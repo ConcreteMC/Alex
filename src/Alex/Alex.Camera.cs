@@ -136,7 +136,7 @@ namespace Alex
 							MathHelper.ToRadians(90.0f)), MathHelper.WrapAngle(_leftrightRot), 0);
 				}
 
-				Cursor.Position = new Point(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2);
+				Cursor.Position = new Point(Window.Position.X + GraphicsDevice.Viewport.Width / 2, Window.Position.Y + GraphicsDevice.Viewport.Height / 2);
 	            _originalMouseState = Mouse.GetState();
 	            // _originalMouseState = currentMouseState;
             }
