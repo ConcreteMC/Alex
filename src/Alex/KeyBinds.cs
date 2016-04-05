@@ -11,5 +11,7 @@ namespace Alex
         public static Keys Up = Keys.Space;
         public static Keys Down = Keys.LeftShift;
         public static Keys Fog = Keys.F;
+	    public static Keys Menu = Keys.Escape;
+	    public static Keys DebugInfo = Keys.F3;
     }
 }

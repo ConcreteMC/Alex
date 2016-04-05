@@ -9,6 +9,8 @@ namespace Alex
 {
     public partial class Alex : Microsoft.Xna.Framework.Game
     {
+	    public static string Version = "1.0";
+
 	    public static Alex Instance;
 	    public static SpriteFont Font;
 
@@ -40,7 +42,7 @@ namespace Alex
 		protected override void Initialize()
         {
             Console.Title = @"Alex - Debug";
-            Window.Title = "Alex - 1.0.0";
+            Window.Title = "Alex - " + Version;
 			SetGameState(new MenuState());
 
 			World = new World();

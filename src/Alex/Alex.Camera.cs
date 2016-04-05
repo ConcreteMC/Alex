@@ -108,9 +108,8 @@ namespace Alex
                 // Add the player's eye level.
                 var vectorWithFeet = new Vector3(gravityVector.X, gravityVector.Y - Player.EyeLevel, gravityVector.Z);
                 var gravLoc = ((FirstPersonCamera) Game.GetCamera()).PreviewMove(vectorWithFeet);
-                var worldLoc = gravLoc.ToBlockCoords();
 
-                if (World.GetBlock(worldLoc.X, worldLoc.Y, worldLoc.Z).Solid)
+                if (World.IsSolid(gravLoc))
                 {
                     if (IsJumping)
                         IsJumping = false;

@@ -59,6 +59,7 @@
     <Compile Include="Blocks\Torch.cs" />
     <Compile Include="Entities\Entity.cs" />
     <Compile Include="Entities\Player.cs" />
+    <Compile Include="Extensions.cs" />
     <Compile Include="Game.cs" />
     <Compile Include="Gamestates\Gamestate.cs" />
     <Compile Include="Gamestates\MenuState.cs" />

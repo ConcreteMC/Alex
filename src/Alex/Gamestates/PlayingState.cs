@@ -1,17 +1,22 @@
-﻿using System.Drawing;
-using System.Windows.Forms;
+﻿using System;
 using Alex.Properties;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 
 namespace Alex.Gamestates
 {
 	public class PlayingState : Gamestate
 	{
+		private FrameCounter FpsCounter { get; set; }
 		private Texture2D CrosshairTexture { get; set; }
+		private bool RenderDebug { get; set; } = false;
+
 		public override void Init(RenderArgs args)
 		{
+			OldKeyboardState = Keyboard.GetState();
+			FpsCounter = new FrameCounter();
 			CrosshairTexture = ResManager.ImageToTexture2D(Resources.crosshair);
 			base.Init(args);
 		}
@@ -23,10 +28,31 @@ namespace Alex.Gamestates
 
 		public override void Render2D(RenderArgs args)
 		{
-			FpsCounter.Render(args.GraphicsDevice);
+			FpsCounter.Update((float) args.GameTime.ElapsedGameTime.TotalSeconds);
+
 			args.SpriteBatch.Begin();
-			args.SpriteBatch.Draw(CrosshairTexture, new Vector2(CenterScreen.X - CrosshairTexture.Width / 2, CenterScreen.Y - CrosshairTexture.Height / 2));
+			args.SpriteBatch.Draw(CrosshairTexture,
+				new Vector2(CenterScreen.X - CrosshairTexture.Width/2f, CenterScreen.Y - CrosshairTexture.Height/2f));
+
+			if (RenderDebug)
+			{
+				var fpsString = string.Format("Alex {0} ({1} FPS)", Alex.Version, Math.Round(FpsCounter.AverageFramesPerSecond));
+				var meisured = Alex.Font.MeasureString(fpsString);
+
+				args.SpriteBatch.FillRectangle(new Rectangle(0, 0, (int)meisured.X, (int)meisured.Y), new Color(Color.Black, 64));
+				args.SpriteBatch.DrawString(Alex.Font,
+					fpsString, new Vector2(0, 0),
+					Color.White);
+
+				var y = (int) meisured.Y;
+				var positionString = "Position: " + Game.MainCamera.Position;
+				meisured = Alex.Font.MeasureString(positionString);
+
+				args.SpriteBatch.FillRectangle(new Rectangle(0, y, (int)meisured.X, (int)meisured.Y), new Color(Color.Black, 64));
+				args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(0,y), Color.White);
+			}
 			args.SpriteBatch.End();
+
 			base.Render2D(args);
 		}
 
@@ -36,6 +62,7 @@ namespace Alex.Gamestates
 			base.Render3D(args);
 		}
 
+		private KeyboardState OldKeyboardState;
 		public override void OnUpdate(GameTime gameTime)
 		{
 			Alex.Instance.UpdateCamera(gameTime);
@@ -43,6 +70,21 @@ namespace Alex.Gamestates
 			{
 				Alex.Instance.HandleInput();
 			}
+
+			KeyboardState currentKeyboardState = Keyboard.GetState();
+			if (currentKeyboardState != OldKeyboardState)
+			{
+				if (currentKeyboardState.IsKeyDown(KeyBinds.Menu))
+				{
+					
+				}
+
+				if (currentKeyboardState.IsKeyDown(KeyBinds.DebugInfo))
+				{
+					RenderDebug = !RenderDebug;
+				}
+			}
+			OldKeyboardState = currentKeyboardState;
 
 			base.OnUpdate(gameTime);
 		}
