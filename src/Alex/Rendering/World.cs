@@ -120,12 +120,12 @@ namespace Alex.Rendering
 		    return GetBlock((int) x, (int) y, (int) z);
 	    }
 
-        public Block GetBlock(int x, int y, int z)
+		public Block GetBlock(int x, int y, int z)
         {
             var key = new Vector3(x >> 4, 0, z >> 4);
             if (ChunkManager.Chunks.ContainsKey(key))
             {
-                return ChunkManager.Chunks[key].GetBlock(x & 0x0f, y & 0x7f, z & 0x0f);
+                return ChunkManager.Chunks[key].GetBlock(x & 0xf, y & 0xff, z & 0xf);
             }
             return BlockFactory.GetBlock(0, 0);
         }

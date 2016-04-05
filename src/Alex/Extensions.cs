@@ -49,5 +49,71 @@ namespace Alex
 		{
 			sb.Draw(WhiteTexture, rectangle, color);
 		}
+
+		public static void RenderBoundingBox(
+			this SpriteBatch sb,
+			BoundingBox box,
+			Matrix view,
+			Matrix projection,
+			Color color)
+		{
+			if (effect == null)
+			{
+				effect = new BasicEffect(sb.GraphicsDevice)
+				{
+					VertexColorEnabled = true,
+					LightingEnabled = false
+				};
+			}
+
+			var corners = box.GetCorners();
+			for (var i = 0; i < 8; i++)
+			{
+				verts[i].Position = corners[i];
+				verts[i].Color = color;
+			}
+
+			effect.View = view;
+			effect.Projection = projection;
+
+			foreach (var pass in effect.CurrentTechnique.Passes)
+			{
+				pass.Apply();
+
+				sb.GraphicsDevice.DrawUserIndexedPrimitives(
+					PrimitiveType.LineList,
+					verts,
+					0,
+					8,
+					indices,
+					0,
+					indices.Length / 2);
+			}
+		}
+
+		#region Fields
+
+		private static readonly VertexPositionColor[] verts = new VertexPositionColor[8];
+
+		private static readonly short[] indices =
+		{
+			0, 1,
+			1, 2,
+			2, 3,
+			3, 0,
+			0, 4,
+			1, 5,
+			2, 6,
+			3, 7,
+			4, 5,
+			5, 6,
+			6, 7,
+			7, 4
+		};
+
+		private static BasicEffect effect;
+		private static VertexDeclaration vertDecl;
+
+		#endregion
 	}
 }

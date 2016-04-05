@@ -96,7 +96,9 @@
     <Compile Include="Utils\FPSCounter.cs" />
     <Compile Include="Utils\NibbleArray.cs" />
     <Compile Include="Utils\OpenSimplexNoise.cs" />
+    <Compile Include="Utils\PlotCell3F.cs" />
     <Compile Include="Utils\Position.cs" />
+    <Compile Include="Utils\RayTracer.cs" />
     <Compile Include="Utils\RenderDistance.cs" />
     <Compile Include="Utils\SimplexOctaveGenerator.cs" />
     <Compile Include="Utils\Singleton.cs" />

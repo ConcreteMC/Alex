@@ -18,6 +18,7 @@ namespace Alex.Gamestates
 			OldKeyboardState = Keyboard.GetState();
 			FpsCounter = new FrameCounter();
 			CrosshairTexture = ResManager.ImageToTexture2D(Resources.crosshair);
+			SelectedBlock = Vector3.Zero;
 			base.Init(args);
 		}
 
@@ -50,8 +51,27 @@ namespace Alex.Gamestates
 
 				args.SpriteBatch.FillRectangle(new Rectangle(0, y, (int)meisured.X, (int)meisured.Y), new Color(Color.Black, 64));
 				args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(0,y), Color.White);
+
+				y += (int)meisured.Y;
+
+				positionString = "Looking at: " + SelectedBlock;
+				meisured = Alex.Font.MeasureString(positionString);
+
+				args.SpriteBatch.FillRectangle(new Rectangle(0, y, (int)meisured.X, (int)meisured.Y), new Color(Color.Black, 64));
+				args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(0, y), Color.White);
 			}
 			args.SpriteBatch.End();
+
+			if (SelectedBlock.Y > 0)
+			{
+				var selBlock = Alex.Instance.World.GetBlock(SelectedBlock.X, SelectedBlock.Y, SelectedBlock.Z);
+				var boundingBox = new BoundingBox(SelectedBlock + selBlock.BlockModel.Offset,
+					SelectedBlock + selBlock.BlockModel.Offset + selBlock.BlockModel.Size);
+
+				args.SpriteBatch.RenderBoundingBox(
+					boundingBox,
+					Game.MainCamera.ViewMatrix, Game.MainCamera.ProjectionMatrix, Color.LightGray);
+			}
 
 			base.Render2D(args);
 		}
@@ -62,29 +82,31 @@ namespace Alex.Gamestates
 			base.Render3D(args);
 		}
 
+		private Vector3 SelectedBlock;
 		private KeyboardState OldKeyboardState;
 		public override void OnUpdate(GameTime gameTime)
 		{
+			SelectedBlock = RayTracer.Raytrace();
 			Alex.Instance.UpdateCamera(gameTime);
 			if (Alex.Instance.IsActive)
 			{
 				Alex.Instance.HandleInput();
-			}
 
-			KeyboardState currentKeyboardState = Keyboard.GetState();
-			if (currentKeyboardState != OldKeyboardState)
-			{
-				if (currentKeyboardState.IsKeyDown(KeyBinds.Menu))
+				KeyboardState currentKeyboardState = Keyboard.GetState();
+				if (currentKeyboardState != OldKeyboardState)
 				{
-					
-				}
+					if (currentKeyboardState.IsKeyDown(KeyBinds.Menu))
+					{
 
-				if (currentKeyboardState.IsKeyDown(KeyBinds.DebugInfo))
-				{
-					RenderDebug = !RenderDebug;
+					}
+
+					if (currentKeyboardState.IsKeyDown(KeyBinds.DebugInfo))
+					{
+						RenderDebug = !RenderDebug;
+					}
 				}
+				OldKeyboardState = currentKeyboardState;
 			}
-			OldKeyboardState = currentKeyboardState;
 
 			base.OnUpdate(gameTime);
 		}
