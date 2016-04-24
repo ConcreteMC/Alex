@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 
 namespace Alex
 {
@@ -14,6 +16,14 @@ namespace Alex
 			WhiteTexture.SetData(new Color[] { Color.White });
 		}
 
+		[DllImport("user32.dll", CharSet = CharSet.Auto)]
+        private static extern int MapVirtualKey(int uCode, int uMapType);
+
+        public static bool RepresentsPrintableChar(this Keys key)
+        {
+            return !char.IsControl((char)MapVirtualKey((int)key, 2));
+        }
+		
 		/// <summary>
 		/// Draw a line between the two supplied points.
 		/// </summary>
@@ -115,5 +125,12 @@ namespace Alex
 		private static VertexDeclaration vertDecl;
 
 		#endregion
+
+		public static BoundingBox OffsetBy(this BoundingBox box, Vector3 offset)
+		{
+			box.Min += offset;
+			box.Max += offset;
+			return box;
+		}
 	}
 }

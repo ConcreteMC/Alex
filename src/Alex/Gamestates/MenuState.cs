@@ -45,16 +45,53 @@ namespace Alex.Gamestates
 			//Alex.ShowMouse();
 			Alex.Instance.IsMouseVisible = true;
 
-			Button button = new Button("Debug world")
-			{
-				Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 20),
-			};
-			button.OnButtonClick += button_OnButtonClick;
+            Button mpbtn = new Button("Multiplayer")
+            {
+                Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 20),
+            };
+            mpbtn.OnButtonClick += Mpbtn_OnButtonClick;
 
-			Controls.Add("testbtn", button);
-		}
+            Controls.Add("mpbtn", mpbtn);
 
-		void button_OnButtonClick()
+            Button button = new Button("Debug world")
+            {
+                Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 70),
+            };
+            button.OnButtonClick += button_OnButtonClick;
+
+            Controls.Add("testbtn", button);
+
+            Button opton = new Button("Settings")
+            {
+                Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 120),
+            };
+            opton.OnButtonClick += Opton_OnButtonClick;
+
+            Controls.Add("optbtn", opton);
+/*
+            Controls.Add("input", new InputField()
+            {
+                Location = new Vector2(5, 5)
+            });
+
+            Controls.Add("track", new TrackBar()
+            {
+                Location = new Vector2(5, 55),
+                Text = "Change Me"
+            });*/
+        }
+
+        private void Opton_OnButtonClick()
+        {
+            //Todo
+        }
+
+        private void Mpbtn_OnButtonClick()
+        {
+            Alex.Instance.SetGameState(new ServerState());
+        }
+
+        void button_OnButtonClick()
 		{
 			Alex.Instance.SetGameState(new PlayingState());
 		}
@@ -69,16 +106,19 @@ namespace Alex.Gamestates
 		{
 			args.SpriteBatch.Begin();
 
-			Controls["testbtn"].Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 20);
+            Controls["mpbtn"].Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 20);
 
-			//Start draw background
-			var retval = new Rectangle(
+            Controls["testbtn"].Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 70);
+
+            Controls["optbtn"].Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 120);
+
+            //Start draw background
+            var retval = new Rectangle(
 				args.SpriteBatch.GraphicsDevice.Viewport.X,
 				args.SpriteBatch.GraphicsDevice.Viewport.Y,
 				args.SpriteBatch.GraphicsDevice.Viewport.Width,
 				args.SpriteBatch.GraphicsDevice.Viewport.Height);
-			var pos = new Vector2(retval.Left, retval.Top);
-			args.SpriteBatch.Draw(BackGround, pos, Color.White);
+			args.SpriteBatch.Draw(BackGround, retval, Color.White);
 			//End draw backgroun
 
 			var x = 0;
@@ -135,6 +175,10 @@ namespace Alex.Gamestates
 					-0.6f, new Vector2(),
 					new Vector2(_scale, _scale), 0f, 0f);
 			}
+
+		    string text = "Alex - Developed by Kennyvv";
+		    var size = Alex.Font.MeasureString(text);
+            args.SpriteBatch.DrawString(Alex.Font, text, new Vector2(4, (args.GraphicsDevice.Viewport.Height - size.Y) - 2), Color.White);
 
 			args.SpriteBatch.End();
 		}

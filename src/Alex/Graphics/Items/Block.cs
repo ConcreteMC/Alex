@@ -28,6 +28,12 @@ namespace Alex.Graphics.Items
 	        Transparent = false;
         }
 
+	    public BoundingBox GetBoundingBox(Vector3 blockPosition)
+	    {
+		    return new BoundingBox(blockPosition + BlockModel.Offset,
+					blockPosition + BlockModel.Offset + BlockModel.Size);
+		}
+
         public BoundingBox BoundingBox
         {
             get
@@ -88,8 +94,8 @@ namespace Alex.Graphics.Items
         // ReSharper disable once InconsistentNaming
         public virtual UVMap CreateUVMapping(TextureSide dir)
         {
-            var tileSizeX = 1/16.0f; //0.0625
-            var tileSizeY = 1/22.0f;
+            var tileSizeX = 1/ResManager.InWidth; //0.0625
+            var tileSizeY = 1/ResManager.InHeigth;
 
             var uvSize = ResManager.AtlasSize;
             var tile = Vector2.Zero;

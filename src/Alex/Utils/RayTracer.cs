@@ -19,12 +19,13 @@ namespace Alex.Utils
 			var direction = farPoint - nearPoint;
 			direction.Normalize();
 
-			var plotter = new PlotCell3f(new Vector3(0, 0, 0), new Vector3(1, 1, 1));
+			var plotter = new PlotCell3f(Alex.Instance.World, new Vector3(0, 0, 0), new Vector3(1, 1, 1));
 
 			plotter.Plot(Game.MainCamera.Position, direction, 5 * 2);
 
 			while (plotter.Next())
 			{
+				var actual = plotter.Actual();
 				var v = plotter.Get();
 				var b = Alex.Instance.World.GetBlock(v.X, v.Y, v.Z);
 				if (b != null && b.BlockId != 0)

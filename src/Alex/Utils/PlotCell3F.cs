@@ -1,4 +1,5 @@
 ﻿using System;
+using Alex.Rendering;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Utils
@@ -18,11 +19,13 @@ namespace Alex.Utils
 		private Vector3 _sign;
 
 		private Vector3 _size;
+		private World _world;
 
-		public PlotCell3f(Vector3 start, Vector3 blocksize)
+		public PlotCell3f(World world, Vector3 start, Vector3 blocksize)
 		{
 			_off = start;
 			_size = blocksize;
+			_world = world;
 		}
 
 		public void Plot(Vector3 position, Vector3 direction, int cells)

@@ -14,7 +14,7 @@ namespace Alex.Rendering
         {
             ChunkManager = new ObjectManager();
             TerrainGenerator = new FlatTerrainGenerator("Flatlands");
-		 //   TerrainGenerator = new DefaultTerrainGenerator("lol");
+		    //TerrainGenerator = new DefaultTerrainGenerator("lol");
             Logging.Info("Generating chunks...");
 			GenerateChunks(GetSpawnPoint(), (int)Game.RenderDistance);
         }
@@ -22,11 +22,22 @@ namespace Alex.Rendering
 		private TerrainGenerator TerrainGenerator { get; set; }
         private ObjectManager ChunkManager { get; }
 
+        internal int Vertices
+        {
+            get { return ChunkManager.Vertices; }
+        }
+
+        internal int ChunkCount
+        {
+            get { return ChunkManager.Chunks.Count; }
+        }
+
         public void Render()
         {
             Game.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
             Game.GraphicsDevice.BlendState = BlendState.AlphaBlend;
             Game.GraphicsDevice.SamplerStates[0] = SamplerState.PointWrap;
+
 
             ChunkManager.Draw(Game.GraphicsDevice);
         }
@@ -115,6 +126,11 @@ namespace Alex.Rendering
 			return GetBlock(x, y, z).Transparent;
 		}
 
+        public Block GetBlock(Vector3 position)
+        {
+            return GetBlock(position.X, position.Y, position.Z);
+        }
+
 		public Block GetBlock(float x, float y, float z)
 	    {
 		    return GetBlock((int) x, (int) y, (int) z);
@@ -129,5 +145,19 @@ namespace Alex.Rendering
             }
             return BlockFactory.GetBlock(0, 0);
         }
+
+	    public void SetBlock(float x, float y, float z, Block block)
+	    {
+		    SetBlock((int) x, (int) y, (int) z, block);
+	    }
+
+	    public void SetBlock(int x, int y, int z, Block block)
+	    {
+			var key = new Vector3(x >> 4, 0, z >> 4);
+		    if (ChunkManager.Chunks.ContainsKey(key))
+		    {
+			    ChunkManager.Chunks[key].SetBlock(x & 0xf, y & 0xff, z & 0xf, block);
+		    }
+	    }
     }
 }

@@ -16,8 +16,8 @@ namespace Alex.Blocks
 
         public override UVMap CreateUVMapping(TextureSide dir)
         {
-            var tileSizeX = 1 / 16.0f;
-            var tileSizeY = 1 / 22.0f;
+            var tileSizeX = 1 / ResManager.InWidth; //0.0625
+            var tileSizeY = 1 / ResManager.InHeigth;
 
             var uvSize = ResManager.AtlasSize;
             var tile = Vector2.Zero;

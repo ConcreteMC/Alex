@@ -14,6 +14,7 @@ namespace Alex.Rendering.UI
 
         private Rectangle ButtonRectangle { get; set; }
         private Texture2D ButtonTexture { get; set; }
+        private Texture2D HoverTexture { get; set; }
         private bool Hovering { get; set; }
         public string Text { get; set; }
         public Button(string text)
@@ -21,16 +22,16 @@ namespace Alex.Rendering.UI
             Text = text;
             Hovering = false;
             Size = new Vector2(400, 40);
+            HoverTexture = ResManager.ImageToTexture2D(Properties.Resources.ButtonState2);
+            ButtonTexture = ResManager.ImageToTexture2D(Properties.Resources.ButtonState1);
         }
 
         public override void Render(RenderArgs args)
         {
             args.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
 
-		    ButtonTexture = ResManager.ImageToTexture2D(Hovering ? Properties.Resources.ButtonState2 : Properties.Resources.ButtonState1);
-
 			ButtonRectangle = new Rectangle((int) Location.X,(int) Location.Y, (int) Size.X, (int) Size.Y);
-            args.SpriteBatch.Draw(ButtonTexture, ButtonRectangle, Color.Cornsilk);
+            args.SpriteBatch.Draw(Hovering ? HoverTexture : ButtonTexture, ButtonRectangle, Color.Cornsilk);
 
             var measureString = Alex.Font.MeasureString(Text);
 
@@ -44,7 +45,6 @@ namespace Alex.Rendering.UI
         public override void Update(GameTime time)
         {
             var ms = Mouse.GetState();
-            //var cursorPos = Cursor.Position;
             var mouseRec = new Rectangle(ms.X, ms.Y, 1, 1);
 
             if (mouseRec.Intersects(ButtonRectangle))

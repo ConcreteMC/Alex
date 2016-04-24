@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
@@ -12,7 +13,7 @@ namespace Alex.Rendering
         {
             Chunks = new Dictionary<Vector3, Chunk>();
 
-            Effect = new AlphaTestEffect(Game.Instance.GraphicsDevice)
+			Effect = new AlphaTestEffect(Game.Instance.GraphicsDevice)
             {
                 Texture = ResManager.GetAtlas(),
                 World = Matrix.Identity,
@@ -21,14 +22,16 @@ namespace Alex.Rendering
         }
 
         public Dictionary<Vector3, Chunk> Chunks { get; }
-
+		 
         private AlphaTestEffect Effect { get; }
 
+        public int Vertices { get; private set; }
         public void Draw(GraphicsDevice device)
         {
             Effect.View = Game.MainCamera.ViewMatrix;
             Effect.Projection = Game.MainCamera.ProjectionMatrix;
 
+            var tempVertices = 0;
             foreach (var c in Chunks.ToArray())
             {
                 var chunk = c.Value;
@@ -44,17 +47,22 @@ namespace Alex.Rendering
                         BufferUsage.WriteOnly);
                 }
 
-                if (chunk.IsDirty)
-                {
-                    if (chunk.Mesh.Vertices.Length > 0)
-                    {
-                        chunk.VertexBuffer.SetData(chunk.Mesh.Vertices);
-                    }
+	            if (chunk.IsDirty)
+	            {
+		            chunk.Mesh = chunk.GenerateMesh();
+		            chunk.VertexBuffer = new VertexBuffer(device, VertexPositionNormalTextureColor.VertexDeclaration,
+			            chunk.Mesh.Vertices.Length,
+			            BufferUsage.WriteOnly);
 
-                    chunk.IsDirty = false;
-                }
+		            if (chunk.Mesh.Vertices.Length > 0)
+		            {
+			            chunk.VertexBuffer.SetData(chunk.Mesh.Vertices);
+		            }
 
-                if (chunk.Mesh.Vertices.Length == 0) continue;
+		            chunk.IsDirty = false;
+	            }
+
+	            if (chunk.Mesh.Vertices.Length == 0) continue;
 
                 device.SetVertexBuffer(chunk.VertexBuffer);
                 foreach (var pass in Effect.CurrentTechnique.Passes)
@@ -62,7 +70,9 @@ namespace Alex.Rendering
                     pass.Apply();
                     device.DrawPrimitives(PrimitiveType.TriangleList, 0, chunk.Mesh.Vertices.Length / 3);
                 }
+                tempVertices += chunk.Mesh.Vertices.Length;
             }
+            Vertices = tempVertices;
         }
 
         public void AddChunk(Chunk chunk, Vector3 position)
