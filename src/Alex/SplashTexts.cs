@@ -8,12 +8,12 @@ namespace Alex
 		{
 			"Inspired by ThinkOfDeath",
 			"Weird shit!",
-			"Works! (Except for many bugs)",
 			"Uhm, random?",
 			"This %RANDOM% is a random number!",
 			"Has a menu!",
 			"Created in C#",
-			"O.M.G Why are you reading this?!"
+			"O.M.G Why are you reading this?!",
+            "(Doesn't yet) Support MC:PE",
 		};
 
 		private static readonly Random Random = new Random();
