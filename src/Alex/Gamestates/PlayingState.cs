@@ -44,6 +44,7 @@ namespace Alex.Gamestates
                 Client.OnChatMessage += Client_OnChatMessage;
                 Client.OnDisconnect += ClientOnOnDisconnect;
                 Client.OnBlockUpdate += Client_OnBlockUpdate;
+                Client.OnPlayerMovement += Client_OnPlayerMovement;
 		        if (Client.Connect())
 		        {
                     Alex.Instance.World.ResetChunks();
@@ -54,7 +55,15 @@ namespace Alex.Gamestates
 			base.Init(args);
 		}
 
-	    private void Client_OnBlockUpdate(McpeUpdateBlock packet)
+        private void Client_OnPlayerMovement(McpeMovePlayer packet)
+        {
+            if (packet.entityId == 0)
+            {
+                Game.GetCamera().Position = new Vector3(packet.x, packet.y, packet.z);
+            }
+        }
+
+        private void Client_OnBlockUpdate(McpeUpdateBlock packet)
 	    {
 	        foreach (var i in packet.blocks)
 	        {
@@ -177,7 +186,7 @@ namespace Alex.Gamestates
 
 		    if (RenderDebug)
 			{
-				var fpsString = string.Format("Alex {0} ({1} FPS)", Alex.Version, Math.Round(FpsCounter.AverageFramesPerSecond));
+				var fpsString = string.Format("Alex {0} ({1} FPS, {2} chunk updates)", Alex.Version, Math.Round(FpsCounter.AverageFramesPerSecond), Alex.Instance.World.ChunkUpdates);
 				var meisured = Alex.Font.MeasureString(fpsString);
 
 				args.SpriteBatch.FillRectangle(new Rectangle(0, 0, (int)meisured.X, (int)meisured.Y), new Color(Color.Black, 64));
