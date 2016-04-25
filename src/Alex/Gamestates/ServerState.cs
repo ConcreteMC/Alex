@@ -79,6 +79,19 @@ namespace Alex.Gamestates
         {
             InputField ip = (InputField) Controls["server-ip"];
             InputField port = (InputField)Controls["server-port"];
+
+            if (ip.Text == string.Empty)
+            {
+                ErrorText = "Enter a server address";
+                return;
+            }
+
+            if (port.Text == string.Empty)
+            {
+                ErrorText = "Enter a server port";
+                return;
+            }
+
             //TODO: Connect to server
             Alex.IsMultiplayer = true;
             try
@@ -114,6 +127,7 @@ namespace Alex.Gamestates
             Alex.Instance.IsMouseVisible = false;
         }
 
+        private string ErrorText = string.Empty;
         public override void Render2D(RenderArgs args)
         {
             args.SpriteBatch.Begin();
@@ -130,6 +144,13 @@ namespace Alex.Gamestates
                 args.SpriteBatch.GraphicsDevice.Viewport.Height);
             args.SpriteBatch.Draw(BackGround, retval, Color.White);
             //End draw backgroun
+
+            if (ErrorText != string.Empty)
+            {
+                var meisure = Alex.Font.MeasureString(ErrorText);
+                args.SpriteBatch.DrawString(Alex.Font, ErrorText,
+                    new Vector2((int)(CenterScreen.X - (meisure.X / 2)), (int)CenterScreen.Y - (30 + meisure.Y + 5)), Color.Red);
+            }
 
             var x = 0;
             var y = 25;
