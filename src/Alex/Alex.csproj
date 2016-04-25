@@ -49,9 +49,12 @@
     <Compile Include="Blocks\Air.cs" />
     <Compile Include="Blocks\Bedrock.cs" />
     <Compile Include="Blocks\Dirt.cs" />
+    <Compile Include="Blocks\GlowStone.cs" />
     <Compile Include="Blocks\Glass.cs" />
     <Compile Include="Blocks\Grass.cs" />
+    <Compile Include="Blocks\IronBars.cs" />
     <Compile Include="Blocks\Leaves.cs" />
+    <Compile Include="Blocks\StoneBrick.cs" />
     <Compile Include="Blocks\Wood.cs" />
     <Compile Include="Blocks\Slab.cs" />
     <Compile Include="Blocks\StainedGlass.cs" />
@@ -71,6 +74,7 @@
     <Compile Include="Graphics\Items\Block.cs" />
     <Compile Include="Graphics\Mesh.cs" />
     <Compile Include="Graphics\Models\Cube.cs" />
+    <Compile Include="Graphics\Models\IronBarsModel.cs" />
     <Compile Include="Graphics\Models\Model.cs" />
     <Compile Include="Graphics\Models\SlabModel.cs" />
     <Compile Include="Graphics\Models\Torch.cs" />
@@ -167,6 +171,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <Compile Include="Blocks\StainedClay.cs" />
     <None Include="Resources\Minecraftia.xnb" />
     <None Include="packages.config" />
     <None Include="Resources\mcbg.png" />

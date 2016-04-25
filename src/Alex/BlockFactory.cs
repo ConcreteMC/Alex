@@ -17,7 +17,11 @@ namespace Alex
 			if (id == 20) return new Glass();
 			if (id == 43 && metadata == 0) return new StoneSlab();
             if (id == 50) return new Torch();
+            if (id == 89) return new GlowStone();
 			if (id == 95) return new StainedGlass(metadata);
+            if (id == 98) return new StoneBrick();
+            if (id == 101) return new IronBars();
+            if (id == 159) return new StainedClay(metadata);
 
 			return new Stone();
         }
