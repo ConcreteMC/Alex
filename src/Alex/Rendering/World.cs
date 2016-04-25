@@ -23,6 +23,11 @@ namespace Alex.Rendering
             get { return ChunkManager.Chunks.Count; }
         }
 
+        internal int ChunkUpdates
+        {
+            get { return ChunkManager.ChunkUpdates; }
+        }
+
         public void ResetChunks()
         {
             ChunkManager.Chunks.Clear();

@@ -40,7 +40,7 @@ namespace Alex.Rendering
                     {
                         chunks = ChunksToUpdate.ToArray();
                     }
-                    Thread.Sleep(50);
+                    Thread.Sleep(5);
                 }
 
                 foreach (var i in chunks)
@@ -84,8 +84,13 @@ namespace Alex.Rendering
                 }
             }
         }
-        private object UpdateLock { get; set; } = new object();
 
+        public int ChunkUpdates
+        {
+            get { return ChunksToUpdate.Count; }
+        }
+
+        private object UpdateLock { get; set; } = new object();
         private List<Vector3> ChunksToUpdate { get; set; }
 
         public Dictionary<Vector3, Chunk> Chunks { get; }
@@ -125,7 +130,7 @@ namespace Alex.Rendering
                         }
                     }
 
-                    if (chunk.Mesh.Vertices.Length == 0) continue;
+                    if (chunk.VertexBuffer.VertexCount == 0) continue;
 
                     bool entered = false;
                     try
@@ -137,7 +142,7 @@ namespace Alex.Rendering
                             foreach (var pass in Effect.CurrentTechnique.Passes)
                             {
                                 pass.Apply();
-                                device.DrawPrimitives(PrimitiveType.TriangleList, 0, chunk.Mesh.Vertices.Length/3);
+                                device.DrawPrimitives(PrimitiveType.TriangleList, 0, chunk.VertexBuffer.VertexCount / 3);
                             }
                             tempVertices += chunk.Mesh.Vertices.Length;
                         }
