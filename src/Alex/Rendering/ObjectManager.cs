@@ -54,17 +54,21 @@ namespace Alex.Rendering
                         continue;
                     }
 
-                    Chunks[i].Mesh = Chunks[i].GenerateMesh();
-                    Chunks[i].VertexBuffer = new VertexBuffer(Alex.Instance.GraphicsDevice, VertexPositionNormalTextureColor.VertexDeclaration,
-                        Chunks[i].Mesh.Vertices.Length,
-                        BufferUsage.WriteOnly);
-
-                    if (Chunks[i].Mesh.Vertices.Length > 0)
+                    lock (Chunks[i].ChunkLock)
                     {
-                        Chunks[i].VertexBuffer.SetData(Chunks[i].Mesh.Vertices);
-                    }
+                        Chunks[i].Mesh = Chunks[i].GenerateMesh();
+                        Chunks[i].VertexBuffer = new VertexBuffer(Alex.Instance.GraphicsDevice,
+                            VertexPositionNormalTextureColor.VertexDeclaration,
+                            Chunks[i].Mesh.Vertices.Length,
+                            BufferUsage.WriteOnly);
 
-                    Chunks[i].IsDirty = false;
+                        if (Chunks[i].Mesh.Vertices.Length > 0)
+                        {
+                            Chunks[i].VertexBuffer.SetData(Chunks[i].Mesh.Vertices);
+                        }
+
+                        Chunks[i].IsDirty = false;
+                    }
 
                     lock (UpdateLock)
                     {
@@ -100,25 +104,41 @@ namespace Alex.Rendering
                     {
                         lock (UpdateLock)
                         {
-                            var key = new Vector3((int)chunk.Position.X >> 4, 0, (int)chunk.Position.Z >> 4);
+                            var key = new Vector3((int) chunk.Position.X >> 4, 0, (int) chunk.Position.Z >> 4);
 
                             if (!ChunksToUpdate.Contains(key))
                             {
                                 ChunksToUpdate.Add(key);
                             }
                         }
-                        continue;
+
+                        if (chunk.VertexBuffer == null)
+                        {
+                            continue;
+                        }
                     }
 
                     if (chunk.Mesh.Vertices.Length == 0) continue;
 
-                    device.SetVertexBuffer(chunk.VertexBuffer);
-                    foreach (var pass in Effect.CurrentTechnique.Passes)
+                    bool entered = false;
+                    try
                     {
-                        pass.Apply();
-                        device.DrawPrimitives(PrimitiveType.TriangleList, 0, chunk.Mesh.Vertices.Length/3);
+                        if (Monitor.TryEnter(chunk.ChunkLock))
+                        {
+                            entered = true;
+                            device.SetVertexBuffer(chunk.VertexBuffer);
+                            foreach (var pass in Effect.CurrentTechnique.Passes)
+                            {
+                                pass.Apply();
+                                device.DrawPrimitives(PrimitiveType.TriangleList, 0, chunk.Mesh.Vertices.Length/3);
+                            }
+                            tempVertices += chunk.Mesh.Vertices.Length;
+                        }
                     }
-                    tempVertices += chunk.Mesh.Vertices.Length;
+                    finally
+                    {
+                        if (entered) Monitor.Exit(chunk.ChunkLock);
+                    }
                 }
             }
             Vertices = tempVertices;
