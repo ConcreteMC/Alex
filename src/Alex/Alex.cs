@@ -7,6 +7,7 @@ using Alex.Rendering;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Newtonsoft.Json;
 
 namespace Alex
 {
@@ -36,6 +37,7 @@ namespace Alex
 	        Instance = this;
 
             ResManager.CheckResources();
+            Username = "";
             //this.Window.AllowUserResizing = true;
             //this.Window.ClientSizeChanged += (sender, args) =>
             //{
@@ -51,6 +53,12 @@ namespace Alex
         private void Window_TextInput(object sender, TextInputEventArgs e)
         {
             OnCharacterInput?.Invoke(this, e.Character);
+        }
+
+        public void SaveSettings()
+        {
+            Settings s = new Settings(Username);
+            File.WriteAllText("settings.json", JsonConvert.SerializeObject(s, Formatting.Indented));
         }
 
         public World World { get; private set; }
@@ -71,7 +79,21 @@ namespace Alex
         {
             Console.Title = @"Alex - Debug";
             Window.Title = "Alex - " + Version;
-			SetGameState(new LoginState());
+
+            if (File.Exists("settings.json"))
+            {
+                try
+                {
+                    Settings s = JsonConvert.DeserializeObject<Settings>(File.ReadAllText("settings.json"));
+                    Username = s.Username;
+                }
+                catch
+                {
+
+                }
+            }
+
+            SetGameState(new LoginState());
 
 			World = new World();
             Game.Init(World.GetSpawnPoint());

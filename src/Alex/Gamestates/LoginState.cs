@@ -48,14 +48,15 @@ namespace Alex.Gamestates
             Controls.Add("username", new InputField()
             {
                 Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y - 30),
-                PlaceHolder = "Username"
+                PlaceHolder = "Username",
+                Text = Alex.Username
             });
 
             Controls.Add("password", new InputField()
             {
                 Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 20),
                 PlaceHolder = "Password",
-                PasswordField = true
+                PasswordField = true,
             });
 
             Button opton = new Button("Login")
@@ -73,6 +74,7 @@ namespace Alex.Gamestates
             if (username.Text != string.Empty)
             {
                 Alex.Username = username.Text;
+                Alex.Instance.SaveSettings();
                 Alex.Instance.SetGameState(new MenuState());
             }
             else
