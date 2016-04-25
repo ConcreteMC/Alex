@@ -55,8 +55,9 @@ namespace Alex.Rendering.UI
                 {
                     s = PlaceHolder;
                     useph = true;
+                    color = Color.Gray;
                 }
-                color = Color.Gray;
+                
                 DoThing = false;
             }
 
