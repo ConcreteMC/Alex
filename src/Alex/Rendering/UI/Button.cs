@@ -24,6 +24,8 @@ namespace Alex.Rendering.UI
             Size = new Vector2(400, 40);
             HoverTexture = ResManager.ImageToTexture2D(Properties.Resources.ButtonState2);
             ButtonTexture = ResManager.ImageToTexture2D(Properties.Resources.ButtonState1);
+
+            PrevMouseState = Mouse.GetState();
         }
 
         public override void Render(RenderArgs args)
@@ -42,6 +44,7 @@ namespace Alex.Rendering.UI
             args.SpriteBatch.End();
         }
 
+        private MouseState PrevMouseState { get; set; }
         public override void Update(GameTime time)
         {
             var ms = Mouse.GetState();
@@ -50,15 +53,19 @@ namespace Alex.Rendering.UI
             if (mouseRec.Intersects(ButtonRectangle))
             {
                 Hovering = true;
-                if (ms.LeftButton == ButtonState.Pressed && OnButtonClick != null)
+                if (ms != PrevMouseState)
                 {
-                    OnButtonClick.Invoke();
+                    if (ms.LeftButton == ButtonState.Released && PrevMouseState.LeftButton == ButtonState.Pressed && OnButtonClick != null)
+                    {
+                        OnButtonClick.Invoke();
+                    }
                 }
             }
             else
             {
                 Hovering = false;
             }
+            PrevMouseState = ms;
         }
     }
 }

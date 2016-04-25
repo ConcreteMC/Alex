@@ -32,6 +32,7 @@ namespace Alex.Rendering.UI
             PasswordField = false;
 
             Alex.Instance.OnCharacterInput += OnCharacterInput;
+            PrevMouseState = Mouse.GetState();
         }
 
         private void OnCharacterInput(object sender, char c)
@@ -94,23 +95,27 @@ namespace Alex.Rendering.UI
         private KeyboardState PrevKeyState { get; set; }
         private DateTime LastUpdate { get; set; }
         private DateTime LastChange { get; set; }
-
+        private MouseState PrevMouseState { get; set; }
         public override void Update(GameTime time)
         {
             var ms = Mouse.GetState();
             var mouseRec = new Rectangle(ms.X, ms.Y, 1, 1);
 
-            if (ms.LeftButton == ButtonState.Pressed)
+            if (ms != PrevMouseState)
             {
-                if (mouseRec.Intersects(ButtonRectangle))
+                if (ms.LeftButton == ButtonState.Released && PrevMouseState.LeftButton == ButtonState.Pressed)
                 {
-                    Focus = true;
-                }
-                else
-                {
-                    Focus = false;
+                    if (mouseRec.Intersects(ButtonRectangle))
+                    {
+                        Focus = true;
+                    }
+                    else
+                    {
+                        Focus = false;
+                    }
                 }
             }
+            PrevMouseState = ms;
 
             if (!Focus) return;
 
