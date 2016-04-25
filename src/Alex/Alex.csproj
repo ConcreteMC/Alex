@@ -49,11 +49,13 @@
     <Compile Include="Blocks\Air.cs" />
     <Compile Include="Blocks\Bedrock.cs" />
     <Compile Include="Blocks\Dirt.cs" />
+    <Compile Include="Blocks\EndStone.cs" />
     <Compile Include="Blocks\GlowStone.cs" />
     <Compile Include="Blocks\Glass.cs" />
     <Compile Include="Blocks\Grass.cs" />
     <Compile Include="Blocks\IronBars.cs" />
     <Compile Include="Blocks\Leaves.cs" />
+    <Compile Include="Blocks\Planks.cs" />
     <Compile Include="Blocks\StoneBrick.cs" />
     <Compile Include="Blocks\Wood.cs" />
     <Compile Include="Blocks\Slab.cs" />
