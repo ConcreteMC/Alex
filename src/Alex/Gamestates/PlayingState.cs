@@ -42,6 +42,7 @@ namespace Alex.Gamestates
                 Client.OnStartGame += Client_OnStartGame;
                 Client.OnChunkData += Client_OnChunkData;
                 Client.OnChatMessage += Client_OnChatMessage;
+                Client.OnDisconnect += ClientOnOnDisconnect;
 		        if (Client.Connect())
 		        {
                     Alex.Instance.World.ResetChunks();
@@ -52,10 +53,20 @@ namespace Alex.Gamestates
 			base.Init(args);
 		}
 
-        private void Client_OnChatMessage(string message, string source, MiNET.MessageType type)
+	    private void ClientOnOnDisconnect(string reason)
+	    {
+	        Alex.Instance.SetGameState(new DisconnectedState(reason));
+	        Alex.IsMultiplayer = false; //Unknown if next one is mp as well, reset to false.
+	    }
+
+	    private void Client_OnChatMessage(string message, string source, MiNET.MessageType type)
         {
             if (type == MessageType.Chat)
             {
+                if (source != string.Empty)
+                {
+                    message = string.Format("<{0}> {1}", source, message);
+                }
                 ChatMessages.Add(message);
             }
         }

@@ -57,10 +57,17 @@ namespace Alex.Rendering
                     lock (Chunks[i].ChunkLock)
                     {
                         Chunks[i].Mesh = Chunks[i].GenerateMesh();
-                        Chunks[i].VertexBuffer = new VertexBuffer(Alex.Instance.GraphicsDevice,
-                            VertexPositionNormalTextureColor.VertexDeclaration,
-                            Chunks[i].Mesh.Vertices.Length,
-                            BufferUsage.WriteOnly);
+                        try
+                        {
+                            Chunks[i].VertexBuffer = new VertexBuffer(Alex.Instance.GraphicsDevice,
+                                VertexPositionNormalTextureColor.VertexDeclaration,
+                                Chunks[i].Mesh.Vertices.Length,
+                                BufferUsage.WriteOnly);
+                        }
+                        catch
+                        {
+                            continue; //Failed? Try again next loop.
+                        }
 
                         if (Chunks[i].Mesh.Vertices.Length > 0)
                         {
