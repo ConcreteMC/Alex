@@ -43,6 +43,7 @@ namespace Alex.Gamestates
                 Client.OnChunkData += Client_OnChunkData;
                 Client.OnChatMessage += Client_OnChatMessage;
                 Client.OnDisconnect += ClientOnOnDisconnect;
+                Client.OnBlockUpdate += Client_OnBlockUpdate;
 		        if (Client.Connect())
 		        {
                     Alex.Instance.World.ResetChunks();
@@ -52,6 +53,15 @@ namespace Alex.Gamestates
 
 			base.Init(args);
 		}
+
+	    private void Client_OnBlockUpdate(McpeUpdateBlock packet)
+	    {
+	        foreach (var i in packet.blocks)
+	        {
+	            Alex.Instance.World.SetBlock(i.Coordinates.X, i.Coordinates.Y, i.Coordinates.Z,
+	                BlockFactory.GetBlock(i.Id, i.Metadata));
+	        }
+        }
 
 	    private void ClientOnOnDisconnect(string reason)
 	    {
