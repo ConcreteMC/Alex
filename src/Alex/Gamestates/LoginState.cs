@@ -69,7 +69,12 @@ namespace Alex.Gamestates
 
         private void Opton_OnButtonClick()
         {
-            Alex.Instance.SetGameState(new MenuState());
+            var username = (InputField) Controls["username"];
+            if (username.Text != string.Empty)
+            {
+                Alex.Username = username.Text;
+                Alex.Instance.SetGameState(new MenuState());
+            }
         }
 
         public override void Stop()

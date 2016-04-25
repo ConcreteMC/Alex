@@ -16,11 +16,11 @@ namespace Alex.Rendering
             TerrainGenerator = new FlatTerrainGenerator("Flatlands");
 		    //TerrainGenerator = new DefaultTerrainGenerator("lol");
             Logging.Info("Generating chunks...");
-			GenerateChunks(GetSpawnPoint(), (int)Game.RenderDistance);
+			//GenerateChunks(GetSpawnPoint(), (int)Game.RenderDistance);
         }
 
 		private TerrainGenerator TerrainGenerator { get; set; }
-        private ObjectManager ChunkManager { get; }
+        public ObjectManager ChunkManager { get; private set; }
 
         internal int Vertices
         {
@@ -30,6 +30,11 @@ namespace Alex.Rendering
         internal int ChunkCount
         {
             get { return ChunkManager.Chunks.Count; }
+        }
+
+        public void ResetChunks()
+        {
+            ChunkManager.Chunks.Clear();
         }
 
         public void Render()

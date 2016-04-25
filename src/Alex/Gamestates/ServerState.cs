@@ -1,4 +1,5 @@
-﻿using Alex.Rendering.UI;
+﻿using System.Net;
+using Alex.Rendering.UI;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -47,7 +48,7 @@ namespace Alex.Gamestates
             Controls.Add("server-ip", new InputField()
             {
                 Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y - 30),
-                PlaceHolder = "Server address"
+                PlaceHolder = "Server address",
             });
 
             Controls.Add("server-port", new InputField()
@@ -76,7 +77,30 @@ namespace Alex.Gamestates
 
         private void Opton_OnButtonClick()
         {
+            InputField ip = (InputField) Controls["server-ip"];
+            InputField port = (InputField)Controls["server-port"];
             //TODO: Connect to server
+            Alex.IsMultiplayer = true;
+            try
+            {
+                Alex.ServerEndPoint = new IPEndPoint(ResolveAddress(ip.Text), int.Parse(port.Text));
+            }
+            catch
+            {
+                return;
+            }
+
+            Alex.Instance.SetGameState(new PlayingState());
+        }
+
+        private static IPAddress ResolveAddress(string address)
+        {
+            IPAddress outAddress;
+            if (IPAddress.TryParse(address, out outAddress))
+            {
+                return outAddress;
+            }
+            return Dns.GetHostEntry(address).AddressList[0];
         }
 
         private void backBton_OnButtonClick()

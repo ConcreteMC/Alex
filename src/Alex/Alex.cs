@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Net;
 using Alex.Gamestates;
 using Alex.Properties;
 using Alex.Rendering;
@@ -12,6 +13,9 @@ namespace Alex
     public partial class Alex : Microsoft.Xna.Framework.Game
     {
 	    public static string Version = "1.0";
+        public static string Username { get; set; }
+        public static IPEndPoint ServerEndPoint { get; set; }
+        public static bool IsMultiplayer { get; set; } = false;
 
 	    public static Alex Instance;
 	    public static SpriteFont Font;

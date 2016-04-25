@@ -2,11 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using Alex.Blocks;
+using Alex.Network;
 using Alex.Properties;
+using Alex.Rendering;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MiNET;
+using MiNET.Net;
 
 namespace Alex.Gamestates
 {
@@ -17,6 +21,7 @@ namespace Alex.Gamestates
 		private Texture2D CrosshairTexture { get; set; }
 		private bool RenderDebug { get; set; } = false;
 	    private bool RenderChatInput { get; set; } = false;
+        private MiNetClient Client { get; set; }
 		public override void Init(RenderArgs args)
 		{
 			OldKeyboardState = Keyboard.GetState();
@@ -29,10 +34,59 @@ namespace Alex.Gamestates
                 "<Alex> This is a test message."
 		    };
             Alex.Instance.OnCharacterInput += OnCharacterInput;
+
+		    if (Alex.IsMultiplayer)
+		    {
+		        Logging.Info("Connecting to server...");
+                Client = new MiNetClient(Alex.ServerEndPoint, Alex.Username);
+                Client.OnStartGame += Client_OnStartGame;
+                Client.OnChunkData += Client_OnChunkData;
+                Client.OnChatMessage += Client_OnChatMessage;
+		        if (Client.Connect())
+		        {
+                    Alex.Instance.World.ResetChunks();
+                    Logging.Info("Connected to server...");
+		        }
+		    }
+
 			base.Init(args);
 		}
 
-	    private void OnCharacterInput(object sender, char c)
+        private void Client_OnChatMessage(string message, string source, MiNET.MessageType type)
+        {
+            if (type == MessageType.Chat)
+            {
+                ChatMessages.Add(message);
+            }
+        }
+
+        private void Client_OnStartGame(MiNET.Worlds.GameMode gamemode, MiNET.Utils.Vector3 spawnPoint, long entityId)
+        {
+            McpeRequestChunkRadius request = McpeRequestChunkRadius.CreateObject();
+            request.chunkRadius = 4;
+            Client.SendPackage(request);
+            Game.GetCamera().Position = new Vector3((float) spawnPoint.X, (float) spawnPoint.Y, (float) spawnPoint.Z);
+        }
+
+        private void Client_OnChunkData(MiNET.Worlds.ChunkColumn chunkColumn)
+        {
+            var vec = new Vector3(chunkColumn.x, 0, chunkColumn.z);
+            Chunk convertedChunk = new Chunk(vec);
+            for (int x = 0; x < 16; x++)
+            {
+                for (int y = 0; y < 128; y++)
+                {
+                    for (int z = 0; z < 16; z++)
+                    {
+                        var blockId = chunkColumn.GetBlock(x, y, z);
+                        convertedChunk.SetBlock(x,y,z, BlockFactory.GetBlock(blockId, 0));
+                    }
+                }
+            }
+            Alex.Instance.World.ChunkManager.AddChunk(convertedChunk, vec);
+        }
+
+        private void OnCharacterInput(object sender, char c)
 	    {
 	        if (RenderChatInput)
 	        {
@@ -225,8 +279,14 @@ namespace Alex.Gamestates
 				            //Submit message
 				            if (Input.Length > 0)
 				            {
-                                //For testing:
-                                ChatMessages.Add("<Username> " + Input);
+				                if (Alex.IsMultiplayer)
+				                {
+                                    Client.SendChat(Input);
+				                }
+				                else
+				                {
+                                    ChatMessages.Add("<Me> " + Input);
+                                }
 				            }
                             Input = string.Empty;
                             RenderChatInput = false;
