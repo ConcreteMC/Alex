@@ -79,7 +79,8 @@ namespace Alex.Gamestates
                     for (int z = 0; z < 16; z++)
                     {
                         var blockId = chunkColumn.GetBlock(x, y, z);
-                        convertedChunk.SetBlock(x,y,z, BlockFactory.GetBlock(blockId, 0));
+                        var metadata = chunkColumn.GetMetadata(x, y, z);
+                        convertedChunk.SetBlock(x,y,z, BlockFactory.GetBlock(blockId, metadata));
                     }
                 }
             }
