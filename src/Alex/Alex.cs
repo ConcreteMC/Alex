@@ -42,6 +42,13 @@ namespace Alex
 
         }
 
+        public EventHandler<char> OnCharacterInput;
+
+        private void Window_TextInput(object sender, TextInputEventArgs e)
+        {
+            OnCharacterInput?.Invoke(this, e.Character);
+        }
+
         public World World { get; private set; }
 
         private object _changeLock = new object();
@@ -66,6 +73,7 @@ namespace Alex
             Game.Init(World.GetSpawnPoint());
             InitCamera();
 
+            this.Window.TextInput += Window_TextInput;
             base.Initialize();
         }
 

@@ -30,6 +30,14 @@ namespace Alex.Rendering.UI
             ButtonTexture = ResManager.ImageToTexture2D(Resources.ButtonState0);
             Focus = false;
             PasswordField = false;
+
+            Alex.Instance.OnCharacterInput += OnCharacterInput;
+        }
+
+        private void OnCharacterInput(object sender, char c)
+        {
+            if (!Focus) return;
+            Text += c;
         }
 
         private bool DoThing = false;
@@ -111,46 +119,9 @@ namespace Alex.Rendering.UI
             KeyboardState state = Keyboard.GetState();
             if (PrevKeyState != state)
             {
-                var keys = state.GetPressedKeys();
-                if (keys.Length > 0)
+                if (state.IsKeyDown(Keys.Back))
                 {
-                    for (int i = 0; i < keys.Length; i++)
-                    {
-                        var key = keys[i];
-
-                        if (key == Keys.Back)
-                        {
-                            if (Text.Length > 0) Text = Text.Remove(Text.Length - 1, 1);
-                        }
-                        else if (key == Keys.Space)
-                        {
-                            Text += ' ';
-                        }
-                        else if (IsKeyAChar(key) || IsKeyADigit(key) || key.RepresentsPrintableChar())
-                        {
-                            char val = (char) key;
-                            if (Alex.Font.Characters.Contains(val))
-                            {
-                                if (keys.Contains(Keys.LeftShift) || keys.Contains(Keys.RightShift))
-                                {
-                                    var a = GetModifiedKey(val);
-                                    if (a == val)
-                                    {
-                                        val = char.ToUpper(val);
-                                    }
-                                    else
-                                    {
-                                        val = a;
-                                    }
-                                }
-                                else
-                                {
-                                    val = char.ToLower(val);
-                                }
-                                Text += val;
-                            }
-                        }
-                    }
+                    if (Text.Length > 0) Text = Text.Remove(Text.Length - 1, 1);
                 }
             }
             PrevKeyState = state;
@@ -161,47 +132,6 @@ namespace Alex.Rendering.UI
                 DoThing = !DoThing;
                 LastChange = DateTime.Now;
             }
-        }
-
-        private static bool IsKeyAChar(Keys key)
-        {
-            return key >= Keys.A && key <= Keys.Z;
-        }
-
-        private static bool IsKeyADigit(Keys key)
-        {
-            return (key >= Keys.D0 && key <= Keys.D9) || (key >= Keys.NumPad0 && key <= Keys.NumPad9);
-        }
-
-        [DllImport("user32.dll")]
-        static extern short VkKeyScan(char c);
-
-        [DllImport("user32.dll", SetLastError = true)]
-        static extern int ToAscii(
-            uint uVirtKey,
-            uint uScanCode,
-            byte[] lpKeyState,
-            out uint lpChar,
-            uint flags
-            );
-
-        private static char GetModifiedKey(char c)
-        {
-            short vkKeyScanResult = VkKeyScan(c);
-
-            if (vkKeyScanResult == -1)
-                return c;
-
-            uint code = (uint)vkKeyScanResult & 0xff;
-
-            byte[] b = new byte[256];
-            b[0x10] = 0x80;
-
-            uint r;
-            if (1 != ToAscii(code, code, b, out r, 0))
-                throw new ApplicationException("Could not translate modified state");
-
-            return (char)r;
         }
     }
 }

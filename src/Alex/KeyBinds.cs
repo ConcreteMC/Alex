@@ -13,5 +13,6 @@ namespace Alex
         public static Keys Fog = Keys.F;
 	    public static Keys Menu = Keys.Escape;
 	    public static Keys DebugInfo = Keys.F3;
+        public static Keys Chat = Keys.T;
     }
 }

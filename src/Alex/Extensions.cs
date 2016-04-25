@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -16,21 +18,67 @@ namespace Alex
 			WhiteTexture.SetData(new Color[] { Color.White });
 		}
 
-		[DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static IEnumerable<T> TakeLast<T>(this IEnumerable<T> source, int N)
+        {
+            return source.Skip(Math.Max(0, source.Count() - N));
+        }
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
         private static extern int MapVirtualKey(int uCode, int uMapType);
 
         public static bool RepresentsPrintableChar(this Keys key)
         {
             return !char.IsControl((char)MapVirtualKey((int)key, 2));
         }
-		
-		/// <summary>
-		/// Draw a line between the two supplied points.
-		/// </summary>
-		/// <param name="start">Starting point.</param>
-		/// <param name="end">End point.</param>
-		/// <param name="color">The draw color.</param>
-		public static void DrawLine(this SpriteBatch sb, Vector2 start, Vector2 end, Color color)
+
+        public static bool IsKeyAChar(this Keys key)
+        {
+            return key >= Keys.A && key <= Keys.Z;
+        }
+
+        public static bool IsKeyADigit(this Keys key)
+        {
+            return (key >= Keys.D0 && key <= Keys.D9) || (key >= Keys.NumPad0 && key <= Keys.NumPad9);
+        }
+
+        [DllImport("user32.dll")]
+        static extern short VkKeyScan(char c);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern int ToAscii(
+            uint uVirtKey,
+            uint uScanCode,
+            byte[] lpKeyState,
+            out uint lpChar,
+            uint flags
+            );
+
+        public static char GetModifiedChar(this char c)
+        {
+            short vkKeyScanResult = VkKeyScan(c);
+
+            if (vkKeyScanResult == -1)
+                return c;
+
+            uint code = (uint)vkKeyScanResult & 0xff;
+
+            byte[] b = new byte[256];
+            b[0x10] = 0x80;
+
+            uint r;
+            if (1 != ToAscii(code, code, b, out r, 0))
+                throw new ApplicationException("Could not translate modified state");
+
+            return (char)r;
+        }
+
+        /// <summary>
+        /// Draw a line between the two supplied points.
+        /// </summary>
+        /// <param name="start">Starting point.</param>
+        /// <param name="end">End point.</param>
+        /// <param name="color">The draw color.</param>
+        public static void DrawLine(this SpriteBatch sb, Vector2 start, Vector2 end, Color color)
 		{
 			float length = (end - start).Length();
 			float rotation = (float)Math.Atan2(end.Y - start.Y, end.X - start.X);
