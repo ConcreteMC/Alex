@@ -12,9 +12,6 @@ namespace Alex.Rendering
         public World()
         {
             ChunkManager = new ObjectManager();
-		    //TerrainGenerator = new DefaultTerrainGenerator("lol");
-            Logging.Info("Generating chunks...");
-			//GenerateChunks(GetSpawnPoint(), (int)Game.RenderDistance);
         }
 
         public ObjectManager ChunkManager { get; private set; }
@@ -37,9 +34,7 @@ namespace Alex.Rendering
         public void Render()
         {
             Game.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
-            Game.GraphicsDevice.BlendState = BlendState.AlphaBlend;
             Game.GraphicsDevice.SamplerStates[0] = SamplerState.PointWrap;
-
 
             ChunkManager.Draw(Game.GraphicsDevice);
         }
