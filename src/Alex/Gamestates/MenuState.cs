@@ -53,13 +53,13 @@ namespace Alex.Gamestates
 
             Controls.Add("mpbtn", mpbtn);
 
-            Button button = new Button("Debug world")
-            {
-                Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 70),
-            };
-            button.OnButtonClick += button_OnButtonClick;
+           // Button button = new Button("Debug world")
+          //  {
+           //     Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 70),
+           // };
+          //  button.OnButtonClick += button_OnButtonClick;
 
-            Controls.Add("testbtn", button);
+           // Controls.Add("testbtn", button);
 
             Button opton = new Button("Settings")
             {
@@ -68,17 +68,30 @@ namespace Alex.Gamestates
             opton.OnButtonClick += Opton_OnButtonClick;
 
             Controls.Add("optbtn", opton);
-/*
-            Controls.Add("input", new InputField()
-            {
-                Location = new Vector2(5, 5)
-            });
 
-            Controls.Add("track", new TrackBar()
+            Button logoutbtn = new Button("Logout")
             {
-                Location = new Vector2(5, 55),
-                Text = "Change Me"
-            });*/
+                Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 120),
+            };
+            logoutbtn.OnButtonClick += Logoutbtn_OnButtonClick;
+
+            Controls.Add("logoutbtn", logoutbtn);
+            /*
+                        Controls.Add("input", new InputField()
+                        {
+                            Location = new Vector2(5, 5)
+                        });
+
+                        Controls.Add("track", new TrackBar()
+                        {
+                            Location = new Vector2(5, 55),
+                            Text = "Change Me"
+                        });*/
+        }
+
+        private void Logoutbtn_OnButtonClick()
+        {
+            Alex.Instance.SetGameState(new LoginState());
         }
 
         private void Opton_OnButtonClick()
@@ -106,11 +119,13 @@ namespace Alex.Gamestates
 		{
 			args.SpriteBatch.Begin();
 
-            Controls["mpbtn"].Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 20);
+            Controls["mpbtn"].Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y - 30);
 
-            Controls["testbtn"].Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 70);
+        //    Controls["testbtn"].Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 70);
 
-            Controls["optbtn"].Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 120);
+            Controls["optbtn"].Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 20);
+
+            Controls["logoutbtn"].Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 70);
 
             //Start draw background
             var retval = new Rectangle(
