@@ -111,7 +111,6 @@
     <Compile Include="Utils\Position.cs" />
     <Compile Include="Utils\RayTracer.cs" />
     <Compile Include="Utils\RenderDistance.cs" />
-    <Compile Include="Utils\SimplexOctaveGenerator.cs" />
     <Compile Include="Utils\Singleton.cs" />
     <Compile Include="Utils\TextureSide.cs" />
     <Compile Include="Utils\UVMap.cs" />
