@@ -102,9 +102,6 @@
     <Compile Include="ResManager.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="SplashTexts.cs" />
-    <Compile Include="Terrain\DefaultTerrainGenerator.cs" />
-    <Compile Include="Terrain\FlatTerrainGenerator.cs" />
-    <Compile Include="Terrain\TerrainGenerator.cs" />
     <Compile Include="Utils\AtlasGenerator.cs" />
     <Compile Include="Utils\Axis.cs" />
     <Compile Include="Utils\FPSCounter.cs" />
