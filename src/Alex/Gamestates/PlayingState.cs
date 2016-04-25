@@ -74,7 +74,7 @@ namespace Alex.Gamestates
         private void Client_OnStartGame(MiNET.Worlds.GameMode gamemode, MiNET.Utils.Vector3 spawnPoint, long entityId)
         {
             McpeRequestChunkRadius request = McpeRequestChunkRadius.CreateObject();
-            request.chunkRadius = 4;
+            request.chunkRadius = 12;
             Client.SendPackage(request);
             Game.GetCamera().Position = new Vector3((float) spawnPoint.X, (float) spawnPoint.Y, (float) spawnPoint.Z);
         }
@@ -145,7 +145,10 @@ namespace Alex.Gamestates
 		    var count = 2;
 		    foreach (var msg in ChatMessages.TakeLast(5).Reverse())
 		    {
-		        var heightCalc = Alex.Font.MeasureString(msg);
+		        var amsg = msg.ToArray()
+		            .Where(i => !Alex.Font.Characters.Contains(i))
+		            .Aggregate(msg, (current, i) => current.Replace(i.ToString(), ""));
+		        var heightCalc = Alex.Font.MeasureString(amsg);
 
 		        int extra = 0;
 		        if (heightCalc.X > args.GraphicsDevice.Viewport.Width/2f)
@@ -157,7 +160,7 @@ namespace Alex.Gamestates
 		            new Rectangle(0, (int) (args.GraphicsDevice.Viewport.Height - ((heightCalc.Y*count) + 10)),
                         (args.GraphicsDevice.Viewport.Width / 2) + extra, (int) heightCalc.Y),
 		            new Color(Color.Black, 64));
-		        args.SpriteBatch.DrawString(Alex.Font, msg,
+		        args.SpriteBatch.DrawString(Alex.Font, amsg,
 		            new Vector2(5, (int) (args.GraphicsDevice.Viewport.Height - ((heightCalc.Y*count) + 10))), Color.White);
 		        count++;
 		    }
