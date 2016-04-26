@@ -166,9 +166,9 @@ namespace Alex.Rendering
                     bool entered = false;
                     try
                     {
-                        if (Monitor.TryEnter(chunk.ChunkLock))
-                        {
-                            entered = true;
+                        //if (Monitor.TryEnter(chunk.ChunkLock))
+                       // {
+                           // entered = true;
                             device.SetVertexBuffer(chunk.VertexBuffer);
                             foreach (var pass in Effect.CurrentTechnique.Passes)
                             {
@@ -176,7 +176,7 @@ namespace Alex.Rendering
                                 device.DrawPrimitives(PrimitiveType.TriangleList, 0, chunk.VertexBuffer.VertexCount / 3);
                             }
                             tempVertices += chunk.Mesh.Vertices.Length;
-                        }
+                       // }
                     }
                     finally
                     {
