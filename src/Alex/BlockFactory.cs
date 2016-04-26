@@ -13,6 +13,7 @@ namespace Alex
             if (id == 3) return new Dirt();
 			if (id == 5) return new Planks(metadata);
             if (id == 7) return new Bedrock();
+            if (id == 8 || id == 9) return new Water();
 			if (id == 17) return new Wood(metadata);
 			if (id == 18) return new Leaves(metadata);
 			if (id == 20) return new Glass();

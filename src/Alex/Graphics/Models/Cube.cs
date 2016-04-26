@@ -21,39 +21,40 @@ namespace Alex.Graphics.Models
             var bottom = baseBlock.CreateUVMapping(TextureSide.Bottom);
 
             var verts = new List<VertexPositionNormalTextureColor>();
+            bool isTransp = baseBlock.Transparent;
 
             if (!Alex.Instance.World.IsSolid(position + Vector3.Up) ||
-                Alex.Instance.World.IsTransparent(position + Vector3.Up))
+                (!isTransp && Alex.Instance.World.IsTransparent(position + Vector3.Up)))
             {
                 verts.AddRange(Top(position, top));
             }
 
             if (!Alex.Instance.World.IsSolid(position + Vector3.Down) ||
-                Alex.Instance.World.IsTransparent(position + Vector3.Down))
+                (!isTransp && Alex.Instance.World.IsTransparent(position + Vector3.Down)))
             {
                 verts.AddRange(Bottom(position, bottom));
             }
 
             if (!Alex.Instance.World.IsSolid(position + Vector3.Forward) ||
-                Alex.Instance.World.IsTransparent(position + Vector3.Forward))
+                (!isTransp && Alex.Instance.World.IsTransparent(position + Vector3.Forward)))
             {
                 verts.AddRange(Front(position, side));
             }
 
             if (!Alex.Instance.World.IsSolid(position + Vector3.Backward) ||
-                Alex.Instance.World.IsTransparent(position + Vector3.Backward))
+                (!isTransp && Alex.Instance.World.IsTransparent(position + Vector3.Backward)))
             {
                 verts.AddRange(Back(position, side));
             }
 
             if (!Alex.Instance.World.IsSolid(position + Vector3.Right) ||
-                Alex.Instance.World.IsTransparent(position + Vector3.Right))
+                (!isTransp && Alex.Instance.World.IsTransparent(position + Vector3.Right)))
             {
                 verts.AddRange(Right(position, side));
             }
 
             if (!Alex.Instance.World.IsSolid(position + Vector3.Left) ||
-                Alex.Instance.World.IsTransparent(position + Vector3.Left))
+                (!isTransp && Alex.Instance.World.IsTransparent(position + Vector3.Left)))
             {
                 verts.AddRange(Left(position, side));
             }

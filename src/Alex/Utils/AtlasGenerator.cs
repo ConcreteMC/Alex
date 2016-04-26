@@ -23,7 +23,8 @@ namespace Alex.Utils
             var bitmaps = Directory.GetFiles(folder)
                 .Where(file => file.EndsWith(".png") 
                 && !file.Contains("lava") 
-                && !file.Contains("water") 
+                && !file.Contains("water_still")
+                && !file.Contains("water_flow")
                 && !file.Contains("fire") 
                 && !file.Contains("portal")).ToDictionary(Path.GetFileNameWithoutExtension, file => new Bitmap(file));
 
