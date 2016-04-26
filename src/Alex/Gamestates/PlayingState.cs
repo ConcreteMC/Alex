@@ -28,11 +28,7 @@ namespace Alex.Gamestates
 			FpsCounter = new FrameCounter();
 			CrosshairTexture = ResManager.ImageToTexture2D(Resources.crosshair);
 			SelectedBlock = Vector3.Zero;
-		    ChatMessages = new List<string>()
-		    {
-		        "<Alex> there",
-                "<Alex> This is a test message."
-		    };
+		    ChatMessages = new List<string>();
             Alex.Instance.OnCharacterInput += OnCharacterInput;
 
 		    if (Alex.IsMultiplayer)
