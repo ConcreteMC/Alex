@@ -30,12 +30,14 @@ namespace Alex.Rendering
 	        {
 		        HeightMap[i] = 0;
 	        }
+		    IsBeingUpdated = false;
         }
 
         public Chunk(float x, float y, float z) : this(new Vector3(x, y, z))
         {
         }
         
+        internal bool IsBeingUpdated { get; set; }
         public bool IsDirty { get; set; }
         public VertexBuffer VertexBuffer { get; set; }
         public Vector3 Position { get; set; }

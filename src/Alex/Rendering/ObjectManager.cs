@@ -28,6 +28,8 @@ namespace Alex.Rendering
 
         private Thread Updater { get; }
 
+        private object _updatedLock = new object();
+        private List<Vector3> _updated = new List<Vector3>();
         private void ChunkUpdateThread()
         {
             while (true)
@@ -54,15 +56,39 @@ namespace Alex.Rendering
                         continue;
                     }
 
+                    if (!_updated.Contains(i))
+                    {
+                        if (!Chunks[i].IsBeingUpdated)
+                        {
+                            Chunks[i].IsBeingUpdated = true;
+                            ThreadPool.QueueUserWorkItem(o =>
+                            {
+                                lock (Chunks[i].ChunkLock)
+                                {
+                                    Chunks[i].Mesh = Chunks[i].GenerateMesh();
+                                    lock (_updatedLock)
+                                    {
+                                        _updated.Add(i);
+                                        Chunks[i].IsBeingUpdated = false;
+                                    }
+                                }
+                            });
+                        }
+                        continue;
+                    }
+
                     lock (Chunks[i].ChunkLock)
                     {
-                        Chunks[i].Mesh = Chunks[i].GenerateMesh();
                         try
                         {
-                            Chunks[i].VertexBuffer = new VertexBuffer(Alex.Instance.GraphicsDevice,
-                                VertexPositionNormalTextureColor.VertexDeclaration,
-                                Chunks[i].Mesh.Vertices.Length,
-                                BufferUsage.WriteOnly);
+                            if (Chunks[i].VertexBuffer == null ||
+                                Chunks[i].Mesh.Vertices.Length > Chunks[i].VertexBuffer.VertexCount)
+                            {
+                                Chunks[i].VertexBuffer = new VertexBuffer(Alex.Instance.GraphicsDevice,
+                                    VertexPositionNormalTextureColor.VertexDeclaration,
+                                    Chunks[i].Mesh.Vertices.Length,
+                                    BufferUsage.WriteOnly);
+                            }
                         }
                         catch
                         {
@@ -75,11 +101,16 @@ namespace Alex.Rendering
                         }
 
                         Chunks[i].IsDirty = false;
+                        Chunks[i].IsBeingUpdated = false;
                     }
 
                     lock (UpdateLock)
                     {
                         ChunksToUpdate.Remove(i);
+                        lock (_updatedLock)
+                        {
+                            _updated.Remove(i);
+                        }
                     }
                 }
             }
