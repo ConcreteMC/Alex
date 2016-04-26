@@ -334,7 +334,23 @@ namespace Alex.Gamestates
 				OldKeyboardState = currentKeyboardState;
 			}
 
+		    var camPos = Game.GetCamera().Position;
+            if (camPos != oldPosition)
+		    {
+                McpeMovePlayer movePlayerPacket = McpeMovePlayer.CreateObject();
+                movePlayerPacket.x = camPos.X;
+                movePlayerPacket.y = camPos.Y;
+                movePlayerPacket.z = camPos.Z;
+		        movePlayerPacket.yaw = 0;
+                movePlayerPacket.headYaw = 0;
+                movePlayerPacket.pitch = 0;
+                Client.SendPackage(movePlayerPacket);
+            }
+		    oldPosition = camPos;
+
 			base.OnUpdate(gameTime);
 		}
+
+	    private Vector3 oldPosition = Vector3.Zero;
 	}
 }
