@@ -20,6 +20,7 @@ namespace Alex.Rendering
 		public int[] HeightMap = new int[ChunkDepth * ChunkWidth];
 		public NibbleArray Blocklight = new NibbleArray(ChunkHeight * ChunkDepth * ChunkWidth);
         internal object ChunkLock = new object();
+        internal object VertexLock = new object();
 
 		public Chunk(Vector3 position)
         {

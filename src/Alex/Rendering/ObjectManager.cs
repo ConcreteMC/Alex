@@ -97,7 +97,10 @@ namespace Alex.Rendering
 
                         if (Chunks[i].Mesh.Vertices.Length > 0)
                         {
-                            Chunks[i].VertexBuffer.SetData(Chunks[i].Mesh.Vertices);
+                            lock (Chunks[i].VertexLock)
+                            {
+                                Chunks[i].VertexBuffer.SetData(Chunks[i].Mesh.Vertices);
+                            }
                         }
 
                         Chunks[i].IsDirty = false;
@@ -166,9 +169,9 @@ namespace Alex.Rendering
                     bool entered = false;
                     try
                     {
-                        //if (Monitor.TryEnter(chunk.ChunkLock))
-                       // {
-                           // entered = true;
+                        if (Monitor.TryEnter(chunk.VertexLock))
+                        {
+                            entered = true;
                             device.SetVertexBuffer(chunk.VertexBuffer);
                             foreach (var pass in Effect.CurrentTechnique.Passes)
                             {
@@ -176,11 +179,11 @@ namespace Alex.Rendering
                                 device.DrawPrimitives(PrimitiveType.TriangleList, 0, chunk.VertexBuffer.VertexCount / 3);
                             }
                             tempVertices += chunk.Mesh.Vertices.Length;
-                       // }
+                        }
                     }
                     finally
                     {
-                        if (entered) Monitor.Exit(chunk.ChunkLock);
+                        if (entered) Monitor.Exit(chunk.VertexLock);
                     }
                 }
             }
