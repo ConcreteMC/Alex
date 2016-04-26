@@ -57,6 +57,7 @@
     <Compile Include="Blocks\Leaves.cs" />
     <Compile Include="Blocks\Planks.cs" />
     <Compile Include="Blocks\StoneBrick.cs" />
+    <Compile Include="Blocks\StoneBrickSlab.cs" />
     <Compile Include="Blocks\Water.cs" />
     <Compile Include="Blocks\Wood.cs" />
     <Compile Include="Blocks\Slab.cs" />

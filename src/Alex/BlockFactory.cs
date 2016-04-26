@@ -18,6 +18,7 @@ namespace Alex
 			if (id == 18) return new Leaves(metadata);
 			if (id == 20) return new Glass();
 			if (id == 43 && metadata == 0) return new StoneSlab();
+            if (id == 43 && metadata == 5) return new StoneBrickSlab();
             if (id == 50) return new Torch();
             if (id == 89) return new GlowStone();
 			if (id == 95) return new Air(); // Invisible Bedrock

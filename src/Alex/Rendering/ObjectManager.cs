@@ -84,10 +84,13 @@ namespace Alex.Rendering
                             if (Chunks[i].VertexBuffer == null ||
                                 Chunks[i].Mesh.Vertices.Length > Chunks[i].VertexBuffer.VertexCount)
                             {
-                                Chunks[i].VertexBuffer = new VertexBuffer(Alex.Instance.GraphicsDevice,
-                                    VertexPositionNormalTextureColor.VertexDeclaration,
-                                    Chunks[i].Mesh.Vertices.Length,
-                                    BufferUsage.WriteOnly);
+                                lock (Chunks[i].VertexLock)
+                                {
+                                    Chunks[i].VertexBuffer = new VertexBuffer(Alex.Instance.GraphicsDevice,
+                                        VertexPositionNormalTextureColor.VertexDeclaration,
+                                        Chunks[i].Mesh.Vertices.Length,
+                                        BufferUsage.WriteOnly);
+                                }
                             }
                         }
                         catch
