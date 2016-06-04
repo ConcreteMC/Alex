@@ -5,6 +5,7 @@ using Alex.Blocks;
 using Alex.Network;
 using Alex.Properties;
 using Alex.Rendering;
+using Alex.Rendering.Camera;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -86,12 +87,13 @@ namespace Alex.Gamestates
             }
         }
 
-        private void Client_OnStartGame(MiNET.Worlds.GameMode gamemode, MiNET.Utils.Vector3 spawnPoint, long entityId)
+        private void Client_OnStartGame(MiNET.Worlds.GameMode gamemode, System.Numerics.Vector3 spawnPoint, long entityId)
         {
             McpeRequestChunkRadius request = McpeRequestChunkRadius.CreateObject();
             request.chunkRadius = 12;
             Client.SendPackage(request);
             Game.GetCamera().Position = new Vector3((float) spawnPoint.X, (float) spawnPoint.Y, (float) spawnPoint.Z);
+          //  Alex.Instance.IsFreeCam = false;
         }
 
         private void Client_OnChunkData(MiNET.Worlds.ChunkColumn chunkColumn)

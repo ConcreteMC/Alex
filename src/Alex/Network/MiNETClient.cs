@@ -5,6 +5,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Numerics;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -1056,15 +1057,13 @@ namespace Alex.Network
 
         private void SendNewIncomingConnection()
         {
-            Random rand = new Random();
-            var packet = new NewIncomingConnection
+            var packet = NewIncomingConnection.CreateObject();
+            packet.clientendpoint = _clientEndpoint;
+            packet.systemAddresses = new IPEndPoint[10];
+            for (int i = 0; i < 10; i++)
             {
-                doSecurity = 163,
-                session = rand.Next(),
-                session2 = rand.Next(),
-                cookie = rand.Next(),
-                port = (short)_clientEndpoint.Port
-            };
+                packet.systemAddresses[i] = new IPEndPoint(IPAddress.Any, 0);
+            }
 
             SendPackage(packet);
         }
@@ -1083,22 +1082,17 @@ namespace Alex.Network
                 skin.Texture = File.ReadAllBytes("skin.png");
             }
 
-            var packet = new McpeLogin
-            {
-                username = username,
-                protocol = 46,
-                protocol2 = 46,
-                clientId = ClientId,
-                clientUuid = new UUID(Guid.NewGuid().ToByteArray()),
-                serverAddress = _serverEndpoint.Address + ":" + _serverEndpoint.Port,
-                // clientSecret = "iwmvi45hm85oncyo58",
-                clientSecret =
-                    Encoding.ASCII.GetString(
-                        MD5.Create()
-                            .ComputeHash(
-                                Encoding.UTF8.GetBytes("" + ClientId + _serverEndpoint.Address + _serverEndpoint.Port))),
-                skin = skin
-            };
+            var packet = McpeLogin.CreateObject();
+            packet.username = username;
+            packet.protocol = 70;
+            packet.protocol2 = 70;
+            packet.clientId = ClientId;
+            packet.clientUuid = new UUID(Guid.NewGuid().ToByteArray());
+            packet.serverAddress = _serverEndpoint.Address + ":" + _serverEndpoint.Port;
+            packet.clientSecret = Encoding.ASCII.GetString(MD5.Create().ComputeHash(Encoding.UTF8.GetBytes("" + ClientId + _serverEndpoint.Address + _serverEndpoint.Port)));
+            packet.skin = skin;
+
+           // SendPackage(packet);
 
             byte[] buffer = Player.CompressBytes(packet.Encode(), CompressionLevel.Fastest, true);
 

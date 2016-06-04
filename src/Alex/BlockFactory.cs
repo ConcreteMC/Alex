@@ -28,6 +28,7 @@ namespace Alex
             if (id == 101) return new IronBars();
 			if (id == 121) return new EndStone();
             if (id == 159) return new StainedClay(metadata);
+            if (id == 161) return new AcaciaLeaves();
 
 			return new Stone();
         }
