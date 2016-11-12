@@ -23,7 +23,7 @@ namespace Alex.Rendering.Camera
             FarDistance = (int)Game.RenderDistance;
 
             ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(
-                MathHelper.PiOver4,
+                MathHelper.ToRadians(70),
                 Game.GraphicsDevice.Viewport.AspectRatio,
                 NearDistance,
                 FarDistance);

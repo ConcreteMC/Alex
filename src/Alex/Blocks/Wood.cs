@@ -29,6 +29,11 @@ namespace Alex.Blocks
 					SetTexture(TextureSide.Top, "log_jungle_top");
 					SetTexture(TextureSide.Bottom, "log_jungle_top");
 					break;
+				default:
+					SetTexture(TextureSide.Side, "log_jungle");
+					SetTexture(TextureSide.Top, "log_jungle_top");
+					SetTexture(TextureSide.Bottom, "log_jungle_top");
+					break;
 			}
 		}
 	}

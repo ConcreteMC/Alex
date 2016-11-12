@@ -7,6 +7,7 @@ namespace Alex.Blocks
         public Air() : base(0,0)
         {
             Solid = false;
+	        Drag = Alex.DefaultDrag;
         }
     }
 }

@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Newtonsoft.Json;
+using OpenTK;
 
 namespace Alex
 {
@@ -27,25 +28,27 @@ namespace Alex
 
         public Alex()
         {
-            graphics = new GraphicsDeviceManager(this) {PreferMultiSampling = false};
+            graphics = new GraphicsDeviceManager(this) {
+                PreferMultiSampling = false,
+                SynchronizeWithVerticalRetrace = false
+            };
 
             Content.RootDirectory = "assets";
 
-            graphics.SynchronizeWithVerticalRetrace = false;
             IsFixedTimeStep = false;
             Game.Initialize(this);
 	        Instance = this;
 
             ResManager.CheckResources();
             Username = "";
-            //this.Window.AllowUserResizing = true;
-            //this.Window.ClientSizeChanged += (sender, args) =>
-            //{
-            //    graphics.PreferredBackBufferWidth = Window.ClientBounds.Width;
-            //    graphics.PreferredBackBufferHeight = Window.ClientBounds.Height;
-            //    graphics.ApplyChanges();
-            //};
-
+            this.Window.AllowUserResizing = true;
+            this.Window.ClientSizeChanged += (sender, args) =>
+            {
+                graphics.PreferredBackBufferWidth = Window.ClientBounds.Width;
+                graphics.PreferredBackBufferHeight = Window.ClientBounds.Height;
+                graphics.ApplyChanges();
+            };
+            
         }
 
         public EventHandler<char> OnCharacterInput;
@@ -57,40 +60,51 @@ namespace Alex
 
         public void SaveSettings()
         {
-            Settings s = new Settings(Username);
-            File.WriteAllText("settings.json", JsonConvert.SerializeObject(s, Formatting.Indented));
+            File.WriteAllText("settings.json", JsonConvert.SerializeObject(GameSettings, Formatting.Indented));
         }
 
         public World World { get; private set; }
 
-        private object _changeLock = new object();
-		public void SetGameState(Gamestate gamestate)
+        private readonly object _changeLock = new object();
+		public void SetGameState(Gamestate gamestate, bool stopOld = true, bool init = true)
 		{
 		    lock (_changeLock)
 		    {
-		        if (_gamestate != null) _gamestate.Stop();
+		        if (stopOld && _gamestate != null)
+		        {
+		            _gamestate.Stop();
+		        }
 
 		        _gamestate = gamestate;
-		        _gamestate.Init(new RenderArgs {GraphicsDevice = GraphicsDevice});
+
+		        if (init)
+		        {
+		            _gamestate.Init(new RenderArgs {GraphicsDevice = GraphicsDevice});
+		        }
 		    }
 		}
 
+        internal Settings GameSettings { get; private set; }
 		protected override void Initialize()
         {
             Console.Title = @"Alex - Debug";
             Window.Title = "Alex - " + Version;
 
-            if (File.Exists("settings.json"))
-            {
-                try
-                {
-                    Settings s = JsonConvert.DeserializeObject<Settings>(File.ReadAllText("settings.json"));
-                    Username = s.Username;
-                }
-                catch
-                {
-
-                }
+		    if (File.Exists("settings.json"))
+		    {
+		        try
+		        {
+		            GameSettings = JsonConvert.DeserializeObject<Settings>(File.ReadAllText("settings.json"));
+		            Username = GameSettings.Username;
+		        }
+		        catch
+		        {
+		            GameSettings = new Settings(string.Empty);
+		        }
+		    }
+		    else
+		    {
+                GameSettings = new Settings(string.Empty);
             }
 
             SetGameState(new LoginState());
@@ -136,19 +150,22 @@ namespace Alex
 
             GraphicsDevice.Clear(Color.SkyBlue);
 
-			_gamestate.Rendering3D(new RenderArgs
+			lock (_changeLock)
 			{
-				GraphicsDevice = GraphicsDevice,
-				GameTime = gameTime,
-				SpriteBatch = spriteBatch
-			});
+			    _gamestate.Rendering3D(new RenderArgs
+			    {
+			        GraphicsDevice = GraphicsDevice,
+			        GameTime = gameTime,
+			        SpriteBatch = spriteBatch
+			    });
 
-			_gamestate.Rendering2D(new RenderArgs
-			{
-				GraphicsDevice = GraphicsDevice,
-				GameTime = gameTime,
-				SpriteBatch = spriteBatch
-			});
+			    _gamestate.Rendering2D(new RenderArgs
+			    {
+			        GraphicsDevice = GraphicsDevice,
+			        GameTime = gameTime,
+			        SpriteBatch = spriteBatch
+			    });
+			}
 
 			base.Draw(gameTime);
         }

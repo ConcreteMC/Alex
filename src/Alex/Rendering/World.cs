@@ -1,4 +1,7 @@
-﻿using Alex.Graphics.Items;
+﻿using System;
+using Alex.Entities;
+using Alex.Gamestates;
+using Alex.Graphics.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -73,15 +76,17 @@ namespace Alex.Rendering
 
 		public Block GetBlock(float x, float y, float z)
 	    {
-		    return GetBlock((int) x, (int) y, (int) z);
+		    return GetBlock((int) Math.Floor(x), (int) Math.Floor(y), (int) Math.Floor(z)); // Fix. xd
 	    }
 
 		public Block GetBlock(int x, int y, int z)
         {
             var key = new Vector3(x >> 4, 0, z >> 4);
-            if (ChunkManager.Chunks.ContainsKey(key))
+
+		    Chunk chunk;
+            if (ChunkManager.Chunks.TryGetValue(key, out chunk))
             {
-                return ChunkManager.Chunks[key].GetBlock(x & 0xf, y & 0xff, z & 0xf);
+                return chunk.GetBlock(x & 0xf, y & 0xff, z & 0xf);
             }
             return BlockFactory.GetBlock(0, 0);
         }
@@ -94,9 +99,11 @@ namespace Alex.Rendering
 	    public void SetBlock(int x, int y, int z, Block block)
 	    {
 			var key = new Vector3(x >> 4, 0, z >> 4);
-		    if (ChunkManager.Chunks.ContainsKey(key))
-		    {
-			    ChunkManager.Chunks[key].SetBlock(x & 0xf, y & 0xff, z & 0xf, block);
+
+            Chunk chunk;
+            if (ChunkManager.Chunks.TryGetValue(key, out chunk))
+            {
+                chunk.SetBlock(x & 0xf, y & 0xff, z & 0xf, block);
 		    }
 	    }
     }

@@ -19,11 +19,22 @@ namespace Alex.Rendering.UI
         public override void Render(RenderArgs args)
         {
             args.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
+            try
+            {
+                foreach (var line in Text.Split('\n'))
+                {
+                    args.SpriteBatch.DrawString(Font, line, Location, Color);
+                }
 
-            args.SpriteBatch.DrawString(Font, Text,
-               Location, Color);
-
-            args.SpriteBatch.End();
+                //args.SpriteBatch.End();
+            }
+            catch
+            {
+            }
+            finally
+            {
+                args.SpriteBatch.End();
+            }
         }
     }
 }

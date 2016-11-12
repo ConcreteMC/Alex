@@ -74,7 +74,7 @@ namespace Alex.Rendering.UI
 
             if (DoThing)
             {
-                s += '_';
+                s += '|';
             }
 
             var measureString = Alex.Font.MeasureString(s);
@@ -120,18 +120,18 @@ namespace Alex.Rendering.UI
 
             if (!Focus) return;
 
-            if (DateTime.Now.Subtract(LastUpdate).TotalMilliseconds < 50) return;
+           // if (DateTime.Now.Subtract(LastUpdate).TotalMilliseconds < 50) return;
 
             KeyboardState state = Keyboard.GetState();
-            if (PrevKeyState != state)
-            {
+			if (PrevKeyState != state || DateTime.Now.Subtract(LastUpdate).TotalMilliseconds > 100)
+			{
                 if (state.IsKeyDown(Keys.Back))
                 {
                     if (Text.Length > 0) Text = Text.Remove(Text.Length - 1, 1);
                 }
-            }
+				LastUpdate = DateTime.Now;
+			}
             PrevKeyState = state;
-            LastUpdate = DateTime.Now;
 
             if (DateTime.Now.Subtract(LastChange).TotalMilliseconds >= 500)
             {

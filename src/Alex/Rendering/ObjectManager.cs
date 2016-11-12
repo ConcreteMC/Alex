@@ -1,18 +1,23 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Alex.Utils;
+using log4net;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using OpenTK.Graphics;
 
 namespace Alex.Rendering
 {
     public class ObjectManager : Singleton<ObjectManager>
     {
+        private static readonly ILog Log = LogManager.GetLogger(typeof(ObjectManager));
+        
         public ObjectManager()
         {
-            Chunks = new Dictionary<Vector3, Chunk>();
+            Chunks = new ConcurrentDictionary<Vector3, Chunk>();
 
 			Effect = new AlphaTestEffect(Game.Instance.GraphicsDevice)
             {
@@ -28,26 +33,26 @@ namespace Alex.Rendering
 
         private Thread Updater { get; }
 
-        private object _updatedLock = new object();
-        private List<Vector3> _updated = new List<Vector3>();
         private void ChunkUpdateThread()
         {
             while (true)
             {
                 Vector3[] chunks = new Vector3[0];
 
+                SpinWait sw = new SpinWait();
                 while (chunks.Length == 0)
                 {
                     lock (UpdateLock)
                     {
                         chunks = ChunksToUpdate.ToArray();
                     }
-                    Thread.Sleep(5);
+                    sw.SpinOnce();
                 }
 
                 foreach (var i in chunks)
                 {
-                    if (!Chunks.ContainsKey(i))
+                    Chunk chunk;
+                    if (!Chunks.TryGetValue(i, out chunk))
                     {
                         lock (UpdateLock)
                         {
@@ -56,67 +61,47 @@ namespace Alex.Rendering
                         continue;
                     }
 
-                    if (!_updated.Contains(i))
+                    if (!Monitor.TryEnter(chunk.UpdateLock)) return;
+                    try
                     {
-                        if (!Chunks[i].IsBeingUpdated)
-                        {
-                            Chunks[i].IsBeingUpdated = true;
-                            ThreadPool.QueueUserWorkItem(o =>
-                            {
-                                lock (Chunks[i].ChunkLock)
-                                {
-                                    Chunks[i].Mesh = Chunks[i].GenerateMesh();
-                                    lock (_updatedLock)
-                                    {
-                                        _updated.Add(i);
-                                        Chunks[i].IsBeingUpdated = false;
-                                    }
-                                }
-                            });
-                        }
-                        continue;
-                    }
-
-                    lock (Chunks[i].ChunkLock)
-                    {
+                        chunk.Mesh = chunk.GenerateMesh();
                         try
                         {
-                            if (Chunks[i].VertexBuffer == null ||
-                                Chunks[i].Mesh.Vertices.Length > Chunks[i].VertexBuffer.VertexCount)
+                            lock (chunk.VertexLock)
                             {
-                                lock (Chunks[i].VertexLock)
+                                if (chunk.VertexBuffer == null ||
+                                    chunk.Mesh.Vertices.Length > chunk.VertexBuffer.VertexCount)
                                 {
-                                    Chunks[i].VertexBuffer = new VertexBuffer(Alex.Instance.GraphicsDevice,
+                                    chunk.VertexBuffer = new VertexBuffer(Alex.Instance.GraphicsDevice,
                                         VertexPositionNormalTextureColor.VertexDeclaration,
-                                        Chunks[i].Mesh.Vertices.Length,
+                                        chunk.Mesh.Vertices.Length,
                                         BufferUsage.WriteOnly);
                                 }
+
+                                if (chunk.Mesh.Vertices.Length > 0)
+                                {
+                                    chunk.VertexBuffer.SetData(chunk.Mesh.Vertices);
+                                }
+
+                                chunk.IsDirty = false;
+                                lock (UpdateLock)
+                                {
+                                    ChunksToUpdate.Remove(i);
+                                }
                             }
+                        }
+                        catch (GraphicsContextException)
+                        {
+
                         }
                         catch
                         {
-                            continue; //Failed? Try again next loop.
-                        }
 
-                        if (Chunks[i].Mesh.Vertices.Length > 0)
-                        {
-                            lock (Chunks[i].VertexLock)
-                            {
-                                Chunks[i].VertexBuffer.SetData(Chunks[i].Mesh.Vertices);
-                            }
                         }
-
-                        Chunks[i].IsDirty = false;
-                        Chunks[i].IsBeingUpdated = false;
                     }
-
-                    lock (UpdateLock)
+                    finally
                     {
-                        ChunksToUpdate.Remove(i);
-                        lock (_updatedLock)
-                        {
-                            _updated.Remove(i);
-                        }
+                        Monitor.Exit(chunk.UpdateLock);
                     }
                 }
             }
@@ -129,13 +114,11 @@ namespace Alex.Rendering
 
         private object UpdateLock { get; set; } = new object();
         private List<Vector3> ChunksToUpdate { get; set; }
-
-        public Dictionary<Vector3, Chunk> Chunks { get; }
+        public ConcurrentDictionary<Vector3, Chunk> Chunks { get; }
 		 
         private AlphaTestEffect Effect { get; }
 
         public int Vertices { get; private set; }
-        private object Lock { get; set; } = new object();
 
         public void Draw(GraphicsDevice device)
         {
@@ -143,76 +126,94 @@ namespace Alex.Rendering
             Effect.Projection = Game.MainCamera.ProjectionMatrix;
 
             var tempVertices = 0;
-            lock (Lock)
+            foreach (var c in Chunks.ToArray())
             {
-                foreach (var c in Chunks.ToArray())
+                var chunk = c.Value;
+
+                VertexBuffer buffer;
+                if (Monitor.TryEnter(chunk.VertexLock))
                 {
-                    var chunk = c.Value;
+                    buffer = chunk.VertexBuffer;
+                    Monitor.Exit(chunk.VertexLock);
+                }
+                else
+                {
+                    continue;
+                }
 
-                    if (chunk.IsDirty || chunk.VertexBuffer == null)
-                    {
-                        lock (UpdateLock)
-                        {
-                            var key = new Vector3((int) chunk.Position.X >> 4, 0, (int) chunk.Position.Z >> 4);
-
-                            if (!ChunksToUpdate.Contains(key))
-                            {
-                                ChunksToUpdate.Add(key);
-                            }
-                        }
-
-                        if (chunk.VertexBuffer == null)
-                        {
-                            continue;
-                        }
-                    }
-
-                    if (chunk.VertexBuffer.VertexCount == 0) continue;
-
-                    bool entered = false;
+                if ((chunk.IsDirty || buffer == null) && Monitor.TryEnter(chunk.UpdateLock, 0))
+                {
                     try
                     {
-                        if (Monitor.TryEnter(chunk.VertexLock))
-                        {
-                            entered = true;
-                            device.SetVertexBuffer(chunk.VertexBuffer);
-                            foreach (var pass in Effect.CurrentTechnique.Passes)
-                            {
-                                pass.Apply();
-                                device.DrawPrimitives(PrimitiveType.TriangleList, 0, chunk.VertexBuffer.VertexCount / 3);
-                            }
-                            tempVertices += chunk.Mesh.Vertices.Length;
-                        }
+                        var key = new Vector3((int) chunk.Position.X >> 4, 0, (int) chunk.Position.Z >> 4);
+                        ScheduleChunkUpdate(key);
+                       // lock (UpdateLock)
+                        //{
+                        //    if (!ChunksToUpdate.Contains(key))
+                       //     {
+                       //         ChunksToUpdate.Add(key);
+                       //     }
+                       // }
                     }
                     finally
                     {
-                        if (entered) Monitor.Exit(chunk.VertexLock);
+                        Monitor.Exit(chunk.UpdateLock);
                     }
                 }
+
+                if (buffer == null) continue;
+
+                if (buffer.VertexCount == 0) continue;
+
+                device.SetVertexBuffer(buffer);
+                foreach (var pass in Effect.CurrentTechnique.Passes)
+                {
+                    pass.Apply();
+                    device.DrawPrimitives(PrimitiveType.TriangleList, 0, chunk.VertexBuffer.VertexCount/3);
+                }
+                tempVertices += buffer.VertexCount;
             }
             Vertices = tempVertices;
         }
 
-        public void AddChunk(Chunk chunk, Vector3 position)
+        public void AddChunk(Chunk chunk, Vector3 position, bool doUpdates = false)
         {
-            if (Chunks.ContainsKey(position)) return;
-
-            lock (Lock)
+            if (!Chunks.TryAdd(position, chunk))
             {
-                Chunks.Add(position, chunk);
+                Log.WarnFormat("Tried adding duplicate chunk for position {0}", position);
+                return;
             }
 
-            lock (UpdateLock)
+            ScheduleChunkUpdate(position);
+
+            if (doUpdates)
             {
-                if (!ChunksToUpdate.Contains(position)) ChunksToUpdate.Add(position);
+                ScheduleChunkUpdate(position + new Vector3(1, 0, 0));
+                ScheduleChunkUpdate(position + new Vector3(0, 0, 1));
+                ScheduleChunkUpdate(position - new Vector3(1, 0, 0));
+                ScheduleChunkUpdate(position - new Vector3(0, 0, 1));
+            }
+        }
+
+        public void ScheduleChunkUpdate(Vector3 position)
+        {
+            Chunk chunk;
+            if (Chunks.TryGetValue(position, out chunk))
+            {
+                lock (UpdateLock)
+                {
+                    if (!ChunksToUpdate.Contains(position))
+                    {
+                        ChunksToUpdate.Add(position);
+                    }
+                }
             }
         }
 
         public void RemoveChunk(Vector3 position)
         {
-            if (!Chunks.ContainsKey(position)) return;
-
-            Chunks.Remove(position);
+            Chunk chunk;
+            Chunks.TryRemove(position, out chunk);
         }
     }
 }

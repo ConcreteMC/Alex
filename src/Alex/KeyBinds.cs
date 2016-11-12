@@ -14,5 +14,6 @@ namespace Alex
 	    public static Keys Menu = Keys.Escape;
 	    public static Keys DebugInfo = Keys.F3;
         public static Keys Chat = Keys.T;
+        public static Keys ToggleFreeCam = Keys.F8;
     }
 }

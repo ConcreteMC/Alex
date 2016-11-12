@@ -1,7 +1,8 @@
 # Alex
 A Minecraft (Pocket Edition) client written in C#
 
-No, this doesn't really do anything yet...
+Supported versions: MCPE 0.16
+
 Screenshot:
 
-![Much Wow](http://i.imgur.com/pFnrTHb.png)
+![Much Wow](http://i.imgur.com/TUBtAGN.png)

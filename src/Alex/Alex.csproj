@@ -41,6 +41,9 @@
   <PropertyGroup>
     <StartupObject />
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="Alex.Camera.cs" />
     <Compile Include="Alex.cs" />
@@ -49,16 +52,21 @@
     <Compile Include="Blocks\AcaciaLeaves.cs" />
     <Compile Include="Blocks\Air.cs" />
     <Compile Include="Blocks\Bedrock.cs" />
+    <Compile Include="Blocks\CoalBlock.cs" />
     <Compile Include="Blocks\Dirt.cs" />
     <Compile Include="Blocks\EndStone.cs" />
     <Compile Include="Blocks\GlowStone.cs" />
     <Compile Include="Blocks\Glass.cs" />
+    <Compile Include="Blocks\GoldBlock.cs" />
     <Compile Include="Blocks\Grass.cs" />
+    <Compile Include="Blocks\InvisibleBedrock.cs" />
     <Compile Include="Blocks\IronBars.cs" />
+    <Compile Include="Blocks\IronBlock.cs" />
     <Compile Include="Blocks\Leaves.cs" />
     <Compile Include="Blocks\Planks.cs" />
     <Compile Include="Blocks\StoneBrick.cs" />
     <Compile Include="Blocks\StoneBrickSlab.cs" />
+    <Compile Include="Blocks\TallGrass.cs" />
     <Compile Include="Blocks\Water.cs" />
     <Compile Include="Blocks\Wood.cs" />
     <Compile Include="Blocks\Slab.cs" />
@@ -72,6 +80,7 @@
     <Compile Include="Game.cs" />
     <Compile Include="Gamestates\DisconnectedState.cs" />
     <Compile Include="Gamestates\Gamestate.cs" />
+    <Compile Include="Gamestates\InGameMenuState.cs" />
     <Compile Include="Gamestates\ServerState.cs" />
     <Compile Include="Gamestates\LoginState.cs" />
     <Compile Include="Gamestates\MenuState.cs" />
@@ -79,12 +88,11 @@
     <Compile Include="Graphics\Items\Block.cs" />
     <Compile Include="Graphics\Mesh.cs" />
     <Compile Include="Graphics\Models\Cube.cs" />
+    <Compile Include="Graphics\Models\GrassModel.cs" />
     <Compile Include="Graphics\Models\IronBarsModel.cs" />
     <Compile Include="Graphics\Models\Model.cs" />
     <Compile Include="Graphics\Models\SlabModel.cs" />
     <Compile Include="Graphics\Models\Torch.cs" />
-    <Compile Include="Graphics\TextureMap.cs" />
-    <Compile Include="Logging.cs" />
     <Compile Include="Network\MiNETClient.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -97,8 +105,10 @@
     <Compile Include="Rendering\ObjectManager.cs" />
     <Compile Include="Rendering\UI\Button.cs" />
     <Compile Include="Rendering\UI\Image.cs" />
+    <Compile Include="Rendering\UI\Info.cs" />
     <Compile Include="Rendering\UI\InputField.cs" />
     <Compile Include="Rendering\UI\Label.cs" />
+    <Compile Include="Rendering\UI\Logo.cs" />
     <Compile Include="Rendering\UI\TrackBar.cs" />
     <Compile Include="Rendering\UI\UIComponent.cs" />
     <Compile Include="Rendering\World.cs" />
@@ -126,12 +136,16 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="fNbt, Version=0.6.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\fNbt.0.6.3\lib\net35-client\fNbt.dll</HintPath>
+    <Reference Include="DotNetZip, Version=1.10.1.0, Culture=neutral, PublicKeyToken=6583c7c814667745, processorArchitecture=MSIL">
+      <HintPath>..\packages\DotNetZip.1.10.1\lib\net20\DotNetZip.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Ionic.Zip, Version=1.9.8.0, Culture=neutral, PublicKeyToken=6583c7c814667745, processorArchitecture=MSIL">
-      <HintPath>..\packages\DotNetZip.1.9.8\lib\net20\Ionic.Zip.dll</HintPath>
+    <Reference Include="fNbt, Version=0.6.9.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MiNET.fnbt.0.6.9\lib\net35-client\fNbt.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="jose-jwt, Version=1.9.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\jose-jwt.1.9.3\lib\4.0\jose-jwt.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="LibNoise, Version=0.2.0.0, Culture=neutral, processorArchitecture=MSIL">
@@ -150,16 +164,16 @@
       <HintPath>..\packages\Microsoft.IO.RecyclableMemoryStream.1.1.0.0\lib\net45\Microsoft.IO.RecyclableMemoryStream.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="MiNET, Version=1.0.1051.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\MiNET.1.0.1051\lib\net46\MiNET.dll</HintPath>
+    <Reference Include="MiNET, Version=1.0.1258.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MiNET.1.0.1258\lib\net461\MiNET.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="MonoGame.Framework, Version=3.5.1.1679, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\MonoGame.Framework.DesktopGL.3.5.1.1679\lib\net40\MonoGame.Framework.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.8.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="NVorbis, Version=0.8.4.0, Culture=neutral, processorArchitecture=MSIL">
@@ -178,8 +192,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Todo.txt" />
     <None Include="app.config" />
     <Compile Include="Blocks\StainedClay.cs" />
+    <None Include="app.manifest" />
     <None Include="Resources\Minecraftia.xnb" />
     <None Include="packages.config" />
     <None Include="Resources\mcbg.png" />

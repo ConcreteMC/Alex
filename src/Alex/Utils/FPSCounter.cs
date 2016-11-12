@@ -1,42 +1,34 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System;
+using System.Diagnostics;
+using Microsoft.Xna.Framework;
 
 namespace Alex.Utils
 {
-	public class FrameCounter
+	public class FpsMonitor
 	{
-		public FrameCounter()
+		public float Value { get; private set; }
+		public TimeSpan Sample { get; set; }
+		private readonly Stopwatch _sw;
+		private int _frames;
+
+		public FpsMonitor()
 		{
+			this.Sample = TimeSpan.FromSeconds(1);
+			this.Value = 0;
+			this._frames = 0;
+			this._sw = Stopwatch.StartNew();
 		}
 
-		public long TotalFrames { get; private set; }
-		public float TotalSeconds { get; private set; }
-		public float AverageFramesPerSecond { get; private set; }
-		public float CurrentFramesPerSecond { get; private set; }
-
-		public const int MAXIMUM_SAMPLES = 100;
-
-		private Queue<float> _sampleBuffer = new Queue<float>();
-
-		public bool Update(float deltaTime)
+		public void Update()
 		{
-			CurrentFramesPerSecond = 1.0f / deltaTime;
-
-			_sampleBuffer.Enqueue(CurrentFramesPerSecond);
-
-			if (_sampleBuffer.Count > MAXIMUM_SAMPLES)
+            this._frames++;
+            if (_sw.Elapsed > Sample)
 			{
-				_sampleBuffer.Dequeue();
-				AverageFramesPerSecond = _sampleBuffer.Average(i => i);
+				this.Value = (float)(_frames / _sw.Elapsed.TotalSeconds);
+				this._sw.Reset();
+				this._sw.Start();
+				this._frames = 0;
 			}
-			else
-			{
-				AverageFramesPerSecond = CurrentFramesPerSecond;
-			}
-
-			TotalFrames++;
-			TotalSeconds += deltaTime;
-			return true;
 		}
 	}
 }

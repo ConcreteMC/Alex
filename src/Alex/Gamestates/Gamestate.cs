@@ -15,6 +15,8 @@ namespace Alex.Gamestates
 			Controls = new Dictionary<string, UIComponent>();
 		}
 
+	    public Viewport Viewport => Alex.Instance.GraphicsDevice.Viewport;
+
 		public Vector2 CenterScreen
 		{
 			get

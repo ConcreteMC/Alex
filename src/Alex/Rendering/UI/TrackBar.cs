@@ -74,7 +74,8 @@ namespace Alex.Rendering.UI
             {
                 if (mouseRec.Intersects(ButtonRectangle))
                 {
-                    var a = (ButtonRectangle.X + ButtonRectangle.Width - ms.X) / 4;
+                    //var a = (ms.X - (ButtonRectangle.X)) / (ButtonRectangle.Width / MaxValue);
+                    var a = (ButtonRectangle.X + ButtonRectangle.Width - ms.X) / (ButtonRectangle.Width / MaxValue);
                     if (a > MaxValue) a = MaxValue;
                     if (a < MinValue) a = MinValue;
 

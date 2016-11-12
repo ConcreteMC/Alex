@@ -11,6 +11,9 @@ namespace Alex.Graphics.Items
         public bool Solid { get; protected set; }
 		public bool Transparent { get; protected set; }
         public Model BlockModel { get; protected set; }
+		public bool Renderable { get; protected set; }
+		public bool HasHitbox { get; protected set; }
+		public float Drag { get; protected set; }
 
         public Block(ushort blockId, byte metadata)
         {
@@ -21,11 +24,14 @@ namespace Alex.Graphics.Items
             BottomColor = Color.White;
             SideColor = Color.White;
 
-            SetTexture(TextureSide.All, "dirt");
+            SetTexture(TextureSide.All, "no_texture");
             BlockModel = new Cube();
 
             Solid = true;
 	        Transparent = false;
+	        Renderable = true;
+	        HasHitbox = true;
+	        Drag = Alex.Acceleration*100;
         }
 
 	    public BoundingBox GetBoundingBox(Vector3 blockPosition)
@@ -33,15 +39,6 @@ namespace Alex.Graphics.Items
 		    return new BoundingBox(blockPosition + BlockModel.Offset,
 					blockPosition + BlockModel.Offset + BlockModel.Size);
 		}
-
-        public BoundingBox BoundingBox
-        {
-            get
-            {
-                return new BoundingBox(Vector3.Zero,
-                    Vector3.Zero + BlockModel.Size);
-            }
-        }
 
         public VertexPositionNormalTextureColor[] GetVertices(Vector3 position)
         {

@@ -1,4 +1,7 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
+using System.Linq;
+using Alex.Rendering.UI;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.Gamestates
@@ -14,8 +17,23 @@ namespace Alex.Gamestates
 
         public override void Init(RenderArgs args)
         {
+            Alex.Instance.IsMouseVisible = true;
             BackGround = ResManager.ImageToTexture2D(Properties.Resources.mcbg);
+            Button opton = new Button("Return to menu")
+            {
+                Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 70),
+            };
+            opton.OnButtonClick += OptonOnOnButtonClick;
+
+            Controls.Add("optbtn", opton);
+            Controls.Add("info", new Info());
+
             base.Init(args);
+        }
+
+        private void OptonOnOnButtonClick()
+        {
+            Alex.Instance.SetGameState(new MenuState());
         }
 
         public override void Render2D(RenderArgs args)
@@ -29,10 +47,34 @@ namespace Alex.Gamestates
               args.SpriteBatch.GraphicsDevice.Viewport.Height);
             args.SpriteBatch.Draw(BackGround, retval, Color.White);
 
-            var msg = "Disconnected from server: " + Reason;
-            args.SpriteBatch.DrawString(Alex.Font, msg, Vector2.Zero, Color.White);
+            const string msg = "Disconnected from server:";
+            var size = Alex.Font.MeasureString(msg);
+            args.SpriteBatch.DrawString(Alex.Font, msg, new Vector2(CenterScreen.X - (size.X / 2), CenterScreen.Y - (size.Y * 2)), Color.White);
+
+            float lastY = 0;
+            var split = Reason.Split('\n');
+            for (int index = 0; index < split.Length; index++)
+            {
+                var message = split[index].StripColors();
+                message = message.StripIllegalCharacters();
+                
+                try
+                {
+                    lastY = CenterScreen.Y + (size.Y* (index +1));
+                    var size2 = Alex.Font.MeasureString(message);
+                    args.SpriteBatch.DrawString(Alex.Font, message, new Vector2(CenterScreen.X - (size2.X / 2), lastY), Color.White);
+                }
+                catch
+                {
+                }
+            }
+
+            Controls["optbtn"].Location = new Vector2((int)(CenterScreen.X - 200), lastY + 50);
 
             args.SpriteBatch.End();
+
+            //Controls["msg"].Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y - 30);
+            //((Label) Controls["msg"]).Text = msg;
         }
     }
 }

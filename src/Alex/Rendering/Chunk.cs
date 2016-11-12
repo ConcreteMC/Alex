@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
 using Alex.Graphics;
 using Alex.Graphics.Items;
 using Alex.Utils;
@@ -19,7 +20,7 @@ namespace Alex.Rendering
         public byte[] Metadata = new byte[ChunkHeight * ChunkDepth * ChunkWidth];
 		public int[] HeightMap = new int[ChunkDepth * ChunkWidth];
 		public NibbleArray Blocklight = new NibbleArray(ChunkHeight * ChunkDepth * ChunkWidth);
-        internal object ChunkLock = new object();
+
         internal object VertexLock = new object();
 
 		public Chunk(Vector3 position)
@@ -31,16 +32,24 @@ namespace Alex.Rendering
 	        {
 		        HeightMap[i] = 0;
 	        }
-		    IsBeingUpdated = false;
         }
 
         public Chunk(float x, float y, float z) : this(new Vector3(x, y, z))
         {
         }
         
-        internal bool IsBeingUpdated { get; set; }
+        internal object UpdateLock { get; set; } = new object();
+
         public bool IsDirty { get; set; }
-        public VertexBuffer VertexBuffer { get; set; }
+
+        private VertexBuffer _vertex;
+
+        public VertexBuffer VertexBuffer
+        {
+            get { return _vertex; }
+            set { _vertex = value; }
+        }
+
         public Vector3 Position { get; set; }
         public Mesh Mesh { get; set; }
 
@@ -55,6 +64,7 @@ namespace Alex.Rendering
                         if (Blocks[index] == 0) continue;
 
                         var block = BlockFactory.GetBlock(Blocks[index], Metadata[index]);
+	                    if (!block.Renderable) continue;
 
                         var vert = block.GetVertices(new Vector3(x, y, z) + Position);
                         vertices.AddRange(vert);
@@ -106,7 +116,13 @@ namespace Alex.Rendering
 			}
 		}
 
-	    public int GetHeight(int x, int z)
+		public byte GetBlocklight(int x, int y, int z)
+		{
+			var index = x * ChunkHeight * ChunkWidth + y * ChunkDepth + z;
+			return Blocklight[index];
+		}
+
+		public int GetHeight(int x, int z)
 	    {
 		    var index = (x << 4) + z;
 		    return HeightMap[index];
