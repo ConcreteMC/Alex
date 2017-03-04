@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
+using Alex.Blocks;
 using Alex.Graphics;
 using Alex.Graphics.Items;
 using Alex.Utils;
@@ -12,14 +13,14 @@ namespace Alex.Rendering
     {
         public const int ChunkDepth = 16;
         public const int ChunkWidth = 16;
-        public const int ChunkHeight = 256;
+        public const int ChunkHeight = 128;
 
         public static Vector3 ChunkSize => new Vector3(ChunkWidth, ChunkHeight, ChunkDepth);
 
-        public ushort[] Blocks = new ushort[ChunkHeight * ChunkDepth * ChunkWidth];
-        public byte[] Metadata = new byte[ChunkHeight * ChunkDepth * ChunkWidth];
-		public int[] HeightMap = new int[ChunkDepth * ChunkWidth];
-		public NibbleArray Blocklight = new NibbleArray(ChunkHeight * ChunkDepth * ChunkWidth);
+        private byte[] Blocks = new byte[ChunkWidth * ChunkHeight * ChunkDepth];
+        private NibbleArray Metadata = new NibbleArray(ChunkWidth * ChunkHeight * ChunkDepth);
+        private NibbleArray Blocklight = new NibbleArray(ChunkWidth * ChunkHeight * ChunkDepth);
+        private NibbleArray Skylight = new NibbleArray(ChunkWidth * ChunkHeight * ChunkDepth);
 
         internal object VertexLock = new object();
 
@@ -27,11 +28,6 @@ namespace Alex.Rendering
         {
             Position = position * ChunkSize;
             IsDirty = true;
-
-	        for (int i = 0; i < HeightMap.Length; i++)
-	        {
-		        HeightMap[i] = 0;
-	        }
         }
 
         public Chunk(float x, float y, float z) : this(new Vector3(x, y, z))
@@ -53,20 +49,22 @@ namespace Alex.Rendering
         public Vector3 Position { get; set; }
         public Mesh Mesh { get; set; }
 
-        public Mesh GenerateMesh()
+        public Mesh GenerateMesh(World world)
         {
             var vertices = new List<VertexPositionNormalTextureColor>();
             for (var x = 0; x < ChunkWidth; x++)
                 for (var z = 0; z < ChunkDepth; z++)
                     for (var y = 0; y < ChunkHeight; y++)
                     {
-                        var index = x * ChunkHeight * ChunkWidth + y * ChunkDepth + z;
+                        var index = GetIndex(x, y, z);
                         if (Blocks[index] == 0) continue;
+
+                        //TODO: Do lighting in here?
 
                         var block = BlockFactory.GetBlock(Blocks[index], Metadata[index]);
 	                    if (!block.Renderable) continue;
 
-                        var vert = block.GetVertices(new Vector3(x, y, z) + Position);
+                        var vert = block.GetVertices(new Vector3(x, y, z) + Position, world);
                         vertices.AddRange(vert);
                     }
 
@@ -75,57 +73,51 @@ namespace Alex.Rendering
 
         public void SetBlock(int x, int y, int z, Block block)
         {
-            var index = x * ChunkHeight * ChunkWidth + y * ChunkDepth + z;
+            var index = GetIndex(x, y, z);
             Blocks[index] = block.BlockId;
             Metadata[index] = block.Metadata;
             IsDirty = true;
-
-	        if (y > GetHeight(x, z))
-	        {
-				index = (x << 4) + (z);
-		        HeightMap[index] = y;
-	        }
         }
 
         public Block GetBlock(int x, int y, int z)
         {
-            var index = x * ChunkHeight * ChunkWidth + y * ChunkDepth + z;
+            if (y < 0 || y > ChunkHeight)
+            {
+                return BlockFactory.GetBlock(0, 0);
+            }
+
+            var index = GetIndex(x, y, z);
             return BlockFactory.GetBlock(Blocks[index], Metadata[index]);
         }
 
-	    public void UpdateHeightMap()
-	    {
-			for (var x = 0; x < Chunk.ChunkWidth; x++)
-			{
-				for (var z = 0; z < Chunk.ChunkDepth; z++)
-				{
-					for (int y = Chunk.ChunkHeight - 1; y > 1; y--)
-					{
-						var index = x * ChunkHeight * ChunkWidth + y * ChunkDepth + z;
-						if (index < Blocks.Length)
-						{
-							var blockId = Blocks[index];
-							if (blockId != 0)
-							{
-								HeightMap[(x << 4) + z] = y;
-								break;
-							}
-						}
-					}
-				}
-			}
-		}
+        public void SetBlocklight(int x, int y, int z, byte value)
+        {
+            var index = GetIndex(x, y, z);
+            Blocklight[index] = value;
+        }
 
-		public byte GetBlocklight(int x, int y, int z)
+        public byte GetBlocklight(int x, int y, int z)
 		{
-			var index = x * ChunkHeight * ChunkWidth + y * ChunkDepth + z;
-			return Blocklight[index];
+            var index = GetIndex(x, y, z);
+            return Blocklight[index];
 		}
 
-		public int GetHeight(int x, int z)
-	    {
-		    var index = (x << 4) + z;
-		    return HeightMap[index];
-	    }
+        public void SetSkylight(int x, int y, int z, byte value)
+        {
+            var index = GetIndex(x, y, z);
+            Skylight[index] = value;
+        }
+
+        public byte GetSkylight(int x, int y, int z)
+        {
+            var index = GetIndex(x, y, z);
+            return Skylight[index];
+        }
+
+        private int GetIndex(int x, int y, int z)
+        {
+            return y + (z * ChunkHeight) + (x * ChunkHeight * ChunkWidth);
+            // return (x * ChunkHeight * ChunkWidth + y * ChunkDepth + z);
+        }
     }
 }

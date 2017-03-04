@@ -10,14 +10,16 @@ namespace Alex.Gamestates
     {
         private string Reason { get; }
         private Texture2D BackGround { get; set; }
-        public DisconnectedState(string reason)
+        private Alex Alex { get; }
+        public DisconnectedState(Alex alex, string reason) : base(alex.GraphicsDevice)
         {
+            Alex = alex;
             Reason = reason;
         }
 
         public override void Init(RenderArgs args)
         {
-            Alex.Instance.IsMouseVisible = true;
+            Alex.IsMouseVisible = true;
             BackGround = ResManager.ImageToTexture2D(Properties.Resources.mcbg);
             Button opton = new Button("Return to menu")
             {
@@ -33,45 +35,52 @@ namespace Alex.Gamestates
 
         private void OptonOnOnButtonClick()
         {
-            Alex.Instance.SetGameState(new MenuState());
+            Alex.GamestateManager.SetActiveState("menu");
         }
 
         public override void Render2D(RenderArgs args)
         {
-            args.SpriteBatch.Begin();
-
-            var retval = new Rectangle(
-              args.SpriteBatch.GraphicsDevice.Viewport.X,
-              args.SpriteBatch.GraphicsDevice.Viewport.Y,
-              args.SpriteBatch.GraphicsDevice.Viewport.Width,
-              args.SpriteBatch.GraphicsDevice.Viewport.Height);
-            args.SpriteBatch.Draw(BackGround, retval, Color.White);
-
-            const string msg = "Disconnected from server:";
-            var size = Alex.Font.MeasureString(msg);
-            args.SpriteBatch.DrawString(Alex.Font, msg, new Vector2(CenterScreen.X - (size.X / 2), CenterScreen.Y - (size.Y * 2)), Color.White);
-
-            float lastY = 0;
-            var split = Reason.Split('\n');
-            for (int index = 0; index < split.Length; index++)
+            try
             {
-                var message = split[index].StripColors();
-                message = message.StripIllegalCharacters();
-                
-                try
+                args.SpriteBatch.Begin();
+
+                var retval = new Rectangle(
+                    args.SpriteBatch.GraphicsDevice.Viewport.X,
+                    args.SpriteBatch.GraphicsDevice.Viewport.Y,
+                    args.SpriteBatch.GraphicsDevice.Viewport.Width,
+                    args.SpriteBatch.GraphicsDevice.Viewport.Height);
+                //args.SpriteBatch.Draw(BackGround, retval, Color.White);
+
+                const string msg = "Disconnected from server:";
+                var size = Alex.Font.MeasureString(msg);
+                args.SpriteBatch.DrawString(Alex.Font, msg,
+                    new Vector2(CenterScreen.X - (size.X/2), CenterScreen.Y - (size.Y*2)), Color.White);
+
+                float lastY = 0;
+                var split = Reason.Split('\n');
+                for (int index = 0; index < split.Length; index++)
                 {
-                    lastY = CenterScreen.Y + (size.Y* (index +1));
-                    var size2 = Alex.Font.MeasureString(message);
-                    args.SpriteBatch.DrawString(Alex.Font, message, new Vector2(CenterScreen.X - (size2.X / 2), lastY), Color.White);
+                    var message = split[index].StripColors();
+                    message = message.StripIllegalCharacters();
+
+                    try
+                    {
+                        lastY = CenterScreen.Y + (size.Y*(index + 1));
+                        var size2 = Alex.Font.MeasureString(message);
+                        args.SpriteBatch.DrawString(Alex.Font, message, new Vector2(CenterScreen.X - (size2.X/2), lastY),
+                            Color.White);
+                    }
+                    catch
+                    {
+                    }
                 }
-                catch
-                {
-                }
+
+                Controls["optbtn"].Location = new Vector2((int) (CenterScreen.X - 200), lastY + 50);
             }
-
-            Controls["optbtn"].Location = new Vector2((int)(CenterScreen.X - 200), lastY + 50);
-
-            args.SpriteBatch.End();
+            finally
+            {
+                args.SpriteBatch.End();
+            }
 
             //Controls["msg"].Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y - 30);
             //((Label) Controls["msg"]).Text = msg;

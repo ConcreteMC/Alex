@@ -304,12 +304,12 @@ namespace Alex.Network
                         throw new Exception("Receive ERROR, NAK in wrong place");
                     }
 
-                   // if (PlayerStatus == 3)
+                    if (PlayerStatus == 3)
                     {
                         int datagramId = new Int24(new[] { receiveBytes[1], receiveBytes[2], receiveBytes[3] });
 
                         //Acks ack = Acks.CreateObject();
-                        Acks ack = new Acks();
+                        Acks ack = Acks.CreateObject();
                         ack.acks.Add(datagramId);
                         byte[] data = ack.Encode();
                         ack.PutPool();
@@ -1293,46 +1293,65 @@ namespace Alex.Network
             McpeFullChunkData msg = (McpeFullChunkData)message;
             try
             {
-                ChunkColumn chunk = new ChunkColumn();
-                MemoryStream stream = new MemoryStream(msg.chunkData);
+                //ChunkColumn chunk = new ChunkColumn();
+                using (MemoryStream stream = new MemoryStream(msg.chunkData))
                 {
                     NbtBinaryReader defStream = new NbtBinaryReader(stream, true);
 
-                    //chunk.x = IPAddress.NetworkToHostOrder(defStream.ReadInt32());
-                    //chunk.z = IPAddress.NetworkToHostOrder(defStream.ReadInt32());
-
-                    int chunkSize = 16 * 16 * 128;
-                    defStream.Read(chunk.blocks, 0, chunkSize);
-                    defStream.Read(chunk.metadata.Data, 0, chunkSize / 2);
-                    defStream.Read(chunk.skylight.Data, 0, chunkSize / 2);
-                    defStream.Read(chunk.blocklight.Data, 0, chunkSize / 2);
-
-                    //Log.Debug($"skylight.Data:\n{Package.HexDump(chunk.skylight.Data, 64)}");
-                    //Log.Debug($"blocklight.Data:\n{Package.HexDump(chunk.blocklight.Data)}");
-
-                    defStream.Read(chunk.height, 0, 256);
-                    //Log.Debug($"Heights:\n{Package.HexDump(chunk.height)}");
-
-                    byte[] ints = new byte[256 * 4];
-                    defStream.Read(ints, 0, ints.Length);
-                    //Log.Debug($"biomeColor (pre):\n{Package.HexDump(ints)}");
-                    int j = 0;
-                    for (int i = 0; i < ints.Length; i = i + 4)
+                    int count = defStream.ReadByte();
+                    if (count < 1)
                     {
-                        chunk.biomeId[j] = ints[i];
-                        chunk.biomeColor[j++] = BitConverter.ToInt32(new[] { (byte)0, ints[i + 1], ints[i + 2], ints[i + 3] }, 0);
+                        Log.Warn("Nothing to read");
+                        return;
                     }
-                    //Log.Debug($"biomeId (post):\n{Package.HexDump(chunk.biomeId)}");
 
-                    if (stream.Position >= stream.Length - 1)
+                    ChunkColumn chunkColumn = new ChunkColumn();
+
+
+                    for (int s = 0; s < count; s++)
                     {
+                        int idx = defStream.ReadByte();
+
+                        Log.Debug($"New section {s}, index={idx}");
+                        Chunk chunk = chunkColumn.chunks[s];
+
+                        int chunkSize = 16 * 16 * 16;
+                        defStream.Read(chunk.blocks, 0, chunkSize);
+
+                        if (defStream.Read(chunk.metadata.Data, 0, chunkSize / 2) != chunkSize / 2) Log.Error($"Out of data: metadata");
+
+                        if (defStream.Read(chunk.skylight.Data, 0, chunkSize / 2) != chunkSize / 2) Log.Error($"Out of data: skylight");
+
+                        if (defStream.Read(chunk.blocklight.Data, 0, chunkSize / 2) != chunkSize / 2) Log.Error($"Out of data: blocklight");
                     }
-                    else
+
+                    if (defStream.Read(chunkColumn.height, 0, 256 * 2) != 256 * 2) Log.Error($"Out of data height");
+
+                    if (defStream.Read(chunkColumn.biomeId, 0, 256) != 256) Log.Error($"Out of data biomeId");
+
+                    int extraSize = defStream.ReadInt16();
+                    if (extraSize != 0)
                     {
-                        int extraSize = defStream.ReadInt16();
-                        if (extraSize != 0)
+                        Log.Debug($"Got extradata\n{Package.HexDump(defStream.ReadBytes(extraSize))}");
+                    }
+
+                    if (stream.Position < stream.Length - 1)
+                    {
+                        //Log.Debug($"Got NBT data\n{Package.HexDump(defStream.ReadBytes((int) (stream.Length - stream.Position)))}");
+
+                        while (stream.Position < stream.Length)
                         {
-                            Log.Debug($"Got extradata\n{Package.HexDump(defStream.ReadBytes(extraSize))}");
+                            NbtFile file = new NbtFile() { BigEndian = false, UseVarInt = true };
+
+                            file.LoadFromStream(stream, NbtCompression.None);
+
+                            Log.Debug($"Blockentity: {file.RootTag}");
+                        }
+
+
+                        if (stream.Position < stream.Length - 1)
+                        {
+                            Log.Debug($"Got data to read\n{Package.HexDump(defStream.ReadBytes((int)(stream.Length - stream.Position)))}");
                         }
                     }
 
@@ -1346,27 +1365,17 @@ namespace Alex.Network
 
                         while (stream.Position < stream.Length)
                         {
-                            NbtFile file = new NbtFile() {BigEndian = false, UseVarInt = true};
+                            NbtFile file = new NbtFile() { BigEndian = false, UseVarInt = true };
 
                             file.LoadFromStream(stream, NbtCompression.None);
 
                             //Log.Debug($"Blockentity: {file.RootTag}");
                         }
                     }
-                }
 
-                if (chunk != null)
-                {
-                    chunk.x = msg.chunkX;
-                    chunk.z = msg.chunkZ;
-                  //  Log.DebugFormat("Chunk X={0}, Z={1}", chunk.x, chunk.z);
-                  //  foreach (KeyValuePair<BlockCoordinates, NbtCompound> blockEntity in chunk.BlockEntities)
-                  //  {
-                  //      Log.Debug($"Blockentity: {blockEntity.Value}");
-                  //  }
-
-                    //ClientUtils.SaveChunkToAnvil(chunk);
-                    OnChunkData?.Invoke(chunk);
+                    chunkColumn.x = msg.chunkX;
+                    chunkColumn.z = msg.chunkZ;
+                    OnChunkData?.Invoke(chunkColumn);
                 }
             }
             catch (Exception e)
@@ -1640,7 +1649,7 @@ namespace Alex.Network
 
             McpeLogin loginPacket = new McpeLogin
             {
-                protocolVersion = 91,
+                protocolVersion = 100,
                 edition = 0,
                 payload = data
             };

@@ -1,4 +1,6 @@
-﻿using Alex.Graphics.Models;
+﻿using Alex.Gamestates.Playing;
+using Alex.Graphics.Models;
+using Alex.Rendering;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
 
@@ -6,7 +8,7 @@ namespace Alex.Graphics.Items
 {
     public class Block
     {
-        public ushort BlockId { get; private set; }
+        public byte BlockId { get; private set; }
         public byte Metadata { get; private set; }
         public bool Solid { get; protected set; }
 		public bool Transparent { get; protected set; }
@@ -15,7 +17,7 @@ namespace Alex.Graphics.Items
 		public bool HasHitbox { get; protected set; }
 		public float Drag { get; protected set; }
 
-        public Block(ushort blockId, byte metadata)
+        public Block(byte blockId, byte metadata)
         {
             BlockId = blockId;
             Metadata = metadata;
@@ -31,7 +33,7 @@ namespace Alex.Graphics.Items
 	        Transparent = false;
 	        Renderable = true;
 	        HasHitbox = true;
-	        Drag = Alex.Acceleration*100;
+	        Drag = CameraComponent.Acceleration*100;
         }
 
 	    public BoundingBox GetBoundingBox(Vector3 blockPosition)
@@ -40,9 +42,9 @@ namespace Alex.Graphics.Items
 					blockPosition + BlockModel.Offset + BlockModel.Size);
 		}
 
-        public VertexPositionNormalTextureColor[] GetVertices(Vector3 position)
+        public VertexPositionNormalTextureColor[] GetVertices(Vector3 position, World world)
         {
-            return BlockModel.GetShape(position + BlockModel.Offset, this);
+            return BlockModel.GetShape(world, position + BlockModel.Offset, this);
         }
 
         public void SetTexture(TextureSide side, string textureName)
@@ -128,32 +130,5 @@ namespace Alex.Graphics.Items
         public Color TopColor { get; protected set; }
         public Color SideColor { get; protected set; }
         public Color BottomColor { get; protected set; }
-
-        #region Old code
-
-        /*var path = string.Format("assets\\minecraft\\textures\\blocks\\{0}.png", textureName);
-            using (var stream = TitleContainer.OpenStream(path))
-            {
-                var texture = Texture2D.FromStream(Game.Instance.GraphicsDevice, stream);
-                switch (side)
-                {
-                    case Utils.TextureSide.Top:
-                        TextureTop = texture;
-                        break;
-                    case Utils.TextureSide.Side:
-                        TextureSide = texture;
-                        break;
-                    case Utils.TextureSide.Bottom:
-                        TextureBottom = texture;
-                        break;
-                    case Utils.TextureSide.All:
-                        TextureTop = texture;
-                        TextureSide = texture;
-                        TextureBottom = texture;
-                        break;
-                }
-            }*/
-
-        #endregion
     }
 }

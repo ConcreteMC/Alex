@@ -13,7 +13,8 @@ namespace Alex
 			"Has a menu!",
 			"Created in C#",
 			"O.M.G Why are you reading this?!",
-            "(Doesn't yet) Support MC:PE",
+            "This project is messy af...  Don't look at me!",
+            "Ehhhh hi?"
 		};
 
 		private static readonly Random Random = new Random();

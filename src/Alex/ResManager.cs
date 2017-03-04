@@ -22,6 +22,12 @@ namespace Alex
         private static Texture2D _atlas;
         public static Vector2 AtlasSize { get; private set; }
 
+        private static GraphicsDevice Graphics { get; set; }
+        public static void Init(GraphicsDevice graphics)
+        {
+            Graphics = graphics;
+        }
+
         public static float InHeigth
         {
             get { return AtlasSize.Y/16; }
@@ -32,11 +38,11 @@ namespace Alex
             get { return AtlasSize.X / 16; }
         }
 
-        public static Texture2D GetAtlas()
+        public static Texture2D GetAtlas(GraphicsDevice graphics)
         {
             if (_atlas != null) return _atlas;
 
-            InitAtlas();
+            InitAtlas(graphics);
             return _atlas;
         }
 
@@ -49,7 +55,7 @@ namespace Alex
 
         public static Vector2 GetAtlasLocation(string file)
         {
-            if (Atlaslocations.Count == 0) InitAtlas();
+            if (Atlaslocations.Count == 0) throw new Exception();
 
             return Atlaslocations.ContainsKey(file) ? Atlaslocations[file] : Vector2.Zero;
         }
@@ -63,7 +69,8 @@ namespace Alex
             using (var memoryStream = new MemoryStream(bufferSize))
             {
                 image.Save(memoryStream, ImageFormat.Png);
-                texture = Texture2D.FromStream(Game.GraphicsDevice, memoryStream);
+                memoryStream.Position = 0;
+                texture = Texture2D.FromStream(Graphics, memoryStream);
             }
             image.Dispose();
             return texture;
@@ -97,7 +104,7 @@ namespace Alex
             //if (File.Exists("resources.temp")) File.Delete("resources.temp");
         }
 
-        public static void InitAtlas()
+        public static void InitAtlas(GraphicsDevice graphics)
         {
             var a = new AtlasGenerator();
 	        var noTexture = "assets\\minecraft\\textures\\blocks\\no_texture.png";
@@ -106,7 +113,7 @@ namespace Alex
 	        {
 				Resources.no.Save(noTexture);
 	        }
-            _atlas = a.GenerateAtlas("assets\\minecraft\\textures\\blocks");
+            _atlas = a.GenerateAtlas(graphics, "assets\\minecraft\\textures\\blocks");
             AtlasSize = new Vector2(_atlas.Width, _atlas.Height);
         }
     }

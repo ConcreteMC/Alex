@@ -1,5 +1,4 @@
 ﻿using Alex.Rendering.UI;
-using Alex.Rendering.UI;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -7,13 +6,19 @@ namespace Alex.Gamestates
 {
     public class LoginState : Gamestate
     {
+        private Alex Alex { get; }
+        public LoginState(Alex alex) : base(alex.GraphicsDevice)
+        {
+            Alex = alex;
+        }
+
         private Texture2D BackGround { get; set; }
         public override void Init(RenderArgs args)
         {
             BackGround = ResManager.ImageToTexture2D(Properties.Resources.mcbg);
 
             //Alex.ShowMouse();
-            Alex.Instance.IsMouseVisible = true;
+            Alex.IsMouseVisible = true;
 
             Controls.Add("username", new InputField()
             {
@@ -47,8 +52,9 @@ namespace Alex.Gamestates
             if (username.Text != string.Empty)
             {
                 Alex.Username = username.Text;
-                Alex.Instance.SaveSettings();
-                Alex.Instance.SetGameState(new MenuState());
+                Alex.SaveSettings();
+                Alex.GamestateManager.AddState("menu", new MenuState(Alex));
+                Alex.GamestateManager.SetActiveState("menu");
             }
             else
             {
@@ -59,7 +65,7 @@ namespace Alex.Gamestates
         public override void Stop()
         {
             //Alex.HideMouse();
-            Alex.Instance.IsMouseVisible = false;
+            Alex.IsMouseVisible = false;
         }
 
         private string ErrorText = string.Empty;

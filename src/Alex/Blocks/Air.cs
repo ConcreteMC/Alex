@@ -1,4 +1,5 @@
-﻿using Alex.Graphics.Items;
+﻿using Alex.Gamestates.Playing;
+using Alex.Graphics.Items;
 
 namespace Alex.Blocks
 {
@@ -7,7 +8,7 @@ namespace Alex.Blocks
         public Air() : base(0,0)
         {
             Solid = false;
-	        Drag = Alex.DefaultDrag;
+	        Drag = CameraComponent.DefaultDrag;
         }
     }
 }

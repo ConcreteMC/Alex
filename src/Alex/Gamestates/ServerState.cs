@@ -7,17 +7,23 @@ namespace Alex.Gamestates
 {
     public class ServerState : Gamestate
     {
+        private  Alex Alex { get; }
+        public ServerState(Alex alex) : base(alex.GraphicsDevice)
+        {
+            Alex = alex;
+        }
+
         private Texture2D BackGround { get; set; }
         public override void Init(RenderArgs args)
         {
             BackGround = ResManager.ImageToTexture2D(Properties.Resources.mcbg);
             //Alex.ShowMouse();
-            Alex.Instance.IsMouseVisible = true;
+            Alex.IsMouseVisible = true;
 
             Controls.Add("server-ip", new InputField()
             {
                 Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y - 30),
-                PlaceHolder = "Server address",
+                PlaceHolder = "Server address"
             });
 
             Controls.Add("server-port", new InputField()
@@ -75,7 +81,10 @@ namespace Alex.Gamestates
                 return;
             }
 
-            Alex.Instance.SetGameState(new PlayingState());
+            Alex.GamestateManager.AddState("play", new PlayingState(Alex));
+            Alex.GamestateManager.SetActiveState("play");
+
+            Alex.GamestateManager.RemoveState("serverMenu");
         }
 
         private static IPAddress ResolveAddress(string address)
@@ -90,13 +99,14 @@ namespace Alex.Gamestates
 
         private void backBton_OnButtonClick()
         {
-            Alex.Instance.SetGameState(new MenuState());
+            Alex.GamestateManager.SetActiveState("menu");
+            Alex.GamestateManager.RemoveState("serverMenu");
         }
 
         public override void Stop()
         {
             //Alex.HideMouse();
-            Alex.Instance.IsMouseVisible = false;
+            Alex.IsMouseVisible = false;
         }
 
         private string ErrorText = string.Empty;

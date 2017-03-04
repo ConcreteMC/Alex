@@ -1,12 +1,13 @@
 ﻿using Alex.Gamestates;
 using Alex.Graphics.Models;
+using Alex.Rendering;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Entities
 {
     public class Entity
     {
-	    public virtual void Render(Vector3 position)
+	    public virtual void Render(RenderArgs args, World world, Vector3 position)
 	    {
 
 	    }

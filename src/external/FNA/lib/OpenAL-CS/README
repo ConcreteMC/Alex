@@ -1,0 +1,31 @@
+This is OpenAL#, a C# wrapper for OpenAL Soft.
+
+Project Website: https://github.com/flibitijibibo/OpenAL-CS
+
+License
+-------
+OpenAL# is released under the zlib license. See LICENSE for details.
+
+OpenAL Soft, however, is released under the GNU LGPLv2. See below for details.
+
+About OpenAL Soft
+-----------------
+For more information about OpenAL Soft and its license, visit the website:
+
+http://kcat.strangesoft.net/openal.html
+
+About the C# Wrapper
+--------------------
+The C# wrapper was written to be used for FNA's audio support. However, this
+is written in a way that can be used for any general C# application.
+
+OpenAL# is a pure port of the C headers. The naming schemes for this library
+will be exactly as they are done in the C library, with little-to-no concern
+for "appropriate" C# style. The namespace indicates that this is OpenAL, the
+class names will indicate which OpenAL standard version the
+function/type/value exists in, and everything else will be as close to the C
+version as technically possible.
+
+Also note that we do not use alGetProcAddress to obtain extension functions.
+Since this wrapper specifically supports OpenAL Soft only, we will be
+accessing the library's entry points directly.

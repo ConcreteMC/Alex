@@ -18,7 +18,7 @@ namespace Alex.Utils
             }
         }
 
-        public Texture2D GenerateAtlas(string folder)
+        public Texture2D GenerateAtlas(GraphicsDevice graphics, string folder)
         {
             var bitmaps = Directory.GetFiles(folder)
                 .Where(file => file.EndsWith(".png") 
@@ -67,7 +67,7 @@ namespace Alex.Utils
             }
             bitmap.Save("assets\\terrain.png", ImageFormat.Png);
 
-            return Texture2D.FromStream(Game.GraphicsDevice, File.OpenRead("assets\\terrain.png"));
+            return Texture2D.FromStream(graphics, File.OpenRead("assets\\terrain.png"));
         }
     }
 }

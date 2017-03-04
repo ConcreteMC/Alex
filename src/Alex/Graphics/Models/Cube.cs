@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Alex.Graphics.Items;
+using Alex.Rendering;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
 
@@ -9,52 +11,71 @@ namespace Alex.Graphics.Models
     {
         private VertexPositionNormalTextureColor _topLeft, _topRight, _bottomLeft, _bottomRight;
 
-        public override VertexPositionNormalTextureColor[] GetShape(Vector3 position, Block baseBlock)
+        public override VertexPositionNormalTextureColor[] GetShape(World world, Vector3 position, Block baseBlock)
         {
-            return FullCube(position, baseBlock);
+            return FullCube(world, position, baseBlock);
         }
 
-        private VertexPositionNormalTextureColor[] FullCube(Vector3 position, Block baseBlock)
+        private byte GetLight(World world, Vector3 position)
+        {
+            byte blockLight = world.GetBlockLight(position);
+            byte skyLight = world.GetSkyLight(position);
+
+            return (byte)Math.Min(blockLight + skyLight, 15);
+        }
+
+        private VertexPositionNormalTextureColor[] FullCube(World world, Vector3 position, Block baseBlock)
         {
             var top = baseBlock.CreateUVMapping(TextureSide.Top);
+            top.LightingTop = GetLight(world, position + Vector3.Up);
+            top.RecalculateLight();
+
             var side = baseBlock.CreateUVMapping(TextureSide.Side);
+            side.LightingBack = GetLight(world, position + Vector3.Backward);
+            side.LightingFront = GetLight(world, position + Vector3.Forward);
+            side.LightingLeft = GetLight(world, position + Vector3.Left);
+            side.LightingRight = GetLight(world, position + Vector3.Right);
+            side.RecalculateLight();
+
             var bottom = baseBlock.CreateUVMapping(TextureSide.Bottom);
+            bottom.LightingBottom = GetLight(world, position + Vector3.Down);
+            bottom.RecalculateLight();
 
             var verts = new List<VertexPositionNormalTextureColor>();
             bool isTransp = baseBlock.Transparent;
 
-            if (!Alex.Instance.World.IsSolid(position + Vector3.Up) ||
-                (!isTransp && Alex.Instance.World.IsTransparent(position + Vector3.Up) || (isTransp && !Alex.Instance.World.IsTransparent(position + Vector3.Up))))
+            if (!world.IsSolid(position + Vector3.Up) ||
+                (!isTransp && world.IsTransparent(position + Vector3.Up) || (isTransp && !world.IsTransparent(position + Vector3.Up))))
             {
                 verts.AddRange(Top(position, top));
             }
 
-            if (!Alex.Instance.World.IsSolid(position + Vector3.Down) ||
-                (!isTransp && Alex.Instance.World.IsTransparent(position + Vector3.Down)) || (isTransp && !Alex.Instance.World.IsTransparent(position + Vector3.Down)))
+            if (!world.IsSolid(position + Vector3.Down) ||
+                (!isTransp && world.IsTransparent(position + Vector3.Down)) || (isTransp && !world.IsTransparent(position + Vector3.Down)))
             {
                 verts.AddRange(Bottom(position, bottom));
             }
 
-            if (!Alex.Instance.World.IsSolid(position + Vector3.Forward) ||
-                (!isTransp && Alex.Instance.World.IsTransparent(position + Vector3.Forward)) || (isTransp && !Alex.Instance.World.IsTransparent(position + Vector3.Forward)))
+            if (!world.IsSolid(position + Vector3.Forward) ||
+                (!isTransp && world.IsTransparent(position + Vector3.Forward)) || (isTransp && !world.IsTransparent(position + Vector3.Forward)))
             {
                 verts.AddRange(Front(position, side));
             }
 
-            if (!Alex.Instance.World.IsSolid(position + Vector3.Backward) ||
-                (!isTransp && Alex.Instance.World.IsTransparent(position + Vector3.Backward)) || (isTransp && !Alex.Instance.World.IsTransparent(position + Vector3.Backward)))
+            if (!world.IsSolid(position + Vector3.Backward) ||
+                (!isTransp && world.IsTransparent(position + Vector3.Backward)) || (isTransp && !world.IsTransparent(position + Vector3.Backward)))
             {
                 verts.AddRange(Back(position, side));
             }
 
-            if (!Alex.Instance.World.IsSolid(position + Vector3.Right) ||
-                (!isTransp && Alex.Instance.World.IsTransparent(position + Vector3.Right)) || (isTransp && !Alex.Instance.World.IsTransparent(position + Vector3.Right)))
+            if (!world.IsSolid(position + Vector3.Right) ||
+                (!isTransp && world.IsTransparent(position + Vector3.Right)) || (isTransp && !world.IsTransparent(position + Vector3.Right)))
             {
                 verts.AddRange(Right(position, side));
             }
 
-            if (!Alex.Instance.World.IsSolid(position + Vector3.Left) ||
-                (!isTransp && Alex.Instance.World.IsTransparent(position + Vector3.Left)) || (isTransp && !Alex.Instance.World.IsTransparent(position + Vector3.Left)))
+            if (!world.IsSolid(position + Vector3.Left) ||
+                (!isTransp && world.IsTransparent(position + Vector3.Left)) || (isTransp && !world.IsTransparent(position + Vector3.Left)))
             {
                 verts.AddRange(Left(position, side));
             }

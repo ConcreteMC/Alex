@@ -1,0 +1,17 @@
+This is MojoShader#, a C# wrapper for MojoShader, a library to work with
+Direct3D shaders on alternate 3D APIs and non-Windows platforms.
+
+License
+-------
+MojoShader# is released under the zlib license. See LICENSE for details.
+
+About MojoShader
+----------------
+For more information about MojoShader, visit the website:
+
+http://icculus.org/mojoshader/
+
+About the C# Wrapper
+--------------------
+MojoShader# was written to be used for FNA's Effect shader support. We wrap this
+around MojoShader compiled as a shared library.

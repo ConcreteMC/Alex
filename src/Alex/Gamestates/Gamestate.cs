@@ -10,19 +10,21 @@ namespace Alex.Gamestates
 	{
 		public Dictionary<string, UIComponent> Controls { get; set; }
 
-		public Gamestate()
+        protected GraphicsDevice Graphics { get; }
+		public Gamestate(GraphicsDevice graphics)
 		{
+		    Graphics = graphics;
 			Controls = new Dictionary<string, UIComponent>();
 		}
 
-	    public Viewport Viewport => Alex.Instance.GraphicsDevice.Viewport;
+	    public Viewport Viewport => Graphics.Viewport;
 
 		public Vector2 CenterScreen
 		{
 			get
 			{
-				return new Vector2((Alex.Instance.GraphicsDevice.Viewport.Width/2f),
-					(Alex.Instance.GraphicsDevice.Viewport.Height/2f));
+				return new Vector2((Graphics.Viewport.Width/2f),
+					(Graphics.Viewport.Height/2f));
 			}
 		}
 

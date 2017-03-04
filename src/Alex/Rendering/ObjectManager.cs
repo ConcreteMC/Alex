@@ -7,26 +7,33 @@ using Alex.Utils;
 using log4net;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using OpenTK.Graphics;
+//using OpenTK.Graphics;
 
 namespace Alex.Rendering
 {
-    public class ObjectManager : Singleton<ObjectManager>
+    public class ObjectManager
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof(ObjectManager));
         
-        public ObjectManager()
+        private GraphicsDevice Graphics { get; }
+        private Camera.Camera Camera { get; }
+        private World World { get; }
+        public ObjectManager(GraphicsDevice graphics, Camera.Camera camera, World world)
         {
+            Graphics = graphics;
+            Camera = camera;
+            World = world;
             Chunks = new ConcurrentDictionary<Vector3, Chunk>();
 
-			Effect = new AlphaTestEffect(Game.Instance.GraphicsDevice)
+			Effect = new AlphaTestEffect(Graphics)
             {
-                Texture = ResManager.GetAtlas(),
+                Texture = ResManager.GetAtlas(graphics),
                 World = Matrix.Identity,
                 VertexColorEnabled = true,
             };
             
-            Updater = new Thread(ChunkUpdateThread);
+            Updater = new Thread(ChunkUpdateThread)
+            {IsBackground = true};
             ChunksToUpdate = new List<Vector3>();
             Updater.Start();
         }
@@ -64,7 +71,7 @@ namespace Alex.Rendering
                     if (!Monitor.TryEnter(chunk.UpdateLock)) return;
                     try
                     {
-                        chunk.Mesh = chunk.GenerateMesh();
+                        chunk.Mesh = chunk.GenerateMesh(World);
                         try
                         {
                             lock (chunk.VertexLock)
@@ -72,7 +79,7 @@ namespace Alex.Rendering
                                 if (chunk.VertexBuffer == null ||
                                     chunk.Mesh.Vertices.Length > chunk.VertexBuffer.VertexCount)
                                 {
-                                    chunk.VertexBuffer = new VertexBuffer(Alex.Instance.GraphicsDevice,
+                                    chunk.VertexBuffer = new VertexBuffer(Graphics,
                                         VertexPositionNormalTextureColor.VertexDeclaration,
                                         chunk.Mesh.Vertices.Length,
                                         BufferUsage.WriteOnly);
@@ -90,13 +97,9 @@ namespace Alex.Rendering
                                 }
                             }
                         }
-                        catch (GraphicsContextException)
+                        catch(Exception ex)
                         {
-
-                        }
-                        catch
-                        {
-
+                            Log.Warn("Exception while updating chunk!", ex);
                         }
                     }
                     finally
@@ -122,9 +125,9 @@ namespace Alex.Rendering
 
         public void Draw(GraphicsDevice device)
         {
-            Effect.View = Game.MainCamera.ViewMatrix;
-            Effect.Projection = Game.MainCamera.ProjectionMatrix;
-
+            Effect.View = Camera.ViewMatrix;
+            Effect.Projection = Camera.ProjectionMatrix;
+            
             var tempVertices = 0;
             foreach (var c in Chunks.ToArray())
             {
@@ -147,13 +150,6 @@ namespace Alex.Rendering
                     {
                         var key = new Vector3((int) chunk.Position.X >> 4, 0, (int) chunk.Position.Z >> 4);
                         ScheduleChunkUpdate(key);
-                       // lock (UpdateLock)
-                        //{
-                        //    if (!ChunksToUpdate.Contains(key))
-                       //     {
-                       //         ChunksToUpdate.Add(key);
-                       //     }
-                       // }
                     }
                     finally
                     {
@@ -169,7 +165,7 @@ namespace Alex.Rendering
                 foreach (var pass in Effect.CurrentTechnique.Passes)
                 {
                     pass.Apply();
-                    device.DrawPrimitives(PrimitiveType.TriangleList, 0, chunk.VertexBuffer.VertexCount/3);
+                    device.DrawPrimitives(PrimitiveType.TriangleList, 0, chunk.VertexBuffer.VertexCount / 3);
                 }
                 tempVertices += buffer.VertexCount;
             }
@@ -178,11 +174,11 @@ namespace Alex.Rendering
 
         public void AddChunk(Chunk chunk, Vector3 position, bool doUpdates = false)
         {
-            if (!Chunks.TryAdd(position, chunk))
+            Chunks.AddOrUpdate(position, chunk, (vector3, chunk1) =>
             {
-                Log.WarnFormat("Tried adding duplicate chunk for position {0}", position);
-                return;
-            }
+                Log.WarnFormat("Replaced chunk at {0}", position);
+                return chunk;
+            });
 
             ScheduleChunkUpdate(position);
 
@@ -214,6 +210,14 @@ namespace Alex.Rendering
         {
             Chunk chunk;
             Chunks.TryRemove(position, out chunk);
+        }
+
+        public void RebuildAll()
+        {
+            foreach (var i in Chunks)
+            {
+                ScheduleChunkUpdate(i.Key);
+            }
         }
     }
 }

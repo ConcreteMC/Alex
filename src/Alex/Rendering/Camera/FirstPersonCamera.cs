@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.Rendering.Camera
 {
@@ -7,24 +8,32 @@ namespace Alex.Rendering.Camera
         /// <summary>
         /// The nearest distance the camera will use
         /// </summary>
-        public const float NearDistance = 0.001f;
+        public const float NearDistance = 0.0001f;
 
         /// <summary>
         /// The furthest the camera can see
         /// </summary>
         public float FarDistance { get; set; }
-        public float[] Distances = { 10f, 15f, 30f, 50f, 100f };
 
-        public FirstPersonCamera(Vector3 pos, Vector3 rot)
+        public FirstPersonCamera(int renderDistance, Vector3 pos, Vector3 rot)
         {
             Position = pos;
             Rotation = rot;
 
-            FarDistance = (int)Game.RenderDistance;
+            FarDistance = renderDistance * 16;
 
             ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(
                 MathHelper.ToRadians(70),
-                Game.GraphicsDevice.Viewport.AspectRatio,
+                1.333333F,
+                NearDistance,
+                FarDistance);
+        }
+
+        public void UpdateAspectRatio(float aspectRatio)
+        {
+            ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(
+                MathHelper.ToRadians(70),
+                aspectRatio,
                 NearDistance,
                 FarDistance);
         }

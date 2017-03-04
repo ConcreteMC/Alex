@@ -31,14 +31,25 @@ namespace Alex.Rendering.UI
             Focus = false;
             PasswordField = false;
 
-            Alex.Instance.OnCharacterInput += OnCharacterInput;
             PrevMouseState = Mouse.GetState();
         }
 
-        private void OnCharacterInput(object sender, char c)
+        private void OnCharacterInput(char c)
         {
             if (!Focus) return;
+#if FNA
+            if (c == (char) 8) //BackSpace
+            {
+                BackSpace();
+                return;
+            }
+#endif
             Text += c;
+        }
+
+        private void BackSpace()
+        {
+            if (Text.Length > 0) Text = Text.Remove(Text.Length - 1, 1);
         }
 
         private bool DoThing = false;
@@ -109,10 +120,22 @@ namespace Alex.Rendering.UI
                     if (mouseRec.Intersects(ButtonRectangle))
                     {
                         Focus = true;
+#if FNA
+                        TextInputEXT.TextInput += OnCharacterInput;
+#endif
+#if MONOGAME
+                        Alex.OnCharacterInput += OnCharacterInput;
+#endif
                     }
                     else
                     {
                         Focus = false;
+#if FNA
+                        TextInputEXT.TextInput -= OnCharacterInput;
+#endif
+#if MONOGAME
+
+#endif
                     }
                 }
             }
@@ -120,24 +143,30 @@ namespace Alex.Rendering.UI
 
             if (!Focus) return;
 
-           // if (DateTime.Now.Subtract(LastUpdate).TotalMilliseconds < 50) return;
+            // if (DateTime.Now.Subtract(LastUpdate).TotalMilliseconds < 50) return;
 
+#if MONOGAME
             KeyboardState state = Keyboard.GetState();
 			if (PrevKeyState != state || DateTime.Now.Subtract(LastUpdate).TotalMilliseconds > 100)
 			{
                 if (state.IsKeyDown(Keys.Back))
                 {
-                    if (Text.Length > 0) Text = Text.Remove(Text.Length - 1, 1);
+                    BackSpace();
                 }
 				LastUpdate = DateTime.Now;
 			}
             PrevKeyState = state;
-
+#endif
             if (DateTime.Now.Subtract(LastChange).TotalMilliseconds >= 500)
             {
                 DoThing = !DoThing;
                 LastChange = DateTime.Now;
             }
+        }
+
+        private void OnCharacterInput(object sender, char c)
+        {
+            OnCharacterInput(c);
         }
     }
 }

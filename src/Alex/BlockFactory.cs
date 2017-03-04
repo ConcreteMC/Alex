@@ -5,7 +5,7 @@ namespace Alex
 {
     public static class BlockFactory
     {
-        public static Block GetBlock(ushort id, byte metadata)
+        public static Block GetBlock(byte id, byte metadata)
         {
             if (id == 0) return new Air();
             if (id == 1) return new Stone(metadata);
@@ -13,7 +13,7 @@ namespace Alex
             if (id == 3) return new Dirt();
 			if (id == 5) return new Planks(metadata);
             if (id == 7) return new Bedrock();
-            if (id == 8 || id == 9) return new Water();
+            if (id == 8 || id == 9) /*return new Water()*/ return new Air();
 			if (id == 17) return new Wood(metadata);
 			if (id == 18) return new Leaves(metadata);
 			if (id == 20) return new Glass();

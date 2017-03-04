@@ -16,9 +16,14 @@ namespace Alex
 
 		static Extensions()
 		{
-			WhiteTexture = new Texture2D(Alex.Instance.GraphicsDevice, 1, 1);
-			WhiteTexture.SetData(new Color[] { Color.White });
+			
 		}
+
+	    public static void Init(GraphicsDevice gd)
+	    {
+            WhiteTexture = new Texture2D(gd, 1, 1);
+            WhiteTexture.SetData(new Color[] { Color.White });
+        }
 
         public static IEnumerable<T> TakeLast<T>(this IEnumerable<T> source, int N)
         {

@@ -7,13 +7,19 @@ namespace Alex.Gamestates
 {
 	public class MenuState : Gamestate
 	{
+	    private Alex Alex { get; }
+	    public MenuState(Alex alex) : base(alex.GraphicsDevice)
+	    {
+	        Alex = alex;
+	    }
+
 		private Texture2D BackGround { get; set; }
 		public override void Init(RenderArgs args)
 		{
 			BackGround = ResManager.ImageToTexture2D(Properties.Resources.mcbg);
 
 			//Alex.ShowMouse();
-			Alex.Instance.IsMouseVisible = true;
+			Alex.IsMouseVisible = true;
 
             Button mpbtn = new Button("Multiplayer")
             {
@@ -68,7 +74,7 @@ namespace Alex.Gamestates
 
         private void Logoutbtn_OnButtonClick()
         {
-            Alex.Instance.SetGameState(new LoginState());
+            Alex.GamestateManager.SetActiveState("login");
         }
 
         private void Opton_OnButtonClick()
@@ -78,18 +84,14 @@ namespace Alex.Gamestates
 
         private void Mpbtn_OnButtonClick()
         {
-            Alex.Instance.SetGameState(new ServerState());
+            Alex.GamestateManager.AddState("serverMenu", new ServerState(Alex));
+            Alex.GamestateManager.SetActiveState("serverMenu");
         }
-
-        void button_OnButtonClick()
-		{
-			Alex.Instance.SetGameState(new PlayingState());
-		}
 
 		public override void Stop()
 		{
 			//Alex.HideMouse();
-			Alex.Instance.IsMouseVisible = false;
+			Alex.IsMouseVisible = false;
 		}
 
 		public override void Render2D(RenderArgs args)

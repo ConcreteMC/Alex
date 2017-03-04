@@ -7,14 +7,14 @@ namespace Alex.Utils
     // ReSharper disable once InconsistentNaming
     public struct UVMap
     {
-        public readonly Color ColorLeft;
-        public readonly Color ColorRight;
+        public Color ColorLeft;
+        public Color ColorRight;
 
-        public readonly Color ColorFront;
-        public readonly Color ColorBack;
+        public Color ColorFront;
+        public Color ColorBack;
 
-        public readonly Color ColorTop;
-        public readonly Color ColorBottom;
+        public Color ColorTop;
+        public Color ColorBottom;
 
         public readonly Vector2 TopLeft;
         public readonly Vector2 TopRight;
@@ -24,14 +24,28 @@ namespace Alex.Utils
 
         public int LightingTop;
         public int LightingBottom;
+
         public int LightingLeft;
         public int LightingRight;
+
         public int LightingFront;
         public int LightingBack;
 
+        private readonly Vector3 originalSide;
+        private readonly Vector3 originalTop;
+        private readonly Vector3 originalBottom;
         public UVMap(Vector2 topLeft, Vector2 topRight, Vector2 bottomLeft, Vector2 bottomRight, Color colorSide,
             Color colorTop, Color colorBottom)
         {
+            TopLeft = topLeft;
+            TopRight = topRight;
+            BottomLeft = bottomLeft;
+            BottomRight = bottomRight;
+
+            originalBottom = colorBottom.ToVector3();
+            originalSide = colorSide.ToVector3();
+            originalTop = colorTop.ToVector3();
+
             LightingTop = UvMapHelp.DefaultLighting[4];
             LightingBottom = UvMapHelp.DefaultLighting[5];
 
@@ -41,24 +55,44 @@ namespace Alex.Utils
             LightingFront = UvMapHelp.DefaultLighting[0];
             LightingBack = UvMapHelp.DefaultLighting[1];
 
-            var lightTop = UvMapHelp.LightColor.ToVector3()*UvMapHelp.CubeBrightness[LightingTop];
+            var lightTop = UvMapHelp.LightColor.ToVector3() * UvMapHelp.CubeBrightness[LightingTop];
             var lightBottom = UvMapHelp.LightColor.ToVector3() * UvMapHelp.CubeBrightness[LightingBottom];
+
             var lightLeft = UvMapHelp.LightColor.ToVector3() * UvMapHelp.CubeBrightness[LightingLeft];
             var lightRight = UvMapHelp.LightColor.ToVector3() * UvMapHelp.CubeBrightness[LightingRight];
+
             var lightFront = UvMapHelp.LightColor.ToVector3() * UvMapHelp.CubeBrightness[LightingFront];
             var lightBack = UvMapHelp.LightColor.ToVector3() * UvMapHelp.CubeBrightness[LightingBack];
 
-            TopLeft = topLeft;
-            TopRight = topRight;
-            BottomLeft = bottomLeft;
-            BottomRight = bottomRight;
+            ColorFront = new Color(originalSide * lightFront);
+            ColorBack = new Color(originalSide * lightBack);
 
-            ColorFront = new Color(colorSide.ToVector3() * lightFront);
-            ColorBack = new Color(colorSide.ToVector3() * lightBack);
-            ColorLeft = new Color(colorSide.ToVector3() * lightLeft);
-            ColorRight = new Color(colorSide.ToVector3() * lightRight);
-            ColorTop = new Color(colorTop.ToVector3() * lightTop); ;
-            ColorBottom = new Color(colorBottom.ToVector3() * lightBottom);
+            ColorLeft = new Color(originalSide * lightLeft);
+            ColorRight = new Color(originalSide * lightRight);
+
+            ColorTop = new Color(originalTop * lightTop);
+            ColorBottom = new Color(originalBottom * lightBottom);
+        }
+
+        public void RecalculateLight()
+        {
+            var lightTop = UvMapHelp.LightColor.ToVector3() * UvMapHelp.CubeBrightness[LightingTop];
+            var lightBottom = UvMapHelp.LightColor.ToVector3() * UvMapHelp.CubeBrightness[LightingBottom];
+
+            var lightLeft = UvMapHelp.LightColor.ToVector3() * UvMapHelp.CubeBrightness[LightingLeft];
+            var lightRight = UvMapHelp.LightColor.ToVector3() * UvMapHelp.CubeBrightness[LightingRight];
+
+            var lightFront = UvMapHelp.LightColor.ToVector3() * UvMapHelp.CubeBrightness[LightingFront];
+            var lightBack = UvMapHelp.LightColor.ToVector3() * UvMapHelp.CubeBrightness[LightingBack];
+
+            ColorFront = new Color(UvMapHelp.FaceBrightness[0] * (originalSide * lightFront));
+            ColorBack = new Color(UvMapHelp.FaceBrightness[1] * (originalSide * lightBack));
+
+            ColorLeft = new Color(UvMapHelp.FaceBrightness[3] * (originalSide * lightLeft));
+            ColorRight = new Color(UvMapHelp.FaceBrightness[2] * (originalSide * lightRight));
+
+            ColorTop = new Color(UvMapHelp.FaceBrightness[4] * (originalTop * lightTop));
+            ColorBottom = new Color(UvMapHelp.FaceBrightness[5] * (originalBottom * lightBottom));
         }
     }
 

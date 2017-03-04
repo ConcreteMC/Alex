@@ -1,5 +1,6 @@
 ﻿using System;
 using Alex.Graphics.Items;
+using Alex.Rendering;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
 
@@ -16,7 +17,7 @@ namespace Alex.Graphics.Models
 	        Offset = Vector3.Zero;
         }
 
-        public virtual VertexPositionNormalTextureColor[] GetShape(Vector3 position, Block baseBlock)
+        public virtual VertexPositionNormalTextureColor[] GetShape(World world, Vector3 position, Block baseBlock)
         {
             return new VertexPositionNormalTextureColor[0];
         }
