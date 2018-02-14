@@ -13,7 +13,8 @@ namespace Alex
             if (id == 3) return new Dirt();
 			if (id == 5) return new Planks(metadata);
             if (id == 7) return new Bedrock();
-            if (id == 8 || id == 9) /*return new Water()*/ return new Air();
+	        if (id == 8 || id == 9) return new Water();// return new Air();
+			if (id == 12) return new Sand(metadata);
 			if (id == 17) return new Wood(metadata);
 			if (id == 18) return new Leaves(metadata);
 			if (id == 20) return new Glass();
@@ -32,6 +33,7 @@ namespace Alex
 			if (id == 121) return new EndStone();
             if (id == 159) return new StainedClay(metadata);
             if (id == 161) return new AcaciaLeaves();
+			if (id == 172) return new HardenenedClay();
 			if (id == 173) return new CoalBlock();
 
 			return new Block(id, metadata);

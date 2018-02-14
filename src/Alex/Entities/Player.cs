@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.Entities
 {
-    public class Player : Entity
+    public class Player : LivingEntity
     {
         public static readonly float EyeLevel = 1.625F;
 

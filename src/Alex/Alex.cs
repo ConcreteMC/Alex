@@ -5,6 +5,7 @@ using Alex.Gamestates;
 using Alex.Properties;
 using Alex.Rendering;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Newtonsoft.Json;
@@ -14,140 +15,145 @@ using Newtonsoft.Json;
 
 namespace Alex
 {
-    public partial class Alex : Microsoft.Xna.Framework.Game
-    {
-	    public static string Version = "1.0";
-        public static string Username { get; set; }
-        public static IPEndPoint ServerEndPoint { get; set; }
-        public static bool IsMultiplayer { get; set; } = false;
+	public partial class Alex : Microsoft.Xna.Framework.Game
+	{
+		public static string Version = "1.0";
+		public static string Username { get; set; }
+		public static IPEndPoint ServerEndPoint { get; set; }
+		public static bool IsMultiplayer { get; set; } = false;
 
 	   // public static Alex Instance;
-	    public static SpriteFont Font;
+		public static SpriteFont Font;
 
 		private readonly GraphicsDeviceManager _graphics;
-        private SpriteBatch _spriteBatch;
+		private SpriteBatch _spriteBatch;
 
-        public GamestateManager GamestateManager { get; private set; }
-        public Alex()
-        {
-            _graphics = new GraphicsDeviceManager(this) {
-                PreferMultiSampling = false,
-                SynchronizeWithVerticalRetrace = false,
-                GraphicsProfile = GraphicsProfile.Reach
-            };
+		public GamestateManager GamestateManager { get; private set; }
+		public Alex()
+		{
+              
+			_graphics = new GraphicsDeviceManager(this) {
+				PreferMultiSampling = false,
+				SynchronizeWithVerticalRetrace = false,
+				GraphicsProfile = GraphicsProfile.Reach
+			};
+			Content.RootDirectory = "assets";
 
-            Content.RootDirectory = "assets";
+			IsFixedTimeStep = false;
+         //   _graphics.ToggleFullScreen();
+			ResManager.CheckResources();
+			Username = "";
+			this.Window.AllowUserResizing = true;
+			this.Window.ClientSizeChanged += (sender, args) =>
+			{
+				if (_graphics.PreferredBackBufferWidth != Window.ClientBounds.Width ||
+				    _graphics.PreferredBackBufferHeight != Window.ClientBounds.Height)
+				{
+					_graphics.PreferredBackBufferWidth = Window.ClientBounds.Width;
+					_graphics.PreferredBackBufferHeight = Window.ClientBounds.Height;
+					_graphics.ApplyChanges();
+				}
+			};
+			
+		}
 
-            IsFixedTimeStep = false;
-
-            ResManager.CheckResources();
-            Username = "";
-            this.Window.AllowUserResizing = true;
-            this.Window.ClientSizeChanged += (sender, args) =>
-            {
-                _graphics.PreferredBackBufferWidth = Window.ClientBounds.Width;
-                _graphics.PreferredBackBufferHeight = Window.ClientBounds.Height;
-                _graphics.ApplyChanges();
-            };
-            
-        }
-
-        public static EventHandler<char> OnCharacterInput;
+		public static EventHandler<char> OnCharacterInput;
 
 #if MONOGAME
-        private void Window_TextInput(object sender, TextInputEventArgs e)
-        {
-            OnCharacterInput?.Invoke(this, e.Character);
-        }
+		private void Window_TextInput(object sender, TextInputEventArgs e)
+		{
+			OnCharacterInput?.Invoke(this, e.Character);
+		}
 #endif
 #if FNA
-        private void TextInputEXT_TextInput(char obj)
-        {
-            OnCharacterInput?.Invoke(this, obj);
-        }
+		private void TextInputEXT_TextInput(char obj)
+		{
+			OnCharacterInput?.Invoke(this, obj);
+		}
 #endif 
 
-        public void SaveSettings()
-        {
-            File.WriteAllText("settings.json", JsonConvert.SerializeObject(GameSettings, Formatting.Indented));
-        }
+		public void SaveSettings()
+		{
+			File.WriteAllText("settings.json", JsonConvert.SerializeObject(GameSettings, Formatting.Indented));
+		}
 
-        internal Settings GameSettings { get; private set; }
+		internal Settings GameSettings { get; private set; }
 		protected override void Initialize()
-        {
-            Window.Title = "Alex - " + Version;
+		{
+			Window.Title = "Alex - " + Version;
 
-		    if (File.Exists("settings.json"))
-		    {
-		        try
-		        {
-		            GameSettings = JsonConvert.DeserializeObject<Settings>(File.ReadAllText("settings.json"));
-		            Username = GameSettings.Username;
-		        }
-		        catch
-		        {
-		            GameSettings = new Settings(string.Empty);
-		        }
-		    }
-		    else
-		    {
-                GameSettings = new Settings(string.Empty);
-            }
+			if (File.Exists("settings.json"))
+			{
+				try
+				{
+					GameSettings = JsonConvert.DeserializeObject<Settings>(File.ReadAllText("settings.json"));
+					Username = GameSettings.Username;
+				}
+				catch
+				{
+					GameSettings = new Settings(string.Empty);
+				}
+			}
+			else
+			{
+				GameSettings = new Settings(string.Empty);
+			}
 
-           // InitCamera();
+		   // InitCamera();
 #if MONOGAME
-            this.Window.TextInput += Window_TextInput;
+			this.Window.TextInput += Window_TextInput;
 #endif
 #if FNA
-            TextInputEXT.TextInput += TextInputEXT_TextInput;
-            TextInputEXT.StartTextInput();
+			//TextInputEXT.TextInput += TextInputEXT_TextInput;
+			//TextInputEXT.StartTextInput();
 #endif
 
-            base.Initialize();
-        }
+			base.Initialize();
+		}
 
-        protected override void LoadContent()
-        {
-            ResManager.Init(GraphicsDevice);
-            _spriteBatch = new SpriteBatch(GraphicsDevice);
-            if (!File.Exists(Path.Combine("assets", "Minecraftia.xnb")))
-            {
-                File.WriteAllBytes(Path.Combine("assets", "Minecraftia.xnb"), Resources.Minecraftia1);
-            }
+		protected override void LoadContent()
+		{
+			ResManager.Init(GraphicsDevice);
+			_spriteBatch = new SpriteBatch(GraphicsDevice);
+			if (!File.Exists(Path.Combine("assets", "Minecraftia.xnb")))
+			{
+				File.WriteAllBytes(Path.Combine("assets", "Minecraftia.xnb"), Resources.Minecraftia1);
+			}
 			Font = Content.Load<SpriteFont>("Minecraftia");
 
 			Mouse.SetPosition(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2);
 			//_originalMouseState = Mouse.GetState();
 
-            GamestateManager = new GamestateManager(GraphicsDevice, _spriteBatch);
-            GamestateManager.AddState("login", new LoginState(this));
-            GamestateManager.SetActiveState("login");
+			GamestateManager = new GamestateManager(GraphicsDevice, _spriteBatch);
+			GamestateManager.AddState("DebugState", new DebugState(this, GraphicsDevice));
+			//GamestateManager.AddState("login", new LoginState(this));
+			GamestateManager.SetActiveState("DebugState");
 
-            Extensions.Init(GraphicsDevice);
-        }
+			Extensions.Init(GraphicsDevice);
+		}
 
-        protected override void UnloadContent()
-        {
+		protected override void UnloadContent()
+		{
 #if FNA
-            TextInputEXT.TextInput -= TextInputEXT_TextInput;
-            TextInputEXT.StopTextInput();
+		//	TextInputEXT.TextInput -= TextInputEXT_TextInput;
+			//TextInputEXT.StopTextInput();
 #endif
-        }
+		}
 
-        protected override void Update(GameTime gameTime)
-        {
-            GamestateManager.Update(gameTime);
-            base.Update(gameTime);
-        }
+		protected override void Update(GameTime gameTime)
+		{
+			GamestateManager.Update(gameTime);
+			base.Update(gameTime);
+		}
 
-        protected override void Draw(GameTime gameTime)
-        {
-            GraphicsDevice.RasterizerState = RasterizerState.CullClockwise;
-            GraphicsDevice.Clear(Color.SkyBlue);
+		protected override void Draw(GameTime gameTime)
+		{
+			GraphicsDevice.RasterizerState = RasterizerState.CullClockwise;
+			GraphicsDevice.Clear(Color.SkyBlue);
 
-            GamestateManager.Draw(gameTime);
+			GamestateManager.Draw(gameTime);
 
 			base.Draw(gameTime);
-        }
-    }
+		}
+	}
 }

@@ -29,17 +29,17 @@ namespace Alex.Gamestates
 
             Controls.Add("mpbtn", mpbtn);
 
-           // Button button = new Button("Debug world")
-          //  {
-           //     Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 70),
-           // };
-          //  button.OnButtonClick += button_OnButtonClick;
+            Button button = new Button("Debug world")
+            {
+                Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 70),
+            };
+			button.OnButtonClick += OnButtonClick;
 
-           // Controls.Add("testbtn", button);
+           Controls.Add("testbtn", button);
 
             Button opton = new Button("Settings")
             {
-                Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 120),
+                Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 240),
             };
             opton.OnButtonClick += Opton_OnButtonClick;
 
@@ -72,7 +72,12 @@ namespace Alex.Gamestates
             Controls.Add("info", new Info());
         }
 
-        private void Logoutbtn_OnButtonClick()
+		private void OnButtonClick()
+		{
+			
+		}
+
+		private void Logoutbtn_OnButtonClick()
         {
             Alex.GamestateManager.SetActiveState("login");
         }

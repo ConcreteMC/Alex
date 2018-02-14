@@ -36,7 +36,7 @@ namespace Alex.Blocks
             }
 
             var x = tile.X / uvSize.X; //0.9375
-            var y = tile.Y / uvSize.Y; //0.0
+            var y = tile.Y / uvSize.Y; //0.0 
 
             var textureTopLeft = new Vector2(x + (tileSizeX / 2) - 0.00390625f, y + (0.01704545454f));
             var textureTopRight = new Vector2(x + (tileSizeX / 2) + 0.00390625f, y + (0.01704545454f));

@@ -4,6 +4,8 @@ using Alex.Graphics.Items;
 using Alex.Rendering;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
+using MiNET.Utils;
+using MiNET.Worlds;
 
 namespace Alex.Graphics.Models
 {
@@ -44,43 +46,65 @@ namespace Alex.Graphics.Models
             var verts = new List<VertexPositionNormalTextureColor>();
             bool isTransp = baseBlock.Transparent;
 
-            if (!world.IsSolid(position + Vector3.Up) ||
-                (!isTransp && world.IsTransparent(position + Vector3.Up) || (isTransp && !world.IsTransparent(position + Vector3.Up))))
+	        var blockUp = position + Vector3.Up;
+            if (CanRender(world, isTransp, blockUp))
             {
                 verts.AddRange(Top(position, top));
             }
 
-            if (!world.IsSolid(position + Vector3.Down) ||
-                (!isTransp && world.IsTransparent(position + Vector3.Down)) || (isTransp && !world.IsTransparent(position + Vector3.Down)))
+			var blockDown =position + Vector3.Down;
+			if (CanRender(world, isTransp, blockDown))
             {
                 verts.AddRange(Bottom(position, bottom));
             }
 
-            if (!world.IsSolid(position + Vector3.Forward) ||
-                (!isTransp && world.IsTransparent(position + Vector3.Forward)) || (isTransp && !world.IsTransparent(position + Vector3.Forward)))
-            {
+	        var blockForward = position + Vector3.Forward;
+	        if (CanRender(world, isTransp, blockForward))
+			{
                 verts.AddRange(Front(position, side));
             }
 
-            if (!world.IsSolid(position + Vector3.Backward) ||
-                (!isTransp && world.IsTransparent(position + Vector3.Backward)) || (isTransp && !world.IsTransparent(position + Vector3.Backward)))
-            {
+	        var blockBackward = position + Vector3.Backward;
+	        if (CanRender(world, isTransp, blockBackward))
+			{
                 verts.AddRange(Back(position, side));
             }
 
-            if (!world.IsSolid(position + Vector3.Right) ||
-                (!isTransp && world.IsTransparent(position + Vector3.Right)) || (isTransp && !world.IsTransparent(position + Vector3.Right)))
-            {
+	        var blockRight = position + Vector3.Right;
+	        if (CanRender(world, isTransp, blockRight))
+			{
                 verts.AddRange(Right(position, side));
             }
 
-            if (!world.IsSolid(position + Vector3.Left) ||
-                (!isTransp && world.IsTransparent(position + Vector3.Left)) || (isTransp && !world.IsTransparent(position + Vector3.Left)))
-            {
+	        var blockLeft = position + Vector3.Left;
+	        if (CanRender(world, isTransp, blockLeft))
+			{
                 verts.AddRange(Left(position, side));
             }
             return verts.ToArray();
         }
+
+	    private bool CanRender(World world, bool amITransparent, Vector3 pos)
+	    {
+		    if (pos.Y >= 256) return true;
+
+		    var cX = (int)pos.X & 0xf;
+		    var cZ = (int)pos.Z & 0xf;
+
+		    if (cX < 0 || cX > 16)
+			    return false;
+
+		    if (cZ < 0 || cZ > 16)
+			    return false;
+
+		    var block = world.GetBlock(pos);
+
+		    if (amITransparent && block.Transparent && !block.Solid) return false;
+		    if (block.Transparent && !amITransparent) return true;
+			if (block.Solid) return false;
+
+		    return true;
+	    }
 
         private VertexPositionNormalTextureColor[] Top(Vector3 position, UVMap uvmap)
         {

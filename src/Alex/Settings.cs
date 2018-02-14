@@ -9,7 +9,8 @@
         public Settings(string username)
         {
             Username = username;
-            RenderDistance = 12;
+            //RenderDistance = 12;
+	        RenderDistance = 6;
             MouseSensitivy = 1.0;
         }
     }

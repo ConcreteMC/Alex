@@ -94,7 +94,7 @@ namespace Alex.Rendering
             Chunk chunk;
             if (ChunkManager.Chunks.TryGetValue(key, out chunk))
             {
-                return chunk.GetSkylight(x & 0xf, y & 0x7f, z & 0xf);
+                return chunk.GetSkylight(x & 0xf, y & 0xff, z & 0xf);
             }
             return 15;
         }
@@ -117,7 +117,7 @@ namespace Alex.Rendering
             Chunk chunk;
             if (ChunkManager.Chunks.TryGetValue(key, out chunk))
             {
-                return chunk.GetBlocklight(x & 0xf, y & 0x7f, z & 0xf);
+                return chunk.GetBlocklight(x & 0xf, y & 0xff, z & 0xf);
             }
             return 15;
         }
@@ -139,7 +139,7 @@ namespace Alex.Rendering
 		    Chunk chunk;
             if (ChunkManager.Chunks.TryGetValue(key, out chunk))
             {
-                return chunk.GetBlock(x & 0xf, y & 0x7f, z & 0xf);
+                return chunk.GetBlock(x & 0xf, y & 0xff, z & 0xf);
             }
             return BlockFactory.GetBlock(0, 0);
         }
@@ -156,7 +156,7 @@ namespace Alex.Rendering
             Chunk chunk;
             if (ChunkManager.Chunks.TryGetValue(key, out chunk))
             {
-                chunk.SetBlock(x & 0xf, y & 0x7f, z & 0xf, block);
+                chunk.SetBlock(x & 0xf, y & 0xff, z & 0xf, block);
 		    }
 	    }
     }

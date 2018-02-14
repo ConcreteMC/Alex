@@ -13,7 +13,7 @@ namespace Alex.Rendering
     {
         public const int ChunkDepth = 16;
         public const int ChunkWidth = 16;
-        public const int ChunkHeight = 128;
+        public const int ChunkHeight = 256;
 
         public static Vector3 ChunkSize => new Vector3(ChunkWidth, ChunkHeight, ChunkDepth);
 
@@ -35,10 +35,11 @@ namespace Alex.Rendering
         }
         
         internal object UpdateLock { get; set; } = new object();
+	    internal bool Scheduled { get; set; } = false;
 
         public bool IsDirty { get; set; }
 
-        private VertexBuffer _vertex;
+	    private VertexBuffer _vertex = null;
 
         public VertexBuffer VertexBuffer
         {
@@ -46,10 +47,18 @@ namespace Alex.Rendering
             set { _vertex = value; }
         }
 
+	    private VertexBuffer _transparentBuffer = null;
+
+	    public VertexBuffer TransparentVertexBuffer
+	    {
+		    get { return _transparentBuffer; }
+		    set { _transparentBuffer = value; }
+	    }
+
         public Vector3 Position { get; set; }
         public Mesh Mesh { get; set; }
-
-        public Mesh GenerateMesh(World world)
+		public Mesh TransparentMesh { get; set; }
+        public Mesh GenerateSolidMesh(World world)
         {
             var vertices = new List<VertexPositionNormalTextureColor>();
             for (var x = 0; x < ChunkWidth; x++)
@@ -62,7 +71,7 @@ namespace Alex.Rendering
                         //TODO: Do lighting in here?
 
                         var block = BlockFactory.GetBlock(Blocks[index], Metadata[index]);
-	                    if (!block.Renderable) continue;
+	                    if (!block.Renderable || block.Transparent) continue;
 
                         var vert = block.GetVertices(new Vector3(x, y, z) + Position, world);
                         vertices.AddRange(vert);
@@ -71,7 +80,29 @@ namespace Alex.Rendering
             return new Mesh(vertices.ToArray());
         }
 
-        public void SetBlock(int x, int y, int z, Block block)
+	    public Mesh GenerateTransparentMesh(World world)
+	    {
+		    var vertices = new List<VertexPositionNormalTextureColor>();
+		    for (var x = 0; x < ChunkWidth; x++)
+		    for (var z = 0; z < ChunkDepth; z++)
+		    for (var y = 0; y < ChunkHeight; y++)
+		    {
+			    var index = GetIndex(x, y, z);
+			    if (Blocks[index] == 0) continue;
+
+			    //TODO: Do lighting in here?
+
+			    var block = BlockFactory.GetBlock(Blocks[index], Metadata[index]);
+			    if (!block.Renderable || !block.Transparent) continue;
+
+			    var vert = block.GetVertices(new Vector3(x, y, z) + Position, world);
+			    vertices.AddRange(vert);
+		    }
+
+		    return new Mesh(vertices.ToArray());
+	    }
+
+		public void SetBlock(int x, int y, int z, Block block)
         {
             var index = GetIndex(x, y, z);
             Blocks[index] = block.BlockId;

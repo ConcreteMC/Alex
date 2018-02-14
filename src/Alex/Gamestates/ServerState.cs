@@ -23,7 +23,8 @@ namespace Alex.Gamestates
             Controls.Add("server-ip", new InputField()
             {
                 Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y - 30),
-                PlaceHolder = "Server address"
+                PlaceHolder = "Server address",
+				Text = "127.0.0.1"
             });
 
             Controls.Add("server-port", new InputField()

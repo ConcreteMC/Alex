@@ -49,7 +49,7 @@ namespace Alex.Gamestates
                     args.SpriteBatch.GraphicsDevice.Viewport.Y,
                     args.SpriteBatch.GraphicsDevice.Viewport.Width,
                     args.SpriteBatch.GraphicsDevice.Viewport.Height);
-                //args.SpriteBatch.Draw(BackGround, retval, Color.White);
+                args.SpriteBatch.Draw(BackGround, retval, Color.White);
 
                 const string msg = "Disconnected from server:";
                 var size = Alex.Font.MeasureString(msg);
@@ -81,9 +81,6 @@ namespace Alex.Gamestates
             {
                 args.SpriteBatch.End();
             }
-
-            //Controls["msg"].Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y - 30);
-            //((Label) Controls["msg"]).Text = msg;
         }
     }
 }
