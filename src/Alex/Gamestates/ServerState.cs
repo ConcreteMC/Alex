@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using Alex.Rendering.UI;
+using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -16,7 +17,8 @@ namespace Alex.Gamestates
         private Texture2D BackGround { get; set; }
         public override void Init(RenderArgs args)
         {
-            BackGround = ResManager.ImageToTexture2D(Properties.Resources.mcbg);
+            BackGround = TextureUtils.ImageToTexture2D(args.GraphicsDevice,Properties.Resources.mcbg);
+
             //Alex.ShowMouse();
             Alex.IsMouseVisible = true;
 

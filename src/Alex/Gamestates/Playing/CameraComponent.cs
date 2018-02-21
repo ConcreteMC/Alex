@@ -2,6 +2,7 @@
 using Alex.Entities;
 using Alex.Rendering;
 using Alex.Rendering.Camera;
+using log4net;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -45,27 +46,11 @@ namespace Alex.Gamestates.Playing
             PreviousMouseState = Mouse.GetState();
         }
 
-	    private bool IsTickValid(GameTime gameTime)
-	    {
-			if (gameTime.TotalGameTime.TotalMilliseconds % 50 <= 1) //Do roughly 20 TPS
-			{
-				return true;
-			}
-		    return false;
-	    }
-
 		private bool _inActive = true;
-	    private int _tick = 0;
-	    private double _prevTickTime = 0;
         public void Update(GameTime gameTime, bool checkInput)
         {
             var dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-	        bool isTick = IsTickValid(gameTime);
-	       // if (isTick)
-	       // {
-		  //      _tick++;
-	      //  }
 
             bool originalJumpValue = IsJumping;
             var moveVector = Vector3.Zero;
@@ -96,16 +81,16 @@ namespace Alex.Gamestates.Playing
                 {
                     if (currentKeyboardState.IsKeyDown(KeyBinds.Up) && !IsJumping && IsOnGround(Velocity))
                     {
-	                  //  moveVector.Y = 1;
-                        Velocity += new Vector3(0, 0.42f, 0);
+	                    moveVector.Y = 1;
+						//ApplyForce(new Vector3(0, 0.42f * 10, 0), dt);
                         IsJumping = true;
                     }
                 }
             }
 
-            if (!IsFreeCam && isTick)
+            if (!IsFreeCam)
             {
-	            DoPhysics(originalJumpValue, moveVector, (float) (gameTime.TotalGameTime.TotalSeconds - _prevTickTime));
+	            DoPhysics(originalJumpValue, moveVector, dt);
             }
             else if (IsFreeCam)
             {
@@ -135,8 +120,8 @@ namespace Alex.Gamestates.Playing
 
 			        _leftrightRot -= mouseModifier * xDifference * dt;
 			        _updownRot -= mouseModifier * yDifference * dt;
-			        _updownRot = MathHelper.Clamp(_updownRot, MathHelper.ToRadians(-90.0f),
-				        MathHelper.ToRadians(90.0f));
+			        _updownRot = MathHelper.Clamp(_updownRot, MathHelper.ToRadians(-89.0f),
+				        MathHelper.ToRadians(89.0f));
 
 					Camera.Rotation = new Vector3(-_updownRot, MathHelper.WrapAngle(_leftrightRot), 0);
 		        }
@@ -149,24 +134,26 @@ namespace Alex.Gamestates.Playing
 	        {
 		        _inActive = true;
 	        }
-
-	        if (isTick)
-	        {
-		        _prevTickTime = gameTime.TotalGameTime.TotalSeconds;
-	        }
         }
 
-        private void DoPhysics(bool originalJumpValue, Vector3 moveVector, float dt)
+	    private static readonly ILog Log = LogManager.GetLogger(typeof(CameraComponent));
+
+        private void DoPhysics(bool originalJumpValue, Vector3 direction, float dt)
         {
 			//Apply Gravity.
 			//Velocity += new Vector3(0, -Gravity * dt, 0);
 			//speed = 0.25f
 			//mp = 0.7f
-			float currentDrag = GetCurrentDrag();
-	        float speedFactor = (float)(0.25f * 0.7f);
 
+	        var oldVelocity = new Vector3(Velocity.X, Velocity.Y, Velocity.Z);
+
+			float currentDrag = GetCurrentDrag();
+	        float speedFactor = (0.25f * 0.7f * 0.7f);
+
+	        bool onGround = false;
 	        if (IsOnGround(Velocity))
 	        {
+		        onGround = true;
 		        if (Velocity.Y < 0)
 		        {
 			        Velocity = new Vector3(Velocity.X, 0, Velocity.Z);
@@ -175,20 +162,40 @@ namespace Alex.Gamestates.Playing
 	        }
 	        else
 	        {
+		        currentDrag *= 0.05f;
 				Velocity -= new Vector3(0, Gravity, 0);
 			}
 
-            Drag = -Velocity * currentDrag;
+	        if (direction.Y > 0)
+	        {
+		        direction.Y = 0;
+		        Velocity += new Vector3(0, (0.55f / Gravity), 0);
+	        }
 
-			//Velocity += (Drag + (moveVector * speedFactor)) * dt;
-			Velocity += (Drag + (moveVector * speedFactor)) * dt;
+	        Drag = new Vector3(Velocity.X * currentDrag, 0, Velocity.Z * currentDrag);
 
-			//if (Velocity != Vector3.Zero)
-			//	Logging.Info("Velocity: " + Velocity + "(DT is " + dt + ")");
+	        Velocity += (direction * speedFactor) - Drag;
 
-			if (Velocity != Vector3.Zero) //Only if we moved.
-            {
-                var preview = Camera.PreviewMove(Velocity);
+	        if (Velocity.LengthSquared() < 0.000001f)
+	        {
+				Velocity = Vector3.Zero;
+	        }
+
+	        var groundSpeedSquared = Velocity.X * Velocity.X + Velocity.Z * Velocity.Z;
+	        if (groundSpeedSquared > 4.7f)
+	        {
+		        var groundSpeed = (float)Math.Sqrt(groundSpeedSquared);
+		        var correctionScale = 4.7f / groundSpeed;
+				Velocity *= new Vector3(correctionScale, 1, correctionScale);
+	        }
+		  //  Velocity -= Drag;
+
+			var v = (oldVelocity + Velocity) * 0.5f * dt;
+
+			if (v != Vector3.Zero) //Only if we moved.
+			{
+				
+                var preview = Camera.PreviewMove(v);
 
                 var headBlock = World.GetBlock(preview);
                 var headBoundingBox = headBlock.GetBoundingBox(preview.Floor());
@@ -204,19 +211,24 @@ namespace Alex.Gamestates.Playing
                 if (!headBlock.Solid && !IsColiding(playerBoundingBox, headBoundingBox) &&
                     !feetBlock.Solid && !IsColiding(playerBoundingBox, feetBoundingBox))
                 {
-                    Camera.Move(Velocity);
+                    Camera.Move(v);
                 }
                 else if (!headBlock.Solid && !IsColiding(playerBoundingBox, headBoundingBox) && feetBlock.Solid &&
                          (difference <= 0.5f))
                 {
-                    Camera.Move(Velocity + new Vector3(0, feetBlock.BlockModel.Size.Y, 0));
+                    Camera.Move((v) + new Vector3(0, feetBlock.BlockModel.Size.Y, 0));
+                }
+                else
+                {
+					Velocity = Vector3.Zero;
+	                Drag = Vector3.Zero;
                 }
             }
         }
 
         private float GetCurrentDrag()
         {
-	        return 1f - DefaultDrag;
+	        return DefaultDrag;
             Vector3 applied = Camera.Position.Floor();
             applied -= new Vector3(0, Player.EyeLevel, 0);
 

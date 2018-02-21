@@ -1,7 +1,8 @@
-﻿using Alex.Graphics.Items;
+﻿using System.Linq;
 using Alex.Graphics.Models;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
+using ResourcePackLib.Json.BlockStates;
 
 namespace Alex.Blocks
 {
@@ -9,9 +10,10 @@ namespace Alex.Blocks
 	{
 		public TallGrass() : base(31, 0)
 		{
-			BlockModel = new GrassModel();
+		//	BlockModel = new GrassModel();
 
 			Transparent = true;
+			Solid = false;
 			SetTexture(TextureSide.All, "tallgrass");
 			SetColor(TextureSide.All, new Color(138, 185, 90));
 		}

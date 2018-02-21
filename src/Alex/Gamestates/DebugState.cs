@@ -8,7 +8,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Alex.Blocks;
 using Alex.Gamestates.Playing;
-using Alex.Graphics.Items;
 using Alex.Properties;
 using Alex.Rendering;
 using Alex.Rendering.Camera;
@@ -27,7 +26,6 @@ namespace Alex.Gamestates
 		private World World { get; }
 		private FirstPersonCamera Camera;
 		private CameraComponent CamComponent { get; }
-		private int renderDistance;
 
 		private FpsMonitor FpsCounter { get; set; }
 		private Texture2D CrosshairTexture { get; set; }
@@ -38,9 +36,7 @@ namespace Alex.Gamestates
 		{
 			Alex = alex;
 			Camera = new FirstPersonCamera(alex.GameSettings.RenderDistance, Vector3.Zero, Vector3.Zero);
-			World = new World(graphics, Camera);
-
-			renderDistance = alex.GameSettings.RenderDistance;
+			World = new World(alex, graphics, Camera);
 
 			CamComponent = new CameraComponent(Camera, Graphics, World, alex.GameSettings);
 		}
@@ -49,18 +45,19 @@ namespace Alex.Gamestates
 		public override void Init(RenderArgs args)
 		{
 			FpsCounter = new FpsMonitor();
-			CrosshairTexture = ResManager.ImageToTexture2D(Resources.crosshair);
+			CrosshairTexture = TextureUtils.ImageToTexture2D(args.GraphicsDevice, Resources.crosshair);
 
 			World.ResetChunks();
-			Generator = new AnvilWorldProvider("E:\\MinecraftWorlds\\Vanilla")
-			//Generator = new AnvilWorldProvider("E:\\MinecraftWorlds\\TestWorld")
+			//Generator = new AnvilWorldProvider("E:\\SlicNic24\'s Resource Pack Test Map")
+		//	Generator = new AnvilWorldProvider("E:\\MinecraftWorlds\\Vanilla")
+			Generator = new AnvilWorldProvider("E:\\MinecraftWorlds\\KingsLanding1")
+			//Generator = new AnvilWorldProvider("C:\\Users\\kennyvv\\Desktop\\Debug\\world")
+			//Generator = new AnvilWorldProvider("E:\\Kenny\\AppData\\Roaming\\.minecraft\\saves\\DebugWorld")
 			{
 				MissingChunkProvider = new VoidWorldGenerator()
 			};
 			Generator.Initialize();
 
-			int totalChunks = 64;
-			int t = totalChunks / 8;
 			new Thread(() =>
 			{
 				while (true)
@@ -73,6 +70,8 @@ namespace Alex.Gamestates
 						PreviousChunkCoordinates = currentCoordinates;
 
 						var oldChunks = LoadedChunks.ToArray();
+
+						int t = Alex.GameSettings.RenderDistance;
 
 						List<ChunkCoordinates> newChunkCoordinates = new List<ChunkCoordinates>();
 						for (int x = -t; x < t; x++)
@@ -117,10 +116,20 @@ namespace Alex.Gamestates
             base.Init(args);
 		}
 
+		private float AspectRatio { get; set; }
 		public override void OnUpdate(GameTime gameTime)
 		{
 			if (Alex.IsActive)
 			{
+				var newAspectRatio = Graphics.Viewport.AspectRatio;
+				if (AspectRatio != newAspectRatio)
+				{
+					Camera.UpdateAspectRatio(newAspectRatio);
+					AspectRatio = newAspectRatio;
+				}
+
+				CamComponent.Update(gameTime, Alex.IsActive);
+
 				UpdateRayTracer(Alex.GraphicsDevice, World);
 
 				CheckInput(gameTime);
@@ -139,8 +148,6 @@ namespace Alex.Gamestates
 		private MouseState _oldMouseState;
 		protected void CheckInput(GameTime gameTime)
 		{
-			CamComponent.Update(gameTime, Alex.IsActive);
-
 			MouseState currentMouseState = Mouse.GetState();
 			if (currentMouseState != _oldMouseState)
 			{
@@ -260,7 +267,7 @@ namespace Alex.Gamestates
 
 					y += (int)meisured.Y;
 
-					positionString = "Chunks: " + World.ChunkCount;
+					positionString = "Chunks: " + World.ChunkCount + ", " + World.ChunkManager.RenderedChunks;
 					meisured = Alex.Font.MeasureString(positionString);
 
 					args.SpriteBatch.FillRectangle(new Rectangle(0, y, (int)meisured.X, (int)meisured.Y),
@@ -277,8 +284,8 @@ namespace Alex.Gamestates
 
 		public override void Render3D(RenderArgs args)
 		{
-			Camera.UpdateAspectRatio(args.GraphicsDevice.Viewport.AspectRatio);
 			FpsCounter.Update();
+
 			World.Render();
 
 			base.Render3D(args);

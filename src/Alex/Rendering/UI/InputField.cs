@@ -3,6 +3,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using Alex.Gamestates;
 using Alex.Properties;
+using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -27,7 +28,7 @@ namespace Alex.Rendering.UI
 			LastChange = DateTime.MinValue;
 
 			Size = new Vector2(400, 40);
-			ButtonTexture = ResManager.ImageToTexture2D(Resources.ButtonState0);
+			
 			Focus = false;
 			PasswordField = false;
 
@@ -55,6 +56,11 @@ namespace Alex.Rendering.UI
 		private bool DoThing = false;
 		public override void Render(RenderArgs args)
 		{
+			if (ButtonTexture == null)
+			{
+				ButtonTexture = TextureUtils.ImageToTexture2D(args.GraphicsDevice, Resources.ButtonState0);
+			}
+
 			ButtonRectangle = new Rectangle((int)Location.X, (int)Location.Y, (int)Size.X, (int)Size.Y);
 			Color color = Color.White;
 

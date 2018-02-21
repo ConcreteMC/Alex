@@ -1,6 +1,4 @@
-﻿using Alex.Graphics.Items;
-
-namespace Alex.Blocks
+﻿namespace Alex.Blocks
 {
     public class StoneBrick : Block
     {

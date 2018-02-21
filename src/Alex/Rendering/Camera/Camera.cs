@@ -13,7 +13,7 @@ namespace Alex.Rendering.Camera
         /// <summary>
         /// 
         /// </summary>
-        public Matrix ViewMatrix => Matrix.CreateLookAt(Position, Target, Vector3.Up);
+        public Matrix ViewMatrix { get; set; }
 
 	    /// <summary>
         /// 
@@ -29,7 +29,7 @@ namespace Alex.Rendering.Camera
             set
             {
                 _position = value;
-                UpdateLookAt();
+				UpdateLookAt();
             }
         }
 
@@ -43,7 +43,7 @@ namespace Alex.Rendering.Camera
             set
             {
                 _rotation = value;
-                UpdateLookAt();
+				UpdateLookAt();
             }
         }
 
@@ -51,7 +51,7 @@ namespace Alex.Rendering.Camera
         /// <summary>
         /// Updates the camera's looking vector.
         /// </summary>
-        private void UpdateLookAt()
+        protected void UpdateLookAt()
         {
             Matrix rotationMatrix = Matrix.CreateRotationX(Rotation.X) *
                                   Matrix.CreateRotationY(Rotation.Y);
@@ -61,6 +61,8 @@ namespace Alex.Rendering.Camera
             Target = Position + lookAtOffset;
 
             Direction = Vector3.Transform(Vector3.Forward, rotationMatrix);
-        }
+
+			ViewMatrix = Matrix.CreateLookAt(Position, Target, Vector3.Up);
+		}
     }
 }

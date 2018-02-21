@@ -1,6 +1,7 @@
 ﻿using System;
 using Alex.Gamestates;
 using Alex.Properties;
+using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -11,8 +12,8 @@ namespace Alex.Rendering.UI
     {
         private Rectangle ButtonRectangle { get; set; }
         private Rectangle TrackerRectangle { get; set; }
-        private Texture2D ButtonTexture { get; set; }
-        private Texture2D TrackerTexture { get; set; }
+	    private Texture2D ButtonTexture { get; set; } = null;
+	    private Texture2D TrackerTexture { get; set; } = null;
 
         public string Text { get; set; }
         private bool Focus { get; set; }
@@ -28,13 +29,18 @@ namespace Alex.Rendering.UI
             MaxValue = 100;
             MinValue = 0;
             Size = new Vector2(400, 40);
-            ButtonTexture = ResManager.ImageToTexture2D(Resources.ButtonState0);
-            TrackerTexture = ResManager.ImageToTexture2D(Resources.ButtonState1);
+            
             Focus = false;
         }
 
         public override void Render(RenderArgs args)
         {
+	        if (ButtonTexture == null || TrackerTexture == null)
+	        {
+		        ButtonTexture = TextureUtils.ImageToTexture2D(args.GraphicsDevice, Resources.ButtonState0);
+		        TrackerTexture = TextureUtils.ImageToTexture2D(args.GraphicsDevice, Resources.ButtonState1);
+			}
+
             ButtonRectangle = new Rectangle((int)Location.X, (int)Location.Y, (int)Size.X, (int)Size.Y);
             var x = (int) ((int) Size.X - Size.X/(MaxValue)*Value);
 

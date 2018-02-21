@@ -1,4 +1,5 @@
 ﻿using Alex.Gamestates;
+using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -31,14 +32,11 @@ namespace Alex.Rendering.UI
         private float _scale = 1.0f;
         private string _splashText = "";
 
-        private Texture2D WoodTexture { get; set; }
-        private Texture2D GrassTexture { get; set; }
+	    private Texture2D WoodTexture { get; set; } = null;
+	    private Texture2D GrassTexture { get; set; } = null;
 
         public Logo()
         {
-            WoodTexture = ResManager.ImageToTexture2D(Properties.Resources.wood);
-            GrassTexture = ResManager.ImageToTexture2D(Properties.Resources.grass);
-
             if (_splashText == "") _splashText = SplashTexts.GetSplashText();
         }
 
@@ -55,6 +53,12 @@ namespace Alex.Rendering.UI
 
         public override void Render(RenderArgs args)
         {
+	        if (WoodTexture == null || GrassTexture == null)
+	        {
+		        WoodTexture = TextureUtils.ImageToTexture2D(args.GraphicsDevice, Properties.Resources.wood);
+		        GrassTexture = TextureUtils.ImageToTexture2D(args.GraphicsDevice, Properties.Resources.grass);
+			}
+
             args.SpriteBatch.Begin();
             Vector2 centerScreen = CenterScreen(args.GraphicsDevice);
 

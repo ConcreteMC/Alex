@@ -1,4 +1,5 @@
 ﻿using System;
+using Alex.Blocks;
 using log4net;
 using LibNoise;
 using LibNoise.Filter;
@@ -27,7 +28,7 @@ namespace Alex.Rendering
 
 		public OverworldGenerator()
 		{
-			int seed = Config.GetProperty("seed", "YoHoMotherducker!").GetHashCode();
+			int seed = Config.GetProperty("seed", "Kenny was here...").GetHashCode();
 			Seed = seed;
 
 			BiomeModifierX = new SimplexPerlin(seed + 3700);
@@ -171,10 +172,9 @@ namespace Alex.Rendering
 			var biomes = CalculateBiomes(chunkCoordinates.X, chunkCoordinates.Z);
 
 			var heightMap = GenerateHeightMap(biomes, x, z);
-			var thresholdMap = GetThresholdMap(x, z, biomes);
 
-			CreateTerrainShape(chunk, heightMap, thresholdMap, biomes);
-			DecorateChunk(chunk, heightMap, thresholdMap, biomes, new ChunkDecorator[0]);
+			CreateTerrainShape(chunk, heightMap, biomes);
+			DecorateChunk(chunk, heightMap, biomes, new ChunkDecorator[0]);
 
 			//chunk.isDirty = true;
 			//chunk.NeedSave = true;
@@ -316,42 +316,19 @@ namespace Alex.Rendering
 			return heightMap;
 		}
 
-		private float[] GetThresholdMap(int cx, int cz, Biome[] biomes)
-		{
-			cx *= 16;
-			cz *= 16;
-
-			float[] thresholdMap = new float[16 * 16 * 256];
-
-			for (int x = 0; x < 16; x++)
-			{
-				float rx = cx + x;
-				for (int z = 0; z < 16; z++)
-				{
-					float rz = cz + z;
-
-					for (int y = 255; y > 0; y--)
-					{
-						thresholdMap[x + ((y + (z << 8)) << 4)] = 1f; //_depthNoise.GetValue(rx, y, rz);
-					}
-				}
-			}
-			return thresholdMap;
-		}
-
 		public const float Threshold = -0.1f;
 		private const int Width = 16;
 		private const int Depth = 16;
 		private const int Height = 256;
 
-		private void CreateTerrainShape(Chunk chunk, float[] heightMap, float[] thresholdMap, Biome[] biomes)
+		private void CreateTerrainShape(Chunk chunk, float[] heightMap, Biome[] biomes)
 		{
 			for (int x = 0; x < Width; x++)
 			{
 				for (int z = 0; z < Depth; z++)
 				{
 					var idx = (x << 4) + z;
-					Biome biome = biomes[idx];
+					//Biome biome = biomes[idx];
 				//	chunk.biomeId[idx] = (byte)biome.Id;// SetBiome(x, z, (byte)biome.Id);
 					float stoneHeight = heightMap[idx];
 					/*	if (stoneHeight > 200 || stoneHeight < 0)
@@ -362,7 +339,7 @@ namespace Alex.Rendering
 					var maxY = 0;
 					for (int y = 0; y < stoneHeight && y < 255; y++)
 					{
-						float density = thresholdMap[x + ((y + (z << 8)) << 4)];
+						float density = 1;//thresholdMap[x + ((y + (z << 8)) << 4)];
 
 						if (y < WaterLevel || (density > Threshold && y >= WaterLevel))
 						{
@@ -379,7 +356,7 @@ namespace Alex.Rendering
 			}
 		}
 
-		private void DecorateChunk(Chunk chunk, float[] heightMap, float[] thresholdMap, Biome[] biomes, ChunkDecorator[] decorators)
+		private void DecorateChunk(Chunk chunk, float[] heightMap, Biome[] biomes, ChunkDecorator[] decorators)
 		{
 			for (int x = 0; x < Width; x++)
 			{
@@ -408,6 +385,10 @@ namespace Alex.Rendering
 									chunk.SetBlock(x, y - 1, z, BlockFactory.GetBlock(biome.SoilBlock, biome.SoilMetadata));
 									//chunk.SetBlock(x, y - 1, z, biome.SoilBlock);
 									//chunk.SetMetadata(x, y - 1, z, biome.SoilMetadata);
+								}
+								else
+								{
+									chunk.SetBlock(x,y,z, new Water());
 								}
 							}
 						}

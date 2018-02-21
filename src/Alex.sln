@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2024
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alex", "Alex\Alex.csproj", "{0E811179-612C-429B-B5EF-2BCF7D9509C6}"
 EndProject
@@ -10,6 +10,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FNA", "FNA", "{F7EA4AF7-846F-4093-A509-A798188A0D89}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FNA", "external\FNA\FNA.csproj", "{35253CE1-C864-4CD3-8249-4D1319748E8F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alex.Data", "Alex.Data\Alex.Data.csproj", "{63D936AD-3498-45F6-84A9-48DAFCEF7D96}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -22,6 +24,7 @@ Global
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{0E811179-612C-429B-B5EF-2BCF7D9509C6}.Debug|AnyCPU.ActiveCfg = Debug|x86
+		{0E811179-612C-429B-B5EF-2BCF7D9509C6}.Debug|AnyCPU.Build.0 = Debug|x86
 		{0E811179-612C-429B-B5EF-2BCF7D9509C6}.Debug|x64.ActiveCfg = Debug|x86
 		{0E811179-612C-429B-B5EF-2BCF7D9509C6}.Debug|x86.ActiveCfg = Debug|x86
 		{0E811179-612C-429B-B5EF-2BCF7D9509C6}.Debug|x86.Build.0 = Debug|x86
@@ -41,6 +44,18 @@ Global
 		{35253CE1-C864-4CD3-8249-4D1319748E8F}.Release|x64.Build.0 = Release|x64
 		{35253CE1-C864-4CD3-8249-4D1319748E8F}.Release|x86.ActiveCfg = Release|x86
 		{35253CE1-C864-4CD3-8249-4D1319748E8F}.Release|x86.Build.0 = Release|x86
+		{63D936AD-3498-45F6-84A9-48DAFCEF7D96}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{63D936AD-3498-45F6-84A9-48DAFCEF7D96}.Debug|AnyCPU.Build.0 = Debug|Any CPU
+		{63D936AD-3498-45F6-84A9-48DAFCEF7D96}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{63D936AD-3498-45F6-84A9-48DAFCEF7D96}.Debug|x64.Build.0 = Debug|Any CPU
+		{63D936AD-3498-45F6-84A9-48DAFCEF7D96}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{63D936AD-3498-45F6-84A9-48DAFCEF7D96}.Debug|x86.Build.0 = Debug|Any CPU
+		{63D936AD-3498-45F6-84A9-48DAFCEF7D96}.Release|AnyCPU.ActiveCfg = Release|Any CPU
+		{63D936AD-3498-45F6-84A9-48DAFCEF7D96}.Release|AnyCPU.Build.0 = Release|Any CPU
+		{63D936AD-3498-45F6-84A9-48DAFCEF7D96}.Release|x64.ActiveCfg = Release|Any CPU
+		{63D936AD-3498-45F6-84A9-48DAFCEF7D96}.Release|x64.Build.0 = Release|Any CPU
+		{63D936AD-3498-45F6-84A9-48DAFCEF7D96}.Release|x86.ActiveCfg = Release|Any CPU
+		{63D936AD-3498-45F6-84A9-48DAFCEF7D96}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -48,6 +63,9 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{F7EA4AF7-846F-4093-A509-A798188A0D89} = {D139F560-A966-4E98-9530-8A478C9CD0BB}
 		{35253CE1-C864-4CD3-8249-4D1319748E8F} = {F7EA4AF7-846F-4093-A509-A798188A0D89}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {32B4D997-4F97-43FC-9636-1E35A79AA844}
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		StartupItem = FNA.csproj

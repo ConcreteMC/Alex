@@ -1,4 +1,5 @@
 ﻿using Alex.Gamestates;
+using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -22,14 +23,18 @@ namespace Alex.Rendering.UI
             Text = text;
             Hovering = false;
             Size = new Vector2(400, 40);
-            HoverTexture = ResManager.ImageToTexture2D(Properties.Resources.ButtonState2);
-            ButtonTexture = ResManager.ImageToTexture2D(Properties.Resources.ButtonState1);
 
             PrevMouseState = Mouse.GetState();
         }
 
         public override void Render(RenderArgs args)
         {
+	        if (HoverTexture == null || ButtonTexture == null)
+	        {
+		        HoverTexture = TextureUtils.ImageToTexture2D(args.GraphicsDevice, Properties.Resources.ButtonState2);
+		        ButtonTexture = TextureUtils.ImageToTexture2D(args.GraphicsDevice, Properties.Resources.ButtonState1);
+			}
+
             args.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
 
 			ButtonRectangle = new Rectangle((int) Location.X,(int) Location.Y, (int) Size.X, (int) Size.Y);

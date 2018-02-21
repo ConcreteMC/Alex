@@ -1,5 +1,4 @@
-﻿using Alex.Graphics.Items;
-using Alex.Utils;
+﻿using Alex.Utils;
 
 namespace Alex.Blocks
 {
@@ -9,7 +8,7 @@ namespace Alex.Blocks
         {
             Solid = false;
             Transparent = true;
-            SetTexture(TextureSide.All, "water_overlay");
+            SetTexture(TextureSide.All, "water_still");
         }
     }
 }

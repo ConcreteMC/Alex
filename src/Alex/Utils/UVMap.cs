@@ -1,5 +1,7 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 using Microsoft.Xna.Framework;
+using ResourcePackLib.Json;
 
 namespace Alex.Utils
 {
@@ -22,18 +24,6 @@ namespace Alex.Utils
         public readonly Vector2 BottomLeft;
         public readonly Vector2 BottomRight;
 
-        public int LightingTop;
-        public int LightingBottom;
-
-        public int LightingLeft;
-        public int LightingRight;
-
-        public int LightingFront;
-        public int LightingBack;
-
-        private readonly Vector3 originalSide;
-        private readonly Vector3 originalTop;
-        private readonly Vector3 originalBottom;
         public UVMap(Vector2 topLeft, Vector2 topRight, Vector2 bottomLeft, Vector2 bottomRight, Color colorSide,
             Color colorTop, Color colorBottom)
         {
@@ -42,57 +32,14 @@ namespace Alex.Utils
             BottomLeft = bottomLeft;
             BottomRight = bottomRight;
 
-            originalBottom = colorBottom.ToVector3();
-            originalSide = colorSide.ToVector3();
-            originalTop = colorTop.ToVector3();
+	        ColorFront = colorSide;
+	        ColorBack = colorSide;
 
-            LightingTop = UvMapHelp.DefaultLighting[4];
-            LightingBottom = UvMapHelp.DefaultLighting[5];
+	        ColorLeft = colorSide;
+	        ColorRight = colorSide;
 
-            LightingLeft = UvMapHelp.DefaultLighting[3];
-            LightingRight = UvMapHelp.DefaultLighting[2];
-
-            LightingFront = UvMapHelp.DefaultLighting[0];
-            LightingBack = UvMapHelp.DefaultLighting[1];
-
-            var lightTop = UvMapHelp.LightColor.ToVector3() * UvMapHelp.CubeBrightness[LightingTop];
-            var lightBottom = UvMapHelp.LightColor.ToVector3() * UvMapHelp.CubeBrightness[LightingBottom];
-
-            var lightLeft = UvMapHelp.LightColor.ToVector3() * UvMapHelp.CubeBrightness[LightingLeft];
-            var lightRight = UvMapHelp.LightColor.ToVector3() * UvMapHelp.CubeBrightness[LightingRight];
-
-            var lightFront = UvMapHelp.LightColor.ToVector3() * UvMapHelp.CubeBrightness[LightingFront];
-            var lightBack = UvMapHelp.LightColor.ToVector3() * UvMapHelp.CubeBrightness[LightingBack];
-
-            ColorFront = new Color(originalSide * lightFront);
-            ColorBack = new Color(originalSide * lightBack);
-
-            ColorLeft = new Color(originalSide * lightLeft);
-            ColorRight = new Color(originalSide * lightRight);
-
-            ColorTop = new Color(originalTop * lightTop);
-            ColorBottom = new Color(originalBottom * lightBottom);
-        }
-
-        public void RecalculateLight()
-        {
-            var lightTop = UvMapHelp.LightColor.ToVector3() * UvMapHelp.CubeBrightness[LightingTop];
-            var lightBottom = UvMapHelp.LightColor.ToVector3() * UvMapHelp.CubeBrightness[LightingBottom];
-
-            var lightLeft = UvMapHelp.LightColor.ToVector3() * UvMapHelp.CubeBrightness[LightingLeft];
-            var lightRight = UvMapHelp.LightColor.ToVector3() * UvMapHelp.CubeBrightness[LightingRight];
-
-            var lightFront = UvMapHelp.LightColor.ToVector3() * UvMapHelp.CubeBrightness[LightingFront];
-            var lightBack = UvMapHelp.LightColor.ToVector3() * UvMapHelp.CubeBrightness[LightingBack];
-
-            ColorFront = new Color(UvMapHelp.FaceBrightness[0] * (originalSide * lightFront));
-            ColorBack = new Color(UvMapHelp.FaceBrightness[1] * (originalSide * lightBack));
-
-            ColorLeft = new Color(UvMapHelp.FaceBrightness[3] * (originalSide * lightLeft));
-            ColorRight = new Color(UvMapHelp.FaceBrightness[2] * (originalSide * lightRight));
-
-            ColorTop = new Color(UvMapHelp.FaceBrightness[4] * (originalTop * lightTop));
-            ColorBottom = new Color(UvMapHelp.FaceBrightness[5] * (originalBottom * lightBottom));
+	        ColorTop = colorTop;
+	        ColorBottom = colorBottom;
         }
     }
 
@@ -134,5 +81,36 @@ namespace Alex.Utils
                 0.8f, 0.8f, // East / West
                 1.0f, 0.5f // Top / Bottom
             };
+
+	    public static Color AdjustColor(Color color, BlockFace face, int lighting)
+	    {
+		    float brightness = 1f;
+		    switch (face)
+		    {
+			    case BlockFace.Down:
+				    brightness = FaceBrightness[5];
+				    break;
+			    case BlockFace.Up:
+				    brightness = FaceBrightness[4];
+					break;
+			    case BlockFace.East:
+				    brightness = FaceBrightness[2];
+					break;
+			    case BlockFace.West:
+				    brightness = FaceBrightness[3];
+					break;
+			    case BlockFace.North:
+				    brightness = FaceBrightness[0];
+					break;
+			    case BlockFace.South:
+				    brightness = FaceBrightness[1];
+					break;
+			    case BlockFace.None:
+
+				    break;
+		    }
+		    var light = LightColor.ToVector3() * CubeBrightness[lighting];
+			return new Color(brightness * (color.ToVector3() * light));
+		}
     }
 }

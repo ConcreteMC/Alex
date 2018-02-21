@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Alex.Rendering.UI;
+using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -20,7 +21,7 @@ namespace Alex.Gamestates
         public override void Init(RenderArgs args)
         {
             Alex.IsMouseVisible = true;
-            BackGround = ResManager.ImageToTexture2D(Properties.Resources.mcbg);
+            BackGround = TextureUtils.ImageToTexture2D(args.GraphicsDevice,Properties.Resources.mcbg);
             Button opton = new Button("Return to menu")
             {
                 Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 70),

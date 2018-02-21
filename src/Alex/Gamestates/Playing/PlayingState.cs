@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Linq;
 using Alex.Blocks;
 using Alex.Gamestates.Playing;
-using Alex.Graphics.Items;
 using Alex.Network;
 using Alex.Properties;
 using Alex.Rendering;
@@ -35,7 +34,7 @@ namespace Alex.Gamestates
 			Alex = alex;
 			Camera = new FirstPersonCamera(alex.GameSettings.RenderDistance, Vector3.Zero, Vector3.Zero);
 
-			World = new World(Alex.GraphicsDevice, Camera);
+			World = new World(Alex, Alex.GraphicsDevice, Camera);
 
 			RenderDistance = Alex.GameSettings.RenderDistance;
 
@@ -55,7 +54,7 @@ namespace Alex.Gamestates
 			//FpsCounter = new FrameCounter();
 
 			FpsCounter = new FpsMonitor();
-			CrosshairTexture = ResManager.ImageToTexture2D(Resources.crosshair);
+			CrosshairTexture = TextureUtils.ImageToTexture2D(args.GraphicsDevice,Resources.crosshair);
 
 			_selectedBlock = Vector3.Zero;
 			ChatMessages = new List<string>();
@@ -149,11 +148,11 @@ namespace Alex.Gamestates
 		{
 			var vec = new Vector3(chunkColumn.x, 0, chunkColumn.z);
 			Chunk convertedChunk = new Chunk(vec);
-			for (int x = 0; x < 16; x++)
+			for (int x = 0; x < Chunk.ChunkWidth; x++)
 			{
-				for (int y = 0; y < 128; y++)
+				for (int y = 0; y < Chunk.ChunkHeight; y++)
 				{
-					for (int z = 0; z < 16; z++)
+					for (int z = 0; z < Chunk.ChunkDepth; z++)
 					{
 						var blockId = chunkColumn.GetBlock(x, y, z);
 						var metadata = chunkColumn.GetMetadata(x, y, z);
@@ -161,6 +160,9 @@ namespace Alex.Gamestates
 						var skyLight = chunkColumn.GetSkylight(x, y, z);
 						var blockLight = chunkColumn.GetBlocklight(x, y, z);
 
+						var height = chunkColumn.GetHeight(x, z);
+
+						convertedChunk.SetHeight(x,z,height);
 						convertedChunk.SetBlocklight(x, y, z, blockLight);
 						convertedChunk.SetSkylight(x, y, z, skyLight);
 

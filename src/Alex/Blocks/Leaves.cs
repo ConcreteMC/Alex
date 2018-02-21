@@ -1,5 +1,4 @@
-﻿using Alex.Graphics.Items;
-using Alex.Utils;
+﻿using Alex.Utils;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Blocks

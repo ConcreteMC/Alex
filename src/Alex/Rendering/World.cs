@@ -1,7 +1,8 @@
 ﻿using System;
+using Alex.Blocks;
 using Alex.Entities;
 using Alex.Gamestates;
-using Alex.Graphics.Items;
+using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -10,13 +11,13 @@ namespace Alex.Rendering
     public class World
     {
         private GraphicsDevice Graphics { get; }
-        public World(GraphicsDevice graphics, Camera.Camera camera)
+        public World(Alex alex, GraphicsDevice graphics, Camera.Camera camera)
         {
             Graphics = graphics;
-            ChunkManager = new ObjectManager(graphics, camera, this);
+			ChunkManager = new RenderingManager(alex, graphics, camera, this);
         }
 
-        public ObjectManager ChunkManager { get; private set; }
+        public RenderingManager ChunkManager { get; private set; }
 
         internal int Vertices
         {

@@ -22,13 +22,13 @@ namespace Alex
 		public static IPEndPoint ServerEndPoint { get; set; }
 		public static bool IsMultiplayer { get; set; } = false;
 
-	   // public static Alex Instance;
 		public static SpriteFont Font;
 
 		private readonly GraphicsDeviceManager _graphics;
 		private SpriteBatch _spriteBatch;
-
+		 
 		public GamestateManager GamestateManager { get; private set; }
+		public ResourceManager Resources { get; private set; }
 		public Alex()
 		{
               
@@ -41,7 +41,7 @@ namespace Alex
 
 			IsFixedTimeStep = false;
          //   _graphics.ToggleFullScreen();
-			ResManager.CheckResources();
+			
 			Username = "";
 			this.Window.AllowUserResizing = true;
 			this.Window.ClientSizeChanged += (sender, args) =>
@@ -113,11 +113,14 @@ namespace Alex
 
 		protected override void LoadContent()
 		{
-			ResManager.Init(GraphicsDevice);
+			Resources = new ResourceManager(GraphicsDevice);
+			Resources.CheckResources(GraphicsDevice, GameSettings);
+			BlockFactory.Init(Resources, Resources.ResourcePack);
+
 			_spriteBatch = new SpriteBatch(GraphicsDevice);
 			if (!File.Exists(Path.Combine("assets", "Minecraftia.xnb")))
 			{
-				File.WriteAllBytes(Path.Combine("assets", "Minecraftia.xnb"), Resources.Minecraftia1);
+				File.WriteAllBytes(Path.Combine("assets", "Minecraftia.xnb"), Properties.Resources.Minecraftia1);
 			}
 			Font = Content.Load<SpriteFont>("Minecraftia");
 

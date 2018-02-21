@@ -46,7 +46,7 @@ namespace Alex.Rendering
 
 			Convert = new Dictionary<int, Tuple<int, Func<int, byte, byte>>>
 			{
-				{36, new NoDataMapper(250)}, // minecraft:piston_extension		=> MovingBlock
+				/*{36, new NoDataMapper(250)}, // minecraft:piston_extension		=> MovingBlock
 				{43, new Mapper(43, (i, b) => (byte) (b == 6 ? 7 : b == 7 ? 6 : b))}, // Fence		=> Fence
 				{44, new Mapper(44, (i, b) => (byte) (b == 6 ? 7 : b == 7 ? 6 : b == 14 ? 15 : b == 15 ? 14 : b))}, // Fence		=> Fence
 				{
@@ -157,6 +157,7 @@ namespace Alex.Rendering
 
 				{251, new NoDataMapper(236)}, // => minecraft:concrete
 				{252, new NoDataMapper(237)}, // => minecraft:concrete_powder
+				*/
 			};
 		}
 
@@ -326,9 +327,11 @@ namespace Alex.Rendering
 					{
 					//	x = coordinates.X,
 					//	z = coordinates.Z,
-						//biomeId = dataTag["Biomes"].ByteArrayValue,
+						BiomeId = dataTag["Biomes"].ByteArrayValue,
 						//isAllAir = true
 					};
+
+					//chunk.b
 
 					//if (chunk.biomeId.Length > 256) throw new Exception();
 
@@ -338,7 +341,7 @@ namespace Alex.Rendering
 						int[] intHeights = heights.IntArrayValue;
 						for (int i = 0; i < 256; i++)
 						{
-							//chunk.height[i] = (short)intHeights[i];
+							chunk.Height[i] = (byte)intHeights[i];
 						}
 					}
 
@@ -412,8 +415,7 @@ namespace Alex.Rendering
 							}
 							else
 							{
-								if (Log.IsDebugEnabled)
-									Log.Debug($"Loaded unknown block entity: {blockEntityTag}");
+								
 							}
 						}
 					}
@@ -432,6 +434,7 @@ namespace Alex.Rendering
 						//TODO: Block lights.
 					}
 
+					chunk.CalculateHeight();
 					return chunk;
 				}
 			}

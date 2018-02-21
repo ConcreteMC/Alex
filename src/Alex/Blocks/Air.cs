@@ -1,5 +1,4 @@
 ﻿using Alex.Gamestates.Playing;
-using Alex.Graphics.Items;
 
 namespace Alex.Blocks
 {

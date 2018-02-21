@@ -8,7 +8,7 @@ namespace Alex.Rendering.Camera
         /// <summary>
         /// The nearest distance the camera will use
         /// </summary>
-        public const float NearDistance = 0.0001f;
+        public const float NearDistance = 0.1f;
 
         /// <summary>
         /// The furthest the camera can see
@@ -20,7 +20,7 @@ namespace Alex.Rendering.Camera
             Position = pos;
             Rotation = rot;
 
-            FarDistance = renderDistance * 16;
+            FarDistance = renderDistance * 16 * 16;
 
             ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(
                 MathHelper.ToRadians(70),
@@ -42,7 +42,7 @@ namespace Alex.Rendering.Camera
         {
             Position = position;
             Rotation = rotation;
-        }
+		}
 
         public Vector3 PreviewMove(Vector3 amount)
         {
