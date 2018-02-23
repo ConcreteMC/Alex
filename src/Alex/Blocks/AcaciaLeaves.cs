@@ -7,8 +7,7 @@ namespace Alex.Blocks
     {
         public AcaciaLeaves() : base(161, 0)
         {
-            SetTexture(TextureSide.All, "leaves_acacia");
-            SetColor(TextureSide.All, new Color(138, 185, 90));
+	        SetColor(TextureSide.All, new Color(138, 185, 90));
 	        Transparent = true;
         }
     }

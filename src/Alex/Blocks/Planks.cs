@@ -1,6 +1,4 @@
-﻿using Alex.Utils;
-
-namespace Alex.Blocks
+﻿namespace Alex.Blocks
 {
 	public class Planks : Block
 	{
@@ -9,22 +7,16 @@ namespace Alex.Blocks
 			switch (meta)
 			{
 				case 1:
-					SetTexture(TextureSide.All, "planks_spruce");
 					break;
 				case 2:
-					SetTexture(TextureSide.All, "planks_birch");
 					break;
 				case 3:
-					SetTexture(TextureSide.All, "planks_jungle");
 					break;
 				case 4:
-					SetTexture(TextureSide.All, "planks_acacia");
 					break;
 				case 5:
-					SetTexture(TextureSide.All, "planks_big_oak");
 					break;
 				default:
-					SetTexture(TextureSide.All, "planks_oak");
 					break;
 			}
 		}

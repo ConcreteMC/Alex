@@ -8,33 +8,19 @@ namespace Alex.Graphics.Models
 {
     public class Model
     {
-        public Vector3 Size { get; protected set; }
-		public Vector3 Offset { get; protected set; }
-
         public Model()
         {
-            Size = Vector3.One;
-	        Offset = Vector3.Zero;
+
         }
 
-        public virtual VertexPositionNormalTextureColor[] GetShape(World world, Vector3 position, Block baseBlock)
+        public virtual VertexPositionNormalTextureColor[] GetVertices(World world, Vector3 position, Block baseBlock)
         {
             return new VertexPositionNormalTextureColor[0];
         }
 
-        public void SetSize(Vector3 size)
-        {
-            Size = size;
-        }
-
-	    public void SetOffset(Vector3 offset)
-	    {
-		    Offset = offset;
-	    }
-
 	    public virtual BoundingBox GetBoundingBox(Vector3 position, Block requestingBlock)
 	    {
-			return new BoundingBox(Vector3.Zero, Size);
+			return new BoundingBox(position, position + Vector3.One);
 	    }
 
 	    protected byte GetLight(World world, Vector3 position)
@@ -47,10 +33,8 @@ namespace Alex.Graphics.Models
 
 		    byte highestBlocklight = 0;
 		    byte highestSkylight = 0;
-
-		    byte lightModifier = 0;
 		    bool lightFound = false;
-		    for(int i = 0; i < 7; i++)
+		    for(int i = 0; i < 6; i++)
 		    {
 			    switch (i)
 			    {
@@ -78,7 +62,7 @@ namespace Alex.Graphics.Models
 						break;
 			    }
 
-			    skyLight = world.GetSkyLight(position + lightOffset);// = world.GetBlock(position + lightOffset);
+			    skyLight = world.GetSkyLight(position + lightOffset);
 			    blockLight = world.GetBlockLight(position + lightOffset);
 			    if (initial && (blockLight > 0 || skyLight > 0))
 			    {

@@ -1,6 +1,4 @@
-﻿using Alex.Utils;
-
-namespace Alex.Blocks
+﻿namespace Alex.Blocks
 {
     public class StainedClay : Block
     {
@@ -55,7 +53,6 @@ namespace Alex.Blocks
                     texture = "hardened_clay_stained_black";
                     break;
             }
-			SetTexture(TextureSide.All, texture);
         }
     }
 }

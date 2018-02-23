@@ -204,7 +204,7 @@ namespace Alex.Gamestates.Playing
                 var feetBlock = World.GetBlock(feetBlockPosition);
                 var feetBoundingBox = feetBlock.GetBoundingBox(feetBlockPosition);
 
-                var difference = (preview.Y) - (feetBlockPosition.Y + feetBlock.BlockModel.Size.Y);
+                var difference = (preview.Y) - (feetBlockPosition.Y + feetBoundingBox.Max.Y);
 
                 var playerBoundingBox = GetPlayerBoundingBox(preview);
 
@@ -216,7 +216,7 @@ namespace Alex.Gamestates.Playing
                 else if (!headBlock.Solid && !IsColiding(playerBoundingBox, headBoundingBox) && feetBlock.Solid &&
                          (difference <= 0.5f))
                 {
-                    Camera.Move((v) + new Vector3(0, feetBlock.BlockModel.Size.Y, 0));
+                    Camera.Move((v) + new Vector3(0, feetBoundingBox.Max.Y, 0));
                 }
                 else
                 {

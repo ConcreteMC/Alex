@@ -1,6 +1,4 @@
-﻿using Alex.Utils;
-
-namespace Alex.Blocks
+﻿namespace Alex.Blocks
 {
 	public class Sand : Block
 	{
@@ -8,11 +6,9 @@ namespace Alex.Blocks
 		{
 			if (meta == 1)
 			{
-				SetTexture(TextureSide.All, "red_sand");
 			}
 			else
 			{
-				SetTexture(TextureSide.All, "sand");
 			}
 
 			Solid = true;

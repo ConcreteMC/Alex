@@ -96,6 +96,7 @@
     <Compile Include="Graphics\Mesh.cs" />
     <Compile Include="Graphics\Models\Model.cs" />
     <Compile Include="Graphics\Models\ResourcePackModel.cs" />
+    <Compile Include="Graphics\Models\WaterModel.cs" />
     <Compile Include="Network\MiNETClient.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>

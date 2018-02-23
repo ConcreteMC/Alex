@@ -4,7 +4,6 @@
     {
         public StoneBrick() : base(98, 0)
         {
-            SetTexture(Utils.TextureSide.All, "stonebrick");
         }
     }
 }

@@ -14,7 +14,6 @@ namespace Alex.Blocks
 
 			Transparent = true;
 			Solid = false;
-			SetTexture(TextureSide.All, "tallgrass");
 			SetColor(TextureSide.All, new Color(138, 185, 90));
 		}
 	}

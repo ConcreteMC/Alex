@@ -6,7 +6,6 @@ using System.Text;
 using Alex.Blocks;
 using Alex.Graphics.Models;
 using Alex.Properties;
-using Alex.Utils;
 using log4net;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -25,70 +24,73 @@ namespace Alex
 		private static ConcurrentDictionary<int, BlockMeta> _blockMeta = new ConcurrentDictionary<int, BlockMeta>();
 
 		private static BlockModel CubeModel { get; set; }
-		public static void Init(ResourceManager resources, MCResourcePack resourcePack)
+
+	    internal static void Init()
+	    {
+		    JArray blockArray = JArray.Parse(Encoding.UTF8.GetString(Resources.blocks));
+		    Dictionary<string, JObject> blockMetaDictionary =
+			    JsonConvert.DeserializeObject<Dictionary<string, JObject>>(
+				    Encoding.UTF8.GetString(Resources.blockstates_without_models_pretty));
+		    foreach (var item in blockArray)
+		    {
+			    byte id = 0;
+			    bool transparent = false;
+			    string name = string.Empty;
+			    string displayName = string.Empty;
+
+			    foreach (dynamic entry in item)
+			    {
+				    if (entry.Name == "id")
+				    {
+					    id = entry.Value;
+				    }
+				    else if (entry.Name == "transparent")
+				    {
+					    transparent = entry.Value;
+				    }
+				    else if (entry.Name == "name")
+				    {
+					    name = entry.Value;
+				    }
+				    else if (entry.Name == "displayName")
+				    {
+					    displayName = entry.Value;
+				    }
+			    }
+
+			    if (id == 0 || string.IsNullOrWhiteSpace(name)) continue;
+
+			    BlockMeta meta = new BlockMeta()
+			    {
+				    Transparent = transparent,
+				    DisplayName = displayName
+			    };
+
+			    JObject found = blockMetaDictionary
+				    .FirstOrDefault(x => x.Key.StartsWith($"minecraft:{name}", StringComparison.InvariantCultureIgnoreCase)).Value;
+			    if (found != null)
+			    {
+				    meta.AmbientOcclusionLightValue = found["ambientOcclusionLightValue"].Value<double>();
+				    meta.IsFullBlock = found["isFullBlock"].Value<bool>();
+				    meta.LightOpacity = found["lightOpacity"].Value<int>();
+				    meta.LightValue = found["lightValue"].Value<int>();
+			    }
+
+			    _blockMeta.TryAdd(id, meta);
+		    }
+		}
+
+	    internal static int LoadResources(ResourceManager resources, MCResourcePack resourcePack, bool replace, bool reportMissing = false)
 		{
 			if (resourcePack.TryGetBlockModel("cube_all", out BlockModel cube))
 			{
-				cube.TextureDefinitions["all"] = "no_texture";
+				cube.Textures["all"] = "no_texture";
 				CubeModel = cube;
 			}
 
 			Dictionary<uint, string> blockStateIds =
 				JsonConvert.DeserializeObject<Dictionary<uint, string>>(Encoding.UTF8.GetString(Resources.blockstate_ids));
 
-			JArray blockArray = JArray.Parse(Encoding.UTF8.GetString(Resources.blocks));
-			Dictionary<string, JObject> blockMetaDictionary =
-				JsonConvert.DeserializeObject<Dictionary<string, JObject>>(
-					Encoding.UTF8.GetString(Resources.blockstates_without_models_pretty)); 
-			foreach (var item in blockArray)
-			{
-				byte id = 0;
-				bool transparent = false;
-				string name = string.Empty;
-				string displayName = string.Empty;
-
-				foreach (dynamic entry in item)
-				{
-					if (entry.Name == "id")
-					{
-						id = entry.Value;
-					}
-					else if (entry.Name == "transparent")
-					{
-						transparent = entry.Value;
-					}
-					else if (entry.Name == "name")
-					{
-						name = entry.Value;
-					}
-					else if (entry.Name == "displayName")
-					{
-						displayName = entry.Value;
-					}
-				}
-
-				if (id == 0 || string.IsNullOrWhiteSpace(name)) continue;
-
-				BlockMeta meta = new BlockMeta()
-				{
-					Transparent = transparent,
-					DisplayName = displayName
-				};
-
-				JObject found = blockMetaDictionary
-					.FirstOrDefault(x => x.Key.StartsWith($"minecraft:{name}", StringComparison.InvariantCultureIgnoreCase)).Value;
-				if (found != null)
-				{
-					 meta.AmbientOcclusionLightValue = found["ambientOcclusionLightValue"].Value<double>();
-					meta.IsFullBlock = found["isFullBlock"].Value<bool>();
-					meta.LightOpacity = found["lightOpacity"].Value<int>();
-					meta.LightValue = found["lightValue"].Value<int>();
-				}
-
-				_blockMeta.TryAdd(id, meta);
-			}
-
-			//List<string> debugged = new List<string>();
 			int importCounter = 0;
 			foreach (var blockState in blockStateIds)
 			{
@@ -100,8 +102,14 @@ namespace Alex
 				string variantKey;
 				var result = Parse(resourcePack, blockState.Value, out variantKey);
 				if (result == null)
+				{   if (reportMissing)
+						Log.Warn($"Missing blockstate for {blockState.Value} (ID: {blockID} Meta: {metadata})");
+
+					continue;
+				}
+				if (result.Model == null)
 				{
-					Log.Warn($"Missing blockstate for {blockState.Value} (ID: {blockID} Meta: {metadata})");
+					Log.Warn($"Missing blockstate model for {blockState.Value} (ID: {blockID} Meta: {metadata})");
 					continue;
 				}
 				BlockMeta knownMeta;
@@ -114,7 +122,7 @@ namespace Alex
 					};
 				}
 
-				if (_registeredBlocks.TryAdd(id, () =>
+				if (Load(id, () =>
 				{
 					var block = new Block(id)
 					{
@@ -124,18 +132,30 @@ namespace Alex
 						LightValue = knownMeta.LightValue,
 						AmbientOcclusionLightValue = knownMeta.AmbientOcclusionLightValue,
 						LightOpacity = knownMeta.LightOpacity,
-						
+
 					};
 
-					block.SetTexture(TextureSide.All, "no_texture");
 					return block;
-				}))
+				}, replace))
 				{
 					importCounter++;
 				}
 			}
 
-			Log.Info($"Imported {importCounter} block states");
+			return importCounter;
+	    }
+
+	    private static bool Load(uint id, Func<Block> blockFunction, bool replace)
+	    {
+		    if (replace)
+		    {
+			    _registeredBlocks.AddOrUpdate(id, blockFunction, (u, func) => { return blockFunction; });
+			    return true;
+		    }
+		    else
+		    {
+			    return _registeredBlocks.TryAdd(id, blockFunction);
+		    }
 	    }
 
 	    private static BlockStateModel Parse(MCResourcePack resources, string rawBlockState, out string variantKey)
@@ -234,8 +254,11 @@ namespace Alex
 
 	    public static Block GetBlock(uint palleteId)
 	    {
-		    if (palleteId == 0) return new Air();
-			if (palleteId == 8) return new Water();
+		    int blockID = (int)(palleteId >> 4);
+		    byte metadata = (byte)(palleteId & 0x0F);
+
+			if (blockID == 0) return new Air();
+			if (blockID == 8 || blockID == 9) return new Water(metadata);
 
 			if (_registeredBlocks.TryGetValue(palleteId, out Func<Block> b))
 		    {

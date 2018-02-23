@@ -1,14 +1,15 @@
-﻿using Alex.Utils;
+﻿using Alex.Graphics.Models;
 
 namespace Alex.Blocks
 {
     public class Water : Block
     {
-        public Water() : base(8, 0)
+        public Water(byte meta = 0) : base(8, meta)
         {
             Solid = false;
             Transparent = true;
-            SetTexture(TextureSide.All, "water_still");
+
+	        BlockModel = new WaterModel();
         }
     }
 }

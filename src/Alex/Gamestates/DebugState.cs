@@ -210,8 +210,7 @@ namespace Alex.Gamestates
 				if (_raytracedBlock.Y > 0 && _raytracedBlock.Y < 256)
 				{
 					selBlock = World.GetBlock(_raytracedBlock.X, _raytracedBlock.Y, _raytracedBlock.Z);
-					var boundingBox = new Microsoft.Xna.Framework.BoundingBox(_raytracedBlock + selBlock.BlockModel.Offset,
-						_raytracedBlock + selBlock.BlockModel.Offset + selBlock.BlockModel.Size);
+					var boundingBox = selBlock.GetBoundingBox(_raytracedBlock);
 
 					args.SpriteBatch.RenderBoundingBox(
 						boundingBox,

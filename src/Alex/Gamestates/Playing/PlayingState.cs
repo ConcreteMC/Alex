@@ -315,8 +315,7 @@ namespace Alex.Gamestates
 				if (_selectedBlock.Y > 0 && _selectedBlock.Y < 256)
 				{
 					selBlock = World.GetBlock(_selectedBlock.X, _selectedBlock.Y, _selectedBlock.Z);
-					var boundingBox = new BoundingBox(_selectedBlock + selBlock.BlockModel.Offset,
-						_selectedBlock + selBlock.BlockModel.Offset + selBlock.BlockModel.Size);
+					var boundingBox = selBlock.GetBoundingBox(_selectedBlock);
 
 					args.SpriteBatch.RenderBoundingBox(
 						boundingBox,

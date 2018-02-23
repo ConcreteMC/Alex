@@ -1,4 +1,5 @@
-﻿using Alex.Graphics.Models;
+﻿using System;
+using Alex.Graphics.Models;
 using Alex.Rendering;
 using Alex.Utils;
 using log4net;
@@ -34,53 +35,34 @@ namespace Alex.Blocks
 	    public Block(uint blockStateId)
 	    {
 		    BlockStateID = blockStateId;
+		    BlockId = (int)(blockStateId >> 4);
+		    Metadata = (byte)(blockStateId & 0x0F);
 
-		    Solid = true;
+			Solid = true;
 		    Transparent = false;
 		    Renderable = true;
 		    HasHitbox = true;
 
 		    SetColor(TextureSide.All, Color.White);
-			SetTexture(TextureSide.All, "no_texture");
-
-			BlockId = (int)(blockStateId >> 4);
-		    Metadata = (byte)(blockStateId & 0x0F);
 		}
 
 	    public BoundingBox GetBoundingBox(Vector3 blockPosition)
 	    {
 			if (BlockModel == null)
 				return new BoundingBox(blockPosition, blockPosition + Vector3.One);
+
 		    return BlockModel.GetBoundingBox(blockPosition, this);
 		}
 
         public VertexPositionNormalTextureColor[] GetVertices(Vector3 position, World world)
         {
-            return BlockModel.GetShape(world, position + BlockModel.Offset, this);
+	        if (BlockModel == null)
+				return new VertexPositionNormalTextureColor[0];
+
+			return BlockModel.GetVertices(world, position, this);
         }
 
-        public void SetTexture(TextureSide side, string textureName)
-        {
-            switch (side)
-            {
-                case TextureSide.Top:
-                    TopTexture = textureName;
-                    break;
-                case TextureSide.Bottom:
-                    BottomTexture = textureName;
-                    break;
-                case TextureSide.Side:
-                    SideTexture = textureName;
-                    break;
-                case TextureSide.All:
-                    TopTexture = textureName;
-                    BottomTexture = textureName;
-                    SideTexture = textureName;
-                    break;
-            }
-        }
-
-        public void SetColor(TextureSide side, Color color)
+	    public void SetColor(TextureSide side, Color color)
         {
             switch (side)
             {
@@ -101,13 +83,9 @@ namespace Alex.Blocks
             }
         }
 
-        public string TopTexture { get; private set; }
-        public string SideTexture { get; private set; }
-        public string BottomTexture { get; private set; }
-
-        public Color TopColor { get; set; }
-        public Color SideColor { get; set; }
-		public Color BottomColor { get; set; }
+        public Color TopColor { get; private set; }
+        public Color SideColor { get; private set; }
+		public Color BottomColor { get; private set; }
 
 	    public string DisplayName { get; set; } = null;
 	    public override string ToString()
@@ -117,7 +95,15 @@ namespace Alex.Blocks
 
 	    public static uint GetBlockStateID(int id, byte meta)
 	    {
-		   return (uint)(id << 4 | meta);
+		    if (id < 0) throw new ArgumentOutOfRangeException();
+
+		    return (uint) (id << 4 | meta);
+	    }
+
+	    public static void StateIDToRaw(uint stateId, out int id, out byte meta)
+	    {
+		    id = (int)(stateId >> 4);
+		    meta = (byte)(stateId & 0x0F);
 		}
 	}
 }

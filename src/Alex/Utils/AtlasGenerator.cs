@@ -26,7 +26,7 @@ namespace Alex.Utils
 	        }
         }
 
-	    private Dictionary<string, Vector2> _atlasLocations = new Dictionary<string, Vector2>();
+	    private Dictionary<string, TextureInfo> _atlasLocations = new Dictionary<string, TextureInfo>();
 
 	    private Texture2D _atlas;
 	    public Vector2 AtlasSize { get; private set; }
@@ -71,7 +71,7 @@ namespace Alex.Utils
 			_atlas = TextureUtils.BitmapToTexture2D(graphics, bitmap);
 			AtlasSize = new Vector2(_atlas.Width, _atlas.Height);
 
-            bitmap.Save("assets\\terrain.png", ImageFormat.Png);
+        //    bitmap.Save("assets\\terrain.png", ImageFormat.Png);
 			Log.Info("Texturemap generated!");
         }
 
@@ -88,7 +88,10 @@ namespace Alex.Utils
 
 			    CopyRegionIntoImage(bm.Value, r, ref bmp, destination);
 
-			    AddTextureLocation(bm.Key, new Vector2(xi, yi));
+			    if (!_atlasLocations.ContainsKey(bm.Key))
+			    {
+				    _atlasLocations.Add(bm.Key, new TextureInfo(new Vector2(xi, yi), bm.Value.Width, bm.Value.Height));
+			    }
 
 			    if (bm.Value.Height > 16)
 			    {
@@ -111,18 +114,8 @@ namespace Alex.Utils
 	    private const int AtlasWidth = 512;
 	    private const int AtlasHeight = 512;
 
-	    public int TextureWidth = 16;
-	    public int TextureHeight = 16;
-	    public float InHeigth
-	    {
-		    get { return AtlasSize.Y / TextureHeight; }
-	    }
-
-	    public float InWidth
-	    {
-		    get { return AtlasSize.X / TextureWidth; }
-	    }
-
+	    public int TextureWidth { get; private set; } = 16;
+	    public int TextureHeight { get; private set; }= 16;
 
 		public void LoadResourcePackOnTop(GraphicsDevice device, ZipArchive archive)
 		{
@@ -155,15 +148,19 @@ namespace Alex.Utils
 			}
 
 
-			Dictionary<string, Vector2> newLocations = new Dictionary<string, Vector2>();
+			Dictionary<string, TextureInfo> newLocations = new Dictionary<string, TextureInfo>();
 			int cx = 0;
 			int cy = 0;
-			Log.Debug($"Texture Height: {textureHeight} Width: {textureWidth}");
+			//Log.Debug($"Texture Height: {textureHeight} Width: {textureWidth}");
 			Bitmap modifiedBitmap = new Bitmap(32 * textureWidth, 32 * textureHeight);
 
 			foreach (var loc in _atlasLocations)
 			{
 				System.Drawing.Rectangle target = new System.Drawing.Rectangle(cx, cy, textureWidth, textureHeight);
+
+				int w = textureWidth;
+				int h = textureHeight;
+
 				var atlasLocation = loc.Value;
 				if (bitmaps.TryGetValue(loc.Key, out Bitmap texture))
 				{
@@ -171,10 +168,12 @@ namespace Alex.Utils
 				}
 				else
 				{
-					CopyRegionIntoImage(Atlas, new System.Drawing.Rectangle((int)atlasLocation.X, (int)atlasLocation.Y, 16, 16), ref modifiedBitmap, target);
+					w = 16;
+					h = 16;
+					CopyRegionIntoImage(Atlas, new System.Drawing.Rectangle((int)atlasLocation.Position.X, (int)atlasLocation.Position.Y, 16, 16), ref modifiedBitmap, target);
 				}
 
-				newLocations.Add(loc.Key, new Vector2(cx, cy));
+				newLocations.Add(loc.Key, new TextureInfo(new Vector2(cx, cy), w, h));
 
 				cx += textureWidth;
 				if (cx == modifiedBitmap.Width)
@@ -216,28 +215,34 @@ namespace Alex.Utils
 			_atlas = TextureUtils.BitmapToTexture2D(Graphics, modifiedBitmap);
 		    AtlasSize = new Vector2(_atlas.Width, _atlas.Height);
 
-			modifiedBitmap.Save("debug.png", ImageFormat.Png);
+			//modifiedBitmap.Save("debug.png", ImageFormat.Png);
 		}
 
-	    public Texture2D GetAtlas(GraphicsDevice graphics)
-	    {
-		    if (_atlas != null) return _atlas;
-
+	    public Texture2D GetAtlas()
+	    { 
 		    return _atlas;
 	    }
 
-	    public void AddTextureLocation(string texture, Vector2 location)
-	    {
-		    if (_atlasLocations.ContainsKey(texture)) return;
-
-		    _atlasLocations.Add(texture, location);
-	    }
-
-	    public Vector2 GetAtlasLocation(string file)
+	    public TextureInfo GetAtlasLocation(string file)
 	    {
 		    if (_atlasLocations.Count == 0) throw new Exception();
 
-		    return _atlasLocations.ContainsKey(file) ? _atlasLocations[file] : Vector2.Zero;
+		    return _atlasLocations.ContainsKey(file) ? _atlasLocations[file] : new TextureInfo(Vector2.Zero, TextureWidth, TextureHeight);
 	    }
+	}
+
+	public class TextureInfo
+	{
+		public int Width { get; } = 16;
+		public int Height { get; } = 16;
+
+		public Vector2 Position { get; } = Vector2.Zero;
+
+		public TextureInfo(Vector2 position, int width, int height)
+		{
+			Position = position;
+			Width = width;
+			Height = height;
+		}
 	}
 }

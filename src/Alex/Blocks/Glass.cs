@@ -1,6 +1,4 @@
-﻿using Alex.Utils;
-
-namespace Alex.Blocks
+﻿namespace Alex.Blocks
 {
 	public class Glass : Block
 	{
@@ -8,7 +6,6 @@ namespace Alex.Blocks
 		{
 			//Solid = false;
 			Transparent = true;
-			SetTexture(TextureSide.All, "glass");
 		}
 	}
 }

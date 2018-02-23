@@ -34,7 +34,7 @@ namespace Alex.Rendering
 
 			Effect = new AlphaTestEffect(Graphics)
             {
-                Texture = alex.Resources.Atlas.GetAtlas(graphics),
+                Texture = alex.Resources.Atlas.GetAtlas(),
                 VertexColorEnabled = true,
 				World = Matrix.Identity
             };

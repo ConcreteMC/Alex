@@ -52,9 +52,32 @@ namespace Alex
 
 		    Log.Info("Saving default resources...");
 		    File.WriteAllBytes(DefaultResourcePackPath, resourceData);
-
 		    return resourceData; 
 		}
+
+	    private MCResourcePack LoadResourcePack(GraphicsDevice graphics, Stream stream, bool replaceModels = false, bool replaceTextures = false, bool reportMissingModels = false)
+	    {
+		    MCResourcePack resourcePack = null;
+
+			using (var archive = new ZipArchive(stream))
+		    {
+			    resourcePack = new MCResourcePack(archive);
+				
+			    int imported = BlockFactory.LoadResources(this, resourcePack, replaceModels, reportMissingModels);
+				Log.Info($"Imported {imported} blockstates from resourcepack!");
+
+			    if (!replaceTextures)
+			    {
+				    Atlas.LoadResourcePackOnTop(graphics, archive);
+				}
+			    else 
+			    {
+				    Atlas.GenerateAtlas(graphics, archive);
+			    }
+		    }
+
+		    return resourcePack;
+	    }
 
         public void CheckResources(GraphicsDevice device, Settings setings)
         {
@@ -78,24 +101,32 @@ namespace Alex
 		        defaultResources = File.ReadAllBytes(DefaultResourcePackPath);
 	        }
 
-			using (var archive = new ZipArchive(new MemoryStream(defaultResources)))
-			{
-				ResourcePack = new MCResourcePack(archive);
-				Atlas.GenerateAtlas(device, archive);
-			}
-
-	        /*if (!string.IsNullOrEmpty(setings.ResourcePack))
+	        Log.Info($"Loading vanilla resourcepack...");
+	        using (MemoryStream stream = new MemoryStream(defaultResources))
 	        {
-		        string resourcePackPath = Path.Combine(ResourcePackDirectory, setings.ResourcePack);
-		        if (File.Exists(resourcePackPath))
+		        ResourcePack = LoadResourcePack(device, stream, true, true, true);
+	        }
+
+	        foreach (string file in setings.ResourcePacks)
+	        {
+		        try
 		        {
-					Log.Info($"Loading resourcepack {resourcePackPath}");
-			        using (var archive = new ZipArchive(new MemoryStream(File.ReadAllBytes(resourcePackPath))))
+			        string resourcePackPath = Path.Combine(ResourcePackDirectory, file);
+			        if (File.Exists(resourcePackPath))
 			        {
-						Atlas.LoadResourcePackOnTop(device, archive);
+				        Log.Info($"Loading resourcepack {file}...");
+
+				        using (FileStream stream = new FileStream(resourcePackPath, FileMode.Open))
+				        {
+					        LoadResourcePack(device, stream, true, false);
+				        }
 			        }
 		        }
-	        }*/
+		        catch (Exception e)
+		        {
+					Log.Warn($"Could not load resourcepack {file}!", e);
+		        }
+	        }
         }
     }
 }

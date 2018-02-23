@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Alex.Blocks;
 using Alex.Rendering;
 using Alex.Utils;
+using log4net;
 using Microsoft.Xna.Framework;
 using MiNET.Utils;
 using ResourcePackLib.Json;
@@ -23,6 +24,8 @@ namespace Alex.Graphics.Models
 {
     public class ResourcePackModel : Model
 	{
+		private static readonly ILog Log = LogManager.GetLogger(typeof(ResourcePackModel));
+		
         private BlockStateModel Variant { get; }
 		private ResourceManager Resources { get; }
 
@@ -30,9 +33,55 @@ namespace Alex.Graphics.Models
 		{
 			Resources = resources;
             Variant = variant;
+
+			//CalculateBoundingBox();
         }
 
-		public override VertexPositionNormalTextureColor[] GetShape(World world, V3 position, Block baseBlock)
+		private void CalculateBoundingBox()
+		{
+			foreach (var element in Variant.Model.Elements)
+			{
+				var faceStart = new V3((element.From.X), (element.From.Y),
+					(element.From.Z)) / 16f;
+
+				var faceEnd = new V3((element.To.X), (element.To.Y),
+					(element.To.Z)) / 16f;
+
+				if (faceEnd.X > Max.X)
+				{
+					Max.X = faceEnd.X;
+				}
+
+				if (faceEnd.Y > Max.Y)
+				{
+					Max.Y = faceEnd.Y;
+				}
+
+				if (faceEnd.Z > Max.Z)
+				{
+					Max.Z = faceEnd.Z;
+				}
+
+				if (faceStart.X < Min.X)
+				{
+					Min.X = faceStart.X;
+				}
+
+				if (faceStart.Y < Min.Y)
+				{
+					Min.Y = faceStart.Y;
+				}
+
+				if (faceStart.Z < Min.Z)
+				{
+					Min.Z = faceStart.Z;
+				}
+			}
+		}
+
+		private V3 Min = V3.Zero;
+		private V3 Max = V3.One / 16f;
+		public override VertexPositionNormalTextureColor[] GetVertices(World world, V3 position, Block baseBlock)
         {
 	        var verts = new List<VertexPositionNormalTextureColor>();
 
@@ -45,11 +94,7 @@ namespace Alex.Graphics.Models
 
 			foreach (var element in Variant.Model.Elements)
             {
-	            Matrix elementRotationMatrix = modelRotationMatrix;
-
 	            var c = new V3(8f, 8f, 8f);
-	            var rotMatrix = Matrix.CreateTranslation(-c) * elementRotationMatrix *
-	                            Matrix.CreateTranslation(c);
 
 				var elementFrom = new V3((element.From.X), (element.From.Y),
 		           (element.From.Z));
@@ -57,44 +102,55 @@ namespace Alex.Graphics.Models
 	            var elementTo = new V3((element.To.X), (element.To.Y) ,
 		            (element.To.Z));
 
+	          //  Max = V3.Max(Max, elementTo);
+	         //   Min = V3.Min(Min, elementFrom);
+
+				var elementModelRotation = Matrix.CreateTranslation(-c) * modelRotationMatrix *
+	                            Matrix.CreateTranslation(c);
+
 				foreach (var face in element.Faces)
 				{
-					var startPosition = elementFrom;// V3.Transform(elementFrom, rotMatrix);
-					var endPosition = elementTo;// V3.Transform(elementTo, rotMatrix);
+					var faceStart = elementFrom;
+					var faceEnd = elementTo;
+
+					var faceWidth = faceEnd.X - faceStart.X;
+					var faceHeight = faceEnd.Y - faceStart.Y;
+					var faceDepth = faceEnd.Z - faceStart.Z;
 
 					float x1 = 0, x2 = 1 / 32f, y1 = 0, y2 = 1 / 32f;
 					if (Resources != null)
 					{
 						string textureName = "";
-						if (!Variant.Model.TextureDefinitions.TryGetValue(face.Value.TextureName.Replace("#", ""), out textureName))
+						if (!Variant.Model.Textures.TryGetValue(face.Value.Texture.Replace("#", ""), out textureName))
 						{
-							textureName = face.Value.TextureName;
+							textureName = face.Value.Texture;
 						}
 
 						if (textureName.StartsWith("#"))
 						{
-							if (!Variant.Model.TextureDefinitions.TryGetValue(textureName.Replace("#", ""), out textureName))
+							if (!Variant.Model.Textures.TryGetValue(textureName.Replace("#", ""), out textureName))
 							{
 								textureName = "no_texture";
 							}
 						}
 
-						//Debug.WriteLine($"Texture: {textureName}");
-						var textureLocation = Resources.Atlas.GetAtlasLocation(textureName.Replace("blocks/", ""));
+						var textureInfo = Resources.Atlas.GetAtlasLocation(textureName.Replace("blocks/", ""));
+						var textureLocation = textureInfo.Position;
 
-						var tileSizeX = (1f / Resources.Atlas.InWidth) / Resources.Atlas.TextureWidth; //0.0625
-						var tileSizeY = (1f / Resources.Atlas.InHeigth) / Resources.Atlas.TextureHeight;
+						var uvSize = Resources.Atlas.AtlasSize;
+
+						var pixelSizeX = (textureInfo.Width / uvSize.X) / 16f; //0.0625
+						var pixelSizeY = (textureInfo.Height / uvSize.Y) / 16f;
 
 						var uv = face.Value.UV;
 
-						var uvSize = Resources.Atlas.AtlasSize;
 						textureLocation.X /= uvSize.X;
 						textureLocation.Y /= uvSize.Y;
 
-						x1 = textureLocation.X + (uv.X1 * (Resources.Atlas.TextureWidth / 16) * tileSizeX);
-						x2 = textureLocation.X + (uv.X2 * (Resources.Atlas.TextureWidth / 16) * tileSizeX);
-						y1 = textureLocation.Y + (uv.Y1 * (Resources.Atlas.TextureHeight / 16) * tileSizeY);
-						y2 = textureLocation.Y + (uv.Y2 * (Resources.Atlas.TextureHeight / 16) * tileSizeY);
+						x1 = textureLocation.X + (uv.X1 * pixelSizeX);
+						x2 = textureLocation.X + (uv.X2 * pixelSizeX);
+						y1 = textureLocation.Y + (uv.Y1 * pixelSizeY);
+						y2 = textureLocation.Y + (uv.Y2 * pixelSizeY);
 					}
 
 					var uvmap = new UVMap(new Microsoft.Xna.Framework.Vector2(x1, y1),
@@ -130,72 +186,71 @@ namespace Alex.Graphics.Models
 							break;
 					}
 
-					cullFace = V3.Transform(cullFace, elementRotationMatrix);
+					cullFace = V3.Transform(cullFace, modelRotationMatrix);
 
 					if (cullFace != V3.Zero && !CanRender(world, baseBlock, worldPosition + cullFace))
 						continue;
 
-					var rotation = element.Rotation;
+					Matrix elementRotationMatrix = Matrix.Identity;
+					float ci = 0f;
+					var elementRotation = element.Rotation;
+					if (elementRotation.Axis != Axis.Undefined)
+					{
+						var elementRotationOrigin = new V3(elementRotation.Origin.X, elementRotation.Origin.Y, elementRotation.Origin.Z);
 
+						var elementAngle =
+							MathUtils.ToRadians((float) (elementRotation.Axis == Axis.X ? -elementRotation.Angle : elementRotation.Angle));
+						elementAngle = elementRotation.Axis == Axis.Z ? elementAngle : -elementAngle;
+						ci = 1f / (float) Math.Cos(elementAngle);
 
+						elementRotationMatrix = Matrix.CreateTranslation(-elementRotationOrigin);
+						if (elementRotation.Axis == ResourcePackLib.Json.Axis.X)
+						{
+							elementRotationMatrix *= Matrix.CreateRotationX(elementAngle);
+						}
+						else if (elementRotation.Axis == ResourcePackLib.Json.Axis.Y)
+						{
+							elementRotationMatrix *= Matrix.CreateRotationY(elementAngle);
+						}
+						else if (elementRotation.Axis == ResourcePackLib.Json.Axis.Z)
+						{
+							elementRotationMatrix *= Matrix.CreateRotationZ(elementAngle);
+						}
 
-					VertexPositionNormalTextureColor[] faceVertices = GetFaceVertices(world, worldPosition + cullFace, face.Value, face.Key, startPosition, endPosition, uvmap, element.Shade);
+						elementRotationMatrix *= Matrix.CreateTranslation(elementRotationOrigin);
+					}
+
+					VertexPositionNormalTextureColor[] faceVertices = GetFaceVertices(world, worldPosition + cullFace, face.Value, face.Key, faceStart, faceEnd, uvmap, element.Shade);
 					for (var index = 0; index < faceVertices.Length; index++)
 					{
 						var vert = faceVertices[index];
-						var originalPos = new V3(vert.Position.X, vert.Position.Y, vert.Position.Z);						
 
-						if (rotation.Axis != Axis.Undefined)
+						if (elementRotation.Axis != Axis.Undefined)
 						{
-							var rotationOrigin = new V3(rotation.Origin.X, rotation.Origin.Y, rotation.Origin.Z);
-							//rotationOrigin += elementFrom;
+							vert.Position = V3.Transform(vert.Position, elementRotationMatrix);
 
-							var angle = MathUtils.ToRadians((float)(rotation.Axis == Axis.X ? -rotation.Angle : rotation.Angle));
-							angle = rotation.Axis == Axis.Z ? angle : -angle;
-							var ci = 1f / (float)Math.Cos(angle);
-
-							Matrix faceRotation = Matrix.CreateTranslation(-rotationOrigin);
-							//offset += rotationOrigin;
-							if (rotation.Axis == ResourcePackLib.Json.Axis.X)
+							if (elementRotation.Rescale)
 							{
-								faceRotation *= Matrix.CreateRotationX(angle);
-							}
-							else if (rotation.Axis == ResourcePackLib.Json.Axis.Y)
-							{
-								faceRotation *= Matrix.CreateRotationY(angle);
-							}
-							else if (rotation.Axis == ResourcePackLib.Json.Axis.Z)
-							{
-								faceRotation *= Matrix.CreateRotationZ(angle);
-							}
-
-							faceRotation *= Matrix.CreateTranslation(rotationOrigin);
-
-							vert.Position = V3.Transform(vert.Position, faceRotation);
-
-							if (rotation.Rescale)
-							{
-								if (rotation.Axis == Axis.X || rotation.Axis == Axis.Z)
+								if (elementRotation.Axis == Axis.X || elementRotation.Axis == Axis.Z)
 								{
 									vert.Position.Y *= ci;
 								}
 
-								if (rotation.Axis == Axis.Y || rotation.Axis == Axis.Z)
+								if (elementRotation.Axis == Axis.Y || elementRotation.Axis == Axis.Z)
 								{
 									vert.Position.X *= ci;
 								}
 
-								if (rotation.Axis == Axis.Y || rotation.Axis == Axis.X)
+								if (elementRotation.Axis == Axis.Y || elementRotation.Axis == Axis.X)
 								{
 									vert.Position.Z *= ci;
 								}
-							}
-							
+							}						
 						}
 						
-						vert.Position = V3.Transform(vert.Position, rotMatrix);
+						vert.Position = V3.Transform(vert.Position, elementModelRotation);
 
-						vert.Position = position + (vert.Position / 16f);
+						vert.Position = worldPosition + (vert.Position / 16f);
 
 						verts.Add(vert);
 					}
@@ -207,8 +262,6 @@ namespace Alex.Graphics.Models
 
 		private VertexPositionNormalTextureColor[] GetFaceVertices(World world, V3 pos, BlockModelElementFace face, BlockFace blockFace, V3 startPosition, V3 endPosition, UVMap uvmap, bool shade)
 		{
-			List< VertexPositionNormalTextureColor > verts = new List<VertexPositionNormalTextureColor>();
-
 			Color faceColor = Color.White;
 			V3 normal = V3.Zero;
 			V3 textureTopLeft = V3.Zero, textureBottomLeft = V3.Zero, textureBottomRight = V3.Zero, textureTopRight = V3.Zero;
@@ -289,33 +342,32 @@ namespace Alex.Graphics.Models
 			Microsoft.Xna.Framework.Vector2 uvBottomRight = uvmap.BottomRight;
 
 			var faceRotation = face.Rotation;
-			if (!Variant.Uvlock)
+
+			if (faceRotation == 90)
 			{
-				if (faceRotation == 90)
-				{
-					uvTopLeft = uvmap.BottomLeft;
-					uvTopRight = uvmap.TopLeft;
+				uvTopLeft = uvmap.BottomLeft;
+				uvTopRight = uvmap.TopLeft;
 
-					uvBottomLeft = uvmap.BottomRight;
-					uvBottomRight = uvmap.TopRight;
-				}
-				else if (faceRotation == 180)
-				{
-					uvTopLeft = uvmap.BottomRight;
-					uvTopRight = uvmap.BottomLeft;
-
-					uvBottomLeft = uvmap.TopRight;
-					uvBottomRight = uvmap.TopLeft;
-				}
-				else if (faceRotation == 270)
-				{
-					uvTopLeft = uvmap.BottomLeft;
-					uvTopRight = uvmap.TopLeft;
-
-					uvBottomLeft = uvmap.BottomRight;
-					uvBottomRight = uvmap.TopRight;
-				}
+				uvBottomLeft = uvmap.BottomRight;
+				uvBottomRight = uvmap.TopRight;
 			}
+			else if (faceRotation == 180)
+			{
+				uvTopLeft = uvmap.BottomRight;
+				uvTopRight = uvmap.BottomLeft;
+
+				uvBottomLeft = uvmap.TopRight;
+				uvBottomRight = uvmap.TopLeft;
+			}
+			else if (faceRotation == 270)
+			{
+				uvTopLeft = uvmap.BottomLeft;
+				uvTopRight = uvmap.TopLeft;
+
+				uvBottomLeft = uvmap.BottomRight;
+				uvBottomRight = uvmap.TopRight;
+			}
+
 
 			var topLeft = new VertexPositionNormalTextureColor(textureTopLeft, normal, uvTopLeft, faceColor);
 			var topRight = new VertexPositionNormalTextureColor(textureTopRight, normal, uvTopRight, faceColor);
@@ -327,55 +379,51 @@ namespace Alex.Graphics.Models
 			switch (blockFace)
 			{
 				case BlockFace.Up:
-					verts.AddRange(new[]
+					return (new[]
 					{
-								bottomLeft, topLeft, topRight,
-								bottomRight, bottomLeft, topRight
-							});
-					break;
+						bottomLeft, topLeft, topRight,
+						bottomRight, bottomLeft, topRight
+					});
 				case BlockFace.Down:
-					verts.AddRange(new[]
+					return (new[]
 					{
-								topLeft, bottomLeft, topRight,
-								bottomLeft, bottomRight, topRight
-							});
-					break;
+						topLeft, bottomLeft, topRight,
+						bottomLeft, bottomRight, topRight
+					});
 				case BlockFace.North:
-					verts.AddRange(new[]
+					return (new[]
 					{
-								topLeft, bottomLeft, topRight,
-								bottomLeft, bottomRight, topRight
-							});
-					break;
+						topLeft, bottomLeft, topRight,
+						bottomLeft, bottomRight, topRight
+					});
 				case BlockFace.East:
-					verts.AddRange(new[]
+					return (new[]
 					{
-								bottomLeft, topLeft, topRight,
-								bottomRight, bottomLeft, topRight
-							});
-					break;
+						bottomLeft, topLeft, topRight,
+						bottomRight, bottomLeft, topRight
+					});
 				case BlockFace.South:
-					verts.AddRange(new[]
+					return (new[]
 					{
-								bottomLeft, topLeft, topRight,
-								bottomRight, bottomLeft, topRight
-							});
-					break;
+						bottomLeft, topLeft, topRight,
+						bottomRight, bottomLeft, topRight
+					});
 				case BlockFace.West:
-					verts.AddRange(new[]
+					return (new[]
 					{
-								topLeft, bottomLeft, topRight,
-								bottomLeft, bottomRight, topRight
-							});
-					break;
+						topLeft, bottomLeft, topRight,
+						bottomLeft, bottomRight, topRight
+					});
 			}
 
-			return verts.ToArray();
+			return new VertexPositionNormalTextureColor[0];
 		}
 
 		public override BoundingBox GetBoundingBox(V3 position, Block requestingBlock)
 		{
-			return new BoundingBox(position, position + new V3(1, 1, 1));
+			//var max = new V3(Math.Max(Min.X, Max.X), Math.Max(Min.Y, Max.Y), Math.Max(Min.Z, Max.Z));
+			//var min = new V3(Math.Min(Min.X, Max.X), Math.Min(Min.Y, Max.Y), Math.Min(Min.Z, Max.Z));
+			return new BoundingBox(position + Min, position + Max);
 		}
 	}
 

@@ -113,9 +113,10 @@ namespace Alex
 
 		protected override void LoadContent()
 		{
+			BlockFactory.Init();
+
 			Resources = new ResourceManager(GraphicsDevice);
 			Resources.CheckResources(GraphicsDevice, GameSettings);
-			BlockFactory.Init(Resources, Resources.ResourcePack);
 
 			_spriteBatch = new SpriteBatch(GraphicsDevice);
 			if (!File.Exists(Path.Combine("assets", "Minecraftia.xnb")))
