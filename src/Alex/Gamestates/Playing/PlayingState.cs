@@ -146,7 +146,7 @@ namespace Alex.Gamestates
 
 		private void Client_OnChunkData(MiNET.Worlds.ChunkColumn chunkColumn)
 		{
-			var vec = new Vector3(chunkColumn.x, 0, chunkColumn.z);
+			/*var vec = new Vector3(chunkColumn.x, 0, chunkColumn.z);
 			Chunk convertedChunk = new Chunk(vec);
 			for (int x = 0; x < Chunk.ChunkWidth; x++)
 			{
@@ -198,7 +198,7 @@ namespace Alex.Gamestates
 						World.ChunkManager.RemoveChunk(i);
 					}
 				}
-			}
+			}*/
 		}
 
 		private void OnCharacterInput(object sender, char c)
@@ -252,7 +252,7 @@ namespace Alex.Gamestates
 		public override void Render2D(RenderArgs args)
 		{
 			//FpsCounter.Update((float) args.GameTime.ElapsedGameTime.TotalSeconds);
-			try
+		/*	try
 			{
 				args.SpriteBatch.Begin();
 
@@ -383,7 +383,7 @@ namespace Alex.Gamestates
 			{
 				args.SpriteBatch.End();
 			}
-			base.Render2D(args);
+			base.Render2D(args);*/
 		}
 
 		public override void Render3D(RenderArgs args)

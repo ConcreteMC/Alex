@@ -5,6 +5,8 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using Alex.API.Graphics;
+using Alex.API.World;
 using Alex.Blocks;
 using Alex.Rendering;
 using Alex.Utils;
@@ -81,7 +83,7 @@ namespace Alex.Graphics.Models
 
 		private V3 Min = V3.Zero;
 		private V3 Max = V3.One / 16f;
-		public override VertexPositionNormalTextureColor[] GetVertices(Rendering.World world, V3 position, Block baseBlock)
+		public override VertexPositionNormalTextureColor[] GetVertices(IWorld world, V3 position, Block baseBlock)
         {
 	        var verts = new List<VertexPositionNormalTextureColor>();
 
@@ -607,7 +609,7 @@ namespace Alex.Graphics.Models
 			}
 		}
 
-		public override VertexPositionNormalTextureColor[] GetVertices(World world, V3 position, Block baseBlock)
+		public override VertexPositionNormalTextureColor[] GetVertices(IWorld world, V3 position, Block baseBlock)
 		{
 			var verts = new List<VertexPositionNormalTextureColor>();
 

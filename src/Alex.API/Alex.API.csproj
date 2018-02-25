@@ -30,6 +30,13 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="MiNET">
+      <HintPath>..\..\..\..\PikaGitLab\BetterCraft\External\MiNET.dll</HintPath>
+    </Reference>
+    <Reference Include="MonoGame.Framework, Version=3.6.0.1625, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MonoGame.Framework.Portable.3.6.0.1625\lib\portable-net45+win8+wpa81\MonoGame.Framework.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -42,8 +49,20 @@
   <ItemGroup>
     <Compile Include="Class1.cs" />
     <Compile Include="Graphics\IRenderable.cs" />
+    <Compile Include="Graphics\Mesh.cs" />
+    <Compile Include="Graphics\VertexPositionNormalTextureColor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="World\IBlock.cs" />
     <Compile Include="World\IChunk.cs" />
+    <Compile Include="World\IChunkColumn.cs" />
+    <Compile Include="World\IWorld.cs" />
+    <Compile Include="World\IWorldProvider.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Blocks\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

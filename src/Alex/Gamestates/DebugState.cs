@@ -6,12 +6,14 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Alex.API.World;
 using Alex.Blocks;
 using Alex.Gamestates.Playing;
 using Alex.Properties;
 using Alex.Rendering;
 using Alex.Rendering.Camera;
 using Alex.Utils;
+using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -29,9 +31,9 @@ namespace Alex.Gamestates
 
 		private FpsMonitor FpsCounter { get; set; }
 		private Texture2D CrosshairTexture { get; set; }
-		private IWorldGenerator Generator { get; set; }
+		//private IWorldGenerator Generator { get; set; }
 
-		private List<ChunkCoordinates> LoadedChunks { get; } = new List<ChunkCoordinates>();
+		private WorldProvider WorldProvider { get; set; }
 		public DebugState(Alex alex, GraphicsDevice graphics) : base(graphics)
 		{
 			Alex = alex;
@@ -41,13 +43,13 @@ namespace Alex.Gamestates
 			CamComponent = new CameraComponent(Camera, Graphics, World, alex.GameSettings);
 		}
 
-		private ChunkCoordinates PreviousChunkCoordinates { get; set; } = new ChunkCoordinates(int.MaxValue, int.MaxValue);
 		public override void Init(RenderArgs args)
 		{
 			FpsCounter = new FpsMonitor();
 			CrosshairTexture = TextureUtils.ImageToTexture2D(args.GraphicsDevice, Resources.crosshair);
 
 			World.ResetChunks();
+			IWorldGenerator Generator;
 			//Generator = new AnvilWorldProvider("E:\\SlicNic24\'s Resource Pack Test Map")
 		//	Generator = new AnvilWorldProvider("E:\\MinecraftWorlds\\Vanilla")
 			Generator = new AnvilWorldProvider("E:\\MinecraftWorlds\\KingsLanding1")
@@ -58,62 +60,20 @@ namespace Alex.Gamestates
 			};
 			Generator.Initialize();
 
-			new Thread(() =>
-			{
-				while (true)
-				{
-					ChunkCoordinates currentCoordinates =
-						new ChunkCoordinates(new PlayerLocation(Camera.Position.X, Camera.Position.Y, Camera.Position.Z));
+			WorldProvider = new SPWorldProvider(Alex, Camera, OnChunkReceived, Unload, Generator);
 
-					if (PreviousChunkCoordinates.DistanceTo(currentCoordinates) >= 1)
-					{
-						PreviousChunkCoordinates = currentCoordinates;
-
-						var oldChunks = LoadedChunks.ToArray();
-
-						int t = Alex.GameSettings.RenderDistance;
-
-						List<ChunkCoordinates> newChunkCoordinates = new List<ChunkCoordinates>();
-						for (int x = -t; x < t; x++)
-						{
-							for (int z = -t; z < t; z++)
-							{
-								var cc = currentCoordinates + new ChunkCoordinates(x, z);
-								if (!LoadedChunks.Contains(cc))
-								{
-									var chunk =
-										Generator.GenerateChunkColumn(cc);
-
-									if (chunk == null) continue;
-									
-									World.ChunkManager.AddChunk(chunk,
-										new Vector3(cc.X, 0, cc.Z), true);
-
-									LoadedChunks.Add(cc);
-									newChunkCoordinates.Add(cc);
-								}
-							}
-						}
-
-						foreach (var chunk in oldChunks)
-						{
-							if (!newChunkCoordinates.Contains(chunk) && currentCoordinates.DistanceTo(chunk) > t + 1)
-							{
-								World.ChunkManager.RemoveChunk(new Vector3(chunk.X, 0, chunk.Z));
-								LoadedChunks.Remove(chunk);
-							}
-						}
-					}
-
-					Thread.Sleep(500);
-				}
-			})
-			{
-				IsBackground = true
-			}.Start();			
-		    
-            Camera.MoveTo(Generator.GetSpawnPoint(), Vector3.Zero);
+			Camera.MoveTo(Generator.GetSpawnPoint(), Vector3.Zero);
             base.Init(args);
+		}
+
+		private void Unload(int x, int z)
+		{
+			World.ChunkManager.RemoveChunk(new ChunkCoordinates(x,z));
+		}
+
+		private void OnChunkReceived(IChunkColumn chunkColumn, int x, int z)
+		{
+			World.ChunkManager.AddChunk(chunkColumn, new ChunkCoordinates(x, z));
 		}
 
 		private float AspectRatio { get; set; }
@@ -209,7 +169,7 @@ namespace Alex.Gamestates
 
 				if (_raytracedBlock.Y > 0 && _raytracedBlock.Y < 256)
 				{
-					selBlock = World.GetBlock(_raytracedBlock.X, _raytracedBlock.Y, _raytracedBlock.Z);
+					selBlock = (Block)World.GetBlock(_raytracedBlock.X, _raytracedBlock.Y, _raytracedBlock.Z);
 					var boundingBox = selBlock.GetBoundingBox(_raytracedBlock);
 
 					args.SpriteBatch.RenderBoundingBox(

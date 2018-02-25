@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Alex.API.World;
 using fNbt;
 using log4net;
 using Microsoft.Xna.Framework;
@@ -242,14 +243,14 @@ namespace Alex.Rendering
 			_chunkCache.Clear();
 		}
 
-		public Chunk GenerateChunkColumn(ChunkCoordinates chunkCoordinates)
+		public IChunkColumn GenerateChunkColumn(ChunkCoordinates chunkCoordinates)
 		{
 			return GetChunk(chunkCoordinates, BasePath, MissingChunkProvider);
 		}
 
 	//	public Queue<Block> LightSources { get; set; } = new Queue<Block>();
 
-		public Chunk GetChunk(ChunkCoordinates coordinates, string basePath, IWorldGenerator generator)
+		public IChunkColumn GetChunk(ChunkCoordinates coordinates, string basePath, IWorldGenerator generator)
 		{
 			try
 			{
@@ -323,10 +324,10 @@ namespace Alex.Rendering
 
 					NbtList sections = dataTag["Sections"] as NbtList;
 
-					Chunk chunk = new Chunk(coordinates.X, 0, coordinates.Z)
+					Worlds.ChunkColumn chunk = new Worlds.ChunkColumn()
 					{
-					//	x = coordinates.X,
-					//	z = coordinates.Z,
+						X = coordinates.X,
+						Z = coordinates.Z,
 						BiomeId = dataTag["Biomes"].ByteArrayValue,
 						//isAllAir = true
 					};
@@ -451,7 +452,7 @@ namespace Alex.Rendering
 			}
 		}
 
-		private void ReadSection(NbtTag sectionTag, Chunk chunk, bool convertBid = true)
+		private void ReadSection(NbtTag sectionTag, Worlds.ChunkColumn chunk, bool convertBid = true)
 		{
 			int sectionIndex = sectionTag["Y"].ByteValue;
 			byte[] blocks = sectionTag["Blocks"].ByteArrayValue;
@@ -513,11 +514,11 @@ namespace Alex.Rendering
 
 						if (ReadSkyLight)
 						{
-							chunk.SetSkylight(x, yi, z, Nibble4(skyLight, anvilIndex));
+							chunk.SetSkyLight(x, yi, z, Nibble4(skyLight, anvilIndex));
 						}
 						else
 						{
-							chunk.SetSkylight(x, yi, z, 0);
+							chunk.SetSkyLight(x, yi, z, 0);
 						}
 
 						if (blockId == 0) continue;

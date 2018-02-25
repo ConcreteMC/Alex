@@ -1,4 +1,5 @@
 ﻿using System;
+using Alex.API.World;
 using Alex.Blocks;
 using log4net;
 using LibNoise;
@@ -9,6 +10,7 @@ using MiNET.Utils.Noise;
 using MiNET.Worlds;
 using MiNET.Worlds.Decorators;
 using MiNET.Worlds.Generators;
+using ChunkColumn = Alex.Worlds.ChunkColumn;
 using Voronoi = MiNET.Utils.Noise.Voronoi;
 
 namespace Alex.Rendering
@@ -162,10 +164,12 @@ namespace Alex.Rendering
 
 		}
 
-		public Chunk GenerateChunkColumn(ChunkCoordinates chunkCoordinates)
+		public IChunkColumn GenerateChunkColumn(ChunkCoordinates chunkCoordinates)
 		{
 			//	Stopwatch sw = Stopwatch.StartNew();
-			Chunk chunk = new Chunk(chunkCoordinates.X, 0, chunkCoordinates.Z);
+			Worlds.ChunkColumn chunk = new Worlds.ChunkColumn(); // new Chunk(chunkCoordinates.X, 0, chunkCoordinates.Z);
+			chunk.X = chunkCoordinates.X;
+			chunk.Z = chunkCoordinates.Z;
 
 			int x = chunkCoordinates.X;
 			int z = chunkCoordinates.Z;
@@ -185,7 +189,7 @@ namespace Alex.Rendering
 				{
 					for (int y = 0; y < 256; y++)
 					{
-						chunk.SetSkylight(mx, y, mz, 15);
+						chunk.SetSkyLight(mx, y, mz, 15);
 					}
 				}
 			}
@@ -321,7 +325,7 @@ namespace Alex.Rendering
 		private const int Depth = 16;
 		private const int Height = 256;
 
-		private void CreateTerrainShape(Chunk chunk, float[] heightMap, Biome[] biomes)
+		private void CreateTerrainShape(Worlds.ChunkColumn chunk, float[] heightMap, Biome[] biomes)
 		{
 			for (int x = 0; x < Width; x++)
 			{
@@ -356,7 +360,7 @@ namespace Alex.Rendering
 			}
 		}
 
-		private void DecorateChunk(Chunk chunk, float[] heightMap, Biome[] biomes, ChunkDecorator[] decorators)
+		private void DecorateChunk(Worlds.ChunkColumn chunk, float[] heightMap, Biome[] biomes, ChunkDecorator[] decorators)
 		{
 			for (int x = 0; x < Width; x++)
 			{
@@ -370,7 +374,7 @@ namespace Alex.Rendering
 						bool isSurface = false;
 						if (y <= height)
 						{
-							if (y < Chunk.ChunkHeight && chunk.GetBlock(x, y, z).BlockId == 1 && chunk.GetBlock(x, y + 1, z).BlockId == 0)
+							if (y < ChunkColumn.ChunkHeight && chunk.GetBlock(x, y, z).BlockId == 1 && chunk.GetBlock(x, y + 1, z).BlockId == 0)
 							{
 								isSurface = true;
 							}

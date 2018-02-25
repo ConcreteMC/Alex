@@ -1,4 +1,5 @@
-﻿using Alex.Rendering;
+﻿using Alex.Blocks;
+using Alex.Rendering;
 using Alex.Rendering.Camera;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -33,7 +34,7 @@ namespace Alex.Utils
 			{
 				//var actual = plotter.Actual();
 				var v = plotter.Get();
-				var b = world.GetBlock(v);
+				var b = (Block)world.GetBlock(v);
 				if (b != null && b.Solid && b.HasHitbox && b.GetBoundingBox(v.Floor()).Intersects(new BoundingBox(v, v)))
 				{
 					plotter.End();

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Alex.API.Graphics;
+using Alex.API.World;
 using Alex.Blocks;
 using Alex.Rendering;
 using Alex.Utils;
@@ -22,27 +24,27 @@ namespace Alex.Graphics.Models
 
 		}
 
-		public override VertexPositionNormalTextureColor[] GetVertices(World world, Vector3 position, Block baseBlock)
+		public override VertexPositionNormalTextureColor[] GetVertices(IWorld world, Vector3 position, Block baseBlock)
 		{
 			int tl = 0, tr = 0, bl = 0, br = 0;
 
 			return new VertexPositionNormalTextureColor[0];
 		}
 
-		protected int GetAverageLiquidLevels(World world, Vector3 position)
+		protected int GetAverageLiquidLevels(IWorld world, Vector3 position)
 		{
 			int level = 0;
 			for (int xx = -1; xx <= 0; xx++)
 			{
 				for (int zz = -1; zz <= 0; zz++)
 				{
-					var b = world.GetBlock(position.X + xx, position.Y + 1, position.Z + zz);
+					var b = (Block)world.GetBlock(position.X + xx, position.Y + 1, position.Z + zz);
 					if (b.BlockModel is WaterModel m && m.IsLava == IsLava)
 					{
 						return 8;
 					}
 
-					b = world.GetBlock(position.X + xx, position.Y, position.Z + zz);
+					b = (Block)world.GetBlock(position.X + xx, position.Y, position.Z + zz);
 					if (b.BlockModel is WaterModel l && l.IsLava == IsLava)
 					{
 						var nl = 7 - (Level & 0x7);

@@ -1,5 +1,7 @@
 ﻿using System;
+using Alex.API.World;
 using Alex.Blocks;
+using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using MiNET.Utils;
 
@@ -7,17 +9,21 @@ namespace Alex.Rendering
 {
 	public class VoidWorldGenerator : IWorldGenerator
 	{
-		public Chunk GenerateChunkColumn(ChunkCoordinates chunkCoordinates)
+		public IChunkColumn GenerateChunkColumn(ChunkCoordinates chunkCoordinates)
 		{
-			Chunk c = new Chunk(chunkCoordinates.X, 0, chunkCoordinates.Z);
-			for (int x = 0; x < Chunk.ChunkWidth; x++)
+			IChunkColumn c = new ChunkColumn()
 			{
-				for (int z = 0; z < Chunk.ChunkDepth; z++)
+				X = chunkCoordinates.X,
+				Z = chunkCoordinates.Z
+			};
+			for (int x = 0; x < ChunkColumn.ChunkWidth; x++)
+			{
+				for (int z = 0; z < ChunkColumn.ChunkDepth; z++)
 				{
-					for (int y = 0; y < Chunk.ChunkHeight; y++)
+					for (int y = 0; y < ChunkColumn.ChunkHeight; y++)
 					{
 						c.SetBlock(x,y,z, new Air());
-						c.SetSkylight(x,y,z, 15);
+						c.SetSkyLight(x,y,z, 15);
 					}
 					c.SetHeight(x,z, 0);
 				}

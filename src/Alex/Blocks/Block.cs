@@ -1,4 +1,6 @@
 ﻿using System;
+using Alex.API.Graphics;
+using Alex.API.World;
 using Alex.Graphics.Models;
 using Alex.Rendering;
 using Alex.Utils;
@@ -8,8 +10,8 @@ using ResourcePackLib.Json.BlockStates;
 
 namespace Alex.Blocks
 {
-    public class Block
-    {
+	public class Block : IBlock
+	{
 	    private static readonly ILog Log = LogManager.GetLogger(typeof(Block));
 	    
 		public uint BlockStateID { get; }
@@ -54,7 +56,7 @@ namespace Alex.Blocks
 		    return BlockModel.GetBoundingBox(blockPosition, this);
 		}
 
-        public VertexPositionNormalTextureColor[] GetVertices(Vector3 position, World world)
+        public VertexPositionNormalTextureColor[] GetVertices(Vector3 position, IWorld world)
         {
 	        if (BlockModel == null)
 				return new VertexPositionNormalTextureColor[0];

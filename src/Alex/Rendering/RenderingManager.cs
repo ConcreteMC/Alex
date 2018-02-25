@@ -6,6 +6,8 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Security.Principal;
 using System.Threading;
+using Alex.API.Graphics;
+using Alex.API.World;
 using Alex.Graphics;
 using Alex.Utils;
 using log4net;
@@ -31,7 +33,7 @@ namespace Alex.Rendering
             Graphics = graphics;
             Camera = camera;
             World = world;
-            Chunks = new ConcurrentDictionary<Vector3, Chunk>();
+            Chunks = new ConcurrentDictionary<ChunkCoordinates, IChunkColumn>();
 
 			Effect = new AlphaTestEffect(Graphics)
             {
@@ -43,22 +45,22 @@ namespace Alex.Rendering
             Updater = new Thread(ChunkUpdateThread)
             {IsBackground = true};
            // ChunksToUpdate = new List<Vector3>();
-		   ChunksToUpdate = new ConcurrentQueue<Vector3>();
+		   ChunksToUpdate = new ConcurrentQueue<ChunkCoordinates>();
             Updater.Start();
         }
 
         private Thread Updater { get; }
-		private List<Vector3> RemovedChunks = new List<Vector3>();
+		private List<ChunkCoordinates> RemovedChunks = new List<ChunkCoordinates>();
 		private ReaderWriterLockSlim RemovedLock = new ReaderWriterLockSlim();
 		private AutoResetEvent UpdateResetEvent = new AutoResetEvent(false);
         private void ChunkUpdateThread()
         {
 	        while (true)
 	        {
-		        Vector3 i;
+		        ChunkCoordinates i;
 		        if (ChunksToUpdate.TryDequeue(out i))
 		        {
-				    Chunk chunk;
+			        IChunkColumn chunk;
 			        if (!Chunks.TryGetValue(i, out chunk))
 			        {
 						RemovedLock.EnterUpgradeableReadLock();
@@ -193,9 +195,9 @@ namespace Alex.Rendering
 	    private int _chunkUpdates = 0;
 	    public int ChunkUpdates => _chunkUpdates;
 
-		private ConcurrentQueue<Vector3> ChunksToUpdate { get; set; }
+		private ConcurrentQueue<ChunkCoordinates> ChunksToUpdate { get; set; }
 
-        public ConcurrentDictionary<Vector3, Chunk> Chunks { get; }
+        public ConcurrentDictionary<ChunkCoordinates, IChunkColumn> Chunks { get; }
 		 
         private AlphaTestEffect Effect { get; }
 
@@ -210,7 +212,12 @@ namespace Alex.Rendering
 			Effect.View = Camera.ViewMatrix;
 			Effect.Projection = Camera.ProjectionMatrix;
 
-			var chunks = Chunks.ToArray().Where(x => Camera.BoundingFrustum.Intersects(new Microsoft.Xna.Framework.BoundingBox(x.Value.Position, x.Value.Position + x.Value.Size))).ToArray();
+			var chunks = Chunks.ToArray().Where(x =>
+			{
+				var chunkPos = new Vector3(x.Key.X * 16, 0, x.Key.Z * 16);
+				return Camera.BoundingFrustum.Intersects(new Microsoft.Xna.Framework.BoundingBox(chunkPos,
+					chunkPos + new Vector3(16, 16 * ((x.Value.GetHeighest() >> 4) + 1), 16)));
+			}).ToArray();
 
 			VertexBuffer[] opaqueBuffers = new VertexBuffer[chunks.Length];
 	        VertexBuffer[] transparentBuffers = new VertexBuffer[chunks.Length];
@@ -256,7 +263,7 @@ namespace Alex.Rendering
 				if ((chunk.IsDirty || (buffer == null || transparentBuffer == null)) &&
 				    !chunk.Scheduled)
 				{
-					ScheduleChunkUpdate(chunk.Position);
+					ScheduleChunkUpdate(c.Key);
 					if (buffer == null && transparentBuffer == null)
 					{
 						tempFailed++;
@@ -332,7 +339,7 @@ namespace Alex.Rendering
 			}*/
 		}
 
-        public void AddChunk(Chunk chunk, Vector3 position, bool doUpdates = false)
+        public void AddChunk(IChunkColumn chunk, ChunkCoordinates position, bool doUpdates = false)
         {
             Chunks.AddOrUpdate(position, chunk, (vector3, chunk1) =>
             {
@@ -366,16 +373,16 @@ namespace Alex.Rendering
 
             if (doUpdates)
             {
-                ScheduleChunkUpdate(new Vector3(position.X + 1, position.Y, position.Z));
-                ScheduleChunkUpdate(new Vector3(position.X - 1, position.Y, position.Z));
-                ScheduleChunkUpdate(new Vector3(position.X, position.Y, position.Z + 1));
-                ScheduleChunkUpdate(new Vector3(position.X, position.Y, position.Z - 1));
+                ScheduleChunkUpdate(new ChunkCoordinates(position.X + 1, position.Z));
+                ScheduleChunkUpdate(new ChunkCoordinates(position.X - 1, position.Z));
+                ScheduleChunkUpdate(new ChunkCoordinates(position.X, position.Z + 1));
+                ScheduleChunkUpdate(new ChunkCoordinates(position.X, position.Z - 1));
             }
         }
 
-        public void ScheduleChunkUpdate(Vector3 position)
+        public void ScheduleChunkUpdate(ChunkCoordinates position)
         {
-	        if (Chunks.TryGetValue(position, out Chunk chunk))
+	        if (Chunks.TryGetValue(position, out IChunkColumn chunk))
 	        {
 		        if (chunk.Scheduled)
 			        return;
@@ -389,9 +396,9 @@ namespace Alex.Rendering
 			}
         }
 
-        public void RemoveChunk(Vector3 position)
+        public void RemoveChunk(ChunkCoordinates position)
         {
-            Chunk chunk;
+	        IChunkColumn chunk;
 	        if (Chunks.TryRemove(position, out chunk))
 	        {
 				RemovedLock.EnterWriteLock();

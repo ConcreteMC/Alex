@@ -52,6 +52,7 @@
     <Compile Include="Blocks\AcaciaLeaves.cs" />
     <Compile Include="Blocks\Air.cs" />
     <Compile Include="Blocks\Bedrock.cs" />
+    <Compile Include="Blocks\Block.cs" />
     <Compile Include="Blocks\CoalBlock.cs" />
     <Compile Include="Blocks\Dirt.cs" />
     <Compile Include="Blocks\Door.cs" />
@@ -92,8 +93,6 @@
     <Compile Include="Gamestates\LoginState.cs" />
     <Compile Include="Gamestates\MenuState.cs" />
     <Compile Include="Gamestates\Playing\PlayingState.cs" />
-    <Compile Include="Blocks\Block.cs" />
-    <Compile Include="Graphics\Mesh.cs" />
     <Compile Include="Graphics\Models\Model.cs" />
     <Compile Include="Graphics\Models\ResourcePackModel.cs" />
     <Compile Include="Graphics\Models\WaterModel.cs" />
@@ -106,7 +105,6 @@
     <Compile Include="Rendering\AnvilWorldProvider.cs" />
     <Compile Include="Rendering\Camera\Camera.cs" />
     <Compile Include="Rendering\Camera\FirstPersonCamera.cs" />
-    <Compile Include="Rendering\Chunk.cs" />
     <Compile Include="Rendering\IWorldGenerator.cs" />
     <Compile Include="Rendering\RenderingManager.cs" />
     <Compile Include="Rendering\UI\Button.cs" />
@@ -140,12 +138,12 @@
     <Compile Include="Utils\Vector3Extension.cs" />
     <Compile Include="Utils\Vector3F.cs" />
     <Compile Include="Utils\Vector3I.cs" />
-    <Compile Include="Utils\VertexPositionNormalTextureColor.cs" />
     <Compile Include="KeyBinds.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Worlds\ChunkColumn.cs" />
     <Compile Include="Worlds\ChunkSection.cs" />
+    <Compile Include="Worlds\SPWorldProvider.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="AStarNavigator, Version=1.0.12.0, Culture=neutral, processorArchitecture=MSIL">

@@ -1,4 +1,5 @@
 ﻿using System;
+using Alex.Blocks;
 using Alex.Entities;
 using Alex.Rendering;
 using Alex.Rendering.Camera;
@@ -197,11 +198,11 @@ namespace Alex.Gamestates.Playing
 				
                 var preview = Camera.PreviewMove(v);
 
-                var headBlock = World.GetBlock(preview);
+                var headBlock = (Block)World.GetBlock(preview);
                 var headBoundingBox = headBlock.GetBoundingBox(preview.Floor());
 
                 var feetBlockPosition = preview.Floor() - new Vector3(0, 1, 0);
-                var feetBlock = World.GetBlock(feetBlockPosition);
+                var feetBlock = (Block)World.GetBlock(feetBlockPosition);
                 var feetBoundingBox = feetBlock.GetBoundingBox(feetBlockPosition);
 
 				var difference = (preview.Y) - (feetBoundingBox.Min.Y);
@@ -248,7 +249,7 @@ namespace Alex.Gamestates.Playing
             if (applied.Y > 255) return false;
             if (applied.Y < 0) return false;
 
-            var block = World.GetBlock(applied.X, applied.Y, applied.Z);
+            var block = (Block)World.GetBlock(applied.X, applied.Y, applied.Z);
             var boundingBox = block.GetBoundingBox(applied);
 
             if (block.Solid)
