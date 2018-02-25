@@ -62,18 +62,17 @@ namespace Alex
 			using (var archive = new ZipArchive(stream))
 		    {
 			    resourcePack = new MCResourcePack(archive);
-				
-			    int imported = BlockFactory.LoadResources(this, resourcePack, replaceModels, reportMissingModels);
-				Log.Info($"Imported {imported} blockstates from resourcepack!");
-
 			    if (!replaceTextures)
 			    {
 				    Atlas.LoadResourcePackOnTop(graphics, archive);
-				}
-			    else 
+			    }
+			    else
 			    {
 				    Atlas.GenerateAtlas(graphics, archive);
 			    }
+
+				int imported = BlockFactory.LoadResources(this, resourcePack, replaceModels, reportMissingModels);
+				Log.Info($"Imported {imported} blockstates from resourcepack!");
 		    }
 
 		    return resourcePack;

@@ -233,5 +233,13 @@ namespace Alex
 	    {
 	        return new Vector3((float)Math.Floor(toFloor.X), (float)Math.Floor(toFloor.Y), (float)Math.Floor(toFloor.Z));
 	    }
+
+		public static void Fill<TType>(this TType[] data, TType value)
+		{
+			for (int i = 0; i < data.Length; i++)
+			{
+				data[i] = value;
+			}
+		}
 	}
 }

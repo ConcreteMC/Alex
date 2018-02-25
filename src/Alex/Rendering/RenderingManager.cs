@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Security.Principal;
 using System.Threading;
+using Alex.Graphics;
 using Alex.Utils;
 using log4net;
 using Microsoft.Xna.Framework;
@@ -95,8 +96,10 @@ namespace Alex.Rendering
 
 				        try
 				        {
-					        var mesh = chunk.GenerateSolidMesh(World);
-					        var transparentMesh = chunk.GenerateTransparentMesh(World);
+					        Mesh mesh;
+					        Mesh transparentMesh;
+
+							chunk.GenerateMeshes(World, out mesh, out transparentMesh);
 
 					        try
 					        {

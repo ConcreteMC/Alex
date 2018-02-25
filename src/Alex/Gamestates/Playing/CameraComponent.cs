@@ -162,7 +162,7 @@ namespace Alex.Gamestates.Playing
 	        }
 	        else
 	        {
-		        currentDrag *= 0.05f;
+		    //    currentDrag *= 0.05f;
 				Velocity -= new Vector3(0, Gravity, 0);
 			}
 
@@ -191,7 +191,7 @@ namespace Alex.Gamestates.Playing
 		  //  Velocity -= Drag;
 
 			var v = (oldVelocity + Velocity) * 0.5f * dt;
-
+			//Matrix.CreateLookAt(v, Vector3.Forward, )
 			if (v != Vector3.Zero) //Only if we moved.
 			{
 				
@@ -204,8 +204,8 @@ namespace Alex.Gamestates.Playing
                 var feetBlock = World.GetBlock(feetBlockPosition);
                 var feetBoundingBox = feetBlock.GetBoundingBox(feetBlockPosition);
 
-                var difference = (preview.Y) - (feetBlockPosition.Y + feetBoundingBox.Max.Y);
-
+				var difference = (preview.Y) - (feetBoundingBox.Min.Y);
+				Log.Debug($"{difference}");
                 var playerBoundingBox = GetPlayerBoundingBox(preview);
 
                 if (!headBlock.Solid && !IsColiding(playerBoundingBox, headBoundingBox) &&
@@ -216,7 +216,7 @@ namespace Alex.Gamestates.Playing
                 else if (!headBlock.Solid && !IsColiding(playerBoundingBox, headBoundingBox) && feetBlock.Solid &&
                          (difference <= 0.5f))
                 {
-                    Camera.Move((v) + new Vector3(0, feetBoundingBox.Max.Y, 0));
+                    Camera.Move((v) + new Vector3(0, Math.Abs(difference), 0));
                 }
                 else
                 {

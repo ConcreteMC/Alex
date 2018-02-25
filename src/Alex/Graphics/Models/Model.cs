@@ -13,7 +13,7 @@ namespace Alex.Graphics.Models
 
         }
 
-        public virtual VertexPositionNormalTextureColor[] GetVertices(World world, Vector3 position, Block baseBlock)
+        public virtual VertexPositionNormalTextureColor[] GetVertices(Rendering.World world, Vector3 position, Block baseBlock)
         {
             return new VertexPositionNormalTextureColor[0];
         }
@@ -23,7 +23,7 @@ namespace Alex.Graphics.Models
 			return new BoundingBox(position, position + Vector3.One);
 	    }
 
-	    protected byte GetLight(World world, Vector3 position)
+	    protected byte GetLight(Rendering.World world, Vector3 position)
 	    {
 			Vector3 lightOffset = Vector3.Zero;
 
@@ -103,7 +103,7 @@ namespace Alex.Graphics.Models
 		    return result;
 	    }
 
-	    protected bool CanRender(World world, Block me, Vector3 pos)
+	    protected bool CanRender(Rendering.World world, Block me, Vector3 pos)
 	    {
 		    if (pos.Y >= 256) return true;
 

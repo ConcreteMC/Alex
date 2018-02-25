@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27130.2024
+VisualStudioVersion = 15.0.27130.2027
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alex", "Alex\Alex.csproj", "{0E811179-612C-429B-B5EF-2BCF7D9509C6}"
 EndProject
@@ -12,6 +12,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FNA", "external\FNA\FNA.csproj", "{35253CE1-C864-4CD3-8249-4D1319748E8F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alex.Data", "Alex.Data\Alex.Data.csproj", "{63D936AD-3498-45F6-84A9-48DAFCEF7D96}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alex.API", "Alex.API\Alex.API.csproj", "{0BA8A7DC-929A-4979-96A0-AEFDE9713664}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ResourcePackLib", "ResourcePackLib\ResourcePackLib.csproj", "{265F3E5A-88A0-4BFB-A4E4-1ABE7524AD86}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -56,6 +60,30 @@ Global
 		{63D936AD-3498-45F6-84A9-48DAFCEF7D96}.Release|x64.Build.0 = Release|Any CPU
 		{63D936AD-3498-45F6-84A9-48DAFCEF7D96}.Release|x86.ActiveCfg = Release|Any CPU
 		{63D936AD-3498-45F6-84A9-48DAFCEF7D96}.Release|x86.Build.0 = Release|Any CPU
+		{0BA8A7DC-929A-4979-96A0-AEFDE9713664}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{0BA8A7DC-929A-4979-96A0-AEFDE9713664}.Debug|AnyCPU.Build.0 = Debug|Any CPU
+		{0BA8A7DC-929A-4979-96A0-AEFDE9713664}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{0BA8A7DC-929A-4979-96A0-AEFDE9713664}.Debug|x64.Build.0 = Debug|Any CPU
+		{0BA8A7DC-929A-4979-96A0-AEFDE9713664}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{0BA8A7DC-929A-4979-96A0-AEFDE9713664}.Debug|x86.Build.0 = Debug|Any CPU
+		{0BA8A7DC-929A-4979-96A0-AEFDE9713664}.Release|AnyCPU.ActiveCfg = Release|Any CPU
+		{0BA8A7DC-929A-4979-96A0-AEFDE9713664}.Release|AnyCPU.Build.0 = Release|Any CPU
+		{0BA8A7DC-929A-4979-96A0-AEFDE9713664}.Release|x64.ActiveCfg = Release|Any CPU
+		{0BA8A7DC-929A-4979-96A0-AEFDE9713664}.Release|x64.Build.0 = Release|Any CPU
+		{0BA8A7DC-929A-4979-96A0-AEFDE9713664}.Release|x86.ActiveCfg = Release|Any CPU
+		{0BA8A7DC-929A-4979-96A0-AEFDE9713664}.Release|x86.Build.0 = Release|Any CPU
+		{265F3E5A-88A0-4BFB-A4E4-1ABE7524AD86}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{265F3E5A-88A0-4BFB-A4E4-1ABE7524AD86}.Debug|AnyCPU.Build.0 = Debug|Any CPU
+		{265F3E5A-88A0-4BFB-A4E4-1ABE7524AD86}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{265F3E5A-88A0-4BFB-A4E4-1ABE7524AD86}.Debug|x64.Build.0 = Debug|Any CPU
+		{265F3E5A-88A0-4BFB-A4E4-1ABE7524AD86}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{265F3E5A-88A0-4BFB-A4E4-1ABE7524AD86}.Debug|x86.Build.0 = Debug|Any CPU
+		{265F3E5A-88A0-4BFB-A4E4-1ABE7524AD86}.Release|AnyCPU.ActiveCfg = Release|Any CPU
+		{265F3E5A-88A0-4BFB-A4E4-1ABE7524AD86}.Release|AnyCPU.Build.0 = Release|Any CPU
+		{265F3E5A-88A0-4BFB-A4E4-1ABE7524AD86}.Release|x64.ActiveCfg = Release|Any CPU
+		{265F3E5A-88A0-4BFB-A4E4-1ABE7524AD86}.Release|x64.Build.0 = Release|Any CPU
+		{265F3E5A-88A0-4BFB-A4E4-1ABE7524AD86}.Release|x86.ActiveCfg = Release|Any CPU
+		{265F3E5A-88A0-4BFB-A4E4-1ABE7524AD86}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

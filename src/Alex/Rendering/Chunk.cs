@@ -66,32 +66,12 @@ namespace Alex.Rendering
 	    }
 
         public Vector3 Position { get; set; }
-        public Mesh GenerateSolidMesh(World world)
-        {
-            var vertices = new List<VertexPositionNormalTextureColor>();
-            for (var x = 0; x < ChunkWidth; x++)
-                for (var z = 0; z < ChunkDepth; z++)
-                    for (var y = 0; y < ChunkHeight; y++)
-                    {
-                        var index = GetIndex(x, y, z);
-                        if (Blocks[index] == 0) continue;
-
-                        //TODO: Do lighting in here?
-
-                        var block = BlockFactory.GetBlock(Blocks[index]);
-	                    if (!block.Renderable || block.Transparent) continue;
-
-                        var vert = block.GetVertices(new Vector3(x, y, z) + Position, world);
-                        vertices.AddRange(vert);
-                    }
-			
-            return new Mesh(vertices.ToArray());
-        }
-
-	    public Mesh GenerateTransparentMesh(World world)
+	    public void GenerateMeshes(World world, out Mesh solid, out Mesh transparent)
 	    {
-		    var vertices = new List<VertexPositionNormalTextureColor>();
-		    for (var x = 0; x < ChunkWidth; x++)
+		    var solidVertices = new List<VertexPositionNormalTextureColor>();
+		    var transparentVertices = new List<VertexPositionNormalTextureColor>();
+
+			for (var x = 0; x < ChunkWidth; x++)
 		    for (var z = 0; z < ChunkDepth; z++)
 		    for (var y = 0; y < ChunkHeight; y++)
 		    {
@@ -101,13 +81,21 @@ namespace Alex.Rendering
 			    //TODO: Do lighting in here?
 
 			    var block = BlockFactory.GetBlock(Blocks[index]);
-			    if (!block.Renderable || !block.Transparent) continue;
+			    if (!block.Renderable) continue;
 
 			    var vert = block.GetVertices(new Vector3(x, y, z) + Position, world);
-			    vertices.AddRange(vert);
+			    if (block.Transparent)
+			    {
+				    transparentVertices.AddRange(vert);
+				}
+			    else
+			    {
+				   solidVertices.AddRange(vert);
+			    }
 		    }
 
-		    return new Mesh(vertices.ToArray());
+			solid = new Mesh(solidVertices.ToArray());
+			transparent = new Mesh(transparentVertices.ToArray());
 	    }
 
 		public void SetBlock(int x, int y, int z, Block block)

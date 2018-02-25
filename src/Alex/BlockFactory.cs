@@ -22,6 +22,7 @@ namespace Alex
 	    
 		private static ConcurrentDictionary<uint, Func<Block>> _registeredBlocks = new ConcurrentDictionary<uint, Func<Block>>();
 		private static ConcurrentDictionary<int, BlockMeta> _blockMeta = new ConcurrentDictionary<int, BlockMeta>();
+		private static ConcurrentDictionary<uint, CachedResourcePackModel> _modelCache = new ConcurrentDictionary<uint, CachedResourcePackModel>();
 
 		private static BlockModel CubeModel { get; set; }
 
@@ -80,6 +81,12 @@ namespace Alex
 		    }
 		}
 
+	    private static CachedResourcePackModel GetOrCacheModel(uint state, ResourceManager resources, MCResourcePack resourcePack,
+		    BlockStateModel variant)
+	    {
+		    return _modelCache.GetOrAdd(state, u => new CachedResourcePackModel(resources, variant));
+	    }
+
 	    internal static int LoadResources(ResourceManager resources, MCResourcePack resourcePack, bool replace, bool reportMissing = false)
 		{
 			if (resourcePack.TryGetBlockModel("cube_all", out BlockModel cube))
@@ -112,6 +119,7 @@ namespace Alex
 					Log.Warn($"Missing blockstate model for {blockState.Value} (ID: {blockID} Meta: {metadata})");
 					continue;
 				}
+
 				BlockMeta knownMeta;
 				if (!_blockMeta.TryGetValue(blockID, out knownMeta))
 				{
@@ -122,11 +130,13 @@ namespace Alex
 					};
 				}
 
+				var cached = GetOrCacheModel(id, resources, resourcePack, result);
+
 				if (Load(id, () =>
 				{
 					var block = new Block(id)
 					{
-						BlockModel = new ResourcePackModel(resources, result),
+						BlockModel = cached,
 						Transparent = knownMeta.Transparent,
 						DisplayName = blockState.Value,
 						LightValue = knownMeta.LightValue,
