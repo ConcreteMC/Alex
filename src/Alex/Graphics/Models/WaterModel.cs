@@ -15,7 +15,7 @@ namespace Alex.Graphics.Models
 
 	//TODO:
 	//https://github.com/Thinkofname/steven-go/blob/master/blockliquid.go
-	public class WaterModel : Model
+	public class WaterModel : BlockModel
 	{
 		public bool IsLava = false;
 		public int Level = 8;

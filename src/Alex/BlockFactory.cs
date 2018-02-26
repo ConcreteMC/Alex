@@ -13,6 +13,7 @@ using ResourcePackLib;
 using ResourcePackLib.Json;
 using ResourcePackLib.Json.BlockStates;
 using ResourcePackLib.Json.Models;
+using BlockModel = ResourcePackLib.Json.Models.BlockModel;
 
 namespace Alex
 {
@@ -89,7 +90,7 @@ namespace Alex
 
 	    internal static int LoadResources(ResourceManager resources, MCResourcePack resourcePack, bool replace, bool reportMissing = false)
 		{
-			if (resourcePack.TryGetBlockModel("cube_all", out BlockModel cube))
+			if (resourcePack.TryGetBlockModel("cube_all", out ResourcePackLib.Json.Models.BlockModel cube))
 			{
 				cube.Textures["all"] = "no_texture";
 				CubeModel = cube;

@@ -8,9 +8,9 @@ using Microsoft.Xna.Framework;
 
 namespace Alex.Graphics.Models
 {
-    public class Model
+    public class BlockModel
     {
-        public Model()
+        public BlockModel()
         {
 
         }

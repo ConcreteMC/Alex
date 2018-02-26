@@ -28,7 +28,7 @@ namespace Alex.Blocks
 	    public int LightValue = 0;
 	    public int LightOpacity = 0;
 
-		public Model BlockModel { get; set; }
+		public BlockModel BlockModel { get; set; }
 	    protected Block(byte blockId, byte metadata) : this(GetBlockStateID(blockId, metadata))
 	    {
 		    

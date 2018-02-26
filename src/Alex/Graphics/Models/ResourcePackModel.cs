@@ -24,7 +24,7 @@ using Vector3 = System.Numerics.Vector3;
 
 namespace Alex.Graphics.Models
 {
-    public class ResourcePackModel : Model
+    public class ResourcePackModel : BlockModel
 	{
 		private static readonly ILog Log = LogManager.GetLogger(typeof(ResourcePackModel));
 		
