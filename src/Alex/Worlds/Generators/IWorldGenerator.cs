@@ -2,7 +2,7 @@
 using Microsoft.Xna.Framework;
 using MiNET.Utils;
 
-namespace Alex.Rendering
+namespace Alex.Worlds.Generators
 {
 	public interface IWorldGenerator
 	{

@@ -3,6 +3,7 @@ using Alex.Blocks;
 using Alex.Entities;
 using Alex.Rendering;
 using Alex.Rendering.Camera;
+using Alex.Worlds;
 using log4net;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

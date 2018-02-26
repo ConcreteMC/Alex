@@ -1,11 +1,9 @@
-﻿using System;
-using Alex.API.World;
+﻿using Alex.API.World;
 using Alex.Blocks;
-using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using MiNET.Utils;
 
-namespace Alex.Rendering
+namespace Alex.Worlds.Generators
 {
 	public class VoidWorldGenerator : IWorldGenerator
 	{

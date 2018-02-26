@@ -5,17 +5,16 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Alex.API.World;
+using Alex.Worlds.Generators;
 using fNbt;
 using log4net;
 using Microsoft.Xna.Framework;
-using MiNET;
 using MiNET.BlockEntities;
 using MiNET.Utils;
 using MiNET.Worlds;
 
-namespace Alex.Rendering
+namespace Alex.Worlds
 {
 	public class AnvilWorldProvider : IWorldGenerator
 	{
@@ -616,7 +615,7 @@ namespace Alex.Rendering
 			return Directory.Exists(Path.Combine(BasePath, @"DIM1"));
 		}
 
-		public static void SaveChunk(ChunkColumn chunk, string basePath)
+		public static void SaveChunk(MiNET.Worlds.ChunkColumn chunk, string basePath)
 		{
 			// WARNING: This method does not consider growing size of the chunks. Needs refactoring to find
 			// free sectors and clear up old ones. It works fine as long as no dynamic data is written
@@ -721,7 +720,7 @@ namespace Alex.Rendering
 			}
 		}
 
-		public static NbtFile CreateNbtFromChunkColumn(ChunkColumn chunk)
+		public static NbtFile CreateNbtFromChunkColumn(MiNET.Worlds.ChunkColumn chunk)
 		{
 			var nbt = new NbtFile();
 

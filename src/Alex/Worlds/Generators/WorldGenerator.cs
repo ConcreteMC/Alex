@@ -9,11 +9,9 @@ using MiNET.Utils;
 using MiNET.Utils.Noise;
 using MiNET.Worlds;
 using MiNET.Worlds.Decorators;
-using MiNET.Worlds.Generators;
-using ChunkColumn = Alex.Worlds.ChunkColumn;
 using Voronoi = MiNET.Utils.Noise.Voronoi;
 
-namespace Alex.Rendering
+namespace Alex.Worlds.Generators
 {
 	public class OverworldGenerator : IWorldGenerator
 	{

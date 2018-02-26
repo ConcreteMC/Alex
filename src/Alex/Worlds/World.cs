@@ -1,22 +1,17 @@
 ﻿using System;
 using Alex.API.World;
-using Alex.Blocks;
-using Alex.Entities;
-using Alex.Gamestates;
-using Alex.Utils;
+using Alex.Rendering;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET.Utils;
-using MiNET.Worlds;
-using ChunkColumn = Alex.Worlds.ChunkColumn;
 
-namespace Alex.Rendering
+namespace Alex.Worlds
 {
 	public class World : IWorld
 	{
         private GraphicsDevice Graphics { get; }
-		private Camera.Camera Camera { get; }
-        public World(Alex alex, GraphicsDevice graphics, Camera.Camera camera, WorldProvider worldProvider)
+		private Rendering.Camera.Camera Camera { get; }
+        public World(Alex alex, GraphicsDevice graphics, Rendering.Camera.Camera camera, WorldProvider worldProvider)
         {
             Graphics = graphics;
 	        Camera = camera;

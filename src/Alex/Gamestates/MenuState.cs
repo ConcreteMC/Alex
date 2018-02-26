@@ -6,6 +6,7 @@ using Alex.Rendering.Camera;
 using Alex.Rendering.UI;
 using Alex.Utils;
 using Alex.Worlds;
+using Alex.Worlds.Generators;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 

@@ -92,7 +92,6 @@
     <Compile Include="Gamestates\ServerState.cs" />
     <Compile Include="Gamestates\LoginState.cs" />
     <Compile Include="Gamestates\MenuState.cs" />
-    <None Include="Gamestates\Playing\PlayingState.cs.old" />
     <Compile Include="Graphics\Models\Model.cs" />
     <Compile Include="Graphics\Models\ResourcePackModel.cs" />
     <Compile Include="Graphics\Models\WaterModel.cs" />
@@ -102,10 +101,10 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Rendering\AnvilWorldProvider.cs" />
+    <Compile Include="Worlds\AnvilWorldProvider.cs" />
     <Compile Include="Rendering\Camera\Camera.cs" />
     <Compile Include="Rendering\Camera\FirstPersonCamera.cs" />
-    <Compile Include="Rendering\IWorldGenerator.cs" />
+    <Compile Include="Worlds\Generators\IWorldGenerator.cs" />
     <Compile Include="Rendering\RenderingManager.cs" />
     <Compile Include="Rendering\UI\Button.cs" />
     <Compile Include="Rendering\UI\ChatComponent.cs" />
@@ -116,9 +115,9 @@
     <Compile Include="Rendering\UI\Logo.cs" />
     <Compile Include="Rendering\UI\TrackBar.cs" />
     <Compile Include="Rendering\UI\UIComponent.cs" />
-    <Compile Include="Rendering\VoidWorldGenerator.cs" />
-    <Compile Include="Rendering\World.cs" />
-    <Compile Include="Rendering\WorldGenerator.cs" />
+    <Compile Include="Worlds\Generators\VoidWorldGenerator.cs" />
+    <Compile Include="Worlds\World.cs" />
+    <Compile Include="Worlds\Generators\WorldGenerator.cs" />
     <Compile Include="ResourceManager.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="SplashTexts.cs" />
@@ -127,20 +126,12 @@
     <Compile Include="Utils\FastRandom.cs" />
     <Compile Include="Utils\FPSCounter.cs" />
     <Compile Include="Utils\MathUtils.cs" />
-    <Compile Include="Utils\NibbleArray.cs" />
-    <Compile Include="Utils\OpenSimplexNoise.cs" />
     <Compile Include="Utils\PlotCell3F.cs" />
-    <Compile Include="Utils\Position.cs" />
     <Compile Include="Utils\RayTracer.cs" />
-    <Compile Include="Utils\RenderDistance.cs" />
-    <Compile Include="Utils\Singleton.cs" />
     <Compile Include="Utils\TextureSide.cs" />
     <Compile Include="Utils\TextureUtils.cs" />
     <Compile Include="Utils\ThreadSafeList.cs" />
     <Compile Include="Utils\UVMap.cs" />
-    <Compile Include="Utils\Vector3Extension.cs" />
-    <Compile Include="Utils\Vector3F.cs" />
-    <Compile Include="Utils\Vector3I.cs" />
     <Compile Include="KeyBinds.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
