@@ -1,8 +1,9 @@
-﻿using MiNET.Utils;
+﻿using System;
+using Microsoft.Xna.Framework;
 
 namespace Alex.API.World
 {
-	public class WorldProvider
+	public abstract class WorldProvider : IDisposable
 	{
 		public delegate void ChunkReceived(IChunkColumn chunkColumn, int x, int z);
 
@@ -11,10 +12,14 @@ namespace Alex.API.World
 		public delegate void ChunkUnload(int x, int z);
 
 		private ChunkUnload ChunkUnloadCallback;
-		public WorldProvider(ChunkReceived chunkReceivedCallback, ChunkUnload unloadCallback)
+
+		public delegate Vector3 RequestPlayerPosition();
+
+		private RequestPlayerPosition requestPlayerPositionMethod = null;
+		protected WorldProvider()
 		{
-			ChunkCallback = chunkReceivedCallback;
-			ChunkUnloadCallback = unloadCallback;
+			//ChunkCallback = chunkReceivedCallback;
+			//ChunkUnloadCallback = unloadCallback;
 		}
 
 		protected void LoadChunk(IChunkColumn chunk, int x, int z)
@@ -25,6 +30,30 @@ namespace Alex.API.World
 		protected void UnloadChunk(int x, int z)
 		{
 			ChunkUnloadCallback?.Invoke(x, z);
+		}
+
+		protected Vector3 GetPlayerPosition()
+		{
+			if (requestPlayerPositionMethod == null) return Vector3.Zero;
+			return requestPlayerPositionMethod.Invoke();
+		}
+
+		public abstract Vector3 GetSpawnPoint();
+
+		protected abstract void Initiate();
+
+		public void Init(ChunkReceived chunkLoad, ChunkUnload chunkUnload, RequestPlayerPosition playerPositionProvider)
+		{
+			ChunkCallback = chunkLoad;
+			ChunkUnloadCallback = chunkUnload;
+			requestPlayerPositionMethod = playerPositionProvider;
+
+			Initiate();
+		}
+
+		public virtual void Dispose()
+		{
+
 		}
 	}
 }

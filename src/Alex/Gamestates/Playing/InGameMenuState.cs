@@ -1,10 +1,9 @@
-﻿using System;
-using Alex.Rendering.UI;
+﻿using Alex.Rendering.UI;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-namespace Alex.Gamestates
+namespace Alex.Gamestates.Playing
 {
     public class InGameMenuState : Gamestate
     {
@@ -37,9 +36,10 @@ namespace Alex.Gamestates
 
         private void DisconnectButtonOnOnButtonClick()
         {
-            State.Disconnect();
+           // State.Disconnect();
             Alex.GamestateManager.SetActiveState("menu");
             Alex.GamestateManager.RemoveState("serverMenu");
+	        Alex.GamestateManager.RemoveState("play");
         }
 
         public override void Render3D(RenderArgs args)
@@ -67,7 +67,7 @@ namespace Alex.Gamestates
 
             if (Alex.IsActive)
             {
-                State.SendPositionUpdate(gameTime);
+                //State.SendPositionUpdate(gameTime);
 
                 KeyboardState currentKeyboardState = Keyboard.GetState();
                 if (currentKeyboardState != PreviousKeyboardState)

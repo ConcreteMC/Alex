@@ -83,7 +83,7 @@
     <Compile Include="Entities\LivingEntity.cs" />
     <Compile Include="Entities\Player.cs" />
     <Compile Include="Extensions.cs" />
-    <Compile Include="Gamestates\DebugState.cs" />
+    <Compile Include="Gamestates\Playing\PlayingState.cs" />
     <Compile Include="Gamestates\DisconnectedState.cs" />
     <Compile Include="Gamestates\Gamestate.cs" />
     <Compile Include="Gamestates\GamestateManager.cs" />
@@ -92,7 +92,7 @@
     <Compile Include="Gamestates\ServerState.cs" />
     <Compile Include="Gamestates\LoginState.cs" />
     <Compile Include="Gamestates\MenuState.cs" />
-    <Compile Include="Gamestates\Playing\PlayingState.cs" />
+    <None Include="Gamestates\Playing\PlayingState.cs.old" />
     <Compile Include="Graphics\Models\Model.cs" />
     <Compile Include="Graphics\Models\ResourcePackModel.cs" />
     <Compile Include="Graphics\Models\WaterModel.cs" />
@@ -123,6 +123,7 @@
     <Compile Include="SplashTexts.cs" />
     <Compile Include="Utils\AtlasGenerator.cs" />
     <Compile Include="Utils\Axis.cs" />
+    <Compile Include="Utils\FastRandom.cs" />
     <Compile Include="Utils\FPSCounter.cs" />
     <Compile Include="Utils\MathUtils.cs" />
     <Compile Include="Utils\NibbleArray.cs" />
@@ -134,6 +135,7 @@
     <Compile Include="Utils\Singleton.cs" />
     <Compile Include="Utils\TextureSide.cs" />
     <Compile Include="Utils\TextureUtils.cs" />
+    <Compile Include="Utils\ThreadSafeList.cs" />
     <Compile Include="Utils\UVMap.cs" />
     <Compile Include="Utils\Vector3Extension.cs" />
     <Compile Include="Utils\Vector3F.cs" />

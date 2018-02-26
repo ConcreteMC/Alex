@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using Alex.Gamestates.Playing;
 using Alex.Rendering.UI;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
@@ -73,6 +74,9 @@ namespace Alex.Gamestates
                 return;
             }
 
+	        ErrorText = "Servers are not currently supported.";
+	        return;
+
             //TODO: Connect to server
             Alex.IsMultiplayer = true;
             try
@@ -84,7 +88,7 @@ namespace Alex.Gamestates
                 return;
             }
 
-            Alex.GamestateManager.AddState("play", new PlayingState(Alex));
+            Alex.GamestateManager.AddState("play", new PlayingState(Alex, Graphics, null));
             Alex.GamestateManager.SetActiveState("play");
 
             Alex.GamestateManager.RemoveState("serverMenu");

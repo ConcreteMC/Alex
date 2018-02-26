@@ -40,7 +40,6 @@ namespace Alex.Gamestates
             });
         }
 
-
         public bool RemoveState(string name)
         {
             Gamestate state;
@@ -53,7 +52,9 @@ namespace Alex.Gamestates
                         ActiveState = null;
                     }
                 }
-                return true;
+
+	            state.Stop();
+				return true;
             }
             return false;
         }

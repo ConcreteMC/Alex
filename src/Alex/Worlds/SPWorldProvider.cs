@@ -17,28 +17,22 @@ namespace Alex.Worlds
 		private Alex Alex { get; }
 
 		private CancellationTokenSource ThreadCancellationTokenSource;
-		private Camera Cam { get; }
-		public SPWorldProvider(Alex alex, Camera camera, ChunkReceived chunkReceivedCallback, ChunkUnload unload, IWorldGenerator worldGenerator) : base(chunkReceivedCallback, unload)
+
+		public SPWorldProvider(Alex alex, IWorldGenerator worldGenerator)
 		{
 			Alex = alex;
 			Generator = worldGenerator;
-			Cam = camera;
+		
 			ThreadCancellationTokenSource = new CancellationTokenSource();
-
-			var thread = new Thread(RunThread)
-			{
-				IsBackground = true
-			};
-
-			thread.Start();
 		}
 
 		private void RunThread()
 		{
 			while (!ThreadCancellationTokenSource.IsCancellationRequested)
 			{
+				var pp = base.GetPlayerPosition();
 				ChunkCoordinates currentCoordinates =
-					new ChunkCoordinates(new PlayerLocation(Cam.Position.X, Cam.Position.Y, Cam.Position.Z));
+					new ChunkCoordinates(new PlayerLocation(pp.X, pp.Y, pp.Z));
 
 				if (PreviousChunkCoordinates.DistanceTo(currentCoordinates) >= 1)
 				{
@@ -46,14 +40,24 @@ namespace Alex.Worlds
 
 					var oldChunks = LoadedChunks.ToArray();
 
+					int count = 0;
 					int t = Alex.GameSettings.RenderDistance;
+					double radiusSquared = Math.Pow(t, 2);
 
 					List<ChunkCoordinates> newChunkCoordinates = new List<ChunkCoordinates>();
 					for (int x = -t; x < t; x++)
 					{
 						for (int z = -t; z < t; z++)
 						{
+							var distance = (x * x) + (z * z);
+							if (distance > radiusSquared)
+							{
+								continue;
+							}
+
 							var cc = currentCoordinates + new ChunkCoordinates(x, z);
+							newChunkCoordinates.Add(cc);
+
 							if (!LoadedChunks.Contains(cc))
 							{
 								var chunk =
@@ -62,20 +66,16 @@ namespace Alex.Worlds
 								if (chunk == null) continue;
 
 								base.LoadChunk(chunk, cc.X, cc.Z);
-								//World.ChunkManager.AddChunk(chunk,
-								//	new Vector3(cc.X, 0, cc.Z), true);
 
-								LoadedChunks.Add(cc);
-								newChunkCoordinates.Add(cc);
+								LoadedChunks.Add(cc);	
 							}
 						}
 					}
 
 					foreach (var chunk in oldChunks)
 					{
-						if (!newChunkCoordinates.Contains(chunk) && currentCoordinates.DistanceTo(chunk) > t + 1)
+						if (!newChunkCoordinates.Contains(chunk))
 						{
-							//World.ChunkManager.RemoveChunk(new Vector3(chunk.X, 0, chunk.Z));
 							UnloadChunk(chunk.X, chunk.Z);
 							LoadedChunks.Remove(chunk);
 						}
@@ -84,6 +84,28 @@ namespace Alex.Worlds
 
 				Thread.Sleep(500);
 			}
+		}
+
+		private Thread UpdateThread { get; set; }
+		protected override void Initiate()
+		{
+			UpdateThread = new Thread(RunThread)
+			{
+				IsBackground = true
+			};
+
+			UpdateThread.Start();
+		}
+
+		public override Vector3 GetSpawnPoint()
+		{
+			return Generator.GetSpawnPoint();
+		}
+
+		public override void Dispose()
+		{
+			ThreadCancellationTokenSource?.Cancel();
+			base.Dispose();
 		}
 	}
 }

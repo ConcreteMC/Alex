@@ -51,32 +51,15 @@ namespace Alex.Worlds
 		public void SetBlockState(int bx, int by, int bz, uint value)
 		{
 			blocks[GetIndex(bx, by, bz)] = value;
+			if (value != 0 && _isAllAir)
+			{
+				_isAllAir = false;
+			}
+			else if (value == 0)
+			{
+				_isDirty = true;
+			}
 		}
-
-		/*public int GetBlock(int bx, int by, int bz)
-		{
-			return blocks[GetIndex(bx, by, bz)];
-		}
-
-		public void SetBlock(int bx, int by, int bz, int bid)
-		{
-			blocks[GetIndex(bx, by, bz)] = bid;
-			_cache = null;
-			_isDirty = true;
-		}
-
-		public byte GetMetadata(int bx, int by, int bz)
-		{
-			return metadata[GetIndex(bx, by, bz)];
-		}
-
-		public void SetMetadata(int bx, int by, int bz, byte data)
-		{
-			metadata[GetIndex(bx, by, bz)] = data;
-			_cache = null;
-			_isDirty = true;
-		}
-			 */
 
 		public byte GetBlocklight(int bx, int by, int bz)
 		{

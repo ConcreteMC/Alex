@@ -1,6 +1,10 @@
 ﻿using System;
+using Alex.Gamestates.Playing;
+using Alex.Rendering;
+using Alex.Rendering.Camera;
 using Alex.Rendering.UI;
 using Alex.Utils;
+using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -34,7 +38,7 @@ namespace Alex.Gamestates
             {
                 Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 70),
             };
-			button.OnButtonClick += OnButtonClick;
+			button.OnButtonClick += OnDebugWorldClick;
 
            Controls.Add("testbtn", button);
 
@@ -73,9 +77,22 @@ namespace Alex.Gamestates
             Controls.Add("info", new Info());
         }
 
-		private void OnButtonClick()
+		private void OnDebugWorldClick()
 		{
-			
+			//IWorldGenerator generator = new AnvilWorldProvider("E:\\SlicNic24\'s Resource Pack Test Map")
+			//IWorldGenerator generator = new AnvilWorldProvider("E:\\MinecraftWorlds\\Vanilla")
+			IWorldGenerator generator = new AnvilWorldProvider("E:\\MinecraftWorlds\\KingsLanding1")
+				//IWorldGenerator generator = new AnvilWorldProvider("C:\\Users\\kennyvv\\Desktop\\Debug\\world")
+				//IWorldGenerator generator = new AnvilWorldProvider("E:\\Kenny\\AppData\\Roaming\\.minecraft\\saves\\DebugWorld")
+				{
+					MissingChunkProvider = new VoidWorldGenerator()
+				};
+			generator.Initialize();
+
+			PlayingState playState = new PlayingState(Alex, Graphics, new SPWorldProvider(Alex, generator));
+			Alex.GamestateManager.AddState("play", playState);
+			Alex.GamestateManager.SetActiveState("play");
+			Alex.IsMouseVisible = false;
 		}
 
 		private void Logoutbtn_OnButtonClick()
@@ -120,11 +137,11 @@ namespace Alex.Gamestates
         {
             Controls["mpbtn"].Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y - 30);
 
-            //    Controls["testbtn"].Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 70);
+            Controls["testbtn"].Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 20);
 
-            Controls["optbtn"].Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 20);
+            Controls["optbtn"].Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 70);
 
-            Controls["logoutbtn"].Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 70);
+            Controls["logoutbtn"].Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 120);
 
 		    //TrackBar track = (TrackBar) Controls["track"];
 		    //track.Text = "Render distance: " + track.Value;

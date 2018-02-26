@@ -4,23 +4,30 @@ using Alex.Blocks;
 using Alex.Entities;
 using Alex.Gamestates;
 using Alex.Utils;
-using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET.Utils;
+using MiNET.Worlds;
+using ChunkColumn = Alex.Worlds.ChunkColumn;
 
 namespace Alex.Rendering
 {
 	public class World : IWorld
 	{
         private GraphicsDevice Graphics { get; }
-        public World(Alex alex, GraphicsDevice graphics, Camera.Camera camera)
+		private Camera.Camera Camera { get; }
+        public World(Alex alex, GraphicsDevice graphics, Camera.Camera camera, WorldProvider worldProvider)
         {
             Graphics = graphics;
+	        Camera = camera;
+
 			ChunkManager = new RenderingManager(alex, graphics, camera, this);
+	        WorldProvider = worldProvider;
+			WorldProvider.Init(OnChunkReceived, Unload, PlayerPositionProvider);
         }
 
-        public RenderingManager ChunkManager { get; private set; }
+		public RenderingManager ChunkManager { get; private set; }
+		private WorldProvider WorldProvider { get; set; }
 
 		public int Vertices
         {
@@ -29,7 +36,7 @@ namespace Alex.Rendering
 
 		public int ChunkCount
         {
-            get { return ChunkManager.Chunks.Count; }
+            get { return ChunkManager.ChunkCount; }
         }
 
 		public int ChunkUpdates
@@ -37,9 +44,24 @@ namespace Alex.Rendering
             get { return ChunkManager.ChunkUpdates; }
         }
 
-        public void ResetChunks()
+		private Vector3 PlayerPositionProvider()
+		{
+			return Camera.Position;
+		}
+
+		private void Unload(int x, int z)
+		{
+			ChunkManager.RemoveChunk(new ChunkCoordinates(x, z));
+		}
+
+		private void OnChunkReceived(IChunkColumn chunkColumn, int x, int z)
+		{
+			ChunkManager.AddChunk(chunkColumn, new ChunkCoordinates(x, z), true);
+		}
+
+		public void ResetChunks()
         {
-            ChunkManager.Chunks.Clear();
+            ChunkManager.ClearChunks();
         }
 
         public void RebuildChunks()
@@ -55,8 +77,17 @@ namespace Alex.Rendering
             ChunkManager.Draw(Graphics);
         }
 
+		public void Update()
+		{
+			ChunkManager.Update();
+		}
+
         public Vector3 GetSpawnPoint()
         {
+	        if (WorldProvider != null)
+	        {
+		        return WorldProvider.GetSpawnPoint();
+	        }
             return Vector3.Zero;
         }
 
@@ -95,7 +126,7 @@ namespace Alex.Rendering
             if (y < 0 || y > ChunkColumn.ChunkHeight) return 15;
 
 			IChunkColumn chunk;
-	        if (ChunkManager.Chunks.TryGetValue(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
+	        if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 	        {
 				return chunk.GetSkylight(x & 0xf, y & 0xff, z & 0xf);
             }
@@ -116,7 +147,7 @@ namespace Alex.Rendering
             if (y < 0 || y > ChunkColumn.ChunkHeight) return 15;
 
 			IChunkColumn chunk;
-	        if (ChunkManager.Chunks.TryGetValue(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
+	        if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 	        {
                 return chunk.GetBlocklight(x & 0xf, y & 0xff, z & 0xf);
             }
@@ -136,7 +167,7 @@ namespace Alex.Rendering
 		public IBlock GetBlock(int x, int y, int z)
         {
 		    IChunkColumn chunk;
-            if (ChunkManager.Chunks.TryGetValue(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
+            if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
             {
                 return chunk.GetBlock(x & 0xf, y & 0xff, z & 0xf);
             }
@@ -151,10 +182,20 @@ namespace Alex.Rendering
 	    public void SetBlock(int x, int y, int z, IBlock block)
 	    {
 			IChunkColumn chunk;
-		    if (ChunkManager.Chunks.TryGetValue(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
+		    if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 		    {
 				chunk.SetBlock(x & 0xf, y & 0xff, z & 0xf, block);
 		    }
 	    }
-    }
+
+		private bool _destroyed = false;
+		public void Destroy()
+		{
+			if (_destroyed) return;
+			_destroyed = true;
+
+			WorldProvider.Dispose();
+			ChunkManager.Dispose();
+		}
+	}
 }

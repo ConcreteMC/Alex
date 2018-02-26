@@ -2,6 +2,7 @@
 using System.IO;
 using System.Net;
 using Alex.Gamestates;
+using Alex.Gamestates.Playing;
 using Alex.Properties;
 using Alex.Rendering;
 using Microsoft.Xna.Framework;
@@ -129,9 +130,8 @@ namespace Alex
 			//_originalMouseState = Mouse.GetState();
 
 			GamestateManager = new GamestateManager(GraphicsDevice, _spriteBatch);
-			GamestateManager.AddState("DebugState", new DebugState(this, GraphicsDevice));
-			//GamestateManager.AddState("login", new LoginState(this));
-			GamestateManager.SetActiveState("DebugState");
+			GamestateManager.AddState("login", new LoginState(this));
+			GamestateManager.SetActiveState("login");
 
 			Extensions.Init(GraphicsDevice);
 		}
