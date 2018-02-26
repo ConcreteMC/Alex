@@ -14,6 +14,8 @@ namespace ResourcePackLib
 {
 	public class MCResourcePack : IDisposable
 	{
+		public ResourcePackInfo Info { get; private set; }
+
 		public IReadOnlyDictionary<string, BlockState> BlockStates => _blockStates;
 		public IReadOnlyDictionary<string, BlockModel> BlockModels => _blockModels;
 
@@ -35,8 +37,36 @@ namespace ResourcePackLib
 
 		private void Load()
 		{
+			LoadMeta();
 			LoadBlockModels();
 			LoadBlockStates();
+		}
+
+		private void LoadMeta()
+		{
+			ResourcePackInfo info;
+
+			var entry = _archive.GetEntry("pack.mcmeta");
+			if (entry == null)
+			{
+				info = new ResourcePackInfo();
+			}
+			else
+			{
+				using (TextReader reader = new StreamReader(entry.Open()))
+				{
+					ResourcePackInfoWrapper wrap = MCJsonConvert.DeserializeObject<ResourcePackInfoWrapper>(reader.ReadToEnd());
+					info = wrap.pack;
+				}
+			}
+
+
+			var imgEntry = _archive.GetEntry("pack.png");
+			if (imgEntry != null)
+			{
+				Bitmap bmp = new Bitmap(imgEntry.Open());
+				info.Logo = bmp;
+			}
 		}
 
 		private void LoadBlockModels()
