@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using Alex.Gamestates.Playing;
 using Alex.Rendering;
 using Alex.Rendering.Camera;
@@ -79,14 +80,19 @@ namespace Alex.Gamestates
 
 		private void OnDebugWorldClick()
 		{
-			//IWorldGenerator generator = new AnvilWorldProvider("E:\\SlicNic24\'s Resource Pack Test Map")
-			//IWorldGenerator generator = new AnvilWorldProvider("E:\\MinecraftWorlds\\Vanilla")
-			IWorldGenerator generator = new AnvilWorldProvider("E:\\MinecraftWorlds\\KingsLanding1")
-				//IWorldGenerator generator = new AnvilWorldProvider("C:\\Users\\kennyvv\\Desktop\\Debug\\world")
-				//IWorldGenerator generator = new AnvilWorldProvider("E:\\Kenny\\AppData\\Roaming\\.minecraft\\saves\\DebugWorld")
+			IWorldGenerator generator;
+			if (Alex.GameSettings.UseBuiltinGenerator || (string.IsNullOrWhiteSpace(Alex.GameSettings.Anvil) || !File.Exists(Path.Combine(Alex.GameSettings.Anvil, "level.dat"))))
+			{
+				generator = new OverworldGenerator();
+			}
+			else
+			{
+				generator = new AnvilWorldProvider(Alex.GameSettings.Anvil)
 				{
 					MissingChunkProvider = new VoidWorldGenerator()
 				};
+			}
+
 			generator.Initialize();
 
 			PlayingState playState = new PlayingState(Alex, Graphics, new SPWorldProvider(Alex, generator));

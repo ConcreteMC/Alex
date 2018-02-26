@@ -24,7 +24,6 @@ namespace Alex.Rendering
 		private IModule2D BiomeModifierZ { get; }
 
 		private readonly IModule2D _mainNoise;
-		private readonly IModule3D _depthNoise;
 
 		private int Seed { get; }
 
@@ -53,7 +52,7 @@ namespace Alex.Rendering
 			tempNoise.Distance = false;
 			tempNoise.Frequency = TemperatureFrequency;
 			tempNoise.OctaveCount = 2;
-			//	tempNoise.Gain = 2.5f;
+
 			TempNoise = tempNoise;
 
 			var mainLimitNoise = new SimplexPerlin(seed + 200);
@@ -77,32 +76,8 @@ namespace Alex.Rendering
 				Primitive3D = mainLimitFractal,
 				Primitive2D = mainLimitFractal
 			};
-			//ModTurbulence turbulence = new ModTurbulence(mainLimitFractal, new ImprovedPerlin(seed - 350, NoiseQuality.Fast), new ImprovedPerlin(seed + 350, NoiseQuality.Fast), null, 0.0125F);
-			_mainNoise = mainScaler; //turbulence;
 
-			var mountainNoise = new SimplexPerlin(seed + 300);
-			var mountainTerrain = new HybridMultiFractal()
-			{
-				Primitive3D = mountainNoise,
-				Primitive2D = mountainNoise,
-				Frequency = DepthFrequency,
-				OctaveCount = 4,
-				Lacunarity = DepthLacunarity,
-				SpectralExponent = DepthNoiseScaleExponent,
-				//Offset = 0.7f,
-				Gain = DepthNoiseGain
-			};
-
-			ScaleableNoise scaling = new ScaleableNoise();
-			scaling.Primitive2D = mountainTerrain;
-			scaling.Primitive3D = mountainTerrain;
-			scaling.YScale = 1f / HeightScale;
-			scaling.XScale = 1f / DepthNoiseScaleX;
-			scaling.ZScale = 1f / DepthNoiseScaleZ;
-
-			_depthNoise = scaling;
-
-		//	BiomeUtils.FixMinMaxHeight();
+			_mainNoise = mainScaler;
 		}
 
 		//1.83f;
@@ -193,13 +168,8 @@ namespace Alex.Rendering
 					}
 				}
 			}
-			//	sw.Stop();
 
-			//	if (sw.ElapsedMilliseconds > previousTime)
-			//{
-			//	Debug.WriteLine("Chunk gen took " + sw.ElapsedMilliseconds + " ms");
-			//previousTime = sw.ElapsedMilliseconds;
-			//}
+			chunk.CalculateHeight();
 
 			return chunk;
 		}
@@ -332,13 +302,11 @@ namespace Alex.Rendering
 				for (int z = 0; z < Depth; z++)
 				{
 					var idx = (x << 4) + z;
-					//Biome biome = biomes[idx];
-				//	chunk.biomeId[idx] = (byte)biome.Id;// SetBiome(x, z, (byte)biome.Id);
+
+					Biome biome = biomes[idx];
+					chunk.BiomeId[idx] = (byte)biome.Id;
+
 					float stoneHeight = heightMap[idx];
-					/*	if (stoneHeight > 200 || stoneHeight < 0)
-						{
-							Debug.WriteLine("MaxHeight: " + stoneHeight);
-						}*/
 
 					var maxY = 0;
 					for (int y = 0; y < stoneHeight && y < 255; y++)
@@ -354,8 +322,6 @@ namespace Alex.Rendering
 
 					chunk.SetBlock(x, 0, z, BlockFactory.GetBlock(7,0)); //Bedrock
 					heightMap[idx] = maxY;
-					//chunk.height[idx] = (short)maxY;
-					//chunk.SetHeight(x, z, (byte)maxY);
 				}
 			}
 		}
