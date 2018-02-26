@@ -6,6 +6,7 @@ using Alex.Blocks;
 using Alex.Properties;
 using Alex.Rendering;
 using Alex.Rendering.Camera;
+using Alex.Rendering.UI;
 using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
@@ -25,9 +26,12 @@ namespace Alex.Gamestates.Playing
 		private FpsMonitor FpsCounter { get; set; }
 		private Texture2D CrosshairTexture { get; set; }
 
+		private ChatComponent Chat { get; }
 		public PlayingState(Alex alex, GraphicsDevice graphics, WorldProvider worldProvider) : base(graphics)
 		{
 			Alex = alex;
+			Chat = new ChatComponent();
+
 			Camera = new FirstPersonCamera(alex.GameSettings.RenderDistance, Vector3.Zero, Vector3.Zero);
 
 			World = new World(alex, graphics, Camera, worldProvider);
@@ -38,8 +42,7 @@ namespace Alex.Gamestates.Playing
 
 		public override void Init(RenderArgs args)
 		{
-			ChatMessages = new List<string>();
-			Alex.OnCharacterInput += OnCharacterInput;
+			Controls.Add("chatComponent", Chat);
 
 			FpsCounter = new FpsMonitor();
 			CrosshairTexture = TextureUtils.ImageToTexture2D(args.GraphicsDevice, Resources.crosshair);
@@ -60,7 +63,7 @@ namespace Alex.Gamestates.Playing
 					AspectRatio = newAspectRatio;
 				}
 
-				CamComponent.Update(gameTime, !RenderChatInput);
+				CamComponent.Update(gameTime, !Chat.RenderChatInput);
 
 				UpdateRayTracer(Alex.GraphicsDevice, World);
 
@@ -82,57 +85,10 @@ namespace Alex.Gamestates.Playing
 			}
 		}
 
-		private void OnCharacterInput(object sender, char c)
-		{
-			if (RenderChatInput)
-			{
-#if FNA
-				if (c == (char)8) //BackSpace
-				{
-					BackSpace();
-					return;
-				}
-				if (c == (char) 13)
-				{
-					SubmitMessage();
-					return;
-				}
-#endif
-				_input += c;
-			}
-		}
-
-		private void BackSpace()
-		{
-			if (_input.Length > 0) _input = _input.Remove(_input.Length - 1, 1);
-		}
-
-		private void SubmitMessage()
-		{
-			//Submit message
-			if (_input.Length > 0)
-			{
-				if (Alex.IsMultiplayer)
-				{
-					//Client.SendChat(_input);
-				}
-				else
-				{
-					ChatMessages.Add("<Alex> " + _input);
-				}
-			}
-			_input = string.Empty;
-			RenderChatInput = false;
-		}
-
-		//private string[]
 		private Block SelBlock { get; set; } = new Air();
 		private Microsoft.Xna.Framework.BoundingBox RayTraceBoundingBox { get; set; }
-
-		private List<string> ChatMessages { get; set; }
-		private string _input = "";
 		private bool RenderDebug { get; set; } = true;
-		private bool RenderChatInput { get; set; } = false;
+		
 		private KeyboardState _oldKeyboardState;
 		private MouseState _oldMouseState;
 		protected void CheckInput(GameTime gameTime)
@@ -163,9 +119,9 @@ namespace Alex.Gamestates.Playing
 			{
 				if (currentKeyboardState.IsKeyDown(KeyBinds.Menu))
 				{
-					if (RenderChatInput)
+					if (Chat.RenderChatInput)
 					{
-						RenderChatInput = false;
+						Chat.Dismiss();			
 					}
 					else
 					{
@@ -173,28 +129,8 @@ namespace Alex.Gamestates.Playing
 					}
 				}
 
-				if (RenderChatInput) //Handle Input
+				if (!Chat.RenderChatInput)
 				{
-#if MONOGAME
-					if (currentKeyboardState.IsKeyDown(Keys.Back))
-					{
-						BackSpace();
-					}
-
-					if (currentKeyboardState.IsKeyDown(Keys.Enter))
-					{
-						SubmitMessage();
-					}
-#endif
-				}
-				else
-				{
-					if (currentKeyboardState.IsKeyDown(KeyBinds.Chat))
-					{
-						RenderChatInput = !RenderChatInput;
-						_input = string.Empty;
-					}
-
 					if (currentKeyboardState.IsKeyDown(KeyBinds.DebugInfo))
 					{
 						RenderDebug = !RenderDebug;
@@ -229,52 +165,6 @@ namespace Alex.Gamestates.Playing
 					new Vector2(CenterScreen.X - CrosshairTexture.Width/2f, CenterScreen.Y - CrosshairTexture.Height/2f),
 					Color.White);
 #endif
-
-				if (RenderChatInput)
-				{
-					var heightCalc = Alex.Font.MeasureString("!");
-					string chatInput = _input.StripIllegalCharacters();
-					if (chatInput.Length > 0)
-					{
-						heightCalc = Alex.Font.MeasureString(chatInput);
-					}
-
-					int extra = 0;
-					if (heightCalc.X > args.GraphicsDevice.Viewport.Width / 2f)
-					{
-						extra = (int)(heightCalc.X - args.GraphicsDevice.Viewport.Width / 2f);
-					}
-
-					args.SpriteBatch.FillRectangle(
-						new Rectangle(0, (int)(args.GraphicsDevice.Viewport.Height - (heightCalc.Y + 5)),
-							(args.GraphicsDevice.Viewport.Width / 2) + extra, (int)heightCalc.Y),
-						new Color(Color.Black, 64));
-
-					args.SpriteBatch.DrawString(Alex.Font, chatInput,
-						new Vector2(5, (int)(args.GraphicsDevice.Viewport.Height - (heightCalc.Y + 5))), Color.White);
-				}
-
-			/*	var count = 2;
-				foreach (var msg in ChatMessages.TakeLast(5).Reverse())
-				{
-					var amsg = msg.StripColors();
-					amsg = amsg.StripIllegalCharacters();
-					var heightCalc = Alex.Font.MeasureString(amsg);
-
-					int extra = 0;
-					if (heightCalc.X > args.GraphicsDevice.Viewport.Width / 2f)
-					{
-						extra = (int)(heightCalc.X - args.GraphicsDevice.Viewport.Width / 2f);
-					}
-
-					args.SpriteBatch.FillRectangle(
-						new Rectangle(0, (int)(args.GraphicsDevice.Viewport.Height - ((heightCalc.Y * count) + 10)),
-							(args.GraphicsDevice.Viewport.Width / 2) + extra, (int)heightCalc.Y),
-						new Color(Color.Black, 64));
-					args.SpriteBatch.DrawString(Alex.Font, amsg,
-						new Vector2(5, (int)(args.GraphicsDevice.Viewport.Height - ((heightCalc.Y * count) + 10))), Color.White);
-					count++;
-				}*/
 
 				if (_raytracedBlock.Y > 0 && _raytracedBlock.Y < 256)
 				{

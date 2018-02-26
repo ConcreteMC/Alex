@@ -108,6 +108,7 @@
     <Compile Include="Rendering\IWorldGenerator.cs" />
     <Compile Include="Rendering\RenderingManager.cs" />
     <Compile Include="Rendering\UI\Button.cs" />
+    <Compile Include="Rendering\UI\ChatComponent.cs" />
     <Compile Include="Rendering\UI\Image.cs" />
     <Compile Include="Rendering\UI\Info.cs" />
     <Compile Include="Rendering\UI\InputField.cs" />
