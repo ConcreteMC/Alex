@@ -1,1 +1,0 @@
-﻿Get rid of all static stuff... This code is horrible!

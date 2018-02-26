@@ -202,7 +202,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Entities\entity_metadata.txt" />
-    <Content Include="Todo.txt" />
     <None Include="app.config" />
     <Compile Include="Blocks\StainedClay.cs" />
     <None Include="app.manifest" />
