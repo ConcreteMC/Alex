@@ -2,7 +2,7 @@
 {
 	public class InvisibleBedrock : Block
 	{
-		public InvisibleBedrock() : base(95, 0)
+		public InvisibleBedrock(bool pe = true) : base(pe ? 95 : 166, 0)
 		{
 			Renderable = false;
 			HasHitbox = false;

@@ -45,7 +45,7 @@ namespace Alex.CoreRT.Rendering.Camera
 
         public Vector3 PreviewMove(Vector3 amount)
         {
-            Matrix rotate = Matrix.CreateRotationY(Rotation.Y);
+			Matrix rotate = Matrix.CreateRotationY(Rotation.Y);
             Vector3 movement = new Vector3(amount.X, amount.Y, amount.Z);
             movement = Vector3.Transform(movement, rotate);
             return Position + movement;

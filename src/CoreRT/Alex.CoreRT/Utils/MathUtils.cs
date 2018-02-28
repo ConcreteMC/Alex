@@ -9,5 +9,10 @@ namespace Alex.CoreRT.Utils
 			return (float)(Math.PI* deg / 180F);
 			return (float)(deg * (Math.PI / 180F));
 		}
+
+		public static float RadianToDegree(float angle)
+		{
+			return (float)(angle * (180.0f / Math.PI));
+		}
 	}
 }

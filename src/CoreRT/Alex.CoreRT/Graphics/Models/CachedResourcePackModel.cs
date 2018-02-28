@@ -16,9 +16,15 @@ namespace Alex.CoreRT.Graphics.Models
 {
 	public class CachedResourcePackModel : ResourcePackModel
 	{
+		static CachedResourcePackModel()
+		{
+			
+		}
+
 		public CachedResourcePackModel(ResourceManager resources, BlockStateModel variant) : base(resources, variant)
 		{
 			Cache();
+			
 		}
 
 		private class FaceCache
@@ -280,29 +286,32 @@ namespace Alex.CoreRT.Graphics.Models
 					}
 
 					Color faceColor = faceVertices[0].Color;
-					if (element.Shade)
-					{
-						faceColor = UvMapHelp.AdjustColor(faceColor, cull, GetLight(world, worldPosition + cullFace));
-					}
 
-					if (face.Value.TintIndex > 0)
+					if (face.Value.TintIndex >= 0)
 					{
-						Color c = new Color(94, 157, 52);
-						faceColor = c;
-						/*World w = (World) world;
+						World w = (World)world;
 
 						if (w.ChunkManager.TryGetChunk(
 							new ChunkCoordinates(new PlayerLocation(worldPosition.X, 0, worldPosition.Z)),
 							out IChunkColumn column))
 						{
-							Worlds.ChunkColumn realColumn = (Worlds.ChunkColumn) column;
-							BiomeUtils utils = new BiomeUtils();
-							
+							Worlds.ChunkColumn realColumn = (Worlds.ChunkColumn)column;
+							var biome = BiomeUtils.GetBiomeById(realColumn.GetBiome((int)worldPosition.X & 0xf, (int)worldPosition.Z & 0xf));
 
-							//uint color = (uint)utils.ComputeBiomeColor(realColumn.GetBiome((int)worldPosition.X & 0xf, (int)worldPosition.Z & 0xf), (int)worldPosition.Y & 0xff, baseBlock.BlockId == 2);
-							Color c = new Color(76, 118, 60);
-							faceColor = c;
-						}*/
+							if (baseBlock.BlockId == 2)
+							{
+								faceColor = Resources.ResourcePack.GetGrassColor(biome.Temperature, biome.Downfall, (int)worldPosition.Y);
+							}
+							else
+							{
+								faceColor = Resources.ResourcePack.GetFoliageColor(biome.Temperature, biome.Downfall, (int)worldPosition.Y);
+							}
+						}
+					}
+
+					//if (element.Shade)
+					{
+						faceColor = UvMapHelp.AdjustColor(faceColor, cull, GetLight(world, worldPosition + cullFace), element.Shade);
 					}
 
 					for (var index = 0; index < faceVertices.Length; index++)

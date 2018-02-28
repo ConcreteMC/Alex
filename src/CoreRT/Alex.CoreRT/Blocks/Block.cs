@@ -27,7 +27,7 @@ namespace Alex.CoreRT.Blocks
 	    public int LightOpacity = 0;
 
 		public BlockModel BlockModel { get; set; }
-	    protected Block(byte blockId, byte metadata) : this(GetBlockStateID(blockId, metadata))
+	    protected Block(int blockId, byte metadata) : this(GetBlockStateID(blockId, metadata))
 	    {
 		    
 	    }
@@ -46,7 +46,7 @@ namespace Alex.CoreRT.Blocks
 		    SetColor(TextureSide.All, Color.White);
 		}
 
-	    public BoundingBox GetBoundingBox(Vector3 blockPosition)
+		public BoundingBox GetBoundingBox(Vector3 blockPosition)
 	    {
 			if (BlockModel == null)
 				return new BoundingBox(blockPosition, blockPosition + Vector3.One);

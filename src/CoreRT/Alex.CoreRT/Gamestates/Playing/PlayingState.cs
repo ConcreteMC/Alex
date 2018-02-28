@@ -78,6 +78,10 @@ namespace Alex.CoreRT.Gamestates.Playing
 				SelBlock = (Block)World.GetBlock(_raytracedBlock.X, _raytracedBlock.Y, _raytracedBlock.Z);
 				RayTraceBoundingBox = SelBlock.GetBoundingBox(_raytracedBlock);
 			}
+			else
+			{
+				SelBlock = new Air();
+			}
 		}
 
 		private Block SelBlock { get; set; } = new Air();
@@ -188,6 +192,16 @@ namespace Alex.CoreRT.Gamestates.Playing
 					args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(0, y), Color.White);
 
 					y += (int)meisured.Y;
+					string facing = GetCardinalDirection(this.Camera);
+
+					positionString = string.Format("Facing: {0}", facing);
+					meisured = Alex.Font.MeasureString(positionString);
+
+					args.SpriteBatch.FillRectangle(new Rectangle(0, y, (int)meisured.X, (int)meisured.Y),
+						new Color(Color.Black, 64));
+					args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(0, y), Color.White);
+
+					y += (int)meisured.Y;
 
 					positionString = "Looking at: " + _raytracedBlock;
 					meisured = Alex.Font.MeasureString(positionString);
@@ -230,6 +244,56 @@ namespace Alex.CoreRT.Gamestates.Playing
 			}
 			base.Render2D(args);
 		}
+
+		public static string GetCardinalDirection(FirstPersonCamera cam)
+		{
+			double rotation = (cam.Yaw) % 360;
+			if (rotation < 0)
+			{
+				rotation += 360.0;
+			}
+			if (0 <= rotation && rotation < 22.5)
+			{
+				return "North";
+			}
+			else if (22.5 <= rotation && rotation < 67.5)
+			{
+				return "North East";
+			}
+			else if (67.5 <= rotation && rotation < 112.5)
+			{
+				return "East";
+			}
+			else if (112.5 <= rotation && rotation < 157.5)
+			{
+				return "South East";
+			}
+			else if (157.5 <= rotation && rotation < 202.5)
+			{
+				return "South";
+			}
+			else if (202.5 <= rotation && rotation < 247.5)
+			{
+				return "South West";
+			}
+			else if (247.5 <= rotation && rotation < 292.5)
+			{
+				return "West";
+			}
+			else if (292.5 <= rotation && rotation < 337.5)
+			{
+				return "North West";
+			}
+			else if (337.5 <= rotation && rotation < 360.0)
+			{
+				return "North";
+			}
+			else
+			{
+				return "N/A";
+			}
+		}
+
 
 		public override void Render3D(RenderArgs args)
 		{

@@ -80,13 +80,13 @@ namespace Alex.CoreRT
 		    }
 		}
 
-	    private static CachedResourcePackModel GetOrCacheModel(uint state, ResourceManager resources, MCResourcePack resourcePack,
+	    private static CachedResourcePackModel GetOrCacheModel(uint state, ResourceManager resources, McResourcePack resourcePack,
 		    BlockStateModel variant)
 	    {
 		    return _modelCache.GetOrAdd(state, u => new CachedResourcePackModel(resources, variant));
 	    }
 
-	    internal static int LoadResources(ResourceManager resources, MCResourcePack resourcePack, bool replace, bool reportMissing = false)
+	    internal static int LoadResources(ResourceManager resources, McResourcePack resourcePack, bool replace, bool reportMissing = false)
 		{
 			if (resourcePack.TryGetBlockModel("cube_all", out BlockModel cube))
 			{
@@ -167,7 +167,7 @@ namespace Alex.CoreRT
 		    }
 	    }
 
-	    private static BlockStateModel Parse(MCResourcePack resources, string rawBlockState, out string variantKey)
+	    private static BlockStateModel Parse(McResourcePack resources, string rawBlockState, out string variantKey)
 	    {
 		    variantKey = string.Empty;
 
@@ -350,6 +350,7 @@ namespace Alex.CoreRT
 
 			if (blockID == 0) return new Air();
 			if (blockID == 8 || blockID == 9) return new Water(metadata);
+			if (blockID == 166) return new InvisibleBedrock(false);
 /*
 			if (blockID == 18) return new Leaves(metadata)
 			{
