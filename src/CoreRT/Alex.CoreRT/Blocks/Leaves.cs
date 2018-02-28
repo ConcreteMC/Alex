@@ -1,4 +1,5 @@
-﻿using Alex.CoreRT.Utils;
+﻿using Alex.CoreRT.Graphics.Models;
+using Alex.CoreRT.Utils;
 using Microsoft.Xna.Framework;
 
 namespace Alex.CoreRT.Blocks
@@ -7,7 +8,8 @@ namespace Alex.CoreRT.Blocks
 	{
 		public Leaves(byte metadata) : base(18, metadata)
 		{
-			switch (metadata)
+			SetColor(TextureSide.All, new Color(138, 185, 90));
+			/*switch (metadata)
 			{
 				case 0:
 					SetColor(TextureSide.All, new Color(138, 185, 90));
@@ -21,9 +23,11 @@ namespace Alex.CoreRT.Blocks
 				case 3:
 					SetColor(TextureSide.All, new Color(138, 185, 90));
 					break;
-			}
+			}*/
 			//Solid = false;
 			Transparent = true;
+
+			
 		}
 	}
 }

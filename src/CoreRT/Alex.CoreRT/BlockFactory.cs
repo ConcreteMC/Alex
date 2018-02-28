@@ -178,10 +178,86 @@ namespace Alex.CoreRT
 		    if (split1.Length > 1)
 		    {
 				data = ParseData(split1[1]);
-			    if (data.ContainsKey("color"))
+
+			    string color = null;
+				data.TryGetValue("color", out color);
+
+			    string variant = null;
+			    data.TryGetValue("variant", out variant);
+
+			    string type = null;
+			    data.TryGetValue("type", out type);
+				//string half = null;
+				//data.TryGetValue("half", out half);
+
+				if (name.Contains("wooden_slab") && !string.IsNullOrWhiteSpace(variant))
 			    {
-				    name = $"{data["color"]}_{name}";
+				    if (!string.IsNullOrWhiteSpace(variant))
+				    {
+					    name = $"{variant}_slab";
+				    }
 			    }
+				else if (name.Contains("leaves") && !string.IsNullOrWhiteSpace(variant))
+			    {
+				    name = $"{variant}_leaves";
+			    }
+				else if (name.Contains("log") && !string.IsNullOrWhiteSpace(variant))
+				{
+					name = $"{variant}_log";
+				}
+				else if (name.StartsWith("red_flower") && !string.IsNullOrWhiteSpace(type))
+				{
+					name = $"{type}";
+				}
+				else if (name.StartsWith("yellow_flower") && !string.IsNullOrWhiteSpace(type))
+				{
+					name = $"{type}";
+				}
+				else if (name.StartsWith("sapling") && !string.IsNullOrWhiteSpace(type))
+				{
+					name = $"{type}_sapling";
+				}
+				else if (name.StartsWith("planks") && !string.IsNullOrWhiteSpace(variant))
+				{
+					name = $"{variant}_planks";
+				}
+				else if (name.StartsWith("double_stone_slab") && !string.IsNullOrWhiteSpace(variant))
+				{
+					name = $"{variant}_double_slab";
+				}
+				else if (name.StartsWith("double_plant") && !string.IsNullOrWhiteSpace(variant))
+				{
+					if (variant.Equals("sunflower", StringComparison.InvariantCultureIgnoreCase))
+					{
+						name = "sunflower";
+					}
+					else if (variant.Equals("paeonia", StringComparison.InvariantCultureIgnoreCase))
+					{
+						name = "paeonia";
+					}
+					else if (variant.Equals("syringa", StringComparison.InvariantCultureIgnoreCase))
+					{
+						name = "syringa";
+					}
+					else
+					{
+						name = $"double_{variant}";
+					}
+				}
+				else if (name.StartsWith("deadbush"))
+				{
+					name = "dead_bush";
+				}
+				else if (name.StartsWith("tallgrass"))
+				{
+					name = "tall_grass";
+				}
+				else if (!string.IsNullOrWhiteSpace(color))
+			    {
+				    name = $"{color}_{name}";
+			    }
+
+				
 			}
 			
 		    if (resources.BlockStates.TryGetValue(name, out BlockState blockState))
@@ -252,8 +328,14 @@ namespace Alex.CoreRT
 			string[] splitVariants = variant.Split(',');
 		    foreach (var split in splitVariants)
 		    {
-			    string key = split.Split('=')[0];
-			    string value = split.Split('=')[1];
+			    string[] splitted = split.Split('=');
+			    if (splitted.Length <= 1)
+			    {
+				    continue;
+			    }
+
+			    string key = splitted[0];
+			    string value = splitted[1];
 
 				values.Add(key, value);
 		    }
@@ -268,6 +350,32 @@ namespace Alex.CoreRT
 
 			if (blockID == 0) return new Air();
 			if (blockID == 8 || blockID == 9) return new Water(metadata);
+/*
+			if (blockID == 18) return new Leaves(metadata)
+			{
+				BlockModel = new ResourcePackModel(null, new BlockStateModel()
+				{
+					Model = CubeModel,
+					ModelName = CubeModel.Name,
+					X = 0,
+					Y = 0,
+					Uvlock = false,
+					Weight = 1
+				})
+			};
+
+			if (blockID == 17) return new Wood(metadata)
+			    { BlockModel = new ResourcePackModel(null, new BlockStateModel()
+				    {
+						Model = CubeModel,
+						ModelName = CubeModel.Name,
+						X = 0,
+						Y = 0,
+						Uvlock = false,
+						Weight = 1
+				    })
+			    };*/
+
 
 			if (_registeredBlocks.TryGetValue(palleteId, out Func<Block> b))
 		    {

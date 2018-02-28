@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using Alex.CoreRT.Gamestates;
 using Alex.CoreRT.Utils;
 using Microsoft.Xna.Framework;
@@ -13,14 +14,16 @@ namespace Alex.CoreRT.Rendering.UI
 		private Texture2D ButtonTexture { get; set; }
 
 		public string PlaceHolder { get; set; }
+
 		public string Text { get; set; }
+
 		private bool Focus { get; set; }
 		public bool PasswordField { get; set; }
 
 		public InputField()
 		{
 			PlaceHolder = "This is a placeholder...";
-			Text = "";
+			Text = String.Empty;
 			LastUpdate = DateTime.MinValue;
 			LastChange = DateTime.MinValue;
 
@@ -61,11 +64,11 @@ namespace Alex.CoreRT.Rendering.UI
 			ButtonRectangle = new Rectangle((int)Location.X, (int)Location.Y, (int)Size.X, (int)Size.Y);
 			Color color = Color.White;
 
-			var s = Text;
+			string s = Text.StripIllegalCharacters().ToString();
 			bool useph = false;
 			if (!Focus)
 			{
-				if (Text == "")
+				if (Text.Length == 0)
 				{
 					s = PlaceHolder;
 					useph = true;
@@ -150,13 +153,13 @@ namespace Alex.CoreRT.Rendering.UI
 
 #if MONOGAME
 			KeyboardState state = Keyboard.GetState();
-			if (PrevKeyState != state || DateTime.Now.Subtract(LastUpdate).TotalMilliseconds > 100)
+			if (PrevKeyState != state || DateTime.UtcNow.Subtract(LastUpdate).TotalMilliseconds > 100)
 			{
 				if (state.IsKeyDown(Keys.Back))
 				{
 					BackSpace();
 				}
-				LastUpdate = DateTime.Now;
+				LastUpdate = DateTime.UtcNow;
 			}
 			PrevKeyState = state;
 #endif

@@ -4,7 +4,10 @@ using Alex.CoreRT.API.Graphics;
 using Alex.CoreRT.API.World;
 using Alex.CoreRT.Blocks;
 using Alex.CoreRT.Utils;
+using Alex.CoreRT.Worlds;
 using Microsoft.Xna.Framework;
+using MiNET.Utils;
+using MiNET.Worlds;
 using ResourcePackLib.CoreRT.Json;
 using ResourcePackLib.CoreRT.Json.BlockStates;
 using Axis = ResourcePackLib.CoreRT.Json.Axis;
@@ -57,7 +60,7 @@ namespace Alex.CoreRT.Graphics.Models
 
 				var elementModelRotation = Matrix.CreateTranslation(-c) * modelRotationMatrix *
 				                           Matrix.CreateTranslation(c);
-
+				
 				FaceCache elementCache = new FaceCache();
 				foreach (var face in element.Faces)
 				{
@@ -104,7 +107,7 @@ namespace Alex.CoreRT.Graphics.Models
 						new Microsoft.Xna.Framework.Vector2(x2, y1), new Microsoft.Xna.Framework.Vector2(x1, y2),
 						new Microsoft.Xna.Framework.Vector2(x2, y2), Color.White, Color.White, Color.White);
 
-					Matrix elementRotationMatrix = Matrix.Identity;
+					Matrix faceRotationMatrix = Matrix.Identity;
 					float ci = 0f;
 					var elementRotation = element.Rotation;
 					if (elementRotation.Axis != Axis.Undefined)
@@ -116,21 +119,21 @@ namespace Alex.CoreRT.Graphics.Models
 						elementAngle = elementRotation.Axis == Axis.Z ? elementAngle : -elementAngle;
 						ci = 1f / (float)Math.Cos(elementAngle);
 
-						elementRotationMatrix = Matrix.CreateTranslation(-elementRotationOrigin);
+						faceRotationMatrix = Matrix.CreateTranslation(-elementRotationOrigin);
 						if (elementRotation.Axis == Axis.X)
 						{
-							elementRotationMatrix *= Matrix.CreateRotationX(elementAngle);
+							faceRotationMatrix *= Matrix.CreateRotationX(elementAngle);
 						}
 						else if (elementRotation.Axis == Axis.Y)
 						{
-							elementRotationMatrix *= Matrix.CreateRotationY(elementAngle);
+							faceRotationMatrix *= Matrix.CreateRotationY(elementAngle);
 						}
 						else if (elementRotation.Axis == Axis.Z)
 						{
-							elementRotationMatrix *= Matrix.CreateRotationZ(elementAngle);
+							faceRotationMatrix *= Matrix.CreateRotationZ(elementAngle);
 						}
 
-						elementRotationMatrix *= Matrix.CreateTranslation(elementRotationOrigin);
+						faceRotationMatrix *= Matrix.CreateTranslation(elementRotationOrigin);
 					}
 
 					VertexPositionNormalTextureColor[] faceVertices = GetFaceVertices(face.Value, face.Key, faceStart, faceEnd, uvmap);
@@ -140,7 +143,8 @@ namespace Alex.CoreRT.Graphics.Models
 
 						if (elementRotation.Axis != Axis.Undefined)
 						{
-							vert.Position = Vector3.Transform(vert.Position, elementRotationMatrix);
+							//Apply face rotation
+							vert.Position = Vector3.Transform(vert.Position, faceRotationMatrix);
 
 							if (elementRotation.Rescale)
 							{
@@ -161,6 +165,7 @@ namespace Alex.CoreRT.Graphics.Models
 							}
 						}
 
+						//Apply element rotation
 						vert.Position = Vector3.Transform(vert.Position, elementModelRotation);
 
 						vert.Position = (vert.Position / 16f);
@@ -278,6 +283,26 @@ namespace Alex.CoreRT.Graphics.Models
 					if (element.Shade)
 					{
 						faceColor = UvMapHelp.AdjustColor(faceColor, cull, GetLight(world, worldPosition + cullFace));
+					}
+
+					if (face.Value.TintIndex > 0)
+					{
+						Color c = new Color(94, 157, 52);
+						faceColor = c;
+						/*World w = (World) world;
+
+						if (w.ChunkManager.TryGetChunk(
+							new ChunkCoordinates(new PlayerLocation(worldPosition.X, 0, worldPosition.Z)),
+							out IChunkColumn column))
+						{
+							Worlds.ChunkColumn realColumn = (Worlds.ChunkColumn) column;
+							BiomeUtils utils = new BiomeUtils();
+							
+
+							//uint color = (uint)utils.ComputeBiomeColor(realColumn.GetBiome((int)worldPosition.X & 0xf, (int)worldPosition.Z & 0xf), (int)worldPosition.Y & 0xff, baseBlock.BlockId == 2);
+							Color c = new Color(76, 118, 60);
+							faceColor = c;
+						}*/
 					}
 
 					for (var index = 0; index < faceVertices.Length; index++)

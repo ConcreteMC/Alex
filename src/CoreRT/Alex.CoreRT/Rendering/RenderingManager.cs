@@ -38,7 +38,12 @@ namespace Alex.CoreRT.Rendering
             {
                 Texture = alex.Resources.Atlas.GetAtlas(),
                 VertexColorEnabled = true,
-				World = Matrix.Identity
+				World = Matrix.Identity,
+				FogEnabled = false,
+				FogColor = Color.LightGray.ToVector3(),
+				FogStart = (alex.GameSettings.RenderDistance - 3) * 16,
+				FogEnd = (alex.GameSettings.RenderDistance - 1) * 16,
+				DiffuseColor = Color.White.ToVector3(),
             };
 
             Updater = new Thread(ChunkUpdateThread)
