@@ -353,10 +353,15 @@ namespace Alex.CoreRT.Worlds.Generators
 									//chunk.SetBlock(x, y - 1, z, biome.SoilBlock);
 									//chunk.SetMetadata(x, y - 1, z, biome.SoilMetadata);
 								}
-								else
-								{
-									chunk.SetBlock(x,y,z, new Water());
-								}
+							}
+							
+						}
+						else
+						{
+
+							if (y <= WaterLevel)
+							{
+								chunk.SetBlock(x, y, z, new FlowingWater());
 							}
 						}
 

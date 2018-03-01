@@ -215,7 +215,7 @@ namespace Alex.CoreRT.Graphics.Models
 					{
 						World w = (World)world;
 
-						if (w.ChunkManager.TryGetChunk(
+						if (w.RenderingManager.TryGetChunk(
 							new ChunkCoordinates(new PlayerLocation(worldPosition.X, 0, worldPosition.Z)),
 							out IChunkColumn column))
 						{

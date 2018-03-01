@@ -194,15 +194,8 @@ namespace Alex.CoreRT.Gamestates.Playing
 					//End draw backgroun
 				}
 
-#if MONOGAME
 				args.SpriteBatch.Draw(CrosshairTexture,
 					new Vector2(CenterScreen.X - CrosshairTexture.Width / 2f, CenterScreen.Y - CrosshairTexture.Height / 2f));
-#endif
-#if FNA
-				args.SpriteBatch.Draw(CrosshairTexture,
-					new Vector2(CenterScreen.X - CrosshairTexture.Width/2f, CenterScreen.Y - CrosshairTexture.Height/2f),
-					Color.White);
-#endif
 
 				if (_raytracedBlock.Y > 0 && _raytracedBlock.Y < 256)
 				{
@@ -269,7 +262,7 @@ namespace Alex.CoreRT.Gamestates.Playing
 
 					y += (int)meisured.Y;
 
-					positionString = "Chunks: " + World.ChunkCount + ", " + World.ChunkManager.RenderedChunks;
+					positionString = "Chunks: " + World.ChunkCount + ", " + World.RenderingManager.RenderedChunks;
 					meisured = Alex.Font.MeasureString(positionString);
 
 					args.SpriteBatch.FillRectangle(new Rectangle(0, y, (int)meisured.X, (int)meisured.Y),

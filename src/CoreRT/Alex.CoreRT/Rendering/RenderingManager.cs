@@ -55,11 +55,11 @@ namespace Alex.CoreRT.Rendering
 
 	    private ConcurrentQueue<ChunkCoordinates> ChunksToUpdate { get; set; }
 	    private ConcurrentDictionary<ChunkCoordinates, IChunkColumn> Chunks { get; }
-	    private ThreadSafeList<ChunkCoordinates> _renderedChunks = new ThreadSafeList<ChunkCoordinates>();
+	    private readonly ThreadSafeList<ChunkCoordinates> _renderedChunks = new ThreadSafeList<ChunkCoordinates>();
 
 		private Thread Updater { get; }
 
-		private AutoResetEvent UpdateResetEvent = new AutoResetEvent(false);
+		private readonly AutoResetEvent _updateResetEvent = new AutoResetEvent(false);
 		private CancellationTokenSource CancelationToken { get; set; } = new CancellationTokenSource();
         private void ChunkUpdateThread()
         {
@@ -104,7 +104,7 @@ namespace Alex.CoreRT.Rendering
 		        }
 		        else
 		        {
-			        UpdateResetEvent.WaitOne();
+			        _updateResetEvent.WaitOne();
 		        }
 	        }
         }
@@ -397,7 +397,7 @@ namespace Alex.CoreRT.Rendering
 		        chunk.Scheduled = true;
 
 		        ChunksToUpdate.Enqueue(position);
-		        UpdateResetEvent.Set();
+		        _updateResetEvent.Set();
 
 				Interlocked.Increment(ref _chunkUpdates);
 			}
