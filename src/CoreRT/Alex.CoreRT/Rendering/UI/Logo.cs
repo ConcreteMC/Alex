@@ -34,6 +34,8 @@ namespace Alex.CoreRT.Rendering.UI
 
 	    private Texture2D WoodTexture { get; set; } = null;
 	    private Texture2D GrassTexture { get; set; } = null;
+	    public bool DrawMotd { get; set; } = true;
+	    public bool Center { get; set; } = false;
 
         public Logo()
         {
@@ -62,72 +64,81 @@ namespace Alex.CoreRT.Rendering.UI
             args.SpriteBatch.Begin();
             Vector2 centerScreen = CenterScreen(args.GraphicsDevice);
 
+	        int totalX = 0;
             var x = 0;
             var y = 25;
+	        if (Center)
+	        {
+		        y = (int) (centerScreen.Y - (AlexLogo.Length * 8));
+	        }
             foreach (var line in AlexLogo)
             {
                 foreach (var i in line)
                 {
-                    float renderX = centerScreen.X - ((line.Length * 6 / 2) - x);
+                    float renderX = centerScreen.X - ((line.Length * 8 / 2) - x);
 
                     if (i == ':')
                     {
-#if MONOGAME
                         args.SpriteBatch.Draw(WoodTexture, new Vector2(renderX, y));
-#endif
-#if FNA
-                        args.SpriteBatch.Draw(WoodTexture, new Vector2(renderX, y), Color.White);
-#endif
+
                     }
                     else if (i != ' ')
                     {
-#if MONOGAME
                         args.SpriteBatch.Draw(GrassTexture, new Vector2(renderX, y));
-#endif
-#if FNA
-                        args.SpriteBatch.Draw(GrassTexture, new Vector2(renderX, y), Color.White);
-#endif
                     }
 
-                    x += 6;
-                }
-                y += 6;
-                x = 0;
-            }
+                    x += 8;
+				}
 
-            float dt = (float)args.GameTime.ElapsedGameTime.TotalSeconds;
-            if (_scale > 1.22f)
-            {
-                _doPlus = false;
-            }
-            if (_scale < 0.52f)
-            {
-                _doPlus = true;
-            }
-            if (_doPlus)
-            {
-                _scale += 1f * dt;
-            }
-            else
-            {
-                _scale -= 1f * dt;
-            }
+				totalX = x;
+
+				y += 8;
+	            
+				x = 0;
+	          
+			}
+
+	        if (DrawMotd)
+	        {
+		        float dt = (float) args.GameTime.ElapsedGameTime.TotalSeconds;
+		        if (_scale > 1.22f)
+		        {
+			        _doPlus = false;
+		        }
+
+		        if (_scale < 0.52f)
+		        {
+			        _doPlus = true;
+		        }
+
+		        if (_doPlus)
+		        {
+			        _scale += 1f * dt;
+		        }
+		        else
+		        {
+			        _scale -= 1f * dt;
+		        }
 
 
-            try
-            {
-                args.SpriteBatch.DrawString(Alex.Font, _splashText, new Vector2(centerScreen.X + 186, 140), Color.Gold, -0.6f,
-                    new Vector2(),
-                    new Vector2(_scale, _scale), 0f, 0f);
-            }
-            catch
-            {
-                args.SpriteBatch.DrawString(Alex.Font, "Free bugs for everyone!", new Vector2(centerScreen.X + 186, 140), Color.Gold,
-                    -0.6f, new Vector2(),
-                    new Vector2(_scale, _scale), 0f, 0f);
-            }
+		        try
+		        {
+			        var textSize = Alex.Font.MeasureString(_splashText);
+			        args.SpriteBatch.DrawString(Alex.Font, _splashText, new Vector2(centerScreen.X + (totalX / 2f), 140 + (textSize.X / 2)), Color.Gold,
+				        -0.6f,
+				        new Vector2(),
+				        new Vector2(_scale, _scale), 0f, 0f);
+		        }
+		        catch
+		        {
+			        args.SpriteBatch.DrawString(Alex.Font, "Free bugs for everyone!", new Vector2(centerScreen.X + 186, 140),
+				        Color.Gold,
+				        -0.6f, new Vector2(),
+				        new Vector2(_scale, _scale), 0f, 0f);
+		        }
+	        }
 
-            args.SpriteBatch.End();
+	        args.SpriteBatch.End();
         }
     }
 }

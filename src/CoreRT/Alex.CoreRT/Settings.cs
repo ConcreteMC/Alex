@@ -1,7 +1,12 @@
-﻿namespace Alex.CoreRT
+﻿using Newtonsoft.Json;
+
+namespace Alex.CoreRT
 {
-    public struct Settings
+    public sealed class Settings
     {
+		[JsonIgnore]
+	    internal bool IsDirty { get; set; }
+
         public string Username { get; set; }
         public int RenderDistance { get; set; }
         public double MouseSensitivy { get; set; }
@@ -22,6 +27,7 @@
 
 	        Anvil = string.Empty;
 	        UseBuiltinGenerator = false;
+	        IsDirty = false;
         }
     }
 }

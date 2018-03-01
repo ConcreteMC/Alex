@@ -78,8 +78,6 @@ namespace Alex.CoreRT
 
         public void CheckResources(GraphicsDevice device, Settings setings)
         {
-			Log.Info("Checking resources...");
-
 	        if (!Directory.Exists("assets"))
 				Directory.CreateDirectory("assets");
 
