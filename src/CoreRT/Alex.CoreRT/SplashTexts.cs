@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Alex.CoreRT
+namespace Alex
 {
 	internal static class SplashTexts
 	{

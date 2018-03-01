@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using Alex.CoreRT.API.Graphics;
-using Alex.CoreRT.API.World;
-using Alex.CoreRT.Blocks;
-using Alex.CoreRT.Utils;
-using Alex.CoreRT.Worlds;
+using Alex.API.Graphics;
+using Alex.API.World;
+using Alex.Blocks;
+using Alex.Utils;
+using Alex.Worlds;
 using log4net;
 using Microsoft.Xna.Framework;
 using MiNET.Utils;
@@ -13,7 +13,7 @@ using ResourcePackLib.CoreRT.Json;
 using ResourcePackLib.CoreRT.Json.BlockStates;
 using Axis = ResourcePackLib.CoreRT.Json.Axis;
 
-namespace Alex.CoreRT.Graphics.Models
+namespace Alex.Graphics.Models
 {
 	public class MultiStateResourcePackModel : ResourcePackModel
 	{

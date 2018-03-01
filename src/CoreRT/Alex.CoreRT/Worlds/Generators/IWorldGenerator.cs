@@ -1,8 +1,8 @@
-﻿using Alex.CoreRT.API.World;
+﻿using Alex.API.World;
 using Microsoft.Xna.Framework;
 using MiNET.Utils;
 
-namespace Alex.CoreRT.Worlds.Generators
+namespace Alex.Worlds.Generators
 {
 	public interface IWorldGenerator
 	{

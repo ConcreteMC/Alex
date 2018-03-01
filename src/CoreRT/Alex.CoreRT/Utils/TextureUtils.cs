@@ -3,7 +3,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Alex.CoreRT.Utils
+namespace Alex.Utils
 {
 	public static class TextureUtils
 	{

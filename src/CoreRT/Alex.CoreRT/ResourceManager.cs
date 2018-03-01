@@ -3,13 +3,12 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Net;
-using Alex.CoreRT.Utils;
+using Alex.Utils;
 using log4net;
 using Microsoft.Xna.Framework.Graphics;
-using ResourcePackLib;
 using ResourcePackLib.CoreRT;
 
-namespace Alex.CoreRT
+namespace Alex
 {
     public class ResourceManager
     {

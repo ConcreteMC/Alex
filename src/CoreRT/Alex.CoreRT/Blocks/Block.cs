@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using Alex.CoreRT.API.Graphics;
-using Alex.CoreRT.API.World;
-using Alex.CoreRT.Graphics.Models;
-using Alex.CoreRT.Utils;
+using Alex.API.Graphics;
+using Alex.API.World;
+using Alex.Graphics.Models;
+using Alex.Utils;
 using log4net;
 using Microsoft.Xna.Framework;
 
-namespace Alex.CoreRT.Blocks
+namespace Alex.Blocks
 {
 	public class Block : IBlock
 	{

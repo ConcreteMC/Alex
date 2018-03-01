@@ -1,4 +1,4 @@
-﻿namespace Alex.CoreRT.Blocks
+﻿namespace Alex.Blocks
 {
     public class StoneBrick : Block
     {

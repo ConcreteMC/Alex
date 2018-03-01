@@ -1,6 +1,6 @@
-﻿using Alex.CoreRT.Gamestates.Playing;
+﻿using Alex.Gamestates.Playing;
 
-namespace Alex.CoreRT.Blocks
+namespace Alex.Blocks
 {
     public class Air : Block
     {

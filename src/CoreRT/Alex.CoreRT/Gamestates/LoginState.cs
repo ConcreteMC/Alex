@@ -1,9 +1,9 @@
-﻿using Alex.CoreRT.Rendering.UI;
-using Alex.CoreRT.Utils;
+﻿using Alex.Rendering.UI;
+using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Alex.CoreRT.Gamestates
+namespace Alex.Gamestates
 {
     public class LoginState : Gamestate
     {

@@ -2,7 +2,7 @@
 using Microsoft.Xna.Framework;
 using ResourcePackLib.CoreRT.Json;
 
-namespace Alex.CoreRT.Utils
+namespace Alex.Utils
 {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     // ReSharper disable once InconsistentNaming

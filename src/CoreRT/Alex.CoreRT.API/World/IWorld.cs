@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 
-namespace Alex.CoreRT.API.World
+namespace Alex.API.World
 {
 	public interface IWorld
 	{

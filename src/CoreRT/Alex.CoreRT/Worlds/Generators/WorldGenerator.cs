@@ -1,6 +1,6 @@
 ﻿using System;
-using Alex.CoreRT.API.World;
-using Alex.CoreRT.Blocks;
+using Alex.API.World;
+using Alex.Blocks;
 using log4net;
 using Microsoft.Xna.Framework;
 using MiNET.Utils;
@@ -10,7 +10,7 @@ using MiNET.Worlds;
 using MiNET.Worlds.Decorators;
 using Voronoi = MiNET.Utils.Noise.Voronoi;
 
-namespace Alex.CoreRT.Worlds.Generators
+namespace Alex.Worlds.Generators
 {
 	public class OverworldGenerator : IWorldGenerator
 	{

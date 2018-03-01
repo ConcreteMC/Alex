@@ -1,16 +1,16 @@
 ﻿using System;
-using Alex.CoreRT.API.World;
-using Alex.CoreRT.Blocks;
-using Alex.CoreRT.Graphics.Overlays;
-using Alex.CoreRT.Rendering.Camera;
-using Alex.CoreRT.Rendering.UI;
-using Alex.CoreRT.Utils;
-using Alex.CoreRT.Worlds;
+using Alex.API.World;
+using Alex.Blocks;
+using Alex.Graphics.Overlays;
+using Alex.Rendering.Camera;
+using Alex.Rendering.UI;
+using Alex.Utils;
+using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-namespace Alex.CoreRT.Gamestates.Playing
+namespace Alex.Gamestates.Playing
 {
 	public class PlayingState : Gamestate
 	{

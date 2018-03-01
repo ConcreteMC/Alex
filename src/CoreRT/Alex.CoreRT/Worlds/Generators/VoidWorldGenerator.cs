@@ -1,9 +1,9 @@
-﻿using Alex.CoreRT.API.World;
-using Alex.CoreRT.Blocks;
+﻿using Alex.API.World;
+using Alex.Blocks;
 using Microsoft.Xna.Framework;
 using MiNET.Utils;
 
-namespace Alex.CoreRT.Worlds.Generators
+namespace Alex.Worlds.Generators
 {
 	public class VoidWorldGenerator : IWorldGenerator
 	{

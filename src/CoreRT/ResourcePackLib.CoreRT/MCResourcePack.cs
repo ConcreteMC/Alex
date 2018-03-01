@@ -246,11 +246,6 @@ namespace ResourcePackLib.CoreRT
 					var blockState = MCJsonConvert.DeserializeObject<BlockState>(json);
 					_blockStates[entry.Name.Replace(".json", "")] = ProcessBlockState(blockState);
 
-					if (blockState.Parts.Length > 0)
-					{
-						Log.Info($"Multipart: {entry.Name} Parts: {blockState.Parts.Length}");
-					}
-
 					return blockState;
 				}
 			}

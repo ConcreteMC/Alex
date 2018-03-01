@@ -5,7 +5,7 @@ using log4net;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Alex.CoreRT.Gamestates
+namespace Alex.Gamestates
 {
     public class GamestateManager
     {

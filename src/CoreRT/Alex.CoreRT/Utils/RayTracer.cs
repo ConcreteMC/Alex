@@ -1,10 +1,10 @@
-﻿using Alex.CoreRT.Blocks;
-using Alex.CoreRT.Rendering.Camera;
-using Alex.CoreRT.Worlds;
+﻿using Alex.Blocks;
+using Alex.Rendering.Camera;
+using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Alex.CoreRT.Utils
+namespace Alex.Utils
 {
 	public static class RayTracer
 	{

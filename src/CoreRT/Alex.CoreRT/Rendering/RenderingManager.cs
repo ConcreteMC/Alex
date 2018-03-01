@@ -5,10 +5,10 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Alex.CoreRT.API.Graphics;
-using Alex.CoreRT.API.World;
-using Alex.CoreRT.Utils;
-using Alex.CoreRT.Worlds;
+using Alex.API.Graphics;
+using Alex.API.World;
+using Alex.Utils;
+using Alex.Worlds;
 using log4net;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -16,7 +16,7 @@ using MiNET.Utils;
 
 //using OpenTK.Graphics;
 
-namespace Alex.CoreRT.Rendering
+namespace Alex.Rendering
 {
     public class RenderingManager : IDisposable
     {

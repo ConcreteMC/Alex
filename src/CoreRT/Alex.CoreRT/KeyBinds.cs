@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework.Input;
 
-namespace Alex.CoreRT
+namespace Alex
 {
     public static class KeyBinds
     {

@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 
-namespace Alex.CoreRT.Rendering.Camera
+namespace Alex.Rendering.Camera
 {
     public class FirstPersonCamera : Camera
     {

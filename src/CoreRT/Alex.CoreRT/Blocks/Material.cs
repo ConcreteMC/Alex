@@ -1,6 +1,6 @@
-﻿using Alex.CoreRT.Utils;
+﻿using Alex.Utils;
 
-namespace Alex.CoreRT.Blocks
+namespace Alex.Blocks
 {
     public class Material
     {

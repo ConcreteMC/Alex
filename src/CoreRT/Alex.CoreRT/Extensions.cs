@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-namespace Alex.CoreRT
+namespace Alex
 {
 	public static class Extensions
 	{

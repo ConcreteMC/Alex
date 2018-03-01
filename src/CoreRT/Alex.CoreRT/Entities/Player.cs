@@ -1,8 +1,8 @@
-﻿using Alex.CoreRT.Gamestates;
-using Alex.CoreRT.Worlds;
+﻿using Alex.Gamestates;
+using Alex.Worlds;
 using Microsoft.Xna.Framework;
 
-namespace Alex.CoreRT.Entities
+namespace Alex.Entities
 {
     public class Player : LivingEntity
     {

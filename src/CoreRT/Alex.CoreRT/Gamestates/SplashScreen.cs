@@ -1,7 +1,7 @@
-﻿using Alex.CoreRT.Rendering.UI;
+﻿using Alex.Rendering.UI;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Alex.CoreRT.Gamestates
+namespace Alex.Gamestates
 {
     public class SplashScreen : Gamestate
     {

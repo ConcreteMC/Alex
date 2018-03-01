@@ -1,8 +1,8 @@
 ﻿using System;
-using Alex.CoreRT.API.Graphics;
+using Alex.API.Graphics;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Alex.CoreRT.API.World
+namespace Alex.API.World
 {
 	public interface IChunkColumn : IDisposable
 	{

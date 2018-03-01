@@ -1,15 +1,14 @@
 ﻿using System;
-using Alex.CoreRT.Blocks;
-using Alex.CoreRT.Entities;
-using Alex.CoreRT.Graphics.Overlays;
-using Alex.CoreRT.Rendering.Camera;
-using Alex.CoreRT.Worlds;
+using Alex.Blocks;
+using Alex.Entities;
+using Alex.Rendering.Camera;
+using Alex.Worlds;
 using log4net;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-namespace Alex.CoreRT.Gamestates.Playing
+namespace Alex.Gamestates.Playing
 {
     public class CameraComponent
     {

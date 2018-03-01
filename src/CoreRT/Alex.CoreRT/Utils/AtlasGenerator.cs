@@ -8,7 +8,7 @@ using log4net;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Alex.CoreRT.Utils
+namespace Alex.Utils
 {
     public class AtlasGenerator
     {

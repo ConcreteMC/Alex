@@ -1,7 +1,7 @@
-﻿using Alex.CoreRT.Gamestates;
+﻿using Alex.Gamestates;
 using Microsoft.Xna.Framework;
 
-namespace Alex.CoreRT.Rendering.UI
+namespace Alex.Rendering.UI
 {
     public class Info : UIComponent
     {

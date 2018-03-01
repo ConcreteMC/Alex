@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
 using System.Threading;
-using Alex.CoreRT.API.World;
-using Alex.CoreRT.Worlds.Generators;
+using Alex.API.World;
+using Alex.Worlds.Generators;
 using Microsoft.Xna.Framework;
 using MiNET.Utils;
 
-namespace Alex.CoreRT.Worlds
+namespace Alex.Worlds
 {
 	public class SPWorldProvider : WorldProvider
 	{

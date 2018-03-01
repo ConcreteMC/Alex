@@ -1,8 +1,8 @@
 ﻿using System;
-using Alex.CoreRT.Worlds;
+using Alex.Worlds;
 using Microsoft.Xna.Framework;
 
-namespace Alex.CoreRT.Utils
+namespace Alex.Utils
 {
 	public class PlotCell3f
 	{

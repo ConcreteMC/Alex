@@ -1,13 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Alex.CoreRT.API.Graphics;
-using Alex.CoreRT.API.World;
+using Alex.API.Graphics;
+using Alex.API.World;
 using log4net;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET.Worlds;
 
-namespace Alex.CoreRT.Worlds
+namespace Alex.Worlds
 {
 	public class ChunkColumn : IChunkColumn
 	{

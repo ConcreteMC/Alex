@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace Alex.CoreRT.Utils
+namespace Alex.Utils
 {
 	public class FpsMonitor
 	{

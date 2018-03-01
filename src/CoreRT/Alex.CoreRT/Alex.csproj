@@ -233,7 +233,7 @@
   </ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\Alex.CoreRT.API\Alex.CoreRT.API.csproj" />
+	  <ProjectReference Include="..\Alex.CoreRT.API\Alex.API.csproj" />
 	  <ProjectReference Include="..\ResourcePackLib.CoreRT\ResourcePackLib.CoreRT.csproj" />
 	</ItemGroup>
 

@@ -1,10 +1,10 @@
 ﻿using System.Drawing;
-using Alex.CoreRT.Gamestates;
-using Alex.CoreRT.Utils;
+using Alex.Gamestates;
+using Alex.Utils;
 using log4net;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Alex.CoreRT.Graphics.Overlays
+namespace Alex.Graphics.Overlays
 {
     public class WaterOverlay : IOverlay
     {

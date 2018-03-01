@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace Alex.CoreRT
+namespace Alex
 {
     public sealed class Settings
     {

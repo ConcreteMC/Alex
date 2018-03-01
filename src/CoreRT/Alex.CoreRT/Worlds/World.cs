@@ -1,11 +1,11 @@
 ﻿using System;
-using Alex.CoreRT.API.World;
-using Alex.CoreRT.Rendering;
+using Alex.API.World;
+using Alex.Rendering;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET.Utils;
 
-namespace Alex.CoreRT.Worlds
+namespace Alex.Worlds
 {
 	public class World : IWorld
 	{

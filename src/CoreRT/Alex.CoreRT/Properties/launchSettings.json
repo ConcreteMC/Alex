@@ -1,6 +1,6 @@
 {
   "profiles": {
-    "Alex.CoreRT": {
+    "Alex": {
       "commandName": "Project",
       "workingDirectory": "bin\\Debug\\netcoreapp2.0\\"
     }

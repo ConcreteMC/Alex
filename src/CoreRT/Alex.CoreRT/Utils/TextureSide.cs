@@ -1,4 +1,4 @@
-﻿namespace Alex.CoreRT.Utils
+﻿namespace Alex.Utils
 {
     public enum TextureSide
     {

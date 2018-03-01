@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using Alex.CoreRT.API.Graphics;
-using Alex.CoreRT.API.World;
-using Alex.CoreRT.Blocks;
-using Alex.CoreRT.Utils;
-using Alex.CoreRT.Worlds;
+﻿using System.Collections.Generic;
+using Alex.API.Graphics;
+using Alex.API.World;
+using Alex.Blocks;
+using Alex.Utils;
+using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using MiNET.Utils;
 using MiNET.Worlds;
@@ -12,7 +11,7 @@ using ResourcePackLib.CoreRT.Json;
 using ResourcePackLib.CoreRT.Json.BlockStates;
 using Axis = ResourcePackLib.CoreRT.Json.Axis;
 
-namespace Alex.CoreRT.Graphics.Models
+namespace Alex.Graphics.Models
 {
 	public class CachedResourcePackModel : ResourcePackModel
 	{
@@ -48,21 +47,21 @@ namespace Alex.CoreRT.Graphics.Models
 				var modelRotationMatrix = GetModelRotationMatrix(var);
 				foreach (var element in var.Model.Elements)
 				{
-					var c = new Vector3(8f, 8f, 8f);
-
 					var elementFrom = new Vector3((element.From.X), (element.From.Y),
 						(element.From.Z));
 
 					var elementTo = new Vector3((element.To.X), (element.To.Y),
 						(element.To.Z));
 
-					var width = elementTo.X - elementFrom.X;
+				/*	var width = elementTo.X - elementFrom.X;
 					var height = elementTo.Y - elementFrom.Y;
 					var length = elementTo.Z - elementFrom.Z;
 
-					var origin = new Vector3((elementTo.X + elementFrom.X) / 2 - 8,
-						(elementTo.X + elementFrom.X) / 2 - 8,
-						(elementTo.X + elementFrom.X) / 2 - 8);
+					var origin = new Vector3(((elementTo.X + elementFrom.X) / 2f) - 8,
+						((elementTo.Y + elementFrom.Y) / 2f) - 8,
+						((elementTo.Z + elementFrom.Z) / 2f) - 8);*/
+
+					var c = new Vector3(8f, 8f, 8f);
 
 					var elementModelRotation = Matrix.CreateTranslation(-c) * modelRotationMatrix *
 					                           Matrix.CreateTranslation(c);
@@ -73,22 +72,8 @@ namespace Alex.CoreRT.Graphics.Models
 						var faceStart = elementFrom;
 						var faceEnd = elementTo;
 
-						string textureName = "no_texture";
-						if (!var.Model.Textures.TryGetValue(face.Value.Texture.Replace("#", ""), out textureName))
-						{
-							textureName = face.Value.Texture;
-						}
-
-						if (textureName.StartsWith("#"))
-						{
-							if (!var.Model.Textures.TryGetValue(textureName.Replace("#", ""), out textureName))
-							{
-								textureName = "no_texture";
-							}
-						}
-
 						var uv = face.Value.UV;
-						var uvmap = GetTextureUVMap(Resources, textureName, uv.X1, uv.X2, uv.Y1, uv.Y2);
+						var uvmap = GetTextureUVMap(Resources, ResolveTexture(var, face.Value.Texture), uv.X1, uv.X2, uv.Y1, uv.Y2);
 
 						var elementRotation = element.Rotation;
 						Matrix faceRotationMatrix = GetElementRotationMatrix(elementRotation, out float ci);

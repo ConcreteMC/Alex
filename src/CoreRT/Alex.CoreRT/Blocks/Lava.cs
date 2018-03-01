@@ -1,6 +1,6 @@
-﻿using Alex.CoreRT.Graphics.Models;
+﻿using Alex.Graphics.Models;
 
-namespace Alex.CoreRT.Blocks
+namespace Alex.Blocks
 {
 	public class Lava : Block
 	{

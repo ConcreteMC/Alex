@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Alex.CoreRT.API.Graphics
+namespace Alex.API.Graphics
 {
     public struct VertexPositionNormalTextureColor : IVertexType
     {

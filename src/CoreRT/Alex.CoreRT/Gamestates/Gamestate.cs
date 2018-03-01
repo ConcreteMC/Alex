@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Alex.CoreRT.Rendering.UI;
+using Alex.Rendering.UI;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Alex.CoreRT.Gamestates
+namespace Alex.Gamestates
 {
 	public class Gamestate
 	{

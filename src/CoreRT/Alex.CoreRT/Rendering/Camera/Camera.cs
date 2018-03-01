@@ -1,8 +1,8 @@
 ﻿using System;
-using Alex.CoreRT.Utils;
+using Alex.Utils;
 using Microsoft.Xna.Framework;
 
-namespace Alex.CoreRT.Rendering.Camera
+namespace Alex.Rendering.Camera
 {
     public class Camera
     {

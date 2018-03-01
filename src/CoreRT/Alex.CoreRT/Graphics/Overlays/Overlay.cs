@@ -1,7 +1,7 @@
-﻿using Alex.CoreRT.Gamestates;
+﻿using Alex.Gamestates;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Alex.CoreRT.Graphics.Overlays
+namespace Alex.Graphics.Overlays
 {
     public interface IOverlay
     {

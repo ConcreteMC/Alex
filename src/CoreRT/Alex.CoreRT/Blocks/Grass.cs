@@ -1,7 +1,7 @@
-﻿using Alex.CoreRT.Utils;
+﻿using Alex.Utils;
 using Microsoft.Xna.Framework;
 
-namespace Alex.CoreRT.Blocks
+namespace Alex.Blocks
 {
     public class Grass : Block
     {

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Alex.CoreRT.Utils
+namespace Alex.Utils
 {
 	public static class MathUtils
 	{

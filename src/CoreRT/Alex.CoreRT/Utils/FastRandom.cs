@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Alex.CoreRT.Utils
+namespace Alex.Utils
 {
 	/// <summary>
 	/// A fast random number generator for .NET

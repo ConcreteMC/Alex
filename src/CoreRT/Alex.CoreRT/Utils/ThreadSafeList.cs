@@ -6,7 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Alex.CoreRT.Utils
+namespace Alex.Utils
 {
 	#region License & Information
 

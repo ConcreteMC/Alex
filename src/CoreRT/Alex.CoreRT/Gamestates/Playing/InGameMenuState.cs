@@ -1,9 +1,9 @@
-﻿using Alex.CoreRT.Rendering.UI;
+﻿using Alex.Rendering.UI;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-namespace Alex.CoreRT.Gamestates.Playing
+namespace Alex.Gamestates.Playing
 {
     public class InGameMenuState : Gamestate
     {

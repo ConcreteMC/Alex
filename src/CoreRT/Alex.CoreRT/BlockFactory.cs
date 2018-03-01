@@ -3,15 +3,15 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Alex.CoreRT.Blocks;
-using Alex.CoreRT.Graphics.Models;
+using Alex.Blocks;
+using Alex.Graphics.Models;
 using log4net;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using ResourcePackLib.CoreRT;
 using ResourcePackLib.CoreRT.Json.BlockStates;
 
-namespace Alex.CoreRT
+namespace Alex
 {
     public static class BlockFactory
     {
@@ -109,7 +109,7 @@ namespace Alex.CoreRT
 				string variantKey;
 				var result = Parse(resourcePack, blockState.Value, out variantKey);
 				if (result == null)
-				{   if (reportMissing)
+				{   if (reportMissing && !IsRegistered(blockID, metadata))
 						Log.Warn($"Missing blockstate for {blockState.Value} (ID: {blockID} Meta: {metadata})");
 
 					continue;
@@ -356,6 +356,18 @@ namespace Alex.CoreRT
 		    return values;
 	    }
 
+	    private static bool IsRegistered(int blockId, byte meta)
+	    {
+		    if (blockId == 0 ||
+		        blockId == 8 ||
+		        blockId == 9 ||
+		        blockId == 10 ||
+		        blockId == 11 ||
+		        blockId == 166) return true;
+
+		    return _registeredBlocks.ContainsKey(Block.GetBlockStateID(blockId, meta));
+	    }
+
 	    public static Block GetBlock(uint palleteId)
 	    {
 		    int blockID = (int)(palleteId >> 4);
@@ -370,32 +382,6 @@ namespace Alex.CoreRT
 		    if (blockID == 11) return new FlowingLava(metadata);
 
 			if (blockID == 166) return new InvisibleBedrock(false);
-/*
-			if (blockID == 18) return new Leaves(metadata)
-			{
-				BlockModel = new ResourcePackModel(null, new BlockStateModel()
-				{
-					Model = CubeModel,
-					ModelName = CubeModel.Name,
-					X = 0,
-					Y = 0,
-					Uvlock = false,
-					Weight = 1
-				})
-			};
-
-			if (blockID == 17) return new Wood(metadata)
-			    { BlockModel = new ResourcePackModel(null, new BlockStateModel()
-				    {
-						Model = CubeModel,
-						ModelName = CubeModel.Name,
-						X = 0,
-						Y = 0,
-						Uvlock = false,
-						Weight = 1
-				    })
-			    };*/
-
 
 			if (_registeredBlocks.TryGetValue(palleteId, out Func<Block> b))
 		    {

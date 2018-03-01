@@ -4,7 +4,7 @@ using System.Reflection;
 using log4net;
 using log4net.Config;
 
-namespace Alex.CoreRT
+namespace Alex
 {
 #if WINDOWS || LINUX
 	/// <summary>

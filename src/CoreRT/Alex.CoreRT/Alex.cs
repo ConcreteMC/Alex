@@ -2,14 +2,14 @@
 using System.IO;
 using System.Net;
 using System.Threading;
-using Alex.CoreRT.Gamestates;
+using Alex.Gamestates;
 using log4net;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Newtonsoft.Json;
 
-namespace Alex.CoreRT
+namespace Alex
 {
 	public partial class Alex : Microsoft.Xna.Framework.Game
 	{
@@ -139,7 +139,7 @@ namespace Alex.CoreRT
 
 			if (!File.Exists(Path.Combine("assets", "Minecraftia.xnb")))
 			{
-				File.WriteAllBytes(Path.Combine("assets", "Minecraftia.xnb"), CoreRT.Resources.Minecraftia1);
+				File.WriteAllBytes(Path.Combine("assets", "Minecraftia.xnb"), global::Alex.Resources.Minecraftia1);
 			}
 			Font = Content.Load<SpriteFont>("Minecraftia");
 

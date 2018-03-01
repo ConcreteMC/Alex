@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Text;
-using Alex.CoreRT.Gamestates;
-using Alex.CoreRT.Utils;
+using Alex.Gamestates;
+using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-namespace Alex.CoreRT.Rendering.UI
+namespace Alex.Rendering.UI
 {
 	public class InputField : UIComponent
 	{

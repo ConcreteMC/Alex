@@ -1,4 +1,4 @@
-﻿namespace Alex.CoreRT.API.Graphics
+﻿namespace Alex.API.Graphics
 {
 	public class Mesh
 	{

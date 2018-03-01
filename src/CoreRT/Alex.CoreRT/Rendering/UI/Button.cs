@@ -1,11 +1,11 @@
-﻿using Alex.CoreRT.Gamestates;
-using Alex.CoreRT.Utils;
+﻿using Alex.Gamestates;
+using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using ButtonState = Microsoft.Xna.Framework.Input.ButtonState;
 
-namespace Alex.CoreRT.Rendering.UI
+namespace Alex.Rendering.UI
 {
     public class Button : UIComponent
     {

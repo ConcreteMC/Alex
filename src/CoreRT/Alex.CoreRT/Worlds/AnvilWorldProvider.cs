@@ -5,8 +5,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Alex.CoreRT.API.World;
-using Alex.CoreRT.Worlds.Generators;
+using Alex.API.World;
+using Alex.Worlds.Generators;
 using fNbt;
 using fNbt.Tags;
 using log4net;
@@ -15,7 +15,7 @@ using MiNET.BlockEntities;
 using MiNET.Utils;
 using MiNET.Worlds;
 
-namespace Alex.CoreRT.Worlds
+namespace Alex.Worlds
 {
 	public class AnvilWorldProvider : IWorldGenerator
 	{

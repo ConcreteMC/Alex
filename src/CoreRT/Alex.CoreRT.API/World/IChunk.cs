@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Alex.CoreRT.API.World
+namespace Alex.API.World
 {
 	public interface IChunk : ICloneable
 	{

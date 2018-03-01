@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using Alex.CoreRT.API.Graphics;
-using Alex.CoreRT.API.World;
-using Alex.CoreRT.Blocks;
-using Alex.CoreRT.Utils;
-using Alex.CoreRT.Worlds;
+using Alex.API.Graphics;
+using Alex.API.World;
+using Alex.Blocks;
+using Alex.Utils;
+using Alex.Worlds;
 using log4net;
 using Microsoft.Xna.Framework;
 using MiNET.Utils;
@@ -16,7 +16,7 @@ using Axis = ResourcePackLib.CoreRT.Json.Axis;
 using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
 using V3 = Microsoft.Xna.Framework.Vector3;
 
-namespace Alex.CoreRT.Graphics.Models
+namespace Alex.Graphics.Models
 {
     public class ResourcePackModel : BlockModel
 	{
@@ -88,7 +88,7 @@ namespace Alex.CoreRT.Graphics.Models
 			
 			if (elementRotation.Axis != Axis.Undefined)
 			{
-				var elementRotationOrigin = new Vector3(elementRotation.Origin.X, elementRotation.Origin.Y, elementRotation.Origin.Z);
+				var elementRotationOrigin = new Vector3(elementRotation.Origin.X , elementRotation.Origin.Y, elementRotation.Origin.Z);
 
 				var elementAngle =
 					MathUtils.ToRadians((float)(elementRotation.Axis == Axis.X ? -elementRotation.Angle : elementRotation.Angle));
@@ -157,6 +157,25 @@ namespace Alex.CoreRT.Graphics.Models
 			       Matrix.CreateRotationY((float)MathUtils.ToRadians(360f - model.Y));
 		}
 
+		protected string ResolveTexture(BlockStateModel var, string texture)
+		{
+			string textureName = "no_texture";
+			if (!var.Model.Textures.TryGetValue(texture.Replace("#", ""), out textureName))
+			{
+				textureName = texture;
+			}
+
+			if (textureName.StartsWith("#"))
+			{
+				if (!var.Model.Textures.TryGetValue(textureName.Replace("#", ""), out textureName))
+				{
+					textureName = "no_texture";
+				}
+			}
+
+			return textureName;
+		}
+
 		private V3 Min = V3.Zero;
 		private V3 Max = V3.One / 16f;
 		public override VertexPositionNormalTextureColor[] GetVertices(IWorld world, V3 position, Block baseBlock)
@@ -188,22 +207,8 @@ namespace Alex.CoreRT.Graphics.Models
 				        var faceStart = elementFrom;
 				        var faceEnd = elementTo;
 
-				        string textureName = "no_texture";
-				        if (!var.Model.Textures.TryGetValue(face.Value.Texture.Replace("#", ""), out textureName))
-				        {
-					        textureName = face.Value.Texture;
-				        }
-
-				        if (textureName.StartsWith("#"))
-				        {
-					        if (!var.Model.Textures.TryGetValue(textureName.Replace("#", ""), out textureName))
-					        {
-						        textureName = "no_texture";
-					        }
-				        }
-
-				        var uv = face.Value.UV;
-				        var uvmap = GetTextureUVMap(Resources, textureName, uv.X1, uv.X2, uv.Y1, uv.Y2);
+						var uv = face.Value.UV;
+				        var uvmap = GetTextureUVMap(Resources, ResolveTexture(var, face.Value.Texture), uv.X1, uv.X2, uv.Y1, uv.Y2);
 
 				        GetFaceValues(face.Value.CullFace, face.Key, out var cull, out var cullFace);
 

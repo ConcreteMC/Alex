@@ -1,4 +1,4 @@
-﻿namespace Alex.CoreRT.Entities
+﻿namespace Alex.Entities
 {
 	public class LivingEntity : Entity
 	{

@@ -1,9 +1,9 @@
 ﻿using System.Linq;
-using Alex.CoreRT.API.World;
+using Alex.API.World;
 using log4net;
 using MiNET.Utils;
 
-namespace Alex.CoreRT.Worlds
+namespace Alex.Worlds
 {
 	public class ChunkSection : IChunk
 	{

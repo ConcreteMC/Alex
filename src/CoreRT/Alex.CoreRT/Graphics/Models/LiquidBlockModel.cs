@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Alex.CoreRT.API.Graphics;
-using Alex.CoreRT.API.World;
-using Alex.CoreRT.Blocks;
-using Alex.CoreRT.Utils;
+using Alex.API.Graphics;
+using Alex.API.World;
+using Alex.Blocks;
+using Alex.Utils;
 using Microsoft.Xna.Framework;
 using ResourcePackLib.CoreRT.Json;
 
-namespace Alex.CoreRT.Graphics.Models
+namespace Alex.Graphics.Models
 {
 
 	//TODO:

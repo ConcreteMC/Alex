@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.Xna.Framework;
 
-namespace Alex.CoreRT.API.World
+namespace Alex.API.World
 {
 	public abstract class WorldProvider : IDisposable
 	{

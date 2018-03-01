@@ -1,8 +1,8 @@
-﻿using Alex.CoreRT.Gamestates;
+﻿using Alex.Gamestates;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Alex.CoreRT.Rendering.UI
+namespace Alex.Rendering.UI
 {
     public class Image : UIComponent
     {

@@ -1,11 +1,11 @@
 ﻿using System.Net;
-using Alex.CoreRT.Gamestates.Playing;
-using Alex.CoreRT.Rendering.UI;
-using Alex.CoreRT.Utils;
+using Alex.Gamestates.Playing;
+using Alex.Rendering.UI;
+using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Alex.CoreRT.Gamestates
+namespace Alex.Gamestates
 {
     public class ServerState : Gamestate
     {

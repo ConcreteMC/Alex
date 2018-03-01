@@ -5,15 +5,15 @@ VisualStudioVersion = 15.0.27130.2036
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alex.Data", "Alex.Data\Alex.Data.csproj", "{63D936AD-3498-45F6-84A9-48DAFCEF7D96}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Alex.CoreRT", "CoreRT\Alex.CoreRT\Alex.CoreRT.csproj", "{C360D9A4-C1AC-4A41-8A49-ADE1306DB389}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Alex", "CoreRT\Alex.CoreRT\Alex.csproj", "{C360D9A4-C1AC-4A41-8A49-ADE1306DB389}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CoreRT", "CoreRT", "{165FD546-9649-40F7-B5E4-6930D4F941EB}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Alex.CoreRT.API", "CoreRT\Alex.CoreRT.API\Alex.CoreRT.API.csproj", "{DFC77469-ABB6-4111-A961-AE9B3AD22F34}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Alex.API", "CoreRT\Alex.CoreRT.API\Alex.API.csproj", "{DFC77469-ABB6-4111-A961-AE9B3AD22F34}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ResourcePackLib.CoreRT", "CoreRT\ResourcePackLib.CoreRT\ResourcePackLib.CoreRT.csproj", "{F66C6662-266E-46DB-A8E6-C4F826B34DAC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alex.Networking", "Alex.Networking\Alex.Networking.csproj", "{9ED91B80-5470-4EE2-A8F4-D3092D7684A1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Alex.Networking", "Alex.Networking\Alex.Networking.csproj", "{9ED91B80-5470-4EE2-A8F4-D3092D7684A1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
