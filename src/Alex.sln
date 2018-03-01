@@ -7,8 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alex.Data", "Alex.Data\Alex
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Alex", "CoreRT\Alex.CoreRT\Alex.csproj", "{C360D9A4-C1AC-4A41-8A49-ADE1306DB389}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CoreRT", "CoreRT", "{165FD546-9649-40F7-B5E4-6930D4F941EB}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Alex.API", "CoreRT\Alex.CoreRT.API\Alex.API.csproj", "{DFC77469-ABB6-4111-A961-AE9B3AD22F34}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ResourcePackLib.CoreRT", "CoreRT\ResourcePackLib.CoreRT\ResourcePackLib.CoreRT.csproj", "{F66C6662-266E-46DB-A8E6-C4F826B34DAC}"
@@ -88,11 +86,6 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{C360D9A4-C1AC-4A41-8A49-ADE1306DB389} = {165FD546-9649-40F7-B5E4-6930D4F941EB}
-		{DFC77469-ABB6-4111-A961-AE9B3AD22F34} = {165FD546-9649-40F7-B5E4-6930D4F941EB}
-		{F66C6662-266E-46DB-A8E6-C4F826B34DAC} = {165FD546-9649-40F7-B5E4-6930D4F941EB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {32B4D997-4F97-43FC-9636-1E35A79AA844}
