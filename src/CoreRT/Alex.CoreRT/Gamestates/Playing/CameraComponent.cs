@@ -1,6 +1,7 @@
 ﻿using System;
 using Alex.CoreRT.Blocks;
 using Alex.CoreRT.Entities;
+using Alex.CoreRT.Graphics.Overlays;
 using Alex.CoreRT.Rendering.Camera;
 using Alex.CoreRT.Worlds;
 using log4net;
@@ -33,7 +34,8 @@ namespace Alex.CoreRT.Gamestates.Playing
         private GraphicsDevice Graphics { get; }
         private World World { get; }
         private Settings GameSettings { get; }
-        public CameraComponent(FirstPersonCamera camera, GraphicsDevice graphics, World world, Settings settings)
+
+		public CameraComponent(FirstPersonCamera camera, GraphicsDevice graphics, World world, Settings settings)
         {
             Camera = camera;
             Graphics = graphics;
@@ -206,7 +208,6 @@ namespace Alex.CoreRT.Gamestates.Playing
 			//Matrix.CreateLookAt(v, Vector3.Forward, )
 			if (v != Vector3.Zero) //Only if we moved.
 			{
-				
                 var preview = Camera.PreviewMove(v);
 
                 var headBlock = (Block)World.GetBlock(preview);

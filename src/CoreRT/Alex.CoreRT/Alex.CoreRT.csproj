@@ -71,6 +71,8 @@
     <None Remove="Graphics\Models\CachedResourcePackModel.cs" />
     <None Remove="Graphics\Models\LiquidBlockModel.cs" />
     <None Remove="Graphics\Models\ResourcePackModel.cs" />
+    <None Remove="Graphics\Overlays\Overlay.cs" />
+    <None Remove="Graphics\Overlays\WaterOverlay.cs" />
     <None Remove="KeyBinds.cs" />
     <None Remove="Program.cs" />
     <None Remove="Rendering\Camera\Camera.cs" />
@@ -163,6 +165,8 @@
     <Compile Include="Graphics\Models\CachedResourcePackModel.cs" />
     <Compile Include="Graphics\Models\ResourcePackModel.cs" />
     <Compile Include="Graphics\Models\LiquidBlockModel.cs" />
+    <Compile Include="Graphics\Overlays\Overlay.cs" />
+    <Compile Include="Graphics\Overlays\WaterOverlay.cs" />
     <Compile Include="KeyBinds.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Rendering\Camera\Camera.cs" />

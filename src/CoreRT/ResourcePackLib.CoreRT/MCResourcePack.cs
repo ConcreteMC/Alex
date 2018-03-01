@@ -7,7 +7,9 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Runtime.InteropServices;
+using log4net;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using ResourcePackLib.CoreRT.Json;
 using ResourcePackLib.CoreRT.Json.BlockStates;
 using ResourcePackLib.CoreRT.Json.Models;
@@ -17,6 +19,7 @@ namespace ResourcePackLib.CoreRT
 {
 	public class McResourcePack : IDisposable
 	{
+		private static ILog Log = LogManager.GetLogger(typeof(McResourcePack));
 		public ResourcePackInfo Info { get; private set; }
 
 		public IReadOnlyDictionary<string, BlockState> BlockStates => _blockStates;
@@ -83,6 +86,30 @@ namespace ResourcePackLib.CoreRT
 
 			return new Color(result.R, result.G, result.B);
 		}
+
+		public bool TryGetBitmap(string resource, out Bitmap texture)
+		{
+			try
+			{
+				var entry = _archive.GetEntry(resource);
+				if (entry == null)
+				{
+					texture = default(Bitmap);
+					return false;
+				}
+				using(var e = entry.Open()){
+					Bitmap bmp = new Bitmap(e);
+					texture = bmp;
+				}
+				return true;
+			}
+			catch(Exception exception)
+			{
+				Log.Error("Oh oh!", exception);
+				texture = default(Bitmap);
+				return false;
+			}
+		} 
 
 		private void Load()
 		{

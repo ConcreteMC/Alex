@@ -1,6 +1,7 @@
 ﻿using System;
 using Alex.CoreRT.API.World;
 using Alex.CoreRT.Blocks;
+using Alex.CoreRT.Graphics.Overlays;
 using Alex.CoreRT.Rendering.Camera;
 using Alex.CoreRT.Rendering.UI;
 using Alex.CoreRT.Utils;
@@ -22,6 +23,8 @@ namespace Alex.CoreRT.Gamestates.Playing
 		private Texture2D CrosshairTexture { get; set; }
 
 		private ChatComponent Chat { get; }
+		private ThreadSafeList<IOverlay> ActiveOverlays { get; }
+ 	//	private WaterOverlay WaterOverlay { get; }
 		public PlayingState(Alex alex, GraphicsDevice graphics, WorldProvider worldProvider) : base(graphics)
 		{
 			Alex = alex;
@@ -33,10 +36,15 @@ namespace Alex.CoreRT.Gamestates.Playing
 			Camera.MoveTo(World.GetSpawnPoint(), Vector3.Zero);
 
 			CamComponent = new CameraComponent(Camera, Graphics, World, alex.GameSettings);
+
+			ActiveOverlays = new ThreadSafeList<IOverlay>();
+			//WaterOverlay = new WaterOverlay();
 		}
 
 		public override void Init(RenderArgs args)
 		{
+			//WaterOverlay.Load(args.GraphicsDevice, Alex.Resources);
+
 			Controls.Add("chatComponent", Chat);
 
 			FpsCounter = new FpsMonitor();
@@ -65,9 +73,27 @@ namespace Alex.CoreRT.Gamestates.Playing
 				CheckInput(gameTime);
 
 				World.Update();
+
+				var headBlock = World.GetBlock(Camera.Position);
+				if (headBlock.BlockId == 8 || headBlock.BlockId == 9)
+				{
+					if (!_renderWaterOverlay)
+					{
+						_renderWaterOverlay = true;
+					}
+					//if (!ActiveOverlays.Contains(WaterOverlay))
+				//	{
+					//	ActiveOverlays.TryAdd(WaterOverlay);
+					//}
+				}else if (_renderWaterOverlay)
+				{
+					_renderWaterOverlay = false;
+				}
 			}
 			base.OnUpdate(gameTime);
 		}
+
+		private bool _renderWaterOverlay = false;
 
 		private Vector3 _raytracedBlock;
 		protected void UpdateRayTracer(GraphicsDevice graphics, World world)
@@ -154,6 +180,19 @@ namespace Alex.CoreRT.Gamestates.Playing
 			try
 			{
 				args.SpriteBatch.Begin();
+
+
+				if (_renderWaterOverlay)
+				{
+					//Start draw background
+					var retval = new Microsoft.Xna.Framework.Rectangle(
+						args.SpriteBatch.GraphicsDevice.Viewport.X,
+						args.SpriteBatch.GraphicsDevice.Viewport.Y,
+						args.SpriteBatch.GraphicsDevice.Viewport.Width,
+						args.SpriteBatch.GraphicsDevice.Viewport.Height);
+					args.SpriteBatch.FillRectangle(retval, new Color(Color.DarkBlue, 0.5f));
+					//End draw backgroun
+				}
 
 #if MONOGAME
 				args.SpriteBatch.Draw(CrosshairTexture,
@@ -242,6 +281,9 @@ namespace Alex.CoreRT.Gamestates.Playing
 			{
 				args.SpriteBatch.End();
 			}
+
+			ActiveOverlays.ForEach(x => x.Render(args));
+
 			base.Render2D(args);
 		}
 
