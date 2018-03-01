@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using System.Threading;
 using Alex.CoreRT.API.World;
 using Alex.CoreRT.Worlds.Generators;
@@ -11,7 +13,7 @@ namespace Alex.CoreRT.Worlds
 	public class SPWorldProvider : WorldProvider
 	{
 		private IWorldGenerator Generator;
-		private List<ChunkCoordinates> LoadedChunks { get; } = new List<ChunkCoordinates>();
+		private List<ChunkCoordinates> LoadedChunks = new List<ChunkCoordinates>();
 		private ChunkCoordinates PreviousChunkCoordinates { get; set; } = new ChunkCoordinates(int.MaxValue, int.MaxValue);
 		private Alex Alex { get; }
 
@@ -44,10 +46,24 @@ namespace Alex.CoreRT.Worlds
 					double radiusSquared = Math.Pow(t, 2);
 
 					List<ChunkCoordinates> newChunkCoordinates = new List<ChunkCoordinates>();
-					for (int x = -t; x < t; x++)
+
+					//Load chunks from the inside out (Playerlocation first, then the chunks around it)
+					for (int cx = 0; cx < t * 2; cx++)
 					{
-						for (int z = -t; z < t; z++)
+						int x = cx / 2;
+						if (cx % 2 == 0)
 						{
+							x = -x;
+						}
+
+						for (int cz = 0; cz < t * 2; cz++)
+						{
+							int z = cz / 2;
+							if (cz % 2 == 0)
+							{
+								z = -z;
+							}
+
 							var distance = (x * x) + (z * z);
 							if (distance > radiusSquared)
 							{
@@ -66,14 +82,14 @@ namespace Alex.CoreRT.Worlds
 
 								base.LoadChunk(chunk, cc.X, cc.Z);
 
-								LoadedChunks.Add(cc);	
+								LoadedChunks.Add(cc);
 							}
 						}
 					}
 
 					foreach (var chunk in oldChunks)
 					{
-						if (!newChunkCoordinates.Contains(chunk))
+						if (!newChunkCoordinates.Contains((ChunkCoordinates) chunk))
 						{
 							UnloadChunk(chunk.X, chunk.Z);
 							LoadedChunks.Remove(chunk);

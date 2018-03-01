@@ -11,10 +11,10 @@ namespace Alex.CoreRT.Worlds
 
 		private bool _isAllAir = true;
 
-		public uint[] blocks = new uint[16 * 16 * 16];
+		public uint[] Blocks = new uint[16 * 16 * 16];
 
-		public NibbleArray blocklight = new NibbleArray(16 * 16 * 16);
-		public NibbleArray skylight = new NibbleArray(16 * 16 * 16);
+		public NibbleArray Blocklight = new NibbleArray(16 * 16 * 16);
+		public NibbleArray Skylight = new NibbleArray(16 * 16 * 16);
 
 		private byte[] _cache;
 		private bool _isDirty;
@@ -22,8 +22,8 @@ namespace Alex.CoreRT.Worlds
 
 		public ChunkSection()
 		{
-			skylight.Data.Fill<byte>(0xff);
-			blocks.Fill<uint>(0);
+			Skylight.Data.Fill<byte>(0xff);
+			Blocks.Fill<uint>(0);
 		}
 
 		public bool IsDirty() => _isDirty;
@@ -32,7 +32,7 @@ namespace Alex.CoreRT.Worlds
 		{
 			if (_isDirty)
 			{
-				_isAllAir = blocks.All(b => b == 0);
+				_isAllAir = Blocks.All(b => b == 0);
 				_isDirty = false;
 			}
 			return _isAllAir;
@@ -45,12 +45,12 @@ namespace Alex.CoreRT.Worlds
 
 		public uint GetBlockState(int bx, int by, int bz)
 		{
-			return blocks[GetIndex(bx, by, bz)];
+			return Blocks[GetIndex(bx, by, bz)];
 		}
 
 		public void SetBlockState(int bx, int by, int bz, uint value)
 		{
-			blocks[GetIndex(bx, by, bz)] = value;
+			Blocks[GetIndex(bx, by, bz)] = value;
 			if (value != 0 && _isAllAir)
 			{
 				_isAllAir = false;
@@ -63,32 +63,32 @@ namespace Alex.CoreRT.Worlds
 
 		public byte GetBlocklight(int bx, int by, int bz)
 		{
-			return blocklight[GetIndex(bx, by, bz)];
+			return Blocklight[GetIndex(bx, by, bz)];
 		}
 
 		public void SetBlocklight(int bx, int by, int bz, byte data)
 		{
-			blocklight[GetIndex(bx, by, bz)] = data;
+			Blocklight[GetIndex(bx, by, bz)] = data;
 		}
 
 		public byte GetSkylight(int bx, int by, int bz)
 		{
-			return skylight[GetIndex(bx, by, bz)];
+			return Skylight[GetIndex(bx, by, bz)];
 		}
 
 		public void SetSkylight(int bx, int by, int bz, byte data)
 		{
-			skylight[GetIndex(bx, by, bz)] = data;
+			Skylight[GetIndex(bx, by, bz)] = data;
 		}
 
 		public object Clone()
 		{
 			ChunkSection cc = (ChunkSection)MemberwiseClone();
 
-			cc.blocks = (uint[])blocks.Clone();
+			cc.Blocks = (uint[])Blocks.Clone();
 			//cc.metadata = (NibbleArray)metadata.Clone();
-			cc.blocklight = (NibbleArray)blocklight.Clone();
-			cc.skylight = (NibbleArray)skylight.Clone();
+			cc.Blocklight = (NibbleArray)Blocklight.Clone();
+			cc.Skylight = (NibbleArray)Skylight.Clone();
 
 			if (_cache != null)
 			{
