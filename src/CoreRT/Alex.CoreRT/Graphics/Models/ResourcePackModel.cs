@@ -22,10 +22,10 @@ namespace Alex.CoreRT.Graphics.Models
 	{
 		private static readonly ILog Log = LogManager.GetLogger(typeof(ResourcePackModel));
 		
-        protected BlockStateModel Variant { get; }
+        protected BlockStateModel[] Variant { get; set; }
 		protected ResourceManager Resources { get; }
 
-		public ResourcePackModel(ResourceManager resources, BlockStateModel variant)
+		public ResourcePackModel(ResourceManager resources, BlockStateModel[] variant)
 		{
 			Resources = resources;
             Variant = variant;
@@ -33,9 +33,15 @@ namespace Alex.CoreRT.Graphics.Models
 			CalculateBoundingBox();
         }
 
-		private void CalculateBoundingBox()
+		protected ResourcePackModel(ResourceManager resources)
 		{
-			foreach (var element in Variant.Model.Elements)
+			Resources = resources;
+		}
+
+		protected void CalculateBoundingBox()
+		{
+			foreach(var var in Variant)
+			foreach (var element in var.Model.Elements)
 			{
 				var faceStart = new V3((element.From.X), (element.From.Y),
 					(element.From.Z)) / 16f;
@@ -145,10 +151,10 @@ namespace Alex.CoreRT.Graphics.Models
 			face = cull;
 		}
 
-		protected Matrix GetModelRotationMatrix()
+		protected Matrix GetModelRotationMatrix(BlockStateModel model)
 		{
-			return Matrix.CreateRotationX((float)MathUtils.ToRadians(360f - Variant.X)) *
-			       Matrix.CreateRotationY((float)MathUtils.ToRadians(360f - Variant.Y));
+			return Matrix.CreateRotationX((float)MathUtils.ToRadians(360f - model.X)) *
+			       Matrix.CreateRotationY((float)MathUtils.ToRadians(360f - model.Y));
 		}
 
 		private V3 Min = V3.Zero;
@@ -157,120 +163,128 @@ namespace Alex.CoreRT.Graphics.Models
         {
 	        var verts = new List<VertexPositionNormalTextureColor>();
 
-	        var modelRotationMatrix = GetModelRotationMatrix();
-
 			// MaxY = 0;
 			V3 worldPosition = new V3(position.X, position.Y, position.Z);
 
-			foreach (var element in Variant.Model.Elements)
-            {
-	            var c = new V3(8f, 8f, 8f);
+	        foreach (var var in Variant)
+	        {
+		        var modelRotationMatrix = GetModelRotationMatrix(var);
 
-				var elementFrom = new V3((element.From.X), (element.From.Y),
-		           (element.From.Z));
+				foreach (var element in var.Model.Elements)
+		        {
+			        var c = new V3(8f, 8f, 8f);
 
-	            var elementTo = new V3((element.To.X), (element.To.Y) ,
-		            (element.To.Z));
+			        var elementFrom = new V3((element.From.X), (element.From.Y),
+				        (element.From.Z));
 
-				var elementModelRotation = Matrix.CreateTranslation(-c) * modelRotationMatrix *
-	                            Matrix.CreateTranslation(c);
+			        var elementTo = new V3((element.To.X), (element.To.Y),
+				        (element.To.Z));
 
-				foreach (var face in element.Faces)
-				{
-					var faceStart = elementFrom;
-					var faceEnd = elementTo;
+			        var elementModelRotation = Matrix.CreateTranslation(-c) * modelRotationMatrix *
+			                                   Matrix.CreateTranslation(c);
 
-					string textureName = "no_texture";
-					if (!Variant.Model.Textures.TryGetValue(face.Value.Texture.Replace("#", ""), out textureName))
-					{
-						textureName = face.Value.Texture;
-					}
+			        foreach (var face in element.Faces)
+			        {
+				        var faceStart = elementFrom;
+				        var faceEnd = elementTo;
 
-					if (textureName.StartsWith("#"))
-					{
-						if (!Variant.Model.Textures.TryGetValue(textureName.Replace("#", ""), out textureName))
-						{
-							textureName = "no_texture";
-						}
-					}
+				        string textureName = "no_texture";
+				        if (!var.Model.Textures.TryGetValue(face.Value.Texture.Replace("#", ""), out textureName))
+				        {
+					        textureName = face.Value.Texture;
+				        }
 
-					var uv = face.Value.UV;
-					var uvmap = GetTextureUVMap(Resources, textureName, uv.X1, uv.X2, uv.Y1, uv.Y2);
+				        if (textureName.StartsWith("#"))
+				        {
+					        if (!var.Model.Textures.TryGetValue(textureName.Replace("#", ""), out textureName))
+					        {
+						        textureName = "no_texture";
+					        }
+				        }
 
-					GetFaceValues(face.Value.CullFace, face.Key, out var cull, out var cullFace);
+				        var uv = face.Value.UV;
+				        var uvmap = GetTextureUVMap(Resources, textureName, uv.X1, uv.X2, uv.Y1, uv.Y2);
 
-					cullFace = V3.Transform(cullFace, modelRotationMatrix);
+				        GetFaceValues(face.Value.CullFace, face.Key, out var cull, out var cullFace);
 
-					if (cullFace != V3.Zero && !CanRender(world, baseBlock, worldPosition + cullFace))
-						continue;
+				        cullFace = V3.Transform(cullFace, modelRotationMatrix);
 
-					var elementRotation = element.Rotation;
-					Matrix faceRotationMatrix = GetElementRotationMatrix(elementRotation, out float ci);
+				        if (cullFace != V3.Zero && !CanRender(world, baseBlock, worldPosition + cullFace))
+					        continue;
 
-					VertexPositionNormalTextureColor[] faceVertices = GetFaceVertices(face.Key, faceStart, faceEnd, uvmap, face.Value.Rotation);
+				        var elementRotation = element.Rotation;
+				        Matrix faceRotationMatrix = GetElementRotationMatrix(elementRotation, out float ci);
 
-					Color faceColor = faceVertices[0].Color;
+				        VertexPositionNormalTextureColor[] faceVertices =
+					        GetFaceVertices(face.Key, faceStart, faceEnd, uvmap, face.Value.Rotation);
 
-					if (face.Value.TintIndex >= 0)
-					{
-						World w = (World)world;
+				        Color faceColor = faceVertices[0].Color;
 
-						if (w.RenderingManager.TryGetChunk(
-							new ChunkCoordinates(new PlayerLocation(worldPosition.X, 0, worldPosition.Z)),
-							out IChunkColumn column))
-						{
-							Worlds.ChunkColumn realColumn = (Worlds.ChunkColumn)column;
-							var biome = BiomeUtils.GetBiomeById(realColumn.GetBiome((int)worldPosition.X & 0xf, (int)worldPosition.Z & 0xf));
+				        if (face.Value.TintIndex >= 0)
+				        {
+					        World w = (World) world;
 
-							if (baseBlock.BlockId == 2)
-							{
-								faceColor = Resources.ResourcePack.GetGrassColor(biome.Temperature, biome.Downfall, (int)worldPosition.Y);
-							}
-							else
-							{
-								faceColor = Resources.ResourcePack.GetFoliageColor(biome.Temperature, biome.Downfall, (int)worldPosition.Y);
-							}
-						}
-					}
+					        if (w.RenderingManager.TryGetChunk(
+						        new ChunkCoordinates(new PlayerLocation(worldPosition.X, 0, worldPosition.Z)),
+						        out IChunkColumn column))
+					        {
+						        Worlds.ChunkColumn realColumn = (Worlds.ChunkColumn) column;
+						        var biome = BiomeUtils.GetBiomeById(realColumn.GetBiome((int) worldPosition.X & 0xf,
+							        (int) worldPosition.Z & 0xf));
 
-					faceColor = UvMapHelp.AdjustColor(faceColor, cull, GetLight(world, worldPosition + cullFace), element.Shade);
+						        if (baseBlock.BlockId == 2)
+						        {
+							        faceColor = Resources.ResourcePack.GetGrassColor(biome.Temperature, biome.Downfall,
+								        (int) worldPosition.Y);
+						        }
+						        else
+						        {
+							        faceColor = Resources.ResourcePack.GetFoliageColor(biome.Temperature, biome.Downfall,
+								        (int) worldPosition.Y);
+						        }
+					        }
+				        }
 
-					for (var index = 0; index < faceVertices.Length; index++)
-					{
-						var vert = faceVertices[index];
-						vert.Color = faceColor;
+				        faceColor = UvMapHelp.AdjustColor(faceColor, cull, GetLight(world, worldPosition + cullFace),
+					        element.Shade);
 
-						if (elementRotation.Axis != Axis.Undefined)
-						{
-							vert.Position = V3.Transform(vert.Position, faceRotationMatrix);
+				        for (var index = 0; index < faceVertices.Length; index++)
+				        {
+					        var vert = faceVertices[index];
+					        vert.Color = faceColor;
 
-							if (elementRotation.Rescale)
-							{
-								if (elementRotation.Axis == Axis.X || elementRotation.Axis == Axis.Z)
-								{
-									vert.Position.Y *= ci;
-								}
+					        if (elementRotation.Axis != Axis.Undefined)
+					        {
+						        vert.Position = V3.Transform(vert.Position, faceRotationMatrix);
 
-								if (elementRotation.Axis == Axis.Y || elementRotation.Axis == Axis.Z)
-								{
-									vert.Position.X *= ci;
-								}
+						        if (elementRotation.Rescale)
+						        {
+							        if (elementRotation.Axis == Axis.X || elementRotation.Axis == Axis.Z)
+							        {
+								        vert.Position.Y *= ci;
+							        }
 
-								if (elementRotation.Axis == Axis.Y || elementRotation.Axis == Axis.X)
-								{
-									vert.Position.Z *= ci;
-								}
-							}						
-						}
-						
-						vert.Position = V3.Transform(vert.Position, elementModelRotation);
+							        if (elementRotation.Axis == Axis.Y || elementRotation.Axis == Axis.Z)
+							        {
+								        vert.Position.X *= ci;
+							        }
 
-						vert.Position = worldPosition + (vert.Position / 16f);
+							        if (elementRotation.Axis == Axis.Y || elementRotation.Axis == Axis.X)
+							        {
+								        vert.Position.Z *= ci;
+							        }
+						        }
+					        }
 
-						verts.Add(vert);
-					}
-				}
-			}
+					        vert.Position = V3.Transform(vert.Position, elementModelRotation);
+
+					        vert.Position = worldPosition + (vert.Position / 16f);
+
+					        verts.Add(vert);
+				        }
+			        }
+		        }
+	        }
 
 	        return verts.ToArray();
         }

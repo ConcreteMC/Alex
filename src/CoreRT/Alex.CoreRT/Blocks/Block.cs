@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Alex.CoreRT.API.Graphics;
 using Alex.CoreRT.API.World;
 using Alex.CoreRT.Graphics.Models;
@@ -20,6 +21,10 @@ namespace Alex.CoreRT.Blocks
 		public bool Transparent { get; set; }
 		public bool Renderable { get; set; }
 		public bool HasHitbox { get; set; }
+		public bool IsBlockNormalCube { get; set; } = false;
+		public bool IsFullCube { get; set; } = true;
+		public bool IsFullBlock { get; set; } = true;
+
 		public float Drag { get; set; }
 
 	    public double AmbientOcclusionLightValue = 1.0;
@@ -83,7 +88,31 @@ namespace Alex.CoreRT.Blocks
             }
         }
 
-        public Color TopColor { get; private set; }
+		private Dictionary<string, bool> SolidSides { get; set; } = new Dictionary<string, bool>()
+		{
+			{"north", true },
+			{"up", true },
+			{"west", true },
+			{"east",true },
+			{"down",true },
+			{"south", true }
+		};
+
+		internal void SetSideSolid(string side, bool value)
+		{
+			if (SolidSides.ContainsKey(side))
+				SolidSides[side] = value;
+		}
+
+		public bool IsSideSolid(string side)
+		{
+			if (SolidSides.TryGetValue(side, out bool res))
+				return res;
+
+			return true;
+		}
+
+		public Color TopColor { get; private set; }
         public Color SideColor { get; private set; }
 		public Color BottomColor { get; private set; }
 

@@ -216,7 +216,7 @@ namespace ResourcePackLib.CoreRT
 
 			if (modelFile == null)
 			{
-				Debug.WriteLine("Failed to load Block Model: File Not Found (" + "assets/minecraft/models/block/" + modelName + ".json)");
+				Log.Debug("Failed to load Block Model: File Not Found (" + "assets/minecraft/models/block/" + modelName + ".json)");
 				return false;
 			}
 
@@ -237,14 +237,27 @@ namespace ResourcePackLib.CoreRT
 
 		private BlockState LoadBlockState(ZipArchiveEntry entry)
 		{
-			using (var r = new StreamReader(entry.Open()))
+			try
 			{
-				var json = r.ReadToEnd();
+				using (var r = new StreamReader(entry.Open()))
+				{
+					var json = r.ReadToEnd();
 
-				var blockState = MCJsonConvert.DeserializeObject<BlockState>(json);
-				_blockStates[entry.Name.Replace(".json", "")] = ProcessBlockState(blockState);
+					var blockState = MCJsonConvert.DeserializeObject<BlockState>(json);
+					_blockStates[entry.Name.Replace(".json", "")] = ProcessBlockState(blockState);
 
-				return blockState;
+					if (blockState.Parts.Length > 0)
+					{
+						Log.Info($"Multipart: {entry.Name} Parts: {blockState.Parts.Length}");
+					}
+
+					return blockState;
+				}
+			}
+			catch (Exception ex)
+			{
+				Log.Warn($"Could not load {entry.Name}!", ex);
+				return null;
 			}
 		}
 
@@ -260,7 +273,7 @@ namespace ResourcePackLib.CoreRT
 
 			if (modelFile == null)
 			{
-				Debug.WriteLine("Failed to load BlockState: File Not Found (" + "assets/minecraft/blockstates/" + modelName + ".json)");
+				Log.Debug("Failed to load BlockState: File Not Found (" + "assets/minecraft/blockstates/" + modelName + ".json)");
 				return false;
 			}
 
@@ -326,17 +339,39 @@ namespace ResourcePackLib.CoreRT
 
 		private BlockState ProcessBlockState(BlockState blockState)
 		{
-			foreach (var variant in blockState.Variants)
+			if (blockState.Parts.Length > 0)
 			{
-				foreach (var sVariant in variant.Value)
+				foreach (var part in blockState.Parts)
 				{
-					if (!TryGetBlockModel("block/" + sVariant.ModelName, out BlockModel model))
+					foreach (var sVariant in part.Apply)
 					{
-						Debug.WriteLine($"Could not get blockmodel for variant! Variant: {variant.Key} Model: {sVariant.ModelName}");
-						continue;
-					}
+						if (!TryGetBlockModel("block/" + sVariant.ModelName, out BlockModel model))
+						{
+							Log.Debug($"Could not get multipart blockmodel! Variant: {blockState} Model: {sVariant.ModelName}");
+							continue;
+						}
 
-					sVariant.Model = model;
+						sVariant.Model = model;
+						//part.Apply = model;
+						//var apply = MCJsonConvert.DeserializeObject<BlockStateModel>(part.ApplyModel);
+						//part.Apply = apply;
+					}
+				}
+			}
+			else
+			{
+				foreach (var variant in blockState.Variants)
+				{
+					foreach (var sVariant in variant.Value)
+					{
+						if (!TryGetBlockModel("block/" + sVariant.ModelName, out BlockModel model))
+						{
+							Log.Debug($"Could not get blockmodel for variant! Variant: {variant.Key} Model: {sVariant.ModelName}");
+							continue;
+						}
+
+						sVariant.Model = model;
+					}
 				}
 			}
 

@@ -8,10 +8,8 @@ using Alex.CoreRT.Graphics.Models;
 using log4net;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using ResourcePackLib;
 using ResourcePackLib.CoreRT;
 using ResourcePackLib.CoreRT.Json.BlockStates;
-using BlockModel = ResourcePackLib.CoreRT.Json.Models.BlockModel;
 
 namespace Alex.CoreRT
 {
@@ -21,9 +19,9 @@ namespace Alex.CoreRT
 	    
 		private static ConcurrentDictionary<uint, Func<Block>> _registeredBlocks = new ConcurrentDictionary<uint, Func<Block>>();
 		private static ConcurrentDictionary<int, BlockMeta> _blockMeta = new ConcurrentDictionary<int, BlockMeta>();
-		private static ConcurrentDictionary<uint, CachedResourcePackModel> _modelCache = new ConcurrentDictionary<uint, CachedResourcePackModel>();
+		private static ConcurrentDictionary<uint, BlockModel> _modelCache = new ConcurrentDictionary<uint, BlockModel>();
 
-		private static BlockModel CubeModel { get; set; }
+		private static ResourcePackLib.CoreRT.Json.Models.BlockModel CubeModel { get; set; }
 
 	    internal static void Init()
 	    {
@@ -60,7 +58,7 @@ namespace Alex.CoreRT
 
 			    if (id == 0 || string.IsNullOrWhiteSpace(name)) continue;
 
-			    BlockMeta meta = new BlockMeta()
+			    BlockMeta meta = new BlockMeta
 			    {
 				    Transparent = transparent,
 				    DisplayName = displayName
@@ -74,21 +72,24 @@ namespace Alex.CoreRT
 				    meta.IsFullBlock = found["isFullBlock"].Value<bool>();
 				    meta.LightOpacity = found["lightOpacity"].Value<int>();
 				    meta.LightValue = found["lightValue"].Value<int>();
+				    meta.IsBlockNormalCube = found["isBlockNormalCube"].Value<bool>();
+				    meta.IsSideSolid = found["isSideSolid"].ToObject<Dictionary<string, bool>>();
+				    meta.IsFullCube = found["isFullCube"].Value<bool>();
 			    }
 
 			    _blockMeta.TryAdd(id, meta);
 		    }
 		}
 
-	    private static CachedResourcePackModel GetOrCacheModel(uint state, ResourceManager resources, McResourcePack resourcePack,
-		    BlockStateModel variant)
+	    private static BlockModel GetOrCacheModel(uint state, ResourceManager resources, McResourcePack resourcePack,
+			 Func<ResourceManager, BlockModel> variant)
 	    {
-		    return _modelCache.GetOrAdd(state, u => new CachedResourcePackModel(resources, variant));
+		    return _modelCache.GetOrAdd(state, u => variant.Invoke(resources));
 	    }
 
 	    internal static int LoadResources(ResourceManager resources, McResourcePack resourcePack, bool replace, bool reportMissing = false)
 		{
-			if (resourcePack.TryGetBlockModel("cube_all", out BlockModel cube))
+			if (resourcePack.TryGetBlockModel("cube_all", out ResourcePackLib.CoreRT.Json.Models.BlockModel cube))
 			{
 				cube.Textures["all"] = "no_texture";
 				CubeModel = cube;
@@ -113,16 +114,16 @@ namespace Alex.CoreRT
 
 					continue;
 				}
-				if (result.Model == null)
+				/*if (result )
 				{
 					Log.Warn($"Missing blockstate model for {blockState.Value} (ID: {blockID} Meta: {metadata})");
 					continue;
-				}
+				}*/
 
 				BlockMeta knownMeta;
 				if (!_blockMeta.TryGetValue(blockID, out knownMeta))
 				{
-					knownMeta = new BlockMeta()
+					knownMeta = new BlockMeta
 					{
 						Transparent = false,
 						DisplayName = blockState.Value
@@ -141,8 +142,16 @@ namespace Alex.CoreRT
 						LightValue = knownMeta.LightValue,
 						AmbientOcclusionLightValue = knownMeta.AmbientOcclusionLightValue,
 						LightOpacity = knownMeta.LightOpacity,
-
+						IsBlockNormalCube = knownMeta.IsBlockNormalCube,
+						IsFullCube = knownMeta.IsFullCube,
+						IsFullBlock = knownMeta.IsFullBlock
+						//Solid = knownMeta.IsFullBlock
 					};
+
+					foreach(var solid in knownMeta.IsSideSolid)
+					{
+						block.SetSideSolid(solid.Key, solid.Value);
+					}
 
 					return block;
 				}, replace))
@@ -161,13 +170,11 @@ namespace Alex.CoreRT
 			    _registeredBlocks.AddOrUpdate(id, blockFunction, (u, func) => { return blockFunction; });
 			    return true;
 		    }
-		    else
-		    {
-			    return _registeredBlocks.TryAdd(id, blockFunction);
-		    }
+
+		    return _registeredBlocks.TryAdd(id, blockFunction);
 	    }
 
-	    private static BlockStateModel Parse(McResourcePack resources, string rawBlockState, out string variantKey)
+	    private static Func<ResourceManager, BlockModel> Parse(McResourcePack resources, string rawBlockState, out string variantKey)
 	    {
 		    variantKey = string.Empty;
 
@@ -268,7 +275,7 @@ namespace Alex.CoreRT
 				    {
 					    var v = blockState.Variants.FirstOrDefault();
 					    variantKey = v.Key;
-					    return v.Value.FirstOrDefault();
+					    return r => new CachedResourcePackModel(r, new[] { v.Value.FirstOrDefault() }) ;
 				    }
 
 				    BlockStateVariant variant = null;
@@ -313,7 +320,13 @@ namespace Alex.CoreRT
 					
 				    
 				    var subVariant = variant.FirstOrDefault();
-				    return subVariant;
+				    return r => new CachedResourcePackModel(r, new[] { subVariant });
+				//	return new BlockStateModel[]{ subVariant};
+			    }
+
+			    if (blockState != null && blockState.Parts != null && blockState.Parts.Length > 0)
+			    {
+				    return m => new MultiStateResourcePackModel(m, blockState);
 			    }
 		    }
 
@@ -321,7 +334,7 @@ namespace Alex.CoreRT
 			return null;
 	    }
 
-	    private static Dictionary<string, string> ParseData(string variant)
+		private static Dictionary<string, string> ParseData(string variant)
 	    {
 		    Dictionary<string, string> values = new Dictionary<string, string>();
 
@@ -391,7 +404,7 @@ namespace Alex.CoreRT
 
 		    return new Block(palleteId)
 		    {
-			    BlockModel = new ResourcePackModel(null, new BlockStateModel()
+			    BlockModel = new ResourcePackModel(null, new[] { new BlockStateModel
 			    {
 					Model = CubeModel,
 					ModelName = CubeModel.Name,
@@ -399,7 +412,7 @@ namespace Alex.CoreRT
 					X = 0,
 					Uvlock = false,
 					Weight = 0
-				}),
+				}}),
 			    Transparent = false,
 			    DisplayName = "Unknown"
 		    };
@@ -416,8 +429,12 @@ namespace Alex.CoreRT
 		    public bool Transparent;
 		    public bool IsFullBlock;
 		    public double AmbientOcclusionLightValue = 1.0;
-		    public int LightValue = 0;
-		    public int LightOpacity = 0;
+		    public int LightValue;
+		    public int LightOpacity;
+		    public bool IsBlockNormalCube;
+		    public bool IsFullCube;
+
+		    public Dictionary<string, bool> IsSideSolid;
 	    }
     }
 }

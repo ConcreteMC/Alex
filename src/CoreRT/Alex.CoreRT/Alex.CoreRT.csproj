@@ -70,6 +70,7 @@
     <None Remove="Graphics\Models\BlockModel.cs" />
     <None Remove="Graphics\Models\CachedResourcePackModel.cs" />
     <None Remove="Graphics\Models\LiquidBlockModel.cs" />
+    <None Remove="Graphics\Models\MultiStateCachedResourcePackModel.cs" />
     <None Remove="Graphics\Models\ResourcePackModel.cs" />
     <None Remove="Graphics\Overlays\Overlay.cs" />
     <None Remove="Graphics\Overlays\WaterOverlay.cs" />
@@ -162,6 +163,7 @@
     <Compile Include="Gamestates\ServerState.cs" />
     <Compile Include="Gamestates\SplashScreen.cs" />
     <Compile Include="Graphics\Models\BlockModel.cs" />
+    <Compile Include="Graphics\Models\MultiStateCachedResourcePackModel.cs" />
     <Compile Include="Graphics\Models\CachedResourcePackModel.cs" />
     <Compile Include="Graphics\Models\ResourcePackModel.cs" />
     <Compile Include="Graphics\Models\LiquidBlockModel.cs" />

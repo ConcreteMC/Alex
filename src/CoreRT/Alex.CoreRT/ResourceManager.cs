@@ -69,8 +69,10 @@ namespace Alex.CoreRT
 				    Atlas.GenerateAtlas(graphics, archive);
 			    }
 
+				Stopwatch sw = Stopwatch.StartNew();
 				int imported = BlockFactory.LoadResources(this, resourcePack, replaceModels, reportMissingModels);
-				Log.Info($"Imported {imported} blockstates from resourcepack!");
+				sw.Stop();
+				Log.Info($"Imported {imported} blockstates from resourcepack in {sw.ElapsedMilliseconds}ms!");
 		    }
 
 		    return resourcePack;
