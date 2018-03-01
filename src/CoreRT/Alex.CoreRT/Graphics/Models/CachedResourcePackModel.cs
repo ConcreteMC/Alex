@@ -42,9 +42,7 @@ namespace Alex.CoreRT.Graphics.Models
 
 		private void Cache()
 		{
-			var modelRotationMatrix =
-				Matrix.CreateRotationX((float)MathUtils.ToRadians(360f - Variant.X)) *
-				Matrix.CreateRotationY((float)MathUtils.ToRadians(360f - Variant.Y));
+			var modelRotationMatrix = GetModelRotationMatrix();
 
 			foreach (var element in Variant.Model.Elements)
 			{
@@ -90,34 +88,8 @@ namespace Alex.CoreRT.Graphics.Models
 					var uv = face.Value.UV;
 					var uvmap = GetTextureUVMap(Resources, textureName, uv.X1, uv.X2, uv.Y1, uv.Y2);
 
-					Matrix faceRotationMatrix = Matrix.Identity;
-					float ci = 0f;
 					var elementRotation = element.Rotation;
-					if (elementRotation.Axis != Axis.Undefined)
-					{
-						var elementRotationOrigin = new Vector3(elementRotation.Origin.X, elementRotation.Origin.Y, elementRotation.Origin.Z);
-
-						var elementAngle =
-							MathUtils.ToRadians((float)(elementRotation.Axis == Axis.X ? -elementRotation.Angle : elementRotation.Angle));
-						elementAngle = elementRotation.Axis == Axis.Z ? elementAngle : -elementAngle;
-						ci = 1f / (float)Math.Cos(elementAngle);
-
-						faceRotationMatrix = Matrix.CreateTranslation(-elementRotationOrigin);
-						if (elementRotation.Axis == Axis.X)
-						{
-							faceRotationMatrix *= Matrix.CreateRotationX(elementAngle);
-						}
-						else if (elementRotation.Axis == Axis.Y)
-						{
-							faceRotationMatrix *= Matrix.CreateRotationY(elementAngle);
-						}
-						else if (elementRotation.Axis == Axis.Z)
-						{
-							faceRotationMatrix *= Matrix.CreateRotationZ(elementAngle);
-						}
-
-						faceRotationMatrix *= Matrix.CreateTranslation(elementRotationOrigin);
-					}
+					Matrix faceRotationMatrix = GetElementRotationMatrix(elementRotation, out float ci);
 
 					VertexPositionNormalTextureColor[] faceVertices = GetFaceVertices(face.Key, faceStart, faceEnd, uvmap, face.Value.Rotation);
 					for (var index = 0; index < faceVertices.Length; index++)
@@ -191,8 +163,7 @@ namespace Alex.CoreRT.Graphics.Models
 			var verts = new List<VertexPositionNormalTextureColor>();
 
 			var modelRotationMatrix =
-				Matrix.CreateRotationX((float)MathUtils.ToRadians(360f - Variant.X)) *
-				Matrix.CreateRotationY((float)MathUtils.ToRadians(360f - Variant.Y));
+				GetModelRotationMatrix();
 
 			// MaxY = 0;
 			Vector3 worldPosition = new Vector3(position.X, position.Y, position.Z);
@@ -202,34 +173,7 @@ namespace Alex.CoreRT.Graphics.Models
 				var elementCache = _elementCache[element.GetHashCode()];
 				foreach (var face in element.Faces)
 				{
-					Vector3 cullFace = Vector3.Zero;
-
-					BlockFace cull;
-					if (!Enum.TryParse(face.Value.CullFace, out cull))
-					{
-						cull = face.Key;
-					}
-					switch (cull)
-					{
-						case BlockFace.Up:
-							cullFace = Vector3.Up;
-							break;
-						case BlockFace.Down:
-							cullFace = Vector3.Down;
-							break;
-						case BlockFace.North:
-							cullFace = Vector3.Backward;
-							break;
-						case BlockFace.South:
-							cullFace = Vector3.Forward;
-							break;
-						case BlockFace.West:
-							cullFace = Vector3.Left;
-							break;
-						case BlockFace.East:
-							cullFace = Vector3.Right;
-							break;
-					}
+					GetFaceValues(face.Value.CullFace, face.Key, out var cull, out var cullFace);
 
 					cullFace = Vector3.Transform(cullFace, modelRotationMatrix);
 
@@ -243,22 +187,22 @@ namespace Alex.CoreRT.Graphics.Models
 							faceVertices = (VertexPositionNormalTextureColor[]) elementCache.Down.Clone();
 							break;
 						case BlockFace.Up:
-							faceVertices = (VertexPositionNormalTextureColor[])elementCache.Up.Clone();
+							faceVertices = (VertexPositionNormalTextureColor[]) elementCache.Up.Clone();
 							break;
 						case BlockFace.East:
-							faceVertices = (VertexPositionNormalTextureColor[])elementCache.East.Clone();
+							faceVertices = (VertexPositionNormalTextureColor[]) elementCache.East.Clone();
 							break;
 						case BlockFace.West:
-							faceVertices = (VertexPositionNormalTextureColor[])elementCache.West.Clone();
+							faceVertices = (VertexPositionNormalTextureColor[]) elementCache.West.Clone();
 							break;
 						case BlockFace.North:
-							faceVertices = (VertexPositionNormalTextureColor[])elementCache.North.Clone();
+							faceVertices = (VertexPositionNormalTextureColor[]) elementCache.North.Clone();
 							break;
 						case BlockFace.South:
-							faceVertices = (VertexPositionNormalTextureColor[])elementCache.South.Clone();
+							faceVertices = (VertexPositionNormalTextureColor[]) elementCache.South.Clone();
 							break;
 						default:
-							faceVertices = (VertexPositionNormalTextureColor[])elementCache.None.Clone();
+							faceVertices = (VertexPositionNormalTextureColor[]) elementCache.None.Clone();
 							break;
 					}
 
@@ -266,30 +210,28 @@ namespace Alex.CoreRT.Graphics.Models
 
 					if (face.Value.TintIndex >= 0)
 					{
-						World w = (World)world;
+						World w = (World) world;
 
 						if (w.ChunkManager.TryGetChunk(
 							new ChunkCoordinates(new PlayerLocation(worldPosition.X, 0, worldPosition.Z)),
 							out IChunkColumn column))
 						{
-							Worlds.ChunkColumn realColumn = (Worlds.ChunkColumn)column;
-							var biome = BiomeUtils.GetBiomeById(realColumn.GetBiome((int)worldPosition.X & 0xf, (int)worldPosition.Z & 0xf));
+							Worlds.ChunkColumn realColumn = (Worlds.ChunkColumn) column;
+							var biome = BiomeUtils.GetBiomeById(
+								realColumn.GetBiome((int) worldPosition.X & 0xf, (int) worldPosition.Z & 0xf));
 
 							if (baseBlock.BlockId == 2)
 							{
-								faceColor = Resources.ResourcePack.GetGrassColor(biome.Temperature, biome.Downfall, (int)worldPosition.Y);
+								faceColor = Resources.ResourcePack.GetGrassColor(biome.Temperature, biome.Downfall, (int) worldPosition.Y);
 							}
 							else
 							{
-								faceColor = Resources.ResourcePack.GetFoliageColor(biome.Temperature, biome.Downfall, (int)worldPosition.Y);
+								faceColor = Resources.ResourcePack.GetFoliageColor(biome.Temperature, biome.Downfall, (int) worldPosition.Y);
 							}
 						}
 					}
 
-					//if (element.Shade)
-					{
-						faceColor = UvMapHelp.AdjustColor(faceColor, cull, GetLight(world, worldPosition + cullFace), element.Shade);
-					}
+					faceColor = UvMapHelp.AdjustColor(faceColor, cull, GetLight(world, worldPosition + cullFace), element.Shade);
 
 					for (var index = 0; index < faceVertices.Length; index++)
 					{
