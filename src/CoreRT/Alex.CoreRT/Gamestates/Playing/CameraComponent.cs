@@ -1,6 +1,7 @@
 ﻿using System;
 using Alex.CoreRT.Blocks;
 using Alex.CoreRT.Entities;
+using Alex.CoreRT.Graphics.Overlays;
 using Alex.CoreRT.Rendering.Camera;
 using Alex.CoreRT.Worlds;
 using log4net;
@@ -18,6 +19,8 @@ namespace Alex.CoreRT.Gamestates.Playing
 
         public const float MouseSpeed = 0.25f;
 
+	    private float FlyingSpeed = 10f;
+
         private MouseState PreviousMouseState { get; set; }
         private float _leftrightRot = MathHelper.PiOver2;
         private float _updownRot = -MathHelper.Pi / 10.0f;
@@ -31,7 +34,8 @@ namespace Alex.CoreRT.Gamestates.Playing
         private GraphicsDevice Graphics { get; }
         private World World { get; }
         private Settings GameSettings { get; }
-        public CameraComponent(FirstPersonCamera camera, GraphicsDevice graphics, World world, Settings settings)
+
+		public CameraComponent(FirstPersonCamera camera, GraphicsDevice graphics, World world, Settings settings)
         {
             Camera = camera;
             Graphics = graphics;
@@ -77,8 +81,17 @@ namespace Alex.CoreRT.Gamestates.Playing
 
                     if (currentKeyboardState.IsKeyDown(KeyBinds.Down))
                         moveVector.Y = -1;
+
+	                if (currentKeyboardState.IsKeyDown(KeyBinds.IncreaseSpeed))
+		                FlyingSpeed += 1;
+
+	                if (currentKeyboardState.IsKeyDown(KeyBinds.DecreaseSpeed))
+		                FlyingSpeed -= 1;
+
+	                if (currentKeyboardState.IsKeyDown(KeyBinds.ResetSpeed))
+		                FlyingSpeed = 10f;
                 }
-                else
+				else
                 {
                     if (currentKeyboardState.IsKeyDown(KeyBinds.Up) && !IsJumping && IsOnGround(Velocity))
                     {
@@ -97,7 +110,7 @@ namespace Alex.CoreRT.Gamestates.Playing
             {
                 if (moveVector != Vector3.Zero) // If we moved
                 {
-                    moveVector *= 10f * dt;
+                    moveVector *= FlyingSpeed * dt;
 
                     Camera.Move(moveVector);
                 }
@@ -195,7 +208,6 @@ namespace Alex.CoreRT.Gamestates.Playing
 			//Matrix.CreateLookAt(v, Vector3.Forward, )
 			if (v != Vector3.Zero) //Only if we moved.
 			{
-				
                 var preview = Camera.PreviewMove(v);
 
                 var headBlock = (Block)World.GetBlock(preview);

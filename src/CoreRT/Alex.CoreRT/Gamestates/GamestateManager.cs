@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Threading;
 using log4net;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -12,11 +13,11 @@ namespace Alex.CoreRT.Gamestates
         
         private ConcurrentDictionary<string, Gamestate> ActiveStates { get; }
         private Gamestate ActiveState { get; set; }
-        private object _lock = new object();
 
         private GraphicsDevice Graphics { get; }
         private SpriteBatch SpriteBatch { get; }
 
+		private ReaderWriterLockSlim Lock = new ReaderWriterLockSlim();
         public GamestateManager(GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
             Graphics = graphics;
@@ -45,13 +46,27 @@ namespace Alex.CoreRT.Gamestates
             Gamestate state;
             if (ActiveStates.TryRemove(name, out state))
             {
-                lock (_lock)
-                {
-                    if (ActiveState == state)
-                    {
-                        ActiveState = null;
-                    }
-                }
+				// lock (_lock)
+				Lock.EnterUpgradeableReadLock();
+	            try
+	            {
+		            if (ActiveState == state)
+		            {
+						Lock.EnterWriteLock();
+			            try
+			            {
+				            ActiveState = null;
+			            }
+			            finally
+			            {
+							Lock.ExitWriteLock();
+			            }
+		            }
+	            }
+	            finally
+	            {
+					Lock.ExitUpgradeableReadLock();
+	            }
 
 	            state.Stop();
 				return true;
@@ -61,11 +76,17 @@ namespace Alex.CoreRT.Gamestates
 
         public bool SetActiveState(Gamestate state)
         {
-            lock (_lock)
-            {
-                ActiveState = state;
-            }
-            return true;
+			Lock.EnterWriteLock();
+	        try
+	        {
+		        ActiveState = state;
+	        }
+	        finally
+	        {
+		        Lock.ExitWriteLock();
+	        }
+
+	        return true;
         }
 
         public bool SetActiveState(string name)
@@ -76,18 +97,34 @@ namespace Alex.CoreRT.Gamestates
                 return false;
             }
 
-            lock (_lock)
-            {
-                ActiveState = state;
-            }
+            Lock.EnterWriteLock();
+	        try
+	        {
+		        ActiveState = state;
+	        }
+	        finally
+	        {
+				Lock.ExitWriteLock();
+	        }
             return true;
         }
 
         public void Draw(GameTime gameTime)
         {
-            lock (_lock)
+	        Gamestate activeState;
+			Lock.EnterReadLock();
+	        try
+	        {
+		        activeState = ActiveState;
+	        }
+	        finally
+	        {
+				Lock.ExitReadLock();
+	        }
+
+          //  lock (_lock)
             {
-                if (ActiveState == null) return;
+                if (activeState == null) return;
 
                 try
                 {
@@ -98,8 +135,8 @@ namespace Alex.CoreRT.Gamestates
                         GraphicsDevice = Graphics
                     };
 
-                    ActiveState.Rendering3D(args);
-                    ActiveState.Rendering2D(args);
+	                activeState.Rendering3D(args);
+	                activeState.Rendering2D(args);
                 }
                 catch (Exception ex)
                 {
@@ -109,14 +146,25 @@ namespace Alex.CoreRT.Gamestates
         }
 
         public void Update(GameTime gameTime)
-        {
-           // foreach (var i in ActiveStates.ToArray())
-            {
+		{
+			Gamestate activeState;
+			Lock.EnterReadLock();
+			try
+			{
+				activeState = ActiveState;
+			}
+			finally
+			{
+				Lock.ExitReadLock();
+			}
+
+			// foreach (var i in ActiveStates.ToArray())
+			{
                 try
                 {
-                    lock (_lock)
+                   // lock (_lock)
                     {
-                        ActiveState.UpdateCall(gameTime);
+	                    activeState.UpdateCall(gameTime);
                     }
                    // i.Value.UpdateCall(gameTime);
                 }

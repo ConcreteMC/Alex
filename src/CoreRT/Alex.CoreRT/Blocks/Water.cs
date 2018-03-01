@@ -9,7 +9,22 @@ namespace Alex.CoreRT.Blocks
             Solid = false;
             Transparent = true;
 
-	        BlockModel = new WaterModel();
+	        BlockModel = new LiquidBlockModel(){Level = meta};
+        }
+    }
+
+	public class FlowingWater : Block
+    {
+        public FlowingWater(byte meta = 0) : base(9, meta)
+        {
+            Solid = false;
+            Transparent = true;
+
+	        BlockModel = new LiquidBlockModel()
+	        {
+				IsFlowing = true,
+				Level = meta
+	        };
         }
     }
 }

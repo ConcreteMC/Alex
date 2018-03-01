@@ -1,7 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Net;
+using System.Threading;
 using Alex.CoreRT.Gamestates;
+using log4net;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -11,6 +13,8 @@ namespace Alex.CoreRT
 {
 	public partial class Alex : Microsoft.Xna.Framework.Game
 	{
+		private static ILog Log = LogManager.GetLogger(typeof(Alex));
+
 		public static string Version = "1.0";
 		public static string Username { get; set; }
 		public static IPEndPoint ServerEndPoint { get; set; }
@@ -18,15 +22,16 @@ namespace Alex.CoreRT
 
 		public static SpriteFont Font;
 
-		private readonly GraphicsDeviceManager _graphics;
 		private SpriteBatch _spriteBatch;
 		 
+		public static Alex Instance { get; private set; }
 		public GamestateManager GamestateManager { get; private set; }
 		public ResourceManager Resources { get; private set; }
 		public Alex()
 		{
-              
-			_graphics = new GraphicsDeviceManager(this) {
+			Instance = this;
+
+			var graphics = new GraphicsDeviceManager(this) {
 				PreferMultiSampling = false,
 				SynchronizeWithVerticalRetrace = false,
 				GraphicsProfile = GraphicsProfile.Reach
@@ -40,12 +45,12 @@ namespace Alex.CoreRT
 			this.Window.AllowUserResizing = true;
 			this.Window.ClientSizeChanged += (sender, args) =>
 			{
-				if (_graphics.PreferredBackBufferWidth != Window.ClientBounds.Width ||
-				    _graphics.PreferredBackBufferHeight != Window.ClientBounds.Height)
+				if (graphics.PreferredBackBufferWidth != Window.ClientBounds.Width ||
+				    graphics.PreferredBackBufferHeight != Window.ClientBounds.Height)
 				{
-					_graphics.PreferredBackBufferWidth = Window.ClientBounds.Width;
-					_graphics.PreferredBackBufferHeight = Window.ClientBounds.Height;
-					_graphics.ApplyChanges();
+					graphics.PreferredBackBufferWidth = Window.ClientBounds.Width;
+					graphics.PreferredBackBufferHeight = Window.ClientBounds.Height;
+					graphics.ApplyChanges();
 				}
 			};
 			
@@ -59,7 +64,11 @@ namespace Alex.CoreRT
 
 		public void SaveSettings()
 		{
-			File.WriteAllText("settings.json", JsonConvert.SerializeObject(GameSettings, Formatting.Indented));
+			if (GameSettings.IsDirty)
+			{
+				Log.Info($"Saving settings...");
+				File.WriteAllText("settings.json", JsonConvert.SerializeObject(GameSettings, Formatting.Indented));
+			}
 		}
 
 		internal Settings GameSettings { get; private set; }
@@ -74,14 +83,15 @@ namespace Alex.CoreRT
 					GameSettings = JsonConvert.DeserializeObject<Settings>(File.ReadAllText("settings.json"));
 					Username = GameSettings.Username;
 				}
-				catch
+				catch(Exception ex)
 				{
-					GameSettings = new Settings(string.Empty);
+					Log.Warn($"Failed to load settings!", ex);
 				}
 			}
 			else
 			{
 				GameSettings = new Settings(string.Empty);
+				GameSettings.IsDirty = true;
 			}
 
 			// InitCamera();
@@ -92,31 +102,19 @@ namespace Alex.CoreRT
 
 		protected override void LoadContent()
 		{
-			BlockFactory.Init();
-
-			Resources = new ResourceManager(GraphicsDevice);
-			Resources.CheckResources(GraphicsDevice, GameSettings);
-
 			_spriteBatch = new SpriteBatch(GraphicsDevice);
-			if (!File.Exists(Path.Combine("assets", "Minecraftia.xnb")))
-			{
-				File.WriteAllBytes(Path.Combine("assets", "Minecraftia.xnb"), CoreRT.Resources.Minecraftia1);
-			}
-			Font = Content.Load<SpriteFont>("Minecraftia");
-
-			Mouse.SetPosition(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2);
-			//_originalMouseState = Mouse.GetState();
-
 			GamestateManager = new GamestateManager(GraphicsDevice, _spriteBatch);
-			GamestateManager.AddState("login", new LoginState(this));
-			GamestateManager.SetActiveState("login");
 
-			Extensions.Init(GraphicsDevice);
+			GamestateManager.AddState("splash", new SplashScreen(GraphicsDevice));
+			GamestateManager.SetActiveState("splash");
+
+			Log.Info($"Initializing Alex...");
+			ThreadPool.QueueUserWorkItem(o => { InitializeGame(); });
 		}
 
 		protected override void UnloadContent()
 		{
-
+			SaveSettings();
 		}
 
 		protected override void Update(GameTime gameTime)
@@ -133,6 +131,33 @@ namespace Alex.CoreRT
 			GamestateManager.Draw(gameTime);
 
 			base.Draw(gameTime);
+		}
+
+		private void InitializeGame()
+		{
+			Extensions.Init(GraphicsDevice);
+
+			if (!File.Exists(Path.Combine("assets", "Minecraftia.xnb")))
+			{
+				File.WriteAllBytes(Path.Combine("assets", "Minecraftia.xnb"), CoreRT.Resources.Minecraftia1);
+			}
+			Font = Content.Load<SpriteFont>("Minecraftia");
+
+			Log.Info($"Loading blockstate metadata...");
+			BlockFactory.Init();
+
+			Log.Info($"Loading resources...");
+			Resources = new ResourceManager(GraphicsDevice);
+			Resources.CheckResources(GraphicsDevice, GameSettings);
+
+			Mouse.SetPosition(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2);
+
+			GamestateManager.AddState("login", new LoginState(this));
+			GamestateManager.SetActiveState("login");
+
+			GamestateManager.RemoveState("splash");
+
+			Log.Info($"Game initialized!");
 		}
 	}
 }

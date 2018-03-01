@@ -81,33 +81,37 @@ namespace Alex.CoreRT.Utils
                 1.0f, 0.5f // Top / Bottom
             };
 
-	    public static Color AdjustColor(Color color, BlockFace face, int lighting)
+	    public static Color AdjustColor(Color color, BlockFace face, int lighting, bool shade = true)
 	    {
 		    float brightness = 1f;
-		    switch (face)
+		    if (shade)
 		    {
-			    case BlockFace.Down:
-				    brightness = FaceBrightness[5];
-				    break;
-			    case BlockFace.Up:
-				    brightness = FaceBrightness[4];
-					break;
-			    case BlockFace.East:
-				    brightness = FaceBrightness[2];
-					break;
-			    case BlockFace.West:
-				    brightness = FaceBrightness[3];
-					break;
-			    case BlockFace.North:
-				    brightness = FaceBrightness[0];
-					break;
-			    case BlockFace.South:
-				    brightness = FaceBrightness[1];
-					break;
-			    case BlockFace.None:
+			    switch (face)
+			    {
+				    case BlockFace.Down:
+					    brightness = FaceBrightness[5];
+					    break;
+				    case BlockFace.Up:
+					    brightness = FaceBrightness[4];
+					    break;
+				    case BlockFace.East:
+					    brightness = FaceBrightness[2];
+					    break;
+				    case BlockFace.West:
+					    brightness = FaceBrightness[3];
+					    break;
+				    case BlockFace.North:
+					    brightness = FaceBrightness[0];
+					    break;
+				    case BlockFace.South:
+					    brightness = FaceBrightness[1];
+					    break;
+				    case BlockFace.None:
 
-				    break;
+					    break;
+			    }
 		    }
+
 		    var light = LightColor.ToVector3() * CubeBrightness[lighting];
 			return new Color(brightness * (color.ToVector3() * light));
 		}

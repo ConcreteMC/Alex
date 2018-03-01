@@ -36,6 +36,7 @@
     <None Remove="Blocks\InvisibleBedrock.cs" />
     <None Remove="Blocks\IronBars.cs" />
     <None Remove="Blocks\IronBlock.cs" />
+    <None Remove="Blocks\Lava.cs" />
     <None Remove="Blocks\Leaves.cs" />
     <None Remove="Blocks\Planks.cs" />
     <None Remove="Blocks\Sand.cs" />
@@ -65,10 +66,13 @@
     <None Remove="Gamestates\Playing\InGameMenuState.cs" />
     <None Remove="Gamestates\Playing\PlayingState.cs" />
     <None Remove="Gamestates\ServerState.cs" />
+    <None Remove="Gamestates\SplashScreen.cs" />
     <None Remove="Graphics\Models\BlockModel.cs" />
     <None Remove="Graphics\Models\CachedResourcePackModel.cs" />
+    <None Remove="Graphics\Models\LiquidBlockModel.cs" />
     <None Remove="Graphics\Models\ResourcePackModel.cs" />
-    <None Remove="Graphics\Models\WaterModel.cs" />
+    <None Remove="Graphics\Overlays\Overlay.cs" />
+    <None Remove="Graphics\Overlays\WaterOverlay.cs" />
     <None Remove="KeyBinds.cs" />
     <None Remove="Program.cs" />
     <None Remove="Rendering\Camera\Camera.cs" />
@@ -127,6 +131,7 @@
     <Compile Include="Blocks\InvisibleBedrock.cs" />
     <Compile Include="Blocks\IronBars.cs" />
     <Compile Include="Blocks\IronBlock.cs" />
+    <Compile Include="Blocks\Lava.cs" />
     <Compile Include="Blocks\Leaves.cs" />
     <Compile Include="Blocks\Planks.cs" />
     <Compile Include="Blocks\Sand.cs" />
@@ -155,10 +160,13 @@
     <Compile Include="Gamestates\Playing\InGameMenuState.cs" />
     <Compile Include="Gamestates\Playing\PlayingState.cs" />
     <Compile Include="Gamestates\ServerState.cs" />
+    <Compile Include="Gamestates\SplashScreen.cs" />
     <Compile Include="Graphics\Models\BlockModel.cs" />
     <Compile Include="Graphics\Models\CachedResourcePackModel.cs" />
     <Compile Include="Graphics\Models\ResourcePackModel.cs" />
-    <Compile Include="Graphics\Models\WaterModel.cs" />
+    <Compile Include="Graphics\Models\LiquidBlockModel.cs" />
+    <Compile Include="Graphics\Overlays\Overlay.cs" />
+    <Compile Include="Graphics\Overlays\WaterOverlay.cs" />
     <Compile Include="KeyBinds.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Rendering\Camera\Camera.cs" />
@@ -212,13 +220,11 @@
 
 	<ItemGroup>
 	  <Folder Include="Graphics\Items\" />
-	  <Folder Include="Network\" />
 	</ItemGroup>
 
 	<ItemGroup>
     <PackageReference Include="CoreCompat.System.Drawing.v2" Version="5.2.0-preview1-r131" />
     <PackageReference Include="log4net" Version="2.0.8" />
-    <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="1.0.0-alpha-26223-02" />
     <PackageReference Include="MonoGame.Content.Builder" Version="3.7.0.1" />
     <PackageReference Include="MonoGame.Framework.DesktopGL.Core" Version="3.7.0.7" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.1" />

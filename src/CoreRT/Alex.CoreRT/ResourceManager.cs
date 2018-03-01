@@ -15,7 +15,7 @@ namespace Alex.CoreRT
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof(ResourceManager));
 
-		public MCResourcePack ResourcePack { get; private set; }
+		public McResourcePack ResourcePack { get; private set; }
 		public AtlasGenerator Atlas { get; private set; }
 
 		private GraphicsDevice Graphics { get; set; }
@@ -53,13 +53,13 @@ namespace Alex.CoreRT
 		    return resourceData; 
 		}
 
-	    private MCResourcePack LoadResourcePack(GraphicsDevice graphics, Stream stream, bool replaceModels = false, bool replaceTextures = false, bool reportMissingModels = false)
+	    private McResourcePack LoadResourcePack(GraphicsDevice graphics, Stream stream, bool replaceModels = false, bool replaceTextures = false, bool reportMissingModels = false)
 	    {
-		    MCResourcePack resourcePack = null;
+		    McResourcePack resourcePack = null;
 
 			using (var archive = new ZipArchive(stream))
 		    {
-			    resourcePack = new MCResourcePack(archive);
+			    resourcePack = new McResourcePack(archive);
 			    if (!replaceTextures)
 			    {
 				    Atlas.LoadResourcePackOnTop(graphics, archive);
@@ -78,8 +78,6 @@ namespace Alex.CoreRT
 
         public void CheckResources(GraphicsDevice device, Settings setings)
         {
-			Log.Info("Checking resources...");
-
 	        if (!Directory.Exists("assets"))
 				Directory.CreateDirectory("assets");
 

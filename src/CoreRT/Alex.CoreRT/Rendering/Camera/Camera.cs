@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
+using Alex.CoreRT.Utils;
+using Microsoft.Xna.Framework;
 
 namespace Alex.CoreRT.Rendering.Camera
 {
@@ -46,6 +48,17 @@ namespace Alex.CoreRT.Rendering.Camera
 				UpdateLookAt();
             }
         }
+
+	    public float Yaw
+	    {
+		    get
+			{
+			 	Vector3 v = Direction;
+				return MathUtils.RadianToDegree((float)Math.Atan2(v.X, v.Z));
+			}
+	    }
+
+	    public float Pitch;
 
         public Vector3 Direction;
         /// <summary>

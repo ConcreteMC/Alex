@@ -1,6 +1,7 @@
 ﻿using System;
 using Alex.CoreRT.API.World;
 using Alex.CoreRT.Blocks;
+using Alex.CoreRT.Graphics.Overlays;
 using Alex.CoreRT.Rendering.Camera;
 using Alex.CoreRT.Rendering.UI;
 using Alex.CoreRT.Utils;
@@ -22,6 +23,8 @@ namespace Alex.CoreRT.Gamestates.Playing
 		private Texture2D CrosshairTexture { get; set; }
 
 		private ChatComponent Chat { get; }
+		private ThreadSafeList<IOverlay> ActiveOverlays { get; }
+ 	//	private WaterOverlay WaterOverlay { get; }
 		public PlayingState(Alex alex, GraphicsDevice graphics, WorldProvider worldProvider) : base(graphics)
 		{
 			Alex = alex;
@@ -33,10 +36,15 @@ namespace Alex.CoreRT.Gamestates.Playing
 			Camera.MoveTo(World.GetSpawnPoint(), Vector3.Zero);
 
 			CamComponent = new CameraComponent(Camera, Graphics, World, alex.GameSettings);
+
+			ActiveOverlays = new ThreadSafeList<IOverlay>();
+			//WaterOverlay = new WaterOverlay();
 		}
 
 		public override void Init(RenderArgs args)
 		{
+			//WaterOverlay.Load(args.GraphicsDevice, Alex.Resources);
+
 			Controls.Add("chatComponent", Chat);
 
 			FpsCounter = new FpsMonitor();
@@ -65,9 +73,27 @@ namespace Alex.CoreRT.Gamestates.Playing
 				CheckInput(gameTime);
 
 				World.Update();
+
+				var headBlock = World.GetBlock(Camera.Position);
+				if (headBlock.BlockId == 8 || headBlock.BlockId == 9)
+				{
+					if (!_renderWaterOverlay)
+					{
+						_renderWaterOverlay = true;
+					}
+					//if (!ActiveOverlays.Contains(WaterOverlay))
+				//	{
+					//	ActiveOverlays.TryAdd(WaterOverlay);
+					//}
+				}else if (_renderWaterOverlay)
+				{
+					_renderWaterOverlay = false;
+				}
 			}
 			base.OnUpdate(gameTime);
 		}
+
+		private bool _renderWaterOverlay = false;
 
 		private Vector3 _raytracedBlock;
 		protected void UpdateRayTracer(GraphicsDevice graphics, World world)
@@ -77,6 +103,10 @@ namespace Alex.CoreRT.Gamestates.Playing
 			{
 				SelBlock = (Block)World.GetBlock(_raytracedBlock.X, _raytracedBlock.Y, _raytracedBlock.Z);
 				RayTraceBoundingBox = SelBlock.GetBoundingBox(_raytracedBlock);
+			}
+			else
+			{
+				SelBlock = new Air();
 			}
 		}
 
@@ -151,15 +181,21 @@ namespace Alex.CoreRT.Gamestates.Playing
 			{
 				args.SpriteBatch.Begin();
 
-#if MONOGAME
+
+				if (_renderWaterOverlay)
+				{
+					//Start draw background
+					var retval = new Microsoft.Xna.Framework.Rectangle(
+						args.SpriteBatch.GraphicsDevice.Viewport.X,
+						args.SpriteBatch.GraphicsDevice.Viewport.Y,
+						args.SpriteBatch.GraphicsDevice.Viewport.Width,
+						args.SpriteBatch.GraphicsDevice.Viewport.Height);
+					args.SpriteBatch.FillRectangle(retval, new Color(Color.DarkBlue, 0.5f));
+					//End draw backgroun
+				}
+
 				args.SpriteBatch.Draw(CrosshairTexture,
 					new Vector2(CenterScreen.X - CrosshairTexture.Width / 2f, CenterScreen.Y - CrosshairTexture.Height / 2f));
-#endif
-#if FNA
-				args.SpriteBatch.Draw(CrosshairTexture,
-					new Vector2(CenterScreen.X - CrosshairTexture.Width/2f, CenterScreen.Y - CrosshairTexture.Height/2f),
-					Color.White);
-#endif
 
 				if (_raytracedBlock.Y > 0 && _raytracedBlock.Y < 256)
 				{
@@ -181,6 +217,16 @@ namespace Alex.CoreRT.Gamestates.Playing
 				{
 					var y = (int)meisured.Y;
 					var positionString = "Position: " + Camera.Position;
+					meisured = Alex.Font.MeasureString(positionString);
+
+					args.SpriteBatch.FillRectangle(new Rectangle(0, y, (int)meisured.X, (int)meisured.Y),
+						new Color(Color.Black, 64));
+					args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(0, y), Color.White);
+
+					y += (int)meisured.Y;
+					string facing = GetCardinalDirection(this.Camera);
+
+					positionString = string.Format("Facing: {0}", facing);
 					meisured = Alex.Font.MeasureString(positionString);
 
 					args.SpriteBatch.FillRectangle(new Rectangle(0, y, (int)meisured.X, (int)meisured.Y),
@@ -216,7 +262,7 @@ namespace Alex.CoreRT.Gamestates.Playing
 
 					y += (int)meisured.Y;
 
-					positionString = "Chunks: " + World.ChunkCount + ", " + World.ChunkManager.RenderedChunks;
+					positionString = "Chunks: " + World.ChunkCount + ", " + World.RenderingManager.RenderedChunks;
 					meisured = Alex.Font.MeasureString(positionString);
 
 					args.SpriteBatch.FillRectangle(new Rectangle(0, y, (int)meisured.X, (int)meisured.Y),
@@ -228,8 +274,61 @@ namespace Alex.CoreRT.Gamestates.Playing
 			{
 				args.SpriteBatch.End();
 			}
+
+			ActiveOverlays.ForEach(x => x.Render(args));
+
 			base.Render2D(args);
 		}
+
+		public static string GetCardinalDirection(FirstPersonCamera cam)
+		{
+			double rotation = (cam.Yaw) % 360;
+			if (rotation < 0)
+			{
+				rotation += 360.0;
+			}
+			if (0 <= rotation && rotation < 22.5)
+			{
+				return "North";
+			}
+			else if (22.5 <= rotation && rotation < 67.5)
+			{
+				return "North East";
+			}
+			else if (67.5 <= rotation && rotation < 112.5)
+			{
+				return "East";
+			}
+			else if (112.5 <= rotation && rotation < 157.5)
+			{
+				return "South East";
+			}
+			else if (157.5 <= rotation && rotation < 202.5)
+			{
+				return "South";
+			}
+			else if (202.5 <= rotation && rotation < 247.5)
+			{
+				return "South West";
+			}
+			else if (247.5 <= rotation && rotation < 292.5)
+			{
+				return "West";
+			}
+			else if (292.5 <= rotation && rotation < 337.5)
+			{
+				return "North West";
+			}
+			else if (337.5 <= rotation && rotation < 360.0)
+			{
+				return "North";
+			}
+			else
+			{
+				return "N/A";
+			}
+		}
+
 
 		public override void Render3D(RenderArgs args)
 		{

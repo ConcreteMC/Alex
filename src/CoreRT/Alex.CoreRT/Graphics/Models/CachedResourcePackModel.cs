@@ -16,9 +16,15 @@ namespace Alex.CoreRT.Graphics.Models
 {
 	public class CachedResourcePackModel : ResourcePackModel
 	{
+		static CachedResourcePackModel()
+		{
+			
+		}
+
 		public CachedResourcePackModel(ResourceManager resources, BlockStateModel variant) : base(resources, variant)
 		{
 			Cache();
+			
 		}
 
 		private class FaceCache
@@ -36,9 +42,7 @@ namespace Alex.CoreRT.Graphics.Models
 
 		private void Cache()
 		{
-			var modelRotationMatrix =
-				Matrix.CreateRotationX((float)MathUtils.ToRadians(360f - Variant.X)) *
-				Matrix.CreateRotationY((float)MathUtils.ToRadians(360f - Variant.Y));
+			var modelRotationMatrix = GetModelRotationMatrix();
 
 			foreach (var element in Variant.Model.Elements)
 			{
@@ -67,76 +71,27 @@ namespace Alex.CoreRT.Graphics.Models
 					var faceStart = elementFrom;
 					var faceEnd = elementTo;
 
-					float x1 = 0, x2 = 1 / 32f, y1 = 0, y2 = 1 / 32f;
-					if (Resources != null)
+					string textureName = "no_texture";
+					if (!Variant.Model.Textures.TryGetValue(face.Value.Texture.Replace("#", ""), out textureName))
 					{
-						string textureName = "";
-						if (!Variant.Model.Textures.TryGetValue(face.Value.Texture.Replace("#", ""), out textureName))
-						{
-							textureName = face.Value.Texture;
-						}
-
-						if (textureName.StartsWith("#"))
-						{
-							if (!Variant.Model.Textures.TryGetValue(textureName.Replace("#", ""), out textureName))
-							{
-								textureName = "no_texture";
-							}
-						}
-
-						var textureInfo = Resources.Atlas.GetAtlasLocation(textureName.Replace("blocks/", ""));
-						var textureLocation = textureInfo.Position;
-
-						var uvSize = Resources.Atlas.AtlasSize;
-
-						var pixelSizeX = (textureInfo.Width / uvSize.X) / 16f; //0.0625
-						var pixelSizeY = (textureInfo.Height / uvSize.Y) / 16f;
-
-						var uv = face.Value.UV;
-
-						textureLocation.X /= uvSize.X;
-						textureLocation.Y /= uvSize.Y;
-
-						x1 = textureLocation.X + (uv.X1 * pixelSizeX);
-						x2 = textureLocation.X + (uv.X2 * pixelSizeX);
-						y1 = textureLocation.Y + (uv.Y1 * pixelSizeY);
-						y2 = textureLocation.Y + (uv.Y2 * pixelSizeY);
+						textureName = face.Value.Texture;
 					}
 
-					var uvmap = new UVMap(new Microsoft.Xna.Framework.Vector2(x1, y1),
-						new Microsoft.Xna.Framework.Vector2(x2, y1), new Microsoft.Xna.Framework.Vector2(x1, y2),
-						new Microsoft.Xna.Framework.Vector2(x2, y2), Color.White, Color.White, Color.White);
+					if (textureName.StartsWith("#"))
+					{
+						if (!Variant.Model.Textures.TryGetValue(textureName.Replace("#", ""), out textureName))
+						{
+							textureName = "no_texture";
+						}
+					}
 
-					Matrix faceRotationMatrix = Matrix.Identity;
-					float ci = 0f;
+					var uv = face.Value.UV;
+					var uvmap = GetTextureUVMap(Resources, textureName, uv.X1, uv.X2, uv.Y1, uv.Y2);
+
 					var elementRotation = element.Rotation;
-					if (elementRotation.Axis != Axis.Undefined)
-					{
-						var elementRotationOrigin = new Vector3(elementRotation.Origin.X, elementRotation.Origin.Y, elementRotation.Origin.Z);
+					Matrix faceRotationMatrix = GetElementRotationMatrix(elementRotation, out float ci);
 
-						var elementAngle =
-							MathUtils.ToRadians((float)(elementRotation.Axis == Axis.X ? -elementRotation.Angle : elementRotation.Angle));
-						elementAngle = elementRotation.Axis == Axis.Z ? elementAngle : -elementAngle;
-						ci = 1f / (float)Math.Cos(elementAngle);
-
-						faceRotationMatrix = Matrix.CreateTranslation(-elementRotationOrigin);
-						if (elementRotation.Axis == Axis.X)
-						{
-							faceRotationMatrix *= Matrix.CreateRotationX(elementAngle);
-						}
-						else if (elementRotation.Axis == Axis.Y)
-						{
-							faceRotationMatrix *= Matrix.CreateRotationY(elementAngle);
-						}
-						else if (elementRotation.Axis == Axis.Z)
-						{
-							faceRotationMatrix *= Matrix.CreateRotationZ(elementAngle);
-						}
-
-						faceRotationMatrix *= Matrix.CreateTranslation(elementRotationOrigin);
-					}
-
-					VertexPositionNormalTextureColor[] faceVertices = GetFaceVertices(face.Value, face.Key, faceStart, faceEnd, uvmap);
+					VertexPositionNormalTextureColor[] faceVertices = GetFaceVertices(face.Key, faceStart, faceEnd, uvmap, face.Value.Rotation);
 					for (var index = 0; index < faceVertices.Length; index++)
 					{
 						var vert = faceVertices[index];
@@ -208,8 +163,7 @@ namespace Alex.CoreRT.Graphics.Models
 			var verts = new List<VertexPositionNormalTextureColor>();
 
 			var modelRotationMatrix =
-				Matrix.CreateRotationX((float)MathUtils.ToRadians(360f - Variant.X)) *
-				Matrix.CreateRotationY((float)MathUtils.ToRadians(360f - Variant.Y));
+				GetModelRotationMatrix();
 
 			// MaxY = 0;
 			Vector3 worldPosition = new Vector3(position.X, position.Y, position.Z);
@@ -219,34 +173,7 @@ namespace Alex.CoreRT.Graphics.Models
 				var elementCache = _elementCache[element.GetHashCode()];
 				foreach (var face in element.Faces)
 				{
-					Vector3 cullFace = Vector3.Zero;
-
-					BlockFace cull;
-					if (!Enum.TryParse(face.Value.CullFace, out cull))
-					{
-						cull = face.Key;
-					}
-					switch (cull)
-					{
-						case BlockFace.Up:
-							cullFace = Vector3.Up;
-							break;
-						case BlockFace.Down:
-							cullFace = Vector3.Down;
-							break;
-						case BlockFace.North:
-							cullFace = Vector3.Backward;
-							break;
-						case BlockFace.South:
-							cullFace = Vector3.Forward;
-							break;
-						case BlockFace.West:
-							cullFace = Vector3.Left;
-							break;
-						case BlockFace.East:
-							cullFace = Vector3.Right;
-							break;
-					}
+					GetFaceValues(face.Value.CullFace, face.Key, out var cull, out var cullFace);
 
 					cullFace = Vector3.Transform(cullFace, modelRotationMatrix);
 
@@ -260,50 +187,51 @@ namespace Alex.CoreRT.Graphics.Models
 							faceVertices = (VertexPositionNormalTextureColor[]) elementCache.Down.Clone();
 							break;
 						case BlockFace.Up:
-							faceVertices = (VertexPositionNormalTextureColor[])elementCache.Up.Clone();
+							faceVertices = (VertexPositionNormalTextureColor[]) elementCache.Up.Clone();
 							break;
 						case BlockFace.East:
-							faceVertices = (VertexPositionNormalTextureColor[])elementCache.East.Clone();
+							faceVertices = (VertexPositionNormalTextureColor[]) elementCache.East.Clone();
 							break;
 						case BlockFace.West:
-							faceVertices = (VertexPositionNormalTextureColor[])elementCache.West.Clone();
+							faceVertices = (VertexPositionNormalTextureColor[]) elementCache.West.Clone();
 							break;
 						case BlockFace.North:
-							faceVertices = (VertexPositionNormalTextureColor[])elementCache.North.Clone();
+							faceVertices = (VertexPositionNormalTextureColor[]) elementCache.North.Clone();
 							break;
 						case BlockFace.South:
-							faceVertices = (VertexPositionNormalTextureColor[])elementCache.South.Clone();
+							faceVertices = (VertexPositionNormalTextureColor[]) elementCache.South.Clone();
 							break;
 						default:
-							faceVertices = (VertexPositionNormalTextureColor[])elementCache.None.Clone();
+							faceVertices = (VertexPositionNormalTextureColor[]) elementCache.None.Clone();
 							break;
 					}
 
 					Color faceColor = faceVertices[0].Color;
-					if (element.Shade)
-					{
-						faceColor = UvMapHelp.AdjustColor(faceColor, cull, GetLight(world, worldPosition + cullFace));
-					}
 
-					if (face.Value.TintIndex > 0)
+					if (face.Value.TintIndex >= 0)
 					{
-						Color c = new Color(94, 157, 52);
-						faceColor = c;
-						/*World w = (World) world;
+						World w = (World) world;
 
-						if (w.ChunkManager.TryGetChunk(
+						if (w.RenderingManager.TryGetChunk(
 							new ChunkCoordinates(new PlayerLocation(worldPosition.X, 0, worldPosition.Z)),
 							out IChunkColumn column))
 						{
 							Worlds.ChunkColumn realColumn = (Worlds.ChunkColumn) column;
-							BiomeUtils utils = new BiomeUtils();
-							
+							var biome = BiomeUtils.GetBiomeById(
+								realColumn.GetBiome((int) worldPosition.X & 0xf, (int) worldPosition.Z & 0xf));
 
-							//uint color = (uint)utils.ComputeBiomeColor(realColumn.GetBiome((int)worldPosition.X & 0xf, (int)worldPosition.Z & 0xf), (int)worldPosition.Y & 0xff, baseBlock.BlockId == 2);
-							Color c = new Color(76, 118, 60);
-							faceColor = c;
-						}*/
+							if (baseBlock.BlockId == 2)
+							{
+								faceColor = Resources.ResourcePack.GetGrassColor(biome.Temperature, biome.Downfall, (int) worldPosition.Y);
+							}
+							else
+							{
+								faceColor = Resources.ResourcePack.GetFoliageColor(biome.Temperature, biome.Downfall, (int) worldPosition.Y);
+							}
+						}
 					}
+
+					faceColor = UvMapHelp.AdjustColor(faceColor, cull, GetLight(world, worldPosition + cullFace), element.Shade);
 
 					for (var index = 0; index < faceVertices.Length; index++)
 					{

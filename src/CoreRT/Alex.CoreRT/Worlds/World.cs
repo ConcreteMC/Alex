@@ -16,27 +16,27 @@ namespace Alex.CoreRT.Worlds
             Graphics = graphics;
 	        Camera = camera;
 
-			ChunkManager = new RenderingManager(alex, graphics, camera, this);
+			RenderingManager = new RenderingManager(alex, graphics, camera, this);
 	        WorldProvider = worldProvider;
 			WorldProvider.Init(OnChunkReceived, Unload, PlayerPositionProvider);
         }
 
-		public RenderingManager ChunkManager { get; private set; }
+		public RenderingManager RenderingManager { get; private set; }
 		private WorldProvider WorldProvider { get; set; }
 
 		public int Vertices
         {
-            get { return ChunkManager.Vertices; }
+            get { return RenderingManager.Vertices; }
         }
 
 		public int ChunkCount
         {
-            get { return ChunkManager.ChunkCount; }
+            get { return RenderingManager.ChunkCount; }
         }
 
 		public int ChunkUpdates
         {
-            get { return ChunkManager.ChunkUpdates; }
+            get { return RenderingManager.ChunkUpdates; }
         }
 
 		private Vector3 PlayerPositionProvider()
@@ -46,22 +46,22 @@ namespace Alex.CoreRT.Worlds
 
 		private void Unload(int x, int z)
 		{
-			ChunkManager.RemoveChunk(new ChunkCoordinates(x, z));
+			RenderingManager.RemoveChunk(new ChunkCoordinates(x, z));
 		}
 
 		private void OnChunkReceived(IChunkColumn chunkColumn, int x, int z)
 		{
-			ChunkManager.AddChunk(chunkColumn, new ChunkCoordinates(x, z), true);
+			RenderingManager.AddChunk(chunkColumn, new ChunkCoordinates(x, z), true);
 		}
 
 		public void ResetChunks()
         {
-            ChunkManager.ClearChunks();
+            RenderingManager.ClearChunks();
         }
 
         public void RebuildChunks()
         {
-            ChunkManager.RebuildAll();
+            RenderingManager.RebuildAll();
         }
 
         public void Render()
@@ -69,12 +69,12 @@ namespace Alex.CoreRT.Worlds
             Graphics.DepthStencilState = DepthStencilState.Default;
             Graphics.SamplerStates[0] = SamplerState.PointWrap;
             
-            ChunkManager.Draw(Graphics);
+            RenderingManager.Draw(Graphics);
         }
 
 		public void Update()
 		{
-			ChunkManager.Update();
+			RenderingManager.Update();
 		}
 
         public Vector3 GetSpawnPoint()
@@ -121,7 +121,7 @@ namespace Alex.CoreRT.Worlds
             if (y < 0 || y > ChunkColumn.ChunkHeight) return 15;
 
 			IChunkColumn chunk;
-	        if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
+	        if (RenderingManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 	        {
 				return chunk.GetSkylight(x & 0xf, y & 0xff, z & 0xf);
             }
@@ -142,7 +142,7 @@ namespace Alex.CoreRT.Worlds
             if (y < 0 || y > ChunkColumn.ChunkHeight) return 15;
 
 			IChunkColumn chunk;
-	        if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
+	        if (RenderingManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 	        {
                 return chunk.GetBlocklight(x & 0xf, y & 0xff, z & 0xf);
             }
@@ -162,7 +162,7 @@ namespace Alex.CoreRT.Worlds
 		public IBlock GetBlock(int x, int y, int z)
         {
 		    IChunkColumn chunk;
-            if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
+            if (RenderingManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
             {
                 return chunk.GetBlock(x & 0xf, y & 0xff, z & 0xf);
             }
@@ -177,7 +177,7 @@ namespace Alex.CoreRT.Worlds
 	    public void SetBlock(int x, int y, int z, IBlock block)
 	    {
 			IChunkColumn chunk;
-		    if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
+		    if (RenderingManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 		    {
 				chunk.SetBlock(x & 0xf, y & 0xff, z & 0xf, block);
 		    }
@@ -190,7 +190,7 @@ namespace Alex.CoreRT.Worlds
 			_destroyed = true;
 
 			WorldProvider.Dispose();
-			ChunkManager.Dispose();
+			RenderingManager.Dispose();
 		}
 	}
 }
