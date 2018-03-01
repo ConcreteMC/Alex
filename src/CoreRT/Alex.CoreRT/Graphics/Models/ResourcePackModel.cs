@@ -111,47 +111,22 @@ namespace Alex.CoreRT.Graphics.Models
 					var faceStart = elementFrom;
 					var faceEnd = elementTo;
 
-					float x1 = 0, x2 = 1 / 32f, y1 = 0, y2 = 1 / 32f;
-					if (Resources != null)
+					string textureName = "no_texture";
+					if (!Variant.Model.Textures.TryGetValue(face.Value.Texture.Replace("#", ""), out textureName))
 					{
-						string textureName = "";
-						if (!Variant.Model.Textures.TryGetValue(face.Value.Texture.Replace("#", ""), out textureName))
-						{
-							textureName = face.Value.Texture;
-						}
-
-						if (textureName.StartsWith("#"))
-						{
-							if (!Variant.Model.Textures.TryGetValue(textureName.Replace("#", ""), out textureName))
-							{
-								textureName = "no_texture";
-							}
-						}
-
-						var textureInfo = Resources.Atlas.GetAtlasLocation(textureName.Replace("blocks/", ""));
-						var textureLocation = textureInfo.Position;
-
-						var uvSize = Resources.Atlas.AtlasSize;
-
-						var pixelSizeX = (textureInfo.Width / uvSize.X) / 16f; //0.0625
-						var pixelSizeY = (textureInfo.Height / uvSize.Y) / 16f;
-
-						var uv = face.Value.UV;
-
-						textureLocation.X /= uvSize.X;
-						textureLocation.Y /= uvSize.Y;
-
-						x1 = textureLocation.X + (uv.X1 * pixelSizeX);
-						x2 = textureLocation.X + (uv.X2 * pixelSizeX);
-						y1 = textureLocation.Y + (uv.Y1 * pixelSizeY);
-						y2 = textureLocation.Y + (uv.Y2 * pixelSizeY);
+						textureName = face.Value.Texture;
 					}
 
-					var uvmap = new UVMap(
-						new Microsoft.Xna.Framework.Vector2(x1, y1),
-						new Microsoft.Xna.Framework.Vector2(x2, y1), 
-						new Microsoft.Xna.Framework.Vector2(x1, y2),
-						new Microsoft.Xna.Framework.Vector2(x2, y2), baseBlock.SideColor, baseBlock.TopColor, baseBlock.BottomColor);
+					if (textureName.StartsWith("#"))
+					{
+						if (!Variant.Model.Textures.TryGetValue(textureName.Replace("#", ""), out textureName))
+						{
+							textureName = "no_texture";
+						}
+					}
+
+					var uv = face.Value.UV;
+					var uvmap = GetTextureUVMap(Resources, textureName, uv.X1, uv.X2, uv.Y1, uv.Y2);
 
 					V3 cullFace = V3.Zero;
 

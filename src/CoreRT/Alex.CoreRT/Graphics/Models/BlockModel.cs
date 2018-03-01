@@ -285,6 +285,18 @@ namespace Alex.CoreRT.Graphics.Models
 
 	    protected UVMap GetTextureUVMap(ResourceManager resources, string texture, float x1, float x2, float y1, float y2)
 	    {
+		    if (resources == null)
+		    {
+			    x1 = 0;
+			    x2 = 1 / 32f;
+			    y1 = 0;
+			    y2 = 1 / 32f;
+
+				return new UVMap(new Microsoft.Xna.Framework.Vector2(x1, y1),
+					new Microsoft.Xna.Framework.Vector2(x2, y1), new Microsoft.Xna.Framework.Vector2(x1, y2),
+					new Microsoft.Xna.Framework.Vector2(x2, y2), Color.White, Color.White, Color.White);
+			}
+
 		    var textureInfo = resources.Atlas.GetAtlasLocation(texture.Replace("blocks/", ""));
 		    var textureLocation = textureInfo.Position;
 
