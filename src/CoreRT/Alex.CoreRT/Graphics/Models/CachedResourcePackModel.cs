@@ -142,7 +142,7 @@ namespace Alex.CoreRT.Graphics.Models
 						faceRotationMatrix *= Matrix.CreateTranslation(elementRotationOrigin);
 					}
 
-					VertexPositionNormalTextureColor[] faceVertices = GetFaceVertices(face.Value, face.Key, faceStart, faceEnd, uvmap);
+					VertexPositionNormalTextureColor[] faceVertices = GetFaceVertices(face.Key, faceStart, faceEnd, uvmap, face.Value.Rotation);
 					for (var index = 0; index < faceVertices.Length; index++)
 					{
 						var vert = faceVertices[index];

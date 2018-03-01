@@ -21,11 +21,13 @@ namespace Alex.CoreRT
 		private readonly GraphicsDeviceManager _graphics;
 		private SpriteBatch _spriteBatch;
 		 
+		public static Alex Instance { get; private set; }
 		public GamestateManager GamestateManager { get; private set; }
 		public ResourceManager Resources { get; private set; }
 		public Alex()
 		{
-              
+			Instance = this;
+
 			_graphics = new GraphicsDeviceManager(this) {
 				PreferMultiSampling = false,
 				SynchronizeWithVerticalRetrace = false,

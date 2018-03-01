@@ -349,7 +349,13 @@ namespace Alex.CoreRT
 		    byte metadata = (byte)(palleteId & 0x0F);
 
 			if (blockID == 0) return new Air();
-			if (blockID == 8 || blockID == 9) return new Water(metadata);
+
+			if (blockID == 8) return new Water(metadata);
+		    if (blockID == 9) return new FlowingWater(metadata);
+
+		    if (blockID == 10) return new Lava(metadata);
+		    if (blockID == 11) return new FlowingLava(metadata);
+
 			if (blockID == 166) return new InvisibleBedrock(false);
 /*
 			if (blockID == 18) return new Leaves(metadata)
