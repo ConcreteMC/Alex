@@ -108,4 +108,75 @@ namespace Alex.ResourcePackLib.Json
 			return c2;
 		}
 	}
+
+	[JsonConverter(typeof(JVector2Converter))]
+	public class JVector2
+	{
+		public static JVector2 Zero => new JVector2(0, 0);
+		public static JVector2 UnitX => new JVector2(1, 0);
+		public static JVector2 UnitY => new JVector2(0, 1);
+
+		public float X { get; set; }
+		public float Y { get; set; }
+
+		public JVector2()
+		{
+
+		}
+
+		/*public JVector2(float x, float y, float z)
+		{
+			X = x;
+			Y = y;
+			Z = z;
+		}*/
+
+		public JVector2(float x, float y)
+		{
+			X = x;
+			Y = y;
+		}
+
+		public JVector2(JVector2 v) : this(v.X, v.Y)
+		{ }
+
+		
+
+		public static explicit operator Vector2(JVector2 b)
+		{
+			return new Vector2((float)b.X, (float)b.Y);
+		}
+
+		public static Vector2 operator +(JVector2 c1, Vector2 c2)
+		{
+			c2.X += c1.X;
+			c2.Y += c1.Y;
+
+			return c2;
+		}
+
+		public static Vector3 operator -(JVector2 c1, Vector3 c2)
+		{
+			c2.X -= c1.X;
+			c2.Y -= c1.Y;
+
+			return c2;
+		}
+
+		public static Vector2 operator *(JVector2 c1, Vector2 c2)
+		{
+			c2.X *= c1.X;
+			c2.Y *= c1.Y;
+
+			return c2;
+		}
+
+		public static Vector2 operator /(JVector2 c1, Vector2 c2)
+		{
+			c2.X /= c1.X;
+			c2.Y /= c1.Y;
+
+			return c2;
+		}
+	}
 }

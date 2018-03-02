@@ -1,4 +1,5 @@
 ﻿using Alex.API.Blocks.State;
+using Alex.API.Graphics;
 using Microsoft.Xna.Framework;
 
 namespace Alex.API.World
@@ -10,7 +11,7 @@ namespace Alex.API.World
 		int ChunkUpdates { get; }
 		void ResetChunks();
 		void RebuildChunks();
-		void Render();
+		void Render(IRenderArgs args);
 		Vector3 GetSpawnPoint();
 		bool IsSolid(Vector3 location);
 		bool IsSolid(float x, float y, float z);

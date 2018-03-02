@@ -2,17 +2,23 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Graphics;
 using Alex.API.World;
+using Alex.Entities;
+using Alex.Gamestates;
+using Alex.Graphics.Models;
+using Alex.ResourcePackLib.Json.Models;
 using Alex.Utils;
 using Alex.Worlds;
 using log4net;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET.Utils;
+using Color = Microsoft.Xna.Framework.Color;
 
 //using OpenTK.Graphics;
 
@@ -26,6 +32,8 @@ namespace Alex.Rendering
         private Camera.Camera Camera { get; }
         private World World { get; }
 	    private Alex Game { get; }
+
+	    private EntityModelRenderer TestEntity { get; set; }
 		public RenderingManager(Alex alex, GraphicsDevice graphics, Camera.Camera camera, World world)
 		{
 			Game = alex;
@@ -33,6 +41,16 @@ namespace Alex.Rendering
             Camera = camera;
             World = world;
             Chunks = new ConcurrentDictionary<ChunkCoordinates, IChunkColumn>();
+
+			if (alex.Resources.BedrockResourcePack.EntityModels.TryGetValue("geometry.humanoid", out EntityModel model)
+			&& alex.Resources.BedrockResourcePack.Textures.TryGetValue("textures/entity/steve", out Bitmap bmp))
+			{
+				TestEntity = new EntityModelRenderer(model, TextureUtils.BitmapToTexture2D(graphics, bmp));
+			}
+			else
+			{
+				Log.Warn("Could not create test entity!");
+			}
 
 			Effect = new AlphaTestEffect(Graphics)
             {
@@ -52,6 +70,8 @@ namespace Alex.Rendering
 			ChunksToUpdate = new ConcurrentQueue<ChunkCoordinates>();
             Updater.Start();
         }
+
+		//private ThreadSafeList<Entity> Entities { get; private set; } 
 
 	    private ConcurrentQueue<ChunkCoordinates> ChunksToUpdate { get; set; }
 	    private ConcurrentDictionary<ChunkCoordinates, IChunkColumn> Chunks { get; }
@@ -202,8 +222,10 @@ namespace Alex.Rendering
         public int Vertices { get; private set; }
 	    public int RenderedChunks { get; private set; } = 0;
 
-		public void Draw(GraphicsDevice device)
+		public void Draw(IRenderArgs args)
 		{
+			var device = args.GraphicsDevice;
+
 			Stopwatch sw = Stopwatch.StartNew();
 
 			Effect.View = Camera.ViewMatrix;
@@ -332,6 +354,8 @@ namespace Alex.Rendering
 
 			Vertices = tempVertices;
 	        RenderedChunks = tempChunks;
+
+			//TestEntity?.Render(args, Camera, World.GetSpawnPoint());
 
 			sw.Stop();
 			if (tempFailed > 0)

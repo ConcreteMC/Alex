@@ -44,18 +44,13 @@ namespace Alex.Graphics.Models
 
 		private void Cache()
 		{
-
+			var c = new Vector3(8f, 8f, 8f);
 			foreach (var var in Variant)
 			{
-				bool isQuad = false;
-				var faces = var.Model.Elements.Sum(x => x.Faces.Count);
-				if (faces == 4) //Block variant is a quad (tall grass etc)
-				{
-					isQuad = true;
-					//Log.Info($"Variant is quad: {var.ModelName}");
-				}
+			//	var faces = var.Model.Elements.Sum(x => x.Faces.Count);
+				
 
-				var c = new Vector3(8f, 8f, 8f);
+			//	var c = new Vector3(8f, 8f, 8f);
 				var modelRotationMatrix = Matrix.CreateTranslation(-c) * GetModelRotationMatrix(var) * Matrix.CreateTranslation(c);
 
 				foreach (var element in var.Model.Elements)

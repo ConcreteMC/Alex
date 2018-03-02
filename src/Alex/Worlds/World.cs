@@ -1,6 +1,8 @@
 ﻿using System;
 using Alex.API.Blocks.State;
+using Alex.API.Graphics;
 using Alex.API.World;
+using Alex.Gamestates;
 using Alex.Rendering;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -65,12 +67,12 @@ namespace Alex.Worlds
             RenderingManager.RebuildAll();
         }
 
-        public void Render()
+        public void Render(IRenderArgs args)
         {
             Graphics.DepthStencilState = DepthStencilState.Default;
             Graphics.SamplerStates[0] = SamplerState.PointWrap;
             
-            RenderingManager.Draw(Graphics);
+            RenderingManager.Draw(args);
         }
 
 		public void Update()

@@ -7,6 +7,7 @@ using Alex.ResourcePackLib;
 using Alex.Utils;
 using log4net;
 using Microsoft.Xna.Framework.Graphics;
+using ZipFile = ICSharpCode.SharpZipLib.Zip.ZipFile;
 
 namespace Alex
 {
@@ -15,6 +16,7 @@ namespace Alex
         private static readonly ILog Log = LogManager.GetLogger(typeof(ResourceManager));
 
 		public McResourcePack ResourcePack { get; private set; }
+		public BedrockResourcePack BedrockResourcePack { get; private set; }
 		public AtlasGenerator Atlas { get; private set; }
 
 		private GraphicsDevice Graphics { get; set; }
@@ -28,6 +30,7 @@ namespace Alex
 	    private const string AssetVersion = "1.12"; //"18w07c";
 		private static readonly string ResourcePackDirectory = Path.Combine("assets", "resourcepacks");
 	    private static readonly string DefaultResourcePackPath = Path.Combine(ResourcePackDirectory, $"{AssetVersion}.zip");
+	    private static readonly string BedrockResourcePackPath = Path.Combine(ResourcePackDirectory, $"bedrock.zip");
 		private byte[] DownloadDefaultResources()
 	    {
 		    var sw = new Stopwatch();
@@ -103,7 +106,13 @@ namespace Alex
 		        ResourcePack = LoadResourcePack(device, stream, true, true, true);
 	        }
 
-	        foreach (string file in setings.ResourcePacks)
+	        if (File.Exists(BedrockResourcePackPath))
+	        {
+				Log.Info($"Loading bedrock resources...");
+				BedrockResourcePack = new BedrockResourcePack(File.ReadAllBytes(BedrockResourcePackPath));
+	        }
+
+			foreach (string file in setings.ResourcePacks)
 	        {
 		        try
 		        {
