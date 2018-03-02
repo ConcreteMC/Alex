@@ -23,7 +23,7 @@ namespace Alex
 		public static SpriteFont Font;
 
 		private SpriteBatch _spriteBatch;
-		 
+
 		public static Alex Instance { get; private set; }
 		public GamestateManager GamestateManager { get; private set; }
 		public ResourceManager Resources { get; private set; }
@@ -31,7 +31,8 @@ namespace Alex
 		{
 			Instance = this;
 
-			var graphics = new GraphicsDeviceManager(this) {
+			var graphics = new GraphicsDeviceManager(this)
+			{
 				PreferMultiSampling = false,
 				SynchronizeWithVerticalRetrace = false,
 				GraphicsProfile = GraphicsProfile.Reach
@@ -39,21 +40,21 @@ namespace Alex
 			Content.RootDirectory = "assets";
 
 			IsFixedTimeStep = false;
-         //   _graphics.ToggleFullScreen();
-			
+			//   _graphics.ToggleFullScreen();
+
 			Username = "";
 			this.Window.AllowUserResizing = true;
 			this.Window.ClientSizeChanged += (sender, args) =>
 			{
 				if (graphics.PreferredBackBufferWidth != Window.ClientBounds.Width ||
-				    graphics.PreferredBackBufferHeight != Window.ClientBounds.Height)
+					graphics.PreferredBackBufferHeight != Window.ClientBounds.Height)
 				{
 					graphics.PreferredBackBufferWidth = Window.ClientBounds.Width;
 					graphics.PreferredBackBufferHeight = Window.ClientBounds.Height;
 					graphics.ApplyChanges();
 				}
 			};
-			
+
 		}
 
 		public static EventHandler<TextInputEventArgs> OnCharacterInput;
@@ -83,7 +84,7 @@ namespace Alex
 					GameSettings = JsonConvert.DeserializeObject<Settings>(File.ReadAllText("settings.json"));
 					Username = GameSettings.Username;
 				}
-				catch(Exception ex)
+				catch (Exception ex)
 				{
 					Log.Warn($"Failed to load settings!", ex);
 				}
@@ -105,7 +106,7 @@ namespace Alex
 			_spriteBatch = new SpriteBatch(GraphicsDevice);
 			GamestateManager = new GamestateManager(GraphicsDevice, _spriteBatch);
 
-			GamestateManager.AddState("splash", new SplashScreen(GraphicsDevice));
+			GamestateManager.AddState("splash", new SplashScreen(this));
 			GamestateManager.SetActiveState("splash");
 
 			Log.Info($"Initializing Alex...");
@@ -152,8 +153,11 @@ namespace Alex
 
 			Mouse.SetPosition(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2);
 
-			GamestateManager.AddState("login", new LoginState(this));
-			GamestateManager.SetActiveState("login");
+			//GamestateManager.AddState("login", new LoginState(this));
+			//GamestateManager.SetActiveState("login");
+
+			GamestateManager.AddState("title", new TitleState(this));
+			GamestateManager.SetActiveState("title");
 
 			GamestateManager.RemoveState("splash");
 

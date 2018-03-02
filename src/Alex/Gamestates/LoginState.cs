@@ -5,98 +5,98 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.Gamestates
 {
-    public class LoginState : Gamestate
-    {
-        private Alex Alex { get; }
-        public LoginState(Alex alex) : base(alex.GraphicsDevice)
-        {
-            Alex = alex;
-        }
+	public class LoginState : Gamestate
+	{
+		private Alex Alex { get; }
+		public LoginState(Alex alex) : base(alex)
+		{
+			Alex = alex;
+		}
 
-        private Texture2D BackGround { get; set; }
-        public override void Init(RenderArgs args)
-        {
-            BackGround = TextureUtils.ImageToTexture2D(args.GraphicsDevice, Resources.mcbg);
+		private Texture2D BackGround { get; set; }
+		public override void Init(RenderArgs args)
+		{
+			BackGround = TextureUtils.ImageToTexture2D(args.GraphicsDevice, Resources.mcbg);
 
-            //Alex.ShowMouse();
-            Alex.IsMouseVisible = true;
+			//Alex.ShowMouse();
+			Alex.IsMouseVisible = true;
 
-            Controls.Add("username", new InputField()
-            {
-                Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y - 30),
-                PlaceHolder = "Username",
-                Text = Alex.Username
-            });
+			Controls.Add("username", new InputField()
+			{
+				Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y - 30),
+				PlaceHolder = "Username",
+				Text = Alex.Username
+			});
 
-            //Controls.Add("password", new InputField()
-            //{
-           //     Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 20),
-           //     PlaceHolder = "Password",
-           //     PasswordField = true,
-           // });
+			//Controls.Add("password", new InputField()
+			//{
+			//     Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 20),
+			//     PlaceHolder = "Password",
+			//     PasswordField = true,
+			// });
 
-            Button opton = new Button("Login")
-            {
-                Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 20),
-            };
-            opton.OnButtonClick += Opton_OnButtonClick;
-            
-            Controls.Add("optbtn", opton);
+			Button opton = new Button("Login")
+			{
+				Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 20),
+			};
+			opton.OnButtonClick += Opton_OnButtonClick;
 
-            Controls.Add("logo", new Logo());
-            Controls.Add("info", new Info());
-        }
+			Controls.Add("optbtn", opton);
 
-        private void Opton_OnButtonClick()
-        {
-            var username = (InputField) Controls["username"];
-            if (username.Text != string.Empty)
-            {
-                Alex.Username = username.Text;
-                Alex.SaveSettings();
-                Alex.GamestateManager.AddState("menu", new MenuState(Alex));
-                Alex.GamestateManager.SetActiveState("menu");
-            }
-            else
-            {
-                ErrorText = "Username cannot be empty!";
-            }
-        }
+			Controls.Add("logo", new Logo());
+			Controls.Add("info", new Info());
+		}
 
-        public override void Stop()
-        {
-            //Alex.HideMouse();
-            Alex.IsMouseVisible = false;
-        }
+		private void Opton_OnButtonClick()
+		{
+			var username = (InputField)Controls["username"];
+			if (username.Text != string.Empty)
+			{
+				Alex.Username = username.Text;
+				Alex.SaveSettings();
+				Alex.GamestateManager.AddState("menu", new MenuState(Alex));
+				Alex.GamestateManager.SetActiveState("menu");
+			}
+			else
+			{
+				ErrorText = "Username cannot be empty!";
+			}
+		}
 
-        private string ErrorText = string.Empty;
-        public override void Render2D(RenderArgs args)
-        {
-            args.SpriteBatch.Begin();
+		public override void Stop()
+		{
+			//Alex.HideMouse();
+			Alex.IsMouseVisible = false;
+		}
 
-            //Start draw background
-            var retval = new Rectangle(
-                args.SpriteBatch.GraphicsDevice.Viewport.X,
-                args.SpriteBatch.GraphicsDevice.Viewport.Y,
-                args.SpriteBatch.GraphicsDevice.Viewport.Width,
-                args.SpriteBatch.GraphicsDevice.Viewport.Height);
-            args.SpriteBatch.Draw(BackGround, retval, Color.White);
-            //End draw backgroun
+		private string ErrorText = string.Empty;
+		public override void Render2D(RenderArgs args)
+		{
+			args.SpriteBatch.Begin();
 
-            if (ErrorText != string.Empty)
-            {
-                var meisure = Alex.Font.MeasureString(ErrorText);
-                args.SpriteBatch.DrawString(Alex.Font, ErrorText,
-                    new Vector2((int) (CenterScreen.X - (meisure.X / 2)), (int) CenterScreen.Y - (30 + meisure.Y + 5)), Color.Red);
-            }
+			//Start draw background
+			var retval = new Rectangle(
+				args.SpriteBatch.GraphicsDevice.Viewport.X,
+				args.SpriteBatch.GraphicsDevice.Viewport.Y,
+				args.SpriteBatch.GraphicsDevice.Viewport.Width,
+				args.SpriteBatch.GraphicsDevice.Viewport.Height);
+			args.SpriteBatch.Draw(BackGround, retval, Color.White);
+			//End draw backgroun
 
-            args.SpriteBatch.End();
-        }
+			if (ErrorText != string.Empty)
+			{
+				var meisure = Alex.Font.MeasureString(ErrorText);
+				args.SpriteBatch.DrawString(Alex.Font, ErrorText,
+					new Vector2((int)(CenterScreen.X - (meisure.X / 2)), (int)CenterScreen.Y - (30 + meisure.Y + 5)), Color.Red);
+			}
 
-        public override void OnUpdate(GameTime gameTime)
-        {
-            Controls["username"].Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y - 30);
-            Controls["optbtn"].Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 20);
-        }
-    }
+			args.SpriteBatch.End();
+		}
+
+		public override void OnUpdate(GameTime gameTime)
+		{
+			Controls["username"].Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y - 30);
+			Controls["optbtn"].Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 20);
+		}
+	}
 }

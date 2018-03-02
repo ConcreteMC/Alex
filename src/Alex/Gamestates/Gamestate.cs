@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Alex.Gui;
 using Alex.Rendering.UI;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -10,21 +11,27 @@ namespace Alex.Gamestates
 	{
 		public Dictionary<string, UIComponent> Controls { get; set; }
 
-        protected GraphicsDevice Graphics { get; }
-		public Gamestate(GraphicsDevice graphics)
+		public GuiManager Gui { get; }
+
+		protected GraphicsDevice Graphics { get; }
+
+
+		public Gamestate(Game game)
 		{
-		    Graphics = graphics;
+			Graphics = game.GraphicsDevice;
 			Controls = new Dictionary<string, UIComponent>();
+
+			Gui = new GuiManager(game);
 		}
 
-	    public Viewport Viewport => Graphics.Viewport;
+		public Viewport Viewport => Graphics.Viewport;
 
 		public Vector2 CenterScreen
 		{
 			get
 			{
-				return new Vector2((Graphics.Viewport.Width/2f),
-					(Graphics.Viewport.Height/2f));
+				return new Vector2((Graphics.Viewport.Width / 2f),
+					(Graphics.Viewport.Height / 2f));
 			}
 		}
 
@@ -43,6 +50,7 @@ namespace Alex.Gamestates
 			{
 				control.Render(args);
 			}
+			Gui.Draw(args.GameTime);
 		}
 
 		public virtual void Render2D(RenderArgs args)
@@ -65,6 +73,7 @@ namespace Alex.Gamestates
 			{
 				control.Update(gametime);
 			}
+			Gui.Update(gametime);
 		}
 
 		public virtual void OnUpdate(GameTime gameTime)

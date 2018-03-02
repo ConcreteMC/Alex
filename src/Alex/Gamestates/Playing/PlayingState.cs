@@ -24,8 +24,8 @@ namespace Alex.Gamestates.Playing
 
 		private ChatComponent Chat { get; }
 		private ThreadSafeList<IOverlay> ActiveOverlays { get; }
- 	//	private WaterOverlay WaterOverlay { get; }
-		public PlayingState(Alex alex, GraphicsDevice graphics, WorldProvider worldProvider) : base(graphics)
+		//	private WaterOverlay WaterOverlay { get; }
+		public PlayingState(Alex alex, GraphicsDevice graphics, WorldProvider worldProvider) : base(alex)
 		{
 			Alex = alex;
 			Chat = new ChatComponent();
@@ -51,7 +51,7 @@ namespace Alex.Gamestates.Playing
 			CrosshairTexture = TextureUtils.ImageToTexture2D(args.GraphicsDevice, Resources.crosshair);
 
 			Camera.MoveTo(World.GetSpawnPoint(), Vector3.Zero);
-            base.Init(args);
+			base.Init(args);
 		}
 
 		private float AspectRatio { get; set; }
@@ -82,10 +82,11 @@ namespace Alex.Gamestates.Playing
 						_renderWaterOverlay = true;
 					}
 					//if (!ActiveOverlays.Contains(WaterOverlay))
-				//	{
+					//	{
 					//	ActiveOverlays.TryAdd(WaterOverlay);
 					//}
-				}else if (_renderWaterOverlay)
+				}
+				else if (_renderWaterOverlay)
 				{
 					_renderWaterOverlay = false;
 				}
@@ -113,7 +114,7 @@ namespace Alex.Gamestates.Playing
 		private Block SelBlock { get; set; } = new Air();
 		private Microsoft.Xna.Framework.BoundingBox RayTraceBoundingBox { get; set; }
 		private bool RenderDebug { get; set; } = true;
-		
+
 		private KeyboardState _oldKeyboardState;
 		private MouseState _oldMouseState;
 		protected void CheckInput(GameTime gameTime)
@@ -133,7 +134,7 @@ namespace Alex.Gamestates.Playing
 				{
 					if (_raytracedBlock.Y > 0 && _raytracedBlock.Y < 256)
 					{
-					//	World.SetBlock(_selectedBlock.X, _selectedBlock.Y + 1, _selectedBlock.Z, new Stone());
+						//	World.SetBlock(_selectedBlock.X, _selectedBlock.Y + 1, _selectedBlock.Z, new Stone());
 					}
 				}
 			}
@@ -146,7 +147,7 @@ namespace Alex.Gamestates.Playing
 				{
 					if (Chat.RenderChatInput)
 					{
-						Chat.Dismiss();			
+						Chat.Dismiss();
 					}
 					else
 					{
