@@ -28,7 +28,7 @@ namespace Alex.Gamestates
 
         public void AddState(string name, Gamestate state)
         {
-            state.Init(new RenderArgs()
+            state.Initialise(new RenderArgs()
             {
                 SpriteBatch = SpriteBatch,
                 GraphicsDevice = Graphics,

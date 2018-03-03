@@ -15,9 +15,11 @@ namespace Alex.Gamestates
 
 		protected GraphicsDevice Graphics { get; }
 
+		protected Game Game { get; }
 
 		public Gamestate(Game game)
 		{
+			Game = game;
 			Graphics = game.GraphicsDevice;
 			Controls = new Dictionary<string, UIComponent>();
 
@@ -33,6 +35,12 @@ namespace Alex.Gamestates
 				return new Vector2((Graphics.Viewport.Width / 2f),
 					(Graphics.Viewport.Height / 2f));
 			}
+		}
+
+		public void Initialise(RenderArgs args)
+		{
+			Gui.Init(args.GraphicsDevice, args.SpriteBatch);
+			Init(args);
 		}
 
 		public virtual void Init(RenderArgs args)

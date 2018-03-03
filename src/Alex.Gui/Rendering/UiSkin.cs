@@ -31,7 +31,7 @@ namespace Alex.Gui.Rendering
 		public void ApplyStyle<TElement>(TElement element) where TElement : UiElement
 		{
 			var style = GetStyle(typeof(TElement).FullName);
-			element.ApplyStyle(style);
+			//element.ApplyStyle(style);
 		}
 
 

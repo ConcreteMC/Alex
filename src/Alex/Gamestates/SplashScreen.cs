@@ -17,7 +17,6 @@ namespace Alex.Gamestates
 				DrawMotd = false,
 				Center = true
 			});
-			base.Init(args);
 		}
 	}
 }

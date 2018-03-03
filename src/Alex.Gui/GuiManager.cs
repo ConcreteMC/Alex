@@ -15,25 +15,46 @@ namespace Alex.Gui
 
 		public UiSkin Skin { get; set; }
 
-		public UiContainer Root { get; private set; }
+		public UiRoot Root { get; private set; }
+
+		private bool _doResize = false;
 
 		public GuiManager(Game game)
 		{
 			Game = game;
-			Renderer = new GuiRenderer(game.GraphicsDevice, game.GraphicsDevice.PresentationParameters.BackBufferWidth, game.GraphicsDevice.PresentationParameters.BackBufferHeight);
-			Initialise();
+			Root = new UiRoot(game.Window.ClientBounds.Width, game.Window.ClientBounds.Height);
+
+			game.Window.ClientSizeChanged += WindowOnClientSizeChanged;
 		}
 
-		private void Initialise()
+		private void WindowOnClientSizeChanged(object sender, EventArgs eventArgs)
 		{
-			Root = new UiContainer(Renderer.ScreenWidth, Renderer.ScreenHeight);
+			var width = Game.GraphicsDevice.PresentationParameters.BackBufferWidth;
+			var height = Game.GraphicsDevice.PresentationParameters.BackBufferHeight;
+
+			Renderer.ResetScreenSize(width, height);
+			Root.Width = width;
+			Root.Height = height;
+
+			_doResize = true;
+		}
+
+		public void Init(GraphicsDevice graphics, SpriteBatch spriteBatch)
+		{
+			Renderer = new GuiRenderer(graphics, spriteBatch, graphics.PresentationParameters.BackBufferWidth, graphics.PresentationParameters.BackBufferHeight);
+			Root = new UiRoot(Renderer.ScreenWidth, Renderer.ScreenHeight);
+			_doResize = true;
 		}
 
 
 		public void Update(GameTime gameTime)
 		{
 			UpdateInput(gameTime);
-			UpdateLayout(gameTime);
+			if (_doResize)
+			{
+				UpdateLayout(gameTime);
+				_doResize = false;
+			}
 
 			Root.Update(gameTime);
 		}
@@ -53,6 +74,7 @@ namespace Alex.Gui
 
 		private void UpdateLayout(GameTime gameTime)
 		{
+			Root.UpdateSize();
 			Root.UpdateLayout();
 		}
 	}

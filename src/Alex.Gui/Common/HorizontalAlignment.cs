@@ -6,6 +6,7 @@ namespace Alex.Gui.Enums
 {
 	public enum HorizontalAlignment
 	{
+		None,
 		Left,
 		Center,
 		Right

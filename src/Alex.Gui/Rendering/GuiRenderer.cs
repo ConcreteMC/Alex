@@ -16,21 +16,34 @@ namespace Alex.Gui.Rendering
 
 		public Matrix Projection { get; set; }
 
+		private RasterizerState _rasteriserState;
+
 		private SpriteBatch _spriteBatch;
 
 
-		public GuiRenderer(GraphicsDevice graphicsDevice, int screenWidth, int screenHeight)
+		public GuiRenderer(GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, int screenWidth, int screenHeight)
 		{
-			_spriteBatch = new SpriteBatch(graphicsDevice);
+			_spriteBatch = spriteBatch;
 			Graphics = graphicsDevice;
 
+			ScreenWidth = screenWidth;
+			ScreenHeight = screenHeight;
+
+			_rasteriserState = new RasterizerState()
+			{
+				ScissorTestEnable = true
+			};
+		}
+
+		public void ResetScreenSize(int screenWidth, int screenHeight)
+		{
 			ScreenWidth = screenWidth;
 			ScreenHeight = screenHeight;
 		}
 
 		public void Begin()
 		{
-			_spriteBatch.Begin(samplerState: SamplerState.PointClamp);
+			_spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, _rasteriserState, null, Matrix.Identity);
 		}
 
 		public void End()
@@ -38,17 +51,36 @@ namespace Alex.Gui.Rendering
 			_spriteBatch.End();
 		}
 
-		public void DrawRectangle(Rectangle bounds, Color color)
+		public void FillRectangle(Rectangle bounds, Color color)
 		{
 			var texture = new Texture2D(Graphics, 1, 1, false, SurfaceFormat.Color);
 			texture.SetData(new Color[] { color });
 
-			DrawRectangle(bounds, texture);
+			FillRectangle(bounds, texture);
 		}
 
-		public void DrawRectangle(Rectangle bounds, Texture2D texture)
+		public void FillRectangle(Rectangle bounds, Texture2D texture)
 		{
 			_spriteBatch.Draw(texture, bounds, Color.White);
+		}
+
+		public void DrawRectangle(Rectangle bounds, Color color, int thickness = 1)
+		{
+			var texture = new Texture2D(Graphics, 1, 1, false, SurfaceFormat.Color);
+			texture.SetData(new Color[] { color });
+
+			// Top
+			_spriteBatch.Draw(texture, new Rectangle(bounds.X, bounds.Y, bounds.Width, thickness), color);
+			
+			// Right
+			_spriteBatch.Draw(texture, new Rectangle(bounds.X + bounds.Width, bounds.Y, thickness, bounds.Height), color);
+
+			// Bottom
+			_spriteBatch.Draw(texture, new Rectangle(bounds.X, bounds.Y + bounds.Height, bounds.Width, thickness), color);
+
+			// Left
+			_spriteBatch.Draw(texture, new Rectangle(bounds.X, bounds.Y, thickness, bounds.Height), color);
+			
 		}
 
 		public void DrawText(Rectangle bounds, string text, SpriteFont font, Color color)
