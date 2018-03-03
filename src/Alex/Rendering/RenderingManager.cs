@@ -355,7 +355,7 @@ namespace Alex.Rendering
 			Vertices = tempVertices;
 	        RenderedChunks = tempChunks;
 
-			//TestEntity?.Render(args, Camera, World.GetSpawnPoint());
+			TestEntity?.Render(args, Camera, World.GetSpawnPoint());
 
 			sw.Stop();
 			if (tempFailed > 0)
