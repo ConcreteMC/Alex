@@ -19,7 +19,7 @@ namespace Alex.Graphics.Models
 		private static readonly ILog Log = LogManager.GetLogger(typeof(EntityModelRenderer));
 		private EntityModel Model { get; }
 		private Texture2D Texture { get; }
-		private BasicEffect Effect { get; set; }
+		private AlphaTestEffect Effect { get; set; }
 		public EntityModelRenderer(EntityModel model, Texture2D texture)
 		{
 			Model = model;
@@ -126,11 +126,15 @@ namespace Alex.Graphics.Models
 
 			if (Effect == null || Buffer == null)
 			{
-				//Effect = new AlphaTestEffect(args.GraphicsDevice);
-				Effect = new BasicEffect(args.GraphicsDevice);
+				Effect = new AlphaTestEffect(args.GraphicsDevice);
+				//Effect = new BasicEffect(args.GraphicsDevice);
+				Effect.Texture = Texture;
 
 				Buffer = new VertexBuffer(args.GraphicsDevice,
 					VertexPositionNormalTexture.VertexDeclaration, Vertices.Length, BufferUsage.WriteOnly);
+
+				Buffer.SetData(Vertices);
+
 			}
 
 			Effect.World = Matrix.CreateScale(1f / 16f) * Matrix.CreateTranslation(position);
@@ -139,16 +143,11 @@ namespace Alex.Graphics.Models
 			Effect.View = camera.ViewMatrix;
 			Effect.Projection = camera.ProjectionMatrix;
 
-			Effect.TextureEnabled = true;
-			Effect.Texture = Texture;
-
-
+			args.GraphicsDevice.SetVertexBuffer(Buffer);
 			foreach (var pass in Effect.CurrentTechnique.Passes)
 			{
 				pass.Apply();
-
-				Buffer.SetData(Vertices);
-				args.GraphicsDevice.SetVertexBuffer(Buffer);
+				args.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, Vertices.Length);
 			}
 
 			args.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, Vertices.Length);

@@ -42,8 +42,8 @@ namespace Alex.Rendering
             World = world;
             Chunks = new ConcurrentDictionary<ChunkCoordinates, IChunkColumn>();
 
-			if (alex.Resources.BedrockResourcePack.EntityModels.TryGetValue("geometry.humanoid", out EntityModel model)
-			&& alex.Resources.BedrockResourcePack.Textures.TryGetValue("textures/entity/steve", out Bitmap bmp))
+			if (alex.Resources.BedrockResourcePack.EntityModels.TryGetValue("geometry.witherBoss", out EntityModel model)
+			&& alex.Resources.BedrockResourcePack.Textures.TryGetValue("textures/entity/wither_boss/wither_invulnerable", out Bitmap bmp))
 			{
 				TestEntity = new EntityModelRenderer(model, TextureUtils.BitmapToTexture2D(graphics, bmp));
 			}
@@ -355,7 +355,7 @@ namespace Alex.Rendering
 			Vertices = tempVertices;
 	        RenderedChunks = tempChunks;
 
-			TestEntity?.Render(args, Camera, World.GetSpawnPoint());
+			//TestEntity?.Render(args, Camera, World.GetSpawnPoint() );
 
 			sw.Stop();
 			if (tempFailed > 0)
