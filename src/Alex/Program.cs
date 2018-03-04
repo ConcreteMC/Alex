@@ -24,7 +24,10 @@ namespace Alex
 			XmlConfigurator.Configure(logRepository, new FileInfo("log4net.config"));
 
 			using (var game = new Alex())
-                game.Run();
+			{
+				game.Init();
+				game.Run();
+			}
 
 		}
 	}

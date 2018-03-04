@@ -18,7 +18,7 @@ namespace Alex.Graphics.Models
 	{
 		private static readonly ILog Log = LogManager.GetLogger(typeof(EntityModelRenderer));
 		private EntityModel Model { get; }
-		private Texture2D Texture { get; }
+		private Texture2D Texture { get; set; }
 		private AlphaTestEffect Effect { get; set; }
 		public EntityModelRenderer(EntityModel model, Texture2D texture)
 		{
@@ -26,6 +26,12 @@ namespace Alex.Graphics.Models
 			Texture = texture;
 
 			Cache();
+		}
+
+		public void UpdateTexture(Texture2D texture)
+		{
+			Texture = texture;
+			Effect.Texture = texture;
 		}
 
 		private VertexPositionNormalTexture[] Vertices { get; set; } = null;
@@ -67,17 +73,7 @@ namespace Alex.Graphics.Models
 							continue;
 						}
 
-						var pixelSizeX = 1f / Texture.Width; //0.0625
-						var pixelSizeY = 1f / Texture.Height;
-
-						var x1 = cube.Uv.X * pixelSizeX;
-						var x2 = (cube.Uv.X + cube.Size.X) * pixelSizeX; // + ((cube.Size.X) * pixelSizeX);
-						var y1 = cube.Uv.Y * pixelSizeY;
-						var y2 = (cube.Uv.Y + cube.Size.Y) * pixelSizeY; // + ((cube.Size.Y) * pixelSizeY);
-
-						var size = new Vector3(cube.Size.X, cube.Size.Y, cube.Size.Z);
-						var origin = new Vector3(cube.Origin.X, cube.Origin.Y, cube.Origin.Z);
-						var built = BuildCube(size, origin, new Vector2(cube.Uv.X, cube.Uv.Y), new Vector2(Texture.Width, Texture.Height));
+						var built = BuildCube(bone, cube, new Vector2(cube.Uv.X, cube.Uv.Y), new Vector2(Texture.Width, Texture.Height));
 
 						textures.AddRange(built.Front);
 						textures.AddRange(built.Back);
@@ -92,28 +88,49 @@ namespace Alex.Graphics.Models
 			Vertices = textures.ToArray();
 		}
 
-		private Cube BuildCube(Vector3 size, Vector3 origin, Vector2 textureOrigin, Vector2 textureSize)
+		private Cube BuildCube(EntityModelBone bone, EntityModelCube model, Vector2 textureOrigin, Vector2 textureSize)
 		{
+			var size = new Vector3(model.Size.X, model.Size.Y, model.Size.Z);
+			var origin = new Vector3(model.Origin.X, model.Origin.Y, model.Origin.Z);
+
 			Cube cube = new Cube(size, textureSize);
 			cube.BuildCube(textureOrigin);
 
-			Mod(ref cube.Back, origin);
-			Mod(ref cube.Front, origin);
-			Mod(ref cube.Left, origin);
-			Mod(ref cube.Right, origin);
-			Mod(ref cube.Top, origin);
-			Mod(ref cube.Bottom, origin);
+			Vector3 rotation = Vector3.Zero;
+			Vector3 pivot = Vector3.Zero;
+			if (bone.Rotation != null)
+			{
+				rotation = new Vector3(bone.Rotation.X, bone.Rotation.Y, bone.Rotation.Z);
+				pivot = new Vector3(bone.Pivot.X, bone.Pivot.Y, bone.Pivot.Z);
+			}
+
+			Mod(ref cube.Back, origin, pivot, rotation);
+			Mod(ref cube.Front, origin, pivot, rotation);
+			Mod(ref cube.Left, origin, pivot, rotation);
+			Mod(ref cube.Right, origin, pivot, rotation);
+			Mod(ref cube.Top, origin, pivot, rotation);
+			Mod(ref cube.Bottom, origin, pivot, rotation);
 
 			return cube;
 		}
 
-		private void Mod(ref VertexPositionNormalTexture[] data, Vector3 o)
+		private void Mod(ref VertexPositionNormalTexture[] data, Vector3 origin, Vector3 pivot, Vector3 rotation)
 		{
+			/*Matrix transform = Matrix.CreateTranslation(-pivot.X, -pivot.Y, -pivot.Z) *
+			                   Matrix.CreateRotationX(rotation.X) *
+			                   Matrix.CreateRotationY(rotation.Y) *
+			                   Matrix.CreateRotationZ(rotation.Z) *
+			                   Matrix.CreateTranslation(pivot.X, pivot.Y, pivot.Z);*/
+
 			for (int i = 0; i < data.Length; i++)
 			{
 				var pos = data[i].Position;
 
-				pos = new Vector3(o.X + pos.X, o.Y + pos.Y, o.Z + pos.Z);
+				pos = new Vector3(origin.X + pos.X, origin.Y + pos.Y, origin.Z + pos.Z);
+			//	if (rotation != Vector3.Zero)
+			//	{
+			//		pos = Vector3.Transform(pos, transform);
+			//	}
 				//pos /= 16;
 				data[i].Position = pos;
 			}
@@ -124,21 +141,11 @@ namespace Alex.Graphics.Models
 		{
 			if (Vertices == null || Vertices.Length == 0) return;
 
-			if (Effect == null || Buffer == null)
-			{
-				Effect = new AlphaTestEffect(args.GraphicsDevice);
-				//Effect = new BasicEffect(args.GraphicsDevice);
-				Effect.Texture = Texture;
+			if (Effect == null || Buffer == null) return;
 
-				Buffer = new VertexBuffer(args.GraphicsDevice,
-					VertexPositionNormalTexture.VertexDeclaration, Vertices.Length, BufferUsage.WriteOnly);
-
-				Buffer.SetData(Vertices);
-
-			}
-
-			Effect.World = Matrix.CreateScale(1f / 16f) * Matrix.CreateTranslation(position);
-			//	    Effect.World = Matrix.CreateScale(1f / 16f) * Matrix.CreateRotationY(3 * _angle) * Matrix.CreateTranslation(position);
+			//Effect.World = Matrix.CreateScale(1f / 16f) * Matrix.CreateTranslation(position);
+			Effect.World = Matrix.CreateScale(1f / 16f) * Matrix.CreateRotationY(3 * _angle) *
+			               Matrix.CreateTranslation(position);
 
 			Effect.View = camera.ViewMatrix;
 			Effect.Projection = camera.ProjectionMatrix;
@@ -147,13 +154,29 @@ namespace Alex.Graphics.Models
 			foreach (var pass in Effect.CurrentTechnique.Passes)
 			{
 				pass.Apply();
-				args.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, Vertices.Length);
 			}
 
-			args.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, Vertices.Length);
+			args.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, Vertices.Length / 3);
 
 			float dt = (float)args.GameTime.ElapsedGameTime.TotalSeconds;
 			_angle += 0.5f * dt;
+		}
+
+		public void Update(GraphicsDevice device, GameTime gameTime)
+		{
+			if (Effect == null)
+			{
+				Effect = new AlphaTestEffect(device);
+				Effect.Texture = Texture;
+			}
+
+			if (Buffer == null)
+			{
+				Buffer = new VertexBuffer(device,
+					VertexPositionNormalTexture.VertexDeclaration, Vertices.Length, BufferUsage.WriteOnly);
+
+				Buffer.SetData(Vertices);
+			}
 		}
 
 		private class Cube
@@ -309,8 +332,6 @@ namespace Alex.Graphics.Models
 					new VertexPositionNormalTexture(btmRightBack , normal, map.BotRight),
 				};
 			}
-
-
 
 			private TextureMapping GetTextureMapping(Vector2 textureOffset, float regionWidth, float regionHeight)
 			{

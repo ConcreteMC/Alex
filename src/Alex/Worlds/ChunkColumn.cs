@@ -35,7 +35,7 @@ namespace Alex.Worlds
 		public VertexBuffer TransparentVertexBuffer { get; set; } = null;
 		public object VertexLock { get; set; } = new object();
 		public object UpdateLock { get; set; } = new object();
-		public bool Scheduled { get; set; } = false;
+		public ScheduleType Scheduled { get; set; } = ScheduleType.Unscheduled;
 
 		public ChunkColumn()
 		{
@@ -119,47 +119,107 @@ namespace Alex.Worlds
 			chunk.SetSkylight(bx, by - 16 * (by >> 4), bz, data);
 		}
 
+		private IReadOnlyDictionary<Vector3, ChunkMesh.EntryPosition> PositionCache { get; set; } = null;
 		private Vector3 Position => new Vector3(X * 16, 0, Z*16);
-		public void GenerateMeshes(IWorld world, out Mesh mesh, out Mesh transparentMesh)
+		public void GenerateMeshes(IWorld world, out ChunkMesh mesh)
 		{
-			Vector3 pos = Position;
-			var solidVertices = new List<VertexPositionNormalTextureColor>();
-			var transparentVertices = new List<VertexPositionNormalTextureColor>();
+			//var solidVertices = new List<VertexPositionNormalTextureColor>();
+			//var transparentVertices = new List<VertexPositionNormalTextureColor>();
 
-			for (var index = 0; index < Chunks.Length; index++)
+			List<ChunkMesh.Entry> solidVertices = new List<ChunkMesh.Entry>();
+			List<ChunkMesh.Entry> transparentVertices = new List<ChunkMesh.Entry>();
+
+			//if (Scheduled == ScheduleType.Full || PositionCache == null)
 			{
-				var chunk = Chunks[index];
-				if (chunk.IsAllAir()) continue;
-
-				for (var x = 0; x < ChunkWidth; x++)
-				for (var z = 0; z < ChunkDepth; z++)
-				for (var y = 0; y < 16; y++)
+				for (var index = 0; index < Chunks.Length; index++)
 				{
-					var stateId = chunk.GetBlockState(x, y, z);
-					var block = BlockFactory.GetBlock(stateId);
+					var chunk = Chunks[index];
+					if (chunk.IsAllAir()) continue;
 
-					if (block.BlockId == 0 || !block.Renderable) continue;
-
-					var blockPosition = new Vector3(x, y + (index * 16), z) + pos;
-
-			//		block.BlockUpdate(world, blockPosition);
-
-					//TODO: Do lighting in here?
-
-					var vert = block.GetVertices(blockPosition, world);
-					if (block.Transparent)
+					for (var x = 0; x < ChunkWidth; x++)
+					for (var z = 0; z < ChunkDepth; z++)
+					for (var y = 0; y < 16; y++)
 					{
-						transparentVertices.AddRange(vert);
-					}
-					else
-					{
-						solidVertices.AddRange(vert);
+						Update(world, chunk,
+							index,
+							x, y, z,
+							solidVertices,
+							transparentVertices);
 					}
 				}
 			}
+		/*	else if (Scheduled == ScheduleType.Border)
+			{
+				for (var index = 0; index < Chunks.Length; index++)
+				{
+					var chunk = Chunks[index];
+					if (chunk.IsAllAir()) continue;
 
-			mesh = new Mesh(solidVertices.ToArray());
-			transparentMesh = new Mesh(transparentVertices.ToArray());
+					for (int x = 0; x < ChunkWidth; x++)
+					{
+						for (var y = 0; y < 16; y++)
+						{
+							Update(world, chunk,
+								index,
+								x, y, 0,
+								solidVertices,
+								transparentVertices);
+
+							Update(world, chunk,
+								index,
+								x, y, 15,
+								solidVertices,
+								transparentVertices);
+
+							Update(world, chunk,
+								index,
+								0, y, x,
+								solidVertices,
+								transparentVertices);
+
+							Update(world, chunk,
+								index,
+								15, y, x,
+								solidVertices,
+								transparentVertices);
+						}
+					}
+				}
+			}
+			else if (Scheduled == ScheduleType.Scheduled)
+			{
+
+			}*/
+
+			mesh = new ChunkMesh(solidVertices.ToArray(), transparentVertices.ToArray());
+		//	PositionCache = mesh.EntryPositions;
+		}
+
+		private void Update(IWorld world, ChunkSection chunk,
+			int index, int x, int y, int z,
+			List<ChunkMesh.Entry> solidVertices,
+			List<ChunkMesh.Entry> transparentVertices)
+		{
+			var stateId = chunk.GetBlockState(x, y, z);
+			var block = BlockFactory.GetBlock(stateId);
+
+			if (block.BlockId == 0 || !block.Renderable) return;
+
+			var blockPosition = new Vector3(x, y + (index * 16), z) + Position;
+
+			var vert = block.GetVertices(blockPosition, world);
+			var result = new ChunkMesh.Entry(vert, blockPosition);
+
+			if (block.Transparent)
+			{
+				transparentVertices.Add(result);
+				//transparentVertices.AddRange(vert);
+			}
+			else
+			{
+				solidVertices.Add(result);
+				//solidVertices.AddRange(vert);
+			}
 		}
 
 		public int GetHeighest()

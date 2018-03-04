@@ -61,7 +61,8 @@
     <None Remove="Program.cs" />
     <None Remove="Rendering\Camera\Camera.cs" />
     <None Remove="Rendering\Camera\FirstPersonCamera.cs" />
-    <None Remove="Rendering\RenderingManager.cs" />
+    <None Remove="Rendering\ChunkManager.cs" />
+    <None Remove="Rendering\EntityManager.cs" />
     <None Remove="Rendering\UI\Button.cs" />
     <None Remove="Rendering\UI\ChatComponent.cs" />
     <None Remove="Rendering\UI\Image.cs" />
@@ -77,6 +78,7 @@
     <None Remove="SplashTexts.cs" />
     <None Remove="Utils\AtlasGenerator.cs" />
     <None Remove="Utils\Axis.cs" />
+    <None Remove="Utils\ComparableBlockFace.cs" />
     <None Remove="Utils\FastRandom.cs" />
     <None Remove="Utils\FPSCounter.cs" />
     <None Remove="Utils\MathUtils.cs" />
@@ -139,7 +141,8 @@
     <Compile Include="Program.cs" />
     <Compile Include="Rendering\Camera\Camera.cs" />
     <Compile Include="Rendering\Camera\FirstPersonCamera.cs" />
-    <Compile Include="Rendering\RenderingManager.cs" />
+    <Compile Include="Rendering\EntityManager.cs" />
+    <Compile Include="Rendering\ChunkManager.cs" />
     <Compile Include="Rendering\UI\Button.cs" />
     <Compile Include="Rendering\UI\ChatComponent.cs" />
     <Compile Include="Rendering\UI\Image.cs" />
@@ -159,6 +162,7 @@
     <Compile Include="SplashTexts.cs" />
     <Compile Include="Utils\AtlasGenerator.cs" />
     <Compile Include="Utils\Axis.cs" />
+    <Compile Include="Utils\ComparableBlockFace.cs" />
     <Compile Include="Utils\FastRandom.cs" />
     <Compile Include="Utils\FPSCounter.cs" />
     <Compile Include="Utils\MathUtils.cs" />

@@ -161,9 +161,9 @@ namespace Alex.Gamestates
 			// foreach (var i in ActiveStates.ToArray())
 			{
                 try
-                {
-                   // lock (_lock)
-                    {
+				{
+					// lock (_lock)
+					{
 	                    activeState.UpdateCall(gameTime);
                     }
                    // i.Value.UpdateCall(gameTime);

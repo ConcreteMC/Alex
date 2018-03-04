@@ -40,43 +40,59 @@ namespace Alex.Graphics.Models
 
 		protected void CalculateBoundingBox()
 		{
-			foreach(var var in Variant)
-			foreach (var element in var.Model.Elements)
+			var c = new V3(8f, 8f, 8f);
+
+			foreach (var var in Variant)
 			{
-				var faceStart = new V3((element.From.X), (element.From.Y),
-					(element.From.Z)) / 16f;
-
-				var faceEnd = new V3((element.To.X), (element.To.Y),
-					(element.To.Z)) / 16f;
-
-				if (faceEnd.X > Max.X)
+				var modelRotationMatrix = GetModelRotationMatrix(var);
+				foreach (var element in var.Model.Elements)
 				{
-					Max.X = faceEnd.X;
-				}
+					Matrix faceRotationMatrix = Matrix.CreateTranslation(-c) * modelRotationMatrix *
+					                            Matrix.CreateTranslation(c);
 
-				if (faceEnd.Y > Max.Y)
-				{
-					Max.Y = faceEnd.Y;
-				}
+					var faceStart = new V3((element.From.X), (element.From.Y),
+						                (element.From.Z));
 
-				if (faceEnd.Z > Max.Z)
-				{
-					Max.Z = faceEnd.Z;
-				}
+					var faceEnd = new V3((element.To.X), (element.To.Y),
+						              (element.To.Z));
 
-				if (faceStart.X < Min.X)
-				{
-					Min.X = faceStart.X;
-				}
+					faceStart = V3.Transform(faceStart, faceRotationMatrix);
+					faceEnd = V3.Transform(faceEnd, faceRotationMatrix);
 
-				if (faceStart.Y < Min.Y)
-				{
-					Min.Y = faceStart.Y;
-				}
+					faceStart /= 16f;
+					faceEnd /= 16f;
+					/*
+					if (faceEnd.X > Max.X)
+					{
+						Max.X = faceEnd.X;
+					}
 
-				if (faceStart.Z < Min.Z)
-				{
-					Min.Z = faceStart.Z;
+					if (faceEnd.Y > Max.Y)
+					{
+						Max.Y = faceEnd.Y;
+					}
+
+					if (faceEnd.Z > Max.Z)
+					{
+						Max.Z = faceEnd.Z;
+					}
+
+					if (faceStart.X < Min.X)
+					{
+						Min.X = faceStart.X;
+					}
+
+					if (faceStart.Y < Min.Y)
+					{
+						Min.Y = faceStart.Y;
+					}
+
+					if (faceStart.Z < Min.Z)
+					{
+						Min.Z = faceStart.Z;
+					}*/
+					Max = Vector3.Max(Max, Vector3.Max(faceStart, faceEnd));
+					Min = Vector3.Min(Min, Vector3.Min(faceStart, faceEnd));
 				}
 			}
 		}
@@ -231,7 +247,7 @@ namespace Alex.Graphics.Models
 				        {
 					        World w = (World) world;
 
-					        if (w.RenderingManager.TryGetChunk(
+					        if (w.ChunkManager.TryGetChunk(
 						        new ChunkCoordinates(new PlayerLocation(worldPosition.X, 0, worldPosition.Z)),
 						        out IChunkColumn column))
 					        {

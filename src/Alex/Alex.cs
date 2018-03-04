@@ -62,6 +62,11 @@ namespace Alex
 			OnCharacterInput?.Invoke(this, e);
 		}
 
+		public void Init()
+		{
+
+		}
+
 		public void SaveSettings()
 		{
 			if (GameSettings.IsDirty)

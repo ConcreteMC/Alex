@@ -7,6 +7,7 @@ using System.Security.AccessControl;
 using Alex.ResourcePackLib.Json.Models;
 using ICSharpCode.SharpZipLib.Zip;
 using log4net;
+using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
 
 namespace Alex.ResourcePackLib
@@ -98,9 +99,87 @@ namespace Alex.ResourcePackLib
 			var json = stream.ReadToEnd();
 
 			Dictionary<string, EntityModel> entries = JsonConvert.DeserializeObject<Dictionary<string, EntityModel>>(json);
-			EntityModels = entries;
+			Dictionary<string, EntityModel> processedModels = new Dictionary<string, EntityModel>();
+			foreach (var e in entries)
+			{
+				e.Value.Name = e.Key;
+			}
 
-			Log.Info($"Imported {entries.Count} entity models");
+			foreach (var e in entries)
+			{
+				if (processedModels.ContainsKey(e.Key))
+					continue;
+
+				ProcessModel(e.Value, entries, processedModels);
+			}
+
+			EntityModels = processedModels;
+
+			Log.Info($"Imported {processedModels.Count} entity models");
+		}
+
+		private void ProcessModel(EntityModel model, Dictionary<string, EntityModel> models, Dictionary<string, EntityModel> processedModels)
+		{
+			string modelName = model.Name;
+			if (model.Name.Contains(":")) //This model inherits from another model.
+			{
+				string[] split = model.Name.Split(':');
+				string parent = split[1];
+				modelName = split[0];
+
+				EntityModel parentModel;
+				if (!processedModels.TryGetValue(parent, out parentModel))
+				{
+					if (models.TryGetValue(parent, out parentModel))
+					{
+						ProcessModel(parentModel, models, processedModels);
+						parentModel = processedModels[parent];
+					}
+					else
+					{
+						Log.Warn($"Failed to find parent model (Stage 1)! {model.Name}");
+						return;
+					}
+				}
+
+				if (model.Bones == null)
+				{
+					model.Bones = new EntityModelBone[0];
+				}
+
+				if (parentModel == null)
+				{
+					Log.Warn($"Failed to find parent model (Stage 2)! {model.Name}");
+					return;
+				}
+
+				if (parentModel.Bones == null || parentModel.Bones.Length == 0)
+				{
+					Log.Warn($"Parent models contains no bones! {model.Name}");
+					return;
+				}
+
+				Dictionary<string, EntityModelBone> parentBones =
+					parentModel.Bones.Where(x => x != null && !string.IsNullOrWhiteSpace(x.Name)).ToDictionary(x => x.Name, e => e);
+
+				Dictionary<string, EntityModelBone> bones =
+					model.Bones.Where(x => x != null && !string.IsNullOrWhiteSpace(x.Name)).ToDictionary(x => x.Name, e => e);
+
+				int inheritedBones = 0;
+				foreach (var bone in parentBones)
+				{
+					if (!bones.ContainsKey(bone.Key))
+					{
+						bones.Add(bone.Key, bone.Value);
+						inheritedBones++;
+					}
+				}
+
+				model.Bones = bones.Values.ToArray();
+				Log.Info($"Processed {modelName} inherited {inheritedBones} bones from {parent}");
+			}
+
+			processedModels.Add(modelName, model);
 		}
 
 		public void Dispose()

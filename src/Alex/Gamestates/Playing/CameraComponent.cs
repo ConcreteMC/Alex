@@ -160,7 +160,7 @@ namespace Alex.Gamestates.Playing
 
 	        var oldVelocity = new Vector3(Velocity.X, Velocity.Y, Velocity.Z);
 
-			float currentDrag = GetCurrentDrag();
+			float currentDrag = GetCurrentDrag() * 2.5f;
 	        float speedFactor = (0.25f * 0.7f * 0.7f);
 
 	        bool onGround = false;
@@ -217,7 +217,7 @@ namespace Alex.Gamestates.Playing
                 var feetBoundingBox = feetBlock.GetBoundingBox(feetBlockPosition);
 
 				var difference = (preview.Y) - (feetBoundingBox.Min.Y);
-				Log.Debug($"{difference}");
+				//Log.Debug($"{difference}");
                 var playerBoundingBox = GetPlayerBoundingBox(preview);
 
                 if (!headBlock.Solid && !IsColiding(playerBoundingBox, headBoundingBox) &&

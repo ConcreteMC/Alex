@@ -19,27 +19,30 @@ namespace Alex.Worlds
             Graphics = graphics;
 	        Camera = camera;
 
-			RenderingManager = new RenderingManager(alex, graphics, camera, this);
+			ChunkManager = new ChunkManager(alex, graphics, camera, this);
+			EntityManager = new EntityManager(graphics);
+
 	        WorldProvider = worldProvider;
 			WorldProvider.Init(OnChunkReceived, Unload, PlayerPositionProvider);
         }
 
-		public RenderingManager RenderingManager { get; private set; }
+		public EntityManager EntityManager { get; }
+		public ChunkManager ChunkManager { get; private set; }
 		private WorldProvider WorldProvider { get; set; }
 
 		public int Vertices
         {
-            get { return RenderingManager.Vertices; }
+            get { return ChunkManager.Vertices; }
         }
 
 		public int ChunkCount
         {
-            get { return RenderingManager.ChunkCount; }
+            get { return ChunkManager.ChunkCount; }
         }
 
 		public int ChunkUpdates
         {
-            get { return RenderingManager.ChunkUpdates; }
+            get { return ChunkManager.ChunkUpdates; }
         }
 
 		private Vector3 PlayerPositionProvider()
@@ -49,22 +52,22 @@ namespace Alex.Worlds
 
 		private void Unload(int x, int z)
 		{
-			RenderingManager.RemoveChunk(new ChunkCoordinates(x, z));
+			ChunkManager.RemoveChunk(new ChunkCoordinates(x, z));
 		}
 
 		private void OnChunkReceived(IChunkColumn chunkColumn, int x, int z)
 		{
-			RenderingManager.AddChunk(chunkColumn, new ChunkCoordinates(x, z), true);
+			ChunkManager.AddChunk(chunkColumn, new ChunkCoordinates(x, z), true);
 		}
 
 		public void ResetChunks()
         {
-            RenderingManager.ClearChunks();
+            ChunkManager.ClearChunks();
         }
 
         public void RebuildChunks()
         {
-            RenderingManager.RebuildAll();
+            ChunkManager.RebuildAll();
         }
 
         public void Render(IRenderArgs args)
@@ -72,12 +75,14 @@ namespace Alex.Worlds
             Graphics.DepthStencilState = DepthStencilState.Default;
             Graphics.SamplerStates[0] = SamplerState.PointWrap;
             
-            RenderingManager.Draw(args);
+            ChunkManager.Draw(args);
+			EntityManager.Render(args, Camera);
         }
 
-		public void Update()
+		public void Update(GameTime gameTime)
 		{
-			RenderingManager.Update();
+			ChunkManager.Update();
+			EntityManager.Update(gameTime);
 		}
 
         public Vector3 GetSpawnPoint()
@@ -124,7 +129,7 @@ namespace Alex.Worlds
             if (y < 0 || y > ChunkColumn.ChunkHeight) return 15;
 
 			IChunkColumn chunk;
-	        if (RenderingManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
+	        if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 	        {
 				return chunk.GetSkylight(x & 0xf, y & 0xff, z & 0xf);
             }
@@ -145,7 +150,7 @@ namespace Alex.Worlds
             if (y < 0 || y > ChunkColumn.ChunkHeight) return 15;
 
 			IChunkColumn chunk;
-	        if (RenderingManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
+	        if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 	        {
                 return chunk.GetBlocklight(x & 0xf, y & 0xff, z & 0xf);
             }
@@ -165,7 +170,7 @@ namespace Alex.Worlds
 		public IBlock GetBlock(int x, int y, int z)
         {
 		    IChunkColumn chunk;
-            if (RenderingManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
+            if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
             {
                 return chunk.GetBlock(x & 0xf, y & 0xff, z & 0xf);
             }
@@ -180,7 +185,7 @@ namespace Alex.Worlds
 	    public void SetBlock(int x, int y, int z, IBlock block)
 	    {
 			IChunkColumn chunk;
-		    if (RenderingManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
+		    if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 		    {
 				chunk.SetBlock(x & 0xf, y & 0xff, z & 0xf, block);
 		    }
@@ -194,7 +199,7 @@ namespace Alex.Worlds
 		public void SetBlockState(int x, int y, int z, IBlockState blockState)
 		{
 		//	IChunkColumn chunk;
-		//	if (RenderingManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
+		//	if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 			//{
 		//		chunk.SetBlockState(x & 0xf, y & 0xff, z & 0xf, blockState);
 			//}
@@ -212,7 +217,7 @@ namespace Alex.Worlds
 			_destroyed = true;
 
 			WorldProvider.Dispose();
-			RenderingManager.Dispose();
+			ChunkManager.Dispose();
 		}
 	}
 }

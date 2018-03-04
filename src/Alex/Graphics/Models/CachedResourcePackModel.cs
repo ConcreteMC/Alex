@@ -197,7 +197,7 @@ namespace Alex.Graphics.Models
 						{
 							World w = (World) world;
 
-							if (w.RenderingManager.TryGetChunk(
+							if (w.ChunkManager.TryGetChunk(
 								new ChunkCoordinates(new PlayerLocation(worldPosition.X, 0, worldPosition.Z)),
 								out IChunkColumn column))
 							{

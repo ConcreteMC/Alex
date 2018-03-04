@@ -1,6 +1,8 @@
-﻿namespace Alex.ResourcePackLib.Json.Models
+﻿using Microsoft.Xna.Framework.Graphics;
+
+namespace Alex.ResourcePackLib.Json.Models
 {
-    public class EntityModelCube
+    public sealed class EntityModelCube
     {
 		public JVector3 Origin { get; set; }
 		public JVector3 Size { get; set; }

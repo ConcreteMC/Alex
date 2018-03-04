@@ -57,34 +57,18 @@ namespace Alex.API.Graphics
         /// <summary>
         ///     The vertex declaration for this vertex type
         /// </summary>
-        public static VertexDeclaration VertexDeclaration
-        {
-            get
-            {
-                return new VertexDeclaration
-                    (
-                    new VertexElement(0, VertexElementFormat.Vector3,
-                        VertexElementUsage.Position, 0),
-                    new VertexElement(3 * sizeof(float), VertexElementFormat.Vector3,
-                        VertexElementUsage.Normal, 0),
-                    new VertexElement(6 * sizeof(float), VertexElementFormat.Vector2,
-                        VertexElementUsage.TextureCoordinate, 0),
-                    new VertexElement(8 * sizeof(float), VertexElementFormat.Color,
-                        VertexElementUsage.Color, 0)
-                    );
-            }
-        }
+        public static VertexDeclaration VertexDeclaration { get; } = new VertexDeclaration
+        (
+	        new VertexElement(0, VertexElementFormat.Vector3,
+		        VertexElementUsage.Position, 0),
+	        new VertexElement(3 * sizeof(float), VertexElementFormat.Vector3,
+		        VertexElementUsage.Normal, 0),
+	        new VertexElement(6 * sizeof(float), VertexElementFormat.Vector2,
+		        VertexElementUsage.TextureCoordinate, 0),
+	        new VertexElement(8 * sizeof(float), VertexElementFormat.Color,
+		        VertexElementUsage.Color, 0)
+        );
 
-        public void AddPosition(Vector3 pos)
-        {
-            Position += pos;
-        }
-
-        public void RemovePosition(Vector3 pos)
-        {
-            Position -= pos;
-        }
-
-        VertexDeclaration IVertexType.VertexDeclaration => VertexDeclaration;
+	    VertexDeclaration IVertexType.VertexDeclaration => VertexDeclaration;
     }
 }

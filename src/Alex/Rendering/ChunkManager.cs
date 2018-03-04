@@ -24,17 +24,16 @@ using Color = Microsoft.Xna.Framework.Color;
 
 namespace Alex.Rendering
 {
-    public class RenderingManager : IDisposable
+    public class ChunkManager : IDisposable
     {
-        private static readonly ILog Log = LogManager.GetLogger(typeof(RenderingManager));
+        private static readonly ILog Log = LogManager.GetLogger(typeof(ChunkManager));
         
         private GraphicsDevice Graphics { get; }
         private Camera.Camera Camera { get; }
         private World World { get; }
 	    private Alex Game { get; }
 
-	    private EntityModelRenderer TestEntity { get; set; }
-		public RenderingManager(Alex alex, GraphicsDevice graphics, Camera.Camera camera, World world)
+		public ChunkManager(Alex alex, GraphicsDevice graphics, Camera.Camera camera, World world)
 		{
 			Game = alex;
             Graphics = graphics;
@@ -42,27 +41,18 @@ namespace Alex.Rendering
             World = world;
             Chunks = new ConcurrentDictionary<ChunkCoordinates, IChunkColumn>();
 
-			if (alex.Resources.BedrockResourcePack.EntityModels.TryGetValue("geometry.witherBoss", out EntityModel model)
-			&& alex.Resources.BedrockResourcePack.Textures.TryGetValue("textures/entity/wither_boss/wither_invulnerable", out Bitmap bmp))
-			{
-				TestEntity = new EntityModelRenderer(model, TextureUtils.BitmapToTexture2D(graphics, bmp));
-			}
-			else
-			{
-				Log.Warn("Could not create test entity!");
-			}
-
+			var distance = (float)Math.Pow(alex.GameSettings.RenderDistance, 2);
 			Effect = new AlphaTestEffect(Graphics)
             {
                 Texture = alex.Resources.Atlas.GetAtlas(),
                 VertexColorEnabled = true,
-				World = Matrix.Identity,
-				FogEnabled = false,
-				FogColor = Color.LightGray.ToVector3(),
-				FogStart = (alex.GameSettings.RenderDistance - 3) * 16,
-				FogEnd = (alex.GameSettings.RenderDistance - 1) * 16,
-				DiffuseColor = Color.White.ToVector3(),
+				World = Matrix.Identity
             };
+			Effect.FogColor = new Vector3(0.5f, 0.5f, 0.5f);
+
+			Effect.FogEnd = distance;
+			Effect.FogStart = distance - 80f;
+			Effect.FogEnabled = true;
 
             Updater = new Thread(ChunkUpdateThread)
             {IsBackground = true};
@@ -138,13 +128,13 @@ namespace Alex.Rendering
 
 			try
 			{
-				chunk.GenerateMeshes(World, out var mesh, out var transparentMesh);
+				chunk.GenerateMeshes(World, out var mesh);
 
 				VertexBuffer opaqueVertexBuffer = chunk.VertexBuffer;
 				if (opaqueVertexBuffer == null ||
-				    mesh.Vertices.Length != opaqueVertexBuffer.VertexCount)
+				    mesh.SolidVertices.Length != opaqueVertexBuffer.VertexCount)
 				{
-					opaqueVertexBuffer = RenewVertexBuffer(mesh);
+					opaqueVertexBuffer = RenewVertexBuffer(mesh.SolidVertices);
 
 					VertexBuffer oldBuffer;
 					lock (chunk.VertexLock)
@@ -155,16 +145,16 @@ namespace Alex.Rendering
 
 					oldBuffer?.Dispose();
 				}
-				else if (mesh.Vertices.Length > 0)
+				else if (mesh.SolidVertices.Length > 0)
 				{
-					chunk.VertexBuffer.SetData(mesh.Vertices);
+					chunk.VertexBuffer.SetData(mesh.SolidVertices);
 				}
 
 				VertexBuffer transparentVertexBuffer = chunk.TransparentVertexBuffer;
 				if (transparentVertexBuffer == null ||
-				    transparentMesh.Vertices.Length != transparentVertexBuffer.VertexCount)
+				    mesh.TransparentVertices.Length != transparentVertexBuffer.VertexCount)
 				{
-					transparentVertexBuffer = RenewVertexBuffer(transparentMesh);
+					transparentVertexBuffer = RenewVertexBuffer(mesh.TransparentVertices);
 
 					VertexBuffer oldBuffer;
 					lock (chunk.VertexLock)
@@ -175,13 +165,13 @@ namespace Alex.Rendering
 
 					oldBuffer?.Dispose();
 				}
-				else if (transparentMesh.Vertices.Length > 0)
+				else if (mesh.TransparentVertices.Length > 0)
 				{
-					chunk.TransparentVertexBuffer.SetData(transparentMesh.Vertices);
+					chunk.TransparentVertexBuffer.SetData(mesh.TransparentVertices);
 				}
 
 				chunk.IsDirty = false;
-				chunk.Scheduled = false;
+				chunk.Scheduled = ScheduleType.Unscheduled;
 
 				Interlocked.Decrement(ref _chunkUpdates);
 				return true;
@@ -198,16 +188,16 @@ namespace Alex.Rendering
 		    return false;
 	    }
 
-	    private VertexBuffer RenewVertexBuffer(Mesh mesh)
+	    private VertexBuffer RenewVertexBuffer(VertexPositionNormalTextureColor[] vertices)
 	    {
 		    VertexBuffer buffer = new VertexBuffer(Graphics,
 			    VertexPositionNormalTextureColor.VertexDeclaration,
-			    mesh.Vertices.Length,
+			    vertices.Length,
 			    BufferUsage.WriteOnly);
 
-		    if (mesh.Vertices.Length > 0)
+		    if (vertices.Length > 0)
 		    {
-			    buffer.SetData(mesh.Vertices);
+			    buffer.SetData(vertices);
 		    }
 
 		    return buffer;
@@ -287,9 +277,9 @@ namespace Alex.Rendering
 				}
 
 				if ((chunk.IsDirty || (buffer == null || transparentBuffer == null)) &&
-				    !chunk.Scheduled)
+				    chunk.Scheduled == ScheduleType.Unscheduled)
 				{
-					ScheduleChunkUpdate(c.Key);
+				//	ScheduleChunkUpdate(c.Key, ScheduleType.Full);
 					if (buffer == null && transparentBuffer == null)
 					{
 						tempFailed++;
@@ -321,8 +311,10 @@ namespace Alex.Rendering
 				foreach (var pass in Effect.CurrentTechnique.Passes)
 				{
 					pass.Apply();
-					device.DrawPrimitives(PrimitiveType.TriangleList, 0, b.VertexCount /3);
+					//device.DrawPrimitives(PrimitiveType.TriangleList, 0, b.VertexCount /3);
 				}
+
+				device.DrawPrimitives(PrimitiveType.TriangleList, 0, b.VertexCount / 3);
 
 				tempVertices += b.VertexCount;
 			}
@@ -344,26 +336,25 @@ namespace Alex.Rendering
 		        device.SetVertexBuffer(b);
 				
 				foreach (var pass in Effect.CurrentTechnique.Passes)
-		        {
-			        pass.Apply();
-			        device.DrawPrimitives(PrimitiveType.TriangleList, 0, b.VertexCount /3);
-		        }
-				
-		        tempVertices += b.VertexCount;
+				{
+					pass.Apply();
+				}
+
+		        device.DrawPrimitives(PrimitiveType.TriangleList, 0, b.VertexCount / 3);
+
+				tempVertices += b.VertexCount;
 	        }
 
 			Vertices = tempVertices;
 	        RenderedChunks = tempChunks;
 
-			//TestEntity?.Render(args, Camera, World.GetSpawnPoint() );
-
 			sw.Stop();
 			if (tempFailed > 0)
 			{
-				Log.Debug(
+			/*	Log.Debug(
 					$"Frame time: {sw.Elapsed.TotalMilliseconds}ms\n\t\tTransparent: {transparentFramesFailed} / {transparentBuffers.Length} chunks\n\t\tOpaque: {opaqueFramesFailed} / {opaqueBuffers.Length} chunks\n\t\t" +
 					$"Full chunks: {tempChunks} / {chunks.Length}\n\t\t" +
-					$"Missed frames: {tempFailed}");
+					$"Missed frames: {tempFailed}");*/
 			}
 		}
 
@@ -400,34 +391,43 @@ namespace Alex.Rendering
                 return chunk;
             });
 
-	        ScheduleChunkUpdate(position);
+	        ScheduleChunkUpdate(position, ScheduleType.Full);
 
 			if (doUpdates)
             {
-                ScheduleChunkUpdate(new ChunkCoordinates(position.X + 1, position.Z));
-                ScheduleChunkUpdate(new ChunkCoordinates(position.X - 1, position.Z));
-                ScheduleChunkUpdate(new ChunkCoordinates(position.X, position.Z + 1));
-                ScheduleChunkUpdate(new ChunkCoordinates(position.X, position.Z - 1));
+                ScheduleChunkUpdate(new ChunkCoordinates(position.X + 1, position.Z), ScheduleType.Border);
+                ScheduleChunkUpdate(new ChunkCoordinates(position.X - 1, position.Z), ScheduleType.Border);
+                ScheduleChunkUpdate(new ChunkCoordinates(position.X, position.Z + 1), ScheduleType.Border);
+                ScheduleChunkUpdate(new ChunkCoordinates(position.X, position.Z - 1), ScheduleType.Border);
             }
 		}
 
-		public void ScheduleChunkUpdate(ChunkCoordinates position)
-        {
-	        if (Chunks.TryGetValue(position, out IChunkColumn chunk))
-	        {
-		        if (chunk.Scheduled)
-			        return;
+	    public void ScheduleChunkUpdate(ChunkCoordinates position, ScheduleType type)
+	    {
+		    if (Chunks.TryGetValue(position, out IChunkColumn chunk))
+		    {
+			    var currentSchedule = chunk.Scheduled;
 
-		        chunk.Scheduled = true;
+			    if (currentSchedule != ScheduleType.Unscheduled)
+			    {
+				    if (currentSchedule != ScheduleType.Full)
+				    {
+					    chunk.Scheduled = type;
+				    }
 
-		        ChunksToUpdate.Enqueue(position);
-		        _updateResetEvent.Set();
+				    return;
+			    }
 
-				Interlocked.Increment(ref _chunkUpdates);
-			}
-        }
+			    chunk.Scheduled = type;
 
-        public void RemoveChunk(ChunkCoordinates position)
+			    ChunksToUpdate.Enqueue(position);
+			    _updateResetEvent.Set();
+
+			    Interlocked.Increment(ref _chunkUpdates);
+		    }
+	    }
+
+	    public void RemoveChunk(ChunkCoordinates position)
         {
 	        IChunkColumn chunk;
 	        if (Chunks.TryRemove(position, out chunk))
@@ -440,7 +440,7 @@ namespace Alex.Rendering
         {
             foreach (var i in Chunks)
             {
-                ScheduleChunkUpdate(i.Key);
+                ScheduleChunkUpdate(i.Key, ScheduleType.Full);
             }
         }
 

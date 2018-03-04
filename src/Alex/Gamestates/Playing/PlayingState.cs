@@ -23,7 +23,7 @@ namespace Alex.Gamestates.Playing
 		private Texture2D CrosshairTexture { get; set; }
 
 		private ChatComponent Chat { get; }
-		private ThreadSafeList<IOverlay> ActiveOverlays { get; }
+		//private ThreadSafeList<IOverlay> ActiveOverlays { get; }
  	//	private WaterOverlay WaterOverlay { get; }
 		public PlayingState(Alex alex, GraphicsDevice graphics, WorldProvider worldProvider) : base(graphics)
 		{
@@ -37,7 +37,7 @@ namespace Alex.Gamestates.Playing
 
 			CamComponent = new CameraComponent(Camera, Graphics, World, alex.GameSettings);
 
-			ActiveOverlays = new ThreadSafeList<IOverlay>();
+			//ActiveOverlays = new ThreadSafeList<IOverlay>();
 			//WaterOverlay = new WaterOverlay();
 		}
 
@@ -72,7 +72,7 @@ namespace Alex.Gamestates.Playing
 
 				CheckInput(gameTime);
 
-				World.Update();
+				World.Update(gameTime);
 
 				var headBlock = World.GetBlock(Camera.Position);
 				if (headBlock.BlockId == 8 || headBlock.BlockId == 9)
@@ -262,7 +262,7 @@ namespace Alex.Gamestates.Playing
 
 					y += (int)meisured.Y;
 
-					positionString = "Chunks: " + World.ChunkCount + ", " + World.RenderingManager.RenderedChunks;
+					positionString = "Chunks: " + World.ChunkCount + ", " + World.ChunkManager.RenderedChunks;
 					meisured = Alex.Font.MeasureString(positionString);
 
 					args.SpriteBatch.FillRectangle(new Rectangle(0, y, (int)meisured.X, (int)meisured.Y),
@@ -275,7 +275,7 @@ namespace Alex.Gamestates.Playing
 				args.SpriteBatch.End();
 			}
 
-			ActiveOverlays.ForEach(x => x.Render(args));
+		//	ActiveOverlays.ForEach(x => x.Render(args));
 
 			base.Render2D(args);
 		}
