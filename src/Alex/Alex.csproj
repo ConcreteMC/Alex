@@ -16,15 +16,6 @@
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
-	<ItemGroup>
-	  <None Remove="Resources\Minecraftia.xnb" />
-	  <None Remove="Resources\no.png" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <ApplicationDefinition Include="Resources\Minecraftia.xnb" />
-	  <ApplicationDefinition Include="Resources\no.png" />
-	</ItemGroup>
 
 	<ItemGroup>
 		<Content Include="Entities\entity_metadata.txt" />

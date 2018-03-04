@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Alex.Gui;
+using Alex.API.Graphics;
 using Alex.Rendering.UI;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -99,10 +100,10 @@ namespace Alex.Gamestates
 		protected virtual void OnDraw3D(RenderArgs args) { }
 	}
 
-	public class RenderArgs
+	public class RenderArgs : IRenderArgs
 	{
-		public GameTime GameTime;
-		public GraphicsDevice GraphicsDevice;
-		public SpriteBatch SpriteBatch;
+		public GameTime GameTime { get; set; }
+		public GraphicsDevice GraphicsDevice { get; set; }
+		public SpriteBatch SpriteBatch { get; set; }
 	}
 }

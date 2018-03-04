@@ -335,7 +335,7 @@ namespace Alex.Gamestates.Playing
 		{
 			FpsCounter.Update();
 
-			World.Render();
+			World.Render(args);
 
 			base.OnDraw3D(args);
 		}

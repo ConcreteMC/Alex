@@ -142,7 +142,7 @@ namespace Alex.Worlds
 
 					var blockPosition = new Vector3(x, y + (index * 16), z) + pos;
 
-					block.BlockUpdate(world, blockPosition);
+			//		block.BlockUpdate(world, blockPosition);
 
 					//TODO: Do lighting in here?
 
