@@ -10,9 +10,6 @@ using Alex.ResourcePackLib.Json;
 
 namespace Alex.Graphics.Models
 {
-
-	//TODO:
-	//https://github.com/Thinkofname/steven-go/blob/master/blockliquid.go
 	public class LiquidBlockModel : BlockModel
 	{
 		public bool IsLava = false;
@@ -76,7 +73,7 @@ namespace Alex.Graphics.Models
 				texture = texture + "_still";
 			}
 
-			UVMap map = GetTextureUVMap(Alex.Instance.Resources, texture, 0, 16, 0, 16);
+			UVMap map = GetTextureUVMap(Alex.Instance.Resources, texture, 0, 1, 0, 6);
 
 			foreach (var f in Enum.GetValues(typeof(BlockFace)).Cast<BlockFace>())
 			{

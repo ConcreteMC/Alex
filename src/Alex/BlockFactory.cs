@@ -17,11 +17,16 @@ namespace Alex
     {
 	    private static readonly ILog Log = LogManager.GetLogger(typeof(BlockFactory));
 	    
-		private static ConcurrentDictionary<uint, Func<Block>> _registeredBlocks = new ConcurrentDictionary<uint, Func<Block>>();
-		private static ConcurrentDictionary<int, BlockMeta> _blockMeta = new ConcurrentDictionary<int, BlockMeta>();
-		private static ConcurrentDictionary<uint, BlockModel> _modelCache = new ConcurrentDictionary<uint, BlockModel>();
+		private static Dictionary<uint, Block> _registeredBlocks = new Dictionary<uint, Block>();
+		private static Dictionary<int, BlockMeta> _blockMeta = new Dictionary<int, BlockMeta>();
+		private static Dictionary<uint, BlockModel> _modelCache = new Dictionary<uint, BlockModel>();
 
 	    private static ResourcePackLib.Json.Models.BlockModel CubeModel { get; set; }
+
+	    //internal static BlockMeta GetBlockMeta(uint block)
+	    //{
+
+	   // }
 
 	    internal static void Init()
 	    {
@@ -84,7 +89,18 @@ namespace Alex
 	    private static BlockModel GetOrCacheModel(uint state, ResourceManager resources, McResourcePack resourcePack,
 			 Func<ResourceManager, BlockModel> variant)
 	    {
-		    return _modelCache.GetOrAdd(state, u => variant.Invoke(resources));
+		    if (_modelCache.TryGetValue(state, out var r))
+		    {
+			    return r;
+			}
+		    else
+		    {
+			    var v = variant.Invoke(resources);
+
+				_modelCache.TryAdd(state, v);
+			    return v;
+		    }
+		    //return _modelCache.GetOrAdd(state, u => variant.Invoke(resources));
 	    }
 
 	    internal static int LoadResources(ResourceManager resources, McResourcePack resourcePack, bool replace,
@@ -122,16 +138,6 @@ namespace Alex
 				    continue;
 			    }*/
 
-			    BlockMeta knownMeta;
-			    if (!_blockMeta.TryGetValue(blockID, out knownMeta))
-			    {
-				    knownMeta = new BlockMeta
-				    {
-					    Transparent = false,
-					    DisplayName = blockState.Value
-				    };
-			    }
-
 			    var cached = GetOrCacheModel(id, resources, resourcePack, result);
 
 			    if (Load(id, () =>
@@ -153,7 +159,17 @@ namespace Alex
 					    block = new Block(id);
 				    }
 
-				    block.BlockModel = cached;
+				    BlockMeta knownMeta;
+				    if (!_blockMeta.TryGetValue(blockID, out knownMeta))
+				    {
+					    knownMeta = new BlockMeta
+					    {
+						    Transparent = false,
+						    DisplayName = blockState.Value
+					    };
+				    }
+
+					block.BlockModel = cached;
 				    block.Transparent = knownMeta.Transparent;
 				    block.DisplayName = blockState.Value;
 				    block.LightValue = knownMeta.LightValue;
@@ -163,10 +179,10 @@ namespace Alex
 				    block.IsFullCube = knownMeta.IsFullCube;
 				    block.IsFullBlock = knownMeta.IsFullBlock;
 
-				    foreach (var solid in knownMeta.IsSideSolid)
-				    {
-					    block.SetSideSolid(solid.Key, solid.Value);
-				    }
+				  //  foreach (var solid in knownMeta.IsSideSolid)
+				  //  {
+					//    block.SetSideSolid(solid.Key, solid.Value);
+				   // }
 
 				    return block;
 			    }, replace))
@@ -175,6 +191,11 @@ namespace Alex
 			    }
 		    }
 
+		 //   for (int level = 0; level < 8; level++)
+		  //  {
+		//		Block.GetBlockStateID(8, )
+		  //  }
+
 		    return importCounter;
 	    }
 
@@ -182,11 +203,19 @@ namespace Alex
 	    {
 		    if (replace)
 		    {
-			    _registeredBlocks.AddOrUpdate(id, blockFunction, (u, func) => { return blockFunction; });
+			    if (_registeredBlocks.ContainsKey(id))
+			    {
+				    _registeredBlocks[id] = blockFunction();
+			    }
+			    else
+			    {
+					_registeredBlocks.Add(id, blockFunction());
+			    }
+			   // _registeredBlocks.AddOrUpdate(id, blockFunction, (u, func) => { return blockFunction; });
 			    return true;
 		    }
 
-		    return _registeredBlocks.TryAdd(id, blockFunction);
+		    return _registeredBlocks.TryAdd(id, blockFunction());
 	    }
 
 	    private static Func<ResourceManager, BlockModel> Parse(McResourcePack resources, string rawBlockState, out string variantKey)
@@ -281,7 +310,9 @@ namespace Alex
 
 				
 			}
-			
+
+		   // var b = Blocks.State.BlockState.FromString(split1[1]);
+
 		    if (resources.BlockStates.TryGetValue(name, out BlockState blockState))
 		    {
 			    if (blockState != null && blockState.Variants != null && blockState.Variants.Count > 0)
@@ -398,9 +429,9 @@ namespace Alex
 
 			if (blockID == 166) return new InvisibleBedrock(false);
 
-			if (_registeredBlocks.TryGetValue(palleteId, out Func<Block> b))
+			if (_registeredBlocks.TryGetValue(palleteId, out Block b))
 		    {
-			    return b();
+			    return b;
 		    }
 
 		    return new Block(palleteId)

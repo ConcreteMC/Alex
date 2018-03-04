@@ -17,7 +17,7 @@ namespace Alex.ResourcePackLib
 		private static readonly ILog Log = LogManager.GetLogger(typeof(BedrockResourcePack));
 
 		public IReadOnlyDictionary<string, EntityModel> EntityModels { get; private set; }
-		public IReadOnlyDictionary<string, Bitmap> Textures { get; private set; }
+		public IReadOnlyDictionary<string, Bitmap> EntityTextures { get; private set; }
 		private ZipFile _archive;
 		public BedrockResourcePack(ZipFile archive)
 		{
@@ -80,17 +80,20 @@ namespace Alex.ResourcePackLib
 			{
 				if (textures.ContainsKey(def))
 					continue;
-				
-				var e = _archive.GetEntry(def + ".png");
-				if (e != null && e.IsFile)
+
+				if (def.StartsWith("textures/entity/"))
 				{
-					Bitmap bmp = new Bitmap(_archive.GetInputStream(e));
-					textures.Add(def, bmp);
+					var e = _archive.GetEntry(def + ".png");
+					if (e != null && e.IsFile)
+					{
+						Bitmap bmp = new Bitmap(_archive.GetInputStream(e));
+						textures.Add(def, bmp);
+					}
 				}
 			}
 
-			Textures = textures;
-			Log.Info($"Loaded {textures.Count} textures");
+			EntityTextures = textures;
+			Log.Info($"Loaded {textures.Count} entity textures");
 		}
 
 		private void LoadMobs(ZipEntry entry)

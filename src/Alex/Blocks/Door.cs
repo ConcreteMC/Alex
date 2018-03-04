@@ -11,9 +11,9 @@ namespace Alex.Blocks
 	{
 		private static ILog Log = LogManager.GetLogger(typeof(Door));
 
-		public static PropertyBool OPEN = PropertyBool.Create("open");
-		public static PropertyBool POWERED = PropertyBool.Create("powered");
-		public static PropertyFace FACING = PropertyFace.Create("facing");
+		public static PropertyBool OPEN = new PropertyBool("open");
+		public static PropertyBool POWERED = new PropertyBool("powered");
+		public static PropertyFace FACING = new PropertyFace("facing");
 
 		public bool IsUpper => (Metadata & 0x08) == 0x08;
 		public bool IsOpen => (Metadata & 0x04) == 0x04;

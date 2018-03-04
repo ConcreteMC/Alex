@@ -362,5 +362,10 @@ namespace Alex.Graphics.Models
 				}
 			}
 		}
+
+		public override string ToString()
+		{
+			return Model.Name;
+		}
 	}
 }

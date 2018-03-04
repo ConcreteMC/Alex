@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using Alex.API.Blocks.State;
 using Alex.API.Graphics;
 using Alex.API.World;
+using Alex.Blocks.State;
 using Alex.Graphics.Models;
+
 using Alex.Utils;
 using log4net;
 using Microsoft.Xna.Framework;
@@ -34,7 +35,8 @@ namespace Alex.Blocks
 	    public int LightOpacity = 0;
 
 		public BlockModel BlockModel { get; set; }
-	    protected Block(int blockId, byte metadata) : this(GetBlockStateID(blockId, metadata))
+		public BlockState BlockState { get; set; }
+		protected Block(int blockId, byte metadata) : this(GetBlockStateID(blockId, metadata))
 	    {
 		    
 	    }

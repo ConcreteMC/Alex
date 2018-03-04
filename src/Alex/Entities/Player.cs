@@ -1,12 +1,14 @@
-﻿namespace Alex.Entities
+﻿using MiNET.Entities;
+
+namespace Alex.Entities
 {
-    public class Player : LivingEntity
+    public class Player : PlayerMob
     {
         public static readonly float EyeLevel = 1.625F;
 
-	    public Player()
+	    public Player(string name) : base(name, null)
 	    {
-		    Model = "geometry.humanoid";
+		   // Model = "geometry.humanoid";
 			
 	    }
     }

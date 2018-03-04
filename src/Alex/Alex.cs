@@ -153,7 +153,11 @@ namespace Alex
 
 			Log.Info($"Loading resources...");
 			Resources = new ResourceManager(GraphicsDevice);
-			Resources.CheckResources(GraphicsDevice, GameSettings);
+			if (!Resources.CheckResources(GraphicsDevice, GameSettings))
+			{
+				Exit();
+				return;
+			}
 
 			Mouse.SetPosition(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2);
 

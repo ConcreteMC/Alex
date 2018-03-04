@@ -1,16 +1,25 @@
-﻿using Alex.Graphics.Models;
+﻿using System;
+using Alex.Graphics.Models;
 using Microsoft.Xna.Framework;
+using MiNET.Net;
+using MiNET.Worlds;
 
 namespace Alex.Entities
 {
-    public class Entity
+   /* public class Entity : MiNET.Entities.Entity
     {
-		public Vector3 Position { get; protected set; } = Vector3.Zero;
 		public string Model { get; protected set; }
-		internal EntityModelRenderer ModelRenderer { get; }
-	    protected Entity()
+		internal EntityModelRenderer ModelRenderer { get; set; }
+		public UUID UUID { get; set; } = new UUID(Guid.Empty.ToByteArray());
+	    public override string ToString()
+	    {
+		    return Model;
+	    }
+
+	    public Entity(int entityTypeId, Level level) : base(entityTypeId, level)
 	    {
 
 	    }
-    }
+		
+    }*/
 }

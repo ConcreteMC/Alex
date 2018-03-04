@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <Folder Include="Blocks\Properties\" />
+    <Folder Include="Blocks\State\" />
   </ItemGroup>
 
 </Project>

@@ -272,6 +272,8 @@ namespace Alex.Graphics.Models
 		    if (cZ < 0 || cZ > 16)
 			    return false;
 
+		   // var blockStateId = world.GetBlockStateId(pos);
+			//BlockFactory.
 		    var block = world.GetBlock(pos);
 
 		    if (me.Solid && block.Transparent) return true;

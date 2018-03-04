@@ -355,7 +355,7 @@ namespace Alex.Worlds
 					NbtList entities = dataTag["Entities"] as NbtList;
 					if (entities != null)
 					{
-						//chunk.Entities = entities.ToArray<NbtCompound>();
+						chunk.Entities = entities.ToArray<NbtCompound>();
 					}
 
 					NbtList blockEntities = dataTag["TileEntities"] as NbtList;

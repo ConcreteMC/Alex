@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Alex.API.Blocks.State;
 using Alex.API.Graphics;
 using Alex.API.World;
+using fNbt.Tags;
 using log4net;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -59,6 +59,12 @@ namespace Alex.Worlds
 			//ChunkSection chunk = Chunks[by >> 4];
 			//return BlockFactory.GetBlock(chunk.GetBlockState(bx, by - 16 * (by >> 4), bz)).BlockState;
 		//}
+
+		public uint GetBlockStateID(int bx, int by, int bz)
+		{
+			ChunkSection chunk = Chunks[by >> 4];
+			return chunk.GetBlockState(bx, by - 16 * (by >> 4), bz);
+		}
 
 		public IBlock GetBlock(int bx, int by, int bz)
 		{
@@ -121,6 +127,9 @@ namespace Alex.Worlds
 
 		private IReadOnlyDictionary<Vector3, ChunkMesh.EntryPosition> PositionCache { get; set; } = null;
 		private Vector3 Position => new Vector3(X * 16, 0, Z*16);
+
+		public NbtCompound[] Entities { get; internal set; }
+
 		public void GenerateMeshes(IWorld world, out ChunkMesh mesh)
 		{
 			//var solidVertices = new List<VertexPositionNormalTextureColor>();

@@ -1,5 +1,4 @@
-﻿using Alex.API.Blocks.State;
-using Alex.API.Graphics;
+﻿using Alex.API.Graphics;
 using Microsoft.Xna.Framework;
 
 namespace Alex.API.World
@@ -29,7 +28,7 @@ namespace Alex.API.World
 		void SetBlock(float x, float y, float z, IBlock block);
 		void SetBlock(int x, int y, int z, IBlock block);
 
-		void SetBlockState(float x, float y, float z, IBlockState blockState);
-		IBlockState GetBlockState(float x, float y, float z);
+		//void SetBlockState(float x, float y, float z, IBlockState blockState);
+		//IBlockState GetBlockState(float x, float y, float z);
 	}
 }

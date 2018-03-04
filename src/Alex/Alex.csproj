@@ -4,17 +4,19 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.0</TargetFramework>
 	  <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-	  <DefineConstants>TRACE;DEBUG;WINDOWS;LINUX;NETCOREAPP2_0;MONOGAME</DefineConstants>
+	  <DefineConstants>TRACE;DEBUG;WINDOWS;NETCOREAPP2_0;MONOGAME;RELEASE;NETCOREAPP2_0</DefineConstants>
 	  <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PlatformTarget>x64</PlatformTarget>
+    <OutputPath>bin\Debug\</OutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
 
   <ItemGroup>
@@ -29,12 +31,11 @@
     <None Remove="Blocks\Lava.cs" />
     <None Remove="Blocks\Properties\PropertyBool.cs" />
     <None Remove="Blocks\Properties\PropertyFacing.cs" />
-    <None Remove="Blocks\Properties\PropertyHelper.cs" />
     <None Remove="Blocks\State\BlockState.cs" />
-    <None Remove="Blocks\State\StateImplementation.cs" />
     <None Remove="Blocks\Water.cs" />
     <None Remove="Blocks\WoodenDoor.cs" />
     <None Remove="Entities\Entity.cs" />
+    <None Remove="Entities\EntityFactory.cs" />
     <None Remove="Entities\entity_metadata.txt" />
     <None Remove="Entities\LivingEntity.cs" />
     <None Remove="Entities\Player.cs" />
@@ -82,6 +83,7 @@
     <None Remove="Utils\FastRandom.cs" />
     <None Remove="Utils\FPSCounter.cs" />
     <None Remove="Utils\MathUtils.cs" />
+    <None Remove="Utils\MiNETUtils.cs" />
     <None Remove="Utils\PlotCell3F.cs" />
     <None Remove="Utils\RayTracer.cs" />
     <None Remove="Utils\TextureSide.cs" />
@@ -110,12 +112,11 @@
     <Compile Include="Blocks\Lava.cs" />
     <Compile Include="Blocks\Properties\PropertyFacing.cs" />
     <Compile Include="Blocks\Properties\PropertyBool.cs" />
-    <Compile Include="Blocks\Properties\PropertyHelper.cs" />
     <Compile Include="Blocks\State\BlockState.cs" />
-    <Compile Include="Blocks\State\StateImplementation.cs" />
     <Compile Include="Blocks\Water.cs" />
     <Compile Include="Blocks\WoodenDoor.cs" />
     <Compile Include="Entities\Entity.cs" />
+    <Compile Include="Entities\EntityFactory.cs" />
     <Compile Include="Entities\LivingEntity.cs" />
     <Compile Include="Entities\Player.cs" />
     <Compile Include="Extensions.cs" />
@@ -166,6 +167,7 @@
     <Compile Include="Utils\FastRandom.cs" />
     <Compile Include="Utils\FPSCounter.cs" />
     <Compile Include="Utils\MathUtils.cs" />
+    <Compile Include="Utils\MiNETUtils.cs" />
     <Compile Include="Utils\PlotCell3F.cs" />
     <Compile Include="Utils\RayTracer.cs" />
     <Compile Include="Utils\TextureSide.cs" />
@@ -212,7 +214,7 @@
 	    <HintPath>..\External\CoreFNBT.dll</HintPath>
 	  </Reference>
 	  <Reference Include="MiNET">
-	    <HintPath>..\External\MiNET.dll</HintPath>
+	    <HintPath>..\CoreRT\External\MiNET.dll</HintPath>
 	  </Reference>
 	</ItemGroup>
 

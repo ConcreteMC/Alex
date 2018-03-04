@@ -1,5 +1,4 @@
 ﻿using System;
-using Alex.API.Blocks.State;
 using Alex.API.Graphics;
 using Alex.API.World;
 using Alex.Gamestates;
@@ -52,7 +51,9 @@ namespace Alex.Worlds
 
 		private void Unload(int x, int z)
 		{
-			ChunkManager.RemoveChunk(new ChunkCoordinates(x, z));
+			var chunkCoordinates = new ChunkCoordinates(x, z);
+			ChunkManager.RemoveChunk(chunkCoordinates);
+			EntityManager.UnloadEntities(chunkCoordinates);
 		}
 
 		private void OnChunkReceived(IChunkColumn chunkColumn, int x, int z)
@@ -157,7 +158,7 @@ namespace Alex.Worlds
             return 15;
         }
 
-        public IBlock GetBlock(Vector3 position)
+		public IBlock GetBlock(Vector3 position)
         {
             return GetBlock(position.X, position.Y, position.Z);
         }
@@ -191,7 +192,7 @@ namespace Alex.Worlds
 		    }
 	    }
 
-		public void SetBlockState(float x, float y, float z, IBlockState blockState)
+		/*public void SetBlockState(float x, float y, float z, IBlockState blockState)
 		{
 			SetBlockState((int)x, (int)y, (int)z, blockState);
 		}
@@ -204,11 +205,11 @@ namespace Alex.Worlds
 		//		chunk.SetBlockState(x & 0xf, y & 0xff, z & 0xf, blockState);
 			//}
 		}
-
+		
 		public IBlockState GetBlockState(float x, float y, float z)
 		{
 			throw new NotImplementedException();
-		}
+		}*/
 
 		private bool _destroyed = false;
 		public void Destroy()
@@ -216,6 +217,7 @@ namespace Alex.Worlds
 			if (_destroyed) return;
 			_destroyed = true;
 
+			EntityManager.Dispose();
 			WorldProvider.Dispose();
 			ChunkManager.Dispose();
 		}
