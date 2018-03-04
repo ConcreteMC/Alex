@@ -9,7 +9,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.Gamestates
 {
-	public class MenuState : Gamestate
+	public class MenuState : GameState
 	{
 		private Alex Alex { get; }
 		public MenuState(Alex alex) : base(alex)
@@ -18,7 +18,8 @@ namespace Alex.Gamestates
 		}
 
 		private Texture2D BackGround { get; set; }
-		public override void Init(RenderArgs args)
+
+		protected override void OnLoad(RenderArgs args)
 		{
 			BackGround = TextureUtils.ImageToTexture2D(args.GraphicsDevice, Resources.mcbg);
 
@@ -94,14 +95,14 @@ namespace Alex.Gamestates
 			generator.Initialize();
 
 			PlayingState playState = new PlayingState(Alex, Graphics, new SPWorldProvider(Alex, generator));
-			Alex.GamestateManager.AddState("play", playState);
-			Alex.GamestateManager.SetActiveState("play");
+			Alex.GameStateManager.AddState("play", playState);
+			Alex.GameStateManager.SetActiveState("play");
 			Alex.IsMouseVisible = false;
 		}
 
 		private void Logoutbtn_OnButtonClick()
 		{
-			Alex.GamestateManager.SetActiveState("login");
+			Alex.GameStateManager.SetActiveState("login");
 		}
 
 		private void Opton_OnButtonClick()
@@ -111,17 +112,17 @@ namespace Alex.Gamestates
 
 		private void Mpbtn_OnButtonClick()
 		{
-			Alex.GamestateManager.AddState("serverMenu", new ServerState(Alex));
-			Alex.GamestateManager.SetActiveState("serverMenu");
+			Alex.GameStateManager.AddState("serverMenu", new ServerState(Alex));
+			Alex.GameStateManager.SetActiveState("serverMenu");
 		}
 
-		public override void Stop()
+		protected override void OnUnload()
 		{
 			//Alex.HideMouse();
 			Alex.IsMouseVisible = false;
 		}
 
-		public override void Render2D(RenderArgs args)
+		protected override void OnDraw2D(RenderArgs args)
 		{
 			args.SpriteBatch.Begin();
 
@@ -137,7 +138,7 @@ namespace Alex.Gamestates
 			args.SpriteBatch.End();
 		}
 
-		public override void OnUpdate(GameTime gameTime)
+		protected override void OnUpdate(GameTime gameTime)
 		{
 			Controls["mpbtn"].Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y - 30);
 

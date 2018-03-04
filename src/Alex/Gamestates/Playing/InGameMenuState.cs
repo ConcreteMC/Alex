@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework.Input;
 
 namespace Alex.Gamestates.Playing
 {
-	public class InGameMenuState : Gamestate
+	public class InGameMenuState : GameState
 	{
 		private Alex Alex { get; }
 		private PlayingState State { get; }
@@ -31,23 +31,23 @@ namespace Alex.Gamestates.Playing
 		private void ReturnButtonOnOnButtonClick()
 		{
 			Alex.IsMouseVisible = false;
-			Alex.GamestateManager.SetActiveState(State);
+			Alex.GameStateManager.SetActiveState(State);
 		}
 
 		private void DisconnectButtonOnOnButtonClick()
 		{
 			// State.Disconnect();
-			Alex.GamestateManager.SetActiveState("menu");
-			Alex.GamestateManager.RemoveState("serverMenu");
-			Alex.GamestateManager.RemoveState("play");
+			Alex.GameStateManager.SetActiveState("menu");
+			Alex.GameStateManager.RemoveState("serverMenu");
+			Alex.GameStateManager.RemoveState("play");
 		}
 
-		public override void Render3D(RenderArgs args)
+		protected override void OnDraw3D(RenderArgs args)
 		{
-			State.Render3D(args);
+			State.Draw3D(args);
 		}
 
-		public override void Render2D(RenderArgs args)
+		protected override void OnDraw2D(RenderArgs args)
 		{
 			Viewport viewPort = Viewport;
 			SpriteBatch sb = args.SpriteBatch;
@@ -60,7 +60,7 @@ namespace Alex.Gamestates.Playing
 		}
 
 		private KeyboardState PreviousKeyboardState { get; set; }
-		public override void OnUpdate(GameTime gameTime)
+		protected override void OnUpdate(GameTime gameTime)
 		{
 			Controls["returnBtn"].Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y - 30);
 			Controls["disconnectBtn"].Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 20);

@@ -3,14 +3,14 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.Gamestates
 {
-	public class SplashScreen : Gamestate
+	public class SplashScreen : GameState
 	{
 		public SplashScreen(Alex alex) : base(alex)
 		{
 
 		}
 
-		public override void Init(RenderArgs args)
+		protected override void OnLoad(RenderArgs args)
 		{
 			Controls.Add("logo", new Logo()
 			{

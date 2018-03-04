@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Net;
+using Alex.Gui.Themes;
+using Alex.Rendering;
 using Alex.ResourcePackLib;
 using Alex.Utils;
 using log4net;
@@ -17,12 +19,15 @@ namespace Alex
 		public McResourcePack ResourcePack { get; private set; }
 		public AtlasGenerator Atlas { get; private set; }
 
+		public ResourcePackUiThemeBuilder UiThemeFactory { get;private set; }
+
 		private GraphicsDevice Graphics { get; set; }
 
 	    public ResourceManager(GraphicsDevice graphics)
 	    {
 		    Graphics = graphics;
 		    Atlas = new AtlasGenerator(Graphics);
+			UiThemeFactory = new ResourcePackUiThemeBuilder(Graphics);
 		}
 
 	    private const string AssetVersion = "1.12"; //"18w07c";
@@ -72,7 +77,10 @@ namespace Alex
 				int imported = BlockFactory.LoadResources(this, resourcePack, replaceModels, reportMissingModels);
 				sw.Stop();
 				Log.Info($"Imported {imported} blockstates from resourcepack in {sw.ElapsedMilliseconds}ms!");
-		    }
+
+			    UiThemeFactory.LoadResources(this, resourcePack, replaceTextures);
+
+			}
 
 		    return resourcePack;
 	    }

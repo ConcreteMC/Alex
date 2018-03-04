@@ -13,27 +13,20 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.Gamestates
 {
-	public class TitleState : Gamestate
+	public class TitleState : GameState
 	{
-		private ResourceManager _resourceManager;
 
-		public TitleState(Alex game) : base(game)
+		public TitleState(Alex alex) : base(alex)
 		{
-			_resourceManager = game.Resources;
 		}
 
-		public override void Init(RenderArgs args)
+		protected override void OnLoad(RenderArgs args)
 		{
-			var bgTexture = TextureUtils.ImageToTexture2D(args.GraphicsDevice, Resources.mcbg);
-			var logoTexture = TextureUtils.ImageToTexture2D(args.GraphicsDevice, Resources.logo);
-
-			Gui.Root.BackgroundImage = bgTexture;
-			//Gui.Root.HorizontalContentAlignment = HorizontalAlignment.Left;
+			Gui.ClassName = "TitleScreenRoot";
 
 			var menuWrapper = new UiPanel()
 			{
 				Width = 250,
-				BackgroundColor = new Color(Color.Black, 0.2f),
 				Margin = new Thickness(100, 0, 100, 0),
 				Padding = new Thickness(10),
 				HorizontalContentAlignment = HorizontalAlignment.Center,
@@ -49,7 +42,6 @@ namespace Alex.Gamestates
 			{
 				Width = 200,
 				Height = 40,
-				BackgroundColor = Color.Gray,
 
 			};
 			playButton.Label.Font = Alex.Font;
@@ -60,7 +52,6 @@ namespace Alex.Gamestates
 			{
 				Width = 200,
 				Height = 40,
-				BackgroundColor = Color.Gray,
 
 			};
 			debugButton.Label.Font = Alex.Font;
@@ -71,7 +62,6 @@ namespace Alex.Gamestates
 			{
 				Width = 200,
 				Height = 40,
-				BackgroundColor = Color.Gray,
 
 			};
 			optionsButton.Label.Font = Alex.Font;
@@ -82,7 +72,6 @@ namespace Alex.Gamestates
 			{
 				Width = 200,
 				Height = 40,
-				BackgroundColor = Color.Gray,
 
 			};
 			exitButton.Label.Font = Alex.Font;
@@ -90,19 +79,18 @@ namespace Alex.Gamestates
 
 			menuWrapper.Controls.Add(stackMenu);
 
-			Gui.Root.Controls.Add(menuWrapper);
+			Gui.Controls.Add(menuWrapper);
 
 			var logo = new UiElement()
 			{
-				BackgroundColor = new Color(Color.Black, 0.8f),
-				BackgroundImage = logoTexture,
+				ClassName = "TitleScreenLogo",
 				Width = 450,
 				Height = 150,
 				Margin = new Thickness(500, 100, 100, 100)
 			};
-			Gui.Root.Controls.Add(logo);
+			Gui.Controls.Add(logo);
 
-			Game.IsMouseVisible = true;
+			Alex.IsMouseVisible = true;
 		}
 
 

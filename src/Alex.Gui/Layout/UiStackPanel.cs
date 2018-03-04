@@ -17,6 +17,23 @@ namespace Alex.Gui.Layout
 
 		}
 
+
+		//public override void UpdateSize()
+		//{
+		//	base.UpdateSize();
+
+		//	if (Orientation == Orientation.Horizontal)
+		//	{
+		//		ActualWidth = Controls.Sum(c => c.Bounds.Width);
+		//		ActualHeight = Controls.Max(c => c.Bounds.Height);
+		//	}
+		//	else if (Orientation == Orientation.Vertical)
+		//	{
+		//		ActualWidth = Controls.Max(c => c.Bounds.Width);
+		//		ActualHeight = Controls.Sum(c => c.Bounds.Height);
+		//	}
+		//}
+
 		protected override void OnUpdateLayout()
 		{
 			base.OnUpdateLayout();
@@ -25,18 +42,22 @@ namespace Alex.Gui.Layout
 
 			foreach (var control in Controls.ToArray())
 			{
+				control.UpdateSize();
+
 				if (Orientation == Orientation.Horizontal)
 				{
 					// Increase X
-					control.Offset = new Point(offset, 0);
-					offset += control.Bounds.Width;
+					control.Offset = new Point(offset, control.Offset.Y);
+					offset += control.OuterBounds.Width;
 				}
 				else if (Orientation == Orientation.Vertical)
 				{
 					// Increase Y
-					control.Offset = new Point(0, offset);
-					offset += control.Bounds.Height;
+					control.Offset = new Point(control.Offset.X, offset);
+					offset += control.OuterBounds.Height;
 				}
+
+				control.UpdateLayout();
 			}
 		}
 	}

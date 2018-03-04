@@ -274,6 +274,49 @@ namespace Alex.ResourcePackLib
 			return true;
 		}
 
+		public bool TryGetStream(string filePath, out Stream stream)
+		{
+			stream = null;
+			var textureFile =
+				_archive.Entries.FirstOrDefault(e => e.FullName.Replace('/', '\\').Equals(filePath.Replace('/', '\\'), StringComparison.InvariantCultureIgnoreCase));
+			if (textureFile == null) return false;
+
+			using (var fileStream = textureFile.Open())
+			{
+				stream = new MemoryStream();
+				fileStream.CopyTo(stream);
+			}
+			return true;
+		}
+
+		public bool TryGetJson<TValue>(string filePath, out TValue value)
+		{
+			if (TryGetJson(filePath, out var json))
+			{
+				value = MCJsonConvert.DeserializeObject<TValue>(json);
+				return true;
+			}
+
+			value = default(TValue);
+			return false;
+		}
+
+		public bool TryGetJson(string filePath, out string json)
+		{
+			if (TryGetStream(filePath + ".json", out var stream))
+			{
+				using (var sr = new StreamReader(stream))
+				{
+					json = sr.ReadToEnd();
+				}
+
+				return true;
+			}
+
+			json = null;
+			return false;
+		}
+
 		public bool TryGetTexture(BlockModel model, string textureName, out Bitmap texture)
 		{
 			while (textureName.StartsWith("#"))

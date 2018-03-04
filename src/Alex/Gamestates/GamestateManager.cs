@@ -1,34 +1,40 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Threading;
+using Alex.Gui;
+using Alex.Gui.Themes;
+using Alex.Rendering;
 using log4net;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.Gamestates
 {
-    public class GamestateManager
+    public class GameStateManager
     {
-        private static readonly ILog Log = LogManager.GetLogger(typeof(GamestateManager));
+        private static readonly ILog Log = LogManager.GetLogger(typeof(GameStateManager));
         
-        private ConcurrentDictionary<string, Gamestate> ActiveStates { get; }
-        private Gamestate ActiveState { get; set; }
+        private ConcurrentDictionary<string, GameState> ActiveStates { get; }
+        private GameState ActiveState { get; set; }
 
         private GraphicsDevice Graphics { get; }
         private SpriteBatch SpriteBatch { get; }
 
+	    private GuiManager GuiManager { get; }
+
 		private ReaderWriterLockSlim Lock = new ReaderWriterLockSlim();
-        public GamestateManager(GraphicsDevice graphics, SpriteBatch spriteBatch)
+        public GameStateManager(GraphicsDevice graphics, SpriteBatch spriteBatch, GuiManager guiManager)
         {
             Graphics = graphics;
             SpriteBatch = spriteBatch;
+	        GuiManager = guiManager;
 
-            ActiveStates = new ConcurrentDictionary<string, Gamestate>();
-        }
+            ActiveStates = new ConcurrentDictionary<string, GameState>();
+		}
 
-        public void AddState(string name, Gamestate state)
+        public void AddState(string name, GameState state)
         {
-            state.Initialise(new RenderArgs()
+            state.Load(new RenderArgs()
             {
                 SpriteBatch = SpriteBatch,
                 GraphicsDevice = Graphics,
@@ -43,7 +49,7 @@ namespace Alex.Gamestates
 
         public bool RemoveState(string name)
         {
-            Gamestate state;
+            GameState state;
             if (ActiveStates.TryRemove(name, out state))
             {
 				// lock (_lock)
@@ -52,15 +58,7 @@ namespace Alex.Gamestates
 	            {
 		            if (ActiveState == state)
 		            {
-						Lock.EnterWriteLock();
-			            try
-			            {
-				            ActiveState = null;
-			            }
-			            finally
-			            {
-							Lock.ExitWriteLock();
-			            }
+			            SetActiveState((GameState) null);
 		            }
 	            }
 	            finally
@@ -68,18 +66,20 @@ namespace Alex.Gamestates
 					Lock.ExitUpgradeableReadLock();
 	            }
 
-	            state.Stop();
+	            state.Unload();
 				return true;
             }
             return false;
         }
 
-        public bool SetActiveState(Gamestate state)
+        public bool SetActiveState(GameState state)
         {
 			Lock.EnterWriteLock();
 	        try
 	        {
+				ActiveState?.Hide();
 		        ActiveState = state;
+				state?.Show();
 	        }
 	        finally
 	        {
@@ -91,27 +91,18 @@ namespace Alex.Gamestates
 
         public bool SetActiveState(string name)
         {
-            Gamestate state;
+            GameState state;
             if (!ActiveStates.TryGetValue(name, out state))
             {
                 return false;
             }
 
-            Lock.EnterWriteLock();
-	        try
-	        {
-		        ActiveState = state;
-	        }
-	        finally
-	        {
-				Lock.ExitWriteLock();
-	        }
-            return true;
+	        return SetActiveState(state);
         }
 
         public void Draw(GameTime gameTime)
         {
-	        Gamestate activeState;
+	        GameState activeState;
 			Lock.EnterReadLock();
 	        try
 	        {
@@ -135,8 +126,8 @@ namespace Alex.Gamestates
                         GraphicsDevice = Graphics
                     };
 
-	                activeState.Rendering3D(args);
-	                activeState.Rendering2D(args);
+	                activeState.Draw3D(args);
+	                activeState.Draw2D(args);
                 }
                 catch (Exception ex)
                 {
@@ -147,7 +138,7 @@ namespace Alex.Gamestates
 
         public void Update(GameTime gameTime)
 		{
-			Gamestate activeState;
+			GameState activeState;
 			Lock.EnterReadLock();
 			try
 			{
@@ -164,7 +155,7 @@ namespace Alex.Gamestates
                 {
                    // lock (_lock)
                     {
-	                    activeState.UpdateCall(gameTime);
+	                    activeState.Update(gameTime);
                     }
                    // i.Value.UpdateCall(gameTime);
                 }

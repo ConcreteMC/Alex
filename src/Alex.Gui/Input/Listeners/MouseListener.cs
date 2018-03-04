@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework.Input;
 
 namespace Alex.Gui.Input.Listeners
 {
-    public class MouseListener
+    public class MouseListener : IMouseListener
     {
 
         public event EventHandler<MouseEventArgs> MouseDown;
@@ -14,6 +14,9 @@ namespace Alex.Gui.Input.Listeners
         
         public event EventHandler<MouseEventArgs> MouseMove;
         public event EventHandler<MouseEventArgs> MouseScroll;
+
+        public Point Position { get; private set; }
+        public MouseState CurrentState => _currentState;
 
         public int ClickThresholdMiliseconds { get; set; } = 1000;
 
@@ -29,6 +32,16 @@ namespace Alex.Gui.Input.Listeners
         {
             _lastGameTime = gameTime;
             _currentState = Mouse.GetState();
+
+            Position = _currentState.Position;
+
+            var moveDelta = _lastState.Position - _currentState.Position;
+            var moveDistance = (moveDelta.X * moveDelta.X) + (moveDelta.Y * moveDelta.Y);
+            if (moveDistance > 0)
+            {
+                var args = new MouseEventArgs(_lastState, _currentState, MouseButton.None);
+                MouseMove?.Invoke(this, args);
+            }
 
             CheckButton(s => s.LeftButton, MouseButton.Left);
             CheckButton(s => s.MiddleButton, MouseButton.Middle);

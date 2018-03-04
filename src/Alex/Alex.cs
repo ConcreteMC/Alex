@@ -3,6 +3,9 @@ using System.IO;
 using System.Net;
 using System.Threading;
 using Alex.Gamestates;
+using Alex.Gui;
+using Alex.Gui.Themes;
+using Alex.Rendering;
 using log4net;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -25,8 +28,11 @@ namespace Alex
 		private SpriteBatch _spriteBatch;
 
 		public static Alex Instance { get; private set; }
-		public GamestateManager GamestateManager { get; private set; }
+		public GameStateManager GameStateManager { get; private set; }
 		public ResourceManager Resources { get; private set; }
+
+		public GuiManager GuiManager { get; private set; }
+
 		public Alex()
 		{
 			Instance = this;
@@ -55,6 +61,7 @@ namespace Alex
 				}
 			};
 
+			GuiManager = new GuiManager(this);
 		}
 
 		public static EventHandler<TextInputEventArgs> OnCharacterInput;
@@ -104,10 +111,11 @@ namespace Alex
 		protected override void LoadContent()
 		{
 			_spriteBatch = new SpriteBatch(GraphicsDevice);
-			GamestateManager = new GamestateManager(GraphicsDevice, _spriteBatch);
+			GuiManager.Init(GraphicsDevice, _spriteBatch);
+			GameStateManager = new GameStateManager(GraphicsDevice, _spriteBatch, GuiManager);
 
-			GamestateManager.AddState("splash", new SplashScreen(this));
-			GamestateManager.SetActiveState("splash");
+			GameStateManager.AddState("splash", new SplashScreen(this));
+			GameStateManager.SetActiveState("splash");
 
 			Log.Info($"Initializing Alex...");
 			ThreadPool.QueueUserWorkItem(o => { InitializeGame(); });
@@ -120,7 +128,8 @@ namespace Alex
 
 		protected override void Update(GameTime gameTime)
 		{
-			GamestateManager.Update(gameTime);
+			GameStateManager.Update(gameTime);
+			GuiManager.Update(gameTime);
 			base.Update(gameTime);
 		}
 
@@ -129,7 +138,8 @@ namespace Alex
 			GraphicsDevice.RasterizerState = RasterizerState.CullClockwise;
 			GraphicsDevice.Clear(Color.SkyBlue);
 
-			GamestateManager.Draw(gameTime);
+			GameStateManager.Draw(gameTime);
+			GuiManager.Draw(gameTime);
 
 			base.Draw(gameTime);
 		}
@@ -153,13 +163,15 @@ namespace Alex
 
 			Mouse.SetPosition(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2);
 
+			GuiManager.Renderer.Theme = Resources.UiThemeFactory.GetTheme();
+
 			//GamestateManager.AddState("login", new LoginState(this));
 			//GamestateManager.SetActiveState("login");
 
-			GamestateManager.AddState("title", new TitleState(this));
-			GamestateManager.SetActiveState("title");
+			GameStateManager.AddState("title", new TitleState(this));
+			GameStateManager.SetActiveState("title");
 
-			GamestateManager.RemoveState("splash");
+			GameStateManager.RemoveState("splash");
 
 			Log.Info($"Game initialized!");
 		}

@@ -7,23 +7,22 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.Gamestates
 {
-	public class Gamestate
+	public class GameState
 	{
 		public Dictionary<string, UIComponent> Controls { get; set; }
 
-		public GuiManager Gui { get; }
+		public UiRoot Gui { get; private set; }
 
 		protected GraphicsDevice Graphics { get; }
 
-		protected Game Game { get; }
+		protected Alex Alex { get; }
 
-		public Gamestate(Game game)
+		public GameState(Alex alex)
 		{
-			Game = game;
-			Graphics = game.GraphicsDevice;
+			Alex = alex;
+			Graphics = alex.GraphicsDevice;
 			Controls = new Dictionary<string, UIComponent>();
 
-			Gui = new GuiManager(game);
 		}
 
 		public Viewport Viewport => Graphics.Viewport;
@@ -37,56 +36,67 @@ namespace Alex.Gamestates
 			}
 		}
 
-		public void Initialise(RenderArgs args)
+		public void Load(RenderArgs args)
 		{
-			Gui.Init(args.GraphicsDevice, args.SpriteBatch);
-			Init(args);
+			Gui = new UiRoot();
+			Alex.GuiManager.Root.Controls.Add(Gui);
+			OnLoad(args);
 		}
 
-		public virtual void Init(RenderArgs args)
+		public void Unload()
 		{
+			Gui.Container.Controls.Remove(Gui);
+			OnUnload();
 		}
 
-		public virtual void Stop()
+		public void Draw2D(RenderArgs args)
 		{
-		}
+			OnDraw2D(args);
 
-		public void Rendering2D(RenderArgs args)
-		{
-			Render2D(args);
 			foreach (var control in Controls.Values.ToArray())
 			{
 				control.Render(args);
 			}
-			Gui.Draw(args.GameTime);
 		}
 
-		public virtual void Render2D(RenderArgs args)
+		public void Draw3D(RenderArgs args)
 		{
+			OnDraw3D(args);
 		}
 
-		public void Rendering3D(RenderArgs args)
+		public void Update(GameTime gameTime)
 		{
-			Render3D(args);
-		}
+			OnUpdate(gameTime);
 
-		public virtual void Render3D(RenderArgs args)
-		{
-		}
-
-		public void UpdateCall(GameTime gametime)
-		{
-			OnUpdate(gametime);
 			foreach (var control in Controls.Values.ToArray())
 			{
-				control.Update(gametime);
+				control.Update(gameTime);
 			}
-			Gui.Update(gametime);
 		}
 
-		public virtual void OnUpdate(GameTime gameTime)
+
+		public void Show()
 		{
+
+			OnShow();
 		}
+
+
+		public void Hide()
+		{
+			OnHide();
+		}
+		
+		protected virtual void OnShow() { }
+		protected virtual void OnHide() { }
+
+		protected virtual void OnLoad(RenderArgs args) { }
+		protected virtual void OnUnload() { }
+
+		protected virtual void OnUpdate(GameTime gameTime) { }
+
+		protected virtual void OnDraw2D(RenderArgs args) { }
+		protected virtual void OnDraw3D(RenderArgs args) { }
 	}
 
 	public class RenderArgs

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Alex.Gui.Common;
 using Alex.Gui.Rendering;
+using Alex.Gui.Themes;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -11,9 +12,8 @@ namespace Alex.Gui
 	public class UiElement
 	{
 		public UiContainer Container { get; internal set; }
-
-		public UiSkin Skin { get; set; }
-
+		
+		public Rectangle OuterBounds { get; private set; }
 		public Rectangle Bounds { get; private set; }
 		public Rectangle ClientBounds { get; private set; }
 
@@ -31,19 +31,15 @@ namespace Alex.Gui
 
 		public bool Visible { get; set; }
 
+		public string ClassName { get; set; }
+
 		#region Styling Properties
 
+		public UiElementStyle Style { get; private set; } = new UiElementStyle();
+		
 		public Thickness Margin { get; set; } = Thickness.Zero;
 		public Thickness Padding { get; set; } = Thickness.Zero;
-
-		public Color BackgroundColor { get; set; } = Color.Transparent;
-		public Texture2D BackgroundImage { get; set; } = null;
-
-		public Color ForegroundColor { get; set; } = Color.White;
-
-		public Color BorderColor { get; set; } = Color.Transparent;
-		public Thickness BorderWidth { get; set; } = Thickness.Zero;
-
+		
 		#endregion
 
 		public UiElement(int? width, int? height)
@@ -62,22 +58,31 @@ namespace Alex.Gui
 		{
 			ActualWidth = Width.HasValue ? Width.Value : 0;
 			ActualHeight = Height.HasValue ? Height.Value : 0;
+
+			UpdateLayout();
 		}
 
 		public void UpdateLayout()
 		{
 			Position = (Container?.ClientBounds.Location ?? Point.Zero) + Offset;
-			Bounds = new Rectangle(
+			OuterBounds = new Rectangle(
 				Position, 
 				new Point(Size.X + Padding.Left + Padding.Right + Margin.Left + Margin.Right, 
 					Size.Y + Padding.Top + Padding.Bottom + Margin.Top + Margin.Bottom)
 			);
 
+			Bounds = new Rectangle(
+				OuterBounds.X + Margin.Left,
+				OuterBounds.Y + Margin.Top,
+				OuterBounds.Width - Margin.Left - Margin.Right,
+				OuterBounds.Height - Margin.Top - Margin.Bottom
+			);
+
 			ClientBounds = new Rectangle(
-				Bounds.X + Padding.Left + Margin.Left,
-				Bounds.Y + Padding.Top + Margin.Top,
-				Bounds.Width - Padding.Left - Padding.Right - Margin.Left - Margin.Right,
-				Bounds.Height - Padding.Top - Padding.Bottom - Margin.Top - Margin.Bottom
+				OuterBounds.X + Padding.Left + Margin.Left,
+				OuterBounds.Y + Padding.Top + Margin.Top,
+				OuterBounds.Width - Padding.Left - Padding.Right - Margin.Left - Margin.Right,
+				OuterBounds.Height - Padding.Top - Padding.Bottom - Margin.Top - Margin.Bottom
 			);
 
 			OnUpdateLayout();
@@ -85,6 +90,8 @@ namespace Alex.Gui
 
 		public void Draw(GameTime gameTime, GuiRenderer renderer)
 		{
+			Style = renderer.Theme.GetCompiledStyleFor(this);
+
 			OnDraw(gameTime, renderer);
 		}
 
@@ -95,14 +102,7 @@ namespace Alex.Gui
 
 		protected virtual void OnDraw(GameTime gameTime, GuiRenderer renderer)
 		{
-			// Border
-			DrawBorder(renderer);
-
-			// Background
-			DrawBackground(renderer);
-
-			// Debug Bounding Boxes
-			//DrawDebugBoundingBoxes(renderer);
+			renderer.DrawElement(this);
 		}
 
 		protected virtual void OnUpdateLayout()
@@ -113,31 +113,6 @@ namespace Alex.Gui
 		protected virtual void OnUpdate(GameTime gameTime)
 		{
 
-		}
-
-		private void DrawDebugBoundingBoxes(GuiRenderer renderer)
-		{
-			renderer.DrawRectangle(ClientBounds, Color.Blue);
-			renderer.DrawRectangle(Bounds, Color.Red);
-			renderer.DrawRectangle(new Rectangle(Position.X + Margin.Left, Position.Y + Margin.Top, ActualWidth - Margin.Left - Margin.Right, ActualHeight - Margin.Top - Margin.Bottom), Color.Green);
-		}
-
-		private void DrawBorder(GuiRenderer renderer)
-		{
-
-		}
-
-		private void DrawBackground(GuiRenderer renderer)
-		{
-			if (BackgroundColor.A > 0.0f)
-			{
-				renderer.FillRectangle(ClientBounds, BackgroundColor);
-			}
-
-			if (BackgroundImage != null)
-			{
-				renderer.FillRectangle(ClientBounds, BackgroundImage);
-			}
 		}
 	}
 }

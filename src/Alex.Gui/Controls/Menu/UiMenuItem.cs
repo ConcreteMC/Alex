@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Alex.Gui.Common;
 using Alex.Gui.Enums;
+using Alex.Gui.Input.Listeners;
+using Microsoft.Xna.Framework;
 
 namespace Alex.Gui.Controls.Menu
 {
@@ -19,9 +22,29 @@ namespace Alex.Gui.Controls.Menu
 			
 			HorizontalContentAlignment = HorizontalAlignment.Center;
 			VerticalContentAlignment = VerticalAlignment.Center;
+			Margin = new Thickness(5);
 
 			Controls.Add(Label);
 		}
 
+		//protected override void OnMouseEnter(MouseEventArgs args)
+		//{
+		//	BackgroundColor = Color.LightSlateGray;
+		//}
+
+		//protected override void OnMouseLeave(MouseEventArgs args)
+		//{
+		//	BackgroundColor = Color.Gray;
+		//}
+
+		//protected override void OnMouseDown(MouseEventArgs args)
+		//{
+		//	BackgroundColor = Color.DarkSlateGray;
+		//}
+
+		//protected override void OnMouseUp(MouseEventArgs args)
+		//{
+		//	BackgroundColor = IsMouseOver ? Color.LightSlateGray : Color.Gray;
+		//}
 	}
 }

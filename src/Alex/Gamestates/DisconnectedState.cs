@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.Gamestates
 {
-	public class DisconnectedState : Gamestate
+	public class DisconnectedState : GameState
 	{
 		private string Reason { get; }
 		private Texture2D BackGround { get; set; }
@@ -16,7 +16,7 @@ namespace Alex.Gamestates
 			Reason = reason;
 		}
 
-		public override void Init(RenderArgs args)
+		protected override void OnLoad(RenderArgs args)
 		{
 			Alex.IsMouseVisible = true;
 			BackGround = TextureUtils.ImageToTexture2D(args.GraphicsDevice, Resources.mcbg);
@@ -29,15 +29,15 @@ namespace Alex.Gamestates
 			Controls.Add("optbtn", opton);
 			Controls.Add("info", new Info());
 
-			base.Init(args);
+			base.OnLoad(args);
 		}
 
 		private void OptonOnOnButtonClick()
 		{
-			Alex.GamestateManager.SetActiveState("menu");
+			Alex.GameStateManager.SetActiveState("menu");
 		}
 
-		public override void Render2D(RenderArgs args)
+		protected override void OnDraw2D(RenderArgs args)
 		{
 			try
 			{

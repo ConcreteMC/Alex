@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Alex.Gui.Input;
 using Alex.Gui.Rendering;
+using Alex.Gui.Themes;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -13,11 +15,11 @@ namespace Alex.Gui
 
 		public GuiRenderer Renderer { get; set; }
 
-		public UiSkin Skin { get; set; }
-
 		public UiRoot Root { get; private set; }
 
 		private bool _doResize = false;
+
+		private IInputManager Input { get; }
 
 		public GuiManager(Game game)
 		{
@@ -25,6 +27,7 @@ namespace Alex.Gui
 			Root = new UiRoot(game.Window.ClientBounds.Width, game.Window.ClientBounds.Height);
 
 			game.Window.ClientSizeChanged += WindowOnClientSizeChanged;
+			Input = new UiInputManager();
 		}
 
 		private void WindowOnClientSizeChanged(object sender, EventArgs eventArgs)
@@ -44,18 +47,19 @@ namespace Alex.Gui
 			Renderer = new GuiRenderer(graphics, spriteBatch, graphics.PresentationParameters.BackBufferWidth, graphics.PresentationParameters.BackBufferHeight);
 			Root = new UiRoot(Renderer.ScreenWidth, Renderer.ScreenHeight);
 			_doResize = true;
+
+			Root.Activate(Input);
 		}
-
-
+		
 		public void Update(GameTime gameTime)
 		{
-			UpdateInput(gameTime);
 			if (_doResize)
 			{
 				UpdateLayout(gameTime);
 				_doResize = false;
 			}
 
+			Input.Update(gameTime);
 			Root.Update(gameTime);
 		}
 
@@ -65,13 +69,7 @@ namespace Alex.Gui
 			Root.Draw(gameTime, Renderer);
 			Renderer.End();
 		}
-
-
-		private void UpdateInput(GameTime gameTime)
-		{
-
-		}
-
+		
 		private void UpdateLayout(GameTime gameTime)
 		{
 			Root.UpdateSize();

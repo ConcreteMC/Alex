@@ -27,29 +27,29 @@ namespace Alex.Gui
 
 		private void ControlsOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
 		{
-			if (e.Action == NotifyCollectionChangedAction.Add)
+			if (e.NewItems != null)
 			{
 				foreach (UiElement eNewItem in e.NewItems)
 				{
 					eNewItem.Container = this;
+					eNewItem.Offset = Point.Zero;
+					eNewItem.UpdateSize();
 				}
 			}
 
 			UpdateSize();
-			Layout();
+			UpdateLayout();
 		}
 
 		public UiContainer() : this(null, null)
 		{
 		}
-
-		protected void Layout()
-		{
-			OnLayout();
-		}
+		
 
 		public override void UpdateSize()
 		{
+			base.UpdateSize();
+
 			var controls = Controls.ToArray();
 			if (!controls.Any())
 			{
@@ -63,14 +63,17 @@ namespace Alex.Gui
 				control.UpdateSize();
 			}
 
-			var childWidth = controls.Max(c => c.Bounds.Right) - controls.Min(c => c.Bounds.Left);
-			var childHeight = controls.Max(c => c.Bounds.Bottom) - controls.Min(c => c.Bounds.Top);
+			//var childWidth = controls.Max(c => c.Bounds.Right) - controls.Min(c => c.Bounds.Left);
+			//var childHeight = controls.Max(c => c.Bounds.Bottom) - controls.Min(c => c.Bounds.Top);
+
+			var childWidth = controls.Max(c => c.OuterBounds.Width);
+			var childHeight = controls.Max(c => c.OuterBounds.Height);
 
 			ActualWidth = Math.Max(Width.HasValue ? Width.Value : 0, childWidth);
 			ActualHeight = Math.Max(Height.HasValue ? Height.Value : 0, childHeight);
-		}
 
-		protected virtual void OnLayout() { }
+			UpdateLayout();
+		}
 		
 		protected override void OnDraw(GameTime gameTime, GuiRenderer renderer)
 		{
@@ -98,24 +101,32 @@ namespace Alex.Gui
 
 			foreach (var control in Controls.ToArray())
 			{
-				int offsetX = 0, offsetY = 0;
+				int offsetX = control.Offset.X, offsetY = control.Offset.Y;
 
 				if (HorizontalContentAlignment == HorizontalAlignment.Right)
 				{
-					offsetX = ClientBounds.Width - control.Bounds.Width;
+					offsetX = ClientBounds.Width - control.OuterBounds.Width;
 				}
 				else if (HorizontalContentAlignment == HorizontalAlignment.Center)
 				{
-					offsetX = (int)Math.Floor((ClientBounds.Width - control.Bounds.Width) / 2f);
+					offsetX = (int)Math.Floor((ClientBounds.Width - control.OuterBounds.Width) / 2f);
+				}
+				else if (HorizontalContentAlignment == HorizontalAlignment.Left)
+				{
+					offsetX = 0;
 				}
 
 				if (VerticalContentAlignment == VerticalAlignment.Bottom)
 				{
-					offsetY = ClientBounds.Height - control.Bounds.Height;
+					offsetY = ClientBounds.Height - control.OuterBounds.Height;
 				}
 				else if (VerticalContentAlignment == VerticalAlignment.Center)
 				{
-					offsetY = (int) Math.Floor((ClientBounds.Height - control.Bounds.Height) / 2f);
+					offsetY = (int) Math.Floor((ClientBounds.Height - control.OuterBounds.Height) / 2f);
+				}
+				else if (VerticalContentAlignment == VerticalAlignment.Top)
+				{
+					offsetY = 0;
 				}
 
 				control.Offset = new Point(offsetX, offsetY);

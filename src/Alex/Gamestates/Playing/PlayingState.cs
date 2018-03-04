@@ -12,7 +12,7 @@ using Microsoft.Xna.Framework.Input;
 
 namespace Alex.Gamestates.Playing
 {
-	public class PlayingState : Gamestate
+	public class PlayingState : GameState
 	{
 		private Alex Alex { get; }
 		private World World { get; }
@@ -41,7 +41,7 @@ namespace Alex.Gamestates.Playing
 			//WaterOverlay = new WaterOverlay();
 		}
 
-		public override void Init(RenderArgs args)
+		protected override void OnLoad(RenderArgs args)
 		{
 			//WaterOverlay.Load(args.GraphicsDevice, Alex.Resources);
 
@@ -51,11 +51,11 @@ namespace Alex.Gamestates.Playing
 			CrosshairTexture = TextureUtils.ImageToTexture2D(args.GraphicsDevice, Resources.crosshair);
 
 			Camera.MoveTo(World.GetSpawnPoint(), Vector3.Zero);
-			base.Init(args);
+			base.OnLoad(args);
 		}
 
 		private float AspectRatio { get; set; }
-		public override void OnUpdate(GameTime gameTime)
+		protected override void OnUpdate(GameTime gameTime)
 		{
 			if (Alex.IsActive)
 			{
@@ -151,7 +151,7 @@ namespace Alex.Gamestates.Playing
 					}
 					else
 					{
-						Alex.GamestateManager.SetActiveState(new InGameMenuState(Alex, this, currentKeyboardState));
+						Alex.GameStateManager.SetActiveState(new InGameMenuState(Alex, this, currentKeyboardState));
 					}
 				}
 
@@ -176,7 +176,7 @@ namespace Alex.Gamestates.Playing
 			_oldKeyboardState = currentKeyboardState;
 		}
 
-		public override void Render2D(RenderArgs args)
+		protected override void OnDraw2D(RenderArgs args)
 		{
 			try
 			{
@@ -278,7 +278,7 @@ namespace Alex.Gamestates.Playing
 
 			ActiveOverlays.ForEach(x => x.Render(args));
 
-			base.Render2D(args);
+			base.OnDraw2D(args);
 		}
 
 		public static string GetCardinalDirection(FirstPersonCamera cam)
@@ -331,16 +331,16 @@ namespace Alex.Gamestates.Playing
 		}
 
 
-		public override void Render3D(RenderArgs args)
+		protected override void OnDraw3D(RenderArgs args)
 		{
 			FpsCounter.Update();
 
 			World.Render();
 
-			base.Render3D(args);
+			base.OnDraw3D(args);
 		}
 
-		public override void Stop()
+		protected override void OnUnload()
 		{
 			World.Destroy();
 		}

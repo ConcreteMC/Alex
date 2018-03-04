@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.Gui.Controls
 {
-	public class UiLabel : UiControl
+	public class UiLabel : UiElement
 	{
 		private string _text;
 
@@ -63,7 +63,7 @@ namespace Alex.Gui.Controls
 				}
 			}
 
-			renderer.DrawText(ClientBounds, Text, Font, ForegroundColor);
+			renderer.DrawText(ClientBounds, Text, Font, Style.TextColor);
 		}
 	}
 }

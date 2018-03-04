@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.Gamestates
 {
-	public class LoginState : Gamestate
+	public class LoginState : GameState
 	{
 		private Alex Alex { get; }
 		public LoginState(Alex alex) : base(alex)
@@ -14,7 +14,8 @@ namespace Alex.Gamestates
 		}
 
 		private Texture2D BackGround { get; set; }
-		public override void Init(RenderArgs args)
+
+		protected override void OnLoad(RenderArgs args)
 		{
 			BackGround = TextureUtils.ImageToTexture2D(args.GraphicsDevice, Resources.mcbg);
 
@@ -54,8 +55,8 @@ namespace Alex.Gamestates
 			{
 				Alex.Username = username.Text;
 				Alex.SaveSettings();
-				Alex.GamestateManager.AddState("menu", new MenuState(Alex));
-				Alex.GamestateManager.SetActiveState("menu");
+				Alex.GameStateManager.AddState("menu", new MenuState(Alex));
+				Alex.GameStateManager.SetActiveState("menu");
 			}
 			else
 			{
@@ -63,14 +64,14 @@ namespace Alex.Gamestates
 			}
 		}
 
-		public override void Stop()
+		protected override void OnUnload()
 		{
 			//Alex.HideMouse();
 			Alex.IsMouseVisible = false;
 		}
 
 		private string ErrorText = string.Empty;
-		public override void Render2D(RenderArgs args)
+		protected override void OnDraw2D(RenderArgs args)
 		{
 			args.SpriteBatch.Begin();
 
@@ -93,7 +94,7 @@ namespace Alex.Gamestates
 			args.SpriteBatch.End();
 		}
 
-		public override void OnUpdate(GameTime gameTime)
+		protected override void OnUpdate(GameTime gameTime)
 		{
 			Controls["username"].Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y - 30);
 			Controls["optbtn"].Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 20);

@@ -6,18 +6,16 @@ using Microsoft.Xna.Framework;
 
 namespace Alex.Gui.Input
 {
-    public class UiInputManager
+    public class UiInputManager : IInputManager
     {
-        private Game Game { get; }
 
-        public MouseListener MouseListener { get; }
+        public IMouseListener MouseListener { get; private set; }
 
-        public UiInputManager(Game game)
+        public UiInputManager()
         {
-            Game = game;
-
             MouseListener = new MouseListener();
         }
+        
 
         public void Update(GameTime gameTime)
         {
