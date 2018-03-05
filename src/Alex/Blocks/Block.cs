@@ -30,9 +30,9 @@ namespace Alex.Blocks
 
 		public float Drag { get; set; }
 
-	    public double AmbientOcclusionLightValue = 1.0;
-	    public int LightValue = 0;
-	    public int LightOpacity = 0;
+	    public double AmbientOcclusionLightValue { get; set; } = 1.0;
+	    public int LightValue { get; set; } = 0;
+	    public int LightOpacity { get; set; } = 0;
 
 		public BlockModel BlockModel { get; set; }
 		public BlockState BlockState { get; set; }

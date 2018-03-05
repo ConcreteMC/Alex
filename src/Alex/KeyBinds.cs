@@ -24,5 +24,7 @@ namespace Alex
 
         public static Keys ToggleFreeCam = Keys.F8;
         public static Keys ReBuildChunks = Keys.F9;
-    }
+
+	    public static Keys ToggleWireframe = Keys.F10;
+	}
 }

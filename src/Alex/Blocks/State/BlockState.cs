@@ -88,10 +88,20 @@ namespace Alex.Blocks.State {
 			return this;
 		}
 
-		//public IBlock GetBlock()
-		//{
+		public Dictionary<StateProperty, string> ToDictionary()
+		{
+			var dictionary = new Dictionary<StateProperty, string>();
+			foreach (var kv in _values)
+			{
+				dictionary.TryAdd(kv.Key, kv.Value.ToString());
+			}
+			return dictionary;
+		}
 
-		//}
+		public override string ToString()
+		{
+			return base.ToString();
+		}
 
 		public static BlockState FromString(string data)
 		{

@@ -436,6 +436,7 @@ namespace Alex.Worlds
 					}
 
 					chunk.CalculateHeight();
+					//chunk.CalculateSkylight();
 					return chunk;
 				}
 			}

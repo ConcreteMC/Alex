@@ -3,14 +3,20 @@ using Alex.API.Graphics;
 using Alex.API.World;
 using Alex.Gamestates;
 using Alex.Rendering;
+using Alex.Utils;
+using log4net;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MiNET.Blocks;
+using MiNET.Entities;
 using MiNET.Utils;
 
 namespace Alex.Worlds
 {
-	public class World : IWorld
+	public class World : IWorld, IWorldReceiver
 	{
+		private static readonly ILog Log = LogManager.GetLogger(typeof(World));
+		
         private GraphicsDevice Graphics { get; }
 		private Rendering.Camera.Camera Camera { get; }
         public World(Alex alex, GraphicsDevice graphics, Rendering.Camera.Camera camera, WorldProvider worldProvider)
@@ -22,7 +28,7 @@ namespace Alex.Worlds
 			EntityManager = new EntityManager(graphics);
 
 	        WorldProvider = worldProvider;
-			WorldProvider.Init(OnChunkReceived, Unload, PlayerPositionProvider);
+			WorldProvider.Init(this);
         }
 
 		public EntityManager EntityManager { get; }
@@ -43,23 +49,6 @@ namespace Alex.Worlds
         {
             get { return ChunkManager.ChunkUpdates; }
         }
-
-		private Vector3 PlayerPositionProvider()
-		{
-			return Camera.Position;
-		}
-
-		private void Unload(int x, int z)
-		{
-			var chunkCoordinates = new ChunkCoordinates(x, z);
-			ChunkManager.RemoveChunk(chunkCoordinates);
-			EntityManager.UnloadEntities(chunkCoordinates);
-		}
-
-		private void OnChunkReceived(IChunkColumn chunkColumn, int x, int z)
-		{
-			ChunkManager.AddChunk(chunkColumn, new ChunkCoordinates(x, z), true);
-		}
 
 		public void ResetChunks()
         {
@@ -221,5 +210,39 @@ namespace Alex.Worlds
 			WorldProvider.Dispose();
 			ChunkManager.Dispose();
 		}
+
+		#region IWorldReceiver (Handle WorldProvider callbacks)
+
+		public Vector3 RequestPlayerPosition()
+		{
+			return Camera.Position;
+		}
+
+		public void ChunkReceived(IChunkColumn chunkColumn, int x, int z)
+		{
+			ChunkManager.AddChunk(chunkColumn, new ChunkCoordinates(x, z), true);
+		}
+
+		public void ChunkUnload(int x, int z)
+		{
+			var chunkCoordinates = new ChunkCoordinates(x, z);
+			ChunkManager.RemoveChunk(chunkCoordinates);
+
+			EntityManager.UnloadEntities(chunkCoordinates);
+		}
+
+		public void SpawnEntity(long entityId, Entity entity)
+		{
+			EntityManager.AddEntity(entityId, entity);
+			Log.Info($"Spawned entity {entityId} : {entity} at {entity.KnownPosition} with renderer {entity.GetModelRenderer()}");
+		}
+
+		public void DespawnEntity(long entityId)
+		{
+			EntityManager.Remove(entityId);
+			Log.Info($"Despawned entity {entityId}");
+		}
+
+		#endregion
 	}
 }

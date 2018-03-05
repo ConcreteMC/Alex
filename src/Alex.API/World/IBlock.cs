@@ -18,6 +18,10 @@ namespace Alex.API.World
 		bool IsFullBlock { get; set; }
 		//IBlockState BlockState { get; set; }
 
+		double AmbientOcclusionLightValue { get; set; }
+		int LightValue { get; set; } 
+		int LightOpacity { get; set; }
+
 		bool IsSideSolid(string side);
 
 		bool BlockUpdate(IWorld world, Vector3 position);

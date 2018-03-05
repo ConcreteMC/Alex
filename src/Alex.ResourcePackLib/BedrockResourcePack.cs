@@ -18,6 +18,9 @@ namespace Alex.ResourcePackLib
 
 		public IReadOnlyDictionary<string, EntityModel> EntityModels { get; private set; }
 		public IReadOnlyDictionary<string, Bitmap> EntityTextures { get; private set; }
+		public IReadOnlyDictionary<string, EntityDefinition> EntityDefinitions { get; private set; }
+
+	
 		private ZipFile _archive;
 		public BedrockResourcePack(ZipFile archive)
 		{
@@ -36,6 +39,7 @@ namespace Alex.ResourcePackLib
 
 		private void Load()
 		{
+			Dictionary<string, EntityDefinition> entityDefinitions = new Dictionary<string, EntityDefinition>();
 			foreach (ZipEntry entry in _archive)
 			{
 				if (entry.IsDirectory)
@@ -43,16 +47,19 @@ namespace Alex.ResourcePackLib
 					CheckDirectory(entry);
 					continue;
 				}
-
+			
 				if (entry.IsFile)
 				{
-					CheckFile(entry);
+					CheckFile(entry, entityDefinitions);
 				}
 			}
+
+			EntityDefinitions = entityDefinitions;
+			Log.Info($"Imported {EntityDefinitions.Count} entity definitions");
 		}
 
 		private bool EntitysLoaded { get; set; } = false;
-		private void CheckFile(ZipEntry entry)
+		private void CheckFile(ZipEntry entry, Dictionary<string, EntityDefinition> entityDefinitions)
 		{
 			if (entry.Name.EndsWith("mobs.json") && !EntitysLoaded)
 			{
@@ -62,11 +69,30 @@ namespace Alex.ResourcePackLib
 			{
 				LoadTexture(entry);
 			}
+			else if (entry.Name.StartsWith("definitions/entity") && entry.Name.EndsWith(".json"))
+			{
+				LoadEntityDefinition(entry, entityDefinitions);
+			}
 		}
 
 		private void CheckDirectory(ZipEntry entry)
 		{
 			
+		}
+
+		private void LoadEntityDefinition(ZipEntry entry, Dictionary<string, EntityDefinition> entityDefinitions)
+		{
+			var stream = new StreamReader(_archive.GetInputStream(entry));
+			var json = stream.ReadToEnd();
+
+			Dictionary<string, EntityDefinition> definitions = JsonConvert.DeserializeObject<Dictionary<string, EntityDefinition>>(json);
+			foreach (var def in definitions)
+			{
+				if (!entityDefinitions.ContainsKey(def.Key))
+				{
+					entityDefinitions.Add(def.Key, def.Value);
+				}
+			}
 		}
 
 		private void LoadTexture(ZipEntry entry)
@@ -93,7 +119,7 @@ namespace Alex.ResourcePackLib
 			}
 
 			EntityTextures = textures;
-			Log.Info($"Loaded {textures.Count} entity textures");
+			Log.Info($"Imported {textures.Count} entity textures");
 		}
 
 		private void LoadMobs(ZipEntry entry)
@@ -179,10 +205,16 @@ namespace Alex.ResourcePackLib
 				}
 
 				model.Bones = bones.Values.ToArray();
-				Log.Info($"Processed {modelName} inherited {inheritedBones} bones from {parent}");
+				//Log.Info($"Processed {modelName} inherited {inheritedBones} bones from {parent}");
 			}
 
 			processedModels.Add(modelName, model);
+		}
+
+		public class EntityDefinition
+		{
+			public Dictionary<string, string> Textures;
+			public Dictionary<string, string> Geometry;
 		}
 
 		public void Dispose()

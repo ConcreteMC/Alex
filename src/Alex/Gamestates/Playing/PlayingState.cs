@@ -55,6 +55,7 @@ namespace Alex.Gamestates.Playing
 		}
 
 		private float AspectRatio { get; set; }
+		private bool RenderWireframe { get; set; } = false;
 		public override void OnUpdate(GameTime gameTime)
 		{
 			if (Alex.IsActive)
@@ -110,6 +111,20 @@ namespace Alex.Gamestates.Playing
 			}
 		}
 
+		private void ToggleWireframe()
+		{
+			RenderWireframe = !RenderWireframe;
+
+			if (RenderWireframe)
+			{
+				Graphics.RasterizerState.FillMode = FillMode.WireFrame;
+			}
+			else
+			{
+				Graphics.RasterizerState.FillMode = FillMode.Solid;
+			}
+		}
+
 		private Block SelBlock { get; set; } = new Air();
 		private Microsoft.Xna.Framework.BoundingBox RayTraceBoundingBox { get; set; }
 		private bool RenderDebug { get; set; } = true;
@@ -161,6 +176,11 @@ namespace Alex.Gamestates.Playing
 						RenderDebug = !RenderDebug;
 					}
 
+					if (currentKeyboardState.IsKeyDown(KeyBinds.ToggleWireframe)) 
+					{
+						ToggleWireframe();
+					}
+
 					if (currentKeyboardState.IsKeyDown(KeyBinds.ToggleFreeCam))
 					{
 						CamComponent.IsFreeCam = !CamComponent.IsFreeCam;
@@ -203,71 +223,10 @@ namespace Alex.Gamestates.Playing
 						RayTraceBoundingBox,
 						Camera.ViewMatrix, Camera.ProjectionMatrix, Color.LightGray);
 				}
-				var fpsString = string.Format("Alex {0} ({1} FPS, {2} chunk updates)", Alex.Version,
-					Math.Round(FpsCounter.Value), World.ChunkUpdates);
-				var meisured = Alex.Font.MeasureString(fpsString);
-
-				args.SpriteBatch.FillRectangle(new Rectangle(0, 0, (int)meisured.X, (int)meisured.Y),
-					new Color(Color.Black, 64));
-				args.SpriteBatch.DrawString(Alex.Font,
-					fpsString, new Vector2(0, 0),
-					Color.White);
-
+				
 				if (RenderDebug)
 				{
-					var y = (int)meisured.Y;
-					var positionString = "Position: " + Camera.Position;
-					meisured = Alex.Font.MeasureString(positionString);
-
-					args.SpriteBatch.FillRectangle(new Rectangle(0, y, (int)meisured.X, (int)meisured.Y),
-						new Color(Color.Black, 64));
-					args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(0, y), Color.White);
-
-					y += (int)meisured.Y;
-					string facing = GetCardinalDirection(this.Camera);
-
-					positionString = string.Format("Facing: {0}", facing);
-					meisured = Alex.Font.MeasureString(positionString);
-
-					args.SpriteBatch.FillRectangle(new Rectangle(0, y, (int)meisured.X, (int)meisured.Y),
-						new Color(Color.Black, 64));
-					args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(0, y), Color.White);
-
-					y += (int)meisured.Y;
-
-					positionString = "Looking at: " + _raytracedBlock;
-					meisured = Alex.Font.MeasureString(positionString);
-
-					args.SpriteBatch.FillRectangle(new Rectangle(0, y, (int)meisured.X, (int)meisured.Y),
-						new Color(Color.Black, 64));
-					args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(0, y), Color.White);
-
-					y += (int)meisured.Y;
-
-					positionString = string.Format("Block: {0} ID: {1}:{2}", SelBlock, SelBlock.BlockId, SelBlock.Metadata);
-					meisured = Alex.Font.MeasureString(positionString);
-
-					args.SpriteBatch.FillRectangle(new Rectangle(0, y, (int)meisured.X, (int)meisured.Y),
-						new Color(Color.Black, 64));
-					args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(0, y), Color.White);
-
-					y += (int)meisured.Y;
-
-					positionString = "Vertices: " + World.Vertices;
-					meisured = Alex.Font.MeasureString(positionString);
-
-					args.SpriteBatch.FillRectangle(new Rectangle(0, y, (int)meisured.X, (int)meisured.Y),
-						new Color(Color.Black, 64));
-					args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(0, y), Color.White);
-
-					y += (int)meisured.Y;
-
-					positionString = "Chunks: " + World.ChunkCount + ", " + World.ChunkManager.RenderedChunks;
-					meisured = Alex.Font.MeasureString(positionString);
-
-					args.SpriteBatch.FillRectangle(new Rectangle(0, y, (int)meisured.X, (int)meisured.Y),
-						new Color(Color.Black, 64));
-					args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(0, y), Color.White);
+					RenderDebugScreen(args);
 				}
 			}
 			finally
@@ -280,13 +239,130 @@ namespace Alex.Gamestates.Playing
 			base.Render2D(args);
 		}
 
+		private void RenderDebugScreen(RenderArgs args)
+		{
+			DebugLeft(args);
+			DebugRight(args);
+		}
+
+		private void DebugRight(RenderArgs args)
+		{
+			var screenWidth = args.GraphicsDevice.Viewport.Width;
+			//var device = args.GraphicsDevice.Adapter.DeviceName;
+			var positionString = "";
+			var meisured = Vector2.Zero;
+			int y = 0;
+
+			if (_raytracedBlock.Y > 0 && _raytracedBlock.Y < 256)
+			{
+				positionString = "Looking at: " + _raytracedBlock;
+				meisured = Alex.Font.MeasureString(positionString);
+
+				args.SpriteBatch.FillRectangle(new Rectangle(screenWidth - (int) meisured.X, y, (int) meisured.X, (int) meisured.Y),
+					new Color(Color.Black, 64));
+				args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(screenWidth - (int) meisured.X, y), Color.White);
+
+				y += (int) meisured.Y;
+
+			//var split1 = SelBlock.BlockState.Split('[', ']');
+				positionString = $"{SelBlock} ({SelBlock.BlockId}:{SelBlock.Metadata})";
+				meisured = Alex.Font.MeasureString(positionString);
+
+				args.SpriteBatch.FillRectangle(new Rectangle(screenWidth - (int) meisured.X, y, (int) meisured.X, (int) meisured.Y),
+					new Color(Color.Black, 64));
+				args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(screenWidth - (int) meisured.X, y), Color.White);
+
+				if (SelBlock.BlockState != null)
+				{
+					var dict = SelBlock.BlockState.ToDictionary();
+					foreach (var kv in dict)
+					{
+						y += (int)meisured.Y;
+
+						//var split1 = SelBlock.BlockState.Split('[', ']');
+						positionString = $"{kv.Key.Name}={kv.Value}";
+						meisured = Alex.Font.MeasureString(positionString);
+
+						args.SpriteBatch.FillRectangle(new Rectangle(screenWidth - (int)meisured.X, y, (int)meisured.X, (int)meisured.Y),
+							new Color(Color.Black, 64));
+						args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(screenWidth - (int)meisured.X, y), Color.White);
+					}
+				}
+			}
+		}
+
+		private void DebugLeft(RenderArgs args)
+		{
+			var fpsString = string.Format("Alex {0} ({1} FPS, {2} chunk updates)", Alex.Version,
+					 Math.Round(FpsCounter.Value), World.ChunkUpdates);
+			var meisured = Alex.Font.MeasureString(fpsString);
+
+			args.SpriteBatch.FillRectangle(new Rectangle(0, 0, (int)meisured.X, (int)meisured.Y),
+				new Color(Color.Black, 64));
+			args.SpriteBatch.DrawString(Alex.Font,
+				fpsString, new Vector2(0, 0),
+				Color.White);
+
+			var y = (int)meisured.Y;
+			var positionString = "Position: " + Camera.Position;
+			meisured = Alex.Font.MeasureString(positionString);
+
+			args.SpriteBatch.FillRectangle(new Rectangle(0, y, (int)meisured.X, (int)meisured.Y),
+				new Color(Color.Black, 64));
+			args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(0, y), Color.White);
+
+			y += (int)meisured.Y;
+			string facing = GetCardinalDirection(this.Camera);
+
+			positionString = string.Format("Facing: {0}", facing);
+			meisured = Alex.Font.MeasureString(positionString);
+
+			args.SpriteBatch.FillRectangle(new Rectangle(0, y, (int)meisured.X, (int)meisured.Y),
+				new Color(Color.Black, 64));
+			args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(0, y), Color.White);
+
+			y += (int)meisured.Y;
+
+
+			positionString = "Vertices: " + World.Vertices;
+			meisured = Alex.Font.MeasureString(positionString);
+
+			args.SpriteBatch.FillRectangle(new Rectangle(0, y, (int)meisured.X, (int)meisured.Y),
+				new Color(Color.Black, 64));
+			args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(0, y), Color.White);
+
+			y += (int)meisured.Y;
+
+			positionString = "Chunks: " + World.ChunkCount + ", " + World.ChunkManager.RenderedChunks;
+			meisured = Alex.Font.MeasureString(positionString);
+
+			args.SpriteBatch.FillRectangle(new Rectangle(0, y, (int)meisured.X, (int)meisured.Y),
+				new Color(Color.Black, 64));
+			args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(0, y), Color.White);
+
+			y += (int)meisured.Y;
+
+			positionString = $"Entities: {World.EntityManager.EntityCount}, {World.EntityManager.EntitiesRendered}";
+			meisured = Alex.Font.MeasureString(positionString);
+
+			args.SpriteBatch.FillRectangle(new Rectangle(0, y, (int)meisured.X, (int)meisured.Y),
+				new Color(Color.Black, 64));
+			args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(0, y), Color.White);
+		}
+
 		public static string GetCardinalDirection(FirstPersonCamera cam)
 		{
-			double rotation = (cam.Yaw) % 360;
+			double rotation = (360 - cam.Yaw) % 360;
 			if (rotation < 0)
 			{
 				rotation += 360.0;
 			}
+
+			return GetDirection(rotation);
+		}
+
+		private static string GetDirection(double rotation)
+		{
 			if (0 <= rotation && rotation < 22.5)
 			{
 				return "North";

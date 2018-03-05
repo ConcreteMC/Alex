@@ -36,7 +36,6 @@
     <None Remove="Blocks\WoodenDoor.cs" />
     <None Remove="Entities\Entity.cs" />
     <None Remove="Entities\EntityFactory.cs" />
-    <None Remove="Entities\entity_metadata.txt" />
     <None Remove="Entities\LivingEntity.cs" />
     <None Remove="Entities\Player.cs" />
     <None Remove="Extensions.cs" />
@@ -184,10 +183,6 @@
     <Compile Include="Worlds\World.cs" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Content Include="Entities\entity_metadata.txt" />
-  </ItemGroup>
-
 	<ItemGroup>
 		<RdXmlFile Include="rd.xml" />
 	</ItemGroup>
@@ -199,8 +194,6 @@
 	<ItemGroup>
     <PackageReference Include="CoreCompat.System.Drawing.v2" Version="5.2.0-preview1-r131" />
     <PackageReference Include="log4net" Version="2.0.8" />
-    <PackageReference Include="MonoGame.Content.Builder" Version="3.7.0.1" />
-    <PackageReference Include="MonoGame.Framework.DesktopGL.Core" Version="3.7.0.7" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.1" />
   </ItemGroup>
 
@@ -216,6 +209,12 @@
 	  <Reference Include="MiNET">
 	    <HintPath>..\CoreRT\External\MiNET.dll</HintPath>
 	  </Reference>
+	  <Reference Include="MonoGame.Framework">
+	    <HintPath>MonoGame.Framework.dll</HintPath>
+	  </Reference>
+	  <Reference Include="MonoGame.Framework.Content.Pipeline">
+	    <HintPath>MonoGame.Framework.Content.Pipeline.dll</HintPath>
+	  </Reference>
 	</ItemGroup>
 
 	<ItemGroup>
@@ -229,6 +228,11 @@
 	  <None Update="log4net.config">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<MonoGameContentReference Update="Resources\shaders.mgcb">
+		</MonoGameContentReference>
 	</ItemGroup>
 
 </Project>

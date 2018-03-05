@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Graphics;
 using Alex.API.World;
@@ -272,6 +273,37 @@ namespace Alex.Worlds
 							SetHeight(x, z, (byte)y);
 							break;
 						}
+					}
+				}
+			}
+		}
+
+		public void CalculateSkylight()
+		{
+			for (int x = 0; x < 16; x++)
+			{
+				for (int z = 0; z < 16; z++)
+				{
+					int prevLight = 15;
+					for (int y = 256 - 1; y > 0; --y)
+					{
+						var block = GetBlock(x, y, z);
+						if (!block.Renderable) continue;
+						
+						int light = 15;
+
+						if (block.Solid && !block.Transparent)
+						{
+							light = 0;
+						}
+						else 
+						{
+							light = (int) Math.Round(prevLight *  (1D - block.AmbientOcclusionLightValue));
+						}
+
+						if (light < 0) light = 0;
+						SetSkyLight(x,y,z, (byte)light);
+						prevLight = light;
 					}
 				}
 			}

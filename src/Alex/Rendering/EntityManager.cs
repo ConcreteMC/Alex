@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Runtime.InteropServices.ComTypes;
+using System.Threading;
 using Alex.API.Graphics;
 using Alex.Entities;
 using Alex.Gamestates;
@@ -11,6 +12,7 @@ using Microsoft.Xna.Framework.Graphics;
 using MiNET.Entities;
 using MiNET.Net;
 using MiNET.Utils;
+using ContainmentType = Microsoft.Xna.Framework.ContainmentType;
 
 namespace Alex.Rendering
 {
@@ -19,6 +21,9 @@ namespace Alex.Rendering
 		private ConcurrentDictionary<long, MiNET.Entities.Entity> Entities { get; }
 		private ConcurrentDictionary<UUID, MiNET.Entities.Entity> EntityByUUID { get; }
 		private GraphicsDevice Device { get; }
+
+	    public int EntityCount => Entities.Count;
+	    public int EntitiesRendered { get; private set; } = 0;
 	    public EntityManager(GraphicsDevice device)
 	    {
 		    Device = device;
@@ -37,11 +42,20 @@ namespace Alex.Rendering
 
 	    public void Render(IRenderArgs args, Camera.Camera camera)
 	    {
+		    int renderCount = 0;
 		    var entities = Entities.Values.ToArray();
 		    foreach (var entity in entities)
 		    {
-				entity.GetModelRenderer()?.Render(args, camera, entity.KnownPosition.ToXnaVector3());
+			    var entityBox = entity.GetBoundingBox();
+
+				if (camera.BoundingFrustum.Contains(new Microsoft.Xna.Framework.BoundingBox(entityBox.Min.ToXnaVector3(), entityBox.Max.ToXnaVector3())) != ContainmentType.Disjoint)
+			    {
+				    entity.GetModelRenderer()?.Render(args, camera, entity.KnownPosition.ToXnaVector3());
+				    renderCount++;
+			    }
 		    }
+
+		    EntitiesRendered = renderCount;
 	    }
 
 	    public void Dispose()
@@ -60,13 +74,16 @@ namespace Alex.Rendering
 		    }
 	    }
 
-	    private void Remove(UUID entity)
+	    private void Remove(UUID entity, bool removeId = true)
 	    {
 		    if (EntityByUUID.TryRemove(entity, out Entity e))
 		    {
-			    Entities.TryRemove(e.EntityId, out e);
+			    if (removeId)
+			    {
+				    Entities.TryRemove(e.EntityId, out e);
+			    }
 
-				e.DeleteData();
+			    e.DeleteData();
 		    }
 	    }
 
@@ -84,6 +101,14 @@ namespace Alex.Rendering
 		    }
 
 		    return false;
+	    }
+
+	    public void Remove(long id)
+	    {
+		    if (Entities.TryRemove(id, out Entity entity))
+		    {
+				Remove(entity.GetUUID(), false);
+		    }
 	    }
     }
 }

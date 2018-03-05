@@ -169,15 +169,24 @@ namespace Alex
 					    };
 				    }
 
-					block.BlockModel = cached;
+				    Blocks.State.BlockState blockStateData = null;
+
+				    var split1 = blockState.Value.Split('[', ']');
+				    if (split1.Length > 1)
+				    {
+					    blockStateData = Blocks.State.BlockState.FromString(split1[1]);
+				    }
+
+				    block.BlockModel = cached;
 				    block.Transparent = knownMeta.Transparent;
-				    block.DisplayName = blockState.Value;
+				    block.DisplayName = knownMeta.DisplayName;
 				    block.LightValue = knownMeta.LightValue;
 				    block.AmbientOcclusionLightValue = knownMeta.AmbientOcclusionLightValue;
 				    block.LightOpacity = knownMeta.LightOpacity;
 				    block.IsBlockNormalCube = knownMeta.IsBlockNormalCube;
 				    block.IsFullCube = knownMeta.IsFullCube;
 				    block.IsFullBlock = knownMeta.IsFullBlock;
+				    block.BlockState = blockStateData;
 
 				  //  foreach (var solid in knownMeta.IsSideSolid)
 				  //  {
@@ -307,11 +316,7 @@ namespace Alex
 			    {
 				    name = $"{color}_{name}";
 			    }
-
-				
 			}
-
-		   // var b = Blocks.State.BlockState.FromString(split1[1]);
 
 		    if (resources.BlockStates.TryGetValue(name, out BlockState blockState))
 		    {

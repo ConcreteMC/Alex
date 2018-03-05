@@ -78,45 +78,52 @@ namespace Alex.Rendering
 		{
 			int maxThreads = Game.GameSettings.RenderDistance; //Environment.ProcessorCount / 2;
 	        //int runningThreads = 0;
-	        while (!CancelationToken.IsCancellationRequested)
-	        {
-		        ChunkCoordinates i;
-		        if (ChunksToUpdate.TryDequeue(out i))
-		        {
-			        UpdateResetEvent.Wait(CancelationToken.Token);
+			while (!CancelationToken.IsCancellationRequested)
+			{
+				try
+				{
+					ChunkCoordinates i;
+					if (ChunksToUpdate.TryDequeue(out i))
+					{
+						UpdateResetEvent.Wait(CancelationToken.Token);
 
-					IChunkColumn chunk;
-			        if (!Chunks.TryGetValue(i, out chunk))
-			        {
-				        Interlocked.Decrement(ref _chunkUpdates);
-						continue;
-			        }
+						IChunkColumn chunk;
+						if (!Chunks.TryGetValue(i, out chunk))
+						{
+							Interlocked.Decrement(ref _chunkUpdates);
+							continue;
+						}
 
-			        try
-			        {
-				        
-				        int newThreads = Interlocked.Increment(ref RunningThreads);
-				        if (newThreads == maxThreads)
-				        {
-							UpdateResetEvent.Reset();
-				        }
+						try
+						{
 
-						Task.Run(() =>
-				        {
-					        UpdateChunk(chunk);
-				        }).ContinueWith(ContinuationAction);
-			        }
-			        catch(TaskCanceledException)
-			        {
-				        break;
-			        }
-		        }
-		        else
-		        {
-			        _updateResetEvent.WaitOne();
-		        }
-	        }
-        }
+							int newThreads = Interlocked.Increment(ref RunningThreads);
+							if (newThreads == maxThreads)
+							{
+								UpdateResetEvent.Reset();
+							}
+
+							Task.Run(() => { UpdateChunk(chunk); }).ContinueWith(ContinuationAction);
+						}
+						catch (TaskCanceledException)
+						{
+							break;
+						}
+					}
+					else
+					{
+						_updateResetEvent.WaitOne();
+					}
+				}
+				catch (TaskCanceledException)
+				{
+					break;
+				}
+			}
+
+			if (!CancelationToken.IsCancellationRequested)
+				Log.Warn($"Chunk update loop has unexpectedly ended!");
+		}
 
 	    private void ContinuationAction(Task task)
 	    {
@@ -124,7 +131,6 @@ namespace Alex.Rendering
 		    UpdateResetEvent.Set();
 		}
 
-	    long entityId = 0;
 		private bool UpdateChunk(IChunkColumn chunk)
 	    {
 			if (!Monitor.TryEnter(chunk.UpdateLock))
@@ -175,26 +181,6 @@ namespace Alex.Rendering
 				else if (mesh.TransparentVertices.Length > 0)
 				{
 					chunk.TransparentVertexBuffer.SetData(mesh.TransparentVertices);
-				}
-
-				var column = (ChunkColumn) chunk;
-				if (column.Entities != null)
-				{					
-					foreach (var nbt in column.Entities)
-					{
-						var eId = Interlocked.Increment(ref entityId);
-						if (EntityFactory.TryLoadEntity(nbt, eId, out MiNET.Entities.Entity entity))
-						{
-							if (World.EntityManager.AddEntity(eId, entity))
-							{
-								//Log.Info($"Spawned entity {entity} at {entity.KnownPosition} with renderer {entity.GetModelRenderer()}");
-							}
-							else
-							{
-								//Log.Warn($"Failed to add entity!");
-							}
-						}
-					}
 				}
 
 				chunk.IsDirty = false;

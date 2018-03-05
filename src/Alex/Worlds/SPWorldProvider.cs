@@ -2,8 +2,11 @@
 using System.Collections.Generic;
 using System.Threading;
 using Alex.API.World;
+using Alex.Entities;
+using Alex.Utils;
 using Alex.Worlds.Generators;
 using Microsoft.Xna.Framework;
+using MiNET.Blocks;
 using MiNET.Utils;
 
 namespace Alex.Worlds
@@ -79,6 +82,7 @@ namespace Alex.Worlds
 								if (chunk == null) continue;
 
 								base.LoadChunk(chunk, cc.X, cc.Z);
+								LoadEntities((ChunkColumn) chunk);
 
 								LoadedChunks.Add(cc);
 							}
@@ -96,6 +100,23 @@ namespace Alex.Worlds
 				}
 
 				Thread.Sleep(500);
+			}
+		}
+
+		private long _spEntityIdCounter = 0;
+		private void LoadEntities(ChunkColumn chunk)
+		{
+			var column = (ChunkColumn)chunk;
+			if (column.Entities != null)
+			{
+				foreach (var nbt in column.Entities)
+				{
+					var eId = Interlocked.Increment(ref _spEntityIdCounter);
+					if (EntityFactory.TryLoadEntity(nbt, eId, out MiNET.Entities.Entity entity))
+					{
+						base.SpawnEntity(eId, entity);
+					}
+				}
 			}
 		}
 

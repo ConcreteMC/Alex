@@ -20,8 +20,11 @@ namespace Alex.Utils
 			return new Vector3(location.X, location.Y, location.Z);
 	    }
 
-
-    }
+	    public static Vector3 ToXnaVector3(this System.Numerics.Vector3 location)
+	    {
+		    return new Vector3(location.X, location.Y, location.Z);
+	    }
+	}
 
 	public static class EntityExtensions
 	{

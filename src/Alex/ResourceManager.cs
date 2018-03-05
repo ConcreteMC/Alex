@@ -108,18 +108,21 @@ namespace Alex
 		        ResourcePack = LoadResourcePack(device, stream, true, true, true);
 	        }
 
-	        if (File.Exists(BedrockResourcePackPath))
-	        {
-				Log.Info($"Loading bedrock resources...");
-				BedrockResourcePack = new BedrockResourcePack(File.ReadAllBytes(BedrockResourcePackPath));
-			}
-	        else
-	        {
-				Log.Error($"Could not start, missing bedrock resources! Please place 'bedrock.zip' in the assets folder!");
-		        return false;
-	        }
+			 if (File.Exists(BedrockResourcePackPath))
+			 {
+				 Log.Info($"Loading bedrock resources...");
+				 BedrockResourcePack = new BedrockResourcePack(File.ReadAllBytes(BedrockResourcePackPath));
+			 }
+			 else
+			 {
+				 Log.Error($"Could not start, missing bedrock resources! Please place 'bedrock.zip' in the assets folder!");
+				 return false;
+			 }
 
-	        EntityFactory.LoadModels(this, device, true);
+		//	Log.Info($"Loading bedrock resources...");
+	        //BedrockResourcePack = new BedrockResourcePack(Resources.bedrock);
+
+			EntityFactory.LoadModels(this, device, true);
 
 			foreach (string file in setings.ResourcePacks)
 	        {

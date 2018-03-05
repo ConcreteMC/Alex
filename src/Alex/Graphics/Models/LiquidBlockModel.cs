@@ -73,7 +73,7 @@ namespace Alex.Graphics.Models
 				texture = texture + "_still";
 			}
 
-			UVMap map = GetTextureUVMap(Alex.Instance.Resources, texture, 0, 1, 0, 6);
+			UVMap map = GetTextureMap(Alex.Instance.Resources, texture, 0, 8, 0, 8);
 
 			foreach (var f in Enum.GetValues(typeof(BlockFace)).Cast<BlockFace>())
 			{
@@ -182,6 +182,42 @@ namespace Alex.Graphics.Models
 			}
 
 			return level;
+		}
+
+		private UVMap GetTextureMap(ResourceManager resources, string texture, float x1, float x2, float y1, float y2)
+		{
+			if (resources == null)
+			{
+				x1 = 0;
+				x2 = 1 / 32f;
+				y1 = 0;
+				y2 = 1 / 32f;
+
+				return new UVMap(new Microsoft.Xna.Framework.Vector2(x1, y1),
+					new Microsoft.Xna.Framework.Vector2(x2, y1), new Microsoft.Xna.Framework.Vector2(x1, y2),
+					new Microsoft.Xna.Framework.Vector2(x2, y2), Color.White, Color.White, Color.White);
+			}
+
+			var textureInfo = resources.Atlas.GetAtlasLocation(texture.Replace("blocks/", ""));
+			var textureLocation = textureInfo.Position;
+
+			var uvSize = resources.Atlas.AtlasSize;
+
+			var pixelSizeX = (textureInfo.Width / uvSize.X) / 16f; //0.0625
+			var pixelSizeY = (textureInfo.Height / uvSize.Y) / 16f;
+
+			textureLocation.X /= uvSize.X;
+			textureLocation.Y /= uvSize.Y;
+
+			x1 = textureLocation.X + (x1 * pixelSizeX);
+			x2 = textureLocation.X + (x2 * pixelSizeX);
+			y1 = textureLocation.Y + (y1 * pixelSizeY);
+			y2 = textureLocation.Y + (y2 * pixelSizeY);
+
+
+			return new UVMap(new Microsoft.Xna.Framework.Vector2(x1, y1),
+				new Microsoft.Xna.Framework.Vector2(x2, y1), new Microsoft.Xna.Framework.Vector2(x1, y2),
+				new Microsoft.Xna.Framework.Vector2(x2, y2), Color.White, Color.White, Color.White);
 		}
 	}
 }

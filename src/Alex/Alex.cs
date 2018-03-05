@@ -5,6 +5,7 @@ using System.Threading;
 using Alex.Gamestates;
 using log4net;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content.Pipeline.Graphics;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Newtonsoft.Json;
@@ -23,25 +24,23 @@ namespace Alex
 		public static SpriteFont Font;
 
 		private SpriteBatch _spriteBatch;
-		 
+
 		public static Alex Instance { get; private set; }
 		public GamestateManager GamestateManager { get; private set; }
 		public ResourceManager Resources { get; private set; }
+
 		public Alex()
 		{
 			Instance = this;
 
-			var graphics = new GraphicsDeviceManager(this) {
+			var graphics = new GraphicsDeviceManager(this)
+			{
 				PreferMultiSampling = false,
 				SynchronizeWithVerticalRetrace = false,
 				GraphicsProfile = GraphicsProfile.Reach
 			};
-			Content.RootDirectory = "assets";
 
-			IsFixedTimeStep = false;
-         //   _graphics.ToggleFullScreen();
-			
-			Username = "";
+			Content.RootDirectory = "assets"; 
 			this.Window.AllowUserResizing = true;
 			this.Window.ClientSizeChanged += (sender, args) =>
 			{
@@ -53,10 +52,17 @@ namespace Alex
 					graphics.ApplyChanges();
 				}
 			};
+
+
+			IsFixedTimeStep = false;
+			//   _graphics.ToggleFullScreen();
+
+			Username = "";
 			
 		}
 
 		public static EventHandler<TextInputEventArgs> OnCharacterInput;
+
 		private void Window_TextInput(object sender, TextInputEventArgs e)
 		{
 			OnCharacterInput?.Invoke(this, e);
@@ -77,6 +83,7 @@ namespace Alex
 		}
 
 		internal Settings GameSettings { get; private set; }
+
 		protected override void Initialize()
 		{
 			Window.Title = "Alex - " + Version;
@@ -88,7 +95,7 @@ namespace Alex
 					GameSettings = JsonConvert.DeserializeObject<Settings>(File.ReadAllText("settings.json"));
 					Username = GameSettings.Username;
 				}
-				catch(Exception ex)
+				catch (Exception ex)
 				{
 					Log.Warn($"Failed to load settings!", ex);
 				}
@@ -146,8 +153,10 @@ namespace Alex
 			{
 				File.WriteAllBytes(Path.Combine("assets", "Minecraftia.xnb"), global::Alex.Resources.Minecraftia1);
 			}
-			Font = Content.Load<SpriteFont>("Minecraftia");
 
+			Font = Content.Load<SpriteFont>("Minecraftia");
+			//var shader = Content.Load<EffectContent>(Path.Combine("shaders", "hlsl", "renderchunk.vertex"));
+			
 			Log.Info($"Loading blockstate metadata...");
 			BlockFactory.Init();
 
