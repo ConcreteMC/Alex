@@ -3,8 +3,8 @@ using System.IO;
 using System.Net;
 using System.Threading;
 using Alex.Gamestates;
-using Alex.Gui;
-using Alex.Gui.Themes;
+using Alex.Graphics;
+using Alex.Graphics.UI;
 using Alex.Rendering;
 using log4net;
 using Microsoft.Xna.Framework;
@@ -31,7 +31,7 @@ namespace Alex
 		public GameStateManager GameStateManager { get; private set; }
 		public ResourceManager Resources { get; private set; }
 
-		public GuiManager GuiManager { get; private set; }
+		public UiManager UiManager { get; private set; }
 
 		public Alex()
 		{
@@ -61,7 +61,7 @@ namespace Alex
 				}
 			};
 
-			GuiManager = new GuiManager(this);
+			UiManager = new UiManager(this);
 		}
 
 		public static EventHandler<TextInputEventArgs> OnCharacterInput;
@@ -111,8 +111,8 @@ namespace Alex
 		protected override void LoadContent()
 		{
 			_spriteBatch = new SpriteBatch(GraphicsDevice);
-			GuiManager.Init(GraphicsDevice, _spriteBatch);
-			GameStateManager = new GameStateManager(GraphicsDevice, _spriteBatch, GuiManager);
+			UiManager.Init(GraphicsDevice, _spriteBatch);
+			GameStateManager = new GameStateManager(GraphicsDevice, _spriteBatch, UiManager);
 
 			GameStateManager.AddState("splash", new SplashScreen(this));
 			GameStateManager.SetActiveState("splash");
@@ -128,9 +128,10 @@ namespace Alex
 
 		protected override void Update(GameTime gameTime)
 		{
-			GameStateManager.Update(gameTime);
-			GuiManager.Update(gameTime);
 			base.Update(gameTime);
+
+			UiManager.Update(gameTime);
+			GameStateManager.Update(gameTime);
 		}
 
 		protected override void Draw(GameTime gameTime)
@@ -139,9 +140,9 @@ namespace Alex
 			GraphicsDevice.Clear(Color.SkyBlue);
 
 			GameStateManager.Draw(gameTime);
-			GuiManager.Draw(gameTime);
 
 			base.Draw(gameTime);
+			UiManager.Draw(gameTime);
 		}
 
 		private void InitializeGame()
@@ -163,7 +164,7 @@ namespace Alex
 
 			Mouse.SetPosition(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2);
 
-			GuiManager.Renderer.Theme = Resources.UiThemeFactory.GetTheme();
+			UiManager.Theme = Resources.UiThemeFactory.GetTheme();
 
 			//GamestateManager.AddState("login", new LoginState(this));
 			//GamestateManager.SetActiveState("login");

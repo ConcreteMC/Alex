@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Threading;
-using Alex.Gui;
-using Alex.Gui.Themes;
+using Alex.Graphics;
+using Alex.Graphics.UI;
 using Alex.Rendering;
 using log4net;
 using Microsoft.Xna.Framework;
@@ -20,14 +20,14 @@ namespace Alex.Gamestates
         private GraphicsDevice Graphics { get; }
         private SpriteBatch SpriteBatch { get; }
 
-	    private GuiManager GuiManager { get; }
+	    private UiManager UiManager { get; }
 
 		private ReaderWriterLockSlim Lock = new ReaderWriterLockSlim();
-        public GameStateManager(GraphicsDevice graphics, SpriteBatch spriteBatch, GuiManager guiManager)
+        public GameStateManager(GraphicsDevice graphics, SpriteBatch spriteBatch, UiManager uiManager)
         {
             Graphics = graphics;
             SpriteBatch = spriteBatch;
-	        GuiManager = guiManager;
+	        UiManager = uiManager;
 
             ActiveStates = new ConcurrentDictionary<string, GameState>();
 		}
@@ -79,7 +79,7 @@ namespace Alex.Gamestates
 	        {
 				ActiveState?.Hide();
 		        ActiveState = state;
-				state?.Show();
+		        ActiveState?.Show();
 	        }
 	        finally
 	        {

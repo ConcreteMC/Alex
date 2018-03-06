@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Alex.Gui;
 using Alex.API.Graphics;
+using Alex.Graphics;
+using Alex.Graphics.UI;
 using Alex.Rendering.UI;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -40,13 +41,14 @@ namespace Alex.Gamestates
 		public void Load(RenderArgs args)
 		{
 			Gui = new UiRoot();
-			Alex.GuiManager.Root.Controls.Add(Gui);
+			Alex.UiManager.Root.Controls.Add(Gui);
+
 			OnLoad(args);
 		}
 
 		public void Unload()
 		{
-			Gui.Container.Controls.Remove(Gui);
+			Alex.UiManager.Root.Controls.Remove(Gui);
 			OnUnload();
 		}
 
@@ -75,13 +77,11 @@ namespace Alex.Gamestates
 			}
 		}
 
-
 		public void Show()
 		{
 
 			OnShow();
 		}
-
 
 		public void Hide()
 		{

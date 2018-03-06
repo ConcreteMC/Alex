@@ -17,6 +17,8 @@ namespace Alex.ResourcePackLib
 
 		public IReadOnlyDictionary<string, EntityModel> EntityModels { get; private set; }
 		public IReadOnlyDictionary<string, Bitmap> Textures { get; private set; }
+		public IReadOnlyDictionary<string, string> TextureJsons { get; private set; }
+
 		private ZipFile _archive;
 		public BedrockResourcePack(ZipFile archive)
 		{
@@ -31,6 +33,21 @@ namespace Alex.ResourcePackLib
 		})
 		{
 
+		}
+
+		public bool TryGetTexture(string name, out Bitmap texture)
+		{
+			return Textures.TryGetValue(NormalisePath(name), out texture);
+		}
+
+		public bool TryGetTextureJson(string name, out string textureJson)
+		{
+			return TextureJsons.TryGetValue(NormalisePath(name), out textureJson);
+		}
+
+		private string NormalisePath(string path)
+		{
+			return path.Replace('\\', '/').ToLowerInvariant();
 		}
 
 		private void Load()
@@ -74,6 +91,8 @@ namespace Alex.ResourcePackLib
 			var json = stream.ReadToEnd();
 
 			Dictionary<string, Bitmap> textures = new Dictionary<string, Bitmap>();
+			Dictionary<string, string> textureJsons = new Dictionary<string, string>();
+
 			string[] definitions = JsonConvert.DeserializeObject<string[]>(json);
 			foreach (string def in definitions)
 			{
@@ -84,12 +103,24 @@ namespace Alex.ResourcePackLib
 				if (e != null && e.IsFile)
 				{
 					Bitmap bmp = new Bitmap(_archive.GetInputStream(e));
-					textures.Add(def, bmp);
+					textures.Add(NormalisePath(def), bmp);
+				}
+
+				e = _archive.GetEntry(def + ".json");
+				if (e != null && e.IsFile)
+				{
+					using(var eStream = _archive.GetInputStream(e))
+					using (var sr = new StreamReader(eStream))
+					{
+						var textureJson = sr.ReadToEnd();
+						textureJsons.Add(NormalisePath(def), textureJson);
+					}
 				}
 			}
 
 			Textures = textures;
-			Log.Info($"Loaded {textures.Count} textures");
+			TextureJsons = textureJsons;
+			Log.Info($"Loaded {textures.Count} textures and {textureJsons.Count} textureJsons");
 		}
 
 		private void LoadMobs(ZipEntry entry)

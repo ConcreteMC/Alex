@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27130.2020
+VisualStudioVersion = 15.0.27130.2036
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alex.Data", "Alex.Data\Alex.Data.csproj", "{63D936AD-3498-45F6-84A9-48DAFCEF7D96}"
 EndProject
@@ -18,7 +18,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		NuGet.Config = NuGet.Config
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alex.Gui", "Alex.Gui\Alex.Gui.csproj", "{7C987100-16CA-432F-B2EA-A9C3929A7AED}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Alex.Graphics", "Alex.Gui\Alex.Graphics.csproj", "{7C987100-16CA-432F-B2EA-A9C3929A7AED}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

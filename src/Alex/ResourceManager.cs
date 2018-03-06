@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Net;
-using Alex.Gui.Themes;
 using Alex.Rendering;
 using Alex.ResourcePackLib;
 using Alex.Utils;
@@ -81,7 +80,6 @@ namespace Alex
 				sw.Stop();
 				Log.Info($"Imported {imported} blockstates from resourcepack in {sw.ElapsedMilliseconds}ms!");
 
-			    UiThemeFactory.LoadResources(this, resourcePack, replaceTextures);
 
 			}
 
@@ -118,7 +116,8 @@ namespace Alex
 	        {
 				Log.Info($"Loading bedrock resources...");
 				BedrockResourcePack = new BedrockResourcePack(File.ReadAllBytes(BedrockResourcePackPath));
-	        }
+		        UiThemeFactory.LoadResources(BedrockResourcePack);
+			}
 
 			foreach (string file in setings.ResourcePacks)
 	        {

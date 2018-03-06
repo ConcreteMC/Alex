@@ -2,13 +2,15 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using Alex.Gui;
-using Alex.Gui.Controls;
-using Alex.Gui.Controls.Menu;
-using Alex.Gui.Layout;
-using Alex.Gui.Rendering;
-using Alex.Gui.Themes;
+using Alex.Graphics;
+using Alex.Graphics.Textures;
+using Alex.Graphics.UI;
+using Alex.Graphics.UI.Common;
+using Alex.Graphics.UI.Controls.Menu;
+using Alex.Graphics.UI.Layout;
+using Alex.Graphics.UI.Themes;
 using Alex.ResourcePackLib;
+using Alex.ResourcePackLib.Json;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -20,9 +22,8 @@ namespace Alex.Rendering
     {
 
         private GraphicsDevice Graphics { get;}
-        private McResourcePack ResourcePack { get; set; }
-        private UiTheme Theme { get;}
-        private bool ReplaceExisting { get; set; }
+        private BedrockResourcePack ResourcePack { get; set; }
+        private UiTheme Theme { get; }
         private Dictionary<string, NinePatchTexture> Textures { get; }
 
         public ResourcePackUiThemeBuilder(GraphicsDevice graphicsDevice)
@@ -32,10 +33,9 @@ namespace Alex.Rendering
             Textures = new Dictionary<string, NinePatchTexture>();
         }
 
-        public void LoadResources(ResourceManager resourceManager, McResourcePack resourcePack, bool replaceExisting)
+        public void LoadResources(BedrockResourcePack resourcePack)
         {
             ResourcePack = resourcePack;
-            ReplaceExisting = replaceExisting;
             Build();
         }
 
@@ -46,16 +46,41 @@ namespace Alex.Rendering
 
         private void Build()
         {
+            BuildBaseStyles();
             BuildPanelStyles();
             BuildButtonStyles();
+        }
+
+        private void BuildBaseStyles()
+        {
+            Theme.AddClass<UiRoot>(new UiElementStyle()
+            {
+                WidthSizeMode = SizeMode.FillParent,
+                HeightSizeMode = SizeMode.FillParent,
+                HorizontalContentAlignment = HorizontalAlignment.Center,
+                VerticalContentAlignment = VerticalAlignment.Center
+            });
+
+            Theme.AddClass<UiElement>(new UiElementStyle()
+            {
+                TextFont = Alex.Font,
+                TextColor = Color.Black,
+            });
+            Theme.AddClass<UiElement>(new UiElementStyle()
+            {
+                TextFont  = Alex.Font,
+                TextColor = Color.Black,
+            });
         }
 
         private void BuildPanelStyles()
         {
             Theme.AddClass("TitleScreenRoot", new UiElementStyle()
             {
-                Background = (NinePatchTexture) TextureUtils.ImageToTexture2D(Graphics, Resources.mcbg)
+                Background = GetTexture("background"),
+                BackgroundRepeat = TextureRepeatMode.Tile
             });
+
             Theme.AddClass("TitleScreenLogo", new UiElementStyle()
             {
                 Background = (NinePatchTexture)TextureUtils.ImageToTexture2D(Graphics, Resources.logo)
@@ -70,6 +95,14 @@ namespace Alex.Rendering
 
         private void BuildButtonStyles()
         {
+            Theme.AddClass<UiMenuItem>(new UiElementStyle()
+            {
+                Width  = 200,
+                Height = 40,
+                TextFont = Alex.Font,
+                TextColor = Color.Black
+            });
+
             Theme.AddClass<UiMenuItem>(i => !i.IsMouseDown && !i.IsMouseOver, new UiElementStyle()
             {
                 Background = GetTexture("classic-button"),
@@ -78,7 +111,7 @@ namespace Alex.Rendering
             {
                 Background = GetTexture("classic-button-hover"),
             });
-            Theme.AddClass<UiMenuItem>(i => i.IsMouseDown && i.IsMouseOver, new UiElementStyle()
+            Theme.AddClass<UiMenuItem>(i => i.IsMouseDown, new UiElementStyle()
             {
                 Background = GetTexture("classic-button-pressed"),
             });
@@ -87,31 +120,26 @@ namespace Alex.Rendering
         private NinePatchTexture GetTexture(string fileName)
         {
             NinePatchTexture texture;
-            if (!Textures.TryGetValue(fileName, out texture) || ReplaceExisting)
+            if (!Textures.TryGetValue(fileName, out texture))
             {
-                if (TryLoadTexture2D(fileName + ".png", out var rawTexture))
-                {
-                    var ninePatch = GetNinePatchSize(fileName);
+                var rawTexture = LoadTexture2D(fileName);
+                var ninePatch = GetNinePatchSize(fileName);
                 
-                    texture = new NinePatchTexture(rawTexture, ninePatch);
-                    Textures.Add(fileName, texture);
-                }
+                texture = new NinePatchTexture(rawTexture, ninePatch);
+                Textures.Add(fileName, texture);
             }
 
             return texture;
         }
 
-        private bool TryLoadTexture2D(string fileName, out Texture2D texture)
+        private Texture2D LoadTexture2D(string fileName)
         {
-            var path = Path.Combine("textures", "ui", fileName);
-
-            if (ResourcePack.TryGetStream(path, out var stream))
+            if (ResourcePack.TryGetTexture($"textures/ui/{fileName}", out var bitmap))
             {
-                texture = Texture2D.FromStream(Graphics, stream);
-                return true;
+                return TextureUtils.BitmapToTexture2D(Graphics, bitmap);
             }
 
-            texture = new Texture2D(Graphics, 2, 2, false, SurfaceFormat.Color);
+            var texture = new Texture2D(Graphics, 2, 2, false, SurfaceFormat.Color);
             texture.SetData(new []
             {
                 Color.Black,
@@ -120,14 +148,15 @@ namespace Alex.Rendering
                 Color.Black
             });
             
-            return false;
+            return texture;
         }
 
         private int GetNinePatchSize(string fileName)
         {
-            if (ResourcePack.TryGetJson($"textures\\ui\\{fileName}", out NinePatchTextureConfig json))
+            if (ResourcePack.TryGetTextureJson($"textures/ui/{fileName}", out var json))
             {
-                return json.NineSliceSize;
+                var obj = MCJsonConvert.DeserializeObject<NinePatchTextureConfig>(json);
+                return obj.NineSliceSize;
             }
 
             return 0;
