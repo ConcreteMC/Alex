@@ -151,7 +151,9 @@ namespace Alex.Gamestates
 
 			// foreach (var i in ActiveStates.ToArray())
 			{
-                try
+				if (activeState == null) return;
+
+				try
                 {
                    // lock (_lock)
                     {

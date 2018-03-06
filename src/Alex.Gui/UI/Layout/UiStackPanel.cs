@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using Alex.Graphics.UI.Common;
 using Microsoft.Xna.Framework;
 
@@ -6,54 +7,42 @@ namespace Alex.Graphics.UI.Layout
 {
 	public class UiStackPanel : UiContainer
 	{
+		private Orientation _orientation = Orientation.Vertical;
 
-		public Orientation Orientation { get; set; } = Orientation.Vertical;
+		public Orientation Orientation
+		{
+			get => _orientation;
+			set
+			{
+				if (value == _orientation) return;
+				_orientation = value;
+				OnPropertyChanged();
+			}
+		}
 
 		public UiStackPanel()
 		{
 
 		}
-
-
-		public override void UpdateSize()
+		
+		protected override void OnLayoutControls(UiElementLayoutParameters layoutParameters, IReadOnlyCollection<UiElement> controls)
 		{
-			base.UpdateSize();
-
-			if (Orientation == Orientation.Horizontal)
-			{
-				ActualWidth = Controls.Sum(c => c.Bounds.Width);
-				ActualHeight = Controls.Max(c => c.Bounds.Height);
-			}
-			else if (Orientation == Orientation.Vertical)
-			{
-				ActualWidth = Controls.Max(c => c.Bounds.Width);
-				ActualHeight = Controls.Sum(c => c.Bounds.Height);
-			}
-
-		}
-
-		protected override void OnUpdateLayout()
-		{
-			base.OnUpdateLayout();
-
 			var offset = 0;
 
-			foreach (var control in Controls.ToArray())
+			foreach (var control in controls.ToArray())
 			{
 				if (Orientation == Orientation.Horizontal)
 				{
 					// Increase X
-					control.Offset = new Point(offset, control.Offset.Y);
-					offset += control.OuterBounds.Width;
+					control.LayoutParameters.Position = new Point(offset, 0);
+					offset += control.LayoutParameters.OuterBounds.Width;
 				}
 				else if (Orientation == Orientation.Vertical)
 				{
 					// Increase Y
-					control.Offset = new Point(control.Offset.X, offset);
-					offset += control.OuterBounds.Height;
+					control.LayoutParameters.Position = new Point(0, offset);
+					offset += control.LayoutParameters.OuterBounds.Height;
 				}
-
-				control.UpdateLayout();
 			}
 		}
 	}

@@ -13,27 +13,36 @@ namespace Alex.Graphics.UI.Themes
 
 	public class UiElementStyle
 	{
-		public Color BackgroundColor { get; set; } = Color.Transparent;
-		public TextureRepeatMode BackgroundRepeat { get; set; } = TextureRepeatMode.Stretch;
-		public NinePatchTexture Background { get; set; } = null;
+		public int StylePriority { get; set; } = 0;
+
+		public Color? BackgroundColor { get; set; }
+		public TextureRepeatMode? BackgroundRepeat { get; set; }
+		public NinePatchTexture Background { get; set; }
 
 
 		public SpriteFont TextFont { get; set; }
-		public Color TextColor { get; set; } = Color.DarkGray;
-		public Color TextShadowColor { get; set; } = Color.Black;
-		public int TextShadowSize { get; set; } = 0;
+		public Color? TextColor { get; set; }
+		public Color? TextShadowColor { get; set; }
+		public float? TextSize { get; set; }
+		public int? TextShadowSize { get; set; }
 
-		public int? Width { get; set; } = null;
-		public int? Height { get; set; } = null;
+		public int? Width { get; set; }
+		public int? Height { get; set; }
+		public int? MinWidth  { get; set; }
+		public int? MinHeight { get; set; }
+		public int? MaxWidth  { get; set; }
+		public int? MaxHeight { get; set; }
 
-		public Thickness Padding { get; set; } = Thickness.Zero;
-		public Thickness Margin { get; set; } = Thickness.Zero;
+		public Thickness? Padding { get; set; }
+		public Thickness? Margin { get; set; }
+		
+		public Vector2? SizeAnchor { get; set; }
+		public Vector2? PositionAnchor { get; set; }
+		public Vector2? SizeAnchorOrigin     { get; set; }
+		public Vector2? PositionAnchorOrigin { get; set; }
 
-		public SizeMode WidthSizeMode { get; set; } = SizeMode.FitToContent;
-		public SizeMode HeightSizeMode { get; set; } = SizeMode.FitToContent;
-
-		public HorizontalAlignment HorizontalContentAlignment { get; set; } = HorizontalAlignment.None;
-		public VerticalAlignment VerticalContentAlignment { get; set; } = VerticalAlignment.None;
+		public HorizontalAlignment? HorizontalContentAlignment { get; set; }
+		public VerticalAlignment? VerticalContentAlignment { get; set; }
 	}
 	
 	public class UiElementStyle2

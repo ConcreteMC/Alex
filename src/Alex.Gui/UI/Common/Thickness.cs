@@ -2,11 +2,10 @@
 
 namespace Alex.Graphics.UI.Common
 {
-	public class Thickness
+	public struct Thickness
 	{
 		public static Thickness Zero => new Thickness(0);
-
-
+		
 		public int Left { get; }
 		public int Top { get; }
 		public int Right { get; }
@@ -35,29 +34,29 @@ namespace Alex.Graphics.UI.Common
 		public static Thickness operator +(Thickness a, Thickness b)
 		{
 			return new Thickness(
-				a?.Left   ?? 0 + b?.Left   ?? 0, 
-				a?.Top    ?? 0 + b?.Top    ?? 0,
-				a?.Right  ?? 0 + b?.Right  ?? 0,
-				a?.Bottom ?? 0 + b?.Bottom ?? 0
+				a.Left + b.Left,
+				a.Top + b.Top,
+				a.Right + b.Right,
+				a.Bottom + b.Bottom
 				);
 		}
 
 		public static Thickness operator -(Thickness a, Thickness b)
 		{
 			return new Thickness(
-				a?.Left   ?? 0 - b?.Left   ?? 0,
-				a?.Top    ?? 0 - b?.Top    ?? 0,
-				a?.Right  ?? 0 - b?.Right  ?? 0,
-				a?.Bottom ?? 0 - b?.Bottom ?? 0
+				a.Left   - b.Left,
+				a.Top    - b.Top,
+				a.Right  - b.Right,
+				a.Bottom - b.Bottom
 			);
 		}
 
 		public static Rectangle operator -(Rectangle rect, Thickness b)
 		{
 			return new Rectangle(
-				rect.Left   + b.Left,
-				rect.Top    + b.Top,
-				rect.Width  - b.Horizontal,
+				rect.Left + b.Left,
+				rect.Top + b.Top,
+				rect.Width - b.Horizontal,
 				rect.Height - b.Vertical
 			);
 		}
@@ -65,9 +64,9 @@ namespace Alex.Graphics.UI.Common
 		public static Rectangle operator +(Rectangle rect, Thickness b)
 		{
 			return new Rectangle(
-				rect.Left   - b.Left,
-				rect.Top    - b.Top,
-				rect.Width  + b.Horizontal,
+				rect.Left - b.Left,
+				rect.Top - b.Top,
+				rect.Width + b.Horizontal,
 				rect.Height + b.Vertical
 			);
 		}

@@ -29,18 +29,12 @@ namespace Alex.Graphics.UI
 
 			Input = new UiInputManager(this);
 
-			Root = new UiRoot();
-			Root.CustomStyle.WidthSizeMode = SizeMode.Absolute;
-			Root.CustomStyle.HeightSizeMode = SizeMode.Absolute;
 		}
 
 		private void OnScaleChanged(object sender, UiScaleEventArgs e)
 		{
 			Renderer.SetVirtualSize(e.ScaledWidth, e.ScaledHeight, e.ScaleFactor);
-
-			Root.ActualWidth  = Renderer.VirtualWidth;
-			Root.ActualHeight = Renderer.VirtualHeight;
-
+			
 			_doResize = true;
 		}
 
@@ -52,11 +46,11 @@ namespace Alex.Graphics.UI
 		public void Init(GraphicsDevice graphics, SpriteBatch spriteBatch)
 		{
 			Renderer = new UiRenderer(this, graphics, spriteBatch);
-			
+
 			ScaledResolution              =  new UiScaledResolution(Game);
 			ScaledResolution.ScaleChanged += OnScaleChanged;
 
-			Root = new UiRoot(Renderer.VirtualWidth, Renderer.VirtualHeight);
+			Root = new UiRoot(Renderer);
 			
 			_doResize = true;
 
@@ -68,7 +62,7 @@ namespace Alex.Graphics.UI
 			if (_doResize)
 			{
 				ScaledResolution.Update();
-				Root.UpdateSize();
+				Root.UpdateLayoutInternal();
 
 				_doResize = false;
 			}

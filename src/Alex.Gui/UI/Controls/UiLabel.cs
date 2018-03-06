@@ -14,7 +14,9 @@ namespace Alex.Graphics.UI.Controls
 			get { return _text; }
 			set
 			{
+				if (_text == value) return;
 				_text = value;
+				OnPropertyChanged();
 				MarkLayoutDirty();
 			}
 		}
@@ -22,15 +24,6 @@ namespace Alex.Graphics.UI.Controls
 		public UiLabel(string text)
 		{
 			Text = text;
-		}
-
-		protected internal override Point GetAutoSize()
-		{
-			if (Style.TextFont != null && !string.IsNullOrWhiteSpace(Text))
-			{
-				return base.GetAutoSize().Max(Style.TextFont?.MeasureString(Text).ToPoint() ?? Point.Zero);
-			}
-			return base.GetAutoSize();
 		}
 
 	}

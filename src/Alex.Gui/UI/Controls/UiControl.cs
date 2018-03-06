@@ -12,8 +12,31 @@ namespace Alex.Graphics.UI.Controls
 		public event EventHandler<MouseEventArgs> MouseDown;
 		public event EventHandler<MouseEventArgs> MouseUp;
 
-		public bool IsMouseOver { get; private set; }
-		public bool IsMouseDown { get; private set; }
+		private bool _isMouseOver;
+
+		public bool IsMouseOver
+		{
+			get => _isMouseOver;
+			private set
+			{
+				if (value == _isMouseOver) return;
+				_isMouseOver = value;
+				OnPropertyChanged();
+			}
+		}
+
+		private bool _isMouseDown;
+
+		public bool IsMouseDown
+		{
+			get => _isMouseDown;
+			private set
+			{
+				if (value == _isMouseDown) return;
+				_isMouseDown = value;
+				OnPropertyChanged();
+			}
+		}
 
 		public void InvokeMouseEnter(MouseEventArgs args)
 		{

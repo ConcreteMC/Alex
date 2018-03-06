@@ -13,7 +13,7 @@ namespace Alex.Gamestates
 	{
 		public Dictionary<string, UIComponent> Controls { get; set; }
 
-		public UiRoot Gui { get; private set; }
+		public UiContainer Gui { get; private set; }
 
 		protected GraphicsDevice Graphics { get; }
 
@@ -40,15 +40,20 @@ namespace Alex.Gamestates
 
 		public void Load(RenderArgs args)
 		{
-			Gui = new UiRoot();
-			Alex.UiManager.Root.Controls.Add(Gui);
+			Gui = new UiContainer
+			{
+				ClassName = "GuiRoot"
+			};
+			Alex.UiManager.Root.AddChild(Gui);
 
 			OnLoad(args);
+
+			Gui.UpdateLayout();
 		}
 
 		public void Unload()
 		{
-			Alex.UiManager.Root.Controls.Remove(Gui);
+			Alex.UiManager.Root.AddChild(Gui);
 			OnUnload();
 		}
 
@@ -79,8 +84,8 @@ namespace Alex.Gamestates
 
 		public void Show()
 		{
-
 			OnShow();
+			Gui.UpdateLayout();
 		}
 
 		public void Hide()

@@ -10,6 +10,7 @@ namespace Alex.Graphics.UI.Rendering
 {
 	public class UiRenderer
 	{
+		public event EventHandler SizeChanged;
 
 		public UiManager UiManager { get; }
 		public UiTheme Theme => UiManager.Theme;
@@ -37,11 +38,11 @@ namespace Alex.Graphics.UI.Rendering
 
 			UpdateViewport();
 
-			//_rasteriserState = new RasterizerState()
-			//{
-			//ScissorTestEnable = true,
+			_rasteriserState = new RasterizerState()
+			{
+			ScissorTestEnable = true,
 			//CullMode = CullMode.None,
-			//};
+			};
 		}
 
 		public void SetVirtualSize(int width, int height, int scaleFactor)
@@ -60,6 +61,8 @@ namespace Alex.Graphics.UI.Rendering
 
 			ScaleMatrix = Matrix.CreateScale(scaleX, scaleY, 1.0f);
 			PointToScreenMatrix = Matrix.Invert(ScaleMatrix);
+
+			SizeChanged?.Invoke(this, null);
 		}
 
 		public Point PointToScreen(Point point)
@@ -86,28 +89,28 @@ namespace Alex.Graphics.UI.Rendering
 			DrawElementStyle(element, args);
 
 			// Debug Bounding Boxes
-			DrawDebugBoundingBoxes(element);
+			//DrawDebugBoundingBoxes(element, args);
 		}
 
-		private void DrawDebugBoundingBoxes(UiElement element)
+		private void DrawDebugBoundingBoxes(UiElement element, UiElementRenderArgs args)
 		{
-			DrawRectangle(element.ClientBounds, Color.Blue);
-			DrawRectangle(element.OuterBounds, Color.Red);
-			DrawRectangle(element.Bounds, Color.Green);
+			DrawRectangle(args.LayoutBounds, Color.Red);
+			DrawRectangle(args.Bounds, Color.Green);
+			DrawRectangle(args.ContentBounds, Color.Blue);
 		}
 
 		private void DrawElementStyle(UiElement element, UiElementRenderArgs args)
 		{
 			var style = args.Style;
 
-			if (style.BackgroundColor.A > 0)
+			if (style.BackgroundColor.HasValue)
 			{
-				FillRectangle(element.Bounds, style.BackgroundColor);
+				FillRectangle(args.Bounds, style.BackgroundColor.Value);
 			}
 
 			if (style.Background != null)
 			{
-				DrawNinePatch(element.Bounds, style.Background, style.BackgroundRepeat);
+				DrawNinePatch(args.Bounds, style.Background, style.BackgroundRepeat ?? TextureRepeatMode.Stretch);
 			}
 
 			if (element is ITextElement textElement)
@@ -119,11 +122,15 @@ namespace Alex.Graphics.UI.Rendering
 		private void DrawTextElement(ITextElement element, UiElementRenderArgs args)
 		{
 			var style = args.Style;
-			if (!(style.TextFont != null && style.TextColor.A > 0 && !string.IsNullOrWhiteSpace(element.Text))) return;
+			if (!(style.TextFont != null && style.TextColor.HasValue && !string.IsNullOrWhiteSpace(element.Text))) return;
 
 			var font = style.TextFont;
 
-			var textSize = font.MeasureString(element.Text);
+			var size = args.Style.TextSize ?? 1.0f;
+
+			var textScale = new Vector2(size, size);
+			var textSize = font.MeasureString(element.Text) * textScale;
+
 
 			var pos = Vector2.Zero;
 			if (style.HorizontalContentAlignment == HorizontalAlignment.Center)
@@ -146,15 +153,17 @@ namespace Alex.Graphics.UI.Rendering
 
 			pos += args.Position;
 
-			if (style.TextShadowSize > 0)
+			if (style.TextShadowSize.HasValue && style.TextShadowSize.Value > 0 && style.TextShadowColor.HasValue)
 			{
+				var shadowColor = style.TextShadowColor.Value;
+
 				for (int i = 0; i < style.TextShadowSize; i++)
 				{
-					SpriteBatch.DrawString(style.TextFont, element.Text, pos + new Vector2(i, i), style.TextShadowColor, 0, Vector2.Zero, Vector2.One, SpriteEffects.None, 0);
+					SpriteBatch.DrawString(style.TextFont, element.Text, pos + new Vector2(i, i), shadowColor, 0, Vector2.Zero, textScale, SpriteEffects.None, 0);
 				}
 			}
 
-			SpriteBatch.DrawString(style.TextFont, element.Text, pos, style.TextColor, 0, Vector2.Zero, Vector2.One, SpriteEffects.None, 0);
+			SpriteBatch.DrawString(style.TextFont, element.Text, pos, style.TextColor.Value, 0, Vector2.Zero, textScale, SpriteEffects.None, 0);
 		}
 
 		public void FillRectangle(Rectangle bounds, Color color)
@@ -177,38 +186,37 @@ namespace Alex.Graphics.UI.Rendering
 			var patchSize = ninePatchTexture.NineSliceSize;
 			var projectedPatchSize = patchSize;
 
-			var innerBounds = new Rectangle(bounds.X, bounds.Y, bounds.Width, bounds.Height);
-			innerBounds.Inflate(-projectedPatchSize, -projectedPatchSize);
+			var innerBounds = new Rectangle(bounds.X + projectedPatchSize, bounds.Y + projectedPatchSize, bounds.Width - projectedPatchSize - projectedPatchSize, bounds.Height - projectedPatchSize - projectedPatchSize);
 
 			var tBounds = texture.Bounds;
 			tBounds.Inflate(-patchSize, -patchSize);
 
 			// Top Left
-			SpriteBatch.Draw(texture, new Rectangle(bounds.Left, bounds.Top, projectedPatchSize, projectedPatchSize), new Rectangle(0, 0, tBounds.Left, tBounds.Top), Color.White);
+			SpriteBatch.Draw(texture, new Rectangle(bounds.Left, bounds.Top, innerBounds.Left, innerBounds.Top), new Rectangle(0, 0, tBounds.Left, tBounds.Top), Color.White);
 
 			// Top Right
-			SpriteBatch.Draw(texture, new Rectangle(innerBounds.Right, bounds.Top, projectedPatchSize, projectedPatchSize), new Rectangle(tBounds.Right, 0, tBounds.Left, tBounds.Top), Color.White);
+			SpriteBatch.Draw(texture, new Rectangle(innerBounds.Right, bounds.Top, innerBounds.Left, innerBounds.Top), new Rectangle(tBounds.Right, 0, tBounds.Left, tBounds.Top), Color.White);
 
 
 			// Bottom Left
-			SpriteBatch.Draw(texture, new Rectangle(bounds.Left, innerBounds.Bottom, patchSize, patchSize), new Rectangle(0, tBounds.Bottom, tBounds.Left, tBounds.Top), Color.White);
+			SpriteBatch.Draw(texture, new Rectangle(bounds.Left, innerBounds.Bottom, innerBounds.Left, innerBounds.Top), new Rectangle(0, tBounds.Bottom, tBounds.Left, tBounds.Top), Color.White);
 
 			// Bottom Right
-			SpriteBatch.Draw(texture, new Rectangle(innerBounds.Right, innerBounds.Bottom, patchSize, patchSize), new Rectangle(tBounds.Right, tBounds.Bottom, tBounds.Left, tBounds.Top), Color.White);
+			SpriteBatch.Draw(texture, new Rectangle(innerBounds.Right, innerBounds.Bottom, innerBounds.Left, innerBounds.Top), new Rectangle(tBounds.Right, tBounds.Bottom, tBounds.Left, tBounds.Top), Color.White);
 
 
 			// Left Middle
-			SpriteBatch.Draw(texture, new Rectangle(bounds.Left, innerBounds.Top, patchSize, innerBounds.Height), new Rectangle(0, tBounds.Top, tBounds.Left, tBounds.Height), Color.White);
+			SpriteBatch.Draw(texture, new Rectangle(bounds.Left, innerBounds.Top, innerBounds.Left, innerBounds.Height), new Rectangle(0, tBounds.Top, tBounds.Left, tBounds.Height), Color.White);
 
 			// Right Middle
-			SpriteBatch.Draw(texture, new Rectangle(innerBounds.Right, innerBounds.Top, patchSize, innerBounds.Height), new Rectangle(tBounds.Right, tBounds.Top, tBounds.Left, tBounds.Height), Color.White);
+			SpriteBatch.Draw(texture, new Rectangle(innerBounds.Right, innerBounds.Top, innerBounds.Left, innerBounds.Height), new Rectangle(tBounds.Right, tBounds.Top, tBounds.Left, tBounds.Height), Color.White);
 
 
 			// Top Middle
-			SpriteBatch.Draw(texture, new Rectangle(innerBounds.Left, bounds.Top, innerBounds.Width, patchSize), new Rectangle(tBounds.Left, 0, tBounds.Width, tBounds.Top), Color.White);
+			SpriteBatch.Draw(texture, new Rectangle(innerBounds.Left, bounds.Top, innerBounds.Width, innerBounds.Top), new Rectangle(tBounds.Left, 0, tBounds.Width, tBounds.Top), Color.White);
 
 			// Bottom Middle
-			SpriteBatch.Draw(texture, new Rectangle(innerBounds.Left, innerBounds.Bottom, innerBounds.Width, patchSize), new Rectangle(tBounds.Left, tBounds.Bottom, tBounds.Width, tBounds.Top), Color.White);
+			SpriteBatch.Draw(texture, new Rectangle(innerBounds.Left, innerBounds.Bottom, innerBounds.Width, innerBounds.Top), new Rectangle(tBounds.Left, tBounds.Bottom, tBounds.Width, tBounds.Top), Color.White);
 
 
 			// Middle Middle
@@ -219,7 +227,7 @@ namespace Alex.Graphics.UI.Rendering
 		{
 			if (repeatMode == TextureRepeatMode.NoRepeat)
 			{
-				SpriteBatch.Draw(texture, new Rectangle(bounds.Location, new Point(texture.Width, texture.Height)), texture.Bounds, Color.White, 0, Vector2.Zero, SpriteEffects.None, 0);
+				SpriteBatch.Draw(texture, new Rectangle(bounds.Location, new Point(texture.Width, texture.Height)), texture.Bounds, Color.White);
 			}
 			else if (repeatMode == TextureRepeatMode.Stretch)
 			{
@@ -239,7 +247,7 @@ namespace Alex.Graphics.UI.Rendering
 					for (int j = 0; j < repeatY; j++)
 					{
 						var p = bounds.Location.ToVector2() + new Vector2(i * texture.Width, j * texture.Height);
-						SpriteBatch.Draw(texture, p, texture.Bounds, Color.White, 0, Vector2.Zero, Vector2.One, SpriteEffects.None, 0);
+						SpriteBatch.Draw(texture, p, texture.Bounds, Color.White);
 					}
 				}
 			}
@@ -254,10 +262,10 @@ namespace Alex.Graphics.UI.Rendering
 			SpriteBatch.Draw(texture, new Rectangle(bounds.X, bounds.Y, bounds.Width, thickness), color);
 
 			// Right
-			SpriteBatch.Draw(texture, new Rectangle(bounds.X + bounds.Width, bounds.Y, thickness, bounds.Height), color);
+			SpriteBatch.Draw(texture, new Rectangle(bounds.X + bounds.Width - thickness, bounds.Y, thickness, bounds.Height), color);
 
 			// Bottom
-			SpriteBatch.Draw(texture, new Rectangle(bounds.X, bounds.Y + bounds.Height, bounds.Width, thickness), color);
+			SpriteBatch.Draw(texture, new Rectangle(bounds.X, bounds.Y + bounds.Height - thickness, bounds.Width, thickness), color);
 
 			// Left
 			SpriteBatch.Draw(texture, new Rectangle(bounds.X, bounds.Y, thickness, bounds.Height), color);

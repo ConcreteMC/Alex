@@ -23,25 +23,10 @@ namespace Alex.Gamestates
 		{
 			Gui.ClassName = "TitleScreenRoot";
 
-			var menuWrapper = new UiPanel()
-			{
-				CustomStyle =
-				{
-					Width   = 250,
-					Margin  = new Thickness(100, 0, 100, 0),
-					Padding = new Thickness(10),
-					HorizontalContentAlignment = HorizontalAlignment.Center,
-					VerticalContentAlignment = VerticalAlignment.Center
-				}
-			};
+			var menuWrapper = new UiPanel();
 			var stackMenu = new UiMenu()
 			{
-				ClassName = "TitleScreenMenu",
-				CustomStyle =
-				{
-					HorizontalContentAlignment = HorizontalAlignment.Center,
-					VerticalContentAlignment = VerticalAlignment.Center
-				}
+				ClassName = "TitleScreenMenu"
 			};
 
 			stackMenu.AddMenuItem("Play", () => { });
@@ -49,15 +34,15 @@ namespace Alex.Gamestates
 			stackMenu.AddMenuItem("Options", () => { });
 			stackMenu.AddMenuItem("Exit Game", () => { Alex.Exit(); });
 
-			menuWrapper.Controls.Add(stackMenu);
+			menuWrapper.AddChild(stackMenu);
 
-			Gui.Controls.Add(menuWrapper);
+			Gui.AddChild(menuWrapper);
 
 			var logo = new UiElement()
 			{
 				ClassName = "TitleScreenLogo",
 			};
-			Gui.Controls.Add(logo);
+			Gui.AddChild(logo);
 
 			Alex.IsMouseVisible = true;
 		}

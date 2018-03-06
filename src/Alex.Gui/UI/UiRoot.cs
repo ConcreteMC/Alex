@@ -3,15 +3,31 @@ using System.Linq;
 using Alex.Graphics.UI.Common;
 using Alex.Graphics.UI.Input;
 using Alex.Graphics.UI.Input.Listeners;
+using Alex.Graphics.UI.Layout;
+using Alex.Graphics.UI.Rendering;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Graphics.UI
 {
     public class UiRoot : UiContainer
     {
+        protected internal UiRenderer Renderer { get; }
+     
+        public UiRoot(UiRenderer renderer)
+        {
+            Renderer = renderer;
+            Renderer.SizeChanged += RendererOnSizeChanged;
+        }
 
-        public UiRoot(int? width, int? height) : base(width, height) { }
-        public UiRoot() : this(null, null) { }
+        ~UiRoot()
+        {
+            Renderer.SizeChanged -= RendererOnSizeChanged;
+        }
+
+        private void RendererOnSizeChanged(object sender, EventArgs eventArgs)
+        {
+            UpdateLayout();
+        }
 
         private IHoverable _hoveredElement;
         private IClickable _clickedElement;
@@ -34,6 +50,14 @@ namespace Alex.Graphics.UI
             _input.MouseListener.MouseUp -= OnMouseUp;
             _input.MouseListener.MouseDown -= OnMouseDown;
             _input.MouseListener.MouseMove -= OnMouseMove;
+        }
+
+        protected override void OnUpdateLayout(UiElementLayoutParameters layoutParameters)
+        {
+            base.OnUpdateLayout(layoutParameters);
+            layoutParameters.Size = new Vector2(Renderer.VirtualWidth, Renderer.VirtualHeight);
+            layoutParameters.Margin = Thickness.Zero;
+            layoutParameters.Position = Point.Zero;
         }
 
         private void OnMouseMove(object sender, MouseEventArgs e)
@@ -98,7 +122,7 @@ namespace Alex.Graphics.UI
                 element = control as TUiElement;
                 if (element != null)
                 {
-                    if (control.OuterBounds.Contains(position))
+                    if (control.LayoutParameters.OuterBounds.Contains(position))
                     {
                         return element;
                     }
@@ -108,7 +132,7 @@ namespace Alex.Graphics.UI
             element = container as TUiElement;
             if (element != null)
             {
-                if (container.OuterBounds.Contains(position))
+                if (container.LayoutParameters.OuterBounds.Contains(position))
                 {
                     return element;
                 }

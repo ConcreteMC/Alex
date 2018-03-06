@@ -45,7 +45,7 @@ namespace Alex.Graphics.UI.Themes
 
         public UiElementStyle[] GetStylesFor(UiElement element)
         {
-            return _styleSheets.Where(ss => ss.Predicate(element)).Select(ss => ss.Style).ToArray();
+            return _styleSheets.Where(ss => ss.Predicate(element)).Select(ss => ss.Style).OrderByDescending(s => s.StylePriority).ToArray();
         }
 
         public void ClearStyles()

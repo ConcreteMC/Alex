@@ -1,237 +1,166 @@
 ﻿using System;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using Alex.Graphics.Annotations;
+using Alex.Graphics.UI.Abstractions;
 using Alex.Graphics.UI.Common;
+using Alex.Graphics.UI.Layout;
 using Alex.Graphics.UI.Rendering;
 using Alex.Graphics.UI.Themes;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Graphics.UI
 {
-	public class UiElement
+	public class UiElement : INotifyPropertyChanged
 	{
 		public event EventHandler SizeChanged;
 		public event EventHandler LayoutChanged;
 
 		public UiContainer Container { get; internal set; }
 
-		private Rectangle _outerBounds;
-
-		public Rectangle OuterBounds
+		private UiRoot Root
 		{
-			get { return _outerBounds; }
-			private set
-			{
-				_outerBounds = value;
-				MarkLayoutDirty();
-			}
+			get { return this as UiRoot ?? TranscendParentsFor(c => c as UiRoot, r => r != null); }
 		}
 
-		private Rectangle _bounds;
+		private UiElementLayoutParameters _layoutParameters = new UiElementLayoutParameters();
 
-		public Rectangle Bounds
+		protected internal UiElementLayoutParameters LayoutParameters
 		{
-			get { return _bounds; }
-			private set
-			{
-				_bounds = value;
-				MarkLayoutDirty();
-			}
-		}
-
-		private Rectangle _clientBounds;
-
-		public Rectangle ClientBounds
-		{
-			get { return _clientBounds; }
-			private set
-			{
-				_clientBounds = value;
-				MarkLayoutDirty();
-			}
-		}
-
-		private Point _offset;
-
-		public Point Offset
-		{
-			get { return _offset; }
+			get { return _layoutParameters; }
 			set
 			{
-				_offset = value;
-				MarkLayoutDirty();
+				if (_layoutParameters == value) return;
+				_layoutParameters = value;
+				OnPropertyChanged();
 			}
 		}
 
-		private Point _position;
+		private bool _visible = true;
 
-		public Point Position
+		public bool Visible
 		{
-			get { return _position; }
+			get { return _visible; }
 			set
 			{
-				_position = value;
-				MarkLayoutDirty();
+				if (_visible == value) return;
+				_visible = value;
+				OnPropertyChanged();
 			}
 		}
 
-		public Point Size => new Point(ActualWidth, ActualHeight);
+		private string _className;
 
-
-		private int _actualWidth;
-
-		public int ActualWidth
+		public string ClassName
 		{
-			get { return _actualWidth; }
-			protected internal set
+			get { return _className; }
+			set
 			{
-				_actualWidth = value;
-				MarkLayoutDirty();
+				if (_className == value) return;
+				_className = value;
+				OnPropertyChanged();
 			}
 		}
-
-		private int _actualHeight;
-
-		public int ActualHeight
-		{
-			get { return _actualHeight; }
-			protected internal set
-			{
-				_actualHeight = value;
-				MarkLayoutDirty();
-			}
-		}
-
-		public bool Visible { get; set; } = true;
-
-		public string ClassName { get; set; }
 
 		private bool _isLayoutDirty = true;
+		private bool _isStyleDirty = true;
 
 		#region Styling Properties
 
 		private UiElementStyle _style = new UiElementStyle();
-
 		public UiElementStyle Style
 		{
 			get { return _style; }
-			private set
-			{
-				_style = value;
-				var customStyle = CustomStyle;
-
-				if (customStyle != null)
-				{
-					UiTheme.MergeStyles(CustomStyle, _style);
-				}
-
-				MarkLayoutDirty();
-			}
+			private set { _style = value; MarkStyleDirty(); }
 		}
-
-		public UiElementStyle CustomStyle { get; } = new UiElementStyle();
-
-		protected int? Width => Style.Width;
-		protected int? Height => Style.Height;
-
-		protected Thickness Margin => Style.Margin;
-		protected Thickness Padding => Style.Margin;
 
 		#endregion
-
-		public UiElement(int? width, int? height) : this()
-		{
-			CustomStyle.Width = width;
-			CustomStyle.Height = height;
-		}
 
 		public UiElement()
 		{
 
 		}
-
-
-		public virtual void UpdateSize()
-		{
-			var autoSize = GetAutoSize();
-
-			// Width
-			SizeMode widthMode = Style.WidthSizeMode;
-			if (widthMode == SizeMode.FitToContent)
-			{
-				ActualWidth = autoSize.X + Padding.Horizontal;
-			}
-			else if (widthMode == SizeMode.Absolute)
-			{
-				ActualWidth = Width.HasValue ? Width.Value : 0;
-			}
-
-			// Height
-			SizeMode heightMode = Style.HeightSizeMode;
-			if (heightMode == SizeMode.FitToContent)
-			{
-				ActualHeight = autoSize.Y + Padding.Vertical;
-			}
-			else if (heightMode == SizeMode.Absolute)
-			{
-				ActualHeight = Height.HasValue ? Height.Value : 0;
-			}
-
-			SizeChanged?.Invoke(this, null);
-		}
-
-		protected internal virtual Point GetAutoSize()
-		{
-			return new Point(Padding.Horizontal, Padding.Vertical);
-		}
-
+		
 		public void UpdateLayout()
 		{
-			Position = (Container?.ClientBounds.Location ?? Point.Zero) + Offset;
-			
-			UpdateBounds();
-			OnUpdateLayout();
+			Root?.UpdateLayoutInternal();
+		}
+
+		internal void UpdateLayoutInternal()
+		{
+			UiElementLayoutParameters layoutParameters = LayoutParameters;
+
+			layoutParameters.ContentSize = GetContentSize();
+
+			OnUpdateLayout(layoutParameters);
+
+			if (Container != null)
+			{
+				var containerSize = Container.LayoutParameters.InnerBounds.Size;
+
+				if (layoutParameters.PositionAnchor.HasValue)
+				{
+					layoutParameters.Position = ((containerSize.ToVector2() * layoutParameters.PositionAnchor.Value) + (layoutParameters.OuterBounds.Size.ToVector2() * layoutParameters.PositionAnchorOrigin)).ToPoint() + Container.LayoutParameters.InnerBounds.Location;
+				}
+
+
+				if (layoutParameters.SizeAnchor.HasValue)
+				{
+					layoutParameters.Size = (containerSize.ToVector2() * layoutParameters.SizeAnchor.Value);
+				}
+			}
+
+			LayoutParameters = layoutParameters;
 
 			LayoutChanged?.Invoke(this, null);
+
+			_isLayoutDirty = false;
 		}
 
-		protected void UpdateBounds()
+		protected virtual void OnUpdateLayout(UiElementLayoutParameters layoutParameters)
 		{
-			var outerBounds = new Rectangle(Position.X, Position.Y, Size.X + Margin.Horizontal, Size.Y + Margin.Vertical);
-			var bounds = outerBounds - Margin;
-			var inner = bounds - Padding;
+			if (Style.PositionAnchor.HasValue)
+			{
+				layoutParameters.PositionAnchor = Style.PositionAnchor.Value;
+			}
+			else
+			{
+				layoutParameters.PositionAnchor = TranscendParentsFor(c => c.Style.PositionAnchor) ?? Vector2.Zero;
+			}
 
-			OuterBounds = outerBounds;
-			Bounds = bounds;
-			ClientBounds = inner;
+			layoutParameters.PositionAnchorOrigin = Style.PositionAnchorOrigin ?? layoutParameters.PositionAnchor ?? Vector2.Zero;
+
+			if (Style.SizeAnchor.HasValue)
+			{
+				layoutParameters.SizeAnchor = Style.SizeAnchor.Value;
+			}
+			layoutParameters.SizeAnchorOrigin = Style.SizeAnchorOrigin ?? layoutParameters.PositionAnchorOrigin;
+
+			layoutParameters.Padding = Style.Padding ?? Thickness.Zero;
+			layoutParameters.Margin = Style.Margin ?? Thickness.Zero;
+			layoutParameters.MinSize = new Point(Style.MinWidth ?? 0, Style.MinHeight ?? 0);
 		}
 
-		public void Draw(GameTime gameTime, UiRenderer renderer)
+		protected virtual Vector2 GetContentSize()
 		{
-			Style = renderer.Theme.GetCompiledStyleFor(this);
+			if (this is ITextElement textElement)
+			{
+				var textSize = Style.TextFont?.MeasureString(textElement.Text) ?? Vector2.Zero;
+				return new Vector2(textSize.X * Style.TextSize ?? 1.0f, textSize.Y * Style.TextSize ?? 1.0f);
+			}
 
-			OnDraw(gameTime, renderer);
+			return Vector2.Zero;
 		}
 
 		public void Update(GameTime gameTime)
 		{
 			if (_isLayoutDirty)
 			{
-				UpdateBounds();
 				UpdateLayout();
-
 				_isLayoutDirty = false;
 			}
 
 			OnUpdate(gameTime);
-		}
-
-		protected virtual void OnDraw(GameTime gameTime, UiRenderer renderer)
-		{
-			renderer.DrawElement(this);
-		}
-
-		protected virtual void OnUpdateLayout()
-		{
-
 		}
 
 		protected virtual void OnUpdate(GameTime gameTime)
@@ -239,10 +168,67 @@ namespace Alex.Graphics.UI
 
 		}
 
+		public void Draw(GameTime gameTime, UiRenderer renderer)
+		{
+			if (_isStyleDirty)
+			{
+				Style = renderer.Theme.GetCompiledStyleFor(this);
+
+				MarkLayoutDirty();
+				_isStyleDirty = false;
+			}
+
+			OnDraw(gameTime, renderer);
+		}
+
+		protected virtual void OnDraw(GameTime gameTime, UiRenderer renderer)
+		{
+			renderer.DrawElement(this);
+		}
+
+		protected void MarkStyleDirty()
+		{
+			if (_isStyleDirty) return;
+			_isStyleDirty = true;
+		}
+
 		protected void MarkLayoutDirty()
 		{
 			if (_isLayoutDirty) return;
 			_isLayoutDirty = true;
+		}
+
+
+		protected TValue TranscendParentsFor<TValue>(Func<UiContainer, TValue> func)
+		{
+			var d = default(TValue);
+			return TranscendParentsFor(func, v => !Equals(d, v));
+		}
+
+		protected TValue TranscendParentsFor<TValue>(Func<UiContainer, TValue> func, Func<TValue, bool> condition)
+		{
+			if (Container != null)
+			{
+				var containerValue = func(Container);
+
+				if (condition(containerValue))
+				{
+					return containerValue;
+				}
+
+				return Container.TranscendParentsFor<TValue>(func, condition);
+			}
+
+			return default(TValue);
+		}
+
+		public event PropertyChangedEventHandler PropertyChanged;
+
+		[NotifyPropertyChangedInvocator]
+		protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+		{
+			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+			MarkStyleDirty();
 		}
 	}
 }

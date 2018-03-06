@@ -21,7 +21,7 @@ namespace Alex.Rendering
     public class ResourcePackUiThemeBuilder
     {
 
-        private GraphicsDevice Graphics { get;}
+        private GraphicsDevice Graphics { get; }
         private BedrockResourcePack ResourcePack { get; set; }
         private UiTheme Theme { get; }
         private Dictionary<string, NinePatchTexture> Textures { get; }
@@ -55,20 +55,19 @@ namespace Alex.Rendering
         {
             Theme.AddClass<UiRoot>(new UiElementStyle()
             {
-                WidthSizeMode = SizeMode.FillParent,
-                HeightSizeMode = SizeMode.FillParent,
+                PositionAnchor = Vector2.Zero,
                 HorizontalContentAlignment = HorizontalAlignment.Center,
-                VerticalContentAlignment = VerticalAlignment.Center
+                VerticalContentAlignment = VerticalAlignment.Center,
+                SizeAnchor = Vector2.One
+            });
+            Theme.AddClass("GuiRoot", new UiElementStyle()
+            {
+                SizeAnchor = Vector2.One
             });
 
             Theme.AddClass<UiElement>(new UiElementStyle()
             {
                 TextFont = Alex.Font,
-                TextColor = Color.Black,
-            });
-            Theme.AddClass<UiElement>(new UiElementStyle()
-            {
-                TextFont  = Alex.Font,
                 TextColor = Color.Black,
             });
         }
@@ -77,32 +76,31 @@ namespace Alex.Rendering
         {
             Theme.AddClass("TitleScreenRoot", new UiElementStyle()
             {
+                StylePriority = 100,
                 Background = GetTexture("background"),
-                BackgroundRepeat = TextureRepeatMode.Tile
+                BackgroundRepeat = TextureRepeatMode.Tile,
+                SizeAnchor = Vector2.One
             });
 
             Theme.AddClass("TitleScreenLogo", new UiElementStyle()
             {
-                Background = (NinePatchTexture)TextureUtils.ImageToTexture2D(Graphics, Resources.logo)
+                Background = (NinePatchTexture)TextureUtils.ImageToTexture2D(Graphics, Resources.logo),
+                PositionAnchor = new Vector2(0.5f,0.1f),
+                Width = 250,
+                Height = 100
             });
 
-            Theme.AddClass<UiPanel>(i => i.ClassName == null, new UiElementStyle()
+            Theme.AddClass<UiPanel>(i => string.IsNullOrWhiteSpace(i.ClassName), new UiElementStyle()
             {
-                BackgroundColor = new Color(Color.Black, 0.2f)
+                BackgroundColor = new Color(Color.Black, 0.2f),
+                SizeAnchor = new Vector2(0.25f, 1.0f),
+                PositionAnchor = new Vector2(0.15f, 0.0f)
             });
         }
 
 
         private void BuildButtonStyles()
         {
-            Theme.AddClass<UiMenuItem>(new UiElementStyle()
-            {
-                Width  = 200,
-                Height = 40,
-                TextFont = Alex.Font,
-                TextColor = Color.Black
-            });
-
             Theme.AddClass<UiMenuItem>(i => !i.IsMouseDown && !i.IsMouseOver, new UiElementStyle()
             {
                 Background = GetTexture("classic-button"),
@@ -115,6 +113,15 @@ namespace Alex.Rendering
             {
                 Background = GetTexture("classic-button-pressed"),
             });
+            Theme.AddClass<UiMenuItem>(new UiElementStyle()
+            {
+                Width     = 200,
+                TextFont  = Alex.Font,
+                TextColor = Color.Black,
+                TextSize  = 0.5f,
+                Padding   = new Thickness(10),
+                Margin    = new Thickness(5)
+            });
         }
 
         private NinePatchTexture GetTexture(string fileName)
@@ -124,7 +131,7 @@ namespace Alex.Rendering
             {
                 var rawTexture = LoadTexture2D(fileName);
                 var ninePatch = GetNinePatchSize(fileName);
-                
+
                 texture = new NinePatchTexture(rawTexture, ninePatch);
                 Textures.Add(fileName, texture);
             }
@@ -140,14 +147,14 @@ namespace Alex.Rendering
             }
 
             var texture = new Texture2D(Graphics, 2, 2, false, SurfaceFormat.Color);
-            texture.SetData(new []
+            texture.SetData(new[]
             {
                 Color.Black,
                 Color.Purple,
                 Color.Purple,
                 Color.Black
             });
-            
+
             return texture;
         }
 

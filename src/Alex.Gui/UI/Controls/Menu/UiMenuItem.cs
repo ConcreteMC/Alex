@@ -13,14 +13,15 @@ namespace Alex.Graphics.UI.Controls.Menu
 
 		public string Text
 		{
-			get => _text;
+			get { return _text; }
 			set
 			{
+				if (_text == value) return;
 				_text = value;
+				OnPropertyChanged();
 				MarkLayoutDirty();
 			}
 		}
-
 		public Action Action { get; }
 
 		public UiMenuItem(string text, Action action = null)
@@ -28,15 +29,7 @@ namespace Alex.Graphics.UI.Controls.Menu
 			Text = text;
 			Action = action;
 		}
-
-		protected internal override Point GetAutoSize()
-		{
-			var textSize = Style.TextFont?.MeasureString(Text).ToPoint() ?? Point.Zero;
-			var baseSize = base.GetAutoSize();
-
-			return baseSize.Max(textSize) + new Point(Padding.Horizontal, Padding.Vertical);
-		}
-
+		
 		protected override void OnMouseUp(MouseEventArgs args)
 		{
 			if (IsMouseOver)
