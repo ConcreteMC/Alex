@@ -16,18 +16,18 @@ namespace Alex.Graphics.UI
 
 		public IReadOnlyCollection<UiElement> Controls => _controls.ToList();
 
-		
+
 		public UiContainer() : base()
 		{
 		}
-		
+
 		public void AddChild(UiElement element)
 		{
 			if (element.Container != null)
 			{
 				element.Container.RemoveChild(element);
 			}
-			
+
 			element.Container = this;
 			_controls.Add(element);
 
@@ -52,13 +52,12 @@ namespace Alex.Graphics.UI
 			if (!controls.Any()) return base.GetContentSize();
 
 
-			var minX = controls.Min(c => c.LayoutParameters.OuterBounds.X);
-			var minY = controls.Min(c => c.LayoutParameters.OuterBounds.Y);
-			var maxX = controls.Max(c => c.LayoutParameters.OuterBounds.X + c.LayoutParameters.OuterBounds.Width);
-			var maxY = controls.Max(c => c.LayoutParameters.OuterBounds.Y + c.LayoutParameters.OuterBounds.Height);
+			var minX = controls.Min(c => c.LayoutParameters.OuterBounds.Left);
+			var minY = controls.Min(c => c.LayoutParameters.OuterBounds.Top);
+			var maxX = controls.Max(c => c.LayoutParameters.OuterBounds.Right);
+			var maxY = controls.Max(c => c.LayoutParameters.OuterBounds.Bottom);
 
-			return new Vector2(maxX - minX, maxY - minY);
-
+			return new Vector2(Math.Abs(maxX - minX), Math.Abs(maxY - minY));
 		}
 
 		protected override void OnDraw(GameTime gameTime, UiRenderer renderer)
@@ -88,25 +87,56 @@ namespace Alex.Graphics.UI
 			}
 		}
 
-		protected override void OnUpdateLayout(UiElementLayoutParameters layoutParameters)
+		protected override void OnUpdateLayout(UiElementLayoutParameters layout)
 		{
-			base.OnUpdateLayout(layoutParameters);
+			base.OnUpdateLayout(layout);
 
 			var controls = Controls;
-			if (!controls.Any()) return;
-
-			foreach (var control in controls)
+			if (controls.Any())
 			{
-				control.UpdateLayoutInternal();
+				foreach (var control in controls)
+				{
+					control.UpdateLayoutInternal();
+					control.LayoutParameters.BasePosition = layout.InnerBounds.Location;
+				}
 			}
 
-			OnLayoutControls(layoutParameters, controls);
+			layout.ContentSize = GetContentSize();
 		}
 
-		protected virtual void OnLayoutControls(UiElementLayoutParameters layoutParameters,
+		protected override void OnPostUpdateLayout(UiElementLayoutParameters layout)
+		{
+			base.OnPostUpdateLayout(layout);
+
+			var controls = Controls;
+			if (controls.Any())
+			{
+				OnLayoutControls(layout, controls);
+			}
+		}
+
+		protected virtual void OnLayoutControls(UiElementLayoutParameters layout,
 			IReadOnlyCollection<UiElement>                                controls)
 		{
+			foreach (var control in controls)
+			{
+				var cLayout = control.LayoutParameters;
+				
+				if (cLayout.SizeAnchor.HasValue)
+				{
+					var newSize = layout.InnerBounds.Size.ToVector2() * cLayout.SizeAnchor.Value;
 
+					cLayout.AutoSize = new Vector2(cLayout.SizeAnchor.Value.X < 0 ? cLayout.Size.X : newSize.X, cLayout.SizeAnchor.Value.Y < 0 ? cLayout.Size.Y : newSize.Y);
+				}
+
+				if (cLayout.PositionAnchor.HasValue)
+				{
+					cLayout.RelativePosition = (
+						(layout.InnerBounds.Size.ToVector2() * cLayout.PositionAnchor.Value) + cLayout.InnerBounds.Size.ToVector2() * (cLayout.PositionAnchorOrigin)
+						- (cLayout.Size * cLayout.SizeAnchorOrigin)
+					).ToPoint();
+				}
+			}
 		}
 	}
 }

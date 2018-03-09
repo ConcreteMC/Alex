@@ -23,7 +23,10 @@ namespace Alex.Gamestates
 		{
 			Gui.ClassName = "TitleScreenRoot";
 
-			var menuWrapper = new UiPanel();
+			var menuWrapper = new UiPanel()
+			{
+				ClassName = "TitleScreenMenuPanel"
+			};
 			var stackMenu = new UiMenu()
 			{
 				ClassName = "TitleScreenMenu"
@@ -31,7 +34,9 @@ namespace Alex.Gamestates
 
 			stackMenu.AddMenuItem("Play", () => { });
 			stackMenu.AddMenuItem("Debug World", () => { });
-			stackMenu.AddMenuItem("Options", () => { });
+			stackMenu.AddMenuItem("Options", () => {
+				Alex.GameStateManager.SetActiveState("options");
+			});
 			stackMenu.AddMenuItem("Exit Game", () => { Alex.Exit(); });
 
 			menuWrapper.AddChild(stackMenu);

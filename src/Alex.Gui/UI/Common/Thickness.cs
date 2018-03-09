@@ -1,8 +1,9 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
+using Microsoft.Xna.Framework;
 
 namespace Alex.Graphics.UI.Common
 {
-	public struct Thickness
+	public struct Thickness : IEquatable<Thickness>
 	{
 		public static Thickness Zero => new Thickness(0);
 		
@@ -29,6 +30,16 @@ namespace Alex.Graphics.UI.Common
 			Top = top;
 			Right = right;
 			Bottom = bottom;
+		}
+
+		public Vector2 ToVector2()
+		{
+			return new Vector2(Horizontal, Vertical);
+		}
+
+		public Point ToPoint()
+		{
+			return new Point(Horizontal, Vertical);
 		}
 
 		public static Thickness operator +(Thickness a, Thickness b)
@@ -69,6 +80,40 @@ namespace Alex.Graphics.UI.Common
 				rect.Width + b.Horizontal,
 				rect.Height + b.Vertical
 			);
+		}
+
+		public static bool operator ==(Thickness a, Thickness b)
+		{
+			return a.Equals(b);
+		}
+
+		public static bool operator !=(Thickness a, Thickness b)
+		{
+			return !(a == b);
+		}
+
+
+		public bool Equals(Thickness other)
+		{
+			return Left == other.Left && Top == other.Top && Right == other.Right && Bottom == other.Bottom;
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (ReferenceEquals(null, obj)) return false;
+			return obj is Thickness && Equals((Thickness) obj);
+		}
+
+		public override int GetHashCode()
+		{
+			unchecked
+			{
+				var hashCode = Left;
+				hashCode = (hashCode * 397) ^ Top;
+				hashCode = (hashCode * 397) ^ Right;
+				hashCode = (hashCode * 397) ^ Bottom;
+				return hashCode;
+			}
 		}
 	}
 }

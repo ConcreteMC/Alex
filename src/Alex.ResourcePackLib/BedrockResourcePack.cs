@@ -4,7 +4,9 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Security.AccessControl;
+using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Models;
+using Alex.ResourcePackLib.Json.Textures;
 using ICSharpCode.SharpZipLib.Zip;
 using log4net;
 using Newtonsoft.Json;
@@ -17,7 +19,7 @@ namespace Alex.ResourcePackLib
 
 		public IReadOnlyDictionary<string, EntityModel> EntityModels { get; private set; }
 		public IReadOnlyDictionary<string, Bitmap> Textures { get; private set; }
-		public IReadOnlyDictionary<string, string> TextureJsons { get; private set; }
+		public IReadOnlyDictionary<string, TextureInfoJson> TextureJsons { get; private set; }
 
 		private ZipFile _archive;
 		public BedrockResourcePack(ZipFile archive)
@@ -40,7 +42,7 @@ namespace Alex.ResourcePackLib
 			return Textures.TryGetValue(NormalisePath(name), out texture);
 		}
 
-		public bool TryGetTextureJson(string name, out string textureJson)
+		public bool TryGetTextureJson(string name, out TextureInfoJson textureJson)
 		{
 			return TextureJsons.TryGetValue(NormalisePath(name), out textureJson);
 		}
@@ -91,7 +93,7 @@ namespace Alex.ResourcePackLib
 			var json = stream.ReadToEnd();
 
 			Dictionary<string, Bitmap> textures = new Dictionary<string, Bitmap>();
-			Dictionary<string, string> textureJsons = new Dictionary<string, string>();
+			Dictionary<string, TextureInfoJson> textureJsons = new Dictionary<string, TextureInfoJson>();
 
 			string[] definitions = JsonConvert.DeserializeObject<string[]>(json);
 			foreach (string def in definitions)
@@ -113,7 +115,8 @@ namespace Alex.ResourcePackLib
 					using (var sr = new StreamReader(eStream))
 					{
 						var textureJson = sr.ReadToEnd();
-						textureJsons.Add(NormalisePath(def), textureJson);
+						var textureInfo = MCJsonConvert.DeserializeObject<TextureInfoJson>(textureJson);
+						textureJsons.Add(NormalisePath(def), textureInfo);
 					}
 				}
 			}

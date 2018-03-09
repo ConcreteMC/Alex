@@ -26,7 +26,7 @@ namespace Alex.Graphics.UI
 
         private void RendererOnSizeChanged(object sender, EventArgs eventArgs)
         {
-            UpdateLayout();
+            UpdateLayoutInternal();
         }
 
         private IHoverable _hoveredElement;
@@ -52,13 +52,14 @@ namespace Alex.Graphics.UI
             _input.MouseListener.MouseMove -= OnMouseMove;
         }
 
-        protected override void OnUpdateLayout(UiElementLayoutParameters layoutParameters)
+        protected override void OnUpdateLayout(UiElementLayoutParameters layout)
         {
-            base.OnUpdateLayout(layoutParameters);
-            layoutParameters.Size = new Vector2(Renderer.VirtualWidth, Renderer.VirtualHeight);
-            layoutParameters.Margin = Thickness.Zero;
-            layoutParameters.Position = Point.Zero;
+            layout.MaxSize = layout.MinSize = new Point(Renderer.VirtualWidth, Renderer.VirtualHeight);
+            layout.Size = layout.MinSize.ToVector2();
+
+            base.OnUpdateLayout(layout);
         }
+
 
         private void OnMouseMove(object sender, MouseEventArgs e)
         {
@@ -122,7 +123,7 @@ namespace Alex.Graphics.UI
                 element = control as TUiElement;
                 if (element != null)
                 {
-                    if (control.LayoutParameters.OuterBounds.Contains(position))
+                    if (control.LayoutParameters.Bounds.Contains(position))
                     {
                         return element;
                     }
@@ -132,7 +133,7 @@ namespace Alex.Graphics.UI
             element = container as TUiElement;
             if (element != null)
             {
-                if (container.LayoutParameters.OuterBounds.Contains(position))
+                if (container.LayoutParameters.Bounds.Contains(position))
                 {
                     return element;
                 }

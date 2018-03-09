@@ -13,56 +13,62 @@ namespace Alex.Graphics.UI.Rendering
 		public event EventHandler SizeChanged;
 
 		public UiManager UiManager { get; }
-		public UiTheme Theme => UiManager.Theme;
+		public UiTheme   Theme     => UiManager.Theme;
 
-		private GraphicsDevice Graphics { get; }
-		private SpriteBatch SpriteBatch { get; }
+		private GraphicsDevice Graphics    { get; }
+		private SpriteBatch    SpriteBatch { get; }
 
 
-		public int VirtualWidth { get; private set; }
+		public int VirtualWidth  { get; private set; }
 		public int VirtualHeight { get; private set; }
-		public int ScaleFactor { get; private set; }
+		public int ScaleFactor   { get; private set; }
 
-		public Matrix ScaleMatrix { get; private set; }
+		public Matrix ScaleMatrix         { get; private set; }
 		public Matrix PointToScreenMatrix { get; private set; }
 
 		private RasterizerState _rasteriserState = null;
 
 
-
 		public UiRenderer(UiManager uiManager, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
 		{
-			UiManager = uiManager;
+			UiManager   = uiManager;
 			SpriteBatch = spriteBatch;
-			Graphics = graphicsDevice;
+			Graphics    = graphicsDevice;
 
 			UpdateViewport();
 
 			_rasteriserState = new RasterizerState()
 			{
-			ScissorTestEnable = true,
-			//CullMode = CullMode.None,
+				ScissorTestEnable = true,
+				CullMode = CullMode.None,
 			};
 		}
 
 		public void SetVirtualSize(int width, int height, int scaleFactor)
 		{
-			VirtualWidth = width;
+			var oldWidth = VirtualWidth;
+			var oldHeight = VirtualHeight;
+			var oldScaleFactor = ScaleFactor;
+
+			VirtualWidth  = width;
 			VirtualHeight = height;
-			ScaleFactor = scaleFactor;
+			ScaleFactor   = scaleFactor;
 			UpdateViewport();
+
+			if (oldWidth != width || oldHeight != height || oldScaleFactor != scaleFactor)
+			{
+				SizeChanged?.Invoke(this, null);
+			}
 		}
 
 		private void UpdateViewport()
 		{
 			var viewport = Graphics.Viewport;
-			var scaleX = (float)viewport.Width / VirtualWidth;
-			var scaleY = (float)viewport.Height / VirtualHeight;
+			var scaleX   = (float) viewport.Width  / VirtualWidth;
+			var scaleY   = (float) viewport.Height / VirtualHeight;
 
-			ScaleMatrix = Matrix.CreateScale(scaleX, scaleY, 1.0f);
+			ScaleMatrix         = Matrix.CreateScale(scaleX, scaleY, 1.0f);
 			PointToScreenMatrix = Matrix.Invert(ScaleMatrix);
-
-			SizeChanged?.Invoke(this, null);
 		}
 
 		public Point PointToScreen(Point point)
@@ -72,14 +78,13 @@ namespace Alex.Graphics.UI.Rendering
 
 		public void BeginDraw()
 		{
-			SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, _rasteriserState, null, ScaleMatrix);
+			SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, null, ScaleMatrix);
 		}
 
 		public void EndDraw()
 		{
 			SpriteBatch.End();
 		}
-
 
 
 		public void DrawElement(UiElement element)
@@ -94,8 +99,8 @@ namespace Alex.Graphics.UI.Rendering
 
 		private void DrawDebugBoundingBoxes(UiElement element, UiElementRenderArgs args)
 		{
-			DrawRectangle(args.LayoutBounds, Color.Red);
-			DrawRectangle(args.Bounds, Color.Green);
+			DrawRectangle(args.LayoutBounds,  Color.Red);
+			DrawRectangle(args.Bounds,        Color.Green);
 			DrawRectangle(args.ContentBounds, Color.Blue);
 		}
 
@@ -129,7 +134,7 @@ namespace Alex.Graphics.UI.Rendering
 			var size = args.Style.TextSize ?? 1.0f;
 
 			var textScale = new Vector2(size, size);
-			var textSize = font.MeasureString(element.Text) * textScale;
+			var textSize  = font.MeasureString(element.Text) * textScale;
 
 
 			var pos = Vector2.Zero;
@@ -159,75 +164,50 @@ namespace Alex.Graphics.UI.Rendering
 
 				for (int i = 0; i < style.TextShadowSize; i++)
 				{
-					SpriteBatch.DrawString(style.TextFont, element.Text, pos + new Vector2(i, i), shadowColor, 0, Vector2.Zero, textScale, SpriteEffects.None, 0);
+					SpriteBatch.DrawString(style.TextFont, element.Text, pos + new Vector2(i, i), shadowColor, 0, Vector2.Zero,
+						textScale, SpriteEffects.None, 0);
 				}
 			}
 
-			SpriteBatch.DrawString(style.TextFont, element.Text, pos, style.TextColor.Value, 0, Vector2.Zero, textScale, SpriteEffects.None, 0);
+			SpriteBatch.DrawString(style.TextFont, element.Text, pos, style.TextColor.Value, 0, Vector2.Zero, textScale,
+				SpriteEffects.None, 0);
 		}
 
 		public void FillRectangle(Rectangle bounds, Color color)
 		{
 			var texture = new Texture2D(Graphics, 1, 1, false, SurfaceFormat.Color);
-			texture.SetData(new Color[] { color });
+			texture.SetData(new Color[] {color});
 
 			FillRectangle(bounds, texture, TextureRepeatMode.Stretch);
 		}
 
 		public void DrawNinePatch(Rectangle bounds, NinePatchTexture ninePatchTexture, TextureRepeatMode repeatMode)
 		{
-			if (ninePatchTexture.NineSliceSize == 0)
+			if (ninePatchTexture.Padding == Thickness.Zero)
 			{
 				FillRectangle(bounds, ninePatchTexture.Texture, repeatMode);
 				return;
 			}
+			
+			var sourceRegions = ninePatchTexture.SourceRegions;
+			var destRegions   = ninePatchTexture.ProjectRegions(bounds);
 
-			var texture = ninePatchTexture.Texture;
-			var patchSize = ninePatchTexture.NineSliceSize;
-			var projectedPatchSize = patchSize;
+			for (var i = 0; i < sourceRegions.Length; i++)
+			{
+				var srcPatch = sourceRegions[i];
+				var dstPatch = destRegions[i];
 
-			var innerBounds = new Rectangle(bounds.X + projectedPatchSize, bounds.Y + projectedPatchSize, bounds.Width - projectedPatchSize - projectedPatchSize, bounds.Height - projectedPatchSize - projectedPatchSize);
-
-			var tBounds = texture.Bounds;
-			tBounds.Inflate(-patchSize, -patchSize);
-
-			// Top Left
-			SpriteBatch.Draw(texture, new Rectangle(bounds.Left, bounds.Top, innerBounds.Left, innerBounds.Top), new Rectangle(0, 0, tBounds.Left, tBounds.Top), Color.White);
-
-			// Top Right
-			SpriteBatch.Draw(texture, new Rectangle(innerBounds.Right, bounds.Top, innerBounds.Left, innerBounds.Top), new Rectangle(tBounds.Right, 0, tBounds.Left, tBounds.Top), Color.White);
-
-
-			// Bottom Left
-			SpriteBatch.Draw(texture, new Rectangle(bounds.Left, innerBounds.Bottom, innerBounds.Left, innerBounds.Top), new Rectangle(0, tBounds.Bottom, tBounds.Left, tBounds.Top), Color.White);
-
-			// Bottom Right
-			SpriteBatch.Draw(texture, new Rectangle(innerBounds.Right, innerBounds.Bottom, innerBounds.Left, innerBounds.Top), new Rectangle(tBounds.Right, tBounds.Bottom, tBounds.Left, tBounds.Top), Color.White);
-
-
-			// Left Middle
-			SpriteBatch.Draw(texture, new Rectangle(bounds.Left, innerBounds.Top, innerBounds.Left, innerBounds.Height), new Rectangle(0, tBounds.Top, tBounds.Left, tBounds.Height), Color.White);
-
-			// Right Middle
-			SpriteBatch.Draw(texture, new Rectangle(innerBounds.Right, innerBounds.Top, innerBounds.Left, innerBounds.Height), new Rectangle(tBounds.Right, tBounds.Top, tBounds.Left, tBounds.Height), Color.White);
-
-
-			// Top Middle
-			SpriteBatch.Draw(texture, new Rectangle(innerBounds.Left, bounds.Top, innerBounds.Width, innerBounds.Top), new Rectangle(tBounds.Left, 0, tBounds.Width, tBounds.Top), Color.White);
-
-			// Bottom Middle
-			SpriteBatch.Draw(texture, new Rectangle(innerBounds.Left, innerBounds.Bottom, innerBounds.Width, innerBounds.Top), new Rectangle(tBounds.Left, tBounds.Bottom, tBounds.Width, tBounds.Top), Color.White);
-
-
-			// Middle Middle
-			SpriteBatch.Draw(texture, innerBounds, tBounds, Color.White);
+				if(dstPatch.Width > 0 && dstPatch.Height > 0)
+					SpriteBatch.Draw(ninePatchTexture.Texture, sourceRectangle: srcPatch, destinationRectangle: dstPatch, color: Color.White);
+			}
 		}
 
 		public void FillRectangle(Rectangle bounds, Texture2D texture, TextureRepeatMode repeatMode)
 		{
 			if (repeatMode == TextureRepeatMode.NoRepeat)
 			{
-				SpriteBatch.Draw(texture, new Rectangle(bounds.Location, new Point(texture.Width, texture.Height)), texture.Bounds, Color.White);
+				SpriteBatch.Draw(texture, new Rectangle(bounds.Location, new Point(texture.Width, texture.Height)), texture.Bounds,
+					Color.White);
 			}
 			else if (repeatMode == TextureRepeatMode.Stretch)
 			{
@@ -235,12 +215,11 @@ namespace Alex.Graphics.UI.Rendering
 			}
 			else if (repeatMode == TextureRepeatMode.ScaleToFit)
 			{
-
 			}
 			else if (repeatMode == TextureRepeatMode.Tile)
 			{
-				var repeatX = Math.Ceiling((float)bounds.Width / texture.Width);
-				var repeatY = Math.Ceiling((float)bounds.Height / texture.Height);
+				var repeatX = Math.Ceiling((float) bounds.Width  / texture.Width);
+				var repeatY = Math.Ceiling((float) bounds.Height / texture.Height);
 
 				for (int i = 0; i < repeatX; i++)
 				{
@@ -256,20 +235,21 @@ namespace Alex.Graphics.UI.Rendering
 		public void DrawRectangle(Rectangle bounds, Color color, int thickness = 1)
 		{
 			var texture = new Texture2D(Graphics, 1, 1, false, SurfaceFormat.Color);
-			texture.SetData(new Color[] { color });
+			texture.SetData(new Color[] {color});
 
 			// Top
 			SpriteBatch.Draw(texture, new Rectangle(bounds.X, bounds.Y, bounds.Width, thickness), color);
 
 			// Right
-			SpriteBatch.Draw(texture, new Rectangle(bounds.X + bounds.Width - thickness, bounds.Y, thickness, bounds.Height), color);
+			SpriteBatch.Draw(texture, new Rectangle(bounds.X + bounds.Width - thickness, bounds.Y, thickness, bounds.Height),
+				color);
 
 			// Bottom
-			SpriteBatch.Draw(texture, new Rectangle(bounds.X, bounds.Y + bounds.Height - thickness, bounds.Width, thickness), color);
+			SpriteBatch.Draw(texture, new Rectangle(bounds.X, bounds.Y + bounds.Height - thickness, bounds.Width, thickness),
+				color);
 
 			// Left
 			SpriteBatch.Draw(texture, new Rectangle(bounds.X, bounds.Y, thickness, bounds.Height), color);
-
 		}
 
 		public void DrawText(Rectangle bounds, string text, SpriteFont font, Color color)

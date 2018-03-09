@@ -44,7 +44,6 @@ namespace Alex.Gamestates
 			{
 				ClassName = "GuiRoot"
 			};
-			Alex.UiManager.Root.AddChild(Gui);
 
 			OnLoad(args);
 
@@ -53,7 +52,6 @@ namespace Alex.Gamestates
 
 		public void Unload()
 		{
-			Alex.UiManager.Root.AddChild(Gui);
 			OnUnload();
 		}
 
@@ -85,12 +83,15 @@ namespace Alex.Gamestates
 		public void Show()
 		{
 			OnShow();
+			Alex.UiManager.Root.AddChild(Gui);
 			Gui.UpdateLayout();
 		}
 
 		public void Hide()
 		{
 			OnHide();
+			Alex.UiManager.Root.RemoveChild(Gui);
+			Gui.UpdateLayout();
 		}
 		
 		protected virtual void OnShow() { }

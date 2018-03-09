@@ -16,7 +16,13 @@ namespace Alex.Graphics.UI
 		public event EventHandler SizeChanged;
 		public event EventHandler LayoutChanged;
 
-		public UiContainer Container { get; internal set; }
+		private UiContainer _container;
+
+		public UiContainer Container
+		{
+			get => _container;
+			internal set { _container = value; MarkStyleDirty(); }
+		}
 
 		private UiRoot Root
 		{
@@ -32,7 +38,6 @@ namespace Alex.Graphics.UI
 			{
 				if (_layoutParameters == value) return;
 				_layoutParameters = value;
-				OnPropertyChanged();
 			}
 		}
 
@@ -71,7 +76,7 @@ namespace Alex.Graphics.UI
 		public UiElementStyle Style
 		{
 			get { return _style; }
-			private set { _style = value; MarkStyleDirty(); }
+			private set { _style = value; MarkLayoutDirty(); }
 		}
 
 		#endregion
@@ -88,59 +93,34 @@ namespace Alex.Graphics.UI
 
 		internal void UpdateLayoutInternal()
 		{
-			UiElementLayoutParameters layoutParameters = LayoutParameters;
-
-			layoutParameters.ContentSize = GetContentSize();
-
+			UiElementLayoutParameters layoutParameters = UiElementLayoutParameters.FromStyle(Style);
+			
 			OnUpdateLayout(layoutParameters);
-
-			if (Container != null)
-			{
-				var containerSize = Container.LayoutParameters.InnerBounds.Size;
-
-				if (layoutParameters.PositionAnchor.HasValue)
-				{
-					layoutParameters.Position = ((containerSize.ToVector2() * layoutParameters.PositionAnchor.Value) + (layoutParameters.OuterBounds.Size.ToVector2() * layoutParameters.PositionAnchorOrigin)).ToPoint() + Container.LayoutParameters.InnerBounds.Location;
-				}
-
-
-				if (layoutParameters.SizeAnchor.HasValue)
-				{
-					layoutParameters.Size = (containerSize.ToVector2() * layoutParameters.SizeAnchor.Value);
-				}
-			}
-
+			
 			LayoutParameters = layoutParameters;
+
+			OnPostUpdateLayout(layoutParameters);
 
 			LayoutChanged?.Invoke(this, null);
 
 			_isLayoutDirty = false;
 		}
 
-		protected virtual void OnUpdateLayout(UiElementLayoutParameters layoutParameters)
+		protected virtual void OnUpdateSize(UiElementLayoutParameters layout)
 		{
-			if (Style.PositionAnchor.HasValue)
-			{
-				layoutParameters.PositionAnchor = Style.PositionAnchor.Value;
-			}
-			else
-			{
-				layoutParameters.PositionAnchor = TranscendParentsFor(c => c.Style.PositionAnchor) ?? Vector2.Zero;
-			}
-
-			layoutParameters.PositionAnchorOrigin = Style.PositionAnchorOrigin ?? layoutParameters.PositionAnchor ?? Vector2.Zero;
-
-			if (Style.SizeAnchor.HasValue)
-			{
-				layoutParameters.SizeAnchor = Style.SizeAnchor.Value;
-			}
-			layoutParameters.SizeAnchorOrigin = Style.SizeAnchorOrigin ?? layoutParameters.PositionAnchorOrigin;
-
-			layoutParameters.Padding = Style.Padding ?? Thickness.Zero;
-			layoutParameters.Margin = Style.Margin ?? Thickness.Zero;
-			layoutParameters.MinSize = new Point(Style.MinWidth ?? 0, Style.MinHeight ?? 0);
+			layout.ContentSize = GetContentSize();
 		}
 
+		protected virtual void OnUpdateLayout(UiElementLayoutParameters layout)
+		{
+			layout.ContentSize = GetContentSize();
+		}
+
+		protected virtual void OnPostUpdateLayout(UiElementLayoutParameters layout)
+		{
+			layout.ContentSize = GetContentSize();
+		}
+		
 		protected virtual Vector2 GetContentSize()
 		{
 			if (this is ITextElement textElement)
@@ -173,8 +153,7 @@ namespace Alex.Graphics.UI
 			if (_isStyleDirty)
 			{
 				Style = renderer.Theme.GetCompiledStyleFor(this);
-
-				MarkLayoutDirty();
+				
 				_isStyleDirty = false;
 			}
 

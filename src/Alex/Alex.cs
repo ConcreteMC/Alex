@@ -169,7 +169,9 @@ namespace Alex
 			//GamestateManager.AddState("login", new LoginState(this));
 			//GamestateManager.SetActiveState("login");
 
-			GameStateManager.AddState("title", new TitleState(this));
+			GameStateManager.AddState("title", new TitleState(this)); 
+			GameStateManager.AddState("options", new OptionsState(this));
+
 			GameStateManager.SetActiveState("title");
 
 			GameStateManager.RemoveState("splash");

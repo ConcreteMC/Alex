@@ -59,9 +59,10 @@ namespace Alex.Graphics.UI
 		
 		public void Update(GameTime gameTime)
 		{
+			ScaledResolution.Update();
+
 			if (_doResize)
 			{
-				ScaledResolution.Update();
 				Root.UpdateLayoutInternal();
 
 				_doResize = false;
