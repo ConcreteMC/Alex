@@ -214,10 +214,10 @@ namespace Alex
 				    block.Drag = knownMeta.FrictionFactor;
 				    block.IsReplacible = knownMeta.Replacible;
 
-				    if (blockId == 8 || blockId == 9 || blockId == 10 || blockId == 11)
-				    {
-					    block.Solid = false;
-				    }
+				 //   if (blockId == 8 || blockId == 9 || blockId == 10 || blockId == 11)
+				//    {
+				//	    block.Solid = false;
+				//    }
 
 				    if (blockStateData != null)
 					{

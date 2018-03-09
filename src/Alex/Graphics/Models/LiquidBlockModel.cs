@@ -16,7 +16,6 @@ namespace Alex.Graphics.Models
 		public bool IsFlowing = false;
 		public int Level = 8;
 
-		private int _frame { get; set; } = 0;
 		public LiquidBlockModel()
 		{
 
@@ -26,6 +25,8 @@ namespace Alex.Graphics.Models
 		{
 			List< VertexPositionNormalTextureColor> result = new List<VertexPositionNormalTextureColor>();
 			int tl = 0, tr = 0, bl = 0, br = 0;
+
+			Level = baseBlock.Metadata;
 
 			int b1, b2;
 			if (IsLava)
@@ -49,10 +50,10 @@ namespace Alex.Graphics.Models
 			}
 			else
 			{
-				tl = GetAverageLiquidLevels(world, position, b1, b2);
-				tr = GetAverageLiquidLevels(world, position + Vector3.UnitX, b1, b2);
-				bl = GetAverageLiquidLevels(world, position + Vector3.UnitZ, b1, b2);
-				br = GetAverageLiquidLevels(world, position + new Vector3(1, 0, 1), b1, b2);
+				tl = GetAverageLiquidLevels(world, position);
+				tr = GetAverageLiquidLevels(world, position + Vector3.UnitX);
+				bl = GetAverageLiquidLevels(world, position + Vector3.UnitZ);
+				br = GetAverageLiquidLevels(world, position + new Vector3(1, 0, 1));
 			}
 
 			string texture = "";
@@ -107,7 +108,7 @@ namespace Alex.Graphics.Models
 				
 				var b = (Block)world.GetBlock(position + d);
 				LiquidBlockModel m = b.BlockModel as LiquidBlockModel;
-				var secondSpecial = m != null && m.Level > Level;
+				var secondSpecial = m != null && b.Metadata > Level;
 
 				if (special || (secondSpecial) || !b.BlockId.Equals(b1) && !b.BlockId.Equals(b2))
 				{
@@ -166,7 +167,7 @@ namespace Alex.Graphics.Models
 			return result.ToArray();
 		}
 
-		protected int GetAverageLiquidLevels(IWorld world, Vector3 position, int b1, int b2)
+		protected int GetAverageLiquidLevels(IWorld world, Vector3 position)
 		{
 			int level = 0;
 			for (int xx = -1; xx <= 0; xx++)
@@ -174,15 +175,15 @@ namespace Alex.Graphics.Models
 				for (int zz = -1; zz <= 0; zz++)
 				{
 					var b = (Block)world.GetBlock(position.X + xx, position.Y + 1, position.Z + zz);
-					if ((b.BlockId == b1 || b.BlockId == b2) && b.BlockModel is LiquidBlockModel m && m.IsLava == IsLava)
+					if (b.BlockModel is LiquidBlockModel m && m.IsLava == IsLava)
 					{
 						return 8;
 					}
 
 					b = (Block)world.GetBlock(position.X + xx, position.Y, position.Z + zz);
-					if ((b.BlockId == b1 || b.BlockId == b2) && b.BlockModel is LiquidBlockModel l && l.IsLava == IsLava)
+					if (b.BlockModel is LiquidBlockModel l && l.IsLava == IsLava)
 					{
-						var nl = 7 - (Level & 0x7);
+						var nl = 7 - (b.Metadata & 0x7);
 						if (nl > level)
 						{
 							level = nl;
