@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Alex.API.World;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.Gamestates
@@ -12,11 +13,25 @@ namespace Alex.Gamestates
 	    }
 
 	    private int Progress { get; set; } = 0;
-	    private bool Generating { get; set; } = false;
-	    public void UpdateProgress(int percentage, bool generatingVertices)
+	    private string DisplayString { get; set; } = "Loading world...";
+	    public void UpdateProgress(LoadingState state, int percentage)
 	    {
 		    Progress = percentage;
-		    Generating = generatingVertices;
+		    switch (state)
+		    {
+				case LoadingState.ConnectingToServer:
+					DisplayString = "Connecting to server...";
+					break;
+				case LoadingState.LoadingChunks:
+					DisplayString = $"Loading chunks: {percentage}%";
+					break;
+				case LoadingState.GeneratingVertices:
+					DisplayString = $"Initiating world: {percentage}%";
+					break;
+				case LoadingState.Spawning:
+					DisplayString = $"Getting ready...";
+					break;
+		    }
 	    }
 
 	    public override void Render2D(RenderArgs args)
@@ -32,9 +47,9 @@ namespace Alex.Gamestates
 		    args.SpriteBatch.Draw(Background, retval, Color.White);
 		    //End draw backgroun
 
-		    string displayString = Generating ? $"Initializing world: {Progress}%" : $"Loading world: {Progress}%";
-		    var size = Alex.Font.MeasureString(displayString);
-			args.SpriteBatch.DrawString(Alex.Font, displayString, CenterScreen - (size / 2), Color.White);
+		   // string displayString = Generating ? $"Initializing world: {Progress}%" : $"Loading world: {Progress}%";
+		    var size = Alex.Font.MeasureString(DisplayString);
+			args.SpriteBatch.DrawString(Alex.Font, DisplayString, CenterScreen - (size / 2), Color.White);
 
 		    args.SpriteBatch.End();
 		}

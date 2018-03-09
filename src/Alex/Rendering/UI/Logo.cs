@@ -65,11 +65,15 @@ namespace Alex.Rendering.UI
             Vector2 centerScreen = CenterScreen(args.GraphicsDevice);
 
 	        int totalX = 0;
+	        int height = 0;
             var x = 0;
             var y = 25;
 	        if (Center)
 	        {
 		        y = (int) (centerScreen.Y - (AlexLogo.Length * 8));
+
+				Location.Y = y;
+		        Location.X = centerScreen.X;
 	        }
             foreach (var line in AlexLogo)
             {
@@ -93,40 +97,46 @@ namespace Alex.Rendering.UI
 				totalX = x;
 
 				y += 8;
-	            
+	            height += 8;
+
 				x = 0;
 	          
 			}
 
+	        Size.Y = height;
+
 	        if (DrawMotd)
 	        {
 		        float dt = (float) args.GameTime.ElapsedGameTime.TotalSeconds;
-		        if (_scale > 1.22f)
-		        {
-			        _doPlus = false;
-		        }
-
-		        if (_scale < 0.52f)
-		        {
-			        _doPlus = true;
-		        }
-
 		        if (_doPlus)
 		        {
-			        _scale += 1f * dt;
-		        }
+			        if (_scale < 1.25f)
+			        {
+				        _scale += 1f * dt;
+			        }
+			        else
+			        {
+				        _doPlus = false;
+					}
+				}
 		        else
 		        {
-			        _scale -= 1f * dt;
+			        if (_scale > 0.75f)
+			        {
+				        _scale -= 1f * dt;
+					}
+			        else
+			        {
+				        _doPlus = true;
+			        }
 		        }
-
 
 		        try
 		        {
 			        var textSize = Alex.Font.MeasureString(_splashText);
-			        args.SpriteBatch.DrawString(Alex.Font, _splashText, new Vector2(centerScreen.X + (totalX / 2f), 140 + (textSize.X / 2)), Color.Gold,
+			        args.SpriteBatch.DrawString(Alex.Font, _splashText, new Vector2(centerScreen.X + (totalX / 2f), y /*+ (textSize.X / 2)*/), Color.Gold,
 				        -0.6f,
-				        new Vector2(),
+				        textSize /2f, 
 				        new Vector2(_scale, _scale), 0f, 0f);
 		        }
 		        catch

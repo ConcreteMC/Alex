@@ -113,7 +113,7 @@ namespace Alex.Gamestates
         public override void Stop()
         {
             //Alex.HideMouse();
-            Alex.IsMouseVisible = false;
+            //Alex.IsMouseVisible = false;
         }
 
         private string ErrorText = string.Empty;

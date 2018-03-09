@@ -243,32 +243,32 @@ namespace Alex.Graphics.Models
 
 				        Color faceColor = faceVertices[0].Color;
 
-				        if (face.Value.TintIndex >= 0)
-				        {
-					        World w = (World) world;
+						if (face.Value.TintIndex >= 0)
+						{
+							//World w = (World) world;
+							int biomeId = world.GetBiome((int)worldPosition.X, 0, (int)worldPosition.Z);
 
-					        if (w.ChunkManager.TryGetChunk(
-						        new ChunkCoordinates(new PlayerLocation(worldPosition.X, 0, worldPosition.Z)),
-						        out IChunkColumn column))
-					        {
-						        Worlds.ChunkColumn realColumn = (Worlds.ChunkColumn) column;
-						        var biome = BiomeUtils.GetBiomeById(realColumn.GetBiome((int) worldPosition.X & 0xf,
-							        (int) worldPosition.Z & 0xf));
+							if (biomeId != -1)
+								/*if (world.ChunkManager.TryGetChunk(
+									new ChunkCoordinates(new PlayerLocation(worldPosition.X, 0, worldPosition.Z)),
+									out IChunkColumn column))*/
+							{
+								//	Worlds.ChunkColumn realColumn = (Worlds.ChunkColumn) column;
+								var biome = BiomeUtils.GetBiomeById(biomeId
+									/*realColumn.GetBiome((int) worldPosition.X & 0xf, (int) worldPosition.Z & 0xf)*/);
 
-						        if (baseBlock.BlockId == 2)
-						        {
-							        faceColor = Resources.ResourcePack.GetGrassColor(biome.Temperature, biome.Downfall,
-								        (int) worldPosition.Y);
-						        }
-						        else
-						        {
-							        faceColor = Resources.ResourcePack.GetFoliageColor(biome.Temperature, biome.Downfall,
-								        (int) worldPosition.Y);
-						        }
-					        }
-				        }
+								if (baseBlock.BlockId == 2)
+								{
+									faceColor = Resources.ResourcePack.GetGrassColor(biome.Temperature, biome.Downfall, (int)worldPosition.Y);
+								}
+								else
+								{
+									faceColor = Resources.ResourcePack.GetFoliageColor(biome.Temperature, biome.Downfall, (int)worldPosition.Y);
+								}
+							}
+						}
 
-				        faceColor = UvMapHelp.AdjustColor(faceColor, cull, GetLight(world, worldPosition + cullFace),
+						faceColor = UvMapHelp.AdjustColor(faceColor, cull, GetLight(world, worldPosition + cullFace),
 					        element.Shade);
 
 				        for (var index = 0; index < faceVertices.Length; index++)

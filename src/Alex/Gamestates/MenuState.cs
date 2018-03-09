@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using Alex.API.World;
 using Alex.Gamestates.Playing;
 using Alex.Rendering.UI;
 using Alex.Utils;
@@ -7,6 +8,8 @@ using Alex.Worlds;
 using Alex.Worlds.Generators;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MiNET.Worlds;
+using AnvilWorldProvider = Alex.Worlds.AnvilWorldProvider;
 
 namespace Alex.Gamestates
 {
@@ -81,10 +84,6 @@ namespace Alex.Gamestates
 		{
 			Alex.IsMouseVisible = false;
 
-			LoadingWorldState loadingScreen = new LoadingWorldState(Graphics, BackGround);
-			Alex.GamestateManager.AddState("loading", loadingScreen);
-			Alex.GamestateManager.SetActiveState("loading");
-
 			IWorldGenerator generator;
 			if (Alex.GameSettings.UseBuiltinGenerator || (string.IsNullOrWhiteSpace(Alex.GameSettings.Anvil) || !File.Exists(Path.Combine(Alex.GameSettings.Anvil, "level.dat"))))
 			{
@@ -100,11 +99,18 @@ namespace Alex.Gamestates
 
 			generator.Initialize();
 
-			SPWorldProvider spWorldProvider = new SPWorldProvider(Alex, generator);
-			
-			spWorldProvider.PreLoad(loadingScreen.UpdateProgress).ContinueWith(task =>
+			LoadWorld(new SPWorldProvider(Alex, generator));
+		}
+
+		private void LoadWorld(WorldProvider worldProvider)
+		{
+			LoadingWorldState loadingScreen = new LoadingWorldState(Graphics, BackGround);
+			Alex.GamestateManager.AddState("loading", loadingScreen);
+			Alex.GamestateManager.SetActiveState("loading");
+
+			worldProvider.Load(loadingScreen.UpdateProgress).ContinueWith(task =>
 			{
-				PlayingState playState = new PlayingState(Alex, Graphics, spWorldProvider);
+				PlayingState playState = new PlayingState(Alex, Graphics, worldProvider);
 				Alex.GamestateManager.AddState("play", playState);
 				Alex.GamestateManager.SetActiveState("play");
 

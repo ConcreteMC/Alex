@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using MiNET.Entities;
 
@@ -6,6 +7,8 @@ namespace Alex.API.World
 {
 	public abstract class WorldProvider : IDisposable
 	{
+		public delegate void ProgressReport(LoadingState state, int percentage);
+
 		private IWorldReceiver WorldReceiver { get; set; }
 		protected WorldProvider()
 		{
@@ -47,6 +50,8 @@ namespace Alex.API.World
 
 			Initiate();
 		}
+
+		public abstract Task Load(ProgressReport progressReport);
 
 		public virtual void Dispose()
 		{

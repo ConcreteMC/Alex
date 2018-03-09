@@ -136,11 +136,13 @@ namespace Alex.Worlds
 		private Thread UpdateThread { get; set; }
 		protected override void Initiate()
 		{
-			while (_cachedChunkColumns.TryDequeue(out ChunkColumn chunk))
+			while (_preGeneratedChunks.TryDequeue(out ChunkColumn chunk))
 			{
 				base.LoadChunk(chunk, chunk.X, chunk.Z, false);
 				LoadEntities(chunk);
 			}
+
+			_preGeneratedChunks = null;
 
 			UpdateThread = new Thread(RunThread)
 			{
@@ -155,8 +157,9 @@ namespace Alex.Worlds
 			return Generator.GetSpawnPoint();
 		}
 
-		private Queue<ChunkColumn> _cachedChunkColumns = new Queue<ChunkColumn>();
-		public Task PreLoad(Action<int, bool> progressReport)
+		private Queue<ChunkColumn> _preGeneratedChunks = new Queue<ChunkColumn>();
+		
+		public override Task Load(ProgressReport progressReport)
 		{
 			return Task.Run(() =>
 			{
@@ -178,7 +181,7 @@ namespace Alex.Worlds
 
 						cached.ChunkManager.AddChunk(chunk, new ChunkCoordinates(c.X, c.Z), false);
 						percentage = (int) Math.Floor((count / target) * 100);
-						progressReport(percentage, false);
+						progressReport(LoadingState.LoadingChunks, percentage);
 
 						count++;
 					}
@@ -188,9 +191,9 @@ namespace Alex.Worlds
 					Parallel.ForEach(generatedChunks, (c) =>
 					{
 						cached.ChunkManager.UpdateChunk(c);
-						_cachedChunkColumns.Enqueue(c);
+						_preGeneratedChunks.Enqueue(c);
 						percentage = (int)Math.Floor((count / target) * 100);
-						progressReport(percentage, true);
+						progressReport(LoadingState.GeneratingVertices, percentage);
 
 						count++;
 

@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Text;
 using Alex.API.Graphics;
 using Alex.API.World;
 using Alex.Rendering;
-using Alex.Rendering.Camera;
 using Microsoft.Xna.Framework;
 using MiNET.Utils;
 
@@ -13,8 +9,6 @@ namespace Alex.Worlds
 {
 	public class CachedWorld : IWorld, IDisposable
 	{
-		private ConcurrentDictionary<ChunkCoordinates, IChunkColumn> Chunks { get; }
-
 		public int Vertices => 0;
 
 		public int ChunkCount => 0;
@@ -24,8 +18,7 @@ namespace Alex.Worlds
 		internal ChunkManager ChunkManager { get; }
 		public CachedWorld(Alex alex)
 		{
-			ChunkManager = new ChunkManager(alex, alex.GraphicsDevice, new Camera(), this);
-			Chunks = new ConcurrentDictionary<ChunkCoordinates, IChunkColumn>();
+			ChunkManager = new ChunkManager(alex, alex.GraphicsDevice, null, this);
 		}
 
 		public bool IsSolid(Vector3 location)
@@ -160,7 +153,7 @@ namespace Alex.Worlds
 
 		public void Dispose()
 		{
-			Chunks.Clear();
+			ChunkManager.Dispose();
 		}
 	}
 }
