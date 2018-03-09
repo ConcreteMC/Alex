@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Threading;
@@ -15,6 +16,9 @@ namespace Alex
 	public partial class Alex : Microsoft.Xna.Framework.Game
 	{
 		private static ILog Log = LogManager.GetLogger(typeof(Alex));
+
+		public static string DotnetRuntime { get; } =
+			$"{System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription}";
 
 		public static string Version = "1.0";
 		public static string Username { get; set; }

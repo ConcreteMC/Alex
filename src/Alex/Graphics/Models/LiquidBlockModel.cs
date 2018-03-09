@@ -30,13 +30,13 @@ namespace Alex.Graphics.Models
 			int b1, b2;
 			if (IsLava)
 			{
-				b1 = 9;//typeof(Lava);
-				b2 = 10;//typeof(FlowingLava);
+				b1 = 10;
+				b2 = 11;
 			}
 			else
 			{
-				b1 = 8;//typeof(Water);
-				b2 = 9; //typeof(FlowingWater);
+				b1 = 8;
+				b2 = 9;
 			}
 
 			var bc = world.GetBlock(position + Vector3.Up).BlockId;//.GetType();
@@ -49,10 +49,10 @@ namespace Alex.Graphics.Models
 			}
 			else
 			{
-				tl = GetAverageLiquidLevels(world, position);
-				tr = GetAverageLiquidLevels(world, position + Vector3.UnitX);
-				bl = GetAverageLiquidLevels(world, position + Vector3.UnitZ);
-				br = GetAverageLiquidLevels(world, position + new Vector3(1, 0, 1));
+				tl = GetAverageLiquidLevels(world, position, b1, b2);
+				tr = GetAverageLiquidLevels(world, position + Vector3.UnitX, b1, b2);
+				bl = GetAverageLiquidLevels(world, position + Vector3.UnitZ, b1, b2);
+				br = GetAverageLiquidLevels(world, position + new Vector3(1, 0, 1), b1, b2);
 			}
 
 			string texture = "";
@@ -166,7 +166,7 @@ namespace Alex.Graphics.Models
 			return result.ToArray();
 		}
 
-		protected int GetAverageLiquidLevels(IWorld world, Vector3 position)
+		protected int GetAverageLiquidLevels(IWorld world, Vector3 position, int b1, int b2)
 		{
 			int level = 0;
 			for (int xx = -1; xx <= 0; xx++)
@@ -174,13 +174,13 @@ namespace Alex.Graphics.Models
 				for (int zz = -1; zz <= 0; zz++)
 				{
 					var b = (Block)world.GetBlock(position.X + xx, position.Y + 1, position.Z + zz);
-					if (b.BlockModel is LiquidBlockModel m && m.IsLava == IsLava)
+					if ((b.BlockId == b1 || b.BlockId == b2) && b.BlockModel is LiquidBlockModel m && m.IsLava == IsLava)
 					{
 						return 8;
 					}
 
 					b = (Block)world.GetBlock(position.X + xx, position.Y, position.Z + zz);
-					if (b.BlockModel is LiquidBlockModel l && l.IsLava == IsLava)
+					if ((b.BlockId == b1 || b.BlockId == b2) && b.BlockModel is LiquidBlockModel l && l.IsLava == IsLava)
 					{
 						var nl = 7 - (Level & 0x7);
 						if (nl > level)

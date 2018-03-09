@@ -33,6 +33,15 @@ namespace Alex.Rendering
         private IWorld World { get; }
 	    private Alex Game { get; }
 
+	    private int _chunkUpdates = 0;
+	    public int ChunkUpdates => _chunkUpdates;
+	    public int ChunkCount => Chunks.Count;
+
+	    private AlphaTestEffect Effect { get; }
+
+	    public int Vertices { get; private set; }
+	    public int RenderedChunks { get; private set; } = 0;
+
 		public ChunkManager(Alex alex, GraphicsDevice graphics, Camera.Camera camera, IWorld world)
 		{
 			Game = alex;
@@ -220,160 +229,141 @@ namespace Alex.Rendering
 		    return buffer;
 	    }
 
-	    private int _chunkUpdates = 0;
-	    public int ChunkUpdates => _chunkUpdates;
-	    public int ChunkCount => Chunks.Count;
+	    public void Draw(IRenderArgs args)
+	    {
+		    var device = args.GraphicsDevice;
 
-		private AlphaTestEffect Effect { get; }
+		    Stopwatch sw = Stopwatch.StartNew();
 
-        public int Vertices { get; private set; }
-	    public int RenderedChunks { get; private set; } = 0;
+		    Effect.View = Camera.ViewMatrix;
+		    Effect.Projection = Camera.ProjectionMatrix;
 
-		public void Draw(IRenderArgs args)
-		{
-			var device = args.GraphicsDevice;
+		    var r = _renderedChunks.ToArray();
+		    var chunks = new KeyValuePair<ChunkCoordinates, IChunkColumn>[r.Length];
+		    for (var index = 0; index < r.Length; index++)
+		    {
+			    var c = r[index];
+			    if (Chunks.TryGetValue(c, out IChunkColumn chunk))
+			    {
+				    chunks[index] = new KeyValuePair<ChunkCoordinates, IChunkColumn>(c, chunk);
+			    }
+			    else
+			    {
+				    chunks[index] = new KeyValuePair<ChunkCoordinates, IChunkColumn>(c, null);
+			    }
+		    }
 
-			Stopwatch sw = Stopwatch.StartNew();
+		    VertexBuffer[] opaqueBuffers = new VertexBuffer[chunks.Length];
+		    VertexBuffer[] transparentBuffers = new VertexBuffer[chunks.Length];
 
-			Effect.View = Camera.ViewMatrix;
-			Effect.Projection = Camera.ProjectionMatrix;
+		    var tempVertices = 0;
+		    int tempChunks = 0;
+		    int tempFailed = 0;
+		    int opaqueFramesFailed = 0;
+		    int transparentFramesFailed = 0;
 
-			var r = _renderedChunks.ToArray();
-			var chunks = new KeyValuePair<ChunkCoordinates, IChunkColumn>[r.Length];
-			for (var index = 0; index < r.Length; index++)
-			{
-				var c = r[index];
-				if (Chunks.TryGetValue(c, out IChunkColumn chunk))
-				{
-					chunks[index] = new KeyValuePair<ChunkCoordinates, IChunkColumn>(c, chunk);
-				}
-				else
-				{
-					chunks[index] = new KeyValuePair<ChunkCoordinates, IChunkColumn>(c, null);
-				}
-			}
+		    for (var index = 0; index < chunks.Length; index++)
+		    {
+			    var c = chunks[index];
+			    var chunk = c.Value;
+			    if (chunk == null) continue;
 
-			VertexBuffer[] opaqueBuffers = new VertexBuffer[chunks.Length];
-	        VertexBuffer[] transparentBuffers = new VertexBuffer[chunks.Length];
+			    VertexBuffer buffer = null;
+			    VertexBuffer transparentBuffer = null;
 
-			var tempVertices = 0;
-	        int tempChunks = 0;
-			int tempFailed = 0;
-			int opaqueFramesFailed = 0;
-			int transparentFramesFailed = 0;
 
-			for (var index = 0; index < chunks.Length; index++)
-			{
-				var c = chunks[index];
-				var chunk = c.Value;
-				if (chunk == null) continue;
+			    buffer = chunk.VertexBuffer;
+			    transparentBuffer = chunk.TransparentVertexBuffer;
 
-				VertexBuffer buffer = null;
-				VertexBuffer transparentBuffer = null;
 
-				//if (Monitor.TryEnter(chunk.VertexLock, 0))
-				{
-					buffer = chunk.VertexBuffer;
-					transparentBuffer = chunk.TransparentVertexBuffer;
-				//	Monitor.Exit(chunk.VertexLock);
-				}
-				//else
-				{
-			//		tempFailed++;
-			//		continue;
-				}
+			    if (buffer != null)
+			    {
+				    opaqueBuffers[index] = buffer;
+			    }
 
-				if (buffer != null)
-				{
-					opaqueBuffers[index] = buffer;
-				}
+			    if (transparentBuffer != null)
+			    {
+				    transparentBuffers[index] = transparentBuffer;
+			    }
 
-				if (transparentBuffer != null)
-				{
-					transparentBuffers[index] = transparentBuffer;
-				}
+			    if ((chunk.IsDirty || (buffer == null || transparentBuffer == null)) &&
+			        chunk.Scheduled == ScheduleType.Unscheduled)
+			    {
+				    //	ScheduleChunkUpdate(c.Key, ScheduleType.Full);
+				    if (buffer == null && transparentBuffer == null)
+				    {
+					    tempFailed++;
+				    }
 
-				if ((chunk.IsDirty || (buffer == null || transparentBuffer == null)) &&
-				    chunk.Scheduled == ScheduleType.Unscheduled)
-				{
-				//	ScheduleChunkUpdate(c.Key, ScheduleType.Full);
-					if (buffer == null && transparentBuffer == null)
-					{
-						tempFailed++;
-					}
+				    continue;
+			    }
 
-					continue;
-				}
+			    if (transparentBuffer != null && buffer != null)
+				    tempChunks++;
+		    }
 
-				if (transparentBuffer != null && buffer != null)
-					tempChunks++;
-			}
+		    //Render Solid
+		    device.DepthStencilState = DepthStencilState.Default;
+		    device.BlendState = BlendState.AlphaBlend;
 
-			//Render Solid
-			device.DepthStencilState = DepthStencilState.Default;
-			device.BlendState = BlendState.AlphaBlend;
+		    foreach (var b in opaqueBuffers)
+		    {
+			    if (b == null)
+			    {
+				    opaqueFramesFailed++;
+				    continue;
+			    }
 
-			foreach (var b in opaqueBuffers)
-			{
-				if (b == null)
-				{
-					opaqueFramesFailed++;
-					continue;
-				}
+			    if (b.VertexCount == 0) continue;
 
-				if (b.VertexCount == 0) continue;
+			    device.SetVertexBuffer(b);
 
-				device.SetVertexBuffer(b);
+			    foreach (var pass in Effect.CurrentTechnique.Passes)
+			    {
+				    pass.Apply();
+				    //device.DrawPrimitives(PrimitiveType.TriangleList, 0, b.VertexCount /3);
+			    }
 
-				foreach (var pass in Effect.CurrentTechnique.Passes)
-				{
-					pass.Apply();
-					//device.DrawPrimitives(PrimitiveType.TriangleList, 0, b.VertexCount /3);
-				}
+			    device.DrawPrimitives(PrimitiveType.TriangleList, 0, b.VertexCount / 3);
 
-				device.DrawPrimitives(PrimitiveType.TriangleList, 0, b.VertexCount / 3);
+			    tempVertices += b.VertexCount;
+		    }
 
-				tempVertices += b.VertexCount;
-			}
+			//Render transparent blocks
+		    foreach (var b in transparentBuffers)
+		    {
+			    if (b == null)
+			    {
+				    transparentFramesFailed++;
+				    continue;
+			    }
 
-			//Render Transparent
-		//	device.DepthStencilState = DepthStencilState.Default;
-		//	device.BlendState = BlendState.AlphaBlend;
+			    if (b.VertexCount == 0) continue;
 
-	        foreach (var b in transparentBuffers)
-	        {
-		        if (b == null)
-		        {
-			        transparentFramesFailed++;
-			        continue;
-		        }
+			    device.SetVertexBuffer(b);
 
-		        if (b.VertexCount == 0) continue;
+			    foreach (var pass in Effect.CurrentTechnique.Passes)
+			    {
+				    pass.Apply();
+			    }
 
-		        device.SetVertexBuffer(b);
-				
-				foreach (var pass in Effect.CurrentTechnique.Passes)
-				{
-					pass.Apply();
-				}
+			    device.DrawPrimitives(PrimitiveType.TriangleList, 0, b.VertexCount / 3);
 
-		        device.DrawPrimitives(PrimitiveType.TriangleList, 0, b.VertexCount / 3);
+			    tempVertices += b.VertexCount;
+		    }
 
-				tempVertices += b.VertexCount;
-	        }
+		    Vertices = tempVertices;
+		    RenderedChunks = tempChunks;
 
-			Vertices = tempVertices;
-	        RenderedChunks = tempChunks;
-
-			sw.Stop();
-			if (tempFailed > 0)
-			{
-			/*	Log.Debug(
-					$"Frame time: {sw.Elapsed.TotalMilliseconds}ms\n\t\tTransparent: {transparentFramesFailed} / {transparentBuffers.Length} chunks\n\t\tOpaque: {opaqueFramesFailed} / {opaqueBuffers.Length} chunks\n\t\t" +
-					$"Full chunks: {tempChunks} / {chunks.Length}\n\t\t" +
-					$"Missed frames: {tempFailed}");*/
-			}
-		}
+		    sw.Stop();
+		    if (tempFailed > 0)
+		    {
+			    /*	Log.Debug(
+					    $"Frame time: {sw.Elapsed.TotalMilliseconds}ms\n\t\tTransparent: {transparentFramesFailed} / {transparentBuffers.Length} chunks\n\t\tOpaque: {opaqueFramesFailed} / {opaqueBuffers.Length} chunks\n\t\t" +
+					    $"Full chunks: {tempChunks} / {chunks.Length}\n\t\t" +
+					    $"Missed frames: {tempFailed}");*/
+		    }
+	    }
 
 	    public void Update()
 	    {
@@ -446,12 +436,15 @@ namespace Alex.Rendering
 		    }
 	    }
 
-	    public void RemoveChunk(ChunkCoordinates position)
+	    public void RemoveChunk(ChunkCoordinates position, bool dispose = true)
         {
 	        IChunkColumn chunk;
 	        if (Chunks.TryRemove(position, out chunk))
-	        {				
-				chunk?.Dispose();
+	        {
+		        if (dispose)
+		        {
+			        chunk?.Dispose();
+		        }
 	        }
         }
 

@@ -27,7 +27,7 @@ namespace Alex.Worlds
 	        Camera = camera;
 
 			ChunkManager = new ChunkManager(alex, graphics, camera, this);
-			EntityManager = new EntityManager(graphics);
+			EntityManager = new EntityManager(graphics, this);
 
 	        WorldProvider = worldProvider;
 			WorldProvider.Init(this);

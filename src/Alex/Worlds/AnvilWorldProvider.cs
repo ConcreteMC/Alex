@@ -30,8 +30,6 @@ namespace Alex.Worlds
 
 		public LevelInfo LevelInfo { get; private set; }
 
-		public ConcurrentDictionary<ChunkCoordinates, Chunk> _chunkCache = new ConcurrentDictionary<ChunkCoordinates, Chunk>();
-
 		public string BasePath { get; private set; }
 
 		public Dimension Dimension { get; set; }
@@ -174,15 +172,6 @@ namespace Alex.Worlds
 			BasePath = basePath;
 		}
 
-		protected AnvilWorldProvider(string basePath, LevelInfo levelInfo, ConcurrentDictionary<ChunkCoordinates, Chunk> chunkCache)
-		{
-			BasePath = basePath;
-			LevelInfo = levelInfo;
-			_chunkCache = chunkCache;
-			_isInitialized = true;
-			//_flatland = new FlatlandWorldProvider();
-		}
-
 		private bool _isInitialized = false;
 		private object _initializeSync = new object();
 
@@ -225,22 +214,7 @@ namespace Alex.Worlds
 				_isInitialized = true;
 			}
 		}
-
-		public bool CachedChunksContains(ChunkCoordinates chunkCoord)
-		{
-			return _chunkCache.ContainsKey(chunkCoord);
-		}
-
-		public Chunk[] GetCachedChunks()
-		{
-			return _chunkCache.Values.Where(column => column != null).ToArray();
-		}
-
-		public void ClearCachedChunks()
-		{
-			_chunkCache.Clear();
-		}
-
+		
 		public IChunkColumn GenerateChunkColumn(ChunkCoordinates chunkCoordinates)
 		{
 			return GetChunk(chunkCoordinates, BasePath, MissingChunkProvider);
@@ -263,12 +237,6 @@ namespace Alex.Worlds
 				if (!File.Exists(filePath))
 				{
 					var chunkColumn = generator?.GenerateChunkColumn(coordinates);
-					if (chunkColumn != null)
-					{
-						//SkyLightBlockAccess blockAccess = new SkyLightBlockAccess(this, chunkColumn);
-						//new SkyLightCalculations().RecalcSkyLight(chunkColumn, blockAccess);
-					}
-
 					return chunkColumn;
 				}
 
@@ -287,11 +255,6 @@ namespace Alex.Worlds
 					if (offset == 0 || sectorCount == 0)
 					{
 						var chunkColumn = generator?.GenerateChunkColumn(coordinates);
-						if (chunkColumn != null)
-						{
-							//chunkColumn.NeedSave = true;
-						}
-
 						return chunkColumn;
 					}
 
@@ -320,8 +283,7 @@ namespace Alex.Worlds
 					{
 						X = coordinates.X,
 						Z = coordinates.Z,
-						BiomeId = dataTag["Biomes"].ByteArrayValue,
-						//isAllAir = true
+						BiomeId = dataTag["Biomes"].ByteArrayValue
 					};
 
 					//chunk.b
@@ -428,7 +390,6 @@ namespace Alex.Worlds
 					}
 
 					chunk.CalculateHeight();
-					//chunk.CalculateSkylight();
 					return chunk;
 				}
 			}

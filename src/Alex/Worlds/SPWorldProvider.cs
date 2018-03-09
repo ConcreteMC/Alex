@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Graphics;
@@ -17,8 +19,8 @@ namespace Alex.Worlds
 	public class SPWorldProvider : WorldProvider
 	{
 		private static readonly ILog Log = LogManager.GetLogger(typeof(SPWorldProvider));
-		private IWorldGenerator Generator;
-		private List<ChunkCoordinates> LoadedChunks = new List<ChunkCoordinates>();
+		private readonly IWorldGenerator _generator;
+		private readonly List<ChunkCoordinates> _loadedChunks = new List<ChunkCoordinates>();
 		private ChunkCoordinates PreviousChunkCoordinates { get; set; } = new ChunkCoordinates(int.MaxValue, int.MaxValue);
 		private Alex Alex { get; }
 
@@ -27,7 +29,7 @@ namespace Alex.Worlds
 		public SPWorldProvider(Alex alex, IWorldGenerator worldGenerator)
 		{
 			Alex = alex;
-			Generator = worldGenerator;
+			_generator = worldGenerator;
 		
 			ThreadCancellationTokenSource = new CancellationTokenSource();
 		}
@@ -59,30 +61,16 @@ namespace Alex.Worlds
 
 		private IEnumerable<IChunkColumn> GenerateChunks(ChunkCoordinates center, int renderDistance)
 		{
-			var oldChunks = LoadedChunks.ToArray();
+			var oldChunks = _loadedChunks.ToArray();
 
-			int count = 0;
 			double radiusSquared = Math.Pow(renderDistance, 2);
 
 			List<ChunkCoordinates> newChunkCoordinates = new List<ChunkCoordinates>();
 
-			//Load chunks from the inside out (Playerlocation first, then the chunks around it)
-			for (int cx = 0; cx < renderDistance * 2; cx++)
+			for (int x = -renderDistance; x < renderDistance; x++)
 			{
-				int x = cx / 2;
-				if (cx % 2 == 0)
+				for (int z = -renderDistance; z < renderDistance; z++)
 				{
-					x = -x;
-				}
-
-				for (int cz = 0; cz < renderDistance * 2; cz++)
-				{
-					int z = cz / 2;
-					if (cz % 2 == 0)
-					{
-						z = -z;
-					}
-
 					var distance = (x * x) + (z * z);
 					if (distance > radiusSquared)
 					{
@@ -92,14 +80,14 @@ namespace Alex.Worlds
 					var cc = center + new ChunkCoordinates(x, z);
 					newChunkCoordinates.Add(cc);
 
-					if (!LoadedChunks.Contains(cc))
+					if (!_loadedChunks.Contains(cc))
 					{
 						IChunkColumn chunk =
-							Generator.GenerateChunkColumn(cc);
-
+							_generator.GenerateChunkColumn(cc);
+						
 						if (chunk == null) continue;
-
-						LoadedChunks.Add(cc);
+						
+						_loadedChunks.Add(cc);
 
 						yield return chunk;
 					}
@@ -111,7 +99,7 @@ namespace Alex.Worlds
 				if (!newChunkCoordinates.Contains((ChunkCoordinates)chunk))
 				{
 					UnloadChunk(chunk.X, chunk.Z);
-					LoadedChunks.Remove(chunk);
+					_loadedChunks.Remove(chunk);
 				}
 			}
 		}
@@ -138,8 +126,11 @@ namespace Alex.Worlds
 		{
 			while (_preGeneratedChunks.TryDequeue(out ChunkColumn chunk))
 			{
-				base.LoadChunk(chunk, chunk.X, chunk.Z, false);
-				LoadEntities(chunk);
+				if (chunk != null)
+				{
+					base.LoadChunk(chunk, chunk.X, chunk.Z, false);
+					LoadEntities(chunk);
+				}
 			}
 
 			_preGeneratedChunks = null;
@@ -154,7 +145,7 @@ namespace Alex.Worlds
 
 		public override Vector3 GetSpawnPoint()
 		{
-			return Generator.GetSpawnPoint();
+			return _generator.GetSpawnPoint();
 		}
 
 		private Queue<ChunkColumn> _preGeneratedChunks = new Queue<ChunkColumn>();
@@ -163,6 +154,7 @@ namespace Alex.Worlds
 		{
 			return Task.Run(() =>
 			{
+				//Dictionary<ChunkCoordinates, IChunkColumn> newChunks = new Dictionary<ChunkCoordinates, IChunkColumn>();
 				using (CachedWorld cached = new CachedWorld(Alex))
 				{
 					int t = Alex.GameSettings.RenderDistance;
@@ -170,9 +162,11 @@ namespace Alex.Worlds
 
 					var target = radiusSquared * 3;
 					int count = 0;
-					int percentage = 0;
 
 					var pp = GetSpawnPoint();
+					//Log.Info($"Spawnpoint: {pp}");
+
+					Stopwatch sw = Stopwatch.StartNew();
 					List<ChunkColumn> generatedChunks = new List<ChunkColumn>();
 					foreach (var chunk in GenerateChunks(new ChunkCoordinates(new PlayerLocation(pp.X, pp.Y, pp.Z)), t))
 					{
@@ -180,26 +174,40 @@ namespace Alex.Worlds
 						generatedChunks.Add(c);
 
 						cached.ChunkManager.AddChunk(chunk, new ChunkCoordinates(c.X, c.Z), false);
-						percentage = (int) Math.Floor((count / target) * 100);
-						progressReport(LoadingState.LoadingChunks, percentage);
+
+						progressReport(LoadingState.LoadingChunks, (int)Math.Floor((count / target) * 100));
 
 						count++;
 					}
 
+					var loaded = sw.Elapsed;
+
 					count = 0;
 
+					object genLock = new object();
 					Parallel.ForEach(generatedChunks, (c) =>
 					{
 						cached.ChunkManager.UpdateChunk(c);
-						_preGeneratedChunks.Enqueue(c);
-						percentage = (int)Math.Floor((count / target) * 100);
-						progressReport(LoadingState.GeneratingVertices, percentage);
+
+						cached.ChunkManager.RemoveChunk(new ChunkCoordinates(c.X, c.Z), false);
+
+						//		newChunks.TryAdd(new ChunkCoordinates(c.X, c.Z), c);
+						lock (genLock)
+						{
+							_preGeneratedChunks.Enqueue(c);
+						}
+
+						progressReport(LoadingState.GeneratingVertices, (int)Math.Floor((count / target) * 100));
 
 						count++;
-
-						//Log.Info($"Init: {count}/{target}");
 					});
+					sw.Stop();
+					Log.Info($"Chunk pre-loading took {sw.Elapsed.TotalMilliseconds}ms (Loading: {loaded.TotalMilliseconds}ms Initializing: {(sw.Elapsed - loaded).TotalMilliseconds}ms)");
+
+					PreviousChunkCoordinates = new ChunkCoordinates(new PlayerLocation(pp.X, pp.Y, pp.Z));
 				}
+
+				//return newChunks.ToArray();
 			});
 		}
 

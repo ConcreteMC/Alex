@@ -23,8 +23,7 @@ namespace Alex.Gamestates.Playing
 		private Texture2D CrosshairTexture { get; set; }
 
 		private ChatComponent Chat { get; }
-		//private ThreadSafeList<IOverlay> ActiveOverlays { get; }
- 	//	private WaterOverlay WaterOverlay { get; }
+
 		public PlayingState(Alex alex, GraphicsDevice graphics, WorldProvider worldProvider) : base(graphics)
 		{
 			Alex = alex;
@@ -36,15 +35,10 @@ namespace Alex.Gamestates.Playing
 			Camera.MoveTo(World.GetSpawnPoint(), Vector3.Zero);
 
 			CamComponent = new CameraComponent(Camera, Graphics, World, alex.GameSettings);
-
-			//ActiveOverlays = new ThreadSafeList<IOverlay>();
-			//WaterOverlay = new WaterOverlay();
 		}
 
 		public override void Init(RenderArgs args)
 		{
-			//WaterOverlay.Load(args.GraphicsDevice, Alex.Resources);
-
 			Controls.Add("chatComponent", Chat);
 
 			FpsCounter = new FpsMonitor();
@@ -56,6 +50,9 @@ namespace Alex.Gamestates.Playing
 
 		private float AspectRatio { get; set; }
 		private bool RenderWireframe { get; set; } = false;
+		private string MemoryUsageDisplay { get; set; } = "";
+
+		private TimeSpan _previousMemUpdate = TimeSpan.Zero;
 		public override void OnUpdate(GameTime gameTime)
 		{
 			if (Alex.IsActive)
@@ -82,13 +79,20 @@ namespace Alex.Gamestates.Playing
 					{
 						_renderWaterOverlay = true;
 					}
-					//if (!ActiveOverlays.Contains(WaterOverlay))
-				//	{
-					//	ActiveOverlays.TryAdd(WaterOverlay);
-					//}
 				}else if (_renderWaterOverlay)
 				{
 					_renderWaterOverlay = false;
+				}
+
+
+				if (RenderDebug)
+				{
+					if (gameTime.TotalGameTime - _previousMemUpdate > TimeSpan.FromSeconds(5))
+					{
+						_previousMemUpdate = gameTime.TotalGameTime;
+						//Alex.Process.Refresh();
+						MemoryUsageDisplay = $"Allocated memory: {GetBytesReadable(Environment.WorkingSet)}";
+					}
 				}
 			}
 			base.OnUpdate(gameTime);
@@ -255,6 +259,24 @@ namespace Alex.Gamestates.Playing
 			var meisured = Vector2.Zero;
 			int y = 0;
 
+			positionString = Alex.DotnetRuntime;
+			meisured = Alex.Font.MeasureString(positionString);
+
+			args.SpriteBatch.FillRectangle(new Rectangle(screenWidth - (int)meisured.X, y, (int)meisured.X, (int)meisured.Y),
+				new Color(Color.Black, 64));
+			args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(screenWidth - (int)meisured.X, y), Color.White);
+
+			y += (int)meisured.Y;
+
+			positionString = MemoryUsageDisplay;
+			meisured = Alex.Font.MeasureString(positionString);
+
+			args.SpriteBatch.FillRectangle(new Rectangle(screenWidth - (int)meisured.X, y, (int)meisured.X, (int)meisured.Y),
+				new Color(Color.Black, 64));
+			args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(screenWidth - (int)meisured.X, y), Color.White);
+
+			y += (int)meisured.Y;
+
 			if (_raytracedBlock.Y > 0 && _raytracedBlock.Y < 256)
 			{
 				positionString = "Looking at: " + _raytracedBlock;
@@ -266,7 +288,6 @@ namespace Alex.Gamestates.Playing
 
 				y += (int) meisured.Y;
 
-			//var split1 = SelBlock.BlockState.Split('[', ']');
 				positionString = $"{SelBlock} ({SelBlock.BlockId}:{SelBlock.Metadata})";
 				meisured = Alex.Font.MeasureString(positionString);
 
@@ -281,7 +302,6 @@ namespace Alex.Gamestates.Playing
 					{
 						y += (int)meisured.Y;
 
-						//var split1 = SelBlock.BlockState.Split('[', ']');
 						positionString = $"{kv.Key.Name}={kv.Value}";
 						meisured = Alex.Font.MeasureString(positionString);
 
@@ -407,6 +427,52 @@ namespace Alex.Gamestates.Playing
 			}
 		}
 
+		private static string GetBytesReadable(long i)
+		{
+			// Get absolute value
+			long absolute_i = (i < 0 ? -i : i);
+			// Determine the suffix and readable value
+			string suffix;
+			double readable;
+			if (absolute_i >= 0x1000000000000000) // Exabyte
+			{
+				suffix = "EB";
+				readable = (i >> 50);
+			}
+			else if (absolute_i >= 0x4000000000000) // Petabyte
+			{
+				suffix = "PB";
+				readable = (i >> 40);
+			}
+			else if (absolute_i >= 0x10000000000) // Terabyte
+			{
+				suffix = "TB";
+				readable = (i >> 30);
+			}
+			else if (absolute_i >= 0x40000000) // Gigabyte
+			{
+				suffix = "GB";
+				readable = (i >> 20);
+			}
+			else if (absolute_i >= 0x100000) // Megabyte
+			{
+				suffix = "MB";
+				readable = (i >> 10);
+			}
+			else if (absolute_i >= 0x400) // Kilobyte
+			{
+				suffix = "KB";
+				readable = i;
+			}
+			else
+			{
+				return i.ToString("0 B"); // Byte
+			}
+			// Divide by 1024 to get fractional value
+			readable = (readable / 1024);
+			// Return formatted number with suffix
+			return readable.ToString("0.### ") + suffix;
+		}
 
 		public override void Render3D(RenderArgs args)
 		{

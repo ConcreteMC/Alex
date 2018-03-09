@@ -7,6 +7,7 @@ using Alex.API.Graphics;
 using Alex.Entities;
 using Alex.Gamestates;
 using Alex.Utils;
+using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET.Entities;
@@ -24,8 +25,10 @@ namespace Alex.Rendering
 
 	    public int EntityCount => Entities.Count;
 	    public int EntitiesRendered { get; private set; } = 0;
-	    public EntityManager(GraphicsDevice device)
+		private World World { get; }
+	    public EntityManager(GraphicsDevice device, World world)
 	    {
+		    World = world;
 		    Device = device;
 			Entities = new ConcurrentDictionary<long, MiNET.Entities.Entity>();
 			EntityByUUID = new ConcurrentDictionary<UUID, MiNET.Entities.Entity>();
@@ -61,7 +64,9 @@ namespace Alex.Rendering
 	    public void Render2D(IRenderArgs args, Camera.Camera camera)
 	    {
 		    var entities = Entities.Values.ToArray();
-		    foreach (var entity in entities.Where(x => x.IsShowName && !string.IsNullOrWhiteSpace(x.NameTag) && (x.IsAlwaysShowName || x.KnownPosition.DistanceTo(new PlayerLocation(camera.Position.X, camera.Position.Y, camera.Position.Z)) < 16f)))
+		    foreach (var entity in entities.Where(x =>
+			    x.IsShowName && !string.IsNullOrWhiteSpace(x.NameTag) &&
+			    (x.IsAlwaysShowName || Vector3.Distance(camera.Position, x.KnownPosition.ToXnaVector3()) < 16f)))
 		    {
 			    var entityBox = entity.GetBoundingBox();
 

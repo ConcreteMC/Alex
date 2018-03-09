@@ -13,19 +13,15 @@ namespace Alex.Utils
 
 		private int _limit;
 		private Vector3 _max;
-		private Vector3 _off;
 		private int _plotted;
 		private Vector3 _pos;
 		private Vector3 _sign;
 
 		private Vector3 _size;
-		private World _world;
 
-		public PlotCell3f(World world, Vector3 start, Vector3 blocksize)
+		public PlotCell3f(Vector3 blocksize)
 		{
-			_off = start;
 			_size = blocksize;
-			_world = world;
 		}
 
 		public void Plot(Vector3 position, Vector3 direction, int cells)
@@ -77,13 +73,13 @@ namespace Alex.Utils
 		{
 			_plotted = 0;
 
-			_index.X = (int)Math.Floor((_pos.X - _off.X) / _size.X);
-			_index.Y = (int)Math.Floor((_pos.Y - _off.Y) / _size.Y);
-			_index.Z = (int)Math.Floor((_pos.Z - _off.Z) / _size.Z);
+			_index.X = (int)Math.Floor((_pos.X) / _size.X);
+			_index.Y = (int)Math.Floor((_pos.Y) / _size.Y);
+			_index.Z = (int)Math.Floor((_pos.Z) / _size.Z);
 
-			var ax = _index.X * _size.X + _off.X;
-			var ay = _index.Y * _size.Y + _off.Y;
-			var az = _index.Z * _size.Z + _off.Z;
+			var ax = _index.X * _size.X;
+			var ay = _index.Y * _size.Y;
+			var az = _index.Z * _size.Z;
 
 			_max.X = (_sign.X > 0) ? ax + _size.X - _pos.X : _pos.X - ax;
 			_max.Y = (_sign.X > 0) ? ay + _size.Y - _pos.Y : _pos.Y - ay;
@@ -104,19 +100,9 @@ namespace Alex.Utils
 
 		public Vector3 Actual()
 		{
-			return new Vector3(_index.X * _size.X + _off.X,
-				_index.Y * _size.Y + _off.Y,
-				_index.Z * _size.Z + _off.Z);
-		}
-
-		public Vector3 offset()
-		{
-			return _off;
-		}
-
-		public void offset(float x, float y, float z)
-		{
-			_off = new Vector3(x, y, z);
+			return new Vector3(_index.X * _size.X,
+				_index.Y * _size.Y,
+				_index.Z * _size.Z);
 		}
 
 		public Vector3 Position()
