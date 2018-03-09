@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Threading;
@@ -8,6 +9,7 @@ using Alex.Graphics.UI;
 using Alex.Rendering;
 using log4net;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content.Pipeline.Graphics;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Newtonsoft.Json;
@@ -17,6 +19,9 @@ namespace Alex
 	public partial class Alex : Microsoft.Xna.Framework.Game
 	{
 		private static ILog Log = LogManager.GetLogger(typeof(Alex));
+
+		public static string DotnetRuntime { get; } =
+			$"{System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription}";
 
 		public static string Version = "1.0";
 		public static string Username { get; set; }
@@ -46,8 +51,8 @@ namespace Alex
 			Content.RootDirectory = "assets";
 
 			IsFixedTimeStep = false;
-			//   _graphics.ToggleFullScreen();
-
+         //   _graphics.ToggleFullScreen();
+			
 			Username = "";
 			this.Window.AllowUserResizing = true;
 			this.Window.ClientSizeChanged += (sender, args) =>
@@ -60,14 +65,19 @@ namespace Alex
 					graphics.ApplyChanges();
 				}
 			};
-
-			UiManager = new UiManager(this);
+			
 		}
 
 		public static EventHandler<TextInputEventArgs> OnCharacterInput;
+
 		private void Window_TextInput(object sender, TextInputEventArgs e)
 		{
 			OnCharacterInput?.Invoke(this, e);
+		}
+
+		public void Init()
+		{
+
 		}
 
 		public void SaveSettings()
@@ -80,6 +90,7 @@ namespace Alex
 		}
 
 		internal Settings GameSettings { get; private set; }
+
 		protected override void Initialize()
 		{
 			Window.Title = "Alex - " + Version;
@@ -153,14 +164,20 @@ namespace Alex
 			{
 				File.WriteAllBytes(Path.Combine("assets", "Minecraftia.xnb"), global::Alex.Resources.Minecraftia1);
 			}
-			Font = Content.Load<SpriteFont>("Minecraftia");
 
+			Font = Content.Load<SpriteFont>("Minecraftia");
+			//var shader = Content.Load<EffectContent>(Path.Combine("shaders", "hlsl", "renderchunk.vertex"));
+			
 			Log.Info($"Loading blockstate metadata...");
 			BlockFactory.Init();
 
 			Log.Info($"Loading resources...");
 			Resources = new ResourceManager(GraphicsDevice);
-			Resources.CheckResources(GraphicsDevice, GameSettings);
+			if (!Resources.CheckResources(GraphicsDevice, GameSettings))
+			{
+				Exit();
+				return;
+			}
 
 			Mouse.SetPosition(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2);
 

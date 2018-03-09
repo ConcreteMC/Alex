@@ -1,22 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
+using Alex.API.Blocks.Properties;
 using Alex.API.World;
 
 namespace Alex.API.Blocks.State
 {
 	public interface IBlockState
 	{
-		ICollection<IProperty<T>> GetPropertyKeys<T>() where T : IComparable<T>;
+		T GetTypedValue<T>(IStateProperty<T> property);
 
-		T GetValue<T>(IProperty<T> property) where T : IComparable<T>;
-
-		IBlockState WithProperty<T, TValue>(IProperty<T> property, TValue value) where TValue : T where T : IComparable<T>;
-
-		IBlockState CycleProperty<T>(IProperty<T> property) where T : IComparable<T>;
-
-		IReadOnlyDictionary<IProperty<TKey>, IComparable<TValue>> GetProperties<TKey, TValue>() where TKey : IComparable<TKey>;
-
+		object GetValue(IStateProperty property);
+		IBlockState WithProperty(IStateProperty property, object value);
+		IDictionary<IStateProperty, object> ToDictionary();
 		IBlock GetBlock();
+		void SetBlock(IBlock block);
 	}
 }

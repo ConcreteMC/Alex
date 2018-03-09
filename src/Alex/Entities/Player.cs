@@ -1,16 +1,15 @@
-﻿using Alex.Gamestates;
-using Alex.Worlds;
-using Microsoft.Xna.Framework;
+﻿using MiNET.Entities;
 
 namespace Alex.Entities
 {
-    public class Player : LivingEntity
+    public class Player : PlayerMob
     {
         public static readonly float EyeLevel = 1.625F;
 
-	    public override void Render(RenderArgs args, World world, Vector3 position)
+	    public Player(string name) : base(name, null)
 	    {
-		   
+		   // Model = "geometry.humanoid";
+			
 	    }
     }
 }

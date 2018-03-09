@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using Alex.API.Blocks.State;
 using Alex.API.Graphics;
 using Alex.API.World;
+using Alex.Blocks.State;
 using Alex.Graphics.Models;
+
 using Alex.Utils;
 using log4net;
 using Microsoft.Xna.Framework;
@@ -25,16 +27,19 @@ namespace Alex.Blocks
 		public bool IsBlockNormalCube { get; set; } = false;
 		public bool IsFullCube { get; set; } = true;
 		public bool IsFullBlock { get; set; } = true;
-		//public IBlockState BlockState { get; set; }
+
+		public bool RandomTicked { get; set; } = false;
+		public bool IsReplacible { get; set; } = false;
 
 		public float Drag { get; set; }
 
-	    public double AmbientOcclusionLightValue = 1.0;
-	    public int LightValue = 0;
-	    public int LightOpacity = 0;
+	    public double AmbientOcclusionLightValue { get; set; } = 1.0;
+	    public int LightValue { get; set; } = 0;
+	    public int LightOpacity { get; set; } = 0;
 
 		public BlockModel BlockModel { get; set; }
-	    protected Block(int blockId, byte metadata) : this(GetBlockStateID(blockId, metadata))
+		public IBlockState BlockState { get; set; }
+		protected Block(int blockId, byte metadata) : this(GetBlockStateID(blockId, metadata))
 	    {
 		    
 	    }
@@ -129,7 +134,13 @@ namespace Alex.Blocks
 		    return DisplayName ?? GetType().Name;
 	    }
 
-	    public static uint GetBlockStateID(int id, byte meta)
+		public virtual IBlockState GetDefaultState()
+		{
+			return BlockState ?? new BlockState();
+		}
+
+
+		public static uint GetBlockStateID(int id, byte meta)
 	    {
 		    if (id < 0) throw new ArgumentOutOfRangeException();
 

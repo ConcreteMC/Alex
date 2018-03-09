@@ -1,59 +1,74 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
+using MiNET.Entities;
+using MiNET.Utils;
 
 namespace Alex.API.World
 {
 	public abstract class WorldProvider : IDisposable
 	{
-		public delegate void ChunkReceived(IChunkColumn chunkColumn, int x, int z);
+		public delegate void ProgressReport(LoadingState state, int percentage);
 
-		private ChunkReceived ChunkCallback;
-
-		public delegate void ChunkUnload(int x, int z);
-
-		private ChunkUnload ChunkUnloadCallback;
-
-		public delegate Vector3 RequestPlayerPosition();
-
-		private RequestPlayerPosition requestPlayerPositionMethod = null;
+		private IWorldReceiver WorldReceiver { get; set; }
 		protected WorldProvider()
 		{
-			//ChunkCallback = chunkReceivedCallback;
-			//ChunkUnloadCallback = unloadCallback;
+			
 		}
 
-		protected void LoadChunk(IChunkColumn chunk, int x, int z)
+		protected void LoadChunk(IChunkColumn chunk, int x, int z, bool update)
 		{
-			ChunkCallback?.Invoke(chunk, x, z);
+			WorldReceiver.ChunkReceived(chunk, x, z, update);
 		}
 
 		protected void UnloadChunk(int x, int z)
 		{
-			ChunkUnloadCallback?.Invoke(x, z);
+			WorldReceiver.ChunkUnload(x, z);
 		}
 
 		protected Vector3 GetPlayerPosition()
 		{
-			if (requestPlayerPositionMethod == null) return Vector3.Zero;
-			return requestPlayerPositionMethod.Invoke();
+			return WorldReceiver.RequestPlayerPosition();
+		}
+
+		protected void SpawnEntity(long entityId, Entity entity)
+		{
+			WorldReceiver.SpawnEntity(entityId, entity);
+		}
+
+		protected void DespawnEntity(long entityId)
+		{
+			WorldReceiver.DespawnEntity(entityId);
 		}
 
 		public abstract Vector3 GetSpawnPoint();
 
 		protected abstract void Initiate();
 
-		public void Init(ChunkReceived chunkLoad, ChunkUnload chunkUnload, RequestPlayerPosition playerPositionProvider)
+		public void Init(IWorldReceiver worldReceiver)
 		{
-			ChunkCallback = chunkLoad;
-			ChunkUnloadCallback = chunkUnload;
-			requestPlayerPositionMethod = playerPositionProvider;
+			WorldReceiver = worldReceiver;
 
 			Initiate();
 		}
+
+		public abstract Task Load(ProgressReport progressReport);
 
 		public virtual void Dispose()
 		{
 
 		}
+	}
+
+	public interface IWorldReceiver
+	{
+		Vector3 RequestPlayerPosition();
+
+		void ChunkReceived(IChunkColumn chunkColumn, int x, int z, bool update);
+		void ChunkUnload(int x, int z);
+
+		void SpawnEntity(long entityId, Entity entity);
+		void DespawnEntity(long entityId);
 	}
 }

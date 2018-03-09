@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using System;
+using Newtonsoft.Json;
 
 namespace Alex
 {
@@ -15,6 +16,8 @@ namespace Alex
 	    public string Anvil { get; set; }
 		public bool UseBuiltinGenerator { get; set; }
 
+		public int ChunkThreads { get; set; } 
+
         public Settings(string username)
         {
             Username = username;
@@ -28,6 +31,9 @@ namespace Alex
 	        Anvil = string.Empty;
 	        UseBuiltinGenerator = false;
 	        IsDirty = false;
+
+	        ChunkThreads = Environment.ProcessorCount;
+
         }
     }
 }

@@ -40,43 +40,59 @@ namespace Alex.Graphics.Models
 
 		protected void CalculateBoundingBox()
 		{
-			foreach(var var in Variant)
-			foreach (var element in var.Model.Elements)
+			var c = new V3(8f, 8f, 8f);
+
+			foreach (var var in Variant)
 			{
-				var faceStart = new V3((element.From.X), (element.From.Y),
-					(element.From.Z)) / 16f;
-
-				var faceEnd = new V3((element.To.X), (element.To.Y),
-					(element.To.Z)) / 16f;
-
-				if (faceEnd.X > Max.X)
+				var modelRotationMatrix = GetModelRotationMatrix(var);
+				foreach (var element in var.Model.Elements)
 				{
-					Max.X = faceEnd.X;
-				}
+					Matrix faceRotationMatrix = Matrix.CreateTranslation(-c) * modelRotationMatrix *
+					                            Matrix.CreateTranslation(c);
 
-				if (faceEnd.Y > Max.Y)
-				{
-					Max.Y = faceEnd.Y;
-				}
+					var faceStart = new V3((element.From.X), (element.From.Y),
+						                (element.From.Z));
 
-				if (faceEnd.Z > Max.Z)
-				{
-					Max.Z = faceEnd.Z;
-				}
+					var faceEnd = new V3((element.To.X), (element.To.Y),
+						              (element.To.Z));
 
-				if (faceStart.X < Min.X)
-				{
-					Min.X = faceStart.X;
-				}
+					faceStart = V3.Transform(faceStart, faceRotationMatrix);
+					faceEnd = V3.Transform(faceEnd, faceRotationMatrix);
 
-				if (faceStart.Y < Min.Y)
-				{
-					Min.Y = faceStart.Y;
-				}
+					faceStart /= 16f;
+					faceEnd /= 16f;
+					/*
+					if (faceEnd.X > Max.X)
+					{
+						Max.X = faceEnd.X;
+					}
 
-				if (faceStart.Z < Min.Z)
-				{
-					Min.Z = faceStart.Z;
+					if (faceEnd.Y > Max.Y)
+					{
+						Max.Y = faceEnd.Y;
+					}
+
+					if (faceEnd.Z > Max.Z)
+					{
+						Max.Z = faceEnd.Z;
+					}
+
+					if (faceStart.X < Min.X)
+					{
+						Min.X = faceStart.X;
+					}
+
+					if (faceStart.Y < Min.Y)
+					{
+						Min.Y = faceStart.Y;
+					}
+
+					if (faceStart.Z < Min.Z)
+					{
+						Min.Z = faceStart.Z;
+					}*/
+					Max = Vector3.Max(Max, Vector3.Max(faceStart, faceEnd));
+					Min = Vector3.Min(Min, Vector3.Min(faceStart, faceEnd));
 				}
 			}
 		}
@@ -227,32 +243,32 @@ namespace Alex.Graphics.Models
 
 				        Color faceColor = faceVertices[0].Color;
 
-				        if (face.Value.TintIndex >= 0)
-				        {
-					        World w = (World) world;
+						if (face.Value.TintIndex >= 0)
+						{
+							//World w = (World) world;
+							int biomeId = world.GetBiome((int)worldPosition.X, 0, (int)worldPosition.Z);
 
-					        if (w.RenderingManager.TryGetChunk(
-						        new ChunkCoordinates(new PlayerLocation(worldPosition.X, 0, worldPosition.Z)),
-						        out IChunkColumn column))
-					        {
-						        Worlds.ChunkColumn realColumn = (Worlds.ChunkColumn) column;
-						        var biome = BiomeUtils.GetBiomeById(realColumn.GetBiome((int) worldPosition.X & 0xf,
-							        (int) worldPosition.Z & 0xf));
+							if (biomeId != -1)
+								/*if (world.ChunkManager.TryGetChunk(
+									new ChunkCoordinates(new PlayerLocation(worldPosition.X, 0, worldPosition.Z)),
+									out IChunkColumn column))*/
+							{
+								//	Worlds.ChunkColumn realColumn = (Worlds.ChunkColumn) column;
+								var biome = BiomeUtils.GetBiomeById(biomeId
+									/*realColumn.GetBiome((int) worldPosition.X & 0xf, (int) worldPosition.Z & 0xf)*/);
 
-						        if (baseBlock.BlockId == 2)
-						        {
-							        faceColor = Resources.ResourcePack.GetGrassColor(biome.Temperature, biome.Downfall,
-								        (int) worldPosition.Y);
-						        }
-						        else
-						        {
-							        faceColor = Resources.ResourcePack.GetFoliageColor(biome.Temperature, biome.Downfall,
-								        (int) worldPosition.Y);
-						        }
-					        }
-				        }
+								if (baseBlock.BlockId == 2)
+								{
+									faceColor = Resources.ResourcePack.GetGrassColor(biome.Temperature, biome.Downfall, (int)worldPosition.Y);
+								}
+								else
+								{
+									faceColor = Resources.ResourcePack.GetFoliageColor(biome.Temperature, biome.Downfall, (int)worldPosition.Y);
+								}
+							}
+						}
 
-				        faceColor = UvMapHelp.AdjustColor(faceColor, cull, GetLight(world, worldPosition + cullFace),
+						faceColor = UvMapHelp.AdjustColor(faceColor, cull, GetLight(world, worldPosition + cullFace),
 					        element.Shade);
 
 				        for (var index = 0; index < faceVertices.Length; index++)

@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Net;
+using Alex.Entities;
 using Alex.Rendering;
 using Alex.ResourcePackLib;
 using Alex.Utils;
@@ -33,8 +34,8 @@ namespace Alex
 
 	    private const string AssetVersion = "1.12"; //"18w07c";
 		private static readonly string ResourcePackDirectory = Path.Combine("assets", "resourcepacks");
-	    private static readonly string DefaultResourcePackPath = Path.Combine(ResourcePackDirectory, $"{AssetVersion}.zip");
-	    private static readonly string BedrockResourcePackPath = Path.Combine(ResourcePackDirectory, $"bedrock.zip");
+	    private static readonly string DefaultResourcePackPath = Path.Combine("assets", $"{AssetVersion}.zip");
+	    private static readonly string BedrockResourcePackPath = Path.Combine("assets", "bedrock.zip");
 		private byte[] DownloadDefaultResources()
 	    {
 		    var sw = new Stopwatch();
@@ -78,15 +79,14 @@ namespace Alex
 				Stopwatch sw = Stopwatch.StartNew();
 				int imported = BlockFactory.LoadResources(this, resourcePack, replaceModels, reportMissingModels);
 				sw.Stop();
+
 				Log.Info($"Imported {imported} blockstates from resourcepack in {sw.ElapsedMilliseconds}ms!");
-
-
-			}
+		    }
 
 		    return resourcePack;
 	    }
 
-        public void CheckResources(GraphicsDevice device, Settings setings)
+        public bool CheckResources(GraphicsDevice device, Settings setings)
         {
 	        if (!Directory.Exists("assets"))
 				Directory.CreateDirectory("assets");
@@ -112,12 +112,21 @@ namespace Alex
 		        ResourcePack = LoadResourcePack(device, stream, true, true, true);
 	        }
 
-	        if (File.Exists(BedrockResourcePackPath))
-	        {
-				Log.Info($"Loading bedrock resources...");
-				BedrockResourcePack = new BedrockResourcePack(File.ReadAllBytes(BedrockResourcePackPath));
-		        UiThemeFactory.LoadResources(BedrockResourcePack);
-			}
+			 if (File.Exists(BedrockResourcePackPath))
+			 {
+				 Log.Info($"Loading bedrock resources...");
+				 BedrockResourcePack = new BedrockResourcePack(File.ReadAllBytes(BedrockResourcePackPath));
+			 }
+			 else
+			 {
+				 Log.Error($"Could not start, missing bedrock resources! Please place 'bedrock.zip' in the assets folder!");
+				 return false;
+			 }
+
+		//	Log.Info($"Loading bedrock resources...");
+	        //BedrockResourcePack = new BedrockResourcePack(Resources.bedrock);
+
+			EntityFactory.LoadModels(this, device, true);
 
 			foreach (string file in setings.ResourcePacks)
 	        {
@@ -139,6 +148,8 @@ namespace Alex
 					Log.Warn($"Could not load resourcepack {file}!", e);
 		        }
 	        }
+
+	        return true;
         }
     }
 }

@@ -11,14 +11,15 @@ namespace Alex.Blocks
 	{
 		private static ILog Log = LogManager.GetLogger(typeof(Door));
 
-		public static PropertyBool OPEN = PropertyBool.Create("open");
-		public static PropertyBool POWERED = PropertyBool.Create("powered");
-		public static PropertyFace FACING = PropertyFace.Create("facing");
+		public static PropertyBool UPPER = new PropertyBool("half", "upper", "lower");
+		public static PropertyBool OPEN = new PropertyBool("open");
+		public static PropertyBool POWERED = new PropertyBool("powered");
+		public static PropertyFace FACING = new PropertyFace("facing");
 
-		public bool IsUpper => (Metadata & 0x08) == 0x08;
-		public bool IsOpen => (Metadata & 0x04) == 0x04;
+		public bool IsUpper => BlockState.GetTypedValue(UPPER);//(Metadata & 0x08) == 0x08;
+		public bool IsOpen => BlockState.GetTypedValue(OPEN);// (Metadata & 0x04) == 0x04;
 		public bool IsRightHinch => (Metadata & 0x01) == 0x01;
-		public bool IsPowered => (Metadata & 0x02) == 0x02;
+		public bool IsPowered => BlockState.GetTypedValue<bool>(POWERED); //(Metadata & 0x02) == 0x02;
 
 		public Door(int blockId, byte metadata) : base(blockId, metadata)
 		{
@@ -34,7 +35,8 @@ namespace Alex.Blocks
 				{
 					if (bottom.IsOpen)
 					{
-						
+						BlockState state = (BlockState)BlockState.WithProperty(OPEN, true);
+
 					}
 				}
 			}

@@ -1,5 +1,4 @@
 ﻿using System;
-using Alex.API.Blocks.State;
 using Alex.API.Graphics;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -17,7 +16,7 @@ namespace Alex.API.World
 		void SetBlocklight(int bx, int by, int bz, byte data);
 		byte GetSkylight(int bx, int by, int bz);
 		void SetSkyLight(int bx, int by, int bz, byte data);
-		void GenerateMeshes(IWorld world, out Mesh mesh, out Mesh transparentMesh);
+		void GenerateMeshes(IWorld world, out ChunkMesh mesh);
 
 		VertexBuffer VertexBuffer { get; set; }
 		VertexBuffer TransparentVertexBuffer { get; set; }
@@ -25,8 +24,16 @@ namespace Alex.API.World
 		object VertexLock { get; set; }
 		object UpdateLock { get; set; }
 		bool IsDirty { get; set; }
-		bool Scheduled { get; set; }
+		ScheduleType Scheduled { get; set; }
 		int GetHeighest();
 		//void SetBlockState(int x, int y, int z, IBlockState blockState);
+	}
+
+	public enum ScheduleType
+	{
+		Unscheduled,
+		Full,
+		Border,
+		Scheduled
 	}
 }

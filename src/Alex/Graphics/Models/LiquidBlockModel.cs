@@ -10,9 +10,6 @@ using Alex.ResourcePackLib.Json;
 
 namespace Alex.Graphics.Models
 {
-
-	//TODO:
-	//https://github.com/Thinkofname/steven-go/blob/master/blockliquid.go
 	public class LiquidBlockModel : BlockModel
 	{
 		public bool IsLava = false;
@@ -29,19 +26,21 @@ namespace Alex.Graphics.Models
 			List< VertexPositionNormalTextureColor> result = new List<VertexPositionNormalTextureColor>();
 			int tl = 0, tr = 0, bl = 0, br = 0;
 
-			Type b1, b2;
+			Level = baseBlock.Metadata;
+
+			int b1, b2;
 			if (IsLava)
 			{
-				b1 = typeof(Lava);
-				b2 = typeof(FlowingLava);
+				b1 = 10;
+				b2 = 11;
 			}
 			else
 			{
-				b1 = typeof(Water);
-				b2 = typeof(FlowingWater);
+				b1 = 8;
+				b2 = 9;
 			}
 
-			var bc = world.GetBlock(position + Vector3.Up).GetType();
+			var bc = world.GetBlock(position + Vector3.Up).BlockId;//.GetType();
 			if (bc == b1 || bc == b2)
 			{
 				tl = 8;
@@ -66,16 +65,17 @@ namespace Alex.Graphics.Models
 			{
 				texture = "water";
 			}
-
+			texture = texture + "_flow";
 			if (IsFlowing)
 			{
-				texture = texture + "_flow";
+			//	texture = texture + "_flow";
 			}
 			else
 			{
-				texture = texture + "_still";
+			//	texture = texture + "_still";
 			}
 
+			//float frameX 
 			UVMap map = GetTextureUVMap(Alex.Instance.Resources, texture, 0, 16, 0, 16);
 
 			foreach (var f in Enum.GetValues(typeof(BlockFace)).Cast<BlockFace>())
@@ -105,9 +105,15 @@ namespace Alex.Graphics.Models
 
 				float height = 0;
 				bool special = f == BlockFace.Up && (tl < 8 || tr < 8 || bl < 8 || br < 8);
-				var b = world.GetBlock(position + d);
-				if (special || (!(b.GetType() == b1) && !(b.GetType() == b2)))
+				
+				var b = (Block)world.GetBlock(position + d);
+				LiquidBlockModel m = b.BlockModel as LiquidBlockModel;
+				var secondSpecial = m != null && b.Metadata > Level;
+
+				if (special || (secondSpecial) || !b.BlockId.Equals(b1) && !b.BlockId.Equals(b2))
 				{
+					//if (b.BlockModel is LiquidBlockModel m && m.Level > Level && f != BlockFace.Up) continue;
+
 					var vertices = GetFaceVertices(f, Vector3.Zero, Vector3.One, map);
 					byte cr, cg, cb;
 					cr = 255;
@@ -118,6 +124,7 @@ namespace Alex.Graphics.Models
 					{
 						var vert = vertices[index];
 
+
 						if (vert.Position.Y == 0)
 						{
 							vert.Position.Y = (position.Y);
@@ -126,25 +133,26 @@ namespace Alex.Graphics.Models
 						{
 							if (vert.Position.X == 0 && vert.Position.Z == 0)
 							{
-								height =  ((16.0f / 8.0f) * (tl));
+								height = ((16.0f / 8.0f) * (tl));
 								vert.Position.Y = (height) / 16.0f + (position.Y);
 							}
 							else if (vert.Position.X != 0 && vert.Position.Z == 0)
 							{
-								height =  ((16.0f / 8.0f) * (tr));
+								height = ((16.0f / 8.0f) * (tr));
 								vert.Position.Y = (height) / 16.0f + (position.Y);
 							}
 							else if (vert.Position.X == 0 && vert.Position.Z != 0)
 							{
-								height =  ((16.0f / 8.0f) * (bl));
+								height = ((16.0f / 8.0f) * (bl));
 								vert.Position.Y = (height) / 16.0f + (position.Y);
 							}
 							else
 							{
-								height =  ((16.0f / 8.0f) * (br));
+								height = ((16.0f / 8.0f) * (br));
 								vert.Position.Y = (height) / 16.0f + (position.Y);
 							}
 						}
+
 
 						vert.Position.X += (position.X);
 						vert.Position.Z += (position.Z);
@@ -175,7 +183,7 @@ namespace Alex.Graphics.Models
 					b = (Block)world.GetBlock(position.X + xx, position.Y, position.Z + zz);
 					if (b.BlockModel is LiquidBlockModel l && l.IsLava == IsLava)
 					{
-						var nl = 7 - (Level & 0x7);
+						var nl = 7 - (b.Metadata & 0x7);
 						if (nl > level)
 						{
 							level = nl;
@@ -186,5 +194,7 @@ namespace Alex.Graphics.Models
 
 			return level;
 		}
+
+
 	}
 }

@@ -79,7 +79,7 @@ namespace Alex.Graphics.Models
 					textureBottomLeft = VectorExtension.From(startPosition, startPosition, startPosition);
 					textureBottomRight = VectorExtension.From(endPosition, startPosition, startPosition);
 
-					normal = Vector3.Backward;
+					normal = Vector3.Forward;
 					faceColor = uvmap.ColorFront; // ew Color(0x00, 0xFF, 0x00);
 					break;
 				case BlockFace.North: //Negative Z
@@ -89,7 +89,7 @@ namespace Alex.Graphics.Models
 					textureBottomLeft = VectorExtension.From(startPosition, startPosition, endPosition);
 					textureBottomRight = VectorExtension.From(endPosition, startPosition, endPosition);
 
-					normal = Vector3.Forward;
+					normal = Vector3.Backward;
 					faceColor = uvmap.ColorBack; // new Color(0xFF, 0x00, 0x00);
 					break;
 				case BlockFace.None:
@@ -272,6 +272,8 @@ namespace Alex.Graphics.Models
 		    if (cZ < 0 || cZ > 16)
 			    return false;
 
+		   // var blockStateId = world.GetBlockStateId(pos);
+			//BlockFactory.
 		    var block = world.GetBlock(pos);
 
 		    if (me.Solid && block.Transparent) return true;
@@ -285,25 +287,25 @@ namespace Alex.Graphics.Models
 
 	    protected UVMap GetTextureUVMap(ResourceManager resources, string texture, float x1, float x2, float y1, float y2)
 	    {
-		    if (resources == null)
+			if (resources == null)
 		    {
 			    x1 = 0;
 			    x2 = 1 / 32f;
 			    y1 = 0;
 			    y2 = 1 / 32f;
 
-				return new UVMap(new Microsoft.Xna.Framework.Vector2(x1, y1),
-					new Microsoft.Xna.Framework.Vector2(x2, y1), new Microsoft.Xna.Framework.Vector2(x1, y2),
-					new Microsoft.Xna.Framework.Vector2(x2, y2), Color.White, Color.White, Color.White);
-			}
+			    return new UVMap(new Microsoft.Xna.Framework.Vector2(x1, y1),
+				    new Microsoft.Xna.Framework.Vector2(x2, y1), new Microsoft.Xna.Framework.Vector2(x1, y2),
+				    new Microsoft.Xna.Framework.Vector2(x2, y2), Color.White, Color.White, Color.White);
+		    }
 
 		    var textureInfo = resources.Atlas.GetAtlasLocation(texture.Replace("blocks/", ""));
 		    var textureLocation = textureInfo.Position;
 
 		    var uvSize = resources.Atlas.AtlasSize;
 
-		    var pixelSizeX = (textureInfo.Width / uvSize.X) / 16f; //0.0625
-		    var pixelSizeY = (textureInfo.Height / uvSize.Y) / 16f;
+		    var pixelSizeX = (1f / uvSize.X); //0.0625
+		    var pixelSizeY = (1f / uvSize.Y);
 
 		    textureLocation.X /= uvSize.X;
 		    textureLocation.Y /= uvSize.Y;
@@ -317,6 +319,6 @@ namespace Alex.Graphics.Models
 		    return new UVMap(new Microsoft.Xna.Framework.Vector2(x1, y1),
 			    new Microsoft.Xna.Framework.Vector2(x2, y1), new Microsoft.Xna.Framework.Vector2(x1, y2),
 			    new Microsoft.Xna.Framework.Vector2(x2, y2), Color.White, Color.White, Color.White);
-	    }
+		}
     }
 }

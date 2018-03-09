@@ -112,4 +112,10 @@ namespace Alex.Gamestates
 		public GraphicsDevice GraphicsDevice { get; set; }
 		public SpriteBatch SpriteBatch { get; set; }
 	}
+
+	public class UpdateArgs : IUpdateArgs
+	{
+		public GameTime GameTime { get; set; }
+		public GraphicsDevice GraphicsDevice { get; set; }
+	}
 }

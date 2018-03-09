@@ -195,15 +195,11 @@ namespace Alex.Graphics.Models
 
 						if (face.Value.TintIndex >= 0)
 						{
-							World w = (World) world;
+							int biomeId = world.GetBiome((int)worldPosition.X, 0, (int)worldPosition.Z);
 
-							if (w.RenderingManager.TryGetChunk(
-								new ChunkCoordinates(new PlayerLocation(worldPosition.X, 0, worldPosition.Z)),
-								out IChunkColumn column))
+							if (biomeId != -1) 
 							{
-								Worlds.ChunkColumn realColumn = (Worlds.ChunkColumn) column;
-								var biome = BiomeUtils.GetBiomeById(
-									realColumn.GetBiome((int) worldPosition.X & 0xf, (int) worldPosition.Z & 0xf));
+								var biome = BiomeUtils.GetBiomeById(biomeId);
 
 								if (baseBlock.BlockId == 2)
 								{

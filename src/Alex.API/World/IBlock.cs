@@ -1,4 +1,5 @@
 ﻿using Alex.API.Blocks.State;
+using Alex.API.Graphics;
 using Microsoft.Xna.Framework;
 
 namespace Alex.API.World
@@ -17,10 +18,18 @@ namespace Alex.API.World
 		bool IsBlockNormalCube { get; set; }
 		bool IsFullCube { get; set; }
 		bool IsFullBlock { get; set; }
+		bool RandomTicked { get; set; }
+		bool IsReplacible { get; set; }
 		//IBlockState BlockState { get; set; }
+
+		double AmbientOcclusionLightValue { get; set; }
+		int LightValue { get; set; } 
+		int LightOpacity { get; set; }
+		IBlockState BlockState { get; set; }
 
 		bool IsSideSolid(string side);
 
 		bool BlockUpdate(IWorld world, Vector3 position);
+		VertexPositionNormalTextureColor[] GetVertices(Vector3 position, IWorld world);
 	}
 }

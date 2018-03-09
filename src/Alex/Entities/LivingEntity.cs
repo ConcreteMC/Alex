@@ -1,7 +1,7 @@
 ﻿namespace Alex.Entities
 {
-	public class LivingEntity : Entity
+	/*public class LivingEntity : Entity
 	{
 
-	}
+	}*/
 }

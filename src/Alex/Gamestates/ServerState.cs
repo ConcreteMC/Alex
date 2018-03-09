@@ -111,11 +111,11 @@ namespace Alex.Gamestates
 			Alex.GameStateManager.RemoveState("serverMenu");
 		}
 
-		protected override void OnUnload()
-		{
-			//Alex.HideMouse();
-			Alex.IsMouseVisible = false;
-		}
+        public override void Stop()
+        {
+            //Alex.HideMouse();
+            //Alex.IsMouseVisible = false;
+        }
 
 		private string ErrorText = string.Empty;
 		protected override void OnDraw2D(RenderArgs args)
