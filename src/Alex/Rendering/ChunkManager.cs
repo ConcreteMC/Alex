@@ -267,16 +267,16 @@ namespace Alex.Rendering
 				VertexBuffer buffer = null;
 				VertexBuffer transparentBuffer = null;
 
-				if (Monitor.TryEnter(chunk.VertexLock, 0))
+				//if (Monitor.TryEnter(chunk.VertexLock, 0))
 				{
 					buffer = chunk.VertexBuffer;
 					transparentBuffer = chunk.TransparentVertexBuffer;
-					Monitor.Exit(chunk.VertexLock);
+				//	Monitor.Exit(chunk.VertexLock);
 				}
-				else
+				//else
 				{
-					tempFailed++;
-					continue;
+			//		tempFailed++;
+			//		continue;
 				}
 
 				if (buffer != null)

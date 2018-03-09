@@ -6,6 +6,9 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Alex.API.World;
+using Alex.Blocks;
+using Alex.Blocks.State;
+using Alex.Blocks.Storage;
 using Alex.Worlds.Generators;
 using fNbt;
 using fNbt.Tags;
@@ -223,11 +226,6 @@ namespace Alex.Worlds
 			}
 		}
 
-		private int Noop(int blockId, int data)
-		{
-			return 0;
-		}
-
 		public bool CachedChunksContains(ChunkCoordinates chunkCoord)
 		{
 			return _chunkCache.ContainsKey(chunkCoord);
@@ -297,12 +295,6 @@ namespace Alex.Worlds
 						return chunkColumn;
 					}
 
-					/*regionFile.Seek(4096 + locationIndex, SeekOrigin.Begin);
-					regionFile.Read(offsetBuffer, 0, 4);
-					Array.Reverse(offsetBuffer);
-					int lastModified = BitConverter.ToInt32(offsetBuffer, 0);
-					Log.Warn("Last modified: " + lastModified);*/
-
 					regionFile.Seek(offset + 4, SeekOrigin.Begin); //Offset + the length header
 
 					int compressionMode = regionFile.ReadByte();
@@ -358,7 +350,7 @@ namespace Alex.Worlds
 						chunk.Entities = entities.ToArray<NbtCompound>();
 					}
 
-					NbtList blockEntities = dataTag["TileEntities"] as NbtList;
+					/*NbtList blockEntities = dataTag["TileEntities"] as NbtList;
 					if (blockEntities != null)
 					{
 						foreach (var nbtTag in blockEntities)
@@ -419,7 +411,7 @@ namespace Alex.Worlds
 								
 							}
 						}
-					}
+					}*/
 
 					//NbtList tileTicks = dataTag["TileTicks"] as NbtList;
 
@@ -464,98 +456,29 @@ namespace Alex.Worlds
 			byte[] blockLight = sectionTag["BlockLight"].ByteArrayValue;
 			byte[] skyLight = sectionTag["SkyLight"].ByteArrayValue;
 
-			// chunk = chunkColumn.chunks[sectionIndex];
+			var section = new ExtendedBlockStorage(sectionIndex, ReadSkyLight);
 
-			for (int x = 0; x < 16; x++)
+			section.GetData().SetDataFromNbt(blocks, data, adddata);
+
+			if (ReadSkyLight)
 			{
-				for (int z = 0; z < 16; z++)
+				section.SetSkylightArray(new NibbleArray()
 				{
-					for (int y = 0; y < 16; y++)
-					{
-						int yi = (sectionIndex << 4) + y;
-
-						int anvilIndex = (y << 8) + (z << 4) + x;
-						int blockId = blocks[anvilIndex] + (Nibble4(adddata, anvilIndex) << 8);
-
-						// Anvil to PE friendly converstion
-
-						Func<int, byte, byte> dataConverter = (i, b) => b; // Default no-op converter
-						if (convertBid && Convert.ContainsKey(blockId))
-						{
-							dataConverter = Convert[blockId].Item2;
-							blockId = Convert[blockId].Item1;
-						}
-						//else
-						//{
-						//	if (BlockFactory.GetBlockById((byte)blockId).GetType() == typeof(Block))
-						//	{
-						//		Log.Warn($"No block implemented for block ID={blockId}, Meta={data}");
-						//		//blockId = 57;
-						//	}
-						//}
-
-						//chunkColumn.isAllAir &= blockId == 0;
-						if (blockId > 255)
-						{
-							Log.Warn($"Failed mapping for block ID={blockId}, Meta={data}");
-							blockId = 41;
-						}
-
-						if (yi == 0 && (blockId == 8 || blockId == 9)) blockId = 7; // Bedrock under water
-
-						//chunk.SetBlock(x, y, z, (byte)blockId);
-						byte metadata = Nibble4(data, anvilIndex);
-						metadata = dataConverter(blockId, metadata);
-
-						chunk.SetBlock(x, yi, z, BlockFactory.GetBlock((byte) blockId, metadata));
-						if (ReadBlockLight)
-						{
-							chunk.SetBlocklight(x, yi, z, Nibble4(blockLight, anvilIndex));
-						}
-
-						if (ReadSkyLight)
-						{
-							chunk.SetSkyLight(x, yi, z, Nibble4(skyLight, anvilIndex));
-						}
-						else
-						{
-							chunk.SetSkyLight(x, yi, z, 0);
-						}
-
-						if (blockId == 0) continue;
-
-						if (convertBid && blockId == 3 && metadata == 2)
-						{
-							// Dirt Podzol => (Podzol)
-							chunk.SetBlock(x, yi, z, BlockFactory.GetBlock(243, 0));
-							blockId = 243;
-						}
-
-						/*if (MiNET.Blocks.BlockFactory.LuminousBlocks[blockId] != 0)
-						{
-							var b = chunk.GetBlock(x, y, z);
-							var block = BlockFactory.GetBlock(b);
-							//block.Coordinates = new BlockCoordinates(x + (chunkColumn.x << 4), yi, z + (chunkColumn.z << 4));
-							chunk.SetBlocklight(x, y, z, (byte)block.LightLevel);
-							lock (LightSources) LightSources.Enqueue(block);
-						}*/
-					}
-				}
+					Data = skyLight
+				});
 			}
-		}
 
-		private static Regex _regex = new Regex(@"^((\{""extra"":\[)?)""(.*?)""(],""text"":""""})?$");
+			if (ReadBlockLight)
+			{
+				section.SetBlocklightArray(new NibbleArray()
+				{
+					Data = blockLight
+				});
+			}
 
-		private static void CleanSignText(NbtCompound blockEntityTag, string tagName)
-		{
-			var text = blockEntityTag[tagName].StringValue;
-			var replace = /*Regex.Unescape*/(_regex.Replace(text, "$3"));
-			blockEntityTag[tagName] = new NbtString(tagName, replace);
-		}
+			section.RemoveInvalidBlocks();
 
-		private static byte Nibble4(byte[] arr, int index)
-		{
-			return (byte)(arr[index >> 1] >> ((index & 1) << 2) & 0xF);
+			chunk.Chunks[sectionIndex] = section;
 		}
 
 		private static void SetNibble4(byte[] arr, int index, byte value)

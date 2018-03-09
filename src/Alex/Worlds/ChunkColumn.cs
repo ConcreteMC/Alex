@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Alex.API.Blocks.State;
 using Alex.API.Graphics;
 using Alex.API.World;
+using Alex.Blocks;
+using Alex.Blocks.State;
+using Alex.Blocks.Storage;
 using fNbt.Tags;
 using log4net;
 using Microsoft.Xna.Framework;
@@ -28,7 +32,7 @@ namespace Alex.Worlds
 		public bool NeedSave = false;
 		public bool IsDirty { get; set; }
 
-		public ChunkSection[] Chunks = ArrayOf<ChunkSection>.Create(16);
+		public ExtendedBlockStorage[] Chunks = new ExtendedBlockStorage[16];
 		public byte[] BiomeId = ArrayOf<byte>.Create(256, 1);
 		public short[] Height = new short[256];
 
@@ -40,7 +44,23 @@ namespace Alex.Worlds
 
 		public ChunkColumn()
 		{
-			IsDirty = false;
+			var air = BlockFactory.GetBlockState(0);
+			IsDirty = true;
+			for (int i = 0; i < Chunks.Length; i++)
+			{
+				var b = new ExtendedBlockStorage(i, true);
+				for (int x = 0; x < 16; x++)
+				{
+					for (int z = 0; z < 16; z++)
+					{
+						for (int y = 0; y < 16; y++)
+						{
+							b.Set(x,y,z, air);
+						}
+					}
+				}
+				Chunks[i] = b;
+			}
 		}
 
 		private void SetDirty()
@@ -49,34 +69,28 @@ namespace Alex.Worlds
 			NeedSave = true;
 		}
 
-		//public void SetBlockState(int x, int y, int z, IBlockState blockState)
-		//{
-//
-		//}
-
-		//public IBlockState GetBlockState(int bx, int by, int bz)
-		//{
-
-			//ChunkSection chunk = Chunks[by >> 4];
-			//return BlockFactory.GetBlock(chunk.GetBlockState(bx, by - 16 * (by >> 4), bz)).BlockState;
-		//}
-
-		public uint GetBlockStateID(int bx, int by, int bz)
+		public void SetBlockState(int x, int y, int z, IBlockState blockState)
 		{
-			ChunkSection chunk = Chunks[by >> 4];
-			return chunk.GetBlockState(bx, by - 16 * (by >> 4), bz);
+			Chunks[y >> 4].Set(x, y - 16 * (y >> 4), z, blockState);
+		}
+
+		public IBlockState GetBlockState(int bx, int by, int bz)
+		{
+			return Chunks[by >> 4].Get(bx, by - 16 * (by >> 4), bz);
 		}
 
 		public IBlock GetBlock(int bx, int by, int bz)
 		{
-			ChunkSection chunk = Chunks[by >> 4];
-			return BlockFactory.GetBlock(chunk.GetBlockState(bx, by - 16 * (by >> 4), bz));
+			var bs = GetBlockState(bx, by, bz);
+
+			if (bs == null) return new Air();
+
+			return bs.GetBlock();
 		}
 
 		public void SetBlock(int bx, int by, int bz, IBlock block)
 		{
-			ChunkSection chunk = Chunks[by >> 4];
-			chunk.SetBlockState(bx, by - 16 * (by >> 4), bz, block.BlockStateID);
+			Chunks[by >> 4].Set(bx, by - 16 * (by >> 4), bz, block.BlockState);
 			SetDirty();
 		}
 
@@ -104,26 +118,22 @@ namespace Alex.Worlds
 
 		public byte GetBlocklight(int bx, int by, int bz)
 		{
-			ChunkSection chunk = Chunks[by >> 4];
-			return chunk.GetBlocklight(bx, by - 16 * (by >> 4), bz);
+			return (byte) Chunks[@by >> 4].GetExtBlocklightValue(bx, @by - 16 * (@by >> 4), bz);
 		}
 
 		public void SetBlocklight(int bx, int by, int bz, byte data)
 		{
-			ChunkSection chunk = Chunks[by >> 4];
-			chunk.SetBlocklight(bx, by - 16 * (by >> 4), bz, data);
+			Chunks[@by >> 4].SetExtBlocklightValue(bx, @by - 16 * (@by >> 4), bz, data);
 		}
 
 		public byte GetSkylight(int bx, int by, int bz)
 		{
-			ChunkSection chunk = Chunks[by >> 4];
-			return chunk.GetSkylight(bx, by - 16 * (by >> 4), bz);
+			return Chunks[@by >> 4].GetExtSkylightValue(bx, @by - 16 * (@by >> 4), bz);
 		}
 
 		public void SetSkyLight(int bx, int by, int bz, byte data)
 		{
-			ChunkSection chunk = Chunks[by >> 4];
-			chunk.SetSkylight(bx, by - 16 * (by >> 4), bz, data);
+			Chunks[@by >> 4].SetExtSkylightValue(bx, @by - 16 * (@by >> 4), bz, data);
 		}
 
 		private IReadOnlyDictionary<Vector3, ChunkMesh.EntryPosition> PositionCache { get; set; } = null;
@@ -133,9 +143,6 @@ namespace Alex.Worlds
 
 		public void GenerateMeshes(IWorld world, out ChunkMesh mesh)
 		{
-			//var solidVertices = new List<VertexPositionNormalTextureColor>();
-			//var transparentVertices = new List<VertexPositionNormalTextureColor>();
-
 			List<ChunkMesh.Entry> solidVertices = new List<ChunkMesh.Entry>();
 			List<ChunkMesh.Entry> transparentVertices = new List<ChunkMesh.Entry>();
 
@@ -144,7 +151,7 @@ namespace Alex.Worlds
 				for (var index = 0; index < Chunks.Length; index++)
 				{
 					var chunk = Chunks[index];
-					if (chunk.IsAllAir()) continue;
+					if (chunk.IsEmpty()) continue;
 
 					for (var x = 0; x < ChunkWidth; x++)
 					for (var z = 0; z < ChunkDepth; z++)
@@ -205,13 +212,20 @@ namespace Alex.Worlds
 		//	PositionCache = mesh.EntryPositions;
 		}
 
-		private void Update(IWorld world, ChunkSection chunk,
+		private void Update(IWorld world, ExtendedBlockStorage chunk,
 			int index, int x, int y, int z,
 			List<ChunkMesh.Entry> solidVertices,
 			List<ChunkMesh.Entry> transparentVertices)
 		{
-			var stateId = chunk.GetBlockState(x, y, z);
-			var block = BlockFactory.GetBlock(stateId);
+			var stateId = chunk.Get(x, y, z);
+
+			if (stateId == null)
+			{
+				Log.Warn($"State is null!");
+				return;
+			}
+
+			IBlock block = stateId.GetBlock();// BlockFactory.GetBlock(stateId);
 
 			if (block.BlockId == 0 || !block.Renderable) return;
 

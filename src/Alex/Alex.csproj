@@ -32,6 +32,13 @@
     <None Remove="Blocks\Properties\PropertyBool.cs" />
     <None Remove="Blocks\Properties\PropertyFacing.cs" />
     <None Remove="Blocks\State\BlockState.cs" />
+    <None Remove="Blocks\State\BlockStateContainer.cs" />
+    <None Remove="Blocks\State\BlockStatePaletteHashMap.cs" />
+    <None Remove="Blocks\State\BlockstatePaletteLinear.cs" />
+    <None Remove="Blocks\State\BlockStatePaletteRegistry.cs" />
+    <None Remove="Blocks\State\ExtendedBlockStorage.cs" />
+    <None Remove="Blocks\State\FlexibleStorage.cs" />
+    <None Remove="Blocks\State\IntIdentityHashBiMap.cs" />
     <None Remove="Blocks\Water.cs" />
     <None Remove="Blocks\WoodenDoor.cs" />
     <None Remove="Entities\Entity.cs" />
@@ -78,7 +85,6 @@
     <None Remove="SplashTexts.cs" />
     <None Remove="Utils\AtlasGenerator.cs" />
     <None Remove="Utils\Axis.cs" />
-    <None Remove="Utils\ComparableBlockFace.cs" />
     <None Remove="Utils\FastRandom.cs" />
     <None Remove="Utils\FPSCounter.cs" />
     <None Remove="Utils\MathUtils.cs" />
@@ -91,7 +97,6 @@
     <None Remove="Utils\UVMap.cs" />
     <None Remove="Worlds\AnvilWorldProvider.cs" />
     <None Remove="Worlds\ChunkColumn.cs" />
-    <None Remove="Worlds\ChunkSection.cs" />
     <None Remove="Worlds\Generators\IWorldGenerator.cs" />
     <None Remove="Worlds\Generators\VoidWorldGenerator.cs" />
     <None Remove="Worlds\Generators\WorldGenerator.cs" />
@@ -111,7 +116,14 @@
     <Compile Include="Blocks\Lava.cs" />
     <Compile Include="Blocks\Properties\PropertyFacing.cs" />
     <Compile Include="Blocks\Properties\PropertyBool.cs" />
+    <Compile Include="Blocks\Storage\FlexibleStorage.cs" />
     <Compile Include="Blocks\State\BlockState.cs" />
+    <Compile Include="Blocks\Storage\BlockStateContainer.cs" />
+    <Compile Include="Blocks\Storage\Pallete\BlockStatePaletteHashMap.cs" />
+    <Compile Include="Blocks\Storage\Pallete\BlockstatePaletteLinear.cs" />
+    <Compile Include="Blocks\Storage\Pallete\BlockStatePaletteRegistry.cs" />
+    <Compile Include="Blocks\Storage\ExtendedBlockStorage.cs" />
+    <Compile Include="Blocks\Storage\IntIdentityHashBiMap.cs" />
     <Compile Include="Blocks\Water.cs" />
     <Compile Include="Blocks\WoodenDoor.cs" />
     <Compile Include="Entities\Entity.cs" />
@@ -162,7 +174,6 @@
     <Compile Include="SplashTexts.cs" />
     <Compile Include="Utils\AtlasGenerator.cs" />
     <Compile Include="Utils\Axis.cs" />
-    <Compile Include="Utils\ComparableBlockFace.cs" />
     <Compile Include="Utils\FastRandom.cs" />
     <Compile Include="Utils\FPSCounter.cs" />
     <Compile Include="Utils\MathUtils.cs" />
@@ -175,7 +186,6 @@
     <Compile Include="Utils\UVMap.cs" />
     <Compile Include="Worlds\AnvilWorldProvider.cs" />
     <Compile Include="Worlds\ChunkColumn.cs" />
-    <Compile Include="Worlds\ChunkSection.cs" />
     <Compile Include="Worlds\Generators\IWorldGenerator.cs" />
     <Compile Include="Worlds\Generators\VoidWorldGenerator.cs" />
     <Compile Include="Worlds\Generators\WorldGenerator.cs" />

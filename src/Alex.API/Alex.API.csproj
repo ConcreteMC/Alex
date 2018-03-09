@@ -10,14 +10,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Blocks\Properties\" />
-    <Folder Include="Blocks\State\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Reference Include="MiNET">
       <HintPath>..\Alex\MiNET.dll</HintPath>
     </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="World\Storage\" />
   </ItemGroup>
 
 </Project>

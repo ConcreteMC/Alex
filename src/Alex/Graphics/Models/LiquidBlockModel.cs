@@ -16,6 +16,7 @@ namespace Alex.Graphics.Models
 		public bool IsFlowing = false;
 		public int Level = 8;
 
+		private int _frame { get; set; } = 0;
 		public LiquidBlockModel()
 		{
 
@@ -26,19 +27,19 @@ namespace Alex.Graphics.Models
 			List< VertexPositionNormalTextureColor> result = new List<VertexPositionNormalTextureColor>();
 			int tl = 0, tr = 0, bl = 0, br = 0;
 
-			Type b1, b2;
+			int b1, b2;
 			if (IsLava)
 			{
-				b1 = typeof(Lava);
-				b2 = typeof(FlowingLava);
+				b1 = 9;//typeof(Lava);
+				b2 = 10;//typeof(FlowingLava);
 			}
 			else
 			{
-				b1 = typeof(Water);
-				b2 = typeof(FlowingWater);
+				b1 = 8;//typeof(Water);
+				b2 = 9; //typeof(FlowingWater);
 			}
 
-			var bc = world.GetBlock(position + Vector3.Up).GetType();
+			var bc = world.GetBlock(position + Vector3.Up).BlockId;//.GetType();
 			if (bc == b1 || bc == b2)
 			{
 				tl = 8;
@@ -63,16 +64,17 @@ namespace Alex.Graphics.Models
 			{
 				texture = "water";
 			}
-
+			texture = texture + "_flow";
 			if (IsFlowing)
 			{
-				texture = texture + "_flow";
+			//	texture = texture + "_flow";
 			}
 			else
 			{
-				texture = texture + "_still";
+			//	texture = texture + "_still";
 			}
 
+			//float frameX 
 			UVMap map = GetTextureUVMap(Alex.Instance.Resources, texture, 0, 16, 0, 16);
 
 			foreach (var f in Enum.GetValues(typeof(BlockFace)).Cast<BlockFace>())
@@ -107,7 +109,7 @@ namespace Alex.Graphics.Models
 				LiquidBlockModel m = b.BlockModel as LiquidBlockModel;
 				var secondSpecial = m != null && m.Level > Level;
 
-				if (special || (secondSpecial) || !b.GetType().IsEquivalentTo(b1) && !b.GetType().IsEquivalentTo(b2))
+				if (special || (secondSpecial) || !b.BlockId.Equals(b1) && !b.BlockId.Equals(b2))
 				{
 					//if (b.BlockModel is LiquidBlockModel m && m.Level > Level && f != BlockFace.Up) continue;
 
@@ -191,5 +193,7 @@ namespace Alex.Graphics.Models
 
 			return level;
 		}
+
+
 	}
 }

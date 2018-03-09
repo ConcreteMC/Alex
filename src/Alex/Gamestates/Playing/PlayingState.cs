@@ -223,7 +223,9 @@ namespace Alex.Gamestates.Playing
 						RayTraceBoundingBox,
 						Camera.ViewMatrix, Camera.ProjectionMatrix, Color.LightGray);
 				}
-				
+
+				World.Render2D(args);
+
 				if (RenderDebug)
 				{
 					RenderDebugScreen(args);

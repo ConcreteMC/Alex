@@ -69,6 +69,11 @@ namespace Alex.Worlds
 			EntityManager.Render(args, Camera);
         }
 
+		public void Render2D(IRenderArgs args)
+		{
+			EntityManager.Render2D(args, Camera);
+		}
+
 		public void Update(GameTime gameTime)
 		{
 			ChunkManager.Update();

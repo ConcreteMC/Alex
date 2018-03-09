@@ -36,7 +36,7 @@ namespace Alex.Rendering
 		    var entities = Entities.Values.ToArray();
 		    foreach (var entity in entities)
 		    {
-				entity.GetModelRenderer()?.Update(Device, gameTime);
+				entity.GetModelRenderer()?.Update(Device, gameTime, entity.KnownPosition.ToXnaVector3(), entity.KnownPosition.Yaw, entity.KnownPosition.Pitch);
 		    }
 	    }
 
@@ -50,12 +50,28 @@ namespace Alex.Rendering
 
 				if (camera.BoundingFrustum.Contains(new Microsoft.Xna.Framework.BoundingBox(entityBox.Min.ToXnaVector3(), entityBox.Max.ToXnaVector3())) != ContainmentType.Disjoint)
 			    {
-				    entity.GetModelRenderer()?.Render(args, camera, entity.KnownPosition.ToXnaVector3());
+				    entity.GetModelRenderer()?.Render(args, camera, entity.KnownPosition.ToXnaVector3(), entity.KnownPosition.Yaw, entity.KnownPosition.Pitch);
 				    renderCount++;
 			    }
 		    }
 
 		    EntitiesRendered = renderCount;
+	    }
+
+	    public void Render2D(IRenderArgs args, Camera.Camera camera)
+	    {
+		    var entities = Entities.Values.ToArray();
+		    foreach (var entity in entities.Where(x => x.IsShowName && !string.IsNullOrWhiteSpace(x.NameTag) && (x.IsAlwaysShowName || x.KnownPosition.DistanceTo(new PlayerLocation(camera.Position.X, camera.Position.Y, camera.Position.Z)) < 16f)))
+		    {
+			    var entityBox = entity.GetBoundingBox();
+
+			    if (camera.BoundingFrustum.Contains(
+				        new Microsoft.Xna.Framework.BoundingBox(entityBox.Min.ToXnaVector3(), entityBox.Max.ToXnaVector3())) !=
+			        ContainmentType.Disjoint)
+			    {
+				    entity.RenderNametag(args, camera);
+			    }
+		    }
 	    }
 
 	    public void Dispose()
@@ -91,6 +107,10 @@ namespace Alex.Rendering
 	    {
 		    if (EntityByUUID.TryAdd(entity.GetUUID(), entity))
 		    {
+			    entity.IsAlwaysShowName = false;
+			    entity.NameTag = $"Entity_{id}";
+			    entity.HideNameTag = false;
+
 			    if (!Entities.TryAdd(id, entity))
 			    {
 				    EntityByUUID.TryRemove(entity.GetUUID(), out Entity _);

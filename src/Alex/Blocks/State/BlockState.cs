@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using Alex.API.Blocks.Properties;
+using Alex.API.Blocks.State;
 using Alex.API.World;
 
 namespace Alex.Blocks.State {
 
-	public abstract class StateProperty
+	public abstract class StateProperty : IStateProperty
 	{
-		private static Dictionary<string, StateProperty> _registeredTypes = new Dictionary<string, StateProperty>();
+		public static Dictionary<string, StateProperty> _registeredTypes = new Dictionary<string, StateProperty>();
 		public string Name { get; }
 		public Type PropertyType { get; }
 
@@ -18,7 +22,7 @@ namespace Alex.Blocks.State {
 			_registeredTypes.TryAdd(name, this);
 		}
 
-		protected abstract object ValueFromString(string value);
+		public abstract object ValueFromString(string value);
 
 		public static StateProperty Parse(string name)
 		{
@@ -37,13 +41,13 @@ namespace Alex.Blocks.State {
 		{
 		}
 
-		protected override object ValueFromString(string value)
+		public override object ValueFromString(string value)
 		{
 			return value;
 		}
 	}
 
-	public abstract class StateProperty<TType> : StateProperty
+	public abstract class StateProperty<TType> : StateProperty, IStateProperty<TType>
 	{
 		protected StateProperty(string name) : base(name, typeof(TType))
 		{
@@ -52,21 +56,21 @@ namespace Alex.Blocks.State {
 
 		public abstract TType ParseValue(string value);
 
-		protected override object ValueFromString(string value)
+		public override object ValueFromString(string value)
 		{
 			return ParseValue(value);
 		}
 	}
 
-	public class BlockState
+	public sealed class BlockState : IBlockState
 	{
-		private Dictionary<StateProperty, object> _values { get; }
+		private Dictionary<IStateProperty, object> _values { get; }
 		public BlockState()
 		{
-			_values = new Dictionary<StateProperty, object>();
+			_values = new Dictionary<IStateProperty, object>();
 		}
 
-		public T GetValue<T>(StateProperty<T> property)
+		public T GetTypedValue<T>(IStateProperty<T> property)
 		{
 			if (_values.TryGetValue(property, out var value))
 			{
@@ -79,7 +83,20 @@ namespace Alex.Blocks.State {
 			return default(T);
 		}
 
-		public BlockState WithProperty<T>(StateProperty<T> property, T value)
+		public object GetValue(IStateProperty property)
+		{
+			if (_values.TryGetValue(property, out var value))
+			{
+				if (property.PropertyType.IsEquivalentTo(value.GetType()))
+				{
+					return value;
+				}
+			}
+
+			return null;
+		}
+
+		public IBlockState WithProperty(IStateProperty property, object value)
 		{
 			if (!_values.TryAdd(property, value))
 			{
@@ -88,9 +105,14 @@ namespace Alex.Blocks.State {
 			return this;
 		}
 
-		public Dictionary<StateProperty, string> ToDictionary()
+		public IBlockState WithProperty(IStateProperty property, string value)
 		{
-			var dictionary = new Dictionary<StateProperty, string>();
+			return WithProperty(property, property.ValueFromString(value));
+		}
+
+		public IDictionary<IStateProperty, object> ToDictionary()
+		{
+			var dictionary = new Dictionary<IStateProperty, object>();
 			foreach (var kv in _values)
 			{
 				dictionary.TryAdd(kv.Key, kv.Value.ToString());
@@ -98,9 +120,30 @@ namespace Alex.Blocks.State {
 			return dictionary;
 		}
 
+		private IBlock _block = new Air();
+		public IBlock GetBlock()
+		{
+			return _block;
+		}
+
+		public void SetBlock(IBlock block)
+		{
+			_block = block;
+		}
+
 		public override string ToString()
 		{
-			return base.ToString();
+			StringBuilder sb = new StringBuilder();
+
+			foreach (var kv in _values)
+			{
+				sb.Append(kv.Key.Name);
+				sb.Append('=');
+				sb.Append(kv.Value.ToString());
+				sb.Append(',');
+			}
+
+			return sb.ToString();
 		}
 
 		public static BlockState FromString(string data)
@@ -136,6 +179,18 @@ namespace Alex.Blocks.State {
 			}
 
 			return values;
+		}
+
+		internal static int GetVarIntSize(int value)
+		{
+			int c = 0;
+			do
+			{
+				value >>= 7;
+				c++;
+			} while (value != 0);
+
+			return c;
 		}
 	}
 }

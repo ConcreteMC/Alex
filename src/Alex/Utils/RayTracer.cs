@@ -19,9 +19,9 @@ namespace Alex.Utils
 				graphics.Viewport.Height / 2f, 1f);
 
 			var nearPoint = graphics.Viewport.Unproject(nearsource,
-				projectionMatrix, viewMatrix, Matrix.CreateTranslation(0, 0, 0));
+				projectionMatrix, viewMatrix, Matrix.Identity);
 			var farPoint = graphics.Viewport.Unproject(farsource,
-				projectionMatrix, viewMatrix, Matrix.CreateTranslation(0, 0, 0));
+				projectionMatrix, viewMatrix, Matrix.Identity);
 
 			var direction = farPoint - nearPoint;
 			direction.Normalize();

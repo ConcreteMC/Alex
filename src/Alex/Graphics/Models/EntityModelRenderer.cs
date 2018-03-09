@@ -7,6 +7,7 @@ using Alex.API.Graphics;
 using Alex.Gamestates;
 using Alex.Rendering.Camera;
 using Alex.ResourcePackLib.Json.Models;
+using Alex.Utils;
 using log4net;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -116,35 +117,35 @@ namespace Alex.Graphics.Models
 
 		private void Mod(ref VertexPositionNormalTexture[] data, Vector3 origin, Vector3 pivot, Vector3 rotation)
 		{
-			/*Matrix transform = Matrix.CreateTranslation(-pivot.X, -pivot.Y, -pivot.Z) *
+			Matrix transform = 
 			                   Matrix.CreateRotationX(rotation.X) *
 			                   Matrix.CreateRotationY(rotation.Y) *
 			                   Matrix.CreateRotationZ(rotation.Z) *
-			                   Matrix.CreateTranslation(pivot.X, pivot.Y, pivot.Z);*/
+			                   Matrix.CreateTranslation(pivot.X, pivot.Y, pivot.Z);
 
 			for (int i = 0; i < data.Length; i++)
 			{
 				var pos = data[i].Position;
 
 				pos = new Vector3(origin.X + pos.X, origin.Y + pos.Y, origin.Z + pos.Z);
-			//	if (rotation != Vector3.Zero)
-			//	{
-			//		pos = Vector3.Transform(pos, transform);
-			//	}
+				if (rotation != Vector3.Zero)
+				{
+					pos = Vector3.Transform(pos, transform);
+				}
 				//pos /= 16;
 				data[i].Position = pos;
 			}
 		}
 
-		private float _angle = 0f;
-		public void Render(IRenderArgs args, Camera camera, Vector3 position)
+		//private float _angle = 0f;
+		public void Render(IRenderArgs args, Camera camera, Vector3 position, float yaw, float pitch)
 		{
 			if (Vertices == null || Vertices.Length == 0) return;
 
 			if (Effect == null || Buffer == null) return;
 
 			//Effect.World = Matrix.CreateScale(1f / 16f) * Matrix.CreateTranslation(position);
-			Effect.World = Matrix.CreateScale(1f / 16f) * Matrix.CreateRotationY(3 * _angle) *
+			Effect.World = Matrix.CreateScale(1f / 16f) * Matrix.CreateRotationY(MathUtils.ToRadians(yaw)) *
 			               Matrix.CreateTranslation(position);
 
 			Effect.View = camera.ViewMatrix;
@@ -158,11 +159,11 @@ namespace Alex.Graphics.Models
 
 			args.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, Vertices.Length / 3);
 
-			float dt = (float)args.GameTime.ElapsedGameTime.TotalSeconds;
-			_angle += 0.5f * dt;
+			//float dt = (float)args.GameTime.ElapsedGameTime.TotalSeconds;
+			//_angle += 0.5f * dt;
 		}
 
-		public void Update(GraphicsDevice device, GameTime gameTime)
+		public void Update(GraphicsDevice device, GameTime gameTime, Vector3 position, float yaw, float pitch)
 		{
 			if (Effect == null)
 			{
@@ -184,8 +185,6 @@ namespace Alex.Graphics.Models
 			public Vector3 Size;
 
 			private Vector2 TextureSize;
-
-			public int Triangles = 12;
 
 			public Cube(Vector3 size, Vector2 textureSize)
 			{
