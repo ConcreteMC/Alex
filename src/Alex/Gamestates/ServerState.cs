@@ -9,10 +9,9 @@ namespace Alex.Gamestates
 {
 	public class ServerState : GameState
 	{
-		private Alex Alex { get; }
 		public ServerState(Alex alex) : base(alex)
 		{
-			Alex = alex;
+
 		}
 
 		private Texture2D BackGround { get; set; }
@@ -76,23 +75,7 @@ namespace Alex.Gamestates
 			}
 
 			ErrorText = "Servers are not currently supported.";
-			return;
-
-			//TODO: Connect to server
-			Alex.IsMultiplayer = true;
-			try
-			{
-				Alex.ServerEndPoint = new IPEndPoint(ResolveAddress(ip.Text), int.Parse(port.Text));
-			}
-			catch
-			{
-				return;
-			}
-
-			Alex.GameStateManager.AddState("play", new PlayingState(Alex, Graphics, null));
-			Alex.GameStateManager.SetActiveState("play");
-
-			Alex.GameStateManager.RemoveState("serverMenu");
+			
 		}
 
 		private static IPAddress ResolveAddress(string address)
@@ -110,12 +93,6 @@ namespace Alex.Gamestates
 			Alex.GameStateManager.SetActiveState("menu");
 			Alex.GameStateManager.RemoveState("serverMenu");
 		}
-
-        public override void Stop()
-        {
-            //Alex.HideMouse();
-            //Alex.IsMouseVisible = false;
-        }
 
 		private string ErrorText = string.Empty;
 		protected override void OnDraw2D(RenderArgs args)

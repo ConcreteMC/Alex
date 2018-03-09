@@ -22,7 +22,6 @@ namespace Alex.ResourcePackLib
 		public IReadOnlyDictionary<string, Bitmap> Textures { get; private set; }
 		public IReadOnlyDictionary<string, TextureInfoJson> TextureJsons { get; private set; }
 
-		public IReadOnlyDictionary<string, Bitmap> EntityTextures { get; private set; }
 		public IReadOnlyDictionary<string, EntityDefinition> EntityDefinitions { get; private set; }
 
 	
@@ -147,18 +146,7 @@ namespace Alex.ResourcePackLib
 						textureJsons.Add(NormalisePath(def), textureInfo);
 					}
 				}
-			}
-
-				if (def.StartsWith("textures/entity/"))
-				{
-					var e = _archive.GetEntry(def + ".png");
-					if (e != null && e.IsFile)
-					{
-						Bitmap bmp = new Bitmap(_archive.GetInputStream(e));
-						textures.Add(def, bmp);
-					}
-				}
-			}
+			}	
 
 			Textures = textures;
 			TextureJsons = textureJsons;

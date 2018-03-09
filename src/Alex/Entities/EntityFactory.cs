@@ -93,7 +93,7 @@ namespace Alex.Entities
 						if (model != null)
 						{
 							var textures = def.Value.Textures;
-							if (resourceManager.BedrockResourcePack.EntityTextures.TryGetValue(textures.FirstOrDefault().Value,
+							if (resourceManager.BedrockResourcePack.Textures.TryGetValue(textures.FirstOrDefault().Value,
 								out Bitmap bmp))
 							{
 								var texture = TextureUtils.BitmapToTexture2D(graphics, bmp);
@@ -120,7 +120,7 @@ namespace Alex.Entities
 		    {
 			    string name = model.Key.Replace("geometry.", "", StringComparison.InvariantCultureIgnoreCase);
 
-			    var textures = resourceManager.BedrockResourcePack.EntityTextures.Where(x => x.Key.Contains(name)).ToArray();
+			    var textures = resourceManager.BedrockResourcePack.Textures.Where(x => x.Key.Contains(name)).ToArray();
 			    if (textures.Length == 0)
 			    {
 				    Log.Warn($"Could not find any textures for entity model {model.Key}");

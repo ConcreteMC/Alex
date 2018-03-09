@@ -128,7 +128,7 @@ namespace Alex.Rendering
 						_updateResetEvent.WaitOne();
 					}
 				}
-				catch (TaskCanceledException)
+				catch (OperationCanceledException)
 				{
 					break;
 				}

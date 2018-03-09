@@ -15,10 +15,9 @@ namespace Alex.Gamestates
 {
 	public class MenuState : GameState
 	{
-		private Alex Alex { get; }
 		public MenuState(Alex alex) : base(alex)
 		{
-			Alex = alex;
+			
 		}
 
 		private Texture2D BackGround { get; set; }
@@ -105,17 +104,17 @@ namespace Alex.Gamestates
 
 		private void LoadWorld(WorldProvider worldProvider)
 		{
-			LoadingWorldState loadingScreen = new LoadingWorldState(Graphics, BackGround);
-			Alex.GamestateManager.AddState("loading", loadingScreen);
-			Alex.GamestateManager.SetActiveState("loading");
+			LoadingWorldState loadingScreen = new LoadingWorldState(Alex, BackGround);
+			Alex.GameStateManager.AddState("loading", loadingScreen);
+			Alex.GameStateManager.SetActiveState("loading");
 
 			worldProvider.Load(loadingScreen.UpdateProgress).ContinueWith(task =>
 			{
 				PlayingState playState = new PlayingState(Alex, Graphics, worldProvider);
-				Alex.GamestateManager.AddState("play", playState);
-				Alex.GamestateManager.SetActiveState("play");
+				Alex.GameStateManager.AddState("play", playState);
+				Alex.GameStateManager.SetActiveState("play");
 
-				Alex.GamestateManager.RemoveState("loading");
+				Alex.GameStateManager.RemoveState("loading");
 			});
 		}
 

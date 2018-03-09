@@ -7,11 +7,9 @@ namespace Alex.Gamestates.Playing
 {
 	public class InGameMenuState : GameState
 	{
-		private Alex Alex { get; }
 		private PlayingState State { get; }
 		public InGameMenuState(Alex alex, PlayingState playingState, KeyboardState state) : base(alex)
 		{
-			Alex = alex;
 			State = playingState;
 			PreviousKeyboardState = state;
 
@@ -37,7 +35,7 @@ namespace Alex.Gamestates.Playing
 		private void DisconnectButtonOnOnButtonClick()
 		{
 			// State.Disconnect();
-			Alex.GameStateManager.SetActiveState("menu");
+			Alex.GameStateManager.SetActiveState("title");
 			Alex.GameStateManager.RemoveState("serverMenu");
 			Alex.GameStateManager.RemoveState("play");
 		}

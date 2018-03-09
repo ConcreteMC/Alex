@@ -9,10 +9,8 @@ namespace Alex.Gamestates
 	{
 		private string Reason { get; }
 		private Texture2D BackGround { get; set; }
-		private Alex Alex { get; }
 		public DisconnectedState(Alex alex, string reason) : base(alex)
 		{
-			Alex = alex;
 			Reason = reason;
 		}
 

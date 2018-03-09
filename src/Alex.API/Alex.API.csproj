@@ -6,12 +6,14 @@
 
   <ItemGroup>
     <PackageReference Include="CoreCompat.System.Drawing.v2" Version="5.2.0-preview1-r131" />
-    <PackageReference Include="MonoGame.Framework.DesktopGL.Core" Version="3.7.0.7" />
   </ItemGroup>
 
   <ItemGroup>
     <Reference Include="MiNET">
       <HintPath>..\Alex\MiNET.dll</HintPath>
+    </Reference>
+    <Reference Include="MonoGame.Framework">
+      <HintPath>..\External\MonoGame.Framework.dll</HintPath>
     </Reference>
   </ItemGroup>
 

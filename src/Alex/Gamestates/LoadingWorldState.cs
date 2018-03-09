@@ -4,10 +4,10 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.Gamestates
 {
-    public class LoadingWorldState : Gamestate
+    public class LoadingWorldState : GameState
     {
 		private Texture2D Background { get; }
-	    public LoadingWorldState(GraphicsDevice graphics, Texture2D background) : base(graphics)
+	    public LoadingWorldState(Alex alex, Texture2D background) : base(alex)
 	    {
 		    Background = background;
 	    }
@@ -34,7 +34,7 @@ namespace Alex.Gamestates
 		    }
 	    }
 
-	    public override void Render2D(RenderArgs args)
+	    protected override void OnDraw2D(RenderArgs args)
 	    {
 			args.SpriteBatch.Begin();
 
@@ -47,9 +47,9 @@ namespace Alex.Gamestates
 		    args.SpriteBatch.Draw(Background, retval, Color.White);
 		    //End draw backgroun
 
-		   // string displayString = Generating ? $"Initializing world: {Progress}%" : $"Loading world: {Progress}%";
+		    // string displayString = Generating ? $"Initializing world: {Progress}%" : $"Loading world: {Progress}%";
 		    var size = Alex.Font.MeasureString(DisplayString);
-			args.SpriteBatch.DrawString(Alex.Font, DisplayString, CenterScreen - (size / 2), Color.White);
+		    args.SpriteBatch.DrawString(Alex.Font, DisplayString, CenterScreen - (size / 2), Color.White);
 
 		    args.SpriteBatch.End();
 		}

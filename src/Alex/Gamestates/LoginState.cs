@@ -7,10 +7,9 @@ namespace Alex.Gamestates
 {
 	public class LoginState : GameState
 	{
-		private Alex Alex { get; }
 		public LoginState(Alex alex) : base(alex)
 		{
-			Alex = alex;
+
 		}
 
 		private Texture2D BackGround { get; set; }

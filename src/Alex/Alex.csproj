@@ -4,7 +4,7 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.0</TargetFramework>
 	  <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-	  <DefineConstants>TRACE;DEBUG;WINDOWS;NETCOREAPP2_0;MONOGAME;RELEASE;NETCOREAPP2_0</DefineConstants>
+	  <DefineConstants>TRACE;DEBUG;MONOGAME;NETCOREAPP2_0;DESKTOPGL;WINDOWS</DefineConstants>
 	  <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
@@ -34,9 +34,17 @@
     <None Remove="Blocks\Properties\PropertyHelper.cs" />
     <None Remove="Blocks\State\BlockState.cs" />
     <None Remove="Blocks\State\StateImplementation.cs" />
+    <None Remove="Blocks\Storage\BlockStateContainer.cs" />
+    <None Remove="Blocks\Storage\ExtendedBlockStorage.cs" />
+    <None Remove="Blocks\Storage\FlexibleStorage.cs" />
+    <None Remove="Blocks\Storage\IntIdentityHashBiMap.cs" />
+    <None Remove="Blocks\Storage\Pallete\BlockStatePaletteHashMap.cs" />
+    <None Remove="Blocks\Storage\Pallete\BlockstatePaletteLinear.cs" />
+    <None Remove="Blocks\Storage\Pallete\BlockStatePaletteRegistry.cs" />
     <None Remove="Blocks\Water.cs" />
     <None Remove="Blocks\WoodenDoor.cs" />
     <None Remove="Entities\Entity.cs" />
+    <None Remove="Entities\EntityFactory.cs" />
     <None Remove="Entities\entity_metadata.txt" />
     <None Remove="Entities\LivingEntity.cs" />
     <None Remove="Entities\Player.cs" />
@@ -44,13 +52,16 @@
     <None Remove="Gamestates\DisconnectedState.cs" />
     <None Remove="Gamestates\Gamestate.cs" />
     <None Remove="Gamestates\GamestateManager.cs" />
+    <None Remove="Gamestates\LoadingWorldState.cs" />
     <None Remove="Gamestates\LoginState.cs" />
     <None Remove="Gamestates\MenuState.cs" />
+    <None Remove="Gamestates\OptionsState.cs" />
     <None Remove="Gamestates\Playing\CameraComponent.cs" />
     <None Remove="Gamestates\Playing\InGameMenuState.cs" />
     <None Remove="Gamestates\Playing\PlayingState.cs" />
     <None Remove="Gamestates\ServerState.cs" />
     <None Remove="Gamestates\SplashScreen.cs" />
+    <None Remove="Gamestates\TitleState.cs" />
     <None Remove="Graphics\Models\BlockModel.cs" />
     <None Remove="Graphics\Models\CachedResourcePackModel.cs" />
     <None Remove="Graphics\Models\EntityModelRenderer.cs" />
@@ -63,7 +74,10 @@
     <None Remove="Program.cs" />
     <None Remove="Rendering\Camera\Camera.cs" />
     <None Remove="Rendering\Camera\FirstPersonCamera.cs" />
+    <None Remove="Rendering\ChunkManager.cs" />
+    <None Remove="Rendering\EntityManager.cs" />
     <None Remove="Rendering\RenderingManager.cs" />
+    <None Remove="Rendering\ResourcePackUiThemeBuilder.cs" />
     <None Remove="Rendering\UI\Button.cs" />
     <None Remove="Rendering\UI\ChatComponent.cs" />
     <None Remove="Rendering\UI\Image.cs" />
@@ -82,6 +96,7 @@
     <None Remove="Utils\FastRandom.cs" />
     <None Remove="Utils\FPSCounter.cs" />
     <None Remove="Utils\MathUtils.cs" />
+    <None Remove="Utils\MiNETUtils.cs" />
     <None Remove="Utils\PlotCell3F.cs" />
     <None Remove="Utils\RayTracer.cs" />
     <None Remove="Utils\TextureSide.cs" />
@@ -89,6 +104,7 @@
     <None Remove="Utils\ThreadSafeList.cs" />
     <None Remove="Utils\UVMap.cs" />
     <None Remove="Worlds\AnvilWorldProvider.cs" />
+    <None Remove="Worlds\CachedWorld.cs" />
     <None Remove="Worlds\ChunkColumn.cs" />
     <None Remove="Worlds\ChunkSection.cs" />
     <None Remove="Worlds\Generators\IWorldGenerator.cs" />
@@ -110,25 +126,34 @@
     <Compile Include="Blocks\Lava.cs" />
     <Compile Include="Blocks\Properties\PropertyFacing.cs" />
     <Compile Include="Blocks\Properties\PropertyBool.cs" />
-    <Compile Include="Blocks\Properties\PropertyHelper.cs" />
     <Compile Include="Blocks\State\BlockState.cs" />
-    <Compile Include="Blocks\State\StateImplementation.cs" />
+    <Compile Include="Blocks\Storage\BlockStateContainer.cs" />
+    <Compile Include="Blocks\Storage\ExtendedBlockStorage.cs" />
+    <Compile Include="Blocks\Storage\FlexibleStorage.cs" />
+    <Compile Include="Blocks\Storage\IntIdentityHashBiMap.cs" />
+    <Compile Include="Blocks\Storage\Pallete\BlockStatePaletteHashMap.cs" />
+    <Compile Include="Blocks\Storage\Pallete\BlockstatePaletteLinear.cs" />
+    <Compile Include="Blocks\Storage\Pallete\BlockStatePaletteRegistry.cs" />
     <Compile Include="Blocks\Water.cs" />
     <Compile Include="Blocks\WoodenDoor.cs" />
     <Compile Include="Entities\Entity.cs" />
+    <Compile Include="Entities\EntityFactory.cs" />
     <Compile Include="Entities\LivingEntity.cs" />
     <Compile Include="Entities\Player.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="Gamestates\DisconnectedState.cs" />
     <Compile Include="Gamestates\Gamestate.cs" />
     <Compile Include="Gamestates\GamestateManager.cs" />
+    <Compile Include="Gamestates\LoadingWorldState.cs" />
     <Compile Include="Gamestates\LoginState.cs" />
     <Compile Include="Gamestates\MenuState.cs" />
+    <Compile Include="Gamestates\OptionsState.cs" />
     <Compile Include="Gamestates\Playing\CameraComponent.cs" />
     <Compile Include="Gamestates\Playing\InGameMenuState.cs" />
     <Compile Include="Gamestates\Playing\PlayingState.cs" />
     <Compile Include="Gamestates\ServerState.cs" />
     <Compile Include="Gamestates\SplashScreen.cs" />
+    <Compile Include="Gamestates\TitleState.cs" />
     <Compile Include="Graphics\Models\BlockModel.cs" />
     <Compile Include="Graphics\Models\EntityModelRenderer.cs" />
     <Compile Include="Graphics\Models\MultiStateCachedResourcePackModel.cs" />
@@ -141,7 +166,9 @@
     <Compile Include="Program.cs" />
     <Compile Include="Rendering\Camera\Camera.cs" />
     <Compile Include="Rendering\Camera\FirstPersonCamera.cs" />
-    <Compile Include="Rendering\RenderingManager.cs" />
+    <Compile Include="Rendering\ChunkManager.cs" />
+    <Compile Include="Rendering\EntityManager.cs" />
+    <Compile Include="Rendering\ResourcePackUiThemeBuilder.cs" />
     <Compile Include="Rendering\UI\Button.cs" />
     <Compile Include="Rendering\UI\ChatComponent.cs" />
     <Compile Include="Rendering\UI\Image.cs" />
@@ -164,6 +191,7 @@
     <Compile Include="Utils\FastRandom.cs" />
     <Compile Include="Utils\FPSCounter.cs" />
     <Compile Include="Utils\MathUtils.cs" />
+    <Compile Include="Utils\MiNETUtils.cs" />
     <Compile Include="Utils\PlotCell3F.cs" />
     <Compile Include="Utils\RayTracer.cs" />
     <Compile Include="Utils\TextureSide.cs" />
@@ -171,17 +199,13 @@
     <Compile Include="Utils\ThreadSafeList.cs" />
     <Compile Include="Utils\UVMap.cs" />
     <Compile Include="Worlds\AnvilWorldProvider.cs" />
+    <Compile Include="Worlds\CachedWorld.cs" />
     <Compile Include="Worlds\ChunkColumn.cs" />
-    <Compile Include="Worlds\ChunkSection.cs" />
     <Compile Include="Worlds\Generators\IWorldGenerator.cs" />
     <Compile Include="Worlds\Generators\VoidWorldGenerator.cs" />
     <Compile Include="Worlds\Generators\WorldGenerator.cs" />
     <Compile Include="Worlds\SPWorldProvider.cs" />
     <Compile Include="Worlds\World.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="Entities\entity_metadata.txt" />
   </ItemGroup>
 
 	<ItemGroup>
@@ -195,8 +219,6 @@
 	<ItemGroup>
     <PackageReference Include="CoreCompat.System.Drawing.v2" Version="5.2.0-preview1-r131" />
     <PackageReference Include="log4net" Version="2.0.8" />
-    <PackageReference Include="MonoGame.Content.Builder" Version="3.7.0.1" />
-    <PackageReference Include="MonoGame.Framework.DesktopGL.Core" Version="3.7.0.7" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.1" />
   </ItemGroup>
 
@@ -220,10 +242,10 @@
 	    <HintPath>..\CoreRT\External\MiNET.dll</HintPath>
 	  </Reference>
 	  <Reference Include="MonoGame.Framework">
-	    <HintPath>MonoGame.Framework.dll</HintPath>
+	    <HintPath>..\External\MonoGame.Framework.dll</HintPath>
 	  </Reference>
 	  <Reference Include="MonoGame.Framework.Content.Pipeline">
-	    <HintPath>MonoGame.Framework.Content.Pipeline.dll</HintPath>
+	    <HintPath>..\External\MonoGame.Framework.Content.Pipeline.dll</HintPath>
 	  </Reference>
 	</ItemGroup>
 

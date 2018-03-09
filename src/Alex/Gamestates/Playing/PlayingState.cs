@@ -14,7 +14,6 @@ namespace Alex.Gamestates.Playing
 {
 	public class PlayingState : GameState
 	{
-		private Alex Alex { get; }
 		private World World { get; }
 		private FirstPersonCamera Camera;
 		private CameraComponent CamComponent { get; }
@@ -24,9 +23,9 @@ namespace Alex.Gamestates.Playing
 
 		private ChatComponent Chat { get; }
 
-		public PlayingState(Alex alex, GraphicsDevice graphics, WorldProvider worldProvider) : base(graphics)
+		public PlayingState(Alex alex, GraphicsDevice graphics, WorldProvider worldProvider) : base(alex)
 		{
-			Alex = alex;
+			//Alex = alex;
 			Chat = new ChatComponent();
 
 			Camera = new FirstPersonCamera(alex.GameSettings.RenderDistance, Vector3.Zero, Vector3.Zero);
@@ -53,7 +52,7 @@ namespace Alex.Gamestates.Playing
 		private string MemoryUsageDisplay { get; set; } = "";
 
 		private TimeSpan _previousMemUpdate = TimeSpan.Zero;
-		public override void OnUpdate(GameTime gameTime)
+		protected override void OnUpdate(GameTime gameTime)
 		{
 			if (Alex.IsActive)
 			{
@@ -242,7 +241,7 @@ namespace Alex.Gamestates.Playing
 
 		//	ActiveOverlays.ForEach(x => x.Render(args));
 
-			base.Render2D(args);
+			//base.Render2D(args);
 		}
 
 		private void RenderDebugScreen(RenderArgs args)
@@ -370,11 +369,6 @@ namespace Alex.Gamestates.Playing
 			args.SpriteBatch.FillRectangle(new Rectangle(0, y, (int)meisured.X, (int)meisured.Y),
 				new Color(Color.Black, 64));
 			args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(0, y), Color.White);
-		}
-
-			ActiveOverlays.ForEach(x => x.Render(args));
-
-			base.Render2D(args);
 		}
 
 		public static string GetCardinalDirection(FirstPersonCamera cam)

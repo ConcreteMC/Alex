@@ -4,6 +4,10 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>TRACE;DEBUG;NETSTANDARD2_0;DESKTOPGL</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="CoreCompat.System.Drawing.v2" Version="5.2.0-preview1-r131" />
     <PackageReference Include="log4net" Version="2.0.8" />
@@ -13,7 +17,7 @@
 
   <ItemGroup>
     <Reference Include="MonoGame.Framework">
-      <HintPath>..\Alex\MonoGame.Framework.dll</HintPath>
+      <HintPath>..\External\MonoGame.Framework.dll</HintPath>
     </Reference>
   </ItemGroup>
 

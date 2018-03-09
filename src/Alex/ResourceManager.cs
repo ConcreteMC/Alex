@@ -116,7 +116,8 @@ namespace Alex
 			 {
 				 Log.Info($"Loading bedrock resources...");
 				 BedrockResourcePack = new BedrockResourcePack(File.ReadAllBytes(BedrockResourcePackPath));
-			 }
+				 UiThemeFactory.LoadResources(BedrockResourcePack);
+			}
 			 else
 			 {
 				 Log.Error($"Could not start, missing bedrock resources! Please place 'bedrock.zip' in the assets folder!");
@@ -148,8 +149,7 @@ namespace Alex
 					Log.Warn($"Could not load resourcepack {file}!", e);
 		        }
 	        }
-
-	        return true;
+			return true;
         }
     }
 }

@@ -64,8 +64,9 @@ namespace Alex
 					graphics.PreferredBackBufferHeight = Window.ClientBounds.Height;
 					graphics.ApplyChanges();
 				}
+
 			};
-			
+			UiManager = new UiManager(this);
 		}
 
 		public static EventHandler<TextInputEventArgs> OnCharacterInput;
