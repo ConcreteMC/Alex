@@ -12,9 +12,9 @@ namespace Alex.API.World
 			
 		}
 
-		protected void LoadChunk(IChunkColumn chunk, int x, int z)
+		protected void LoadChunk(IChunkColumn chunk, int x, int z, bool update)
 		{
-			WorldReceiver.ChunkReceived(chunk, x, z);
+			WorldReceiver.ChunkReceived(chunk, x, z, update);
 		}
 
 		protected void UnloadChunk(int x, int z)
@@ -58,7 +58,7 @@ namespace Alex.API.World
 	{
 		Vector3 RequestPlayerPosition();
 
-		void ChunkReceived(IChunkColumn chunkColumn, int x, int z);
+		void ChunkReceived(IChunkColumn chunkColumn, int x, int z, bool update);
 		void ChunkUnload(int x, int z);
 
 		void SpawnEntity(long entityId, Entity entity);

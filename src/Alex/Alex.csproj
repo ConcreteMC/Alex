@@ -49,6 +49,7 @@
     <None Remove="Gamestates\DisconnectedState.cs" />
     <None Remove="Gamestates\Gamestate.cs" />
     <None Remove="Gamestates\GamestateManager.cs" />
+    <None Remove="Gamestates\LoadingWorldState.cs" />
     <None Remove="Gamestates\LoginState.cs" />
     <None Remove="Gamestates\MenuState.cs" />
     <None Remove="Gamestates\Playing\CameraComponent.cs" />
@@ -96,6 +97,7 @@
     <None Remove="Utils\ThreadSafeList.cs" />
     <None Remove="Utils\UVMap.cs" />
     <None Remove="Worlds\AnvilWorldProvider.cs" />
+    <None Remove="Worlds\CachedWorld.cs" />
     <None Remove="Worlds\ChunkColumn.cs" />
     <None Remove="Worlds\Generators\IWorldGenerator.cs" />
     <None Remove="Worlds\Generators\VoidWorldGenerator.cs" />
@@ -134,6 +136,7 @@
     <Compile Include="Gamestates\DisconnectedState.cs" />
     <Compile Include="Gamestates\Gamestate.cs" />
     <Compile Include="Gamestates\GamestateManager.cs" />
+    <Compile Include="Gamestates\LoadingWorldState.cs" />
     <Compile Include="Gamestates\LoginState.cs" />
     <Compile Include="Gamestates\MenuState.cs" />
     <Compile Include="Gamestates\Playing\CameraComponent.cs" />
@@ -185,6 +188,7 @@
     <Compile Include="Utils\ThreadSafeList.cs" />
     <Compile Include="Utils\UVMap.cs" />
     <Compile Include="Worlds\AnvilWorldProvider.cs" />
+    <Compile Include="Worlds\CachedWorld.cs" />
     <Compile Include="Worlds\ChunkColumn.cs" />
     <Compile Include="Worlds\Generators\IWorldGenerator.cs" />
     <Compile Include="Worlds\Generators\VoidWorldGenerator.cs" />

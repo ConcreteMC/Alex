@@ -30,10 +30,10 @@ namespace Alex.Rendering
         
         private GraphicsDevice Graphics { get; }
         private Camera.Camera Camera { get; }
-        private World World { get; }
+        private IWorld World { get; }
 	    private Alex Game { get; }
 
-		public ChunkManager(Alex alex, GraphicsDevice graphics, Camera.Camera camera, World world)
+		public ChunkManager(Alex alex, GraphicsDevice graphics, Camera.Camera camera, IWorld world)
 		{
 			Game = alex;
             Graphics = graphics;
@@ -58,8 +58,12 @@ namespace Alex.Rendering
             {IsBackground = true};
 
 			ChunksToUpdate = new ConcurrentQueue<ChunkCoordinates>();
-            Updater.Start();
         }
+
+	    public void Start()
+	    {
+		    Updater.Start();
+		}
 
 		//private ThreadSafeList<Entity> Entities { get; private set; } 
 
@@ -131,7 +135,7 @@ namespace Alex.Rendering
 		    UpdateResetEvent.Set();
 		}
 
-		private bool UpdateChunk(IChunkColumn chunk)
+		internal bool UpdateChunk(IChunkColumn chunk)
 	    {
 			if (!Monitor.TryEnter(chunk.UpdateLock))
 			{
@@ -404,11 +408,13 @@ namespace Alex.Rendering
                 return chunk;
             });
 
-	        ScheduleChunkUpdate(position, ScheduleType.Full);
+	       
 
 			if (doUpdates)
-            {
-                ScheduleChunkUpdate(new ChunkCoordinates(position.X + 1, position.Z), ScheduleType.Border);
+			{
+				ScheduleChunkUpdate(position, ScheduleType.Full);
+
+				ScheduleChunkUpdate(new ChunkCoordinates(position.X + 1, position.Z), ScheduleType.Border);
                 ScheduleChunkUpdate(new ChunkCoordinates(position.X - 1, position.Z), ScheduleType.Border);
                 ScheduleChunkUpdate(new ChunkCoordinates(position.X, position.Z + 1), ScheduleType.Border);
                 ScheduleChunkUpdate(new ChunkCoordinates(position.X, position.Z - 1), ScheduleType.Border);

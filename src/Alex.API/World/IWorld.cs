@@ -30,5 +30,6 @@ namespace Alex.API.World
 
 		//void SetBlockState(float x, float y, float z, IBlockState blockState);
 		//IBlockState GetBlockState(float x, float y, float z);
+		int GetBiome(int x, int y, int z);
 	}
 }

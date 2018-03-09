@@ -10,6 +10,8 @@ using Microsoft.Xna.Framework.Graphics;
 using MiNET.Blocks;
 using MiNET.Entities;
 using MiNET.Utils;
+using MiNET.Worlds;
+using EntityManager = Alex.Rendering.EntityManager;
 
 namespace Alex.Worlds
 {
@@ -29,6 +31,8 @@ namespace Alex.Worlds
 
 	        WorldProvider = worldProvider;
 			WorldProvider.Init(this);
+
+			ChunkManager.Start();
         }
 
 		public EntityManager EntityManager { get; }
@@ -186,6 +190,18 @@ namespace Alex.Worlds
 		    }
 	    }
 
+		public int GetBiome(int x, int y, int z)
+		{
+			IChunkColumn chunk;
+			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
+			{
+				Worlds.ChunkColumn realColumn = (Worlds.ChunkColumn) chunk;
+				return	realColumn.GetBiome((int) x & 0xf, (int) z & 0xf);
+			}
+
+			return -1;
+		}
+
 		/*public void SetBlockState(float x, float y, float z, IBlockState blockState)
 		{
 			SetBlockState((int)x, (int)y, (int)z, blockState);
@@ -223,9 +239,9 @@ namespace Alex.Worlds
 			return Camera.Position;
 		}
 
-		public void ChunkReceived(IChunkColumn chunkColumn, int x, int z)
+		public void ChunkReceived(IChunkColumn chunkColumn, int x, int z, bool update)
 		{
-			ChunkManager.AddChunk(chunkColumn, new ChunkCoordinates(x, z), true);
+			ChunkManager.AddChunk(chunkColumn, new ChunkCoordinates(x, z), update);
 		}
 
 		public void ChunkUnload(int x, int z)
@@ -239,13 +255,13 @@ namespace Alex.Worlds
 		public void SpawnEntity(long entityId, Entity entity)
 		{
 			EntityManager.AddEntity(entityId, entity);
-			Log.Info($"Spawned entity {entityId} : {entity} at {entity.KnownPosition} with renderer {entity.GetModelRenderer()}");
+			//Log.Info($"Spawned entity {entityId} : {entity} at {entity.KnownPosition} with renderer {entity.GetModelRenderer()}");
 		}
 
 		public void DespawnEntity(long entityId)
 		{
 			EntityManager.Remove(entityId);
-			Log.Info($"Despawned entity {entityId}");
+		//	Log.Info($"Despawned entity {entityId}");
 		}
 
 		#endregion

@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using Alex.Gamestates.Playing;
 using Alex.Rendering.UI;
 using Alex.Utils;
@@ -78,6 +79,12 @@ namespace Alex.Gamestates
 
 		private void OnDebugWorldClick()
 		{
+			Alex.IsMouseVisible = false;
+
+			LoadingWorldState loadingScreen = new LoadingWorldState(Graphics, BackGround);
+			Alex.GamestateManager.AddState("loading", loadingScreen);
+			Alex.GamestateManager.SetActiveState("loading");
+
 			IWorldGenerator generator;
 			if (Alex.GameSettings.UseBuiltinGenerator || (string.IsNullOrWhiteSpace(Alex.GameSettings.Anvil) || !File.Exists(Path.Combine(Alex.GameSettings.Anvil, "level.dat"))))
 			{
@@ -93,10 +100,16 @@ namespace Alex.Gamestates
 
 			generator.Initialize();
 
-			PlayingState playState = new PlayingState(Alex, Graphics, new SPWorldProvider(Alex, generator));
-			Alex.GamestateManager.AddState("play", playState);
-			Alex.GamestateManager.SetActiveState("play");
-			Alex.IsMouseVisible = false;
+			SPWorldProvider spWorldProvider = new SPWorldProvider(Alex, generator);
+			
+			spWorldProvider.PreLoad(loadingScreen.UpdateProgress).ContinueWith(task =>
+			{
+				PlayingState playState = new PlayingState(Alex, Graphics, spWorldProvider);
+				Alex.GamestateManager.AddState("play", playState);
+				Alex.GamestateManager.SetActiveState("play");
+
+				Alex.GamestateManager.RemoveState("loading");
+			});
 		}
 
 		private void Logoutbtn_OnButtonClick()
