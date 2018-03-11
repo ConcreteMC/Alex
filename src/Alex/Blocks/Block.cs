@@ -9,6 +9,10 @@ using Alex.Graphics.Models;
 using Alex.Utils;
 using log4net;
 using Microsoft.Xna.Framework;
+using MiNET;
+using MiNET.Entities;
+using MiNET.Utils;
+using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
 
 namespace Alex.Blocks
 {
@@ -19,8 +23,8 @@ namespace Alex.Blocks
 		public uint BlockStateID { get; }
 
         public int BlockId { get; }
-        public byte Metadata { get; }
-        public bool Solid { get; set; }
+        public byte Metadata { get; set; }
+		public bool Solid { get; set; }
 		public bool Transparent { get; set; }
 		public bool Renderable { get; set; }
 		public bool HasHitbox { get; set; }
@@ -119,9 +123,19 @@ namespace Alex.Blocks
 			return true;
 		}
 
-		public virtual bool BlockUpdate(IWorld world, Vector3 position)
+		public virtual void BlockPlaced(IWorld world, BlockCoordinates position)
+		{
+
+		}
+
+		public virtual bool Tick(IWorld world, Vector3 position)
 		{
 			return false;
+		}
+
+		public virtual void Interact(IWorld world, BlockCoordinates position, BlockFace face, Entity sourceEntity)
+		{
+
 		}
 
 		public Color TopColor { get; private set; }
@@ -136,9 +150,86 @@ namespace Alex.Blocks
 
 		public virtual IBlockState GetDefaultState()
 		{
-			return BlockState ?? new BlockState();
+			return BlockState ?? new BlockState()
+			{
+				//Name = DisplayName,
+				ID = BlockStateID
+			};
 		}
 
+		public static BlockCoordinates GetBlockCoordinatesFromFace(BlockCoordinates position, BlockFace face)
+		{
+			switch (face) {
+				case BlockFace.Down:
+					return position + BlockCoordinates.Down;
+				case BlockFace.Up:
+					return position + BlockCoordinates.Up;
+				case BlockFace.East:
+					return position + BlockCoordinates.East;
+				case BlockFace.West:
+					return position + BlockCoordinates.West;
+				case BlockFace.North:
+					return position + BlockCoordinates.North;
+				case BlockFace.South:
+					return position + BlockCoordinates.South;
+				default:
+					return position;
+			}
+		}
+
+		public BlockFace RotateY(BlockFace v)
+		{
+			switch (v)
+			{
+				case BlockFace.North:
+					return BlockFace.East;
+				case BlockFace.East:
+					return BlockFace.South;
+				case BlockFace.South:
+					return BlockFace.West;
+				case BlockFace.West:
+					return BlockFace.North;
+				default:
+					throw new Exception("Unable to get Y-rotated facing of " + this);
+			}
+		}
+
+		private BlockFace RotateX(BlockFace v)
+		{
+			switch (v)
+			{
+				case BlockFace.North:
+					return BlockFace.Down;
+				case BlockFace.East:
+				case BlockFace.West:
+				default:
+					throw new Exception("Unable to get X-rotated facing of " + this);
+				case BlockFace.South:
+					return BlockFace.Up;
+				case BlockFace.Up:
+					return BlockFace.North;
+				case BlockFace.Down:
+					return BlockFace.South;
+			}
+		}
+
+		private BlockFace RotateZ(BlockFace v)
+		{
+			switch (v)
+			{
+				case BlockFace.East:
+					return BlockFace.Down;
+				case BlockFace.South:
+				default:
+					throw new Exception("Unable to get Z-rotated facing of " + this);
+				case BlockFace.West:
+					return BlockFace.Up;
+				case BlockFace.Up:
+					return BlockFace.East;
+				case BlockFace.Down:
+					return BlockFace.West;
+			}
+		}
 
 		public static uint GetBlockStateID(int id, byte meta)
 	    {

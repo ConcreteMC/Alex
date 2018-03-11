@@ -5,6 +5,7 @@ using System.Text;
 using Alex.API.Graphics;
 using Alex.Gamestates;
 using Alex.Graphics.Models;
+using Alex.Graphics.Models.Entity;
 using Alex.Rendering.Camera;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

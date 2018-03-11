@@ -9,7 +9,7 @@ namespace Alex.Blocks.Storage.Pallete
 		private readonly IBlockState[] _states;
 		private readonly IBlockStatePaletteResizer _resizeHandler;
 		private readonly int _bits;
-		private int _arraySize;
+		private uint _arraySize;
 
 		public BlockStatePaletteLinear(int bitsIn, IBlockStatePaletteResizer resizeHandlerIn)
 		{
@@ -18,9 +18,9 @@ namespace Alex.Blocks.Storage.Pallete
 			this._resizeHandler = resizeHandlerIn;
 		}
 
-		public int IdFor(IBlockState state)
+		public uint IdFor(IBlockState state)
 		{
-			for (int i = 0; i < this._arraySize; i++)
+			for (uint i = 0; i < this._arraySize; i++)
 			{
 				if (this._states[i] == state)
 				{
@@ -28,7 +28,7 @@ namespace Alex.Blocks.Storage.Pallete
 				}
 			}
 
-			int j = this._arraySize;
+			uint j = (uint) this._arraySize;
 
 			if (j < this._states.Length)
 			{
@@ -42,7 +42,7 @@ namespace Alex.Blocks.Storage.Pallete
 			}
 		}
 
-		public IBlockState GetBlockState(int indexKey)
+		public IBlockState GetBlockState(uint indexKey)
 		{
 			return indexKey >= 0 && indexKey < this._arraySize ? this._states[indexKey] : null;
 		}

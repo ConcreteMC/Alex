@@ -29,7 +29,7 @@ namespace Alex.API.World
 
 		bool IsSideSolid(string side);
 
-		bool BlockUpdate(IWorld world, Vector3 position);
+		bool Tick(IWorld world, Vector3 position);
 		VertexPositionNormalTextureColor[] GetVertices(Vector3 position, IWorld world);
 	}
 }

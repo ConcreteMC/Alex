@@ -9,6 +9,8 @@ using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MiNET;
+using MiNET.Utils;
 
 namespace Alex.Gamestates.Playing
 {
@@ -151,7 +153,8 @@ namespace Alex.Gamestates.Playing
 				{
 					if (_raytracedBlock.Y > 0 && _raytracedBlock.Y < 256)
 					{
-						//	World.SetBlock(_selectedBlock.X, _selectedBlock.Y + 1, _selectedBlock.Z, new Stone());
+						SelBlock.Interact(World,
+							new BlockCoordinates(new PlayerLocation(_raytracedBlock.X, _raytracedBlock.Y, _raytracedBlock.Z)), BlockFace.None, null);
 					}
 				}
 			}

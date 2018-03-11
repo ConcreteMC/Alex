@@ -24,11 +24,13 @@
     <None Remove="BlockFactory.cs" />
     <None Remove="Blocks\Air.cs" />
     <None Remove="Blocks\Block.cs" />
+    <None Remove="Blocks\BlockRegistry.cs" />
     <None Remove="Blocks\Door.cs" />
     <None Remove="Blocks\FlowingLava.cs" />
     <None Remove="Blocks\FlowingWater.cs" />
     <None Remove="Blocks\InvisibleBedrock.cs" />
     <None Remove="Blocks\Lava.cs" />
+    <None Remove="Blocks\Lever.cs" />
     <None Remove="Blocks\Properties\PropertyBool.cs" />
     <None Remove="Blocks\Properties\PropertyFacing.cs" />
     <None Remove="Blocks\Properties\PropertyHelper.cs" />
@@ -49,12 +51,9 @@
     <None Remove="Entities\LivingEntity.cs" />
     <None Remove="Entities\Player.cs" />
     <None Remove="Extensions.cs" />
-    <None Remove="Gamestates\DisconnectedState.cs" />
     <None Remove="Gamestates\Gamestate.cs" />
     <None Remove="Gamestates\GamestateManager.cs" />
     <None Remove="Gamestates\LoadingWorldState.cs" />
-    <None Remove="Gamestates\LoginState.cs" />
-    <None Remove="Gamestates\MenuState.cs" />
     <None Remove="Gamestates\OptionsState.cs" />
     <None Remove="Gamestates\Playing\CameraComponent.cs" />
     <None Remove="Gamestates\Playing\InGameMenuState.cs" />
@@ -66,6 +65,7 @@
     <None Remove="Graphics\Models\CachedResourcePackModel.cs" />
     <None Remove="Graphics\Models\EntityModelRenderer.cs" />
     <None Remove="Graphics\Models\LiquidBlockModel.cs" />
+    <None Remove="Graphics\Models\Model.cs" />
     <None Remove="Graphics\Models\MultiStateCachedResourcePackModel.cs" />
     <None Remove="Graphics\Models\ResourcePackModel.cs" />
     <None Remove="Graphics\Overlays\Overlay.cs" />
@@ -107,9 +107,11 @@
     <None Remove="Worlds\CachedWorld.cs" />
     <None Remove="Worlds\ChunkColumn.cs" />
     <None Remove="Worlds\ChunkSection.cs" />
+    <None Remove="Worlds\Generators\DebugWorldGenerator.cs" />
     <None Remove="Worlds\Generators\IWorldGenerator.cs" />
     <None Remove="Worlds\Generators\VoidWorldGenerator.cs" />
     <None Remove="Worlds\Generators\WorldGenerator.cs" />
+    <None Remove="Worlds\Lighting\SkylightCalculations.cs" />
     <None Remove="Worlds\SPWorldProvider.cs" />
     <None Remove="Worlds\World.cs" />
   </ItemGroup>
@@ -119,11 +121,13 @@
     <Compile Include="BlockFactory.cs" />
     <Compile Include="Blocks\Air.cs" />
     <Compile Include="Blocks\Block.cs" />
+    <Compile Include="Blocks\BlockRegistry.cs" />
     <Compile Include="Blocks\Door.cs" />
     <Compile Include="Blocks\FlowingLava.cs" />
     <Compile Include="Blocks\FlowingWater.cs" />
     <Compile Include="Blocks\InvisibleBedrock.cs" />
     <Compile Include="Blocks\Lava.cs" />
+    <Compile Include="Blocks\Lever.cs" />
     <Compile Include="Blocks\Properties\PropertyFacing.cs" />
     <Compile Include="Blocks\Properties\PropertyBool.cs" />
     <Compile Include="Blocks\State\BlockState.cs" />
@@ -141,12 +145,9 @@
     <Compile Include="Entities\LivingEntity.cs" />
     <Compile Include="Entities\Player.cs" />
     <Compile Include="Extensions.cs" />
-    <Compile Include="Gamestates\DisconnectedState.cs" />
     <Compile Include="Gamestates\Gamestate.cs" />
     <Compile Include="Gamestates\GamestateManager.cs" />
     <Compile Include="Gamestates\LoadingWorldState.cs" />
-    <Compile Include="Gamestates\LoginState.cs" />
-    <Compile Include="Gamestates\MenuState.cs" />
     <Compile Include="Gamestates\OptionsState.cs" />
     <Compile Include="Gamestates\Playing\CameraComponent.cs" />
     <Compile Include="Gamestates\Playing\InGameMenuState.cs" />
@@ -155,7 +156,8 @@
     <Compile Include="Gamestates\SplashScreen.cs" />
     <Compile Include="Gamestates\TitleState.cs" />
     <Compile Include="Graphics\Models\BlockModel.cs" />
-    <Compile Include="Graphics\Models\EntityModelRenderer.cs" />
+    <Compile Include="Graphics\Models\Entity\EntityModelRenderer.cs" />
+    <Compile Include="Graphics\Models\Model.cs" />
     <Compile Include="Graphics\Models\MultiStateCachedResourcePackModel.cs" />
     <Compile Include="Graphics\Models\CachedResourcePackModel.cs" />
     <Compile Include="Graphics\Models\ResourcePackModel.cs" />
@@ -201,9 +203,11 @@
     <Compile Include="Worlds\AnvilWorldProvider.cs" />
     <Compile Include="Worlds\CachedWorld.cs" />
     <Compile Include="Worlds\ChunkColumn.cs" />
+    <Compile Include="Worlds\Generators\DebugWorldGenerator.cs" />
     <Compile Include="Worlds\Generators\IWorldGenerator.cs" />
     <Compile Include="Worlds\Generators\VoidWorldGenerator.cs" />
     <Compile Include="Worlds\Generators\WorldGenerator.cs" />
+    <Compile Include="Worlds\Lighting\SkylightCalculations.cs" />
     <Compile Include="Worlds\SPWorldProvider.cs" />
     <Compile Include="Worlds\World.cs" />
   </ItemGroup>

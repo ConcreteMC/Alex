@@ -71,6 +71,7 @@ namespace Alex.Worlds
 		public void SetBlockState(int x, int y, int z, IBlockState blockState)
 		{
 			Chunks[y >> 4].Set(x, y - 16 * (y >> 4), z, blockState);
+			SetDirty();
 		}
 
 		public IBlockState GetBlockState(int bx, int by, int bz)
@@ -297,26 +298,33 @@ namespace Alex.Worlds
 			{
 				for (int z = 0; z < 16; z++)
 				{
-					int prevLight = 15;
+					int light = 15;
 					for (int y = 256 - 1; y > 0; --y)
 					{
 						var block = GetBlock(x, y, z);
 						if (!block.Renderable) continue;
-						
-						int light = 15;
 
 						if (block.Solid && !block.Transparent)
 						{
 							light = 0;
 						}
-						else 
+						else
 						{
-							light = (int) Math.Round(prevLight *  (1D - block.AmbientOcclusionLightValue));
+							var lightOpacity = block.LightOpacity;
+							if (lightOpacity == 0 && light != 15)
+							{
+								lightOpacity = 1;
+							}
+
+							light -= lightOpacity;
+							//(int) Math.Round(prevLight *  (1D - block.LightOpacity));
 						}
 
-						if (light < 0) light = 0;
-						SetSkyLight(x,y,z, (byte)light);
-						prevLight = light;
+						if (light > 0)
+						{
+							SetSkyLight(x, y, z, (byte) light);
+						}
+
 					}
 				}
 			}

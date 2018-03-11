@@ -4,6 +4,7 @@ using Alex.Blocks.State;
 using Alex.ResourcePackLib.Json;
 using log4net;
 using Microsoft.Xna.Framework;
+using MiNET.Utils;
 
 namespace Alex.Blocks
 {
@@ -26,23 +27,23 @@ namespace Alex.Blocks
 			Transparent = true;
 		}
 
-		public override bool BlockUpdate(IWorld world, Vector3 position)
+		public override void BlockPlaced(IWorld world, BlockCoordinates position)
 		{
 			if (IsUpper)
 			{
-				Block below = (Block) world.GetBlock(position - new Vector3(0, 1, 0));
+				Block below = (Block) world.GetBlock(position - new BlockCoordinates(0, 1, 0));
 				if (below is Door bottom)
 				{
 					if (bottom.IsOpen)
 					{
 						BlockState state = (BlockState)BlockState.WithProperty(OPEN, true);
-
+						world.SetBlockState(position.X, position.Y, position.Z, state);
 					}
 				}
 			}
 			else
 			{
-				Block up = (Block)world.GetBlock(position + new Vector3(0, 1, 0));
+				Block up = (Block)world.GetBlock(position + new BlockCoordinates(0, 1, 0));
 				if (up is Door upper)
 				{
 					if (upper.IsRightHinch)
@@ -51,7 +52,7 @@ namespace Alex.Blocks
 					}
 				}
 			}
-			return false;
+			//return false;
 		}
 	}
 }

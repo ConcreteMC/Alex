@@ -5,13 +5,13 @@ namespace Alex.Blocks.Storage.Pallete
 {
     public class BlockStatePaletteRegistry : IBlockStatePalette
     {
-	    public int IdFor(IBlockState state)
+	    public uint IdFor(IBlockState state)
 	    {
-		    int i = BlockFactory.GetBlockStateId(state);
+		    uint i = BlockFactory.GetBlockStateId(state);
 		    return i == -1 ? 0 : i;
 		}
 
-	    public IBlockState GetBlockState(int indexKey)
+	    public IBlockState GetBlockState(uint indexKey)
 	    {
 			IBlockState iblockstate = BlockFactory.GetBlockState(indexKey);// .getByValue(indexKey);
 		    return iblockstate == null ? new Air().GetDefaultState() : iblockstate;

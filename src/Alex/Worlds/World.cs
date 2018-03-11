@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using Alex.API.Blocks.State;
 using Alex.API.Graphics;
 using Alex.API.World;
 using Alex.Gamestates;
 using Alex.Rendering;
 using Alex.Utils;
+using Alex.Worlds.Lighting;
 using log4net;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -11,6 +14,7 @@ using MiNET.Blocks;
 using MiNET.Entities;
 using MiNET.Utils;
 using MiNET.Worlds;
+using Block = Alex.Blocks.Block;
 using EntityManager = Alex.Rendering.EntityManager;
 
 namespace Alex.Worlds
@@ -28,6 +32,7 @@ namespace Alex.Worlds
 
 			ChunkManager = new ChunkManager(alex, graphics, camera, this);
 			EntityManager = new EntityManager(graphics, this);
+			Ticker = new TickManager(this);
 
 	        WorldProvider = worldProvider;
 			WorldProvider.Init(this);
@@ -35,6 +40,7 @@ namespace Alex.Worlds
 			ChunkManager.Start();
         }
 
+		public TickManager Ticker { get; }
 		public EntityManager EntityManager { get; }
 		public ChunkManager ChunkManager { get; private set; }
 		private WorldProvider WorldProvider { get; set; }
@@ -82,6 +88,7 @@ namespace Alex.Worlds
 		{
 			ChunkManager.Update();
 			EntityManager.Update(gameTime);
+			Ticker.Update(gameTime);
 		}
 
         public Vector3 GetSpawnPoint()
@@ -156,6 +163,11 @@ namespace Alex.Worlds
             return 15;
         }
 
+		public IBlock GetBlock(BlockCoordinates position)
+		{
+			return GetBlock(position.X, position.Y, position.Z);
+		}
+
 		public IBlock GetBlock(Vector3 position)
         {
             return GetBlock(position.X, position.Y, position.Z);
@@ -178,7 +190,7 @@ namespace Alex.Worlds
 
 	    public void SetBlock(float x, float y, float z, IBlock block)
 	    {
-		    SetBlock((int) x, (int) y, (int) z, block);
+		    SetBlock((int) Math.Floor(x), (int)Math.Floor(y), (int)Math.Floor(z), block);
 	    }
 
 	    public void SetBlock(int x, int y, int z, IBlock block)
@@ -187,8 +199,30 @@ namespace Alex.Worlds
 		    if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 		    {
 				chunk.SetBlock(x & 0xf, y & 0xff, z & 0xf, block);
+				ChunkManager.ScheduleChunkUpdate(new ChunkCoordinates(x >> 4, z >> 4), ScheduleType.Full);
 		    }
 	    }
+
+		public void SetBlockState(int x, int y, int z, IBlockState block)
+		{
+			IChunkColumn chunk;
+			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
+			{
+				chunk.SetBlockState(x & 0xf, y & 0xff, z & 0xf, block);
+				ChunkManager.ScheduleChunkUpdate(new ChunkCoordinates(x >> 4, z >> 4), ScheduleType.Full);
+			}
+		}
+
+		public IBlockState GetBlockState(int x, int y, int z)
+		{
+			IChunkColumn chunk;
+			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
+			{
+				return chunk.GetBlockState(x & 0xf, y & 0xff, z & 0xf);
+			}
+
+			return BlockFactory.GetBlockState(0,0);
+		}
 
 		public int GetBiome(int x, int y, int z)
 		{
@@ -202,24 +236,42 @@ namespace Alex.Worlds
 			return -1;
 		}
 
-		/*public void SetBlockState(float x, float y, float z, IBlockState blockState)
+		public void TickChunk(ChunkColumn chunkColumn)
 		{
-			SetBlockState((int)x, (int)y, (int)z, blockState);
+			var chunkCoords = new Vector3(chunkColumn.X >> 4, 0, chunkColumn.Z >> 4);
+
+			for (int x = 0; x < 16; x++)
+			{
+				for (int z = 0; z < 16; z++)
+				{
+					for (int y = chunkColumn.GetHeight(x, z); y > 1; y--)
+					{
+						var block = chunkColumn.GetBlock(x, y, z);
+						if (block.Tick(this, chunkCoords + new Vector3(x, y, z)))
+						{
+
+						}
+					}
+				}
+			}
 		}
 
-		public void SetBlockState(int x, int y, int z, IBlockState blockState)
+		private void InitiateChunk(ChunkColumn chunkColumn)
 		{
-		//	IChunkColumn chunk;
-		//	if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
-			//{
-		//		chunk.SetBlockState(x & 0xf, y & 0xff, z & 0xf, blockState);
-			//}
+			var chunkCoords = new BlockCoordinates(chunkColumn.X >> 4, 0, chunkColumn.Z >> 4);
+
+			for (int x = 0; x < 16; x++)
+			{
+				for (int z = 0; z < 16; z++)
+				{
+					for (int y = 255; y > 0; y--)
+					{
+						var block = (Block)chunkColumn.GetBlock(x, y, z);
+						block.BlockPlaced(this, chunkCoords + new BlockCoordinates(x, y, z));
+					}
+				}
+			}
 		}
-		
-		public IBlockState GetBlockState(float x, float y, float z)
-		{
-			throw new NotImplementedException();
-		}*/
 
 		private bool _destroyed = false;
 		public void Destroy()
@@ -242,6 +294,7 @@ namespace Alex.Worlds
 		public void ChunkReceived(IChunkColumn chunkColumn, int x, int z, bool update)
 		{
 			ChunkManager.AddChunk(chunkColumn, new ChunkCoordinates(x, z), update);
+			InitiateChunk(chunkColumn as ChunkColumn);
 		}
 
 		public void ChunkUnload(int x, int z)

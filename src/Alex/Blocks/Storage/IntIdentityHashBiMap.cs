@@ -9,46 +9,46 @@ namespace Alex.Blocks.Storage
 	{
 		private static TK _empty = default(TK);
 		private TK[] _keys;
-		private int[] _values;
+		private uint[] _values;
 		private TK[] _byId;
-		private int _nextFreeIndex;
+		private uint _nextFreeIndex;
 		private int _mapSize;
 
 		public IntIdentityHashBiMap(int initialCapacity)
 		{
 			initialCapacity = (int) ((float) initialCapacity / 0.8F);
 			this._keys = new TK[initialCapacity];
-			this._values = new int[initialCapacity];
+			this._values = new uint[initialCapacity];
 			this._byId = new TK[initialCapacity];
 		}
 
-		public int GetId(TK p1868151)
+		public uint GetId(TK p1868151)
 		{
-			if (p1868151 == null) return -1;
+			if (p1868151 == null) return uint.MaxValue;
 			return this.GetValue(this.GetIndex(p1868151, this.HashObject(p1868151)));
 		}
 
-		public TK Get(int idIn)
+		public TK Get(uint idIn)
 		{
 			return (TK) (idIn >= 0 && idIn < this._byId.Length ? this._byId[idIn] : default(TK));
 		}
 
-		private int GetValue(int p1868051)
+		private uint GetValue(uint p1868051)
 		{
-			return p1868051 == -1 ? -1 : this._values[p1868051];
+			return p1868051 == uint.MaxValue ? uint.MaxValue : this._values[p1868051];
 		}
 
 		/**
 	     * Adds the given object while expanding this map
 	     */
-		public int Add(TK objectIn)
+		public uint Add(TK objectIn)
 		{
-			int i = this.NextId();
+			uint i = this.NextId();
 			this.Put(objectIn, i);
 			return i;
 		}
 
-		private int NextId()
+		private uint NextId()
 		{
 			while (this._nextFreeIndex < this._byId.Length && this._byId[this._nextFreeIndex] != null)
 			{
@@ -64,9 +64,9 @@ namespace Alex.Blocks.Storage
 		private void Grow(int capacity)
 		{
 			TK[] ak = this._keys;
-			int[] aint = this._values;
+			uint[] aint = this._values;
 			this._keys = new TK[capacity];
-			this._values = new int[capacity];
+			this._values = new uint[capacity];
 			this._byId = new TK[capacity];
 			this._nextFreeIndex = 0;
 			this._mapSize = 0;
@@ -83,9 +83,9 @@ namespace Alex.Blocks.Storage
 		/**
 	     * Puts the provided object value with the integer key.
 	     */
-		public void Put(TK objectIn, int intKey)
+		public void Put(TK objectIn, uint intKey)
 		{
-			int i = Math.Max(intKey, this._mapSize + 1);
+			uint i = (uint) Math.Max(intKey, this._mapSize + 1);
 
 			if ((float) i >= (float) this._keys.Length * 0.8F)
 			{
@@ -99,7 +99,7 @@ namespace Alex.Blocks.Storage
 				this.Grow(j);
 			}
 
-			int k = this.FindEmpty(this.HashObject(objectIn));
+			uint k = this.FindEmpty(this.HashObject(objectIn));
 			this._keys[k] = objectIn;
 			this._values[k] = intKey;
 			this._byId[intKey] = objectIn;
@@ -111,16 +111,16 @@ namespace Alex.Blocks.Storage
 			}
 		}
 
-		private int HashObject(TK obectIn)
+		private uint HashObject(TK obectIn)
 		{
 			//if (obectIn == null) return -1;
-			return obectIn.GetHashCode() % this._keys.Length;
+			return (uint) ((obectIn.GetHashCode() & uint.MaxValue) % this._keys.Length);
 			//	return (MathHelper.getHash(System.identityHashCode(obectIn)) & Integer.MAX_VALUE) % this.keys.length;
 		}
 
-		private int GetIndex(TK objectIn, int p1868162)
+		private uint GetIndex(TK objectIn, uint p1868162)
 		{
-			for (int i = p1868162; i < this._keys.Length; ++i)
+			for (uint i = p1868162; i < this._keys.Length; ++i)
 			{
 				if (this._keys[i] == objectIn)
 				{
@@ -129,11 +129,11 @@ namespace Alex.Blocks.Storage
 
 				if (this._keys[i] == _empty)
 				{
-					return -1;
+					return uint.MaxValue;
 				}
 			}
 
-			for (int j = 0; j < p1868162; ++j)
+			for (uint j = 0; j < p1868162; ++j)
 			{
 				if (this._keys[j] == objectIn)
 				{
@@ -142,16 +142,16 @@ namespace Alex.Blocks.Storage
 
 				if (this._keys[j] == _empty)
 				{
-					return -1;
+					return uint.MaxValue;
 				}
 			}
 
-			return -1;
+			return uint.MaxValue;
 		}
 
-		private int FindEmpty(int p1868061)
+		private uint FindEmpty(uint p1868061)
 		{
-			for (int i = p1868061; i < this._keys.Length; ++i)
+			for (uint i = p1868061; i < this._keys.Length; ++i)
 			{
 				if (this._keys[i] == _empty)
 				{
@@ -159,7 +159,7 @@ namespace Alex.Blocks.Storage
 				}
 			}
 
-			for (int j = 0; j < p1868061; ++j)
+			for (uint j = 0; j < p1868061; ++j)
 			{
 				if (this._keys[j] == _empty)
 				{

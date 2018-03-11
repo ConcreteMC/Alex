@@ -6,6 +6,6 @@ namespace Alex.API.Blocks.State
 {
     public interface IBlockStatePaletteResizer
     {
-	    int OnResize(int bits, IBlockState state);
+	    uint OnResize(int bits, IBlockState state);
 	}
 }

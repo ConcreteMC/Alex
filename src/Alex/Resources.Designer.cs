@@ -181,6 +181,53 @@ namespace Alex {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to [
+        ///	{
+        ///		&quot;runtimeID&quot;: 0,
+        ///		&quot;name&quot;: &quot;minecraft:air&quot;,
+        ///		&quot;id&quot;: 0,
+        ///		&quot;data&quot;: 0
+        ///	},
+        ///	{
+        ///		&quot;runtimeID&quot;: 1,
+        ///		&quot;name&quot;: &quot;minecraft:stone&quot;,
+        ///		&quot;id&quot;: 1,
+        ///		&quot;data&quot;: 0
+        ///	},
+        ///	{
+        ///		&quot;runtimeID&quot;: 2,
+        ///		&quot;name&quot;: &quot;minecraft:stone&quot;,
+        ///		&quot;id&quot;: 1,
+        ///		&quot;data&quot;: 1
+        ///	},
+        ///	{
+        ///		&quot;runtimeID&quot;: 3,
+        ///		&quot;name&quot;: &quot;minecraft:stone&quot;,
+        ///		&quot;id&quot;: 1,
+        ///		&quot;data&quot;: 2
+        ///	},
+        ///	{
+        ///		&quot;runtimeID&quot;: 4,
+        ///		&quot;name&quot;: &quot;minecraft:stone&quot;,
+        ///		&quot;id&quot;: 1,
+        ///		&quot;data&quot;: 3
+        ///	},
+        ///	{
+        ///		&quot;runtimeID&quot;: 5,
+        ///		&quot;name&quot;: &quot;minecraft:stone&quot;,
+        ///		&quot;id&quot;: 1,
+        ///		&quot;data&quot;: 4
+        ///	},
+        ///	{
+        ///		&quot;runtim [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string runtimeid_table {
+            get {
+                return ResourceManager.GetString("runtimeid_table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
         internal static byte[] wood {

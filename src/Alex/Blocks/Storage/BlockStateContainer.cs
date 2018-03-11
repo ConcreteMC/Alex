@@ -52,7 +52,7 @@ namespace Alex.Blocks.Storage
 			}
 		}
 
-		public int OnResize(int bits, IBlockState state)
+		public uint OnResize(int bits, IBlockState state)
 		{
 			FlexibleStorage bitarray = this.Storage;
 			IBlockStatePalette blockStatepalette = this.Palette;
@@ -83,7 +83,7 @@ namespace Alex.Blocks.Storage
 				return;
 			}
 
-			int i = this.Palette.IdFor(state);
+			uint i = this.Palette.IdFor(state);
 			this.Storage[index] = i;
 		}
 
@@ -125,7 +125,7 @@ namespace Alex.Blocks.Storage
 			for (int i = 0; i < 4096; i++)
 			{
 				//BlockFactory.
-				int blockStateId = BlockFactory.GetBlockStateId(this.Get(i));
+				uint blockStateId = BlockFactory.GetBlockStateId(this.Get(i));
 				int x = i & 15;
 				int y = i >> 8 & 15;
 				int z = i >> 4 & 15;

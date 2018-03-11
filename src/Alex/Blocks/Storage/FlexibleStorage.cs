@@ -27,7 +27,7 @@ namespace Alex.Blocks.Storage
 			this._maxEntryValue = (1L << this._bitsPerEntry) - 1;
 		}
 
-		public int this[int index]
+		public uint this[int index]
 		{
 			get
 			{
@@ -42,12 +42,12 @@ namespace Alex.Blocks.Storage
 				int startBitSubIndex = bitIndex % 64;
 				if (startIndex == endIndex)
 				{
-					return (int)(this._data[startIndex] >> startBitSubIndex & this._maxEntryValue);
+					return (uint)(this._data[startIndex] >> startBitSubIndex & this._maxEntryValue);
 				}
 				else
 				{
 					int endBitSubIndex = 64 - startBitSubIndex;
-					return (int)((this._data[startIndex] >> startBitSubIndex | this._data[endIndex] << endBitSubIndex) & this._maxEntryValue);
+					return (uint)((this._data[startIndex] >> startBitSubIndex | this._data[endIndex] << endBitSubIndex) & this._maxEntryValue);
 				}
 			}
 			set

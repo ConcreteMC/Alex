@@ -1,4 +1,5 @@
 ﻿using System;
+using Alex.API.Blocks.State;
 using Alex.API.Graphics;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -6,6 +7,8 @@ namespace Alex.API.World
 {
 	public interface IChunkColumn : IDisposable
 	{
+		IBlockState GetBlockState(int x, int y, int z);
+		void SetBlockState(int x, int y, int z, IBlockState state);
 		IBlock GetBlock(int bx, int by, int bz);
 		void SetBlock(int bx, int by, int bz, IBlock block);
 		void SetHeight(int bx, int bz, short h);

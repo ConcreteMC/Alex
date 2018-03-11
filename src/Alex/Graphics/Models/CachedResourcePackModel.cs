@@ -47,7 +47,7 @@ namespace Alex.Graphics.Models
 			var c = new Vector3(8f, 8f, 8f);
 			foreach (var var in Variant)
 			{
-			//	var faces = var.Model.Elements.Sum(x => x.Faces.Count);
+				var faces = var.Model.Elements.Sum(x => x.Faces.Count);
 				
 
 			//	var c = new Vector3(8f, 8f, 8f);
@@ -61,6 +61,13 @@ namespace Alex.Graphics.Models
 					var elementTo = new Vector3((element.To.X), (element.To.Y),
 						(element.To.Z));
 
+					var width = elementTo.X - elementFrom.X;
+					var depth = elementTo.Z - elementFrom.Z;
+
+					var origin = new Vector3(((elementTo.X + elementFrom.X) / 2f) - 8,
+						((elementTo.Y + elementFrom.Y) / 2f) - 8,
+						((elementTo.Z + elementFrom.Z) / 2f) - 8);
+
 					var elementRotation = element.Rotation;
 					Matrix elementRotationMatrix = GetElementRotationMatrix(elementRotation, out float scalingFactor);
 
@@ -70,8 +77,17 @@ namespace Alex.Graphics.Models
 						var uv = face.Value.UV;
 						var uvmap = GetTextureUVMap(Resources, ResolveTexture(var, face.Value.Texture), uv.X1, uv.X2, uv.Y1, uv.Y2);
 
-						VertexPositionNormalTextureColor[] faceVertices =
-							GetFaceVertices(face.Key, elementFrom, elementTo, uvmap, face.Value.Rotation);
+						var faceKey = face.Key;
+
+						VertexPositionNormalTextureColor[] faceVertices;// =
+						/*if (element.Faces.Count == 4)
+						{
+							faceVertices = GetQuadVertices(faceKey, elementFrom, elementTo, uvmap, face.Value.Rotation);
+						}
+						else
+						{*/
+							faceVertices = GetFaceVertices(faceKey, elementFrom, elementTo, uvmap, face.Value.Rotation);
+						//}
 
 						for (var index = 0; index < faceVertices.Length; index++)
 						{
@@ -80,7 +96,30 @@ namespace Alex.Graphics.Models
 							//Apply element rotation
 							if (elementRotation.Axis != Axis.Undefined)
 							{
-								vert.Position = Vector3.Transform(vert.Position, elementRotationMatrix);
+								var trans = new Vector3((width / 2f), 0, (depth / 2f));
+								if (elementRotation.Axis == Axis.X)
+								{
+									trans = new Vector3(width / 2f, 0, 0);
+								}
+								else if (elementRotation.Axis == Axis.Z)
+								{
+									trans = new Vector3(0, 0, depth / 2f);
+								}
+
+								if (element.Rotation.Angle < 0)
+								{
+								//	trans = -trans;
+									/*if (elementRotation.Axis == Axis.X)
+									{
+										trans = -trans;
+									}
+									else if (elementRotation.Axis == Axis.Z)
+									{
+										trans = new Vector3(0, 0, depth / 2f);
+									}*/
+								}
+
+								vert.Position = Vector3.Transform(vert.Position, Matrix.CreateTranslation(trans) * elementRotationMatrix * Matrix.CreateTranslation(-trans));
 
 								//Scale the texture back to its correct size
 								if (elementRotation.Rescale) 

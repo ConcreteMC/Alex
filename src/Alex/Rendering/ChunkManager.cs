@@ -14,6 +14,7 @@ using Alex.Graphics.Models;
 using Alex.ResourcePackLib.Json.Models;
 using Alex.Utils;
 using Alex.Worlds;
+using Alex.Worlds.Lighting;
 using log4net;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -42,6 +43,7 @@ namespace Alex.Rendering
 	    public int Vertices { get; private set; }
 	    public int RenderedChunks { get; private set; } = 0;
 
+	    private SkylightCalculations SkylightCalculator { get; set; }
 		public ChunkManager(Alex alex, GraphicsDevice graphics, Camera.Camera camera, IWorld world)
 		{
 			Game = alex;
@@ -49,6 +51,8 @@ namespace Alex.Rendering
             Camera = camera;
             World = world;
             Chunks = new ConcurrentDictionary<ChunkCoordinates, IChunkColumn>();
+
+			SkylightCalculator = new SkylightCalculations(world);
 
 			var distance = (float)Math.Pow(alex.GameSettings.RenderDistance, 2);
 			Effect = new AlphaTestEffect(Graphics)
@@ -60,7 +64,7 @@ namespace Alex.Rendering
 			Effect.FogColor = new Vector3(0.5f, 0.5f, 0.5f);
 
 			Effect.FogEnd = distance;
-			Effect.FogStart = distance - 80f;
+			Effect.FogStart = distance - (distance * 0.55f);
 			Effect.FogEnabled = true;
 
             Updater = new Thread(ChunkUpdateThread)
@@ -397,8 +401,6 @@ namespace Alex.Rendering
 				Log.WarnFormat("Replaced chunk at {0}", position);
                 return chunk;
             });
-
-	       
 
 			if (doUpdates)
 			{

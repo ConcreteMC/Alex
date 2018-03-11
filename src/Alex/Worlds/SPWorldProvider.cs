@@ -124,16 +124,19 @@ namespace Alex.Worlds
 		private Thread UpdateThread { get; set; }
 		protected override void Initiate()
 		{
-			while (_preGeneratedChunks.TryDequeue(out ChunkColumn chunk))
+			lock (genLock)
 			{
-				if (chunk != null)
+				while (_preGeneratedChunks.TryDequeue(out ChunkColumn chunk))
 				{
-					base.LoadChunk(chunk, chunk.X, chunk.Z, false);
-					LoadEntities(chunk);
+					if (chunk != null)
+					{
+						base.LoadChunk(chunk, chunk.X, chunk.Z, false);
+						LoadEntities(chunk);
+					}
 				}
-			}
 
-			_preGeneratedChunks = null;
+				_preGeneratedChunks = null;
+			}
 
 			UpdateThread = new Thread(RunThread)
 			{
@@ -149,7 +152,7 @@ namespace Alex.Worlds
 		}
 
 		private Queue<ChunkColumn> _preGeneratedChunks = new Queue<ChunkColumn>();
-		
+		private readonly object genLock = new object();
 		public override Task Load(ProgressReport progressReport)
 		{
 			return Task.Run(() =>
@@ -184,18 +187,19 @@ namespace Alex.Worlds
 
 					count = 0;
 
-					object genLock = new object();
+				
 					Parallel.ForEach(generatedChunks, (c) =>
 					{
 						cached.ChunkManager.UpdateChunk(c);
 
-						cached.ChunkManager.RemoveChunk(new ChunkCoordinates(c.X, c.Z), false);
-
-						//		newChunks.TryAdd(new ChunkCoordinates(c.X, c.Z), c);
 						lock (genLock)
 						{
 							_preGeneratedChunks.Enqueue(c);
 						}
+
+						cached.ChunkManager.RemoveChunk(new ChunkCoordinates(c.X, c.Z), false);
+
+						//		newChunks.TryAdd(new ChunkCoordinates(c.X, c.Z), c);
 
 						progressReport(LoadingState.GeneratingVertices, (int)Math.Floor((count / target) * 100));
 

@@ -17,11 +17,11 @@ namespace Alex.Blocks.Storage.Pallete
 			this._statePaletteMap = new IntIdentityHashBiMap<IBlockState>(1 << bitsIn);
 		}
 
-		public int IdFor(IBlockState state)
+		public uint IdFor(IBlockState state)
 		{
-			int i = this._statePaletteMap.GetId(state);
+			uint i = this._statePaletteMap.GetId(state);
 
-			if (i == -1)
+			if (i == uint.MaxValue)
 			{
 				i = this._statePaletteMap.Add(state);
 
@@ -34,7 +34,7 @@ namespace Alex.Blocks.Storage.Pallete
 			return i;
 		}
 
-		public IBlockState GetBlockState(int indexKey)
+		public IBlockState GetBlockState(uint indexKey)
 		{
 			return _statePaletteMap.Get(indexKey);
 		}
@@ -67,7 +67,7 @@ namespace Alex.Blocks.Storage.Pallete
 		{
 			int i = BlockState.GetVarIntSize(this._statePaletteMap.Size());
 
-			for (int j = 0; j < this._statePaletteMap.Size(); ++j)
+			for (uint j = 0; j < this._statePaletteMap.Size(); ++j)
 			{
 				i += BlockState.GetVarIntSize(
 					BlockFactory.GetBlockStateId(_statePaletteMap.Get(j)));

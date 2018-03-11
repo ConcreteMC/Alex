@@ -64,7 +64,7 @@ namespace Alex.Gamestates
 			if (Alex.GameSettings.UseBuiltinGenerator || (string.IsNullOrWhiteSpace(Alex.GameSettings.Anvil) ||
 			                                              !File.Exists(Path.Combine(Alex.GameSettings.Anvil, "level.dat"))))
 			{
-				generator = new OverworldGenerator();
+				generator = new DebugWorldGenerator();
 			}
 			else
 			{

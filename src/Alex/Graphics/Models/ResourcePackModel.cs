@@ -106,9 +106,10 @@ namespace Alex.Graphics.Models
 			{
 				var elementRotationOrigin = new Vector3(elementRotation.Origin.X , elementRotation.Origin.Y, elementRotation.Origin.Z);
 
-				var elementAngle =
-					MathUtils.ToRadians((float)(elementRotation.Axis == Axis.X ? -elementRotation.Angle : elementRotation.Angle));
-				elementAngle = elementRotation.Axis == Axis.Z ? elementAngle : -elementAngle;
+				//var elementAngle =
+				//	MathUtils.ToRadians((float)(elementRotation.Axis == Axis.X ? -elementRotation.Angle : elementRotation.Angle));
+				//elementAngle = elementRotation.Axis == Axis.Z ? elementAngle : -elementAngle;
+				var elementAngle = MathUtils.ToRadians((float) elementRotation.Angle);
 				ci = 1f / (float)Math.Cos(elementAngle);
 
 				faceRotationMatrix = Matrix.CreateTranslation(-elementRotationOrigin);

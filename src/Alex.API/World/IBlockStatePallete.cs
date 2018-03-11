@@ -4,8 +4,8 @@ namespace Alex.API.World
 {
 	public interface IBlockStatePalette
 	{
-		int IdFor(IBlockState state);
-		IBlockState GetBlockState(int indexKey);
+		uint IdFor(IBlockState state);
+		IBlockState GetBlockState(uint indexKey);
 
 		/*@SideOnly(Side.CLIENT)
 		void read(PacketBuffer buf);
