@@ -1,7 +1,7 @@
 ﻿using Alex.ResourcePackLib.Json.Converters;
 using Newtonsoft.Json;
 
-namespace Alex.ResourcePackLib.Json.Models
+namespace Alex.ResourcePackLib.Json.Models.Blocks
 {
 	[JsonConverter(typeof(BlockModelElementFaceUVConverter))]
 	public class BlockModelElementFaceUV

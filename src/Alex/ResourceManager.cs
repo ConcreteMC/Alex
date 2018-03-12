@@ -32,7 +32,7 @@ namespace Alex
 			UiThemeFactory = new ResourcePackUiThemeBuilder(Graphics);
 		}
 
-	    private const string AssetVersion = "1.12"; //"18w07c";
+	    private const string AssetVersion = "18w10d"; //"18w07c";
 		private static readonly string ResourcePackDirectory = Path.Combine("assets", "resourcepacks");
 	    private static readonly string DefaultResourcePackPath = Path.Combine("assets", $"{AssetVersion}.zip");
 	    private static readonly string BedrockResourcePackPath = Path.Combine("assets", "bedrock.zip");

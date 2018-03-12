@@ -1,7 +1,9 @@
-﻿using Alex.API.Blocks.State;
+﻿using System;
+using Alex.API.Blocks.State;
 using Alex.API.World;
 using Alex.Blocks.State;
 using Alex.Blocks.Storage.Pallete;
+using fNbt.Tags;
 using log4net;
 using MiNET.Utils;
 
@@ -44,7 +46,9 @@ namespace Alex.Blocks.Storage
 				else
 				{
 					this.Palette = RegistryBasedPalette;
-					this._bits = 13; //MathHelper.Log2E(Block.BLOCK_STATE_IDS.size());
+					this._bits =
+						(int) Math.Ceiling(Math.Log(BlockFactory.AllBlockstates.Count,
+							2)); //MathHelper.Log2E(Block.BLOCK_STATE_IDS.size());
 				}
 
 				this.Palette.IdFor(AirBlockState);
@@ -155,6 +159,40 @@ namespace Alex.Blocks.Storage
 				int blockStateId = (blockIdExtensionData << 12) | ((blocks[i]) << 4) | Nibble4(data, i); //.Get(j, k, l);
 
 				this.Set(i, BlockFactory.GetBlockState(blockStateId));
+			}
+		}
+
+		public void SetDataFromNbt(NbtList palette, long[] blockStates)
+		{
+
+			int bits = 4;
+			if (palette.Count > 16)
+			{
+				bits = (int) Math.Ceiling(Math.Log(palette.Count, 2));
+				SetBits(bits);
+			}
+
+			for (int i = 0; i < 256; i++)
+			{
+				int startLong = (i * _bits) / 64;
+				int startOffset = (i * _bits) % 64;
+				int endLong = ((i + 1) * _bits - 1) / 64;
+
+				uint data;
+				if (startLong == endLong)
+				{
+					data = (uint)(blockStates[startLong] >> startOffset);
+				}
+				else
+				{
+					int endOffset = 64 - startOffset;
+					data = (uint)(blockStates[startLong] >> startOffset | blockStates[endLong] << endOffset);
+				}
+				//data &= individualValueMask;
+
+			//	string name = (palette.Get<NbtCompound>((int)data))["Name"].StringValue;
+
+				//this.Set(i, BlockFactory.GetBlockState(name));
 			}
 		}
 

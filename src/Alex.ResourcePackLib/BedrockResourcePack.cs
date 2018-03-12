@@ -6,6 +6,7 @@ using System.Linq;
 using System.Security.AccessControl;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Models;
+using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.ResourcePackLib.Json.Textures;
 using ICSharpCode.SharpZipLib.Zip;
 using log4net;
@@ -158,7 +159,7 @@ namespace Alex.ResourcePackLib
 			var stream = new StreamReader(_archive.GetInputStream(entry));
 			var json = stream.ReadToEnd();
 
-			Dictionary<string, EntityModel> entries = JsonConvert.DeserializeObject<Dictionary<string, EntityModel>>(json);
+			Dictionary<string, EntityModel> entries = MCJsonConvert.DeserializeObject<Dictionary<string, EntityModel>>(json);
 			Dictionary<string, EntityModel> processedModels = new Dictionary<string, EntityModel>();
 			foreach (var e in entries)
 			{

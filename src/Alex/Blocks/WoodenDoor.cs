@@ -79,7 +79,7 @@ namespace Alex.Blocks
 				if (below is WoodenDoor bottom && !bottom.IsUpper)
 				{
 					IBlockState state = BlockState.Clone().WithProperty(OPEN, bottom.IsOpen);
-					world.SetBlock(position.X, position.Y, position.Z, BlockFactory.GetBlock(Block.GetBlockStateID(BlockId, GetMetaFromState(state))));
+					world.SetBlock(position.X, position.Y, position.Z, BlockFactory.GetBlock(BlockFactory.GetBlockStateID(BlockId, GetMetaFromState(state))));
 				}
 			}
 			else if (!IsUpper)

@@ -13,8 +13,8 @@ namespace Alex.API.World
 		void SetBlock(int bx, int by, int bz, IBlock block);
 		void SetHeight(int bx, int bz, short h);
 		byte GetHeight(int bx, int bz);
-		void SetBiome(int bx, int bz, byte biome);
-		byte GetBiome(int bx, int bz);
+		void SetBiome(int bx, int bz, int biome);
+		int GetBiome(int bx, int bz);
 		byte GetBlocklight(int bx, int by, int bz);
 		void SetBlocklight(int bx, int by, int bz, byte data);
 		byte GetSkylight(int bx, int by, int bz);

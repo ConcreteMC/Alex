@@ -12,6 +12,7 @@ using MiNET.Worlds;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.BlockStates;
 using Alex.ResourcePackLib.Json.Models;
+using Alex.ResourcePackLib.Json.Models.Blocks;
 using Axis = Alex.ResourcePackLib.Json.Axis;
 using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
 using V3 = Microsoft.Xna.Framework.Vector3;

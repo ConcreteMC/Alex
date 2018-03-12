@@ -5,6 +5,7 @@ using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET.Entities;
+using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
 
 namespace Alex.Utils
 {

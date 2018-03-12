@@ -9,6 +9,7 @@ using System.Runtime.InteropServices;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.BlockStates;
 using Alex.ResourcePackLib.Json.Models;
+using Alex.ResourcePackLib.Json.Models.Blocks;
 using log4net;
 using Microsoft.Xna.Framework;
 using Color = Microsoft.Xna.Framework.Color;
@@ -186,14 +187,16 @@ namespace Alex.ResourcePackLib
 
 		private BlockModel LoadBlockModel(ZipArchiveEntry entry)
 		{
+			string nameSpace = entry.FullName.Split('/')[1];
 			string name = Path.GetFileNameWithoutExtension(entry.FullName);
 			using (var r = new StreamReader(entry.Open()))
 			{
 				var blockModel = MCJsonConvert.DeserializeObject<BlockModel>(r.ReadToEnd());
 				blockModel.Name = name;
+				blockModel.Namespace = nameSpace;
 
 				blockModel = ProcessBlockModel(blockModel);
-				_blockModels[name] = blockModel;
+				_blockModels[$"{nameSpace}:{name}"] = blockModel;
 
 				return blockModel;
 			}
@@ -237,12 +240,17 @@ namespace Alex.ResourcePackLib
 		{
 			try
 			{
+				string name = Path.GetFileNameWithoutExtension(entry.FullName);
+				string nameSpace = entry.FullName.Split('/')[1];
+
 				using (var r = new StreamReader(entry.Open()))
 				{
 					var json = r.ReadToEnd();
 
 					var blockState = MCJsonConvert.DeserializeObject<BlockState>(json);
-					_blockStates[entry.Name.Replace(".json", "")] = ProcessBlockState(blockState);
+					blockState.Name = name;
+					blockState.Namespace = nameSpace;
+					_blockStates[$"{nameSpace}:{name}"] = ProcessBlockState(blockState);
 
 					return blockState;
 				}

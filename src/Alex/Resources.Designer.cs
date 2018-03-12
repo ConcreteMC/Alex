@@ -171,6 +171,56 @@ namespace Alex {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {
+        ///	&quot;minecraft:air&quot;: {
+        ///		&quot;states&quot;: [
+        ///			{
+        ///				&quot;id&quot;: 0,
+        ///				&quot;default&quot;: true
+        ///			}
+        ///		]
+        ///	},
+        ///	&quot;minecraft:stone&quot;: {
+        ///		&quot;states&quot;: [
+        ///			{
+        ///				&quot;id&quot;: 1,
+        ///				&quot;default&quot;: true
+        ///			}
+        ///		]
+        ///	},
+        ///	&quot;minecraft:granite&quot;: {
+        ///		&quot;states&quot;: [
+        ///			{
+        ///				&quot;id&quot;: 2,
+        ///				&quot;default&quot;: true
+        ///			}
+        ///		]
+        ///	},
+        ///	&quot;minecraft:polished_granite&quot;: {
+        ///		&quot;states&quot;: [
+        ///			{
+        ///				&quot;id&quot;: 3,
+        ///				&quot;default&quot;: true
+        ///			}
+        ///		]
+        ///	},
+        ///	&quot;minecraft:diorite&quot;: {
+        ///		&quot;states&quot;: [
+        ///			{
+        ///				&quot;id&quot;: 4,
+        ///				&quot;default&quot;: true
+        ///			}
+        ///		]
+        ///	},
+        ///	&quot;minecraft:polished_ [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string NewBlocks {
+            get {
+                return ResourceManager.GetString("NewBlocks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
         internal static byte[] no {
@@ -224,6 +274,15 @@ namespace Alex {
         internal static string runtimeid_table {
             get {
                 return ResourceManager.GetString("runtimeid_table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to .
+        /// </summary>
+        internal static string String1 {
+            get {
+                return ResourceManager.GetString("String1", resourceCulture);
             }
         }
         

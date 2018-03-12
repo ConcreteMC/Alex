@@ -1,12 +1,15 @@
 ﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace Alex.ResourcePackLib.Json.Models
+namespace Alex.ResourcePackLib.Json.Models.Blocks
 {
 	public class BlockModel
 	{
 		[JsonIgnore]
 		public string Name { get; set; }
+
+		[JsonIgnore]
+		public string Namespace { get; set; }
 
 		/// <summary>
 		/// Loads a different model from the given path, starting in assets/minecraft/models. If both "parent" and "elements" are set, the "elements" tag overrides the "elements" tag from the previous model.
@@ -33,7 +36,6 @@ namespace Alex.ResourcePackLib.Json.Models
 		/// Contains all the elements of the model. they can only have cubic forms. If both "parent" and "elements" are set, the "elements" tag overrides the "elements" tag from the previous model.
 		/// </summary>
 		//[JsonConverter(typeof(MCElementsDictionaryConverter))]
-		//public Dictionary<string, BlockModelElement> Elements { get; set; } = new Dictionary<string, BlockModelElement>();
 		public BlockModelElement[] Elements { get; set; } = new BlockModelElement[0];
 	}
 }

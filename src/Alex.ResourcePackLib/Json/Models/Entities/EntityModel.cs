@@ -1,4 +1,4 @@
-﻿namespace Alex.ResourcePackLib.Json.Models
+﻿namespace Alex.ResourcePackLib.Json.Models.Entities
 {
     public sealed class EntityModel
     {

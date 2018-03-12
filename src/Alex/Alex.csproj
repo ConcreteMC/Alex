@@ -21,9 +21,11 @@
 
   <ItemGroup>
     <None Remove="Alex.cs" />
+    <None Remove="BlockData.cs" />
     <None Remove="BlockFactory.cs" />
     <None Remove="Blocks\Air.cs" />
     <None Remove="Blocks\Block.cs" />
+    <None Remove="Blocks\BlockData.cs" />
     <None Remove="Blocks\BlockRegistry.cs" />
     <None Remove="Blocks\Door.cs" />
     <None Remove="Blocks\FlowingLava.cs" />
@@ -31,6 +33,7 @@
     <None Remove="Blocks\InvisibleBedrock.cs" />
     <None Remove="Blocks\Lava.cs" />
     <None Remove="Blocks\Lever.cs" />
+    <None Remove="Blocks\Properties\DynamicStateProperty.cs" />
     <None Remove="Blocks\Properties\PropertyBool.cs" />
     <None Remove="Blocks\Properties\PropertyFacing.cs" />
     <None Remove="Blocks\Properties\PropertyHelper.cs" />
@@ -118,9 +121,11 @@
 
   <ItemGroup>
     <Compile Include="Alex.cs" />
+    <Compile Include="BlockData.cs" />
     <Compile Include="BlockFactory.cs" />
     <Compile Include="Blocks\Air.cs" />
     <Compile Include="Blocks\Block.cs" />
+    <Compile Include="Blocks\BlockData.cs" />
     <Compile Include="Blocks\BlockRegistry.cs" />
     <Compile Include="Blocks\Door.cs" />
     <Compile Include="Blocks\FlowingLava.cs" />
@@ -128,6 +133,7 @@
     <Compile Include="Blocks\InvisibleBedrock.cs" />
     <Compile Include="Blocks\Lava.cs" />
     <Compile Include="Blocks\Lever.cs" />
+    <Compile Include="Blocks\Properties\DynamicStateProperty.cs" />
     <Compile Include="Blocks\Properties\PropertyFacing.cs" />
     <Compile Include="Blocks\Properties\PropertyBool.cs" />
     <Compile Include="Blocks\State\BlockState.cs" />
@@ -234,17 +240,11 @@
 
 	<ItemGroup>
 		<Reference Include="CoreFNBT">
-			<HintPath>..\External\CoreFNBT.dll</HintPath>
+		  <HintPath>..\External\CoreFNBT.dll</HintPath>
 		</Reference>
 		<Reference Include="MiNET">
 			<HintPath>..\External\MiNET.dll</HintPath>
 		</Reference>
-	  <Reference Include="CoreFNBT">
-	    <HintPath>..\External\CoreFNBT.dll</HintPath>
-	  </Reference>
-	  <Reference Include="MiNET">
-	    <HintPath>..\CoreRT\External\MiNET.dll</HintPath>
-	  </Reference>
 	  <Reference Include="MonoGame.Framework">
 	    <HintPath>..\External\MonoGame.Framework.dll</HintPath>
 	  </Reference>

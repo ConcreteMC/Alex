@@ -1,4 +1,5 @@
 ﻿using System;
+using Alex.ResourcePackLib.Json.Converters;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
@@ -22,6 +23,8 @@ namespace Alex.ResourcePackLib.Json
 
 		static MCJsonConvert()
 		{
+			DefaultSettings.Converters.Add(new Vector3Converter());
+			DefaultSettings.Converters.Add(new Vector2Converter());
 			//DefaultSettings.Converters.Add(new MCElementsDictionaryConverter());
 		}
 

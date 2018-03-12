@@ -5,6 +5,12 @@ namespace Alex.ResourcePackLib.Json.BlockStates
 {
 	public class BlockState
 	{
+		[JsonIgnore]
+		public string Name { get; set; }
+
+		[JsonIgnore]
+		public string Namespace { get; set; }
+
 		/// <summary>
 		/// Holds the names of all the variants of the block.
 		/// </summary>

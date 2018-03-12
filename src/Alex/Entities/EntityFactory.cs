@@ -9,6 +9,7 @@ using Alex.Graphics.Models;
 using Alex.Graphics.Models.Entity;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json.Models;
+using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
 using fNbt.Tags;
 using log4net;
@@ -106,7 +107,10 @@ namespace Alex.Entities
 
 								_registeredRenderers.AddOrUpdate(name,
 									() => new EntityModelRenderer(model, texture),
-									(s, func) => () => new EntityModelRenderer(model, texture));
+									(s, func) =>
+									{
+										return () => new EntityModelRenderer(model, texture);
+									});
 							}
 						}
 					}

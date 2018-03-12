@@ -8,6 +8,8 @@ using System.Text;
 using Alex.API.Blocks.Properties;
 using Alex.API.Blocks.State;
 using Alex.Blocks;
+using Alex.Blocks.Properties;
+using Alex.Blocks.State;
 using Alex.Graphics.Models;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json;
@@ -18,6 +20,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using BlockFace = MiNET.BlockFace;
+using BlockState = Alex.ResourcePackLib.Json.BlockStates.BlockState;
 
 namespace Alex
 {
@@ -33,7 +36,7 @@ namespace Alex
 
 		private static readonly Dictionary<int, BlockMeta> CachedBlockMeta = new Dictionary<int, BlockMeta>();
 
-	    private static ResourcePackLib.Json.Models.BlockModel CubeModel { get; set; }
+	    private static ResourcePackLib.Json.Models.Blocks.BlockModel CubeModel { get; set; }
 	    private static readonly LiquidBlockModel StationairyWaterModel = new LiquidBlockModel()
 	    {
 		    IsFlowing = false,
@@ -194,7 +197,7 @@ namespace Alex
 		internal static int LoadResources(ResourceManager resources, McResourcePack resourcePack, bool replace,
 		    bool reportMissing = false)
 	    {
-		    if (resourcePack.TryGetBlockModel("cube_all", out ResourcePackLib.Json.Models.BlockModel cube))
+		    if (resourcePack.TryGetBlockModel("cube_all", out ResourcePackLib.Json.Models.Blocks.BlockModel cube))
 		    {
 			    cube.Textures["all"] = "no_texture";
 			    CubeModel = cube;
@@ -209,124 +212,108 @@ namespace Alex
 		    bool reportMissing)
 	    {
 			TableEntry[] tablesEntries = TableEntry.FromJson(Resources.runtimeid_table);
+		    var data = BlockData.FromJson(Resources.NewBlocks);
 			int importCounter = 0;
 
 		    uint c = 0;
-		    foreach (var bs in resourcePack.BlockStates)
+		    foreach (var entry in data)
 		    {
-			    byte metaId = 0;
+			    Blocks.State.BlockState state = new Blocks.State.BlockState();
+			    state.Name = entry.Key;
 
-			    var entries = tablesEntries.Where(x =>
-			    x.Name.Equals("minecraft:" + bs.Key, StringComparison.InvariantCultureIgnoreCase)).ToArray();
-
-			    if (entries.Length == 0)
+			    if (entry.Value.Properties != null)
 			    {
-				    if (reportMissing)
-					    Log.Warn($"Could not resolve block id for blockstate minecraft:{bs.Key}");
-
-					continue;
+				    foreach (var property in entry.Value.Properties)
+				    {
+					    state = (Blocks.State.BlockState)state.WithProperty(new DynamicStateProperty(property.Key, property.Value), property.Value.FirstOrDefault());
+				    }
 			    }
 
-			    foreach (var variant in bs.Value.Variants)
+			    foreach (var s in entry.Value.States)
 			    {
-				    string name = bs.Key;
-				    //if (metaId > entries.Length - 1)
-				    //{
-					//    Log.Warn($"Entry out of range: {name} ({metaId} > {entries.Length - 1})");
-					//    metaId++;
-					//    continue;
-				    //}
-					
+				    Blocks.State.BlockState blockStateData = (Blocks.State.BlockState)state.Clone();
+				    blockStateData.ID = s.ID;
 
-					IBlockState blockStateData = Blocks.State.BlockState.FromString(variant.Key);
-				    blockStateData.Name = name;
-
-				    var tableEntry = entries[metaId % entries.Length];
-
-
-					var blockId = (int)tableEntry.Id;
-
-				    uint id = c++;
-				    byte metadata = metaId;
-				    //uint id = tableEntry.RuntimeId; //Block.GetBlockStateID(blockId, metadata);
-				    metaId++;
-
-				    if (RegisteredBlockStates.TryGetValue(id, out IBlockState s))
-				    {
-						Log.Warn($"Duplicate blockstate id (Existing: {s.Name}[{s.ToString()}] | New: {name}[{blockStateData.ToString()}]) ");
+					var id = s.ID;
+					if (RegisteredBlockStates.TryGetValue(id, out IBlockState st))
+					{
+						Log.Warn($"Duplicate blockstate id (Existing: {st.Name}[{st.ToString()}] | New: {entry.Key}[{blockStateData.ToString()}]) ");
 						continue;
-				    }
+					}
 
-				    blockStateData.ID = id;
-					
-				    var cached = GetOrCacheModel(resources, resourcePack, blockStateData);
-				    if (cached == null)
+					if (s.Properties != null)
 				    {
-					    if (reportMissing)
-						    Log.Warn($"Missing blockmodel for blockstate {name}[{variant.Key}]");
-
-					    continue;
+					    foreach (var property in s.Properties)
+					    {
+						    blockStateData = (Blocks.State.BlockState)blockStateData.WithProperty(StateProperty.Parse(property.Key), property.Value);
+					    }
 				    }
+
+					var cached = GetOrCacheModel(resources, resourcePack, blockStateData);
+					if (cached == null)
+					{
+						if (reportMissing)
+							Log.Warn($"Missing blockmodel for blockstate {entry.Key}[{blockStateData.ToString()}]");
+
+						continue;
+					}
 
 					if (Load(blockStateData, () =>
-				    {
-					    var block = new Block(id);
-					  //  if (blockId == 69)
-					 //   {
-					//	    block = new Lever(id);
-					 //   }
-					 //   else if (blockId == 64 || (blockId >= 193 && blockId <= 197))
-					 //   {
-					//	    block = new WoodenDoor(blockId, (byte) tableEntry.Data);
-					 //   }
-
-					    BlockMeta knownMeta;
-					   // if (!CachedBlockMeta.TryGetValue(c, out knownMeta))
-					    {
-						    knownMeta = CachedBlockMeta
-							    .FirstOrDefault(x => x.Value.Name.Equals(bs.Key, StringComparison.InvariantCultureIgnoreCase)).Value;
-						    if (knownMeta == null)
-						    {
-							    knownMeta = new BlockMeta
-							    {
-								    Transparent = false,
-								    DisplayName = bs.Key,
+					{
+						var block = new Block(id);
+						BlockMeta knownMeta = null;
+						//if (!CachedBlockMeta.TryGetValue(blockId, out knownMeta))
+						{
+							if (knownMeta == null)
+							{
+								knownMeta = new BlockMeta
+								{
+									Transparent = false,
+									DisplayName = entry.Key,
 									Solid = true
-							    };
-						    }
-						    else
-						    {
-							    //   blockId = knownMeta.ID;
-						    }
-					    }
+								};
+							}
+							else
+							{
+								//   blockId = knownMeta.ID;
+							}
+						}
 
-					    block.BlockModel = cached;
-					    block.Transparent = knownMeta.Transparent;
-					    block.DisplayName = knownMeta.DisplayName;
-					    block.LightValue = knownMeta.LightValue;
-					    block.AmbientOcclusionLightValue = knownMeta.AmbientOcclusionLightValue;
-					    block.LightOpacity = knownMeta.LightOpacity;
-					    block.IsBlockNormalCube = knownMeta.IsBlockNormalCube;
-					    block.IsFullCube = knownMeta.IsFullCube;
-					    block.IsFullBlock = knownMeta.IsFullBlock;
-					    block.BlockState = blockStateData;
-					    block.Solid = knownMeta.Solid;
-					    block.Drag = knownMeta.FrictionFactor;
-					    block.IsReplacible = knownMeta.Replacible;
+						block.BlockModel = cached;
+						block.Transparent = knownMeta.Transparent;
+						block.DisplayName = knownMeta.DisplayName;
+						block.LightValue = knownMeta.LightValue;
+						block.AmbientOcclusionLightValue = knownMeta.AmbientOcclusionLightValue;
+						block.LightOpacity = knownMeta.LightOpacity;
+						block.IsBlockNormalCube = knownMeta.IsBlockNormalCube;
+						block.IsFullCube = knownMeta.IsFullCube;
+						block.IsFullBlock = knownMeta.IsFullBlock;
+						block.BlockState = blockStateData;
+						block.Solid = knownMeta.Solid;
+						block.Drag = knownMeta.FrictionFactor;
+						block.IsReplacible = knownMeta.Replacible;
 
+						if (s.Default)
+						{
+							state.Block = block;
+						}
 
-					    blockStateData.SetBlock(block);
-					    RegisteredBlockStates.TryAdd(id, blockStateData);
+						blockStateData.Block = block;
+						RegisteredBlockStates.TryAdd(id, blockStateData);
 
-					    return block;
-				    }, replace))
-				    {
-					    importCounter++;
-				    }
+						return block;
+					}, replace))
+					{
+						importCounter++;
+					}
+
+					
+				   // Blocks.State.BlockState value = (Blocks.State.BlockState) state.Clone();
+					
 			    }
 		    }
 
-			return importCounter;
+		    return importCounter;
 		}
 
 	    private static bool Load(IBlockState id, Func<Block> blockFunction, bool replace)
@@ -493,7 +480,7 @@ namespace Alex
 
 		    BlockState blockState;
 
-			if (resourcePack.BlockStates.TryGetValue(name, out blockState) || resourcePack.BlockStates.TryGetValue(FixBlockStateNaming(name, state), out blockState))
+			if (resourcePack.BlockStates.TryGetValue(name, out blockState))
 			{
 				if (blockState.Variants == null ||
 				    blockState.Variants.Count == 0)
@@ -558,10 +545,20 @@ namespace Alex
 
 	    public static IBlockState GetBlockState(int blockId, byte meta)
 	    {
-		    return GetBlockState(Block.GetBlockStateID(blockId, meta));
+		    return GetBlockState(GetBlockStateID(blockId, meta));
 	    }
 
-	    public static IBlockState GetBlockState(uint palleteId)
+	    public static IBlockState GetBlockState(string palleteId)
+	    {
+		   // if (RegisteredBlockStates.TryGetValue(palleteId, out var result))
+		   // {
+			//    return result;
+		  //  }
+
+		    return AirState;
+	    }
+
+		public static IBlockState GetBlockState(uint palleteId)
 	    {
 		    if (RegisteredBlockStates.TryGetValue(palleteId, out var result))
 		    {
@@ -580,53 +577,6 @@ namespace Alex
 
 		    return AirState;
 	    }
-
-	   /* public static IBlockState GetBlockState(IBlockState state)
-	    {
-		    var data = Blocks.State.BlockState.FromString(state.ToString());
-			IBlockState closest = null;
-
-		    int closestMatch = 0;
-			foreach (var registeredBlockstate in RegisteredBlockStates.Where(x => x.Value.Name.Equals(state.Name, StringComparison.InvariantCultureIgnoreCase) /*&& !x.Value.GetBlock().Equals(state.GetBlock())))
-			{
-				var rawVariantData = registeredBlockstate.Value.ToString();
-				var variantData = Blocks.State.BlockState.FromString(rawVariantData);
-
-			    int matches = 0;
-			    foreach (var kv in data)
-			    {
-				    if (variantData.TryGetValue(kv.Key, out string v))
-				    {
-						if (v.Equals(kv.Value, StringComparison.InvariantCultureIgnoreCase))
-					    {
-						    matches++;
-					    }
-				    }
-			    }
-
-				if (matches == data.Count)
-				{
-					return registeredBlockstate.Value;
-				}
-
-			    if (matches > closestMatch)
-			    {
-				    closestMatch = matches;
-				    closest = registeredBlockstate.Value;
-			    }
-
-			}
-
-		    if (closestMatch < (data.Count / 2))
-		    {
-			    return state;
-		    }
-
-		    return closest;
-		    // var first = RegisteredBlockStates.FirstOrDefault(x => x.Value.ToDictionary() == state).Key;
-
-		    // return first;
-	    }*/
 
 	    public static uint GetBlockStateId(IBlockState state)
 	    {
@@ -664,10 +614,23 @@ namespace Alex
 	    public static Block GetBlock(int id, byte metadata)
 		{
 			if (id == 0) return Air;
-			return GetBlock(Block.GetBlockStateID(id, metadata));
+			return GetBlock(GetBlockStateID(id, metadata));
 		}
 
-	    private class BlockMeta
+	    public static uint GetBlockStateID(int id, byte meta)
+	    {
+		    if (id < 0) throw new ArgumentOutOfRangeException();
+
+		    return (uint)(id << 4 | meta);
+	    }
+
+	    public static void StateIDToRaw(uint stateId, out int id, out byte meta)
+	    {
+		    id = (int)(stateId >> 4);
+		    meta = (byte)(stateId & 0x0F);
+	    }
+
+		private class BlockMeta
 	    {
 		    public int ID = -1;
 		    public string Name;

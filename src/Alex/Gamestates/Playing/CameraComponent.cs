@@ -7,6 +7,7 @@ using log4net;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
 
 namespace Alex.Gamestates.Playing
 {

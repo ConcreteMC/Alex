@@ -190,22 +190,17 @@ namespace Alex.Blocks.State {
 			return false;
 		}
 
-		private IBlock _block = new Air();
+		public IBlock Block = new Air();
 		public IBlock GetBlock()
 		{
-			return _block;
-		}
-
-		public void SetBlock(IBlock block)
-		{
-			_block = block;
+			return Block;
 		}
 
 		public bool Equals(BlockState other)
 		{
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;
-			return _block.Equals(other._block) && _values.SequenceEqual(other._values) && string.Equals(Name, other.Name, StringComparison.InvariantCultureIgnoreCase) && ID == other.ID;
+			return Block.Equals(other.Block) && _values.SequenceEqual(other._values) && string.Equals(Name, other.Name, StringComparison.InvariantCultureIgnoreCase) && ID == other.ID;
 		}
 
 		public bool Equals(IBlockState other)

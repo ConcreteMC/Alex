@@ -43,7 +43,7 @@ namespace Alex.Blocks
 
 		public BlockModel BlockModel { get; set; }
 		public IBlockState BlockState { get; set; }
-		protected Block(int blockId, byte metadata) : this(GetBlockStateID(blockId, metadata))
+		protected Block(int blockId, byte metadata) : this(BlockFactory.GetBlockStateID(blockId, metadata))
 	    {
 		    
 	    }
@@ -51,8 +51,13 @@ namespace Alex.Blocks
 	    public Block(uint blockStateId)
 	    {
 		    BlockStateID = blockStateId;
-		    BlockId = (int)(blockStateId >> 4);
-		    Metadata = (byte)(blockStateId & 0x0F);
+
+		    int blockId;
+		    byte meta;
+
+		    BlockFactory.StateIDToRaw(blockStateId, out blockId, out meta);
+		    BlockId = blockId;
+		    Metadata = meta;
 
 			Solid = true;
 		    Transparent = false;
@@ -62,10 +67,10 @@ namespace Alex.Blocks
 		    SetColor(TextureSide.All, Color.White);
 		}
 
-		public BoundingBox GetBoundingBox(Vector3 blockPosition)
+		public Microsoft.Xna.Framework.BoundingBox GetBoundingBox(Vector3 blockPosition)
 	    {
 			if (BlockModel == null)
-				return new BoundingBox(blockPosition, blockPosition + Vector3.One);
+				return new Microsoft.Xna.Framework.BoundingBox(blockPosition, blockPosition + Vector3.One);
 
 		    return BlockModel.GetBoundingBox(blockPosition, this);
 		}
@@ -229,19 +234,6 @@ namespace Alex.Blocks
 				case BlockFace.Down:
 					return BlockFace.West;
 			}
-		}
-
-		public static uint GetBlockStateID(int id, byte meta)
-	    {
-		    if (id < 0) throw new ArgumentOutOfRangeException();
-
-		    return (uint) (id << 4 | meta);
-	    }
-
-	    public static void StateIDToRaw(uint stateId, out int id, out byte meta)
-	    {
-		    id = (int)(stateId >> 4);
-		    meta = (byte)(stateId & 0x0F);
 		}
 	}
 }

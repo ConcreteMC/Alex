@@ -17,7 +17,6 @@ namespace Alex.API.Blocks.State
 		IBlockState WithProperty<T>(IStateProperty<T> property, T value);
 		IDictionary<IStateProperty, string> ToDictionary();
 		IBlock GetBlock();
-		void SetBlock(IBlock block);
 		IBlockState Clone();
 
 		bool TryGetValue(IStateProperty property, out object value);

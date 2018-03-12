@@ -26,7 +26,7 @@ namespace Alex.Blocks
 		public override void Interact(IWorld world, BlockCoordinates position, BlockFace face, Entity sourcEntity)
 		{
 			var state = (BlockState) BlockState;
-			world.SetBlockState(position.X, position.Y, position.Z, BlockFactory.GetBlockState((int)Block.GetBlockStateID(BlockId, (byte)(Metadata ^ 0x8))));
+			world.SetBlockState(position.X, position.Y, position.Z, BlockFactory.GetBlockState((int)BlockFactory.GetBlockStateID(BlockId, (byte)(Metadata ^ 0x8))));
 		/*	if (state.GetTypedValue(Powered))
 			{
 				world.SetBlockState(position.X, position.Y, position.Z, BlockFactory.GetBlockState((int) Block.GetBlockStateID(BlockId, (byte) (Metadata ^ 0x8))));

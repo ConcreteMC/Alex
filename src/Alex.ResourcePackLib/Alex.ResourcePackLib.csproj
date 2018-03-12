@@ -6,6 +6,7 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>TRACE;DEBUG;NETSTANDARD2_0;DESKTOPGL</DefineConstants>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,6 +14,10 @@
     <PackageReference Include="log4net" Version="2.0.8" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.1" />
     <PackageReference Include="SharpZipLib" Version="1.0.0-alpha2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Alex.API\Alex.API.csproj" />
   </ItemGroup>
 
   <ItemGroup>

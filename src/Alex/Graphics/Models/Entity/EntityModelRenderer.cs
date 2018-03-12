@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Graphics;
 using Alex.Rendering.Camera;
 using Alex.ResourcePackLib.Json.Models;
+using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
 using log4net;
 using Microsoft.Xna.Framework;
@@ -14,6 +16,8 @@ namespace Alex.Graphics.Models.Entity
 	public class EntityModelRenderer : Model
 	{
 		private static readonly ILog Log = LogManager.GetLogger(typeof(EntityModelRenderer));
+		private static ConcurrentDictionary<string, VertexPositionNormalTexture[]> ModelBonesCache { get; } = new ConcurrentDictionary<string, VertexPositionNormalTexture[]>();
+
 		private EntityModel Model { get; }
 		private IReadOnlyDictionary<string, ModelPart> Cubes { get; }
 		private Texture2D Texture { get; set; }
@@ -27,6 +31,100 @@ namespace Alex.Graphics.Models.Entity
 			Cache(cubes);
 
 			Cubes = cubes;
+		}
+
+		static EntityModelRenderer()
+		{
+			
+		}
+
+		private void Cache(Dictionary<string, ModelPart> cubes)
+		{
+			float x = 0, y = 0, z = 0;
+		//	List<VertexPositionNormalTexture> textures = new List<VertexPositionNormalTexture>();
+			foreach (var bone in Model.Bones)
+			{
+				if (bone == null) continue;
+				if (bone.NeverRender) continue;
+
+				if (bone.Cubes != null)
+				{
+					foreach (var cube in bone.Cubes)
+					{
+						if (cube == null)
+						{
+							Log.Warn("Cube was null!");
+							continue;
+						}
+
+						if (cube.Uv == null)
+						{
+							Log.Warn("Cube.UV was null!");
+							continue;
+						}
+
+						if (cube.Origin == null)
+						{
+							Log.Warn("Cube.Origin was null!");
+							continue;
+						}
+
+						if (cube.Size == null)
+						{
+							Log.Warn("Cube.Size was null!");
+							continue;
+						}
+
+						var size = new Vector3(cube.Size.X, cube.Size.Y, cube.Size.Z);
+						var origin = new Vector3(cube.Origin.X, cube.Origin.Y, cube.Origin.Z);
+						var pivot = bone.Pivot;
+						var rotation = bone.Rotation;
+
+						VertexPositionNormalTexture[] vertices = ModelBonesCache.GetOrAdd($"{Model.Name}:{bone.Name}", s =>
+						{
+							Cube built = new Cube(size, new Vector2(Texture.Width, Texture.Height));
+							built.BuildCube(new Vector2(cube.Uv.X, cube.Uv.Y));
+							return built.Front.Concat(built.Back).Concat(built.Top).Concat(built.Bottom).Concat(built.Left)
+								.Concat(built.Right).ToArray();
+						});
+
+						if (!cubes.TryAdd(bone.Name, new ModelPart(vertices, 
+							Texture,
+							rotation, pivot, origin)))
+						{
+							Log.Warn($"Failed to add cube to list of bones: {Model.Name}:{bone.Name}");
+						}
+					}
+				}
+			}
+		}
+
+		public void Render(IRenderArgs args, Camera camera, Vector3 position, float yaw, float pitch)
+		{
+			foreach (var bone in Cubes)
+			{
+				if (bone.Value.IsDirty)
+					continue;
+
+
+				bone.Value.Render(args, camera, position, yaw, bone.Key.Contains("head") ? pitch : 0);
+			}
+		}
+
+		public void Update(GraphicsDevice device, GameTime gameTime, Vector3 position, float yaw, float pitch)
+		{
+			foreach (var bone in Cubes)
+			{
+				if (!bone.Value.IsDirty)
+					continue;
+				
+				bone.Value.Update(device, gameTime);
+			}
+		}
+
+		public override string ToString()
+		{
+			return Model.Name;
 		}
 
 		private class ModelPart : IDisposable
@@ -49,6 +147,8 @@ namespace Alex.Graphics.Models.Entity
 				Pivot = pivot;
 				Origin = origin;
 
+				Mod(ref _vertices, Origin, Pivot, Rotation);
+
 				IsDirty = true;
 			}
 
@@ -56,8 +156,8 @@ namespace Alex.Graphics.Models.Entity
 			{
 				if (!IsDirty) return;
 
-				if (_vertices.Length > 0)
-					Mod(ref _vertices, Origin, Pivot, Rotation);
+				//if (_vertices.Length > 0)
+				//	Mod(ref _vertices, Origin, Pivot, Rotation);
 
 				if (Effect == null)
 				{
@@ -100,14 +200,17 @@ namespace Alex.Graphics.Models.Entity
 
 				if (Effect == null || Buffer == null) return;
 
-				//Effect.World = Matrix.CreateScale(1f / 16f) * Matrix.CreateTranslation(position);
+				var buffer = Buffer;
+
 				Effect.World = Matrix.CreateScale(1f / 16f) * Matrix.CreateRotationY(MathUtils.ToRadians(yaw)) * Matrix.CreateRotationX(MathUtils.ToRadians(pitch)) *
 				               Matrix.CreateTranslation(position);
 
 				Effect.View = camera.ViewMatrix;
 				Effect.Projection = camera.ProjectionMatrix;
 
-				args.GraphicsDevice.SetVertexBuffer(Buffer);
+				//Effect.World = Matrix.CreateScale(1f / 16f) * Matrix.CreateTranslation(position);
+
+				args.GraphicsDevice.SetVertexBuffer(buffer);
 				foreach (var pass in Effect.CurrentTechnique.Passes)
 				{
 					pass.Apply();
@@ -140,103 +243,10 @@ namespace Alex.Graphics.Models.Entity
 
 			public void Dispose()
 			{
+				IsDirty = false;
 				Effect?.Dispose();
+				Buffer?.Dispose();
 			}
-		}
-
-		private void Cache(Dictionary<string, ModelPart> cubes)
-		{
-			float x = 0, y = 0, z = 0;
-		//	List<VertexPositionNormalTexture> textures = new List<VertexPositionNormalTexture>();
-			foreach (var bone in Model.Bones)
-			{
-				if (bone == null) continue;
-				if (bone.NeverRender) continue;
-
-				if (bone.Cubes != null)
-				{
-					foreach (var cube in bone.Cubes)
-					{
-						if (cube == null)
-						{
-							Log.Warn("Cube was null!");
-							continue;
-						}
-
-						if (cube.Uv == null)
-						{
-							Log.Warn("Cube.UV was null!");
-							continue;
-						}
-
-						if (cube.Origin == null)
-						{
-							Log.Warn("Cube.Origin was null!");
-							continue;
-						}
-
-						if (cube.Size == null)
-						{
-							Log.Warn("Cube.Size was null!");
-							continue;
-						}
-
-						var size = new Vector3(cube.Size.X, cube.Size.Y, cube.Size.Z);
-						var origin = new Vector3(cube.Origin.X, cube.Origin.Y, cube.Origin.Z);
-						var pivot = Vector3.Zero;
-						var rotation = Vector3.Zero;
-
-						if (bone.Pivot != null)
-						{
-							pivot = new Vector3(bone.Pivot.X, bone.Pivot.Y, bone.Pivot.Z);
-						}
-
-						if (bone.Rotation != null)
-						{
-							rotation = new Vector3(bone.Rotation.X, bone.Rotation.Y, bone.Rotation.Z);
-						}
-
-						Cube built = new Cube(size, new Vector2(Texture.Width, Texture.Height));
-						built.BuildCube(new Vector2(cube.Uv.X, cube.Uv.Y));
-						var combined = built.Front.Concat(built.Back).Concat(built.Top).Concat(built.Bottom).Concat(built.Left)
-							.Concat(built.Right).ToArray();
-
-						if (!cubes.TryAdd(bone.Name, new ModelPart(combined, 
-							Texture,
-							rotation, pivot, origin)))
-						{
-							Log.Warn($"Failed to add cube to list of bones!");
-						}
-					}
-				}
-			}
-		}
-
-		public void Render(IRenderArgs args, Camera camera, Vector3 position, float yaw, float pitch)
-		{
-			foreach (var bone in Cubes)
-			{
-				if (bone.Value.IsDirty)
-					continue;
-
-				bone.Value.Render(args, camera, position, yaw, pitch);
-			}
-		}
-
-		public void Update(GraphicsDevice device, GameTime gameTime, Vector3 position, float yaw, float pitch)
-		{
-			foreach (var bone in Cubes)
-			{
-				if (!bone.Value.IsDirty)
-					continue;
-				
-				bone.Value.Update(device, gameTime);
-			}
-		}
-
-		public override string ToString()
-		{
-			return Model.Name;
 		}
 	}
 }

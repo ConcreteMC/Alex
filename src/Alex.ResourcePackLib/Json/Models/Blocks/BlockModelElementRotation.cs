@@ -1,11 +1,13 @@
-﻿namespace Alex.ResourcePackLib.Json.Models
+﻿using Microsoft.Xna.Framework;
+
+namespace Alex.ResourcePackLib.Json.Models.Blocks
 {
 	public class BlockModelElementRotation
 	{
 		/// <summary>
 		/// Sets the center of the rotation according to the scheme [x, y, z], defaults to [8, 8, 8].
 		/// </summary>
-		public JVector3 Origin { get; set; } = new JVector3(8, 8, 8);
+		public Vector3 Origin { get; set; } = new Vector3(8, 8, 8);
 
 		/// <summary>
 		/// Specifies the direction of rotation, can be "x", "y" or "z".

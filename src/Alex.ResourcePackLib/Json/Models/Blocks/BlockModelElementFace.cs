@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace Alex.ResourcePackLib.Json.Models
+namespace Alex.ResourcePackLib.Json.Models.Blocks
 {
 	public class BlockModelElementFace
 	{

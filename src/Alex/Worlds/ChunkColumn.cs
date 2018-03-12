@@ -32,7 +32,7 @@ namespace Alex.Worlds
 		public bool IsDirty { get; set; }
 
 		public ExtendedBlockStorage[] Chunks = new ExtendedBlockStorage[16];
-		public byte[] BiomeId = ArrayOf<byte>.Create(256, 1);
+		public int[] BiomeId = ArrayOf<int>.Create(256, 1);
 		public short[] Height = new short[256];
 
 		public VertexBuffer VertexBuffer { get; set; } = null;
@@ -105,13 +105,13 @@ namespace Alex.Worlds
 			return (byte)Height[((bz << 4) + (bx))];
 		}
 
-		public void SetBiome(int bx, int bz, byte biome)
+		public void SetBiome(int bx, int bz, int biome)
 		{
 			BiomeId[(bz << 4) + (bx)] = biome;
 			SetDirty();
 		}
 
-		public byte GetBiome(int bx, int bz)
+		public int GetBiome(int bx, int bz)
 		{
 			return BiomeId[(bz << 4) + (bx)];
 		}

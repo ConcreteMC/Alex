@@ -1,18 +1,19 @@
 ﻿using System.Collections.Generic;
+using Microsoft.Xna.Framework;
 
-namespace Alex.ResourcePackLib.Json.Models
+namespace Alex.ResourcePackLib.Json.Models.Blocks
 {
 	public class BlockModelElement
 	{
 		/// <summary>
 		/// Start point of a cube according to the scheme [x, y, z]. Values must be between -16 and 32.
 		/// </summary>
-		public JVector3 From { get; set; } = new JVector3(0, 0, 0);
+		public Vector3 From { get; set; } = new Vector3(0, 0, 0);
 
 		/// <summary>
 		/// Stop point of a cube according to the scheme [x, y, z]. Values must be between -16 and 32.
 		/// </summary>
-		public JVector3 To { get; set; } = new JVector3(16, 16, 16);
+		public Vector3 To { get; set; } = new Vector3(16, 16, 16);
 
 		/// <summary>
 		/// Defines the rotation of an element.

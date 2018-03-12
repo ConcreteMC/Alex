@@ -269,6 +269,7 @@ namespace Alex.Worlds
 					var nbt = new NbtFile();
 					nbt.LoadFromStream(regionFile, NbtCompression.ZLib);
 
+					int version = nbt.RootTag["DataVersion"].IntValue;
 					NbtCompound dataTag = (NbtCompound)nbt.RootTag["Level"];
 
 					bool isPocketEdition = false;
@@ -282,9 +283,22 @@ namespace Alex.Worlds
 					Worlds.ChunkColumn chunk = new Worlds.ChunkColumn()
 					{
 						X = coordinates.X,
-						Z = coordinates.Z,
-						BiomeId = dataTag["Biomes"].ByteArrayValue
+						Z = coordinates.Z
 					};
+
+					if (version >= 1477)
+					{
+						chunk.BiomeId = dataTag["Biomes"].IntArrayValue;
+					}
+					else
+					{
+						var byteArray = dataTag["Biomes"].ByteArrayValue;
+						chunk.BiomeId = new int[byteArray.Length];
+						for (int i = 0; i < byteArray.Length; i++)
+						{
+							chunk.BiomeId[i] = byteArray[i];
+						}
+					}
 
 					//chunk.b
 
@@ -303,7 +317,14 @@ namespace Alex.Worlds
 					// This will turn into a full chunk column
 					foreach (NbtTag sectionTag in sections)
 					{
-						ReadSection(sectionTag, chunk, !isPocketEdition);
+						if (version >= 1477)
+						{
+							ReadSection(sectionTag, chunk, !isPocketEdition);
+						}
+						else
+						{
+							ReadOldSection(sectionTag, chunk, !isPocketEdition);
+						}
 					}
 
 					NbtList entities = dataTag["Entities"] as NbtList;
@@ -407,6 +428,39 @@ namespace Alex.Worlds
 		}
 
 		private void ReadSection(NbtTag sectionTag, Worlds.ChunkColumn chunk, bool convertBid = true)
+		{
+			int sectionIndex = sectionTag["Y"].ByteValue;
+			NbtList palette = sectionTag["Palette"] as NbtList;
+			long[] blockStates = sectionTag["BlockStates"].LongArrayValue;
+
+			byte[] blockLight = sectionTag["BlockLight"].ByteArrayValue;
+			byte[] skyLight = sectionTag["SkyLight"].ByteArrayValue;
+
+			var section = new ExtendedBlockStorage(sectionIndex, ReadSkyLight);
+			section.GetData().SetDataFromNbt(palette, blockStates);
+
+			if (ReadSkyLight)
+			{
+				section.SetSkylightArray(new NibbleArray()
+				{
+					Data = skyLight
+				});
+			}
+
+			if (ReadBlockLight)
+			{
+				section.SetBlocklightArray(new NibbleArray()
+				{
+					Data = blockLight
+				});
+			}
+
+			section.RemoveInvalidBlocks();
+
+			chunk.Chunks[sectionIndex] = section;
+		}
+
+		private void ReadOldSection(NbtTag sectionTag, Worlds.ChunkColumn chunk, bool convertBid = true)
 		{
 			int sectionIndex = sectionTag["Y"].ByteValue;
 			byte[] blocks = sectionTag["Blocks"].ByteArrayValue;
