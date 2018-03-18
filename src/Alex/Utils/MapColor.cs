@@ -1,8 +1,9 @@
 ﻿using System;
+using Alex.API.Blocks;
 
 namespace Alex.Utils
 {
-	public class MapColor
+	public class MapColor : IMapColor
 	{
 		public static MapColor[] COLORS = new MapColor[64];
 		public static MapColor[] BLOCK_COLORS = new MapColor[16];

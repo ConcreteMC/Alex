@@ -1,12 +1,12 @@
 ﻿using System;
 using Alex.API.Blocks.State;
+using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks.Properties;
 using Alex.Blocks.State;
+using Alex.Entities;
+using Alex.ResourcePackLib.Json;
 using Microsoft.Xna.Framework;
-using MiNET;
-using MiNET.Entities;
-using MiNET.Utils;
 
 namespace Alex.Blocks
 {
@@ -18,10 +18,10 @@ namespace Alex.Blocks
 		private static PropertyBool POWERED = new PropertyBool("powered");
 		private static PropertyFace FACING = new PropertyFace("facing");
 
-		public bool IsOpen => (Metadata & 0x04) == 0x04;
-		public bool IsUpper => (Metadata & 0x08) == 0x08;
-		public bool IsRightHinch => (Metadata & 0x01) == 0x01;
-		public bool IsPowered => (Metadata & 0x02) == 0x02;
+	//	public bool IsOpen => (Metadata & 0x04) == 0x04;
+	//	public bool IsUpper => (Metadata & 0x08) == 0x08;
+	//	public bool IsRightHinch => (Metadata & 0x01) == 0x01;
+	//	public bool IsPowered => (Metadata & 0x02) == 0x02;
 
 		public WoodenDoor(byte meta) : this(64, meta)
 		{
@@ -35,7 +35,7 @@ namespace Alex.Blocks
 
 		private void Toggle(IWorld world, BlockCoordinates position)
 		{
-			if (IsUpper)
+		/*	if (IsUpper)
 			{
 				Block below = (Block)world.GetBlock(position - new BlockCoordinates(0, 1, 0));
 				if (below is WoodenDoor bottom && !bottom.IsUpper)
@@ -62,7 +62,7 @@ namespace Alex.Blocks
 					IBlockState state2 = upper.BlockState.Clone().WithProperty(OPEN, open).WithProperty(UPPER, true);
 					world.SetBlock(position.X, position.Y + 1, position.Z, BlockFactory.GetBlock(BlockId, GetMetaFromState(state2)));
 				}
-			}
+			}*/
 		}
 
 		public override void Interact(IWorld world, BlockCoordinates position, BlockFace face, Entity sourceEntity)
@@ -71,31 +71,7 @@ namespace Alex.Blocks
 		}
 
 		public override void BlockPlaced(IWorld world, BlockCoordinates position)
-		{
-			return;
-			if (IsUpper)
-			{
-				Block below = (Block) world.GetBlock(position - new BlockCoordinates(0, 1, 0));
-				if (below is WoodenDoor bottom && !bottom.IsUpper)
-				{
-					IBlockState state = BlockState.Clone().WithProperty(OPEN, bottom.IsOpen);
-					world.SetBlock(position.X, position.Y, position.Z, BlockFactory.GetBlock(BlockFactory.GetBlockStateID(BlockId, GetMetaFromState(state))));
-				}
-			}
-			else if (!IsUpper)
-			{
-				Block up = (Block) world.GetBlock(position + new BlockCoordinates(0, 1, 0));
-				if (up is WoodenDoor upper && upper.IsUpper)
-				{
-					IBlockState state = BlockState.Clone().WithProperty(RIGHTHINCHED, upper.IsRightHinch).WithProperty(UPPER, false).WithProperty(OPEN, IsOpen);
-				//	world.SetBlockState(position.X, position.Y, position.Z,
-				//		BlockFactory.GetBlockState(state));
-
-					//Block.GetBlockStateID(BlockId, GetMetaFromState(state))
-				}
-			}
-
-			//return false;
+		{ 
 		}
 
 		public byte GetMetaFromState(IBlockState state)
@@ -145,16 +121,12 @@ namespace Alex.Blocks
 			{
 				case BlockFace.East:
 					return 0;
-					break;
 				case BlockFace.West:
 					return 2;
-					break;
 				case BlockFace.North:
 					return 3;
-					break;
 				case BlockFace.South:
 					return 1;
-					break;
 			}
 
 			return 0;

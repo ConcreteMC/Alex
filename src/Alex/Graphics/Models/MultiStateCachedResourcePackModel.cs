@@ -6,8 +6,8 @@ using Alex.Blocks;
 using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
-using MiNET.Utils;
-using MiNET.Worlds;
+
+
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.BlockStates;
 using NLog;
@@ -140,7 +140,7 @@ namespace Alex.Graphics.Models
 			//}
 			else if (value == "none")
 			{
-				return block.BlockId == 0;
+				return block.BlockMaterial == Material.Air;
 			}
 
 			return false;

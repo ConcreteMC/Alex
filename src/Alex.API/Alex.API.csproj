@@ -11,12 +11,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="MiNET">
-      <HintPath>..\External\MiNET.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
     <Folder Include="Data\Tags\" />
     <Folder Include="World\Storage\" />
   </ItemGroup>

@@ -1,16 +1,15 @@
 ﻿using System;
+using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks;
 using Alex.Rendering.Camera;
 using Alex.Rendering.UI;
+using Alex.ResourcePackLib.Json;
 using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using MiNET;
-using MiNET.Utils;
-
 namespace Alex.Gamestates.Playing
 {
 	public class PlayingState : GameState
@@ -73,7 +72,7 @@ namespace Alex.Gamestates.Playing
 				World.Update(gameTime);
 
 				var headBlock = World.GetBlock(Camera.Position);
-				if (headBlock.BlockId == 8 || headBlock.BlockId == 9)
+				if (headBlock.IsWater)
 				{
 					if (!_renderWaterOverlay)
 					{
@@ -289,7 +288,7 @@ namespace Alex.Gamestates.Playing
 
 				y += (int) meisured.Y;
 
-				positionString = $"{SelBlock} ({SelBlock.BlockId}:{SelBlock.Metadata})";
+				positionString = $"{SelBlock} ({SelBlock.BlockStateID})";
 				meisured = Alex.Font.MeasureString(positionString);
 
 				args.SpriteBatch.FillRectangle(new Rectangle(screenWidth - (int) meisured.X, y, (int) meisured.X, (int) meisured.Y),

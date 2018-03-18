@@ -3,8 +3,8 @@ using Alex.API.Blocks.State;
 using Alex.API.World;
 using Alex.Blocks.State;
 using Alex.Blocks.Storage.Pallete;
+using Alex.Utils;
 using fNbt.Tags;
-using MiNET.Utils;
 
 namespace Alex.Blocks.Storage
 {
@@ -172,7 +172,22 @@ namespace Alex.Blocks.Storage
 			//	SetBits(bits);
 
 			Storage = new FlexibleStorage(bits, blockStates);
-			Palette = new BlockStatePaletteLinear(bits, this);
+			if (bits <= 4)
+			{
+				this.Palette = new BlockStatePaletteLinear(bits, this);
+			}
+			else if (bits <= 8)
+			{
+				this.Palette = new BlockStatePaletteHashMap(bits, this);
+			}
+			else
+			{
+				this.Palette = RegistryBasedPalette;
+				this._bits =
+					(int)Math.Ceiling(Math.Log(BlockFactory.AllBlockstates.Count,
+						2)); //MathHelper.Log2E(Block.BLOCK_STATE_IDS.size());
+			}
+
 			_bits = bits;
 
 			for (int i = 0; i < palette.Count; i++)

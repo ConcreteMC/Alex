@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Graphics;
+using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Entities;
 using Alex.Gamestates;
@@ -17,7 +18,6 @@ using Alex.Worlds;
 using Alex.Worlds.Lighting;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MiNET.Utils;
 using NLog;
 using Color = Microsoft.Xna.Framework.Color;
 
@@ -207,7 +207,7 @@ namespace Alex.Rendering
 			}
 			catch (Exception ex)
 			{
-				Log.Warn("Exception while updating chunk!", ex);
+				Log.Error(ex, $"Exception while updating chunk: {ex.ToString()}");
 			}
 			finally
 			{

@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using Alex.API.Utils;
 using Alex.Graphics.Models;
 using Alex.Graphics.Models.Entity;
 using Alex.ResourcePackLib;
@@ -14,10 +15,6 @@ using Alex.Utils;
 using fNbt.Tags;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MiNET.Blocks;
-using MiNET.Entities;
-using MiNET.Net;
-using MiNET.Utils;
 using NLog;
 
 namespace Alex.Entities
@@ -34,7 +31,7 @@ namespace Alex.Entities
 
 		}
 
-		public static bool TryLoadEntity(NbtCompound nbt, long entityId, out MiNET.Entities.Entity entity)
+		public static bool TryLoadEntity(NbtCompound nbt, long entityId, out Entity entity)
 		{
 			var id = nbt["id"].StringValue.Replace("minecraft:", "");
 			var pos = nbt["Pos"];
@@ -53,14 +50,14 @@ namespace Alex.Entities
 					if (entity == null) return false;
 
 					entity.EntityId = entityId;
-					entity.SetUUID(new UUID(uuid.ToByteArray()));
+					entity.UUID = new UUID(uuid.ToByteArray());
 
 					PlayerLocation position = new PlayerLocation((float) pos[0].DoubleValue, (float) pos[1].DoubleValue,
 						(float) pos[2].DoubleValue, rot[0].FloatValue, rot[0].FloatValue, rot[1].FloatValue);
 
 					entity.KnownPosition = position;
 
-					entity.SetModelRenderer(renderer);
+					entity.ModelRenderer = renderer;
 
 					return true;
 				}

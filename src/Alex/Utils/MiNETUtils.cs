@@ -3,18 +3,17 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
 using Alex.API.Graphics;
+using Alex.API.Utils;
+using Alex.Entities;
+using Alex.Entities.Hostile;
+using Alex.Entities.Passive;
 using Alex.Gamestates;
 using Alex.Graphics.Models;
 using Alex.Graphics.Models.Entity;
 using Alex.Rendering.Camera;
+using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MiNET.Entities;
-using MiNET.Entities.Hostile;
-using MiNET.Entities.Passive;
-using MiNET.Net;
-using MiNET.Utils;
-using MiNET.Worlds;
 
 namespace Alex.Utils
 {
@@ -33,47 +32,6 @@ namespace Alex.Utils
 
 	public static class EntityExtensions
 	{
-		private static ConcurrentDictionary<long, EntityModelRenderer> _entityRenderers = new ConcurrentDictionary<long, EntityModelRenderer>();
-		private static ConcurrentDictionary<long, UUID> _entityUuids = new ConcurrentDictionary<long, UUID>();
-		public static EntityModelRenderer GetModelRenderer(this Entity entity)
-		{
-			if (_entityRenderers.TryGetValue(entity.EntityId, out EntityModelRenderer val))
-			{
-				return val;
-			}
-
-			return null;
-		}
-
-		public static void SetModelRenderer(this Entity entity, EntityModelRenderer value)
-		{
-			_entityRenderers.AddOrUpdate(entity.EntityId, value, (a, b) => value);
-		}
-
-		public static UUID GetUUID(this Entity entity)
-		{
-			if (_entityUuids.TryGetValue(entity.EntityId, out UUID v))
-			{
-				return v;
-			}
-
-			return null;
-		}
-
-		public static void SetUUID(this Entity entity, UUID value)
-		{
-			_entityUuids.AddOrUpdate(entity.EntityId, value, (a, b) => value);
-		}
-
-		internal static void DeleteData(this Entity entity)
-		{
-			if (entity != null)
-				_entityRenderers.TryRemove(entity.EntityId, out var _);
-
-			if (entity != null)
-				_entityUuids.TryRemove(entity.EntityId, out _);
-		}
-
 		public static void RenderNametag(this Entity entity, IRenderArgs renderArgs, Camera camera)
 		{
 			Vector2 textPosition;
@@ -203,13 +161,13 @@ namespace Alex.Utils
 
 	public static class EntityHelpers
 	{
-		public static Entity CreateEntity(this short entityTypeId, Level world)
+		public static Entity CreateEntity(this short entityTypeId, World world)
 		{
 			EntityType entityType = (EntityType)entityTypeId;
 			return entityType.Create(world);
 		}
 
-		public static Entity Create(this EntityType entityType, Level world)
+		public static Entity Create(this EntityType entityType, World world)
 		{
 			Entity entity = null;
 
@@ -236,7 +194,7 @@ namespace Alex.Utils
 					entity = new Villager(world);
 					break;
 				case EntityType.MushroomCow:
-					entity = new MushroomCow(world);
+					entity = new Mooshroom(world);
 					break;
 				case EntityType.Squid:
 					entity = new Squid(world);
@@ -248,10 +206,10 @@ namespace Alex.Utils
 					entity = new Bat(world);
 					break;
 				case EntityType.IronGolem:
-					entity = new IronGolem(world);
+					entity = new VillagerGolem(world);
 					break;
 				case EntityType.SnowGolem:
-					entity = new SnowGolem(world);
+					entity = new Snowman(world);
 					break;
 				case EntityType.Ocelot:
 					entity = new Ocelot(world);
@@ -314,8 +272,9 @@ namespace Alex.Utils
 					entity = new ElderGuardian(world);
 					break;
 				case EntityType.Horse:
-					var random = new Random();
-					entity = new Horse(world, random.NextDouble() < 0.10, random);
+					entity = new Horse(world);
+					//var random = new Random();
+					//entity = new Horse(world, random.NextDouble() < 0.10, random);
 					break;
 				case EntityType.PolarBear:
 					entity = new PolarBear(world);
@@ -324,7 +283,7 @@ namespace Alex.Utils
 					entity = new Shulker(world);
 					break;
 				case EntityType.Dragon:
-					entity = new Dragon(world);
+					entity = new EnderDragon(world);
 					break;
 				case EntityType.SkeletonHorse:
 					entity = new SkeletonHorse(world);
@@ -333,10 +292,10 @@ namespace Alex.Utils
 					entity = new Wither(world);
 					break;
 				case EntityType.Evoker:
-					entity = new Evoker(world);
+					entity = new EvocationIllager(world);
 					break;
 				case EntityType.Vindicator:
-					entity = new Vindicator(world);
+					entity = new VindicationIllager(world);
 					break;
 				case EntityType.Vex:
 					entity = new Vex(world);

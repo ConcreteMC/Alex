@@ -1,0 +1,44 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace Alex.Utils
+{
+	public class NibbleArray : ICloneable
+	{
+		public byte[] Data { get; set; }
+
+		public NibbleArray()
+		{
+		}
+
+		public NibbleArray(int length)
+		{
+			Data = new byte[length / 2];
+		}
+
+		public int Length
+		{
+			get { return Data.Length * 2; }
+		}
+
+		public byte this[int index]
+		{
+			get { return (byte)(Data[index >> 1] >> ((index & 1) * 4) & 0xF); }
+			set
+			{
+				value &= 0xF;
+				var idx = index >> 1;
+				Data[idx] &= (byte)(0xF << (((index + 1) & 1) * 4));
+				Data[idx] |= (byte)(value << ((index & 1) * 4));
+			}
+		}
+
+		public object Clone()
+		{
+			NibbleArray nibbleArray = (NibbleArray)MemberwiseClone();
+			nibbleArray.Data = (byte[])Data.Clone();
+			return nibbleArray;
+		}
+	}
+}

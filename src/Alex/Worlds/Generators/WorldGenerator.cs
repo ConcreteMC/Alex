@@ -1,14 +1,13 @@
 ﻿using System;
+using Alex.API.Utils;
+using Alex.API.Utils.Noise;
+using Alex.API.Utils.Noise.Filter;
 using Alex.API.World;
 using Alex.Blocks;
+using Alex.Worlds.Generators.Decorators;
 using Microsoft.Xna.Framework;
-using MiNET.Utils;
-using MiNET.Utils.Noise;
-using MiNET.Utils.Noise.Filter;
-using MiNET.Worlds;
-using MiNET.Worlds.Decorators;
 using NLog;
-using Voronoi = MiNET.Utils.Noise.Voronoi;
+using MathF = Alex.API.Utils.MathF;
 
 namespace Alex.Worlds.Generators
 {
@@ -26,7 +25,7 @@ namespace Alex.Worlds.Generators
 
 		public OverworldGenerator()
 		{
-			int seed = Config.GetProperty("seed", "Kenny was here...").GetHashCode();
+			int seed = 0123;
 			Seed = seed;
 
 			BiomeModifierX = new SimplexPerlin(seed + 3700);
@@ -204,10 +203,10 @@ namespace Alex.Worlds.Generators
 
 			for (int x = 0; x < 16; x++)
 			{
-				float rx = MathHelpers.Lerp(minX, maxX, (1f / 15f) * x);
+				float rx = MathHelper.Lerp(minX, maxX, (1f / 15f) * x);
 				for (int z = 0; z < 16; z++)
 				{
-					rb[(x << 4) + z] = GetBiome(rx, MathHelpers.Lerp(minZ, maxZ, (1f / 15f) * z));
+					rb[(x << 4) + z] = GetBiome(rx, MathHelper.Lerp(minZ, maxZ, (1f / 15f) * z));
 				}
 			}
 
@@ -253,11 +252,11 @@ namespace Alex.Worlds.Generators
 			int cz = (chunkZ * 16);
 
 
-			float q11 = MathHelpers.Abs(WaterLevel + (128f * CalculateHeight(biomes, minX, minZ)) * _mainNoise.GetValue(minX, minZ));
-			float q12 = MathHelpers.Abs(WaterLevel + (128f * CalculateHeight(biomes, minX, maxZ)) * _mainNoise.GetValue(minX, maxZ));
+			float q11 = MathF.Abs(WaterLevel + (128f * CalculateHeight(biomes, minX, minZ)) * _mainNoise.GetValue(minX, minZ));
+			float q12 = MathF.Abs(WaterLevel + (128f * CalculateHeight(biomes, minX, maxZ)) * _mainNoise.GetValue(minX, maxZ));
 
-			float q21 = MathHelpers.Abs(WaterLevel + (128f * CalculateHeight(biomes, maxX, minZ)) * _mainNoise.GetValue(maxX, minZ));
-			float q22 = MathHelpers.Abs(WaterLevel + (128f * CalculateHeight(biomes, maxX, maxZ)) * _mainNoise.GetValue(maxX, maxZ));
+			float q21 = MathF.Abs(WaterLevel + (128f * CalculateHeight(biomes, maxX, minZ)) * _mainNoise.GetValue(maxX, minZ));
+			float q22 = MathF.Abs(WaterLevel + (128f * CalculateHeight(biomes, maxX, maxZ)) * _mainNoise.GetValue(maxX, maxZ));
 
 			float[] heightMap = new float[16 * 16];
 
@@ -337,7 +336,7 @@ namespace Alex.Worlds.Generators
 						bool isSurface = false;
 						if (y <= height)
 						{
-							if (y < ChunkColumn.ChunkHeight && chunk.GetBlock(x, y, z).BlockId == 1 && chunk.GetBlock(x, y + 1, z).BlockId == 0)
+							if (y < ChunkColumn.ChunkHeight && chunk.GetBlock(x, y, z).Name == "minecraft:stone" && chunk.GetBlock(x, y + 1, z).IsReplacible)
 							{
 								isSurface = true;
 							}

@@ -2,14 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Blocks.State;
+using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Entities;
 using Alex.Utils;
 using fNbt;
 using fNbt.Tags;
 using Microsoft.Xna.Framework;
-using MiNET.Utils;
-using MiNET.Worlds;
+using MathF = System.MathF;
+
 
 namespace Alex.Worlds.Generators
 {
@@ -74,7 +75,7 @@ namespace Alex.Worlds.Generators
 
 			    if (p_177461_0_ <= GRID_WIDTH && p_177461_1_ <= GRID_HEIGHT)
 			    {
-				    int i = (int) MathHelpers.Abs(p_177461_0_ * GRID_WIDTH + p_177461_1_);
+				    int i = (int) Math.Abs(p_177461_0_ * GRID_WIDTH + p_177461_1_);
 
 				    if (i < ALL_VALID_STATES.Count)
 				    {
@@ -103,8 +104,8 @@ namespace Alex.Worlds.Generators
 			    ALL_VALID_STATES.Add(state.Value);
 			}
 
-		    GRID_WIDTH = (int)MathHelpers.Ceiling(MathHelpers.Sqrt((float)ALL_VALID_STATES.Count));
-		    GRID_HEIGHT = (int)MathHelpers.Ceiling((float)ALL_VALID_STATES.Count / (float)GRID_WIDTH);
+		    GRID_WIDTH = (int)MathF.Ceiling(MathF.Sqrt(ALL_VALID_STATES.Count));
+		    GRID_HEIGHT = (int)MathF.Ceiling((float)ALL_VALID_STATES.Count / GRID_WIDTH);
 		}
     }
 }

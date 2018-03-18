@@ -5,21 +5,36 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks;
 using Alex.Blocks.State;
 using Alex.Blocks.Storage;
+using Alex.Utils;
 using Alex.Worlds.Generators;
+using AutoMapper;
 using fNbt;
 using fNbt.Tags;
 using Microsoft.Xna.Framework;
-using MiNET.BlockEntities;
-using MiNET.Utils;
-using MiNET.Worlds;
 using NLog;
 
 namespace Alex.Worlds
 {
+	public class Mapper : Tuple<int, Func<int, byte, byte>>
+	{
+		public Mapper(int blockId, Func<int, byte, byte> dataMapper)
+			: base(blockId, dataMapper)
+		{
+		}
+	}
+
+	public class NoDataMapper : Mapper
+	{
+		public NoDataMapper(int blockId) : base(blockId, (bi, i1) => i1)
+		{
+		}
+	}
+
 	public class AnvilWorldProvider : IWorldGenerator
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(AnvilWorldProvider));
@@ -27,12 +42,9 @@ namespace Alex.Worlds
 		public static readonly Dictionary<int, Tuple<int, Func<int, byte, byte>>> Convert;
 
 		public IWorldGenerator MissingChunkProvider { get; set; }
-
 		public LevelInfo LevelInfo { get; private set; }
 
 		public string BasePath { get; private set; }
-
-		public Dimension Dimension { get; set; }
 
 		public bool IsCaching { get; private set; } = true;
 
@@ -45,7 +57,6 @@ namespace Alex.Worlds
 		static AnvilWorldProvider()
 		{
 			var air = new Mapper(0, (i, b) => 0);
-
 			Convert = new Dictionary<int, Tuple<int, Func<int, byte, byte>>>
 			{
 				/*{36, new NoDataMapper(250)}, // minecraft:piston_extension		=> MovingBlock
@@ -183,8 +194,6 @@ namespace Alex.Worlds
 			{
 				if (_isInitialized) return;
 
-				BasePath = BasePath ?? Config.GetProperty("PCWorldFolder", "World").Trim();
-
 				NbtFile file = new NbtFile();
 				var levelFileName = Path.Combine(BasePath, "level.dat");
 				if (File.Exists(levelFileName))
@@ -196,19 +205,7 @@ namespace Alex.Worlds
 				else
 				{
 					Log.Warn($"No level.dat found at {levelFileName}. Creating empty.");
-					LevelInfo = new LevelInfo();
-				}
-
-				switch (Dimension)
-				{
-					case Dimension.Overworld:
-						break;
-					case Dimension.Nether:
-						BasePath = Path.Combine(BasePath, @"DIM-1");
-						break;
-					case Dimension.TheEnd:
-						BasePath = Path.Combine(BasePath, @"DIM1");
-						break;
+					
 				}
 
 				_isInitialized = true;
@@ -416,7 +413,7 @@ namespace Alex.Worlds
 			}
 			catch (Exception e)
 			{
-				Log.Error($"Loading chunk {coordinates}", e);
+				Log.Error(e, $"Loading chunk {coordinates}");
 				var chunkColumn = generator?.GenerateChunkColumn(coordinates);
 				if (chunkColumn != null)
 				{
@@ -496,25 +493,9 @@ namespace Alex.Worlds
 			chunk.Chunks[sectionIndex] = section;
 		}
 
-		private static void SetNibble4(byte[] arr, int index, byte value)
-		{
-			value &= 0xF;
-			var idx = index >> 1;
-			arr[idx] &= (byte)(0xF << (((index + 1) & 1) << 2));
-			arr[idx] |= (byte)(value << ((index & 1) << 2));
-		}
-
 		public Vector3 GetSpawnPoint()
 		{
 			var spawnPoint = new Vector3(LevelInfo.SpawnX, LevelInfo.SpawnY + 2 /* + WaterOffsetY*/, LevelInfo.SpawnZ);
-			if (Dimension == Dimension.TheEnd)
-			{
-				spawnPoint = new Vector3(100, 49, 0);
-			}
-			else if (Dimension == Dimension.Nether)
-			{
-				spawnPoint = new Vector3(0, 80, 0);
-			}
 
 			if (spawnPoint.Y > 256) spawnPoint.Y = 255;
 
@@ -531,20 +512,6 @@ namespace Alex.Worlds
 			return LevelInfo.LevelName;
 		}
 
-		public void SaveLevelInfo(LevelInfo level)
-		{
-			if (!Directory.Exists(BasePath))
-				Directory.CreateDirectory(BasePath);
-			else
-				return;
-
-			if (LevelInfo.SpawnY <= 0) LevelInfo.SpawnY = 256;
-
-			NbtFile file = new NbtFile();
-			NbtTag dataTag = file.RootTag["Data"] = new NbtCompound("Data");
-			level.SaveToNbt(dataTag);
-			file.SaveToFile(Path.Combine(BasePath, "level.dat"), NbtCompression.ZLib);
-		}
 		public bool HaveNether()
 		{
 			return Directory.Exists(Path.Combine(BasePath, @"DIM-1"));
@@ -553,191 +520,6 @@ namespace Alex.Worlds
 		public bool HaveTheEnd()
 		{
 			return Directory.Exists(Path.Combine(BasePath, @"DIM1"));
-		}
-
-		public static void SaveChunk(MiNET.Worlds.ChunkColumn chunk, string basePath)
-		{
-			// WARNING: This method does not consider growing size of the chunks. Needs refactoring to find
-			// free sectors and clear up old ones. It works fine as long as no dynamic data is written
-			// like block entity data (signs etc).
-
-			Stopwatch time = new Stopwatch();
-			time.Restart();
-
-			chunk.NeedSave = false;
-
-			var coordinates = new ChunkCoordinates(chunk.x, chunk.z);
-
-			int width = 32;
-			int depth = 32;
-
-			int rx = coordinates.X >> 5;
-			int rz = coordinates.Z >> 5;
-
-			string filePath = Path.Combine(basePath, string.Format(@"region{2}r.{0}.{1}.mca", rx, rz, Path.DirectorySeparatorChar));
-
-			Log.Debug($"Save chunk X={chunk.x}, Z={chunk.z} to {filePath}");
-
-			if (!File.Exists(filePath))
-			{
-				// Make sure directory exist
-				Directory.CreateDirectory(Path.Combine(basePath, "region"));
-
-				// Create empty region file
-				using (var regionFile = File.Open(filePath, FileMode.CreateNew))
-				{
-					byte[] buffer = new byte[8192];
-					regionFile.Write(buffer, 0, buffer.Length);
-				}
-			}
-
-			Stopwatch testTime = new Stopwatch();
-
-			using (var regionFile = File.Open(filePath, FileMode.Open))
-			{
-				int locationIndex = ((coordinates.X & (width - 1)) + (coordinates.Z & (depth - 1)) * width) << 2;
-				regionFile.Seek(locationIndex, SeekOrigin.Begin);
-
-				byte[] offsetBuffer = new byte[4];
-				regionFile.Read(offsetBuffer, 0, 3);
-				Array.Reverse(offsetBuffer);
-				int offset = BitConverter.ToInt32(offsetBuffer, 0) << 4;
-
-				int sectorCount = regionFile.ReadByte();
-
-				testTime.Restart(); // RESTART
-
-				// Seriaize NBT to get lenght
-				NbtFile nbt = CreateNbtFromChunkColumn(chunk);
-
-				testTime.Stop();
-
-				byte[] nbtBuf = nbt.SaveToBuffer(NbtCompression.ZLib);
-				int nbtLength = nbtBuf.Length;
-				byte nbtSectorCount = (byte)Math.Ceiling(nbtLength / 4096d);
-
-				// Don't write yet, just use the lenght
-
-				//TODO: Search for available sectors
-				if (offset == 0 || sectorCount == 0 || nbtSectorCount > sectorCount)
-				{
-					if (Log.IsDebugEnabled) if (sectorCount != 0) Log.Warn($"Creating new sectors for this chunk even tho it existed. Old sector count={sectorCount}, new sector count={nbtSectorCount} (lenght={nbtLength})");
-
-					regionFile.Seek(0, SeekOrigin.End);
-					offset = (int)((int)regionFile.Position & 0xfffffff0);
-
-					regionFile.Seek(locationIndex, SeekOrigin.Begin);
-
-					byte[] bytes = BitConverter.GetBytes(offset >> 4);
-					Array.Reverse(bytes);
-					regionFile.Write(bytes, 0, 3);
-					regionFile.WriteByte(nbtSectorCount);
-
-					regionFile.Seek(4096 + locationIndex, SeekOrigin.Begin);
-					bytes = BitConverter.GetBytes((int)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds);
-					Array.Reverse(bytes);
-					regionFile.Write(bytes, 0, bytes.Length);
-				}
-
-				byte[] lenghtBytes = BitConverter.GetBytes(nbtLength + 1);
-				Array.Reverse(lenghtBytes);
-
-				regionFile.Seek(offset, SeekOrigin.Begin);
-				regionFile.Write(lenghtBytes, 0, 4); // Lenght
-				regionFile.WriteByte(0x02); // Compression mode
-
-				regionFile.Write(nbtBuf, 0, nbtBuf.Length);
-
-				int reminder;
-				Math.DivRem(nbtLength + 4, 4096, out reminder);
-
-				byte[] padding = new byte[4096 - reminder];
-				if (padding.Length > 0) regionFile.Write(padding, 0, padding.Length);
-
-				testTime.Stop(); // STOP
-
-				Log.Warn($"Took {time.ElapsedMilliseconds}ms to save. And {testTime.ElapsedMilliseconds}ms to generate bytes from NBT");
-			}
-		}
-
-		public static NbtFile CreateNbtFromChunkColumn(MiNET.Worlds.ChunkColumn chunk)
-		{
-			var nbt = new NbtFile();
-
-			NbtCompound levelTag = new NbtCompound("Level");
-			nbt.RootTag.Add(levelTag);
-
-			levelTag.Add(new NbtByte("MCPE BID", 1)); // Indicate that the chunks contain PE block ID's.
-
-			levelTag.Add(new NbtInt("xPos", chunk.x));
-			levelTag.Add(new NbtInt("zPos", chunk.z));
-			levelTag.Add(new NbtByteArray("Biomes", chunk.biomeId));
-
-			NbtList sectionsTag = new NbtList("Sections", NbtTagType.Compound);
-			levelTag.Add(sectionsTag);
-
-			for (int i = 0; i < 16; i++)
-			{
-				var section = chunk.chunks[i];
-				if (section.IsAllAir()) continue;
-
-				NbtCompound sectionTag = new NbtCompound();
-				sectionsTag.Add(sectionTag);
-				sectionTag.Add(new NbtByte("Y", (byte)i));
-
-				byte[] blocks = new byte[4096];
-				byte[] data = new byte[2048];
-				byte[] blockLight = new byte[2048];
-				byte[] skyLight = new byte[2048];
-
-				{
-					for (int x = 0; x < 16; x++)
-					{
-						for (int z = 0; z < 16; z++)
-						{
-							for (int y = 0; y < 16; y++)
-							{
-								int anvilIndex = y * 16 * 16 + z * 16 + x;
-								byte blockId = section.GetBlock(x, y, z);
-								blocks[anvilIndex] = blockId;
-								SetNibble4(data, anvilIndex, section.GetMetadata(x, y, z));
-								SetNibble4(blockLight, anvilIndex, section.GetBlocklight(x, y, z));
-								SetNibble4(skyLight, anvilIndex, section.GetSkylight(x, y, z));
-							}
-						}
-					}
-				}
-				sectionTag.Add(new NbtByteArray("Blocks", blocks));
-				sectionTag.Add(new NbtByteArray("Data", data));
-				sectionTag.Add(new NbtByteArray("BlockLight", blockLight));
-				sectionTag.Add(new NbtByteArray("SkyLight", skyLight));
-			}
-
-			int[] heights = new int[256];
-			for (int h = 0; h < heights.Length; h++)
-			{
-				heights[h] = chunk.height[h];
-			}
-			levelTag.Add(new NbtIntArray("HeightMap", heights));
-
-			// TODO: Save entities
-			NbtList entitiesTag = new NbtList("Entities", NbtTagType.Compound);
-			//foreach(var entity in )
-			levelTag.Add(entitiesTag);
-
-			NbtList blockEntitiesTag = new NbtList("TileEntities", NbtTagType.Compound);
-			foreach (NbtCompound blockEntityNbt in chunk.BlockEntities.Values)
-			{
-				NbtCompound nbtClone = (NbtCompound)blockEntityNbt.Clone();
-				nbtClone.Name = null;
-				blockEntitiesTag.Add(nbtClone);
-			}
-
-			levelTag.Add(blockEntitiesTag);
-
-			levelTag.Add(new NbtList("TileTicks", NbtTagType.Compound));
-
-			return nbt;
 		}
 	}
 }

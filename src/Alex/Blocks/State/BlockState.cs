@@ -76,10 +76,10 @@ namespace Alex.Blocks.State {
 			var v = Variants.Find(state =>
 			{
 				if (Equals(state, this)) return false;
-				var s =state;
+
 				foreach (var e in valuesCopied)
 				{
-					if (!s.TryGetValue(e.Key, out object val) || !val.Equals(e.Value))
+					if (!state.TryGetValue(e.Key, out object val) || !val.Equals(e.Value))
 					{
 						return false;
 					}
@@ -103,27 +103,18 @@ namespace Alex.Blocks.State {
 				return result;
 			}
 
-
-			if (!_values.TryAdd(property, value))
+			var cloned = (BlockState)Clone();
+			
+			if (!cloned._values.TryAdd(property, value))
 			{
-				_values[property] = value;
+				cloned._values[property] = value;
 			}
-			return this;
+			return cloned;
 		}
 
 		public IBlockState WithProperty<T>(IStateProperty<T> property, T value)
 		{
-			///return WithProperty((IStateProperty)property, value);
-			if (_values.ContainsKey(property))
-			{
-				_values[property] = value;
-			}
-			else
-			{
-				_values.TryAdd(property, value);
-			}
-
-			return this;
+			return WithProperty((IStateProperty)property, value);
 		}
 
 		public IBlockState WithProperty(IStateProperty property, string value)
@@ -297,6 +288,9 @@ namespace Alex.Blocks.State {
 			bs.Name = Name;
 			bs.ID = ID;
 			bs._values = new Dictionary<IStateProperty, object>(_values, new EqualityCompare());
+			bs.Block = Block;
+			bs.Variants.AddRange(Variants);
+			bs.Default = Default;
 			return bs;
 		}
 

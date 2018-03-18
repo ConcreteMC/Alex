@@ -131,6 +131,44 @@ namespace Alex {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to [
+        ///	{
+        ///		&quot;id&quot;: 1,
+        ///		&quot;internalId&quot;: 1,
+        ///		&quot;name&quot;: &quot;item&quot;,
+        ///		&quot;displayName&quot;: &quot;Dropped item&quot;,
+        ///		&quot;type&quot;: &quot;mob&quot;,
+        ///		&quot;width&quot;: 0.25,
+        ///		&quot;height&quot;: 0.25,
+        ///		&quot;category&quot;: &quot;Drops&quot;
+        ///	},
+        ///	{
+        ///		&quot;id&quot;: 2,
+        ///		&quot;internalId&quot;: 2,
+        ///		&quot;name&quot;: &quot;xp_orb&quot;,
+        ///		&quot;displayName&quot;: &quot;Experience orb&quot;,
+        ///		&quot;type&quot;: &quot;mob&quot;,
+        ///		&quot;width&quot;: 0.5,
+        ///		&quot;height&quot;: 0.5,
+        ///		&quot;category&quot;: &quot;Drops&quot;
+        ///	},
+        ///	{
+        ///		&quot;id&quot;: 3,
+        ///		&quot;internalId&quot;: 3,
+        ///		&quot;name&quot;: &quot;area_effect_cloud&quot;,
+        ///		&quot;displayName&quot;: &quot;Area effect cloud&quot;,
+        ///		&quot;type&quot;: &quot;mob&quot;,
+        ///		&quot;width&quot;: 0.0,
+        ///		&quot;height&quot;: 0.5,
+        ///		&quot; [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string Entities {
+            get {
+                return ResourceManager.GetString("Entities", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
         internal static byte[] grass {

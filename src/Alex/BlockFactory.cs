@@ -3,8 +3,10 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using Alex.API.Blocks.Properties;
 using Alex.API.Blocks.State;
 using Alex.Blocks;
@@ -14,11 +16,10 @@ using Alex.Graphics.Models;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.BlockStates;
-using MiNET.Worlds;
+using Alex.Worlds;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
-using BlockFace = MiNET.BlockFace;
 using BlockState = Alex.ResourcePackLib.Json.BlockStates.BlockState;
 
 namespace Alex
@@ -37,28 +38,28 @@ namespace Alex
 		private static readonly Dictionary<string, BlockMeta> CachedBlockMeta = new Dictionary<string, BlockMeta>();
 
 		private static ResourcePackLib.Json.Models.Blocks.BlockModel CubeModel { get; set; }
-		private static readonly LiquidBlockModel StationairyWaterModel = new LiquidBlockModel()
+		public static readonly LiquidBlockModel StationairyWaterModel = new LiquidBlockModel()
 		{
 			IsFlowing = false,
 			IsLava = false,
 			Level = 8
 		};
 
-		private static readonly LiquidBlockModel FlowingWaterModel = new LiquidBlockModel()
+		public static readonly LiquidBlockModel FlowingWaterModel = new LiquidBlockModel()
 		{
 			IsFlowing = true,
 			IsLava = false,
 			Level = 8
 		};
 
-		private static readonly LiquidBlockModel StationairyLavaModel = new LiquidBlockModel()
+		public static readonly LiquidBlockModel StationairyLavaModel = new LiquidBlockModel()
 		{
 			IsFlowing = false,
 			IsLava = true,
 			Level = 8
 		};
 
-		private static readonly LiquidBlockModel FlowingLavaModel = new LiquidBlockModel()
+		public static readonly LiquidBlockModel FlowingLavaModel = new LiquidBlockModel()
 		{
 			IsFlowing = true,
 			IsLava = true,
@@ -67,7 +68,6 @@ namespace Alex
 
 		internal static void Init()
 		{
-			return;
 			JArray blockArray = JArray.Parse(Encoding.UTF8.GetString(Resources.blocks));
 			Dictionary<string, JObject> blockMetaDictionary =
 				JsonConvert.DeserializeObject<Dictionary<string, JObject>>(
@@ -106,7 +106,8 @@ namespace Alex
 					ID = id,
 					Transparent = transparent,
 					DisplayName = displayName,
-					Name = name
+					Name = name,
+					Solid = true
 				};
 
 				JObject found = blockMetaDictionary
@@ -121,26 +122,8 @@ namespace Alex
 					meta.IsSideSolid = found["isSideSolid"].ToObject<Dictionary<string, bool>>();
 					meta.IsFullCube = found["isFullCube"].Value<bool>();
 				}
-
-				// MiNET.Blocks.Block minetBlock = MiNET.Blocks.BlockFactory.GetBlockByName(name);
-
-				//  if (minetBlock == null)
-				// {
-				//   minetBlock = MiNET.Blocks.BlockFactory.GetBlockById(id); 
-				//  }
-
-				/* if (minetBlock != null)
-				 {
-					 meta.Solid = minetBlock.IsSolid;
-					 meta.FrictionFactor = minetBlock.FrictionFactor;
-					 meta.Replacible = minetBlock.IsReplacible;
-					 if (minetBlock.IsTransparent && !meta.Transparent)
-					 {
-						 meta.Transparent = true;
-					 }
-				 }*/
-
-				CachedBlockMeta.TryAdd($"{name}", meta);
+				CachedBlockMeta.TryAdd($"minecraft:{displayName.Replace(" ", "_").ToLowerInvariant()}", meta);
+				CachedBlockMeta.TryAdd($"minecraft:{name}", meta);
 			}
 		}
 
@@ -208,9 +191,12 @@ namespace Alex
 			return LoadModels(resources, resourcePack, replace, reportMissing);
 		}
 
+		internal static bool GenerateClasses { get; set; } = false;
 		private static int LoadModels(ResourceManager resources, McResourcePack resourcePack, bool replace,
 			bool reportMissing)
 		{
+			StringBuilder factoryBuilder = new StringBuilder();
+
 			TableEntry[] tablesEntries = TableEntry.FromJson(Resources.runtimeid_table);
 			var data = BlockData.FromJson(Resources.NewBlocks);
 			int importCounter = 0;
@@ -260,38 +246,51 @@ namespace Alex
 
 					if (Load(blockStateData, () =>
 					{
-						var block = new Block(id);
-						BlockMeta knownMeta = null;
-						//if (!CachedBlockMeta.TryGetValue(entry.Key, out knownMeta))
+						string displayName = entry.Key;
+						var block = GetBlockByName(entry.Key);
+						if (block == null)
 						{
-							if (knownMeta == null)
+							block = new Block(s.ID);
+							displayName = $"(Not implemented) {displayName}";
+
+							bool foundMeta = false;
+							BlockMeta knownMeta = null;
+							if (CachedBlockMeta.TryGetValue(entry.Key, out knownMeta))
 							{
-								knownMeta = new BlockMeta
-								{
-									Transparent = false,
-									DisplayName = entry.Key,
-									Solid = true
-								};
+								foundMeta = true;
+								block.Transparent = knownMeta.Transparent;
+								block.LightValue = knownMeta.LightValue;
+								block.AmbientOcclusionLightValue = knownMeta.AmbientOcclusionLightValue;
+								block.LightOpacity = knownMeta.LightOpacity;
+								block.IsBlockNormalCube = knownMeta.IsBlockNormalCube;
+								block.IsFullCube = knownMeta.IsFullCube;
+								block.IsFullBlock = knownMeta.IsFullBlock;
+								block.Solid = knownMeta.Solid;
+								block.Drag = knownMeta.FrictionFactor;
+								block.IsReplacible = knownMeta.Replacible;
 							}
-							else
+
+							block.Name = entry.Key;
+
+							if (s.Default && GenerateClasses)
 							{
-								//   blockId = knownMeta.ID;
+								string className = ToPascalCase(block.Name.Substring(10));
+
+								factoryBuilder.AppendLine($"\t\t\telse if (blockName == \"{entry.Key.ToLowerInvariant()}\" || blockName == \"{className.ToLowerInvariant()}\") return new {className}();");
+
+								SaveBlock(block, className, foundMeta);
+								Log.Info($"Saved un-implemnted block to file ({displayName})!");
 							}
 						}
 
-						block.BlockModel = cached;
-						block.Transparent = knownMeta.Transparent;
-						block.DisplayName = knownMeta.DisplayName;
-						block.LightValue = knownMeta.LightValue;
-						block.AmbientOcclusionLightValue = knownMeta.AmbientOcclusionLightValue;
-						block.LightOpacity = knownMeta.LightOpacity;
-						block.IsBlockNormalCube = knownMeta.IsBlockNormalCube;
-						block.IsFullCube = knownMeta.IsFullCube;
-						block.IsFullBlock = knownMeta.IsFullBlock;
+						block.Name = entry.Key;
+						//if (block.BlockModel == null)
+						{
+							block.BlockModel = cached;
+						}
+
 						block.BlockState = blockStateData;
-						block.Solid = knownMeta.Solid;
-						block.Drag = knownMeta.FrictionFactor;
-						block.IsReplacible = knownMeta.Replacible;
+						block.DisplayName = displayName;
 
 						blockStateData.Block = block;
 						blockStateData.Default = state;
@@ -300,11 +299,15 @@ namespace Alex
 						{
 							state.Block = block;
 							state.Default = blockStateData;
+							state.ID = id;
 						}
 
 						state.Variants.Add(blockStateData);
 
-						RegisteredBlockStates.TryAdd(id, blockStateData);
+						if (!RegisteredBlockStates.TryAdd(id, blockStateData))
+						{
+							Log.Warn($"Failed to add blockstate (variant), key already exists! ({blockStateData.Name})");
+						}
 
 						return block;
 					}, replace))
@@ -321,7 +324,86 @@ namespace Alex
 				}
 			}
 
+			if (GenerateClasses)
+			{
+				File.WriteAllBytes("generated\\blockFactoryChanges.txt", Encoding.UTF8.GetBytes(factoryBuilder.ToString()));
+			}
+
 			return importCounter;
+		}
+
+		private static void SaveBlock(Block block, string className, bool hasMeta)
+		{
+			StringBuilder builder = new StringBuilder();
+			builder.AppendLine("using Alex.Utils;");
+			builder.AppendLine("using Alex.Worlds;");
+			builder.AppendLine();
+			builder.AppendLine("namespace Alex.Blocks");
+			builder.AppendLine("{");
+
+			builder.AppendLine($"\tpublic class {className} : Block");
+			builder.AppendLine("\t{");
+			builder.AppendLine($"\t\tpublic {className}() : base({block.BlockStateID.ToString()})");
+			builder.AppendLine("\t\t{");
+			builder.AppendLine($"\t\t\tSolid = {block.Solid.ToString().ToLower()};");
+			builder.AppendLine($"\t\t\tTransparent = {block.Transparent.ToString().ToLower()};");
+			builder.AppendLine($"\t\t\tIsReplacible = {block.IsReplacible.ToString().ToLower()};");
+			builder.AppendLine($"\t\t\tIsFullBlock = {block.IsFullBlock.ToString().ToLower()};");
+			builder.AppendLine($"\t\t\tIsFullCube = {block.IsFullCube.ToString().ToLower()};");
+
+			if (block.LightOpacity != 0)
+			{
+				builder.AppendLine($"\t\t\tLightOpacity = {block.LightOpacity};");
+			}
+
+			if (block.Drag > 0)
+			{
+				builder.AppendLine($"\t\t\tDrag = {block.Drag:F}f;");
+			}
+
+			if (block.LightValue > 0)
+			{
+				builder.AppendLine($"\t\t\tLightValue = {block.LightValue};");
+			}
+
+			builder.AppendLine("\t\t}");
+			builder.AppendLine("\t}");
+
+			builder.AppendLine("}");
+
+			if (hasMeta)
+			{
+				File.WriteAllBytes($"generated\\blocks\\withMeta\\{className}.cs", Encoding.UTF8.GetBytes(builder.ToString()));
+			}
+			else
+			{
+				File.WriteAllBytes($"generated\\blocks\\{className}.cs", Encoding.UTF8.GetBytes(builder.ToString()));
+			}
+		}
+
+		public static string ToPascalCase(string original)
+		{
+			Regex invalidCharsRgx = new Regex("[^_a-zA-Z0-9]");
+			Regex whiteSpace = new Regex(@"(?<=\s)");
+			Regex startsWithLowerCaseChar = new Regex("^[a-z]");
+			Regex firstCharFollowedByUpperCasesOnly = new Regex("(?<=[A-Z])[A-Z0-9]+$");
+			Regex lowerCaseNextToNumber = new Regex("(?<=[0-9])[a-z]");
+			Regex upperCaseInside = new Regex("(?<=[A-Z])[A-Z]+?((?=[A-Z][a-z])|(?=[0-9]))");
+
+			// replace white spaces with undescore, then replace all invalid chars with empty string
+			var pascalCase = invalidCharsRgx.Replace(whiteSpace.Replace(original, "_"), string.Empty)
+				// split by underscores
+				.Split(new char[] { '_' }, StringSplitOptions.RemoveEmptyEntries)
+				// set first letter to uppercase
+				.Select(w => startsWithLowerCaseChar.Replace(w, m => m.Value.ToUpper()))
+				// replace second and all following upper case letters to lower if there is no next lower (ABC -> Abc)
+				.Select(w => firstCharFollowedByUpperCasesOnly.Replace(w, m => m.Value.ToLower()))
+				// set upper case the first lower case following a number (Ab9cd -> Ab9Cd)
+				.Select(w => lowerCaseNextToNumber.Replace(w, m => m.Value.ToUpper()))
+				// lower second and next upper case letters except the last if it follows by any lower (ABcDEf -> AbcDef)
+				.Select(w => upperCaseInside.Replace(w, m => m.Value.ToLower()));
+
+			return string.Concat(pascalCase);
 		}
 
 		private static bool Load(IBlockState id, Func<Block> blockFunction, bool replace)
@@ -343,137 +425,6 @@ namespace Alex
 			return RegisteredBlocks.TryAdd(id.ID, blockFunction());
 		}
 
-		//private static string Get
-
-		private static string FixBlockStateNaming(string name, IBlockState data)
-		{
-			string color = null;
-			data.TryGetValue("color", out color);
-
-			string variant = null;
-			data.TryGetValue("variant", out variant);
-
-			string type = null;
-			data.TryGetValue("type", out type);
-			int level = 8;
-			if (data.TryGetValue("level", out string lvl))
-			{
-				if (int.TryParse(lvl, out level))
-				{
-
-				}
-			}
-
-			//string half = null;
-			//data.TryGetValue("half", out half);
-
-			if (name.Contains("wooden_slab") && !string.IsNullOrWhiteSpace(variant))
-			{
-				if (!string.IsNullOrWhiteSpace(variant))
-				{
-					name = $"{variant}_slab";
-				}
-			}
-			else if (name.Contains("leaves") && !string.IsNullOrWhiteSpace(variant))
-			{
-				name = $"{variant}_leaves";
-			}
-			else if (name.Contains("log") && !string.IsNullOrWhiteSpace(variant))
-			{
-				name = $"{variant}_log";
-			}
-			else if (name.StartsWith("red_flower") && !string.IsNullOrWhiteSpace(type))
-			{
-				name = $"{type}";
-			}
-			else if (name.StartsWith("yellow_flower") && !string.IsNullOrWhiteSpace(type))
-			{
-				name = $"{type}";
-			}
-			else if (name.StartsWith("sapling") && !string.IsNullOrWhiteSpace(type))
-			{
-				name = $"{type}_sapling";
-			}
-			else if (name.StartsWith("planks") && !string.IsNullOrWhiteSpace(variant))
-			{
-				name = $"{variant}_planks";
-			}
-			else if (name.StartsWith("double_stone_slab") && !string.IsNullOrWhiteSpace(variant))
-			{
-				name = $"{variant}_double_slab";
-			}
-			else if (name.StartsWith("double_plant") && !string.IsNullOrWhiteSpace(variant))
-			{
-				if (variant.Equals("sunflower", StringComparison.InvariantCultureIgnoreCase))
-				{
-					name = "sunflower";
-				}
-				else if (variant.Equals("paeonia", StringComparison.InvariantCultureIgnoreCase))
-				{
-					name = "paeonia";
-				}
-				else if (variant.Equals("syringa", StringComparison.InvariantCultureIgnoreCase))
-				{
-					name = "syringa";
-				}
-				else
-				{
-					name = $"double_{variant}";
-				}
-			}
-			else if (name.StartsWith("deadbush"))
-			{
-				name = "dead_bush";
-			}
-			else if (name.StartsWith("tallgrass"))
-			{
-				name = "tall_grass";
-			}
-			else if (!string.IsNullOrWhiteSpace(color))
-			{
-				name = $"{color}_{name}";
-			}
-
-			/*if (name.Equals("water", StringComparison.InvariantCultureIgnoreCase))
-			{
-				return manager =>
-				{
-					var w = StationairyWaterModel;
-					w.Level = level;
-					return w;
-				};
-			}
-			else if (name.Equals("flowing_water", StringComparison.InvariantCultureIgnoreCase))
-			{
-				return manager =>
-				{
-					var w = FlowingWaterModel;
-					w.Level = level;
-					return w;
-				};
-			}
-			if (name.Equals("lava", StringComparison.InvariantCultureIgnoreCase))
-			{
-				return manager =>
-				{
-					var w = StationairyLavaModel;
-					w.Level = level;
-					return w;
-				};
-			}
-			else if (name.Equals("flowing_lava", StringComparison.InvariantCultureIgnoreCase))
-			{
-				return manager =>
-				{
-					var w = FlowingLavaModel;
-					w.Level = level;
-					return w;
-				};
-			}*/
-
-			return name;
-		}
-
 		private static Func<ResourceManager, BlockModel> GetModelResolver(McResourcePack resourcePack,
 			IBlockState state)
 		{
@@ -483,6 +434,16 @@ namespace Alex
 			{
 				Log.Warn($"State name is null!");
 				return null;
+			}
+
+			if (name.Contains("water"))
+			{
+				return manager => StationairyWaterModel;
+			}
+
+			if (name.Contains("lava"))
+			{
+				return manager => StationairyLavaModel;
 			}
 
 			BlockState blockState;
@@ -591,6 +552,206 @@ namespace Alex
 
 			return first;
 
+		}
+
+		private static Block GetBlockByName(string blockName)
+		{
+			blockName = blockName.ToLowerInvariant();
+			if (string.IsNullOrWhiteSpace(blockName)) return null;
+			else if (blockName == "minecraft:air" || blockName == "air") return new Air();
+			else if (blockName == "minecraft:stone" || blockName == "stone") return new Stone();
+			else if (blockName == "minecraft:dirt" || blockName == "dirt") return new Dirt();
+			else if (blockName == "minecraft:podzol" || blockName == "podzol") return new Podzol();
+			else if (blockName == "minecraft:cobblestone" || blockName == "cobblestone") return new Cobblestone();
+			else if (blockName == "minecraft:bedrock" || blockName == "bedrock") return new Bedrock();
+			else if (blockName == "minecraft:water" || blockName == "water") return new Water();
+			else if (blockName == "minecraft:lava" || blockName == "lava") return new Lava();
+			else if (blockName == "minecraft:sand" || blockName == "sand") return new Sand();
+			else if (blockName == "minecraft:gravel" || blockName == "gravel") return new Gravel();
+			else if (blockName == "minecraft:gold_ore" || blockName == "goldore") return new GoldOre();
+			else if (blockName == "minecraft:iron_ore" || blockName == "ironore") return new IronOre();
+			else if (blockName == "minecraft:coal_ore" || blockName == "coalore") return new CoalOre();
+			else if (blockName == "minecraft:sponge" || blockName == "sponge") return new Sponge();
+			else if (blockName == "minecraft:glass" || blockName == "glass") return new Glass();
+			else if (blockName == "minecraft:lapis_ore" || blockName == "lapisore") return new LapisOre();
+			else if (blockName == "minecraft:lapis_block" || blockName == "lapisblock") return new LapisBlock();
+			else if (blockName == "minecraft:dispenser" || blockName == "dispenser") return new Dispenser();
+			else if (blockName == "minecraft:sandstone" || blockName == "sandstone") return new Sandstone();
+			else if (blockName == "minecraft:note_block" || blockName == "noteblock") return new NoteBlock();
+			else if (blockName == "minecraft:detector_rail" || blockName == "detectorrail") return new DetectorRail();
+			else if (blockName == "minecraft:sticky_piston" || blockName == "stickypiston") return new StickyPiston();
+			else if (blockName == "minecraft:grass" || blockName == "grass") return new Grass();
+			else if (blockName == "minecraft:dead_bush" || blockName == "deadbush") return new DeadBush();
+			else if (blockName == "minecraft:piston" || blockName == "piston") return new Piston();
+			else if (blockName == "minecraft:piston_head" || blockName == "pistonhead") return new PistonHead();
+			else if (blockName == "minecraft:brown_mushroom" || blockName == "brownmushroom") return new BrownMushroom();
+			else if (blockName == "minecraft:red_mushroom" || blockName == "redmushroom") return new RedMushroom();
+			else if (blockName == "minecraft:gold_block" || blockName == "goldblock") return new GoldBlock();
+			else if (blockName == "minecraft:iron_block" || blockName == "ironblock") return new IronBlock();
+			else if (blockName == "minecraft:tnt" || blockName == "tnt") return new Tnt();
+			else if (blockName == "minecraft:bookshelf" || blockName == "bookshelf") return new Bookshelf();
+			else if (blockName == "minecraft:mossy_cobblestone" || blockName == "mossycobblestone") return new MossyCobblestone();
+			else if (blockName == "minecraft:obsidian" || blockName == "obsidian") return new Obsidian();
+			else if (blockName == "minecraft:torch" || blockName == "torch") return new Torch();
+			else if (blockName == "minecraft:fire" || blockName == "fire") return new Fire();
+			else if (blockName == "minecraft:mob_spawner" || blockName == "mobspawner") return new MobSpawner();
+			else if (blockName == "minecraft:oak_stairs" || blockName == "oakstairs") return new OakStairs();
+			else if (blockName == "minecraft:chest" || blockName == "chest") return new Chest();
+			else if (blockName == "minecraft:redstone_wire" || blockName == "redstonewire") return new RedstoneWire();
+			else if (blockName == "minecraft:diamond_ore" || blockName == "diamondore") return new DiamondOre();
+			else if (blockName == "minecraft:diamond_block" || blockName == "diamondblock") return new DiamondBlock();
+			else if (blockName == "minecraft:crafting_table" || blockName == "craftingtable") return new CraftingTable();
+			else if (blockName == "minecraft:wheat" || blockName == "wheat") return new Wheat();
+			else if (blockName == "minecraft:farmland" || blockName == "farmland") return new Farmland();
+			else if (blockName == "minecraft:furnace" || blockName == "furnace") return new Furnace();
+			else if (blockName == "minecraft:ladder" || blockName == "ladder") return new Ladder();
+			else if (blockName == "minecraft:rail" || blockName == "rail") return new Rail();
+			else if (blockName == "minecraft:wall_sign" || blockName == "wallsign") return new WallSign();
+			else if (blockName == "minecraft:lever" || blockName == "lever") return new Lever();
+			else if (blockName == "minecraft:stone_pressure_plate" || blockName == "stonepressureplate") return new StonePressurePlate();
+			else if (blockName == "minecraft:iron_door" || blockName == "irondoor") return new IronDoor();
+			else if (blockName == "minecraft:redstone_ore" || blockName == "redstoneore") return new RedstoneOre();
+			else if (blockName == "minecraft:redstone_torch" || blockName == "redstonetorch") return new RedstoneTorch();
+			else if (blockName == "minecraft:stone_button" || blockName == "stonebutton") return new StoneButton();
+			else if (blockName == "minecraft:snow" || blockName == "snow") return new Snow();
+			else if (blockName == "minecraft:ice" || blockName == "ice") return new Ice();
+			else if (blockName == "minecraft:cactus" || blockName == "cactus") return new Cactus();
+			else if (blockName == "minecraft:clay" || blockName == "clay") return new Clay();
+			else if (blockName == "minecraft:pumpkin" || blockName == "pumpkin") return new Pumpkin();
+			else if (blockName == "minecraft:netherrack" || blockName == "netherrack") return new Netherrack();
+			else if (blockName == "minecraft:soul_sand" || blockName == "soulsand") return new SoulSand();
+			else if (blockName == "minecraft:glowstone" || blockName == "glowstone") return new Glowstone();
+			else if (blockName == "minecraft:portal" || blockName == "portal") return new Portal();
+			else if (blockName == "minecraft:cake" || blockName == "cake") return new Cake();
+			else if (blockName == "minecraft:brown_mushroom_block" || blockName == "brownmushroomblock") return new BrownMushroomBlock();
+			else if (blockName == "minecraft:red_mushroom_block" || blockName == "redmushroomblock") return new RedMushroomBlock();
+			else if (blockName == "minecraft:iron_bars" || blockName == "ironbars") return new IronBars();
+			else if (blockName == "minecraft:glass_pane" || blockName == "glasspane") return new GlassPane();
+			else if (blockName == "minecraft:melon_block" || blockName == "melonblock") return new MelonBlock();
+			else if (blockName == "minecraft:pumpkin_stem" || blockName == "pumpkinstem") return new PumpkinStem();
+			else if (blockName == "minecraft:melon_stem" || blockName == "melonstem") return new MelonStem();
+			else if (blockName == "minecraft:vine" || blockName == "vine") return new Vine();
+			else if (blockName == "minecraft:brick_stairs" || blockName == "brickstairs") return new BrickStairs();
+			else if (blockName == "minecraft:stone_brick_stairs" || blockName == "stonebrickstairs") return new StoneBrickStairs();
+			else if (blockName == "minecraft:mycelium" || blockName == "mycelium") return new Mycelium();
+			else if (blockName == "minecraft:nether_brick_fence" || blockName == "netherbrickfence") return new NetherBrickFence();
+			else if (blockName == "minecraft:nether_brick_stairs" || blockName == "netherbrickstairs") return new NetherBrickStairs();
+			else if (blockName == "minecraft:nether_wart" || blockName == "netherwart") return new NetherWart();
+			else if (blockName == "minecraft:enchanting_table" || blockName == "enchantingtable") return new EnchantingTable();
+			else if (blockName == "minecraft:brewing_stand" || blockName == "brewingstand") return new BrewingStand();
+			else if (blockName == "minecraft:cauldron" || blockName == "cauldron") return new Cauldron();
+			else if (blockName == "minecraft:end_portal" || blockName == "endportal") return new EndPortal();
+			else if (blockName == "minecraft:end_portal_frame" || blockName == "endportalframe") return new EndPortalFrame();
+			else if (blockName == "minecraft:end_stone" || blockName == "endstone") return new EndStone();
+			else if (blockName == "minecraft:dragon_egg" || blockName == "dragonegg") return new DragonEgg();
+			else if (blockName == "minecraft:redstone_lamp" || blockName == "redstonelamp") return new RedstoneLamp();
+			else if (blockName == "minecraft:cocoa" || blockName == "cocoa") return new Cocoa();
+			else if (blockName == "minecraft:sandstone_stairs" || blockName == "sandstonestairs") return new SandstoneStairs();
+			else if (blockName == "minecraft:emerald_ore" || blockName == "emeraldore") return new EmeraldOre();
+			else if (blockName == "minecraft:ender_chest" || blockName == "enderchest") return new EnderChest();
+			else if (blockName == "minecraft:tripwire_hook" || blockName == "tripwirehook") return new TripwireHook();
+			else if (blockName == "minecraft:tripwire" || blockName == "tripwire") return new Tripwire();
+			else if (blockName == "minecraft:emerald_block" || blockName == "emeraldblock") return new EmeraldBlock();
+			else if (blockName == "minecraft:spruce_stairs" || blockName == "sprucestairs") return new SpruceStairs();
+			else if (blockName == "minecraft:birch_stairs" || blockName == "birchstairs") return new BirchStairs();
+			else if (blockName == "minecraft:jungle_stairs" || blockName == "junglestairs") return new JungleStairs();
+			else if (blockName == "minecraft:beacon" || blockName == "beacon") return new Beacon();
+			else if (blockName == "minecraft:cobblestone_wall" || blockName == "cobblestonewall") return new CobblestoneWall();
+			else if (blockName == "minecraft:flower_pot" || blockName == "flowerpot") return new FlowerPot();
+			else if (blockName == "minecraft:carrots" || blockName == "carrots") return new Carrots();
+			else if (blockName == "minecraft:potatoes" || blockName == "potatoes") return new Potatoes();
+			else if (blockName == "minecraft:anvil" || blockName == "anvil") return new Anvil();
+			else if (blockName == "minecraft:trapped_chest" || blockName == "trappedchest") return new TrappedChest();
+			else if (blockName == "minecraft:light_weighted_pressure_plate" || blockName == "lightweightedpressureplate") return new LightWeightedPressurePlate();
+			else if (blockName == "minecraft:heavy_weighted_pressure_plate" || blockName == "heavyweightedpressureplate") return new HeavyWeightedPressurePlate();
+			else if (blockName == "minecraft:daylight_detector" || blockName == "daylightdetector") return new DaylightDetector();
+			else if (blockName == "minecraft:redstone_block" || blockName == "redstoneblock") return new RedstoneBlock();
+			else if (blockName == "minecraft:hopper" || blockName == "hopper") return new Hopper();
+			else if (blockName == "minecraft:quartz_block" || blockName == "quartzblock") return new QuartzBlock();
+			else if (blockName == "minecraft:quartz_stairs" || blockName == "quartzstairs") return new QuartzStairs();
+			else if (blockName == "minecraft:activator_rail" || blockName == "activatorrail") return new ActivatorRail();
+			else if (blockName == "minecraft:dropper" || blockName == "dropper") return new Dropper();
+			else if (blockName == "minecraft:acacia_stairs" || blockName == "acaciastairs") return new AcaciaStairs();
+			else if (blockName == "minecraft:dark_oak_stairs" || blockName == "darkoakstairs") return new DarkOakStairs();
+			else if (blockName == "minecraft:iron_trapdoor" || blockName == "irontrapdoor") return new IronTrapdoor();
+			else if (blockName == "minecraft:prismarine" || blockName == "prismarine") return new Prismarine();
+			else if (blockName == "minecraft:sea_lantern" || blockName == "sealantern") return new SeaLantern();
+			else if (blockName == "minecraft:hay_block" || blockName == "hayblock") return new HayBlock();
+			else if (blockName == "minecraft:coal_block" || blockName == "coalblock") return new CoalBlock();
+			else if (blockName == "minecraft:packed_ice" || blockName == "packedice") return new PackedIce();
+			else if (blockName == "minecraft:tall_grass" || blockName == "tallgrass") return new TallGrass();
+			else if (blockName == "minecraft:red_sandstone" || blockName == "redsandstone") return new RedSandstone();
+			else if (blockName == "minecraft:red_sandstone_stairs" || blockName == "redsandstonestairs") return new RedSandstoneStairs();
+			else if (blockName == "minecraft:stone_slab" || blockName == "stoneslab") return new StoneSlab();
+			else if (blockName == "minecraft:spruce_fence_gate" || blockName == "sprucefencegate") return new SpruceFenceGate();
+			else if (blockName == "minecraft:birch_fence_gate" || blockName == "birchfencegate") return new BirchFenceGate();
+			else if (blockName == "minecraft:jungle_fence_gate" || blockName == "junglefencegate") return new JungleFenceGate();
+			else if (blockName == "minecraft:acacia_fence_gate" || blockName == "acaciafencegate") return new AcaciaFenceGate();
+			else if (blockName == "minecraft:dark_oak_fence_gate" || blockName == "darkoakfencegate") return new DarkOakFenceGate();
+			else if (blockName == "minecraft:spruce_door" || blockName == "sprucedoor") return new SpruceDoor();
+			else if (blockName == "minecraft:birch_door" || blockName == "birchdoor") return new BirchDoor();
+			else if (blockName == "minecraft:jungle_door" || blockName == "jungledoor") return new JungleDoor();
+			else if (blockName == "minecraft:acacia_door" || blockName == "acaciadoor") return new AcaciaDoor();
+			else if (blockName == "minecraft:dark_oak_door" || blockName == "darkoakdoor") return new DarkOakDoor();
+			else if (blockName == "minecraft:end_rod" || blockName == "endrod") return new EndRod();
+			else if (blockName == "minecraft:chorus_plant" || blockName == "chorusplant") return new ChorusPlant();
+			else if (blockName == "minecraft:chorus_flower" || blockName == "chorusflower") return new ChorusFlower();
+			else if (blockName == "minecraft:purpur_block" || blockName == "purpurblock") return new PurpurBlock();
+			else if (blockName == "minecraft:purpur_stairs" || blockName == "purpurstairs") return new PurpurStairs();
+			else if (blockName == "minecraft:grass_path" || blockName == "grasspath") return new GrassPath();
+			else if (blockName == "minecraft:end_gateway" || blockName == "endgateway") return new EndGateway();
+			else if (blockName == "minecraft:frosted_ice" || blockName == "frostedice") return new FrostedIce();
+			else if (blockName == "minecraft:observer" || blockName == "observer") return new Observer();
+			else if (blockName == "minecraft:white_glazed_terracotta" || blockName == "whiteglazedterracotta") return new WhiteGlazedTerracotta();
+			else if (blockName == "minecraft:orange_glazed_terracotta" || blockName == "orangeglazedterracotta") return new OrangeGlazedTerracotta();
+			else if (blockName == "minecraft:magenta_glazed_terracotta" || blockName == "magentaglazedterracotta") return new MagentaGlazedTerracotta();
+			else if (blockName == "minecraft:light_blue_glazed_terracotta" || blockName == "lightblueglazedterracotta") return new LightBlueGlazedTerracotta();
+			else if (blockName == "minecraft:yellow_glazed_terracotta" || blockName == "yellowglazedterracotta") return new YellowGlazedTerracotta();
+			else if (blockName == "minecraft:lime_glazed_terracotta" || blockName == "limeglazedterracotta") return new LimeGlazedTerracotta();
+			else if (blockName == "minecraft:pink_glazed_terracotta" || blockName == "pinkglazedterracotta") return new PinkGlazedTerracotta();
+			else if (blockName == "minecraft:gray_glazed_terracotta" || blockName == "grayglazedterracotta") return new GrayGlazedTerracotta();
+			else if (blockName == "minecraft:cyan_glazed_terracotta" || blockName == "cyanglazedterracotta") return new CyanGlazedTerracotta();
+			else if (blockName == "minecraft:purple_glazed_terracotta" || blockName == "purpleglazedterracotta") return new PurpleGlazedTerracotta();
+			else if (blockName == "minecraft:blue_glazed_terracotta" || blockName == "blueglazedterracotta") return new BlueGlazedTerracotta();
+			else if (blockName == "minecraft:brown_glazed_terracotta" || blockName == "brownglazedterracotta") return new BrownGlazedTerracotta();
+			else if (blockName == "minecraft:green_glazed_terracotta" || blockName == "greenglazedterracotta") return new GreenGlazedTerracotta();
+			else if (blockName == "minecraft:red_glazed_terracotta" || blockName == "redglazedterracotta") return new RedGlazedTerracotta();
+			else if (blockName == "minecraft:black_glazed_terracotta" || blockName == "blackglazedterracotta") return new BlackGlazedTerracotta();
+			else if (blockName == "minecraft:grass_block" || blockName == "grassblock") return new GrassBlock();
+			else if (blockName == "minecraft:powered_rail" || blockName == "poweredrail") return new PoweredRail();
+			else if (blockName == "minecraft:cobweb" || blockName == "cobweb") return new Cobweb();
+			else if (blockName == "minecraft:dandelion" || blockName == "dandelion") return new Dandelion();
+			else if (blockName == "minecraft:poppy" || blockName == "poppy") return new Poppy();
+			else if (blockName == "minecraft:bricks" || blockName == "bricks") return new Bricks();
+			else if (blockName == "minecraft:oak_door" || blockName == "oakdoor") return new OakDoor();
+			else if (blockName == "minecraft:cobblestone_stairs" || blockName == "cobblestonestairs") return new CobblestoneStairs();
+			else if (blockName == "minecraft:sugar_cane" || blockName == "sugarcane") return new SugarCane();
+			else if (blockName == "minecraft:jukebox" || blockName == "jukebox") return new Jukebox();
+			else if (blockName == "minecraft:stone_bricks" || blockName == "stonebricks") return new StoneBricks();
+			else if (blockName == "minecraft:lily_pad" || blockName == "lilypad") return new LilyPad();
+			else if (blockName == "minecraft:command_block" || blockName == "commandblock") return new CommandBlock();
+			else if (blockName == "minecraft:nether_quartz_ore" || blockName == "netherquartzore") return new NetherQuartzOre();
+			else if (blockName == "minecraft:slime_block" || blockName == "slimeblock") return new SlimeBlock();
+			else if (blockName == "minecraft:red_sandstone_slab" || blockName == "redsandstoneslab") return new RedSandstoneSlab();
+			else if (blockName == "minecraft:purpur_slab" || blockName == "purpurslab") return new PurpurSlab();
+			else if (blockName == "minecraft:purpur_pillar" || blockName == "purpurpillar") return new PurpurPillar();
+			else if (blockName == "minecraft:end_stone_bricks" || blockName == "endstonebricks") return new EndStoneBricks();
+			else if (blockName == "minecraft:beetroots" || blockName == "beetroots") return new Beetroots();
+			else if (blockName == "minecraft:repeating_command_block" || blockName == "repeatingcommandblock") return new RepeatingCommandBlock();
+			else if (blockName == "minecraft:chain_command_block" || blockName == "chaincommandblock") return new ChainCommandBlock();
+			else if (blockName == "minecraft:magma_block" || blockName == "magmablock") return new MagmaBlock();
+			else if (blockName == "minecraft:nether_wart_block" || blockName == "netherwartblock") return new NetherWartBlock();
+			else if (blockName == "minecraft:bone_block" || blockName == "boneblock") return new BoneBlock();
+			else if (blockName == "minecraft:light_gray_glazed_terracotta" || blockName == "lightgrayglazedterracotta") return new LightGrayGlazedTerracotta();
+			else if (blockName == "minecraft:structure_block" || blockName == "structureblock") return new StructureBlock();
+			else if (blockName == "minecraft:oak_leaves" || blockName == "oakleaves") return new OakLeaves();
+			else if (blockName == "minecraft:spruce_leaves" || blockName == "spruceleaves") return new SpruceLeaves();
+			else if (blockName == "minecraft:birch_leaves" || blockName == "birchleaves") return new BirchLeaves();
+			else if (blockName == "minecraft:jungle_leaves" || blockName == "jungleleaves") return new JungleLeaves();
+			else if (blockName == "minecraft:acacia_leaves" || blockName == "acacialeaves") return new AcaciaLeaves();
+			else if (blockName == "minecraft:dark_oak_leaves" || blockName == "darkoakleaves") return new DarkOakLeaves();
+
+			else return null;
 		}
 
 		private static Block Air { get; } = new Air();

@@ -1,19 +1,22 @@
-﻿using Alex.Graphics.Models;
+using Alex.Utils;
+using Alex.Worlds;
 
 namespace Alex.Blocks
 {
 	public class Lava : Block
 	{
-		public Lava(byte meta = 0) : base(10, meta)
+		public Lava() : base(50)
 		{
 			Solid = false;
 			Transparent = true;
+			IsReplacible = true;
+			HasHitbox = false;
 
-			BlockModel = new LiquidBlockModel()
-			{
-				IsLava = true,
-				Level = meta
-			};
+			LightValue = 15;
+
+			BlockModel = BlockFactory.StationairyLavaModel;
+
+		//	BlockMaterial = Material.Lava;
 		}
 	}
 }

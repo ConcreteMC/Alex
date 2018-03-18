@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Graphics;
 using Alex.API.World;
@@ -8,8 +9,8 @@ using Alex.ResourcePackLib.Json.BlockStates;
 using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
-using MiNET.Utils;
-using MiNET.Worlds;
+
+
 using NLog;
 using Axis = Alex.ResourcePackLib.Json.Axis;
 
@@ -240,7 +241,7 @@ namespace Alex.Graphics.Models
 							{
 								var biome = BiomeUtils.GetBiomeById(biomeId);
 
-								if (baseBlock.BlockId == 2)
+								if (baseBlock.Name.Equals("minecraft:grass_block", StringComparison.InvariantCultureIgnoreCase))
 								{
 									faceColor = Resources.ResourcePack.GetGrassColor(biome.Temperature, biome.Downfall, (int) worldPosition.Y);
 								}

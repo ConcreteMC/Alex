@@ -1,18 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using Alex.API.Blocks.State;
+using Alex.API.Entities;
 using Alex.API.Graphics;
+using Alex.API.Utils;
 using Alex.API.World;
+using Alex.Entities;
 using Alex.Gamestates;
 using Alex.Rendering;
 using Alex.Utils;
 using Alex.Worlds.Lighting;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MiNET.Blocks;
-using MiNET.Entities;
-using MiNET.Utils;
-using MiNET.Worlds;
 using NLog;
 using Block = Alex.Blocks.Block;
 using EntityManager = Alex.Rendering.EntityManager;
@@ -188,7 +187,21 @@ namespace Alex.Worlds
             return BlockFactory.GetBlock(0, 0);
         }
 
-	    public void SetBlock(float x, float y, float z, IBlock block)
+		public void SetBlock(Block block)
+		{
+			var x = block.Coordinates.X;
+			var y = block.Coordinates.Y;
+			var z = block.Coordinates.Z;
+
+			IChunkColumn chunk;
+			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
+			{
+				chunk.SetBlock(x & 0xf, y & 0xff, z & 0xf, block);
+				ChunkManager.ScheduleChunkUpdate(new ChunkCoordinates(x >> 4, z >> 4), ScheduleType.Full);
+			}
+		}
+
+		public void SetBlock(float x, float y, float z, IBlock block)
 	    {
 		    SetBlock((int) Math.Floor(x), (int)Math.Floor(y), (int)Math.Floor(z), block);
 	    }
@@ -303,6 +316,11 @@ namespace Alex.Worlds
 			ChunkManager.RemoveChunk(chunkCoordinates);
 
 			EntityManager.UnloadEntities(chunkCoordinates);
+		}
+
+		public void SpawnEntity(long entityId, IEntity entity)
+		{
+			EntityManager.AddEntity(entityId, (Entity)entity);
 		}
 
 		public void SpawnEntity(long entityId, Entity entity)

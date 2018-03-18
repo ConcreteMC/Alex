@@ -9,11 +9,30 @@ using Alex.Blocks.Storage;
 using fNbt.Tags;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MiNET.Worlds;
+
 using NLog;
 
 namespace Alex.Worlds
 {
+	public static class ArrayOf<T> where T : new()
+	{
+		public static T[] Create(int size, T initialValue)
+		{
+			T[] array = (T[])Array.CreateInstance(typeof(T), size);
+			for (int i = 0; i < array.Length; i++)
+				array[i] = initialValue;
+			return array;
+		}
+
+		public static T[] Create(int size)
+		{
+			T[] array = (T[])Array.CreateInstance(typeof(T), size);
+			for (int i = 0; i < array.Length; i++)
+				array[i] = new T();
+			return array;
+		}
+	}
+
 	public class ChunkColumn : IChunkColumn
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(SPWorldProvider));
@@ -227,7 +246,7 @@ namespace Alex.Worlds
 
 			IBlock block = stateId.GetBlock();// BlockFactory.GetBlock(stateId);
 
-			if (block.BlockId == 0 || !block.Renderable) return;
+			if (!block.Renderable) return;
 
 			var blockPosition = new Vector3(x, y + (index * 16), z) + Position;
 

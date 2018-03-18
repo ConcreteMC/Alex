@@ -4,6 +4,7 @@ using System.Linq;
 using Alex.API.Graphics;
 using Alex.API.World;
 using Alex.Blocks;
+using Alex.Blocks.Properties;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Alex.ResourcePackLib.Json;
@@ -12,6 +13,8 @@ namespace Alex.Graphics.Models
 {
 	public class LiquidBlockModel : BlockModel
 	{
+		private static PropertyInt LEVEL = new PropertyInt("LEVEL", 8);
+
 		public bool IsLava = false;
 		public bool IsFlowing = false;
 		public int Level = 8;
@@ -26,21 +29,21 @@ namespace Alex.Graphics.Models
 			List< VertexPositionNormalTextureColor> result = new List<VertexPositionNormalTextureColor>();
 			int tl = 0, tr = 0, bl = 0, br = 0;
 
-			Level = baseBlock.Metadata;
+			Level = baseBlock.BlockState.GetTypedValue(LEVEL);
 
-			int b1, b2;
+			string b1, b2;
 			if (IsLava)
 			{
-				b1 = 10;
-				b2 = 11;
+				b1 = "minecraft:lava";
+				b2 = "minecraft:lava";
 			}
 			else
 			{
-				b1 = 8;
-				b2 = 9;
+				b1 = "minecraft:water";
+				b2 = "minecraft:water";
 			}
 
-			var bc = world.GetBlock(position + Vector3.Up).BlockId;//.GetType();
+			var bc = world.GetBlock(position + Vector3.Up).Name;//.GetType();
 			if (bc == b1 || bc == b2)
 			{
 				tl = 8;
@@ -108,9 +111,9 @@ namespace Alex.Graphics.Models
 				
 				var b = (Block)world.GetBlock(position + d);
 				LiquidBlockModel m = b.BlockModel as LiquidBlockModel;
-				var secondSpecial = m != null && b.Metadata > Level;
+				var secondSpecial = m != null && m.Level > Level;
 
-				if (special || (secondSpecial) || !b.BlockId.Equals(b1) && !b.BlockId.Equals(b2))
+				if (special || (secondSpecial) || (!string.IsNullOrWhiteSpace(b.Name) && (!b.Name.Equals(b1) && !b.Name.Equals(b2))))
 				{
 					//if (b.BlockModel is LiquidBlockModel m && m.Level > Level && f != BlockFace.Up) continue;
 
@@ -183,7 +186,7 @@ namespace Alex.Graphics.Models
 					b = (Block)world.GetBlock(position.X + xx, position.Y, position.Z + zz);
 					if (b.BlockModel is LiquidBlockModel l && l.IsLava == IsLava)
 					{
-						var nl = 7 - (b.Metadata & 0x7);
+						var nl = 7 - (l.Level & 0x7);
 						if (nl > level)
 						{
 							level = nl;

@@ -5,13 +5,12 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Graphics;
+using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Entities;
 using Alex.Utils;
 using Alex.Worlds.Generators;
 using Microsoft.Xna.Framework;
-using MiNET.Blocks;
-using MiNET.Utils;
 using NLog;
 
 namespace Alex.Worlds
@@ -114,7 +113,7 @@ namespace Alex.Worlds
 				foreach (var nbt in column.Entities)
 				{
 					var eId = Interlocked.Increment(ref _spEntityIdCounter);
-					if (EntityFactory.TryLoadEntity(nbt, eId, out MiNET.Entities.Entity entity))
+					if (EntityFactory.TryLoadEntity(nbt, eId, out Entity entity))
 					{
 						base.SpawnEntity(eId, entity);
 					}

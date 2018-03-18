@@ -4,23 +4,21 @@ using System.Linq;
 using System.Runtime.InteropServices.ComTypes;
 using System.Threading;
 using Alex.API.Graphics;
+using Alex.API.Utils;
 using Alex.Entities;
 using Alex.Gamestates;
 using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MiNET.Entities;
-using MiNET.Net;
-using MiNET.Utils;
 using ContainmentType = Microsoft.Xna.Framework.ContainmentType;
 
 namespace Alex.Rendering
 {
     public class EntityManager : IDisposable
     {
-		private ConcurrentDictionary<long, MiNET.Entities.Entity> Entities { get; }
-		private ConcurrentDictionary<UUID, MiNET.Entities.Entity> EntityByUUID { get; }
+		private ConcurrentDictionary<long, Entity> Entities { get; }
+		private ConcurrentDictionary<UUID, Entity> EntityByUUID { get; }
 		private GraphicsDevice Device { get; }
 
 	    public int EntityCount => Entities.Count;
@@ -30,8 +28,8 @@ namespace Alex.Rendering
 	    {
 		    World = world;
 		    Device = device;
-			Entities = new ConcurrentDictionary<long, MiNET.Entities.Entity>();
-			EntityByUUID = new ConcurrentDictionary<UUID, MiNET.Entities.Entity>();
+			Entities = new ConcurrentDictionary<long, Entity>();
+			EntityByUUID = new ConcurrentDictionary<UUID, Entity>();
 	    }
 
 	    public void Update(GameTime gameTime)
@@ -39,7 +37,7 @@ namespace Alex.Rendering
 		    var entities = Entities.Values.ToArray();
 		    foreach (var entity in entities)
 		    {
-				entity.GetModelRenderer()?.Update(Device, gameTime, entity.KnownPosition.ToXnaVector3(), entity.KnownPosition.Yaw, entity.KnownPosition.Pitch);
+				entity.ModelRenderer?.Update(Device, gameTime, entity.KnownPosition.ToXnaVector3(), entity.KnownPosition.Yaw, entity.KnownPosition.Pitch);
 		    }
 	    }
 
@@ -51,9 +49,9 @@ namespace Alex.Rendering
 		    {
 			    var entityBox = entity.GetBoundingBox();
 
-				if (camera.BoundingFrustum.Contains(new Microsoft.Xna.Framework.BoundingBox(entityBox.Min.ToXnaVector3(), entityBox.Max.ToXnaVector3())) != ContainmentType.Disjoint)
+				if (camera.BoundingFrustum.Contains(new Microsoft.Xna.Framework.BoundingBox(entityBox.Min, entityBox.Max)) != ContainmentType.Disjoint)
 			    {
-				    entity.GetModelRenderer()?.Render(args, camera, entity.KnownPosition.ToXnaVector3(), entity.KnownPosition.Yaw, entity.KnownPosition.Pitch);
+				    entity.ModelRenderer?.Render(args, camera, entity.KnownPosition.ToXnaVector3(), entity.KnownPosition.Yaw, entity.KnownPosition.Pitch);
 				    renderCount++;
 			    }
 		    }
@@ -71,7 +69,7 @@ namespace Alex.Rendering
 			    var entityBox = entity.GetBoundingBox();
 
 			    if (camera.BoundingFrustum.Contains(
-				        new Microsoft.Xna.Framework.BoundingBox(entityBox.Min.ToXnaVector3(), entityBox.Max.ToXnaVector3())) !=
+				        new Microsoft.Xna.Framework.BoundingBox(entityBox.Min, entityBox.Max)) !=
 			        ContainmentType.Disjoint)
 			    {
 				    entity.RenderNametag(args, camera);
@@ -90,7 +88,7 @@ namespace Alex.Rendering
 		    {
 			    if (new ChunkCoordinates(entity.Value.KnownPosition).Equals(coordinates))
 			    {
-					Remove(entity.Value.GetUUID());
+					Remove(entity.Value.UUID);
 			    }
 		    }
 	    }
@@ -103,14 +101,12 @@ namespace Alex.Rendering
 			    {
 				    Entities.TryRemove(e.EntityId, out e);
 			    }
-
-			    e.DeleteData();
 		    }
 	    }
 
-	    public bool AddEntity(long id, MiNET.Entities.Entity entity)
+	    public bool AddEntity(long id, Entity entity)
 	    {
-		    if (EntityByUUID.TryAdd(entity.GetUUID(), entity))
+		    if (EntityByUUID.TryAdd(entity.UUID, entity))
 		    {
 			    entity.IsAlwaysShowName = false;
 			    entity.NameTag = $"Entity_{id}";
@@ -118,7 +114,7 @@ namespace Alex.Rendering
 
 			    if (!Entities.TryAdd(id, entity))
 			    {
-				    EntityByUUID.TryRemove(entity.GetUUID(), out Entity _);
+				    EntityByUUID.TryRemove(entity.UUID, out Entity _);
 				    return false;
 			    }
 
@@ -132,7 +128,7 @@ namespace Alex.Rendering
 	    {
 		    if (Entities.TryRemove(id, out Entity entity))
 		    {
-				Remove(entity.GetUUID(), false);
+				Remove(entity.UUID, false);
 		    }
 	    }
     }

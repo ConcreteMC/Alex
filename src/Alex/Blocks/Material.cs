@@ -1,46 +1,47 @@
-﻿using Alex.Utils;
+﻿using Alex.API.Blocks;
+using Alex.Utils;
 
 namespace Alex.Blocks
 {
-    public class Material
-    {
-		public static Material Air = new MaterialTransparent(MapColor.AIR);
-		public static Material Grass = new Material(MapColor.GRASS);
-		public static Material Ground = new Material(MapColor.DIRT);
-		public static Material Wood = (new Material(MapColor.WOOD)).SetBurning();
-		public static Material Rock = (new Material(MapColor.STONE)).SetRequiresTool();
-		public static Material Iron = (new Material(MapColor.IRON)).SetRequiresTool();
-		public static Material Anvil = (new Material(MapColor.IRON)).SetRequiresTool().SetImmovableMobility();
-		public static Material Water = (new MaterialLiquid(MapColor.WATER)).SetNoPushMobility();
-		public static Material Lava = (new MaterialLiquid(MapColor.TNT)).SetNoPushMobility();
-		public static Material Leaves = (new Material(MapColor.FOLIAGE)).SetBurning().SetTranslucent().SetNoPushMobility();
-		public static Material Plants = (new MaterialLogic(MapColor.FOLIAGE)).SetNoPushMobility();
-		public static Material Vine = (new MaterialLogic(MapColor.FOLIAGE)).SetBurning().SetNoPushMobility().SetReplaceable();
-		public static Material Sponge = new Material(MapColor.YELLOW);
-		public static Material Cloth = (new Material(MapColor.CLOTH)).SetBurning();
-		public static Material Fire = (new MaterialTransparent(MapColor.AIR)).SetNoPushMobility();
-		public static Material Sand = new Material(MapColor.SAND);
-		public static Material Circuits = (new MaterialLogic(MapColor.AIR)).SetNoPushMobility();
-		public static Material Carpet = (new MaterialLogic(MapColor.CLOTH)).SetBurning();
-		public static Material Glass = (new Material(MapColor.AIR)).SetTranslucent().SetAdventureModeExempt();
-		public static Material RedstoneLight = (new Material(MapColor.AIR)).SetAdventureModeExempt();
-		public static Material Tnt = (new Material(MapColor.TNT)).SetBurning().SetTranslucent();
-		public static Material Coral = (new Material(MapColor.FOLIAGE)).SetNoPushMobility();
-		public static Material Ice = (new Material(MapColor.ICE)).SetTranslucent().SetAdventureModeExempt();
-		public static Material PackedIce = (new Material(MapColor.ICE)).SetAdventureModeExempt();
-		public static Material Snow = (new MaterialLogic(MapColor.SNOW)).SetReplaceable().SetTranslucent().SetRequiresTool().SetNoPushMobility();
-		public static Material CraftedSnow = (new Material(MapColor.SNOW)).SetRequiresTool();
-		public static Material Cactus = (new Material(MapColor.FOLIAGE)).SetTranslucent().SetNoPushMobility();
-		public static Material Clay = new Material(MapColor.CLAY);
-		public static Material Gourd = (new Material(MapColor.FOLIAGE)).SetNoPushMobility();
-		public static Material DragonEgg = (new Material(MapColor.FOLIAGE)).SetNoPushMobility();
-		public static Material Portal = (new MaterialPortal(MapColor.AIR)).SetImmovableMobility();
-		public static Material Cake = (new Material(MapColor.AIR)).SetNoPushMobility();
-		public static Material Web = (new Material(MapColor.CLOTH)).SetRequiresTool().SetNoPushMobility();
+    public class Material : IMaterial
+	{
+		public static IMaterial Air = new MaterialTransparent(MapColor.AIR);
+		public static IMaterial Grass = new Material(MapColor.GRASS);
+		public static IMaterial Ground = new Material(MapColor.DIRT);
+		public static IMaterial Wood = (new Material(MapColor.WOOD)).SetBurning();
+		public static IMaterial Rock = (new Material(MapColor.STONE)).SetRequiresTool();
+		public static IMaterial Iron = (new Material(MapColor.IRON)).SetRequiresTool();
+		public static IMaterial Anvil = (new Material(MapColor.IRON)).SetRequiresTool().SetImmovableMobility();
+		public static IMaterial Water = (new MaterialLiquid(MapColor.WATER)).SetNoPushMobility();
+		public static IMaterial Lava = (new MaterialLiquid(MapColor.TNT)).SetNoPushMobility();
+		public static IMaterial Leaves = (new Material(MapColor.FOLIAGE)).SetBurning().SetTranslucent().SetNoPushMobility();
+		public static IMaterial Plants = (new MaterialLogic(MapColor.FOLIAGE)).SetNoPushMobility();
+		public static IMaterial Vine = (new MaterialLogic(MapColor.FOLIAGE)).SetBurning().SetNoPushMobility().SetReplaceable();
+		public static IMaterial Sponge = new Material(MapColor.YELLOW);
+		public static IMaterial Cloth = (new Material(MapColor.CLOTH)).SetBurning();
+		public static IMaterial Fire = (new MaterialTransparent(MapColor.AIR)).SetNoPushMobility();
+		public static IMaterial Sand = new Material(MapColor.SAND);
+		public static IMaterial Circuits = (new MaterialLogic(MapColor.AIR)).SetNoPushMobility();
+		public static IMaterial Carpet = (new MaterialLogic(MapColor.CLOTH)).SetBurning();
+		public static IMaterial Glass = (new Material(MapColor.AIR)).SetTranslucent().SetAdventureModeExempt();
+		public static IMaterial RedstoneLight = (new Material(MapColor.AIR)).SetAdventureModeExempt();
+		public static IMaterial Tnt = (new Material(MapColor.TNT)).SetBurning().SetTranslucent();
+		public static IMaterial Coral = (new Material(MapColor.FOLIAGE)).SetNoPushMobility();
+		public static IMaterial Ice = (new Material(MapColor.ICE)).SetTranslucent().SetAdventureModeExempt();
+		public static IMaterial PackedIce = (new Material(MapColor.ICE)).SetAdventureModeExempt();
+		public static IMaterial Snow = (new MaterialLogic(MapColor.SNOW)).SetReplaceable().SetTranslucent().SetRequiresTool().SetNoPushMobility();
+		public static IMaterial CraftedSnow = (new Material(MapColor.SNOW)).SetRequiresTool();
+		public static IMaterial Cactus = (new Material(MapColor.FOLIAGE)).SetTranslucent().SetNoPushMobility();
+		public static IMaterial Clay = new Material(MapColor.CLAY);
+		public static IMaterial Gourd = (new Material(MapColor.FOLIAGE)).SetNoPushMobility();
+		public static IMaterial DragonEgg = (new Material(MapColor.FOLIAGE)).SetNoPushMobility();
+		public static IMaterial Portal = (new MaterialPortal(MapColor.AIR)).SetImmovableMobility();
+		public static IMaterial Cake = (new Material(MapColor.AIR)).SetNoPushMobility();
+		public static IMaterial Web = (new Material(MapColor.CLOTH)).SetRequiresTool().SetNoPushMobility();
 
-		public static Material Piston = (new Material(MapColor.STONE)).SetImmovableMobility();
-		public static Material Barrier = (new Material(MapColor.AIR)).SetRequiresTool().SetImmovableMobility();
-		public static Material StructureVoid = new MaterialTransparent(MapColor.AIR);
+		public static IMaterial Piston = (new Material(MapColor.STONE)).SetImmovableMobility();
+		public static IMaterial Barrier = (new Material(MapColor.AIR)).SetRequiresTool().SetImmovableMobility();
+		public static IMaterial StructureVoid = new MaterialTransparent(MapColor.AIR);
 
 		private bool _canBurn;
 		private bool _replaceable;
@@ -73,19 +74,19 @@ namespace Alex.Blocks
 			return true;
 		}
 
-		private Material SetTranslucent()
+		public IMaterial SetTranslucent()
 		{
 			this._isTranslucent = true;
 			return this;
 		}
 
-		protected Material SetRequiresTool()
+		public IMaterial SetRequiresTool()
 		{
 			this._requiresNoTool = false;
 			return this;
 		}
 
-		protected Material SetBurning()
+		public IMaterial SetBurning()
 		{
 			this._canBurn = true;
 			return this;
@@ -96,7 +97,7 @@ namespace Alex.Blocks
 			return this._canBurn;
 		}
 
-		public Material SetReplaceable()
+		public IMaterial SetReplaceable()
 		{
 			this._replaceable = true;
 			return this;
@@ -117,25 +118,25 @@ namespace Alex.Blocks
 			return this._requiresNoTool;
 		}
 
-		protected Material SetNoPushMobility()
+		public IMaterial SetNoPushMobility()
 		{
 		//	this.mobilityFlag = EnumPushReaction.DESTROY;
 			return this;
 		}
 
-		protected Material SetImmovableMobility()
+		public IMaterial SetImmovableMobility()
 		{
 		//	this.mobilityFlag = EnumPushReaction.BLOCK;
 			return this;
 		}
 
-		protected Material SetAdventureModeExempt()
+		public IMaterial SetAdventureModeExempt()
 		{
 			this._isAdventureModeExempt = true;
 			return this;
 		}
 
-		public virtual MapColor GetMaterialMapColor()
+		public virtual IMapColor GetMaterialMapColor()
 		{
 			return MapColor.AIR;
 		//	return this.materialMapColor;

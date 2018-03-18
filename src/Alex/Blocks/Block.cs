@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using Alex.API.Blocks;
 using Alex.API.Blocks.State;
 using Alex.API.Graphics;
+using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks.State;
+using Alex.Entities;
 using Alex.Graphics.Models;
-
+using Alex.ResourcePackLib.Json;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
-using MiNET;
-using MiNET.Entities;
-using MiNET.Utils;
 using NLog;
 using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
 
@@ -22,8 +22,6 @@ namespace Alex.Blocks
 	    
 		public uint BlockStateID { get; }
 
-        public int BlockId { get; }
-        public byte Metadata { get; set; }
 		public bool Solid { get; set; }
 		public bool Transparent { get; set; }
 		public bool Renderable { get; set; }
@@ -36,13 +34,33 @@ namespace Alex.Blocks
 		public bool IsReplacible { get; set; } = false;
 
 		public float Drag { get; set; }
+		public string Name { get; set; }
 
-	    public double AmbientOcclusionLightValue { get; set; } = 1.0;
+		public double AmbientOcclusionLightValue { get; set; } = 1.0;
 	    public int LightValue { get; set; } = 0;
 	    public int LightOpacity { get; set; } = 0;
 
 		public BlockModel BlockModel { get; set; }
 		public IBlockState BlockState { get; set; }
+		public bool IsWater { get; set; } = false;
+		public bool IsWaterSource { get; set; } = false;
+
+		private IMaterial _material;
+
+		public IMaterial BlockMaterial
+		{
+			get { return _material; }
+			set
+			{
+				IMaterial newValue = value;
+				Solid = newValue.IsSolid();
+				IsReplacible = newValue.IsReplaceable();
+
+				_material = newValue;
+			}
+		}
+
+		public BlockCoordinates Coordinates { get; set; }
 		protected Block(int blockId, byte metadata) : this(BlockFactory.GetBlockStateID(blockId, metadata))
 	    {
 		    
@@ -51,13 +69,7 @@ namespace Alex.Blocks
 	    public Block(uint blockStateId)
 	    {
 		    BlockStateID = blockStateId;
-
-		    int blockId;
-		    byte meta;
-
-		    BlockFactory.StateIDToRaw(blockStateId, out blockId, out meta);
-		    BlockId = blockId;
-		    Metadata = meta;
+			BlockMaterial = new Material(MapColor.STONE);
 
 			Solid = true;
 		    Transparent = false;
@@ -103,30 +115,6 @@ namespace Alex.Blocks
                     break;
             }
         }
-
-		private Dictionary<string, bool> SolidSides { get; set; } = new Dictionary<string, bool>()
-		{
-			{"north", true },
-			{"up", true },
-			{"west", true },
-			{"east",true },
-			{"down",true },
-			{"south", true }
-		};
-
-		internal void SetSideSolid(string side, bool value)
-		{
-			if (SolidSides.ContainsKey(side))
-				SolidSides[side] = value;
-		}
-
-		public bool IsSideSolid(string side)
-		{
-			if (SolidSides.TryGetValue(side, out bool res))
-				return res;
-
-			return true;
-		}
 
 		public virtual void BlockPlaced(IWorld world, BlockCoordinates position)
 		{

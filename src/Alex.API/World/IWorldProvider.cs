@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Alex.API.Entities;
 using Microsoft.Xna.Framework;
-using MiNET.Entities;
-using MiNET.Utils;
 
 namespace Alex.API.World
 {
@@ -32,7 +31,7 @@ namespace Alex.API.World
 			return WorldReceiver.RequestPlayerPosition();
 		}
 
-		protected void SpawnEntity(long entityId, Entity entity)
+		protected void SpawnEntity(long entityId, IEntity entity)
 		{
 			WorldReceiver.SpawnEntity(entityId, entity);
 		}
@@ -68,7 +67,7 @@ namespace Alex.API.World
 		void ChunkReceived(IChunkColumn chunkColumn, int x, int z, bool update);
 		void ChunkUnload(int x, int z);
 
-		void SpawnEntity(long entityId, Entity entity);
+		void SpawnEntity(long entityId, IEntity entity);
 		void DespawnEntity(long entityId);
 	}
 }
