@@ -7,18 +7,18 @@ using Alex.Blocks.State;
 using Alex.Graphics.Models;
 
 using Alex.Utils;
-using log4net;
 using Microsoft.Xna.Framework;
 using MiNET;
 using MiNET.Entities;
 using MiNET.Utils;
+using NLog;
 using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
 
 namespace Alex.Blocks
 {
 	public class Block : IBlock
 	{
-	    private static readonly ILog Log = LogManager.GetLogger(typeof(Block));
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Block));
 	    
 		public uint BlockStateID { get; }
 

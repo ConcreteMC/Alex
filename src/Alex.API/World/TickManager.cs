@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Linq;
-using log4net;
 using Microsoft.Xna.Framework;
+using NLog;
 
 namespace Alex.API.World
 {
     public class TickManager
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(TickManager));
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(TickManager));
 
 		private IWorld World { get; }
 		private ConcurrentDictionary<Action, long> _scheduledTicks { get; }
@@ -41,7 +41,7 @@ namespace Alex.API.World
 					}
 					catch (Exception ex)
 					{
-						Log.Error($"An exception occureced while executing a scheduled tick!", ex);
+						Log.Error(ex, $"An exception occureced while executing a scheduled tick!");
 					}
 				}
 

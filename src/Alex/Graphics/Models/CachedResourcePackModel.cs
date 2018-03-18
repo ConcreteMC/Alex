@@ -7,17 +7,17 @@ using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.BlockStates;
 using Alex.Utils;
 using Alex.Worlds;
-using log4net;
 using Microsoft.Xna.Framework;
 using MiNET.Utils;
 using MiNET.Worlds;
+using NLog;
 using Axis = Alex.ResourcePackLib.Json.Axis;
 
 namespace Alex.Graphics.Models
 {
 	public class CachedResourcePackModel : ResourcePackModel
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(CachedResourcePackModel));
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(SPWorldProvider));
 		static CachedResourcePackModel()
 		{
 			

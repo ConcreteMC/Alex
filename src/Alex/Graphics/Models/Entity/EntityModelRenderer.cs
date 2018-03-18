@@ -7,15 +7,15 @@ using Alex.Rendering.Camera;
 using Alex.ResourcePackLib.Json.Models;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
-using log4net;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using NLog;
 
 namespace Alex.Graphics.Models.Entity
 {
 	public class EntityModelRenderer : Model
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(EntityModelRenderer));
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(EntityModelRenderer));
 		private static ConcurrentDictionary<string, VertexPositionNormalTexture[]> ModelBonesCache { get; } = new ConcurrentDictionary<string, VertexPositionNormalTexture[]>();
 
 		private EntityModel Model { get; }

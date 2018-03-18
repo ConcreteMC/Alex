@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27130.2036
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alex.Data", "Alex.Data\Alex.Data.csproj", "{63D936AD-3498-45F6-84A9-48DAFCEF7D96}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Alex", "Alex\Alex.csproj", "{C360D9A4-C1AC-4A41-8A49-ADE1306DB389}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Alex.API", "Alex.API\Alex.API.csproj", "{DFC77469-ABB6-4111-A961-AE9B3AD22F34}"
@@ -30,18 +28,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{63D936AD-3498-45F6-84A9-48DAFCEF7D96}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
-		{63D936AD-3498-45F6-84A9-48DAFCEF7D96}.Debug|AnyCPU.Build.0 = Debug|Any CPU
-		{63D936AD-3498-45F6-84A9-48DAFCEF7D96}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{63D936AD-3498-45F6-84A9-48DAFCEF7D96}.Debug|x64.Build.0 = Debug|Any CPU
-		{63D936AD-3498-45F6-84A9-48DAFCEF7D96}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{63D936AD-3498-45F6-84A9-48DAFCEF7D96}.Debug|x86.Build.0 = Debug|Any CPU
-		{63D936AD-3498-45F6-84A9-48DAFCEF7D96}.Release|AnyCPU.ActiveCfg = Release|Any CPU
-		{63D936AD-3498-45F6-84A9-48DAFCEF7D96}.Release|AnyCPU.Build.0 = Release|Any CPU
-		{63D936AD-3498-45F6-84A9-48DAFCEF7D96}.Release|x64.ActiveCfg = Release|Any CPU
-		{63D936AD-3498-45F6-84A9-48DAFCEF7D96}.Release|x64.Build.0 = Release|Any CPU
-		{63D936AD-3498-45F6-84A9-48DAFCEF7D96}.Release|x86.ActiveCfg = Release|Any CPU
-		{63D936AD-3498-45F6-84A9-48DAFCEF7D96}.Release|x86.Build.0 = Release|Any CPU
 		{C360D9A4-C1AC-4A41-8A49-ADE1306DB389}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
 		{C360D9A4-C1AC-4A41-8A49-ADE1306DB389}.Debug|AnyCPU.Build.0 = Debug|Any CPU
 		{C360D9A4-C1AC-4A41-8A49-ADE1306DB389}.Debug|x64.ActiveCfg = Debug|Any CPU

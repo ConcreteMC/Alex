@@ -4,17 +4,18 @@ using System.Drawing;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using log4net;
+using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using NLog;
 
 namespace Alex.Utils
 {
     public class AtlasGenerator
     {
-	    private static readonly ILog Log = LogManager.GetLogger(typeof(AtlasGenerator));
-	    
-        private void CopyRegionIntoImage(Bitmap srcBitmap, System.Drawing.Rectangle srcRegion, ref Bitmap destBitmap,
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(SPWorldProvider));
+
+		private void CopyRegionIntoImage(Bitmap srcBitmap, System.Drawing.Rectangle srcRegion, ref Bitmap destBitmap,
             System.Drawing.Rectangle destRegion)
         {
 			using (System.Drawing.Graphics grD = System.Drawing.Graphics.FromImage(destBitmap))

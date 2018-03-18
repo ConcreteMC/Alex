@@ -15,10 +15,10 @@ using Alex.ResourcePackLib.Json.Models;
 using Alex.Utils;
 using Alex.Worlds;
 using Alex.Worlds.Lighting;
-using log4net;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET.Utils;
+using NLog;
 using Color = Microsoft.Xna.Framework.Color;
 
 //using OpenTK.Graphics;
@@ -27,9 +27,9 @@ namespace Alex.Rendering
 {
     public class ChunkManager : IDisposable
     {
-        private static readonly ILog Log = LogManager.GetLogger(typeof(ChunkManager));
-        
-        private GraphicsDevice Graphics { get; }
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ChunkManager));
+
+		private GraphicsDevice Graphics { get; }
         private Camera.Camera Camera { get; }
         private IWorld World { get; }
 	    private Alex Game { get; }
@@ -398,7 +398,7 @@ namespace Alex.Rendering
             Chunks.AddOrUpdate(position, chunk, (vector3, chunk1) =>
             {
 	            chunk1.Dispose();
-				Log.WarnFormat("Replaced chunk at {0}", position);
+				Log.Warn($"Replaced chunk at {position}");
                 return chunk;
             });
 

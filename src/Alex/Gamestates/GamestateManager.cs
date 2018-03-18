@@ -4,17 +4,17 @@ using System.Threading;
 using Alex.Graphics;
 using Alex.Graphics.UI;
 using Alex.Rendering;
-using log4net;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using NLog;
 
 namespace Alex.Gamestates
 {
     public class GameStateManager
     {
-        private static readonly ILog Log = LogManager.GetLogger(typeof(GameStateManager));
-        
-        private ConcurrentDictionary<string, GameState> ActiveStates { get; }
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(GameStateManager));
+
+		private ConcurrentDictionary<string, GameState> ActiveStates { get; }
         private GameState ActiveState { get; set; }
 
         private GraphicsDevice Graphics { get; }

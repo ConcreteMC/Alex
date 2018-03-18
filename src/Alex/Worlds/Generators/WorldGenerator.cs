@@ -1,13 +1,13 @@
 ﻿using System;
 using Alex.API.World;
 using Alex.Blocks;
-using log4net;
 using Microsoft.Xna.Framework;
 using MiNET.Utils;
 using MiNET.Utils.Noise;
 using MiNET.Utils.Noise.Filter;
 using MiNET.Worlds;
 using MiNET.Worlds.Decorators;
+using NLog;
 using Voronoi = MiNET.Utils.Noise.Voronoi;
 
 namespace Alex.Worlds.Generators
@@ -171,7 +171,7 @@ namespace Alex.Worlds.Generators
 			return chunk;
 		}
 
-		private static readonly ILog Log = LogManager.GetLogger(typeof(OverworldGenerator));
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(OverworldGenerator));
 		private Biome GetBiome(float x, float z)
 		{
 			x /= CoordinateScale;

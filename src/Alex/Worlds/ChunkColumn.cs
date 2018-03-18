@@ -7,16 +7,16 @@ using Alex.API.World;
 using Alex.Blocks;
 using Alex.Blocks.Storage;
 using fNbt.Tags;
-using log4net;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET.Worlds;
+using NLog;
 
 namespace Alex.Worlds
 {
 	public class ChunkColumn : IChunkColumn
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(ChunkColumn));
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(SPWorldProvider));
 
 		public const int ChunkHeight = 256;
 		public const int ChunkWidth = 16;

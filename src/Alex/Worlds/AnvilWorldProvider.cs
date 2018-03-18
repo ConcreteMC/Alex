@@ -12,17 +12,17 @@ using Alex.Blocks.Storage;
 using Alex.Worlds.Generators;
 using fNbt;
 using fNbt.Tags;
-using log4net;
 using Microsoft.Xna.Framework;
 using MiNET.BlockEntities;
 using MiNET.Utils;
 using MiNET.Worlds;
+using NLog;
 
 namespace Alex.Worlds
 {
 	public class AnvilWorldProvider : IWorldGenerator
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(AnvilWorldProvider));
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(AnvilWorldProvider));
 
 		public static readonly Dictionary<int, Tuple<int, Func<int, byte, byte>>> Convert;
 

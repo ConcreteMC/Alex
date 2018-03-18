@@ -9,16 +9,16 @@ using Alex.ResourcePackLib.Json.Models;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.ResourcePackLib.Json.Textures;
 using ICSharpCode.SharpZipLib.Zip;
-using log4net;
+
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
+using NLog;
 
 namespace Alex.ResourcePackLib
 {
 	public class BedrockResourcePack : IDisposable
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(BedrockResourcePack));
-
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BedrockResourcePack));
 		public IReadOnlyDictionary<string, EntityModel> EntityModels { get; private set; }
 		public IReadOnlyDictionary<string, Bitmap> Textures { get; private set; }
 		public IReadOnlyDictionary<string, TextureInfoJson> TextureJsons { get; private set; }

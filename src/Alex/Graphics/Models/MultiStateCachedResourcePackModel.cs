@@ -5,19 +5,19 @@ using Alex.API.World;
 using Alex.Blocks;
 using Alex.Utils;
 using Alex.Worlds;
-using log4net;
 using Microsoft.Xna.Framework;
 using MiNET.Utils;
 using MiNET.Worlds;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.BlockStates;
+using NLog;
 using Axis = Alex.ResourcePackLib.Json.Axis;
 
 namespace Alex.Graphics.Models
 {
 	public class MultiStateResourcePackModel : ResourcePackModel
 	{
-		private static ILog Log = LogManager.GetLogger(typeof(MultiStateResourcePackModel));
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(MultiStateResourcePackModel));
 		static MultiStateResourcePackModel()
 		{
 			

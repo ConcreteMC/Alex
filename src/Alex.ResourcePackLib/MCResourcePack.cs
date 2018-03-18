@@ -6,19 +6,20 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Runtime.InteropServices;
+using Alex.API.World;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.BlockStates;
 using Alex.ResourcePackLib.Json.Models;
 using Alex.ResourcePackLib.Json.Models.Blocks;
-using log4net;
 using Microsoft.Xna.Framework;
+using NLog;
 using Color = Microsoft.Xna.Framework.Color;
 
 namespace Alex.ResourcePackLib
 {
 	public class McResourcePack : IDisposable
 	{
-		private static ILog Log = LogManager.GetLogger(typeof(McResourcePack));
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(McResourcePack));
 		public ResourcePackInfo Info { get; private set; }
 
 		public IReadOnlyDictionary<string, BlockState> BlockStates => _blockStates;

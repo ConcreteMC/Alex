@@ -4,7 +4,6 @@ using System.Linq;
 using System.Reflection;
 using Alex.Graphics.Textures;
 using Alex.Graphics.UI.Common;
-using log4net;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -47,7 +46,7 @@ namespace Alex.Graphics.UI.Themes
 	
 	public class UiElementStyle2
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(UiElementStyle));
+		
 
 		public int Priority { get; set; } = -1;
 		

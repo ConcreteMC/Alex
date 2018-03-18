@@ -3,7 +3,6 @@ using Alex.Blocks;
 using Alex.Entities;
 using Alex.Rendering.Camera;
 using Alex.Worlds;
-using log4net;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -150,8 +149,7 @@ namespace Alex.Gamestates.Playing
 	        }
         }
 
-	    private static readonly ILog Log = LogManager.GetLogger(typeof(CameraComponent));
-
+	   
         private void DoPhysics(bool originalJumpValue, Vector3 direction, float dt)
         {
 			//Apply Gravity.

@@ -5,7 +5,6 @@ using Alex.API.World;
 using Alex.Blocks;
 using Alex.Utils;
 using Alex.Worlds;
-using log4net;
 using Microsoft.Xna.Framework;
 using MiNET.Utils;
 using MiNET.Worlds;
@@ -13,6 +12,7 @@ using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.BlockStates;
 using Alex.ResourcePackLib.Json.Models;
 using Alex.ResourcePackLib.Json.Models.Blocks;
+using NLog;
 using Axis = Alex.ResourcePackLib.Json.Axis;
 using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
 using V3 = Microsoft.Xna.Framework.Vector3;
@@ -21,9 +21,9 @@ namespace Alex.Graphics.Models
 {
     public class ResourcePackModel : BlockModel
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(ResourcePackModel));
-		
-        protected BlockStateModel[] Variant { get; set; }
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ResourcePackModel));
+
+		protected BlockStateModel[] Variant { get; set; }
 		protected ResourceManager Resources { get; }
 
 		public ResourcePackModel(ResourceManager resources, BlockStateModel[] variant)

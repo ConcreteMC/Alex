@@ -7,18 +7,17 @@ using Alex.Gamestates;
 using Alex.Graphics;
 using Alex.Graphics.UI;
 using Alex.Rendering;
-using log4net;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Content.Pipeline.Graphics;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Newtonsoft.Json;
+using NLog;
 
 namespace Alex
 {
 	public partial class Alex : Microsoft.Xna.Framework.Game
 	{
-		private static ILog Log = LogManager.GetLogger(typeof(Alex));
+		//private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Alex));
 
 		public static string DotnetRuntime { get; } =
 			$"{System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription}";
@@ -51,9 +50,12 @@ namespace Alex
 			Content.RootDirectory = "assets";
 
 			IsFixedTimeStep = false;
-         //   _graphics.ToggleFullScreen();
+           // graphics.ToggleFullScreen();
 			
 			Username = "";
+
+			UiManager = new UiManager(this);
+
 			this.Window.AllowUserResizing = true;
 			this.Window.ClientSizeChanged += (sender, args) =>
 			{
@@ -64,9 +66,7 @@ namespace Alex
 					graphics.PreferredBackBufferHeight = Window.ClientBounds.Height;
 					graphics.ApplyChanges();
 				}
-
 			};
-			UiManager = new UiManager(this);
 		}
 
 		public static EventHandler<TextInputEventArgs> OnCharacterInput;
@@ -76,16 +76,11 @@ namespace Alex
 			OnCharacterInput?.Invoke(this, e);
 		}
 
-		public void Init()
-		{
-
-		}
-
 		public void SaveSettings()
 		{
 			if (GameSettings.IsDirty)
 			{
-				Log.Info($"Saving settings...");
+				//Log.Info($"Saving settings...");
 				File.WriteAllText("settings.json", JsonConvert.SerializeObject(GameSettings, Formatting.Indented));
 			}
 		}
@@ -105,7 +100,7 @@ namespace Alex
 				}
 				catch (Exception ex)
 				{
-					Log.Warn($"Failed to load settings!", ex);
+				//	Log.Warn(ex, $"Failed to load settings!");
 				}
 			}
 			else
@@ -129,7 +124,7 @@ namespace Alex
 			GameStateManager.AddState("splash", new SplashScreen(this));
 			GameStateManager.SetActiveState("splash");
 
-			Log.Info($"Initializing Alex...");
+		//	Log.Info($"Initializing Alex...");
 			ThreadPool.QueueUserWorkItem(o => { InitializeGame(); });
 		}
 
@@ -169,10 +164,10 @@ namespace Alex
 			Font = Content.Load<SpriteFont>("Minecraftia");
 			//var shader = Content.Load<EffectContent>(Path.Combine("shaders", "hlsl", "renderchunk.vertex"));
 			
-			Log.Info($"Loading blockstate metadata...");
+			//Log.Info($"Loading blockstate metadata...");
 			BlockFactory.Init();
 
-			Log.Info($"Loading resources...");
+		//	Log.Info($"Loading resources...");
 			Resources = new ResourceManager(GraphicsDevice);
 			if (!Resources.CheckResources(GraphicsDevice, GameSettings))
 			{
@@ -194,7 +189,7 @@ namespace Alex
 
 			GameStateManager.RemoveState("splash");
 
-			Log.Info($"Game initialized!");
+		//	Log.Info($"Game initialized!");
 		}
 	}
 }

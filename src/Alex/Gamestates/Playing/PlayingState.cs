@@ -1,7 +1,6 @@
 ﻿using System;
 using Alex.API.World;
 using Alex.Blocks;
-using Alex.Graphics.Overlays;
 using Alex.Rendering.Camera;
 using Alex.Rendering.UI;
 using Alex.Utils;

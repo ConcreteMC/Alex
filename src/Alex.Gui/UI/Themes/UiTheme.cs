@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using AutoMapper;
-using log4net;
 using Microsoft.Xna.Framework.Graphics;
+using NLog;
 
 namespace Alex.Graphics.UI.Themes
 {
@@ -13,9 +13,9 @@ namespace Alex.Graphics.UI.Themes
 
     public class UiTheme
     {
-        private static readonly ILog Log = LogManager.GetLogger(typeof(UiTheme));
-        
-        private List<Texture2D> _textures = new List<Texture2D>();
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(UiTheme));
+
+		private List<Texture2D> _textures = new List<Texture2D>();
         private List<UiThemeStyleSheet> _styleSheets = new List<UiThemeStyleSheet>();
         
         public void AddClass<TUiElement>(UiElementStyle style) where TUiElement : UiElement

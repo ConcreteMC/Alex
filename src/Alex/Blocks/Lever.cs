@@ -1,17 +1,17 @@
 ﻿using Alex.API.World;
 using Alex.Blocks.Properties;
 using Alex.Blocks.State;
-using log4net;
 using Microsoft.Xna.Framework;
 using MiNET;
 using MiNET.Entities;
 using MiNET.Utils;
+using NLog;
 
 namespace Alex.Blocks
 {
     public class Lever : Block
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(Lever));
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Lever));
 		public static PropertyBool Powered = new PropertyBool("powered");
 		public Lever(uint blockStateId) : base(blockStateId)
 	    {

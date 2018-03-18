@@ -7,13 +7,13 @@ using Alex.Gamestates;
 using Alex.Rendering;
 using Alex.Utils;
 using Alex.Worlds.Lighting;
-using log4net;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET.Blocks;
 using MiNET.Entities;
 using MiNET.Utils;
 using MiNET.Worlds;
+using NLog;
 using Block = Alex.Blocks.Block;
 using EntityManager = Alex.Rendering.EntityManager;
 
@@ -21,9 +21,9 @@ namespace Alex.Worlds
 {
 	public class World : IWorld, IWorldReceiver
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(World));
-		
-        private GraphicsDevice Graphics { get; }
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(World));
+
+		private GraphicsDevice Graphics { get; }
 		private Rendering.Camera.Camera Camera { get; }
         public World(Alex alex, GraphicsDevice graphics, Rendering.Camera.Camera camera, WorldProvider worldProvider)
         {

@@ -2,15 +2,15 @@
 using Alex.Blocks.Properties;
 using Alex.Blocks.State;
 using Alex.ResourcePackLib.Json;
-using log4net;
 using Microsoft.Xna.Framework;
 using MiNET.Utils;
+using NLog;
 
 namespace Alex.Blocks
 {
 	public class Door : Block
 	{
-		private static ILog Log = LogManager.GetLogger(typeof(Door));
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Door));
 
 		public static PropertyBool UPPER = new PropertyBool("half", "upper", "lower");
 		public static PropertyBool OPEN = new PropertyBool("open");

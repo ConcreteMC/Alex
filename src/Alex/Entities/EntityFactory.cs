@@ -12,19 +12,19 @@ using Alex.ResourcePackLib.Json.Models;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
 using fNbt.Tags;
-using log4net;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET.Blocks;
 using MiNET.Entities;
 using MiNET.Net;
 using MiNET.Utils;
+using NLog;
 
 namespace Alex.Entities
 {
 	public static class EntityFactory
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(EntityFactory));
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(EntityFactory));
 
 		private static ConcurrentDictionary<string, Func<EntityModelRenderer>> _registeredRenderers =
 			new ConcurrentDictionary<string, Func<EntityModelRenderer>>();

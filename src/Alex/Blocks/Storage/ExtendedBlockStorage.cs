@@ -1,13 +1,13 @@
 ﻿using Alex.API.Blocks.State;
 using Alex.API.World;
-using log4net;
 using MiNET.Utils;
+using NLog;
 
 namespace Alex.Blocks.Storage
 {
 	public class ExtendedBlockStorage
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(ExtendedBlockStorage));
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ExtendedBlockStorage));
 		/**
 		 * Contains the bottom-most Y block represented by this ExtendedBlockStorage. Typically a multiple of 16.
 		 */

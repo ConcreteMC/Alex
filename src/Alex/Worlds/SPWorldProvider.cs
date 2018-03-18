@@ -9,16 +9,17 @@ using Alex.API.World;
 using Alex.Entities;
 using Alex.Utils;
 using Alex.Worlds.Generators;
-using log4net;
 using Microsoft.Xna.Framework;
 using MiNET.Blocks;
 using MiNET.Utils;
+using NLog;
 
 namespace Alex.Worlds
 {
 	public class SPWorldProvider : WorldProvider
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(SPWorldProvider));
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(SPWorldProvider));
+
 		private readonly IWorldGenerator _generator;
 		private readonly List<ChunkCoordinates> _loadedChunks = new List<ChunkCoordinates>();
 		private ChunkCoordinates PreviousChunkCoordinates { get; set; } = new ChunkCoordinates(int.MaxValue, int.MaxValue);
