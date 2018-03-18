@@ -4,10 +4,10 @@ using Alex.Blocks.State;
 
 namespace Alex.Blocks.Properties
 {
-    public class DynamicStateProperty : StateProperty<string>
+    public class DynamicStateProperty : StateProperty
     {
 		private string[] Valid { get; }
-	    public DynamicStateProperty(string name, string[] validValues) : base(name)
+	    public DynamicStateProperty(string name, string[] validValues) : base(name, typeof(string))
 	    {
 		    Valid = validValues;
 	    }
@@ -17,7 +17,17 @@ namespace Alex.Blocks.Properties
 		    return Valid;
 	    }
 
-	    public override string ParseValue(string value)
+	    public override object ValueFromString(string value)
+	    {
+			if (Valid.Any(x => x.Equals(value)))
+		    {
+			    return value;
+		    }
+
+		    return Valid.FirstOrDefault();
+		}
+
+	  /*  public override string ParseValue(string value)
 	    {
 		    if (Valid.Any(x => x.Equals(value)))
 		    {
@@ -30,6 +40,6 @@ namespace Alex.Blocks.Properties
 	    public override string ToString(string v)
 	    {
 		    return v;
-	    }
+	    }*/
     }
 }

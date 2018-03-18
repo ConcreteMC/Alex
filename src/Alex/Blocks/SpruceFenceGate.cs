@@ -3,7 +3,7 @@ using Alex.Worlds;
 
 namespace Alex.Blocks
 {
-	public class SpruceFenceGate : Block
+	public class SpruceFenceGate : FenceGate
 	{
 		public SpruceFenceGate() : base(7274)
 		{

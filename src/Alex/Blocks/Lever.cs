@@ -7,7 +7,7 @@ namespace Alex.Blocks
 	{
 		public Lever() : base(3196)
 		{
-			Solid = false;
+			Solid = true;
 			Transparent = true;
 			IsReplacible = false;
 		}

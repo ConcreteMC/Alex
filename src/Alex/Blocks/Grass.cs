@@ -7,7 +7,7 @@ namespace Alex.Blocks
 	{
 		public Grass() : base(951)
 		{
-			Solid = true;
+			Solid = false;
 			Transparent = true;
 			IsReplacible = false;
 

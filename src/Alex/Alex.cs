@@ -165,7 +165,7 @@ namespace Alex
 			//var shader = Content.Load<EffectContent>(Path.Combine("shaders", "hlsl", "renderchunk.vertex"));
 			
 			//Log.Info($"Loading blockstate metadata...");
-			BlockFactory.Init();
+			//BlockFactory.Init();
 
 		//	Log.Info($"Loading resources...");
 			Resources = new ResourceManager(GraphicsDevice);

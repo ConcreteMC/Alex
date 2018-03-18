@@ -3,13 +3,11 @@ using Alex.Worlds;
 
 namespace Alex.Blocks
 {
-	public class StoneButton : Block
+	public class StoneButton : Button
 	{
 		public StoneButton() : base(3310)
 		{
-			Solid = false;
-			Transparent = true;
-			IsReplacible = false;
+			
 		}
 	}
 }

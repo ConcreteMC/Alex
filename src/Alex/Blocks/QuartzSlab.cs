@@ -3,11 +3,11 @@ using Alex.Worlds;
 
 namespace Alex.Blocks
 {
-	public class PurpurSlab : Slab
+	public class QuartzSlab : Slab
 	{
-		public PurpurSlab() : base(7260)
+		public QuartzSlab() : base(7248)
 		{
-		
+
 		}
 	}
 }

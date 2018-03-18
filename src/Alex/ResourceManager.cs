@@ -80,7 +80,7 @@ namespace Alex
 				int imported = BlockFactory.LoadResources(this, resourcePack, replaceModels, reportMissingModels);
 				sw.Stop();
 
-				Log.Info($"Imported {imported} blockstates from resourcepack in {sw.ElapsedMilliseconds}ms!");
+				Log.Info($"Imported {imported} blockstate variants from resourcepack in {sw.ElapsedMilliseconds}ms!");
 		    }
 
 		    return resourcePack;

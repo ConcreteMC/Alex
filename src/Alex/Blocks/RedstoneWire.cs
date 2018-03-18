@@ -7,7 +7,7 @@ namespace Alex.Blocks
 	{
 		public RedstoneWire() : base(2822)
 		{
-			Solid = true;
+			Solid = false;
 			Transparent = true;
 			IsReplacible = false;
 		}

@@ -20,7 +20,7 @@ namespace Alex.Blocks
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Block));
 	    
-		public uint BlockStateID { get; }
+		public uint BlockStateID { get; set; }
 
 		public bool Solid { get; set; }
 		public bool Transparent { get; set; }
@@ -53,8 +53,8 @@ namespace Alex.Blocks
 			set
 			{
 				IMaterial newValue = value;
-				Solid = newValue.IsSolid();
-				IsReplacible = newValue.IsReplaceable();
+			//	Solid = newValue.IsSolid();
+			//	IsReplacible = newValue.IsReplaceable();
 
 				_material = newValue;
 			}

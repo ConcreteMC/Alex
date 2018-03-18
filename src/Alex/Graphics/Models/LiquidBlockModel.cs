@@ -13,7 +13,7 @@ namespace Alex.Graphics.Models
 {
 	public class LiquidBlockModel : BlockModel
 	{
-		private static PropertyInt LEVEL = new PropertyInt("LEVEL", 8);
+		private static PropertyInt LEVEL = new PropertyInt("level", 0);
 
 		public bool IsLava = false;
 		public bool IsFlowing = false;

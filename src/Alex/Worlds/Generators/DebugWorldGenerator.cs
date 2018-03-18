@@ -100,8 +100,13 @@ namespace Alex.Worlds.Generators
 
 	    static DebugWorldGenerator()
 	    {
-		    foreach (var state in BlockFactory.AllBlockstates.OrderBy(x => x.Value.Name))
+		    foreach (var state in BlockFactory.AllBlockstatesByName.OrderBy(x => x.Key))
 		    {
+			    foreach (var variant in ((BlockState) state.Value).Variants)
+			    {
+					if (variant == state.Value) continue;
+					ALL_VALID_STATES.Add(variant);
+			    }
 			    ALL_VALID_STATES.Add(state.Value);
 			}
 

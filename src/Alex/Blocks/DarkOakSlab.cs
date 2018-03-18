@@ -3,9 +3,9 @@ using Alex.Worlds;
 
 namespace Alex.Blocks
 {
-	public class NetherBrickFence : Fence
+	public class DarkOakSlab : Slab
 	{
-		public NetherBrickFence() : base(4437)
+		public DarkOakSlab() : base(7200)
 		{
 			
 		}

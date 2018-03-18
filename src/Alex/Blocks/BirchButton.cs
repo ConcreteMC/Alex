@@ -3,9 +3,9 @@ using Alex.Worlds;
 
 namespace Alex.Blocks
 {
-	public class PurpurSlab : Slab
+	public class BirchButton : Button
 	{
-		public PurpurSlab() : base(7260)
+		public BirchButton() : base(5270)
 		{
 		
 		}

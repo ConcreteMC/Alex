@@ -8,7 +8,7 @@ namespace Alex.Blocks
 		public FrostedIce() : base(8098)
 		{
 			Solid = true;
-			Transparent = false;
+			Transparent = true;
 			IsReplacible = false;
 		}
 	}

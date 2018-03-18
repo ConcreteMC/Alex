@@ -3,7 +3,7 @@ using Alex.Worlds;
 
 namespace Alex.Blocks
 {
-	public class AcaciaDoor : Block
+	public class AcaciaDoor : Door
 	{
 		public AcaciaDoor() : base(7790)
 		{
