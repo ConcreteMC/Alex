@@ -194,6 +194,11 @@ namespace Alex.Gamestates.Playing
 					{
 						World.RebuildChunks();
 					}
+
+					if (currentKeyboardState.IsKeyDown(KeyBinds.Fog) && !_oldKeyboardState.IsKeyDown(KeyBinds.Fog))
+					{
+						World.ChunkManager.Effect.FogEnabled = !World.ChunkManager.Effect.FogEnabled;
+					}
 				}
 			}
 			_oldKeyboardState = currentKeyboardState;

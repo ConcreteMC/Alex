@@ -38,7 +38,7 @@ namespace Alex.Rendering
 	    public int ChunkUpdates => _chunkUpdates;
 	    public int ChunkCount => Chunks.Count;
 
-	    private AlphaTestEffect Effect { get; }
+	    public AlphaTestEffect Effect { get; }
 
 	    public int Vertices { get; private set; }
 	    public int RenderedChunks { get; private set; } = 0;
