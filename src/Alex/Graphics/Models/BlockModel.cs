@@ -277,8 +277,12 @@ namespace Alex.Graphics.Models
 			//BlockFactory.
 		    var block = world.GetBlock(pos);
 
+		    if (me.Solid && me.Transparent)
+		    {
+			    if (me.Name.Equals(block.Name)) return false;
+		    }
 		    if (me.Solid && block.Transparent) return true;
-		    if (me.Transparent && block.Transparent && !block.Solid) return false;
+		 //   if (me.Transparent && block.Transparent && !block.Solid) return false;
 			if (me.Transparent) return true;
 			if (!me.Transparent && block.Transparent) return true;
 		    if (block.Solid && !block.Transparent) return false;

@@ -561,6 +561,8 @@ namespace Alex
 			blockName = blockName.ToLowerInvariant();
 			if (string.IsNullOrWhiteSpace(blockName)) return null;
 			else if (blockName == "minecraft:air" || blockName == "air") return new Air();
+			else if (blockName == "minecraft:cave_air" || blockName == "caveair") return new Air();
+
 			else if (blockName == "minecraft:stone" || blockName == "stone") return new Stone();
 			else if (blockName == "minecraft:dirt" || blockName == "dirt") return new Dirt();
 			else if (blockName == "minecraft:podzol" || blockName == "podzol") return new Podzol();
