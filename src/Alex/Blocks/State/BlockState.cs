@@ -124,7 +124,7 @@ namespace Alex.Blocks.State {
 
 		public IDictionary<IStateProperty, string> ToDictionary()
 		{
-			var dictionary = new Dictionary<IStateProperty, string>();
+			var dictionary = new Dictionary<IStateProperty, string>(new EqualityCompare());
 			foreach (var kv in _values)
 			{
 				dictionary.TryAdd(kv.Key, kv.Value.ToString().ToLowerInvariant());

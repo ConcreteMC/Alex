@@ -29,6 +29,7 @@ namespace Alex
 		private static NLog.Logger Log = NLog.LogManager.GetCurrentClassLogger(typeof(BlockFactory));
 
 		public static IReadOnlyDictionary<uint, IBlockState> AllBlockstates => new ReadOnlyDictionary<uint, IBlockState>(RegisteredBlockStates);
+		public static IReadOnlyDictionary<string, IBlockState> AllBlockstatesByName => new ReadOnlyDictionary<string, IBlockState>(BlockStateByName);
 		private static readonly Dictionary<uint, IBlockState> RegisteredBlockStates = new Dictionary<uint, IBlockState>();
 		private static readonly Dictionary<string, IBlockState> BlockStateByName = new Dictionary<string, IBlockState>();
 
@@ -301,8 +302,10 @@ namespace Alex
 							state.Default = blockStateData;
 							state.ID = id;
 						}
-
-						state.Variants.Add(blockStateData);
+						else
+						{
+							state.Variants.Add(blockStateData);
+						}
 
 						if (!RegisteredBlockStates.TryAdd(id, blockStateData))
 						{
@@ -450,6 +453,11 @@ namespace Alex
 
 			if (resourcePack.BlockStates.TryGetValue(name, out blockState))
 			{
+				if (blockState != null && blockState.Parts != null && blockState.Parts.Length > 0)
+				{
+					return m => new MultiStateResourcePackModel(m, blockState);
+				}
+
 				if (blockState.Variants == null ||
 					blockState.Variants.Count == 0)
 					return null;
@@ -467,9 +475,19 @@ namespace Alex
 				KeyValuePair<string, BlockStateVariant> closest = default(KeyValuePair<string, BlockStateVariant>);
 				foreach (var v in blockState.Variants)
 				{
-					var variantBlockState = Blocks.State.BlockState.FromString(v.Key);
-
 					int matches = 0;
+					var variantBlockState = Blocks.State.BlockState.FromString(v.Key);
+					/*foreach (var kv in variantBlockState.ToDictionary())
+					{
+						if (data.TryGetValue(kv.Key, out string va))
+						{
+							if (kv.Value.Equals(va, StringComparison.InvariantCultureIgnoreCase))
+							{
+								matches++;
+							}
+						}
+					}*/
+				
 					foreach (var kv in data)
 					{
 						if (variantBlockState.TryGetValue(kv.Key.Name, out string vValue))
@@ -499,11 +517,6 @@ namespace Alex
 
 				var subVariant = blockStateVariant.FirstOrDefault();
 				return r => new CachedResourcePackModel(r, new[] { subVariant });
-			}
-
-			if (blockState != null && blockState.Parts != null && blockState.Parts.Length > 0)
-			{
-				return m => new MultiStateResourcePackModel(m, blockState);
 			}
 
 			return null;
