@@ -234,19 +234,4 @@ namespace Alex.Utils
 		    return _atlasLocations.ContainsKey(file) ? _atlasLocations[file] : new TextureInfo(Vector2.Zero, TextureWidth, TextureHeight);
 	    }
 	}
-
-	public class TextureInfo
-	{
-		public int Width { get; } = 16;
-		public int Height { get; } = 16;
-
-		public Vector2 Position { get; } = Vector2.Zero;
-
-		public TextureInfo(Vector2 position, int width, int height)
-		{
-			Position = position;
-			Width = width;
-			Height = height;
-		}
-	}
 }

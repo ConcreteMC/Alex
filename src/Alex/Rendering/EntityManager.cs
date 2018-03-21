@@ -37,7 +37,7 @@ namespace Alex.Rendering
 		    var entities = Entities.Values.ToArray();
 		    foreach (var entity in entities)
 		    {
-				entity.ModelRenderer?.Update(Device, gameTime, entity.KnownPosition.ToXnaVector3(), entity.KnownPosition.Yaw, entity.KnownPosition.Pitch);
+				entity.ModelRenderer?.Update(Device, gameTime, entity.KnownPosition, entity.KnownPosition.Yaw, entity.KnownPosition.Pitch);
 		    }
 	    }
 
@@ -51,7 +51,7 @@ namespace Alex.Rendering
 
 				if (camera.BoundingFrustum.Contains(new Microsoft.Xna.Framework.BoundingBox(entityBox.Min, entityBox.Max)) != ContainmentType.Disjoint)
 			    {
-				    entity.ModelRenderer?.Render(args, camera, entity.KnownPosition.ToXnaVector3(), entity.KnownPosition.Yaw, entity.KnownPosition.Pitch);
+				    entity.ModelRenderer?.Render(args, camera, entity.KnownPosition, entity.KnownPosition.Yaw, entity.KnownPosition.Pitch);
 				    renderCount++;
 			    }
 		    }
@@ -64,7 +64,7 @@ namespace Alex.Rendering
 		    var entities = Entities.Values.ToArray();
 		    foreach (var entity in entities.Where(x =>
 			    x.IsShowName && !string.IsNullOrWhiteSpace(x.NameTag) &&
-			    (x.IsAlwaysShowName || Vector3.Distance(camera.Position, x.KnownPosition.ToXnaVector3()) < 16f)))
+			    (x.IsAlwaysShowName || Vector3.Distance(camera.Position, x.KnownPosition) < 16f)))
 		    {
 			    var entityBox = entity.GetBoundingBox();
 

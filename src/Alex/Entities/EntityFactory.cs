@@ -36,7 +36,7 @@ namespace Alex.Entities
 			var id = nbt["id"].StringValue.Replace("minecraft:", "");
 			var pos = nbt["Pos"];
 			var rot = nbt["Rotation"];
-			if (id != null && pos != null && Utils.EntityType.TryParse(id, true, out Utils.EntityType entityType))
+			if (id != null && pos != null && EntityType.TryParse(id, true, out EntityType entityType))
 			{
 				var uuidLeast = nbt["UUIDLeast"].LongValue;
 				var uuidMost = nbt["UUIDMost"].LongValue;

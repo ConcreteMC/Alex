@@ -160,7 +160,7 @@ namespace Alex.Graphics.Models
 						vert.Position.X += (position.X);
 						vert.Position.Z += (position.Z);
 
-						vert.Color = UvMapHelp.AdjustColor(vert.Color, f, GetLight(world, position), false);
+						vert.Color = LightingUtils.AdjustColor(vert.Color, f, GetLight(world, position), false);
 
 						result.Add(vert);
 					}

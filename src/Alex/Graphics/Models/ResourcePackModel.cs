@@ -270,7 +270,7 @@ namespace Alex.Graphics.Models
 							}
 						}
 
-						faceColor = UvMapHelp.AdjustColor(faceColor, cull, GetLight(world, worldPosition + cullFace),
+						faceColor = LightingUtils.AdjustColor(faceColor, cull, GetLight(world, worldPosition + cullFace),
 					        element.Shade);
 
 				        for (var index = 0; index < faceVertices.Length; index++)

@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections;
 using Alex.API.Entities;
+using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.Graphics.Models;
 using Alex.Graphics.Models.Entity;
 using Alex.Rendering;
+using Alex.Rendering.Camera;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using NLog;
 
 namespace Alex.Entities
@@ -326,6 +329,36 @@ namespace Alex.Entities
 
 		public virtual void DoMouseOverInteraction(byte actionId, Player player)
 		{
+		}
+
+		public void RenderNametag(IRenderArgs renderArgs, Camera camera)
+		{
+			Vector2 textPosition;
+
+			// calculate screenspace of text3d space position
+			var screenSpace = renderArgs.GraphicsDevice.Viewport.Project(Vector3.Zero,
+				camera.ProjectionMatrix,
+				camera.ViewMatrix,
+				Matrix.CreateTranslation(KnownPosition + new Vector3(0, (float)Height, 0)));
+
+
+			// get 2D position from screenspace vector
+			textPosition.X = screenSpace.X;
+			textPosition.Y = screenSpace.Y;
+
+			float s = 0.5f;
+			var scale = new Vector2(s, s);
+
+			string clean = NameTag.StripIllegalCharacters();
+
+			var stringCenter = Alex.Font.MeasureString(clean) * s;
+			var c = new Point((int)stringCenter.X, (int)stringCenter.Y);
+
+			textPosition.X = (int)(textPosition.X - c.X);
+			textPosition.Y = (int)(textPosition.Y - c.Y);
+
+			renderArgs.SpriteBatch.FillRectangle(new Rectangle(textPosition.ToPoint(), c), new Color(Color.Black, 128));
+			renderArgs.SpriteBatch.DrawString(Alex.Font, clean, textPosition, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0);
 		}
 	}
 }
