@@ -28,26 +28,6 @@ namespace Alex.Worlds
 			Ticker = new TickManager(this);
 		}
 
-		public bool IsSolid(Vector3 location)
-		{
-			return IsSolid(location.X, location.Y, location.Z);
-		}
-
-		public bool IsSolid(float x, float y, float z)
-		{
-			return GetBlock(x, y, z).Solid;
-		}
-
-		public bool IsTransparent(Vector3 location)
-		{
-			return IsTransparent(location.X, location.Y, location.Z);
-		}
-
-		public bool IsTransparent(float x, float y, float z)
-		{
-			return GetBlock(x, y, z).Transparent;
-		}
-
 		public byte GetSkyLight(Vector3 position)
 		{
 			return GetSkyLight(position.X, position.Y, position.Z);

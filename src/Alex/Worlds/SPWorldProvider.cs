@@ -67,10 +67,22 @@ namespace Alex.Worlds
 
 			List<ChunkCoordinates> newChunkCoordinates = new List<ChunkCoordinates>();
 
-			for (int x = -renderDistance; x < renderDistance; x++)
+			for (int cx = 0; cx < renderDistance * 2; cx++)
 			{
-				for (int z = -renderDistance; z < renderDistance; z++)
+				int x = cx / 2;
+				if (cx % 2 == 0)
 				{
+					x = -x;
+				}
+
+				for (int cz = 0; cz < renderDistance * 2; cz++)
+				{
+					int z = cz / 2;
+					if (cz % 2 == 0)
+					{
+						z = -z;
+					}
+
 					var distance = (x * x) + (z * z);
 					if (distance > radiusSquared)
 					{
@@ -84,9 +96,9 @@ namespace Alex.Worlds
 					{
 						IChunkColumn chunk =
 							_generator.GenerateChunkColumn(cc);
-						
+
 						if (chunk == null) continue;
-						
+
 						_loadedChunks.Add(cc);
 
 						yield return chunk;

@@ -111,7 +111,7 @@ namespace Alex.Rendering
 		private ManualResetEventSlim UpdateResetEvent = new ManualResetEventSlim(true);
 		private void ChunkUpdateThread()
 		{
-			int maxThreads = Game.GameSettings.RenderDistance; //Environment.ProcessorCount / 2;
+			int maxThreads = Game.GameSettings.ChunkThreads; //Environment.ProcessorCount / 2;
 	        //int runningThreads = 0;
 			while (!CancelationToken.IsCancellationRequested)
 			{
@@ -123,7 +123,7 @@ namespace Alex.Rendering
 						UpdateResetEvent.Wait(CancelationToken.Token);
 
 						IChunkColumn chunk;
-						if (!Chunks.TryGetValue(i, out chunk))
+						if (i.DistanceTo(new ChunkCoordinates(Camera.Position)) > Game.GameSettings.RenderDistance || !Chunks.TryGetValue(i, out chunk))
 						{
 							Interlocked.Decrement(ref _chunkUpdates);
 							continue;
@@ -137,7 +137,7 @@ namespace Alex.Rendering
 							{
 								UpdateResetEvent.Reset();
 							}
-
+							
 							Task.Run(() => { UpdateChunk(chunk); }).ContinueWith(ContinuationAction);
 						}
 						catch (TaskCanceledException)

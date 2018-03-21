@@ -30,6 +30,7 @@ namespace Alex.Gamestates.Playing
 		{
 			Alex.IsMouseVisible = false;
 			Alex.GameStateManager.SetActiveState(State);
+			Alex.GameStateManager.RemoveState("ingamemenu");
 		}
 
 		private void DisconnectButtonOnOnButtonClick()

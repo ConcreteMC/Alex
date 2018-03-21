@@ -16,10 +16,6 @@ namespace Alex.API.World
 		void RebuildChunks();
 		void Render(IRenderArgs args);
 		Vector3 GetSpawnPoint();
-		bool IsSolid(Vector3 location);
-		bool IsSolid(float x, float y, float z);
-		bool IsTransparent(Vector3 location);
-		bool IsTransparent(float x, float y, float z);
 		byte GetSkyLight(Vector3 position);
 		byte GetSkyLight(float x, float y, float z);
 		byte GetSkyLight(int x, int y, int z);

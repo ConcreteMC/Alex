@@ -387,6 +387,7 @@
     <None Remove="Worlds\Generators\DebugWorldGenerator.cs" />
     <None Remove="Worlds\Generators\Decorators\ChunkDecorator.cs" />
     <None Remove="Worlds\Generators\Decorators\FoliageDecorator.cs" />
+    <None Remove="Worlds\Generators\EmptyWorldGenerator.cs" />
     <None Remove="Worlds\Generators\IWorldGenerator.cs" />
     <None Remove="Worlds\Generators\Structures\AcaciaTree.cs" />
     <None Remove="Worlds\Generators\Structures\BirchTree.cs" />
@@ -774,6 +775,7 @@
     <Compile Include="Worlds\Generators\DebugWorldGenerator.cs" />
     <Compile Include="Worlds\Generators\Decorators\ChunkDecorator.cs" />
     <Compile Include="Worlds\Generators\Decorators\FoliageDecorator.cs" />
+    <Compile Include="Worlds\Generators\EmptyWorldGenerator.cs" />
     <Compile Include="Worlds\Generators\IWorldGenerator.cs" />
     <Compile Include="Worlds\Generators\Structures\AcaciaTree.cs" />
     <Compile Include="Worlds\Generators\Structures\BirchTree.cs" />

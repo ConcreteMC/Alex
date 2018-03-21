@@ -131,7 +131,7 @@ namespace Alex.Gamestates
                 }
                 catch (Exception ex)
                 {
-                    Log.Warn("An exception occured while trying to render!", ex);
+                    Log.Warn(ex, "An exception occured while trying to render!");
                 }
             }
         }
@@ -163,7 +163,7 @@ namespace Alex.Gamestates
                 }
                 catch(Exception ex)
                 {
-                    Log.Warn($"An exception occured while trying to call Update!", ex);
+                    Log.Warn(ex, $"An exception occured while trying to call Update!");
                 }
             }
         }

@@ -280,7 +280,14 @@ namespace Alex.Graphics.Models
 		    if (me.Solid && me.Transparent)
 		    {
 			    if (me.Name.Equals(block.Name)) return false;
+			    if (block.Solid && !block.Transparent) return false;
 		    }
+			else if (me.Transparent)
+		    {
+			    if (block.Solid && !block.Transparent) return false;
+		    }
+		
+
 		    if (me.Solid && block.Transparent) return true;
 		 //   if (me.Transparent && block.Transparent && !block.Solid) return false;
 			if (me.Transparent) return true;

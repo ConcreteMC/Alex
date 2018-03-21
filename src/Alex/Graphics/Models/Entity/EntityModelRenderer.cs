@@ -57,41 +57,26 @@ namespace Alex.Graphics.Models.Entity
 							continue;
 						}
 
-						if (cube.Uv == null)
-						{
-							Log.Warn("Cube.UV was null!");
-							continue;
-						}
-
-						if (cube.Origin == null)
-						{
-							Log.Warn("Cube.Origin was null!");
-							continue;
-						}
-
-						if (cube.Size == null)
-						{
-							Log.Warn("Cube.Size was null!");
-							continue;
-						}
-
-						var size = new Vector3(cube.Size.X, cube.Size.Y, cube.Size.Z);
-						var origin = new Vector3(cube.Origin.X, cube.Origin.Y, cube.Origin.Z);
+						var size = cube.Size;
+						var origin = cube.Origin;
 						var pivot = bone.Pivot;
 						var rotation = bone.Rotation;
 
 						VertexPositionNormalTexture[] vertices = ModelBonesCache.GetOrAdd($"{Model.Name}:{bone.Name}", s =>
 						{
 							Cube built = new Cube(size, new Vector2(Texture.Width, Texture.Height));
-							built.BuildCube(new Vector2(cube.Uv.X, cube.Uv.Y));
+							built.BuildCube(cube.Uv);
+
 							return built.Front.Concat(built.Back).Concat(built.Top).Concat(built.Bottom).Concat(built.Left)
 								.Concat(built.Right).ToArray();
 						});
 
-						if (!cubes.TryAdd(bone.Name, new ModelPart(vertices, 
+						var part = new ModelPart(vertices,
 							Texture,
-							rotation, pivot, origin)))
+							rotation, pivot, origin);
+						if (!cubes.TryAdd(bone.Name, part))
 						{
+							part.Dispose();
 							Log.Warn($"Failed to add cube to list of bones: {Model.Name}:{bone.Name}");
 						}
 					}
@@ -202,13 +187,11 @@ namespace Alex.Graphics.Models.Entity
 
 				var buffer = Buffer;
 
-				Effect.World = Matrix.CreateScale(1f / 16f) * Matrix.CreateRotationY(MathUtils.ToRadians(yaw)) * Matrix.CreateRotationX(MathUtils.ToRadians(pitch)) *
-				               Matrix.CreateTranslation(position);
+				Effect.World = Matrix.CreateScale(1f / 16f) * Matrix.CreateRotationY(MathUtils.ToRadians(yaw)) * Matrix.CreateRotationX(MathUtils.ToRadians(pitch)) * Matrix.CreateTranslation(position);
+				//Effect.World = Matrix.CreateScale(1f / 16f) * Matrix.CreateTranslation(position);
 
 				Effect.View = camera.ViewMatrix;
 				Effect.Projection = camera.ProjectionMatrix;
-
-				//TransparentEffect.World = Matrix.CreateScale(1f / 16f) * Matrix.CreateTranslation(position);
 
 				args.GraphicsDevice.SetVertexBuffer(buffer);
 				foreach (var pass in Effect.CurrentTechnique.Passes)
@@ -221,17 +204,18 @@ namespace Alex.Graphics.Models.Entity
 
 			private void Mod(ref VertexPositionNormalTexture[] data, Vector3 origin, Vector3 pivot, Vector3 rotation)
 			{
-				Matrix transform =
+				Matrix transform = Matrix.CreateTranslation(-pivot) *
 					Matrix.CreateRotationX(rotation.X) *
 					Matrix.CreateRotationY(rotation.Y) *
 					Matrix.CreateRotationZ(rotation.Z) *
-					Matrix.CreateTranslation(pivot.X, pivot.Y, pivot.Z);
+					Matrix.CreateTranslation(pivot);
 
 				for (int i = 0; i < data.Length; i++)
 				{
 					var pos = data[i].Position;
 
-					pos = new Vector3(origin.X + pos.X, origin.Y + pos.Y, origin.Z + pos.Z);
+					pos = pos + origin;
+
 					if (rotation != Vector3.Zero)
 					{
 						pos = Vector3.Transform(pos, transform);

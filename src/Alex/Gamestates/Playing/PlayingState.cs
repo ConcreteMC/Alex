@@ -169,7 +169,8 @@ namespace Alex.Gamestates.Playing
 					}
 					else
 					{
-						Alex.GameStateManager.SetActiveState(new InGameMenuState(Alex, this, currentKeyboardState));
+						Alex.GameStateManager.AddState("ingamemenu", new InGameMenuState(Alex, this, currentKeyboardState));
+						Alex.GameStateManager.SetActiveState("ingamemenu");
 					}
 				}
 

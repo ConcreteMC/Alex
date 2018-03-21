@@ -176,9 +176,10 @@ namespace Alex.Graphics.Models
 		    CelestialPlaneEffect.View = camera.ViewMatrix;
 		    CelestialPlaneEffect.Projection = camera.ProjectionMatrix;
 
-		   // var depthState = renderArgs.GraphicsDevice.DepthStencilState;
-		   // var raster = renderArgs.GraphicsDevice.RasterizerState;
-		   // var bl = renderArgs.GraphicsDevice.BlendState;
+		    var depthState = renderArgs.GraphicsDevice.DepthStencilState;
+		    var raster = renderArgs.GraphicsDevice.RasterizerState;
+		    var bl = renderArgs.GraphicsDevice.BlendState;
+
 			renderArgs.GraphicsDevice.DepthStencilState = new DepthStencilState() { DepthBufferEnable = false };
 			renderArgs.GraphicsDevice.RasterizerState = new RasterizerState() { CullMode = CullMode.None };
 			renderArgs.GraphicsDevice.BlendState = BlendState.AlphaBlend;
@@ -193,8 +194,8 @@ namespace Alex.Graphics.Models
 		    foreach (var pass in SkyPlaneEffect.CurrentTechnique.Passes)
 			{
 				pass.Apply();
-				SkyPlaneEffect.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, 2);
 			}
+		    SkyPlaneEffect.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, 2);
 
 			// Sun
 			renderArgs.GraphicsDevice.SetVertexBuffer(CelestialPlane);
@@ -211,8 +212,8 @@ namespace Alex.Graphics.Models
 			foreach (var pass in CelestialPlaneEffect.CurrentTechnique.Passes)
 			{
 				pass.Apply();
-				CelestialPlaneEffect.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, 2);
 			}
+		    CelestialPlaneEffect.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, 2);
 
 			renderArgs.GraphicsDevice.SetVertexBuffer(MoonPlane);
 
@@ -223,9 +224,10 @@ namespace Alex.Graphics.Models
 			foreach (var pass in CelestialPlaneEffect.CurrentTechnique.Passes)
 			{
 				pass.Apply();
-				CelestialPlaneEffect.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, 2);
 			}
-		    renderArgs.GraphicsDevice.BlendState = backup;
+		    CelestialPlaneEffect.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, 2);
+
+			renderArgs.GraphicsDevice.BlendState = backup;
 		    renderArgs.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
 
 			// Void
@@ -237,8 +239,12 @@ namespace Alex.Graphics.Models
 			foreach (var pass in SkyPlaneEffect.CurrentTechnique.Passes)
 			{
 				pass.Apply();
-				SkyPlaneEffect.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, 2);
 			}
-		}
+		    SkyPlaneEffect.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, 2);
+
+			renderArgs.GraphicsDevice.DepthStencilState = depthState;
+		    renderArgs.GraphicsDevice.RasterizerState = raster;
+		    renderArgs.GraphicsDevice.BlendState = bl;
+	    }
     }
 }

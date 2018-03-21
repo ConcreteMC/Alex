@@ -47,7 +47,7 @@ namespace Alex.Worlds
 
 		private long LastLightningBolt = 0;
 		private long Tick = 0;
-		public long WorldTime { get; private set; } = 12000;
+		public long WorldTime { get; private set; } = 6000;
 		public Vector3 GetSkyColor(float celestialAngle)
 		{
 			var position = Camera.Position;
@@ -167,7 +167,7 @@ namespace Alex.Worlds
 			if (testWatch.ElapsedMilliseconds >= 50)
 			{
 				testWatch.Restart();
-				WorldTime++;
+			//	WorldTime++;
 
 			 	SkyRenderer.Update(gameTime);
 			}
@@ -190,26 +190,6 @@ namespace Alex.Worlds
 	        }
             return Vector3.Zero;
         }
-
-	    public bool IsSolid(Vector3 location)
-	    {
-		    return IsSolid(location.X, location.Y, location.Z);
-	    }
-
-	    public bool IsSolid(float x, float y, float z)
-	    {
-		    return GetBlock(x, y, z).Solid;
-	    }
-
-		public bool IsTransparent(Vector3 location)
-		{
-			return IsTransparent(location.X, location.Y, location.Z);
-		}
-
-		public bool IsTransparent(float x, float y, float z)
-		{
-			return GetBlock(x, y, z).Transparent;
-		}
 
         public byte GetSkyLight(Vector3 position)
         {
