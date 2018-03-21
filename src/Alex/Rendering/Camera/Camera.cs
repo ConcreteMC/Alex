@@ -56,6 +56,11 @@ namespace Alex.Rendering.Camera
 			 	Vector3 v = Direction;
 				return MathUtils.RadianToDegree((float)Math.Atan2(v.X, v.Z));
 			}
+		    set
+		    {
+			    _rotation.Y = MathUtils.ToRadians(value);
+				UpdateLookAt();
+		    }
 	    }
 
 	    public float Pitch;

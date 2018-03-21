@@ -342,6 +342,7 @@
     <None Remove="Graphics\Models\Model.cs" />
     <None Remove="Graphics\Models\MultiStateCachedResourcePackModel.cs" />
     <None Remove="Graphics\Models\ResourcePackModel.cs" />
+    <None Remove="Graphics\Models\SkyboxModel.cs" />
     <None Remove="KeyBinds.cs" />
     <None Remove="Program.cs" />
     <None Remove="Rendering\Camera\Camera.cs" />
@@ -726,6 +727,7 @@
     <Compile Include="Graphics\Models\CachedResourcePackModel.cs" />
     <Compile Include="Graphics\Models\ResourcePackModel.cs" />
     <Compile Include="Graphics\Models\LiquidBlockModel.cs" />
+    <Compile Include="Graphics\Models\SkyboxModel.cs" />
     <Compile Include="KeyBinds.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Rendering\Camera\Camera.cs" />

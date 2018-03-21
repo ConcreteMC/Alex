@@ -568,47 +568,23 @@ namespace Alex
 			else if (blockName == "minecraft:podzol" || blockName == "podzol") return new Podzol();
 			else if (blockName == "minecraft:cobblestone" || blockName == "cobblestone") return new Cobblestone();
 			else if (blockName == "minecraft:bedrock" || blockName == "bedrock") return new Bedrock();
-
-			//Liquid
-			else if (blockName == "minecraft:water" || blockName == "water") return new Water();
-			else if (blockName == "minecraft:lava" || blockName == "lava") return new Lava();
-
 			else if (blockName == "minecraft:sand" || blockName == "sand") return new Sand();
 			else if (blockName == "minecraft:gravel" || blockName == "gravel") return new Gravel();
-
-			//Ores
-			else if (blockName == "minecraft:redstone_ore" || blockName == "redstoneore") return new RedstoneOre();
-			else if (blockName == "minecraft:gold_ore" || blockName == "goldore") return new GoldOre();
-			else if (blockName == "minecraft:iron_ore" || blockName == "ironore") return new IronOre();
-			else if (blockName == "minecraft:coal_ore" || blockName == "coalore") return new CoalOre();
-			else if (blockName == "minecraft:diamond_ore" || blockName == "diamondore") return new DiamondOre();
-			else if (blockName == "minecraft:emerald_ore" || blockName == "emeraldore") return new EmeraldOre();
-			else if (blockName == "minecraft:lapis_ore" || blockName == "lapisore") return new LapisOre();
-
-			else if (blockName == "minecraft:gold_block" || blockName == "goldblock") return new GoldBlock();
-			else if (blockName == "minecraft:iron_block" || blockName == "ironblock") return new IronBlock();
-			else if (blockName == "minecraft:diamond_block" || blockName == "diamondblock") return new DiamondBlock();
-			else if (blockName == "minecraft:emerald_block" || blockName == "emeraldblock") return new EmeraldBlock();
-			else if (blockName == "minecraft:lapis_block" || blockName == "lapisblock") return new LapisBlock();
-
 			else if (blockName == "minecraft:sponge" || blockName == "sponge") return new Sponge();
 			else if (blockName == "minecraft:glass" || blockName == "glass") return new Glass();
-
 			else if (blockName == "minecraft:dispenser" || blockName == "dispenser") return new Dispenser();
 			else if (blockName == "minecraft:sandstone" || blockName == "sandstone") return new Sandstone();
 			else if (blockName == "minecraft:note_block" || blockName == "noteblock") return new NoteBlock();
 			else if (blockName == "minecraft:detector_rail" || blockName == "detectorrail") return new DetectorRail();
-
 			else if (blockName == "minecraft:grass" || blockName == "grass") return new Grass();
 			else if (blockName == "minecraft:fern" || blockName == "fern") return new Fern();
+			else if (blockName == "minecraft:large_fern" || blockName == "largefern") return new Fern(); //TODO: Create large fern class
 			else if (blockName == "minecraft:brown_mushroom" || blockName == "brownmushroom") return new BrownMushroom();
 			else if (blockName == "minecraft:red_mushroom" || blockName == "redmushroom") return new RedMushroom();
 			else if (blockName == "minecraft:dead_bush" || blockName == "deadbush") return new DeadBush();
-
 			else if (blockName == "minecraft:piston" || blockName == "piston") return new Piston();
 			else if (blockName == "minecraft:piston_head" || blockName == "pistonhead") return new PistonHead();
 			else if (blockName == "minecraft:sticky_piston" || blockName == "stickypiston") return new StickyPiston();
-
 			else if (blockName == "minecraft:tnt" || blockName == "tnt") return new Tnt();
 			else if (blockName == "minecraft:bookshelf" || blockName == "bookshelf") return new Bookshelf();
 			else if (blockName == "minecraft:mossy_cobblestone" || blockName == "mossycobblestone") return new MossyCobblestone();
@@ -617,7 +593,6 @@ namespace Alex
 			else if (blockName == "minecraft:mob_spawner" || blockName == "mobspawner") return new MobSpawner();
 			else if (blockName == "minecraft:chest" || blockName == "chest") return new Chest();
 			else if (blockName == "minecraft:redstone_wire" || blockName == "redstonewire") return new RedstoneWire();
-
 			else if (blockName == "minecraft:crafting_table" || blockName == "craftingtable") return new CraftingTable();
 			else if (blockName == "minecraft:wheat" || blockName == "wheat") return new Wheat();
 			else if (blockName == "minecraft:farmland" || blockName == "farmland") return new Farmland();
@@ -627,10 +602,9 @@ namespace Alex
 			else if (blockName == "minecraft:wall_sign" || blockName == "wallsign") return new WallSign();
 			else if (blockName == "minecraft:lever" || blockName == "lever") return new Lever();
 			else if (blockName == "minecraft:stone_pressure_plate" || blockName == "stonepressureplate") return new StonePressurePlate();
-
 			else if (blockName == "minecraft:torch" || blockName == "torch") return new Torch();
+			else if (blockName == "minecraft:wall_torch" || blockName == "walltorch") return new Torch(true); 
 			else if (blockName == "minecraft:redstone_torch" || blockName == "redstonetorch") return new RedstoneTorch();
-
 			else if (blockName == "minecraft:snow" || blockName == "snow") return new Snow();
 			else if (blockName == "minecraft:ice" || blockName == "ice") return new Ice();
 			else if (blockName == "minecraft:cactus" || blockName == "cactus") return new Cactus();
@@ -649,7 +623,6 @@ namespace Alex
 			else if (blockName == "minecraft:pumpkin_stem" || blockName == "pumpkinstem") return new PumpkinStem();
 			else if (blockName == "minecraft:melon_stem" || blockName == "melonstem") return new MelonStem();
 			else if (blockName == "minecraft:vine" || blockName == "vine") return new Vine();
-
 			else if (blockName == "minecraft:mycelium" || blockName == "mycelium") return new Mycelium();
 			else if (blockName == "minecraft:nether_wart" || blockName == "netherwart") return new NetherWart();
 			else if (blockName == "minecraft:enchanting_table" || blockName == "enchantingtable") return new EnchantingTable();
@@ -661,11 +634,9 @@ namespace Alex
 			else if (blockName == "minecraft:dragon_egg" || blockName == "dragonegg") return new DragonEgg();
 			else if (blockName == "minecraft:redstone_lamp" || blockName == "redstonelamp") return new RedstoneLamp();
 			else if (blockName == "minecraft:cocoa" || blockName == "cocoa") return new Cocoa();
-
 			else if (blockName == "minecraft:ender_chest" || blockName == "enderchest") return new EnderChest();
 			else if (blockName == "minecraft:tripwire_hook" || blockName == "tripwirehook") return new TripwireHook();
 			else if (blockName == "minecraft:tripwire" || blockName == "tripwire") return new Tripwire();
-
 			else if (blockName == "minecraft:beacon" || blockName == "beacon") return new Beacon();
 			else if (blockName == "minecraft:cobblestone_wall" || blockName == "cobblestonewall") return new CobblestoneWall();
 			else if (blockName == "minecraft:flower_pot" || blockName == "flowerpot") return new FlowerPot();
@@ -679,10 +650,8 @@ namespace Alex
 			else if (blockName == "minecraft:redstone_block" || blockName == "redstoneblock") return new RedstoneBlock();
 			else if (blockName == "minecraft:hopper" || blockName == "hopper") return new Hopper();
 			else if (blockName == "minecraft:quartz_block" || blockName == "quartzblock") return new QuartzBlock();
-
 			else if (blockName == "minecraft:activator_rail" || blockName == "activatorrail") return new ActivatorRail();
 			else if (blockName == "minecraft:dropper" || blockName == "dropper") return new Dropper();
-
 			else if (blockName == "minecraft:iron_trapdoor" || blockName == "irontrapdoor") return new IronTrapdoor();
 			else if (blockName == "minecraft:prismarine" || blockName == "prismarine") return new Prismarine();
 			else if (blockName == "minecraft:sea_lantern" || blockName == "sealantern") return new SeaLantern();
@@ -691,43 +660,35 @@ namespace Alex
 			else if (blockName == "minecraft:packed_ice" || blockName == "packedice") return new PackedIce();
 			else if (blockName == "minecraft:tall_grass" || blockName == "tallgrass") return new TallGrass();
 			else if (blockName == "minecraft:red_sandstone" || blockName == "redsandstone") return new RedSandstone();
-
 			else if (blockName == "minecraft:end_rod" || blockName == "endrod") return new EndRod();
 			else if (blockName == "minecraft:chorus_plant" || blockName == "chorusplant") return new ChorusPlant();
 			else if (blockName == "minecraft:chorus_flower" || blockName == "chorusflower") return new ChorusFlower();
 			else if (blockName == "minecraft:purpur_block" || blockName == "purpurblock") return new PurpurBlock();
-
 			else if (blockName == "minecraft:grass_path" || blockName == "grasspath") return new GrassPath();
 			else if (blockName == "minecraft:end_gateway" || blockName == "endgateway") return new EndGateway();
 			else if (blockName == "minecraft:frosted_ice" || blockName == "frostedice") return new FrostedIce();
 			else if (blockName == "minecraft:observer" || blockName == "observer") return new Observer();
-
 			else if (blockName == "minecraft:grass_block" || blockName == "grassblock") return new GrassBlock();
 			else if (blockName == "minecraft:powered_rail" || blockName == "poweredrail") return new PoweredRail();
 			else if (blockName == "minecraft:bricks" || blockName == "bricks") return new Bricks();
-
 			else if (blockName == "minecraft:cobweb" || blockName == "cobweb") return new Cobweb();
 			else if (blockName == "minecraft:dandelion" || blockName == "dandelion") return new Dandelion();
 			else if (blockName == "minecraft:poppy" || blockName == "poppy") return new Poppy();
 			else if (blockName == "minecraft:sugar_cane" || blockName == "sugarcane") return new SugarCane();
 			else if (blockName == "minecraft:beetroots" || blockName == "beetroots") return new Beetroots();
-
 			else if (blockName == "minecraft:nether_wart_block" || blockName == "netherwartblock") return new NetherWartBlock();
-
 			else if (blockName == "minecraft:jukebox" || blockName == "jukebox") return new Jukebox();
 			else if (blockName == "minecraft:stone_bricks" || blockName == "stonebricks") return new StoneBricks();
 			else if (blockName == "minecraft:lily_pad" || blockName == "lilypad") return new LilyPad();
 			else if (blockName == "minecraft:command_block" || blockName == "commandblock") return new CommandBlock();
 			else if (blockName == "minecraft:nether_quartz_ore" || blockName == "netherquartzore") return new NetherQuartzOre();
 			else if (blockName == "minecraft:slime_block" || blockName == "slimeblock") return new SlimeBlock();
-
 			else if (blockName == "minecraft:purpur_pillar" || blockName == "purpurpillar") return new PurpurPillar();
 			else if (blockName == "minecraft:end_stone_bricks" || blockName == "endstonebricks") return new EndStoneBricks();
 			else if (blockName == "minecraft:repeating_command_block" || blockName == "repeatingcommandblock") return new RepeatingCommandBlock();
 			else if (blockName == "minecraft:chain_command_block" || blockName == "chaincommandblock") return new ChainCommandBlock();
 			else if (blockName == "minecraft:magma_block" || blockName == "magmablock") return new MagmaBlock();
 			else if (blockName == "minecraft:bone_block" || blockName == "boneblock") return new BoneBlock();
-
 			else if (blockName == "minecraft:structure_block" || blockName == "structureblock") return new StructureBlock();
 
 			//Buttons
@@ -822,6 +783,25 @@ namespace Alex
 			else if (blockName == "minecraft:stone_brick_stairs" || blockName == "stonebrickstairs") return new StoneBrickStairs();
 			else if (blockName == "minecraft:nether_brick_stairs" || blockName == "netherbrickstairs") return new NetherBrickStairs();
 			else if (blockName == "minecraft:oak_stairs" || blockName == "oakstairs") return new OakStairs();
+
+			//Liquid
+			else if (blockName == "minecraft:water" || blockName == "water") return new Water();
+			else if (blockName == "minecraft:lava" || blockName == "lava") return new Lava();
+
+			//Ores
+			else if (blockName == "minecraft:redstone_ore" || blockName == "redstoneore") return new RedstoneOre();
+			else if (blockName == "minecraft:gold_ore" || blockName == "goldore") return new GoldOre();
+			else if (blockName == "minecraft:iron_ore" || blockName == "ironore") return new IronOre();
+			else if (blockName == "minecraft:coal_ore" || blockName == "coalore") return new CoalOre();
+			else if (blockName == "minecraft:diamond_ore" || blockName == "diamondore") return new DiamondOre();
+			else if (blockName == "minecraft:emerald_ore" || blockName == "emeraldore") return new EmeraldOre();
+			else if (blockName == "minecraft:lapis_ore" || blockName == "lapisore") return new LapisOre();
+
+			else if (blockName == "minecraft:gold_block" || blockName == "goldblock") return new GoldBlock();
+			else if (blockName == "minecraft:iron_block" || blockName == "ironblock") return new IronBlock();
+			else if (blockName == "minecraft:diamond_block" || blockName == "diamondblock") return new DiamondBlock();
+			else if (blockName == "minecraft:emerald_block" || blockName == "emeraldblock") return new EmeraldBlock();
+			else if (blockName == "minecraft:lapis_block" || blockName == "lapisblock") return new LapisBlock();
 
 			else return null;
 		}

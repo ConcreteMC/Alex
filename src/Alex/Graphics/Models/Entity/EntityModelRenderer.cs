@@ -21,7 +21,7 @@ namespace Alex.Graphics.Models.Entity
 		private EntityModel Model { get; }
 		private IReadOnlyDictionary<string, ModelPart> Cubes { get; }
 		private Texture2D Texture { get; set; }
-		//private AlphaTestEffect Effect { get; set; }
+		//private AlphaTestEffect TransparentEffect { get; set; }
 		public EntityModelRenderer(EntityModel model, Texture2D texture)
 		{
 			Model = model;
@@ -208,7 +208,7 @@ namespace Alex.Graphics.Models.Entity
 				Effect.View = camera.ViewMatrix;
 				Effect.Projection = camera.ProjectionMatrix;
 
-				//Effect.World = Matrix.CreateScale(1f / 16f) * Matrix.CreateTranslation(position);
+				//TransparentEffect.World = Matrix.CreateScale(1f / 16f) * Matrix.CreateTranslation(position);
 
 				args.GraphicsDevice.SetVertexBuffer(buffer);
 				foreach (var pass in Effect.CurrentTechnique.Passes)

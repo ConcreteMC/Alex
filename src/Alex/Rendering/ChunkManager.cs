@@ -38,7 +38,8 @@ namespace Alex.Rendering
 	    public int ChunkUpdates => _chunkUpdates;
 	    public int ChunkCount => Chunks.Count;
 
-	    public AlphaTestEffect Effect { get; }
+	    public AlphaTestEffect TransparentEffect { get; }
+		public BasicEffect OpaqueEffect { get; }
 
 	    public int Vertices { get; private set; }
 	    public int RenderedChunks { get; private set; } = 0;
@@ -55,19 +56,36 @@ namespace Alex.Rendering
 			SkylightCalculator = new SkylightCalculations(world);
 
 			var distance = (float)Math.Pow(alex.GameSettings.RenderDistance, 2);
-			Effect = new AlphaTestEffect(Graphics)
-            {
-                Texture = alex.Resources.Atlas.GetAtlas(),
-                VertexColorEnabled = true,
-				World = Matrix.Identity
-            };
-			Effect.FogColor = new Vector3(0.5f, 0.5f, 0.5f);
+			var fogStart = distance - (distance * 0.35f);
+			TransparentEffect = new AlphaTestEffect(Graphics)
+			{
+				Texture = alex.Resources.Atlas.GetAtlas(),
+				VertexColorEnabled = true,
+				World = Matrix.Identity,
+				AlphaFunction = CompareFunction.Greater,
+				ReferenceAlpha = 127,
+				FogEnd = distance,
+				FogStart = fogStart,
+				FogEnabled = true
+			};
+			//TransparentEffect.FogColor = new Vector3(0.5f, 0.5f, 0.5f);
 
-			Effect.FogEnd = distance;
-			Effect.FogStart = distance - (distance * 0.55f);
-			Effect.FogEnabled = true;
+			//TransparentEffect.FogEnd = distance;
+			//	TransparentEffect.FogStart = distance - (distance * 0.55f);
+			//	TransparentEffect.FogEnabled = true;
 
-            Updater = new Thread(ChunkUpdateThread)
+			OpaqueEffect = new BasicEffect(Graphics)
+			{
+				TextureEnabled = true,
+				Texture = alex.Resources.Atlas.GetAtlas(),
+				FogEnd = distance,
+				FogStart = fogStart,
+				VertexColorEnabled = true,
+				LightingEnabled = true,
+				FogEnabled = true
+			};
+
+			Updater = new Thread(ChunkUpdateThread)
             {IsBackground = true};
 
 			ChunksToUpdate = new ConcurrentQueue<ChunkCoordinates>();
@@ -239,10 +257,13 @@ namespace Alex.Rendering
 
 		    Stopwatch sw = Stopwatch.StartNew();
 
-		    Effect.View = Camera.ViewMatrix;
-		    Effect.Projection = Camera.ProjectionMatrix;
+		    TransparentEffect.View = Camera.ViewMatrix;
+		    TransparentEffect.Projection = Camera.ProjectionMatrix;
 
-		    var r = _renderedChunks.ToArray();
+		    OpaqueEffect.View = Camera.ViewMatrix;
+		    OpaqueEffect.Projection = Camera.ProjectionMatrix;
+
+			var r = _renderedChunks.ToArray();
 		    var chunks = new KeyValuePair<ChunkCoordinates, IChunkColumn>[r.Length];
 		    for (var index = 0; index < r.Length; index++)
 		    {
@@ -322,7 +343,7 @@ namespace Alex.Rendering
 
 			    device.SetVertexBuffer(b);
 
-			    foreach (var pass in Effect.CurrentTechnique.Passes)
+			    foreach (var pass in OpaqueEffect.CurrentTechnique.Passes)
 			    {
 				    pass.Apply();
 				    //device.DrawPrimitives(PrimitiveType.TriangleList, 0, b.VertexCount /3);
@@ -346,7 +367,7 @@ namespace Alex.Rendering
 
 			    device.SetVertexBuffer(b);
 
-			    foreach (var pass in Effect.CurrentTechnique.Passes)
+			    foreach (var pass in TransparentEffect.CurrentTechnique.Passes)
 			    {
 				    pass.Apply();
 			    }
@@ -371,7 +392,7 @@ namespace Alex.Rendering
 
 	    public void Update()
 	    {
-		    var renderedChunks = Chunks.ToArray().Where(x =>
+			var renderedChunks = Chunks.ToArray().Where(x =>
 		    {
 			    var chunkPos = new Vector3(x.Key.X * ChunkColumn.ChunkWidth, 0, x.Key.Z * ChunkColumn.ChunkDepth);
 			    return Camera.BoundingFrustum.Intersects(new Microsoft.Xna.Framework.BoundingBox(chunkPos,

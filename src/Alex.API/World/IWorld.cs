@@ -8,6 +8,7 @@ namespace Alex.API.World
 	public interface IWorld
 	{
 		TickManager Ticker { get; }
+		long WorldTime { get; }
 		int Vertices { get; }
 		int ChunkCount { get; }
 		int ChunkUpdates { get; }

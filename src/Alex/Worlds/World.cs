@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Alex.API.Blocks.State;
 using Alex.API.Entities;
 using Alex.API.Graphics;
@@ -7,6 +8,7 @@ using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Entities;
 using Alex.Gamestates;
+using Alex.Graphics.Models;
 using Alex.Rendering;
 using Alex.Utils;
 using Alex.Worlds.Lighting;
@@ -15,6 +17,7 @@ using Microsoft.Xna.Framework.Graphics;
 using NLog;
 using Block = Alex.Blocks.Block;
 using EntityManager = Alex.Rendering.EntityManager;
+using MathF = System.MathF;
 
 namespace Alex.Worlds
 {
@@ -24,10 +27,13 @@ namespace Alex.Worlds
 
 		private GraphicsDevice Graphics { get; }
 		private Rendering.Camera.Camera Camera { get; }
-        public World(Alex alex, GraphicsDevice graphics, Rendering.Camera.Camera camera, WorldProvider worldProvider)
+		private SkyboxModel SkyRenderer { get; }
+		public World(Alex alex, GraphicsDevice graphics, Rendering.Camera.Camera camera, WorldProvider worldProvider)
         {
             Graphics = graphics;
 	        Camera = camera;
+
+			SkyRenderer = new SkyboxModel(alex, graphics, this);
 
 			ChunkManager = new ChunkManager(alex, graphics, camera, this);
 			EntityManager = new EntityManager(graphics, this);
@@ -38,6 +44,76 @@ namespace Alex.Worlds
 
 			ChunkManager.Start();
         }
+
+		private long LastLightningBolt = 0;
+		private long Tick = 0;
+		public long WorldTime { get; private set; } = 12000;
+		public Vector3 GetSkyColor(float celestialAngle)
+		{
+			var position = Camera.Position;
+
+			float f1 = MathF.Cos(celestialAngle * ((float)Math.PI * 2F)) * 2.0F + 0.5F;
+			f1 = MathHelper.Clamp(f1, 0.0F, 1.0F);
+
+			int x = (int)MathF.Floor(position.X);
+			int y = (int)MathF.Floor(position.Y);
+			int z = (int) MathF.Floor(position.Z);
+
+			Biome biome = BiomeUtils.GetBiomeById(this.GetBiome(x,y,z));
+			float f2 = biome.Temperature;//.getTemperature(blockpos);
+			int l = GetSkyColorByTemp(f2);
+			float r = (l >> 16 & 255) / 255.0F;
+			float g = (l >> 8 & 255) / 255.0F;
+			float b = (l & 255) / 255.0F;
+			r = r * f1;
+			g = g * f1;
+			b = b * f1;
+			float f6 = 0;//RainStrength
+
+			if (f6 > 0.0F)
+			{
+				float f7 = (r * 0.3F + g * 0.59F + b * 0.11F) * 0.6F;
+				float f8 = 1.0F - f6 * 0.75F;
+				r = r * f8 + f7 * (1.0F - f8);
+				g = g * f8 + f7 * (1.0F - f8);
+				b = b * f8 + f7 * (1.0F - f8);
+			}
+
+			float f10 = 0f; //Thunder
+
+			if (f10 > 0.0F)
+			{
+				float f11 = (r * 0.3F + g * 0.59F + b * 0.11F) * 0.2F;
+				float f9 = 1.0F - f10 * 0.75F;
+				r = r * f9 + f11 * (1.0F - f9);
+				g = g * f9 + f11 * (1.0F - f9);
+				b = b * f9 + f11 * (1.0F - f9);
+			}
+
+			if (LastLightningBolt > 0)
+			{
+				float f12 = (float)this.LastLightningBolt - Tick;
+
+				if (f12 > 1.0F)
+				{
+					f12 = 1.0F;
+				}
+
+				f12 = f12 * 0.45F;
+				r = r * (1.0F - f12) + 0.8F * f12;
+				g = g * (1.0F - f12) + 0.8F * f12;
+				b = b * (1.0F - f12) + 1.0F * f12;
+			}
+
+			return new Vector3(r, g, b);
+		}
+
+		public int GetSkyColorByTemp(float currentTemperature)
+		{
+			currentTemperature = currentTemperature / 3.0F;
+			currentTemperature = MathHelper.Clamp(currentTemperature, -1.0F, 1.0F);
+			return MathUtils.HsvToRGB(0.62222224F - currentTemperature * 0.05F, 0.5F + currentTemperature * 0.1F, 1.0F);
+		}
 
 		public TickManager Ticker { get; }
 		public EntityManager EntityManager { get; }
@@ -71,7 +147,9 @@ namespace Alex.Worlds
 
         public void Render(IRenderArgs args)
         {
-            Graphics.DepthStencilState = DepthStencilState.Default;
+	        SkyRenderer.Draw(args, Camera);
+
+			Graphics.DepthStencilState = DepthStencilState.Default;
             Graphics.SamplerStates[0] = SamplerState.PointWrap;
             
             ChunkManager.Draw(args);
@@ -83,8 +161,22 @@ namespace Alex.Worlds
 			EntityManager.Render2D(args, Camera);
 		}
 
+		private Stopwatch testWatch = Stopwatch.StartNew();
 		public void Update(GameTime gameTime)
 		{
+			if (testWatch.ElapsedMilliseconds >= 50)
+			{
+				testWatch.Restart();
+				WorldTime++;
+
+			 	SkyRenderer.Update(gameTime);
+			}
+
+			ChunkManager.TransparentEffect.FogColor = SkyRenderer.WorldFogColor.ToVector3();
+			ChunkManager.OpaqueEffect.FogColor = SkyRenderer.WorldFogColor.ToVector3();
+			ChunkManager.OpaqueEffect.AmbientLightColor = ChunkManager.TransparentEffect.DiffuseColor =
+				Color.White.ToVector3() * new Vector3( (SkyRenderer.BrightnessModifier));
+
 			ChunkManager.Update();
 			EntityManager.Update(gameTime);
 			Ticker.Update(gameTime);

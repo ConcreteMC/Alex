@@ -51,9 +51,11 @@ namespace Alex.API.Graphics
 		{
 			public VertexPositionNormalTextureColor[] Vertices;
 			public Vector3 Position;
-			public Entry(VertexPositionNormalTextureColor[] vertices, 
+			public uint ID;
+			public Entry(uint id, VertexPositionNormalTextureColor[] vertices, 
 				Vector3 position)
 			{
+				ID = id;
 				Vertices = vertices;
 				Position = position;
 			}

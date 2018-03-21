@@ -5,7 +5,7 @@ namespace Alex.Blocks
 {
 	public class Torch : Block
 	{
-		public Torch() : base(1040)
+		public Torch(bool wallTorch = false) : base(1040)
 		{
 			Solid = false;
 			Transparent = true;

@@ -251,7 +251,7 @@ namespace Alex.Worlds
 			var blockPosition = new Vector3(x, y + (index * 16), z) + Position;
 
 			var vert = block.GetVertices(blockPosition, world);
-			var result = new ChunkMesh.Entry(vert, blockPosition);
+			var result = new ChunkMesh.Entry(block.BlockState.ID, vert, blockPosition);
 
 			if (block.Transparent)
 			{

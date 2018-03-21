@@ -60,7 +60,7 @@ namespace Alex.Graphics.Models
 					textureBottomLeft = VectorExtension.From(startPosition, startPosition, startPosition);
 					textureBottomRight = VectorExtension.From(startPosition, startPosition, endPosition);
 
-					normal = Vector3.Left;
+					normal = Vector3.Right;
 					faceColor = uvmap.ColorLeft; // new Color(0xFF, 0x00, 0xFF);
 					break;
 				case BlockFace.East: //Positive X
@@ -70,7 +70,7 @@ namespace Alex.Graphics.Models
 					textureBottomLeft = VectorExtension.From(endPosition, startPosition, startPosition);
 					textureBottomRight = VectorExtension.From(endPosition, startPosition, endPosition);
 
-					normal = Vector3.Right;
+					normal = Vector3.Left;
 					faceColor = uvmap.ColorRight; //new Color(0x00, 0xFF, 0xFF);
 					break;
 				case BlockFace.South: //Positive Z
