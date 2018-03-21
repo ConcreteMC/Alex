@@ -78,7 +78,7 @@ namespace Alex.Graphics.UI.Rendering
 			game.Window.ClientSizeChanged += (sender, args) => Update();
 			game.Activated                += (sender, args) => Update();
 
-			Update();
+			//Update();
 		}
 
 		public void Update()
