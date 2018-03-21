@@ -5,8 +5,8 @@ namespace Alex.Utils
 {
 	public class LightingUtils
 	{
-		public static readonly Vector3 LightColor =
-			new Vector3(245, 245, 225);
+		public static readonly Color LightColor =
+			new Color(245, 245, 225);
 
 		/// <summary>
 		/// The default lighting information for rendering a block;
@@ -73,7 +73,7 @@ namespace Alex.Utils
 				}
 			}
 
-			var light = LightColor * CubeBrightness[lighting];
+			var light = LightColor.ToVector3() * CubeBrightness[lighting];
 			return new Color(brightness * (color.ToVector3() * light));
 		}
 	}
