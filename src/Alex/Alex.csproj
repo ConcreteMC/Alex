@@ -345,6 +345,7 @@
     <None Remove="Graphics\Models\ResourcePackModel.cs" />
     <None Remove="Graphics\Models\SkyboxModel.cs" />
     <None Remove="KeyBinds.cs" />
+    <None Remove="LauncherMeta.cs" />
     <None Remove="Program.cs" />
     <None Remove="Rendering\Camera\Camera.cs" />
     <None Remove="Rendering\Camera\FirstPersonCamera.cs" />
@@ -381,6 +382,7 @@
     <None Remove="Utils\TextureUtils.cs" />
     <None Remove="Utils\ThreadSafeList.cs" />
     <None Remove="Utils\UVMap.cs" />
+    <None Remove="VersionManifest.cs" />
     <None Remove="Worlds\AnvilWorldProvider.cs" />
     <None Remove="Worlds\BiomeUtils.cs" />
     <None Remove="Worlds\CachedWorld.cs" />
@@ -733,6 +735,7 @@
     <Compile Include="Graphics\Models\LiquidBlockModel.cs" />
     <Compile Include="Graphics\Models\SkyboxModel.cs" />
     <Compile Include="KeyBinds.cs" />
+    <Compile Include="LauncherMeta.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Rendering\Camera\Camera.cs" />
     <Compile Include="Rendering\Camera\FirstPersonCamera.cs" />
@@ -772,6 +775,7 @@
     <Compile Include="Utils\TextureUtils.cs" />
     <Compile Include="Utils\ThreadSafeList.cs" />
     <Compile Include="Utils\UVMap.cs" />
+    <Compile Include="VersionManifest.cs" />
     <Compile Include="Worlds\AnvilWorldProvider.cs" />
     <Compile Include="Worlds\BiomeUtils.cs" />
     <Compile Include="Worlds\CachedWorld.cs" />

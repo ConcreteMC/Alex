@@ -1,15 +1,17 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Net;
 using Alex.Entities;
 using Alex.Rendering;
 using Alex.ResourcePackLib;
 using Alex.Utils;
 using Microsoft.Xna.Framework.Graphics;
+using Newtonsoft.Json;
 using NLog;
-using ZipFile = ICSharpCode.SharpZipLib.Zip.ZipFile;
 
 namespace Alex
 {
@@ -32,32 +34,34 @@ namespace Alex
 			UiThemeFactory = new ResourcePackUiThemeBuilder(Graphics);
 		}
 
-	    private const string AssetVersion = "18w11a"; //"18w07c";
 		private static readonly string ResourcePackDirectory = Path.Combine("assets", "resourcepacks");
-	    private static readonly string DefaultResourcePackPath = Path.Combine("assets", $"{AssetVersion}.zip");
 	    private static readonly string BedrockResourcePackPath = Path.Combine("assets", "bedrock.zip");
-		private byte[] DownloadDefaultResources()
-	    {
-		    var sw = new Stopwatch();
 
-		    Log.Info("Downloading vanilla Minecraft resources...");
-		    byte[] resourceData;
+		private byte[] GetLatestAssets()
+		{
+			using (WebClient wc = new WebClient())
+			{
+				var rawJson = wc.DownloadString("https://launchermeta.mojang.com/mc/game/version_manifest.json?_t=" +
+				                                   (long) (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds);
 
-		    sw.Start();
-		    using (var client = new WebClient())
-		    {
-			    resourceData =
-				    client.DownloadData(string.Format("https://s3.amazonaws.com/Minecraft.Download/versions/{0}/{0}.jar",
-					    AssetVersion));
-		    }
-		    sw.Stop();
+				VersionManifest manifest = VersionManifest.FromJson(rawJson);
+				Version latestSnapshotVersion =
+					manifest.Versions.OrderByDescending(x => x.ReleaseTime.ToUnixTimeSeconds()).FirstOrDefault();
 
-		    Log.Info("Download took: " + Math.Round(sw.ElapsedMilliseconds / 1000D, 2) +
-		             " seconds to finish");
-
-		    Log.Info("Saving default resources...");
-		    File.WriteAllBytes(DefaultResourcePackPath, resourceData);
-		    return resourceData; 
+				string savedPath = Path.Combine("assets", latestSnapshotVersion.Id + ".bin");
+				if (!File.Exists(savedPath))
+				{
+					Log.Info("Downloading latest vanilla Minecraft resources...");
+					LauncherMeta meta = LauncherMeta.FromJson(wc.DownloadString(latestSnapshotVersion.Url));
+					byte[] clientData = wc.DownloadData(meta.Downloads.Client.Url);
+					File.WriteAllBytesAsync(savedPath, clientData);
+					return clientData;
+				}
+				else
+				{
+					return File.ReadAllBytes(savedPath);
+				}
+			}
 		}
 
 	    private McResourcePack LoadResourcePack(GraphicsDevice graphics, Stream stream, bool replaceModels = false, bool replaceTextures = false, bool reportMissingModels = false)
@@ -96,17 +100,9 @@ namespace Alex
 				Directory.CreateDirectory(ResourcePackDirectory);
 			}
 
-	        byte[] defaultResources;
-	        if (!File.Exists(DefaultResourcePackPath))
-	        {
-		        defaultResources = DownloadDefaultResources();
-	        }
-	        else
-	        {
-		        defaultResources = File.ReadAllBytes(DefaultResourcePackPath);
-	        }
+	        byte[] defaultResources = GetLatestAssets();
 
-	        Log.Info($"Loading vanilla resourcepack...");
+	        Log.Info($"Loading vanilla resources...");
 	        using (MemoryStream stream = new MemoryStream(defaultResources))
 	        {
 		        ResourcePack = LoadResourcePack(device, stream, true, true, true);
@@ -118,14 +114,11 @@ namespace Alex
 				 BedrockResourcePack = new BedrockResourcePack(File.ReadAllBytes(BedrockResourcePackPath));
 				 UiThemeFactory.LoadResources(BedrockResourcePack);
 			}
-			 else
-			 {
-				 Log.Error($"Could not start, missing bedrock resources! Please place 'bedrock.zip' in the assets folder!");
-				 return false;
-			 }
-
-		//	Log.Info($"Loading bedrock resources...");
-	        //BedrockResourcePack = new BedrockResourcePack(Resources.bedrock);
+	        else
+	        {
+		        Log.Error($"Could not start, missing bedrock resources! Please place 'bedrock.zip' in the assets folder!");
+		        return false;
+	        }
 
 			EntityFactory.LoadModels(this, device, true);
 
@@ -146,7 +139,7 @@ namespace Alex
 		        }
 		        catch (Exception e)
 		        {
-					Log.Warn($"Could not load resourcepack {file}!", e);
+					Log.Warn(e, $"Could not load resourcepack {file}!");
 		        }
 	        }
 			return true;

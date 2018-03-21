@@ -64,7 +64,6 @@ namespace Alex.ResourcePackLib
 			{
 				if (entry.IsDirectory)
 				{
-					CheckDirectory(entry);
 					continue;
 				}
 			
@@ -93,11 +92,6 @@ namespace Alex.ResourcePackLib
 			{
 				LoadEntityDefinition(entry, entityDefinitions);
 			}
-		}
-
-		private void CheckDirectory(ZipEntry entry)
-		{
-			
 		}
 
 		private void LoadEntityDefinition(ZipEntry entry, Dictionary<string, EntityDefinition> entityDefinitions)
@@ -237,7 +231,6 @@ namespace Alex.ResourcePackLib
 				}
 
 				model.Bones = bones.Values.ToArray();
-				//Log.Info($"Processed {modelName} inherited {inheritedBones} bones from {parent}");
 			}
 
 			processedModels.Add(modelName, model);
