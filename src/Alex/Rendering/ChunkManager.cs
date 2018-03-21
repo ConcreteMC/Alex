@@ -112,7 +112,9 @@ namespace Alex.Rendering
 		private void ChunkUpdateThread()
 		{
 			int maxThreads = Game.GameSettings.ChunkThreads; //Environment.ProcessorCount / 2;
-	        //int runningThreads = 0;
+			double radiusSquared = Math.Pow(Game.GameSettings.RenderDistance, 2);
+
+			//int runningThreads = 0;
 			while (!CancelationToken.IsCancellationRequested)
 			{
 				try
@@ -123,7 +125,7 @@ namespace Alex.Rendering
 						UpdateResetEvent.Wait(CancelationToken.Token);
 
 						IChunkColumn chunk;
-						if (i.DistanceTo(new ChunkCoordinates(Camera.Position)) > Game.GameSettings.RenderDistance || !Chunks.TryGetValue(i, out chunk))
+						if (i.DistanceTo(new ChunkCoordinates(Camera.Position)) > radiusSquared || !Chunks.TryGetValue(i, out chunk))
 						{
 							Interlocked.Decrement(ref _chunkUpdates);
 							continue;
