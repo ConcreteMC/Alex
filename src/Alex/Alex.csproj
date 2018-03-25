@@ -259,6 +259,7 @@
     <None Remove="Blocks\TrappedChest.cs" />
     <None Remove="Blocks\Tripwire.cs" />
     <None Remove="Blocks\TripwireHook.cs" />
+    <None Remove="Blocks\UnknownBlock.cs" />
     <None Remove="Blocks\Vine.cs" />
     <None Remove="Blocks\WallSign.cs" />
     <None Remove="Blocks\Water.cs" />
@@ -650,6 +651,7 @@
     <Compile Include="Blocks\TrappedChest.cs" />
     <Compile Include="Blocks\Tripwire.cs" />
     <Compile Include="Blocks\TripwireHook.cs" />
+    <Compile Include="Blocks\UnknownBlock.cs" />
     <Compile Include="Blocks\Vine.cs" />
     <Compile Include="Blocks\WallSign.cs" />
     <Compile Include="Blocks\Water.cs" />

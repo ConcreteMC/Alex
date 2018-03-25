@@ -202,7 +202,7 @@ namespace Alex.Graphics.Models
 
 						cullFace = Vector3.Transform(cullFace, modelRotationMatrix);
 
-						if (cullFace != Vector3.Zero && !CanRender(world, baseBlock, worldPosition + cullFace))
+						if (cullFace != Vector3.Zero && !baseBlock.ShouldRenderFace(world, cull, worldPosition)/* CanRender(world, baseBlock, worldPosition, cull)*/)
 							continue;
 
 						VertexPositionNormalTextureColor[] faceVertices;

@@ -10,7 +10,7 @@ namespace Alex.Blocks
 			Solid = true;
 			Transparent = true;
 			IsReplacible = false;
-
+			IsFullCube = false;
 			//BlockMaterial = Material.Snow;
 		}
 	}

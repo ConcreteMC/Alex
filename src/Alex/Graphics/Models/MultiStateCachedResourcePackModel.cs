@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Alex.API.Graphics;
 using Alex.API.World;
 using Alex.Blocks;
@@ -64,15 +65,22 @@ namespace Alex.Graphics.Models
 
 		private static bool PassesMultiPartRule(IWorld world, Vector3 position, MultiPartRule rule, Block baseBlock)
 		{
-			if (rule.Or != null && rule.Or.Length > 0)
+			if (rule.HasOrContition)
 			{
-				foreach (var o in rule.Or)
+				return rule.Or.Any(o => PassesMultiPartRule(world, position, o, baseBlock));
+
+				/*foreach (var o in rule.Or)
 				{
 					if (PassesMultiPartRule(world, position, o, baseBlock))
 					{
 						return true;
 					}
-				}
+				}*/
+			}
+
+			if (rule.HasAndContition)
+			{
+				return rule.And.All(o => PassesMultiPartRule(world, position, o, baseBlock));
 			}
 
 			if (Passes(world, position, baseBlock, "down", rule.Down) 
@@ -134,10 +142,10 @@ namespace Alex.Graphics.Models
 			{
 				return canAttach;
 			} 
-			//else if (value == "false")
-			//{
-			//	return !block.Solid;
-			//}
+			else if (value == "false")
+			{
+				return !canAttach;
+			}
 			else if (value == "none")
 			{
 				return block.BlockMaterial == Material.Air;

@@ -12,4 +12,11 @@ namespace Alex.Blocks
 			IsReplacible = false;
 		}
 	}
+
+	public class BirchFence : Fence
+	{
+		public BirchFence() : base(7490)
+		{
+		}
+	}
 }

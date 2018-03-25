@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Security.AccessControl;
 using Alex.API.Blocks;
 using Alex.API.Blocks.State;
 using Alex.API.Graphics;
@@ -75,8 +76,6 @@ namespace Alex.Blocks
 		    Transparent = false;
 		    Renderable = true;
 		    HasHitbox = true;
-
-		    SetColor(TextureSide.All, Color.White);
 		}
 
 		public Microsoft.Xna.Framework.BoundingBox GetBoundingBox(Vector3 blockPosition)
@@ -95,27 +94,6 @@ namespace Alex.Blocks
 			return BlockModel.GetVertices(world, position, this);
         }
 
-	    public void SetColor(TextureSide side, Color color)
-        {
-            switch (side)
-            {
-                case TextureSide.Top:
-                    TopColor = color;
-                    break;
-                case TextureSide.Bottom:
-                    BottomColor = color;
-                    break;
-                case TextureSide.Side:
-                    SideColor = color;
-                    break;
-                case TextureSide.All:
-                    TopColor = color;
-                    BottomColor = color;
-                    SideColor = color;
-                    break;
-            }
-        }
-
 		public virtual void BlockPlaced(IWorld world, BlockCoordinates position)
 		{
 
@@ -131,9 +109,49 @@ namespace Alex.Blocks
 
 		}
 
-		public Color TopColor { get; private set; }
-        public Color SideColor { get; private set; }
-		public Color BottomColor { get; private set; }
+		internal virtual bool ShouldRenderFace(IWorld world, BlockFace face, BlockCoordinates position)
+		{
+			if (position.Y >= 256) return true;
+
+			var pos = position + face.GetBlockCoordinates();
+
+			var cX = (int)pos.X & 0xf;
+			var cZ = (int)pos.Z & 0xf;
+
+			if (cX < 0 || cX > 16)
+				return false;
+
+			if (cZ < 0 || cZ > 16)
+				return false;
+
+			// var blockStateId = world.GetBlockStateId(pos);
+			//BlockFactory.
+			var block = world.GetBlock(pos);
+
+			if (Transparent && block is UnknownBlock)
+			{
+				return true;
+			}
+
+			if (Solid && Transparent)
+			{
+			//	if (IsFullCube && Name.Equals(block.Name)) return false;
+				if (block.Solid && !block.Transparent) return false;
+			}
+			else if (Transparent)
+			{
+				if (block.Solid && !block.Transparent) return false;
+			}
+
+
+			if (Solid && block.Transparent) return true;
+			//   if (me.Transparent && block.Transparent && !block.Solid) return false;
+			if (Transparent) return true;
+			if (!Transparent && block.Transparent) return true;
+			if (block.Solid && !block.Transparent) return false;
+
+			return true;
+		}
 
 	    public string DisplayName { get; set; } = null;
 	    public override string ToString()
@@ -143,31 +161,22 @@ namespace Alex.Blocks
 
 		public virtual IBlockState GetDefaultState()
 		{
-			return BlockState ?? new BlockState()
+			IBlockState r;
+			if (BlockState != null)
 			{
-				//Name = DisplayName,
+				r = BlockState.GetDefaultState();
+			}
+			else
+			{
+				r = BlockFactory.GetBlockState(BlockStateID)?.GetDefaultState();
+			}
+
+			if (r == null) return new BlockState()
+			{
 				ID = BlockStateID
 			};
-		}
 
-		public static BlockCoordinates GetBlockCoordinatesFromFace(BlockCoordinates position, BlockFace face)
-		{
-			switch (face) {
-				case BlockFace.Down:
-					return position + BlockCoordinates.Down;
-				case BlockFace.Up:
-					return position + BlockCoordinates.Up;
-				case BlockFace.East:
-					return position + BlockCoordinates.East;
-				case BlockFace.West:
-					return position + BlockCoordinates.West;
-				case BlockFace.North:
-					return position + BlockCoordinates.North;
-				case BlockFace.South:
-					return position + BlockCoordinates.South;
-				default:
-					return position;
-			}
+			return r;
 		}
 
 		public BlockFace RotateY(BlockFace v)

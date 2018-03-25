@@ -259,44 +259,7 @@ namespace Alex.Graphics.Models
 
 		    return result;
 	    }
-
-	    protected bool CanRender(IWorld world, Block me, Vector3 pos)
-	    {
-		    if (pos.Y >= 256) return true;
-
-		    var cX = (int)pos.X & 0xf;
-		    var cZ = (int)pos.Z & 0xf;
-
-		    if (cX < 0 || cX > 16)
-			    return false;
-
-		    if (cZ < 0 || cZ > 16)
-			    return false;
-
-		   // var blockStateId = world.GetBlockStateId(pos);
-			//BlockFactory.
-		    var block = world.GetBlock(pos);
-
-		    if (me.Solid && me.Transparent)
-		    {
-			    if (me.Name.Equals(block.Name)) return false;
-			    if (block.Solid && !block.Transparent) return false;
-		    }
-			else if (me.Transparent)
-		    {
-			    if (block.Solid && !block.Transparent) return false;
-		    }
 		
-
-		    if (me.Solid && block.Transparent) return true;
-		 //   if (me.Transparent && block.Transparent && !block.Solid) return false;
-			if (me.Transparent) return true;
-			if (!me.Transparent && block.Transparent) return true;
-		    if (block.Solid && !block.Transparent) return false;
-
-		    return true;
-	    }
-
 	    protected UVMap GetTextureUVMap(ResourceManager resources, string texture, float x1, float x2, float y1, float y2)
 	    {
 			if (resources == null)

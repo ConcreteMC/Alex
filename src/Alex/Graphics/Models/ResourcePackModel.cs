@@ -234,8 +234,8 @@ namespace Alex.Graphics.Models
 
 				        cullFace = V3.Transform(cullFace, modelRotationMatrix);
 
-				        if (cullFace != V3.Zero && !CanRender(world, baseBlock, worldPosition + cullFace))
-					        continue;
+						if (cullFace != Vector3.Zero && !baseBlock.ShouldRenderFace(world, cull, worldPosition)/* CanRender(world, baseBlock, worldPosition, cull)*/)
+							continue;
 
 				        var elementRotation = element.Rotation;
 				        Matrix faceRotationMatrix = GetElementRotationMatrix(elementRotation, out float ci);

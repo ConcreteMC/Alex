@@ -262,7 +262,7 @@ namespace Alex
 						var block = GetBlockByName(entry.Key);
 						if (block == null)
 						{
-							block = new Block(id);
+							block = new UnknownBlock(id);
 							displayName = $"(Not implemented) {displayName}";
 
 							bool foundMeta = false;
@@ -765,6 +765,7 @@ namespace Alex
 			else if (blockName == "minecraft:dark_oak_fence_gate" || blockName == "darkoakfencegate") return new DarkOakFenceGate();
 			else if (blockName == "minecraft:spruce_fence_gate" || blockName == "sprucefencegate") return new SpruceFenceGate();
 			else if (blockName == "minecraft:birch_fence_gate" || blockName == "birchfencegate") return new BirchFenceGate();
+			else if (blockName == "minecraft:birch_fence" || blockName == "birchfence") return new BirchFence();
 			else if (blockName == "minecraft:jungle_fence_gate" || blockName == "junglefencegate") return new JungleFenceGate();
 			else if (blockName == "minecraft:acacia_fence_gate" || blockName == "acaciafencegate") return new AcaciaFenceGate();
 
