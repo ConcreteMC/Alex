@@ -16,7 +16,9 @@ namespace Alex.Graphics.Models
 
         }
 
-        public virtual VertexPositionNormalTextureColor[] GetVertices(IWorld world, Vector3 position, Block baseBlock)
+		public float Scale { get; set; } = 1f;
+
+		public virtual VertexPositionNormalTextureColor[] GetVertices(IWorld world, Vector3 position, Block baseBlock)
         {
             return new VertexPositionNormalTextureColor[0];
         }
@@ -28,6 +30,10 @@ namespace Alex.Graphics.Models
 
 		protected VertexPositionNormalTextureColor[] GetFaceVertices(BlockFace blockFace, Vector3 startPosition, Vector3 endPosition, UVMap uvmap, int rotation = 0)
 		{
+			//float s = 1f - Scale;
+			//startPosition += new Vector3(s);
+			//endPosition -= new Vector3(s);
+
 			Color faceColor = Color.White;
 			Vector3 normal = Vector3.Zero;
 			Vector3 textureTopLeft = Vector3.Zero, textureBottomLeft = Vector3.Zero, textureBottomRight = Vector3.Zero, textureTopRight = Vector3.Zero;

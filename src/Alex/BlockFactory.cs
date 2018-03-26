@@ -145,7 +145,7 @@ namespace Alex
 
 				if (state.GetTypedValue(WaterLoggedProperty))
 				{
-					result = new MultiBlockModel(StationairyWaterModel, result);
+					result = new MultiBlockModel(result, StationairyWaterModel);
 				}
 
 				if (!ModelCache.TryAdd(id, result))
@@ -306,12 +306,19 @@ namespace Alex
 						{
 							if (block.IsWater)
 							{
-								cachedBlockModel = new MultiBlockModel(StationairyWaterModel, cachedBlockModel);
+								cachedBlockModel = new MultiBlockModel(cachedBlockModel, StationairyWaterModel);
 							}
 							else
 							{
-								cachedBlockModel = new MultiBlockModel(StationairyLavaModel, cachedBlockModel);
+								cachedBlockModel = new MultiBlockModel(cachedBlockModel, StationairyLavaModel);
 							}
+
+							block.Transparent = true;
+						}
+
+						if (blockStateData.GetTypedValue(WaterLoggedProperty))
+						{
+							block.Transparent = true;
 						}
 
 						//block.BlockStateID = id;

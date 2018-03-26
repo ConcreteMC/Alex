@@ -115,48 +115,46 @@ namespace Alex.Graphics.Models
 				LiquidBlockModel m = b.BlockModel as LiquidBlockModel;
 				var secondSpecial = m != null && m.Level > Level;
 
+				float s = 1f - Scale;
+				var start = Vector3.One * s;
+				var end = Vector3.One * Scale;
+
 				if (special || (secondSpecial) || (!string.IsNullOrWhiteSpace(b.Name) && (!b.Name.Equals(b1) && !b.Name.Equals(b2))))
 				{
 					//if (b.BlockModel is LiquidBlockModel m && m.Level > Level && f != BlockFace.Up) continue;
 
-					var vertices = GetFaceVertices(f, Vector3.Zero, Vector3.One, map);
+					var vertices = GetFaceVertices(f, start, end, map);
 					
 					for (var index = 0; index < vertices.Length; index++)
 					{
 						var vert = vertices[index];
 
-
-						if (vert.Position.Y == 0)
+						if (vert.Position.Y > start.Y)
 						{
-							vert.Position.Y = (position.Y);
-						}
-						else
-						{
-							if (vert.Position.X == 0 && vert.Position.Z == 0)
+							const float modifier = 2f;
+							if (vert.Position.X == start.X && vert.Position.Z == start.Z)
 							{
-								height = ((16.0f / 8.0f) * (tl));
-								vert.Position.Y = (height) / 16.0f + (position.Y);
+								height = (modifier * (tl));
 							}
-							else if (vert.Position.X != 0 && vert.Position.Z == 0)
+							else if (vert.Position.X != start.X && vert.Position.Z == start.Z)
 							{
-								height = ((16.0f / 8.0f) * (tr));
-								vert.Position.Y = (height) / 16.0f + (position.Y);
+								height = (modifier * (tr));
 							}
-							else if (vert.Position.X == 0 && vert.Position.Z != 0)
+							else if (vert.Position.X == start.X && vert.Position.Z != start.Z)
 							{
-								height = ((16.0f / 8.0f) * (bl));
-								vert.Position.Y = (height) / 16.0f + (position.Y);
+								height = (modifier * (bl));
 							}
 							else
 							{
-								height = ((16.0f / 8.0f) * (br));
-								vert.Position.Y = (height) / 16.0f + (position.Y);
+								height = (modifier * (br));
 							}
+
+							vert.Position.Y = height / 16.0f; //; + (position.Y);
 						}
 
-
-						vert.Position.X += (position.X);
-						vert.Position.Z += (position.Z);
+						vert.Position.Y += position.Y - s;
+						vert.Position.X += position.X;
+						vert.Position.Z += position.Z;
 
 						vert.Color = LightingUtils.AdjustColor(vert.Color, f, GetLight(world, position), false);
 
