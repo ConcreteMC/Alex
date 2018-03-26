@@ -1,20 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Graphics;
 using Alex.API.World;
 using Alex.Blocks;
-using Alex.Utils;
-using Alex.Worlds;
-using Microsoft.Xna.Framework;
-
-
-using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.BlockStates;
+using Microsoft.Xna.Framework;
 using NLog;
-using Axis = Alex.ResourcePackLib.Json.Axis;
 
-namespace Alex.Graphics.Models
+namespace Alex.Graphics.Models.Blocks
 {
 	public class MultiStateResourcePackModel : ResourcePackModel
 	{

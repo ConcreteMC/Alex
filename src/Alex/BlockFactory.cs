@@ -13,6 +13,7 @@ using Alex.Blocks;
 using Alex.Blocks.Properties;
 using Alex.Blocks.State;
 using Alex.Graphics.Models;
+using Alex.Graphics.Models.Blocks;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.BlockStates;

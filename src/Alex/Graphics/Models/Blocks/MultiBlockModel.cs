@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 using Alex.API.Graphics;
 using Alex.API.World;
 using Alex.Blocks;
 using Microsoft.Xna.Framework;
 
-namespace Alex.Graphics.Models
+namespace Alex.Graphics.Models.Blocks
 {
     public class MultiBlockModel : BlockModel
     {

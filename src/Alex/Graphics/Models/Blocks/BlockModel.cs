@@ -2,12 +2,12 @@
 using Alex.API.Graphics;
 using Alex.API.World;
 using Alex.Blocks;
+using Alex.ResourcePackLib.Json;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
-using Alex.ResourcePackLib.Json;
 using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
 
-namespace Alex.Graphics.Models
+namespace Alex.Graphics.Models.Blocks
 {
     public class BlockModel : Model
 	{

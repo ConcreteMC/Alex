@@ -9,12 +9,10 @@ using Alex.ResourcePackLib.Json.BlockStates;
 using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
-
-
 using NLog;
 using Axis = Alex.ResourcePackLib.Json.Axis;
 
-namespace Alex.Graphics.Models
+namespace Alex.Graphics.Models.Blocks
 {
 	public class CachedResourcePackModel : ResourcePackModel
 	{

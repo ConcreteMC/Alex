@@ -3,21 +3,18 @@ using System.Collections.Generic;
 using Alex.API.Graphics;
 using Alex.API.World;
 using Alex.Blocks;
+using Alex.ResourcePackLib.Json;
+using Alex.ResourcePackLib.Json.BlockStates;
+using Alex.ResourcePackLib.Json.Models.Blocks;
 using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
-
-
-using Alex.ResourcePackLib.Json;
-using Alex.ResourcePackLib.Json.BlockStates;
-using Alex.ResourcePackLib.Json.Models;
-using Alex.ResourcePackLib.Json.Models.Blocks;
 using NLog;
 using Axis = Alex.ResourcePackLib.Json.Axis;
 using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
 using V3 = Microsoft.Xna.Framework.Vector3;
 
-namespace Alex.Graphics.Models
+namespace Alex.Graphics.Models.Blocks
 {
     public class ResourcePackModel : BlockModel
 	{

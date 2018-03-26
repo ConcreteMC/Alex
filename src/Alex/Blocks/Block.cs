@@ -9,6 +9,7 @@ using Alex.API.World;
 using Alex.Blocks.State;
 using Alex.Entities;
 using Alex.Graphics.Models;
+using Alex.Graphics.Models.Blocks;
 using Alex.ResourcePackLib.Json;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
