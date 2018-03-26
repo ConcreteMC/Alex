@@ -19,8 +19,8 @@ namespace Alex.Worlds.Generators
     {
 	    private static List<IBlockState> ALL_VALID_STATES = new List<IBlockState>();
 	    private static IBlockState AIR = BlockFactory.GetBlockState(0);
-	    private static IBlockState BARRIER = BlockFactory.GetBlockState(7, 0);//.getDefaultState();
-	    private static int GRID_WIDTH;
+
+		private static int GRID_WIDTH;
 	    private static int GRID_HEIGHT;
 
 		public IChunkColumn GenerateChunkColumn(ChunkCoordinates chunkCoordinates)
@@ -35,15 +35,16 @@ namespace Alex.Worlds.Generators
 		    {
 			    for (int z = 0; z < 16; ++z)
 			    {
-				    int k = chunkCoordinates.X * 16 + x;
-				    int l = chunkCoordinates.Z * 16 + z;
-				//    chunk.SetBlockState(x, 60, z, BARRIER);
-				    IBlockState iblockstate = GetBlockStateFor(k, l);
+				    int rx = chunkCoordinates.X * 16 + x;
+				    int rz = chunkCoordinates.Z * 16 + z;
+
+				    IBlockState iblockstate = GetBlockStateFor(rx, rz);
 
 				    if (iblockstate != null)
 				    {
 					    chunk.SetBlockState(x, 70, z, iblockstate);
-					}
+					    chunk.Height[((z << 4) + (x))] = 70;
+				    }
 
 				    chunk.SetSkyLight(x, 70, z, 15);
 				    chunk.SetSkyLight(x, 71, z, 15);
@@ -51,32 +52,22 @@ namespace Alex.Worlds.Generators
 				}
 			}
 
-			//chunk.generateSkylightMap();
-			/*  Biome[] abiome = BiomeUtils.Biomes;//((Biome[])null, chunkCoordinates.X * 16, chunkCoordinates.Z * 16, 16, 16);
-			  byte[] abyte = chunk.BiomeId;
-
-			  for (int i1 = 0; i1 < abyte.length; ++i1)
-			  {
-				  abyte[i1] = (byte)BiomeUtils.Get(abiome[i1]);
-			  }
-			  */
-			chunk.CalculateHeight();
-			//chunk.CalculateSkylight();
+			//chunk.CalculateHeight();
 		    return chunk;
 		}
 
-	    public static IBlockState GetBlockStateFor(int p_177461_0_, int p_177461_1_)
+	    public static IBlockState GetBlockStateFor(int x, int z)
 	    {
 		    IBlockState iblockstate = AIR;
 
-		    if (p_177461_0_ > 0 && p_177461_1_ > 0 && p_177461_0_ % 2 != 0 && p_177461_1_ % 2 != 0)
+		    if (x > 0 && z > 0 && x % 2 != 0 && z % 2 != 0)
 		    {
-			    p_177461_0_ = p_177461_0_ / 2;
-			    p_177461_1_ = p_177461_1_ / 2;
+			    x = x / 2;
+			    z = z / 2;
 
-			    if (p_177461_0_ <= GRID_WIDTH && p_177461_1_ <= GRID_HEIGHT)
+			    if (x <= GRID_WIDTH && z <= GRID_HEIGHT)
 			    {
-				    int i = (int) Math.Abs(p_177461_0_ * GRID_WIDTH + p_177461_1_);
+				    int i = Math.Abs(x * GRID_WIDTH + z);
 
 				    if (i < ALL_VALID_STATES.Count)
 				    {

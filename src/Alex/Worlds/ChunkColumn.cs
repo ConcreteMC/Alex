@@ -67,16 +67,6 @@ namespace Alex.Worlds
 			for (int i = 0; i < Chunks.Length; i++)
 			{
 				var b = new ExtendedBlockStorage(i, true);
-				for (int x = 0; x < 16; x++)
-				{
-					for (int z = 0; z < 16; z++)
-					{
-						for (int y = 0; y < 16; y++)
-						{
-							b.Set(x,y,z, air);
-						}
-					}
-				}
 				Chunks[i] = b;
 			}
 		}
