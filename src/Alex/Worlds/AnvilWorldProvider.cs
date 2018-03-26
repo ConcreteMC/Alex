@@ -465,6 +465,8 @@ namespace Alex.Worlds
 
 		private void ReadOldSection(NbtTag sectionTag, Worlds.ChunkColumn chunk, bool convertBid = true)
 		{
+			throw new NotImplementedException("TODO: Implement a id:meta to blockstate converter.");
+
 			int sectionIndex = sectionTag["Y"].ByteValue;
 			byte[] blocks = sectionTag["Blocks"].ByteArrayValue;
 			byte[] data = sectionTag["Data"].ByteArrayValue;
