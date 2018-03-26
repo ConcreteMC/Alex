@@ -10,6 +10,7 @@ namespace Alex.Blocks.State
 		public static Dictionary<string, StateProperty> _registeredTypes = new Dictionary<string, StateProperty>(StringComparer.InvariantCultureIgnoreCase);
 		public string Name { get; }
 		public Type PropertyType { get; }
+		public object DefaultValue { get; set; }
 
 		protected StateProperty(string name, Type propertyType)
 		{
@@ -64,6 +65,15 @@ namespace Alex.Blocks.State
 
 		public abstract TType ParseValue(string value);
 		public abstract string ToString(TType v);
+		public TType GetDefaultValue()
+		{
+			if (DefaultValue is TType typedDefault)
+			{
+				return typedDefault;
+			}
+
+			return default(TType);
+		}
 
 		public override object ValueFromString(string value)
 		{

@@ -36,4 +36,8 @@
     </EmbeddedResource>
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Json\Tags\Blocks\" />
+  </ItemGroup>
+
 </Project>

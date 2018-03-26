@@ -215,12 +215,12 @@ namespace Alex.Gamestates.Playing
 				if (_renderWaterOverlay)
 				{
 					//Start draw background
-					var retval = new Microsoft.Xna.Framework.Rectangle(
+				/*	var retval = new Microsoft.Xna.Framework.Rectangle(
 						args.SpriteBatch.GraphicsDevice.Viewport.X,
 						args.SpriteBatch.GraphicsDevice.Viewport.Y,
 						args.SpriteBatch.GraphicsDevice.Viewport.Width,
 						args.SpriteBatch.GraphicsDevice.Viewport.Height);
-					args.SpriteBatch.FillRectangle(retval, new Color(Color.DarkBlue, 0.5f));
+					args.SpriteBatch.FillRectangle(retval, new Color(Color.DarkBlue, 0.5f));*/
 					//End draw backgroun
 				}
 
@@ -294,7 +294,7 @@ namespace Alex.Gamestates.Playing
 
 				y += (int) meisured.Y;
 
-				positionString = $"{SelBlock} ({SelBlock.BlockStateID})";
+				positionString = $"{SelBlock} ({SelBlock.BlockState.ID})";
 				meisured = Alex.Font.MeasureString(positionString);
 
 				args.SpriteBatch.FillRectangle(new Rectangle(screenWidth - (int) meisured.X, y, (int) meisured.X, (int) meisured.Y),

@@ -79,7 +79,14 @@ namespace Alex.Rendering
 
 	    public void Dispose()
 	    {
-		    
+		    var entities = Entities.ToArray();
+			Entities.Clear();
+		    EntityByUUID.Clear();
+
+			foreach (var entity in entities)
+		    {
+				entity.Deconstruct(out long _, out Entity _);
+		    }
 	    }
 
 	    public void UnloadEntities(ChunkCoordinates coordinates)

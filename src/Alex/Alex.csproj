@@ -3,7 +3,6 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.0</TargetFramework>
-	  <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
 	  <DefineConstants>TRACE;DEBUG;MONOGAME;NETCOREAPP2_0;DESKTOPGL;WINDOWS</DefineConstants>
 	  <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
@@ -19,7 +18,8 @@
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
 
-  <ItemGroup>
+	<!--
+	<ItemGroup>
     <None Remove="Alex.cs" />
     <None Remove="BlockData.cs" />
     <None Remove="BlockFactory.cs" />
@@ -412,7 +412,8 @@
     <None Remove="Worlds\SPWorldProvider.cs" />
     <None Remove="Worlds\World.cs" />
   </ItemGroup>
-
+	-->
+	<!--
   <ItemGroup>
     <Compile Include="Alex.cs" />
     <Compile Include="BlockData.cs" />
@@ -805,6 +806,7 @@
     <Compile Include="Worlds\SPWorldProvider.cs" />
     <Compile Include="Worlds\World.cs" />
   </ItemGroup>
+	-->
 
 	<ItemGroup>
 		<RdXmlFile Include="rd.xml" />

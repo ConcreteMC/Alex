@@ -297,6 +297,12 @@ namespace Alex.Worlds
 						}
 					}
 
+
+					if (chunk.BiomeId.Length != 256)
+					{
+						Array.Resize(ref chunk.BiomeId, 256);
+					}
+
 					//chunk.b
 
 					//if (chunk.biomeId.Length > 256) throw new Exception();

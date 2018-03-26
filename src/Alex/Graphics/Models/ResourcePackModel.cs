@@ -23,7 +23,7 @@ namespace Alex.Graphics.Models
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ResourcePackModel));
 
-		protected BlockStateModel[] Variant { get; set; }
+		public BlockStateModel[] Variant { get; set; }
 		protected ResourceManager Resources { get; }
 
 		public ResourcePackModel(ResourceManager resources, BlockStateModel[] variant)

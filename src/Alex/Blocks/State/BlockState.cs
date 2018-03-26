@@ -53,6 +53,7 @@ namespace Alex.Blocks.State {
 				}
 			}
 
+			return property.GetDefaultValue();
 			return default(T);
 		}
 

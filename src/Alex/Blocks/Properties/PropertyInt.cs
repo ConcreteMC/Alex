@@ -4,9 +4,10 @@ namespace Alex.Blocks.Properties
 {
 	public class PropertyInt : StateProperty<int>
 	{
-		private int DefaultValue = 0;
+		private readonly int _defaultValue = 0;
 		public PropertyInt(string name, int defaultValue = 0) : base(name)
 		{
+			_defaultValue = defaultValue;
 			DefaultValue = defaultValue;
 		}
 
@@ -17,7 +18,7 @@ namespace Alex.Blocks.Properties
 				return result;
 			}
 
-			return DefaultValue;
+			return _defaultValue;
 		}
 
 		public override string ToString(int v)

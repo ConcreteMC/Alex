@@ -13,9 +13,11 @@ namespace Alex.Graphics.Models
 {
 	public class LiquidBlockModel : BlockModel
 	{
-		private static PropertyInt LEVEL = new PropertyInt("level", 0);
+		private static PropertyInt LEVEL = new PropertyInt("level");
+		private static PropertyBool WATERLOGGED = new PropertyBool("waterlogged");
 
 		public bool IsLava = false;
+		public bool IsWater => !IsLava;
 		public bool IsFlowing = false;
 		public int Level = 8;
 
@@ -43,8 +45,8 @@ namespace Alex.Graphics.Models
 				b2 = "minecraft:water";
 			}
 
-			var bc = world.GetBlock(position + Vector3.Up).Name;//.GetType();
-			if (bc == b1 || bc == b2)
+			var bc = world.GetBlock(position + Vector3.Up);//.GetType();
+			if ((!IsLava && bc.IsWater) || (IsLava && bc.Name == "minecraft:lava")) //.Name == b1 || bc.Name == b2)
 			{
 				tl = 8;
 				tr = 8;
@@ -118,11 +120,7 @@ namespace Alex.Graphics.Models
 					//if (b.BlockModel is LiquidBlockModel m && m.Level > Level && f != BlockFace.Up) continue;
 
 					var vertices = GetFaceVertices(f, Vector3.Zero, Vector3.One, map);
-					byte cr, cg, cb;
-					cr = 255;
-					cg = 255;
-					cb = 255;
-
+					
 					for (var index = 0; index < vertices.Length; index++)
 					{
 						var vert = vertices[index];
@@ -178,19 +176,23 @@ namespace Alex.Graphics.Models
 				for (int zz = -1; zz <= 0; zz++)
 				{
 					var b = (Block)world.GetBlock(position.X + xx, position.Y + 1, position.Z + zz);
-					if (b.BlockModel is LiquidBlockModel m && m.IsLava == IsLava)
+					if ((b.BlockModel is LiquidBlockModel m && m.IsLava == IsLava))
 					{
 						return 8;
 					}
 
 					b = (Block)world.GetBlock(position.X + xx, position.Y, position.Z + zz);
-					if (b.BlockModel is LiquidBlockModel l && l.IsLava == IsLava)
+					if ((b.BlockModel is LiquidBlockModel l && l.IsLava == IsLava))
 					{
 						var nl = 7 - (l.Level & 0x7);
 						if (nl > level)
 						{
 							level = nl;
 						}
+					}
+					else if (b != null && b.BlockState != null && b.BlockState.GetTypedValue(WATERLOGGED)) //Block is 'waterlogged'
+					{
+						level = 8;
 					}
 				}
 			}

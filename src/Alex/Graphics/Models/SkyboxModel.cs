@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Security.Cryptography;
 using System.Text;
 using Alex.API.Graphics;
 using Alex.Gamestates;
@@ -31,9 +32,11 @@ namespace Alex.Graphics.Models
 		private World World { get; }
 
 	    private VertexPositionTexture[] MoonPlaneVertices;
+		private Alex Game { get; }
 		public SkyboxModel(Alex alex, GraphicsDevice device, World world)
 		{
 			World = world;
+			Game = alex;
 
 		    if (alex.Resources.BedrockResourcePack.TryGetTexture("textures/environment/sun", out Bitmap sun))
 		    {
@@ -55,6 +58,8 @@ namespace Alex.Graphics.Models
 			    return;
 		    }
 
+			var d = alex.GameSettings.RenderDistance ^ 2;
+
 			CelestialPlaneEffect = new BasicEffect(device);
 			CelestialPlaneEffect.TextureEnabled = true;
 
@@ -62,17 +67,17 @@ namespace Alex.Graphics.Models
 			SkyPlaneEffect.VertexColorEnabled = false;
 			SkyPlaneEffect.FogEnabled = true;
 			SkyPlaneEffect.FogStart = 0;
-			SkyPlaneEffect.FogEnd = 64 * 0.8f;
+			SkyPlaneEffect.FogEnd = d * 0.8f;
 			SkyPlaneEffect.LightingEnabled = true;
 			var plane = new[]
 			{
-				new VertexPositionColor(new Vector3(-64, 0, -64), Color.White),
-				new VertexPositionColor(new Vector3(64, 0, -64), Color.White),
-				new VertexPositionColor(new Vector3(-64, 0, 64), Color.White),
+				new VertexPositionColor(new Vector3(-d, 0, -d), Color.White),
+				new VertexPositionColor(new Vector3(d, 0, -d), Color.White),
+				new VertexPositionColor(new Vector3(-d, 0, d), Color.White),
 
-				new VertexPositionColor(new Vector3(64, 0, -64), Color.White),
-				new VertexPositionColor(new Vector3(64, 0, 64), Color.White),
-				new VertexPositionColor(new Vector3(-64, 0, 64), Color.White)
+				new VertexPositionColor(new Vector3(d, 0, -d), Color.White),
+				new VertexPositionColor(new Vector3(d, 0, d), Color.White),
+				new VertexPositionColor(new Vector3(-d, 0, d), Color.White)
 			};
 			SkyPlane = new VertexBuffer(device, VertexPositionColor.VertexDeclaration,
 				plane.Length, BufferUsage.WriteOnly);
@@ -80,13 +85,13 @@ namespace Alex.Graphics.Models
 
 			var celestialPlane = new[]
 			{
-				new VertexPositionTexture(new Vector3(-60, 0, -60), new Vector2(0, 0)),
-				new VertexPositionTexture(new Vector3(60, 0, -60), new Vector2(1, 0)),
-				new VertexPositionTexture(new Vector3(-60, 0, 60), new Vector2(0, 1)),
+				new VertexPositionTexture(new Vector3(-d, 0, -d), new Vector2(0, 0)),
+				new VertexPositionTexture(new Vector3(d, 0, -d), new Vector2(1, 0)),
+				new VertexPositionTexture(new Vector3(-d, 0, d), new Vector2(0, 1)),
 
-				new VertexPositionTexture(new Vector3(60, 0, -60), new Vector2(1, 0)),
-				new VertexPositionTexture(new Vector3(60, 0, 60), new Vector2(1, 1)),
-				new VertexPositionTexture(new Vector3(-60, 0, 60), new Vector2(0, 1))
+				new VertexPositionTexture(new Vector3(d, 0, -d), new Vector2(1, 0)),
+				new VertexPositionTexture(new Vector3(d, 0, d), new Vector2(1, 1)),
+				new VertexPositionTexture(new Vector3(-d, 0, d), new Vector2(0, 1))
 			};
 			CelestialPlane = new VertexBuffer(device, VertexPositionTexture.VertexDeclaration,
 				celestialPlane.Length, BufferUsage.WriteOnly);
@@ -94,10 +99,10 @@ namespace Alex.Graphics.Models
 
 			MoonPlaneVertices = new[]
 			{
-				new VertexPositionTexture(new Vector3(-60, 0, -60), new Vector2(0, 0)),
-				new VertexPositionTexture(new Vector3(60, 0, -60), new Vector2(1, 0)),
-				new VertexPositionTexture(new Vector3(-60, 0, 60), new Vector2(0, 1)),
-				new VertexPositionTexture(new Vector3(60, 0, -60), new Vector2(1, 0)),
+				new VertexPositionTexture(new Vector3(-d, 0, -d), new Vector2(0, 0)),
+				new VertexPositionTexture(new Vector3(d, 0, -d), new Vector2(1, 0)),
+				new VertexPositionTexture(new Vector3(-d, 0, d), new Vector2(0, 1)),
+				new VertexPositionTexture(new Vector3(d, 0, -d), new Vector2(1, 0)),
 			};
 			MoonPlane = new VertexBuffer(device, VertexPositionTexture.VertexDeclaration,
 				MoonPlaneVertices.Length, BufferUsage.WriteOnly);
@@ -133,7 +138,7 @@ namespace Alex.Graphics.Models
 		{
 			get
 			{
-				const float blendFactor = 0.29f; // TODO: Compute based on view distance
+				float blendFactor = ((Game.GameSettings.RenderDistance ^2) / 100f) * 0.45f;//  0.29f; // TODO: Compute based on view distance
 
 				float Blend(float source, float destination) => destination + (source - destination) * blendFactor;
 

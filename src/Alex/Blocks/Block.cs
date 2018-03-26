@@ -20,8 +20,6 @@ namespace Alex.Blocks
 	public class Block : IBlock
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Block));
-	    
-		public uint BlockStateID { get; set; }
 
 		public bool Solid { get; set; }
 		public bool Transparent { get; set; }
@@ -44,7 +42,7 @@ namespace Alex.Blocks
 		public BlockModel BlockModel { get; set; }
 		public IBlockState BlockState { get; set; }
 		public bool IsWater { get; set; } = false;
-		public bool IsWaterSource { get; set; } = false;
+		public bool IsSourceBlock { get; set; } = false;
 
 		private IMaterial _material;
 
@@ -69,13 +67,24 @@ namespace Alex.Blocks
 
 	    public Block(uint blockStateId)
 	    {
-		    BlockStateID = blockStateId;
+		   //BlockStateID = blockStateId;
 			BlockMaterial = new Material(MapColor.STONE);
 
 			Solid = true;
 		    Transparent = false;
 		    Renderable = true;
 		    HasHitbox = true;
+		}
+
+		protected Block(string blockName)
+		{
+		//	BlockStateID = blockStateId;
+			BlockMaterial = new Material(MapColor.STONE);
+
+			Solid = true;
+			Transparent = false;
+			Renderable = true;
+			HasHitbox = true;
 		}
 
 		public Microsoft.Xna.Framework.BoundingBox GetBoundingBox(Vector3 blockPosition)
@@ -161,19 +170,15 @@ namespace Alex.Blocks
 
 		public virtual IBlockState GetDefaultState()
 		{
-			IBlockState r;
+			IBlockState r = null;
 			if (BlockState != null)
 			{
 				r = BlockState.GetDefaultState();
 			}
-			else
-			{
-				r = BlockFactory.GetBlockState(BlockStateID)?.GetDefaultState();
-			}
 
 			if (r == null) return new BlockState()
 			{
-				ID = BlockStateID
+				
 			};
 
 			return r;

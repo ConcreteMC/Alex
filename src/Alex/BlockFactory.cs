@@ -142,6 +142,12 @@ namespace Alex
 					return null;
 				}
 
+
+				if (state.GetTypedValue(WaterLoggedProperty))
+				{
+					result = new MultiBlockModel(StationairyWaterModel, result);
+				}
+
 				if (!ModelCache.TryAdd(id, result))
 				{
 					Log.Warn($"Could not register model in cache! {state.Name} - {state.ID}");
@@ -193,6 +199,7 @@ namespace Alex
 			return LoadModels(resources, resourcePack, replace, reportMissing);
 		}
 
+		private static PropertyBool WaterLoggedProperty = new PropertyBool("waterlogged");
 		internal static bool GenerateClasses { get; set; } = false;
 		private static int LoadModels(ResourceManager resources, McResourcePack resourcePack, bool replace,
 			bool reportMissing)
@@ -295,7 +302,19 @@ namespace Alex
 							}
 						}
 
-						block.BlockStateID = id;
+						if (block.IsSourceBlock && !(cachedBlockModel is MultiBlockModel) && !(cachedBlockModel is LiquidBlockModel))
+						{
+							if (block.IsWater)
+							{
+								cachedBlockModel = new MultiBlockModel(StationairyWaterModel, cachedBlockModel);
+							}
+							else
+							{
+								cachedBlockModel = new MultiBlockModel(StationairyLavaModel, cachedBlockModel);
+							}
+						}
+
+						//block.BlockStateID = id;
 						block.Name = entry.Key;
 						block.BlockModel = cachedBlockModel;
 
@@ -363,7 +382,7 @@ namespace Alex
 
 			builder.AppendLine($"\tpublic class {className} : Block");
 			builder.AppendLine("\t{");
-			builder.AppendLine($"\t\tpublic {className}() : base({block.BlockStateID.ToString()})");
+			builder.AppendLine($"\t\tpublic {className}() : base({block.BlockState.ID.ToString()})");
 			builder.AppendLine("\t\t{");
 			builder.AppendLine($"\t\t\tSolid = {block.Solid.ToString().ToLower()};");
 			builder.AppendLine($"\t\t\tTransparent = {block.Transparent.ToString().ToLower()};");
@@ -788,6 +807,7 @@ namespace Alex
 			//Liquid
 			else if (blockName == "minecraft:water" || blockName == "water") return new Water();
 			else if (blockName == "minecraft:lava" || blockName == "lava") return new Lava();
+			else if (blockName == "minecraft:kelp" || blockName == "kelp") return new Kelp();
 
 			//Ores
 			else if (blockName == "minecraft:redstone_ore" || blockName == "redstoneore") return new RedstoneOre();
