@@ -36,6 +36,7 @@ namespace Alex.Rendering
 
 	    private int _chunkUpdates = 0;
 	    public int ChunkUpdates => _chunkUpdates;
+	    public int LowPriortiyUpdates => LowPriority.Count;
 	    public int ChunkCount => Chunks.Count;
 
 	    public AlphaTestEffect TransparentEffect { get; }
@@ -122,6 +123,7 @@ namespace Alex.Rendering
 			{
 				try
 				{
+					//bool doingLowPriority = false;
 					ChunkCoordinates? i = null;
 					if (HighPriority.TryDequeue(out ChunkCoordinates ci))
 					{
@@ -132,6 +134,7 @@ namespace Alex.Rendering
 						if (LowPriority.TryDequeue(out ChunkCoordinates cic))
 						{
 							i = cic;
+							//doingLowPriority = true;
 						}
 						else
 						{
@@ -165,9 +168,12 @@ namespace Alex.Rendering
 							}
 							else
 							{
-								LowPriority.Enqueue(i.Value);
+								if (i.Value.DistanceTo(new ChunkCoordinates(Camera.Position)) <= radiusSquared)
+								{
+									LowPriority.Enqueue(i.Value);
+								}
 
-							//	Interlocked.Decrement(ref _chunkUpdates);
+								//	Interlocked.Decrement(ref _chunkUpdates);
 							}
 						}
 						catch (TaskCanceledException)

@@ -1,10 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using Alex.ResourcePackLib.Json;
+using Alex.ResourcePackLib.Json.Tags;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using Alex.ResourcePackLib.Json;
-using Alex.ResourcePackLib.Json.Models.Blocks;
-using Alex.ResourcePackLib.Json.Tags;
 
 namespace Alex.ResourcePackLib
 {
@@ -34,7 +33,7 @@ namespace Alex.ResourcePackLib
 
 			foreach (var jsonFile in jsonFiles)
 			{
-				var tag = LaodTag(jsonFile);
+				var tag = LoadTag(jsonFile);
 				_itemTags[$"{tag.Namespace}:{tag.Name}"] = tag;
 			}
 		}
@@ -46,12 +45,12 @@ namespace Alex.ResourcePackLib
 
 		    foreach (var jsonFile in jsonFiles)
 		    {
-			    var tag = LaodTag(jsonFile);
+			    var tag = LoadTag(jsonFile);
 			    _blockTags[$"{tag.Namespace}:{tag.Name}"] = tag;
 			}
 	    }
 
-		private Tag LaodTag(ZipArchiveEntry entry)
+		private Tag LoadTag(ZipArchiveEntry entry)
 		{
 			string nameSpace = entry.FullName.Split('/')[1];
 			string name = Path.GetFileNameWithoutExtension(entry.FullName);

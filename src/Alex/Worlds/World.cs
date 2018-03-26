@@ -135,6 +135,11 @@ namespace Alex.Worlds
             get { return ChunkManager.ChunkUpdates; }
         }
 
+		public int LowPriorityUpdates
+		{
+			get { return ChunkManager.LowPriortiyUpdates; }
+		}
+
 		public void ResetChunks()
         {
             ChunkManager.ClearChunks();

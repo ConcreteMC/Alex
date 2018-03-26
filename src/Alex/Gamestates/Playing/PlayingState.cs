@@ -321,8 +321,8 @@ namespace Alex.Gamestates.Playing
 
 		private void DebugLeft(RenderArgs args)
 		{
-			var fpsString = string.Format("Alex {0} ({1} FPS, {2} chunk updates)", Alex.Version,
-					 Math.Round(FpsCounter.Value), World.ChunkUpdates);
+			var fpsString = string.Format("Alex {0} ({1} FPS, {2}:{3} chunk updates)", Alex.Version,
+					 Math.Round(FpsCounter.Value), World.ChunkUpdates, World.LowPriorityUpdates);
 			var meisured = Alex.Font.MeasureString(fpsString);
 
 			args.SpriteBatch.FillRectangle(new Rectangle(0, 0, (int)meisured.X, (int)meisured.Y),
