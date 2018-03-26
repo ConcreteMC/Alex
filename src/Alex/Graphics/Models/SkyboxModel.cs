@@ -233,11 +233,11 @@ namespace Alex.Graphics.Models
 		    CelestialPlaneEffect.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, 2);
 
 			renderArgs.GraphicsDevice.BlendState = backup;
-		    renderArgs.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+		//    renderArgs.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
 
 			// Void
 		    renderArgs.GraphicsDevice.SetVertexBuffer(SkyPlane);
-			SkyPlaneEffect.World = Matrix.CreateTranslation(camera.Position.X, -16, camera.Position.Z);
+			SkyPlaneEffect.World = Matrix.CreateTranslation(0, -16,0) * Matrix.CreateTranslation(camera.Position);
 			SkyPlaneEffect.AmbientLightColor = WorldSkyColor.ToVector3()
 				* new Vector3(0.2f, 0.2f, 0.6f)
 				+ new Vector3(0.04f, 0.04f, 0.1f);
