@@ -41,8 +41,8 @@ namespace Alex.Worlds
 		public const int ChunkWidth = 16;
 		public const int ChunkDepth = 16;
 
-		public int X;
-		public int Z;
+		public int X { get; set; }
+		public int Z { get; set; }
 
 		public bool IsAllAir = false;
 		public bool IsNew = true;

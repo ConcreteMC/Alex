@@ -7,6 +7,9 @@ namespace Alex.API.World
 {
 	public interface IChunkColumn : IDisposable
 	{
+		int X { get; }
+		int Z { get; }
+
 		IBlockState GetBlockState(int x, int y, int z);
 		void SetBlockState(int x, int y, int z, IBlockState state);
 		IBlock GetBlock(int bx, int by, int bz);
