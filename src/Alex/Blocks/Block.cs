@@ -88,6 +88,16 @@ namespace Alex.Blocks
 			HasHitbox = true;
 		}
 
+		protected Block()
+		{
+			BlockMaterial = new Material(MapColor.STONE);
+
+			Solid = true;
+			Transparent = false;
+			Renderable = true;
+			HasHitbox = true;
+		}
+
 		public Microsoft.Xna.Framework.BoundingBox GetBoundingBox(Vector3 blockPosition)
 	    {
 			if (BlockModel == null)

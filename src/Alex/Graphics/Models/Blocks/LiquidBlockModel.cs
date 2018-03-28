@@ -182,7 +182,7 @@ namespace Alex.Graphics.Models.Blocks
 					b = (Block)world.GetBlock(position.X + xx, position.Y, position.Z + zz);
 					if ((b.BlockModel is LiquidBlockModel l && l.IsLava == IsLava))
 					{
-						var nl = 7 - (l.Level & 0x7);
+						var nl = 7 - (b.BlockState.GetTypedValue(LEVEL) & 0x7);
 						if (nl > level)
 						{
 							level = nl;

@@ -1,28 +1,20 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using Alex.API.Blocks.Properties;
 using Alex.API.Blocks.State;
-using Alex.API.World;
 using Alex.Blocks;
 using Alex.Blocks.Properties;
 using Alex.Blocks.State;
-using Alex.Graphics.Models;
 using Alex.Graphics.Models.Blocks;
 using Alex.ResourcePackLib;
-using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.BlockStates;
-using Alex.Worlds;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Linq;
-using BlockState = Alex.ResourcePackLib.Json.BlockStates.BlockState;
+using JsonBlockstate = Alex.ResourcePackLib.Json.BlockStates.BlockState;
+using BlockState = Alex.Blocks.State.BlockState;
 
 namespace Alex
 {
@@ -133,14 +125,16 @@ namespace Alex
 			uint c = 0;
 			foreach (var entry in data)
 			{
-				Blocks.State.BlockState state = new Blocks.State.BlockState();
-				state.Name = entry.Key;
+				var state = new BlockState
+				{
+					Name = entry.Key
+				};
 
 				if (entry.Value.Properties != null)
 				{
 					foreach (var property in entry.Value.Properties)
 					{
-						state = (Blocks.State.BlockState)state.WithProperty(new DynamicStateProperty(property.Key, property.Value), property.Value.FirstOrDefault());
+						state = (BlockState)state.WithProperty(new DynamicStateProperty(property.Key, property.Value), property.Value.FirstOrDefault());
 					}
 				}
 
@@ -148,32 +142,32 @@ namespace Alex
 				{
 					var id = s.ID;
 
-					Blocks.State.BlockState blockStateData = (Blocks.State.BlockState)state.Clone();
-					blockStateData.Variants.Clear();
+					BlockState variantState = (BlockState)state.Clone();
+					variantState.Variants.Clear();
 					
-					blockStateData.Name = state.Name;
-					blockStateData.ID = id;
+					variantState.Name = state.Name;
+					variantState.ID = id;
 
 					if (s.Properties != null)
 					{
 						foreach (var property in s.Properties)
 						{
-							blockStateData = (Blocks.State.BlockState)blockStateData.WithProperty(StateProperty.Parse(property.Key), property.Value);
+							variantState = (BlockState)variantState.WithProperty(StateProperty.Parse(property.Key), property.Value);
 						}
 					}
 
 					if (RegisteredBlockStates.TryGetValue(id, out IBlockState st))
 					{
-						Log.Warn($"Duplicate blockstate id (Existing: {st.Name}[{st.ToString()}] | New: {entry.Key}[{blockStateData.ToString()}]) ");
+						Log.Warn($"Duplicate blockstate id (Existing: {st.Name}[{st.ToString()}] | New: {entry.Key}[{variantState.ToString()}]) ");
 						continue;
 					}
 
 					{
-						var cachedBlockModel = GetOrCacheModel(resources, resourcePack, blockStateData, id);
+						var cachedBlockModel = GetOrCacheModel(resources, resourcePack, variantState, id);
 						if (cachedBlockModel == null)
 						{
 							if (reportMissing)
-								Log.Warn($"Missing blockmodel for blockstate {entry.Key}[{blockStateData.ToString()}]");
+								Log.Warn($"Missing blockmodel for blockstate {entry.Key}[{variantState.ToString()}]");
 
 							cachedBlockModel = new CachedResourcePackModel(resources, new BlockStateModel[]
 							{
@@ -219,33 +213,32 @@ namespace Alex
 							block.Transparent = true;
 						}
 
-						if (blockStateData.GetTypedValue(WaterLoggedProperty))
+						if (variantState.GetTypedValue(WaterLoggedProperty))
 						{
 							block.Transparent = true;
 						}
 
-						//block.BlockStateID = id;
 						block.Name = entry.Key;
 						block.BlockModel = cachedBlockModel;
 
-						block.BlockState = blockStateData;
+						block.BlockState = variantState;
 						block.DisplayName = displayName;
 
-						blockStateData.Block = block;
-						blockStateData.Default = state;
+						variantState.Block = block;
+						variantState.Default = state;
 
 						if (s.Default) //This is the default variant.
 						{
 							state.Block = block;
-							state.Default = blockStateData;
+							state.Default = variantState;
 							state.ID = id;
 						}
 						else
 						{
-							state.Variants.Add(blockStateData);
-							if (!RegisteredBlockStates.TryAdd(id, blockStateData))
+							state.Variants.Add(variantState);
+							if (!RegisteredBlockStates.TryAdd(id, variantState))
 							{
-								Log.Warn($"Failed to add blockstate (variant), key already exists! ({blockStateData.Name})");
+								Log.Warn($"Failed to add blockstate (variant), key already exists! ({variantState.Name})");
 							}
 							else
 							{
@@ -266,7 +259,7 @@ namespace Alex
 				}
 				else
 				{
-					foreach (var bsVariant in state.Variants.Cast<Blocks.State.BlockState>())
+					foreach (var bsVariant in state.Variants.Cast<BlockState>())
 					{
 						bsVariant.Variants.AddRange(state.Variants.Where(x => !x.ID.Equals(bsVariant.ID)));
 					}
@@ -376,7 +369,7 @@ namespace Alex
 				return StationairyLavaModel;
 			}
 
-			BlockState blockState;
+			JsonBlockstate blockState;
 
 			if (resourcePack.BlockStates.TryGetValue(name, out blockState))
 			{
@@ -439,7 +432,7 @@ namespace Alex
 			return null;
 		}
 
-		private static readonly IBlockState AirState = new Blocks.State.BlockState();
+		private static readonly IBlockState AirState = new BlockState();
 
 		public static IBlockState GetBlockState(string palleteId)
 		{
@@ -690,12 +683,15 @@ namespace Alex
 			else if (blockName == "minecraft:oak_fence" || blockName == "oakfence") return new OakFence();
 			else if (blockName == "minecraft:oak_fence_gate" || blockName == "oakfencegate") return new FenceGate();
 			else if (blockName == "minecraft:dark_oak_fence_gate" || blockName == "darkoakfencegate") return new DarkOakFenceGate();
+			else if (blockName == "minecraft:dark_oak_fence" || blockName == "darkoakfence") return new Fence();
 			else if (blockName == "minecraft:spruce_fence_gate" || blockName == "sprucefencegate") return new SpruceFenceGate();
-			else if (blockName == "minecraft:spruce_fence" || blockName == "sprucefence") return new OakFence();
+			else if (blockName == "minecraft:spruce_fence" || blockName == "sprucefence") return new Fence();
 			else if (blockName == "minecraft:birch_fence_gate" || blockName == "birchfencegate") return new BirchFenceGate();
 			else if (blockName == "minecraft:birch_fence" || blockName == "birchfence") return new BirchFence();
 			else if (blockName == "minecraft:jungle_fence_gate" || blockName == "junglefencegate") return new JungleFenceGate();
+			else if (blockName == "minecraft:jungle_fence" || blockName == "junglefence") return new Fence();
 			else if (blockName == "minecraft:acacia_fence_gate" || blockName == "acaciafencegate") return new AcaciaFenceGate();
+			else if (blockName == "minecraft:acacia_fence" || blockName == "acaciafence") return new Fence();
 
 			//Stairs
 			else if (blockName == "minecraft:purpur_stairs" || blockName == "purpurstairs") return new PurpurStairs();
