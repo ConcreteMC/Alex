@@ -52,6 +52,7 @@ namespace Alex.Gamestates.Playing
 		private string MemoryUsageDisplay { get; set; } = "";
 
 		private TimeSpan _previousMemUpdate = TimeSpan.Zero;
+		private BlockCoordinates _prevCollisonCheck = new BlockCoordinates(-255,-255,-255);
 		protected override void OnUpdate(GameTime gameTime)
 		{
 			if (Alex.IsActive)
@@ -71,16 +72,22 @@ namespace Alex.Gamestates.Playing
 
 				World.Update(gameTime);
 
-				var headBlock = World.GetBlock(Camera.Position);
-				if (headBlock.IsWater)
+				var myBlockPos = new BlockCoordinates(Camera.Position);
+				if (myBlockPos != _prevCollisonCheck)
 				{
-					if (!_renderWaterOverlay)
+					_prevCollisonCheck = myBlockPos;
+					var headBlock = World.GetBlock(myBlockPos);
+					if (headBlock.IsWater)
 					{
-						_renderWaterOverlay = true;
+						if (!_renderWaterOverlay)
+						{
+							_renderWaterOverlay = true;
+						}
 					}
-				}else if (_renderWaterOverlay)
-				{
-					_renderWaterOverlay = false;
+					else if (_renderWaterOverlay)
+					{
+						_renderWaterOverlay = false;
+					}
 				}
 
 

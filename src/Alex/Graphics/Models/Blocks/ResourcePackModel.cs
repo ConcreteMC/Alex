@@ -105,31 +105,37 @@ namespace Alex.Graphics.Models.Blocks
 		protected void GetCullFaceValues(string facename, BlockFace originalFace, out BlockFace face, out V3 offset)
 		{
 			V3 cullFace = V3.Zero;
-
 			BlockFace cull;
-			if (!Enum.TryParse(facename, out cull))
+
+			switch (facename)
 			{
-				cull = originalFace;
-			}
-			switch (cull)
-			{
-				case BlockFace.Up:
+				case "up":
 					cullFace = V3.Up;
+					cull = BlockFace.Up;
 					break;
-				case BlockFace.Down:
+				case "down":
 					cullFace = V3.Down;
+					cull = BlockFace.Down;
 					break;
-				case BlockFace.North:
+				case "north":
 					cullFace = V3.Backward;
+					cull = BlockFace.North;
 					break;
-				case BlockFace.South:
+				case "south":
 					cullFace = V3.Forward;
+					cull = BlockFace.South;
 					break;
-				case BlockFace.West:
+				case "west":
 					cullFace = V3.Left;
+					cull = BlockFace.West;
 					break;
-				case BlockFace.East:
+				case "east":
 					cullFace = V3.Right;
+					cull = BlockFace.East;
+					break;
+				default:
+					cull = originalFace;
+					cullFace = cull.GetVector3();
 					break;
 			}
 

@@ -179,7 +179,7 @@ namespace Alex.Graphics.Models.Blocks
 
 		public override VertexPositionNormalTextureColor[] GetVertices(IWorld world, Vector3 position, Block baseBlock)
 		{
-			var verts = new List<VertexPositionNormalTextureColor>(6 * 6);
+			var verts = new List<VertexPositionNormalTextureColor>(36);
 
 			// MaxY = 0;
 			Vector3 worldPosition = new Vector3(position.X, position.Y, position.Z);

@@ -80,6 +80,7 @@ namespace Alex.Worlds
 		{
 			Chunks[y >> 4].Set(x, y - 16 * (y >> 4), z, blockState);
 			SetDirty();
+			_heightDirty = true;
 		}
 
 		public IBlockState GetBlockState(int bx, int by, int bz)
@@ -100,6 +101,8 @@ namespace Alex.Worlds
 		{
 			Chunks[by >> 4].Set(bx, by - 16 * (by >> 4), bz, block.BlockState);
 			SetDirty();
+
+			_heightDirty = true;
 		}
 
 		public void SetHeight(int bx, int bz, short h)
@@ -144,15 +147,14 @@ namespace Alex.Worlds
 			Chunks[@by >> 4].SetExtSkylightValue(bx, @by - 16 * (@by >> 4), bz, data);
 		}
 
-		private IReadOnlyDictionary<Vector3, ChunkMesh.EntryPosition> PositionCache { get; set; } = null;
 		private Vector3 Position => new Vector3(X * 16, 0, Z*16);
 
 		public NbtCompound[] Entities { get; internal set; }
 
 		public void GenerateMeshes(IWorld world, out ChunkMesh mesh)
 		{
-			List<ChunkMesh.Entry> solidVertices = new List<ChunkMesh.Entry>();
-			List<ChunkMesh.Entry> transparentVertices = new List<ChunkMesh.Entry>();
+			List<VertexPositionNormalTextureColor> solidVertices = new List<VertexPositionNormalTextureColor>();
+			List<VertexPositionNormalTextureColor> transparentVertices = new List<VertexPositionNormalTextureColor>();
 
 			//if (Scheduled == ScheduleType.Full || PositionCache == null)
 			{
@@ -173,48 +175,6 @@ namespace Alex.Worlds
 					}
 				}
 			}
-		/*	else if (Scheduled == ScheduleType.Border)
-			{
-				for (var index = 0; index < Chunks.Length; index++)
-				{
-					var chunk = Chunks[index];
-					if (chunk.IsAllAir()) continue;
-
-					for (int x = 0; x < ChunkWidth; x++)
-					{
-						for (var y = 0; y < 16; y++)
-						{
-							Update(world, chunk,
-								index,
-								x, y, 0,
-								solidVertices,
-								transparentVertices);
-
-							Update(world, chunk,
-								index,
-								x, y, 15,
-								solidVertices,
-								transparentVertices);
-
-							Update(world, chunk,
-								index,
-								0, y, x,
-								solidVertices,
-								transparentVertices);
-
-							Update(world, chunk,
-								index,
-								15, y, x,
-								solidVertices,
-								transparentVertices);
-						}
-					}
-				}
-			}
-			else if (Scheduled == ScheduleType.Scheduled)
-			{
-
-			}*/
 
 			mesh = new ChunkMesh(solidVertices.ToArray(), transparentVertices.ToArray());
 		//	PositionCache = mesh.EntryPositions;
@@ -222,8 +182,8 @@ namespace Alex.Worlds
 
 		private void Update(IWorld world, ExtendedBlockStorage chunk,
 			int index, int x, int y, int z,
-			List<ChunkMesh.Entry> solidVertices,
-			List<ChunkMesh.Entry> transparentVertices)
+			List<VertexPositionNormalTextureColor> solidVertices,
+			List<VertexPositionNormalTextureColor> transparentVertices)
 		{
 			var stateId = chunk.Get(x, y, z);
 
@@ -240,23 +200,31 @@ namespace Alex.Worlds
 			var blockPosition = new Vector3(x, y + (index * 16), z) + Position;
 
 			var vert = block.GetVertices(blockPosition, world);
-			var result = new ChunkMesh.Entry(block.BlockState.ID, vert, blockPosition);
+		//	var result = new ChunkMesh.Entry(block.BlockState.ID, vert, blockPosition);
 
 			if (block.Transparent)
 			{
-				transparentVertices.Add(result);
+				transparentVertices.AddRange(vert);
 				//transparentVertices.AddRange(vert);
 			}
 			else
 			{
-				solidVertices.Add(result);
+				solidVertices.AddRange(vert);
 				//solidVertices.AddRange(vert);
 			}
 		}
 
+		private bool _heightDirty = true;
+		private int _heighest = -1;
 		public int GetHeighest()
 		{
-			return Height.Max();
+			if (_heightDirty)
+			{
+				_heighest = Height.Max();
+				_heightDirty = false;
+			}
+
+			return _heighest;
 		}
 
 		public void Dispose()
@@ -298,6 +266,8 @@ namespace Alex.Worlds
 					}
 				}
 			}
+
+			GetHeighest();
 		}
 
 		public void CalculateSkylight()
