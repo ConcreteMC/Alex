@@ -67,42 +67,40 @@ namespace Alex.Worlds
 
 			List<ChunkCoordinates> newChunkCoordinates = new List<ChunkCoordinates>();
 
-			for (int cx = 0; cx < renderDistance * 2; cx++)
+			IChunkColumn doLoop(int x, int z)
 			{
-				int x = cx / 2;
-				if (cx % 2 == 0)
+				var distance = (x * x) + (z * z);
+				if (distance > radiusSquared)
 				{
-					x = -x;
+					return null;
 				}
 
-				for (int cz = 0; cz < renderDistance * 2; cz++)
+				var cc = center + new ChunkCoordinates(x, z);
+				newChunkCoordinates.Add(cc);
+
+				if (!_loadedChunks.Contains(cc))
 				{
-					int z = cz / 2;
-					if (cz % 2 == 0)
-					{
-						z = -z;
-					}
+					IChunkColumn chunk =
+						_generator.GenerateChunkColumn(cc);
 
-					var distance = (x * x) + (z * z);
-					if (distance > radiusSquared)
-					{
-						continue;
-					}
+					if (chunk == null) return null;
 
-					var cc = center + new ChunkCoordinates(x, z);
-					newChunkCoordinates.Add(cc);
+					_loadedChunks.Add(cc);
 
-					if (!_loadedChunks.Contains(cc))
-					{
-						IChunkColumn chunk =
-							_generator.GenerateChunkColumn(cc);
+					return chunk;
+				}
 
-						if (chunk == null) continue;
+				return null;
+			}
 
-						_loadedChunks.Add(cc);
+			for (int x = -renderDistance; x < renderDistance; x++)
+			{
+				for (int z = -renderDistance; z < renderDistance; z++)
+				{
+					var l = doLoop(x, z);
+					if (l == null) continue;
 
-						yield return chunk;
-					}
+					yield return l;
 				}
 			}
 
@@ -134,8 +132,10 @@ namespace Alex.Worlds
 		}
 
 		private Thread UpdateThread { get; set; }
-		protected override void Initiate()
+		protected override void Initiate(out LevelInfo info)
 		{
+			info = _generator.GetInfo();
+
 			lock (genLock)
 			{
 				while (_preGeneratedChunks.TryDequeue(out ChunkColumn chunk))
@@ -156,6 +156,8 @@ namespace Alex.Worlds
 			};
 
 			UpdateThread.Start();
+
+			Log.Info($"World {info.LevelName} loaded!");
 		}
 
 		public override Vector3 GetSpawnPoint()

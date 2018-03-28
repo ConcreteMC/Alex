@@ -59,36 +59,7 @@ namespace Alex.Graphics.Models.Blocks
 
 					faceStart /= 16f;
 					faceEnd /= 16f;
-					/*
-					if (faceEnd.X > Max.X)
-					{
-						Max.X = faceEnd.X;
-					}
 
-					if (faceEnd.Y > Max.Y)
-					{
-						Max.Y = faceEnd.Y;
-					}
-
-					if (faceEnd.Z > Max.Z)
-					{
-						Max.Z = faceEnd.Z;
-					}
-
-					if (faceStart.X < Min.X)
-					{
-						Min.X = faceStart.X;
-					}
-
-					if (faceStart.Y < Min.Y)
-					{
-						Min.Y = faceStart.Y;
-					}
-
-					if (faceStart.Z < Min.Z)
-					{
-						Min.Z = faceStart.Z;
-					}*/
 					Max = Vector3.Max(Max, Vector3.Max(faceStart, faceEnd));
 					Min = Vector3.Min(Min, Vector3.Min(faceStart, faceEnd));
 				}
@@ -131,7 +102,7 @@ namespace Alex.Graphics.Models.Blocks
 			return faceRotationMatrix;
 		}
 
-		protected void GetFaceValues(string facename, BlockFace originalFace, out BlockFace face, out V3 offset)
+		protected void GetCullFaceValues(string facename, BlockFace originalFace, out BlockFace face, out V3 offset)
 		{
 			V3 cullFace = V3.Zero;
 
@@ -213,9 +184,9 @@ namespace Alex.Graphics.Models.Blocks
 
 			        var elementTo = new V3((element.To.X), (element.To.Y),
 				        (element.To.Z));
-			        var origin = new Vector3(((elementTo.X + elementFrom.X) / 2f) - 8,
-				        ((elementTo.Y + elementFrom.Y) / 2f) - 8,
-				        ((elementTo.Z + elementFrom.Z) / 2f) - 8);
+			      //  var origin = new Vector3(((elementTo.X + elementFrom.X) / 2f) - 8,
+				//        ((elementTo.Y + elementFrom.Y) / 2f) - 8,
+				//        ((elementTo.Z + elementFrom.Z) / 2f) - 8);
 					var elementModelRotation = Matrix.CreateTranslation(-c) * modelRotationMatrix *
 			                                   Matrix.CreateTranslation(c);
 
@@ -227,9 +198,9 @@ namespace Alex.Graphics.Models.Blocks
 						var uv = face.Value.UV;
 				        var uvmap = GetTextureUVMap(Resources, ResolveTexture(var, face.Value.Texture), uv.X1, uv.X2, uv.Y1, uv.Y2);
 
-				        GetFaceValues(face.Value.CullFace, face.Key, out var cull, out var cullFace);
+						 GetCullFaceValues(face.Value.CullFace, face.Key, out var cull, out var cullFace);
 
-				        cullFace = V3.Transform(cullFace, modelRotationMatrix);
+						cullFace = V3.Transform(cullFace, modelRotationMatrix);
 
 						if (cullFace != Vector3.Zero && !baseBlock.ShouldRenderFace(world, cull, worldPosition)/* CanRender(world, baseBlock, worldPosition, cull)*/)
 							continue;
@@ -248,13 +219,8 @@ namespace Alex.Graphics.Models.Blocks
 							int biomeId = world.GetBiome((int)worldPosition.X, 0, (int)worldPosition.Z);
 
 							if (biomeId != -1)
-								/*if (world.ChunkManager.TryGetChunk(
-									new ChunkCoordinates(new PlayerLocation(worldPosition.X, 0, worldPosition.Z)),
-									out IChunkColumn column))*/
 							{
-								//	Worlds.ChunkColumn realColumn = (Worlds.ChunkColumn) column;
-								var biome = BiomeUtils.GetBiomeById(biomeId
-									/*realColumn.GetBiome((int) worldPosition.X & 0xf, (int) worldPosition.Z & 0xf)*/);
+								var biome = BiomeUtils.GetBiomeById(biomeId);
 
 								if (baseBlock.Name.Equals("minecraft:grass_block", StringComparison.InvariantCultureIgnoreCase))
 								{

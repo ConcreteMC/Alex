@@ -61,14 +61,6 @@ namespace Alex.Graphics.Models.Blocks
 			if (rule.HasOrContition)
 			{
 				return rule.Or.Any(o => PassesMultiPartRule(world, position, o, baseBlock));
-
-				/*foreach (var o in rule.Or)
-				{
-					if (PassesMultiPartRule(world, position, o, baseBlock))
-					{
-						return true;
-					}
-				}*/
 			}
 
 			if (rule.HasAndContition)
@@ -83,7 +75,6 @@ namespace Alex.Graphics.Models.Blocks
 			    && Passes(world, position, baseBlock, "south", rule.South) 			                                                          
 			    && Passes(world, position, baseBlock, "west", rule.West))
 			{
-				//Log.Info($"Passed tests!");
 				return true;
 			}
 
@@ -94,37 +85,29 @@ namespace Alex.Graphics.Models.Blocks
 		{
 			if (string.IsNullOrWhiteSpace(value)) return true;
 
-			string opposite = "";
 			Vector3 direction;
 			switch (rule)
 			{
 				case "north":
 					direction = Vector3.Forward;
-					opposite = "south";
 					break;
 				case "east":
 					direction = Vector3.Right;
-					opposite = "west";
 					break;
 				case "south":
 					direction = Vector3.Backward;
-					opposite = "north";
 					break;
 				case "west":
 					direction = Vector3.Left;
-					opposite = "south";
 					break;
 				case "up":
 					direction = Vector3.Up;
-					opposite = "down";
 					break;
 				case "down":
 					direction = Vector3.Down;
-					opposite = "up";
 					break;
 				default:
 					direction = Vector3.Zero;
-				//	Log.Warn($"Unknown rule {rule}");
 					break;
 			}
 

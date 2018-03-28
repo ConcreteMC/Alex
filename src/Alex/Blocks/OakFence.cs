@@ -11,6 +11,12 @@ namespace Alex.Blocks
 			Transparent = true;
 			Solid = true;
 		}
+
+		public Fence(string name) : base(name)
+		{
+			Transparent = true;
+			Solid = true;
+		}
 	}
 
 	public class OakFence : Fence
@@ -19,4 +25,11 @@ namespace Alex.Blocks
 	    {
 	    }
     }
+
+	public class SpruceFence : Fence
+	{
+		public SpruceFence() : base("minecraft:spruce_fence")
+		{
+		}
+	}
 }

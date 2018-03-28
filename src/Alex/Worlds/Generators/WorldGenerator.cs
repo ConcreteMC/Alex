@@ -129,6 +129,10 @@ namespace Alex.Worlds.Generators
 		{
 			return new Vector3(0, 128, 0);
 		}
+		public LevelInfo GetInfo()
+		{
+			return new LevelInfo();
+		}
 
 		public void Initialize()
 		{

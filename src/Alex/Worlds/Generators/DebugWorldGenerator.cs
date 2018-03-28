@@ -81,12 +81,36 @@ namespace Alex.Worlds.Generators
 
 		public Vector3 GetSpawnPoint()
 	    {
-		    return new Vector3(0, 75, 0);
+		    return new Vector3(_levelInfo.SpawnX, _levelInfo.SpawnY, _levelInfo.SpawnZ);
 	    }
 
+		private LevelInfo _levelInfo = new LevelInfo()
+		{
+			LevelName = "Internal Debug",
+			AllowCommands = true,
+			GeneratorVersion = 1,
+			GeneratorName = "debug",
+			Raining = false,
+			Initialized = true,
+			SpawnX = 0,
+			SpawnY = 75,
+			SpawnZ = 0,
+			Hardcore = false,
+			Thundering = false,
+			ThunderTime = 0,
+			DayTime = 1200,
+			Time = 1200,
+			MapFeatures = true,
+			RainTime = 0
+		};
 	    public void Initialize()
 	    {
 		    
+	    }
+
+	    public LevelInfo GetInfo()
+	    {
+		    return _levelInfo;
 	    }
 
 	    static DebugWorldGenerator()

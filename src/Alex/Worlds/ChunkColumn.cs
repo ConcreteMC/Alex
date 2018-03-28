@@ -62,7 +62,6 @@ namespace Alex.Worlds
 
 		public ChunkColumn()
 		{
-			var air = BlockFactory.GetBlockState(0);
 			IsDirty = true;
 			for (int i = 0; i < Chunks.Length; i++)
 			{

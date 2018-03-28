@@ -22,7 +22,7 @@ namespace Alex.Blocks.Storage.Pallete
 		{
 			for (uint i = 0; i < this._arraySize; i++)
 			{
-				if (this._states[i] == state)
+				if (this._states[i].ID == state.ID)
 				{
 					return i;
 				}

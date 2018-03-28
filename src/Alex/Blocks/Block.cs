@@ -119,6 +119,11 @@ namespace Alex.Blocks
 
 		}
 
+		public virtual void BlockUpdate(IWorld world, BlockCoordinates position, BlockCoordinates updatedBlock)
+		{
+
+		}
+
 		internal virtual bool ShouldRenderFace(IWorld world, BlockFace face, BlockCoordinates position)
 		{
 			if (position.Y >= 256) return true;
@@ -134,9 +139,9 @@ namespace Alex.Blocks
 			if (cZ < 0 || cZ > 16)
 				return false;
 
-			// var blockStateId = world.GetBlockStateId(pos);
+			 var block = world.GetBlockState(pos.X, pos.Y, pos.Z).GetBlock();
 			//BlockFactory.
-			var block = world.GetBlock(pos);
+			//var block = world.GetBlock(pos);
 
 			if (Transparent && block is UnknownBlock)
 			{

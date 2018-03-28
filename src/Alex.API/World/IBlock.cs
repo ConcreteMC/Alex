@@ -1,6 +1,7 @@
 ﻿using Alex.API.Blocks;
 using Alex.API.Blocks.State;
 using Alex.API.Graphics;
+using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 
 namespace Alex.API.World
@@ -30,6 +31,7 @@ namespace Alex.API.World
 		IMaterial BlockMaterial { get; set; }
 
 		bool Tick(IWorld world, Vector3 position);
+		void BlockUpdate(IWorld world, BlockCoordinates position, BlockCoordinates updatedBlock);
 		VertexPositionNormalTextureColor[] GetVertices(Vector3 position, IWorld world);
 	}
 }

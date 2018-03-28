@@ -46,9 +46,6 @@ namespace Alex.Graphics.Models.Blocks
 			var c = new Vector3(8f, 8f, 8f);
 			foreach (var var in Variant)
 			{
-				var faces = var.Model.Elements.Sum(x => x.Faces.Count);
-				
-
 			//	var c = new Vector3(8f, 8f, 8f);
 				var modelRotationMatrix = Matrix.CreateTranslation(-c) * GetModelRotationMatrix(var) * Matrix.CreateTranslation(c);
 
@@ -63,9 +60,9 @@ namespace Alex.Graphics.Models.Blocks
 					var width = elementTo.X - elementFrom.X;
 					var depth = elementTo.Z - elementFrom.Z;
 
-					var origin = new Vector3(((elementTo.X + elementFrom.X) / 2f) - 8,
-						((elementTo.Y + elementFrom.Y) / 2f) - 8,
-						((elementTo.Z + elementFrom.Z) / 2f) - 8);
+				//	var origin = new Vector3(((elementTo.X + elementFrom.X) / 2f) - 8,
+				//		((elementTo.Y + elementFrom.Y) / 2f) - 8,
+				//		((elementTo.Z + elementFrom.Z) / 2f) - 8);
 
 					var elementRotation = element.Rotation;
 					Matrix elementRotationMatrix = GetElementRotationMatrix(elementRotation, out float scalingFactor);
@@ -182,7 +179,7 @@ namespace Alex.Graphics.Models.Blocks
 
 		public override VertexPositionNormalTextureColor[] GetVertices(IWorld world, Vector3 position, Block baseBlock)
 		{
-			var verts = new List<VertexPositionNormalTextureColor>();
+			var verts = new List<VertexPositionNormalTextureColor>(6 * 6);
 
 			// MaxY = 0;
 			Vector3 worldPosition = new Vector3(position.X, position.Y, position.Z);
@@ -196,7 +193,7 @@ namespace Alex.Graphics.Models.Blocks
 					var elementCache = _elementCache[element.GetHashCode()];
 					foreach (var face in element.Faces)
 					{
-						GetFaceValues(face.Value.CullFace, face.Key, out var cull, out var cullFace);
+						GetCullFaceValues(face.Value.CullFace, face.Key, out var cull, out var cullFace);
 
 						cullFace = Vector3.Transform(cullFace, modelRotationMatrix);
 

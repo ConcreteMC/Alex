@@ -35,6 +35,10 @@ namespace Alex.Worlds.Generators
 			return Vector3.Zero;
 		}
 
+		public LevelInfo GetInfo()
+		{
+			return new LevelInfo();
+		}
 		public void Initialize()
 		{
 			

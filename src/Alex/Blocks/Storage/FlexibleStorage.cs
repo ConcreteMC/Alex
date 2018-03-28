@@ -9,7 +9,7 @@ namespace Alex.Blocks.Storage
 		private int _size;
 		private long _maxEntryValue;
 
-		public FlexibleStorage(int bitsPerEntry, int size) : this(bitsPerEntry, new long[RoundToNearest(size * bitsPerEntry, 64) / 64])
+		public FlexibleStorage(int bitsPerEntry, int size) : this(bitsPerEntry, new long[RoundUp(size * bitsPerEntry, 64) / 64])
 		{
 		}
 
@@ -26,7 +26,7 @@ namespace Alex.Blocks.Storage
 			this._size = this._data.Length * 64 / this._bitsPerEntry;
 			this._maxEntryValue = (1L << this._bitsPerEntry) - 1;
 		}
-
+		
 		public uint this[int index]
 		{
 			get
@@ -57,7 +57,7 @@ namespace Alex.Blocks.Storage
 					throw new IndexOutOfRangeException();
 				}
 
-				if (value < 0 || value > this._maxEntryValue)
+				if (value > this._maxEntryValue)
 				{
 					throw new Exception("Value cannot be outside of accepted range.");
 				}
@@ -86,7 +86,7 @@ namespace Alex.Blocks.Storage
 		}
 
 
-		private static int RoundToNearest(int value, int roundTo)
+		private static int RoundUp(int value, int roundTo)
 		{
 			if (roundTo == 0)
 			{
@@ -104,7 +104,7 @@ namespace Alex.Blocks.Storage
 				}
 
 				int remainder = value % roundTo;
-				return remainder != 0 ? value + roundTo - remainder : value;
+				return remainder == 0 ? value : value + roundTo - remainder;
 			}
 		}
 	}

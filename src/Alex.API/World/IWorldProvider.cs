@@ -43,13 +43,13 @@ namespace Alex.API.World
 
 		public abstract Vector3 GetSpawnPoint();
 
-		protected abstract void Initiate();
+		protected abstract void Initiate(out LevelInfo info);
 
-		public void Init(IWorldReceiver worldReceiver)
+		public void Init(IWorldReceiver worldReceiver, out LevelInfo info)
 		{
 			WorldReceiver = worldReceiver;
 
-			Initiate();
+			Initiate(out info);
 		}
 
 		public abstract Task Load(ProgressReport progressReport);

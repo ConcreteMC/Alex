@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Security.Cryptography.X509Certificates;
 using Alex.API.Blocks.State;
 using Alex.API.Entities;
 using Alex.API.Graphics;
@@ -28,6 +29,8 @@ namespace Alex.Worlds
 		private GraphicsDevice Graphics { get; }
 		private Rendering.Camera.Camera Camera { get; }
 		private SkyboxModel SkyRenderer { get; }
+
+		public readonly LevelInfo WorldInfo;
 		public World(Alex alex, GraphicsDevice graphics, Rendering.Camera.Camera camera, WorldProvider worldProvider)
         {
             Graphics = graphics;
@@ -40,7 +43,7 @@ namespace Alex.Worlds
 			Ticker = new TickManager(this);
 
 	        WorldProvider = worldProvider;
-			WorldProvider.Init(this);
+			WorldProvider.Init(this, out WorldInfo);
 
 			ChunkManager.Start();
         }
@@ -261,7 +264,7 @@ namespace Alex.Worlds
             {
                 return chunk.GetBlock(x & 0xf, y & 0xff, z & 0xf);
             }
-            return BlockFactory.GetBlock(0, 0);
+            return BlockFactory.GetBlock(0);
         }
 
 		public void SetBlock(Block block)
@@ -275,6 +278,8 @@ namespace Alex.Worlds
 			{
 				chunk.SetBlock(x & 0xf, y & 0xff, z & 0xf, block);
 				ChunkManager.ScheduleChunkUpdate(new ChunkCoordinates(x >> 4, z >> 4), ScheduleType.Full);
+
+				UpdateNeighbors(x, y, z);
 			}
 		}
 
@@ -285,22 +290,57 @@ namespace Alex.Worlds
 
 	    public void SetBlock(int x, int y, int z, IBlock block)
 	    {
+		    var chunkCoords = new ChunkCoordinates(x >> 4, z >> 4);
+
 			IChunkColumn chunk;
-		    if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
+		    if (ChunkManager.TryGetChunk(chunkCoords, out chunk))
 		    {
 				chunk.SetBlock(x & 0xf, y & 0xff, z & 0xf, block);
-				ChunkManager.ScheduleChunkUpdate(new ChunkCoordinates(x >> 4, z >> 4), ScheduleType.Full);
-		    }
+				ChunkManager.ScheduleChunkUpdate(chunkCoords, ScheduleType.Full);
+
+			    UpdateNeighbors(x, y, z);
+			} 
 	    }
 
 		public void SetBlockState(int x, int y, int z, IBlockState block)
 		{
+			var chunkCoords = new ChunkCoordinates(x >> 4, z >> 4);
+
 			IChunkColumn chunk;
-			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
+			if (ChunkManager.TryGetChunk(chunkCoords, out chunk))
 			{
-				chunk.SetBlockState(x & 0xf, y & 0xff, z & 0xf, block);
-				ChunkManager.ScheduleChunkUpdate(new ChunkCoordinates(x >> 4, z >> 4), ScheduleType.Full);
+				var cx = x & 0xf;
+				var cy = y & 0xff;
+				var cz = z & 0xf;
+
+				chunk.SetBlockState(cx, cy, cz, block);
+				
+				ChunkManager.ScheduleChunkUpdate(chunkCoords, ScheduleType.Full);
+
+				UpdateNeighbors(x,y,z);
 			}
+		}
+
+		private void UpdateNeighbors(int x, int y, int z)
+		{
+			var source = new BlockCoordinates(x, y, z);
+
+			ScheduleBlockUpdate(source, new BlockCoordinates(x + 1, y, z));
+			ScheduleBlockUpdate(source, new BlockCoordinates(x - 1, y, z));
+
+			ScheduleBlockUpdate(source, new BlockCoordinates(x, y, z + 1));
+			ScheduleBlockUpdate(source, new BlockCoordinates(x, y, z - 1));
+
+			ScheduleBlockUpdate(source, new BlockCoordinates(x, y + 1, z));
+			ScheduleBlockUpdate(source, new BlockCoordinates(x, y - 1, z));
+		}
+
+		private void ScheduleBlockUpdate(BlockCoordinates updatedBlock, BlockCoordinates block)
+		{
+			Ticker.ScheduleTick(() =>
+			{
+				GetBlock(block).BlockUpdate(this, block, updatedBlock);
+			}, 1);
 		}
 
 		public IBlockState GetBlockState(int x, int y, int z)
@@ -311,7 +351,7 @@ namespace Alex.Worlds
 				return chunk.GetBlockState(x & 0xf, y & 0xff, z & 0xf);
 			}
 
-			return BlockFactory.GetBlockState(0,0);
+			return BlockFactory.GetBlockState(0);
 		}
 
 		public int GetBiome(int x, int y, int z)

@@ -7,7 +7,7 @@ using fNbt;
 using fNbt.Tags;
 using ICloneable = System.ICloneable;
 
-namespace Alex.Worlds
+namespace Alex.API.World
 {
 	public class LevelInfo : ICloneable
 	{

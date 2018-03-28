@@ -95,7 +95,6 @@ namespace Alex.Blocks.Storage
 
 				for (j = _keys.Length << 1; j < intKey; j <<= 1)
 				{
-					;
 				}
 
 				Grow(j);
@@ -115,7 +114,7 @@ namespace Alex.Blocks.Storage
 
 		private uint HashObject(TK obectIn)
 		{
-			return (uint)(MathUtils.Hash((uint)(RuntimeHelpers.GetHashCode(obectIn).GetHashCode() & uint.MaxValue)) % _keys.Length);
+			return (uint)(MathUtils.Hash((uint)(RuntimeHelpers.GetHashCode(obectIn) & uint.MaxValue)) % _keys.Length);
 		}
 
 		private uint GetIndex(TK objectIn, uint index)

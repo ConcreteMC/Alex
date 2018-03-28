@@ -10,5 +10,6 @@ namespace Alex.Worlds.Generators
 		Vector3 GetSpawnPoint();
 
 		void Initialize();
+		LevelInfo GetInfo();
 	}
 }

@@ -93,7 +93,7 @@ namespace Alex.Worlds
 			{
 				return chunk.GetBlock(x & 0xf, y & 0xff, z & 0xf);
 			}
-			return BlockFactory.GetBlock(0, 0);
+			return BlockFactory.GetBlock(0);
 		}
 
 		public void SetBlock(float x, float y, float z, IBlock block)

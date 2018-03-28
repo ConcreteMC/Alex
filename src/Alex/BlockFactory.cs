@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Alex.API.Blocks.Properties;
 using Alex.API.Blocks.State;
+using Alex.API.World;
 using Alex.Blocks;
 using Alex.Blocks.Properties;
 using Alex.Blocks.State;
@@ -31,13 +32,10 @@ namespace Alex
 
 		public static IReadOnlyDictionary<uint, IBlockState> AllBlockstates => new ReadOnlyDictionary<uint, IBlockState>(RegisteredBlockStates);
 		public static IReadOnlyDictionary<string, IBlockState> AllBlockstatesByName => new ReadOnlyDictionary<string, IBlockState>(BlockStateByName);
+
 		private static readonly Dictionary<uint, IBlockState> RegisteredBlockStates = new Dictionary<uint, IBlockState>();
 		private static readonly Dictionary<string, IBlockState> BlockStateByName = new Dictionary<string, IBlockState>();
-
-		//private static readonly Dictionary<uint, Block> RegisteredBlocks = new Dictionary<uint, Block>();
 		private static readonly Dictionary<uint, BlockModel> ModelCache = new Dictionary<uint, BlockModel>();
-
-		private static readonly Dictionary<string, BlockMeta> CachedBlockMeta = new Dictionary<string, BlockMeta>();
 
 		private static ResourcePackLib.Json.Models.Blocks.BlockModel CubeModel { get; set; }
 		public static readonly LiquidBlockModel StationairyWaterModel = new LiquidBlockModel()
@@ -68,67 +66,6 @@ namespace Alex
 			Level = 8
 		};
 
-		internal static void Init()
-		{
-			JArray blockArray = JArray.Parse(Encoding.UTF8.GetString(Resources.blocks));
-			Dictionary<string, JObject> blockMetaDictionary =
-				JsonConvert.DeserializeObject<Dictionary<string, JObject>>(
-					Encoding.UTF8.GetString(Resources.blockstates_without_models_pretty));
-			foreach (var item in blockArray)
-			{
-				byte id = 0;
-				bool transparent = false;
-				string name = string.Empty;
-				string displayName = string.Empty;
-
-				foreach (dynamic entry in item)
-				{
-					if (entry.Name == "id")
-					{
-						id = entry.Value;
-					}
-					else if (entry.Name == "transparent")
-					{
-						transparent = entry.Value;
-					}
-					else if (entry.Name == "name")
-					{
-						name = entry.Value;
-					}
-					else if (entry.Name == "displayName")
-					{
-						displayName = entry.Value;
-					}
-				}
-
-				if (id == 0 || string.IsNullOrWhiteSpace(name)) continue;
-
-				BlockMeta meta = new BlockMeta
-				{
-					ID = id,
-					Transparent = transparent,
-					DisplayName = displayName,
-					Name = name,
-					Solid = true
-				};
-
-				JObject found = blockMetaDictionary
-					.FirstOrDefault(x => x.Key.StartsWith($"minecraft:{name}", StringComparison.InvariantCultureIgnoreCase)).Value;
-				if (found != null)
-				{
-					meta.AmbientOcclusionLightValue = found["ambientOcclusionLightValue"].Value<double>();
-					meta.IsFullBlock = found["isFullBlock"].Value<bool>();
-					meta.LightOpacity = found["lightOpacity"].Value<int>();
-					meta.LightValue = found["lightValue"].Value<int>();
-					meta.IsBlockNormalCube = found["isBlockNormalCube"].Value<bool>();
-					meta.IsSideSolid = found["isSideSolid"].ToObject<Dictionary<string, bool>>();
-					meta.IsFullCube = found["isFullCube"].Value<bool>();
-				}
-				CachedBlockMeta.TryAdd($"minecraft:{displayName.Replace(" ", "_").ToLowerInvariant()}", meta);
-				CachedBlockMeta.TryAdd($"minecraft:{name}", meta);
-			}
-		}
-
 		private static BlockModel GetOrCacheModel(ResourceManager resources, McResourcePack resourcePack, IBlockState state, uint id)
 		{
 			if (ModelCache.TryGetValue(id, out var r))
@@ -156,23 +93,6 @@ namespace Alex
 
 				return result;
 			}
-		}
-
-		public partial class TableEntry
-		{
-			[JsonProperty("runtimeID")]
-			public uint RuntimeId { get; set; }
-
-			[JsonProperty("name")]
-			public string Name { get; set; }
-
-			[JsonProperty("id")]
-			public long Id { get; set; }
-
-			[JsonProperty("data")]
-			public long Data { get; set; }
-
-			public static TableEntry[] FromJson(string json) => JsonConvert.DeserializeObject<TableEntry[]>(json);
 		}
 
 		private static bool _builtin = false;
@@ -207,7 +127,6 @@ namespace Alex
 		{
 			StringBuilder factoryBuilder = new StringBuilder();
 
-			TableEntry[] tablesEntries = TableEntry.FromJson(Resources.runtimeid_table);
 			var data = BlockData.FromJson(Resources.NewBlocks);
 			int importCounter = 0;
 
@@ -273,23 +192,6 @@ namespace Alex
 							block = new UnknownBlock(id);
 							displayName = $"(Not implemented) {displayName}";
 
-							bool foundMeta = false;
-							BlockMeta knownMeta = null;
-							if (CachedBlockMeta.TryGetValue(entry.Key, out knownMeta))
-							{
-								foundMeta = true;
-								block.Transparent = knownMeta.Transparent;
-								block.LightValue = knownMeta.LightValue;
-								block.AmbientOcclusionLightValue = knownMeta.AmbientOcclusionLightValue;
-								block.LightOpacity = knownMeta.LightOpacity;
-								block.IsBlockNormalCube = knownMeta.IsBlockNormalCube;
-								block.IsFullCube = knownMeta.IsFullCube;
-								block.IsFullBlock = knownMeta.IsFullBlock;
-								block.Solid = knownMeta.Solid;
-								block.Drag = knownMeta.FrictionFactor;
-								block.IsReplacible = knownMeta.Replacible;
-							}
-
 							block.Name = entry.Key;
 
 							if (s.Default && GenerateClasses)
@@ -298,7 +200,7 @@ namespace Alex
 
 								factoryBuilder.AppendLine($"\t\t\telse if (blockName == \"{entry.Key.ToLowerInvariant()}\" || blockName == \"{className.ToLowerInvariant()}\") return new {className}();");
 
-								SaveBlock(block, className, foundMeta);
+								SaveBlock(block, className, false);
 								Log.Info($"Saved un-implemnted block to file ({displayName})!");
 							}
 						}
@@ -539,11 +441,6 @@ namespace Alex
 
 		private static readonly IBlockState AirState = new Blocks.State.BlockState();
 
-		public static IBlockState GetBlockState(int blockId, byte meta)
-		{
-			return GetBlockState(GetBlockStateID(blockId, meta));
-		}
-
 		public static IBlockState GetBlockState(string palleteId)
 		{
 			if (BlockStateByName.TryGetValue(palleteId, out var result))
@@ -679,7 +576,7 @@ namespace Alex
 			else if (blockName == "minecraft:quartz_block" || blockName == "quartzblock") return new QuartzBlock();
 			else if (blockName == "minecraft:activator_rail" || blockName == "activatorrail") return new ActivatorRail();
 			else if (blockName == "minecraft:dropper" || blockName == "dropper") return new Dropper();
-			else if (blockName == "minecraft:iron_trapdoor" || blockName == "irontrapdoor") return new IronTrapdoor();
+			
 			else if (blockName == "minecraft:prismarine" || blockName == "prismarine") return new Prismarine();
 			else if (blockName == "minecraft:sea_lantern" || blockName == "sealantern") return new SeaLantern();
 			else if (blockName == "minecraft:hay_block" || blockName == "hayblock") return new HayBlock();
@@ -754,6 +651,9 @@ namespace Alex
 			else if (blockName == "minecraft:dark_oak_door" || blockName == "darkoakdoor") return new DarkOakDoor();
 			else if (blockName == "minecraft:iron_door" || blockName == "irondoor") return new IronDoor();
 
+			else if (blockName == "minecraft:iron_trapdoor" || blockName == "irontrapdoor") return new IronTrapdoor();
+			else if (blockName == "minecraft:spruce_trapdoor" || blockName == "sprucetrapdoro") return new Trapdoor("minecraft:spruce_trapdoor");
+
 			//Slabs
 			else if (blockName == "minecraft:stone_slab" || blockName == "stoneslab") return new StoneSlab();
 			else if (blockName == "minecraft:red_sandstone_slab" || blockName == "redsandstoneslab") return new RedSandstoneSlab();
@@ -791,6 +691,7 @@ namespace Alex
 			else if (blockName == "minecraft:oak_fence_gate" || blockName == "oakfencegate") return new FenceGate();
 			else if (blockName == "minecraft:dark_oak_fence_gate" || blockName == "darkoakfencegate") return new DarkOakFenceGate();
 			else if (blockName == "minecraft:spruce_fence_gate" || blockName == "sprucefencegate") return new SpruceFenceGate();
+			else if (blockName == "minecraft:spruce_fence" || blockName == "sprucefence") return new OakFence();
 			else if (blockName == "minecraft:birch_fence_gate" || blockName == "birchfencegate") return new BirchFenceGate();
 			else if (blockName == "minecraft:birch_fence" || blockName == "birchfence") return new BirchFence();
 			else if (blockName == "minecraft:jungle_fence_gate" || blockName == "junglefencegate") return new JungleFenceGate();
@@ -860,10 +761,26 @@ namespace Alex
 			};
 		}
 
+		private static TableEntry[] _tablesEntries = TableEntry.FromJson(Resources.runtimeid_table);
 		public static Block GetBlock(int id, byte metadata)
 		{
+			throw new NotSupportedException();
 			if (id == 0) return Air;
-			return GetBlock(GetBlockStateID(id, metadata));
+
+			var matchingIds = _tablesEntries.Where(x => x.Id == id);
+			var f = matchingIds.FirstOrDefault(x => x.Data == metadata);
+			if (f == null)
+			{
+				f = matchingIds.FirstOrDefault();
+			}
+
+			if (BlockStateByName.TryGetValue(f.Name, out var vv))
+			{
+				return (Block)vv.GetBlock();
+			}
+
+			return Air;
+			//	return GetBlock(GetBlockStateID(id, metadata));
 		}
 
 		public static uint GetBlockStateID(int id, byte meta)
@@ -879,23 +796,21 @@ namespace Alex
 			meta = (byte)(stateId & 0x0F);
 		}
 
-		private class BlockMeta
+		public partial class TableEntry
 		{
-			public int ID = -1;
-			public string Name;
-			public string DisplayName;
-			public bool Transparent;
-			public bool IsFullBlock;
-			public double AmbientOcclusionLightValue = 1.0;
-			public int LightValue;
-			public int LightOpacity;
-			public bool IsBlockNormalCube;
-			public bool IsFullCube;
-			public bool Solid;
-			public float FrictionFactor;
+			[JsonProperty("runtimeID")]
+			public uint RuntimeId { get; set; }
 
-			public Dictionary<string, bool> IsSideSolid;
-			public bool Replacible;
+			[JsonProperty("name")]
+			public string Name { get; set; }
+
+			[JsonProperty("id")]
+			public long Id { get; set; }
+
+			[JsonProperty("data")]
+			public long Data { get; set; }
+
+			public static TableEntry[] FromJson(string json) => JsonConvert.DeserializeObject<TableEntry[]>(json);
 		}
 	}
 }
