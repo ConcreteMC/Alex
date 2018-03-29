@@ -10,12 +10,12 @@ namespace Alex.Blocks
 			Solid = false;
 			Transparent = true;
 
-			BlockModel = new LiquidBlockModel()
-			{
-				IsFlowing = true,
-				IsLava = true,
-				Level = meta
-			};
+			//BlockModel = new LiquidBlockModel()
+			//{
+			//	IsFlowing = true,
+			//	IsLava = true,
+			//	Level = meta
+			//};
 		}
 	}
 }

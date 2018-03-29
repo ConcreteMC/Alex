@@ -36,7 +36,7 @@ namespace Alex.Entities
 			var id = nbt["id"].StringValue.Replace("minecraft:", "");
 			var pos = nbt["Pos"];
 			var rot = nbt["Rotation"];
-			if (id != null && pos != null && EntityType.TryParse(id, true, out EntityType entityType))
+			if (id != null && pos != null && Enum.TryParse(id, true, out EntityType entityType))
 			{
 				var uuidLeast = nbt["UUIDLeast"].LongValue;
 				var uuidMost = nbt["UUIDMost"].LongValue;
@@ -52,8 +52,8 @@ namespace Alex.Entities
 					entity.EntityId = entityId;
 					entity.UUID = new UUID(uuid.ToByteArray());
 
-					PlayerLocation position = new PlayerLocation((float) pos[0].DoubleValue, (float) pos[1].DoubleValue,
-						(float) pos[2].DoubleValue, rot[0].FloatValue, rot[0].FloatValue, rot[1].FloatValue);
+					PlayerLocation position = new PlayerLocation(Convert.ToSingle(pos[0].DoubleValue), Convert.ToSingle(pos[1].DoubleValue),
+						Convert.ToSingle(pos[2].DoubleValue), rot[0].FloatValue, rot[0].FloatValue, rot[1].FloatValue);
 
 					entity.KnownPosition = position;
 
@@ -116,7 +116,7 @@ namespace Alex.Entities
 				}
 				catch (Exception ex)
 				{
-					Log.Warn($"Failed to load model {def.Key}!", ex);
+					Log.Warn(ex, $"Failed to load model {def.Key}!");
 				}
 			}
 

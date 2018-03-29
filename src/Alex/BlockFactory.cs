@@ -12,9 +12,10 @@ using Alex.Blocks.State;
 using Alex.Graphics.Models.Blocks;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json.BlockStates;
+using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
-using JsonBlockstate = Alex.ResourcePackLib.Json.BlockStates.BlockState;
 using BlockState = Alex.Blocks.State.BlockState;
+using BlockStateVariant = Alex.ResourcePackLib.Json.BlockStates.BlockStateVariant;
 
 namespace Alex
 {
@@ -23,10 +24,10 @@ namespace Alex
 		private static NLog.Logger Log = NLog.LogManager.GetCurrentClassLogger(typeof(BlockFactory));
 
 		public static IReadOnlyDictionary<uint, IBlockState> AllBlockstates => new ReadOnlyDictionary<uint, IBlockState>(RegisteredBlockStates);
-		public static IReadOnlyDictionary<string, IBlockState> AllBlockstatesByName => new ReadOnlyDictionary<string, IBlockState>(BlockStateByName);
+		public static IReadOnlyDictionary<string, BlockStateVariantMapper> AllBlockstatesByName => new ReadOnlyDictionary<string, BlockStateVariantMapper>(BlockStateByName);
 
 		private static readonly Dictionary<uint, IBlockState> RegisteredBlockStates = new Dictionary<uint, IBlockState>();
-		private static readonly Dictionary<string, IBlockState> BlockStateByName = new Dictionary<string, IBlockState>();
+		private static readonly Dictionary<string, BlockStateVariantMapper> BlockStateByName = new Dictionary<string, BlockStateVariantMapper>();
 		private static readonly Dictionary<uint, BlockModel> ModelCache = new Dictionary<uint, BlockModel>();
 
 		private static ResourcePackLib.Json.Models.Blocks.BlockModel CubeModel { get; set; }
@@ -105,6 +106,15 @@ namespace Alex
 			{
 				cube.Textures["all"] = "no_texture";
 				CubeModel = cube;
+
+				UnknownBlockModel = new CachedResourcePackModel(resources, new BlockStateModel[]
+				{
+					new BlockStateModel()
+					{
+						Model = CubeModel,
+						ModelName = "Unknown model",
+					}
+				});
 			}
 
 			RegisterBuiltinBlocks();
@@ -114,6 +124,7 @@ namespace Alex
 
 		private static PropertyBool WaterLoggedProperty = new PropertyBool("waterlogged");
 		internal static bool GenerateClasses { get; set; } = false;
+		private static BlockModel UnknownBlockModel { get; set; }
 		private static int LoadModels(ResourceManager resources, McResourcePack resourcePack, bool replace,
 			bool reportMissing)
 		{
@@ -125,6 +136,7 @@ namespace Alex
 			uint c = 0;
 			foreach (var entry in data)
 			{
+				var variantMap = new BlockStateVariantMapper();
 				var state = new BlockState
 				{
 					Name = entry.Key
@@ -134,7 +146,7 @@ namespace Alex
 				{
 					foreach (var property in entry.Value.Properties)
 					{
-						state = (BlockState)state.WithProperty(new DynamicStateProperty(property.Key, property.Value), property.Value.FirstOrDefault());
+						state = (BlockState)state.WithPropertyNoResolve(new DynamicStateProperty(property.Key, property.Value), property.Value.FirstOrDefault(), false);
 					}
 				}
 
@@ -142,17 +154,20 @@ namespace Alex
 				{
 					var id = s.ID;
 
-					BlockState variantState = (BlockState)state.Clone();
-					variantState.Variants.Clear();
-					
-					variantState.Name = state.Name;
+					BlockState variantState = (BlockState)(state).CloneSilent();
 					variantState.ID = id;
+					variantState.VariantMapper = variantMap;
 
 					if (s.Properties != null)
 					{
 						foreach (var property in s.Properties)
 						{
-							variantState = (BlockState)variantState.WithProperty(StateProperty.Parse(property.Key), property.Value);
+							var prop = StateProperty.Parse(property.Key);
+							variantState = (Blocks.State.BlockState)variantState.WithPropertyNoResolve(prop, property.Value, false);
+							if (s.Default)
+							{
+								state = (BlockState) state.WithPropertyNoResolve(prop, property.Value, false);
+							}
 						}
 					}
 
@@ -169,14 +184,7 @@ namespace Alex
 							if (reportMissing)
 								Log.Warn($"Missing blockmodel for blockstate {entry.Key}[{variantState.ToString()}]");
 
-							cachedBlockModel = new CachedResourcePackModel(resources, new BlockStateModel[]
-							{
-								new BlockStateModel()
-								{
-									Model = CubeModel,
-									ModelName = "Unknown model",
-								}
-							});
+							cachedBlockModel = UnknownBlockModel;
 						}
 
 						string displayName = entry.Key;
@@ -218,51 +226,55 @@ namespace Alex
 							block.Transparent = true;
 						}
 
-						block.Name = entry.Key;
-						block.BlockModel = cachedBlockModel;
+						variantState.Block = block;
+						variantState.Model = cachedBlockModel;
 
+						block.Name = entry.Key;
 						block.BlockState = variantState;
 						block.DisplayName = displayName;
 
-						variantState.Block = block;
-						variantState.Default = state;
-
 						if (s.Default) //This is the default variant.
 						{
-							state.Block = block;
-							state.Default = variantState;
-							state.ID = id;
+							variantMap._default = variantState;
+							//variantState.Default = variantState;
+							//variantState.Variants.AddRange(state.Variants);
+							//state = variantState;
 						}
 						else
 						{
-							state.Variants.Add(variantState);
-							if (!RegisteredBlockStates.TryAdd(id, variantState))
+							if (!variantMap.TryAdd(variantState))
 							{
-								Log.Warn($"Failed to add blockstate (variant), key already exists! ({variantState.Name})");
+								Log.Warn($"Could not add variant to variantmapper! ({variantState.ID} - {variantState.Name})");
+								continue;
 							}
-							else
-							{
-								importCounter++;
-							}
+						}
+
+						if (!RegisteredBlockStates.TryAdd(id, variantState))
+						{
+							Log.Warn($"Failed to add blockstate (variant), key already exists! ({variantState.ID} - {variantState.Name})");
+						}
+						else
+						{
+							importCounter++;
 						}
 					}
 				}
 
-				if (!RegisteredBlockStates.TryAdd(state.ID, state))
+			/*	if (!RegisteredBlockStates.TryAdd(state.ID, state))
 				{
 					Log.Warn($"Failed to register default blockstate! {state.Name} - {state.ID}");
 				}
-
-				if (!BlockStateByName.TryAdd(state.Name, state))
+				*/
+				if (!BlockStateByName.TryAdd(state.Name, variantMap))
 				{
 					Log.Warn($"Failed to add blockstate, key already exists! ({state.Name})");
 				}
 				else
 				{
-					foreach (var bsVariant in state.Variants.Cast<BlockState>())
-					{
-						bsVariant.Variants.AddRange(state.Variants.Where(x => !x.ID.Equals(bsVariant.ID)));
-					}
+					//foreach (var bsVariant in state.Variants.ToArray().Cast<BlockState>())
+					//{
+					//	bsVariant.Variants.AddRange(state.Variants.Where(x => !x.ID.Equals(bsVariant.ID)));
+					//}
 				}
 			}
 
@@ -369,22 +381,26 @@ namespace Alex
 				return StationairyLavaModel;
 			}
 
-			JsonBlockstate blockState;
+			BlockStateResource blockStateResource;
 
-			if (resourcePack.BlockStates.TryGetValue(name, out blockState))
+			if (resourcePack.BlockStates.TryGetValue(name, out blockStateResource))
 			{
-				if (blockState != null && blockState.Parts != null && blockState.Parts.Length > 0)
+				if (blockStateResource != null && blockStateResource.Parts != null && blockStateResource.Parts.Length > 0)
 				{
-					return new MultiStateResourcePackModel(resources, blockState);
+					if (state is BlockState ss)
+					{
+						ss.IsMultiPart = true;
+					}
+					return new CachedResourcePackModel(resources, MultiPartModels.GetModels(state, blockStateResource));
 				}
 
-				if (blockState.Variants == null ||
-					blockState.Variants.Count == 0)
+				if (blockStateResource.Variants == null ||
+					blockStateResource.Variants.Count == 0)
 					return null;
 
-				if (blockState.Variants.Count == 1)
+				if (blockStateResource.Variants.Count == 1)
 				{
-					var v = blockState.Variants.FirstOrDefault();
+					var v = blockStateResource.Variants.FirstOrDefault();
 					return new CachedResourcePackModel(resources, new[] { v.Value.FirstOrDefault() });
 				}
 
@@ -393,7 +409,7 @@ namespace Alex
 				var data = state.ToDictionary();
 				int closestMatch = 0;
 				KeyValuePair<string, BlockStateVariant> closest = default(KeyValuePair<string, BlockStateVariant>);
-				foreach (var v in blockState.Variants)
+				foreach (var v in blockStateResource.Variants)
 				{
 					int matches = 0;
 					var variantBlockState = Blocks.State.BlockState.FromString(v.Key);
@@ -409,10 +425,13 @@ namespace Alex
 						}
 					}
 
-					if (matches > closestMatch)
+					if (matches > closestMatch || matches == data.Count)
 					{
 						closestMatch = matches;
 						closest = v;
+
+						if (matches == data.Count)
+							break;
 					}
 				}
 
@@ -420,7 +439,7 @@ namespace Alex
 
 				if (blockStateVariant == null)
 				{
-					var a = blockState.Variants.FirstOrDefault();
+					var a = blockStateResource.Variants.FirstOrDefault();
 					blockStateVariant = a.Value;
 				}
 
@@ -438,7 +457,7 @@ namespace Alex
 		{
 			if (BlockStateByName.TryGetValue(palleteId, out var result))
 			{
-				return result;
+				return result.GetDefaultState();
 			}
 
 			return AirState;
@@ -738,23 +757,33 @@ namespace Alex
 			if (palleteId == 0) return Air;
 			if (RegisteredBlockStates.TryGetValue(palleteId, out IBlockState b))
 			{
-				return (Block) b.GetBlock();
+				return (Block) b.Block;
 			}
 
-			return new Block(palleteId)
+			var state = new BlockState()
 			{
-				BlockModel = new CachedResourcePackModel(null, new[] { new BlockStateModel
+				Model = new CachedResourcePackModel(null, new[]
 				{
-					Model = CubeModel,
-					ModelName = CubeModel.Name,
-					Y = 0,
-					X = 0,
-					Uvlock = false,
-					Weight = 0
-				}}),
+					new BlockStateModel
+					{
+						Model = CubeModel,
+						ModelName = CubeModel.Name,
+						Y = 0,
+						X = 0,
+						Uvlock = false,
+						Weight = 0
+					}
+				}),
+			};
+
+			var result = new Block(palleteId)
+			{
+				BlockState = state,
 				Transparent = false,
 				DisplayName = "Unknown"
 			};
+			state.Block = result;
+			return result;
 		}
 
 		private static TableEntry[] _tablesEntries = TableEntry.FromJson(Resources.runtimeid_table);
@@ -772,7 +801,7 @@ namespace Alex
 
 			if (BlockStateByName.TryGetValue(f.Name, out var vv))
 			{
-				return (Block)vv.GetBlock();
+				return (Block)vv._default.Block;
 			}
 
 			return Air;

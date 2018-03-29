@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Graphics;
+using Alex.API.Utils;
 using Alex.Rendering.Camera;
 using Alex.ResourcePackLib.Json.Models;
 using Alex.ResourcePackLib.Json.Models.Entities;
@@ -19,7 +20,7 @@ namespace Alex.Graphics.Models.Entity
 		private static ConcurrentDictionary<string, VertexPositionNormalTexture[]> ModelBonesCache { get; } = new ConcurrentDictionary<string, VertexPositionNormalTexture[]>();
 
 		private EntityModel Model { get; }
-		private IReadOnlyDictionary<string, ModelPart> Cubes { get; }
+		private IReadOnlyDictionary<int, ModelPart> Cubes { get; }
 		private Texture2D Texture { get; set; }
 		//private AlphaTestEffect TransparentEffect { get; set; }
 		public EntityModelRenderer(EntityModel model, Texture2D texture)
@@ -27,7 +28,7 @@ namespace Alex.Graphics.Models.Entity
 			Model = model;
 			Texture = texture;
 
-			var cubes = new Dictionary<string, ModelPart>();
+			var cubes = new Dictionary<int, ModelPart>();
 			Cache(cubes);
 
 			Cubes = cubes;
@@ -38,9 +39,8 @@ namespace Alex.Graphics.Models.Entity
 			
 		}
 
-		private void Cache(Dictionary<string, ModelPart> cubes)
+		private void Cache(Dictionary<int, ModelPart> cubes)
 		{
-			float x = 0, y = 0, z = 0;
 		//	List<VertexPositionNormalTexture> textures = new List<VertexPositionNormalTexture>();
 			foreach (var bone in Model.Bones)
 			{
@@ -74,7 +74,14 @@ namespace Alex.Graphics.Models.Entity
 						var part = new ModelPart(vertices,
 							Texture,
 							rotation, pivot, origin);
-						if (!cubes.TryAdd(bone.Name, part))
+
+						part.Mirror = bone.Mirror;
+						if (!bone.Name.Contains("head"))
+						{
+							part.ApplyPitch = false;
+						}
+
+						if (!cubes.TryAdd(bone.GetHashCode(), part))
 						{
 							part.Dispose();
 							Log.Warn($"Failed to add cube to list of bones: {Model.Name}:{bone.Name}");
@@ -84,7 +91,7 @@ namespace Alex.Graphics.Models.Entity
 			}
 		}
 
-		public void Render(IRenderArgs args, Camera camera, Vector3 position, float yaw, float pitch)
+		public void Render(IRenderArgs args, Camera camera, PlayerLocation position)
 		{
 			foreach (var bone in Cubes)
 			{
@@ -92,11 +99,11 @@ namespace Alex.Graphics.Models.Entity
 					continue;
 
 
-				bone.Value.Render(args, camera, position, yaw, bone.Key.Contains("head") ? pitch : 0);
+				bone.Value.Render(args, camera, position);
 			}
 		}
 
-		public void Update(GraphicsDevice device, GameTime gameTime, Vector3 position, float yaw, float pitch)
+		public void Update(GraphicsDevice device, GameTime gameTime, PlayerLocation position)
 		{
 			foreach (var bone in Cubes)
 			{
@@ -126,13 +133,13 @@ namespace Alex.Graphics.Models.Entity
 			public Vector3 Origin { get; private set; }
 			public ModelPart(VertexPositionNormalTexture[] textures, Texture2D texture, Vector3 rotation, Vector3 pivot, Vector3 origin)
 			{
-				_vertices = textures;
+				_vertices = (VertexPositionNormalTexture[]) textures.Clone();
 				Texture = texture;
 				Rotation = rotation;
 				Pivot = pivot;
 				Origin = origin;
 
-				Mod(ref _vertices, Origin, Pivot, Rotation);
+				Apply(Origin, Pivot, Rotation);
 
 				IsDirty = true;
 			}
@@ -142,7 +149,7 @@ namespace Alex.Graphics.Models.Entity
 				if (!IsDirty) return;
 
 				//if (_vertices.Length > 0)
-				//	Mod(ref _vertices, Origin, Pivot, Rotation);
+				//	Apply(ref _vertices, Origin, Pivot, Rotation);
 
 				if (Effect == null)
 				{
@@ -179,7 +186,10 @@ namespace Alex.Graphics.Models.Entity
 				IsDirty = false;
 			}
 
-			public void Render(IRenderArgs args, Camera camera, Vector3 position, float yaw, float pitch)
+			public bool ApplyYaw { get; set; } = true;
+			public bool ApplyPitch { get; set; } = true;
+			public bool Mirror { get; set; } = false;
+			public void Render(IRenderArgs args, Camera camera, PlayerLocation position)
 			{
 				if (_vertices == null || _vertices.Length == 0) return;
 
@@ -187,7 +197,18 @@ namespace Alex.Graphics.Models.Entity
 
 				var buffer = Buffer;
 
-				Effect.World = Matrix.CreateScale(1f / 16f) * Matrix.CreateRotationY(MathUtils.ToRadians(yaw)) * Matrix.CreateRotationX(MathUtils.ToRadians(pitch)) * Matrix.CreateTranslation(position);
+				Matrix world = Matrix.Identity;
+				if (ApplyYaw)
+				{
+					world = world * Matrix.CreateRotationY(MathUtils.ToRadians(position.HeadYaw));
+				}
+
+				if (ApplyPitch)
+				{
+					world = world * Matrix.CreateRotationX(MathUtils.ToRadians(position.Pitch));
+				}
+
+				Effect.World = world * Matrix.CreateScale(1f / 16f) * Matrix.CreateTranslation(position);
 				//Effect.World = Matrix.CreateScale(1f / 16f) * Matrix.CreateTranslation(position);
 
 				Effect.View = camera.ViewMatrix;
@@ -202,26 +223,26 @@ namespace Alex.Graphics.Models.Entity
 				args.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, _vertices.Length / 3);
 			}
 
-			private void Mod(ref VertexPositionNormalTexture[] data, Vector3 origin, Vector3 pivot, Vector3 rotation)
+			private void Apply(Vector3 origin, Vector3 pivot, Vector3 rotation)
 			{
-				Matrix transform = Matrix.CreateTranslation(-pivot) *
-					Matrix.CreateRotationX(rotation.X) *
-					Matrix.CreateRotationY(rotation.Y) *
-					Matrix.CreateRotationZ(rotation.Z) *
+				Matrix transform =  Matrix.CreateTranslation(-pivot) *
+					Matrix.CreateRotationX((rotation.X + 360f) % 360f) *
+					Matrix.CreateRotationY((rotation.Y + 360f) % 360f) *
+					Matrix.CreateRotationZ((rotation.Z + 360f) % 360f) *
 					Matrix.CreateTranslation(pivot);
 
-				for (int i = 0; i < data.Length; i++)
+				for (int i = 0; i < _vertices.Length; i++)
 				{
-					var pos = data[i].Position;
+					var pos = _vertices[i].Position;
 
-					pos = pos + origin;
+					pos = Vector3.Add(pos, origin );
 
 					if (rotation != Vector3.Zero)
 					{
 						pos = Vector3.Transform(pos, transform);
 					}
 
-					data[i].Position = pos;
+					_vertices[i].Position = pos;
 				}
 			}
 

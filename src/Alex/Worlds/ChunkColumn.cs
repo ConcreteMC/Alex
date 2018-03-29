@@ -94,7 +94,7 @@ namespace Alex.Worlds
 
 			if (bs == null) return new Air();
 
-			return bs.GetBlock();
+			return bs.Block;
 		}
 
 		public void SetBlock(int bx, int by, int bz, IBlock block)
@@ -193,14 +193,14 @@ namespace Alex.Worlds
 				return;
 			}
 
-			IBlock block = stateId.GetBlock();// BlockFactory.GetBlock(stateId);
+			IBlock block = stateId.Block;// BlockFactory.GetBlock(stateId);
 
 			if (!block.Renderable) return;
 
 			var blockPosition = new Vector3(x, y + (index * 16), z) + Position;
 
-			var vert = block.GetVertices(blockPosition, world);
-		//	var result = new ChunkMesh.Entry(block.BlockState.ID, vert, blockPosition);
+			var vert = stateId.Model.GetVertices(world, blockPosition, block);
+		//	var result = new ChunkMesh.Entry(block.BlockStateResource.ID, vert, blockPosition);
 
 			if (block.Transparent)
 			{

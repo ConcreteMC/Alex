@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 namespace Alex.ResourcePackLib.Json.BlockStates
 {
-	public class BlockState
+	public class BlockStateResource
 	{
 		[JsonIgnore]
 		public string Name { get; set; }

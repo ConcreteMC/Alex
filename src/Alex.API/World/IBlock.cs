@@ -32,6 +32,5 @@ namespace Alex.API.World
 
 		bool Tick(IWorld world, Vector3 position);
 		void BlockUpdate(IWorld world, BlockCoordinates position, BlockCoordinates updatedBlock);
-		VertexPositionNormalTextureColor[] GetVertices(Vector3 position, IWorld world);
 	}
 }

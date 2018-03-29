@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace Alex.Blocks.Storage
 {
@@ -35,6 +36,7 @@ namespace Alex.Blocks.Storage
 				{
 					throw new IndexOutOfRangeException();
 				}
+
 
 				int bitIndex = index * this._bitsPerEntry;
 				int startIndex = bitIndex / 64;
@@ -80,12 +82,7 @@ namespace Alex.Blocks.Storage
 			return _data;
 		}
 
-		public int Size()
-		{
-			return _size;
-		}
-
-
+		public int Length => _size;
 		private static int RoundUp(int value, int roundTo)
 		{
 			if (roundTo == 0)

@@ -11,6 +11,7 @@ using Alex.Entities;
 using Alex.Graphics.Models;
 using Alex.Graphics.Models.Blocks;
 using Alex.ResourcePackLib.Json;
+using Alex.ResourcePackLib.Json.BlockStates;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
 using NLog;
@@ -40,7 +41,7 @@ namespace Alex.Blocks
 	    public int LightValue { get; set; } = 0;
 	    public int LightOpacity { get; set; } = 0;
 
-		public BlockModel BlockModel { get; set; }
+		//public BlockModel BlockModel { get; set; }
 		public IBlockState BlockState { get; set; }
 		public bool IsWater { get; set; } = false;
 		public bool IsSourceBlock { get; set; } = false;
@@ -100,23 +101,28 @@ namespace Alex.Blocks
 
 		public Microsoft.Xna.Framework.BoundingBox GetBoundingBox(Vector3 blockPosition)
 	    {
-			if (BlockModel == null)
+			if (BlockState == null)
 				return new Microsoft.Xna.Framework.BoundingBox(blockPosition, blockPosition + Vector3.One);
 
-		    return BlockModel.GetBoundingBox(blockPosition, this);
+		    return BlockState.Model.GetBoundingBox(blockPosition, this);
 		}
-
-        public VertexPositionNormalTextureColor[] GetVertices(Vector3 position, IWorld world)
-        {
-	        if (BlockModel == null)
-				return new VertexPositionNormalTextureColor[0];
-
-			return BlockModel.GetVertices(world, position, this);
-        }
 
 		public virtual void BlockPlaced(IWorld world, BlockCoordinates position)
 		{
+			/*if (BlockState is BlockState s)
+			{
+				if (s.IsMultiPart)
+				{
+					BlockStateResource blockStateResource;
 
+					if (Alex.Instance.Resources.ResourcePack.BlockStates.TryGetValue(s.Name, out blockStateResource))
+					{
+						BlockState.Model = new CachedResourcePackModel(Alex.Instance.Resources,
+							MultiPartModels.GetBlockStateModels(world, position, s.VariantMapper.GetDefaultState(), blockStateResource));
+						world.SetBlockState(position.X, position.Y, position.Z, BlockState);
+					}
+				}
+			}*/
 		}
 
 		public virtual bool Tick(IWorld world, Vector3 position)
@@ -131,51 +137,7 @@ namespace Alex.Blocks
 
 		public virtual void BlockUpdate(IWorld world, BlockCoordinates position, BlockCoordinates updatedBlock)
 		{
-
-		}
-
-		internal virtual bool ShouldRenderFace(IWorld world, BlockFace face, BlockCoordinates position)
-		{
-			if (position.Y >= 256) return true;
-
-			var pos = position + face.GetBlockCoordinates();
-
-			var cX = (int)pos.X & 0xf;
-			var cZ = (int)pos.Z & 0xf;
-
-			if (cX < 0 || cX > 16)
-				return false;
-
-			if (cZ < 0 || cZ > 16)
-				return false;
-
-			 var block = world.GetBlockState(pos.X, pos.Y, pos.Z).GetBlock();
-			//BlockFactory.
-			//var block = world.GetBlock(pos);
-
-			if (Transparent && block is UnknownBlock)
-			{
-				return true;
-			}
-
-			if (Solid && Transparent)
-			{
-			//	if (IsFullCube && Name.Equals(block.Name)) return false;
-				if (block.Solid && !block.Transparent) return false;
-			}
-			else if (Transparent)
-			{
-				if (block.Solid && !block.Transparent) return false;
-			}
-
-
-			if (Solid && block.Transparent) return true;
-			//   if (me.Transparent && block.Transparent && !block.Solid) return false;
-			if (Transparent) return true;
-			if (!Transparent && block.Transparent) return true;
-			if (block.Solid && !block.Transparent) return false;
-
-			return true;
+			
 		}
 
 	    public string DisplayName { get; set; } = null;
@@ -187,71 +149,18 @@ namespace Alex.Blocks
 		public virtual IBlockState GetDefaultState()
 		{
 			IBlockState r = null;
-			if (BlockState != null)
+			if (BlockState is BlockState s)
 			{
-				r = BlockState.GetDefaultState();
+				r = s.VariantMapper.GetDefaultState();
 			}
 
-			if (r == null) return new BlockState()
-			{
-				
-			};
+			if (r == null)
+				return new BlockState()
+				{
+
+				};
 
 			return r;
-		}
-
-		public BlockFace RotateY(BlockFace v)
-		{
-			switch (v)
-			{
-				case BlockFace.North:
-					return BlockFace.East;
-				case BlockFace.East:
-					return BlockFace.South;
-				case BlockFace.South:
-					return BlockFace.West;
-				case BlockFace.West:
-					return BlockFace.North;
-				default:
-					throw new Exception("Unable to get Y-rotated facing of " + this);
-			}
-		}
-
-		private BlockFace RotateX(BlockFace v)
-		{
-			switch (v)
-			{
-				case BlockFace.North:
-					return BlockFace.Down;
-				case BlockFace.East:
-				case BlockFace.West:
-				default:
-					throw new Exception("Unable to get X-rotated facing of " + this);
-				case BlockFace.South:
-					return BlockFace.Up;
-				case BlockFace.Up:
-					return BlockFace.North;
-				case BlockFace.Down:
-					return BlockFace.South;
-			}
-		}
-
-		private BlockFace RotateZ(BlockFace v)
-		{
-			switch (v)
-			{
-				case BlockFace.East:
-					return BlockFace.Down;
-				case BlockFace.South:
-				default:
-					throw new Exception("Unable to get Z-rotated facing of " + this);
-				case BlockFace.West:
-					return BlockFace.Up;
-				case BlockFace.Up:
-					return BlockFace.East;
-				case BlockFace.Down:
-					return BlockFace.West;
-			}
 		}
 	}
 }

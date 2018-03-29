@@ -40,12 +40,12 @@ namespace Alex.Blocks
 				Block below = (Block)world.GetBlock(position - new BlockCoordinates(0, 1, 0));
 				if (below is WoodenDoor bottom && !bottom.IsUpper)
 				{
-					bool open = !bottom.BlockState.GetTypedValue(OPEN);
+					bool open = !bottom.BlockStateResource.GetTypedValue(OPEN);
 
-					IBlockState state = BlockState.Clone().WithProperty(OPEN, open).WithProperty(UPPER, true);
+					IBlockState state = BlockStateResource.Clone().WithProperty(OPEN, open).WithProperty(UPPER, true);
 					world.SetBlock(position.X, position.Y, position.Z, BlockFactory.GetBlock(BlockId, GetMetaFromState(state)));
 
-					IBlockState state2 = bottom.BlockState.Clone().WithProperty(RIGHTHINCHED, IsRightHinch).WithProperty(UPPER, false)
+					IBlockState state2 = bottom.BlockStateResource.Clone().WithProperty(RIGHTHINCHED, IsRightHinch).WithProperty(UPPER, false)
 						.WithProperty(OPEN, open);
 					world.SetBlock(position.X, position.Y - 1, position.Z, BlockFactory.GetBlock(BlockId, GetMetaFromState(state2)));
 				}
@@ -55,11 +55,11 @@ namespace Alex.Blocks
 				Block up = (Block)world.GetBlock(position + new BlockCoordinates(0, 1, 0));
 				if (up is WoodenDoor upper && upper.IsUpper)
 				{
-					bool open = !BlockState.GetTypedValue(OPEN);
-					IBlockState state = BlockState.Clone().WithProperty(RIGHTHINCHED, upper.IsRightHinch).WithProperty(UPPER, false).WithProperty(OPEN, open);
+					bool open = !BlockStateResource.GetTypedValue(OPEN);
+					IBlockState state = BlockStateResource.Clone().WithProperty(RIGHTHINCHED, upper.IsRightHinch).WithProperty(UPPER, false).WithProperty(OPEN, open);
 					world.SetBlock(position.X, position.Y, position.Z, BlockFactory.GetBlock(BlockId, GetMetaFromState(state)));
 
-					IBlockState state2 = upper.BlockState.Clone().WithProperty(OPEN, open).WithProperty(UPPER, true);
+					IBlockState state2 = upper.BlockStateResource.Clone().WithProperty(OPEN, open).WithProperty(UPPER, true);
 					world.SetBlock(position.X, position.Y + 1, position.Z, BlockFactory.GetBlock(BlockId, GetMetaFromState(state2)));
 				}
 			}*/

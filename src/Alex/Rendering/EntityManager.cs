@@ -37,7 +37,7 @@ namespace Alex.Rendering
 		    var entities = Entities.Values.ToArray();
 		    foreach (var entity in entities)
 		    {
-				entity.ModelRenderer?.Update(Device, gameTime, entity.KnownPosition, entity.KnownPosition.Yaw, entity.KnownPosition.Pitch);
+				entity.ModelRenderer?.Update(Device, gameTime, entity.KnownPosition);
 		    }
 	    }
 
@@ -51,7 +51,7 @@ namespace Alex.Rendering
 
 				if (camera.BoundingFrustum.Contains(new Microsoft.Xna.Framework.BoundingBox(entityBox.Min, entityBox.Max)) != ContainmentType.Disjoint)
 			    {
-				    entity.ModelRenderer?.Render(args, camera, entity.KnownPosition, entity.KnownPosition.Yaw, entity.KnownPosition.Pitch);
+				    entity.ModelRenderer?.Render(args, camera, entity.KnownPosition);
 				    renderCount++;
 			    }
 		    }

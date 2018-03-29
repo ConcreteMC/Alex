@@ -22,11 +22,11 @@ namespace Alex.ResourcePackLib
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(McResourcePack));
 		public ResourcePackInfo Info { get; private set; }
 
-		public IReadOnlyDictionary<string, BlockState> BlockStates => _blockStates;
+		public IReadOnlyDictionary<string, BlockStateResource> BlockStates => _blockStates;
 		public IReadOnlyDictionary<string, BlockModel> BlockModels => _blockModels;
 
 		private ZipArchive _archive;
-		private readonly Dictionary<string, BlockState> _blockStates = new Dictionary<string, BlockState>();
+		private readonly Dictionary<string, BlockStateResource> _blockStates = new Dictionary<string, BlockStateResource>();
 		private readonly Dictionary<string, BlockModel> _blockModels = new Dictionary<string, BlockModel>();
 		private readonly Dictionary<string, Bitmap> _textureCache = new Dictionary<string, Bitmap>();
 		private Color[] FoliageColors { get; set; } = null;
@@ -237,7 +237,7 @@ namespace Alex.ResourcePackLib
 			}
 		}
 
-		private BlockState LoadBlockState(ZipArchiveEntry entry)
+		private BlockStateResource LoadBlockState(ZipArchiveEntry entry)
 		{
 			try
 			{
@@ -248,7 +248,7 @@ namespace Alex.ResourcePackLib
 				{
 					var json = r.ReadToEnd();
 
-					var blockState = MCJsonConvert.DeserializeObject<BlockState>(json);
+					var blockState = MCJsonConvert.DeserializeObject<BlockStateResource>(json);
 					blockState.Name = name;
 					blockState.Namespace = nameSpace;
 					_blockStates[$"{nameSpace}:{name}"] = ProcessBlockState(blockState);
@@ -263,23 +263,23 @@ namespace Alex.ResourcePackLib
 			}
 		}
 
-		public bool TryGetBlockState(string modelName, out BlockState state)
+		public bool TryGetBlockState(string modelName, out BlockStateResource stateResource)
 		{
-			if (_blockStates.TryGetValue(modelName, out state))
+			if (_blockStates.TryGetValue(modelName, out stateResource))
 				return true;
 
-			state = null;
+			stateResource = null;
 
 			var modelFile =
 				_archive.Entries.FirstOrDefault(e => e.FullName.Equals($"assets/minecraft/blockstates/{modelName}.json"));
 
 			if (modelFile == null)
 			{
-				Log.Debug("Failed to load BlockState: File Not Found (" + "assets/minecraft/blockstates/" + modelName + ".json)");
+				Log.Debug("Failed to load BlockStateResource: File Not Found (" + "assets/minecraft/blockstates/" + modelName + ".json)");
 				return false;
 			}
 
-			state = LoadBlockState(modelFile);
+			stateResource = LoadBlockState(modelFile);
 			return true;
 		}
 
@@ -382,17 +382,17 @@ namespace Alex.ResourcePackLib
 			return model;
 		}
 
-		private BlockState ProcessBlockState(BlockState blockState)
+		private BlockStateResource ProcessBlockState(BlockStateResource blockStateResource)
 		{
-			if (blockState.Parts.Length > 0)
+			if (blockStateResource.Parts.Length > 0)
 			{
-				foreach (var part in blockState.Parts)
+				foreach (var part in blockStateResource.Parts)
 				{
 					foreach (var sVariant in part.Apply)
 					{
 						if (!TryGetBlockModel("block/" + sVariant.ModelName, out BlockModel model))
 						{
-							Log.Debug($"Could not get multipart blockmodel! Variant: {blockState} Model: {sVariant.ModelName}");
+							Log.Debug($"Could not get multipart blockmodel! Variant: {blockStateResource} Model: {sVariant.ModelName}");
 							continue;
 						}
 
@@ -405,7 +405,7 @@ namespace Alex.ResourcePackLib
 			}
 			else
 			{
-				foreach (var variant in blockState.Variants)
+				foreach (var variant in blockStateResource.Variants)
 				{
 					foreach (var sVariant in variant.Value)
 					{
@@ -420,7 +420,7 @@ namespace Alex.ResourcePackLib
 				}
 			}
 
-			return blockState;
+			return blockStateResource;
 		}
 
 		public void Dispose()

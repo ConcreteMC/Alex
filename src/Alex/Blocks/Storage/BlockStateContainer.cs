@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Alex.API.Blocks.State;
 using Alex.API.World;
 using Alex.Blocks.State;
@@ -45,9 +46,7 @@ namespace Alex.Blocks.Storage
 				else
 				{
 					this.Palette = RegistryBasedPalette;
-					this._bits =
-						(int)Math.Ceiling(Math.Log(BlockFactory.AllBlockstates.Count,
-							2)); //MathHelper.Log2E(Block.BLOCK_STATE_IDS.size());
+					this._bits = QuickMath.Log2(QuickMath.NextPow2(BlockFactory.AllBlockstates.Count));
 				}
 
 				this.Palette.IdFor(AirBlockState);
@@ -61,7 +60,7 @@ namespace Alex.Blocks.Storage
 			IBlockStatePalette blockStatepalette = this.Palette;
 			this.SetBits(bits);
 
-			for (int i = 0; i < storage.Size(); i++)
+			for (int i = 0; i < storage.Length; i++)
 			{
 				IBlockState blockState = blockStatepalette.GetBlockState(storage[i]);
 
@@ -79,7 +78,7 @@ namespace Alex.Blocks.Storage
 			this.Set(GetIndex(x, y, z), state);
 		}
 
-		protected void Set(int index, IBlockState state)
+		public void Set(int index, IBlockState state)
 		{
 			if (state == null)
 			{
@@ -130,17 +129,6 @@ namespace Alex.Blocks.Storage
 			return nibblearray;
 		}
 
-		public void SetDataFromNbt(byte[] blocks, byte[] data, byte[] blockIdExtension)
-		{
-			for (int i = 0; i < 4096; i++)
-			{
-				int blockIdExtensionData = blockIdExtension == null ? 0 : Nibble4(blockIdExtension, i); //.Get(j, k, l);
-				int blockStateId = (blockIdExtensionData << 12) | ((blocks[i]) << 4) | Nibble4(data, i); //.Get(j, k, l);
-
-				this.Set(i, BlockFactory.GetBlockState(blockStateId));
-			}
-		}
-
 		public void SetDataFromNbt(NbtList palette, long[] blockStates)
 		{
 			int bits = 4;
@@ -148,8 +136,6 @@ namespace Alex.Blocks.Storage
 			if (palette.Count > 16)
 			{ 
 				bits = QuickMath.Log2(QuickMath.NextPow2(palette.Count));
-				
-				//bits = (int)Math.Ceiling(Math.Log(palette.Count, 2));
 			}
 
 			Storage = new FlexibleStorage(bits, blockStates);
@@ -169,9 +155,9 @@ namespace Alex.Blocks.Storage
 
 			_bits = bits;
 
-			for (int i = 0; i < palette.Count; i++)
+			int pIndex = 0;
+			foreach (var p in palette.Cast<NbtCompound>())
 			{
-				var p = (NbtCompound)palette[i];
 				string name = p["Name"].StringValue;
 
 				var blockState = BlockFactory.GetBlockState(name);
@@ -180,25 +166,13 @@ namespace Alex.Blocks.Storage
 				{
 					foreach (var property in properties)
 					{
-						var pp = StateProperty.Parse(property.Name);
-						blockState = blockState.WithProperty(pp, pp.ValueFromString(property.StringValue));
+						blockState = blockState.WithProperty(StateProperty.Parse(property.Name), property.StringValue);
 					}
 				}
 
-
 				Palette.IdFor(blockState);
+				//pIndex++;
 			}
-		}
-
-		private static byte Nibble4(byte[] arr, int index)
-		{
-			return (byte)(arr[index >> 1] >> ((index & 1) << 2) & 0xF);
-		}
-
-		public int GetSerializedSize()
-		{
-			return 1 + this.Palette.GetSerializedSize() + BlockState.GetVarIntSize(this.Storage.Size()) +
-				   this.Storage.GetBackingLongArray().Length * 8;
 		}
 	}
 }
