@@ -14,7 +14,7 @@ namespace Alex.Graphics.Models.Blocks
 			Models = models;
 		}
 
-	    public override VertexPositionNormalTextureColor[] GetVertices(IWorld world, Vector3 position, Block baseBlock)
+	    public override VertexPositionNormalTextureColor[] GetVertices(IWorld world, Vector3 position, IBlock baseBlock)
 	    {
 			List<VertexPositionNormalTextureColor> vertices = new List<VertexPositionNormalTextureColor>();
 		    for (var index = 0; index < Models.Length; index++)

@@ -17,6 +17,8 @@ namespace Alex.Blocks
 			Transparent = true;
 			Solid = true;
 		}
+
+		public Fence() { }
 	}
 
 	public class OakFence : Fence

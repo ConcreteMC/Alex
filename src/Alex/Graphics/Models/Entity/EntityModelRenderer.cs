@@ -35,6 +35,13 @@ namespace Alex.Graphics.Models.Entity
 
 		private void Cache(Dictionary<string, EntityModelCube> cubes)
 		{
+			
+		}
+
+		private void Cache(Dictionary<string, ModelPart> cubes)
+		{
+			float x = 0, y = 0, z = 0;
+		//	List<VertexPositionNormalTexture> textures = new List<VertexPositionNormalTexture>();
 			foreach (var bone in Model.Bones)
 			{
 				if (bone == null) continue;
@@ -67,8 +74,14 @@ namespace Alex.Graphics.Models.Entity
 						var part = new EntityModelCube(vertices,
 							Texture,
 							rotation, pivot, origin);
-						part.ApplyPitch = bone.Name.Equals("head", StringComparison.InvariantCultureIgnoreCase);
-						if (!cubes.TryAdd(bone.Name, part))
+
+						part.Mirror = bone.Mirror;
+						if (!bone.Name.Contains("head"))
+						{
+							part.ApplyPitch = false;
+						}
+
+						if (!cubes.TryAdd(bone.GetHashCode(), part))
 						{
 							part.Dispose();
 							Log.Warn($"Failed to add cube to list of bones: {Model.Name}:{bone.Name}");
@@ -126,13 +139,13 @@ namespace Alex.Graphics.Models.Entity
 			public Vector3 Origin { get; private set; }
 			public EntityModelCube(VertexPositionNormalTexture[] textures, Texture2D texture, Vector3 rotation, Vector3 pivot, Vector3 origin)
 			{
-				_vertices = textures;
+				_vertices = (VertexPositionNormalTexture[]) textures.Clone();
 				Texture = texture;
 				Rotation = rotation;
 				Pivot = pivot;
 				Origin = origin;
 
-				Mod(ref _vertices, Origin, Pivot, Rotation);
+				Apply(Origin, Pivot, Rotation);
 
 				IsDirty = true;
 			}
@@ -142,7 +155,7 @@ namespace Alex.Graphics.Models.Entity
 				if (!IsDirty) return;
 
 				//if (_vertices.Length > 0)
-				//	Mod(ref _vertices, Origin, Pivot, Rotation);
+				//	Apply(ref _vertices, Origin, Pivot, Rotation);
 
 				if (Effect == null)
 				{
@@ -181,6 +194,7 @@ namespace Alex.Graphics.Models.Entity
 
 			public bool ApplyPitch { get; set; } = true;
 			public bool ApplyYaw { get; set; } = true;
+			public bool Mirror { get; set; } = false;
 			public void Render(IRenderArgs args, Camera camera, PlayerLocation position)
 			{
 				if (_vertices == null || _vertices.Length == 0) return;
@@ -207,26 +221,26 @@ namespace Alex.Graphics.Models.Entity
 				args.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, _vertices.Length / 3);
 			}
 
-			private void Mod(ref VertexPositionNormalTexture[] data, Vector3 origin, Vector3 pivot, Vector3 rotation)
+			private void Apply(Vector3 origin, Vector3 pivot, Vector3 rotation)
 			{
-				Matrix transform = Matrix.CreateTranslation(-pivot) *
-					Matrix.CreateRotationX(rotation.X) *
-					Matrix.CreateRotationY(rotation.Y) *
-					Matrix.CreateRotationZ(rotation.Z) *
+				Matrix transform =  Matrix.CreateTranslation(-pivot) *
+					Matrix.CreateRotationX((rotation.X + 360f) % 360f) *
+					Matrix.CreateRotationY((rotation.Y + 360f) % 360f) *
+					Matrix.CreateRotationZ((rotation.Z + 360f) % 360f) *
 					Matrix.CreateTranslation(pivot);
 
-				for (int i = 0; i < data.Length; i++)
+				for (int i = 0; i < _vertices.Length; i++)
 				{
-					var pos = data[i].Position;
+					var pos = _vertices[i].Position;
 
-					pos = pos + origin;
+					pos = Vector3.Add(pos, origin );
 
 					if (rotation != Vector3.Zero)
 					{
 						pos = Vector3.Transform(pos, transform);
 					}
 
-					data[i].Position = pos;
+					_vertices[i].Position = pos;
 				}
 			}
 

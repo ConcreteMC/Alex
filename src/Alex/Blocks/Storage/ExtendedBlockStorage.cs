@@ -64,8 +64,8 @@ namespace Alex.Blocks.Storage
 			IBlockState iblockstate = this.Get(x, y, z);
 			if (iblockstate != null)
 			{
-				IBlock block = iblockstate.GetBlock();
-				
+				IBlock block = iblockstate.Block;
+
 				if (!(block is Air))
 				{
 					--this._blockRefCount;
@@ -77,7 +77,7 @@ namespace Alex.Blocks.Storage
 				}				
 			}
 
-			IBlock block1 = state.GetBlock();
+			IBlock block1 = state.Block;
 			if (!(block1 is Air))
 			{
 				++this._blockRefCount;
@@ -159,7 +159,7 @@ namespace Alex.Blocks.Storage
 				{
 					for (int z = 0; z < 16; z++)
 					{
-						IBlock block = this.Get(x, y, z).GetBlock();
+						IBlock block = this.Get(x, y, z).Block;
 
 						if (!(block is Air))
 						{

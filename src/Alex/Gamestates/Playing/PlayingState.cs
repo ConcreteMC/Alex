@@ -48,6 +48,7 @@ namespace Alex.Gamestates.Playing
 		private string MemoryUsageDisplay { get; set; } = "";
 
 		private TimeSpan _previousMemUpdate = TimeSpan.Zero;
+		private BlockCoordinates _prevCollisonCheck = new BlockCoordinates(-255,-255,-255);
 		protected override void OnUpdate(GameTime gameTime)
 		{
 			if (Alex.IsActive)

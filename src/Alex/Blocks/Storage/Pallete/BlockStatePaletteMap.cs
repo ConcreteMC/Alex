@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Alex.API.Blocks.State;
 using Alex.API.World;
 using Alex.Blocks.State;
@@ -20,20 +21,21 @@ namespace Alex.Blocks.Storage.Pallete
 			this._paletteResizer = paletteResizerIn;
 
 			_map = new Dictionary<uint, IBlockState>(1 << bitsIn);
-			_byValue = new Dictionary<int, uint>();
+			_byValue = new Dictionary<int, uint>(1 << bitsIn);
 		}
 
 		public uint IdFor(IBlockState state)
 		{
 			if (state == null) return uint.MaxValue;
-			var hash = state.GetHashCode();
 
+			var hash = RuntimeHelpers.GetHashCode(state.ID);
+			
 			if (!_byValue.TryGetValue(hash, out uint index))
 			{
 				index = nextIndex;
 				nextIndex++;
 
-				if (index >= 1 << this._bits)
+				if (index >= (1 << this._bits))
 				{
 					index = this._paletteResizer.OnResize(this._bits + 1, state);
 				}
@@ -50,19 +52,6 @@ namespace Alex.Blocks.Storage.Pallete
 		public IBlockState GetBlockState(uint indexKey)
 		{
 			return indexKey >= 0 && indexKey < _map.Count ? _map[indexKey] : default(IBlockState);
-		}
-
-		public int GetSerializedSize()
-		{
-			int i = BlockState.GetVarIntSize(this._map.Count);
-
-			for (uint j = 0; j < this._map.Count; ++j)
-			{
-				i += BlockState.GetVarIntSize(
-					BlockFactory.GetBlockStateId(_map[j]));
-			}
-
-			return i;
 		}
 	}
 }

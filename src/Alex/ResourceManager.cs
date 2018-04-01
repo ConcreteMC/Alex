@@ -45,6 +45,8 @@ namespace Alex
 				Version latestSnapshotVersion =
 					manifest.Versions.OrderByDescending(x => x.ReleaseTime.ToUnixTimeSeconds()).FirstOrDefault();
 
+				Log.Info($"Using assets version {latestSnapshotVersion.Id}");
+
 				string savedPath = Path.Combine("assets", latestSnapshotVersion.Id + ".bin");
 				if (!File.Exists(savedPath))
 				{

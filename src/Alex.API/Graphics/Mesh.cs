@@ -9,14 +9,14 @@ namespace Alex.API.Graphics
 	{
 		public VertexPositionNormalTextureColor[] SolidVertices { get; }
 		public VertexPositionNormalTextureColor[] TransparentVertices { get; }
-		public ChunkMesh(Entry[] solidEntries, Entry[] transparentEntries)
+		public ChunkMesh(VertexPositionNormalTextureColor[] solidEntries, VertexPositionNormalTextureColor[] transparentEntries)
 		{
-			var entries = new Dictionary<Vector3, EntryPosition>();
+			//var entries = new Dictionary<Vector3, EntryPosition>();
 
-			SolidVertices = new VertexPositionNormalTextureColor[solidEntries.Sum(x => x.Vertices.Length)];
-			TransparentVertices = new VertexPositionNormalTextureColor[transparentEntries.Sum(x => x.Vertices.Length)];
+			SolidVertices = solidEntries; //new VertexPositionNormalTextureColor[solidEntries.Sum(x => x.Vertices.Length)];
+			TransparentVertices = transparentEntries;//.SelectMany(x => x.Vertices).ToArray();// new VertexPositionNormalTextureColor[transparentEntries.Sum(x => x.Vertices.Length)];
 
-			int index = 0;
+			/*int index = 0;
 			for (var i = 0; i < solidEntries.Length; i++)
 			{
 				var e = solidEntries[i];
@@ -42,10 +42,10 @@ namespace Alex.API.Graphics
 				}
 			}
 
-			EntryPositions = entries;
+			EntryPositions = entries;*/
 		}
 
-		public IReadOnlyDictionary<Vector3, EntryPosition> EntryPositions { get; }
+	//	public IReadOnlyDictionary<Vector3, EntryPosition> EntryPositions { get; }
 
 		public sealed class Entry
 		{

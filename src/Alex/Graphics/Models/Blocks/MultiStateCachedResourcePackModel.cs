@@ -1,6 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using Alex.API.Blocks.State;
 using Alex.API.Graphics;
+using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks;
 using Alex.ResourcePackLib.Json.BlockStates;
@@ -9,25 +12,14 @@ using NLog;
 
 namespace Alex.Graphics.Models.Blocks
 {
-	public class MultiStateResourcePackModel : ResourcePackModel
+	public class MultiPartModels
 	{
-		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(MultiStateResourcePackModel));
-		static MultiStateResourcePackModel()
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(MultiPartModels));
+		public static BlockStateModel[] GetModels(IBlockState blockState, BlockStateResource resource)
 		{
-			
-		}
+			List<BlockStateModel> resultingModels = new List<BlockStateModel>(resource.Parts.Length);
 
-		private BlockState BlockState { get; }
-		public MultiStateResourcePackModel(ResourceManager resources, BlockState blockState) : base(resources)
-		{
-			BlockState = blockState;	
-		}
-
-		private BlockStateModel[] GetBlockStateModels(IWorld world, Vector3 position, Block baseBlock)
-		{
-			List<BlockStateModel> resultingModels = new List<BlockStateModel>();
-			
-			foreach (var s in BlockState.Parts)
+			foreach (var s in resource.Parts)
 			{
 				if (s.When == null)
 				{
@@ -38,7 +30,7 @@ namespace Alex.Graphics.Models.Blocks
 					bool passes = true;
 					foreach (var rule in s.When)
 					{
-						if (!PassesMultiPartRule(world, position, rule, baseBlock))
+						if (!PassesMultiPartRule(rule, blockState))
 						{
 							passes = false;
 							break;
@@ -55,8 +47,79 @@ namespace Alex.Graphics.Models.Blocks
 			return resultingModels.ToArray();
 		}
 
+		public static BlockStateModel[] GetBlockStateModels(IWorld world, Vector3 position, IBlockState blockState, BlockStateResource blockStateModel)
+		{
+			List<BlockStateModel> resultingModels = new List<BlockStateModel>(blockStateModel.Parts.Length);
 
-		private static bool PassesMultiPartRule(IWorld world, Vector3 position, MultiPartRule rule, Block baseBlock)
+			foreach (var s in blockStateModel.Parts)
+			{
+				if (s.When == null)
+				{
+					resultingModels.AddRange(s.Apply);
+				}
+				else if (s.When.Length > 0)
+				{
+					bool passes = true;
+					foreach (var rule in s.When)
+					{
+						if (!PassesMultiPartRule(world, position, rule, blockState))
+						{
+							passes = false;
+							break;
+						}
+					}
+
+					if (passes)
+					{
+						resultingModels.AddRange(s.Apply);
+					}
+				}
+			}
+
+			return resultingModels.ToArray();
+		}
+
+		private static bool PassesMultiPartRule(MultiPartRule rule, IBlockState blockState)
+		{
+			if (rule.HasOrContition)
+			{
+				return rule.Or.Any(o => PassesMultiPartRule(o, blockState));
+			}
+
+			if (rule.HasAndContition)
+			{
+				return rule.And.All(o => PassesMultiPartRule(o, blockState));
+			}
+
+			if (CheckRequirements(blockState, "down", rule.Down)
+			    && CheckRequirements(blockState, "up", rule.Up)
+			    && CheckRequirements(blockState, "north", rule.North)
+			    && CheckRequirements(blockState, "east", rule.East)
+			    && CheckRequirements(blockState, "south", rule.South)
+			    && CheckRequirements(blockState, "west", rule.West))
+			{
+				return true;
+			}
+
+			return false;
+		}
+
+		private static bool CheckRequirements(IBlockState baseblockState, string rule, string value)
+		{
+			if (string.IsNullOrWhiteSpace(value)) return true;
+
+			if (baseblockState.TryGetValue(rule, out string stateValue))
+			{
+				if (stateValue.Equals(value, StringComparison.InvariantCultureIgnoreCase))
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		private static bool PassesMultiPartRule(IWorld world, Vector3 position, MultiPartRule rule, IBlockState baseBlock)
 		{
 			if (rule.HasOrContition)
 			{
@@ -68,12 +131,12 @@ namespace Alex.Graphics.Models.Blocks
 				return rule.And.All(o => PassesMultiPartRule(world, position, o, baseBlock));
 			}
 
-			if (Passes(world, position, baseBlock, "down", rule.Down) 
-			    && Passes(world, position, baseBlock, "up", rule.Up) 			                                                          
-			    && Passes(world, position, baseBlock, "north", rule.North) 			                                                          
-			    && Passes(world, position, baseBlock, "east", rule.East)                     
-			    && Passes(world, position, baseBlock, "south", rule.South) 			                                                          
-			    && Passes(world, position, baseBlock, "west", rule.West))
+			if (Passes(world, position, baseBlock, "down", rule.Down)
+				&& Passes(world, position, baseBlock, "up", rule.Up)
+				&& Passes(world, position, baseBlock, "north", rule.North)
+				&& Passes(world, position, baseBlock, "east", rule.East)
+				&& Passes(world, position, baseBlock, "south", rule.South)
+				&& Passes(world, position, baseBlock, "west", rule.West))
 			{
 				return true;
 			}
@@ -81,7 +144,7 @@ namespace Alex.Graphics.Models.Blocks
 			return false;
 		}
 
-		private static bool Passes(IWorld world, Vector3 position, Block baseBlock, string rule, string value)
+		private static bool Passes(IWorld world, Vector3 position, IBlockState baseblockState, string rule, string value)
 		{
 			if (string.IsNullOrWhiteSpace(value)) return true;
 
@@ -111,13 +174,16 @@ namespace Alex.Graphics.Models.Blocks
 					break;
 			}
 
-			var block = world.GetBlock(position + direction);
-			var canAttach = block.Solid && (block.IsFullCube || block.GetType() == baseBlock.GetType());
+			var newPos = new BlockCoordinates(position + direction);
+			var blockState = world.GetBlockState((int) newPos.X, (int) newPos.Y, (int) newPos.Z);
+			var block = blockState.Block;
+
+			var canAttach = block.Solid && (block.IsFullCube || blockState.Name.Equals(baseblockState.Name));
 
 			if (value == "true")
 			{
 				return canAttach;
-			} 
+			}
 			else if (value == "false")
 			{
 				return !canAttach;
@@ -128,16 +194,6 @@ namespace Alex.Graphics.Models.Blocks
 			}
 
 			return false;
-		}
-
-		public override VertexPositionNormalTextureColor[] GetVertices(IWorld world, Vector3 position, Block baseBlock)
-		{
-			Vector3 worldPosition = new Vector3(position.X, position.Y, position.Z);
-
-			Variant = GetBlockStateModels(world, worldPosition, baseBlock);
-			CalculateBoundingBox();
-
-			return base.GetVertices(world, worldPosition, baseBlock);
 		}
 	}
 }

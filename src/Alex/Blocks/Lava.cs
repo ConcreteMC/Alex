@@ -14,7 +14,7 @@ namespace Alex.Blocks
 
 			LightValue = 15;
 
-			BlockModel = BlockFactory.StationairyLavaModel;
+			//BlockModel = BlockFactory.StationairyLavaModel;
 
 		//	BlockMaterial = Material.Lava;
 		}

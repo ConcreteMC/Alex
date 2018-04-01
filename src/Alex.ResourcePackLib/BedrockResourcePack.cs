@@ -221,13 +221,29 @@ namespace Alex.ResourcePackLib
 				Dictionary<string, EntityModelBone> bones =
 					model.Bones.Where(x => x != null && !string.IsNullOrWhiteSpace(x.Name)).ToDictionary(x => x.Name, e => e);
 
-			//	int inheritedBones = 0;
 				foreach (var bone in parentBones)
 				{
-					if (!bones.ContainsKey(bone.Key))
+					var parentBone = bone.Value;
+					if (bones.TryGetValue(bone.Key, out EntityModelBone val))
 					{
-						bones.Add(bone.Key, bone.Value);
-					//	inheritedBones++;
+						if (!val.Reset)
+						{
+							if (val.Cubes != null)
+							{
+								val.Cubes = val.Cubes.Concat(parentBone.Cubes).ToArray();
+							}
+							else
+							{
+								val.Cubes = parentBone.Cubes;
+							}
+							//val.Cubes.Concat(parentBone.Cubes);
+						}
+
+						bones[bone.Key] = val;
+					}
+					else
+					{
+						bones.Add(bone.Key, parentBone);
 					}
 				}
 

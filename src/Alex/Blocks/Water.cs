@@ -15,7 +15,7 @@ namespace Alex.Blocks
 			Transparent = true;
 			IsReplacible = true;
 			HasHitbox = false;
-			BlockModel = BlockFactory.StationairyWaterModel;
+			//BlockModel = BlockFactory.StationairyWaterModel;
 
 			IsWater = true;
 			IsSourceBlock = true;

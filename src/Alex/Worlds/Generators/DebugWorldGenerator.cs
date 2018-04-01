@@ -117,12 +117,12 @@ namespace Alex.Worlds.Generators
 	    {
 		    foreach (var state in BlockFactory.AllBlockstatesByName.OrderBy(x => x.Key))
 		    {
-			    foreach (var variant in ((BlockState) state.Value).Variants)
+			    foreach (var variant in state.Value.GetVariants())
 			    {
-					if (variant == state.Value) continue;
+					if (variant == state.Value.GetDefaultState()) continue;
 					ALL_VALID_STATES.Add(variant);
 			    }
-			    ALL_VALID_STATES.Add(state.Value);
+			    ALL_VALID_STATES.Add(state.Value.GetDefaultState());
 			}
 
 		    GRID_WIDTH = (int)MathF.Ceiling(MathF.Sqrt(ALL_VALID_STATES.Count));

@@ -52,8 +52,8 @@ namespace Alex.Entities
 					entity.EntityId = entityId;
 					entity.UUID = new UUID(uuid.ToByteArray());
 
-					PlayerLocation position = new PlayerLocation((float) pos[0].DoubleValue, (float) pos[1].DoubleValue,
-						(float) pos[2].DoubleValue, rot[0].FloatValue, rot[0].FloatValue, rot[1].FloatValue);
+					PlayerLocation position = new PlayerLocation(Convert.ToSingle(pos[0].DoubleValue), Convert.ToSingle(pos[1].DoubleValue),
+						Convert.ToSingle(pos[2].DoubleValue), rot[0].FloatValue, rot[0].FloatValue, rot[1].FloatValue);
 
 					entity.KnownPosition = position;
 

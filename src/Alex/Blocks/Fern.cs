@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Alex.Blocks
+﻿namespace Alex.Blocks
 {
     public class Fern : Block
     {
