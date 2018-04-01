@@ -20,28 +20,21 @@ namespace Alex.Graphics.Models.Entity
 		private static ConcurrentDictionary<string, VertexPositionNormalTexture[]> ModelBonesCache { get; } = new ConcurrentDictionary<string, VertexPositionNormalTexture[]>();
 
 		private EntityModel Model { get; }
-		private IReadOnlyDictionary<string, EntityModelCube> Cubes { get; }
+		private IReadOnlyDictionary<int, EntityModelCube> Cubes { get; }
 		private Texture2D Texture { get; set; }
 		public EntityModelRenderer(EntityModel model, Texture2D texture)
 		{
 			Model = model;
 			Texture = texture;
 
-			var cubes = new Dictionary<string, EntityModelCube>();
+			var cubes = new Dictionary<int, EntityModelCube>();
 			Cache(cubes);
 
 			Cubes = cubes;
 		}
 
-		private void Cache(Dictionary<string, EntityModelCube> cubes)
+		private void Cache(Dictionary<int, EntityModelCube> cubes)
 		{
-			
-		}
-
-		private void Cache(Dictionary<string, ModelPart> cubes)
-		{
-			float x = 0, y = 0, z = 0;
-		//	List<VertexPositionNormalTexture> textures = new List<VertexPositionNormalTexture>();
 			foreach (var bone in Model.Bones)
 			{
 				if (bone == null) continue;
