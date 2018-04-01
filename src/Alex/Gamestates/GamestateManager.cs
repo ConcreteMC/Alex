@@ -163,7 +163,7 @@ namespace Alex.Gamestates
                 }
                 catch(Exception ex)
                 {
-                    Log.Warn(ex, $"An exception occured while trying to call Update!");
+                    Log.Warn(ex, $"An exception occured while trying to call Update: {ex.ToString()}!");
                 }
             }
         }

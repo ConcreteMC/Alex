@@ -2,6 +2,7 @@
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks;
+using Alex.Entities;
 using Alex.Rendering.Camera;
 using Alex.Rendering.UI;
 using Alex.ResourcePackLib.Json;
@@ -15,8 +16,7 @@ namespace Alex.Gamestates.Playing
 	public class PlayingState : GameState
 	{
 		private World World { get; }
-		private FirstPersonCamera Camera;
-		private CameraComponent CamComponent { get; }
+		private PlayerController CamComponent { get; }
 
 		private FpsMonitor FpsCounter { get; set; }
 		private Texture2D CrosshairTexture { get; set; }
@@ -25,15 +25,11 @@ namespace Alex.Gamestates.Playing
 
 		public PlayingState(Alex alex, GraphicsDevice graphics, WorldProvider worldProvider) : base(alex)
 		{
-			//Alex = alex;
 			Chat = new ChatComponent();
 
-			Camera = new FirstPersonCamera(alex.GameSettings.RenderDistance, Vector3.Zero, Vector3.Zero);
+			World = new World(alex, graphics, new FirstPersonCamera(alex.GameSettings.RenderDistance, Vector3.Zero, Vector3.Zero), worldProvider);			
 
-			World = new World(alex, graphics, Camera, worldProvider);
-			Camera.MoveTo(World.GetSpawnPoint(), Vector3.Zero);
-
-			CamComponent = new CameraComponent(Camera, Graphics, World, alex.GameSettings);
+			CamComponent = new PlayerController(Graphics, World, alex.GameSettings);
 		}
 
 		protected override void OnLoad(RenderArgs args)
@@ -43,7 +39,7 @@ namespace Alex.Gamestates.Playing
 			FpsCounter = new FpsMonitor();
 			CrosshairTexture = TextureUtils.ImageToTexture2D(args.GraphicsDevice, Resources.crosshair);
 
-			Camera.MoveTo(World.GetSpawnPoint(), Vector3.Zero);
+			World.Camera.MoveTo(World.GetSpawnPoint(), Vector3.Zero);
 			base.OnLoad(args);
 		}
 
@@ -59,7 +55,7 @@ namespace Alex.Gamestates.Playing
 				var newAspectRatio = Graphics.Viewport.AspectRatio;
 				if (AspectRatio != newAspectRatio)
 				{
-					Camera.UpdateAspectRatio(newAspectRatio);
+					World.Camera.UpdateAspectRatio(newAspectRatio);
 					AspectRatio = newAspectRatio;
 				}
 
@@ -71,7 +67,7 @@ namespace Alex.Gamestates.Playing
 
 				World.Update(gameTime);
 
-				var headBlock = World.GetBlock(Camera.Position);
+				var headBlock = World.GetBlock(World.Player.KnownPosition);
 				if (headBlock.IsWater)
 				{
 					if (!_renderWaterOverlay)
@@ -102,7 +98,7 @@ namespace Alex.Gamestates.Playing
 		private Vector3 _raytracedBlock;
 		protected void UpdateRayTracer(GraphicsDevice graphics, World world)
 		{
-			_raytracedBlock = RayTracer.Raytrace(graphics, world, Camera);
+			_raytracedBlock = RayTracer.Raytrace(graphics, world, World.Camera);
 			if (_raytracedBlock.Y > 0 && _raytracedBlock.Y < 256)
 			{
 				SelBlock = (Block)World.GetBlock(_raytracedBlock.X, _raytracedBlock.Y, _raytracedBlock.Z);
@@ -200,6 +196,18 @@ namespace Alex.Gamestates.Playing
 					{
 						World.ChunkManager.OpaqueEffect.FogEnabled = !World.ChunkManager.OpaqueEffect.FogEnabled;
 					}
+
+					if (currentKeyboardState.IsKeyDown(KeyBinds.ChangeCamera))
+					{
+						if (World.Camera is FirstPersonCamera)
+						{
+							World.Camera = new ThirdPersonCamera(Alex.GameSettings.RenderDistance, World.Player.KnownPosition, Vector3.Zero);
+						}
+						else
+						{
+							World.Camera = new FirstPersonCamera(Alex.GameSettings.RenderDistance, World.Player.KnownPosition, Vector3.Zero);
+						}
+					}
 				}
 			}
 			_oldKeyboardState = currentKeyboardState;
@@ -211,19 +219,6 @@ namespace Alex.Gamestates.Playing
 			{
 				args.SpriteBatch.Begin();
 
-
-				if (_renderWaterOverlay)
-				{
-					//Start draw background
-				/*	var retval = new Microsoft.Xna.Framework.Rectangle(
-						args.SpriteBatch.GraphicsDevice.Viewport.X,
-						args.SpriteBatch.GraphicsDevice.Viewport.Y,
-						args.SpriteBatch.GraphicsDevice.Viewport.Width,
-						args.SpriteBatch.GraphicsDevice.Viewport.Height);
-					args.SpriteBatch.FillRectangle(retval, new Color(Color.DarkBlue, 0.5f));*/
-					//End draw backgroun
-				}
-
 				args.SpriteBatch.Draw(CrosshairTexture,
 					new Vector2(CenterScreen.X - CrosshairTexture.Width / 2f, CenterScreen.Y - CrosshairTexture.Height / 2f));
 
@@ -231,7 +226,7 @@ namespace Alex.Gamestates.Playing
 				{
 					args.SpriteBatch.RenderBoundingBox(
 						RayTraceBoundingBox,
-						Camera.ViewMatrix, Camera.ProjectionMatrix, Color.LightGray);
+						World.Camera.ViewMatrix, World.Camera.ProjectionMatrix, Color.LightGray);
 				}
 
 				World.Render2D(args);
@@ -332,7 +327,7 @@ namespace Alex.Gamestates.Playing
 				Color.White);
 
 			var y = (int)meisured.Y;
-			var positionString = "Position: " + Camera.Position;
+			var positionString = "Position: " + World.Player.KnownPosition;
 			meisured = Alex.Font.MeasureString(positionString);
 
 			args.SpriteBatch.FillRectangle(new Rectangle(0, y, (int)meisured.X, (int)meisured.Y),
@@ -340,7 +335,7 @@ namespace Alex.Gamestates.Playing
 			args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(0, y), Color.White);
 
 			y += (int)meisured.Y;
-			string facing = GetCardinalDirection(this.Camera);
+			string facing = GetCardinalDirection(World.Player.KnownPosition);
 
 			positionString = string.Format("Facing: {0}", facing);
 			meisured = Alex.Font.MeasureString(positionString);
@@ -378,7 +373,7 @@ namespace Alex.Gamestates.Playing
 			args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(0, y), Color.White);
 		}
 
-		public static string GetCardinalDirection(FirstPersonCamera cam)
+		public static string GetCardinalDirection(PlayerLocation cam)
 		{
 			double rotation = (360 - cam.Yaw) % 360;
 			if (rotation < 0)

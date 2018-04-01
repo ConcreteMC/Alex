@@ -67,40 +67,39 @@ namespace Alex.Worlds
 
 			List<ChunkCoordinates> newChunkCoordinates = new List<ChunkCoordinates>();
 
-			IChunkColumn doLoop(int x, int z)
-			{
-				var distance = (x * x) + (z * z);
-				if (distance > radiusSquared)
+			List<ChunkCoordinates> results = new List<ChunkCoordinates>((renderDistance * 2) * (renderDistance * 2));
+
+			for (int y = -renderDistance; y <= renderDistance; y++)
+			for (int x = -renderDistance; x <= renderDistance; x++)
+				results.Add(new ChunkCoordinates(x, y));
+
+			foreach (var cc in results.OrderBy(p =>
 				{
-					return null;
-				}
+					int dx = p.X;
+					int dy = p.Z;
+					return dx * dx + dy * dy;
+				})
+				.TakeWhile(p =>
+				{
+					int dx = p.X;
+					int dy = p.Z;
+					var r = dx * dx + dy * dy;
+					return r < radiusSquared;
+				}))
+			{
+				var acc = center + cc;
+				newChunkCoordinates.Add(acc);
 
-				var cc = center + new ChunkCoordinates(x, z);
-				newChunkCoordinates.Add(cc);
-
-				if (!_loadedChunks.Contains(cc))
+				if (!_loadedChunks.Contains(acc))
 				{
 					IChunkColumn chunk =
-						_generator.GenerateChunkColumn(cc);
+						_generator.GenerateChunkColumn(acc);
 
-					if (chunk == null) return null;
+					if (chunk == null) continue;
 
-					_loadedChunks.Add(cc);
+					_loadedChunks.Add(acc);
 
-					return chunk;
-				}
-
-				return null;
-			}
-
-			for (int x = -renderDistance; x < renderDistance; x++)
-			{
-				for (int z = -renderDistance; z < renderDistance; z++)
-				{
-					var l = doLoop(x, z);
-					if (l == null) continue;
-
-					yield return l;
+					yield return chunk;
 				}
 			}
 

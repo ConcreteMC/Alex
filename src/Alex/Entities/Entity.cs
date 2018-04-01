@@ -14,28 +14,6 @@ using NLog;
 
 namespace Alex.Entities
 {
-   /* public class Entity : IEntity
-	{
-		public string Model { get; protected set; }
-		internal EntityModelRenderer ModelRenderer { get; set; }
-		public UUID UUID { get; set; } = new UUID(Guid.Empty.ToByteArray());
-		public long EntityId { get; set; }
-		public PlayerLocation KnownPosition { get; set; }
-
-		public long Age { get; set; }
-		public double Scale { get; set; } = 1.0;
-		public double Height { get; set; } = 1;
-		public double Width { get; set; } = 1;
-		public double Length { get; set; } = 1;
-		public double Drag { get; set; } = 0.02;
-		public double Gravity { get; set; } = 0.08;
-
-		public override string ToString()
-	    {
-		    return Model;
-	    }
-    }*/
-
 	public class Entity : IEntity
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Entity));

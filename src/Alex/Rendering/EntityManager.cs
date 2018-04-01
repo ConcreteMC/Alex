@@ -7,6 +7,7 @@ using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.Entities;
 using Alex.Gamestates;
+using Alex.Graphics.Models;
 using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
@@ -32,12 +33,12 @@ namespace Alex.Rendering
 			EntityByUUID = new ConcurrentDictionary<UUID, Entity>();
 	    }
 
-	    public void Update(GameTime gameTime)
+	    public void Update(GameTime gameTime, SkyboxModel skyRenderer)
 	    {
 		    var entities = Entities.Values.ToArray();
 		    foreach (var entity in entities)
 		    {
-				entity.ModelRenderer?.Update(Device, gameTime, entity.KnownPosition, entity.KnownPosition.Yaw, entity.KnownPosition.Pitch);
+				entity.ModelRenderer?.Update(Device, gameTime, entity.KnownPosition, skyRenderer);
 		    }
 	    }
 
@@ -51,7 +52,7 @@ namespace Alex.Rendering
 
 				if (camera.BoundingFrustum.Contains(new Microsoft.Xna.Framework.BoundingBox(entityBox.Min, entityBox.Max)) != ContainmentType.Disjoint)
 			    {
-				    entity.ModelRenderer?.Render(args, camera, entity.KnownPosition, entity.KnownPosition.Yaw, entity.KnownPosition.Pitch);
+				    entity.ModelRenderer?.Render(args, camera, entity.KnownPosition);
 				    renderCount++;
 			    }
 		    }

@@ -22,6 +22,7 @@ namespace Alex
 
         public static Keys Chat = Keys.T;
 
+	    public static Keys ChangeCamera = Keys.F5;
         public static Keys ToggleFreeCam = Keys.F8;
         public static Keys ReBuildChunks = Keys.F9;
 

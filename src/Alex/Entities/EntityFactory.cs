@@ -23,8 +23,8 @@ namespace Alex.Entities
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(EntityFactory));
 
-		private static ConcurrentDictionary<string, Func<EntityModelRenderer>> _registeredRenderers =
-			new ConcurrentDictionary<string, Func<EntityModelRenderer>>();
+		private static ConcurrentDictionary<string, Func<Texture2D, EntityModelRenderer>> _registeredRenderers =
+			new ConcurrentDictionary<string, Func<Texture2D, EntityModelRenderer>>();
 
 		public static void Load()
 		{
@@ -33,17 +33,17 @@ namespace Alex.Entities
 
 		public static bool TryLoadEntity(NbtCompound nbt, long entityId, out Entity entity)
 		{
-			var id = nbt["id"].StringValue.Replace("minecraft:", "");
+			var id = nbt["id"].StringValue;
 			var pos = nbt["Pos"];
 			var rot = nbt["Rotation"];
-			if (id != null && pos != null && EntityType.TryParse(id, true, out EntityType entityType))
+			if (id != null && pos != null && EntityType.TryParse(id.Replace("minecraft:", ""), true, out EntityType entityType))
 			{
 				var uuidLeast = nbt["UUIDLeast"].LongValue;
 				var uuidMost = nbt["UUIDMost"].LongValue;
 
 				Guid uuid = Extensions.GuidFromBits(uuidLeast, uuidMost);
 
-				var renderer = GetEntityRenderer(id);
+				var renderer = GetEntityRenderer(id, null);
 				if (renderer != null)
 				{
 					entity = entityType.Create(null);
@@ -67,13 +67,20 @@ namespace Alex.Entities
 			return false;
 		}
 
-		public static EntityModelRenderer GetEntityRenderer(string name)
+		public static EntityModelRenderer GetEntityRenderer(string name, Texture2D texture)
 		{
 			if (_registeredRenderers.TryGetValue(name, out var func))
 			{
-				return func();
+				return func(texture);
 			}
-
+			else
+			{
+				var f = _registeredRenderers.FirstOrDefault(x => x.Key.Contains(name));
+				if (f.Value != null)
+				{
+					return f.Value(texture);
+				}
+			}
 			return null;
 		}
 
@@ -89,38 +96,66 @@ namespace Alex.Entities
 					if (def.Value.Geometry.Count == 0) continue;
 
 					EntityModel model;
-					if (resourceManager.BedrockResourcePack.EntityModels.TryGetValue(def.Value.Geometry.FirstOrDefault().Value,
-						out model))
+					if (resourceManager.BedrockResourcePack.EntityModels.TryGetValue(def.Value.Geometry["default"],
+						    out model) && model != null)
 					{
-						if (model != null)
-						{
-							var textures = def.Value.Textures;
-							if (resourceManager.BedrockResourcePack.Textures.TryGetValue(textures.FirstOrDefault().Value,
-								out Bitmap bmp))
+						//var textures = def.Value.Textures;
+						//if (resourceManager.BedrockResourcePack.Textures.TryGetValue(textures.FirstOrDefault().Value,
+						//		out Bitmap bmp))
+						//{
+						//var texture = TextureUtils.BitmapToTexture2D(graphics, bmp);
+
+						//string name = def.Key.Replace("definition.", "", StringComparison.InvariantCultureIgnoreCase).Replace("_", "");
+					//	Log.Info($"Loaded model: {def.Key}");
+						_registeredRenderers.AddOrUpdate(def.Key,
+							(t) =>
 							{
-								var texture = TextureUtils.BitmapToTexture2D(graphics, bmp);
-
-								string name = def.Key.Replace("definition.", "", StringComparison.InvariantCultureIgnoreCase).Replace("_", "");
-
-								_registeredRenderers.AddOrUpdate(name,
-									() => new EntityModelRenderer(model, texture),
-									(s, func) =>
+								if (t == null)
+								{
+									var textures = def.Value.Textures;
+									string texture;
+									if (!textures.TryGetValue("default", out texture))
 									{
-										return () => new EntityModelRenderer(model, texture);
-									});
-							}
-						}
+										texture = textures.FirstOrDefault().Value;
+									}
+
+									if (resourceManager.BedrockResourcePack.Textures.TryGetValue(texture,
+										out Bitmap bmp))
+									{
+										t = TextureUtils.BitmapToTexture2D(graphics, bmp);
+									}
+								}
+
+								return new EntityModelRenderer(model, t);
+							},
+							(s, func) =>
+							{
+								return (t) =>
+								{
+									var textures = def.Value.Textures;
+									string texture;
+									if (!textures.TryGetValue("default", out texture))
+									{
+										texture = textures.FirstOrDefault().Value;
+									}
+
+									if (resourceManager.BedrockResourcePack.Textures.TryGetValue(texture,
+										out Bitmap bmp))
+									{
+										t = TextureUtils.BitmapToTexture2D(graphics, bmp);
+									}
+
+									return new EntityModelRenderer(model, t);
+								};
+							});
+						//	}
 					}
-
-
 				}
 				catch (Exception ex)
 				{
-					Log.Warn($"Failed to load model {def.Key}!", ex);
+					Log.Warn(ex, $"Failed to load model {def.Key}!");
 				}
 			}
-
-			return;
 		}
 	}
 }

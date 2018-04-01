@@ -39,7 +39,11 @@ namespace Alex.Gamestates
 			};
 
 			stackMenu.AddMenuItem("Play", () => { });
-			stackMenu.AddMenuItem("Debug World", DebugWorldButtonActivated);
+
+			stackMenu.AddMenuItem("Debug Blockstates", DebugWorldButtonActivated);
+			stackMenu.AddMenuItem("Debug Flatland", DebugFlatland);
+			stackMenu.AddMenuItem("Debug Anvil", DebugAnvil);
+
 			stackMenu.AddMenuItem("Options", () => { Alex.GameStateManager.SetActiveState("options"); });
 			stackMenu.AddMenuItem("Exit Game", () => { Alex.Exit(); });
 
@@ -56,27 +60,31 @@ namespace Alex.Gamestates
 			Alex.IsMouseVisible = true;
 		}
 
-		private void DebugWorldButtonActivated()
+		private void Debug(IWorldGenerator generator)
 		{
 			Alex.IsMouseVisible = false;
-
-			IWorldGenerator generator;
-			if (Alex.GameSettings.UseBuiltinGenerator || (string.IsNullOrWhiteSpace(Alex.GameSettings.Anvil) ||
-			                                              !File.Exists(Path.Combine(Alex.GameSettings.Anvil, "level.dat"))))
-			{
-				generator = new DebugWorldGenerator();
-			}
-			else
-			{
-				generator = new AnvilWorldProvider(Alex.GameSettings.Anvil)
-				{
-					MissingChunkProvider = new VoidWorldGenerator()
-				};
-			}
 
 			generator.Initialize();
 
 			LoadWorld(new SPWorldProvider(Alex, generator));
+		}
+
+		private void DebugFlatland()
+		{
+			Debug(new FlatlandGenerator());
+		}
+
+		private void DebugAnvil()
+		{
+			Debug(new AnvilWorldProvider(Alex.GameSettings.Anvil)
+			{
+				MissingChunkProvider = new VoidWorldGenerator()
+			});
+		}
+
+		private void DebugWorldButtonActivated()
+		{
+			Debug(new DebugWorldGenerator());
 		}
 
 		private void LoadWorld(WorldProvider worldProvider)

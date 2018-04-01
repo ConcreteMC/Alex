@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Graphics;
+using Alex.API.Utils;
 using Alex.Rendering.Camera;
 using Alex.ResourcePackLib.Json.Models;
 using Alex.ResourcePackLib.Json.Models.Entities;
@@ -19,29 +20,21 @@ namespace Alex.Graphics.Models.Entity
 		private static ConcurrentDictionary<string, VertexPositionNormalTexture[]> ModelBonesCache { get; } = new ConcurrentDictionary<string, VertexPositionNormalTexture[]>();
 
 		private EntityModel Model { get; }
-		private IReadOnlyDictionary<string, ModelPart> Cubes { get; }
+		private IReadOnlyDictionary<string, EntityModelCube> Cubes { get; }
 		private Texture2D Texture { get; set; }
-		//private AlphaTestEffect TransparentEffect { get; set; }
 		public EntityModelRenderer(EntityModel model, Texture2D texture)
 		{
 			Model = model;
 			Texture = texture;
 
-			var cubes = new Dictionary<string, ModelPart>();
+			var cubes = new Dictionary<string, EntityModelCube>();
 			Cache(cubes);
 
 			Cubes = cubes;
 		}
 
-		static EntityModelRenderer()
+		private void Cache(Dictionary<string, EntityModelCube> cubes)
 		{
-			
-		}
-
-		private void Cache(Dictionary<string, ModelPart> cubes)
-		{
-			float x = 0, y = 0, z = 0;
-		//	List<VertexPositionNormalTexture> textures = new List<VertexPositionNormalTexture>();
 			foreach (var bone in Model.Bones)
 			{
 				if (bone == null) continue;
@@ -71,9 +64,10 @@ namespace Alex.Graphics.Models.Entity
 								.Concat(built.Right).ToArray();
 						});
 
-						var part = new ModelPart(vertices,
+						var part = new EntityModelCube(vertices,
 							Texture,
 							rotation, pivot, origin);
+						part.ApplyPitch = bone.Name.Equals("head", StringComparison.InvariantCultureIgnoreCase);
 						if (!cubes.TryAdd(bone.Name, part))
 						{
 							part.Dispose();
@@ -84,7 +78,7 @@ namespace Alex.Graphics.Models.Entity
 			}
 		}
 
-		public void Render(IRenderArgs args, Camera camera, Vector3 position, float yaw, float pitch)
+		public void Render(IRenderArgs args, Camera camera, PlayerLocation position)
 		{
 			foreach (var bone in Cubes)
 			{
@@ -92,14 +86,19 @@ namespace Alex.Graphics.Models.Entity
 					continue;
 
 
-				bone.Value.Render(args, camera, position, yaw, bone.Key.Contains("head") ? pitch : 0);
+				bone.Value.Render(args, camera, position);
 			}
 		}
 
-		public void Update(GraphicsDevice device, GameTime gameTime, Vector3 position, float yaw, float pitch)
+		public void Update(GraphicsDevice device, GameTime gameTime, PlayerLocation position, SkyboxModel skybox)
 		{
 			foreach (var bone in Cubes)
 			{
+				if (bone.Value.Effect != null)
+				{
+					bone.Value.Effect.DiffuseColor = Color.White.ToVector3() * new Vector3((skybox.BrightnessModifier));
+				}
+
 				if (!bone.Value.IsDirty)
 					continue;
 				
@@ -112,9 +111,10 @@ namespace Alex.Graphics.Models.Entity
 			return Model.Name;
 		}
 
-		private class ModelPart : IDisposable
+		private class EntityModelCube : IDisposable
 		{
-			private AlphaTestEffect Effect { get; set; }
+			public AlphaTestEffect Effect { get; private set; }
+
 			private VertexBuffer Buffer { get; set; }
 			private VertexPositionNormalTexture[] _vertices;
 
@@ -124,7 +124,7 @@ namespace Alex.Graphics.Models.Entity
 			public Vector3 Rotation { get; private set; } = Vector3.Zero;
 			public Vector3 Pivot { get; private set; } = Vector3.Zero;
 			public Vector3 Origin { get; private set; }
-			public ModelPart(VertexPositionNormalTexture[] textures, Texture2D texture, Vector3 rotation, Vector3 pivot, Vector3 origin)
+			public EntityModelCube(VertexPositionNormalTexture[] textures, Texture2D texture, Vector3 rotation, Vector3 pivot, Vector3 origin)
 			{
 				_vertices = textures;
 				Texture = texture;
@@ -179,7 +179,9 @@ namespace Alex.Graphics.Models.Entity
 				IsDirty = false;
 			}
 
-			public void Render(IRenderArgs args, Camera camera, Vector3 position, float yaw, float pitch)
+			public bool ApplyPitch { get; set; } = true;
+			public bool ApplyYaw { get; set; } = true;
+			public void Render(IRenderArgs args, Camera camera, PlayerLocation position)
 			{
 				if (_vertices == null || _vertices.Length == 0) return;
 
@@ -187,8 +189,11 @@ namespace Alex.Graphics.Models.Entity
 
 				var buffer = Buffer;
 
-				Effect.World = Matrix.CreateScale(1f / 16f) * Matrix.CreateRotationY(MathUtils.ToRadians(yaw)) * Matrix.CreateRotationX(MathUtils.ToRadians(pitch)) * Matrix.CreateTranslation(position);
-				//Effect.World = Matrix.CreateScale(1f / 16f) * Matrix.CreateTranslation(position);
+				Effect.World = Matrix.CreateTranslation(-Pivot)
+				               * Matrix.CreateFromYawPitchRoll(ApplyYaw ? MathUtils.ToRadians(position.HeadYaw) : 0f,
+					               ApplyPitch ? MathUtils.ToRadians(position.Pitch) : 0f, 0f)
+				               * Matrix.CreateTranslation(Pivot)
+				               * (Matrix.CreateScale(1f / 16f) * Matrix.CreateTranslation(position));
 
 				Effect.View = camera.ViewMatrix;
 				Effect.Projection = camera.ProjectionMatrix;

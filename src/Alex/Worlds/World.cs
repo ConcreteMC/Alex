@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Security.Cryptography.X509Certificates;
 using Alex.API.Blocks.State;
 using Alex.API.Entities;
@@ -11,6 +12,7 @@ using Alex.Entities;
 using Alex.Gamestates;
 using Alex.Graphics.Models;
 using Alex.Rendering;
+using Alex.Rendering.Camera;
 using Alex.Utils;
 using Alex.Worlds.Lighting;
 using Microsoft.Xna.Framework;
@@ -27,10 +29,12 @@ namespace Alex.Worlds
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(World));
 
 		private GraphicsDevice Graphics { get; }
-		private Rendering.Camera.Camera Camera { get; }
+		public Rendering.Camera.Camera Camera { get; set; }
 		private SkyboxModel SkyRenderer { get; }
 
 		public readonly LevelInfo WorldInfo;
+
+		public Player Player { get; set; }
 		public World(Alex alex, GraphicsDevice graphics, Rendering.Camera.Camera camera, WorldProvider worldProvider)
         {
             Graphics = graphics;
@@ -38,7 +42,7 @@ namespace Alex.Worlds
 
 			SkyRenderer = new SkyboxModel(alex, graphics, this);
 
-			ChunkManager = new ChunkManager(alex, graphics, camera, this);
+			ChunkManager = new ChunkManager(alex, graphics, this);
 			EntityManager = new EntityManager(graphics, this);
 			Ticker = new TickManager(this);
 
@@ -46,7 +50,14 @@ namespace Alex.Worlds
 			WorldProvider.Init(this, out WorldInfo);
 
 			ChunkManager.Start();
-        }
+
+	        alex.Resources.BedrockResourcePack.TryGetTexture("textures/entity/alex", out Bitmap rawTexture);
+	        var t = TextureUtils.BitmapToTexture2D(graphics, rawTexture);
+
+			Player = new Player(alex.GameSettings.Username, this, t);
+	        Player.KnownPosition = new PlayerLocation(GetSpawnPoint());
+	        Camera.MoveTo(Player.KnownPosition, Vector3.Zero);
+		}
 
 		private long LastLightningBolt = 0;
 		private long Tick = 0;
@@ -160,8 +171,13 @@ namespace Alex.Worlds
 			Graphics.DepthStencilState = DepthStencilState.Default;
             Graphics.SamplerStates[0] = SamplerState.PointWrap;
             
-            ChunkManager.Draw(args);
+            ChunkManager.Draw(args, Camera);
 			EntityManager.Render(args, Camera);
+
+	        if (Camera is ThirdPersonCamera)
+	        {
+		        Player.ModelRenderer.Render(args, Camera, Player.KnownPosition);
+	        }
         }
 
 		public void Render2D(IRenderArgs args)
@@ -172,6 +188,8 @@ namespace Alex.Worlds
 		private Stopwatch testWatch = Stopwatch.StartNew();
 		public void Update(GameTime gameTime)
 		{
+			Camera.Update(gameTime, Player);
+
 			if (testWatch.ElapsedMilliseconds >= 50)
 			{
 				testWatch.Restart();
@@ -179,14 +197,12 @@ namespace Alex.Worlds
 
 			 	SkyRenderer.Update(gameTime);
 			}
+			
+			ChunkManager.Update(gameTime, SkyRenderer, Camera);
+			EntityManager.Update(gameTime, SkyRenderer);
 
-			ChunkManager.TransparentEffect.FogColor = SkyRenderer.WorldFogColor.ToVector3();
-			ChunkManager.OpaqueEffect.FogColor = SkyRenderer.WorldFogColor.ToVector3();
-			ChunkManager.OpaqueEffect.AmbientLightColor = ChunkManager.TransparentEffect.DiffuseColor =
-				Color.White.ToVector3() * new Vector3( (SkyRenderer.BrightnessModifier));
+			Player.ModelRenderer.Update(Graphics, gameTime, Player.KnownPosition, SkyRenderer);
 
-			ChunkManager.Update();
-			EntityManager.Update(gameTime);
 			Ticker.Update(gameTime);
 		}
 

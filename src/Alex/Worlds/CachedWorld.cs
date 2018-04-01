@@ -24,7 +24,7 @@ namespace Alex.Worlds
 		internal ChunkManager ChunkManager { get; }
 		public CachedWorld(Alex alex)
 		{
-			ChunkManager = new ChunkManager(alex, alex.GraphicsDevice, null, this);
+			ChunkManager = new ChunkManager(alex, alex.GraphicsDevice, this);
 			Ticker = new TickManager(this);
 		}
 

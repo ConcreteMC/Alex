@@ -10,7 +10,7 @@ using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
 
 namespace Alex.Gamestates.Playing
 {
-    public class CameraComponent
+    public class PlayerController
     {
         public const float Gravity = 0.08f;
         public const float DefaultDrag = 0.02f;
@@ -29,14 +29,12 @@ namespace Alex.Gamestates.Playing
         private Vector3 Velocity { get; set; }
         private Vector3 Drag { get; set; }
 
-        private FirstPersonCamera Camera { get; }
         private GraphicsDevice Graphics { get; }
         private World World { get; }
         private Settings GameSettings { get; }
 
-		public CameraComponent(FirstPersonCamera camera, GraphicsDevice graphics, World world, Settings settings)
+		public PlayerController(GraphicsDevice graphics, World world, Settings settings)
         {
-            Camera = camera;
             Graphics = graphics;
             World = world;
             GameSettings = settings;
@@ -111,7 +109,8 @@ namespace Alex.Gamestates.Playing
                 {
                     moveVector *= FlyingSpeed * dt;
 
-                    Camera.Move(moveVector);
+	                World.Player.KnownPosition.Move(moveVector);
+	                //World.Camera.Move(moveVector);
                 }
             }
 
@@ -136,7 +135,9 @@ namespace Alex.Gamestates.Playing
 			        _updownRot = MathHelper.Clamp(_updownRot, MathHelper.ToRadians(-89.0f),
 				        MathHelper.ToRadians(89.0f));
 
-					Camera.Rotation = new Vector3(-_updownRot, MathHelper.WrapAngle(_leftrightRot), 0);
+			        World.Player.KnownPosition.Pitch = MathHelper.ToDegrees(-_updownRot);
+			        World.Player.KnownPosition.HeadYaw = MathHelper.ToDegrees(MathHelper.WrapAngle(_leftrightRot));
+			        //World.Camera.Rotation = new Vector3(-_updownRot, MathHelper.WrapAngle(_leftrightRot), 0);
 		        }
 
 		        Mouse.SetPosition(Graphics.Viewport.Width / 2, Graphics.Viewport.Height / 2);
@@ -206,7 +207,7 @@ namespace Alex.Gamestates.Playing
 			//Matrix.CreateLookAt(v, Vector3.Forward, )
 			if (v != Vector3.Zero) //Only if we moved.
 			{
-                var preview = Camera.PreviewMove(v);
+                var preview = World.Player.KnownPosition.PreviewMove(v);
 
                 var headBlock = (Block)World.GetBlock(preview);
                 var headBoundingBox = headBlock.GetBoundingBox(preview.Floor());
@@ -222,12 +223,12 @@ namespace Alex.Gamestates.Playing
                 if (!headBlock.Solid && !IsColiding(playerBoundingBox, headBoundingBox) &&
                     !feetBlock.Solid && !IsColiding(playerBoundingBox, feetBoundingBox))
                 {
-                    Camera.Move(v);
+	                World.Player.KnownPosition.Move(v);
                 }
                 else if (!headBlock.Solid && !IsColiding(playerBoundingBox, headBoundingBox) && feetBlock.Solid &&
                          (difference <= 0.5f))
                 {
-                    Camera.Move((v) + new Vector3(0, Math.Abs(difference), 0));
+					World.Player.KnownPosition.Move((v) + new Vector3(0, Math.Abs(difference), 0));
                 }
                 else
                 {
@@ -240,7 +241,7 @@ namespace Alex.Gamestates.Playing
         private float GetCurrentDrag()
         {
 	        return DefaultDrag;
-            Vector3 applied = Camera.Position.Floor();
+            Vector3 applied = World.Camera.Position.Floor();
             applied -= new Vector3(0, Player.EyeLevel, 0);
 
             if (applied.Y > 255) return DefaultDrag;
@@ -251,9 +252,10 @@ namespace Alex.Gamestates.Playing
 
         private bool IsOnGround(Vector3 velocity)
         {
-            var playerPosition = Camera.Position;
+	        var playerPosition = World.Player.KnownPosition;
 
-            Vector3 applied = Camera.Position.Floor();
+
+			Vector3 applied = World.Player.KnownPosition.ToVector3().Floor();
             applied -= new Vector3(0, Player.EyeLevel, 0);
 
             if (applied.Y > 255) return false;
