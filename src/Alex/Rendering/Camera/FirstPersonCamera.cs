@@ -1,4 +1,6 @@
-﻿using Alex.Entities;
+﻿using Alex.API.Entities;
+using Alex.API.Graphics;
+using Alex.Entities;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Rendering.Camera
@@ -11,7 +13,7 @@ namespace Alex.Rendering.Camera
             Rotation = rot;
         }
 
-	    public override void Update(GameTime gameTime, Entity entity)
+	    public override void Update(IUpdateArgs args, IEntity entity)
 	    {
 		    MoveTo(entity.KnownPosition + new Vector3(0, Player.EyeLevel, 0),
 			    new Vector3(MathHelper.ToRadians(entity.KnownPosition.Pitch), MathHelper.ToRadians(entity.KnownPosition.HeadYaw), 0));

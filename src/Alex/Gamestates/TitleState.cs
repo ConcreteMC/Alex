@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Net;
 using System.Text;
 using Alex.API.World;
 using Alex.Gamestates.Playing;
@@ -13,6 +14,7 @@ using Alex.Graphics.UI.Layout;
 using Alex.Utils;
 using Alex.Worlds;
 using Alex.Worlds.Generators;
+using Alex.Worlds.Java;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -38,7 +40,16 @@ namespace Alex.Gamestates
 				ClassName = "TitleScreenMenu"
 			};
 
-			stackMenu.AddMenuItem("Play", () => { });
+			if (Alex.IsMultiplayer)
+			{
+				stackMenu.AddMenuItem("Connect", () =>
+				{
+					if (Alex.IsMultiplayer)
+					{
+						LoadWorld(new JavaWorldProvider(Alex, Alex.ServerEndPoint, Alex.Username, Alex.UUID, Alex.AccessToken));
+					}
+				});
+			}
 
 			stackMenu.AddMenuItem("Debug Blockstates", DebugWorldButtonActivated);
 			stackMenu.AddMenuItem("Debug Flatland", DebugFlatland);

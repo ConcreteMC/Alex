@@ -84,7 +84,7 @@ namespace Alex.Graphics.Models.Entity
 			}
 		}
 
-		public void Render(IRenderArgs args, Camera camera, PlayerLocation position)
+		public void Render(IRenderArgs args, PlayerLocation position)
 		{
 			foreach (var bone in Cubes)
 			{
@@ -92,23 +92,25 @@ namespace Alex.Graphics.Models.Entity
 					continue;
 
 
-				bone.Value.Render(args, camera, position);
+				bone.Value.Render(args, position);
 			}
 		}
 
-		public void Update(GraphicsDevice device, GameTime gameTime, PlayerLocation position, SkyboxModel skybox)
+		public Vector3 DiffuseColor { get; set; } = Color.White.ToVector3();
+
+		public void Update(IUpdateArgs args, PlayerLocation position)
 		{
 			foreach (var bone in Cubes)
 			{
 				if (bone.Value.Effect != null)
 				{
-					bone.Value.Effect.DiffuseColor = Color.White.ToVector3() * new Vector3((skybox.BrightnessModifier));
+					bone.Value.Effect.DiffuseColor = DiffuseColor;
 				}
 
 				if (!bone.Value.IsDirty)
 					continue;
 				
-				bone.Value.Update(device, gameTime);
+				bone.Value.Update(args);
 			}
 		}
 
@@ -143,10 +145,10 @@ namespace Alex.Graphics.Models.Entity
 				IsDirty = true;
 			}
 
-			public void Update(GraphicsDevice device, GameTime gameTime)
+			public void Update(IUpdateArgs args)
 			{
 				if (!IsDirty) return;
-
+				var device = args.GraphicsDevice;
 				//if (_vertices.Length > 0)
 				//	Apply(ref _vertices, Origin, Pivot, Rotation);
 
@@ -188,7 +190,7 @@ namespace Alex.Graphics.Models.Entity
 			public bool ApplyPitch { get; set; } = true;
 			public bool ApplyYaw { get; set; } = true;
 			public bool Mirror { get; set; } = false;
-			public void Render(IRenderArgs args, Camera camera, PlayerLocation position)
+			public void Render(IRenderArgs args, PlayerLocation position)
 			{
 				if (_vertices == null || _vertices.Length == 0) return;
 
@@ -202,8 +204,8 @@ namespace Alex.Graphics.Models.Entity
 				               * Matrix.CreateTranslation(Pivot)
 				               * (Matrix.CreateScale(1f / 16f) * Matrix.CreateTranslation(position));
 
-				Effect.View = camera.ViewMatrix;
-				Effect.Projection = camera.ProjectionMatrix;
+				Effect.View = args.Camera.ViewMatrix;
+				Effect.Projection = args.Camera.ProjectionMatrix;
 
 				args.GraphicsDevice.SetVertexBuffer(buffer);
 				foreach (var pass in Effect.CurrentTechnique.Passes)

@@ -12,6 +12,7 @@ namespace Alex.API.Utils
 		public float Yaw { get; set; }
 		public float Pitch { get; set; }
 		public float HeadYaw { get; set; }
+		public bool OnGround { get; set; }
 
 		public PlayerLocation()
 		{

@@ -38,7 +38,13 @@ namespace Alex.Worlds
 		{
 			while (!ThreadCancellationTokenSource.IsCancellationRequested)
 			{
-				var pp = base.GetPlayerPosition();
+				Vector3 pp = Vector3.Zero;
+				var e = base.WorldReceiver?.GetPlayerEntity();
+				if (e != null)
+				{
+					pp = e.KnownPosition;
+				}
+				//var pp = base.WorldReceiver.GetPlayerEntity();
 				ChunkCoordinates currentCoordinates =
 					new ChunkCoordinates(new PlayerLocation(pp.X, pp.Y, pp.Z));
 

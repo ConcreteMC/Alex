@@ -26,7 +26,7 @@ namespace Alex.Gamestates
 					DisplayString = $"Loading chunks: {percentage}%";
 					break;
 				case LoadingState.GeneratingVertices:
-					DisplayString = $"Initiating world: {percentage}%";
+					DisplayString = $"Building world: {percentage}%";
 					break;
 				case LoadingState.Spawning:
 					DisplayString = $"Getting ready...";

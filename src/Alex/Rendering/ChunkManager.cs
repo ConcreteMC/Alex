@@ -54,8 +54,8 @@ namespace Alex.Rendering
 
 			SkylightCalculator = new SkylightCalculations(world);
 
-			var distance = (float)Math.Pow(alex.GameSettings.RenderDistance, 2);
-			var fogStart = distance - (distance * 0.35f);
+			var distance = (float)Math.Pow(alex.GameSettings.RenderDistance, 2) * 0.8f;
+			var fogStart = 0;//distance - (distance * 0.35f);
 			TransparentEffect = new AlphaTestEffect(Graphics)
 			{
 				Texture = alex.Resources.Atlas.GetAtlas(),
@@ -297,9 +297,10 @@ namespace Alex.Rendering
 		    return buffer;
 	    }
 
-	    public void Draw(IRenderArgs args, Camera.Camera camera)
+	    public void Draw(IRenderArgs args)
 	    {
 		    var device = args.GraphicsDevice;
+		    var camera = args.Camera;
 
 		    Stopwatch sw = Stopwatch.StartNew();
 			
@@ -436,13 +437,14 @@ namespace Alex.Rendering
 		    }
 	    }
 
-	    public void Update(GameTime gameTime, SkyboxModel skyRenderer, Camera.Camera camera)
+	    public void Update(IUpdateArgs args, SkyboxModel skyRenderer)
 	    {
 		    TransparentEffect.FogColor = skyRenderer.WorldFogColor.ToVector3();
 		    OpaqueEffect.FogColor = skyRenderer.WorldFogColor.ToVector3();
 		    OpaqueEffect.AmbientLightColor = TransparentEffect.DiffuseColor =
 			    Color.White.ToVector3() * new Vector3((skyRenderer.BrightnessModifier));
 
+		    var camera = args.Camera;
 		    CameraBoundingFrustum = camera.BoundingFrustum;
 		    CameraPosition = camera.Position;
 

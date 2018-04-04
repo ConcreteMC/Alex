@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Alex.API.Blocks.State;
 using Alex.API.Graphics;
 using Alex.API.World;
 using Alex.Blocks;
+using Alex.Blocks.State;
 using Alex.Blocks.Storage;
+using Alex.Networking.Java.Util;
+using Alex.Utils;
 using fNbt.Tags;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -83,9 +87,13 @@ namespace Alex.Worlds
 			_heightDirty = true;
 		}
 
+		private static IBlockState Air = BlockFactory.GetBlockState("minecraft:air");
 		public IBlockState GetBlockState(int bx, int by, int bz)
 		{
-			return Chunks[by >> 4].Get(bx, by - 16 * (by >> 4), bz);
+			var chunk = Chunks[by >> 4];
+			if (chunk == null) return Air;
+
+			return chunk.Get(bx, by - 16 * (by >> 4), bz);
 		}
 
 		public IBlock GetBlock(int bx, int by, int bz)
@@ -306,6 +314,83 @@ namespace Alex.Worlds
 					}
 				}
 			}
+		}
+
+		public void Read(MinecraftStream ms, int availableSections, bool groundUp)
+		{
+			for (int i = 0; i < this.Chunks.Length; i++)
+			{
+				var storage = this.Chunks[i];
+				if ((availableSections & (1 << i)) == 0)
+				{
+					if (groundUp && !storage.IsEmpty())
+					{
+						storage = new ExtendedBlockStorage(i, true);
+					}
+				}
+				else
+				{
+					if (storage == null)
+					{
+						storage = new ExtendedBlockStorage(i, true);
+					}
+
+					storage.Data.Read(ms);					
+				}
+
+				for (int y = 0; y < 16; y++)
+				{
+					for (int z = 0; z < 16; z++)
+					{
+						for (int x = 0; x < 16; x += 2)
+						{
+							// Note: x += 2 above; we read 2 values along x each time
+							byte value = (byte) ms.ReadByte();
+
+							storage.SetExtBlocklightValue(x, y, z, (byte) (value & 0xF));
+							storage.SetExtBlocklightValue(x + 1, y, z, (byte) ((value >> 4) & 0xF));
+						}
+					}
+				}
+
+				//if (currentDimension.HasSkylight())
+				{ // IE, current dimension is overworld / 0
+					for (int y = 0; y < 16; y++)
+					{
+						for (int z = 0; z < 16; z++)
+						{
+							for (int x = 0; x < 16; x += 2)
+							{
+								// Note: x += 2 above; we read 2 values along x each time
+								byte value = (byte)ms.ReadByte();
+
+								storage.SetExtSkylightValue(x, y, z, value & 0xF);
+								storage.SetExtSkylightValue(x + 1, y, z, (value >> 4) & 0xF);
+							}
+						}
+					}
+				}
+
+				this.Chunks[i] = storage;
+			}
+
+			for (int i = 0; i < Chunks.Length; i++)
+			{
+				Chunks[i].RemoveInvalidBlocks();
+			}
+
+			if (groundUp)
+			{
+				for (int z = 0; z < 16; z++)
+				{
+					for (int x = 0; x < 16; x++)
+					{
+						SetBiome(x, z, ms.ReadByte());
+					}
+				}
+			}
+
+			CalculateHeight();
 		}
 	}
 }

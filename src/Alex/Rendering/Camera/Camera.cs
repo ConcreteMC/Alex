@@ -1,12 +1,14 @@
 ﻿using System;
+using Alex.API.Entities;
+using Alex.API.Graphics;
 using Alex.Entities;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Rendering.Camera
 {
-    public class Camera
-    {
+    public class Camera : ICamera
+	{
         public BoundingFrustum BoundingFrustum => new BoundingFrustum(ViewMatrix * ProjectionMatrix);
 
 	    /// <summary>
@@ -19,7 +21,7 @@ namespace Alex.Rendering.Camera
 	    /// </summary>
 	    public float FarDistance { get; set; }
 
-	    protected float FOV { get; set; } = 70;
+	    protected float FOV { get; set; } = 75;
 		public Camera(int renderDistance)
 	    {
 		    FarDistance = renderDistance * 16 * 16;
@@ -119,7 +121,7 @@ namespace Alex.Rendering.Camera
 		    MoveTo(PreviewMove(scale), Rotation);
 	    }
 
-	    public virtual void Update(GameTime gameTime, Entity entity)
+	    public virtual void Update(IUpdateArgs args, IEntity entity)
 	    {
 			MoveTo(entity.KnownPosition, 
 				new Vector3(MathHelper.ToRadians(entity.KnownPosition.Pitch), MathHelper.ToRadians(entity.KnownPosition.HeadYaw), 0));

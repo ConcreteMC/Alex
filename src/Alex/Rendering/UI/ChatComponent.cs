@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Alex.API.Data;
 using Alex.Gamestates;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
 namespace Alex.Rendering.UI
 {
-	public class ChatComponent : UIComponent
+	public class ChatComponent : UIComponent, IChatReceiver
 	{
 		public bool RenderChatInput { get; private set; } = false;
 		private List<string> ChatMessages { get; set; } = new List<string>();
@@ -170,6 +171,11 @@ namespace Alex.Rendering.UI
 		public void Append(string message)
 		{
 			ChatMessages.Add(message);
+		}
+
+		public void Receive(string message)
+		{
+			Append(message);
 		}
 	}
 }

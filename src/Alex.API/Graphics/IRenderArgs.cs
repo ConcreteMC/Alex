@@ -8,11 +8,13 @@ namespace Alex.API.Graphics
 		GameTime GameTime { get; }
 		GraphicsDevice GraphicsDevice { get; }
 		SpriteBatch SpriteBatch { get; }
+		ICamera Camera { get; set; }
 	}
 
 	public interface IUpdateArgs
 	{
 		GameTime GameTime { get; }
 		GraphicsDevice GraphicsDevice { get; }
+		ICamera Camera { get; set; }
 	}
 }

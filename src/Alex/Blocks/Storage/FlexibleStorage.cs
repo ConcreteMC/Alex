@@ -5,7 +5,7 @@ namespace Alex.Blocks.Storage
 {
 	public class FlexibleStorage
 	{
-		private long[] _data;
+		public long[] _data;
 		private int _bitsPerEntry;
 		private int _size;
 		private long _maxEntryValue;
@@ -75,11 +75,6 @@ namespace Alex.Blocks.Storage
 					this._data[endIndex] = this._data[endIndex] >> endBitSubIndex << endBitSubIndex | ((long)value & this._maxEntryValue) >> endBitSubIndex;
 				}
 			}
-		}
-
-		public long[] GetBackingLongArray()
-		{
-			return _data;
 		}
 
 		public int Length => _size;

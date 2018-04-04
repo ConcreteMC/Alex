@@ -4,6 +4,7 @@ using Alex.API.Blocks.State;
 using Alex.API.World;
 using Alex.Blocks.State;
 using Alex.Blocks.Storage.Pallete;
+using Alex.Networking.Java.Util;
 using Alex.Utils;
 using fNbt.Tags;
 
@@ -172,6 +173,31 @@ namespace Alex.Blocks.Storage
 
 				Palette.IdFor(blockState);
 				//pIndex++;
+			}
+		}
+
+		public void Read(MinecraftStream ms)
+		{
+			int bitsPerBlock = ms.ReadByte();
+			if (this._bits != bitsPerBlock)
+			{
+				SetBits(bitsPerBlock);
+			}
+
+			Palette.Read(ms);
+
+			var backingArray = Storage._data;
+
+			int length = ms.ReadVarInt();
+
+			if (backingArray == null || backingArray.Length != length)
+			{
+				backingArray = new long[length];
+			}
+
+			for (int j = 0; j < backingArray.Length; j++)
+			{
+				backingArray[j] = ms.ReadLong();
 			}
 		}
 	}

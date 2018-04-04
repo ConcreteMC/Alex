@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Alex.API.Entities;
+using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 
 namespace Alex.API.World
@@ -10,7 +11,7 @@ namespace Alex.API.World
 	{
 		public delegate void ProgressReport(LoadingState state, int percentage);
 
-		private IWorldReceiver WorldReceiver { get; set; }
+		protected IWorldReceiver WorldReceiver { get; set; }
 		protected WorldProvider()
 		{
 			
@@ -24,11 +25,6 @@ namespace Alex.API.World
 		protected void UnloadChunk(int x, int z)
 		{
 			WorldReceiver.ChunkUnload(x, z);
-		}
-
-		protected Vector3 GetPlayerPosition()
-		{
-			return WorldReceiver.RequestPlayerPosition();
 		}
 
 		protected void SpawnEntity(long entityId, IEntity entity)
@@ -62,12 +58,17 @@ namespace Alex.API.World
 
 	public interface IWorldReceiver
 	{
-		Vector3 RequestPlayerPosition();
+		IEntity GetPlayerEntity();
 
 		void ChunkReceived(IChunkColumn chunkColumn, int x, int z, bool update);
 		void ChunkUnload(int x, int z);
 
 		void SpawnEntity(long entityId, IEntity entity);
 		void DespawnEntity(long entityId);
+
+		void UpdatePlayerPosition(PlayerLocation location);
+		void UpdateEntityPosition(long entityId, PlayerLocation position, bool relative = false);
+
+		void SetTime(long worldTime);
 	}
 }

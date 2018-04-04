@@ -3,8 +3,10 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Runtime.InteropServices.ComTypes;
 using System.Threading;
+using Alex.API.Entities;
 using Alex.API.Graphics;
 using Alex.API.Utils;
+using Alex.API.World;
 using Alex.Entities;
 using Alex.Gamestates;
 using Alex.Graphics.Models;
@@ -16,10 +18,10 @@ using ContainmentType = Microsoft.Xna.Framework.ContainmentType;
 
 namespace Alex.Rendering
 {
-    public class EntityManager : IDisposable
-    {
-		private ConcurrentDictionary<long, Entity> Entities { get; }
-		private ConcurrentDictionary<UUID, Entity> EntityByUUID { get; }
+    public class EntityManager : IEntityHolder, IDisposable
+	{
+		private ConcurrentDictionary<long, IEntity> Entities { get; }
+		private ConcurrentDictionary<UUID, IEntity> EntityByUUID { get; }
 		private GraphicsDevice Device { get; }
 
 	    public int EntityCount => Entities.Count;
@@ -29,20 +31,24 @@ namespace Alex.Rendering
 	    {
 		    World = world;
 		    Device = device;
-			Entities = new ConcurrentDictionary<long, Entity>();
-			EntityByUUID = new ConcurrentDictionary<UUID, Entity>();
+			Entities = new ConcurrentDictionary<long, IEntity>();
+			EntityByUUID = new ConcurrentDictionary<UUID, IEntity>();
 	    }
 
-	    public void Update(GameTime gameTime, SkyboxModel skyRenderer)
+	    public void Update(IUpdateArgs args, SkyboxModel skyRenderer)
 	    {
 		    var entities = Entities.Values.ToArray();
 		    foreach (var entity in entities)
 		    {
-				entity.ModelRenderer?.Update(Device, gameTime, entity.KnownPosition, skyRenderer);
+			    if (entity is Entity e)
+			    {
+				    e.ModelRenderer.DiffuseColor = Color.White.ToVector3() * skyRenderer.BrightnessModifier;
+			    }
+				entity.Update(args);
 		    }
 	    }
 
-	    public void Render(IRenderArgs args, Camera.Camera camera)
+	    public void Render(IRenderArgs args)
 	    {
 		    int renderCount = 0;
 		    var entities = Entities.Values.ToArray();
@@ -50,9 +56,9 @@ namespace Alex.Rendering
 		    {
 			    var entityBox = entity.GetBoundingBox();
 
-				if (camera.BoundingFrustum.Contains(new Microsoft.Xna.Framework.BoundingBox(entityBox.Min, entityBox.Max)) != ContainmentType.Disjoint)
+				if (args.Camera.BoundingFrustum.Contains(new Microsoft.Xna.Framework.BoundingBox(entityBox.Min, entityBox.Max)) != ContainmentType.Disjoint)
 			    {
-				    entity.ModelRenderer?.Render(args, camera, entity.KnownPosition);
+				    entity.Render(args);
 				    renderCount++;
 			    }
 		    }
@@ -60,9 +66,9 @@ namespace Alex.Rendering
 		    EntitiesRendered = renderCount;
 	    }
 
-	    public void Render2D(IRenderArgs args, Camera.Camera camera)
+	    public void Render2D(IRenderArgs args)
 	    {
-		    var entities = Entities.Values.ToArray();
+		    /*var entities = Entities.Values.ToArray();
 		    foreach (var entity in entities.Where(x =>
 			    x.IsShowName && !string.IsNullOrWhiteSpace(x.NameTag) &&
 			    (x.IsAlwaysShowName || Vector3.Distance(camera.Position, x.KnownPosition) < 16f)))
@@ -75,7 +81,7 @@ namespace Alex.Rendering
 			    {
 				    entity.RenderNametag(args, camera);
 			    }
-		    }
+		    }*/
 	    }
 
 	    public void Dispose()
@@ -86,7 +92,7 @@ namespace Alex.Rendering
 
 			foreach (var entity in entities)
 		    {
-				entity.Deconstruct(out long _, out Entity _);
+				entity.Deconstruct(out long _, out IEntity _);
 		    }
 	    }
 
@@ -103,7 +109,7 @@ namespace Alex.Rendering
 
 	    private void Remove(UUID entity, bool removeId = true)
 	    {
-		    if (EntityByUUID.TryRemove(entity, out Entity e))
+		    if (EntityByUUID.TryRemove(entity, out IEntity e))
 		    {
 			    if (removeId)
 			    {
@@ -122,7 +128,7 @@ namespace Alex.Rendering
 
 			    if (!Entities.TryAdd(id, entity))
 			    {
-				    EntityByUUID.TryRemove(entity.UUID, out Entity _);
+				    EntityByUUID.TryRemove(entity.UUID, out IEntity _);
 				    return false;
 			    }
 
@@ -131,13 +137,18 @@ namespace Alex.Rendering
 
 		    return false;
 	    }
-
+		
 	    public void Remove(long id)
 	    {
-		    if (Entities.TryRemove(id, out Entity entity))
+		    if (Entities.TryRemove(id, out IEntity entity))
 		    {
 				Remove(entity.UUID, false);
 		    }
+	    }
+
+	    public bool TryGet(long id, out IEntity entity)
+	    {
+		    return Entities.TryGetValue(id, out entity);
 	    }
     }
 }

@@ -49,6 +49,7 @@ namespace Alex.Entities
 		public double Length { get; set; } = 1;
 		public double Drag { get; set; } = 0.02;
 		public double Gravity { get; set; } = 0.08;
+
 		public int Data { get; set; }
 		public UUID UUID { get; set; } = new UUID(Guid.Empty.ToByteArray());
 
@@ -235,6 +236,16 @@ namespace Alex.Entities
 			return bits;
 		}
 
+		public void Render(IRenderArgs renderArgs)
+		{
+			ModelRenderer.Render(renderArgs, KnownPosition);
+		}
+
+		public void Update(IUpdateArgs args)
+		{
+			ModelRenderer.Update(args, KnownPosition);
+		}
+
 		public virtual void OnTick()
 		{
 			Age++;
@@ -309,14 +320,14 @@ namespace Alex.Entities
 		{
 		}
 
-		public void RenderNametag(IRenderArgs renderArgs, Camera camera)
+		public void RenderNametag(IRenderArgs renderArgs)
 		{
 			Vector2 textPosition;
 
 			// calculate screenspace of text3d space position
 			var screenSpace = renderArgs.GraphicsDevice.Viewport.Project(Vector3.Zero,
-				camera.ProjectionMatrix,
-				camera.ViewMatrix,
+				renderArgs.Camera.ProjectionMatrix,
+				renderArgs.Camera.ViewMatrix,
 				Matrix.CreateTranslation(KnownPosition + new Vector3(0, (float)Height, 0)));
 
 

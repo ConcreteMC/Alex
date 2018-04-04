@@ -1,4 +1,5 @@
 ﻿using Alex.API.Blocks.State;
+using Alex.API.Utils;
 using Alex.API.World;
 
 namespace Alex.Blocks.Storage.Pallete
@@ -16,6 +17,11 @@ namespace Alex.Blocks.Storage.Pallete
 			IBlockState iblockstate = BlockFactory.GetBlockState(indexKey);// .getByValue(indexKey);
 		    return iblockstate == null ? new Air().GetDefaultState() : iblockstate;
 		}
+
+	    public void Read(IMinecraftStream ms)
+	    {
+		    ms.ReadVarInt();
+	    }
 
 	    public int GetSerializedSize()
 	    {

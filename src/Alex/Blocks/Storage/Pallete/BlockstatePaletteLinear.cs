@@ -1,4 +1,5 @@
 ﻿using Alex.API.Blocks.State;
+using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks.State;
 
@@ -45,6 +46,16 @@ namespace Alex.Blocks.Storage.Pallete
 		public IBlockState GetBlockState(uint indexKey)
 		{
 			return indexKey >= 0 && indexKey < this._arraySize ? this._states[indexKey] : null;
+		}
+
+		public void Read(IMinecraftStream ms)
+		{
+			this._arraySize = (uint) ms.ReadVarInt();
+
+			for (int i = 0; i < _arraySize; ++i)
+			{
+				_states[i] = BlockFactory.GetBlockState(ms.ReadVarInt());
+			}
 		}
 	}
 }

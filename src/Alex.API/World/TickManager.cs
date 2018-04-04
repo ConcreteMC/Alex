@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Linq;
+using Alex.API.Graphics;
 using Microsoft.Xna.Framework;
 using NLog;
 
@@ -20,11 +21,11 @@ namespace Alex.API.World
 		}
 
 		private TimeSpan _lastTickTime = TimeSpan.Zero;
-		public void Update(GameTime gameTime)
+		public void Update(IUpdateArgs args)
 		{
-			if ((gameTime.TotalGameTime - _lastTickTime).TotalMilliseconds >= 50)
+			if ((args.GameTime.TotalGameTime - _lastTickTime).TotalMilliseconds >= 50)
 			{
-				_lastTickTime = gameTime.TotalGameTime;
+				_lastTickTime = args.GameTime.TotalGameTime;
 				var ticks = _scheduledTicks.Where(x => x.Value <= _tick).ToArray();
 
 				foreach (var tick in ticks)

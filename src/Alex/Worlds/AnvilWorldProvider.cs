@@ -335,22 +335,22 @@ namespace Alex.Worlds
 			byte[] skyLight = sectionTag["SkyLight"].ByteArrayValue;
 
 			var section = new ExtendedBlockStorage(sectionIndex, ReadSkyLight);
-			section.GetData().SetDataFromNbt(palette, blockStates);
+			section.Data.SetDataFromNbt(palette, blockStates);
 
 			if (ReadSkyLight)
 			{
-				section.SetSkylightArray(new NibbleArray()
+				section.SkyLight = new NibbleArray()
 				{
 					Data = skyLight
-				});
+				};
 			}
 
 			if (ReadBlockLight)
 			{
-				section.SetBlocklightArray(new NibbleArray()
+				section.BlockLight = new NibbleArray()
 				{
 					Data = blockLight
-				});
+				};
 			}
 
 			section.RemoveInvalidBlocks();
@@ -384,7 +384,7 @@ namespace Alex.Worlds
 
 				if (_1p12to1p13.TryGetValue(blockStateId, out blockStateId))
 				{
-					section.GetData().Set(i, BlockFactory.GetBlockState(blockStateId));
+					section.Data.Set(i, BlockFactory.GetBlockState(blockStateId));
 				}
 
 				//section.GetData().Set(i, BlockFactory.GetBlockState(blockStateId));
@@ -394,18 +394,18 @@ namespace Alex.Worlds
 
 			if (ReadSkyLight)
 			{
-				section.SetSkylightArray(new NibbleArray()
+				section.SkyLight = new NibbleArray()
 				{
 					Data = skyLight
-				});
+				};
 			}
 
 			if (ReadBlockLight)
 			{
-				section.SetBlocklightArray(new NibbleArray()
+				section.BlockLight = new NibbleArray()
 				{
 					Data = blockLight
-				});
+				};
 			}
 
 			section.RemoveInvalidBlocks();
