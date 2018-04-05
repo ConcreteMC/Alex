@@ -100,6 +100,7 @@ namespace Alex.Gamestates
 
 		private void LoadWorld(WorldProvider worldProvider)
 		{
+			
 
 			LoadingWorldState loadingScreen =
 				new LoadingWorldState(Alex, TextureUtils.ImageToTexture2D(Alex.GraphicsDevice, Resources.mcbg));

@@ -107,6 +107,7 @@ namespace Alex.Worlds.Java
 				List<ChunkColumn> generatedChunks = new List<ChunkColumn>();
 				using (CachedWorld cached = new CachedWorld(Alex))
 				{
+					
 					int t = Alex.GameSettings.RenderDistance;
 					double radiusSquared = Math.Pow(t, 2);
 
@@ -152,7 +153,7 @@ namespace Alex.Worlds.Java
 
 		public void ChunkReceived(IChunkColumn chunkColumn, int x, int z, bool update)
 		{
-			if (_generatingHelper != null && !_initiated)
+			if (_generatingHelper != null)
 			{
 				_generatingHelper.Add((ChunkColumn)chunkColumn);
 				return;
@@ -203,7 +204,7 @@ namespace Alex.Worlds.Java
 
 		public void UpdateTime(long worldAge, long timeOfDay)
 		{ 
-			WorldReceiver.SetTime(timeOfDay);
+			WorldReceiver?.SetTime(timeOfDay);
 		}
 
 		private void SendPacket(Packet packet)
@@ -272,6 +273,12 @@ namespace Alex.Worlds.Java
 
 		private void HandleChunkData(ChunkDataPacket chunk)
 		{
+			if (_loginCompleteEvent != null)
+			{
+				_loginCompleteEvent.Set();
+				_loginCompleteEvent = null;
+			}
+
 			if (!Spawned)
 			{
 				ThreadPool.QueueUserWorkItem(o =>
@@ -282,7 +289,7 @@ namespace Alex.Worlds.Java
 					result.Z = chunk.ChunkZ;
 					result.Read(new MinecraftStream(new MemoryStream(chunk.Buffer)), chunk.AvailableSections, chunk.FullChunk);
 
-					WorldReceiver.ChunkReceived(result, result.X, result.Z, false);
+					ChunkReceived(result, result.X, result.Z, false);
 				});
 			}
 			else
@@ -293,13 +300,7 @@ namespace Alex.Worlds.Java
 				result.Z = chunk.ChunkZ;
 				result.Read(new MinecraftStream(new MemoryStream(chunk.Buffer)), chunk.AvailableSections, chunk.FullChunk);
 
-				WorldReceiver.ChunkReceived(result, result.X, result.Z, false);
-			}
-
-			if (_loginCompleteEvent != null)
-			{
-				_loginCompleteEvent.Set();
-				_loginCompleteEvent = null;
+				ChunkReceived(result, result.X, result.Z, false);
 			}
 		}
 
@@ -329,7 +330,7 @@ namespace Alex.Worlds.Java
 
 			SendPacket(response);
 
-			WorldReceiver.UpdatePlayerPosition(
+			UpdatePlayerPosition(
 				new PlayerLocation(packet.X, packet.Y, packet.Z, packet.Yaw, pitch: packet.Pitch));
 
 			if (!Spawned)
@@ -392,14 +393,14 @@ namespace Alex.Worlds.Java
 		{
 			Client.ConnectionState = ConnectionState.Play;
 
-			ClientSettingsPacket settings = new ClientSettingsPacket();
+			/*ClientSettingsPacket settings = new ClientSettingsPacket();
 			settings.ChatColors = false;
 			settings.ChatMode = 0;
 			settings.ViewDistance = 12;
 			settings.SkinParts = 255;
 			settings.MainHand = 1;
 			settings.Locale = "en_US";
-			SendPacket(settings);
+			SendPacket(settings);*/
 		}
 
 		private void HandleSetCompression(SetCompressionPacket packet)
@@ -479,6 +480,7 @@ namespace Alex.Worlds.Java
 
 			TcpClient.Connect(Endpoint);
 		//	Client.InitEncryption();
+			Client.Initialize();
 
 			HandshakePacket handshake = new HandshakePacket();
 			handshake.NextState = ConnectionState.Login;

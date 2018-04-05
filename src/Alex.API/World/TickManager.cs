@@ -21,7 +21,7 @@ namespace Alex.API.World
 		}
 
 		private TimeSpan _lastTickTime = TimeSpan.Zero;
-		public void Update(IUpdateArgs args)
+		public bool Update(IUpdateArgs args)
 		{
 			if ((args.GameTime.TotalGameTime - _lastTickTime).TotalMilliseconds >= 50)
 			{
@@ -47,7 +47,10 @@ namespace Alex.API.World
 				}
 
 				_tick++;
+				return true;
 			}
+
+			return false;
 		}
 
 		public void ScheduleTick(Action action, long ticksFromNow)

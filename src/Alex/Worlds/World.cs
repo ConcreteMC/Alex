@@ -63,7 +63,7 @@ namespace Alex.Worlds
 		private long LastLightningBolt = 0;
 		private long Tick = 0;
 		public long WorldTime { get; private set; } = 6000;
-
+		private bool FreezeWorldTime { get; set; } = false;
 
 		public TickManager Ticker { get; }
 		public EntityManager EntityManager { get; }
@@ -144,7 +144,15 @@ namespace Alex.Worlds
 			Player.ModelRenderer.DiffuseColor = Color.White.ToVector3() * new Vector3(SkyRenderer.BrightnessModifier);
 			Player.ModelRenderer.Update(args, Player.KnownPosition);
 
-			Ticker.Update(args);
+			if (Ticker.Update(args))
+			{
+				if (!FreezeWorldTime)
+				{
+					WorldTime++;
+				}
+
+				Tick++;
+			}
 		}
 
         public Vector3 GetSpawnPoint()
