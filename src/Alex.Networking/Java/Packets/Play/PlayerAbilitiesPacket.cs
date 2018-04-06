@@ -12,7 +12,10 @@ namespace Alex.Networking.Java.Packets.Play
 
 	    public byte Flags;
 	    public float FlyingSpeed;
+		public float WalkingSpeed;
 	    public float FiedOfViewModifier;
+
+	    public bool ServerBound = false;
 
 		public override void Decode(MinecraftStream stream)
 		{
@@ -23,7 +26,12 @@ namespace Alex.Networking.Java.Packets.Play
 
 	    public override void Encode(MinecraftStream stream)
 	    {
-		    throw new NotImplementedException();
+		    if (ServerBound)
+		    {
+			    stream.WriteByte(Flags);
+				stream.WriteFloat(FlyingSpeed);
+				stream.WriteFloat(WalkingSpeed);
+		    }
 	    }
     }
 }

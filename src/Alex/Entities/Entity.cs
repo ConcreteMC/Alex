@@ -35,12 +35,13 @@ namespace Alex.Entities
 		//public HealthManager HealthManager { get; set; }
 
 		public string NameTag { get; set; }
-
+		
 		public bool NoAi { get; set; }
 		public bool HideNameTag { get; set; } = true;
 		public bool Silent { get; set; }
 		public bool IsInWater { get; set; } = false;
 		public bool IsOutOfWater => !IsInWater;
+		public bool Invulnerable { get; set; } = false;
 
 		public long Age { get; set; }
 		public double Scale { get; set; } = 1.0;
@@ -52,6 +53,9 @@ namespace Alex.Entities
 
 		public int Data { get; set; }
 		public UUID UUID { get; set; } = new UUID(Guid.Empty.ToByteArray());
+
+		public double MovementSpeed { get; set; } = 0.699999988079071;
+		public double FlyingSpeed { get; set; } = 0.4000000059604645;
 
 		public Entity(int entityTypeId, World level)
 		{
@@ -241,7 +245,7 @@ namespace Alex.Entities
 			ModelRenderer.Render(renderArgs, KnownPosition);
 		}
 
-		public void Update(IUpdateArgs args)
+		public virtual void Update(IUpdateArgs args)
 		{
 			ModelRenderer.Update(args, KnownPosition);
 		}

@@ -100,7 +100,8 @@ namespace Alex.Gamestates
 
 		private void LoadWorld(WorldProvider worldProvider)
 		{
-			
+			PlayingState playState = new PlayingState(Alex, Graphics, worldProvider);
+			Alex.GameStateManager.AddState("play", playState);
 
 			LoadingWorldState loadingScreen =
 				new LoadingWorldState(Alex, TextureUtils.ImageToTexture2D(Alex.GraphicsDevice, Resources.mcbg));
@@ -109,8 +110,7 @@ namespace Alex.Gamestates
 
 			worldProvider.Load(loadingScreen.UpdateProgress).ContinueWith(task =>
 			{
-				PlayingState playState = new PlayingState(Alex, Graphics, worldProvider);
-				Alex.GameStateManager.AddState("play", playState);
+				
 				Alex.GameStateManager.SetActiveState("play");
 
 				Alex.GameStateManager.RemoveState("loading");

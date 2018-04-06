@@ -234,7 +234,10 @@ namespace Alex.Networking.Java.Packets
 			Register(Direction.Server, ConnectionState.Play, 0x03, () => new SpawnMob());
 			Register(Direction.Server, ConnectionState.Play, 0x05, () => new SpawnPlayerPacket());
 			Register(Direction.Server, ConnectionState.Play, 0x0d, () => new ServerDifficultyPacket());
-			Register(Direction.Server, ConnectionState.Play, 0x0E, () => new ChatMessagePacket());
+			Register(Direction.Server, ConnectionState.Play, 0x0E, () => new ChatMessagePacket()
+			{
+				ServerBound = false
+			});
 			Register(Direction.Server, ConnectionState.Play, 0x19, () => new PluginMessagePacket());
 			Register(Direction.Server, ConnectionState.Play, 0x1E, () => new UnloadChunk());
 			Register(Direction.Server, ConnectionState.Play, 0x20, () => new KeepAlivePacket());
@@ -245,7 +248,12 @@ namespace Alex.Networking.Java.Packets
 			Register(Direction.Server, ConnectionState.Play, 0x2F, () => new PlayerListItemPacket());
 			Register(Direction.Server, ConnectionState.Play, 0x31, () => new PlayerPositionAndLookPacket());
 			Register(Direction.Server, ConnectionState.Play, 0x49, () => new TimeUpdatePacket());
-			
+			Register(Direction.Server, ConnectionState.Play, 0x27, () => new EntityRelativeMove());
+			Register(Direction.Server, ConnectionState.Play, 0x28, () => new EntityLookAndRelativeMove());
+			Register(Direction.Server, ConnectionState.Play, 0x29, () => new EntityLook());
+			Register(Direction.Server, ConnectionState.Play, 0x38, () => new EntityHeadLook());
+			Register(Direction.Server, ConnectionState.Play, 0x40, () => new EntityVelocity());
+			Register(Direction.Server, ConnectionState.Play, 0x51, () => new EntityPropertiesPacket());
 		}
 	}
 }

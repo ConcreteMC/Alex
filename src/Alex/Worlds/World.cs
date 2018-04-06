@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Reflection.Metadata.Ecma335;
 using System.Security.Cryptography.X509Certificates;
 using Alex.API.Blocks.State;
 using Alex.API.Entities;
@@ -31,31 +32,25 @@ namespace Alex.Worlds
 
 		private GraphicsDevice Graphics { get; }
 		public Rendering.Camera.Camera Camera { get; set; }
-		private SkyboxModel SkyRenderer { get; }
 
-		public readonly LevelInfo WorldInfo;
+		public LevelInfo WorldInfo;
 
 		public Player Player { get; set; }
-		public World(Alex alex, GraphicsDevice graphics, Rendering.Camera.Camera camera, WorldProvider worldProvider)
+		public World(Alex alex, GraphicsDevice graphics, Rendering.Camera.Camera camera)
         {
             Graphics = graphics;
 	        Camera = camera;
 
-			SkyRenderer = new SkyboxModel(alex, graphics, this);
-
 			ChunkManager = new ChunkManager(alex, graphics, this);
 			EntityManager = new EntityManager(graphics, this);
 			Ticker = new TickManager(this);
-
-	        WorldProvider = worldProvider;
-			WorldProvider.Init(this, out WorldInfo);
 			 
 			ChunkManager.Start();
 
 	        alex.Resources.BedrockResourcePack.TryGetTexture("textures/entity/alex", out Bitmap rawTexture);
 	        var t = TextureUtils.BitmapToTexture2D(graphics, rawTexture);
 
-			Player = new Player(alex.GameSettings.Username, this, t);
+			Player = new Player(graphics, alex, alex.GameSettings.Username, this, t);
 	        Player.KnownPosition = new PlayerLocation(GetSpawnPoint());
 	        Camera.MoveTo(Player.KnownPosition, Vector3.Zero);
 		}
@@ -63,12 +58,12 @@ namespace Alex.Worlds
 		private long LastLightningBolt = 0;
 		private long Tick = 0;
 		public long WorldTime { get; private set; } = 6000;
-		private bool FreezeWorldTime { get; set; } = false;
+		public bool FreezeWorldTime { get; set; } = false;
 
 		public TickManager Ticker { get; }
 		public EntityManager EntityManager { get; }
 		public ChunkManager ChunkManager { get; private set; }
-		private WorldProvider WorldProvider { get; set; }
+	//	private WorldProvider WorldProvider { get; set; }
 
 		public int Vertices
         {
@@ -102,9 +97,6 @@ namespace Alex.Worlds
 
         public void Render(IRenderArgs args)
         {
-	        args.Camera = Camera;
-	        SkyRenderer.Draw(args);
-
 			Graphics.DepthStencilState = DepthStencilState.Default;
             Graphics.SamplerStates[0] = SamplerState.PointWrap;
             
@@ -113,7 +105,7 @@ namespace Alex.Worlds
 
 	        if (Camera is ThirdPersonCamera)
 	        {
-		        Player.ModelRenderer.Render(args, Player.KnownPosition);
+		        Player.Render(args);
 	        }
         }
 
@@ -124,25 +116,16 @@ namespace Alex.Worlds
 			EntityManager.Render2D(args);
 		}
 		
-		public void Update(GameTime time)
+		public void Update(UpdateArgs args, SkyboxModel skyRenderer)
 		{
-			var args = new UpdateArgs()
-			{
-				Camera = Camera,
-				GraphicsDevice = Graphics,
-				GameTime = time
-			};
-
 			args.Camera = Camera;
 			Camera.Update(args, Player);
 
-			SkyRenderer.Update(args);
+			ChunkManager.Update(args, skyRenderer);
+			EntityManager.Update(args, skyRenderer);
 
-			ChunkManager.Update(args, SkyRenderer);
-			EntityManager.Update(args, SkyRenderer);
-
-			Player.ModelRenderer.DiffuseColor = Color.White.ToVector3() * new Vector3(SkyRenderer.BrightnessModifier);
-			Player.ModelRenderer.Update(args, Player.KnownPosition);
+			Player.ModelRenderer.DiffuseColor = Color.White.ToVector3() * new Vector3(skyRenderer.BrightnessModifier);
+			Player.Update(args);
 
 			if (Ticker.Update(args))
 			{
@@ -151,17 +134,14 @@ namespace Alex.Worlds
 					WorldTime++;
 				}
 
-				Tick++;
+				//if (Player.IsSpawned)
 			}
 		}
 
+		public Vector3 SpawnPoint { get; set; } = Vector3.Zero;
         public Vector3 GetSpawnPoint()
         {
-	        if (WorldProvider != null)
-	        {
-		        return WorldProvider.GetSpawnPoint();
-	        }
-            return Vector3.Zero;
+	        return SpawnPoint;
         }
 
         public byte GetSkyLight(Vector3 position)
@@ -375,7 +355,6 @@ namespace Alex.Worlds
 			_destroyed = true;
 
 			EntityManager.Dispose();
-			WorldProvider.Dispose();
 			ChunkManager.Dispose();
 		}
 

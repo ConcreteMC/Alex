@@ -8,6 +8,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 using Alex.API.Data;
 using Alex.API.Entities;
 using Alex.API.Utils;
@@ -34,7 +35,7 @@ namespace Alex.Worlds.Java
 		void HandleLogin(Packet packet);
 		void HandlePlay(Packet packet);
 	}
-	public class JavaWorldProvider : WorldProvider, IJavaProvider
+	public class JavaWorldProvider : WorldProvider, IJavaProvider, IChatProvider
 	{
 		private Alex Alex { get; }
 		private JavaClient Client { get; }
@@ -45,7 +46,8 @@ namespace Alex.Worlds.Java
 		private IPEndPoint Endpoint;
 		private AutoResetEvent _loginCompleteEvent = new AutoResetEvent(false);
 		private TcpClient TcpClient;
-		private IChatReceiver ChatReceiver = null;
+
+		private System.Threading.Timer _gameTickTimer;
 		public JavaWorldProvider(Alex alex, IPEndPoint endPoint, string username, string uuid, string accessToken)
 		{
 			Alex = alex;
@@ -58,28 +60,101 @@ namespace Alex.Worlds.Java
 			Client = new JavaClient(this, TcpClient.Client);
 		}
 
+		private PlayerLocation _lastSentLocation = new PlayerLocation(Vector3.Zero);
+		private int _tickSinceLastPositionUpdate = 0;
+		private bool _flying = false;
+
+		private void SendPlayerAbilities(Player player)
+		{
+			int flags = 0;
+
+			if (_flying)
+			{
+				flags |= 0x01 << flags;
+			}
+
+			if (player.CanFly)
+			{
+				flags |= 0x03 << flags;
+			}
+
+			PlayerAbilitiesPacket abilitiesPacket = new PlayerAbilitiesPacket();
+			abilitiesPacket.PacketId = 0x13;
+			abilitiesPacket.ServerBound = true;
+
+			abilitiesPacket.Flags = (byte) flags;
+			abilitiesPacket.FlyingSpeed = (float) player.FlyingSpeed;
+			abilitiesPacket.WalkingSpeed = (float)player.MovementSpeed;
+
+			SendPacket(abilitiesPacket);
+		}
+
+		private void GameTick(object state)
+		{
+			if (WorldReceiver == null) return;
+
+			if (_initiated)
+			{
+				var p = WorldReceiver.GetPlayerEntity();
+				if (p != null && p is Player player && Spawned)
+				{
+					player.IsSpawned = Spawned;
+
+					if (player.IsFlying != _flying)
+					{
+						_flying = player.IsFlying;
+						
+						SendPlayerAbilities(player);
+					}
+
+					var pos = player.KnownPosition;
+					if (player.KnownPosition != _lastSentLocation)
+					{
+						PlayerPositionAndLookPacketServerBound packet = new PlayerPositionAndLookPacketServerBound();
+						packet.Yaw = pos.Yaw;
+						packet.Pitch = pos.Pitch;
+						packet.X = pos.X;
+						packet.Y = pos.Y;
+						packet.Z = pos.Z;
+						packet.OnGround = pos.OnGround;
+
+						SendPacket(packet);
+
+						_lastSentLocation = pos;
+
+						_tickSinceLastPositionUpdate = 0;
+					}
+					else if (_tickSinceLastPositionUpdate >= 20)
+					{
+						PlayerPosition packet = new PlayerPosition();
+						packet.FeetY = pos.Y;
+						packet.X = pos.X;
+						packet.Z = pos.Z;
+						packet.OnGround = pos.OnGround;
+
+						SendPacket(packet);
+						_lastSentLocation = pos;
+
+						_tickSinceLastPositionUpdate = 0;
+					}
+					else
+					{
+						_tickSinceLastPositionUpdate++;
+					}
+				}
+			}
+		}
+
 		private Vector3 _spawn = Vector3.Zero;
 		public override Vector3 GetSpawnPoint()
 		{
 			return _spawn;
 		}
 
-		protected override void Initiate(out LevelInfo info)
+		protected override void Initiate(out LevelInfo info, out IChatProvider chatProvider)
 		{
 			info = new LevelInfo();
-			lock (_genLock)
-			{
-				while (_preGeneratedChunks.TryDequeue(out ChunkColumn chunk))
-				{
-					if (chunk != null)
-					{
-						base.LoadChunk(chunk, chunk.X, chunk.Z, false);
-						//LoadEntities(chunk);
-					}
-				}
-
-				_preGeneratedChunks = null;
-			}
+			chatProvider = this;
 
 			_initiated = true;
 			while (_entitySpawnQueue.TryDequeue(out Entity entity))
@@ -88,11 +163,22 @@ namespace Alex.Worlds.Java
 			}
 
 			_entitySpawnQueue = null;
+			WorldReceiver?.UpdatePlayerPosition(_lastReceivedLocation);
+
+			_gameTickTimer = new System.Threading.Timer(GameTick, null, 50, 50);
+		}
+
+		void IChatProvider.Send(string message)
+		{
+			SendPacket(new ChatMessagePacket()
+			{
+				Position = ChatMessagePacket.Chat,
+				Message = message,
+				ServerBound = true
+			});
 		}
 
 		private bool _initiated = false;
-		private object _genLock = new object();
-		private Queue<ChunkColumn> _preGeneratedChunks = new Queue<ChunkColumn>();
 		private BlockingCollection<ChunkColumn> _generatingHelper = new BlockingCollection<ChunkColumn>();
 		public override Task Load(ProgressReport progressReport)
 		{
@@ -105,7 +191,7 @@ namespace Alex.Worlds.Java
 				_loginCompleteEvent.WaitOne();
 
 				List<ChunkColumn> generatedChunks = new List<ChunkColumn>();
-				using (CachedWorld cached = new CachedWorld(Alex))
+				//using (CachedWorld cached = new CachedWorld(Alex))
 				{
 					
 					int t = Alex.GameSettings.RenderDistance;
@@ -117,32 +203,32 @@ namespace Alex.Worlds.Java
 					ChunkColumn column = _generatingHelper.Take();
 					do
 					{
-						cached.ChunkManager.AddChunk(column, new ChunkCoordinates(column.X, column.Z), false);
+						base.LoadChunk(column, column.X, column.Z, true);
+						//ChunkManager.AddChunk(column, new ChunkCoordinates(column.X, column.Z), false);
 						generatedChunks.Add(column);
 
 						progressReport(LoadingState.LoadingChunks, (int) Math.Floor((count / target) * 100));
 						count++;
 					} while (_generatingHelper.TryTake(out column, 1250));
 
+					_generatingHelper = null;
 					count = 0;
 
-					Parallel.ForEach(generatedChunks, (c) =>
+					/*Parallel.ForEach(generatedChunks, (c) =>
 					{
 						cached.ChunkManager.UpdateChunk(c);
 
 						lock (_genLock)
 						{
-							_preGeneratedChunks.Enqueue(c);
+							base.LoadChunk(c, c.X, c.Z, false);
 						}
 
 						cached.ChunkManager.RemoveChunk(new ChunkCoordinates(c.X, c.Z), false);
 
-						//		newChunks.TryAdd(new ChunkCoordinates(c.X, c.Z), c);
-
 						progressReport(LoadingState.GeneratingVertices, (int)Math.Floor((count / target) * 100));
 
 						count++;
-					});
+					});*/
 				}
 
 				progressReport(LoadingState.Spawning, 99);
@@ -153,7 +239,7 @@ namespace Alex.Worlds.Java
 
 		public void ChunkReceived(IChunkColumn chunkColumn, int x, int z, bool update)
 		{
-			if (_generatingHelper != null)
+			if (_generatingHelper != null && !Spawned)
 			{
 				_generatingHelper.Add((ChunkColumn)chunkColumn);
 				return;
@@ -187,8 +273,11 @@ namespace Alex.Worlds.Java
 			}
 		}
 
+		private PlayerLocation _lastReceivedLocation = new PlayerLocation();
 		public void UpdatePlayerPosition(PlayerLocation location)
 		{
+			_lastReceivedLocation = location;
+
 			if (_spawn == Vector3.Zero)
 			{
 				_spawn = location;
@@ -242,9 +331,61 @@ namespace Alex.Worlds.Java
 			{
 				HandleTimeUpdatePacket(timeUpdate);
 			}
+			else if (packet is PlayerAbilitiesPacket abilitiesPacket)
+			{
+				HandlePlayerAbilitiesPacket(abilitiesPacket);
+			}
+			else if (packet is EntityPropertiesPacket entityProperties)
+			{
+				HandleEntityPropertiesPacket(entityProperties);
+			}
 			else
 			{
-				Log.Warn($"Unhandled packet: 0x{packet.PacketId:x2} - {packet.ToString()}");
+				//Log.Warn($"Unhandled packet: 0x{packet.PacketId:x2} - {packet.ToString()}");
+			}
+		}
+
+		private void HandleEntityPropertiesPacket(EntityPropertiesPacket packet)
+		{
+			if (packet.EntityId == 0 || packet.EntityId == _entityId)
+			{
+				if (WorldReceiver.GetPlayerEntity() is Player player)
+				{
+					foreach (var prop in packet.Properties.Values)
+					{
+						if (prop.Key.Equals("generic.movementSpeed", StringComparison.InvariantCultureIgnoreCase))
+						{
+							player.MovementSpeed = prop.Value;
+						}
+						else if (prop.Key.Equals("generic.flyingSpeed", StringComparison.InvariantCultureIgnoreCase))
+						{
+							player.FlyingSpeed = prop.Value;
+						}
+
+						//TODO: Modifier data
+					}
+				}
+			}
+		}
+
+		private void HandlePlayerAbilitiesPacket(PlayerAbilitiesPacket packet)
+		{
+			var flags = packet.Flags;
+			if (WorldReceiver?.GetPlayerEntity() is Player player)
+			{
+				player.CanFly = flags.IsBitSet(0x03);
+				player.Invulnerable = flags.IsBitSet(0x00);
+
+				if (flags.IsBitSet(0x01))
+				{
+					player.IsFlying = true;
+					_flying = true;
+				}
+				else
+				{
+					player.IsFlying = false;
+					_flying = false;
+				}
 			}
 		}
 
@@ -255,7 +396,14 @@ namespace Alex.Worlds.Java
 
 		private void HandleChatMessagePacket(ChatMessagePacket packet)
 		{
-			ChatReceiver?.Receive(packet.Message);
+			if (ChatObject.TryParse(packet.Message, out ChatObject chat))
+			{
+				ChatReceiver?.Receive(chat.ToString());
+			}
+			else
+			{
+				Log.Warn($"Failed to parse chat object, received json: {packet.Message}");
+			}
 		}
 
 		private void HandleUnloadChunk(UnloadChunk packet)
@@ -263,8 +411,19 @@ namespace Alex.Worlds.Java
 			ChunkUnloaded(packet.X, packet.Z);
 		}
 
+		private int _entityId = -1;
 		private void HandleJoinGamePacket(JoinGamePacket packet)
 		{
+			_entityId = packet.EntityId;
+			if (WorldReceiver?.GetPlayerEntity() is Player player)
+			{
+				player.EntityId = packet.EntityId;
+				player.Gamemode = (Gamemode) packet.Gamemode;
+			}
+			else
+			{
+				Log.Warn($"Could not get player entity!");
+			}
 			//	if (WorldReceiver.WorldReceiver.GetPlayerEntity() is Player player)
 			//{
 			//	player.EntityId = packet.EntityId;
@@ -300,7 +459,7 @@ namespace Alex.Worlds.Java
 				result.Z = chunk.ChunkZ;
 				result.Read(new MinecraftStream(new MemoryStream(chunk.Buffer)), chunk.AvailableSections, chunk.FullChunk);
 
-				ChunkReceived(result, result.X, result.Z, false);
+				ChunkReceived(result, result.X, result.Z, true);
 			}
 		}
 
@@ -544,6 +703,18 @@ namespace Alex.Worlds.Java
 				}
 			}
 			return p;
+		}
+
+		public override void Dispose()
+		{
+			Spawned = false;
+			_initiated = false;
+			
+			base.Dispose();
+			_gameTickTimer?.Dispose();
+
+			Client.Stop();
+			TcpClient.Dispose();
 		}
 	}
 }

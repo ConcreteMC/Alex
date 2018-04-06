@@ -14,6 +14,8 @@ namespace Alex.Rendering.UI
 		public bool RenderChatInput { get; private set; } = false;
 		private List<string> ChatMessages { get; set; } = new List<string>();
 		private StringBuilder _input = new StringBuilder();
+
+		public IChatProvider ChatProvider;
 		public ChatComponent()
 		{
 			Alex.OnCharacterInput += OnCharacterInput;
@@ -157,6 +159,7 @@ namespace Alex.Rendering.UI
 			{
 				if (Alex.IsMultiplayer)
 				{
+					ChatProvider?.Send(_input.ToString());
 					//Client.SendChat(_input);
 				}
 				else

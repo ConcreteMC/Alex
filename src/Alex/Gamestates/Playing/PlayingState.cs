@@ -3,6 +3,7 @@ using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks;
 using Alex.Entities;
+using Alex.Graphics.Models;
 using Alex.Rendering.Camera;
 using Alex.Rendering.UI;
 using Alex.ResourcePackLib.Json;
@@ -15,21 +16,36 @@ namespace Alex.Gamestates.Playing
 {
 	public class PlayingState : GameState
 	{
+		private SkyboxModel SkyRenderer { get; }
 		private World World { get; }
-		private PlayerController CamComponent { get; }
+	//	private PlayerController Controller { get; }
 
 		private FpsMonitor FpsCounter { get; set; }
 		private Texture2D CrosshairTexture { get; set; }
 
 		private ChatComponent Chat { get; }
 
+		private WorldProvider WorldProvider { get; }
 		public PlayingState(Alex alex, GraphicsDevice graphics, WorldProvider worldProvider) : base(alex)
 		{
+			World = new World(alex, graphics, new FirstPersonCamera(alex.GameSettings.RenderDistance, Vector3.Zero, Vector3.Zero));
+			SkyRenderer = new SkyboxModel(alex, graphics, World);
+
 			Chat = new ChatComponent();
 
-			World = new World(alex, graphics, new FirstPersonCamera(alex.GameSettings.RenderDistance, Vector3.Zero, Vector3.Zero), worldProvider);			
+		//	Controller = new PlayerController(Graphics, World, alex.GameSettings);
 
-			CamComponent = new PlayerController(Graphics, World, alex.GameSettings);
+			WorldProvider = worldProvider;
+			if (worldProvider is SPWorldProvider)
+			{
+				World.FreezeWorldTime = true;
+			}
+
+			WorldProvider = worldProvider;
+			WorldProvider.Init(World, Chat, out var info, out var chatProvider);
+			World.WorldInfo = info;
+
+			Chat.ChatProvider = chatProvider;
 		}
 
 		protected override void OnLoad(RenderArgs args)
@@ -39,6 +55,7 @@ namespace Alex.Gamestates.Playing
 			FpsCounter = new FpsMonitor();
 			CrosshairTexture = TextureUtils.ImageToTexture2D(args.GraphicsDevice, Resources.crosshair);
 
+			World.SpawnPoint = WorldProvider.GetSpawnPoint();
 			World.Camera.MoveTo(World.GetSpawnPoint(), Vector3.Zero);
 			base.OnLoad(args);
 		}
@@ -48,9 +65,15 @@ namespace Alex.Gamestates.Playing
 		private string MemoryUsageDisplay { get; set; } = "";
 
 		private TimeSpan _previousMemUpdate = TimeSpan.Zero;
-		private BlockCoordinates _prevCollisonCheck = new BlockCoordinates(-255,-255,-255);
 		protected override void OnUpdate(GameTime gameTime)
 		{
+			var args = new UpdateArgs()
+			{
+				Camera = World.Camera,
+				GraphicsDevice = Graphics,
+				GameTime = gameTime
+			};
+
 			if (Alex.IsActive)
 			{
 				var newAspectRatio = Graphics.Viewport.AspectRatio;
@@ -60,13 +83,34 @@ namespace Alex.Gamestates.Playing
 					AspectRatio = newAspectRatio;
 				}
 
-				CamComponent.Update(gameTime, !Chat.RenderChatInput);
+				/*var player = World.Player;
+				if (player.IsSpawned)
+				{
+					if (Controller.IsFreeCam)
+					{
+						if (!player.CanFly)
+						{
+							Controller.IsFreeCam = false;
+						}
+						else
+						{
+							if (!player.IsFlying)
+							{
+								player.IsFlying = true;
+							}
+						}
+					}
+				}
+
+				Controller.Update(gameTime, !Chat.RenderChatInput);*/
 
 				UpdateRayTracer(Alex.GraphicsDevice, World);
 
 				CheckInput(gameTime);
 
-				World.Update(gameTime);
+				World.Update(args, SkyRenderer);
+				World.Player.Controller.CheckInput = !Chat.RenderChatInput;
+				SkyRenderer.Update(args);
 
 				var headBlock = World.GetBlock(World.Player.KnownPosition);
 				if (headBlock.IsWater)
@@ -183,11 +227,6 @@ namespace Alex.Gamestates.Playing
 						ToggleWireframe();
 					}
 
-					if (currentKeyboardState.IsKeyDown(KeyBinds.ToggleFreeCam))
-					{
-						CamComponent.IsFreeCam = !CamComponent.IsFreeCam;
-					}
-
 					if (currentKeyboardState.IsKeyDown(KeyBinds.ReBuildChunks))
 					{
 						World.RebuildChunks();
@@ -196,6 +235,7 @@ namespace Alex.Gamestates.Playing
 					if (currentKeyboardState.IsKeyDown(KeyBinds.Fog) && !_oldKeyboardState.IsKeyDown(KeyBinds.Fog))
 					{
 						World.ChunkManager.OpaqueEffect.FogEnabled = !World.ChunkManager.OpaqueEffect.FogEnabled;
+						World.ChunkManager.TransparentEffect.FogEnabled = !World.ChunkManager.TransparentEffect.FogEnabled;
 					}
 
 					if (currentKeyboardState.IsKeyDown(KeyBinds.ChangeCamera))
@@ -478,7 +518,11 @@ namespace Alex.Gamestates.Playing
 
 		protected override void OnDraw3D(RenderArgs args)
 		{
+			args.Camera = World.Camera;
+
 			FpsCounter.Update();
+			
+			SkyRenderer.Draw(args);
 
 			World.Render(args);
 
@@ -488,6 +532,12 @@ namespace Alex.Gamestates.Playing
 		protected override void OnUnload()
 		{
 			World.Destroy();
+			WorldProvider.Dispose();
+		}
+
+		public void Disconnect()
+		{
+			
 		}
 	}
 }

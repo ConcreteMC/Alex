@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Alex.API.Data;
 using Alex.API.Entities;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
@@ -12,6 +13,7 @@ namespace Alex.API.World
 		public delegate void ProgressReport(LoadingState state, int percentage);
 
 		protected IWorldReceiver WorldReceiver { get; set; }
+		protected IChatReceiver ChatReceiver { get; set; }
 		protected WorldProvider()
 		{
 			
@@ -39,13 +41,14 @@ namespace Alex.API.World
 
 		public abstract Vector3 GetSpawnPoint();
 
-		protected abstract void Initiate(out LevelInfo info);
+		protected abstract void Initiate(out LevelInfo info, out IChatProvider chatProvider);
 
-		public void Init(IWorldReceiver worldReceiver, out LevelInfo info)
+		public void Init(IWorldReceiver worldReceiver, IChatReceiver chat, out LevelInfo info, out IChatProvider chatProvider)
 		{
 			WorldReceiver = worldReceiver;
+			ChatReceiver = chat;
 
-			Initiate(out info);
+			Initiate(out info, out chatProvider);
 		}
 
 		public abstract Task Load(ProgressReport progressReport);

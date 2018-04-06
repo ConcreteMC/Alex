@@ -8,9 +8,10 @@ namespace Alex.Networking.Java.Packets.Play
 		public const byte System = 1;
 		public const byte Hotbar = 2;
 
+		public bool ServerBound = false;
 		public ChatMessagePacket()
 		{
-			PacketId = 0x0E;
+			PacketId = 0x01;
 		}
 
 		public string Message;
@@ -18,12 +19,19 @@ namespace Alex.Networking.Java.Packets.Play
 		public override void Decode(MinecraftStream stream)
 		{
 			Message = stream.ReadString();
+			if (!ServerBound)
+			{
+				Position = (byte)stream.ReadByte();
+			}
 		}
 
 		public override void Encode(MinecraftStream stream)
 		{
 			stream.WriteString(Message);
-			stream.WriteByte(Position);
+			if (!ServerBound)
+			{
+				stream.WriteByte(Position);
+			}
 		}
 	}
 }

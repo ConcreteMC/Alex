@@ -12,7 +12,7 @@
 	/// Hybrid-multifractal attempts to control the amount of details according
 	/// to the slope of the underlying overlays. Hybrid Multifractal  is 
 	/// conventionally used to generate terrains with smooth valley areas and 
-	/// rough peaked mountains. With high Lacunarity values, it tends to produce 
+	/// rough peaked mountains. ChatObjectComponent high Lacunarity values, it tends to produce 
 	/// embedded plateaus. 
 	/// 
 	/// Some good parameter values to start with:

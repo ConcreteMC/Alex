@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Alex.API.Data;
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.API.World;
@@ -137,9 +138,10 @@ namespace Alex.Worlds
 		}
 
 		private Thread UpdateThread { get; set; }
-		protected override void Initiate(out LevelInfo info)
+		protected override void Initiate(out LevelInfo info, out IChatProvider chatProvider)
 		{
 			info = _generator.GetInfo();
+			chatProvider = null;
 
 			lock (genLock)
 			{
@@ -161,6 +163,8 @@ namespace Alex.Worlds
 			};
 
 			UpdateThread.Start();
+
+			WorldReceiver?.UpdatePlayerPosition(new PlayerLocation(GetSpawnPoint()));
 
 			Log.Info($"World {info.LevelName} loaded!");
 		}
@@ -213,7 +217,9 @@ namespace Alex.Worlds
 
 						lock (genLock)
 						{
-							_preGeneratedChunks.Enqueue(c);
+							base.LoadChunk(c, c.X, c.Z, false);
+							LoadEntities(c);
+						//	_preGeneratedChunks.Enqueue(c);
 						}
 
 						cached.ChunkManager.RemoveChunk(new ChunkCoordinates(c.X, c.Z), false);
