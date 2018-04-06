@@ -14,20 +14,13 @@ namespace Alex.Entities
 
 		public bool CanFly { get; set; } = false;
 		public bool IsFlying { get; set; } = false;
-		public Gamemode Gamemode { get; set; }
 
 		public float FOVModifier { get; set; } = 0;
 
 		public PlayerController Controller { get; }
-		public Player(GraphicsDevice graphics, Alex alex, string name, World world, Texture2D skin) : base(name, world)
+		public Player(GraphicsDevice graphics, Alex alex, string name, World world, Texture2D skin) : base(name, world, skin, true)
 	    {
 		    Controller = new PlayerController(graphics, world, alex.GameSettings, this); 
-
-			if (Alex.Instance.Resources.BedrockResourcePack.EntityModels.TryGetValue("geometry.humanoid.customSlim",
-			    out EntityModel m))
-		    {
-				ModelRenderer = new EntityModelRenderer(m, skin);
-		    }
 	    }
 
 		public override void Update(IUpdateArgs args)
@@ -43,6 +36,12 @@ namespace Alex.Entities
 			
 			Controller.Update(args.GameTime);
 			base.Update(args);
+
+		}
+
+		public override void OnTick()
+		{
+			base.OnTick();
 
 		}
 	}

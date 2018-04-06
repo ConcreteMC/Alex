@@ -113,8 +113,6 @@ namespace Alex.Utils
 					break;
 				case EntityType.Horse:
 					entity = new Horse(world);
-					//var random = new Random();
-					//entity = new Horse(world, random.NextDouble() < 0.10, random);
 					break;
 				case EntityType.PolarBear:
 					entity = new PolarBear(world);
@@ -122,7 +120,7 @@ namespace Alex.Utils
 				case EntityType.Shulker:
 					entity = new Shulker(world);
 					break;
-				case EntityType.Dragon:
+				case EntityType.EnderDragon:
 					entity = new EnderDragon(world);
 					break;
 				case EntityType.SkeletonHorse:
@@ -140,9 +138,9 @@ namespace Alex.Utils
 				case EntityType.Vex:
 					entity = new Vex(world);
 					break;
-				case EntityType.Npc:
-					entity = new PlayerMob("test", world);
-					break;
+				//case EntityType.Human:
+					//entity = new PlayerMob("test", world, );
+				//	break;
 				default:
 					return null;
 			}

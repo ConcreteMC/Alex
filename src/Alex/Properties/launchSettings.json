@@ -2,6 +2,7 @@
   "profiles": {
     "Alex": {
       "commandName": "Project",
+      "commandLineArgs": "--username PocketEdition --uuid d38d0d94032a40e3b6bffa3edd570d5c --accessToken e3a7270243904ecc8f13de8ce5c55596 --server 10.0.1.50:25565",
       "workingDirectory": "bin\\Debug\\netcoreapp2.0\\"
     }
   }

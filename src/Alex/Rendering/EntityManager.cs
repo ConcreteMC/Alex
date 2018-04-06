@@ -68,20 +68,21 @@ namespace Alex.Rendering
 
 	    public void Render2D(IRenderArgs args)
 	    {
-		    /*var entities = Entities.Values.ToArray();
-		    foreach (var entity in entities.Where(x =>
-			    x.IsShowName && !string.IsNullOrWhiteSpace(x.NameTag) &&
-			    (x.IsAlwaysShowName || Vector3.Distance(camera.Position, x.KnownPosition) < 16f)))
+		    var entities = Entities.Values.ToArray();
+		    foreach (var entity in entities)
 		    {
-			    var entityBox = entity.GetBoundingBox();
-
-			    if (camera.BoundingFrustum.Contains(
-				        new Microsoft.Xna.Framework.BoundingBox(entityBox.Min, entityBox.Max)) !=
-			        ContainmentType.Disjoint)
+			    if (entity is PlayerMob player)
 			    {
-				    entity.RenderNametag(args, camera);
-			    }
-		    }*/
+				    var entityBox = player.GetBoundingBox();
+
+				    if (args.Camera.BoundingFrustum.Contains(
+					        new Microsoft.Xna.Framework.BoundingBox(entityBox.Min, entityBox.Max)) !=
+				        ContainmentType.Disjoint)
+				    {
+					    player.RenderNametag(args);
+				    }
+				}
+		    }
 	    }
 
 	    public void Dispose()
@@ -123,7 +124,7 @@ namespace Alex.Rendering
 		    if (EntityByUUID.TryAdd(entity.UUID, entity))
 		    {
 			    entity.IsAlwaysShowName = false;
-			    entity.NameTag = $"Entity_{id}";
+			   // entity.NameTag = $"Entity_{id}";
 			    entity.HideNameTag = false;
 
 			    if (!Entities.TryAdd(id, entity))

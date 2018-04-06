@@ -401,19 +401,32 @@ namespace Alex.Worlds
 			Player.KnownPosition = location;
 		}
 
-		public void UpdateEntityPosition(long entityId, PlayerLocation position, bool relative = false)
+		public void UpdateEntityPosition(long entityId, PlayerLocation position, bool relative = false, bool updateLook = false)
 		{
 			if (EntityManager.TryGet(entityId, out IEntity entity))
 			{
+				entity.KnownPosition.OnGround = position.OnGround;
 				if (!relative)
 				{
 					entity.KnownPosition = position;
 				}
 				else
 				{
-					entity.KnownPosition += position;
+					entity.KnownPosition.Move(position);
+					
+					if (updateLook)
+					{
+						entity.KnownPosition.Yaw = position.Yaw;
+						entity.KnownPosition.Pitch = position.Pitch;
+						entity.KnownPosition.HeadYaw = position.HeadYaw;
+					}
 				}
 			}
+		}
+
+		public bool TryGetEntity(long entityId, out IEntity entity)
+		{
+			return EntityManager.TryGet(entityId, out entity);
 		}
 
 		public void SetTime(long worldTime)

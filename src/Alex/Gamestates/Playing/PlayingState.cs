@@ -18,7 +18,6 @@ namespace Alex.Gamestates.Playing
 	{
 		private SkyboxModel SkyRenderer { get; }
 		private World World { get; }
-	//	private PlayerController Controller { get; }
 
 		private FpsMonitor FpsCounter { get; set; }
 		private Texture2D CrosshairTexture { get; set; }
@@ -32,8 +31,6 @@ namespace Alex.Gamestates.Playing
 			SkyRenderer = new SkyboxModel(alex, graphics, World);
 
 			Chat = new ChatComponent();
-
-		//	Controller = new PlayerController(Graphics, World, alex.GameSettings);
 
 			WorldProvider = worldProvider;
 			if (worldProvider is SPWorldProvider)

@@ -66,62 +66,6 @@ namespace Alex.Entities
 		//	HealthManager = new HealthManager(this);
 		}
 
-		public enum MetadataFlags
-		{
-			EntityFlags = 0,
-			HideNameTag = 3,
-			NameTag = 4,
-			AvailableAir = 7,
-			EatingHaystack = 16,
-			MaybeAge = 25,
-			Scale = 39,
-			MaxAir = 44,
-			CollisionBoxHeight = 53,
-			CollisionBoxWidth = 54,
-		}
-
-
-		/*public virtual MetadataDictionary GetMetadata()
-		{
-			MetadataDictionary metadata = new MetadataDictionary();
-			metadata[(int)MetadataFlags.EntityFlags] = new MetadataLong(GetDataValue());
-			metadata[1] = new MetadataInt(1);
-			metadata[2] = new MetadataInt(0);
-			metadata[(int)MetadataFlags.HideNameTag] = new MetadataByte(!HideNameTag);
-			metadata[(int)MetadataFlags.NameTag] = new MetadataString(NameTag ?? string.Empty);
-			metadata[(int)MetadataFlags.AvailableAir] = new MetadataShort(HealthManager.Air);
-			//metadata[4] = new MetadataByte(Silent);
-			//metadata[7] = new MetadataInt(0); // Potion Color
-			//metadata[8] = new MetadataByte(0); // Potion Ambient
-			//metadata[15] = new MetadataByte(NoAi);
-			//metadata[16] = new MetadataByte(0); // Player flags
-			////metadata[17] = new MetadataIntCoordinates(0, 0, 0);
-			//metadata[23] = new MetadataLong(-1); // Leads EID (target or holder?)
-			//metadata[23] = new MetadataLong(-1); // Leads EID (target or holder?)
-			//metadata[24] = new MetadataByte(0); // Leads on/off
-			metadata[(int)MetadataFlags.MaybeAge] = new MetadataInt(0); // Scale
-			metadata[(int)MetadataFlags.Scale] = new MetadataFloat(Scale); // Scale
-			metadata[(int)MetadataFlags.MaxAir] = new MetadataShort(HealthManager.MaxAir);
-			metadata[(int)MetadataFlags.CollisionBoxHeight] = new MetadataFloat(Height); // Collision box width
-			metadata[(int)MetadataFlags.CollisionBoxWidth] = new MetadataFloat(Width); // Collision box height
-			return metadata;
-		}*/
-
-		public virtual long GetDataValue()
-		{
-			//Player: 10000000000000011001000000000000
-			// 12, 15, 16, 31
-
-			BitArray bits = GetFlags();
-
-			byte[] bytes = new byte[8];
-			bits.CopyTo(bytes, 0);
-
-			long dataValue = BitConverter.ToInt64(bytes, 0);
-			Log.Debug($"Bit-array datavalue: dec={dataValue} hex=0x{dataValue:x2}, bin={Convert.ToString((long)dataValue, 2)}b ");
-			return dataValue;
-		}
-
 		public bool IsSneaking { get; set; }
 		public bool IsRiding { get; set; }
 		public bool IsSprinting { get; set; }
@@ -243,6 +187,7 @@ namespace Alex.Entities
 		public void Render(IRenderArgs renderArgs)
 		{
 			ModelRenderer.Render(renderArgs, KnownPosition);
+
 		}
 
 		public virtual void Update(IUpdateArgs args)

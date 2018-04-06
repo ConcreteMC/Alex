@@ -254,6 +254,7 @@ namespace Alex.Networking.Java.Packets
 			Register(Direction.Server, ConnectionState.Play, 0x38, () => new EntityHeadLook());
 			Register(Direction.Server, ConnectionState.Play, 0x40, () => new EntityVelocity());
 			Register(Direction.Server, ConnectionState.Play, 0x51, () => new EntityPropertiesPacket());
+			Register(Direction.Server, ConnectionState.Play, 0x4F, () => new EntityTeleport());
 		}
 	}
 }

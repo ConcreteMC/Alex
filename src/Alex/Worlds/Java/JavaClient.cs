@@ -40,7 +40,5 @@ namespace Alex.Worlds.Java
 					throw new ArgumentOutOfRangeException();
 			}
 		}
-
-		
 	}
 }

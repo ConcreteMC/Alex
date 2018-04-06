@@ -316,7 +316,7 @@ namespace Alex.Worlds
 			}
 		}
 
-		public void Read(MinecraftStream ms, int availableSections, bool groundUp)
+		public void Read(MinecraftStream ms, int availableSections, bool groundUp, bool readSkylight)
 		{
 			for (int i = 0; i < this.Chunks.Length; i++)
 			{
@@ -325,14 +325,14 @@ namespace Alex.Worlds
 				{
 					if (groundUp && !storage.IsEmpty())
 					{
-						storage = new ExtendedBlockStorage(i, true);
+						storage = new ExtendedBlockStorage(i, readSkylight);
 					}
 				}
 				else
 				{
 					if (storage == null)
 					{
-						storage = new ExtendedBlockStorage(i, true);
+						storage = new ExtendedBlockStorage(i, readSkylight);
 					}
 
 					storage.Data.Read(ms);					
@@ -354,7 +354,8 @@ namespace Alex.Worlds
 				}
 
 				//if (currentDimension.HasSkylight())
-				{ // IE, current dimension is overworld / 0
+				if (readSkylight)
+				{
 					for (int y = 0; y < 16; y++)
 					{
 						for (int z = 0; z < 16; z++)
@@ -381,12 +382,9 @@ namespace Alex.Worlds
 
 			if (groundUp)
 			{
-				for (int z = 0; z < 16; z++)
+				for (int i = 0; i < 256; i++)
 				{
-					for (int x = 0; x < 16; x++)
-					{
-						SetBiome(x, z, ms.ReadByte());
-					}
+					BiomeId[i] = ms.ReadByte();
 				}
 			}
 

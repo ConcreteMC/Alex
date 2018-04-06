@@ -27,7 +27,7 @@ namespace Alex.Gamestates.Playing
         public bool IsJumping { get; private set; }
         public bool IsFreeCam { get; set; }
         private Vector3 Velocity { get; set; }
-        private Vector3 Drag { get; set; }
+       // private Vector3 Drag { get; set; }
 
         private GraphicsDevice Graphics { get; }
         private World World { get; }
@@ -44,11 +44,9 @@ namespace Alex.Gamestates.Playing
             IsFreeCam = true;
 
             Velocity = Vector3.Zero;
-            Drag = Vector3.Zero;
 
-            Mouse.SetPosition(graphics.Viewport.Width / 2, graphics.Viewport.Height / 2);
             PreviousMouseState = Mouse.GetState();
-        }
+		}
 
 		private bool _inActive = true;
 	    public bool CheckInput { get; set; } = false;
@@ -74,7 +72,7 @@ namespace Alex.Gamestates.Playing
 		            _prevKeyState = currentKeyboardState;
 	            }
 
-	            isSprinting = currentKeyboardState.IsKeyDown(KeyBinds.Down);
+	            Player.IsSprinting = currentKeyboardState.IsKeyDown(KeyBinds.Down);
 
 	            if (currentKeyboardState.IsKeyDown(KeyBinds.Forward))
                     moveVector.Z = 1;
@@ -107,29 +105,12 @@ namespace Alex.Gamestates.Playing
                 }
 				else
                 {
-                    if (currentKeyboardState.IsKeyDown(KeyBinds.Up) && !IsJumping && IsOnGround(Velocity))
+                    if (currentKeyboardState.IsKeyDown(KeyBinds.Up) && !IsJumping)
                     {
 	                    moveVector.Y = 1;
-						//ApplyForce(new Vector3(0, 0.42f * 10, 0), dt);
-                        IsJumping = true;
                     }
                 }
             }
-
-           // if (!IsFreeCam)
-            {
-	            DoPhysics(originalJumpValue, isSprinting, moveVector, dt);
-            }
-            //else if (IsFreeCam)
-           // {
-            //    if (moveVector != Vector3.Zero) // If we moved
-           //     {
-           //         moveVec%Ator *= (FlyingSpeed * (float)Player.FlyingSpeed) * dt;
-
-	      //          World.Player.KnownPosition.Move(moveVector);
-	                //World.Camera.Move(moveVector);
-            //    }
-            //}
 
 	        if (CheckInput)
 	        {
@@ -165,59 +146,64 @@ namespace Alex.Gamestates.Playing
 	        {
 		        _inActive = true;
 	        }
-        }
 
-	   
+	        DoPhysics(originalJumpValue, Player.IsSprinting, moveVector, dt);
+		}
+
         private void DoPhysics(bool originalJumpValue, bool sprinting, Vector3 direction, float dt)
         {
-			//Apply Gravity.
-			//Velocity += new Vector3(0, -Gravity * dt, 0);
-			//speed = 0.25f
-			//mp = 0.7f
-
 	        var oldVelocity = new Vector3(Velocity.X, Velocity.Y, Velocity.Z);
 
 			float currentDrag = GetCurrentDrag();
-	       // float speedFactor = (0.25f * 0.7f * 0.7f);
-	        float speedFactor = 0.21585f;
-	        if (sprinting)
+			var drag = new Vector3(1f - currentDrag, 1f - currentDrag, 1f - currentDrag);
+
+			float speedFactor = (float)Player.MovementSpeed;
+
+			if (sprinting)
 	        {
-		        speedFactor = 0.2806f;
+		        speedFactor += 0.2806f;
 	        }
 
 	        if (!IsFreeCam)
 	        {
 		        bool onGround = false;
-		        if (IsOnGround(Velocity))
+		        if (!IsOnGround(Velocity))
 		        {
-			        onGround = true;
-			        if (Velocity.Y < 0)
-			        {
-				        Velocity = new Vector3(Velocity.X, 0, Velocity.Z);
-				        IsJumping = false;
-			        }
-		        }
-		        else
-		        {
-			        Velocity -= new Vector3(0, (float) Player.Gravity, 0);
+					Velocity -= new Vector3(0, (float)Player.Gravity, 0);
 
 			        if (Velocity.Y < -3.92f)
 			        {
 				        Velocity = new Vector3(Velocity.X, -3.92f, Velocity.Z);
 			        }
-		        }
-
-		        if (direction.Y > 0)
+				}
+		        else
 		        {
-			        direction.Y = 0;
-			        Velocity += new Vector3(0, 0.42f, 0);
+			        onGround = true;
+
+			        if (direction.Y > 0 && !IsJumping)
+			        {
+				        direction.Y = 0;
+				        Velocity += new Vector3(0, 0.42f, 0);
+				        IsJumping = true;
+			        }
+			        else
+			        {
+						if (Velocity.Y < 0)
+				        {
+					        Velocity = new Vector3(Velocity.X, 0, Velocity.Z);
+					        IsJumping = false;
+						}
+			        }
 		        }
 
 		        Player.KnownPosition.OnGround = onGround;
 			}
 	        else
 	        {
-		        if (direction.Y > 0)
+		        speedFactor = (float) Player.FlyingSpeed;
+		        speedFactor *= 2.5f;
+
+				if (direction.Y > 0)
 		        {
 			        direction.Y = 0;
 					Player.KnownPosition.Move(new Vector3(0, speedFactor * dt, 0));
@@ -227,32 +213,25 @@ namespace Alex.Gamestates.Playing
 			        direction.Y = 0;
 			        Player.KnownPosition.Move(new Vector3(0, -speedFactor * dt, 0));
 				}
-
-		        speedFactor *= 2.5f;
 			}
 
 	        var groundSpeedSquared = Velocity.X * Velocity.X + Velocity.Z * Velocity.Z;
-	        if (groundSpeedSquared > 4.7f)
+	        if (groundSpeedSquared > (4.7f))
 	        {
-		        var groundSpeed = (float)groundSpeedSquared;
-		        var correctionScale = (float)Math.Sqrt(4.7f / groundSpeed);
-		        Velocity *= new Vector3(correctionScale, 1, correctionScale);
+		        var correctionScale = (float)Math.Sqrt(4.7f / groundSpeedSquared);
+		        Velocity *= new Vector3(correctionScale, 1f, correctionScale);
 	        }
 
-			Drag = new Vector3(1f - currentDrag, 1f - currentDrag, 1f - currentDrag);
 	        Velocity += (direction * speedFactor);
 
-			if (Velocity.LengthSquared() < 0.000001f)
+			if (Velocity.LengthSquared() < 0.001f)
 	        {
 				Velocity = Vector3.Zero;
 	        }
 
-	        Velocity *= Drag;
-			//  Velocity -= Drag;
+	        Velocity *= drag;
 
 			var v = ((oldVelocity + Velocity) * 0.5f) * dt;
-	       // var v = Velocity * dt;
-			//Matrix.CreateLookAt(v, Vector3.Forward, )
 			if (v != Vector3.Zero) //Only if we moved.
 			{
                 var preview = World.Player.KnownPosition.PreviewMove(v).Floor();
@@ -267,7 +246,7 @@ namespace Alex.Gamestates.Playing
                 var feetBlock = (Block)World.GetBlock(feetBlockPosition);
                 var feetBoundingBox = feetBlock.GetBoundingBox(feetBlockPosition);
 
-				var difference = (preview.Y) - (feetBoundingBox.Min.Y);
+				var difference = (feetBoundingBox.Max.Y) - (preview.Y);
 				//Log.Debug($"{difference}");
                 var playerBoundingBox = GetPlayerBoundingBox(preview);
 
@@ -284,7 +263,6 @@ namespace Alex.Gamestates.Playing
                 else
                 {
 					Velocity = Vector3.Zero;
-	                Drag = Vector3.Zero;
                 }
             }
         }

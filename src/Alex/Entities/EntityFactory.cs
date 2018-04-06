@@ -99,14 +99,6 @@ namespace Alex.Entities
 					if (resourceManager.BedrockResourcePack.EntityModels.TryGetValue(def.Value.Geometry["default"],
 						    out model) && model != null)
 					{
-						//var textures = def.Value.Textures;
-						//if (resourceManager.BedrockResourcePack.Textures.TryGetValue(textures.FirstOrDefault().Value,
-						//		out Bitmap bmp))
-						//{
-						//var texture = TextureUtils.BitmapToTexture2D(graphics, bmp);
-
-						//string name = def.Key.Replace("definition.", "", StringComparison.InvariantCultureIgnoreCase).Replace("_", "");
-					//	Log.Info($"Loaded model: {def.Key}");
 						_registeredRenderers.AddOrUpdate(def.Key,
 							(t) =>
 							{
