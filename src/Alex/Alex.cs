@@ -84,7 +84,6 @@ namespace Alex
 		{
 			if (GameSettings.IsDirty)
 			{
-				//Log.Info($"Saving settings...");
 				File.WriteAllText("settings.json", JsonConvert.SerializeObject(GameSettings, Formatting.Indented));
 			}
 		}
@@ -151,12 +150,11 @@ namespace Alex
 		protected override void Draw(GameTime gameTime)
 		{
 			GraphicsDevice.RasterizerState = RasterizerState.CullClockwise;
-			GraphicsDevice.Clear(Color.SkyBlue);
-
 			GameStateManager.Draw(gameTime);
 
-			base.Draw(gameTime);
 			UiManager.Draw(gameTime);
+
+			base.Draw(gameTime);
 		}
 
 		private void InitializeGame()

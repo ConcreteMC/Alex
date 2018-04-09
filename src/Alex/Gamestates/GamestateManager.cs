@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Threading;
-using Alex.Graphics;
 using Alex.Graphics.UI;
-using Alex.Rendering;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using NLog;
@@ -16,13 +13,12 @@ namespace Alex.Gamestates
 
 		private ConcurrentDictionary<string, GameState> ActiveStates { get; }
         private GameState ActiveState { get; set; }
+	    private GameState PreviousState { get; set; } = null;
 
         private GraphicsDevice Graphics { get; }
         private SpriteBatch SpriteBatch { get; }
 
 	    private UiManager UiManager { get; }
-
-		private ReaderWriterLockSlim Lock = new ReaderWriterLockSlim();
         public GameStateManager(GraphicsDevice graphics, SpriteBatch spriteBatch, UiManager uiManager)
         {
             Graphics = graphics;
@@ -31,6 +27,16 @@ namespace Alex.Gamestates
 
             ActiveStates = new ConcurrentDictionary<string, GameState>();
 		}
+
+	    public void Back()
+	    {
+		    var prev = PreviousState;
+
+			if (prev != null)
+		    {
+			    SetActiveState(prev);
+		    }
+	    }
 
         public void AddState(string name, GameState state)
         {
@@ -47,49 +53,52 @@ namespace Alex.Gamestates
             });
         }
 
-        public bool RemoveState(string name)
-        {
-            GameState state;
-            if (ActiveStates.TryRemove(name, out state))
-            {
-				// lock (_lock)
-				Lock.EnterUpgradeableReadLock();
-	            try
-	            {
-		            if (ActiveState == state)
-		            {
-			            SetActiveState((GameState) null);
-		            }
-	            }
-	            finally
-	            {
-					Lock.ExitUpgradeableReadLock();
-	            }
+	    public bool RemoveState(string name)
+	    {
+		    GameState state;
+		    if (ActiveStates.TryRemove(name, out state))
+		    {
+			    if (ActiveState == state)
+			    {
+				    var parent = state.ParentState;
+				    if (parent == null)
+				    {
+					    SetActiveState((GameState) null);
+					}
+				    else
+				    {
+					  //  SetActiveState(state.ParentState);
+				    }
+			    }
 
-	            state.Unload();
-				return true;
-            }
-            return false;
-        }
+			    state.Unload();
+			    return true;
+		    }
 
-        public bool SetActiveState(GameState state)
-        {
-			Lock.EnterWriteLock();
-	        try
-	        {
-				ActiveState?.Hide();
-		        ActiveState = state;
-		        ActiveState?.Show();
-	        }
-	        finally
-	        {
-		        Lock.ExitWriteLock();
-	        }
+		    return false;
+	    }
 
-	        return true;
-        }
+	    public bool SetActiveState(GameState state)
+	    {
+		    var current = ActiveState;
+		    current?.Hide();
 
-        public bool SetActiveState(string name)
+		    if (current != null && state.ParentState == null)
+		    {
+			    state.ParentState = current;
+		    }
+
+		    ActiveState = state;
+		    ActiveState?.Show();
+
+		    PreviousState = current;
+
+		    _activeStateDoubleBuffer = state;
+
+		    return true;
+	    }
+
+	    public bool SetActiveState(string name)
         {
             GameState state;
             if (!ActiveStates.TryGetValue(name, out state))
@@ -100,72 +109,53 @@ namespace Alex.Gamestates
 	        return SetActiveState(state);
         }
 
-        public void Draw(GameTime gameTime)
-        {
-	        GameState activeState;
-			Lock.EnterReadLock();
-	        try
-	        {
-		        activeState = ActiveState;
-	        }
-	        finally
-	        {
-				Lock.ExitReadLock();
-	        }
+	    private GameState _activeStateDoubleBuffer = null;
 
-          //  lock (_lock)
-            {
-                if (activeState == null) return;
+	    public void Draw(GameTime gameTime)
+	    {
+		    GameState activeState = _activeStateDoubleBuffer;
 
-                try
-                {
-                    RenderArgs args = new RenderArgs()
-                    {
-                        SpriteBatch = SpriteBatch,
-                        GameTime = gameTime,
-                        GraphicsDevice = Graphics
-                    };
+		    if (activeState == null) return;
 
-	                activeState.Draw3D(args);
-	                activeState.Draw2D(args);
-                }
-                catch (Exception ex)
-                {
-                    Log.Warn(ex, "An exception occured while trying to render!");
-                }
-            }
-        }
+		    try
+		    {
+			    RenderArgs args = new RenderArgs()
+			    {
+				    SpriteBatch = SpriteBatch,
+				    GameTime = gameTime,
+				    GraphicsDevice = Graphics
+			    };
 
-        public void Update(GameTime gameTime)
-		{
-			GameState activeState;
-			Lock.EnterReadLock();
-			try
-			{
-				activeState = ActiveState;
-			}
-			finally
-			{
-				Lock.ExitReadLock();
-			}
+			    activeState.Draw3D(args);
+			    activeState.Draw2D(args);
+		    }
+		    catch (Exception ex)
+		    {
+			    Log.Warn(ex, "An exception occured while trying to render!");
+		    }
+	    }
 
-			// foreach (var i in ActiveStates.ToArray())
-			{
-				if (activeState == null) return;
+	    public void Update(GameTime gameTime)
+	    {
+		    GameState activeState = _activeStateDoubleBuffer;
 
-				try
-                {
-                   // lock (_lock)
-                    {
-	                    activeState.Update(gameTime);
-                    }
-                   // i.Value.UpdateCall(gameTime);
-                }
-                catch(Exception ex)
-                {
-                    Log.Warn(ex, $"An exception occured while trying to call Update: {ex.ToString()}!");
-                }
-            }
-        }
+		    if (activeState == null) return;
+
+		    try
+		    {
+			 //   var parent = activeState.ParentState;
+
+			//	if (parent != null)
+			//    {
+			//		parent.Update(gameTime);
+			 //   }
+
+			    activeState.Update(gameTime);
+		    }
+		    catch (Exception ex)
+		    {
+			    Log.Warn(ex, $"An exception occured while trying to call Update: {ex.ToString()}!");
+		    }
+	    }
     }
 }

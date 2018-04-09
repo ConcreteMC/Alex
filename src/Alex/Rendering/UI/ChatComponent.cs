@@ -10,7 +10,7 @@ using Microsoft.Xna.Framework.Input;
 
 namespace Alex.Rendering.UI
 {
-	public class ChatComponent : UIComponent, IChatReceiver
+	public class ChatComponent : IChatReceiver
 	{
 		public bool RenderChatInput { get; private set; } = false;
 		private List<string> ChatMessages { get; set; } = new List<string>();
@@ -22,7 +22,7 @@ namespace Alex.Rendering.UI
 			Alex.OnCharacterInput += OnCharacterInput;
 		}
 
-		public override void Render(RenderArgs args)
+		public void Render(RenderArgs args)
 		{
 			args.SpriteBatch.Begin();
 			try
@@ -83,18 +83,13 @@ namespace Alex.Rendering.UI
 		}
 
 		private KeyboardState _prevKeyboardState;
-		public override void Update(GameTime time)
+		public void Update(GameTime time)
 		{
 			KeyboardState currentKeyboardState = Keyboard.GetState();
 			if (currentKeyboardState != _prevKeyboardState)
 			{
 				if (RenderChatInput) //Handle Input
 				{					
-				//	if (currentKeyboardState.IsKeyDown(Keys.Back))
-				//	{
-				//		BackSpace();
-				//	}
-
 					if (currentKeyboardState.IsKeyDown(Keys.Enter))
 					{
 						SubmitMessage();
@@ -150,6 +145,7 @@ namespace Alex.Rendering.UI
 		{
 			if (DateTime.UtcNow.Subtract(_lastBackSpace).TotalMilliseconds < 100) return;
 			_lastBackSpace = DateTime.UtcNow;
+
 			if (_input.Length > 0) _input = _input.Remove(_input.Length - 1, 1);
 		}
 
@@ -161,7 +157,6 @@ namespace Alex.Rendering.UI
 				if (Alex.IsMultiplayer)
 				{
 					ChatProvider?.Send(_input.ToString());
-					//Client.SendChat(_input);
 				}
 				else
 				{

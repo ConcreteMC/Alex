@@ -149,8 +149,6 @@ namespace Alex.Graphics.Models.Entity
 			{
 				if (!IsDirty) return;
 				var device = args.GraphicsDevice;
-				//if (_vertices.Length > 0)
-				//	Apply(ref _vertices, Origin, Pivot, Rotation);
 
 				if (Effect == null)
 				{

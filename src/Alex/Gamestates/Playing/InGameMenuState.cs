@@ -1,4 +1,7 @@
-﻿using Alex.Rendering.UI;
+﻿using Alex.Graphics.UI;
+using Alex.Graphics.UI.Controls.Menu;
+using Alex.Graphics.UI.Layout;
+using Alex.Rendering.UI;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -7,21 +10,37 @@ namespace Alex.Gamestates.Playing
 {
 	public class InGameMenuState : GameState
 	{
-		private PlayingState State { get; }
-		public InGameMenuState(Alex alex, PlayingState playingState, KeyboardState state) : base(alex)
+		public InGameMenuState(Alex alex, KeyboardState state) : base(alex)
 		{
-			State = playingState;
 			PreviousKeyboardState = state;
+		}
 
-			Button disconnectButton = new Button("Disconnect");
-			disconnectButton.OnButtonClick += DisconnectButtonOnOnButtonClick;
+		protected override void OnLoad(RenderArgs args)
+		{
+			Gui.ClassName = "TitleScreenRoot";
 
-			Button returnButton = new Button("Return to game");
-			returnButton.OnButtonClick += ReturnButtonOnOnButtonClick;
+			var menuWrapper = new UiPanel()
+			{
+				ClassName = "TitleScreenMenuPanel"
+			};
+			var stackMenu = new UiMenu()
+			{
+				ClassName = "TitleScreenMenu"
+			};
 
-			Controls.Add("disconnectBtn", disconnectButton);
-			Controls.Add("returnBtn", returnButton);
-			Controls.Add("info", new Info());
+			stackMenu.AddMenuItem("Disconnect", DisconnectButtonOnOnButtonClick);
+			stackMenu.AddMenuItem("Options", () => { Alex.GameStateManager.SetActiveState("options"); });
+			stackMenu.AddMenuItem("Return to game", ReturnButtonOnOnButtonClick);
+
+			menuWrapper.AddChild(stackMenu);
+
+			Gui.AddChild(menuWrapper);
+
+			var logo = new UiElement()
+			{
+				ClassName = "TitleScreenLogo",
+			};
+			Gui.AddChild(logo);
 
 			Alex.IsMouseVisible = true;
 		}
@@ -29,21 +48,21 @@ namespace Alex.Gamestates.Playing
 		private void ReturnButtonOnOnButtonClick()
 		{
 			Alex.IsMouseVisible = false;
-			Alex.GameStateManager.SetActiveState(State);
+			Alex.GameStateManager.Back();
 			Alex.GameStateManager.RemoveState("ingamemenu");
 		}
 
 		private void DisconnectButtonOnOnButtonClick()
 		{
-			State.Disconnect();
 			Alex.GameStateManager.SetActiveState("title");
+
 			Alex.GameStateManager.RemoveState("serverMenu");
 			Alex.GameStateManager.RemoveState("play");
 		}
 
 		protected override void OnDraw3D(RenderArgs args)
 		{
-			State.Draw3D(args);
+			ParentState.Draw3D(args);
 		}
 
 		protected override void OnDraw2D(RenderArgs args)
@@ -61,13 +80,8 @@ namespace Alex.Gamestates.Playing
 		private KeyboardState PreviousKeyboardState { get; set; }
 		protected override void OnUpdate(GameTime gameTime)
 		{
-			Controls["returnBtn"].Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y - 30);
-			Controls["disconnectBtn"].Location = new Vector2((int)(CenterScreen.X - 200), (int)CenterScreen.Y + 20);
-
 			if (Alex.IsActive)
 			{
-				//State.SendPositionUpdate(gameTime);
-
 				KeyboardState currentKeyboardState = Keyboard.GetState();
 				if (currentKeyboardState != PreviousKeyboardState)
 				{

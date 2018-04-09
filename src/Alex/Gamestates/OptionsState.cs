@@ -18,7 +18,7 @@ namespace Alex.Gamestates
 
             var backButton = new UiButton("Back", () =>
             {
-                Alex.GameStateManager.SetActiveState("title");
+                Alex.GameStateManager.Back();
             });
 
             var toggle1 = new UiToggleButton();

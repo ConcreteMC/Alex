@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.Graphics.Models
 {
-    public class Model
+    public abstract class Model
     {
 	    protected static VertexPositionNormalTextureColor[] QuadVertices { get; private set; } = null;
 	    protected static VertexPositionNormalTextureColor[] CubeVertices { get; private set; } = null;

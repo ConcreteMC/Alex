@@ -47,8 +47,6 @@ namespace Alex.Gamestates.Playing
 
 		protected override void OnLoad(RenderArgs args)
 		{
-			Controls.Add("chatComponent", Chat);
-
 			FpsCounter = new FpsMonitor();
 			CrosshairTexture = TextureUtils.ImageToTexture2D(args.GraphicsDevice, Resources.crosshair);
 
@@ -97,11 +95,11 @@ namespace Alex.Gamestates.Playing
 						MemoryUsageDisplay = $"Allocated memory: {GetBytesReadable(Environment.WorkingSet)}";
 					}
 				}
+
+				Chat.Update(gameTime);
 			}
 			base.OnUpdate(gameTime);
 		}
-
-		private bool _renderWaterOverlay = false;
 
 		private Vector3 _raytracedBlock;
 		protected void UpdateRayTracer(GraphicsDevice graphics, World world)
@@ -173,7 +171,7 @@ namespace Alex.Gamestates.Playing
 					}
 					else
 					{
-						Alex.GameStateManager.AddState("ingamemenu", new InGameMenuState(Alex, this, currentKeyboardState));
+						Alex.GameStateManager.AddState("ingamemenu", new InGameMenuState(Alex, currentKeyboardState));
 						Alex.GameStateManager.SetActiveState("ingamemenu");
 					}
 				}
@@ -245,9 +243,7 @@ namespace Alex.Gamestates.Playing
 				args.SpriteBatch.End();
 			}
 
-		//	ActiveOverlays.ForEach(x => x.Render(args));
-
-			//base.Render2D(args);
+			Chat.Render(args);
 		}
 
 		private void RenderDebugScreen(RenderArgs args)
@@ -496,11 +492,6 @@ namespace Alex.Gamestates.Playing
 		{
 			World.Destroy();
 			WorldProvider.Dispose();
-		}
-
-		public void Disconnect()
-		{
-			
 		}
 	}
 }
