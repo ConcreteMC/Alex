@@ -96,8 +96,8 @@ namespace Alex.Graphics.UI
 			{
 				foreach (var control in controls)
 				{
-					control.UpdateLayoutInternal();
 					control.LayoutParameters.BasePosition = layout.InnerBounds.Location;
+					control.UpdateLayoutInternal();
 				}
 			}
 

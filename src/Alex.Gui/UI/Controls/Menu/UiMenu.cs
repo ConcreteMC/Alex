@@ -8,7 +8,8 @@ namespace Alex.Graphics.UI.Controls.Menu
 
 		public void AddMenuItem(string text, Action action = null)
 		{
-			AddChild(new UiMenuItem(text, action));
+			var menuItem = new UiMenuItem(text, action);
+			AddChild(menuItem);
 		}
 
 	}

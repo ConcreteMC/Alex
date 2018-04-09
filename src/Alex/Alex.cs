@@ -55,7 +55,7 @@ namespace Alex
            // graphics.ToggleFullScreen();
 
 			UiManager = new UiManager(this);
-
+			
 			this.Window.AllowUserResizing = true;
 			this.Window.ClientSizeChanged += (sender, args) =>
 			{
@@ -90,7 +90,7 @@ namespace Alex
 		protected override void Initialize()
 		{
 			Window.Title = "Alex - " + Version;
-
+			
 			if (File.Exists("settings.json"))
 			{
 				try

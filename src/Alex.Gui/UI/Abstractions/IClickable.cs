@@ -1,7 +1,7 @@
 ﻿using System;
 using Alex.Graphics.UI.Input.Listeners;
 
-namespace Alex.Graphics.UI.Common
+namespace Alex.Graphics.UI.Abstractions
 {
 	public interface IClickable
 	{
