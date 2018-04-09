@@ -1,8 +1,10 @@
-﻿namespace Alex.API.Data
+﻿using Alex.API.Utils;
+
+namespace Alex.API.Data
 {
     public interface IChatReceiver
     {
-	    void Receive(string message);
+	    void Receive(ChatObject message);
     }
 
 	public interface IChatProvider

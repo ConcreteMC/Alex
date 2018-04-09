@@ -44,11 +44,13 @@ namespace Alex.Entities
 				else
 				{
 					Velocity *= (float)(1.0f - Drag);
-					if (!onGround)
-					{
-						Velocity -= new Vector3(0, (float)Gravity, 0);
-					}
+				//	if (!onGround)
+				//	{
+				//		Velocity -= new Vector3(0, (float)Gravity, 0);
+				//	}
 				}
+
+				KnownPosition.OnGround = onGround;
 				LastUpdatedTime = DateTime.UtcNow;
 			}
 			else if (Velocity != Vector3.Zero)

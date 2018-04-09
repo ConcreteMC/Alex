@@ -83,7 +83,7 @@ namespace Alex.Entities
 			}
 			return null;
 		}
-
+		
 		public static void LoadModels(ResourceManager resourceManager, GraphicsDevice graphics, bool replaceModels)
 		{
 			foreach (var def in resourceManager.BedrockResourcePack.EntityDefinitions)

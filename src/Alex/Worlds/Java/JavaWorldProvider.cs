@@ -98,12 +98,25 @@ namespace Alex.Worlds.Java
 			SendPacket(abilitiesPacket);
 		}
 
+		private object _entityTicks = new object();
 		private void GameTick(object state)
 		{
 			if (WorldReceiver == null) return;
 
 			if (_initiated)
 			{
+				if (Monitor.TryEnter(_entityTicks, 0) && WorldReceiver is World world)
+				{
+					try
+					{
+						world.EntityManager.GameTick();
+					}
+					finally
+					{
+						Monitor.Exit(_entityTicks);
+					}
+				}
+
 				var p = WorldReceiver.GetPlayerEntity();
 				if (p != null && p is Player player && Spawned)
 				{
@@ -112,35 +125,34 @@ namespace Alex.Worlds.Java
 					if (player.IsFlying != _flying)
 					{
 						_flying = player.IsFlying;
-						
+
 						SendPlayerAbilities(player);
 					}
 
-					var pos = player.KnownPosition;
-					if (player.KnownPosition != _lastSentLocation)
+					var pos = (PlayerLocation)player.KnownPosition.Clone();
+					if (pos.DistanceTo(_lastSentLocation) > 0.0f)
 					{
-						if (pos.DistanceTo(_lastSentLocation) > 0.001f)
-						{
-							PlayerPositionAndLookPacketServerBound packet = new PlayerPositionAndLookPacketServerBound();
-							packet.Yaw = pos.Yaw;
-							packet.Pitch = pos.Pitch;
-							packet.X = pos.X;
-							packet.Y = pos.Y;
-							packet.Z = pos.Z;
-							packet.OnGround = pos.OnGround;
+						PlayerPositionAndLookPacketServerBound packet = new PlayerPositionAndLookPacketServerBound();
+						packet.Yaw = pos.HeadYaw;
+						packet.Pitch = pos.Pitch;
+						packet.X = pos.X;
+						packet.Y = pos.Y;
+						packet.Z = pos.Z;
+						packet.OnGround = pos.OnGround;
 
-							SendPacket(packet);
-							_lastSentLocation = pos;
-						}
-						else if (Math.Abs(pos.Pitch - _lastSentLocation.Pitch) > 0f || Math.Abs(pos.Yaw - _lastSentLocation.Yaw) > 0f)
-						{
-							PlayerLookPacket playerLook = new PlayerLookPacket();
-							playerLook.Pitch = pos.Pitch;
-							playerLook.Yaw = pos.Yaw;
-							playerLook.OnGround = pos.OnGround;
+						SendPacket(packet);
+						_lastSentLocation = pos;
 
-							SendPacket(playerLook);
-						}
+						_tickSinceLastPositionUpdate = 0;
+					}
+					else if (Math.Abs(pos.Pitch - _lastSentLocation.Pitch) > 0f || Math.Abs(pos.Yaw - _lastSentLocation.Yaw) > 0f)
+					{
+						PlayerLookPacket playerLook = new PlayerLookPacket();
+						playerLook.Pitch = pos.Pitch;
+						playerLook.Yaw = pos.HeadYaw;
+						playerLook.OnGround = pos.OnGround;
+
+						SendPacket(playerLook);
 
 						_tickSinceLastPositionUpdate = 0;
 					}
@@ -282,18 +294,11 @@ namespace Alex.Worlds.Java
 			}
 			else if (entity.ModelRenderer == null)
 			{
-				/*	var def = Alex.Resources.BedrockResourcePack.EntityDefinitions.FirstOrDefault(x => x.Key.Contains(type.ToString()));
-					if (string.IsNullOrWhiteSpace(def.Key))
-					{
-						Log.Warn($"Could not create entity of type: {(int)type}:{type.ToString()}");
-						return;
-					}
-
-					def.Value.*/
 				var renderer = EntityFactory.GetEntityRenderer(type.ToString(), null);
+			
 				if (renderer == null)
 				{
-					var def = Alex.Resources.BedrockResourcePack.EntityDefinitions.FirstOrDefault(x => x.Key.Contains(type.ToString().ToLowerInvariant()));
+					var def = Alex.Resources.BedrockResourcePack.EntityDefinitions.FirstOrDefault(x => x.Value.Filename.Replace("_","").Equals(type.ToString().ToLowerInvariant()));
 					if (!string.IsNullOrWhiteSpace(def.Key))
 					{
 						EntityModel model;
@@ -316,12 +321,12 @@ namespace Alex.Worlds.Java
 							}
 						}
 					}
+				}
 
-					if (renderer == null)
-					{
-						Log.Warn($"Could not create entity (no renderer found) of type: {(int) type}:{type.ToString()}");
-						return;
-					}
+				if (renderer == null)
+				{
+					Log.Warn($"Could not find renderer for entity type: {type.ToString()} ({(int) type})");
+					return;
 				}
 
 				entity.ModelRenderer = renderer;
@@ -436,9 +441,45 @@ namespace Alex.Worlds.Java
 			{
 				HandleSpawnPlayerPacket(spawnPlayerPacket);
 			}
+			else if (packet is DestroyEntitiesPacket destroy)
+			{
+				HandleDestroyEntitiesPacket(destroy);
+			}
+			else if (packet is EntityHeadLook headlook)
+			{
+				HandleEntityHeadLook(headlook);
+			}
+			else if (packet is EntityVelocity velocity)
+			{
+				HandleEntityVelocity(velocity);
+			}
 			else
 			{
-				//Log.Warn($"Unhandled packet: 0x{packet.PacketId:x2} - {packet.ToString()}");
+				Log.Warn($"Unhandled packet: 0x{packet.PacketId:x2} - {packet.ToString()}");
+			}
+		}
+
+		private void HandleEntityVelocity(EntityVelocity packet)
+		{
+			if (WorldReceiver.TryGetEntity(packet.EntityId, out var entity))
+			{
+				entity.Velocity = new Vector3(packet.VelocityX / 8000f, packet.VelocityY / 8000f, packet.VelocityZ / 8000f);
+			}
+		}
+
+		private void HandleEntityHeadLook(EntityHeadLook packet)
+		{
+			if (WorldReceiver.TryGetEntity(packet.EntityId, out var entity))
+			{
+				entity.KnownPosition.HeadYaw = MathUtils.AngleToDegree(packet.HeadYaw);
+			}
+		}
+
+		private void HandleDestroyEntitiesPacket(DestroyEntitiesPacket packet)
+		{
+			foreach(var id in packet.Entitys)
+			{
+				base.DespawnEntity(id);
 			}
 		}
 
@@ -446,8 +487,8 @@ namespace Alex.Worlds.Java
 		{
 			if (_players.TryGetValue(new UUID(packet.Uuid.ToByteArray()), out PlayerMob mob))
 			{
-				float yaw = (float) (packet.Yaw / 256.0f) * MathF.PI * 2.0f;
-				mob.KnownPosition = new PlayerLocation(packet.X, packet.Y, packet.Z, yaw, yaw, (float)(packet.Pitch / 256.0f) * MathF.PI * 2.0f);
+				float yaw = MathUtils.AngleToDegree(packet.Yaw);
+				mob.KnownPosition = new PlayerLocation(packet.X, packet.Y, packet.Z, yaw, yaw, -MathUtils.AngleToDegree(packet.Pitch));
 				mob.EntityId = packet.EntityId;
 				mob.IsSpawned = true;
 
@@ -503,8 +544,8 @@ namespace Alex.Worlds.Java
 
 		private void HandleEntityLookAndRelativeMove(EntityLookAndRelativeMove packet)
 		{
-			
-			WorldReceiver.UpdateEntityPosition(packet.EntityId, new PlayerLocation(((float)packet.DeltaX) / (32.0 * 128.0), ((float)packet.DeltaY) / (32.0 * 128.0), ((float)packet.DeltaZ) / (32.0 * 128.0), (float)(packet.Yaw / 256.0f) * MathF.PI * 2.0f, (float)(packet.Yaw / 256.0f) * MathF.PI * 2.0f, (float)(packet.Pitch / 256.0f) * MathF.PI * 2.0f)
+			var yaw = MathUtils.AngleToDegree(packet.Yaw);
+			WorldReceiver.UpdateEntityPosition(packet.EntityId, new PlayerLocation(MathUtils.FromFixedPoint(packet.DeltaX), MathUtils.FromFixedPoint(packet.DeltaY), MathUtils.FromFixedPoint(packet.DeltaZ), yaw, yaw, -MathUtils.AngleToDegree(packet.Pitch))
 			{
 				OnGround = packet.OnGround
 			}, true, true);
@@ -512,7 +553,7 @@ namespace Alex.Worlds.Java
 
 		private void HandleEntityRelativeMove(EntityRelativeMove packet)
 		{
-			WorldReceiver.UpdateEntityPosition(packet.EntityId, new PlayerLocation((float)(packet.DeltaX) / (32.0 * 128.0), ((float)packet.DeltaY) / (32.0 * 128.0), ((float)packet.DeltaZ) / (32.0 * 128.0))
+			WorldReceiver.UpdateEntityPosition(packet.EntityId, new PlayerLocation(MathUtils.FromFixedPoint(packet.DeltaX), MathUtils.FromFixedPoint(packet.DeltaY), MathUtils.FromFixedPoint(packet.DeltaZ))
 			{
 				OnGround = packet.OnGround
 			}, true);
@@ -522,15 +563,16 @@ namespace Alex.Worlds.Java
 		{
 			if (WorldReceiver.TryGetEntity(packet.EntityId, out var entity))
 			{
-				entity.KnownPosition.Yaw = (float)(packet.Yaw / 256.0f) * MathF.PI * 2.0f;
-				entity.KnownPosition.Pitch = (float)(packet.Pitch / 256.0f) * MathF.PI * 2.0f;
+				entity.KnownPosition.Yaw = MathUtils.AngleToDegree(packet.Yaw);
+				entity.KnownPosition.Pitch = -MathUtils.AngleToDegree(packet.Pitch);
 				entity.KnownPosition.OnGround = packet.OnGround;
 			}
 		}
 
 		private void HandleEntityTeleport(EntityTeleport packet)
 		{
-			WorldReceiver.UpdateEntityPosition(packet.EntityID, new PlayerLocation(packet.X, packet.Y, packet.Z, packet.Yaw, packet.Yaw, packet.Pitch)
+			float yaw = MathUtils.AngleToDegree(packet.Yaw);
+			WorldReceiver.UpdateEntityPosition(packet.EntityID, new PlayerLocation(packet.X, packet.Y, packet.Z, yaw, yaw, packet.Pitch)
 			{
 				OnGround = packet.OnGround
 			});
@@ -589,7 +631,7 @@ namespace Alex.Worlds.Java
 		{
 			if (ChatObject.TryParse(packet.Message, out ChatObject chat))
 			{
-				ChatReceiver?.Receive(chat.ToString());
+				ChatReceiver?.Receive(chat);
 			}
 			else
 			{

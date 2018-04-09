@@ -11,7 +11,7 @@ namespace Alex.Rendering.Camera
 		}
 
 
-		private Vector3 _thirdPersonOffset =  new Vector3(0, 2.5f, 2.5f);
+		private Vector3 _thirdPersonOffset =  new Vector3(0, 2.5f, 3.5f);
 	    protected override void UpdateLookAt()
 	    {
 			Matrix rotationMatrix = Matrix.CreateRotationX(Rotation.X) *

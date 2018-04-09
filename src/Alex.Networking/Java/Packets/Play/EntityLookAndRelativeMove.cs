@@ -11,7 +11,7 @@ namespace Alex.Networking.Java.Packets.Play
 
 		public int EntityId { get; set; }
 		public short DeltaX, DeltaY, DeltaZ;
-		public byte Yaw, Pitch;
+		public sbyte Yaw, Pitch;
 		public bool OnGround;
 
 		public override void Decode(MinecraftStream stream)
@@ -20,8 +20,8 @@ namespace Alex.Networking.Java.Packets.Play
 			DeltaX = stream.ReadShort();
 			DeltaY = stream.ReadShort();
 			DeltaZ = stream.ReadShort();
-			Yaw = (byte) stream.ReadByte();
-			Pitch = (byte) stream.ReadByte();
+			Yaw = (sbyte) stream.ReadByte();
+			Pitch = (sbyte) stream.ReadByte();
 			OnGround = stream.ReadBool();
 		}
 
@@ -31,8 +31,8 @@ namespace Alex.Networking.Java.Packets.Play
 			stream.WriteShort(DeltaX);
 			stream.WriteShort(DeltaY);
 			stream.WriteShort(DeltaZ);
-			stream.WriteByte(Yaw);
-			stream.WriteByte(Pitch);
+			stream.WriteByte((byte)Yaw);
+			stream.WriteByte((byte)Pitch);
 			stream.WriteBool(OnGround);
 		}
 	}

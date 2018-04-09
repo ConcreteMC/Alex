@@ -109,7 +109,7 @@ namespace Alex.Gamestates.Playing
 				World.Player.Controller.CheckInput = !Chat.RenderChatInput;
 				SkyRenderer.Update(args);
 
-				var headBlock = World.GetBlock(World.Player.KnownPosition);
+			/*	var headBlock = World.GetBlock(World.Player.KnownPosition);
 				if (headBlock.IsWater)
 				{
 					if (!_renderWaterOverlay)
@@ -119,7 +119,7 @@ namespace Alex.Gamestates.Playing
 				}else if (_renderWaterOverlay)
 				{
 					_renderWaterOverlay = false;
-				}
+				}*/
 
 
 				if (RenderDebug)
@@ -413,7 +413,7 @@ namespace Alex.Gamestates.Playing
 
 		public static string GetCardinalDirection(PlayerLocation cam)
 		{
-			double rotation = (360 - cam.Yaw) % 360;
+			double rotation = (360 - cam.HeadYaw) % 360;
 			if (rotation < 0)
 			{
 				rotation += 360.0;

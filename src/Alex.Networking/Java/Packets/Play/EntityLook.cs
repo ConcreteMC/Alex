@@ -10,22 +10,22 @@ namespace Alex.Networking.Java.Packets.Play
 		}
 
 		public int EntityId { get; set; }
-		public byte Yaw, Pitch;
+		public sbyte Yaw, Pitch;
 		public bool OnGround;
 
 		public override void Decode(MinecraftStream stream)
 		{
 			EntityId = stream.ReadVarInt();
-			Yaw = (byte)stream.ReadByte();
-			Pitch = (byte)stream.ReadByte();
+			Yaw = (sbyte)stream.ReadByte();
+			Pitch = (sbyte)stream.ReadByte();
 			OnGround = stream.ReadBool();
 		}
 
 		public override void Encode(MinecraftStream stream)
 		{
 			stream.WriteVarInt(EntityId);
-			stream.WriteByte(Yaw);
-			stream.WriteByte(Pitch);
+			stream.WriteByte((byte)Yaw);
+			stream.WriteByte((byte)Pitch);
 			stream.WriteBool(OnGround);
 		}
 	}

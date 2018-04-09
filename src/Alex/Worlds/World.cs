@@ -134,6 +134,7 @@ namespace Alex.Worlds
 					WorldTime++;
 				}
 
+				
 				//if (Player.IsSpawned)
 			}
 		}
@@ -412,7 +413,10 @@ namespace Alex.Worlds
 				}
 				else
 				{
-					entity.KnownPosition.Move(position);
+					entity.KnownPosition.X += position.X;
+					entity.KnownPosition.Y += position.Y;
+					entity.KnownPosition.Z += position.Z;	
+					//entity.KnownPosition.Move(position);
 					
 					if (updateLook)
 					{

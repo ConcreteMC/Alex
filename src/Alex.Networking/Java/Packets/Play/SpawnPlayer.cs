@@ -16,8 +16,8 @@ namespace Alex.Networking.Java.Packets.Play
 		public double X;
 		public double Y;
 		public double Z;
-		public byte Yaw;
-		public byte Pitch;
+		public sbyte Yaw;
+		public sbyte Pitch;
 
 		public override void Decode(MinecraftStream stream)
 		{
@@ -26,8 +26,8 @@ namespace Alex.Networking.Java.Packets.Play
 			X = stream.ReadDouble();
 			Y = stream.ReadDouble();
 			Z = stream.ReadDouble();
-			Yaw = (byte) stream.ReadByte();
-			Pitch = (byte) stream.ReadByte();
+			Yaw = (sbyte) stream.ReadByte();
+			Pitch = (sbyte) stream.ReadByte();
 			stream.ReadByte();
 		}
 
@@ -38,8 +38,8 @@ namespace Alex.Networking.Java.Packets.Play
 			stream.WriteDouble(X);
 			stream.WriteDouble(Y);
 			stream.WriteDouble(Z);
-			stream.WriteByte(Yaw);
-			stream.WriteByte(Pitch);
+			stream.WriteByte((byte)Yaw);
+			stream.WriteByte((byte)Pitch);
 			stream.WriteByte(0xff); //End of metadata
 		}
 	}
