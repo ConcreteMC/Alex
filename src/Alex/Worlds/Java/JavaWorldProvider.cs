@@ -98,7 +98,18 @@ namespace Alex.Worlds.Java
 			SendPacket(abilitiesPacket);
 		}
 
+		private void SendEntityAction(IEntity entity, EntityAction action, int jumpBoost = 0)
+		{
+			EntityActionPacket packet = new EntityActionPacket();
+			packet.EntityId = (int) entity.EntityId;
+			packet.Action = action;
+			packet.JumpBoost = jumpBoost;
+			SendPacket(packet);
+		}
+
 		private object _entityTicks = new object();
+		private bool _isSneaking = false;
+		private bool _isSprinting = false;
 		private void GameTick(object state)
 		{
 			if (WorldReceiver == null) return;
@@ -127,6 +138,34 @@ namespace Alex.Worlds.Java
 						_flying = player.IsFlying;
 
 						SendPlayerAbilities(player);
+					}
+
+					if (player.IsSneaking != _isSneaking)
+					{
+						if (!_isSneaking)
+						{
+							SendEntityAction(player, EntityAction.StartSneaking);
+							_isSneaking = true;
+						}
+						else
+						{
+							SendEntityAction(player, EntityAction.StopSneaking);
+							_isSneaking = false;
+						}
+					}
+
+					if (player.IsSprinting != _isSprinting)
+					{
+						if (!_isSprinting)
+						{
+							SendEntityAction(player, EntityAction.StartSprinting);
+							_isSprinting = true;
+						}
+						else
+						{
+							SendEntityAction(player, EntityAction.StopSprinting);
+							_isSprinting = false;
+						}
 					}
 
 					var pos = (PlayerLocation)player.KnownPosition.Clone();
@@ -189,12 +228,7 @@ namespace Alex.Worlds.Java
 			chatProvider = this;
 
 			_initiated = true;
-			while (_entitySpawnQueue.TryDequeue(out Entity entity))
-			{
-				base.SpawnEntity(entity.EntityId, entity);
-			}
 
-			_entitySpawnQueue = null;
 			WorldReceiver?.UpdatePlayerPosition(_lastReceivedLocation);
 
 			_gameTickTimer = new System.Threading.Timer(GameTick, null, 50, 50);
@@ -222,48 +256,40 @@ namespace Alex.Worlds.Java
 
 				_loginCompleteEvent.WaitOne();
 
-				//using (CachedWorld cached = new CachedWorld(Alex))
+				int t = Alex.GameSettings.RenderDistance;
+				double radiusSquared = Math.Pow(t, 2);
+
+				var target = radiusSquared * 3;
+
+				int count = 0;
+				ChunkColumn column = _generatingHelper.Take();
+				do
 				{
-					
-					int t = Alex.GameSettings.RenderDistance;
-					double radiusSquared = Math.Pow(t, 2);
+					base.LoadChunk(column, column.X, column.Z, true);
+					progressReport(LoadingState.LoadingChunks, (int) Math.Floor((count / target) * 100));
+					count++;
+				} while (_generatingHelper.TryTake(out column, 1250) && !Spawned);
 
-					var target = radiusSquared * 3;
+				_generatingHelper = null;
+				count = 0;
 
-					int count = 0;
-					ChunkColumn column = _generatingHelper.Take();
-					do
+				/*Parallel.ForEach(generatedChunks, (c) =>
+				{
+					cached.ChunkManager.UpdateChunk(c);
+
+					lock (_genLock)
 					{
-						base.LoadChunk(column, column.X, column.Z, true);
-						//ChunkManager.AddChunk(column, new ChunkCoordinates(column.X, column.Z), false);
+						base.LoadChunk(c, c.X, c.Z, false);
+					}
 
-						progressReport(LoadingState.LoadingChunks, (int) Math.Floor((count / target) * 100));
-						count++;
-					} while (_generatingHelper.TryTake(out column, 1250));
+					cached.ChunkManager.RemoveChunk(new ChunkCoordinates(c.X, c.Z), false);
 
-					_generatingHelper = null;
-					count = 0;
+					progressReport(LoadingState.GeneratingVertices, (int)Math.Floor((count / target) * 100));
 
-					/*Parallel.ForEach(generatedChunks, (c) =>
-					{
-						cached.ChunkManager.UpdateChunk(c);
-
-						lock (_genLock)
-						{
-							base.LoadChunk(c, c.X, c.Z, false);
-						}
-
-						cached.ChunkManager.RemoveChunk(new ChunkCoordinates(c.X, c.Z), false);
-
-						progressReport(LoadingState.GeneratingVertices, (int)Math.Floor((count / target) * 100));
-
-						count++;
-					});*/
-				}
-
+					count++;
+				});*/
 				progressReport(LoadingState.Spawning, 99);
 				SpinWait.SpinUntil(() => Spawned);
-				
 			});
 		}
 
