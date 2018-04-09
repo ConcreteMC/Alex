@@ -117,7 +117,7 @@ namespace Alex.Worlds
 		}
 
 		private float _fovModifier = -1;
-		public void Update(UpdateArgs args, SkyboxModel skyRenderer)
+		public void Update(UpdateArgs args, SkyBox skyRenderer)
 		{
 			args.Camera = Camera;
 			if (Player.FOVModifier != _fovModifier)

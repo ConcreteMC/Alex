@@ -11,7 +11,7 @@ namespace Alex.Worlds.Java
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(JavaClient));
 
 		private IJavaProvider WorldReceiver { get; }
-		public JavaClient(JavaWorldProvider javaWorldProvider, Socket socket) : base(Direction.Server, socket)
+		public JavaClient(JavaWorldProvider javaWorldProvider, Socket socket) : base(Direction.ClientBound, socket)
 		{
 			MCPacketFactory.Load();
 

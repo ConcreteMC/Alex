@@ -2,7 +2,7 @@
 {
     public enum Direction
     {
-        Client,
-        Server
+        ServerBound,
+        ClientBound
     }
 }

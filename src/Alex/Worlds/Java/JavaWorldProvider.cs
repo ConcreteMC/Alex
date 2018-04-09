@@ -899,7 +899,7 @@ namespace Alex.Worlds.Java
 			_accesToken = accessToken;
 
 			TcpClient.Connect(Endpoint);
-		//	Client.InitEncryption();
+		//	ServerBound.InitEncryption();
 			Client.Initialize();
 
 			HandshakePacket handshake = new HandshakePacket();

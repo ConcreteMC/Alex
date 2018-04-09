@@ -37,5 +37,7 @@ namespace Alex.ResourcePackLib.Json.Models.Blocks
 		/// </summary>
 		//[JsonConverter(typeof(MCElementsDictionaryConverter))]
 		public BlockModelElement[] Elements { get; set; } = new BlockModelElement[0];
+
+		public Dictionary<string, DisplayElement> Display { get; set; } = new Dictionary<string, DisplayElement>();
 	}
 }

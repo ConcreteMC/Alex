@@ -76,7 +76,7 @@ namespace Alex.Utils
 			AtlasSize = new Vector2(_atlas.Width, _atlas.Height);
 
         //    bitmap.Save("assets\\terrain.png", ImageFormat.Png);
-			Log.Info("Texturemap generated!");
+			Log.Info($"Texturemap generated! (Width:{_atlas.Width}px Height:{_atlas.Height}px)");
         }
 
 	    private void Process(ref Bitmap bmp, IEnumerable<KeyValuePair<string, Bitmap>> data, ref int xi, ref int yi, ref int xOffset, ref int yRemaining)

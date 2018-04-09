@@ -16,7 +16,7 @@ namespace Alex.Gamestates.Playing
 {
 	public class PlayingState : GameState
 	{
-		private SkyboxModel SkyRenderer { get; }
+		private SkyBox SkyRenderer { get; }
 		private World World { get; }
 
 		private FpsMonitor FpsCounter { get; set; }
@@ -28,7 +28,7 @@ namespace Alex.Gamestates.Playing
 		public PlayingState(Alex alex, GraphicsDevice graphics, WorldProvider worldProvider) : base(alex)
 		{
 			World = new World(alex, graphics, new FirstPersonCamera(alex.GameSettings.RenderDistance, Vector3.Zero, Vector3.Zero));
-			SkyRenderer = new SkyboxModel(alex, graphics, World);
+			SkyRenderer = new SkyBox(alex, graphics, World);
 
 			Chat = new ChatComponent();
 

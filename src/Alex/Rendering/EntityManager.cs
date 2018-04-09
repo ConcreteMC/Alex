@@ -44,7 +44,7 @@ namespace Alex.Rendering
 			}
 		}
 
-	    public void Update(IUpdateArgs args, SkyboxModel skyRenderer)
+	    public void Update(IUpdateArgs args, SkyBox skyRenderer)
 	    {
 		    var entities = Entities.Values.ToArray();
 		    foreach (var entity in entities)
