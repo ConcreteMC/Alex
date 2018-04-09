@@ -163,4 +163,10 @@
   <data name="Entities" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>resources\entities.json;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
+  <data name="Alex" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\Alex.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="Splash" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\Splash.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
 </root>

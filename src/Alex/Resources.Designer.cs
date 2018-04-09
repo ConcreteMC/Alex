@@ -63,6 +63,16 @@ namespace Alex {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
+        internal static byte[] Alex {
+            get {
+                object obj = ResourceManager.GetObject("Alex", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
         internal static byte[] blocks {
             get {
                 object obj = ResourceManager.GetObject("blocks", resourceCulture);
@@ -285,6 +295,16 @@ namespace Alex {
         internal static string runtimeid_table {
             get {
                 return ResourceManager.GetString("runtimeid_table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] Splash {
+            get {
+                object obj = ResourceManager.GetObject("Splash", resourceCulture);
+                return ((byte[])(obj));
             }
         }
         

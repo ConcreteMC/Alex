@@ -63,7 +63,8 @@ namespace Alex.Rendering
 			});
 			Theme.AddClass("GuiRoot", new UiElementStyle()
 			{
-				SizeAnchor = Vector2.One
+				SizeAnchor = Vector2.One,
+				BackgroundColor = Color.FromNonPremultiplied(0xFF, 0x50, 0x3F, 0xFF)
 			});
 
 			Theme.AddClass<UiElement>(new UiElementStyle()
@@ -172,6 +173,11 @@ namespace Alex.Rendering
 				VerticalContentAlignment   = VerticalAlignment.Center
 			});
 
+			Theme.AddClass<UiMenu>(new UiElementStyle()
+			{
+
+			});
+
 			Theme.AddClass<UiMenuItem>(new UiElementStyle()
 			{
 				MinWidth                   = 80,
@@ -180,6 +186,7 @@ namespace Alex.Rendering
 				TextSize                   = 0.5f,
 				Padding                    = new Thickness(5, 10),
 				Margin                     = new Thickness(5),
+				SizeAnchor                 = new Vector2(1f, 0f),
 				PositionAnchor             = Vector2.Zero,
 				HorizontalContentAlignment = HorizontalAlignment.Center,
 				VerticalContentAlignment   = VerticalAlignment.Center

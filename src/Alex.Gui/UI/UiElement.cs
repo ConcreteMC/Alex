@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using Alex.Graphics.Annotations;
 using Alex.Graphics.UI.Abstractions;
 using Alex.Graphics.UI.Common;
 using Alex.Graphics.UI.Layout;
@@ -94,6 +93,7 @@ namespace Alex.Graphics.UI
 		internal void UpdateLayoutInternal()
 		{
 			UiElementLayoutParameters layoutParameters = UiElementLayoutParameters.FromStyle(Style);
+			layoutParameters.BasePosition = Container?.LayoutParameters?.InnerBounds.Location ?? Point.Zero;
 			
 			OnUpdateLayout(layoutParameters);
 			
