@@ -115,10 +115,19 @@ namespace Alex.Worlds
 
 			EntityManager.Render2D(args);
 		}
-		
+
+		private float _fovModifier = -1;
 		public void Update(UpdateArgs args, SkyboxModel skyRenderer)
 		{
 			args.Camera = Camera;
+			if (Player.FOVModifier != _fovModifier)
+			{
+				_fovModifier = Player.FOVModifier;
+
+				Camera.FOV += _fovModifier;
+				Camera.UpdateProjMatrix();
+				Camera.FOV -= _fovModifier;
+			}
 			Camera.Update(args, Player);
 
 			ChunkManager.Update(args, skyRenderer);
@@ -134,6 +143,7 @@ namespace Alex.Worlds
 					WorldTime++;
 				}
 
+				
 				//if (Player.IsSpawned)
 			}
 		}
@@ -412,7 +422,10 @@ namespace Alex.Worlds
 				}
 				else
 				{
-					entity.KnownPosition.Move(position);
+					entity.KnownPosition.X += position.X;
+					entity.KnownPosition.Y += position.Y;
+					entity.KnownPosition.Z += position.Z;	
+					//entity.KnownPosition.Move(position);
 					
 					if (updateLook)
 					{

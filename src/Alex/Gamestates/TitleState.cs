@@ -40,16 +40,10 @@ namespace Alex.Gamestates
 				ClassName = "TitleScreenMenu"
 			};
 
-			if (Alex.IsMultiplayer)
+			stackMenu.AddMenuItem("Multiplayer", () =>
 			{
-				stackMenu.AddMenuItem("Connect", () =>
-				{
-					if (Alex.IsMultiplayer)
-					{
-						LoadWorld(new JavaWorldProvider(Alex, Alex.ServerEndPoint, Alex.Username, Alex.UUID, Alex.AccessToken));
-					}
-				});
-			}
+				
+			});
 
 			stackMenu.AddMenuItem("Debug Blockstates", DebugWorldButtonActivated);
 			stackMenu.AddMenuItem("Debug Flatland", DebugFlatland);
@@ -77,7 +71,7 @@ namespace Alex.Gamestates
 
 			generator.Initialize();
 
-			LoadWorld(new SPWorldProvider(Alex, generator));
+			Alex.LoadWorld(new SPWorldProvider(Alex, generator));
 		}
 
 		private void DebugFlatland()
@@ -97,26 +91,6 @@ namespace Alex.Gamestates
 		{
 			Debug(new DebugWorldGenerator());
 		}
-
-		private void LoadWorld(WorldProvider worldProvider)
-		{
-			PlayingState playState = new PlayingState(Alex, Graphics, worldProvider);
-			Alex.GameStateManager.AddState("play", playState);
-
-			LoadingWorldState loadingScreen =
-				new LoadingWorldState(Alex, TextureUtils.ImageToTexture2D(Alex.GraphicsDevice, Resources.mcbg));
-			Alex.GameStateManager.AddState("loading", loadingScreen);
-			Alex.GameStateManager.SetActiveState("loading");
-
-			worldProvider.Load(loadingScreen.UpdateProgress).ContinueWith(task =>
-			{
-				
-				Alex.GameStateManager.SetActiveState("play");
-
-				Alex.GameStateManager.RemoveState("loading");
-			});
-		}
-
 	}
 
 	class TitleSkyBoxBackground

@@ -10,6 +10,7 @@ namespace Alex.API.Graphics
 	{
 		BoundingFrustum BoundingFrustum { get; }
 		float FarDistance { get; set; }
+		float FOV { get; set; }
 		Vector3 Position { get; set; }
 		Matrix ProjectionMatrix { get; set; }
 		Vector3 Rotation { get; set; }
@@ -21,5 +22,6 @@ namespace Alex.API.Graphics
 		Vector3 PreviewMove(Vector3 amount);
 		void Update(IUpdateArgs args, IEntity entity);
 		void UpdateAspectRatio(float aspectRatio);
+		void UpdateProjMatrix();
 	}
 }

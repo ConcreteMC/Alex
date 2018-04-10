@@ -80,47 +80,13 @@ namespace Alex.Gamestates.Playing
 					AspectRatio = newAspectRatio;
 				}
 
-				/*var player = World.Player;
-				if (player.IsSpawned)
-				{
-					if (Controller.IsFreeCam)
-					{
-						if (!player.CanFly)
-						{
-							Controller.IsFreeCam = false;
-						}
-						else
-						{
-							if (!player.IsFlying)
-							{
-								player.IsFlying = true;
-							}
-						}
-					}
-				}
-
-				Controller.Update(gameTime, !Chat.RenderChatInput);*/
-
 				UpdateRayTracer(Alex.GraphicsDevice, World);
 
 				CheckInput(gameTime);
-
+				
 				World.Update(args, SkyRenderer);
 				World.Player.Controller.CheckInput = !Chat.RenderChatInput;
 				SkyRenderer.Update(args);
-
-				var headBlock = World.GetBlock(World.Player.KnownPosition);
-				if (headBlock.IsWater)
-				{
-					if (!_renderWaterOverlay)
-					{
-						_renderWaterOverlay = true;
-					}
-				}else if (_renderWaterOverlay)
-				{
-					_renderWaterOverlay = false;
-				}
-
 
 				if (RenderDebug)
 				{
@@ -413,7 +379,7 @@ namespace Alex.Gamestates.Playing
 
 		public static string GetCardinalDirection(PlayerLocation cam)
 		{
-			double rotation = (360 - cam.Yaw) % 360;
+			double rotation = (360 - cam.HeadYaw) % 360;
 			if (rotation < 0)
 			{
 				rotation += 360.0;

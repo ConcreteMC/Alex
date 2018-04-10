@@ -198,9 +198,12 @@ namespace Alex.Graphics.Models.Entity
 
 				var buffer = Buffer;
 
+				var yaw = ApplyYaw ? MathUtils.ToRadians((position.HeadYaw) % 360) : 0f;
+				var pitch = ApplyPitch ? MathUtils.ToRadians((position.Pitch) % 360f) : 0f;
+
 				Effect.World = Matrix.CreateTranslation(-Pivot)
-				               * Matrix.CreateFromYawPitchRoll(ApplyYaw ? MathUtils.ToRadians(position.HeadYaw) : 0f,
-					               ApplyPitch ? MathUtils.ToRadians(position.Pitch) : 0f, 0f)
+				               * Matrix.CreateFromYawPitchRoll(yaw,
+					              pitch, 0f)
 				               * Matrix.CreateTranslation(Pivot)
 				               * (Matrix.CreateScale(1f / 16f) * Matrix.CreateTranslation(position));
 

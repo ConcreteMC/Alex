@@ -21,7 +21,7 @@ namespace Alex.Rendering.Camera
 	    /// </summary>
 	    public float FarDistance { get; set; }
 
-	    protected float FOV { get; set; } = 75;
+	    public float FOV { get; set; } = 75;
 		public Camera(int renderDistance)
 	    {
 		    FarDistance = renderDistance * 16 * 16;
@@ -95,12 +95,19 @@ namespace Alex.Rendering.Camera
 
 	    public virtual void UpdateAspectRatio(float aspectRatio)
 	    {
-		    ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(
-			    MathHelper.ToRadians(FOV),
-			    aspectRatio,
-			    NearDistance,
-			    FarDistance);
+		    _aspectRatio = aspectRatio;
+			UpdateProjMatrix();
 	    }
+
+		private float _aspectRatio = 0;
+		public void UpdateProjMatrix()
+		{
+			ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(
+				MathHelper.ToRadians(FOV),
+				_aspectRatio,
+				NearDistance,
+				FarDistance);
+		}
 
 	    public virtual void MoveTo(Vector3 position, Vector3 rotation)
 	    {
@@ -123,6 +130,7 @@ namespace Alex.Rendering.Camera
 
 	    public virtual void Update(IUpdateArgs args, IEntity entity)
 	    {
+			
 			MoveTo(entity.KnownPosition, 
 				new Vector3(MathHelper.ToRadians(entity.KnownPosition.Pitch), MathHelper.ToRadians(entity.KnownPosition.HeadYaw), 0));
 	    }

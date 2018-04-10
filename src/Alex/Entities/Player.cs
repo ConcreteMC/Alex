@@ -25,6 +25,7 @@ namespace Alex.Entities
 
 		public override void Update(IUpdateArgs args)
 		{
+			bool sprint = IsSprinting;
 			if (Controller.IsFreeCam && !CanFly)
 			{
 				Controller.IsFreeCam = false;
@@ -35,6 +36,16 @@ namespace Alex.Entities
 			}
 			
 			Controller.Update(args.GameTime);
+
+			if (IsSprinting && !sprint)
+			{
+				FOVModifier += 10;
+			}
+			else if (!IsSprinting && sprint)
+			{
+				FOVModifier -= 10;
+			}
+
 			base.Update(args);
 
 		}

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Alex.API.Data;
+using Alex.API.Utils;
 using Alex.Gamestates;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
@@ -176,9 +177,9 @@ namespace Alex.Rendering.UI
 			ChatMessages.Add(message);
 		}
 
-		public void Receive(string message)
+		public void Receive(ChatObject message)
 		{
-			Append(message);
+			Append(message.ToString());
 		}
 	}
 }

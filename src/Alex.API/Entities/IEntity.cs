@@ -36,5 +36,7 @@ namespace Alex.API.Entities
 		void Update(IUpdateArgs args);
 
 		void RenderNametag(IRenderArgs renderArgs);
+
+		void OnTick();
 	}
 }

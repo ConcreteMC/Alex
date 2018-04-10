@@ -99,10 +99,13 @@ namespace Alex.ResourcePackLib
 		{
 			var stream = new StreamReader(_archive.GetInputStream(entry));
 			var json = stream.ReadToEnd();
+			string fileName = Path.GetFileNameWithoutExtension(entry.Name);
+			
 
 			Dictionary<string, EntityDefinition> definitions = JsonConvert.DeserializeObject<Dictionary<string, EntityDefinition>>(json);
 			foreach (var def in definitions)
 			{
+				def.Value.Filename = fileName;
 				if (!entityDefinitions.ContainsKey(def.Key))
 				{
 					entityDefinitions.Add(def.Key, def.Value);
@@ -261,6 +264,8 @@ namespace Alex.ResourcePackLib
 
 		public class EntityDefinition
 		{
+			[JsonIgnore] public string Filename { get; set; } = string.Empty;
+
 			public Dictionary<string, string> Textures;
 			public Dictionary<string, string> Geometry;
 		}

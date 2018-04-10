@@ -10,18 +10,18 @@ namespace Alex.Networking.Java.Packets.Play
 		}
 
 		public int EntityId { get; set; }
-		public byte HeadYaw;
+		public sbyte HeadYaw;
 
 		public override void Decode(MinecraftStream stream)
 		{
 			EntityId = stream.ReadVarInt();
-			HeadYaw = (byte)stream.ReadByte();
+			HeadYaw = (sbyte)stream.ReadByte();
 		}
 
 		public override void Encode(MinecraftStream stream)
 		{
 			stream.WriteVarInt(EntityId);
-			stream.WriteByte(HeadYaw);
+			stream.WriteByte((byte)HeadYaw);
 		}
 	}
 }

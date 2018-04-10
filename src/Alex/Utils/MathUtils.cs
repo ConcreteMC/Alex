@@ -1,4 +1,5 @@
 ﻿using System;
+using Alex.Blocks.State;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Utils
@@ -8,12 +9,26 @@ namespace Alex.Utils
 		public static float ToRadians(float deg)
 		{
 			return (float)(Math.PI* deg / 180F);
-			return (float)(deg * (Math.PI / 180F));
 		}
 
 		public static float RadianToDegree(float angle)
 		{
 			return (float)(angle * (180.0f / Math.PI));
+		}
+
+		public static float AngleToDegree(sbyte angle)
+		{
+			return (angle / 256f) * 360f;
+		}
+
+		public static sbyte DegreeToAngle(float angle)
+		{
+			return (sbyte)(((angle % 360) / 360) * 256);
+		}
+
+		public static float FromFixedPoint(int f)
+		{
+			return ((float) f) / (32.0f * 128.0f);
 		}
 
 		public static uint Hash(uint value)

@@ -35,6 +35,15 @@ namespace Alex.Rendering
 			EntityByUUID = new ConcurrentDictionary<UUID, IEntity>();
 	    }
 
+		public void GameTick()
+		{
+			var entities = Entities.Values.ToArray();
+			foreach (var entity in entities)
+			{
+				entity.OnTick();
+			}
+		}
+
 	    public void Update(IUpdateArgs args, SkyboxModel skyRenderer)
 	    {
 		    var entities = Entities.Values.ToArray();
@@ -121,7 +130,8 @@ namespace Alex.Rendering
 
 	    public bool AddEntity(long id, Entity entity)
 	    {
-		    if (EntityByUUID.TryAdd(entity.UUID, entity))
+		    entity.Level = World;
+			if (EntityByUUID.TryAdd(entity.UUID, entity))
 		    {
 			    entity.IsAlwaysShowName = false;
 			   // entity.NameTag = $"Entity_{id}";

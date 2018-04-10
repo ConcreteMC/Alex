@@ -3,10 +3,14 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Threading;
+using Alex.API.World;
 using Alex.Gamestates;
+using Alex.Gamestates.Playing;
 using Alex.Graphics;
 using Alex.Graphics.UI;
 using Alex.Rendering;
+using Alex.Utils;
+using Alex.Worlds.Java;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -189,11 +193,36 @@ namespace Alex
 			GameStateManager.AddState("title", new TitleState(this)); 
 			GameStateManager.AddState("options", new OptionsState(this));
 
-			GameStateManager.SetActiveState("title");
+			if (!IsMultiplayer)
+			{
+				GameStateManager.SetActiveState("title");
+			}
+			else
+			{
+				LoadWorld(new JavaWorldProvider(this, ServerEndPoint, Username, UUID, AccessToken));
+			}
 
 			GameStateManager.RemoveState("splash");
 
 		//	Log.Info($"Game initialized!");
+		}
+
+		public void LoadWorld(WorldProvider worldProvider)
+		{
+			PlayingState playState = new PlayingState(this, GraphicsDevice, worldProvider);
+			GameStateManager.AddState("play", playState);
+
+			LoadingWorldState loadingScreen =
+				new LoadingWorldState(this, TextureUtils.ImageToTexture2D(GraphicsDevice, global::Alex.Resources.mcbg));
+			GameStateManager.AddState("loading", loadingScreen);
+			GameStateManager.SetActiveState("loading");
+
+			worldProvider.Load(loadingScreen.UpdateProgress).ContinueWith(task =>
+			{
+				GameStateManager.SetActiveState("play");
+
+				GameStateManager.RemoveState("loading");
+			});
 		}
 	}
 }

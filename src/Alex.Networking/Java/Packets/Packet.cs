@@ -6,6 +6,7 @@ namespace Alex.Networking.Java.Packets
 	public abstract class Packet : IPacket<MinecraftStream>
 	{
 		public int PacketId { get; set; } = -1;
+		public bool Log { get; set; } = false;
 
 		public abstract void Decode(MinecraftStream stream);
 

@@ -6,12 +6,15 @@ using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using NLog;
 using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
 
 namespace Alex.Gamestates.Playing
 {
     public class PlayerController
     {
+	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(PlayerController));
+
         public const float Gravity = 0.08f;
         public const float DefaultDrag = 0.02f;
         public const float Acceleration = 0.02f;
@@ -51,6 +54,7 @@ namespace Alex.Gamestates.Playing
 		private bool _inActive = true;
 	    public bool CheckInput { get; set; } = false;
 	    private KeyboardState _prevKeyState;
+	    private DateTime _lastForward = DateTime.UtcNow;
         public void Update(GameTime gameTime)
         {
             var dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
@@ -60,6 +64,7 @@ namespace Alex.Gamestates.Playing
             var moveVector = Vector3.Zero;
             if (CheckInput)
             {
+	            var now = DateTime.UtcNow;
                 var currentKeyboardState = Keyboard.GetState();
 
 	            if (currentKeyboardState != _prevKeyState)
@@ -68,16 +73,31 @@ namespace Alex.Gamestates.Playing
 		            {
 			            IsFreeCam = !IsFreeCam;
 		            }
-
-		            _prevKeyState = currentKeyboardState;
 	            }
-
-	            Player.IsSprinting = currentKeyboardState.IsKeyDown(KeyBinds.Down);
+	            //Player.IsSprinting = currentKeyboardState.IsKeyDown(KeyBinds.Down);
 
 	            if (currentKeyboardState.IsKeyDown(KeyBinds.Forward))
-                    moveVector.Z = 1;
+	            {
+		            moveVector.Z = 1;
+		            if (!Player.IsSprinting)
+		            {
+			            if (!_prevKeyState.IsKeyDown(KeyBinds.Forward) && now.Subtract(_lastForward).TotalMilliseconds <= 100)
+			            {
+				            Player.IsSprinting = true;
+			            }
+		            }
 
-                if (currentKeyboardState.IsKeyDown(KeyBinds.Backward))
+		            _lastForward = now;
+	            }
+	            else
+	            {
+		            if (Player.IsSprinting)
+		            {
+			            Player.IsSprinting = false;
+					}
+	            }
+
+	            if (currentKeyboardState.IsKeyDown(KeyBinds.Backward))
                     moveVector.Z = -1;
 
                 if (currentKeyboardState.IsKeyDown(KeyBinds.Left))
@@ -89,10 +109,17 @@ namespace Alex.Gamestates.Playing
                 if (IsFreeCam)
                 {
                     if (currentKeyboardState.IsKeyDown(KeyBinds.Up))
-                        moveVector.Y = 1;
+                        moveVector.Y += 1;
 
-                    if (currentKeyboardState.IsKeyDown(KeyBinds.Down))
-                        moveVector.Y = -1;
+	                if (currentKeyboardState.IsKeyDown(KeyBinds.Down))
+	                {
+		                moveVector.Y -= 1;
+		                Player.IsSneaking = true;
+					}
+	                else if (_prevKeyState.IsKeyDown(KeyBinds.Down))
+	                {
+		                Player.IsSneaking = false;
+	                }
 
 	                if (currentKeyboardState.IsKeyDown(KeyBinds.IncreaseSpeed))
 		                FlyingSpeed += 1;
@@ -109,8 +136,19 @@ namespace Alex.Gamestates.Playing
                     {
 	                    moveVector.Y = 1;
                     }
-                }
-            }
+
+	                if (currentKeyboardState.IsKeyDown(KeyBinds.Down))
+	                {
+		                Player.IsSneaking = true;
+	                }
+	                else if (_prevKeyState.IsKeyDown(KeyBinds.Down))
+	                {
+		                Player.IsSneaking = false;
+	                }
+				}
+
+	            _prevKeyState = currentKeyboardState;
+			}
 
 	        if (CheckInput)
 	        {
@@ -147,10 +185,10 @@ namespace Alex.Gamestates.Playing
 		        _inActive = true;
 	        }
 
-	        DoPhysics(originalJumpValue, Player.IsSprinting, moveVector, dt);
+	        DoPhysics(originalJumpValue, Player.IsSprinting, Player.IsSneaking, moveVector, dt);
 		}
 
-        private void DoPhysics(bool originalJumpValue, bool sprinting, Vector3 direction, float dt)
+        private void DoPhysics(bool originalJumpValue, bool sprinting, bool sneaking, Vector3 direction, float dt)
         {
 	        var oldVelocity = new Vector3(Velocity.X, Velocity.Y, Velocity.Z);
 
@@ -178,13 +216,14 @@ namespace Alex.Gamestates.Playing
 				}
 		        else
 		        {
-			        onGround = true;
-
-			        if (direction.Y > 0 && !IsJumping)
+			        if (direction.Y > 0)
 			        {
 				        direction.Y = 0;
-				        Velocity += new Vector3(0, 0.42f, 0);
-				        IsJumping = true;
+				        if (!IsJumping && Velocity.Y <= 0)
+				        {
+					        Velocity += new Vector3(0, 0.42f, 0);
+					        IsJumping = true;
+				        }
 			        }
 			        else
 			        {
@@ -194,7 +233,9 @@ namespace Alex.Gamestates.Playing
 					        IsJumping = false;
 						}
 			        }
-		        }
+
+			        onGround = !IsJumping;
+				}
 
 		        Player.KnownPosition.OnGround = onGround;
 			}
@@ -206,19 +247,23 @@ namespace Alex.Gamestates.Playing
 				if (direction.Y > 0)
 		        {
 			        direction.Y = 0;
+					//Velocity += new Vector3(Velocity.X, speedFactor, Velocity.Z);
 					Player.KnownPosition.Move(new Vector3(0, speedFactor * dt, 0));
 		        }
 				else if (direction.Y < 0)
 		        {
 			        direction.Y = 0;
-			        Player.KnownPosition.Move(new Vector3(0, -speedFactor * dt, 0));
+			      //  Velocity += new Vector3(Velocity.X, -speedFactor, Velocity.Z);
+					 Player.KnownPosition.Move(new Vector3(0, -speedFactor * dt, 0));
 				}
 			}
 
 	        var groundSpeedSquared = Velocity.X * Velocity.X + Velocity.Z * Velocity.Z;
-	        if (groundSpeedSquared > (4.7f))
+
+	        var maxSpeed = IsFreeCam ? (sprinting ? 22f : 11f) : (sprinting && !sneaking ? 5.6f : (sneaking ? 1.3 : 4.3f));
+	        if (groundSpeedSquared > (maxSpeed))
 	        {
-		        var correctionScale = (float)Math.Sqrt(4.7f / groundSpeedSquared);
+		        var correctionScale = (float)Math.Sqrt(maxSpeed / groundSpeedSquared);
 		        Velocity *= new Vector3(correctionScale, 1f, correctionScale);
 	        }
 
@@ -237,21 +282,23 @@ namespace Alex.Gamestates.Playing
                 var preview = World.Player.KnownPosition.PreviewMove(v).Floor();
 
 				var headBlockPos = preview;
-				headBlockPos += new Vector3(0, 1f, 0);
+				headBlockPos += new Vector3(0, 1.8f, 0);
 
                 var headBlock = (Block)World.GetBlock(headBlockPos);
                 var headBoundingBox = headBlock.GetBoundingBox(headBlockPos);
 
                 var feetBlockPosition = preview;
-                var feetBlock = (Block)World.GetBlock(feetBlockPosition);
+				feetBlockPosition += new Vector3(0, 1f, 0);
+
+				var feetBlock = (Block)World.GetBlock(feetBlockPosition);
                 var feetBoundingBox = feetBlock.GetBoundingBox(feetBlockPosition);
 
 				var difference = (feetBoundingBox.Max.Y) - (preview.Y);
 				//Log.Debug($"{difference}");
                 var playerBoundingBox = GetPlayerBoundingBox(preview);
 
-                if (!headBlock.Solid && !IsColiding(playerBoundingBox, headBoundingBox) &&
-                    !feetBlock.Solid && !IsColiding(playerBoundingBox, feetBoundingBox))
+                if ((!headBlock.Solid && !IsColiding(playerBoundingBox, headBoundingBox)) &&
+                    (!feetBlock.Solid && !IsColiding(playerBoundingBox, feetBoundingBox)))
                 {
 	                World.Player.KnownPosition.Move(v);
                 }
@@ -262,6 +309,7 @@ namespace Alex.Gamestates.Playing
                 }
                 else
                 {
+	                Player.IsSprinting = false;
 					Velocity = Vector3.Zero;
                 }
             }

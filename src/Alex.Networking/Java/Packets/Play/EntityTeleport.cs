@@ -6,7 +6,7 @@ namespace Alex.Networking.Java.Packets.Play
     {
 	    public int EntityID;
 	    public double X, Y, Z;
-	    public byte Yaw, Pitch;
+	    public sbyte Yaw, Pitch;
 	    public bool OnGround;
 
 	    public override void Decode(MinecraftStream stream)
@@ -15,8 +15,8 @@ namespace Alex.Networking.Java.Packets.Play
 		    X = stream.ReadDouble();
 		    Y = stream.ReadDouble();
 		    Z = stream.ReadDouble();
-		    Yaw = (byte) stream.ReadByte();
-		    Pitch = (byte) stream.ReadByte();
+		    Yaw = (sbyte) stream.ReadByte();
+		    Pitch = (sbyte) stream.ReadByte();
 		    OnGround = stream.ReadBool();
 	    }
 
