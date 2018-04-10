@@ -20,5 +20,15 @@ namespace Alex.Graphics.Gui
             ScaledResolution = new UiScaledResolution(game);
         }
 
+        public void Update(GameTime gameTime)
+        {
+
+        }
+
+        public void Draw(GameTime gameTime)
+        {
+
+        }
+
     }
 }

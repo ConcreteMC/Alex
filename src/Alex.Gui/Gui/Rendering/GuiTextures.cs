@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Alex.Gamestates.Gui
+﻿namespace Alex.Graphics.Gui.Rendering
 {
     public enum GuiTextures
     {

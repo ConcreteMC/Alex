@@ -124,7 +124,8 @@ namespace Alex
 			UiManager.Init(GraphicsDevice, _spriteBatch);
 			GameStateManager = new GameStateManager(GraphicsDevice, _spriteBatch, UiManager);
 
-			GameStateManager.AddState("splash", new SplashScreen(this));
+			var splash = new SplashScreen(this);
+			GameStateManager.AddState("splash", splash);
 			GameStateManager.SetActiveState("splash");
 
 		//	Log.Info($"Initializing Alex...");

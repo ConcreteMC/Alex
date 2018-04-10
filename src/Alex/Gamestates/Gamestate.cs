@@ -2,6 +2,7 @@
 using System.Linq;
 using Alex.API.Graphics;
 using Alex.Graphics;
+using Alex.Graphics.Gui;
 using Alex.Graphics.UI;
 using Alex.Rendering.UI;
 using Microsoft.Xna.Framework;
@@ -14,6 +15,8 @@ namespace Alex.Gamestates
 		public Dictionary<string, UIComponent> Controls { get; set; }
 
 		public UiContainer Gui { get; private set; }
+
+		public GuiScreen Hud { get; private set; }
 
 		protected GraphicsDevice Graphics { get; }
 
@@ -59,6 +62,8 @@ namespace Alex.Gamestates
 		{
 			OnDraw2D(args);
 
+			Hud.Draw(args.GameTime);
+
 			foreach (var control in Controls.Values.ToArray())
 			{
 				control.Render(args);
@@ -73,6 +78,8 @@ namespace Alex.Gamestates
 		public void Update(GameTime gameTime)
 		{
 			OnUpdate(gameTime);
+
+			Hud.Update(gameTime);
 
 			foreach (var control in Controls.Values.ToArray())
 			{

@@ -11,6 +11,7 @@ namespace Alex.Graphics.Gui.Rendering
 
         SpriteFont DefaultFont { get; }
 
+        Texture2D GetTexture(GuiTextures guiTexture);
 
 
     }

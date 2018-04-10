@@ -15,5 +15,9 @@ namespace Alex.Gamestates.Gui
             Height = GuiScalar.FromAbsolute(20);
         }
 
+        protected override void OnInit(IGuiRenderer renderer)
+        {
+            Background = renderer.GetTexture(GuiTextures.Inventory_HotBar);
+        }
     }
 }
