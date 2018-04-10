@@ -186,12 +186,17 @@ namespace Alex.Networking.Java.Packets
 			return outPacket;
 		}
 
+		private static bool _loaded = false;
 		public static void Load()
 		{
+			if (_loaded) return;
+
 			RegisterHandshake();
 			RegisterStatus();
 			RegisterLogin();
 			RegisterPlay();
+
+			_loaded = true;
 		}
 
 		private static void RegisterHandshake()

@@ -1,4 +1,5 @@
 ﻿using Alex.API.Graphics;
+using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.Gamestates.Playing;
 using Alex.Graphics.Models.Entity;
@@ -18,14 +19,17 @@ namespace Alex.Entities
 		public float FOVModifier { get; set; } = 0;
 
 		public PlayerController Controller { get; }
-		public Player(GraphicsDevice graphics, Alex alex, string name, World world, Texture2D skin) : base(name, world, skin, true)
+		public Player(GraphicsDevice graphics, Alex alex, string name, World world, Texture2D skin, INetworkProvider networkProvider) : base(name, world, networkProvider, skin, true)
 	    {
-		    Controller = new PlayerController(graphics, world, alex.GameSettings, this); 
+		    Controller = new PlayerController(graphics, world, alex.GameSettings, this);
+		    NoAi = false;
 	    }
 
 		public override void Update(IUpdateArgs args)
 		{
 			bool sprint = IsSprinting;
+			bool sneak = IsSneaking;
+
 			if (Controller.IsFreeCam && !CanFly)
 			{
 				Controller.IsFreeCam = false;
@@ -40,10 +44,24 @@ namespace Alex.Entities
 			if (IsSprinting && !sprint)
 			{
 				FOVModifier += 10;
+				Network.EntityAction((int) EntityId, EntityAction.StartSprinting);
 			}
 			else if (!IsSprinting && sprint)
 			{
 				FOVModifier -= 10;
+				Network.EntityAction((int)EntityId, EntityAction.StopSprinting);
+			}
+
+			if (IsSneaking != sneak)
+			{
+				if (IsSneaking)
+				{
+					Network.EntityAction((int)EntityId, EntityAction.StartSneaking);
+				}
+				else
+				{
+					Network.EntityAction((int)EntityId, EntityAction.StopSneaking);
+				}
 			}
 
 			base.Update(args);
@@ -53,7 +71,6 @@ namespace Alex.Entities
 		public override void OnTick()
 		{
 			base.OnTick();
-
 		}
 	}
 }

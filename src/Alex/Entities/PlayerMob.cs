@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.Graphics.Models.Entity;
 using Alex.ResourcePackLib.Json.Models.Entities;
@@ -25,7 +26,7 @@ namespace Alex.Entities
 
 		//public Item ItemInHand { get; set; }
 
-		public PlayerMob(string name, World level, Texture2D skinTexture, bool skinSlim = true) : base(63, level)
+		public PlayerMob(string name, World level, INetworkProvider network, Texture2D skinTexture, bool skinSlim = true) : base(63, level, network)
 		{
 			Uuid = new UUID(Guid.NewGuid().ToByteArray());
 

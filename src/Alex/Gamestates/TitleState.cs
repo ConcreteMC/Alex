@@ -56,8 +56,8 @@ namespace Alex.Gamestates
 			Alex.IsMouseVisible = false;
 
 			generator.Initialize();
-
-			Alex.LoadWorld(new SPWorldProvider(Alex, generator));
+			var debugProvider = new SPWorldProvider(Alex, generator);
+			Alex.LoadWorld(debugProvider, debugProvider.Network);
 		}
 
 		private void DebugFlatland()

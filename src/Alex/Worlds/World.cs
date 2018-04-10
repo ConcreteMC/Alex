@@ -7,6 +7,7 @@ using System.Security.Cryptography.X509Certificates;
 using Alex.API.Blocks.State;
 using Alex.API.Entities;
 using Alex.API.Graphics;
+using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Entities;
@@ -36,13 +37,14 @@ namespace Alex.Worlds
 		public LevelInfo WorldInfo;
 
 		public Player Player { get; set; }
-		public World(Alex alex, GraphicsDevice graphics, Rendering.Camera.Camera camera)
+		public World(Alex alex, GraphicsDevice graphics, Rendering.Camera.Camera camera, INetworkProvider networkProvider)
         {
             Graphics = graphics;
 	        Camera = camera;
 
+			PhysicsEngine = new PhysicsManager(alex, this);
 			ChunkManager = new ChunkManager(alex, graphics, this);
-			EntityManager = new EntityManager(graphics, this);
+			EntityManager = new EntityManager(graphics, this, networkProvider);
 			Ticker = new TickManager(this);
 			 
 			ChunkManager.Start();
@@ -50,9 +52,12 @@ namespace Alex.Worlds
 	        alex.Resources.BedrockResourcePack.TryGetTexture("textures/entity/alex", out Bitmap rawTexture);
 	        var t = TextureUtils.BitmapToTexture2D(graphics, rawTexture);
 
-			Player = new Player(graphics, alex, alex.GameSettings.Username, this, t);
+			Player = new Player(graphics, alex, alex.GameSettings.Username, this, t, networkProvider);
 	        Player.KnownPosition = new PlayerLocation(GetSpawnPoint());
 	        Camera.MoveTo(Player.KnownPosition, Vector3.Zero);
+
+	       // PhysicsEngine.AddTickable(Player);
+			PhysicsEngine.Start();
 		}
 
 		private long LastLightningBolt = 0;
@@ -63,7 +68,8 @@ namespace Alex.Worlds
 		public TickManager Ticker { get; }
 		public EntityManager EntityManager { get; }
 		public ChunkManager ChunkManager { get; private set; }
-	//	private WorldProvider WorldProvider { get; set; }
+		public PhysicsManager PhysicsEngine { get; set; }
+		//	private WorldProvider WorldProvider { get; set; }
 
 		public int Vertices
         {
@@ -364,8 +370,11 @@ namespace Alex.Worlds
 			if (_destroyed) return;
 			_destroyed = true;
 
+			PhysicsEngine.Stop();
 			EntityManager.Dispose();
 			ChunkManager.Dispose();
+
+			PhysicsEngine.Dispose();
 		}
 
 		#region IWorldReceiver (Handle WorldProvider callbacks)
@@ -396,7 +405,10 @@ namespace Alex.Worlds
 
 		public void SpawnEntity(long entityId, Entity entity)
 		{
-			EntityManager.AddEntity(entityId, entity);
+			if (EntityManager.AddEntity(entityId, entity))
+			{
+				PhysicsEngine.AddTickable(entity);
+			}
 			//Log.Info($"Spawned entity {entityId} : {entity} at {entity.KnownPosition} with renderer {entity.GetModelRenderer()}");
 		}
 

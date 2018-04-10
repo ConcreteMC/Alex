@@ -21,6 +21,11 @@ namespace Alex.Utils
 			return (angle / 256f) * 360f;
 		}
 
+		public static float AngleToNotchianDegree(sbyte angle)
+		{
+			return -AngleToDegree(angle);
+		}
+
 		public static sbyte DegreeToAngle(float angle)
 		{
 			return (sbyte)(((angle % 360) / 360) * 256);

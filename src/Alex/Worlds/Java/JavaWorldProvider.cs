@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using System.Timers;
 using Alex.API.Data;
 using Alex.API.Entities;
+using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Entities;
@@ -57,7 +58,7 @@ namespace Alex.Worlds.Java
 		private TcpClient TcpClient;
 
 		private System.Threading.Timer _gameTickTimer;
-		public JavaWorldProvider(Alex alex, IPEndPoint endPoint, string username, string uuid, string accessToken)
+		public JavaWorldProvider(Alex alex, IPEndPoint endPoint, string username, string uuid, string accessToken, out INetworkProvider networkProvider)
 		{
 			Alex = alex;
 			Username = username;
@@ -67,6 +68,8 @@ namespace Alex.Worlds.Java
 
 			TcpClient = new TcpClient();
 			Client = new JavaClient(this, TcpClient.Client);
+
+			networkProvider = Client;
 		}
 
 		private PlayerLocation _lastSentLocation = new PlayerLocation(Vector3.Zero);
@@ -98,15 +101,6 @@ namespace Alex.Worlds.Java
 			SendPacket(abilitiesPacket);
 		}
 
-		private void SendEntityAction(IEntity entity, EntityAction action, int jumpBoost = 0)
-		{
-			EntityActionPacket packet = new EntityActionPacket();
-			packet.EntityId = (int) entity.EntityId;
-			packet.Action = action;
-			packet.JumpBoost = jumpBoost;
-			SendPacket(packet);
-		}
-
 		private object _entityTicks = new object();
 		private bool _isSneaking = false;
 		private bool _isSprinting = false;
@@ -116,18 +110,6 @@ namespace Alex.Worlds.Java
 
 			if (_initiated)
 			{
-				if (Monitor.TryEnter(_entityTicks, 0) && WorldReceiver is World world)
-				{
-					try
-					{
-						world.EntityManager.GameTick();
-					}
-					finally
-					{
-						Monitor.Exit(_entityTicks);
-					}
-				}
-
 				var p = WorldReceiver.GetPlayerEntity();
 				if (p != null && p is Player player && Spawned)
 				{
@@ -138,34 +120,6 @@ namespace Alex.Worlds.Java
 						_flying = player.IsFlying;
 
 						SendPlayerAbilities(player);
-					}
-
-					if (player.IsSneaking != _isSneaking)
-					{
-						if (!_isSneaking)
-						{
-							SendEntityAction(player, EntityAction.StartSneaking);
-							_isSneaking = true;
-						}
-						else
-						{
-							SendEntityAction(player, EntityAction.StopSneaking);
-							_isSneaking = false;
-						}
-					}
-
-					if (player.IsSprinting != _isSprinting)
-					{
-						if (!_isSprinting)
-						{
-							SendEntityAction(player, EntityAction.StartSprinting);
-							_isSprinting = true;
-						}
-						else
-						{
-							SendEntityAction(player, EntityAction.StopSprinting);
-							_isSprinting = false;
-						}
 					}
 
 					var pos = (PlayerLocation)player.KnownPosition.Clone();
@@ -236,12 +190,7 @@ namespace Alex.Worlds.Java
 
 		void IChatProvider.Send(string message)
 		{
-			SendPacket(new ChatMessagePacket()
-			{
-				Position = ChatMessagePacket.Chat,
-				Message = message,
-				ServerBound = true
-			});
+			Client.SendChatMessage(message);
 		}
 
 		private bool _initiated = false;
@@ -497,7 +446,7 @@ namespace Alex.Worlds.Java
 		{
 			if (WorldReceiver.TryGetEntity(packet.EntityId, out var entity))
 			{
-				entity.KnownPosition.HeadYaw = MathUtils.AngleToDegree(packet.HeadYaw);
+				entity.KnownPosition.HeadYaw = 360f - MathUtils.AngleToNotchianDegree(packet.HeadYaw);
 			}
 		}
 
@@ -513,8 +462,8 @@ namespace Alex.Worlds.Java
 		{
 			if (_players.TryGetValue(new UUID(packet.Uuid.ToByteArray()), out PlayerMob mob))
 			{
-				float yaw = MathUtils.AngleToDegree(packet.Yaw);
-				mob.KnownPosition = new PlayerLocation(packet.X, packet.Y, packet.Z, yaw, yaw, -MathUtils.AngleToDegree(packet.Pitch));
+				float yaw = 360f - MathUtils.AngleToNotchianDegree(packet.Yaw);
+				mob.KnownPosition = new PlayerLocation(packet.X, packet.Y, packet.Z, yaw, yaw, MathUtils.AngleToNotchianDegree(packet.Pitch));
 				mob.EntityId = packet.EntityId;
 				mob.IsSpawned = true;
 
@@ -532,7 +481,7 @@ namespace Alex.Worlds.Java
 			{
 				foreach (var entry in packet.AddPlayerEntries)
 				{
-					PlayerMob entity = new PlayerMob(entry.Name, (World)WorldReceiver, t, true);
+					PlayerMob entity = new PlayerMob(entry.Name, (World)WorldReceiver, Client, t, true);
 					entity.Gamemode = (Gamemode) entry.Gamemode;
 					entity.UUID = new UUID(entry.UUID.ToByteArray());
 
@@ -570,8 +519,8 @@ namespace Alex.Worlds.Java
 
 		private void HandleEntityLookAndRelativeMove(EntityLookAndRelativeMove packet)
 		{
-			var yaw = MathUtils.AngleToDegree(packet.Yaw);
-			WorldReceiver.UpdateEntityPosition(packet.EntityId, new PlayerLocation(MathUtils.FromFixedPoint(packet.DeltaX), MathUtils.FromFixedPoint(packet.DeltaY), MathUtils.FromFixedPoint(packet.DeltaZ), yaw, yaw, -MathUtils.AngleToDegree(packet.Pitch))
+			var yaw = 360f - MathUtils.AngleToNotchianDegree(packet.Yaw);
+			WorldReceiver.UpdateEntityPosition(packet.EntityId, new PlayerLocation(MathUtils.FromFixedPoint(packet.DeltaX), MathUtils.FromFixedPoint(packet.DeltaY), MathUtils.FromFixedPoint(packet.DeltaZ), yaw, yaw, MathUtils.AngleToNotchianDegree(packet.Pitch))
 			{
 				OnGround = packet.OnGround
 			}, true, true);
@@ -589,16 +538,16 @@ namespace Alex.Worlds.Java
 		{
 			if (WorldReceiver.TryGetEntity(packet.EntityId, out var entity))
 			{
-				entity.KnownPosition.Yaw = MathUtils.AngleToDegree(packet.Yaw);
-				entity.KnownPosition.Pitch = -MathUtils.AngleToDegree(packet.Pitch);
+				entity.KnownPosition.Yaw = 360f - MathUtils.AngleToNotchianDegree(packet.Yaw);
+				entity.KnownPosition.Pitch = MathUtils.AngleToNotchianDegree(packet.Pitch);
 				entity.KnownPosition.OnGround = packet.OnGround;
 			}
 		}
 
 		private void HandleEntityTeleport(EntityTeleport packet)
 		{
-			float yaw = MathUtils.AngleToDegree(packet.Yaw);
-			WorldReceiver.UpdateEntityPosition(packet.EntityID, new PlayerLocation(packet.X, packet.Y, packet.Z, yaw, yaw, packet.Pitch)
+			float yaw = 360f - MathUtils.AngleToNotchianDegree(packet.Yaw);
+			WorldReceiver.UpdateEntityPosition(packet.EntityID, new PlayerLocation(packet.X, packet.Y, packet.Z, yaw, yaw, MathUtils.AngleToNotchianDegree(packet.Pitch))
 			{
 				OnGround = packet.OnGround
 			});

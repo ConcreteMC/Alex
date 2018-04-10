@@ -5,6 +5,7 @@ using System.Runtime.InteropServices.ComTypes;
 using System.Threading;
 using Alex.API.Entities;
 using Alex.API.Graphics;
+using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Entities;
@@ -27,8 +28,11 @@ namespace Alex.Rendering
 	    public int EntityCount => Entities.Count;
 	    public int EntitiesRendered { get; private set; } = 0;
 		private World World { get; }
-	    public EntityManager(GraphicsDevice device, World world)
-	    {
+		private INetworkProvider Network { get; }
+
+		public EntityManager(GraphicsDevice device, World world, INetworkProvider networkProvider)
+		{
+			Network = networkProvider;
 		    World = world;
 		    Device = device;
 			Entities = new ConcurrentDictionary<long, IEntity>();
@@ -130,6 +134,7 @@ namespace Alex.Rendering
 
 	    public bool AddEntity(long id, Entity entity)
 	    {
+		    entity.Network = Network;
 		    entity.Level = World;
 			if (EntityByUUID.TryAdd(entity.UUID, entity))
 		    {
@@ -148,7 +153,7 @@ namespace Alex.Rendering
 
 		    return false;
 	    }
-		
+
 	    public void Remove(long id)
 	    {
 		    if (Entities.TryRemove(id, out IEntity entity))

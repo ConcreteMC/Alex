@@ -1,4 +1,5 @@
 ﻿using System;
+using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks;
@@ -25,9 +26,12 @@ namespace Alex.Gamestates.Playing
 		private ChatComponent Chat { get; }
 
 		private WorldProvider WorldProvider { get; }
-		public PlayingState(Alex alex, GraphicsDevice graphics, WorldProvider worldProvider) : base(alex)
+		public INetworkProvider NetworkProvider { get; }
+		public PlayingState(Alex alex, GraphicsDevice graphics, WorldProvider worldProvider, INetworkProvider networkProvider) : base(alex)
 		{
-			World = new World(alex, graphics, new FirstPersonCamera(alex.GameSettings.RenderDistance, Vector3.Zero, Vector3.Zero));
+			NetworkProvider = networkProvider;
+
+			World = new World(alex, graphics, new FirstPersonCamera(alex.GameSettings.RenderDistance, Vector3.Zero, Vector3.Zero), networkProvider);
 			SkyRenderer = new SkyBox(alex, graphics, World);
 
 			Chat = new ChatComponent();

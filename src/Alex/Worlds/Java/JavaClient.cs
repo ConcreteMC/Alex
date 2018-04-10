@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Net.Sockets;
+using Alex.API.Network;
+using Alex.API.Utils;
 using Alex.Networking.Java;
 using Alex.Networking.Java.Packets;
+using Alex.Networking.Java.Packets.Play;
 using NLog;
 
 namespace Alex.Worlds.Java
 {
-	public class JavaClient : NetConnection
+	public class JavaClient : NetConnection, INetworkProvider
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(JavaClient));
 
@@ -39,6 +42,26 @@ namespace Alex.Worlds.Java
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
+		}
+
+
+		public void EntityAction(int entityId, EntityAction action)
+		{
+			EntityActionPacket packet = new EntityActionPacket();
+			packet.EntityId = entityId;
+			packet.Action = action;
+			packet.JumpBoost = 0;
+			SendPacket(packet);
+		}
+
+		public void SendChatMessage(string message)
+		{
+			SendPacket(new ChatMessagePacket()
+			{
+				Position = ChatMessagePacket.Chat,
+				Message = message,
+				ServerBound = true
+			});
 		}
 	}
 }
