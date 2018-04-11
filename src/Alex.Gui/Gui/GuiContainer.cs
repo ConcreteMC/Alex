@@ -4,7 +4,8 @@ using System.Text;
 
 namespace Alex.Graphics.Gui
 {
-    public class GuiElementGroup : GuiElement
+    public class GuiContainer : GuiElement
     {
+
     }
 }

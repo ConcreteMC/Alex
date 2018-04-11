@@ -4,6 +4,7 @@ using System.Text;
 using Alex.Gamestates.Gui;
 using Alex.Gamestates.Playing;
 using Alex.Graphics.Gui;
+using Alex.Graphics.Gui.Elements;
 using Alex.Graphics.Gui.Rendering;
 using Alex.Input;
 using Microsoft.Xna.Framework;
@@ -26,6 +27,7 @@ namespace Alex.Gamestates.Hud
         protected override void OnInit(IGuiRenderer renderer)
         {
             AddChild(_hotbar);
+            AddChild(new GuiCrosshair());
         }
 
         protected override void OnUpdate(GameTime gameTime)

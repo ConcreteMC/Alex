@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 
 namespace Alex.Gamestates.Gui
 {
-    public class GuiItemHotbar : GuiElementGroup
+    public class GuiItemHotbar : GuiContainer
     {
         private const int ItemWidth = 20;
 

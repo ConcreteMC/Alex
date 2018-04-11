@@ -3,8 +3,10 @@
     public enum GuiTextures
     {
         Inventory_HotBar,
-        Inventory_HotBar_SelectedItemOverlay
+        Inventory_HotBar_SelectedItemOverlay,
 
-
+        Crosshair,
+        ProgressBar,
+        SplashBackground
     }
 }

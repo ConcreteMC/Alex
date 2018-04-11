@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Text;
 using Alex.Graphics.Gui.Rendering;
+using Alex.Graphics.Textures;
 using Alex.ResourcePackLib;
 using Alex.Utils;
 using Microsoft.Xna.Framework.Graphics;
@@ -24,6 +25,7 @@ namespace Alex.Gamestates.Gui
 
         private static readonly Rectangle WidgetHotBar = new Rectangle(0, 0, 182, 22);
         private static readonly Rectangle WidgetHotBarSelectedOverlay = new Rectangle(0, 22, 24, 24);
+        private static readonly Rectangle WidgetCrosshair = new Rectangle(240, 0, 15, 15);
 
         public GuiRenderer(Alex alex)
         {
@@ -45,13 +47,23 @@ namespace Alex.Gamestates.Gui
             switch (guiTexture)
             {
                 case GuiTextures.Inventory_HotBar:
-                    return  TextureUtils.BitmapToTexture2D(_graphicsDevice, _widgets.Clone(WidgetHotBar, PixelFormat.Format32bppPArgb));
+                    return _widgets.Slice(_graphicsDevice, WidgetHotBar);
 
                 case GuiTextures.Inventory_HotBar_SelectedItemOverlay:
-                    return  TextureUtils.BitmapToTexture2D(_graphicsDevice, _widgets.Clone(WidgetHotBarSelectedOverlay, PixelFormat.Format32bppPArgb));
+                    return _widgets.Slice(_graphicsDevice, WidgetHotBarSelectedOverlay);
+
+                case GuiTextures.Crosshair:
+                    return _widgets.Slice(_graphicsDevice, WidgetCrosshair);
+
+                case GuiTextures.ProgressBar:
+                    return TextureUtils.ImageToTexture2D(_graphicsDevice, Resources.ProgressBar);
+
+                case GuiTextures.SplashBackground:
+                    return TextureUtils.ImageToTexture2D(Alex.GraphicsDevice, Resources.Splash);
             }
 
             return new Texture2D(_graphicsDevice, 1, 1);
         }
+
     }
 }

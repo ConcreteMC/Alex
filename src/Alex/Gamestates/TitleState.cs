@@ -1,4 +1,7 @@
-﻿using Alex.Graphics.UI;
+﻿using Alex.Graphics.Gui;
+using Alex.Graphics.Gui.Elements;
+using Alex.Graphics.UI;
+using Alex.Graphics.UI.Common;
 using Alex.Graphics.UI.Controls.Menu;
 using Alex.Graphics.UI.Layout;
 using Alex.Worlds;
@@ -15,6 +18,19 @@ namespace Alex.Gamestates
 
 		protected override void OnLoad(RenderArgs args)
 		{
+			var screen = new GuiScreen(Alex);
+			GuiManager.AddScreen(screen);
+			screen.AddChild(new GuiProgressBar()
+			{
+				Width  = 520,
+				Height = 12,
+
+				Y = 50,
+				
+				HorizontalAlignment = HorizontalAlignment.Center,
+				VerticalAlignment   = VerticalAlignment.Bottom,
+			});
+
 			Gui.ClassName = "TitleScreenRoot";
 
 			var menuWrapper = new UiPanel()

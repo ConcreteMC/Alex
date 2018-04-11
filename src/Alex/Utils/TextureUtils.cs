@@ -49,5 +49,10 @@ namespace Alex.Utils
 				return BitmapToTexture2D(device, image);
 			}
 		}
+
+		public static Texture2D Slice(this Bitmap bmp, GraphicsDevice graphics, Rectangle region)
+		{
+			return ImageToTexture2D(graphics, bmp.Clone(region, PixelFormat.Format32bppPArgb));
+		}
 	}
 }
