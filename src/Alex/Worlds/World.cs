@@ -50,7 +50,7 @@ namespace Alex.Worlds
 	        alex.Resources.BedrockResourcePack.TryGetTexture("textures/entity/alex", out Bitmap rawTexture);
 	        var t = TextureUtils.BitmapToTexture2D(graphics, rawTexture);
 
-			Player = new Player(graphics, alex, alex.GameSettings.Username, this, t);
+			Player = new Player(graphics, alex, alex.GameSettings.Username, this, t, PlayerIndex.One);
 	        Player.KnownPosition = new PlayerLocation(GetSpawnPoint());
 	        Camera.MoveTo(Player.KnownPosition, Vector3.Zero);
 		}

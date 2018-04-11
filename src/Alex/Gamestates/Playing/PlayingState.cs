@@ -3,6 +3,7 @@ using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks;
 using Alex.Entities;
+using Alex.Gamestates.Hud;
 using Alex.Graphics.Models;
 using Alex.Rendering.Camera;
 using Alex.Rendering.UI;
@@ -47,6 +48,8 @@ namespace Alex.Gamestates.Playing
 
 		protected override void OnLoad(RenderArgs args)
 		{
+			GuiManager.AddScreen(new PlayingHud(Alex));
+
 			Controls.Add("chatComponent", Chat);
 
 			FpsCounter = new FpsMonitor();

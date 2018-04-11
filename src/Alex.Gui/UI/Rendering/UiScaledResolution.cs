@@ -30,6 +30,8 @@ namespace Alex.Graphics.UI.Rendering
 
 		public int ScaleFactor { get; private set; }
 
+		public Matrix TransformMatrix { get; private set; } = Matrix.Identity;
+
 		private int _targetWidth = 320;
 
 		public int TargetWidth
@@ -102,9 +104,17 @@ namespace Alex.Graphics.UI.Rendering
 
 			if (scaledWidth != ScaledWidth || scaledHeight != ScaledHeight || ScaleFactor != scaleFactor)
 			{
+
 				ScaleFactor  = scaleFactor;
 				ScaledWidth  = scaledWidth;
 				ScaledHeight = scaledHeight;
+				
+				var scaleX = viewportWidth / ScaledWidth;
+				var scaleY = viewportHeight / ScaledHeight;
+
+				var transformMatrix = Matrix.CreateScale(scaleX, scaleY, 1f);
+
+				TransformMatrix = transformMatrix;
 
 				ScaleChanged?.Invoke(this, new UiScaleEventArgs(ScaledWidth, ScaledHeight, ScaleFactor));
 			}

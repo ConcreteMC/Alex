@@ -169,4 +169,16 @@
   <data name="Splash" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\Splash.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="Item" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\Item.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="ItemHotbar" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\ItemHotbar.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="ItemHotbar_SelectedItem" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\ItemHotbar_SelectedItem.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="ItemSelected" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\ItemSelected.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
 </root>

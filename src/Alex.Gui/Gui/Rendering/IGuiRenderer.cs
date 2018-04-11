@@ -7,6 +7,7 @@ namespace Alex.Graphics.Gui.Rendering
 {
     public interface IGuiRenderer
     {
+        void Init(GraphicsDevice graphics);
 
 
         SpriteFont DefaultFont { get; }

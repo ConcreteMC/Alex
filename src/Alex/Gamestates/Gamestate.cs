@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Graphics;
+using Alex.Gamestates.Gui;
 using Alex.Graphics;
 using Alex.Graphics.Gui;
 using Alex.Graphics.UI;
@@ -16,7 +17,7 @@ namespace Alex.Gamestates
 
 		public UiContainer Gui { get; private set; }
 
-		public GuiScreen Hud { get; private set; }
+		public GuiManager GuiManager { get; private set; }
 
 		protected GraphicsDevice Graphics { get; }
 
@@ -27,7 +28,7 @@ namespace Alex.Gamestates
 			Alex = alex;
 			Graphics = alex.GraphicsDevice;
 			Controls = new Dictionary<string, UIComponent>();
-
+			GuiManager = new GuiManager(Alex, new GuiRenderer(Alex.GraphicsDevice));
 		}
 
 		public Viewport Viewport => Graphics.Viewport;
@@ -48,6 +49,7 @@ namespace Alex.Gamestates
 				ClassName = "GuiRoot"
 			};
 
+
 			OnLoad(args);
 
 			Gui.UpdateLayout();
@@ -62,7 +64,7 @@ namespace Alex.Gamestates
 		{
 			OnDraw2D(args);
 
-			Hud.Draw(args.GameTime);
+			GuiManager.Draw(args.GameTime);
 
 			foreach (var control in Controls.Values.ToArray())
 			{
@@ -79,7 +81,7 @@ namespace Alex.Gamestates
 		{
 			OnUpdate(gameTime);
 
-			Hud.Update(gameTime);
+			GuiManager.Update(gameTime);
 
 			foreach (var control in Controls.Values.ToArray())
 			{
