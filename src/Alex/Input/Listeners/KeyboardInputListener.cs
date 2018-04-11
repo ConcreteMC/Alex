@@ -10,12 +10,12 @@ namespace Alex.Input.Listeners
     {
         public KeyboardInputListener() : base(PlayerIndex.One)
         {
-            RegisterMap(InputCommand.MoveForwardy, Keys.W);
-            RegisterMap(InputCommand.MoveBackie, Keys.S);
-            RegisterMap(InputCommand.MoveLeftie, Keys.A);
-            RegisterMap(InputCommand.MoveRightie, Keys.D);
-            RegisterMap(InputCommand.MoveUppy, Keys.Space);
-            RegisterMap(InputCommand.MoveDownie, Keys.LeftShift);
+            RegisterMap(InputCommand.MoveForwards, Keys.W);
+            RegisterMap(InputCommand.MoveBackwards, Keys.S);
+            RegisterMap(InputCommand.MoveLeft, Keys.A);
+            RegisterMap(InputCommand.MoveRight, Keys.D);
+            RegisterMap(InputCommand.MoveUp, Keys.Space);
+            RegisterMap(InputCommand.MoveDown, Keys.LeftShift);
 
             RegisterMap(InputCommand.MoveSpeedIncrease, Keys.OemPlus);
             RegisterMap(InputCommand.MoveSpeedDecrease, Keys.OemMinus);

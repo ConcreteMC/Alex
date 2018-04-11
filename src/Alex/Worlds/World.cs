@@ -459,6 +459,11 @@ namespace Alex.Worlds
 			WorldTime = worldTime;
 		}
 
+		public void SetBlockState(BlockCoordinates coordinates, IBlockState blockState)
+		{
+			SetBlockState(coordinates.X, coordinates.Y, coordinates.Z, blockState);
+		}
+
 		#endregion
 	}
 }

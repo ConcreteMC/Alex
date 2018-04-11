@@ -261,6 +261,11 @@ namespace Alex.Networking.Java.Packets
 			Register(Direction.ClientBound, ConnectionState.Play, 0x51, () => new EntityPropertiesPacket());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x4F, () => new EntityTeleport());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x34, () => new DestroyEntitiesPacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x15, () => new WindowItems());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x17, () => new SetSlot());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x1C, () => new EntityStatusPacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x0B, () => new BlockChangePacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x0F, () => new MultiBlockChange());
 		}
 	}
 }

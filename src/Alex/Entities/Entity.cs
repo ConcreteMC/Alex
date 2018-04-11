@@ -9,6 +9,7 @@ using Alex.Graphics.Models;
 using Alex.Graphics.Models.Entity;
 using Alex.Rendering;
 using Alex.Rendering.Camera;
+using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -60,6 +61,7 @@ namespace Alex.Entities
 		public double FlyingSpeed { get; set; } = 0.4000000059604645;
 
 		public INetworkProvider Network { get; set; }
+		public Inventory Inventory { get; protected set; }
 		public Entity(int entityTypeId, World level, INetworkProvider network)
 		{
 			Network = network;
@@ -68,6 +70,7 @@ namespace Alex.Entities
 			Level = level;
 			EntityTypeId = entityTypeId;
 			KnownPosition = new PlayerLocation();
+			Inventory = new Inventory(0);
 		//	HealthManager = new HealthManager(this);
 		}
 

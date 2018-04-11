@@ -11,7 +11,7 @@ namespace Alex.Gamestates
     {
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(GameStateManager));
 
-		private ConcurrentDictionary<string, GameState> ActiveStates { get; }
+		private ConcurrentDictionary<string, GameState> States { get; }
         private GameState ActiveState { get; set; }
 	    private GameState PreviousState { get; set; } = null;
 
@@ -20,12 +20,12 @@ namespace Alex.Gamestates
 
 	    private UiManager UiManager { get; }
         public GameStateManager(GraphicsDevice graphics, SpriteBatch spriteBatch, UiManager uiManager)
-        {
+        { 
             Graphics = graphics;
             SpriteBatch = spriteBatch;
 	        UiManager = uiManager;
 
-            ActiveStates = new ConcurrentDictionary<string, GameState>();
+            States = new ConcurrentDictionary<string, GameState>();
 		}
 
 	    public void Back()
@@ -47,7 +47,7 @@ namespace Alex.Gamestates
                 GameTime = new GameTime()
             });
 
-            ActiveStates.AddOrUpdate(name, state, (s, gamestate) =>
+            States.AddOrUpdate(name, state, (s, gamestate) =>
             {
                 return state;
             });
@@ -56,7 +56,7 @@ namespace Alex.Gamestates
 	    public bool RemoveState(string name)
 	    {
 		    GameState state;
-		    if (ActiveStates.TryRemove(name, out state))
+		    if (States.TryRemove(name, out state))
 		    {
 			    if (ActiveState == state)
 			    {
@@ -101,7 +101,7 @@ namespace Alex.Gamestates
 	    public bool SetActiveState(string name)
         {
             GameState state;
-            if (!ActiveStates.TryGetValue(name, out state))
+            if (!States.TryGetValue(name, out state))
             {
                 return false;
             }

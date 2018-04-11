@@ -165,6 +165,13 @@ namespace Alex.Worlds
 
 			UpdateThread.Start();
 
+			if (WorldReceiver is World world)
+			{
+				world.Player.CanFly = true;
+				world.Player.IsFlying = true;
+				world.Player.Controller.IsFreeCam = true;
+			} 
+
 			WorldReceiver?.UpdatePlayerPosition(new PlayerLocation(GetSpawnPoint()));
 
 			Log.Info($"World {info.LevelName} loaded!");

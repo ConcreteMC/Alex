@@ -19,6 +19,7 @@ using Alex.API.World;
 using Alex.Entities;
 using Alex.Graphics.Models.Entity;
 using Alex.Networking.Java;
+using Alex.Networking.Java.Events;
 using Alex.Networking.Java.Packets;
 using Alex.Networking.Java.Packets.Handshake;
 using Alex.Networking.Java.Packets.Login;
@@ -68,8 +69,21 @@ namespace Alex.Worlds.Java
 
 			TcpClient = new TcpClient();
 			Client = new JavaClient(this, TcpClient.Client);
+			Client.OnConnectionClosed += OnConnectionClosed;
 
 			networkProvider = Client;
+		}
+
+		private void OnConnectionClosed(object sender, ConnectionClosedEventArgs e)
+		{
+			if (e.Graceful)
+			{
+
+			}
+			else
+			{
+
+			}
 		}
 
 		private PlayerLocation _lastSentLocation = new PlayerLocation(Vector3.Zero);
@@ -428,9 +442,107 @@ namespace Alex.Worlds.Java
 			{
 				HandleEntityVelocity(velocity);
 			}
+			else if (packet is WindowItems itemsPacket)
+			{
+				HandleWindowItems(itemsPacket);
+			}
+			else if (packet is SetSlot setSlotPacket)
+			{
+				HandleSetSlot(setSlotPacket);
+			}
+			else if (packet is HeldItemChangePacket pack)
+			{
+				HandleHeldItemChangePacket(pack);
+			}
+			else if (packet is EntityStatusPacket entityStatusPacket)
+			{
+				HandleEntityStatusPacket(entityStatusPacket);
+			}
+			else if (packet is BlockChangePacket blockChangePacket)
+			{
+				HandleBlockChangePacket(blockChangePacket);
+			}
+			else if (packet is MultiBlockChange multiBlock)
+			{
+				HandleMultiBlockChange(multiBlock);
+			}
 			else
 			{
 				Log.Warn($"Unhandled packet: 0x{packet.PacketId:x2} - {packet.ToString()}");
+			}
+		}
+
+		private void HandleMultiBlockChange(MultiBlockChange packet)
+		{
+			int cx = packet.ChunkX;
+			int cz = packet.ChunkZ;
+			foreach (var blockUpdate in packet.Records)
+			{
+				WorldReceiver?.SetBlockState(new BlockCoordinates(blockUpdate.RelativeX + cx, blockUpdate.Y, blockUpdate.RelativeZ + cz), BlockFactory.GetBlockState(blockUpdate.BlockId));
+			}
+		}
+
+		private void HandleBlockChangePacket(BlockChangePacket packet)
+		{
+			WorldReceiver?.SetBlockState(packet.Location, BlockFactory.GetBlockState(packet.PalleteId));
+		}
+
+		private void HandleEntityStatusPacket(EntityStatusPacket packet)
+		{
+			//TODO: Do somethign with the packet.
+		}
+
+		private void HandleHeldItemChangePacket(HeldItemChangePacket packet)
+		{
+			if (WorldReceiver?.GetPlayerEntity() is Player player)
+			{
+				player.Inventory.SelectedSlot = packet.Slot;
+			}
+		}
+
+		private void HandleSetSlot(SetSlot packet)
+		{
+			Inventory inventory = null;
+			if (packet.WindowId == 0 || packet.WindowId == -2)
+			{
+				if (WorldReceiver?.GetPlayerEntity() is Player player)
+				{
+					inventory = player.Inventory;
+				}
+			}
+
+			if (inventory == null) return;
+
+			if (packet.SlotId >= inventory.SlotCount - 1)
+			{
+				inventory[packet.SlotId] = packet.Slot;
+			}
+		}
+
+		private void HandleWindowItems(WindowItems packet)
+		{
+			Inventory inventory = null;
+			if (packet.WindowId == 0)
+			{
+				if (WorldReceiver?.GetPlayerEntity() is Player player)
+				{
+					inventory = player.Inventory;
+				}
+			}
+
+			if (inventory == null) return;
+
+			if (packet.Slots != null && packet.Slots.Length > 0)
+			{
+				for (int i = 0; i < packet.Slots.Length; i++)
+				{
+					if (i >= inventory.SlotCount - 1)
+					{
+						Log.Warn($"Slot index {i} is out of bounds (Max: {inventory.SlotCount})");
+						continue;
+					}
+					inventory[i] = packet.Slots[i];
+				}
 			}
 		}
 
@@ -855,7 +967,7 @@ namespace Alex.Worlds.Java
 			handshake.NextState = ConnectionState.Login;
 			handshake.ServerAddress = Endpoint.Address.ToString();
 			handshake.ServerPort = (ushort)Endpoint.Port;
-			handshake.ProtocolVersion = 370; //18W14b
+			handshake.ProtocolVersion = JavaProtocol.ProtocolVersion;
 			SendPacket(handshake);
 
 			Client.ConnectionState = ConnectionState.Login;

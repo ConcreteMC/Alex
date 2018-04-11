@@ -20,11 +20,11 @@ namespace Alex
 		[STAThread]
 		static void Main(string[] args)
 		{
+			LaunchSettings launchSettings = new LaunchSettings();
 			bool nextIsServer = false;
 			bool nextIsuuid = false;
 			bool nextIsaccessToken = false;
 			bool nextIsUsername = false;
-
 			foreach (var arg in args)
 			{
 				if (nextIsServer)
@@ -35,8 +35,7 @@ namespace Alex
 					{
 						if (ushort.TryParse(s[1], out ushort reee))
 						{
-							Alex.ServerEndPoint = new IPEndPoint(val, reee);
-							Alex.IsMultiplayer = true;
+							launchSettings.Server = new IPEndPoint(val, reee);
 						}
 					}
 				}
@@ -44,19 +43,19 @@ namespace Alex
 				if (nextIsaccessToken)
 				{
 					nextIsaccessToken = false;
-					Alex.AccessToken = arg;
+					launchSettings.AccesToken = arg;
 				}
 
 				if (nextIsuuid)
 				{
 					nextIsuuid = false;
-					Alex.UUID = arg;
+					launchSettings.UUID = arg;
 				}
 
 				if (nextIsUsername)
 				{
 					nextIsUsername = false;
-					Alex.Username = arg;
+					launchSettings.Username = arg;
 				}
 
 				if (arg == "--server")
@@ -78,11 +77,21 @@ namespace Alex
 				{
 					nextIsUsername = true;
 				}
+
+				if (arg == "--direct")
+				{
+					launchSettings.ConnectOnLaunch = true;
+				}
 			}
 
+			if (launchSettings.Server == null && launchSettings.ConnectOnLaunch)
+			{
+				launchSettings.ConnectOnLaunch = false;
+				Log.Warn($"No server specified, ignoring connect argument.");
+			}
 
 			Log.Info($"Starting...");
-			using (var game = new Alex())
+			using (var game = new Alex(launchSettings))
 			{
 				game.Run();
 			}
@@ -90,4 +99,14 @@ namespace Alex
 		}
 	}
 #endif
+
+	public class LaunchSettings
+	{
+		public bool ConnectOnLaunch = false;
+		public IPEndPoint Server = null;
+
+		public string Username;
+		public string UUID;
+		public string AccesToken;
+	}
 }

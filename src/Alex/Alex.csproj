@@ -21,6 +21,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Graphics\Items\**" />
+    <EmbeddedResource Remove="Graphics\Items\**" />
+    <None Remove="Graphics\Items\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="Icon.bmp" />
     <None Remove="Icon.ico" />
   </ItemGroup>
@@ -822,10 +828,6 @@
 
 	<ItemGroup>
 		<RdXmlFile Include="rd.xml" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<Folder Include="Graphics\Items\" />
 	</ItemGroup>
 
 	<ItemGroup>

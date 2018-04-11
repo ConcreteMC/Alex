@@ -2,11 +2,6 @@
 
 namespace Alex.Networking.Java.Framework
 {
-	public interface IPacket : IPacket<Stream>
-	{
-		
-	}
-
 	public interface IPacket<in TStream> where TStream : Stream
 	{
 		void Encode(TStream stream);

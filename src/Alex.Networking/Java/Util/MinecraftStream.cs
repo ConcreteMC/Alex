@@ -5,6 +5,7 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Alex.API.Data;
 using Alex.API.Utils;
 using fNbt;
 using fNbt.Tags;
@@ -260,6 +261,29 @@ namespace Alex.Networking.Java.Util
 			var y = Convert.ToSingle((val >> 26) & 0xFFF);
 			var z = Convert.ToSingle(val << 38 >> 38);
 			return new Vector3(x, y, z);
+		}
+
+		public SlotData ReadSlot()
+		{
+			short id = ReadShort();
+			byte count = 0;
+			short damage = 0;
+			NbtCompound nbt = null;
+
+			if (id != -1)
+			{
+				count = (byte)ReadByte();
+			//	damage = ReadShort();
+				nbt = ReadNbtCompound();
+			}
+
+			SlotData slot = new SlotData();
+			slot.Count = count;
+			slot.Nbt = nbt;
+			slot.ItemID = id;
+			slot.ItemDamage = damage;
+
+			return slot;
 		}
 
 		private double NetworkToHostOrder(byte[] data)
