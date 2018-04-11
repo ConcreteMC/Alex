@@ -428,9 +428,84 @@ namespace Alex.Worlds.Java
 			{
 				HandleEntityVelocity(velocity);
 			}
+			else if (packet is WindowItems itemsPacket)
+			{
+				HandleWindowItems(itemsPacket);
+			}
+			else if (packet is SetSlot setSlotPacket)
+			{
+				HandleSetSlot(setSlotPacket);
+			}
+			else if (packet is HeldItemChangePacket pack)
+			{
+				HandleHeldItemChangePacket(pack);
+			}
+			else if (packet is EntityStatusPacket entityStatusPacket)
+			{
+				HandleEntityStatusPacket(entityStatusPacket);
+			}
 			else
 			{
 				Log.Warn($"Unhandled packet: 0x{packet.PacketId:x2} - {packet.ToString()}");
+			}
+		}
+
+		private void HandleEntityStatusPacket(EntityStatusPacket packet)
+		{
+			//TODO: Do somethign with the packet.
+		}
+
+		private void HandleHeldItemChangePacket(HeldItemChangePacket packet)
+		{
+			if (WorldReceiver?.GetPlayerEntity() is Player player)
+			{
+				player.Inventory.SelectedSlot = packet.Slot;
+			}
+		}
+
+		private void HandleSetSlot(SetSlot packet)
+		{
+			Inventory inventory = null;
+			if (packet.WindowId == 0 || packet.WindowId == -2)
+			{
+				if (WorldReceiver?.GetPlayerEntity() is Player player)
+				{
+					inventory = player.Inventory;
+				}
+			}
+
+			if (inventory == null) return;
+
+			if (packet.SlotId >= inventory.SlotCount - 1)
+			{
+				inventory[packet.SlotId] = packet.Slot;
+			}
+		}
+
+		private void HandleWindowItems(WindowItems packet)
+		{
+			Inventory inventory = null;
+			if (packet.WindowId == 0)
+			{
+				if (WorldReceiver?.GetPlayerEntity() is Player player)
+				{
+					inventory = player.Inventory;
+				}
+			}
+
+			if (inventory == null) return;
+
+			if (packet.Slots != null && packet.Slots.Length > 0)
+			{
+				for (int i = 0; i < packet.Slots.Length; i++)
+				{
+					if (i >= inventory.SlotCount - 1)
+					{
+						Log.Warn($"Slot index {i} is out of bounds (Max: {inventory.SlotCount})");
+						continue;
+					}
+					inventory[i] = packet.Slots[i];
+				}
 			}
 		}
 

@@ -28,7 +28,8 @@ namespace Alex.Gamestates
 
 			stackMenu.AddMenuItem("Multiplayer", () =>
 			{
-				
+				//TODO: Switch to multiplayer serverlist (maybe choose PE or Java?)
+				Alex.ConnectToServer();
 			});
 
 			stackMenu.AddMenuItem("Debug Blockstates", DebugWorldButtonActivated);
@@ -53,6 +54,8 @@ namespace Alex.Gamestates
 
 		private void Debug(IWorldGenerator generator)
 		{
+			Alex.IsMultiplayer = false;
+
 			Alex.IsMouseVisible = false;
 
 			generator.Initialize();

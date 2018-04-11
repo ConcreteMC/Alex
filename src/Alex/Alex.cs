@@ -44,8 +44,23 @@ namespace Alex
 
 		public UiManager UiManager { get; private set; }
 
-		public Alex()
+		private bool BypassTitleState { get; set; } = false;
+		public Alex(LaunchSettings launchSettings)
 		{
+			if (launchSettings.Server != null)
+			{
+				ServerEndPoint = launchSettings.Server;
+				if (launchSettings.ConnectOnLaunch)
+				{
+					IsMultiplayer = true;
+					BypassTitleState = true;
+				}
+			}
+
+			Username = launchSettings.Username;
+			AccessToken = launchSettings.AccesToken;
+			UUID = launchSettings.UUID;
+
 			Instance = this;
 
 			var graphics = new GraphicsDeviceManager(this)
@@ -192,14 +207,13 @@ namespace Alex
 			GameStateManager.AddState("title", new TitleState(this)); 
 			GameStateManager.AddState("options", new OptionsState(this));
 
-			if (!IsMultiplayer)
+			if (!BypassTitleState)
 			{
 				GameStateManager.SetActiveState("title");
 			}
 			else
 			{
-				var javaProvider = new JavaWorldProvider(this, ServerEndPoint, Username, UUID, AccessToken, out INetworkProvider networkProvider);
-				LoadWorld(javaProvider, networkProvider);
+				ConnectToServer();
 			}
 
 			GameStateManager.RemoveState("splash");
@@ -223,6 +237,14 @@ namespace Alex
 
 				GameStateManager.RemoveState("loading");
 			});
+		}
+
+		public void ConnectToServer()
+		{
+			IsMultiplayer = true;
+
+			var javaProvider = new JavaWorldProvider(this, ServerEndPoint, Username, UUID, AccessToken, out INetworkProvider networkProvider);
+			LoadWorld(javaProvider, networkProvider);
 		}
 	}
 }

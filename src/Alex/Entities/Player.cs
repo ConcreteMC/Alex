@@ -4,6 +4,7 @@ using Alex.API.Utils;
 using Alex.Gamestates.Playing;
 using Alex.Graphics.Models.Entity;
 using Alex.ResourcePackLib.Json.Models.Entities;
+using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -27,6 +28,8 @@ namespace Alex.Entities
 		    PlayerIndex = playerIndex;
 		    Controller = new PlayerController(graphics, world, alex.GameSettings, this, playerIndex); 
 		    NoAi = false;
+
+			Inventory = new Inventory(45);
 	    }
 
 		public override void Update(IUpdateArgs args)
