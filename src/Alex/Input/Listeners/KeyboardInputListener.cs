@@ -31,6 +31,17 @@ namespace Alex.Input.Listeners
             RegisterMap(InputCommand.RebuildChunks, Keys.F9);
             RegisterMap(InputCommand.ToggleWireframe, Keys.F10);
 
+            
+            RegisterMap(InputCommand.HotBarSelect1, Keys.D1);
+            RegisterMap(InputCommand.HotBarSelect2, Keys.D2);
+            RegisterMap(InputCommand.HotBarSelect3, Keys.D3);
+            RegisterMap(InputCommand.HotBarSelect4, Keys.D4);
+            RegisterMap(InputCommand.HotBarSelect5, Keys.D5);
+            RegisterMap(InputCommand.HotBarSelect6, Keys.D6);
+            RegisterMap(InputCommand.HotBarSelect7, Keys.D7);
+            RegisterMap(InputCommand.HotBarSelect8, Keys.D8);
+            RegisterMap(InputCommand.HotBarSelect9, Keys.D9);
+
         }
 
         protected override KeyboardState GetCurrentState()

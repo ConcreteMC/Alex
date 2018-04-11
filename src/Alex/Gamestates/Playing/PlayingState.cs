@@ -52,7 +52,7 @@ namespace Alex.Gamestates.Playing
 
 		protected override void OnLoad(RenderArgs args)
 		{
-			GuiManager.AddScreen(new PlayingHud(Alex));
+			GuiManager.AddScreen(new PlayingHud(Alex, World.Player.Controller));
 			FpsCounter = new FpsMonitor();
 			CrosshairTexture = TextureUtils.ImageToTexture2D(args.GraphicsDevice, Resources.crosshair);
 

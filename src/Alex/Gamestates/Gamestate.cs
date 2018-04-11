@@ -26,7 +26,7 @@ namespace Alex.Gamestates
 		{
 			Alex = alex;
 			Graphics = alex.GraphicsDevice;
-			GuiManager = new GuiManager(Alex, new GuiRenderer(Alex.GraphicsDevice));
+			GuiManager = new GuiManager(Alex, new GuiRenderer(alex));
 		}
 
 		public Viewport Viewport => Graphics.Viewport;
@@ -42,6 +42,7 @@ namespace Alex.Gamestates
 
 		public void Load(RenderArgs args)
 		{
+			GuiManager.Init(Alex.GraphicsDevice);
 			Gui = new UiContainer
 			{
 				ClassName = "GuiRoot"

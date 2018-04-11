@@ -26,7 +26,7 @@ namespace Alex.Gamestates.Playing
 
 	    private float FlyingSpeed = 10f;
 
-		private PlayerInputManager InputManager { get; }
+		public PlayerInputManager InputManager { get; }
 
 
         private MouseState PreviousMouseState { get; set; }

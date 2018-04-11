@@ -10,7 +10,16 @@ namespace Alex.Gamestates.Gui
 {
     public class GuiInventoryItem : GuiElement
     {
-        public bool IsSelected { get; set; }
+        private bool _isSelected;
+
+        public bool IsSelected
+        {
+            get { return _isSelected; }
+            set { _isSelected = value; OnSelectedChanged(); }
+        }
+
+        public override int Width => 20;
+        public override int Height => 20;
 
         public Texture2D SelectedBackground { get;private set; }
 
@@ -23,15 +32,18 @@ namespace Alex.Gamestates.Gui
             SelectedBackground = renderer.GetTexture(GuiTextures.Inventory_HotBar_SelectedItemOverlay);
         }
 
-        protected override void OnUpdate(GameTime gameTime)
+        private void OnSelectedChanged()
         {
-            if (!IsSelected && Background != null)
+            Background = IsSelected ? SelectedBackground : null;
+        }
+
+        protected override void OnDraw(GuiRenderArgs args)
+        {
+            if (IsSelected)
             {
-                Background = null;
-            }
-            else if(IsSelected && Background == null)
-            {
-                Background = SelectedBackground;
+                var bounds = Bounds;
+                bounds.Inflate(1, 1);
+                args.SpriteBatch.Draw(SelectedBackground, bounds, null, Color.White, 0, Vector2.Zero, SpriteEffects.None, 0);
             }
         }
     }

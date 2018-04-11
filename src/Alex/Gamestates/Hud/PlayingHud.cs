@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Text;
 using Alex.Gamestates.Gui;
+using Alex.Gamestates.Playing;
 using Alex.Graphics.Gui;
 using Alex.Graphics.Gui.Rendering;
+using Alex.Input;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Gamestates.Hud
@@ -11,9 +13,13 @@ namespace Alex.Gamestates.Hud
     public class PlayingHud : GuiScreen
     {
         private GuiItemHotbar _hotbar;
+        private PlayerController _playerController;
+        private PlayerInputManager InputManager => _playerController.InputManager;
 
-        public PlayingHud(Game game) : base(game)
+        public PlayingHud(Game game, PlayerController playerController) : base(game)
         {
+            DebugColor = Color.Green;
+            _playerController = playerController;
             _hotbar = new GuiItemHotbar();
         }
 
@@ -22,12 +28,33 @@ namespace Alex.Gamestates.Hud
             AddChild(_hotbar);
         }
 
+        protected override void OnUpdate(GameTime gameTime)
+        {
+            if (InputManager.IsPressed(InputCommand.HotBarSelectNext))
+            {
+                _hotbar.SelectedIndex++;
+            }
+
+            if (InputManager.IsPressed(InputCommand.HotBarSelectPrevious))
+            {
+                _hotbar.SelectedIndex--;
+            }
+
+            if (InputManager.IsPressed(InputCommand.HotBarSelect1)) _hotbar.SelectedIndex = 0;
+            if (InputManager.IsPressed(InputCommand.HotBarSelect2)) _hotbar.SelectedIndex = 1;
+            if (InputManager.IsPressed(InputCommand.HotBarSelect3)) _hotbar.SelectedIndex = 2;
+            if (InputManager.IsPressed(InputCommand.HotBarSelect4)) _hotbar.SelectedIndex = 3;
+            if (InputManager.IsPressed(InputCommand.HotBarSelect5)) _hotbar.SelectedIndex = 4;
+            if (InputManager.IsPressed(InputCommand.HotBarSelect6)) _hotbar.SelectedIndex = 5;
+            if (InputManager.IsPressed(InputCommand.HotBarSelect7)) _hotbar.SelectedIndex = 6;
+            if (InputManager.IsPressed(InputCommand.HotBarSelect8)) _hotbar.SelectedIndex = 7;
+            if (InputManager.IsPressed(InputCommand.HotBarSelect9)) _hotbar.SelectedIndex = 8;
+        }
+
         protected override void OnUpdateLayout()
         {
-            _hotbar.X = (int)((Width / (float)_hotbar.Width) / 2f);
-            _hotbar.Y = Height - _hotbar.Height;
-            //_hotbar.X = new GuiScalar(0f, (int)((AbsoluteWidth - _hotbar.AbsoluteWidth) / 2f));
-            //_hotbar.Y = new GuiScalar(1f, -_hotbar.AbsoluteHeight);
+            _hotbar.X = (int)((Width - (float)_hotbar.Width) / 2f) - 1;
+            _hotbar.Y = Height - _hotbar.Height - 1;
         }
     }
 }

@@ -19,6 +19,8 @@ namespace Alex.Graphics.Gui
         protected List<GuiElement> Children { get; } = new List<GuiElement>();
         public bool HasChildren => Children.Any();
 
+        protected Color DebugColor { get; set; } = Color.Red;
+
         #region Layout
 
         public HorizontalAlignment HorizontalAlignment { get;set; }
@@ -89,7 +91,7 @@ namespace Alex.Graphics.Gui
 
         protected virtual void OnDraw(GuiRenderArgs args)
         {
-            DrawRectangle(args, Bounds, Color.Red);
+            DrawRectangle(args, Bounds, DebugColor);
 
             if (Background != null)
             {
