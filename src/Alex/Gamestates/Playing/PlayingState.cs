@@ -22,7 +22,6 @@ namespace Alex.Gamestates.Playing
 		private World World { get; }
 
 		private FpsMonitor FpsCounter { get; set; }
-		private Texture2D CrosshairTexture { get; set; }
 
 		private ChatComponent Chat { get; }
 
@@ -52,9 +51,8 @@ namespace Alex.Gamestates.Playing
 
 		protected override void OnLoad(RenderArgs args)
 		{
-			GuiManager.AddScreen(new PlayingHud(Alex));
+			GuiManager.AddScreen(new PlayingHud(Alex, World.Player.Controller));
 			FpsCounter = new FpsMonitor();
-			CrosshairTexture = TextureUtils.ImageToTexture2D(args.GraphicsDevice, Resources.crosshair);
 
 			World.SpawnPoint = WorldProvider.GetSpawnPoint();
 			World.Camera.MoveTo(World.GetSpawnPoint(), Vector3.Zero);
@@ -226,9 +224,6 @@ namespace Alex.Gamestates.Playing
 			try
 			{
 				args.SpriteBatch.Begin();
-
-				args.SpriteBatch.Draw(CrosshairTexture,
-					new Vector2(CenterScreen.X - CrosshairTexture.Width / 2f, CenterScreen.Y - CrosshairTexture.Height / 2f));
 
 				if (_raytracedBlock.Y > 0 && _raytracedBlock.Y < 256)
 				{

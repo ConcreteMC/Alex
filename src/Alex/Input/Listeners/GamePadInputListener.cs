@@ -20,16 +20,18 @@ namespace Alex.Input.Listeners
             RegisterMap(InputCommand.MoveUp, Buttons.A);
             RegisterMap(InputCommand.MoveDown, Buttons.B);
 
-            RegisterMap(InputCommand.MoveSpeedIncrease, Buttons.LeftTrigger);
-            RegisterMap(InputCommand.MoveSpeedDecrease, Buttons.LeftShoulder);
+            RegisterMap(InputCommand.MoveSpeedIncrease, Buttons.RightTrigger);
+            RegisterMap(InputCommand.MoveSpeedDecrease, Buttons.LeftTrigger);
             RegisterMap(InputCommand.MoveSpeedReset, Buttons.LeftStick);
 
             RegisterMap(InputCommand.ToggleFog, Buttons.X);
             RegisterMap(InputCommand.ToggleMenu, Buttons.Start);
-            RegisterMap(InputCommand.ToggleDebugInfo, Buttons.RightShoulder);
             RegisterMap(InputCommand.ToggleChat, Buttons.Back);
 
             RegisterMap(InputCommand.ToggleCamera, Buttons.Y);
+
+            RegisterMap(InputCommand.HotBarSelectPrevious, Buttons.LeftShoulder);
+            RegisterMap(InputCommand.HotBarSelectNext, Buttons.RightShoulder);
         }
 
         protected override GamePadState GetCurrentState()

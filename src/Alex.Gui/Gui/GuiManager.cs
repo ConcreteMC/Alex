@@ -52,9 +52,9 @@ namespace Alex.Graphics.Gui
 
         public void AddScreen(GuiScreen screen)
         {
-            Screens.Add(screen);
             screen.Init(GuiRenderer);
-            screen.UpdateSize(ScaledResolution.TargetWidth, ScaledResolution.TargetHeight);
+            screen.UpdateSize(ScaledResolution.ScaledWidth, ScaledResolution.ScaledHeight);
+            Screens.Add(screen);
         }
 
         public void RemoveScreen(GuiScreen screen)
@@ -76,7 +76,10 @@ namespace Alex.Graphics.Gui
         {
             try
             {
-                SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, null, ScaledResolution.TransformMatrix);
+                SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, null, new RasterizerState
+                {
+                    ScissorTestEnable = true
+                }, null, ScaledResolution.TransformMatrix);
 
                 foreach (var screen in Screens.ToArray())
                 {

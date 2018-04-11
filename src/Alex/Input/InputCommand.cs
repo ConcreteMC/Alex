@@ -32,6 +32,19 @@ namespace Alex.Input
         
         RebuildChunks,
 
+
+        HotBarSelectPrevious,
+        HotBarSelectNext,
+        HotBarSelect1,
+        HotBarSelect2,
+        HotBarSelect3,
+        HotBarSelect4,
+        HotBarSelect5,
+        HotBarSelect6,
+        HotBarSelect7,
+        HotBarSelect8,
+        HotBarSelect9,
+
         A,
         B,
         X,

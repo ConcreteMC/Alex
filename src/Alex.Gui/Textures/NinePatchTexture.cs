@@ -65,8 +65,9 @@ namespace Alex.Graphics.Textures
 			return CreateRegions(rectangle);
 		}
 
-		public static explicit operator NinePatchTexture(Texture2D texture)
+		public static implicit operator NinePatchTexture(Texture2D texture)
 		{
+			if (texture == null) return null;
 			return new NinePatchTexture(texture, texture.Bounds);
 		}
 	}

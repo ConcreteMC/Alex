@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Alex.Graphics.Textures;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.Graphics.Gui.Rendering

@@ -85,13 +85,12 @@ namespace Alex.Graphics.UI.Rendering
 
 		public void Update()
 		{
-			var viewportWidth  = Graphics.PresentationParameters.BackBufferWidth;
-			var viewportHeight = Graphics.PresentationParameters.BackBufferHeight;
+			var viewportWidth  = Graphics.Viewport.Width;
+			var viewportHeight = Graphics.Viewport.Height;
 
 			var scaleFactor = 1;
 
-			while (scaleFactor < GuiScale && viewportWidth / (scaleFactor + 1) >= TargetWidth &&
-			       viewportHeight                          / (scaleFactor + 1) >= TargetHeight)
+			while (scaleFactor < GuiScale && viewportWidth / (scaleFactor + 1) >= TargetWidth && viewportHeight / (scaleFactor + 1) >= TargetHeight)
 			{
 				++scaleFactor;
 			}
@@ -112,9 +111,7 @@ namespace Alex.Graphics.UI.Rendering
 				var scaleX = viewportWidth / ScaledWidth;
 				var scaleY = viewportHeight / ScaledHeight;
 
-				var transformMatrix = Matrix.CreateScale(scaleX, scaleY, 1f);
-
-				TransformMatrix = transformMatrix;
+				TransformMatrix = Matrix.CreateScale(scaleX, scaleY, 1f);
 
 				ScaleChanged?.Invoke(this, new UiScaleEventArgs(ScaledWidth, ScaledHeight, ScaleFactor));
 			}

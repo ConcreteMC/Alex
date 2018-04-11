@@ -95,7 +95,7 @@ namespace Alex.ResourcePackLib
 		{
 			try
 			{
-				var entry = _archive.GetEntry(resource);
+				var entry = _archive.GetEntry($"assets/minecraft/textures/{resource}.png");
 				if (entry == null)
 				{
 					texture = default(Bitmap);
@@ -118,10 +118,34 @@ namespace Alex.ResourcePackLib
 		private void Load()
 		{
 			LoadMeta();
+			LoadTextures();
 			LoadBlockModels();
 			LoadBlockStates();
 			LoadItemModels();
 			LoadColormap();
+		}
+
+		private void LoadTextures()
+		{
+			var images = _archive
+			             .Entries.Where(e => e.FullName.StartsWith("assets/minecraft/textures/") && e.FullName.EndsWith(".png"))
+			             .ToArray();
+			foreach (var image in images)
+			{
+				LoadTexture(image);
+			}
+		}
+
+		private void LoadTexture(ZipArchiveEntry entry)
+		{
+			var textureName = entry.FullName.Replace("assets/minecraft/textures/", "").Replace(".png","");
+			
+			using (var s = entry.Open())
+			{
+				var img = new Bitmap(s);
+
+				_textureCache[textureName] = img;
+			}
 		}
 
 		private void LoadItemModels()
@@ -381,6 +405,26 @@ namespace Alex.ResourcePackLib
 				}
 			}
 
+			if (_textureCache.TryGetValue(textureName, out texture))
+				return true;
+
+			var textureFile =
+				_archive.Entries.FirstOrDefault(e => e.FullName.Equals("assets/minecraft/textures/" + textureName + ".png"));
+			if (textureFile == null) return false;
+
+			using (var s = textureFile.Open())
+			{
+				var img = new Bitmap(s);
+
+				_textureCache[textureName] = img;
+
+				texture = img;
+				return true;
+			}
+		}
+
+		public bool TryGetTexture(string textureName, out Bitmap texture)
+		{
 			if (_textureCache.TryGetValue(textureName, out texture))
 				return true;
 
