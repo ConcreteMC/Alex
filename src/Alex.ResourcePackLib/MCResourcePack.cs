@@ -11,6 +11,7 @@ using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.BlockStates;
 using Alex.ResourcePackLib.Json.Models;
 using Alex.ResourcePackLib.Json.Models.Blocks;
+using Alex.ResourcePackLib.Json.Models.Items;
 using Microsoft.Xna.Framework;
 using NLog;
 using Color = Microsoft.Xna.Framework.Color;
@@ -24,11 +25,14 @@ namespace Alex.ResourcePackLib
 
 		public IReadOnlyDictionary<string, BlockStateResource> BlockStates => _blockStates;
 		public IReadOnlyDictionary<string, BlockModel> BlockModels => _blockModels;
+		public IReadOnlyDictionary<string, ResourcePackItem> ItemModels => _itemModels;
 
 		private ZipArchive _archive;
 		private readonly Dictionary<string, BlockStateResource> _blockStates = new Dictionary<string, BlockStateResource>();
 		private readonly Dictionary<string, BlockModel> _blockModels = new Dictionary<string, BlockModel>();
+		private readonly Dictionary<string, ResourcePackItem> _itemModels = new Dictionary<string, ResourcePackItem>();
 		private readonly Dictionary<string, Bitmap> _textureCache = new Dictionary<string, Bitmap>();
+
 		private Color[] FoliageColors { get; set; } = null;
 		private int _foliageWidth = 256;
 		private int _foliageHeight = 256;
@@ -116,7 +120,47 @@ namespace Alex.ResourcePackLib
 			LoadMeta();
 			LoadBlockModels();
 			LoadBlockStates();
+			LoadItemModels();
 			LoadColormap();
+		}
+
+		private void LoadItemModels()
+		{
+			var jsonFiles = _archive.Entries
+				.Where(e => e.FullName.StartsWith("assets/minecraft/models/items/") && e.FullName.EndsWith(".json")).ToArray();
+
+			foreach (var jsonFile in jsonFiles)
+			{
+				LoadItemModel(jsonFile);
+			}
+		}
+
+		private ResourcePackItem LoadItemModel(ZipArchiveEntry entry)
+		{
+			string nameSpace = entry.FullName.Split('/')[1];
+			string name = Path.GetFileNameWithoutExtension(entry.FullName);
+			using (var r = new StreamReader(entry.Open()))
+			{
+				var blockModel = MCJsonConvert.DeserializeObject<ResourcePackItem>(r.ReadToEnd());
+				blockModel.Name = name;
+				blockModel.Namespace = nameSpace;
+
+				blockModel = ProcessItem(blockModel);
+				_itemModels[$"{nameSpace}:{name}"] = blockModel;
+
+				return blockModel;
+			}
+
+		}
+
+		private ResourcePackItem ProcessItem(ResourcePackItem model)
+		{
+			if (!string.IsNullOrWhiteSpace(model.Parent) && !model.Parent.Equals(model.Name, StringComparison.InvariantCultureIgnoreCase))
+			{
+				
+			}
+
+			return model;
 		}
 
 		private void LoadColormap()

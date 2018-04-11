@@ -1,22 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.IO;
-using System.Net;
-using System.Text;
-using Alex.API.World;
-using Alex.Gamestates.Playing;
-using Alex.Graphics;
-using Alex.Graphics.UI;
-using Alex.Graphics.UI.Common;
+﻿using Alex.Graphics.UI;
 using Alex.Graphics.UI.Controls.Menu;
 using Alex.Graphics.UI.Layout;
-using Alex.Utils;
 using Alex.Worlds;
 using Alex.Worlds.Generators;
-using Alex.Worlds.Java;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.Gamestates
 {
@@ -70,8 +56,8 @@ namespace Alex.Gamestates
 			Alex.IsMouseVisible = false;
 
 			generator.Initialize();
-
-			Alex.LoadWorld(new SPWorldProvider(Alex, generator));
+			var debugProvider = new SPWorldProvider(Alex, generator);
+			Alex.LoadWorld(debugProvider, debugProvider.Network);
 		}
 
 		private void DebugFlatland()

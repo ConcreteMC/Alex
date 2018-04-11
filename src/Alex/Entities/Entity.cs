@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections;
+using Alex.API;
 using Alex.API.Entities;
 using Alex.API.Graphics;
+using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.Graphics.Models;
 using Alex.Graphics.Models.Entity;
@@ -14,7 +16,7 @@ using NLog;
 
 namespace Alex.Entities
 {
-	public class Entity : IEntity
+	public class Entity : IEntity, IPhysicsEntity
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Entity));
 
@@ -35,8 +37,8 @@ namespace Alex.Entities
 		//public HealthManager HealthManager { get; set; }
 
 		public string NameTag { get; set; }
-		
-		public bool NoAi { get; set; }
+
+		public bool NoAi { get; set; } = true;
 		public bool HideNameTag { get; set; } = true;
 		public bool Silent { get; set; }
 		public bool IsInWater { get; set; } = false;
@@ -57,8 +59,11 @@ namespace Alex.Entities
 		public double MovementSpeed { get; set; } = 0.699999988079071;
 		public double FlyingSpeed { get; set; } = 0.4000000059604645;
 
-		public Entity(int entityTypeId, World level)
+		public INetworkProvider Network { get; set; }
+		public Entity(int entityTypeId, World level, INetworkProvider network)
 		{
+			Network = network;
+
 			EntityId = -1;
 			Level = level;
 			EntityTypeId = entityTypeId;

@@ -55,9 +55,10 @@ namespace Alex.Rendering.UI
 		private bool DoThing = false;
 		public override void Render(RenderArgs args)
 		{
+			return;
 			if (ButtonTexture == null)
 			{
-				ButtonTexture = TextureUtils.ImageToTexture2D(args.GraphicsDevice, Resources.ButtonState0);
+				//ButtonTexture = TextureUtils.ImageToTexture2D(args.GraphicsDevice, Resources.ButtonState0);
 			}
 
 			ButtonRectangle = new Rectangle((int)Location.X, (int)Location.Y, (int)Size.X, (int)Size.Y);

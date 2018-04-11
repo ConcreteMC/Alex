@@ -73,46 +73,6 @@ namespace Alex {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] blocks {
-            get {
-                object obj = ResourceManager.GetObject("blocks", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] ButtonState0 {
-            get {
-                object obj = ResourceManager.GetObject("ButtonState0", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] ButtonState1 {
-            get {
-                object obj = ResourceManager.GetObject("ButtonState1", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] ButtonState2 {
-            get {
-                object obj = ResourceManager.GetObject("ButtonState2", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
         internal static byte[] crosshair {
             get {
                 object obj = ResourceManager.GetObject("crosshair", resourceCulture);
@@ -155,16 +115,6 @@ namespace Alex {
         internal static string Entities {
             get {
                 return ResourceManager.GetString("Entities", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] grass {
-            get {
-                object obj = ResourceManager.GetObject("grass", resourceCulture);
-                return ((byte[])(obj));
             }
         }
         
@@ -273,7 +223,10 @@ namespace Alex {
         ///    ]
         ///  },
         ///  &quot;minecraft:diorite&quot;: {
-        ///    &quot;states&quot; [rest of string was truncated]&quot;;.
+        ///    &quot;states&quot;: [
+        ///      {
+        ///        &quot;id&quot;: 4,
+        ///      [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string NewBlocks {
             get {
@@ -354,16 +307,6 @@ namespace Alex {
         internal static string String1 {
             get {
                 return ResourceManager.GetString("String1", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] wood {
-            get {
-                object obj = ResourceManager.GetObject("wood", resourceCulture);
-                return ((byte[])(obj));
             }
         }
     }

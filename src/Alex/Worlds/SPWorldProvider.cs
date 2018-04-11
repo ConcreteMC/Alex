@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Data;
 using Alex.API.Graphics;
+using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Entities;
@@ -24,7 +25,7 @@ namespace Alex.Worlds
 		private readonly List<ChunkCoordinates> _loadedChunks = new List<ChunkCoordinates>();
 		private ChunkCoordinates PreviousChunkCoordinates { get; set; } = new ChunkCoordinates(int.MaxValue, int.MaxValue);
 		private Alex Alex { get; }
-
+		public INetworkProvider Network { get; }
 		private CancellationTokenSource ThreadCancellationTokenSource;
 
 		public SPWorldProvider(Alex alex, IWorldGenerator worldGenerator)

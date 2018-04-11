@@ -53,5 +53,10 @@ namespace Alex.Gamestates
 
 		    args.SpriteBatch.End();
 		}
+
+	    protected override void OnShow()
+	    {
+		    base.OnShow();
+	    }
     }
 }

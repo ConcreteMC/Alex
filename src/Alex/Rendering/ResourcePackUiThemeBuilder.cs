@@ -64,7 +64,7 @@ namespace Alex.Rendering
 			Theme.AddClass("GuiRoot", new UiElementStyle()
 			{
 				SizeAnchor = Vector2.One,
-				//BackgroundColor = Color.FromNonPremultiplied(0xFF, 0x50, 0x3F, 0xFF)
+			//	BackgroundColor = Color.FromNonPremultiplied(0xFF, 0x50, 0x3F, 0xFF)
 			});
 
 			Theme.AddClass<UiElement>(new UiElementStyle()

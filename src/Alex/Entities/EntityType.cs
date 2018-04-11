@@ -60,7 +60,7 @@
 		Guardian = 49,
 		ElderGuardian = 50,
 		Wither = 52,
-		Dragon = 53,
+		EnderDragon = 53,
 		Shulker = 54,
 		Endermite = 55,
 		Vindicator = 57,

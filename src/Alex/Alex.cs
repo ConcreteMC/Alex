@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Threading;
+using Alex.API.Network;
 using Alex.API.World;
 using Alex.Gamestates;
 using Alex.Gamestates.Playing;
@@ -84,7 +85,6 @@ namespace Alex
 		{
 			if (GameSettings.IsDirty)
 			{
-				//Log.Info($"Saving settings...");
 				File.WriteAllText("settings.json", JsonConvert.SerializeObject(GameSettings, Formatting.Indented));
 			}
 		}
@@ -152,12 +152,11 @@ namespace Alex
 		protected override void Draw(GameTime gameTime)
 		{
 			GraphicsDevice.RasterizerState = RasterizerState.CullClockwise;
-			GraphicsDevice.Clear(Color.SkyBlue);
-
 			GameStateManager.Draw(gameTime);
 
-			base.Draw(gameTime);
 			UiManager.Draw(gameTime);
+
+			base.Draw(gameTime);
 		}
 
 		private void InitializeGame()
@@ -199,7 +198,8 @@ namespace Alex
 			}
 			else
 			{
-				LoadWorld(new JavaWorldProvider(this, ServerEndPoint, Username, UUID, AccessToken));
+				var javaProvider = new JavaWorldProvider(this, ServerEndPoint, Username, UUID, AccessToken, out INetworkProvider networkProvider);
+				LoadWorld(javaProvider, networkProvider);
 			}
 
 			GameStateManager.RemoveState("splash");
@@ -207,9 +207,9 @@ namespace Alex
 		//	Log.Info($"Game initialized!");
 		}
 
-		public void LoadWorld(WorldProvider worldProvider)
+		public void LoadWorld(WorldProvider worldProvider, INetworkProvider networkProvider)
 		{
-			PlayingState playState = new PlayingState(this, GraphicsDevice, worldProvider);
+			PlayingState playState = new PlayingState(this, GraphicsDevice, worldProvider, networkProvider);
 			GameStateManager.AddState("play", playState);
 
 			LoadingWorldState loadingScreen =

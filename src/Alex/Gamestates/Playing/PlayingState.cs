@@ -1,4 +1,5 @@
 ﻿using System;
+using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks;
@@ -17,7 +18,7 @@ namespace Alex.Gamestates.Playing
 {
 	public class PlayingState : GameState
 	{
-		private SkyboxModel SkyRenderer { get; }
+		private SkyBox SkyRenderer { get; }
 		private World World { get; }
 
 		private FpsMonitor FpsCounter { get; set; }
@@ -26,10 +27,13 @@ namespace Alex.Gamestates.Playing
 		private ChatComponent Chat { get; }
 
 		private WorldProvider WorldProvider { get; }
-		public PlayingState(Alex alex, GraphicsDevice graphics, WorldProvider worldProvider) : base(alex)
+		public INetworkProvider NetworkProvider { get; }
+		public PlayingState(Alex alex, GraphicsDevice graphics, WorldProvider worldProvider, INetworkProvider networkProvider) : base(alex)
 		{
-			World = new World(alex, graphics, new FirstPersonCamera(alex.GameSettings.RenderDistance, Vector3.Zero, Vector3.Zero));
-			SkyRenderer = new SkyboxModel(alex, graphics, World);
+			NetworkProvider = networkProvider;
+
+			World = new World(alex, graphics, new FirstPersonCamera(alex.GameSettings.RenderDistance, Vector3.Zero, Vector3.Zero), networkProvider);
+			SkyRenderer = new SkyBox(alex, graphics, World);
 
 			Chat = new ChatComponent();
 
@@ -49,9 +53,6 @@ namespace Alex.Gamestates.Playing
 		protected override void OnLoad(RenderArgs args)
 		{
 			GuiManager.AddScreen(new PlayingHud(Alex));
-
-			Controls.Add("chatComponent", Chat);
-
 			FpsCounter = new FpsMonitor();
 			CrosshairTexture = TextureUtils.ImageToTexture2D(args.GraphicsDevice, Resources.crosshair);
 
@@ -100,11 +101,11 @@ namespace Alex.Gamestates.Playing
 						MemoryUsageDisplay = $"Allocated memory: {GetBytesReadable(Environment.WorkingSet)}";
 					}
 				}
+
+				Chat.Update(gameTime);
 			}
 			base.OnUpdate(gameTime);
 		}
-
-		private bool _renderWaterOverlay = false;
 
 		private Vector3 _raytracedBlock;
 		protected void UpdateRayTracer(GraphicsDevice graphics, World world)
@@ -176,7 +177,7 @@ namespace Alex.Gamestates.Playing
 					}
 					else
 					{
-						Alex.GameStateManager.AddState("ingamemenu", new InGameMenuState(Alex, this, currentKeyboardState));
+						Alex.GameStateManager.AddState("ingamemenu", new InGameMenuState(Alex, currentKeyboardState));
 						Alex.GameStateManager.SetActiveState("ingamemenu");
 					}
 				}
@@ -248,9 +249,7 @@ namespace Alex.Gamestates.Playing
 				args.SpriteBatch.End();
 			}
 
-		//	ActiveOverlays.ForEach(x => x.Render(args));
-
-			//base.Render2D(args);
+			Chat.Render(args);
 		}
 
 		private void RenderDebugScreen(RenderArgs args)
@@ -499,11 +498,6 @@ namespace Alex.Gamestates.Playing
 		{
 			World.Destroy();
 			WorldProvider.Dispose();
-		}
-
-		public void Disconnect()
-		{
-			
 		}
 	}
 }

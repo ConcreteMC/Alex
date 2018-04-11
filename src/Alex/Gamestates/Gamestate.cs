@@ -13,9 +13,7 @@ namespace Alex.Gamestates
 {
 	public class GameState
 	{
-		public Dictionary<string, UIComponent> Controls { get; set; }
-
-		public UiContainer Gui { get; private set; }
+		public UiContainer Gui { get; protected set; }
 
 		public GuiManager GuiManager { get; private set; }
 
@@ -23,11 +21,11 @@ namespace Alex.Gamestates
 
 		protected Alex Alex { get; }
 
+		public GameState ParentState { get; internal set; } = null;
 		public GameState(Alex alex)
 		{
 			Alex = alex;
 			Graphics = alex.GraphicsDevice;
-			Controls = new Dictionary<string, UIComponent>();
 			GuiManager = new GuiManager(Alex, new GuiRenderer(Alex.GraphicsDevice));
 		}
 
@@ -52,7 +50,10 @@ namespace Alex.Gamestates
 
 			OnLoad(args);
 
-			Gui.UpdateLayout();
+			if (Gui != null)
+			{
+				Gui.UpdateLayout();
+			}
 		}
 
 		public void Unload()
@@ -65,11 +66,6 @@ namespace Alex.Gamestates
 			OnDraw2D(args);
 
 			GuiManager.Draw(args.GameTime);
-
-			foreach (var control in Controls.Values.ToArray())
-			{
-				control.Render(args);
-			}
 		}
 
 		public void Draw3D(RenderArgs args)
@@ -82,25 +78,27 @@ namespace Alex.Gamestates
 			OnUpdate(gameTime);
 
 			GuiManager.Update(gameTime);
-
-			foreach (var control in Controls.Values.ToArray())
-			{
-				control.Update(gameTime);
-			}
 		}
 
 		public void Show()
 		{
 			OnShow();
-			Alex.UiManager.Root.AddChild(Gui);
-			Gui.UpdateLayout();
+			if (Gui != null)
+			{
+				Alex.UiManager.Root.AddChild(Gui);
+				Gui.UpdateLayout();
+			}
 		}
 
 		public void Hide()
 		{
 			OnHide();
-			Alex.UiManager.Root.RemoveChild(Gui);
-			Gui.UpdateLayout();
+			
+			if (Gui != null)
+			{
+				Alex.UiManager.Root.RemoveChild(Gui);
+				Gui.UpdateLayout();
+			}
 		}
 		
 		protected virtual void OnShow() { }

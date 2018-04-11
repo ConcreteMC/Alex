@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Graphics;
+using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.BlockStates;
+using Alex.ResourcePackLib.Json.Models.Blocks;
 using Alex.Utils;
 using Alex.Worlds;
 using JetBrains.Annotations;
@@ -15,32 +17,174 @@ using Axis = Alex.ResourcePackLib.Json.Axis;
 
 namespace Alex.Graphics.Models.Blocks
 {
-	public class CachedResourcePackModel : ResourcePackModel
+	public class CachedResourcePackModel : BlockModel
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(SPWorldProvider));
-		static CachedResourcePackModel()
-		{
-			
-		}
 
-		public CachedResourcePackModel(ResourceManager resources, BlockStateModel[] variant) : base(resources, variant)
+		public BlockStateModel[] Models { get; set; }
+		protected ResourceManager Resources { get; }
+		private readonly IDictionary<int, FaceCache> _elementCache;
+
+		public CachedResourcePackModel(ResourceManager resources, BlockStateModel[] models)
 		{
-			if (variant != null)
+			Resources = resources;
+			Models = models;
+
+			if (models != null)
 			{
-				_elementCache = CalculateModel(variant);
+				_elementCache = CalculateModel(models);
 			}
 		}
 
+		protected Matrix GetElementRotationMatrix(BlockModelElementRotation elementRotation, out float rescale)
+		{
+			Matrix faceRotationMatrix = Matrix.Identity;
+			float ci = 0f;
+
+			if (elementRotation.Axis != Axis.Undefined)
+			{
+				var elementRotationOrigin = new Vector3(elementRotation.Origin.X, elementRotation.Origin.Y, elementRotation.Origin.Z);
+
+				var elementAngle = MathUtils.ToRadians((float)(360f + elementRotation.Angle) % 360f);
+				ci = 1f / (float)Math.Cos(elementAngle);
+
+				faceRotationMatrix = Matrix.CreateTranslation(-elementRotationOrigin);
+				if (elementRotation.Axis == Axis.X)
+				{
+					faceRotationMatrix *= Matrix.CreateRotationX(elementAngle);
+				}
+				else if (elementRotation.Axis == Axis.Y)
+				{
+					faceRotationMatrix *= Matrix.CreateRotationY(elementAngle);
+				}
+				else if (elementRotation.Axis == Axis.Z)
+				{
+					faceRotationMatrix *= Matrix.CreateRotationZ(elementAngle);
+				}
+
+				faceRotationMatrix *= Matrix.CreateTranslation(elementRotationOrigin);
+			}
+
+			rescale = ci;
+			return faceRotationMatrix;
+		}
+
+		protected void GetCullFaceValues(string facename, BlockFace originalFace, out BlockFace face, out Vector3 offset)
+		{
+			Vector3 cullFace = Vector3.Zero;
+			BlockFace cull;
+
+			switch (facename)
+			{
+				case "up":
+					cullFace = Vector3.Up;
+					cull = BlockFace.Up;
+					break;
+				case "down":
+					cullFace = Vector3.Down;
+					cull = BlockFace.Down;
+					break;
+				case "north":
+					cullFace = Vector3.Backward;
+					cull = BlockFace.North;
+					break;
+				case "south":
+					cullFace = Vector3.Forward;
+					cull = BlockFace.South;
+					break;
+				case "west":
+					cullFace = Vector3.Left;
+					cull = BlockFace.West;
+					break;
+				case "east":
+					cullFace = Vector3.Right;
+					cull = BlockFace.East;
+					break;
+				default:
+					cull = originalFace;
+					cullFace = cull.GetVector3();
+					break;
+			}
+
+			offset = cullFace;
+			face = cull;
+		}
+
+		protected Matrix GetModelRotationMatrix(BlockStateModel model)
+		{
+			return Matrix.CreateRotationX(MathUtils.ToRadians((model.X) % 360f)) *
+				   Matrix.CreateRotationY(MathUtils.ToRadians((model.Y) % 360f));
+		}
+
+		protected string ResolveTexture(BlockStateModel var, string texture)
+		{
+			string textureName = "no_texture";
+			if (!var.Model.Textures.TryGetValue(texture.Replace("#", ""), out textureName))
+			{
+				textureName = texture;
+			}
+
+			if (textureName.StartsWith("#"))
+			{
+				if (!var.Model.Textures.TryGetValue(textureName.Replace("#", ""), out textureName))
+				{
+					textureName = "no_texture";
+				}
+			}
+
+			return textureName;
+		}
+
+		internal virtual bool ShouldRenderFace(IWorld world, BlockFace face, BlockCoordinates position, IBlock me)
+		{
+			if (position.Y >= 256) return true;
+
+			var pos = position + face.GetBlockCoordinates();
+
+			var cX = (int)pos.X & 0xf;
+			var cZ = (int)pos.Z & 0xf;
+
+			if (cX < 0 || cX > 16)
+				return false;
+
+			if (cZ < 0 || cZ > 16)
+				return false;
+
+			var block = world.GetBlockState(pos.X, pos.Y, pos.Z).Block;
+			//BlockFactory.
+			//var block = world.GetBlock(pos);
+
+			if (me.Transparent && block is UnknownBlock)
+			{
+				return true;
+			}
+
+			if (me.Solid && me.Transparent)
+			{
+				//	if (IsFullCube && Name.Equals(block.Name)) return false;
+				if (block.Solid && !block.Transparent) return false;
+			}
+			else if (me.Transparent)
+			{
+				if (block.Solid && !block.Transparent) return false;
+			}
+
+
+			if (me.Solid && block.Transparent) return true;
+			//   if (me.Transparent && block.Transparent && !block.Solid) return false;
+			if (me.Transparent) return true;
+			if (!me.Transparent && block.Transparent) return true;
+			if (block.Solid && !block.Transparent) return false;
+
+			return true;
+		}
+
+		protected Vector3 Min = Vector3.Zero;
+		protected Vector3 Max = Vector3.One / 16f;
+
 		protected class FaceCache
 		{
-			//public VertexPositionNormalTextureColor[] Up = new VertexPositionNormalTextureColor[0];
-			//public VertexPositionNormalTextureColor[] Down = new VertexPositionNormalTextureColor[0];
-			//public VertexPositionNormalTextureColor[] West = new VertexPositionNormalTextureColor[0];
-			//public VertexPositionNormalTextureColor[] East = new VertexPositionNormalTextureColor[0];
-			//public VertexPositionNormalTextureColor[] South = new VertexPositionNormalTextureColor[0];
-			//public VertexPositionNormalTextureColor[] North = new VertexPositionNormalTextureColor[0];
-			//public VertexPositionNormalTextureColor[] None = new VertexPositionNormalTextureColor[0];
-
+		
 			private Dictionary<BlockFace, VertexPositionNormalTextureColor[]> _cache = new Dictionary<BlockFace, VertexPositionNormalTextureColor[]>();
 			public bool TryGet(BlockFace face, out VertexPositionNormalTextureColor[] vertices)
 			{
@@ -52,8 +196,6 @@ namespace Alex.Graphics.Models.Blocks
 				_cache[face] = vertices;
 			}
 		}
-
-		private IDictionary<int, FaceCache> _elementCache;
 
 		protected IDictionary<int, FaceCache> CalculateModel(BlockStateModel[] models)
 		{
@@ -68,19 +210,25 @@ namespace Alex.Graphics.Models.Blocks
 					var elementTo = new Vector3((element.To.X), (element.To.Y),
 						(element.To.Z));
 
+					var width = elementTo.X - elementFrom.X;
+					var height = elementTo.Y - elementFrom.Y;
+					var depth = elementTo.Z - elementFrom.Z;
+
 					var elementRotation = element.Rotation;
 					Matrix elementRotationMatrix = GetElementRotationMatrix(elementRotation, out float scalingFactor);
 
 					FaceCache elementCache = new FaceCache();
 					foreach (var face in element.Faces)
 					{
+						VertexPositionNormalTextureColor[] faceVertices;
+					
 						var uv = face.Value.UV;
 
 						var text = ResolveTexture(model, face.Value.Texture);
 
 						var uvmap = GetTextureUVMap(Resources, text, uv.X1, uv.X2, uv.Y1, uv.Y2, face.Value.Rotation);
 
-						VertexPositionNormalTextureColor[] faceVertices = GetFaceVertices(face.Key, elementFrom, elementTo, uvmap);
+						faceVertices = GetFaceVertices(face.Key, elementFrom, elementTo, uvmap);
 
 						float minX = 1f, minY = 1f, minZ = 1f;
 						float maxX = -1f, maxY = -1f, maxZ = -1f;
@@ -113,27 +261,6 @@ namespace Alex.Graphics.Models.Blocks
 									}
 								}
 							}
-
-							/*if (var.X > 0.0f)
-							{
-								var rotx = MathUtils.ToRadians((var.X + 360f) % 360f);//(var.X * (MathF.PI / 180.0f));
-								var cos = MathF.Cos(rotx);
-								var sin = MathF.Sin(rotx);
-								var z = vert.Position.Z - 0.5f;
-								var y = vert.Position.Y - 0.5f;
-								vert.Position.Z = 0.5f + (z * cos - y * sin);
-								vert.Position.Y = 0.5f + (y * cos + z * sin);
-							}
-
-							if (var.Y > 0.0f) {
-								var roty = MathUtils.ToRadians((var.Y + 360f) % 360f);//(var.Y * (MathF.PI / 180.0f));
-								var cos = MathF.Cos(roty);
-								var sin = MathF.Sin(roty);
-								var x = vert.Position.X - 0.5f;
-								var z = vert.Position.Z - 0.5f;
-								vert.Position.X = 0.5f + (x * cos - z * sin);
-								vert.Position.Z = 0.5f + (z * cos + x * sin);
-							}*/
 
 							vert.Position = Vector3.Transform(vert.Position, Matrix.CreateTranslation(-element.Rotation.Origin) * GetModelRotationMatrix(model) * Matrix.CreateTranslation(element.Rotation.Origin));
 
@@ -168,8 +295,8 @@ namespace Alex.Graphics.Models.Blocks
 							faceVertices[index] = vert;
 						}
 
-						base.Min = Vector3.Min(new Vector3(minX, minY, minZ), Min);
-						base.Max = Vector3.Max(new Vector3(maxX, maxY, maxZ), Max);
+						Min = Vector3.Min(new Vector3(minX, minY, minZ), Min);
+						Max = Vector3.Max(new Vector3(maxX, maxY, maxZ), Max);
 
 						elementCache.Set(face.Key, faceVertices);
 					}
@@ -242,9 +369,7 @@ namespace Alex.Graphics.Models.Blocks
 							});
 						}
 
-						//cullFace = Vector3.Transform(cullFace, modelRotationMatrix);
-
-						if (cullFace != Vector3.Zero && !ShouldRenderFace(world, cull, worldPosition, baseBlock)/* CanRender(world, baseBlock, worldPosition, cull)*/)
+						if (cullFace != Vector3.Zero && !ShouldRenderFace(world, cull, worldPosition, baseBlock))
 							continue;
 
 						VertexPositionNormalTextureColor[] faceVertices;
@@ -295,7 +420,7 @@ namespace Alex.Graphics.Models.Blocks
 
 		public override VertexPositionNormalTextureColor[] GetVertices(IWorld world, Vector3 position, IBlock baseBlock)
 		{
-			return GetVertices(world, position, baseBlock, Variant, _elementCache);
+			return GetVertices(world, position, baseBlock, Models, _elementCache);
 		}
 	}
 }

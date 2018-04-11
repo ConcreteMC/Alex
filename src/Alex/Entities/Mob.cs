@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks;
@@ -12,13 +13,13 @@ namespace Alex.Entities
 {
 	public class Mob : Entity
 	{
-		public Mob(int entityTypeId, World level) : base(entityTypeId, level)
+		public Mob(int entityTypeId, World level, INetworkProvider network) : base(entityTypeId, level, network)
 		{
 			Width = Length = 0.6;
 			Height = 1.80;
 		}
 
-		public Mob(EntityType mobTypes, World level) : this((int)mobTypes, level)
+		public Mob(EntityType mobTypes, World level, INetworkProvider network) : this((int)mobTypes, level, network)
 		{
 		}
 
@@ -44,10 +45,10 @@ namespace Alex.Entities
 				else
 				{
 					Velocity *= (float)(1.0f - Drag);
-				//	if (!onGround)
-				//	{
-				//		Velocity -= new Vector3(0, (float)Gravity, 0);
-				//	}
+					if (!onGround && !NoAi)
+					{
+						Velocity -= new Vector3(0, (float)Gravity, 0);
+					}
 				}
 
 				KnownPosition.OnGround = onGround;

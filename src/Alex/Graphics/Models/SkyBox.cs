@@ -15,7 +15,7 @@ using Color = Microsoft.Xna.Framework.Color;
 namespace Alex.Graphics.Models
 {
 	//Thanks https://github.com/SirCmpwn/TrueCraft
-	public class SkyboxModel
+	public class SkyBox
     {
 	    private BasicEffect SkyPlaneEffect { get; set; }
 	    private BasicEffect CelestialPlaneEffect { get; set; }
@@ -33,7 +33,7 @@ namespace Alex.Graphics.Models
 
 	    private VertexPositionTexture[] MoonPlaneVertices;
 		private Alex Game { get; }
-		public SkyboxModel(Alex alex, GraphicsDevice device, World world)
+		public SkyBox(Alex alex, GraphicsDevice device, World world)
 		{
 			World = world;
 			Game = alex;

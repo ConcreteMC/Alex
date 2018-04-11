@@ -786,28 +786,6 @@ namespace Alex
 			return result;
 		}
 
-		private static TableEntry[] _tablesEntries = TableEntry.FromJson(Resources.runtimeid_table);
-		public static Block GetBlock(int id, byte metadata)
-		{
-			throw new NotSupportedException();
-			if (id == 0) return Air;
-
-			var matchingIds = _tablesEntries.Where(x => x.Id == id);
-			var f = matchingIds.FirstOrDefault(x => x.Data == metadata);
-			if (f == null)
-			{
-				f = matchingIds.FirstOrDefault();
-			}
-
-			if (BlockStateByName.TryGetValue(f.Name, out var vv))
-			{
-				return (Block)vv._default.Block;
-			}
-
-			return Air;
-			//	return GetBlock(GetBlockStateID(id, metadata));
-		}
-
 		public static uint GetBlockStateID(int id, byte meta)
 		{
 			if (id < 0) throw new ArgumentOutOfRangeException();

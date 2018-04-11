@@ -437,7 +437,7 @@ namespace Alex.Rendering
 		    }
 	    }
 
-	    public void Update(IUpdateArgs args, SkyboxModel skyRenderer)
+	    public void Update(IUpdateArgs args, SkyBox skyRenderer)
 	    {
 		    TransparentEffect.FogColor = skyRenderer.WorldFogColor.ToVector3();
 		    OpaqueEffect.FogColor = skyRenderer.WorldFogColor.ToVector3();
