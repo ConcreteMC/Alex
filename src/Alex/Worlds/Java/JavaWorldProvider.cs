@@ -448,9 +448,23 @@ namespace Alex.Worlds.Java
 			{
 				HandleBlockChangePacket(blockChangePacket);
 			}
+			else if (packet is MultiBlockChange multiBlock)
+			{
+				HandleMultiBlockChange(multiBlock);
+			}
 			else
 			{
 				Log.Warn($"Unhandled packet: 0x{packet.PacketId:x2} - {packet.ToString()}");
+			}
+		}
+
+		private void HandleMultiBlockChange(MultiBlockChange packet)
+		{
+			int cx = packet.ChunkX;
+			int cz = packet.ChunkZ;
+			foreach (var blockUpdate in packet.Records)
+			{
+				WorldReceiver?.SetBlockState(new BlockCoordinates(blockUpdate.RelativeX + cx, blockUpdate.Y, blockUpdate.RelativeZ + cz), BlockFactory.GetBlockState(blockUpdate.BlockId));
 			}
 		}
 
