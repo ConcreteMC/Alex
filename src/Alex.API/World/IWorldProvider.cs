@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Alex.API.Blocks.State;
 using Alex.API.Data;
 using Alex.API.Entities;
 using Alex.API.Utils;
@@ -74,5 +75,7 @@ namespace Alex.API.World
 		bool TryGetEntity(long entityId, out IEntity entity);
 
 		void SetTime(long worldTime);
-	}
+
+		void SetBlockState(BlockCoordinates coordinates, IBlockState blockState);
+	};
 }

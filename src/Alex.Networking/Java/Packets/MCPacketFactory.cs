@@ -264,6 +264,7 @@ namespace Alex.Networking.Java.Packets
 			Register(Direction.ClientBound, ConnectionState.Play, 0x15, () => new WindowItems());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x17, () => new SetSlot());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x1C, () => new EntityStatusPacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x0B, () => new BlockChangePacket());
 		}
 	}
 }

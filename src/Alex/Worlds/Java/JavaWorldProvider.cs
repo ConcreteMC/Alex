@@ -444,10 +444,19 @@ namespace Alex.Worlds.Java
 			{
 				HandleEntityStatusPacket(entityStatusPacket);
 			}
+			else if (packet is BlockChangePacket blockChangePacket)
+			{
+				HandleBlockChangePacket(blockChangePacket);
+			}
 			else
 			{
 				Log.Warn($"Unhandled packet: 0x{packet.PacketId:x2} - {packet.ToString()}");
 			}
+		}
+
+		private void HandleBlockChangePacket(BlockChangePacket packet)
+		{
+			WorldReceiver?.SetBlockState(packet.Location, BlockFactory.GetBlockState(packet.PalleteId));
 		}
 
 		private void HandleEntityStatusPacket(EntityStatusPacket packet)
