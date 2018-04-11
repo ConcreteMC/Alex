@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using System.Timers;
 using Alex.API.Data;
 using Alex.API.Entities;
+using Alex.API.Json;
 using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.API.World;
@@ -756,10 +757,6 @@ namespace Alex.Worlds.Java
 			{
 				Log.Warn($"Could not get player entity!");
 			}
-			//	if (WorldReceiver.WorldReceiver.GetPlayerEntity() is Player player)
-			//{
-			//	player.EntityId = packet.EntityId;
-			//}
 		}
 
 		private void HandleChunkData(ChunkDataPacket chunk)

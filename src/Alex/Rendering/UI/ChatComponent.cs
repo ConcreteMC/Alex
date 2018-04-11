@@ -7,13 +7,16 @@ using Alex.API.Utils;
 using Alex.Gamestates;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using NLog;
 
 namespace Alex.Rendering.UI
 {
 	public class ChatComponent : IChatReceiver
 	{
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ChatComponent));
+
 		public bool RenderChatInput { get; private set; } = false;
-		private List<string> ChatMessages { get; set; } = new List<string>();
+		private List<ChatObject> ChatMessages { get; set; } = new List<ChatObject>();
 		private StringBuilder _input = new StringBuilder();
 
 		public IChatProvider ChatProvider;
@@ -24,12 +27,14 @@ namespace Alex.Rendering.UI
 
 		public void Render(RenderArgs args)
 		{
+			float horizontalOffset = 5;
+			var heightCalc = Alex.Font.MeasureString("!");
+
 			args.SpriteBatch.Begin();
 			try
 			{
 				if (RenderChatInput)
 				{
-					var heightCalc = Alex.Font.MeasureString("!");
 					string chatInput = _input.ToString().StripIllegalCharacters();
 					if (chatInput.Length > 0)
 					{
@@ -56,9 +61,7 @@ namespace Alex.Rendering.UI
 					var count = 2;
 					foreach (var msg in ChatMessages.TakeLast(5).Reverse())
 					{
-						var amsg = msg.StripColors();
-						amsg = amsg.StripIllegalCharacters();
-						var heightCalc = Alex.Font.MeasureString(amsg);
+						heightCalc = Alex.Font.MeasureString(msg.ToString().StripIllegalCharacters());
 
 						int extra = 0;
 						if (heightCalc.X > args.GraphicsDevice.Viewport.Width / 2f)
@@ -70,11 +73,16 @@ namespace Alex.Rendering.UI
 							new Rectangle(0, (int) (args.GraphicsDevice.Viewport.Height - ((heightCalc.Y * count) + 10)),
 								(args.GraphicsDevice.Viewport.Width / 2) + extra, (int) heightCalc.Y),
 							new Color(Color.Black, 64));
-						args.SpriteBatch.DrawString(Alex.Font, amsg,
-							new Vector2(5, (int) (args.GraphicsDevice.Viewport.Height - ((heightCalc.Y * count) + 10))), Color.White);
+
+						msg.Render(args.SpriteBatch, Alex.Font,
+							new Vector2(horizontalOffset, (int) (args.GraphicsDevice.Viewport.Height - ((heightCalc.Y * count) + 10))));
 						count++;
 					}
 				}
+			}
+			catch (Exception ex)
+			{
+				Log.Error($"Could not render text: {ex.ToString()}");
 			}
 			finally
 			{
@@ -160,7 +168,7 @@ namespace Alex.Rendering.UI
 				}
 				else
 				{
-					ChatMessages.Add("<Alex> " + _input.ToString());
+					ChatMessages.Add(new ChatObject(_input.ToString()));
 				}
 			}
 			_input.Clear();
@@ -169,12 +177,12 @@ namespace Alex.Rendering.UI
 
 		public void Append(string message)
 		{
-			ChatMessages.Add(message);
+			ChatMessages.Add(new ChatObject(message.ToString()));
 		}
 
 		public void Receive(ChatObject message)
 		{
-			Append(message.ToString());
+			ChatMessages.Add(message);
 		}
 	}
 }

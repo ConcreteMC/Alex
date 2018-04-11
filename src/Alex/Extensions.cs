@@ -189,6 +189,7 @@ namespace Alex
 
 	    public static string StripIllegalCharacters(this string input)
 	    {
+		    if (input == null) return "null";
             return input.ToArray()
                     .Where(i => !Alex.Font.Characters.Contains(i))
                     .Aggregate(input, (current, i) => current.Replace(i.ToString(), ""));
