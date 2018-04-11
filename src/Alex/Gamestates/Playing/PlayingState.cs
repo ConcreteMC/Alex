@@ -142,7 +142,7 @@ namespace Alex.Gamestates.Playing
 
 		private KeyboardState _oldKeyboardState;
 		private MouseState _oldMouseState;
-		protected void CheckInput(GameTime gameTime)
+		protected void CheckInput(GameTime gameTime) //TODO: Move this input out of the main update loop and use the new per-player based implementation by @TruDan
 		{
 			MouseState currentMouseState = Mouse.GetState();
 			if (currentMouseState != _oldMouseState)

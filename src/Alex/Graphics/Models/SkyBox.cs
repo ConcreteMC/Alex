@@ -16,8 +16,11 @@ namespace Alex.Graphics.Models
 {
 	//Thanks https://github.com/SirCmpwn/TrueCraft
 	public class SkyBox
-    {
-	    private BasicEffect SkyPlaneEffect { get; set; }
+	{
+		private float MoonX = 1/4f;
+		private float MoonY = 1/2f;
+
+		private BasicEffect SkyPlaneEffect { get; set; }
 	    private BasicEffect CelestialPlaneEffect { get; set; }
 	    private VertexBuffer SkyPlane { get; set; }
 	    private VertexBuffer CelestialPlane { get; set; }
@@ -102,12 +105,12 @@ namespace Alex.Graphics.Models
 			MoonPlaneVertices = new[]
 			{
 				new VertexPositionTexture(new Vector3(-planeDistance, 0, -planeDistance), new Vector2(0, 0)),
-				new VertexPositionTexture(new Vector3(planeDistance, 0, -planeDistance), new Vector2(1, 0)),
-				new VertexPositionTexture(new Vector3(-planeDistance, 0, planeDistance), new Vector2(0, 1)),
+				new VertexPositionTexture(new Vector3(planeDistance, 0, -planeDistance), new Vector2(MoonX, 0)),
+				new VertexPositionTexture(new Vector3(-planeDistance, 0, planeDistance), new Vector2(0, MoonY)),
 
-				new VertexPositionTexture(new Vector3(planeDistance, 0, -planeDistance), new Vector2(1, 0)),
-				new VertexPositionTexture(new Vector3(planeDistance, 0, planeDistance), new Vector2(1, 1)),
-				new VertexPositionTexture(new Vector3(-planeDistance, 0, planeDistance), new Vector2(0, 1)),
+				new VertexPositionTexture(new Vector3(planeDistance, 0, -planeDistance), new Vector2(MoonX, 0)),
+				new VertexPositionTexture(new Vector3(planeDistance, 0, planeDistance), new Vector2(MoonX, MoonY)),
+				new VertexPositionTexture(new Vector3(-planeDistance, 0, planeDistance), new Vector2(0, MoonY)),
 			};
 			MoonPlane = new VertexBuffer(device, VertexPositionTexture.VertexDeclaration,
 				MoonPlaneVertices.Length, BufferUsage.WriteOnly);
@@ -224,19 +227,48 @@ namespace Alex.Graphics.Models
 	    public void Update(IUpdateArgs args)
 	    {
 		    var moonPhase = (int)(World.WorldTime / 24000L % 8L + 8L) % 8;
-		    int i2 = moonPhase % 4;
-		    int k2 = moonPhase / 4 % 2;
-		    float f22 = (i2 + 0) / 4.0F;
-		    float f23 = (k2 + 0) / 2.0F;
-		    float f24 = (i2 + 1) / 4.0F;
-		    float f14 = (k2 + 1) / 2.0F;
+		    int x = moonPhase % 4;
+		    int y = moonPhase / 4 % 2;
 
-		    MoonPlaneVertices[0] = new VertexPositionTexture(new Vector3(-20, 0, 20), new Vector2(f24, f14));
-		    MoonPlaneVertices[1] = new VertexPositionTexture(new Vector3(20, 0, 20), new Vector2(f22, f14));
-		    MoonPlaneVertices[2] = new VertexPositionTexture(new Vector3(20, 0, -20), new Vector2(f22, f23));
-		    MoonPlaneVertices[3] = new VertexPositionTexture(new Vector3(-20, 0, -20), new Vector2(f24, f23));
-			MoonPlaneVertices[4] = new VertexPositionTexture(new Vector3(20, 0, 20), new Vector2(f24, f23));
-		    MoonPlaneVertices[5] = new VertexPositionTexture(new Vector3(-20, 0, 20), new Vector2(f24, f23));
+		    float textureX = (x + 0) / 4.0F;
+		    float textureY = (y + 0) / 2.0F;
+
+		    float textureXMax = (x + 1) / 4.0F;
+		    float textureYMax = (y + 1) / 2.0F;
+
+		    MoonPlaneVertices[0].TextureCoordinate = new Vector2(textureX, textureY);
+			MoonPlaneVertices[1].TextureCoordinate = new Vector2(textureXMax, textureY);
+		    MoonPlaneVertices[2].TextureCoordinate = new Vector2(textureX, textureYMax);
+
+		    MoonPlaneVertices[3].TextureCoordinate = new Vector2(textureXMax, textureY);
+		    MoonPlaneVertices[4].TextureCoordinate = new Vector2(textureXMax, textureYMax);
+			MoonPlaneVertices[5].TextureCoordinate = new Vector2(textureX, textureYMax);
+
+			/*
+
+			var celestialPlane = new[]
+			{
+				new VertexPositionTexture(new Vector3(-planeDistance, 0, -planeDistance), new Vector2(0, 0)),
+				new VertexPositionTexture(new Vector3(planeDistance, 0, -planeDistance), new Vector2(1, 0)),
+				new VertexPositionTexture(new Vector3(-planeDistance, 0, planeDistance), new Vector2(0, 1)),
+
+				new VertexPositionTexture(new Vector3(planeDistance, 0, -planeDistance), new Vector2(1, 0)),
+				new VertexPositionTexture(new Vector3(planeDistance, 0, planeDistance), new Vector2(1, 1)),
+				new VertexPositionTexture(new Vector3(-planeDistance, 0, planeDistance), new Vector2(0, 1))
+			};
+
+		    MoonPlaneVertices = new[]
+		    {
+			    new VertexPositionTexture(new Vector3(-planeDistance, 0, -planeDistance), new Vector2(0, 0)),
+			    new VertexPositionTexture(new Vector3(planeDistance, 0, -planeDistance), new Vector2(MoonX, 0)),
+			    new VertexPositionTexture(new Vector3(-planeDistance, 0, planeDistance), new Vector2(0, MoonY)),
+
+			    new VertexPositionTexture(new Vector3(planeDistance, 0, -planeDistance), new Vector2(MoonX, 0)),
+			    new VertexPositionTexture(new Vector3(planeDistance, 0, planeDistance), new Vector2(MoonX, MoonY)),
+			    new VertexPositionTexture(new Vector3(-planeDistance, 0, planeDistance), new Vector2(0, MoonY)),
+		    };
+
+	*/
 
 			MoonPlane.SetData<VertexPositionTexture>(MoonPlaneVertices);
 		}

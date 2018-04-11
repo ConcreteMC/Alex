@@ -6,12 +6,12 @@ namespace Alex.Input
 {
     public enum InputCommand
     {
-        MoveForwardy,
-        MoveBackie,
-        MoveUppy,
-        MoveDownie,
-        MoveLeftie,
-        MoveRightie,
+        MoveForwards,
+        MoveBackwards,
+        MoveUp,
+        MoveDown,
+        MoveLeft,
+        MoveRight,
 
         CameraUp,
         CameraDown,

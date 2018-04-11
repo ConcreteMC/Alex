@@ -19,6 +19,7 @@ using Alex.API.World;
 using Alex.Entities;
 using Alex.Graphics.Models.Entity;
 using Alex.Networking.Java;
+using Alex.Networking.Java.Events;
 using Alex.Networking.Java.Packets;
 using Alex.Networking.Java.Packets.Handshake;
 using Alex.Networking.Java.Packets.Login;
@@ -68,8 +69,21 @@ namespace Alex.Worlds.Java
 
 			TcpClient = new TcpClient();
 			Client = new JavaClient(this, TcpClient.Client);
+			Client.OnConnectionClosed += OnConnectionClosed;
 
 			networkProvider = Client;
+		}
+
+		private void OnConnectionClosed(object sender, ConnectionClosedEventArgs e)
+		{
+			if (e.Graceful)
+			{
+
+			}
+			else
+			{
+
+			}
 		}
 
 		private PlayerLocation _lastSentLocation = new PlayerLocation(Vector3.Zero);
@@ -953,7 +967,7 @@ namespace Alex.Worlds.Java
 			handshake.NextState = ConnectionState.Login;
 			handshake.ServerAddress = Endpoint.Address.ToString();
 			handshake.ServerPort = (ushort)Endpoint.Port;
-			handshake.ProtocolVersion = 370; //18W14b
+			handshake.ProtocolVersion = JavaProtocol.ProtocolVersion;
 			SendPacket(handshake);
 
 			Client.ConnectionState = ConnectionState.Login;

@@ -2,6 +2,7 @@
 
 namespace Alex
 {
+	//TODO: Get rid of this completely
     public static class KeyBinds
     {
         public static Keys Forward = Keys.W;

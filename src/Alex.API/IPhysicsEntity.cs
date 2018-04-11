@@ -6,6 +6,12 @@ namespace Alex.API
 {
     public interface IPhysicsEntity
     {
-	    void OnTick();
+	    double Height { get; set; }
+	    double Width { get; set; }
+	    double Length { get; set; }
+	    double Drag { get; set; }
+	    double Gravity { get; set; }
+
+		void OnTick();
     }
 }

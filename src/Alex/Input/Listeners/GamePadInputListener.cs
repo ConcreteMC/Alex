@@ -13,12 +13,12 @@ namespace Alex.Input.Listeners
 
         public GamePadInputListener(PlayerIndex playerIndex) : base(playerIndex)
         {
-            RegisterMap(InputCommand.MoveForwardy, Buttons.LeftThumbstickUp);
-            RegisterMap(InputCommand.MoveBackie, Buttons.LeftThumbstickDown);
-            RegisterMap(InputCommand.MoveLeftie, Buttons.LeftThumbstickLeft);
-            RegisterMap(InputCommand.MoveRightie, Buttons.LeftThumbstickRight);
-            RegisterMap(InputCommand.MoveUppy, Buttons.A);
-            RegisterMap(InputCommand.MoveDownie, Buttons.B);
+            RegisterMap(InputCommand.MoveForwards, Buttons.LeftThumbstickUp);
+            RegisterMap(InputCommand.MoveBackwards, Buttons.LeftThumbstickDown);
+            RegisterMap(InputCommand.MoveLeft, Buttons.LeftThumbstickLeft);
+            RegisterMap(InputCommand.MoveRight, Buttons.LeftThumbstickRight);
+            RegisterMap(InputCommand.MoveUp, Buttons.A);
+            RegisterMap(InputCommand.MoveDown, Buttons.B);
 
             RegisterMap(InputCommand.MoveSpeedIncrease, Buttons.LeftTrigger);
             RegisterMap(InputCommand.MoveSpeedDecrease, Buttons.LeftShoulder);

@@ -70,7 +70,6 @@ namespace Alex.Gamestates.Playing
 
             var dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-	        bool isSprinting = false;
             bool originalJumpValue = IsJumping;
             var moveVector = Vector3.Zero;
             if (CheckInput)
@@ -81,15 +80,13 @@ namespace Alex.Gamestates.Playing
 				{
 			        IsFreeCam = !IsFreeCam;
 		        }
-	            
-	            //Player.IsSprinting = currentKeyboardState.IsKeyDown(KeyBinds.Down);
 
-	            if (InputManager.IsDown(InputCommand.MoveForwardy))
+	            if (InputManager.IsDown(InputCommand.MoveForwards))
 	            {
 		            moveVector.Z = 1;
 		            if (!Player.IsSprinting)
 		            {
-			            if (InputManager.IsBeginPress(InputCommand.MoveForwardy) && now.Subtract(_lastForward).TotalMilliseconds <= 100)
+			            if (InputManager.IsBeginPress(InputCommand.MoveForwards) && now.Subtract(_lastForward).TotalMilliseconds <= 100)
 			            {
 				            Player.IsSprinting = true;
 			            }
@@ -105,21 +102,21 @@ namespace Alex.Gamestates.Playing
 					}
 	            }
 
-	            if (InputManager.IsDown(InputCommand.MoveBackie))
+	            if (InputManager.IsDown(InputCommand.MoveBackwards))
                     moveVector.Z = -1;
 
-                if (InputManager.IsDown(InputCommand.MoveLeftie))
+                if (InputManager.IsDown(InputCommand.MoveLeft))
                     moveVector.X = 1;
 
-                if (InputManager.IsDown(InputCommand.MoveRightie))
+                if (InputManager.IsDown(InputCommand.MoveRight))
                     moveVector.X = -1;
 
                 if (IsFreeCam)
                 {
-                    if (InputManager.IsDown(InputCommand.MoveUppy))
+                    if (InputManager.IsDown(InputCommand.MoveUp))
                         moveVector.Y += 1;
 
-	                if (InputManager.IsDown(InputCommand.MoveDownie))
+	                if (InputManager.IsDown(InputCommand.MoveDown))
 	                {
 		                moveVector.Y -= 1;
 		                Player.IsSneaking = true;
@@ -140,12 +137,12 @@ namespace Alex.Gamestates.Playing
                 }
 				else
                 {
-                    if (InputManager.IsDown(InputCommand.MoveUppy) && !IsJumping)
+                    if (InputManager.IsDown(InputCommand.MoveUp) && !IsJumping)
                     {
 	                    moveVector.Y = 1;
                     }
 
-	                if (InputManager.IsDown(InputCommand.MoveDownie))
+	                if (InputManager.IsDown(InputCommand.MoveDown))
 	                {
 		                Player.IsSneaking = true;
 	                }
