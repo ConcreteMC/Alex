@@ -1,62 +1,147 @@
-﻿using Alex.API.World;
-using Microsoft.Xna.Framework;
+﻿using System.Drawing;
+using System.IO;
+using Alex.API.World;
+using Alex.Graphics.Gui;
+using Alex.Graphics.Gui.Elements;
+using Alex.Graphics.Gui.Rendering;
+using Alex.Graphics.Textures;
+using Alex.Graphics.UI;
+using Alex.Graphics.UI.Common;
+using Alex.Utils;
 using Microsoft.Xna.Framework.Graphics;
+using Color = Microsoft.Xna.Framework.Color;
 
 namespace Alex.Gamestates
 {
     public class LoadingWorldState : GameState
     {
 		private Texture2D Background { get; }
-	    public LoadingWorldState(Alex alex, Texture2D background) : base(alex)
+		private LoadingWorldGui Screen { get; set; }
+		public LoadingWorldState(Alex alex, Texture2D background) : base(alex)
 	    {
 		    Background = background;
 	    }
 
-	    private int Progress { get; set; } = 0;
-	    private string DisplayString { get; set; } = "Loading world...";
 	    public void UpdateProgress(LoadingState state, int percentage)
 	    {
-		    Progress = percentage;
 		    switch (state)
 		    {
 				case LoadingState.ConnectingToServer:
-					DisplayString = "Connecting to server...";
+					Screen.Text = "Connecting to server...";
 					break;
 				case LoadingState.LoadingChunks:
-					DisplayString = $"Loading chunks: {percentage}%";
+					Screen.Text = $"Loading chunks...";
 					break;
 				case LoadingState.GeneratingVertices:
-					DisplayString = $"Building world: {percentage}%";
+					Screen.Text = $"Building world...";
 					break;
 				case LoadingState.Spawning:
-					DisplayString = $"Getting ready...";
+					Screen.Text = $"Getting ready...";
 					break;
 		    }
+
+			Screen.UpdateProgress(percentage);
 	    }
 
-	    protected override void OnDraw2D(RenderArgs args)
+	    protected override void OnLoad(RenderArgs args)
 	    {
-			args.SpriteBatch.Begin();
+		    base.OnLoad(args);
 
-		    //Start draw background
-		    var retval = new Rectangle(
-			    args.SpriteBatch.GraphicsDevice.Viewport.X,
-			    args.SpriteBatch.GraphicsDevice.Viewport.Y,
-			    args.SpriteBatch.GraphicsDevice.Viewport.Width,
-			    args.SpriteBatch.GraphicsDevice.Viewport.Height);
-		    args.SpriteBatch.Draw(Background, retval, Color.White);
-		    //End draw backgroun
-
-		    // string displayString = Generating ? $"Initializing world: {Progress}%" : $"Loading world: {Progress}%";
-		    var size = Alex.Font.MeasureString(DisplayString);
-		    args.SpriteBatch.DrawString(Alex.Font, DisplayString, CenterScreen - (size / 2), Color.White);
-
-		    args.SpriteBatch.End();
+		    Screen = new LoadingWorldGui(Alex);
+		    Screen.Background = Background;
+		    GuiManager.AddScreen(Screen);
 		}
 
 	    protected override void OnShow()
 	    {
 		    base.OnShow();
 	    }
-    }
+
+	    private class LoadingWorldGui : GuiScreen
+	    {
+		    private GuiProgressBar _progressBar;
+		    private GuiTextElement _textDisplay;
+		    private GuiTextElement _percentageDisplay;
+
+		    public string Text
+		    {
+			    get { return _textDisplay?.Text ?? string.Empty; }
+			    set
+			    {
+				    _textDisplay.Text = value;
+				    _textDisplay.Y = -(_textDisplay.Height);
+			    }
+		    }
+
+		    private Alex Alex { get; }
+		    public LoadingWorldGui(Alex game) : base(game)
+		    {
+			    Alex = game;
+		    }
+
+		    protected override void OnInit(IGuiRenderer renderer)
+		    {
+			    Texture2D logoTexture;
+			    using (MemoryStream ms = new MemoryStream(Resources.logo))
+			    {
+				    logoTexture = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, new Bitmap(ms));
+			    }
+
+			    var logo = new GuiTextureElement()
+			    {
+				    Texture = logoTexture,
+				    Height = 50,
+					Width = 150,
+					//X = -75,
+					Y = -25,
+				    HorizontalAlignment = HorizontalAlignment.Center,
+				    VerticalAlignment = VerticalAlignment.Center,
+					RepeatMode = TextureRepeatMode.Stretch
+			    };
+
+				AddChild(logo);
+
+			    _progressBar = new GuiProgressBar()
+			    {
+				    Width = 300,
+				    Height = 9,
+
+				    Y = -50,
+
+				    HorizontalAlignment = HorizontalAlignment.Center,
+				    VerticalAlignment = VerticalAlignment.Bottom,
+			    };
+			    AddChild(_progressBar);
+
+			    _textDisplay = new GuiTextElement()
+			    {
+				    Text = Text,
+				    Font = Alex.Font,
+				    HorizontalAlignment = HorizontalAlignment.Center,
+				    VerticalAlignment = VerticalAlignment.Top,
+				    Scale = 0.5f,
+					Color = Color.White
+			    };
+			    _progressBar.AddChild(_textDisplay);
+
+			    _percentageDisplay = new GuiTextElement()
+			    {
+				    Text = Text,
+				    Font = Alex.Font,
+				    HorizontalAlignment = HorizontalAlignment.Center,
+				    VerticalAlignment = VerticalAlignment.Bottom,
+				    Scale = 0.50f,
+				    Color = Color.White
+				};
+			    _progressBar.AddChild(_percentageDisplay);
+		    }
+
+		    public void UpdateProgress(int value)
+		    {
+			    _progressBar.Value = value;
+			    _percentageDisplay.Text = $"{value}%";
+			    _percentageDisplay.Y = _percentageDisplay.Height;
+		    }
+	    }
+	}
 }

@@ -35,19 +35,9 @@ namespace Alex.Utils
 		    Graphics = graphics;
 	    }
 
-        public void GenerateAtlas(GraphicsDevice graphics, ZipArchive archive)
+	    public void GenerateAtlas(GraphicsDevice graphics, KeyValuePair<string, Bitmap>[] bitmaps, IProgressReceiver progressReceiver)
         {
 	        Log.Info("Generating texture map...");
-
-			string path = Path.Combine("assets", "minecraft", "textures", "blocks");
-
-			var bitmaps = archive.Entries.Where(x =>
-				x.FullName.Replace('/', '\\').StartsWith(path, StringComparison.InvariantCultureIgnoreCase) && x.Name.EndsWith(".png")).ToDictionary(entry => Path.GetFileNameWithoutExtension(entry.Name), file =>
-			{
-				Stream stream = file.Open();
-
-				return new Bitmap(stream);
-			});
 
 	        Bitmap no;
 	        using (MemoryStream ms = new MemoryStream(Resources.no))
@@ -58,17 +48,19 @@ namespace Alex.Utils
 	        var regular = new[]
 	        {
 		        new KeyValuePair<string, Bitmap>("no_texture", no),
-	        }.Concat(bitmaps.Where(x => x.Value.Height == 16 && x.Value.Width == 16));
+	        }.Concat(bitmaps.Where(x => x.Value.Height == 16 && x.Value.Width == 16)).ToArray();
 		       
-	        var others = bitmaps.Where(x => x.Value.Height != 16 && x.Value.Width != 16);
+	        var others = bitmaps.Where(x => x.Value.Height != 16 && x.Value.Width != 16).ToArray();
 
 			var bitmap = new Bitmap(AtlasWidth, AtlasHeight);
 
-	        int xi = 0, yi = 0, offsetX = 0, yRemaining = 0;
-	        Process(ref bitmap, regular, ref xi, ref yi, ref offsetX, ref yRemaining);
+	        int total = regular.Length + others.Length;
+
+			int xi = 0, yi = 0, offsetX = 0, yRemaining = 0;
+	        int processedFiles = Process(ref bitmap, regular, ref xi, ref yi, ref offsetX, ref yRemaining, total, 0, progressReceiver);
 	        yi += 16;
 	        xi = 0;
-			Process(ref bitmap, others, ref xi, ref yi, ref offsetX, ref yRemaining);
+			Process(ref bitmap, others, ref xi, ref yi, ref offsetX, ref yRemaining, total, processedFiles, progressReceiver);
 		
 			Atlas = bitmap;
 
@@ -79,12 +71,14 @@ namespace Alex.Utils
 			Log.Info($"Texturemap generated! (Width:{_atlas.Width}px Height:{_atlas.Height}px)");
         }
 
-	    private void Process(ref Bitmap bmp, IEnumerable<KeyValuePair<string, Bitmap>> data, ref int xi, ref int yi, ref int xOffset, ref int yRemaining)
-		{
+	    private int Process(ref Bitmap bmp, KeyValuePair<string, Bitmap>[] data, ref int xi, ref int yi, ref int xOffset, ref int yRemaining, int total, int processed, IProgressReceiver progressReceiver)
+	    {
+		    int done = processed;
 			var count = 0;
 
 		    foreach (var bm in data.OrderByDescending(x => x.Value.Height))
 		    {
+			    string key = Path.GetFileNameWithoutExtension(bm.Key);
 			    count++;
 
 			    var r = new System.Drawing.Rectangle(0, 0, bm.Value.Width, bm.Value.Height);
@@ -92,9 +86,9 @@ namespace Alex.Utils
 
 			    CopyRegionIntoImage(bm.Value, r, ref bmp, destination);
 
-			    if (!_atlasLocations.ContainsKey(bm.Key))
+			    if (!_atlasLocations.ContainsKey(key))
 			    {
-				    _atlasLocations.Add(bm.Key, new TextureInfo(new Vector2(xi, yi), bm.Value.Width, bm.Value.Height));
+				    _atlasLocations.Add(key, new TextureInfo(new Vector2(xi, yi), bm.Value.Width, bm.Value.Height));
 			    }
 
 			    if (bm.Value.Height > 16)
@@ -112,8 +106,15 @@ namespace Alex.Utils
 
 				    count = 0;
 			    }
+
+			    done++;
+
+			    double percentage = 100D * ((double)processed / (double)total);
+			    progressReceiver.UpdateProgress((int)percentage, "Stitching textures...");
 			}
-		}
+
+		    return done;
+	    }
 
 	    private const int AtlasWidth = 512;
 	    private const int AtlasHeight = 512;
@@ -121,33 +122,56 @@ namespace Alex.Utils
 	    public int TextureWidth { get; private set; } = 16;
 	    public int TextureHeight { get; private set; }= 16;
 
-		public void LoadResourcePackOnTop(GraphicsDevice device, ZipArchive archive)
+		public void LoadResourcePackOnTop(GraphicsDevice device, KeyValuePair<string, Bitmap>[] bitmapsRaw, IProgressReceiver progressReceiver)
 		{
-		    string path = Path.Combine("assets", "minecraft", "textures", "blocks");
+			/*  string path = Path.Combine("assets", "minecraft", "textures", "blocks");
+
+			  int textureWidth = 16, textureHeight = 16;
+			  var bitmapsRaw = archive.Entries.Where(x =>
+				  x.FullName.Replace('/', '\\').StartsWith(path, StringComparison.InvariantCultureIgnoreCase) &&
+				  x.Name.EndsWith(".png")).ToArray();
+			  Dictionary<string, Bitmap> bitmaps = new Dictionary<string, Bitmap>();
+			  foreach (var entry in bitmapsRaw)
+			  {
+				  string name = entry.Name.Replace(".png", "");
+				  if (!bitmaps.ContainsKey(name))
+				  {
+					  using (Stream stream = entry.Open())
+					  {
+						  Bitmap texture = new Bitmap(stream);
+						  if (texture.Width > textureWidth && texture.Width % 16 == 0 && texture.Height > textureHeight && texture.Height % 16 == 0)
+						  {
+							  if (texture.Width == texture.Height)
+							  {
+								  textureWidth = texture.Width;
+								  textureHeight = texture.Height;
+							  }
+						  }
+						  bitmaps.Add(name, texture);
+					  }
+				  }
+			  }*/
 
 			int textureWidth = 16, textureHeight = 16;
-		    var bitmapsRaw = archive.Entries.Where(x =>
-			    x.FullName.Replace('/', '\\').StartsWith(path, StringComparison.InvariantCultureIgnoreCase) &&
-			    x.Name.EndsWith(".png")).ToArray();
 			Dictionary<string, Bitmap> bitmaps = new Dictionary<string, Bitmap>();
-			foreach (var entry in bitmapsRaw)
+			foreach (var bitmap in bitmapsRaw)
 			{
-				string name = entry.Name.Replace(".png", "");
+				string name = Path.GetFullPath(bitmap.Key);
+
 				if (!bitmaps.ContainsKey(name))
 				{
-					using (Stream stream = entry.Open())
+					var texture = bitmap.Value;
+					if (texture.Width > textureWidth && texture.Width % 16 == 0 && texture.Height > textureHeight &&
+					    texture.Height % 16 == 0)
 					{
-						Bitmap texture = new Bitmap(stream);
-						if (texture.Width > textureWidth && texture.Width % 16 == 0 && texture.Height > textureHeight && texture.Height % 16 == 0)
+						if (texture.Width == texture.Height)
 						{
-							if (texture.Width == texture.Height)
-							{
-								textureWidth = texture.Width;
-								textureHeight = texture.Height;
-							}
+							textureWidth = texture.Width;
+							textureHeight = texture.Height;
 						}
-						bitmaps.Add(name, texture);
 					}
+
+					bitmaps.Add(name, texture);
 				}
 			}
 

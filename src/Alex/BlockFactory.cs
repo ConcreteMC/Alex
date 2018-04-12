@@ -100,8 +100,10 @@ namespace Alex
 		}
 
 		internal static int LoadResources(ResourceManager resources, McResourcePack resourcePack, bool replace,
-			bool reportMissing = false)
+			bool reportMissing = false, IProgressReceiver progressReceiver = null)
 		{
+			progressReceiver?.UpdateProgress(0, "Loading block models...");
+
 			if (resourcePack.TryGetBlockModel("cube_all", out ResourcePackLib.Json.Models.Blocks.BlockModel cube))
 			{
 				cube.Textures["all"] = "no_texture";
@@ -119,18 +121,20 @@ namespace Alex
 
 			RegisterBuiltinBlocks();
 
-			return LoadModels(resources, resourcePack, replace, reportMissing);
+			return LoadModels(resources, resourcePack, replace, reportMissing, progressReceiver);
 		}
 
 		private static PropertyBool WaterLoggedProperty = new PropertyBool("waterlogged");
 		internal static bool GenerateClasses { get; set; } = false;
 		private static BlockModel UnknownBlockModel { get; set; }
 		private static int LoadModels(ResourceManager resources, McResourcePack resourcePack, bool replace,
-			bool reportMissing)
+			bool reportMissing, IProgressReceiver progressReceiver)
 		{
 			StringBuilder factoryBuilder = new StringBuilder();
 
 			var data = BlockData.FromJson(Resources.NewBlocks);
+			int total = data.Count;
+			int done = 0;
 			int importCounter = 0;
 
 			uint c = 0;
@@ -276,6 +280,11 @@ namespace Alex
 					//	bsVariant.Variants.AddRange(state.Variants.Where(x => !x.ID.Equals(bsVariant.ID)));
 					//}
 				}
+
+				done++;
+
+				double percentage = 100D * ((double)done / (double)total);
+				progressReceiver.UpdateProgress((int)percentage, $"Importing block models...");
 			}
 
 			if (GenerateClasses)

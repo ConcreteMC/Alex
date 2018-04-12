@@ -84,9 +84,13 @@ namespace Alex.Entities
 			return null;
 		}
 		
-		public static void LoadModels(ResourceManager resourceManager, GraphicsDevice graphics, bool replaceModels)
+		public static void LoadModels(ResourceManager resourceManager, GraphicsDevice graphics, bool replaceModels, IProgressReceiver progressReceiver = null)
 		{
-			foreach (var def in resourceManager.BedrockResourcePack.EntityDefinitions)
+			var entityDefinitions = resourceManager.BedrockResourcePack.EntityDefinitions;
+			int done = 0;
+			int total = entityDefinitions.Count;
+
+			foreach (var def in entityDefinitions)
 			{
 				try
 				{
@@ -146,6 +150,13 @@ namespace Alex.Entities
 				catch (Exception ex)
 				{
 					Log.Warn(ex, $"Failed to load model {def.Key}!");
+				}
+				finally
+				{
+					done++;
+
+					double percentage = 100D * ((double)done / (double)total);
+					progressReceiver?.UpdateProgress((int)percentage, $"Importing entity definitions...");
 				}
 			}
 		}

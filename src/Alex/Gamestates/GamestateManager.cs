@@ -131,7 +131,7 @@ namespace Alex.Gamestates
 		    }
 		    catch (Exception ex)
 		    {
-			    Log.Warn(ex, "An exception occured while trying to render!");
+			    Log.Warn(ex, $"An exception occured while trying to render: {ex.ToString()}");
 		    }
 	    }
 

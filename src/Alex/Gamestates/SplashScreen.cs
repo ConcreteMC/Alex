@@ -1,4 +1,5 @@
-﻿using Alex.Gamestates.Gui;
+﻿using System;
+using Alex.Gamestates.Gui;
 using Alex.Graphics.Gui;
 using Alex.Graphics.Gui.Elements;
 using Alex.Graphics.Gui.Rendering;
@@ -10,14 +11,8 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.Gamestates
 {
-	public class SplashScreen : GameState
+	public class SplashScreen : GameState, IProgressReceiver
 	{
-
-		private Vector2 StatusTextPosition { get; set; }
-
-		private string StatusText { get; set; }
-		private Vector2 StatusTextSize { get; set; }
-
 		private SplashScreenGui _screen;
 
 		public SplashScreen(Alex alex) : base(alex)
@@ -30,40 +25,76 @@ namespace Alex.Gamestates
 			base.OnLoad(args);
 		}
 
-		protected override void OnUpdate(GameTime gameTime)
+		public void UpdateProgress(int percentage, string statusMessage)
 		{
-			_screen.UpdateProgress((int)(100d * (gameTime.TotalGameTime.TotalMilliseconds / 2500)));
+			_screen.UpdateProgress(percentage);
+			_screen.Text = statusMessage;
 		}
 	}
 
 	public class SplashScreenGui : GuiScreen
 	{
 		private GuiProgressBar _progressBar;
-		public SplashScreenGui(Game game) : base(game)
-		{
+		private GuiTextElement _textDisplay;
+		private GuiTextElement _percentageDisplay;
 
+		public string Text
+		{
+			get { return _textDisplay?.Text ?? string.Empty; }
+			set
+			{
+				_textDisplay.Text = value;
+				_textDisplay.Y = -(_textDisplay.Height);
+			}
 		}
 
+		private Alex Alex { get; }
+		public SplashScreenGui(Alex game) : base(game)
+		{
+			Alex = game;
+		}
 
 		protected override void OnInit(IGuiRenderer renderer)
 		{
 			Background = renderer.GetTexture(GuiTextures.SplashBackground);
 			_progressBar = new GuiProgressBar()
 			{
-							Width  = 300,
-							Height = 9,
+				Width = 300,
+				Height = 9,
 
-							Y = -50,
-				
-							HorizontalAlignment = HorizontalAlignment.Center,
-							VerticalAlignment   = VerticalAlignment.Bottom,
+				Y = -50,
+
+				HorizontalAlignment = HorizontalAlignment.Center,
+				VerticalAlignment = VerticalAlignment.Bottom,
 			};
 			AddChild(_progressBar);
+
+			_textDisplay  = new GuiTextElement()
+			{
+				Text = Text,
+				Font = Alex.Font,
+				HorizontalAlignment = HorizontalAlignment.Center,
+				VerticalAlignment = VerticalAlignment.Top,
+				Scale = 0.5f
+			};
+			_progressBar.AddChild(_textDisplay);
+
+			_percentageDisplay = new GuiTextElement()
+			{
+				Text = Text,
+				Font = Alex.Font,
+				HorizontalAlignment = HorizontalAlignment.Center,
+				VerticalAlignment = VerticalAlignment.Bottom,
+				Scale = 0.50f
+			};
+			_progressBar.AddChild(_percentageDisplay);
 		}
 
 		public void UpdateProgress(int value)
 		{
 			_progressBar.Value = value;
+			_percentageDisplay.Text = $"{value}%";
+			_percentageDisplay.Y = _percentageDisplay.Height;
 		}
 	}
 }

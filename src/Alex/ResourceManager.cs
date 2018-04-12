@@ -63,7 +63,7 @@ namespace Alex
 			}
 		}
 
-		private McResourcePack LoadResourcePack(GraphicsDevice graphics, Stream stream, bool replaceModels = false,
+		private McResourcePack LoadResourcePack(IProgressReceiver progressReceiver, GraphicsDevice graphics, Stream stream, bool replaceModels = false,
 			bool replaceTextures = false, bool reportMissingModels = false)
 		{
 			McResourcePack resourcePack = null;
@@ -71,21 +71,25 @@ namespace Alex
 			using (var archive = new ZipArchive(stream))
 			{
 				resourcePack = new McResourcePack(archive);
+
 				if (!replaceTextures)
 				{
-					Atlas.LoadResourcePackOnTop(graphics, archive);
+					Atlas.LoadResourcePackOnTop(graphics, resourcePack.Textures.Where(x => x.Key.StartsWith("blocks")).ToArray(),
+						progressReceiver);
 				}
 				else
 				{
-					Atlas.GenerateAtlas(graphics, archive);
+					Atlas.GenerateAtlas(graphics, resourcePack.Textures.Where(x => x.Key.StartsWith("blocks")).ToArray(),
+						progressReceiver);
 				}
 
 				Stopwatch sw = Stopwatch.StartNew();
-				int imported = BlockFactory.LoadResources(this, resourcePack, replaceModels, reportMissingModels);
+				int imported = BlockFactory.LoadResources(this, resourcePack, replaceModels, reportMissingModels, progressReceiver);
 				sw.Stop();
 
 				Log.Info($"Imported {imported} blockstate variants from resourcepack in {sw.ElapsedMilliseconds}ms!");
 			}
+
 
 			return resourcePack;
 		}
@@ -132,7 +136,7 @@ namespace Alex
 			return true;
 		}
 
-		public bool CheckResources(GraphicsDevice device, Settings setings)
+		public bool CheckResources(GraphicsDevice device, Settings setings, IProgressReceiver progressReceiver)
 		{
 			byte[] defaultResources;
 			byte[] bedrockResources;
@@ -145,14 +149,14 @@ namespace Alex
 			Log.Info($"Loading vanilla resources...");
 			using (MemoryStream stream = new MemoryStream(defaultResources))
 			{
-				ResourcePack = LoadResourcePack(device, stream, true, true, true);
+				ResourcePack = LoadResourcePack(progressReceiver, device, stream, true, true, true);
 			}
 
 			Log.Info($"Loading bedrock resources...");
 			BedrockResourcePack = new BedrockResourcePack(bedrockResources);
 			UiThemeFactory.LoadResources(BedrockResourcePack);
 
-			EntityFactory.LoadModels(this, device, true);
+			EntityFactory.LoadModels(this, device, true, progressReceiver);
 
 			foreach (string file in setings.ResourcePacks)
 			{
@@ -165,7 +169,7 @@ namespace Alex
 
 						using (FileStream stream = new FileStream(resourcePackPath, FileMode.Open))
 						{
-							LoadResourcePack(device, stream, true, false);
+							LoadResourcePack(progressReceiver, device, stream, true, false);
 						}
 					}
 				}

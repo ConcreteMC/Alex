@@ -26,6 +26,7 @@ namespace Alex.ResourcePackLib
 		public IReadOnlyDictionary<string, BlockStateResource> BlockStates => _blockStates;
 		public IReadOnlyDictionary<string, BlockModel> BlockModels => _blockModels;
 		public IReadOnlyDictionary<string, ResourcePackItem> ItemModels => _itemModels;
+		public IReadOnlyDictionary<string, Bitmap> Textures => _textureCache;
 
 		private ZipArchive _archive;
 		private readonly Dictionary<string, BlockStateResource> _blockStates = new Dictionary<string, BlockStateResource>();

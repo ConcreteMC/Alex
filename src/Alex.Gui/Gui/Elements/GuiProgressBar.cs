@@ -20,14 +20,21 @@ namespace Alex.Graphics.Gui.Elements
 
         private int _spriteSheetSegmentWidth = 1;
         public NinePatchTexture Highlight { get; set; }
+	 //   public SpriteFont Font { get; set; }
 
-        public GuiProgressBar()
+	//	private Vector2 TextSize { get; set; } = Vector2.One;
+	 //   private Vector2 TextScale { get; set; } = Vector2.One;
+	//	private string Text { get; set; } = string.Empty;
+		public GuiProgressBar()
         {
             DebugColor = Color.LavenderBlush;
         }
 
         protected override void OnInit(IGuiRenderer renderer)
         {
+	     //   Font = renderer.DefaultFont;
+		//	TextSize = new Vector2(Width, Height);
+
             var texture = renderer.GetTexture(GuiTextures.ProgressBar);
             var b = texture.Bounds;
 
@@ -36,7 +43,22 @@ namespace Alex.Graphics.Gui.Elements
             Highlight = new NinePatchTexture(texture, new Rectangle(_spriteSheetSegmentWidth * 3, b.Y, _spriteSheetSegmentWidth, b.Height), _spriteSheetSegmentWidth);
         }
 
-        protected override void OnDraw(GuiRenderArgs args)
+	    protected override void OnUpdate(GameTime gameTime)
+	    {
+		    base.OnUpdate(gameTime);
+
+		   /* Text = $"{(int)(Percent * 100)}%";
+		    var size = Font.MeasureString(Text);
+		    TextSize = size * TextScale;
+
+		    while (TextSize.Y >= Height)
+			{
+			    TextScale *= 0.9f;
+			    TextSize = size * TextScale;
+			}*/
+		}
+
+	    protected override void OnDraw(GuiRenderArgs args)
         {
             var bounds = Bounds;
 
@@ -44,8 +66,10 @@ namespace Alex.Graphics.Gui.Elements
 
             base.OnDraw(args);
 
-            bounds = new Rectangle(bounds.X + _spriteSheetSegmentWidth, bounds.Y, (int)(fillWidth * Percent), bounds.Height);
+            bounds = new Rectangle(bounds.X + _spriteSheetSegmentWidth, bounds.Y, Math.Max(1, (int)(fillWidth * Percent)), bounds.Height);
             args.DrawNinePatch(bounds, Highlight, TextureRepeatMode.Stretch);
+
+	       //	args.SpriteBatch.DrawString(Font, Text, Bounds.Center.ToVector2() - (TextSize / 2f), Color.Black, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
         }
     }
 }

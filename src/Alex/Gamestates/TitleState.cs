@@ -20,16 +20,6 @@ namespace Alex.Gamestates
 		{
 			var screen = new GuiScreen(Alex);
 			GuiManager.AddScreen(screen);
-			screen.AddChild(new GuiProgressBar()
-			{
-				Width  = 520,
-				Height = 12,
-
-				Y = 50,
-				
-				HorizontalAlignment = HorizontalAlignment.Center,
-				VerticalAlignment   = VerticalAlignment.Bottom,
-			});
 
 			Gui.ClassName = "TitleScreenRoot";
 
