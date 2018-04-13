@@ -11,14 +11,16 @@ namespace Alex.API.Gui.Elements
         public override int Height => Background == null ? 0 : Background.Bounds.Height;
         public override int Width => Background == null ? 0 : Background.Bounds.Width;
 
-        public GuiImage(GuiTextures texture)
+        public GuiImage(GuiTextures texture, TextureRepeatMode mode = TextureRepeatMode.Stretch)
         {
             DefaultBackgroundTexture = texture;
+            BackgroundRepeatMode = mode;
         }
 
-        public GuiImage(NinePatchTexture2D background)
+        public GuiImage(NinePatchTexture2D background, TextureRepeatMode mode = TextureRepeatMode.Stretch)
         {
             Background = background;
+            BackgroundRepeatMode = mode;
         }
     }
 }

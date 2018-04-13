@@ -2,6 +2,7 @@
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Rendering;
+using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Gamestates.Gui
@@ -35,12 +36,18 @@ namespace Alex.Gamestates.Gui
 
         public void AddDebugLeft(Func<string> getDebugString)
         {
-            _leftContainer.AddChild(new GuiAutoUpdatingTextElement(getDebugString));
+            _leftContainer.AddChild(new GuiAutoUpdatingTextElement(getDebugString)
+            {
+                TextColor = TextColor.White
+            });
         }
 
         public void AddDebugRight(Func<string> getDebugString)
         {
-            _rightContainer.AddChild(new GuiAutoUpdatingTextElement(getDebugString));
+            _rightContainer.AddChild(new GuiAutoUpdatingTextElement(getDebugString)
+            {
+                TextColor = TextColor.White
+            });
         }
 
         protected override void OnUpdate(GameTime gameTime)

@@ -15,7 +15,7 @@ namespace Alex.API.Gui.Elements
         public float Percent => Math.Max(0, Math.Min(1, Value / (float)Math.Abs(MaxValue - MinValue)));
 
         private int _spriteSheetSegmentWidth = 1;
-        public NinePatchTexture Highlight { get; set; }
+        public NinePatchTexture2D Highlight { get; set; }
 	 //   public SpriteFont Font { get; set; }
 
 	//	private Vector2 TextSize { get; set; } = Vector2.One;

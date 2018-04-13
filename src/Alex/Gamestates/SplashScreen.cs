@@ -94,7 +94,7 @@ namespace Alex.Gamestates
 			_progressBar.AddChild(_percentageDisplay);
 		}
 
-		public void UpdateProgress(int value, string status)
+		public void UpdateProgress(int value)
 		{
 			_progressBar.Value = value;
 			_percentageDisplay.Text = $"{value}%";

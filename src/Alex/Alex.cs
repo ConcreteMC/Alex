@@ -142,7 +142,7 @@ namespace Alex
 		{
 			if (!File.Exists(Path.Combine("assets", "Minecraftia.xnb")))
 			{
-				File.WriteAllBytes(Path.Combine("assets", "Minecraftia.xnb"), global::Alex.Resources.Minecraftia1);
+				File.WriteAllBytes(Path.Combine("assets", "Minecraftia.xnb"), global::Alex.Resources.Minecraftia);
 			}
 
 			Font = Content.Load<SpriteFont>("Minecraftia");
@@ -226,7 +226,7 @@ namespace Alex
 			GameStateManager.AddState("play", playState);
 
 			LoadingWorldState loadingScreen =
-				new LoadingWorldState(this, TextureUtils.ImageToTexture2D(GraphicsDevice, global::Alex.Resources.mcbg));
+				new LoadingWorldState(this);
 			GameStateManager.AddState("loading", loadingScreen);
 			GameStateManager.SetActiveState("loading");
 

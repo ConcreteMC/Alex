@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Alex.Graphics.Gui.Rendering;
-using Alex.Graphics.UI.Common;
+using Alex.API.Gui;
+using Alex.API.Gui.Rendering;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 

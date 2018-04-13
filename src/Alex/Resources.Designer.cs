@@ -141,16 +141,6 @@ namespace Alex {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] mcbg {
-            get {
-                object obj = ResourceManager.GetObject("mcbg", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
         internal static byte[] Minecraftia {
             get {
                 object obj = ResourceManager.GetObject("Minecraftia", resourceCulture);

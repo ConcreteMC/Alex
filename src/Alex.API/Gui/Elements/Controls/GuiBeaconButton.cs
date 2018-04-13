@@ -1,6 +1,7 @@
 ﻿using System;
 using Alex.API.Gui;
 using Alex.API.Gui.Rendering;
+using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 
 namespace Alex.API.Gui.Elements.Controls
@@ -27,7 +28,8 @@ namespace Alex.API.Gui.Elements.Controls
             {
                 VerticalAlignment = VerticalAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Center,
-                Text = text
+                Text = text,
+                TextColor = TextColor.White
             };
             AddChild(TextElement);
         }

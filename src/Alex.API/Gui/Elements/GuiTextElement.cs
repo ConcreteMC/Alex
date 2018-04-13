@@ -1,5 +1,6 @@
 ﻿using System;
 using Alex.API.Gui.Rendering;
+using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -19,8 +20,24 @@ namespace Alex.API.Gui.Elements
             }
         }
 
-        public Color TextColor { get; set; } = Color.Black;
+        public TextColor TextColor { get; set; } = TextColor.Black;
 
+        private Vector2? _textShadowOffset;
+
+        public Vector2 TextShadowOffset
+        {
+            get
+            {
+                if (!_textShadowOffset.HasValue)
+                {
+                    _textShadowOffset = new Vector2(1f, 1f) * (Size.Y * 0.1f);
+                    //return new Vector2(1f, -1f) * Scale * 0.125f;
+                }
+                return _textShadowOffset.Value;
+            }
+
+            set => _textShadowOffset = value;
+        }
 
         private float _scale = 0.5f;
 
@@ -34,6 +51,8 @@ namespace Alex.API.Gui.Elements
             }
         }
 
+        public bool HasShadow { get; set; } = true;
+
         private SpriteFont _font;
         public SpriteFont Font
         {
@@ -45,8 +64,6 @@ namespace Alex.API.Gui.Elements
             }
         }
 
-	    public float Scale { get; set; } = 1f;
-	    public Color Color { get; set; } = Color.Black;
 		protected override void OnInit(IGuiRenderer renderer)
         {
             base.OnInit(renderer);
@@ -60,12 +77,16 @@ namespace Alex.API.Gui.Elements
 
         protected override void OnDraw(GuiRenderArgs renderArgs)
         {
-            //if (!string.IsNullOrWhiteSpace(Text) && Font != null)
-            //{
-            //    renderArgs.DrawString(Position, Font, Text, TextColor, Scale);
-            //}
 
-            renderArgs.SpriteBatch.DrawString(Font, Text, Bounds.Location.ToVector2(), Color, 0f, Vector2.Zero, new Vector2(Scale, Scale), SpriteEffects.None, 0f);
+            if (!string.IsNullOrWhiteSpace(Text) && Font != null)
+            {
+                if (HasShadow)
+                {
+                    renderArgs.DrawString(Position + TextShadowOffset, Font, Text, TextColor.BackgroundColor, Scale);
+                }
+
+                renderArgs.DrawString(Position, Font, Text, TextColor.ForegroundColor, Scale);
+            }
         }
 
         private void OnTextUpdated()

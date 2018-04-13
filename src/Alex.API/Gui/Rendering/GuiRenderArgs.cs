@@ -127,7 +127,7 @@ namespace Alex.API.Gui.Rendering
 
         public void DrawString(Vector2 position, SpriteFont font, string text, Color color, float scale = 1f)
         {
-            SpriteBatch.DrawString(font, text, position, color, 0, Vector2.Zero, new Vector2(scale), SpriteEffects.None, 0);
+            SpriteBatch.DrawString(font, text, position, color, 0f, Vector2.Zero, new Vector2(scale), SpriteEffects.None, 0);
         }
     }
 }
