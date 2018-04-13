@@ -70,7 +70,7 @@ namespace Alex
 
 			using (var archive = new ZipArchive(stream, ZipArchiveMode.Read, false))
 			{
-				resourcePack = new McResourcePack(archive);
+				resourcePack = new McResourcePack(archive, graphics);
 			}
 
 			if (!replaceTextures)

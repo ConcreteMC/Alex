@@ -10,6 +10,7 @@ using Alex.Gamestates.Playing;
 using Alex.Graphics;
 using Alex.Graphics.UI;
 using Alex.Rendering;
+using Alex.ResourcePackLib;
 using Alex.Utils;
 using Alex.Worlds.Java;
 using Microsoft.Xna.Framework;

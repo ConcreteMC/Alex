@@ -14,6 +14,7 @@ using Alex.ResourcePackLib.Json.Models;
 using Alex.ResourcePackLib.Json.Models.Blocks;
 using Alex.ResourcePackLib.Json.Models.Items;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using NLog;
 using Color = Microsoft.Xna.Framework.Color;
 
@@ -43,15 +44,15 @@ namespace Alex.ResourcePackLib
 		private int _grassHeight = 256;
 		private int _grassWidth = 256;
 
-		public McResourcePack(byte[] resourcePackData) : this(new ZipArchive(new MemoryStream(resourcePackData), ZipArchiveMode.Read, false))
+		public McResourcePack(byte[] resourcePackData, GraphicsDevice graphicsDevice) : this(new ZipArchive(new MemoryStream(resourcePackData), ZipArchiveMode.Read, false), graphicsDevice)
 		{
 
 		}
 
-		public McResourcePack(ZipArchive archive)
+		public McResourcePack(ZipArchive archive, GraphicsDevice graphicsDevice)
 		{
 			//_archive = archive;
-			Load(archive);
+			Load(archive, graphicsDevice);
 		}
 
 		public Color GetGrassColor(float temp, float rain, int elevation)
@@ -96,7 +97,8 @@ namespace Alex.ResourcePackLib
 		private static readonly Regex IsTextureResource = new Regex(@"assets\/(?'namespace'.*)\/textures\/(?'filename'.*)\.png$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 		private static readonly Regex IsModelRegex = new Regex(@"assets\/(?'namespace'.*)\/models\/(?'filename'.*)\.json$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 		private static readonly Regex IsBlockStateRegex = new Regex(@"assets\/(?'namespace'.*)\/blockstates\/(?'filename'.*)\.json$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-		private void Load(ZipArchive archive)
+		private static readonly Regex IsGlyphSizes = new Regex(@"assets\/(?'namespace'.*)\/font\/glyph_sizes.bin$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+		private void Load(ZipArchive archive, GraphicsDevice graphicsDevice)
 		{
 			LoadMeta(archive);
 
@@ -133,6 +135,13 @@ namespace Alex.ResourcePackLib
 					LoadBlockState(entry, blockStateMatch);
 					continue;
 				}
+
+				var glyphSizeMatch = IsGlyphSizes.Match(entry.FullName);
+				if (glyphSizeMatch.Success)
+				{
+					LoadGlyphSizes(entry);
+					continue;
+				}
 			}
 
 			foreach (var blockModel in models)
@@ -152,6 +161,64 @@ namespace Alex.ResourcePackLib
 			}
 
 			LoadColormap();
+
+			LoadFonts(graphicsDevice);
+		}
+
+
+		private byte[] GlyphWidth = null;
+		private void LoadFonts(GraphicsDevice graphicsDevice)
+		{
+			if (TryGetTexture("font/ascii", out Bitmap asciiTexture))
+			{
+				AsciiFont = LoadFont(graphicsDevice, asciiTexture, false);
+			}
+		}
+		private static Texture2D BitmapToTexture2D(GraphicsDevice device, Bitmap bmp)
+		{
+			uint[] imgData = new uint[bmp.Width * bmp.Height];
+			Texture2D texture = new Texture2D(device, bmp.Width, bmp.Height);
+
+			unsafe
+			{
+				BitmapData origdata =
+					bmp.LockBits(new System.Drawing.Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadOnly, bmp.PixelFormat);
+
+				uint* byteData = (uint*)origdata.Scan0;
+
+				for (int i = 0; i < imgData.Length; i++)
+				{
+					var val = byteData[i];
+					imgData[i] = (val & 0x000000FF) << 16 | (val & 0x0000FF00) | (val & 0x00FF0000) >> 16 | (val & 0xFF000000);
+				}
+
+				byteData = null;
+
+				bmp.UnlockBits(origdata);
+			}
+
+			texture.SetData(imgData);
+
+			return texture;
+		}
+
+		public FontRenderer AsciiFont { get; private set; } = null;
+		private FontRenderer LoadFont(GraphicsDevice graphicsDevice, Bitmap fontTexture, bool unicode)
+		{
+
+			return new FontRenderer(unicode, BitmapToTexture2D(graphicsDevice, fontTexture), GlyphWidth);
+		}
+
+		private void LoadGlyphSizes(ZipArchiveEntry entry)
+		{
+			byte[] glyphWidth = new byte[65536];
+			using (Stream stream = entry.Open())
+			{
+				int length = stream.Read(glyphWidth, 0, glyphWidth.Length);
+				Array.Resize(ref glyphWidth, length);
+			}
+
+			GlyphWidth = glyphWidth;
 		}
 
 		private void LoadTexture(ZipArchiveEntry entry, Match match)
