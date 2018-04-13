@@ -6,6 +6,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Alex.API;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.ResourcePackLib.Json;
@@ -47,13 +48,15 @@ namespace Alex.ResourcePackLib
 		private int _grassHeight = 256;
 		private int _grassWidth = 256;
 
-		public McResourcePack(byte[] resourcePackData, GraphicsDevice graphicsDevice) : this(new ZipArchive(new MemoryStream(resourcePackData), ZipArchiveMode.Read, false), graphicsDevice)
+		public McResourcePack(byte[] resourcePackData, GraphicsDevice graphicsDevice) : this(new ZipArchive(new MemoryStream(resourcePackData), ZipArchiveMode.Read, false), graphicsDevice, null)
 		{
 
 		}
 
-		public McResourcePack(ZipArchive archive, GraphicsDevice graphicsDevice)
+		private Action<IFontRenderer> ReportRenderer = null;
+		public McResourcePack(ZipArchive archive, GraphicsDevice graphicsDevice, Action<IFontRenderer> reportFont)
 		{
+			ReportRenderer = reportFont;
 			//_archive = archive;
 			Load(archive, graphicsDevice);
 		}
@@ -154,6 +157,9 @@ namespace Alex.ResourcePackLib
 				}
 			}
 
+			AsciiFont = new FontRenderer(true, this, GlyphWidth);
+			ReportRenderer?.Invoke(AsciiFont);
+
 			foreach (var blockModel in models)
 			{
 				if (!_blockModels.ContainsKey(blockModel.Key))
@@ -171,9 +177,10 @@ namespace Alex.ResourcePackLib
 			}
 
 			LoadColormap();
-
-			LoadFonts(graphics);
 		}
+
+		private byte[] GlyphWidth = null;
+
 		private void LoadMeta(ZipArchive archive)
 		{
 			ResourcePackInfo info;
@@ -192,35 +199,10 @@ namespace Alex.ResourcePackLib
 				}
 			}
 
-
-			var imgEntry = archive.GetEntry("pack.png");
-			if (imgEntry != null)
-			{
-				Bitmap bmp = new Bitmap(imgEntry.Open());
-				info.Logo = bmp;
-			}
+			Info = info;
 		}
 
-		#region Fonts
-		
 		public FontRenderer AsciiFont { get; private set; } = null;
-		private byte[] GlyphWidth = null;
-
-		private void LoadFonts(GraphicsDevice graphicsDevice)
-		{
-			if (TryGetTexture("font/ascii", out Texture2D asciiTexture))
-			{
-				AsciiFont = LoadFont(graphicsDevice, asciiTexture, false);
-			}
-		}
-
-		private FontRenderer LoadFont(GraphicsDevice graphicsDevice, Texture2D fontTexture, bool unicode)
-		{
-			return new FontRenderer(unicode, fontTexture, GlyphWidth)
-			{
-				//Scale = 12f
-			};
-		}
 
 		private void LoadGlyphSizes(ZipArchiveEntry entry)
 		{
@@ -233,8 +215,6 @@ namespace Alex.ResourcePackLib
 
 			GlyphWidth = glyphWidth;
 		}
-
-		#endregion
 
 		#region Bitmap
 		

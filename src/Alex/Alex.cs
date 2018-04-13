@@ -37,7 +37,7 @@ namespace Alex
 		public static bool IsMultiplayer { get; set; } = false;
 
 		public static SpriteFont Font;
-		public static SpriteFont AltFont;
+		public static FontRenderer FontRender = null;
 
 		private SpriteBatch _spriteBatch;
 
@@ -50,6 +50,8 @@ namespace Alex
 		public GuiManager GuiManager { get; private set; }
 
 		private bool BypassTitleState { get; set; } = false;
+
+		public GraphicsDeviceManager DeviceManager { get; }
 		public Alex(LaunchSettings launchSettings)
 		{
 			if (launchSettings.Server != null)
@@ -68,7 +70,7 @@ namespace Alex
 
 			Instance = this;
 
-			var graphics = new GraphicsDeviceManager(this)
+			DeviceManager = new GraphicsDeviceManager(this)
 			{
 				PreferMultiSampling = false,
 				SynchronizeWithVerticalRetrace = false,
@@ -82,12 +84,12 @@ namespace Alex
 			this.Window.AllowUserResizing = true;
 			this.Window.ClientSizeChanged += (sender, args) =>
 			{
-				if (graphics.PreferredBackBufferWidth != Window.ClientBounds.Width ||
-					graphics.PreferredBackBufferHeight != Window.ClientBounds.Height)
+				if (DeviceManager.PreferredBackBufferWidth != Window.ClientBounds.Width ||
+				    DeviceManager.PreferredBackBufferHeight != Window.ClientBounds.Height)
 				{
-					graphics.PreferredBackBufferWidth = Window.ClientBounds.Width;
-					graphics.PreferredBackBufferHeight = Window.ClientBounds.Height;
-					graphics.ApplyChanges();
+					DeviceManager.PreferredBackBufferWidth = Window.ClientBounds.Width;
+					DeviceManager.PreferredBackBufferHeight = Window.ClientBounds.Height;
+					DeviceManager.ApplyChanges();
 				}
 			};
 		}
@@ -188,7 +190,6 @@ namespace Alex
 			GameStateManager.Update(gameTime);
 		}
 
-		private FontRenderer FontRender = null;
 		protected override void Draw(GameTime gameTime)
 		{
 			GraphicsDevice.RasterizerState = RasterizerState.CullClockwise;
@@ -196,9 +197,9 @@ namespace Alex
 
 			GuiManager.Draw(gameTime);
 
-			//_spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointWrap, transformMatrix:Matrix.CreateScale(4f));
-			//FontRender?.DrawString(_spriteBatch, "test 123", 10, 10, (int) Color.Black.PackedValue);
-			//_spriteBatch.End();
+		//	_spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointWrap);
+		//	FontRender?.DrawString(_spriteBatch, "§1R§2e§3d§4s§5t§6o§7n§8e §9C§ar§be§ca§dt§ei§fo§1n§2s§r§0This is a render test", 10, 10, (int) Color.Black.PackedValue, false, new Vector2(4, 4));
+		//	_spriteBatch.End();
 			base.Draw(gameTime);
 		}
 
@@ -210,13 +211,12 @@ namespace Alex
 
 			//	Log.Info($"Loading resources...");
 			Resources = new ResourceManager(GraphicsDevice);
-			if (!Resources.CheckResources(GraphicsDevice, GameSettings, progressReceiver))
+			if (!Resources.CheckResources(GraphicsDevice, GameSettings, progressReceiver, (f) => { FontRender = (FontRenderer) f; }))
 			{
 				Exit();
 				return;
 			}
 
-			FontRender = Resources.ResourcePack.AsciiFont;
 			Mouse.SetPosition(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2);
 
 			GuiRenderer.LoadResourcePackTextures(Resources.ResourcePack);

@@ -81,6 +81,8 @@ namespace Alex.API.Gui
 			game.Window.ClientSizeChanged += (sender, args) => Update();
 			game.Activated                += (sender, args) => Update();
 
+			_targetWidth = Viewport.TitleSafeArea.Width;
+			_targetHeight = Viewport.TitleSafeArea.Height;
 			//Update();
 		}
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace Alex.API.Gui.Elements
 {
@@ -14,7 +15,7 @@ namespace Alex.API.Gui.Elements
 
         public GuiStackContainer()
         {
-
+			
         }
 
         protected override void OnUpdateLayout()
@@ -97,16 +98,12 @@ namespace Alex.API.Gui.Elements
                 offset += c.Height + Spacing;
             });
         }
+
         protected void AlignContentHorizontally()
         {
             if (!HasChildren || HorizontalContentAlignment == HorizontalAlignment.None) return;
 
-            int contentWidth = 0, offset = 0;
-
-            contentWidth = Orientation == Orientation.Horizontal
-                                    ? Children.Sum(c => c.Width) + (Children.Count - 1) * Spacing
-                                    : Children.Max(c => c.Width);
-
+            int offset = 0;
 
             if (HorizontalContentAlignment == HorizontalAlignment.Stretch)
             {
@@ -134,25 +131,22 @@ namespace Alex.API.Gui.Elements
                 return;
             }
 
-            if (HorizontalContentAlignment == HorizontalAlignment.Left)
-            {
-                // Offset is 0
-            }
-            else if (HorizontalContentAlignment == HorizontalAlignment.Center)
-            {
-                offset = (int)((Width - contentWidth) / 2f);
-            }
-            else if (HorizontalContentAlignment == HorizontalAlignment.Right)
-            {
-                offset = Width - contentWidth;
-            }
 
-            ForEachChild(c =>
-            {
-                c.LayoutWidth = 0;
-                c.LayoutOffsetX = offset;
-                offset += c.Width + Spacing;
+			ForEachChild(c =>
+			{
+	            if (HorizontalContentAlignment == HorizontalAlignment.Left)
+	            {
+		            c.LayoutOffsetX = 0;
+	            }
+	            else if (HorizontalContentAlignment == HorizontalAlignment.Center)
+	            {
+		            c.LayoutOffsetX = (int)((Width - c.Width) / 2f);
+	            }
+	            else if (HorizontalContentAlignment == HorizontalAlignment.Right)
+	            {
+		            c.LayoutOffsetX = (Width - (c.Width));
+	            }
             });
-        }
+		}
     }
 }

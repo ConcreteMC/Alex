@@ -6,7 +6,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
-using Alex.API.Utils;
+using Alex.API;
 using Alex.Entities;
 using Alex.Rendering;
 using Alex.ResourcePackLib;
@@ -65,13 +65,13 @@ namespace Alex
 		}
 
 		private McResourcePack LoadResourcePack(IProgressReceiver progressReceiver, GraphicsDevice graphics, Stream stream, bool replaceModels = false,
-			bool replaceTextures = false, bool reportMissingModels = false)
+			bool replaceTextures = false, bool reportMissingModels = false, Action<IFontRenderer> report = null)
 		{
 			McResourcePack resourcePack = null;
 
 			using (var archive = new ZipArchive(stream, ZipArchiveMode.Read, false))
 			{
-				resourcePack = new McResourcePack(archive, graphics);
+				resourcePack = new McResourcePack(archive, graphics, report);
 			}
 
 			if (!replaceTextures)
@@ -136,7 +136,7 @@ namespace Alex
 			return true;
 		}
 
-		public bool CheckResources(GraphicsDevice device, Settings setings, IProgressReceiver progressReceiver)
+		public bool CheckResources(GraphicsDevice device, Settings setings, IProgressReceiver progressReceiver, Action<IFontRenderer> report)
 		{
 			byte[] defaultResources;
 			byte[] bedrockResources;
@@ -149,8 +149,10 @@ namespace Alex
 			Log.Info($"Loading vanilla resources...");
 			using (MemoryStream stream = new MemoryStream(defaultResources))
 			{
-				ResourcePack = LoadResourcePack(progressReceiver, device, stream, true, true, true);
+				ResourcePack = LoadResourcePack(progressReceiver, device, stream, true, true, true, report);
 			}
+
+			//report(ResourcePack.AsciiFont);
 
 			Log.Info($"Loading bedrock resources...");
 			BedrockResourcePack = new BedrockResourcePack(bedrockResources);
