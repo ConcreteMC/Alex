@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Drawing;
+using Alex.API;
 using Alex.API.Graphics;
 using Alex.API.Gui.Rendering;
 using Alex.ResourcePackLib;
@@ -13,7 +14,7 @@ namespace Alex.Gamestates.Gui
 
         private Alex Alex { get; }
 
-        public SpriteFont DefaultFont => Alex.Font;
+        public IFontRenderer DefaultFont => Alex.FontRender;
 
         private GraphicsDevice _graphicsDevice;
         private ResourceManager _resourceManager;
@@ -34,13 +35,14 @@ namespace Alex.Gamestates.Gui
             Alex = alex;
             Init(alex.GraphicsDevice);
         }
+
         public void Init(GraphicsDevice graphics)
         {
             _graphicsDevice = graphics;
             _resourceManager = Alex.Resources;
             LoadEmbeddedTextures();
 
-            if (_resourceManager != null)
+            if (_resourceManager?.ResourcePack != null)
             {
                 LoadResourcePackTextures(_resourceManager.ResourcePack);
             }
@@ -56,6 +58,8 @@ namespace Alex.Gamestates.Gui
 
         public void LoadResourcePackTextures(McResourcePack resourcePack)
         {
+	        if (_widgets != null) return;
+
             // First load Widgets
             resourcePack.TryGetTexture("gui/widgets", out _widgets);
 

@@ -53,8 +53,8 @@ namespace Alex.API.Gui.Elements
 
         public bool HasShadow { get; set; } = true;
 
-        private SpriteFont _font;
-        public SpriteFont Font
+        private IFontRenderer _font;
+        public IFontRenderer Font
         {
             get => _font;
             set
@@ -63,6 +63,17 @@ namespace Alex.API.Gui.Elements
                 OnTextUpdated();
             }
         }
+
+	    private SpriteFont _backupFont;
+		public SpriteFont BackupFont
+	    {
+		    get => _backupFont;
+		    set
+		    {
+			    _backupFont = value;
+				OnTextUpdated();
+		    }
+	    }
 
 		protected override void OnInit(IGuiRenderer renderer)
         {
@@ -77,26 +88,44 @@ namespace Alex.API.Gui.Elements
 
         protected override void OnDraw(GuiRenderArgs renderArgs)
         {
-
-            if (!string.IsNullOrWhiteSpace(Text) && Font != null)
+	        var text = Text;
+            if (!string.IsNullOrWhiteSpace(text))
             {
-                if (HasShadow)
-                {
-                    renderArgs.DrawString(Position + TextShadowOffset, Font, Text, TextColor.BackgroundColor, Scale);
-                }
+	            if (Font != null)
+	            {
+		            if (HasShadow)
+		            {
+			            renderArgs.DrawString(Font, text, Position + TextShadowOffset, TextColor.BackgroundColor, Scale);
+		            }
 
-                renderArgs.DrawString(Position, Font, Text, TextColor.ForegroundColor, Scale);
-            }
+		            renderArgs.DrawString(Font, text, Position, TextColor.ForegroundColor, Scale);
+	            }
+				else if (BackupFont != null)
+	            {
+		            if (HasShadow)
+		            {
+			            renderArgs.DrawString(Position + TextShadowOffset, BackupFont, text, TextColor.BackgroundColor, Scale);
+		            }
+
+		            renderArgs.DrawString(Position, BackupFont, text, TextColor.ForegroundColor, Scale);
+				}
+			}
         }
 
-        private void OnTextUpdated()
+	    private void OnTextUpdated(bool updateLayout = true)
         {
-            var size = Font?.MeasureString(Text) ?? Vector2.Zero;
+	        if ((Font != null || BackupFont != null) && !string.IsNullOrWhiteSpace(Text))
+	        {
+		        var size = Font?.GetStringSize(Text, new Vector2(Scale)) ?? BackupFont.MeasureString(Text);
 
-            Width  = (int)Math.Ceiling(size.X * Scale);
-            Height = (int)Math.Ceiling(size.Y * Scale);
+		        Width = (int) Math.Ceiling(size.X);
+		        Height = (int) Math.Ceiling(size.Y);
 
-			UpdateLayout();
+		        if (updateLayout)
+		        {
+					ParentElement.UpdateLayout();
+		        }
+	        }
         }
     }
 

@@ -190,7 +190,7 @@ namespace Alex.API.Gui
 
         protected virtual void OnDraw(GuiRenderArgs args)
         {
-            //args.DrawRectangle(Bounds, DebugColor);
+            args.DrawRectangle(Bounds, DebugColor);
 
             if (Background != null)
             {

@@ -7,6 +7,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using Alex.API;
 using Alex.API.World;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.BlockStates;
@@ -45,13 +46,15 @@ namespace Alex.ResourcePackLib
 		private int _grassHeight = 256;
 		private int _grassWidth = 256;
 
-		public McResourcePack(byte[] resourcePackData, GraphicsDevice graphicsDevice) : this(new ZipArchive(new MemoryStream(resourcePackData), ZipArchiveMode.Read, false), graphicsDevice)
+		public McResourcePack(byte[] resourcePackData, GraphicsDevice graphicsDevice) : this(new ZipArchive(new MemoryStream(resourcePackData), ZipArchiveMode.Read, false), graphicsDevice, null)
 		{
 
 		}
 
-		public McResourcePack(ZipArchive archive, GraphicsDevice graphicsDevice)
+		private Action<IFontRenderer> ReportRenderer = null;
+		public McResourcePack(ZipArchive archive, GraphicsDevice graphicsDevice, Action<IFontRenderer> reportFont)
 		{
+			ReportRenderer = reportFont;
 			//_archive = archive;
 			Load(archive, graphicsDevice);
 		}
@@ -145,6 +148,9 @@ namespace Alex.ResourcePackLib
 				}
 			}
 
+			AsciiFont = new FontRenderer(true, this, GlyphWidth);
+			ReportRenderer?.Invoke(AsciiFont);
+
 			foreach (var blockModel in models)
 			{
 				if (!_blockModels.ContainsKey(blockModel.Key))
@@ -162,55 +168,12 @@ namespace Alex.ResourcePackLib
 			}
 
 			LoadColormap();
-
-			LoadFonts(graphicsDevice);
 		}
 
 
 		private byte[] GlyphWidth = null;
-		private void LoadFonts(GraphicsDevice graphicsDevice)
-		{
-			if (TryGetTexture("font/ascii", out Bitmap asciiTexture))
-			{
-				AsciiFont = LoadFont(graphicsDevice, asciiTexture, false);
-			}
-		}
-		private static Texture2D BitmapToTexture2D(GraphicsDevice device, Bitmap bmp)
-		{
-			uint[] imgData = new uint[bmp.Width * bmp.Height];
-			Texture2D texture = new Texture2D(device, bmp.Width, bmp.Height);
-
-			unsafe
-			{
-				BitmapData origdata =
-					bmp.LockBits(new System.Drawing.Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadOnly, bmp.PixelFormat);
-
-				uint* byteData = (uint*)origdata.Scan0;
-
-				for (int i = 0; i < imgData.Length; i++)
-				{
-					var val = byteData[i];
-					imgData[i] = (val & 0x000000FF) << 16 | (val & 0x0000FF00) | (val & 0x00FF0000) >> 16 | (val & 0xFF000000);
-				}
-
-				byteData = null;
-
-				bmp.UnlockBits(origdata);
-			}
-
-			texture.SetData(imgData);
-
-			return texture;
-		}
 
 		public FontRenderer AsciiFont { get; private set; } = null;
-		private FontRenderer LoadFont(GraphicsDevice graphicsDevice, Bitmap fontTexture, bool unicode)
-		{
-			return new FontRenderer(unicode, BitmapToTexture2D(graphicsDevice, fontTexture), GlyphWidth)
-			{
-				//Scale = 12f
-			};
-		}
 
 		private void LoadGlyphSizes(ZipArchiveEntry entry)
 		{

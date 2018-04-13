@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.API.World;
@@ -101,6 +102,32 @@ namespace Alex.Gamestates.Playing
 			_debugInfo.AddDebugLeft(() => $"Vertices: {World.Vertices}");
 			_debugInfo.AddDebugLeft(() => $"Chunks: {World.ChunkCount}, {World.ChunkManager.RenderedChunks}");
 			_debugInfo.AddDebugLeft(() => $"Entities: {World.EntityManager.EntityCount}, {World.EntityManager.EntitiesRendered}");
+
+
+			_debugInfo.AddDebugRight(() => Alex.DotnetRuntime);
+			_debugInfo.AddDebugRight(() => MemoryUsageDisplay);
+			_debugInfo.AddDebugRight(() => 
+			{
+				if (_raytracedBlock.Y > 0 && _raytracedBlock.Y < 256)
+				{
+					StringBuilder sb = new StringBuilder();
+					sb.AppendLine("Looking at: " + _raytracedBlock);
+					sb.AppendLine($"{SelBlock} ({SelBlock.BlockState.ID})");
+
+					if (SelBlock.BlockState != null)
+					{
+						var dict = SelBlock.BlockState.ToDictionary();
+						foreach (var kv in dict)
+						{
+							sb.AppendLine($"{kv.Key.Name}={kv.Value}");
+						}
+					}
+
+					return sb.ToString();
+				}
+
+				return null;
+			});
 		}
 
 		private float AspectRatio { get; set; }
@@ -277,11 +304,6 @@ namespace Alex.Gamestates.Playing
 				}
 
 				World.Render2D(args);
-
-				//if (RenderDebug)
-				//{
-				//	RenderDebugScreen(args);
-				//}
 			}
 			finally
 			{
@@ -289,133 +311,6 @@ namespace Alex.Gamestates.Playing
 			}
 
 			Chat.Render(args);
-		}
-
-		private void RenderDebugScreen(RenderArgs args)
-		{
-			DebugLeft(args);
-			DebugRight(args);
-		}
-
-		private void DebugRight(RenderArgs args)
-		{
-			var screenWidth = args.GraphicsDevice.Viewport.Width;
-			//var device = args.GraphicsDevice.Adapter.DeviceName;
-			var positionString = "";
-			var meisured = Vector2.Zero;
-			int y = 0;
-
-			positionString = Alex.DotnetRuntime;
-			meisured = Alex.Font.MeasureString(positionString);
-
-			args.SpriteBatch.FillRectangle(new Rectangle(screenWidth - (int)meisured.X, y, (int)meisured.X, (int)meisured.Y),
-				new Color(Color.Black, 64));
-			args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(screenWidth - (int)meisured.X, y), Color.White);
-
-			y += (int)meisured.Y;
-
-			positionString = MemoryUsageDisplay;
-			meisured = Alex.Font.MeasureString(positionString);
-
-			args.SpriteBatch.FillRectangle(new Rectangle(screenWidth - (int)meisured.X, y, (int)meisured.X, (int)meisured.Y),
-				new Color(Color.Black, 64));
-			args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(screenWidth - (int)meisured.X, y), Color.White);
-
-			y += (int)meisured.Y;
-
-			if (_raytracedBlock.Y > 0 && _raytracedBlock.Y < 256)
-			{
-				positionString = "Looking at: " + _raytracedBlock;
-				meisured = Alex.Font.MeasureString(positionString);
-
-				args.SpriteBatch.FillRectangle(new Rectangle(screenWidth - (int) meisured.X, y, (int) meisured.X, (int) meisured.Y),
-					new Color(Color.Black, 64));
-				args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(screenWidth - (int) meisured.X, y), Color.White);
-
-				y += (int) meisured.Y;
-
-				positionString = $"{SelBlock} ({SelBlock.BlockState.ID})";
-				meisured = Alex.Font.MeasureString(positionString);
-
-				args.SpriteBatch.FillRectangle(new Rectangle(screenWidth - (int) meisured.X, y, (int) meisured.X, (int) meisured.Y),
-					new Color(Color.Black, 64));
-				args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(screenWidth - (int) meisured.X, y), Color.White);
-
-				if (SelBlock.BlockState != null)
-				{
-					var dict = SelBlock.BlockState.ToDictionary();
-					foreach (var kv in dict)
-					{
-						y += (int)meisured.Y;
-
-						positionString = $"{kv.Key.Name}={kv.Value}";
-						meisured = Alex.Font.MeasureString(positionString);
-
-						args.SpriteBatch.FillRectangle(new Rectangle(screenWidth - (int)meisured.X, y, (int)meisured.X, (int)meisured.Y),
-							new Color(Color.Black, 64));
-						args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(screenWidth - (int)meisured.X, y), Color.White);
-					}
-				}
-			}
-		}
-
-		private void DebugLeft(RenderArgs args)
-		{
-			var fpsString = string.Format("Alex {0} ({1} FPS, {2}:{3} chunk updates)", Alex.Version,
-					 Math.Round(FpsCounter.Value), World.ChunkUpdates, World.LowPriorityUpdates);
-			var meisured = Alex.Font.MeasureString(fpsString);
-
-			args.SpriteBatch.FillRectangle(new Rectangle(0, 0, (int)meisured.X, (int)meisured.Y),
-				new Color(Color.Black, 64));
-			args.SpriteBatch.DrawString(Alex.Font,
-				fpsString, new Vector2(0, 0),
-				Color.White);
-
-			var y = (int)meisured.Y;
-			var positionString = "Position: " + World.Player.KnownPosition;
-			meisured = Alex.Font.MeasureString(positionString);
-
-			args.SpriteBatch.FillRectangle(new Rectangle(0, y, (int)meisured.X, (int)meisured.Y),
-				new Color(Color.Black, 64));
-			args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(0, y), Color.White);
-
-			y += (int)meisured.Y;
-			string facing = GetCardinalDirection(World.Player.KnownPosition);
-
-			positionString = string.Format("Facing: {0}", facing);
-			meisured = Alex.Font.MeasureString(positionString);
-
-			args.SpriteBatch.FillRectangle(new Rectangle(0, y, (int)meisured.X, (int)meisured.Y),
-				new Color(Color.Black, 64));
-			args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(0, y), Color.White);
-
-			y += (int)meisured.Y;
-
-
-			positionString = "Vertices: " + World.Vertices;
-			meisured = Alex.Font.MeasureString(positionString);
-
-			args.SpriteBatch.FillRectangle(new Rectangle(0, y, (int)meisured.X, (int)meisured.Y),
-				new Color(Color.Black, 64));
-			args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(0, y), Color.White);
-
-			y += (int)meisured.Y;
-
-			positionString = "Chunks: " + World.ChunkCount + ", " + World.ChunkManager.RenderedChunks;
-			meisured = Alex.Font.MeasureString(positionString);
-
-			args.SpriteBatch.FillRectangle(new Rectangle(0, y, (int)meisured.X, (int)meisured.Y),
-				new Color(Color.Black, 64));
-			args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(0, y), Color.White);
-
-			y += (int)meisured.Y;
-
-			positionString = $"Entities: {World.EntityManager.EntityCount}, {World.EntityManager.EntitiesRendered}";
-			meisured = Alex.Font.MeasureString(positionString);
-
-			args.SpriteBatch.FillRectangle(new Rectangle(0, y, (int)meisured.X, (int)meisured.Y),
-				new Color(Color.Black, 64));
-			args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(0, y), Color.White);
 		}
 
 		public static string GetCardinalDirection(PlayerLocation cam)

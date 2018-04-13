@@ -18,7 +18,9 @@ namespace Alex.Gamestates
 		{
 			Gui = _screen = new SplashScreenGui(Alex)
 			{
-				BackgroundRepeatMode = TextureRepeatMode.Stretch
+				BackgroundRepeatMode = TextureRepeatMode.Stretch,
+				VerticalAlignment = VerticalAlignment.Top,
+				HorizontalAlignment = HorizontalAlignment.Left
 			};
 		}
 
@@ -38,7 +40,6 @@ namespace Alex.Gamestates
 	{
 		private GuiContainer _progressBarContainer;
 
-		private GuiTextElement _statusText, _percentageText;
 		private GuiProgressBar _progressBar;
 		private GuiTextElement _textDisplay;
 		private GuiTextElement _percentageDisplay;
@@ -49,7 +50,6 @@ namespace Alex.Gamestates
 			set
 			{
 				_textDisplay.Text = value;
-//				_textDisplay.Y = -(_textDisplay.Height);
 			}
 		}
 
@@ -62,7 +62,6 @@ namespace Alex.Gamestates
 		protected override void OnInit(IGuiRenderer renderer)
 		{
 			Background = renderer.GetTexture(GuiTextures.SplashBackground);
-
 			//AddChild(_progressBarContainer = new GuiStackContainer()
 			//{
 			//	Width  = 300,
@@ -91,19 +90,23 @@ namespace Alex.Gamestates
 			_progressBarContainer.AddChild(_textDisplay  = new GuiTextElement()
 			{
 				Text = Text,
-				TextColor = TextColor.Red,
+				TextColor = TextColor.Black,
 
 				VerticalAlignment = VerticalAlignment.Top,
 				HorizontalAlignment = HorizontalAlignment.Left,
+				HasShadow = false,
+				BackupFont = Alex.Font
 			});
 
 			_progressBarContainer.AddChild(_percentageDisplay = new GuiTextElement()
 			{
 				Text = Text,
-				TextColor = TextColor.Red,
+				TextColor = TextColor.Black,
 
 				VerticalAlignment   = VerticalAlignment.Top,
 				HorizontalAlignment = HorizontalAlignment.Right,
+				HasShadow = false,
+				BackupFont = Alex.Font
 			});
 
 			_progressBarContainer.AddChild(_progressBar = new GuiProgressBar()

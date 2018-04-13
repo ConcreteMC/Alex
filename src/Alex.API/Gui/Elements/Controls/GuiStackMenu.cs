@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.Xna.Framework;
 
 namespace Alex.API.Gui.Elements.Controls
 {
@@ -7,12 +8,16 @@ namespace Alex.API.Gui.Elements.Controls
 
         public GuiStackMenu()
         {
-
+	        DebugColor = Color.Red;
         }
 
         public void AddMenuItem(string label, Action action)
         {
-            AddChild(new GuiStackMenuItem(label, action));
+            AddChild(new GuiStackMenuItem(label, action)
+            {
+				HorizontalAlignment = HorizontalAlignment.Stretch,
+				VerticalAlignment = VerticalAlignment.Top,
+            });
         }
 
     }

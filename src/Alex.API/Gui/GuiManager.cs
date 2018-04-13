@@ -81,7 +81,7 @@ namespace Alex.API.Gui
         {
             try
             {
-                SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.None,  RasterizerState.CullNone, null, ScaledResolution.TransformMatrix);
+                SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointWrap, DepthStencilState.None,  RasterizerState.CullNone, null, ScaledResolution.TransformMatrix);
 
                 foreach (var screen in Screens.ToArray())
                 {

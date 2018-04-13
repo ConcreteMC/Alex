@@ -1,24 +1,28 @@
 ﻿using System;
+using System.Drawing;
+using System.Drawing.Imaging;
+using Alex.API;
+using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Color = Microsoft.Xna.Framework.Color;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace Alex.ResourcePackLib
 {
-    public class FontRenderer
-    {
+    public class FontRenderer : IFontRenderer
+	{
 	    public const string Characters = "\u00c0\u00c1\u00c2\u00c8\u00ca\u00cb\u00cd\u00d3\u00d4\u00d5\u00da\u00df\u00e3\u00f5\u011f\u0130\u0131\u0152\u0153\u015e\u015f\u0174\u0175\u017e\u0207\u0000\u0000\u0000\u0000\u0000\u0000\u0000 !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\u0000\u00c7\u00fc\u00e9\u00e2\u00e4\u00e0\u00e5\u00e7\u00ea\u00eb\u00e8\u00ef\u00ee\u00ec\u00c4\u00c5\u00c9\u00e6\u00c6\u00f4\u00f6\u00f2\u00fb\u00f9\u00ff\u00d6\u00dc\u00f8\u00a3\u00d8\u00d7\u0192\u00e1\u00ed\u00f3\u00fa\u00f1\u00d1\u00aa\u00ba\u00bf\u00ae\u00ac\u00bd\u00bc\u00a1\u00ab\u00bb\u2591\u2592\u2593\u2502\u2524\u2561\u2562\u2556\u2555\u2563\u2551\u2557\u255d\u255c\u255b\u2510\u2514\u2534\u252c\u251c\u2500\u253c\u255e\u255f\u255a\u2554\u2569\u2566\u2560\u2550\u256c\u2567\u2568\u2564\u2565\u2559\u2558\u2552\u2553\u256b\u256a\u2518\u250c\u2588\u2584\u258c\u2590\u2580\u03b1\u03b2\u0393\u03c0\u03a3\u03c3\u03bc\u03c4\u03a6\u0398\u03a9\u03b4\u221e\u2205\u2208\u2229\u2261\u00b1\u2265\u2264\u2320\u2321\u00f7\u2248\u00b0\u2219\u00b7\u221a\u207f\u00b2\u25a0\u0000";
 
 		public int FONT_HEIGHT = 8;
 
 		private byte[] GlyphWidth { get; }
 	    private int[] CharWidth { get; set; } = null;
-		private Texture2D FontTexture { get; }
-		private bool Unicode { get; }
-	    private int[] colorCode { get; }
+		private Texture2D FontTexture { get; set; }
+	    private bool Unicode { get; }
 
-		protected float PosX;
-	    protected float PosY;
+	//	protected float PosX;
+	 //   protected float PosY;
 
 	    private int textColor;
 	    private bool randomStyle;
@@ -30,35 +34,47 @@ namespace Alex.ResourcePackLib
 	    private Microsoft.Xna.Framework.Color TextColor = Microsoft.Xna.Framework.Color.Black;
 
 	    private Random fontRandom;
-		public FontRenderer(bool unicode, Texture2D fontTexture, byte[] glyphWidth)
+	    private Texture2D[] GlyphTextures = new Texture2D[256];
+		    //	private Vector2 Scale { get; set; } = Vector2.One;
+
+		private McResourcePack ResourcePack { get; }
+
+	    private static Texture2D BitmapToTexture2D(GraphicsDevice device, Bitmap bmp)
 	    {
+		    uint[] imgData = new uint[bmp.Width * bmp.Height];
+		    Texture2D texture = new Texture2D(device, bmp.Width, bmp.Height);
+
+		    unsafe
+		    {
+			    BitmapData origdata =
+				    bmp.LockBits(new System.Drawing.Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadOnly, bmp.PixelFormat);
+
+			    uint* byteData = (uint*)origdata.Scan0;
+
+			    for (int i = 0; i < imgData.Length; i++)
+			    {
+				    var val = byteData[i];
+				    imgData[i] = (val & 0x000000FF) << 16 | (val & 0x0000FF00) | (val & 0x00FF0000) >> 16 | (val & 0xFF000000);
+			    }
+
+			    byteData = null;
+
+			    bmp.UnlockBits(origdata);
+		    }
+
+		    texture.SetData(imgData);
+
+		    return texture;
+	    }
+
+		public FontRenderer(bool unicode, McResourcePack resourcepack, byte[] glyphWidth)
+		{
+			ResourcePack = resourcepack;
 			fontRandom = new Random();
 
 		    Unicode = unicode;
-		    FontTexture = fontTexture;
 
-			colorCode = new int[32];
-			for (int i = 0; i < 32; ++i)
-		    {
-			    int j = (i >> 3 & 1) * 85;
-			    int k = (i >> 2 & 1) * 170 + j;
-			    int l = (i >> 1 & 1) * 170 + j;
-			    int i1 = (i >> 0 & 1) * 170 + j;
-
-			    if (i == 6)
-			    {
-				    k += 85;
-			    }
-
-			    if (i >= 16)
-			    {
-				    k /= 4;
-				    l /= 4;
-				    i1 /= 4;
-			    }
-
-			    this.colorCode[i] = (k & 255) << 16 | (l & 255) << 8 | i1 & 255;
-		    }
+		   // FontTexture = fontTexture;
 
 			GlyphWidth = glyphWidth;
 	    }
@@ -116,8 +132,20 @@ namespace Alex.ResourcePackLib
 		    return charWidth;
 	    }
 
-		private float RenderChar(SpriteBatch sb, char ch, bool italic)
+		private float RenderChar(SpriteBatch sb, char ch, bool italic, Vector2 pos, Vector2 scale)
 		{
+			if (FontTexture == null)
+			{
+				if (ResourcePack.TryGetTexture("font/ascii", out Bitmap b))
+				{
+					FontTexture = BitmapToTexture2D(sb.GraphicsDevice, b);
+				}
+				else
+				{
+					return 0f;
+				}
+			}
+
 			if (CharWidth == null)
 			{
 				CharWidth = ReadFontTexture();
@@ -125,77 +153,48 @@ namespace Alex.ResourcePackLib
 
 			if (ch == ' ')
 			{
-				return 4.0F;
+				return (Unicode ? 8.0F : 4.0f);
 			}
 			else
 			{
 				int i = Characters.IndexOf(ch);
-				return i != -1 && !this.Unicode ? this.RenderDefaultChar(sb, i, italic) : this.RenderUnicodeChar(sb, ch, italic);
+				return i != -1 && !this.Unicode ? this.RenderDefaultChar(sb, i, italic, pos, scale) : this.RenderUnicodeChar(sb, ch, italic, pos, scale);
 			}
 		}
 
-		protected float RenderDefaultChar(SpriteBatch sb, int ch, bool italic)
-		{
-			int x = ch % 16 * 8;
-			int y = ch / 16 * 8;
-			int k = italic ? 1 : 0;
-			//this.renderEngine.bindTexture(this.locationFontTexture);
-			int l = this.CharWidth[ch];
-			float f = (float)l - 0.01F;
-
-			var sourceRectangle = new Rectangle(x, y, l, FONT_HEIGHT);
-			var destRectangle = new Rectangle(
-				(int)(PosX),
-				(int)(PosY),
-				(int)(l),
-				(int)(FONT_HEIGHT));
-
-			sb.Draw(FontTexture, destRectangle, sourceRectangle, TextColor);
-
-			return (float) l;
-		}
-
-	    protected float RenderUnicodeChar(SpriteBatch sb, char ch, bool italic)
+	    private Texture2D LoadGlyphTexture(GraphicsDevice g, int i)
 	    {
-		    int i = this.GlyphWidth[ch] & 255;
-
-		    if (i == 0)
+		    if (GlyphTextures[i] == null)
 		    {
-			    return 0.0F;
-		    }
+			    if (ResourcePack.TryGetTexture($"font/unicode_page_{i:x2}", out Bitmap bmp))
+			    {
+				    Texture2D t = BitmapToTexture2D(g, bmp);
+				    GlyphTextures[i] = t;
+
+				    return t;
+			    }
+			}
 		    else
 		    {
-			    int k = i >> 4;
-			    int l = i & 15;
-			    var f = k;
-			    var f1 = (l + 1);
-			    var x = (ch % 16 * 16) + f;
-			    var y = ((ch & 255) / 16 * 16);
-			    float f4 = f1 - f - 0.02F;
-			    float f5 = italic ? 1.0F : 0.0F;
+			    return GlyphTextures[i];
 
-			    var sourceRectangle = new Rectangle(x, y, l, FONT_HEIGHT);
-			    var destRectangle = new Rectangle(
-				    (int)(PosX + f4 / 2.0F + f5),
-				    (int)(PosY),
-				    (int)(l),
-				    (int)(FONT_HEIGHT));
-
-			    sb.Draw(FontTexture, destRectangle, sourceRectangle, TextColor);
-
-				return (f1 - f) / 2.0F + 1.0F;
 		    }
+
+		    return FontTexture;
 	    }
 
-		private void RenderStringAtPos(SpriteBatch sb, string text, bool shadow)
+	    private Vector2 RenderStringAtPos(SpriteBatch sb, string text, bool shadow, Vector2 pos, Vector2 scale)
 		{
-			for (int i = 0; i < text.Length; ++i)
+			Vector2 size = new Vector2();
+			for (int i = 0; i < text.Length; i++)
 			{
 				char c0 = text[i];
 
 				if (c0 == 167 && i + 1 < text.Length)
 				{
-					int i1 = "0123456789abcdefklmnor".IndexOf(text[i + 1].ToString().ToLower()[0]);
+					char colorSymb = text[i + 1].ToString().ToLower()[0];
+					var ccc = "0123456789abcdefklmnor";
+					int i1 = ccc.IndexOf(colorSymb);
 
 					if (i1 < 16)
 					{
@@ -215,9 +214,13 @@ namespace Alex.ResourcePackLib
 							i1 += 16;
 						}
 
-						int j1 = this.colorCode[i1];
-						this.textColor = j1;
-						Color((float)(j1 >> 16) / 255.0F, (float)(j1 >> 8 & 255) / 255.0F, (float)(j1 & 255) / 255.0F, TextColor.A);
+						var c = API.Utils.TextColor.GetColor(colorSymb);
+						
+						uint j1 = c.ForegroundColor.PackedValue;
+						this.textColor = (int)j1;
+
+						TextColor = c.ForegroundColor;
+						//Color(new Color((uint) j1), TextColor.A);
 					}
 					else if (i1 == 16)
 					{
@@ -246,10 +249,10 @@ namespace Alex.ResourcePackLib
 						this.strikethroughStyle = false;
 						this.underlineStyle = false;
 						this.italicStyle = false;
-						Color(TextColor.R, TextColor.B, TextColor.G, TextColor.A);
+						TextColor = new Color((uint) textColor);
 					}
 
-					++i;
+					i++;
 				}
 				else
 				{
@@ -279,35 +282,35 @@ namespace Alex.ResourcePackLib
 
 					if (flag)
 					{
-						this.PosX -= f1;
-						this.PosY -= f1;
+						pos.X -= f1;
+						pos.Y -= f1;
 					}
 
-					float f = this.RenderChar(sb, c0, this.italicStyle);
+					float f = this.RenderChar(sb, c0, this.italicStyle, pos, scale);
 
 					if (flag)
 					{
-						this.PosX += f1;
-						this.PosY += f1;
+						pos.X += f1;
+						pos.Y += f1;
 					}
 
 					if (this.boldStyle)
 					{
-						this.PosX += f1;
+						pos.X += f1;
 
 						if (flag)
 						{
-							this.PosX -= f1;
-							this.PosY -= f1;
+							pos.X -= f1;
+							pos.Y -= f1;
 						}
 
-						this.RenderChar(sb, c0, this.italicStyle);
-						this.PosX -= f1;
+						this.RenderChar(sb, c0, this.italicStyle, pos, scale);
+						pos.X -= f1;
 
 						if (flag)
 						{
-							this.PosX += f1;
-							this.PosY += f1;
+							pos.X += f1;
+							pos.Y += f1;
 						}
 
 						++f;
@@ -342,15 +345,13 @@ namespace Alex.ResourcePackLib
 						GlStateManager.enableTexture2D();
 					}*/
 
-					this.PosX += (float)((int)f);
+					pos.X += f;
+					size.X += f;
 				}
 			}
-		}
 
-	    private void Color(float red, float blue, float green, float alpha)
-	    {
-		   TextColor = new Color(red, green, blue, alpha);
-	    }
+			return size;
+		}
 
 	    public int GetStringWidth(string text)
 	    {
@@ -360,45 +361,114 @@ namespace Alex.ResourcePackLib
 		    }
 		    else
 		    {
-			    int i = 0;
-			    bool flag = false;
-
-			    for (int j = 0; j < text.Length; ++j)
-			    {
-				    char c0 = text[j];
-				    int k = this.GetCharWidth(c0);
-
-				    if (k < 0 && j < text.Length - 1)
-				    {
-					    ++j;
-					    c0 = text[j];
-
-					    if (c0 != 'l' && c0 != 'L')
-					    {
-						    if (c0 == 'r' || c0 == 'R')
-						    {
-							    flag = false;
-						    }
-					    }
-					    else
-					    {
-						    flag = true;
-					    }
-
-					    k = 0;
-				    }
-
-				    i += k;
-
-				    if (flag && k > 0)
-				    {
-					    ++i;
-				    }
-			    }
-
-			    return i;
+			    return (int)Math.Ceiling(GetStringSize(text, Vector2.One).X);
 		    }
 	    }
+
+		protected float RenderDefaultChar(SpriteBatch sb, int ch, bool italic, Vector2 pos, Vector2 scale)
+		{
+			int x = ch % 16 * 8;
+			int y = ch / 16 * 8;
+			int k = italic ? 1 : 0;
+			//this.renderEngine.bindTexture(this.locationFontTexture);
+			int l = this.CharWidth[ch];
+			float f = (float)l - 0.01F;
+
+			var sourceRectangle = new Rectangle(x, y, l, FONT_HEIGHT);
+			var destRectangle = new Rectangle(
+				(int)(pos.X),
+				(int)(pos.Y),
+				(int)(l),
+				(int)(FONT_HEIGHT));
+
+			sb.Draw(FontTexture, destRectangle, sourceRectangle, TextColor);
+
+			return (float)l;
+		}
+
+		protected float RenderUnicodeChar(SpriteBatch sb, char ch, bool italic, Vector2 pos, Vector2 scale)
+		{
+			int i = this.GlyphWidth[ch] & 255;
+
+			if (i == 0)
+			{
+				return 0.0F;
+			}
+			else
+			{
+				var texture = LoadGlyphTexture(sb.GraphicsDevice, ch / 256);
+
+				int k = i >> 4;
+				int l = i & 15;
+				var f = k;
+				var f1 = (l + 1);
+				var x = (ch % 16 * 16) + f;
+				var y = ((ch & 255) / 16 * 16);
+				float f4 = f1 - f - 0.02F;
+				float f5 = italic ? 1.0F : 0.0F;
+
+				var sourceRectangle = new Rectangle(x, y, l, FONT_HEIGHT * 2);
+				var destRectangle = new Rectangle(
+					(int)(pos.X),
+					(int)(pos.Y),
+					(int)(((l + f4 + f5)) * scale.X),
+					(int)((FONT_HEIGHT * 2) * scale.Y));
+
+				sb.Draw(texture, destRectangle, sourceRectangle, TextColor);
+
+				return destRectangle.Width + (((f1 - f) / 2.0F + 1.0F) * scale.X);
+			}
+		}
+
+		public Vector2 GetStringSize(string text, Vector2 scale)
+		{
+			float width = 0, height = 0;
+
+			foreach (var line in text.Split(new string[] {Environment.NewLine}, StringSplitOptions.RemoveEmptyEntries))
+			{
+				float lineWidth = 0;
+				for (int index = 0; index < line.Length; index++)
+				{
+					var ch = line[index];
+
+					if (ch == 167)
+					{
+						index++;
+						continue;
+					}
+
+					if (ch == ' ')
+					{
+						lineWidth += ((Unicode ? 8.0F : 4.0f) * scale.X);
+						continue;
+					}
+
+					int i = this.GlyphWidth[ch] & 255;
+
+					if (i > 0)
+					{
+						int k = i >> 4;
+						int l = i & 15;
+						var f = k;
+						var f1 = (l + 1);
+
+						float f4 = f1 - f - 0.02F;
+						//float f5 = italic ? 1.0F : 0.0F;
+
+						lineWidth += (int) (((l + f4)) * scale.X) + (((f1 - f) / 2.0F + 1.0F) * scale.X);
+					}
+				}
+
+				if (lineWidth > width)
+				{
+					width = lineWidth;
+				}
+
+				height += (((Unicode ? FONT_HEIGHT * 2 : FONT_HEIGHT)) * scale.Y);
+			}
+
+			return new Vector2(width, height);
+		}
 
 		public int GetCharWidth(char character)
 	    {
@@ -408,7 +478,7 @@ namespace Alex.ResourcePackLib
 		    }
 		    else if (character == ' ')
 		    {
-			    return 4;
+			    return (int) ((Unicode ? 8.0F : 4.0f));
 		    }
 		    else
 		    {
@@ -424,7 +494,7 @@ namespace Alex.ResourcePackLib
 				    int k = j >> 4;
 				    int l = j & 15;
 				    ++l;
-				    return ((l - k) / 2 + 1);
+				    return ((l - k) / 2);
 			    }
 			    else
 			    {
@@ -444,55 +514,79 @@ namespace Alex.ResourcePackLib
 
 	    public int DrawString(SpriteBatch sb, String text, int x, int y, int color)
 	    {
-		    return this.DrawString(sb, text, (float)x, (float)y, color, false);
+		    return this.DrawString(sb, text, (float)x, (float)y, color, false, Vector2.One);
 	    }
 
-	    public int DrawString(SpriteBatch sb, string text, float x, float y, int color, bool dropShadow)
+		public int DrawString(SpriteBatch sb, string text, float x, float y, int color, bool dropShadow)
+		{
+			return DrawString(sb, text, x, y, color, dropShadow, Vector2.One);
+		}
+
+		public int DrawString(SpriteBatch sb, string text, float x, float y, int color, bool dropShadow, Vector2 scale)
+		{
+			int lineWidth;
+			this.ResetStyles();
+
+			if (dropShadow)
+			{
+				lineWidth = this.RenderString(sb, text, x + 1.0F, y + 1.0F, color, true, scale);
+				lineWidth = Math.Max(lineWidth, this.RenderString(sb, text, x, y, color, false, scale));
+			}
+			else
+			{
+				lineWidth = this.RenderString(sb, text, x, y, color, false, scale);
+			}
+
+			return (int) (lineWidth);
+		}
+
+		private int RenderString(SpriteBatch sb, string text, float x, float y, int color, bool dropShadow, Vector2 scale)
 	    {
-		    this.ResetStyles();
-		    int i;
+		    var pos = new Vector2(x, y);
 
-		    if (dropShadow)
-		    {
-			    i = this.RenderString(sb, text, x + 1.0F, y + 1.0F, color, true);
-			    i = Math.Max(i, this.RenderString(sb, text, x, y, color, false));
-		    }
-		    else
-		    {
-			    i = this.RenderString(sb, text, x, y, color, false);
-		    }
-
-		    return i;
-	    }
-
-	    private int RenderString(SpriteBatch sb, string text, float x, float y, int color, bool dropShadow)
-	    {
-		    if (text == null)
+			if (text == null)
 		    {
 			    return 0;
 		    }
 		    else
 		    {
-			  //  if (this.bidiFlag)
-			    {
-				 //   text = this.bidiReorder(text);
-			    }
+			    float width = 0, height = 0;
 
-			    if ((color & -67108864) == 0)
+			    foreach (var line in text.Split(new string[] {Environment.NewLine}, StringSplitOptions.RemoveEmptyEntries))
 			    {
-				    color |= -16777216;
-			    }
+				    float lineWidth = 0;
 
-			    if (dropShadow)
-			    {
-				    color = (color & 16579836) >> 2 | color & -16777216;
-			    }
+				    //  if (this.bidiFlag)
+				    {
+					    //   text = this.bidiReorder(text);
+				    }
 
-			    Color((float)(color >> 16 & 255) / 255.0F, (float)(color >> 8 & 255) / 255.0F, (float)(color & 255) / 255.0F, (float)(color >> 24 & 255) / 255.0F);
-			    this.PosX = x;
-			    this.PosY = y;
-			    this.RenderStringAtPos(sb, text, dropShadow);
-			    return (int)this.PosX;
+				    if ((color & -67108864) == 0)
+				    {
+					    color |= -16777216;
+				    }
+
+				    if (dropShadow)
+				    {
+					    color = (color & 16579836) >> 2 | color & -16777216;
+				    }
+
+
+				    TextColor = new Color((float) (color >> 16 & 255) / 255.0F, (float) (color >> 8 & 255) / 255.0F,
+					    (float) (color & 255) / 255.0F, (float) (color >> 24 & 255) / 255.0F);
+					//Color((float)(color >> 16 & 255) / 255.0F, (float)(color >> 8 & 255) / 255.0F, (float)(color & 255) / 255.0F, (float)(color >> 24 & 255) / 255.0F);
+					//	this.PosX = x;
+					//   this.PosY = y;
+				    lineWidth = this.RenderStringAtPos(sb, line, dropShadow, pos + new Vector2(0, height), scale).X;
+				    if (lineWidth > width)
+				    {
+					    width = lineWidth;
+				    }
+
+				    height += (((Unicode ? FONT_HEIGHT * 2 : FONT_HEIGHT)) * scale.Y);
+				}
+
+			    return (int) (Math.Ceiling(width));
 		    }
 	    }
 	}

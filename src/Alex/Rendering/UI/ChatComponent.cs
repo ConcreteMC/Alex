@@ -6,6 +6,7 @@ using Alex.API.Data;
 using Alex.API.Utils;
 using Alex.Gamestates;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using NLog;
 
@@ -27,18 +28,20 @@ namespace Alex.Rendering.UI
 
 		public void Render(RenderArgs args)
 		{
-			float horizontalOffset = 5;
-			var heightCalc = Alex.Font.MeasureString("!");
+			Vector2 scale = new Vector2(1.25f, 1.25f);
 
-			args.SpriteBatch.Begin();
+			float horizontalOffset = 5;
+			var heightCalc = Alex.FontRender.GetStringSize("!", scale);
+
+			args.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied);
 			try
 			{
 				if (RenderChatInput)
 				{
-					string chatInput = _input.ToString().StripIllegalCharacters();
+					string chatInput = _input.ToString();
 					if (chatInput.Length > 0)
 					{
-						heightCalc = Alex.Font.MeasureString(chatInput);
+						heightCalc = Alex.FontRender.GetStringSize(chatInput, scale);
 					}
 
 					int extra = 0;
@@ -48,12 +51,11 @@ namespace Alex.Rendering.UI
 					}
 
 					args.SpriteBatch.FillRectangle(
-						new Rectangle(0, (int) (args.GraphicsDevice.Viewport.Height - (heightCalc.Y + 5)),
+						new Rectangle(0, (int) (args.GraphicsDevice.Viewport.Height - (heightCalc.Y + 25)),
 							(args.GraphicsDevice.Viewport.Width / 2) + extra, (int) heightCalc.Y),
 						new Color(Color.Black, 64));
 
-					args.SpriteBatch.DrawString(Alex.Font, chatInput,
-						new Vector2(5, (int) (args.GraphicsDevice.Viewport.Height - (heightCalc.Y + 5))), Color.White);
+					Alex.FontRender.DrawString(args.SpriteBatch, chatInput.ToString(), 5, (int)(args.GraphicsDevice.Viewport.Height - (heightCalc.Y + 25)), (int)Color.White.PackedValue, false, scale);
 				}
 
 				if (ChatMessages.Count > 0)
@@ -61,7 +63,7 @@ namespace Alex.Rendering.UI
 					var count = 2;
 					foreach (var msg in ChatMessages.TakeLast(5).Reverse())
 					{
-						heightCalc = Alex.Font.MeasureString(msg.ToString().StripIllegalCharacters());
+						heightCalc = Alex.FontRender.GetStringSize(msg.RawMessage, scale);
 
 						int extra = 0;
 						if (heightCalc.X > args.GraphicsDevice.Viewport.Width / 2f)
@@ -70,12 +72,14 @@ namespace Alex.Rendering.UI
 						}
 
 						args.SpriteBatch.FillRectangle(
-							new Rectangle(0, (int) (args.GraphicsDevice.Viewport.Height - ((heightCalc.Y * count) + 10)),
+							new Rectangle(0, (int) (args.GraphicsDevice.Viewport.Height - ((heightCalc.Y * count) + 25)),
 								(args.GraphicsDevice.Viewport.Width / 2) + extra, (int) heightCalc.Y),
 							new Color(Color.Black, 64));
 
-						msg.Render(args.SpriteBatch, Alex.Font,
-							new Vector2(horizontalOffset, (int) (args.GraphicsDevice.Viewport.Height - ((heightCalc.Y * count) + 10))));
+						var p = new Vector2(horizontalOffset,
+							(int) (args.GraphicsDevice.Viewport.Height - ((heightCalc.Y * count) + 25)));
+						Alex.FontRender.DrawString(args.SpriteBatch, msg.RawMessage, p.X, p.Y, (int) Color.White.PackedValue, false, scale);
+
 						count++;
 					}
 				}

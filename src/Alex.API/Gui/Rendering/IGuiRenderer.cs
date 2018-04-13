@@ -8,7 +8,7 @@ namespace Alex.API.Gui.Rendering
         void Init(GraphicsDevice graphics);
 
 
-        SpriteFont DefaultFont { get; }
+        IFontRenderer DefaultFont { get; }
 
         NinePatchTexture2D GetTexture(GuiTextures guiTexture);
 

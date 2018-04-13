@@ -15,12 +15,13 @@ namespace Alex.Gamestates.Gui
         {
             AddChild(_leftContainer = new GuiStackContainer()
             {
-                HorizontalAlignment = HorizontalAlignment.Left,
+	            HorizontalAlignment = HorizontalAlignment.Left,
                 VerticalAlignment   = VerticalAlignment.Top,
 
                 Orientation = Orientation.Vertical,
                 HorizontalContentAlignment = HorizontalAlignment.Left,
                 VerticalContentAlignment = VerticalAlignment.Top,
+				Spacing = 1
             });
             
             AddChild(_rightContainer = new GuiStackContainer()
@@ -29,16 +30,19 @@ namespace Alex.Gamestates.Gui
                 VerticalAlignment   = VerticalAlignment.Top,
 
                 Orientation                = Orientation.Vertical,
-                HorizontalContentAlignment = HorizontalAlignment.Right,
+	            HorizontalContentAlignment = HorizontalAlignment.Right,
                 VerticalContentAlignment   = VerticalAlignment.Top,
-            });
+	            Spacing = 1
+			});
         }
 
         public void AddDebugLeft(Func<string> getDebugString)
         {
             _leftContainer.AddChild(new GuiAutoUpdatingTextElement(getDebugString)
             {
-                TextColor = TextColor.White
+                TextColor = TextColor.White,
+				//HorizontalAlignment = HorizontalAlignment.Left,
+				Scale = 0.5f
             });
         }
 
@@ -46,8 +50,10 @@ namespace Alex.Gamestates.Gui
         {
             _rightContainer.AddChild(new GuiAutoUpdatingTextElement(getDebugString)
             {
-                TextColor = TextColor.White
-            });
+                TextColor = TextColor.White,
+				//HorizontalAlignment = HorizontalAlignment.Right,
+	            Scale = 0.5f
+			});
         }
 
         protected override void OnUpdate(GameTime gameTime)
