@@ -140,6 +140,13 @@ namespace Alex
 
 		protected override void LoadContent()
 		{
+			if (!File.Exists(Path.Combine("assets", "Minecraftia.xnb")))
+			{
+				File.WriteAllBytes(Path.Combine("assets", "Minecraftia.xnb"), global::Alex.Resources.Minecraftia1);
+			}
+
+			Font = Content.Load<SpriteFont>("Minecraftia");
+
 			_spriteBatch = new SpriteBatch(GraphicsDevice);
 			InputManager = new InputManager(this);
 			GuiRenderer = new GuiRenderer(this);
@@ -151,7 +158,7 @@ namespace Alex
 			GameStateManager.SetActiveState("splash");
 
 		//	Log.Info($"Initializing Alex...");
-			ThreadPool.QueueUserWorkItem(o => { InitializeGame(); });
+			ThreadPool.QueueUserWorkItem(o => { InitializeGame(splash); });
 		}
 
 		protected override void UnloadContent()
@@ -179,20 +186,15 @@ namespace Alex
 			base.Draw(gameTime);
 		}
 
-		private void InitializeGame()
+		private void InitializeGame(IProgressReceiver progressReceiver)
 		{
+			progressReceiver.UpdateProgress(0, "Initializing...");
+
 			Extensions.Init(GraphicsDevice);
 
-			Font = LoadFont("Minecraftia");
-			AltFont = LoadFont("Kenney_Future_Square");
-			//var shader = Content.Load<EffectContent>(Path.Combine("shaders", "hlsl", "renderchunk.vertex"));
-			
-			//Log.Info($"Loading blockstate metadata...");
-			//BlockFactory.Init();
-
-		//	Log.Info($"Loading resources...");
+			//	Log.Info($"Loading resources...");
 			Resources = new ResourceManager(GraphicsDevice);
-			if (!Resources.CheckResources(GraphicsDevice, GameSettings))
+			if (!Resources.CheckResources(GraphicsDevice, GameSettings, progressReceiver))
 			{
 				Exit();
 				return;
@@ -202,9 +204,6 @@ namespace Alex
 
 			GuiRenderer.LoadResourcePackTextures(Resources.ResourcePack);
 			//UiManager.Theme = Resources.UiThemeFactory.GetTheme();
-
-			//GamestateManager.AddState("login", new LoginState(this));
-			//GamestateManager.SetActiveState("login");
 
 			GameStateManager.AddState("title", new TitleState(this)); 
 			GameStateManager.AddState("options", new OptionsState(this));
@@ -219,20 +218,6 @@ namespace Alex
 			}
 
 			GameStateManager.RemoveState("splash");
-
-		//	Log.Info($"Game initialized!");
-		}
-		
-		private SpriteFont LoadFont(string fontName)
-		{
-			if (!File.Exists(Path.Combine("assets", $"{fontName}.xnb")))
-			{
-
-					File.WriteAllBytes(Path.Combine("assets", $"{fontName}.xnb"), global::Alex.Resources.ResourceManager.GetObject(fontName) as byte[]);
-				
-			}
-
-			return Content.Load<SpriteFont>(fontName);
 		}
 
 		public void LoadWorld(WorldProvider worldProvider, INetworkProvider networkProvider)
@@ -260,5 +245,10 @@ namespace Alex
 			var javaProvider = new JavaWorldProvider(this, ServerEndPoint, Username, UUID, AccessToken, out INetworkProvider networkProvider);
 			LoadWorld(javaProvider, networkProvider);
 		}
+	}
+
+	public interface IProgressReceiver
+	{
+		void UpdateProgress(int percentage, string statusMessage);
 	}
 }

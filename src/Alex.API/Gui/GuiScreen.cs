@@ -4,7 +4,7 @@ namespace Alex.API.Gui
 {
     public class GuiScreen : GuiElement
     {
-        private Game Game { get; }
+        protected Game Game { get; }
         
         public GuiScreen(Game game)
         {

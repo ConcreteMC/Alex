@@ -45,7 +45,9 @@ namespace Alex.API.Gui.Elements
             }
         }
 
-        protected override void OnInit(IGuiRenderer renderer)
+	    public float Scale { get; set; } = 1f;
+	    public Color Color { get; set; } = Color.Black;
+		protected override void OnInit(IGuiRenderer renderer)
         {
             base.OnInit(renderer);
             Font = renderer.DefaultFont;
@@ -58,20 +60,22 @@ namespace Alex.API.Gui.Elements
 
         protected override void OnDraw(GuiRenderArgs renderArgs)
         {
-            if (!string.IsNullOrWhiteSpace(Text) && Font != null)
-            {
-                renderArgs.DrawString(Position, Font, Text, TextColor, Scale);
-            }
+            //if (!string.IsNullOrWhiteSpace(Text) && Font != null)
+            //{
+            //    renderArgs.DrawString(Position, Font, Text, TextColor, Scale);
+            //}
+
+            renderArgs.SpriteBatch.DrawString(Font, Text, Bounds.Location.ToVector2(), Color, 0f, Vector2.Zero, new Vector2(Scale, Scale), SpriteEffects.None, 0f);
         }
 
         private void OnTextUpdated()
         {
             var size = Font?.MeasureString(Text) ?? Vector2.Zero;
 
-            size *= Scale;
+            Width  = (int)Math.Ceiling(size.X * Scale);
+            Height = (int)Math.Ceiling(size.Y * Scale);
 
-            Width  = (int)Math.Ceiling(size.X);
-            Height = (int)Math.Ceiling(size.Y);
+			UpdateLayout();
         }
     }
 
