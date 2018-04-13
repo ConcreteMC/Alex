@@ -1,10 +1,16 @@
-﻿using Alex.API.Gui;
+﻿using System.Threading;
+using System.Threading.Tasks;
+using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Rendering;
 using Alex.Gamestates.Gui;
+using Alex.Graphics;
+using Alex.Graphics.Models;
 using Alex.Worlds;
 using Alex.Worlds.Generators;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 
 namespace Alex.Gamestates
 {
@@ -12,8 +18,12 @@ namespace Alex.Gamestates
 	{
 		private GuiDebugInfo _debugInfo;
 
-		public TitleState(Alex alex) : base(alex)
+		//private GuiPanoramaSkyBox _backgroundSkyBox;
+
+		public TitleState(Alex alex, ContentManager content) : base(alex)
 		{
+			//_backgroundSkyBox = new GuiPanoramaSkyBox(alex, alex.GraphicsDevice, content);
+
 			Gui = new GuiScreen(Alex)
 			{
 				DefaultBackgroundTexture = GuiTextures.TitleScreenBackground
@@ -64,7 +74,21 @@ namespace Alex.Gamestates
 			//};
 			//Gui.AddChild(logo);
 
+			//SynchronizationContext.Current.Send((o) => _backgroundSkyBox.Load(Alex.GuiRenderer), null);
+
 			Alex.IsMouseVisible = true;
+		}
+
+		protected override void OnUpdate(GameTime gameTime)
+		{
+			//_backgroundSkyBox.Update(gameTime);
+			base.OnUpdate(gameTime);
+		}
+
+		protected override void OnDraw3D(RenderArgs args)
+		{
+			//_backgroundSkyBox.Draw(args);
+			base.OnDraw3D(args);
 		}
 
 		protected override void OnShow()
@@ -107,10 +131,5 @@ namespace Alex.Gamestates
 		{
 			Debug(new DebugWorldGenerator());
 		}
-	}
-
-	class TitleSkyBoxBackground
-	{
-
 	}
 }

@@ -1,6 +1,8 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Threading;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.Utils
@@ -33,6 +35,31 @@ namespace Alex.Utils
 			texture.SetData(imgData);
 
 			return texture;
+		}
+
+		public static TextureCube TexturesToCube(GraphicsDevice device, int size, Texture2D front, Texture2D right, Texture2D back,
+		                                         Texture2D      left,   Texture2D up,    Texture2D down)
+		{
+			var cube = new TextureCube(device, size, false, SurfaceFormat.Color);
+			
+			cube.SetCubeFaceTexture(CubeMapFace.PositiveX, front);
+			cube.SetCubeFaceTexture(CubeMapFace.PositiveZ, right);
+			cube.SetCubeFaceTexture(CubeMapFace.NegativeX, back);
+			cube.SetCubeFaceTexture(CubeMapFace.NegativeZ, left);
+			cube.SetCubeFaceTexture(CubeMapFace.PositiveY, up);
+			cube.SetCubeFaceTexture(CubeMapFace.NegativeY, down);
+
+			return cube;
+		}
+
+		public static void SetCubeFaceTexture(this TextureCube cube, CubeMapFace face, Texture2D texture)
+		{
+			//if(texture.Width || cube.Size != texture.Height) throw new ArgumentOutOfRangeException(nameof(texture.Bounds));
+
+			uint[] imgData = new uint[texture.Width * texture.Height];
+
+			texture.GetData(imgData);
+			cube.SetData(face, imgData);
 		}
 
 		public static Texture2D ImageToTexture2D(GraphicsDevice device, Image bmp)

@@ -17,5 +17,12 @@
         ButtonHover,
         ButtonFocused,
         ButtonDisabled,
+
+        Panorama0,
+        Panorama1,
+        Panorama2,
+        Panorama3,
+        Panorama4,
+        Panorama5,
     }
 }

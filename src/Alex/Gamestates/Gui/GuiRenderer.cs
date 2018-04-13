@@ -68,6 +68,14 @@ namespace Alex.Gamestates.Gui
 
             // Load other resources
             LoadTextureFromResourcePack(GuiTextures.TitleScreenBackground, resourcePack, "gui/options_background");
+
+            // Panorama
+            LoadTextureFromResourcePack(GuiTextures.Panorama0, resourcePack, "gui/title/background/panorama_0");
+            LoadTextureFromResourcePack(GuiTextures.Panorama1, resourcePack, "gui/title/background/panorama_1");
+            LoadTextureFromResourcePack(GuiTextures.Panorama2, resourcePack, "gui/title/background/panorama_2");
+            LoadTextureFromResourcePack(GuiTextures.Panorama3, resourcePack, "gui/title/background/panorama_3");
+            LoadTextureFromResourcePack(GuiTextures.Panorama4, resourcePack, "gui/title/background/panorama_4");
+            LoadTextureFromResourcePack(GuiTextures.Panorama5, resourcePack, "gui/title/background/panorama_5");
         }
 
         private void LoadTextureFromEmbeddedResource(GuiTextures texture, byte[] resource)
@@ -98,5 +106,9 @@ namespace Alex.Gamestates.Gui
             return (NinePatchTexture2D)new Texture2D(_graphicsDevice, 1, 1);
         }
 
+        public Texture2D GetTexture2D(GuiTextures guiTexture)
+        {
+            return GetTexture(guiTexture).Texture;
+        }
     }
 }
