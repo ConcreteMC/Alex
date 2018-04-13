@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using Alex.Graphics.UI;
+using Alex.API.Gui;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using NLog;
@@ -17,13 +17,13 @@ namespace Alex.Gamestates
 
         private GraphicsDevice Graphics { get; }
         private SpriteBatch SpriteBatch { get; }
-
-	    private UiManager UiManager { get; }
-        public GameStateManager(GraphicsDevice graphics, SpriteBatch spriteBatch, UiManager uiManager)
+		
+	    public GuiManager GuiManager { get; private set; }
+        public GameStateManager(GraphicsDevice graphics, SpriteBatch spriteBatch, GuiManager guiManager)
         { 
             Graphics = graphics;
             SpriteBatch = spriteBatch;
-	        UiManager = uiManager;
+	        GuiManager = guiManager;
 
             States = new ConcurrentDictionary<string, GameState>();
 		}

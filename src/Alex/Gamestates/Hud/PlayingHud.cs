@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Alex.API.Gui;
+using Alex.API.Gui.Elements;
+using Alex.API.Gui.Rendering;
+using Alex.API.Input;
 using Alex.Gamestates.Gui;
 using Alex.Gamestates.Playing;
-using Alex.Graphics.Gui;
-using Alex.Graphics.Gui.Elements;
-using Alex.Graphics.Gui.Rendering;
-using Alex.Input;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Gamestates.Hud

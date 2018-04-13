@@ -111,9 +111,29 @@ namespace Alex {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
+        internal static byte[] Kenney_Future_Square {
+            get {
+                object obj = ResourceManager.GetObject("Kenney_Future_Square", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
         internal static byte[] logo {
             get {
                 object obj = ResourceManager.GetObject("logo", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] logo2 {
+            get {
+                object obj = ResourceManager.GetObject("logo2", resourceCulture);
                 return ((byte[])(obj));
             }
         }
@@ -131,9 +151,9 @@ namespace Alex {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] Minecraftia1 {
+        internal static byte[] Minecraftia {
             get {
-                object obj = ResourceManager.GetObject("Minecraftia1", resourceCulture);
+                object obj = ResourceManager.GetObject("Minecraftia", resourceCulture);
                 return ((byte[])(obj));
             }
         }

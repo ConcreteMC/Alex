@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Alex.Graphics.Gui;
-using Alex.Graphics.Gui.Rendering;
+﻿using Alex.API.Graphics;
+using Alex.API.Gui;
+using Alex.API.Gui.Rendering;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -21,7 +19,7 @@ namespace Alex.Gamestates.Gui
         public override int Width => 20;
         public override int Height => 20;
 
-        public Texture2D SelectedBackground { get;private set; }
+        public NinePatchTexture2D SelectedBackground { get;private set; }
 
         public GuiInventoryItem()
         {
@@ -43,7 +41,7 @@ namespace Alex.Gamestates.Gui
             {
                 var bounds = Bounds;
                 bounds.Inflate(1, 1);
-                args.SpriteBatch.Draw(SelectedBackground, bounds, null, Color.White, 0, Vector2.Zero, SpriteEffects.None, 0);
+                args.DrawNinePatch(bounds, SelectedBackground, TextureRepeatMode.NoRepeat);
             }
         }
     }

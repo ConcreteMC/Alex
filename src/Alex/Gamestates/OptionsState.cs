@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Alex.Graphics.UI.Controls;
-using Alex.Graphics.UI.Layout;
+﻿using Alex.API.Gui;
+using Alex.API.Gui.Elements;
+using Alex.API.Gui.Elements.Controls;
 
 namespace Alex.Gamestates
 {
@@ -14,18 +12,16 @@ namespace Alex.Gamestates
 
         protected override void OnLoad(RenderArgs args)
         {
-            var stackPanel = new UiStackPanel();
+            var stackPanel = new GuiStackContainer();
 
-            var backButton = new UiButton("Back", () =>
+            var backButton = new GuiBeaconButton("Back", () =>
             {
                 Alex.GameStateManager.Back();
             });
 
-            var toggle1 = new UiToggleButton();
-
             stackPanel.AddChild(backButton);
-            stackPanel.AddChild(toggle1);
 
+            Gui = new GuiScreen(Alex);
             Gui.AddChild(stackPanel);
         }
     }

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Alex.Graphics.Gui;
+﻿using Alex.API.Gui;
 
 namespace Alex.Gamestates.Gui
 {

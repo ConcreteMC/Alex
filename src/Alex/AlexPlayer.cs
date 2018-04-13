@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Alex.Graphics.UI.Input;
-using Alex.Input;
+using Alex.API.Input;
 using Microsoft.Xna.Framework;
 
 namespace Alex

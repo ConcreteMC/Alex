@@ -1,11 +1,5 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using Alex.API.Graphics;
-using Alex.Gamestates.Gui;
-using Alex.Graphics;
-using Alex.Graphics.Gui;
-using Alex.Graphics.UI;
-using Alex.Rendering.UI;
+﻿using Alex.API.Graphics;
+using Alex.API.Gui;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -13,9 +7,7 @@ namespace Alex.Gamestates
 {
 	public class GameState
 	{
-		public UiContainer Gui { get; protected set; }
-
-		public GuiManager GuiManager { get; private set; }
+		public GuiScreen Gui { get; protected set; }
 
 		protected GraphicsDevice Graphics { get; }
 
@@ -26,7 +18,6 @@ namespace Alex.Gamestates
 		{
 			Alex = alex;
 			Graphics = alex.GraphicsDevice;
-			GuiManager = new GuiManager(Alex, new GuiRenderer(alex));
 		}
 
 		public Viewport Viewport => Graphics.Viewport;
@@ -42,13 +33,6 @@ namespace Alex.Gamestates
 
 		public void Load(RenderArgs args)
 		{
-			GuiManager.Init(Alex.GraphicsDevice);
-			Gui = new UiContainer
-			{
-				ClassName = "GuiRoot"
-			};
-
-
 			OnLoad(args);
 
 			if (Gui != null)
@@ -65,8 +49,6 @@ namespace Alex.Gamestates
 		public void Draw2D(RenderArgs args)
 		{
 			OnDraw2D(args);
-
-			GuiManager.Draw(args.GameTime);
 		}
 
 		public void Draw3D(RenderArgs args)
@@ -77,18 +59,15 @@ namespace Alex.Gamestates
 		public void Update(GameTime gameTime)
 		{
 			OnUpdate(gameTime);
-
-			GuiManager.Update(gameTime);
 		}
 
 		public void Show()
 		{
-			OnShow();
 			if (Gui != null)
 			{
-				Alex.UiManager.Root.AddChild(Gui);
-				Gui.UpdateLayout();
+				Alex.GuiManager.AddScreen(Gui);
 			}
+			OnShow();
 		}
 
 		public void Hide()
@@ -97,8 +76,7 @@ namespace Alex.Gamestates
 			
 			if (Gui != null)
 			{
-				Alex.UiManager.Root.RemoveChild(Gui);
-				Gui.UpdateLayout();
+				Alex.GuiManager.RemoveScreen(Gui);
 			}
 		}
 		

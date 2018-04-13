@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Alex.Graphics.Gui;
-using Alex.Graphics.Gui.Rendering;
+﻿using System.Linq;
+using Alex.API.Gui;
+using Alex.API.Gui.Rendering;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Gamestates.Gui

@@ -3,7 +3,7 @@ using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks;
-using Alex.Entities;
+using Alex.Gamestates.Gui;
 using Alex.Gamestates.Hud;
 using Alex.Graphics.Models;
 using Alex.Rendering.Camera;
@@ -27,6 +27,10 @@ namespace Alex.Gamestates.Playing
 
 		private WorldProvider WorldProvider { get; }
 		public INetworkProvider NetworkProvider { get; }
+
+		private PlayingHud _playingHud;
+		private GuiDebugInfo _debugInfo;
+
 		public PlayingState(Alex alex, GraphicsDevice graphics, WorldProvider worldProvider, INetworkProvider networkProvider) : base(alex)
 		{
 			NetworkProvider = networkProvider;
@@ -47,16 +51,56 @@ namespace Alex.Gamestates.Playing
 			World.WorldInfo = info;
 
 			Chat.ChatProvider = chatProvider;
+
+			_playingHud = new PlayingHud(Alex, World.Player.Controller);
+			_debugInfo = new GuiDebugInfo(alex);
+			FpsCounter = new FpsMonitor();
+			InitDebugInfo();
 		}
 
 		protected override void OnLoad(RenderArgs args)
 		{
-			GuiManager.AddScreen(new PlayingHud(Alex, World.Player.Controller));
-			FpsCounter = new FpsMonitor();
 
 			World.SpawnPoint = WorldProvider.GetSpawnPoint();
 			World.Camera.MoveTo(World.GetSpawnPoint(), Vector3.Zero);
 			base.OnLoad(args);
+		}
+
+		protected override void OnShow()
+		{
+			base.OnShow();
+			Alex.GuiManager.AddScreen(_playingHud);
+			Alex.GuiManager.AddScreen(_debugInfo);
+		}
+
+		protected override void OnHide()
+		{
+			Alex.GuiManager.RemoveScreen(_debugInfo);
+			Alex.GuiManager.RemoveScreen(_playingHud);
+			base.OnHide();
+		}
+
+		private void InitDebugInfo()
+		{
+			_debugInfo.AddDebugLeft(() =>
+			{
+				FpsCounter.Update();
+				return $"Alex {Alex.Version} ({FpsCounter.Value} FPS, {World.ChunkUpdates}:{World.LowPriorityUpdates} chunk updates)";
+			});
+			_debugInfo.AddDebugLeft(() =>
+			{
+				var pos = World.Player.KnownPosition;
+				var blockPos = pos.GetCoordinates3D();
+				return $"Position: (X={pos.X:##.00}, Y={pos.Y:##.00}, Z={pos.Z:##.00}) / Block: ({blockPos.X:D}, {blockPos.Y:D}, {blockPos.Z:D})";
+			});
+			_debugInfo.AddDebugLeft(() =>
+			{
+				var pos = World.Player.KnownPosition;
+				return  $"Facing: {GetCardinalDirection(pos)} (HeadYaw={pos.HeadYaw:##.00}, Yaw={pos.Yaw:##.00}, Pitch={pos.Pitch:##.00})";
+			});
+			_debugInfo.AddDebugLeft(() => $"Vertices: {World.Vertices}");
+			_debugInfo.AddDebugLeft(() => $"Chunks: {World.ChunkCount}, {World.ChunkManager.RenderedChunks}");
+			_debugInfo.AddDebugLeft(() => $"Entities: {World.EntityManager.EntityCount}, {World.EntityManager.EntitiesRendered}");
 		}
 
 		private float AspectRatio { get; set; }
@@ -234,10 +278,10 @@ namespace Alex.Gamestates.Playing
 
 				World.Render2D(args);
 
-				if (RenderDebug)
-				{
-					RenderDebugScreen(args);
-				}
+				//if (RenderDebug)
+				//{
+				//	RenderDebugScreen(args);
+				//}
 			}
 			finally
 			{

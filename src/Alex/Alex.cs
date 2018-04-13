@@ -3,13 +3,13 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Threading;
+using Alex.API.Gui;
+using Alex.API.Input;
 using Alex.API.Network;
 using Alex.API.World;
 using Alex.Gamestates;
+using Alex.Gamestates.Gui;
 using Alex.Gamestates.Playing;
-using Alex.Graphics;
-using Alex.Graphics.UI;
-using Alex.Rendering;
 using Alex.Utils;
 using Alex.Worlds.Java;
 using Microsoft.Xna.Framework;
@@ -35,6 +35,7 @@ namespace Alex
 		public static bool IsMultiplayer { get; set; } = false;
 
 		public static SpriteFont Font;
+		public static SpriteFont AltFont;
 
 		private SpriteBatch _spriteBatch;
 
@@ -42,7 +43,9 @@ namespace Alex
 		public GameStateManager GameStateManager { get; private set; }
 		public ResourceManager Resources { get; private set; }
 
-		public UiManager UiManager { get; private set; }
+		public InputManager InputManager { get; private set; }
+		public GuiRenderer GuiRenderer { get; private set; }
+		public GuiManager GuiManager { get; private set; }
 
 		private bool BypassTitleState { get; set; } = false;
 		public Alex(LaunchSettings launchSettings)
@@ -67,14 +70,12 @@ namespace Alex
 			{
 				PreferMultiSampling = false,
 				SynchronizeWithVerticalRetrace = false,
-				GraphicsProfile = GraphicsProfile.Reach
+				GraphicsProfile = GraphicsProfile.Reach,
 			};
 			Content.RootDirectory = "assets";
 
 			IsFixedTimeStep = false;
            // graphics.ToggleFullScreen();
-
-			UiManager = new UiManager(this);
 			
 			this.Window.AllowUserResizing = true;
 			this.Window.ClientSizeChanged += (sender, args) =>
@@ -140,8 +141,10 @@ namespace Alex
 		protected override void LoadContent()
 		{
 			_spriteBatch = new SpriteBatch(GraphicsDevice);
-			UiManager.Init(GraphicsDevice, _spriteBatch);
-			GameStateManager = new GameStateManager(GraphicsDevice, _spriteBatch, UiManager);
+			InputManager = new InputManager(this);
+			GuiRenderer = new GuiRenderer(this);
+			GuiManager = new GuiManager(this, InputManager, GuiRenderer);
+			GameStateManager = new GameStateManager(GraphicsDevice, _spriteBatch, GuiManager);
 
 			var splash = new SplashScreen(this);
 			GameStateManager.AddState("splash", splash);
@@ -159,8 +162,10 @@ namespace Alex
 		protected override void Update(GameTime gameTime)
 		{
 			base.Update(gameTime);
+			
+			InputManager.Update();
 
-			UiManager.Update(gameTime);
+			GuiManager.Update(gameTime);
 			GameStateManager.Update(gameTime);
 		}
 
@@ -169,7 +174,7 @@ namespace Alex
 			GraphicsDevice.RasterizerState = RasterizerState.CullClockwise;
 			GameStateManager.Draw(gameTime);
 
-			UiManager.Draw(gameTime);
+			GuiManager.Draw(gameTime);
 
 			base.Draw(gameTime);
 		}
@@ -178,12 +183,8 @@ namespace Alex
 		{
 			Extensions.Init(GraphicsDevice);
 
-			if (!File.Exists(Path.Combine("assets", "Minecraftia.xnb")))
-			{
-				File.WriteAllBytes(Path.Combine("assets", "Minecraftia.xnb"), global::Alex.Resources.Minecraftia1);
-			}
-
-			Font = Content.Load<SpriteFont>("Minecraftia");
+			Font = LoadFont("Minecraftia");
+			AltFont = LoadFont("Kenney_Future_Square");
 			//var shader = Content.Load<EffectContent>(Path.Combine("shaders", "hlsl", "renderchunk.vertex"));
 			
 			//Log.Info($"Loading blockstate metadata...");
@@ -199,7 +200,8 @@ namespace Alex
 
 			Mouse.SetPosition(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2);
 
-			UiManager.Theme = Resources.UiThemeFactory.GetTheme();
+			GuiRenderer.LoadResourcePackTextures(Resources.ResourcePack);
+			//UiManager.Theme = Resources.UiThemeFactory.GetTheme();
 
 			//GamestateManager.AddState("login", new LoginState(this));
 			//GamestateManager.SetActiveState("login");
@@ -219,6 +221,18 @@ namespace Alex
 			GameStateManager.RemoveState("splash");
 
 		//	Log.Info($"Game initialized!");
+		}
+		
+		private SpriteFont LoadFont(string fontName)
+		{
+			if (!File.Exists(Path.Combine("assets", $"{fontName}.xnb")))
+			{
+
+					File.WriteAllBytes(Path.Combine("assets", $"{fontName}.xnb"), global::Alex.Resources.ResourceManager.GetObject(fontName) as byte[]);
+				
+			}
+
+			return Content.Load<SpriteFont>(fontName);
 		}
 
 		public void LoadWorld(WorldProvider worldProvider, INetworkProvider networkProvider)
