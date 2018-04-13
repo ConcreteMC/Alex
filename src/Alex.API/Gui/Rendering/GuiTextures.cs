@@ -24,5 +24,20 @@
         Panorama3,
         Panorama4,
         Panorama5,
+
+        ServerPing0,
+        ServerPing1,
+        ServerPing2,
+        ServerPing3,
+        ServerPing4,
+        ServerPing5,
+        
+        ServerPingPending1,
+        ServerPingPending2,
+        ServerPingPending3,
+        ServerPingPending4,
+        ServerPingPending5,
+
+        DefaultServerIcon,
     }
 }

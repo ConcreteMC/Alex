@@ -91,7 +91,7 @@ namespace Alex.API.Gui.Elements
 
         private void OnTextUpdated()
         {
-            var size = Font?.MeasureString(Text) ?? Vector2.Zero;
+            var size = string.IsNullOrWhiteSpace(Text) ? Vector2.Zero : (Font?.MeasureString(Text) ?? Vector2.Zero);
 
             Width  = (int)Math.Ceiling(size.X * Scale);
             Height = (int)Math.Ceiling(size.Y * Scale);

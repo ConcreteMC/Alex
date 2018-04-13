@@ -78,12 +78,24 @@ namespace Alex.Gamestates
 		    return false;
 	    }
 
+	    public bool SetActiveState<TStateType>() where TStateType : GameState, new()
+	    {
+		    var key = typeof(TStateType).FullName;
+		    if (!States.TryGetValue(key, out var state))
+		    {
+				state = new TStateType();
+				AddState(key, state);
+		    }
+
+			return SetActiveState(state);
+	    }
+
 	    public bool SetActiveState(GameState state)
 	    {
 		    var current = ActiveState;
 		    current?.Hide();
 
-		    if (current != null && state.ParentState == null)
+		    if (current != null && state != null && state.ParentState == null)
 		    {
 			    state.ParentState = current;
 		    }

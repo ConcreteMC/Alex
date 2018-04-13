@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Graphics;
+using Alex.API.Graphics.Textures;
 using Alex.API.Gui.Rendering;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.API.Gui
 {
@@ -41,6 +43,21 @@ namespace Alex.API.Gui
         public TextureRepeatMode BackgroundRepeatMode { get; set; } = TextureRepeatMode.Stretch;
         public TextureSlice2D DefaultBackground { get; set; }
         public TextureSlice2D Background { get; set; }
+        public Vector2 BackgroundScale { get; set; } = Vector2.One;
+
+        private Color? _backgroundOverlayColor;
+
+        public Color? BackgroundOverlayColor
+        {
+            get => _backgroundOverlayColor;
+            set
+            {
+                _backgroundOverlayColor = value;
+                BackgroundOverlay = null;
+            }
+        }
+
+        public TextureSlice2D BackgroundOverlay { get; set; }
 
         private int _width = -1;
         private int _height = -1;
@@ -52,8 +69,9 @@ namespace Alex.API.Gui
                 if (ParentElement != null && HorizontalAlignment == HorizontalAlignment.Stretch) return ParentElement.Width;
                 if (_width < 0)
                 {
-                    return (HasChildren
-                                ? Math.Abs(Children.Max(c => c.Bounds.Right) - Children.Min(c => c.Bounds.Left))
+                    var childrenToCheck = Children.Where(c => c.HorizontalAlignment != HorizontalAlignment.Stretch).ToArray();
+                    return (childrenToCheck.Any()
+                                ? Math.Abs(childrenToCheck.Max(c => c.Bounds.Right) - childrenToCheck.Min(c => c.Bounds.Left))
                                 : 0);
                 }
 
@@ -70,8 +88,9 @@ namespace Alex.API.Gui
                 if (ParentElement != null && VerticalAlignment == VerticalAlignment.Stretch) return ParentElement.Height;
                 if (_height < 0)
                 {
-                    return (HasChildren
-                                ? Math.Abs(Children.Max(c => c.Bounds.Bottom) - Children.Min(c => c.Bounds.Top))
+                    var childrenToCheck = Children.Where(c => c.VerticalAlignment != VerticalAlignment.Stretch).ToArray();
+                    return (childrenToCheck.Any()
+                                ? Math.Abs(childrenToCheck.Max(c => c.Bounds.Bottom) - childrenToCheck.Min(c => c.Bounds.Top))
                                 : 0);
                 }
 
@@ -192,9 +211,19 @@ namespace Alex.API.Gui
         {
             //args.DrawRectangle(Bounds, DebugColor);
 
+            if (BackgroundOverlayColor.HasValue && BackgroundOverlay == null)
+            {
+                BackgroundOverlay = new ColorTexture2D(args.Graphics, BackgroundOverlayColor.Value);
+            }
+
             if (Background != null)
             {
-                args.Draw(Background, Bounds, BackgroundRepeatMode);
+                args.Draw(Background, Bounds, BackgroundRepeatMode, BackgroundScale);
+            }
+
+            if (BackgroundOverlay != null)
+            {
+                args.Draw(BackgroundOverlay, Bounds, BackgroundRepeatMode, BackgroundScale);
             }
         }
 

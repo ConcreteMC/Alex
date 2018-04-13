@@ -5,6 +5,7 @@ using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Rendering;
 using Alex.Gamestates.Gui;
+using Alex.GameStates.Gui.MainMenu;
 using Alex.Graphics;
 using Alex.Graphics.Models;
 using Alex.Worlds;
@@ -42,6 +43,11 @@ namespace Alex.Gamestates
 			{
 				//TODO: Switch to multiplayer serverlist (maybe choose PE or Java?)
 				Alex.ConnectToServer();
+			});
+
+			stackMenu.AddMenuItem("Multiplayer Servers", () =>
+			{
+				Alex.GameStateManager.SetActiveState<MultiplayerServerSelectionState>();
 			});
 
 			stackMenu.AddMenuItem("Debug Blockstates", DebugWorldButtonActivated);

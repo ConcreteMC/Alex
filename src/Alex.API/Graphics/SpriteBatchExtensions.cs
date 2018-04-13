@@ -45,6 +45,8 @@ namespace Alex.API.Graphics
         
         public static void Draw(this SpriteBatch spriteBatch, TextureSlice2D textureSlice, Vector2 position) =>
             Draw(spriteBatch, textureSlice, position, Color.White);
+        public static void Draw(this SpriteBatch spriteBatch, TextureSlice2D textureSlice, Vector2 position, Vector2? scale) =>
+            Draw(spriteBatch, textureSlice, position, null, Color.White, 0f, Vector2.Zero, scale.HasValue ? scale.Value : Vector2.One);
         public static void Draw(this SpriteBatch spriteBatch, TextureSlice2D textureSlice, Vector2 position, Rectangle? sourceRectangle) =>
             Draw(spriteBatch, textureSlice, position, sourceRectangle, Color.White);
         #endregion

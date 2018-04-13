@@ -40,22 +40,23 @@ namespace Alex.API.Gui.Rendering
             // Left
             SpriteBatch.Draw(texture, new Rectangle(bounds.X, bounds.Y, thickness, bounds.Height), color);
         }
-
         public void Draw(TextureSlice2D    texture, Rectangle bounds,
-                         TextureRepeatMode repeatMode = TextureRepeatMode.Stretch)
+                         TextureRepeatMode repeatMode = TextureRepeatMode.Stretch, Vector2? scale = null)
         {
             if (texture is NinePatchTexture2D ninePatch)
             {
-                DrawNinePatch(bounds, ninePatch, repeatMode);
+                DrawNinePatch(bounds, ninePatch, repeatMode, scale);
             }
             else
             {
-                FillRectangle(bounds, texture, repeatMode);
+                FillRectangle(bounds, texture, repeatMode, scale);
             }
         }
         
-        public void DrawNinePatch(Rectangle bounds, NinePatchTexture2D ninePatchTexture, TextureRepeatMode repeatMode)
+        public void DrawNinePatch(Rectangle bounds, NinePatchTexture2D ninePatchTexture, TextureRepeatMode repeatMode, Vector2? scale = null)
         {
+            if(scale == null) scale = Vector2.One;
+            
             if (ninePatchTexture.Padding == Thickness.Zero)
             {
                 FillRectangle(bounds, ninePatchTexture.Texture, repeatMode);
@@ -74,8 +75,10 @@ namespace Alex.API.Gui.Rendering
                     SpriteBatch.Draw(ninePatchTexture, sourceRectangle: srcPatch, destinationRectangle: dstPatch);
             }
         }
-        public void FillRectangle(Rectangle bounds, TextureSlice2D texture, TextureRepeatMode repeatMode)
+        public void FillRectangle(Rectangle bounds, TextureSlice2D texture, TextureRepeatMode repeatMode, Vector2? scale = null)
         {
+            if(scale == null) scale = Vector2.One;
+
             if (repeatMode == TextureRepeatMode.NoRepeat)
             {
                 SpriteBatch.Draw(texture, bounds);
@@ -89,15 +92,17 @@ namespace Alex.API.Gui.Rendering
             }
             else if (repeatMode == TextureRepeatMode.Tile)
             {
-                var repeatX = Math.Ceiling((float) bounds.Width  / texture.Width);
-                var repeatY = Math.Ceiling((float) bounds.Height / texture.Height);
+                Vector2 size = texture.Bounds.Size.ToVector2() * scale.Value;
+
+                var repeatX = Math.Ceiling((float) bounds.Width  / size.X);
+                var repeatY = Math.Ceiling((float) bounds.Height / size.Y);
 
                 for (int i = 0; i < repeatX; i++)
                 {
                     for (int j = 0; j < repeatY; j++)
                     {
-                        var p = bounds.Location.ToVector2() + new Vector2(i * texture.Width, j * texture.Height);
-                        SpriteBatch.Draw(texture, p);
+                        var p = bounds.Location.ToVector2() + new Vector2(i * size.X, j * size.Y);
+                        SpriteBatch.Draw(texture, p, scale);
                     }
                 }
             }

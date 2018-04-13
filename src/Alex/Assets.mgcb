@@ -38,3 +38,11 @@
 /processorParam:DebugMode=Auto
 /build:Resources/Skybox.fx
 
+#begin Resources/File.spritefont
+/importer:FontDescriptionImporter
+/processor:FontTextureProcessor
+/processorParam:FirstCharacter= 
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Color
+/build:Resources/File.spritefont
+
