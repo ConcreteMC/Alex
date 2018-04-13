@@ -17,6 +17,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using NLog;
 using Color = Microsoft.Xna.Framework.Color;
+using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace Alex.ResourcePackLib
 {
@@ -205,8 +206,10 @@ namespace Alex.ResourcePackLib
 		public FontRenderer AsciiFont { get; private set; } = null;
 		private FontRenderer LoadFont(GraphicsDevice graphicsDevice, Bitmap fontTexture, bool unicode)
 		{
-
-			return new FontRenderer(unicode, BitmapToTexture2D(graphicsDevice, fontTexture), GlyphWidth);
+			return new FontRenderer(unicode, BitmapToTexture2D(graphicsDevice, fontTexture), GlyphWidth)
+			{
+				//Scale = 12f
+			};
 		}
 
 		private void LoadGlyphSizes(ZipArchiveEntry entry)

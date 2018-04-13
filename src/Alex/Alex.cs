@@ -172,6 +172,7 @@ namespace Alex
 			GameStateManager.Update(gameTime);
 		}
 
+		private FontRenderer FontRender = null;
 		protected override void Draw(GameTime gameTime)
 		{
 			GraphicsDevice.RasterizerState = RasterizerState.CullClockwise;
@@ -179,6 +180,9 @@ namespace Alex
 
 			UiManager.Draw(gameTime);
 
+			//_spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointWrap, transformMatrix:Matrix.CreateScale(4f));
+			//FontRender?.DrawString(_spriteBatch, "test 123", 10, 10, (int) Color.Black.PackedValue);
+			//_spriteBatch.End();
 			base.Draw(gameTime);
 		}
 
@@ -196,6 +200,7 @@ namespace Alex
 				return;
 			}
 
+			FontRender = Resources.ResourcePack.AsciiFont;
 			Mouse.SetPosition(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2);
 
 			UiManager.Theme = Resources.UiThemeFactory.GetTheme();

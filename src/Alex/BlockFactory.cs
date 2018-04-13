@@ -353,7 +353,7 @@ namespace Alex
 			Regex lowerCaseNextToNumber = new Regex("(?<=[0-9])[a-z]");
 			Regex upperCaseInside = new Regex("(?<=[A-Z])[A-Z]+?((?=[A-Z][a-z])|(?=[0-9]))");
 
-			// replace white spaces with undescore, then replace all invalid chars with empty string
+			// replace white spaces with undescore, then replace all invalid Characters with empty string
 			var pascalCase = invalidCharsRgx.Replace(whiteSpace.Replace(original, "_"), string.Empty)
 				// split by underscores
 				.Split(new char[] { '_' }, StringSplitOptions.RemoveEmptyEntries)
