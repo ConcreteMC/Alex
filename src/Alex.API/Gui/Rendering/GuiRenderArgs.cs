@@ -41,6 +41,18 @@ namespace Alex.API.Gui.Rendering
             SpriteBatch.Draw(texture, new Rectangle(bounds.X, bounds.Y, thickness, bounds.Height), color);
         }
 
+        public void Draw(TextureSlice2D    texture, Rectangle bounds,
+                         TextureRepeatMode repeatMode = TextureRepeatMode.Stretch)
+        {
+            if (texture is NinePatchTexture2D ninePatch)
+            {
+                DrawNinePatch(bounds, ninePatch, repeatMode);
+            }
+            else
+            {
+                FillRectangle(bounds, texture, repeatMode);
+            }
+        }
         
         public void DrawNinePatch(Rectangle bounds, NinePatchTexture2D ninePatchTexture, TextureRepeatMode repeatMode)
         {
@@ -62,16 +74,16 @@ namespace Alex.API.Gui.Rendering
                     SpriteBatch.Draw(ninePatchTexture.Texture, sourceRectangle: srcPatch, destinationRectangle: dstPatch, color: Color.White);
             }
         }
-        public void FillRectangle(Rectangle bounds, Texture2D texture, TextureRepeatMode repeatMode)
+        public void FillRectangle(Rectangle bounds, TextureSlice2D texture, TextureRepeatMode repeatMode)
         {
             if (repeatMode == TextureRepeatMode.NoRepeat)
             {
-                SpriteBatch.Draw(texture, new Rectangle(bounds.Location, new Point(texture.Width, texture.Height)), texture.Bounds,
+                SpriteBatch.Draw(texture.Texture, new Rectangle(bounds.Location, new Point(texture.Width, texture.Height)), texture.Bounds,
                                  Color.White);
             }
             else if (repeatMode == TextureRepeatMode.Stretch)
             {
-                SpriteBatch.Draw(texture, bounds, Color.White);
+                SpriteBatch.Draw(texture.Texture, bounds, Color.White);
             }
             else if (repeatMode == TextureRepeatMode.ScaleToFit)
             {
@@ -86,7 +98,7 @@ namespace Alex.API.Gui.Rendering
                     for (int j = 0; j < repeatY; j++)
                     {
                         var p = bounds.Location.ToVector2() + new Vector2(i * texture.Width, j * texture.Height);
-                        SpriteBatch.Draw(texture, p, texture.Bounds, Color.White);
+                        SpriteBatch.Draw(texture.Texture, p, texture.Bounds, Color.White);
                     }
                 }
             }
@@ -105,23 +117,27 @@ namespace Alex.API.Gui.Rendering
 
                 var srcHalfWidth = Math.Min(texture.Width / 2f, halfWidth);
                 var srcHalfHeight = Math.Min(texture.Height / 2f, halfHeight);
+
+                var srcX = texture.Bounds.X;
+                var srcY = texture.Bounds.Y;
+
                 int srcLeftWidth   = (int) Math.Floor(srcHalfWidth);
                 int srcRightWidth  = (int) Math.Ceiling(srcHalfWidth);
                 int srcLeftHeight  = (int) Math.Floor(srcHalfHeight);
                 int srcRightHeight = (int) Math.Ceiling(srcHalfHeight);
 
                 // Top Left
-                SpriteBatch.Draw(texture, new Rectangle(xOffset               , yOffset, dstLeftWidth, dstLeftHeight), new Rectangle(0, 0, srcLeftWidth, srcLeftHeight), Color.White);
+                SpriteBatch.Draw(texture.Texture, new Rectangle(xOffset               , yOffset, dstLeftWidth, dstLeftHeight), new Rectangle(srcX, srcY, srcLeftWidth, srcLeftHeight), Color.White);
                 
                 // Top Right
-                SpriteBatch.Draw(texture, new Rectangle(xOffset + dstLeftWidth, yOffset, dstRightWidth, dstRightHeight), new Rectangle(texture.Width - srcRightWidth, 0, srcRightWidth, srcRightHeight), Color.White);
+                SpriteBatch.Draw(texture.Texture, new Rectangle(xOffset + dstLeftWidth, yOffset, dstRightWidth, dstRightHeight), new Rectangle(texture.Width - srcRightWidth, srcY, srcRightWidth, srcRightHeight), Color.White);
 
 
                 // Bottom Left
-                SpriteBatch.Draw(texture, new Rectangle(xOffset               , yOffset + dstLeftHeight , dstLeftWidth, dstLeftHeight), new Rectangle(0, texture.Height - srcRightHeight, srcLeftWidth, srcLeftHeight), Color.White);
+                SpriteBatch.Draw(texture.Texture, new Rectangle(xOffset               , yOffset + dstLeftHeight , dstLeftWidth, dstLeftHeight), new Rectangle(srcX, texture.Height - srcRightHeight, srcLeftWidth, srcLeftHeight), Color.White);
                 
                 // Bottom Right
-                SpriteBatch.Draw(texture, new Rectangle(xOffset + dstLeftWidth, yOffset + dstRightHeight, dstRightWidth, dstRightHeight), new Rectangle(texture.Width - srcRightWidth, texture.Height - srcRightHeight, srcRightWidth, srcRightHeight), Color.White);
+                SpriteBatch.Draw(texture.Texture, new Rectangle(xOffset + dstLeftWidth, yOffset + dstRightHeight, dstRightWidth, dstRightHeight), new Rectangle(texture.Width - srcRightWidth, texture.Height - srcRightHeight, srcRightWidth, srcRightHeight), Color.White);
             }
         }
 

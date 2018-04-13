@@ -26,7 +26,7 @@ namespace Alex.Gamestates
 
 			Gui = new GuiScreen(Alex)
 			{
-				DefaultBackgroundTexture = GuiTextures.TitleScreenBackground
+				DefaultBackgroundTexture = GuiTextures.OptionsBackground
 			};
 			var stackMenu = new GuiStackMenu()
 			{

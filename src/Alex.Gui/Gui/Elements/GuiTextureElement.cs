@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Alex.API.Graphics;
 using Alex.API.Gui;
 using Alex.API.Gui.Rendering;
 using Microsoft.Xna.Framework;
@@ -10,7 +11,7 @@ namespace Alex.Graphics.Gui.Elements
 {
     public class GuiTextureElement : GuiElement
     {
-		public Texture2D Texture { get; set; }
+		public TextureSlice2D Texture { get; set; }
 	    public TextureRepeatMode RepeatMode { get; set; } = TextureRepeatMode.Stretch;
 		public GuiTextureElement()
 	    {
@@ -23,7 +24,7 @@ namespace Alex.Graphics.Gui.Elements
 
 		    if (Texture != null)
 		    {
-			    args.DrawNinePatch(Bounds, Texture, RepeatMode);
+			    args.Draw(Texture, Bounds, RepeatMode);
 		    }
 	    }
     }

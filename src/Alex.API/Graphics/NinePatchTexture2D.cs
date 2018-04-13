@@ -4,14 +4,10 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.API.Graphics
 {
-	public class NinePatchTexture2D
+	public class NinePatchTexture2D : TextureSlice2D
 	{
 		public Thickness Padding { get; }
-
-		public Texture2D Texture { get; }
-
-		public Rectangle Bounds { get; set; }
-
+		
 		public Rectangle[] SourceRegions { get; private set; }
 
 		public NinePatchTexture2D(Texture2D texture, Rectangle bounds, int sizeSlice = 0) : this(texture, bounds,
@@ -23,12 +19,9 @@ namespace Alex.API.Graphics
 		{
 		}
 
-		public NinePatchTexture2D(Texture2D texture, Rectangle bounds, Thickness padding)
+		public NinePatchTexture2D(Texture2D texture, Rectangle bounds, Thickness padding) : base(texture, bounds == Rectangle.Empty ? texture.Bounds : bounds)
 		{
-			Texture = texture;
-			Bounds  = bounds == Rectangle.Empty ? texture.Bounds : bounds;
 			Padding = padding;
-
 			SourceRegions = CreateRegions(Bounds);
 		}
 
@@ -62,12 +55,6 @@ namespace Alex.API.Graphics
 		public Rectangle[] ProjectRegions(Rectangle rectangle)
 		{
 			return CreateRegions(rectangle);
-		}
-
-		public static implicit operator NinePatchTexture2D(Texture2D texture)
-		{
-			if (texture == null) return null;
-			return new NinePatchTexture2D(texture, texture.Bounds);
 		}
 	}
 }

@@ -19,7 +19,7 @@ namespace Alex.Gamestates.Gui
         public override int Width => 20;
         public override int Height => 20;
 
-        public NinePatchTexture2D SelectedBackground { get;private set; }
+        public TextureSlice2D SelectedBackground { get;private set; }
 
         public GuiInventoryItem()
         {
@@ -41,7 +41,7 @@ namespace Alex.Gamestates.Gui
             {
                 var bounds = Bounds;
                 bounds.Inflate(1, 1);
-                args.DrawNinePatch(bounds, SelectedBackground, TextureRepeatMode.NoRepeat);
+                args.Draw(SelectedBackground, bounds, TextureRepeatMode.NoRepeat);
             }
         }
     }

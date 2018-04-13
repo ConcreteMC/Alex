@@ -6,7 +6,7 @@
         ProgressBar,
         SplashBackground,
 
-        TitleScreenBackground,
+        OptionsBackground,
 
         Inventory_HotBar,
         Inventory_HotBar_SelectedItemOverlay,
