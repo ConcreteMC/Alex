@@ -23,7 +23,7 @@ namespace Alex.Graphics.Models.Blocks
 
 		public BlockStateModel[] Models { get; set; }
 		protected ResourceManager Resources { get; }
-		private readonly IDictionary<int, FaceCache> _elementCache;
+		private readonly IDictionary<string, FaceCache> _elementCache;
 
 		public CachedResourcePackModel(ResourceManager resources, BlockStateModel[] models)
 		{
@@ -197,13 +197,14 @@ namespace Alex.Graphics.Models.Blocks
 			}
 		}
 
-		protected IDictionary<int, FaceCache> CalculateModel(BlockStateModel[] models)
+		protected IDictionary<string, FaceCache> CalculateModel(BlockStateModel[] models)
 		{
-			Dictionary<int, FaceCache> result = new Dictionary<int, FaceCache>();
+			Dictionary<string, FaceCache> result = new Dictionary<string, FaceCache>();
 			foreach (var model in models)
 			{
-				foreach (var element in model.Model.Elements)
+				for (var i = 0; i < model.Model.Elements.Length; i++)
 				{
+					var element = model.Model.Elements[i];
 					var elementFrom = new Vector3((element.From.X), (element.From.Y),
 						(element.From.Z));
 
@@ -221,7 +222,7 @@ namespace Alex.Graphics.Models.Blocks
 					foreach (var face in element.Faces)
 					{
 						VertexPositionNormalTextureColor[] faceVertices;
-					
+
 						var uv = face.Value.UV;
 
 						var text = ResolveTexture(model, face.Value.Texture);
@@ -243,7 +244,7 @@ namespace Alex.Graphics.Models.Blocks
 								vert.Position = Vector3.Transform(vert.Position, elementRotationMatrix);
 
 								//Scale the texture back to its correct size
-								if (elementRotation.Rescale) 
+								if (elementRotation.Rescale)
 								{
 									if (elementRotation.Axis == Axis.X || elementRotation.Axis == Axis.Z)
 									{
@@ -262,7 +263,9 @@ namespace Alex.Graphics.Models.Blocks
 								}
 							}
 
-							vert.Position = Vector3.Transform(vert.Position, Matrix.CreateTranslation(-element.Rotation.Origin) * GetModelRotationMatrix(model) * Matrix.CreateTranslation(element.Rotation.Origin));
+							vert.Position = Vector3.Transform(vert.Position,
+								Matrix.CreateTranslation(-element.Rotation.Origin) * GetModelRotationMatrix(model) *
+								Matrix.CreateTranslation(element.Rotation.Origin));
 
 							//Scale the position
 							vert.Position = (vert.Position / 16f);
@@ -275,6 +278,7 @@ namespace Alex.Graphics.Models.Blocks
 							{
 								maxX = vert.Position.X;
 							}
+
 							if (vert.Position.Y < minY)
 							{
 								minY = vert.Position.Y;
@@ -283,6 +287,7 @@ namespace Alex.Graphics.Models.Blocks
 							{
 								maxY = vert.Position.Y;
 							}
+
 							if (vert.Position.Z < minZ)
 							{
 								minZ = vert.Position.Z;
@@ -301,7 +306,10 @@ namespace Alex.Graphics.Models.Blocks
 						elementCache.Set(face.Key, faceVertices);
 					}
 
-					result.Add(element.GetHashCode(), elementCache);
+					if (!result.ContainsKey(model.ModelName + ":" + i))
+					{
+						result.Add(model.ModelName + ":" + i, elementCache);
+					}
 				}
 			}
 
@@ -309,7 +317,7 @@ namespace Alex.Graphics.Models.Blocks
 		}
 
 		protected VertexPositionNormalTextureColor[] GetVertices(IWorld world, Vector3 position, IBlock baseBlock,
-			BlockStateModel[] models, IDictionary<int, FaceCache> faceCache)
+			BlockStateModel[] models, IDictionary<string, FaceCache> faceCache)
 		{
 			var verts = new List<VertexPositionNormalTextureColor>(36);
 
@@ -318,14 +326,16 @@ namespace Alex.Graphics.Models.Blocks
 
 			foreach (var model in models)
 			{
-				foreach (var element in model.Model.Elements)
+				for (var i = 0; i < model.Model.Elements.Length; i++)
 				{
 					FaceCache elementCache;
-					if (!faceCache.TryGetValue(element.GetHashCode(), out elementCache))
+					if (!faceCache.TryGetValue(model.ModelName + ":" + i, out elementCache))
 					{
 						Log.Warn($"Element cache is null!");
 						continue;
 					}
+
+					var element = model.Model.Elements[i];
 
 					foreach (var face in element.Faces)
 					{
@@ -383,24 +393,25 @@ namespace Alex.Graphics.Models.Blocks
 
 						if (face.Value.TintIndex >= 0)
 						{
-							int biomeId = world.GetBiome((int)worldPosition.X, 0, (int)worldPosition.Z);
+							int biomeId = world.GetBiome((int) worldPosition.X, 0, (int) worldPosition.Z);
 
 							if (biomeId != -1)
 							{
 								var biome = BiomeUtils.GetBiomeById(biomeId);
 
-								if (baseBlock.Name.Equals("minecraft:grass_block", StringComparison.InvariantCultureIgnoreCase))
+								if (baseBlock.Name.Equals("grass_block", StringComparison.InvariantCultureIgnoreCase))
 								{
-									faceColor = Resources.ResourcePack.GetGrassColor(biome.Temperature, biome.Downfall, (int)worldPosition.Y);
+									faceColor = Resources.ResourcePack.GetGrassColor(biome.Temperature, biome.Downfall, (int) worldPosition.Y);
 								}
 								else
 								{
-									faceColor = Resources.ResourcePack.GetFoliageColor(biome.Temperature, biome.Downfall, (int)worldPosition.Y);
+									faceColor = Resources.ResourcePack.GetFoliageColor(biome.Temperature, biome.Downfall, (int) worldPosition.Y);
 								}
 							}
 						}
 
-						faceColor = LightingUtils.AdjustColor(faceColor, cull, GetLight(world, worldPosition + cullFace, model.Model.AmbientOcclusion), element.Shade);
+						faceColor = LightingUtils.AdjustColor(faceColor, cull,
+							GetLight(world, worldPosition + cullFace, model.Model.AmbientOcclusion), element.Shade);
 
 						for (var index = 0; index < faceVertices.Length; index++)
 						{

@@ -75,10 +75,11 @@ namespace Alex.Entities
 			}
 			else
 			{
-				var f = _registeredRenderers.FirstOrDefault(x => x.Key.Contains(name));
-				if (f.Value != null)
+				var f = _registeredRenderers.FirstOrDefault(x => x.Key.Contains(name)).Value;
+
+				if (f != null)
 				{
-					return f.Value(texture);
+					return f(texture);
 				}
 			}
 			return null;
