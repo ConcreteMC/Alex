@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
+using Alex.API.Utils;
 using Alex.Entities;
 using Alex.Rendering;
 using Alex.ResourcePackLib;
@@ -21,6 +23,7 @@ namespace Alex
 
 		public McResourcePack ResourcePack { get; private set; }
 		public BedrockResourcePack BedrockResourcePack { get; private set; }
+
 		public AtlasGenerator Atlas { get; private set; }
 		
 		private GraphicsDevice Graphics { get; set; }
@@ -73,12 +76,12 @@ namespace Alex
 
 			if (!replaceTextures)
 			{
-				Atlas.LoadResourcePackOnTop(graphics, resourcePack.Textures.Where(x => x.Key.StartsWith("blocks")).ToArray(),
+				Atlas.LoadResourcePackOnTop(graphics, resourcePack.TexturesAsBitmaps.Where(x => x.Key.StartsWith("blocks")).ToArray(),
 					progressReceiver);
 			}
 			else
 			{
-				Atlas.GenerateAtlas(graphics, resourcePack.Textures.Where(x => x.Key.StartsWith("blocks")).ToArray(),
+				Atlas.GenerateAtlas(graphics, resourcePack.TexturesAsBitmaps.Where(x => x.Key.StartsWith("blocks")).ToArray(),
 					progressReceiver);
 			}
 

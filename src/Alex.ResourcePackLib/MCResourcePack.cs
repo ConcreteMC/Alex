@@ -6,6 +6,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Alex.API.Utils;
 using Alex.API.World;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.BlockStates;
@@ -28,6 +29,7 @@ namespace Alex.ResourcePackLib
 		public IReadOnlyDictionary<string, BlockStateResource> BlockStates => _blockStates;
 		public IReadOnlyDictionary<string, BlockModel> BlockModels => _blockModels;
 		public IReadOnlyDictionary<string, ResourcePackItem> ItemModels => _itemModels;
+		public IReadOnlyDictionary<string, Bitmap> TexturesAsBitmaps => _bitmapCache;
 		public IReadOnlyDictionary<string, Texture2D> Textures => _textureCache;
 
 	//	private ZipArchive _archive;
@@ -111,10 +113,10 @@ namespace Alex.ResourcePackLib
 				if (textureMatchs.Success)
 				{
 					// TODO: HACK
-					if (textureMatchs.Groups["filename"].Value.StartsWith("colormap/"))
-					{
-						LoadBitmap(entry, textureMatchs);
-					}
+					//if (textureMatchs.Groups["filename"].Value.StartsWith("colormap/"))
+					//{
+					//	LoadBitmap(entry, textureMatchs);
+					//}
 
 					LoadTexture(graphics, entry, textureMatchs);
 					continue;
@@ -171,6 +173,32 @@ namespace Alex.ResourcePackLib
 			LoadColormap();
 
 			LoadFonts(graphics);
+		}
+		private void LoadMeta(ZipArchive archive)
+		{
+			ResourcePackInfo info;
+
+			var entry = archive.GetEntry("pack.mcmeta");
+			if (entry == null)
+			{
+				info = new ResourcePackInfo();
+			}
+			else
+			{
+				using (TextReader reader = new StreamReader(entry.Open()))
+				{
+					ResourcePackInfoWrapper wrap = MCJsonConvert.DeserializeObject<ResourcePackInfoWrapper>(reader.ReadToEnd());
+					info = wrap.pack;
+				}
+			}
+
+
+			var imgEntry = archive.GetEntry("pack.png");
+			if (imgEntry != null)
+			{
+				Bitmap bmp = new Bitmap(imgEntry.Open());
+				info.Logo = bmp;
+			}
 		}
 
 		#region Fonts
@@ -235,17 +263,16 @@ namespace Alex.ResourcePackLib
 			}
 		}
 
-		private void LoadBitmap(ZipArchiveEntry entry, Match match)
+		private Bitmap LoadBitmap(ZipArchiveEntry entry, Match match)
 		{
 			Bitmap img;
 			using (var s = entry.Open())
 			{
-				img = (Bitmap) Image.FromStream(s);
+				img = new Bitmap(s);
 			}
 
-			if (img == null) return;
-
 			_bitmapCache[match.Groups["filename"].Value] = img;
+			return img;
 		}
 
 		public bool TryGetBitmap(string textureName, out Bitmap bitmap)
@@ -263,13 +290,13 @@ namespace Alex.ResourcePackLib
 		
 		private void LoadTexture(GraphicsDevice graphics, ZipArchiveEntry entry, Match match)
 		{
-			Texture2D img;
-			using (var s = entry.Open())
+			var textureName = match.Groups["filename"].Value;
+			if (!TryGetBitmap(textureName, out var bmp))
 			{
-				img = Texture2D.FromStream(graphics, s);
+				bmp = LoadBitmap(entry, match);
 			}
-
-			_textureCache[match.Groups["filename"].Value] = img;
+			
+			_textureCache[match.Groups["filename"].Value] = TextureUtils.ImageToTexture2D(graphics, bmp);
 		}
 
 		public bool TryGetTexture(BlockModel model, string textureName, out Texture2D texture)
@@ -295,39 +322,17 @@ namespace Alex.ResourcePackLib
 			if (_textureCache.TryGetValue(textureName, out texture))
 				return true;
 
+			if (TryGetBitmap(textureName, out Bitmap bmp))
+			{
+
+			}
+
 			texture = null;
 			return false;
 		}
 
 		#endregion
 		
-		private void LoadMeta(ZipArchive archive)
-		{
-			ResourcePackInfo info;
-
-			var entry = archive.GetEntry("pack.mcmeta");
-			if (entry == null)
-			{
-				info = new ResourcePackInfo();
-			}
-			else
-			{
-				using (TextReader reader = new StreamReader(entry.Open()))
-				{
-					ResourcePackInfoWrapper wrap = MCJsonConvert.DeserializeObject<ResourcePackInfoWrapper>(reader.ReadToEnd());
-					info = wrap.pack;
-				}
-			}
-
-
-			var imgEntry = archive.GetEntry("pack.png");
-			if (imgEntry != null)
-			{
-				Bitmap bmp = new Bitmap(imgEntry.Open());
-				info.Logo = bmp;
-			}
-		}
-
 		#region Items
 		private void LoadItemModel(ZipArchiveEntry entry, Match match)
 		{

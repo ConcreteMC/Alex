@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Security.Cryptography;
 using System.Text;
 using Alex.API.Graphics;
+using Alex.API.Utils;
 using Alex.Gamestates;
 using Alex.Rendering.Camera;
 using Alex.Utils;
@@ -11,6 +12,7 @@ using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Color = Microsoft.Xna.Framework.Color;
+using MathF = System.MathF;
 
 namespace Alex.Graphics.Models
 {

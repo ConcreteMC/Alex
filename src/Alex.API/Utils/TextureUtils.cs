@@ -1,11 +1,9 @@
-﻿using System;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using System.Threading;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Alex.Utils
+namespace Alex.API.Utils
 {
 	public static class TextureUtils
 	{
