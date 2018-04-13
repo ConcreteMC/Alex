@@ -136,9 +136,9 @@ namespace Alex.ResourcePackLib
 		{
 			if (FontTexture == null)
 			{
-				if (ResourcePack.TryGetTexture("font/ascii", out Bitmap b))
+				if (ResourcePack.TryGetTexture("font/ascii", out Texture2D b))
 				{
-					FontTexture = BitmapToTexture2D(sb.GraphicsDevice, b);
+					FontTexture = b;
 				}
 				else
 				{
@@ -166,9 +166,8 @@ namespace Alex.ResourcePackLib
 	    {
 		    if (GlyphTextures[i] == null)
 		    {
-			    if (ResourcePack.TryGetTexture($"font/unicode_page_{i:x2}", out Bitmap bmp))
+			    if (ResourcePack.TryGetTexture($"font/unicode_page_{i:x2}", out Texture2D t))
 			    {
-				    Texture2D t = BitmapToTexture2D(g, bmp);
 				    GlyphTextures[i] = t;
 
 				    return t;

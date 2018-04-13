@@ -10,6 +10,9 @@ namespace Alex.API.Input
         Middle,
         Right,
         XButton1,
-        XButton2
+        XButton2,
+
+        ScrollUp,
+        ScrollDown,
     }
 }

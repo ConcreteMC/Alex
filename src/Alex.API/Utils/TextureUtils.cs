@@ -3,15 +3,15 @@ using System.Drawing.Imaging;
 using System.IO;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Alex.Utils
+namespace Alex.API.Utils
 {
 	public static class TextureUtils
 	{
-		public static Bitmap Texture2DToBitmap(GraphicsDevice device, Texture2D texture)
+		public static Bitmap Texture2DToBitmap(Texture2D texture)
 		{
 			uint[] imgData = new uint[texture.Height * texture.Width];
 			texture.GetData(imgData);
-			
+            
 			Bitmap bmp = new Bitmap(texture.Width, texture.Height, PixelFormat.Format32bppArgb);
 			unsafe
 			{
@@ -42,7 +42,7 @@ namespace Alex.Utils
 					bmp.LockBits(new System.Drawing.Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadOnly, bmp.PixelFormat);
 
 				uint* byteData = (uint*)origdata.Scan0;
-				
+
 				for (int i = 0; i < imgData.Length; i++)
 				{
 					var val = byteData[i];
@@ -57,6 +57,31 @@ namespace Alex.Utils
 			texture.SetData(imgData);
 
 			return texture;
+		}
+
+		public static TextureCube TexturesToCube(GraphicsDevice device, int size, Texture2D front, Texture2D right, Texture2D back,
+		                                         Texture2D      left,   Texture2D up,    Texture2D down)
+		{
+			var cube = new TextureCube(device, size, false, SurfaceFormat.Color);
+			
+			cube.SetCubeFaceTexture(CubeMapFace.PositiveX, front);
+			cube.SetCubeFaceTexture(CubeMapFace.PositiveZ, right);
+			cube.SetCubeFaceTexture(CubeMapFace.NegativeX, back);
+			cube.SetCubeFaceTexture(CubeMapFace.NegativeZ, left);
+			cube.SetCubeFaceTexture(CubeMapFace.PositiveY, up);
+			cube.SetCubeFaceTexture(CubeMapFace.NegativeY, down);
+
+			return cube;
+		}
+
+		public static void SetCubeFaceTexture(this TextureCube cube, CubeMapFace face, Texture2D texture)
+		{
+			//if(texture.Width || cube.Size != texture.Height) throw new ArgumentOutOfRangeException(nameof(texture.Bounds));
+
+			uint[] imgData = new uint[texture.Width * texture.Height];
+
+			texture.GetData(imgData);
+			cube.SetData(face, imgData);
 		}
 
 		public static Texture2D ImageToTexture2D(GraphicsDevice device, Image bmp)

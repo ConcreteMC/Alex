@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
+using System.Diagnostics;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
 namespace Alex.API.Input.Listeners
@@ -8,11 +10,30 @@ namespace Alex.API.Input.Listeners
         public MouseInputListener(PlayerIndex playerIndex) : base(playerIndex)
         {
             RegisterMap(InputCommand.Click, MouseButton.Left);
+            RegisterMap(InputCommand.HotBarSelectPrevious, MouseButton.ScrollDown);
+            RegisterMap(InputCommand.HotBarSelectNext, MouseButton.ScrollUp);
         }
+        
+        private int _lastScroll;
+        private int _scrollValue;
+
+        private ButtonState _scrollUp, _scrollDown, _lastScrollUp, _lastScrollDown;
 
         protected override MouseState GetCurrentState()
         {
+            _lastScroll = _scrollValue;
+            _scrollValue = CurrentState.ScrollWheelValue;
+
+            _lastScrollUp = _scrollUp;
+            _lastScrollDown = _scrollDown;
+
             return Mouse.GetState();
+        }
+
+        protected override void OnUpdate(GameTime gameTime)
+        {
+            _scrollUp = _scrollValue > _lastScroll ? ButtonState.Pressed : ButtonState.Released;
+            _scrollDown = _scrollValue < _lastScroll ? ButtonState.Pressed : ButtonState.Released;
         }
 
         protected override bool IsButtonDown(MouseState state, MouseButton buttons)
@@ -39,6 +60,12 @@ namespace Alex.API.Input.Listeners
                     return state.XButton1 == buttonState;
                 case MouseButton.XButton2:
                     return state.XButton2 == buttonState;
+                
+                // SPECIAL CASE
+                case MouseButton.ScrollUp:
+                    return state == CurrentState ? _scrollUp == buttonState : _lastScrollUp == buttonState;
+                case MouseButton.ScrollDown:
+                    return state == CurrentState ? _scrollDown == buttonState : _lastScrollDown == buttonState;
             }
 
             return false;

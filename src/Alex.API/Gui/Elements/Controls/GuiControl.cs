@@ -40,8 +40,8 @@ namespace Alex.API.Gui.Elements.Controls
         public GuiTextures? HighlightedBackgroundTexture { get; set; }
         public GuiTextures? FocusedBackgroundTexture { get; set; }
 
-        public NinePatchTexture2D HighlightedBackground { get; set; }
-        public NinePatchTexture2D FocusedBackground { get; set; }
+        public TextureSlice2D HighlightedBackground { get; set; }
+        public TextureSlice2D FocusedBackground { get; set; }
 
         public void InvokeHighlighted()
         {

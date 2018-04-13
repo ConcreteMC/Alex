@@ -40,11 +40,11 @@ namespace Alex.API.Input
             return playerInputManager;
         }
 
-        public void Update()
+        public void Update(GameTime gameTime)
         {
             foreach (var playerInputManager in PlayerInputManagers.Values.ToArray())
             {
-                playerInputManager.Update();
+               playerInputManager.Update(gameTime);
             }
         }
     }

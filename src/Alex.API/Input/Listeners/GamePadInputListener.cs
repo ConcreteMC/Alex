@@ -45,7 +45,7 @@ namespace Alex.API.Input.Listeners
             return state.IsButtonUp(buttons);
         }
 
-        protected override void OnUpdate()
+        protected override void OnUpdate(GameTime gameTime)
         {
             _gamePadCapabilities = GamePad.GetCapabilities(PlayerIndex);
         }

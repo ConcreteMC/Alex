@@ -6,7 +6,7 @@ namespace Alex.API.Input.Listeners
     {
         PlayerIndex PlayerIndex { get; }
 
-        void Update();
+        void Update(GameTime gameTime);
 
         bool IsDown(InputCommand command);
         bool IsUp(InputCommand command);

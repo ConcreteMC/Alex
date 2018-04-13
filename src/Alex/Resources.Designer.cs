@@ -71,6 +71,16 @@ namespace Alex {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] CubeModel {
+            get {
+                object obj = ResourceManager.GetObject("CubeModel", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to [
         ///	{
         ///		&quot;id&quot;: 1,
@@ -150,40 +160,47 @@ namespace Alex {
         
         /// <summary>
         ///   Looks up a localized string similar to {
-        ///  &quot;minecraft:air&quot;: {
-        ///    &quot;states&quot;: [
-        ///      {
-        ///        &quot;id&quot;: 0,
-        ///        &quot;default&quot;: true
-        ///      }
-        ///    ]
-        ///  },
-        ///  &quot;minecraft:stone&quot;: {
-        ///    &quot;states&quot;: [
-        ///      {
-        ///        &quot;id&quot;: 1,
-        ///        &quot;default&quot;: true
-        ///      }
-        ///    ]
-        ///  },
-        ///  &quot;minecraft:granite&quot;: {
-        ///    &quot;states&quot;: [
-        ///      {
-        ///        &quot;id&quot;: 2,
-        ///        &quot;default&quot;: true
-        ///      }
-        ///    ]
-        ///  },
-        ///  &quot;minecraft:polished_granite&quot;: {
-        ///    &quot;states&quot;: [
-        ///      {
-        ///        &quot;id&quot;: 3,
-        ///        &quot;default&quot;: true
-        ///      }
-        ///    ]
-        ///  },
-        ///  &quot;minecraft:diorite&quot;: {
-        ///    &quot;states&quot; [rest of string was truncated]&quot;;.
+        ///	&quot;minecraft:air&quot;: {
+        ///		&quot;states&quot;: [
+        ///			{
+        ///				&quot;id&quot;: 0,
+        ///				&quot;default&quot;: true
+        ///			}
+        ///		]
+        ///	},
+        ///	&quot;minecraft:stone&quot;: {
+        ///		&quot;states&quot;: [
+        ///			{
+        ///				&quot;id&quot;: 1,
+        ///				&quot;default&quot;: true
+        ///			}
+        ///		]
+        ///	},
+        ///	&quot;minecraft:granite&quot;: {
+        ///		&quot;states&quot;: [
+        ///			{
+        ///				&quot;id&quot;: 2,
+        ///				&quot;default&quot;: true
+        ///			}
+        ///		]
+        ///	},
+        ///	&quot;minecraft:polished_granite&quot;: {
+        ///		&quot;states&quot;: [
+        ///			{
+        ///				&quot;id&quot;: 3,
+        ///				&quot;default&quot;: true
+        ///			}
+        ///		]
+        ///	},
+        ///	&quot;minecraft:diorite&quot;: {
+        ///		&quot;states&quot;: [
+        ///			{
+        ///				&quot;id&quot;: 4,
+        ///				&quot;default&quot;: true
+        ///			}
+        ///		]
+        ///	},
+        ///	&quot;minecraft:polished_ [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string NewBlocks {
             get {
@@ -255,6 +272,16 @@ namespace Alex {
         internal static string runtimeid_table {
             get {
                 return ResourceManager.GetString("runtimeid_table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] SkyboxEffect {
+            get {
+                object obj = ResourceManager.GetObject("SkyboxEffect", resourceCulture);
+                return ((byte[])(obj));
             }
         }
         

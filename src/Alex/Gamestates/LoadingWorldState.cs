@@ -20,7 +20,7 @@ namespace Alex.Gamestates
 	    {
 		    Gui = Screen = new LoadingWorldGui(Alex)
 		    {
-				DefaultBackgroundTexture = GuiTextures.TitleScreenBackground,
+				DefaultBackgroundTexture = GuiTextures.OptionsBackground,
 			    BackgroundRepeatMode = TextureRepeatMode.ScaleToFit
 			};
 	    }

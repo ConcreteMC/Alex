@@ -39,8 +39,8 @@ namespace Alex.API.Gui
 
         public GuiTextures? DefaultBackgroundTexture { get; set; }
         public TextureRepeatMode BackgroundRepeatMode { get; set; } = TextureRepeatMode.Stretch;
-        public NinePatchTexture2D DefaultBackground { get; set; }
-        public NinePatchTexture2D Background { get; set; }
+        public TextureSlice2D DefaultBackground { get; set; }
+        public TextureSlice2D Background { get; set; }
 
         private int _width = -1;
         private int _height = -1;
@@ -194,7 +194,7 @@ namespace Alex.API.Gui
 
             if (Background != null)
             {
-                args.DrawNinePatch(Bounds, Background, BackgroundRepeatMode);
+                args.Draw(Background, Bounds, BackgroundRepeatMode);
             }
         }
 

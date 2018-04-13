@@ -151,6 +151,16 @@ namespace Alex
 
 			Font = Content.Load<SpriteFont>("Minecraftia");
 
+			
+			if (!File.Exists(Path.Combine("assets", "SkyboxEffect.xnb")))
+			{
+				File.WriteAllBytes(Path.Combine("assets", "SkyboxEffect.xnb"), global::Alex.Resources.SkyboxEffect);
+			}
+			if (!File.Exists(Path.Combine("assets", "CubeModel.xnb")))
+			{
+				File.WriteAllBytes(Path.Combine("assets", "CubeModel.xnb"), global::Alex.Resources.CubeModel);
+			}
+
 			_spriteBatch = new SpriteBatch(GraphicsDevice);
 			InputManager = new InputManager(this);
 			GuiRenderer = new GuiRenderer(this);
@@ -174,7 +184,7 @@ namespace Alex
 		{
 			base.Update(gameTime);
 			
-			InputManager.Update();
+			InputManager.Update(gameTime);
 
 			GuiManager.Update(gameTime);
 			GameStateManager.Update(gameTime);
@@ -212,7 +222,7 @@ namespace Alex
 			GuiRenderer.LoadResourcePackTextures(Resources.ResourcePack);
 			//UiManager.Theme = Resources.UiThemeFactory.GetTheme();
 
-			GameStateManager.AddState("title", new TitleState(this)); 
+			GameStateManager.AddState("title", new TitleState(this, Content)); 
 			GameStateManager.AddState("options", new OptionsState(this));
 
 			if (!BypassTitleState)

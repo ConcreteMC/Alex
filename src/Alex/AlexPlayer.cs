@@ -19,12 +19,13 @@ namespace Alex
             Alex = alex;
             PlayerIndex = playerIndex;
 
-            InputManager = new PlayerInputManager(playerIndex);
+            InputManager = alex.InputManager.GetOrAddPlayerManager(playerIndex);
         }
 
         public override void Update(GameTime gameTime)
         {
-            InputManager.Update();
+            // no. bad kenny.
+            //InputManager.Update();
 
             base.Update(gameTime);
         }
