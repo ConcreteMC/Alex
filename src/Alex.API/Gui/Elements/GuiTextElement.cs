@@ -20,7 +20,7 @@ namespace Alex.API.Gui.Elements
             }
         }
 
-        public TextColor TextColor { get; set; } = TextColor.Black;
+        public TextColor TextColor { get; set; } = TextColor.White;
 
         private Vector2? _textShadowOffset;
 

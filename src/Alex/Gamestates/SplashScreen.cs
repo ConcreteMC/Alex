@@ -3,6 +3,7 @@ using Alex.Gamestates.Gui;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Rendering;
+using Alex.API.Utils;
 using Alex.Rendering.UI;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
@@ -35,7 +36,7 @@ namespace Alex.Gamestates
 
 	public class SplashScreenGui : GuiScreen
 	{
-		private GuiContainer _container;
+		private GuiContainer _progressBarContainer;
 
 		private GuiTextElement _statusText, _percentageText;
 		private GuiProgressBar _progressBar;
@@ -48,7 +49,7 @@ namespace Alex.Gamestates
 			set
 			{
 				_textDisplay.Text = value;
-				_textDisplay.Y = -(_textDisplay.Height);
+//				_textDisplay.Y = -(_textDisplay.Height);
 			}
 		}
 
@@ -61,44 +62,67 @@ namespace Alex.Gamestates
 		protected override void OnInit(IGuiRenderer renderer)
 		{
 			Background = renderer.GetTexture(GuiTextures.SplashBackground);
-			_progressBar = new GuiProgressBar()
+
+			//AddChild(_progressBarContainer = new GuiStackContainer()
+			//{
+			//	Width  = 300,
+			//	Height = 10,
+
+			//	Y = -50,
+
+			//	HorizontalAlignment = HorizontalAlignment.Center,
+			//	VerticalAlignment   = VerticalAlignment.Bottom,
+
+			//	VerticalContentAlignment = VerticalAlignment.Center,
+			//	HorizontalContentAlignment = HorizontalAlignment.Stretch
+			//});
+
+			AddChild(_progressBarContainer = new GuiContainer()
+			{
+				Width  = 300,
+				Height = 25,
+
+				Y = -25,
+
+				HorizontalAlignment = HorizontalAlignment.Center,
+				VerticalAlignment   = VerticalAlignment.Bottom,
+			});
+
+			_progressBarContainer.AddChild(_textDisplay  = new GuiTextElement()
+			{
+				Text = Text,
+				TextColor = TextColor.Red,
+
+				VerticalAlignment = VerticalAlignment.Top,
+				HorizontalAlignment = HorizontalAlignment.Left,
+			});
+
+			_progressBarContainer.AddChild(_percentageDisplay = new GuiTextElement()
+			{
+				Text = Text,
+				TextColor = TextColor.Red,
+
+				VerticalAlignment   = VerticalAlignment.Top,
+				HorizontalAlignment = HorizontalAlignment.Right,
+			});
+
+			_progressBarContainer.AddChild(_progressBar = new GuiProgressBar()
 			{
 				Width = 300,
 				Height = 9,
-
-				Y = -50,
-
-				HorizontalAlignment = HorizontalAlignment.Center,
+				
 				VerticalAlignment = VerticalAlignment.Bottom,
-			};
-			AddChild(_progressBar);
+				HorizontalAlignment = HorizontalAlignment.Stretch,
+			});
 
-			_textDisplay  = new GuiTextElement()
-			{
-				Text = Text,
-				Font = Alex.Font,
-				HorizontalAlignment = HorizontalAlignment.Center,
-				VerticalAlignment = VerticalAlignment.Top,
-				Scale = 0.5f
-			};
-			_progressBar.AddChild(_textDisplay);
-
-			_percentageDisplay = new GuiTextElement()
-			{
-				Text = Text,
-				Font = Alex.Font,
-				HorizontalAlignment = HorizontalAlignment.Center,
-				VerticalAlignment = VerticalAlignment.Bottom,
-				Scale = 0.50f
-			};
-			_progressBar.AddChild(_percentageDisplay);
+			
 		}
 
 		public void UpdateProgress(int value)
 		{
 			_progressBar.Value = value;
 			_percentageDisplay.Text = $"{value}%";
-			_percentageDisplay.Y = _percentageDisplay.Height;
+			//_percentageDisplay.Y = _percentageDisplay.Height;
 		}
 	}
 }

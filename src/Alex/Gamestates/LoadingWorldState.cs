@@ -94,7 +94,7 @@ namespace Alex.Gamestates
 				AddChild(_progressBarContainer = new GuiStackContainer()
 				{
 					Width  = 300,
-					Height = 9,
+					Height = 30,
 					Y = -50,
 
 					HorizontalAlignment = HorizontalAlignment.Center,
