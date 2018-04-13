@@ -7,6 +7,30 @@ namespace Alex.API.Utils
 {
 	public static class TextureUtils
 	{
+		public static Bitmap Texture2DToBitmap(Texture2D texture)
+		{
+			uint[] imgData = new uint[texture.Height * texture.Width];
+			texture.GetData(imgData);
+            
+			Bitmap bmp = new Bitmap(texture.Width, texture.Height, PixelFormat.Format32bppArgb);
+			unsafe
+			{
+				BitmapData origdata =
+					bmp.LockBits(new System.Drawing.Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.WriteOnly, bmp.PixelFormat);
+
+				uint* targetData = (uint*)origdata.Scan0;
+				for (int i = 0; i < imgData.Length; i++)
+				{
+					var rgba = imgData[i];
+					targetData[i] = (rgba << (3 * 8)) | (rgba >> 8);
+				}
+
+				bmp.UnlockBits(origdata);
+			}
+
+			return bmp;
+		}
+
 		public static Texture2D BitmapToTexture2D(GraphicsDevice device, Bitmap bmp)
 		{
 			uint[] imgData = new uint[bmp.Width * bmp.Height];
