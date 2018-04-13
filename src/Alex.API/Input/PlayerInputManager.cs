@@ -28,11 +28,11 @@ namespace Alex.API.Input
             InputListeners.Add(listener);
         }
 
-        public void Update()
+        public void Update(GameTime gameTime)
         {
             foreach (var inputListener in InputListeners.ToArray())
             {
-                inputListener.Update();
+                inputListener.Update(gameTime);
             }
         }
 

@@ -172,7 +172,7 @@ namespace Alex
 		{
 			base.Update(gameTime);
 			
-			InputManager.Update();
+			InputManager.Update(gameTime);
 
 			GuiManager.Update(gameTime);
 			GameStateManager.Update(gameTime);

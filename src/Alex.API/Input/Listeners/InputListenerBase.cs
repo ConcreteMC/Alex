@@ -21,15 +21,15 @@ namespace Alex.API.Input.Listeners
             PlayerIndex = playerIndex;
         }
 
-        public void Update()
+        public void Update(GameTime gameTime)
         {
             PreviousState = CurrentState;
             CurrentState = GetCurrentState();
 
-            OnUpdate();
+            OnUpdate(gameTime);
         }
 
-        protected virtual void OnUpdate()
+        protected virtual void OnUpdate(GameTime gameTime)
         {
 
         }
