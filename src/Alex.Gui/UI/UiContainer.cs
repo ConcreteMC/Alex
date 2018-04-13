@@ -78,11 +78,13 @@ namespace Alex.Graphics.UI
 		{
 			base.OnUpdate(gameTime);
 
-			var controls = Controls;
+			var controls = Controls.ToArray();
 			if (!controls.Any()) return;
 
 			foreach (var control in controls)
 			{
+				if (control == null) continue;
+				
 				control.Update(gameTime);
 			}
 		}

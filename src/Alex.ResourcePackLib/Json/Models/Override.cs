@@ -6,7 +6,7 @@ namespace Alex.ResourcePackLib.Json.Models
 {
     public class Override
     {
-	    public Dictionary<string, int> Predicate;
+	    public Dictionary<string, double> Predicate;
 	    public string Model;
     }
 }

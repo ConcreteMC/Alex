@@ -68,20 +68,20 @@ namespace Alex.Graphics.Models.Blocks
 			string texture = "";
 			if (IsLava)
 			{
-				texture = "lava";
+				texture = "blocks/lava";
 			}
 			else
 			{
-				texture = "water";
+				texture = "blocks/water";
 			}
-			texture = texture + "_flow";
+			//texture = texture + "_flow";
 			if (IsFlowing)
 			{
-			//	texture = texture + "_flow";
+				texture = texture + "_flow";
 			}
 			else
 			{
-			//	texture = texture + "_still";
+				texture = texture + "_still";
 			}
 
 			//float frameX 

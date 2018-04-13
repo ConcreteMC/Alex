@@ -68,28 +68,27 @@ namespace Alex
 		{
 			McResourcePack resourcePack = null;
 
-			using (var archive = new ZipArchive(stream))
+			using (var archive = new ZipArchive(stream, ZipArchiveMode.Read, false))
 			{
 				resourcePack = new McResourcePack(archive);
-
-				if (!replaceTextures)
-				{
-					Atlas.LoadResourcePackOnTop(graphics, resourcePack.Textures.Where(x => x.Key.StartsWith("blocks")).ToArray(),
-						progressReceiver);
-				}
-				else
-				{
-					Atlas.GenerateAtlas(graphics, resourcePack.Textures.Where(x => x.Key.StartsWith("blocks")).ToArray(),
-						progressReceiver);
-				}
-
-				Stopwatch sw = Stopwatch.StartNew();
-				int imported = BlockFactory.LoadResources(this, resourcePack, replaceModels, reportMissingModels, progressReceiver);
-				sw.Stop();
-
-				Log.Info($"Imported {imported} blockstate variants from resourcepack in {sw.ElapsedMilliseconds}ms!");
 			}
 
+			if (!replaceTextures)
+			{
+				Atlas.LoadResourcePackOnTop(graphics, resourcePack.Textures.Where(x => x.Key.StartsWith("blocks")).ToArray(),
+					progressReceiver);
+			}
+			else
+			{
+				Atlas.GenerateAtlas(graphics, resourcePack.Textures.Where(x => x.Key.StartsWith("blocks")).ToArray(),
+					progressReceiver);
+			}
+
+			Stopwatch sw = Stopwatch.StartNew();
+			int imported = BlockFactory.LoadResources(this, resourcePack, replaceModels, reportMissingModels, progressReceiver);
+			sw.Stop();
+
+			Log.Info($"Imported {imported} blockstate variants from resourcepack in {sw.ElapsedMilliseconds}ms!");
 
 			return resourcePack;
 		}

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -78,7 +79,7 @@ namespace Alex.Utils
 
 		    foreach (var bm in data.OrderByDescending(x => x.Value.Height))
 		    {
-			    string key = Path.GetFileNameWithoutExtension(bm.Key);
+			    string key = bm.Key;
 			    count++;
 
 			    var r = new System.Drawing.Rectangle(0, 0, bm.Value.Width, bm.Value.Height);

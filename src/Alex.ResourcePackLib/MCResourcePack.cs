@@ -6,6 +6,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using Alex.API.World;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.BlockStates;
@@ -28,7 +29,7 @@ namespace Alex.ResourcePackLib
 		public IReadOnlyDictionary<string, ResourcePackItem> ItemModels => _itemModels;
 		public IReadOnlyDictionary<string, Bitmap> Textures => _textureCache;
 
-		private ZipArchive _archive;
+	//	private ZipArchive _archive;
 		private readonly Dictionary<string, BlockStateResource> _blockStates = new Dictionary<string, BlockStateResource>();
 		private readonly Dictionary<string, BlockModel> _blockModels = new Dictionary<string, BlockModel>();
 		private readonly Dictionary<string, ResourcePackItem> _itemModels = new Dictionary<string, ResourcePackItem>();
@@ -49,8 +50,8 @@ namespace Alex.ResourcePackLib
 
 		public McResourcePack(ZipArchive archive)
 		{
-			_archive = archive;
-			Load();
+			//_archive = archive;
+			Load(archive);
 		}
 
 		public Color GetGrassColor(float temp, float rain, int elevation)
@@ -92,88 +93,91 @@ namespace Alex.ResourcePackLib
 			return new Color(result.R, result.G, result.B);
 		}
 
-		public bool TryGetBitmap(string resource, out Bitmap texture)
+		private static readonly Regex IsTextureResource = new Regex(@"assets\/(?'namespace'.*)\/textures\/(?'filename'.*)\.png$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+		private static readonly Regex IsModelRegex = new Regex(@"assets\/(?'namespace'.*)\/models\/(?'filename'.*)\.json$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+		private static readonly Regex IsBlockStateRegex = new Regex(@"assets\/(?'namespace'.*)\/blockstates\/(?'filename'.*)\.json$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+		private void Load(ZipArchive archive)
 		{
-			try
-			{
-				var entry = _archive.GetEntry($"assets/minecraft/textures/{resource}.png");
-				if (entry == null)
-				{
-					texture = default(Bitmap);
-					return false;
-				}
-				using(var e = entry.Open()){
-					Bitmap bmp = new Bitmap(e);
-					texture = bmp;
-				}
-				return true;
-			}
-			catch(Exception exception)
-			{
-				Log.Error("Oh oh!", exception);
-				texture = default(Bitmap);
-				return false;
-			}
-		} 
+			LoadMeta(archive);
 
-		private void Load()
-		{
-			LoadMeta();
-			LoadTextures();
-			LoadBlockModels();
-			LoadBlockStates();
-			LoadItemModels();
+			Dictionary<string, BlockModel> models = new Dictionary<string, BlockModel>();
+			foreach (var entry in archive.Entries)
+			{
+				var textureMatchs = IsTextureResource.Match(entry.FullName);
+				if (textureMatchs.Success)
+				{
+					LoadTexture(entry, textureMatchs);
+					continue;
+				}
+
+				var modelMatch = IsModelRegex.Match(entry.FullName);
+				if (modelMatch.Success)
+				{
+					var fileName = modelMatch.Groups["filename"].Value;
+					if (fileName.StartsWith("block"))
+					{
+						var model = LoadBlockModel(entry, modelMatch);
+						models.Add($"{model.Namespace}:{model.Name}", model);
+					}
+					else if (fileName.StartsWith("item"))
+					{
+						LoadItemModel(entry, modelMatch);
+					}
+
+					continue;
+				}
+
+				var blockStateMatch = IsBlockStateRegex.Match(entry.FullName);
+				if (blockStateMatch.Success)
+				{
+					LoadBlockState(entry, blockStateMatch);
+					continue;
+				}
+			}
+
+			foreach (var blockModel in models)
+			{
+				if (!_blockModels.ContainsKey(blockModel.Key))
+					ProcessBlockModel(blockModel.Value, ref models);
+			}
+
+			foreach (var itemModel in _itemModels.ToArray())
+			{
+				_itemModels[itemModel.Key] = ProcessItem(itemModel.Value);
+			}
+
+			foreach (var blockState in _blockStates.ToArray())
+			{
+				_blockStates[blockState.Key] = ProcessBlockState(blockState.Value);
+			}
+
 			LoadColormap();
 		}
 
-		private void LoadTextures()
+		private void LoadTexture(ZipArchiveEntry entry, Match match)
 		{
-			var images = _archive
-			             .Entries.Where(e => e.FullName.StartsWith("assets/minecraft/textures/") && e.FullName.EndsWith(".png"))
-			             .ToArray();
-			foreach (var image in images)
-			{
-				LoadTexture(image);
-			}
-		}
-
-		private void LoadTexture(ZipArchiveEntry entry)
-		{
-			var textureName = entry.FullName.Replace("assets/minecraft/textures/", "").Replace(".png","");
-			
+			Bitmap img;
 			using (var s = entry.Open())
 			{
-				var img = new Bitmap(s);
-
-				_textureCache[textureName] = img;
+				img = new Bitmap(s);
 			}
+
+			_textureCache[match.Groups["filename"].Value] = img;
 		}
 
-		private void LoadItemModels()
+		private void LoadItemModel(ZipArchiveEntry entry, Match match)
 		{
-			var jsonFiles = _archive.Entries
-				.Where(e => e.FullName.StartsWith("assets/minecraft/models/items/") && e.FullName.EndsWith(".json")).ToArray();
+			string name = match.Groups["filename"].Value;
+			string nameSpace = match.Groups["namespace"].Value;
 
-			foreach (var jsonFile in jsonFiles)
-			{
-				LoadItemModel(jsonFile);
-			}
-		}
-
-		private ResourcePackItem LoadItemModel(ZipArchiveEntry entry)
-		{
-			string nameSpace = entry.FullName.Split('/')[1];
-			string name = Path.GetFileNameWithoutExtension(entry.FullName);
 			using (var r = new StreamReader(entry.Open()))
 			{
 				var blockModel = MCJsonConvert.DeserializeObject<ResourcePackItem>(r.ReadToEnd());
 				blockModel.Name = name;
 				blockModel.Namespace = nameSpace;
 
-				blockModel = ProcessItem(blockModel);
+				//blockModel = ProcessItem(blockModel);
 				_itemModels[$"{nameSpace}:{name}"] = blockModel;
-
-				return blockModel;
 			}
 
 		}
@@ -190,13 +194,9 @@ namespace Alex.ResourcePackLib
 
 		private void LoadColormap()
 		{
-			const string colormapPath = "assets/minecraft/textures/colormap";
-			var foliageEntry = _archive.GetEntry($"{colormapPath}/foliage.png");
-			var grassEntry = _archive.GetEntry($"{colormapPath}/grass.png");
-
-			if (foliageEntry != null)
+			if (TryGetTexture("colormap/foliage", out Bitmap foliage))
 			{
-				var foliageColors = new LockBitmap(new Bitmap(foliageEntry.Open()));
+				var foliageColors = new LockBitmap(foliage);
 				foliageColors.LockBits();
 				FoliageColors = foliageColors.GetColorArray();
 				foliageColors.UnlockBits();
@@ -205,9 +205,9 @@ namespace Alex.ResourcePackLib
 				_foliageWidth = foliageColors.Width;
 			}
 
-			if (grassEntry != null)
+			if (TryGetTexture("colormap/grass", out Bitmap grass))
 			{
-				var grassColors = new LockBitmap(new Bitmap(grassEntry.Open()));
+				var grassColors = new LockBitmap(grass);
 				grassColors.LockBits();
 				GrassColors = grassColors.GetColorArray();
 				grassColors.UnlockBits();
@@ -217,11 +217,11 @@ namespace Alex.ResourcePackLib
 			}
 		}
 
-		private void LoadMeta()
+		private void LoadMeta(ZipArchive archive)
 		{
 			ResourcePackInfo info;
 
-			var entry = _archive.GetEntry("pack.mcmeta");
+			var entry = archive.GetEntry("pack.mcmeta");
 			if (entry == null)
 			{
 				info = new ResourcePackInfo();
@@ -236,7 +236,7 @@ namespace Alex.ResourcePackLib
 			}
 
 
-			var imgEntry = _archive.GetEntry("pack.png");
+			var imgEntry = archive.GetEntry("pack.png");
 			if (imgEntry != null)
 			{
 				Bitmap bmp = new Bitmap(imgEntry.Open());
@@ -244,74 +244,65 @@ namespace Alex.ResourcePackLib
 			}
 		}
 
-		private void LoadBlockModels()
+		private BlockModel LoadBlockModel(ZipArchiveEntry entry, Match match)
 		{
-			var jsonFiles = _archive.Entries
-				.Where(e => e.FullName.StartsWith("assets/minecraft/models/block/") && e.FullName.EndsWith(".json")).ToArray();
+			string name = match.Groups["filename"].Value;
+			string nameSpace = match.Groups["namespace"].Value;
 
-			foreach (var jsonFile in jsonFiles)
-			{
-				LoadBlockModel(jsonFile);
-			}
-		}
-
-		private BlockModel LoadBlockModel(ZipArchiveEntry entry)
-		{
-			string nameSpace = entry.FullName.Split('/')[1];
-			string name = Path.GetFileNameWithoutExtension(entry.FullName);
 			using (var r = new StreamReader(entry.Open()))
 			{
 				var blockModel = MCJsonConvert.DeserializeObject<BlockModel>(r.ReadToEnd());
-				blockModel.Name = name;
+				blockModel.Name = name.Replace("block/", "");
 				blockModel.Namespace = nameSpace;
-
-				blockModel = ProcessBlockModel(blockModel);
-				_blockModels[$"{nameSpace}:{name}"] = blockModel;
-
+				if (blockModel.ParentName != null)
+				{
+					blockModel.ParentName = blockModel.ParentName.Replace("block/", "");
+				}
+				//blockModel = ProcessBlockModel(blockModel);
+				//_blockModels[$"{nameSpace}:{name}"] = blockModel;
 				return blockModel;
 			}
 		}
 
 		public bool TryGetBlockModel(string modelName, out BlockModel model)
 		{
-			if (modelName.StartsWith("block/"))
-				modelName = modelName.Replace("block/", "");
+			string @namespace = DefaultNamespace;
+			var split = modelName.Split(':');
+			if (split.Length > 1)
+			{
+				@namespace = split[0];
+				modelName = split[1];
+			}
 
-			//		if (_blockModels.TryGetValue(modelName, out model))
-			//		return true;
+			return TryGetBlockModel(@namespace, modelName, out model);
+		}
+
+		public bool TryGetBlockModel(string @namespace, string modelName, out BlockModel model)
+		{
+			string fullName = $"{@namespace}:{modelName}";
+
+			if (_blockModels.TryGetValue(fullName, out model))
+				return true;
+
+			var m = _blockModels.FirstOrDefault(x => x.Value.Name.EndsWith(modelName, StringComparison.InvariantCultureIgnoreCase))
+				.Value;
+
+			if (m != null)
+			{
+				model = m;
+				return true;
+			}
 
 			model = null;
-
-			var modelFile =
-				_archive.Entries.FirstOrDefault(e => e.FullName.Equals("assets/minecraft/models/block/" + modelName + ".json"));
-
-			if (modelFile == null)
-			{
-				Log.Debug("Failed to load Block Model: File Not Found (" + "assets/minecraft/models/block/" + modelName + ".json)");
-				return false;
-			}
-
-			model = LoadBlockModel(modelFile);
-			return true;
+			return false;
 		}
 
-		private void LoadBlockStates()
-		{
-			var jsonFiles = _archive.Entries
-				.Where(e => e.FullName.StartsWith("assets/minecraft/blockstates/") && e.FullName.EndsWith(".json")).ToArray();
-
-			foreach (var jsonFile in jsonFiles)
-			{
-				LoadBlockState(jsonFile);
-			}
-		}
-
-		private BlockStateResource LoadBlockState(ZipArchiveEntry entry)
+		private void LoadBlockState(ZipArchiveEntry entry, Match match)
 		{
 			try
 			{
-				string name = Path.GetFileNameWithoutExtension(entry.FullName);
-				string nameSpace = entry.FullName.Split('/')[1];
+				string name = match.Groups["filename"].Value;
+				string nameSpace = match.Groups["namespace"].Value;
 
 				using (var r = new StreamReader(entry.Open()))
 				{
@@ -320,15 +311,17 @@ namespace Alex.ResourcePackLib
 					var blockState = MCJsonConvert.DeserializeObject<BlockStateResource>(json);
 					blockState.Name = name;
 					blockState.Namespace = nameSpace;
-					_blockStates[$"{nameSpace}:{name}"] = ProcessBlockState(blockState);
 
-					return blockState;
+					
+					_blockStates[$"{nameSpace}:{name}"] = blockState;
+
+					//return blockState;
 				}
 			}
 			catch (Exception ex)
 			{
 				Log.Warn($"Could not load {entry.Name}!", ex);
-				return null;
+			//	return null;
 			}
 		}
 
@@ -338,60 +331,6 @@ namespace Alex.ResourcePackLib
 				return true;
 
 			stateResource = null;
-
-			var modelFile =
-				_archive.Entries.FirstOrDefault(e => e.FullName.Equals($"assets/minecraft/blockstates/{modelName}.json"));
-
-			if (modelFile == null)
-			{
-				Log.Debug("Failed to load BlockStateResource: File Not Found (" + "assets/minecraft/blockstates/" + modelName + ".json)");
-				return false;
-			}
-
-			stateResource = LoadBlockState(modelFile);
-			return true;
-		}
-
-		public bool TryGetStream(string filePath, out Stream stream)
-		{
-			stream = null;
-			var textureFile =
-				_archive.Entries.FirstOrDefault(e => e.FullName.Replace('/', '\\').Equals(filePath.Replace('/', '\\'), StringComparison.InvariantCultureIgnoreCase));
-			if (textureFile == null) return false;
-
-			using (var fileStream = textureFile.Open())
-			{
-				stream = new MemoryStream();
-				fileStream.CopyTo(stream);
-			}
-			return true;
-		}
-
-		public bool TryGetJson<TValue>(string filePath, out TValue value)
-		{
-			if (TryGetJson(filePath, out var json))
-			{
-				value = MCJsonConvert.DeserializeObject<TValue>(json);
-				return true;
-			}
-
-			value = default(TValue);
-			return false;
-		}
-
-		public bool TryGetJson(string filePath, out string json)
-		{
-			if (TryGetStream(filePath + ".json", out var stream))
-			{
-				using (var sr = new StreamReader(stream))
-				{
-					json = sr.ReadToEnd();
-				}
-
-				return true;
-			}
-
-			json = null;
 			return false;
 		}
 
@@ -409,19 +348,8 @@ namespace Alex.ResourcePackLib
 			if (_textureCache.TryGetValue(textureName, out texture))
 				return true;
 
-			var textureFile =
-				_archive.Entries.FirstOrDefault(e => e.FullName.Equals("assets/minecraft/textures/" + textureName + ".png"));
-			if (textureFile == null) return false;
-
-			using (var s = textureFile.Open())
-			{
-				var img = new Bitmap(s);
-
-				_textureCache[textureName] = img;
-
-				texture = img;
-				return true;
-			}
+			texture = null;
+			return false;
 		}
 
 		public bool TryGetTexture(string textureName, out Bitmap texture)
@@ -429,33 +357,33 @@ namespace Alex.ResourcePackLib
 			if (_textureCache.TryGetValue(textureName, out texture))
 				return true;
 
-			var textureFile =
-				_archive.Entries.FirstOrDefault(e => e.FullName.Equals("assets/minecraft/textures/" + textureName + ".png"));
-			if (textureFile == null) return false;
-
-			using (var s = textureFile.Open())
-			{
-				var img = new Bitmap(s);
-
-				_textureCache[textureName] = img;
-
-				texture = img;
-				return true;
-			}
+			texture = null;
+			return false;
 		}
-
-		private BlockModel ProcessBlockModel(BlockModel model)
+		
+		private BlockModel ProcessBlockModel(BlockModel model, ref Dictionary<string, BlockModel> models)
 		{
+			string key = $"{model.Namespace}:{model.Name}";
 			if (!string.IsNullOrWhiteSpace(model.ParentName) && !model.ParentName.Equals(model.Name, StringComparison.InvariantCultureIgnoreCase))
 			{
+				string parentKey = $"{model.Namespace}:{model.ParentName}";
+
 				BlockModel parent;
-				if (TryGetBlockModel(model.ParentName, out parent))
+				if (!_blockModels.TryGetValue(parentKey, out parent))
+				{
+					if (models.TryGetValue(parentKey, out parent))
+					{
+						parent = ProcessBlockModel(parent, ref models);
+					}
+				}
+
+				if (parent != null)
 				{
 					model.Parent = parent;
 
 					if (model.Elements.Length == 0 && parent.Elements.Length > 0)
 					{
-						model.Elements = (BlockModelElement[]) parent.Elements.Clone();
+						model.Elements = (BlockModelElement[])parent.Elements.Clone();
 					}
 
 					foreach (var kvp in parent.Textures)
@@ -468,9 +396,12 @@ namespace Alex.ResourcePackLib
 				}
 			}
 
+			_blockModels.Add(key, model);
+
 			return model;
 		}
 
+		private const string DefaultNamespace = "minecraft";
 		private BlockStateResource ProcessBlockState(BlockStateResource blockStateResource)
 		{
 			if (blockStateResource.Parts.Length > 0)
@@ -479,16 +410,13 @@ namespace Alex.ResourcePackLib
 				{
 					foreach (var sVariant in part.Apply)
 					{
-						if (!TryGetBlockModel("block/" + sVariant.ModelName, out BlockModel model))
+						if (!TryGetBlockModel(sVariant.ModelName, out BlockModel model))
 						{
 							Log.Debug($"Could not get multipart blockmodel! Variant: {blockStateResource} Model: {sVariant.ModelName}");
 							continue;
 						}
 
 						sVariant.Model = model;
-						//part.Apply = model;
-						//var apply = MCJsonConvert.DeserializeObject<BlockStateModel>(part.ApplyModel);
-						//part.Apply = apply;
 					}
 				}
 			}
@@ -498,7 +426,7 @@ namespace Alex.ResourcePackLib
 				{
 					foreach (var sVariant in variant.Value)
 					{
-						if (!TryGetBlockModel("block/" + sVariant.ModelName, out BlockModel model))
+						if (!TryGetBlockModel(sVariant.ModelName, out BlockModel model))
 						{
 							Log.Debug($"Could not get blockmodel for variant! Variant: {variant.Key} Model: {sVariant.ModelName}");
 							continue;
@@ -514,7 +442,7 @@ namespace Alex.ResourcePackLib
 
 		public void Dispose()
 		{
-			_archive?.Dispose();
+			//_archive?.Dispose();
 		}
 	}
 
