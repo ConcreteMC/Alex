@@ -104,7 +104,7 @@ namespace Alex.Rendering.Camera
 		{
 			ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(
 				MathHelper.ToRadians(FOV),
-				_aspectRatio,
+				320f/240f,
 				NearDistance,
 				FarDistance);
 		}

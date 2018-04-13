@@ -1,8 +1,4 @@
-﻿using Alex.Graphics.UI;
-using Alex.Graphics.UI.Controls.Menu;
-using Alex.Graphics.UI.Layout;
-using Alex.Rendering.UI;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
@@ -17,30 +13,32 @@ namespace Alex.Gamestates.Playing
 
 		protected override void OnLoad(RenderArgs args)
 		{
-			Gui.ClassName = "TitleScreenRoot";
 
-			var menuWrapper = new UiPanel()
-			{
-				ClassName = "TitleScreenMenuPanel"
-			};
-			var stackMenu = new UiMenu()
-			{
-				ClassName = "TitleScreenMenu"
-			};
 
-			stackMenu.AddMenuItem("Disconnect", DisconnectButtonOnOnButtonClick);
-			stackMenu.AddMenuItem("Options", () => { Alex.GameStateManager.SetActiveState("options"); });
-			stackMenu.AddMenuItem("Return to game", ReturnButtonOnOnButtonClick);
+			//Gui.ClassName = "TitleScreenRoot";
 
-			menuWrapper.AddChild(stackMenu);
+			//var menuWrapper = new UiPanel()
+			//{
+			//	ClassName = "TitleScreenMenuPanel"
+			//};
+			//var stackMenu = new UiMenu()
+			//{
+			//	ClassName = "TitleScreenMenu"
+			//};
 
-			Gui.AddChild(menuWrapper);
+			//stackMenu.AddMenuItem("Disconnect", DisconnectButtonOnOnButtonClick);
+			//stackMenu.AddMenuItem("Options", () => { Alex.GameStateManager.SetActiveState("options"); });
+			//stackMenu.AddMenuItem("Return to game", ReturnButtonOnOnButtonClick);
 
-			var logo = new UiElement()
-			{
-				ClassName = "TitleScreenLogo",
-			};
-			Gui.AddChild(logo);
+			//menuWrapper.AddChild(stackMenu);
+
+			//Gui.AddChild(menuWrapper);
+
+			//var logo = new UiElement()
+			//{
+			//	ClassName = "TitleScreenLogo",
+			//};
+			//Gui.AddChild(logo);
 
 			Alex.IsMouseVisible = true;
 		}

@@ -1,8 +1,7 @@
 ﻿using System;
+using Alex.API.Input;
 using Alex.Blocks;
 using Alex.Entities;
-using Alex.Input;
-using Alex.Rendering.Camera;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -43,7 +42,7 @@ namespace Alex.Gamestates.Playing
         private Settings GameSettings { get; }
 
 		private Player Player { get; }
-		public PlayerController(GraphicsDevice graphics, World world, Settings settings, Player player, PlayerIndex playerIndex)
+		public PlayerController(GraphicsDevice graphics, World world, Settings settings, InputManager inputManager, Player player, PlayerIndex playerIndex)
 		{
 			Player = player;
             Graphics = graphics;
@@ -57,7 +56,7 @@ namespace Alex.Gamestates.Playing
 
             PreviousMouseState = Mouse.GetState();
 
-			InputManager = new PlayerInputManager(playerIndex);
+			InputManager = inputManager.GetOrAddPlayerManager(playerIndex);
 		}
 
 		private bool _inActive = true;
@@ -66,8 +65,6 @@ namespace Alex.Gamestates.Playing
 	    private DateTime _lastForward = DateTime.UtcNow;
         public void Update(GameTime gameTime)
         {
-			InputManager.Update();
-
             var dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
             bool originalJumpValue = IsJumping;

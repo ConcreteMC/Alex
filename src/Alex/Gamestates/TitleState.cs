@@ -1,9 +1,8 @@
-﻿using Alex.Graphics.Gui;
-using Alex.Graphics.Gui.Elements;
-using Alex.Graphics.UI;
-using Alex.Graphics.UI.Common;
-using Alex.Graphics.UI.Controls.Menu;
-using Alex.Graphics.UI.Layout;
+﻿using Alex.API.Gui;
+using Alex.API.Gui.Elements;
+using Alex.API.Gui.Elements.Controls;
+using Alex.API.Gui.Rendering;
+using Alex.Gamestates.Gui;
 using Alex.Worlds;
 using Alex.Worlds.Generators;
 
@@ -11,25 +10,22 @@ namespace Alex.Gamestates
 {
 	public class TitleState : GameState
 	{
+		private GuiDebugInfo _debugInfo;
 
 		public TitleState(Alex alex) : base(alex)
 		{
-		}
-
-		protected override void OnLoad(RenderArgs args)
-		{
-			var screen = new GuiScreen(Alex);
-			GuiManager.AddScreen(screen);
-
-			Gui.ClassName = "TitleScreenRoot";
-
-			var menuWrapper = new UiPanel()
+			Gui = new GuiScreen(Alex)
 			{
-				ClassName = "TitleScreenMenuPanel"
+				DefaultBackgroundTexture = GuiTextures.TitleScreenBackground
 			};
-			var stackMenu = new UiMenu()
+			var stackMenu = new GuiStackMenu()
 			{
-				ClassName = "TitleScreenMenu"
+				LayoutOffsetX = 25,
+				Width = 125,
+				VerticalAlignment = VerticalAlignment.Center,
+
+				VerticalContentAlignment = VerticalAlignment.Top,
+				HorizontalContentAlignment = HorizontalAlignment.Stretch
 			};
 
 			stackMenu.AddMenuItem("Multiplayer", () =>
@@ -45,17 +41,42 @@ namespace Alex.Gamestates
 			stackMenu.AddMenuItem("Options", () => { Alex.GameStateManager.SetActiveState("options"); });
 			stackMenu.AddMenuItem("Exit Game", () => { Alex.Exit(); });
 
-			menuWrapper.AddChild(stackMenu);
+			Gui.AddChild(stackMenu);
 
-			Gui.AddChild(menuWrapper);
-
-			var logo = new UiElement()
+			Gui.AddChild(new GuiImage(GuiTextures.AlexLogo)
 			{
-				ClassName = "TitleScreenLogo",
-			};
-			Gui.AddChild(logo);
+				LayoutOffsetX = 175,
+				LayoutOffsetY = 25
+			});
+
+			_debugInfo = new GuiDebugInfo(alex);
+			_debugInfo.AddDebugRight(() => $"Cursor Position: {alex.InputManager.CursorInputListener.GetCursorPosition()} / {alex.GuiManager.FocusManager.CursorPosition}");
+			_debugInfo.AddDebugRight(() => $"Cursor Delta: {alex.InputManager.CursorInputListener.GetCursorPositionDelta()}");
+
+		}
+
+		protected override void OnLoad(RenderArgs args)
+		{
+
+			//var logo = new UiElement()
+			//{
+			//	ClassName = "TitleScreenLogo",
+			//};
+			//Gui.AddChild(logo);
 
 			Alex.IsMouseVisible = true;
+		}
+
+		protected override void OnShow()
+		{
+			base.OnShow();
+			Alex.GuiManager.AddScreen(_debugInfo);
+		}
+
+		protected override void OnHide()
+		{
+			Alex.GuiManager.RemoveScreen(_debugInfo);
+			base.OnHide();
 		}
 
 		private void Debug(IWorldGenerator generator)

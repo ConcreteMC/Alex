@@ -3,12 +3,13 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Threading;
+using Alex.API.Gui;
+using Alex.API.Input;
 using Alex.API.Network;
 using Alex.API.World;
 using Alex.Gamestates;
+using Alex.Gamestates.Gui;
 using Alex.Gamestates.Playing;
-using Alex.Graphics;
-using Alex.Graphics.UI;
 using Alex.Rendering;
 using Alex.ResourcePackLib;
 using Alex.Utils;
@@ -36,6 +37,7 @@ namespace Alex
 		public static bool IsMultiplayer { get; set; } = false;
 
 		public static SpriteFont Font;
+		public static SpriteFont AltFont;
 
 		private SpriteBatch _spriteBatch;
 
@@ -43,7 +45,9 @@ namespace Alex
 		public GameStateManager GameStateManager { get; private set; }
 		public ResourceManager Resources { get; private set; }
 
-		public UiManager UiManager { get; private set; }
+		public InputManager InputManager { get; private set; }
+		public GuiRenderer GuiRenderer { get; private set; }
+		public GuiManager GuiManager { get; private set; }
 
 		private bool BypassTitleState { get; set; } = false;
 		public Alex(LaunchSettings launchSettings)
@@ -68,14 +72,12 @@ namespace Alex
 			{
 				PreferMultiSampling = false,
 				SynchronizeWithVerticalRetrace = false,
-				GraphicsProfile = GraphicsProfile.Reach
+				GraphicsProfile = GraphicsProfile.Reach,
 			};
 			Content.RootDirectory = "assets";
 
 			IsFixedTimeStep = false;
            // graphics.ToggleFullScreen();
-
-			UiManager = new UiManager(this);
 			
 			this.Window.AllowUserResizing = true;
 			this.Window.ClientSizeChanged += (sender, args) =>
@@ -142,14 +144,16 @@ namespace Alex
 		{
 			if (!File.Exists(Path.Combine("assets", "Minecraftia.xnb")))
 			{
-				File.WriteAllBytes(Path.Combine("assets", "Minecraftia.xnb"), global::Alex.Resources.Minecraftia1);
+				File.WriteAllBytes(Path.Combine("assets", "Minecraftia.xnb"), global::Alex.Resources.Minecraftia);
 			}
 
 			Font = Content.Load<SpriteFont>("Minecraftia");
 
 			_spriteBatch = new SpriteBatch(GraphicsDevice);
-			UiManager.Init(GraphicsDevice, _spriteBatch);
-			GameStateManager = new GameStateManager(GraphicsDevice, _spriteBatch, UiManager);
+			InputManager = new InputManager(this);
+			GuiRenderer = new GuiRenderer(this);
+			GuiManager = new GuiManager(this, InputManager, GuiRenderer);
+			GameStateManager = new GameStateManager(GraphicsDevice, _spriteBatch, GuiManager);
 
 			var splash = new SplashScreen(this);
 			GameStateManager.AddState("splash", splash);
@@ -167,8 +171,10 @@ namespace Alex
 		protected override void Update(GameTime gameTime)
 		{
 			base.Update(gameTime);
+			
+			InputManager.Update();
 
-			UiManager.Update(gameTime);
+			GuiManager.Update(gameTime);
 			GameStateManager.Update(gameTime);
 		}
 
@@ -178,7 +184,7 @@ namespace Alex
 			GraphicsDevice.RasterizerState = RasterizerState.CullClockwise;
 			GameStateManager.Draw(gameTime);
 
-			UiManager.Draw(gameTime);
+			GuiManager.Draw(gameTime);
 
 			//_spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointWrap, transformMatrix:Matrix.CreateScale(4f));
 			//FontRender?.DrawString(_spriteBatch, "test 123", 10, 10, (int) Color.Black.PackedValue);
@@ -203,7 +209,8 @@ namespace Alex
 			FontRender = Resources.ResourcePack.AsciiFont;
 			Mouse.SetPosition(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2);
 
-			UiManager.Theme = Resources.UiThemeFactory.GetTheme();
+			GuiRenderer.LoadResourcePackTextures(Resources.ResourcePack);
+			//UiManager.Theme = Resources.UiThemeFactory.GetTheme();
 
 			GameStateManager.AddState("title", new TitleState(this)); 
 			GameStateManager.AddState("options", new OptionsState(this));
@@ -226,7 +233,7 @@ namespace Alex
 			GameStateManager.AddState("play", playState);
 
 			LoadingWorldState loadingScreen =
-				new LoadingWorldState(this, TextureUtils.ImageToTexture2D(GraphicsDevice, global::Alex.Resources.mcbg));
+				new LoadingWorldState(this);
 			GameStateManager.AddState("loading", loadingScreen);
 			GameStateManager.SetActiveState("loading");
 

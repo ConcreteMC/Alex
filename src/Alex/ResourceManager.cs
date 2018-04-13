@@ -22,17 +22,15 @@ namespace Alex
 		public McResourcePack ResourcePack { get; private set; }
 		public BedrockResourcePack BedrockResourcePack { get; private set; }
 		public AtlasGenerator Atlas { get; private set; }
-
-		public ResourcePackUiThemeBuilder UiThemeFactory { get; private set; }
-
+		
 		private GraphicsDevice Graphics { get; set; }
 
 		public ResourceManager(GraphicsDevice graphics)
 		{
 			Graphics = graphics;
 			Atlas = new AtlasGenerator(Graphics);
-			UiThemeFactory = new ResourcePackUiThemeBuilder(Graphics);
 		}
+
 
 		private byte[] GetLatestAssets()
 		{
@@ -153,7 +151,6 @@ namespace Alex
 
 			Log.Info($"Loading bedrock resources...");
 			BedrockResourcePack = new BedrockResourcePack(bedrockResources);
-			UiThemeFactory.LoadResources(BedrockResourcePack);
 
 			EntityFactory.LoadModels(this, device, true, progressReceiver);
 

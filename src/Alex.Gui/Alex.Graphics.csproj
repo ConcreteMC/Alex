@@ -15,4 +15,8 @@
     <PackageReference Include="NLog" Version="4.5.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Alex.API\Alex.API.csproj" />
+  </ItemGroup>
+
 </Project>

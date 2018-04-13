@@ -26,7 +26,7 @@ namespace Alex.Entities
 		public Player(GraphicsDevice graphics, Alex alex, string name, World world, Texture2D skin, INetworkProvider networkProvider, PlayerIndex playerIndex) : base(name, world, networkProvider, skin, true)
 	    {
 		    PlayerIndex = playerIndex;
-		    Controller = new PlayerController(graphics, world, alex.GameSettings, this, playerIndex); 
+		    Controller = new PlayerController(graphics, world, alex.GameSettings, alex.InputManager, this, playerIndex); 
 		    NoAi = false;
 
 			Inventory = new Inventory(45);
