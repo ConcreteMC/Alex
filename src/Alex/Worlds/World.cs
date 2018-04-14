@@ -131,7 +131,7 @@ namespace Alex.Worlds
 				_fovModifier = Player.FOVModifier;
 
 				Camera.FOV += _fovModifier;
-				Camera.UpdateProjMatrix();
+				Camera.UpdateProjectionMatrix();
 				Camera.FOV -= _fovModifier;
 			}
 			Camera.Update(args, Player);
