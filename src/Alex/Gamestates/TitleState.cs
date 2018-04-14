@@ -64,8 +64,10 @@ namespace Alex.Gamestates
 
 			Gui.AddChild(new GuiImage(GuiTextures.AlexLogo)
 			{
-				LayoutOffsetX = 175,
-				LayoutOffsetY = 25
+				//LayoutOffsetX = 175,
+				LayoutOffsetY = 25,
+				HorizontalAlignment = HorizontalAlignment.Center,
+				VerticalAlignment = VerticalAlignment.Top
 			});
 			Gui.AddChild( _splashText = new GuiTextElement(false)
 			{
@@ -81,7 +83,6 @@ namespace Alex.Gamestates
 			_debugInfo = new GuiDebugInfo(alex);
 			_debugInfo.AddDebugRight(() => $"Cursor Position: {alex.InputManager.CursorInputListener.GetCursorPosition()} / {alex.GuiManager.FocusManager.CursorPosition}");
 			_debugInfo.AddDebugRight(() => $"Cursor Delta: {alex.InputManager.CursorInputListener.GetCursorPositionDelta()}");
-
 		}
 
 		protected override void OnLoad(RenderArgs args)

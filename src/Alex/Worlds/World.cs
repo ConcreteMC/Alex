@@ -56,7 +56,7 @@ namespace Alex.Worlds
 	        Player.KnownPosition = new PlayerLocation(GetSpawnPoint());
 	        Camera.MoveTo(Player.KnownPosition, Vector3.Zero);
 
-	       // PhysicsEngine.AddTickable(Player);
+	        PhysicsEngine.AddTickable(Player);
 			PhysicsEngine.Start();
 		}
 
@@ -141,6 +141,8 @@ namespace Alex.Worlds
 
 			Player.ModelRenderer.DiffuseColor = Color.White.ToVector3() * new Vector3(skyRenderer.BrightnessModifier);
 			Player.Update(args);
+
+			PhysicsEngine.Update(args.GameTime);
 
 			if (Ticker.Update(args))
 			{
@@ -400,7 +402,10 @@ namespace Alex.Worlds
 
 		public void SpawnEntity(long entityId, IEntity entity)
 		{
-			EntityManager.AddEntity(entityId, (Entity)entity);
+			if (EntityManager.AddEntity(entityId, (Entity) entity))
+			{
+				PhysicsEngine.AddTickable((Entity) entity);
+			}
 		}
 
 		public void SpawnEntity(long entityId, Entity entity)
@@ -414,8 +419,13 @@ namespace Alex.Worlds
 
 		public void DespawnEntity(long entityId)
 		{
+			if (EntityManager.TryGet(entityId, out IEntity entity))
+			{
+				PhysicsEngine.Remove(entity);
+			}
+
 			EntityManager.Remove(entityId);
-		//	Log.Info($"Despawned entity {entityId}");
+			//	Log.Info($"Despawned entity {entityId}");
 		}
 
 		public void UpdatePlayerPosition(PlayerLocation location)

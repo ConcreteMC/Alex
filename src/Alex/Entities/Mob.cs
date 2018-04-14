@@ -25,6 +25,7 @@ namespace Alex.Entities
 
 		public override void OnTick()
 		{
+			return;
 			base.OnTick();
 
 			if (Velocity.Length() > 0)

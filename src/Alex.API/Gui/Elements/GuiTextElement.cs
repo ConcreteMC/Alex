@@ -78,6 +78,7 @@ namespace Alex.API.Gui.Elements
 		    }
 	    }
 		
+		private string _renderText = String.Empty;
 	    public GuiTextElement(bool hasBackground = false)
 	    {
 			RotationOrigin = new Vector2(0.5f);
@@ -100,12 +101,12 @@ namespace Alex.API.Gui.Elements
 
         protected override void OnDraw(GuiRenderArgs renderArgs)
         {
-	        var text = Text;
+	        var text = _renderText;
             if (!string.IsNullOrWhiteSpace(text))
             {
 	            if (Font != null)
 	            {
-		            if (HasShadow)
+					if (HasShadow)
 		            {
 			            renderArgs.DrawString(Font, text, Position + TextShadowOffset, TextColor.BackgroundColor, Scale, Rotation, RotationOrigin);
 		            }
@@ -124,20 +125,31 @@ namespace Alex.API.Gui.Elements
 			}
         }
 
+
+	    private Vector2 GetSize(string text, Vector2 scale)
+	    {
+		    return Font?.GetStringSize(text, scale) ?? (BackupFont.MeasureString(text));
+		}
+
 	    private void OnTextUpdated(bool updateLayout = true)
-        {
-	        if ((Font != null || BackupFont != null) && !string.IsNullOrWhiteSpace(Text))
-	        {
-		        var size = Font?.GetStringSize(Text, new Vector2(Scale)) ?? BackupFont.MeasureString(Text);
+	    {
+		    string text = _text;
+			if ((Font != null || BackupFont != null) && !string.IsNullOrWhiteSpace(text))
+			{
+				var scale = new Vector2(Scale, Scale);
 
-		        Width = (int) Math.Ceiling(size.X);
-		        Height = (int) Math.Ceiling(size.Y);
+				var textSize = GetSize(text, scale);
+				
+				Width = (int)Math.Floor(textSize.X);
+				Height = (int)Math.Floor(textSize.Y);
 
-		        if (updateLayout)
+				_renderText = text;
+
+				if (updateLayout)
 		        {
 					ParentElement.UpdateLayout();
 		        }
 	        }
-        }
+		}
     }
 }

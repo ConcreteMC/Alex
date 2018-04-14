@@ -75,6 +75,11 @@ namespace Alex.Entities
 
 		}
 
+		public override void TerrainCollision(Vector3 collisionPoint, Vector3 direction)
+		{
+			base.TerrainCollision(collisionPoint, direction);
+		}
+
 		public override void OnTick()
 		{
 			base.OnTick();

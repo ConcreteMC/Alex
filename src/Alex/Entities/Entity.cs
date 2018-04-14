@@ -32,7 +32,8 @@ namespace Alex.Entities
 
 		public DateTime LastUpdatedTime { get; set; }
 		public PlayerLocation KnownPosition { get; set; }
-		public Vector3 Velocity { get; set; }
+
+		public Vector3 Velocity { get; set; } = Vector3.Zero;
 		public float PositionOffset { get; set; }
 
 		//public HealthManager HealthManager { get; set; }
@@ -53,11 +54,12 @@ namespace Alex.Entities
 		public double Length { get; set; } = 1;
 		public double Drag { get; set; } = 0.02;
 		public double Gravity { get; set; } = 0.08;
+		public float TerminalVelocity { get; set; } = 4.3f;
 
 		public int Data { get; set; }
 		public UUID UUID { get; set; } = new UUID(Guid.Empty.ToByteArray());
 
-		public double MovementSpeed { get; set; } = 0.699999988079071;
+		public double MovementSpeed { get; set; } = 0.1;
 		public double FlyingSpeed { get; set; } = 0.4000000059604645;
 
 		public INetworkProvider Network { get; set; }
@@ -144,6 +146,7 @@ namespace Alex.Entities
 			IsSpawned = false;
 		}
 
+		public BoundingBox BoundingBox => GetBoundingBox();
 		public BoundingBox GetBoundingBox()
 		{
 			var pos = KnownPosition;
@@ -221,6 +224,11 @@ namespace Alex.Entities
 
 			renderArgs.SpriteBatch.FillRectangle(new Rectangle(textPosition.ToPoint(), c), new Color(Color.Black, 128));
 			renderArgs.SpriteBatch.DrawString(Alex.Font, clean, textPosition, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0);
+		}
+
+		public virtual void TerrainCollision(Vector3 collisionPoint, Vector3 direction)
+		{
+			
 		}
 	}
 }
