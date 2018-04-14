@@ -22,15 +22,15 @@ namespace Alex.Gamestates
 
 		private GuiTextElement _splashText;
 
-		//private GuiPanoramaSkyBox _backgroundSkyBox;
+		private GuiPanoramaSkyBox _backgroundSkyBox;
 
 		public TitleState(Alex alex, ContentManager content) : base(alex)
 		{
-			//_backgroundSkyBox = new GuiPanoramaSkyBox(alex, alex.GraphicsDevice, content);
+			_backgroundSkyBox = new GuiPanoramaSkyBox(alex, alex.GraphicsDevice, content);
 
 			Gui = new GuiScreen(Alex)
 			{
-				DefaultBackgroundTexture = GuiTextures.OptionsBackground
+				//DefaultBackgroundTexture = GuiTextures.OptionsBackground
 			};
 			var stackMenu = new GuiStackMenu()
 			{
@@ -99,18 +99,18 @@ namespace Alex.Gamestates
 
 		protected override void OnUpdate(GameTime gameTime)
 		{
-			//_backgroundSkyBox.Update(gameTime);
+			_backgroundSkyBox.Update(gameTime);
 			base.OnUpdate(gameTime);
 		}
 
 		protected override void OnDraw3D(RenderArgs args)
 		{
-		//	if (!_backgroundSkyBox.Loaded)
-			//{
-		//		_backgroundSkyBox.Load(Alex.GuiRenderer);
-		//	}
+			if (!_backgroundSkyBox.Loaded)
+			{
+				_backgroundSkyBox.Load(Alex.GuiRenderer);
+			}
 
-		//	_backgroundSkyBox.Draw(args);
+			_backgroundSkyBox.Draw(args);
 
 			base.OnDraw3D(args);
 		}

@@ -22,6 +22,6 @@ namespace Alex.API.Graphics
 		Vector3 PreviewMove(Vector3 amount);
 		void Update(IUpdateArgs args, IEntity entity);
 		void UpdateAspectRatio(float aspectRatio);
-		void UpdateProjMatrix();
+		void UpdateProjectionMatrix();
 	}
 }

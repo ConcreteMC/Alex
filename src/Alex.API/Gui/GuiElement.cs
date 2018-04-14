@@ -214,7 +214,8 @@ namespace Alex.API.Gui
 
         protected virtual void OnDraw(GuiRenderArgs args)
         {
-            args.DrawRectangle(Bounds, DebugColor);
+            // Draw Debug Bounds
+            //args.DrawRectangle(Bounds, DebugColor);
 
             if (BackgroundOverlayColor.HasValue && BackgroundOverlay == null)
             {

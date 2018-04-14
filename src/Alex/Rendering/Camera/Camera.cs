@@ -57,7 +57,7 @@ namespace Alex.Rendering.Camera
             set
             {
                 _position = value;
-				UpdateLookAt();
+	            UpdateViewMatrix();
             }
         }
 
@@ -71,7 +71,7 @@ namespace Alex.Rendering.Camera
             set
             {
                 _rotation = value;
-				UpdateLookAt();
+	            UpdateViewMatrix();
             }
         }
 
@@ -79,10 +79,11 @@ namespace Alex.Rendering.Camera
         /// <summary>
         /// Updates the camera's looking vector.
         /// </summary>
-        protected virtual void UpdateLookAt()
+        protected virtual void UpdateViewMatrix()
         {
-            Matrix rotationMatrix = Matrix.CreateRotationX(Rotation.X) *
-                                  Matrix.CreateRotationY(Rotation.Y);
+//	        Matrix rotationMatrix = Matrix.CreateRotationX(Rotation.X) * Matrix.CreateRotationY(Rotation.Y) * Matrix.CreateRotationZ(Rotation.Z);
+
+	        Matrix rotationMatrix = Matrix.CreateFromYawPitchRoll(Rotation.X, Rotation.Y, Rotation.Z);
 
             Vector3 lookAtOffset = Vector3.Transform(Vector3.UnitZ, rotationMatrix);
 
@@ -96,11 +97,11 @@ namespace Alex.Rendering.Camera
 	    public virtual void UpdateAspectRatio(float aspectRatio)
 	    {
 		    _aspectRatio = aspectRatio;
-			UpdateProjMatrix();
+		    UpdateProjectionMatrix();
 	    }
 
 		private float _aspectRatio = 0;
-		public void UpdateProjMatrix()
+		public void UpdateProjectionMatrix()
 		{
 			ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(
 				MathHelper.ToRadians(FOV),
