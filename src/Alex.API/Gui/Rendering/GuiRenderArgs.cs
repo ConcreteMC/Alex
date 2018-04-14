@@ -12,6 +12,8 @@ namespace Alex.API.Gui.Rendering
         public GraphicsDevice Graphics { get; }
         public SpriteBatch SpriteBatch { get; }
 
+        //public GuiElementRenderContext ActiveContext { get; private set; }
+
         public GuiRenderArgs(IGuiRenderer renderer, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
         {
             Renderer = renderer;
@@ -40,6 +42,7 @@ namespace Alex.API.Gui.Rendering
             // Left
             SpriteBatch.Draw(texture, new Rectangle(bounds.X, bounds.Y, thickness, bounds.Height), color);
         }
+        
         public void Draw(TextureSlice2D    texture, Rectangle bounds,
                          TextureRepeatMode repeatMode = TextureRepeatMode.Stretch, Vector2? scale = null)
         {
@@ -149,10 +152,111 @@ namespace Alex.API.Gui.Rendering
         {
             SpriteBatch.DrawString(font, text, position, color, 0f, Vector2.Zero, new Vector2(scale), SpriteEffects.None, 0);
         }
+        
+        public void DrawString(Vector2 position, SpriteFont font, string text, Color color, float scale, float rotation, Vector2 origin, SpriteEffects effects = SpriteEffects.None, float layerDepth = 0f)
+        {
+            SpriteBatch.DrawString(font, text, position, color, rotation, origin, new Vector2(scale), effects, layerDepth);
+        }
+
+        public void DrawString(Vector2 position, SpriteFont font, string text, Color color, Vector2 scale, float rotation, Vector2 origin, SpriteEffects effects = SpriteEffects.None, float layerDepth = 0f)
+        {
+            SpriteBatch.DrawString(font, text, position, color, rotation, origin, scale, effects, layerDepth);
+        }
 
 		public void DrawString(IFontRenderer spriteFont, string text, Vector2 position, Color color, float scale = 1f)
 		{
-			spriteFont.DrawString(SpriteBatch, text, position.X, position.Y, (int) color.PackedValue, false, new Vector2(scale));
+			//spriteFont.DrawString(SpriteBatch, text, position.X, position.Y, (int) color.PackedValue, false, new Vector2(scale));
+            DrawString(spriteFont, text, position, color, new Vector2(scale), 0f, Vector2.Zero);
 		}
+        
+        public void DrawString(IFontRenderer spriteFont, string text, Vector2 position, Color color, float scale, float rotation, Vector2 origin, SpriteEffects effects = SpriteEffects.None, float layerDepth = 0f)
+        {
+            spriteFont.DrawString(SpriteBatch, text, position, color, false, new Vector2(scale), rotation, origin, effects, layerDepth);
+        }
+
+        public void DrawString(IFontRenderer spriteFont, string text, Vector2 position, Color color, Vector2 scale, float rotation, Vector2 origin, SpriteEffects effects = SpriteEffects.None, float layerDepth = 0f)
+        {
+            spriteFont.DrawString(SpriteBatch, text, position, color, false, scale, rotation, origin, effects, layerDepth);
+        }
 	}
+
+    //public struct GuiRenderState
+    //{
+    //    public SpriteSortMode    SpriteSortMode    { get; private set; }
+    //    public BlendState        BlendState        { get; private set; }
+    //    public SamplerState      SamplerState      { get; private set; }
+    //    public DepthStencilState DepthStencilState { get; private set; }
+    //    public RasterizerState   RasterizerState   { get; private set; }
+    //    public Effect            Effect            { get; private set; }
+    //    public Matrix            TransformMatrix   { get; private set; }
+
+    //}
+
+    //public class GuiElementRenderContext : IDisposable
+    //{
+    //    protected GuiRenderArgs RenderArgs { get; }
+
+    //    public GuiElement Element { get; }
+
+    //    public GuiElementRenderContext ParentContext { get; }
+    //    public GuiRenderState ParentState => ParentContext?.SavedState ?? SavedState;
+
+    //    public SpriteBatch SpriteBatch => RenderArgs.SpriteBatch;
+    //    public GraphicsDevice Graphics => RenderArgs.Graphics;
+
+
+    //    public GuiRenderState SavedState { get; }
+
+
+    //    private bool _isActive;
+
+    //    public GuiElementRenderContext(GuiRenderArgs args, GuiElement element)
+    //    {
+    //        RenderArgs = args;
+    //        Element = element;
+    //        ParentContext = args.ActiveContext;
+
+    //        GuiRenderState = SaveState();
+    //    }
+
+    //    private GuiRenderState SaveState()
+    //    {
+    //        return new GuiRenderState()
+    //        {
+    //            BlendState = Graphics.BlendState,
+    //            DepthStencilState = Graphics.DepthStencilState,
+    //            RasterizerState = Graphics.RasterizerState,
+    //            Effect = Graphics.
+    //        };
+    //        BlendState = Graphics.BlendState;
+    //        DepthStencilState = Graphics.DepthStencilState;
+    //        RasterizerState = Graphics.RasterizerState;
+    //        TransformMatrix = ParentContext.TransformMatrix * Element.RenderTransformMatrix;
+    //    }
+
+    //    private void LoadState()
+    //    {
+    //        RenderArgs.SpriteBatch.End();
+    //        RenderArgs.SpriteBatch.Begin(SpriteSortMode, BlendState, SamplerState, DepthStencilState, RasterizerState, Effect, TransformMatrix);
+    //    }
+
+    //    public void PushContext()
+    //    {
+    //        _isActive = true;
+    //    }
+
+    //    public void PopContext()
+    //    {
+
+    //        _isActive = false;
+    //    }
+
+    //    public void Dispose()
+    //    {
+    //        if (_isActive)
+    //        {
+    //            PopContext();
+    //        }
+    //    }
+    //}
 }

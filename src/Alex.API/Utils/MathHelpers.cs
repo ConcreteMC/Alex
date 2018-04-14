@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -7,6 +8,22 @@ namespace Alex.API.Utils
 {
 	public static class MathHelpers
 	{
+		public static int IntCeil(double value)
+		{
+			int i = (int) value;
+			return value > (double) i ? i + 1 : i;
+		}
+
+		public static float Min(params float[] values)
+		{
+			return values?.Min() ?? 0;
+		}
+		public static float Max(params float[] values)
+		{
+			return values?.Max() ?? 0;
+		}
+
+
 		public static float Normalize(this float x, float oldMax, float oldMin, float newMax, float newMin)
 		{
 			if (newMax < newMin)

@@ -4,6 +4,7 @@ using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Rendering;
+using Alex.API.Utils;
 using Alex.Gamestates.Gui;
 using Alex.GameStates.Gui.MainMenu;
 using Alex.Graphics;
@@ -18,6 +19,8 @@ namespace Alex.Gamestates
 	public class TitleState : GameState
 	{
 		private GuiDebugInfo _debugInfo;
+
+		private GuiTextElement _splashText;
 
 		//private GuiPanoramaSkyBox _backgroundSkyBox;
 
@@ -63,6 +66,16 @@ namespace Alex.Gamestates
 			{
 				LayoutOffsetX = 175,
 				LayoutOffsetY = 25
+			});
+			Gui.AddChild( _splashText = new GuiTextElement(false)
+			{
+				TextColor = TextColor.Yellow,
+				Rotation = -35f,
+				
+				LayoutOffsetX = 240,
+				LayoutOffsetY = 25,
+
+				Text = "Who liek minecwaf?!"
 			});
 
 			_debugInfo = new GuiDebugInfo(alex);

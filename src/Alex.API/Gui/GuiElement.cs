@@ -38,6 +38,10 @@ namespace Alex.API.Gui
         #endregion
 
         #region Drawing
+        
+        public float Rotation { get; set; }
+
+        public virtual Vector2 RotationOrigin { get; set; } = Vector2.Zero;
 
         public GuiTextures? DefaultBackgroundTexture { get; set; }
         public TextureRepeatMode BackgroundRepeatMode { get; set; } = TextureRepeatMode.Stretch;
@@ -202,6 +206,7 @@ namespace Alex.API.Gui
 
         public void Draw(GuiRenderArgs renderArgs)
         {
+            // Init matrix
             OnDraw(renderArgs);
 
             ForEachChild(c => c.Draw(renderArgs));

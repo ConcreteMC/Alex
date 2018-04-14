@@ -1,4 +1,5 @@
 ﻿using System;
+using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -81,8 +82,11 @@ namespace Alex.API.Gui
 			game.Window.ClientSizeChanged += (sender, args) => Update();
 			game.Activated                += (sender, args) => Update();
 
-			_targetWidth = Viewport.TitleSafeArea.Width;
-			_targetHeight = Viewport.TitleSafeArea.Height;
+			//TargetWidth = 480;
+			//TargetHeight = 320;
+
+			//_targetWidth = Viewport.TitleSafeArea.Width;
+			//_targetHeight = Viewport.TitleSafeArea.Height;
 			//Update();
 		}
 
@@ -91,28 +95,23 @@ namespace Alex.API.Gui
 			var viewportWidth  = Graphics.Viewport.Width;
 			var viewportHeight = Graphics.Viewport.Height;
 
-			var scaleFactor = 1;
+			CalculateScale(viewportWidth, viewportHeight, 0, TargetWidth, TargetHeight, out var scaleFactor, out var scaledWidthD, out var scaledHeightD);
 
-			while (scaleFactor < GuiScale && viewportWidth / (scaleFactor + 1.0d) >= TargetWidth && viewportHeight / (scaleFactor + 1.0d) >= TargetHeight)
-			{
-				++scaleFactor;
-			}
-
-
-			ScaledWidthD  = (double) viewportWidth  / (double) scaleFactor;
-			ScaledHeightD = (double) viewportHeight / (double) scaleFactor;
-			var scaledWidth  = (int) Math.Ceiling(ScaledWidthD);
-			var scaledHeight = (int) Math.Ceiling(ScaledHeightD);
+			var scaledWidth  = MathHelpers.IntCeil(scaledWidthD);
+			var scaledHeight = MathHelpers.IntCeil(scaledHeightD);
 
 			if (scaledWidth != ScaledWidth || scaledHeight != ScaledHeight || ScaleFactor != scaleFactor)
 			{
 
 				ScaleFactor  = scaleFactor;
+				ScaledWidthD = scaledWidthD;
+				ScaledHeightD = scaledHeightD;
+
 				ScaledWidth  = scaledWidth;
 				ScaledHeight = scaledHeight;
 				
-				var scaleX = viewportWidth / ScaledWidth;
-				var scaleY = viewportHeight / ScaledHeight;
+				var scaleX = (float)(viewportWidth / ScaledWidthD);
+				var scaleY = (float)(viewportHeight / ScaledHeightD);
 
 
 				TransformMatrix = Matrix.CreateScale(scaleX, scaleY, 1f);
@@ -120,6 +119,30 @@ namespace Alex.API.Gui
 
 				ScaleChanged?.Invoke(this, new UiScaleEventArgs(ScaledWidth, ScaledHeight, ScaleFactor));
 			}
+		}
+
+		private void CalculateScale(int viewportWidth, int viewportHeight, int guiScale, int targetWidth, int targetHeight, out int scaleFactor, out double scaledWidthD, out double scaledHeightD)
+		{
+			var isUnicode      = false;
+			scaleFactor    = 1;
+
+			if (guiScale == 0)
+			{
+				guiScale = 1000;
+			}
+
+			while (scaleFactor < guiScale && viewportWidth / (scaleFactor + 1.0d) >= targetWidth && viewportHeight / (scaleFactor + 1.0d) >= targetHeight)
+			{
+				++scaleFactor;
+			}
+
+			if (isUnicode && scaleFactor % 2 != 0 && scaleFactor != 1)
+			{
+				--scaleFactor;
+			}
+
+			scaledWidthD  = (double) viewportWidth  / (double) scaleFactor;
+			scaledHeightD = (double) viewportHeight / (double) scaleFactor;
 		}
 	}
 }

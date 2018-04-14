@@ -8,9 +8,18 @@ namespace Alex.API.Gui.Elements
 {
     public class GuiTextElement : GuiElement
     {
-        private string _text;
+	    public static readonly Color DefaultTextBackgroundColor = new Color(Color.Black, 0.6f);
+        
+	    private string _text;
+	    private Vector2? _textShadowOffset;
+	    private float _scale = 0.5f;
+	    private IFontRenderer _font;
+	    private SpriteFont _backupFont;
+	    private float _rotation;
+	    private Vector2 _rotationOrigin;
 
-        public string Text
+
+	    public string Text
         {
             get => _text;
             set
@@ -21,9 +30,7 @@ namespace Alex.API.Gui.Elements
         }
 
         public TextColor TextColor { get; set; } = TextColor.White;
-
-        private Vector2? _textShadowOffset;
-
+		
         public Vector2 TextShadowOffset
         {
             get
@@ -38,9 +45,7 @@ namespace Alex.API.Gui.Elements
 
             set => _textShadowOffset = value;
         }
-
-        private float _scale = 0.5f;
-
+		
         public float Scale
         {
             get => _scale;
@@ -53,7 +58,6 @@ namespace Alex.API.Gui.Elements
 
         public bool HasShadow { get; set; } = true;
 
-        private IFontRenderer _font;
         public IFontRenderer Font
         {
             get => _font;
@@ -64,7 +68,6 @@ namespace Alex.API.Gui.Elements
             }
         }
 
-	    private SpriteFont _backupFont;
 		public SpriteFont BackupFont
 	    {
 		    get => _backupFont;
@@ -72,6 +75,15 @@ namespace Alex.API.Gui.Elements
 		    {
 			    _backupFont = value;
 				OnTextUpdated();
+		    }
+	    }
+		
+	    public GuiTextElement(bool hasBackground = false)
+	    {
+			RotationOrigin = new Vector2(0.5f);
+		    if (hasBackground)
+		    {
+			    BackgroundOverlayColor = DefaultTextBackgroundColor;
 		    }
 	    }
 
@@ -95,19 +107,19 @@ namespace Alex.API.Gui.Elements
 	            {
 		            if (HasShadow)
 		            {
-			            renderArgs.DrawString(Font, text, Position + TextShadowOffset, TextColor.BackgroundColor, Scale);
+			            renderArgs.DrawString(Font, text, Position + TextShadowOffset, TextColor.BackgroundColor, Scale, Rotation, RotationOrigin);
 		            }
 
-		            renderArgs.DrawString(Font, text, Position, TextColor.ForegroundColor, Scale);
+		            renderArgs.DrawString(Font, text, Position, TextColor.ForegroundColor, Scale, Rotation, RotationOrigin);
 	            }
 				else if (BackupFont != null)
 	            {
 		            if (HasShadow)
 		            {
-			            renderArgs.DrawString(Position + TextShadowOffset, BackupFont, text, TextColor.BackgroundColor, Scale);
+			            renderArgs.DrawString(Position + TextShadowOffset, BackupFont, text, TextColor.BackgroundColor, Scale, Rotation, RotationOrigin);
 		            }
 
-		            renderArgs.DrawString(Position, BackupFont, text, TextColor.ForegroundColor, Scale);
+		            renderArgs.DrawString(Position, BackupFont, text, TextColor.ForegroundColor, Scale, Rotation, RotationOrigin);
 				}
 			}
         }
@@ -126,22 +138,6 @@ namespace Alex.API.Gui.Elements
 					ParentElement.UpdateLayout();
 		        }
 	        }
-        }
-    }
-
-    public class GuiAutoUpdatingTextElement : GuiTextElement
-    {
-        private readonly Func<string> _updateFunc;
-
-        public GuiAutoUpdatingTextElement(Func<string> updateFunc) : base()
-        {
-            _updateFunc = updateFunc;
-            Text = _updateFunc();
-        }
-
-        protected override void OnUpdate(GameTime gameTime)
-        {
-            Text = _updateFunc();
         }
     }
 }

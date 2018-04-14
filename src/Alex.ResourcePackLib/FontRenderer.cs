@@ -469,6 +469,11 @@ namespace Alex.ResourcePackLib
 			return new Vector2(width, height);
 		}
 
+		public int DrawString(SpriteBatch sb, string text, int x, int y, Color color)
+		{
+			return DrawString(sb, text, new Vector2(x, y), color);
+		}
+
 		public int GetCharWidth(char character)
 	    {
 		    if (character == 167)
@@ -511,38 +516,43 @@ namespace Alex.ResourcePackLib
 		    this.strikethroughStyle = false;
 	    }
 
-	    public int DrawString(SpriteBatch sb, String text, int x, int y, int color)
+	    public int DrawString(SpriteBatch sb, String text, Vector2 position, Color color)
 	    {
-		    return this.DrawString(sb, text, (float)x, (float)y, color, false, Vector2.One);
+		    return this.DrawString(sb, text, position, color, false, Vector2.One);
 	    }
 
-		public int DrawString(SpriteBatch sb, string text, float x, float y, int color, bool dropShadow)
+		public int DrawString(SpriteBatch sb, string text, Vector2 position, Color color, bool dropShadow)
 		{
-			return DrawString(sb, text, x, y, color, dropShadow, Vector2.One);
+			return DrawString(sb, text, position, color, dropShadow, Vector2.One);
 		}
 
-		public int DrawString(SpriteBatch sb, string text, float x, float y, int color, bool dropShadow, Vector2 scale)
+		public int DrawString(SpriteBatch sb,         string  text, Vector2 position, Color color,
+		                      bool        dropShadow, Vector2 scale,
+		                      float       rotation,   Vector2 origin, SpriteEffects effects = SpriteEffects.None, float layerDepth = 0)
+		{
+			return DrawString(sb, text, position, color, dropShadow, scale);
+		}
+
+		public int DrawString(SpriteBatch sb, string text, Vector2 position, Color color, bool dropShadow, Vector2 scale)
 		{
 			int lineWidth;
 			this.ResetStyles();
 
 			if (dropShadow)
 			{
-				lineWidth = this.RenderString(sb, text, x + 1.0F, y + 1.0F, color, true, scale);
-				lineWidth = Math.Max(lineWidth, this.RenderString(sb, text, x, y, color, false, scale));
+				lineWidth = this.RenderString(sb, text, position + Vector2.One, color, true, scale);
+				lineWidth = Math.Max(lineWidth, this.RenderString(sb, text, position, color, false, scale));
 			}
 			else
 			{
-				lineWidth = this.RenderString(sb, text, x, y, color, false, scale);
+				lineWidth = this.RenderString(sb, text, position, color, false, scale);
 			}
 
 			return (int) (lineWidth);
 		}
 
-		private int RenderString(SpriteBatch sb, string text, float x, float y, int color, bool dropShadow, Vector2 scale)
+		private int RenderString(SpriteBatch sb, string text, Vector2 position, Color color, bool dropShadow, Vector2 scale)
 	    {
-		    var pos = new Vector2(x, y);
-
 			if (text == null)
 		    {
 			    return 0;
@@ -556,27 +566,28 @@ namespace Alex.ResourcePackLib
 				    float lineWidth = 0;
 
 				    //  if (this.bidiFlag)
-				    {
+				    //{
 					    //   text = this.bidiReorder(text);
-				    }
+				    //}
 
-				    if ((color & -67108864) == 0)
-				    {
-					    color |= -16777216;
-				    }
+				    //if ((color & -67108864) == 0)
+				    //{
+					   // color |= -16777216;
+				    //}
 
-				    if (dropShadow)
-				    {
-					    color = (color & 16579836) >> 2 | color & -16777216;
-				    }
+				    //if (dropShadow)
+				    //{
+					   // color = (color & 16579836) >> 2 | color & -16777216;
+				    //}
 
 
-				    TextColor = new Color((float) (color >> 16 & 255) / 255.0F, (float) (color >> 8 & 255) / 255.0F,
-					    (float) (color & 255) / 255.0F, (float) (color >> 24 & 255) / 255.0F);
+				    //TextColor = new Color((float) (color >> 16 & 255) / 255.0F, (float) (color >> 8 & 255) / 255.0F,
+					   // (float) (color & 255) / 255.0F, (float) (color >> 24 & 255) / 255.0F);
 					//Color((float)(color >> 16 & 255) / 255.0F, (float)(color >> 8 & 255) / 255.0F, (float)(color & 255) / 255.0F, (float)(color >> 24 & 255) / 255.0F);
 					//	this.PosX = x;
 					//   this.PosY = y;
-				    lineWidth = this.RenderStringAtPos(sb, line, dropShadow, pos + new Vector2(0, height), scale).X;
+				    TextColor = color;
+				    lineWidth = this.RenderStringAtPos(sb, line, dropShadow, position + new Vector2(0, height), scale).X;
 				    if (lineWidth > width)
 				    {
 					    width = lineWidth;

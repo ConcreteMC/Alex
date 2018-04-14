@@ -13,6 +13,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Color = Microsoft.Xna.Framework.Color;
 using MathF = System.MathF;
+using MathHelper = Microsoft.Xna.Framework.MathHelper;
 
 namespace Alex.Graphics.Models
 {

@@ -18,6 +18,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using NLog;
 using Color = Microsoft.Xna.Framework.Color;
+using MathHelper = Microsoft.Xna.Framework.MathHelper;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace Alex.ResourcePackLib

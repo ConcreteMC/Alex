@@ -55,7 +55,7 @@ namespace Alex.Rendering.UI
 							(args.GraphicsDevice.Viewport.Width / 2) + extra, (int) heightCalc.Y),
 						new Color(Color.Black, 64));
 
-					Alex.FontRender.DrawString(args.SpriteBatch, chatInput.ToString(), 5, (int)(args.GraphicsDevice.Viewport.Height - (heightCalc.Y + 25)), (int)Color.White.PackedValue, false, scale);
+					Alex.FontRender.DrawString(args.SpriteBatch, chatInput, new Vector2(5, (int)(args.GraphicsDevice.Viewport.Height - (heightCalc.Y + 25))), Color.White, false, scale);
 				}
 
 				if (ChatMessages.Count > 0)
@@ -78,7 +78,7 @@ namespace Alex.Rendering.UI
 
 						var p = new Vector2(horizontalOffset,
 							(int) (args.GraphicsDevice.Viewport.Height - ((heightCalc.Y * count) + 25)));
-						Alex.FontRender.DrawString(args.SpriteBatch, msg.RawMessage, p.X, p.Y, (int) Color.White.PackedValue, false, scale);
+						Alex.FontRender.DrawString(args.SpriteBatch, msg.RawMessage, p, Color.White, false, scale);
 
 						count++;
 					}
