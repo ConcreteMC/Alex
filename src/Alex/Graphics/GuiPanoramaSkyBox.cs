@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Text;
 using Alex.API.Graphics;
 using Alex.API.Gui.Rendering;
 using Alex.API.Utils;
+using Alex.API.World;
+using Alex.Graphics.Models.Blocks;
 using Alex.Rendering.Camera;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
@@ -12,100 +16,244 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.Graphics
 {
-    public class GuiPanoramaSkyBox
+	public class GuiPanoramaSkyBox
     {
-        
-        private bool CanRender { get; set; } = true;
+        private bool CanRender { get; set; } = false;
 
         public Matrix WorldMatrix { get; set; } = Matrix.Identity; //Matrix.CreateScale(256f);
 
-        public ICamera Camera {get; set; }
+        public  FirstPersonCamera Camera {get; set; }
 
-        private Model _skyBox;
-        private TextureCube _skyBoxTexture;
-        private Effect _skyBoxEffect;
+        private AlphaTestEffect _skyBoxEffect;
 
         private Alex Game { get; }
         private GraphicsDevice GraphicsDevice { get; }
         private ContentManager Content { get; }
-        
 
-        public GuiPanoramaSkyBox(Alex alex, GraphicsDevice graphics, ContentManager content)
+	    private VertexBuffer Buffer;
+	    private IndexBuffer IndexBuffer;
+		public GuiPanoramaSkyBox(Alex alex, GraphicsDevice graphics, ContentManager content)
         {
             Game = alex;
             GraphicsDevice = graphics;
             Content = content;
 
-            Camera = new FirstPersonCamera(1, Vector3.Zero, Vector3.Forward);
+            Camera = new FirstPersonCamera(12, new Vector3(1, 1, 1), Vector3.Forward);
         }
 
+	    public bool Loaded = false;
+
+	    private Texture2D[] _textures;
         public void Load(IGuiRenderer renderer)
         {
+			_textures = new Texture2D[]
+			{
+				renderer.GetTexture2D(GuiTextures.Panorama0),
+				renderer.GetTexture2D(GuiTextures.Panorama2),
 
-            _skyBoxTexture = TextureUtils.TexturesToCube(GraphicsDevice, 256,
-                                                         renderer.GetTexture2D(GuiTextures.Panorama0),
-                                                         renderer.GetTexture2D(GuiTextures.Panorama1),
-                                                         renderer.GetTexture2D(GuiTextures.Panorama2),
-                                                         renderer.GetTexture2D(GuiTextures.Panorama3),
-                                                         renderer.GetTexture2D(GuiTextures.Panorama4),
-                                                         renderer.GetTexture2D(GuiTextures.Panorama5)
-                                                        );
+				renderer.GetTexture2D(GuiTextures.Panorama5), //Bottom
+				renderer.GetTexture2D(GuiTextures.Panorama4), //Top
 
-            _skyBox = Content.Load<Model>("CubeModel.xnb");
-            _skyBoxEffect = Content.Load<Effect>("SkyboxEffect.xnb");
-
+				renderer.GetTexture2D(GuiTextures.Panorama1), //Left
+				renderer.GetTexture2D(GuiTextures.Panorama3)  //Right
+			};
+			
+			CreateSkybox(GraphicsDevice);
+			
             CanRender = true;
+	        Loaded = true;
         }
 
+		public void CreateSkybox(GraphicsDevice device)
+		{
+			_skyBoxEffect = new AlphaTestEffect(device);
 
-        private long _i;
+			Buffer = new VertexBuffer(device,
+								typeof(VertexPositionTexture),
+								4 * 6,
+								BufferUsage.WriteOnly);
+
+			VertexPositionTexture[] data = new VertexPositionTexture[4 * 6];
+
+			float y = 0.3f;
+
+			short[] indexer = new short[6 * 6];
+
+			#region Define Vertexes
+			Vector3 vExtents = new Vector3(256, 256, 256);
+			//back
+			data[0].Position = new Vector3(vExtents.X, -vExtents.Y * y, -vExtents.Z);
+			data[0].TextureCoordinate.X = 0f;
+			data[0].TextureCoordinate.Y = 1.0f;
+
+			data[1].Position = new Vector3(vExtents.X, vExtents.Y, -vExtents.Z);
+			data[1].TextureCoordinate.X = 0.0f;
+			data[1].TextureCoordinate.Y = 0.0f;
+
+
+			data[2].Position = new Vector3(-vExtents.X, vExtents.Y, -vExtents.Z);
+			data[2].TextureCoordinate.X = 1f;
+			data[2].TextureCoordinate.Y = 0.0f;
+
+			data[3].Position = new Vector3(-vExtents.X, -vExtents.Y * y, -vExtents.Z);
+			data[3].TextureCoordinate.X = 1f;
+			data[3].TextureCoordinate.Y = 1.0f;
+
+			//front
+			data[4].Position = new Vector3(-vExtents.X, -vExtents.Y * y, vExtents.Z);
+			data[4].TextureCoordinate.X = 1f;
+			data[4].TextureCoordinate.Y = 1.0f;
+
+			data[5].Position = new Vector3(-vExtents.X, vExtents.Y, vExtents.Z);
+			data[5].TextureCoordinate.X = 1f;
+			data[5].TextureCoordinate.Y = 0.0f;
+
+			data[6].Position = new Vector3(vExtents.X, vExtents.Y, vExtents.Z);
+			data[6].TextureCoordinate.X = 0.0f;
+			data[6].TextureCoordinate.Y = 0.0f;
+
+			data[7].Position = new Vector3(vExtents.X, -vExtents.Y * y, vExtents.Z);
+			data[7].TextureCoordinate.X = 0.0f;
+			data[7].TextureCoordinate.Y = 1.0f;
+
+			//bottom (2)
+			data[8].Position = new Vector3(-vExtents.X, -vExtents.Y * y, -vExtents.Z);
+			data[8].TextureCoordinate.X = 1.0f;
+			data[8].TextureCoordinate.Y = 0.0f;
+
+			data[9].Position = new Vector3(-vExtents.X, -vExtents.Y * y, vExtents.Z);
+			data[9].TextureCoordinate.X = 1.0f;
+			data[9].TextureCoordinate.Y = 1f;
+
+			data[10].Position = new Vector3(vExtents.X, -vExtents.Y * y, vExtents.Z);
+			data[10].TextureCoordinate.X = 0.0f;
+			data[10].TextureCoordinate.Y = 1f;
+
+			data[11].Position = new Vector3(vExtents.X, -vExtents.Y * y, -vExtents.Z);
+			data[11].TextureCoordinate.X = 0.0f;
+			data[11].TextureCoordinate.Y = 0.0f;
+
+			//top (3)
+			data[12].Position = new Vector3(vExtents.X, vExtents.Y, -vExtents.Z);
+			data[12].TextureCoordinate.X = 0.5f;
+			data[12].TextureCoordinate.Y = 0.0f;
+
+			data[13].Position = new Vector3(vExtents.X, vExtents.Y, vExtents.Z);
+			data[13].TextureCoordinate.X = 0.5f;
+			data[13].TextureCoordinate.Y = 1.0f;
+
+			data[14].Position = new Vector3(-vExtents.X, vExtents.Y, vExtents.Z);
+			data[14].TextureCoordinate.X = 1.0f;
+			data[14].TextureCoordinate.Y = 1.0f;
+
+			data[15].Position = new Vector3(-vExtents.X, vExtents.Y, -vExtents.Z);
+			data[15].TextureCoordinate.X = 1.0f;
+			data[15].TextureCoordinate.Y = 0.0f;
+
+			//left
+			data[16].Position = new Vector3(-vExtents.X, vExtents.Y, -vExtents.Z);
+			data[16].TextureCoordinate.X = 1f;
+			data[16].TextureCoordinate.Y = 1.0f;
+
+			data[17].Position = new Vector3(-vExtents.X, vExtents.Y, vExtents.Z);
+			data[17].TextureCoordinate.X = 0f;
+			data[17].TextureCoordinate.Y = 1.0f;
+
+			data[18].Position = new Vector3(-vExtents.X, -vExtents.Y * y, vExtents.Z);
+			data[18].TextureCoordinate.X = 0f;
+			data[18].TextureCoordinate.Y = 0.0f;
+
+			data[19].Position = new Vector3(-vExtents.X, -vExtents.Y * y, -vExtents.Z);
+			data[19].TextureCoordinate.X = 1.0f;
+			data[19].TextureCoordinate.Y = 0.0f;
+
+			//right
+			data[20].Position = new Vector3(vExtents.X, -vExtents.Y * y, -vExtents.Z);
+			data[20].TextureCoordinate.X = 0.0f;
+			data[20].TextureCoordinate.Y = 1.0f;
+
+			data[21].Position = new Vector3(vExtents.X, -vExtents.Y * y, vExtents.Z);
+			data[21].TextureCoordinate.X = 1.0f;
+			data[21].TextureCoordinate.Y = 0.0f;
+
+			data[22].Position = new Vector3(vExtents.X, vExtents.Y, vExtents.Z);
+			data[22].TextureCoordinate.X = 1.0f;
+			data[22].TextureCoordinate.Y = 0.0f;
+
+			data[23].Position = new Vector3(vExtents.X, vExtents.Y, -vExtents.Z);
+			data[23].TextureCoordinate.X = 0.0f;
+			data[23].TextureCoordinate.Y = 0.5f;
+
+			Buffer.SetData<VertexPositionTexture>(data);
+
+
+			IndexBuffer = new IndexBuffer(device,
+								typeof(short), 6 * 6,
+								BufferUsage.WriteOnly);
+
+			for (int x = 0; x < 6; x++)
+			{
+				indexer[x * 6 + 0] = (short)(x * 4 + 0);
+				indexer[x * 6 + 2] = (short)(x * 4 + 1);
+				indexer[x * 6 + 1] = (short)(x * 4 + 2);
+
+				indexer[x * 6 + 3] = (short)(x * 4 + 2);
+				indexer[x * 6 + 5] = (short)(x * 4 + 3);
+				indexer[x * 6 + 4] = (short)(x * 4 + 0);
+			}
+
+			IndexBuffer.SetData<short>(indexer);
+			#endregion
+
+		}
+
+
+	    private float _rotation = 0f;
         public void Update(GameTime gameTime)
         {
-            var rotX = (float) Math.Sin(_i);
-            var rotY = (float) Math.Cos(_i) / 2f;
+	        _rotation += 0.2f * 
+	                     (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-            Camera.Rotation = new Vector3(rotX, rotY, 1f);
+			WorldMatrix = Matrix.CreateTranslation(-Vector3.One) * Matrix.CreateRotationY(_rotation) * Matrix.CreateTranslation(Vector3.One);
+	        _skyBoxEffect.World = WorldMatrix;
+	        _skyBoxEffect.View = Camera.ViewMatrix;
+	        _skyBoxEffect.Projection = Camera.ProjectionMatrix;
         }
 
         public void Draw(IRenderArgs args)
         {
             if (!CanRender) return;
 
-            var g = args.GraphicsDevice;
-            var camera = args.Camera;
-            g.Clear(Color.SkyBlue);
-            
-            var depthState = g.DepthStencilState;
-            var raster     = g.RasterizerState;
-            var bl         = g.BlendState;
+            var device = args.GraphicsDevice;
 
-            g.DepthStencilState = new DepthStencilState() { DepthBufferEnable = false };
-            g.RasterizerState   = new RasterizerState() { CullMode            = CullMode.None };
-            g.BlendState        = BlendState.AlphaBlend;
+	        device.Clear(Color.SkyBlue);
 
-            foreach (var pass in _skyBoxEffect.CurrentTechnique.Passes)
-            {
-                pass.Apply();
+			//g.Indices =
+			var depthState = device.DepthStencilState;
+            var raster     = device.RasterizerState;
+            var bl         = device.BlendState;
 
-                foreach (var mesh in _skyBox.Meshes)
-                {
-                    foreach (var part in mesh.MeshParts)
-                    {
-                        part.Effect = _skyBoxEffect;
-                        part.Effect.Parameters["World"].SetValue(WorldMatrix * Matrix.CreateTranslation(camera.Position));
-                        part.Effect.Parameters["View"].SetValue(WorldMatrix * camera.ViewMatrix);
-                        part.Effect.Parameters["Projection"].SetValue(camera.ProjectionMatrix);
-                        part.Effect.Parameters["SkyBoxTexture"].SetValue(_skyBoxTexture);
-                        part.Effect.Parameters["CameraPosition"].SetValue(camera.Position);
-                    }
+			device.DepthStencilState = DepthStencilState.None;
+	        device.SamplerStates[0] = SamplerState.LinearWrap;
+	        device.RasterizerState = RasterizerState.CullCounterClockwise;
+	        device.SetVertexBuffer(Buffer);
+	        device.Indices = IndexBuffer;
+	        _skyBoxEffect.CurrentTechnique.Passes[0].Apply();
 
-                    mesh.Draw();
-                }
-            }
+	        //int x = 1;
+	        for (int x = 0; x < 6; x++)
+	        {
+		        if (_textures[x] == null) continue;
 
-            g.DepthStencilState = depthState;
-            g.RasterizerState   = raster;
-            g.BlendState        = bl;
+		        _skyBoxEffect.Texture = _textures[x];
+		        _skyBoxEffect.Techniques[0].Passes[0].Apply();
+		        device.DrawIndexedPrimitives(PrimitiveType.TriangleList,
+			        0, 0, Buffer.VertexCount, x * 6, 2);
+	        }
+
+			device.DepthStencilState = depthState;
+            device.RasterizerState   = raster;
+            device.BlendState        = bl;
         }
     }
 }
