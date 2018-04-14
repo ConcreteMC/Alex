@@ -88,6 +88,16 @@ namespace Alex.Graphics.Models
 				Bottom = GetBottomVertex(uv);
 			}
 
+			public void BuildCube(Vector2 front, Vector2 back, Vector2 left, Vector2 right, Vector2 top, Vector2 bottom)
+			{
+				Front = GetFrontVertex(front);
+				Back = GetBackVertex(back);
+				Left = GetLeftVertex(left);
+				Right = GetRightVertex(right);
+				Top = GetTopVertex(top);
+				Bottom = GetBottomVertex(bottom);
+			}
+
 			private VertexPositionNormalTexture[] GetLeftVertex(Vector2 uv)
 			{
 				Vector3 normal = new Vector3(-1.0f, 0.0f, 0.0f) * Size;

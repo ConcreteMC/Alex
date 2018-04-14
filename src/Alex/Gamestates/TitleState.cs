@@ -67,7 +67,6 @@ namespace Alex.Gamestates
 
 		protected override void OnLoad(RenderArgs args)
 		{
-
 			//var logo = new UiElement()
 			//{
 			//	ClassName = "TitleScreenLogo",
@@ -87,7 +86,13 @@ namespace Alex.Gamestates
 
 		protected override void OnDraw3D(RenderArgs args)
 		{
-			//_backgroundSkyBox.Draw(args);
+		//	if (!_backgroundSkyBox.Loaded)
+			//{
+		//		_backgroundSkyBox.Load(Alex.GuiRenderer);
+		//	}
+
+		//	_backgroundSkyBox.Draw(args);
+
 			base.OnDraw3D(args);
 		}
 
