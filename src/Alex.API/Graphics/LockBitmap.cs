@@ -4,9 +4,9 @@ using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using Color = Microsoft.Xna.Framework.Color;
 
-namespace Alex.ResourcePackLib
+namespace Alex.API.Graphics
 {
-    internal class LockBitmap
+    public class LockBitmap
     {
         Bitmap     _source     = null;
         IntPtr     _iptr       = IntPtr.Zero;

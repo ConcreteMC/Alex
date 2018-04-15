@@ -7,6 +7,7 @@ namespace Alex.API.Gui.Rendering
     {
         void Init(GraphicsDevice graphics);
 
+        BitmapFont Font { get; }
 
         IFontRenderer DefaultFont { get; }
 

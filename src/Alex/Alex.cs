@@ -219,7 +219,7 @@ namespace Alex
 
 			Mouse.SetPosition(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2);
 
-			GuiRenderer.LoadResourcePackTextures(Resources.ResourcePack);
+			GuiRenderer.LoadResourcePack(Resources.ResourcePack);
 			//UiManager.Theme = Resources.UiThemeFactory.GetTheme();
 
 			GameStateManager.AddState("title", new TitleState(this, Content)); 

@@ -16,7 +16,7 @@ namespace Alex.API.Gui.Elements
 
         private int _spriteSheetSegmentWidth = 1;
         public NinePatchTexture2D Highlight { get; set; }
-	 //   public SpriteFont Font { get; set; }
+	 //   public SpriteFont FontRenderer { get; set; }
 
 	//	private Vector2 TextSize { get; set; } = Vector2.One;
 	 //   private Vector2 TextScale { get; set; } = Vector2.One;
@@ -28,7 +28,7 @@ namespace Alex.API.Gui.Elements
 
         protected override void OnInit(IGuiRenderer renderer)
         {
-	     //   Font = renderer.DefaultFont;
+	     //   FontRenderer = renderer.DefaultFont;
 		//	TextSize = new Vector2(Width, Height);
 
             var texture = renderer.GetTexture(GuiTextures.ProgressBar);
@@ -44,7 +44,7 @@ namespace Alex.API.Gui.Elements
 		    base.OnUpdate(gameTime);
 
 		   /* Text = $"{(int)(Percent * 100)}%";
-		    var size = Font.MeasureString(Text);
+		    var size = FontRenderer.MeasureString(Text);
 		    TextSize = size * TextScale;
 
 		    while (TextSize.Y >= Height)
@@ -65,7 +65,7 @@ namespace Alex.API.Gui.Elements
             bounds = new Rectangle(bounds.X + _spriteSheetSegmentWidth, bounds.Y, Math.Max(1, (int)(fillWidth * Percent)), bounds.Height);
             args.DrawNinePatch(bounds, Highlight, TextureRepeatMode.Stretch);
 
-	       //	args.SpriteBatch.DrawString(Font, Text, Bounds.Center.ToVector2() - (TextSize / 2f), Color.Black, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
+	       //	args.SpriteBatch.DrawString(FontRenderer, Text, Bounds.Center.ToVector2() - (TextSize / 2f), Color.Black, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
         }
     }
 }

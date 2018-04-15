@@ -16,7 +16,8 @@ namespace Alex.Gamestates.Gui
     {
 
         private Alex Alex { get; }
-
+        
+        public BitmapFont Font => _font;
         public IFontRenderer DefaultFont => Alex.FontRender;
 
         private GraphicsDevice _graphicsDevice;
@@ -26,6 +27,7 @@ namespace Alex.Gamestates.Gui
 
         private Texture2D _widgets;
         private Texture2D _icons;
+        private BitmapFont _font;
 
         #region SpriteSheet Definitions
 
@@ -76,9 +78,17 @@ namespace Alex.Gamestates.Gui
 
             if (_resourceManager?.ResourcePack != null)
             {
-                LoadResourcePackTextures(_resourceManager.ResourcePack);
+                LoadResourcePack(_resourceManager.ResourcePack);
             }
         }
+
+        public void LoadResourcePack(McResourcePack resourcePack)
+        {
+            _font = resourcePack.Font;
+
+            LoadResourcePackTextures(resourcePack);
+        }
+
 
         private void LoadEmbeddedTextures()
         {
@@ -88,7 +98,7 @@ namespace Alex.Gamestates.Gui
         }
 
 
-        public void LoadResourcePackTextures(McResourcePack resourcePack)
+        private void LoadResourcePackTextures(McResourcePack resourcePack)
         {
             // First load Widgets
             resourcePack.TryGetTexture("gui/widgets", out _widgets);

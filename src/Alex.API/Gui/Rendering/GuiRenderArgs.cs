@@ -1,5 +1,6 @@
 ﻿using System;
 using Alex.API.Graphics;
+using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -178,6 +179,51 @@ namespace Alex.API.Gui.Rendering
         {
             spriteFont.DrawString(SpriteBatch, text, position, color, false, scale, rotation, origin, effects, layerDepth);
         }
+
+        #region BitmapFont Proxy
+        
+		public void DrawString(BitmapFont bitmapFont, string text, Vector2 position, TextColor color, bool dropShadow = true)
+		{
+		    SpriteBatch.DrawString(bitmapFont, text, position, color, dropShadow, 0f, Vector2.Zero, Vector2.One, SpriteEffects.None, 0f);
+		}
+
+		public void DrawString(BitmapFont bitmapFont, string text, Vector2 position, float scale, TextColor color, bool dropShadow = true)
+		{
+		    SpriteBatch.DrawString(bitmapFont, text, position, color, dropShadow, 0f, Vector2.Zero, new Vector2(scale), SpriteEffects.None, 0f);
+		}
+
+		public void DrawString(BitmapFont bitmapFont, string text, Vector2 position, Vector2 scale, TextColor color, bool dropShadow = true)
+		{
+		    SpriteBatch.DrawString(bitmapFont, text, position, color, dropShadow, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+		}
+
+		public void DrawString(BitmapFont bitmapFont, string text, Vector2 position, float scale, TextColor color, bool dropShadow = true, float rotation = 0f, Vector2? origin = null)
+		{
+		    SpriteBatch.DrawString(bitmapFont, text, position, color, dropShadow, rotation, origin.HasValue ? origin.Value : Vector2.Zero, new Vector2(scale), SpriteEffects.None, 0f);
+		}
+
+		public void DrawString(BitmapFont bitmapFont, string text, Vector2 position, Vector2 scale, TextColor color, bool dropShadow = true, float rotation = 0f, Vector2? origin = null)
+		{
+		    SpriteBatch.DrawString(bitmapFont, text, position, color, dropShadow, rotation, origin.HasValue ? origin.Value : Vector2.Zero, scale, SpriteEffects.None, 0f);
+		}
+
+		public void DrawString(BitmapFont bitmapFont, string text, Vector2 position, TextColor color, bool dropShadow = true, float rotation = 0f, Vector2? origin = null)
+		{
+		    SpriteBatch.DrawString(bitmapFont, text, position, color, dropShadow, rotation, origin.HasValue ? origin.Value : Vector2.Zero, Vector2.One, SpriteEffects.None, 0f);
+		}
+
+        
+        public void DrawString(BitmapFont bitmapFont, string text, Vector2 position, TextColor color, bool dropShadow, float rotation, Vector2 origin, float scale = 1f, SpriteEffects effects = SpriteEffects.None, float layerDepth = 0f)
+        {
+            SpriteBatch.DrawString(bitmapFont, text, position, color, dropShadow, rotation, origin, new Vector2(scale), effects, layerDepth);
+        }
+
+        public void DrawString(BitmapFont bitmapFont, string text, Vector2 position, TextColor color, bool dropShadow, float rotation, Vector2 origin, Vector2 scale, SpriteEffects effects = SpriteEffects.None, float layerDepth = 0f)
+        {
+            SpriteBatch.DrawString(bitmapFont, text, position, color, dropShadow, rotation, origin, scale, effects, layerDepth);
+        }
+
+        #endregion
 	}
 
     //public struct GuiRenderState

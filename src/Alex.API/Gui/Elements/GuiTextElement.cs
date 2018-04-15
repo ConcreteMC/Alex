@@ -1,4 +1,5 @@
 ﻿using System;
+using Alex.API.Graphics;
 using Alex.API.Gui.Rendering;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
@@ -12,8 +13,9 @@ namespace Alex.API.Gui.Elements
         
 	    private string _text;
 	    private Vector2? _textShadowOffset;
-	    private float _scale = 0.5f;
-	    private IFontRenderer _font;
+	    private float _scale = 1f;
+	    private IFontRenderer _fontRenderer;
+	    private BitmapFont _font;
 	    private SpriteFont _backupFont;
 	    private float _rotation;
 	    private Vector2 _rotationOrigin;
@@ -58,15 +60,24 @@ namespace Alex.API.Gui.Elements
 
         public bool HasShadow { get; set; } = true;
 
-        public IFontRenderer Font
+        public IFontRenderer FontRenderer
         {
-            get => _font;
+            get => _fontRenderer;
             set
             {
-                _font = value;
+                _fontRenderer = value;
                 OnTextUpdated();
             }
         }
+	    public BitmapFont Font
+	    {
+		    get => _font;
+		    set
+		    {
+			    _font = value;
+			    OnTextUpdated();
+		    }
+	    }
 
 		public SpriteFont BackupFont
 	    {
@@ -90,7 +101,8 @@ namespace Alex.API.Gui.Elements
 		protected override void OnInit(IGuiRenderer renderer)
         {
             base.OnInit(renderer);
-            Font = renderer.DefaultFont;
+            Font = renderer.Font;
+	        FontRenderer = renderer.DefaultFont;
         }
 
         protected override void OnUpdate(GameTime gameTime)
@@ -105,12 +117,16 @@ namespace Alex.API.Gui.Elements
             {
 	            if (Font != null)
 	            {
+					renderArgs.DrawString(Font, text, Position, TextColor, HasShadow, Rotation, RotationOrigin, Scale);
+	            }
+				else if (FontRenderer != null)
+	            {
 		            if (HasShadow)
 		            {
-			            renderArgs.DrawString(Font, text, Position + TextShadowOffset, TextColor.BackgroundColor, Scale, Rotation, RotationOrigin);
+			            renderArgs.DrawString(FontRenderer, text, Position + TextShadowOffset, TextColor.BackgroundColor, Scale, Rotation, RotationOrigin);
 		            }
-
-		            renderArgs.DrawString(Font, text, Position, TextColor.ForegroundColor, Scale, Rotation, RotationOrigin);
+					
+		            renderArgs.DrawString(FontRenderer, text, Position, TextColor.ForegroundColor, Scale, Rotation, RotationOrigin);
 	            }
 				else if (BackupFont != null)
 	            {
@@ -126,9 +142,9 @@ namespace Alex.API.Gui.Elements
 
 	    private void OnTextUpdated(bool updateLayout = true)
         {
-	        if ((Font != null || BackupFont != null) && !string.IsNullOrWhiteSpace(Text))
+	        if ((Font != null || FontRenderer != null || BackupFont != null) && !string.IsNullOrWhiteSpace(Text))
 	        {
-		        var size = Font?.GetStringSize(Text, new Vector2(Scale)) ?? BackupFont.MeasureString(Text);
+		        var size = Font?.MeasureString(Text, new Vector2(Scale)) ?? FontRenderer?.GetStringSize(Text, new Vector2(Scale)) ?? (BackupFont.MeasureString(Text) * Scale);
 
 		        Width = (int) Math.Ceiling(size.X);
 		        Height = (int) Math.Ceiling(size.Y);

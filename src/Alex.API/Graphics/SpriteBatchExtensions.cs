@@ -72,6 +72,11 @@ namespace Alex.API.Graphics
         {
             spriteBatch.Draw(textureSlice.Texture, position, textureSlice.Bounds, color);
         }
+        
+        public static void Draw(this SpriteBatch spriteBatch, TextureSlice2D textureSlice, Vector2 position, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects effects = SpriteEffects.None, float layerDepth = 0f)
+        {
+            spriteBatch.Draw(textureSlice.Texture, position, textureSlice.Bounds, color, rotation, origin, scale, effects, layerDepth);
+        }
 
         public static void Draw(this SpriteBatch spriteBatch, TextureSlice2D textureSlice, Vector2 position, Rectangle? sourceRectangle, Color color)
         {

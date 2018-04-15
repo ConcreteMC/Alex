@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
@@ -70,10 +71,11 @@ namespace Alex.Gamestates
 			Gui.AddChild( _splashText = new GuiTextElement(false)
 			{
 				TextColor = TextColor.Yellow,
-				Rotation = -35f,
+				Rotation = 145f,
+				//RotationOrigin = Vector2.Zero,
 				
-				LayoutOffsetX = 240,
-				LayoutOffsetY = 25,
+				X = 240,
+				Y = 25,
 
 				Text = "Who liek minecwaf?!"
 			});
@@ -81,6 +83,7 @@ namespace Alex.Gamestates
 			_debugInfo = new GuiDebugInfo(alex);
 			_debugInfo.AddDebugRight(() => $"Cursor Position: {alex.InputManager.CursorInputListener.GetCursorPosition()} / {alex.GuiManager.FocusManager.CursorPosition}");
 			_debugInfo.AddDebugRight(() => $"Cursor Delta: {alex.InputManager.CursorInputListener.GetCursorPositionDelta()}");
+			_debugInfo.AddDebugRight(() => $"Splash Text Scale: {_splashText.Scale:F3}");
 
 		}
 
@@ -97,9 +100,16 @@ namespace Alex.Gamestates
 			Alex.IsMouseVisible = true;
 		}
 
+		private float _rotation;
+
 		protected override void OnUpdate(GameTime gameTime)
 		{
 			_backgroundSkyBox.Update(gameTime);
+
+			_rotation += (float)gameTime.ElapsedGameTime.TotalMilliseconds / (1000.0f / 20.0f);
+
+			_splashText.Scale = 0.75f + (float)Math.Abs(Math.Sin(MathHelper.ToRadians(_rotation * 10.0f))) * 0.75f;
+
 			base.OnUpdate(gameTime);
 		}
 
