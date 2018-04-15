@@ -13,13 +13,16 @@ namespace Alex.API.Gui.Rendering
         public GraphicsDevice Graphics { get; }
         public SpriteBatch SpriteBatch { get; }
 
+        public GameTime GameTime { get; }
+
         //public GuiElementRenderContext ActiveContext { get; private set; }
 
-        public GuiRenderArgs(IGuiRenderer renderer, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
+        public GuiRenderArgs(IGuiRenderer renderer, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, GameTime gameTime)
         {
             Renderer = renderer;
             Graphics = graphicsDevice;
             SpriteBatch = spriteBatch;
+            GameTime = gameTime;
         }
         
         

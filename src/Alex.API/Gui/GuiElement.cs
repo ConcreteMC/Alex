@@ -9,12 +9,38 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.API.Gui
 {
-    public delegate bool GuiElementPredicate(GuiElement element);
+    public delegate bool GuiElementPredicate(IGuiElement element);
+    public delegate bool GuiElementPredicate<in TGuiElement>(TGuiElement element) where TGuiElement : class, IGuiElement;
 
-    public class GuiElement
+    public class GuiElement : IGuiElement
     {
-        public GuiElement ParentElement { get; set; }
-        
+        private IGuiScreen _screen;
+
+        public IGuiScreen Screen
+        {
+            get => _screen;
+            private set
+            {
+                var currentScreen = _screen;
+                _screen = value;
+                OnScreenChanged(currentScreen, _screen);
+            }
+        }
+
+        private IGuiElement _parentElement;
+
+        public IGuiElement ParentElement
+        {
+            get => _parentElement;
+            set
+            {
+                _parentElement = value;
+                TryFindParentOfType<IGuiScreen>(e => true, out IGuiScreen screen);
+                Screen = screen;
+                OnParentElementChanged(_parentElement);
+            }
+        }
+
         public virtual int X  { get; set; } = 0;
         public virtual int Y { get; set; } = 0;
 
@@ -23,10 +49,10 @@ namespace Alex.API.Gui
         public virtual int LayoutWidth { get; set; } = -1;
         public virtual int LayoutHeight { get; set; } = -1;
 
-        protected List<GuiElement> Children { get; } = new List<GuiElement>();
+        protected List<IGuiElement> Children { get; } = new List<IGuiElement>();
         public bool HasChildren => Children.Any();
 
-        protected internal IEnumerable<GuiElement> AllChildElements => Children.SelectMany(c => c.AllChildElements);
+        // protected internal IEnumerable<IGuiElement> AllChildElements => Children.SelectMany(c => c.AllChildElements);
 
         protected Color DebugColor { get; set; } = Color.Red;
 
@@ -116,6 +142,8 @@ namespace Alex.API.Gui
         public         Rectangle Bounds   => new Rectangle(Position.ToPoint(), Size);
 
         #endregion
+
+        protected IGuiRenderer GuiRenderer => _guiRenderer;
 
         private IGuiRenderer _guiRenderer;
         private bool _initialised;
@@ -239,7 +267,7 @@ namespace Alex.API.Gui
             }
         }
 
-        public void AddChild(GuiElement element)
+        public void AddChild(IGuiElement element)
         {
 	        if (element == this) return;
 
@@ -252,7 +280,7 @@ namespace Alex.API.Gui
             UpdateLayout();
         }
 
-        public void RemoveChild(GuiElement element)
+        public void RemoveChild(IGuiElement element)
         {
 	        if (element == this) return;
 
@@ -290,7 +318,33 @@ namespace Alex.API.Gui
             return false;
         }
 
-        public bool TryFindDeepestChild(GuiElementPredicate predicate, out GuiElement childElement)
+        public bool TryFindParent(GuiElementPredicate predicate, out IGuiElement parentElement)
+        {
+            if (ParentElement == null)
+            {
+                parentElement = null;
+                return false;
+            }
+
+            if(predicate(ParentElement))
+            {
+                parentElement = ParentElement;
+                return true;
+            }
+
+            return ParentElement.TryFindParent(predicate, out parentElement);
+        }
+
+        public bool TryFindParentOfType<TGuiElement>(GuiElementPredicate<TGuiElement> predicate, out TGuiElement parentElement) where TGuiElement : class, IGuiElement
+        {
+            
+            var result = TryFindParent(e => e is TGuiElement e1 && predicate(e1), out IGuiElement element);
+
+            parentElement = element as TGuiElement;
+            return result;
+        }
+
+        public bool TryFindDeepestChild(GuiElementPredicate predicate, out IGuiElement childElement)
         {
             childElement = null;
             if (!HasChildren) return false;
@@ -322,11 +376,19 @@ namespace Alex.API.Gui
                     return true;
                 }
             }
-
+             
             return false;
         }
 
-        public IEnumerable<TResult> ForEachChild<TResult>(Func<GuiElement, TResult> valueSelector)
+        public bool TryFindDeepestChildOfType<TGuiElement>(GuiElementPredicate<TGuiElement> predicate, out TGuiElement childElement) where TGuiElement : class, IGuiElement
+        {
+            var result = TryFindDeepestChild(e => e is TGuiElement e1 && predicate(e1), out IGuiElement element);
+
+            childElement = element as TGuiElement;
+            return result;
+        }
+
+        public IEnumerable<TResult> ForEachChild<TResult>(Func<IGuiElement, TResult> valueSelector)
         {
             if (HasChildren)
             {
@@ -337,7 +399,7 @@ namespace Alex.API.Gui
             }
         }
 
-        public void ForEachChild(Action<GuiElement> childAction)
+        public void ForEachChild(Action<IGuiElement> childAction)
         {
             if (!HasChildren) return;
 
@@ -345,6 +407,20 @@ namespace Alex.API.Gui
             {
                 childAction(child);
             }
+        }
+
+        protected virtual void OnScreenChanged(IGuiScreen previousScreen, IGuiScreen newScreen)
+        {
+            if (this is IGuiElement3D element3D)
+            {
+                previousScreen?.UnregisterElement(element3D);
+                newScreen?.RegisterElement(element3D);
+            }
+        }
+
+        protected virtual void OnParentElementChanged(IGuiElement parentElement)
+        {
+
         }
     }
 }

@@ -112,7 +112,7 @@ namespace Alex.API.Gui
             }
         }
 
-        private bool TryFindNextControl(Vector2 scanVector, out GuiElement nextControl)
+        private bool TryFindNextControl(Vector2 scanVector, out IGuiElement nextControl)
         {
             Vector2 scan = CursorPosition + scanVector;
 
@@ -134,7 +134,7 @@ namespace Alex.API.Gui
             return false;
         }
 
-        private bool TryGetElementAt(Vector2 position, GuiElementPredicate predicate, out GuiElement element)
+        private bool TryGetElementAt(Vector2 position, GuiElementPredicate predicate, out IGuiElement element)
         {
             foreach (var screen in GuiManager.Screens.ToArray().Reverse())
             {

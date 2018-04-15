@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using Alex.API.Entities;
+using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 
 namespace Alex.API.Graphics
@@ -21,6 +22,7 @@ namespace Alex.API.Graphics
 		void MoveTo(Vector3 position, Vector3 rotation);
 		Vector3 PreviewMove(Vector3 amount);
 		void Update(IUpdateArgs args, IEntity entity);
+		void Update(IUpdateArgs args, PlayerLocation entityLocation);
 		void UpdateAspectRatio(float aspectRatio);
 		void UpdateProjectionMatrix();
 	}

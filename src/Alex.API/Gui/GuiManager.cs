@@ -31,7 +31,7 @@ namespace Alex.API.Gui
 
             GuiRenderer = guiRenderer;
             SpriteBatch = new SpriteBatch(Game.GraphicsDevice);
-            GuiRenderArgs = new GuiRenderArgs(GuiRenderer, Game.GraphicsDevice, SpriteBatch);
+            GuiRenderArgs = new GuiRenderArgs(GuiRenderer, Game.GraphicsDevice, SpriteBatch, new GameTime());
         }
 
         private void ScaledResolutionOnScaleChanged(object sender, UiScaleEventArgs args)
@@ -50,7 +50,7 @@ namespace Alex.API.Gui
             SpriteBatch = new SpriteBatch(graphicsDevice);
             GuiRenderer.Init(graphicsDevice);
 
-            GuiRenderArgs = new GuiRenderArgs(GuiRenderer, GraphicsDevice, SpriteBatch);
+            GuiRenderArgs = new GuiRenderArgs(GuiRenderer, GraphicsDevice, SpriteBatch, new GameTime());
         }
 
         public void AddScreen(GuiScreen screen)
