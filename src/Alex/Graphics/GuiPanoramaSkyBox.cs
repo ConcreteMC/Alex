@@ -78,7 +78,7 @@ namespace Alex.Graphics
 			_skyBoxEffect = new AlphaTestEffect(device);
 
 		    _skyBoxEffect.World = World;
-		    //_skyBoxEffect.View = View;
+		    _skyBoxEffect.View = View;
 			_skyBoxEffect.View = Matrix.Identity;
 		    _skyBoxEffect.Projection = Projection;
 
@@ -90,7 +90,7 @@ namespace Alex.Graphics
 	    private Matrix _rotationMatrix;
 	    private void RotateSkyBox()
 	    {
-		    var xRot = MathHelper.ToDegrees((float)Math.Sin(MathHelper.ToRadians(_rotation / 400.0f))) * 25.0f + 20.0f;
+		    var xRot = (float) Math.Sin(_rotation / 400.0f) * 25.0f;// + 20.0f;
 
 		    _rotationMatrix = Matrix.CreateRotationX(MathHelper.ToRadians(xRot))
 		                  * Matrix.CreateRotationY(MathHelper.ToRadians(_rotation * 0.1f));

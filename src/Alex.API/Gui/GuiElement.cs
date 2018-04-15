@@ -38,8 +38,14 @@ namespace Alex.API.Gui
         #endregion
 
         #region Drawing
-        
-        public float Rotation { get; set; }
+
+        private float _rotation;
+
+        public float Rotation
+        {
+            get => _rotation;
+            set => _rotation = MathHelper.ToRadians(value);
+        }
 
         public virtual Vector2 RotationOrigin { get; set; } = Vector2.Zero;
 
