@@ -73,11 +73,11 @@ namespace Alex.Gamestates
 			Gui.AddChild( _splashText = new GuiTextElement(false)
 			{
 				TextColor = TextColor.Yellow,
-				Rotation = 145f,
+				Rotation = 17.5f,
 				//RotationOrigin = Vector2.Zero,
 				
 				X = 240,
-				Y = 25,
+				Y = 15,
 
 				Text = "Who liek minecwaf?!"
 			});
@@ -110,7 +110,7 @@ namespace Alex.Gamestates
 
 			_rotation += (float)gameTime.ElapsedGameTime.TotalMilliseconds / (1000.0f / 20.0f);
 
-			_splashText.Scale = 0.75f + (float)Math.Abs(Math.Sin(MathHelper.ToRadians(_rotation * 10.0f))) * 0.75f;
+			_splashText.Scale = 0.65f + (float)Math.Abs(Math.Sin(MathHelper.ToRadians(_rotation * 10.0f))) * 0.5f;
 
 			base.OnUpdate(gameTime);
 		}

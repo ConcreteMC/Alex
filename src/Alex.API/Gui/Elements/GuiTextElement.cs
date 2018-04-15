@@ -18,8 +18,17 @@ namespace Alex.API.Gui.Elements
 	    private BitmapFont _font;
 	    private SpriteFont _backupFont;
 	    private float _rotation;
-	    private Vector2 _rotationOrigin;
+	    private Vector2? _rotationOrigin;
 
+	    public override Vector2 RotationOrigin
+	    {
+		    get
+		    {
+			    return _rotationOrigin.HasValue ? _rotationOrigin.Value : new Vector2(-0.5f,-0.5f);
+
+		    }
+		    set { _rotationOrigin = value; }
+	    }
 
 	    public string Text
         {
@@ -90,9 +99,10 @@ namespace Alex.API.Gui.Elements
 	    }
 		
 		private string _renderText = String.Empty;
+	    private Vector2 _rotationOrigin1;
+
 	    public GuiTextElement(bool hasBackground = false)
 	    {
-			RotationOrigin = new Vector2(0.5f);
 		    if (hasBackground)
 		    {
 			    BackgroundOverlayColor = DefaultTextBackgroundColor;

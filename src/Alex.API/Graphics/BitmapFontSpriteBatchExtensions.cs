@@ -42,6 +42,8 @@ namespace Alex.API.Graphics
 		{
 			if (string.IsNullOrEmpty(text)) return;
 
+			origin *= scale;
+
 			var flipAdjustment = Vector2.Zero;
 
 			var flippedVert = (effects & SpriteEffects.FlipVertically) == SpriteEffects.FlipVertically;
@@ -167,7 +169,6 @@ namespace Alex.API.Graphics
 					firstGlyphOfLine = false;
 
 					var p = offset;
-
 
 					if (dropShadow)
 					{
