@@ -65,8 +65,10 @@ namespace Alex.Gamestates
 
 			Gui.AddChild(new GuiImage(GuiTextures.AlexLogo)
 			{
-				LayoutOffsetX = 175,
-				LayoutOffsetY = 25
+				//LayoutOffsetX = 175,
+				LayoutOffsetY = 25,
+				HorizontalAlignment = HorizontalAlignment.Center,
+				VerticalAlignment = VerticalAlignment.Top
 			});
 			Gui.AddChild( _splashText = new GuiTextElement(false)
 			{

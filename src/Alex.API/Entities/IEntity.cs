@@ -7,13 +7,12 @@ using Microsoft.Xna.Framework;
 
 namespace Alex.API.Entities
 {
-	public interface IEntity
+	public interface IEntity : IPhysicsEntity
 	{
 		UUID UUID { get; set; }
 		long EntityId { get; set; }
 		bool IsSpawned { get; set; }
 		PlayerLocation KnownPosition { get; set; }
-		Vector3 Velocity { get; set; }
 		string NameTag { get; set; }
 
 		bool NoAi { get; set; }
@@ -24,11 +23,6 @@ namespace Alex.API.Entities
 
 		long Age { get; set; }
 		double Scale { get; set; }
-		double Height { get; set; }
-		double Width { get; set; }
-		double Length { get; set; }
-		double Drag { get; set; }
-		double Gravity { get; set; }
 
 		BoundingBox GetBoundingBox();
 
@@ -36,7 +30,5 @@ namespace Alex.API.Entities
 		void Update(IUpdateArgs args);
 
 		void RenderNametag(IRenderArgs renderArgs);
-
-		void OnTick();
 	}
 }

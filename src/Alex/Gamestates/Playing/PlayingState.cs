@@ -69,6 +69,8 @@ namespace Alex.Gamestates.Playing
 
 		protected override void OnShow()
 		{
+			Alex.IsMouseVisible = false;
+
 			base.OnShow();
 			Alex.GuiManager.AddScreen(_playingHud);
 			Alex.GuiManager.AddScreen(_debugInfo);
@@ -86,7 +88,7 @@ namespace Alex.Gamestates.Playing
 			_debugInfo.AddDebugLeft(() =>
 			{
 				FpsCounter.Update();
-				return $"Alex {Alex.Version} ({FpsCounter.Value} FPS, {World.ChunkUpdates}:{World.LowPriorityUpdates} chunk updates)";
+				return $"Alex {Alex.Version} ({FpsCounter.Value:##} FPS, {World.ChunkUpdates}:{World.LowPriorityUpdates} chunk updates)";
 			});
 			_debugInfo.AddDebugLeft(() =>
 			{
@@ -102,7 +104,11 @@ namespace Alex.Gamestates.Playing
 			_debugInfo.AddDebugLeft(() => $"Vertices: {World.Vertices}");
 			_debugInfo.AddDebugLeft(() => $"Chunks: {World.ChunkCount}, {World.ChunkManager.RenderedChunks}");
 			_debugInfo.AddDebugLeft(() => $"Entities: {World.EntityManager.EntityCount}, {World.EntityManager.EntitiesRendered}");
-
+			_debugInfo.AddDebugLeft(() =>
+			{
+				var pos = World.Player.KnownPosition.GetCoordinates3D();
+				return $"Biome: {World.GetBiome(pos.X,pos.Y,pos.Z)}";
+			});
 
 			_debugInfo.AddDebugRight(() => Alex.DotnetRuntime);
 			_debugInfo.AddDebugRight(() => MemoryUsageDisplay);
@@ -112,7 +118,7 @@ namespace Alex.Gamestates.Playing
 				{
 					StringBuilder sb = new StringBuilder();
 					sb.AppendLine("Looking at: " + _raytracedBlock);
-					sb.AppendLine($"{SelBlock} ({SelBlock.BlockState.ID})");
+					sb.AppendLine($"{SelBlock}");
 
 					if (SelBlock.BlockState != null)
 					{

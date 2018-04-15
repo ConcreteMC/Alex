@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Drawing.Imaging;
 using Alex.API;
+using Alex.API.Gui;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

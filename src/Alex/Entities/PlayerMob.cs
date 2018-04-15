@@ -44,7 +44,7 @@ namespace Alex.Entities
 			HideNameTag = false;
 			IsAlwaysShowName = true;
 
-			IsInWater = true;
+			IsInWater = false;
 			NoAi = true;
 			//HealthManager.IsOnFire = false;
 			Velocity = Vector3.Zero;

@@ -26,6 +26,7 @@ namespace Alex.API.Gui.Elements.Controls
 
             TextElement = new GuiTextElement()
             {
+				LayoutOffsetX = 5,
                 VerticalAlignment = VerticalAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Text = text,
@@ -34,8 +35,19 @@ namespace Alex.API.Gui.Elements.Controls
             AddChild(TextElement);
         }
 
+	    protected override void OnUpdateLayout()
+	    {
+		    int minWidth = TextElement.Width + 20;
+		    if (Width <= minWidth)
+		    {
+			    Width = minWidth;
+		    }
 
-        protected override void OnClick(Vector2 cursorPosition)
+			base.OnUpdateLayout();
+	    }
+
+
+	    protected override void OnClick(Vector2 cursorPosition)
         {
             Action?.Invoke();
         }

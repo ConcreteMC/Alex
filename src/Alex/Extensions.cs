@@ -18,7 +18,13 @@ namespace Alex
 			
 		}
 
-	    public static void Init(GraphicsDevice gd)
+		public static float DistanceTo(this Vector3 a, Vector3 b)
+		{
+			return Vector3.Distance(a, b);
+		}
+
+
+		public static void Init(GraphicsDevice gd)
 	    {
             WhiteTexture = new Texture2D(gd, 1, 1);
             WhiteTexture.SetData(new Color[] { Color.White });

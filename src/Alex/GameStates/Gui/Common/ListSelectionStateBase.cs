@@ -53,25 +53,29 @@ namespace Alex.GameStates.Gui.Common
             {
                 Text = Title,
                 TextColor = TextColor.White,
+	            Scale = 1.5f,
 
-                VerticalAlignment = VerticalAlignment.Bottom,
-                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                HorizontalAlignment = HorizontalAlignment.Center
             });
 
-            Gui.AddChild(_listContainer = new GuiStackContainer()
+	        Gui.AddChild(_listContainer = new GuiStackContainer()
             {
-                BackgroundOverlayColor = new Color(Color.Black, 0.5f),
-                LayoutOffsetY = 42,
+				BackgroundOverlayColor = new Color(Color.Black, 0.5f),
+                Y = _header.Height,
                 Width = 192,
-                VerticalAlignment = VerticalAlignment.Top,
-                //HorizontalAlignment = HorizontalAlignment.Stretch,
-                
-                //VerticalContentAlignment = VerticalAlignment.Top,
-                //HorizontalContentAlignment = HorizontalAlignment.Stretch,
+				VerticalAlignment = VerticalAlignment.Top,
+				HorizontalAlignment = HorizontalAlignment.Center,
+				HorizontalContentAlignment = HorizontalAlignment.Left,
             });
         }
 
-        public void AddItem(TGuiListItemContainer item)
+	    protected override void OnUpdate(GameTime gameTime)
+	    {
+		    base.OnUpdate(gameTime);
+	    }
+
+	    public void AddItem(TGuiListItemContainer item)
         {
             _items.Add(item);
             _listContainer.AddChild(item);

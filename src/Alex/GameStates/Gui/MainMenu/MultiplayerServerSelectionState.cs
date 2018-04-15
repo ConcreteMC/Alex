@@ -3,6 +3,7 @@ using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Icons;
 using Alex.API.Gui.Rendering;
 using Alex.GameStates.Gui.Common;
+using Alex.GameStates.Gui.Elements;
 using Alex.Graphics.Gui.Elements;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -13,6 +14,7 @@ namespace Alex.GameStates.Gui.MainMenu
 
         public MultiplayerServerSelectionState() : base()
         {
+	        Title = "Multiplayer";
             AddItem(new GuiServerListEntryElement("Localhost", "localhost:25565"));
         }
 
@@ -45,6 +47,9 @@ namespace Alex.GameStates.Gui.MainMenu
             ServerName = serverName;
             ServerAddress = serverAddress;
 
+	        HorizontalAlignment = HorizontalAlignment.Left;
+	        VerticalAlignment = VerticalAlignment.Top;
+
             AddChild( _serverIcon = new GuiTextureElement()
             {
                 Width = ServerIconSize,
@@ -65,7 +70,6 @@ namespace Alex.GameStates.Gui.MainMenu
             AddChild( _textWrapper = new GuiStackContainer()
             {
                 LayoutOffsetX = ServerIconSize + 5,
-
                 HorizontalContentAlignment = HorizontalAlignment.Stretch,
                 VerticalContentAlignment = VerticalAlignment.Top
             });
@@ -76,7 +80,7 @@ namespace Alex.GameStates.Gui.MainMenu
             });
             _textWrapper.AddChild(_serverMotd = new GuiTextElement()
             {
-
+				Text = "Pinging server..."
             });
 
 
@@ -87,7 +91,6 @@ namespace Alex.GameStates.Gui.MainMenu
             RawMotd = rawMotd;
             
             _serverMotd.Text = rawMotd;
-
         }
     }
 }

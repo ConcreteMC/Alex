@@ -235,6 +235,8 @@ namespace Alex.API.Gui
 
         public void AddChild(GuiElement element)
         {
+	        if (element == this) return;
+
             element.ParentElement = this;
             Children.Add(element);
             if (_initialised)
@@ -246,7 +248,9 @@ namespace Alex.API.Gui
 
         public void RemoveChild(GuiElement element)
         {
-            Children.Remove(element);
+	        if (element == this) return;
+
+			Children.Remove(element);
             element.ParentElement = null;
             UpdateLayout();
         }
