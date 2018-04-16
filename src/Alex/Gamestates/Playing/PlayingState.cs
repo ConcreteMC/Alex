@@ -131,6 +131,10 @@ namespace Alex.Gamestates.Playing
 
 					return sb.ToString();
 				}
+				else
+				{
+					return string.Empty;
+				}
 
 				return null;
 			});
