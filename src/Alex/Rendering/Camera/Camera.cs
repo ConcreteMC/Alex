@@ -137,8 +137,8 @@ namespace Alex.Rendering.Camera
 	    public virtual void Update(IUpdateArgs args, PlayerLocation entityLocation)
 	    {
 			
-			MoveTo(entity.KnownPosition, 
-				new Vector3(MathHelper.ToRadians(entity.KnownPosition.HeadYaw), MathHelper.ToRadians(entity.KnownPosition.Yaw), MathHelper.ToRadians(entity.KnownPosition.Pitch)));
+			MoveTo(entityLocation.ToVector3(), 
+				new Vector3(MathHelper.ToRadians(entityLocation.HeadYaw), MathHelper.ToRadians(entityLocation.Yaw), MathHelper.ToRadians(entityLocation.Pitch)));
 	    }
 	}
 }
