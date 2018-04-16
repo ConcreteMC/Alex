@@ -1,12 +1,32 @@
 ﻿using Alex.API.Gui;
+using Alex.API.Gui.Elements;
+using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Rendering;
+using Alex.API.Utils;
 using Alex.Gamestates;
+using Alex.GameStates.Gui.Elements;
 using Microsoft.Xna.Framework;
 
 namespace Alex.GameStates.Gui.Common
 {
     public class GuiStateBase : GameState
     {
+        private string _title;
+
+        public string Title
+        {
+            get => _title;
+            set
+            {
+                _title = value;
+                if(_headerTitle != null)
+                    _headerTitle.Text = value;
+            }
+        }
+
+        protected GuiContainer    Header { get; }
+        private GuiTextElement  _headerTitle;
+        private GuiBeaconButton _headerBackButton;
 
         public GuiStateBase() : base(Alex.Instance)
         {
@@ -17,6 +37,29 @@ namespace Alex.GameStates.Gui.Common
                 BackgroundOverlayColor = new Color(Color.Black, 0.25f),
                 BackgroundScale = new Vector2(2f, 2f)
             };
+
+            Gui.AddChild(Header = new GuiContainer()
+            {
+                Height              = 42,
+                VerticalAlignment   = VerticalAlignment.Top,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+            });
+
+            Header.AddChild(_headerBackButton = new GuiBackButton()
+            {
+                VerticalAlignment   = VerticalAlignment.Top,
+                HorizontalAlignment = HorizontalAlignment.Left,
+            });
+
+            Header.AddChild(_headerTitle = new GuiTextElement()
+            {
+                Text      = Title,
+                TextColor = TextColor.White,
+                Scale     = 1.5f,
+
+                VerticalAlignment   = VerticalAlignment.Center,
+                HorizontalAlignment = HorizontalAlignment.Center
+            });
         }
     }
 }

@@ -13,7 +13,7 @@ namespace Alex.API.Gui
         public GuiFocusManager FocusManager { get; }
 
         private InputManager InputManager { get; set; }
-        private IGuiRenderer GuiRenderer { get; set; }
+        public IGuiRenderer GuiRenderer { get; set; }
         private GraphicsDevice GraphicsDevice { get; set; }
         private SpriteBatch SpriteBatch { get; set; }
         private GuiRenderArgs GuiRenderArgs { get; set; }
@@ -30,6 +30,7 @@ namespace Alex.API.Gui
             FocusManager = new GuiFocusManager(this, InputManager, game.GraphicsDevice);
 
             GuiRenderer = guiRenderer;
+            guiRenderer.ScaledResolution = ScaledResolution;
             SpriteBatch = new SpriteBatch(Game.GraphicsDevice);
             GuiRenderArgs = new GuiRenderArgs(GuiRenderer, Game.GraphicsDevice, SpriteBatch, new GameTime(), ScaledResolution);
         }

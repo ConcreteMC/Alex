@@ -104,10 +104,10 @@ namespace Alex.Gamestates
 			});
 
 			_debugInfo = new GuiDebugInfo(alex);
-			_debugInfo.AddDebugRight(() => $"Cursor Position: {alex.InputManager.CursorInputListener.GetCursorPosition()} / {alex.GuiManager.FocusManager.CursorPosition}");
+			_debugInfo.AddDebugRight(() => $"Cursor RenderPosition: {alex.InputManager.CursorInputListener.GetCursorPosition()} / {alex.GuiManager.FocusManager.CursorPosition}");
 			_debugInfo.AddDebugRight(() => $"Cursor Delta: {alex.InputManager.CursorInputListener.GetCursorPositionDelta()}");
 			_debugInfo.AddDebugRight(() => $"Splash Text Scale: {_splashText.Scale:F3}");
-			_debugInfo.AddDebugRight(() => $"Entity Position: {_playerView.EntityPosition}");
+			_debugInfo.AddDebugRight(() => $"Entity RenderPosition: {_playerView.EntityPosition}");
 
 		}
 		
@@ -149,7 +149,7 @@ namespace Alex.Gamestates
 			var mousePos = Alex.InputManager.CursorInputListener.GetCursorPosition();
 
 			mousePos = Vector2.Transform(mousePos, Alex.GuiManager.ScaledResolution.InverseTransformMatrix);
-			var playerPos = _playerView.Bounds.Center.ToVector2();
+			var playerPos = _playerView.RenderBounds.Center.ToVector2();
 
 			var mouseDelta = (new Vector3(playerPos.X, -playerPos.Y, _playerViewDepth) - new Vector3(mousePos.X, -mousePos.Y, 0.0f));
 			mouseDelta.Normalize();

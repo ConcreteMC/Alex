@@ -21,7 +21,7 @@ namespace Alex.API.Graphics
 			{
 				var e = solidEntries[i];
 
-				entries.Add(e.Position, new EntryPosition(false, index, e.Vertices.Length));
+				entries.Add(e.RenderPosition, new EntryPosition(false, index, e.Vertices.Length));
 
 				for (int x = 0; x < e.Vertices.Length; x++)
 				{
@@ -34,7 +34,7 @@ namespace Alex.API.Graphics
 			{
 				var e = transparentEntries[i];
 
-				entries.Add(e.Position, new EntryPosition(true, index, e.Vertices.Length));
+				entries.Add(e.RenderPosition, new EntryPosition(true, index, e.Vertices.Length));
 
 				for (int x = 0; x < e.Vertices.Length; x++)
 				{

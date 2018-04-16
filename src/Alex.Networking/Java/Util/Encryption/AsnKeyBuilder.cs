@@ -1140,7 +1140,7 @@ namespace Alex.Networking.Java.Util.Encryption
 
       byte[] d = Duplicate(octets);
 
-      // Position of the first non-zero value
+      // RenderPosition of the first non-zero value
       int pos = 0;
       foreach (byte b in d)
       {

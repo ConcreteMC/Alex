@@ -19,13 +19,18 @@ namespace Alex.API.Gui
 
         int X { get; set; }
         int Y { get; set; }
+        
+        int MinWidth  { get; }
+        int MinHeight { get; }
+        int MaxWidth  { get; }
+        int MaxHeight { get; }
 
         int Width { get; }
         int Height { get; }
 
-        Vector2 Position { get; }
-        Point Size { get; }
-        Rectangle Bounds { get; }
+        Vector2 RenderPosition { get; }
+        Point RenderSize { get; }
+        Rectangle RenderBounds { get; }
         
         VerticalAlignment VerticalAlignment { get; set; }
         HorizontalAlignment HorizontalAlignment { get; set; }

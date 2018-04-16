@@ -93,12 +93,12 @@ namespace Alex.Graphics
 
             if (_canRender)
             {
-                var bounds = Screen.Bounds;
+                var bounds = Screen.RenderBounds;
 
                 if (bounds != _previousBounds)
                 {
                     //var c = bounds.Center;
-                    //Camera.Position = new Vector3(c.X, c.Y, 0.0f);
+                    //Camera.RenderPosition = new Vector3(c.X, c.Y, 0.0f);
                     //Camera.UpdateProjectionMatrix();
                     //Camera.UpdateAspectRatio((float) bounds.Width / (float) bounds.Height);
                     Camera.UpdateAspectRatio(bounds.Width / (float)bounds.Height);
@@ -133,7 +133,7 @@ namespace Alex.Graphics
                 };
 
                 //var viewport = args.Graphics.Viewport;
-                //args.Graphics.Viewport = new Viewport(Bounds);
+                //args.Graphics.Viewport = new Viewport(RenderBounds);
 
                 args.EndSpriteBatch();
 
@@ -151,7 +151,7 @@ namespace Alex.Graphics
                 g.RasterizerState = RasterizerState.CullClockwise;
                 g.SamplerStates[0] = SamplerState.PointWrap;
                 var newViewport = Camera.Viewport;
-                var bounds = Bounds;
+                var bounds = RenderBounds;
                 
                 bounds.Inflate(-3, -3);
 
@@ -167,7 +167,7 @@ namespace Alex.Graphics
 
                 //g.Viewport = newViewport;
                 g.Viewport = newViewport;
-                //g.ScissorRectangle = Bounds;
+                //g.ScissorRectangle = RenderBounds;
                 
                 //args.BeginSpriteBatch();
 
@@ -221,17 +221,17 @@ namespace Alex.Graphics
 
             public override void UpdateProjectionMatrix()
             {
-                //ProjectionMatrix = Matrix.CreatePerspectiveOffCenter(Viewport.Bounds, NearDistance, FarDistance);
+                //ProjectionMatrix = Matrix.CreatePerspectiveOffCenter(Viewport.RenderBounds, NearDistance, FarDistance);
                 ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(FOV), Viewport.AspectRatio, NearDistance, FarDistance);
             }
 
             //public override void UpdateProjectionMatrix()
             //{
-            //    var bounds = _modelView.Bounds;
+            //    var bounds = _modelView.RenderBounds;
             //    ProjectionMatrix =
             //        Matrix.CreatePerspective(Viewport.Width, Viewport.Height, Viewport.MinDepth, Viewport.MaxDepth);
-            //    //ProjectionMatrix = Matrix.CreateOrthographicOffCenter(Viewport.Bounds, NearDistance, FarDistance);// * Matrix.CreateTranslation(new Vector3(bounds.Location.ToVector2(), -1f));
-            //    //ProjectionMatrix = Matrix.CreatePerspectiveOffCenter(_modelView.Bounds, NearDistance, FarDistance);
+            //    //ProjectionMatrix = Matrix.CreateOrthographicOffCenter(Viewport.RenderBounds, NearDistance, FarDistance);// * Matrix.CreateTranslation(new Vector3(bounds.Location.ToVector2(), -1f));
+            //    //ProjectionMatrix = Matrix.CreatePerspectiveOffCenter(_modelView.RenderBounds, NearDistance, FarDistance);
             //}
         }
     }

@@ -9,6 +9,8 @@ namespace Alex.API.Gui
 {
     public class GuiFocusManager
     {
+        private GuiControl _highlightedElement;
+        private GuiControl _focusedElement;
 
         private GuiManager GuiManager { get; }
         private GraphicsDevice GraphicsDevice { get; }
@@ -18,9 +20,9 @@ namespace Alex.API.Gui
 
         private Viewport Viewport => GraphicsDevice.Viewport;
 
+        private Vector2 _previousCursorPosition;
         public Vector2 CursorPosition { get; private set; }
 
-        private GuiControl _highlightedElement;
         public GuiControl HighlightedElement
         {
             get => _highlightedElement;
@@ -40,7 +42,6 @@ namespace Alex.API.Gui
             }
         }
 
-        private GuiControl _focusedElement;
         public GuiControl FocusedElement
         {
             get => _focusedElement;
@@ -84,9 +85,10 @@ namespace Alex.API.Gui
             //var focusableControls = allElements.Where(e => e is GuiControl c && c.Enabled).Cast<GuiControl>().ToList();
 
             var rawCursorPosition = CursorInputListener.GetCursorPosition();
-            CursorPosition = Vector2.Transform(rawCursorPosition, GuiManager.ScaledResolution.InverseTransformMatrix);
 
-            //var controlMatchingPosition = focusableControls.LastOrDefault(e => e.Bounds.Contains(CursorPosition));
+            CursorPosition = GuiManager.GuiRenderer.Unproject(rawCursorPosition);
+
+            //var controlMatchingPosition = focusableControls.LastOrDefault(e => e.RenderBounds.Contains(CursorPosition));
             if (TryGetElementAt(CursorPosition, e => e is GuiControl c && c.Enabled, out var controlMatchingPosition))
             {
                 HighlightedElement = controlMatchingPosition as GuiControl;
@@ -109,6 +111,17 @@ namespace Alex.API.Gui
             if (HighlightedElement == FocusedElement && CursorInputListener.IsPressed(InputCommand.Click))
             {
                 HighlightedElement.InvokeClick(CursorPosition);
+            }
+
+            var isDown = CursorInputListener.IsDown(InputCommand.Click);
+            if (isDown)
+            {
+                HighlightedElement.InvokeCursorDown(CursorPosition);
+            }
+
+            if (CursorPosition.ToPoint() != _previousCursorPosition.ToPoint())
+            {
+                HighlightedElement.InvokeCursorMove(CursorPosition, _previousCursorPosition, isDown);
             }
         }
 
@@ -139,7 +152,7 @@ namespace Alex.API.Gui
             foreach (var screen in GuiManager.Screens.ToArray().Reverse())
             {
 
-                if (screen.TryFindDeepestChild(e => e.Bounds.Contains(position) && predicate(e), out var matchedChild))
+                if (screen.TryFindDeepestChild(e => e.RenderBounds.Contains(position) && predicate(e), out var matchedChild))
                 {
                     element = matchedChild;
                     return true;

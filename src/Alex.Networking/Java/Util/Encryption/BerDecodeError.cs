@@ -18,7 +18,7 @@ namespace Alex.Networking.Java.Util.Encryption
       {
         StringBuilder sb = new StringBuilder(base.Message);
 
-        sb.AppendFormat(" (Position {0}){1}",
+        sb.AppendFormat(" (RenderPosition {0}){1}",
           m_position, Environment.NewLine);
 
         return sb.ToString();
@@ -42,13 +42,13 @@ namespace Alex.Networking.Java.Util.Encryption
 
     private BerDecodeException(SerializationInfo info, StreamingContext context)
       : base(info, context)
-    { m_position = info.GetInt32("Position"); }
+    { m_position = info.GetInt32("RenderPosition"); }
 
     [SecurityPermission(SecurityAction.Demand, SerializationFormatter = true)]
     public override void GetObjectData(SerializationInfo info, StreamingContext context)
     {
       base.GetObjectData(info, context);
-      info.AddValue("Position", m_position);
+      info.AddValue("RenderPosition", m_position);
     }
   }
 }

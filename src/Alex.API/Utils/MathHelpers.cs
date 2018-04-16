@@ -14,6 +14,25 @@ namespace Alex.API.Utils
 			return value > (double) i ? i + 1 : i;
 		}
 
+		
+		public static int RoundToNearestInterval(int value, int interval)
+		{	
+			var scale = (1f / interval);
+			return (int)(Math.Round(value * scale) / scale);
+		}
+
+		public static double RoundToNearestInterval(double value, double interval)
+		{	
+			var scale = (1f / interval);
+			return Math.Round(value * scale) / scale;
+		}
+
+		public static float RoundToNearestInterval(float value, float interval)
+		{	
+			var scale = (1f / interval);
+			return (float)(Math.Round(value * scale) / scale);
+		}
+
 		public static float Min(params float[] values)
 		{
 			return values?.Min() ?? 0;

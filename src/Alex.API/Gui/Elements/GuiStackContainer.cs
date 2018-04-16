@@ -9,7 +9,7 @@ namespace Alex.API.Gui.Elements
         public Orientation Orientation { get; set; } = Orientation.Vertical;
 
         public HorizontalAlignment HorizontalContentAlignment { get; set; } = HorizontalAlignment.None;
-        public VerticalAlignment VerticalContentAlignment { get; set; } = VerticalAlignment.None;
+        public VerticalAlignment VerticalContentAlignment { get; set; } = VerticalAlignment.Top;
 
         public int Spacing = 5;
 

@@ -48,7 +48,7 @@ namespace Alex.API.Gui.Elements
             {
                 if (!_textShadowOffset.HasValue)
                 {
-                    _textShadowOffset = new Vector2(1f, 1f) * (Size.Y * 0.1f);
+                    _textShadowOffset = new Vector2(1f, 1f) * (RenderSize.Y * 0.1f);
                     //return new Vector2(1f, -1f) * Scale * 0.125f;
                 }
                 return _textShadowOffset.Value;
@@ -128,25 +128,25 @@ namespace Alex.API.Gui.Elements
             {
 	            if (Font != null)
 	            {
-					renderArgs.DrawString(Font, text, Position, TextColor, HasShadow, Rotation, RotationOrigin, Scale);
+					renderArgs.DrawString(Font, text, RenderPosition, TextColor, HasShadow, Rotation, RotationOrigin, Scale);
 	            }
 				else if (FontRenderer != null)
 	            {
 		            if (HasShadow)
 		            {
-			            renderArgs.DrawString(FontRenderer, text, Position + TextShadowOffset, TextColor.BackgroundColor, Scale, Rotation, RotationOrigin);
+			            renderArgs.DrawString(FontRenderer, text, RenderPosition + TextShadowOffset, TextColor.BackgroundColor, Scale, Rotation, RotationOrigin);
 		            }
 					
-		            renderArgs.DrawString(FontRenderer, text, Position, TextColor.ForegroundColor, Scale, Rotation, RotationOrigin);
+		            renderArgs.DrawString(FontRenderer, text, RenderPosition, TextColor.ForegroundColor, Scale, Rotation, RotationOrigin);
 	            }
 				else if (BackupFont != null)
 	            {
 		            if (HasShadow)
 		            {
-			            renderArgs.DrawString(Position + TextShadowOffset, BackupFont, text, TextColor.BackgroundColor, Scale, Rotation, RotationOrigin);
+			            renderArgs.DrawString(RenderPosition + TextShadowOffset, BackupFont, text, TextColor.BackgroundColor, Scale, Rotation, RotationOrigin);
 		            }
 
-		            renderArgs.DrawString(Position, BackupFont, text, TextColor.ForegroundColor, Scale, Rotation, RotationOrigin);
+		            renderArgs.DrawString(RenderPosition, BackupFont, text, TextColor.ForegroundColor, Scale, Rotation, RotationOrigin);
 				}
 			}
         }

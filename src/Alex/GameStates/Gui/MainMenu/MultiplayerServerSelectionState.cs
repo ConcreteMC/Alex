@@ -69,7 +69,7 @@ namespace Alex.GameStates.Gui.MainMenu
 
             AddChild( _textWrapper = new GuiStackContainer()
             {
-                LayoutOffsetX = ServerIconSize + 5,
+                X = ServerIconSize + 5,
                 HorizontalContentAlignment = HorizontalAlignment.Stretch,
                 VerticalContentAlignment = VerticalAlignment.Top
             });

@@ -39,7 +39,7 @@ namespace Alex.Gamestates.Gui
         {
             if (IsSelected)
             {
-                var bounds = Bounds;
+                var bounds = RenderBounds;
                 bounds.Inflate(1, 1);
                 args.Draw(SelectedBackground, bounds, TextureRepeatMode.NoRepeat);
             }

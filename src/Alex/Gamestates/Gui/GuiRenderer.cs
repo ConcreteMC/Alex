@@ -20,6 +20,7 @@ namespace Alex.Gamestates.Gui
         
         public BitmapFont Font => Alex.Font;
         public IFontRenderer DefaultFont => Alex.FontRender;
+        public GuiScaledResolution ScaledResolution { get; set; }
 
         private GraphicsDevice _graphicsDevice;
         private ResourceManager _resourceManager;
@@ -72,6 +73,7 @@ namespace Alex.Gamestates.Gui
             Alex = alex;
             Init(alex.GraphicsDevice);
         }
+
 
         public void Init(GraphicsDevice graphics)
         {
@@ -187,6 +189,16 @@ namespace Alex.Gamestates.Gui
         public Texture2D GetTexture2D(GuiTextures guiTexture)
         {
             return GetTexture(guiTexture).Texture;
+        }
+
+        public Vector2 Project(Vector2 point)
+        {
+            return Vector2.Transform(point, ScaledResolution.TransformMatrix);
+        }
+
+        public Vector2 Unproject(Vector2 screen)
+        {
+            return Vector2.Transform(screen, ScaledResolution.InverseTransformMatrix);
         }
     }
 }

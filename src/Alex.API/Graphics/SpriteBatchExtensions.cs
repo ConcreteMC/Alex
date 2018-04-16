@@ -17,7 +17,7 @@ namespace Alex.API.Graphics
 
         //public static void Draw(this SpriteBatch spriteBatch, TextureSlice2D textureSlice, Rectangle bounds, Color color)
         //{
-        //    Draw(spriteBatch, textureSlice.Texture, textureSlice.Bounds, bounds, color);
+        //    Draw(spriteBatch, textureSlice.Texture, textureSlice.RenderBounds, bounds, color);
         //}
         
         //public static void Draw(this SpriteBatch spriteBatch, TextureSlice2D textureSlice, Rectangle sourceRectangle, Rectangle destinationRectangle)
@@ -32,7 +32,7 @@ namespace Alex.API.Graphics
 
         //public static void Draw(this SpriteBatch spriteBatch, TextureSlice2D textureSlice, Rectangle bounds, Color color, float rotation, Vector2 origin, SpriteEffects effects = SpriteEffects.None, float layerDepth = 0f)
         //{
-        //    spriteBatch.Draw(textureSlice.Texture, bounds, textureSlice.Bounds, color, rotation, origin, effects, layerDepth);
+        //    spriteBatch.Draw(textureSlice.Texture, bounds, textureSlice.RenderBounds, color, rotation, origin, effects, layerDepth);
         //}
 
         #region Helpers

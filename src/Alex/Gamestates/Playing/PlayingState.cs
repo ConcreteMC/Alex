@@ -94,7 +94,7 @@ namespace Alex.Gamestates.Playing
 			{
 				var pos = World.Player.KnownPosition;
 				var blockPos = pos.GetCoordinates3D();
-				return $"Position: (X={pos.X:##.00}, Y={pos.Y:##.00}, Z={pos.Z:##.00}) / Block: ({blockPos.X:D}, {blockPos.Y:D}, {blockPos.Z:D})";
+				return $"RenderPosition: (X={pos.X:##.00}, Y={pos.Y:##.00}, Z={pos.Z:##.00}) / Block: ({blockPos.X:D}, {blockPos.Y:D}, {blockPos.Z:D})";
 			});
 			_debugInfo.AddDebugLeft(() =>
 			{

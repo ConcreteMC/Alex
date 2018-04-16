@@ -6,6 +6,14 @@ namespace Alex.API.Gui
 	public struct Thickness : IEquatable<Thickness>
 	{
 		public static Thickness Zero => new Thickness(0);
+		public static Thickness One => new Thickness(1);
+		
+		public static Thickness OneLeft => new Thickness(1, 0, 0, 0);
+		public static Thickness OneTop => new Thickness(0, 1, 0, 0);
+		public static Thickness OneRight => new Thickness(0, 0, 1, 0);
+		public static Thickness OneBottom => new Thickness(0, 0, 0, 1);
+		public static Thickness OneVertical => new Thickness(1, 0);
+		public static Thickness OneHorizontal => new Thickness(0, 1);
 		
 		public int Left { get; }
 		public int Top { get; }
@@ -32,6 +40,11 @@ namespace Alex.API.Gui
 			Bottom = bottom;
 		}
 
+		public double Size()
+		{
+			return Math.Sqrt(Vertical * Vertical + Horizontal * Horizontal);
+		}
+
 		public Vector2 ToVector2()
 		{
 			return new Vector2(Horizontal, Vertical);
@@ -41,6 +54,8 @@ namespace Alex.API.Gui
 		{
 			return new Point(Horizontal, Vertical);
 		}
+
+		#region Operator Overloads
 
 		public static Thickness operator +(Thickness a, Thickness b)
 		{
@@ -92,6 +107,9 @@ namespace Alex.API.Gui
 			return !(a == b);
 		}
 
+		#endregion
+
+		#region Equality
 
 		public bool Equals(Thickness other)
 		{
@@ -115,5 +133,7 @@ namespace Alex.API.Gui
 				return hashCode;
 			}
 		}
+	
+		#endregion
 	}
 }

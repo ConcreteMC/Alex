@@ -12,6 +12,7 @@ using Alex.API.World;
 using Alex.Gamestates;
 using Alex.Gamestates.Gui;
 using Alex.Gamestates.Playing;
+using Alex.GameStates.Gui.MainMenu;
 using Alex.Rendering;
 using Alex.ResourcePackLib;
 using Alex.Utils;
@@ -215,7 +216,7 @@ namespace Alex
 			GuiRenderer.LoadResourcePack(Resources.ResourcePack);
 
 			GameStateManager.AddState("title", new TitleState(this, Content)); 
-			GameStateManager.AddState("options", new OptionsState(this));
+			GameStateManager.AddState("options", new OptionsState());
 
 			if (!BypassTitleState)
 			{
