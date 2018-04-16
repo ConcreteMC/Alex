@@ -69,9 +69,15 @@ namespace Alex.Graphics.Models.Entity
 							rotation, pivot, origin);
 
 						part.Mirror = bone.Mirror;
-						if (!bone.Name.Contains("head"))
+						if (bone.Name.Contains("head"))
+						{
+							part.ApplyHeadYaw = true;
+						}
+						else
 						{
 							part.ApplyPitch = false;
+							part.ApplyYaw = true;
+							part.ApplyHeadYaw = false;
 						}
 
 						if (!cubes.TryAdd(bone.GetHashCode(), part))
@@ -187,6 +193,7 @@ namespace Alex.Graphics.Models.Entity
 
 			public bool ApplyPitch { get; set; } = true;
 			public bool ApplyYaw { get; set; } = true;
+			public bool ApplyHeadYaw { get; set; } = false;
 			public bool Mirror { get; set; } = false;
 			public void Render(IRenderArgs args, PlayerLocation position)
 			{
@@ -196,12 +203,13 @@ namespace Alex.Graphics.Models.Entity
 
 				var buffer = Buffer;
 
-				var yaw = ApplyYaw ? MathUtils.ToRadians((position.HeadYaw) % 360) : 0f;
-				var pitch = ApplyPitch ? MathUtils.ToRadians((position.Pitch) % 360f) : 0f;
+				var yaw = ApplyYaw ? MathUtils.ToRadians(position.Yaw) : 0f;
+				var headYaw = ApplyHeadYaw ? MathUtils.ToRadians(position.HeadYaw) : 0f;
+				var pitch = ApplyPitch ? MathUtils.ToRadians(position.Pitch) : 0f;
 
-				Effect.World = Matrix.CreateTranslation(-Pivot)
-				               * Matrix.CreateFromYawPitchRoll(yaw,
-					              pitch, 0f)
+				Effect.World = Matrix.CreateRotationY(yaw)
+							   * Matrix.CreateTranslation(-Pivot)
+							   * Matrix.CreateFromYawPitchRoll(headYaw, pitch, 0f)
 				               * Matrix.CreateTranslation(Pivot)
 				               * (Matrix.CreateScale(1f / 16f) * Matrix.CreateTranslation(position));
 
@@ -229,11 +237,11 @@ namespace Alex.Graphics.Models.Entity
 				{
 					var pos = _vertices[i].Position;
 
-					pos = Vector3.Add(pos, origin );
+					pos = Vector3.Add(pos, origin);
 
 					if (rotation != Vector3.Zero)
 					{
-						pos = Vector3.Transform(pos, transform);
+						//pos = Vector3.Transform(pos, transform);
 					}
 
 					_vertices[i].Position = pos;

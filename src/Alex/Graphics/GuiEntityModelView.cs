@@ -45,18 +45,20 @@ namespace Alex.Graphics
         }
         
         private EntityModelRenderer EntityModelRenderer { get; set; }
-        private Camera Camera { get; }
+        private GuiEntityModelViewCamera Camera { get; }
         private bool _canRender;
         
         public GuiEntityModelView(string entityName)
         {
             EntityName = entityName;
             EntityPosition = new PlayerLocation(Vector3.Zero);
+            DefaultBackgroundTexture = GuiTextures.PanelGeneric;
 
             //Camera = new GuiEntityModelViewCamera(this);
-            Camera = new ThirdPersonCamera(1, EntityPosition, Vector3.Zero);
+            Camera = new GuiEntityModelViewCamera(this);
         }
         
+
         public void SetEntityRotation(float yaw, float pitch)
         {
             EntityPosition.Yaw     = yaw;
@@ -133,65 +135,104 @@ namespace Alex.Graphics
                 //var viewport = args.Graphics.Viewport;
                 //args.Graphics.Viewport = new Viewport(Bounds);
 
+                args.EndSpriteBatch();
+
                 var g = args.Graphics;
 
                 var blendState = g.BlendState;
                 var depthStencilState = g.DepthStencilState;
                 var rasterizerState = g.RasterizerState;
                 var samplerState = g.SamplerStates[0];
+                var viewport = g.Viewport;
+                var scissor = g.ScissorRectangle;
 
                 g.BlendState = BlendState.AlphaBlend;
                 g.DepthStencilState = DepthStencilState.Default;
                 g.RasterizerState = RasterizerState.CullClockwise;
                 g.SamplerStates[0] = SamplerState.PointWrap;
+                var newViewport = Camera.Viewport;
+                var bounds = Bounds;
+                
+                bounds.Inflate(-3, -3);
+
+                var p = Vector2.Transform(bounds.Location.ToVector2(), args.ScaledResolution.TransformMatrix);
+                var p2 = Vector2.Transform(bounds.Location.ToVector2() + bounds.Size.ToVector2(), args.ScaledResolution.TransformMatrix);
+
+                newViewport.X = (int)p.X;
+                newViewport.Y = (int)p.Y;
+                newViewport.Width = (int) (p2.X - p.X);
+                newViewport.Height = (int) (p2.Y - p.Y);
+                Camera.Viewport = newViewport;
+                Camera.UpdateProjectionMatrix();
+
+                //g.Viewport = newViewport;
+                g.Viewport = newViewport;
+                //g.ScissorRectangle = Bounds;
+                
+                //args.BeginSpriteBatch();
 
                 EntityModelRenderer?.Render(renderArgs, EntityPosition);
+                
+                //args.EndSpriteBatch();
 
                 g.BlendState = blendState;
                 g.DepthStencilState = depthStencilState;
                 g.RasterizerState = rasterizerState;
                 g.SamplerStates[0] = samplerState;
-
+                g.Viewport = viewport;
+                //g.ScissorRectangle = scissor;
+                
+                args.BeginSpriteBatch();
                 //args.Graphics.Viewport = viewport;
             }
         }
         
         class GuiEntityModelViewCamera : Camera
         {
-            private GuiEntityModelView _modelView;
+            private readonly GuiEntityModelView _modelView;
+
+            public Viewport Viewport { get; set; }
+            public Vector3 EntityPositionOffset { get; set; } = new Vector3(0f, 0f, -6f);
 
             public GuiEntityModelViewCamera(GuiEntityModelView guiEntityModelView) : base(1)
             {
                 _modelView = guiEntityModelView;
+                Viewport = new Viewport(256, 128, 128, 256, 0.01f, 16.0f);
+                Position = _modelView.EntityPosition;
+                Rotation = Vector3.Zero;
+                FOV = 25.0f;
 
-                Position = Vector3.Zero;
-                Rotation = Vector3.Zero;;
+                UpdateAspectRatio(Viewport.AspectRatio);
+            }
+
+            protected override void UpdateViewMatrix()
+            {
+                Matrix rotationMatrix = (Matrix.CreateRotationX(Rotation.X) *
+                                        Matrix.CreateRotationY(Rotation.Y));
+
+                Vector3 lookAtOffset = Vector3.Transform(EntityPositionOffset, rotationMatrix);
+
+                Target = Position;
+
+                Direction = Vector3.Transform(Vector3.Forward, rotationMatrix);
+
+                ViewMatrix = Matrix.CreateLookAt(Target + lookAtOffset, Target + (Vector3.Up * 1.8f), Vector3.Up);
+            }
+
+            public override void UpdateProjectionMatrix()
+            {
+                //ProjectionMatrix = Matrix.CreatePerspectiveOffCenter(Viewport.Bounds, NearDistance, FarDistance);
+                ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(FOV), Viewport.AspectRatio, NearDistance, FarDistance);
             }
 
             //public override void UpdateProjectionMatrix()
             //{
             //    var bounds = _modelView.Bounds;
             //    ProjectionMatrix =
-            //        Matrix.CreatePerspectiveOffCenter(bounds.Left, bounds.Right, bounds.Bottom, bounds.Top,
-            //                                          NearDistance, FarDistance);
+            //        Matrix.CreatePerspective(Viewport.Width, Viewport.Height, Viewport.MinDepth, Viewport.MaxDepth);
+            //    //ProjectionMatrix = Matrix.CreateOrthographicOffCenter(Viewport.Bounds, NearDistance, FarDistance);// * Matrix.CreateTranslation(new Vector3(bounds.Location.ToVector2(), -1f));
+            //    //ProjectionMatrix = Matrix.CreatePerspectiveOffCenter(_modelView.Bounds, NearDistance, FarDistance);
             //}
-            
-            private Vector3 _thirdPersonOffset =  new Vector3(0, 2.5f, 3.5f);
-            protected override void UpdateViewMatrix()
-            {
-                Matrix rotationMatrix = Matrix.CreateRotationX(Rotation.X) *
-                                        Matrix.CreateRotationY(Rotation.Y);
-
-                Vector3 lookAtOffset = Vector3.Transform(_thirdPersonOffset, rotationMatrix);
-
-                Target = Position;
-
-                Direction = Vector3.Transform(Vector3.Forward, rotationMatrix);
-
-
-                var heightOffset = new Vector3(0, 1.8f, 0);
-                ViewMatrix = Matrix.CreateLookAt(Position + lookAtOffset, Target + heightOffset, Vector3.Up);
-            }
         }
     }
 }

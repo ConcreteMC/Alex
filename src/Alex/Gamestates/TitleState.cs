@@ -91,12 +91,12 @@ namespace Alex.Gamestates
 			var username = alex.GameSettings.Username;
 			Gui.AddChild(_playerView = new GuiEntityModelView("geometry.humanoid.custom")
 			{
-				BackgroundOverlayColor = new Microsoft.Xna.Framework.Color(Color.Black, 0.15f),
+				BackgroundOverlayColor = new Color(Color.Black, 0.15f),
 
-				LayoutOffsetX = -25,
-				LayoutOffsetY = -25,
+				X = -25,
+				Y = -25,
 
-				Width = 64,
+				Width = 92,
 				Height = 128,
 
 				HorizontalAlignment = HorizontalAlignment.Right,
@@ -107,6 +107,7 @@ namespace Alex.Gamestates
 			_debugInfo.AddDebugRight(() => $"Cursor Position: {alex.InputManager.CursorInputListener.GetCursorPosition()} / {alex.GuiManager.FocusManager.CursorPosition}");
 			_debugInfo.AddDebugRight(() => $"Cursor Delta: {alex.InputManager.CursorInputListener.GetCursorPositionDelta()}");
 			_debugInfo.AddDebugRight(() => $"Splash Text Scale: {_splashText.Scale:F3}");
+			_debugInfo.AddDebugRight(() => $"Entity Position: {_playerView.EntityPosition}");
 
 		}
 		
@@ -135,8 +136,8 @@ namespace Alex.Gamestates
 
 		private float _rotation;
 
-		private float _playerViewDepth = -5.0f;
-
+		private float _playerViewDepth = -512.0f;
+		
 		protected override void OnUpdate(GameTime gameTime)
 		{
 			_backgroundSkyBox.Update(gameTime);
@@ -146,12 +147,18 @@ namespace Alex.Gamestates
 			_splashText.Scale = 0.65f + (float)Math.Abs(Math.Sin(MathHelper.ToRadians(_rotation * 10.0f))) * 0.5f;
 
 			var mousePos = Alex.InputManager.CursorInputListener.GetCursorPosition();
+
+			mousePos = Vector2.Transform(mousePos, Alex.GuiManager.ScaledResolution.InverseTransformMatrix);
 			var playerPos = _playerView.Bounds.Center.ToVector2();
 
-			var mouseDelta = (new Vector3(playerPos.X, playerPos.Y, _playerViewDepth) - new Vector3(mousePos.X, mousePos.Y, 0.0f));
+			var mouseDelta = (new Vector3(playerPos.X, -playerPos.Y, _playerViewDepth) - new Vector3(mousePos.X, -mousePos.Y, 0.0f));
 			mouseDelta.Normalize();
 
-			_playerView.SetEntityRotation((float) mouseDelta.GetYaw(), (float) mouseDelta.GetPitch());
+			var headYaw = (float) mouseDelta.GetYaw();
+			var pitch = (float) mouseDelta.GetPitch();
+			var yaw = (float) headYaw;
+
+			_playerView.SetEntityRotation(yaw, pitch, headYaw);
 			
 			base.OnUpdate(gameTime);
 		}

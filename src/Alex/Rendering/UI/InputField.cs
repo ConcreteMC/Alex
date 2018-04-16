@@ -1,4 +1,6 @@
 ﻿using System;
+using Alex.API.Graphics;
+using Alex.API.Utils;
 using Alex.Gamestates;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
@@ -62,7 +64,7 @@ namespace Alex.Rendering.UI
 			}
 
 			ButtonRectangle = new Rectangle((int)Location.X, (int)Location.Y, (int)Size.X, (int)Size.Y);
-			Color color = Color.White;
+			TextColor color = TextColor.White;
 
 			string s = Text.StripIllegalCharacters().ToString();
 			bool useph = false;
@@ -72,7 +74,7 @@ namespace Alex.Rendering.UI
 				{
 					s = PlaceHolder;
 					useph = true;
-					color = Color.Gray;
+					color = TextColor.Gray;
 				}
 				
 				DoThing = false;
@@ -104,8 +106,7 @@ namespace Alex.Rendering.UI
 			args.SpriteBatch.Begin();
 
 			args.SpriteBatch.Draw(ButtonTexture, ButtonRectangle, Color.Cornsilk);
-			args.SpriteBatch.DrawString(Alex.Font, s,
-				new Vector2(Location.X + 10, Location.Y + (measureString.Y/2) - 3), color);
+			args.SpriteBatch.DrawString(Alex.Font, s, new Vector2(Location.X + 10, Location.Y + (measureString.Y/2) - 3), color, false);
 
 			args.SpriteBatch.End();
 		}

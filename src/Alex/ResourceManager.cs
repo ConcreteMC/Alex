@@ -65,13 +65,13 @@ namespace Alex
 		}
 
 		private McResourcePack LoadResourcePack(IProgressReceiver progressReceiver, GraphicsDevice graphics, Stream stream, bool replaceModels = false,
-			bool replaceTextures = false, bool reportMissingModels = false, Action<IFontRenderer> report = null)
+			bool replaceTextures = false, bool reportMissingModels = false, McResourcePack.McResourcePackPreloadCallback preloadCallback = null)
 		{
 			McResourcePack resourcePack = null;
 
 			using (var archive = new ZipArchive(stream, ZipArchiveMode.Read, false))
 			{
-				resourcePack = new McResourcePack(archive, graphics, report);
+				resourcePack = new McResourcePack(archive, graphics, preloadCallback);
 			}
 
 			if (!replaceTextures)
@@ -136,7 +136,7 @@ namespace Alex
 			return true;
 		}
 
-		public bool CheckResources(GraphicsDevice device, Settings setings, IProgressReceiver progressReceiver, Action<IFontRenderer> report)
+		public bool CheckResources(GraphicsDevice device, Settings setings, IProgressReceiver progressReceiver, McResourcePack.McResourcePackPreloadCallback preloadCallback)
 		{
 			byte[] defaultResources;
 			byte[] bedrockResources;
@@ -149,7 +149,7 @@ namespace Alex
 			Log.Info($"Loading vanilla resources...");
 			using (MemoryStream stream = new MemoryStream(defaultResources))
 			{
-				ResourcePack = LoadResourcePack(progressReceiver, device, stream, true, true, true, report);
+				ResourcePack = LoadResourcePack(progressReceiver, device, stream, true, true, true, preloadCallback);
 			}
 
 			//report(ResourcePack.AsciiFont);

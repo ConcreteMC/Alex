@@ -12,6 +12,9 @@ namespace Alex.API.Graphics
 {
     public class BitmapFont
     {
+
+        public char[] Characters { get; }
+
         public int GridWidth  { get; }
         public int GridHeight { get; }
 
@@ -53,11 +56,17 @@ namespace Alex.API.Graphics
             GridWidth   = gridWidth;
             GridHeight  = gridHeight;
             _characters = characters;
+            Characters = _characters.ToArray();
 
             DefaultGlyph = new Glyph() { Width = 0, Height = 8 };
             Glyphs       = new Glyph[characters.Count];
         }
-        
+
+        public Vector2 MeasureString(string text, float scale = 1.0f)
+        {
+            return MeasureString(text, new Vector2(scale));
+        }
+
         public Vector2 MeasureString(string text, Vector2 scale)
         {
             MeasureString(text, out var size);

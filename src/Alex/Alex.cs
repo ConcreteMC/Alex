@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Threading;
+using Alex.API;
+using Alex.API.Graphics;
 using Alex.API.Gui;
 using Alex.API.Input;
 using Alex.API.Network;
@@ -36,8 +38,9 @@ namespace Alex
 		public static IPEndPoint ServerEndPoint { get; set; }
 		public static bool IsMultiplayer { get; set; } = false;
 
-		public static SpriteFont Font;
-		public static FontRenderer FontRender = null;
+		public static BitmapFont Font;
+		public static IFontRenderer FontRender = null;
+		public static SpriteFont BackupFont;
 
 		private SpriteBatch _spriteBatch;
 
@@ -149,18 +152,8 @@ namespace Alex
 				File.WriteAllBytes(Path.Combine("assets", "Minecraftia.xnb"), global::Alex.Resources.Minecraftia);
 			}
 
-			Font = Content.Load<SpriteFont>("Minecraftia");
-
+			BackupFont = Content.Load<SpriteFont>("Minecraftia");
 			
-			if (!File.Exists(Path.Combine("assets", "SkyboxEffect.xnb")))
-			{
-				File.WriteAllBytes(Path.Combine("assets", "SkyboxEffect.xnb"), global::Alex.Resources.SkyboxEffect);
-			}
-			if (!File.Exists(Path.Combine("assets", "CubeModel.xnb")))
-			{
-				File.WriteAllBytes(Path.Combine("assets", "CubeModel.xnb"), global::Alex.Resources.CubeModel);
-			}
-
 			_spriteBatch = new SpriteBatch(GraphicsDevice);
 			InputManager = new InputManager(this);
 			GuiRenderer = new GuiRenderer(this);
@@ -211,7 +204,7 @@ namespace Alex
 
 			//	Log.Info($"Loading resources...");
 			Resources = new ResourceManager(GraphicsDevice);
-			if (!Resources.CheckResources(GraphicsDevice, GameSettings, progressReceiver, (f) => { FontRender = (FontRenderer) f; }))
+			if (!Resources.CheckResources(GraphicsDevice, GameSettings, progressReceiver, OnResourcePackPreLoadCompleted))
 			{
 				Exit();
 				return;
@@ -220,7 +213,6 @@ namespace Alex
 			Mouse.SetPosition(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2);
 
 			GuiRenderer.LoadResourcePack(Resources.ResourcePack);
-			//UiManager.Theme = Resources.UiThemeFactory.GetTheme();
 
 			GameStateManager.AddState("title", new TitleState(this, Content)); 
 			GameStateManager.AddState("options", new OptionsState(this));
@@ -237,13 +229,20 @@ namespace Alex
 			GameStateManager.RemoveState("splash");
 		}
 
+		private void OnResourcePackPreLoadCompleted(IFontRenderer fontRenderer, BitmapFont bitmapFont)
+		{
+			FontRender = fontRenderer;
+			Font = bitmapFont;
+
+			GuiManager.RefreshResources();
+		}
+
 		public void LoadWorld(WorldProvider worldProvider, INetworkProvider networkProvider)
 		{
 			PlayingState playState = new PlayingState(this, GraphicsDevice, worldProvider, networkProvider);
 			GameStateManager.AddState("play", playState);
 
-			LoadingWorldState loadingScreen =
-				new LoadingWorldState(this);
+			LoadingWorldState loadingScreen = new LoadingWorldState(this);
 			GameStateManager.AddState("loading", loadingScreen);
 			GameStateManager.SetActiveState("loading");
 

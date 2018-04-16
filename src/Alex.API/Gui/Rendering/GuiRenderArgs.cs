@@ -15,16 +15,28 @@ namespace Alex.API.Gui.Rendering
 
         public GameTime GameTime { get; }
 
+        public GuiScaledResolution ScaledResolution { get; }
+
         //public GuiElementRenderContext ActiveContext { get; private set; }
 
-        public GuiRenderArgs(IGuiRenderer renderer, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, GameTime gameTime)
+        public GuiRenderArgs(IGuiRenderer renderer, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, GameTime gameTime, GuiScaledResolution scaledResolution)
         {
             Renderer = renderer;
             Graphics = graphicsDevice;
             SpriteBatch = spriteBatch;
             GameTime = gameTime;
+            ScaledResolution = scaledResolution;
         }
-        
+
+        public void BeginSpriteBatch()
+        {
+            SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, null, ScaledResolution.TransformMatrix);
+        }
+
+        public void EndSpriteBatch()
+        {
+            SpriteBatch.End();
+        }
         
 
         public void DrawRectangle(Rectangle bounds, Color color, int thickness = 1)

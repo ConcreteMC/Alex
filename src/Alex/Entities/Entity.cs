@@ -216,14 +216,14 @@ namespace Alex.Entities
 
 			string clean = NameTag.StripIllegalCharacters();
 
-			var stringCenter = Alex.Font.MeasureString(clean) * s;
+			var stringCenter = Alex.Font.MeasureString(clean, s);
 			var c = new Point((int)stringCenter.X, (int)stringCenter.Y);
 
 			textPosition.X = (int)(textPosition.X - c.X);
 			textPosition.Y = (int)(textPosition.Y - c.Y);
 
 			renderArgs.SpriteBatch.FillRectangle(new Rectangle(textPosition.ToPoint(), c), new Color(Color.Black, 128));
-			renderArgs.SpriteBatch.DrawString(Alex.Font, clean, textPosition, Color.White, 0f, Vector2.Zero, scale, SpriteEffects.None, 0);
+			renderArgs.SpriteBatch.DrawString(Alex.Font, clean, textPosition, TextColor.White, false, 0f, Vector2.Zero, scale);
 		}
 
 		public virtual void TerrainCollision(Vector3 collisionPoint, Vector3 direction)
