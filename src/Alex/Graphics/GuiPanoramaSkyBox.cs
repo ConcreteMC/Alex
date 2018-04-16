@@ -105,10 +105,6 @@ namespace Alex.Graphics
 		    {
 			    var pos = new Vector3(((float)(j % 8) / 8.0f - 0.5f) / 64.0f, ((float)(j / 8) / 8.0f - 0.5f) / 64.0f, 0.0f);
 				
-			    var world = World;
-			    world *= Matrix.CreateTranslation(pos);
-			    //world *= _rotationMatrix;
-				
 			    for (int k = 0; k < 6; k++)
 			    {
 				    var indexerIndex = j * 6 + k * 6;
@@ -194,7 +190,6 @@ namespace Alex.Graphics
 					
 
 				    var indexerIndex = j * 6 + k * 6;
-				    var dataIndex    = j * 6 + k * 4;
 
 				    _skyBoxEffect.VertexColorEnabled = true;
 				    _skyBoxEffect.Texture = _textures[k];
@@ -211,23 +206,6 @@ namespace Alex.Graphics
         public void Update(GameTime gameTime)
         {
 	        _rotation += (float)gameTime.ElapsedGameTime.TotalMilliseconds / (1000.0f / 20.0f);
-
-			//WorldMatrix = Matrix.CreateTranslation(-Vector3.One) * Matrix.CreateRotationY(_rotation) * Matrix.CreateTranslation(Vector3.One);
-			
-		// WorldMatrix = Matrix.CreateTranslation(-Vector3.One) 
-	       //               * Matrix.CreateRotationY(_rotation) 
-	       //               * Matrix.CreateTranslation(Vector3.One) 
-						  //* Matrix.CreateTranslation(-pos);
-
-	        //WorldMatrix = Matrix.CreateRotationX(MathHelper.Pi)
-	        //            * Matrix.CreateRotationZ(MathHelper.PiOver2)
-		       //         * Matrix.CreateRotationY(_rotation);
-
-			//Camera.MoveTo(pos, rotation);
-
-	        //_skyBoxEffect.World = WorldMatrix;
-	        //_skyBoxEffect.View = Camera.ViewMatrix;
-	        //_skyBoxEffect.Projection = Camera.ProjectionMatrix;
 
 			RotateSkyBox();
         }
@@ -263,8 +241,18 @@ namespace Alex.Graphics
 
 			//device.Viewport = new Viewport(0, 0, 256, 256);
 			device.DepthStencilState = DepthStencilState.None;
-	        device.SamplerStates[0] = SamplerState.LinearClamp;
-	        device.RasterizerState = RasterizerState.CullNone;
+	        device.SamplerStates[0] = new SamplerState()
+	        {
+		        FilterMode = TextureFilterMode.Default,
+		        Filter = TextureFilter.Anisotropic,
+		        MaxAnisotropy = 16,
+		        AddressU = TextureAddressMode.Clamp,
+		        AddressV = TextureAddressMode.Clamp,
+		        AddressW = TextureAddressMode.Clamp,
+		        //ComparisonFunction = CompareFunction.
+
+	        };
+			device.RasterizerState = RasterizerState.CullNone;
 	        device.BlendState = skyBoxBlendState;
 
 	        device.SetVertexBuffer(Buffer);

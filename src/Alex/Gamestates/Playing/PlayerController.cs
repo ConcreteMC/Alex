@@ -45,6 +45,7 @@ namespace Alex.Gamestates.Playing
 	    public bool CheckInput { get; set; } = false;
 	    private bool IgnoreNextUpdate { get; set; } = false;
 		private DateTime _lastForward = DateTime.UtcNow;
+		private Vector2 _previousMousePosition = Vector2.Zero;
 		public void Update(GameTime gameTime)
 	    {
 		    if (CheckInput)
@@ -163,22 +164,27 @@ namespace Alex.Gamestates.Playing
 				    if (e.X < 10 || e.X > Graphics.Viewport.Width - 10 ||
 				        e.Y < 10 || e.Y > Graphics.Viewport.Height - 10)
 				    {
+						_previousMousePosition = new Vector2(centerX, centerY);
 					    Mouse.SetPosition(centerX, centerY);
 					    IgnoreNextUpdate = true;
 					}
 				    else
 				    {
-					    var mouseDelta = this.GlobalInputManager.CursorInputListener.GetCursorPositionDelta();
+						var mouseDelta = _previousMousePosition - e; //this.GlobalInputManager.CursorInputListener.GetCursorPositionDelta();
 					    var look = new Vector2((-mouseDelta.X), (-mouseDelta.Y))
 					               * (float) (gameTime.ElapsedGameTime.TotalSeconds * 30);
-					   
+					    look = -look;
+
 					    Player.KnownPosition.Yaw -= -look.X;
 					    Player.KnownPosition.Pitch -= look.Y;
 					    Player.KnownPosition.Yaw %= 360;
 					    Player.KnownPosition.Pitch = MathHelper.Clamp(Player.KnownPosition.Pitch, -89.9f, 89.9f);
 
-					    Player.KnownPosition.HeadYaw = Player.KnownPosition.Yaw;
-				    }
+						//Player.KnownPosition.Pitch = MathHelper.Clamp(Player.KnownPosition.Pitch + look.Y, -89.9f, 89.9f);
+					   // Player.KnownPosition.Yaw = (Player.KnownPosition.Yaw + look.X) % 360f;
+						// Player.KnownPosition.Yaw %= 360f;
+					    _previousMousePosition = e;
+					}
 			    }
 			}
 		    else if (!_inActive)

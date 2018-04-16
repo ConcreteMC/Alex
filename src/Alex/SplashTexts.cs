@@ -14,7 +14,11 @@ namespace Alex
 			"Created in C#",
 			"O.M.G Why are you reading this?!",
             "This project is messy af...  Don't look at me!",
-            "Ehhhh hi?"
+            "Ehhhh hi?",
+			"Such compatibility, wow.",
+			"Who like minecwaf?!",
+			"Thanks TruDan!",
+			"3D Transformations are hard..."
 		};
 
 		private static readonly Random Random = new Random();
