@@ -9,8 +9,9 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.API.Gui.Elements.Controls
 {
-    public class GuiSlider : GuiControl
+    public class GuiSlider : GuiControl, IValuedControl<double>
     {
+        public event EventHandler<double> ValueChanged; 
 
         public double MinValue { get; set; } = 0.0d;
         public double MaxValue { get; set; } = 100.0d;
@@ -27,7 +28,11 @@ namespace Alex.API.Gui.Elements.Controls
                     proposedValue = MathHelpers.RoundToNearestInterval(proposedValue, StepInterval);
                 }
 
-                _value = proposedValue;
+                if (proposedValue != _value)
+                {
+                    _value = proposedValue;
+                    ValueChanged?.Invoke(this, _value);
+                }
             }
         }
 
@@ -40,7 +45,7 @@ namespace Alex.API.Gui.Elements.Controls
         public int ThumbWidth { get; set; } = 10;
 
         public GuiTextElement Label { get; private set; }
-        public string LabelFormat { get; set; } = "{0:F2}";
+        public string DisplayFormat { get; set; } = "{0:F2}";
 
         private double _thumbOffsetX;
 
@@ -53,7 +58,7 @@ namespace Alex.API.Gui.Elements.Controls
             DefaultBackgroundTexture = GuiTextures.ButtonDisabled;
             BackgroundRepeatMode = TextureRepeatMode.NoScaleCenterSlice;
 
-            AddChild(Label = new GuiAutoUpdatingTextElement(() => string.Format(LabelFormat, Value))
+            AddChild(Label = new GuiAutoUpdatingTextElement(() => string.Format(DisplayFormat, Value))
             {
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center
@@ -92,7 +97,7 @@ namespace Alex.API.Gui.Elements.Controls
         {
             base.OnDraw(args);
 
-            args.Draw(IsHighlighted ? ThumbHighlightBackground : ThumbBackground, new Rectangle((int)_thumbOffsetX, (int)RenderPosition.Y, ThumbWidth, RenderSize.Y), TextureRepeatMode.NoScaleCenterSlice);
+            args.Draw(IsHighlighted ? ThumbHighlightBackground : ThumbBackground, new Rectangle((int)(RenderPosition.X + _thumbOffsetX), (int)RenderPosition.Y, ThumbWidth, RenderSize.Y), TextureRepeatMode.NoScaleCenterSlice);
         }
 
         private void SetValueFromCursor(Vector2 relativePosition)

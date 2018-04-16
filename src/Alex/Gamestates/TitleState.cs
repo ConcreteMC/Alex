@@ -89,7 +89,7 @@ namespace Alex.Gamestates
 			});
 
 			var username = alex.GameSettings.Username;
-			Gui.AddChild(_playerView = new GuiEntityModelView("geometry.humanoid.custom")
+			Gui.AddChild(_playerView = new GuiEntityModelView("geometry.humanoid.customSlim")
 			{
 				BackgroundOverlayColor = new Color(Color.Black, 0.15f),
 
@@ -118,7 +118,7 @@ namespace Alex.Gamestates
 
 		protected override void OnLoad(RenderArgs args)
 		{
-			Alex.Resources.BedrockResourcePack.TryGetTexture("textures/entity/steve", out Bitmap rawTexture);
+			Alex.Resources.BedrockResourcePack.TryGetTexture("textures/entity/alex", out Bitmap rawTexture);
 			var steve = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, rawTexture);
 
 			_playerView.SkinTexture = steve;

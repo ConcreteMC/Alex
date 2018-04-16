@@ -10,6 +10,7 @@ namespace Alex.API.Gui
     {
         IGuiScreen Screen { get; }
         IGuiElement ParentElement { get; set; }
+
         bool HasChildren { get; }
 
         int LayoutOffsetX { get; set; }
@@ -38,7 +39,7 @@ namespace Alex.API.Gui
 
         void Init(IGuiRenderer renderer);
 
-        void UpdateLayout();
+        void UpdateLayout(bool updateChildren = true);
 
         void Update(GameTime gameTime);
 

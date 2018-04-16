@@ -64,9 +64,7 @@ namespace Alex.Graphics.Models.Entity
 								.Concat(built.Right).ToArray();
 						});
 
-						var part = new EntityModelCube(vertices,
-							Texture,
-							rotation, pivot, origin);
+						var part = new EntityModelCube(vertices, Texture, rotation, pivot, origin);
 
 						part.Mirror = bone.Mirror;
 						if (bone.Name.Contains("head"))

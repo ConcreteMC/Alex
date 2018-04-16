@@ -14,7 +14,12 @@ namespace Alex.API.Gui.Elements.Controls
         protected GuiTextElement TextElement { get; }
         protected Action Action { get; }
 
-        public GuiBeaconButton(string text, Action action)
+	    public GuiBeaconButton() : this(string.Empty)
+	    {
+
+	    }
+		
+        public GuiBeaconButton(string text, Action action = null)
         {
             DefaultBackgroundTexture = GuiTextures.ButtonDefault;
             HighlightedBackgroundTexture = GuiTextures.ButtonHover;
@@ -26,7 +31,6 @@ namespace Alex.API.Gui.Elements.Controls
 
             TextElement = new GuiTextElement()
             {
-				X = 5,
                 VerticalAlignment = VerticalAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Text = text,

@@ -221,7 +221,7 @@ namespace Alex.API.Gui
             }
         }
 
-        public void UpdateLayout()
+        public void UpdateLayout(bool updateChildren = true)
         {
             OnUpdateLayout();
 
