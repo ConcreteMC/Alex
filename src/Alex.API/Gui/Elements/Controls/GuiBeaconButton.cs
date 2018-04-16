@@ -26,7 +26,7 @@ namespace Alex.API.Gui.Elements.Controls
 
             TextElement = new GuiTextElement()
             {
-				LayoutOffsetX = 5,
+				X = 5,
                 VerticalAlignment = VerticalAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Text = text,
@@ -47,7 +47,7 @@ namespace Alex.API.Gui.Elements.Controls
 	    }
 
 
-	    protected override void OnClick(Vector2 cursorPosition)
+	    protected override void OnClick(Vector2 relativePosition)
         {
             Action?.Invoke();
         }

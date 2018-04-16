@@ -56,7 +56,7 @@ namespace Alex.API.Gui.Elements
 
 	    protected override void OnDraw(GuiRenderArgs args)
         {
-            var bounds = Bounds;
+            var bounds = RenderBounds;
 
             var fillWidth = bounds.Width - 2 * _spriteSheetSegmentWidth;
 
@@ -65,7 +65,7 @@ namespace Alex.API.Gui.Elements
             bounds = new Rectangle(bounds.X + _spriteSheetSegmentWidth, bounds.Y, Math.Max(1, (int)(fillWidth * Percent)), bounds.Height);
             args.DrawNinePatch(bounds, Highlight, TextureRepeatMode.Stretch);
 
-	       //	args.SpriteBatch.DrawString(FontRenderer, Text, Bounds.Center.ToVector2() - (TextSize / 2f), Color.Black, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
+	       //	args.SpriteBatch.DrawString(FontRenderer, Text, RenderBounds.Center.ToVector2() - (TextSize / 2f), Color.Black, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
         }
     }
 }

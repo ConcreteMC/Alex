@@ -43,29 +43,9 @@ namespace Alex.API.Gui.Elements.Controls
         public TextureSlice2D HighlightedBackground { get; set; }
         public TextureSlice2D FocusedBackground { get; set; }
 
-        public void InvokeHighlighted()
-        {
-            OnHighlighted();
-        }
-
-        protected virtual void OnHighlighted() {}
-
-
-        public void InvokeFocused()
-        {
-            OnFocused();
-        }
-
-        protected virtual void OnFocused() {}
-
-
-        public void InvokeClick(Vector2 cursorPosition)
-        {
-            OnClick(cursorPosition);
-        }
-
-        protected virtual void OnClick(Vector2 cursorPosition) {}
-
+        public virtual Color HighlightOutlineColor { get; set; } = Color.White;
+        public virtual Thickness HighlightOutlineThickness { get; set; } = Thickness.One;
+        
         protected override void OnInit(IGuiRenderer renderer)
         {
             base.OnInit(renderer);
@@ -87,13 +67,13 @@ namespace Alex.API.Gui.Elements.Controls
 
             if (IsFocused)
             {
-                Background = FocusedBackground;
+                Background = FocusedBackground ?? (IsHighlighted ? HighlightedBackground ?? DefaultBackground : DefaultBackground);
             }
             else
             {
                 if (IsHighlighted)
                 {
-                    Background = HighlightedBackground;
+                    Background = HighlightedBackground ?? DefaultBackground;
                 }
                 else
                 {
@@ -106,13 +86,63 @@ namespace Alex.API.Gui.Elements.Controls
         {
             base.OnDraw(args);
 
-            var outlineBounds = Bounds;
+            var outlineBounds = RenderBounds;
                 outlineBounds.Inflate(1f,1f);
 
-            if (IsHighlighted)
+            if (IsHighlighted && HighlightOutlineThickness.Size() > 0)
             {
-                args.DrawRectangle(outlineBounds, Color.White, 1);
+                args.DrawRectangle(outlineBounds, HighlightOutlineColor, HighlightOutlineThickness);
             }
         }
+
+        #region Control Cursor Events
+        
+        public void InvokeHighlighted()
+        {
+            OnHighlighted();
+        }
+
+        protected virtual void OnHighlighted() {}
+
+
+        public void InvokeFocused()
+        {
+            OnFocused();
+        }
+
+        protected virtual void OnFocused() {}
+
+
+        public void InvokeClick(Vector2 cursorPosition)
+        {
+            var relative = cursorPosition - RenderPosition;
+
+            OnClick(relative);
+        }
+
+        protected virtual void OnClick(Vector2 relativePosition) { }
+
+
+        public void InvokeCursorDown(Vector2 cursorPosition)
+        {
+            var relative = cursorPosition - RenderPosition;
+
+            OnCursorDown(relative);
+        }
+
+        protected virtual void OnCursorDown(Vector2 relativePosition) { }
+
+        
+        public void InvokeCursorMove(Vector2 newPosition, Vector2 oldPosition, bool isCursorDown)
+        {
+            var relativeNew = newPosition - RenderPosition;
+            var relativeOld = oldPosition - RenderPosition;
+
+            OnCursorMove(relativeNew, relativeOld, isCursorDown);
+        }
+
+        protected virtual void OnCursorMove(Vector2 relativeNewPosition, Vector2 relativeOldPosition, bool isCursorDown) { }
+
+        #endregion
     }
 }

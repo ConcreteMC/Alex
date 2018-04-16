@@ -13,7 +13,7 @@ namespace Alex.API.Gui
         public GuiFocusManager FocusManager { get; }
 
         private InputManager InputManager { get; set; }
-        private IGuiRenderer GuiRenderer { get; set; }
+        public IGuiRenderer GuiRenderer { get; set; }
         private GraphicsDevice GraphicsDevice { get; set; }
         private SpriteBatch SpriteBatch { get; set; }
         private GuiRenderArgs GuiRenderArgs { get; set; }
@@ -30,8 +30,9 @@ namespace Alex.API.Gui
             FocusManager = new GuiFocusManager(this, InputManager, game.GraphicsDevice);
 
             GuiRenderer = guiRenderer;
+            guiRenderer.ScaledResolution = ScaledResolution;
             SpriteBatch = new SpriteBatch(Game.GraphicsDevice);
-            GuiRenderArgs = new GuiRenderArgs(GuiRenderer, Game.GraphicsDevice, SpriteBatch);
+            GuiRenderArgs = new GuiRenderArgs(GuiRenderer, Game.GraphicsDevice, SpriteBatch, new GameTime(), ScaledResolution);
         }
 
         private void ScaledResolutionOnScaleChanged(object sender, UiScaleEventArgs args)
@@ -50,7 +51,13 @@ namespace Alex.API.Gui
             SpriteBatch = new SpriteBatch(graphicsDevice);
             GuiRenderer.Init(graphicsDevice);
 
-            GuiRenderArgs = new GuiRenderArgs(GuiRenderer, GraphicsDevice, SpriteBatch);
+            GuiRenderArgs = new GuiRenderArgs(GuiRenderer, GraphicsDevice, SpriteBatch, new GameTime(), ScaledResolution);
+        }
+
+        private bool _doInit = true;
+        public void RefreshResources()
+        {
+            _doInit = true;
         }
 
         public void AddScreen(GuiScreen screen)
@@ -68,10 +75,22 @@ namespace Alex.API.Gui
         public void Update(GameTime gameTime)
         {
             ScaledResolution.Update();
-            
+
+            var screens = Screens.ToArray();
+
+            if (_doInit)
+            {
+                _doInit = false;
+                
+                foreach (var screen in screens)
+                {
+                    screen.Init(GuiRenderer);
+                }
+            }
+
             FocusManager.Update(gameTime);
 
-            foreach (var screen in Screens.ToArray())
+            foreach (var screen in screens)
             {
                 screen.Update(gameTime);
             }

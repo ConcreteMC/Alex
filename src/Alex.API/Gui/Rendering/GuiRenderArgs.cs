@@ -13,37 +13,81 @@ namespace Alex.API.Gui.Rendering
         public GraphicsDevice Graphics { get; }
         public SpriteBatch SpriteBatch { get; }
 
+        public GameTime GameTime { get; }
+
+        public GuiScaledResolution ScaledResolution { get; }
+
         //public GuiElementRenderContext ActiveContext { get; private set; }
 
-        public GuiRenderArgs(IGuiRenderer renderer, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
+        public GuiRenderArgs(IGuiRenderer renderer, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, GameTime gameTime, GuiScaledResolution scaledResolution)
         {
             Renderer = renderer;
             Graphics = graphicsDevice;
             SpriteBatch = spriteBatch;
+            GameTime = gameTime;
+            ScaledResolution = scaledResolution;
         }
-        
+
+        public void BeginSpriteBatch()
+        {
+            SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, null, ScaledResolution.TransformMatrix);
+        }
+
+        public void EndSpriteBatch()
+        {
+            SpriteBatch.End();
+        }
         
 
         public void DrawRectangle(Rectangle bounds, Color color, int thickness = 1)
+        {
+            DrawRectangle(bounds, color, thickness, thickness, thickness, thickness);
+        }
+
+        public void DrawRectangle(Rectangle bounds, Color color, Thickness thickness)
+        {
+            DrawRectangle(bounds, color, thickness.Left, thickness.Top, thickness.Right, thickness.Bottom);
+        }
+
+        public void DrawRectangle(Rectangle bounds,         Color color, int thicknessVertical, int thicknessHorizontal)
+        {
+            DrawRectangle(bounds, color, thicknessHorizontal, thicknessVertical, thicknessHorizontal, thicknessVertical);
+        }
+
+        public void DrawRectangle(Rectangle bounds, Color color, int thicknessLeft, int thicknessTop, int thicknessRight, int thicknessBottom)
         {
             var texture = new Texture2D(Graphics, 1, 1, false, SurfaceFormat.Color);
             texture.SetData(new Color[] {color});
 
             // Top
-            SpriteBatch.Draw(texture, new Rectangle(bounds.X, bounds.Y, bounds.Width, thickness), color);
+            if (thicknessTop > 0)
+            {
+                SpriteBatch.Draw(texture, new Rectangle(bounds.X, bounds.Y, bounds.Width, thicknessTop), color);   
+            }
 
             // Right
-            SpriteBatch.Draw(texture, new Rectangle(bounds.X + bounds.Width - thickness, bounds.Y, thickness, bounds.Height),
-                             color);
+            if (thicknessRight > 0)
+            {
+                SpriteBatch.Draw(texture,
+                                 new Rectangle(bounds.X + bounds.Width - thicknessRight, bounds.Y, thicknessRight, bounds.Height),
+                                 color);
+            }
 
             // Bottom
-            SpriteBatch.Draw(texture, new Rectangle(bounds.X, bounds.Y + bounds.Height - thickness, bounds.Width, thickness),
-                             color);
+            if (thicknessBottom > 0)
+            {
+                SpriteBatch.Draw(texture,
+                                 new Rectangle(bounds.X, bounds.Y + bounds.Height - thicknessBottom, bounds.Width, thicknessBottom),
+                                 color);
+            }
 
             // Left
-            SpriteBatch.Draw(texture, new Rectangle(bounds.X, bounds.Y, thickness, bounds.Height), color);
+            if (thicknessLeft > 0)
+            {
+                SpriteBatch.Draw(texture, new Rectangle(bounds.X, bounds.Y, thicknessLeft, bounds.Height), color);
+            }
         }
-        
+
         public void Draw(TextureSlice2D    texture, Rectangle bounds,
                          TextureRepeatMode repeatMode = TextureRepeatMode.Stretch, Vector2? scale = null)
         {
@@ -79,6 +123,7 @@ namespace Alex.API.Gui.Rendering
                     SpriteBatch.Draw(ninePatchTexture, sourceRectangle: srcPatch, destinationRectangle: dstPatch);
             }
         }
+        
         public void FillRectangle(Rectangle bounds, TextureSlice2D texture, TextureRepeatMode repeatMode, Vector2? scale = null)
         {
             if(scale == null) scale = Vector2.One;
@@ -149,6 +194,9 @@ namespace Alex.API.Gui.Rendering
             }
         }
 
+
+        #region SpriteFont Proxy
+
         public void DrawString(Vector2 position, SpriteFont font, string text, Color color, float scale = 1f)
         {
             SpriteBatch.DrawString(font, text, position, color, 0f, Vector2.Zero, new Vector2(scale), SpriteEffects.None, 0);
@@ -164,6 +212,10 @@ namespace Alex.API.Gui.Rendering
             SpriteBatch.DrawString(font, text, position, color, rotation, origin, scale, effects, layerDepth);
         }
 
+        #endregion
+
+        #region FontRenderer Proxy
+        
 		public void DrawString(IFontRenderer spriteFont, string text, Vector2 position, Color color, float scale = 1f)
 		{
 			//spriteFont.DrawString(SpriteBatch, text, position.X, position.Y, (int) color.PackedValue, false, new Vector2(scale));
@@ -178,7 +230,9 @@ namespace Alex.API.Gui.Rendering
         public void DrawString(IFontRenderer spriteFont, string text, Vector2 position, Color color, Vector2 scale, float rotation, Vector2 origin, SpriteEffects effects = SpriteEffects.None, float layerDepth = 0f)
         {
             spriteFont.DrawString(SpriteBatch, text, position, color, false, scale, rotation, origin, effects, layerDepth);
-        }
+        }       
+
+        #endregion
 
         #region BitmapFont Proxy
         
@@ -225,84 +279,5 @@ namespace Alex.API.Gui.Rendering
 
         #endregion
 	}
-
-    //public struct GuiRenderState
-    //{
-    //    public SpriteSortMode    SpriteSortMode    { get; private set; }
-    //    public BlendState        BlendState        { get; private set; }
-    //    public SamplerState      SamplerState      { get; private set; }
-    //    public DepthStencilState DepthStencilState { get; private set; }
-    //    public RasterizerState   RasterizerState   { get; private set; }
-    //    public Effect            Effect            { get; private set; }
-    //    public Matrix            TransformMatrix   { get; private set; }
-
-    //}
-
-    //public class GuiElementRenderContext : IDisposable
-    //{
-    //    protected GuiRenderArgs RenderArgs { get; }
-
-    //    public GuiElement Element { get; }
-
-    //    public GuiElementRenderContext ParentContext { get; }
-    //    public GuiRenderState ParentState => ParentContext?.SavedState ?? SavedState;
-
-    //    public SpriteBatch SpriteBatch => RenderArgs.SpriteBatch;
-    //    public GraphicsDevice Graphics => RenderArgs.Graphics;
-
-
-    //    public GuiRenderState SavedState { get; }
-
-
-    //    private bool _isActive;
-
-    //    public GuiElementRenderContext(GuiRenderArgs args, GuiElement element)
-    //    {
-    //        RenderArgs = args;
-    //        Element = element;
-    //        ParentContext = args.ActiveContext;
-
-    //        GuiRenderState = SaveState();
-    //    }
-
-    //    private GuiRenderState SaveState()
-    //    {
-    //        return new GuiRenderState()
-    //        {
-    //            BlendState = Graphics.BlendState,
-    //            DepthStencilState = Graphics.DepthStencilState,
-    //            RasterizerState = Graphics.RasterizerState,
-    //            Effect = Graphics.
-    //        };
-    //        BlendState = Graphics.BlendState;
-    //        DepthStencilState = Graphics.DepthStencilState;
-    //        RasterizerState = Graphics.RasterizerState;
-    //        TransformMatrix = ParentContext.TransformMatrix * Element.RenderTransformMatrix;
-    //    }
-
-    //    private void LoadState()
-    //    {
-    //        RenderArgs.SpriteBatch.End();
-    //        RenderArgs.SpriteBatch.Begin(SpriteSortMode, BlendState, SamplerState, DepthStencilState, RasterizerState, Effect, TransformMatrix);
-    //    }
-
-    //    public void PushContext()
-    //    {
-    //        _isActive = true;
-    //    }
-
-    //    public void PopContext()
-    //    {
-
-    //        _isActive = false;
-    //    }
-
-    //    public void Dispose()
-    //    {
-    //        if (_isActive)
-    //        {
-    //            PopContext();
-    //        }
-    //    }
-    //}
+    
 }

@@ -9,13 +9,39 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.API.Gui
 {
-    public delegate bool GuiElementPredicate(GuiElement element);
+    public delegate bool GuiElementPredicate(IGuiElement element);
+    public delegate bool GuiElementPredicate<in TGuiElement>(TGuiElement element) where TGuiElement : class, IGuiElement;
 
-    public class GuiElement
+    public class GuiElement : IGuiElement
     {
-        public GuiElement ParentElement { get; set; }
-        
-        public virtual int X  { get; set; } = 0;
+        private IGuiScreen _screen;
+
+        public IGuiScreen Screen
+        {
+            get => _screen;
+            private set
+            {
+                var currentScreen = _screen;
+                _screen = value;
+                OnScreenChanged(currentScreen, _screen);
+            }
+        }
+
+        private IGuiElement _parentElement;
+
+        public IGuiElement ParentElement
+        {
+            get => _parentElement;
+            set
+            {
+                _parentElement = value;
+                TryFindParentOfType<IGuiScreen>(e => true, out IGuiScreen screen);
+                Screen = screen;
+                OnParentElementChanged(_parentElement);
+            }
+        }
+
+        public virtual int X { get; set; } = 0;
         public virtual int Y { get; set; } = 0;
 
         public virtual int LayoutOffsetX { get; set; } = 0;
@@ -23,10 +49,10 @@ namespace Alex.API.Gui
         public virtual int LayoutWidth { get; set; } = -1;
         public virtual int LayoutHeight { get; set; } = -1;
 
-        protected List<GuiElement> Children { get; } = new List<GuiElement>();
+        protected List<IGuiElement> Children { get; } = new List<IGuiElement>();
         public bool HasChildren => Children.Any();
 
-        protected internal IEnumerable<GuiElement> AllChildElements => Children.SelectMany(c => c.AllChildElements);
+        // protected internal IEnumerable<IGuiElement> AllChildElements => Children.SelectMany(c => c.AllChildElements);
 
         protected Color DebugColor { get; set; } = Color.Red;
 
@@ -72,20 +98,43 @@ namespace Alex.API.Gui
         private int _width = -1;
         private int _height = -1;
 
+        public virtual int MinWidth { get; set; } = -1;
+        public virtual int MaxWidth { get; set; } = -1;
+
+        public virtual int MinHeight { get; set; } = -1;
+        public virtual int MaxHeight { get; set; } = -1;
+
         public virtual int Width
         {
             get
             {
-                if (ParentElement != null && HorizontalAlignment == HorizontalAlignment.Stretch) return ParentElement.Width;
+                var proposedWidth = LayoutWidth > 0 ? LayoutWidth : _width;
+                if (MaxHeight > 0)
+                {
+                    proposedWidth = Math.Min(MaxWidth, proposedWidth);
+                }
+
+                if (MinHeight > 0)
+                {
+                    proposedWidth = Math.Max(MinWidth, proposedWidth);
+                }
+
+                if (ParentElement != null && HorizontalAlignment == HorizontalAlignment.Stretch)
+                {
+                    proposedWidth = Math.Max(proposedWidth, ParentElement.Width);
+                }
+
                 if (_width < 0)
                 {
                     var childrenToCheck = Children.Where(c => c.HorizontalAlignment != HorizontalAlignment.Stretch).ToArray();
-                    return (childrenToCheck.Any()
-                                ? Math.Abs(childrenToCheck.Max(c => c.Bounds.Right) - childrenToCheck.Min(c => c.Bounds.Left))
+                    var autoWidth = (childrenToCheck.Any()
+                                ? Math.Abs(childrenToCheck.Max(c => c.RenderBounds.Right) - childrenToCheck.Min(c => c.RenderBounds.Left))
                                 : 0);
+
+                    proposedWidth = Math.Max(proposedWidth, autoWidth);
                 }
 
-                return _width;
+                return Math.Max(proposedWidth, _width);
             }
 
             set => _width = value;
@@ -95,27 +144,48 @@ namespace Alex.API.Gui
         {
             get
             {
-                if (ParentElement != null && VerticalAlignment == VerticalAlignment.Stretch) return ParentElement.Height;
+                var proposedHeight = LayoutHeight > 0 ? LayoutHeight : _height;
+                if (MaxHeight > 0)
+                {
+                    proposedHeight = Math.Min(MaxHeight, proposedHeight);
+                }
+
+                if (MinHeight > 0)
+                {
+                    proposedHeight = Math.Max(MinHeight, proposedHeight);
+                }
+
+
+                if (ParentElement != null && VerticalAlignment == VerticalAlignment.Stretch)
+                {
+                    proposedHeight = Math.Max(proposedHeight, ParentElement.Height);
+                }
+
                 if (_height < 0)
                 {
                     var childrenToCheck = Children.Where(c => c.VerticalAlignment != VerticalAlignment.Stretch).ToArray();
-                    return (childrenToCheck.Any()
-                                ? Math.Abs(childrenToCheck.Max(c => c.Bounds.Bottom) - childrenToCheck.Min(c => c.Bounds.Top))
+                    var autoHeight = (childrenToCheck.Any()
+                                ? Math.Abs(childrenToCheck.Max(c => c.RenderBounds.Bottom) - childrenToCheck.Min(c => c.RenderBounds.Top))
                                 : 0);
+
+                    proposedHeight = Math.Max(proposedHeight, autoHeight);
                 }
 
-                return _height;
+                return Math.Max(proposedHeight, _height);
             }
 
             set => _height = value;
         }
+        
 
-        public virtual Vector2   Position => (ParentElement?.Position ?? Vector2.Zero) + new Vector2(LayoutOffsetX, LayoutOffsetY) + new Vector2(X, Y);
 
-        public virtual Point Size => new Point(LayoutWidth > 0 ? LayoutWidth : Width, LayoutHeight > 0 ? LayoutHeight : Height);
-        public         Rectangle Bounds   => new Rectangle(Position.ToPoint(), Size);
+        public virtual Vector2 RenderPosition => (ParentElement?.RenderPosition ?? Vector2.Zero) + new Vector2(LayoutOffsetX, LayoutOffsetY) + new Vector2(X, Y);
+        public virtual Point RenderSize => new Point(Width, Height);
+        public Rectangle RenderBounds => new Rectangle(RenderPosition.ToPoint(), RenderSize);
 
         #endregion
+
+        protected IGuiRenderer GuiRenderer => _guiRenderer;
 
         private IGuiRenderer _guiRenderer;
         private bool _initialised;
@@ -173,11 +243,11 @@ namespace Alex.API.Gui
             }
             else if (VerticalAlignment == VerticalAlignment.Center)
             {
-                LayoutOffsetY = (int)((ParentElement.Size.Y - Size.Y) / 2f);
+                LayoutOffsetY = (int)((ParentElement.RenderSize.Y - RenderSize.Y) / 2f);
             }
             else if (VerticalAlignment == VerticalAlignment.Bottom)
             {
-                LayoutOffsetY = (int) (ParentElement.Size.Y - Size.Y);
+                LayoutOffsetY = (int)(ParentElement.RenderSize.Y - RenderSize.Y);
             }
         }
         protected void AlignHorizontally()
@@ -189,11 +259,11 @@ namespace Alex.API.Gui
             }
             else if (HorizontalAlignment == HorizontalAlignment.Center)
             {
-                LayoutOffsetX = (int)((ParentElement.Size.X - Size.X) / 2f);
+                LayoutOffsetX = (int)((ParentElement.RenderSize.X - RenderSize.X) / 2f);
             }
             else if (HorizontalAlignment == HorizontalAlignment.Right)
             {
-                LayoutOffsetX = (int) (ParentElement.Size.X - Size.X);
+                LayoutOffsetX = (int)(ParentElement.RenderSize.X - RenderSize.X);
             }
         }
 
@@ -220,8 +290,8 @@ namespace Alex.API.Gui
 
         protected virtual void OnDraw(GuiRenderArgs args)
         {
-            // Draw Debug Bounds
-            //args.DrawRectangle(Bounds, DebugColor);
+            // Draw Debug RenderBounds
+            //args.DrawRectangle(RenderBounds, DebugColor);
 
             if (BackgroundOverlayColor.HasValue && BackgroundOverlay == null)
             {
@@ -230,18 +300,18 @@ namespace Alex.API.Gui
 
             if (Background != null)
             {
-                args.Draw(Background, Bounds, BackgroundRepeatMode, BackgroundScale);
+                args.Draw(Background, RenderBounds, BackgroundRepeatMode, BackgroundScale);
             }
 
             if (BackgroundOverlay != null)
             {
-                args.Draw(BackgroundOverlay, Bounds, BackgroundRepeatMode, BackgroundScale);
+                args.Draw(BackgroundOverlay, RenderBounds, BackgroundRepeatMode, BackgroundScale);
             }
         }
 
-        public void AddChild(GuiElement element)
+        public void AddChild(IGuiElement element)
         {
-	        if (element == this) return;
+            if (element == this) return;
 
             element.ParentElement = this;
             Children.Add(element);
@@ -252,11 +322,11 @@ namespace Alex.API.Gui
             UpdateLayout();
         }
 
-        public void RemoveChild(GuiElement element)
+        public void RemoveChild(IGuiElement element)
         {
-	        if (element == this) return;
+            if (element == this) return;
 
-			Children.Remove(element);
+            Children.Remove(element);
             element.ParentElement = null;
             UpdateLayout();
         }
@@ -275,7 +345,7 @@ namespace Alex.API.Gui
                     return true;
                 }
             }
-            
+
             if (!recurse) return false;
 
             // If the children on this level do not match, check their children.
@@ -290,13 +360,39 @@ namespace Alex.API.Gui
             return false;
         }
 
-        public bool TryFindDeepestChild(GuiElementPredicate predicate, out GuiElement childElement)
+        public bool TryFindParent(GuiElementPredicate predicate, out IGuiElement parentElement)
+        {
+            if (ParentElement == null)
+            {
+                parentElement = null;
+                return false;
+            }
+
+            if (predicate(ParentElement))
+            {
+                parentElement = ParentElement;
+                return true;
+            }
+
+            return ParentElement.TryFindParent(predicate, out parentElement);
+        }
+
+        public bool TryFindParentOfType<TGuiElement>(GuiElementPredicate<TGuiElement> predicate, out TGuiElement parentElement) where TGuiElement : class, IGuiElement
+        {
+
+            var result = TryFindParent(e => e is TGuiElement e1 && predicate(e1), out IGuiElement element);
+
+            parentElement = element as TGuiElement;
+            return result;
+        }
+
+        public bool TryFindDeepestChild(GuiElementPredicate predicate, out IGuiElement childElement)
         {
             childElement = null;
             if (!HasChildren) return false;
 
             var children = Children.ToArray();
-            
+
             foreach (var child in children)
             {
                 if (predicate(child))
@@ -326,7 +422,15 @@ namespace Alex.API.Gui
             return false;
         }
 
-        public IEnumerable<TResult> ForEachChild<TResult>(Func<GuiElement, TResult> valueSelector)
+        public bool TryFindDeepestChildOfType<TGuiElement>(GuiElementPredicate<TGuiElement> predicate, out TGuiElement childElement) where TGuiElement : class, IGuiElement
+        {
+            var result = TryFindDeepestChild(e => e is TGuiElement e1 && predicate(e1), out IGuiElement element);
+
+            childElement = element as TGuiElement;
+            return result;
+        }
+
+        public IEnumerable<TResult> ForEachChild<TResult>(Func<IGuiElement, TResult> valueSelector)
         {
             if (HasChildren)
             {
@@ -337,7 +441,7 @@ namespace Alex.API.Gui
             }
         }
 
-        public void ForEachChild(Action<GuiElement> childAction)
+        public void ForEachChild(Action<IGuiElement> childAction)
         {
             if (!HasChildren) return;
 
@@ -345,6 +449,20 @@ namespace Alex.API.Gui
             {
                 childAction(child);
             }
+        }
+
+        protected virtual void OnScreenChanged(IGuiScreen previousScreen, IGuiScreen newScreen)
+        {
+            if (this is IGuiElement3D element3D)
+            {
+                previousScreen?.UnregisterElement(element3D);
+                newScreen?.RegisterElement(element3D);
+            }
+        }
+
+        protected virtual void OnParentElementChanged(IGuiElement parentElement)
+        {
+
         }
     }
 }

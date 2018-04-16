@@ -94,9 +94,7 @@ namespace Alex.Gamestates
 
 				VerticalAlignment = VerticalAlignment.Top,
 				HorizontalAlignment = HorizontalAlignment.Left,
-				HasShadow = false,
-				BackupFont = Alex.Font,
-				Scale = 0.5f
+				HasShadow = false
 			});
 
 			_progressBarContainer.AddChild(_percentageDisplay = new GuiTextElement()
@@ -106,9 +104,7 @@ namespace Alex.Gamestates
 
 				VerticalAlignment   = VerticalAlignment.Top,
 				HorizontalAlignment = HorizontalAlignment.Right,
-				HasShadow = false,
-				BackupFont = Alex.Font,
-				Scale = 0.5f
+				HasShadow = false
 			});
 
 			_progressBarContainer.AddChild(_progressBar = new GuiProgressBar()

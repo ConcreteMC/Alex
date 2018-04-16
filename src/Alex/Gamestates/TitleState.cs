@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,16 +8,19 @@ using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Rendering;
 using Alex.API.Utils;
+using Alex.Entities;
 using Alex.Gamestates.Gui;
 using Alex.GameStates.Gui.MainMenu;
 using Alex.Graphics;
 using Alex.Graphics.Models;
+using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
 using Alex.Worlds;
 using Alex.Worlds.Generators;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using Color = Microsoft.Xna.Framework.Color;
 
 namespace Alex.Gamestates
 {
@@ -27,6 +31,7 @@ namespace Alex.Gamestates
 		private GuiTextElement _splashText;
 
 		private GuiPanoramaSkyBox _backgroundSkyBox;
+		private GuiEntityModelView _playerView;
 
 		private FpsMonitor FpsMonitor { get; }
 		public TitleState(Alex alex, ContentManager content) : base(alex)
@@ -87,8 +92,23 @@ namespace Alex.Gamestates
 				Text = "Who liek minecwaf?!"
 			});
 
+			var username = alex.GameSettings.Username;
+			Gui.AddChild(_playerView = new GuiEntityModelView("geometry.humanoid.custom")
+			{
+				BackgroundOverlayColor = new Color(Color.Black, 0.15f),
+
+				X = -25,
+				Y = -25,
+
+				Width = 92,
+				Height = 128,
+
+				HorizontalAlignment = HorizontalAlignment.Right,
+				VerticalAlignment = VerticalAlignment.Bottom
+			});
+
 			_debugInfo = new GuiDebugInfo(alex);
-			_debugInfo.AddDebugRight(() => $"Cursor Position: {alex.InputManager.CursorInputListener.GetCursorPosition()} / {alex.GuiManager.FocusManager.CursorPosition}");
+			_debugInfo.AddDebugRight(() => $"Cursor RenderPosition: {alex.InputManager.CursorInputListener.GetCursorPosition()} / {alex.GuiManager.FocusManager.CursorPosition}");
 			_debugInfo.AddDebugRight(() => $"Cursor Delta: {alex.InputManager.CursorInputListener.GetCursorPositionDelta()}");
 			_debugInfo.AddDebugRight(() => $"Splash Text Scale: {_splashText.Scale:F3}");
 			_debugInfo.AddDebugLeft(() => $"FPS: {FpsMonitor.Value:F0}");
@@ -97,6 +117,11 @@ namespace Alex.Gamestates
 		private Texture2D _gradient;
 		protected override void OnLoad(RenderArgs args)
 		{
+			Alex.Resources.BedrockResourcePack.TryGetTexture("textures/entity/steve", out Bitmap rawTexture);
+			var steve = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, rawTexture);
+
+			_playerView.SkinTexture = steve;
+
 			using (MemoryStream ms = new MemoryStream(Resources.goodblur))
 			{
 				_gradient = Texture2D.FromStream(args.GraphicsDevice, ms);
@@ -114,6 +139,8 @@ namespace Alex.Gamestates
 
 		private float _rotation;
 
+		private float _playerViewDepth = -512.0f;
+		
 		protected override void OnUpdate(GameTime gameTime)
 		{
 			_backgroundSkyBox.Update(gameTime);
@@ -122,6 +149,20 @@ namespace Alex.Gamestates
 
 			_splashText.Scale = 0.65f + (float)Math.Abs(Math.Sin(MathHelper.ToRadians(_rotation * 10.0f))) * 0.5f;
 
+			var mousePos = Alex.InputManager.CursorInputListener.GetCursorPosition();
+
+			mousePos = Vector2.Transform(mousePos, Alex.GuiManager.ScaledResolution.InverseTransformMatrix);
+			var playerPos = _playerView.RenderBounds.Center.ToVector2();
+
+			var mouseDelta = (new Vector3(playerPos.X, -playerPos.Y, _playerViewDepth) - new Vector3(mousePos.X, -mousePos.Y, 0.0f));
+			mouseDelta.Normalize();
+
+			var headYaw = (float) mouseDelta.GetYaw();
+			var pitch = (float) mouseDelta.GetPitch();
+			var yaw = (float) headYaw;
+
+			_playerView.SetEntityRotation(yaw, pitch, headYaw);
+			
 			base.OnUpdate(gameTime);
 		}
 

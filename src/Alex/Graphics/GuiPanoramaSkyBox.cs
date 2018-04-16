@@ -141,10 +141,10 @@ namespace Alex.Graphics
 					data[dataIndex + 2].Position = Vector3.Transform(new Vector3(1.0f, 1.0f, 1.0f), vm);
 					data[dataIndex + 3].Position = Vector3.Transform(new Vector3(-1.0f, 1.0f, 1.0f), vm);
 
-					//data[dataIndex + 0].Position = new Vector3(-1.0f, -1.0f, 1.0f);
-					//data[dataIndex + 1].Position = new Vector3(1.0f, -1.0f, 1.0f);
-					//data[dataIndex + 2].Position = new Vector3(1.0f, 1.0f, 1.0f);
-					//data[dataIndex + 3].Position = new Vector3(-1.0f, 1.0f, 1.0f);
+					//data[dataIndex + 0].RenderPosition = new Vector3(-1.0f, -1.0f, 1.0f);
+					//data[dataIndex + 1].RenderPosition = new Vector3(1.0f, -1.0f, 1.0f);
+					//data[dataIndex + 2].RenderPosition = new Vector3(1.0f, 1.0f, 1.0f);
+					//data[dataIndex + 3].RenderPosition = new Vector3(-1.0f, 1.0f, 1.0f);
 
 					data[dataIndex + 0].TextureCoordinate = new Vector2(0.0f, 0.0f);
 				    data[dataIndex + 1].TextureCoordinate = new Vector2(1.0f, 0.0f);

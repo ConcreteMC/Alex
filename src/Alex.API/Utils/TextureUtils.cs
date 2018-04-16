@@ -76,7 +76,7 @@ namespace Alex.API.Utils
 
 		public static void SetCubeFaceTexture(this TextureCube cube, CubeMapFace face, Texture2D texture)
 		{
-			//if(texture.Width || cube.Size != texture.Height) throw new ArgumentOutOfRangeException(nameof(texture.Bounds));
+			//if(texture.Width || cube.RenderSize != texture.Height) throw new ArgumentOutOfRangeException(nameof(texture.RenderBounds));
 
 			uint[] imgData = new uint[texture.Width * texture.Height];
 

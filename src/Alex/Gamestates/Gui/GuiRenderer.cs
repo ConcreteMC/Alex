@@ -2,6 +2,7 @@
 using System.Drawing;
 using Alex.API;
 using Alex.API.Graphics;
+using Alex.API.Gui;
 using Alex.API.Gui.Rendering;
 using Alex.API.Utils;
 using Alex.ResourcePackLib;
@@ -17,8 +18,9 @@ namespace Alex.Gamestates.Gui
 
         private Alex Alex { get; }
         
-        public BitmapFont Font => _font;
+        public BitmapFont Font => Alex.Font;
         public IFontRenderer DefaultFont => Alex.FontRender;
+        public GuiScaledResolution ScaledResolution { get; set; }
 
         private GraphicsDevice _graphicsDevice;
         private ResourceManager _resourceManager;
@@ -38,6 +40,8 @@ namespace Alex.Gamestates.Gui
         private static readonly Rectangle WidgetButtonDisabled        = new Rectangle(0, 46, 200, 20);
         private static readonly Rectangle WidgetButtonDefault         = new Rectangle(0, 66, 200, 20);
         private static readonly Rectangle WidgetButtonHover           = new Rectangle(0, 86, 200, 20);
+
+        private static readonly Rectangle WidgetHotBarSeparated = new Rectangle(24, 23, 22, 22);
 
         #endregion
 
@@ -70,6 +74,7 @@ namespace Alex.Gamestates.Gui
             Init(alex.GraphicsDevice);
         }
 
+
         public void Init(GraphicsDevice graphics)
         {
             _graphicsDevice = graphics;
@@ -84,8 +89,6 @@ namespace Alex.Gamestates.Gui
 
         public void LoadResourcePack(McResourcePack resourcePack)
         {
-            _font = resourcePack.Font;
-
             LoadResourcePackTextures(resourcePack);
         }
 
@@ -130,6 +133,7 @@ namespace Alex.Gamestates.Gui
             LoadTextureFromSpriteSheet(GuiTextures.ButtonDefault                       , spriteSheet, WidgetButtonDefault);
             LoadTextureFromSpriteSheet(GuiTextures.ButtonHover                         , spriteSheet, WidgetButtonHover);
             LoadTextureFromSpriteSheet(GuiTextures.ButtonDisabled                      , spriteSheet, WidgetButtonDisabled);
+            LoadTextureFromSpriteSheet(GuiTextures.PanelGeneric, spriteSheet, WidgetHotBarSeparated, new Thickness(5));
         }
 
         private void LoadIcons(Texture2D spriteSheet)
@@ -161,6 +165,11 @@ namespace Alex.Gamestates.Gui
                 _textureCache[guiTexture] = texture;
             }
         }
+        
+        private void LoadTextureFromSpriteSheet(GuiTextures guiTexture, Texture2D spriteSheet, Rectangle sliceRectangle, Thickness ninePatchThickness)
+        {
+            _textureCache[guiTexture] = new NinePatchTexture2D(spriteSheet.Slice(sliceRectangle), ninePatchThickness);
+        }
 
         private void LoadTextureFromSpriteSheet(GuiTextures guiTexture, Texture2D spriteSheet, Rectangle sliceRectangle)
         {
@@ -180,6 +189,16 @@ namespace Alex.Gamestates.Gui
         public Texture2D GetTexture2D(GuiTextures guiTexture)
         {
             return GetTexture(guiTexture).Texture;
+        }
+
+        public Vector2 Project(Vector2 point)
+        {
+            return Vector2.Transform(point, ScaledResolution.TransformMatrix);
+        }
+
+        public Vector2 Unproject(Vector2 screen)
+        {
+            return Vector2.Transform(screen, ScaledResolution.InverseTransformMatrix);
         }
     }
 }

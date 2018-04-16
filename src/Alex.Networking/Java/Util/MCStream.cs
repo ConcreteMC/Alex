@@ -45,10 +45,10 @@
 		public override bool CanWrite => BaseStream.CanRead;
 		public override long Length => BaseStream.Length;
 
-		public override long Position
+		public override long RenderPosition
 		{
-			get { return BaseStream.Position; }
-			set { BaseStream.Position = value; }
+			get { return BaseStream.RenderPosition; }
+			set { BaseStream.RenderPosition = value; }
 		}
 
 		public override long Seek(long offset, SeekOrigin origin)

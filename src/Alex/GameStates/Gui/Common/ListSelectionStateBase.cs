@@ -12,23 +12,6 @@ namespace Alex.GameStates.Gui.Common
 {
     public class ListSelectionStateBase<TGuiListItemContainer> : GuiStateBase where TGuiListItemContainer : GuiContainer
     {
-        private string _title;
-
-        public string Title
-        {
-            get => _title;
-            set
-            {
-                _title = value;
-                if(_headerTitle != null)
-                    _headerTitle.Text = value;
-            }
-        }
-
-        private GuiContainer _header;
-        private GuiTextElement _headerTitle;
-        private GuiBeaconButton _headerBackButton;
-
         protected TGuiListItemContainer[] Items => _items.ToArray();
         private List<TGuiListItemContainer> _items { get; } = new List<TGuiListItemContainer>();
 
@@ -36,33 +19,10 @@ namespace Alex.GameStates.Gui.Common
 
         public ListSelectionStateBase() : base()
         {
-            Gui.AddChild(_header = new GuiContainer()
-            {
-                Height = 42,
-                VerticalAlignment = VerticalAlignment.Top,
-                HorizontalAlignment = HorizontalAlignment.Stretch,
-            });
-
-            _header.AddChild(_headerBackButton = new GuiBackButton()
-            {
-                VerticalAlignment = VerticalAlignment.Top,
-                HorizontalAlignment = HorizontalAlignment.Left,
-            });
-
-            _header.AddChild(_headerTitle = new GuiTextElement()
-            {
-                Text = Title,
-                TextColor = TextColor.White,
-	            Scale = 1.5f,
-
-                VerticalAlignment = VerticalAlignment.Center,
-                HorizontalAlignment = HorizontalAlignment.Center
-            });
-
 	        Gui.AddChild(_listContainer = new GuiStackContainer()
             {
 				BackgroundOverlayColor = new Color(Color.Black, 0.5f),
-                Y = _header.Height,
+                Y = Header.Height,
                 Width = 192,
 				VerticalAlignment = VerticalAlignment.Top,
 				HorizontalAlignment = HorizontalAlignment.Center,

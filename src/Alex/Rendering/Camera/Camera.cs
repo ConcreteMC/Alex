@@ -1,6 +1,7 @@
 ﻿using System;
 using Alex.API.Entities;
 using Alex.API.Graphics;
+using Alex.API.Utils;
 using Alex.Entities;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
@@ -100,7 +101,7 @@ namespace Alex.Rendering.Camera
 	    }
 
 		private float _aspectRatio = 0;
-		public void UpdateProjectionMatrix()
+		public virtual void UpdateProjectionMatrix()
 		{
 			ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(
 				MathHelper.ToRadians(FOV),
@@ -128,7 +129,12 @@ namespace Alex.Rendering.Camera
 		    MoveTo(PreviewMove(scale), Rotation);
 	    }
 
-	    public virtual void Update(IUpdateArgs args, IEntity entity)
+		public virtual void Update(IUpdateArgs args, IEntity entity)
+		{
+			Update(args, entity.KnownPosition);
+		}
+
+	    public virtual void Update(IUpdateArgs args, PlayerLocation entityLocation)
 	    {
 			
 			MoveTo(entity.KnownPosition, 

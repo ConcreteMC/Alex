@@ -8,6 +8,8 @@
 
         OptionsBackground,
 
+        PanelGeneric,
+
         Inventory_HotBar,
         Inventory_HotBar_SelectedItemOverlay,
 

@@ -24,7 +24,7 @@ namespace Alex.Graphics.Gui.Elements
 
 		    if (Texture != null)
 		    {
-			    args.Draw(Texture, Bounds, RepeatMode);
+			    args.Draw(Texture, RenderBounds, RepeatMode);
 		    }
 	    }
     }

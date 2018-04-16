@@ -71,7 +71,7 @@ namespace Alex.Networking.Java.Util.Encryption
       length = parser.NextSequence();
       if (length != parser.RemainingBytes())
       {
-        StringBuilder sb = new StringBuilder("Incorrect Sequence Size. ");
+        StringBuilder sb = new StringBuilder("Incorrect Sequence RenderSize. ");
         sb.AppendFormat("Specified: {0}, Remaining: {1}",
           length.ToString(CultureInfo.InvariantCulture),
           parser.RemainingBytes().ToString(CultureInfo.InvariantCulture));
@@ -85,7 +85,7 @@ namespace Alex.Networking.Java.Util.Encryption
       length = parser.NextSequence();
       if (length > parser.RemainingBytes())
       {
-        StringBuilder sb = new StringBuilder("Incorrect AlgorithmIdentifier Size. ");
+        StringBuilder sb = new StringBuilder("Incorrect AlgorithmIdentifier RenderSize. ");
         sb.AppendFormat("Specified: {0}, Remaining: {1}",
           length.ToString(CultureInfo.InvariantCulture),
           parser.RemainingBytes().ToString(CultureInfo.InvariantCulture));
@@ -119,7 +119,7 @@ namespace Alex.Networking.Java.Util.Encryption
       length = parser.NextBitString();
       if (length > parser.RemainingBytes())
       {
-        StringBuilder sb = new StringBuilder("Incorrect PublicKey Size. ");
+        StringBuilder sb = new StringBuilder("Incorrect PublicKey RenderSize. ");
         sb.AppendFormat("Specified: {0}, Remaining: {1}",
           length.ToString(CultureInfo.InvariantCulture),
           (parser.RemainingBytes()).ToString(CultureInfo.InvariantCulture));
@@ -133,7 +133,7 @@ namespace Alex.Networking.Java.Util.Encryption
       length = parser.NextSequence();
       if (length < parser.RemainingBytes())
       {
-        StringBuilder sb = new StringBuilder("Incorrect RSAPublicKey Size. ");
+        StringBuilder sb = new StringBuilder("Incorrect RSAPublicKey RenderSize. ");
         sb.AppendFormat("Specified: {0}, Remaining: {1}",
           length.ToString(CultureInfo.InvariantCulture),
           parser.RemainingBytes().ToString(CultureInfo.InvariantCulture));
@@ -165,7 +165,7 @@ namespace Alex.Networking.Java.Util.Encryption
       length = parser.NextSequence();
       if (length != parser.RemainingBytes())
       {
-        StringBuilder sb = new StringBuilder("Incorrect Sequence Size. ");
+        StringBuilder sb = new StringBuilder("Incorrect Sequence RenderSize. ");
         sb.AppendFormat("Specified: {0}, Remaining: {1}",
           length.ToString(CultureInfo.InvariantCulture), parser.RemainingBytes().ToString(CultureInfo.InvariantCulture));
         throw new BerDecodeException(sb.ToString(), position);
@@ -190,7 +190,7 @@ namespace Alex.Networking.Java.Util.Encryption
       length = parser.NextSequence();
       if (length > parser.RemainingBytes())
       {
-        StringBuilder sb = new StringBuilder("Incorrect AlgorithmIdentifier Size. ");
+        StringBuilder sb = new StringBuilder("Incorrect AlgorithmIdentifier RenderSize. ");
         sb.AppendFormat("Specified: {0}, Remaining: {1}",
           length.ToString(CultureInfo.InvariantCulture),
           parser.RemainingBytes().ToString(CultureInfo.InvariantCulture));
@@ -225,7 +225,7 @@ namespace Alex.Networking.Java.Util.Encryption
       length = parser.NextOctetString();
       if (length > parser.RemainingBytes())
       {
-        StringBuilder sb = new StringBuilder("Incorrect PrivateKey Size. ");
+        StringBuilder sb = new StringBuilder("Incorrect PrivateKey RenderSize. ");
         sb.AppendFormat("Specified: {0}, Remaining: {1}",
           length.ToString(CultureInfo.InvariantCulture),
           parser.RemainingBytes().ToString(CultureInfo.InvariantCulture));
@@ -239,7 +239,7 @@ namespace Alex.Networking.Java.Util.Encryption
       length = parser.NextSequence();
       if (length < parser.RemainingBytes())
       {
-        StringBuilder sb = new StringBuilder("Incorrect RSAPrivateKey Size. ");
+        StringBuilder sb = new StringBuilder("Incorrect RSAPrivateKey RenderSize. ");
         sb.AppendFormat("Specified: {0}, Remaining: {1}",
           length.ToString(CultureInfo.InvariantCulture),
           parser.RemainingBytes().ToString(CultureInfo.InvariantCulture));
@@ -279,7 +279,7 @@ namespace Alex.Networking.Java.Util.Encryption
       // Current value
       byte[] value = null;
 
-      // Current Position
+      // Current RenderPosition
       int position = parser.CurrentPosition();
       // Sanity Checks
       int length = 0;
@@ -288,7 +288,7 @@ namespace Alex.Networking.Java.Util.Encryption
       length = parser.NextSequence();
       if (length != parser.RemainingBytes())
       {
-        StringBuilder sb = new StringBuilder("Incorrect Sequence Size. ");
+        StringBuilder sb = new StringBuilder("Incorrect Sequence RenderSize. ");
         sb.AppendFormat("Specified: {0}, Remaining: {1}",
           length.ToString(CultureInfo.InvariantCulture), parser.RemainingBytes().ToString(CultureInfo.InvariantCulture));
         throw new BerDecodeException(sb.ToString(), position);
@@ -301,7 +301,7 @@ namespace Alex.Networking.Java.Util.Encryption
       length = parser.NextSequence();
       if (length > parser.RemainingBytes())
       {
-        StringBuilder sb = new StringBuilder("Incorrect AlgorithmIdentifier Size. ");
+        StringBuilder sb = new StringBuilder("Incorrect AlgorithmIdentifier RenderSize. ");
         sb.AppendFormat("Specified: {0}, Remaining: {1}",
           length.ToString(CultureInfo.InvariantCulture), parser.RemainingBytes().ToString(CultureInfo.InvariantCulture));
         throw new BerDecodeException(sb.ToString(), position);
@@ -324,7 +324,7 @@ namespace Alex.Networking.Java.Util.Encryption
       length = parser.NextSequence();
       if (length > parser.RemainingBytes())
       {
-        StringBuilder sb = new StringBuilder("Incorrect DSS-Params Size. ");
+        StringBuilder sb = new StringBuilder("Incorrect DSS-Params RenderSize. ");
         sb.AppendFormat("Specified: {0}, Remaining: {1}",
           length.ToString(CultureInfo.InvariantCulture), parser.RemainingBytes().ToString(CultureInfo.InvariantCulture));
         throw new BerDecodeException(sb.ToString(), position);
@@ -353,7 +353,7 @@ namespace Alex.Networking.Java.Util.Encryption
       // Current value
       byte[] value = null;
 
-      // Current Position
+      // Current RenderPosition
       int position = parser.CurrentPosition();
       // Sanity Checks
       int length = 0;
@@ -362,7 +362,7 @@ namespace Alex.Networking.Java.Util.Encryption
       length = parser.NextSequence();
       if (length != parser.RemainingBytes())
       {
-        StringBuilder sb = new StringBuilder("Incorrect Sequence Size. ");
+        StringBuilder sb = new StringBuilder("Incorrect Sequence RenderSize. ");
         sb.AppendFormat("Specified: {0}, Remaining: {1}",
           length.ToString(CultureInfo.InvariantCulture), parser.RemainingBytes().ToString(CultureInfo.InvariantCulture));
         throw new BerDecodeException(sb.ToString(), position);
@@ -384,7 +384,7 @@ namespace Alex.Networking.Java.Util.Encryption
       length = parser.NextSequence();
       if (length > parser.RemainingBytes())
       {
-        StringBuilder sb = new StringBuilder("Incorrect AlgorithmIdentifier Size. ");
+        StringBuilder sb = new StringBuilder("Incorrect AlgorithmIdentifier RenderSize. ");
         sb.AppendFormat("Specified: {0}, Remaining: {1}",
           length.ToString(CultureInfo.InvariantCulture), parser.RemainingBytes().ToString(CultureInfo.InvariantCulture));
         throw new BerDecodeException(sb.ToString(), position);
@@ -405,7 +405,7 @@ namespace Alex.Networking.Java.Util.Encryption
       length = parser.NextSequence();
       if (length > parser.RemainingBytes())
       {
-        StringBuilder sb = new StringBuilder("Incorrect DSS-Params Size. ");
+        StringBuilder sb = new StringBuilder("Incorrect DSS-Params RenderSize. ");
         sb.AppendFormat("Specified: {0}, Remaining: {1}",
           length.ToString(CultureInfo.InvariantCulture), parser.RemainingBytes().ToString(CultureInfo.InvariantCulture));
         throw new BerDecodeException(sb.ToString(), position);
@@ -498,7 +498,7 @@ namespace Alex.Networking.Java.Util.Encryption
         int length = GetLength();
         if (length > RemainingBytes())
         {
-          StringBuilder sb = new StringBuilder("Incorrect Size. ");
+          StringBuilder sb = new StringBuilder("Incorrect RenderSize. ");
           sb.AppendFormat("Specified: {0}, Remaining: {1}",
             length.ToString(CultureInfo.InvariantCulture),
             RemainingBytes().ToString(CultureInfo.InvariantCulture));
@@ -518,7 +518,7 @@ namespace Alex.Networking.Java.Util.Encryption
 
       if (0 == RemainingBytes())
       {
-        StringBuilder sb = new StringBuilder("Incorrect Size. ");
+        StringBuilder sb = new StringBuilder("Incorrect RenderSize. ");
         sb.AppendFormat("Specified: {0}, Remaining: {1}",
           1.ToString(CultureInfo.InvariantCulture),
           RemainingBytes().ToString(CultureInfo.InvariantCulture));
@@ -536,7 +536,7 @@ namespace Alex.Networking.Java.Util.Encryption
 
       if (octetCount > RemainingBytes())
       {
-        StringBuilder sb = new StringBuilder("Incorrect Size. ");
+        StringBuilder sb = new StringBuilder("Incorrect RenderSize. ");
         sb.AppendFormat("Specified: {0}, Remaining: {1}",
           octetCount.ToString(CultureInfo.InvariantCulture),
           RemainingBytes().ToString(CultureInfo.InvariantCulture));
@@ -581,7 +581,7 @@ namespace Alex.Networking.Java.Util.Encryption
         if (0x00 != b)
         {
           StringBuilder sb = new StringBuilder("Null has non-zero size. ");
-          sb.AppendFormat("Size: {0}", b.ToString(CultureInfo.InvariantCulture));
+          sb.AppendFormat("RenderSize: {0}", b.ToString(CultureInfo.InvariantCulture));
           throw new BerDecodeException(sb.ToString(), position);
         }
 
@@ -615,7 +615,7 @@ namespace Alex.Networking.Java.Util.Encryption
         int length = GetLength();
         if (length > RemainingBytes())
         {
-          StringBuilder sb = new StringBuilder("Incorrect Sequence Size. ");
+          StringBuilder sb = new StringBuilder("Incorrect Sequence RenderSize. ");
           sb.AppendFormat("Specified: {0}, Remaining: {1}",
             length.ToString(CultureInfo.InvariantCulture),
             RemainingBytes().ToString(CultureInfo.InvariantCulture));
@@ -651,7 +651,7 @@ namespace Alex.Networking.Java.Util.Encryption
         int length = GetLength();
         if (length > RemainingBytes())
         {
-          StringBuilder sb = new StringBuilder("Incorrect Octet String Size. ");
+          StringBuilder sb = new StringBuilder("Incorrect Octet String RenderSize. ");
           sb.AppendFormat("Specified: {0}, Remaining: {1}",
             length.ToString(CultureInfo.InvariantCulture),
             RemainingBytes().ToString(CultureInfo.InvariantCulture));
@@ -724,7 +724,7 @@ namespace Alex.Networking.Java.Util.Encryption
         int length = GetLength();
         if (length > RemainingBytes())
         {
-          StringBuilder sb = new StringBuilder("Incorrect Integer Size. ");
+          StringBuilder sb = new StringBuilder("Incorrect Integer RenderSize. ");
           sb.AppendFormat("Specified: {0}, Remaining: {1}",
             length.ToString(CultureInfo.InvariantCulture),
             RemainingBytes().ToString(CultureInfo.InvariantCulture));
@@ -756,7 +756,7 @@ namespace Alex.Networking.Java.Util.Encryption
         int length = GetLength();
         if (length > RemainingBytes())
         {
-          StringBuilder sb = new StringBuilder("Incorrect Object Identifier Size. ");
+          StringBuilder sb = new StringBuilder("Incorrect Object Identifier RenderSize. ");
           sb.AppendFormat("Specified: {0}, Remaining: {1}",
             length.ToString(CultureInfo.InvariantCulture),
             RemainingBytes().ToString(CultureInfo.InvariantCulture));
