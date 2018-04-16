@@ -38,7 +38,7 @@ namespace Alex.API.Graphics
 			DrawString(sb, bitmapFont, text, position, color, dropShadow, rotation, origin.HasValue ? origin.Value : Vector2.Zero, Vector2.One, SpriteEffects.None, 0f);
 		}
 
-		public static void DrawString(this SpriteBatch sb, BitmapFont bitmapFont, string text, Vector2 position, TextColor color, bool dropShadow, float rotation, Vector2 origin, Vector2 scale, SpriteEffects effects = SpriteEffects.None, float layerDepth = 0f)
+		public static void DrawString(this SpriteBatch sb, BitmapFont bitmapFont, string text, Vector2 position, TextColor color, bool dropShadow, float rotation, Vector2 origin, Vector2 scale, SpriteEffects effects = SpriteEffects.None, float layerDepth = 0f, float opacity = 1f)
 		{
 			if (string.IsNullOrEmpty(text)) return;
 
@@ -94,6 +94,9 @@ namespace Alex.API.Graphics
 
 			TextColor styleColor = color;
 			bool styleRandom = false, styleBold = false, styleItalic = false, styleUnderline = false, styleStrikethrough = false;
+
+			var blendFactor = sb.GraphicsDevice.BlendFactor;
+			sb.GraphicsDevice.BlendFactor = Color.White * opacity;
 
 			for (int i = 0; i < text.Length; i++)
 			{
@@ -198,6 +201,8 @@ namespace Alex.API.Graphics
 					offset.X += glyph.Width + bitmapFont.CharacterSpacing;
 				}
 			}
+
+			sb.GraphicsDevice.BlendFactor = blendFactor;
 		}
 	}
 

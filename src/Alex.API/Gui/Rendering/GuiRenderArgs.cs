@@ -87,6 +87,22 @@ namespace Alex.API.Gui.Rendering
                 SpriteBatch.Draw(texture, new Rectangle(bounds.X, bounds.Y, thicknessLeft, bounds.Height), color);
             }
         }
+        
+        public void DrawLine(int startX, int startY, int endX, int endY, Color color, int thickness = 1)
+        {
+            // TODO: support angles
+            DrawRectangle(new Rectangle(startX, startY, endX-startX, endY-startY), color, thickness);
+        }
+
+        public void DrawLine(Vector2 startPosition, Vector2 endPosition, Color color)
+        {
+            //var diff = (endPosition - startPosition);
+            //var len = Math.Sqrt(diff.X * diff.X + diff.Y * diff.Y);
+
+            //diff.Normalize();
+            
+            //SpriteBatch.
+        }
 
         public void Draw(TextureSlice2D    texture, Rectangle bounds,
                          TextureRepeatMode repeatMode = TextureRepeatMode.Stretch, Vector2? scale = null)
@@ -267,14 +283,14 @@ namespace Alex.API.Gui.Rendering
 		}
 
         
-        public void DrawString(BitmapFont bitmapFont, string text, Vector2 position, TextColor color, bool dropShadow, float rotation, Vector2 origin, float scale = 1f, SpriteEffects effects = SpriteEffects.None, float layerDepth = 0f)
+        public void DrawString(BitmapFont bitmapFont, string text, Vector2 position, TextColor color, bool dropShadow, float rotation, Vector2 origin, float scale = 1f, SpriteEffects effects = SpriteEffects.None, float layerDepth = 0f, float opacity = 1f)
         {
-            SpriteBatch.DrawString(bitmapFont, text, position, color, dropShadow, rotation, origin, new Vector2(scale), effects, layerDepth);
+            SpriteBatch.DrawString(bitmapFont, text, position, color, dropShadow, rotation, origin, new Vector2(scale), effects, layerDepth, opacity);
         }
 
-        public void DrawString(BitmapFont bitmapFont, string text, Vector2 position, TextColor color, bool dropShadow, float rotation, Vector2 origin, Vector2 scale, SpriteEffects effects = SpriteEffects.None, float layerDepth = 0f)
+        public void DrawString(BitmapFont bitmapFont, string text, Vector2 position, TextColor color, bool dropShadow, float rotation, Vector2 origin, Vector2 scale, SpriteEffects effects = SpriteEffects.None, float layerDepth = 0f, float opacity = 1f)
         {
-            SpriteBatch.DrawString(bitmapFont, text, position, color, dropShadow, rotation, origin, scale, effects, layerDepth);
+            SpriteBatch.DrawString(bitmapFont, text, position, color, dropShadow, rotation, origin, scale, effects, layerDepth, opacity);
         }
 
         #endregion

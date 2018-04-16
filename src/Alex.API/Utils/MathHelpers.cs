@@ -8,6 +8,18 @@ namespace Alex.API.Utils
 {
 	public static class MathHelpers
 	{
+		public static double PiOver180 = Math.PI / 180.0;
+
+		public static double SinInterpolation(double a, double b, double t)
+		{
+			return a + Math.Sin(t * PiOver180) * (b - a);
+		}
+
+		public static double TriangularWave(double a, double b, double t)
+		{
+			return a + Math.Abs((b - a) - t % (2 * (b - a)));
+		}
+
 		public static int IntCeil(double value)
 		{
 			int i = (int) value;

@@ -1,5 +1,6 @@
 ﻿using Alex.API.Gui;
 using Alex.API.Gui.Elements;
+using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Elements.Icons;
 using Alex.API.Gui.Rendering;
 using Alex.GameStates.Gui.Common;
@@ -16,6 +17,13 @@ namespace Alex.GameStates.Gui.MainMenu
         {
 	        Title = "Multiplayer";
             AddItem(new GuiServerListEntryElement("Localhost", "localhost:25565"));
+
+            Gui.AddChild(new GuiBeaconButton("Direct Connect", () => Alex.GameStateManager.SetActiveState<MultiplayerConnectState>())
+            {
+                VerticalAlignment = VerticalAlignment.Bottom,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                LayoutOffsetY = -25
+            });
         }
 
     }

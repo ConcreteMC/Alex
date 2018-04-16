@@ -1,6 +1,7 @@
 ﻿using Alex.API.Graphics;
 using Alex.API.Gui.Rendering;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 
 namespace Alex.API.Gui.Elements.Controls
 {
@@ -45,6 +46,8 @@ namespace Alex.API.Gui.Elements.Controls
 
         public virtual Color HighlightOutlineColor { get; set; } = Color.White;
         public virtual Thickness HighlightOutlineThickness { get; set; } = Thickness.One;
+        public virtual Color     FocusOutlineColor     { get; set; } = Color.White;
+        public virtual Thickness FocusOutlineThickness { get; set; } = Thickness.One;
         
         protected override void OnInit(IGuiRenderer renderer)
         {
@@ -86,13 +89,20 @@ namespace Alex.API.Gui.Elements.Controls
         {
             base.OnDraw(args);
 
-            var outlineBounds = RenderBounds;
-                outlineBounds.Inflate(1f,1f);
 
-            if (IsHighlighted && HighlightOutlineThickness.Size() > 0)
+            if (IsFocused && FocusOutlineThickness.Size() > 0)
             {
+                var outlineBounds = RenderBounds;
+                outlineBounds.Inflate(1f,1f);
+                args.DrawRectangle(outlineBounds, FocusOutlineColor, FocusOutlineThickness);
+            }
+            else if (IsHighlighted && HighlightOutlineThickness.Size() > 0)
+            {
+                var outlineBounds = RenderBounds;
+                outlineBounds.Inflate(1f,1f);
                 args.DrawRectangle(outlineBounds, HighlightOutlineColor, HighlightOutlineThickness);
             }
+            
         }
 
         #region Control Cursor Events
@@ -101,7 +111,6 @@ namespace Alex.API.Gui.Elements.Controls
         {
             OnHighlighted();
         }
-
         protected virtual void OnHighlighted() {}
 
 
@@ -109,7 +118,6 @@ namespace Alex.API.Gui.Elements.Controls
         {
             OnFocused();
         }
-
         protected virtual void OnFocused() {}
 
 
@@ -119,7 +127,6 @@ namespace Alex.API.Gui.Elements.Controls
 
             OnClick(relative);
         }
-
         protected virtual void OnClick(Vector2 relativePosition) { }
 
 
@@ -129,7 +136,6 @@ namespace Alex.API.Gui.Elements.Controls
 
             OnCursorDown(relative);
         }
-
         protected virtual void OnCursorDown(Vector2 relativePosition) { }
 
         
@@ -140,9 +146,19 @@ namespace Alex.API.Gui.Elements.Controls
 
             OnCursorMove(relativeNew, relativeOld, isCursorDown);
         }
-
         protected virtual void OnCursorMove(Vector2 relativeNewPosition, Vector2 relativeOldPosition, bool isCursorDown) { }
 
         #endregion
+
+        #region Control Keyboard Events
+
+        public void InvokeKeyInput(char character, Keys key)
+        {
+            OnKeyInput(character, key);
+        }
+        protected virtual void OnKeyInput(char character, Keys key) {}
+
+        #endregion
+
     }
 }

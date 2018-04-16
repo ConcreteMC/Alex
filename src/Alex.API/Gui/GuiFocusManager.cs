@@ -49,14 +49,14 @@ namespace Alex.API.Gui
             {
                 if (_focusedElement != null)
                 {
-                    _focusedElement.IsHighlighted = false;
+                    _focusedElement.IsFocused = false;
                 }
 
                 _focusedElement = value;
 
                 if (_focusedElement != null)
                 {
-                    _focusedElement.IsHighlighted = true;
+                    _focusedElement.IsFocused = true;
                 }
             }
         }
@@ -73,6 +73,11 @@ namespace Alex.API.Gui
         {
             UpdateHighlightedElement();
             UpdateInput();
+        }
+
+        public void OnTextInput(object sender, TextInputEventArgs args)
+        {
+            FocusedElement?.InvokeKeyInput(args.Character, args.Key);
         }
 
         private void UpdateHighlightedElement()

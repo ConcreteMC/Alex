@@ -159,6 +159,8 @@ namespace Alex
 			InputManager = new InputManager(this);
 			GuiRenderer = new GuiRenderer(this);
 			GuiManager = new GuiManager(this, InputManager, GuiRenderer);
+			OnCharacterInput += GuiManager.FocusManager.OnTextInput;
+
 			GameStateManager = new GameStateManager(GraphicsDevice, _spriteBatch, GuiManager);
 
 			var splash = new SplashScreen(this);
