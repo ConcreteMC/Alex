@@ -78,7 +78,7 @@ namespace Alex
 			{
 				PreferMultiSampling = false,
 				SynchronizeWithVerticalRetrace = false,
-				GraphicsProfile = GraphicsProfile.Reach,
+				GraphicsProfile = GraphicsProfile.HiDef,
 			};
 			Content.RootDirectory = "assets";
 

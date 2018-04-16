@@ -121,6 +121,26 @@ namespace Alex {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
+        internal static byte[] goodblur {
+            get {
+                object obj = ResourceManager.GetObject("goodblur", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] grey_black_gradient01 {
+            get {
+                object obj = ResourceManager.GetObject("grey_black_gradient01", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
         internal static byte[] Kenney_Future_Square {
             get {
                 object obj = ResourceManager.GetObject("Kenney_Future_Square", resourceCulture);
@@ -200,7 +220,10 @@ namespace Alex {
         ///			}
         ///		]
         ///	},
-        ///	&quot;minecraft:polished_ [rest of string was truncated]&quot;;.
+        ///	&quot;minecraft:polished_diorite&quot;: {
+        ///		&quot;states&quot;: [
+        ///			{
+        ///				&quot;id&quot;:  [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string NewBlocks {
             get {

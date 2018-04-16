@@ -150,7 +150,7 @@ namespace Alex.Entities
 		public BoundingBox GetBoundingBox()
 		{
 			var pos = KnownPosition;
-			double halfWidth = Width / 2;
+			double halfWidth = Width / 2D;
 
 			return new BoundingBox(new Vector3((float)(pos.X - halfWidth), pos.Y, (float)(pos.Z - halfWidth)), new Vector3((float)(pos.X + halfWidth), (float)(pos.Y + Height), (float)(pos.Z + halfWidth)));
 		}

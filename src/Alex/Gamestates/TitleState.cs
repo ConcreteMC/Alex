@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Gui;
@@ -13,12 +14,14 @@ using Alex.GameStates.Gui.MainMenu;
 using Alex.Graphics;
 using Alex.Graphics.Models;
 using Alex.ResourcePackLib.Json.Models.Entities;
+using Alex.Utils;
 using Alex.Worlds;
 using Alex.Worlds.Generators;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Color = Microsoft.Xna.Framework.Color;
+using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace Alex.Gamestates
 {
@@ -31,8 +34,10 @@ namespace Alex.Gamestates
 		private GuiPanoramaSkyBox _backgroundSkyBox;
 		private GuiEntityModelView _playerView;
 
+		private FpsMonitor FpsMonitor { get; }
 		public TitleState(Alex alex, ContentManager content) : base(alex)
 		{
+			FpsMonitor = new FpsMonitor();
 			_backgroundSkyBox = new GuiPanoramaSkyBox(alex, alex.GraphicsDevice, content);
 
 			Gui = new GuiScreen(Alex)
@@ -107,15 +112,10 @@ namespace Alex.Gamestates
 			_debugInfo.AddDebugRight(() => $"Cursor RenderPosition: {alex.InputManager.CursorInputListener.GetCursorPosition()} / {alex.GuiManager.FocusManager.CursorPosition}");
 			_debugInfo.AddDebugRight(() => $"Cursor Delta: {alex.InputManager.CursorInputListener.GetCursorPositionDelta()}");
 			_debugInfo.AddDebugRight(() => $"Splash Text Scale: {_splashText.Scale:F3}");
-			_debugInfo.AddDebugRight(() => $"Entity RenderPosition: {_playerView.EntityPosition}");
-
-		}
-		
-		public void LoadPlayerSkinCallback(Texture2D skinTexture)
-		{
-			//_playerView.LoadTexture(skinTexture);
+			_debugInfo.AddDebugLeft(() => $"FPS: {FpsMonitor.Value:F0}");
 		}
 
+		private Texture2D _gradient;
 		protected override void OnLoad(RenderArgs args)
 		{
 			Alex.Resources.BedrockResourcePack.TryGetTexture("textures/entity/alex", out Bitmap rawTexture);
@@ -123,6 +123,10 @@ namespace Alex.Gamestates
 
 			_playerView.SkinTexture = steve;
 
+			using (MemoryStream ms = new MemoryStream(Resources.goodblur))
+			{
+				_gradient = Texture2D.FromStream(args.GraphicsDevice, ms);
+			}
 			//var logo = new UiElement()
 			//{
 			//	ClassName = "TitleScreenLogo",
@@ -130,7 +134,7 @@ namespace Alex.Gamestates
 			//Gui.AddChild(logo);
 
 			//SynchronizationContext.Current.Send((o) => _backgroundSkyBox.Load(Alex.GuiRenderer), null);
-
+			_splashText.Text = SplashTexts.GetSplashText();
 			Alex.IsMouseVisible = true;
 		}
 
@@ -173,6 +177,15 @@ namespace Alex.Gamestates
 			_backgroundSkyBox.Draw(args);
 
 			base.OnDraw3D(args);
+			FpsMonitor.Update();
+		}
+
+		protected override void OnDraw2D(RenderArgs args)
+		{
+			args.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
+			args.SpriteBatch.Draw(_gradient, null, new Rectangle(0,0, Viewport.Width, Viewport.Height), null, null, 0f, null, new Color(Color.White, 0.5f), SpriteEffects.None);
+			args.SpriteBatch.End();
+			base.OnDraw2D(args);
 		}
 
 		protected override void OnShow()

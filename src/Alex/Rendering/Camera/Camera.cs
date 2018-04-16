@@ -82,17 +82,16 @@ namespace Alex.Rendering.Camera
         /// </summary>
         protected virtual void UpdateViewMatrix()
         {
-//	        Matrix rotationMatrix = Matrix.CreateRotationX(Rotation.X) * Matrix.CreateRotationY(Rotation.Y) * Matrix.CreateRotationZ(Rotation.Z);
+			Matrix rotationMatrix = Matrix.CreateRotationX(Rotation.Z) * //Pitch
+			                        Matrix.CreateRotationY(Rotation.Y); //Yaw
 
-	        Matrix rotationMatrix = Matrix.CreateFromYawPitchRoll(Rotation.X, Rotation.Y, Rotation.Z);
+	        Vector3 lookAtOffset = Vector3.Transform(Vector3.UnitZ, rotationMatrix);
 
-            Vector3 lookAtOffset = Vector3.Transform(Vector3.UnitZ, rotationMatrix);
+	        Target = Position + lookAtOffset;
 
-            Target = Position + lookAtOffset;
+	        Direction = Vector3.Transform(Vector3.Forward, rotationMatrix);
 
-            Direction = Vector3.Transform(Vector3.Forward, rotationMatrix);
-
-			ViewMatrix = Matrix.CreateLookAt(Position, Target, Vector3.Up);
+	        ViewMatrix = Matrix.CreateLookAt(Position, Target, Vector3.Up);
 		}
 
 	    public virtual void UpdateAspectRatio(float aspectRatio)
@@ -138,8 +137,8 @@ namespace Alex.Rendering.Camera
 	    public virtual void Update(IUpdateArgs args, PlayerLocation entityLocation)
 	    {
 			
-			MoveTo(entityLocation, 
-				new Vector3(MathHelper.ToRadians(entityLocation.Pitch), MathHelper.ToRadians(entityLocation.Yaw), 0));
+			MoveTo(entityLocation.ToVector3(), 
+				new Vector3(MathHelper.ToRadians(entityLocation.HeadYaw), MathHelper.ToRadians(entityLocation.Yaw), MathHelper.ToRadians(entityLocation.Pitch)));
 	    }
 	}
 }

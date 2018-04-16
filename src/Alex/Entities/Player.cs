@@ -8,11 +8,14 @@ using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using NLog;
 
 namespace Alex.Entities
 {
     public class Player : PlayerMob
-	{
+    {
+	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Player));
+
         public static readonly float EyeLevel = 1.625F;
 
 		public PlayerIndex PlayerIndex { get; }
@@ -77,6 +80,7 @@ namespace Alex.Entities
 
 		public override void TerrainCollision(Vector3 collisionPoint, Vector3 direction)
 		{
+		//	Log.Debug($"Terrain collision: {collisionPoint.ToString()} | {direction}");	
 			base.TerrainCollision(collisionPoint, direction);
 		}
 
