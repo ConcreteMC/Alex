@@ -2,7 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Alex.API.Graphics
+namespace Alex.API.Graphics.Textures
 {
 	public class NinePatchTexture2D : TextureSlice2D
 	{
@@ -11,7 +11,7 @@ namespace Alex.API.Graphics
 		public Rectangle[] SourceRegions { get; private set; }
 
 		
-		public NinePatchTexture2D(TextureSlice2D texture, Thickness padding) : this(texture.Texture, texture.Bounds, padding)
+		public NinePatchTexture2D(TextureSlice2D texture, Thickness padding) : this(texture.Texture, texture.ClipBounds, padding)
 		{
 		}
 
@@ -27,7 +27,7 @@ namespace Alex.API.Graphics
 		public NinePatchTexture2D(Texture2D texture, Rectangle bounds, Thickness padding) : base(texture, bounds == Rectangle.Empty ? texture.Bounds : bounds)
 		{
 			Padding = padding;
-			SourceRegions = CreateRegions(Bounds);
+			SourceRegions = CreateRegions(ClipBounds);
 		}
 
 		private Rectangle[] CreateRegions(Rectangle rectangle)

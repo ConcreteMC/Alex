@@ -207,6 +207,7 @@ namespace Alex.Networking.Java.Packets
 		private static void RegisterStatus()
 		{
 			Register(Direction.ServerBound, ConnectionState.Status, 0x00, () => new RequestPacket());
+			Register(Direction.ClientBound, ConnectionState.Status, 0x00, () => new ResponsePacket());
 			Register(Direction.ServerBound, ConnectionState.Status, 0x01, () => new PingPacket());
 
 		}

@@ -1,5 +1,6 @@
 ﻿using System;
 using Alex.API.Graphics;
+using Alex.API.Graphics.Textures;
 using Alex.API.Gui.Rendering;
 using Microsoft.Xna.Framework;
 
@@ -32,7 +33,7 @@ namespace Alex.API.Gui.Elements
 		//	TextSize = new Vector2(Width, Height);
 
             var texture = renderer.GetTexture(GuiTextures.ProgressBar);
-            var b = texture.Bounds;
+            var b = texture.ClipBounds;
 
             _spriteSheetSegmentWidth = (int)Math.Round(b.Width / 4f);
             Background = new NinePatchTexture2D(texture.Texture, new Rectangle(b.X, b.Y, _spriteSheetSegmentWidth * 3, b.Height), _spriteSheetSegmentWidth);

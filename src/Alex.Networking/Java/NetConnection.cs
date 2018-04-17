@@ -18,7 +18,7 @@ using NLog;
 namespace Alex.Networking.Java
 {
     public delegate void ConnectionConfirmed(NetConnection conn);
-    public class NetConnection
+    public class NetConnection : IDisposable
     {
         private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(NetConnection));
         
@@ -369,6 +369,19 @@ namespace Alex.Networking.Java
             else
                 return true;
         }
+
+	    public void Dispose()
+	    {
+			Stop();
+
+		    _readerStream?.Dispose();
+		    _sendStream?.Dispose();
+		    CancellationToken?.Dispose();
+		    Socket?.Dispose();
+		    PacketWriteQueue?.Dispose();
+		    NetworkProcessing?.Dispose();
+		    NetworkWriting?.Dispose();
+	    }
     }
 
     internal struct ReceivedData

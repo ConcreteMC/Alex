@@ -1,8 +1,11 @@
-﻿using Alex.API.Gui;
+﻿using System.Threading.Tasks;
+using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Elements.Icons;
 using Alex.API.Gui.Rendering;
+using Alex.API.Services;
+using Alex.API.Utils;
 using Alex.GameStates.Gui.Common;
 using Alex.GameStates.Gui.Elements;
 using Alex.Graphics.Gui.Elements;
@@ -16,7 +19,9 @@ namespace Alex.GameStates.Gui.MainMenu
         public MultiplayerServerSelectionState() : base()
         {
 	        Title = "Multiplayer";
+            
             AddItem(new GuiServerListEntryElement("Localhost", "localhost:25565"));
+            AddItem(new GuiServerListEntryElement("Hypixel", "mc.hypixel.net:25565"));
 
             Gui.AddChild(new GuiBeaconButton("Direct Connect", () => Alex.GameStateManager.SetActiveState<MultiplayerConnectState>())
             {
@@ -55,7 +60,7 @@ namespace Alex.GameStates.Gui.MainMenu
             ServerName = serverName;
             ServerAddress = serverAddress;
 
-	        HorizontalAlignment = HorizontalAlignment.Left;
+	        HorizontalAlignment = HorizontalAlignment.Stretch;
 	        VerticalAlignment = VerticalAlignment.Top;
 
             AddChild( _serverIcon = new GuiTextureElement()
@@ -91,6 +96,102 @@ namespace Alex.GameStates.Gui.MainMenu
 				Text = "Pinging server..."
             });
 
+
+        }
+
+        public bool PingCompleted { get; private set; }
+
+        protected override void OnInit(IGuiRenderer renderer)
+        {
+            base.OnInit(renderer);
+
+            Ping();
+        }
+
+        public void Ping()
+        {
+            if (PingCompleted) return;
+            PingCompleted = true;
+
+            
+            var hostname = ServerAddress;
+
+            ushort port = 25565;
+
+            var split = hostname.Split(':');
+            if (split.Length == 2)
+            {
+                if (ushort.TryParse(split[1], out port))
+                {
+                    QueryServer(split[0], port);
+                }
+                else
+                {
+                    SetErrorMessage("Invalid Server Address!");
+                }
+            }
+            else if (split.Length == 1)
+            {
+                QueryServer(split[0], port);
+            }
+            else
+            {
+                SetErrorMessage("Invalid Server Address!");
+            }
+        }
+        
+        private void QueryServer(string address, ushort port)
+        {
+            SetErrorMessage(null);
+            SetConnectingState(true);
+
+            var queryProvider = Alex.Instance.Services.GetService<IServerQueryProvider>();
+            queryProvider.QueryServerAsync(address, port).ContinueWith(ContinuationAction);
+        }
+
+        private void SetConnectingState(bool connecting)
+        {
+            if (connecting)
+            {
+                _serverMotd.Text = "Pinging Server...";
+            }
+            else
+            {
+                _serverMotd.Text = "...";
+            }
+
+            _pingStatus.SetPending();
+        }
+
+        private void SetErrorMessage(string error)
+        {
+            _serverMotd.Text = error;
+
+            if (!string.IsNullOrWhiteSpace(error))
+            {
+                _serverMotd.TextColor = TextColor.Red;
+            }
+            else
+            {
+                _serverMotd.TextColor = TextColor.White;
+            }
+            _pingStatus.SetOffline();
+        }
+        
+        private void ContinuationAction(Task<ServerQueryResponse> queryTask)
+        {
+            var response = queryTask.Result;
+            SetConnectingState(false);
+            
+            if (response.Success)
+            {
+                var s = response.Status;
+                _pingStatus.SetPing(s.Delay);
+            }
+            else
+            {
+                _pingStatus.SetOffline();
+            }
 
         }
 

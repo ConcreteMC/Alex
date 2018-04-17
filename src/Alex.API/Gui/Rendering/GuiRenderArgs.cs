@@ -1,5 +1,6 @@
 ﻿using System;
 using Alex.API.Graphics;
+using Alex.API.Graphics.Textures;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -157,7 +158,7 @@ namespace Alex.API.Gui.Rendering
             }
             else if (repeatMode == TextureRepeatMode.Tile)
             {
-                Vector2 size = texture.Bounds.Size.ToVector2() * scale.Value;
+                Vector2 size = texture.ClipBounds.Size.ToVector2() * scale.Value;
 
                 var repeatX = Math.Ceiling((float) bounds.Width  / size.X);
                 var repeatY = Math.Ceiling((float) bounds.Height / size.Y);
@@ -187,8 +188,8 @@ namespace Alex.API.Gui.Rendering
                 var srcHalfWidth = Math.Min(texture.Width / 2f, halfWidth);
                 var srcHalfHeight = Math.Min(texture.Height / 2f, halfHeight);
 
-                var srcX = texture.Bounds.X;
-                var srcY = texture.Bounds.Y;
+                var srcX = texture.ClipBounds.X;
+                var srcY = texture.ClipBounds.Y;
 
                 int srcLeftWidth   = (int) Math.Floor(srcHalfWidth);
                 int srcRightWidth  = (int) Math.Ceiling(srcHalfWidth);
