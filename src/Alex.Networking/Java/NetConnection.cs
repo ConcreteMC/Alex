@@ -223,7 +223,7 @@ namespace Alex.Networking.Java
 	    protected virtual void HandlePacket(Packets.Packet packet)
 	    {
 			PacketReceivedEventArgs args = new PacketReceivedEventArgs(packet);
-		    OnPacketReceived?.BeginInvoke(this, args, PacketReceivedCallback, args);
+		    OnPacketReceived?.Invoke(this, args);
 	    }
 
         private void PacketReceivedCallback(IAsyncResult ar)
