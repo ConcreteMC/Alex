@@ -33,7 +33,7 @@ namespace Alex.API.Gui.Elements.Controls
             AddChild(_textElement = new GuiTextElement()
             {
                 HorizontalAlignment = HorizontalAlignment.Left,
-                VerticalAlignment = VerticalAlignment.Top
+                VerticalAlignment = VerticalAlignment.Center
             });
         }
 
@@ -43,15 +43,15 @@ namespace Alex.API.Gui.Elements.Controls
 
             var text = _textBuilder.Text;
             _textElement.Text = text;
-
-            var preCursor = text.Substring(0, _textBuilder.CursorPosition);
-
-            _cursorPositionX = (int)_textElement.Font.MeasureString(preCursor, _textElement.Scale).X;
-
+            
             if (IsFocused)
             {
+                var preCursor = text.Substring(0, _textBuilder.CursorPosition);
+                var cursorOffsetX = (int)_textElement.Font.MeasureString(preCursor, _textElement.Scale).X;
+                _cursorPositionX = cursorOffsetX;
+
                 var delta = (float)gameTime.TotalGameTime.TotalMilliseconds / 2;
-                _cursorAlpha = (float)MathHelpers.SinInterpolation(0f, 0.5f, delta)*2;
+                _cursorAlpha = (float)MathHelpers.SinInterpolation(0.1f, 0.5f, delta)*2;
             }
         }
 
@@ -82,14 +82,19 @@ namespace Alex.API.Gui.Elements.Controls
         {
             base.OnDraw(args);
 
-            args.DrawRectangle(RenderBounds, BorderColor, BorderThickness);
+            var bounds = RenderBounds;
+            bounds.Inflate(1f, 1f);
+            args.DrawRectangle(bounds, BorderColor, BorderThickness);
 
             // Text
             if (IsFocused)
             {
                 if (args.GameTime.TotalGameTime.Seconds % 2 == 0)
                 {
-                    args.DrawLine(_cursorPositionX + 1, _textElement.RenderBounds.Y, _cursorPositionX + 1, _textElement.RenderBounds.Height, Color.White * _cursorAlpha);
+                    var textElementBounds = _textElement.RenderBounds;
+                    var offsetX = textElementBounds.X + _cursorPositionX + 1;
+
+                    args.DrawLine(offsetX, textElementBounds.Y, offsetX, textElementBounds.Height, Color.White * _cursorAlpha);
                 }
             }
 

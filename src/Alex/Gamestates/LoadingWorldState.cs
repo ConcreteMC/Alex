@@ -107,7 +107,7 @@ namespace Alex.Gamestates
 				    Height = 9,
 
 				    VerticalAlignment = VerticalAlignment.Bottom,
-				    HorizontalAlignment = HorizontalAlignment.Stretch,
+				    HorizontalAlignment = HorizontalAlignment.FillParent,
 			    });
 			}
 

@@ -60,7 +60,7 @@ namespace Alex.GameStates.Gui.MainMenu
             ServerName = serverName;
             ServerAddress = serverAddress;
 
-	        HorizontalAlignment = HorizontalAlignment.Stretch;
+	        HorizontalAlignment = HorizontalAlignment.FillParent;
 	        VerticalAlignment = VerticalAlignment.Top;
 
             AddChild( _serverIcon = new GuiTextureElement()
@@ -83,7 +83,7 @@ namespace Alex.GameStates.Gui.MainMenu
             AddChild( _textWrapper = new GuiStackContainer()
             {
                 X = ServerIconSize + 5,
-                HorizontalContentAlignment = HorizontalAlignment.Stretch,
+                HorizontalContentAlignment = HorizontalAlignment.FillParent,
                 VerticalContentAlignment = VerticalAlignment.Top
             });
 

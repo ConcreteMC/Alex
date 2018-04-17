@@ -25,6 +25,8 @@ namespace Alex.GameStates.Gui.Common
         }
 
         protected GuiContainer    Header { get; }
+        protected GuiStackContainer Body { get; }
+
         private GuiTextElement  _headerTitle;
         private GuiBeaconButton _headerBackButton;
 
@@ -42,7 +44,7 @@ namespace Alex.GameStates.Gui.Common
             {
                 Height              = 42,
                 VerticalAlignment   = VerticalAlignment.Top,
-                HorizontalAlignment = HorizontalAlignment.Stretch,
+                HorizontalAlignment = HorizontalAlignment.FillParent,
             });
 
             Header.AddChild(_headerBackButton = new GuiBackButton()
@@ -60,6 +62,19 @@ namespace Alex.GameStates.Gui.Common
                 VerticalAlignment   = VerticalAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Center
             });
+
+            Gui.AddChild(Body = new GuiStackContainer()
+            {
+                Y = Header.Height + 10,
+
+                HorizontalAlignment = HorizontalAlignment.FillParent,
+                HorizontalContentAlignment = HorizontalAlignment.Center
+            });
+        }
+
+        protected void AddGuiElement(GuiElement element)
+        {
+            Body.AddChild(element);
         }
     }
 }

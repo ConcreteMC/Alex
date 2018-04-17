@@ -69,7 +69,7 @@ namespace Alex.API.Gui.Elements
                         row.Label.LayoutWidth = LabelWidth;
                         
                         row.Orientation       = Orientation.Vertical;
-                        row.HorizontalContentAlignment = HorizontalAlignment.Stretch;
+                        row.HorizontalContentAlignment = HorizontalAlignment.FillParent;
                     }
                 });
             }
@@ -132,7 +132,7 @@ namespace Alex.API.Gui.Elements
             
             public GuiLabelledControlRow(string label, IGuiElement element)
             {
-                HorizontalAlignment = HorizontalAlignment.Stretch;
+                HorizontalAlignment = HorizontalAlignment.FillParent;
                 
                 AddChild(Label = new GuiTextElement()
                 {

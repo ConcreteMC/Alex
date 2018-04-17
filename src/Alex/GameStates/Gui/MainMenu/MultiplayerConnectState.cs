@@ -13,22 +13,22 @@ namespace Alex.GameStates.Gui.MainMenu
 {
     public class MultiplayerConnectState : GuiStateBase
     {
-        private GuiTextInput _hostnameInput;
-        private GuiBeaconButton _connectButton;
-        private GuiTextElement _errorMessage;
+        private readonly GuiTextInput _hostnameInput;
+        private readonly GuiBeaconButton _connectButton;
+        private readonly GuiTextElement _errorMessage;
 
         public MultiplayerConnectState()
         {
             Title = "Connect to Server";
 
-            Gui.AddChild(_hostnameInput = new GuiTextInput()
+            AddGuiElement(_hostnameInput = new GuiTextInput()
             {
                 Width = 200,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center
             });
-            Gui.AddChild( _connectButton = new GuiBeaconButton("Connect", OnConnectButtonPressed));
-            Gui.AddChild(_errorMessage = new GuiTextElement()
+            AddGuiElement( _connectButton = new GuiBeaconButton("Connect", OnConnectButtonPressed));
+            AddGuiElement(_errorMessage = new GuiTextElement()
             {
                 TextColor = TextColor.Red
             });
@@ -36,15 +36,25 @@ namespace Alex.GameStates.Gui.MainMenu
 
         private void OnConnectButtonPressed()
         {
-
-            var hostname = _hostnameInput.Value;
-
-            ushort port = 25565;
-
-            var split = hostname.Split(':');
-            if (split.Length == 2)
+            try
             {
-                if (ushort.TryParse(split[1], out port))
+                var hostname = _hostnameInput.Value;
+
+                ushort port = 25565;
+
+                var split = hostname.Split(':');
+                if (split.Length == 2)
+                {
+                    if (ushort.TryParse(split[1], out port))
+                    {
+                        QueryServer(split[0], port);
+                    }
+                    else
+                    {
+                        SetErrorMessage("Invalid Server Address!");
+                    }
+                }
+                else if (split.Length == 1)
                 {
                     QueryServer(split[0], port);
                 }
@@ -53,13 +63,9 @@ namespace Alex.GameStates.Gui.MainMenu
                     SetErrorMessage("Invalid Server Address!");
                 }
             }
-            else if (split.Length == 1)
+            catch (Exception ex)
             {
-                QueryServer(split[0], port);
-            }
-            else
-            {
-                SetErrorMessage("Invalid Server Address!");
+                SetErrorMessage(ex.Message);
             }
         }
 

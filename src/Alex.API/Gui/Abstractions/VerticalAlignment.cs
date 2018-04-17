@@ -6,6 +6,6 @@
 		Top,
 		Center,
 		Bottom,
-		Stretch
+		FillParent
 	}
 }

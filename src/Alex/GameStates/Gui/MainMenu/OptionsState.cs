@@ -22,7 +22,7 @@ namespace Alex.GameStates.Gui.MainMenu
             Gui.AddChild(_optionControls = new GuiLabelledControlGroup()
             {
                 HorizontalAlignment = HorizontalAlignment.Center,
-                HorizontalContentAlignment = HorizontalAlignment.Stretch,
+                HorizontalContentAlignment = HorizontalAlignment.FillParent,
                 LabelPosition = LabelPosition.LeftOrControl,
                 Y = Header.Height
             });

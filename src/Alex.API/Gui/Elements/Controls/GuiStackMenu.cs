@@ -15,7 +15,7 @@ namespace Alex.API.Gui.Elements.Controls
         {
             AddChild(new GuiStackMenuItem(label, action)
             {
-				HorizontalAlignment = HorizontalAlignment.Stretch,
+				HorizontalAlignment = HorizontalAlignment.FillParent,
 				VerticalAlignment = VerticalAlignment.Top,
             });
         }

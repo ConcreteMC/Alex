@@ -1,11 +1,14 @@
 ﻿namespace Alex.API.Gui
 {
-	public enum HorizontalAlignment
+    public enum HorizontalAlignment
 	{
 		None,
+
 		Left,
 		Center,
 		Right,
-		Stretch
+
+		FillParent,
+
 	}
 }

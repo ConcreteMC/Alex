@@ -50,7 +50,7 @@ namespace Alex.API.Gui.Elements
                                 ? Children.Sum(c => c.Height) + (Children.Count - 1) * Spacing
                                 : Children.Max(c => c.Height);
 
-            if (VerticalContentAlignment == VerticalAlignment.Stretch)
+            if (VerticalContentAlignment == VerticalAlignment.FillParent)
             {
                 if (Orientation == Orientation.Vertical)
                 {
@@ -105,7 +105,7 @@ namespace Alex.API.Gui.Elements
 
             int offset = 0;
 
-            if (HorizontalContentAlignment == HorizontalAlignment.Stretch)
+            if (HorizontalContentAlignment == HorizontalAlignment.FillParent)
             {
                 if (Orientation == Orientation.Horizontal)
                 {

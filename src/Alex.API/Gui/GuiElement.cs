@@ -44,24 +44,12 @@ namespace Alex.API.Gui
         public virtual int X { get; set; } = 0;
         public virtual int Y { get; set; } = 0;
 
-        public virtual int LayoutOffsetX { get; set; } = 0;
-        public virtual int LayoutOffsetY { get; set; } = 0;
-        public virtual int LayoutWidth { get; set; } = -1;
-        public virtual int LayoutHeight { get; set; } = -1;
-
         protected List<IGuiElement> Children { get; } = new List<IGuiElement>();
         public bool HasChildren => Children.Any();
 
         // protected internal IEnumerable<IGuiElement> AllChildElements => Children.SelectMany(c => c.AllChildElements);
 
         protected Color DebugColor { get; set; } = Color.Red;
-
-        #region Layout
-
-        public HorizontalAlignment HorizontalAlignment { get; set; } = HorizontalAlignment.None;
-        public VerticalAlignment VerticalAlignment { get; set; } = VerticalAlignment.None;
-
-        #endregion
 
         #region Drawing
 
@@ -98,12 +86,6 @@ namespace Alex.API.Gui
         private int _width = -1;
         private int _height = -1;
 
-        public virtual int MinWidth { get; set; } = -1;
-        public virtual int MaxWidth { get; set; } = -1;
-
-        public virtual int MinHeight { get; set; } = -1;
-        public virtual int MaxHeight { get; set; } = -1;
-
         public virtual int Width
         {
             get
@@ -119,14 +101,14 @@ namespace Alex.API.Gui
                     proposedWidth = Math.Max(MinWidth, proposedWidth);
                 }
 
-                if (ParentElement != null && HorizontalAlignment == HorizontalAlignment.Stretch)
+                if (ParentElement != null && HorizontalAlignment == HorizontalAlignment.FillParent)
                 {
                     proposedWidth = Math.Max(proposedWidth, ParentElement.Width);
                 }
 
                 if (_width < 0)
                 {
-                    var childrenToCheck = Children.Where(c => c.HorizontalAlignment != HorizontalAlignment.Stretch).ToArray();
+                    var childrenToCheck = Children.Where(c => c.HorizontalAlignment != HorizontalAlignment.FillParent).ToArray();
                     var autoWidth = (childrenToCheck.Any()
                                 ? Math.Abs(childrenToCheck.Max(c => c.RenderBounds.Right) - childrenToCheck.Min(c => c.RenderBounds.Left))
                                 : 0);
@@ -156,14 +138,14 @@ namespace Alex.API.Gui
                 }
 
 
-                if (ParentElement != null && VerticalAlignment == VerticalAlignment.Stretch)
+                if (ParentElement != null && VerticalAlignment == VerticalAlignment.FillParent)
                 {
                     proposedHeight = Math.Max(proposedHeight, ParentElement.Height);
                 }
 
                 if (_height < 0)
                 {
-                    var childrenToCheck = Children.Where(c => c.VerticalAlignment != VerticalAlignment.Stretch).ToArray();
+                    var childrenToCheck = Children.Where(c => c.VerticalAlignment != VerticalAlignment.FillParent).ToArray();
                     var autoHeight = (childrenToCheck.Any()
                                 ? Math.Abs(childrenToCheck.Max(c => c.RenderBounds.Bottom) - childrenToCheck.Min(c => c.RenderBounds.Top))
                                 : 0);
@@ -176,7 +158,7 @@ namespace Alex.API.Gui
 
             set => _height = value;
         }
-        
+
 
 
         public virtual Vector2 RenderPosition => (ParentElement?.RenderPosition ?? Vector2.Zero) + new Vector2(LayoutOffsetX, LayoutOffsetY) + new Vector2(X, Y);
@@ -218,52 +200,6 @@ namespace Alex.API.Gui
             if (Background == null && DefaultBackground != null)
             {
                 Background = DefaultBackground;
-            }
-        }
-
-        public void UpdateLayout(bool updateChildren = true)
-        {
-            OnUpdateLayout();
-
-            ForEachChild(c => c.UpdateLayout());
-        }
-
-        protected virtual void OnUpdateLayout()
-        {
-            AlignVertically();
-            AlignHorizontally();
-        }
-
-        protected void AlignVertically()
-        {
-            if (ParentElement == null || VerticalAlignment == VerticalAlignment.None) return;
-            if (VerticalAlignment == VerticalAlignment.Top)
-            {
-                LayoutOffsetY = 0;
-            }
-            else if (VerticalAlignment == VerticalAlignment.Center)
-            {
-                LayoutOffsetY = (int)((ParentElement.RenderSize.Y - RenderSize.Y) / 2f);
-            }
-            else if (VerticalAlignment == VerticalAlignment.Bottom)
-            {
-                LayoutOffsetY = (int)(ParentElement.RenderSize.Y - RenderSize.Y);
-            }
-        }
-        protected void AlignHorizontally()
-        {
-            if (ParentElement == null || HorizontalAlignment == HorizontalAlignment.None) return;
-            if (HorizontalAlignment == HorizontalAlignment.Left)
-            {
-                LayoutOffsetX = 0;
-            }
-            else if (HorizontalAlignment == HorizontalAlignment.Center)
-            {
-                LayoutOffsetX = (int)((ParentElement.RenderSize.X - RenderSize.X) / 2f);
-            }
-            else if (HorizontalAlignment == HorizontalAlignment.Right)
-            {
-                LayoutOffsetX = (int)(ParentElement.RenderSize.X - RenderSize.X);
             }
         }
 
@@ -330,6 +266,8 @@ namespace Alex.API.Gui
             element.ParentElement = null;
             UpdateLayout();
         }
+
+        #region Hierachy Transcending
 
         public bool TryTranscendChildren(GuiElementPredicate predicate, bool recurse = true)
         {
@@ -451,6 +389,9 @@ namespace Alex.API.Gui
             }
         }
 
+        #endregion
+
+
         protected virtual void OnScreenChanged(IGuiScreen previousScreen, IGuiScreen newScreen)
         {
             if (this is IGuiElement3D element3D)
@@ -464,5 +405,214 @@ namespace Alex.API.Gui
         {
 
         }
+
+
+        #region Layout Engine
+
+        #region Properties
+
+        public AutoSizeMode AutoSizeMode { get; set; } = AutoSizeMode.GrowAndShrink;
+
+        public Thickness Padding { get; set; } = Thickness.Zero;
+        public Thickness Margin { get; set; } = Thickness.Zero;
+
+        public virtual int LayoutOffsetX { get; set; } = 0;
+        public virtual int LayoutOffsetY { get; set; } = 0;
+        public virtual int LayoutWidth { get; set; } = -1;
+        public virtual int LayoutHeight { get; set; } = -1;
+
+        public virtual int MinWidth { get; set; } = -1;
+        public virtual int MaxWidth { get; set; } = -1;
+
+        public virtual int MinHeight { get; set; } = -1;
+        public virtual int MaxHeight { get; set; } = -1;
+
+        public bool IsLayoutDirty { get; protected set; }
+
+        public HorizontalAlignment HorizontalAlignment { get; set; } = HorizontalAlignment.None;
+        public VerticalAlignment VerticalAlignment { get; set; } = VerticalAlignment.None;
+
+        public HorizontalAlignment HorizontalContentAlignment { get; set; } = HorizontalAlignment.None;
+        public VerticalAlignment VerticalContentAlignment { get; set; } = VerticalAlignment.None;
+
+        #endregion
+
+        //#region Calculated Properties
+
+        //public Rectangle Bounds { get; private set; }
+        //public Rectangle InnerBounds { get; private set; }
+        //public Rectangle OuterBounds { get; private set; }
+
+        //public Point Position { get; private set; }
+        //public Point Size { get; private set; }
+
+        //#endregion
+
+        //#region Methods
+
+
+        public void UpdateLayout(bool updateChildren = true)
+        {
+            OnUpdateLayout();
+
+            ForEachChild(c => c.UpdateLayout());
+        }
+
+        protected virtual void OnUpdateLayout()
+        {
+            AlignVertically();
+            AlignHorizontally();
+        }
+
+        protected void AlignVertically()
+        {
+            if (ParentElement == null || VerticalAlignment == VerticalAlignment.None) return;
+            if (VerticalAlignment == VerticalAlignment.Top)
+            {
+                LayoutOffsetY = 0;
+            }
+            else if (VerticalAlignment == VerticalAlignment.Center)
+            {
+                LayoutOffsetY = (int)((ParentElement.RenderSize.Y - RenderSize.Y) / 2f);
+            }
+            else if (VerticalAlignment == VerticalAlignment.Bottom)
+            {
+                LayoutOffsetY = (int)(ParentElement.RenderSize.Y - RenderSize.Y);
+            }
+        }
+        protected void AlignHorizontally()
+        {
+            if (ParentElement == null || HorizontalAlignment == HorizontalAlignment.None) return;
+            if (HorizontalAlignment == HorizontalAlignment.Left)
+            {
+                LayoutOffsetX = 0;
+            }
+            else if (HorizontalAlignment == HorizontalAlignment.Center)
+            {
+                LayoutOffsetX = (int)((ParentElement.RenderSize.X - RenderSize.X) / 2f);
+            }
+            else if (HorizontalAlignment == HorizontalAlignment.Right)
+            {
+                LayoutOffsetX = (int)(ParentElement.RenderSize.X - RenderSize.X);
+            }
+        }
+        
+        //private void UpdateLayoutSize(Point containerSize)
+        //{
+        //    var selfSize = Layout_CalculateAbsoluteSize();
+
+        //    Layout_CalculateSize(out var preferredSize, out var minSize, out var maxSize);
+
+        //    if (AutoSizeMode == AutoSizeMode.None)
+        //    {
+        //        // AS DEFINED ONLY.
+        //        Size = preferredSize;
+        //        return;
+        //    }
+
+        //    if (HorizontalAlignment == HorizontalAlignment.FillParent)
+        //    {
+        //        preferredSize.X = containerSize.X;
+        //    }
+
+        //    if (VerticalAlignment == VerticalAlignment.FillParent)
+        //    {
+        //        preferredSize.Y = containerSize.Y;
+        //    }
+
+        //    Size = preferredSize;
+
+        //    ForEachChild(c => UpdateLayoutSize(selfSize));
+        //}
+        
+        //private Point Layout_CalculateAbsoluteSize()
+        //{
+        //    var width = MathHelper.Clamp(_width, MinWidth, MaxWidth);
+        //    var height = MathHelper.Clamp(_height, MinHeight, MaxHeight);
+
+        //    return new Point(width, height);
+        //}
+
+        //private void Layout_CalculateSize(out Point preferredSize, out Point minSize, out Point maxSize)
+        //{
+        //    var children = Children.Cast<GuiElement>().ToArray();
+
+        //    int minWidth = MinWidth, minHeight = MinHeight,
+        //        maxWidth = MaxWidth, maxHeight = MaxHeight,
+        //        preferredWidth = 0, preferredHeight = 0;
+
+        //    if (AutoSizeMode == AutoSizeMode.None)
+        //    {
+        //        preferredWidth = _width;
+        //        preferredHeight = _height;
+
+        //        preferredWidth  = MathHelper.Clamp(preferredWidth, minWidth, maxWidth);
+        //        preferredHeight = MathHelper.Clamp(preferredHeight, minHeight, maxHeight);
+        //        preferredSize = new Point(preferredWidth, preferredHeight);
+        //        minSize       = new Point(minWidth, minHeight);
+        //        maxSize       = new Point(maxWidth, maxHeight);
+
+        //        return;
+        //    }
+
+        //    if (AutoSizeMode == AutoSizeMode.GrowOnly)
+        //    {
+        //        preferredWidth = _width;
+        //        preferredHeight = _height;
+        //    }
+
+        //    bool widthFromChildren = true, heightFromChildren = true;
+
+        //    if (HorizontalAlignment == HorizontalAlignment.FillParent ||
+        //        HorizontalAlignment == HorizontalAlignment.None)
+        //    {
+        //        widthFromChildren = false;
+        //    }
+
+        //    if (VerticalAlignment == VerticalAlignment.FillParent ||
+        //        VerticalAlignment == VerticalAlignment.None)
+        //    {
+        //        heightFromChildren = false;
+        //    }
+
+        //    if (widthFromChildren || heightFromChildren)
+        //    {
+        //        foreach (var child in children)
+        //        {
+        //            child.Layout_CalculateSize(out var childPreferredSize, out var childMinSize, out var childMaxSize);
+
+        //            if (widthFromChildren)
+        //            {
+        //                if (preferredWidth < childPreferredSize.X) preferredWidth     = childPreferredSize.X;
+        //                if (minWidth < childMinSize.X) minWidth                       = childMinSize.X;
+        //                if (childMaxSize.X > 0 && maxWidth < childMaxSize.X) maxWidth = childMaxSize.X;
+        //            }
+
+        //            if (heightFromChildren)
+        //            {
+        //                if (preferredHeight < childPreferredSize.Y) preferredHeight     = childPreferredSize.Y;
+        //                if (minHeight < childMinSize.Y) minHeight                       = childMinSize.Y;
+        //                if (childMaxSize.Y > 0 && maxHeight < childMaxSize.Y) maxHeight = childMaxSize.Y;
+        //            }
+        //        }
+        //    }
+
+        //    preferredWidth = MathHelper.Clamp(preferredWidth, minWidth, maxWidth);
+        //    preferredHeight = MathHelper.Clamp(preferredHeight, minHeight, maxHeight);
+
+        //    if (AutoSizeMode == AutoSizeMode.GrowOnly)
+        //    {
+        //        minWidth = preferredWidth;
+        //        minHeight = preferredHeight;
+        //    }
+
+        //    preferredSize = new Point(preferredWidth, preferredHeight);
+        //    minSize = new Point(minWidth, minHeight);
+        //    maxSize = new Point(maxWidth, maxHeight);
+        //}
+
+        //#endregion
+
+        #endregion
     }
 }

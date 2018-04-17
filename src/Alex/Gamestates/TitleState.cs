@@ -51,7 +51,7 @@ namespace Alex.Gamestates
 				VerticalAlignment = VerticalAlignment.Center,
 
 				VerticalContentAlignment = VerticalAlignment.Top,
-				HorizontalContentAlignment = HorizontalAlignment.Stretch
+				HorizontalContentAlignment = HorizontalAlignment.FillParent
 			};
 
 			stackMenu.AddMenuItem("Multiplayer", () =>

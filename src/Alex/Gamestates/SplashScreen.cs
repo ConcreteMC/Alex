@@ -73,7 +73,7 @@ namespace Alex.Gamestates
 			//	VerticalAlignment   = VerticalAlignment.Bottom,
 
 			//	VerticalContentAlignment = VerticalAlignment.Center,
-			//	HorizontalContentAlignment = HorizontalAlignment.Stretch
+			//	HorizontalContentAlignment = HorizontalAlignment.FillParent
 			//});
 
 			AddChild(_progressBarContainer = new GuiContainer()
@@ -113,7 +113,7 @@ namespace Alex.Gamestates
 				Height = 9,
 				
 				VerticalAlignment = VerticalAlignment.Bottom,
-				HorizontalAlignment = HorizontalAlignment.Stretch,
+				HorizontalAlignment = HorizontalAlignment.FillParent,
 			});
 
 			
