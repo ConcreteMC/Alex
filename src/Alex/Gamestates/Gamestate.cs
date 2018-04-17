@@ -79,6 +79,11 @@ namespace Alex.Gamestates
 				Alex.GuiManager.RemoveScreen(Gui);
 			}
 		}
+
+		protected TService GetService<TService>() where TService : class
+		{
+			return Alex.Services.GetService<TService>();
+		}
 		
 		protected virtual void OnShow() { }
 		protected virtual void OnHide() { }

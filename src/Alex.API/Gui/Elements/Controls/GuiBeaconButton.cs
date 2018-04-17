@@ -9,7 +9,11 @@ namespace Alex.API.Gui.Elements.Controls
     public class GuiBeaconButton : GuiControl
     {
 
-        public string Text => TextElement.Text;
+        public string Text
+        {
+            get => TextElement.Text;
+	        set => TextElement.Text = value;
+        }
 
         protected GuiTextElement TextElement { get; }
         protected Action Action { get; }

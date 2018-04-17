@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Threading;
 using Alex.API;
@@ -8,6 +9,7 @@ using Alex.API.Graphics;
 using Alex.API.Gui;
 using Alex.API.Input;
 using Alex.API.Network;
+using Alex.API.Services;
 using Alex.API.World;
 using Alex.Gamestates;
 using Alex.Gamestates.Gui;
@@ -15,6 +17,7 @@ using Alex.Gamestates.Playing;
 using Alex.GameStates.Gui.MainMenu;
 using Alex.Rendering;
 using Alex.ResourcePackLib;
+using Alex.Services;
 using Alex.Utils;
 using Alex.Worlds.Java;
 using Microsoft.Xna.Framework;
@@ -171,6 +174,11 @@ namespace Alex
 			ThreadPool.QueueUserWorkItem(o => { InitializeGame(splash); });
 		}
 
+		private void ConfigureServices()
+		{
+			Services.AddService<IServerQueryProvider>(new ServerQueryProvider());
+		}
+
 		protected override void UnloadContent()
 		{
 			SaveSettings();
@@ -202,6 +210,7 @@ namespace Alex
 		private void InitializeGame(IProgressReceiver progressReceiver)
 		{
 			progressReceiver.UpdateProgress(0, "Initializing...");
+			ConfigureServices();
 
 			Extensions.Init(GraphicsDevice);
 
@@ -240,6 +249,20 @@ namespace Alex
 			GuiManager.RefreshResources();
 		}
 
+		public void ConnectToServer()
+		{
+			ConnectToServer(ServerEndPoint);
+		}
+
+		public void ConnectToServer(IPEndPoint serverEndPoint)
+		{
+			IsMultiplayer = true;
+
+			var javaProvider = new JavaWorldProvider(this, serverEndPoint, Username, UUID, AccessToken, out INetworkProvider networkProvider);
+
+			LoadWorld(javaProvider, networkProvider);
+		}
+
 		public void LoadWorld(WorldProvider worldProvider, INetworkProvider networkProvider)
 		{
 			PlayingState playState = new PlayingState(this, GraphicsDevice, worldProvider, networkProvider);
@@ -255,14 +278,6 @@ namespace Alex
 
 				GameStateManager.RemoveState("loading");
 			});
-		}
-
-		public void ConnectToServer()
-		{
-			IsMultiplayer = true;
-
-			var javaProvider = new JavaWorldProvider(this, ServerEndPoint, Username, UUID, AccessToken, out INetworkProvider networkProvider);
-			LoadWorld(javaProvider, networkProvider);
 		}
 	}
 

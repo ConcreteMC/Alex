@@ -34,6 +34,7 @@
         ServerPing4,
         ServerPing5,
         
+        ServerPingPending,
         ServerPingPending1,
         ServerPingPending2,
         ServerPingPending3,

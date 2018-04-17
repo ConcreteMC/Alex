@@ -2,6 +2,7 @@
 using System.Drawing;
 using Alex.API;
 using Alex.API.Graphics;
+using Alex.API.Graphics.Textures;
 using Alex.API.Gui;
 using Alex.API.Gui.Rendering;
 using Alex.API.Utils;
