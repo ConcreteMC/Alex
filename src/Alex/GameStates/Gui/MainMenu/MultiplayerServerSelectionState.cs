@@ -1,4 +1,7 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.IO;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
@@ -9,27 +12,35 @@ using Alex.API.Utils;
 using Alex.GameStates.Gui.Common;
 using Alex.GameStates.Gui.Elements;
 using Alex.Graphics.Gui.Elements;
+using Alex.Networking.Java;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.GameStates.Gui.MainMenu
 {
     public class MultiplayerServerSelectionState : ListSelectionStateBase<GuiServerListEntryElement>
     {
-
-        public MultiplayerServerSelectionState() : base()
+		private GuiContainer Footer { get; }
+		public MultiplayerServerSelectionState() : base()
         {
 	        Title = "Multiplayer";
-            
-            AddItem(new GuiServerListEntryElement("Localhost", "localhost:25565"));
-            AddItem(new GuiServerListEntryElement("Hypixel", "mc.hypixel.net:25565"));
 
-            Gui.AddChild(new GuiBeaconButton("Direct Connect", () => Alex.GameStateManager.SetActiveState<MultiplayerConnectState>())
+	        Gui.AddChild(Footer = new GuiContainer()
+	        {
+		        Height = 42,
+		        VerticalAlignment = VerticalAlignment.Bottom,
+		        HorizontalAlignment = HorizontalAlignment.FillParent,
+	        });
+
+            Footer.AddChild(new GuiBeaconButton("Direct Connect", () => Alex.GameStateManager.SetActiveState<MultiplayerConnectState>())
             {
                 VerticalAlignment = VerticalAlignment.Bottom,
                 HorizontalAlignment = HorizontalAlignment.Center,
-                LayoutOffsetY = -25
+                LayoutOffsetY = 25
             });
-        }
+
+	        AddItem(new GuiServerListEntryElement("Localhost", "localhost:25565"));
+	        AddItem(new GuiServerListEntryElement("Hypixel", "mc.hypixel.net:25565"));
+		}
 
     }
 
@@ -55,7 +66,11 @@ namespace Alex.GameStates.Gui.MainMenu
         private GuiTextElement _serverName;
         private GuiTextElement _serverMotd;
 
-        public GuiServerListEntryElement(string serverName, string serverAddress)
+	   // public override int Width => 325;
+
+	    public override int LayoutWidth => 325;
+
+	    public GuiServerListEntryElement(string serverName, string serverAddress)
         {
             ServerName = serverName;
             ServerAddress = serverAddress;
@@ -89,7 +104,8 @@ namespace Alex.GameStates.Gui.MainMenu
 
             _textWrapper.AddChild(_serverName = new GuiTextElement()
             {
-                Text = ServerName
+                Text = ServerName,
+				
             });
             _textWrapper.AddChild(_serverMotd = new GuiTextElement()
             {
@@ -104,11 +120,18 @@ namespace Alex.GameStates.Gui.MainMenu
         protected override void OnInit(IGuiRenderer renderer)
         {
             base.OnInit(renderer);
-
+			
             Ping();
         }
 
-        public void Ping()
+	    private GraphicsDevice _graphicsDevice = null;
+	    protected override void OnDraw(GuiRenderArgs args)
+	    {
+		    _graphicsDevice = args.Graphics;
+		    base.OnDraw(args);
+	    }
+
+	    public void Ping()
         {
             if (PingCompleted) return;
             PingCompleted = true;
@@ -178,18 +201,50 @@ namespace Alex.GameStates.Gui.MainMenu
             _pingStatus.SetOffline();
         }
         
+		private static readonly Regex FaviconRegex = new Regex(@"data:image/png;base64,(?<data>.+)", RegexOptions.Compiled);
         private void ContinuationAction(Task<ServerQueryResponse> queryTask)
         {
             var response = queryTask.Result;
             SetConnectingState(false);
             
             if (response.Success)
-            {
+			{
                 var s = response.Status;
+				_pingStatus.SetPlayerCount(s.NumberOfPlayers, s.MaxNumberOfPlayers);
                 _pingStatus.SetPing(s.Delay);
+
+				if (s.ProtocolVersion < JavaProtocol.ProtocolVersion)
+				{
+					_pingStatus.SetOutdated(s.Version);
+				}
+				else if (s.ProtocolVersion > JavaProtocol.ProtocolVersion)
+				{
+					_pingStatus.SetOutdated($"Client out of date!");
+				}
+
 	            _serverMotd.Text = s.Motd;
 
-				//if (s.FaviconDataRaw)
+	            if (!string.IsNullOrWhiteSpace(s.FaviconDataRaw))
+	            {
+		            var match = FaviconRegex.Match(s.FaviconDataRaw);
+		            if (match.Success)
+		            {
+			         //   try
+			            {
+				            using (MemoryStream ms = new MemoryStream(Convert.FromBase64String(match.Groups["data"].Value)))
+				            {
+					            ServerIcon = Texture2D.FromStream(_graphicsDevice, ms);
+				            }
+
+				            _serverIcon.Texture = ServerIcon;
+
+			            }
+			         //   catch
+			            {
+							
+			            }
+		            }
+	            }
             }
             else
             {

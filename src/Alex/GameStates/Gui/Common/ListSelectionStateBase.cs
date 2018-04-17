@@ -23,10 +23,10 @@ namespace Alex.GameStates.Gui.Common
             {
 				BackgroundOverlayColor = new Color(Color.Black, 0.5f),
                 Y = Header.Height,
-                Width = 192,
+               // Width = 320,
 				VerticalAlignment = VerticalAlignment.Top,
-				HorizontalAlignment = HorizontalAlignment.Center,
-				HorizontalContentAlignment = HorizontalAlignment.Left,
+				HorizontalAlignment = HorizontalAlignment.FillParent,
+				HorizontalContentAlignment = HorizontalAlignment.Center,
             });
         }
 
