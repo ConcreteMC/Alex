@@ -37,7 +37,7 @@ namespace Alex.Utils
 		    Graphics = graphics;
 	    }
 
-	    public void GenerateAtlas(GraphicsDevice graphics, KeyValuePair<string, Bitmap>[] bitmaps, IProgressReceiver progressReceiver)
+	    public void GenerateAtlas(KeyValuePair<string, Bitmap>[] bitmaps, IProgressReceiver progressReceiver)
         {
 	        Log.Info("Generating texture map...");
 
@@ -66,7 +66,7 @@ namespace Alex.Utils
 		
 			Atlas = bitmap;
 
-			_atlas = TextureUtils.BitmapToTexture2D(graphics, bitmap);
+			_atlas = TextureUtils.BitmapToTexture2D(Graphics, bitmap);
 			AtlasSize = new Vector2(_atlas.Width, _atlas.Height);
 
         //    bitmap.Save("assets\\terrain.png", ImageFormat.Png);
@@ -124,7 +124,7 @@ namespace Alex.Utils
 	    public int TextureWidth { get; private set; } = 16;
 	    public int TextureHeight { get; private set; }= 16;
 
-		public void LoadResourcePackOnTop(GraphicsDevice device, KeyValuePair<string, Bitmap>[] bitmapsRaw, IProgressReceiver progressReceiver)
+		public void LoadResourcePackOnTop(KeyValuePair<string, Bitmap>[] bitmapsRaw, IProgressReceiver progressReceiver)
 		{
 			/*  string path = Path.Combine("assets", "minecraft", "textures", "blocks");
 
