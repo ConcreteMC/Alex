@@ -43,7 +43,6 @@ namespace Alex
 		public static bool IsMultiplayer { get; set; } = false;
 
 		public static BitmapFont Font;
-		public static IFontRenderer FontRender = null;
 		public static SpriteFont BackupFont;
 
 		private SpriteBatch _spriteBatch;
@@ -243,7 +242,6 @@ namespace Alex
 
 		private void OnResourcePackPreLoadCompleted(IFontRenderer fontRenderer, BitmapFont bitmapFont)
 		{
-			FontRender = fontRenderer;
 			Font = bitmapFont;
 
 			GuiManager.RefreshResources();

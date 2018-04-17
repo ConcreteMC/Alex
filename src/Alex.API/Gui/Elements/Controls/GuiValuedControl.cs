@@ -10,13 +10,18 @@ namespace Alex.API.Gui.Elements.Controls
     {
         public event EventHandler<TValue> ValueChanged;
 
+	    public GuiValuedControl()
+	    {
+		    _value = default(TValue);
+	    }
+
         private TValue _value;
         public TValue Value
         {
             get => _value;
             set
             {
-                if (!Equals(_value, value))
+                if (!value.Equals(_value))
                 {
                     _value = value;
                     ValueChanged?.Invoke(this, _value);

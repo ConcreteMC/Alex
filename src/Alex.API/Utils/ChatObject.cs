@@ -218,7 +218,7 @@ namespace Alex.API.Utils
         public string RawMessage { get; set; }
 
         private static Random _rnd = new Random();
-
+		/*
         public Vector2 Render(SpriteBatch sb, SpriteFont font, Vector2 position)
         {
             Vector2 pos = position;
@@ -306,7 +306,7 @@ namespace Alex.API.Utils
 
             return position;
         }
-
+		*/
         public static bool TryParse(string json, out ChatObject result)
         {
             try

@@ -1,9 +1,11 @@
-﻿using Alex.API.Gui;
+﻿using Alex.API.Data;
+using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Rendering;
 using Alex.API.Input;
 using Alex.Gamestates.Gui;
 using Alex.Gamestates.Playing;
+using Alex.Rendering.UI;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Gamestates.Hud
@@ -12,20 +14,24 @@ namespace Alex.Gamestates.Hud
     {
         private GuiItemHotbar _hotbar;
         private PlayerController _playerController;
-        private PlayerInputManager InputManager => _playerController.InputManager;
+	    private ChatComponent _chatComponent;
+		private PlayerInputManager InputManager => _playerController.InputManager;
 
-        public PlayingHud(Game game, PlayerController playerController) : base(game)
+        public PlayingHud(Game game, PlayerController playerController, ChatComponent chatComponent) : base(game)
         {
             DebugColor = Color.Green;
             _playerController = playerController;
             _hotbar = new GuiItemHotbar();
-        }
+
+	        _chatComponent = chatComponent;
+		}
 
         protected override void OnInit(IGuiRenderer renderer)
         {
             AddChild(_hotbar);
             AddChild(new GuiCrosshair());
-        }
+			AddChild(_chatComponent);
+		}
 
         protected override void OnUpdate(GameTime gameTime)
         {

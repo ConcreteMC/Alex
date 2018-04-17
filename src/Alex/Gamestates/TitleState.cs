@@ -56,12 +56,6 @@ namespace Alex.Gamestates
 
 			stackMenu.AddMenuItem("Multiplayer", () =>
 			{
-				//TODO: Switch to multiplayer serverlist (maybe choose PE or Java?)
-				Alex.ConnectToServer();
-			});
-
-			stackMenu.AddMenuItem("Multiplayer Servers", () =>
-			{
 				Alex.GameStateManager.SetActiveState<MultiplayerServerSelectionState>();
 			});
 

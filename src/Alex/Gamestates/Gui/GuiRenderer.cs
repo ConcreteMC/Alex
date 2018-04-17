@@ -20,7 +20,6 @@ namespace Alex.Gamestates.Gui
         private Alex Alex { get; }
         
         public BitmapFont Font => Alex.Font;
-        public IFontRenderer DefaultFont => Alex.FontRender;
         public GuiScaledResolution ScaledResolution { get; set; }
 
         private GraphicsDevice _graphicsDevice;

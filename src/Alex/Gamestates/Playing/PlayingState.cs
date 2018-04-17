@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using Alex.API.Data;
 using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.API.World;
@@ -24,8 +25,6 @@ namespace Alex.Gamestates.Playing
 
 		private FpsMonitor FpsCounter { get; set; }
 
-		private ChatComponent Chat { get; }
-
 		private WorldProvider WorldProvider { get; }
 		public INetworkProvider NetworkProvider { get; }
 
@@ -39,21 +38,20 @@ namespace Alex.Gamestates.Playing
 			World = new World(alex, graphics, new FirstPersonCamera(alex.GameSettings.RenderDistance, Vector3.Zero, Vector3.Zero), networkProvider);
 			SkyRenderer = new SkyBox(alex, graphics, World);
 
-			Chat = new ChatComponent();
-
 			WorldProvider = worldProvider;
 			if (worldProvider is SPWorldProvider)
 			{
 				World.FreezeWorldTime = true;
 			}
 
+			var chat = new ChatComponent();
+
 			WorldProvider = worldProvider;
-			WorldProvider.Init(World, Chat, out var info, out var chatProvider);
+			WorldProvider.Init(World, chat, out var info, out var chatProvider);
 			World.WorldInfo = info;
+			chat.ChatProvider = chatProvider;
 
-			Chat.ChatProvider = chatProvider;
-
-			_playingHud = new PlayingHud(Alex, World.Player.Controller);
+			_playingHud = new PlayingHud(Alex, World.Player.Controller, chat);
 			_debugInfo = new GuiDebugInfo(alex);
 			FpsCounter = new FpsMonitor();
 			InitDebugInfo();
@@ -168,7 +166,7 @@ namespace Alex.Gamestates.Playing
 				CheckInput(gameTime);
 				
 				World.Update(args, SkyRenderer);
-				World.Player.Controller.CheckInput = !Chat.RenderChatInput;
+				
 				SkyRenderer.Update(args);
 
 				if (RenderDebug)
@@ -180,8 +178,6 @@ namespace Alex.Gamestates.Playing
 						MemoryUsageDisplay = $"Allocated memory: {GetBytesReadable(Environment.WorkingSet)}";
 					}
 				}
-
-				Chat.Update(gameTime);
 			}
 			base.OnUpdate(gameTime);
 		}
@@ -250,53 +246,45 @@ namespace Alex.Gamestates.Playing
 			{
 				if (currentKeyboardState.IsKeyDown(KeyBinds.Menu))
 				{
-					if (Chat.RenderChatInput)
+					Alex.GameStateManager.AddState("ingamemenu", new InGameMenuState(Alex, currentKeyboardState));
+					Alex.GameStateManager.SetActiveState("ingamemenu");
+				}
+
+
+				if (currentKeyboardState.IsKeyDown(KeyBinds.DebugInfo))
+				{
+					RenderDebug = !RenderDebug;
+				}
+
+				if (currentKeyboardState.IsKeyDown(KeyBinds.ToggleWireframe))
+				{
+					ToggleWireframe();
+				}
+
+				if (currentKeyboardState.IsKeyDown(KeyBinds.ReBuildChunks))
+				{
+					World.RebuildChunks();
+				}
+
+				if (currentKeyboardState.IsKeyDown(KeyBinds.Fog) && !_oldKeyboardState.IsKeyDown(KeyBinds.Fog))
+				{
+					World.ChunkManager.OpaqueEffect.FogEnabled = !World.ChunkManager.OpaqueEffect.FogEnabled;
+					World.ChunkManager.TransparentEffect.FogEnabled = !World.ChunkManager.TransparentEffect.FogEnabled;
+				}
+
+				if (currentKeyboardState.IsKeyDown(KeyBinds.ChangeCamera))
+				{
+					if (World.Camera is FirstPersonCamera)
 					{
-						Chat.Dismiss();
+						World.Camera = new ThirdPersonCamera(Alex.GameSettings.RenderDistance, World.Player.KnownPosition, Vector3.Zero);
 					}
 					else
 					{
-						Alex.GameStateManager.AddState("ingamemenu", new InGameMenuState(Alex, currentKeyboardState));
-						Alex.GameStateManager.SetActiveState("ingamemenu");
-					}
-				}
-
-				if (!Chat.RenderChatInput)
-				{
-					if (currentKeyboardState.IsKeyDown(KeyBinds.DebugInfo))
-					{
-						RenderDebug = !RenderDebug;
-					}
-
-					if (currentKeyboardState.IsKeyDown(KeyBinds.ToggleWireframe)) 
-					{
-						ToggleWireframe();
-					}
-
-					if (currentKeyboardState.IsKeyDown(KeyBinds.ReBuildChunks))
-					{
-						World.RebuildChunks();
-					}
-
-					if (currentKeyboardState.IsKeyDown(KeyBinds.Fog) && !_oldKeyboardState.IsKeyDown(KeyBinds.Fog))
-					{
-						World.ChunkManager.OpaqueEffect.FogEnabled = !World.ChunkManager.OpaqueEffect.FogEnabled;
-						World.ChunkManager.TransparentEffect.FogEnabled = !World.ChunkManager.TransparentEffect.FogEnabled;
-					}
-
-					if (currentKeyboardState.IsKeyDown(KeyBinds.ChangeCamera))
-					{
-						if (World.Camera is FirstPersonCamera)
-						{
-							World.Camera = new ThirdPersonCamera(Alex.GameSettings.RenderDistance, World.Player.KnownPosition, Vector3.Zero);
-						}
-						else
-						{
-							World.Camera = new FirstPersonCamera(Alex.GameSettings.RenderDistance, World.Player.KnownPosition, Vector3.Zero);
-						}
+						World.Camera = new FirstPersonCamera(Alex.GameSettings.RenderDistance, World.Player.KnownPosition, Vector3.Zero);
 					}
 				}
 			}
+
 			_oldKeyboardState = currentKeyboardState;
 		}
 
@@ -319,8 +307,6 @@ namespace Alex.Gamestates.Playing
 			{
 				args.SpriteBatch.End();
 			}
-
-			Chat.Render(args);
 		}
 
 		public static string GetCardinalDirection(PlayerLocation cam)

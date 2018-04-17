@@ -8,12 +8,15 @@ using Alex.API.Gui.Elements.Controls;
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.GameStates.Gui.Common;
+using NLog;
 
 namespace Alex.GameStates.Gui.MainMenu
 {
     public class MultiplayerConnectState : GuiStateBase
     {
-        private readonly GuiTextInput _hostnameInput;
+	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(MultiplayerConnectState));
+
+		private readonly GuiTextInput _hostnameInput;
         private readonly GuiBeaconButton _connectButton;
         private readonly GuiTextElement _errorMessage;
 
@@ -65,6 +68,7 @@ namespace Alex.GameStates.Gui.MainMenu
             }
             catch (Exception ex)
             {
+				Log.Error($"Error: {ex.ToString()}");
                 SetErrorMessage(ex.Message);
             }
         }
@@ -105,9 +109,11 @@ namespace Alex.GameStates.Gui.MainMenu
             if (response.Success)
             {
                 Alex.ConnectToServer(response.Status.EndPoint);
-            }
-
-            SetConnectingState(false);
+			}
+	        else
+	        {
+		        SetConnectingState(false);
+	        }
         }
     }
 }

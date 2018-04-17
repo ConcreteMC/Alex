@@ -14,7 +14,6 @@ namespace Alex.API.Gui.Elements
 	    private string _text;
 	    private Vector2? _textShadowOffset;
 	    private float _scale = 1f;
-	    private IFontRenderer _fontRenderer;
 	    private BitmapFont _font;
 	    private SpriteFont _backupFont;
 	    private float _rotation;
@@ -69,15 +68,6 @@ namespace Alex.API.Gui.Elements
 
         public bool HasShadow { get; set; } = true;
 
-        public IFontRenderer FontRenderer
-        {
-            get => _fontRenderer;
-            set
-            {
-                _fontRenderer = value;
-                OnTextUpdated();
-            }
-        }
 	    public BitmapFont Font
 	    {
 		    get => _font;
@@ -113,7 +103,6 @@ namespace Alex.API.Gui.Elements
         {
             base.OnInit(renderer);
             Font = renderer.Font;
-	        FontRenderer = renderer.DefaultFont;
         }
 
         protected override void OnUpdate(GameTime gameTime)
@@ -130,15 +119,6 @@ namespace Alex.API.Gui.Elements
 	            {
 					renderArgs.DrawString(Font, text, RenderPosition, TextColor, HasShadow, Rotation, RotationOrigin, Scale);
 	            }
-				else if (FontRenderer != null)
-	            {
-		            if (HasShadow)
-		            {
-			            renderArgs.DrawString(FontRenderer, text, RenderPosition + TextShadowOffset, TextColor.BackgroundColor, Scale, Rotation, RotationOrigin);
-		            }
-					
-		            renderArgs.DrawString(FontRenderer, text, RenderPosition, TextColor.ForegroundColor, Scale, Rotation, RotationOrigin);
-	            }
 				else if (BackupFont != null)
 	            {
 		            if (HasShadow)
@@ -154,13 +134,19 @@ namespace Alex.API.Gui.Elements
 
 	    private Vector2 GetSize(string text, Vector2 scale)
 	    {
-		    return Font?.MeasureString(text, scale) ?? FontRenderer?.GetStringSize(text, scale) ?? (BackupFont.MeasureString(text));
+		    return Font?.MeasureString(text, scale) ?? (BackupFont.MeasureString(text));
 		}
 
 	    private void OnTextUpdated(bool updateLayout = true)
 	    {
 		    string text = _text;
-			if ((Font != null || FontRenderer != null || BackupFont != null) && !string.IsNullOrWhiteSpace(text))
+		    if (string.IsNullOrWhiteSpace(text))
+		    {
+			    _renderText = string.Empty;
+			    Width = 0;
+			    Height = 0;
+		    }
+		    else if ((Font != null || BackupFont != null))
 			{
 				var scale = new Vector2(Scale, Scale);
 
@@ -170,12 +156,12 @@ namespace Alex.API.Gui.Elements
 				Height = (int)Math.Floor(textSize.Y);
 
 				_renderText = text;
-
-				if (updateLayout)
-		        {
-					ParentElement.UpdateLayout();
-		        }
 	        }
+
+		    if (updateLayout)
+		    {
+			    ParentElement?.UpdateLayout();
+		    }
 		}
     }
 }

@@ -3,8 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Alex.API.Data;
+using Alex.API.Graphics;
+using Alex.API.Gui;
+using Alex.API.Gui.Rendering;
 using Alex.API.Utils;
 using Alex.Gamestates;
+using Alex.Gamestates.Gui;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -12,26 +16,69 @@ using NLog;
 
 namespace Alex.Rendering.UI
 {
-	public class ChatComponent : IChatReceiver
+	public class ChatComponent : GuiContainer, IChatReceiver
 	{
+		private class ChatEntry
+		{
+			public ChatObject ChatObject;
+			public DateTime ReceiveTime;
+		}
+
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ChatComponent));
 
 		public bool RenderChatInput { get; private set; } = false;
-		private List<ChatObject> ChatMessages { get; set; } = new List<ChatObject>();
 		private StringBuilder _input = new StringBuilder();
 
+		private SortedList<DateTime, ChatObject> _chatEntries = new SortedList<DateTime, ChatObject>();
 		public IChatProvider ChatProvider;
 		public ChatComponent()
 		{
-			Alex.OnCharacterInput += OnCharacterInput;
+			VerticalAlignment = VerticalAlignment.Bottom;
+			HorizontalAlignment = HorizontalAlignment.Left;
+
+			BackgroundOverlayColor = new Color(Color.Black, 0.5f);
 		}
 
-		public void Render(RenderArgs args)
+		private BitmapFont Font;
+		protected override void OnInit(IGuiRenderer renderer)
+		{
+			Font = renderer.Font;
+			renderer.ScaledResolution.ScaleChanged += ScaledResolutionOnScaleChanged;
+		}
+
+		private void ScaledResolutionOnScaleChanged(object sender, UiScaleEventArgs e)
+		{
+				
+		}
+
+		protected override void OnDraw(GuiRenderArgs args)
+		{
+			//args.BeginSpriteBatch();
+			if (_chatEntries.Count > 0)
+			{
+				DateTime now = DateTime.UtcNow;
+				Vector2 offset = Vector2.One;
+				foreach (var msg in _chatEntries.ToArray())
+				{
+					offset.Y += Font.MeasureString(msg.Value.RawMessage, new Vector2()).Y;
+					
+				}
+			}
+		//	args.EndSpriteBatch();
+			base.OnDraw(args);
+		}
+
+		protected override void OnUpdateLayout()
+		{
+			base.OnUpdateLayout();
+		}
+
+		/*public void Render(RenderArgs args)
 		{
 			Vector2 scale = new Vector2(1.25f, 1.25f);
 
 			float horizontalOffset = 5;
-			var heightCalc = Alex.FontRender.GetStringSize("!", scale);
+			var heightCalc = Alex.Font.GetStringSize("!", scale);
 
 			args.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied);
 			try
@@ -92,34 +139,34 @@ namespace Alex.Rendering.UI
 			{
 				args.SpriteBatch.End();
 			}
-		}
+		}*/
 
-		private KeyboardState _prevKeyboardState;
-		public void Update(GameTime time)
-		{
-			KeyboardState currentKeyboardState = Keyboard.GetState();
-			if (currentKeyboardState != _prevKeyboardState)
+		/*	private KeyboardState _prevKeyboardState;
+			public void Update(GameTime time)
 			{
-				if (RenderChatInput) //Handle Input
-				{					
-					if (currentKeyboardState.IsKeyDown(Keys.Enter))
-					{
-						SubmitMessage();
-					}
-				}
-				else
+				KeyboardState currentKeyboardState = Keyboard.GetState();
+				if (currentKeyboardState != _prevKeyboardState)
 				{
-					if (currentKeyboardState.IsKeyDown(KeyBinds.Chat))
-					{
-						RenderChatInput = !RenderChatInput;
-						_input.Clear();
+					if (RenderChatInput) //Handle Input
+					{					
+						if (currentKeyboardState.IsKeyDown(Keys.Enter))
+						{
+							SubmitMessage();
+						}
 					}
-				}
+					else
+					{
+						if (currentKeyboardState.IsKeyDown(KeyBinds.Chat))
+						{
+							RenderChatInput = !RenderChatInput;
+							_input.Clear();
+						}
+					}
 
-				
-			}
-			_prevKeyboardState = currentKeyboardState;
-		}
+
+				}
+				_prevKeyboardState = currentKeyboardState;
+			}*/
 
 		public void Dismiss()
 		{
@@ -172,21 +219,16 @@ namespace Alex.Rendering.UI
 				}
 				else
 				{
-					ChatMessages.Add(new ChatObject(_input.ToString()));
+					Receive(new ChatObject(_input.ToString()));
 				}
 			}
 			_input.Clear();
 			RenderChatInput = false;
 		}
 
-		public void Append(string message)
-		{
-			ChatMessages.Add(new ChatObject(message.ToString()));
-		}
-
 		public void Receive(ChatObject message)
 		{
-			ChatMessages.Add(message);
+			_chatEntries.Add(DateTime.UtcNow, message);
 		}
 	}
 }
