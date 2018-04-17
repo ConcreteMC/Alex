@@ -79,7 +79,7 @@ namespace Alex.API.Gui.Elements.Icons
         {
             _isPending = false;
             int index = 0;
-            for (int i = _qualityStateTextures.Length; i > 0; --i)
+            for (int i = _qualityStateTextures.Length - 1; i > 0; i--)
             {
                 if(ms > _qualityThresholds[i]) break;
                 index = i;

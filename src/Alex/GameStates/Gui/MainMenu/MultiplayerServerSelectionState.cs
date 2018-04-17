@@ -187,10 +187,11 @@ namespace Alex.GameStates.Gui.MainMenu
             {
                 var s = response.Status;
                 _pingStatus.SetPing(s.Delay);
+	            _serverMotd.Text = s.Motd;
             }
             else
             {
-                _pingStatus.SetOffline();
+                SetErrorMessage(response.ErrorMessage);
             }
 
         }

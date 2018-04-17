@@ -70,7 +70,6 @@ namespace Alex.API.Utils
 			cube.SetCubeFaceTexture(CubeMapFace.NegativeZ, left);
 			cube.SetCubeFaceTexture(CubeMapFace.PositiveY, up);
 			cube.SetCubeFaceTexture(CubeMapFace.NegativeY, down);
-
 			return cube;
 		}
 

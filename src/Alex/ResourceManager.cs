@@ -76,12 +76,12 @@ namespace Alex
 
 			if (!replaceTextures)
 			{
-				Atlas.LoadResourcePackOnTop(graphics, resourcePack.TexturesAsBitmaps.Where(x => x.Key.StartsWith("blocks")).ToArray(),
+				Atlas.LoadResourcePackOnTop(resourcePack.TexturesAsBitmaps.Where(x => x.Key.StartsWith("blocks")).ToArray(),
 					progressReceiver);
 			}
 			else
 			{
-				Atlas.GenerateAtlas(graphics, resourcePack.TexturesAsBitmaps.Where(x => x.Key.StartsWith("blocks")).ToArray(),
+				Atlas.GenerateAtlas(resourcePack.TexturesAsBitmaps.Where(x => x.Key.StartsWith("blocks")).ToArray(),
 					progressReceiver);
 			}
 

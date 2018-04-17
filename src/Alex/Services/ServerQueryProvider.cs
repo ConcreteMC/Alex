@@ -11,6 +11,7 @@ using Alex.Networking.Java.Packets;
 using Alex.Networking.Java.Packets.Handshake;
 using Alex.Networking.Java.Packets.Status;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Alex.Services
 {
@@ -29,80 +30,93 @@ namespace Alex.Services
         private async Task<ServerQueryResponse> QueryJavaServerAsync(string hostname, ushort port)
         {
             var sw = Stopwatch.StartNew();
-            IPEndPoint endPoint = null;
-            try
-            {
-                using(var client = new TcpClient())
-                using (var conn = new NetConnection(Direction.ClientBound, client.Client))
-                {
-                    AutoResetEvent ar = new AutoResetEvent(false);
-                    string jsonResponse = null;
+	        TcpClient client = null;
+	        NetConnection conn = null;
+			IPEndPoint endPoint = null;
+	        try
+	        {
+		        client = new TcpClient();
 
-                    conn.OnPacketReceived += (sender, args) =>
-                    {
-                        if (args.Packet is ResponsePacket responsePacket)
-                        {
-                            jsonResponse = responsePacket.ResponseMsg;
-                            ar.Set();
-                        }
-                    };
+		        await client.ConnectAsync(hostname, port);
+		        endPoint = client.Client.RemoteEndPoint as IPEndPoint;
 
-                    await client.ConnectAsync(hostname, port);
-                    endPoint = client.Client.RemoteEndPoint as IPEndPoint;
+		        if (client.Connected)
+		        {
+			        conn = new NetConnection(Direction.ClientBound, client.Client);
+			        //using (var conn = new NetConnection(Direction.ClientBound, client.Client))
+			        {
+				        AutoResetEvent ar = new AutoResetEvent(false);
+				        string jsonResponse = null;
 
-                    conn.Initialize();
-                    conn.SendPacket(new HandshakePacket()
-                    {
-                        NextState = ConnectionState.Status,
-                        ServerAddress = hostname,
-                        ServerPort = port,
-                        ProtocolVersion = JavaProtocol.ProtocolVersion
-                    });
+				        conn.OnPacketReceived += (sender, args) =>
+				        {
+					        if (args.Packet is ResponsePacket responsePacket)
+					        {
+						        jsonResponse = responsePacket.ResponseMsg;
+						        ar.Set();
+					        }
+				        };
 
-                    conn.SendPacket(new RequestPacket());
+				        conn.OnConnectionClosed += (sender, args) => { ar.Set(); };
 
-                    ar.WaitOne(10000);
+				        conn.Initialize();
 
-                    var json = JsonConvert.DeserializeObject<ServerListPingJson>(jsonResponse);
+				        conn.SendPacket(new HandshakePacket()
+				        {
+					        NextState = ConnectionState.Status,
+					        ServerAddress = hostname,
+					        ServerPort = port,
+					        ProtocolVersion = JavaProtocol.ProtocolVersion
+				        });
 
-                    return new ServerQueryResponse(true, new ServerQueryStatus()
-                    {
-                        Delay = sw.ElapsedMilliseconds,
-                        Success = true,
+				        conn.ConnectionState = ConnectionState.Status;
 
-                        EndPoint = endPoint,
-                        Address = hostname,
-                        Port =  port,
+				        conn.SendPacket(new RequestPacket());
 
-                        Motd = json.Description?.Text,
-                        ProtocolVersion = json.Version?.Protocol ?? -1,
-                        Version = json.Version?.Name ?? string.Empty,
-                        NumberOfPlayers = json.Players?.Online ?? -1,
-                        MaxNumberOfPlayers = json.Players?.Max ?? -1,
-                        FaviconDataRaw = json.Favicon
-                    });
-                }
-            }
-            catch (Exception ex)
-            {
-                if(sw.IsRunning)
-                    sw.Stop();
+				        if (ar.WaitOne(10000) && jsonResponse != null)
+				        {
+					        var json = JsonConvert.DeserializeObject<ServerListPingJson>(jsonResponse);
 
-                return new ServerQueryResponse(false, ex.Message, new ServerQueryStatus()
-                {
-                    Delay = sw.ElapsedMilliseconds,
-                    Success = false,
+							return new ServerQueryResponse(true, new ServerQueryStatus()
+					        {
+						        Delay = sw.ElapsedMilliseconds,
+						        Success = true,
 
-                    EndPoint = endPoint,
-                    Address = hostname,
-                    Port = port
-                });
-            }
+						        EndPoint = endPoint,
+						        Address = hostname,
+						        Port = port,
+
+						        Motd = json.Description?.Text,
+						        ProtocolVersion = json.Version?.Protocol ?? -1,
+						        Version = json.Version?.Name ?? string.Empty,
+						        NumberOfPlayers = json.Players?.Online ?? -1,
+						        MaxNumberOfPlayers = json.Players?.Max ?? -1,
+						        FaviconDataRaw = json.Favicon
+					        });
+				        }
+			        }
+		        }
+	        }
+	        catch (Exception ex)
+	        {
+		        if (sw.IsRunning)
+			        sw.Stop();
+
+				return new ServerQueryResponse(false, ex.Message, new ServerQueryStatus()
+		        {
+			        Delay = sw.ElapsedMilliseconds,
+			        Success = false,
+
+			        EndPoint = endPoint,
+			        Address = hostname,
+			        Port = port
+		        });
+	        }
             
             if(sw.IsRunning)
                 sw.Stop();
 
-            return new ServerQueryResponse(false, "Unknown Error", new ServerQueryStatus()
+			return new ServerQueryResponse(false, "Unknown Error", new ServerQueryStatus()
             {
                 Delay   = sw.ElapsedMilliseconds,
                 Success = false,
@@ -113,30 +127,64 @@ namespace Alex.Services
             });
         }
 
-        class ServerListPingJson
+	    public class ServerListPingJson
         {
             public ServerListPingVersionJson Version { get; set; } = new ServerListPingVersionJson();
             public ServerListPingPlayersJson Players { get; set; } = new ServerListPingPlayersJson();
+
+			[JsonConverter(typeof(ServerListPingDescriptionJson.DescriptionConverter))]
             public ServerListPingDescriptionJson Description { get; set; } = new ServerListPingDescriptionJson();
             public string Favicon { get; set; }
         }
 
-        class ServerListPingVersionJson
+        public class ServerListPingVersionJson
         {
             public string Name { get; set; }
             public int Protocol { get; set; }
         }
 
-        class ServerListPingPlayersJson
+	    public class ServerListPingPlayersJson
         {
             public int Max { get; set; }
             public int Online { get;set; }
         }
 
-        class ServerListPingDescriptionJson
+	    public class ServerListPingDescriptionJson
         {
             public string Text { get; set; }
-        }
+
+	        public class DescriptionConverter : JsonConverter<ServerListPingDescriptionJson>
+	        {
+		        public override ServerListPingDescriptionJson ReadJson(JsonReader reader, Type objectType, ServerListPingDescriptionJson existingValue,
+			        bool hasExistingValue, JsonSerializer serializer)
+		        {
+					if (reader.TokenType == JsonToken.StartObject)
+			        {
+				        JObject item = JObject.Load(reader);
+				        return item.ToObject<ServerListPingDescriptionJson>();
+			        }
+					else if (reader.TokenType == JsonToken.String)
+					{
+						return new ServerListPingDescriptionJson()
+						{
+							Text = (string) reader.Value
+						};
+					}
+
+			        return null;
+		        }
+
+		        public override bool CanWrite
+		        {
+			        get { return false; }
+		        }
+
+		        public override void WriteJson(JsonWriter writer, ServerListPingDescriptionJson value, JsonSerializer serializer)
+		        {
+			        throw new NotImplementedException();
+		        }
+	        }
+		}
 
         private async Task<ServerQueryResponse> QueryLegacyServerAsync(string hostname, ushort port)
         {
