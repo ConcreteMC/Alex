@@ -30,9 +30,6 @@ namespace Alex
 		[STAThread]
 		static void Main(string[] args)
 		{
-		//	Test();
-		//	Console.ReadLine();
-		//	return;
 			LaunchSettings launchSettings = new LaunchSettings();
 			bool nextIsServer = false;
 			bool nextIsuuid = false;
@@ -109,79 +106,6 @@ namespace Alex
 				game.Run();
 			}
 
-		}
-
-		private static void Test()
-		{
-			MCPacketFactory.Load();
-			Stopwatch sw = Stopwatch.StartNew();
-
-			string hostname = "127.0.0.1";
-			ushort port = 25565;
-
-			NetConnection conn;
-			var client = new TcpClient();
-
-			client.Connect(hostname, port);
-			var endPoint = client.Client.RemoteEndPoint as IPEndPoint;
-
-			if (client.Connected)
-			{
-				conn = new NetConnection(Direction.ClientBound, client.Client);
-				//using (var conn = new NetConnection(Direction.ClientBound, client.Client))
-				{
-					AutoResetEvent ar = new AutoResetEvent(false);
-					string jsonResponse = null;
-
-					conn.OnPacketReceived += (sender, args) =>
-					{
-						if (args.Packet is ResponsePacket responsePacket)
-						{
-							jsonResponse = responsePacket.ResponseMsg;
-							ar.Set();
-						}
-					};
-
-					conn.OnConnectionClosed += (sender, args) => { ar.Set(); };
-
-					conn.Initialize();
-
-					conn.SendPacket(new HandshakePacket()
-					{
-						NextState = ConnectionState.Status,
-						ServerAddress = hostname,
-						ServerPort = port,
-						ProtocolVersion = JavaProtocol.ProtocolVersion
-					});
-
-					conn.ConnectionState = ConnectionState.Status;
-
-					conn.SendPacket(new RequestPacket());
-
-					if (ar.WaitOne(10000) && jsonResponse != null)
-					{
-						var json = JsonConvert.DeserializeObject<ServerQueryProvider.ServerListPingJson>(jsonResponse);
-						Console.WriteLine("Got result: " + json);
-
-					/*	return new ServerQueryResponse(true, new ServerQueryStatus()
-						{
-							Delay = sw.ElapsedMilliseconds,
-							Success = true,
-
-							EndPoint = endPoint,
-							Address = hostname,
-							Port = port,
-
-							Motd = json.Description?.Text,
-							ProtocolVersion = json.Version?.Protocol ?? -1,
-							Version = json.Version?.Name ?? string.Empty,
-							NumberOfPlayers = json.Players?.Online ?? -1,
-							MaxNumberOfPlayers = json.Players?.Max ?? -1,
-							FaviconDataRaw = json.Favicon
-						});*/
-					}
-				}
-			}
 		}
 	}
 #endif

@@ -43,11 +43,13 @@ namespace Alex.API.Input
 
         public void RemoveCharacter()
         {
+	        if (string.IsNullOrEmpty(Text)) return;
+
             var t   = Text;
             var pos = CursorPosition;
-            
-            Text           = t.Substring(0, pos - 1) + t.Substring(pos, t.Length-pos);
-            CursorPosition = pos + 1;
+
+	        Text = t.Remove(pos - 1, 1);
+            CursorPosition = pos - 1;
         }
 
         public void AppendCharacter(char c)

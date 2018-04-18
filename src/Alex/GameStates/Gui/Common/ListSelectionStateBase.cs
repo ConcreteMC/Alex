@@ -23,9 +23,9 @@ namespace Alex.GameStates.Gui.Common
             {
 				BackgroundOverlayColor = new Color(Color.Black, 0.5f),
                 Y = Header.Height,
-                Width = 192,
-	            Anchor = Alignment.TopCenter,
-				ChildAnchor = Alignment.TopFill,
+                //Width = 322,
+	            Anchor = Alignment.TopFill,
+				ChildAnchor = Alignment.TopCenter,
             });
         }
 

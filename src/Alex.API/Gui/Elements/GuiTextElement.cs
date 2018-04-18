@@ -14,7 +14,6 @@ namespace Alex.API.Gui.Elements
 	    private string _text;
 	    private Vector2? _textShadowOffset;
 	    private float _scale = 1f;
-	    private IFontRenderer _fontRenderer;
 	    private BitmapFont _font;
 	    private SpriteFont _backupFont;
 	    private float _rotation;
@@ -131,6 +130,13 @@ namespace Alex.API.Gui.Elements
 	    {
 		    string text = _text;
 			if (Font != null && !string.IsNullOrWhiteSpace(text))
+		    if (string.IsNullOrWhiteSpace(text))
+		    {
+			    _renderText = string.Empty;
+			    Width = 0;
+			    Height = 0;
+		    }
+		    else if (Font != null)
 			{
 				var scale = new Vector2(Scale, Scale);
 
@@ -140,9 +146,12 @@ namespace Alex.API.Gui.Elements
 				Height = (int)Math.Floor(textSize.Y);
 
 				_renderText = text;
-				
-				InvalidateLayout();
 	        }
+
+		    if (updateLayout)
+		    {
+			    InvalidateLayout();
+		    }
 		}
     }
 }

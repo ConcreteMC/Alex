@@ -42,10 +42,11 @@ namespace Alex.API.Gui.Elements.Icons
         private TextureSlice2D _offlineTexture;
         private TextureSlice2D[] _qualityStateTextures = new TextureSlice2D[5];
         private TextureSlice2D[] _connectingStateTextures = new TextureSlice2D[5];
+	    private GuiTextElement _playerCountElement;
 
         private bool _isPending;
         private int _animationFrame;
-        
+	    private bool _isPendingUpdate; 
         public GuiConnectionPingIcon() : base(GuiTextures.ServerPing0)
         {
             SetFixedSize(10, 8);
@@ -65,6 +66,14 @@ namespace Alex.API.Gui.Elements.Icons
             {
                 _connectingStateTextures[i] = renderer.GetTexture(_connectingStates[i]);
             }
+
+			AddChild(_playerCountElement = new GuiTextElement(false)
+			{
+				Font = renderer.Font,
+				Text = string.Empty,
+				HorizontalAlignment = HorizontalAlignment.Left,
+				
+			});
         }
 
         public void SetPending()
@@ -86,6 +95,20 @@ namespace Alex.API.Gui.Elements.Icons
             Background = _qualityStateTextures[index];
         }
 
+	    public void SetPlayerCount(int players, int max)
+	    {
+		    _playerCountElement.Text = $"§7{players}/{max}";
+		    UpdateKids();
+		    //_isPending = true;
+	    }
+
+	    public void SetOutdated(string message)
+	    {
+		    _playerCountElement.Text = $"§4{message}";
+		    UpdateKids();
+			SetOffline();
+	    }
+
         public void SetOffline()
         {
             _isPending = false;
@@ -101,6 +124,7 @@ namespace Alex.API.Gui.Elements.Icons
                 var dt = gameTime.ElapsedGameTime.Seconds / 20.0f;
 
                 _animationFrame = (int)((dt * 20.0f) % _connectingStates.Length);
+
             }
         }
 
@@ -115,5 +139,19 @@ namespace Alex.API.Gui.Elements.Icons
                 base.OnDraw(args);
             }
         }
+
+	    protected override void OnUpdateLayout()
+	    {
+		    base.OnUpdateLayout();
+			UpdateKids();
+	    }
+
+	    private void UpdateKids()
+	    {
+		    if (_playerCountElement != null)
+		    {
+			    _playerCountElement.X = -_playerCountElement.Width - 4;
+		    }
+		}
     }
 }

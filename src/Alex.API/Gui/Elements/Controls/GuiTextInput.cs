@@ -58,6 +58,7 @@ namespace Alex.API.Gui.Elements.Controls
         {
             if (IsFocused)
             {
+	            string originalValue = Value?.Clone().ToString() ?? string.Empty;
                 if (key == Keys.Back)
                 {
                     _textBuilder.RemoveCharacter();
@@ -74,6 +75,11 @@ namespace Alex.API.Gui.Elements.Controls
                 {
                     _textBuilder.AppendCharacter(character);
                 }
+
+	            if (originalValue != _textBuilder.Text)
+	            {
+		            Value = _textBuilder.Text;
+	            }
             }
         }
 

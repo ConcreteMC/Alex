@@ -250,7 +250,6 @@ namespace Alex
 
 		private void OnResourcePackPreLoadCompleted(IFontRenderer fontRenderer, BitmapFont bitmapFont)
 		{
-			FontRender = fontRenderer;
 			Font = bitmapFont;
 
 			GuiManager.RefreshResources();
