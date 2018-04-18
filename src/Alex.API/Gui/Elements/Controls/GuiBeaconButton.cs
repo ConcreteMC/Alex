@@ -40,7 +40,8 @@ namespace Alex.API.Gui.Elements.Controls
             {
                 Anchor = Alignment.MiddleCenter,
                 Text = text,
-                TextColor = TextColor.White
+                TextColor = TextColor.White,
+				Opacity = 0.875f
             };
             AddChild(TextElement);
         }

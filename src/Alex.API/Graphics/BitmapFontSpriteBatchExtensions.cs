@@ -109,6 +109,7 @@ namespace Alex.API.Graphics
 				{
 					offset.X =  0.0f;
 					offset.Y += bitmapFont.LineSpacing;
+
 					firstGlyphOfLine = true;
 
 					styleRandom        = false;
@@ -181,109 +182,29 @@ namespace Alex.API.Graphics
 						if (styleBold)
 						{
 							var boldShadowP = Vector2.Transform(shadowP + Vector2.UnitX, transformation);
-							sb.Draw(glyph.TextureSlice, boldShadowP, styleColor.BackgroundColor, rotation, origin, scale, effects, layerDepth);
+							sb.Draw(glyph.TextureSlice, boldShadowP, styleColor.BackgroundColor * opacity, rotation, origin, scale, effects, layerDepth);
 						}
 						
 						shadowP = Vector2.Transform(shadowP, transformation);
 
-						sb.Draw(glyph.TextureSlice, shadowP, styleColor.BackgroundColor, rotation, origin, scale, effects, layerDepth);
+						sb.Draw(glyph.TextureSlice, shadowP, styleColor.BackgroundColor * opacity, rotation, origin, scale, effects, layerDepth);
 					}
 
 					if (styleBold)
 					{
 						var boldP = Vector2.Transform(p + Vector2.UnitX, transformation);
-						sb.Draw(glyph.TextureSlice, boldP, styleColor.ForegroundColor, rotation, origin, scale, effects, layerDepth);
+						sb.Draw(glyph.TextureSlice, boldP, styleColor.ForegroundColor * opacity, rotation, origin, scale, effects, layerDepth);
 					}
 
 					p = Vector2.Transform(p, transformation);
 
-					sb.Draw(glyph.TextureSlice, p, styleColor.ForegroundColor, rotation, origin, scale, effects, layerDepth);
+					sb.Draw(glyph.TextureSlice, p, styleColor.ForegroundColor * opacity, rotation, origin, scale, effects, layerDepth);
 
-					offset.X += glyph.Width + bitmapFont.CharacterSpacing;
+					offset.X += glyph.Width + (styleBold ? 1 : 0) + bitmapFont.CharacterSpacing;
 				}
 			}
 
 			sb.GraphicsDevice.BlendFactor = blendFactor;
 		}
 	}
-
-	
-  internal class SpriteBatchItem : IComparable<SpriteBatchItem>
-  {
-    public Texture2D Texture;
-    public float SortKey;
-    public VertexPositionColorTexture vertexTL;
-    public VertexPositionColorTexture vertexTR;
-    public VertexPositionColorTexture vertexBL;
-    public VertexPositionColorTexture vertexBR;
-
-    public SpriteBatchItem()
-    {
-      this.vertexTL = new VertexPositionColorTexture();
-      this.vertexTR = new VertexPositionColorTexture();
-      this.vertexBL = new VertexPositionColorTexture();
-      this.vertexBR = new VertexPositionColorTexture();
-    }
-
-    public void Set(float x, float y, float dx, float dy, float w, float h, float sin, float cos, Color color, Vector2 texCoordTL, Vector2 texCoordBR, float depth)
-    {
-      this.vertexTL.Position.X = (float) ((double) x + (double) dx * (double) cos - (double) dy * (double) sin);
-      this.vertexTL.Position.Y = (float) ((double) y + (double) dx * (double) sin + (double) dy * (double) cos);
-      this.vertexTL.Position.Z = depth;
-      this.vertexTL.Color = color;
-      this.vertexTL.TextureCoordinate.X = texCoordTL.X;
-      this.vertexTL.TextureCoordinate.Y = texCoordTL.Y;
-      this.vertexTR.Position.X = (float) ((double) x + ((double) dx + (double) w) * (double) cos - (double) dy * (double) sin);
-      this.vertexTR.Position.Y = (float) ((double) y + ((double) dx + (double) w) * (double) sin + (double) dy * (double) cos);
-      this.vertexTR.Position.Z = depth;
-      this.vertexTR.Color = color;
-      this.vertexTR.TextureCoordinate.X = texCoordBR.X;
-      this.vertexTR.TextureCoordinate.Y = texCoordTL.Y;
-      this.vertexBL.Position.X = (float) ((double) x + (double) dx * (double) cos - ((double) dy + (double) h) * (double) sin);
-      this.vertexBL.Position.Y = (float) ((double) y + (double) dx * (double) sin + ((double) dy + (double) h) * (double) cos);
-      this.vertexBL.Position.Z = depth;
-      this.vertexBL.Color = color;
-      this.vertexBL.TextureCoordinate.X = texCoordTL.X;
-      this.vertexBL.TextureCoordinate.Y = texCoordBR.Y;
-      this.vertexBR.Position.X = (float) ((double) x + ((double) dx + (double) w) * (double) cos - ((double) dy + (double) h) * (double) sin);
-      this.vertexBR.Position.Y = (float) ((double) y + ((double) dx + (double) w) * (double) sin + ((double) dy + (double) h) * (double) cos);
-      this.vertexBR.Position.Z = depth;
-      this.vertexBR.Color = color;
-      this.vertexBR.TextureCoordinate.X = texCoordBR.X;
-      this.vertexBR.TextureCoordinate.Y = texCoordBR.Y;
-    }
-
-    public void Set(float x, float y, float w, float h, Color color, Vector2 texCoordTL, Vector2 texCoordBR, float depth)
-    {
-      this.vertexTL.Position.X = x;
-      this.vertexTL.Position.Y = y;
-      this.vertexTL.Position.Z = depth;
-      this.vertexTL.Color = color;
-      this.vertexTL.TextureCoordinate.X = texCoordTL.X;
-      this.vertexTL.TextureCoordinate.Y = texCoordTL.Y;
-      this.vertexTR.Position.X = x + w;
-      this.vertexTR.Position.Y = y;
-      this.vertexTR.Position.Z = depth;
-      this.vertexTR.Color = color;
-      this.vertexTR.TextureCoordinate.X = texCoordBR.X;
-      this.vertexTR.TextureCoordinate.Y = texCoordTL.Y;
-      this.vertexBL.Position.X = x;
-      this.vertexBL.Position.Y = y + h;
-      this.vertexBL.Position.Z = depth;
-      this.vertexBL.Color = color;
-      this.vertexBL.TextureCoordinate.X = texCoordTL.X;
-      this.vertexBL.TextureCoordinate.Y = texCoordBR.Y;
-      this.vertexBR.Position.X = x + w;
-      this.vertexBR.Position.Y = y + h;
-      this.vertexBR.Position.Z = depth;
-      this.vertexBR.Color = color;
-      this.vertexBR.TextureCoordinate.X = texCoordBR.X;
-      this.vertexBR.TextureCoordinate.Y = texCoordBR.Y;
-    }
-
-    public int CompareTo(SpriteBatchItem other)
-    {
-      return this.SortKey.CompareTo(other.SortKey);
-    }
-  }
 }

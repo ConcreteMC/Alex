@@ -59,7 +59,7 @@ namespace Alex.Rendering.UI
 				Vector2 offset = Vector2.One;
 				foreach (var msg in _chatEntries.ToArray())
 				{
-					offset.Y += Font.MeasureString(msg.Value.RawMessage, new Vector2()).Y;
+					offset.Y += Font.MeasureString(msg.Value.RawMessage).Y;
 					
 				}
 			}

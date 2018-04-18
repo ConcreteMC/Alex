@@ -85,6 +85,8 @@ namespace Alex.API.Graphics
             float width = 0.0f, finalLineHeight = LineSpacing;
             Vector2 offset = Vector2.Zero;
             var firstGlyphOfLine = true;
+            
+            bool styleRandom = false, styleBold = false, styleItalic = false, styleUnderline = false, styleStrikethrough = false;
 
             for (int i = 0; i < text.Length; i++)
             {
@@ -99,30 +101,67 @@ namespace Alex.API.Graphics
 
                     finalLineHeight = LineSpacing;
                     firstGlyphOfLine = true;
-                    continue;
-                }
 
-                if (c == '\x00A7')
+                    styleRandom        = false;
+                    styleBold          = false;
+                    styleStrikethrough = false;
+                    styleUnderline     = false;
+                    styleItalic        = false;
+                }
+                else if (c == '\x00A7')
                 {
                     // Formatting
-                    i++; // skip next char
-                    continue;
-                }
-
-                var glyph = GetGlyphOrDefault(c);
-
-                if (firstGlyphOfLine)
-                {
-                    offset.X += CharacterSpacing;
-                }
                     
-                firstGlyphOfLine = false;
+                    // Get next character
+                    if(i + 1 >= text.Length) continue;
 
-                offset.X += glyph.Width + CharacterSpacing;
+                    i++;
+                    var formatChar = text.ToLower()[i];
+                    if (formatChar == 'k')
+                    {
+                        styleRandom = true;
+                    }
+                    else if (formatChar == 'l')
+                    {
+                        styleBold = true;
+                    }
+                    else if (formatChar == 'm')
+                    {
+                        styleStrikethrough = true;
+                    }
+                    else if (formatChar == 'n')
+                    {
+                        styleUnderline = true;
+                    }
+                    else if (formatChar == 'o')
+                    {
+                        styleItalic = true;
+                    }
+                    else if (formatChar == 'r')
+                    {
+                        styleRandom        = false;
+                        styleBold          = false;
+                        styleStrikethrough = false;
+                        styleUnderline     = false;
+                        styleItalic        = false;
+                    }
+                }
+                else
+                {
+                    var glyph = GetGlyphOrDefault(c);
 
-                finalLineHeight = Math.Max(finalLineHeight, glyph.Height);
-                width = Math.Max(width, offset.X);
-                
+                    if (firstGlyphOfLine)
+                    {
+                        offset.X += CharacterSpacing;
+                    }
+
+                    firstGlyphOfLine = false;
+
+                    offset.X += glyph.Width + (styleBold ? 1 : 0) + CharacterSpacing;
+
+                    finalLineHeight = Math.Max(finalLineHeight, glyph.Height);
+                    width           = Math.Max(width, offset.X);
+                }
             }
 
             size.X = width;
@@ -131,7 +170,6 @@ namespace Alex.API.Graphics
 
         public Glyph GetGlyphOrDefault(char character)
         {
-
             for (int i = 0; i < Glyphs.Length; i++)
             {
                 if(Glyphs[i].Character == character) return Glyphs[i];
@@ -163,7 +201,6 @@ namespace Alex.API.Graphics
             {
                 int row = i / GridWidth;
                 int col = i % GridWidth;
-
                 
                 // Scan the grid cell by pixel column, to determine the
                 // width of the characters.
@@ -189,22 +226,21 @@ namespace Alex.API.Graphics
                         break;
                     }
                 }
-
+                
                 ++width;
-
-                var charWidth = (int) (0.5d + (width * (8.0f / cellWidth)) + 1);
 
                 var bounds = new Rectangle(col * cellWidth, row * cellHeight, width, cellHeight);
                 var textureSlice = Texture.Slice(bounds);
-
                 
+                var charWidth = (int) (0.5d + (width * (8.0f / cellWidth)) + 1);
+
                 var character = characters[i];
 
                 var glyph = new Glyph()
                 {
                     Character = character,
                     TextureSlice = textureSlice,
-                    Width = charWidth,
+                    Width = width,
                     Height = cellHeight
                 };
 

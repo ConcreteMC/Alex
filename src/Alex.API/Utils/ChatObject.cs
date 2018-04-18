@@ -23,35 +23,37 @@ namespace Alex.API.Utils
         //	public string clickEvent { get; set; } = null;
         //	public string hoverEvent { get; set; } = null;
 
-        public string insertion     { get; set; } = null;
-        public bool   bold          { get; set; } = false;
-        public bool   italic        { get; set; } = false;
-        public bool   underlined    { get; set; } = false;
-        public bool   strikethrough { get; set; } = false;
-        public bool   obfuscated    { get; set; } = false;
-        public string color         { get; set; } = null;
+        public string insertion { get; set; } = null;
+        public bool bold { get; set; } = false;
+        public bool italic { get; set; } = false;
+        public bool underlined { get; set; } = false;
+        public bool strikethrough { get; set; } = false;
+        public bool obfuscated { get; set; } = false;
+        public string color { get; set; } = null;
     }
 
     public class TextColor
     {
         private static Logger Log = LogManager.GetCurrentClassLogger(typeof(TextColor));
 
-        public static readonly TextColor Black       = new TextColor('0', 0, 0, 0, 0, 0, 0, "black");
-        public static readonly TextColor DarkBlue    = new TextColor('1', 0, 0, 170, 0, 0, 42, "dark_blue");
-        public static readonly TextColor DarkGreen   = new TextColor('2', 0, 170, 0, 42, 42, 0, "dark_green");
-        public static readonly TextColor DarkCyan    = new TextColor('3', 0, 170, 170, 42, 42, 42, "dark_aqua");
-        public static readonly TextColor DarkRed     = new TextColor('4', 170, 0, 0, 0, 0, 0, "dark_red");
-        public static readonly TextColor Purple      = new TextColor('5', 170, 0, 170, 0, 0, 42, "dark_purple");
-        public static readonly TextColor Gold        = new TextColor('6', 255, 170, 0, 42, 42, 0, "gold");
-        public static readonly TextColor Gray        = new TextColor('7', 170, 170, 170, 42, 42, 42, "gray");
-        public static readonly TextColor DarkGray    = new TextColor('8', 85, 85, 85, 21, 21, 21, "dark_gray");
-        public static readonly TextColor Blue        = new TextColor('9', 85, 85, 255, 21, 21, 63, "blue");
-        public static readonly TextColor BrightGreen = new TextColor('a', 85, 255, 255, 21, 63, 21, "green");
-        public static readonly TextColor Cyan        = new TextColor('b', 85, 255, 255, 21, 63, 63, "aqua");
-        public static readonly TextColor Red         = new TextColor('c', 255, 85, 85, 63, 21, 21, "red");
-        public static readonly TextColor Pink        = new TextColor('d', 255, 85, 255, 63, 21, 62, "light_purple");
-        public static readonly TextColor Yellow      = new TextColor('e', 255, 255, 85, 63, 63, 21, "yellow");
-        public static readonly TextColor White       = new TextColor('f', 255, 255, 255, 63, 63, 63, "white");
+        // @formatter:off — disable formatter after this line
+        public static readonly TextColor Black       = new TextColor('0',   0,   0,   0,   0,   0,   0, "black");
+        public static readonly TextColor DarkBlue    = new TextColor('1',   0,   0, 170,   0,   0,  42, "dark_blue");
+        public static readonly TextColor DarkGreen   = new TextColor('2',   0, 170,   0,  42,  42,   0, "dark_green");
+        public static readonly TextColor DarkCyan    = new TextColor('3',   0, 170, 170,  42,  42,  42, "dark_aqua");
+        public static readonly TextColor DarkRed     = new TextColor('4', 170,   0,   0,   0,   0,   0, "dark_red");
+        public static readonly TextColor Purple      = new TextColor('5', 170,   0, 170,   0,   0,  42, "dark_purple");
+        public static readonly TextColor Gold        = new TextColor('6', 255, 170,   0,  42,  42,   0, "gold");
+        public static readonly TextColor Gray        = new TextColor('7', 170, 170, 170,  42,  42,  42, "gray");
+        public static readonly TextColor DarkGray    = new TextColor('8',  85,  85,  85,  21,  21,  21, "dark_gray");
+        public static readonly TextColor Blue        = new TextColor('9',  85,  85, 255,  21,  21,  63, "blue");
+        public static readonly TextColor BrightGreen = new TextColor('a',  85, 255, 255,  21,  63,  21, "green");
+        public static readonly TextColor Cyan        = new TextColor('b',  85, 255, 255,  21,  63,  63, "aqua");
+        public static readonly TextColor Red         = new TextColor('c', 255,  85,  85,  63,  21,  21, "red");
+        public static readonly TextColor Pink        = new TextColor('d', 255,  85, 255,  63,  21,  62, "light_purple");
+        public static readonly TextColor Yellow      = new TextColor('e', 255, 255,  85,  63,  63,  21, "yellow");
+        public static readonly TextColor White       = new TextColor('f', 255, 255, 255,  63,  63,  63, "white");
+        // @formatter:on — enable formatter after this line
 
         public string Name;
         public Color  ForegroundColor;
@@ -62,8 +64,8 @@ namespace Alex.API.Utils
         {
             try
             {
-                this.Name            = name;
-                this.Code            = code;
+                this.Name = name;
+                this.Code = code;
                 this.ForegroundColor = new Color(r, g, b);
                 this.BackgroundColor = new Color(br, bg, bb);
             }
@@ -218,7 +220,7 @@ namespace Alex.API.Utils
         public string RawMessage { get; set; }
 
         private static Random _rnd = new Random();
-		/*
+        /*
         public Vector2 Render(SpriteBatch sb, SpriteFont font, Vector2 position)
         {
             Vector2 pos = position;

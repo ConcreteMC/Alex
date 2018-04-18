@@ -13,6 +13,7 @@ namespace Alex.API.Gui.Elements
         
 	    private string _text;
 	    private Vector2? _textShadowOffset;
+	    private float _opacity = 1f;
 	    private float _scale = 1f;
 	    private BitmapFont _font;
 	    private SpriteFont _backupFont;
@@ -41,22 +42,13 @@ namespace Alex.API.Gui.Elements
 
         public TextColor TextColor { get; set; } = TextColor.White;
 		
-        public Vector2 TextShadowOffset
-        {
-            get
-            {
-                if (!_textShadowOffset.HasValue)
-                {
-                    _textShadowOffset = new Vector2(1f, 1f) * (RenderSize.Height * 0.1f);
-                    //return new Vector2(1f, -1f) * Scale * 0.125f;
-                }
-                return _textShadowOffset.Value;
-            }
+	    public float Opacity
+	    {
+		    get => _opacity;
+		    set => _opacity = value;
+	    }
 
-            set => _textShadowOffset = value;
-        }
-		
-        public float Scale
+	    public float Scale
         {
             get => _scale;
             set
@@ -115,7 +107,7 @@ namespace Alex.API.Gui.Elements
             {
 	            if (Font != null)
 	            {
-					renderArgs.DrawString(Font, text, RenderPosition, TextColor, HasShadow, Rotation, RotationOrigin, Scale);
+					renderArgs.DrawString(Font, text, RenderPosition, TextColor, HasShadow, Rotation, RotationOrigin, Scale, SpriteEffects.None, 0f, Opacity);
 	            }
 			}
         }

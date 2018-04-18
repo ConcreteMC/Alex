@@ -123,7 +123,7 @@ namespace Alex.API.Gui
 
 		private void CalculateScale(int viewportWidth, int viewportHeight, int guiScale, int targetWidth, int targetHeight, out int scaleFactor, out double scaledWidthD, out double scaledHeightD)
 		{
-			var isUnicode      = false;
+			var isUnicode      = true;
 			scaleFactor    = 1;
 
 			if (guiScale == 0)
