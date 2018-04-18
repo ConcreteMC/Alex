@@ -192,7 +192,7 @@ namespace Alex.API.Graphics
 					if (styleBold)
 					{
 						var boldP = Vector2.Transform(p + Vector2.UnitX, transformation);
-						sb.Draw(glyph.TextureSlice, boldP, glyph.TextureSlice.ClipBounds, styleColor.ForegroundColor, rotation, origin, scale, effects, layerDepth);
+						sb.Draw(glyph.TextureSlice, boldP, styleColor.ForegroundColor, rotation, origin, scale, effects, layerDepth);
 					}
 
 					p = Vector2.Transform(p, transformation);

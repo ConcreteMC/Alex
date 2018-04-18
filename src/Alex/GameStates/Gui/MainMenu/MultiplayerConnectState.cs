@@ -24,8 +24,7 @@ namespace Alex.GameStates.Gui.MainMenu
             AddGuiElement(_hostnameInput = new GuiTextInput()
             {
                 Width = 200,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center
+                Anchor = Alignment.MiddleCenter,
             });
             AddGuiElement( _connectButton = new GuiBeaconButton("Connect", OnConnectButtonPressed));
             AddGuiElement(_errorMessage = new GuiTextElement()

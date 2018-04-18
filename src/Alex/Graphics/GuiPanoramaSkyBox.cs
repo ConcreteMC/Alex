@@ -50,20 +50,20 @@ namespace Alex.Graphics
 			//	renderer.GetTexture2D(GuiTextures.Panorama0),
 			//	renderer.GetTexture2D(GuiTextures.Panorama2),
 
-			//	renderer.GetTexture2D(GuiTextures.Panorama5), //Bottom
-			//	renderer.GetTexture2D(GuiTextures.Panorama4), //Top
+			//	renderer.GetTexture2D(GuiTextures.Panorama5), //MaxY
+			//	renderer.GetTexture2D(GuiTextures.Panorama4), //MinY
 
-			//	renderer.GetTexture2D(GuiTextures.Panorama3), //Left
-			//	renderer.GetTexture2D(GuiTextures.Panorama1)  //Right
+			//	renderer.GetTexture2D(GuiTextures.Panorama3), //MinX
+			//	renderer.GetTexture2D(GuiTextures.Panorama1)  //MaxX
 			//};
 	        _textures = new Texture2D[]
 	        {
 		        renderer.GetTexture2D(GuiTextures.Panorama0),
-		        renderer.GetTexture2D(GuiTextures.Panorama1), //Right
+		        renderer.GetTexture2D(GuiTextures.Panorama1), //MaxX
 		        renderer.GetTexture2D(GuiTextures.Panorama2),
-		        renderer.GetTexture2D(GuiTextures.Panorama3), //Left
-		        renderer.GetTexture2D(GuiTextures.Panorama4), //Top
-		        renderer.GetTexture2D(GuiTextures.Panorama5), //Bottom
+		        renderer.GetTexture2D(GuiTextures.Panorama3), //MinX
+		        renderer.GetTexture2D(GuiTextures.Panorama4), //MinY
+		        renderer.GetTexture2D(GuiTextures.Panorama5), //MaxY
 
 	        };
 			

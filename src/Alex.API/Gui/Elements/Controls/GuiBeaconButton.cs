@@ -18,6 +18,8 @@ namespace Alex.API.Gui.Elements.Controls
         protected GuiTextElement TextElement { get; }
         protected Action Action { get; }
 
+	    //public override int MinWidth => TextElement.Width;
+
 	    public GuiBeaconButton() : this(string.Empty)
 	    {
 
@@ -31,28 +33,28 @@ namespace Alex.API.Gui.Elements.Controls
             BackgroundRepeatMode = TextureRepeatMode.NoScaleCenterSlice;
 
             Action = action;
-            Height = 20;
+            MinHeight = 20;
+	        MinWidth = 20;
 
             TextElement = new GuiTextElement()
             {
-                VerticalAlignment = VerticalAlignment.Center,
-                HorizontalAlignment = HorizontalAlignment.Center,
+                Anchor = Alignment.MiddleCenter,
                 Text = text,
                 TextColor = TextColor.White
             };
             AddChild(TextElement);
         }
 
-	    protected override void OnUpdateLayout()
-	    {
-		    int minWidth = TextElement.Width + 20;
-		    if (Width <= minWidth)
-		    {
-			    Width = minWidth;
-		    }
+	  //  protected override void OnUpdateLayout()
+	  //  {
+		 //   int minWidth = TextElement.Width + 20;
+		 //   if (Width <= minWidth)
+		 //   {
+			//    Width = minWidth;
+		 //   }
 
-			base.OnUpdateLayout();
-	    }
+			//base.OnUpdateLayout();
+	  //  }
 
 
 	    protected override void OnClick(Vector2 relativePosition)

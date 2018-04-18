@@ -61,8 +61,7 @@ namespace Alex.API.Gui.Elements.Controls
 
             AddChild(Label = new GuiAutoUpdatingTextElement(() => string.Format(DisplayFormat, Value))
             {
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center
+                Anchor = Alignment.MiddleCenter
             });
         }
 
@@ -91,19 +90,19 @@ namespace Alex.API.Gui.Elements.Controls
 
             var diff = MathHelpers.RoundToNearestInterval(Math.Abs(MinValue - MaxValue), StepInterval);
             
-            _thumbOffsetX = ((RenderSize.X - ThumbWidth) / (double) diff) * val;
+            _thumbOffsetX = ((RenderSize.Width - ThumbWidth) / (double) diff) * val;
         }
 
         protected override void OnDraw(GuiRenderArgs args)
         {
             base.OnDraw(args);
 
-            args.Draw(IsHighlighted ? ThumbHighlightBackground : ThumbBackground, new Rectangle((int)(RenderPosition.X + _thumbOffsetX), (int)RenderPosition.Y, ThumbWidth, RenderSize.Y), TextureRepeatMode.NoScaleCenterSlice);
+            args.Draw(IsHighlighted ? ThumbHighlightBackground : ThumbBackground, new Rectangle((int)(RenderPosition.X + _thumbOffsetX), (int)RenderPosition.Y, ThumbWidth, RenderSize.Height), TextureRepeatMode.NoScaleCenterSlice);
         }
 
         private void SetValueFromCursor(Vector2 relativePosition)
         {
-            var percentageClicked = relativePosition.X / (float)RenderSize.X;
+            var percentageClicked = relativePosition.X / (float)RenderSize.Width;
 
             var diff = Math.Abs(MinValue - MaxValue);
             Value = MinValue + diff * percentageClicked;

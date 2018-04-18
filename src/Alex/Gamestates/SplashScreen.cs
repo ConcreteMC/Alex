@@ -19,8 +19,7 @@ namespace Alex.Gamestates
 			Gui = _screen = new SplashScreenGui(Alex)
 			{
 				BackgroundRepeatMode = TextureRepeatMode.Stretch,
-				VerticalAlignment = VerticalAlignment.Top,
-				HorizontalAlignment = HorizontalAlignment.Left
+				Anchor = Alignment.TopLeft,
 			};
 		}
 
@@ -70,7 +69,7 @@ namespace Alex.Gamestates
 			//	Y = -50,
 
 			//	HorizontalAlignment = HorizontalAlignment.Center,
-			//	VerticalAlignment   = VerticalAlignment.Bottom,
+			//	VerticalAlignment   = VerticalAlignment.MaxY,
 
 			//	VerticalContentAlignment = VerticalAlignment.Center,
 			//	HorizontalContentAlignment = HorizontalAlignment.FillParent
@@ -82,18 +81,16 @@ namespace Alex.Gamestates
 				Height = 25,
 
 				Y = -25,
-
-				HorizontalAlignment = HorizontalAlignment.Center,
-				VerticalAlignment   = VerticalAlignment.Bottom,
+				
+				Anchor = Alignment.BottomCenter,
 			});
 
 			_progressBarContainer.AddChild(_textDisplay  = new GuiTextElement()
 			{
 				Text = Text,
 				TextColor = TextColor.Black,
-
-				VerticalAlignment = VerticalAlignment.Top,
-				HorizontalAlignment = HorizontalAlignment.Left,
+				
+				Anchor = Alignment.TopLeft,
 				HasShadow = false
 			});
 
@@ -101,9 +98,8 @@ namespace Alex.Gamestates
 			{
 				Text = Text,
 				TextColor = TextColor.Black,
-
-				VerticalAlignment   = VerticalAlignment.Top,
-				HorizontalAlignment = HorizontalAlignment.Right,
+				
+				Anchor = Alignment.TopRight,
 				HasShadow = false
 			});
 
@@ -112,8 +108,7 @@ namespace Alex.Gamestates
 				Width = 300,
 				Height = 9,
 				
-				VerticalAlignment = VerticalAlignment.Bottom,
-				HorizontalAlignment = HorizontalAlignment.FillParent,
+				Anchor = Alignment.BottomCenter,
 			});
 
 			

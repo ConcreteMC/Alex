@@ -35,7 +35,7 @@ namespace Alex.API.Gui.Elements
             get => _text;
             set
             {
-                _text = value;
+                _text = value ?? string.Empty;
                 OnTextUpdated();
             }
         }
@@ -48,7 +48,7 @@ namespace Alex.API.Gui.Elements
             {
                 if (!_textShadowOffset.HasValue)
                 {
-                    _textShadowOffset = new Vector2(1f, 1f) * (RenderSize.Y * 0.1f);
+                    _textShadowOffset = new Vector2(1f, 1f) * (RenderSize.Height * 0.1f);
                     //return new Vector2(1f, -1f) * Scale * 0.125f;
                 }
                 return _textShadowOffset.Value;
@@ -69,15 +69,6 @@ namespace Alex.API.Gui.Elements
 
         public bool HasShadow { get; set; } = true;
 
-        public IFontRenderer FontRenderer
-        {
-            get => _fontRenderer;
-            set
-            {
-                _fontRenderer = value;
-                OnTextUpdated();
-            }
-        }
 	    public BitmapFont Font
 	    {
 		    get => _font;
@@ -107,19 +98,16 @@ namespace Alex.API.Gui.Elements
 		    {
 			    BackgroundOverlayColor = DefaultTextBackgroundColor;
 		    }
+
+			Margin = new Thickness(5, 5);
 	    }
 
 		protected override void OnInit(IGuiRenderer renderer)
         {
             base.OnInit(renderer);
             Font = renderer.Font;
-	        FontRenderer = renderer.DefaultFont;
         }
 
-        protected override void OnUpdate(GameTime gameTime)
-        {
-            base.OnUpdate(gameTime);
-        }
 
         protected override void OnDraw(GuiRenderArgs renderArgs)
         {
@@ -130,37 +118,19 @@ namespace Alex.API.Gui.Elements
 	            {
 					renderArgs.DrawString(Font, text, RenderPosition, TextColor, HasShadow, Rotation, RotationOrigin, Scale);
 	            }
-				else if (FontRenderer != null)
-	            {
-		            if (HasShadow)
-		            {
-			            renderArgs.DrawString(FontRenderer, text, RenderPosition + TextShadowOffset, TextColor.BackgroundColor, Scale, Rotation, RotationOrigin);
-		            }
-					
-		            renderArgs.DrawString(FontRenderer, text, RenderPosition, TextColor.ForegroundColor, Scale, Rotation, RotationOrigin);
-	            }
-				else if (BackupFont != null)
-	            {
-		            if (HasShadow)
-		            {
-			            renderArgs.DrawString(RenderPosition + TextShadowOffset, BackupFont, text, TextColor.BackgroundColor, Scale, Rotation, RotationOrigin);
-		            }
-
-		            renderArgs.DrawString(RenderPosition, BackupFont, text, TextColor.ForegroundColor, Scale, Rotation, RotationOrigin);
-				}
 			}
         }
 
 
 	    private Vector2 GetSize(string text, Vector2 scale)
 	    {
-		    return Font?.MeasureString(text, scale) ?? FontRenderer?.GetStringSize(text, scale) ?? (BackupFont.MeasureString(text));
+		    return Font?.MeasureString(text, scale) ?? (BackupFont.MeasureString(text));
 		}
 
-	    private void OnTextUpdated(bool updateLayout = true)
+	    private void OnTextUpdated()
 	    {
 		    string text = _text;
-			if ((Font != null || FontRenderer != null || BackupFont != null) && !string.IsNullOrWhiteSpace(text))
+			if (Font != null && !string.IsNullOrWhiteSpace(text))
 			{
 				var scale = new Vector2(Scale, Scale);
 
@@ -170,11 +140,8 @@ namespace Alex.API.Gui.Elements
 				Height = (int)Math.Floor(textSize.Y);
 
 				_renderText = text;
-
-				if (updateLayout)
-		        {
-					ParentElement.UpdateLayout();
-		        }
+				
+				InvalidateLayout();
 	        }
 		}
     }

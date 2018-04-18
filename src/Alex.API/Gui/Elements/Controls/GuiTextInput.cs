@@ -32,8 +32,7 @@ namespace Alex.API.Gui.Elements.Controls
 
             AddChild(_textElement = new GuiTextElement()
             {
-                HorizontalAlignment = HorizontalAlignment.Left,
-                VerticalAlignment = VerticalAlignment.Center
+                Anchor = Alignment.MiddleLeft
             });
         }
 

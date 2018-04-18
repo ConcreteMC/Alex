@@ -10,9 +10,14 @@ namespace Alex.API.Gui
         protected Game Game { get; }
 
         private List<IGuiElement3D> _3DElements = new List<IGuiElement3D>();
+        public bool IsLayoutInProgress { get; protected set; } = false;
 
         public GuiScreen(Game game)
         {
+            AutoSizeMode = AutoSizeMode.None;
+            Anchor = Alignment.Fill;
+            DrawDebugVisible = false;
+
             BackgroundRepeatMode = TextureRepeatMode.Tile;
             Game = game;
         }
@@ -22,7 +27,40 @@ namespace Alex.API.Gui
             Width = width;
             Height = height;
 
-            UpdateLayout();
+            InvalidateLayout(true);
+        }
+        
+        public void UpdateLayout()
+        {
+            if (!IsLayoutDirty || IsLayoutInProgress) return;
+            IsLayoutInProgress = true;
+            
+            // Pass 1 - Update the Preferred size for all elements with
+            //          fixed sizes
+            DoLayoutSizing();
+
+            // Pass 2 - Update the actual sizes for all children based upon their
+            //          parent sizes.
+            DoLayoutMeasure(new Size(Width, Height));
+
+            // Pass 3 - Arrange all child elements based on the LayoutManager for
+            //          the current element.
+            Arrange(new Rectangle(Point.Zero, new Size(Width, Height)));
+            
+            OnUpdateLayout();
+
+            IsLayoutDirty      = false;
+            IsLayoutInProgress = false;
+        }
+
+        protected override void OnUpdate(GameTime gameTime)
+        {
+            if (IsLayoutDirty)
+            {
+                UpdateLayout();
+            }
+
+            base.OnUpdate(gameTime);
         }
 
         public void Draw3D(GuiRenderArgs renderArgs)

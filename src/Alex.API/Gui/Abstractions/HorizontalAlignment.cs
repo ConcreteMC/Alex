@@ -2,13 +2,13 @@
 {
     public enum HorizontalAlignment
 	{
-		None,
+		None		= Alignment.None,
 
-		Left,
-		Center,
-		Right,
+		Left		= Alignment.MinX,
+		Center		= Alignment.CenterX,
+		Right		= Alignment.MaxX,
 
-		FillParent,
+		FillParent	= Alignment.FillX,
 
 	}
 }

@@ -37,7 +37,7 @@ namespace Alex.Gamestates
 
 			if (Gui != null)
 			{
-				Gui.UpdateLayout();
+				Gui.InvalidateLayout(true);
 			}
 		}
 

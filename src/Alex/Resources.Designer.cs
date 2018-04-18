@@ -73,9 +73,9 @@ namespace Alex {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] CubeModel {
+        internal static byte[] DebugFont {
             get {
-                object obj = ResourceManager.GetObject("CubeModel", resourceCulture);
+                object obj = ResourceManager.GetObject("DebugFont", resourceCulture);
                 return ((byte[])(obj));
             }
         }
@@ -134,16 +134,6 @@ namespace Alex {
         internal static byte[] grey_black_gradient01 {
             get {
                 object obj = ResourceManager.GetObject("grey_black_gradient01", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] Kenney_Future_Square {
-            get {
-                object obj = ResourceManager.GetObject("Kenney_Future_Square", resourceCulture);
                 return ((byte[])(obj));
             }
         }
@@ -220,10 +210,7 @@ namespace Alex {
         ///			}
         ///		]
         ///	},
-        ///	&quot;minecraft:polished_diorite&quot;: {
-        ///		&quot;states&quot;: [
-        ///			{
-        ///				&quot;id&quot;:  [rest of string was truncated]&quot;;.
+        ///	&quot;minecraft:polished_ [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string NewBlocks {
             get {
@@ -295,16 +282,6 @@ namespace Alex {
         internal static string runtimeid_table {
             get {
                 return ResourceManager.GetString("runtimeid_table", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] SkyboxEffect {
-            get {
-                object obj = ResourceManager.GetObject("SkyboxEffect", resourceCulture);
-                return ((byte[])(obj));
             }
         }
         

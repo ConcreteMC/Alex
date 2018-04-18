@@ -38,7 +38,111 @@ namespace Alex.API.Gui.Rendering
         {
             SpriteBatch.End();
         }
+
+        #region Debug Helpers
+
+        private static readonly Vector2 DebugFontScale = new Vector2(0.25f);
+
+        private static readonly Color OuterBoundsBackground = Color.LightGoldenrodYellow * 0.1f;
+        private static readonly Color BoundsBackground = Color.LightSeaGreen * 0.2f;
+        private static readonly Color InnerBoundsBackground = Color.CornflowerBlue * 0.1f;
+
+        public void DrawDebug(GuiElement element)
+        {
+            if (element.OuterBounds != element.Bounds)
+            {
+                DrawDebugBounds(element.OuterBounds, OuterBoundsBackground, false, true, false, false);
+            }
+
+            DrawDebugBounds(element.Bounds, BoundsBackground, false, true, false, false);
+
+            if (element.AutoSizeMode == AutoSizeMode.None)
+            {
+                DrawDebugBounds(element.RenderBounds, Color.Red, false, true, true, true);
+            }
+
+            if (element.AutoSizeMode == AutoSizeMode.GrowAndShrink)
+            {
+                DrawDebugBounds(element.RenderBounds, Color.YellowGreen, false, true, true, true);
+            }
+
+            if (element.AutoSizeMode == AutoSizeMode.GrowOnly)
+            {
+                DrawDebugBounds(element.RenderBounds, Color.LawnGreen, false, true, true, true);
+            }
+            
+            if(element.InnerBounds != element.Bounds);
+            {
+                DrawDebugBounds(element.InnerBounds, InnerBoundsBackground, true, true, false, false);
+            }
+
+            DrawDebugString(element.Bounds.CenterTop(), element.GetType().Name, Color.Black, 2, 0, 1);
+        }
+
+        public void DrawDebugBounds(Rectangle bounds, Color color, bool drawBackground = false, bool drawBorders = true, bool drawCoordinates = true, bool drawSize = true)
+        {
+            // Bounding Rectangle
+            if (drawBackground)
+            {
+                FillRectangle(bounds, color);
+            }
+
+            if (drawBorders)
+            {
+                DrawRectangle(bounds, color, 1);
+            }
+
+            if (drawCoordinates)
+            {
+                DrawDebugString(bounds.CenterLeft(), bounds.Left.ToString(), Color.Black, 2, -1, 0);
+                DrawDebugString(bounds.CenterRight(), bounds.Right.ToString(), Color.Black, 2, 1, 0);
+                DrawDebugString(bounds.CenterTop(), bounds.Top.ToString(), Color.Black, 2, 0, -1);
+                DrawDebugString(bounds.CenterBottom(), bounds.Bottom.ToString(), Color.Black, 2, 0, 1);
+            }
+
+            if (drawSize)
+            {
+                DrawDebugString(bounds.Center.ToVector2(), $"{bounds.Width}x{bounds.Height}", Color.Black, 2, 0, 0);
+            }
+        }
+
+        public void DrawDebugString(Vector2 position, string text, Color color, int padding = 2, int xAlign = 0, int yAlign = 0)
+        {
+            if (Renderer.DebugFont == null) return;
+
+            var p = position;
+            var s = Renderer.DebugFont.MeasureString(text) * DebugFontScale;
+
+            if (xAlign == 1)
+            {
+                p.X = p.X - (s.X + padding);
+            }
+            else if(xAlign == 0)
+            {
+                p.X = p.X - (s.X / 2f);
+            }
+            else if (xAlign == -1)
+            {
+                p.X = p.X + padding;
+            }
+
+            if (yAlign == 1)
+            {
+                p.Y = p.Y - (s.Y + padding);
+            }
+            else if(yAlign == 0)
+            {
+                p.Y = p.Y - (s.Y / 2f);
+            }
+            else if (yAlign == -1)
+            {
+                p.Y = p.Y + padding;
+            }
+
+            SpriteBatch.DrawString(Renderer.DebugFont, text, p, color, 0f, Vector2.Zero, DebugFontScale, SpriteEffects.None, 0);
+        }
         
+        #endregion
 
         public void DrawRectangle(Rectangle bounds, Color color, int thickness = 1)
         {
@@ -60,13 +164,13 @@ namespace Alex.API.Gui.Rendering
             var texture = new Texture2D(Graphics, 1, 1, false, SurfaceFormat.Color);
             texture.SetData(new Color[] {color});
 
-            // Top
+            // MinY
             if (thicknessTop > 0)
             {
                 SpriteBatch.Draw(texture, new Rectangle(bounds.X, bounds.Y, bounds.Width, thicknessTop), color);   
             }
 
-            // Right
+            // MaxX
             if (thicknessRight > 0)
             {
                 SpriteBatch.Draw(texture,
@@ -74,7 +178,7 @@ namespace Alex.API.Gui.Rendering
                                  color);
             }
 
-            // Bottom
+            // MaxY
             if (thicknessBottom > 0)
             {
                 SpriteBatch.Draw(texture,
@@ -82,11 +186,19 @@ namespace Alex.API.Gui.Rendering
                                  color);
             }
 
-            // Left
+            // MinX
             if (thicknessLeft > 0)
             {
                 SpriteBatch.Draw(texture, new Rectangle(bounds.X, bounds.Y, thicknessLeft, bounds.Height), color);
             }
+        }
+
+        public void FillRectangle(Rectangle bounds, Color color)
+        {
+            var texture = new Texture2D(Graphics, 1, 1, false, SurfaceFormat.Color);
+            texture.SetData(new Color[] {color});
+
+            SpriteBatch.Draw(texture, bounds, Color.White);
         }
         
         public void DrawLine(int startX, int startY, int endX, int endY, Color color, int thickness = 1)
@@ -140,7 +252,7 @@ namespace Alex.API.Gui.Rendering
                     SpriteBatch.Draw(ninePatchTexture, sourceRectangle: srcPatch, destinationRectangle: dstPatch);
             }
         }
-        
+
         public void FillRectangle(Rectangle bounds, TextureSlice2D texture, TextureRepeatMode repeatMode, Vector2? scale = null)
         {
             if(scale == null) scale = Vector2.One;
@@ -196,17 +308,17 @@ namespace Alex.API.Gui.Rendering
                 int srcLeftHeight  = (int) Math.Floor(srcHalfHeight);
                 int srcRightHeight = (int) Math.Ceiling(srcHalfHeight);
 
-                // Top Left
+                // MinY MinX
                 SpriteBatch.Draw(texture, new Rectangle(xOffset               , yOffset, dstLeftWidth, dstLeftHeight), new Rectangle(srcX, srcY, srcLeftWidth, srcLeftHeight), Color.White);
                 
-                // Top Right
+                // MinY MaxX
                 SpriteBatch.Draw(texture, new Rectangle(xOffset + dstLeftWidth, yOffset, dstRightWidth, dstRightHeight), new Rectangle(srcX + texture.Width - srcRightWidth, srcY, srcRightWidth, srcRightHeight), Color.White);
 
 
-                // Bottom Left
+                // MaxY MinX
                 SpriteBatch.Draw(texture, new Rectangle(xOffset               , yOffset + dstLeftHeight , dstLeftWidth, dstLeftHeight), new Rectangle(srcX, srcY + texture.Height - srcRightHeight, srcLeftWidth, srcLeftHeight), Color.White);
                 
-                // Bottom Right
+                // MaxY MaxX
                 SpriteBatch.Draw(texture, new Rectangle(xOffset + dstLeftWidth, yOffset + dstRightHeight, dstRightWidth, dstRightHeight), new Rectangle(srcX + texture.Width - srcRightWidth, srcY + texture.Height - srcRightHeight, srcRightWidth, srcRightHeight), Color.White);
             }
         }

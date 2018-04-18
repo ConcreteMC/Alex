@@ -12,34 +12,16 @@ namespace Alex.API.Gui
         IGuiElement ParentElement { get; set; }
 
         bool HasChildren { get; }
-
-        int LayoutOffsetX { get; set; }
-        int LayoutOffsetY { get; set; }
-        int LayoutWidth { get; set; }
-        int LayoutHeight { get; set; }
-
-        int X { get; set; }
-        int Y { get; set; }
+        int X { set; }
+        int Y { set; }
         
-        int MinWidth  { get; }
-        int MinHeight { get; }
-        int MaxWidth  { get; }
-        int MaxHeight { get; }
-
-        int Width { get; }
-        int Height { get; }
 
         Vector2 RenderPosition { get; }
-        Point RenderSize { get; }
+        Size RenderSize { get; }
         Rectangle RenderBounds { get; }
         
-        VerticalAlignment VerticalAlignment { get; set; }
-        HorizontalAlignment HorizontalAlignment { get; set; }
-
 
         void Init(IGuiRenderer renderer);
-
-        void UpdateLayout(bool updateChildren = true);
 
         void Update(GameTime gameTime);
 
@@ -47,6 +29,8 @@ namespace Alex.API.Gui
 
         void AddChild(IGuiElement element);
         void RemoveChild(IGuiElement element);
+        
+        #region Hierachy Transcending
 
         bool TryFindParent(GuiElementPredicate predicate, out IGuiElement parentElement);
         bool TryFindParentOfType<TGuiElement>(GuiElementPredicate<TGuiElement> predicate, out TGuiElement parentElement) where TGuiElement : class, IGuiElement;
@@ -56,7 +40,65 @@ namespace Alex.API.Gui
         bool TryFindDeepestChild(GuiElementPredicate predicate, out IGuiElement childElement);
         bool TryFindDeepestChildOfType<TGuiElement>(GuiElementPredicate<TGuiElement> predicate, out TGuiElement childElement) where TGuiElement : class, IGuiElement;
         
-        IEnumerable<TResult> ForEachChild<TResult>(Func<IGuiElement, TResult> valueSelector);
         void ForEachChild(Action<IGuiElement> element);
+        IEnumerable<TResult> ForEachChild<TResult>(Func<IGuiElement, TResult> valueSelector);
+        
+        #endregion
+
+        #region Layout Engine
+
+        #region Properties
+        int MinWidth  { get; set;}
+        int MinHeight { get; set; }
+        int MaxWidth  { get; set; }
+        int MaxHeight { get; set; }
+
+        int Width  { get; set; }
+        int Height { get; set; }
+
+        Thickness Margin  { get; }
+        Thickness Padding { get; }
+
+        AutoSizeMode AutoSizeMode { get; }
+        Alignment Anchor { get; set; }
+
+        #endregion
+
+
+        #region Layout Calculation State Properties
+
+        int LayoutOffsetX { get; }
+        int LayoutOffsetY { get; }
+        int LayoutWidth   { get; }
+        int LayoutHeight  { get; }
+        
+        bool IsLayoutDirty { get; }
+
+        Size PreferredSize { get; }
+        Size PreferredMinSize { get; }
+        Size PreferredMaxSize { get; }
+
+        #endregion
+        
+        #region Calculated Properties
+
+        Rectangle OuterBounds { get; }
+        Rectangle Bounds { get; }
+        Rectangle InnerBounds { get; }
+        Point Position { get; }
+        Size Size { get; }
+        
+        #endregion
+
+
+        Size Measure(Size availableSize);
+        void Arrange(Rectangle newBounds);
+
+        void InvalidateLayout(bool invalidateChildren = true);
+        void InvalidateLayout(IGuiElement sender, bool invalidateChildren = true);
+
+
+
+        #endregion
     }
 }

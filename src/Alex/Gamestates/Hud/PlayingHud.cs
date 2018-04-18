@@ -16,7 +16,6 @@ namespace Alex.Gamestates.Hud
 
         public PlayingHud(Game game, PlayerController playerController) : base(game)
         {
-            DebugColor = Color.Green;
             _playerController = playerController;
             _hotbar = new GuiItemHotbar();
         }

@@ -39,7 +39,7 @@ namespace Alex.Utils
 			{
 				0.6f, 0.6f, // North / South
 				0.8f, 0.8f, // East / West
-				1.0f, 0.5f // Top / Bottom
+				1.0f, 0.5f // MinY / MaxY
 			};
 
 		public static Color AdjustColor(Color color, BlockFace face, int lighting, bool shade = true)

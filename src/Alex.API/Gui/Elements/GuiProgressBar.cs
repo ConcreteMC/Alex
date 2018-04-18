@@ -24,7 +24,6 @@ namespace Alex.API.Gui.Elements
 	//	private string Text { get; set; } = string.Empty;
 		public GuiProgressBar()
         {
-            DebugColor = Color.LavenderBlush;
         }
 
         protected override void OnInit(IGuiRenderer renderer)

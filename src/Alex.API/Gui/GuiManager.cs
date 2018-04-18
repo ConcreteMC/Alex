@@ -8,6 +8,8 @@ namespace Alex.API.Gui
 {
     public class GuiManager
     {
+        public static bool DebugVisible = false;
+
         private Game Game { get; }
         public GuiScaledResolution ScaledResolution { get; }
         public GuiFocusManager FocusManager { get; }
@@ -98,18 +100,28 @@ namespace Alex.API.Gui
 
         public void Draw(GameTime gameTime)
         {
+            var args = GuiRenderArgs;
             try
             {
-                SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None,  RasterizerState.CullNone, null, ScaledResolution.TransformMatrix);
+                //SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None,  RasterizerState.CullNone, null, ScaledResolution.TransformMatrix);
+                args.BeginSpriteBatch();
 
                 foreach (var screen in Screens.ToArray())
                 {
-                    screen.Draw(GuiRenderArgs);
+                    screen.Draw(args);
+                }
+
+                if (DebugVisible)
+                {
+                    foreach (var screen in Screens.ToArray())
+                    {
+                        screen.DrawDebug(args);
+                    }
                 }
             }
             finally
             {
-                SpriteBatch.End();
+                args.EndSpriteBatch();
             }
         }
 

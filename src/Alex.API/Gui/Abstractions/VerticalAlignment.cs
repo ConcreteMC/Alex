@@ -2,10 +2,10 @@
 {
 	public enum VerticalAlignment
 	{
-		None,
-		Top,
-		Center,
-		Bottom,
-		FillParent
+		None		= Alignment.NoneY,
+		Top			= Alignment.MinY,
+		Center		= Alignment.CenterY,
+		Bottom		= Alignment.MaxY,
+		FillParent	= Alignment.FillY,
 	}
 }

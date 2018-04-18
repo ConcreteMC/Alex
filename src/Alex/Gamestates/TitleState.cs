@@ -10,6 +10,7 @@ using Alex.API.Gui.Rendering;
 using Alex.API.Utils;
 using Alex.Entities;
 using Alex.Gamestates.Gui;
+using Alex.GameStates.Gui.Common;
 using Alex.GameStates.Gui.MainMenu;
 using Alex.Graphics;
 using Alex.Graphics.Models;
@@ -29,6 +30,7 @@ namespace Alex.Gamestates
 	{
 		private GuiDebugInfo _debugInfo;
 
+		private GuiStackMenu _stackMenu;
 		private GuiTextElement _splashText;
 
 		private GuiPanoramaSkyBox _backgroundSkyBox;
@@ -44,42 +46,12 @@ namespace Alex.Gamestates
 			{
 				//DefaultBackgroundTexture = GuiTextures.OptionsBackground
 			};
-			var stackMenu = new GuiStackMenu()
-			{
-				LayoutOffsetX = 25,
-				Width = 125,
-				VerticalAlignment = VerticalAlignment.Center,
-
-				VerticalContentAlignment = VerticalAlignment.Top,
-				HorizontalContentAlignment = HorizontalAlignment.FillParent
-			};
-
-			stackMenu.AddMenuItem("Multiplayer", () =>
-			{
-				//TODO: Switch to multiplayer serverlist (maybe choose PE or Java?)
-				Alex.ConnectToServer();
-			});
-
-			stackMenu.AddMenuItem("Multiplayer Servers", () =>
-			{
-				Alex.GameStateManager.SetActiveState<MultiplayerServerSelectionState>();
-			});
-
-			stackMenu.AddMenuItem("Debug Blockstates", DebugWorldButtonActivated);
-			stackMenu.AddMenuItem("Debug Flatland", DebugFlatland);
-			stackMenu.AddMenuItem("Debug Anvil", DebugAnvil);
-
-			stackMenu.AddMenuItem("Options", () => { Alex.GameStateManager.SetActiveState("options"); });
-			stackMenu.AddMenuItem("Exit Game", () => { Alex.Exit(); });
-
-			Gui.AddChild(stackMenu);
-
+			
 			Gui.AddChild(new GuiImage(GuiTextures.AlexLogo)
 			{
 				//LayoutOffsetX = 175,
-				LayoutOffsetY = 25,
-				HorizontalAlignment = HorizontalAlignment.Center,
-				VerticalAlignment = VerticalAlignment.Top
+				Y = 25,
+				Anchor = Alignment.TopCenter,
 			});
 			Gui.AddChild( _splashText = new GuiTextElement(false)
 			{
@@ -89,9 +61,37 @@ namespace Alex.Gamestates
 				
 				X = 240,
 				Y = 15,
+				Anchor = Alignment.TopCenter,
 
 				Text = "Who liek minecwaf?!"
 			});
+
+			Gui.AddChild(_stackMenu = new GuiStackMenu()
+			{
+				Margin = new Thickness(25, 125, 25, 25),
+				Width = 125,
+				Anchor = Alignment.BottomCenter,
+
+				ChildAnchor = Alignment.TopFill
+			});
+
+			_stackMenu.AddMenuItem("Multiplayer", () =>
+			{
+				//TODO: Switch to multiplayer serverlist (maybe choose PE or Java?)
+				Alex.ConnectToServer();
+			});
+
+			_stackMenu.AddMenuItem("Multiplayer Servers", () =>
+			{
+				Alex.GameStateManager.SetActiveState<MultiplayerServerSelectionState>();
+			});
+
+			_stackMenu.AddMenuItem("Debug Blockstates", DebugWorldButtonActivated);
+			_stackMenu.AddMenuItem("Debug Flatland", DebugFlatland);
+			_stackMenu.AddMenuItem("Debug Anvil", DebugAnvil);
+
+			_stackMenu.AddMenuItem("Options", () => { Alex.GameStateManager.SetActiveState("options"); });
+			_stackMenu.AddMenuItem("Exit Game", () => { Alex.Exit(); });
 
 			var username = alex.GameSettings.Username;
 			Gui.AddChild(_playerView = new GuiEntityModelView("geometry.humanoid.customSlim")
@@ -103,9 +103,8 @@ namespace Alex.Gamestates
 
 				Width = 92,
 				Height = 128,
-
-				HorizontalAlignment = HorizontalAlignment.Right,
-				VerticalAlignment = VerticalAlignment.Bottom
+				
+				Anchor = Alignment.BottomRight,
 			});
 
 			_debugInfo = new GuiDebugInfo(alex);

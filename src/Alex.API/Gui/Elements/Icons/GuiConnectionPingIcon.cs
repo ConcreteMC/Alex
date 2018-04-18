@@ -10,9 +10,6 @@ namespace Alex.API.Gui.Elements.Icons
 {
     public class GuiConnectionPingIcon : GuiImage
     {
-        public override int Width => 10;
-        public override int Height => 8;
-
         private GuiTextures _offlineState = GuiTextures.ServerPing0;
 
         private long[] _qualityThresholds = new long[]
@@ -51,6 +48,7 @@ namespace Alex.API.Gui.Elements.Icons
         
         public GuiConnectionPingIcon() : base(GuiTextures.ServerPing0)
         {
+            SetFixedSize(10, 8);
         }
 
         protected override void OnInit(IGuiRenderer renderer)

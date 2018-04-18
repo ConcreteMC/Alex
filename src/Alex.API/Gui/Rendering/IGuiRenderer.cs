@@ -11,9 +11,8 @@ namespace Alex.API.Gui.Rendering
         void Init(GraphicsDevice graphics);
 
         BitmapFont Font { get; }
-
-        IFontRenderer DefaultFont { get; }
-
+        SpriteFont DebugFont { get; }
+        
         TextureSlice2D GetTexture(GuiTextures guiTexture);
         Texture2D GetTexture2D(GuiTextures guiTexture);
 

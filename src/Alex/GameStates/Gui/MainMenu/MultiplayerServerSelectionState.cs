@@ -25,9 +25,8 @@ namespace Alex.GameStates.Gui.MainMenu
 
             Gui.AddChild(new GuiBeaconButton("Direct Connect", () => Alex.GameStateManager.SetActiveState<MultiplayerConnectState>())
             {
-                VerticalAlignment = VerticalAlignment.Bottom,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                LayoutOffsetY = -25
+                Anchor = Alignment.BottomCenter,
+                Y = -25
             });
         }
 
@@ -60,31 +59,29 @@ namespace Alex.GameStates.Gui.MainMenu
             ServerName = serverName;
             ServerAddress = serverAddress;
 
-	        HorizontalAlignment = HorizontalAlignment.FillParent;
-	        VerticalAlignment = VerticalAlignment.Top;
+            Anchor = Alignment.TopFill;
 
             AddChild( _serverIcon = new GuiTextureElement()
             {
                 Width = ServerIconSize,
                 Height = ServerIconSize,
-
-                HorizontalAlignment = HorizontalAlignment.Left,
-                VerticalAlignment = VerticalAlignment.Top,
+                
+                Anchor = Alignment.TopLeft,
 
                 DefaultBackgroundTexture = GuiTextures.DefaultServerIcon
             });
 
             AddChild(_pingStatus = new GuiConnectionPingIcon()
             {
-                HorizontalAlignment = HorizontalAlignment.Right,
-                VerticalAlignment = VerticalAlignment.Top
+                Anchor = Alignment.TopRight,
             });
 
             AddChild( _textWrapper = new GuiStackContainer()
             {
                 X = ServerIconSize + 5,
-                HorizontalContentAlignment = HorizontalAlignment.FillParent,
-                VerticalContentAlignment = VerticalAlignment.Top
+                ChildAnchor = Alignment.TopFill
+                //HorizontalContentAlignment = HorizontalAlignment.FillParent,
+                //VerticalContentAlignment = VerticalAlignment.Top
             });
 
             _textWrapper.AddChild(_serverName = new GuiTextElement()

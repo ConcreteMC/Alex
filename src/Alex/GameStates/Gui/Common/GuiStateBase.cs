@@ -43,14 +43,12 @@ namespace Alex.GameStates.Gui.Common
             Gui.AddChild(Header = new GuiContainer()
             {
                 Height              = 42,
-                VerticalAlignment   = VerticalAlignment.Top,
-                HorizontalAlignment = HorizontalAlignment.FillParent,
+                Anchor = Alignment.TopFill,
             });
 
             Header.AddChild(_headerBackButton = new GuiBackButton()
             {
-                VerticalAlignment   = VerticalAlignment.Top,
-                HorizontalAlignment = HorizontalAlignment.Left,
+                Anchor = Alignment.TopLeft,
             });
 
             Header.AddChild(_headerTitle = new GuiTextElement()
@@ -58,17 +56,17 @@ namespace Alex.GameStates.Gui.Common
                 Text      = Title,
                 TextColor = TextColor.White,
                 Scale     = 1.5f,
-
-                VerticalAlignment   = VerticalAlignment.Center,
-                HorizontalAlignment = HorizontalAlignment.Center
+                
+                Anchor = Alignment.MiddleCenter,
             });
 
             Gui.AddChild(Body = new GuiStackContainer()
             {
                 Y = Header.Height + 10,
-
-                HorizontalAlignment = HorizontalAlignment.FillParent,
-                HorizontalContentAlignment = HorizontalAlignment.Center
+                
+                Anchor = Alignment.FillX,
+                ChildAnchor = Alignment.TopCenter,
+                //HorizontalContentAlignment = HorizontalAlignment.Center
             });
         }
 

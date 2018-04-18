@@ -6,8 +6,7 @@ namespace Alex.API.Gui.Elements
     {
         public GuiCrosshair()
         {
-            VerticalAlignment = VerticalAlignment.Center;
-            HorizontalAlignment = HorizontalAlignment.Center;
+            Anchor = Alignment.MiddleCenter;
             Width = 15;
             Height = 15;
         }

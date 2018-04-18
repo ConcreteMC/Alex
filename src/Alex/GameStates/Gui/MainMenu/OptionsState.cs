@@ -21,8 +21,9 @@ namespace Alex.GameStates.Gui.MainMenu
 
             Gui.AddChild(_optionControls = new GuiLabelledControlGroup()
             {
-                HorizontalAlignment = HorizontalAlignment.Center,
-                HorizontalContentAlignment = HorizontalAlignment.FillParent,
+                Anchor =  Alignment.CenterX,
+                ChildAnchor = Alignment.TopFill,
+                //HorizontalContentAlignment = HorizontalAlignment.FillParent,
                 LabelPosition = LabelPosition.LeftOrControl,
                 Y = Header.Height
             });

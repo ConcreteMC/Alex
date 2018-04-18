@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using Alex.API.Graphics;
 using Alex.API.Graphics.Textures;
+using Alex.API.Gui.Layout;
 using Alex.API.Gui.Rendering;
+using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -15,6 +18,7 @@ namespace Alex.API.Gui
     public class GuiElement : IGuiElement
     {
         private IGuiScreen _screen;
+        private IGuiElement _parentElement;
 
         public IGuiScreen Screen
         {
@@ -24,11 +28,9 @@ namespace Alex.API.Gui
                 var currentScreen = _screen;
                 _screen = value;
                 OnScreenChanged(currentScreen, _screen);
+                InvalidateLayout();
             }
         }
-
-        private IGuiElement _parentElement;
-
         public IGuiElement ParentElement
         {
             get => _parentElement;
@@ -38,19 +40,13 @@ namespace Alex.API.Gui
                 TryFindParentOfType<IGuiScreen>(e => true, out IGuiScreen screen);
                 Screen = screen;
                 OnParentElementChanged(_parentElement);
+                InvalidateLayout();
             }
         }
-
-        public virtual int X { get; set; } = 0;
-        public virtual int Y { get; set; } = 0;
-
+        
         protected List<IGuiElement> Children { get; } = new List<IGuiElement>();
         public bool HasChildren => Children.Any();
-
-        // protected internal IEnumerable<IGuiElement> AllChildElements => Children.SelectMany(c => c.AllChildElements);
-
-        protected Color DebugColor { get; set; } = Color.Red;
-
+        
         #region Drawing
 
         private float _rotation;
@@ -62,15 +58,15 @@ namespace Alex.API.Gui
         }
 
         public virtual Vector2 RotationOrigin { get; set; } = Vector2.Zero;
+        
+        private Color? _backgroundOverlayColor;
 
         public GuiTextures? DefaultBackgroundTexture { get; set; }
         public TextureRepeatMode BackgroundRepeatMode { get; set; } = TextureRepeatMode.Stretch;
         public TextureSlice2D DefaultBackground { get; set; }
         public TextureSlice2D Background { get; set; }
         public Vector2 BackgroundScale { get; set; } = Vector2.One;
-
-        private Color? _backgroundOverlayColor;
-
+        
         public Color? BackgroundOverlayColor
         {
             get => _backgroundOverlayColor;
@@ -82,101 +78,63 @@ namespace Alex.API.Gui
         }
 
         public TextureSlice2D BackgroundOverlay { get; set; }
-
-        private int _width = -1;
-        private int _height = -1;
-
-        public virtual int Width
+        
+        public virtual Vector2 RenderPosition => Position.ToVector2();
+        public virtual Size RenderSize => Size;
+        public virtual Rectangle RenderBounds => Bounds;
+        
+        public void Draw(GuiRenderArgs renderArgs)
         {
-            get
-            {
-                var proposedWidth = LayoutWidth > 0 ? LayoutWidth : _width;
-                if (MaxHeight > 0)
-                {
-                    proposedWidth = Math.Min(MaxWidth, proposedWidth);
-                }
+            // Init matrix
+            OnDraw(renderArgs);
 
-                if (MinHeight > 0)
-                {
-                    proposedWidth = Math.Max(MinWidth, proposedWidth);
-                }
-
-                if (ParentElement != null && HorizontalAlignment == HorizontalAlignment.FillParent)
-                {
-                    proposedWidth = Math.Max(proposedWidth, ParentElement.Width);
-                }
-
-                if (_width < 0)
-                {
-                    var childrenToCheck = Children.Where(c => c.HorizontalAlignment != HorizontalAlignment.FillParent).ToArray();
-                    var autoWidth = (childrenToCheck.Any()
-                                ? Math.Abs(childrenToCheck.Max(c => c.RenderBounds.Right) - childrenToCheck.Min(c => c.RenderBounds.Left))
-                                : 0);
-
-                    proposedWidth = Math.Max(proposedWidth, autoWidth);
-                }
-
-                return Math.Max(proposedWidth, _width);
-            }
-
-            set => _width = value;
+            ForEachChild(c => c.Draw(renderArgs));
         }
 
-        public virtual int Height
+        protected virtual void OnDraw(GuiRenderArgs args)
         {
-            get
+            if (BackgroundOverlayColor.HasValue && BackgroundOverlay == null)
             {
-                var proposedHeight = LayoutHeight > 0 ? LayoutHeight : _height;
-                if (MaxHeight > 0)
-                {
-                    proposedHeight = Math.Min(MaxHeight, proposedHeight);
-                }
-
-                if (MinHeight > 0)
-                {
-                    proposedHeight = Math.Max(MinHeight, proposedHeight);
-                }
-
-
-                if (ParentElement != null && VerticalAlignment == VerticalAlignment.FillParent)
-                {
-                    proposedHeight = Math.Max(proposedHeight, ParentElement.Height);
-                }
-
-                if (_height < 0)
-                {
-                    var childrenToCheck = Children.Where(c => c.VerticalAlignment != VerticalAlignment.FillParent).ToArray();
-                    var autoHeight = (childrenToCheck.Any()
-                                ? Math.Abs(childrenToCheck.Max(c => c.RenderBounds.Bottom) - childrenToCheck.Min(c => c.RenderBounds.Top))
-                                : 0);
-
-                    proposedHeight = Math.Max(proposedHeight, autoHeight);
-                }
-
-                return Math.Max(proposedHeight, _height);
+                BackgroundOverlay = new ColorTexture2D(args.Graphics, BackgroundOverlayColor.Value);
             }
 
-            set => _height = value;
+            if (Background != null)
+            {
+                args.Draw(Background, RenderBounds, BackgroundRepeatMode, BackgroundScale);
+            }
+
+            if (BackgroundOverlay != null)
+            {
+                args.Draw(BackgroundOverlay, RenderBounds, BackgroundRepeatMode, BackgroundScale);
+            }
         }
 
+        public bool DrawDebugVisible = true;
 
+        public void DrawDebug(GuiRenderArgs args)
+        {
+            if (DrawDebugVisible)
+            {
+                args.DrawDebug(this);
+            }
 
-        public virtual Vector2 RenderPosition => (ParentElement?.RenderPosition ?? Vector2.Zero) + new Vector2(LayoutOffsetX, LayoutOffsetY) + new Vector2(X, Y);
-        public virtual Point RenderSize => new Point(Width, Height);
-        public Rectangle RenderBounds => new Rectangle(RenderPosition.ToPoint(), RenderSize);
+            ForEachChild<GuiElement>(c => c.DrawDebug(args));
+        }
 
         #endregion
-
-        protected IGuiRenderer GuiRenderer => _guiRenderer;
 
         private IGuiRenderer _guiRenderer;
         private bool _initialised;
 
+        protected IGuiRenderer GuiRenderer => _guiRenderer;
+        
         public GuiElement()
         {
 
         }
 
+        #region Methods
+        
         public void Init(IGuiRenderer renderer)
         {
             if (!_initialised)
@@ -189,7 +147,6 @@ namespace Alex.API.Gui
 
             _initialised = true;
         }
-
         protected virtual void OnInit(IGuiRenderer renderer)
         {
             if (DefaultBackgroundTexture.HasValue)
@@ -209,41 +166,11 @@ namespace Alex.API.Gui
 
             ForEachChild(c => c.Update(gameTime));
         }
-
         protected virtual void OnUpdate(GameTime gameTime)
         {
 
         }
-
-
-        public void Draw(GuiRenderArgs renderArgs)
-        {
-            // Init matrix
-            OnDraw(renderArgs);
-
-            ForEachChild(c => c.Draw(renderArgs));
-        }
-
-        protected virtual void OnDraw(GuiRenderArgs args)
-        {
-            // Draw Debug RenderBounds
-            //args.DrawRectangle(RenderBounds, DebugColor);
-
-            if (BackgroundOverlayColor.HasValue && BackgroundOverlay == null)
-            {
-                BackgroundOverlay = new ColorTexture2D(args.Graphics, BackgroundOverlayColor.Value);
-            }
-
-            if (Background != null)
-            {
-                args.Draw(Background, RenderBounds, BackgroundRepeatMode, BackgroundScale);
-            }
-
-            if (BackgroundOverlay != null)
-            {
-                args.Draw(BackgroundOverlay, RenderBounds, BackgroundRepeatMode, BackgroundScale);
-            }
-        }
+        
 
         public void AddChild(IGuiElement element)
         {
@@ -255,17 +182,23 @@ namespace Alex.API.Gui
             {
                 element.Init(_guiRenderer);
             }
-            UpdateLayout();
+            OnChildAdded(element);
+            InvalidateLayout();
         }
 
         public void RemoveChild(IGuiElement element)
         {
             if (element == this) return;
 
+            OnChildRemoved(element);
+
             Children.Remove(element);
             element.ParentElement = null;
-            UpdateLayout();
+            InvalidateLayout();
         }
+        
+        #endregion
+
 
         #region Hierachy Transcending
 
@@ -389,230 +322,491 @@ namespace Alex.API.Gui
             }
         }
 
+        private void ForEachChild<TElement>(Action<TElement> childAction) where TElement : class, IGuiElement
+        {
+            ForEachChild(c =>
+            {
+                if(c is TElement e) childAction(e);
+            });
+        }
+
         #endregion
 
+        #region Event Handlers
+        
+        protected virtual void OnChildAdded(IGuiElement element) { }
 
-        protected virtual void OnScreenChanged(IGuiScreen previousScreen, IGuiScreen newScreen)
-        {
-            if (this is IGuiElement3D element3D)
-            {
-                previousScreen?.UnregisterElement(element3D);
-                newScreen?.RegisterElement(element3D);
-            }
-        }
+        protected virtual void OnChildRemoved(IGuiElement element) { }
 
-        protected virtual void OnParentElementChanged(IGuiElement parentElement)
-        {
+        protected virtual void OnScreenChanged(IGuiScreen previousScreen, IGuiScreen newScreen) { }
 
-        }
+        protected virtual void OnParentElementChanged(IGuiElement parentElement) { }
+        
+        protected virtual void OnUpdateLayout() { }
 
+        #endregion
 
         #region Layout Engine
 
         #region Properties
-
-        public AutoSizeMode AutoSizeMode { get; set; } = AutoSizeMode.GrowAndShrink;
-
-        public Thickness Padding { get; set; } = Thickness.Zero;
-        public Thickness Margin { get; set; } = Thickness.Zero;
-
-        public virtual int LayoutOffsetX { get; set; } = 0;
-        public virtual int LayoutOffsetY { get; set; } = 0;
-        public virtual int LayoutWidth { get; set; } = -1;
-        public virtual int LayoutHeight { get; set; } = -1;
-
-        public virtual int MinWidth { get; set; } = -1;
-        public virtual int MaxWidth { get; set; } = -1;
-
-        public virtual int MinHeight { get; set; } = -1;
-        public virtual int MaxHeight { get; set; } = -1;
-
-        public bool IsLayoutDirty { get; protected set; }
-
-        public HorizontalAlignment HorizontalAlignment { get; set; } = HorizontalAlignment.None;
-        public VerticalAlignment VerticalAlignment { get; set; } = VerticalAlignment.None;
-
-        public HorizontalAlignment HorizontalContentAlignment { get; set; } = HorizontalAlignment.None;
-        public VerticalAlignment VerticalContentAlignment { get; set; } = VerticalAlignment.None;
-
-        #endregion
-
-        //#region Calculated Properties
-
-        //public Rectangle Bounds { get; private set; }
-        //public Rectangle InnerBounds { get; private set; }
-        //public Rectangle OuterBounds { get; private set; }
-
-        //public Point Position { get; private set; }
-        //public Point Size { get; private set; }
-
-        //#endregion
-
-        //#region Methods
-
-
-        public void UpdateLayout(bool updateChildren = true)
+        
+        private int _width = 0;
+        private int _height = 0;
+        private int _minWidth  = 0;
+        private int _minHeight = 0;
+        private int _maxWidth  = int.MaxValue;
+        private int _maxHeight = int.MaxValue;
+        private Thickness _padding = Thickness.Zero;
+        private Thickness _margin = Thickness.Zero;
+        private AutoSizeMode _autoSizeMode = AutoSizeMode.GrowOnly;
+        private Alignment _anchor = Alignment.Default;
+        
+        [Obsolete("Please use the Margin.Left property instead!")]
+        public int X
         {
-            OnUpdateLayout();
-
-            ForEachChild(c => c.UpdateLayout());
+            set
+            {
+                var m = Margin;
+                Margin  = new Thickness(value, m.Top, m.Right, m.Bottom);
+                InvalidateLayout();
+            }
         }
 
-        protected virtual void OnUpdateLayout()
+        [Obsolete("Please use the Margin.Top property instead!")]
+        public int Y
         {
-            AlignVertically();
-            AlignHorizontally();
+            set
+            {
+                var m = Margin;
+                Margin = new Thickness(m.Left, value, m.Right, m.Bottom);
+                InvalidateLayout();
+            }
         }
 
-        protected void AlignVertically()
+        public int Width
         {
-            if (ParentElement == null || VerticalAlignment == VerticalAlignment.None) return;
-            if (VerticalAlignment == VerticalAlignment.Top)
+            get => _width;
+            set
             {
-                LayoutOffsetY = 0;
-            }
-            else if (VerticalAlignment == VerticalAlignment.Center)
-            {
-                LayoutOffsetY = (int)((ParentElement.RenderSize.Y - RenderSize.Y) / 2f);
-            }
-            else if (VerticalAlignment == VerticalAlignment.Bottom)
-            {
-                LayoutOffsetY = (int)(ParentElement.RenderSize.Y - RenderSize.Y);
+                _width = value;
+                InvalidateLayout();
             }
         }
-        protected void AlignHorizontally()
+        public int Height
         {
-            if (ParentElement == null || HorizontalAlignment == HorizontalAlignment.None) return;
-            if (HorizontalAlignment == HorizontalAlignment.Left)
+            get => _height;
+            set
             {
-                LayoutOffsetX = 0;
-            }
-            else if (HorizontalAlignment == HorizontalAlignment.Center)
-            {
-                LayoutOffsetX = (int)((ParentElement.RenderSize.X - RenderSize.X) / 2f);
-            }
-            else if (HorizontalAlignment == HorizontalAlignment.Right)
-            {
-                LayoutOffsetX = (int)(ParentElement.RenderSize.X - RenderSize.X);
+                _height = value;
+                InvalidateLayout();
             }
         }
         
-        //private void UpdateLayoutSize(Point containerSize)
-        //{
-        //    var selfSize = Layout_CalculateAbsoluteSize();
-
-        //    Layout_CalculateSize(out var preferredSize, out var minSize, out var maxSize);
-
-        //    if (AutoSizeMode == AutoSizeMode.None)
-        //    {
-        //        // AS DEFINED ONLY.
-        //        Size = preferredSize;
-        //        return;
-        //    }
-
-        //    if (HorizontalAlignment == HorizontalAlignment.FillParent)
-        //    {
-        //        preferredSize.X = containerSize.X;
-        //    }
-
-        //    if (VerticalAlignment == VerticalAlignment.FillParent)
-        //    {
-        //        preferredSize.Y = containerSize.Y;
-        //    }
-
-        //    Size = preferredSize;
-
-        //    ForEachChild(c => UpdateLayoutSize(selfSize));
-        //}
+        public int MinWidth
+        {
+            get => _minWidth;
+            set
+            {
+                _minWidth = value;
+                InvalidateLayout();
+            }
+        }
+        public int MaxWidth
+        {
+            get => _maxWidth;
+            set
+            {
+                _maxWidth = value;
+                InvalidateLayout();
+            }
+        }
         
-        //private Point Layout_CalculateAbsoluteSize()
-        //{
-        //    var width = MathHelper.Clamp(_width, MinWidth, MaxWidth);
-        //    var height = MathHelper.Clamp(_height, MinHeight, MaxHeight);
+        public int MinHeight
+        {
+            get => _minHeight;
+            set
+            {
+                _minHeight = value;
+                InvalidateLayout();
+            }
+        }
+        public int MaxHeight
+        {
+            get => _maxHeight;
+            set
+            {
+                _maxHeight = value;
+                InvalidateLayout();
+            }
+        }
+        
+        public Thickness Padding
+        {
+            get => _padding;
+            set
+            {
+                _padding = value;
+                InvalidateLayout();
+            }
+        }
+        public Thickness Margin
+        {
+            get => _margin;
+            set
+            {
+                _margin = value;
+                InvalidateLayout();
+            }
+        }
+        public virtual AutoSizeMode AutoSizeMode
+        {
+            get => _autoSizeMode;
+            set
+            {
+                _autoSizeMode = value;
+                InvalidateLayout();
+            }
+        }
+        public Alignment Anchor
+        {
+            get => _anchor;
+            set
+            {
+                _anchor = value;
+                InvalidateLayout();
+            }
+        }
+        
+        #endregion
 
-        //    return new Point(width, height);
-        //}
+        #region Layout Calculation State Properties
+        
+        public bool IsLayoutDirty      { get; protected set; } = true;
+        
+        public int LayoutOffsetX { get; private set; } = 0;
+        public int LayoutOffsetY { get; private set; } = 0;
+        public int LayoutWidth   { get; private set; } = 0;
+        public int LayoutHeight  { get; private set; } = 0;
 
-        //private void Layout_CalculateSize(out Point preferredSize, out Point minSize, out Point maxSize)
-        //{
-        //    var children = Children.Cast<GuiElement>().ToArray();
-
-        //    int minWidth = MinWidth, minHeight = MinHeight,
-        //        maxWidth = MaxWidth, maxHeight = MaxHeight,
-        //        preferredWidth = 0, preferredHeight = 0;
-
-        //    if (AutoSizeMode == AutoSizeMode.None)
-        //    {
-        //        preferredWidth = _width;
-        //        preferredHeight = _height;
-
-        //        preferredWidth  = MathHelper.Clamp(preferredWidth, minWidth, maxWidth);
-        //        preferredHeight = MathHelper.Clamp(preferredHeight, minHeight, maxHeight);
-        //        preferredSize = new Point(preferredWidth, preferredHeight);
-        //        minSize       = new Point(minWidth, minHeight);
-        //        maxSize       = new Point(maxWidth, maxHeight);
-
-        //        return;
-        //    }
-
-        //    if (AutoSizeMode == AutoSizeMode.GrowOnly)
-        //    {
-        //        preferredWidth = _width;
-        //        preferredHeight = _height;
-        //    }
-
-        //    bool widthFromChildren = true, heightFromChildren = true;
-
-        //    if (HorizontalAlignment == HorizontalAlignment.FillParent ||
-        //        HorizontalAlignment == HorizontalAlignment.None)
-        //    {
-        //        widthFromChildren = false;
-        //    }
-
-        //    if (VerticalAlignment == VerticalAlignment.FillParent ||
-        //        VerticalAlignment == VerticalAlignment.None)
-        //    {
-        //        heightFromChildren = false;
-        //    }
-
-        //    if (widthFromChildren || heightFromChildren)
-        //    {
-        //        foreach (var child in children)
-        //        {
-        //            child.Layout_CalculateSize(out var childPreferredSize, out var childMinSize, out var childMaxSize);
-
-        //            if (widthFromChildren)
-        //            {
-        //                if (preferredWidth < childPreferredSize.X) preferredWidth     = childPreferredSize.X;
-        //                if (minWidth < childMinSize.X) minWidth                       = childMinSize.X;
-        //                if (childMaxSize.X > 0 && maxWidth < childMaxSize.X) maxWidth = childMaxSize.X;
-        //            }
-
-        //            if (heightFromChildren)
-        //            {
-        //                if (preferredHeight < childPreferredSize.Y) preferredHeight     = childPreferredSize.Y;
-        //                if (minHeight < childMinSize.Y) minHeight                       = childMinSize.Y;
-        //                if (childMaxSize.Y > 0 && maxHeight < childMaxSize.Y) maxHeight = childMaxSize.Y;
-        //            }
-        //        }
-        //    }
-
-        //    preferredWidth = MathHelper.Clamp(preferredWidth, minWidth, maxWidth);
-        //    preferredHeight = MathHelper.Clamp(preferredHeight, minHeight, maxHeight);
-
-        //    if (AutoSizeMode == AutoSizeMode.GrowOnly)
-        //    {
-        //        minWidth = preferredWidth;
-        //        minHeight = preferredHeight;
-        //    }
-
-        //    preferredSize = new Point(preferredWidth, preferredHeight);
-        //    minSize = new Point(minWidth, minHeight);
-        //    maxSize = new Point(maxWidth, maxHeight);
-        //}
-
-        //#endregion
+        public Size PreferredSize { get; private set; }
+        public Size PreferredMinSize { get; private set; }
+        public Size PreferredMaxSize { get; private set; }
 
         #endregion
+
+        #region Calculated Properties
+
+        public Rectangle Bounds { get; private set; }
+        public Rectangle InnerBounds { get; private set; }
+        public Rectangle OuterBounds { get; private set; }
+
+        public Point Position { get; private set; }
+        public Size Size { get; private set; }
+
+        #endregion
+
+        #region Methods
+
+        protected void SetFixedSize(int width, int height)
+        {
+            AutoSizeMode = AutoSizeMode.None;
+            MinWidth = width;
+            MaxWidth = width;
+            MinHeight = height;
+            MaxHeight = height;
+            Width = width;
+            Height = height;
+        }
+
+        public void InvalidateLayout(bool invalidateChildren = true)
+        {
+            InvalidateLayout(this, invalidateChildren);
+        }
+        public void InvalidateLayout(IGuiElement sender, bool invalidateChildren = true)
+        {
+            //if ((ParentElement as GuiElement)?.IsLayoutInProgress ?? false)
+            //{
+            //    return;
+            //}
+
+            IsLayoutDirty = true;
+
+            if (invalidateChildren)
+            {
+                ForEachChild(c =>
+                {
+                    if (c != sender)
+                    {
+                        c.InvalidateLayout(this, true);
+                    }
+                });
+            }
+
+            if (ParentElement != sender)
+            {
+                ParentElement?.InvalidateLayout(this, invalidateChildren);
+            }
+        }
+
+        #region Sizing
+        
+        protected void UpdatePreferredSize()
+        {
+            GetPreferredSize(out var size, out var minSize, out var maxSize);
+
+            PreferredSize    = size;
+            PreferredMinSize = minSize;
+            PreferredMaxSize = maxSize;
+        }
+        
+
+        #endregion
+
+        #region Positioning
+
+        
+
+        #endregion
+
+
+        protected internal void DoLayoutSizing()
+        {
+            UpdatePreferredSize();
+
+            ForEachChild<GuiElement>(c => c.DoLayoutSizing());
+        }
+
+        protected internal void DoLayoutMeasure(Size parentSize)
+        {
+            var size = Measure(parentSize);
+
+            ForEachChild<GuiElement>(c => c.DoLayoutMeasure(size));
+        }
+
+        protected internal void DoLayoutArrange(Point parentPosition)
+        {
+            if (IsLayoutDirty)
+            {
+                //Arrange(new Rectangle(parentPosition.X + LayoutOffsetX, parentPosition.Y + LayoutOffsetY, LayoutWidth, LayoutHeight));
+                //Arrange(Bounds);
+            }
+
+            //ForEachChild<GuiElement>(c => c.DoLayoutArrange(Position));
+        }
+
+        public void Arrange(Rectangle newBounds)
+        {
+            OuterBounds = newBounds + Margin;
+            InnerBounds = newBounds - Padding;
+            Bounds      = newBounds;
+
+            Size     = newBounds.Size;
+            Position = newBounds.Location;
+
+            ArrangeCore(newBounds);
+            
+            IsLayoutDirty = false;
+        }
+
+        protected virtual void ArrangeCore(Rectangle newBounds)
+        {
+            ArrangeChildren(newBounds - Padding);
+        }
+
+        protected void ArrangeChildren(Rectangle newBounds)
+        {
+            var children = new ReadOnlyCollection<GuiElement>(Children.Cast<GuiElement>().ToList());
+            
+            ArrangeChildrenCore(newBounds, children);
+        }
+
+        protected virtual void ArrangeChildrenCore(Rectangle newBounds, IReadOnlyCollection<GuiElement> children)
+        {
+            foreach (var child in children)
+            {
+                PositionChild(child, child.Anchor, newBounds, Thickness.Zero);
+            }
+        }
+        
+        protected LayoutBoundingRectangle PositionChild(GuiElement child, Alignment alignment, Rectangle availableBounds, Thickness offset, bool forceAlignment = false)
+        {
+            var bounds = new LayoutBoundingRectangle(availableBounds, child.Margin, child.Size);
+            
+            PositionChildCore(child, ref bounds, offset, forceAlignment ? alignment : (child.Anchor & alignment));
+
+            child.Arrange(bounds.Bounds);
+            return bounds;
+        }
+
+        protected virtual void PositionChildCore(GuiElement child, ref LayoutBoundingRectangle bounds, Thickness offset, Alignment alignment)
+        {
+            // Arrange Y
+            var vertical = (alignment & (Alignment.OrientationY));
+            
+            if (vertical == Alignment.CenterY)
+            {
+                bounds.AnchorTop    = null;
+                bounds.AnchorBottom = null;
+            }
+
+            if (vertical.HasFlag(Alignment.MinY))
+            {
+                bounds.AnchorTop = offset.Top;
+            }
+            if (vertical.HasFlag(Alignment.MaxY))
+            {
+                bounds.AnchorBottom = offset.Bottom;
+            }
+        
+
+            var horizontal = (alignment & (Alignment.OrientationX));
+
+            if (horizontal == Alignment.CenterX)
+            {
+                bounds.AnchorLeft  = null;
+                bounds.AnchorRight = null;
+            }
+            if (horizontal.HasFlag(Alignment.MinX))
+            {
+                bounds.AnchorLeft = offset.Left;
+            }
+            if (horizontal.HasFlag(Alignment.MaxX))
+            {
+                bounds.AnchorRight = offset.Right;
+            }
+            
+            //if (vertical != Alignment.NoneY && vertical != Alignment.None)
+            {
+                child.LayoutOffsetY = bounds.RelativeY;
+                child.LayoutHeight  = bounds.Height;
+            }
+
+            //if (horizontal != Alignment.NoneX && horizontal != Alignment.None)
+            {
+                child.LayoutOffsetX = bounds.RelativeX;
+                child.LayoutWidth   = bounds.Width;
+            }
+        }
+        
+        public Size Measure(Size availableSize)
+        {
+            UpdatePreferredSize();
+
+            var size = MeasureCore(availableSize);
+
+            Size = size;
+
+            return Size + Margin;
+        }
+
+        protected virtual Size MeasureCore(Size availableSize)
+        {
+            var size = PreferredSize;
+            
+            if (AutoSizeMode == AutoSizeMode.None)
+            {
+                // AS DEFINED ONLY.
+                // Make sure we still measure all children though!
+                MeasureChildren(size);
+            }
+            else
+            {
+                var autoSize = MeasureAutoSize(availableSize) + Padding;
+
+                if (Anchor.HasFlag(Alignment.FillX))
+                {
+                    autoSize.Width = Math.Max(availableSize.Width, autoSize.Width);
+                }
+
+                if (Anchor.HasFlag(Alignment.FillY))
+                {
+                    autoSize.Height = Math.Max(availableSize.Height, autoSize.Height);
+                }
+
+                size = autoSize;
+            }
+
+            LayoutWidth = size.Height;
+            LayoutHeight = size.Width;
+
+            return size;
+        }
+
+        protected virtual void GetPreferredSize(out Size size, out Size minSize, out Size maxSize)
+        {
+            size = new Size(Width, Height);
+            minSize = new Size(MinWidth, MinHeight);
+            maxSize = new Size(MaxWidth, MaxHeight);
+            
+            if (AutoSizeMode == AutoSizeMode.None)
+            {
+                minSize = size;
+                maxSize = size;
+            }
+            else if (AutoSizeMode == AutoSizeMode.GrowOnly)
+            {
+                minSize = size;
+            }
+
+            size = Size.Clamp(size, minSize, maxSize);
+        }
+
+        private Size MeasureAutoSize(Size availableSize)
+        {
+            var size = PreferredMinSize;
+
+            if (AutoSizeMode == AutoSizeMode.None)
+            {
+                size = PreferredSize;
+            }
+            else
+            {
+                if (AutoSizeMode == AutoSizeMode.GrowOnly)
+                {
+                    size = Size.Clamp(size, PreferredSize, PreferredMaxSize);
+                }
+
+                if (AutoSizeMode == AutoSizeMode.GrowAndShrink)
+                {
+                    size = Size.Min(size, availableSize);
+                    size = Size.Clamp(size, PreferredMinSize, availableSize);
+                }
+
+                if (Anchor.HasFlag(Alignment.FillX))
+                {
+                    size.Width = availableSize.Width;
+                }
+
+                if (Anchor.HasFlag(Alignment.FillY))
+                {
+                    size.Height = availableSize.Height;
+                }
+            }
+
+            var childSize = MeasureChildren(size);
+            
+            return Size.Max(size, childSize);
+        }
+
+        protected virtual Size MeasureChildren(Size availableSize)
+        {
+            var children = Children.Cast<GuiElement>().ToArray();
+            
+            Size size = Size.Zero;
+
+            foreach (var child in children)
+            {
+                var childSize = child.Measure(availableSize);
+
+                size = Size.Max(size, childSize);
+            }
+
+            return size;
+        }
+
+        #endregion
+
+#endregion
     }
 }
+

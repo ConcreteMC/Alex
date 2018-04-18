@@ -15,23 +15,23 @@ namespace Alex.Gamestates.Gui
         {
             AddChild(_leftContainer = new GuiStackContainer()
             {
-	            HorizontalAlignment = HorizontalAlignment.Left,
-                VerticalAlignment   = VerticalAlignment.Top,
+                Anchor = Alignment.TopLeft,
 
                 Orientation = Orientation.Vertical,
-                HorizontalContentAlignment = HorizontalAlignment.Left,
-                VerticalContentAlignment = VerticalAlignment.Top,
+                ChildAnchor = Alignment.TopLeft,
+                //HorizontalContentAlignment = HorizontalAlignment.Left,
+                //VerticalContentAlignment = VerticalAlignment.Top,
 				Spacing = 1
             });
             
             AddChild(_rightContainer = new GuiStackContainer()
             {
-                HorizontalAlignment = HorizontalAlignment.Right,
-                VerticalAlignment   = VerticalAlignment.Top,
+                Anchor = Alignment.TopRight,
 
                 Orientation                = Orientation.Vertical,
-	            HorizontalContentAlignment = HorizontalAlignment.Right,
-                VerticalContentAlignment   = VerticalAlignment.Top,
+                ChildAnchor = Alignment.TopRight,
+	           // HorizontalContentAlignment = HorizontalAlignment.Right,
+                //VerticalContentAlignment   = VerticalAlignment.Top,
 	            Spacing = 1
 			});
         }
@@ -41,7 +41,7 @@ namespace Alex.Gamestates.Gui
             _leftContainer.AddChild(new GuiAutoUpdatingTextElement(getDebugString)
             {
                 TextColor = TextColor.White,
-				//HorizontalAlignment = HorizontalAlignment.Left,
+				//HorizontalAlignment = HorizontalAlignment.MinX,
 				Scale = 0.5f
             });
         }
@@ -51,7 +51,7 @@ namespace Alex.Gamestates.Gui
             _rightContainer.AddChild(new GuiAutoUpdatingTextElement(getDebugString)
             {
                 TextColor = TextColor.White,
-				//HorizontalAlignment = HorizontalAlignment.Right,
+				//HorizontalAlignment = HorizontalAlignment.MaxX,
 	            Scale = 0.5f
 			});
         }

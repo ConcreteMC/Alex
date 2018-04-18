@@ -16,14 +16,13 @@ namespace Alex.Gamestates.Gui
             get { return _isSelected; }
             set { _isSelected = value; OnSelectedChanged(); }
         }
-
-        public override int Width => 20;
-        public override int Height => 20;
-
+        
         public TextureSlice2D SelectedBackground { get;private set; }
 
         public GuiInventoryItem()
         {
+            Height = 20;
+            Width = 20;
         }
 
         protected override void OnInit(IGuiRenderer renderer)

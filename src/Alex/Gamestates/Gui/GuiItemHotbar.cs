@@ -7,11 +7,9 @@ namespace Alex.Gamestates.Gui
 {
     public class GuiItemHotbar : GuiContainer
     {
+        private const int ItemCount = 9;
         private const int ItemWidth = 20;
-
-        public override int Width => 180;
-        public override int Height => 20;
-
+        
         private int _selectedIndex = 0;
 
         public int SelectedIndex
@@ -34,6 +32,12 @@ namespace Alex.Gamestates.Gui
             }
         }
 
+        public GuiItemHotbar()
+        {
+            Width = ItemWidth * ItemCount;
+            Height = ItemWidth;
+        }
+
         private void OnSelectedIndexChanged()
         {
             var items = Children.OfType<GuiInventoryItem>().ToArray();
@@ -43,11 +47,6 @@ namespace Alex.Gamestates.Gui
             }
 
             items[SelectedIndex].IsSelected = true;
-        }
-
-        public GuiItemHotbar()
-        {
-            DebugColor = Color.Blue;
         }
 
         protected override void OnInit(IGuiRenderer renderer)

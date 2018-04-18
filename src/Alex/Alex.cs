@@ -43,8 +43,8 @@ namespace Alex
 		public static bool IsMultiplayer { get; set; } = false;
 
 		public static BitmapFont Font;
-		public static IFontRenderer FontRender = null;
-		public static SpriteFont BackupFont;
+		public static IFontRenderer FontRender;
+		public static SpriteFont DebugFont;
 
 		private SpriteBatch _spriteBatch;
 
@@ -151,13 +151,20 @@ namespace Alex
 
 		protected override void LoadContent()
 		{
-			if (!File.Exists(Path.Combine("assets", "Minecraftia.xnb")))
+			//if (!File.Exists(Path.Combine("assets", "Minecraftia.xnb")))
+			//{
+			//	File.WriteAllBytes(Path.Combine("assets", "Minecraftia.xnb"), global::Alex.Resources.Minecraftia);
+			//}
+
+			//BackupFont = Content.Load<SpriteFont>("Minecraftia");
+
+			if (!File.Exists(Path.Combine("assets", "DebugFont.xnb")))
 			{
-				File.WriteAllBytes(Path.Combine("assets", "Minecraftia.xnb"), global::Alex.Resources.Minecraftia);
+				File.WriteAllBytes(Path.Combine("assets", "DebugFont.xnb"), global::Alex.Resources.DebugFont);
 			}
 
-			BackupFont = Content.Load<SpriteFont>("Minecraftia");
-			
+			DebugFont = Content.Load<SpriteFont>("DebugFont");
+
 			_spriteBatch = new SpriteBatch(GraphicsDevice);
 			InputManager = new InputManager(this);
 			GuiRenderer = new GuiRenderer(this);

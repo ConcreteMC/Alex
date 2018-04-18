@@ -4,14 +4,12 @@ using System.Text;
 using Alex.API.Graphics;
 using Alex.API.Graphics.Textures;
 using Alex.API.Gui.Rendering;
+using Microsoft.Xna.Framework;
 
 namespace Alex.API.Gui.Elements
 {
     public class GuiImage : GuiElement
     {
-        public override int Height => Background == null ? 0 : Background.ClipBounds.Height;
-        public override int Width => Background == null ? 0 : Background.ClipBounds.Width;
-
         public GuiImage(GuiTextures texture, TextureRepeatMode mode = TextureRepeatMode.Stretch)
         {
             DefaultBackgroundTexture = texture;
@@ -22,6 +20,17 @@ namespace Alex.API.Gui.Elements
         {
             Background = background;
             BackgroundRepeatMode = mode;
+            Width = background.ClipBounds.Width;
+            Height = background.ClipBounds.Height;
+        }
+
+        protected override void GetPreferredSize(out Size size, out Size minSize, out Size maxSize)
+        {
+            base.GetPreferredSize(out size, out minSize, out maxSize);
+            if (Background != null)
+            {
+                size = new Size(Background.ClipBounds.Width, Background.ClipBounds.Height);
+            }
         }
     }
 }

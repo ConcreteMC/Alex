@@ -22,7 +22,7 @@ namespace Alex.API.Gui.Elements
             set
             {
                 _labelWidth = value;
-                UpdateLayout();
+                InvalidateLayout();
             }
         }
 
@@ -34,7 +34,7 @@ namespace Alex.API.Gui.Elements
             set
             {
                 _labelPosition = value;
-                UpdateLayout();
+                InvalidateLayout();
             }
         }
 
@@ -51,12 +51,12 @@ namespace Alex.API.Gui.Elements
                 {
                     if (c is GuiLabelledControlRow row)
                     {
-                        row.Label.LayoutWidth = LabelWidth;
+                        //row.Label.LayoutWidth = LabelWidth;
 
-                        row.Element.LayoutOffsetY = 0;
+                        //row.Element.LayoutOffsetY = 0;
 
                         row.Orientation = Orientation.Horizontal;
-                        row.HorizontalContentAlignment = HorizontalAlignment.None;
+                        //row.HorizontalContentAlignment = HorizontalAlignment.None;
                     }
                 });
             }
@@ -66,10 +66,10 @@ namespace Alex.API.Gui.Elements
                 {
                     if (c is GuiLabelledControlRow row)
                     {
-                        row.Label.LayoutWidth = LabelWidth;
+                        //row.Label.LayoutWidth = LabelWidth;
                         
                         row.Orientation       = Orientation.Vertical;
-                        row.HorizontalContentAlignment = HorizontalAlignment.FillParent;
+                        //row.HorizontalContentAlignment = HorizontalAlignment.FillParent;
                     }
                 });
             }
@@ -132,17 +132,15 @@ namespace Alex.API.Gui.Elements
             
             public GuiLabelledControlRow(string label, IGuiElement element)
             {
-                HorizontalAlignment = HorizontalAlignment.FillParent;
+                Anchor = Alignment.FillX;
                 
                 AddChild(Label = new GuiTextElement()
                 {
-                    HorizontalAlignment = HorizontalAlignment.Left,
-                    VerticalAlignment = VerticalAlignment.Top,
+                    Anchor = Alignment.TopLeft,
                     Text = label
                 });
 
-                element.HorizontalAlignment = HorizontalAlignment.Right;
-                element.VerticalAlignment = VerticalAlignment.Top;
+                element.Anchor = Alignment.TopRight;
 
                 AddChild(Element = element);
             }
