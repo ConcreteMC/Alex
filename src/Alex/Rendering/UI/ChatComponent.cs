@@ -33,8 +33,7 @@ namespace Alex.Rendering.UI
 		public IChatProvider ChatProvider;
 		public ChatComponent()
 		{
-			VerticalAlignment = VerticalAlignment.Bottom;
-			HorizontalAlignment = HorizontalAlignment.Left;
+			Anchor = Alignment.BottomLeft;
 
 			BackgroundOverlayColor = new Color(Color.Black, 0.5f);
 		}

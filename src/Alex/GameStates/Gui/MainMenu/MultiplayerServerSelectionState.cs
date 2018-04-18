@@ -27,8 +27,7 @@ namespace Alex.GameStates.Gui.MainMenu
 	        Gui.AddChild(Footer = new GuiContainer()
 	        {
 		        Height = 42,
-		        VerticalAlignment = VerticalAlignment.Bottom,
-		        HorizontalAlignment = HorizontalAlignment.FillParent,
+				Anchor = Alignment.BottomFill
 	        });
 
             Footer.AddChild(new GuiBeaconButton("Direct Connect", () => Alex.GameStateManager.SetActiveState<MultiplayerConnectState>())
@@ -66,13 +65,12 @@ namespace Alex.GameStates.Gui.MainMenu
         private GuiTextElement _serverMotd;
 
 	   // public override int Width => 325;
-
-	    public override int LayoutWidth => 325;
-
+	   
 	    public GuiServerListEntryElement(string serverName, string serverAddress)
         {
             ServerName = serverName;
             ServerAddress = serverAddress;
+	        Width = 325;
 
             Anchor = Alignment.TopFill;
 

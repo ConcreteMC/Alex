@@ -147,11 +147,8 @@ namespace Alex.API.Gui.Elements
 
 				_renderText = text;
 	        }
-
-		    if (updateLayout)
-		    {
-			    InvalidateLayout();
-		    }
+			
+		    InvalidateLayout();
 		}
     }
 }

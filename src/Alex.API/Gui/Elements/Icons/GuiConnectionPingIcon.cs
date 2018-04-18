@@ -71,8 +71,7 @@ namespace Alex.API.Gui.Elements.Icons
 			{
 				Font = renderer.Font,
 				Text = string.Empty,
-				HorizontalAlignment = HorizontalAlignment.Left,
-				
+                Anchor = Alignment.TopRight,
 			});
         }
 
