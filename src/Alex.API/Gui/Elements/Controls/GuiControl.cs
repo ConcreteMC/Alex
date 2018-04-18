@@ -8,10 +8,11 @@ namespace Alex.API.Gui.Elements.Controls
 {
     public class GuiControl : GuiContainer
     {
+        private bool _isHighlighted = false;
+        private bool _isFocused = false;
 
         public bool Enabled { get; set; } = true;
 
-        private bool _isHighlighted = false;
         public bool IsHighlighted
         {
             get => _isHighlighted;
@@ -25,7 +26,6 @@ namespace Alex.API.Gui.Elements.Controls
             }
         }
 
-        private bool _isFocused = false;
         public bool IsFocused
         {
             get => _isFocused;
@@ -45,7 +45,7 @@ namespace Alex.API.Gui.Elements.Controls
         public TextureSlice2D HighlightedBackground { get; set; }
         public TextureSlice2D FocusedBackground { get; set; }
 
-        public virtual Color HighlightOutlineColor { get; set; } = Color.White;
+        public virtual Color HighlightOutlineColor { get; set; } = new Color(Color.White, 0.75f);
         public virtual Thickness HighlightOutlineThickness { get; set; } = Thickness.One;
         public virtual Color     FocusOutlineColor     { get; set; } = Color.White;
         public virtual Thickness FocusOutlineThickness { get; set; } = Thickness.One;

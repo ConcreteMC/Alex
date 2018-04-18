@@ -26,6 +26,7 @@ namespace Alex.GameStates.Gui.Common
 
         protected GuiContainer    Header { get; }
         protected GuiStackContainer Body { get; }
+        protected GuiContainer Footer { get; }
 
         private GuiTextElement  _headerTitle;
         private GuiBeaconButton _headerBackButton;
@@ -36,13 +37,15 @@ namespace Alex.GameStates.Gui.Common
             {
                 DefaultBackgroundTexture = GuiTextures.OptionsBackground,
                 BackgroundRepeatMode = TextureRepeatMode.Tile,
-                BackgroundOverlayColor = new Color(Color.Black, 0.25f),
+                BackgroundOverlayColor = new Color(Color.Black, 0.65f),
                 BackgroundScale = new Vector2(2f, 2f)
             };
 
             Gui.AddChild(Header = new GuiContainer()
             {
-                Height              = 42,
+                Height              = 32,
+                Padding = new Thickness(3),
+
                 Anchor = Alignment.TopFill,
             });
 
@@ -67,6 +70,14 @@ namespace Alex.GameStates.Gui.Common
                 Anchor = Alignment.FillX,
                 ChildAnchor = Alignment.TopCenter,
                 //HorizontalContentAlignment = HorizontalAlignment.Center
+            });
+            
+            Gui.AddChild(Footer = new GuiContainer()
+            {
+                Height  = 32,
+                Padding = new Thickness(3),
+
+                Anchor = Alignment.BottomFill,
             });
         }
 

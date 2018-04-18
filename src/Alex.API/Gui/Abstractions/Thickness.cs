@@ -118,6 +118,14 @@ namespace Alex.API.Gui
 		{
 			return new Size(a.Width - b.Horizontal, a.Height - b.Vertical);
 		} 
+		public static Thickness operator +(Thickness a, Size b)
+		{
+			return new Thickness(a.Horizontal + b.Width, a.Vertical + b.Height);
+		} 
+		public static Thickness operator -(Thickness a, Size b)
+		{
+			return new Thickness(a.Horizontal - b.Width, a.Vertical - b.Height);
+		} 
 
 
 		public static bool operator ==(Thickness a, Thickness b)

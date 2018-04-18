@@ -707,7 +707,7 @@ namespace Alex.API.Gui
             {
                 // AS DEFINED ONLY.
                 // Make sure we still measure all children though!
-                MeasureChildren(size);
+                MeasureChildren(size - Padding);
             }
             else
             {
@@ -783,7 +783,7 @@ namespace Alex.API.Gui
                 }
             }
 
-            var childSize = MeasureChildren(size);
+            var childSize = MeasureChildren(size - Padding);
             
             return Size.Max(size, childSize);
         }

@@ -21,10 +21,10 @@ namespace Alex.GameStates.Gui.Common
         {
 	        Gui.AddChild(_listContainer = new GuiStackContainer()
             {
-				BackgroundOverlayColor = new Color(Color.Black, 0.5f),
+				BackgroundOverlayColor = new Color(Color.Black, 0.35f),
                 Y = Header.Height,
                 //Width = 322,
-	            Anchor = Alignment.TopFill,
+	            Anchor = Alignment.Fill,
 				ChildAnchor = Alignment.TopCenter,
             });
         }

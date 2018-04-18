@@ -79,8 +79,7 @@ namespace Alex.Gamestates
 			{
 				Width  = 300,
 				Height = 25,
-
-				Y = -25,
+				Margin = new Thickness(12),
 				
 				Anchor = Alignment.BottomCenter,
 			});

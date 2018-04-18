@@ -33,7 +33,7 @@ namespace Alex.API.Gui.Elements
             }
         }
 
-        public int Spacing = 2;
+        public int Spacing = 0;
 
         public GuiStackContainer()
         {
@@ -44,37 +44,60 @@ namespace Alex.API.Gui.Elements
         {
             var children = Children.Cast<GuiElement>().ToArray();
 
-            var containerSize = availableSize;
+            var containerSize = availableSize + Padding;
 
-            int width = 0, height = 0;
+            var size = Size.Zero;
+            Thickness lastOffset = Thickness.Zero;
 
             foreach (var child in children)
             {
-                var childSize = child.Measure(containerSize);
+                containerSize += lastOffset;
 
-                if (Orientation == Orientation.Vertical)
+                var childSize = child.Measure(containerSize) - child.Margin;
+                
+                var offset = CalculateOffset(ChildAnchor, childSize, child.Margin);
+                
+                size += offset;
+                containerSize -= offset;
+
+                lastOffset = CalculateOffset(ChildAnchor, Size.Zero, child.Margin);
+            }
+
+            return size;
+        }
+
+        private Thickness CalculateOffset(Alignment alignment, Size size, Thickness margin)
+        {
+            var offset = Thickness.Zero;
+
+            if (Orientation == Orientation.Vertical)
+            {
+                if (alignment.HasFlag(Alignment.MinY))
                 {
-                    containerSize.Height -= (childSize.Height + Spacing);
-
-                    height += childSize.Height + Spacing;
-                    if (width < childSize.Width) width = childSize.Width;
+                    offset.Top += size.Height + margin.Bottom;
                 }
-                else
+                else if (alignment.HasFlag(Alignment.MaxY))
                 {
-                    containerSize.Width -= (childSize.Width + Spacing);
-
-                    width += childSize.Width + Spacing;
-                    if (height < childSize.Height) height = childSize.Height;
+                    offset.Bottom += size.Height + margin.Top;
+                }
+            }
+            else if (Orientation == Orientation.Horizontal)
+            {
+                if (alignment.HasFlag(Alignment.MinX))
+                {
+                    offset.Left += size.Width + margin.Right;
+                }
+                else if (alignment.HasFlag(Alignment.MaxX))
+                {
+                    offset.Right += size.Width + margin.Left;
                 }
             }
 
-            return new Size(width, height);
+            return offset;
         }
 
         protected override void ArrangeChildrenCore(Rectangle finalRect, IReadOnlyCollection<GuiElement> children)
         {
-            var mask = Orientation == Orientation.Vertical ? Alignment.OrientationY : Alignment.OrientationX;
-
             var positioningBounds = finalRect;
 
             var alignment = ChildAnchor;
@@ -83,32 +106,8 @@ namespace Alex.API.Gui.Elements
             foreach (var child in children)
             {
                 var layoutBounds = PositionChild(child, alignment, positioningBounds, _offset, true);
-                //_offset += layoutBounds.ToThickness();
-
-                var childBounds = layoutBounds.Bounds;
-
-                if (Orientation == Orientation.Vertical)
-                {
-                    if (alignment.HasFlag(Alignment.MinY))
-                    {
-                        _offset.Top += childBounds.Height + Spacing;
-                    }
-                    else if (alignment.HasFlag(Alignment.MaxY))
-                    {
-                        _offset.Bottom += childBounds.Height + Spacing;
-                    }
-                }
-                else if (Orientation == Orientation.Horizontal)
-                {
-                    if (alignment.HasFlag(Alignment.MinX))
-                    {
-                        _offset.Left += childBounds.Width + Spacing;
-                    }
-                    else if (alignment.HasFlag(Alignment.MaxX))
-                    {
-                        _offset.Right += childBounds.Width + Spacing;
-                    }
-                }
+                
+                _offset += CalculateOffset(alignment, layoutBounds.Size, child.Margin);
             }
         }
 

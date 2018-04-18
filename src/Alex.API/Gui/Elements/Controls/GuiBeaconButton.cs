@@ -35,6 +35,8 @@ namespace Alex.API.Gui.Elements.Controls
             Action = action;
             MinHeight = 20;
 	        MinWidth = 20;
+			Padding = new Thickness(2, 4);
+			Margin = new Thickness(2);
 
             TextElement = new GuiTextElement()
             {

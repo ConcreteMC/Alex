@@ -26,7 +26,7 @@ namespace Alex.GameStates.Gui.MainMenu
 
 	        Gui.AddChild(Footer = new GuiContainer()
 	        {
-		        Height = 42,
+		        Height = 32,
 				Anchor = Alignment.BottomFill
 	        });
 
