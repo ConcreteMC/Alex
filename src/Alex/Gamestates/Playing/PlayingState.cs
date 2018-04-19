@@ -150,7 +150,7 @@ namespace Alex.Gamestates.Playing
 				GameTime = gameTime
 			};
 
-			if (Alex.IsActive)
+		//	if (Alex.IsActive)
 			{
 				var newAspectRatio = Graphics.Viewport.AspectRatio;
 				if (AspectRatio != newAspectRatio)
@@ -163,7 +163,12 @@ namespace Alex.Gamestates.Playing
 
 				if (!_playingHud.Chat.IsFocused)
 				{
+					World.Player.Controller.CheckInput = Alex.IsActive;
 					CheckInput(gameTime);
+				}
+				else
+				{
+					World.Player.Controller.CheckInput = false;
 				}
 
 				World.Update(args, SkyRenderer);

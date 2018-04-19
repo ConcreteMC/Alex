@@ -57,7 +57,6 @@ namespace Alex.Worlds
 	        Camera.MoveTo(Player.KnownPosition, Vector3.Zero);
 
 	        PhysicsEngine.AddTickable(Player);
-			PhysicsEngine.Start();
 		}
 
 		private long LastLightningBolt = 0;
