@@ -19,14 +19,14 @@ namespace Alex.GameStates.Gui.MainMenu
 {
     public class MultiplayerServerSelectionState : ListSelectionStateBase<GuiServerListEntryElement>
     {
-		private GuiBeaconButton DirectConnectButton { get; }
-	    private GuiBeaconButton AddServerButton { get; }
+		private GuiButton DirectConnectButton { get; }
+	    private GuiButton AddServerButton { get; }
 		public MultiplayerServerSelectionState() : base()
         {
 	        Title = "Multiplayer";
 
 	        Footer.AddChild(DirectConnectButton =
-		        new GuiBeaconButton("Direct Connect", () => Alex.GameStateManager.SetActiveState<MultiplayerConnectState>())
+		        new GuiButton("Direct Connect", () => Alex.GameStateManager.SetActiveState<MultiplayerConnectState>())
 		        {
 					Anchor = Alignment.MiddleCenter
 				});

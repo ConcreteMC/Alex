@@ -17,7 +17,7 @@ namespace Alex.GameStates.Gui.MainMenu
 	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(MultiplayerConnectState));
 
 		private readonly GuiTextInput _hostnameInput;
-        private readonly GuiBeaconButton _connectButton;
+        private readonly GuiButton _connectButton;
         private readonly GuiTextElement _errorMessage;
 
         public MultiplayerConnectState()
@@ -30,7 +30,7 @@ namespace Alex.GameStates.Gui.MainMenu
                 Anchor = Alignment.MiddleCenter,
 				PlaceHolder = "Server Address..."
             });
-            AddGuiElement( _connectButton = new GuiBeaconButton("Join Server", OnConnectButtonPressed)
+            AddGuiElement( _connectButton = new GuiButton("Join Server", OnConnectButtonPressed)
             {
 				Margin = new Thickness(5)
             });

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Alex.API.Graphics.Typography;
 using Alex.API.Gui.Rendering;
 using Alex.API.Input;
 using Microsoft.Xna.Framework;
@@ -61,8 +62,10 @@ namespace Alex.API.Gui
         }
 
         private bool _doInit = true;
-        public void RefreshResources()
+        public void ApplyFont(IFont font)
         {
+            GuiRenderer.Font = font;
+
             _doInit = true;
         }
 
@@ -90,7 +93,7 @@ namespace Alex.API.Gui
                 
                 foreach (var screen in screens)
                 {
-                    screen.Init(GuiRenderer);
+                    screen.Init(GuiRenderer, true);
                 }
             }
 

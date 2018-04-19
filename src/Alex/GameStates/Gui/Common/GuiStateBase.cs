@@ -29,7 +29,7 @@ namespace Alex.GameStates.Gui.Common
         protected GuiContainer Footer { get; }
 
         private GuiTextElement  _headerTitle;
-        private GuiBeaconButton _headerBackButton;
+        private GuiButton _headerBackButton;
 
         public GuiStateBase() : base(Alex.Instance)
         {

@@ -1,6 +1,7 @@
 ﻿using System;
 using Alex.API.Graphics;
 using Alex.API.Graphics.Textures;
+using Alex.API.Graphics.Typography;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -218,88 +219,37 @@ namespace Alex.API.Gui.Rendering
                 SpriteBatch.Draw(texture, new Rectangle(xOffset + dstLeftWidth, yOffset + dstRightHeight, dstRightWidth, dstRightHeight), new Rectangle(srcX + texture.Width - srcRightWidth, srcY + texture.Height - srcRightHeight, srcRightWidth, srcRightHeight), Color.White);
             }
         }
-
-
-        #region SpriteFont Proxy
-
-        public void DrawString(Vector2 position, SpriteFont font, string text, Color color, float scale = 1f)
-        {
-            SpriteBatch.DrawString(font, text, position, color, 0f, Vector2.Zero, new Vector2(scale), SpriteEffects.None, 0);
-        }
         
-        public void DrawString(Vector2 position, SpriteFont font, string text, Color color, float scale, float rotation, Vector2 origin, SpriteEffects effects = SpriteEffects.None, float layerDepth = 0f)
-        {
-            SpriteBatch.DrawString(font, text, position, color, rotation, origin, new Vector2(scale), effects, layerDepth);
-        }
-
-        public void DrawString(Vector2 position, SpriteFont font, string text, Color color, Vector2 scale, float rotation, Vector2 origin, SpriteEffects effects = SpriteEffects.None, float layerDepth = 0f)
-        {
-            SpriteBatch.DrawString(font, text, position, color, rotation, origin, scale, effects, layerDepth);
-        }
-
-        #endregion
-
-        #region FontRenderer Proxy
+        #region IFont Proxy
         
-		public void DrawString(IFontRenderer spriteFont, string text, Vector2 position, Color color, float scale = 1f)
+		public void DrawString(IFont font, string text, Vector2 position, TextColor color, FontStyle style = FontStyle.None)
 		{
-			//spriteFont.DrawString(SpriteBatch, text, position.X, position.Y, (int) color.PackedValue, false, new Vector2(scale));
-            DrawString(spriteFont, text, position, color, new Vector2(scale), 0f, Vector2.Zero);
+		    SpriteBatch.DrawString(font, text, position, color, style, 0f, Vector2.Zero, Vector2.One);
 		}
-        
-        public void DrawString(IFontRenderer spriteFont, string text, Vector2 position, Color color, float scale, float rotation, Vector2 origin, SpriteEffects effects = SpriteEffects.None, float layerDepth = 0f)
+
+        public void DrawString(IFont font, string text, Vector2 position, TextColor color, float scale, FontStyle style = FontStyle.None, float rotation = 0f, Vector2? origin = null)
+		{
+		    SpriteBatch.DrawString(font, text, position, color, style, rotation, origin.HasValue ? origin.Value : Vector2.Zero, new Vector2(scale));
+		}
+
+		public void DrawString(IFont font, string text, Vector2 position, TextColor color, Vector2 scale, FontStyle style = FontStyle.None, float rotation = 0f, Vector2? origin = null)
+		{
+		    SpriteBatch.DrawString(font, text, position, color, style, rotation, origin.HasValue ? origin.Value : Vector2.Zero, scale);
+		}
+
+        public void DrawString(IFont     font,                        string    text,
+                               Vector2   position,                    TextColor color, float scale = 1f,
+                               FontStyle style      = FontStyle.None, float     rotation = 0f,
+                               Vector2?  origin     = null,
+                               float     opacity    = 1f, SpriteEffects effects = SpriteEffects.None,
+                               float     layerDepth = 0f)
         {
-            spriteFont.DrawString(SpriteBatch, text, position, color, false, new Vector2(scale), rotation, origin, effects, layerDepth);
+            font.DrawString(SpriteBatch, text, position, color, style, scale: new Vector2(scale), rotation: rotation, origin: origin ?? Vector2.Zero, opacity: opacity, effects: effects, layerDepth: layerDepth);
         }
 
-        public void DrawString(IFontRenderer spriteFont, string text, Vector2 position, Color color, Vector2 scale, float rotation, Vector2 origin, SpriteEffects effects = SpriteEffects.None, float layerDepth = 0f)
+        public void DrawString(IFont font, string text, Vector2 position, TextColor color, Vector2? scale = null, FontStyle style = FontStyle.None, float rotation = 0f, Vector2? origin = null, float opacity = 1f, SpriteEffects effects = SpriteEffects.None, float layerDepth = 0f)
         {
-            spriteFont.DrawString(SpriteBatch, text, position, color, false, scale, rotation, origin, effects, layerDepth);
-        }       
-
-        #endregion
-
-        #region BitmapFont Proxy
-        
-		public void DrawString(BitmapFont bitmapFont, string text, Vector2 position, TextColor color, bool dropShadow = true)
-		{
-		    SpriteBatch.DrawString(bitmapFont, text, position, color, dropShadow, 0f, Vector2.Zero, Vector2.One, SpriteEffects.None, 0f);
-		}
-
-		public void DrawString(BitmapFont bitmapFont, string text, Vector2 position, float scale, TextColor color, bool dropShadow = true)
-		{
-		    SpriteBatch.DrawString(bitmapFont, text, position, color, dropShadow, 0f, Vector2.Zero, new Vector2(scale), SpriteEffects.None, 0f);
-		}
-
-		public void DrawString(BitmapFont bitmapFont, string text, Vector2 position, Vector2 scale, TextColor color, bool dropShadow = true)
-		{
-		    SpriteBatch.DrawString(bitmapFont, text, position, color, dropShadow, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
-		}
-
-		public void DrawString(BitmapFont bitmapFont, string text, Vector2 position, float scale, TextColor color, bool dropShadow = true, float rotation = 0f, Vector2? origin = null)
-		{
-		    SpriteBatch.DrawString(bitmapFont, text, position, color, dropShadow, rotation, origin.HasValue ? origin.Value : Vector2.Zero, new Vector2(scale), SpriteEffects.None, 0f);
-		}
-
-		public void DrawString(BitmapFont bitmapFont, string text, Vector2 position, Vector2 scale, TextColor color, bool dropShadow = true, float rotation = 0f, Vector2? origin = null)
-		{
-		    SpriteBatch.DrawString(bitmapFont, text, position, color, dropShadow, rotation, origin.HasValue ? origin.Value : Vector2.Zero, scale, SpriteEffects.None, 0f);
-		}
-
-		public void DrawString(BitmapFont bitmapFont, string text, Vector2 position, TextColor color, bool dropShadow = true, float rotation = 0f, Vector2? origin = null)
-		{
-		    SpriteBatch.DrawString(bitmapFont, text, position, color, dropShadow, rotation, origin.HasValue ? origin.Value : Vector2.Zero, Vector2.One, SpriteEffects.None, 0f);
-		}
-
-        
-        public void DrawString(BitmapFont bitmapFont, string text, Vector2 position, TextColor color, bool dropShadow, float rotation, Vector2 origin, float scale = 1f, SpriteEffects effects = SpriteEffects.None, float layerDepth = 0f, float opacity = 1f)
-        {
-            SpriteBatch.DrawString(bitmapFont, text, position, color, dropShadow, rotation, origin, new Vector2(scale), effects, layerDepth, opacity);
-        }
-
-        public void DrawString(BitmapFont bitmapFont, string text, Vector2 position, TextColor color, bool dropShadow, float rotation, Vector2 origin, Vector2 scale, SpriteEffects effects = SpriteEffects.None, float layerDepth = 0f, float opacity = 1f)
-        {
-            SpriteBatch.DrawString(bitmapFont, text, position, color, dropShadow, rotation, origin, scale, effects, layerDepth, opacity);
+            font.DrawString(SpriteBatch, text, position, color, style, scale: scale ?? Vector2.One, rotation: rotation, origin: origin ?? Vector2.Zero, opacity: opacity, effects: effects, layerDepth: layerDepth);
         }
 
         #endregion

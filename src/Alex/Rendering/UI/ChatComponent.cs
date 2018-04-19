@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Data;
 using Alex.API.Graphics;
+using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Rendering;
@@ -31,7 +32,7 @@ namespace Alex.Rendering.UI
 			Width = 320;
 		}
 
-		private BitmapFont Font;
+		private IFont Font;
 		protected override void OnInit(IGuiRenderer renderer)
 		{
 			Font = renderer.Font;
@@ -159,7 +160,7 @@ namespace Alex.Rendering.UI
 
 			args.FillRectangle(new Rectangle(renderPos.ToPoint(), new Point(Width, (int)Math.Ceiling(size.Y + 2))), new Color(Color.Black, alpha * 0.5f));
 
-			args.DrawString(Font, text, renderPos + new Vector2(0, 2), TextColor.White, false, 0f, Vector2.Zero, opacity: alpha);
+			Font.DrawString(args.SpriteBatch, text, renderPos + new Vector2(0, 2), TextColor.White, opacity: alpha);
 			offset.Y -= (size.Y + 2);
 		}
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Alex.API.Graphics.Typography;
 using Alex.API.Gui.Rendering;
 using Alex.API.Input;
 using Alex.API.Utils;
@@ -178,7 +179,7 @@ namespace Alex.API.Gui
                 RenderArgs.FillRectangle(new Rectangle((int)(p.X - padding), (int)(p.Y - padding), (int)(s.X + 2*padding), (int)(s.Y + 2*padding)), background.Value);
             }
 
-            SpriteBatch.DrawString(Renderer.DebugFont, text, p, color, 0f, Vector2.Zero, DebugFontScale, SpriteEffects.None, 0);
+            Renderer.DebugFont.DrawString(SpriteBatch, text, p, (TextColor) color, scale: DebugFontScale);
         }
 
         #endregion

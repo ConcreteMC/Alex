@@ -5,7 +5,7 @@ using Alex.API.Gui.Elements.Controls;
 
 namespace Alex.GameStates.Gui.Elements
 {
-    public class GuiBackButton : GuiBeaconButton
+    public class GuiBackButton : GuiButton
     {
         public GuiBackButton() : base("Back", () => Alex.Instance.GameStateManager.Back())
         {

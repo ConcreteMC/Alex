@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework;
 
 namespace Alex.API.Gui.Elements.Controls
 {
-    public class GuiBeaconButton : GuiControl
+    public class GuiButton : GuiControl
     {
 
         public string Text
@@ -17,15 +17,13 @@ namespace Alex.API.Gui.Elements.Controls
 
         protected GuiTextElement TextElement { get; }
         protected Action Action { get; }
-
-	    //public override int MinWidth => TextElement.Width;
-
-	    public GuiBeaconButton() : this(string.Empty)
+		
+	    public GuiButton() : this(string.Empty)
 	    {
 
 	    }
 		
-        public GuiBeaconButton(string text, Action action = null)
+        public GuiButton(string text, Action action = null)
         {
             DefaultBackgroundTexture = GuiTextures.ButtonDefault;
             HighlightedBackgroundTexture = GuiTextures.ButtonHover;
@@ -48,17 +46,6 @@ namespace Alex.API.Gui.Elements.Controls
             };
             AddChild(TextElement);
         }
-
-	  //  protected override void OnUpdateLayout()
-	  //  {
-		 //   int minWidth = TextElement.Width + 20;
-		 //   if (Width <= minWidth)
-		 //   {
-			//    Width = minWidth;
-		 //   }
-
-			//base.OnUpdateLayout();
-	  //  }
 
 
 	    protected override void OnClick(Vector2 relativePosition)

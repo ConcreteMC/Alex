@@ -33,6 +33,11 @@ namespace Alex.API.Gui
 			Bottom = bottom;
 		}
 
+		public Thickness ToDirection()
+		{
+			return Thickness.Clamp(this, Thickness.Zero, Thickness.One);
+		}
+
 		public double Size()
 		{
 			return Math.Sqrt(Vertical * Vertical + Horizontal * Horizontal);
@@ -80,6 +85,24 @@ namespace Alex.API.Gui
 				a.Right  - b.Right,
 				a.Bottom - b.Bottom
 			);
+		}
+		public static Thickness operator *(Thickness a, Thickness b)
+		{
+			return new Thickness(
+			                     a.Left * b.Left,
+			                     a.Top * b.Top,
+			                     a.Right * b.Right,
+			                     a.Bottom * b.Bottom
+			                    );
+		}
+		public static Thickness operator /(Thickness a, Thickness b)
+		{
+			return new Thickness(
+			                     a.Left   / b.Left,
+			                     a.Top    / b.Top,
+			                     a.Right  / b.Right,
+			                     a.Bottom / b.Bottom
+			                    );
 		}
 
 		public static Rectangle operator +(Rectangle rect, Thickness b)

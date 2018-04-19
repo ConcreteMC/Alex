@@ -56,10 +56,47 @@ namespace Alex.Gamestates
 		public SplashScreenGui(Alex game) : base(game)
 		{
 			Alex = game;
+			
+			AddChild(_progressBarContainer = new GuiContainer()
+			{
+				Width  = 300,
+				Height = 25,
+				Margin = new Thickness(12),
+				
+				Anchor = Alignment.BottomCenter,
+			});
+
+			_progressBarContainer.AddChild(_textDisplay = new GuiTextElement()
+			{
+				Text      = Text,
+				TextColor = TextColor.Black,
+				
+				Anchor    = Alignment.TopLeft,
+				HasShadow = false
+			});
+
+			_progressBarContainer.AddChild(_percentageDisplay = new GuiTextElement()
+			{
+				Text      = Text,
+				TextColor = TextColor.Black,
+				
+				Anchor    = Alignment.TopRight,
+				HasShadow = false
+			});
+
+			_progressBarContainer.AddChild(_progressBar = new GuiProgressBar()
+			{
+				Width  = 300,
+				Height = 9,
+				
+				Anchor = Alignment.BottomCenter,
+			});
 		}
 
 		protected override void OnInit(IGuiRenderer renderer)
 		{
+			base.OnInit(renderer);
+
 			Background = renderer.GetTexture(GuiTextures.SplashBackground);
 			//AddChild(_progressBarContainer = new GuiStackContainer()
 			//{
@@ -74,43 +111,6 @@ namespace Alex.Gamestates
 			//	VerticalContentAlignment = VerticalAlignment.Center,
 			//	HorizontalContentAlignment = HorizontalAlignment.FillParent
 			//});
-
-			AddChild(_progressBarContainer = new GuiContainer()
-			{
-				Width  = 300,
-				Height = 25,
-				Margin = new Thickness(12),
-				
-				Anchor = Alignment.BottomCenter,
-			});
-
-			_progressBarContainer.AddChild(_textDisplay  = new GuiTextElement()
-			{
-				Text = Text,
-				TextColor = TextColor.Black,
-				
-				Anchor = Alignment.TopLeft,
-				HasShadow = false
-			});
-
-			_progressBarContainer.AddChild(_percentageDisplay = new GuiTextElement()
-			{
-				Text = Text,
-				TextColor = TextColor.Black,
-				
-				Anchor = Alignment.TopRight,
-				HasShadow = false
-			});
-
-			_progressBarContainer.AddChild(_progressBar = new GuiProgressBar()
-			{
-				Width = 300,
-				Height = 9,
-				
-				Anchor = Alignment.BottomCenter,
-			});
-
-			
 		}
 
 		public void UpdateProgress(int value)

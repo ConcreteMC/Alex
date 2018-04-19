@@ -3,6 +3,7 @@ using System.Drawing;
 using Alex.API;
 using Alex.API.Graphics;
 using Alex.API.Graphics.Textures;
+using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Gui.Rendering;
 using Alex.API.Utils;
@@ -18,9 +19,20 @@ namespace Alex.Gamestates.Gui
     {
 
         private Alex Alex { get; }
-        
-        public BitmapFont Font => Alex.Font;
-        public SpriteFont DebugFont => Alex.DebugFont;
+
+        private IFont _font;
+
+        public IFont Font
+        {
+            get => _font;
+            set
+            {
+                _font = value;
+                OnFontChanged();
+            }
+        }
+        public IFont DebugFont => Alex.DebugFont;
+
         public GuiScaledResolution ScaledResolution { get; set; }
 
         private GraphicsDevice _graphicsDevice;
@@ -30,7 +42,6 @@ namespace Alex.Gamestates.Gui
 
         private Texture2D _widgets;
         private Texture2D _icons;
-        private BitmapFont _font;
 
         #region SpriteSheet Definitions
 
@@ -86,6 +97,11 @@ namespace Alex.Gamestates.Gui
             {
                 LoadResourcePack(_resourceManager.ResourcePack);
             }
+        }
+
+        private void OnFontChanged()
+        {
+
         }
 
         public void LoadResourcePack(McResourcePack resourcePack)

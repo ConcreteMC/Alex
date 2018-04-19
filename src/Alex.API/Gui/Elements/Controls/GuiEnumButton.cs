@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Alex.API.Gui.Elements.Controls
 {
-    public class GuiEnumButton<TEnum> : GuiBeaconButton, IValuedControl<TEnum> where TEnum : struct
+    public class GuiEnumButton<TEnum> : GuiButton, IValuedControl<TEnum> where TEnum : struct
     {
         public event EventHandler<TEnum> ValueChanged;
         private TEnum _value;

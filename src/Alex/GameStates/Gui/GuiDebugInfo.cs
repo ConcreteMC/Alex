@@ -21,7 +21,6 @@ namespace Alex.Gamestates.Gui
                 ChildAnchor = Alignment.TopLeft,
                 //HorizontalContentAlignment = HorizontalAlignment.Left,
                 //VerticalContentAlignment = VerticalAlignment.Top,
-				Spacing = 1
             });
             
             AddChild(_rightContainer = new GuiStackContainer()
@@ -32,7 +31,6 @@ namespace Alex.Gamestates.Gui
                 ChildAnchor = Alignment.TopRight,
 	           // HorizontalContentAlignment = HorizontalAlignment.Right,
                 //VerticalContentAlignment   = VerticalAlignment.Top,
-	            Spacing = 1
 			});
         }
 
