@@ -20,16 +20,26 @@ namespace Alex.GameStates.Gui.MainMenu
     public class MultiplayerServerSelectionState : ListSelectionStateBase<GuiServerListEntryElement>
     {
 		private GuiBeaconButton DirectConnectButton { get; }
+	    private GuiBeaconButton AddServerButton { get; }
 		public MultiplayerServerSelectionState() : base()
         {
 	        Title = "Multiplayer";
-            Footer.AddChild(DirectConnectButton = new GuiBeaconButton("Direct Connect", () => Alex.GameStateManager.SetActiveState<MultiplayerConnectState>())
-            {
-                Anchor = Alignment.BottomCenter,
-            });
-	        DirectConnectButton.Margin = new Thickness(0, 0, 0, 0);
 
-	        AddItem(new GuiServerListEntryElement("Localhost", "localhost:25565"));
+	        Footer.AddChild(DirectConnectButton =
+		        new GuiBeaconButton("Direct Connect", () => Alex.GameStateManager.SetActiveState<MultiplayerConnectState>())
+		        {
+			        Anchor = Alignment.BottomCenter,
+			        Margin = new Thickness(0, 0, 0, 0)
+		        });
+
+	        Footer.AddChild(DirectConnectButton =
+		        new GuiBeaconButton("Add Server", () => Alex.GameStateManager.SetActiveState<MultiplayerConnectState>())
+		        {
+			        Anchor = Alignment.BottomCenter,
+			        Margin = new Thickness(0, 0, 0, 0)
+		        });
+
+			AddItem(new GuiServerListEntryElement("Localhost", "localhost:25565"));
 	        AddItem(new GuiServerListEntryElement("Hypixel", "mc.hypixel.net:25565"));
 		}
 
