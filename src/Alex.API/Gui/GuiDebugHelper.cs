@@ -14,8 +14,8 @@ namespace Alex.API.Gui
     {
         private static readonly Vector2 DebugFontScale = new Vector2(0.25f);
         
-        private static readonly Color DebugTextBackground = Color.WhiteSmoke * 0.5f;
-        private static readonly Color DebugTextForeground = Color.Black * 0.85f;
+        private static readonly Color DebugTextBackground = Color.WhiteSmoke * 0.6f;
+        private static readonly Color DebugTextForeground = Color.Black * 0.95f;
 
         private static readonly Color OuterBoundsBackground = Color.LightGoldenrodYellow * 0.1f;
         private static readonly Color BoundsBackground = Color.LightSeaGreen * 0.2f;
@@ -134,14 +134,12 @@ namespace Alex.API.Gui
             var x = (align & (Alignment.CenterX | Alignment.FillX)) != 0 ? 0 : ((align & Alignment.MinX) != 0 ? -1 : 1);
             var y = (align & (Alignment.CenterY | Alignment.FillY)) != 0 ? 0 : ((align & Alignment.MinY) != 0 ? -1 : 1);
 
-            DrawDebugString(position, obj.ToString(), Color.WhiteSmoke * 0.5f, Color.Black, 2, x, y);
+            DrawDebugString(position, obj.ToString(), DebugTextBackground, DebugTextForeground, 2, x, y);
         }
-
         private void DrawDebugString(Vector2 position, object obj, Color color, int padding = 2, int xAlign = 0, int yAlign = 0)
         {
             DrawDebugString(position, obj.ToString(), color, padding, xAlign, yAlign);
         }
-
         private void DrawDebugString(Vector2 position, string text, Color? background, Color color, int padding = 2, int xAlign = 0, int yAlign = 0)
         {
             if (Renderer.DebugFont == null) return;
