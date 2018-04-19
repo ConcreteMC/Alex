@@ -1,5 +1,6 @@
 ﻿using Alex.API.Graphics;
 using Alex.API.Graphics.Textures;
+using Alex.API.Graphics.Typography;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -10,8 +11,8 @@ namespace Alex.API.Gui.Rendering
         GuiScaledResolution ScaledResolution { get; set; }
         void Init(GraphicsDevice graphics);
 
-        BitmapFont Font { get; }
-        SpriteFont DebugFont { get; }
+        IFont Font { get; set; }
+        IFont DebugFont { get; }
         
         TextureSlice2D GetTexture(GuiTextures guiTexture);
         Texture2D GetTexture2D(GuiTextures guiTexture);

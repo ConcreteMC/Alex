@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework;
 
 namespace Alex.API.Gui.Elements.Controls
 {
-    public class GuiToggleButton : GuiBeaconButton, IValuedControl<bool>
+    public class GuiToggleButton : GuiButton, IValuedControl<bool>
     {
 
 	    public event EventHandler<bool> ValueChanged;

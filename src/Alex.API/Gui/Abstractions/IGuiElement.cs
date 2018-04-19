@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Alex.API.Gui.Layout;
 using Alex.API.Gui.Rendering;
 using Microsoft.Xna.Framework;
 
@@ -21,7 +22,7 @@ namespace Alex.API.Gui
         Rectangle RenderBounds { get; }
         
 
-        void Init(IGuiRenderer renderer);
+        void Init(IGuiRenderer renderer, bool force = false);
 
         void Update(GameTime gameTime);
 

@@ -3,6 +3,7 @@ using System.Collections;
 using Alex.API;
 using Alex.API.Entities;
 using Alex.API.Graphics;
+using Alex.API.Graphics.Typography;
 using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.Graphics.Models;
@@ -223,7 +224,7 @@ namespace Alex.Entities
 			textPosition.Y = (int)(textPosition.Y - c.Y);
 
 			renderArgs.SpriteBatch.FillRectangle(new Rectangle(textPosition.ToPoint(), c), new Color(Color.Black, 128));
-			renderArgs.SpriteBatch.DrawString(Alex.Font, clean, textPosition, TextColor.White, false, 0f, Vector2.Zero, scale);
+			renderArgs.SpriteBatch.DrawString(Alex.Font, clean, textPosition, TextColor.White, FontStyle.None, 0f, Vector2.Zero, scale);
 		}
 
 		public virtual void TerrainCollision(Vector3 collisionPoint, Vector3 direction)

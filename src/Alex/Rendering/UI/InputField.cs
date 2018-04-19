@@ -1,5 +1,6 @@
 ﻿using System;
 using Alex.API.Graphics;
+using Alex.API.Graphics.Typography;
 using Alex.API.Utils;
 using Alex.Gamestates;
 using Alex.Utils;
@@ -106,7 +107,7 @@ namespace Alex.Rendering.UI
 			args.SpriteBatch.Begin();
 
 			args.SpriteBatch.Draw(ButtonTexture, ButtonRectangle, Color.Cornsilk);
-			args.SpriteBatch.DrawString(Alex.Font, s, new Vector2(Location.X + 10, Location.Y + (measureString.Y/2) - 3), color, false);
+			//args.SpriteBatch.DrawString(Alex.Font, s, new Vector2(Location.X + 10, Location.Y + (measureString.Y/2) - 3), (TextColor)color);
 
 			args.SpriteBatch.End();
 		}

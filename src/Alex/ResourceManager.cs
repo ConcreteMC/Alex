@@ -170,7 +170,7 @@ namespace Alex
 
 						using (FileStream stream = new FileStream(resourcePackPath, FileMode.Open))
 						{
-							LoadResourcePack(progressReceiver, device, stream, true, false);
+							LoadResourcePack(progressReceiver, device, stream, true, false, false, preloadCallback);
 						}
 					}
 				}

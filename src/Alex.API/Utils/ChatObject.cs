@@ -78,6 +78,7 @@ namespace Alex.API.Utils
 	    public TextColor(Color c)
 	    {
 			ForegroundColor = c;
+            BackgroundColor = Color.TransparentBlack;
 	    }
 
         public static string Color2tag(string colorname)
@@ -210,6 +211,16 @@ namespace Alex.API.Utils
                     return White;
                 default: return White;
             }
+        }
+
+        public static explicit operator Color(TextColor textColor)
+        {
+            return textColor.ForegroundColor;
+        }
+
+        public static explicit operator TextColor(Color color)
+        {
+            return new TextColor(color);
         }
     }
 

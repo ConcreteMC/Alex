@@ -8,10 +8,13 @@ namespace Alex.API.Gui.Layout
     public struct LayoutBoundingRectangle
     {
         public Rectangle ContainerBounds { get; }
-        public Thickness Margin { get; }
+        public Thickness ContainerPadding { get; }
+
+        public Thickness Margin => Thickness.Max(ContainerPadding, ElementMargin);
         public Rectangle LayoutBounds => ContainerBounds - Margin;
 
         public Size ElementSize { get; }
+        public Thickness ElementMargin { get; }
 
         public int? AnchorLeft;
         public int? AnchorTop;
@@ -20,21 +23,6 @@ namespace Alex.API.Gui.Layout
 
         public bool AnchorCenterX => !AnchorLeft.HasValue && !AnchorRight.HasValue;
         public bool AnchorCenterY => !AnchorTop.HasValue && !AnchorBottom.HasValue;
-
-
-        public int MinX => AnchorLeft.HasValue
-                               ? ContainerBounds.Left + AnchorLeft.Value + Margin.Left
-                               : ContainerBounds.Left + Margin.Left;
-        public int MinY => AnchorTop.HasValue
-                               ? ContainerBounds.Top + AnchorTop.Value + Margin.Top
-                               : ContainerBounds.Top + Margin.Top;
-
-        public int MaxX => AnchorRight.HasValue
-                               ? ContainerBounds.Right - (AnchorRight.Value + ElementSize.Width + Margin.Right)
-                               : MinX + ElementSize.Width;
-        public int MaxY => AnchorBottom.HasValue
-                               ? ContainerBounds.Bottom - (AnchorBottom.Value + ElementSize.Height + Margin.Bottom)
-                               : MinY + Margin.Bottom;
 
         public int Width => (AnchorLeft.HasValue && AnchorRight.HasValue)
                                 ? LayoutBounds.Width - AnchorLeft.Value - AnchorRight.Value
@@ -63,10 +51,11 @@ namespace Alex.API.Gui.Layout
         public Size Size => new Size(Width, Height);
         public Rectangle Bounds => new Rectangle(Location, Size);
         
-        public LayoutBoundingRectangle(Rectangle containerBounds, Thickness margin, Size elementSize)
+        public LayoutBoundingRectangle(Rectangle containerBounds, Thickness containerPadding, Thickness elementMargin, Size elementSize)
         {
             ContainerBounds = containerBounds;
-            Margin = margin;
+            ContainerPadding = containerPadding;
+            ElementMargin = elementMargin;
             ElementSize = elementSize;
 
             AnchorLeft = null;

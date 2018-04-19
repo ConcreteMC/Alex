@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Alex.API.Data;
 using Alex.API.Graphics;
+using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Gui.Rendering;
 using Alex.API.Utils;
@@ -40,7 +41,7 @@ namespace Alex.Rendering.UI
 			//BackgroundOverlayColor = new Color(Color.Black, 0.5f);
 		}
 
-		private BitmapFont Font;
+		private IFont Font;
 		protected override void OnInit(IGuiRenderer renderer)
 		{
 			Font = renderer.Font;
@@ -85,7 +86,7 @@ namespace Alex.Rendering.UI
 
 					args.FillRectangle(new Rectangle(renderPos.ToPoint(), new Point(Width, (int)Math.Ceiling(size.Y))), new Color(Color.Black, alpha * 0.5f));
 
-					args.DrawString(Font, msg.Value.RawMessage, renderPos, TextColor.White, false, 0f, Vector2.Zero, opacity: alpha);
+					Font.DrawString(args.SpriteBatch, msg.Value.RawMessage, renderPos, TextColor.White, opacity: alpha);
 					offset.Y -= size.Y;
 				}
 			}

@@ -6,6 +6,7 @@ using System.Net;
 using System.Threading;
 using Alex.API;
 using Alex.API.Graphics;
+using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Input;
 using Alex.API.Network;
@@ -42,9 +43,8 @@ namespace Alex
 		public static IPEndPoint ServerEndPoint { get; set; }
 		public static bool IsMultiplayer { get; set; } = false;
 
-		public static BitmapFont Font;
-		public static IFontRenderer FontRender;
-		public static SpriteFont DebugFont;
+		public static IFont Font;
+		public static IFont DebugFont;
 
 		private SpriteBatch _spriteBatch;
 
@@ -163,7 +163,7 @@ namespace Alex
 				File.WriteAllBytes(Path.Combine("assets", "DebugFont.xnb"), global::Alex.Resources.DebugFont);
 			}
 
-			DebugFont = Content.Load<SpriteFont>("DebugFont");
+			DebugFont = (WrappedSpriteFont) Content.Load<SpriteFont>("DebugFont");
 
 			_spriteBatch = new SpriteBatch(GraphicsDevice);
 			InputManager = new InputManager(this);
@@ -248,11 +248,11 @@ namespace Alex
 			GameStateManager.RemoveState("splash");
 		}
 
-		private void OnResourcePackPreLoadCompleted(IFontRenderer fontRenderer, BitmapFont bitmapFont)
+		private void OnResourcePackPreLoadCompleted(IFont font)
 		{
-			Font = bitmapFont;
+			Font = font;
 
-			GuiManager.RefreshResources();
+			GuiManager.ApplyFont(font);
 		}
 
 		public void ConnectToServer()
