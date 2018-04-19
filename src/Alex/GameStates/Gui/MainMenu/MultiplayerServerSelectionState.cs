@@ -28,16 +28,8 @@ namespace Alex.GameStates.Gui.MainMenu
 	        Footer.AddChild(DirectConnectButton =
 		        new GuiBeaconButton("Direct Connect", () => Alex.GameStateManager.SetActiveState<MultiplayerConnectState>())
 		        {
-			        Anchor = Alignment.BottomCenter,
-			        Margin = new Thickness(0, 0, 0, 0)
-		        });
-
-	        Footer.AddChild(DirectConnectButton =
-		        new GuiBeaconButton("Add Server", () => Alex.GameStateManager.SetActiveState<MultiplayerConnectState>())
-		        {
-			        Anchor = Alignment.BottomCenter,
-			        Margin = new Thickness(0, 0, 0, 0)
-		        });
+					Anchor = Alignment.MiddleCenter
+				});
 
 			AddItem(new GuiServerListEntryElement("Localhost", "localhost:25565"));
 	        AddItem(new GuiServerListEntryElement("Hypixel", "mc.hypixel.net:25565"));

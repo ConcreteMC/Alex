@@ -28,8 +28,12 @@ namespace Alex.GameStates.Gui.MainMenu
             {
                 Width = 200,
                 Anchor = Alignment.MiddleCenter,
+				PlaceHolder = "Server Address..."
             });
-            AddGuiElement( _connectButton = new GuiBeaconButton("Connect", OnConnectButtonPressed));
+            AddGuiElement( _connectButton = new GuiBeaconButton("Join Server", OnConnectButtonPressed)
+            {
+				Margin = new Thickness(5)
+            });
             AddGuiElement(_errorMessage = new GuiTextElement()
             {
                 TextColor = TextColor.Red
