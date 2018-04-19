@@ -163,8 +163,11 @@ namespace Alex.Gamestates.Playing
 
 				UpdateRayTracer(Alex.GraphicsDevice, World);
 
-				CheckInput(gameTime);
-				
+				if (!_playingHud.Chat.RenderChatInput)
+				{
+					CheckInput(gameTime);
+				}
+
 				World.Update(args, SkyRenderer);
 				
 				SkyRenderer.Update(args);

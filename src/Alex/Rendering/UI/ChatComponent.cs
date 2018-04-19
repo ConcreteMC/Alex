@@ -34,37 +34,61 @@ namespace Alex.Rendering.UI
 		public ChatComponent()
 		{
 			Anchor = Alignment.BottomLeft;
+			Height = 500;
+			Width = 500;
 
-			BackgroundOverlayColor = new Color(Color.Black, 0.5f);
+			//BackgroundOverlayColor = new Color(Color.Black, 0.5f);
 		}
 
 		private BitmapFont Font;
 		protected override void OnInit(IGuiRenderer renderer)
 		{
 			Font = renderer.Font;
+			Width = renderer.ScaledResolution.ScaledWidth / 3;
+			Height = renderer.ScaledResolution.ScaledHeight / 2;
 			renderer.ScaledResolution.ScaleChanged += ScaledResolutionOnScaleChanged;
 		}
 
+		private Vector2 Scale { get; set; } = Vector2.One;
 		private void ScaledResolutionOnScaleChanged(object sender, UiScaleEventArgs e)
 		{
-				
+			Width = e.ScaledWidth / 3;
+			Height = e.ScaledHeight / 2;
 		}
 
+		private TimeSpan _renderTimeout = TimeSpan.FromSeconds(30);
 		protected override void OnDraw(GuiRenderArgs args)
 		{
-			//args.BeginSpriteBatch();
+			base.OnDraw(args);
+
 			if (_chatEntries.Count > 0)
 			{
 				DateTime now = DateTime.UtcNow;
-				Vector2 offset = Vector2.One;
-				foreach (var msg in _chatEntries.ToArray())
+				Vector2 offset = new Vector2(0, -8);
+				foreach (var msg in _chatEntries.ToArray().OrderByDescending(x => x.Key))
 				{
-					offset.Y += Font.MeasureString(msg.Value.RawMessage).Y;
-					
+					var elapse = now - msg.Key;
+					float alpha = 0.5f;
+					if (!RenderChatInput)
+					{
+						if (elapse > _renderTimeout)
+						{
+							continue;
+						}
+
+						alpha = (float) (1f - ((elapse.TotalMilliseconds / _renderTimeout.TotalMilliseconds) * 1f));
+					}
+
+					var size = Font.MeasureString(msg.Value.RawMessage);
+
+					var renderPos = Bounds.BottomLeft() + offset;
+
+					args.FillRectangle(new Rectangle(renderPos.ToPoint(), new Point(Width, (int)Math.Ceiling(size.Y))), new Color(Color.Black, alpha * 0.5f));
+
+					args.DrawString(Font, msg.Value.RawMessage, renderPos, TextColor.White, false, 0f, Vector2.Zero, opacity: alpha);
+					offset.Y -= size.Y;
 				}
 			}
-		//	args.EndSpriteBatch();
-			base.OnDraw(args);
 		}
 
 		protected override void OnUpdateLayout()
@@ -228,6 +252,11 @@ namespace Alex.Rendering.UI
 		public void Receive(ChatObject message)
 		{
 			_chatEntries.Add(DateTime.UtcNow, message);
+		}
+
+		public void ToggleInput()
+		{
+			RenderChatInput = !RenderChatInput;
 		}
 	}
 }

@@ -75,6 +75,11 @@ namespace Alex.API.Utils
             }
         }
 
+	    public TextColor(Color c)
+	    {
+			ForegroundColor = c;
+	    }
+
         public static string Color2tag(string colorname)
         {
             switch (colorname.ToLower())
