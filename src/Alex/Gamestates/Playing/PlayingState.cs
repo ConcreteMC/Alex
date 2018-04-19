@@ -133,8 +133,6 @@ namespace Alex.Gamestates.Playing
 				{
 					return string.Empty;
 				}
-
-				return null;
 			});
 		}
 
@@ -163,7 +161,7 @@ namespace Alex.Gamestates.Playing
 
 				UpdateRayTracer(Alex.GraphicsDevice, World);
 
-				if (!_playingHud.Chat.RenderChatInput)
+				if (!_playingHud.Chat.IsFocused)
 				{
 					CheckInput(gameTime);
 				}
@@ -200,50 +198,13 @@ namespace Alex.Gamestates.Playing
 			}
 		}
 
-		private void ToggleWireframe()
-		{
-			RenderWireframe = !RenderWireframe;
-
-			if (RenderWireframe)
-			{
-				Graphics.RasterizerState.FillMode = FillMode.WireFrame;
-			}
-			else
-			{
-				Graphics.RasterizerState.FillMode = FillMode.Solid;
-			}
-		}
-
 		private Block SelBlock { get; set; } = new Air();
 		private Microsoft.Xna.Framework.BoundingBox RayTraceBoundingBox { get; set; }
 		private bool RenderDebug { get; set; } = true;
 
 		private KeyboardState _oldKeyboardState;
-		private MouseState _oldMouseState;
 		protected void CheckInput(GameTime gameTime) //TODO: Move this input out of the main update loop and use the new per-player based implementation by @TruDan
 		{
-			MouseState currentMouseState = Mouse.GetState();
-			if (currentMouseState != _oldMouseState)
-			{
-				if (currentMouseState.LeftButton == ButtonState.Pressed)
-				{
-					if (_raytracedBlock.Y > 0 && _raytracedBlock.Y < 256)
-					{
-						//World.SetBlock(_selectedBlock.X, _selectedBlock.Y, _selectedBlock.Z, new Air());
-					}
-				}
-
-				if (currentMouseState.RightButton == ButtonState.Pressed)
-				{
-					if (_raytracedBlock.Y > 0 && _raytracedBlock.Y < 256)
-					{
-						SelBlock.Interact(World,
-							new BlockCoordinates(new PlayerLocation(_raytracedBlock.X, _raytracedBlock.Y, _raytracedBlock.Z)), BlockFace.None, null);
-					}
-				}
-			}
-			_oldMouseState = currentMouseState;
-
 			KeyboardState currentKeyboardState = Keyboard.GetState();
 			if (currentKeyboardState != _oldKeyboardState)
 			{
@@ -253,15 +214,9 @@ namespace Alex.Gamestates.Playing
 					Alex.GameStateManager.SetActiveState("ingamemenu");
 				}
 
-
 				if (currentKeyboardState.IsKeyDown(KeyBinds.DebugInfo))
 				{
 					RenderDebug = !RenderDebug;
-				}
-
-				if (currentKeyboardState.IsKeyDown(KeyBinds.ToggleWireframe))
-				{
-					ToggleWireframe();
 				}
 
 				if (currentKeyboardState.IsKeyDown(KeyBinds.ReBuildChunks))

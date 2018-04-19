@@ -17,13 +17,16 @@ namespace Alex.Gamestates.Hud
 	    public ChatComponent Chat;
 		private PlayerInputManager InputManager => _playerController.InputManager;
 
-        public PlayingHud(Game game, PlayerController playerController, ChatComponent chat) : base(game)
+		private Alex Alex { get; }
+        public PlayingHud(Alex game, PlayerController playerController, ChatComponent chat) : base(game)
         {
+	        Alex = game;
             _playerController = playerController;
             _hotbar = new GuiItemHotbar();
 	        _hotbar.Anchor = Alignment.BottomCenter;
+	        _hotbar.Padding = Thickness.Zero;
 
-	        Chat = chat;
+			Chat = chat;
 	        Chat.Anchor = Alignment.BottomLeft;
         }
 
@@ -36,7 +39,7 @@ namespace Alex.Gamestates.Hud
 
         protected override void OnUpdate(GameTime gameTime)
         {
-	        if (!Chat.RenderChatInput)
+	        if (!Chat.IsFocused)
 	        {
 				if (InputManager.IsPressed(InputCommand.HotBarSelectNext))
 		        {
@@ -60,14 +63,16 @@ namespace Alex.Gamestates.Hud
 
 		        if (InputManager.IsPressed(InputCommand.ToggleChat))
 		        {
-			        Chat.ToggleInput();
+					Chat.Dismiss();
+			        Alex.GuiManager.FocusManager.FocusedElement = Chat;
 		        }
 			}
 	        else
 	        {
 		        if (InputManager.IsPressed(InputCommand.ToggleMenu))
 		        {
-
+			        Alex.GuiManager.FocusManager.FocusedElement = null;
+					Chat.Dismiss();
 		        }
 	        }
 

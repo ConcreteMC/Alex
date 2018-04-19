@@ -1,59 +1,63 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Alex.API.Data;
 using Alex.API.Graphics;
 using Alex.API.Gui;
+using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Rendering;
+using Alex.API.Input;
 using Alex.API.Utils;
-using Alex.Gamestates;
-using Alex.Gamestates.Gui;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using NLog;
 
 namespace Alex.Rendering.UI
 {
-	public class ChatComponent : GuiContainer, IChatReceiver
+	public class ChatComponent : GuiControl, IChatReceiver
 	{
-		private class ChatEntry
-		{
-			public ChatObject ChatObject;
-			public DateTime ReceiveTime;
-		}
-
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ChatComponent));
 
-		public bool RenderChatInput { get; private set; } = false;
-		private StringBuilder _input = new StringBuilder();
-
-		private SortedList<DateTime, ChatObject> _chatEntries = new SortedList<DateTime, ChatObject>();
+		private SortedList<DateTime, ChatObject> _chatEntries = new SortedList<DateTime, ChatObject>(new DescendedDateComparer());
 		public IChatProvider ChatProvider;
+
+		private TextInputBuilder _textBuilder;
 		public ChatComponent()
 		{
+			_textBuilder = new TextInputBuilder();
 			Anchor = Alignment.BottomLeft;
-			Height = 500;
-			Width = 500;
 
-			//BackgroundOverlayColor = new Color(Color.Black, 0.5f);
+			Height = 180;
+			Width = 320;
 		}
 
 		private BitmapFont Font;
 		protected override void OnInit(IGuiRenderer renderer)
 		{
 			Font = renderer.Font;
-			Width = renderer.ScaledResolution.ScaledWidth / 3;
-			Height = renderer.ScaledResolution.ScaledHeight / 2;
-			renderer.ScaledResolution.ScaleChanged += ScaledResolutionOnScaleChanged;
+
+			FocusOutlineThickness = Thickness.Zero;
+			HighlightOutlineThickness = Thickness.Zero;
 		}
 
 		private Vector2 Scale { get; set; } = Vector2.One;
-		private void ScaledResolutionOnScaleChanged(object sender, UiScaleEventArgs e)
+
+		private int _cursorPositionX;
+		private float _cursorAlpha;
+
+		protected override void OnUpdate(GameTime gameTime)
 		{
-			Width = e.ScaledWidth / 3;
-			Height = e.ScaledHeight / 2;
+			if (IsFocused)
+			{
+				var msg = _textBuilder.Text;
+				var preCursor = msg.Substring(0, _textBuilder.CursorPosition);
+				var cursorOffsetX = (int)Font.MeasureString(preCursor, Scale).X;
+				_cursorPositionX = cursorOffsetX;
+
+				var delta = (float)gameTime.TotalGameTime.TotalMilliseconds / 2;
+				_cursorAlpha = (float)MathHelpers.SinInterpolation(0.1f, 0.5f, delta) * 2;
+			}
+			base.OnUpdate(gameTime);
 		}
 
 		private TimeSpan _renderTimeout = TimeSpan.FromSeconds(30);
@@ -61,15 +65,33 @@ namespace Alex.Rendering.UI
 		{
 			base.OnDraw(args);
 
+			if (IsFocused)
+			{
+				var renderPos = (Bounds.BottomLeft() - new Vector2(0, 8)).ToPoint();
+
+				string msg = _textBuilder.Text;
+
+				args.FillRectangle(new Rectangle(renderPos.X, renderPos.Y - 2, Width, 10), new Color(Color.Black, 0.5f));
+
+				args.DrawString(Font, msg, new Vector2(renderPos.X, renderPos.Y), TextColor.White, false, 0f, Vector2.Zero, opacity: 1f);
+
+				if (args.GameTime.TotalGameTime.Seconds % 2 == 0)
+				{
+					var offsetX = renderPos.X + _cursorPositionX + 1;
+
+					args.DrawLine(offsetX, (renderPos.Y), offsetX, (renderPos.Y + 8), Color.White * _cursorAlpha);
+				}
+			}
+
 			if (_chatEntries.Count > 0)
 			{
 				DateTime now = DateTime.UtcNow;
-				Vector2 offset = new Vector2(0, -8);
-				foreach (var msg in _chatEntries.ToArray().OrderByDescending(x => x.Key))
+				Vector2 offset = new Vector2(0, -33);
+				foreach (var msg in _chatEntries.ToArray())
 				{
 					var elapse = now - msg.Key;
-					float alpha = 0.5f;
-					if (!RenderChatInput)
+					float alpha = 1f;
+					if (!IsFocused)
 					{
 						if (elapse > _renderTimeout)
 						{
@@ -79,174 +101,117 @@ namespace Alex.Rendering.UI
 						alpha = (float) (1f - ((elapse.TotalMilliseconds / _renderTimeout.TotalMilliseconds) * 1f));
 					}
 
-					var size = Font.MeasureString(msg.Value.RawMessage);
-
-					var renderPos = Bounds.BottomLeft() + offset;
-
-					args.FillRectangle(new Rectangle(renderPos.ToPoint(), new Point(Width, (int)Math.Ceiling(size.Y))), new Color(Color.Black, alpha * 0.5f));
-
-					args.DrawString(Font, msg.Value.RawMessage, renderPos, TextColor.White, false, 0f, Vector2.Zero, opacity: alpha);
-					offset.Y -= size.Y;
+					string message = msg.Value.RawMessage;
+					foreach (var line in CalculateLines(message))
+					{
+						DrawChatLine(args, line, alpha, ref offset);
+					}
 				}
 			}
 		}
 
-		protected override void OnUpdateLayout()
+		private string GetFitting(string text, out string rest)
 		{
-			base.OnUpdateLayout();
+			rest = string.Empty;
+
+			var size = Font.MeasureString(text);
+			while (size.X > Bounds.Width)
+			{
+				string current = text;
+				text = current.Remove(current.Length - 1, 1);
+				rest = current.Substring(current.Length - 1, 1) + rest;
+
+				size = Font.MeasureString(text);
+			}
+
+			return text;
 		}
 
-		/*public void Render(RenderArgs args)
+		private string[] CalculateLines(string text)
 		{
-			Vector2 scale = new Vector2(1.25f, 1.25f);
-
-			float horizontalOffset = 5;
-			var heightCalc = Alex.Font.GetStringSize("!", scale);
-
-			args.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied);
-			try
+			var size = Font.MeasureString(text);
+			if (size.X > Bounds.Width)
 			{
-				if (RenderChatInput)
+				List<string> output = new List<string>();
+				do
 				{
-					string chatInput = _input.ToString();
-					if (chatInput.Length > 0)
-					{
-						heightCalc = Alex.FontRender.GetStringSize(chatInput, scale);
-					}
+					string result = GetFitting(text, out text);
+					if (result.Length == 0) break;
+					output.Add(result);
+					
+				} while (text.Length > 0);
 
-					int extra = 0;
-					if (heightCalc.X > args.GraphicsDevice.Viewport.Width / 2f)
-					{
-						extra = (int) (heightCalc.X - args.GraphicsDevice.Viewport.Width / 2f);
-					}
+				output.Reverse();
 
-					args.SpriteBatch.FillRectangle(
-						new Rectangle(0, (int) (args.GraphicsDevice.Viewport.Height - (heightCalc.Y + 25)),
-							(args.GraphicsDevice.Viewport.Width / 2) + extra, (int) heightCalc.Y),
-						new Color(Color.Black, 64));
+				return output.ToArray();
+			}
+			else
+			{
+				return new[] {text};
+			}
+		}
 
-					Alex.FontRender.DrawString(args.SpriteBatch, chatInput, new Vector2(5, (int)(args.GraphicsDevice.Viewport.Height - (heightCalc.Y + 25))), Color.White, false, scale);
+		private void DrawChatLine(GuiRenderArgs args, string text, float alpha, ref Vector2 offset)
+		{
+			var size = Font.MeasureString(text);
+
+			var renderPos = Bounds.BottomLeft() + offset;
+
+			args.FillRectangle(new Rectangle(renderPos.ToPoint(), new Point(Width, (int)Math.Ceiling(size.Y + 2))), new Color(Color.Black, alpha * 0.5f));
+
+			args.DrawString(Font, text, renderPos + new Vector2(0, 2), TextColor.White, false, 0f, Vector2.Zero, opacity: alpha);
+			offset.Y -= (size.Y + 2);
+		}
+
+		protected override void OnKeyInput(char character, Keys key)
+		{
+			if (IsFocused)
+			{
+				if (key == Keys.Back)
+				{
+					_textBuilder.RemoveCharacter();
 				}
-
-				if (ChatMessages.Count > 0)
+				else if (key == Keys.Left)
 				{
-					var count = 2;
-					foreach (var msg in ChatMessages.TakeLast(5).Reverse())
-					{
-						heightCalc = Alex.FontRender.GetStringSize(msg.RawMessage, scale);
-
-						int extra = 0;
-						if (heightCalc.X > args.GraphicsDevice.Viewport.Width / 2f)
-						{
-							extra = (int) (heightCalc.X - args.GraphicsDevice.Viewport.Width / 2f);
-						}
-
-						args.SpriteBatch.FillRectangle(
-							new Rectangle(0, (int) (args.GraphicsDevice.Viewport.Height - ((heightCalc.Y * count) + 25)),
-								(args.GraphicsDevice.Viewport.Width / 2) + extra, (int) heightCalc.Y),
-							new Color(Color.Black, 64));
-
-						var p = new Vector2(horizontalOffset,
-							(int) (args.GraphicsDevice.Viewport.Height - ((heightCalc.Y * count) + 25)));
-						Alex.FontRender.DrawString(args.SpriteBatch, msg.RawMessage, p, Color.White, false, scale);
-
-						count++;
-					}
+					_textBuilder.CursorPosition--;
+				}
+				else if (key == Keys.Right)
+				{
+					_textBuilder.CursorPosition++;
+				}
+				else if (key == Keys.Enter)
+				{
+					SubmitMessage();
+				}
+				else
+				{
+					_textBuilder.AppendCharacter(character);
 				}
 			}
-			catch (Exception ex)
-			{
-				Log.Error($"Could not render text: {ex.ToString()}");
-			}
-			finally
-			{
-				args.SpriteBatch.End();
-			}
-		}*/
-
-		/*	private KeyboardState _prevKeyboardState;
-			public void Update(GameTime time)
-			{
-				KeyboardState currentKeyboardState = Keyboard.GetState();
-				if (currentKeyboardState != _prevKeyboardState)
-				{
-					if (RenderChatInput) //Handle Input
-					{					
-						if (currentKeyboardState.IsKeyDown(Keys.Enter))
-						{
-							SubmitMessage();
-						}
-					}
-					else
-					{
-						if (currentKeyboardState.IsKeyDown(KeyBinds.Chat))
-						{
-							RenderChatInput = !RenderChatInput;
-							_input.Clear();
-						}
-					}
-
-
-				}
-				_prevKeyboardState = currentKeyboardState;
-			}*/
+		}
 
 		public void Dismiss()
 		{
-			RenderChatInput = false;
-			_input.Clear();
-		}
-
-		public void Clear()
-		{
-
-		}
-
-		private void OnCharacterInput(object sender, TextInputEventArgs c)
-		{
-			if (RenderChatInput)
-			{
-				if (c.Key == Keys.Back)
-				{
-					BackSpace();
-					return;
-				}
-
-				if (c.Key == Keys.Enter)
-				{
-					SubmitMessage();
-					return;
-				}
-
-				_input.Append(c.Character);
-			}
-		}
-
-		private DateTime _lastBackSpace = DateTime.MinValue;
-		private void BackSpace()
-		{
-			if (DateTime.UtcNow.Subtract(_lastBackSpace).TotalMilliseconds < 100) return;
-			_lastBackSpace = DateTime.UtcNow;
-
-			if (_input.Length > 0) _input = _input.Remove(_input.Length - 1, 1);
+			IsFocused = false;
+			_textBuilder.Clear();
 		}
 
 		private void SubmitMessage()
 		{
 			//Submit message
-			if (_input.Length > 0)
+			if (_textBuilder.Length > 0)
 			{
 				if (Alex.IsMultiplayer)
 				{
-					ChatProvider?.Send(_input.ToString());
+					ChatProvider?.Send(_textBuilder.Text);
 				}
 				else
 				{
-					Receive(new ChatObject(_input.ToString()));
+					Receive(new ChatObject(_textBuilder.Text));
 				}
 			}
-			_input.Clear();
-			RenderChatInput = false;
+			_textBuilder.Clear();
+			IsFocused = false;
 		}
 
 		public void Receive(ChatObject message)
@@ -254,9 +219,16 @@ namespace Alex.Rendering.UI
 			_chatEntries.Add(DateTime.UtcNow, message);
 		}
 
-		public void ToggleInput()
+		private class DescendedDateComparer : IComparer<DateTime>
 		{
-			RenderChatInput = !RenderChatInput;
+			public int Compare(DateTime x, DateTime y)
+			{
+				// use the default comparer to do the original comparison for datetimes
+				int ascendingResult = Comparer<DateTime>.Default.Compare(x, y);
+
+				// turn the result around
+				return 0 - ascendingResult;
+			}
 		}
 	}
 }

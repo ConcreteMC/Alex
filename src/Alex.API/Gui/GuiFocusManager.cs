@@ -26,7 +26,7 @@ namespace Alex.API.Gui
         public GuiControl HighlightedElement
         {
             get => _highlightedElement;
-            private set
+            set
             {
                 if (_highlightedElement != null)
                 {
@@ -45,7 +45,7 @@ namespace Alex.API.Gui
         public GuiControl FocusedElement
         {
             get => _focusedElement;
-            private set
+            set
             {
                 if (_focusedElement != null)
                 {
