@@ -22,11 +22,12 @@ namespace Alex.GameStates.Gui.Common
 	        Gui.AddChild(_listContainer = new GuiStackContainer()
             {
 				BackgroundOverlayColor = new Color(Color.Black, 0.35f),
-                Y = Header.Height,
+                //Y = Header.Height,
                 //Width = 322,
 	            Anchor = Alignment.Fill,
 				ChildAnchor = Alignment.TopCenter,
             });
+			_listContainer.Margin = new Thickness(0, Header.Height, 0, Footer.Height);
         }
 
 	    protected override void OnUpdate(GameTime gameTime)

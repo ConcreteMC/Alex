@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using Alex.API.Gui;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -12,8 +13,10 @@ namespace Alex.Gamestates
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(GameStateManager));
 
 		private ConcurrentDictionary<string, GameState> States { get; }
+
+		private LinkedList<GameState> History { get; } = new LinkedList<GameState>();
+
         private GameState ActiveState { get; set; }
-	    private GameState PreviousState { get; set; } = null;
 
         private GraphicsDevice Graphics { get; }
         private SpriteBatch SpriteBatch { get; }
@@ -30,12 +33,16 @@ namespace Alex.Gamestates
 
 	    public void Back()
 	    {
-		    var prev = PreviousState;
-
-			if (prev != null)
-		    {
-			    SetActiveState(prev);
-		    }
+		    var last = History.Last;
+			if (History.Last != null)
+			{
+				var prev = last.Value;
+				if (prev != ActiveState)
+				{
+					History.RemoveLast();
+					SetActiveState(prev, false);
+				}
+			}
 	    }
 
         public void AddState(string name, GameState state)
@@ -90,7 +97,7 @@ namespace Alex.Gamestates
 			return SetActiveState(state);
 	    }
 
-	    public bool SetActiveState(GameState state)
+	    public bool SetActiveState(GameState state, bool keepHistory = true)
 	    {
 		    var current = ActiveState;
 		    current?.Hide();
@@ -103,7 +110,10 @@ namespace Alex.Gamestates
 		    ActiveState = state;
 		    ActiveState?.Show();
 
-		    PreviousState = current;
+		    if (History.Last?.Previous?.Value != state && keepHistory)
+		    {
+			    History.AddLast(current);
+		    }
 
 		    _activeStateDoubleBuffer = state;
 

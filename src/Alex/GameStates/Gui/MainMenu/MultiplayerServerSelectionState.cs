@@ -19,24 +19,19 @@ namespace Alex.GameStates.Gui.MainMenu
 {
     public class MultiplayerServerSelectionState : ListSelectionStateBase<GuiServerListEntryElement>
     {
-		private GuiContainer Footer { get; }
+		private GuiBeaconButton DirectConnectButton { get; }
+	    private GuiBeaconButton AddServerButton { get; }
 		public MultiplayerServerSelectionState() : base()
         {
 	        Title = "Multiplayer";
 
-	        Gui.AddChild(Footer = new GuiContainer()
-	        {
-		        Height = 32,
-				Anchor = Alignment.BottomFill
-	        });
+	        Footer.AddChild(DirectConnectButton =
+		        new GuiBeaconButton("Direct Connect", () => Alex.GameStateManager.SetActiveState<MultiplayerConnectState>())
+		        {
+					Anchor = Alignment.MiddleCenter
+				});
 
-            Footer.AddChild(new GuiBeaconButton("Direct Connect", () => Alex.GameStateManager.SetActiveState<MultiplayerConnectState>())
-            {
-                Anchor = Alignment.BottomCenter,
-                Y = -25
-            });
-
-	        AddItem(new GuiServerListEntryElement("Localhost", "localhost:25565"));
+			AddItem(new GuiServerListEntryElement("Localhost", "localhost:25565"));
 	        AddItem(new GuiServerListEntryElement("Hypixel", "mc.hypixel.net:25565"));
 		}
 
@@ -64,14 +59,13 @@ namespace Alex.GameStates.Gui.MainMenu
         private GuiTextElement _serverName;
         private GuiTextElement _serverMotd;
 
-	   // public override int Width => 325;
-	   
 	    public GuiServerListEntryElement(string serverName, string serverAddress)
         {
             ServerName = serverName;
             ServerAddress = serverAddress;
-	        Width = 325;
-
+	        MinWidth = 356;
+	        Width = 356;
+			Margin = new Thickness(5, 5);
             Anchor = Alignment.TopFill;
 
             AddChild( _serverIcon = new GuiTextureElement()
@@ -91,20 +85,23 @@ namespace Alex.GameStates.Gui.MainMenu
 
             AddChild( _textWrapper = new GuiStackContainer()
             {
-                X = ServerIconSize + 5,
-                ChildAnchor = Alignment.TopFill
-                //HorizontalContentAlignment = HorizontalAlignment.FillParent,
-                //VerticalContentAlignment = VerticalAlignment.Top
+                ChildAnchor = Alignment.TopFill,
+				Anchor = Alignment.TopLeft
             });
+			_textWrapper.Padding = new Thickness(0,0);
+			_textWrapper.Margin = new Thickness(ServerIconSize + 5, 0, 0, 0);
 
             _textWrapper.AddChild(_serverName = new GuiTextElement()
             {
                 Text = ServerName,
-				
+				Margin = Thickness.Zero
             });
+
             _textWrapper.AddChild(_serverMotd = new GuiTextElement()
             {
-				Text = "Pinging server..."
+				Text = "Pinging server...",
+				Margin = Thickness.Zero
+				//Anchor = center
             });
 
 
@@ -162,7 +159,7 @@ namespace Alex.GameStates.Gui.MainMenu
         {
             SetErrorMessage(null);
             SetConnectingState(true);
-
+		
             var queryProvider = Alex.Instance.Services.GetService<IServerQueryProvider>();
             queryProvider.QueryServerAsync(address, port).ContinueWith(ContinuationAction);
         }
@@ -224,20 +221,12 @@ namespace Alex.GameStates.Gui.MainMenu
 		            var match = FaviconRegex.Match(s.FaviconDataRaw);
 		            if (match.Success)
 		            {
-			         //   try
+			            using (MemoryStream ms = new MemoryStream(Convert.FromBase64String(match.Groups["data"].Value)))
 			            {
-				            using (MemoryStream ms = new MemoryStream(Convert.FromBase64String(match.Groups["data"].Value)))
-				            {
-					            ServerIcon = Texture2D.FromStream(_graphicsDevice, ms);
-				            }
-
-				            _serverIcon.Texture = ServerIcon;
-
+				            ServerIcon = Texture2D.FromStream(_graphicsDevice, ms);
 			            }
-			         //   catch
-			            {
-							
-			            }
+
+			            _serverIcon.Texture = ServerIcon;
 		            }
 	            }
             }
@@ -246,13 +235,6 @@ namespace Alex.GameStates.Gui.MainMenu
                 SetErrorMessage(response.ErrorMessage);
             }
 
-        }
-
-        private void ServerPingCallback(string rawMotd, long pingMs)
-        {
-            RawMotd = rawMotd;
-            
-            _serverMotd.Text = rawMotd;
         }
     }
 }

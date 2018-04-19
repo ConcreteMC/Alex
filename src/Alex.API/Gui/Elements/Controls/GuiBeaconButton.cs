@@ -31,15 +31,16 @@ namespace Alex.API.Gui.Elements.Controls
             HighlightedBackgroundTexture = GuiTextures.ButtonHover;
             FocusedBackgroundTexture = GuiTextures.ButtonFocused;
             BackgroundRepeatMode = TextureRepeatMode.NoScaleCenterSlice;
-
+			
             Action = action;
             MinHeight = 20;
 	        MinWidth = 20;
-			Padding = new Thickness(2, 4);
+			Padding = new Thickness(5, 5);
 			Margin = new Thickness(2);
 
             TextElement = new GuiTextElement()
             {
+				Margin = Thickness.Zero,
                 Anchor = Alignment.MiddleCenter,
                 Text = text,
                 TextColor = TextColor.White,

@@ -21,7 +21,9 @@ namespace Alex.API.Gui.Elements.Controls
 
         private int _cursorPositionX;
         private float _cursorAlpha;
-        
+
+	    public string PlaceHolder { get; set; } = string.Empty;
+
         public GuiTextInput()
         {
             MinWidth = 100;
@@ -34,16 +36,38 @@ namespace Alex.API.Gui.Elements.Controls
             {
                 Anchor = Alignment.MiddleLeft
             });
+
+	        _textColor = _textElement.TextColor;
+	        Value = string.Empty;
         }
 
+	    private TextColor _textColor;
+		private bool _isPlaceholder = false;
         protected override void OnUpdate(GameTime gameTime)
         {
             base.OnUpdate(gameTime);
 
             var text = _textBuilder.Text;
-            _textElement.Text = text;
-            
-            if (IsFocused)
+	        var l = text.Length;
+			if (IsFocused || l > 0)
+	        {
+		        _textElement.Text = text;
+		        _textElement.TextColor = _textColor;
+		        _isPlaceholder = false;
+	        }
+	        else if (!IsFocused && !string.IsNullOrWhiteSpace(PlaceHolder) && l == 0)
+			{
+				if (!_isPlaceholder)
+				{
+					_isPlaceholder = true;
+					_textColor = _textElement.TextColor;
+
+					_textElement.Text = PlaceHolder;
+					_textElement.TextColor = TextColor.Gray;
+				}
+			}
+
+	        if (IsFocused)
             {
                 var preCursor = text.Substring(0, _textBuilder.CursorPosition);
                 var cursorOffsetX = (int)_textElement.Font.MeasureString(preCursor, _textElement.Scale).X;
@@ -58,7 +82,7 @@ namespace Alex.API.Gui.Elements.Controls
         {
             if (IsFocused)
             {
-	            string originalValue = Value?.Clone().ToString() ?? string.Empty;
+	            int originalLength = Value?.Length ?? 0;
                 if (key == Keys.Back)
                 {
                     _textBuilder.RemoveCharacter();
@@ -76,7 +100,7 @@ namespace Alex.API.Gui.Elements.Controls
                     _textBuilder.AppendCharacter(character);
                 }
 
-	            if (originalValue != _textBuilder.Text)
+	            if (_textBuilder.Length != originalLength)
 	            {
 		            Value = _textBuilder.Text;
 	            }
@@ -99,7 +123,7 @@ namespace Alex.API.Gui.Elements.Controls
                     var textElementBounds = _textElement.RenderBounds;
                     var offsetX = textElementBounds.X + _cursorPositionX + 1;
 
-                    args.DrawLine(offsetX, textElementBounds.Y, offsetX, textElementBounds.Height, Color.White * _cursorAlpha);
+                    args.DrawLine(offsetX, textElementBounds.Top, offsetX, textElementBounds.Bottom, _textColor.ForegroundColor * _cursorAlpha);
                 }
             }
 

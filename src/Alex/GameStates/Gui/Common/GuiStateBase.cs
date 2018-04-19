@@ -63,25 +63,25 @@ namespace Alex.GameStates.Gui.Common
                 Anchor = Alignment.MiddleCenter,
             });
 
-            Gui.AddChild(Body = new GuiStackContainer()
-            {
-                Y = Header.Height + 10,
-                
-                Anchor = Alignment.FillX,
-                ChildAnchor = Alignment.TopCenter,
-                //HorizontalContentAlignment = HorizontalAlignment.Center
-            });
-            
             Gui.AddChild(Footer = new GuiContainer()
             {
                 Height  = 32,
                 Padding = new Thickness(3),
 
-                Anchor = Alignment.BottomFill,
+                Anchor = Alignment.BottomFill
             });
-        }
 
-        protected void AddGuiElement(GuiElement element)
+	        Gui.AddChild(Body = new GuiStackContainer()
+	        {
+		        Margin = new Thickness(0, Header.Height, 0, Footer.Height),
+
+		        Anchor = Alignment.FillX,
+		        ChildAnchor = Alignment.TopCenter,
+		        //HorizontalContentAlignment = HorizontalAlignment.Center
+	        });
+		}
+
+		protected void AddGuiElement(GuiElement element)
         {
             Body.AddChild(element);
         }
