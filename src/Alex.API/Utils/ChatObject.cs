@@ -47,7 +47,7 @@ namespace Alex.API.Utils
         public static readonly TextColor Gray        = new TextColor('7', 170, 170, 170,  42,  42,  42, "gray");
         public static readonly TextColor DarkGray    = new TextColor('8',  85,  85,  85,  21,  21,  21, "dark_gray");
         public static readonly TextColor Blue        = new TextColor('9',  85,  85, 255,  21,  21,  63, "blue");
-        public static readonly TextColor BrightGreen = new TextColor('a',  85, 255, 255,  21,  63,  21, "green");
+        public static readonly TextColor BrightGreen = new TextColor('a',  85, 255, 85,  21,  63,  21, "green");
         public static readonly TextColor Cyan        = new TextColor('b',  85, 255, 255,  21,  63,  63, "aqua");
         public static readonly TextColor Red         = new TextColor('c', 255,  85,  85,  63,  21,  21, "red");
         public static readonly TextColor Pink        = new TextColor('d', 255,  85, 255,  63,  21,  62, "light_purple");
@@ -149,8 +149,8 @@ namespace Alex.API.Utils
                     return BrightGreen;
                 case 'b':
                     return Cyan;
-                case 'r':
-                    return Red;
+				case 'c':
+					return Red;
                 case 'd':
                     return Pink;
                 case 'e':

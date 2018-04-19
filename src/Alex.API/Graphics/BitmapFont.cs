@@ -39,7 +39,7 @@ namespace Alex.API.Graphics
         public BitmapFont(GraphicsDevice graphics, Bitmap bitmap, int gridWidth, int gridHeight, List<char> characters) :
             this(TextureUtils.BitmapToTexture2D(graphics, bitmap), gridWidth, gridHeight, characters)
         {
-            LoadGlyphSizes(bitmap, characters);
+            LoadGlyphs(bitmap, characters);
         }
 
         public BitmapFont(Texture2D texture, int gridSize, List<char> characters) : this(texture, gridSize, gridSize, characters)
@@ -153,9 +153,8 @@ namespace Alex.API.Graphics
                     if (firstGlyphOfLine)
                     {
                         offset.X += CharacterSpacing;
-                    }
-
-                    firstGlyphOfLine = false;
+	                    firstGlyphOfLine = false;
+					}
 
                     offset.X += glyph.Width + (styleBold ? 1 : 0) + CharacterSpacing;
 
@@ -178,7 +177,7 @@ namespace Alex.API.Graphics
             return DefaultGlyph;
         }
         
-        private void LoadGlyphSizes(Bitmap bitmap, List<char> characters)
+        private void LoadGlyphs(Bitmap bitmap, List<char> characters)
         {
             if (_isInitialised) return;
 
@@ -236,11 +235,16 @@ namespace Alex.API.Graphics
 
                 var character = characters[i];
 
-                var glyph = new Glyph()
+	            if (character == ' ')
+	            {
+		            charWidth = 4;
+	            }
+
+				var glyph = new Glyph()
                 {
                     Character = character,
                     TextureSlice = textureSlice,
-                    Width = width,
+                    Width = charWidth,
                     Height = cellHeight
                 };
 

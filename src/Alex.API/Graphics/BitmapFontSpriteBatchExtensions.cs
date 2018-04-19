@@ -39,6 +39,7 @@ namespace Alex.API.Graphics
 			DrawString(sb, bitmapFont, text, position, color, dropShadow, rotation, origin.HasValue ? origin.Value : Vector2.Zero, Vector2.One, SpriteEffects.None, 0f);
 		}
 
+		private static Random _fontRandomGenerator = new Random();
 		public static void DrawString(this SpriteBatch sb, BitmapFont bitmapFont, string text, Vector2 position, TextColor color, bool dropShadow, float rotation, Vector2 origin, Vector2 scale, SpriteEffects effects = SpriteEffects.None, float layerDepth = 0f, float opacity = 1f)
 		{
 			if (string.IsNullOrEmpty(text)) return;
@@ -169,9 +170,13 @@ namespace Alex.API.Graphics
 					if (firstGlyphOfLine)
 					{
 						offset.X += bitmapFont.CharacterSpacing;
+						firstGlyphOfLine = false;
 					}
 
-					firstGlyphOfLine = false;
+					//if (styleRandom)
+					//{
+					//	c = 
+					//}
 
 					var p = offset;
 
