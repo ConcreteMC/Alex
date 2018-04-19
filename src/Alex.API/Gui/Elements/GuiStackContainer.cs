@@ -40,11 +40,9 @@ namespace Alex.API.Gui.Elements
 
         }
 
-        protected override Size MeasureChildren(Size availableSize)
+        protected override Size MeasureChildrenCore(Size availableSize, IReadOnlyCollection<GuiElement> children)
         {
-            var children = Children.Cast<GuiElement>().ToArray();
-
-            var containerSize = availableSize + Padding;
+            var containerSize = availableSize;
 
             var size = Size.Zero;
             Thickness lastOffset = Thickness.Zero;
@@ -62,6 +60,8 @@ namespace Alex.API.Gui.Elements
 
                 lastOffset = CalculateOffset(ChildAnchor, Size.Zero, child.Margin);
             }
+
+            size += lastOffset;
 
             return size;
         }

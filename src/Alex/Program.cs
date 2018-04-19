@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading;
 using Alex.API.Services;
 using Alex.Networking.Java;
@@ -30,11 +31,29 @@ namespace Alex
 		[STAThread]
 		static void Main(string[] args)
 		{
-			LaunchSettings launchSettings = new LaunchSettings();
-			bool nextIsServer = false;
-			bool nextIsuuid = false;
-			bool nextIsaccessToken = false;
-			bool nextIsUsername = false;
+			LaunchSettings launchSettings = ParseArguments(args);
+
+			if (launchSettings.Server == null && launchSettings.ConnectOnLaunch)
+			{
+				launchSettings.ConnectOnLaunch = false;
+				Log.Warn($"No server specified, ignoring connect argument.");
+			}
+
+			Log.Info($"Starting...");
+			using (var game = new Alex(launchSettings))
+			{
+				game.Run();
+			}
+
+		}
+
+		private static LaunchSettings ParseArguments(string[] args)
+		{
+			LaunchSettings launchSettings    = new LaunchSettings();
+			bool           nextIsServer      = false;
+			bool           nextIsuuid        = false;
+			bool           nextIsaccessToken = false;
+			bool           nextIsUsername    = false;
 			foreach (var arg in args)
 			{
 				if (nextIsServer)
@@ -52,19 +71,19 @@ namespace Alex
 
 				if (nextIsaccessToken)
 				{
-					nextIsaccessToken = false;
+					nextIsaccessToken         = false;
 					launchSettings.AccesToken = arg;
 				}
 
 				if (nextIsuuid)
 				{
-					nextIsuuid = false;
+					nextIsuuid          = false;
 					launchSettings.UUID = arg;
 				}
 
 				if (nextIsUsername)
 				{
-					nextIsUsername = false;
+					nextIsUsername          = false;
 					launchSettings.Username = arg;
 				}
 
@@ -94,21 +113,13 @@ namespace Alex
 				}
 			}
 
-			if (launchSettings.Server == null && launchSettings.ConnectOnLaunch)
-			{
-				launchSettings.ConnectOnLaunch = false;
-				Log.Warn($"No server specified, ignoring connect argument.");
-			}
-
-			Log.Info($"Starting...");
-			using (var game = new Alex(launchSettings))
-			{
-				game.Run();
-			}
-
+			return launchSettings;
 		}
+		
 	}
 #endif
+
+
 
 	public class LaunchSettings
 	{

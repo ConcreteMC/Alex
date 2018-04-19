@@ -42,6 +42,9 @@ namespace Alex.API.Gui.Rendering
         #region Debug Helpers
 
         private static readonly Vector2 DebugFontScale = new Vector2(0.25f);
+        
+        private static readonly Color DebugTextBackground = Color.WhiteSmoke * 0.5f;
+        private static readonly Color DebugTextForeground = Color.Black * 0.85f;
 
         private static readonly Color OuterBoundsBackground = Color.LightGoldenrodYellow * 0.1f;
         private static readonly Color BoundsBackground = Color.LightSeaGreen * 0.2f;
@@ -76,7 +79,7 @@ namespace Alex.API.Gui.Rendering
                 DrawDebugBounds(element.InnerBounds, InnerBoundsBackground, true, true, false, false);
             }
 
-            DrawDebugString(element.Bounds.CenterTop(), element.GetType().Name, Color.Black, 2, 0, 1);
+            DrawDebugString(element.Bounds.TopCenter(), element.GetType().Name);
         }
 
         public void DrawDebugBounds(Rectangle bounds, Color color, bool drawBackground = false, bool drawBorders = true, bool drawCoordinates = true, bool drawSize = true)
@@ -92,21 +95,32 @@ namespace Alex.API.Gui.Rendering
                 DrawRectangle(bounds, color, 1);
             }
 
+            var pos = bounds.Location;
             if (drawCoordinates)
             {
-                DrawDebugString(bounds.CenterLeft(), bounds.Left.ToString(), Color.Black, 2, -1, 0);
-                DrawDebugString(bounds.CenterRight(), bounds.Right.ToString(), Color.Black, 2, 1, 0);
-                DrawDebugString(bounds.CenterTop(), bounds.Top.ToString(), Color.Black, 2, 0, -1);
-                DrawDebugString(bounds.CenterBottom(), bounds.Bottom.ToString(), Color.Black, 2, 0, 1);
+                DrawDebugString(bounds.TopLeft(), $"({pos.X}, {pos.Y})", Alignment.BottomLeft);
             }
 
             if (drawSize)
             {
-                DrawDebugString(bounds.Center.ToVector2(), $"{bounds.Width}x{bounds.Height}", Color.Black, 2, 0, 0);
+                DrawDebugString(bounds.TopRight(), $"[{bounds.Width} x {bounds.Height}]");
             }
         }
 
-        public void DrawDebugString(Vector2 position, string text, Color color, int padding = 2, int xAlign = 0, int yAlign = 0)
+        public void DrawDebugString(Vector2 position,   object obj, Alignment align = Alignment.TopLeft)
+        {
+            var x = (align & (Alignment.CenterX | Alignment.FillX)) != 0 ? 0 : ((align & Alignment.MinX) != 0 ? -1 : 1);
+            var y = (align & (Alignment.CenterY | Alignment.FillY)) != 0 ? 0 : ((align & Alignment.MinY) != 0 ? -1 : 1);
+
+            DrawDebugString(position, obj.ToString(), Color.WhiteSmoke * 0.5f, Color.Black, 2, x, y);
+        }
+
+        public void DrawDebugString(Vector2 position, object obj, Color color, int padding = 2, int xAlign = 0, int yAlign = 0)
+        {
+            DrawDebugString(position, obj.ToString(), color, padding, xAlign, yAlign);
+        }
+
+        private void DrawDebugString(Vector2 position, string text, Color? background, Color color, int padding = 2, int xAlign = 0, int yAlign = 0)
         {
             if (Renderer.DebugFont == null) return;
 
@@ -139,11 +153,31 @@ namespace Alex.API.Gui.Rendering
                 p.Y = p.Y + padding;
             }
 
+            if (background.HasValue)
+            {
+                FillRectangle(new Rectangle((int)(p.X - padding), (int)(p.Y - padding), (int)(s.X + 2*padding), (int)(s.Y + 2*padding)), background.Value);
+            }
+
             SpriteBatch.DrawString(Renderer.DebugFont, text, p, color, 0f, Vector2.Zero, DebugFontScale, SpriteEffects.None, 0);
         }
-        
-        #endregion
 
+        public Vector2 Project(Vector2 vector)
+        {
+            return Renderer.Project(vector);
+        }
+        public Point Project(Point point)
+        {
+            return Renderer.Project(point.ToVector2()).ToPoint();
+        }
+        public Rectangle Project(Rectangle rectangle)
+        {
+            var location = Project(rectangle.Location);
+            var size = Project(rectangle.Location + rectangle.Size);
+            return new Rectangle(location.X, location.Y, size.X-location.X, size.Y-location.Y);
+        }
+
+        #endregion
+        
         public void DrawRectangle(Rectangle bounds, Color color, int thickness = 1)
         {
             DrawRectangle(bounds, color, thickness, thickness, thickness, thickness);

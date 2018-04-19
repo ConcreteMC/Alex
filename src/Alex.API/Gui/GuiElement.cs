@@ -707,11 +707,11 @@ namespace Alex.API.Gui
             {
                 // AS DEFINED ONLY.
                 // Make sure we still measure all children though!
-                MeasureChildren(size - Padding);
+                MeasureChildren(size);
             }
             else
             {
-                var autoSize = MeasureAutoSize(availableSize) + Padding;
+                var autoSize = MeasureAutoSize(availableSize);
 
                 if (Anchor.HasFlag(Alignment.FillX))
                 {
@@ -783,15 +783,22 @@ namespace Alex.API.Gui
                 }
             }
 
-            var childSize = MeasureChildren(size - Padding);
+            var childSize = MeasureChildren(size);
             
             return Size.Max(size, childSize);
         }
 
-        protected virtual Size MeasureChildren(Size availableSize)
+        protected Size MeasureChildren(Size availableSize)
         {
             var children = Children.Cast<GuiElement>().ToArray();
-            
+
+            var size = MeasureChildrenCore(availableSize - Padding, children);
+
+            return size + Padding;
+        }
+
+        protected virtual Size MeasureChildrenCore(Size availableSize, IReadOnlyCollection<GuiElement> children)
+        {
             Size size = Size.Zero;
 
             foreach (var child in children)

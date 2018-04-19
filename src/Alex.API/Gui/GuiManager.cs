@@ -8,7 +8,7 @@ namespace Alex.API.Gui
 {
     public class GuiManager
     {
-        public static bool DebugVisible = false;
+        public static bool DebugVisible = true;
 
         private Game Game { get; }
         public GuiScaledResolution ScaledResolution { get; }
