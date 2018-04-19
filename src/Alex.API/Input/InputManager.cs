@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Input.Listeners;
 using Microsoft.Xna.Framework;
@@ -46,6 +47,11 @@ namespace Alex.API.Input
             {
                playerInputManager.Update(gameTime);
             }
+        }
+
+        public bool Any(Func<PlayerInputManager, bool> playerInputManagerFunc)
+        {
+            return PlayerInputManagers.Values.ToArray().Any(playerInputManagerFunc);
         }
     }
 }

@@ -8,17 +8,19 @@ namespace Alex.API.Gui
 {
     public class GuiManager
     {
-        public static bool DebugVisible = true;
+        private GuiDebugHelper DebugHelper { get; }
 
         private Game Game { get; }
+        private GraphicsDevice GraphicsDevice { get; set; }
+
         public GuiScaledResolution ScaledResolution { get; }
         public GuiFocusManager FocusManager { get; }
 
-        private InputManager InputManager { get; set; }
-        public IGuiRenderer GuiRenderer { get; set; }
-        private GraphicsDevice GraphicsDevice { get; set; }
-        private SpriteBatch SpriteBatch { get; set; }
-        private GuiRenderArgs GuiRenderArgs { get; set; }
+        public IGuiRenderer GuiRenderer { get; }
+
+        internal InputManager InputManager { get; }
+        internal SpriteBatch SpriteBatch { get; private set; }
+        internal GuiRenderArgs GuiRenderArgs { get; private set; }
 
         public List<GuiScreen> Screens { get; } = new List<GuiScreen>();
         
@@ -35,6 +37,8 @@ namespace Alex.API.Gui
             guiRenderer.ScaledResolution = ScaledResolution;
             SpriteBatch = new SpriteBatch(Game.GraphicsDevice);
             GuiRenderArgs = new GuiRenderArgs(GuiRenderer, Game.GraphicsDevice, SpriteBatch, new GameTime(), ScaledResolution);
+
+            DebugHelper = new GuiDebugHelper(this);
         }
 
         private void ScaledResolutionOnScaleChanged(object sender, UiScaleEventArgs args)
@@ -96,6 +100,8 @@ namespace Alex.API.Gui
             {
                 screen.Update(gameTime);
             }
+
+            DebugHelper.Update(gameTime);
         }
 
         public void Draw(GameTime gameTime)
@@ -109,14 +115,8 @@ namespace Alex.API.Gui
                 foreach (var screen in Screens.ToArray())
                 {
                     screen.Draw(args);
-                }
 
-                if (DebugVisible)
-                {
-                    foreach (var screen in Screens.ToArray())
-                    {
-                        screen.DrawDebug(args);
-                    }
+                    DebugHelper.DrawScreen(screen);
                 }
             }
             finally

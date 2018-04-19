@@ -16,7 +16,6 @@ namespace Alex.API.Gui
         {
             AutoSizeMode = AutoSizeMode.None;
             Anchor = Alignment.Fill;
-            DrawDebugVisible = false;
 
             BackgroundRepeatMode = TextureRepeatMode.Tile;
             Game = game;

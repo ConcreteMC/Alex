@@ -4,6 +4,7 @@ using Alex.API.Graphics.Textures;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 
 namespace Alex.API.Gui.Rendering
 {
@@ -38,146 +39,7 @@ namespace Alex.API.Gui.Rendering
         {
             SpriteBatch.End();
         }
-
-        #region Debug Helpers
-
-        private static readonly Vector2 DebugFontScale = new Vector2(0.25f);
-        
-        private static readonly Color DebugTextBackground = Color.WhiteSmoke * 0.5f;
-        private static readonly Color DebugTextForeground = Color.Black * 0.85f;
-
-        private static readonly Color OuterBoundsBackground = Color.LightGoldenrodYellow * 0.1f;
-        private static readonly Color BoundsBackground = Color.LightSeaGreen * 0.2f;
-        private static readonly Color InnerBoundsBackground = Color.CornflowerBlue * 0.1f;
-
-        public void DrawDebug(GuiElement element)
-        {
-            if (element.OuterBounds != element.Bounds)
-            {
-                DrawDebugBounds(element.OuterBounds, OuterBoundsBackground, false, true, false, false);
-            }
-
-            DrawDebugBounds(element.Bounds, BoundsBackground, false, true, false, false);
-
-            if (element.AutoSizeMode == AutoSizeMode.None)
-            {
-                DrawDebugBounds(element.RenderBounds, Color.Red, false, true, true, true);
-            }
-
-            if (element.AutoSizeMode == AutoSizeMode.GrowAndShrink)
-            {
-                DrawDebugBounds(element.RenderBounds, Color.YellowGreen, false, true, true, true);
-            }
-
-            if (element.AutoSizeMode == AutoSizeMode.GrowOnly)
-            {
-                DrawDebugBounds(element.RenderBounds, Color.LawnGreen, false, true, true, true);
-            }
-            
-            if(element.InnerBounds != element.Bounds);
-            {
-                DrawDebugBounds(element.InnerBounds, InnerBoundsBackground, true, true, false, false);
-            }
-
-            DrawDebugString(element.Bounds.TopCenter(), element.GetType().Name);
-        }
-
-        public void DrawDebugBounds(Rectangle bounds, Color color, bool drawBackground = false, bool drawBorders = true, bool drawCoordinates = true, bool drawSize = true)
-        {
-            // Bounding Rectangle
-            if (drawBackground)
-            {
-                FillRectangle(bounds, color);
-            }
-
-            if (drawBorders)
-            {
-                DrawRectangle(bounds, color, 1);
-            }
-
-            var pos = bounds.Location;
-            if (drawCoordinates)
-            {
-                DrawDebugString(bounds.TopLeft(), $"({pos.X}, {pos.Y})", Alignment.BottomLeft);
-            }
-
-            if (drawSize)
-            {
-                DrawDebugString(bounds.TopRight(), $"[{bounds.Width} x {bounds.Height}]");
-            }
-        }
-
-        public void DrawDebugString(Vector2 position,   object obj, Alignment align = Alignment.TopLeft)
-        {
-            var x = (align & (Alignment.CenterX | Alignment.FillX)) != 0 ? 0 : ((align & Alignment.MinX) != 0 ? -1 : 1);
-            var y = (align & (Alignment.CenterY | Alignment.FillY)) != 0 ? 0 : ((align & Alignment.MinY) != 0 ? -1 : 1);
-
-            DrawDebugString(position, obj.ToString(), Color.WhiteSmoke * 0.5f, Color.Black, 2, x, y);
-        }
-
-        public void DrawDebugString(Vector2 position, object obj, Color color, int padding = 2, int xAlign = 0, int yAlign = 0)
-        {
-            DrawDebugString(position, obj.ToString(), color, padding, xAlign, yAlign);
-        }
-
-        private void DrawDebugString(Vector2 position, string text, Color? background, Color color, int padding = 2, int xAlign = 0, int yAlign = 0)
-        {
-            if (Renderer.DebugFont == null) return;
-
-            var p = position;
-            var s = Renderer.DebugFont.MeasureString(text) * DebugFontScale;
-
-            if (xAlign == 1)
-            {
-                p.X = p.X - (s.X + padding);
-            }
-            else if(xAlign == 0)
-            {
-                p.X = p.X - (s.X / 2f);
-            }
-            else if (xAlign == -1)
-            {
-                p.X = p.X + padding;
-            }
-
-            if (yAlign == 1)
-            {
-                p.Y = p.Y - (s.Y + padding);
-            }
-            else if(yAlign == 0)
-            {
-                p.Y = p.Y - (s.Y / 2f);
-            }
-            else if (yAlign == -1)
-            {
-                p.Y = p.Y + padding;
-            }
-
-            if (background.HasValue)
-            {
-                FillRectangle(new Rectangle((int)(p.X - padding), (int)(p.Y - padding), (int)(s.X + 2*padding), (int)(s.Y + 2*padding)), background.Value);
-            }
-
-            SpriteBatch.DrawString(Renderer.DebugFont, text, p, color, 0f, Vector2.Zero, DebugFontScale, SpriteEffects.None, 0);
-        }
-
-        public Vector2 Project(Vector2 vector)
-        {
-            return Renderer.Project(vector);
-        }
-        public Point Project(Point point)
-        {
-            return Renderer.Project(point.ToVector2()).ToPoint();
-        }
-        public Rectangle Project(Rectangle rectangle)
-        {
-            var location = Project(rectangle.Location);
-            var size = Project(rectangle.Location + rectangle.Size);
-            return new Rectangle(location.X, location.Y, size.X-location.X, size.Y-location.Y);
-        }
-
-        #endregion
-        
+       
         public void DrawRectangle(Rectangle bounds, Color color, int thickness = 1)
         {
             DrawRectangle(bounds, color, thickness, thickness, thickness, thickness);
