@@ -7,14 +7,11 @@ namespace Alex.API.Input
 {
     public class TextInputBuilder
     {
-        public event EventHandler CursorPositionChanged; 
+        public event EventHandler CursorPositionChanged;
 
-        public string Text { get; private set; }
-
-        public int Length
-        {
-            get { return Text.Length; }
-        }
+	    private StringBuilder _stringBuilder;
+	    public string Text => _stringBuilder.ToString();
+	    public int Length => _stringBuilder.Length;
 
         private int _cursorPosition;
 
@@ -38,29 +35,45 @@ namespace Alex.API.Input
 
         public TextInputBuilder(string text = null)
         {
-            Text = text ?? string.Empty;
+	        if (text != null)
+	        {
+				_stringBuilder = new StringBuilder(text);
+			}
+	        else
+	        {
+				_stringBuilder = new StringBuilder();
+	        }
         }
 
         public void RemoveCharacter()
         {
-	        if (string.IsNullOrEmpty(Text)) return;
+	        if (_stringBuilder.Length == 0) return;
 
-            var t   = Text;
             var pos = CursorPosition;
 
-	        Text = t.Remove(pos - 1, 1);
+	        _stringBuilder.Remove(pos - 1, 1);
             CursorPosition = pos - 1;
         }
 
         public void AppendCharacter(char c)
         {
-            var t = Text;
             var pos = CursorPosition;
+	        _stringBuilder.Insert(pos, c);
 
-            var str = c.ToString();
-            
-            Text = t.Substring(0, pos) + str + t.Substring(pos, t.Length-pos);
             CursorPosition = pos + 1;
         }
+
+	    public void AppendLine(string line)
+		{
+			var pos = CursorPosition;
+			_stringBuilder.Insert(pos, line);
+			CursorPosition = pos + line.Length;
+		}
+
+	    public void Clear()
+	    {
+		    _stringBuilder.Clear();
+			CursorPosition = 0;
+	    }
     }
 }

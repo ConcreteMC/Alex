@@ -57,8 +57,9 @@ namespace Alex.Gamestates.Gui
             {
                 AddChild(new GuiInventoryItem()
                 {
-                    X = i * ItemWidth,
-                    IsSelected = i == SelectedIndex
+                    Margin = new Thickness((i * ItemWidth), 0, 0, 0),
+                    IsSelected = i == SelectedIndex,
+					Anchor = Alignment.TopLeft
                 });
             }
         }

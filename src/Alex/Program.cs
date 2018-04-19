@@ -54,6 +54,7 @@ namespace Alex
 			bool           nextIsuuid        = false;
 			bool           nextIsaccessToken = false;
 			bool           nextIsUsername    = false;
+			
 			foreach (var arg in args)
 			{
 				if (nextIsServer)
@@ -111,6 +112,11 @@ namespace Alex
 				{
 					launchSettings.ConnectOnLaunch = true;
 				}
+
+				if (arg == "--console")
+				{
+					launchSettings.ShowConsole = true;
+				}
 			}
 
 			return launchSettings;
@@ -129,5 +135,6 @@ namespace Alex
 		public string Username;
 		public string UUID;
 		public string AccesToken;
+		public bool ShowConsole = false;
 	}
 }
