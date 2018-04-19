@@ -108,19 +108,7 @@ namespace Alex.API.Gui
                 args.Draw(BackgroundOverlay, RenderBounds, BackgroundRepeatMode, BackgroundScale);
             }
         }
-
-        public bool DrawDebugVisible = true;
-
-        public void DrawDebug(GuiRenderArgs args)
-        {
-            if (DrawDebugVisible)
-            {
-                args.DrawDebug(this);
-            }
-
-            ForEachChild<GuiElement>(c => c.DrawDebug(args));
-        }
-
+        
         #endregion
 
         private IGuiRenderer _guiRenderer;
