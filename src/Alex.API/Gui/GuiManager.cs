@@ -23,7 +23,7 @@ namespace Alex.API.Gui
         internal SpriteBatch SpriteBatch { get; private set; }
         internal GuiRenderArgs GuiRenderArgs { get; private set; }
 
-        private GuiSpriteBatch GuiSpriteBatch { get; set; }
+        internal GuiSpriteBatch GuiSpriteBatch { get; private set; }
 
         public List<GuiScreen> Screens { get; } = new List<GuiScreen>();
         

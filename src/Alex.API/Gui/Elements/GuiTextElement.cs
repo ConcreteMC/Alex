@@ -84,7 +84,7 @@ namespace Alex.API.Gui.Elements
 			    BackgroundOverlayColor = DefaultTextBackgroundColor;
 		    }
 
-			Margin = new Thickness(5, 5);
+			Margin = new Thickness(2);
 	    }
 
 		protected override void OnInit(IGuiRenderer renderer)

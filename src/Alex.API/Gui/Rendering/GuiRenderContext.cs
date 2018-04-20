@@ -51,6 +51,7 @@ namespace Alex.API.Gui.Rendering
             _hasBegun = true;
 
         }
+
         public void End()
         {
             if (!_hasBegun) return;
@@ -68,6 +69,7 @@ namespace Alex.API.Gui.Rendering
 
             var context = GraphicsContext.CreateContext(_graphicsDevice, blendState, depthStencilState, rasterizerState, samplerState);
             context.Disposed += OnGraphicsContextDisposed;
+
             return context;
         }
 

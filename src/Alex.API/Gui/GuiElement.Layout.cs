@@ -247,6 +247,24 @@ namespace Alex.API.Gui
             PreferredMinSize = minSize;
             PreferredMaxSize = maxSize;
         }
+        protected virtual void GetPreferredSize(out Size size, out Size minSize, out Size maxSize)
+        {
+            size    = new Size(Width, Height);
+            minSize = new Size(MinWidth, MinHeight);
+            maxSize = new Size(MaxWidth, MaxHeight);
+
+            if (AutoSizeMode == AutoSizeMode.None)
+            {
+                minSize = size;
+                maxSize = size;
+            }
+            else if (AutoSizeMode == AutoSizeMode.GrowOnly)
+            {
+                minSize = size;
+            }
+
+            size = Size.Clamp(size, minSize, maxSize);
+        }
         
         public Size Measure(Size availableSize)
         {
@@ -258,7 +276,6 @@ namespace Alex.API.Gui
 
             return Size + Margin;
         }
-
         protected virtual Size MeasureCore(Size availableSize)
         {
             var size = PreferredSize;
@@ -291,26 +308,7 @@ namespace Alex.API.Gui
 
             return size;
         }
-
-        protected virtual void GetPreferredSize(out Size size, out Size minSize, out Size maxSize)
-        {
-            size    = new Size(Width, Height);
-            minSize = new Size(MinWidth, MinHeight);
-            maxSize = new Size(MaxWidth, MaxHeight);
-
-            if (AutoSizeMode == AutoSizeMode.None)
-            {
-                minSize = size;
-                maxSize = size;
-            }
-            else if (AutoSizeMode == AutoSizeMode.GrowOnly)
-            {
-                minSize = size;
-            }
-
-            size = Size.Clamp(size, minSize, maxSize);
-        }
-
+        
         private Size MeasureAutoSize(Size availableSize)
         {
             var size = PreferredMinSize;
@@ -356,7 +354,6 @@ namespace Alex.API.Gui
 
             return size + Padding;
         }
-
         protected virtual Size MeasureChildrenCore(Size availableSize, IReadOnlyCollection<GuiElement> children)
         {
             Size size = Size.Zero;

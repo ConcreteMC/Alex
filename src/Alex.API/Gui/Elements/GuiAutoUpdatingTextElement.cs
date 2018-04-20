@@ -7,7 +7,7 @@ namespace Alex.API.Gui.Elements
     {
         private readonly Func<string> _updateFunc;
 
-        public GuiAutoUpdatingTextElement(Func<string> updateFunc) : base()
+        public GuiAutoUpdatingTextElement(Func<string> updateFunc, bool hasBackground = false) : base(hasBackground)
         {
             _updateFunc = updateFunc;
             Text        = _updateFunc();

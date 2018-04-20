@@ -50,7 +50,6 @@ namespace Alex.API.Gui
         #region Drawing
 
         private float _rotation;
-
         public float Rotation
         {
             get => _rotation;

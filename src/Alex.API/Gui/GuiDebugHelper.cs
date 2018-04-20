@@ -30,8 +30,7 @@ namespace Alex.API.Gui
 
         protected IGuiRenderer Renderer => GuiManager.GuiRenderer;
         protected InputManager Input => GuiManager.InputManager;
-        protected GuiRenderArgs RenderArgs => GuiManager.GuiRenderArgs;
-        protected SpriteBatch SpriteBatch => GuiManager.SpriteBatch;
+        protected GuiSpriteBatch SpriteBatch => GuiManager.GuiSpriteBatch;
         
         private KeyboardState _previousKeyboard, _currentKeyboard;
 
@@ -110,12 +109,12 @@ namespace Alex.API.Gui
             // Bounding Rectangle
             if (drawBackground)
             {
-                RenderArgs.FillRectangle(bounds, color);
+                SpriteBatch.FillRectangle(bounds, color);
             }
 
             if (drawBorders)
             {
-                RenderArgs.DrawRectangle(bounds, color, 1);
+                SpriteBatch.DrawRectangle(bounds, color, 1);
             }
 
             var pos = bounds.Location;
@@ -176,10 +175,10 @@ namespace Alex.API.Gui
 
             if (background.HasValue)
             {
-                RenderArgs.FillRectangle(new Rectangle((int)(p.X - padding), (int)(p.Y - padding), (int)(s.X + 2*padding), (int)(s.Y + 2*padding)), background.Value);
+                SpriteBatch.FillRectangle(new Rectangle((int)(p.X - padding), (int)(p.Y - padding), (int)(s.X + 2*padding), (int)(s.Y + 2*padding)), background.Value);
             }
 
-            Renderer.DebugFont.DrawString(SpriteBatch, text, p, (TextColor) color, scale: DebugFontScale);
+            SpriteBatch.DrawString(p, text, Renderer.DebugFont, (TextColor) color, FontStyle.None, DebugFontScale);
         }
 
         #endregion

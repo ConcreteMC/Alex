@@ -1,4 +1,5 @@
 ﻿using System;
+using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Rendering;
@@ -15,42 +16,38 @@ namespace Alex.Gamestates.Gui
         {
             AddChild(_leftContainer = new GuiStackContainer()
             {
-                Anchor = Alignment.TopLeft,
-
                 Orientation = Orientation.Vertical,
+
+                Anchor = Alignment.TopLeft,
                 ChildAnchor = Alignment.TopLeft,
-                //HorizontalContentAlignment = HorizontalAlignment.Left,
-                //VerticalContentAlignment = VerticalAlignment.Top,
             });
             
             AddChild(_rightContainer = new GuiStackContainer()
             {
-                Anchor = Alignment.TopRight,
+                Orientation = Orientation.Vertical,
 
-                Orientation                = Orientation.Vertical,
+                Anchor = Alignment.TopRight,
                 ChildAnchor = Alignment.TopRight,
-	           // HorizontalContentAlignment = HorizontalAlignment.Right,
-                //VerticalContentAlignment   = VerticalAlignment.Top,
 			});
         }
 
         public void AddDebugLeft(Func<string> getDebugString)
         {
-            _leftContainer.AddChild(new GuiAutoUpdatingTextElement(getDebugString)
+            _leftContainer.AddChild(new GuiAutoUpdatingTextElement(getDebugString, true)
             {
                 TextColor = TextColor.White,
-				//HorizontalAlignment = HorizontalAlignment.MinX,
-				Scale = 0.5f
+                FontStyle = FontStyle.DropShadow,
+                Scale = 0.5f,
             });
         }
 
         public void AddDebugRight(Func<string> getDebugString)
         {
-            _rightContainer.AddChild(new GuiAutoUpdatingTextElement(getDebugString)
+            _rightContainer.AddChild(new GuiAutoUpdatingTextElement(getDebugString, true)
             {
                 TextColor = TextColor.White,
-				//HorizontalAlignment = HorizontalAlignment.MaxX,
-	            Scale = 0.5f
+                FontStyle = FontStyle.DropShadow,
+                Scale = 0.5f,
 			});
         }
     }

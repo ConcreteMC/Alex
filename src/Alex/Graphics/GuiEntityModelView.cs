@@ -156,7 +156,11 @@ namespace Alex.Graphics
 
                     context.Viewport = Camera.Viewport;
 
+                    graphics.Begin();
+
                     EntityModelRenderer?.Render(renderArgs, EntityPosition);
+
+                    graphics.End();
                 }
 
                 //graphics.Begin();
