@@ -6,39 +6,39 @@
         Style="{StaticResource WindowStyle}"
         xmlns:local="clr-namespace:Alex.Launcher"
         mc:Ignorable="d"
-        Title="Alex Launcher" Height="450" Width="400" ResizeMode="NoResize" Icon="Alex.ico">
-    <Grid>
+        Title="Alex Launcher" ResizeMode="NoResize" Icon="Alex.ico" Height="517" Width="398">
+    <Grid Height="480" Width="384">
+        <Grid.Background>
+            <ImageBrush ImageSource="background.png"/>
+        </Grid.Background>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="120"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="2*"/>
+            <RowDefinition Height="140"/>
+            <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="100"/>
-            <RowDefinition Height="42"/>
+            <RowDefinition Height="2*"/>
+            <RowDefinition Height="32"/>
         </Grid.RowDefinitions>
 
-        <Image x:Name="image" VerticalAlignment="Top" Source="logo2.png" Margin="25" Height="75" UseLayoutRounding="True" Grid.ColumnSpan="2" HorizontalAlignment="Center"/>
-
-        <Label x:Name="label"       Grid.Row="2" Grid.Column="0" Content="Username" />
+        <Label x:Name="label"       Grid.Row="2" Grid.Column="0" Content="Username" Height="24" />
         <TextBox x:Name="textBox"   Grid.Row="2" Grid.Column="1" />
 
-        <Label x:Name="label2"      Grid.Row="3" Grid.Column="0" Content="UUID" />
+        <Label x:Name="label2"      Grid.Row="3" Grid.Column="0" Content="UUID" Height="24" />
         <TextBox x:Name="textBox2"  Grid.Row="3" Grid.Column="1" />
 
-        <Label x:Name="label3"      Grid.Row="4" Grid.Column="0" Content="AccessToken"/>
+        <Label x:Name="label3"      Grid.Row="4" Grid.Column="0" Content="AccessToken" Height="24"/>
         <TextBox x:Name="textBox3"  Grid.Row="4" Grid.Column="1" />
-        
-        <Button x:Name="button" Grid.ColumnSpan="2" Margin="40,10" Grid.Row="6" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" BorderBrush="{DynamicResource BorderBrush}" Height="48" Width="256">
+
+        <Button x:Name="PlayButton" Grid.ColumnSpan="2" Margin="64,22" Grid.Row="6" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" BorderBrush="{DynamicResource BorderBrush}">
             <Button.Background>
                 <ImageBrush ImageSource="play.png" Stretch="UniformToFill"/>
             </Button.Background>
         </Button>
-        <Image x:Name="image1" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="10,0" Grid.Row="7" VerticalAlignment="Center" Source="kennyvv.png" Width="164"/>
     </Grid>
 </Window>

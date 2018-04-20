@@ -74,7 +74,7 @@ namespace Alex.Rendering.UI
 
 				args.FillRectangle(new Rectangle(renderPos.X, renderPos.Y - 2, Width, 10), new Color(Color.Black, 0.5f));
 
-				args.DrawString(Font, msg, new Vector2(renderPos.X, renderPos.Y), TextColor.White, false, 0f, Vector2.Zero, opacity: 1f);
+				Font.DrawString(args.SpriteBatch, msg, renderPos.ToVector2(), TextColor.White);
 
 				if (args.GameTime.TotalGameTime.Seconds % 2 == 0)
 				{

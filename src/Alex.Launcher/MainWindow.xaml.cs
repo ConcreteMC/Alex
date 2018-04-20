@@ -22,7 +22,42 @@ namespace Alex.Launcher
     {
         public MainWindow()
         {
+            DataContext = this;
             InitializeComponent();
+
+            PlayButton.Command = PlayAlexCommand;
         }
+
+        public ICommand PlayAlexCommand
+        {
+            get { return new SimpleCommand(o => Program.RunAlex()); }
+        }
+    }
+
+    public class SimpleCommand : ICommand
+    {
+        private Func<object, bool> _predicate;
+        private Action<object> _action;
+
+        public SimpleCommand(Func<object, bool> predicate, Action<object> action)
+        {
+            _predicate = predicate;
+            _action = action;
+        }
+        public SimpleCommand(Action<object> action) : this(null, action)
+        {
+        }
+
+        public bool CanExecute(object parameter)
+        {
+            return _predicate?.Invoke(parameter) ?? true;
+        }
+
+        public void Execute(object parameter)
+        {
+            _action?.Invoke(parameter);
+        }
+
+        public event EventHandler CanExecuteChanged;
     }
 }

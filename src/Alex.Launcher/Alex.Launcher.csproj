@@ -35,11 +35,12 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>..\Alex\bin\Debug\netcoreapp2.0\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <LangVersion>latest</LangVersion>
+    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -52,6 +53,9 @@
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Alex.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>Alex.Launcher.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="PresentationFramework.Classic" />
@@ -89,6 +93,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -130,13 +135,13 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="logo2.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="kennyvv.png" />
-  </ItemGroup>
-  <ItemGroup>
     <Resource Include="play.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="logo3.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="background.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
