@@ -20,7 +20,13 @@ namespace Alex
 
 		public static float DistanceTo(this Vector3 a, Vector3 b)
 		{
+
 			return Vector3.Distance(a, b);
+		}
+
+		private static float Square(float num)
+		{
+			return num * num;
 		}
 
 

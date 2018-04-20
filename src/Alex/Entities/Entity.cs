@@ -60,6 +60,9 @@ namespace Alex.Entities
 		public int Data { get; set; }
 		public UUID UUID { get; set; } = new UUID(Guid.Empty.ToByteArray());
 
+		public bool CanFly { get; set; } = false;
+		public bool IsFlying { get; set; } = false;
+
 		public double MovementSpeed { get; set; } = 0.1;
 		public double FlyingSpeed { get; set; } = 0.4000000059604645;
 

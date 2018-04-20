@@ -1,6 +1,9 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Runtime.InteropServices;
+using Alex.API.Graphics;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.API.Utils
@@ -36,23 +39,34 @@ namespace Alex.API.Utils
 			uint[] imgData = new uint[bmp.Width * bmp.Height];
 			Texture2D texture = new Texture2D(device, bmp.Width, bmp.Height);
 
-			unsafe
+			LockBitmap locked = new LockBitmap(bmp);
+			locked.LockBits();
+				Buffer.BlockCopy(locked.Pixels, 0, imgData, 0, locked.Pixels.Length);
+			locked.UnlockBits();
+
+			for (int i = 0; i < imgData.Length; i++)
+			{
+				var val = imgData[i];
+				imgData[i] = (val & 0x000000FF) << 16 | (val & 0x0000FF00) | (val & 0x00FF0000) >> 16 | (val & 0xFF000000);
+			}
+
+		/*	unsafe
 			{
 				BitmapData origdata =
 					bmp.LockBits(new System.Drawing.Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadOnly, bmp.PixelFormat);
 
-				uint* byteData = (uint*)origdata.Scan0;
-
-				for (int i = 0; i < imgData.Length; i++)
+				fixed (uint* ptrDest = imgData)
 				{
-					var val = byteData[i];
-					imgData[i] = (val & 0x000000FF) << 16 | (val & 0x0000FF00) | (val & 0x00FF0000) >> 16 | (val & 0xFF000000);
+					var o = (uint*) origdata.Scan0.ToPointer();
+					for (int i = 0; i < imgData.Length; i++)
+					{
+						var val = o[i];
+						ptrDest[i] = (val & 0x000000FF) << 16 | (val & 0x0000FF00) | (val & 0x00FF0000) >> 16 | (val & 0xFF000000);
+					}
 				}
 
-				byteData = null;
-
 				bmp.UnlockBits(origdata);
-			}
+			}*/
 
 			texture.SetData(imgData);
 

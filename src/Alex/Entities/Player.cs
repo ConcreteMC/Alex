@@ -20,9 +20,6 @@ namespace Alex.Entities
 
 		public PlayerIndex PlayerIndex { get; }
 
-		public bool CanFly { get; set; } = false;
-		public bool IsFlying { get; set; } = false;
-
 		public float FOVModifier { get; set; } = 0;
 
 		public PlayerController Controller { get; }

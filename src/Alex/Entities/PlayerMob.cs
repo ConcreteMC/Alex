@@ -107,7 +107,7 @@ namespace Alex.Entities
 		{
 			base.Update(args);
 
-			var dt = args.GameTime.ElapsedGameTime.Seconds / 20.0d;
+			var dt = args.GameTime.ElapsedGameTime.TotalSeconds / 20.0d;
 
 			// Test arm rotations
 			if (_leftArmModel != null && _rightArmModel != null)

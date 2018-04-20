@@ -9,6 +9,7 @@ using Alex.Entities;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
 using NLog;
+using MathF = System.MathF;
 
 namespace Alex.Worlds
 {
@@ -19,73 +20,29 @@ namespace Alex.Worlds
 	    private Alex Alex { get; }
 		private IWorld World { get; }
 
-		private System.Threading.Timer Timer = null;// = new System.Threading.Timer(GameTick, null, 50, 50);
-		private object _timerLock = new object();
 	    public PhysicsManager(Alex alex, IWorld world)
 	    {
 		    Alex = alex;
 		    World = world;
 	    }
 
-	    public void Start()
-	    {
-		    if (Timer == null)
-		    {
-			//    Timer = new System.Threading.Timer(GameTick, null, 50, 50);
-		    }
-		    else
-		    {
-			//    Timer.Change(50, 50);
-		    }
-	    }
-
 		private ThreadSafeList<IPhysicsEntity> PhysicsEntities { get; } = new ThreadSafeList<IPhysicsEntity>();
- 	    private long SkippedTicks = 0;
-	    private void GameTick(object state)
-	    {
-		    if (!Monitor.TryEnter(_timerLock))
-		    {
-			    SkippedTicks++;
-				Log.Warn($"Skipped {SkippedTicks} ticks, something is taking to long!");
-				return;
-		    }
-
-		    SkippedTicks = 0;
-
-			try
-		    {
-			    foreach (var tickable in PhysicsEntities.ToArray())
-			    {
-				    try
-				    {
-					   tickable.OnTick();
-					}
-				    catch (Exception ex)
-				    {
-						Log.Warn(ex, $"Entity tick threw exception: {ex.ToString()}");
-				    }
-			    }
-		    }
-		    finally
-		    {
-				Monitor.Exit(_timerLock);
-		    }
-	    }
 
 	    private void TruncateVelocity(Entity entity, float multiplier)
 	    {
-		    if (Math.Abs(entity.Velocity.X) < 0.001 * multiplier)
-			    entity.Velocity = new Vector3(0, entity.Velocity.Y, entity.Velocity.Z) ;
+		    if (Math.Abs(entity.Velocity.X) < 0.1f * multiplier)
+			    entity.Velocity = new Vector3(0, entity.Velocity.Y, entity.Velocity.Z);
 
-		    if (Math.Abs(entity.Velocity.Y) < 0.001 * multiplier)
+		    if (Math.Abs(entity.Velocity.Y) < 0.1f * multiplier)
 				entity.Velocity = new Vector3(entity.Velocity.X, 0, entity.Velocity.Z);
 
-		    if (Math.Abs(entity.Velocity.Z) < 0.001 * multiplier)
+		    if (Math.Abs(entity.Velocity.Z) < 0.1f * multiplier)
 			    entity.Velocity = new Vector3(entity.Velocity.X, entity.Velocity.Y, 0);
+				
 
-		  /*  var groundSpeedSquared = entity.Velocity.X * entity.Velocity.X + entity.Velocity.Z * entity.Velocity.Z;
+		 /*   var groundSpeedSquared = entity.Velocity.X * entity.Velocity.X + entity.Velocity.Z * entity.Velocity.Z;
 
-		    var maxSpeed = entity.IsFlagAllFlying ? (entity.IsSprinting ? 22f : 11f) : (entity.IsSprinting && !entity.IsSneaking ? 5.6f : (entity.IsSneaking ? 1.3 : 4.3f));
+		    var maxSpeed = entity.IsFlying ? (entity.IsSprinting ? 22f : 11f) : (entity.IsSprinting && !entity.IsSneaking ? 5.6f : (entity.IsSneaking ? 1.3 : 4.3f));
 		    if (groundSpeedSquared > (maxSpeed))
 		    {
 			    var correctionScale = (float) Math.Sqrt(maxSpeed / groundSpeedSquared);
@@ -96,57 +53,52 @@ namespace Alex.Worlds
 		    entity.Velocity = Vector3.Clamp(entity.Velocity, -new Vector3(entity.TerminalVelocity), new Vector3(entity.TerminalVelocity));
 	    }
 
-		public void Update(GameTime elapsed)
+	    public void Update(GameTime elapsed)
 	    {
-		    float dt = (float)elapsed.ElapsedGameTime.TotalSeconds;
+		    float dt = (float) elapsed.ElapsedGameTime.TotalSeconds;
 
-		    try
+
+		    foreach (var entity in PhysicsEntities.ToArray())
 		    {
-			    foreach (var entity in PhysicsEntities.ToArray())
+			    try
 			    {
-				    try
+				    if (entity is Entity e)
 				    {
-					    if (entity is Entity e)
-					    {
-							if (e.NoAi) continue;
-						    
-							entity.Velocity -= new Vector3(0, (float) (entity.Gravity), 0);
-						    entity.Velocity *= (float)(1f - entity.Drag);
+					    if (e.NoAi) continue;
 
-						    TruncateVelocity(e, dt);
+					  //  if (!e.IsFlying)
+						e.Velocity -= new Vector3(0, (float) (e.Gravity), 0);
+					    e.Velocity *= (float) (1f - e.Drag);
 
-						    Vector3 collision, before = entity.Velocity;
+					    TruncateVelocity(e, dt);
 
-						  //  var velocityInput = entity.Velocity * multiplier;
+					    Vector3 collision, before = e.Velocity;
 
-							if (TestTerrainCollisionY(e, entity.Velocity * dt, out collision))
-							    e.TerrainCollision(collision, before.Y < 0 ? Vector3.Down : Vector3.Up);
+					    //  var velocityInput = entity.Velocity * multiplier;
 
-						    if (TestTerrainCollisionX(e, entity.Velocity * dt, out collision))
-							    e.TerrainCollision(collision, before.X < 0 ? Vector3.Left : Vector3.Right);
+					    if (TestTerrainCollisionY(e, e.Velocity * dt, dt, out collision))
+						    e.TerrainCollision(collision, before.Y < 0 ? Vector3.Down : Vector3.Up);
 
-						    if (TestTerrainCollisionZ(e, entity.Velocity * dt, out collision))
-							    e.TerrainCollision(collision, before.Z < 0 ? Vector3.Backward : Vector3.Forward);
+					    if (TestTerrainCollisionX(e, e.Velocity * dt, dt, out collision))
+						    e.TerrainCollision(collision, before.X < 0 ? Vector3.Left : Vector3.Right);
 
-						    //if (TestTerrainCollisionCylinder(e, entity.Velocity * dt, out collision))
-							  //  e.TerrainCollision(collision, before);
+					    if (TestTerrainCollisionZ(e, e.Velocity * dt, dt, out collision))
+						    e.TerrainCollision(collision, before.Z < 0 ? Vector3.Backward : Vector3.Forward);
 
-							e.KnownPosition.Move(entity.Velocity * dt);
+					    if (TestTerrainCollisionCylinder(e, e.Velocity * dt, dt, out collision))
+						    e.TerrainCollision(collision, before);
 
-							TruncateVelocity(e, dt);
-					    }
-				    }
-				    catch (Exception ex)
-				    {
-					    Log.Warn(ex, $"Entity tick threw exception: {ex.ToString()}");
+					    e.KnownPosition.Move(e.Velocity * dt);
+
+					    TruncateVelocity(e, dt);
 				    }
 			    }
+			    catch (Exception ex)
+			    {
+				    Log.Warn(ex, $"Entity tick threw exception: {ex.ToString()}");
+			    }
 		    }
-		    finally
-		    {
-			  //  Monitor.Exit(_timerLock);
-		    }
-		}
+	    }
 
 	    private BoundingBox GetAABBVelocityBox(BoundingBox bbox, Vector3 velocity)
 	    {
@@ -164,33 +116,34 @@ namespace Alex.Worlds
 		    return new BoundingBox(min, max);
 	    }
 
-		private Vector3 AdjustVelocityForCollision(Vector3 velocity, BoundingBox entityBoundingBox, BoundingBox problem)
+		private Vector3 AdjustVelocityForCollision(Vector3 velocity, BoundingBox entityBoundingBox, BoundingBox problem, float dt)
 		{
 			var boundingBox = entityBoundingBox;
 
-			if (velocity.X < 0)
+			if (velocity.X < 0f)
 				velocity.X = boundingBox.Min.X - problem.Max.X;
-			if (velocity.X > 0)
+			if (velocity.X > 0f)
 				velocity.X = boundingBox.Max.X - problem.Min.X;
 
-			if (velocity.Y < 0)
+			if (velocity.Y < 0f)
 				velocity.Y = boundingBox.Min.Y - problem.Max.Y;
-			if (velocity.Y > 0)
+			if (velocity.Y > 0f)
 				velocity.Y = boundingBox.Max.Y - problem.Min.Y;
 
-			if (velocity.Z < 0)
+			if (velocity.Z < 0f)
 				velocity.Z = boundingBox.Min.Z - problem.Max.Z;
-			if (velocity.Z > 0)
+			if (velocity.Z > 0f)
 				velocity.Z = boundingBox.Max.Z - problem.Min.Z;
 
 			return velocity;
 		}
 
-		public bool TestTerrainCollisionCylinder(Entity entity, Vector3 velocity, out Vector3 collisionPoint)
+		public bool TestTerrainCollisionCylinder(Entity entity, Vector3 velocity, float dt, out Vector3 collisionPoint)
 		{
 			collisionPoint = Vector3.Zero;
 			var testBox = GetAABBVelocityBox(entity.BoundingBox, velocity);
-			var testCylinder = new BoundingCylinder(testBox.Min, testBox.Max, entity.Width);//;.(entity.GetBoundingBox().Max));
+			var testCylinder =
+				new BoundingCylinder(testBox.Min, testBox.Max, entity.BoundingBox.Min.DistanceTo(entity.BoundingBox.Max));
 
 			bool collision = false;
 			for (int x = (int)(Math.Floor(testBox.Min.X)); x <= (int)(Math.Ceiling(testBox.Max.X)); x++)
@@ -199,12 +152,11 @@ namespace Alex.Worlds
 				{
 					for (int y = (int)(Math.Floor(testBox.Min.Y)); y <= (int)(Math.Ceiling(testBox.Max.Y)); y++)
 					{
-						var coords = new BlockCoordinates(x, y, z);
+						var coords = new Vector3(x, y, z);
 
 						var state = World.GetBlockState(x, y, z);
-						var _box = state?.Model?.GetBoundingBox(new Vector3(x, y, z), state.Block);
+						var _box = state?.Model?.GetBoundingBox(coords, state.Block);
 
-						//var _box = BlockPhysicsProvider.GetBoundingBox(World, coords);
 						if (_box == null)
 							continue;
 
@@ -216,19 +168,26 @@ namespace Alex.Worlds
 							if (testBox.Intersects(box))
 							{
 								collision = true;
-								velocity = AdjustVelocityForCollision(velocity, entity.BoundingBox, box);
+								velocity = AdjustVelocityForCollision(velocity, entity.BoundingBox, box, dt);
 								testBox = GetAABBVelocityBox(entity.BoundingBox, velocity);
-								testCylinder = new BoundingCylinder(testBox.Min, testBox.Max, entity.Width);
+								testCylinder = new BoundingCylinder(testBox.Min, testBox.Max, entity.BoundingBox.Min.DistanceTo(entity.BoundingBox.Max));
 								collisionPoint = coords;
 							}
 						}
 					}
 				}
 			}
+
+			if (collision)
+			{
+				entity.Velocity = velocity;
+			}
+
+
 			return collision;
 		}
 
-		public bool TestTerrainCollisionY(Entity entity, Vector3 velocity, out Vector3 collisionPoint)
+		public bool TestTerrainCollisionY(Entity entity, Vector3 velocity, float deltaTime, out Vector3 collisionPoint)
 		{
 			// Things we need to do:
 			// 1 - expand bounding box to include the destination and everything within
@@ -269,12 +228,12 @@ namespace Alex.Worlds
 				{
 					for (int y = (int)(Math.Floor(testBox.Min.Y)); y <= (int)(Math.Ceiling(testBox.Max.Y)); y++)
 					{
-						var coords = new BlockCoordinates(x, y, z);
+						var coords = new Vector3(x, y, z);
+
 						var state = World.GetBlockState(x, y, z);
 
-						var _box = state?.Model?.GetBoundingBox(new Vector3(x, y, z), state.Block);
+						var _box = state?.Model?.GetBoundingBox(coords, state.Block);
 
-						//var _box = BlockPhysicsProvider.GetBoundingBox(World, coords);
 						if (_box == null)
 							continue;
 
@@ -318,7 +277,7 @@ namespace Alex.Worlds
 			return false;
 		}
 
-		public bool TestTerrainCollisionX(Entity entity, Vector3 velocity, out Vector3 collisionPoint)
+		public bool TestTerrainCollisionX(Entity entity, Vector3 velocity, float deltaTime, out Vector3 collisionPoint)
 		{
 			// Things we need to do:
 			// 1 - expand bounding box to include the destination and everything within
@@ -361,15 +320,12 @@ namespace Alex.Worlds
 				{
 					for (int y = (int)(Math.Floor(testBox.Min.Y)); y <= (int)(Math.Ceiling(testBox.Max.Y)); y++)
 					{
-						var coords = new BlockCoordinates(x, y, z);
-						//if (!World.IsValidPosition(coords))
-						//	continue;
+						var coords = new Vector3(x, y, z);
 
 						var state = World.GetBlockState(x, y, z);
 
-						var _box = state?.Model?.GetBoundingBox(new Vector3(x, y, z), state.Block);
+						var _box = state?.Model?.GetBoundingBox(coords, state.Block);
 
-						//var _box = BlockPhysicsProvider.GetBoundingBox(World, coords);
 						if (_box == null)
 							continue;
 
@@ -413,7 +369,7 @@ namespace Alex.Worlds
 			return false;
 		}
 
-		public bool TestTerrainCollisionZ(Entity entity, Vector3 velocity, out Vector3 collisionPoint)
+		public bool TestTerrainCollisionZ(Entity entity, Vector3 velocity, float deltaTime, out Vector3 collisionPoint)
 		{
 			// Things we need to do:
 			// 1 - expand bounding box to include the destination and everything within
@@ -456,15 +412,12 @@ namespace Alex.Worlds
 				{
 					for (int y = (int)(Math.Floor(testBox.Min.Y)); y <= (int)(Math.Ceiling(testBox.Max.Y)); y++)
 					{
-						var coords = new BlockCoordinates(x, y, z);
-						//if (!World.IsValidPosition(coords))
-						//	continue;
+						var coords = new Vector3(x, y, z);
 
 						var state = World.GetBlockState(x, y, z);
 						
-						var _box = state?.Model?.GetBoundingBox(new Vector3(x, y, z), state.Block);
+						var _box = state?.Model?.GetBoundingBox(coords, state.Block);
 
-						//var _box = BlockPhysicsProvider.GetBoundingBox(World, coords);
 						if (_box == null)
 							continue;
 
