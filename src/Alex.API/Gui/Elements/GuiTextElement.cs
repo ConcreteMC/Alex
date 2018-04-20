@@ -14,12 +14,10 @@ namespace Alex.API.Gui.Elements
 	    public static readonly Color DefaultTextBackgroundColor = new Color(Color.Black, 0.6f);
         
 	    private string _text;
-	    private Vector2? _textShadowOffset;
-	    private float _opacity = 1f;
+	    private float _textOpacity = 1f;
 	    private Vector2 _scale = Vector2.One;
-	    private IFont _font;
-	    private float _rotation;
 	    private Vector2? _rotationOrigin;
+	    private IFont _font;
 
 	    public override Vector2 RotationOrigin
 	    {
@@ -40,13 +38,11 @@ namespace Alex.API.Gui.Elements
                 OnTextUpdated();
             }
         }
-
-        public TextColor TextColor { get; set; } = TextColor.White;
-		
-	    public float Opacity
+		public TextColor TextColor { get; set; } = TextColor.White;
+		public float TextOpacity
 	    {
-		    get => _opacity;
-		    set => _opacity = value;
+		    get => _textOpacity;
+		    set => _textOpacity = value;
 	    }
 
 	    public float Scale
@@ -80,7 +76,6 @@ namespace Alex.API.Gui.Elements
 	    }
 
 		private string _renderText = String.Empty;
-	    private Vector2 _rotationOrigin1;
 
 	    public GuiTextElement(bool hasBackground = false)
 	    {
@@ -100,15 +95,12 @@ namespace Alex.API.Gui.Elements
         }
 
 
-        protected override void OnDraw(GuiRenderArgs renderArgs)
+        protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
         {
 	        var text = _renderText;
             if (!string.IsNullOrWhiteSpace(text))
             {
-	            if (Font != null)
-	            {
-					Font.DrawString(renderArgs.SpriteBatch, text, RenderPosition, TextColor, FontStyle, scale: _scale, rotation: Rotation, origin: RotationOrigin, opacity: Opacity);
-	            }
+				graphics.DrawString(RenderPosition, text, Font, TextColor, FontStyle, Scale, Rotation, RotationOrigin, TextOpacity);
 			}
         }
 

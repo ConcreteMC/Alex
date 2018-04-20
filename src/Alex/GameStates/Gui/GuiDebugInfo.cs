@@ -53,15 +53,5 @@ namespace Alex.Gamestates.Gui
 	            Scale = 0.5f
 			});
         }
-
-        protected override void OnUpdate(GameTime gameTime)
-        {
-            base.OnUpdate(gameTime);
-        }
-
-        protected override void OnDraw(GuiRenderArgs args)
-        {
-            base.OnDraw(args);
-        }
     }
 }

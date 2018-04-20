@@ -128,15 +128,15 @@ namespace Alex.API.Gui.Elements.Icons
             }
         }
 
-        protected override void OnDraw(GuiRenderArgs args)
+        protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
         {
             if (_isPending)
             {
-                args.Draw(_connectingStateTextures[_animationFrame], RenderBounds, TextureRepeatMode.NoScaleCenterSlice);
+                graphics.FillRectangle(RenderBounds,_connectingStateTextures[_animationFrame],  TextureRepeatMode.NoScaleCenterSlice);
             }
             else
             {
-                base.OnDraw(args);
+                base.OnDraw(graphics, gameTime);
             }
         }
 

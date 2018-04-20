@@ -117,73 +117,97 @@ namespace Alex.Graphics
                 EntityModelRenderer?.Update(updateArgs, EntityPosition);
             }
         }
-
-        protected override void OnDraw(GuiRenderArgs args)
+        
+        protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
         {
-            base.OnDraw(args);
+            base.OnDraw(graphics, gameTime);
 
             if (_canRender)
             {
                 var renderArgs = new RenderArgs()
                 {
-                    GraphicsDevice = args.Graphics,
-                    SpriteBatch    = args.SpriteBatch,
-                    GameTime       = args.GameTime,
+                    GraphicsDevice = graphics.SpriteBatch.GraphicsDevice,
+                    SpriteBatch    = graphics.SpriteBatch,
+                    GameTime       = gameTime,
                     Camera         = Camera,
                 };
 
                 //var viewport = args.Graphics.Viewport;
                 //args.Graphics.Viewport = new Viewport(RenderBounds);
 
-                args.EndSpriteBatch();
-
-                var g = args.Graphics;
-
-                var blendState = g.BlendState;
-                var depthStencilState = g.DepthStencilState;
-                var rasterizerState = g.RasterizerState;
-                var samplerState = g.SamplerStates[0];
-                var viewport = g.Viewport;
-                var scissor = g.ScissorRectangle;
-
-                g.BlendState = BlendState.AlphaBlend;
-                g.DepthStencilState = DepthStencilState.Default;
-                g.RasterizerState = RasterizerState.CullClockwise;
-                g.SamplerStates[0] = SamplerState.PointWrap;
-                var newViewport = Camera.Viewport;
-                var bounds = RenderBounds;
+                using (var context = graphics.ExitContext(BlendState.AlphaBlend, DepthStencilState.Default,
+                                            RasterizerState.CullClockwise, SamplerState.PointWrap))
+                {
+                    var bounds = RenderBounds;
                 
-                bounds.Inflate(-3, -3);
+                    bounds.Inflate(-3, -3);
 
-                var p = Vector2.Transform(bounds.Location.ToVector2(), args.ScaledResolution.TransformMatrix);
-                var p2 = Vector2.Transform(bounds.Location.ToVector2() + bounds.Size.ToVector2(), args.ScaledResolution.TransformMatrix);
+                    var p = graphics.Project(bounds.Location.ToVector2());
+                    var p2 = graphics.Project(bounds.Location.ToVector2() + bounds.Size.ToVector2());
+                    
+                    var newViewport = Camera.Viewport;
+                    newViewport.X      = (int)p.X;
+                    newViewport.Y      = (int)p.Y;
+                    newViewport.Width  = (int) (p2.X - p.X);
+                    newViewport.Height = (int) (p2.Y - p.Y);
 
-                newViewport.X = (int)p.X;
-                newViewport.Y = (int)p.Y;
-                newViewport.Width = (int) (p2.X - p.X);
-                newViewport.Height = (int) (p2.Y - p.Y);
-                Camera.Viewport = newViewport;
-                Camera.UpdateProjectionMatrix();
+                    Camera.Viewport    = newViewport;
+                    Camera.UpdateProjectionMatrix();
 
+                    context.Viewport = Camera.Viewport;
+
+                    EntityModelRenderer?.Render(renderArgs, EntityPosition);
+                }
+
+                //graphics.Begin();
+
+                //var g = args.Graphics;
+
+                //var blendState = g.BlendState;
+                //var depthStencilState = g.DepthStencilState;
+                //var rasterizerState = g.RasterizerState;
+                //var samplerState = g.SamplerStates[0];
+                //var viewport = g.Viewport;
+                //var scissor = g.ScissorRectangle;
+
+                //g.BlendState = BlendState.AlphaBlend;
+                //g.DepthStencilState = DepthStencilState.Default;
+                //g.RasterizerState = RasterizerState.CullClockwise;
+                //g.SamplerStates[0] = SamplerState.PointWrap;
+                //var newViewport = Camera.Viewport;
+                //var bounds = RenderBounds;
+                
+                //bounds.Inflate(-3, -3);
+
+                //var p = Vector2.Transform(bounds.Location.ToVector2(), args.ScaledResolution.TransformMatrix);
+                //var p2 = Vector2.Transform(bounds.Location.ToVector2() + bounds.Size.ToVector2(), args.ScaledResolution.TransformMatrix);
+
+                //newViewport.X = (int)p.X;
+                //newViewport.Y = (int)p.Y;
+                //newViewport.Width = (int) (p2.X - p.X);
+                //newViewport.Height = (int) (p2.Y - p.Y);
+                //Camera.Viewport = newViewport;
+                //Camera.UpdateProjectionMatrix();
+
+                ////g.Viewport = newViewport;
                 //g.Viewport = newViewport;
-                g.Viewport = newViewport;
-                //g.ScissorRectangle = RenderBounds;
+                ////g.ScissorRectangle = RenderBounds;
+                
+                ////args.BeginSpriteBatch();
+
+                //EntityModelRenderer?.Render(renderArgs, EntityPosition);
+                
+                ////args.EndSpriteBatch();
+
+                //g.BlendState = blendState;
+                //g.DepthStencilState = depthStencilState;
+                //g.RasterizerState = rasterizerState;
+                //g.SamplerStates[0] = samplerState;
+                //g.Viewport = viewport;
+                ////g.ScissorRectangle = scissor;
                 
                 //args.BeginSpriteBatch();
-
-                EntityModelRenderer?.Render(renderArgs, EntityPosition);
-                
-                //args.EndSpriteBatch();
-
-                g.BlendState = blendState;
-                g.DepthStencilState = depthStencilState;
-                g.RasterizerState = rasterizerState;
-                g.SamplerStates[0] = samplerState;
-                g.Viewport = viewport;
-                //g.ScissorRectangle = scissor;
-                
-                args.BeginSpriteBatch();
-                //args.Graphics.Viewport = viewport;
+                ////args.Graphics.Viewport = viewport;
             }
         }
         

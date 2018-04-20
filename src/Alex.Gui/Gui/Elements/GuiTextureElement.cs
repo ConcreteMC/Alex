@@ -19,13 +19,13 @@ namespace Alex.Graphics.Gui.Elements
 
 	    }
 
-	    protected override void OnDraw(GuiRenderArgs args)
+	    protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
 	    {
-		    base.OnDraw(args);
+		    base.OnDraw(graphics, gameTime);
 
 		    if (Texture != null)
 		    {
-			    args.Draw(Texture, RenderBounds, RepeatMode);
+			    graphics.FillRectangle(RenderBounds, Texture, RepeatMode);
 		    }
 	    }
     }

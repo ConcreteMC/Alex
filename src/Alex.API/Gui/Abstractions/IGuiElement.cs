@@ -26,7 +26,7 @@ namespace Alex.API.Gui
 
         void Update(GameTime gameTime);
 
-        void Draw(GuiRenderArgs args);
+        void Draw(GuiSpriteBatch graphics, GameTime gameTime);
 
         void AddChild(IGuiElement element);
         void RemoveChild(IGuiElement element);

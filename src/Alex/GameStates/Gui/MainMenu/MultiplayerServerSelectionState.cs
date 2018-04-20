@@ -13,6 +13,7 @@ using Alex.GameStates.Gui.Common;
 using Alex.GameStates.Gui.Elements;
 using Alex.Graphics.Gui.Elements;
 using Alex.Networking.Java;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.GameStates.Gui.MainMenu
@@ -117,10 +118,10 @@ namespace Alex.GameStates.Gui.MainMenu
         }
 
 	    private GraphicsDevice _graphicsDevice = null;
-	    protected override void OnDraw(GuiRenderArgs args)
+	    protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
 	    {
-		    _graphicsDevice = args.Graphics;
-		    base.OnDraw(args);
+		    _graphicsDevice = graphics.SpriteBatch.GraphicsDevice;
+		    base.OnDraw(graphics, gameTime);
 	    }
 
 	    public void Ping()

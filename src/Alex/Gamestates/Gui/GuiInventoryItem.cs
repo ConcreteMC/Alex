@@ -35,13 +35,13 @@ namespace Alex.Gamestates.Gui
             Background = IsSelected ? SelectedBackground : null;
         }
 
-        protected override void OnDraw(GuiRenderArgs args)
+        protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
         {
             if (IsSelected)
             {
                 var bounds = RenderBounds;
                 bounds.Inflate(1, 1);
-                args.Draw(SelectedBackground, bounds, TextureRepeatMode.NoRepeat);
+                graphics.FillRectangle(bounds, SelectedBackground, TextureRepeatMode.NoRepeat);
             }
         }
     }

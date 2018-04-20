@@ -9,6 +9,8 @@ namespace Alex.API.Graphics
 {
     public class GraphicsContext : IDisposable
     {
+        public EventHandler Disposed;
+
         public GraphicsDevice GraphicsDevice { get; }
 
         #region Properties
@@ -72,6 +74,41 @@ namespace Alex.API.Graphics
             _blendFactorProperty        = CreateState(g => g.BlendFactor,           (g, v) => g.BlendFactor = v);
         }
 
+        public GraphicsContext CreateContext(BlendState blendState = null, DepthStencilState depthStencilState = null, RasterizerState rasterizerState = null, SamplerState samplerState = null)
+        {
+            return CreateContext(GraphicsDevice, blendState, depthStencilState, rasterizerState, samplerState);
+        }
+
+        public static GraphicsContext CreateContext(GraphicsDevice    graphicsDevice, BlendState blendState = null,
+                                                    DepthStencilState depthStencilState = null,
+                                                    RasterizerState   rasterizerState   = null,
+                                                    SamplerState      samplerState      = null)
+        {
+            var context = new GraphicsContext(graphicsDevice);
+
+            if (blendState != null)
+            {
+                context.BlendState = blendState;
+            }
+
+            if (depthStencilState != null)
+            {
+                context.DepthStencilState = depthStencilState;
+            }
+
+            if (rasterizerState != null)
+            {
+                context.RasterizerState = rasterizerState;
+            }
+
+            if (samplerState != null)
+            {
+                context.SamplerState = samplerState;
+            }
+
+            return context;
+        }
+
         #region Dispose
         
         private bool _isDisposed = false; // To detect redundant calls
@@ -89,6 +126,8 @@ namespace Alex.API.Graphics
                     _samplerStateProperty.Dispose();
                     _scissorRectangleProperty.Dispose();
                     _blendFactorProperty.Dispose();
+
+                    Disposed?.Invoke(this, null);
                 }
 
                 _isDisposed = true;

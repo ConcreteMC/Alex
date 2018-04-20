@@ -1,22 +1,37 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Alex.API.Gui;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.API.Graphics.Textures
 {
-    public class ColorTexture2D : TextureSlice2D
+    public class ColorTexture2D : ITexture2D, IDisposable
     {
-        private static readonly Rectangle DefaultBounds = new Rectangle(0, 0, 1, 1);
+        private static readonly Size DefaultSize = new Size(1, 1);
+        
+        public Texture2D Texture    { get; }
+        public Rectangle ClipBounds { get; }
+    
+        public int Width  { get; }
+        public int Height { get; }
 
-        public ColorTexture2D(GraphicsDevice graphics, Color color) : base(CreateTexture(graphics, color), DefaultBounds)
+        public ColorTexture2D(GraphicsDevice graphics, Color color) : this(graphics, color, DefaultSize)
         {
         }
 
-        private static Texture2D CreateTexture(GraphicsDevice graphics, Color color)
+        public ColorTexture2D(GraphicsDevice graphics, Color color, Size size)
         {
-            var bounds = DefaultBounds;
+            Width = size.Width;
+            Height = size.Height;
+            ClipBounds = new Rectangle(0, 0, Width, Height);
+            Texture = CreateTexture(graphics, ClipBounds, color);
+        }
+
+
+        private static Texture2D CreateTexture(GraphicsDevice graphics, Rectangle bounds, Color color)
+        {
             var texture = new Texture2D(graphics, bounds.Width, bounds.Height, false, SurfaceFormat.Color);
             var data = new Color[bounds.Width * bounds.Height];
 
@@ -26,6 +41,17 @@ namespace Alex.API.Graphics.Textures
             }
             texture.SetData(data);
             return texture;
+        }
+        
+        
+        public static implicit operator Texture2D(ColorTexture2D texture)
+        {
+            return texture.Texture;
+        }
+
+        public void Dispose()
+        {
+            Texture?.Dispose();
         }
     }
 }

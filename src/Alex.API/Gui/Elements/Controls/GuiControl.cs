@@ -58,6 +58,7 @@ namespace Alex.API.Gui.Elements.Controls
             {
                 HighlightedBackground = renderer.GetTexture(HighlightedBackgroundTexture.Value);
             }
+
             if (FocusedBackgroundTexture.HasValue)
             {
                 FocusedBackground = renderer.GetTexture(FocusedBackgroundTexture.Value);
@@ -86,22 +87,21 @@ namespace Alex.API.Gui.Elements.Controls
             }
         }
 
-        protected override void OnDraw(GuiRenderArgs args)
+        protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
         {
-            base.OnDraw(args);
-
+            base.OnDraw(graphics, gameTime);
 
             if (IsFocused && FocusOutlineThickness.Size() > 0)
             {
                 var outlineBounds = RenderBounds;
                 outlineBounds.Inflate(1f,1f);
-                args.DrawRectangle(outlineBounds, FocusOutlineColor, FocusOutlineThickness);
+                graphics.DrawRectangle(outlineBounds, FocusOutlineColor, FocusOutlineThickness);
             }
             else if (IsHighlighted && HighlightOutlineThickness.Size() > 0)
             {
                 var outlineBounds = RenderBounds;
                 outlineBounds.Inflate(1f,1f);
-                args.DrawRectangle(outlineBounds, HighlightOutlineColor, HighlightOutlineThickness);
+                graphics.DrawRectangle(outlineBounds, HighlightOutlineColor, HighlightOutlineThickness);
             }
             
         }

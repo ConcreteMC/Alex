@@ -9,11 +9,13 @@ using Microsoft.Xna.Framework.Input;
 
 namespace Alex.API.Gui.Rendering
 {
-    public class GuiRenderArgs
+    public class GuiRenderArgs : GraphicsContext
     {
         public IGuiRenderer Renderer { get; }
 
         public GraphicsDevice Graphics { get; }
+        public GraphicsContext GraphicsContext { get; }
+
         public SpriteBatch SpriteBatch { get; }
 
         public GameTime GameTime { get; }
@@ -22,7 +24,7 @@ namespace Alex.API.Gui.Rendering
 
         //public GuiElementRenderContext ActiveContext { get; private set; }
 
-        public GuiRenderArgs(IGuiRenderer renderer, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, GameTime gameTime, GuiScaledResolution scaledResolution)
+        public GuiRenderArgs(GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, GuiScaledResolution scaledResolution, IGuiRenderer renderer, GameTime gameTime) : base(graphicsDevice)
         {
             Renderer = renderer;
             Graphics = graphicsDevice;
@@ -51,7 +53,7 @@ namespace Alex.API.Gui.Rendering
             DrawRectangle(bounds, color, thickness.Left, thickness.Top, thickness.Right, thickness.Bottom);
         }
 
-        public void DrawRectangle(Rectangle bounds,         Color color, int thicknessVertical, int thicknessHorizontal)
+        public void DrawRectangle(Rectangle bounds, Color color, int thicknessVertical, int thicknessHorizontal)
         {
             DrawRectangle(bounds, color, thicknessHorizontal, thicknessVertical, thicknessHorizontal, thicknessVertical);
         }
@@ -114,8 +116,7 @@ namespace Alex.API.Gui.Rendering
             //SpriteBatch.
         }
 
-        public void Draw(TextureSlice2D    texture, Rectangle bounds,
-                         TextureRepeatMode repeatMode = TextureRepeatMode.Stretch, Vector2? scale = null)
+        public void Draw(TextureSlice2D texture, Rectangle bounds, TextureRepeatMode repeatMode = TextureRepeatMode.Stretch, Vector2? scale = null)
         {
             if (texture is NinePatchTexture2D ninePatch)
             {
@@ -253,6 +254,6 @@ namespace Alex.API.Gui.Rendering
         }
 
         #endregion
-	}
+    }
     
 }

@@ -65,47 +65,43 @@ namespace Alex.API.Gui
         public TextureRepeatMode BackgroundRepeatMode { get; set; } = TextureRepeatMode.Stretch;
         public TextureSlice2D DefaultBackground { get; set; }
         public TextureSlice2D Background { get; set; }
-        public Vector2 BackgroundScale { get; set; } = Vector2.One;
+        public Vector2? BackgroundScale { get; set; }
         
         public Color? BackgroundOverlayColor
         {
             get => _backgroundOverlayColor;
-            set
-            {
-                _backgroundOverlayColor = value;
-                BackgroundOverlay = null;
-            }
+            set => _backgroundOverlayColor = value;
         }
 
-        public TextureSlice2D BackgroundOverlay { get; set; }
-        
         public virtual Vector2 RenderPosition => Position.ToVector2();
         public virtual Size RenderSize => Size;
         public virtual Rectangle RenderBounds => Bounds;
         
-        public void Draw(GuiRenderArgs renderArgs)
+        public void Draw(GuiSpriteBatch graphics, GameTime gameTime)
         {
             // Init matrix
-            OnDraw(renderArgs);
+            OnDraw(graphics, gameTime);
 
-            ForEachChild(c => c.Draw(renderArgs));
+            ForEachChild(c => c.Draw(graphics, gameTime));
         }
 
-        protected virtual void OnDraw(GuiRenderArgs args)
+        protected virtual void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
         {
-            if (BackgroundOverlayColor.HasValue && BackgroundOverlay == null)
-            {
-                BackgroundOverlay = new ColorTexture2D(args.Graphics, BackgroundOverlayColor.Value);
-            }
-
             if (Background != null)
             {
-                args.Draw(Background, RenderBounds, BackgroundRepeatMode, BackgroundScale);
+                if (BackgroundScale.HasValue)
+                {
+                    graphics.FillRectangle(RenderBounds, Background, BackgroundRepeatMode, BackgroundScale.Value);
+                }
+                else
+                {
+                    graphics.FillRectangle(RenderBounds, Background, BackgroundRepeatMode);
+                }
             }
 
-            if (BackgroundOverlay != null)
+            if (BackgroundOverlayColor.HasValue)
             {
-                args.Draw(BackgroundOverlay, RenderBounds, BackgroundRepeatMode, BackgroundScale);
+                graphics.FillRectangle(RenderBounds, BackgroundOverlayColor.Value);
             }
         }
         

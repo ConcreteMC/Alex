@@ -107,23 +107,24 @@ namespace Alex.API.Gui.Elements.Controls
             }
         }
 
-        protected override void OnDraw(GuiRenderArgs args)
+        protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
         {
-            base.OnDraw(args);
+            base.OnDraw(graphics, gameTime);
 
             var bounds = RenderBounds;
             bounds.Inflate(1f, 1f);
-            args.DrawRectangle(bounds, BorderColor, BorderThickness);
+	        graphics.DrawRectangle(bounds, BorderColor, BorderThickness);
 
             // Text
             if (IsFocused)
             {
-                if (args.GameTime.TotalGameTime.Seconds % 2 == 0)
+                if (gameTime.TotalGameTime.Seconds % 2 == 0)
                 {
                     var textElementBounds = _textElement.RenderBounds;
                     var offsetX = textElementBounds.X + _cursorPositionX + 1;
 
-                    args.DrawLine(offsetX, textElementBounds.Top, offsetX, textElementBounds.Bottom, _textColor.ForegroundColor * _cursorAlpha);
+					graphics.DrawLine(new Vector2(offsetX, textElementBounds.Top), new Vector2(offsetX, textElementBounds.Bottom), _textColor.ForegroundColor * _cursorAlpha);
+	                //graphics.DrawLine(offsetX, textElementBounds.Top, offsetX, textElementBounds.Bottom, _textColor.ForegroundColor * _cursorAlpha);
                 }
             }
 

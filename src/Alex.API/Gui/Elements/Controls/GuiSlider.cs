@@ -93,11 +93,11 @@ namespace Alex.API.Gui.Elements.Controls
             _thumbOffsetX = ((RenderSize.Width - ThumbWidth) / (double) diff) * val;
         }
 
-        protected override void OnDraw(GuiRenderArgs args)
+        protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
         {
-            base.OnDraw(args);
+            base.OnDraw(graphics, gameTime);
 
-            args.Draw(IsHighlighted ? ThumbHighlightBackground : ThumbBackground, new Rectangle((int)(RenderPosition.X + _thumbOffsetX), (int)RenderPosition.Y, ThumbWidth, RenderSize.Height), TextureRepeatMode.NoScaleCenterSlice);
+            graphics.FillRectangle(new Rectangle((int)(RenderPosition.X + _thumbOffsetX), (int)RenderPosition.Y, ThumbWidth, RenderSize.Height), IsHighlighted ? ThumbHighlightBackground : ThumbBackground, TextureRepeatMode.NoScaleCenterSlice);
         }
 
         private void SetValueFromCursor(Vector2 relativePosition)

@@ -62,9 +62,9 @@ namespace Alex.Rendering.UI
 		}
 
 		private TimeSpan _renderTimeout = TimeSpan.FromSeconds(30);
-		protected override void OnDraw(GuiRenderArgs args)
+		protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
 		{
-			base.OnDraw(args);
+			base.OnDraw(graphics, gameTime);
 
 			if (IsFocused)
 			{
@@ -72,15 +72,15 @@ namespace Alex.Rendering.UI
 
 				string msg = _textBuilder.Text;
 
-				args.FillRectangle(new Rectangle(renderPos.X, renderPos.Y - 2, Width, 10), new Color(Color.Black, 0.5f));
+				graphics.FillRectangle(new Rectangle(renderPos.X, renderPos.Y - 2, Width, 10), new Color(Color.Black, 0.5f));
 
-				Font.DrawString(args.SpriteBatch, msg, renderPos.ToVector2(), TextColor.White);
+				Font.DrawString(graphics.SpriteBatch, msg, renderPos.ToVector2(), TextColor.White);
 
-				if (args.GameTime.TotalGameTime.Seconds % 2 == 0)
+				if (gameTime.TotalGameTime.Seconds % 2 == 0)
 				{
 					var offsetX = renderPos.X + _cursorPositionX + 1;
 
-					args.DrawLine(offsetX, (renderPos.Y), offsetX, (renderPos.Y + 8), Color.White * _cursorAlpha);
+					graphics.DrawLine(new Vector2(offsetX, renderPos.Y), new Vector2(offsetX, renderPos.Y + 8), Color.White * _cursorAlpha);
 				}
 			}
 
@@ -105,7 +105,7 @@ namespace Alex.Rendering.UI
 					string message = msg.Value.RawMessage;
 					foreach (var line in CalculateLines(message))
 					{
-						DrawChatLine(args, line, alpha, ref offset);
+						DrawChatLine(graphics, line, alpha, ref offset);
 					}
 				}
 			}
@@ -152,15 +152,15 @@ namespace Alex.Rendering.UI
 			}
 		}
 
-		private void DrawChatLine(GuiRenderArgs args, string text, float alpha, ref Vector2 offset)
+		private void DrawChatLine(GuiSpriteBatch graphics, string text, float alpha, ref Vector2 offset)
 		{
 			var size = Font.MeasureString(text);
 
 			var renderPos = Bounds.BottomLeft() + offset;
 
-			args.FillRectangle(new Rectangle(renderPos.ToPoint(), new Point(Width, (int)Math.Ceiling(size.Y + 2))), new Color(Color.Black, alpha * 0.5f));
+			graphics.FillRectangle(new Rectangle(renderPos.ToPoint(), new Point(Width, (int)Math.Ceiling(size.Y + 2))), new Color(Color.Black, alpha * 0.5f));
 
-			Font.DrawString(args.SpriteBatch, text, renderPos + new Vector2(0, 2), TextColor.White, opacity: alpha);
+			Font.DrawString(graphics.SpriteBatch, text, renderPos + new Vector2(0, 2), TextColor.White, opacity: alpha);
 			offset.Y -= (size.Y + 2);
 		}
 

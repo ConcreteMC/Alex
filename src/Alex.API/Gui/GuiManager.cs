@@ -23,6 +23,8 @@ namespace Alex.API.Gui
         internal SpriteBatch SpriteBatch { get; private set; }
         internal GuiRenderArgs GuiRenderArgs { get; private set; }
 
+        private GuiSpriteBatch GuiSpriteBatch { get; set; }
+
         public List<GuiScreen> Screens { get; } = new List<GuiScreen>();
         
         public GuiManager(Game game, InputManager inputManager, IGuiRenderer guiRenderer)
@@ -37,7 +39,9 @@ namespace Alex.API.Gui
             GuiRenderer = guiRenderer;
             guiRenderer.ScaledResolution = ScaledResolution;
             SpriteBatch = new SpriteBatch(Game.GraphicsDevice);
-            GuiRenderArgs = new GuiRenderArgs(GuiRenderer, Game.GraphicsDevice, SpriteBatch, new GameTime(), ScaledResolution);
+
+            GuiSpriteBatch = new GuiSpriteBatch(guiRenderer, Game.GraphicsDevice);
+            GuiRenderArgs = new GuiRenderArgs(Game.GraphicsDevice, SpriteBatch, ScaledResolution, GuiRenderer, new GameTime());
 
             DebugHelper = new GuiDebugHelper(this);
         }
@@ -57,14 +61,17 @@ namespace Alex.API.Gui
             GraphicsDevice = graphicsDevice;
             SpriteBatch = new SpriteBatch(graphicsDevice);
             GuiRenderer.Init(graphicsDevice);
-
-            GuiRenderArgs = new GuiRenderArgs(GuiRenderer, GraphicsDevice, SpriteBatch, new GameTime(), ScaledResolution);
+            
+            GuiSpriteBatch?.Dispose();
+            GuiSpriteBatch = new GuiSpriteBatch(GuiRenderer, graphicsDevice);
+            GuiRenderArgs = new GuiRenderArgs(GraphicsDevice, SpriteBatch, ScaledResolution, GuiRenderer, new GameTime());
         }
 
         private bool _doInit = true;
         public void ApplyFont(IFont font)
         {
             GuiRenderer.Font = font;
+            GuiSpriteBatch.Font = font;
 
             _doInit = true;
         }
@@ -109,22 +116,21 @@ namespace Alex.API.Gui
 
         public void Draw(GameTime gameTime)
         {
-            var args = GuiRenderArgs;
             try
             {
                 //SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None,  RasterizerState.CullNone, null, ScaledResolution.TransformMatrix);
-                args.BeginSpriteBatch();
+                GuiSpriteBatch.Begin();
 
                 foreach (var screen in Screens.ToArray())
                 {
-                    screen.Draw(args);
+                    screen.Draw(GuiSpriteBatch, gameTime);
 
                     DebugHelper.DrawScreen(screen);
                 }
             }
             finally
             {
-                args.EndSpriteBatch();
+                GuiSpriteBatch.End();
             }
         }
 

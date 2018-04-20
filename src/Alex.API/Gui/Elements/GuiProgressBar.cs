@@ -54,16 +54,16 @@ namespace Alex.API.Gui.Elements
 			}*/
 		}
 
-	    protected override void OnDraw(GuiRenderArgs args)
+	    protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
         {
             var bounds = RenderBounds;
 
             var fillWidth = bounds.Width - 2 * _spriteSheetSegmentWidth;
 
-            base.OnDraw(args);
+            base.OnDraw(graphics, gameTime);
 
             bounds = new Rectangle(bounds.X + _spriteSheetSegmentWidth, bounds.Y, Math.Max(1, (int)(fillWidth * Percent)), bounds.Height);
-            args.DrawNinePatch(bounds, Highlight, TextureRepeatMode.Stretch);
+            graphics.FillRectangle(bounds, Highlight, TextureRepeatMode.Stretch);
 
 	       //	args.SpriteBatch.DrawString(FontRenderer, Text, RenderBounds.Center.ToVector2() - (TextSize / 2f), Color.Black, 0f, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
         }
