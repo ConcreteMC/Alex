@@ -17,6 +17,8 @@ namespace Alex.API.Gui.Rendering
         TextureSlice2D GetTexture(GuiTextures guiTexture);
         Texture2D GetTexture2D(GuiTextures guiTexture);
 
+        string GetTranslation(string key);
+
         Vector2 Project(Vector2 point);
         Vector2 Unproject(Vector2 screen);
     }

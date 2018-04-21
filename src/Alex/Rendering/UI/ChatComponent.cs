@@ -48,7 +48,7 @@ namespace Alex.Rendering.UI
 
 		protected override void OnUpdate(GameTime gameTime)
 		{
-			if (IsFocused)
+			if (Focused)
 			{
 				var msg = _textBuilder.Text;
 				var preCursor = msg.Substring(0, _textBuilder.CursorPosition);
@@ -66,7 +66,7 @@ namespace Alex.Rendering.UI
 		{
 			base.OnDraw(graphics, gameTime);
 
-			if (IsFocused)
+			if (Focused)
 			{
 				var renderPos = (Bounds.BottomLeft() - new Vector2(0, 8)).ToPoint();
 
@@ -92,7 +92,7 @@ namespace Alex.Rendering.UI
 				{
 					var elapse = now - msg.Key;
 					float alpha = 1f;
-					if (!IsFocused)
+					if (!Focused)
 					{
 						if (elapse > _renderTimeout)
 						{
@@ -166,7 +166,7 @@ namespace Alex.Rendering.UI
 
 		protected override void OnKeyInput(char character, Keys key)
 		{
-			if (IsFocused)
+			if (Focused)
 			{
 				if (key == Keys.Back)
 				{
@@ -193,7 +193,7 @@ namespace Alex.Rendering.UI
 
 		public void Dismiss()
 		{
-			IsFocused = false;
+			//Focused = false;
 			_textBuilder.Clear();
 		}
 
@@ -212,7 +212,7 @@ namespace Alex.Rendering.UI
 				}
 			}
 			_textBuilder.Clear();
-			IsFocused = false;
+			//Focused = false;
 		}
 
 		public void Receive(ChatObject message)

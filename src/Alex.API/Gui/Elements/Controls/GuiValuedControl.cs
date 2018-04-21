@@ -21,14 +21,22 @@ namespace Alex.API.Gui.Elements.Controls
             get => _value;
             set
             {
-                if (!value.Equals(_value))
+                if (!Equals(value, _value) || _value == null)
                 {
-                    _value = value;
-                    ValueChanged?.Invoke(this, _value);
+                    if (OnValueChanged(value))
+                    {
+                        _value = value;
+                        ValueChanged?.Invoke(this, _value);
+                    }
                 }
             }
         }
 
         public string DisplayFormat { get; set; }
+
+        protected virtual bool OnValueChanged(TValue value)
+        {
+            return true;
+        }
     }
 }

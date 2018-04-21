@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Alex.API.Graphics.Typography;
 using Alex.API.Gui.Rendering;
 using Alex.API.Input;
@@ -15,7 +16,7 @@ namespace Alex.API.Gui
         private GraphicsDevice GraphicsDevice { get; set; }
 
         public GuiScaledResolution ScaledResolution { get; }
-        public GuiFocusManager FocusManager { get; }
+        public GuiFocusHelper FocusManager { get; }
 
         public IGuiRenderer GuiRenderer { get; }
 
@@ -34,7 +35,7 @@ namespace Alex.API.Gui
             ScaledResolution = new GuiScaledResolution(game);
             ScaledResolution.ScaleChanged += ScaledResolutionOnScaleChanged;
 
-            FocusManager = new GuiFocusManager(this, InputManager, game.GraphicsDevice);
+            FocusManager = new GuiFocusHelper(this, InputManager, game.GraphicsDevice);
 
             GuiRenderer = guiRenderer;
             guiRenderer.ScaledResolution = ScaledResolution;
@@ -113,20 +114,19 @@ namespace Alex.API.Gui
 
             DebugHelper.Update(gameTime);
         }
-
+        
         public void Draw(GameTime gameTime)
         {
             try
             {
-                //SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None,  RasterizerState.CullNone, null, ScaledResolution.TransformMatrix);
                 GuiSpriteBatch.Begin();
 
-                foreach (var screen in Screens.ToArray())
+                ForEachScreen(screen =>
                 {
                     screen.Draw(GuiSpriteBatch, gameTime);
 
                     DebugHelper.DrawScreen(screen);
-                }
+                });
             }
             finally
             {
@@ -134,5 +134,13 @@ namespace Alex.API.Gui
             }
         }
 
+
+        private void ForEachScreen(Action<GuiScreen> action)
+        {
+            foreach (var screen in Screens.ToArray())
+            {
+                action.Invoke(screen);
+            }
+        }
     }
 }

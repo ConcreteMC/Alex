@@ -1,8 +1,11 @@
 ﻿using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using Alex.API.Graphics.Textures;
 using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Gui.Rendering;
+using Alex.API.Localization;
 using Alex.API.Utils;
 using Alex.ResourcePackLib;
 using Microsoft.Xna.Framework;
@@ -30,6 +33,8 @@ namespace Alex.Gui
         public IFont DebugFont => Alex.DebugFont;
 
         public GuiScaledResolution ScaledResolution { get; set; }
+
+        public CultureLanguage Language = new CultureLanguage(CultureInfo.DefaultThreadCurrentCulture ?? CultureInfo.GetCultureInfo("en-US"));
 
         private GraphicsDevice _graphicsDevice;
         private ResourceManager _resourceManager;
@@ -102,7 +107,13 @@ namespace Alex.Gui
 
         public void LoadResourcePack(McResourcePack resourcePack)
         {
+            LoadLanguages(resourcePack);
             LoadResourcePackTextures(resourcePack);
+        }
+
+        private void LoadLanguages(McResourcePack resourcePack)
+        {
+            Language.Load(resourcePack.Languages.FirstOrDefault().Value);
         }
 
 
@@ -145,6 +156,7 @@ namespace Alex.Gui
 
             LoadTextureFromSpriteSheet(GuiTextures.ButtonDefault                       , spriteSheet, WidgetButtonDefault);
             LoadTextureFromSpriteSheet(GuiTextures.ButtonHover                         , spriteSheet, WidgetButtonHover);
+            LoadTextureFromSpriteSheet(GuiTextures.ButtonFocused                       , spriteSheet, WidgetButtonHover);
             LoadTextureFromSpriteSheet(GuiTextures.ButtonDisabled                      , spriteSheet, WidgetButtonDisabled);
             LoadTextureFromSpriteSheet(GuiTextures.PanelGeneric, spriteSheet, WidgetHotBarSeparated, new Thickness(5));
         }
@@ -202,6 +214,11 @@ namespace Alex.Gui
         public Texture2D GetTexture2D(GuiTextures guiTexture)
         {
             return GetTexture(guiTexture).Texture;
+        }
+
+        public string GetTranslation(string key)
+        {
+            return Language[key];
         }
 
         public Vector2 Project(Vector2 point)

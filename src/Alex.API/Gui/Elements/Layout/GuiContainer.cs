@@ -1,4 +1,4 @@
-﻿namespace Alex.API.Gui
+﻿namespace Alex.API.Gui.Elements.Layout
 {
     public class GuiContainer : GuiElement
     {

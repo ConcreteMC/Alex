@@ -93,8 +93,7 @@ namespace Alex.GameStates
 			{
 				BackgroundOverlayColor = new Color(Color.Black, 0.15f),
 
-				X = -25,
-				Y = -25,
+				Margin = new Thickness(25),
 
 				Width = 92,
 				Height = 128,

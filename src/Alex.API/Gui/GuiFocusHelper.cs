@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Input;
 using Alex.API.Input.Listeners;
@@ -7,11 +8,8 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.API.Gui
 {
-    public class GuiFocusManager
+    public class GuiFocusHelper
     {
-        private GuiControl _highlightedElement;
-        private GuiControl _focusedElement;
-
         private GuiManager GuiManager { get; }
         private GraphicsDevice GraphicsDevice { get; }
         private InputManager InputManager { get; }
@@ -23,51 +21,53 @@ namespace Alex.API.Gui
         private Vector2 _previousCursorPosition;
         public Vector2 CursorPosition { get; private set; }
 
-        public GuiControl HighlightedElement
+        
+        private IGuiControl _highlightedElement;
+        private IGuiControl _focusedElement;
+
+        public IGuiControl HighlightedElement
         {
             get => _highlightedElement;
             set
             {
-                if (_highlightedElement != null)
-                {
-                    _highlightedElement.IsHighlighted = false;
-                }
-
+                _highlightedElement?.InvokeHighlightDeactivate();
                 _highlightedElement = value;
-
-                if (_highlightedElement != null)
-                {
-                    _highlightedElement.IsHighlighted = true;
-                }
+                _highlightedElement?.InvokeHighlightActivate();
             }
         }
-
-        public GuiControl FocusedElement
+        public IGuiControl FocusedElement
         {
             get => _focusedElement;
             set
             {
-                if (_focusedElement != null)
-                {
-                    _focusedElement.IsFocused = false;
-                }
-
+                _focusedElement?.InvokeFocusDeactivate();
                 _focusedElement = value;
-
-                if (_focusedElement != null)
-                {
-                    _focusedElement.IsFocused = true;
-                }
+                _focusedElement?.InvokeFocusActivate();
             }
         }
 
+        private IGuiFocusContext _activeFocusContext;
+        public IGuiFocusContext ActiveFocusContext
+        {
+            get => _activeFocusContext;
+            set
+            {
+                if (_activeFocusContext == value) return;
 
-        public GuiFocusManager(GuiManager guiManager, InputManager inputManager, GraphicsDevice graphicsDevice)
+                _activeFocusContext?.HandleContextInactive();
+                _activeFocusContext = value;
+                _activeFocusContext?.HandleContextActive();
+
+            }
+        }
+
+        public GuiFocusHelper(GuiManager guiManager, InputManager inputManager, GraphicsDevice graphicsDevice)
         {
             GuiManager = guiManager;
             InputManager = inputManager;
             GraphicsDevice = graphicsDevice;
         }
+        
 
         public void Update(GameTime gameTime)
         {
@@ -82,25 +82,28 @@ namespace Alex.API.Gui
 
         private void UpdateHighlightedElement()
         {
-            var movePosition = CursorInputListener.GetCursorPositionDelta();
-
-            //if (movePosition.X < 1 && movePosition.Y < 1) return;
-
-            //var allElements = GuiManager.Screens.SelectMany(s => s.AllChildElements).ToArray();
-            //var focusableControls = allElements.Where(e => e is GuiControl c && c.Enabled).Cast<GuiControl>().ToList();
-
             var rawCursorPosition = CursorInputListener.GetCursorPosition();
 
-            CursorPosition = GuiManager.GuiRenderer.Unproject(rawCursorPosition);
+            var cursorPosition = GuiManager.GuiRenderer.Unproject(rawCursorPosition);
 
-            //var controlMatchingPosition = focusableControls.LastOrDefault(e => e.RenderBounds.Contains(CursorPosition));
-            if (TryGetElementAt(CursorPosition, e => e is GuiControl c && c.Enabled, out var controlMatchingPosition))
+            if (Vector2.DistanceSquared(rawCursorPosition, _previousCursorPosition) >= 1)
             {
-                HighlightedElement = controlMatchingPosition as GuiControl;
+                _previousCursorPosition = CursorPosition;
+                CursorPosition = cursorPosition;
             }
-            else
+
+            IGuiControl newHighlightedElement = null;
+
+            if (TryGetElementAt(CursorPosition, e => e is IGuiControl c && c.Enabled, out var controlMatchingPosition))
             {
-                HighlightedElement = null;
+                newHighlightedElement = controlMatchingPosition as IGuiControl;
+            }
+
+            if (newHighlightedElement != HighlightedElement)
+            {
+                HighlightedElement?.InvokeCursorLeave(CursorPosition);
+                HighlightedElement = newHighlightedElement;
+                HighlightedElement?.InvokeCursorEnter(CursorPosition);
             }
         }
 
@@ -115,18 +118,18 @@ namespace Alex.API.Gui
 
             if (HighlightedElement == FocusedElement && CursorInputListener.IsPressed(InputCommand.Click))
             {
-                HighlightedElement.InvokeClick(CursorPosition);
+                HighlightedElement?.InvokeCursorPressed(CursorPosition);
             }
 
             var isDown = CursorInputListener.IsDown(InputCommand.Click);
             if (isDown)
             {
-                HighlightedElement.InvokeCursorDown(CursorPosition);
+                HighlightedElement?.InvokeCursorDown(CursorPosition);
             }
 
-            if (CursorPosition.ToPoint() != _previousCursorPosition.ToPoint())
+            if (CursorPosition != _previousCursorPosition)
             {
-                HighlightedElement.InvokeCursorMove(CursorPosition, _previousCursorPosition, isDown);
+                HighlightedElement?.InvokeCursorMove(CursorPosition, _previousCursorPosition, isDown);
             }
         }
 
@@ -152,11 +155,10 @@ namespace Alex.API.Gui
             return false;
         }
 
-        private bool TryGetElementAt(Vector2 position, GuiElementPredicate predicate, out IGuiElement element)
+        public bool TryGetElementAt(Vector2 position, GuiElementPredicate predicate, out IGuiElement element)
         {
             foreach (var screen in GuiManager.Screens.ToArray().Reverse())
             {
-
                 if (screen.TryFindDeepestChild(e => e.RenderBounds.Contains(position) && predicate(e), out var matchedChild))
                 {
                     element = matchedChild;

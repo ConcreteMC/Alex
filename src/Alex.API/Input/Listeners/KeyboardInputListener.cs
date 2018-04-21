@@ -7,6 +7,8 @@ namespace Alex.API.Input.Listeners
     {
         public KeyboardInputListener() : base(PlayerIndex.One)
         {
+            RegisterMap(InputCommand.Exit, Keys.Escape);
+
             RegisterMap(InputCommand.MoveForwards, Keys.W);
             RegisterMap(InputCommand.MoveBackwards, Keys.S);
             RegisterMap(InputCommand.MoveLeft, Keys.A);

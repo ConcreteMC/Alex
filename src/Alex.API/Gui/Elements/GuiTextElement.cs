@@ -29,6 +29,18 @@ namespace Alex.API.Gui.Elements
 		    set { _rotationOrigin = value; }
 	    }
 
+	    private string _translationKey;
+
+	    public string TranslationKey
+	    {
+		    get => _translationKey;
+		    set 
+		    { 
+			    _translationKey = value;
+			    OnTranslationKeyUpdated();
+		    }
+	    }
+		
 	    public string Text
         {
             get => _text;
@@ -92,6 +104,8 @@ namespace Alex.API.Gui.Elements
             base.OnInit(renderer);
 
             Font = renderer.Font;
+
+	        OnTranslationKeyUpdated();
         }
 
 
@@ -109,6 +123,14 @@ namespace Alex.API.Gui.Elements
 	    {
 		    return Font?.MeasureString(text, scale) ?? Vector2.Zero;
 		}
+
+	    private void OnTranslationKeyUpdated()
+	    {
+		    if (!string.IsNullOrEmpty(TranslationKey))
+		    {
+			    Text = GuiRenderer?.GetTranslation(TranslationKey);
+		    }
+	    }
 
 	    private void OnTextUpdated()
 	    {

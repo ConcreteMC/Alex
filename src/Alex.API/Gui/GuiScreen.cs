@@ -1,7 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Rendering;
+using Alex.API.Input;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 
 namespace Alex.API.Gui
 {
@@ -11,6 +14,11 @@ namespace Alex.API.Gui
 
         private List<IGuiElement3D> _3DElements = new List<IGuiElement3D>();
         public bool IsLayoutInProgress { get; protected set; } = false;
+
+        public override IGuiFocusContext FocusContext
+        {
+            get { return this; }
+        }
 
         public GuiScreen(Game game)
         {
@@ -40,10 +48,12 @@ namespace Alex.API.Gui
 
             // Pass 2 - Update the actual sizes for all children based upon their
             //          parent sizes.
-            DoLayoutMeasure(new Size(Width, Height));
+            BeginLayoutMeasure();
+            Measure(new Size(Width, Height));
 
             // Pass 3 - Arrange all child elements based on the LayoutManager for
             //          the current element.
+            BeginLayoutArrange();
             Arrange(new Rectangle(Point.Zero, new Size(Width, Height)));
             
             OnUpdateLayout();
@@ -82,6 +92,16 @@ namespace Alex.API.Gui
         public void UnregisterElement(IGuiElement3D element)
         {
             _3DElements.Remove(element);
+        }
+        
+        public void HandleContextActive()
+        {
+
+        }
+
+        public void HandleContextInactive()
+        {
+
         }
     }
 }

@@ -42,6 +42,7 @@
         HotBarSelect9,
 
         Click,
+        Exit,
 
         A,
         B,

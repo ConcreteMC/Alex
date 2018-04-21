@@ -160,7 +160,7 @@ namespace Alex.GameStates.Playing
 
 				UpdateRayTracer(Alex.GraphicsDevice, World);
 
-				if (!_playingHud.Chat.IsFocused)
+				if (!_playingHud.Chat.Focused)
 				{
 					World.Player.Controller.CheckInput = Alex.IsActive;
 					CheckInput(gameTime);

@@ -148,8 +148,13 @@ namespace Alex.API.Gui
         #endregion
 
         #region Layout Calculation State Properties
-
+        
+        public bool IsSizeDirty { get; protected set; } = true;
         public bool IsLayoutDirty    { get; protected set; } = true;
+        
+        public bool IsMeasureComplete { get; protected set; } = false;
+        public bool IsArrangeComplete { get; protected set; } = false;
+
         public int  LayoutOffsetX    { get; private set; }   = 0;
         public int  LayoutOffsetY    { get; private set; }   = 0;
         public int  LayoutWidth      { get; private set; }   = 0;
@@ -194,7 +199,9 @@ namespace Alex.API.Gui
             //    return;
             //}
 
+            IsSizeDirty = true;
             IsLayoutDirty = true;
+
 
             if (invalidateChildren)
             {
@@ -215,26 +222,26 @@ namespace Alex.API.Gui
 
         protected internal void DoLayoutSizing()
         {
-            UpdatePreferredSize();
+            if (IsSizeDirty)
+            {
+                UpdatePreferredSize();
+            }
 
             ForEachChild<GuiElement>(c => c.DoLayoutSizing());
         }
-        
-        protected internal void DoLayoutMeasure(Size parentSize)
-        {
-            var size = Measure(parentSize);
 
-            ForEachChild<GuiElement>(c => c.DoLayoutMeasure(size));
+        protected internal void BeginLayoutMeasure()
+        {
+            IsMeasureComplete = false;
+
+            ForEachChild<GuiElement>(c => c.BeginLayoutMeasure());
         }
-        protected internal void DoLayoutArrange(Point parentPosition)
-        {
-            if (IsLayoutDirty)
-            {
-                //Arrange(new Rectangle(parentPosition.X + LayoutOffsetX, parentPosition.Y + LayoutOffsetY, LayoutWidth, LayoutHeight));
-                //Arrange(Bounds);
-            }
 
-            //ForEachChild<GuiElement>(c => c.DoLayoutArrange(Position));
+        protected internal void BeginLayoutArrange()
+        {
+            IsArrangeComplete = false;
+
+            ForEachChild<GuiElement>(c => c.BeginLayoutArrange());
         }
         
         #region Sizing Methods
@@ -268,11 +275,16 @@ namespace Alex.API.Gui
         
         public Size Measure(Size availableSize)
         {
-            UpdatePreferredSize();
+            if (!IsMeasureComplete)
+            {
+                UpdatePreferredSize();
 
-            var size = MeasureCore(availableSize);
+                var size = MeasureCore(availableSize - Margin);
 
-            Size = size;
+                Size = size;
+
+                IsMeasureComplete = true;
+            }
 
             return Size + Margin;
         }
@@ -302,6 +314,8 @@ namespace Alex.API.Gui
 
                 size = autoSize;
             }
+
+            size = Size.Clamp(size, PreferredMinSize, PreferredMaxSize);
 
             LayoutWidth  = size.Height;
             LayoutHeight = size.Width;
@@ -374,16 +388,22 @@ namespace Alex.API.Gui
         
         public void Arrange(Rectangle newBounds)
         {
-            OuterBounds = newBounds + Margin;
-            InnerBounds = newBounds - Padding;
-            Bounds      = newBounds;
+            if (!IsArrangeComplete)
+            {
+                OuterBounds = newBounds + Margin;
+                InnerBounds = newBounds - Padding;
+                Bounds      = newBounds;
 
-            Size     = newBounds.Size;
-            Position = newBounds.Location;
+                Size     = newBounds.Size;
+                Position = newBounds.Location;
+                
+                IsLayoutDirty = false;
 
-            ArrangeCore(newBounds);
+                ArrangeCore(newBounds);
 
-            IsLayoutDirty = false;
+                IsArrangeComplete = true;
+            }
+
         }
 
         protected virtual void ArrangeCore(Rectangle newBounds)
@@ -419,6 +439,8 @@ namespace Alex.API.Gui
             child.LayoutOffsetX = bounds.RelativeX;
             child.LayoutWidth   = bounds.Width;
 
+            child.IsLayoutDirty = false;
+
             child.Arrange(bounds.Bounds);
 
             return bounds;
@@ -439,7 +461,6 @@ namespace Alex.API.Gui
             {
                 bounds.AnchorTop = offset.Top;
             }
-
             if (vertical.HasFlag(Alignment.MaxY))
             {
                 bounds.AnchorBottom = offset.Bottom;

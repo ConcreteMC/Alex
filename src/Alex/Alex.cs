@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -10,6 +11,7 @@ using Alex.API.Graphics;
 using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Input;
+using Alex.API.Localization;
 using Alex.API.Network;
 using Alex.API.Services;
 using Alex.API.World;
@@ -51,6 +53,7 @@ namespace Alex
 
 		public static Alex Instance { get; private set; }
 		public GameStateManager GameStateManager { get; private set; }
+
 		public ResourceManager Resources { get; private set; }
 
 		public InputManager InputManager { get; private set; }
@@ -165,7 +168,7 @@ namespace Alex
 			}
 
 			DebugFont = (WrappedSpriteFont) Content.Load<SpriteFont>("DebugFont");
-
+			
 			_spriteBatch = new SpriteBatch(GraphicsDevice);
 			InputManager = new InputManager(this);
 			GuiRenderer = new GuiRenderer(this);

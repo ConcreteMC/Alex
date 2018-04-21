@@ -11,6 +11,7 @@ namespace Alex.API.Gui
     {
         IGuiScreen Screen { get; }
         IGuiElement ParentElement { get; set; }
+        IGuiFocusContext FocusContext { get; set; }
 
         bool HasChildren { get; }
         int X { set; }

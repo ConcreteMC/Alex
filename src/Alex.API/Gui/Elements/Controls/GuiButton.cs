@@ -14,11 +14,16 @@ namespace Alex.API.Gui.Elements.Controls
             get => TextElement.Text;
 	        set => TextElement.Text = value;
         }
+	    public string TranslationKey
+	    {
+		    get => TextElement.TranslationKey;
+		    set => TextElement.TranslationKey = value;
+	    }
 
         protected GuiTextElement TextElement { get; }
         protected Action Action { get; }
 		
-	    public GuiButton() : this(string.Empty)
+	    public GuiButton(Action action = null) : this(string.Empty, action)
 	    {
 
 	    }
@@ -33,6 +38,9 @@ namespace Alex.API.Gui.Elements.Controls
             Action = action;
             MinHeight = 20;
 	        MinWidth = 20;
+
+	        MaxHeight = 22;
+	        MaxWidth = 200;
 			Padding = new Thickness(5, 5);
 			Margin = new Thickness(2);
 
@@ -48,7 +56,7 @@ namespace Alex.API.Gui.Elements.Controls
         }
 
 
-	    protected override void OnClick(Vector2 relativePosition)
+	    protected override void OnCursorPressed(Point cursorPosition)
         {
             Action?.Invoke();
         }

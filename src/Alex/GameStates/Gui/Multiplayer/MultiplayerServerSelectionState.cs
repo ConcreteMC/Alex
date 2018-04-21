@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Alex.API.Data.Servers;
@@ -8,6 +9,7 @@ using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Elements.Icons;
+using Alex.API.Gui.Elements.Layout;
 using Alex.API.Gui.Rendering;
 using Alex.API.Services;
 using Alex.API.Utils;
@@ -21,8 +23,11 @@ namespace Alex.GameStates.Gui.Multiplayer
 {
     public class MultiplayerServerSelectionState : ListSelectionStateBase<GuiServerListEntryElement>
     {
-		private GuiButton DirectConnectButton { get; }
-	    private GuiButton AddServerButton { get; }
+	    private GuiButton DirectConnectButton;
+	    private GuiButton JoinServerButton;
+	    private GuiButton AddServerButton;
+	    private GuiButton EditServerButton;
+	    private GuiButton DeleteServerButton;
 
 	    private IListStorageProvider<SavedServerEntry> _listProvider;
 
@@ -32,21 +37,44 @@ namespace Alex.GameStates.Gui.Multiplayer
 
 	        Title = "Multiplayer";
 			
-			Footer.AddChild(DirectConnectButton = 
-				                new GuiButton("Add Server", OnAddItemButtonClick)
-				                {
-					                Anchor = Alignment.MiddleLeft
-				                });
-
-	        Footer.AddChild(DirectConnectButton = 
-		                        new GuiButton("Direct Connect", () => Alex.GameStateManager.SetActiveState<MultiplayerConnectState>())
-		        {
-					Anchor = Alignment.MiddleCenter
-				});
-
-			Footer.AddChild(new GuiButton("Refresh", OnRefreshButtonPressed)
+			Footer.AddRow(row =>
 			{
-				Anchor = Alignment.MiddleRight
+				
+				row.AddChild(JoinServerButton = new GuiButton("Join Server", 
+				                                             OnJoinServerButtonPressed)
+				{
+					TranslationKey = "selectServer.select",
+					Enabled = false
+				});
+				row.AddChild(DirectConnectButton = new GuiButton("Direct Connect", 
+					() => Alex.GameStateManager.SetActiveState<MultiplayerConnectState>())
+		            {
+			             TranslationKey = "selectServer.direct"
+					});
+				row.AddChild(AddServerButton = new GuiButton("Add Server", 
+				                                             OnAddItemButtonPressed)
+				{
+					TranslationKey = "selectServer.add"
+				});
+			});
+			Footer.AddRow(row =>
+			{
+				row.AddChild(EditServerButton = new GuiButton("Edit", OnEditItemButtonPressed)
+				{
+					TranslationKey = "selectServer.edit"
+				});
+				row.AddChild(DeleteServerButton = new GuiButton("Delete", OnDeleteItemButtonPressed)
+				{
+					TranslationKey = "selectServer.delete"
+				});
+				row.AddChild(new GuiButton("Refresh", OnRefreshButtonPressed)
+				{
+					TranslationKey = "selectServer.refresh"
+				});
+				row.AddChild(new GuiButton("Cancel", OnCancelButtonPressed)
+				{
+					TranslationKey = "gui.cancel"
+				});
 			});
 
 			//AddItem(new GuiServerListEntryElement("Localhost", "localhost:25565"));
@@ -54,6 +82,65 @@ namespace Alex.GameStates.Gui.Multiplayer
 
 			Load();
 		}
+
+	    protected override void OnSelectedItemChanged(GuiServerListEntryElement newItem)
+	    {
+		    if (newItem != null)
+		    {
+			    JoinServerButton.Enabled = true;
+			    EditServerButton.Enabled = true;
+			    DeleteServerButton.Enabled = true;
+		    }
+		    else
+		    {
+			    JoinServerButton.Enabled = false;
+			    EditServerButton.Enabled   = false;
+			    DeleteServerButton.Enabled = false;
+		    }
+	    }
+		
+	    public void OnAddItemButtonPressed()
+	    {
+		    Alex.GameStateManager.SetActiveState(new MultiplayerAddEditServerState(AddEditServerCallbackAction));
+	    }
+
+	    private void OnEditItemButtonPressed()
+	    {
+		    Alex.GameStateManager.SetActiveState(new MultiplayerAddEditServerState(SelectedItem.SavedServerEntry, AddEditServerCallbackAction));
+	    }
+		
+	    private void OnDeleteItemButtonPressed()
+	    {
+		    _toDelete = SelectedItem.SavedServerEntry;
+		    Alex.GameStateManager.SetActiveState(new GuiConfirmState(new GuiConfirmState.GuiConfirmStateOptions()
+		    {
+				MessageTranslationKey = "selectServer.deleteQuestion",
+				ConfirmTranslationKey = "selectServer.deleteButton"
+		    }, DeleteServerCallbackAction));
+	    }
+
+	    private SavedServerEntry _toDelete;
+	    private void DeleteServerCallbackAction(bool confirm)
+	    {
+		    if (confirm)
+		    {
+			    _listProvider.RemoveEntry(_toDelete);
+			    Load();
+		    }
+	    }
+
+	    private void OnJoinServerButtonPressed()
+	    {
+		    var entry = SelectedItem.SavedServerEntry;
+		    var ip = Dns.GetHostAddresses(entry.Host).FirstOrDefault();
+
+		    Alex.ConnectToServer(new IPEndPoint(ip, entry.Port));
+	    }
+		
+	    private void OnCancelButtonPressed()
+	    {
+			Alex.GameStateManager.SetActiveState("title");
+	    }
 
 	    private void OnRefreshButtonPressed()
 	    {
@@ -81,12 +168,8 @@ namespace Alex.GameStates.Gui.Multiplayer
 		    }
 	    }
 
-	    public void OnAddItemButtonClick()
-	    {
-		    Alex.GameStateManager.SetActiveState(new MultiplayerAddServerState(CallbackAction));
-	    }
 
-	    private void CallbackAction(SavedServerEntry obj)
+	    private void AddEditServerCallbackAction(SavedServerEntry obj)
 	    {
 		    //if (obj == null) return;
 
@@ -94,7 +177,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 	    }
     }
 
-    public class GuiServerListEntryElement : GuiContainer
+    public class GuiServerListEntryElement : GuiSelectionListItem
     {
         private const int ServerIconSize = 32;
 
@@ -115,20 +198,20 @@ namespace Alex.GameStates.Gui.Multiplayer
         private GuiTextElement _serverName;
         private GuiTextElement _serverMotd;
 
-	    private SavedServerEntry entry;
+	    internal SavedServerEntry SavedServerEntry;
 		
 	    public GuiServerListEntryElement(SavedServerEntry entry) : this(entry.Name, entry.Host + ":" + entry.Port)
 	    {
-		    this.entry = entry;
+		    SavedServerEntry = entry;
 	    }
 
-	    public GuiServerListEntryElement(string serverName, string serverAddress)
+	    private GuiServerListEntryElement(string serverName, string serverAddress)
         {
             ServerName = serverName;
             ServerAddress = serverAddress;
 
-	        MinWidth = 356;
-	        Width = 356;
+	        MinWidth = GuiStateBase.ListItemMinWidth;
+	        Width = GuiStateBase.ListItemMinWidth;
 			Margin = new Thickness(5, 5);
             Anchor = Alignment.TopFill;
 

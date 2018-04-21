@@ -38,7 +38,7 @@ namespace Alex.GameStates.Hud
 
         protected override void OnUpdate(GameTime gameTime)
         {
-	        if (!Chat.IsFocused)
+	        if (!Chat.Focused)
 	        {
 				if (InputManager.IsPressed(InputCommand.HotBarSelectNext))
 		        {
@@ -71,7 +71,6 @@ namespace Alex.GameStates.Hud
 		        if (InputManager.IsPressed(InputCommand.ToggleMenu))
 		        {
 			        Alex.GuiManager.FocusManager.FocusedElement = null;
-					Chat.Dismiss();
 		        }
 	        }
 

@@ -129,7 +129,7 @@ namespace Alex.Gui.Elements
                 //var viewport = args.Graphics.Viewport;
                 //args.Graphics.Viewport = new Viewport(RenderBounds);
 
-                using (var context = graphics.ExitContext(BlendState.AlphaBlend, DepthStencilState.Default,
+                using (var context = graphics.BranchContext(BlendState.AlphaBlend, DepthStencilState.Default,
                                             RasterizerState.CullClockwise, SamplerState.PointWrap))
                 {
                     var bounds = RenderBounds;

@@ -1,55 +1,27 @@
 ﻿using Alex.API.Graphics;
 using Alex.API.Graphics.Textures;
+using Alex.API.Gui.Elements.Layout;
 using Alex.API.Gui.Rendering;
+using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
 namespace Alex.API.Gui.Elements.Controls
 {
-    public class GuiControl : GuiContainer
+    public class GuiControl : GuiContainer, IGuiControl
     {
-        private bool _isHighlighted = false;
-        private bool _isFocused = false;
+        public GuiTextures?      HighlightedBackgroundTexture { get; set; }
+        public GuiTextures?      FocusedBackgroundTexture { get; set; }
 
-        public bool Enabled { get; set; } = true;
+        public TextureSlice2D    HighlightedBackground { get; set; }
+        public TextureSlice2D    FocusedBackground { get; set; }
 
-        public bool IsHighlighted
-        {
-            get => _isHighlighted;
-            set
-            {
-                if (_isHighlighted == value) return;
-                _isHighlighted = value;
-
-                if(_isHighlighted)
-                    InvokeHighlighted();
-            }
-        }
-
-        public bool IsFocused
-        {
-            get => _isFocused;
-            set
-            {
-                if (_isFocused == value) return;
-                _isFocused = value;
-
-                if(_isFocused)
-                    InvokeFocused();
-            }
-        }
-
-        public GuiTextures? HighlightedBackgroundTexture { get; set; }
-        public GuiTextures? FocusedBackgroundTexture { get; set; }
-
-        public TextureSlice2D HighlightedBackground { get; set; }
-        public TextureSlice2D FocusedBackground { get; set; }
-
-        public virtual Color HighlightOutlineColor { get; set; } = new Color(Color.White, 0.75f);
+        public virtual Color     HighlightOutlineColor { get; set; } = new Color(TextColor.Gray.ForegroundColor, 0.75f);
         public virtual Thickness HighlightOutlineThickness { get; set; } = Thickness.Zero;
+
         public virtual Color     FocusOutlineColor     { get; set; } = new Color(Color.White, 0.75f);
-        public virtual Thickness FocusOutlineThickness { get; set; } = Thickness.One;
-        
+        public virtual Thickness FocusOutlineThickness { get; set; } = Thickness.Zero;
+
         protected override void OnInit(IGuiRenderer renderer)
         {
             base.OnInit(renderer);
@@ -70,13 +42,13 @@ namespace Alex.API.Gui.Elements.Controls
             base.OnUpdate(gameTime);
 
 
-            if (IsFocused)
+            if (Focused)
             {
-                Background = FocusedBackground ?? (IsHighlighted ? HighlightedBackground ?? DefaultBackground : DefaultBackground);
+                Background = FocusedBackground ?? (Highlighted ? HighlightedBackground ?? DefaultBackground : DefaultBackground);
             }
             else
             {
-                if (IsHighlighted)
+                if (Highlighted)
                 {
                     Background = HighlightedBackground ?? DefaultBackground;
                 }
@@ -91,13 +63,13 @@ namespace Alex.API.Gui.Elements.Controls
         {
             base.OnDraw(graphics, gameTime);
 
-            if (IsFocused && FocusOutlineThickness != Thickness.Zero)
+            if (Focused && FocusOutlineThickness != Thickness.Zero)
             {
                 var outlineBounds = RenderBounds;
                 outlineBounds.Inflate(1f,1f);
                 graphics.DrawRectangle(outlineBounds, FocusOutlineColor, FocusOutlineThickness);
             }
-            else if (IsHighlighted && HighlightOutlineThickness != Thickness.Zero)
+            else if (Highlighted && HighlightOutlineThickness != Thickness.Zero)
             {
                 var outlineBounds = RenderBounds;
                 outlineBounds.Inflate(1f,1f);
@@ -106,52 +78,41 @@ namespace Alex.API.Gui.Elements.Controls
             
         }
 
-        #region Control Cursor Events
-        
-        public void InvokeHighlighted()
+
+        public bool Enabled { get; set; } = true;
+        public bool Focused { get; private set; }
+        public bool Highlighted { get; private set; }
+
+
+        public void InvokeHighlightActivate()
         {
-            OnHighlighted();
+            Highlighted = true;
+            OnHighlightActivate();
         }
-        protected virtual void OnHighlighted() {}
+        protected virtual void OnHighlightActivate() { }
 
-
-        public void InvokeFocused()
+        public void InvokeHighlightDeactivate()
         {
-            OnFocused();
+            Highlighted = false;
+            OnHighlightDeactivate();
         }
-        protected virtual void OnFocused() {}
+        protected virtual void OnHighlightDeactivate() { }
 
 
-        public void InvokeClick(Vector2 cursorPosition)
+        public void InvokeFocusActivate()
         {
-            var relative = cursorPosition - RenderPosition;
-
-            OnClick(relative);
+            Focused = true;
+            OnFocusActivate();
         }
-        protected virtual void OnClick(Vector2 relativePosition) { }
+        protected virtual void OnFocusActivate() { }
 
-
-        public void InvokeCursorDown(Vector2 cursorPosition)
+        public void InvokeFocusDeactivate()
         {
-            var relative = cursorPosition - RenderPosition;
-
-            OnCursorDown(relative);
+            Focused = false;
+            OnFocusDeactivate();
         }
-        protected virtual void OnCursorDown(Vector2 relativePosition) { }
+        protected virtual void OnFocusDeactivate() { }
 
-        
-        public void InvokeCursorMove(Vector2 newPosition, Vector2 oldPosition, bool isCursorDown)
-        {
-            var relativeNew = newPosition - RenderPosition;
-            var relativeOld = oldPosition - RenderPosition;
-
-            OnCursorMove(relativeNew, relativeOld, isCursorDown);
-        }
-        protected virtual void OnCursorMove(Vector2 relativeNewPosition, Vector2 relativeOldPosition, bool isCursorDown) { }
-
-        #endregion
-
-        #region Control Keyboard Events
 
         public void InvokeKeyInput(char character, Keys key)
         {
@@ -159,7 +120,40 @@ namespace Alex.API.Gui.Elements.Controls
         }
         protected virtual void OnKeyInput(char character, Keys key) {}
 
-        #endregion
+
+        public void InvokeCursorDown(Vector2 cursorPosition)
+        {
+            OnCursorDown((cursorPosition - RenderPosition).ToPoint());
+        }
+        protected virtual void OnCursorDown(Point cursorPosition) { }
+
+        public void InvokeCursorPressed(Vector2 cursorPosition)
+        {
+            OnCursorPressed((cursorPosition - RenderPosition).ToPoint());
+        }
+        protected virtual void OnCursorPressed(Point cursorPosition) { }
+
+        public void InvokeCursorMove(Vector2 cursorPosition, Vector2 previousCursorPosition, bool isCursorDown)
+        {
+            var relativeNew = (cursorPosition - RenderPosition).ToPoint();
+            var relativeOld = (previousCursorPosition - RenderPosition).ToPoint();
+
+            OnCursorMove(relativeNew, relativeOld, isCursorDown);
+        }
+        protected virtual void OnCursorMove(Point cursorPosition, Point previousCursorPosition, bool isCursorDown) { }
+
+
+        public void InvokeCursorEnter(Vector2 cursorPosition)
+        {
+            OnCursorEnter((cursorPosition - RenderPosition).ToPoint());
+        }
+        protected virtual void OnCursorEnter(Point cursorPosition) { }
+
+        public void InvokeCursorLeave(Vector2 cursorPosition)
+        {
+            OnCursorLeave((cursorPosition - RenderPosition).ToPoint());
+        }
+        protected virtual void OnCursorLeave(Point cursorPosition) { }
 
     }
 }

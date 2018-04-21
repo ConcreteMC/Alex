@@ -10,66 +10,93 @@ using NLog;
 
 namespace Alex.GameStates.Gui.Multiplayer
 {
-    public class MultiplayerAddServerState : GuiCallbackStateBase<SavedServerEntry>
+    public class MultiplayerAddEditServerState : GuiCallbackStateBase<SavedServerEntry>
     {
 	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(MultiplayerConnectState));
         
+        #region Gui Elements
+
         private readonly GuiTextInput _nameInput;
 		private readonly GuiTextInput _hostnameInput;
-        private readonly GuiButton _connectButton;
-        private readonly GuiButton _cancelButton;
         private readonly GuiTextElement _errorMessage;
+        private readonly GuiButton _saveButton;
 
+        #endregion
+
+        private SavedServerEntry _entry;
         private readonly IListStorageProvider<SavedServerEntry> _savedServersStorage;
+        
+        public MultiplayerAddEditServerState(Action<SavedServerEntry> callbackAction) : this(null, null, callbackAction)
+        {
 
-        public MultiplayerAddServerState(Action<SavedServerEntry> callbackAction) : base(callbackAction)
+        }
+
+        public MultiplayerAddEditServerState(string name, string address, Action<SavedServerEntry> callbackAction) :
+            base(callbackAction)
         {
             _savedServersStorage = GetService<IListStorageProvider<SavedServerEntry>>();
 
             Title = "Add Server";
             
-            AddGuiElement(_nameInput = new GuiTextInput()
+            AddGuiElement(_nameInput = new GuiTextInput(name)
             {
                 Width       = 200,
                 Anchor      = Alignment.MiddleCenter,
-                PlaceHolder = "Server Name"
+                PlaceHolder = "Server Name",
+                Margin = new Thickness(5),
             });
 
-            AddGuiElement(_hostnameInput = new GuiTextInput()
+            AddGuiElement(_hostnameInput = new GuiTextInput(address)
             {
-                Width = 200,
-                Anchor = Alignment.MiddleCenter,
-				PlaceHolder = "Server Address..."
-            });
-            AddGuiElement( _connectButton = new GuiButton("Add Server", OnAddButtonPressed)
-            {
+                Width       = 200,
+                Anchor      = Alignment.MiddleCenter,
+                PlaceHolder = "Server Address...",
                 Margin = new Thickness(5)
             });
-            AddGuiElement( _cancelButton = new GuiButton("Cancel", OnCancelButtonPressed)
+
+            AddGuiElement(_saveButton = new GuiButton(OnSaveButtonPressed)
             {
-				Margin = new Thickness(5)
+                TranslationKey = "addServer.add",
+                Margin = new Thickness(5)
             });
+
+            AddGuiElement(new GuiButton(OnCancelButtonPressed)
+            {
+                TranslationKey = "gui.cancel",
+                Margin = new Thickness(5)
+            });
+
             AddGuiElement(_errorMessage = new GuiTextElement()
             {
                 TextColor = TextColor.Red
             });
         }
 
-        private void OnAddButtonPressed()
+        public MultiplayerAddEditServerState(SavedServerEntry entry, Action<SavedServerEntry> callbackAction) : this(entry.Name, entry.Host + ":" + entry.Port, callbackAction)
+        {
+            if (entry != null)
+            {
+                _entry = entry;
+            }
+        }
+
+        private void OnSaveButtonPressed()
         {
             try
             {
                 var name = _nameInput.Value;
-                var hostname = _hostnameInput.Value;
+                var address = _hostnameInput.Value;
 
                 ushort port = 25565;
 
-                var split = hostname.Split(':');
+                var split = address.Split(':', StringSplitOptions.RemoveEmptyEntries);
+                var hostname = split[0];
+
                 if (split.Length == 2)
                 {
                     if (ushort.TryParse(split[1], out port))
                     {
-                        AddServer(name, hostname, port);
+                        SaveServer(name, hostname, port);
                     }
                     else
                     {
@@ -78,7 +105,7 @@ namespace Alex.GameStates.Gui.Multiplayer
                 }
                 else if (split.Length == 1)
                 {
-                    AddServer(name, hostname, port);
+                    SaveServer(name, hostname, port);
                 }
                 else
                 {
@@ -97,8 +124,9 @@ namespace Alex.GameStates.Gui.Multiplayer
             InvokeCallback(null);
         }
 
-        private void AddServer(string name, string hostname, ushort port)
+        private void SaveServer(string name, string hostname, ushort port)
         {
+
             var entry = new SavedServerEntry()
             {
                 Name       = name,
@@ -106,6 +134,11 @@ namespace Alex.GameStates.Gui.Multiplayer
                 Port       = port,
                 ServerType = ServerType.Java
             };
+            
+            if (_entry != null)
+            {
+                _savedServersStorage.RemoveEntry(_entry);
+            }
             _savedServersStorage.AddEntry(entry);
 
             InvokeCallback(entry);

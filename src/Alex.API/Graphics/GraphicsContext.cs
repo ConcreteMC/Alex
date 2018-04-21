@@ -79,6 +79,29 @@ namespace Alex.API.Graphics
             return CreateContext(GraphicsDevice, blendState, depthStencilState, rasterizerState, samplerState);
         }
 
+        public void ApplyState()
+        {
+            ForEachProperty(p => p.RestoreStateValue());
+        }
+
+        public void RestoreState()
+        {
+            ForEachProperty(p => p.RestoreInitialValue());
+        }
+
+        private void ForEachProperty(Action<IPropertyState<GraphicsDevice>> action)
+        {
+            if (action == null) return;
+            
+            action.Invoke(_viewportProperty);
+            action.Invoke(_blendStateProperty);
+            action.Invoke(_depthStencilStateProperty);
+            action.Invoke(_rasterizerStateProperty);
+            action.Invoke(_samplerStateProperty);
+            action.Invoke(_scissorRectangleProperty);
+            action.Invoke(_blendFactorProperty);
+        }
+
         public static GraphicsContext CreateContext(GraphicsDevice    graphicsDevice, BlendState blendState = null,
                                                     DepthStencilState depthStencilState = null,
                                                     RasterizerState   rasterizerState   = null,
@@ -119,13 +142,7 @@ namespace Alex.API.Graphics
             {
                 if (disposing)
                 {
-                    _viewportProperty.Dispose();
-                    _blendStateProperty.Dispose();
-                    _depthStencilStateProperty.Dispose();
-                    _rasterizerStateProperty.Dispose();
-                    _samplerStateProperty.Dispose();
-                    _scissorRectangleProperty.Dispose();
-                    _blendFactorProperty.Dispose();
+                    ForEachProperty(p => p.Dispose());
 
                     Disposed?.Invoke(this, null);
                 }
@@ -145,8 +162,14 @@ namespace Alex.API.Graphics
         {
             return new PropertyState<GraphicsDevice, TPropertyType>(GraphicsDevice, getProperty(GraphicsDevice), setProperty);
         }
-        
-        public class PropertyState<TPropertyOwner, TPropertyType> : IDisposable
+
+        public interface IPropertyState<TPropertyOwner> : IDisposable
+        {
+            void RestoreInitialValue();
+            void RestoreStateValue();
+        }
+
+        public class PropertyState<TPropertyOwner, TPropertyType> : IPropertyState<TPropertyOwner>
         {
             public TPropertyType InitialValue { get; }
             public TPropertyType Value
@@ -156,6 +179,7 @@ namespace Alex.API.Graphics
             }
 
             private bool _dirty;
+            private bool _hasStateValue;
             private TPropertyType _currentValue;
             private readonly TPropertyOwner _owner;
 
@@ -175,7 +199,8 @@ namespace Alex.API.Graphics
             public TPropertyType Set(TPropertyType newValue)
             { 
                 _dirty          = true;
-                _currentValue = newValue;
+                _hasStateValue  = true;
+                _currentValue   = newValue;
 
                 _setValueFunc(_owner, _currentValue);
 
@@ -186,7 +211,18 @@ namespace Alex.API.Graphics
             {
                 if (_dirty)
                 {
-                    _setValueFunc(_owner, InitialValue);
+                    _dirty = false;
+                }
+                
+                _setValueFunc(_owner, InitialValue);
+            }
+
+            public void RestoreStateValue()
+            {
+                if (_hasStateValue)
+                {
+                    _dirty = true;
+                    _setValueFunc(_owner, _hasStateValue ? _currentValue : InitialValue);
                 }
             }
 

@@ -97,10 +97,10 @@ namespace Alex.API.Gui.Elements.Controls
         {
             base.OnDraw(graphics, gameTime);
 
-            graphics.FillRectangle(new Rectangle((int)(RenderPosition.X + _thumbOffsetX), (int)RenderPosition.Y, ThumbWidth, RenderSize.Height), IsHighlighted ? ThumbHighlightBackground : ThumbBackground, TextureRepeatMode.NoScaleCenterSlice);
+            graphics.FillRectangle(new Rectangle((int)(RenderPosition.X + _thumbOffsetX), (int)RenderPosition.Y, ThumbWidth, RenderSize.Height), Highlighted ? ThumbHighlightBackground : ThumbBackground, TextureRepeatMode.NoScaleCenterSlice);
         }
 
-        private void SetValueFromCursor(Vector2 relativePosition)
+        private void SetValueFromCursor(Point relativePosition)
         {
             var percentageClicked = relativePosition.X / (float)RenderSize.Width;
 
@@ -109,12 +109,12 @@ namespace Alex.API.Gui.Elements.Controls
         }
 
 
-        protected override void OnClick(Vector2 relativePosition)
+        protected override void OnCursorPressed(Point cursorPosition)
         {
-            SetValueFromCursor(relativePosition);
+            SetValueFromCursor(cursorPosition);
         }
 
-        protected override void OnCursorMove(Vector2 relativeNewPosition, Vector2 relativeOldPosition, bool isCursorDown)
+        protected override void OnCursorMove(Point relativeNewPosition, Point relativeOldPosition, bool isCursorDown)
         {
             if (isCursorDown)
             {

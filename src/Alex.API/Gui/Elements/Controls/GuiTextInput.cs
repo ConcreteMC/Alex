@@ -11,11 +11,33 @@ namespace Alex.API.Gui.Elements.Controls
 {
     public class GuiTextInput : GuiValuedControl<string>
     {
+	    private TextColor _textColor        = TextColor.White;
+	    private TextColor _inactiveTextColor = TextColor.Gray;
+
         public Color BorderColor { get; set; } = Color.LightGray;
 
         public Thickness BorderThickness { get; set; } = Thickness.One;
+		
+	    public TextColor TextColor
+	    {
+		    get => _textColor;
+		    set
+		    {
+			    _textColor = value;
+				UpdateDisplayText();
+		    }
+	    }
+		public TextColor InactiveTextColor
+	    {
+		    get => _inactiveTextColor;
+		    set 
+		    { 
+			    _inactiveTextColor = value;
+			    UpdateDisplayText();
+		    }
+	    }
 
-        private TextInputBuilder _textBuilder;
+	    private TextInputBuilder _textBuilder;
 
         private GuiTextElement _textElement;
 
@@ -24,54 +46,36 @@ namespace Alex.API.Gui.Elements.Controls
 
 	    public string PlaceHolder { get; set; } = string.Empty;
 
-        public GuiTextInput()
+        public GuiTextInput(string text = null)
         {
             MinWidth = 100;
             MinHeight = 20;
             BackgroundOverlayColor = Color.Black;
 
-            _textBuilder = new TextInputBuilder();
-
+            _textBuilder = new TextInputBuilder(text);
             AddChild(_textElement = new GuiTextElement()
             {
-                Anchor = Alignment.MiddleLeft
+                Anchor = Alignment.MiddleLeft,
+				Text = _textBuilder.Text
             });
 
-	        _textColor = _textElement.TextColor;
-	        Value = string.Empty;
+	        _textBuilder.TextChanged += (s, v) => Value = v;
+	        Value = _textBuilder.Text;
+
+
+			UpdateDisplayText();
         }
 
-	    private TextColor _textColor;
-		private bool _isPlaceholder = false;
+		//private bool _isPlaceholder = false;
         protected override void OnUpdate(GameTime gameTime)
         {
             base.OnUpdate(gameTime);
-
-            var text = _textBuilder.Text;
-	        var l = text.Length;
-			if (IsFocused || l > 0)
-	        {
-		        _textElement.Text = text;
-		        _textElement.TextColor = _textColor;
-		        _isPlaceholder = false;
-	        }
-	        else if (!IsFocused && !string.IsNullOrWhiteSpace(PlaceHolder) && l == 0)
-			{
-				if (!_isPlaceholder)
-				{
-					_isPlaceholder = true;
-					_textColor = _textElement.TextColor;
-
-					_textElement.Text = PlaceHolder;
-					_textElement.TextColor = TextColor.Gray;
-				}
-			}
-
-	        if (IsFocused)
+			
+	        if (Focused)
             {
-                var preCursor = text.Substring(0, _textBuilder.CursorPosition);
-                var cursorOffsetX = (int)_textElement.Font.MeasureString(preCursor, _textElement.Scale).X;
-                _cursorPositionX = cursorOffsetX;
+	            var preCursor     = _textBuilder.Text.Substring(0, _textBuilder.CursorPosition);
+	            var cursorOffsetX = (int)_textElement.Font.MeasureString(preCursor, _textElement.Scale).X;
+	            _cursorPositionX = cursorOffsetX;
 
                 var delta = (float)gameTime.TotalGameTime.TotalMilliseconds / 2;
                 _cursorAlpha = (float)MathHelpers.SinInterpolation(0.1f, 0.5f, delta)*2;
@@ -80,7 +84,7 @@ namespace Alex.API.Gui.Elements.Controls
 
         protected override void OnKeyInput(char character, Keys key)
         {
-            if (IsFocused)
+            if (Focused)
             {
 	            int originalLength = Value?.Length ?? 0;
                 if (key == Keys.Back)
@@ -99,11 +103,6 @@ namespace Alex.API.Gui.Elements.Controls
                 {
                     _textBuilder.AppendCharacter(character);
                 }
-
-	            if (_textBuilder.Length != originalLength)
-	            {
-		            Value = _textBuilder.Text;
-	            }
             }
         }
 
@@ -116,7 +115,7 @@ namespace Alex.API.Gui.Elements.Controls
 	        graphics.DrawRectangle(bounds, BorderColor, BorderThickness);
 
             // Text
-            if (IsFocused)
+            if (Focused)
             {
                 if (gameTime.TotalGameTime.Seconds % 2 == 0)
                 {
@@ -129,5 +128,52 @@ namespace Alex.API.Gui.Elements.Controls
             }
 
         }
+
+	    protected override void OnFocusActivate()
+	    {
+		    UpdateDisplayText();
+	    }
+	    protected override void OnFocusDeactivate()
+	    {
+		    UpdateDisplayText();
+	    }
+
+	    private void UpdateDisplayText()
+	    {
+			UpdateDisplayText(Value);
+	    }
+
+	    private void UpdateDisplayText(string value)
+	    {
+		    if (string.IsNullOrEmpty(value))
+		    {
+			    _textElement.TextColor = InactiveTextColor;
+
+			    if (!string.IsNullOrWhiteSpace(PlaceHolder))
+			    {
+				    _textElement.Text = PlaceHolder;
+			    }
+			    else
+			    {
+				    _textElement.Text = " ";
+			    }
+		    }
+		    else
+		    {
+			    _textElement.TextColor = Focused ? TextColor : InactiveTextColor;
+			    _textElement.Text      = value;
+		    }
+	    }
+		
+	    protected override bool OnValueChanged(string value)
+	    {
+		    if (!_textBuilder.Text.Equals(value))
+		    {
+			    _textBuilder.Text = value;
+		    }
+
+		    UpdateDisplayText(value);
+		    return true;
+	    }
     }
 }

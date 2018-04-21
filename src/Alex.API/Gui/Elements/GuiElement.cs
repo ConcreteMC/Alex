@@ -43,10 +43,20 @@ namespace Alex.API.Gui
                 InvalidateLayout();
             }
         }
-        
-        protected List<IGuiElement> Children { get; } = new List<IGuiElement>();
+
+        private IGuiFocusContext _focusContext;
+        public virtual IGuiFocusContext FocusContext 
+        {
+            get { return _focusContext ?? ParentElement?.FocusContext ?? Screen; }
+            set { _focusContext = value; }
+        }
+
+            protected List<IGuiElement> Children { get; } = new List<IGuiElement>();
         public bool HasChildren => Children.Any();
-        
+
+        public int ChildCount => Children.Count;
+        internal IReadOnlyList<IGuiElement> AllChildren => Children;
+
         #region Drawing
 
         private float _rotation;
@@ -122,8 +132,8 @@ namespace Alex.API.Gui
         {
             if (!_initialised || force)
             {
-                OnInit(renderer);
                 _guiRenderer = renderer;
+                OnInit(renderer);
             }
 
             ForEachChild(c => c.Init(renderer, force));
@@ -158,6 +168,8 @@ namespace Alex.API.Gui
         public void AddChild(IGuiElement element)
         {
             if (element == this) return;
+            if (element.ParentElement == this) return;
+            if (Children.Contains(element)) return;
 
             element.ParentElement = this;
             Children.Add(element);

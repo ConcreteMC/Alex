@@ -17,6 +17,8 @@ namespace Alex.API.Gui.Rendering
         public SpriteBatch SpriteBatch { get; }
         public GuiScaledResolution ScaledResolution { get; }
 
+        public GraphicsContext Context { get; }
+
         private readonly GraphicsDevice _graphicsDevice;
         private readonly IGuiRenderer _renderer;
         private Texture2D _colorTexture;
@@ -29,6 +31,7 @@ namespace Alex.API.Gui.Rendering
             _renderer = renderer;
             _graphicsDevice = graphicsDevice;
             SpriteBatch = new SpriteBatch(_graphicsDevice);
+            Context = GraphicsContext.CreateContext(_graphicsDevice, BlendState.AlphaBlend, DepthStencilState.None, RasterizerState.CullNone, SamplerState.PointClamp);
 
             Font = _renderer.Font;
             ScaledResolution = _renderer.ScaledResolution;
@@ -46,6 +49,9 @@ namespace Alex.API.Gui.Rendering
         public void Begin()
         {
             if (_hasBegun) return;
+
+            Context.ApplyState();
+
             SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, null, ScaledResolution.TransformMatrix);
         
             _hasBegun = true;
@@ -56,13 +62,16 @@ namespace Alex.API.Gui.Rendering
         {
             if (!_hasBegun) return;
             SpriteBatch.End();
+            
+            Context.RestoreState();
+
             _hasBegun = false;
         }
 
         
         #region Sub-Contexts
 
-        public GraphicsContext ExitContext(BlendState blendState = null, DepthStencilState depthStencilState = null, RasterizerState rasterizerState = null, SamplerState samplerState = null)
+        public GraphicsContext BranchContext(BlendState blendState = null, DepthStencilState depthStencilState = null, RasterizerState rasterizerState = null, SamplerState samplerState = null)
         {
             _beginSpriteBatchAfterContext = _hasBegun;
             End();
@@ -82,7 +91,7 @@ namespace Alex.API.Gui.Rendering
         }
 
         #endregion
-
+        
         #region Drawing
 
         public void DrawLine(Vector2 from, Vector2 to, Color color, int thickness = 1)
@@ -127,10 +136,6 @@ namespace Alex.API.Gui.Rendering
         public void FillRectangle(Rectangle rectangle, Color color)
         {
             SpriteBatch.Draw(ColorTexture, rectangle, color);
-        }
-        public void FillRectangle(Rectangle rectangle, ITexture2D texture)
-        {
-            SpriteBatch.Draw(texture, rectangle);
         }
         public void FillRectangle(Rectangle rectangle, ITexture2D texture, TextureRepeatMode repeatMode = TextureRepeatMode.Stretch)
         {
@@ -261,17 +266,17 @@ namespace Alex.API.Gui.Rendering
             int srcRightHeight = (int) Math.Ceiling(srcHalfHeight);
 
             // MinY MinX
-            SpriteBatch.Draw(texture, new Rectangle(xOffset               , yOffset, dstLeftWidth, dstLeftHeight), new Rectangle(srcX, srcY, srcLeftWidth, srcLeftHeight), Color.White);
+            SpriteBatch.Draw(texture.Texture, new Rectangle(xOffset               , yOffset, dstLeftWidth, dstLeftHeight), new Rectangle(srcX, srcY, srcLeftWidth, srcLeftHeight), Color.White);
                 
             // MinY MaxX
-            SpriteBatch.Draw(texture, new Rectangle(xOffset + dstLeftWidth, yOffset, dstRightWidth, dstRightHeight), new Rectangle(srcX + texture.Width - srcRightWidth, srcY, srcRightWidth, srcRightHeight), Color.White);
+            SpriteBatch.Draw(texture.Texture, new Rectangle(xOffset + dstLeftWidth, yOffset, dstRightWidth, dstRightHeight), new Rectangle(srcX + texture.Width - srcRightWidth, srcY, srcRightWidth, srcRightHeight), Color.White);
 
 
             // MaxY MinX
-            SpriteBatch.Draw(texture, new Rectangle(xOffset               , yOffset + dstLeftHeight , dstLeftWidth, dstLeftHeight), new Rectangle(srcX, srcY + texture.Height - srcRightHeight, srcLeftWidth, srcLeftHeight), Color.White);
+            SpriteBatch.Draw(texture.Texture, new Rectangle(xOffset               , yOffset + dstLeftHeight , dstLeftWidth, dstLeftHeight), new Rectangle(srcX, srcY + texture.Height - srcRightHeight, srcLeftWidth, srcLeftHeight), Color.White);
                 
             // MaxY MaxX
-            SpriteBatch.Draw(texture, new Rectangle(xOffset + dstLeftWidth, yOffset + dstRightHeight, dstRightWidth, dstRightHeight), new Rectangle(srcX + texture.Width - srcRightWidth, srcY + texture.Height - srcRightHeight, srcRightWidth, srcRightHeight), Color.White);
+            SpriteBatch.Draw(texture.Texture, new Rectangle(xOffset + dstLeftWidth, yOffset + dstRightHeight, dstRightWidth, dstRightHeight), new Rectangle(srcX + texture.Width - srcRightWidth, srcY + texture.Height - srcRightHeight, srcRightWidth, srcRightHeight), Color.White);
 
         }
 
