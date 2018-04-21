@@ -1,19 +1,15 @@
 ﻿using System.Collections.Generic;
-using System.Drawing;
-using Alex.API;
-using Alex.API.Graphics;
 using Alex.API.Graphics.Textures;
 using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Gui.Rendering;
 using Alex.API.Utils;
 using Alex.ResourcePackLib;
-using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
-namespace Alex.Gamestates.Gui
+namespace Alex.Gui
 {
     public class GuiRenderer : IGuiRenderer
     {

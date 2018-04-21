@@ -1,20 +1,14 @@
 ﻿using System;
 using System.Drawing;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Rendering;
 using Alex.API.Utils;
-using Alex.Entities;
-using Alex.Gamestates.Gui;
-using Alex.GameStates.Gui.Common;
-using Alex.GameStates.Gui.MainMenu;
-using Alex.Graphics;
-using Alex.Graphics.Models;
-using Alex.ResourcePackLib.Json.Models.Entities;
+using Alex.GameStates.Gui.Multiplayer;
+using Alex.Gui;
+using Alex.Gui.Elements;
 using Alex.Utils;
 using Alex.Worlds;
 using Alex.Worlds.Generators;
@@ -24,7 +18,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Color = Microsoft.Xna.Framework.Color;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
-namespace Alex.Gamestates
+namespace Alex.GameStates
 {
 	public class TitleState : GameState
 	{
@@ -44,7 +38,8 @@ namespace Alex.Gamestates
 
 			Gui = new GuiScreen(Alex)
 			{
-				//DefaultBackgroundTexture = GuiTextures.OptionsBackground
+				BackgroundRepeatMode = TextureRepeatMode.Stretch,
+				Background = _backgroundSkyBox,
 			};
 			
 			Gui.AddChild(new GuiImage(GuiTextures.AlexLogo)
@@ -182,7 +177,7 @@ namespace Alex.Gamestates
 		protected override void OnDraw2D(RenderArgs args)
 		{
 			args.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
-			args.SpriteBatch.Draw(_gradient, null, new Rectangle(0,0, Viewport.Width, Viewport.Height), null, null, 0f, null, new Color(Color.White, 0.5f), SpriteEffects.None);
+			args.SpriteBatch.Draw(_gradient, null, new Rectangle(0,0, Viewport.Width, Viewport.Height), null, null, 0f, null, new Color(Color.White, 0.5f));
 			args.SpriteBatch.End();
 			base.OnDraw2D(args);
 		}

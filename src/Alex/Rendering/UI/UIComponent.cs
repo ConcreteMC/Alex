@@ -1,4 +1,4 @@
-﻿using Alex.Gamestates;
+﻿using Alex.GameStates;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Rendering.UI

@@ -2,7 +2,7 @@
 using Alex.API.Gui.Rendering;
 using Microsoft.Xna.Framework;
 
-namespace Alex.Gamestates.Gui
+namespace Alex.GameStates.Gui
 {
     public class GuiPlayingMenuScreen : GuiScreen
     {

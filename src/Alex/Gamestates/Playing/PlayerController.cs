@@ -1,16 +1,13 @@
 ﻿using System;
 using Alex.API.Input;
-using Alex.API.Input.Listeners;
-using Alex.Blocks;
 using Alex.Entities;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using NLog;
-using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
 
-namespace Alex.Gamestates.Playing
+namespace Alex.GameStates.Playing
 {
     public class PlayerController
     {

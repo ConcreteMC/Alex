@@ -5,7 +5,6 @@ using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Utils;
-using Alex.GameStates.Gui.Elements;
 using Microsoft.Xna.Framework;
 
 namespace Alex.GameStates.Gui.Common
@@ -46,5 +45,14 @@ namespace Alex.GameStates.Gui.Common
             _listContainer.RemoveChild(item);
             _items.Remove(item);
         }
+
+	    public void ClearItems()
+	    {
+		    foreach (var item in _items)
+		    {
+			    _listContainer.RemoveChild(item);
+		    }
+			_items.Clear();
+	    }
     }
 }

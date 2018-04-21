@@ -1,22 +1,21 @@
 ﻿using System;
 using System.Text;
-using Alex.API.Data;
 using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks;
-using Alex.Gamestates.Gui;
-using Alex.Gamestates.Hud;
+using Alex.GameStates.Hud;
 using Alex.Graphics.Models;
+using Alex.Gui.Elements;
 using Alex.Rendering.Camera;
 using Alex.Rendering.UI;
-using Alex.ResourcePackLib.Json;
 using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-namespace Alex.Gamestates.Playing
+
+namespace Alex.GameStates.Playing
 {
 	public class PlayingState : GameState
 	{

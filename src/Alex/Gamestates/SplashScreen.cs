@@ -1,14 +1,9 @@
-﻿using System;
-using Alex.Gamestates.Gui;
-using Alex.API.Gui;
+﻿using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Rendering;
 using Alex.API.Utils;
-using Alex.Rendering.UI;
-using Alex.Utils;
-using Microsoft.Xna.Framework;
 
-namespace Alex.Gamestates
+namespace Alex.GameStates
 {
 	public class SplashScreen : GameState, IProgressReceiver
 	{

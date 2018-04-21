@@ -1,7 +1,9 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Alex.API.Data.Servers;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
@@ -10,32 +12,86 @@ using Alex.API.Gui.Rendering;
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.GameStates.Gui.Common;
-using Alex.GameStates.Gui.Elements;
 using Alex.Graphics.Gui.Elements;
 using Alex.Networking.Java;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Alex.GameStates.Gui.MainMenu
+namespace Alex.GameStates.Gui.Multiplayer
 {
     public class MultiplayerServerSelectionState : ListSelectionStateBase<GuiServerListEntryElement>
     {
 		private GuiButton DirectConnectButton { get; }
 	    private GuiButton AddServerButton { get; }
-		public MultiplayerServerSelectionState() : base()
-        {
-	        Title = "Multiplayer";
 
-	        Footer.AddChild(DirectConnectButton =
-		        new GuiButton("Direct Connect", () => Alex.GameStateManager.SetActiveState<MultiplayerConnectState>())
+	    private IListStorageProvider<SavedServerEntry> _listProvider;
+
+		public MultiplayerServerSelectionState() : base()
+		{
+			_listProvider = Alex.Services.GetService<IListStorageProvider<SavedServerEntry>>();
+
+	        Title = "Multiplayer";
+			
+			Footer.AddChild(DirectConnectButton = 
+				                new GuiButton("Add Server", OnAddItemButtonClick)
+				                {
+					                Anchor = Alignment.MiddleLeft
+				                });
+
+	        Footer.AddChild(DirectConnectButton = 
+		                        new GuiButton("Direct Connect", () => Alex.GameStateManager.SetActiveState<MultiplayerConnectState>())
 		        {
 					Anchor = Alignment.MiddleCenter
 				});
 
-			AddItem(new GuiServerListEntryElement("Localhost", "localhost:25565"));
-	        AddItem(new GuiServerListEntryElement("Hypixel", "mc.hypixel.net:25565"));
+			Footer.AddChild(new GuiButton("Refresh", OnRefreshButtonPressed)
+			{
+				Anchor = Alignment.MiddleRight
+			});
+
+			//AddItem(new GuiServerListEntryElement("Localhost", "localhost:25565"));
+	  //      AddItem(new GuiServerListEntryElement("Hypixel", "mc.hypixel.net:25565"));
+
+			Load();
 		}
 
+	    private void OnRefreshButtonPressed()
+	    {
+			Load();
+	    }
+
+	    public void Load()
+	    {
+		    _listProvider.Load();
+		
+			ClearItems();
+		    foreach (var entry in _listProvider.Entries.ToArray())
+		    {
+				AddItem(new GuiServerListEntryElement(entry));
+		    }
+
+		    PingAll();
+	    }
+
+	    public void PingAll()
+	    {
+		    foreach (var item in Items)
+		    {
+				item.Ping();
+		    }
+	    }
+
+	    public void OnAddItemButtonClick()
+	    {
+		    Alex.GameStateManager.SetActiveState(new MultiplayerAddServerState(CallbackAction));
+	    }
+
+	    private void CallbackAction(SavedServerEntry obj)
+	    {
+		    //if (obj == null) return;
+
+			Load();
+	    }
     }
 
     public class GuiServerListEntryElement : GuiContainer
@@ -51,8 +107,7 @@ namespace Alex.GameStates.Gui.MainMenu
         public byte PingQuality { get; private set; }
 
         public bool IsPingPending { get; private set; }
-
-
+		
         private GuiTextureElement _serverIcon;
         private GuiStackContainer _textWrapper;
         private GuiConnectionPingIcon _pingStatus;
@@ -60,10 +115,18 @@ namespace Alex.GameStates.Gui.MainMenu
         private GuiTextElement _serverName;
         private GuiTextElement _serverMotd;
 
+	    private SavedServerEntry entry;
+		
+	    public GuiServerListEntryElement(SavedServerEntry entry) : this(entry.Name, entry.Host + ":" + entry.Port)
+	    {
+		    this.entry = entry;
+	    }
+
 	    public GuiServerListEntryElement(string serverName, string serverAddress)
         {
             ServerName = serverName;
             ServerAddress = serverAddress;
+
 	        MinWidth = 356;
 	        Width = 356;
 			Margin = new Thickness(5, 5);
@@ -104,8 +167,6 @@ namespace Alex.GameStates.Gui.MainMenu
 				Margin = Thickness.Zero
 				//Anchor = center
             });
-
-
         }
 
         public bool PingCompleted { get; private set; }
@@ -118,7 +179,8 @@ namespace Alex.GameStates.Gui.MainMenu
         }
 
 	    private GraphicsDevice _graphicsDevice = null;
-	    protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
+
+        protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
 	    {
 		    _graphicsDevice = graphics.SpriteBatch.GraphicsDevice;
 		    base.OnDraw(graphics, gameTime);

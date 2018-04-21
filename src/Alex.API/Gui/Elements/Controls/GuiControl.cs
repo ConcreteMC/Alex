@@ -46,8 +46,8 @@ namespace Alex.API.Gui.Elements.Controls
         public TextureSlice2D FocusedBackground { get; set; }
 
         public virtual Color HighlightOutlineColor { get; set; } = new Color(Color.White, 0.75f);
-        public virtual Thickness HighlightOutlineThickness { get; set; } = Thickness.One;
-        public virtual Color     FocusOutlineColor     { get; set; } = Color.White;
+        public virtual Thickness HighlightOutlineThickness { get; set; } = Thickness.Zero;
+        public virtual Color     FocusOutlineColor     { get; set; } = new Color(Color.White, 0.75f);
         public virtual Thickness FocusOutlineThickness { get; set; } = Thickness.One;
         
         protected override void OnInit(IGuiRenderer renderer)
@@ -91,13 +91,13 @@ namespace Alex.API.Gui.Elements.Controls
         {
             base.OnDraw(graphics, gameTime);
 
-            if (IsFocused && FocusOutlineThickness.Size() > 0)
+            if (IsFocused && FocusOutlineThickness != Thickness.Zero)
             {
                 var outlineBounds = RenderBounds;
                 outlineBounds.Inflate(1f,1f);
                 graphics.DrawRectangle(outlineBounds, FocusOutlineColor, FocusOutlineThickness);
             }
-            else if (IsHighlighted && HighlightOutlineThickness.Size() > 0)
+            else if (IsHighlighted && HighlightOutlineThickness != Thickness.Zero)
             {
                 var outlineBounds = RenderBounds;
                 outlineBounds.Inflate(1f,1f);

@@ -1,7 +1,7 @@
 ﻿using Alex.API.Graphics;
 using Alex.API.Graphics.Typography;
 using Alex.API.Utils;
-using Alex.Gamestates;
+using Alex.GameStates;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Rendering.UI

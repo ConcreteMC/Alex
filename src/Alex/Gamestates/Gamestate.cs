@@ -3,7 +3,7 @@ using Alex.API.Gui;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Alex.Gamestates
+namespace Alex.GameStates
 {
 	public class GameState
 	{

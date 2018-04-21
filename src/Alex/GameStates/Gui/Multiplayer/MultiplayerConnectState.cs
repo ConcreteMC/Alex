@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
@@ -10,7 +8,7 @@ using Alex.API.Utils;
 using Alex.GameStates.Gui.Common;
 using NLog;
 
-namespace Alex.GameStates.Gui.MainMenu
+namespace Alex.GameStates.Gui.Multiplayer
 {
     public class MultiplayerConnectState : GuiStateBase
     {

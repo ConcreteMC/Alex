@@ -1,7 +1,7 @@
 ﻿using Alex.API.Graphics;
 using Alex.API.Network;
 using Alex.API.Utils;
-using Alex.Gamestates.Playing;
+using Alex.GameStates.Playing;
 using Alex.Graphics.Models.Entity;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;

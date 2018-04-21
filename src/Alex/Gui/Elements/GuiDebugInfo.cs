@@ -2,11 +2,10 @@
 using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
-using Alex.API.Gui.Rendering;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 
-namespace Alex.Gamestates.Gui
+namespace Alex.Gui.Elements
 {
     public class GuiDebugInfo : GuiScreen
     {

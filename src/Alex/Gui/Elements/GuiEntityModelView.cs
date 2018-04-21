@@ -1,20 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Alex.API.Entities;
-using Alex.API.Graphics;
-using Alex.API.Gui;
+﻿using Alex.API.Gui;
 using Alex.API.Gui.Rendering;
 using Alex.API.Utils;
-using Alex.Entities;
-using Alex.Gamestates;
+using Alex.GameStates;
 using Alex.Graphics.Models.Entity;
 using Alex.Rendering.Camera;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Alex.Graphics
+namespace Alex.Gui.Elements
 {
     public class GuiEntityModelView : GuiElement
     {

@@ -2,7 +2,7 @@
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
 using Alex.GameStates.Gui.Common;
-using Alex.GameStates.Gui.Elements;
+using Alex.Gui.Elements;
 
 namespace Alex.GameStates.Gui.MainMenu
 {

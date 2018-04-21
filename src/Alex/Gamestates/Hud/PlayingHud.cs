@@ -1,14 +1,13 @@
-﻿using Alex.API.Data;
-using Alex.API.Gui;
+﻿using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Rendering;
 using Alex.API.Input;
-using Alex.Gamestates.Gui;
-using Alex.Gamestates.Playing;
+using Alex.GameStates.Playing;
+using Alex.Gui.Elements.Inventory;
 using Alex.Rendering.UI;
 using Microsoft.Xna.Framework;
 
-namespace Alex.Gamestates.Hud
+namespace Alex.GameStates.Hud
 {
     public class PlayingHud : GuiScreen
     {

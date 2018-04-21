@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using NLog;
 
-namespace Alex.Gamestates
+namespace Alex.GameStates
 {
     public class GameStateManager
     {

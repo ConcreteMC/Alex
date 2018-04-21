@@ -2,7 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-namespace Alex.Gamestates.Playing
+namespace Alex.GameStates.Playing
 {
 	public class InGameMenuState : GameState
 	{

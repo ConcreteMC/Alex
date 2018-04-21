@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using Alex.API;
+using Alex.API.Data.Servers;
 using Alex.API.Graphics;
 using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
@@ -12,10 +13,10 @@ using Alex.API.Input;
 using Alex.API.Network;
 using Alex.API.Services;
 using Alex.API.World;
-using Alex.Gamestates;
-using Alex.Gamestates.Gui;
-using Alex.Gamestates.Playing;
+using Alex.GameStates;
 using Alex.GameStates.Gui.MainMenu;
+using Alex.GameStates.Playing;
+using Alex.Gui;
 using Alex.Rendering;
 using Alex.ResourcePackLib;
 using Alex.Services;
@@ -183,6 +184,10 @@ namespace Alex
 
 		private void ConfigureServices()
 		{
+			var storage = new AppDataStorageSystem();
+			Services.AddService<IStorageSystem>(storage);
+			Services.AddService<IListStorageProvider<SavedServerEntry>>(new SavedServerDataProvider(storage));
+
 			Services.AddService<IServerQueryProvider>(new ServerQueryProvider());
 		}
 

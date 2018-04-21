@@ -2,7 +2,7 @@
 using Alex.API.Graphics;
 using Alex.API.Graphics.Typography;
 using Alex.API.Utils;
-using Alex.Gamestates;
+using Alex.GameStates;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

@@ -62,8 +62,8 @@ namespace Alex.API.Gui
 
         public GuiTextures? DefaultBackgroundTexture { get; set; }
         public TextureRepeatMode BackgroundRepeatMode { get; set; } = TextureRepeatMode.Stretch;
-        public TextureSlice2D DefaultBackground { get; set; }
-        public TextureSlice2D Background { get; set; }
+        public ITexture2D DefaultBackground { get; set; }
+        public ITexture2D Background { get; set; }
         public Vector2? BackgroundScale { get; set; }
         
         public Color? BackgroundOverlayColor

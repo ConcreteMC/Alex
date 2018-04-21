@@ -1,6 +1,6 @@
 ﻿using Alex.API.Gui;
 
-namespace Alex.Gamestates.Gui
+namespace Alex.Gui.Elements
 {
     public class GuiOverlayText : GuiElement
     {

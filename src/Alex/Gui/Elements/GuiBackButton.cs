@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Alex.API.Gui.Elements.Controls;
+﻿using Alex.API.Gui.Elements.Controls;
 
-namespace Alex.GameStates.Gui.Elements
+namespace Alex.Gui.Elements
 {
     public class GuiBackButton : GuiButton
     {

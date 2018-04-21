@@ -1,9 +1,8 @@
 ﻿using System.Linq;
 using Alex.API.Gui;
 using Alex.API.Gui.Rendering;
-using Microsoft.Xna.Framework;
 
-namespace Alex.Gamestates.Gui
+namespace Alex.Gui.Elements.Inventory
 {
     public class GuiItemHotbar : GuiContainer
     {

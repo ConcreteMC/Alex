@@ -3,8 +3,7 @@ using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Rendering;
 using Alex.API.Utils;
-using Alex.Gamestates;
-using Alex.GameStates.Gui.Elements;
+using Alex.Gui.Elements;
 using Microsoft.Xna.Framework;
 
 namespace Alex.GameStates.Gui.Common

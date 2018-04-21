@@ -1,17 +1,10 @@
-﻿using System.Drawing;
-using System.IO;
-using Alex.API.Gui;
+﻿using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Rendering;
 using Alex.API.Utils;
 using Alex.API.World;
-using Alex.Graphics.Gui;
-using Alex.Graphics.Gui.Elements;
-using Alex.Utils;
-using Microsoft.Xna.Framework.Graphics;
-using Color = Microsoft.Xna.Framework.Color;
 
-namespace Alex.Gamestates
+namespace Alex.GameStates
 {
     public class LoadingWorldState : GameState
     {
