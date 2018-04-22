@@ -11,6 +11,9 @@ namespace Alex.API.Graphics.Textures
 		public Rectangle[] SourceRegions { get; private set; }
 
 		
+		public NinePatchTexture2D(TextureSlice2D texture, int padding) : this(texture.Texture, texture.ClipBounds, new Thickness(padding))
+		{
+		}
 		public NinePatchTexture2D(TextureSlice2D texture, Thickness padding) : this(texture.Texture, texture.ClipBounds, padding)
 		{
 		}

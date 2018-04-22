@@ -93,7 +93,7 @@ namespace Alex.API.Gui.Elements
 	    {
 		    if (hasBackground)
 		    {
-			    BackgroundOverlayColor = DefaultTextBackgroundColor;
+			    BackgroundOverlay = DefaultTextBackgroundColor;
 		    }
 
 			Margin = new Thickness(2);

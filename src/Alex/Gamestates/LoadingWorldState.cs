@@ -14,8 +14,11 @@ namespace Alex.GameStates
 	    {
 		    Gui = Screen = new LoadingWorldGui(Alex)
 		    {
-				DefaultBackgroundTexture = GuiTextures.OptionsBackground,
-			    BackgroundRepeatMode = TextureRepeatMode.ScaleToFit
+				Background =
+				{
+					TextureResource = GuiTextures.OptionsBackground, 
+					RepeatMode = TextureRepeatMode.ScaleToFit
+				}
 			};
 	    }
 

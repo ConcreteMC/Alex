@@ -3,6 +3,7 @@ using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Layout;
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
+using Microsoft.Xna.Framework;
 
 namespace Alex.GameStates
 {
@@ -14,7 +15,12 @@ namespace Alex.GameStates
 		{
 			Gui = _screen = new SplashScreenGui(Alex)
 			{
-				BackgroundRepeatMode = TextureRepeatMode.Stretch,
+				Background =
+				{
+					Color = Color.White,
+					TextureResource = GuiTextures.SplashBackground,
+					RepeatMode = TextureRepeatMode.ScaleToFit
+				},
 				Anchor = Alignment.TopLeft,
 			};
 		}
@@ -87,26 +93,6 @@ namespace Alex.GameStates
 				
 				Anchor = Alignment.BottomCenter,
 			});
-		}
-
-		protected override void OnInit(IGuiRenderer renderer)
-		{
-			base.OnInit(renderer);
-
-			Background = renderer.GetTexture(GuiTextures.SplashBackground);
-			//AddChild(_progressBarContainer = new GuiStackContainer()
-			//{
-			//	Width  = 300,
-			//	Height = 10,
-
-			//	Y = -50,
-
-			//	HorizontalAlignment = HorizontalAlignment.Center,
-			//	VerticalAlignment   = VerticalAlignment.MaxY,
-
-			//	VerticalContentAlignment = VerticalAlignment.Center,
-			//	HorizontalContentAlignment = HorizontalAlignment.FillParent
-			//});
 		}
 
 		public void UpdateProgress(int value)

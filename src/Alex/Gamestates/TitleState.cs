@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.IO;
+using Alex.API.Graphics.Textures;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
@@ -38,24 +39,25 @@ namespace Alex.GameStates
 
 			Gui = new GuiScreen(Alex)
 			{
-				BackgroundRepeatMode = TextureRepeatMode.Stretch,
-				Background = _backgroundSkyBox,
+				Background =
+				{
+					Texture = _backgroundSkyBox,
+					RepeatMode = TextureRepeatMode.Stretch
+				},
 			};
 			
 			Gui.AddChild(new GuiImage(GuiTextures.AlexLogo)
 			{
-				//LayoutOffsetX = 175,
-				Y = 25,
+				Margin = new Thickness(0, 25, 0, 0),
 				Anchor = Alignment.TopCenter,
 			});
+
 			Gui.AddChild( _splashText = new GuiTextElement(false)
 			{
 				TextColor = TextColor.Yellow,
 				Rotation = 17.5f,
-				//RotationOrigin = Vector2.Zero,
 				
-				X = 240,
-				Y = 15,
+				Margin = new Thickness(240, 15, 0, 0),
 				Anchor = Alignment.TopCenter,
 
 				Text = "Who liek minecwaf?!"
@@ -63,9 +65,9 @@ namespace Alex.GameStates
 
 			Gui.AddChild(_stackMenu = new GuiStackMenu()
 			{
-				Margin = new Thickness(25, 125, 25, 25),
+				Margin = new Thickness(15, 125, 15, 15),
 				Width = 125,
-				Anchor = Alignment.BottomCenter,
+				Anchor = Alignment.BottomLeft,
 
 				ChildAnchor = Alignment.TopFill
 			});
@@ -91,9 +93,9 @@ namespace Alex.GameStates
 			var username = alex.GameSettings.Username;
 			Gui.AddChild(_playerView = new GuiEntityModelView("geometry.humanoid.customSlim")
 			{
-				BackgroundOverlayColor = new Color(Color.Black, 0.15f),
+				BackgroundOverlay = new Color(Color.Black, 0.15f),
 
-				Margin = new Thickness(25),
+				Margin = new Thickness(15),
 
 				Width = 92,
 				Height = 128,
@@ -120,13 +122,10 @@ namespace Alex.GameStates
 			{
 				_gradient = Texture2D.FromStream(args.GraphicsDevice, ms);
 			}
-			//var logo = new UiElement()
-			//{
-			//	ClassName = "TitleScreenLogo",
-			//};
-			//Gui.AddChild(logo);
 
-			//SynchronizationContext.Current.Send((o) => _backgroundSkyBox.Load(Alex.GuiRenderer), null);
+			Gui.BackgroundOverlay = (TextureSlice2D) _gradient;
+			Gui.BackgroundOverlay.Mask = new Color(Color.White, 0.5f);
+
 			_splashText.Text = SplashTexts.GetSplashText();
 			Alex.IsMouseVisible = true;
 		}
@@ -173,13 +172,13 @@ namespace Alex.GameStates
 			FpsMonitor.Update();
 		}
 
-		protected override void OnDraw2D(RenderArgs args)
-		{
-			args.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
-			args.SpriteBatch.Draw(_gradient, null, new Rectangle(0,0, Viewport.Width, Viewport.Height), null, null, 0f, null, new Color(Color.White, 0.5f));
-			args.SpriteBatch.End();
-			base.OnDraw2D(args);
-		}
+		//protected override void OnDraw2D(RenderArgs args)
+		//{
+		//	args.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
+		//	args.SpriteBatch.Draw(_gradient, null, new Rectangle(0,0, Viewport.Width, Viewport.Height), null, null, 0f, null, new Color(Color.White, 0.5f));
+		//	args.SpriteBatch.End();
+		//	base.OnDraw2D(args);
+		//}
 
 		protected override void OnShow()
 		{

@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework;
 
 namespace Alex.API.Gui
 {
-    public interface IGuiScreen : IGuiElement3D, IGuiFocusContext
+    public interface IGuiScreen : IGuiElement, IGuiFocusContext
     {
 
         void UpdateLayout();

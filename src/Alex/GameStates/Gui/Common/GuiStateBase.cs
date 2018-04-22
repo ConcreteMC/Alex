@@ -27,7 +27,7 @@ namespace Alex.GameStates.Gui.Common
         }
 
         protected GuiContainer           Header { get; }
-        protected GuiStackContainer Body { get; }
+        protected GuiStackContainer      Body { get; }
         protected GuiMultiStackContainer Footer { get; }
 
         private GuiTextElement  _headerTitle;
@@ -37,10 +37,13 @@ namespace Alex.GameStates.Gui.Common
         {
             Gui = new GuiScreen(Alex)
             {
-                DefaultBackgroundTexture = GuiTextures.OptionsBackground,
-                BackgroundRepeatMode = TextureRepeatMode.Tile,
-                BackgroundOverlayColor = new Color(Color.Black, 0.65f),
-                BackgroundScale = new Vector2(2f, 2f)
+                Background = 
+                { 
+                    TextureResource = GuiTextures.OptionsBackground, 
+                    RepeatMode = TextureRepeatMode.Tile,
+                    Scale =  new Vector2(2f, 2f),
+                },
+                BackgroundOverlay = new Color(Color.Black, 0.65f),
             };
 
             Gui.AddChild(Header = new GuiContainer()

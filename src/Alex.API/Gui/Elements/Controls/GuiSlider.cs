@@ -56,8 +56,8 @@ namespace Alex.API.Gui.Elements.Controls
             MinHeight = 22;
             HighlightOutlineThickness = Thickness.Zero;
             
-            DefaultBackgroundTexture = GuiTextures.ButtonDisabled;
-            BackgroundRepeatMode = TextureRepeatMode.NoScaleCenterSlice;
+            Background = GuiTextures.ButtonDisabled;
+            Background.RepeatMode = TextureRepeatMode.NoScaleCenterSlice;
 
             AddChild(Label = new GuiAutoUpdatingTextElement(() => string.Format(DisplayFormat, Value))
             {

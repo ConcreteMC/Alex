@@ -14,6 +14,7 @@ namespace Alex.API.Gui.Elements
     {
         private IGuiScreen _screen;
         private IGuiElement _parentElement;
+        private IGuiFocusContext _focusContext;
 
         public IGuiScreen Screen
         {
@@ -39,14 +40,13 @@ namespace Alex.API.Gui.Elements
             }
         }
 
-        private IGuiFocusContext _focusContext;
         public virtual IGuiFocusContext FocusContext 
         {
             get { return _focusContext ?? ParentElement?.FocusContext ?? Screen; }
             set { _focusContext = value; }
         }
 
-            protected List<IGuiElement> Children { get; } = new List<IGuiElement>();
+        protected List<IGuiElement> Children { get; } = new List<IGuiElement>();
         public bool HasChildren => Children.Any();
 
         public int ChildCount => Children.Count;
@@ -54,28 +54,7 @@ namespace Alex.API.Gui.Elements
 
         #region Drawing
 
-        private float _rotation;
-        public float Rotation
-        {
-            get => _rotation;
-            set => _rotation = MathHelper.ToRadians(value);
-        }
-
-        public virtual Vector2 RotationOrigin { get; set; } = Vector2.Zero;
-        
-        private Color? _backgroundOverlayColor;
-
-        public GuiTextures? DefaultBackgroundTexture { get; set; }
-        public TextureRepeatMode BackgroundRepeatMode { get; set; } = TextureRepeatMode.Stretch;
-        public ITexture2D DefaultBackground { get; set; }
-        public ITexture2D Background { get; set; }
-        public Vector2? BackgroundScale { get; set; }
-        
-        public Color? BackgroundOverlayColor
-        {
-            get => _backgroundOverlayColor;
-            set => _backgroundOverlayColor = value;
-        }
+       
 
         public virtual Vector2 RenderPosition => Position.ToVector2();
         public virtual Size RenderSize => Size;
@@ -91,25 +70,6 @@ namespace Alex.API.Gui.Elements
             ForEachChild(c => c.Draw(graphics, gameTime));
         }
 
-        protected virtual void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
-        {
-            if (Background != null)
-            {
-                if (BackgroundScale.HasValue)
-                {
-                    graphics.FillRectangle(RenderBounds, Background, BackgroundRepeatMode, BackgroundScale.Value);
-                }
-                else
-                {
-                    graphics.FillRectangle(RenderBounds, Background, BackgroundRepeatMode);
-                }
-            }
-
-            if (BackgroundOverlayColor.HasValue)
-            {
-                graphics.FillRectangle(RenderBounds, BackgroundOverlayColor.Value);
-            }
-        }
         
         #endregion
 
@@ -137,17 +97,11 @@ namespace Alex.API.Gui.Elements
 
             _initialised = true;
         }
+
         protected virtual void OnInit(IGuiRenderer renderer)
         {
-            if (DefaultBackgroundTexture.HasValue)
-            {
-                DefaultBackground = renderer.GetTexture(DefaultBackgroundTexture.Value);
-            }
-
-            if (Background == null && DefaultBackground != null)
-            {
-                Background = DefaultBackground;
-            }
+            Background.TryResolveTexture(renderer);
+            BackgroundOverlay.TryResolveTexture(renderer);
         }
 
         public void Update(GameTime gameTime)

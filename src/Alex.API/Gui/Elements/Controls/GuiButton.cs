@@ -31,11 +31,15 @@ namespace Alex.API.Gui.Elements.Controls
 		
         public GuiButton(string text, Action action = null)
         {
-            DefaultBackgroundTexture = GuiTextures.ButtonDefault;
-	        DisabledBackgroundTexture = GuiTextures.ButtonDisabled;
-            HighlightedBackgroundTexture = GuiTextures.ButtonHover;
-            FocusedBackgroundTexture = GuiTextures.ButtonFocused;
-            BackgroundRepeatMode = TextureRepeatMode.NoScaleCenterSlice;
+            Background	  = GuiTextures.ButtonDefault;
+	        DisabledBackground	  = GuiTextures.ButtonDisabled;
+            HighlightedBackground = GuiTextures.ButtonHover;
+            FocusedBackground	  = GuiTextures.ButtonFocused;
+
+	        Background.RepeatMode	 = TextureRepeatMode.NoScaleCenterSlice;
+	        DisabledBackground.RepeatMode	 = TextureRepeatMode.NoScaleCenterSlice;
+	        HighlightedBackground.RepeatMode = TextureRepeatMode.NoScaleCenterSlice;
+	        FocusedBackground.RepeatMode	 = TextureRepeatMode.NoScaleCenterSlice;
 			
             Action = action;
             MinHeight = 20;
@@ -46,7 +50,7 @@ namespace Alex.API.Gui.Elements.Controls
 			Padding = new Thickness(5, 5);
 			Margin = new Thickness(2);
 
-            TextElement = new GuiTextElement()
+	        AddChild(TextElement = new GuiTextElement()
             {
 				Margin =  Thickness.Zero,
                 Anchor = Alignment.MiddleCenter,
@@ -54,8 +58,7 @@ namespace Alex.API.Gui.Elements.Controls
                 TextColor = TextColor.White,
 				TextOpacity = 0.875f,
 				FontStyle = FontStyle.DropShadow
-            };
-            AddChild(TextElement);
+            });
         }
 
 	    protected override void OnHighlightActivate()

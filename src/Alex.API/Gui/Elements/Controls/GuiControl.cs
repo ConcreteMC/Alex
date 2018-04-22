@@ -10,13 +10,9 @@ namespace Alex.API.Gui.Elements.Controls
 {
     public class GuiControl : GuiContainer, IGuiControl
     {
-        public GuiTextures?      DisabledBackgroundTexture { get; set; }
-        public GuiTextures?      HighlightedBackgroundTexture { get; set; }
-        public GuiTextures?      FocusedBackgroundTexture { get; set; }
-        
-        public ITexture2D DisabledBackground { get; set; }
-        public ITexture2D HighlightedBackground { get; set; }
-        public ITexture2D FocusedBackground { get; set; }
+        public GuiTexture2D DisabledBackground;
+        public GuiTexture2D HighlightedBackground;
+        public GuiTexture2D FocusedBackground;
 
         public virtual Color     HighlightOutlineColor { get; set; } = new Color(TextColor.Gray.ForegroundColor, 0.75f);
         public virtual Thickness HighlightOutlineThickness { get; set; } = Thickness.Zero;
@@ -27,65 +23,41 @@ namespace Alex.API.Gui.Elements.Controls
         protected override void OnInit(IGuiRenderer renderer)
         {
             base.OnInit(renderer);
-
-            if (DisabledBackgroundTexture.HasValue)
-            {
-                DisabledBackground = renderer.GetTexture(DisabledBackgroundTexture.Value);
-            }
-
-            if (HighlightedBackgroundTexture.HasValue)
-            {
-                HighlightedBackground = renderer.GetTexture(HighlightedBackgroundTexture.Value);
-            }
-
-            if (FocusedBackgroundTexture.HasValue)
-            {
-                FocusedBackground = renderer.GetTexture(FocusedBackgroundTexture.Value);
-            }
+            DisabledBackground.TryResolveTexture(renderer);
+            HighlightedBackground.TryResolveTexture(renderer);
+            FocusedBackground.TryResolveTexture(renderer);
         }
-
-        protected override void OnUpdate(GameTime gameTime)
-        {
-            base.OnUpdate(gameTime);
-
-            if (!Enabled && DisabledBackground != null)
-            {
-                Background = DisabledBackground;
-            }
-            else if (Focused)
-            {
-                Background = FocusedBackground ?? (Highlighted ? HighlightedBackground ?? DefaultBackground : DefaultBackground);
-            }
-            else {
-                if (Highlighted)
-                {
-                    Background = HighlightedBackground ?? DefaultBackground;
-                }
-                else
-                {
-                    Background = DefaultBackground;
-                }
-
-            }
-        }
-
+        
         protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
         {
             base.OnDraw(graphics, gameTime);
 
-            if (Focused && FocusOutlineThickness != Thickness.Zero)
+            if (!Enabled)
             {
-                var outlineBounds = RenderBounds;
-                outlineBounds.Inflate(1f,1f);
-                graphics.DrawRectangle(outlineBounds, FocusOutlineColor, FocusOutlineThickness);
+                graphics.FillRectangle(RenderBounds, DisabledBackground);
             }
-            else if (Highlighted && HighlightOutlineThickness != Thickness.Zero)
+            else 
             {
-                var outlineBounds = RenderBounds;
-                outlineBounds.Inflate(1f,1f);
-                graphics.DrawRectangle(outlineBounds, HighlightOutlineColor, HighlightOutlineThickness);
+                if(Focused)
+                {
+                    graphics.FillRectangle(RenderBounds, FocusedBackground);
+                    
+                    if (FocusOutlineThickness != Thickness.Zero)
+                    {
+                        graphics.DrawRectangle(RenderBounds, FocusOutlineColor, FocusOutlineThickness, true);
+                    }
+                }
+
+                if (Highlighted)
+                {
+                    graphics.FillRectangle(RenderBounds, HighlightedBackground);
+                    
+                    if (HighlightOutlineThickness != Thickness.Zero)
+                    {
+                        graphics.DrawRectangle(RenderBounds, HighlightOutlineColor, HighlightOutlineThickness, true);
+                    }
+                }
             }
-            
         }
 
 

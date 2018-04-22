@@ -224,7 +224,7 @@ namespace Alex.GameStates.Gui.Multiplayer
                 
                 Anchor = Alignment.TopLeft,
 
-                DefaultBackgroundTexture = GuiTextures.DefaultServerIcon
+                Background = GuiTextures.DefaultServerIcon
             });
 
             AddChild(_pingStatus = new GuiConnectionPingIcon()

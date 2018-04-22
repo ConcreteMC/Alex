@@ -104,26 +104,33 @@ namespace Alex.API.Gui.Graphics
         {
             DrawRectangle(rectangle, color, new Thickness(thickness));
         }
-        public void DrawRectangle(Rectangle rectangle, Color color, Thickness thickness)
+        public void DrawRectangle(Rectangle rectangle, Color color, Thickness thickness, bool borderOutside = false)
         {
+            var borderRectangle = rectangle;
+
+            if (borderOutside)
+            {
+                borderRectangle += thickness;
+            }
+
             if (thickness.Top > 0)
             {
-                DrawLine(rectangle.TopLeft(), rectangle.TopRight(), color, thickness.Top);
+                DrawLine(borderRectangle.TopLeft()   , borderRectangle.TopRight()   , color, thickness.Top);
             }
             
             if (thickness.Right > 0)
             {
-                DrawLine(rectangle.TopRight(), rectangle.BottomRight(), color, thickness.Right);
+                DrawLine(borderRectangle.TopRight()  , borderRectangle.BottomRight(), color, thickness.Right);
             }
             
             if (thickness.Bottom > 0)
             {
-                DrawLine(rectangle.BottomLeft(), rectangle.BottomRight(), color, thickness.Bottom);
+                DrawLine(borderRectangle.BottomLeft(), borderRectangle.BottomRight(), color, thickness.Bottom);
             }
             
             if (thickness.Left > 0)
             {
-                DrawLine(rectangle.TopLeft(), rectangle.BottomLeft(), color, thickness.Left);
+                DrawLine(borderRectangle.TopLeft()   , borderRectangle.BottomLeft() , color, thickness.Left);
             }
         }
 
@@ -131,38 +138,48 @@ namespace Alex.API.Gui.Graphics
         {
             SpriteBatch.Draw(ColorTexture, rectangle, color);
         }
+
+        public void FillRectangle(Rectangle rectangle, GuiTexture2D texture)
+        {
+            if (texture.Color.HasValue)
+            {
+                FillRectangle(rectangle, texture.Color.Value);
+            }
+
+            if (texture.Texture == null && texture.TextureResource.HasValue)
+            {
+                texture.TryResolveTexture(_renderer);
+            }
+
+            if (texture.Texture != null)
+            {
+                FillRectangle(rectangle, texture.Texture, texture.RepeatMode, texture.Scale, texture.Mask);
+            }
+        }
+
         public void FillRectangle(Rectangle rectangle, ITexture2D texture, TextureRepeatMode repeatMode = TextureRepeatMode.Stretch)
         {
-            if (repeatMode == TextureRepeatMode.NoScaleCenterSlice)
-            {
-                DrawTextureCenterSliced(rectangle, texture);
-            }
-            else if (repeatMode == TextureRepeatMode.Tile)
-            {
-                DrawTextureTiled(rectangle, texture);
-            }
-            else if (texture is NinePatchTexture2D ninePatchTexture)
-            {
-                DrawTextureNinePatch(rectangle, ninePatchTexture);
-            }
-            else
-            {
-                SpriteBatch.Draw(texture, rectangle);
-            }
+            FillRectangle(rectangle, texture, repeatMode, null, Color.White);
         } 
-        public void FillRectangle(Rectangle rectangle, ITexture2D texture, TextureRepeatMode repeatMode, Vector2? scale)
+        public void FillRectangle(Rectangle rectangle, ITexture2D texture, TextureRepeatMode repeatMode, Vector2? scale, Color? mask)
         {
+            mask = mask ?? Color.White;
+            
             if (repeatMode == TextureRepeatMode.NoScaleCenterSlice)
             {
-                DrawTextureCenterSliced(rectangle, texture);
+                DrawTextureCenterSliced(rectangle, texture, mask.Value);
             }
             else if (repeatMode == TextureRepeatMode.Tile)
             {
-                DrawTextureTiled(rectangle, texture);
+                DrawTextureTiled(rectangle, texture, mask.Value);
+            }
+            else if (repeatMode == TextureRepeatMode.ScaleToFit)
+            {
+                DrawTextureScaledToFit(rectangle, texture, mask.Value);
             }
             else if (texture is NinePatchTexture2D ninePatchTexture)
             {
-                DrawTextureNinePatch(rectangle, ninePatchTexture);
+                DrawTextureNinePatch(rectangle, ninePatchTexture, mask.Value);
             }
             else if(scale.HasValue)
             {
@@ -170,10 +187,9 @@ namespace Alex.API.Gui.Graphics
             }
             else
             {
-                SpriteBatch.Draw(texture, rectangle);
+                SpriteBatch.Draw(texture, rectangle, mask.Value);
             }
-        } 
-
+        }
         #endregion
 
         #region Drawing - Text
@@ -205,7 +221,7 @@ namespace Alex.API.Gui.Graphics
 
         #region TextureRepeatMode Helpers
 
-        private void DrawTextureNinePatch(Rectangle rectangle, NinePatchTexture2D ninePatchTexture)
+        private void DrawTextureNinePatch(Rectangle rectangle, NinePatchTexture2D ninePatchTexture, Color mask)
         {
             if (ninePatchTexture.Padding == Thickness.Zero)
             {
@@ -222,10 +238,10 @@ namespace Alex.API.Gui.Graphics
                 var dstPatch = destRegions[i];
 
                 if(dstPatch.Width > 0 && dstPatch.Height > 0)
-                    SpriteBatch.Draw(ninePatchTexture, sourceRectangle: srcPatch, destinationRectangle: dstPatch);
+                    SpriteBatch.Draw(ninePatchTexture, dstPatch, srcPatch, mask);
             }
         }
-        private void DrawTextureTiled(Rectangle rectangle, ITexture2D texture)
+        private void DrawTextureTiled(Rectangle rectangle, ITexture2D texture, Color mask)
         {
             var repeatX = Math.Ceiling((float) rectangle.Width / texture.Width);
             var repeatY = Math.Ceiling((float) rectangle.Height / texture.Height);
@@ -233,10 +249,26 @@ namespace Alex.API.Gui.Graphics
             for (int i = 0; i < repeatX; i++)
             for (int j = 0; j < repeatY; j++)
             {
-                SpriteBatch.Draw(texture, new Vector2(i * texture.Width, j * texture.Height));
+                SpriteBatch.Draw(texture, new Vector2(i * texture.Width, j * texture.Height), mask);
             }
         }
-        private void DrawTextureCenterSliced(Rectangle rectangle, ITexture2D texture)
+
+        private void DrawTextureScaledToFit(Rectangle rectangle, ITexture2D texture, Color mask)
+        {
+            var widthRatio = rectangle.Width / (float)texture.Width;
+            var heightRatio = rectangle.Height / (float)texture.Height;
+
+            var resultRatio = Math.Min(heightRatio, widthRatio);
+            var scaledSize = new Vector2(texture.Width, texture.Height) * resultRatio;
+
+            var xOffset = (rectangle.Width - scaledSize.X) / 2f;
+            var yOffset = (rectangle.Height - scaledSize.Y) / 2f;
+
+            var dstBounds = new Rectangle((int)xOffset, (int)yOffset, (int)scaledSize.X, (int)scaledSize.Y);
+            SpriteBatch.Draw(texture, dstBounds, mask);
+        }
+
+        private void DrawTextureCenterSliced(Rectangle rectangle, ITexture2D texture, Color mask)
         {
             var halfWidth  = rectangle.Width / 2f;
             var halfHeight = rectangle.Height / 2f;
@@ -260,17 +292,17 @@ namespace Alex.API.Gui.Graphics
             int srcRightHeight = (int) Math.Ceiling(srcHalfHeight);
 
             // MinY MinX
-            SpriteBatch.Draw(texture.Texture, new Rectangle(xOffset               , yOffset, dstLeftWidth, dstLeftHeight), new Rectangle(srcX, srcY, srcLeftWidth, srcLeftHeight), Color.White);
+            SpriteBatch.Draw(texture.Texture, new Rectangle(xOffset               , yOffset, dstLeftWidth, dstLeftHeight), new Rectangle(srcX, srcY, srcLeftWidth, srcLeftHeight), mask);
                 
             // MinY MaxX
-            SpriteBatch.Draw(texture.Texture, new Rectangle(xOffset + dstLeftWidth, yOffset, dstRightWidth, dstRightHeight), new Rectangle(srcX + texture.Width - srcRightWidth, srcY, srcRightWidth, srcRightHeight), Color.White);
+            SpriteBatch.Draw(texture.Texture, new Rectangle(xOffset + dstLeftWidth, yOffset, dstRightWidth, dstRightHeight), new Rectangle(srcX + texture.Width - srcRightWidth, srcY, srcRightWidth, srcRightHeight), mask);
 
 
             // MaxY MinX
-            SpriteBatch.Draw(texture.Texture, new Rectangle(xOffset               , yOffset + dstLeftHeight , dstLeftWidth, dstLeftHeight), new Rectangle(srcX, srcY + texture.Height - srcRightHeight, srcLeftWidth, srcLeftHeight), Color.White);
+            SpriteBatch.Draw(texture.Texture, new Rectangle(xOffset               , yOffset + dstLeftHeight , dstLeftWidth, dstLeftHeight), new Rectangle(srcX, srcY + texture.Height - srcRightHeight, srcLeftWidth, srcLeftHeight), mask);
                 
             // MaxY MaxX
-            SpriteBatch.Draw(texture.Texture, new Rectangle(xOffset + dstLeftWidth, yOffset + dstRightHeight, dstRightWidth, dstRightHeight), new Rectangle(srcX + texture.Width - srcRightWidth, srcY + texture.Height - srcRightHeight, srcRightWidth, srcRightHeight), Color.White);
+            SpriteBatch.Draw(texture.Texture, new Rectangle(xOffset + dstLeftWidth, yOffset + dstRightHeight, dstRightWidth, dstRightHeight), new Rectangle(srcX + texture.Width - srcRightWidth, srcY + texture.Height - srcRightHeight, srcRightWidth, srcRightHeight), mask);
 
         }
 

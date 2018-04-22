@@ -48,7 +48,7 @@ namespace Alex.Gui.Elements
         {
             EntityName = entityName;
             EntityPosition = new PlayerLocation(Vector3.Zero);
-            DefaultBackgroundTexture = GuiTextures.PanelGeneric;
+            Background = GuiTextures.PanelGeneric;
 
             //Camera = new GuiEntityModelViewCamera(this);
             Camera = new GuiEntityModelViewCamera(this);

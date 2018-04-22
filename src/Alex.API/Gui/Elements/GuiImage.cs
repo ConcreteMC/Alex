@@ -12,14 +12,14 @@ namespace Alex.API.Gui.Elements
     {
         public GuiImage(GuiTextures texture, TextureRepeatMode mode = TextureRepeatMode.Stretch)
         {
-            DefaultBackgroundTexture = texture;
-            BackgroundRepeatMode = mode;
+            Background = texture;
+            Background.RepeatMode = mode;
         }
 
         public GuiImage(NinePatchTexture2D background, TextureRepeatMode mode = TextureRepeatMode.Stretch)
         {
             Background = background;
-            BackgroundRepeatMode = mode;
+            Background.RepeatMode = mode;
             Width = background.ClipBounds.Width;
             Height = background.ClipBounds.Height;
         }
@@ -27,9 +27,10 @@ namespace Alex.API.Gui.Elements
         protected override void GetPreferredSize(out Size size, out Size minSize, out Size maxSize)
         {
             base.GetPreferredSize(out size, out minSize, out maxSize);
-            if (Background != null)
+            if (Background.HasValue)
             {
-                size = new Size(Background.ClipBounds.Width, Background.ClipBounds.Height);
+                size = new Size(Background.Width, Background.Height);
+                size = Size.Clamp(size, minSize, maxSize);
             }
         }
     }

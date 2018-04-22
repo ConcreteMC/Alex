@@ -23,7 +23,7 @@ namespace Alex.GameStates.Gui.Common
         {
 	        AddGuiElement(ListContainer = new GuiSelectionList()
             {
-				BackgroundOverlayColor = new Color(Color.Black, 0.65f),
+				BackgroundOverlay = new Color(Color.Black, 0.65f),
                 //Y = Header.Height,
                 //Width = 322,
 	            Anchor = Alignment.Fill,
