@@ -1,4 +1,4 @@
-﻿namespace Alex.API.Gui.Rendering
+﻿namespace Alex.API.Gui.Graphics
 {
     public class GuiScalar
     {

@@ -5,9 +5,8 @@ using Alex.API.Graphics.Typography;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 
-namespace Alex.API.Gui.Rendering
+namespace Alex.API.Gui.Graphics
 {
     public class GuiRenderArgs : GraphicsContext
     {

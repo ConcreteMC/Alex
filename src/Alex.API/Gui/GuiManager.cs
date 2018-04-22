@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Alex.API.Graphics.Typography;
-using Alex.API.Gui.Rendering;
+using Alex.API.Gui.Graphics;
 using Alex.API.Input;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -41,7 +41,7 @@ namespace Alex.API.Gui
             guiRenderer.ScaledResolution = ScaledResolution;
             SpriteBatch = new SpriteBatch(Game.GraphicsDevice);
 
-            GuiSpriteBatch = new GuiSpriteBatch(guiRenderer, Game.GraphicsDevice);
+            GuiSpriteBatch = new GuiSpriteBatch(guiRenderer, Game.GraphicsDevice, SpriteBatch);
             GuiRenderArgs = new GuiRenderArgs(Game.GraphicsDevice, SpriteBatch, ScaledResolution, GuiRenderer, new GameTime());
 
             DebugHelper = new GuiDebugHelper(this);
@@ -64,7 +64,7 @@ namespace Alex.API.Gui
             GuiRenderer.Init(graphicsDevice);
             
             GuiSpriteBatch?.Dispose();
-            GuiSpriteBatch = new GuiSpriteBatch(GuiRenderer, graphicsDevice);
+            GuiSpriteBatch = new GuiSpriteBatch(GuiRenderer, graphicsDevice, SpriteBatch);
             GuiRenderArgs = new GuiRenderArgs(GraphicsDevice, SpriteBatch, ScaledResolution, GuiRenderer, new GameTime());
         }
 

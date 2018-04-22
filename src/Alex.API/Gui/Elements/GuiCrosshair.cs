@@ -1,4 +1,4 @@
-﻿using Alex.API.Gui.Rendering;
+﻿using Alex.API.Gui.Graphics;
 
 namespace Alex.API.Gui.Elements
 {

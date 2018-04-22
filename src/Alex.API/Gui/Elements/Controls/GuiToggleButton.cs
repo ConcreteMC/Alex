@@ -1,6 +1,5 @@
 ﻿using System;
 using Alex.API.Gui;
-using Alex.API.Gui.Rendering;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 

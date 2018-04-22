@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Alex.API.Gui.Rendering;
+using Alex.API.Gui.Graphics;
 using Microsoft.Xna.Framework;
 
 namespace Alex.API.Gui

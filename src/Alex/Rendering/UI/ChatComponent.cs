@@ -6,7 +6,7 @@ using Alex.API.Graphics;
 using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements.Controls;
-using Alex.API.Gui.Rendering;
+using Alex.API.Gui.Graphics;
 using Alex.API.Input;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;

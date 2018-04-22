@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Alex.API.Graphics;
 using Alex.API.Graphics.Textures;
-using Alex.API.Gui.Rendering;
+using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

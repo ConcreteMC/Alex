@@ -5,7 +5,7 @@ using System.Linq;
 using Alex.API.Gui.Layout;
 using Microsoft.Xna.Framework;
 
-namespace Alex.API.Gui
+namespace Alex.API.Gui.Elements
 {
     public partial class GuiElement
     {

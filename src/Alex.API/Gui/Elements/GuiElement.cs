@@ -1,16 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
-using Alex.API.Graphics;
 using Alex.API.Graphics.Textures;
-using Alex.API.Gui.Layout;
-using Alex.API.Gui.Rendering;
-using Alex.API.Utils;
+using Alex.API.Gui.Graphics;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 
-namespace Alex.API.Gui
+namespace Alex.API.Gui.Elements
 {
     public delegate bool GuiElementPredicate(IGuiElement element);
     public delegate bool GuiElementPredicate<in TGuiElement>(TGuiElement element) where TGuiElement : class, IGuiElement;
@@ -88,8 +83,10 @@ namespace Alex.API.Gui
         
         public void Draw(GuiSpriteBatch graphics, GameTime gameTime)
         {
-            // Init matrix
-            OnDraw(graphics, gameTime);
+            if (_initialised)
+            {
+                OnDraw(graphics, gameTime);
+            }
 
             ForEachChild(c => c.Draw(graphics, gameTime));
         }

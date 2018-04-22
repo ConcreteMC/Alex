@@ -1,7 +1,7 @@
 ﻿using Alex.API.Graphics;
 using Alex.API.Graphics.Textures;
 using Alex.API.Gui.Elements.Layout;
-using Alex.API.Gui.Rendering;
+using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
@@ -10,11 +10,13 @@ namespace Alex.API.Gui.Elements.Controls
 {
     public class GuiControl : GuiContainer, IGuiControl
     {
+        public GuiTextures?      DisabledBackgroundTexture { get; set; }
         public GuiTextures?      HighlightedBackgroundTexture { get; set; }
         public GuiTextures?      FocusedBackgroundTexture { get; set; }
-
-        public TextureSlice2D    HighlightedBackground { get; set; }
-        public TextureSlice2D    FocusedBackground { get; set; }
+        
+        public ITexture2D DisabledBackground { get; set; }
+        public ITexture2D HighlightedBackground { get; set; }
+        public ITexture2D FocusedBackground { get; set; }
 
         public virtual Color     HighlightOutlineColor { get; set; } = new Color(TextColor.Gray.ForegroundColor, 0.75f);
         public virtual Thickness HighlightOutlineThickness { get; set; } = Thickness.Zero;
@@ -25,7 +27,12 @@ namespace Alex.API.Gui.Elements.Controls
         protected override void OnInit(IGuiRenderer renderer)
         {
             base.OnInit(renderer);
-            
+
+            if (DisabledBackgroundTexture.HasValue)
+            {
+                DisabledBackground = renderer.GetTexture(DisabledBackgroundTexture.Value);
+            }
+
             if (HighlightedBackgroundTexture.HasValue)
             {
                 HighlightedBackground = renderer.GetTexture(HighlightedBackgroundTexture.Value);
@@ -41,13 +48,15 @@ namespace Alex.API.Gui.Elements.Controls
         {
             base.OnUpdate(gameTime);
 
-
-            if (Focused)
+            if (!Enabled && DisabledBackground != null)
+            {
+                Background = DisabledBackground;
+            }
+            else if (Focused)
             {
                 Background = FocusedBackground ?? (Highlighted ? HighlightedBackground ?? DefaultBackground : DefaultBackground);
             }
-            else
-            {
+            else {
                 if (Highlighted)
                 {
                     Background = HighlightedBackground ?? DefaultBackground;
@@ -56,6 +65,7 @@ namespace Alex.API.Gui.Elements.Controls
                 {
                     Background = DefaultBackground;
                 }
+
             }
         }
 
@@ -86,6 +96,8 @@ namespace Alex.API.Gui.Elements.Controls
 
         public void InvokeHighlightActivate()
         {
+            if (!Enabled) return;
+
             Highlighted = true;
             OnHighlightActivate();
         }
@@ -101,6 +113,8 @@ namespace Alex.API.Gui.Elements.Controls
 
         public void InvokeFocusActivate()
         {
+            if (!Enabled) return;
+
             Focused = true;
             OnFocusActivate();
         }

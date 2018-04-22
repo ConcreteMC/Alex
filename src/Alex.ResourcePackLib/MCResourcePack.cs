@@ -7,7 +7,6 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Alex.API;
-using Alex.API.Globalization;
 using Alex.API.Graphics;
 using Alex.API.Graphics.Typography;
 using Alex.API.Utils;

@@ -1,5 +1,7 @@
-﻿using Alex.API.Gui;
-using Alex.API.Gui.Rendering;
+﻿using Alex.API.Graphics;
+using Alex.API.Gui;
+using Alex.API.Gui.Elements;
+using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Alex.GameStates;
 using Alex.Graphics.Models.Entity;
@@ -128,6 +130,7 @@ namespace Alex.Gui.Elements
 
                 //var viewport = args.Graphics.Viewport;
                 //args.Graphics.Viewport = new Viewport(RenderBounds);
+                //graphics.End();
 
                 using (var context = graphics.BranchContext(BlendState.AlphaBlend, DepthStencilState.Default,
                                             RasterizerState.CullClockwise, SamplerState.PointWrap))
@@ -156,6 +159,8 @@ namespace Alex.Gui.Elements
 
                     graphics.End();
                 }
+
+                //graphics.Begin();
 
                 //graphics.Begin();
 

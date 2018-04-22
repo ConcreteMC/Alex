@@ -4,7 +4,7 @@ using System.Linq;
 using Alex.API.Graphics.Textures;
 using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
-using Alex.API.Gui.Rendering;
+using Alex.API.Gui.Graphics;
 using Alex.API.Localization;
 using Alex.API.Utils;
 using Alex.ResourcePackLib;

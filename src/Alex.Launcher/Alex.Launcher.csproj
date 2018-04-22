@@ -143,5 +143,14 @@
   <ItemGroup>
     <Resource Include="background.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Alex.ico" />
+    <Resource Include="Resources\background.png" />
+    <Resource Include="Resources\kennyvv.png" />
+    <Resource Include="Resources\logo.png" />
+    <Resource Include="Resources\logo2.png" />
+    <Resource Include="Resources\logo3.png" />
+    <Resource Include="Resources\play.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

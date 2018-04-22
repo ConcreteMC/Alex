@@ -2,7 +2,7 @@
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Elements.Layout;
-using Alex.API.Gui.Rendering;
+using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Alex.Gui.Elements;
 using Microsoft.Xna.Framework;

@@ -1,7 +1,7 @@
 ﻿using System;
 using Alex.API.Graphics;
 using Alex.API.Graphics.Textures;
-using Alex.API.Gui.Rendering;
+using Alex.API.Gui.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -11,7 +11,7 @@ namespace Alex.Gui
 	public class GuiPanoramaSkyBox : ITexture2D
 	{
 		public Texture2D Texture => _renderTarget;
-		public Rectangle ClipBounds => _renderTarget.Bounds;
+		public Rectangle ClipBounds => _renderTarget?.Bounds ?? new Rectangle(0, 0, 256, 256);
 		public int Width { get; } = 256;
 	    public int Height { get; } = 256;
 
@@ -27,10 +27,7 @@ namespace Alex.Gui
         private Alex Game { get; }
         private GraphicsDevice GraphicsDevice { get; }
         private ContentManager Content { get; }
-
-	    private VertexBuffer BaseBuffer;
-	    private IndexBuffer BaseIndexBuffer;
-
+		
 		
 		private VertexBuffer Buffer;
 		private IndexBuffer IndexBuffer;
@@ -69,8 +66,6 @@ namespace Alex.Gui
 		        renderer.GetTexture2D(GuiTextures.Panorama5), //MaxY
 	        };
 
-	        //_baseRenderTarget = new RenderTarget2D(GraphicsDevice, 256, 256, false, SurfaceFormat.Color, DepthFormat.None);
-	        _renderTarget     = new RenderTarget2D(GraphicsDevice, 256, 256, false, SurfaceFormat.Color, DepthFormat.None);
 			
 			CreateSkybox(GraphicsDevice);
 			
@@ -80,6 +75,9 @@ namespace Alex.Gui
 
 	    private void CreateSkybox(GraphicsDevice device)
 	    {
+	        //_baseRenderTarget = new RenderTarget2D(GraphicsDevice, 256, 256, false, SurfaceFormat.Color, DepthFormat.None);
+	        _renderTarget     = new RenderTarget2D(GraphicsDevice, 256, 256, false, SurfaceFormat.Color, DepthFormat.None);
+
 			_skyBoxEffect = new AlphaTestEffect(device);
 
 		    _skyBoxEffect.World = World;
@@ -87,9 +85,7 @@ namespace Alex.Gui
 			_skyBoxEffect.View = Matrix.Identity;
 		    _skyBoxEffect.Projection = Projection;
 
-			BaseBuffer = new VertexBuffer(device, typeof(VertexPositionColorTexture), 64 * 6 * 4, BufferUsage.WriteOnly);
-			BaseIndexBuffer = new IndexBuffer(device, typeof(short), 64 * 6 * 6, BufferUsage.WriteOnly);
-
+		    _skyboxBuilder = new BufferBuilder<VertexPositionColorTexture>(device, 64 * 6);// 64 * 6
 			
 		    Buffer      = new VertexBuffer(device, typeof(VertexPositionColorTexture), 3 * 4, BufferUsage.WriteOnly);
 		    IndexBuffer = new IndexBuffer(device, typeof(short), 3 * 6, BufferUsage.WriteOnly);
@@ -106,12 +102,12 @@ namespace Alex.Gui
 		    _rotationMatrix = Matrix.CreateRotationX(MathHelper.ToRadians(xRot))
 		                  * Matrix.CreateRotationY(MathHelper.ToRadians(_rotation * 0.1f));
 	    }
-		
+
+
+		private BufferBuilder<VertexPositionColorTexture> _skyboxBuilder;
 	    private void UpdateSkyBoxCube()
 	    {
-			short[] indexer = new short[64 * 6 * 6];
-		    VertexPositionColorTexture[] data = new VertexPositionColorTexture[64 * 6 * 4];
-			
+
 		    for (int j = 0; j < 64; ++j)
 		    {
 			    var pos = new Vector3(
@@ -119,13 +115,13 @@ namespace Alex.Gui
 			                          ((float)(j / 8) / 8.0f - 0.5f) / 64.0f, 
 			                          0.0f);
 				
+			    int alphaLevel = 255 / (j + 1);
+			    var color      = new Color(255, 255, 255, alphaLevel);
+
 			    for (int k = 0; k < 6; k++)
 			    {
-				    var indexerIndex = 6 * (k + j * 6);
-				    var dataIndex    = 4 * (k + j * 6);
+				    var i    = k + j * 6;
 					
-				    int alphaLevel = 255 / (j + 1);
-				    var color      = new Color(255, 255, 255, alphaLevel);
 					
 				    var vm = Matrix.Identity;
 
@@ -150,39 +146,24 @@ namespace Alex.Gui
 					    vm *= Matrix.CreateRotationX(-MathHelper.PiOver2);
 				    }
 
-					data[dataIndex + 0].Position = Vector3.Transform(new Vector3(-1.0f, -1.0f, 1.0f), vm);
-					data[dataIndex + 1].Position = Vector3.Transform(new Vector3( 1.0f, -1.0f, 1.0f), vm);
-					data[dataIndex + 2].Position = Vector3.Transform(new Vector3( 1.0f,  1.0f, 1.0f), vm);
-					data[dataIndex + 3].Position = Vector3.Transform(new Vector3(-1.0f,  1.0f, 1.0f), vm);
+					_skyboxBuilder[i, 0].Position = Vector3.Transform(new Vector3(-1.0f, -1.0f, 1.0f), vm);
+				    _skyboxBuilder[i, 1].Position = Vector3.Transform(new Vector3( 1.0f, -1.0f, 1.0f), vm);
+				    _skyboxBuilder[i, 2].Position = Vector3.Transform(new Vector3( 1.0f,  1.0f, 1.0f), vm);
+				    _skyboxBuilder[i, 3].Position = Vector3.Transform(new Vector3(-1.0f,  1.0f, 1.0f), vm);
 
-					//data[dataIndex + 0].RenderPosition = new Vector3(-1.0f, -1.0f, 1.0f);
-					//data[dataIndex + 1].RenderPosition = new Vector3(1.0f, -1.0f, 1.0f);
-					//data[dataIndex + 2].RenderPosition = new Vector3(1.0f, 1.0f, 1.0f);
-					//data[dataIndex + 3].RenderPosition = new Vector3(-1.0f, 1.0f, 1.0f);
-
-					data[dataIndex + 0].TextureCoordinate = new Vector2(0.0f, 0.0f);
-				    data[dataIndex + 1].TextureCoordinate = new Vector2(1.0f, 0.0f);
-				    data[dataIndex + 2].TextureCoordinate = new Vector2(1.0f, 1.0f);
-				    data[dataIndex + 3].TextureCoordinate = new Vector2(0.0f, 1.0f);
+				    _skyboxBuilder[i, 0].TextureCoordinate = new Vector2(0.0f, 0.0f);
+				    _skyboxBuilder[i, 1].TextureCoordinate = new Vector2(1.0f, 0.0f);
+				    _skyboxBuilder[i, 2].TextureCoordinate = new Vector2(1.0f, 1.0f);
+				    _skyboxBuilder[i, 3].TextureCoordinate = new Vector2(0.0f, 1.0f);
 					
-				    data[dataIndex + 0].Color = color;
-				    data[dataIndex + 1].Color = color;
-				    data[dataIndex + 2].Color = color;
-				    data[dataIndex + 3].Color = color;
-
-
-				    indexer[indexerIndex + 0] = (short) (dataIndex + 0);
-				    indexer[indexerIndex + 2] = (short) (dataIndex + 1);
-				    indexer[indexerIndex + 1] = (short) (dataIndex + 2);
-					
-				    indexer[indexerIndex + 3] = (short) (dataIndex + 2);
-				    indexer[indexerIndex + 5] = (short) (dataIndex + 3);
-				    indexer[indexerIndex + 4] = (short) (dataIndex + 0);
+				    _skyboxBuilder[i, 0].Color = color;
+				    _skyboxBuilder[i, 1].Color = color;
+				    _skyboxBuilder[i, 2].Color = color;
+				    _skyboxBuilder[i, 3].Color = color;
 			    }
 			}
-			
-		    BaseBuffer.SetData<VertexPositionColorTexture>(data);
-		    BaseIndexBuffer.SetData<short>(indexer);
+
+		    _skyboxBuilder.Build();
 	    }
 
 	    private void DrawSkyBoxCube(GraphicsDevice graphics)
@@ -294,18 +275,19 @@ namespace Alex.Gui
 
 			    //ColorBlendFunction = BlendFunction.Add,
 			    //AlphaBlendFunction = BlendFunction.Add,
-			    //IndependentBlendEnable = true,
+			    IndependentBlendEnable = true,
 			    //ColorWriteChannels = ColorWriteChannels.All
 		    };
 			
 		    _samplerState = new SamplerState()
 		    {
 			    Filter = TextureFilter.Linear,
-				FilterMode = TextureFilterMode.Default,
+				FilterMode = TextureFilterMode.Comparison,
+				ComparisonFunction = CompareFunction.Always,
 			
 			    //FilterMode    = TextureFilterMode.Default,
 			    //Filter        = TextureFilter.Anisotropic,
-			    //MaxAnisotropy = 16,
+			    MaxAnisotropy = 16,
 			    AddressU      = TextureAddressMode.Clamp,
 			    AddressV      = TextureAddressMode.Clamp,
 			    AddressW      = TextureAddressMode.Clamp,
@@ -318,8 +300,7 @@ namespace Alex.Gui
 		{
 			var device = context.GraphicsDevice;
 
-			device.SetVertexBuffer(BaseBuffer);
-			device.Indices = BaseIndexBuffer;
+			_skyboxBuilder.Bind();
 
 			_skyBoxEffect.CurrentTechnique.Passes[0].Apply();
 				
@@ -343,7 +324,7 @@ namespace Alex.Gui
             if (!CanRender) return;
 
             var device = args.GraphicsDevice;
-
+			
 	        device.Clear(Color.SkyBlue);
 
 	        using (var context = GraphicsContext.CreateContext(args.GraphicsDevice, _blendState, _depthStencilState, _rasterizerState, _samplerState))

@@ -24,13 +24,16 @@ namespace Alex.API.Gui.Elements.Controls
             }
         }
 
-        public void SetSelectedItem(GuiSelectionListItem selected)
+        public void UnsetSelectedItem(GuiSelectionListItem selected)
         {
             if (SelectedItem == selected)
             {
                 SelectedItem = null;
             }
+        }
 
+        public void SetSelectedItem(GuiSelectionListItem selected)
+        {
             SelectedItem = selected;
         }
 
@@ -49,6 +52,11 @@ namespace Alex.API.Gui.Elements.Controls
             if (element is GuiSelectionListItem listItem)
             {
                 listItem.List = null;
+
+                if (SelectedItem == listItem)
+                {
+                    SelectedItem = null;
+                }
             }
         }
     }

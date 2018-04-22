@@ -1,10 +1,9 @@
-﻿using Alex.API.Graphics;
-using Alex.API.Graphics.Textures;
+﻿using Alex.API.Graphics.Textures;
 using Alex.API.Graphics.Typography;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Alex.API.Gui.Rendering
+namespace Alex.API.Gui.Graphics
 {
     public interface IGuiRenderer
     {

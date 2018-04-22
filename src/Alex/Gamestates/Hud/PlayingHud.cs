@@ -1,6 +1,6 @@
 ﻿using Alex.API.Gui;
 using Alex.API.Gui.Elements;
-using Alex.API.Gui.Rendering;
+using Alex.API.Gui.Graphics;
 using Alex.API.Input;
 using Alex.GameStates.Playing;
 using Alex.Gui.Elements.Inventory;

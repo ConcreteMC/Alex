@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using Alex.API.Graphics;
 using Alex.API.Graphics.Textures;
 using Alex.API.Graphics.Typography;
@@ -8,7 +6,7 @@ using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Alex.API.Gui.Rendering
+namespace Alex.API.Gui.Graphics
 {
     public class GuiSpriteBatch : IDisposable
     {
@@ -26,11 +24,11 @@ namespace Alex.API.Gui.Rendering
         private bool _beginSpriteBatchAfterContext;
         private bool _hasBegun;
 
-        public GuiSpriteBatch(IGuiRenderer renderer, GraphicsDevice graphicsDevice)
+        public GuiSpriteBatch(IGuiRenderer renderer, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
         {
             _renderer = renderer;
             _graphicsDevice = graphicsDevice;
-            SpriteBatch = new SpriteBatch(_graphicsDevice);
+            SpriteBatch = spriteBatch;
             Context = GraphicsContext.CreateContext(_graphicsDevice, BlendState.AlphaBlend, DepthStencilState.None, RasterizerState.CullNone, SamplerState.PointClamp);
 
             Font = _renderer.Font;
@@ -50,8 +48,6 @@ namespace Alex.API.Gui.Rendering
         {
             if (_hasBegun) return;
 
-            Context.ApplyState();
-
             SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, null, ScaledResolution.TransformMatrix);
         
             _hasBegun = true;
@@ -62,8 +58,6 @@ namespace Alex.API.Gui.Rendering
         {
             if (!_hasBegun) return;
             SpriteBatch.End();
-            
-            Context.RestoreState();
 
             _hasBegun = false;
         }

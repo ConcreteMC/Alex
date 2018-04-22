@@ -1,5 +1,5 @@
 ﻿using Alex.API.Gui;
-using Alex.API.Gui.Rendering;
+using Alex.API.Gui.Graphics;
 using Microsoft.Xna.Framework;
 
 namespace Alex.GameStates.Gui

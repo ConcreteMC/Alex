@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements.Layout;
-using Alex.API.Gui.Rendering;
+using Alex.API.Gui.Graphics;
 
 namespace Alex.Gui.Elements.Inventory
 {

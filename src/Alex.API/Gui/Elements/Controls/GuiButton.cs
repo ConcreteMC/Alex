@@ -1,6 +1,7 @@
 ﻿using System;
+using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
-using Alex.API.Gui.Rendering;
+using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 
@@ -31,6 +32,7 @@ namespace Alex.API.Gui.Elements.Controls
         public GuiButton(string text, Action action = null)
         {
             DefaultBackgroundTexture = GuiTextures.ButtonDefault;
+	        DisabledBackgroundTexture = GuiTextures.ButtonDisabled;
             HighlightedBackgroundTexture = GuiTextures.ButtonHover;
             FocusedBackgroundTexture = GuiTextures.ButtonFocused;
             BackgroundRepeatMode = TextureRepeatMode.NoScaleCenterSlice;
@@ -46,15 +48,29 @@ namespace Alex.API.Gui.Elements.Controls
 
             TextElement = new GuiTextElement()
             {
-				Margin = Thickness.Zero,
+				Margin =  Thickness.Zero,
                 Anchor = Alignment.MiddleCenter,
                 Text = text,
                 TextColor = TextColor.White,
-				TextOpacity = 0.875f
+				TextOpacity = 0.875f,
+				FontStyle = FontStyle.DropShadow
             };
             AddChild(TextElement);
         }
 
+	    protected override void OnHighlightActivate()
+	    {
+		    base.OnHighlightActivate();
+
+			TextElement.TextColor = TextColor.Yellow;
+	    }
+
+	    protected override void OnHighlightDeactivate()
+	    {
+		    base.OnHighlightDeactivate();
+
+			TextElement.TextColor = TextColor.White;
+	    }
 
 	    protected override void OnCursorPressed(Point cursorPosition)
         {

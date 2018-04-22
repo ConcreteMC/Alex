@@ -10,7 +10,7 @@ using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Elements.Icons;
 using Alex.API.Gui.Elements.Layout;
-using Alex.API.Gui.Rendering;
+using Alex.API.Gui.Graphics;
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.GameStates.Gui.Common;
@@ -61,11 +61,13 @@ namespace Alex.GameStates.Gui.Multiplayer
 			{
 				row.AddChild(EditServerButton = new GuiButton("Edit", OnEditItemButtonPressed)
 				{
-					TranslationKey = "selectServer.edit"
+					TranslationKey = "selectServer.edit",
+					Enabled = false
 				});
 				row.AddChild(DeleteServerButton = new GuiButton("Delete", OnDeleteItemButtonPressed)
 				{
-					TranslationKey = "selectServer.delete"
+					TranslationKey = "selectServer.delete",
+					Enabled = false
 				});
 				row.AddChild(new GuiButton("Refresh", OnRefreshButtonPressed)
 				{

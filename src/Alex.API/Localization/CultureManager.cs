@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Text;
-
-namespace Alex.API.Globalization
+﻿namespace Alex.API.Localization
 {
     public class CultureManager
     {

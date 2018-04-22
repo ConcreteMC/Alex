@@ -13,11 +13,17 @@ namespace Alex.API.Gui.Elements.Controls
             FocusOutlineThickness = Thickness.One;
         }
 
-        protected override void OnCursorPressed(Point cursorPosition)
+        protected override void OnFocusActivate()
         {
-            base.OnCursorPressed(cursorPosition);
+            base.OnFocusActivate();
 
             List?.SetSelectedItem(this);
+        }
+        protected override void OnFocusDeactivate()
+        {
+            base.OnFocusActivate();
+
+            List?.UnsetSelectedItem(this);
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Alex.API.Graphics.Textures;
 using Alex.API.Gui;
-using Alex.API.Gui.Rendering;
+using Alex.API.Gui.Elements;
+using Alex.API.Gui.Graphics;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Gui.Elements.Inventory
