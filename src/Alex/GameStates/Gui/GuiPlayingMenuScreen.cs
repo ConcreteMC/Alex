@@ -6,7 +6,7 @@ namespace Alex.GameStates.Gui
 {
     public class GuiPlayingMenuScreen : GuiScreen
     {
-        public GuiPlayingMenuScreen(Game game) : base(game)
+        public GuiPlayingMenuScreen() : base()
         {
 
         }

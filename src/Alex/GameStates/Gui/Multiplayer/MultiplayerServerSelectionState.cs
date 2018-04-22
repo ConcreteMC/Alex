@@ -29,7 +29,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 	    private GuiButton EditServerButton;
 	    private GuiButton DeleteServerButton;
 
-	    private IListStorageProvider<SavedServerEntry> _listProvider;
+	    private readonly IListStorageProvider<SavedServerEntry> _listProvider;
 
 		public MultiplayerServerSelectionState() : base()
 		{
@@ -193,12 +193,12 @@ namespace Alex.GameStates.Gui.Multiplayer
 
         public bool IsPingPending { get; private set; }
 		
-        private GuiTextureElement _serverIcon;
-        private GuiStackContainer _textWrapper;
-        private GuiConnectionPingIcon _pingStatus;
+        private readonly GuiTextureElement _serverIcon;
+        private readonly GuiStackContainer _textWrapper;
+        private readonly GuiConnectionPingIcon _pingStatus;
         
         private GuiTextElement _serverName;
-        private GuiTextElement _serverMotd;
+        private readonly GuiTextElement _serverMotd;
 
 	    internal SavedServerEntry SavedServerEntry;
 		
@@ -212,8 +212,6 @@ namespace Alex.GameStates.Gui.Multiplayer
             ServerName = serverName;
             ServerAddress = serverAddress;
 
-	        MinWidth = GuiStateBase.ListItemMinWidth;
-	        Width = GuiStateBase.ListItemMinWidth;
 			Margin = new Thickness(5, 5);
             Anchor = Alignment.TopFill;
 

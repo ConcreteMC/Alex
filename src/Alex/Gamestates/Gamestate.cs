@@ -1,11 +1,12 @@
-﻿using Alex.API.Graphics;
+﻿using Alex.API.GameStates;
+using Alex.API.Graphics;
 using Alex.API.Gui;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.GameStates
 {
-	public class GameState
+	public class GameState : IGameState
 	{
 		public GuiScreen Gui { get; protected set; }
 
@@ -13,7 +14,7 @@ namespace Alex.GameStates
 
 		protected Alex Alex { get; }
 
-		public GameState ParentState { get; internal set; } = null;
+		public IGameState ParentState { get; set; } = null;
 		public GameState(Alex alex)
 		{
 			Alex = alex;
@@ -31,7 +32,7 @@ namespace Alex.GameStates
 			}
 		}
 
-		public void Load(RenderArgs args)
+		public void Load(IRenderArgs args)
 		{
 			OnLoad(args);
 
@@ -46,14 +47,9 @@ namespace Alex.GameStates
 			OnUnload();
 		}
 
-		public void Draw2D(RenderArgs args)
+		public void Draw(IRenderArgs args)
 		{
-			OnDraw2D(args);
-		}
-
-		public void Draw3D(RenderArgs args)
-		{
-			OnDraw3D(args);
+			OnDraw(args);
 		}
 
 		public void Update(GameTime gameTime)
@@ -88,13 +84,11 @@ namespace Alex.GameStates
 		protected virtual void OnShow() { }
 		protected virtual void OnHide() { }
 
-		protected virtual void OnLoad(RenderArgs args) { }
+		protected virtual void OnLoad(IRenderArgs args) { }
 		protected virtual void OnUnload() { }
 
 		protected virtual void OnUpdate(GameTime gameTime) { }
-
-		protected virtual void OnDraw2D(RenderArgs args) { }
-		protected virtual void OnDraw3D(RenderArgs args) { }
+		protected virtual void OnDraw(IRenderArgs args) { }
 	}
 
 	public class RenderArgs : IRenderArgs

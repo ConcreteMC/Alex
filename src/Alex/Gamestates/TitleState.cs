@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Drawing;
 using System.IO;
+using Alex.API.Graphics;
 using Alex.API.Graphics.Textures;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
+using Alex.GameStates.Gui.Common;
 using Alex.GameStates.Gui.Multiplayer;
 using Alex.Gui;
 using Alex.Gui.Elements;
@@ -21,38 +23,32 @@ using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace Alex.GameStates
 {
-	public class TitleState : GameState
+	public class TitleState : GuiGameStateBase
 	{
-		private GuiDebugInfo _debugInfo;
+		private readonly GuiDebugInfo _debugInfo;
 
-		private GuiStackMenu _stackMenu;
-		private GuiTextElement _splashText;
+		private readonly GuiStackMenu _stackMenu;
+		private readonly GuiTextElement _splashText;
 
-		private GuiPanoramaSkyBox _backgroundSkyBox;
-		private GuiEntityModelView _playerView;
+		private readonly GuiPanoramaSkyBox _backgroundSkyBox;
+		private readonly GuiEntityModelView _playerView;
 
 		private FpsMonitor FpsMonitor { get; }
-		public TitleState(Alex alex, ContentManager content) : base(alex)
+		public TitleState(Alex alex, ContentManager content)
 		{
 			FpsMonitor = new FpsMonitor();
 			_backgroundSkyBox = new GuiPanoramaSkyBox(alex, alex.GraphicsDevice, content);
 
-			Gui = new GuiScreen(Alex)
-			{
-				Background =
-				{
-					Texture = _backgroundSkyBox,
-					RepeatMode = TextureRepeatMode.Stretch
-				},
-			};
+			Background.Texture = _backgroundSkyBox;
+			Background.RepeatMode = TextureRepeatMode.Stretch;
 			
-			Gui.AddChild(new GuiImage(GuiTextures.AlexLogo)
+			AddChild(new GuiImage(GuiTextures.AlexLogo)
 			{
 				Margin = new Thickness(0, 25, 0, 0),
 				Anchor = Alignment.TopCenter,
 			});
 
-			Gui.AddChild( _splashText = new GuiTextElement(false)
+			AddChild( _splashText = new GuiTextElement()
 			{
 				TextColor = TextColor.Yellow,
 				Rotation = 17.5f,
@@ -63,7 +59,7 @@ namespace Alex.GameStates
 				Text = "Who liek minecwaf?!"
 			});
 
-			Gui.AddChild(_stackMenu = new GuiStackMenu()
+			AddChild(_stackMenu = new GuiStackMenu()
 			{
 				Margin = new Thickness(15, 125, 15, 15),
 				Width = 125,
@@ -91,7 +87,7 @@ namespace Alex.GameStates
 			_stackMenu.AddMenuItem("Exit Game", () => { Alex.Exit(); });
 
 			var username = alex.GameSettings.Username;
-			Gui.AddChild(_playerView = new GuiEntityModelView("geometry.humanoid.customSlim")
+			AddChild(_playerView = new GuiEntityModelView("geometry.humanoid.customSlim")
 			{
 				BackgroundOverlay = new Color(Color.Black, 0.15f),
 
@@ -103,7 +99,7 @@ namespace Alex.GameStates
 				Anchor = Alignment.BottomRight,
 			});
 
-			_debugInfo = new GuiDebugInfo(alex);
+			_debugInfo = new GuiDebugInfo();
 			_debugInfo.AddDebugRight(() => $"Cursor RenderPosition: {alex.InputManager.CursorInputListener.GetCursorPosition()} / {alex.GuiManager.FocusManager.CursorPosition}");
 			_debugInfo.AddDebugRight(() => $"Cursor Delta: {alex.InputManager.CursorInputListener.GetCursorPositionDelta()}");
 			_debugInfo.AddDebugRight(() => $"Splash Text Scale: {_splashText.Scale:F3}");
@@ -111,7 +107,7 @@ namespace Alex.GameStates
 		}
 
 		private Texture2D _gradient;
-		protected override void OnLoad(RenderArgs args)
+		protected override void OnLoad(IRenderArgs args)
 		{
 			Alex.Resources.BedrockResourcePack.TryGetTexture("textures/entity/alex", out Bitmap rawTexture);
 			var steve = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, rawTexture);
@@ -123,8 +119,8 @@ namespace Alex.GameStates
 				_gradient = Texture2D.FromStream(args.GraphicsDevice, ms);
 			}
 
-			Gui.BackgroundOverlay = (TextureSlice2D) _gradient;
-			Gui.BackgroundOverlay.Mask = new Color(Color.White, 0.5f);
+			BackgroundOverlay = (TextureSlice2D) _gradient;
+			BackgroundOverlay.Mask = new Color(Color.White, 0.5f);
 
 			_splashText.Text = SplashTexts.GetSplashText();
 			Alex.IsMouseVisible = true;
@@ -132,7 +128,7 @@ namespace Alex.GameStates
 
 		private float _rotation;
 
-		private float _playerViewDepth = -512.0f;
+		private readonly float _playerViewDepth = -512.0f;
 		
 		protected override void OnUpdate(GameTime gameTime)
 		{
@@ -159,7 +155,7 @@ namespace Alex.GameStates
 			base.OnUpdate(gameTime);
 		}
 
-		protected override void OnDraw3D(RenderArgs args)
+		protected override void OnDraw(IRenderArgs args)
 		{
 			if (!_backgroundSkyBox.Loaded)
 			{
@@ -168,17 +164,9 @@ namespace Alex.GameStates
 
 			_backgroundSkyBox.Draw(args);
 
-			base.OnDraw3D(args);
+			base.OnDraw(args);
 			FpsMonitor.Update();
 		}
-
-		//protected override void OnDraw2D(RenderArgs args)
-		//{
-		//	args.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
-		//	args.SpriteBatch.Draw(_gradient, null, new Rectangle(0,0, Viewport.Width, Viewport.Height), null, null, 0f, null, new Color(Color.White, 0.5f));
-		//	args.SpriteBatch.End();
-		//	base.OnDraw2D(args);
-		//}
 
 		protected override void OnShow()
 		{

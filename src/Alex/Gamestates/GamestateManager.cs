@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using Alex.API.GameStates;
 using Alex.API.Gui;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -12,11 +13,11 @@ namespace Alex.GameStates
     {
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(GameStateManager));
 
-		private ConcurrentDictionary<string, GameState> States { get; }
+		private ConcurrentDictionary<string, IGameState> States { get; }
 
-		private LinkedList<GameState> History { get; } = new LinkedList<GameState>();
+		private LinkedList<IGameState> History { get; } = new LinkedList<IGameState>();
 
-        private GameState ActiveState { get; set; }
+        private IGameState ActiveState { get; set; }
 
         private GraphicsDevice Graphics { get; }
         private SpriteBatch SpriteBatch { get; }
@@ -28,7 +29,7 @@ namespace Alex.GameStates
             SpriteBatch = spriteBatch;
 	        GuiManager = guiManager;
 
-            States = new ConcurrentDictionary<string, GameState>();
+            States = new ConcurrentDictionary<string, IGameState>();
 		}
 
 	    public void Back()
@@ -45,7 +46,7 @@ namespace Alex.GameStates
 			}
 	    }
 
-        public void AddState(string name, GameState state)
+        public void AddState(string name, IGameState state)
         {
             state.Load(new RenderArgs()
             {
@@ -62,7 +63,7 @@ namespace Alex.GameStates
 
 	    public bool RemoveState(string name)
 	    {
-		    GameState state;
+		    IGameState state;
 		    if (States.TryRemove(name, out state))
 		    {
 			    if (ActiveState == state)
@@ -70,7 +71,7 @@ namespace Alex.GameStates
 				    var parent = state.ParentState;
 				    if (parent == null)
 				    {
-					    SetActiveState((GameState) null);
+					    SetActiveState((IGameState) null);
 					}
 				    else
 				    {
@@ -84,20 +85,24 @@ namespace Alex.GameStates
 
 		    return false;
 	    }
-
-	    public bool SetActiveState<TStateType>() where TStateType : GameState, new()
+	    public bool SetActiveState<TStateType>(string key) where TStateType : IGameState, new()
 	    {
-		    var key = typeof(TStateType).FullName;
 		    if (!States.TryGetValue(key, out var state))
 		    {
-				state = new TStateType();
-				AddState(key, state);
+			    state = new TStateType();
+			    AddState(key, state);
 		    }
 
-			return SetActiveState(state);
+		    return SetActiveState(state);
 	    }
 
-	    public bool SetActiveState(GameState state, bool keepHistory = true)
+	    public bool SetActiveState<TStateType>() where TStateType : IGameState, new()
+	    {
+		    var key = typeof(TStateType).FullName;
+		    return SetActiveState<TStateType>(key);
+	    }
+
+	    public bool SetActiveState(IGameState state, bool keepHistory = true)
 	    {
 		    var current = ActiveState;
 		    current?.Hide();
@@ -122,7 +127,7 @@ namespace Alex.GameStates
 
 	    public bool SetActiveState(string name)
         {
-            GameState state;
+	        IGameState state;
             if (!States.TryGetValue(name, out state))
             {
                 return false;
@@ -131,11 +136,11 @@ namespace Alex.GameStates
 	        return SetActiveState(state);
         }
 
-	    private GameState _activeStateDoubleBuffer = null;
+	    private IGameState _activeStateDoubleBuffer = null;
 
 	    public void Draw(GameTime gameTime)
 	    {
-		    GameState activeState = _activeStateDoubleBuffer;
+		    IGameState activeState = _activeStateDoubleBuffer;
 
 		    if (activeState == null) return;
 
@@ -148,8 +153,7 @@ namespace Alex.GameStates
 				    GraphicsDevice = Graphics
 			    };
 
-			    activeState.Draw3D(args);
-			    activeState.Draw2D(args);
+			    activeState.Draw(args);
 		    }
 		    catch (Exception ex)
 		    {
@@ -159,7 +163,7 @@ namespace Alex.GameStates
 
 	    public void Update(GameTime gameTime)
 	    {
-		    GameState activeState = _activeStateDoubleBuffer;
+		    IGameState activeState = _activeStateDoubleBuffer;
 
 		    if (activeState == null) return;
 

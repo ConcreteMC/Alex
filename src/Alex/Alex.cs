@@ -177,7 +177,7 @@ namespace Alex
 
 			GameStateManager = new GameStateManager(GraphicsDevice, _spriteBatch, GuiManager);
 
-			var splash = new SplashScreen(this);
+			var splash = new SplashScreen();
 			GameStateManager.AddState("splash", splash);
 			GameStateManager.SetActiveState("splash");
 
@@ -282,7 +282,7 @@ namespace Alex
 			PlayingState playState = new PlayingState(this, GraphicsDevice, worldProvider, networkProvider);
 			GameStateManager.AddState("play", playState);
 
-			LoadingWorldState loadingScreen = new LoadingWorldState(this);
+			LoadingWorldState loadingScreen = new LoadingWorldState();
 			GameStateManager.AddState("loading", loadingScreen);
 			GameStateManager.SetActiveState("loading");
 

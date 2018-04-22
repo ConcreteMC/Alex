@@ -3,48 +3,19 @@ using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Layout;
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
+using Alex.GameStates.Gui.Common;
 using Microsoft.Xna.Framework;
 
 namespace Alex.GameStates
 {
-	public class SplashScreen : GameState, IProgressReceiver
+	public class SplashScreen : GuiGameStateBase, IProgressReceiver
 	{
-		private SplashScreenGui _screen;
+		private readonly GuiContainer _progressBarContainer;
 
-		public SplashScreen(Alex alex) : base(alex)
-		{
-			Gui = _screen = new SplashScreenGui(Alex)
-			{
-				Background =
-				{
-					Color = Color.White,
-					TextureResource = GuiTextures.SplashBackground,
-					RepeatMode = TextureRepeatMode.ScaleToFit
-				},
-				Anchor = Alignment.TopLeft,
-			};
-		}
-
-		protected override void OnLoad(RenderArgs args)
-		{
-			base.OnLoad(args);
-		}
-
-		public void UpdateProgress(int percentage, string statusMessage)
-		{
-			_screen.UpdateProgress(percentage);
-			_screen.Text = statusMessage;
-		}
-	}
-
-	public class SplashScreenGui : GuiScreen
-	{
-		private GuiContainer _progressBarContainer;
-
-		private GuiProgressBar _progressBar;
-		private GuiTextElement _textDisplay;
-		private GuiTextElement _percentageDisplay;
-
+		private readonly GuiProgressBar _progressBar;
+		private readonly GuiTextElement _textDisplay;
+		private readonly GuiTextElement _percentageDisplay;
+		
 		public string Text
 		{
 			get { return _textDisplay?.Text ?? string.Empty; }
@@ -54,11 +25,12 @@ namespace Alex.GameStates
 			}
 		}
 
-		private Alex Alex { get; }
-		public SplashScreenGui(Alex game) : base(game)
+		public SplashScreen()
 		{
-			Alex = game;
-			
+			Background = Color.White;
+			Background.TextureResource = GuiTextures.SplashBackground;
+			Background.RepeatMode = TextureRepeatMode.ScaleToFit;
+
 			AddChild(_progressBarContainer = new GuiContainer()
 			{
 				Width  = 300,
@@ -94,12 +66,13 @@ namespace Alex.GameStates
 				Anchor = Alignment.BottomCenter,
 			});
 		}
+		
 
-		public void UpdateProgress(int value)
+		public void UpdateProgress(int percentage, string statusMessage)
 		{
-			_progressBar.Value = value;
-			_percentageDisplay.Text = $"{value}%";
-			//_percentageDisplay.Y = _percentageDisplay.Height;
+			_progressBar.Value      = percentage;
+			_percentageDisplay.Text = $"{percentage}%";
+			Text = statusMessage;
 		}
 	}
 }

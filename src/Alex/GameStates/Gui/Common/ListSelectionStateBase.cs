@@ -10,7 +10,7 @@ using Microsoft.Xna.Framework;
 
 namespace Alex.GameStates.Gui.Common
 {
-    public class ListSelectionStateBase<TGuiListItemContainer> : GuiStateBase where TGuiListItemContainer : GuiSelectionListItem
+    public class ListSelectionStateBase<TGuiListItemContainer> : GuiMenuStateBase where TGuiListItemContainer : GuiSelectionListItem
     {
 
         protected TGuiListItemContainer[] Items => _items.ToArray();
@@ -27,7 +27,7 @@ namespace Alex.GameStates.Gui.Common
                 //Y = Header.Height,
                 //Width = 322,
 	            Anchor = Alignment.Fill,
-				ChildAnchor = Alignment.TopCenter,
+				ChildAnchor = Alignment.TopFill,
             });
 	        ListContainer.SelectedItemChanged += HandleSelectedItemChanged;
 			ListContainer.Margin = new Thickness(0, Header.Height, 0, Footer.Height);

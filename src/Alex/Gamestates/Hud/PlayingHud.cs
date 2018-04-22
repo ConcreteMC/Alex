@@ -11,13 +11,13 @@ namespace Alex.GameStates.Hud
 {
     public class PlayingHud : GuiScreen
     {
-        private GuiItemHotbar _hotbar;
-        private PlayerController _playerController;
+        private readonly GuiItemHotbar _hotbar;
+        private readonly PlayerController _playerController;
 	    public ChatComponent Chat;
 		private PlayerInputManager InputManager => _playerController.InputManager;
 
 		private Alex Alex { get; }
-        public PlayingHud(Alex game, PlayerController playerController, ChatComponent chat) : base(game)
+        public PlayingHud(Alex game, PlayerController playerController, ChatComponent chat) : base()
         {
 	        Alex = game;
             _playerController = playerController;

@@ -4,112 +4,89 @@ using Alex.API.Gui.Elements.Layout;
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Alex.API.World;
+using Alex.GameStates.Gui.Common;
 
 namespace Alex.GameStates
 {
-    public class LoadingWorldState : GameState
+    public class LoadingWorldState : GuiMenuStateBase
     {
-		private LoadingWorldGui Screen { get; set; }
-		public LoadingWorldState(Alex alex) : base(alex)
+	    private readonly GuiContainer   _progressBarContainer;
+	    private readonly GuiProgressBar _progressBar;
+	    private readonly GuiTextElement _textDisplay;
+	    private readonly GuiTextElement _percentageDisplay;
+		
+	    public string Text
 	    {
-		    Gui = Screen = new LoadingWorldGui(Alex)
+		    get { return _textDisplay?.Text ?? string.Empty; }
+		    set
 		    {
-				Background =
-				{
-					TextureResource = GuiTextures.OptionsBackground, 
-					RepeatMode = TextureRepeatMode.ScaleToFit
-				}
-			};
+			    _textDisplay.Text = value;
+		    }
 	    }
 
+		public LoadingWorldState()
+	    {
+		    AddGuiElement(_progressBarContainer = new GuiContainer()
+		    {
+			    Width  = 300,
+			    Height = 25,
+
+			    Y = -25,
+					
+			    Anchor = Alignment.BottomCenter,
+		    });
+
+		    _progressBarContainer.AddChild(_textDisplay = new GuiTextElement()
+		    {
+			    Text      = Text,
+			    TextColor = TextColor.Black,
+					
+			    Anchor    = Alignment.TopLeft,
+			    HasShadow = false
+		    });
+
+		    _progressBarContainer.AddChild(_percentageDisplay = new GuiTextElement()
+		    {
+			    Text      = Text,
+			    TextColor = TextColor.Black,
+					
+			    Anchor    = Alignment.TopRight,
+			    HasShadow = false
+		    });
+
+		    _progressBarContainer.AddChild(_progressBar = new GuiProgressBar()
+		    {
+			    Width  = 300,
+			    Height = 9,
+					
+			    Anchor = Alignment.BottomFill,
+		    });
+	    }
+		
 	    public void UpdateProgress(LoadingState state, int percentage)
 	    {
 		    switch (state)
 		    {
-				case LoadingState.ConnectingToServer:
-					Screen.Text = "Connecting to server...";
-					break;
-				case LoadingState.LoadingChunks:
-					Screen.Text = $"Loading chunks...";
-					break;
-				case LoadingState.GeneratingVertices:
-					Screen.Text = $"Building world...";
-					break;
-				case LoadingState.Spawning:
-					Screen.Text = $"Getting ready...";
-					break;
+			    case LoadingState.ConnectingToServer:
+				    Text = "Connecting to server...";
+				    break;
+			    case LoadingState.LoadingChunks:
+				    Text = $"Loading chunks...";
+				    break;
+			    case LoadingState.GeneratingVertices:
+				    Text = $"Building world...";
+				    break;
+			    case LoadingState.Spawning:
+				    Text = $"Getting ready...";
+				    break;
 		    }
 
-			Screen.UpdateProgress(percentage);
+		    UpdateProgress(percentage);
 	    }
-
-	    private class LoadingWorldGui : GuiScreen
+	    public void UpdateProgress(int value)
 	    {
-			private GuiContainer _progressBarContainer;
-		    private GuiProgressBar _progressBar;
-		    private GuiTextElement _textDisplay;
-		    private GuiTextElement _percentageDisplay;
-
-		    public string Text
-		    {
-			    get { return _textDisplay?.Text ?? string.Empty; }
-			    set
-			    {
-				    _textDisplay.Text = value;
-			    }
-		    }
-
-			private Alex Alex { get; }
-		    public LoadingWorldGui(Alex game) : base(game)
-		    {
-			    Alex = game;
-		    }
-
-		    protected override void OnInit(IGuiRenderer renderer)
-		    {
-				AddChild(_progressBarContainer = new GuiContainer()
-			    {
-				    Width = 300,
-				    Height = 25,
-
-				    Y = -25,
-					
-				    Anchor = Alignment.BottomCenter,
-			    });
-
-				_progressBarContainer.AddChild(_textDisplay = new GuiTextElement()
-			    {
-				    Text = Text,
-				    TextColor = TextColor.Black,
-					
-				    Anchor = Alignment.TopLeft,
-				    HasShadow = false
-			    });
-
-			    _progressBarContainer.AddChild(_percentageDisplay = new GuiTextElement()
-			    {
-				    Text = Text,
-				    TextColor = TextColor.Black,
-					
-				    Anchor = Alignment.TopRight,
-				    HasShadow = false
-			    });
-
-			    _progressBarContainer.AddChild(_progressBar = new GuiProgressBar()
-			    {
-				    Width = 300,
-				    Height = 9,
-					
-				    Anchor = Alignment.BottomFill,
-			    });
-			}
-
-		    public void UpdateProgress(int value)
-		    {
-			    _progressBar.Value = value;
-			    _percentageDisplay.Text = $"{value}%";
-			   // _percentageDisplay.Y = _percentageDisplay.Height;
-		    }
+		    _progressBar.Value      = value;
+		    _percentageDisplay.Text = $"{value}%";
 	    }
 	}
 }

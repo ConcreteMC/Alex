@@ -6,10 +6,10 @@ using Alex.Gui.Elements;
 
 namespace Alex.GameStates.Gui.MainMenu
 {
-    public class OptionsState : GuiStateBase
+    public class OptionsState : GuiMenuStateBase
     {
-        private GuiLabelledControlGroup _optionControls;
-        private Settings _settings;
+        private readonly GuiLabelledControlGroup _optionControls;
+        private readonly Settings _settings;
 
         public OptionsState() : base()
         {
@@ -17,9 +17,9 @@ namespace Alex.GameStates.Gui.MainMenu
 
             _settings = Alex.GameSettings;
 
-            Gui.AddChild(new GuiBackButton());
+            AddChild(new GuiBackButton());
 
-            Gui.AddChild(_optionControls = new GuiLabelledControlGroup()
+            AddChild(_optionControls = new GuiLabelledControlGroup()
             {
                 Anchor =  Alignment.CenterX,
                 ChildAnchor = Alignment.TopFill,

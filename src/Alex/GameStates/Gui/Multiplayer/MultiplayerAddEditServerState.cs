@@ -23,7 +23,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 
         #endregion
 
-        private SavedServerEntry _entry;
+        private readonly SavedServerEntry _entry;
         private readonly IListStorageProvider<SavedServerEntry> _savedServersStorage;
         
         public MultiplayerAddEditServerState(Action<SavedServerEntry> callbackAction) : this(null, null, callbackAction)

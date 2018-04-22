@@ -12,7 +12,7 @@ namespace Alex.Gui.Elements
     {
         private GuiContainer _leftContainer, _rightContainer;
 
-        public GuiDebugInfo(Game game) : base(game)
+        public GuiDebugInfo() : base()
         {
             AddChild(_leftContainer = new GuiStackContainer()
             {

@@ -1,17 +1,18 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Alex.API.Graphics;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
 namespace Alex.GameStates.Playing
 {
-	public class InGameMenuState : GameState
+	public class InGameMenuStateOld : GameState
 	{
-		public InGameMenuState(Alex alex, KeyboardState state) : base(alex)
+		public InGameMenuStateOld(Alex alex, KeyboardState state) : base(alex)
 		{
 			PreviousKeyboardState = state;
 		}
 
-		protected override void OnLoad(RenderArgs args)
+		protected override void OnLoad(IRenderArgs args)
 		{
 
 
@@ -58,13 +59,10 @@ namespace Alex.GameStates.Playing
 			Alex.GameStateManager.RemoveState("play");
 		}
 
-		protected override void OnDraw3D(RenderArgs args)
+		protected override void OnDraw(IRenderArgs args)
 		{
-			ParentState.Draw3D(args);
-		}
+			ParentState.Draw(args);
 
-		protected override void OnDraw2D(RenderArgs args)
-		{
 			Viewport viewPort = Viewport;
 			SpriteBatch sb = args.SpriteBatch;
 

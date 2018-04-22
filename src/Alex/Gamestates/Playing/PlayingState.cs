@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Text;
+using Alex.API.Graphics;
 using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks;
+using Alex.GameStates.Gui.InGame;
 using Alex.GameStates.Hud;
 using Alex.Graphics.Models;
 using Alex.Gui.Elements;
@@ -27,8 +29,8 @@ namespace Alex.GameStates.Playing
 		private WorldProvider WorldProvider { get; }
 		public INetworkProvider NetworkProvider { get; }
 
-		private PlayingHud _playingHud;
-		private GuiDebugInfo _debugInfo;
+		private readonly PlayingHud _playingHud;
+		private readonly GuiDebugInfo _debugInfo;
 
 		public PlayingState(Alex alex, GraphicsDevice graphics, WorldProvider worldProvider, INetworkProvider networkProvider) : base(alex)
 		{
@@ -51,14 +53,13 @@ namespace Alex.GameStates.Playing
 			chat.ChatProvider = chatProvider;
 
 			_playingHud = new PlayingHud(Alex, World.Player.Controller, chat);
-			_debugInfo = new GuiDebugInfo(alex);
+			_debugInfo = new GuiDebugInfo();
 			FpsCounter = new FpsMonitor();
 			InitDebugInfo();
 		}
 
-		protected override void OnLoad(RenderArgs args)
+		protected override void OnLoad(IRenderArgs args)
 		{
-
 			World.SpawnPoint = WorldProvider.GetSpawnPoint();
 			World.Camera.MoveTo(World.GetSpawnPoint(), Vector3.Zero);
 			base.OnLoad(args);
@@ -214,8 +215,7 @@ namespace Alex.GameStates.Playing
 			{
 				if (currentKeyboardState.IsKeyDown(KeyBinds.Menu))
 				{
-					Alex.GameStateManager.AddState("ingamemenu", new InGameMenuState(Alex, currentKeyboardState));
-					Alex.GameStateManager.SetActiveState("ingamemenu");
+					Alex.GameStateManager.SetActiveState<InGameMenuState>("ingamemenu");
 				}
 
 				if (currentKeyboardState.IsKeyDown(KeyBinds.DebugInfo))
@@ -250,7 +250,7 @@ namespace Alex.GameStates.Playing
 			_oldKeyboardState = currentKeyboardState;
 		}
 
-		protected override void OnDraw2D(RenderArgs args)
+		protected void Draw2D(IRenderArgs args)
 		{
 			try
 			{
@@ -373,7 +373,7 @@ namespace Alex.GameStates.Playing
 			return readable.ToString("0.### ") + suffix;
 		}
 
-		protected override void OnDraw3D(RenderArgs args)
+		protected override void OnDraw(IRenderArgs args)
 		{
 			args.Camera = World.Camera;
 
@@ -383,7 +383,9 @@ namespace Alex.GameStates.Playing
 
 			World.Render(args);
 
-			base.OnDraw3D(args);
+			base.OnDraw(args);
+
+			Draw2D(args);
 		}
 
 		protected override void OnUnload()

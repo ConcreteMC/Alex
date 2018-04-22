@@ -10,7 +10,7 @@ using NLog;
 
 namespace Alex.GameStates.Gui.Multiplayer
 {
-    public class MultiplayerConnectState : GuiStateBase
+    public class MultiplayerConnectState : GuiMenuStateBase
     {
 	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(MultiplayerConnectState));
 

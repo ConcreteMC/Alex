@@ -7,7 +7,7 @@ using System;
 
 namespace Alex.GameStates.Gui.Common
 {
-    public class GuiCallbackStateBase<TResponse> : GuiStateBase
+    public class GuiCallbackStateBase<TResponse> : GuiMenuStateBase
     {
         private readonly Action<TResponse> _callbackAction;
 

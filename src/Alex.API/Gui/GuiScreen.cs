@@ -11,8 +11,6 @@ namespace Alex.API.Gui
 {
     public class GuiScreen : GuiElement, IGuiScreen
     {
-        protected Game Game { get; }
-
         public bool IsLayoutInProgress { get; protected set; } = false;
 
         public override IGuiFocusContext FocusContext
@@ -20,12 +18,10 @@ namespace Alex.API.Gui
             get { return this; }
         }
 
-        public GuiScreen(Game game)
+        public GuiScreen()
         {
             AutoSizeMode = AutoSizeMode.None;
             Anchor = Alignment.Fill;
-
-            Game = game;
         }
 
         public void UpdateSize(int width, int height)

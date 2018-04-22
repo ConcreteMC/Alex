@@ -56,43 +56,43 @@ namespace Alex.API.Gui.Elements.Layout
 
             var size = Size.Zero;
             Thickness lastOffset = Thickness.Zero;
+            
 
             foreach (var child in children)
             {
                 containerSize += lastOffset;
 
+                var thisOffset = CalculateOffset(alignment, Size.Zero, child.Margin, lastOffset);
+
                 var childSize = child.Measure(new Size(widthOverride == 0 ? containerSize.Width : widthOverride, 
-                                                       heightOverride == 0 ? containerSize.Height : heightOverride)) - child.Margin;
+                                                       heightOverride == 0 ? containerSize.Height : heightOverride)) - thisOffset;
                 
-                var offset = CalculateOffset(alignment, childSize, child.Margin);
-                lastOffset = CalculateOffset(alignment, Size.Zero, child.Margin);
+                var offset = CalculateOffset(alignment, childSize, child.Margin, lastOffset);
 
                 if (Orientation == Orientation.Vertical)
                 {
-                    size.Width = Math.Max(size.Width, childSize.Width - lastOffset.Horizontal);
-                    size.Width = Math.Max(size.Width, childSize.Width - lastOffset.Horizontal);
-                    size.Height += offset.Vertical;
+                    size.Width = Math.Max(size.Width, childSize.Width);
+                    size.Height += childSize.Height;
 
                     containerSize.Height -= offset.Vertical;
                 }
                 else if (Orientation == Orientation.Horizontal)
                 {
-                    size.Width += offset.Horizontal;
-                    size.Height = Math.Max(size.Height, childSize.Height - lastOffset.Vertical);
-                    size.Height = Math.Max(size.Height, childSize.Height - lastOffset.Vertical);
+                    size.Width += childSize.Width;
+                    size.Height = Math.Max(size.Height, childSize.Height);
 
                     containerSize.Width -= offset.Horizontal;
                 }
 
-
+                lastOffset = thisOffset;
             }
 
-            //size -= lastOffset;
+            size -= lastOffset;
 
             return size;
         }
         
-        private Thickness CalculateOffset(Alignment alignment, Size size, Thickness margin)
+        private Thickness CalculateOffset(Alignment alignment, Size size, Thickness margin, Thickness previousMargin)
         {
             var offset = Thickness.Zero;
 
@@ -103,14 +103,17 @@ namespace Alex.API.Gui.Elements.Layout
             {
                 if((vertical & Alignment.MinY) != 0)
                 {
+                    offset.Top -= Math.Min(previousMargin.Bottom, margin.Top);
                     offset.Top += size.Height + margin.Bottom;
                 }
                 else if((vertical & Alignment.MaxY) != 0)
                 {
+                    offset.Bottom -= Math.Min(previousMargin.Top, margin.Bottom);
                     offset.Bottom += size.Height + margin.Top;
                 }
                 else if ((vertical & Alignment.FillY) != 0)
                 {
+                    offset.Top -= Math.Min(previousMargin.Bottom, margin.Top);
                     offset.Top += size.Height + margin.Bottom;
                 }
             }
@@ -118,14 +121,17 @@ namespace Alex.API.Gui.Elements.Layout
             {
                 if((horizontal & Alignment.MinX) != 0)
                 {
+                    offset.Left -= Math.Min(previousMargin.Right, margin.Left);
                     offset.Left += size.Width + margin.Right;
                 }
                 else if((horizontal & Alignment.MaxX) != 0)
                 {
+                    offset.Right -= Math.Min(previousMargin.Left, margin.Right);
                     offset.Right += size.Width + margin.Left;
                 }
                 else if ((horizontal & Alignment.FillX) != 0)
                 {
+                    offset.Left -= Math.Min(previousMargin.Right, margin.Left);
                     offset.Left += size.Width + margin.Right;
                 }
             }
@@ -176,7 +182,7 @@ namespace Alex.API.Gui.Elements.Layout
 
         protected override void ArrangeChildrenCore(Rectangle finalRect, IReadOnlyCollection<GuiElement> children)
         {
-            var positioningBounds = finalRect;
+            var positioningBounds = finalRect + Padding;
 
             var alignment = NormalizeAlignmentForArrange(Orientation, ChildAnchor);
 
@@ -187,9 +193,9 @@ namespace Alex.API.Gui.Elements.Layout
             {
                 //offset -= lastOffset;
 
-                var layoutBounds = PositionChild(child, alignment, positioningBounds, Thickness.Max(Padding, lastOffset), offset, true);
+                var layoutBounds = PositionChild(child, alignment, positioningBounds, lastOffset, offset, true);
 
-                var currentOffset = CalculateOffset(alignment, layoutBounds.Size, layoutBounds.Margin);
+                var currentOffset = CalculateOffset(alignment, layoutBounds.Size, layoutBounds.Margin, lastOffset);
 
                 offset += currentOffset;
 
@@ -203,8 +209,7 @@ namespace Alex.API.Gui.Elements.Layout
                 //    size.Width  += offset.Horizontal;
                 //    size.Height =  Math.Max(size.Height, childSize.Height - lastOffset.Vertical);
                 //}
-
-                lastOffset = CalculateOffset(alignment, Size.Zero, layoutBounds.Margin);
+                lastOffset = CalculateOffset(alignment, Size.Zero, layoutBounds.Margin, lastOffset);
             }
         }
 
