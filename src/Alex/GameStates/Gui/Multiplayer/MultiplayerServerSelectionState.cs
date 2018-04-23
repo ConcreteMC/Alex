@@ -141,7 +141,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 		
 	    private void OnCancelButtonPressed()
 	    {
-			Alex.GameStateManager.SetActiveState("title");
+			Alex.GameStateManager.SetActiveState<TitleState>();
 	    }
 
 	    private void OnRefreshButtonPressed()
@@ -154,7 +154,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 		    _listProvider.Load();
 		
 			ClearItems();
-		    foreach (var entry in _listProvider.Entries.ToArray())
+		    foreach (var entry in _listProvider.Data.ToArray())
 		    {
 				AddItem(new GuiServerListEntryElement(entry));
 		    }

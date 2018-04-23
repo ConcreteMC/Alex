@@ -61,7 +61,7 @@ namespace Alex.GameStates.Gui.InGame
 
         private void OnQuitButtonPressed()
         {
-            Alex.GameStateManager.SetActiveState("title");
+            Alex.GameStateManager.SetActiveState<TitleState>();
 
             Alex.GameStateManager.RemoveState("serverMenu");
             Alex.GameStateManager.RemoveState("play");

@@ -161,33 +161,35 @@ namespace Alex.API.Gui.Graphics
         {
             FillRectangle(rectangle, texture, repeatMode, null, Color.White);
         } 
-        public void FillRectangle(Rectangle rectangle, ITexture2D texture, TextureRepeatMode repeatMode, Vector2? scale, Color? mask)
+        public void FillRectangle(Rectangle rectangle, ITexture2D texture, TextureRepeatMode repeatMode, Vector2? scale, Color? colorMask)
         {
-            mask = mask ?? Color.White;
+            if(texture?.Texture == null) return;
+
+            var mask = colorMask.HasValue ? colorMask.Value : Color.White;
             
             if (repeatMode == TextureRepeatMode.NoScaleCenterSlice)
             {
-                DrawTextureCenterSliced(rectangle, texture, mask.Value);
+                DrawTextureCenterSliced(rectangle, texture, mask);
             }
             else if (repeatMode == TextureRepeatMode.Tile)
             {
-                DrawTextureTiled(rectangle, texture, mask.Value);
+                DrawTextureTiled(rectangle, texture, mask);
             }
             else if (repeatMode == TextureRepeatMode.ScaleToFit)
             {
-                DrawTextureScaledToFit(rectangle, texture, mask.Value);
+                DrawTextureScaledToFit(rectangle, texture, mask);
             }
             else if (texture is NinePatchTexture2D ninePatchTexture)
             {
-                DrawTextureNinePatch(rectangle, ninePatchTexture, mask.Value);
+                DrawTextureNinePatch(rectangle, ninePatchTexture, mask);
             }
             else if(scale.HasValue)
             {
-                SpriteBatch.Draw(texture.Texture, rectangle.Location.ToVector2(), texture.ClipBounds, Color.White, 0f, Vector2.Zero, scale.Value, SpriteEffects.None, 0f);
+                SpriteBatch.Draw(texture.Texture, rectangle.Location.ToVector2(), texture.ClipBounds, mask, 0f, Vector2.Zero, scale.Value, SpriteEffects.None, 0f);
             }
             else
             {
-                SpriteBatch.Draw(texture, rectangle, mask.Value);
+                SpriteBatch.Draw(texture, rectangle, mask);
             }
         }
         #endregion

@@ -60,15 +60,17 @@ namespace Alex.GameStates.Gui.Common
             {
                 Height              = 32,
                 Padding = new Thickness(3),
+                Margin = new Thickness(3, 3, 3, 6),
 
                 Anchor = Alignment.TopFill,
+                ChildAnchor = Alignment.BottomCenter
             });
             
             Header.AddChild(_headerTitle = new GuiTextElement()
             {
                 Text      = Title,
                 TextColor = TextColor.White,
-                Scale     = 1.25f,
+                Scale     = 1f,
                 FontStyle = FontStyle.DropShadow,
                 
                 Anchor = Alignment.BottomCenter,

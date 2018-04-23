@@ -23,10 +23,6 @@ namespace Alex.Gui
         public Matrix Projection { get; set; } = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(120.0f), 1.0f, 0.05f, 10.0f); //Matrix.CreateScale(256f);
 		
         private AlphaTestEffect _skyBoxEffect;
-
-        private Alex Game { get; }
-        private GraphicsDevice GraphicsDevice { get; }
-        private ContentManager Content { get; }
 		
 		
 		private VertexBuffer Buffer;
@@ -45,13 +41,9 @@ namespace Alex.Gui
 	    public bool Loaded = false;
 
 	    private Texture2D[] _textures;
-		public GuiPanoramaSkyBox(Alex alex, GraphicsDevice graphics, ContentManager content)
+		public GuiPanoramaSkyBox()
         {
-            Game = alex;
-            GraphicsDevice = graphics;
-            Content = content;
-
-	        InitGraphics();
+	        
         }
 
         public void Load(IGuiRenderer renderer)
@@ -67,7 +59,7 @@ namespace Alex.Gui
 	        };
 
 			
-			CreateSkybox(GraphicsDevice);
+			CreateSkybox(Alex.Instance.GraphicsDevice);
 			
             CanRender = true;
 	        Loaded = true;
@@ -75,8 +67,9 @@ namespace Alex.Gui
 
 	    private void CreateSkybox(GraphicsDevice device)
 	    {
+		    InitGraphics();
 	        //_baseRenderTarget = new RenderTarget2D(GraphicsDevice, 256, 256, false, SurfaceFormat.Color, DepthFormat.None);
-	        _renderTarget     = new RenderTarget2D(GraphicsDevice, 256, 256, false, SurfaceFormat.Color, DepthFormat.None);
+	        _renderTarget     = new RenderTarget2D(device, 256, 256, false, SurfaceFormat.Color, DepthFormat.None);
 
 			_skyBoxEffect = new AlphaTestEffect(device);
 

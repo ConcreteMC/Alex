@@ -9,7 +9,8 @@ namespace Alex.API.Services
 {
     public class AppDataStorageSystem : IStorageSystem
     {
-        private static Regex FileKeySanitizeRegex = new Regex(@"[\W]", RegexOptions.Compiled);
+        private static readonly Regex FileKeySanitizeRegex = new Regex(@"[\W]", RegexOptions.Compiled);
+
         private string AppDataDirectory { get; }
 
         public AppDataStorageSystem()
@@ -19,8 +20,7 @@ namespace Alex.API.Services
 
             Directory.CreateDirectory(AppDataDirectory);
         }
-
-
+        
         public bool TryWrite<T>(string key, T value)
         {
             var fileName = GetFileName(key);
@@ -38,7 +38,6 @@ namespace Alex.API.Services
                 return false;
             }
         }
-
         public bool TryRead<T>(string key, out T value)
         {
             var fileName = GetFileName(key);

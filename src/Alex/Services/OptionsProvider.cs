@@ -8,14 +8,37 @@ namespace Alex.Services
 {
     public class OptionsProvider : IOptionsProvider
     {
-        public AlexOptions AlexOptions { get; }
+        private const string StorageKey = "SavedServers";
 
-        public SoundOptions SoundOptions { get; }
+        public AlexOptions AlexOptions { get; private set; }
 
-        public OptionsProvider()
+        private readonly IStorageSystem _storage;
+
+        public OptionsProvider(IStorageSystem storage)
         {
+            _storage = storage;
             AlexOptions = new AlexOptions();
-            SoundOptions = new SoundOptions();
+            Load();
+        }
+
+        public void Load()
+        {
+            if (_storage.TryRead(StorageKey, out AlexOptions options))
+            {
+                AlexOptions = options;
+            }
+        }
+
+        public void Save()
+        {
+            if (_storage.TryWrite(StorageKey, AlexOptions))
+            {
+            }
+        }
+
+        public void ResetAllToDefault()
+        {
+            AlexOptions.ResetToDefault();
         }
     }
 }

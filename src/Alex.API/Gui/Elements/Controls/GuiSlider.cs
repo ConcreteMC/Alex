@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Alex.API.Graphics;
 using Alex.API.Graphics.Textures;
+using Alex.API.Graphics.Typography;
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
@@ -38,11 +39,9 @@ namespace Alex.API.Gui.Elements.Controls
         }
 
         public double StepInterval { get; set; } = 1.0d;
-        
-        public GuiTextures?   DefaultThumbBackgroundTexture { get; set; } = GuiTextures.ButtonDefault;
-        public TextureSlice2D ThumbBackground               { get; set; }
-        public GuiTextures?   DefaultThumbHighlightBackgroundTexture { get; set; } = GuiTextures.ButtonHover;
-        public TextureSlice2D ThumbHighlightBackground               { get; set; }
+
+        public GuiTexture2D ThumbBackground;
+        public GuiTexture2D ThumbHighlightBackground;
         public int ThumbWidth { get; set; } = 10;
 
         public GuiTextElement Label { get; private set; }
@@ -52,60 +51,83 @@ namespace Alex.API.Gui.Elements.Controls
 
         public GuiSlider()
         {
-            MinWidth = 64;
-            MinHeight = 22;
-            HighlightOutlineThickness = Thickness.Zero;
-            
             Background = GuiTextures.ButtonDisabled;
+            ThumbBackground = GuiTextures.ButtonDefault;
+            ThumbHighlightBackground = GuiTextures.ButtonHover;
+            
+            Background.RepeatMode = TextureRepeatMode.NoScaleCenterSlice;
+            ThumbBackground.RepeatMode = TextureRepeatMode.NoScaleCenterSlice;
+            ThumbHighlightBackground.RepeatMode = TextureRepeatMode.NoScaleCenterSlice;
+
+            MinWidth = 20;
+            MinHeight = 20;
+
+            MaxHeight = 22;
+            MaxWidth  = 200;
+            Padding = new Thickness(5, 5);
+            Margin = new Thickness(2);
+
+            
             Background.RepeatMode = TextureRepeatMode.NoScaleCenterSlice;
 
             AddChild(Label = new GuiAutoUpdatingTextElement(() => string.Format(DisplayFormat, Value))
             {
-                Anchor = Alignment.MiddleCenter
+                Margin      =  Thickness.Zero,
+                Anchor      = Alignment.MiddleCenter,
+                TextColor   = TextColor.White,
+                FontStyle   = FontStyle.DropShadow
             });
         }
 
         protected override void OnInit(IGuiRenderer renderer)
         {
             base.OnInit(renderer);
-            
-            if (DefaultThumbBackgroundTexture.HasValue && ThumbBackground == null)
-            {
-                ThumbBackground = renderer.GetTexture(DefaultThumbBackgroundTexture.Value);
-            }
-            
-            if (DefaultThumbHighlightBackgroundTexture.HasValue && ThumbHighlightBackground == null)
-            {
-                ThumbHighlightBackground = renderer.GetTexture(DefaultThumbHighlightBackgroundTexture.Value);
-            }
+            ThumbBackground.TryResolveTexture(renderer);
+            ThumbHighlightBackground.TryResolveTexture(renderer);
         }
 
         protected override void OnUpdate(GameTime gameTime)
         {
             base.OnUpdate(gameTime);
 
-            var val = Math.Min(MaxValue, Math.Max(MinValue, Value));
-            val = MathHelpers.RoundToNearestInterval(val, StepInterval);
+            var val = MathHelper.Clamp((float)Value, (float)MinValue, (float)MaxValue);
+            val = MathHelpers.RoundToNearestInterval(val, (float)StepInterval);
 
 
             var diff = MathHelpers.RoundToNearestInterval(Math.Abs(MinValue - MaxValue), StepInterval);
             
-            _thumbOffsetX = ((RenderSize.Width - ThumbWidth) / (double) diff) * val;
+            _thumbOffsetX = ((RenderBounds.Width - ThumbWidth) / (double) diff) * val;
         }
 
         protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
         {
             base.OnDraw(graphics, gameTime);
 
-            graphics.FillRectangle(new Rectangle((int)(RenderPosition.X + _thumbOffsetX), (int)RenderPosition.Y, ThumbWidth, RenderSize.Height), Highlighted ? ThumbHighlightBackground : ThumbBackground, TextureRepeatMode.NoScaleCenterSlice);
+            var bounds = new Rectangle((int) (RenderPosition.X + _thumbOffsetX), (int) RenderPosition.Y, ThumbWidth,
+                                       RenderSize.Height);
+            graphics.FillRectangle(bounds, Highlighted ? ThumbHighlightBackground : ThumbBackground);
         }
 
         private void SetValueFromCursor(Point relativePosition)
         {
-            var percentageClicked = relativePosition.X / (float)RenderSize.Width;
+            var percentageClicked = relativePosition.X / (float)RenderBounds.Width;
 
             var diff = Math.Abs(MinValue - MaxValue);
             Value = MinValue + diff * percentageClicked;
+        }
+
+        protected override void OnHighlightActivate()
+        {
+            base.OnHighlightActivate();
+
+            Label.TextColor = TextColor.Yellow;
+        }
+
+        protected override void OnHighlightDeactivate()
+        {
+            base.OnHighlightDeactivate();
+
+            Label.TextColor = TextColor.White;
         }
 
 

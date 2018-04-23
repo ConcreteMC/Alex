@@ -63,6 +63,7 @@ namespace Alex
 		private bool BypassTitleState { get; set; } = false;
 
 		public GraphicsDeviceManager DeviceManager { get; }
+
 		public Alex(LaunchSettings launchSettings)
 		{
 			if (launchSettings.Server != null)
@@ -189,6 +190,8 @@ namespace Alex
 		{
 			var storage = new AppDataStorageSystem();
 			Services.AddService<IStorageSystem>(storage);
+			Services.AddService<IOptionsProvider>(new OptionsProvider(storage));
+
 			Services.AddService<IListStorageProvider<SavedServerEntry>>(new SavedServerDataProvider(storage));
 
 			Services.AddService<IServerQueryProvider>(new ServerQueryProvider());
@@ -241,12 +244,12 @@ namespace Alex
 
 			GuiRenderer.LoadResourcePack(Resources.ResourcePack);
 
-			GameStateManager.AddState("title", new TitleState(this, Content)); 
+			GameStateManager.AddState<TitleState>("title"); 
 			GameStateManager.AddState("options", new OptionsState());
 
 			if (!BypassTitleState)
 			{
-				GameStateManager.SetActiveState("title");
+				GameStateManager.SetActiveState<TitleState>("title");
 			}
 			else
 			{

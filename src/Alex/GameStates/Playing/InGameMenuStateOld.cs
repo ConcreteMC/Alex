@@ -53,7 +53,7 @@ namespace Alex.GameStates.Playing
 
 		private void DisconnectButtonOnOnButtonClick()
 		{
-			Alex.GameStateManager.SetActiveState("title");
+			Alex.GameStateManager.SetActiveState<TitleState>();
 
 			Alex.GameStateManager.RemoveState("serverMenu");
 			Alex.GameStateManager.RemoveState("play");

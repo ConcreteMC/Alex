@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Alex.API.Gui
 {
-    public interface IValuedControl<TValue>
+    public interface IValuedControl<TValue> : IGuiControl
     {
         event EventHandler<TValue> ValueChanged;
 

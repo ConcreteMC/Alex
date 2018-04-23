@@ -13,7 +13,7 @@ namespace Alex.API.Gui.Elements.Controls
         public GuiTexture2D DisabledBackground;
         public GuiTexture2D HighlightedBackground;
         public GuiTexture2D FocusedBackground;
-
+        
         public virtual Color     HighlightOutlineColor { get; set; } = new Color(TextColor.Gray.ForegroundColor, 0.75f);
         public virtual Thickness HighlightOutlineThickness { get; set; } = Thickness.Zero;
 

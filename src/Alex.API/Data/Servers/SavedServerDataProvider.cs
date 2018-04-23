@@ -10,9 +10,9 @@ namespace Alex.API.Data.Servers
     {
         private const string StorageKey = "SavedServers";
 
-        public IReadOnlyCollection<SavedServerEntry> Entries => _entries;
+        public IReadOnlyCollection<SavedServerEntry> Data => _data;
 
-        private readonly List<SavedServerEntry> _entries = new List<SavedServerEntry>();
+        private readonly List<SavedServerEntry> _data = new List<SavedServerEntry>();
 
         private readonly IStorageSystem _storage;
 
@@ -27,8 +27,8 @@ namespace Alex.API.Data.Servers
         {
             if (_storage.TryRead(StorageKey, out SavedServerEntry[] newEntries))
             {
-                _entries.Clear();
-                _entries.AddRange(newEntries);
+                _data.Clear();
+                _data.AddRange(newEntries);
 
                 UpdateIndexes();
             }
@@ -36,16 +36,21 @@ namespace Alex.API.Data.Servers
 
         public void Save()
         {
-            _storage.TryWrite(StorageKey, Entries.ToArray());
+            _storage.TryWrite(StorageKey, Data.ToArray());
+        }
+
+        void IDataProvider<IReadOnlyCollection<SavedServerEntry>>.Save(IReadOnlyCollection<SavedServerEntry> entries)
+        {
+            _storage.TryWrite(StorageKey, Data.ToArray());
         }
 
         public void MoveEntry(int index, SavedServerEntry entry)
         {
-            _entries.Remove(entry);
+            _data.Remove(entry);
 
             entry.ListIndex = index;
 
-            _entries.Insert(index, entry);
+            _data.Insert(index, entry);
 
             UpdateIndexes();
 
@@ -54,22 +59,22 @@ namespace Alex.API.Data.Servers
 
         private void UpdateIndexes()
         {
-            for (var index = 0; index < _entries.Count; index++)
+            for (var index = 0; index < _data.Count; index++)
             {
-               _entries[index].ListIndex = index;
+               _data[index].ListIndex = index;
             }
         }
 
         public void AddEntry(SavedServerEntry entry)
         {
-            _entries.Add(entry);
+            _data.Add(entry);
 
             Save();
         }
 
         public void RemoveEntry(SavedServerEntry entry)
         {
-            _entries.Remove(entry);
+            _data.Remove(entry);
             
             Save();
         }

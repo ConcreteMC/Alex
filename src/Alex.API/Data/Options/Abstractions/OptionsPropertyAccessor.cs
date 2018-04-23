@@ -2,6 +2,7 @@
 
 namespace Alex.API.Data.Options
 {
+
     public class OptionsPropertyAccessor<TProperty> : IDisposable
     {
         private readonly OptionsProperty<TProperty> _property;
@@ -11,16 +12,17 @@ namespace Alex.API.Data.Options
         internal OptionsPropertyAccessor(OptionsProperty<TProperty> property, OptionsPropertyChangedDelegate<TProperty> listenDelegate)
         {
             _property = property;
+            _delegate = listenDelegate;
         }
 
-        internal void Invoke(OptionsPropertyChangedEventArgs<TProperty> args)
+        internal void Invoke(TProperty oldValue, TProperty newValue)
         {
-
+            _delegate?.Invoke(oldValue, newValue);
         }
 
         public void Dispose()
         {
-            //_property.Unbind(this);
+            _property.Unbind(this);
         }
     }
 }

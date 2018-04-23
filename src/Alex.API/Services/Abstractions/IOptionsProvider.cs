@@ -8,6 +8,10 @@ namespace Alex.API.Services
     public interface IOptionsProvider
     {
         AlexOptions AlexOptions { get; }
-        SoundOptions SoundOptions { get; }
+
+        void Load();
+        void Save();
+
+        void ResetAllToDefault();
     }
 }

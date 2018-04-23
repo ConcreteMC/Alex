@@ -34,10 +34,10 @@ namespace Alex.GameStates
 		private readonly GuiEntityModelView _playerView;
 
 		private FpsMonitor FpsMonitor { get; }
-		public TitleState(Alex alex, ContentManager content)
+		public TitleState()
 		{
 			FpsMonitor = new FpsMonitor();
-			_backgroundSkyBox = new GuiPanoramaSkyBox(alex, alex.GraphicsDevice, content);
+			_backgroundSkyBox = new GuiPanoramaSkyBox();
 
 			Background.Texture = _backgroundSkyBox;
 			Background.RepeatMode = TextureRepeatMode.Stretch;
@@ -86,7 +86,6 @@ namespace Alex.GameStates
 			_stackMenu.AddMenuItem("Options", () => { Alex.GameStateManager.SetActiveState("options"); });
 			_stackMenu.AddMenuItem("Exit Game", () => { Alex.Exit(); });
 
-			var username = alex.GameSettings.Username;
 			AddChild(_playerView = new GuiEntityModelView("geometry.humanoid.customSlim")
 			{
 				BackgroundOverlay = new Color(Color.Black, 0.15f),
@@ -100,8 +99,8 @@ namespace Alex.GameStates
 			});
 
 			_debugInfo = new GuiDebugInfo();
-			_debugInfo.AddDebugRight(() => $"Cursor RenderPosition: {alex.InputManager.CursorInputListener.GetCursorPosition()} / {alex.GuiManager.FocusManager.CursorPosition}");
-			_debugInfo.AddDebugRight(() => $"Cursor Delta: {alex.InputManager.CursorInputListener.GetCursorPositionDelta()}");
+			_debugInfo.AddDebugRight(() => $"Cursor RenderPosition: {Alex.InputManager.CursorInputListener.GetCursorPosition()} / {Alex.GuiManager.FocusManager.CursorPosition}");
+			_debugInfo.AddDebugRight(() => $"Cursor Delta: {Alex.InputManager.CursorInputListener.GetCursorPositionDelta()}");
 			_debugInfo.AddDebugRight(() => $"Splash Text Scale: {_splashText.Scale:F3}");
 			_debugInfo.AddDebugLeft(() => $"FPS: {FpsMonitor.Value:F0}");
 		}

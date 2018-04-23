@@ -18,6 +18,7 @@
     <PackageReference Include="NLog" Version="4.5.0" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Data\Options\JsonConverters\" />
     <Folder Include="Data\Tags\" />
     <Folder Include="World\Storage\" />
   </ItemGroup>

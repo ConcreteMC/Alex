@@ -46,6 +46,11 @@ namespace Alex.GameStates
 			}
 	    }
 
+	    public void AddState<TStateType>(string name) where TStateType : class, IGameState, new()
+	    {
+			AddState(name, new TStateType());
+	    }
+
         public void AddState(string name, IGameState state)
         {
             state.Load(new RenderArgs()

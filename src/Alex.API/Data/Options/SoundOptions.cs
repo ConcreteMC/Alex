@@ -1,9 +1,17 @@
-﻿namespace Alex.API.Data.Options
+﻿using System.Runtime.Serialization;
+
+namespace Alex.API.Data.Options
 {
+    [DataContract]
     public class SoundOptions : OptionsBase
     {
+        [DataMember]
         public OptionsProperty<float> GlobalVolume { get; }
+
+        [DataMember]
         public OptionsProperty<float> MusicVolume { get; }
+
+        [DataMember]
         public OptionsProperty<float> SoundEffectsVolume { get; }
 
 
