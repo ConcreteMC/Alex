@@ -74,15 +74,15 @@ namespace Alex.Graphics.Models.Blocks
 			{
 				texture = "blocks/water";
 			}
-			//texture = texture + "_flow";
-			if (IsFlowing)
+			texture = texture + "_flow";
+			/*if (IsFlowing)
 			{
 				texture = texture + "_flow";
 			}
 			else
 			{
 				texture = texture + "_still";
-			}
+			}*/
 
 			//float frameX 
 			UVMap map = GetTextureUVMap(Alex.Instance.Resources, texture, 0, 16, 0, 16, 0);

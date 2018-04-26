@@ -31,59 +31,56 @@ namespace Alex.GameStates.Gui.Multiplayer
 
 	    private readonly IListStorageProvider<SavedServerEntry> _listProvider;
 
-		public MultiplayerServerSelectionState() : base()
-		{
-			_listProvider = Alex.Services.GetService<IListStorageProvider<SavedServerEntry>>();
+	    public MultiplayerServerSelectionState() : base()
+	    {
+		    _listProvider = Alex.Services.GetService<IListStorageProvider<SavedServerEntry>>();
 
-	        Title = "Multiplayer";
-			
-			Footer.AddRow(row =>
-			{
-				
-				row.AddChild(JoinServerButton = new GuiButton("Join Server", 
-				                                             OnJoinServerButtonPressed)
-				{
-					TranslationKey = "selectServer.select",
-					Enabled = false
-				});
-				row.AddChild(DirectConnectButton = new GuiButton("Direct Connect", 
-					() => Alex.GameStateManager.SetActiveState<MultiplayerConnectState>())
-		            {
-			             TranslationKey = "selectServer.direct"
-					});
-				row.AddChild(AddServerButton = new GuiButton("Add Server", 
-				                                             OnAddItemButtonPressed)
-				{
-					TranslationKey = "selectServer.add"
-				});
-			});
-			Footer.AddRow(row =>
-			{
-				row.AddChild(EditServerButton = new GuiButton("Edit", OnEditItemButtonPressed)
-				{
-					TranslationKey = "selectServer.edit",
-					Enabled = false
-				});
-				row.AddChild(DeleteServerButton = new GuiButton("Delete", OnDeleteItemButtonPressed)
-				{
-					TranslationKey = "selectServer.delete",
-					Enabled = false
-				});
-				row.AddChild(new GuiButton("Refresh", OnRefreshButtonPressed)
-				{
-					TranslationKey = "selectServer.refresh"
-				});
-				row.AddChild(new GuiButton("Cancel", OnCancelButtonPressed)
-				{
-					TranslationKey = "gui.cancel"
-				});
-			});
+		    Title = "Multiplayer";
 
-			//AddItem(new GuiServerListEntryElement("Localhost", "localhost:25565"));
-	  //      AddItem(new GuiServerListEntryElement("Hypixel", "mc.hypixel.net:25565"));
+		    Footer.AddRow(row =>
+		    {
 
-			Load();
-		}
+			    row.AddChild(JoinServerButton = new GuiButton("Join Server",
+				    OnJoinServerButtonPressed)
+			    {
+				    TranslationKey = "selectServer.select",
+				    Enabled = false
+			    });
+			    row.AddChild(DirectConnectButton = new GuiButton("Direct Connect",
+				    () => Alex.GameStateManager.SetActiveState<MultiplayerConnectState>())
+			    {
+				    TranslationKey = "selectServer.direct"
+			    });
+			    row.AddChild(AddServerButton = new GuiButton("Add Server",
+				    OnAddItemButtonPressed)
+			    {
+				    TranslationKey = "selectServer.add"
+			    });
+		    });
+		    Footer.AddRow(row =>
+		    {
+			    row.AddChild(EditServerButton = new GuiButton("Edit", OnEditItemButtonPressed)
+			    {
+				    TranslationKey = "selectServer.edit",
+				    Enabled = false
+			    });
+			    row.AddChild(DeleteServerButton = new GuiButton("Delete", OnDeleteItemButtonPressed)
+			    {
+				    TranslationKey = "selectServer.delete",
+				    Enabled = false
+			    });
+			    row.AddChild(new GuiButton("Refresh", OnRefreshButtonPressed)
+			    {
+				    TranslationKey = "selectServer.refresh"
+			    });
+			    row.AddChild(new GuiButton("Cancel", OnCancelButtonPressed)
+			    {
+				    TranslationKey = "gui.cancel"
+			    });
+		    });
+
+		    Load();
+	    }
 
 	    protected override void OnSelectedItemChanged(GuiServerListEntryElement newItem)
 	    {
@@ -208,7 +205,8 @@ namespace Alex.GameStates.Gui.Multiplayer
 	    }
 
 	    private GuiServerListEntryElement(string serverName, string serverAddress)
-        {
+	    {
+		    Width = 335;
             ServerName = serverName;
             ServerAddress = serverAddress;
 

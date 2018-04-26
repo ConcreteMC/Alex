@@ -72,7 +72,7 @@ namespace Alex.API.Gui.Elements.Icons
 				Font = renderer.Font,
 				Text = string.Empty,
                 Anchor = Alignment.TopRight,
-				Margin = new Thickness(5, 0, Background.Width + 5, 0)
+				Margin = new Thickness(5, 0, Background.Width + 15, 0)
 			});
         }
 

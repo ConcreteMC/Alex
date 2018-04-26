@@ -12,11 +12,14 @@ using Alex.Networking.Java.Packets.Handshake;
 using Alex.Networking.Java.Packets.Status;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using NLog;
 
 namespace Alex.Services
 {
     public class ServerQueryProvider : IServerQueryProvider
     {
+	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ServerQueryProvider));
+
         public ServerQueryProvider()
         {
             MCPacketFactory.Load();
@@ -33,7 +36,9 @@ namespace Alex.Services
 	        TcpClient client = null;
 	        NetConnection conn = null;
 			IPEndPoint endPoint = null;
-	        try
+	        string jsonResponse = null;
+
+			try
 	        {
 		        client = new TcpClient();
 
@@ -46,7 +51,7 @@ namespace Alex.Services
 			        //using (var conn = new NetConnection(Direction.ClientBound, client.Client))
 			        {
 				        AutoResetEvent ar = new AutoResetEvent(false);
-				        string jsonResponse = null;
+				        
 
 				        conn.OnPacketReceived += (sender, args) =>
 				        {
@@ -101,6 +106,8 @@ namespace Alex.Services
 	        {
 		        if (sw.IsRunning)
 			        sw.Stop();
+
+				Log.Error($"Could not get server query result, server returned \"{jsonResponse}\"");
 
 				return new ServerQueryResponse(false, ex.Message, new ServerQueryStatus()
 		        {

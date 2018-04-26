@@ -96,15 +96,15 @@ namespace Alex.Networking.Java.Util
 
 		public byte[] Read(int length)
 		{
-			byte[] d = new byte[length];
-			Read(d, 0, d.Length);
-			return d;
-			/*
+			//byte[] d = new byte[length];
+			//Read(d, 0, d.Length);
+			//return d;
+
 			SpinWait s = new SpinWait();
 			int read = 0;
 
 			var buffer = new byte[length];
-			while (read < buffer.Length && !CancelationToken.IsCancellationRequested)
+			while (read < buffer.Length && !CancelationToken.IsCancellationRequested && s.Count < 25) //Give the network some time to catch up on sending data, but really 25 cycles should be enough.
 			{
 				int oldRead = read;
 
@@ -123,7 +123,7 @@ namespace Alex.Networking.Java.Util
 				if (CancelationToken.IsCancellationRequested) throw new ObjectDisposedException("");
 			}
 
-			return buffer;*/
+			return buffer;
 		}
 
 

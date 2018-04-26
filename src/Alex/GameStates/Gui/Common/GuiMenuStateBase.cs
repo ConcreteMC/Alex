@@ -95,7 +95,7 @@ namespace Alex.GameStates.Gui.Common
 
 	        AddChild(Body = new GuiMultiStackContainer(row =>
 	                     {
-	                         row.ChildAnchor = Alignment.TopFill;
+	                         row.ChildAnchor = Alignment.MiddleFill;
                              row.Margin = new Thickness(3);
 	                         row.Width = BodyMinWidth;
 	                         row.MinWidth = BodyMinWidth;
@@ -104,8 +104,8 @@ namespace Alex.GameStates.Gui.Common
 	            Margin = new Thickness(0, Header.Height, 0, Footer.Height),
                 
 	            Orientation = Orientation.Vertical,
-		        Anchor = Alignment.TopFill,
-		        ChildAnchor = Alignment.MiddleCenter,
+		        Anchor = Alignment.Fill,
+		        ChildAnchor = Alignment.FillCenter,
 	        });
 		}
 
