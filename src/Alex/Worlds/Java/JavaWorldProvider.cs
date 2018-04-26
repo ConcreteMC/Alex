@@ -739,7 +739,7 @@ namespace Alex.Worlds.Java
 			_dimension = packet.Dimension;
 
 			ClientSettingsPacket settings = new ClientSettingsPacket();
-			settings.ChatColors = false;
+			settings.ChatColors = true;
 			settings.ChatMode = 0;
 			settings.ViewDistance = (byte)Alex.GameSettings.RenderDistance;
 			settings.SkinParts = 255;

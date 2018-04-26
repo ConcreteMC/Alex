@@ -381,26 +381,15 @@ namespace Alex.Worlds
 
 			if (groundUp)
 			{
-		//		double el = s.Elapsed.TotalMilliseconds;
-			//	Log.Debug($"Start reading biome data...");
 				for (int x = 0; x < 16; x++)
 				{
 					for (int z = 0; z < 16; z++)
 					{
 						var biomeId = ms.ReadInt();
-			//			if (biomeId < 0)
-		//				{
-			//				Log.Debug($"Read biome of id: {biomeId}");
-			//			}
 						SetBiome(x, z, biomeId);
 					}
 				}
-
-		//		Log.Debug($"Read biome data in {(s.Elapsed.TotalMilliseconds - el)}ms");
 			}
-
-		//	s.Stop();
-		//	Log.Debug($"Read all chunk data in {s.Elapsed.TotalMilliseconds}ms");
 			
 			for (int i = 0; i < Chunks.Length; i++)
 			{

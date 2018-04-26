@@ -50,26 +50,21 @@ namespace Alex.Launcher
                     //WindowStyle = ProcessWindowStyle.Hidden
                 };
 
-                using(var alex = Process.Start(processStartInfo)) {
-                if (alex != null && !alex.HasExited)
-                {
-                    if (Application.Current.MainWindow != null) Application.Current.MainWindow.Hide();
-                }
-                
-                //MessageBox.Show($"Opened with pid {alex.Id}!");
+	            using (var alex = Process.Start(processStartInfo))
+	            {
+		            if (alex != null && !alex.HasExited)
+		            {
+			            if (Application.Current.MainWindow != null) Application.Current.MainWindow.Hide();
+		            }
 
-                //Thread.Sleep(5 * 1000);
-
-                //MessageBox.Show("Closed!");
-                
-                alex.WaitForExit();
-                var main = Application.Current.MainWindow;
-                if (main != null)
-                {
-                    main.Show();
-                    main.Focus();
-                }
-                    }
+		            alex.WaitForExit();
+		            var main = Application.Current.MainWindow;
+		            if (main != null)
+		            {
+			            main.Show();
+			            main.Focus();
+		            }
+	            }
             }
             catch (Exception ex)
             {

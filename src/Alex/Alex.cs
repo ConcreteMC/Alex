@@ -156,13 +156,6 @@ namespace Alex
 
 		protected override void LoadContent()
 		{
-			//if (!File.Exists(Path.Combine("assets", "Minecraftia.xnb")))
-			//{
-			//	File.WriteAllBytes(Path.Combine("assets", "Minecraftia.xnb"), global::Alex.Resources.Minecraftia);
-			//}
-
-			//BackupFont = Content.Load<SpriteFont>("Minecraftia");
-
 			if (!File.Exists(Path.Combine("assets", "DebugFont.xnb")))
 			{
 				File.WriteAllBytes(Path.Combine("assets", "DebugFont.xnb"), global::Alex.Resources.DebugFont);
@@ -219,9 +212,6 @@ namespace Alex
 
 			GuiManager.Draw(gameTime);
 
-		//	_spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointWrap);
-		//	FontRender?.DrawString(_spriteBatch, "§1R§2e§3d§4s§5t§6o§7n§8e §9C§ar§be§ca§dt§ei§fo§1n§2s§r§0This is a render test", 10, 10, (int) Color.Black.PackedValue, false, new Vector2(4, 4));
-		//	_spriteBatch.End();
 			base.Draw(gameTime);
 		}
 
