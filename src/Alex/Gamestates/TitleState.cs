@@ -37,8 +37,8 @@ namespace Alex.GameStates
 		public TitleState()
 		{
 			FpsMonitor = new FpsMonitor();
-			_backgroundSkyBox = new GuiPanoramaSkyBox();
-
+			_backgroundSkyBox = new GuiPanoramaSkyBox(Alex);
+			
 			Background.Texture = _backgroundSkyBox;
 			Background.RepeatMode = TextureRepeatMode.Stretch;
 			
@@ -68,16 +68,7 @@ namespace Alex.GameStates
 				ChildAnchor = Alignment.TopFill
 			});
 
-			_stackMenu.AddMenuItem("Multiplayer", () =>
-			{
-				//TODO: Switch to multiplayer serverlist (maybe choose PE or Java?)
-				Alex.ConnectToServer();
-			});
-
-			_stackMenu.AddMenuItem("Multiplayer Servers", () =>
-			{
-				Alex.GameStateManager.SetActiveState<MultiplayerServerSelectionState>();
-			});
+			_stackMenu.AddMenuItem("Multiplayer", OnMultiplayerButtonPressed);
 
 			_stackMenu.AddMenuItem("Debug Blockstates", DebugWorldButtonActivated);
 			_stackMenu.AddMenuItem("Debug Flatland", DebugFlatland);
@@ -105,6 +96,11 @@ namespace Alex.GameStates
 			_debugInfo.AddDebugLeft(() => $"FPS: {FpsMonitor.Value:F0}");
 		}
 
+		private void OnMultiplayerButtonPressed()
+		{
+			Alex.GameStateManager.SetActiveState("serverlist");
+		}
+
 		private Texture2D _gradient;
 		protected override void OnLoad(IRenderArgs args)
 		{
@@ -123,6 +119,8 @@ namespace Alex.GameStates
 
 			_splashText.Text = SplashTexts.GetSplashText();
 			Alex.IsMouseVisible = true;
+
+			Alex.GameStateManager.AddState("serverlist", new MultiplayerServerSelectionState(_backgroundSkyBox));
 		}
 
 		private float _rotation;

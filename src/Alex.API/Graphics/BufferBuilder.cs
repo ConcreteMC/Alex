@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+﻿using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.API.Graphics
 {
@@ -65,9 +61,6 @@ namespace Alex.API.Graphics
             }
         }
         
-        public ref TVertexType this[int index, int subIndex]
-        {
-            get { return ref Data[index * 4 + subIndex]; }
-        }
+        public ref TVertexType this[int index, int subIndex] => ref Data[index * 4 + subIndex];
     }
 }

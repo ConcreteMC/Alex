@@ -98,14 +98,11 @@ namespace Alex.API.Gui.Elements.Icons
 	    public void SetPlayerCount(int players, int max)
 	    {
 		    _playerCountElement.Text = $"§7{players}/{max}";
-		    UpdateKids();
-		    //_isPending = true;
 	    }
 
 	    public void SetOutdated(string message)
 	    {
 		    _playerCountElement.Text = $"§4{message}";
-		    UpdateKids();
 			SetOffline();
 	    }
 
@@ -124,7 +121,6 @@ namespace Alex.API.Gui.Elements.Icons
                 var dt = gameTime.ElapsedGameTime.Seconds / 20.0f;
 
                 _animationFrame = (int)((dt * 20.0f) % _connectingStates.Length);
-
             }
         }
 
@@ -139,20 +135,5 @@ namespace Alex.API.Gui.Elements.Icons
                 base.OnDraw(graphics, gameTime);
             }
         }
-
-	    protected override void OnUpdateLayout()
-	    {
-		    base.OnUpdateLayout();
-			UpdateKids();
-	    }
-
-	    private void UpdateKids()
-	    {
-		    if (_playerCountElement != null)
-		    {
-				
-			    //_playerCountElement.X = -_playerCountElement.Width - 4;
-		    }
-		}
     }
 }

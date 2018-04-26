@@ -5,6 +5,7 @@ using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Alex.API.Data.Servers;
+using Alex.API.Graphics;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
@@ -15,6 +16,7 @@ using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.GameStates.Gui.Common;
 using Alex.Graphics.Gui.Elements;
+using Alex.Gui;
 using Alex.Networking.Java;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -31,9 +33,12 @@ namespace Alex.GameStates.Gui.Multiplayer
 
 	    private readonly IListStorageProvider<SavedServerEntry> _listProvider;
 
-	    public MultiplayerServerSelectionState() : base()
-	    {
-		    _listProvider = Alex.Services.GetService<IListStorageProvider<SavedServerEntry>>();
+	    private GuiPanoramaSkyBox _skyBox;
+		public MultiplayerServerSelectionState(GuiPanoramaSkyBox skyBox) : base()
+		{
+			_skyBox = skyBox;
+
+			_listProvider = Alex.Services.GetService<IListStorageProvider<SavedServerEntry>>();
 
 		    Title = "Multiplayer";
 
@@ -79,8 +84,14 @@ namespace Alex.GameStates.Gui.Multiplayer
 			    });
 		    });
 
+			Background = new GuiTexture2D(_skyBox, TextureRepeatMode.Stretch);
+		}
+
+	    protected override void OnShow()
+	    {
+		    base.OnShow();
 		    Load();
-	    }
+		}
 
 	    protected override void OnSelectedItemChanged(GuiServerListEntryElement newItem)
 	    {
@@ -138,7 +149,8 @@ namespace Alex.GameStates.Gui.Multiplayer
 		
 	    private void OnCancelButtonPressed()
 	    {
-			Alex.GameStateManager.SetActiveState<TitleState>();
+			Alex.GameStateManager.Back();
+		//	Alex.GameStateManager.SetActiveState<TitleState>();
 	    }
 
 	    private void OnRefreshButtonPressed()
@@ -173,6 +185,24 @@ namespace Alex.GameStates.Gui.Multiplayer
 		    //if (obj == null) return;
 
 			Load();
+	    }
+
+	    protected override void OnUpdate(GameTime gameTime)
+	    {
+			_skyBox.Update(gameTime);
+		    base.OnUpdate(gameTime);
+	    }
+
+	    protected override void OnDraw(IRenderArgs args)
+	    {
+		    if (!_skyBox.Loaded)
+		    {
+			    _skyBox.Load(Alex.GuiRenderer);
+		    }
+
+		    _skyBox.Draw(args);
+
+			base.OnDraw(args);
 	    }
     }
 

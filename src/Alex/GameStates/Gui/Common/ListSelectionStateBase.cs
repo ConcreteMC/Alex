@@ -22,7 +22,7 @@ namespace Alex.GameStates.Gui.Common
 
         public ListSelectionStateBase() : base()
         {
-	        Body.BackgroundOverlay = new Color(Color.Black, 0.65f);
+	        Body.BackgroundOverlay = new Color(Color.Black, 0.35f);
 
 	        AddGuiElement(ListContainer = new GuiSelectionList()
             {
