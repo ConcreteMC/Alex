@@ -172,11 +172,12 @@ namespace Alex.API.Gui.Elements
         public Rectangle OuterBounds { get; private set; }
         public Point     Position    { get; private set; }
         public Size      Size        { get; private set; }
+	    public Size      ContentSize { get; private set; }
 
-        #endregion
+		#endregion
 
 
-        protected void SetFixedSize(int width, int height)
+		protected void SetFixedSize(int width, int height)
         {
             AutoSizeMode = AutoSizeMode.None;
             MinWidth     = width;
@@ -366,7 +367,9 @@ namespace Alex.API.Gui.Elements
 
             var size = MeasureChildrenCore(availableSize - Padding, children);
 
-            return size + Padding;
+	        ContentSize = size;
+
+			return size + Padding;
         }
         protected virtual Size MeasureChildrenCore(Size availableSize, IReadOnlyCollection<GuiElement> children)
         {

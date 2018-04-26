@@ -237,6 +237,8 @@ namespace Alex.GameStates.Gui.Multiplayer
 	    private GuiServerListEntryElement(string serverName, string serverAddress)
 	    {
 		    Width = 335;
+		    MaxWidth = 335;
+
             ServerName = serverName;
             ServerAddress = serverAddress;
 
