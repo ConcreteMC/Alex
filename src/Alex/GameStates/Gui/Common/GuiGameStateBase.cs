@@ -22,6 +22,8 @@ namespace Alex.GameStates.Gui.Common
         {
             OnLoad(args);
 
+            //Init(Alex.GuiManager.GuiRenderer);
+
             InvalidateLayout();
         }
 
@@ -33,12 +35,15 @@ namespace Alex.GameStates.Gui.Common
         public void Draw(IRenderArgs args)
         {
             OnDraw(args);
+
+            //Draw(Alex.GuiManager.GuiSpriteBatch, args.GameTime);
         }
         
         public void Show()
         {
             Alex.GuiManager.AddScreen(this);
             OnShow();
+            InvalidateLayout();
         }
 
         public void Hide()

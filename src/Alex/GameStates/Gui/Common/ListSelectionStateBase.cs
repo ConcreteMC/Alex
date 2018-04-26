@@ -12,6 +12,7 @@ namespace Alex.GameStates.Gui.Common
 {
     public class ListSelectionStateBase<TGuiListItemContainer> : GuiMenuStateBase where TGuiListItemContainer : GuiSelectionListItem
     {
+	    public override int BodyMinWidth => 356;
 
         protected TGuiListItemContainer[] Items => _items.ToArray();
         private List<TGuiListItemContainer> _items { get; } = new List<TGuiListItemContainer>();
@@ -21,11 +22,10 @@ namespace Alex.GameStates.Gui.Common
 
         public ListSelectionStateBase() : base()
         {
+	        Body.BackgroundOverlay = new Color(Color.Black, 0.65f);
+
 	        AddGuiElement(ListContainer = new GuiSelectionList()
             {
-				BackgroundOverlay = new Color(Color.Black, 0.65f),
-                //Y = Header.Height,
-                //Width = 322,
 	            Anchor = Alignment.Fill,
 				ChildAnchor = Alignment.TopFill,
             });

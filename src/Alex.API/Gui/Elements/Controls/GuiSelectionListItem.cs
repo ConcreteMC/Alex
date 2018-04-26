@@ -23,7 +23,7 @@ namespace Alex.API.Gui.Elements.Controls
         {
             base.OnFocusActivate();
 
-            List?.UnsetSelectedItem(this);
+            //List?.UnsetSelectedItem(this);
         }
     }
 }

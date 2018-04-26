@@ -50,11 +50,21 @@ namespace Alex.GameStates
 		public void Draw(IRenderArgs args)
 		{
 			OnDraw(args);
+
+			//if (Gui != null)
+			//{
+			//	Gui.Draw(Alex.GuiManager.GuiSpriteBatch, args.GameTime);
+			//}
 		}
 
 		public void Update(GameTime gameTime)
 		{
 			OnUpdate(gameTime);
+
+			if (Gui != null)
+			{
+				Gui.Update(gameTime);
+			}
 		}
 
 		public void Show()

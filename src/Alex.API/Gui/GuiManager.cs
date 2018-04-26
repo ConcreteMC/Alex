@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Alex.API.GameStates;
 using Alex.API.Graphics.Typography;
 using Alex.API.Gui.Graphics;
 using Alex.API.Input;
@@ -24,7 +25,7 @@ namespace Alex.API.Gui
         internal SpriteBatch SpriteBatch { get; private set; }
         internal GuiRenderArgs GuiRenderArgs { get; private set; }
 
-        internal GuiSpriteBatch GuiSpriteBatch { get; private set; }
+        public GuiSpriteBatch GuiSpriteBatch { get; private set; }
 
         public List<GuiScreen> Screens { get; } = new List<GuiScreen>();
         
@@ -109,7 +110,10 @@ namespace Alex.API.Gui
 
             foreach (var screen in screens)
             {
-                screen.Update(gameTime);
+                if (!(screen is IGameState))
+                {
+                    screen.Update(gameTime);
+                }
             }
 
             DebugHelper.Update(gameTime);

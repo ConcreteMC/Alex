@@ -131,6 +131,8 @@ namespace Alex.GameStates
 		
 		protected override void OnUpdate(GameTime gameTime)
 		{
+			base.OnUpdate(gameTime);
+
 			_backgroundSkyBox.Update(gameTime);
 
 			_rotation += (float)gameTime.ElapsedGameTime.TotalMilliseconds / (1000.0f / 20.0f);
@@ -151,7 +153,6 @@ namespace Alex.GameStates
 
 			_playerView.SetEntityRotation(yaw, pitch, headYaw);
 			
-			base.OnUpdate(gameTime);
 		}
 
 		protected override void OnDraw(IRenderArgs args)

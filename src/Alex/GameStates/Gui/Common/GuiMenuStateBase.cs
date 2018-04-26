@@ -13,7 +13,7 @@ namespace Alex.GameStates.Gui.Common
 {
     public class GuiMenuStateBase : GuiGameStateBase
     {
-        public int BodyMinWidth { get; set; } = 356;
+        public virtual int BodyMinWidth { get; set; } = 356;
 
         private string _title;
         private string _titleTranslationKey;
@@ -78,16 +78,15 @@ namespace Alex.GameStates.Gui.Common
 
             AddChild(Footer = new GuiMultiStackContainer(row =>
                          {
-                             //row.Anchor = Alignment.TopFill;
+                             row.Anchor = Alignment.BottomFill;
                              //row.Orientation = Orientation.Horizontal;
-                             row.ChildAnchor = Alignment.TopFill;
-                             row.Margin = new Thickness(3);
+                             row.ChildAnchor = Alignment.BottomFill;
+                             //row.Margin = new Thickness(3);
                              row.Width = BodyMinWidth;
                              row.MaxWidth = BodyMinWidth;
                          })
             {
                 Height  = 64,
-                Padding = new Thickness(3),
 
                 Orientation = Orientation.Vertical,
                 Anchor = Alignment.BottomFill,
@@ -102,12 +101,11 @@ namespace Alex.GameStates.Gui.Common
 	                         row.MinWidth = BodyMinWidth;
 	                     })
 	        {
-		        Margin = new Thickness(0, Header.Height, 0, Footer.Height),
-	            Padding = new Thickness(3),
+	            Margin = new Thickness(0, Header.Height, 0, Footer.Height),
                 
 	            Orientation = Orientation.Vertical,
-		        Anchor = Alignment.MiddleFill,
-		        ChildAnchor = Alignment.TopCenter,
+		        Anchor = Alignment.TopFill,
+		        ChildAnchor = Alignment.MiddleCenter,
 	        });
 		}
 
