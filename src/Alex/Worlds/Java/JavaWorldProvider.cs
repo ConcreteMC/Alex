@@ -775,7 +775,7 @@ namespace Alex.Worlds.Java
 					result.IsDirty = true;
 					result.X = chunk.ChunkX;
 					result.Z = chunk.ChunkZ;
-					result.Read(new MinecraftStream(new MemoryStream(chunk.Buffer)), chunk.AvailableSections, chunk.FullChunk, _dimension == 0);
+					result.Read(new MinecraftStream(new MemoryStream(chunk.Buffer)), chunk.PrimaryBitmask, chunk.GroundUp, _dimension == 0);
 
 					ChunkReceived(result, result.X, result.Z, false);
 				});
@@ -786,7 +786,7 @@ namespace Alex.Worlds.Java
 				result.IsDirty = true;
 				result.X = chunk.ChunkX;
 				result.Z = chunk.ChunkZ;
-				result.Read(new MinecraftStream(new MemoryStream(chunk.Buffer)), chunk.AvailableSections, chunk.FullChunk, _dimension == 0);
+				result.Read(new MinecraftStream(new MemoryStream(chunk.Buffer)), chunk.PrimaryBitmask, chunk.GroundUp, _dimension == 0);
 
 				ChunkReceived(result, result.X, result.Z, true);
 			}

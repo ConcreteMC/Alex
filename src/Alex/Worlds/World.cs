@@ -322,9 +322,10 @@ namespace Alex.Worlds
 			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 			{
 				Worlds.ChunkColumn realColumn = (Worlds.ChunkColumn) chunk;
-				return	realColumn.GetBiome((int) x & 0xf, (int) z & 0xf);
+				return	realColumn.GetBiome(x & 0xf, z & 0xf);
 			}
 
+			Log.Debug($"Failed getting biome: {x} | {y} | {z}");
 			return -1;
 		}
 

@@ -10,10 +10,10 @@ namespace Alex.Networking.Java.Packets.Play
 	{
 		public int ChunkX;
 		public int ChunkZ;
-		public int AvailableSections;
+		public int PrimaryBitmask;
 		public byte[] Buffer;
 		public List<NbtCompound> TileEntities;
-		public bool FullChunk;
+		public bool GroundUp;
 
 		public ChunkDataPacket()
 		{
@@ -26,8 +26,8 @@ namespace Alex.Networking.Java.Packets.Play
 		{
 			ChunkX = stream.ReadInt();
 			ChunkZ = stream.ReadInt();
-			FullChunk = stream.ReadBool();
-			AvailableSections = stream.ReadVarInt();
+			GroundUp = stream.ReadBool();
+			PrimaryBitmask = stream.ReadVarInt();
 
 			int i = stream.ReadVarInt();
 			Buffer = new byte[i];
@@ -44,8 +44,8 @@ namespace Alex.Networking.Java.Packets.Play
 		{
 			stream.WriteInt(ChunkX);
 			stream.WriteInt(ChunkZ);
-			stream.WriteBool(FullChunk);
-			stream.WriteVarInt(AvailableSections);
+			stream.WriteBool(GroundUp);
+			stream.WriteVarInt(PrimaryBitmask);
 			stream.WriteVarInt(Buffer.Length);
 			stream.Write(Buffer, 0, Buffer.Length);
 			//stream.WriteVarInt(TileEntities.Count);
