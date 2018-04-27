@@ -122,12 +122,47 @@ namespace Alex.Entities
 
 		public virtual void Update(IUpdateArgs args)
 		{
+			var now = DateTime.UtcNow;
 			ModelRenderer.Update(args, KnownPosition);
+
+			if (now.Subtract(LastUpdatedTime).TotalMilliseconds >= 50)
+			{
+				LastUpdatedTime = now;
+				OnTick();
+			}
 		}
 
 		public virtual void OnTick()
 		{
 			Age++;
+
+			if (IsNoAi) return;
+			IsMoving = Velocity.LengthSquared() > 0f;
+
+			var feetBlock = Level?.GetBlock(KnownPosition.GetCoordinates3D());
+			if (feetBlock != null)
+			{
+				if (!feetBlock.Solid)
+				{
+					if (KnownPosition.OnGround)
+					{
+						KnownPosition.OnGround = false;
+					}
+				}
+			}
+
+			var headBlock = Level?.GetBlock(KnownPosition.GetCoordinates3D() + new BlockCoordinates(0, 1, 0));
+			if (headBlock != null)
+			{
+				if (headBlock.IsWater)
+				{
+					IsInWater = true;
+				}
+				else
+				{
+					IsInWater = false;
+				}
+			}
 
 			//HealthManager.OnTick();
 		}
@@ -232,7 +267,10 @@ namespace Alex.Entities
 
 		public virtual void TerrainCollision(Vector3 collisionPoint, Vector3 direction)
 		{
-			
+			if (direction.Y < 0) //Collided with the ground
+			{
+				KnownPosition.OnGround = true;
+			}
 		}
 	}
 }

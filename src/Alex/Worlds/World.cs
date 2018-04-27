@@ -37,8 +37,10 @@ namespace Alex.Worlds
 		public LevelInfo WorldInfo;
 
 		public Player Player { get; set; }
+		private Alex Alex { get; }
 		public World(Alex alex, GraphicsDevice graphics, Rendering.Camera.Camera camera, INetworkProvider networkProvider)
-        {
+		{
+			Alex = alex;
             Graphics = graphics;
 	        Camera = camera;
 
@@ -135,11 +137,25 @@ namespace Alex.Worlds
 			}
 			Camera.Update(args, Player);
 
-			ChunkManager.Update(args, skyRenderer);
+			ChunkManager.Update(args);
 			EntityManager.Update(args, skyRenderer);
 
-			Player.ModelRenderer.DiffuseColor = Color.White.ToVector3() * new Vector3(skyRenderer.BrightnessModifier);
+			var diffuseColor = Color.White.ToVector3() * skyRenderer.BrightnessModifier;
+			ChunkManager.AmbientLightColor = diffuseColor;
+
+			Player.ModelRenderer.DiffuseColor = diffuseColor;
 			Player.Update(args);
+
+			if (Player.IsInWater)
+			{
+				ChunkManager.FogColor = new Vector3(0.2666667F, 0.6862745F, 0.9607844F) * skyRenderer.BrightnessModifier;
+				ChunkManager.FogDistance = (float)Math.Pow(Alex.GameSettings.RenderDistance, 2) * 0.15f;
+			}
+			else
+			{
+				ChunkManager.FogColor = skyRenderer.WorldFogColor.ToVector3();
+				ChunkManager.FogDistance = (float) Math.Pow(Alex.GameSettings.RenderDistance, 2) * 0.8f;
+			}
 
 			PhysicsEngine.Update(args.GameTime);
 

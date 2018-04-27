@@ -40,17 +40,22 @@ namespace Alex.Worlds
 			    entity.Velocity = new Vector3(entity.Velocity.X, entity.Velocity.Y, 0);
 				
 
-		 /*   var groundSpeedSquared = entity.Velocity.X * entity.Velocity.X + entity.Velocity.Z * entity.Velocity.Z;
+		    var groundSpeedSquared = entity.Velocity.X * entity.Velocity.X + entity.Velocity.Z * entity.Velocity.Z;
 
 		    var maxSpeed = entity.IsFlying ? (entity.IsSprinting ? 22f : 11f) : (entity.IsSprinting && !entity.IsSneaking ? 5.6f : (entity.IsSneaking ? 1.3 : 4.3f));
 		    if (groundSpeedSquared > (maxSpeed))
 		    {
 			    var correctionScale = (float) Math.Sqrt(maxSpeed / groundSpeedSquared);
 			    entity.Velocity *= new Vector3(correctionScale, 1f, correctionScale);
-		    }*/
+		    }
+
+		    if (Math.Abs(entity.Velocity.Y) > entity.TerminalVelocity)
+		    {
+				entity.Velocity = new Vector3(entity.Velocity.X, entity.TerminalVelocity, entity.Velocity.Z);
+		    }
 
 		   // entity.Velocity = Vector3.Clamp(entity.Velocity, entity.Velocity, new Vector3(entity.TerminalVelocity));// velocity;
-		    entity.Velocity = Vector3.Clamp(entity.Velocity, -new Vector3(entity.TerminalVelocity), new Vector3(entity.TerminalVelocity));
+				    // entity.Velocity = Vector3.Clamp(entity.Velocity, -new Vector3(entity.TerminalVelocity), new Vector3(entity.TerminalVelocity));
 	    }
 
 	    public void Update(GameTime elapsed)
@@ -66,8 +71,11 @@ namespace Alex.Worlds
 				    {
 					    if (e.NoAi) continue;
 
-					  //  if (!e.IsFlying)
-						e.Velocity -= new Vector3(0, (float) (e.Gravity), 0);
+					    if (!e.IsFlying)
+					    {
+						    e.Velocity -= new Vector3(0, (float) (e.Gravity), 0);
+					    }
+
 					    e.Velocity *= (float) (1f - e.Drag);
 
 					    TruncateVelocity(e, dt);

@@ -161,7 +161,7 @@ namespace Alex.Graphics.Models.Blocks
 						vert.Position.X += position.X;
 						vert.Position.Z += position.Z;
 
-						vert.Color = LightingUtils.AdjustColor(vert.Color, f, GetLight(world, position + d), false);
+						vert.Color = LightingUtils.AdjustColor(new Color(68, 175, 245), f, GetLight(world, position + d), false);
 
 						result.Add(vert);
 					}

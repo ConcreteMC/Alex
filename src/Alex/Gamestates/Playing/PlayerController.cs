@@ -156,17 +156,31 @@ namespace Alex.GameStates.Playing
 			{
 				if (InputManager.IsDown(InputCommand.MoveUp))
 				{
-					if (Math.Abs(Math.Floor(Player.KnownPosition.Y) - Player.KnownPosition.Y) < 0.001f)
-						Player.Velocity += new Vector3(0, 0.42f, 0);
+					if (Player.IsInWater)
+					{
+						moveVector.Y += 0.04f;
+						//Player.Velocity += new Vector3(0, 0.42f, 0);
+					}
+					else
+					{
+						if (Math.Abs(Math.Floor(Player.KnownPosition.Y) - Player.KnownPosition.Y) < 0.001f)
+						{
+							//moveVector.Y += 42f;
+							Player.Velocity += new Vector3(0, 42f, 0);
+						}
+					}
 				}
 
-				if (InputManager.IsDown(InputCommand.MoveDown))
+				if (!Player.IsInWater) //Sneaking in water is not a thing.
 				{
-					Player.IsSneaking = true;
-				}
-				else //if (_prevKeyState.IsKeyDown(KeyBinds.Down))
-				{
-					Player.IsSneaking = false;
+					if (InputManager.IsDown(InputCommand.MoveDown))
+					{
+						Player.IsSneaking = true;
+					}
+					else //if (_prevKeyState.IsKeyDown(KeyBinds.Down))
+					{
+						Player.IsSneaking = false;
+					}
 				}
 			}
 
