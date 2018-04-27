@@ -57,6 +57,7 @@ namespace Alex.API.Services
 
     public struct ServerQueryStatus
     {
+	    public bool WaitingOnPing { get; set; }
         public bool Success { get; set; }
         public long Delay   { get; set; }
         public IPEndPoint EndPoint { get; set; }

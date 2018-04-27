@@ -391,7 +391,11 @@ namespace Alex.GameStates.Gui.Multiplayer
 			{
                 var s = response.Status;
 				_pingStatus.SetPlayerCount(s.NumberOfPlayers, s.MaxNumberOfPlayers);
-                _pingStatus.SetPing(s.Delay);
+
+				if (!s.WaitingOnPing)
+				{
+					_pingStatus.SetPing(s.Delay);
+				}
 
 				if (s.ProtocolVersion < JavaProtocol.ProtocolVersion)
 				{
@@ -400,10 +404,6 @@ namespace Alex.GameStates.Gui.Multiplayer
 				else if (s.ProtocolVersion > JavaProtocol.ProtocolVersion)
 				{
 					_pingStatus.SetOutdated($"Client out of date!");
-				}
-				else
-				{
-
 				}
 
 	            _serverMotd.Text = s.Motd;

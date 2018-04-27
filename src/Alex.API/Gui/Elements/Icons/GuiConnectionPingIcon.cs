@@ -46,7 +46,8 @@ namespace Alex.API.Gui.Elements.Icons
 
         private bool _isPending;
         private int _animationFrame;
-	    private bool _isPendingUpdate; 
+	    private bool _isPendingUpdate;
+	    private bool _isOutdated = false;
         public GuiConnectionPingIcon() : base(GuiTextures.ServerPing0)
         {
             SetFixedSize(10, 8);
@@ -85,14 +86,19 @@ namespace Alex.API.Gui.Elements.Icons
         public void SetPing(long ms)
         {
             _isPending = false;
-            int index = 0;
-            for (int i = _qualityStateTextures.Length - 1; i > 0; i--)
-            {
-                if(ms > _qualityThresholds[i]) break;
-                index = i;
-            }
 
-            Background = _qualityStateTextures[index];
+	        if (!_isOutdated)
+	        {
+		        int index = 0;
+		        for (int i = _qualityStateTextures.Length - 1; i > 0; i--)
+		        {
+			        index = i;
+			        if (ms > _qualityThresholds[i]) break;
+
+		        }
+
+		        Background = _qualityStateTextures[_qualityStateTextures.Length - index];
+	        }
         }
 
 	    public void SetPlayerCount(int players, int max)
@@ -103,6 +109,7 @@ namespace Alex.API.Gui.Elements.Icons
 	    public void SetOutdated(string message)
 	    {
 		    _playerCountElement.Text = $"§4{message}";
+		    _isOutdated = true;
 			SetOffline();
 	    }
 
@@ -118,7 +125,7 @@ namespace Alex.API.Gui.Elements.Icons
 
             if (_isPending)
             {
-                var dt = gameTime.ElapsedGameTime.Seconds / 20.0f;
+                var dt = gameTime.ElapsedGameTime.TotalSeconds / 20.0f;
 
                 _animationFrame = (int)((dt * 20.0f) % _connectingStates.Length);
             }

@@ -110,8 +110,9 @@ namespace Alex.Services
 					        {
 						        Delay = timeElapsed,
 						        Success = true,
+								WaitingOnPing = pingCallback != null,
 
-						        EndPoint = endPoint,
+								EndPoint = endPoint,
 						        Address = hostname,
 						        Port = port,
 
