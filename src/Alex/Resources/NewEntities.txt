@@ -1,0 +1,669 @@
+{
+  "entity": {
+    "area_effect_cloud": {
+      "class": "abp",
+      "display_name": "Area Effect Cloud",
+      "id": 0,
+      "name": "area_effect_cloud"
+    },
+    "armor_stand": {
+      "class": "aiy",
+      "display_name": "Armor Stand",
+      "height": 1.98,
+      "id": 1,
+      "name": "armor_stand",
+      "width": 0.5
+    },
+    "arrow": {
+      "class": "all",
+      "display_name": "Arrow",
+      "id": 2,
+      "name": "arrow"
+    },
+    "bat": {
+      "class": "agl",
+      "display_name": "Bat",
+      "height": 0.9,
+      "id": 3,
+      "name": "bat",
+      "width": 0.5
+    },
+    "blaze": {
+      "class": "ajq",
+      "display_name": "Blaze",
+      "id": 4,
+      "name": "blaze"
+    },
+    "boat": {
+      "class": "ami",
+      "display_name": "Boat",
+      "height": 0.56,
+      "id": 5,
+      "name": "boat",
+      "width": 1.38
+    },
+    "cave_spider": {
+      "class": "ajr",
+      "display_name": "Cave Spider",
+      "height": 0.5,
+      "id": 6,
+      "name": "cave_spider",
+      "width": 0.7
+    },
+    "chest_minecart": {
+      "class": "amk",
+      "display_name": "Minecart with Chest",
+      "id": 40,
+      "name": "chest_minecart"
+    },
+    "chicken": {
+      "class": "agq",
+      "display_name": "Chicken",
+      "height": 0.7,
+      "id": 7,
+      "name": "chicken",
+      "width": 0.4
+    },
+    "cod_mob": {
+      "class": "agr",
+      "height": 0.25,
+      "id": 8,
+      "name": "cod_mob",
+      "width": 0.5
+    },
+    "commandblock_minecart": {
+      "class": "aml",
+      "display_name": "Minecart with Command Block",
+      "id": 41,
+      "name": "commandblock_minecart"
+    },
+    "cow": {
+      "class": "ags",
+      "display_name": "Cow",
+      "height": 1.4,
+      "id": 9,
+      "name": "cow",
+      "width": 0.9
+    },
+    "creeper": {
+      "class": "ajs",
+      "display_name": "Creeper",
+      "height": 1.7,
+      "id": 10,
+      "name": "creeper",
+      "width": 0.6
+    },
+    "dolphin": {
+      "class": "agt",
+      "display_name": "Dolphin",
+      "height": 0.6,
+      "id": 12,
+      "name": "dolphin",
+      "width": 0.9
+    },
+    "donkey": {
+      "class": "aho",
+      "display_name": "Donkey",
+      "id": 11,
+      "name": "donkey"
+    },
+    "dragon_fireball": {
+      "class": "alm",
+      "display_name": "Dragon Fireball",
+      "id": 13,
+      "name": "dragon_fireball"
+    },
+    "drowned": {
+      "class": "ajt",
+      "display_name": "Drowned",
+      "id": 14,
+      "name": "drowned"
+    },
+    "egg": {
+      "class": "alz",
+      "display_name": "Thrown Egg",
+      "id": 74,
+      "name": "egg"
+    },
+    "elder_guardian": {
+      "class": "aju",
+      "display_name": "Elder Guardian",
+      "id": 15,
+      "name": "elder_guardian"
+    },
+    "ender_crystal": {
+      "class": "aib",
+      "display_name": "Ender Crystal",
+      "id": 16,
+      "name": "ender_crystal"
+    },
+    "ender_dragon": {
+      "class": "aic",
+      "display_name": "Ender Dragon",
+      "height": 8,
+      "id": 17,
+      "name": "ender_dragon",
+      "texture": "wing",
+      "width": 16
+    },
+    "ender_pearl": {
+      "class": "ama",
+      "display_name": "Thrown Ender Pearl",
+      "id": 75,
+      "name": "ender_pearl"
+    },
+    "enderman": {
+      "class": "ajv",
+      "display_name": "Enderman",
+      "height": 2.9,
+      "id": 18,
+      "name": "enderman",
+      "width": 0.6
+    },
+    "endermite": {
+      "class": "ajw",
+      "display_name": "Endermite",
+      "height": 0.3,
+      "id": 19,
+      "name": "endermite",
+      "width": 0.4
+    },
+    "evocation_fangs": {
+      "class": "aln",
+      "display_name": "Evocation Fangs",
+      "height": 0.8,
+      "id": 20,
+      "name": "evocation_fangs",
+      "width": 0.5
+    },
+    "evocation_illager": {
+      "class": "ajy",
+      "display_name": "Evoker",
+      "height": 1.95,
+      "id": 21,
+      "name": "evocation_illager",
+      "width": 0.6
+    },
+    "eye_of_ender_signal": {
+      "class": "alo",
+      "display_name": "Eye of Ender Signal",
+      "height": 0.25,
+      "id": 23,
+      "name": "eye_of_ender_signal",
+      "width": 0.25
+    },
+    "falling_block": {
+      "class": "ajk",
+      "display_name": "Falling Block",
+      "id": 24,
+      "name": "falling_block"
+    },
+    "fireball": {
+      "class": "alq",
+      "display_name": "Fireball",
+      "id": 34,
+      "name": "fireball"
+    },
+    "fireworks_rocket": {
+      "class": "alp",
+      "display_name": "Firework Rocket",
+      "height": 0.25,
+      "id": 25,
+      "name": "fireworks_rocket",
+      "width": 0.25
+    },
+    "fishing_bobber": {
+      "class": "ajf",
+      "display_name": "Fishing Bobber",
+      "id": 93,
+      "name": "fishing_bobber"
+    },
+    "furnace_minecart": {
+      "class": "amm",
+      "display_name": "Minecart with Furnace",
+      "id": 42,
+      "name": "furnace_minecart"
+    },
+    "ghast": {
+      "class": "ajz",
+      "display_name": "Ghast",
+      "height": 4,
+      "id": 26,
+      "name": "ghast",
+      "width": 4
+    },
+    "giant": {
+      "class": "aka",
+      "display_name": "Giant",
+      "id": 27,
+      "name": "giant"
+    },
+    "guardian": {
+      "class": "akb",
+      "display_name": "Guardian",
+      "height": 0.85,
+      "id": 28,
+      "name": "guardian",
+      "width": 0.85
+    },
+    "hopper_minecart": {
+      "class": "amn",
+      "display_name": "Minecart with Hopper",
+      "id": 43,
+      "name": "hopper_minecart"
+    },
+    "horse": {
+      "class": "ahp",
+      "display_name": "Horse",
+      "id": 29,
+      "name": "horse"
+    },
+    "husk": {
+      "class": "akc",
+      "display_name": "Husk",
+      "id": 30,
+      "name": "husk"
+    },
+    "illusion_illager": {
+      "class": "akd",
+      "display_name": "Illusioner",
+      "height": 1.95,
+      "id": 31,
+      "name": "illusion_illager",
+      "width": 0.6
+    },
+    "item": {
+      "class": "ajl",
+      "display_name": "Item",
+      "height": 0.25,
+      "id": 32,
+      "name": "item",
+      "width": 0.25
+    },
+    "item_frame": {
+      "class": "aja",
+      "display_name": "Item Frame",
+      "id": 33,
+      "name": "item_frame"
+    },
+    "leash_knot": {
+      "class": "ajb",
+      "display_name": "Leash Knot",
+      "id": 35,
+      "name": "leash_knot"
+    },
+    "lightning_bolt": {
+      "class": "aji",
+      "display_name": "Bolt of Lightning",
+      "id": 91,
+      "name": "lightning_bolt"
+    },
+    "llama": {
+      "class": "ahr",
+      "display_name": "Llama",
+      "height": 1.87,
+      "id": 36,
+      "name": "llama",
+      "width": 0.9
+    },
+    "llama_spit": {
+      "class": "alr",
+      "display_name": "Llama Spit",
+      "height": 0.25,
+      "id": 37,
+      "name": "llama_spit",
+      "width": 0.25
+    },
+    "magma_cube": {
+      "class": "ake",
+      "display_name": "Magma Cube",
+      "id": 38,
+      "name": "magma_cube"
+    },
+    "minecart": {
+      "class": "amj",
+      "display_name": "Minecart",
+      "id": 39,
+      "name": "minecart"
+    },
+    "mooshroom": {
+      "class": "agv",
+      "display_name": "Mooshroom",
+      "height": 1.4,
+      "id": 47,
+      "name": "mooshroom",
+      "width": 0.9
+    },
+    "mule": {
+      "class": "ahs",
+      "display_name": "Mule",
+      "id": 46,
+      "name": "mule"
+    },
+    "ocelot": {
+      "class": "agw",
+      "display_name": "Ocelot",
+      "height": 0.7,
+      "id": 48,
+      "name": "ocelot",
+      "width": 0.6
+    },
+    "painting": {
+      "class": "ajd",
+      "display_name": "Painting",
+      "id": 49,
+      "name": "painting"
+    },
+    "parrot": {
+      "class": "agx",
+      "display_name": "Parrot",
+      "height": 0.9,
+      "id": 50,
+      "name": "parrot",
+      "width": 0.5
+    },
+    "phantom": {
+      "class": "akg",
+      "display_name": "Phantom",
+      "height": 0.5,
+      "id": 90,
+      "name": "phantom",
+      "width": 0.9
+    },
+    "pig": {
+      "class": "agy",
+      "display_name": "Pig",
+      "height": 0.9,
+      "id": 51,
+      "name": "pig",
+      "width": 0.9
+    },
+    "player": {
+      "class": "alf",
+      "display_name": "Player",
+      "id": 92,
+      "name": "player"
+    },
+    "polar_bear": {
+      "class": "agz",
+      "display_name": "Polar Bear",
+      "height": 1.4,
+      "id": 54,
+      "name": "polar_bear",
+      "width": 1.3
+    },
+    "potion": {
+      "class": "amc",
+      "display_name": "Potion",
+      "id": 77,
+      "name": "potion"
+    },
+    "puffer_fish": {
+      "class": "aha",
+      "height": 0.7,
+      "id": 52,
+      "name": "puffer_fish",
+      "width": 0.7
+    },
+    "rabbit": {
+      "class": "ahb",
+      "display_name": "Rabbit",
+      "height": 0.5,
+      "id": 56,
+      "name": "rabbit",
+      "width": 0.4
+    },
+    "salmon_mob": {
+      "class": "ahc",
+      "height": 0.5,
+      "id": 57,
+      "name": "salmon_mob",
+      "width": 0.7
+    },
+    "sheep": {
+      "class": "ahd",
+      "display_name": "Sheep",
+      "height": 1.3,
+      "id": 58,
+      "name": "sheep",
+      "width": 0.9
+    },
+    "shulker": {
+      "class": "akk",
+      "display_name": "Shulker",
+      "id": 59,
+      "name": "shulker"
+    },
+    "shulker_bullet": {
+      "class": "alu",
+      "display_name": "Shulker Bullet",
+      "height": 0.31,
+      "id": 60,
+      "name": "shulker_bullet",
+      "width": 0.31
+    },
+    "silverfish": {
+      "class": "akl",
+      "display_name": "Silverfish",
+      "height": 0.3,
+      "id": 61,
+      "name": "silverfish",
+      "width": 0.4
+    },
+    "skeleton": {
+      "class": "akm",
+      "display_name": "Skeleton",
+      "id": 62,
+      "name": "skeleton"
+    },
+    "skeleton_horse": {
+      "class": "aht",
+      "display_name": "Skeleton Horse",
+      "id": 63,
+      "name": "skeleton_horse"
+    },
+    "slime": {
+      "class": "akn",
+      "display_name": "Slime",
+      "id": 64,
+      "name": "slime"
+    },
+    "small_fireball": {
+      "class": "alv",
+      "display_name": "Small Fireball",
+      "id": 65,
+      "name": "small_fireball"
+    },
+    "snowball": {
+      "class": "alw",
+      "display_name": "Snowball",
+      "id": 67,
+      "name": "snowball"
+    },
+    "snowman": {
+      "class": "ahf",
+      "display_name": "Snow Golem",
+      "height": 1.9,
+      "id": 66,
+      "name": "snowman",
+      "width": 0.7
+    },
+    "spawner_minecart": {
+      "class": "amo",
+      "display_name": "Minecart with Spawner",
+      "id": 44,
+      "name": "spawner_minecart"
+    },
+    "spectral_arrow": {
+      "class": "alx",
+      "display_name": "Spectral Arrow",
+      "id": 68,
+      "name": "spectral_arrow"
+    },
+    "spider": {
+      "class": "akp",
+      "display_name": "Spider",
+      "height": 0.9,
+      "id": 69,
+      "name": "spider",
+      "width": 1.4
+    },
+    "squid": {
+      "class": "ahg",
+      "display_name": "Squid",
+      "height": 0.8,
+      "id": 70,
+      "name": "squid",
+      "width": 0.8
+    },
+    "stray": {
+      "class": "akq",
+      "display_name": "Stray",
+      "id": 71,
+      "name": "stray"
+    },
+    "tnt": {
+      "class": "ajm",
+      "display_name": "Block of TNT",
+      "height": 0.98,
+      "id": 55,
+      "name": "tnt",
+      "width": 0.98
+    },
+    "tnt_minecart": {
+      "class": "amp",
+      "display_name": "Minecart with TNT",
+      "id": 45,
+      "name": "tnt_minecart"
+    },
+    "trident": {
+      "class": "amd",
+      "display_name": "Trident",
+      "id": 94,
+      "name": "trident"
+    },
+    "tropical_fish": {
+      "class": "ahh",
+      "height": 0.6,
+      "id": 72,
+      "name": "tropical_fish",
+      "width": 0.6
+    },
+    "turtle": {
+      "class": "ahi",
+      "display_name": "Turtle",
+      "height": 0.4,
+      "id": 73,
+      "name": "turtle",
+      "width": 1.2
+    },
+    "vex": {
+      "class": "akr",
+      "display_name": "Vex",
+      "height": 0.8,
+      "id": 78,
+      "name": "vex",
+      "width": 0.4
+    },
+    "villager": {
+      "class": "ala",
+      "display_name": "Villager",
+      "id": 79,
+      "name": "villager"
+    },
+    "villager_golem": {
+      "class": "ahj",
+      "display_name": "Iron Golem",
+      "height": 2.7,
+      "id": 80,
+      "name": "villager_golem",
+      "width": 1.4
+    },
+    "vindication_illager": {
+      "class": "aks",
+      "display_name": "Vindicator",
+      "height": 1.95,
+      "id": 81,
+      "name": "vindication_illager",
+      "width": 0.6
+    },
+    "witch": {
+      "class": "akt",
+      "display_name": "Witch",
+      "height": 1.95,
+      "id": 82,
+      "name": "witch",
+      "width": 0.6
+    },
+    "wither": {
+      "class": "aiw",
+      "display_name": "Wither",
+      "height": 3.5,
+      "id": 83,
+      "name": "wither",
+      "width": 0.9
+    },
+    "wither_skeleton": {
+      "class": "aku",
+      "display_name": "Wither Skeleton",
+      "height": 2.4,
+      "id": 84,
+      "name": "wither_skeleton",
+      "width": 0.7
+    },
+    "wither_skull": {
+      "class": "ame",
+      "display_name": "Wither Skull",
+      "id": 85,
+      "name": "wither_skull"
+    },
+    "wolf": {
+      "class": "ahl",
+      "display_name": "Wolf",
+      "height": 0.85,
+      "id": 86,
+      "name": "wolf",
+      "width": 0.6
+    },
+    "xp_bottle": {
+      "class": "amb",
+      "display_name": "Thrown Bottle o' Enchanting",
+      "id": 76,
+      "name": "xp_bottle"
+    },
+    "xp_orb": {
+      "class": "abx",
+      "display_name": "Experience Orb",
+      "height": 0.5,
+      "id": 22,
+      "name": "xp_orb",
+      "width": 0.5
+    },
+    "zombie": {
+      "class": "akv",
+      "display_name": "Zombie",
+      "height": 1.95,
+      "id": 87,
+      "name": "zombie",
+      "width": 0.6
+    },
+    "zombie_horse": {
+      "class": "ahv",
+      "display_name": "Zombie Horse",
+      "id": 88,
+      "name": "zombie_horse"
+    },
+    "zombie_pigman": {
+      "class": "akh",
+      "display_name": "Zombie Pigman",
+      "id": 53,
+      "name": "zombie_pigman"
+    },
+    "zombie_villager": {
+      "class": "akw",
+      "display_name": "Zombie Villager",
+      "id": 89,
+      "name": "zombie_villager"
+    }
+  }
+}

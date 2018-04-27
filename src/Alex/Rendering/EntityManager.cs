@@ -38,15 +38,6 @@ namespace Alex.Rendering
 			EntityByUUID = new ConcurrentDictionary<UUID, IEntity>();
 	    }
 
-		public void GameTick()
-		{
-			var entities = Entities.Values.ToArray();
-			foreach (var entity in entities)
-			{
-				entity.OnTick();
-			}
-		}
-
 	    public void Update(IUpdateArgs args, SkyBox skyRenderer)
 	    {
 		    var entities = Entities.Values.ToArray();

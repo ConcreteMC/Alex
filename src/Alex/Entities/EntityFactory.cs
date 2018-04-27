@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using Alex.API.Utils;
@@ -15,6 +17,8 @@ using Alex.Utils;
 using fNbt.Tags;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using NLog;
 
 namespace Alex.Entities
@@ -26,9 +30,34 @@ namespace Alex.Entities
 		private static ConcurrentDictionary<string, Func<Texture2D, EntityModelRenderer>> _registeredRenderers =
 			new ConcurrentDictionary<string, Func<Texture2D, EntityModelRenderer>>();
 
+		private static IReadOnlyDictionary<long, EntityData> _idToData;
+
 		public static void Load()
 		{
+			Dictionary<long, EntityData> networkIdToData = new Dictionary<long, EntityData>();
 
+			JObject j = JObject.Parse(Resources.NewEntities);
+			foreach (var p in j["entity"])
+			{
+				if (p.HasValues)
+				{
+					foreach (var dd in p)
+					{
+						EntityData data = new EntityData();
+						data.Id = dd["id"].Value<long>();
+						data.Name = dd["name"].Value<string>();
+
+						data.DisplayName = dd["display_name"]?.Value<string>();
+
+						if (dd["height"] != null) data.Height = dd["height"].Value<double>();
+						if (dd["width"] != null) data.Width = dd["width"].Value<double>();
+
+						networkIdToData.TryAdd(data.Id, data);
+					}
+				}
+			}
+
+			_idToData = networkIdToData;
 		}
 
 		public static bool TryLoadEntity(NbtCompound nbt, long entityId, out Entity entity)
@@ -67,15 +96,48 @@ namespace Alex.Entities
 			return false;
 		}
 
-		public static EntityModelRenderer GetEntityRenderer(string name, Texture2D texture)
+		public static bool ModelByNetworkId(long networkId, out EntityModelRenderer renderer, out EntityData data)
 		{
-			if (_registeredRenderers.TryGetValue(name, out var func))
+			if (_idToData.TryGetValue(networkId, out data))
+			{
+				renderer = TryGetRendererer(data, null);
+				if (renderer != null)
+				{
+					return true;
+				}
+			}
+
+			renderer = null;
+			return false;
+		}
+
+		private static EntityModelRenderer TryGetRendererer(EntityData data, Texture2D texture)
+		{
+			if (_registeredRenderers.TryGetValue(data.Name, out var func))
 			{
 				return func(texture);
 			}
 			else
 			{
-				var f = _registeredRenderers.FirstOrDefault(x => x.Key.Contains(name)).Value;
+				var f = _registeredRenderers.FirstOrDefault(x => x.Key.ToLowerInvariant().Contains(data.Name.ToLowerInvariant())).Value;
+
+				if (f != null)
+				{
+					return f(texture);
+				}
+			}
+			return null;
+		}
+
+		public static EntityModelRenderer GetEntityRenderer(string name, Texture2D texture)
+		{
+			if (_registeredRenderers.TryGetValue(name, out var func))
+			{
+				if (func != null) return func(texture);
+			}
+			else
+			{
+				var f = _registeredRenderers.FirstOrDefault(x => x.Key.ToLowerInvariant().Contains(name.ToLowerInvariant())).Value;
 
 				if (f != null)
 				{
@@ -101,51 +163,11 @@ namespace Alex.Entities
 					if (def.Value.Geometry.Count == 0) continue;
 
 					EntityModel model;
-					if (resourceManager.BedrockResourcePack.EntityModels.TryGetValue(def.Value.Geometry["default"],
-						    out model) && model != null)
+					if ((resourceManager.BedrockResourcePack.EntityModels.TryGetValue(def.Value.Geometry["default"],
+						    out model)) && model != null)
 					{
-						_registeredRenderers.AddOrUpdate(def.Key,
-							(t) =>
-							{
-								if (t == null)
-								{
-									var textures = def.Value.Textures;
-									string texture;
-									if (!textures.TryGetValue("default", out texture))
-									{
-										texture = textures.FirstOrDefault().Value;
-									}
-
-									if (resourceManager.BedrockResourcePack.Textures.TryGetValue(texture,
-										out Bitmap bmp))
-									{
-										t = TextureUtils.BitmapToTexture2D(graphics, bmp);
-									}
-								}
-
-								return new EntityModelRenderer(model, t);
-							},
-							(s, func) =>
-							{
-								return (t) =>
-								{
-									var textures = def.Value.Textures;
-									string texture;
-									if (!textures.TryGetValue("default", out texture))
-									{
-										texture = textures.FirstOrDefault().Value;
-									}
-
-									if (resourceManager.BedrockResourcePack.Textures.TryGetValue(texture,
-										out Bitmap bmp))
-									{
-										t = TextureUtils.BitmapToTexture2D(graphics, bmp);
-									}
-
-									return new EntityModelRenderer(model, t);
-								};
-							});
-						//	}
+						Add(resourceManager, graphics, def.Value, model, def.Value.Filename);
+						Add(resourceManager, graphics, def.Value, model, def.Key);
 					}
 				}
 				catch (Exception ex)
@@ -160,6 +182,51 @@ namespace Alex.Entities
 					progressReceiver?.UpdateProgress((int)percentage, $"Importing entity definitions...");
 				}
 			}
+		}
+
+		private static void Add(ResourceManager resourceManager, GraphicsDevice graphics, BedrockResourcePack.EntityDefinition def, EntityModel model, string name)
+		{
+			_registeredRenderers.AddOrUpdate(name,
+				(t) =>
+				{
+					if (t == null)
+					{
+						var textures = def.Textures;
+						string texture;
+						if (!textures.TryGetValue("default", out texture))
+						{
+							texture = textures.FirstOrDefault().Value;
+						}
+
+						if (resourceManager.BedrockResourcePack.Textures.TryGetValue(texture,
+							out Bitmap bmp))
+						{
+							t = TextureUtils.BitmapToTexture2D(graphics, bmp);
+						}
+					}
+
+					return new EntityModelRenderer(model, t);
+				},
+				(s, func) =>
+				{
+					return (t) =>
+					{
+						var textures = def.Textures;
+						string texture;
+						if (!textures.TryGetValue("default", out texture))
+						{
+							texture = textures.FirstOrDefault().Value;
+						}
+
+						if (resourceManager.BedrockResourcePack.Textures.TryGetValue(texture,
+							out Bitmap bmp))
+						{
+							t = TextureUtils.BitmapToTexture2D(graphics, bmp);
+						}
+
+						return new EntityModelRenderer(model, t);
+					};
+				});
 		}
 	}
 }

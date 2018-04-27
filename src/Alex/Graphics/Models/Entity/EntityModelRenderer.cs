@@ -21,11 +21,17 @@ namespace Alex.Graphics.Models.Entity
 
 		private EntityModel Model { get; }
 		private IReadOnlyDictionary<int, EntityModelCube> Cubes { get; }
-		private Texture2D Texture { get; set; }
+		public Texture2D Texture { get; set; }
 		public EntityModelRenderer(EntityModel model, Texture2D texture)
 		{
 			Model = model;
 			Texture = texture;
+
+			if (texture == null)
+			{
+				Log.Warn($"No texture set for rendererer for {model.Name}!");
+				return;
+			}
 
 			var cubes = new Dictionary<int, EntityModelCube>();
 			Cache(cubes);
@@ -55,14 +61,19 @@ namespace Alex.Graphics.Models.Entity
 						var pivot = bone.Pivot;
 						var rotation = bone.Rotation;
 
-						VertexPositionNormalTexture[] vertices = ModelBonesCache.GetOrAdd($"{Model.Name}:{bone.Name}", s =>
+						
+						VertexPositionNormalTexture[] vertices;
+						//if (Texture != null)
 						{
-							Cube built = new Cube(size, new Vector2(Texture.Width, Texture.Height));
-							built.BuildCube(cube.Uv);
+							vertices = ModelBonesCache.GetOrAdd($"{Model.Name}:{bone.Name}", s =>
+							{
+								Cube built = new Cube(size, new Vector2(Texture.Width, Texture.Height));
+								built.BuildCube(cube.Uv);
 
-							return built.Front.Concat(built.Back).Concat(built.Top).Concat(built.Bottom).Concat(built.Left)
-								.Concat(built.Right).ToArray();
-						});
+								return built.Front.Concat(built.Back).Concat(built.Top).Concat(built.Bottom).Concat(built.Left)
+									.Concat(built.Right).ToArray();
+							});
+						}
 
 						var part = new EntityModelCube(vertices, Texture, rotation, pivot, origin);
 

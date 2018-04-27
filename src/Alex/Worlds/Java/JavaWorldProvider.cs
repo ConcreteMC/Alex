@@ -79,12 +79,17 @@ namespace Alex.Worlds.Java
 		{
 			if (e.Graceful)
 			{
-
+				ShowDisconnect("You've been disconnected!");
 			}
 			else
 			{
-
+				ShowDisconnect("The connection was forcibilly closed!");
 			}
+		}
+
+		public void ShowDisconnect(string reason)
+		{
+
 		}
 
 		private PlayerLocation _lastSentLocation = new PlayerLocation(Vector3.Zero);
@@ -141,7 +146,7 @@ namespace Alex.Worlds.Java
 					if (pos.DistanceTo(_lastSentLocation) > 0.0f)
 					{
 						PlayerPositionAndLookPacketServerBound packet = new PlayerPositionAndLookPacketServerBound();
-						packet.Yaw = pos.HeadYaw;
+						packet.Yaw = pos.Yaw;
 						packet.Pitch = pos.Pitch;
 						packet.X = pos.X;
 						packet.Y = pos.Y;
@@ -157,7 +162,7 @@ namespace Alex.Worlds.Java
 					{
 						PlayerLookPacket playerLook = new PlayerLookPacket();
 						playerLook.Pitch = pos.Pitch;
-						playerLook.Yaw = pos.HeadYaw;
+						playerLook.Yaw = pos.Yaw;
 						playerLook.OnGround = pos.OnGround;
 
 						SendPacket(playerLook);
@@ -274,53 +279,83 @@ namespace Alex.Worlds.Java
 		}
 
 		private Queue<Entity> _entitySpawnQueue = new Queue<Entity>();
+
 		public void SpawnMob(int entityId, Guid uuid, EntityType type, PlayerLocation position, Vector3 velocity)
 		{
-			var entity = type.Create(null);
+			Entity entity = null;
+			if (EntityFactory.ModelByNetworkId((long) type, out var renderer, out EntityData knownData))
+			{
+				if (Enum.TryParse(knownData.Name, out type))
+				{
+					entity = type.Create(null);
+				}
+
+				if (entity == null)
+				{
+					entity = new Entity((int) type, null, Client);
+				}
+
+				if (knownData.Height.HasValue)
+				{
+					entity.Height = knownData.Height.Value;
+				}
+
+				if (knownData.Width.HasValue)
+					entity.Width = knownData.Width.Value;
+
+				if (string.IsNullOrWhiteSpace(entity.NameTag) && !string.IsNullOrWhiteSpace(knownData.Name))
+				{
+					entity.NameTag = knownData.Name;
+				}
+			}
+
 			if (entity == null)
 			{
 				Log.Warn($"Could not create entity of type: {(int) type}:{type.ToString()}");
 				return;
 			}
-			else if (entity.ModelRenderer == null)
+
+			if (renderer == null)
 			{
-				var renderer = EntityFactory.GetEntityRenderer(type.ToString(), null);
-			
-				if (renderer == null)
+				var def = Alex.Resources.BedrockResourcePack.EntityDefinitions.FirstOrDefault(x =>
+					x.Value.Filename.Replace("_", "").Equals(type.ToString().ToLowerInvariant()));
+				if (!string.IsNullOrWhiteSpace(def.Key))
 				{
-					var def = Alex.Resources.BedrockResourcePack.EntityDefinitions.FirstOrDefault(x => x.Value.Filename.Replace("_","").Equals(type.ToString().ToLowerInvariant()));
-					if (!string.IsNullOrWhiteSpace(def.Key))
+					EntityModel model;
+					if (Alex.Resources.BedrockResourcePack.EntityModels.TryGetValue(def.Value.Geometry["default"],
+						    out model) && model != null)
 					{
-						EntityModel model;
-						if (Alex.Resources.BedrockResourcePack.EntityModels.TryGetValue(def.Value.Geometry["default"],
-							    out model) && model != null)
+						var textures = def.Value.Textures;
+						string texture;
+						if (!textures.TryGetValue("default", out texture))
 						{
-							var textures = def.Value.Textures;
-							string texture;
-							if (!textures.TryGetValue("default", out texture))
-							{
-								texture = textures.FirstOrDefault().Value;
-							}
+							texture = textures.FirstOrDefault().Value;
+						}
 
-							if (Alex.Resources.BedrockResourcePack.Textures.TryGetValue(texture,
-								out Bitmap bmp))
-							{
-								Texture2D t = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, bmp);
+						if (Alex.Resources.BedrockResourcePack.Textures.TryGetValue(texture,
+							out Bitmap bmp))
+						{
+							Texture2D t = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, bmp);
 
-								renderer = new EntityModelRenderer(model, t);
-							}
+							renderer = new EntityModelRenderer(model, t);
 						}
 					}
 				}
-
-				if (renderer == null)
-				{
-					Log.Warn($"Could not find renderer for entity type: {type.ToString()} ({(int) type})");
-					return;
-				}
-
-				entity.ModelRenderer = renderer;
 			}
+
+			if (renderer == null)
+			{
+				Log.Warn($"Could not find renderer for entity type: {type.ToString()} ({(int) type})");
+				return;
+			}
+
+			if (renderer.Texture == null)
+			{
+				Log.Warn($"Could not find textyre for entity type: {type.ToString()} ({(int) type})");
+				return;
+			}
+
+			entity.ModelRenderer = renderer;
 
 			entity.KnownPosition = position;
 			entity.Velocity = velocity;
@@ -559,7 +594,7 @@ namespace Alex.Worlds.Java
 		{
 			if (WorldReceiver.TryGetEntity(packet.EntityId, out var entity))
 			{
-				entity.KnownPosition.HeadYaw = 360f - MathUtils.AngleToNotchianDegree(packet.HeadYaw);
+				entity.KnownPosition.HeadYaw = 180f - MathUtils.AngleToNotchianDegree(packet.HeadYaw);
 			}
 		}
 
@@ -575,7 +610,7 @@ namespace Alex.Worlds.Java
 		{
 			if (_players.TryGetValue(new UUID(packet.Uuid.ToByteArray()), out PlayerMob mob))
 			{
-				float yaw = 360f - MathUtils.AngleToNotchianDegree(packet.Yaw);
+				float yaw = 180f - MathUtils.AngleToNotchianDegree(packet.Yaw);
 				mob.KnownPosition = new PlayerLocation(packet.X, packet.Y, packet.Z, yaw, yaw, MathUtils.AngleToNotchianDegree(packet.Pitch));
 				mob.EntityId = packet.EntityId;
 				mob.IsSpawned = true;
@@ -632,7 +667,7 @@ namespace Alex.Worlds.Java
 
 		private void HandleEntityLookAndRelativeMove(EntityLookAndRelativeMove packet)
 		{
-			var yaw = 360f - MathUtils.AngleToNotchianDegree(packet.Yaw);
+			var yaw = 180f - MathUtils.AngleToNotchianDegree(packet.Yaw);
 			WorldReceiver.UpdateEntityPosition(packet.EntityId, new PlayerLocation(MathUtils.FromFixedPoint(packet.DeltaX), MathUtils.FromFixedPoint(packet.DeltaY), MathUtils.FromFixedPoint(packet.DeltaZ), yaw, yaw, MathUtils.AngleToNotchianDegree(packet.Pitch))
 			{
 				OnGround = packet.OnGround
@@ -651,7 +686,7 @@ namespace Alex.Worlds.Java
 		{
 			if (WorldReceiver.TryGetEntity(packet.EntityId, out var entity))
 			{
-				entity.KnownPosition.Yaw = 360f - MathUtils.AngleToNotchianDegree(packet.Yaw);
+				entity.KnownPosition.Yaw = 180f - MathUtils.AngleToNotchianDegree(packet.Yaw);
 				entity.KnownPosition.Pitch = MathUtils.AngleToNotchianDegree(packet.Pitch);
 				entity.KnownPosition.OnGround = packet.OnGround;
 			}
@@ -659,7 +694,7 @@ namespace Alex.Worlds.Java
 
 		private void HandleEntityTeleport(EntityTeleport packet)
 		{
-			float yaw = 360f - MathUtils.AngleToNotchianDegree(packet.Yaw);
+			float yaw = 180f - MathUtils.AngleToNotchianDegree(packet.Yaw);
 			WorldReceiver.UpdateEntityPosition(packet.EntityID, new PlayerLocation(packet.X, packet.Y, packet.Z, yaw, yaw, MathUtils.AngleToNotchianDegree(packet.Pitch))
 			{
 				OnGround = packet.OnGround
@@ -819,7 +854,7 @@ namespace Alex.Worlds.Java
 			SendPacket(response);
 
 			UpdatePlayerPosition(
-				new PlayerLocation(packet.X, packet.Y, packet.Z, packet.Yaw, pitch: packet.Pitch));
+				new PlayerLocation(packet.X, packet.Y, packet.Z, 180f - packet.Yaw, pitch: packet.Pitch));
 
 			if (!Spawned)
 			{
@@ -863,7 +898,7 @@ namespace Alex.Worlds.Java
 
 		private void HandleSpawnMob(SpawnMob packet)
 		{
-			SpawnMob(packet.EntityId, packet.Uuid, (EntityType)packet.Type, new PlayerLocation(packet.X, packet.Y, packet.Z, packet.Yaw, packet.Yaw, packet.Pitch)
+			SpawnMob(packet.EntityId, packet.Uuid, (EntityType)packet.Type, new PlayerLocation(packet.X, packet.Y, packet.Z, 180f - packet.Yaw, 180f - packet.Yaw, packet.Pitch)
 			{
 			//	OnGround = packet.
 			}, new Vector3(packet.VelocityX, packet.VelocityY, packet.VelocityZ));
@@ -907,34 +942,52 @@ namespace Alex.Worlds.Java
 				serverHash = JavaHexDigest(ms.ToArray());
 			}
 
+			bool authenticated = true;
 			if (!string.IsNullOrWhiteSpace(_accesToken))
 			{
-				var baseAddress = "https://sessionserver.mojang.com/session/minecraft/join";
-
-				var http = (HttpWebRequest)WebRequest.Create(new Uri(baseAddress));
-				http.Accept = "application/json";
-				http.ContentType = "application/json";
-				http.Method = "POST";
-
-				var bytes = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(new JoinRequest()
+				try
 				{
-					ServerId = serverHash,
-					SelectedProfile = _uuid,
-					AccessToken = _accesToken
-				}));
+					var baseAddress = "https://sessionserver.mojang.com/session/minecraft/join";
 
-				using (Stream newStream = http.GetRequestStream())
-				{
-					newStream.Write(bytes, 0, bytes.Length);
+					var http = (HttpWebRequest) WebRequest.Create(new Uri(baseAddress));
+					http.Accept = "application/json";
+					http.ContentType = "application/json";
+					http.Method = "POST";
+
+					var bytes = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(new JoinRequest()
+					{
+						ServerId = serverHash,
+						SelectedProfile = _uuid,
+						AccessToken = _accesToken
+					}));
+
+					using (Stream newStream = http.GetRequestStream())
+					{
+						newStream.Write(bytes, 0, bytes.Length);
+					}
+
+					var r = http.GetResponse();
+
+					using (var stream = r.GetResponseStream())
+					using (var sr = new StreamReader(stream))
+					{
+						var content = sr.ReadToEnd();
+					}
 				}
-
-				var r = http.GetResponse();
-
-				using (var stream = r.GetResponseStream())
-				using (var sr = new StreamReader(stream))
+				catch
 				{
-					var content = sr.ReadToEnd();
+					authenticated = false;
 				}
+			}
+			else
+			{
+				authenticated = false;
+			}
+
+			if (!authenticated)
+			{
+				ShowDisconnect("Could not verify your current login session!");
+				return;
 			}
 
 			var cryptoProvider = AsnKeyBuilder.DecodePublicKey(packet.PublicKey);
@@ -947,7 +1000,6 @@ namespace Alex.Worlds.Java
 
 			Client.InitEncryption(SharedSecret);
 		}
-
 
 		public void Login(string username, string uuid, string accessToken, AutoResetEvent signalWhenReady)
 		{
