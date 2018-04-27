@@ -330,15 +330,6 @@ namespace Alex.GameStates.Gui.Multiplayer
                 SetErrorMessage("Invalid Server Address!");
             }
         }
-        
-        private void QueryServer(string address, ushort port)
-        {
-            SetErrorMessage(null);
-            SetConnectingState(true);
-		
-            var queryProvider = Alex.Instance.Services.GetService<IServerQueryProvider>();
-            queryProvider.QueryServerAsync(address, port).ContinueWith(ContinuationAction);
-        }
 
         private void SetConnectingState(bool connecting)
         {
@@ -368,9 +359,30 @@ namespace Alex.GameStates.Gui.Multiplayer
             }
             _pingStatus.SetOffline();
         }
-        
-		private static readonly Regex FaviconRegex = new Regex(@"data:image/png;base64,(?<data>.+)", RegexOptions.Compiled);
-        private void ContinuationAction(Task<ServerQueryResponse> queryTask)
+
+	    private void QueryServer(string address, ushort port)
+	    {
+		    SetErrorMessage(null);
+		    SetConnectingState(true);
+
+		    var queryProvider = Alex.Instance.Services.GetService<IServerQueryProvider>();
+		    queryProvider.QueryServerAsync(address, port, PingCallback).ContinueWith(QueryCompleted);
+	    }
+
+	    private void PingCallback(ServerPingResponse response)
+	    {
+		    if (response.Success)
+		    {
+			    _pingStatus.SetPing(response.Ping);
+			}
+		    else
+		    {
+				_pingStatus.SetOutdated(response.ErrorMessage);
+		    }
+	    }
+
+	    private static readonly Regex FaviconRegex = new Regex(@"data:image/png;base64,(?<data>.+)", RegexOptions.Compiled);
+        private void QueryCompleted(Task<ServerQueryResponse> queryTask)
         {
             var response = queryTask.Result;
             SetConnectingState(false);
@@ -388,6 +400,10 @@ namespace Alex.GameStates.Gui.Multiplayer
 				else if (s.ProtocolVersion > JavaProtocol.ProtocolVersion)
 				{
 					_pingStatus.SetOutdated($"Client out of date!");
+				}
+				else
+				{
+
 				}
 
 	            _serverMotd.Text = s.Motd;
