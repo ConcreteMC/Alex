@@ -3,6 +3,7 @@ using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
+using Alex.Entities;
 using Alex.GameStates;
 using Alex.Graphics.Models.Entity;
 using Alex.Rendering.Camera;
@@ -14,9 +15,13 @@ namespace Alex.Gui.Elements
 {
     public class GuiEntityModelView : GuiElement
     {
-        public PlayerLocation EntityPosition { get; set; }
+	    public PlayerLocation EntityPosition
+	    {
+		    get { return Entity.KnownPosition; }
+		    set { Entity.KnownPosition = value; }
+	    }
 
-        private string _entityName;
+	    private string _entityName;
 
         public string EntityName
         {
@@ -28,25 +33,19 @@ namespace Alex.Gui.Elements
             }
         }
 
-        private Texture2D _skinTexture;
-
-        public Texture2D SkinTexture
-        {
-            get => _skinTexture;
-            set
-            {
-                _skinTexture = value;
-                InitRenderer();
-            }
-        }
-        
-        private EntityModelRenderer EntityModelRenderer { get; set; }
+      
+        private Entity Entity { get; set; }
         private GuiEntityModelViewCamera Camera { get; }
         private bool _canRender;
         
-        public GuiEntityModelView(string entityName)
+        public GuiEntityModelView(Entity entity)
         {
-            EntityName = entityName;
+	        if (entity.ModelRenderer != null)
+	        {
+		        _canRender = true;
+	        }
+
+            Entity = entity;
             EntityPosition = new PlayerLocation(Vector3.Zero);
             Background = GuiTextures.PanelGeneric;
 
@@ -70,7 +69,7 @@ namespace Alex.Gui.Elements
 
         private void InitRenderer()
         {
-            if (string.IsNullOrWhiteSpace(EntityName) || SkinTexture == null)
+          /*  if (string.IsNullOrWhiteSpace(EntityName) || SkinTexture == null)
             {
                 _canRender = false;
                 EntityModelRenderer = null;
@@ -79,7 +78,7 @@ namespace Alex.Gui.Elements
             Alex.Instance.Resources.BedrockResourcePack.EntityModels.TryGetValue(EntityName, out EntityModel m);
 
             EntityModelRenderer = new EntityModelRenderer(m, SkinTexture);
-            _canRender = true;
+            _canRender = true;*/
         }
         
         private Rectangle _previousBounds;
@@ -109,8 +108,9 @@ namespace Alex.Gui.Elements
                 };
 
                 Camera.MoveTo(EntityPosition, Vector3.Zero);
-                
-                EntityModelRenderer?.Update(updateArgs, EntityPosition);
+
+				Entity.Update(updateArgs);
+					//EntityModelRenderer?.Update(updateArgs, EntityPosition);
             }
         }
         
@@ -155,7 +155,8 @@ namespace Alex.Gui.Elements
 
                     graphics.Begin();
 
-                    EntityModelRenderer?.Render(renderArgs, EntityPosition);
+					Entity.Render(renderArgs);
+	              //  EntityModelRenderer?.Render(renderArgs, EntityPosition);
 
                     graphics.End();
                 }

@@ -10,6 +10,7 @@ using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MathF = Alex.API.Utils.MathF;
 
 namespace Alex.Entities
 {
@@ -29,10 +30,10 @@ namespace Alex.Entities
 
 		private EntityModel _model;
 
-		private EntityModelBone _leftArmModel;
-		private EntityModelBone _rightArmModel;
-		private EntityModelBone _leftLegModel;
-		private EntityModelBone _rightLegModel;
+		private EntityModelRenderer.ModelBone _leftArmModel;
+		private EntityModelRenderer.ModelBone _rightArmModel;
+		private EntityModelRenderer.ModelBone _leftLegModel;
+		private EntityModelRenderer.ModelBone _rightLegModel;
 
 		public PlayerMob(string name, World level, INetworkProvider network, Texture2D skinTexture, bool skinSlim = true) : base(63, level, network)
 		{
@@ -63,8 +64,8 @@ namespace Alex.Entities
 					out EntityModel m))
 				{
 					_model = m;
-					UpdateModelParts();
 					ModelRenderer = new EntityModelRenderer(_model, skinTexture);
+					UpdateModelParts();
 				}
 			}
 			else
@@ -73,15 +74,20 @@ namespace Alex.Entities
 					out EntityModel m))
 				{
 					_model        = m;
-					UpdateModelParts();
 					ModelRenderer = new EntityModelRenderer(_model, skinTexture);
+					UpdateModelParts();
 				}
 			}
 		}
 
 		private void UpdateModelParts()
 		{
-			foreach (var bone in _model.Bones)
+			ModelRenderer.GetBone("rightArm", out _rightArmModel);
+			ModelRenderer.GetBone("leftArm", out _leftArmModel);
+			ModelRenderer.GetBone("leftLeg", out _leftLegModel);
+			ModelRenderer.GetBone("rightLeg", out _rightLegModel);
+
+			/*foreach (var bone in _model.Bones)
 			{
 				if (bone.Name.Contains("rightArm"))
 				{
@@ -99,24 +105,21 @@ namespace Alex.Entities
 				{
 					_rightLegModel = bone;
 				}
-			}
+			}*/
 		}
 
-		private double _armRotation;
+		private float _armRotation = 0f;
 		public override void Update(IUpdateArgs args)
 		{
 			base.Update(args);
 
-			var dt = args.GameTime.ElapsedGameTime.TotalSeconds / 20.0d;
+			var dt = (float)args.GameTime.TotalGameTime.TotalSeconds;
 
 			// Test arm rotations
 			if (_leftArmModel != null && _rightArmModel != null)
 			{
-				_armRotation += 0.2f * Math.Sin(dt * 10.0f);
-
-				_leftArmModel.Rotation = new Vector3((float)Math.Sin(_armRotation), (float)Math.Cos(_armRotation), 0f);
-
-				_rightArmModel.Rotation = new Vector3((float)Math.Sin(-_armRotation), (float)Math.Cos(-_armRotation), 0f);
+				_leftArmModel.Rotation = new Vector3(MathF.Sin(dt), 0f, 0f);
+				_rightArmModel.Rotation = new Vector3(-MathF.Sin(dt), 0f, 0f);
 			}
 
 		}

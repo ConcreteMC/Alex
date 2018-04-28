@@ -49,6 +49,7 @@ namespace Alex.Graphics.Models
 
 			private readonly Vector2 _textureSize;
 
+			public bool Mirrored { get; set; } = false;
 			public Cube(Vector3 size, Vector2 textureSize)
 			{
 				this.Size = size;
@@ -207,7 +208,7 @@ namespace Alex.Graphics.Models
 
 			private TextureMapping GetTextureMapping(Vector2 textureOffset, float regionWidth, float regionHeight)
 			{
-				return new TextureMapping(_textureSize, textureOffset, regionWidth, regionHeight);
+				return new TextureMapping(_textureSize, textureOffset, regionWidth, regionHeight, Mirrored);
 			}
 
 			private class TextureMapping
@@ -217,7 +218,7 @@ namespace Alex.Graphics.Models
 				public Vector2 BotLeft { get; }
 				public Vector2 BotRight { get; }
 
-				public TextureMapping(Vector2 textureSize, Vector2 textureOffset, float width, float height)
+				public TextureMapping(Vector2 textureSize, Vector2 textureOffset, float width, float height, bool mirrored)
 				{
 					var pixelWidth = (1f / textureSize.X);
 					var pixelHeight = (1f / textureSize.Y);
@@ -227,10 +228,20 @@ namespace Alex.Graphics.Models
 					var y1 = pixelHeight * textureOffset.Y;
 					var y2 = pixelHeight * (textureOffset.Y + height);
 
-					TopLeft = new Vector2(x1, y1);
-					TopRight = new Vector2(x2, y1);
-					BotLeft = new Vector2(x1, y2);
-					BotRight = new Vector2(x2, y2);
+					/*if (mirrored)
+					{
+						TopLeft = new Vector2(x2, y1);
+						TopRight = new Vector2(x1, y1);
+						BotLeft = new Vector2(x2, y2);
+						BotRight = new Vector2(x1, y2);
+					}
+					else
+					{*/
+						TopLeft = new Vector2(x1, y1);
+						TopRight = new Vector2(x2, y1);
+						BotLeft = new Vector2(x1, y2);
+						BotRight = new Vector2(x2, y2);
+					//}
 				}
 			}
 		}

@@ -8,6 +8,7 @@ using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
+using Alex.Entities;
 using Alex.GameStates.Gui.Common;
 using Alex.GameStates.Gui.Multiplayer;
 using Alex.Gui;
@@ -31,7 +32,7 @@ namespace Alex.GameStates
 		private readonly GuiTextElement _splashText;
 
 		private readonly GuiPanoramaSkyBox _backgroundSkyBox;
-		private readonly GuiEntityModelView _playerView;
+		private GuiEntityModelView _playerView;
 
 		private readonly GuiImage _logo;
 
@@ -65,17 +66,7 @@ namespace Alex.GameStates
 			_stackMenu.AddMenuItem("Options", () => { Alex.GameStateManager.SetActiveState("options"); });
 			_stackMenu.AddMenuItem("Exit Game", () => { Alex.Exit(); });
 
-			AddChild(_playerView = new GuiEntityModelView("geometry.humanoid.customSlim")
-			{
-				BackgroundOverlay = new Color(Color.Black, 0.15f),
-
-				Margin = new Thickness(15),
-
-				Width = 92,
-				Height = 128,
-
-				Anchor = Alignment.BottomRight,
-			});
+			
 
 			AddChild(_logo = new GuiImage(GuiTextures.AlexLogo)
 			{
@@ -121,7 +112,17 @@ namespace Alex.GameStates
 			Alex.Resources.BedrockResourcePack.TryGetTexture("textures/entity/alex", out Bitmap rawTexture);
 			var steve = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, rawTexture);
 
-			_playerView.SkinTexture = steve;
+			AddChild(_playerView = new GuiEntityModelView(new PlayerMob("", null, null, steve)) /*"geometry.humanoid.customSlim"*/
+			{
+				BackgroundOverlay = new Color(Color.Black, 0.15f),
+
+				Margin = new Thickness(15),
+
+				Width = 92,
+				Height = 128,
+
+				Anchor = Alignment.BottomRight,
+			});
 
 			using (MemoryStream ms = new MemoryStream(Resources.GradientBlur))
 			{

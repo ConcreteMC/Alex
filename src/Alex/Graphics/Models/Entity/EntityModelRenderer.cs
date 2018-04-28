@@ -17,10 +17,9 @@ namespace Alex.Graphics.Models.Entity
 	public class EntityModelRenderer : Model
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(EntityModelRenderer));
-		private static ConcurrentDictionary<string, VertexPositionNormalTexture[]> ModelBonesCache { get; } = new ConcurrentDictionary<string, VertexPositionNormalTexture[]>();
 
 		private EntityModel Model { get; }
-		private IReadOnlyDictionary<int, EntityModelCube> Cubes { get; }
+		private IReadOnlyDictionary<string, ModelBone> Bones { get; }
 		public Texture2D Texture { get; set; }
 		public EntityModelRenderer(EntityModel model, Texture2D texture)
 		{
@@ -33,13 +32,13 @@ namespace Alex.Graphics.Models.Entity
 				return;
 			}
 
-			var cubes = new Dictionary<int, EntityModelCube>();
+			var cubes = new Dictionary<string, ModelBone>();
 			Cache(cubes);
 
-			Cubes = cubes;
+			Bones = cubes;
 		}
 
-		private void Cache(Dictionary<int, EntityModelCube> cubes)
+		private void Cache(Dictionary<string, ModelBone> modelBones)
 		{
 			foreach (var bone in Model.Bones)
 			{
@@ -48,6 +47,8 @@ namespace Alex.Graphics.Models.Entity
 
 				if (bone.Cubes != null)
 				{
+					List<EntityModelCube> c = new List<EntityModelCube>();
+					ModelBone modelBone;
 					foreach (var cube in bone.Cubes)
 					{
 						if (cube == null)
@@ -63,17 +64,12 @@ namespace Alex.Graphics.Models.Entity
 
 						
 						VertexPositionNormalTexture[] vertices;
-						//if (Texture != null)
-						{
-							vertices = ModelBonesCache.GetOrAdd($"{Model.Name}:{bone.Name}", s =>
-							{
-								Cube built = new Cube(size, new Vector2(Texture.Width, Texture.Height));
-								built.BuildCube(cube.Uv);
+						Cube built = new Cube(bone.Mirror ? -size : size, new Vector2(Texture.Width, Texture.Height));
+						built.Mirrored = bone.Mirror;
+						built.BuildCube(cube.Uv);
 
-								return built.Front.Concat(built.Back).Concat(built.Top).Concat(built.Bottom).Concat(built.Left)
-									.Concat(built.Right).ToArray();
-							});
-						}
+						vertices = built.Front.Concat(built.Back).Concat(built.Top).Concat(built.Bottom).Concat(built.Left)
+							.Concat(built.Right).ToArray();
 
 						var part = new EntityModelCube(vertices, Texture, rotation, pivot, origin);
 
@@ -89,11 +85,13 @@ namespace Alex.Graphics.Models.Entity
 							part.ApplyHeadYaw = false;
 						}
 
-						if (!cubes.TryAdd(bone.GetHashCode(), part))
-						{
-							part.Dispose();
-							Log.Warn($"Failed to add cube to list of bones: {Model.Name}:{bone.Name}");
-						}
+						c.Add(part);
+					}
+
+					modelBone = new ModelBone(c.ToArray());
+					if (!modelBones.TryAdd(bone.Name, modelBone))
+					{
+						Log.Warn($"Failed to add bone! {Model.Name}:{bone.Name}");
 					}
 				}
 			}
@@ -101,12 +99,8 @@ namespace Alex.Graphics.Models.Entity
 
 		public void Render(IRenderArgs args, PlayerLocation position)
 		{
-			foreach (var bone in Cubes)
+			foreach (var bone in Bones)
 			{
-				if (bone.Value.IsDirty)
-					continue;
-
-
 				bone.Value.Render(args, position);
 			}
 		}
@@ -115,18 +109,15 @@ namespace Alex.Graphics.Models.Entity
 
 		public void Update(IUpdateArgs args, PlayerLocation position)
 		{
-			foreach (var bone in Cubes)
+			foreach (var bone in Bones)
 			{
-				if (bone.Value.Effect != null)
-				{
-					bone.Value.Effect.DiffuseColor = DiffuseColor;
-				}
-
-				if (!bone.Value.IsDirty)
-					continue;
-				
-				bone.Value.Update(args);
+				bone.Value.Update(args, position, DiffuseColor);
 			}
+		}
+
+		public bool GetBone(string name, out ModelBone bone)
+		{
+			return Bones.TryGetValue(name, out bone);
 		}
 
 		public override string ToString()
@@ -134,7 +125,48 @@ namespace Alex.Graphics.Models.Entity
 			return Model.Name;
 		}
 
-		private class EntityModelCube : IDisposable
+		public class ModelBone
+		{
+			public EntityModelCube[] Parts { get; }
+
+			private Vector3 _rotation = Vector3.Zero;
+			public Vector3 Rotation
+			{
+				get { return _rotation; }
+				set { _rotation = value; }
+			}
+
+			public ModelBone(EntityModelCube[] parts)
+			{
+				Parts = parts;
+			}
+
+			public void Render(IRenderArgs args, PlayerLocation position)
+			{
+				foreach (var part in Parts)
+				{
+					part.Render(args, position, _rotation);
+				}
+			}
+
+			public void Update(IUpdateArgs args, PlayerLocation position, Vector3 diffuseColor)
+			{
+				foreach (var part in Parts)
+				{
+					if (part.Effect != null)
+					{
+						part.Effect.DiffuseColor = diffuseColor;
+					}
+
+					if (!part.IsDirty)
+						continue;
+
+					part.Update(args);
+				}
+			}
+		}
+
+		public class EntityModelCube : IDisposable
 		{
 			public AlphaTestEffect Effect { get; private set; }
 
@@ -144,18 +176,21 @@ namespace Alex.Graphics.Models.Entity
 			public bool IsDirty { get; private set; }
 			public Texture2D Texture { get; private set; }
 
-			public Vector3 Rotation { get; private set; } = Vector3.Zero;
+			public Vector3 Rotation { get; set; } = Vector3.Zero;
 			public Vector3 Pivot { get; private set; } = Vector3.Zero;
-			public Vector3 Origin { get; private set; }
+			//public Vector3 Origin { get; private set; }
 			public EntityModelCube(VertexPositionNormalTexture[] textures, Texture2D texture, Vector3 rotation, Vector3 pivot, Vector3 origin)
 			{
 				_vertices = (VertexPositionNormalTexture[]) textures.Clone();
 				Texture = texture;
 				Rotation = rotation;
 				Pivot = pivot;
-				Origin = origin;
+				//Origin = origin;
 
-				Apply(Origin, Pivot, Rotation);
+				for (int i = 0; i < _vertices.Length; i++)
+				{
+					_vertices[i].Position += origin;
+				}
 
 				IsDirty = true;
 			}
@@ -204,7 +239,7 @@ namespace Alex.Graphics.Models.Entity
 			public bool ApplyYaw { get; set; } = true;
 			public bool ApplyHeadYaw { get; set; } = false;
 			public bool Mirror { get; set; } = false;
-			public void Render(IRenderArgs args, PlayerLocation position)
+			public void Render(IRenderArgs args, PlayerLocation position, Vector3 rot)
 			{
 				if (_vertices == null || _vertices.Length == 0) return;
 
@@ -216,11 +251,15 @@ namespace Alex.Graphics.Models.Entity
 				var headYaw = ApplyHeadYaw ? MathUtils.ToRadians(MathUtils.NormDeg(position.HeadYaw + 180f)) : 0f;
 				var pitch = ApplyPitch ? MathUtils.ToRadians(position.Pitch) : 0f;
 
-				Effect.World = Matrix.CreateRotationY(yaw)
-							   * (Matrix.CreateTranslation(-Pivot)
-							   * Matrix.CreateFromYawPitchRoll(headYaw, pitch, 0f)
-				               * Matrix.CreateTranslation(Pivot))
-				               * (Matrix.CreateScale(1f / 16f) * Matrix.CreateTranslation(position));
+				rot += Rotation;
+
+				Matrix rotMatrix = Matrix.CreateTranslation(-Pivot) * Matrix.CreateRotationX((rot.X )) *
+				                   Matrix.CreateRotationY((rot.Y)) *
+				                   Matrix.CreateRotationZ((rot.Z)) * Matrix.CreateTranslation(Pivot);
+
+				Effect.World = rotMatrix * Matrix.CreateRotationY(yaw) *
+								  (Matrix.CreateTranslation(-Pivot) * Matrix.CreateFromYawPitchRoll(headYaw, pitch, 0f) * Matrix.CreateTranslation(Pivot))
+							   * (Matrix.CreateScale(1f / 16f) * Matrix.CreateTranslation(position));
 
 				//Effect.World = world * (Matrix.CreateScale(1f / 16f) * Matrix.CreateTranslation(position));
 				Effect.View = args.Camera.ViewMatrix;
@@ -233,29 +272,6 @@ namespace Alex.Graphics.Models.Entity
 				}
 
 				args.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, _vertices.Length / 3);
-			}
-
-			private void Apply(Vector3 origin, Vector3 pivot, Vector3 rotation)
-			{
-				Matrix transform =  Matrix.CreateTranslation(-pivot) *
-					Matrix.CreateRotationX((rotation.X + 360f) % 360f) *
-					Matrix.CreateRotationY((rotation.Y + 360f) % 360f) *
-					Matrix.CreateRotationZ((rotation.Z + 360f) % 360f) *
-					Matrix.CreateTranslation(pivot);
-
-				for (int i = 0; i < _vertices.Length; i++)
-				{
-					var pos = _vertices[i].Position;
-
-					pos = Vector3.Add(pos, origin);
-
-					if (rotation != Vector3.Zero)
-					{
-						pos = Vector3.Transform(pos, transform);
-					}
-
-					_vertices[i].Position = pos;
-				}
 			}
 
 			public void Dispose()
