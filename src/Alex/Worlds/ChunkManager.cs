@@ -2,27 +2,21 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.API.World;
-using Alex.Entities;
-using Alex.Graphics.Models;
-using Alex.ResourcePackLib.Json.Models;
 using Alex.Utils;
-using Alex.Worlds;
 using Alex.Worlds.Lighting;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using NLog;
-using Color = Microsoft.Xna.Framework.Color;
 
 //using OpenTK.Graphics;
 
-namespace Alex.Rendering
+namespace Alex.Worlds
 {
     public class ChunkManager : IDisposable
     {

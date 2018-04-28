@@ -6,7 +6,7 @@ using Alex.API.Utils;
 
 namespace Alex.API.Json
 {
-	static class ChatParser
+	public static class ChatParser
 	{
 		/// <summary>
 		/// The main function to convert text from MC 1.6+ JSON to MC 1.5.2 formatted text
@@ -27,7 +27,7 @@ namespace Alex.API.Json
 		/// <summary>
 		/// Set of translation rules for formatting text
 		/// </summary>
-		private static Dictionary<string, string> TranslationRules = new Dictionary<string, string>();
+		public static Dictionary<string, string> TranslationRules = new Dictionary<string, string>();
 
 		/// <summary>
 		/// Initialize translation rules.

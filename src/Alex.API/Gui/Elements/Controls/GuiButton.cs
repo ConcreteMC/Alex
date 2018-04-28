@@ -21,12 +21,38 @@ namespace Alex.API.Gui.Elements.Controls
 		    set => TextElement.TranslationKey = value;
 	    }
 
+	    private bool _disabled = false;
+	    public bool Disabled
+	    {
+		    get => _disabled;
+		    set
+		    {
+			    //var oldValue = _disabled;
+			    Enabled = !value;
+			    _disabled = value;
+
+			    if (_isModern)
+			    {
+				    if (value)
+				    {
+					    TextElement.TextColor = TextColor.DarkGray;
+					    // TextElement.TextOpacity = 0.3f;
+				    }
+				    else
+				    {
+					    TextElement.TextColor = TextColor.White;
+					    TextElement.TextOpacity = 1f;
+				    }
+			    }
+		    }
+	    }
+
         protected GuiTextElement TextElement { get; }
         protected Action Action { get; }
 		
 	    public GuiButton(Action action = null) : this(string.Empty, action)
 	    {
-
+			
 	    }
 		
         public GuiButton(string text, Action action = null)
@@ -36,7 +62,7 @@ namespace Alex.API.Gui.Elements.Controls
             HighlightedBackground = GuiTextures.ButtonHover;
             FocusedBackground	  = GuiTextures.ButtonFocused;
 
-	        Background.RepeatMode	 = TextureRepeatMode.NoScaleCenterSlice;
+			Background.RepeatMode	 = TextureRepeatMode.NoScaleCenterSlice;
 	        DisabledBackground.RepeatMode	 = TextureRepeatMode.NoScaleCenterSlice;
 	        HighlightedBackground.RepeatMode = TextureRepeatMode.NoScaleCenterSlice;
 	        FocusedBackground.RepeatMode	 = TextureRepeatMode.NoScaleCenterSlice;
@@ -61,12 +87,44 @@ namespace Alex.API.Gui.Elements.Controls
             });
         }
 
+	    private bool _isModern = false;
+	    public bool Modern
+	    {
+		    get { return _isModern; }
+		    set
+		    {
+			    if (value)
+			    {
+				    _isModern = true;
+
+				    Background = DisabledBackground = FocusedBackground = Color.Transparent;
+
+				    HighlightedBackground = new Color(Color.Black * 0.8f, 0.5f);
+
+				}
+			    else
+			    {
+				    _isModern = false;
+				    Background = GuiTextures.ButtonDefault;
+				    DisabledBackground = GuiTextures.ButtonDisabled;
+				    HighlightedBackground = GuiTextures.ButtonHover;
+				    FocusedBackground = GuiTextures.ButtonFocused;
+				}
+			}
+	    }
+
 	    protected override void OnHighlightActivate()
 	    {
 		    base.OnHighlightActivate();
-
-			TextElement.TextColor = TextColor.Yellow;
-	    }
+		    if (_isModern)
+		    {
+			    TextElement.TextColor = TextColor.Cyan;
+			}
+		    else
+		    {
+			    TextElement.TextColor = TextColor.Yellow;
+			}
+		}
 
 	    protected override void OnHighlightDeactivate()
 	    {
@@ -79,5 +137,15 @@ namespace Alex.API.Gui.Elements.Controls
         {
             Action?.Invoke();
         }
+
+	    protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
+	    {
+		    if (!Enabled && !_disabled)
+		    {
+			    Disabled = true;
+		    }
+
+		    base.OnDraw(graphics, gameTime);
+	    }
     }
 }

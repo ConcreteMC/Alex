@@ -41,7 +41,11 @@ namespace Alex.API.Input.Listeners
             RegisterMap(InputCommand.HotBarSelect8, Keys.D8);
             RegisterMap(InputCommand.HotBarSelect9, Keys.D9);
 
-        }
+			RegisterMap(InputCommand.Right, Keys.Right);
+	        RegisterMap(InputCommand.Left, Keys.Left);
+	        RegisterMap(InputCommand.Up, Keys.Up);
+	        RegisterMap(InputCommand.Down, Keys.Down);
+		}
 
         protected override KeyboardState GetCurrentState()
         {

@@ -19,6 +19,7 @@ using Alex.Worlds.Generators;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using Color = Microsoft.Xna.Framework.Color;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
@@ -28,7 +29,9 @@ namespace Alex.GameStates
 	{
 		private readonly GuiDebugInfo _debugInfo;
 
-		private readonly GuiStackMenu _stackMenu;
+		private readonly GuiStackMenu _mainMenu;
+		private readonly GuiStackMenu _debugMenu;
+
 		private readonly GuiTextElement _splashText;
 
 		private readonly GuiPanoramaSkyBox _backgroundSkyBox;
@@ -45,8 +48,9 @@ namespace Alex.GameStates
 			Background.Texture = _backgroundSkyBox;
 			Background.RepeatMode = TextureRepeatMode.Stretch;
 
+			#region Create MainMenu
 
-			AddChild(_stackMenu = new GuiStackMenu()
+			_mainMenu = new GuiStackMenu()
 			{
 				Margin = new Thickness(15, 0, 15, 0),
 				Padding = new Thickness(0, 50, 0, 0),
@@ -55,18 +59,38 @@ namespace Alex.GameStates
 
 				ChildAnchor = Alignment.CenterY | Alignment.FillX,
 				BackgroundOverlay = new Color(Color.Black, 0.35f)
-			});
+			};
 
-			_stackMenu.AddMenuItem("Multiplayer", OnMultiplayerButtonPressed);
+			_mainMenu.AddMenuItem("Multiplayer", OnMultiplayerButtonPressed);
+			_mainMenu.AddMenuItem("Debug", OnDebugPressed);
 
-			_stackMenu.AddMenuItem("Debug Blockstates", DebugWorldButtonActivated);
-			_stackMenu.AddMenuItem("Debug Flatland", DebugFlatland);
-			_stackMenu.AddMenuItem("Debug Anvil", DebugAnvil);
+			_mainMenu.AddMenuItem("Options", () => { Alex.GameStateManager.SetActiveState("options"); });
+			_mainMenu.AddMenuItem("Exit Game", () => { Alex.Exit(); });
 
-			_stackMenu.AddMenuItem("Options", () => { Alex.GameStateManager.SetActiveState("options"); });
-			_stackMenu.AddMenuItem("Exit Game", () => { Alex.Exit(); });
+			#endregion
 
-			
+			#region Create DebugMenu
+
+			_debugMenu = new GuiStackMenu()
+			{
+				Margin = new Thickness(15, 0, 15, 0),
+				Padding = new Thickness(0, 50, 0, 0),
+				Width = 125,
+				Anchor = Alignment.FillY | Alignment.MinX,
+
+				ChildAnchor = Alignment.CenterY | Alignment.FillX,
+				BackgroundOverlay = new Color(Color.Black, 0.35f),
+				
+			};
+
+			_debugMenu.AddMenuItem("Debug Blockstates", DebugWorldButtonActivated);
+			_debugMenu.AddMenuItem("Debug Flatland", DebugFlatland);
+			_debugMenu.AddMenuItem("Debug Anvil", DebugAnvil);
+			_debugMenu.AddMenuItem("Go Back", DebugGoBackPressed);
+
+			#endregion
+
+			AddChild(_mainMenu);
 
 			AddChild(_logo = new GuiImage(GuiTextures.AlexLogo)
 			{
@@ -85,7 +109,8 @@ namespace Alex.GameStates
 				Text = "Who liek minecwaf?!"
 			});
 
-			AddChild(new GuiTextElement()
+			GuiTextElement cc;
+			AddChild(cc = new GuiTextElement()
 			{
 				Anchor = Alignment.BottomRight,
 				Text = "github.com/kennyvv/Alex",
@@ -100,6 +125,18 @@ namespace Alex.GameStates
 			_debugInfo.AddDebugRight(() => $"Cursor Delta: {Alex.InputManager.CursorInputListener.GetCursorPositionDelta()}");
 			_debugInfo.AddDebugRight(() => $"Splash Text Scale: {_splashText.Scale:F3}");
 			_debugInfo.AddDebugLeft(() => $"FPS: {FpsMonitor.Value:F0}");
+		}
+
+		private void DebugGoBackPressed()
+		{
+			RemoveChild(_debugMenu);
+			AddChild(_mainMenu);
+		}
+
+		private void OnDebugPressed()
+		{
+			RemoveChild(_mainMenu);
+			AddChild(_debugMenu);
 		}
 
 		private void OnMultiplayerButtonPressed()
@@ -140,6 +177,7 @@ namespace Alex.GameStates
 
 		private readonly float _playerViewDepth = -512.0f;
 
+		private KeyboardState _prevKeyboardState = new KeyboardState();
 		protected override void OnUpdate(GameTime gameTime)
 		{
 			base.OnUpdate(gameTime);
@@ -164,6 +202,26 @@ namespace Alex.GameStates
 
 			_playerView.SetEntityRotation(yaw, pitch, headYaw);
 
+			KeyboardState s = Keyboard.GetState();
+			if (_prevKeyboardState.IsKeyDown(Keys.M) && s.IsKeyUp(Keys.M))
+			{
+				_debugMenu.ModernStyle = !_debugMenu.ModernStyle;
+				_mainMenu.ModernStyle = !_mainMenu.ModernStyle;
+			}
+
+			if (_prevKeyboardState.IsKeyDown(Keys.End) && s.IsKeyUp(Keys.End))
+			{
+				if (Alex.GuiManager.HasScreen(_debugInfo))
+				{
+					Alex.GuiManager.RemoveScreen(_debugInfo);
+				}
+				else
+				{
+					Alex.GuiManager.AddScreen(_debugInfo);
+				}
+			}
+
+			_prevKeyboardState = s;
 		}
 
 		protected override void OnDraw(IRenderArgs args)

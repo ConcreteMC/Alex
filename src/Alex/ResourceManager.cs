@@ -7,6 +7,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using Alex.API;
+using Alex.API.Json;
 using Alex.Entities;
 using Alex.Rendering;
 using Alex.ResourcePackLib;
@@ -95,6 +96,15 @@ namespace Alex
 			Log.Info($"Imported {imported} blockstate variants from resourcepack in {sw.ElapsedMilliseconds}ms!");
 
 			ItemFactory.Init(this, resourcePack);
+
+			var language = resourcePack.Languages.Values.FirstOrDefault();
+			if (language != null)
+			{
+				foreach (var translation in language)
+				{
+					ChatParser.TranslationRules[translation.Key] = translation.Value;
+				}
+			}
 
 			return resourcePack;
 		}

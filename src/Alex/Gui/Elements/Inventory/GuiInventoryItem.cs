@@ -49,8 +49,8 @@ namespace Alex.Gui.Elements.Inventory
 		        TextColor = TextColor.White,
 		        Anchor = Alignment.BottomRight,
 		        Text = "-1",
-				Scale = 0.5f,
-				Margin = new Thickness(0, 0, 5, 0)
+				Scale = 0.75f,
+				Margin = new Thickness(0, 0, 5, 3)
 	        });
 		}
 
@@ -80,7 +80,7 @@ namespace Alex.Gui.Elements.Inventory
 			
 	        if (Item != null && Item.ItemID > 0)
 	        {
-				
+
 	        }
 
             if (IsSelected)

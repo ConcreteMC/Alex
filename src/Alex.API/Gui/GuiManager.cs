@@ -90,6 +90,11 @@ namespace Alex.API.Gui
             Screens.Remove(screen);
         }
 
+	    public bool HasScreen(GuiScreen screen)
+	    {
+		    return Screens.Contains(screen);
+	    }
+
         public void Update(GameTime gameTime)
         {
             ScaledResolution.Update();

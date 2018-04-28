@@ -2,8 +2,11 @@
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Graphics;
 using Alex.API.Input;
+using Alex.API.Input.Listeners;
 using Alex.Entities;
+using Alex.GameStates.Gui.InGame;
 using Alex.GameStates.Playing;
+using Alex.Gui.Elements;
 using Alex.Gui.Elements.Inventory;
 using Alex.Rendering.UI;
 using Microsoft.Xna.Framework;
@@ -18,10 +21,12 @@ namespace Alex.GameStates.Hud
 		private PlayerInputManager InputManager => _playerController.InputManager;
 
 		private Alex Alex { get; }
+
         public PlayingHud(Alex game, Player player, ChatComponent chat) : base()
         {
 	        Alex = game;
             _playerController = player.Controller;
+			InputManager.AddListener(new MouseInputListener(InputManager.PlayerIndex));
 
 	        _hotbar = new GuiItemHotbar(player.Inventory);
 	        _hotbar.Anchor = Alignment.BottomCenter;
@@ -39,19 +44,25 @@ namespace Alex.GameStates.Hud
         }
 
         protected override void OnUpdate(GameTime gameTime)
-        {
-	        if (!Chat.Focused)
+		{
+			if (_playerController.MouseInputListener.IsButtonDown(MouseButton.ScrollUp))
+			{
+				if (Chat.Focused)
+					Chat.ScrollUp();
+				else
+					_hotbar.SelectedIndex++;
+			}
+
+			if (_playerController.MouseInputListener.IsButtonDown(MouseButton.ScrollDown))
+			{
+				if (Chat.Focused)
+					Chat.ScrollDown();
+				else
+					_hotbar.SelectedIndex--;
+			}
+
+			if (!Chat.Focused)
 	        {
-				if (InputManager.IsPressed(InputCommand.HotBarSelectNext))
-		        {
-			        _hotbar.SelectedIndex++;
-		        }
-
-		        if (InputManager.IsPressed(InputCommand.HotBarSelectPrevious))
-		        {
-			        _hotbar.SelectedIndex--;
-		        }
-
 		        if (InputManager.IsPressed(InputCommand.HotBarSelect1)) _hotbar.SelectedIndex = 0;
 		        if (InputManager.IsPressed(InputCommand.HotBarSelect2)) _hotbar.SelectedIndex = 1;
 		        if (InputManager.IsPressed(InputCommand.HotBarSelect3)) _hotbar.SelectedIndex = 2;
@@ -67,14 +78,29 @@ namespace Alex.GameStates.Hud
 					Chat.Dismiss();
 			        Alex.GuiManager.FocusManager.FocusedElement = Chat;
 		        }
+
+		        if (InputManager.IsPressed(InputCommand.ToggleMenu))
+		        {
+			        Alex.GameStateManager.SetActiveState<InGameMenuState>("ingamemenu");
+				}
 			}
 	        else
 	        {
 		        if (InputManager.IsPressed(InputCommand.ToggleMenu))
 		        {
+			        Chat.Dismiss();
 			        Alex.GuiManager.FocusManager.FocusedElement = null;
 		        }
-	        }
+
+		        if (InputManager.IsPressed(InputCommand.Left))
+		        {
+					Chat.MoveCursor(false);
+		        }
+				else if (InputManager.IsPressed(InputCommand.Right))
+		        {
+			        Chat.MoveCursor(true);
+		        }
+			}
 
 			base.OnUpdate(gameTime);
         }

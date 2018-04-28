@@ -29,7 +29,7 @@ namespace Alex.Entities
 		    Controller = new PlayerController(graphics, world, alex.GameSettings, alex.InputManager, this, playerIndex); 
 		    NoAi = false;
 
-			Inventory = new Inventory(45);
+			Inventory = new Inventory(46);
 	    }
 
 		public override void Update(IUpdateArgs args)

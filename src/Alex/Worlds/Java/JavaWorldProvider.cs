@@ -146,7 +146,7 @@ namespace Alex.Worlds.Java
 					if (pos.DistanceTo(_lastSentLocation) > 0.0f)
 					{
 						PlayerPositionAndLookPacketServerBound packet = new PlayerPositionAndLookPacketServerBound();
-						packet.Yaw = pos.Yaw;
+						packet.Yaw = pos.HeadYaw;
 						packet.Pitch = pos.Pitch;
 						packet.X = pos.X;
 						packet.Y = pos.Y;
@@ -158,11 +158,11 @@ namespace Alex.Worlds.Java
 
 						_tickSinceLastPositionUpdate = 0;
 					}
-					else if (Math.Abs(pos.Pitch - _lastSentLocation.Pitch) > 0f || Math.Abs(pos.Yaw - _lastSentLocation.Yaw) > 0f)
+					else if (Math.Abs(pos.Pitch - _lastSentLocation.Pitch) > 0f || Math.Abs(pos.HeadYaw - _lastSentLocation.Yaw) > 0f)
 					{
 						PlayerLookPacket playerLook = new PlayerLookPacket();
 						playerLook.Pitch = pos.Pitch;
-						playerLook.Yaw = pos.Yaw;
+						playerLook.Yaw = pos.HeadYaw;
 						playerLook.OnGround = pos.OnGround;
 
 						SendPacket(playerLook);
@@ -211,6 +211,17 @@ namespace Alex.Worlds.Java
 		void IChatProvider.Send(string message)
 		{
 			Client.SendChatMessage(message);
+		}
+
+		private int _transactionIds = 0;
+		void IChatProvider.RequestTabComplete(string text, out int transactionId)
+		{
+			transactionId = Interlocked.Increment(ref _transactionIds);
+			SendPacket(new TabCompleteServerBound()
+			{
+				Text = text,
+				TransactionId = transactionId
+			});
 		}
 
 		private bool _initiated = false;
@@ -502,10 +513,19 @@ namespace Alex.Worlds.Java
 			{
 				HandleMultiBlockChange(multiBlock);
 			}
+			else if (packet is TabCompleteClientBound tabComplete)
+			{
+				HandleTabCompleteClientBound(tabComplete);
+			}
 			else
 			{
 				Log.Warn($"Unhandled packet: 0x{packet.PacketId:x2} - {packet.ToString()}");
 			}
+		}
+
+		private void HandleTabCompleteClientBound(TabCompleteClientBound tabComplete)
+		{
+			ChatReceiver?.ReceivedTabComplete(tabComplete.TransactionId, tabComplete.Start, tabComplete.Length, tabComplete.Matches);
 		}
 
 		private void HandleMultiBlockChange(MultiBlockChange packet)
@@ -549,7 +569,7 @@ namespace Alex.Worlds.Java
 
 			if (inventory == null) return;
 
-			if (packet.SlotId >= inventory.SlotCount - 1)
+			if (packet.SlotId < inventory.SlotCount)
 			{
 				inventory[packet.SlotId] = packet.Slot;
 			}
@@ -572,7 +592,7 @@ namespace Alex.Worlds.Java
 			{
 				for (int i = 0; i < packet.Slots.Length; i++)
 				{
-					if (i >= inventory.SlotCount - 1)
+					if (i >= inventory.SlotCount)
 					{
 						Log.Warn($"Slot index {i} is out of bounds (Max: {inventory.SlotCount})");
 						continue;

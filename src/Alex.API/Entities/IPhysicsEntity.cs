@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 
-namespace Alex.API
+namespace Alex.API.Entities
 {
     public interface IPhysicsEntity
     {

@@ -80,5 +80,15 @@ namespace Alex.API.Input.Listeners
         {
             return CurrentState.Position.ToVector2();
         }
-    }
+
+	    public bool IsButtonDown(MouseButton button)
+	    {
+		    return CheckButtonState(CurrentState, button, ButtonState.Pressed);
+	    }
+
+	    public bool IsButtonUp(MouseButton button)
+	    {
+		    return CheckButtonState(CurrentState, button, ButtonState.Released);
+	    }
+	}
 }

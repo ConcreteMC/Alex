@@ -1,5 +1,6 @@
 ﻿using System;
 using Alex.API.Input;
+using Alex.API.Input.Listeners;
 using Alex.Entities;
 using Alex.GameStates.Gui.InGame;
 using Alex.Utils;
@@ -17,6 +18,8 @@ namespace Alex.GameStates.Playing
 
 		public PlayerIndex PlayerIndex { get; }
 		public PlayerInputManager InputManager { get; }
+		public MouseInputListener MouseInputListener { get; }
+
         public bool IsFreeCam { get; set; }
 
         private GraphicsDevice Graphics { get; }
@@ -38,6 +41,7 @@ namespace Alex.GameStates.Playing
 
 			GlobalInputManager = inputManager;
 			InputManager = inputManager.GetOrAddPlayerManager(playerIndex);
+			InputManager.AddListener(MouseInputListener = new MouseInputListener(playerIndex));
 		}
 
 		private bool _inActive = true;
@@ -68,7 +72,7 @@ namespace Alex.GameStates.Playing
 	    {
 		    if (InputManager.IsPressed(InputCommand.ToggleMenu))
 		    {
-			    Alex.Instance.GameStateManager.SetActiveState<InGameMenuState>("ingamemenu");
+			    
 			}
 	    }
 

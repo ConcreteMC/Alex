@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
-using System.Threading;
 using Alex.API.Entities;
 using Alex.API.Graphics;
 using Alex.API.Network;
@@ -10,13 +8,11 @@ using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Entities;
 using Alex.Graphics.Models;
-using Alex.Utils;
-using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ContainmentType = Microsoft.Xna.Framework.ContainmentType;
 
-namespace Alex.Rendering
+namespace Alex.Worlds
 {
     public class EntityManager : IEntityHolder, IDisposable
 	{

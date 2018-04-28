@@ -66,6 +66,7 @@ namespace Alex.API.Input
 	        if (_stringBuilder.Length == 0) return;
 
             var pos = CursorPosition;
+	        if (pos == 0) return;
 
 	        _stringBuilder.Remove(pos - 1, 1);
 
@@ -90,6 +91,28 @@ namespace Alex.API.Input
 			TextChanged?.Invoke(this, Text);
 			CursorPosition = pos + line.Length;
 		}
+
+	    public string GetAllBehindCursor(out int cursorPos)
+	    {
+		    if (Length == 0)
+		    {
+			    CursorPosition = cursorPos = 0;
+			    return String.Empty;
+		    }
+
+		    var pos = CursorPosition;
+		    while (pos > Length)
+		    {
+			    pos--;
+		    }
+
+		    cursorPos = pos;
+
+			char[] dest = new char[Length - pos];
+		    _stringBuilder.CopyTo(pos, dest, 0, dest.Length);
+
+			return new string(dest);
+	    }
 
 	    public void Clear()
 	    {
