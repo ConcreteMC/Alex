@@ -55,7 +55,7 @@ namespace Alex.Entities
 		public double Length { get; set; } = 1;
 		public double Drag { get; set; } = 0.02;
 		public double Gravity { get; set; } = 0.08;
-		public float TerminalVelocity { get; set; } = 4.3f;
+		public float TerminalVelocity { get; set; } = 3.92f;
 
 		public int Data { get; set; }
 		public UUID UUID { get; set; } = new UUID(Guid.Empty.ToByteArray());
@@ -120,9 +120,13 @@ namespace Alex.Entities
 			ModelRenderer.Render(renderArgs, KnownPosition);
 		}
 
+		private int turnTicks;
+		private int turnTicksLimit = 20;
+		private float lastRotationYawHead = 0f;
 		public virtual void Update(IUpdateArgs args)
 		{
 			var now = DateTime.UtcNow;
+
 			ModelRenderer.Update(args, KnownPosition);
 
 			if (now.Subtract(LastUpdatedTime).TotalMilliseconds >= 50)
@@ -132,9 +136,17 @@ namespace Alex.Entities
 			}
 		}
 
+		public void UpdateHeadYaw(float rotation)
+		{
+			KnownPosition.HeadYaw = rotation;
+		}
+
 		public virtual void OnTick()
 		{
 			Age++;
+			
+			UpdateRotations();
+			_previousPosition = KnownPosition;
 
 			if (IsNoAi) return;
 			IsMoving = Velocity.LengthSquared() > 0f;
@@ -167,22 +179,47 @@ namespace Alex.Entities
 			//HealthManager.OnTick();
 		}
 
-		private void CheckBlockCollisions()
+		private Vector3 _previousPosition = Vector3.Zero;
+		private void UpdateRotations()
 		{
-			// Check all blocks within entity BB
-		}
+			double deltaX = KnownPosition.X - _previousPosition.X;
+			double deltaZ = KnownPosition.Z - _previousPosition.Z;
+			double distSQ = deltaX * deltaX + deltaZ * deltaZ;
 
-		public virtual void SpawnEntity()
-		{
-			//Level.AddEntity(this);
+			float maximumHeadBodyAngleDifference = 90;
+			const float MOVEMENT_THRESHOLD_SQ = 0.0001F;
+			// if moving:
+			// 1) snap the body yaw (renderYawOffset) to the movement direction (rotationYaw)
+			// 2) constrain the head yaw (rotationYawHead) to be within +/- 90 of the body yaw (renderYawOffset)
+			if (IsNoAi && distSQ > MOVEMENT_THRESHOLD_SQ)
+			{
+				//KnownPosition.Yaw = KnownPosition.Yaw;
+				float newRotationYawHead = MathUtils.ConstrainAngle(KnownPosition.HeadYaw, KnownPosition.Yaw,
+					maximumHeadBodyAngleDifference);
 
-			IsSpawned = true;
-		}
+				KnownPosition.HeadYaw = newRotationYawHead;
+				lastRotationYawHead = newRotationYawHead;
+				turnTicks = 0;
+				return;
+			}
 
-		public virtual void DespawnEntity()
-		{
-			//Level.RemoveEntity(this);
-			IsSpawned = false;
+			var changeInHeadYaw = Math.Abs(KnownPosition.HeadYaw - lastRotationYawHead);
+
+			if (changeInHeadYaw > 15)
+			{
+				turnTicks = 0;
+				lastRotationYawHead = KnownPosition.HeadYaw;
+			}
+			else
+			{
+				turnTicks++;
+				if (turnTicks > turnTicksLimit)
+				{
+					maximumHeadBodyAngleDifference = Math.Max(1f - (float)(turnTicks - turnTicksLimit) / turnTicksLimit, 0f) * 75f;
+				}
+			}
+
+			KnownPosition.Yaw = MathUtils.ConstrainAngle(KnownPosition.Yaw, KnownPosition.HeadYaw, maximumHeadBodyAngleDifference);
 		}
 
 		public BoundingBox BoundingBox => GetBoundingBox();

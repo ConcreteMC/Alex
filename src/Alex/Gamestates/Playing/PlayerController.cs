@@ -2,6 +2,7 @@
 using Alex.API.Input;
 using Alex.Entities;
 using Alex.GameStates.Gui.InGame;
+using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -84,7 +85,7 @@ namespace Alex.GameStates.Playing
 				speedFactor *= 0.3f;
 				//speedFactor *= 0.2806f;
 			}
-			else if (Player.IsSneaking)
+			else if (Player.IsSneaking && !Player.IsFlying)
 			{
 				speedFactor *= 0.1f;
 			}
@@ -159,14 +160,13 @@ namespace Alex.GameStates.Playing
 					if (Player.IsInWater)
 					{
 						moveVector.Y += 0.04f;
-						//Player.Velocity += new Vector3(0, 0.42f, 0);
 					}
 					else
 					{
-						if (Math.Abs(Math.Floor(Player.KnownPosition.Y) - Player.KnownPosition.Y) < 0.001f)
+						if (Player.KnownPosition.OnGround && Math.Abs(Math.Floor(Player.KnownPosition.Y) - Player.KnownPosition.Y) < 0.001f)
 						{
 							//moveVector.Y += 42f;
-							Player.Velocity += new Vector3(0, 42f, 0);
+							Player.Velocity += new Vector3(0f, 0.42f, 0f);// //, 0);
 						}
 					}
 				}
@@ -214,9 +214,9 @@ namespace Alex.GameStates.Playing
 							   * (float)(gt.ElapsedGameTime.TotalSeconds * 30);
 					look = -look;
 
-					Player.KnownPosition.Yaw -= -look.X;
+					Player.KnownPosition.HeadYaw -= -look.X;
 					Player.KnownPosition.Pitch -= look.Y;
-					Player.KnownPosition.Yaw %= 360;
+					Player.KnownPosition.HeadYaw = MathUtils.NormDeg(Player.KnownPosition.HeadYaw);
 					Player.KnownPosition.Pitch = MathHelper.Clamp(Player.KnownPosition.Pitch, -89.9f, 89.9f);
 
 					//Player.KnownPosition.Pitch = MathHelper.Clamp(Player.KnownPosition.Pitch + look.Y, -89.9f, 89.9f);

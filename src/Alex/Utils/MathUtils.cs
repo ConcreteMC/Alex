@@ -6,9 +6,35 @@ namespace Alex.Utils
 {
 	public static class MathUtils
 	{
+		public static float ConstrainAngle(float targetAngle, float centreAngle, float maximumDifference)
+		{
+			return centreAngle + Clamp(NormDeg(targetAngle - centreAngle), -maximumDifference, maximumDifference);
+		}
+
+		// normalizes a double degrees angle to between +180 and -180
+		public static float NormDeg(float a)
+		{
+			a %= 360f;
+			if (a >= 180f)
+			{
+				a -= 360f;
+			}
+			if (a < -180)
+			{
+				a += 360f;
+			}
+			return a;
+		}
+
+		// numeric double clamp
+		public static float Clamp(float value, float min, float max)
+		{
+			return (value < min ? min : (value > max ? max : value));
+		}
+
 		public static float ToRadians(float deg)
 		{
-			return (float)(Math.PI* deg / 180F);
+			return (float)(Math.PI* deg) / 180F;
 		}
 
 		public static float RadianToDegree(float angle)

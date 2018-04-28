@@ -154,7 +154,7 @@ namespace Alex.GameStates
 			mousePos = Vector2.Transform(mousePos, Alex.GuiManager.ScaledResolution.InverseTransformMatrix);
 			var playerPos = _playerView.RenderBounds.Center.ToVector2();
 
-			var mouseDelta = (new Vector3(playerPos.X, -playerPos.Y, _playerViewDepth) - new Vector3(mousePos.X, -mousePos.Y, 0.0f));
+			var mouseDelta = (new Vector3(playerPos.X, playerPos.Y, _playerViewDepth) - new Vector3(mousePos.X, mousePos.Y, 0.0f));
 			mouseDelta.Normalize();
 
 			var headYaw = (float)mouseDelta.GetYaw();

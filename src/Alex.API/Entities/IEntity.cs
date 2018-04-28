@@ -28,6 +28,7 @@ namespace Alex.API.Entities
 
 		void Render(IRenderArgs renderArgs);
 		void Update(IUpdateArgs args);
+		void UpdateHeadYaw(float headYaw);
 
 		void RenderNametag(IRenderArgs renderArgs);
 	}

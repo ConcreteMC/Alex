@@ -28,35 +28,36 @@ namespace Alex.Worlds
 
 		private ThreadSafeList<IPhysicsEntity> PhysicsEntities { get; } = new ThreadSafeList<IPhysicsEntity>();
 
-	    private void TruncateVelocity(Entity entity, float multiplier)
+	    private void TruncateVelocity(Entity entity, float deltaTime)
 	    {
-		    if (Math.Abs(entity.Velocity.X) < 0.1f * multiplier)
+			if (Math.Abs(entity.Velocity.X) < 0.01f)
 			    entity.Velocity = new Vector3(0, entity.Velocity.Y, entity.Velocity.Z);
 
-		    if (Math.Abs(entity.Velocity.Y) < 0.1f * multiplier)
-				entity.Velocity = new Vector3(entity.Velocity.X, 0, entity.Velocity.Z);
+		    if (Math.Abs(entity.Velocity.Y) < 0.01f)
+			    entity.Velocity = new Vector3(entity.Velocity.X, 0, entity.Velocity.Z);
 
-		    if (Math.Abs(entity.Velocity.Z) < 0.1f * multiplier)
+		    if (Math.Abs(entity.Velocity.Z) < 0.01f)
 			    entity.Velocity = new Vector3(entity.Velocity.X, entity.Velocity.Y, 0);
-				
 
-		    var groundSpeedSquared = entity.Velocity.X * entity.Velocity.X + entity.Velocity.Z * entity.Velocity.Z;
 
-		    var maxSpeed = entity.IsFlying ? (entity.IsSprinting ? 22f : 11f) : (entity.IsSprinting && !entity.IsSneaking ? 5.6f : (entity.IsSneaking ? 1.3 : 4.3f));
+			var groundSpeedSquared = entity.Velocity.X * entity.Velocity.X + entity.Velocity.Z * entity.Velocity.Z;
+
+		    var maxSpeed = entity.IsFlying ? (entity.IsSprinting ? 22f : 11f) : (entity.IsSprinting && !entity.IsSneaking ? 5.6f : (entity.IsSneaking ? 1.3f : 4.3f));
 		    if (groundSpeedSquared > (maxSpeed))
 		    {
 			    var correctionScale = (float) Math.Sqrt(maxSpeed / groundSpeedSquared);
 			    entity.Velocity *= new Vector3(correctionScale, 1f, correctionScale);
 		    }
 
-		    if (Math.Abs(entity.Velocity.Y) > entity.TerminalVelocity)
+			if (entity.Velocity.Y > entity.TerminalVelocity)
 		    {
 				entity.Velocity = new Vector3(entity.Velocity.X, entity.TerminalVelocity, entity.Velocity.Z);
 		    }
-
-		   // entity.Velocity = Vector3.Clamp(entity.Velocity, entity.Velocity, new Vector3(entity.TerminalVelocity));// velocity;
-				    // entity.Velocity = Vector3.Clamp(entity.Velocity, -new Vector3(entity.TerminalVelocity), new Vector3(entity.TerminalVelocity));
-	    }
+			else if (entity.Velocity.Y < -entity.TerminalVelocity)
+			{
+				entity.Velocity = new Vector3(entity.Velocity.X, -entity.TerminalVelocity, entity.Velocity.Z);
+			}
+		}
 
 	    public void Update(GameTime elapsed)
 	    {
@@ -71,18 +72,18 @@ namespace Alex.Worlds
 				    {
 					    if (e.NoAi) continue;
 
-					    if (!e.IsFlying)
+					    if (!e.IsFlying && !e.KnownPosition.OnGround)
 					    {
-						    e.Velocity -= new Vector3(0, (float) (e.Gravity), 0);
+						    e.Velocity -= new Vector3(0, (float)(e.Gravity), 0);
 					    }
 
-					    e.Velocity *= (float) (1f - e.Drag);
+					    e.Velocity *= (float)(1f - e.Drag);
 
-					    TruncateVelocity(e, dt);
+						TruncateVelocity(e, dt);
 
 					    Vector3 collision, before = e.Velocity;
 
-					    //  var velocityInput = entity.Velocity * multiplier;
+					    //  var velocityInput = entity.Velocity * deltaTime;
 
 					    if (TestTerrainCollisionY(e, e.Velocity * dt, dt, out collision))
 						    e.TerrainCollision(collision, before.Y < 0 ? Vector3.Down : Vector3.Up);
@@ -98,7 +99,7 @@ namespace Alex.Worlds
 
 					    e.KnownPosition.Move(e.Velocity * dt);
 
-					    TruncateVelocity(e, dt);
+					//	TruncateVelocity(e, dt);
 				    }
 			    }
 			    catch (Exception ex)

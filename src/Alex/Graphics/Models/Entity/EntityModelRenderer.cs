@@ -212,16 +212,17 @@ namespace Alex.Graphics.Models.Entity
 
 				var buffer = Buffer;
 
-				var yaw = ApplyYaw ? MathUtils.ToRadians(position.Yaw) : 0f;
-				var headYaw = ApplyHeadYaw ? MathUtils.ToRadians(position.HeadYaw) : 0f;
+				var yaw = ApplyYaw ? MathUtils.ToRadians(MathUtils.NormDeg(position.Yaw + 180f)) : 0f;
+				var headYaw = ApplyHeadYaw ? MathUtils.ToRadians(MathUtils.NormDeg(position.HeadYaw + 180f)) : 0f;
 				var pitch = ApplyPitch ? MathUtils.ToRadians(position.Pitch) : 0f;
 
 				Effect.World = Matrix.CreateRotationY(yaw)
-							   * Matrix.CreateTranslation(-Pivot)
+							   * (Matrix.CreateTranslation(-Pivot)
 							   * Matrix.CreateFromYawPitchRoll(headYaw, pitch, 0f)
-				               * Matrix.CreateTranslation(Pivot)
+				               * Matrix.CreateTranslation(Pivot))
 				               * (Matrix.CreateScale(1f / 16f) * Matrix.CreateTranslation(position));
 
+				//Effect.World = world * (Matrix.CreateScale(1f / 16f) * Matrix.CreateTranslation(position));
 				Effect.View = args.Camera.ViewMatrix;
 				Effect.Projection = args.Camera.ProjectionMatrix;
 
@@ -250,7 +251,7 @@ namespace Alex.Graphics.Models.Entity
 
 					if (rotation != Vector3.Zero)
 					{
-						//pos = Vector3.Transform(pos, transform);
+						pos = Vector3.Transform(pos, transform);
 					}
 
 					_vertices[i].Position = pos;

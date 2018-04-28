@@ -582,22 +582,6 @@ namespace Alex.Worlds.Java
 			}
 		}
 
-		private void HandleEntityVelocity(EntityVelocity packet)
-		{
-			if (WorldReceiver.TryGetEntity(packet.EntityId, out var entity))
-			{
-				entity.Velocity = new Vector3(packet.VelocityX / 8000f, packet.VelocityY / 8000f, packet.VelocityZ / 8000f);
-			}
-		}
-
-		private void HandleEntityHeadLook(EntityHeadLook packet)
-		{
-			if (WorldReceiver.TryGetEntity(packet.EntityId, out var entity))
-			{
-				entity.KnownPosition.HeadYaw = 180f - MathUtils.AngleToNotchianDegree(packet.HeadYaw);
-			}
-		}
-
 		private void HandleDestroyEntitiesPacket(DestroyEntitiesPacket packet)
 		{
 			foreach(var id in packet.Entitys)
@@ -610,7 +594,7 @@ namespace Alex.Worlds.Java
 		{
 			if (_players.TryGetValue(new UUID(packet.Uuid.ToByteArray()), out PlayerMob mob))
 			{
-				float yaw = 180f - MathUtils.AngleToNotchianDegree(packet.Yaw);
+				float yaw = MathUtils.AngleToNotchianDegree(packet.Yaw);
 				mob.KnownPosition = new PlayerLocation(packet.X, packet.Y, packet.Z, yaw, yaw, MathUtils.AngleToNotchianDegree(packet.Pitch));
 				mob.EntityId = packet.EntityId;
 				mob.IsSpawned = true;
@@ -667,7 +651,7 @@ namespace Alex.Worlds.Java
 
 		private void HandleEntityLookAndRelativeMove(EntityLookAndRelativeMove packet)
 		{
-			var yaw = 180f - MathUtils.AngleToNotchianDegree(packet.Yaw);
+			var yaw = MathUtils.AngleToNotchianDegree(packet.Yaw);
 			WorldReceiver.UpdateEntityPosition(packet.EntityId, new PlayerLocation(MathUtils.FromFixedPoint(packet.DeltaX), MathUtils.FromFixedPoint(packet.DeltaY), MathUtils.FromFixedPoint(packet.DeltaZ), yaw, yaw, MathUtils.AngleToNotchianDegree(packet.Pitch))
 			{
 				OnGround = packet.OnGround
@@ -682,11 +666,19 @@ namespace Alex.Worlds.Java
 			}, true);
 		}
 
+		private void HandleEntityHeadLook(EntityHeadLook packet)
+		{
+			if (WorldReceiver.TryGetEntity(packet.EntityId, out var entity))
+			{
+				entity.UpdateHeadYaw(MathUtils.AngleToNotchianDegree(packet.HeadYaw));
+			}
+		}
+
 		private void HandleEntityLook(EntityLook packet)
 		{
 			if (WorldReceiver.TryGetEntity(packet.EntityId, out var entity))
 			{
-				entity.KnownPosition.Yaw = 180f - MathUtils.AngleToNotchianDegree(packet.Yaw);
+				entity.KnownPosition.Yaw = MathUtils.AngleToNotchianDegree(packet.Yaw);
 				entity.KnownPosition.Pitch = MathUtils.AngleToNotchianDegree(packet.Pitch);
 				entity.KnownPosition.OnGround = packet.OnGround;
 			}
@@ -694,11 +686,19 @@ namespace Alex.Worlds.Java
 
 		private void HandleEntityTeleport(EntityTeleport packet)
 		{
-			float yaw = 180f - MathUtils.AngleToNotchianDegree(packet.Yaw);
+			float yaw = MathUtils.AngleToNotchianDegree(packet.Yaw);
 			WorldReceiver.UpdateEntityPosition(packet.EntityID, new PlayerLocation(packet.X, packet.Y, packet.Z, yaw, yaw, MathUtils.AngleToNotchianDegree(packet.Pitch))
 			{
 				OnGround = packet.OnGround
 			});
+		}
+
+		private void HandleEntityVelocity(EntityVelocity packet)
+		{
+			if (WorldReceiver.TryGetEntity(packet.EntityId, out var entity))
+			{
+				entity.Velocity = new Vector3(packet.VelocityX / 8000f, packet.VelocityY / 8000f, packet.VelocityZ / 8000f);
+			}
 		}
 
 		private void HandleEntityPropertiesPacket(EntityPropertiesPacket packet)
@@ -898,7 +898,7 @@ namespace Alex.Worlds.Java
 
 		private void HandleSpawnMob(SpawnMob packet)
 		{
-			SpawnMob(packet.EntityId, packet.Uuid, (EntityType)packet.Type, new PlayerLocation(packet.X, packet.Y, packet.Z, 180f - packet.Yaw, 180f - packet.Yaw, packet.Pitch)
+			SpawnMob(packet.EntityId, packet.Uuid, (EntityType)packet.Type, new PlayerLocation(packet.X, packet.Y, packet.Z, packet.Yaw, packet.Yaw, packet.Pitch)
 			{
 			//	OnGround = packet.
 			}, new Vector3(packet.VelocityX, packet.VelocityY, packet.VelocityZ));
