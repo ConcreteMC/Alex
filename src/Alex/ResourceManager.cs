@@ -48,7 +48,7 @@ namespace Alex
 
 				Log.Info($"Using assets version {latestSnapshotVersion.Id}");
 
-				string savedPath = Path.Combine("assets", latestSnapshotVersion.Id + ".bin");
+				string savedPath = Path.Combine("assets", latestSnapshotVersion.Id + ".zip");
 				if (!File.Exists(savedPath))
 				{
 					Log.Info("Downloading latest vanilla Minecraft resources...");
@@ -74,6 +74,9 @@ namespace Alex
 				resourcePack = new McResourcePack(archive, graphics, preloadCallback);
 			}
 
+			Log.Info($"Loaded {resourcePack.BlockModels.Count} block models from resourcepack");
+			Log.Info($"Loaded {resourcePack.ItemModels.Count} item models from resourcepack");
+
 			if (!replaceTextures)
 			{
 				Atlas.LoadResourcePackOnTop(resourcePack.TexturesAsBitmaps.Where(x => x.Key.StartsWith("blocks")).ToArray(),
@@ -90,6 +93,8 @@ namespace Alex
 			sw.Stop();
 
 			Log.Info($"Imported {imported} blockstate variants from resourcepack in {sw.ElapsedMilliseconds}ms!");
+
+			ItemFactory.Init(this, resourcePack);
 
 			return resourcePack;
 		}

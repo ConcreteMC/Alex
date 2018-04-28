@@ -2,6 +2,7 @@
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Graphics;
 using Alex.API.Input;
+using Alex.Entities;
 using Alex.GameStates.Playing;
 using Alex.Gui.Elements.Inventory;
 using Alex.Rendering.UI;
@@ -17,11 +18,12 @@ namespace Alex.GameStates.Hud
 		private PlayerInputManager InputManager => _playerController.InputManager;
 
 		private Alex Alex { get; }
-        public PlayingHud(Alex game, PlayerController playerController, ChatComponent chat) : base()
+        public PlayingHud(Alex game, Player player, ChatComponent chat) : base()
         {
 	        Alex = game;
-            _playerController = playerController;
-            _hotbar = new GuiItemHotbar();
+            _playerController = player.Controller;
+
+	        _hotbar = new GuiItemHotbar(player.Inventory);
 	        _hotbar.Anchor = Alignment.BottomCenter;
 	        _hotbar.Padding = Thickness.Zero;
 

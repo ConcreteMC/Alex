@@ -114,6 +114,7 @@ namespace Alex.ResourcePackLib
 			if (IsLoaded) return;
 
 			Dictionary<string, BlockModel> models = new Dictionary<string, BlockModel>();
+			Dictionary<string, ResourcePackItem> items = new Dictionary<string, ResourcePackItem>();
 
 			foreach (var entry in archive.Entries)
 			{
@@ -142,7 +143,8 @@ namespace Alex.ResourcePackLib
 					}
 					else if (fileName.StartsWith("item"))
 					{
-						LoadItemModel(entry, modelMatch);
+						var item = LoadItemModel(entry, modelMatch);
+						items.Add($"{item.Namespace}:{item.Name}", item);
 					}
 
 					continue;
@@ -169,9 +171,10 @@ namespace Alex.ResourcePackLib
 					ProcessBlockModel(blockModel.Value, ref models);
 			}
 
-			foreach (var itemModel in _itemModels.ToArray())
+			foreach (var itemModel in items)
 			{
-				_itemModels[itemModel.Key] = ProcessItem(itemModel.Value);
+				if (!_itemModels.ContainsKey(itemModel.Key))
+					ProcessItem(itemModel.Value, ref items);
 			}
 
 			foreach (var blockState in _blockStates.ToArray())
@@ -356,7 +359,7 @@ namespace Alex.ResourcePackLib
 		#endregion
 		
 		#region Items
-		private void LoadItemModel(ZipArchiveEntry entry, Match match)
+		private ResourcePackItem LoadItemModel(ZipArchiveEntry entry, Match match)
 		{
 			string name = match.Groups["filename"].Value;
 			string nameSpace = match.Groups["namespace"].Value;
@@ -364,21 +367,65 @@ namespace Alex.ResourcePackLib
 			using (var r = new StreamReader(entry.Open()))
 			{
 				var blockModel = MCJsonConvert.DeserializeObject<ResourcePackItem>(r.ReadToEnd());
-				blockModel.Name = name;
+				blockModel.Name = name.Replace("item/", "");
 				blockModel.Namespace = nameSpace;
+				if (blockModel.ParentName != null)
+				{
+					blockModel.ParentName = blockModel.ParentName.Replace("item/", "");
+				}
 
-				//blockModel = ProcessItem(blockModel);
-				_itemModels[$"{nameSpace}:{name}"] = blockModel;
+				return blockModel;
 			}
 
 		}
 
-		private ResourcePackItem ProcessItem(ResourcePackItem model)
+		private ResourcePackItem ProcessItem(ResourcePackItem model, ref Dictionary<string, ResourcePackItem> models)
 		{
-			if (!string.IsNullOrWhiteSpace(model.Parent) && !model.Parent.Equals(model.Name, StringComparison.InvariantCultureIgnoreCase))
+			string key = $"{model.Namespace}:{model.Name}";
+			if (!string.IsNullOrWhiteSpace(model.ParentName) && !model.ParentName.Equals(model.Name, StringComparison.InvariantCultureIgnoreCase))
 			{
-				
+				if (!model.ParentName.StartsWith("builtin/", StringComparison.InvariantCultureIgnoreCase))
+				{
+					string parentKey = $"{model.Namespace}:{model.ParentName}";
+
+					ResourcePackItem parent;
+					if (!_itemModels.TryGetValue(parentKey, out parent))
+					{
+						if (models.TryGetValue(parentKey, out parent))
+						{
+							parent = ProcessItem(parent, ref models);
+						}
+					}
+
+					if (parent != null)
+					{
+						model.Parent = parent;
+
+						if (model.Elements.Length == 0 && parent.Elements.Length > 0)
+						{
+							model.Elements = (BlockModelElement[]) parent.Elements.Clone();
+						}
+
+						foreach (var kvp in parent.Textures)
+						{
+							if (!model.Textures.ContainsKey(kvp.Key))
+							{
+								model.Textures.Add(kvp.Key, kvp.Value);
+							}
+						}
+
+						foreach (var kvp in parent.Display)
+						{
+							if (!model.Display.ContainsKey(kvp.Key))
+							{
+								model.Display.Add(kvp.Key, kvp.Value);
+							}
+						}
+					}
+				}
 			}
+
+			_itemModels.Add(key, model);
 
 			return model;
 		}

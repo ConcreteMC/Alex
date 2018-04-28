@@ -147,6 +147,46 @@ namespace Alex {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {
+        ///	&quot;minecraft:air&quot;: {
+        ///		&quot;protocol_id&quot;: 0
+        ///	},
+        ///	&quot;minecraft:stone&quot;: {
+        ///		&quot;protocol_id&quot;: 1
+        ///	},
+        ///	&quot;minecraft:granite&quot;: {
+        ///		&quot;protocol_id&quot;: 2
+        ///	},
+        ///	&quot;minecraft:polished_granite&quot;: {
+        ///		&quot;protocol_id&quot;: 3
+        ///	},
+        ///	&quot;minecraft:diorite&quot;: {
+        ///		&quot;protocol_id&quot;: 4
+        ///	},
+        ///	&quot;minecraft:polished_diorite&quot;: {
+        ///		&quot;protocol_id&quot;: 5
+        ///	},
+        ///	&quot;minecraft:andesite&quot;: {
+        ///		&quot;protocol_id&quot;: 6
+        ///	},
+        ///	&quot;minecraft:polished_andesite&quot;: {
+        ///		&quot;protocol_id&quot;: 7
+        ///	},
+        ///	&quot;minecraft:grass_block&quot;: {
+        ///		&quot;protocol_id&quot;: 8
+        ///	},
+        ///	&quot;minecraft:dirt&quot;: {
+        ///		&quot;protocol_id&quot;: 9
+        ///	},
+        ///	&quot;minecraft:coar [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string Items {
+            get {
+                return ResourceManager.GetString("Items", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
         internal static byte[] logo {
@@ -211,10 +251,7 @@ namespace Alex {
         ///    ]
         ///  },
         ///  &quot;minecraft:diorite&quot;: {
-        ///    &quot;states&quot;: [
-        ///      {
-        ///        &quot;id&quot;: 4,
-        ///      [rest of string was truncated]&quot;;.
+        ///    &quot;states&quot; [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string NewBlocks {
             get {
@@ -247,8 +284,7 @@ namespace Alex {
         ///    },
         ///    &quot;bat&quot;: {
         ///      &quot;class&quot;: &quot;agl&quot;,
-        ///      &quot;display_name&quot;: &quot;Bat&quot;,
-        /// [rest of string was truncated]&quot;;.
+        ///      [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string NewEntities {
             get {

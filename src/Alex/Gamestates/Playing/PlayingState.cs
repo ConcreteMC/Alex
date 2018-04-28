@@ -52,7 +52,7 @@ namespace Alex.GameStates.Playing
 			World.WorldInfo = info;
 			chat.ChatProvider = chatProvider;
 
-			_playingHud = new PlayingHud(Alex, World.Player.Controller, chat);
+			_playingHud = new PlayingHud(Alex, World.Player, chat);
 			_debugInfo = new GuiDebugInfo();
 			FpsCounter = new FpsMonitor();
 			InitDebugInfo();

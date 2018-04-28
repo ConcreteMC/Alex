@@ -14,6 +14,8 @@ namespace Alex.Utils
 	    public int SlotCount => Slots.Length;
 	    public byte SelectedSlot { get; set; } = 0;
 
+	    public EventHandler<SlotChangedEventArgs> SlotChanged = null;
+
 	    public Inventory(int slots)
 	    {
 			Slots = new SlotData[slots];
@@ -24,7 +26,13 @@ namespace Alex.Utils
 	    {
 		    for (int i = 0; i < Slots.Length; i++)
 		    {
-			    Slots[i] = new SlotData();
+			    Slots[i] = new SlotData()
+			    {
+					ItemID = -1,
+					Count = 0,
+					ItemDamage = 0,
+					Nbt = null
+			    };
 		    }
 		}
 
@@ -41,7 +49,20 @@ namespace Alex.Utils
 			    if (index < 0 || index >= Slots.Length) throw new IndexOutOfRangeException();
 
 			    Slots[index] = value;
-		    }
+			    SlotChanged?.Invoke(this, new SlotChangedEventArgs(index, value));
+			}
 	    }
     }
+
+	public class SlotChangedEventArgs : EventArgs
+	{
+		public int Index;
+		public SlotData Value;
+
+		public SlotChangedEventArgs(int index, SlotData value)
+		{
+			Index = index;
+			Value = value;
+		}
+	}
 }

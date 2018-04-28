@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Alex.ResourcePackLib.Json.Models.Blocks;
 using Newtonsoft.Json;
 
 namespace Alex.ResourcePackLib.Json.Models.Items
@@ -12,10 +13,15 @@ namespace Alex.ResourcePackLib.Json.Models.Items
 
 	    }
 
-	    public string Parent;
+		[JsonProperty("parent")]
+	    public string ParentName;
+
+	    [JsonIgnore] public ResourcePackItem Parent = null;
+
 	    public Dictionary<string, string> Textures = new Dictionary<string, string>();
 		public Dictionary<string, DisplayElement> Display = new Dictionary<string, DisplayElement>();
 	    public Override[] Overrides = new Override[0];
+	    public BlockModelElement[] Elements { get; set; } = new BlockModelElement[0];
 
 		[JsonIgnore]
 	    public string Name { get; set; }

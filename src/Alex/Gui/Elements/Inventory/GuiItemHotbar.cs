@@ -1,13 +1,20 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Alex.API.Gui;
+using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Layout;
 using Alex.API.Gui.Graphics;
+using Alex.API.Utils;
+using Alex.Utils;
+using NLog;
 
 namespace Alex.Gui.Elements.Inventory
 {
     public class GuiItemHotbar : GuiContainer
     {
-        private const int ItemCount = 9;
+	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(GuiItemHotbar));
+
+		private const int ItemCount = 9;
         private const int ItemWidth = 20;
         
         private int _selectedIndex = 0;
@@ -32,13 +39,41 @@ namespace Alex.Gui.Elements.Inventory
             }
         }
 
-        public GuiItemHotbar()
+		public Utils.Inventory Inventory { get; set; }
+
+	    private GuiTextElement _itemNameTextElement;
+        public GuiItemHotbar(Utils.Inventory inventory)
         {
+	        Inventory = inventory;
+			Inventory.SlotChanged += SlotChanged;
+
             Width = ItemWidth * ItemCount;
             Height = ItemWidth;
         }
 
-        private void OnSelectedIndexChanged()
+	    private void SlotChanged(object sender, SlotChangedEventArgs e)
+		{
+			var items = Children.OfType<GuiInventoryItem>().ToArray();
+
+			if (e.Index >= 36 && e.Index <= 44) //Hotbar
+		    {
+			    int childIndex = 8 - (44 - e.Index);
+			    if (childIndex < 0 || childIndex >= items.Length)
+			    {
+				    Log.Warn($"Index out of range for hotbar: {childIndex}");
+					return;
+			    }
+
+			    items[childIndex].Item = e.Value;
+
+			    if (childIndex == SelectedIndex)
+			    {
+				    OnSelectedIndexChanged();
+			    }
+		    }
+	    }
+
+	    private void OnSelectedIndexChanged()
         {
             var items = Children.OfType<GuiInventoryItem>().ToArray();
             foreach (var guiInventoryItem in items)
@@ -46,7 +81,14 @@ namespace Alex.Gui.Elements.Inventory
                 guiInventoryItem.IsSelected = false;
             }
 
-            items[SelectedIndex].IsSelected = true;
+	        var item = items[SelectedIndex];
+	        item.IsSelected = true;
+
+	        if (ItemFactory.ResolveItemName(item.Item.ItemID, out string itemName))
+	        {
+		        _itemNameTextElement.Text = itemName;
+
+	        }
         }
 
         protected override void OnInit(IGuiRenderer renderer)
@@ -59,9 +101,18 @@ namespace Alex.Gui.Elements.Inventory
                 {
                     Margin = new Thickness((i * ItemWidth), 0, 0, 0),
                     IsSelected = i == SelectedIndex,
-					Anchor = Alignment.TopLeft
+					Anchor = Alignment.TopLeft,
+					Item = Inventory[36 + i]
                 });
             }
+
+			AddChild(_itemNameTextElement = new GuiTextElement()
+			{
+				Font = renderer.Font,
+				Anchor = Alignment.TopCenter,
+				TextColor = TextColor.White,
+				Text = "Unknown"
+			});
         }
     }
 }
