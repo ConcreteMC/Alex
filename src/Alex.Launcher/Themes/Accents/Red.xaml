@@ -1,0 +1,43 @@
+﻿<Style xmlns="https://github.com/avaloniaui"
+       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+       xmlns:mut="https://github.com/avaloniaui/mutable"
+       xmlns:sys="clr-namespace:System;assembly=mscorlib"
+			 xmlns:local="clr-namespace:Alex.Launcher.Themes.Accents;assembly=Alex.Launcher">
+    <Style.Resources>
+			<SolidColorBrush x:Key="ThemeAccentBrush">#FFFF503F</SolidColorBrush>
+			<SolidColorBrush x:Key="ThemeAccentBrush2">#FFFF503F</SolidColorBrush>
+			<SolidColorBrush x:Key="ThemeAccentBrush3">#66FF503F</SolidColorBrush>
+			<SolidColorBrush x:Key="ThemeAccentBrush4">#33FF503F</SolidColorBrush>
+			<SolidColorBrush x:Key="ApplicationAccentBrush">#FF503F</SolidColorBrush>
+			<SolidColorBrush x:Key="ApplicationAccentBrushLight">#E74856</SolidColorBrush>
+			<SolidColorBrush x:Key="ApplicationAccentForegroundBrush">#FF2C2C2D</SolidColorBrush>
+			
+			<!--80%-->
+			<SolidColorBrush x:Key="AccentColor">#CCFF503F</SolidColorBrush>
+			<!--60%-->
+			<SolidColorBrush x:Key="AccentColor2">#99FF503F</SolidColorBrush>
+			<!--40%-->
+			<SolidColorBrush x:Key="AccentColor3">#66FF503F</SolidColorBrush>
+			<!--20%-->
+			<SolidColorBrush x:Key="AccentColor4">#33FF503F</SolidColorBrush>
+
+			<!--A lighter version of the base theme-->
+			<!--80%-->
+			<SolidColorBrush x:Key="AccentColorLight">#CCE74856</SolidColorBrush>
+			<!--60%-->
+			<SolidColorBrush x:Key="AccentColorLight2">#99E74856</SolidColorBrush>
+
+
+
+			<SolidColorBrush x:Key="ThemeBorderBrush">#FF2C2C2D</SolidColorBrush>
+			<SolidColorBrush x:Key="ThemeBorderLightBrush">#FFF2F2F2</SolidColorBrush>
+			<SolidColorBrush x:Key="ThemeBorderMidBrush">#FF888888</SolidColorBrush>
+			<SolidColorBrush x:Key="ThemeBorderDarkBrush">#FF2C2C2D</SolidColorBrush>
+			<SolidColorBrush x:Key="ThemeControlLightBrush">#FFF2F2F2</SolidColorBrush>
+			<SolidColorBrush x:Key="ThemeControlMidBrush">#FF666666</SolidColorBrush>
+			<SolidColorBrush x:Key="ThemeControlDarkBrush">#FF2C2C2D</SolidColorBrush>
+			<SolidColorBrush x:Key="ThemeControlBackgroundBrush">#FF666666</SolidColorBrush>
+			<SolidColorBrush x:Key="ThemeForegroundBrush">#FF2C2C2D</SolidColorBrush>
+			<SolidColorBrush x:Key="ThemeForegroundLightBrush">#FFF2F2F2</SolidColorBrush>
+    </Style.Resources>
+</Style>
