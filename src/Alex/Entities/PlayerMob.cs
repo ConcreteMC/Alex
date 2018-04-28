@@ -109,17 +109,38 @@ namespace Alex.Entities
 		}
 
 		private float _armRotation = 0f;
+		private float _legRotation = 0f;
 		public override void Update(IUpdateArgs args)
 		{
 			base.Update(args);
 
-			var dt = (float)args.GameTime.TotalGameTime.TotalSeconds;
+			var dt = (float)args.GameTime.ElapsedGameTime.TotalSeconds;
+			
+			_armRotation += dt;
+			//_armRotation = _armRotation;
 
 			// Test arm rotations
 			if (_leftArmModel != null && _rightArmModel != null)
 			{
-				_leftArmModel.Rotation = new Vector3(MathF.Sin(dt), 0f, 0f);
-				_rightArmModel.Rotation = new Vector3(-MathF.Sin(dt), 0f, 0f);
+				_leftArmModel.Rotation = new Vector3((0.5f + MathF.Sin(_armRotation)) / 7.5f, 0f, 0.1f + (MathF.Cos(_armRotation) / 7.5f));
+				_rightArmModel.Rotation = new Vector3((0.5f + MathF.Sin(_armRotation)) / -7.5f, 0f, -0.1f + (MathF.Cos(_armRotation) / -7.5f));
+			}
+
+			if (_leftLegModel != null && _rightLegModel != null)
+			{
+				if (IsMoving)
+				{
+					_legRotation += (MathF.Sqrt(Velocity.X * Velocity.X + Velocity.Z * Velocity.Z) * 0.23f) * dt;
+
+					_leftLegModel.Rotation = new Vector3(MathF.Sin(_legRotation), 0f, 0f);
+					_rightLegModel.Rotation = new Vector3(-MathF.Sin(_legRotation), 0f, 0f);
+				}
+				else
+				{
+					_legRotation = 0;
+					_leftLegModel.Rotation = Vector3.Zero;
+					_rightLegModel.Rotation = Vector3.Zero;
+				}
 			}
 
 		}
