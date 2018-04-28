@@ -149,7 +149,7 @@ namespace Alex.Entities
 			_previousPosition = KnownPosition;
 
 			if (IsNoAi) return;
-			IsMoving = Velocity.LengthSquared() > 0f;
+		//	IsMoving = Velocity.LengthSquared() > 0f;
 
 			var feetBlock = Level?.GetBlock(KnownPosition.GetCoordinates3D());
 			if (feetBlock != null)
@@ -185,6 +185,8 @@ namespace Alex.Entities
 			double deltaX = KnownPosition.X - _previousPosition.X;
 			double deltaZ = KnownPosition.Z - _previousPosition.Z;
 			double distSQ = deltaX * deltaX + deltaZ * deltaZ;
+
+			IsMoving = distSQ > 0f || Velocity.LengthSquared() > 0f;
 
 			float maximumHeadBodyAngleDifference = 90;
 			const float MOVEMENT_THRESHOLD_SQ = 0.0001F;

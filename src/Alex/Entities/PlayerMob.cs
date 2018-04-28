@@ -86,28 +86,9 @@ namespace Alex.Entities
 			ModelRenderer.GetBone("leftArm", out _leftArmModel);
 			ModelRenderer.GetBone("leftLeg", out _leftLegModel);
 			ModelRenderer.GetBone("rightLeg", out _rightLegModel);
-
-			/*foreach (var bone in _model.Bones)
-			{
-				if (bone.Name.Contains("rightArm"))
-				{
-					_rightArmModel = bone;
-				}
-				else if (bone.Name.Contains("leftArm"))
-				{
-					_leftArmModel = bone;
-				}
-				else if (bone.Name.Contains("leftLeg"))
-				{
-					_leftLegModel = bone;
-				}
-				else if (bone.Name.Contains("rightLeg"))
-				{
-					_rightLegModel = bone;
-				}
-			}*/
 		}
 
+		private Vector3 _prevUpdatePosition = Vector3.Zero;
 		private float _armRotation = 0f;
 		private float _legRotation = 0f;
 		public override void Update(IUpdateArgs args)
@@ -126,23 +107,37 @@ namespace Alex.Entities
 				_rightArmModel.Rotation = new Vector3((0.5f + MathF.Sin(_armRotation)) / -7.5f, 0f, -0.1f + (MathF.Cos(_armRotation) / -7.5f));
 			}
 
+
 			if (_leftLegModel != null && _rightLegModel != null)
 			{
 				if (IsMoving)
 				{
-					_legRotation += (MathF.Sqrt(Velocity.X * Velocity.X + Velocity.Z * Velocity.Z) * 0.23f) * dt;
+					var pos = KnownPosition.ToVector3();
+					float deltaX = pos.X - _prevUpdatePosition.X;
+					float deltaZ = pos.Z - _prevUpdatePosition.Z;
+					float distSQ = deltaX * deltaX + deltaZ * deltaZ;
+
+					_legRotation += (distSQ / dt);
 
 					_leftLegModel.Rotation = new Vector3(MathF.Sin(_legRotation), 0f, 0f);
 					_rightLegModel.Rotation = new Vector3(-MathF.Sin(_legRotation), 0f, 0f);
+
+					_prevUpdatePosition = pos;
 				}
 				else
 				{
-					_legRotation = 0;
+					_legRotation = 0f;
 					_leftLegModel.Rotation = Vector3.Zero;
 					_rightLegModel.Rotation = Vector3.Zero;
 				}
 			}
+		}
 
+		public override void OnTick()
+		{
+			base.OnTick();
+
+			
 		}
 	}
 }
