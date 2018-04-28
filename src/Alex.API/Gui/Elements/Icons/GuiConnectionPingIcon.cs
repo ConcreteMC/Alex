@@ -46,7 +46,8 @@ namespace Alex.API.Gui.Elements.Icons
 
         private bool _isPending;
         private int _animationFrame;
-	    private bool _isPendingUpdate; 
+	    private bool _isPendingUpdate;
+	    private bool _isOutdated = false;
         public GuiConnectionPingIcon() : base(GuiTextures.ServerPing0)
         {
             SetFixedSize(10, 8);
@@ -72,7 +73,7 @@ namespace Alex.API.Gui.Elements.Icons
 				Font = renderer.Font,
 				Text = string.Empty,
                 Anchor = Alignment.TopRight,
-				Margin = new Thickness(5, 0, Background.Width + 5, 0)
+				Margin = new Thickness(5, 0, Background.Width + 15, 0)
 			});
         }
 
@@ -85,27 +86,30 @@ namespace Alex.API.Gui.Elements.Icons
         public void SetPing(long ms)
         {
             _isPending = false;
-            int index = 0;
-            for (int i = _qualityStateTextures.Length - 1; i > 0; i--)
-            {
-                if(ms > _qualityThresholds[i]) break;
-                index = i;
-            }
 
-            Background = _qualityStateTextures[index];
+	        if (!_isOutdated)
+	        {
+		        int index = 0;
+		        for (int i = _qualityStateTextures.Length - 1; i > 0; i--)
+		        {
+			        index = i;
+			        if (ms > _qualityThresholds[i]) break;
+
+		        }
+
+		        Background = _qualityStateTextures[_qualityStateTextures.Length - index];
+	        }
         }
 
 	    public void SetPlayerCount(int players, int max)
 	    {
 		    _playerCountElement.Text = $"§7{players}/{max}";
-		    UpdateKids();
-		    //_isPending = true;
 	    }
 
 	    public void SetOutdated(string message)
 	    {
 		    _playerCountElement.Text = $"§4{message}";
-		    UpdateKids();
+		    _isOutdated = true;
 			SetOffline();
 	    }
 
@@ -121,10 +125,9 @@ namespace Alex.API.Gui.Elements.Icons
 
             if (_isPending)
             {
-                var dt = gameTime.ElapsedGameTime.Seconds / 20.0f;
+                var dt = gameTime.ElapsedGameTime.TotalSeconds / 20.0f;
 
                 _animationFrame = (int)((dt * 20.0f) % _connectingStates.Length);
-
             }
         }
 
@@ -139,20 +142,5 @@ namespace Alex.API.Gui.Elements.Icons
                 base.OnDraw(graphics, gameTime);
             }
         }
-
-	    protected override void OnUpdateLayout()
-	    {
-		    base.OnUpdateLayout();
-			UpdateKids();
-	    }
-
-	    private void UpdateKids()
-	    {
-		    if (_playerCountElement != null)
-		    {
-				
-			    //_playerCountElement.X = -_playerCountElement.Width - 4;
-		    }
-		}
     }
 }

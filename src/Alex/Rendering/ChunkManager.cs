@@ -53,7 +53,7 @@ namespace Alex.Rendering
 
 			SkylightCalculator = new SkylightCalculations(world);
 
-			var distance = (float)Math.Pow(alex.GameSettings.RenderDistance, 2) * 0.8f;
+				//	var distance = (float)Math.Pow(alex.GameSettings.RenderDistance, 2) * 0.8f;
 			var fogStart = 0;//distance - (distance * 0.35f);
 			TransparentEffect = new AlphaTestEffect(Graphics)
 			{
@@ -62,7 +62,7 @@ namespace Alex.Rendering
 				World = Matrix.Identity,
 				AlphaFunction = CompareFunction.Greater,
 				ReferenceAlpha = 127,
-				FogEnd = distance,
+				//FogEnd = distance,
 				FogStart = fogStart,
 				FogEnabled = true
 			};
@@ -76,7 +76,7 @@ namespace Alex.Rendering
 			{
 				TextureEnabled = true,
 				Texture = alex.Resources.Atlas.GetAtlas(),
-				FogEnd = distance,
+			//	FogEnd = distance,
 				FogStart = fogStart,
 				VertexColorEnabled = true,
 				LightingEnabled = true,
@@ -436,13 +436,44 @@ namespace Alex.Rendering
 		    }
 	    }
 
-	    public void Update(IUpdateArgs args, SkyBox skyRenderer)
+	    public Vector3 FogColor
 	    {
-		    TransparentEffect.FogColor = skyRenderer.WorldFogColor.ToVector3();
-		    OpaqueEffect.FogColor = skyRenderer.WorldFogColor.ToVector3();
-		    OpaqueEffect.AmbientLightColor = TransparentEffect.DiffuseColor =
-			    Color.White.ToVector3() * new Vector3((skyRenderer.BrightnessModifier));
+		    get { return TransparentEffect.FogColor; }
+		    set
+		    {
+				TransparentEffect.FogColor = value;
+			    OpaqueEffect.FogColor = value;
+		    }
+	    }
 
+	    public float FogDistance
+	    {
+		    get { return TransparentEffect.FogEnd; }
+		    set
+		    {
+			    TransparentEffect.FogEnd = value;
+			    OpaqueEffect.FogEnd = value;
+		    }
+	    }
+
+	    public Vector3 AmbientLightColor
+		{
+		    get { return TransparentEffect.DiffuseColor; }
+		    set
+		    {
+			    TransparentEffect.DiffuseColor = value;
+			    OpaqueEffect.AmbientLightColor = value;
+		    }
+	    }
+
+		public void Update(IUpdateArgs args)
+	    {
+		  //  TransparentEffect.FogColor = skyRenderer.WorldFogColor.ToVector3();
+		 //   OpaqueEffect.FogColor = skyRenderer.WorldFogColor.ToVector3();
+
+		    //   OpaqueEffect.AmbientLightColor = TransparentEffect.DiffuseColor =
+			//    Color.White.ToVector3() * new Vector3((skyRenderer.BrightnessModifier));
+			
 		    var camera = args.Camera;
 		    CameraBoundingFrustum = camera.BoundingFrustum;
 		    CameraPosition = camera.Position;

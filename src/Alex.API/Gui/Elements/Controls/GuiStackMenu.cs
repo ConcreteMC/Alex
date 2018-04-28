@@ -15,7 +15,6 @@ namespace Alex.API.Gui.Elements.Controls
         {
             AddChild(new GuiStackMenuItem(label, action)
             {
-                Anchor = Alignment.TopFill,
             });
         }
 

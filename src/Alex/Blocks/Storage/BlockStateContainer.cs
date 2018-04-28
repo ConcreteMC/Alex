@@ -155,8 +155,6 @@ namespace Alex.Blocks.Storage
 			}
 
 			_bits = bits;
-
-			int pIndex = 0;
 			foreach (var p in palette.Cast<NbtCompound>())
 			{
 				string name = p["Name"].StringValue;

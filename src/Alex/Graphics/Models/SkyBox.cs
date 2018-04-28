@@ -214,7 +214,7 @@ namespace Alex.Graphics.Models
 		{
 			get
 			{
-				float blendFactor = ((Game.GameSettings.RenderDistance ^2) / 100f) * 0.45f;//  0.29f; // TODO: Compute based on view distance
+				float blendFactor = ((Game.GameSettings.RenderDistance ^2) / 100f) * 0.45f;
 
 				float Blend(float source, float destination) => destination + (source - destination) * blendFactor;
 

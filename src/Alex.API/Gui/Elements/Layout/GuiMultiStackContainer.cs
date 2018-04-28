@@ -47,6 +47,17 @@ namespace Alex.API.Gui.Elements.Layout
             _rows.Add(stack);
             AddChild(stack);
             return stack;
-        }
-    }
+		}
+
+	    public GuiStackContainer AddRow(params GuiElement[] elements)
+	    {
+		    return AddRow(row =>
+		    {
+			    foreach (var element in elements)
+			    {
+				    row.AddChild(element);
+			    }
+		    });
+	    }
+	}
 }

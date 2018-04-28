@@ -159,6 +159,10 @@ namespace Alex
 
 			EntityFactory.LoadModels(this, device, true, progressReceiver);
 
+
+			Log.Info($"Loading known entity data...");
+			EntityFactory.Load();
+
 			foreach (string file in setings.ResourcePacks)
 			{
 				try

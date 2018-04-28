@@ -6,12 +6,33 @@ using System.Threading.Tasks;
 
 namespace Alex.API.Services
 {
+	public delegate void PingServerDelegate(ServerPingResponse response);
     public interface IServerQueryProvider
     {
 
-        Task<ServerQueryResponse> QueryServerAsync(string hostname, ushort port);
+        Task<ServerQueryResponse> QueryServerAsync(string hostname, ushort port, PingServerDelegate pingCallback = null);
 
     }
+
+	public class ServerPingResponse
+	{
+		public bool Success { get; }
+		public string ErrorMessage { get; }
+		public long Ping { get; }
+
+		public ServerPingResponse(bool success, long ping)
+		{
+			Success = success;
+			Ping = ping;
+		}
+
+		public ServerPingResponse(bool success, string error, long ping)
+		{
+			Success = success;
+			ErrorMessage = error;
+			Ping = ping;
+		}
+	}
 
     public class ServerQueryResponse
     {
@@ -36,6 +57,7 @@ namespace Alex.API.Services
 
     public struct ServerQueryStatus
     {
+	    public bool WaitingOnPing { get; set; }
         public bool Success { get; set; }
         public long Delay   { get; set; }
         public IPEndPoint EndPoint { get; set; }

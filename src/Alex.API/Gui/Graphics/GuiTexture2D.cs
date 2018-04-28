@@ -21,9 +21,15 @@ namespace Alex.API.Gui.Graphics
         public GuiTexture2D(ITexture2D texture) : this()
         {
             Texture = texture;
-        }
+		}
+		public GuiTexture2D(ITexture2D texture, TextureRepeatMode repeatMode = TextureRepeatMode.Stretch, Vector2? scale = null) : this()
+		{
+			Texture = texture;
+			RepeatMode = repeatMode;
+			Scale = scale;
+		}
 
-        public GuiTexture2D(GuiTextures guiTexture, TextureRepeatMode repeatMode = TextureRepeatMode.Stretch, Vector2? scale = null) : this()
+		public GuiTexture2D(GuiTextures guiTexture, TextureRepeatMode repeatMode = TextureRepeatMode.Stretch, Vector2? scale = null) : this()
         {
             TextureResource = guiTexture;
             RepeatMode = repeatMode;

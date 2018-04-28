@@ -10,30 +10,36 @@ using Alex.Networking.Java;
 using Alex.Networking.Java.Packets;
 using Alex.Networking.Java.Packets.Handshake;
 using Alex.Networking.Java.Packets.Status;
+using Alex.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using NLog;
 
 namespace Alex.Services
 {
     public class ServerQueryProvider : IServerQueryProvider
     {
+	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ServerQueryProvider));
+		private static FastRandom Rnd = new FastRandom();
         public ServerQueryProvider()
         {
             MCPacketFactory.Load();
         }
 
-        public async Task<ServerQueryResponse> QueryServerAsync(string hostname, ushort port)
+        public async Task<ServerQueryResponse> QueryServerAsync(string hostname, ushort port, PingServerDelegate pingCallback = null)
         {
-            return await QueryJavaServerAsync(hostname, port);
+            return await QueryJavaServerAsync(hostname, port, pingCallback);
         }
 
-        private async Task<ServerQueryResponse> QueryJavaServerAsync(string hostname, ushort port)
+        private async Task<ServerQueryResponse> QueryJavaServerAsync(string hostname, ushort port, PingServerDelegate pingCallback)
         {
             var sw = Stopwatch.StartNew();
 	        TcpClient client = null;
 	        NetConnection conn = null;
 			IPEndPoint endPoint = null;
-	        try
+	        string jsonResponse = null;
+
+			try
 	        {
 		        client = new TcpClient();
 
@@ -42,11 +48,11 @@ namespace Alex.Services
 
 		        if (client.Connected)
 		        {
-			        conn = new NetConnection(Direction.ClientBound, client.Client);
+			        long pingId = Rnd.NextUInt();
+					conn = new NetConnection(Direction.ClientBound, client.Client);
 			        //using (var conn = new NetConnection(Direction.ClientBound, client.Client))
 			        {
 				        AutoResetEvent ar = new AutoResetEvent(false);
-				        string jsonResponse = null;
 
 				        conn.OnPacketReceived += (sender, args) =>
 				        {
@@ -54,6 +60,17 @@ namespace Alex.Services
 					        {
 						        jsonResponse = responsePacket.ResponseMsg;
 						        ar.Set();
+					        }
+							else if (args.Packet is PingPacket pong)
+					        {
+						        if (pong.Payload == pingId)
+						        {
+							       pingCallback?.Invoke(new ServerPingResponse(true, sw.ElapsedMilliseconds));
+								}
+						        else
+						        {
+							        pingCallback?.Invoke(new ServerPingResponse(false, "Ping payload does not match!", sw.ElapsedMilliseconds));
+								}
 					        }
 				        };
 
@@ -75,14 +92,27 @@ namespace Alex.Services
 
 				        if (ar.WaitOne(10000) && jsonResponse != null)
 				        {
-					        var json = JsonConvert.DeserializeObject<ServerListPingJson>(jsonResponse);
+					        long timeElapsed = sw.ElapsedMilliseconds;
 
-							return new ServerQueryResponse(true, new ServerQueryStatus()
+							var json = JsonConvert.DeserializeObject<ServerListPingJson>(jsonResponse);
+
+					        if (pingCallback != null)
 					        {
-						        Delay = sw.ElapsedMilliseconds,
-						        Success = true,
+								conn.SendPacket(new PingPacket()
+								{
+									Payload = pingId,
+								});
 
-						        EndPoint = endPoint,
+								sw.Restart();
+					        }
+
+					        return new ServerQueryResponse(true, new ServerQueryStatus()
+					        {
+						        Delay = timeElapsed,
+						        Success = true,
+								WaitingOnPing = pingCallback != null,
+
+								EndPoint = endPoint,
 						        Address = hostname,
 						        Port = port,
 
@@ -101,6 +131,8 @@ namespace Alex.Services
 	        {
 		        if (sw.IsRunning)
 			        sw.Stop();
+
+				Log.Error($"Could not get server query result, server returned \"{jsonResponse}\"");
 
 				return new ServerQueryResponse(false, ex.Message, new ServerQueryStatus()
 		        {

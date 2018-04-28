@@ -33,51 +33,30 @@ namespace Alex.GameStates
 		private readonly GuiPanoramaSkyBox _backgroundSkyBox;
 		private readonly GuiEntityModelView _playerView;
 
+		private readonly GuiImage _logo;
+
 		private FpsMonitor FpsMonitor { get; }
 		public TitleState()
 		{
 			FpsMonitor = new FpsMonitor();
-			_backgroundSkyBox = new GuiPanoramaSkyBox();
+			_backgroundSkyBox = new GuiPanoramaSkyBox(Alex);
 
 			Background.Texture = _backgroundSkyBox;
 			Background.RepeatMode = TextureRepeatMode.Stretch;
-			
-			AddChild(new GuiImage(GuiTextures.AlexLogo)
-			{
-				Margin = new Thickness(0, 25, 0, 0),
-				Anchor = Alignment.TopCenter,
-			});
 
-			AddChild( _splashText = new GuiTextElement()
-			{
-				TextColor = TextColor.Yellow,
-				Rotation = 17.5f,
-				
-				Margin = new Thickness(240, 15, 0, 0),
-				Anchor = Alignment.TopCenter,
-
-				Text = "Who liek minecwaf?!"
-			});
 
 			AddChild(_stackMenu = new GuiStackMenu()
 			{
-				Margin = new Thickness(15, 125, 15, 15),
+				Margin = new Thickness(15, 0, 15, 0),
+				Padding = new Thickness(0, 50, 0, 0),
 				Width = 125,
-				Anchor = Alignment.BottomLeft,
+				Anchor = Alignment.FillY | Alignment.MinX,
 
-				ChildAnchor = Alignment.TopFill
+				ChildAnchor = Alignment.CenterY | Alignment.FillX,
+				BackgroundOverlay = new Color(Color.Black, 0.35f)
 			});
 
-			_stackMenu.AddMenuItem("Multiplayer", () =>
-			{
-				//TODO: Switch to multiplayer serverlist (maybe choose PE or Java?)
-				Alex.ConnectToServer();
-			});
-
-			_stackMenu.AddMenuItem("Multiplayer Servers", () =>
-			{
-				Alex.GameStateManager.SetActiveState<MultiplayerServerSelectionState>();
-			});
+			_stackMenu.AddMenuItem("Multiplayer", OnMultiplayerButtonPressed);
 
 			_stackMenu.AddMenuItem("Debug Blockstates", DebugWorldButtonActivated);
 			_stackMenu.AddMenuItem("Debug Flatland", DebugFlatland);
@@ -94,8 +73,35 @@ namespace Alex.GameStates
 
 				Width = 92,
 				Height = 128,
-				
+
 				Anchor = Alignment.BottomRight,
+			});
+
+			AddChild(_logo = new GuiImage(GuiTextures.AlexLogo)
+			{
+				Margin = new Thickness(95, 25, 0, 0),
+				Anchor = Alignment.TopCenter
+			});
+
+			AddChild(_splashText = new GuiTextElement()
+			{
+				TextColor = TextColor.Yellow,
+				Rotation = 17.5f,
+
+				Margin = new Thickness(240, 15, 0, 0),
+				Anchor = Alignment.TopCenter,
+
+				Text = "Who liek minecwaf?!"
+			});
+
+			AddChild(new GuiTextElement()
+			{
+				Anchor = Alignment.BottomRight,
+				Text = "github.com/kennyvv/Alex",
+				TextColor = TextColor.White,
+				TextOpacity = 0.5f,
+				Scale = 0.5f,
+				Margin = new Thickness(0, 0, 30, 5)
 			});
 
 			_debugInfo = new GuiDebugInfo();
@@ -105,7 +111,11 @@ namespace Alex.GameStates
 			_debugInfo.AddDebugLeft(() => $"FPS: {FpsMonitor.Value:F0}");
 		}
 
-		private Texture2D _gradient;
+		private void OnMultiplayerButtonPressed()
+		{
+			Alex.GameStateManager.SetActiveState("serverlist");
+		}
+
 		protected override void OnLoad(IRenderArgs args)
 		{
 			Alex.Resources.BedrockResourcePack.TryGetTexture("textures/entity/alex", out Bitmap rawTexture);
@@ -113,22 +123,22 @@ namespace Alex.GameStates
 
 			_playerView.SkinTexture = steve;
 
-			using (MemoryStream ms = new MemoryStream(Resources.goodblur))
+			using (MemoryStream ms = new MemoryStream(Resources.GradientBlur))
 			{
-				_gradient = Texture2D.FromStream(args.GraphicsDevice, ms);
+				BackgroundOverlay = (TextureSlice2D)Texture2D.FromStream(args.GraphicsDevice, ms);
 			}
-
-			BackgroundOverlay = (TextureSlice2D) _gradient;
 			BackgroundOverlay.Mask = new Color(Color.White, 0.5f);
 
 			_splashText.Text = SplashTexts.GetSplashText();
 			Alex.IsMouseVisible = true;
+
+			Alex.GameStateManager.AddState("serverlist", new MultiplayerServerSelectionState(_backgroundSkyBox));
 		}
 
 		private float _rotation;
 
 		private readonly float _playerViewDepth = -512.0f;
-		
+
 		protected override void OnUpdate(GameTime gameTime)
 		{
 			base.OnUpdate(gameTime);
@@ -147,12 +157,12 @@ namespace Alex.GameStates
 			var mouseDelta = (new Vector3(playerPos.X, -playerPos.Y, _playerViewDepth) - new Vector3(mousePos.X, -mousePos.Y, 0.0f));
 			mouseDelta.Normalize();
 
-			var headYaw = (float) mouseDelta.GetYaw();
-			var pitch = (float) mouseDelta.GetPitch();
-			var yaw = (float) headYaw;
+			var headYaw = (float)mouseDelta.GetYaw();
+			var pitch = (float)mouseDelta.GetPitch();
+			var yaw = (float)headYaw;
 
 			_playerView.SetEntityRotation(yaw, pitch, headYaw);
-			
+
 		}
 
 		protected override void OnDraw(IRenderArgs args)

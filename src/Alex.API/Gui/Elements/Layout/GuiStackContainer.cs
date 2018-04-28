@@ -149,8 +149,12 @@ namespace Alex.API.Gui.Elements.Layout
                 if((vertical & Alignment.FillY) != 0)
                 {
                     vertical = Alignment.MinY;
+				}
+				else if ((vertical & Alignment.CenterY) != 0)
+                {
+	                vertical = Alignment.MinY;
                 }
-                else if((vertical & Alignment.MaxY) != 0)
+				else if((vertical & Alignment.MaxY) != 0)
                 {
                     vertical = Alignment.MaxY;
                 }
@@ -165,8 +169,12 @@ namespace Alex.API.Gui.Elements.Layout
                 if((horizontal & Alignment.FillX) != 0)
                 {
                     horizontal = Alignment.MinX;
+				}
+				else if ((horizontal & Alignment.CenterX) != 0)
+                {
+	                horizontal = Alignment.MinX;
                 }
-                else if((horizontal & Alignment.MaxX) != 0)
+				else if((horizontal & Alignment.MaxX) != 0)
                 {
                     horizontal = Alignment.MaxX;
                 }
@@ -186,8 +194,20 @@ namespace Alex.API.Gui.Elements.Layout
 
             var alignment = NormalizeAlignmentForArrange(Orientation, ChildAnchor);
 
-            var offset = Padding;
-            var lastOffset = Thickness.Zero;
+	        var childSize = ContentSize;
+			var offset = Padding;
+
+	        if (ChildAnchor.HasFlag(Alignment.CenterX))
+	        {
+				offset.Left = Math.Max(Padding.Left, (int)((positioningBounds.Width - childSize.Width) / 2f));
+			}
+
+			if (ChildAnchor.HasFlag(Alignment.CenterY))
+			{
+				offset.Top = Math.Max(Padding.Top, (int)((positioningBounds.Height - childSize.Height) / 2f));
+			}
+
+			var lastOffset = Thickness.Zero;
 
             foreach (var child in children)
             {

@@ -81,36 +81,34 @@ namespace Alex {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to [
-        ///	{
-        ///		&quot;id&quot;: 1,
-        ///		&quot;internalId&quot;: 1,
-        ///		&quot;name&quot;: &quot;item&quot;,
-        ///		&quot;displayName&quot;: &quot;Dropped item&quot;,
-        ///		&quot;type&quot;: &quot;mob&quot;,
-        ///		&quot;width&quot;: 0.25,
-        ///		&quot;height&quot;: 0.25,
-        ///		&quot;category&quot;: &quot;Drops&quot;
-        ///	},
-        ///	{
-        ///		&quot;id&quot;: 2,
-        ///		&quot;internalId&quot;: 2,
-        ///		&quot;name&quot;: &quot;xp_orb&quot;,
-        ///		&quot;displayName&quot;: &quot;Experience orb&quot;,
-        ///		&quot;type&quot;: &quot;mob&quot;,
-        ///		&quot;width&quot;: 0.5,
-        ///		&quot;height&quot;: 0.5,
-        ///		&quot;category&quot;: &quot;Drops&quot;
-        ///	},
-        ///	{
-        ///		&quot;id&quot;: 3,
-        ///		&quot;internalId&quot;: 3,
-        ///		&quot;name&quot;: &quot;area_effect_cloud&quot;,
-        ///		&quot;displayName&quot;: &quot;Area effect cloud&quot;,
-        ///		&quot;type&quot;: &quot;mob&quot;,
-        ///		&quot;width&quot;: 0.0,
-        ///		&quot;height&quot;: 0.5,
-        ///		&quot; [rest of string was truncated]&quot;;.
+        ///   Looks up a localized string similar to 
+        ///[
+        ///  {
+        ///    &quot;id&quot;: 1,
+        ///    &quot;internalId&quot;: 1,
+        ///    &quot;name&quot;: &quot;item&quot;,
+        ///    &quot;displayName&quot;: &quot;Dropped item&quot;,
+        ///    &quot;type&quot;: &quot;mob&quot;,
+        ///    &quot;width&quot;: 0.25,
+        ///    &quot;height&quot;: 0.25,
+        ///    &quot;category&quot;: &quot;Drops&quot;
+        ///  },
+        ///  {
+        ///    &quot;id&quot;: 2,
+        ///    &quot;internalId&quot;: 2,
+        ///    &quot;name&quot;: &quot;xp_orb&quot;,
+        ///    &quot;displayName&quot;: &quot;Experience orb&quot;,
+        ///    &quot;type&quot;: &quot;mob&quot;,
+        ///    &quot;width&quot;: 0.5,
+        ///    &quot;height&quot;: 0.5,
+        ///    &quot;category&quot;: &quot;Drops&quot;
+        ///  },
+        ///  {
+        ///    &quot;id&quot;: 3,
+        ///    &quot;internalId&quot;: 3,
+        ///    &quot;name&quot;: &quot;area_effect_cloud&quot;,
+        ///    &quot;displayName&quot;: &quot;Area effect cloud&quot;,
+        ///    &quot;type [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string Entities {
             get {
@@ -124,6 +122,16 @@ namespace Alex {
         internal static byte[] goodblur {
             get {
                 object obj = ResourceManager.GetObject("goodblur", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] GradientBlur {
+            get {
+                object obj = ResourceManager.GetObject("GradientBlur", resourceCulture);
                 return ((byte[])(obj));
             }
         }
@@ -170,51 +178,81 @@ namespace Alex {
         
         /// <summary>
         ///   Looks up a localized string similar to {
-        ///	&quot;minecraft:air&quot;: {
-        ///		&quot;states&quot;: [
-        ///			{
-        ///				&quot;id&quot;: 0,
-        ///				&quot;default&quot;: true
-        ///			}
-        ///		]
-        ///	},
-        ///	&quot;minecraft:stone&quot;: {
-        ///		&quot;states&quot;: [
-        ///			{
-        ///				&quot;id&quot;: 1,
-        ///				&quot;default&quot;: true
-        ///			}
-        ///		]
-        ///	},
-        ///	&quot;minecraft:granite&quot;: {
-        ///		&quot;states&quot;: [
-        ///			{
-        ///				&quot;id&quot;: 2,
-        ///				&quot;default&quot;: true
-        ///			}
-        ///		]
-        ///	},
-        ///	&quot;minecraft:polished_granite&quot;: {
-        ///		&quot;states&quot;: [
-        ///			{
-        ///				&quot;id&quot;: 3,
-        ///				&quot;default&quot;: true
-        ///			}
-        ///		]
-        ///	},
-        ///	&quot;minecraft:diorite&quot;: {
-        ///		&quot;states&quot;: [
-        ///			{
-        ///				&quot;id&quot;: 4,
-        ///				&quot;default&quot;: true
-        ///			}
-        ///		]
-        ///	},
-        ///	&quot;minecraft:polished_ [rest of string was truncated]&quot;;.
+        ///  &quot;minecraft:air&quot;: {
+        ///    &quot;states&quot;: [
+        ///      {
+        ///        &quot;id&quot;: 0,
+        ///        &quot;default&quot;: true
+        ///      }
+        ///    ]
+        ///  },
+        ///  &quot;minecraft:stone&quot;: {
+        ///    &quot;states&quot;: [
+        ///      {
+        ///        &quot;id&quot;: 1,
+        ///        &quot;default&quot;: true
+        ///      }
+        ///    ]
+        ///  },
+        ///  &quot;minecraft:granite&quot;: {
+        ///    &quot;states&quot;: [
+        ///      {
+        ///        &quot;id&quot;: 2,
+        ///        &quot;default&quot;: true
+        ///      }
+        ///    ]
+        ///  },
+        ///  &quot;minecraft:polished_granite&quot;: {
+        ///    &quot;states&quot;: [
+        ///      {
+        ///        &quot;id&quot;: 3,
+        ///        &quot;default&quot;: true
+        ///      }
+        ///    ]
+        ///  },
+        ///  &quot;minecraft:diorite&quot;: {
+        ///    &quot;states&quot;: [
+        ///      {
+        ///        &quot;id&quot;: 4,
+        ///      [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string NewBlocks {
             get {
                 return ResourceManager.GetString("NewBlocks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {
+        ///  &quot;entity&quot;: {
+        ///    &quot;area_effect_cloud&quot;: {
+        ///      &quot;class&quot;: &quot;abp&quot;,
+        ///      &quot;display_name&quot;: &quot;Area Effect Cloud&quot;,
+        ///      &quot;id&quot;: 0,
+        ///      &quot;name&quot;: &quot;area_effect_cloud&quot;
+        ///    },
+        ///    &quot;armor_stand&quot;: {
+        ///      &quot;class&quot;: &quot;aiy&quot;,
+        ///      &quot;display_name&quot;: &quot;Armor Stand&quot;,
+        ///      &quot;height&quot;: 1.98,
+        ///      &quot;id&quot;: 1,
+        ///      &quot;name&quot;: &quot;armor_stand&quot;,
+        ///      &quot;width&quot;: 0.5
+        ///    },
+        ///    &quot;arrow&quot;: {
+        ///      &quot;class&quot;: &quot;all&quot;,
+        ///      &quot;display_name&quot;: &quot;Arrow&quot;,
+        ///      &quot;id&quot;: 2,
+        ///      &quot;name&quot;: &quot;arrow&quot;
+        ///    },
+        ///    &quot;bat&quot;: {
+        ///      &quot;class&quot;: &quot;agl&quot;,
+        ///      &quot;display_name&quot;: &quot;Bat&quot;,
+        /// [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string NewEntities {
+            get {
+                return ResourceManager.GetString("NewEntities", resourceCulture);
             }
         }
         

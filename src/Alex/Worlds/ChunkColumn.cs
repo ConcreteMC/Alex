@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Alex.API.Blocks.State;
@@ -318,6 +319,9 @@ namespace Alex.Worlds
 
 		public void Read(MinecraftStream ms, int availableSections, bool groundUp, bool readSkylight)
 		{
+		//	Stopwatch s = Stopwatch.StartNew();
+		//	Log.Debug($"Reading chunk data...");
+
 			for (int i = 0; i < this.Chunks.Length; i++)
 			{
 				var storage = this.Chunks[i];
@@ -375,20 +379,25 @@ namespace Alex.Worlds
 				this.Chunks[i] = storage;
 			}
 
+			if (groundUp)
+			{
+				for (int x = 0; x < 16; x++)
+				{
+					for (int z = 0; z < 16; z++)
+					{
+						var biomeId = ms.ReadInt();
+						SetBiome(x, z, biomeId);
+					}
+				}
+			}
+			
 			for (int i = 0; i < Chunks.Length; i++)
 			{
 				Chunks[i].RemoveInvalidBlocks();
 			}
 
-			if (groundUp)
-			{
-				for (int i = 0; i < 256; i++)
-				{
-					BiomeId[i] = ms.ReadByte();
-				}
-			}
-
 			CalculateHeight();
+
 		}
 	}
 }

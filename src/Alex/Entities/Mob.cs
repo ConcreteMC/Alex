@@ -25,7 +25,7 @@ namespace Alex.Entities
 
 		public override void OnTick()
 		{
-			
+			base.OnTick();
 		}
 	}
 }

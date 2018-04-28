@@ -4,6 +4,11 @@ namespace Alex.Networking.Java.Packets.Status
 {
 	public class PingPacket : Packet<PingPacket>
 	{
+		public PingPacket()
+		{
+			PacketId = 0x01;
+		}
+
 		public long Payload;
 
 		public override void Decode(MinecraftStream stream)

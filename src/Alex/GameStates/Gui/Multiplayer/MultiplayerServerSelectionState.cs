@@ -5,6 +5,7 @@ using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Alex.API.Data.Servers;
+using Alex.API.Graphics;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
@@ -15,6 +16,7 @@ using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.GameStates.Gui.Common;
 using Alex.Graphics.Gui.Elements;
+using Alex.Gui;
 using Alex.Networking.Java;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -31,58 +33,64 @@ namespace Alex.GameStates.Gui.Multiplayer
 
 	    private readonly IListStorageProvider<SavedServerEntry> _listProvider;
 
-		public MultiplayerServerSelectionState() : base()
+	    private GuiPanoramaSkyBox _skyBox;
+		public MultiplayerServerSelectionState(GuiPanoramaSkyBox skyBox) : base()
 		{
+			_skyBox = skyBox;
+
 			_listProvider = Alex.Services.GetService<IListStorageProvider<SavedServerEntry>>();
 
-	        Title = "Multiplayer";
-			
-			Footer.AddRow(row =>
-			{
-				
-				row.AddChild(JoinServerButton = new GuiButton("Join Server", 
-				                                             OnJoinServerButtonPressed)
-				{
-					TranslationKey = "selectServer.select",
-					Enabled = false
-				});
-				row.AddChild(DirectConnectButton = new GuiButton("Direct Connect", 
-					() => Alex.GameStateManager.SetActiveState<MultiplayerConnectState>())
-		            {
-			             TranslationKey = "selectServer.direct"
-					});
-				row.AddChild(AddServerButton = new GuiButton("Add Server", 
-				                                             OnAddItemButtonPressed)
-				{
-					TranslationKey = "selectServer.add"
-				});
-			});
-			Footer.AddRow(row =>
-			{
-				row.AddChild(EditServerButton = new GuiButton("Edit", OnEditItemButtonPressed)
-				{
-					TranslationKey = "selectServer.edit",
-					Enabled = false
-				});
-				row.AddChild(DeleteServerButton = new GuiButton("Delete", OnDeleteItemButtonPressed)
-				{
-					TranslationKey = "selectServer.delete",
-					Enabled = false
-				});
-				row.AddChild(new GuiButton("Refresh", OnRefreshButtonPressed)
-				{
-					TranslationKey = "selectServer.refresh"
-				});
-				row.AddChild(new GuiButton("Cancel", OnCancelButtonPressed)
-				{
-					TranslationKey = "gui.cancel"
-				});
-			});
+		    Title = "Multiplayer";
 
-			//AddItem(new GuiServerListEntryElement("Localhost", "localhost:25565"));
-	  //      AddItem(new GuiServerListEntryElement("Hypixel", "mc.hypixel.net:25565"));
+		    Footer.AddRow(row =>
+		    {
 
-			Load();
+			    row.AddChild(JoinServerButton = new GuiButton("Join Server",
+				    OnJoinServerButtonPressed)
+			    {
+				    TranslationKey = "selectServer.select",
+				    Enabled = false
+			    });
+			    row.AddChild(DirectConnectButton = new GuiButton("Direct Connect",
+				    () => Alex.GameStateManager.SetActiveState<MultiplayerConnectState>())
+			    {
+				    TranslationKey = "selectServer.direct"
+			    });
+			    row.AddChild(AddServerButton = new GuiButton("Add Server",
+				    OnAddItemButtonPressed)
+			    {
+				    TranslationKey = "selectServer.add"
+			    });
+		    });
+		    Footer.AddRow(row =>
+		    {
+			    row.AddChild(EditServerButton = new GuiButton("Edit", OnEditItemButtonPressed)
+			    {
+				    TranslationKey = "selectServer.edit",
+				    Enabled = false
+			    });
+			    row.AddChild(DeleteServerButton = new GuiButton("Delete", OnDeleteItemButtonPressed)
+			    {
+				    TranslationKey = "selectServer.delete",
+				    Enabled = false
+			    });
+			    row.AddChild(new GuiButton("Refresh", OnRefreshButtonPressed)
+			    {
+				    TranslationKey = "selectServer.refresh"
+			    });
+			    row.AddChild(new GuiButton("Cancel", OnCancelButtonPressed)
+			    {
+				    TranslationKey = "gui.cancel"
+			    });
+		    });
+
+			Background = new GuiTexture2D(_skyBox, TextureRepeatMode.Stretch);
+		}
+
+	    protected override void OnShow()
+	    {
+		    base.OnShow();
+		    Load();
 		}
 
 	    protected override void OnSelectedItemChanged(GuiServerListEntryElement newItem)
@@ -141,7 +149,8 @@ namespace Alex.GameStates.Gui.Multiplayer
 		
 	    private void OnCancelButtonPressed()
 	    {
-			Alex.GameStateManager.SetActiveState<TitleState>();
+			Alex.GameStateManager.Back();
+		//	Alex.GameStateManager.SetActiveState<TitleState>();
 	    }
 
 	    private void OnRefreshButtonPressed()
@@ -177,6 +186,24 @@ namespace Alex.GameStates.Gui.Multiplayer
 
 			Load();
 	    }
+
+	    protected override void OnUpdate(GameTime gameTime)
+	    {
+			_skyBox.Update(gameTime);
+		    base.OnUpdate(gameTime);
+	    }
+
+	    protected override void OnDraw(IRenderArgs args)
+	    {
+		    if (!_skyBox.Loaded)
+		    {
+			    _skyBox.Load(Alex.GuiRenderer);
+		    }
+
+		    _skyBox.Draw(args);
+
+			base.OnDraw(args);
+	    }
     }
 
     public class GuiServerListEntryElement : GuiSelectionListItem
@@ -208,7 +235,10 @@ namespace Alex.GameStates.Gui.Multiplayer
 	    }
 
 	    private GuiServerListEntryElement(string serverName, string serverAddress)
-        {
+	    {
+		    Width = 335;
+		    MaxWidth = 335;
+
             ServerName = serverName;
             ServerAddress = serverAddress;
 
@@ -300,15 +330,6 @@ namespace Alex.GameStates.Gui.Multiplayer
                 SetErrorMessage("Invalid Server Address!");
             }
         }
-        
-        private void QueryServer(string address, ushort port)
-        {
-            SetErrorMessage(null);
-            SetConnectingState(true);
-		
-            var queryProvider = Alex.Instance.Services.GetService<IServerQueryProvider>();
-            queryProvider.QueryServerAsync(address, port).ContinueWith(ContinuationAction);
-        }
 
         private void SetConnectingState(bool connecting)
         {
@@ -338,9 +359,30 @@ namespace Alex.GameStates.Gui.Multiplayer
             }
             _pingStatus.SetOffline();
         }
-        
-		private static readonly Regex FaviconRegex = new Regex(@"data:image/png;base64,(?<data>.+)", RegexOptions.Compiled);
-        private void ContinuationAction(Task<ServerQueryResponse> queryTask)
+
+	    private void QueryServer(string address, ushort port)
+	    {
+		    SetErrorMessage(null);
+		    SetConnectingState(true);
+
+		    var queryProvider = Alex.Instance.Services.GetService<IServerQueryProvider>();
+		    queryProvider.QueryServerAsync(address, port, PingCallback).ContinueWith(QueryCompleted);
+	    }
+
+	    private void PingCallback(ServerPingResponse response)
+	    {
+		    if (response.Success)
+		    {
+			    _pingStatus.SetPing(response.Ping);
+			}
+		    else
+		    {
+				_pingStatus.SetOutdated(response.ErrorMessage);
+		    }
+	    }
+
+	    private static readonly Regex FaviconRegex = new Regex(@"data:image/png;base64,(?<data>.+)", RegexOptions.Compiled);
+        private void QueryCompleted(Task<ServerQueryResponse> queryTask)
         {
             var response = queryTask.Result;
             SetConnectingState(false);
@@ -349,7 +391,11 @@ namespace Alex.GameStates.Gui.Multiplayer
 			{
                 var s = response.Status;
 				_pingStatus.SetPlayerCount(s.NumberOfPlayers, s.MaxNumberOfPlayers);
-                _pingStatus.SetPing(s.Delay);
+
+				if (!s.WaitingOnPing)
+				{
+					_pingStatus.SetPing(s.Delay);
+				}
 
 				if (s.ProtocolVersion < JavaProtocol.ProtocolVersion)
 				{

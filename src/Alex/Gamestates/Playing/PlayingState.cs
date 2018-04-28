@@ -213,11 +213,6 @@ namespace Alex.GameStates.Playing
 			KeyboardState currentKeyboardState = Keyboard.GetState();
 			if (currentKeyboardState != _oldKeyboardState)
 			{
-				if (currentKeyboardState.IsKeyDown(KeyBinds.Menu))
-				{
-					Alex.GameStateManager.SetActiveState<InGameMenuState>("ingamemenu");
-				}
-
 				if (currentKeyboardState.IsKeyDown(KeyBinds.DebugInfo))
 				{
 					RenderDebug = !RenderDebug;

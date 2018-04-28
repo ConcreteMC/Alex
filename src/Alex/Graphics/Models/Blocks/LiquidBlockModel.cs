@@ -74,15 +74,15 @@ namespace Alex.Graphics.Models.Blocks
 			{
 				texture = "blocks/water";
 			}
-			//texture = texture + "_flow";
-			if (IsFlowing)
+			texture = texture + "_flow";
+			/*if (IsFlowing)
 			{
 				texture = texture + "_flow";
 			}
 			else
 			{
 				texture = texture + "_still";
-			}
+			}*/
 
 			//float frameX 
 			UVMap map = GetTextureUVMap(Alex.Instance.Resources, texture, 0, 16, 0, 16, 0);
@@ -161,7 +161,7 @@ namespace Alex.Graphics.Models.Blocks
 						vert.Position.X += position.X;
 						vert.Position.Z += position.Z;
 
-						vert.Color = LightingUtils.AdjustColor(vert.Color, f, GetLight(world, position + d), false);
+						vert.Color = LightingUtils.AdjustColor(new Color(68, 175, 245), f, GetLight(world, position + d), false);
 
 						result.Add(vert);
 					}

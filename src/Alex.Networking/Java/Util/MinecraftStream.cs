@@ -96,17 +96,29 @@ namespace Alex.Networking.Java.Util
 
 		public byte[] Read(int length)
 		{
+			//byte[] d = new byte[length];
+			//Read(d, 0, d.Length);
+			//return d;
+
+			SpinWait s = new SpinWait();
 			int read = 0;
 
 			var buffer = new byte[length];
-			while (read < buffer.Length && !CancelationToken.IsCancellationRequested)
+			while (read < buffer.Length && !CancelationToken.IsCancellationRequested && s.Count < 25) //Give the network some time to catch up on sending data, but really 25 cycles should be enough.
 			{
 				int oldRead = read;
-				read += this.Read(buffer, read, length - read);
+
+				int r = this.Read(buffer, read, length - read);
+				if (r < 0) //No data read?
+				{
+					break;
+				}
+
+				read += r;
 
 				if (read == oldRead)
 				{
-					Thread.Sleep(1);
+					s.SpinOnce();
 				}
 				if (CancelationToken.IsCancellationRequested) throw new ObjectDisposedException("");
 			}

@@ -22,7 +22,7 @@ namespace Alex.GameStates.Gui.Common
 
         public ListSelectionStateBase() : base()
         {
-	        Body.BackgroundOverlay = new Color(Color.Black, 0.65f);
+	        Body.BackgroundOverlay = new Color(Color.Black, 0.35f);
 
 	        AddGuiElement(ListContainer = new GuiSelectionList()
             {
@@ -30,7 +30,7 @@ namespace Alex.GameStates.Gui.Common
 				ChildAnchor = Alignment.TopFill,
             });
 	        ListContainer.SelectedItemChanged += HandleSelectedItemChanged;
-			ListContainer.Margin = new Thickness(0, Header.Height, 0, Footer.Height);
+			//ListContainer.Margin = new Thickness(0, Header.Height, 0, Footer.Height);
         }
 
 	    protected override void OnUpdate(GameTime gameTime)

@@ -209,7 +209,7 @@ namespace Alex.Networking.Java.Packets
 			Register(Direction.ServerBound, ConnectionState.Status, 0x00, () => new RequestPacket());
 			Register(Direction.ClientBound, ConnectionState.Status, 0x00, () => new ResponsePacket());
 			Register(Direction.ServerBound, ConnectionState.Status, 0x01, () => new PingPacket());
-
+			Register(Direction.ClientBound, ConnectionState.Status, 0x01, () => new PingPacket());
 		}
 
 		private static void RegisterLogin()
@@ -229,10 +229,6 @@ namespace Alex.Networking.Java.Packets
 			{
 				PacketId = 0x0B
 			});
-		//	Register(ConnectionState.Play, 0x0c, () => new PlayerPosition());
-		//	Register(ConnectionState.Play, 0x0D, () => new PlayerPositionAndLookPacket());
-		//	Register(ConnectionState.Play, 0x0E, () => new PlayerLookPacket());
-
 			Register<ClientSettingsPacket>(Direction.ServerBound, ConnectionState.Play, 0x03);
 			Register<ClientStatusPacket>(Direction.ServerBound, ConnectionState.Play, 0x02);
 			Register<ChatMessagePacket>(Direction.ServerBound, ConnectionState.Play, 0x01);
