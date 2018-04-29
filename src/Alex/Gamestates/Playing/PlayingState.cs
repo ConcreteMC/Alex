@@ -171,9 +171,8 @@ namespace Alex.GameStates.Playing
 					World.Player.Controller.CheckInput = false;
 				}
 
-				World.Update(args, SkyRenderer);
-				
 				SkyRenderer.Update(args);
+				World.Update(args, SkyRenderer);
 
 				if (RenderDebug)
 				{

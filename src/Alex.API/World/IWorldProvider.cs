@@ -75,6 +75,7 @@ namespace Alex.API.World
 		bool TryGetEntity(long entityId, out IEntity entity);
 
 		void SetTime(long worldTime);
+		void SetRain(bool raining);
 
 		void SetBlockState(BlockCoordinates coordinates, IBlockState blockState);
 	};

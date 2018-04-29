@@ -265,6 +265,7 @@ namespace Alex.Networking.Java.Packets
 			Register(Direction.ClientBound, ConnectionState.Play, 0x0F, () => new MultiBlockChange());
 
 			Register(Direction.ClientBound, ConnectionState.Play, 0x10, () => new TabCompleteClientBound());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x1F, () => new ChangeGameStatePacket());
 		}
 	}
 }

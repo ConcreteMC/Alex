@@ -32,12 +32,12 @@ namespace Alex.API.World
 		public bool AllowCommands { get; set; }
 		public bool Hardcore { get; set; }
 		public int GameType { get; set; }
-		public long Time { get; set; }
+		public long Time { get; set; } = 6000;
 		public long DayTime { get; set; }
 		public int SpawnX { get; set; }
 		public int SpawnY { get; set; }
 		public int SpawnZ { get; set; }
-		public bool Raining { get; set; }
+		public bool Raining { get; set; } = false;
 		public int RainTime { get; set; }
 		public bool Thundering { get; set; }
 		public int ThunderTime { get; set; }

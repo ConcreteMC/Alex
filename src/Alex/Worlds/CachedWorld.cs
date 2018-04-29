@@ -13,7 +13,7 @@ namespace Alex.Worlds
 	public class CachedWorld : IWorld, IDisposable
 	{
 		public TickManager Ticker { get; }
-		public long WorldTime { get; } = 0;
+		public LevelInfo WorldInfo { get; set; } = new LevelInfo();
 
 		public int Vertices => 0;
 

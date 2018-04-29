@@ -24,7 +24,7 @@ namespace Alex.Entities
 		public short Chest { get; set; }
 		public short Helmet { get; set; }
 
-		public Gamemode Gamemode { get; set; }
+		public Gamemode Gamemode { get; private set; }
 
 		//public Item ItemInHand { get; set; }
 
@@ -78,6 +78,11 @@ namespace Alex.Entities
 					UpdateModelParts();
 				}
 			}
+		}
+
+		public void UpdateGamemode(Gamemode gamemode)
+		{
+			Gamemode = gamemode;
 		}
 
 		private void UpdateModelParts()

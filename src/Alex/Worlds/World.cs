@@ -34,7 +34,7 @@ namespace Alex.Worlds
 		private GraphicsDevice Graphics { get; }
 		public Rendering.Camera.Camera Camera { get; set; }
 
-		public LevelInfo WorldInfo;
+		public LevelInfo WorldInfo { get; set; }
 
 		public Player Player { get; set; }
 		private Alex Alex { get; }
@@ -61,9 +61,7 @@ namespace Alex.Worlds
 	        PhysicsEngine.AddTickable(Player);
 		}
 
-		private long LastLightningBolt = 0;
-		private long Tick = 0;
-		public long WorldTime { get; private set; } = 6000;
+		//public long WorldTime { get; private set; } = 6000;
 		public bool FreezeWorldTime { get; set; } = false;
 
 		public TickManager Ticker { get; }
@@ -163,7 +161,7 @@ namespace Alex.Worlds
 			{
 				if (!FreezeWorldTime)
 				{
-					WorldTime++;
+					WorldInfo.Time++;
 				}
 
 				
@@ -482,7 +480,12 @@ namespace Alex.Worlds
 
 		public void SetTime(long worldTime)
 		{
-			WorldTime = worldTime;
+			WorldInfo.Time = worldTime;
+		}
+
+		public void SetRain(bool raining)
+		{
+			WorldInfo.Raining = raining;
 		}
 
 		public void SetBlockState(BlockCoordinates coordinates, IBlockState blockState)

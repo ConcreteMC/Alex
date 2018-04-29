@@ -20,12 +20,12 @@ namespace Alex.API.World
 		    _scheduledTicks = new ConcurrentDictionary<Action, long>();
 		}
 
-		private TimeSpan _lastTickTime = TimeSpan.Zero;
+		private double _lastTickTime = 0;
 		public bool Update(IUpdateArgs args)
 		{
-			if ((args.GameTime.TotalGameTime - _lastTickTime).TotalMilliseconds >= 50)
+			if ((args.GameTime.TotalGameTime.TotalMilliseconds - _lastTickTime) >= 50)
 			{
-				_lastTickTime = args.GameTime.TotalGameTime;
+				_lastTickTime = args.GameTime.TotalGameTime.TotalMilliseconds;
 				var ticks = _scheduledTicks.Where(x => x.Value <= _tick).ToArray();
 
 				foreach (var tick in ticks)

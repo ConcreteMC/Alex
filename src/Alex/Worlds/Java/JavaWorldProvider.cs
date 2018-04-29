@@ -517,9 +517,46 @@ namespace Alex.Worlds.Java
 			{
 				HandleTabCompleteClientBound(tabComplete);
 			}
+			else if (packet is ChangeGameStatePacket p)
+			{
+				HandleChangeGameStatePacket(p);
+			}
 			else
 			{
 				Log.Warn($"Unhandled packet: 0x{packet.PacketId:x2} - {packet.ToString()}");
+			}
+		}
+
+		private void HandleChangeGameStatePacket(ChangeGameStatePacket packet)
+		{
+			switch (packet.Reason)
+			{
+				case GameStateReason.InvalidBed:
+					break;
+				case GameStateReason.EndRain:
+					WorldReceiver?.SetRain(false);
+					break;
+				case GameStateReason.StartRain:
+					WorldReceiver?.SetRain(true);
+					break;
+				case GameStateReason.ChangeGamemode:
+					if (WorldReceiver?.GetPlayerEntity() is Player player)
+					{
+						player.UpdateGamemode((Gamemode) packet.Value);
+					}
+					break;
+				case GameStateReason.ExitEnd:
+					break;
+				case GameStateReason.DemoMessage:
+					break;
+				case GameStateReason.ArrowHitPlayer:
+					break;
+				case GameStateReason.FadeValue:
+					break;
+				case GameStateReason.FadeTime:
+					break;
+				case GameStateReason.PlayerElderGuardianMob:
+					break;
 			}
 		}
 
@@ -634,7 +671,7 @@ namespace Alex.Worlds.Java
 				foreach (var entry in packet.AddPlayerEntries)
 				{
 					PlayerMob entity = new PlayerMob(entry.Name, (World)WorldReceiver, Client, t, true);
-					entity.Gamemode = (Gamemode) entry.Gamemode;
+					entity.UpdateGamemode((Gamemode)entry.Gamemode);
 					entity.UUID = new UUID(entry.UUID.ToByteArray());
 
 					if (entry.HasDisplayName)
@@ -806,7 +843,7 @@ namespace Alex.Worlds.Java
 			if (WorldReceiver?.GetPlayerEntity() is Player player)
 			{
 				player.EntityId = packet.EntityId;
-				player.Gamemode = (Gamemode) packet.Gamemode;
+				player.UpdateGamemode((Gamemode)packet.Gamemode);
 			}
 			else
 			{

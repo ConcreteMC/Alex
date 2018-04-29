@@ -32,7 +32,6 @@ namespace Alex.Graphics.Models
 		private Texture2D MoonTexture { get; }
 
 	    private bool CanRender { get; set; } = true;
-	    public float BiomeTemperature { get; set; } = 0.8f;
 
 		private World World { get; }
 
@@ -43,19 +42,19 @@ namespace Alex.Graphics.Models
 			World = world;
 			Game = alex;
 
-		    if (alex.Resources.BedrockResourcePack.TryGetTexture("textures/environment/sun", out Bitmap sun))
+		    if (alex.Resources.ResourcePack.TryGetTexture("environment/sun", out Texture2D sun))
 		    {
-			    SunTexture = TextureUtils.BitmapToTexture2D(device, sun);
-			}
+			    SunTexture = sun;
+		    }
 		    else
 		    {
 			    CanRender = false;
 			    return;
 		    }
 
-		    if (alex.Resources.BedrockResourcePack.TryGetTexture("textures/environment/moon_phases", out Bitmap moonPhases))
+		    if (alex.Resources.ResourcePack.TryGetTexture("environment/moon_phases", out Texture2D moonPhases))
 		    {
-			    MoonTexture = TextureUtils.BitmapToTexture2D(device, moonPhases);
+			    MoonTexture = moonPhases;
 		    }
 		    else
 		    {
@@ -123,8 +122,22 @@ namespace Alex.Graphics.Models
 		{
 			get
 			{
-				float x = (World.WorldTime % 24000f) / 24000f - 0.25f;
-				return (x + (MathF.Cos(x * 3.14159265358979f) * -0.5f + 0.5f - x) / 3.0f) * 6.28318530717959f;
+				int i = (int)(World.WorldInfo.Time % 24000L);
+				float f = ((float)i + 1f) / 24000.0F - 0.25F;
+
+				if (f < 0.0F)
+				{
+					++f;
+				}
+
+				if (f > 1.0F)
+				{
+					--f;
+				}
+
+				float f1 = 1.0F - (float)((Math.Cos((double)f * Math.PI) + 1.0D) / 2.0D);
+				f = f + (f1 - f) / 3.0F;
+				return f;
 			}
 		}
 
@@ -228,49 +241,26 @@ namespace Alex.Graphics.Models
 
 	    public void Update(IUpdateArgs args)
 	    {
-		    var moonPhase = (int)(World.WorldTime / 24000L % 8L + 8L) % 8;
+		    var w = (1f / MoonTexture.Width) * (MoonTexture.Width / 4f);
+		    var h = (1f / MoonTexture.Height) * (MoonTexture.Height / 2f);
+
+			var moonPhase = (int)(World.WorldInfo.Time / 24000L % 8L + 8L) % 8;
 		    int x = moonPhase % 4;
-		    int y = moonPhase / 4 % 2;
+		    int y = moonPhase % 2;
 
-		    float textureX = (x + 0) / 4.0F;
-		    float textureY = (y + 0) / 2.0F;
+		    float textureX = (w * x);
+		    float textureY = (h * y);
 
-		    float textureXMax = (x + 1) / 4.0F;
-		    float textureYMax = (y + 1) / 2.0F;
+		    float textureXMax = (w * x) + w;
+		    float textureYMax = (h * y) + h;
 
 		    MoonPlaneVertices[0].TextureCoordinate = new Vector2(textureX, textureY);
-			MoonPlaneVertices[1].TextureCoordinate = new Vector2(textureXMax, textureY);
+		    MoonPlaneVertices[1].TextureCoordinate = new Vector2(textureXMax, textureY);
 		    MoonPlaneVertices[2].TextureCoordinate = new Vector2(textureX, textureYMax);
 
 		    MoonPlaneVertices[3].TextureCoordinate = new Vector2(textureXMax, textureY);
 		    MoonPlaneVertices[4].TextureCoordinate = new Vector2(textureXMax, textureYMax);
-			MoonPlaneVertices[5].TextureCoordinate = new Vector2(textureX, textureYMax);
-
-			/*
-
-			var celestialPlane = new[]
-			{
-				new VertexPositionTexture(new Vector3(-planeDistance, 0, -planeDistance), new Vector2(0, 0)),
-				new VertexPositionTexture(new Vector3(planeDistance, 0, -planeDistance), new Vector2(1, 0)),
-				new VertexPositionTexture(new Vector3(-planeDistance, 0, planeDistance), new Vector2(0, 1)),
-
-				new VertexPositionTexture(new Vector3(planeDistance, 0, -planeDistance), new Vector2(1, 0)),
-				new VertexPositionTexture(new Vector3(planeDistance, 0, planeDistance), new Vector2(1, 1)),
-				new VertexPositionTexture(new Vector3(-planeDistance, 0, planeDistance), new Vector2(0, 1))
-			};
-
-		    MoonPlaneVertices = new[]
-		    {
-			    new VertexPositionTexture(new Vector3(-planeDistance, 0, -planeDistance), new Vector2(0, 0)),
-			    new VertexPositionTexture(new Vector3(planeDistance, 0, -planeDistance), new Vector2(MoonX, 0)),
-			    new VertexPositionTexture(new Vector3(-planeDistance, 0, planeDistance), new Vector2(0, MoonY)),
-
-			    new VertexPositionTexture(new Vector3(planeDistance, 0, -planeDistance), new Vector2(MoonX, 0)),
-			    new VertexPositionTexture(new Vector3(planeDistance, 0, planeDistance), new Vector2(MoonX, MoonY)),
-			    new VertexPositionTexture(new Vector3(-planeDistance, 0, planeDistance), new Vector2(0, MoonY)),
-		    };
-
-	*/
+		    MoonPlaneVertices[5].TextureCoordinate = new Vector2(textureX, textureYMax);
 
 			MoonPlane.SetData<VertexPositionTexture>(MoonPlaneVertices);
 		}
@@ -310,35 +300,34 @@ namespace Alex.Graphics.Models
 			}
 		    SkyPlaneEffect.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, 2);
 
-			// Sun
-			renderArgs.GraphicsDevice.SetVertexBuffer(CelestialPlane);
-
-			var backup = renderArgs.GraphicsDevice.BlendState;
+		    var backup = renderArgs.GraphicsDevice.BlendState;
 		    renderArgs.GraphicsDevice.BlendState = BlendState.Additive;
 		    renderArgs.GraphicsDevice.DepthStencilState = DepthStencilState.DepthRead;
 
+			// Sun
 			CelestialPlaneEffect.Texture = SunTexture;
 			CelestialPlaneEffect.World = Matrix.CreateRotationX(MathHelper.Pi)
 				* Matrix.CreateTranslation(0, 100, 0)
 				* Matrix.CreateRotationX(MathHelper.TwoPi * CelestialAngle) * Matrix.CreateTranslation(camera.Position) ;
 
+		    renderArgs.GraphicsDevice.SetVertexBuffer(CelestialPlane);
 			foreach (var pass in CelestialPlaneEffect.CurrentTechnique.Passes)
 			{
 				pass.Apply();
 			}
-		    CelestialPlaneEffect.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, 2);
-
-			renderArgs.GraphicsDevice.SetVertexBuffer(MoonPlane);
+		    renderArgs.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, 2);
 
 			// Moon
 			CelestialPlaneEffect.Texture = MoonTexture;
 			CelestialPlaneEffect.World =  Matrix.CreateTranslation(0, -100, 0)
 				* Matrix.CreateRotationX(MathHelper.TwoPi * CelestialAngle) * Matrix.CreateTranslation(camera.Position) ;
+
+		    renderArgs.GraphicsDevice.SetVertexBuffer(MoonPlane);
 			foreach (var pass in CelestialPlaneEffect.CurrentTechnique.Passes)
 			{
 				pass.Apply();
 			}
-		    CelestialPlaneEffect.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, 2);
+		    renderArgs.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, MoonPlane.VertexCount);
 
 			renderArgs.GraphicsDevice.BlendState = backup;
 		//    renderArgs.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
@@ -353,7 +342,7 @@ namespace Alex.Graphics.Models
 			{
 				pass.Apply();
 			}
-		    SkyPlaneEffect.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, 2);
+		    renderArgs.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, 2);
 
 			renderArgs.GraphicsDevice.DepthStencilState = depthState;
 		    renderArgs.GraphicsDevice.RasterizerState = raster;
