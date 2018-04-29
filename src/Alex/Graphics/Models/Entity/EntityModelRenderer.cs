@@ -64,7 +64,7 @@ namespace Alex.Graphics.Models.Entity
 
 						
 						VertexPositionNormalTexture[] vertices;
-						Cube built = new Cube(bone.Mirror ? -size : size, new Vector2(Texture.Width, Texture.Height));
+						Cube built = new Cube(size, new Vector2(Texture.Width, Texture.Height));
 						built.Mirrored = bone.Mirror;
 						built.BuildCube(cube.Uv);
 
@@ -247,8 +247,8 @@ namespace Alex.Graphics.Models.Entity
 
 				var buffer = Buffer;
 
-				var yaw = ApplyYaw ? MathUtils.ToRadians(MathUtils.NormDeg(position.Yaw + 180f)) : 0f;
-				var headYaw = ApplyHeadYaw ? MathUtils.ToRadians(MathUtils.NormDeg(position.HeadYaw + 180f)) : 0f;
+				var yaw = ApplyYaw ? MathUtils.ToRadians(180f + position.Yaw) : 0f;
+				var headYaw = ApplyHeadYaw ? MathUtils.ToRadians(180f + position.HeadYaw) : 0f;
 				var pitch = ApplyPitch ? MathUtils.ToRadians(position.Pitch) : 0f;
 
 				rot += Rotation;

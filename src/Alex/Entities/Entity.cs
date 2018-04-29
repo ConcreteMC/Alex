@@ -141,11 +141,15 @@ namespace Alex.Entities
 			KnownPosition.HeadYaw = rotation;
 		}
 
+		protected bool DoRotationCalculations = true;
+
 		public virtual void OnTick()
 		{
 			Age++;
 			
-			UpdateRotations();
+			if (DoRotationCalculations)
+				UpdateRotations();
+
 			_previousPosition = KnownPosition;
 
 			if (IsNoAi) return;
@@ -193,7 +197,7 @@ namespace Alex.Entities
 			// if moving:
 			// 1) snap the body yaw (renderYawOffset) to the movement direction (rotationYaw)
 			// 2) constrain the head yaw (rotationYawHead) to be within +/- 90 of the body yaw (renderYawOffset)
-			if (IsNoAi && distSQ > MOVEMENT_THRESHOLD_SQ)
+			if (distSQ > MOVEMENT_THRESHOLD_SQ)
 			{
 				//KnownPosition.Yaw = KnownPosition.Yaw;
 				float newRotationYawHead = MathUtils.ConstrainAngle(KnownPosition.HeadYaw, KnownPosition.Yaw,

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -22,7 +23,8 @@ namespace Alex
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ResourceManager));
 
-		public McResourcePack ResourcePack { get; private set; }
+		private LinkedList<McResourcePack> ActiveResourcePacks { get; } = new LinkedList<McResourcePack>();
+		public McResourcePack ResourcePack => ActiveResourcePacks.First.Value;
 		public BedrockResourcePack BedrockResourcePack { get; private set; }
 
 		public AtlasGenerator Atlas { get; private set; }
@@ -35,34 +37,59 @@ namespace Alex
 			Atlas = new AtlasGenerator(Graphics);
 		}
 
-
+		private static readonly string VersionFile = Path.Combine("assets", "version.txt");
 		private byte[] GetLatestAssets()
 		{
-			using (WebClient wc = new WebClient())
+			try
 			{
-				var rawJson = wc.DownloadString("https://launchermeta.mojang.com/mc/game/version_manifest.json?_t=" +
-				                                (long) (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds);
-
-				VersionManifest manifest = VersionManifest.FromJson(rawJson);
-				Version latestSnapshotVersion =
-					manifest.Versions.OrderByDescending(x => x.ReleaseTime.ToUnixTimeSeconds()).FirstOrDefault();
-
-				Log.Info($"Using assets version {latestSnapshotVersion.Id}");
-
-				string savedPath = Path.Combine("assets", latestSnapshotVersion.Id + ".zip");
-				if (!File.Exists(savedPath))
+				using (WebClient wc = new WebClient())
 				{
-					Log.Info("Downloading latest vanilla Minecraft resources...");
-					LauncherMeta meta = LauncherMeta.FromJson(wc.DownloadString(latestSnapshotVersion.Url));
-					byte[] clientData = wc.DownloadData(meta.Downloads.Client.Url);
-					File.WriteAllBytesAsync(savedPath, clientData);
-					return clientData;
-				}
-				else
-				{
-					return File.ReadAllBytes(savedPath);
+					var rawJson = wc.DownloadString("https://launchermeta.mojang.com/mc/game/version_manifest.json?_t=" +
+					                                (long) (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds);
+
+					VersionManifest manifest = VersionManifest.FromJson(rawJson);
+					Version latestSnapshotVersion =
+						manifest.Versions.OrderByDescending(x => x.ReleaseTime.ToUnixTimeSeconds()).FirstOrDefault();
+
+					Log.Info($"Using assets version {latestSnapshotVersion.Id}");
+
+					string savedPath = Path.Combine("assets", latestSnapshotVersion.Id + ".zip");
+					if (!File.Exists(savedPath))
+					{
+						Log.Info("Downloading latest vanilla Minecraft resources...");
+						LauncherMeta meta = LauncherMeta.FromJson(wc.DownloadString(latestSnapshotVersion.Url));
+						byte[] clientData = wc.DownloadData(meta.Downloads.Client.Url);
+
+						File.WriteAllBytesAsync(savedPath, clientData);
+						File.WriteAllTextAsync(VersionFile, savedPath);
+
+						return clientData;
+					}
+					else
+					{
+						var data = File.ReadAllBytes(savedPath);
+
+						if (!File.Exists(VersionFile))
+							File.WriteAllTextAsync(VersionFile, savedPath);
+
+						return data;
+					}
 				}
 			}
+			catch
+			{
+				Log.Warn($"Failed to check for latest assets!");
+				if (File.Exists(VersionFile))
+				{
+					string content = File.ReadAllText(VersionFile);
+					if (File.Exists(content))
+					{
+						return File.ReadAllBytes(content);
+					}
+				}
+			}
+
+			return null;
 		}
 
 		private McResourcePack LoadResourcePack(IProgressReceiver progressReceiver, GraphicsDevice graphics, Stream stream, bool replaceModels = false,
@@ -137,6 +164,14 @@ namespace Alex
 			try
 			{
 				javaResources = GetLatestAssets();
+				if (javaResources == null)
+				{
+					Log.Error($"Could not load any assets! Are you connected to the internet?");
+
+					javaResources = null;
+					bedrockResources = null;
+					return false;
+				}
 			}
 			catch (Exception ex)
 			{
@@ -164,7 +199,7 @@ namespace Alex
 			Log.Info($"Loading vanilla resources...");
 			using (MemoryStream stream = new MemoryStream(defaultResources))
 			{
-				ResourcePack = LoadResourcePack(progressReceiver, device, stream, true, true, true, preloadCallback);
+				ActiveResourcePacks.AddFirst(LoadResourcePack(progressReceiver, device, stream, true, true, true, preloadCallback));
 			}
 
 			//report(ResourcePack.AsciiFont);
@@ -189,7 +224,7 @@ namespace Alex
 
 						using (FileStream stream = new FileStream(resourcePackPath, FileMode.Open))
 						{
-							LoadResourcePack(progressReceiver, device, stream, true, false, false, preloadCallback);
+							ActiveResourcePacks.AddLast(LoadResourcePack(progressReceiver, device, stream, true, false, false, preloadCallback));
 						}
 					}
 				}

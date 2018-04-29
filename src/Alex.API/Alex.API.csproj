@@ -20,6 +20,7 @@
   <ItemGroup>
     <Folder Include="Data\Options\JsonConverters\" />
     <Folder Include="Data\Tags\" />
+    <Folder Include="Mojang\" />
     <Folder Include="World\Storage\" />
   </ItemGroup>
 </Project>

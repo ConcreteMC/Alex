@@ -21,9 +21,9 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="0.6.2-build4929-beta" />
-    <PackageReference Include="Avalonia.Desktop" Version="0.6.2-build4929-beta" />
-    <PackageReference Include="Avalonia.ReactiveUI" Version="0.6.2-build4929-beta" />
+    <PackageReference Include="Avalonia" Version="0.6.1" />
+    <PackageReference Include="Avalonia.Desktop" Version="0.6.1" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="0.6.1" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System">

@@ -138,7 +138,7 @@ namespace Alex.Rendering.Camera
 	    {
 			
 			MoveTo(entityLocation.ToVector3(), 
-				new Vector3(MathHelper.ToRadians(entityLocation.Yaw), MathHelper.ToRadians(entityLocation.HeadYaw), MathHelper.ToRadians(entityLocation.Pitch)));
+				new Vector3(MathHelper.ToRadians(entityLocation.HeadYaw), MathHelper.ToRadians(entityLocation.Yaw), MathHelper.ToRadians(entityLocation.Pitch)));
 	    }
 	}
 }

@@ -116,5 +116,14 @@ namespace Alex.API.Utils
 		{
 			return ImageToTexture2D(graphics, bmp.Clone(region, PixelFormat.Format32bppPArgb));
 		}
+
+		public static void CopyRegionIntoImage(Bitmap srcBitmap, System.Drawing.Rectangle srcRegion, ref Bitmap destBitmap,
+			System.Drawing.Rectangle destRegion)
+		{
+			using (System.Drawing.Graphics grD = System.Drawing.Graphics.FromImage(destBitmap))
+			{
+				grD.DrawImage(srcBitmap, destRegion, srcRegion, GraphicsUnit.Pixel);
+			}
+		}
 	}
 }

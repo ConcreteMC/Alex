@@ -17,15 +17,6 @@ namespace Alex.Utils
     {
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(SPWorldProvider));
 
-		private void CopyRegionIntoImage(Bitmap srcBitmap, System.Drawing.Rectangle srcRegion, ref Bitmap destBitmap,
-            System.Drawing.Rectangle destRegion)
-        {
-			using (System.Drawing.Graphics grD = System.Drawing.Graphics.FromImage(destBitmap))
-	        {
-		        grD.DrawImage(srcBitmap, destRegion, srcRegion, GraphicsUnit.Pixel);
-	        }
-        }
-
 	    private Dictionary<string, TextureInfo> _atlasLocations = new Dictionary<string, TextureInfo>();
 
 	    private Texture2D _atlas;
@@ -39,7 +30,7 @@ namespace Alex.Utils
 
 	    public void GenerateAtlas(KeyValuePair<string, Bitmap>[] bitmaps, IProgressReceiver progressReceiver)
         {
-	        Log.Info("Generating texture map...");
+	        Log.Info($"Generating texture atlas out of {bitmaps.Length} bitmaps...");
 
 	        Bitmap no;
 	        using (MemoryStream ms = new MemoryStream(Resources.no))
@@ -69,8 +60,8 @@ namespace Alex.Utils
 			_atlas = TextureUtils.BitmapToTexture2D(Graphics, bitmap);
 			AtlasSize = new Vector2(_atlas.Width, _atlas.Height);
 
-        //    bitmap.Save("assets\\terrain.png", ImageFormat.Png);
-			Log.Info($"Texturemap generated! (Width:{_atlas.Width}px Height:{_atlas.Height}px)");
+            bitmap.Save("assets\\terrain.png", ImageFormat.Png);
+			Log.Info($"TextureAtlas generated! (Width:{_atlas.Width}px Height:{_atlas.Height}px)");
         }
 
 	    private int Process(ref Bitmap bmp, KeyValuePair<string, Bitmap>[] data, ref int xi, ref int yi, ref int xOffset, ref int yRemaining, int total, int processed, IProgressReceiver progressReceiver)
@@ -86,7 +77,7 @@ namespace Alex.Utils
 			    var r = new System.Drawing.Rectangle(0, 0, bm.Value.Width, bm.Value.Height);
 			    var destination = new System.Drawing.Rectangle(xi, yi, bm.Value.Width, bm.Value.Height);
 
-			    CopyRegionIntoImage(bm.Value, r, ref bmp, destination);
+			    TextureUtils.CopyRegionIntoImage(bm.Value, r, ref bmp, destination);
 
 			    if (!_atlasLocations.ContainsKey(key))
 			    {
@@ -194,13 +185,13 @@ namespace Alex.Utils
 				var atlasLocation = loc.Value;
 				if (bitmaps.TryGetValue(loc.Key, out Bitmap texture))
 				{
-					CopyRegionIntoImage(texture, new System.Drawing.Rectangle(0, 0, textureWidth, textureHeight), ref modifiedBitmap, target);
+					TextureUtils.CopyRegionIntoImage(texture, new System.Drawing.Rectangle(0, 0, textureWidth, textureHeight), ref modifiedBitmap, target);
 				}
 				else
 				{
 					w = 16;
 					h = 16;
-					CopyRegionIntoImage(Atlas, new System.Drawing.Rectangle((int)atlasLocation.Position.X, (int)atlasLocation.Position.Y, 16, 16), ref modifiedBitmap, target);
+					TextureUtils.CopyRegionIntoImage(Atlas, new System.Drawing.Rectangle((int)atlasLocation.Position.X, (int)atlasLocation.Position.Y, 16, 16), ref modifiedBitmap, target);
 				}
 
 				newLocations.Add(loc.Key, new TextureInfo(new Vector2(cx, cy), w, h));

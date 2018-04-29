@@ -230,7 +230,7 @@ namespace Alex
 				return;
 			}
 
-			Mouse.SetPosition(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2);
+			//Mouse.SetPosition(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2);
 
 			GuiRenderer.LoadResourcePack(Resources.ResourcePack);
 
