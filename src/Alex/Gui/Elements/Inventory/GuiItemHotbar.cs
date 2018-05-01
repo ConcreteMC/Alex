@@ -60,6 +60,14 @@ namespace Alex.Gui.Elements.Inventory
 			        Item = Inventory[36 + i]
 		        });
 	        }
+
+	        AddChild(_itemNameTextElement = new GuiTextElement()
+	        {
+		        Anchor = Alignment.TopCenter,
+		        TextColor = TextColor.White,
+		        Text = "Unknown",
+		        Margin = new Thickness(0, -5, 0, 5)
+	        });
 		}
 
 	    private void SlotChanged(object sender, SlotChangedEventArgs e)
@@ -106,14 +114,7 @@ namespace Alex.Gui.Elements.Inventory
         {
             Background = renderer.GetTexture(GuiTextures.Inventory_HotBar);
 
-			AddChild(_itemNameTextElement = new GuiTextElement()
-			{
-				Font = renderer.Font,
-				Anchor = Alignment.TopCenter,
-				TextColor = TextColor.White,
-				Text = "Unknown",
-				Margin = new Thickness(0, -5, 0, 5)
-			});
+			
         }
     }
 }
