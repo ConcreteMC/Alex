@@ -3,6 +3,7 @@ using Alex.API.Graphics;
 using Alex.API.Gui;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using RocketUI.Screens;
 
 namespace Alex.GameStates
 {
@@ -36,10 +37,7 @@ namespace Alex.GameStates
 		{
 			OnLoad(args);
 
-			if (Gui != null)
-			{
-				Gui.InvalidateLayout(true);
-			}
+			Gui?.InvalidateLayout();
 		}
 
 		public void Unload()

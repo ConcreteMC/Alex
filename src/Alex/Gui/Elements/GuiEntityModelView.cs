@@ -1,7 +1,6 @@
 ﻿using Alex.API.Graphics;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
-using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Alex.Entities;
 using Alex.GameStates;
@@ -10,10 +9,12 @@ using Alex.Rendering.Camera;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using RocketUI.Elements;
+using RocketUI.Graphics;
 
 namespace Alex.Gui.Elements
 {
-    public class GuiEntityModelView : GuiElement
+    public class GuiEntityModelView : VisualElement
     {
 	    public PlayerLocation EntityPosition
 	    {

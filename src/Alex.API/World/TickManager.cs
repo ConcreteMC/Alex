@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using Alex.API.Graphics;
-using Microsoft.Xna.Framework;
 using NLog;
 
 namespace Alex.API.World

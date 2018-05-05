@@ -2,11 +2,10 @@
 using System.Drawing;
 using System.IO;
 using Alex.API.Graphics;
-using Alex.API.Graphics.Textures;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
-using Alex.API.Gui.Graphics;
+using Alex.API.Gui.Elements.Controls.Menus;
 using Alex.API.Utils;
 using Alex.Entities;
 using Alex.GameStates.Gui.Common;
@@ -20,8 +19,11 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using RocketUI;
+using RocketUI.Elements;
+using RocketUI.Elements.Controls;
+using RocketUI.Graphics.Textures;
 using Color = Microsoft.Xna.Framework.Color;
-using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace Alex.GameStates
 {
@@ -29,10 +31,10 @@ namespace Alex.GameStates
 	{
 		private readonly GuiDebugInfo _debugInfo;
 
-		private readonly GuiStackMenu _mainMenu;
-		private readonly GuiStackMenu _debugMenu;
+		private readonly GuiMCStackMenu _mainMenu;
+		private readonly GuiMCStackMenu _debugMenu;
 
-		private readonly GuiTextElement _splashText;
+		private readonly GuiMCTextElement _splashText;
 
 		private readonly GuiPanoramaSkyBox _backgroundSkyBox;
 		private GuiEntityModelView _playerView;
@@ -50,14 +52,14 @@ namespace Alex.GameStates
 
 			#region Create MainMenu
 
-			_mainMenu = new GuiStackMenu()
+			_mainMenu = new GuiMCStackMenu()
 			{
 				Margin = new Thickness(15, 0, 15, 0),
 				Padding = new Thickness(0, 50, 0, 0),
 				Width = 125,
-				Anchor = Alignment.FillY | Alignment.MinX,
+				Anchor = Anchor.FillY | Anchor.MinX,
 
-				ChildAnchor = Alignment.CenterY | Alignment.FillX,
+				ChildAnchor = Anchor.CenterY | Anchor.FillX,
 				BackgroundOverlay = new Color(Color.Black, 0.35f)
 			};
 
@@ -71,14 +73,14 @@ namespace Alex.GameStates
 
 			#region Create DebugMenu
 
-			_debugMenu = new GuiStackMenu()
+			_debugMenu = new GuiMCStackMenu()
 			{
 				Margin = new Thickness(15, 0, 15, 0),
 				Padding = new Thickness(0, 50, 0, 0),
 				Width = 125,
-				Anchor = Alignment.FillY | Alignment.MinX,
+				Anchor = Anchor.FillY | Anchor.MinX,
 
-				ChildAnchor = Alignment.CenterY | Alignment.FillX,
+				ChildAnchor = Anchor.CenterY | Anchor.FillX,
 				BackgroundOverlay = new Color(Color.Black, 0.35f),
 				
 			};
@@ -92,27 +94,27 @@ namespace Alex.GameStates
 
 			AddChild(_mainMenu);
 
-			AddChild(_logo = new GuiImage(GuiTextures.AlexLogo)
+			AddChild(_logo = new GuiImage(GuiTextures.AlexLogo.ToString())
 			{
 				Margin = new Thickness(95, 25, 0, 0),
-				Anchor = Alignment.TopCenter
+				Anchor = Anchor.TopCenter
 			});
 
-			AddChild(_splashText = new GuiTextElement()
+			AddChild(_splashText = new GuiMCTextElement()
 			{
 				TextColor = TextColor.Yellow,
 				Rotation = 17.5f,
 
 				Margin = new Thickness(240, 15, 0, 0),
-				Anchor = Alignment.TopCenter,
+				Anchor = Anchor.TopCenter,
 
 				Text = "Who liek minecwaf?!"
 			});
 
-			GuiTextElement cc;
-			AddChild(cc = new GuiTextElement()
+			GuiMCTextElement cc;
+			AddChild(cc = new GuiMCTextElement()
 			{
-				Anchor = Alignment.BottomRight,
+				Anchor = Anchor.BottomRight,
 				Text = "github.com/kennyvv/Alex",
 				TextColor = TextColor.White,
 				TextOpacity = 0.5f,
@@ -158,7 +160,7 @@ namespace Alex.GameStates
 				Width = 92,
 				Height = 128,
 
-				Anchor = Alignment.BottomRight,
+				Anchor = Anchor.BottomRight,
 			});
 
 			using (MemoryStream ms = new MemoryStream(Resources.GradientBlur))
@@ -228,7 +230,7 @@ namespace Alex.GameStates
 		{
 			if (!_backgroundSkyBox.Loaded)
 			{
-				_backgroundSkyBox.Load(Alex.GuiRenderer);
+				_backgroundSkyBox.Load(Alex.GuiResourceProvider);
 			}
 
 			_backgroundSkyBox.Draw(args);

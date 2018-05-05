@@ -2,19 +2,23 @@
 using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Data;
+using Alex.API.Graphics;
 using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements.Controls;
-using Alex.API.Gui.Graphics;
 using Alex.API.Input;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using NLog;
+using RocketUI;
+using RocketUI.Elements.Controls;
+using RocketUI.Graphics;
+using RocketUI.Utilities;
 
 namespace Alex.Gui.Elements
 {
-	public class ChatComponent : GuiControl, IChatReceiver
+	public class ChatComponent : Control, IChatReceiver
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ChatComponent));
 
@@ -29,7 +33,7 @@ namespace Alex.Gui.Elements
 		public ChatComponent()
 		{
 			_textBuilder = new TextInputBuilder();
-			Anchor = Alignment.BottomLeft;
+			Anchor = Anchor.BottomLeft;
 
 			MaxHeight = Height;
 			Height = 180;
@@ -38,8 +42,8 @@ namespace Alex.Gui.Elements
 
 		private IFont Font;
 
-		protected override void OnInit(IGuiRenderer renderer)
-		{
+		protected override void OnInit()
+        {
 			Font = renderer.Font;
 
 			FocusOutlineThickness = Thickness.Zero;
@@ -85,7 +89,7 @@ namespace Alex.Gui.Elements
 
 				graphics.FillRectangle(new Rectangle(renderPos.X, renderPos.Y - 2, Width, 10), new Color(Color.Black, 0.5f));
 
-				Font.DrawString(graphics.SpriteBatch, msg, renderPos.ToVector2(), TextColor.White);
+				graphics.SpriteBatch.DrawString(renderPos.ToVector2(), msg,  Font, TextColor.White);
 
 				if (gameTime.TotalGameTime.Seconds % 2 == 0)
 				{
@@ -198,7 +202,7 @@ namespace Alex.Gui.Elements
 			graphics.FillRectangle(new Rectangle(renderPos.ToPoint(), new Point(Width, (int) Math.Ceiling(size.Y + 2))),
 				new Color(Color.Black, alpha * 0.5f));
 
-			Font.DrawString(graphics.SpriteBatch, text, renderPos + new Vector2(0, 2), TextColor.White, opacity: alpha);
+			graphics.SpriteBatch.DrawString(renderPos + new Vector2(0, 2), text, Font, TextColor.White, opacity: alpha);
 			offset.Y -= (size.Y + 2);
 		}
 

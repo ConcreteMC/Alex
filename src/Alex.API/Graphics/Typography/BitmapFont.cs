@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using Alex.API.Graphics.Textures;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using RocketUI;
+using RocketUI.Graphics.Textures;
+using RocketUI.Utilities;
 using Color = Microsoft.Xna.Framework.Color;
+using FontStyle = RocketUI.FontStyle;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace Alex.API.Graphics.Typography
@@ -167,7 +170,17 @@ namespace Alex.API.Graphics.Typography
             size.Y = offset.Y + finalLineHeight;
         }
 
-        public void DrawString(SpriteBatch   sb, string text, Vector2 position,
+	    public void DrawString(SpriteBatch sb,                          string   text, Vector2 position,
+	                           Color       foreground,                  Color?    shadow = null,
+	                           FontStyle   style      = FontStyle.None, Vector2? scale = null, float opacity = 1,
+	                           float       rotation   = 0,
+	                           Vector2?    origin     = null, SpriteEffects effects = SpriteEffects.None,
+	                           float       layerDepth = 0)
+	    {
+		    DrawString(sb, text, position, new TextColor(foreground, shadow ?? Color.TransparentBlack), style, scale, opacity, rotation, origin, effects, layerDepth);
+	    }
+
+	    public void DrawString(SpriteBatch   sb, string text, Vector2 position,
                                TextColor     color,
                                FontStyle     style      = FontStyle.None, Vector2? scale = null,
                                float         opacity    = 1f,

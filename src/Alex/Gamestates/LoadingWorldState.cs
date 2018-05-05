@@ -1,10 +1,11 @@
 ﻿using Alex.API.Gui;
 using Alex.API.Gui.Elements;
-using Alex.API.Gui.Elements.Layout;
-using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.GameStates.Gui.Common;
+using RocketUI;
+using RocketUI.Elements;
+using RocketUI.Elements.Layout;
 
 namespace Alex.GameStates
 {
@@ -12,8 +13,8 @@ namespace Alex.GameStates
     {
 	    private readonly GuiContainer   _progressBarContainer;
 	    private readonly GuiProgressBar _progressBar;
-	    private readonly GuiTextElement _textDisplay;
-	    private readonly GuiTextElement _percentageDisplay;
+	    private readonly GuiMCTextElement _textDisplay;
+	    private readonly GuiMCTextElement _percentageDisplay;
 		
 	    public string Text
 	    {
@@ -33,25 +34,23 @@ namespace Alex.GameStates
 
 			    Y = -25,
 					
-			    Anchor = Alignment.BottomCenter,
+			    Anchor = Anchor.BottomCenter,
 		    });
 
-		    _progressBarContainer.AddChild(_textDisplay = new GuiTextElement()
+		    _progressBarContainer.AddChild(_textDisplay = new GuiMCTextElement()
 		    {
 			    Text      = Text,
 			    TextColor = TextColor.Black,
 					
-			    Anchor    = Alignment.TopLeft,
-			    HasShadow = false
+			    Anchor    = Anchor.TopLeft
 		    });
 
-		    _progressBarContainer.AddChild(_percentageDisplay = new GuiTextElement()
+		    _progressBarContainer.AddChild(_percentageDisplay = new GuiMCTextElement()
 		    {
 			    Text      = Text,
 			    TextColor = TextColor.Black,
 					
-			    Anchor    = Alignment.TopRight,
-			    HasShadow = false
+			    Anchor    = Anchor.TopRight
 		    });
 
 		    _progressBarContainer.AddChild(_progressBar = new GuiProgressBar()
@@ -59,7 +58,7 @@ namespace Alex.GameStates
 			    Width  = 300,
 			    Height = 9,
 					
-			    Anchor = Alignment.BottomFill,
+			    Anchor = Anchor.BottomFill,
 		    });
 	    }
 		

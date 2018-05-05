@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Alex.API.Graphics.Textures;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
-using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Alex.GameStates;
 using Alex.Rendering;
@@ -12,10 +10,14 @@ using Alex.Rendering.Camera;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using RocketUI;
+using RocketUI.Elements;
+using RocketUI.Graphics;
+using RocketUI.Graphics.Textures;
 
 namespace Alex.Gui
 {
-    public class GuiMiniMap : GuiElement
+    public class GuiMiniMap : VisualElement
     {
         public Camera Camera { get; }
         public PlayerLocation PlayerLocation { get; set; }
@@ -34,14 +36,14 @@ namespace Alex.Gui
             Width = 128;
             Height = 128;
             Margin = new Thickness(10, 10);
-            Anchor = Alignment.TopRight;
+            Anchor = Anchor.TopRight;
 
             Camera = new TopDownCamera(16);
         }
 
-        protected override void OnInit(IGuiRenderer renderer)
+        protected override void OnInit()
         {
-            base.OnInit(renderer);
+            base.OnInit();
 
             InitMiniMap(Alex.Instance.GraphicsDevice);
             Background.Texture = (TextureSlice2D) _mapTexture;

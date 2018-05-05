@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Linq;
+using Alex.API.Graphics;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
-using Alex.API.Gui.Elements.Layout;
-using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Alex.Utils;
 using NLog;
+using RocketUI;
+using RocketUI.Elements;
+using RocketUI.Elements.Layout;
 
 namespace Alex.Gui.Elements.Inventory
 {
@@ -41,7 +43,7 @@ namespace Alex.Gui.Elements.Inventory
 
 		public Utils.Inventory Inventory { get; set; }
 
-	    private GuiTextElement _itemNameTextElement;
+	    private GuiMCTextElement _itemNameTextElement;
         public GuiItemHotbar(Utils.Inventory inventory)
         {
 	        Inventory = inventory;
@@ -56,7 +58,7 @@ namespace Alex.Gui.Elements.Inventory
 		        {
 			        Margin = new Thickness((i * ItemWidth), 0, 0, 0),
 			        IsSelected = i == SelectedIndex,
-			        Anchor = Alignment.TopLeft,
+			        Anchor = Anchor.TopLeft,
 			        Item = Inventory[36 + i]
 		        });
 	        }
@@ -102,14 +104,14 @@ namespace Alex.Gui.Elements.Inventory
 	        }
         }
 
-        protected override void OnInit(IGuiRenderer renderer)
+        protected override void OnInit()
         {
             Background = renderer.GetTexture(GuiTextures.Inventory_HotBar);
 
-			AddChild(_itemNameTextElement = new GuiTextElement()
+			AddChild(_itemNameTextElement = new GuiMCTextElement()
 			{
 				Font = renderer.Font,
-				Anchor = Alignment.TopCenter,
+				Anchor = Anchor.TopCenter,
 				TextColor = TextColor.White,
 				Text = "Unknown",
 				Margin = new Thickness(0, -5, 0, 5)

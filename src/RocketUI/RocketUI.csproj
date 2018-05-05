@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<AssemblyTitle>RocketUI</AssemblyTitle>
+		<AssemblyName>RocketUI</AssemblyName>
+		<PackageId>RocketUI</PackageId>
+		<Version>1.0.0</Version>
+		<Authors>Dan Spiteri</Authors>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="MonoGame.Framework.DesktopGL.Core" Version="3.7.0.7" />
+		<PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+		<PackageReference Include="NLog" Version="4.5.3" />
+		<PackageReference Include="Portable.Xaml" Version="0.21.0" />
+		<PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
+		<PackageReference Include="UniversalTypeConverter" Version="1.0.4" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="DefaultSkin.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </None>
+	</ItemGroup>
+
+</Project>

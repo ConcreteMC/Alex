@@ -1,59 +1,59 @@
 ﻿namespace Alex.API.Input
 {
-    public enum InputCommand
+    public static class InputCommand
     {
-        MoveForwards,
-        MoveBackwards,
-        MoveUp,
-        MoveDown,
-        MoveLeft,
-        MoveRight,
+        public const string MoveForwards = "MoveForwards";
+        public const string MoveBackwards = "MoveBackwards";
+        public const string MoveUp = "MoveUp";
+        public const string MoveDown = "MoveDown";
+        public const string MoveLeft = "MoveLeft";
+        public const string MoveRight = "MoveRight";
 
-        CameraUp,
-        CameraDown,
-        CameraLeft,
-        CameraRight,
+        public const string CameraUp = "CameraUp";
+        public const string CameraDown = "CameraDown";
+        public const string CameraLeft = "CameraLeft";
+        public const string CameraRight = "CameraRight";
 
-        MoveSpeedIncrease,
-        MoveSpeedDecrease,
-        MoveSpeedReset,
+        public const string MoveSpeedIncrease = "MoveSpeedIncrease";
+        public const string MoveSpeedDecrease = "MoveSpeedDecrease";
+        public const string MoveSpeedReset = "MoveSpeedReset";
 
-        ToggleFog,
-        ToggleMenu,
-        ToggleDebugInfo,
-        ToggleChat,
-        ToggleCamera,
-        ToggleCameraFree,
-        ToggleWireframe,
+        public const string ToggleFog = "ToggleFog";
+        public const string ToggleMenu = "ToggleMenu";
+        public const string ToggleDebugInfo = "ToggleDebugInfo";
+        public const string ToggleChat = "ToggleChat";
+        public const string ToggleCamera = "ToggleCamera";
+        public const string ToggleCameraFree = "ToggleCameraFree";
+        public const string ToggleWireframe = "ToggleWireframe";
         
-        RebuildChunks,
+        public const string RebuildChunks = "RebuildChunks";
 
 
-        HotBarSelectPrevious,
-        HotBarSelectNext,
-        HotBarSelect1,
-        HotBarSelect2,
-        HotBarSelect3,
-        HotBarSelect4,
-        HotBarSelect5,
-        HotBarSelect6,
-        HotBarSelect7,
-        HotBarSelect8,
-        HotBarSelect9,
+        public const string HotBarSelectPrevious = "HotBarSelectPrevious";
+        public const string HotBarSelectNext = "HotBarSelectNext";
+        public const string HotBarSelect1 = "HotBarSelect1";
+        public const string HotBarSelect2 = "HotBarSelect2";
+        public const string HotBarSelect3 = "HotBarSelect3";
+        public const string HotBarSelect4 = "HotBarSelect4";
+        public const string HotBarSelect5 = "HotBarSelect5";
+        public const string HotBarSelect6 = "HotBarSelect6";
+        public const string HotBarSelect7 = "HotBarSelect7";
+        public const string HotBarSelect8 = "HotBarSelect8";
+        public const string HotBarSelect9 = "HotBarSelect9";
 
-        Click,
-        Exit,
+        public const string Click = "Click";
+        public const string Exit = "Exit";
 
-        A,
-        B,
-        X,
-        Y,
+        public const string A = "A";
+        public const string B = "B";
+        public const string X = "X";
+        public const string Y = "Y";
 
-        Start,
+        public const string Start = "Start";
 
-		Left,
-		Right,
-		Up,
-		Down
+		public const string Left = "Left";
+		public const string Right = "Right";
+		public const string Up = "Up";
+		public const string Down = "Down";
     }
 }

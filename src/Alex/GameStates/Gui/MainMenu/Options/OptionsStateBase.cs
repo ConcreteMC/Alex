@@ -8,6 +8,8 @@ using Alex.API.Gui.Elements.Controls;
 using Alex.API.Services;
 using Alex.GameStates.Gui.Common;
 using Alex.Gui.Elements;
+using RocketUI;
+using RocketUI.Elements.Controls;
 
 namespace Alex.GameStates.Gui.MainMenu.Options
 {
@@ -24,7 +26,7 @@ namespace Alex.GameStates.Gui.MainMenu.Options
             Footer.AddChild(new GuiBackButton()
             {
                 TranslationKey = "gui.done",
-                Anchor = Alignment.TopFill
+                Anchor = Anchor.TopFill
             });
         }
 
@@ -40,16 +42,16 @@ namespace Alex.GameStates.Gui.MainMenu.Options
             base.OnHide();
         }
 
-        protected GuiButton CreateLinkButton<TGameState>(string translationKey) where TGameState : class,IGameState, new()
+        protected MCButton CreateLinkButton<TGameState>(string translationKey) where TGameState : class,IGameState, new()
         {
-            return new GuiButton(() => Alex.GameStateManager.SetActiveState<TGameState>())
+            return new MCButton(() => Alex.GameStateManager.SetActiveState<TGameState>())
             {
                 TranslationKey = translationKey
             };
         }
-        protected GuiSlider CreateSlider(string label, Func<AlexOptions, OptionsProperty<int>> optionsAccessor, int? minValue = null, int? maxValue = null, int? stepInterval = null)
+        protected Slider CreateSlider(string label, Func<AlexOptions, OptionsProperty<int>> optionsAccessor, int? minValue = null, int? maxValue = null, int? stepInterval = null)
         {
-            var slider = CreateValuedControl<GuiSlider, double, int>(label, optionsAccessor);
+            var slider = CreateValuedControl<Slider, double, int>(label, optionsAccessor);
             
             if (minValue.HasValue)
             {
@@ -68,9 +70,9 @@ namespace Alex.GameStates.Gui.MainMenu.Options
 
             return slider;
         }
-        protected GuiSlider CreateSlider(string label, Func<AlexOptions, OptionsProperty<double>> optionsAccessor, double? minValue = null, double? maxValue = null, double? stepInterval = null)
+        protected Slider CreateSlider(string label, Func<AlexOptions, OptionsProperty<double>> optionsAccessor, double? minValue = null, double? maxValue = null, double? stepInterval = null)
         {
-            var slider = CreateValuedControl<GuiSlider, double>(label, optionsAccessor);
+            var slider = CreateValuedControl<Slider, double>(label, optionsAccessor);
             
             if (minValue.HasValue)
             {

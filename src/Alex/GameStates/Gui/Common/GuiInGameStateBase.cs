@@ -5,6 +5,7 @@ using Alex.API.Graphics;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Microsoft.Xna.Framework;
+using RocketUI.Graphics.Textures;
 
 namespace Alex.GameStates.Gui.Common
 {
@@ -13,7 +14,7 @@ namespace Alex.GameStates.Gui.Common
 
         public GuiInGameStateBase()
         {
-            Background = null;
+            Background = new GuiTexture2D();
             BackgroundOverlay = new Color(Color.Black, 0.65f);
         }
         

@@ -29,6 +29,10 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Newtonsoft.Json;
 using NLog;
+using RocketUI;
+using RocketUI.Graphics.Typography;
+using RocketUI.Input;
+using GuiRenderer = Alex.Gui.GuiRenderer;
 
 namespace Alex
 {
@@ -59,6 +63,7 @@ namespace Alex
 		public InputManager InputManager { get; private set; }
 		public GuiRenderer GuiRenderer { get; private set; }
 		public GuiManager GuiManager { get; private set; }
+		public AlexGuiResourceProvider GuiResourceProvider { get; private set; }
 
 		private bool BypassTitleState { get; set; } = false;
 
@@ -165,8 +170,10 @@ namespace Alex
 			
 			_spriteBatch = new SpriteBatch(GraphicsDevice);
 			InputManager = new InputManager(this);
+
 			GuiRenderer = new GuiRenderer(this);
-			GuiManager = new GuiManager(this, InputManager, GuiRenderer);
+			GuiResourceProvider = new AlexGuiResourceProvider(this, GraphicsDevice);
+			GuiManager = new GuiManager(this, GuiResourceProvider, InputManager);
 			OnCharacterInput += GuiManager.FocusManager.OnTextInput;
 
 			GameStateManager = new GameStateManager(GraphicsDevice, _spriteBatch, GuiManager);
@@ -232,7 +239,8 @@ namespace Alex
 
 			//Mouse.SetPosition(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2);
 
-			GuiRenderer.LoadResourcePack(Resources.ResourcePack);
+			GuiResourceProvider.LoadResourcePack(Resources.ResourcePack);
+			GuiManager.Reinitialise();
 
 			GameStateManager.AddState<TitleState>("title"); 
 			GameStateManager.AddState("options", new OptionsState());
@@ -253,7 +261,8 @@ namespace Alex
 		{
 			Font = font;
 
-			GuiManager.ApplyFont(font);
+			GuiResourceProvider.PrimaryFont = font;
+			GuiManager.Reinitialise();
 		}
 
 		public void ConnectToServer()

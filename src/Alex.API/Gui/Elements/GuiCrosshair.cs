@@ -1,19 +1,18 @@
-﻿using Alex.API.Gui.Graphics;
+﻿using Alex.API.Graphics;
+using RocketUI;
+using RocketUI.Elements;
 
 namespace Alex.API.Gui.Elements
 {
-    public class GuiCrosshair : GuiElement
+    public class GuiCrosshair : VisualElement
     {
         public GuiCrosshair()
         {
-            Anchor = Alignment.MiddleCenter;
+            Anchor = Anchor.MiddleCenter;
             Width = 15;
             Height = 15;
+            Background = GuiTextures.Crosshair;
         }
 
-        protected override void OnInit(IGuiRenderer renderer)
-        {
-            Background = renderer.GetTexture(GuiTextures.Crosshair);
-        }
     }
 }

@@ -1,15 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Alex.API.Gui.Graphics;
-using Alex.API.Input;
+﻿using Alex.API.Input;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using RocketUI;
+using RocketUI.Elements.Controls;
+using RocketUI.Graphics;
 
 namespace Alex.API.Gui.Elements.Controls
 {
-    public class GuiTextInput : GuiValuedControl<string>
+    public class GuiTextInput : ValuedControl<string>
     {
 	    private TextColor _textColor        = TextColor.White;
 	    private TextColor _inactiveTextColor = TextColor.Gray;
@@ -39,7 +38,7 @@ namespace Alex.API.Gui.Elements.Controls
 
 	    private TextInputBuilder _textBuilder;
 
-        private GuiTextElement _textElement;
+        private GuiMCTextElement _textElement;
 
         private int _cursorPositionX;
         private float _cursorAlpha;
@@ -53,9 +52,9 @@ namespace Alex.API.Gui.Elements.Controls
             BackgroundOverlay = Color.Black;
 
             _textBuilder = new TextInputBuilder(text);
-            AddChild(_textElement = new GuiTextElement()
+            AddChild(_textElement = new GuiMCTextElement()
             {
-                Anchor = Alignment.MiddleLeft,
+                Anchor = Anchor.MiddleLeft,
 				Text = _textBuilder.Text
             });
 

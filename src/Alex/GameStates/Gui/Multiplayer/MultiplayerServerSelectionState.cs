@@ -10,26 +10,29 @@ using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Elements.Icons;
-using Alex.API.Gui.Elements.Layout;
-using Alex.API.Gui.Graphics;
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.GameStates.Gui.Common;
-using Alex.Graphics.Gui.Elements;
 using Alex.Gui;
 using Alex.Networking.Java;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using RocketUI;
+using RocketUI.Elements;
+using RocketUI.Elements.Controls;
+using RocketUI.Elements.Layout;
+using RocketUI.Graphics;
+using RocketUI.Graphics.Textures;
 
 namespace Alex.GameStates.Gui.Multiplayer
 {
     public class MultiplayerServerSelectionState : ListSelectionStateBase<GuiServerListEntryElement>
     {
-	    private GuiButton DirectConnectButton;
-	    private GuiButton JoinServerButton;
-	    private GuiButton AddServerButton;
-	    private GuiButton EditServerButton;
-	    private GuiButton DeleteServerButton;
+	    private MCButton DirectConnectButton;
+	    private MCButton JoinServerButton;
+	    private MCButton AddServerButton;
+	    private MCButton EditServerButton;
+	    private MCButton DeleteServerButton;
 
 	    private readonly IListStorageProvider<SavedServerEntry> _listProvider;
 
@@ -45,18 +48,18 @@ namespace Alex.GameStates.Gui.Multiplayer
 		    Footer.AddRow(row =>
 		    {
 
-			    row.AddChild(JoinServerButton = new GuiButton("Join Server",
+			    row.AddChild(JoinServerButton = new MCButton("Join Server",
 				    OnJoinServerButtonPressed)
 			    {
 				    TranslationKey = "selectServer.select",
 				    Enabled = false
 			    });
-			    row.AddChild(DirectConnectButton = new GuiButton("Direct Connect",
+			    row.AddChild(DirectConnectButton = new MCButton("Direct Connect",
 				    () => Alex.GameStateManager.SetActiveState<MultiplayerConnectState>())
 			    {
 				    TranslationKey = "selectServer.direct"
 			    });
-			    row.AddChild(AddServerButton = new GuiButton("Add Server",
+			    row.AddChild(AddServerButton = new MCButton("Add Server",
 				    OnAddItemButtonPressed)
 			    {
 				    TranslationKey = "selectServer.add"
@@ -64,21 +67,21 @@ namespace Alex.GameStates.Gui.Multiplayer
 		    });
 		    Footer.AddRow(row =>
 		    {
-			    row.AddChild(EditServerButton = new GuiButton("Edit", OnEditItemButtonPressed)
+			    row.AddChild(EditServerButton = new MCButton("Edit", OnEditItemButtonPressed)
 			    {
 				    TranslationKey = "selectServer.edit",
 				    Enabled = false
 			    });
-			    row.AddChild(DeleteServerButton = new GuiButton("Delete", OnDeleteItemButtonPressed)
+			    row.AddChild(DeleteServerButton = new MCButton("Delete", OnDeleteItemButtonPressed)
 			    {
 				    TranslationKey = "selectServer.delete",
 				    Enabled = false
 			    });
-			    row.AddChild(new GuiButton("Refresh", OnRefreshButtonPressed)
+			    row.AddChild(new MCButton("Refresh", OnRefreshButtonPressed)
 			    {
 				    TranslationKey = "selectServer.refresh"
 			    });
-			    row.AddChild(new GuiButton("Cancel", OnCancelButtonPressed)
+			    row.AddChild(new MCButton("Cancel", OnCancelButtonPressed)
 			    {
 				    TranslationKey = "gui.cancel"
 			    });
@@ -206,7 +209,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 	    }
     }
 
-    public class GuiServerListEntryElement : GuiSelectionListItem
+    public class GuiServerListEntryElement : SelectionListItem
     {
         private const int ServerIconSize = 32;
 
@@ -220,12 +223,12 @@ namespace Alex.GameStates.Gui.Multiplayer
 
         public bool IsPingPending { get; private set; }
 		
-        private readonly GuiTextureElement _serverIcon;
+        private readonly GuiImage _serverIcon;
         private readonly GuiStackContainer _textWrapper;
         private readonly GuiConnectionPingIcon _pingStatus;
         
-        private GuiTextElement _serverName;
-        private readonly GuiTextElement _serverMotd;
+        private GuiMCTextElement _serverName;
+        private readonly GuiMCTextElement _serverMotd;
 
 	    internal SavedServerEntry SavedServerEntry;
 		
@@ -243,38 +246,36 @@ namespace Alex.GameStates.Gui.Multiplayer
             ServerAddress = serverAddress;
 
 			Margin = new Thickness(5, 5);
-            Anchor = Alignment.TopFill;
+            Anchor = Anchor.TopFill;
 
-            AddChild( _serverIcon = new GuiTextureElement()
+            AddChild( _serverIcon = new GuiImage(GuiTextures.DefaultServerIcon)
             {
                 Width = ServerIconSize,
                 Height = ServerIconSize,
                 
-                Anchor = Alignment.TopLeft,
-
-                Background = GuiTextures.DefaultServerIcon
+                Anchor = Anchor.TopLeft,
             });
 
             AddChild(_pingStatus = new GuiConnectionPingIcon()
             {
-                Anchor = Alignment.TopRight,
+                Anchor = Anchor.TopRight,
             });
 
             AddChild( _textWrapper = new GuiStackContainer()
             {
-                ChildAnchor = Alignment.TopFill,
-				Anchor = Alignment.TopLeft
+                ChildAnchor = Anchor.TopFill,
+				Anchor = Anchor.TopLeft
             });
 			_textWrapper.Padding = new Thickness(0,0);
 			_textWrapper.Margin = new Thickness(ServerIconSize + 5, 0, 0, 0);
 
-            _textWrapper.AddChild(_serverName = new GuiTextElement()
+            _textWrapper.AddChild(_serverName = new GuiMCTextElement()
             {
                 Text = ServerName,
 				Margin = Thickness.Zero
             });
 
-            _textWrapper.AddChild(_serverMotd = new GuiTextElement()
+            _textWrapper.AddChild(_serverMotd = new GuiMCTextElement()
             {
 				Text = "Pinging server...",
 				Margin = Thickness.Zero
@@ -284,9 +285,9 @@ namespace Alex.GameStates.Gui.Multiplayer
 
         public bool PingCompleted { get; private set; }
 
-        protected override void OnInit(IGuiRenderer renderer)
+        protected override void OnInit()
         {
-            base.OnInit(renderer);
+            base.OnInit();
 			
             Ping();
         }
@@ -418,7 +419,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 				            ServerIcon = Texture2D.FromStream(_graphicsDevice, ms);
 			            }
 
-			            _serverIcon.Texture = ServerIcon;
+			            _serverIcon.Background.Texture = (TextureSlice2D) ServerIcon;
 		            }
 	            }
             }

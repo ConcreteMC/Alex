@@ -15,6 +15,7 @@ using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using NLog;
+using RocketUI;
 
 namespace Alex.Entities
 {
@@ -305,7 +306,7 @@ namespace Alex.Entities
 			textPosition.Y = (int)(textPosition.Y - c.Y);
 
 			renderArgs.SpriteBatch.FillRectangle(new Rectangle(textPosition.ToPoint(), c), new Color(Color.Black, 128));
-			renderArgs.SpriteBatch.DrawString(Alex.Font, clean, textPosition, TextColor.White, FontStyle.None, 0f, Vector2.Zero, scale);
+			renderArgs.SpriteBatch.DrawString(textPosition, clean, Alex.Font, TextColor.White, FontStyle.None, 0f, Vector2.Zero, scale);
 		}
 
 		public virtual void TerrainCollision(Vector3 collisionPoint, Vector3 direction)

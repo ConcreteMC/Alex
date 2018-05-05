@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Alex.API.Graphics;
+﻿using Alex.API.Graphics;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 

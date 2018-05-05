@@ -19,4 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Alex.API\Alex.API.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Gui\Elements\" />
+  </ItemGroup>
 </Project>

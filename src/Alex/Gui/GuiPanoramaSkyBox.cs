@@ -1,11 +1,10 @@
 ﻿using System;
 using System.IO;
 using Alex.API.Graphics;
-using Alex.API.Graphics.Textures;
-using Alex.API.Gui.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using RocketUI;
 
 namespace Alex.Gui
 {
@@ -30,7 +29,7 @@ namespace Alex.Gui
 
 	    public bool Loaded = false;
 
-	    private Texture2D[] _textures;
+	    private ITexture2D[] _textures;
 
 		private Alex Game { get; }
 		public GuiPanoramaSkyBox(Alex alex)
@@ -38,17 +37,16 @@ namespace Alex.Gui
 			Game = alex;
 		}
 
-        public void Load(IGuiRenderer renderer)
+        public void Load(IGuiResourceProvider resources)
         {
-	        _textures = new Texture2D[]
-	        {
-		        renderer.GetTexture2D(GuiTextures.Panorama0),
-		        renderer.GetTexture2D(GuiTextures.Panorama1),
-		        renderer.GetTexture2D(GuiTextures.Panorama2),
-		        renderer.GetTexture2D(GuiTextures.Panorama3),
-		        renderer.GetTexture2D(GuiTextures.Panorama4),
-		        renderer.GetTexture2D(GuiTextures.Panorama5),
-	        };
+	        _textures = new ITexture2D[6];
+	        ITexture2D t;
+	        resources.TryGetTexture2D(GuiTextures.Panorama0, out t); _textures[0] = t;
+	        resources.TryGetTexture2D(GuiTextures.Panorama1, out t); _textures[1] = t;
+	        resources.TryGetTexture2D(GuiTextures.Panorama2, out t); _textures[2] = t;
+	        resources.TryGetTexture2D(GuiTextures.Panorama3, out t); _textures[3] = t;
+	        resources.TryGetTexture2D(GuiTextures.Panorama4, out t); _textures[4] = t;
+	        resources.TryGetTexture2D(GuiTextures.Panorama5, out t); _textures[5] = t;
 
 			CreateSkybox(Game.GraphicsDevice);
 			
@@ -155,7 +153,7 @@ namespace Alex.Gui
 				    var indexerIndex = 6 * (k + j * 6);
 
 				    _skyBoxEffect.VertexColorEnabled = true;
-				    _skyBoxEffect.Texture = _textures[k];
+				    _skyBoxEffect.Texture = _textures[k].Texture;
 
 				    _skyBoxEffect.Techniques[0].Passes[0].Apply();
 					graphics.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, indexerIndex, 2);

@@ -1,6 +1,6 @@
-﻿using Alex.API.Gui;
-using Alex.API.Gui.Graphics;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
+using RocketUI;
+using RocketUI.Screens;
 
 namespace Alex.GameStates.Gui
 {
@@ -11,9 +11,9 @@ namespace Alex.GameStates.Gui
 
         }
 
-        protected override void OnInit(IGuiRenderer renderer)
+        protected override void OnInit()
         {
-            base.OnInit(renderer);
+            base.OnInit();
         }
     }
 }

@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 using Alex.API.GameStates;
 using Alex.API.Graphics;
-using Alex.API.Gui;
-using Alex.API.Gui.Graphics;
 using Microsoft.Xna.Framework;
+using RocketUI.Screens;
 
 namespace Alex.GameStates.Gui.Common
 {

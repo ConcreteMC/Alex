@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
+using RocketUI.Elements;
+using RocketUI.Elements.Controls;
 
 namespace Alex.GameStates.Gui.Common
 {
@@ -38,17 +40,17 @@ namespace Alex.GameStates.Gui.Common
 
         public GuiConfirmState(GuiConfirmStateOptions options, Action<bool> callbackAction) : base(callbackAction)
         {
-            AddGuiElement(new GuiTextElement()
+            AddGuiElement(new GuiMCTextElement()
             {
                 Text = options.MessageText,
                 TranslationKey = options.MessageTranslationKey
             });
-            AddGuiElement(new GuiButton("Confirm", OnConfirmButtonPressed)
+            AddGuiElement(new Button("Confirm", OnConfirmButtonPressed)
             {
                 Text           = options.ConfirmText,
                 TranslationKey = options.ConfirmTranslationKey
             });
-            AddGuiElement(new GuiButton("Cancel", OnCancelButtonPressed)
+            AddGuiElement(new Button("Cancel", OnCancelButtonPressed)
             {
                 Text           = options.CancelText,
                 TranslationKey = options.CancelTranslationKey

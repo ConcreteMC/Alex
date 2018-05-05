@@ -1,6 +1,5 @@
 ﻿using System;
 using Alex.API.Input;
-using Alex.API.Input.Listeners;
 using Alex.Entities;
 using Alex.GameStates.Gui.InGame;
 using Alex.Utils;
@@ -9,6 +8,8 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using NLog;
+using RocketUI.Input;
+using RocketUI.Input.Listeners;
 
 namespace Alex.GameStates.Playing
 {

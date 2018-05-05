@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Alex.API.Utils.Noise
+﻿namespace Alex.API.Utils.Noise
 {
 	/// <summary>
 	/// Noise module that randomly displaces the input value before

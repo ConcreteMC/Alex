@@ -1,8 +1,6 @@
 ﻿using Alex.API.Gui;
 using Alex.API.Gui.Elements;
-using Alex.API.Gui.Graphics;
 using Alex.API.Input;
-using Alex.API.Input.Listeners;
 using Alex.Entities;
 using Alex.GameStates.Gui.InGame;
 using Alex.GameStates.Playing;
@@ -10,6 +8,13 @@ using Alex.Gui.Elements;
 using Alex.Gui.Elements.Inventory;
 using Alex.Rendering.UI;
 using Microsoft.Xna.Framework;
+using RocketUI;
+using RocketUI.Elements;
+using RocketUI.Input;
+using RocketUI.Input.Listeners;
+using RocketUI.Screens;
+using Anchor = RocketUI.Anchor;
+using GuiCrosshair = Alex.API.Gui.Elements.GuiCrosshair;
 
 namespace Alex.GameStates.Hud
 {
@@ -29,14 +34,14 @@ namespace Alex.GameStates.Hud
 			InputManager.AddListener(new MouseInputListener(InputManager.PlayerIndex));
 
 	        _hotbar = new GuiItemHotbar(player.Inventory);
-	        _hotbar.Anchor = Alignment.BottomCenter;
+	        _hotbar.Anchor = Anchor.BottomCenter;
 	        _hotbar.Padding = Thickness.Zero;
 
 			Chat = chat;
-	        Chat.Anchor = Alignment.BottomLeft;
+	        Chat.Anchor = Anchor.BottomLeft;
         }
 
-        protected override void OnInit(IGuiRenderer renderer)
+        protected override void OnInit()
         {
             AddChild(_hotbar);
             AddChild(new GuiCrosshair());
@@ -44,8 +49,9 @@ namespace Alex.GameStates.Hud
         }
 
         protected override void OnUpdate(GameTime gameTime)
-		{
-			if (_playerController.MouseInputListener.IsButtonDown(MouseButton.ScrollUp))
+        {
+	        var scroll = _playerController.MouseInputListener.GetYScrollDelta();
+			if (scroll > 0)
 			{
 				if (Chat.Focused)
 					Chat.ScrollUp();
@@ -53,7 +59,7 @@ namespace Alex.GameStates.Hud
 					_hotbar.SelectedIndex++;
 			}
 
-			if (_playerController.MouseInputListener.IsButtonDown(MouseButton.ScrollDown))
+			if (scroll < 0)
 			{
 				if (Chat.Focused)
 					Chat.ScrollDown();

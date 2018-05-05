@@ -1,19 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Net;
-using System.Reflection;
-using System.Security.Policy;
-using System.Text;
-using System.Xml;
 using Alex.API.Json;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using NLog;
-using NLog.Internal;
 
 namespace Alex.API.Utils
 {
@@ -75,11 +64,15 @@ namespace Alex.API.Utils
             }
         }
 
-	    public TextColor(Color c)
+	    public TextColor(Color c) : this(c, Color.TransparentBlack)
 	    {
-			ForegroundColor = c;
-            BackgroundColor = Color.TransparentBlack;
 	    }
+
+        public TextColor(Color foreground, Color background)
+        {
+            ForegroundColor = foreground;
+            BackgroundColor = background;
+        }
 
         public static string Color2tag(string colorname)
         {

@@ -1,13 +1,15 @@
 ﻿using Alex.API.Gui;
 using Alex.API.Gui.Elements;
-using Alex.API.Gui.Elements.Controls;
-using Alex.API.Gui.Elements.Layout;
-using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Alex.Gui.Elements;
 using Microsoft.Xna.Framework;
 using System;
+using Alex.API.Graphics;
 using Alex.API.Graphics.Typography;
+using RocketUI;
+using RocketUI.Elements;
+using RocketUI.Elements.Layout;
+using RocketUI.Graphics.Textures;
 
 namespace Alex.GameStates.Gui.Common
 {
@@ -43,7 +45,7 @@ namespace Alex.GameStates.Gui.Common
         protected GuiMultiStackContainer Body { get; }
         protected GuiMultiStackContainer Footer { get; }
 
-        private readonly GuiTextElement  _headerTitle;
+        private readonly GuiMCTextElement  _headerTitle;
 
         public GuiMenuStateBase()
         {
@@ -62,25 +64,25 @@ namespace Alex.GameStates.Gui.Common
                 Padding = new Thickness(3),
                 Margin = new Thickness(3, 3, 3, 6),
 
-                Anchor = Alignment.TopFill,
-                ChildAnchor = Alignment.BottomCenter
+                Anchor = Anchor.TopFill,
+                ChildAnchor = Anchor.BottomCenter
             });
             
-            Header.AddChild(_headerTitle = new GuiTextElement()
+            Header.AddChild(_headerTitle = new GuiMCTextElement()
             {
                 Text      = Title,
                 TextColor = TextColor.White,
                 Scale     = 1f,
                 FontStyle = FontStyle.DropShadow,
                 
-                Anchor = Alignment.BottomCenter,
+                Anchor = Anchor.BottomCenter,
             });
 
             AddChild(Footer = new GuiMultiStackContainer(row =>
                          {
-                             row.Anchor = Alignment.BottomFill;
+                             row.Anchor = Anchor.BottomFill;
                              //row.Orientation = Orientation.Horizontal;
-                             row.ChildAnchor = Alignment.BottomFill;
+                             row.ChildAnchor = Anchor.BottomFill;
                              //row.Margin = new Thickness(3);
                              row.Width = BodyMinWidth;
                              row.MaxWidth = BodyMinWidth;
@@ -89,13 +91,13 @@ namespace Alex.GameStates.Gui.Common
                 Height  = 64,
 
                 Orientation = Orientation.Vertical,
-                Anchor = Alignment.BottomFill,
-                ChildAnchor = Alignment.TopCenter
+                Anchor = Anchor.BottomFill,
+                ChildAnchor = Anchor.TopCenter
             });
 
 	        AddChild(Body = new GuiMultiStackContainer(row =>
 	                     {
-	                         row.ChildAnchor = Alignment.MiddleFill;
+	                         row.ChildAnchor = Anchor.MiddleFill;
                              row.Margin = new Thickness(3);
 	                         row.Width = BodyMinWidth;
 	                         row.MinWidth = BodyMinWidth;
@@ -104,19 +106,19 @@ namespace Alex.GameStates.Gui.Common
 	            Margin = new Thickness(0, Header.Height, 0, Footer.Height),
                 
 	            Orientation = Orientation.Vertical,
-		        Anchor = Alignment.Fill,
-		        ChildAnchor = Alignment.FillCenter,
+		        Anchor = Anchor.Fill,
+		        ChildAnchor = Anchor.FillCenter,
 	        });
 		}
 
-		protected TGuiElement AddGuiElement<TGuiElement>(TGuiElement element) where TGuiElement : IGuiElement
+		protected TGuiElement AddGuiElement<TGuiElement>(TGuiElement element) where TGuiElement : IVisualElement
         {
             Body.AddChild(element);
 
             return element;
         }
 
-        protected GuiStackContainer AddGuiRow(params GuiElement[] elements)
+        protected GuiStackContainer AddGuiRow(params VisualElement[] elements)
         {
             return Body.AddRow(row =>
             {

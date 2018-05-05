@@ -1,10 +1,12 @@
 ﻿using System;
 using Alex.API.Graphics.Typography;
-using Alex.API.Gui;
 using Alex.API.Gui.Elements;
-using Alex.API.Gui.Elements.Layout;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
+using RocketUI;
+using RocketUI.Elements;
+using RocketUI.Elements.Layout;
+using RocketUI.Screens;
 
 namespace Alex.Gui.Elements
 {
@@ -18,22 +20,22 @@ namespace Alex.Gui.Elements
             {
                 Orientation = Orientation.Vertical,
 
-                Anchor = Alignment.TopLeft,
-                ChildAnchor = Alignment.TopLeft,
+                Anchor = Anchor.TopLeft,
+                ChildAnchor = Anchor.TopLeft,
             });
             
             AddChild(_rightContainer = new GuiStackContainer()
             {
                 Orientation = Orientation.Vertical,
 
-                Anchor = Alignment.TopRight,
-                ChildAnchor = Alignment.TopRight,
+                Anchor = Anchor.TopRight,
+                ChildAnchor = Anchor.TopRight,
 			});
         }
 
         public void AddDebugLeft(Func<string> getDebugString)
         {
-            _leftContainer.AddChild(new GuiAutoUpdatingTextElement(getDebugString, true)
+            _leftContainer.AddChild(new GuiAutoUpdatingMCTextElement(getDebugString, true)
             {
                 TextColor = TextColor.White,
                 FontStyle = FontStyle.DropShadow,
@@ -43,7 +45,7 @@ namespace Alex.Gui.Elements
 
         public void AddDebugRight(Func<string> getDebugString)
         {
-            _rightContainer.AddChild(new GuiAutoUpdatingTextElement(getDebugString, true)
+            _rightContainer.AddChild(new GuiAutoUpdatingMCTextElement(getDebugString, true)
             {
                 TextColor = TextColor.White,
                 FontStyle = FontStyle.DropShadow,

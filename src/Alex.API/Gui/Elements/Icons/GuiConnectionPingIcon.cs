@@ -2,15 +2,17 @@
 using System.Collections.Generic;
 using System.Text;
 using Alex.API.Graphics;
-using Alex.API.Graphics.Textures;
-using Alex.API.Gui.Graphics;
 using Microsoft.Xna.Framework;
+using RocketUI;
+using RocketUI.Elements;
+using RocketUI.Graphics;
+using RocketUI.Graphics.Textures;
 
 namespace Alex.API.Gui.Elements.Icons
 {
     public class GuiConnectionPingIcon : GuiImage
     {
-        private GuiTextures _offlineState = GuiTextures.ServerPing0;
+        private string _offlineState = GuiTextures.ServerPing0;
 
         private long[] _qualityThresholds = new long[]
         {
@@ -21,7 +23,7 @@ namespace Alex.API.Gui.Elements.Icons
             1000
         };
 
-        private GuiTextures[] _qualityStates = new[]
+        private string[] _qualityStates = new[]
         {
             GuiTextures.ServerPing1,
             GuiTextures.ServerPing2,
@@ -30,7 +32,7 @@ namespace Alex.API.Gui.Elements.Icons
             GuiTextures.ServerPing5,
         };
 
-        private GuiTextures[] _connectingStates = new[]
+        private string[] _connectingStates = new[]
         {
             GuiTextures.ServerPingPending1,
             GuiTextures.ServerPingPending2,
@@ -39,10 +41,10 @@ namespace Alex.API.Gui.Elements.Icons
             GuiTextures.ServerPingPending5,
         };
 
-        private TextureSlice2D _offlineTexture;
-        private TextureSlice2D[] _qualityStateTextures = new TextureSlice2D[5];
-        private TextureSlice2D[] _connectingStateTextures = new TextureSlice2D[5];
-	    private GuiTextElement _playerCountElement;
+        private GuiTexture2D _offlineTexture;
+        private GuiTexture2D[] _qualityStateTextures = new GuiTexture2D[5];
+        private GuiTexture2D[] _connectingStateTextures = new GuiTexture2D[5];
+	    private TextBlock _playerCountElement;
 
         private bool _isPending;
         private int _animationFrame;
@@ -53,26 +55,25 @@ namespace Alex.API.Gui.Elements.Icons
             SetFixedSize(10, 8);
         }
 
-        protected override void OnInit(IGuiRenderer renderer)
+        protected override void OnInit()
         {
-            base.OnInit(renderer);
+            base.OnInit();
 
-            _offlineTexture = renderer.GetTexture(_offlineState);
+            Resources.TryGetGuiTexture(_offlineState, out _offlineTexture);
 
             for (int i = 0; i < _qualityStates.Length; i++)
             {
-                _qualityStateTextures[i] = renderer.GetTexture(_qualityStates[i]);
+                Resources.TryGetGuiTexture(_qualityStates[i], out _qualityStateTextures[i]);
             }
             for (int i = 0; i < _connectingStates.Length; i++)
             {
-                _connectingStateTextures[i] = renderer.GetTexture(_connectingStates[i]);
+                Resources.TryGetGuiTexture(_connectingStates[i], out _connectingStateTextures[i]);
             }
 
-			AddChild(_playerCountElement = new GuiTextElement(false)
+			AddChild(_playerCountElement = new TextBlock(false)
 			{
-				Font = renderer.Font,
 				Text = string.Empty,
-                Anchor = Alignment.TopRight,
+                Anchor = Anchor.TopRight,
 				Margin = new Thickness(5, 0, Background.Width + 15, 0)
 			});
         }

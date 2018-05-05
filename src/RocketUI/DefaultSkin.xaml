@@ -1,0 +1,46 @@
+﻿<GuiSkin xmlns="http://schemas.pikatru.nl/rocketui">
+	<Resources>
+		<Color Key="ControlBackgroundColor">#CCCCCC</Color>
+		<Color Key="ControlDisabledBackgroundColor">#CCCCCC</Color>
+		<Color Key="ControlHighlightBackgroundColor">#999999</Color>
+		<Color Key="ControlActiveBackgroundColor">#2D78D6</Color>
+	</Resources>
+	<Styles>
+
+		<!-- #region Button -->
+
+		<Style TargetType="Button">
+			<Setter Property="Background" Value="{Resource ControlBackgroundColor}" />
+		</Style>
+		<Style TargetType="Button" ControlState="Highlighted">
+			<Setter Property="Background" Value="{Resource ControlHighlightBackgroundColor}" />
+		</Style>
+		<Style TargetType="Button" ControlState="Focused">
+			<Setter Property="Background" Value="{Resource ControlActiveBackgroundColor}" />
+		</Style>
+		<Style TargetType="Button" ControlState="Disabled">
+			<Setter Property="Background" Value="{Resource ControlDisabledBackgroundColor}" />
+		</Style>
+
+	<!-- #endregion -->
+
+
+		<!-- #region Menu Buttons -->
+
+		<Style Selector="StackMenu > Button">
+			<Setter Property="Background" Value="{Resource ControlBackgroundColor}" />
+		</Style>
+		<Style Selector="StackMenu > Button" ControlState="Highlighted">
+			<Setter Property="Background" Value="{Resource ControlHighlightBackgroundColor}" />
+		</Style>
+		<Style Selector="StackMenu > Button" ControlState="Focused">
+			<Setter Property="Background" Value="{Resource ControlActiveBackgroundColor}" />
+		</Style>
+		<Style Selector="StackMenu > Button" ControlState="Disabled">
+			<Setter Property="Background" Value="{Resource ControlDisabledBackgroundColor}" />
+		</Style>
+
+		<!-- #endregion -->
+
+	</Styles>
+</GuiSkin>

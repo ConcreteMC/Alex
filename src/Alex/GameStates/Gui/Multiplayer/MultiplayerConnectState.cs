@@ -7,6 +7,9 @@ using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.GameStates.Gui.Common;
 using NLog;
+using RocketUI;
+using RocketUI.Elements;
+using RocketUI.Elements.Controls;
 
 namespace Alex.GameStates.Gui.Multiplayer
 {
@@ -15,8 +18,8 @@ namespace Alex.GameStates.Gui.Multiplayer
 	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(MultiplayerConnectState));
 
 		private readonly GuiTextInput _hostnameInput;
-        private readonly GuiButton _connectButton;
-        private readonly GuiTextElement _errorMessage;
+        private readonly MCButton _connectButton;
+        private readonly GuiMCTextElement _errorMessage;
 
         public MultiplayerConnectState()
         {
@@ -25,14 +28,14 @@ namespace Alex.GameStates.Gui.Multiplayer
             AddGuiElement(_hostnameInput = new GuiTextInput()
             {
                 Width = 200,
-                Anchor = Alignment.MiddleCenter,
+                Anchor = Anchor.MiddleCenter,
 				PlaceHolder = "Server Address..."
             });
-            AddGuiElement( _connectButton = new GuiButton("Join Server", OnConnectButtonPressed)
+            AddGuiElement( _connectButton = new MCButton("Join Server", OnConnectButtonPressed)
             {
 				Margin = new Thickness(5)
             });
-            AddGuiElement(_errorMessage = new GuiTextElement()
+            AddGuiElement(_errorMessage = new GuiMCTextElement()
             {
                 TextColor = TextColor.Red
             });

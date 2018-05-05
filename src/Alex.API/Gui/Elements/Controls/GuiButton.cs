@@ -1,13 +1,16 @@
 ﻿using System;
+using Alex.API.Graphics;
 using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
-using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
+using RocketUI;
+using RocketUI.Elements.Controls;
+using RocketUI.Graphics;
 
 namespace Alex.API.Gui.Elements.Controls
 {
-    public class GuiButton : GuiControl
+    public class MCButton : Control
     {
 
         public string Text
@@ -47,15 +50,15 @@ namespace Alex.API.Gui.Elements.Controls
 		    }
 	    }
 
-        protected GuiTextElement TextElement { get; }
+        protected GuiMCTextElement TextElement { get; }
         protected Action Action { get; }
 		
-	    public GuiButton(Action action = null) : this(string.Empty, action)
+	    public MCButton(Action action = null) : this(string.Empty, action)
 	    {
 			
 	    }
 		
-        public GuiButton(string text, Action action = null)
+        public MCButton(string text, Action action = null)
         {
             Background	  = GuiTextures.ButtonDefault;
 	        DisabledBackground	  = GuiTextures.ButtonDisabled;
@@ -76,10 +79,10 @@ namespace Alex.API.Gui.Elements.Controls
 			Padding = new Thickness(5, 5);
 			Margin = new Thickness(2);
 
-	        AddChild(TextElement = new GuiTextElement()
+	        AddChild(TextElement = new GuiMCTextElement()
             {
 				Margin =  Thickness.Zero,
-                Anchor = Alignment.MiddleCenter,
+                Anchor = Anchor.MiddleCenter,
                 Text = text,
                 TextColor = TextColor.White,
 				TextOpacity = 0.875f,

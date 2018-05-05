@@ -7,6 +7,9 @@ using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.GameStates.Gui.Common;
 using NLog;
+using RocketUI;
+using RocketUI.Elements;
+using RocketUI.Elements.Controls;
 
 namespace Alex.GameStates.Gui.Multiplayer
 {
@@ -18,8 +21,8 @@ namespace Alex.GameStates.Gui.Multiplayer
 
         private readonly GuiTextInput _nameInput;
 		private readonly GuiTextInput _hostnameInput;
-        private readonly GuiTextElement _errorMessage;
-        private readonly GuiButton _saveButton;
+        private readonly GuiMCTextElement _errorMessage;
+        private readonly MCButton _saveButton;
 
         #endregion
 
@@ -41,7 +44,7 @@ namespace Alex.GameStates.Gui.Multiplayer
             AddGuiElement(_nameInput = new GuiTextInput(name)
             {
                 Width       = 200,
-                Anchor      = Alignment.MiddleCenter,
+                Anchor      = Anchor.MiddleCenter,
                 PlaceHolder = "Server Name",
                 Margin = new Thickness(5),
             });
@@ -49,24 +52,24 @@ namespace Alex.GameStates.Gui.Multiplayer
             AddGuiElement(_hostnameInput = new GuiTextInput(address)
             {
                 Width       = 200,
-                Anchor      = Alignment.MiddleCenter,
+                Anchor      = Anchor.MiddleCenter,
                 PlaceHolder = "Server Address...",
                 Margin = new Thickness(5)
             });
 
-            AddGuiElement(_saveButton = new GuiButton(OnSaveButtonPressed)
+            AddGuiElement(_saveButton = new MCButton(OnSaveButtonPressed)
             {
                 TranslationKey = "addServer.add",
                 Margin = new Thickness(5)
             });
 
-            AddGuiElement(new GuiButton(OnCancelButtonPressed)
+            AddGuiElement(new Button(OnCancelButtonPressed)
             {
                 TranslationKey = "gui.cancel",
                 Margin = new Thickness(5)
             });
 
-            AddGuiElement(_errorMessage = new GuiTextElement()
+            AddGuiElement(_errorMessage = new GuiMCTextElement()
             {
                 TextColor = TextColor.Red
             });
