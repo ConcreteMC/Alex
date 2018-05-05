@@ -49,7 +49,7 @@ namespace Alex.Utils
 
 		public static float AngleToNotchianDegree(sbyte angle)
 		{
-			return -AngleToDegree(angle);
+			return AngleToDegree(angle);
 		}
 
 		public static sbyte DegreeToAngle(float angle)

@@ -189,5 +189,10 @@ namespace Alex.GameStates
 			    Log.Warn(ex, $"An exception occured while trying to call Update: {ex.ToString()}!");
 		    }
 	    }
-    }
+
+	    public IGameState GetActiveState()
+	    {
+		    return ActiveState;
+	    }
+	}
 }

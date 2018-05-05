@@ -121,9 +121,6 @@ namespace Alex.Entities
 			ModelRenderer.Render(renderArgs, KnownPosition);
 		}
 
-		private int turnTicks;
-		private int turnTicksLimit = 20;
-		private float lastRotationYawHead = 0f;
 		public virtual void Update(IUpdateArgs args)
 		{
 			var now = DateTime.UtcNow;
@@ -184,6 +181,9 @@ namespace Alex.Entities
 			//HealthManager.OnTick();
 		}
 
+		private int turnTicks;
+		private int turnTicksLimit = 20;
+		private float lastRotationYawHead = 0f;
 		private Vector3 _previousPosition = Vector3.Zero;
 		private void UpdateRotations()
 		{

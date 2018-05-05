@@ -18,6 +18,7 @@ using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Entities;
+using Alex.Gamestates;
 using Alex.Graphics.Models.Entity;
 using Alex.Networking.Java;
 using Alex.Networking.Java.Events;
@@ -75,6 +76,9 @@ namespace Alex.Worlds.Java
 			networkProvider = Client;
 		}
 
+		private bool _disconnected = false;
+		private string _disconnectReason = string.Empty;
+
 		private void OnConnectionClosed(object sender, ConnectionClosedEventArgs e)
 		{
 			if (e.Graceful)
@@ -83,13 +87,18 @@ namespace Alex.Worlds.Java
 			}
 			else
 			{
-				ShowDisconnect("The connection was forcibilly closed!");
+				ShowDisconnect("disconnect.closed");
 			}
 		}
 
 		public void ShowDisconnect(string reason)
 		{
+			if (Alex.GameStateManager.GetActiveState() is DisconnectedScreen) return;
 
+			Alex.GameStateManager.SetActiveState(new DisconnectedScreen()
+			{
+				Reason = reason
+			}, false);
 		}
 
 		private PlayerLocation _lastSentLocation = new PlayerLocation(Vector3.Zero);
@@ -963,6 +972,7 @@ namespace Alex.Worlds.Java
 
 		private void HandleDisconnectPacket(DisconnectPacket packet)
 		{
+			ShowDisconnect(packet.Message);
 			Log.Info($"Received disconnect: {packet.Message}");
 			Client.Stop();
 		}
@@ -1060,27 +1070,34 @@ namespace Alex.Worlds.Java
 
 		public void Login(string username, string uuid, string accessToken, AutoResetEvent signalWhenReady)
 		{
-			_loginCompleteEvent = signalWhenReady;
-			_username = username;
-			_uuid = uuid;
-			_accesToken = accessToken;
+			try
+			{
+				_loginCompleteEvent = signalWhenReady;
+				_username = username;
+				_uuid = uuid;
+				_accesToken = accessToken;
 
-			TcpClient.Connect(Endpoint);
-		//	ServerBound.InitEncryption();
-			Client.Initialize();
+				TcpClient.Connect(Endpoint);
+				//	ServerBound.InitEncryption();
+				Client.Initialize();
 
-			HandshakePacket handshake = new HandshakePacket();
-			handshake.NextState = ConnectionState.Login;
-			handshake.ServerAddress = Endpoint.Address.ToString();
-			handshake.ServerPort = (ushort)Endpoint.Port;
-			handshake.ProtocolVersion = JavaProtocol.ProtocolVersion;
-			SendPacket(handshake);
+				HandshakePacket handshake = new HandshakePacket();
+				handshake.NextState = ConnectionState.Login;
+				handshake.ServerAddress = Endpoint.Address.ToString();
+				handshake.ServerPort = (ushort) Endpoint.Port;
+				handshake.ProtocolVersion = JavaProtocol.ProtocolVersion;
+				SendPacket(handshake);
 
-			Client.ConnectionState = ConnectionState.Login;
+				Client.ConnectionState = ConnectionState.Login;
 
-			LoginStartPacket loginStart = new LoginStartPacket();
-			loginStart.Username = _username;
-			SendPacket(loginStart);
+				LoginStartPacket loginStart = new LoginStartPacket();
+				loginStart.Username = _username;
+				SendPacket(loginStart);
+			}
+			catch (Exception ex)
+			{
+				ShowDisconnect(ex.Message);
+			}
 		}
 
 		public sealed class JoinRequest
