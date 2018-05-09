@@ -21,10 +21,12 @@ namespace Alex.GameStates.Hud
 		private PlayerInputManager InputManager => _playerController.InputManager;
 
 		private Alex Alex { get; }
-
+		private Player Player { get; }
         public PlayingHud(Alex game, Player player, ChatComponent chat) : base()
         {
 	        Alex = game;
+	        Player = player;
+
             _playerController = player.Controller;
 			InputManager.AddListener(new MouseInputListener(InputManager.PlayerIndex));
 
@@ -50,7 +52,7 @@ namespace Alex.GameStates.Hud
 				if (Chat.Focused)
 					Chat.ScrollUp();
 				else
-					_hotbar.SelectedIndex++;
+					Player.Inventory.SelectedSlot--;
 			}
 
 			if (_playerController.MouseInputListener.IsButtonDown(MouseButton.ScrollDown))
@@ -58,20 +60,20 @@ namespace Alex.GameStates.Hud
 				if (Chat.Focused)
 					Chat.ScrollDown();
 				else
-					_hotbar.SelectedIndex--;
+					Player.Inventory.SelectedSlot++;
 			}
 
 			if (!Chat.Focused)
 	        {
-		        if (InputManager.IsPressed(InputCommand.HotBarSelect1)) _hotbar.SelectedIndex = 0;
-		        if (InputManager.IsPressed(InputCommand.HotBarSelect2)) _hotbar.SelectedIndex = 1;
-		        if (InputManager.IsPressed(InputCommand.HotBarSelect3)) _hotbar.SelectedIndex = 2;
-		        if (InputManager.IsPressed(InputCommand.HotBarSelect4)) _hotbar.SelectedIndex = 3;
-		        if (InputManager.IsPressed(InputCommand.HotBarSelect5)) _hotbar.SelectedIndex = 4;
-		        if (InputManager.IsPressed(InputCommand.HotBarSelect6)) _hotbar.SelectedIndex = 5;
-		        if (InputManager.IsPressed(InputCommand.HotBarSelect7)) _hotbar.SelectedIndex = 6;
-		        if (InputManager.IsPressed(InputCommand.HotBarSelect8)) _hotbar.SelectedIndex = 7;
-		        if (InputManager.IsPressed(InputCommand.HotBarSelect9)) _hotbar.SelectedIndex = 8;
+		        if (InputManager.IsPressed(InputCommand.HotBarSelect1)) Player.Inventory.SelectedSlot = 0;
+		        if (InputManager.IsPressed(InputCommand.HotBarSelect2)) Player.Inventory.SelectedSlot = 1;
+		        if (InputManager.IsPressed(InputCommand.HotBarSelect3)) Player.Inventory.SelectedSlot = 2;
+		        if (InputManager.IsPressed(InputCommand.HotBarSelect4)) Player.Inventory.SelectedSlot = 3;
+		        if (InputManager.IsPressed(InputCommand.HotBarSelect5)) Player.Inventory.SelectedSlot = 4;
+		        if (InputManager.IsPressed(InputCommand.HotBarSelect6)) Player.Inventory.SelectedSlot = 5;
+		        if (InputManager.IsPressed(InputCommand.HotBarSelect7)) Player.Inventory.SelectedSlot = 6;
+		        if (InputManager.IsPressed(InputCommand.HotBarSelect8)) Player.Inventory.SelectedSlot = 7;
+		        if (InputManager.IsPressed(InputCommand.HotBarSelect9)) Player.Inventory.SelectedSlot = 8;
 
 		        if (InputManager.IsPressed(InputCommand.ToggleChat))
 		        {

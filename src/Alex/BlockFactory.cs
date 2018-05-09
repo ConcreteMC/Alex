@@ -757,6 +757,9 @@ namespace Alex
 			else if (blockName == "minecraft:emerald_block" || blockName == "emeraldblock") return new EmeraldBlock();
 			else if (blockName == "minecraft:lapis_block" || blockName == "lapisblock") return new LapisBlock();
 
+			else if (blockName == "minecraft:lilac" || blockName == "lilac") return new Lilac();
+			else if (blockName == "minecraft:rose_bush" || blockName == "rosebush") return new RoseBush();
+
 			else return null;
 		}
 

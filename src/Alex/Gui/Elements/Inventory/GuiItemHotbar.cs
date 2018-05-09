@@ -46,6 +46,7 @@ namespace Alex.Gui.Elements.Inventory
         {
 	        Inventory = inventory;
 			Inventory.SlotChanged += SlotChanged;
+			Inventory.SelectedHotbarSlotChanged += SelectedHotbarSlotChanged;
 
             Width = ItemWidth * ItemCount;
             Height = ItemWidth;
@@ -69,6 +70,14 @@ namespace Alex.Gui.Elements.Inventory
 		        Margin = new Thickness(0, -5, 0, 5)
 	        });
 		}
+
+	    private void SelectedHotbarSlotChanged(object sender, SelectedSlotChangedEventArgs e)
+	    {
+		    if (e.NewValue - SelectedIndex != 0)
+		    {
+			    SelectedIndex = e.NewValue;
+		    }
+	    }
 
 	    private void SlotChanged(object sender, SlotChangedEventArgs e)
 		{
@@ -116,5 +125,10 @@ namespace Alex.Gui.Elements.Inventory
 
 			
         }
+
+	    ~GuiItemHotbar()
+	    {
+
+	    }
     }
 }

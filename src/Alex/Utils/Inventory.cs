@@ -12,9 +12,32 @@ namespace Alex.Utils
     {
 		private SlotData[] Slots { get; }
 	    public int SlotCount => Slots.Length;
-	    public byte SelectedSlot { get; set; } = 0;
+
+	    private byte _selectedSlot = 0;
+
+	    public int SelectedSlot
+	    {
+		    get { return _selectedSlot; }
+		    set
+		    {
+			    if (value >= 9)
+			    {
+				    value = 0;
+			    }
+
+			    if (value < 0)
+			    {
+				    value = 8;
+			    }
+
+				byte oldValue = _selectedSlot;
+			    _selectedSlot = (byte)value;
+			    SelectedHotbarSlotChanged?.Invoke(this, new SelectedSlotChangedEventArgs(oldValue, (byte)value));
+			}
+	    }
 
 	    public EventHandler<SlotChangedEventArgs> SlotChanged = null;
+	    public EventHandler<SelectedSlotChangedEventArgs> SelectedHotbarSlotChanged = null;
 
 	    public Inventory(int slots)
 	    {
@@ -63,6 +86,16 @@ namespace Alex.Utils
 		{
 			Index = index;
 			Value = value;
+		}
+	}
+
+	public class SelectedSlotChangedEventArgs : EventArgs
+	{
+		public byte PreviousValue, NewValue;
+		public SelectedSlotChangedEventArgs(byte oldValue, byte newValue)
+		{
+			PreviousValue = oldValue;
+			NewValue = newValue;
 		}
 	}
 }

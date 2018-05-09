@@ -81,6 +81,9 @@ namespace Alex.Worlds.Java
 
 		private void OnConnectionClosed(object sender, ConnectionClosedEventArgs e)
 		{
+			if (_disconnected) return;
+			_disconnected = true;
+
 			if (e.Graceful)
 			{
 				ShowDisconnect("You've been disconnected!");
@@ -530,6 +533,10 @@ namespace Alex.Worlds.Java
 			{
 				HandleChangeGameStatePacket(p);
 			}
+			else if (packet is EntityMetadataPacket entityMetadata)
+			{
+				HandleEntityMetadataPacket(entityMetadata);
+			}
 			else
 			{
 				Log.Warn($"Unhandled packet: 0x{packet.PacketId:x2} - {packet.ToString()}");
@@ -587,6 +594,11 @@ namespace Alex.Worlds.Java
 		private void HandleBlockChangePacket(BlockChangePacket packet)
 		{
 			WorldReceiver?.SetBlockState(packet.Location, BlockFactory.GetBlockState(packet.PalleteId));
+		}
+
+		private void HandleEntityMetadataPacket(EntityMetadataPacket packet)
+		{
+			//TODO: Handle entity metadata
 		}
 
 		private void HandleEntityStatusPacket(EntityStatusPacket packet)
@@ -920,7 +932,7 @@ namespace Alex.Worlds.Java
 			SendPacket(response);
 
 			UpdatePlayerPosition(
-				new PlayerLocation(packet.X, packet.Y, packet.Z, 180f - packet.Yaw, pitch: packet.Pitch));
+				new PlayerLocation(packet.X, packet.Y, packet.Z, packet.Yaw, pitch: packet.Pitch));
 
 			if (!Spawned)
 			{
@@ -973,6 +985,7 @@ namespace Alex.Worlds.Java
 		private void HandleDisconnectPacket(DisconnectPacket packet)
 		{
 			ShowDisconnect(packet.Message);
+			_disconnected = true;
 			Log.Info($"Received disconnect: {packet.Message}");
 			Client.Stop();
 		}

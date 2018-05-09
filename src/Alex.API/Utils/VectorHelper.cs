@@ -18,12 +18,17 @@ namespace Alex.API.Utils
 
 		public static double ToRadians(this float angle)
 		{
-			return (Math.PI / 180.0f) * angle;
+			return (Math.PI / 180.0D) * angle;
 		}
 
 		public static double ToRadians(this double angle)
 		{
-			return (Math.PI / 180.0f) * angle;
+			return (Math.PI / 180.0D) * angle;
+		}
+
+		public static float ToRadians(this int angle)
+		{
+			return ((float)Math.PI / 180.0f) * angle;
 		}
 
 		public static double ToDegrees(this double angle)

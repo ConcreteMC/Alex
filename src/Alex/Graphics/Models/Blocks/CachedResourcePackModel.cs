@@ -45,7 +45,7 @@ namespace Alex.Graphics.Models.Blocks
 			{
 				var elementRotationOrigin = new Vector3(elementRotation.Origin.X, elementRotation.Origin.Y, elementRotation.Origin.Z);
 
-				var elementAngle = MathUtils.ToRadians((float)(360f + elementRotation.Angle) % 360f);
+				var elementAngle = (float)(elementRotation.Angle % 360f).ToRadians();
 				ci = 1f / (float)Math.Cos(elementAngle);
 
 				faceRotationMatrix = Matrix.CreateTranslation(-elementRotationOrigin);
@@ -112,8 +112,8 @@ namespace Alex.Graphics.Models.Blocks
 
 		protected Matrix GetModelRotationMatrix(BlockStateModel model)
 		{
-			return Matrix.CreateRotationX(MathUtils.ToRadians((model.X) % 360f)) *
-				   Matrix.CreateRotationY(MathUtils.ToRadians((model.Y) % 360f));
+			return Matrix.CreateRotationX((model.X % 360).ToRadians()) *
+				   Matrix.CreateRotationY((model.Y % 360).ToRadians());
 		}
 
 		protected string ResolveTexture(BlockStateModel var, string texture)
@@ -211,6 +211,9 @@ namespace Alex.Graphics.Models.Blocks
 					var elementTo = new Vector3((element.To.X), (element.To.Y),
 						(element.To.Z));
 
+					//elementTo = Vector3.Transform(elementTo, Matrix.CreateScale(1f / 16f));
+					//elementFrom = Vector3.Transform(elementFrom, Matrix.CreateScale(1f / 16f));
+
 					var width = elementTo.X - elementFrom.X;
 					var height = elementTo.Y - elementFrom.Y;
 					var depth = elementTo.Z - elementFrom.Z;
@@ -241,7 +244,7 @@ namespace Alex.Graphics.Models.Blocks
 							//Apply element rotation
 							if (elementRotation.Axis != Axis.Undefined)
 							{
-								vert.Position = Vector3.Transform(vert.Position, elementRotationMatrix);
+								vert.Position = Vector3.TransformNormal(vert.Position, elementRotationMatrix);
 
 								//Scale the texture back to its correct size
 								if (elementRotation.Rescale)
@@ -263,12 +266,13 @@ namespace Alex.Graphics.Models.Blocks
 								}
 							}
 
-							vert.Position = Vector3.Transform(vert.Position,
-								Matrix.CreateTranslation(-element.Rotation.Origin) * GetModelRotationMatrix(model) *
+							vert.Position = Vector3.Transform(vert.Position, Matrix.CreateTranslation(-element.Rotation.Origin) * GetModelRotationMatrix(model) *
 								Matrix.CreateTranslation(element.Rotation.Origin));
 
+							vert.Position = Vector3.Transform(vert.Position, Matrix.CreateScale(1f / 16f));
+
 							//Scale the position
-							vert.Position = (vert.Position / 16f);
+							//vert.Position = (vert.Position / 16f);
 
 							if (vert.Position.X < minX)
 							{

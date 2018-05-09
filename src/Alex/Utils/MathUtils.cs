@@ -26,6 +26,20 @@ namespace Alex.Utils
 			return a;
 		}
 
+		public static double NormDeg(double a)
+		{
+			a %= 360f;
+			if (a >= 180f)
+			{
+				a -= 360f;
+			}
+			if (a < -180)
+			{
+				a += 360f;
+			}
+			return a;
+		}
+
 		// numeric double clamp
 		public static float Clamp(float value, float min, float max)
 		{
