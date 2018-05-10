@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework;
 using RocketUI;
 using RocketUI.Elements.Controls;
 using RocketUI.Graphics;
+using RocketUI.Graphics.Textures;
 
 namespace Alex.API.Gui.Elements.Controls
 {
@@ -60,15 +61,10 @@ namespace Alex.API.Gui.Elements.Controls
 		
         public MCButton(string text, Action action = null)
         {
-            Background	  = GuiTextures.ButtonDefault;
-	        DisabledBackground	  = GuiTextures.ButtonDisabled;
-            HighlightedBackground = GuiTextures.ButtonHover;
-            FocusedBackground	  = GuiTextures.ButtonFocused;
-
-			Background.RepeatMode	 = TextureRepeatMode.NoScaleCenterSlice;
-	        DisabledBackground.RepeatMode	 = TextureRepeatMode.NoScaleCenterSlice;
-	        HighlightedBackground.RepeatMode = TextureRepeatMode.NoScaleCenterSlice;
-	        FocusedBackground.RepeatMode	 = TextureRepeatMode.NoScaleCenterSlice;
+            Background			  = new GuiTexture2D(GuiTextures.ButtonDefault, TextureRepeatMode.NoScaleCenterSlice);
+	        DisabledBackground	  = new GuiTexture2D(GuiTextures.ButtonDisabled, TextureRepeatMode.NoScaleCenterSlice);
+            HighlightedBackground = new GuiTexture2D(GuiTextures.ButtonHover, TextureRepeatMode.NoScaleCenterSlice);
+            FocusedBackground	  = new GuiTexture2D(GuiTextures.ButtonFocused, TextureRepeatMode.NoScaleCenterSlice);
 			
             Action = action;
             MinHeight = 20;

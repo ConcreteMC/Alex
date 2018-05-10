@@ -63,9 +63,9 @@ namespace Alex.Gui.Elements.Inventory
 		        });
 	        }
 
-	        AddChild(_itemNameTextElement = new GuiTextElement()
+	        AddChild(_itemNameTextElement = new GuiMCTextElement()
 	        {
-		        Anchor = Alignment.TopCenter,
+		        Anchor = Anchor.TopCenter,
 		        TextColor = TextColor.White,
 		        Text = "Unknown",
 		        Margin = new Thickness(0, -5, 0, 5)
@@ -113,12 +113,11 @@ namespace Alex.Gui.Elements.Inventory
         }
 
         protected override void OnInit()
-        {
-            Background = renderer.GetTexture(GuiTextures.Inventory_HotBar);
+		{
+			Background = GuiTextures.Inventory_HotBar;
 
 			AddChild(_itemNameTextElement = new GuiMCTextElement()
 			{
-				Font = renderer.Font,
 				Anchor = Anchor.TopCenter,
 				TextColor = TextColor.White,
 				Text = "Unknown",

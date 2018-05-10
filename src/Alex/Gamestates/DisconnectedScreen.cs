@@ -7,6 +7,7 @@ using Alex.API.Gui.Elements.Controls;
 using Alex.API.Utils;
 using Alex.GameStates;
 using Alex.GameStates.Gui.Common;
+using RocketUI;
 
 namespace Alex.Gamestates
 {
@@ -17,10 +18,10 @@ namespace Alex.Gamestates
 		{
 			TitleTranslationKey = "multiplayer.disconnect.generic";
 			
-			Footer.AddChild(new GuiButton(MenuButtonClicked)
+			Footer.AddChild(new MCButton(MenuButtonClicked)
 			{
 				TranslationKey = "gui.toTitle",
-				Anchor = Alignment.MiddleCenter
+				Anchor = Anchor.MiddleCenter
 			});
 		}
 
@@ -31,7 +32,7 @@ namespace Alex.Gamestates
 
 	    protected override void OnShow()
 	    {
-			AddChild(new GuiTextElement()
+			AddChild(new GuiMCTextElement()
 			{
 				Text = Reason,
 				TextColor = TextColor.Red

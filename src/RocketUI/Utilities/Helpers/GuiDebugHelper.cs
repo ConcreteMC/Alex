@@ -12,6 +12,8 @@ namespace RocketUI.Utilities
 	public class GuiDebugHelper
 	{
 		private static readonly float DebugFontScale = 0.25f;
+		private static readonly string DebugFontFamily = "Debug";
+		private static IFont Font;
 
 		private static readonly Color DebugTextBackground = Color.WhiteSmoke * 0.6f;
 		private static readonly Color DebugTextForeground = Color.Black * 0.95f;
@@ -29,6 +31,7 @@ namespace RocketUI.Utilities
 
 		protected GuiManager GuiManager { get; }
 
+		protected IGuiResourceProvider Resources => GuiManager.ResourceProvider;
 		protected IGuiRenderer Renderer => GuiManager.GuiRenderer;
 		protected InputManager Input => GuiManager.InputManager;
 		protected GuiSpriteBatch SpriteBatch => GuiManager.GuiSpriteBatch;
@@ -288,10 +291,17 @@ namespace RocketUI.Utilities
         }
         private void DrawDebugString(Vector2 position, string text, Color? background, Color color, int padding = 2, int xAlign = 0, int yAlign = 0)
         {
-            if (Renderer.Font == null) return;
+			if (Font == null)
+			{
+				if (Resources.TryGetFont(DebugFontFamily, out var font))
+				{
+					Font = font;
+				}
+				else return;
+			}
 
             var p = position;
-            var s = Renderer.Font.MeasureString(text) * DebugFontScale;
+            var s = Font.MeasureString(text) * DebugFontScale;
 
             var bounds = new Rectangle(p.ToPoint(), s.ToPoint());
             bounds.Inflate(padding, padding);
@@ -330,7 +340,7 @@ namespace RocketUI.Utilities
             }
             
             bounds.Inflate(-padding, -padding);
-            SpriteBatch.DrawString(p, text, Renderer.DebugFont, color, scale: DebugFontScale);
+            SpriteBatch.DrawString(p, text, Font, color, scale: DebugFontScale);
         }
 
         #endregion

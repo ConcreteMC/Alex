@@ -72,6 +72,7 @@ namespace Alex.API.Gui.Elements.Controls
 		    set => _fontStyle = value;
 	    }
 
+		public string FontFamily { get; set; } = "Default";
 	    public IFont Font
 	    {
 		    get => _font;
@@ -81,9 +82,6 @@ namespace Alex.API.Gui.Elements.Controls
 			    OnTextUpdated();
 		    }
 	    }
-		public bool UseDebugFont { get; set; } = false;
-
-
 
 	    public GuiTextElement(bool hasBackground = false)
 	    {
@@ -101,7 +99,10 @@ namespace Alex.API.Gui.Elements.Controls
 
 	        if (Font == null)
 	        {
-		        Font = UseDebugFont ? renderer.DebugFont : renderer.Font;
+				if (Resources.TryGetFont(FontFamily, out var font))
+				{
+					Font = font;
+				}
 	        }
 
 	        OnTranslationKeyUpdated();
@@ -124,8 +125,9 @@ namespace Alex.API.Gui.Elements.Controls
 	    private void OnTranslationKeyUpdated()
 	    {
 		    if (!string.IsNullOrEmpty(TranslationKey))
-		    {
-			    Text = GuiRenderer?.GetTranslation(TranslationKey);
+			{
+				if (Resources.TryGetTranslation(TranslationKey, out var translation))
+					Text = translation;
 		    }
 	    }
 

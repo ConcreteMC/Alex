@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework;
 using RocketUI;
 using RocketUI.Elements;
 using RocketUI.Elements.Layout;
+using RocketUI.Graphics.Textures;
 
 namespace Alex.GameStates
 {
@@ -29,9 +30,10 @@ namespace Alex.GameStates
 
 		public SplashScreen()
 		{
-			Background = Color.White;
-			Background.TextureResource = GuiTextures.SplashBackground;
-			Background.RepeatMode = TextureRepeatMode.ScaleToFit;
+			Background = new GuiTexture2D(GuiTextures.SplashBackground, TextureRepeatMode.ScaleToFit)
+			{
+				Color = Color.White
+			};
 
 			AddChild(_progressBarContainer = new GuiContainer()
 			{

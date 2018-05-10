@@ -8,7 +8,6 @@ namespace RocketUI.Graphics
 {
     public class GuiSpriteBatch : IDisposable
     {
-        public IFont Font { get; set; }
         //public GraphicsContext Graphics { get; }
         public SpriteBatch SpriteBatch { get; }
         public GuiScaledResolution ScaledResolution { get; }
@@ -16,21 +15,20 @@ namespace RocketUI.Graphics
         public GraphicsContext Context { get; }
 
         private readonly GraphicsDevice _graphicsDevice;
-        private readonly IGuiRenderer _renderer;
+        private readonly IGuiResourceProvider _resourceProvider;
         private Texture2D _colorTexture;
 
         private bool _beginSpriteBatchAfterContext;
         private bool _hasBegun;
 
-        public GuiSpriteBatch(IGuiRenderer renderer, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
+        public GuiSpriteBatch(IGuiResourceProvider resourceProvider, GuiScaledResolution scaledResolution, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
         {
-            _renderer = renderer;
+            _resourceProvider = resourceProvider;
             _graphicsDevice = graphicsDevice;
             SpriteBatch = spriteBatch;
             Context = GraphicsContext.CreateContext(_graphicsDevice, BlendState.AlphaBlend, DepthStencilState.None, RasterizerState.CullNone, SamplerState.PointClamp);
 
-            Font = _renderer.Font;
-            ScaledResolution = _renderer.ScaledResolution;
+            ScaledResolution = scaledResolution;
         }
         
         public Vector2 Project(Vector2 point)
@@ -152,7 +150,7 @@ namespace RocketUI.Graphics
 
             if (texture.Texture == null && !string.IsNullOrEmpty(texture.TextureResource))
             {
-                texture.TryResolveTexture(_renderer);
+                texture.TryResolveTexture(_resourceProvider);
             }
 
             if (texture.Texture != null)

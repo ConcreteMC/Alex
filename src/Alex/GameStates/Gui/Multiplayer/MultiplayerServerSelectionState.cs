@@ -93,6 +93,8 @@ namespace Alex.GameStates.Gui.Multiplayer
 	    protected override void OnShow()
 	    {
 		    base.OnShow();
+			_skyBox.Load(Alex.GuiResourceProvider);
+
 		    Load();
 		}
 
@@ -198,11 +200,6 @@ namespace Alex.GameStates.Gui.Multiplayer
 
 	    protected override void OnDraw(IRenderArgs args)
 	    {
-		    if (!_skyBox.Loaded)
-		    {
-			    _skyBox.Load(Alex.GuiRenderer);
-		    }
-
 		    _skyBox.Draw(args);
 
 			base.OnDraw(args);
@@ -419,7 +416,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 				            ServerIcon = Texture2D.FromStream(_graphicsDevice, ms);
 			            }
 
-			            _serverIcon.Background.Texture = (TextureSlice2D) ServerIcon;
+			            _serverIcon.Background = (TextureSlice2D) ServerIcon;
 		            }
 	            }
             }

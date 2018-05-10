@@ -46,7 +46,7 @@ namespace Alex.Gui
             base.OnInit();
 
             InitMiniMap(Alex.Instance.GraphicsDevice);
-            Background.Texture = (TextureSlice2D) _mapTexture;
+            Background = (TextureSlice2D) _mapTexture;
         }
 
         protected override void OnUpdate(GameTime gameTime)

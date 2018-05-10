@@ -1,20 +1,23 @@
-﻿using System;
+using System;
+using Alex.API.Graphics;
+using Alex.API.Graphics.Typography;
+using Alex.API.Gui.Graphics;
+using Alex.API.Utils;
 using Microsoft.Xna.Framework;
-using RocketUI.Graphics;
+using Microsoft.Xna.Framework.Graphics;
+using BitmapFont = Alex.API.Graphics.Typography.BitmapFont;
 
-namespace RocketUI.Elements
+namespace Alex.API.Gui.Elements
 {
-    public class TextBlock : VisualElement
+    public class GuiTextElement : GuiElement
     {
 	    public static readonly Color DefaultTextBackgroundColor = new Color(Color.Black, 0.6f);
         
 	    private string _text;
-	    private string _renderText = String.Empty;
 	    private float _textOpacity = 1f;
 	    private Vector2 _scale = Vector2.One;
 	    private Vector2? _rotationOrigin;
 	    private IFont _font;
-	    private FontStyle _fontStyle;
 
 	    public override Vector2 RotationOrigin
 	    {
@@ -47,8 +50,7 @@ namespace RocketUI.Elements
                 OnTextUpdated();
             }
         }
-		public Color Foreground { get; set; } = Color.White;
-	    public Color ForegroundShadow { get; set; } = Color.Transparent;
+		public TextColor TextColor { get; set; } = TextColor.White;
 		public float TextOpacity
 	    {
 		    get => _textOpacity;
@@ -64,11 +66,16 @@ namespace RocketUI.Elements
                 OnTextUpdated();
             }
         }
-		public FontStyle FontStyle
+
+	    private FontStyle _fontStyle;
+
+	    public FontStyle FontStyle
 	    {
 		    get => _fontStyle;
 		    set => _fontStyle = value;
 	    }
+
+	    public bool HasShadow { get; set; } = true;
 
 	    public IFont Font
 	    {
@@ -80,19 +87,9 @@ namespace RocketUI.Elements
 		    }
 	    }
 
-	    private string _fontFamily;
+		private string _renderText = String.Empty;
 
-	    public string FontFamily
-	    {
-		    get => _fontFamily;
-		    set
-		    {
-			    _fontFamily = value;
-		    }
-	    }
-
-
-	    public TextBlock(bool hasBackground = false)
+	    public GuiTextElement(bool hasBackground = false)
 	    {
 		    if (hasBackground)
 		    {
@@ -102,40 +99,37 @@ namespace RocketUI.Elements
 			Margin = new Thickness(2);
 	    }
 
-		protected override void OnInit()
+		protected override void OnInit(IGuiRenderer renderer)
         {
-            base.OnInit();
+            base.OnInit(renderer);
 
-	        if (Font == null)
-			{
-				if (!string.IsNullOrWhiteSpace(FontFamily) && Resources.TryGetFont(FontFamily, out var font))
-					Font = font;
-			}
+            Font = renderer.Font;
 
 	        OnTranslationKeyUpdated();
         }
-		
+
+
         protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
         {
 	        var text = _renderText;
             if (!string.IsNullOrWhiteSpace(text))
             {
-				graphics.DrawString(RenderPosition, text, Font, Foreground, ForegroundShadow, FontStyle, Scale, Rotation, RotationOrigin, TextOpacity);
+				graphics.DrawString(RenderPosition, text, Font, TextColor, FontStyle, Scale, Rotation, RotationOrigin, TextOpacity);
 			}
         }
-		
+
+
 	    private Vector2 GetSize(string text, Vector2 scale)
 	    {
-		    return (Font?.MeasureString(text) * scale) ?? Vector2.Zero;
+		    return Font?.MeasureString(text, scale) ?? Vector2.Zero;
 		}
 
 	    private void OnTranslationKeyUpdated()
 	    {
 		    if (!string.IsNullOrEmpty(TranslationKey))
-			{
-				if (Resources.TryGetTranslation(TranslationKey, out string translation))
-					Text = translation;
-			}
+		    {
+			    Text = GuiRenderer?.GetTranslation(TranslationKey);
+		    }
 	    }
 
 	    private void OnTextUpdated()

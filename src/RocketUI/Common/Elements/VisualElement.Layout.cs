@@ -184,7 +184,7 @@ namespace RocketUI.Elements
             {
                 if (c != sender)
                 {
-                    c.InvalidateLayout(this, true);
+                    c.InvalidateLayout(this);
                 }
             });
             

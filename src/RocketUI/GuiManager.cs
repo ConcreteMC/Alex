@@ -47,9 +47,7 @@ namespace RocketUI
             GuiRenderer = new GuiRenderer(game, resourceManager);
             SpriteBatch = new SpriteBatch(Game.GraphicsDevice);
 
-            GuiSpriteBatch = new GuiSpriteBatch(GuiRenderer, Game.GraphicsDevice, SpriteBatch);
-            
-            GuiSpriteBatch.Font = resourceManager.PrimaryFont;
+            GuiSpriteBatch = new GuiSpriteBatch(resourceManager, ScaledResolution, Game.GraphicsDevice, SpriteBatch);
             
             DebugHelper = new GuiDebugHelper(this);
 
@@ -83,7 +81,7 @@ namespace RocketUI
 
             
             GuiSpriteBatch?.Dispose();
-            GuiSpriteBatch = new GuiSpriteBatch(GuiRenderer, graphicsDevice, SpriteBatch);
+            GuiSpriteBatch = new GuiSpriteBatch(ResourceProvider, ScaledResolution, graphicsDevice, SpriteBatch);
         }
 
         public void Reinitialise()
@@ -120,7 +118,7 @@ namespace RocketUI
                 
                 foreach (var screen in screens)
                 {
-                    screen.Init(GuiRenderer, true);
+                    screen.Init(this, true);
                 }
             }
 

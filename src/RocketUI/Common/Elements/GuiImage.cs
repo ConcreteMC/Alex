@@ -7,14 +7,12 @@ namespace RocketUI.Elements
     {
         public GuiImage(string textureResource, TextureRepeatMode mode = TextureRepeatMode.ScaleToFit)
         {
-            Background = textureResource;
-            Background.RepeatMode = mode;
+            Background = new GuiTexture2D(textureResource, mode);
         }
 
         public GuiImage(NinePatchTexture2D background, TextureRepeatMode mode = TextureRepeatMode.Stretch)
         {
-            Background = background;
-            Background.RepeatMode = mode;
+            Background = new GuiTexture2D(background, mode);
             Width = background.ClipBounds.Width;
             Height = background.ClipBounds.Height;
         }

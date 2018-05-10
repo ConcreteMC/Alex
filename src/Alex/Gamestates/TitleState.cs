@@ -47,8 +47,7 @@ namespace Alex.GameStates
 			FpsMonitor = new FpsMonitor();
 			_backgroundSkyBox = new GuiPanoramaSkyBox(Alex);
 
-			Background.Texture = _backgroundSkyBox;
-			Background.RepeatMode = TextureRepeatMode.Stretch;
+			Background = new GuiTexture2D(_backgroundSkyBox, TextureRepeatMode.Stretch);
 
 			#region Create MainMenu
 
@@ -163,11 +162,13 @@ namespace Alex.GameStates
 				Anchor = Anchor.BottomRight,
 			});
 
-			using (MemoryStream ms = new MemoryStream(Resources.GradientBlur))
+			using (MemoryStream ms = new MemoryStream(global::Alex.Resources.GradientBlur))
 			{
-				BackgroundOverlay = (TextureSlice2D)Texture2D.FromStream(args.GraphicsDevice, ms);
+				BackgroundOverlay = new GuiTexture2D((TextureSlice2D) Texture2D.FromStream(args.GraphicsDevice, ms))
+				{
+					Mask = new Color(Color.White, 0.5f)
+				};
 			}
-			BackgroundOverlay.Mask = new Color(Color.White, 0.5f);
 
 			_splashText.Text = SplashTexts.GetSplashText();
 			Alex.IsMouseVisible = true;

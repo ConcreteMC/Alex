@@ -28,7 +28,7 @@ namespace RocketUI.Screens
 
             OnUpdateSize();
 
-            InvalidateLayout(true);
+            InvalidateLayout();
         }
 
         protected virtual void OnUpdateSize()

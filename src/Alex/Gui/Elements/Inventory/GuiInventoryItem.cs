@@ -58,10 +58,10 @@ namespace Alex.Gui.Elements.Inventory
 		}
 
         protected override void OnInit()
-        {
-            SelectedBackground = renderer.GetTexture(GuiTextures.Inventory_HotBar_SelectedItemOverlay);
-	        _counTextElement.Font = renderer.Font;
-        }
+		{
+			if(Resources.TryGetGuiTexture(GuiTextures.Inventory_HotBar_SelectedItemOverlay, out var selectedBackground))
+				SelectedBackground = selectedBackground;
+		}
 
 	    private void SlotChanged(SlotData newValue)
 	    {

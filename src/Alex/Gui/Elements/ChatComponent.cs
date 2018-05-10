@@ -40,11 +40,13 @@ namespace Alex.Gui.Elements
 			Width = 320;
 		}
 
+		private string FontFamily = "Default";
 		private IFont Font;
 
 		protected override void OnInit()
-        {
-			Font = renderer.Font;
+		{
+			Resources.TryGetFont(FontFamily, out var font);
+			Font = font;
 
 			FocusOutlineThickness = Thickness.Zero;
 			HighlightOutlineThickness = Thickness.Zero;

@@ -98,14 +98,14 @@ namespace RocketUI.Elements
                 OnInit();
             }
 
-            ForEachChild(c => c.Init(Resources, force));
+            ForEachChild(c => c.Init(guiManager, force));
 
             _initialised = true;
         }
 
         protected virtual void OnInit()
         {
-            Resources.ResolveDefaultTextures(this);
+            //Resources.ResolveDefaultTextures(this);
             
             Background.TryResolveTexture(Resources);
             BackgroundOverlay.TryResolveTexture(Resources);
@@ -135,7 +135,7 @@ namespace RocketUI.Elements
             Children.Add(element);
             if (_initialised)
             {
-                element.Init(_guiRenderer);
+                element.Init(GuiManager);
             }
             OnChildAdded(element);
             InvalidateLayout();
