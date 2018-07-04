@@ -68,11 +68,11 @@ namespace Alex.Graphics.Models.Blocks
 			string texture = "";
 			if (IsLava)
 			{
-				texture = "blocks/lava";
+				texture = "block/lava";
 			}
 			else
 			{
-				texture = "blocks/water";
+				texture = "block/water";
 			}
 			texture = texture + "_flow";
 			/*if (IsFlowing)

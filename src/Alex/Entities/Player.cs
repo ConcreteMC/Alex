@@ -31,7 +31,9 @@ namespace Alex.Entities
 		    NoAi = false;
 
 			Inventory = new Inventory(46);
-	    }
+
+			MovementSpeed = 0.1;
+		}
 
 		public override void Update(IUpdateArgs args)
 		{
@@ -53,11 +55,13 @@ namespace Alex.Entities
 			if (IsSprinting && !sprint)
 			{
 				FOVModifier += 10;
+				
 				Network.EntityAction((int) EntityId, EntityAction.StartSprinting);
 			}
 			else if (!IsSprinting && sprint)
 			{
 				FOVModifier -= 10;
+				
 				Network.EntityAction((int)EntityId, EntityAction.StopSprinting);
 			}
 
@@ -65,7 +69,7 @@ namespace Alex.Entities
 			{
 				if (IsSneaking)
 				{
-					Network.EntityAction((int)EntityId, EntityAction.StartSneaking);
+					Network.EntityAction((int)EntityId, EntityAction.StartSneaking);		
 				}
 				else
 				{

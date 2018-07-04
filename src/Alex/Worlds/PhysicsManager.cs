@@ -43,11 +43,11 @@ namespace Alex.Worlds
 			var groundSpeedSquared = entity.Velocity.X * entity.Velocity.X + entity.Velocity.Z * entity.Velocity.Z;
 
 		    var maxSpeed = entity.IsFlying ? (entity.IsSprinting ? 22f : 11f) : (entity.IsSprinting && !entity.IsSneaking ? 5.6f : (entity.IsSneaking ? 1.3f : 4.3f));
-		    if (groundSpeedSquared > (maxSpeed))
-		    {
-			    var correctionScale = (float) Math.Sqrt(maxSpeed / groundSpeedSquared);
-			    entity.Velocity *= new Vector3(correctionScale, 1f, correctionScale);
-		    }
+		   // if (groundSpeedSquared > (maxSpeed))
+		   // {
+			//    var correctionScale = (float) Math.Sqrt(maxSpeed / groundSpeedSquared);
+			//    entity.Velocity *= new Vector3(correctionScale, 1f, correctionScale);
+		   // }
 
 			if (entity.Velocity.Y > entity.TerminalVelocity)
 		    {
@@ -72,16 +72,11 @@ namespace Alex.Worlds
 				    {
 					    if (e.NoAi) continue;
 
-					    if (!e.IsFlying && !e.KnownPosition.OnGround)
-					    {
-						    e.Velocity -= new Vector3(0, (float)(e.Gravity), 0);
-					    }
+					    
 
-					    e.Velocity *= (float)(1f - e.Drag);
+						//TruncateVelocity(e, dt);
 
-						TruncateVelocity(e, dt);
-
-					    Vector3 collision, before = e.Velocity;
+						Vector3 collision, before = e.Velocity;
 
 					    //  var velocityInput = entity.Velocity * deltaTime;
 
@@ -99,8 +94,14 @@ namespace Alex.Worlds
 
 					    e.KnownPosition.Move(e.Velocity * dt);
 
-					//	TruncateVelocity(e, dt);
-				    }
+					    e.Velocity *= (float)(1f - e.Drag);
+						if (!e.IsFlying && !e.KnownPosition.OnGround)
+					    {
+						    e.Velocity -= new Vector3(0, (float)(e.Gravity), 0);
+					    }
+
+						TruncateVelocity(e, dt);
+					}
 			    }
 			    catch (Exception ex)
 			    {

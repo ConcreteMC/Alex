@@ -17,6 +17,7 @@ using fNbt;
 using fNbt.Tags;
 using Microsoft.Xna.Framework;
 using NLog;
+using NbtTag = fNbt.Tags.NbtTag;
 
 namespace Alex.Worlds
 {
@@ -158,7 +159,7 @@ namespace Alex.Worlds
 					nbt.LoadFromStream(regionFile, NbtCompression.ZLib);
 
 					//int version = nbt.RootTag["DataVersion"].IntValue;
-					NbtCompound dataTag = (NbtCompound)nbt.RootTag["Level"];
+					fNbt.Tags.NbtCompound dataTag = (fNbt.Tags.NbtCompound)nbt.RootTag["Level"];
 
 					bool isPocketEdition = false;
 					if (dataTag.Contains("MCPE BID"))
@@ -166,7 +167,7 @@ namespace Alex.Worlds
 						isPocketEdition = dataTag["MCPE BID"].ByteValue == 1;
 					}
 
-					NbtList sections = dataTag["Sections"] as NbtList;
+					fNbt.Tags.NbtList sections = dataTag["Sections"] as fNbt.Tags.NbtList;
 
 					Worlds.ChunkColumn chunk = new Worlds.ChunkColumn()
 					{
@@ -201,7 +202,7 @@ namespace Alex.Worlds
 
 					//if (chunk.biomeId.Length > 256) throw new Exception();
 
-					NbtTag heights = dataTag["HeightMap"] as NbtIntArray;
+					NbtTag heights = dataTag["HeightMap"] as fNbt.Tags.NbtIntArray;
 					if (heights != null)
 					{
 						int[] intHeights = heights.IntArrayValue;
@@ -225,7 +226,7 @@ namespace Alex.Worlds
 						}
 					}
 
-					NbtList entities = dataTag["Entities"] as NbtList;
+					fNbt.Tags.NbtList entities = dataTag["Entities"] as fNbt.Tags.NbtList;
 					if (entities != null)
 					{
 						chunk.Entities = entities.ToArray<NbtCompound>();
@@ -325,10 +326,10 @@ namespace Alex.Worlds
 			}
 		}
 
-		private void ReadSection(NbtTag sectionTag, Worlds.ChunkColumn chunk, bool convertBid = true)
+		private void ReadSection(fNbt.Tags.NbtTag sectionTag, Worlds.ChunkColumn chunk, bool convertBid = true)
 		{
 			int sectionIndex = sectionTag["Y"].ByteValue;
-			NbtList palette = sectionTag["Palette"] as NbtList;
+			fNbt.Tags.NbtList palette = sectionTag["Palette"] as fNbt.Tags.NbtList;
 			long[] blockStates = sectionTag["BlockStates"].LongArrayValue;
 
 			byte[] blockLight = sectionTag["BlockLight"].ByteArrayValue;
@@ -362,7 +363,7 @@ namespace Alex.Worlds
 			return (byte)(arr[index >> 1] >> ((index & 1) << 2) & 0xF);
 		}
 
-		private void ReadOldSection(NbtTag sectionTag, Worlds.ChunkColumn chunk, bool convertBid = true)
+		private void ReadOldSection(fNbt.Tags.NbtTag sectionTag, Worlds.ChunkColumn chunk, bool convertBid = true)
 		{
 			//throw new NotImplementedException("TODO: Implement a id:meta to blockstate converter.");
 
@@ -413,12 +414,34 @@ namespace Alex.Worlds
 			chunk.Chunks[sectionIndex] = section;
 		}
 
+		private bool _spawnInitiated = false;
 		public Vector3 GetSpawnPoint()
 		{
 			var spawnPoint = new Vector3(LevelInfo.SpawnX, LevelInfo.SpawnY + 2 /* + WaterOffsetY*/, LevelInfo.SpawnZ);
 
 			if (spawnPoint.Y > 256) spawnPoint.Y = 255;
+			if (!_spawnInitiated)
+			{
+				_spawnInitiated = true;
+				IChunkColumn chunk = GenerateChunkColumn(new ChunkCoordinates(spawnPoint));
+				if (chunk != null)
+				{
+					int originalY = (int) spawnPoint.Y;
+					int y = (int) spawnPoint.Y;
+					while (y + 1 < 256 && y >= 0)
+					{
+						y++;
+						if (!chunk.GetBlock((int)spawnPoint.X & 0xf, y & 0xff, (int)spawnPoint.Z & 0xf).Solid)
+						{
+							break;
+						}
 
+						//y++;
+					}
+
+					spawnPoint.Y = y;
+				}
+			}
 			return spawnPoint;
 		}
 

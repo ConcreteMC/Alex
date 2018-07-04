@@ -367,11 +367,11 @@ namespace Alex.ResourcePackLib
 			using (var r = new StreamReader(entry.Open()))
 			{
 				var blockModel = MCJsonConvert.DeserializeObject<ResourcePackItem>(r.ReadToEnd());
-				blockModel.Name = name.Replace("item/", "");
+				blockModel.Name = name;//name.Replace("item/", "");
 				blockModel.Namespace = nameSpace;
 				if (blockModel.ParentName != null)
 				{
-					blockModel.ParentName = blockModel.ParentName.Replace("item/", "");
+				//	blockModel.ParentName = blockModel.ParentName.Replace("item/", "");
 				}
 
 				return blockModel;
@@ -524,11 +524,11 @@ namespace Alex.ResourcePackLib
 			using (var r = new StreamReader(entry.Open()))
 			{
 				var blockModel = MCJsonConvert.DeserializeObject<BlockModel>(r.ReadToEnd());
-				blockModel.Name      = name.Replace("block/", "");
+				blockModel.Name = name;// name.Replace("block/", "");
 				blockModel.Namespace = nameSpace;
 				if (blockModel.ParentName != null)
 				{
-					blockModel.ParentName = blockModel.ParentName.Replace("block/", "");
+					//blockModel.ParentName = blockModel.ParentName.Replace("block/", "");
 				}
 				//blockModel = ProcessBlockModel(blockModel);
 				//_blockModels[$"{nameSpace}:{name}"] = blockModel;

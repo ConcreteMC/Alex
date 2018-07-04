@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using System.Reflection.Metadata.Ecma335;
+//using System.Reflection.Metadata.Ecma335;
 using System.Security.Cryptography.X509Certificates;
 using Alex.API.Blocks.State;
 using Alex.API.Entities;
@@ -465,9 +465,10 @@ namespace Alex.Worlds
 					
 					if (updateLook)
 					{
-						entity.KnownPosition.Yaw = position.Yaw;
+						//entity.KnownPosition.Yaw = position.Yaw;
 						entity.KnownPosition.Pitch = position.Pitch;
-						entity.KnownPosition.HeadYaw = position.HeadYaw;
+					//	entity.KnownPosition.HeadYaw = position.HeadYaw;
+						entity.UpdateHeadYaw(position.HeadYaw);
 					}
 				}
 			}

@@ -5,14 +5,16 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Schedulers;
 using Alex.API.Graphics;
-using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Utils;
 using Alex.Worlds.Lighting;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MiNET.Utils;
 using NLog;
+using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
 
 //using OpenTK.Graphics;
 
@@ -110,11 +112,12 @@ namespace Alex.Worlds
 		private void ChunkUpdateThread()
 		{
 			int maxThreads = Game.GameSettings.ChunkThreads; //Environment.ProcessorCount / 2;
-			double radiusSquared = Math.Pow(Game.GameSettings.RenderDistance, 2);
+			DedicatedThreadPool taskScheduler = new DedicatedThreadPool(new DedicatedThreadPoolSettings(maxThreads, ThreadType.Foreground));
 
 			//int runningThreads = 0;
 			while (!CancelationToken.IsCancellationRequested)
 			{
+				double radiusSquared = Math.Pow(Game.GameSettings.RenderDistance, 2);
 				try
 				{
 					//bool doingLowPriority = false;
@@ -158,7 +161,25 @@ namespace Alex.Worlds
 									UpdateResetEvent.Reset();
 								}
 
-								Task.Run(() => { UpdateChunk(chunk); }).ContinueWith(ContinuationAction);
+								/*new Thread(() => {
+									UpdateChunk(chunk);
+									Interlocked.Decrement(ref RunningThreads);
+									UpdateResetEvent.Set();
+								}).Start();*/
+								/*ThreadPool.QueueUserWorkItem(state =>
+								{
+									UpdateChunk(chunk);
+									Interlocked.Decrement(ref RunningThreads);
+									UpdateResetEvent.Set();
+								});*/
+								//Task.Run(() => { UpdateChunk(chunk); }).ContinueWith(ContinuationAction);
+
+								taskScheduler.QueueUserWorkItem(() =>
+								{
+									UpdateChunk(chunk);
+									Interlocked.Decrement(ref RunningThreads);
+									UpdateResetEvent.Set();
+								});
 							}
 							else
 							{

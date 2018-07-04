@@ -156,12 +156,12 @@ namespace Alex
 
 		protected override void LoadContent()
 		{
-			if (!File.Exists(Path.Combine("assets", "DebugFont.xnb")))
-			{
-				File.WriteAllBytes(Path.Combine("assets", "DebugFont.xnb"), global::Alex.Resources.DebugFont);
-			}
-
-			DebugFont = (WrappedSpriteFont) Content.Load<SpriteFont>("DebugFont");
+		//	if (!File.Exists(Path.Combine("assets", "DebugFont.xnb")))
+		//	{
+		//		File.WriteAllBytes(Path.Combine("assets", "DebugFont.xnb"), global::Alex.Resources.DebugFont);
+		//	}
+			//DebugFont = (WrappedSpriteFont) Content.Load<SpriteFont>("DebugFont");
+			DebugFont = (WrappedSpriteFont) Content.Load<SpriteFont>(global::Alex.Resources.DebugFont);
 			
 			_spriteBatch = new SpriteBatch(GraphicsDevice);
 			InputManager = new InputManager(this);

@@ -1,7 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
     <DefineConstants>$(DefineConstants);TRACE;DEBUG;MONOGAME;NETCOREAPP2_0;DESKTOPGL;WINDOWS;LINUX</DefineConstants>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <ApplicationIcon>Icon.ico</ApplicationIcon>
@@ -56,6 +56,11 @@
     <PackageReference Include="CoreCompat.System.Drawing.v2" Version="5.2.0-preview1-r131" />
     <PackageReference Include="CoreFNBT" Version="1.0.9" />
     <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="1.0.0-alpha-26418-02" />
+    <PackageReference Include="MiNET" Version="1.0.1792">
+      <PrivateAssets></PrivateAssets>
+      <ExcludeAssets></ExcludeAssets>
+      <IncludeAssets></IncludeAssets>
+    </PackageReference>
     <PackageReference Include="MonoGame.Framework.DesktopGL.Core" Version="3.7.0.7" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <PackageReference Include="NLog" Version="4.5.0" />
@@ -83,5 +88,17 @@
       <Generator>ResXFileCodeGenerator</Generator>
     </EmbeddedResource>
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Worlds\Bedrock\" />
+  </ItemGroup>
+
+	<Target Name="ChangeAliasesOfNugetRefs" BeforeTargets="FindReferenceAssembliesForReferences;ResolveReferences">
+		<ItemGroup>
+			<ReferencePath Condition="'%(FileName)' == 'fNbt'">
+				<Aliases>MiNETfNbt</Aliases>
+			</ReferencePath>
+		</ItemGroup>
+	</Target>
 
 </Project>

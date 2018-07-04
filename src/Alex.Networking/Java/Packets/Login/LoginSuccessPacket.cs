@@ -6,7 +6,7 @@ namespace Alex.Networking.Java.Packets.Login
 	{
 		public LoginSuccessPacket()
 		{
-			PacketId = 0x02;
+			PacketId = 0x03;
 		}
 
 		public string UUID;

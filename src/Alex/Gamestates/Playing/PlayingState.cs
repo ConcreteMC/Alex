@@ -92,12 +92,17 @@ namespace Alex.GameStates.Playing
 			{
 				var pos = World.Player.KnownPosition;
 				var blockPos = pos.GetCoordinates3D();
-				return $"RenderPosition: (X={pos.X:##.00}, Y={pos.Y:##.00}, Z={pos.Z:##.00}) / Block: ({blockPos.X:D}, {blockPos.Y:D}, {blockPos.Z:D})";
+				return $"RenderPosition: (X={pos.X:F2}, Y={pos.Y:F2}, Z={pos.Z:F2}) / Block: ({blockPos.X:D}, {blockPos.Y:D}, {blockPos.Z:D})";
 			});
 			_debugInfo.AddDebugLeft(() =>
 			{
 				var pos = World.Player.KnownPosition;
-				return  $"Facing: {GetCardinalDirection(pos)} (HeadYaw={pos.HeadYaw:##.00}, Yaw={pos.Yaw:##.00}, Pitch={pos.Pitch:##.00})";
+				return  $"Facing: {GetCardinalDirection(pos)} (HeadYaw={pos.HeadYaw:F2}, Yaw={pos.Yaw:F2}, Pitch={pos.Pitch:F2})";
+			});
+			_debugInfo.AddDebugLeft(() =>
+			{
+				var pos = World.Player.Velocity;
+				return $"Velocity: (X={pos.X:F2}, Y={pos.Y:F2}, Z={pos.Z:F2}) / SpeedFactor: {World.Player.Controller.LastSpeedFactor:F2}";
 			});
 			_debugInfo.AddDebugLeft(() => $"Vertices: {World.Vertices}");
 			_debugInfo.AddDebugLeft(() => $"Chunks: {World.ChunkCount}, {World.ChunkManager.RenderedChunks}");

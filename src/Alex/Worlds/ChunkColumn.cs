@@ -319,47 +319,31 @@ namespace Alex.Worlds
 
 		public void Read(MinecraftStream ms, int availableSections, bool groundUp, bool readSkylight)
 		{
-		//	Stopwatch s = Stopwatch.StartNew();
-		//	Log.Debug($"Reading chunk data...");
-
-			for (int i = 0; i < this.Chunks.Length; i++)
+			try
 			{
-				var storage = this.Chunks[i];
-				if ((availableSections & (1 << i)) == 0)
-				{
-					if (groundUp && !storage.IsEmpty())
-					{
-						storage = new ExtendedBlockStorage(i, readSkylight);
-					}
-				}
-				else
-				{
-					if (storage == null)
-					{
-						storage = new ExtendedBlockStorage(i, readSkylight);
-					}
+				//	Stopwatch s = Stopwatch.StartNew();
+				//	Log.Debug($"Reading chunk data...");
 
-					storage.Data.Read(ms);					
-				}
-
-				for (int y = 0; y < 16; y++)
+				for (int i = 0; i < this.Chunks.Length; i++)
 				{
-					for (int z = 0; z < 16; z++)
+					var storage = this.Chunks[i];
+					if ((availableSections & (1 << i)) == 0)
 					{
-						for (int x = 0; x < 16; x += 2)
+						if (groundUp && !storage.IsEmpty())
 						{
-							// Note: x += 2 above; we read 2 values along x each time
-							byte value = (byte) ms.ReadByte();
-
-							storage.SetExtBlocklightValue(x, y, z, (byte) (value & 0xF));
-							storage.SetExtBlocklightValue(x + 1, y, z, (byte) ((value >> 4) & 0xF));
+							storage = new ExtendedBlockStorage(i, readSkylight);
 						}
 					}
-				}
+					else
+					{
+						if (storage == null)
+						{
+							storage = new ExtendedBlockStorage(i, readSkylight);
+						}
 
-				//if (currentDimension.HasSkylight())
-				if (readSkylight)
-				{
+						storage.Data.Read(ms);
+					}
+
 					for (int y = 0; y < 16; y++)
 					{
 						for (int z = 0; z < 16; z++)
@@ -367,37 +351,59 @@ namespace Alex.Worlds
 							for (int x = 0; x < 16; x += 2)
 							{
 								// Note: x += 2 above; we read 2 values along x each time
-								byte value = (byte)ms.ReadByte();
+								byte value = (byte) ms.ReadByte();
 
-								storage.SetExtSkylightValue(x, y, z, value & 0xF);
-								storage.SetExtSkylightValue(x + 1, y, z, (value >> 4) & 0xF);
+								storage.SetExtBlocklightValue(x, y, z, (byte) (value & 0xF));
+								storage.SetExtBlocklightValue(x + 1, y, z, (byte) ((value >> 4) & 0xF));
 							}
+						}
+					}
+
+					//if (currentDimension.HasSkylight())
+					if (readSkylight)
+					{
+						for (int y = 0; y < 16; y++)
+						{
+							for (int z = 0; z < 16; z++)
+							{
+								for (int x = 0; x < 16; x += 2)
+								{
+									// Note: x += 2 above; we read 2 values along x each time
+									byte value = (byte) ms.ReadByte();
+
+									storage.SetExtSkylightValue(x, y, z, value & 0xF);
+									storage.SetExtSkylightValue(x + 1, y, z, (value >> 4) & 0xF);
+								}
+							}
+						}
+					}
+
+					this.Chunks[i] = storage;
+				}
+
+				if (groundUp)
+				{
+					for (int x = 0; x < 16; x++)
+					{
+						for (int z = 0; z < 16; z++)
+						{
+							var biomeId = ms.ReadInt();
+							SetBiome(x, z, biomeId);
 						}
 					}
 				}
 
-				this.Chunks[i] = storage;
-			}
-
-			if (groundUp)
-			{
-				for (int x = 0; x < 16; x++)
+				for (int i = 0; i < Chunks.Length; i++)
 				{
-					for (int z = 0; z < 16; z++)
-					{
-						var biomeId = ms.ReadInt();
-						SetBiome(x, z, biomeId);
-					}
+					Chunks[i].RemoveInvalidBlocks();
 				}
+
+				CalculateHeight();
 			}
-			
-			for (int i = 0; i < Chunks.Length; i++)
+			catch (Exception e)
 			{
-				Chunks[i].RemoveInvalidBlocks();
+				Log.Warn($"Received supposedly corrupted chunk :D");
 			}
-
-			CalculateHeight();
-
 		}
 	}
 }

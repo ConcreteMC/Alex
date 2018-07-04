@@ -76,6 +76,7 @@ namespace Alex.GameStates.Playing
 			}
 	    }
 
+	    public float LastSpeedFactor = 0f;
 	    private void CheckMovementInput(GameTime gt)
 	    {
 		    if (!_allowMovementInput) return;
@@ -83,30 +84,29 @@ namespace Alex.GameStates.Playing
 			var moveVector = Vector3.Zero;
 			var now = DateTime.UtcNow;
 
-			float speedFactor = 43.178f;
-			if (Player.IsSprinting && !Player.IsSneaking)
-			{
-				speedFactor *= 0.3f;
-				//speedFactor *= 0.2806f;
-			}
-			else if (Player.IsSneaking && !Player.IsFlying)
-			{
-				speedFactor *= 0.1f;
-			}
+		    if (InputManager.IsPressed(InputCommand.ToggleCameraFree))
+		    {
+			    IsFreeCam = !IsFreeCam;
+		    }
 
-			if (Player.IsFlying)
-			{
-				speedFactor *= (float)Player.FlyingSpeed;
-			}
-			else
-			{
-				speedFactor *= 0.15f;
-			}
+		    float modifier = 1f;
 
-			if (InputManager.IsPressed(InputCommand.ToggleCameraFree))
+			if (Player.IsInWater)
 			{
-				IsFreeCam = !IsFreeCam;
+				modifier = 0.3f;
 			}
+			else if (Player.IsSprinting && !Player.IsSneaking)
+			{	
+				modifier = 1.30000001192092896f;
+			    //speedFactor *= 0.2806f; 
+		    }
+		    else if (Player.IsSneaking && !Player.IsSprinting)
+		    {
+			    modifier = 0.1f;
+		    }
+
+		//	float speedFactor = (((float) Player.MovementSpeed) * modifier);
+		    float speedFactor = ((float) Player.MovementSpeed * modifier);
 
 			if (InputManager.IsDown(InputCommand.MoveForwards))
 			{
@@ -141,7 +141,7 @@ namespace Alex.GameStates.Playing
 
 			if (Player.IsFlying)
 			{
-				//speedFactor = (float)Player.FlyingSpeed;
+				speedFactor *= 1f + (float)Player.FlyingSpeed;
 				speedFactor *= 2.5f;
 
 				if (InputManager.IsDown(InputCommand.MoveUp))
@@ -169,7 +169,7 @@ namespace Alex.GameStates.Playing
 					{
 						if (Player.KnownPosition.OnGround && Math.Abs(Math.Floor(Player.KnownPosition.Y) - Player.KnownPosition.Y) < 0.001f)
 						{
-							//moveVector.Y += 42f;
+						//	moveVector.Y += 42f;
 							Player.Velocity += new Vector3(0f, 0.42f, 0f);// //, 0);
 						}
 					}
@@ -190,8 +190,11 @@ namespace Alex.GameStates.Playing
 
 			if (moveVector != Vector3.Zero)
 			{
-				Player.Velocity += new Vector3(moveVector.X * speedFactor, moveVector.Y * speedFactor, moveVector.Z * speedFactor);
+				//speedFactor *= 20;
+				Player.Velocity += (moveVector * speedFactor);// new Vector3(moveVector.X * speedFactor, moveVector.Y * (speedFactor), moveVector.Z * speedFactor);
 			}
+
+		    LastSpeedFactor = speedFactor;
 
 			if (IgnoreNextUpdate)
 			{

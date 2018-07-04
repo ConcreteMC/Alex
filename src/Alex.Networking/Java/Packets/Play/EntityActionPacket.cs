@@ -7,7 +7,7 @@ namespace Alex.Networking.Java.Packets.Play
     {
 	    public EntityActionPacket()
 	    {
-		    PacketId = 0x15;
+		    PacketId = 0x17;
 	    }
 
 	    public int EntityId;

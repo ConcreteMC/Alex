@@ -35,7 +35,6 @@ using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
 using NLog;
 using NLog.Fluent;
-using MathF = System.MathF;
 
 namespace Alex.Worlds.Java
 {
@@ -57,7 +56,7 @@ namespace Alex.Worlds.Java
 		private string AccessToken { get; }
 
 		private IPEndPoint Endpoint;
-		private AutoResetEvent _loginCompleteEvent = new AutoResetEvent(false);
+		private ManualResetEvent _loginCompleteEvent = new ManualResetEvent(false);
 		private TcpClient TcpClient;
 
 		private System.Threading.Timer _gameTickTimer;
@@ -123,7 +122,7 @@ namespace Alex.Worlds.Java
 			}
 
 			PlayerAbilitiesPacket abilitiesPacket = new PlayerAbilitiesPacket();
-			abilitiesPacket.PacketId = 0x13;
+			abilitiesPacket.PacketId = 0x15;
 			abilitiesPacket.ServerBound = true;
 
 			abilitiesPacket.Flags = (byte) flags;
@@ -237,16 +236,19 @@ namespace Alex.Worlds.Java
 		}
 
 		private bool _initiated = false;
-		private BlockingCollection<ChunkColumn> _generatingHelper = new BlockingCollection<ChunkColumn>();
+		//private BlockingCollection<ChunkColumn> _generatingHelper = new BlockingCollection<ChunkColumn>();
+	//	private AutoResetEvent _chunkReceivedWaitEvent = new AutoResetEvent(false);
 		public override Task Load(ProgressReport progressReport)
 		{
 			return Task.Run(() =>
 			{
 				progressReport(LoadingState.ConnectingToServer, 0);
-				Login(Username, UUID, AccessToken, _loginCompleteEvent);
+				Login(Username, UUID, AccessToken);
 				progressReport(LoadingState.ConnectingToServer, 99);
 
 				_loginCompleteEvent.WaitOne();
+
+				progressReport(LoadingState.LoadingChunks, 0);
 
 				int t = Alex.GameSettings.RenderDistance;
 				double radiusSquared = Math.Pow(t, 2);
@@ -254,7 +256,7 @@ namespace Alex.Worlds.Java
 				var target = radiusSquared * 3;
 
 				int count = 0;
-				ChunkColumn column = _generatingHelper.Take();
+			/*	ChunkColumn column = _generatingHelper.Take();
 				do
 				{
 					base.LoadChunk(column, column.X, column.Z, true);
@@ -263,6 +265,14 @@ namespace Alex.Worlds.Java
 				} while (_generatingHelper.TryTake(out column, 1250) && !Spawned);
 
 				_generatingHelper = null;
+				*/
+
+				//while (!Spawned && _chunkReceivedWaitEvent.WaitOne(1250))
+			//	{
+			//		progressReport(LoadingState.LoadingChunks, (int)Math.Floor((count / target) * 100));
+			//		count++;
+			//	}
+
 				count = 0;
 
 				/*Parallel.ForEach(generatedChunks, (c) =>
@@ -287,11 +297,12 @@ namespace Alex.Worlds.Java
 
 		public void ChunkReceived(IChunkColumn chunkColumn, int x, int z, bool update)
 		{
-			if (_generatingHelper != null && !Spawned)
+			/*if (_generatingHelper != null && !Spawned)
 			{
 				_generatingHelper.Add((ChunkColumn)chunkColumn);
 				return;
-			}
+			}*/
+			//_chunkReceivedWaitEvent.Set();
 
 			base.LoadChunk(chunkColumn, x, z, update);
 		}
@@ -730,7 +741,12 @@ namespace Alex.Worlds.Java
 		private void HandleEntityLookAndRelativeMove(EntityLookAndRelativeMove packet)
 		{
 			var yaw = MathUtils.AngleToNotchianDegree(packet.Yaw);
-			WorldReceiver.UpdateEntityPosition(packet.EntityId, new PlayerLocation(MathUtils.FromFixedPoint(packet.DeltaX), MathUtils.FromFixedPoint(packet.DeltaY), MathUtils.FromFixedPoint(packet.DeltaZ), yaw, yaw, MathUtils.AngleToNotchianDegree(packet.Pitch))
+			WorldReceiver.UpdateEntityPosition(packet.EntityId, new PlayerLocation(MathUtils.FromFixedPoint(packet.DeltaX),
+				MathUtils.FromFixedPoint(packet.DeltaY),
+				MathUtils.FromFixedPoint(packet.DeltaZ),
+				yaw, 
+				yaw,
+				MathUtils.AngleToNotchianDegree(packet.Pitch))
 			{
 				OnGround = packet.OnGround
 			}, true, true);
@@ -756,7 +772,8 @@ namespace Alex.Worlds.Java
 		{
 			if (WorldReceiver.TryGetEntity(packet.EntityId, out var entity))
 			{
-				entity.KnownPosition.Yaw = MathUtils.AngleToNotchianDegree(packet.Yaw);
+				entity.UpdateHeadYaw(MathUtils.AngleToNotchianDegree(packet.Yaw));
+				//entity.KnownPosition.HeadYaw = MathUtils.AngleToNotchianDegree(packet.Yaw);
 				entity.KnownPosition.Pitch = MathUtils.AngleToNotchianDegree(packet.Pitch);
 				entity.KnownPosition.OnGround = packet.OnGround;
 			}
@@ -768,7 +785,7 @@ namespace Alex.Worlds.Java
 			WorldReceiver.UpdateEntityPosition(packet.EntityID, new PlayerLocation(packet.X, packet.Y, packet.Z, yaw, yaw, MathUtils.AngleToNotchianDegree(packet.Pitch))
 			{
 				OnGround = packet.OnGround
-			});
+			}, updateLook: true);
 		}
 
 		private void HandleEntityVelocity(EntityVelocity packet)
@@ -872,14 +889,22 @@ namespace Alex.Worlds.Java
 			}
 		}
 
+		//private BlockingCollection<ChunkDataPacket> _chunkQueue = new BlockingCollection<ChunkDataPacket>();
 		private void HandleChunkData(ChunkDataPacket chunk)
 		{
-			if (_loginCompleteEvent != null)
+			_loginCompleteEvent?.Set();
+			//_chunkQueue.Add(chunk);
+			ThreadPool.QueueUserWorkItem(o =>
 			{
-				_loginCompleteEvent.Set();
-				_loginCompleteEvent = null;
-			}
+				ChunkColumn result = new ChunkColumn();
+				result.IsDirty = true;
+				result.X = chunk.ChunkX;
+				result.Z = chunk.ChunkZ;
+				result.Read(new MinecraftStream(new MemoryStream(chunk.Buffer)), chunk.PrimaryBitmask, chunk.GroundUp, _dimension == 0);
 
+				ChunkReceived(result, result.X, result.Z, true);
+			});
+			return;
 			if (!Spawned)
 			{
 				ThreadPool.QueueUserWorkItem(o =>
@@ -890,7 +915,7 @@ namespace Alex.Worlds.Java
 					result.Z = chunk.ChunkZ;
 					result.Read(new MinecraftStream(new MemoryStream(chunk.Buffer)), chunk.PrimaryBitmask, chunk.GroundUp, _dimension == 0);
 
-					ChunkReceived(result, result.X, result.Z, false);
+					ChunkReceived(result, result.X, result.Z, true);
 				});
 			}
 			else
@@ -909,7 +934,7 @@ namespace Alex.Worlds.Java
 		{
 			KeepAlivePacket response = new KeepAlivePacket();
 			response.KeepAliveid = packet.KeepAliveid;
-			response.PacketId = 0x0B;
+			response.PacketId = 0x0C;
 
 			SendPacket(response);
 		}
@@ -1081,11 +1106,11 @@ namespace Alex.Worlds.Java
 			Client.InitEncryption(SharedSecret);
 		}
 
-		public void Login(string username, string uuid, string accessToken, AutoResetEvent signalWhenReady)
+		public void Login(string username, string uuid, string accessToken)
 		{
 			try
 			{
-				_loginCompleteEvent = signalWhenReady;
+			//	_loginCompleteEvent = signalWhenReady;
 				_username = username;
 				_uuid = uuid;
 				_accesToken = accessToken;

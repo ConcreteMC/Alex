@@ -25,6 +25,7 @@ namespace Alex.Graphics.Models.Blocks
 		protected ResourceManager Resources { get; }
 		private readonly IDictionary<string, FaceCache> _elementCache;
 
+		private float Height = 1f, Width = 1f, Depth = 1f;
 		public CachedResourcePackModel(ResourceManager resources, BlockStateModel[] models)
 		{
 			Resources = resources;
@@ -34,6 +35,12 @@ namespace Alex.Graphics.Models.Blocks
 			{
 				_elementCache = CalculateModel(models);
 			}
+		}
+
+		public override BoundingBox GetBoundingBox(Vector3 position, IBlock requestingBlock)
+		{
+			return new BoundingBox(position, position + new Vector3(Width / 16f, Height / 16f, Depth / 16f));
+			return base.GetBoundingBox(position, requestingBlock);
 		}
 
 		protected Matrix GetElementRotationMatrix(BlockModelElementRotation elementRotation, out float rescale)
@@ -202,6 +209,8 @@ namespace Alex.Graphics.Models.Blocks
 			Dictionary<string, FaceCache> result = new Dictionary<string, FaceCache>();
 			foreach (var model in models)
 			{
+				if (model.Model == null) continue;
+				
 				for (var i = 0; i < model.Model.Elements.Length; i++)
 				{
 					var element = model.Model.Elements[i];
@@ -217,6 +226,15 @@ namespace Alex.Graphics.Models.Blocks
 					var width = elementTo.X - elementFrom.X;
 					var height = elementTo.Y - elementFrom.Y;
 					var depth = elementTo.Z - elementFrom.Z;
+
+					if (width > Width)
+						Width = width;
+
+					if (height > Height)
+						Height = height;
+
+					if (depth > Depth)
+						Depth = depth;
 
 					var elementRotation = element.Rotation;
 					Matrix elementRotationMatrix = GetElementRotationMatrix(elementRotation, out float scalingFactor);
@@ -330,6 +348,8 @@ namespace Alex.Graphics.Models.Blocks
 
 			foreach (var model in models)
 			{
+				if (model.Model == null ) continue;
+				
 				for (var i = 0; i < model.Model.Elements.Length; i++)
 				{
 					FaceCache elementCache;
