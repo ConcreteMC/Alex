@@ -364,6 +364,7 @@ namespace Alex.Gui.Elements
 
 		public void Dismiss()
 		{
+			Enabled = false;
 			//Focused = false;
 			_scrollValue = 0;
 			_textBuilder.Clear();

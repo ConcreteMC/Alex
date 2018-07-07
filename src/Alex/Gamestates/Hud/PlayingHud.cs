@@ -35,6 +35,7 @@ namespace Alex.GameStates.Hud
 	        _hotbar.Padding = Thickness.Zero;
 
 			Chat = chat;
+	        Chat.Enabled = false;
 	        Chat.Anchor = Alignment.BottomLeft;
         }
 
@@ -78,7 +79,8 @@ namespace Alex.GameStates.Hud
 		        if (InputManager.IsPressed(InputCommand.ToggleChat))
 		        {
 					Chat.Dismiss();
-			        Alex.GuiManager.FocusManager.FocusedElement = Chat;
+			        Chat.Enabled = true;
+					Alex.GuiManager.FocusManager.FocusedElement = Chat;
 		        }
 
 		        if (InputManager.IsPressed(InputCommand.ToggleMenu))
