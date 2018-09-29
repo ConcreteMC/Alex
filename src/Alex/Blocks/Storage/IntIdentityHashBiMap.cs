@@ -10,8 +10,8 @@ namespace Alex.Blocks.Storage
 	public class IntIdentityHashBiMap<TK> : IEnumerable<TK> where TK : class
 	{
 		private static TK _empty = default(TK);
-		private TK[] _keys;
-		private uint[] _values;
+		private TK[] _values;
+		private uint[] _keys;
 		private TK[] _byId;
 		private uint _nextFreeIndex;
 		private int _mapSize;
@@ -19,8 +19,8 @@ namespace Alex.Blocks.Storage
 		public IntIdentityHashBiMap(int initialCapacity)
 		{
 			initialCapacity = (int)(initialCapacity / 0.8F);
-			_keys = new TK[initialCapacity];
-			_values = new uint[initialCapacity];
+			_values = new TK[initialCapacity];
+			_keys = new uint[initialCapacity];
 			_byId = new TK[initialCapacity];
 		}
 
@@ -37,7 +37,7 @@ namespace Alex.Blocks.Storage
 
 		private uint GetValue(uint index)
 		{
-			return index == uint.MaxValue ? uint.MaxValue : _values[index];
+			return index == uint.MaxValue ? uint.MaxValue : _keys[index];
 		}
 
 		/**
@@ -65,10 +65,10 @@ namespace Alex.Blocks.Storage
 	     */
 		private void Grow(int capacity)
 		{
-			TK[] ak = _keys;
-			uint[] aint = _values;
-			_keys = new TK[capacity];
-			_values = new uint[capacity];
+			TK[] ak = _values;
+			uint[] aint = _keys;
+			_values = new TK[capacity];
+			_keys = new uint[capacity];
 			_byId = new TK[capacity];
 			_nextFreeIndex = 0;
 			_mapSize = 0;
@@ -89,11 +89,11 @@ namespace Alex.Blocks.Storage
 		{
 			uint i = (uint)Math.Max(intKey, _mapSize + 1);
 
-			if (i >= _keys.Length * 0.8F)
+			if (i >= _values.Length * 0.8F)
 			{
 				int j;
 
-				for (j = _keys.Length << 1; j < intKey; j <<= 1)
+				for (j = _values.Length << 1; j < intKey; j <<= 1)
 				{
 				}
 
@@ -101,8 +101,8 @@ namespace Alex.Blocks.Storage
 			}
 
 			uint k = FindEmpty(HashObject(objectIn));
-			_keys[k] = objectIn;
-			_values[k] = intKey;
+			_values[k] = objectIn;
+			_keys[k] = intKey;
 			_byId[intKey] = objectIn;
 			++_mapSize;
 
@@ -114,19 +114,19 @@ namespace Alex.Blocks.Storage
 
 		private uint HashObject(TK obectIn)
 		{
-			return (uint)(MathUtils.Hash((uint)(RuntimeHelpers.GetHashCode(obectIn) & uint.MaxValue)) % _keys.Length);
+			return (uint)(MathUtils.Hash((uint)(RuntimeHelpers.GetHashCode(obectIn) & uint.MaxValue)) % _values.Length);
 		}
 
 		private uint GetIndex(TK objectIn, uint index)
 		{
-			for (uint i = index; i < _keys.Length; ++i)
+			for (uint i = index; i < _values.Length; ++i)
 			{
-				if (_keys[i] == objectIn)
+				if (_values[i] == objectIn)
 				{
 					return i;
 				}
 
-				if (_keys[i] == _empty)
+				if (_values[i] == _empty)
 				{
 					return uint.MaxValue;
 				}
@@ -134,12 +134,12 @@ namespace Alex.Blocks.Storage
 
 			for (uint j = 0; j < index; ++j)
 			{
-				if (_keys[j] == objectIn)
+				if (_values[j] == objectIn)
 				{
 					return j;
 				}
 
-				if (_keys[j] == _empty)
+				if (_values[j] == _empty)
 				{
 					return uint.MaxValue;
 				}
@@ -150,9 +150,9 @@ namespace Alex.Blocks.Storage
 
 		private uint FindEmpty(uint index)
 		{
-			for (uint i = index; i < _keys.Length; ++i)
+			for (uint i = index; i < _values.Length; ++i)
 			{
-				if (_keys[i] == _empty)
+				if (_values[i] == _empty)
 				{
 					return i;
 				}
@@ -160,7 +160,7 @@ namespace Alex.Blocks.Storage
 
 			for (uint j = 0; j < index; ++j)
 			{
-				if (_keys[j] == _empty)
+				if (_values[j] == _empty)
 				{
 					return j;
 				}
@@ -171,7 +171,7 @@ namespace Alex.Blocks.Storage
 
 		public void Clear()
 		{
-			Array.Fill(_keys, default(TK));
+			Array.Fill(_values, default(TK));
 			Array.Fill(_byId, default(TK));
 
 			_nextFreeIndex = 0;

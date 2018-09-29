@@ -52,7 +52,7 @@ namespace Alex.Graphics.Models.Blocks
 			{
 				var elementRotationOrigin = new Vector3(elementRotation.Origin.X, elementRotation.Origin.Y, elementRotation.Origin.Z);
 
-				var elementAngle = (float)(elementRotation.Angle % 360f).ToRadians();
+				var elementAngle = MathHelper.ToRadians((float)(elementRotation.Angle));
 				ci = 1f / (float)Math.Cos(elementAngle);
 
 				faceRotationMatrix = Matrix.CreateTranslation(-elementRotationOrigin);
@@ -119,8 +119,8 @@ namespace Alex.Graphics.Models.Blocks
 
 		protected Matrix GetModelRotationMatrix(BlockStateModel model)
 		{
-			return Matrix.CreateRotationX((model.X % 360).ToRadians()) *
-				   Matrix.CreateRotationY((model.Y % 360).ToRadians());
+			return Matrix.CreateRotationX(MathHelper.ToRadians(360f - model.X)) *
+				   Matrix.CreateRotationY(MathHelper.ToRadians(360f - model.Y));
 		}
 
 		protected string ResolveTexture(BlockStateModel var, string texture)

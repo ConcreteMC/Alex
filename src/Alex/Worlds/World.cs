@@ -400,6 +400,18 @@ namespace Alex.Worlds
 			return Player;
 		}
 
+		public IChunkColumn GetChunkColumn(int x, int z)
+		{
+			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x, z), out IChunkColumn val))
+			{
+				return val;
+			}
+			else
+			{
+				return null;
+			}
+		}
+
 		public void ChunkReceived(IChunkColumn chunkColumn, int x, int z, bool update)
 		{
 			ChunkManager.AddChunk(chunkColumn, new ChunkCoordinates(x, z), update);

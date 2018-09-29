@@ -23,7 +23,7 @@ namespace Alex.Blocks.Storage.Pallete
 		{
 			for (uint i = 0; i < this._arraySize; i++)
 			{
-				if (this._states[i].Equals(state))
+				if (this._states[i].ExactMatch(state))
 				{
 					return i;
 				}
@@ -52,7 +52,7 @@ namespace Alex.Blocks.Storage.Pallete
 		{
 			this._arraySize = (uint) ms.ReadVarInt();
 
-			for (int i = 0; i < _arraySize; ++i)
+			for (int i = 0; i < _arraySize; i++)
 			{
 				_states[i] = BlockFactory.GetBlockState(ms.ReadVarInt());
 			}

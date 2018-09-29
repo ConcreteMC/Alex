@@ -64,6 +64,7 @@ namespace Alex.API.World
 	{
 		IEntity GetPlayerEntity();
 
+		IChunkColumn GetChunkColumn(int x, int z);
 		void ChunkReceived(IChunkColumn chunkColumn, int x, int z, bool update);
 		void ChunkUnload(int x, int z);
 

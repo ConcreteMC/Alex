@@ -23,5 +23,7 @@ namespace Alex.API.Blocks.State
 
 		bool TryGetValue(IStateProperty property, out object value);
 		bool TryGetValue(string property, out string value);
+
+		bool ExactMatch(IBlockState other);
 	}
 }

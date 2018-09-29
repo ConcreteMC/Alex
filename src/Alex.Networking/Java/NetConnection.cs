@@ -305,7 +305,7 @@ namespace Alex.Networking.Java
 				}
 		    }
 
-			//if (packet.Log)
+			if (packet.Log)
 				Log.Info($"Sending packet ({CompressionEnabled}:{EncryptionInitiated}): {packet} 0x{packet.PacketId:X2}");
 
 			PacketWriteQueue.Add(encodedPacket);

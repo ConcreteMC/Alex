@@ -6,6 +6,7 @@
 		{
 			Renderable = false;
 			HasHitbox = false;
+			Solid = true;
 		}
 	}
 }

@@ -356,7 +356,7 @@ namespace Alex.Worlds
 
 			section.RemoveInvalidBlocks();
 
-			chunk.Chunks[sectionIndex] = section;
+			chunk.Sections[sectionIndex] = section;
 		}
 		private static byte Nibble4(byte[] arr, int index)
 		{
@@ -411,7 +411,7 @@ namespace Alex.Worlds
 
 			section.RemoveInvalidBlocks();
 
-			chunk.Chunks[sectionIndex] = section;
+			chunk.Sections[sectionIndex] = section;
 		}
 
 		private bool _spawnInitiated = false;

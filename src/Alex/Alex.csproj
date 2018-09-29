@@ -57,7 +57,7 @@
     <PackageReference Include="CoreFNBT" Version="1.0.9" />
     <PackageReference Include="Hawezo.MojangSharp" Version="0.5.1" />
     <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="1.0.0-alpha-26707-01" />
-    <PackageReference Include="MiNET" Version="1.0.1812">
+    <PackageReference Include="MiNET" Version="1.0.1869">
       <PrivateAssets></PrivateAssets>
       <ExcludeAssets></ExcludeAssets>
       <IncludeAssets></IncludeAssets>

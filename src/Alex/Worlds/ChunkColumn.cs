@@ -55,7 +55,7 @@ namespace Alex.Worlds
 		public bool NeedSave = false;
 		public bool IsDirty { get; set; }
 
-		public ExtendedBlockStorage[] Chunks = new ExtendedBlockStorage[16];
+		public ExtendedBlockStorage[] Sections = new ExtendedBlockStorage[16];
 		public int[] BiomeId = ArrayOf<int>.Create(256, 1);
 		public short[] Height = new short[256];
 
@@ -68,10 +68,10 @@ namespace Alex.Worlds
 		public ChunkColumn()
 		{
 			IsDirty = true;
-			for (int i = 0; i < Chunks.Length; i++)
+			for (int i = 0; i < Sections.Length; i++)
 			{
 				var b = new ExtendedBlockStorage(i, true);
-				Chunks[i] = b;
+				Sections[i] = b;
 			}
 		}
 
@@ -83,7 +83,7 @@ namespace Alex.Worlds
 
 		public void SetBlockState(int x, int y, int z, IBlockState blockState)
 		{
-			Chunks[y >> 4].Set(x, y - 16 * (y >> 4), z, blockState);
+			Sections[y >> 4].Set(x, y - 16 * (y >> 4), z, blockState);
 			SetDirty();
 			_heightDirty = true;
 		}
@@ -91,7 +91,7 @@ namespace Alex.Worlds
 		private static IBlockState Air = BlockFactory.GetBlockState("minecraft:air");
 		public IBlockState GetBlockState(int bx, int by, int bz)
 		{
-			var chunk = Chunks[by >> 4];
+			var chunk = Sections[by >> 4];
 			if (chunk == null) return Air;
 
 			return chunk.Get(bx, by - 16 * (by >> 4), bz);
@@ -108,7 +108,7 @@ namespace Alex.Worlds
 
 		public void SetBlock(int bx, int by, int bz, IBlock block)
 		{
-			Chunks[by >> 4].Set(bx, by - 16 * (by >> 4), bz, block.BlockState);
+			Sections[by >> 4].Set(bx, by - 16 * (by >> 4), bz, block.BlockState);
 			SetDirty();
 
 			_heightDirty = true;
@@ -138,22 +138,22 @@ namespace Alex.Worlds
 
 		public byte GetBlocklight(int bx, int by, int bz)
 		{
-			return (byte) Chunks[@by >> 4].GetExtBlocklightValue(bx, @by - 16 * (@by >> 4), bz);
+			return (byte) Sections[@by >> 4].GetExtBlocklightValue(bx, @by - 16 * (@by >> 4), bz);
 		}
 
 		public void SetBlocklight(int bx, int by, int bz, byte data)
 		{
-			Chunks[@by >> 4].SetExtBlocklightValue(bx, @by - 16 * (@by >> 4), bz, data);
+			Sections[@by >> 4].SetExtBlocklightValue(bx, @by - 16 * (@by >> 4), bz, data);
 		}
 
 		public byte GetSkylight(int bx, int by, int bz)
 		{
-			return Chunks[@by >> 4].GetExtSkylightValue(bx, @by - 16 * (@by >> 4), bz);
+			return Sections[@by >> 4].GetExtSkylightValue(bx, @by - 16 * (@by >> 4), bz);
 		}
 
 		public void SetSkyLight(int bx, int by, int bz, byte data)
 		{
-			Chunks[@by >> 4].SetExtSkylightValue(bx, @by - 16 * (@by >> 4), bz, data);
+			Sections[@by >> 4].SetExtSkylightValue(bx, @by - 16 * (@by >> 4), bz, data);
 		}
 
 		private Vector3 Position => new Vector3(X * 16, 0, Z*16);
@@ -167,9 +167,9 @@ namespace Alex.Worlds
 
 			//if (Scheduled == ScheduleType.Full || PositionCache == null)
 			{
-				for (var index = 0; index < Chunks.Length; index++)
+				for (var index = 0; index < Sections.Length; index++)
 				{
-					var chunk = Chunks[index];
+					var chunk = Sections[index];
 					if (chunk.IsEmpty()) continue;
 
 					for (var x = 0; x < ChunkWidth; x++)
@@ -324,44 +324,18 @@ namespace Alex.Worlds
 				//	Stopwatch s = Stopwatch.StartNew();
 				//	Log.Debug($"Reading chunk data...");
 
-				for (int i = 0; i < this.Chunks.Length; i++)
+				for (int sectionY = 0; sectionY < this.Sections.Length; sectionY++)
 				{
-					var storage = this.Chunks[i];
-					if ((availableSections & (1 << i)) == 0)
-					{
-						if (groundUp && !storage.IsEmpty())
-						{
-							storage = new ExtendedBlockStorage(i, readSkylight);
-						}
-					}
-					else
+					var storage = this.Sections[sectionY];
+					if ((availableSections & (1 << sectionY)) != 0)
 					{
 						if (storage == null)
 						{
-							storage = new ExtendedBlockStorage(i, readSkylight);
+							storage = new ExtendedBlockStorage(sectionY, readSkylight);
 						}
 
 						storage.Data.Read(ms);
-					}
 
-					for (int y = 0; y < 16; y++)
-					{
-						for (int z = 0; z < 16; z++)
-						{
-							for (int x = 0; x < 16; x += 2)
-							{
-								// Note: x += 2 above; we read 2 values along x each time
-								byte value = (byte) ms.ReadByte();
-
-								storage.SetExtBlocklightValue(x, y, z, (byte) (value & 0xF));
-								storage.SetExtBlocklightValue(x + 1, y, z, (byte) ((value >> 4) & 0xF));
-							}
-						}
-					}
-
-					//if (currentDimension.HasSkylight())
-					if (readSkylight)
-					{
 						for (int y = 0; y < 16; y++)
 						{
 							for (int z = 0; z < 16; z++)
@@ -369,16 +343,42 @@ namespace Alex.Worlds
 								for (int x = 0; x < 16; x += 2)
 								{
 									// Note: x += 2 above; we read 2 values along x each time
-									byte value = (byte) ms.ReadByte();
+									byte value = (byte)ms.ReadByte();
 
-									storage.SetExtSkylightValue(x, y, z, value & 0xF);
-									storage.SetExtSkylightValue(x + 1, y, z, (value >> 4) & 0xF);
+									storage.SetExtBlocklightValue(x, y, z, (byte)(value & 0xF));
+									storage.SetExtBlocklightValue(x + 1, y, z, (byte)((value >> 4) & 0xF));
+								}
+							}
+						}
+
+						//if (currentDimension.HasSkylight())
+						if (readSkylight)
+						{
+							for (int y = 0; y < 16; y++)
+							{
+								for (int z = 0; z < 16; z++)
+								{
+									for (int x = 0; x < 16; x += 2)
+									{
+										// Note: x += 2 above; we read 2 values along x each time
+										byte value = (byte)ms.ReadByte();
+
+										storage.SetExtSkylightValue(x, y, z, value & 0xF);
+										storage.SetExtSkylightValue(x + 1, y, z, (value >> 4) & 0xF);
+									}
 								}
 							}
 						}
 					}
+					else
+					{
+						if (groundUp && !storage.IsEmpty())
+						{
+							storage = new ExtendedBlockStorage(sectionY, readSkylight);
+						}
+					}
 
-					this.Chunks[i] = storage;
+					this.Sections[sectionY] = storage;
 				}
 
 				if (groundUp)
@@ -393,9 +393,9 @@ namespace Alex.Worlds
 					}
 				}
 
-				for (int i = 0; i < Chunks.Length; i++)
+				for (int i = 0; i < Sections.Length; i++)
 				{
-					Chunks[i].RemoveInvalidBlocks();
+					Sections[i].RemoveInvalidBlocks();
 				}
 
 				CalculateHeight();

@@ -716,13 +716,28 @@ namespace Alex.Worlds.Java
 			{
 				foreach (var entry in packet.AddPlayerEntries)
 				{
+					foreach (var property in entry.Properties)
+					{
+						if (property.Name == "textures")
+						{
+							string json = Encoding.UTF8.GetString(Convert.FromBase64String(property.Value));
+							if (SkinUtils.TryGetSkin(json, Alex.GraphicsDevice, out var skin))
+							{
+								t = skin;
+							}
+						}
+					}
+
 					PlayerMob entity = new PlayerMob(entry.Name, (World)WorldReceiver, Client, t, true);
 					entity.UpdateGamemode((Gamemode)entry.Gamemode);
 					entity.UUID = new UUID(entry.UUID.ToByteArray());
 
 					if (entry.HasDisplayName)
 					{
-						entity.NameTag = entry.DisplayName;
+						if (ChatObject.TryParse(entry.DisplayName, out ChatObject chat))
+						{
+							entity.NameTag = chat.RawMessage;
+						}
 					}
 					else
 					{
@@ -733,6 +748,27 @@ namespace Alex.Worlds.Java
 					entity.IsAlwaysShowName = true;
 
 					_players.TryAdd(entity.UUID, entity);
+				}
+			}
+
+			else if (packet.Action == PlayerListAction.UpdateDisplayName)
+			{
+				foreach (var entry in packet.UpdateDisplayNameEntries)
+				{
+					if (_players.TryGetValue(new UUID(entry.UUID.ToByteArray()), out PlayerMob entity))
+					{
+						if (entry.HasDisplayName)
+						{
+							if (ChatObject.TryParse(entry.DisplayName, out ChatObject chat))
+							{
+								entity.NameTag = chat.RawMessage;
+							}
+						}
+						else
+						{
+							entity.NameTag = entity.Name;
+						}
+					}
 				}
 			}
 
@@ -910,38 +946,31 @@ namespace Alex.Worlds.Java
 			//_chunkQueue.Add(chunk);
 			ThreadPool.QueueUserWorkItem(o =>
 			{
-				ChunkColumn result = new ChunkColumn();
-				result.IsDirty = true;
+				ChunkColumn result = null;// = new ChunkColumn();
+				if (chunk.GroundUp)
+				{
+					result = new ChunkColumn();
+				}
+				else
+				{
+					if (WorldReceiver.GetChunkColumn(chunk.ChunkX, chunk.ChunkZ) is ChunkColumn c)
+					{
+						result = c;
+					}
+					else
+					{
+						result = new ChunkColumn();
+					}
+				}
+
 				result.X = chunk.ChunkX;
 				result.Z = chunk.ChunkZ;
+				result.IsDirty = true;
+			
 				result.Read(new MinecraftStream(new MemoryStream(chunk.Buffer)), chunk.PrimaryBitmask, chunk.GroundUp, _dimension == 0);
 
 				ChunkReceived(result, result.X, result.Z, true);
 			});
-			return;
-			if (!Spawned)
-			{
-				ThreadPool.QueueUserWorkItem(o =>
-				{
-					ChunkColumn result = new ChunkColumn();
-					result.IsDirty = true;
-					result.X = chunk.ChunkX;
-					result.Z = chunk.ChunkZ;
-					result.Read(new MinecraftStream(new MemoryStream(chunk.Buffer)), chunk.PrimaryBitmask, chunk.GroundUp, _dimension == 0);
-
-					ChunkReceived(result, result.X, result.Z, true);
-				});
-			}
-			else
-			{
-				ChunkColumn result = new ChunkColumn();
-				result.IsDirty = true;
-				result.X = chunk.ChunkX;
-				result.Z = chunk.ChunkZ;
-				result.Read(new MinecraftStream(new MemoryStream(chunk.Buffer)), chunk.PrimaryBitmask, chunk.GroundUp, _dimension == 0);
-
-				ChunkReceived(result, result.X, result.Z, true);
-			}
 		}
 
 		private void HandleKeepAlivePacket(KeepAlivePacket packet)

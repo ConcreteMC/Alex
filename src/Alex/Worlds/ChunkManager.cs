@@ -519,8 +519,12 @@ namespace Alex.Worlds
         {
             Chunks.AddOrUpdate(position, chunk, (vector3, chunk1) =>
             {
-	            chunk1.Dispose();
-				Log.Warn($"Replaced chunk at {position}");
+	            if (!ReferenceEquals(chunk1, chunk))
+	            {
+		            chunk1.Dispose();
+	            }
+
+	            Log.Warn($"Replaced/Updated chunk at {position}");
                 return chunk;
             });
 
