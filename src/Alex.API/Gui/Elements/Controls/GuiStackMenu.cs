@@ -7,7 +7,7 @@ namespace Alex.API.Gui.Elements.Controls
 {
     public class GuiStackMenu : GuiStackContainer
     {
-	    private bool _modern = false;
+	    private bool _modern = true;
 
 	    public bool ModernStyle
 	    {
@@ -31,7 +31,6 @@ namespace Alex.API.Gui.Elements.Controls
             AddChild(new GuiStackMenuItem(label, action)
             {
 				Enabled = enabled,
-				Disabled = !enabled,
 				Modern = ModernStyle
 			});
         }

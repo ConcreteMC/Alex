@@ -8,7 +8,7 @@ namespace Alex.Networking.Java.Packets.Login
 
 		public LoginStartPacket()
 		{
-			PacketId = 0x01;
+			PacketId = 0x00;
 		}
 
 		public override void Decode(MinecraftStream stream)

@@ -9,7 +9,7 @@ namespace Alex.Networking.Java.Packets.Login
 
 		public EncryptionResponsePacket()
 		{
-			PacketId = 0x02;
+			PacketId = 0x01;
 		}
 
 		public override void Decode(MinecraftStream stream)

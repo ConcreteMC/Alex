@@ -122,7 +122,6 @@ namespace Alex.Worlds.Java
 			}
 
 			PlayerAbilitiesPacket abilitiesPacket = new PlayerAbilitiesPacket();
-			abilitiesPacket.PacketId = 0x15;
 			abilitiesPacket.ServerBound = true;
 
 			abilitiesPacket.Flags = (byte) flags;
@@ -548,9 +547,24 @@ namespace Alex.Worlds.Java
 			{
 				HandleEntityMetadataPacket(entityMetadata);
 			}
+			else if (packet is CombatEventPacket combatEventPacket)
+			{
+				HandleCombatEventPacket(combatEventPacket);
+			}
 			else
 			{
 				Log.Warn($"Unhandled packet: 0x{packet.PacketId:x2} - {packet.ToString()}");
+			}
+		}
+
+		private void HandleCombatEventPacket(CombatEventPacket packet)
+		{
+			if (packet.Event == CombatEventPacket.CombatEvent.EntityDead)
+			{
+				Log.Warn($"Status packet: Entity={packet.EntityId} Player={packet.PlayerId} Message={packet.Message}");
+				ClientStatusPacket statusPacket = new ClientStatusPacket();
+				statusPacket.ActionID = ClientStatusPacket.Action.PerformRespawnOrConfirmLogin;
+				SendPacket(statusPacket);
 			}
 		}
 
@@ -934,7 +948,7 @@ namespace Alex.Worlds.Java
 		{
 			KeepAlivePacket response = new KeepAlivePacket();
 			response.KeepAliveid = packet.KeepAliveid;
-			response.PacketId = 0x0C;
+			response.PacketId = 0x0E;
 
 			SendPacket(response);
 		}

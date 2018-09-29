@@ -76,7 +76,22 @@ namespace Alex.GameStates.Gui.Common
                 Anchor = Alignment.BottomCenter,
             });
 
-            AddChild(Footer = new GuiMultiStackContainer(row =>
+			AddChild(Body = new GuiMultiStackContainer(row =>
+			{
+				row.ChildAnchor = Alignment.MiddleFill;
+				row.Margin = new Thickness(3);
+				row.Width = BodyMinWidth;
+				row.MinWidth = BodyMinWidth;
+			})
+			{
+				//Margin = new Thickness(0, Header.Height, 0, Footer.Height),
+
+				Orientation = Orientation.Vertical,
+				Anchor = Alignment.Fill,
+				ChildAnchor = Alignment.FillCenter,
+			});
+
+			AddChild(Footer = new GuiMultiStackContainer(row =>
                          {
                              row.Anchor = Alignment.BottomFill;
                              //row.Orientation = Orientation.Horizontal;
@@ -93,20 +108,7 @@ namespace Alex.GameStates.Gui.Common
                 ChildAnchor = Alignment.TopCenter
             });
 
-	        AddChild(Body = new GuiMultiStackContainer(row =>
-	                     {
-	                         row.ChildAnchor = Alignment.MiddleFill;
-                             row.Margin = new Thickness(3);
-	                         row.Width = BodyMinWidth;
-	                         row.MinWidth = BodyMinWidth;
-	                     })
-	        {
-	            Margin = new Thickness(0, Header.Height, 0, Footer.Height),
-                
-	            Orientation = Orientation.Vertical,
-		        Anchor = Alignment.Fill,
-		        ChildAnchor = Alignment.FillCenter,
-	        });
+			Body.Margin = new Thickness(0, Header.Height, 0, Footer.Height);
 		}
 
 		protected TGuiElement AddGuiElement<TGuiElement>(TGuiElement element) where TGuiElement : IGuiElement

@@ -13,7 +13,7 @@ namespace Alex.Networking.Java.Packets.Play
 
 		public ClientSettingsPacket()
 		{
-			PacketId = 0x03;
+			PacketId = 0x04;
 		}
 
 		public override void Decode(MinecraftStream stream)

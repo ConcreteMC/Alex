@@ -6,7 +6,7 @@ namespace Alex.Networking.Java.Packets.Play
 	{
 		public EntityHeadLook()
 		{
-			PacketId = 0x38;
+			PacketId = 0x39;
 		}
 
 		public int EntityId { get; set; }

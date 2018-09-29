@@ -219,10 +219,10 @@ namespace Alex.Networking.Java.Packets
 			Register(Direction.ServerBound, ConnectionState.Login, 0x02, () => new EncryptionResponsePacket());
 
 			//Register(Direction.ClientBound, ConnectionState.Login, 0x00, () => new LoginPluginMessagePacket());
-			Register(Direction.ClientBound, ConnectionState.Login, 0x01, () => new DisconnectPacket());
-			Register(Direction.ClientBound, ConnectionState.Login, 0x02, () => new EncryptionRequestPacket());
-			Register(Direction.ClientBound, ConnectionState.Login, 0x03, () => new LoginSuccessPacket());
-			Register(Direction.ClientBound, ConnectionState.Login, 0x04, () => new SetCompressionPacket());
+			Register(Direction.ClientBound, ConnectionState.Login, 0x00, () => new DisconnectPacket());
+			Register(Direction.ClientBound, ConnectionState.Login, 0x01, () => new EncryptionRequestPacket());
+			Register(Direction.ClientBound, ConnectionState.Login, 0x02, () => new LoginSuccessPacket());
+			Register(Direction.ClientBound, ConnectionState.Login, 0x03, () => new SetCompressionPacket());
 		}
 
 		private static void RegisterPlay()
@@ -244,23 +244,23 @@ namespace Alex.Networking.Java.Packets
 			});
 			Register(Direction.ClientBound, ConnectionState.Play, 0x19, () => new PluginMessagePacket());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x1E, () => new UnloadChunk());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x20, () => new KeepAlivePacket());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x21, () => new ChunkDataPacket());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x24, () => new JoinGamePacket());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x3C, () => new HeldItemChangePacket());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x2D, () => new PlayerAbilitiesPacket());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x2F, () => new PlayerListItemPacket());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x31, () => new PlayerPositionAndLookPacket());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x49, () => new TimeUpdatePacket());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x27, () => new EntityRelativeMove());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x28, () => new EntityLookAndRelativeMove());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x29, () => new EntityLook());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x38, () => new EntityHeadLook());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x3E, () => new EntityMetadataPacket());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x40, () => new EntityVelocity());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x51, () => new EntityPropertiesPacket());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x4F, () => new EntityTeleport());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x34, () => new DestroyEntitiesPacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x21, () => new KeepAlivePacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x22, () => new ChunkDataPacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x25, () => new JoinGamePacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x3D, () => new HeldItemChangePacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x2E, () => new PlayerAbilitiesPacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x30, () => new PlayerListItemPacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x32, () => new PlayerPositionAndLookPacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x4A, () => new TimeUpdatePacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x28, () => new EntityRelativeMove());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x29, () => new EntityLookAndRelativeMove());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x2A, () => new EntityLook());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x39, () => new EntityHeadLook());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x3F, () => new EntityMetadataPacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x41, () => new EntityVelocity());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x52, () => new EntityPropertiesPacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x50, () => new EntityTeleport());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x35, () => new DestroyEntitiesPacket());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x15, () => new WindowItems());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x17, () => new SetSlot());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x1C, () => new EntityStatusPacket());
@@ -269,6 +269,8 @@ namespace Alex.Networking.Java.Packets
 
 			Register(Direction.ClientBound, ConnectionState.Play, 0x10, () => new TabCompleteClientBound());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x1F, () => new ChangeGameStatePacket());
+
+			Register(Direction.ClientBound, ConnectionState.Play, 0x2F, () => new CombatEventPacket());
 		}
 	}
 }

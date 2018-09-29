@@ -10,7 +10,7 @@ namespace Alex.Networking.Java.Packets.Play
 
 		public PlayerLookPacket()
 		{
-			PacketId = 0x10;
+			PacketId = 0x12;
 		}
 
 		public override void Decode(MinecraftStream stream)

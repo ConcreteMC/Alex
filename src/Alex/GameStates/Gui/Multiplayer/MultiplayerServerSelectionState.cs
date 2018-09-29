@@ -242,7 +242,8 @@ namespace Alex.GameStates.Gui.Multiplayer
             ServerName = serverName;
             ServerAddress = serverAddress;
 
-			Margin = new Thickness(5, 5);
+			Margin = new Thickness(5, 5, 5, 5);
+			Padding = Thickness.One;
             Anchor = Alignment.TopFill;
 
             AddChild( _serverIcon = new GuiTextureElement()
@@ -252,7 +253,7 @@ namespace Alex.GameStates.Gui.Multiplayer
                 
                 Anchor = Alignment.TopLeft,
 
-                Background = GuiTextures.DefaultServerIcon
+                Background = GuiTextures.DefaultServerIcon,
             });
 
             AddChild(_pingStatus = new GuiConnectionPingIcon()
@@ -277,7 +278,8 @@ namespace Alex.GameStates.Gui.Multiplayer
             _textWrapper.AddChild(_serverMotd = new GuiTextElement()
             {
 				Text = "Pinging server...",
-				Margin = Thickness.Zero
+				Margin = new Thickness(0, 0, 5, 0),
+				
 				//Anchor = center
             });
         }
@@ -411,7 +413,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 	            if (!string.IsNullOrWhiteSpace(s.FaviconDataRaw))
 	            {
 		            var match = FaviconRegex.Match(s.FaviconDataRaw);
-		            if (match.Success)
+		            if (match.Success && _graphicsDevice != null)
 		            {
 			            using (MemoryStream ms = new MemoryStream(Convert.FromBase64String(match.Groups["data"].Value)))
 			            {

@@ -55,16 +55,16 @@
   <ItemGroup>
     <PackageReference Include="CoreCompat.System.Drawing.v2" Version="5.2.0-preview1-r131" />
     <PackageReference Include="CoreFNBT" Version="1.0.9" />
-    <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="1.0.0-alpha-26418-02" />
-    <PackageReference Include="MiNET" Version="1.0.1792">
+    <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="1.0.0-alpha-26707-01" />
+    <PackageReference Include="MiNET" Version="1.0.1812">
       <PrivateAssets></PrivateAssets>
       <ExcludeAssets></ExcludeAssets>
       <IncludeAssets></IncludeAssets>
     </PackageReference>
     <PackageReference Include="MonoGame.Framework.DesktopGL.Core" Version="3.7.0.7" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-    <PackageReference Include="NLog" Version="4.5.0" />
-    <PackageReference Include="NLog.Config" Version="4.5.0" />
+    <PackageReference Include="NLog" Version="4.5.6" />
+    <PackageReference Include="NLog.Config" Version="4.5.6" />
   </ItemGroup>
 
   <ItemGroup>

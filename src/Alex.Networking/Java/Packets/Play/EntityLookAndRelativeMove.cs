@@ -6,7 +6,7 @@ namespace Alex.Networking.Java.Packets.Play
 	{
 		public EntityLookAndRelativeMove()
 		{
-			PacketId = 0x28;
+			PacketId = 0x29;
 		}
 
 		public int EntityId { get; set; }

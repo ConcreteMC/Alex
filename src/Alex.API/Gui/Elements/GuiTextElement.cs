@@ -114,6 +114,12 @@ namespace Alex.API.Gui.Elements
 	        var text = _renderText;
             if (!string.IsNullOrWhiteSpace(text))
             {
+				/*var size = Font.MeasureString(text, Scale);
+				while (size.X > RenderBounds.Width && text.Length >= 1)
+				{
+					text = text.Substring(0, text.Length - 1);
+					size = Font.MeasureString(text, Scale);
+				}*/
 				graphics.DrawString(RenderPosition, text, Font, TextColor, FontStyle, Scale, Rotation, RotationOrigin, TextOpacity);
 			}
         }
@@ -132,7 +138,18 @@ namespace Alex.API.Gui.Elements
 		    }
 	    }
 
-	    private void OnTextUpdated()
+		protected override void GetPreferredSize(out Size size, out Size minSize, out Size maxSize)
+		{
+			base.GetPreferredSize(out size, out minSize, out maxSize);
+			var scale = new Vector2(Scale, Scale);
+
+			string text = _text;
+			var textSize = GetSize(text, scale);
+
+			size = new Size((int)Math.Floor(textSize.X), (int)Math.Floor(textSize.Y));
+		}
+
+		private void OnTextUpdated()
 	    {
 		    string text = _text;
 			if (Font != null && !string.IsNullOrWhiteSpace(text))
@@ -149,9 +166,18 @@ namespace Alex.API.Gui.Elements
 				var scale = new Vector2(Scale, Scale);
 
 				var textSize = GetSize(text, scale);
-				
-				Width = (int)Math.Floor(textSize.X);
-				Height = (int)Math.Floor(textSize.Y);
+
+					/*while (textSize.X > RenderBounds.Width)
+					{
+						if (string.IsNullOrWhiteSpace(text)) break;
+
+						text = text.Substring(0, text.Length - 1);
+						textSize = GetSize(text, scale);
+					}*/
+			
+					//PreferredSize = new Size((int)Math.Floor(textSize.X), (int)Math.Floor(textSize.Y));
+				//Width = (int)Math.Floor(textSize.X);
+				//Height = (int)Math.Floor(textSize.Y);
 
 				_renderText = text;
 

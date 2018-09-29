@@ -132,7 +132,7 @@ namespace Alex.API.Gui
 
                 ForEachScreen(screen =>
                 {
-                    screen.Draw(GuiSpriteBatch, gameTime);
+					screen.Draw(GuiSpriteBatch, gameTime);
 
                     DebugHelper.DrawScreen(screen);
                 });

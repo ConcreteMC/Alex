@@ -60,8 +60,20 @@ namespace Alex.API.Gui.Elements.Controls
             }
         }
 
+	    private bool _enabled = true;
 
-        public bool Enabled { get; set; } = true;
+	    public bool Enabled
+	    {
+		    get { return _enabled; }
+		    set
+		    {
+			    _enabled = value;
+			    OnEnabledChanged();
+		    }
+	    }
+
+		protected virtual void OnEnabledChanged() { }
+
         public bool Focused { get; private set; }
         public bool Highlighted { get; private set; }
 

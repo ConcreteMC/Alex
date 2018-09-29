@@ -21,32 +21,6 @@ namespace Alex.API.Gui.Elements.Controls
 		    set => TextElement.TranslationKey = value;
 	    }
 
-	    private bool _disabled = false;
-	    public bool Disabled
-	    {
-		    get => _disabled;
-		    set
-		    {
-			    //var oldValue = _disabled;
-			    Enabled = !value;
-			    _disabled = value;
-
-			    if (_isModern)
-			    {
-				    if (value)
-				    {
-					    TextElement.TextColor = TextColor.DarkGray;
-					    // TextElement.TextOpacity = 0.3f;
-				    }
-				    else
-				    {
-					    TextElement.TextColor = TextColor.White;
-					    TextElement.TextOpacity = 1f;
-				    }
-			    }
-		    }
-	    }
-
         protected GuiTextElement TextElement { get; }
         protected Action Action { get; }
 		
@@ -85,6 +59,9 @@ namespace Alex.API.Gui.Elements.Controls
 				TextOpacity = 0.875f,
 				FontStyle = FontStyle.DropShadow
             });
+
+	        Modern = true;
+
         }
 
 	    private bool _isModern = false;
@@ -97,7 +74,9 @@ namespace Alex.API.Gui.Elements.Controls
 			    {
 				    _isModern = true;
 
-				    Background = DisabledBackground = FocusedBackground = Color.Transparent;
+				    Background = Color.Transparent;// new Color(Color.Black * 0.25f, 0.25f) ;
+				    DisabledBackground = Color.Transparent;
+				    FocusedBackground = Color.TransparentBlack;
 
 				    HighlightedBackground = new Color(Color.Black * 0.8f, 0.5f);
 
@@ -140,12 +119,24 @@ namespace Alex.API.Gui.Elements.Controls
 
 	    protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
 	    {
-		    if (!Enabled && !_disabled)
-		    {
-			    Disabled = true;
-		    }
-
 		    base.OnDraw(graphics, gameTime);
+	    }
+
+	    protected override void OnEnabledChanged()
+	    {
+		    if (_isModern)
+		    {
+			    if (!Enabled)
+			    {
+				    TextElement.TextColor = TextColor.DarkGray;
+				    // TextElement.TextOpacity = 0.3f;
+			    }
+			    else
+			    {
+				    TextElement.TextColor = TextColor.White;
+				    TextElement.TextOpacity = 1f;
+			    }
+		    }
 	    }
     }
 }

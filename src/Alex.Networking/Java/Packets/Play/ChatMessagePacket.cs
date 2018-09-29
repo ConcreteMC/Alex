@@ -11,7 +11,7 @@ namespace Alex.Networking.Java.Packets.Play
 		public bool ServerBound = false;
 		public ChatMessagePacket()
 		{
-			PacketId = 0x01;
+			PacketId = 0x02;
 		}
 
 		public string Message;

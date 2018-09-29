@@ -235,7 +235,11 @@ namespace Alex
 
 						block.Name = entry.Key;
 						block.BlockState = variantState;
-						block.DisplayName = displayName;
+						if (string.IsNullOrWhiteSpace(block.DisplayName) ||
+						    !block.DisplayName.Contains("minet", StringComparison.InvariantCultureIgnoreCase))
+						{
+							block.DisplayName = displayName;
+						}
 
 						if (s.Default) //This is the default variant.
 						{
@@ -760,7 +764,27 @@ namespace Alex
 			else if (blockName == "minecraft:lilac" || blockName == "lilac") return new Lilac();
 			else if (blockName == "minecraft:rose_bush" || blockName == "rosebush") return new RoseBush();
 
-			else return null;
+			else
+			{
+				var minetblock = MiNET.Blocks.BlockFactory.GetBlockByName(blockName);
+				if (minetblock != null)
+				{ 
+					return new Block(minetblock.GetRuntimeId())
+					{
+						Solid = minetblock.IsSolid,
+						Name = minetblock.Name,
+						LightValue = minetblock.LightLevel,
+						Transparent = minetblock.IsTransparent,
+						IsReplacible = minetblock.IsReplacible,
+						Drag = minetblock.FrictionFactor,
+						DisplayName = "MiNET:" + blockName
+					};
+				}
+
+				return null;
+			}
+
+			//else return null;
 		}
 
 		private static Block Air { get; } = new Air();

@@ -6,7 +6,7 @@ namespace Alex.Networking.Java.Packets.Play
 	{
 		public ClientStatusPacket()
 		{
-			PacketId = 0x02;
+			PacketId = 0x03;
 		}
 
 		public Action ActionID;

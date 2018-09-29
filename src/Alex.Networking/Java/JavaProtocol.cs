@@ -6,7 +6,7 @@ namespace Alex.Networking.Java
 {
     public static class JavaProtocol
     {
-	    public const int ProtocolVersion = 387;
+	    public const int ProtocolVersion = 401;
 
     }
 }
