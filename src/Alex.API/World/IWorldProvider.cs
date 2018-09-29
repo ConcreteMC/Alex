@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Alex.API.Blocks.State;
+using Alex.API.Data;
+using Alex.API.Entities;
+using Alex.API.Utils;
 using Microsoft.Xna.Framework;
-using MiNET.Entities;
-using MiNET.Utils;
 
 namespace Alex.API.World
 {
@@ -11,7 +13,8 @@ namespace Alex.API.World
 	{
 		public delegate void ProgressReport(LoadingState state, int percentage);
 
-		private IWorldReceiver WorldReceiver { get; set; }
+		protected IWorldReceiver WorldReceiver { get; set; }
+		protected IChatReceiver ChatReceiver { get; set; }
 		protected WorldProvider()
 		{
 			
@@ -27,12 +30,7 @@ namespace Alex.API.World
 			WorldReceiver.ChunkUnload(x, z);
 		}
 
-		protected Vector3 GetPlayerPosition()
-		{
-			return WorldReceiver.RequestPlayerPosition();
-		}
-
-		protected void SpawnEntity(long entityId, Entity entity)
+		protected void SpawnEntity(long entityId, IEntity entity)
 		{
 			WorldReceiver.SpawnEntity(entityId, entity);
 		}
@@ -44,13 +42,14 @@ namespace Alex.API.World
 
 		public abstract Vector3 GetSpawnPoint();
 
-		protected abstract void Initiate();
+		protected abstract void Initiate(out LevelInfo info, out IChatProvider chatProvider);
 
-		public void Init(IWorldReceiver worldReceiver)
+		public void Init(IWorldReceiver worldReceiver, IChatReceiver chat, out LevelInfo info, out IChatProvider chatProvider)
 		{
 			WorldReceiver = worldReceiver;
+			ChatReceiver = chat;
 
-			Initiate();
+			Initiate(out info, out chatProvider);
 		}
 
 		public abstract Task Load(ProgressReport progressReport);
@@ -63,12 +62,21 @@ namespace Alex.API.World
 
 	public interface IWorldReceiver
 	{
-		Vector3 RequestPlayerPosition();
+		IEntity GetPlayerEntity();
 
 		void ChunkReceived(IChunkColumn chunkColumn, int x, int z, bool update);
 		void ChunkUnload(int x, int z);
 
-		void SpawnEntity(long entityId, Entity entity);
+		void SpawnEntity(long entityId, IEntity entity);
 		void DespawnEntity(long entityId);
-	}
+
+		void UpdatePlayerPosition(PlayerLocation location);
+		void UpdateEntityPosition(long entityId, PlayerLocation position, bool relative = false, bool updateLook = false);
+		bool TryGetEntity(long entityId, out IEntity entity);
+
+		void SetTime(long worldTime);
+		void SetRain(bool raining);
+
+		void SetBlockState(BlockCoordinates coordinates, IBlockState blockState);
+	};
 }

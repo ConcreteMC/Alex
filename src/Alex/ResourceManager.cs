@@ -1,151 +1,240 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Net;
+using Alex.API;
+using Alex.API.Json;
 using Alex.Entities;
+using Alex.Rendering;
 using Alex.ResourcePackLib;
 using Alex.Utils;
-using log4net;
 using Microsoft.Xna.Framework.Graphics;
-using ZipFile = ICSharpCode.SharpZipLib.Zip.ZipFile;
+using Newtonsoft.Json;
+using NLog;
 
 namespace Alex
 {
-    public class ResourceManager
-    {
-        private static readonly ILog Log = LogManager.GetLogger(typeof(ResourceManager));
+	public class ResourceManager
+	{
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ResourceManager));
 
-		public McResourcePack ResourcePack { get; private set; }
+		private LinkedList<McResourcePack> ActiveResourcePacks { get; } = new LinkedList<McResourcePack>();
+		public McResourcePack ResourcePack => ActiveResourcePacks.First.Value;
 		public BedrockResourcePack BedrockResourcePack { get; private set; }
-		public AtlasGenerator Atlas { get; private set; }
 
+		public AtlasGenerator Atlas { get; private set; }
+		
 		private GraphicsDevice Graphics { get; set; }
 
-	    public ResourceManager(GraphicsDevice graphics)
-	    {
-		    Graphics = graphics;
-		    Atlas = new AtlasGenerator(Graphics);
+		public ResourceManager(GraphicsDevice graphics)
+		{
+			Graphics = graphics;
+			Atlas = new AtlasGenerator(Graphics);
 		}
 
-	    private const string AssetVersion = "1.12"; //"18w07c";
-		private static readonly string ResourcePackDirectory = Path.Combine("assets", "resourcepacks");
-	    private static readonly string DefaultResourcePackPath = Path.Combine("assets", $"{AssetVersion}.zip");
-	    private static readonly string BedrockResourcePackPath = Path.Combine("assets", "bedrock.zip");
-		private byte[] DownloadDefaultResources()
-	    {
-		    var sw = new Stopwatch();
+		private static readonly string VersionFile = Path.Combine("assets", "version.txt");
+		private byte[] GetLatestAssets()
+		{
+			try
+			{
+				using (WebClient wc = new WebClient())
+				{
+					var rawJson = wc.DownloadString("https://launchermeta.mojang.com/mc/game/version_manifest.json?_t=" +
+					                                (long) (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds);
 
-		    Log.Info("Downloading vanilla Minecraft resources...");
-		    byte[] resourceData;
+					VersionManifest manifest = VersionManifest.FromJson(rawJson);
+					Version latestSnapshotVersion =
+						manifest.Versions.OrderByDescending(x => x.ReleaseTime.ToUnixTimeSeconds()).FirstOrDefault();
 
-		    sw.Start();
-		    using (var client = new WebClient())
-		    {
-			    resourceData =
-				    client.DownloadData(string.Format("https://s3.amazonaws.com/Minecraft.Download/versions/{0}/{0}.jar",
-					    AssetVersion));
-		    }
-		    sw.Stop();
+					Log.Info($"Using assets version {latestSnapshotVersion.Id}");
 
-		    Log.Info("Download took: " + Math.Round(sw.ElapsedMilliseconds / 1000D, 2) +
-		             " seconds to finish");
+					string savedPath = Path.Combine("assets", latestSnapshotVersion.Id + ".zip");
+					if (!File.Exists(savedPath))
+					{
+						Log.Info("Downloading latest vanilla Minecraft resources...");
+						LauncherMeta meta = LauncherMeta.FromJson(wc.DownloadString(latestSnapshotVersion.Url));
+						byte[] clientData = wc.DownloadData(meta.Downloads.Client.Url);
 
-		    Log.Info("Saving default resources...");
-		    File.WriteAllBytes(DefaultResourcePackPath, resourceData);
-		    return resourceData; 
-		}
+						File.WriteAllBytesAsync(savedPath, clientData);
+						File.WriteAllTextAsync(VersionFile, savedPath);
 
-	    private McResourcePack LoadResourcePack(GraphicsDevice graphics, Stream stream, bool replaceModels = false, bool replaceTextures = false, bool reportMissingModels = false)
-	    {
-		    McResourcePack resourcePack = null;
+						return clientData;
+					}
+					else
+					{
+						var data = File.ReadAllBytes(savedPath);
 
-			using (var archive = new ZipArchive(stream))
-		    {
-			    resourcePack = new McResourcePack(archive);
-			    if (!replaceTextures)
-			    {
-				    Atlas.LoadResourcePackOnTop(graphics, archive);
-			    }
-			    else
-			    {
-				    Atlas.GenerateAtlas(graphics, archive);
-			    }
+						if (!File.Exists(VersionFile))
+							File.WriteAllTextAsync(VersionFile, savedPath);
 
-				Stopwatch sw = Stopwatch.StartNew();
-				int imported = BlockFactory.LoadResources(this, resourcePack, replaceModels, reportMissingModels);
-				sw.Stop();
-
-				Log.Info($"Imported {imported} blockstates from resourcepack in {sw.ElapsedMilliseconds}ms!");
+						return data;
+					}
+				}
+			}
+			catch
+			{
+				Log.Warn($"Failed to check for latest assets!");
+				if (File.Exists(VersionFile))
+				{
+					string content = File.ReadAllText(VersionFile);
+					if (File.Exists(content))
+					{
+						return File.ReadAllBytes(content);
+					}
+				}
 			}
 
-		    return resourcePack;
-	    }
+			return null;
+		}
 
-        public bool CheckResources(GraphicsDevice device, Settings setings)
-        {
-	        if (!Directory.Exists("assets"))
-				Directory.CreateDirectory("assets");
+		private McResourcePack LoadResourcePack(IProgressReceiver progressReceiver, GraphicsDevice graphics, Stream stream, bool replaceModels = false,
+			bool replaceTextures = false, bool reportMissingModels = false, McResourcePack.McResourcePackPreloadCallback preloadCallback = null)
+		{
+			McResourcePack resourcePack = null;
+
+			using (var archive = new ZipArchive(stream, ZipArchiveMode.Read, false))
+			{
+				resourcePack = new McResourcePack(archive, graphics, preloadCallback);
+			}
+
+			Log.Info($"Loaded {resourcePack.BlockModels.Count} block models from resourcepack");
+			Log.Info($"Loaded {resourcePack.ItemModels.Count} item models from resourcepack");
+
+			if (!replaceTextures)
+			{
+				Atlas.LoadResourcePackOnTop(resourcePack.TexturesAsBitmaps.Where(x => x.Key.StartsWith("block")).ToArray(),
+					progressReceiver);
+			}
+			else
+			{
+				Atlas.GenerateAtlas(resourcePack.TexturesAsBitmaps.Where(x => x.Key.StartsWith("block")).ToArray(),
+					progressReceiver);
+			}
+
+			Stopwatch sw = Stopwatch.StartNew();
+			int imported = BlockFactory.LoadResources(this, resourcePack, replaceModels, reportMissingModels, progressReceiver);
+			sw.Stop();
+
+			Log.Info($"Imported {imported} blockstate variants from resourcepack in {sw.ElapsedMilliseconds}ms!");
+
+			ItemFactory.Init(this, resourcePack);
+
+			var language = resourcePack.Languages.Values.FirstOrDefault();
+			if (language != null)
+			{
+				foreach (var translation in language)
+				{
+					ChatParser.TranslationRules[translation.Key] = translation.Value;
+				}
+			}
+
+			return resourcePack;
+		}
+
+		private static string Root = "assets";
+		private static readonly string ResourcePackDirectory = Path.Combine(Root, "resourcepacks");
+		private static readonly string BedrockResourcePackPath = Path.Combine(Root, "bedrock.zip");
+
+		private bool CheckRequiredPaths(out byte[] javaResources, out byte[] bedrockResources)
+		{
+			if (!Directory.Exists(Root))
+			{
+				Directory.CreateDirectory(Root);
+			}
 
 			if (!Directory.Exists(ResourcePackDirectory))
 			{
 				Directory.CreateDirectory(ResourcePackDirectory);
 			}
 
-	        byte[] defaultResources;
-	        if (!File.Exists(DefaultResourcePackPath))
-	        {
-		        defaultResources = DownloadDefaultResources();
-	        }
-	        else
-	        {
-		        defaultResources = File.ReadAllBytes(DefaultResourcePackPath);
-	        }
+			if (!File.Exists(BedrockResourcePackPath))
+			{
+				Log.Error(
+					$"Missing bedrock edition resources! Please put a copy of the bedrock resources in a zip archive with the path '{BedrockResourcePackPath}'");
+				javaResources = null;
+				bedrockResources = null;
+				return false;
+			}
 
-	        Log.Info($"Loading vanilla resourcepack...");
-	        using (MemoryStream stream = new MemoryStream(defaultResources))
-	        {
-		        ResourcePack = LoadResourcePack(device, stream, true, true, true);
-	        }
+			try
+			{
+				javaResources = GetLatestAssets();
+				if (javaResources == null)
+				{
+					Log.Error($"Could not load any assets! Are you connected to the internet?");
 
-			 if (File.Exists(BedrockResourcePackPath))
-			 {
-				 Log.Info($"Loading bedrock resources...");
-				 BedrockResourcePack = new BedrockResourcePack(File.ReadAllBytes(BedrockResourcePackPath));
-			 }
-			 else
-			 {
-				 Log.Error($"Could not start, missing bedrock resources! Please place 'bedrock.zip' in the assets folder!");
-				 return false;
-			 }
+					javaResources = null;
+					bedrockResources = null;
+					return false;
+				}
+			}
+			catch (Exception ex)
+			{
+				Log.Error(ex, $"Could not check for latests assets! Do you have a internet connection up?");
+				javaResources = null;
+				bedrockResources = null;
+				return false;
+			}
 
-		//	Log.Info($"Loading bedrock resources...");
-	        //BedrockResourcePack = new BedrockResourcePack(Resources.bedrock);
+			bedrockResources = File.ReadAllBytes(BedrockResourcePackPath);
 
-			EntityFactory.LoadModels(this, device, true);
+			return true;
+		}
+
+		public bool CheckResources(GraphicsDevice device, Settings setings, IProgressReceiver progressReceiver, McResourcePack.McResourcePackPreloadCallback preloadCallback)
+		{
+			byte[] defaultResources;
+			byte[] bedrockResources;
+
+			if (!CheckRequiredPaths(out defaultResources, out bedrockResources))
+			{
+				return false;
+			}
+
+			Log.Info($"Loading vanilla resources...");
+			using (MemoryStream stream = new MemoryStream(defaultResources))
+			{
+				ActiveResourcePacks.AddFirst(LoadResourcePack(progressReceiver, device, stream, true, true, true, preloadCallback));
+			}
+
+			//report(ResourcePack.AsciiFont);
+
+			Log.Info($"Loading bedrock resources...");
+			BedrockResourcePack = new BedrockResourcePack(bedrockResources);
+
+			EntityFactory.LoadModels(this, device, true, progressReceiver);
+
+
+			Log.Info($"Loading known entity data...");
+			EntityFactory.Load();
 
 			foreach (string file in setings.ResourcePacks)
-	        {
-		        try
-		        {
-			        string resourcePackPath = Path.Combine(ResourcePackDirectory, file);
-			        if (File.Exists(resourcePackPath))
-			        {
-				        Log.Info($"Loading resourcepack {file}...");
+			{
+				try
+				{
+					string resourcePackPath = Path.Combine(ResourcePackDirectory, file);
+					if (File.Exists(resourcePackPath))
+					{
+						Log.Info($"Loading resourcepack {file}...");
 
-				        using (FileStream stream = new FileStream(resourcePackPath, FileMode.Open))
-				        {
-					        LoadResourcePack(device, stream, true, false);
-				        }
-			        }
-		        }
-		        catch (Exception e)
-		        {
-					Log.Warn($"Could not load resourcepack {file}!", e);
-		        }
-	        }
+						using (FileStream stream = new FileStream(resourcePackPath, FileMode.Open))
+						{
+							ActiveResourcePacks.AddLast(LoadResourcePack(progressReceiver, device, stream, true, false, false, preloadCallback));
+						}
+					}
+				}
+				catch (Exception e)
+				{
+					Log.Warn(e, $"Could not load resourcepack {file}!");
+				}
+			}
 
-	        return true;
-        }
-    }
+			return true;
+		}
+	}
 }

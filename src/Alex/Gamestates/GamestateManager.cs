@@ -1,178 +1,197 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Threading;
-using log4net;
+using System.Collections.Generic;
+using Alex.API.GameStates;
+using Alex.API.Gui;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using NLog;
 
-namespace Alex.Gamestates
+namespace Alex.GameStates
 {
-    public class GamestateManager
+    public class GameStateManager
     {
-        private static readonly ILog Log = LogManager.GetLogger(typeof(GamestateManager));
-        
-        private ConcurrentDictionary<string, Gamestate> ActiveStates { get; }
-        private Gamestate ActiveState { get; set; }
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(GameStateManager));
+
+		private ConcurrentDictionary<string, IGameState> States { get; }
+
+		private LinkedList<IGameState> History { get; } = new LinkedList<IGameState>();
+
+        private IGameState ActiveState { get; set; }
 
         private GraphicsDevice Graphics { get; }
         private SpriteBatch SpriteBatch { get; }
-
-		private ReaderWriterLockSlim Lock = new ReaderWriterLockSlim();
-        public GamestateManager(GraphicsDevice graphics, SpriteBatch spriteBatch)
-        {
+		
+	    public GuiManager GuiManager { get; private set; }
+        public GameStateManager(GraphicsDevice graphics, SpriteBatch spriteBatch, GuiManager guiManager)
+        { 
             Graphics = graphics;
             SpriteBatch = spriteBatch;
+	        GuiManager = guiManager;
 
-            ActiveStates = new ConcurrentDictionary<string, Gamestate>();
-        }
+            States = new ConcurrentDictionary<string, IGameState>();
+		}
 
-        public void AddState(string name, Gamestate state)
+	    public void Back()
+	    {
+		    var last = History.Last;
+			if (History.Last != null)
+			{
+				var prev = last.Value;
+				if (prev != ActiveState)
+				{
+					History.RemoveLast();
+					SetActiveState(prev, false);
+				}
+			}
+	    }
+
+	    public void AddState<TStateType>(string name) where TStateType : class, IGameState, new()
+	    {
+			AddState(name, new TStateType());
+	    }
+
+        public void AddState(string name, IGameState state)
         {
-            state.Init(new RenderArgs()
+            state.Load(new RenderArgs()
             {
                 SpriteBatch = SpriteBatch,
                 GraphicsDevice = Graphics,
                 GameTime = new GameTime()
             });
 
-            ActiveStates.AddOrUpdate(name, state, (s, gamestate) =>
+            States.AddOrUpdate(name, state, (s, gamestate) =>
             {
                 return state;
             });
         }
 
-        public bool RemoveState(string name)
+	    public bool RemoveState(string name)
+	    {
+		    IGameState state;
+		    if (States.TryRemove(name, out state))
+		    {
+			    if (ActiveState == state)
+			    {
+				    var parent = state.ParentState;
+				    if (parent == null)
+				    {
+					    SetActiveState((IGameState) null);
+					}
+				    else
+				    {
+					  //  SetActiveState(state.ParentState);
+				    }
+			    }
+
+			    state.Unload();
+			    return true;
+		    }
+
+		    return false;
+	    }
+	    public bool SetActiveState<TStateType>(string key) where TStateType : IGameState, new()
+	    {
+		    if (!States.TryGetValue(key, out var state))
+		    {
+			    state = new TStateType();
+			    AddState(key, state);
+		    }
+
+		    return SetActiveState(state);
+	    }
+
+	    public bool SetActiveState<TStateType>() where TStateType : IGameState, new()
+	    {
+		    var key = typeof(TStateType).FullName;
+		    return SetActiveState<TStateType>(key);
+	    }
+
+	    public bool SetActiveState(IGameState state, bool keepHistory = true)
+	    {
+		    var current = ActiveState;
+		    current?.Hide();
+
+		    if (current != null && state != null && state.ParentState == null)
+		    {
+			    state.ParentState = current;
+		    }
+
+		    ActiveState = state;
+		    ActiveState?.Show();
+
+		    if (History.Last?.Previous?.Value != state && keepHistory)
+		    {
+			    History.AddLast(current);
+		    }
+
+		    _activeStateDoubleBuffer = state;
+
+		    return true;
+	    }
+
+	    public bool SetActiveState(string name)
         {
-            Gamestate state;
-            if (ActiveStates.TryRemove(name, out state))
-            {
-				// lock (_lock)
-				Lock.EnterUpgradeableReadLock();
-	            try
-	            {
-		            if (ActiveState == state)
-		            {
-						Lock.EnterWriteLock();
-			            try
-			            {
-				            ActiveState = null;
-			            }
-			            finally
-			            {
-							Lock.ExitWriteLock();
-			            }
-		            }
-	            }
-	            finally
-	            {
-					Lock.ExitUpgradeableReadLock();
-	            }
-
-	            state.Stop();
-				return true;
-            }
-            return false;
-        }
-
-        public bool SetActiveState(Gamestate state)
-        {
-			Lock.EnterWriteLock();
-	        try
-	        {
-		        ActiveState = state;
-	        }
-	        finally
-	        {
-		        Lock.ExitWriteLock();
-	        }
-
-	        return true;
-        }
-
-        public bool SetActiveState(string name)
-        {
-            Gamestate state;
-            if (!ActiveStates.TryGetValue(name, out state))
+	        IGameState state;
+            if (!States.TryGetValue(name, out state))
             {
                 return false;
             }
 
-            Lock.EnterWriteLock();
-	        try
-	        {
-		        ActiveState = state;
-	        }
-	        finally
-	        {
-				Lock.ExitWriteLock();
-	        }
-            return true;
+	        return SetActiveState(state);
         }
 
-        public void Draw(GameTime gameTime)
-        {
-	        Gamestate activeState;
-			Lock.EnterReadLock();
-	        try
-	        {
-		        activeState = ActiveState;
-	        }
-	        finally
-	        {
-				Lock.ExitReadLock();
-	        }
+	    private IGameState _activeStateDoubleBuffer = null;
 
-          //  lock (_lock)
-            {
-                if (activeState == null) return;
+	    public void Draw(GameTime gameTime)
+	    {
+		    IGameState activeState = _activeStateDoubleBuffer;
 
-                try
-                {
-                    RenderArgs args = new RenderArgs()
-                    {
-                        SpriteBatch = SpriteBatch,
-                        GameTime = gameTime,
-                        GraphicsDevice = Graphics
-                    };
+		    if (activeState == null) return;
 
-	                activeState.Rendering3D(args);
-	                activeState.Rendering2D(args);
-                }
-                catch (Exception ex)
-                {
-                    Log.Warn("An exception occured while trying to render!", ex);
-                }
-            }
-        }
+		    try
+		    {
+			    RenderArgs args = new RenderArgs()
+			    {
+				    SpriteBatch = SpriteBatch,
+				    GameTime = gameTime,
+				    GraphicsDevice = Graphics
+			    };
 
-        public void Update(GameTime gameTime)
-		{
-			Gamestate activeState;
-			Lock.EnterReadLock();
-			try
-			{
-				activeState = ActiveState;
-			}
-			finally
-			{
-				Lock.ExitReadLock();
-			}
+			    activeState.Draw(args);
+		    }
+		    catch (Exception ex)
+		    {
+			    Log.Warn(ex, $"An exception occured while trying to render: {ex.ToString()}");
+		    }
+	    }
 
-			// foreach (var i in ActiveStates.ToArray())
-			{
-                try
-				{
-					// lock (_lock)
-					{
-	                    activeState.UpdateCall(gameTime);
-                    }
-                   // i.Value.UpdateCall(gameTime);
-                }
-                catch(Exception ex)
-                {
-                    Log.Warn($"An exception occured while trying to call Update!", ex);
-                }
-            }
-        }
-    }
+	    public void Update(GameTime gameTime)
+	    {
+		    IGameState activeState = _activeStateDoubleBuffer;
+
+		    if (activeState == null) return;
+
+		    try
+		    {
+			 //   var parent = activeState.ParentState;
+
+			//	if (parent != null)
+			//    {
+			//		parent.Update(gameTime);
+			 //   }
+
+			    activeState.Update(gameTime);
+		    }
+		    catch (Exception ex)
+		    {
+			    Log.Warn(ex, $"An exception occured while trying to call Update: {ex.ToString()}!");
+		    }
+	    }
+
+	    public IGameState GetActiveState()
+	    {
+		    return ActiveState;
+	    }
+	}
 }

@@ -1,14 +1,20 @@
 ﻿using System;
+using Alex.API.Blocks.State;
 using Alex.API.Graphics;
+using Alex.API.Utils;
 using Alex.API.World;
+using Alex.Blocks;
 using Alex.Rendering;
 using Microsoft.Xna.Framework;
-using MiNET.Utils;
+
 
 namespace Alex.Worlds
 {
 	public class CachedWorld : IWorld, IDisposable
 	{
+		public TickManager Ticker { get; }
+		public LevelInfo WorldInfo { get; set; } = new LevelInfo();
+
 		public int Vertices => 0;
 
 		public int ChunkCount => 0;
@@ -18,27 +24,8 @@ namespace Alex.Worlds
 		internal ChunkManager ChunkManager { get; }
 		public CachedWorld(Alex alex)
 		{
-			ChunkManager = new ChunkManager(alex, alex.GraphicsDevice, null, this);
-		}
-
-		public bool IsSolid(Vector3 location)
-		{
-			return IsSolid(location.X, location.Y, location.Z);
-		}
-
-		public bool IsSolid(float x, float y, float z)
-		{
-			return GetBlock(x, y, z).Solid;
-		}
-
-		public bool IsTransparent(Vector3 location)
-		{
-			return IsTransparent(location.X, location.Y, location.Z);
-		}
-
-		public bool IsTransparent(float x, float y, float z)
-		{
-			return GetBlock(x, y, z).Transparent;
+			ChunkManager = new ChunkManager(alex, alex.GraphicsDevice, this);
+			Ticker = new TickManager(this);
 		}
 
 		public byte GetSkyLight(Vector3 position)
@@ -84,6 +71,11 @@ namespace Alex.Worlds
 			return 15;
 		}
 
+		public IBlock GetBlock(BlockCoordinates position)
+		{
+			return GetBlock(position.X, position.Y, position.Z);
+		}
+
 		public IBlock GetBlock(Vector3 position)
 		{
 			return GetBlock(position.X, position.Y, position.Z);
@@ -101,7 +93,7 @@ namespace Alex.Worlds
 			{
 				return chunk.GetBlock(x & 0xf, y & 0xff, z & 0xf);
 			}
-			return BlockFactory.GetBlock(0, 0);
+			return BlockFactory.GetBlock(0);
 		}
 
 		public void SetBlock(float x, float y, float z, IBlock block)
@@ -116,6 +108,26 @@ namespace Alex.Worlds
 			{
 				chunk.SetBlock(x & 0xf, y & 0xff, z & 0xf, block);
 			}
+		}
+
+		public void SetBlockState(int x, int y, int z, IBlockState block)
+		{
+			IChunkColumn chunk;
+			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
+			{
+				chunk.SetBlockState(x & 0xf, y & 0xff, z & 0xf, block);
+			}
+		}
+
+		public IBlockState GetBlockState(int x, int y, int z)
+		{
+			IChunkColumn chunk;
+			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
+			{
+				return chunk.GetBlockState(x & 0xf, y & 0xff, z & 0xf);
+			}
+
+			return new Air().GetDefaultState();
 		}
 
 		public int GetBiome(int x, int y, int z)

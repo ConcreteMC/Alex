@@ -1,68 +1,109 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Threading;
-using Alex.Gamestates;
-using log4net;
+using Alex.API;
+using Alex.API.Data.Servers;
+using Alex.API.Graphics;
+using Alex.API.Graphics.Typography;
+using Alex.API.Gui;
+using Alex.API.Input;
+using Alex.API.Localization;
+using Alex.API.Network;
+using Alex.API.Services;
+using Alex.API.World;
+using Alex.GameStates;
+using Alex.GameStates.Gui.MainMenu;
+using Alex.GameStates.Playing;
+using Alex.Gui;
+using Alex.Rendering;
+using Alex.ResourcePackLib;
+using Alex.Services;
+using Alex.Utils;
+using Alex.Worlds.Java;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Content.Pipeline.Graphics;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Newtonsoft.Json;
+using NLog;
 
 namespace Alex
 {
 	public partial class Alex : Microsoft.Xna.Framework.Game
 	{
-		private static ILog Log = LogManager.GetLogger(typeof(Alex));
+		//private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Alex));
 
 		public static string DotnetRuntime { get; } =
 			$"{System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription}";
 
-		public static string Version = "1.0";
+		public const string Version = "1.0 DEV";
 		public static string Username { get; set; }
+		public static string UUID { get; set; }
+		public static string AccessToken { get; set; }
 		public static IPEndPoint ServerEndPoint { get; set; }
 		public static bool IsMultiplayer { get; set; } = false;
 
-		public static SpriteFont Font;
+		public static IFont Font;
+		public static IFont DebugFont;
 
 		private SpriteBatch _spriteBatch;
 
 		public static Alex Instance { get; private set; }
-		public GamestateManager GamestateManager { get; private set; }
+		public GameStateManager GameStateManager { get; private set; }
+
 		public ResourceManager Resources { get; private set; }
 
-		public Alex()
+		public InputManager InputManager { get; private set; }
+		public GuiRenderer GuiRenderer { get; private set; }
+		public GuiManager GuiManager { get; private set; }
+
+		private bool BypassTitleState { get; set; } = false;
+
+		public GraphicsDeviceManager DeviceManager { get; }
+
+		public Alex(LaunchSettings launchSettings)
 		{
+			if (launchSettings.Server != null)
+			{
+				ServerEndPoint = launchSettings.Server;
+				if (launchSettings.ConnectOnLaunch)
+				{
+					IsMultiplayer = true;
+					BypassTitleState = true;
+				}
+			}
+
+			Username = launchSettings.Username;
+			AccessToken = launchSettings.AccesToken;
+			UUID = launchSettings.UUID;
+
 			Instance = this;
 
-			var graphics = new GraphicsDeviceManager(this)
+			DeviceManager = new GraphicsDeviceManager(this)
 			{
 				PreferMultiSampling = false,
 				SynchronizeWithVerticalRetrace = false,
-				GraphicsProfile = GraphicsProfile.Reach
+				GraphicsProfile = GraphicsProfile.HiDef,
 			};
+			Content.RootDirectory = "assets";
 
-			Content.RootDirectory = "assets"; 
+			IsFixedTimeStep = false;
+           // graphics.ToggleFullScreen();
+			
 			this.Window.AllowUserResizing = true;
 			this.Window.ClientSizeChanged += (sender, args) =>
 			{
-				if (graphics.PreferredBackBufferWidth != Window.ClientBounds.Width ||
-				    graphics.PreferredBackBufferHeight != Window.ClientBounds.Height)
+				if (DeviceManager.PreferredBackBufferWidth != Window.ClientBounds.Width ||
+				    DeviceManager.PreferredBackBufferHeight != Window.ClientBounds.Height)
 				{
-					graphics.PreferredBackBufferWidth = Window.ClientBounds.Width;
-					graphics.PreferredBackBufferHeight = Window.ClientBounds.Height;
-					graphics.ApplyChanges();
+					DeviceManager.PreferredBackBufferWidth = Window.ClientBounds.Width;
+					DeviceManager.PreferredBackBufferHeight = Window.ClientBounds.Height;
+					DeviceManager.ApplyChanges();
 				}
 			};
-
-
-			IsFixedTimeStep = false;
-			//   _graphics.ToggleFullScreen();
-
-			Username = "";
-			
 		}
 
 		public static EventHandler<TextInputEventArgs> OnCharacterInput;
@@ -72,16 +113,10 @@ namespace Alex
 			OnCharacterInput?.Invoke(this, e);
 		}
 
-		public void Init()
-		{
-
-		}
-
 		public void SaveSettings()
 		{
 			if (GameSettings.IsDirty)
 			{
-				Log.Info($"Saving settings...");
 				File.WriteAllText("settings.json", JsonConvert.SerializeObject(GameSettings, Formatting.Indented));
 			}
 		}
@@ -91,17 +126,20 @@ namespace Alex
 		protected override void Initialize()
 		{
 			Window.Title = "Alex - " + Version;
-
+			
 			if (File.Exists("settings.json"))
 			{
 				try
 				{
 					GameSettings = JsonConvert.DeserializeObject<Settings>(File.ReadAllText("settings.json"));
-					Username = GameSettings.Username;
+					if (string.IsNullOrEmpty(Username))
+					{
+						Username = GameSettings.Username;
+					}
 				}
 				catch (Exception ex)
 				{
-					Log.Warn($"Failed to load settings!", ex);
+				//	Log.Warn(ex, $"Failed to load settings!");
 				}
 			}
 			else
@@ -118,14 +156,38 @@ namespace Alex
 
 		protected override void LoadContent()
 		{
+		//	if (!File.Exists(Path.Combine("assets", "DebugFont.xnb")))
+		//	{
+		//		File.WriteAllBytes(Path.Combine("assets", "DebugFont.xnb"), global::Alex.Resources.DebugFont);
+		//	}
+			//DebugFont = (WrappedSpriteFont) Content.Load<SpriteFont>("DebugFont");
+			DebugFont = (WrappedSpriteFont) Content.Load<SpriteFont>(global::Alex.Resources.DebugFont);
+			
 			_spriteBatch = new SpriteBatch(GraphicsDevice);
-			GamestateManager = new GamestateManager(GraphicsDevice, _spriteBatch);
+			InputManager = new InputManager(this);
+			GuiRenderer = new GuiRenderer(this);
+			GuiManager = new GuiManager(this, InputManager, GuiRenderer);
+			OnCharacterInput += GuiManager.FocusManager.OnTextInput;
 
-			GamestateManager.AddState("splash", new SplashScreen(GraphicsDevice));
-			GamestateManager.SetActiveState("splash");
+			GameStateManager = new GameStateManager(GraphicsDevice, _spriteBatch, GuiManager);
 
-			Log.Info($"Initializing Alex...");
-			ThreadPool.QueueUserWorkItem(o => { InitializeGame(); });
+			var splash = new SplashScreen();
+			GameStateManager.AddState("splash", splash);
+			GameStateManager.SetActiveState("splash");
+
+		//	Log.Info($"Initializing Alex...");
+			ThreadPool.QueueUserWorkItem(o => { InitializeGame(splash); });
+		}
+
+		private void ConfigureServices()
+		{
+			var storage = new AppDataStorageSystem();
+			Services.AddService<IStorageSystem>(storage);
+			Services.AddService<IOptionsProvider>(new OptionsProvider(storage));
+
+			Services.AddService<IListStorageProvider<SavedServerEntry>>(new SavedServerDataProvider(storage));
+
+			Services.AddService<IServerQueryProvider>(new ServerQueryProvider());
 		}
 
 		protected override void UnloadContent()
@@ -135,51 +197,99 @@ namespace Alex
 
 		protected override void Update(GameTime gameTime)
 		{
-			GamestateManager.Update(gameTime);
 			base.Update(gameTime);
+			
+			InputManager.Update(gameTime);
+
+			GuiManager.Update(gameTime);
+			GameStateManager.Update(gameTime);
 		}
 
 		protected override void Draw(GameTime gameTime)
 		{
 			GraphicsDevice.RasterizerState = RasterizerState.CullClockwise;
-			GraphicsDevice.Clear(Color.SkyBlue);
+			GameStateManager.Draw(gameTime);
 
-			GamestateManager.Draw(gameTime);
+			GuiManager.Draw(gameTime);
 
 			base.Draw(gameTime);
 		}
 
-		private void InitializeGame()
+		private void InitializeGame(IProgressReceiver progressReceiver)
 		{
+			progressReceiver.UpdateProgress(0, "Initializing...");
+			ConfigureServices();
+
 			Extensions.Init(GraphicsDevice);
 
-			if (!File.Exists(Path.Combine("assets", "Minecraftia.xnb")))
-			{
-				File.WriteAllBytes(Path.Combine("assets", "Minecraftia.xnb"), global::Alex.Resources.Minecraftia1);
-			}
-
-			Font = Content.Load<SpriteFont>("Minecraftia");
-			//var shader = Content.Load<EffectContent>(Path.Combine("shaders", "hlsl", "renderchunk.vertex"));
-			
-			Log.Info($"Loading blockstate metadata...");
-			BlockFactory.Init();
-
-			Log.Info($"Loading resources...");
+			//	Log.Info($"Loading resources...");
 			Resources = new ResourceManager(GraphicsDevice);
-			if (!Resources.CheckResources(GraphicsDevice, GameSettings))
+			if (!Resources.CheckResources(GraphicsDevice, GameSettings, progressReceiver, OnResourcePackPreLoadCompleted))
 			{
 				Exit();
 				return;
 			}
 
-			Mouse.SetPosition(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2);
+			//Mouse.SetPosition(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2);
 
-			GamestateManager.AddState("login", new LoginState(this));
-			GamestateManager.SetActiveState("login");
+			GuiRenderer.LoadResourcePack(Resources.ResourcePack);
 
-			GamestateManager.RemoveState("splash");
+			GameStateManager.AddState<TitleState>("title"); 
+			GameStateManager.AddState("options", new OptionsState());
 
-			Log.Info($"Game initialized!");
+			if (!BypassTitleState)
+			{
+				GameStateManager.SetActiveState<TitleState>("title");
+			}
+			else
+			{
+				ConnectToServer();
+			}
+
+			GameStateManager.RemoveState("splash");
 		}
+
+		private void OnResourcePackPreLoadCompleted(IFont font)
+		{
+			Font = font;
+
+			GuiManager.ApplyFont(font);
+		}
+
+		public void ConnectToServer()
+		{
+			ConnectToServer(ServerEndPoint);
+		}
+
+		public void ConnectToServer(IPEndPoint serverEndPoint)
+		{
+			IsMultiplayer = true;
+
+			var javaProvider = new JavaWorldProvider(this, serverEndPoint, Username, UUID, AccessToken, out INetworkProvider networkProvider);
+
+			LoadWorld(javaProvider, networkProvider);
+		}
+
+		public void LoadWorld(WorldProvider worldProvider, INetworkProvider networkProvider)
+		{
+			PlayingState playState = new PlayingState(this, GraphicsDevice, worldProvider, networkProvider);
+			GameStateManager.AddState("play", playState);
+
+			LoadingWorldState loadingScreen = new LoadingWorldState();
+			GameStateManager.AddState("loading", loadingScreen);
+			GameStateManager.SetActiveState("loading");
+
+			worldProvider.Load(loadingScreen.UpdateProgress).ContinueWith(task =>
+			{
+				GameStateManager.SetActiveState("play");
+
+				GameStateManager.RemoveState("loading");
+			});
+		}
+	}
+
+	public interface IProgressReceiver
+	{
+		void UpdateProgress(int percentage, string statusMessage);
 	}
 }

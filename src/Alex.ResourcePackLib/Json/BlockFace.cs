@@ -1,4 +1,6 @@
 ﻿using System;
+using Alex.API.Utils;
+using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -14,5 +16,50 @@ namespace Alex.ResourcePackLib.Json
 		North = 4,
 		South = 5,
 		None = 255,
+	}
+
+	public static class BlockFaceHelper
+	{
+		public static Vector3 GetVector3(this BlockFace face)
+		{
+			switch (face)
+			{
+				case BlockFace.Down:
+					return Vector3.Down;
+				case BlockFace.Up:
+					return Vector3.Up;
+				case BlockFace.East:
+					return Vector3.Right;
+				case BlockFace.West:
+					return Vector3.Left;
+				case BlockFace.North:
+					return Vector3.Forward;
+				case BlockFace.South:
+					return Vector3.Backward;
+				default:
+					return Vector3.Zero;
+			}
+		}
+
+		public static BlockCoordinates GetBlockCoordinates(this BlockFace face)
+		{
+			switch (face)
+			{
+				case BlockFace.Down:
+					return BlockCoordinates.Down;
+				case BlockFace.Up:
+					return BlockCoordinates.Up;
+				case BlockFace.East:
+					return BlockCoordinates.Right;
+				case BlockFace.West:
+					return BlockCoordinates.Left;
+				case BlockFace.North:
+					return BlockCoordinates.Forwards;
+				case BlockFace.South:
+					return BlockCoordinates.Backwards;
+				default:
+					return BlockCoordinates.Zero;
+			}
+		}
 	}
 }

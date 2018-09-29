@@ -1,19 +1,19 @@
-﻿using Alex.API.Blocks.State;
+﻿using Alex.API.Blocks;
+using Alex.API.Blocks.State;
 using Alex.API.Graphics;
+using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 
 namespace Alex.API.World
 {
 	public interface IBlock
 	{
-		uint BlockStateID { get; }
-		int BlockId { get; }
-		byte Metadata { get; }
 		bool Solid { get; set; }
 		bool Transparent { get; set; }
 		bool Renderable { get; set; }
 		bool HasHitbox { get; set; }
 		float Drag { get; set; }
+		string Name { get; set; }
 		string DisplayName { get; set; }
 		bool IsBlockNormalCube { get; set; }
 		bool IsFullCube { get; set; }
@@ -26,10 +26,11 @@ namespace Alex.API.World
 		int LightValue { get; set; } 
 		int LightOpacity { get; set; }
 		IBlockState BlockState { get; set; }
+		bool IsWater { get; set; }
+		bool IsSourceBlock { get; set; }
+		IMaterial BlockMaterial { get; set; }
 
-		bool IsSideSolid(string side);
-
-		bool BlockUpdate(IWorld world, Vector3 position);
-		VertexPositionNormalTextureColor[] GetVertices(Vector3 position, IWorld world);
+		bool Tick(IWorld world, Vector3 position);
+		void BlockUpdate(IWorld world, BlockCoordinates position, BlockCoordinates updatedBlock);
 	}
 }

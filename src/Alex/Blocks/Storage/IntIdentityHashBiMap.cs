@@ -2,60 +2,62 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using Alex.Utils;
 
 namespace Alex.Blocks.Storage
 {
-	public class IntIdentityHashBiMap<TK> : IEnumerable<TK> where TK : class 
+	public class IntIdentityHashBiMap<TK> : IEnumerable<TK> where TK : class
 	{
 		private static TK _empty = default(TK);
 		private TK[] _keys;
-		private int[] _values;
+		private uint[] _values;
 		private TK[] _byId;
-		private int _nextFreeIndex;
+		private uint _nextFreeIndex;
 		private int _mapSize;
 
 		public IntIdentityHashBiMap(int initialCapacity)
 		{
-			initialCapacity = (int) ((float) initialCapacity / 0.8F);
-			this._keys = new TK[initialCapacity];
-			this._values = new int[initialCapacity];
-			this._byId = new TK[initialCapacity];
+			initialCapacity = (int)(initialCapacity / 0.8F);
+			_keys = new TK[initialCapacity];
+			_values = new uint[initialCapacity];
+			_byId = new TK[initialCapacity];
 		}
 
-		public int GetId(TK p1868151)
+		public uint GetId(TK p1868151)
 		{
-			if (p1868151 == null) return -1;
-			return this.GetValue(this.GetIndex(p1868151, this.HashObject(p1868151)));
+			if (p1868151 == null) return uint.MaxValue;
+			return GetValue(GetIndex(p1868151, HashObject(p1868151)));
 		}
 
-		public TK Get(int idIn)
+		public TK Get(uint idIn)
 		{
-			return (TK) (idIn >= 0 && idIn < this._byId.Length ? this._byId[idIn] : default(TK));
+			return idIn >= 0 && idIn < _byId.Length ? _byId[idIn] : default(TK);
 		}
 
-		private int GetValue(int p1868051)
+		private uint GetValue(uint index)
 		{
-			return p1868051 == -1 ? -1 : this._values[p1868051];
+			return index == uint.MaxValue ? uint.MaxValue : _values[index];
 		}
 
 		/**
 	     * Adds the given object while expanding this map
 	     */
-		public int Add(TK objectIn)
+		public uint Add(TK objectIn)
 		{
-			int i = this.NextId();
-			this.Put(objectIn, i);
+			uint i = NextId();
+			Put(objectIn, i);
 			return i;
 		}
 
-		private int NextId()
+		private uint NextId()
 		{
-			while (this._nextFreeIndex < this._byId.Length && this._byId[this._nextFreeIndex] != null)
+			while (_nextFreeIndex < _byId.Length && _byId[_nextFreeIndex] != null)
 			{
-				++this._nextFreeIndex;
+				++_nextFreeIndex;
 			}
 
-			return this._nextFreeIndex;
+			return _nextFreeIndex;
 		}
 
 		/**
@@ -63,19 +65,19 @@ namespace Alex.Blocks.Storage
 	     */
 		private void Grow(int capacity)
 		{
-			TK[] ak = this._keys;
-			int[] aint = this._values;
-			this._keys = new TK[capacity];
-			this._values = new int[capacity];
-			this._byId = new TK[capacity];
-			this._nextFreeIndex = 0;
-			this._mapSize = 0;
+			TK[] ak = _keys;
+			uint[] aint = _values;
+			_keys = new TK[capacity];
+			_values = new uint[capacity];
+			_byId = new TK[capacity];
+			_nextFreeIndex = 0;
+			_mapSize = 0;
 
 			for (int i = 0; i < ak.Length; ++i)
 			{
 				if (ak[i] != null)
 				{
-					this.Put(ak[i], aint[i]);
+					Put(ak[i], aint[i]);
 				}
 			}
 		}
@@ -83,85 +85,82 @@ namespace Alex.Blocks.Storage
 		/**
 	     * Puts the provided object value with the integer key.
 	     */
-		public void Put(TK objectIn, int intKey)
+		public void Put(TK objectIn, uint intKey)
 		{
-			int i = Math.Max(intKey, this._mapSize + 1);
+			uint i = (uint)Math.Max(intKey, _mapSize + 1);
 
-			if ((float) i >= (float) this._keys.Length * 0.8F)
+			if (i >= _keys.Length * 0.8F)
 			{
 				int j;
 
-				for (j = this._keys.Length << 1; j < intKey; j <<= 1)
+				for (j = _keys.Length << 1; j < intKey; j <<= 1)
 				{
-					;
 				}
 
-				this.Grow(j);
+				Grow(j);
 			}
 
-			int k = this.FindEmpty(this.HashObject(objectIn));
-			this._keys[k] = objectIn;
-			this._values[k] = intKey;
-			this._byId[intKey] = objectIn;
-			++this._mapSize;
+			uint k = FindEmpty(HashObject(objectIn));
+			_keys[k] = objectIn;
+			_values[k] = intKey;
+			_byId[intKey] = objectIn;
+			++_mapSize;
 
-			if (intKey == this._nextFreeIndex)
+			if (intKey == _nextFreeIndex)
 			{
-				++this._nextFreeIndex;
+				++_nextFreeIndex;
 			}
 		}
 
-		private int HashObject(TK obectIn)
+		private uint HashObject(TK obectIn)
 		{
-			//if (obectIn == null) return -1;
-			return obectIn.GetHashCode() % this._keys.Length;
-			//	return (MathHelper.getHash(System.identityHashCode(obectIn)) & Integer.MAX_VALUE) % this.keys.length;
+			return (uint)(MathUtils.Hash((uint)(RuntimeHelpers.GetHashCode(obectIn) & uint.MaxValue)) % _keys.Length);
 		}
 
-		private int GetIndex(TK objectIn, int p1868162)
+		private uint GetIndex(TK objectIn, uint index)
 		{
-			for (int i = p1868162; i < this._keys.Length; ++i)
+			for (uint i = index; i < _keys.Length; ++i)
 			{
-				if (this._keys[i] == objectIn)
+				if (_keys[i] == objectIn)
 				{
 					return i;
 				}
 
-				if (this._keys[i] == _empty)
+				if (_keys[i] == _empty)
 				{
-					return -1;
+					return uint.MaxValue;
 				}
 			}
 
-			for (int j = 0; j < p1868162; ++j)
+			for (uint j = 0; j < index; ++j)
 			{
-				if (this._keys[j] == objectIn)
+				if (_keys[j] == objectIn)
 				{
 					return j;
 				}
 
-				if (this._keys[j] == _empty)
+				if (_keys[j] == _empty)
 				{
-					return -1;
+					return uint.MaxValue;
 				}
 			}
 
-			return -1;
+			return uint.MaxValue;
 		}
 
-		private int FindEmpty(int p1868061)
+		private uint FindEmpty(uint index)
 		{
-			for (int i = p1868061; i < this._keys.Length; ++i)
+			for (uint i = index; i < _keys.Length; ++i)
 			{
-				if (this._keys[i] == _empty)
+				if (_keys[i] == _empty)
 				{
 					return i;
 				}
 			}
 
-			for (int j = 0; j < p1868061; ++j)
+			for (uint j = 0; j < index; ++j)
 			{
-				if (this._keys[j] == _empty)
+				if (_keys[j] == _empty)
 				{
 					return j;
 				}
@@ -170,24 +169,18 @@ namespace Alex.Blocks.Storage
 			throw new OverflowException();
 		}
 
-		//public Iterator<K> iterator()
-		//{
-		//	return Iterators.filter(Iterators.forArray(this.byId), Predicates.notNull());
-		//}
-
 		public void Clear()
 		{
-			Array.Fill<TK>(this._keys, default(TK));
-			Array.Fill<TK>(this._byId, default(TK));
-			//Array.fill(this.keys, (Object) null);
-			//Arrays.fill(this.byId, (Object) null);
-			this._nextFreeIndex = 0;
-			this._mapSize = 0;
+			Array.Fill(_keys, default(TK));
+			Array.Fill(_byId, default(TK));
+
+			_nextFreeIndex = 0;
+			_mapSize = 0;
 		}
 
 		public int Size()
 		{
-			return this._mapSize;
+			return _mapSize;
 		}
 
 		public IEnumerator<TK> GetEnumerator()

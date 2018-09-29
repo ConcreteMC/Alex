@@ -1,0 +1,16 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		         xmlns:local="clr-namespace:Alex.Launcher">
+	<Application.DataTemplates>
+		<local:ViewLocator/>
+	</Application.DataTemplates>
+	<Application.Styles>
+    <StyleInclude Source="resm:Avalonia.Themes.Default.DefaultTheme.xaml?assembly=Avalonia.Themes.Default"/>
+		
+		<!--<StyleInclude Source="resm:Alex.Launcher.Themes.BaseDark.xaml?assembly=Alex.Launcher"/>-->		
+		<StyleInclude Source="resm:Alex.Launcher.Themes.DefaultTheme.xaml?assembly=Alex.Launcher"/>
+		
+		<StyleInclude Source="resm:Alex.Launcher.Themes.Accents.DarkAccent.xaml?assembly=Alex.Launcher"/>
+		<StyleInclude Source="resm:Alex.Launcher.Themes.Accents.Red.xaml?assembly=Alex.Launcher"/>	
+	</Application.Styles>
+</Application>

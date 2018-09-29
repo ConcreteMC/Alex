@@ -1,76 +1,104 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using Alex.API.GameStates;
 using Alex.API.Graphics;
-using Alex.Rendering.UI;
+using Alex.API.Gui;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Alex.Gamestates
+namespace Alex.GameStates
 {
-	public class Gamestate
+	public class GameState : IGameState
 	{
-		public Dictionary<string, UIComponent> Controls { get; set; }
+		public GuiScreen Gui { get; protected set; }
 
-        protected GraphicsDevice Graphics { get; }
-		public Gamestate(GraphicsDevice graphics)
+		protected GraphicsDevice Graphics { get; }
+
+		protected Alex Alex { get; }
+
+		public IGameState ParentState { get; set; } = null;
+		public GameState(Alex alex)
 		{
-		    Graphics = graphics;
-			Controls = new Dictionary<string, UIComponent>();
+			Alex = alex;
+			Graphics = alex.GraphicsDevice;
 		}
 
-	    public Viewport Viewport => Graphics.Viewport;
+		public Viewport Viewport => Graphics.Viewport;
 
 		public Vector2 CenterScreen
 		{
 			get
 			{
-				return new Vector2((Graphics.Viewport.Width/2f),
-					(Graphics.Viewport.Height/2f));
+				return new Vector2((Graphics.Viewport.Width / 2f),
+					(Graphics.Viewport.Height / 2f));
 			}
 		}
 
-		public virtual void Init(RenderArgs args)
+		public void Load(IRenderArgs args)
 		{
-		}
+			OnLoad(args);
 
-		public virtual void Stop()
-		{
-		}
-
-		public void Rendering2D(RenderArgs args)
-		{
-			Render2D(args);
-			foreach (var control in Controls.Values.ToArray())
+			if (Gui != null)
 			{
-				control.Render(args);
+				Gui.InvalidateLayout(true);
 			}
 		}
 
-		public virtual void Render2D(RenderArgs args)
+		public void Unload()
 		{
+			OnUnload();
 		}
 
-		public void Rendering3D(RenderArgs args)
+		public void Draw(IRenderArgs args)
 		{
-			Render3D(args);
+			OnDraw(args);
+
+			//if (Gui != null)
+			//{
+			//	Gui.Draw(Alex.GuiManager.GuiSpriteBatch, args.GameTime);
+			//}
 		}
 
-		public virtual void Render3D(RenderArgs args)
+		public void Update(GameTime gameTime)
 		{
-		}
+			OnUpdate(gameTime);
 
-		public void UpdateCall(GameTime gametime)
-		{
-			OnUpdate(gametime);
-			foreach (var control in Controls.Values.ToArray())
+			if (Gui != null)
 			{
-				control.Update(gametime);
+				Gui.Update(gameTime);
 			}
 		}
 
-		public virtual void OnUpdate(GameTime gameTime)
+		public void Show()
 		{
+			if (Gui != null)
+			{
+				Alex.GuiManager.AddScreen(Gui);
+			}
+			OnShow();
 		}
+
+		public void Hide()
+		{
+			OnHide();
+			
+			if (Gui != null)
+			{
+				Alex.GuiManager.RemoveScreen(Gui);
+			}
+		}
+
+		protected TService GetService<TService>() where TService : class
+		{
+			return Alex.Services.GetService<TService>();
+		}
+		
+		protected virtual void OnShow() { }
+		protected virtual void OnHide() { }
+
+		protected virtual void OnLoad(IRenderArgs args) { }
+		protected virtual void OnUnload() { }
+
+		protected virtual void OnUpdate(GameTime gameTime) { }
+		protected virtual void OnDraw(IRenderArgs args) { }
 	}
 
 	public class RenderArgs : IRenderArgs
@@ -78,11 +106,13 @@ namespace Alex.Gamestates
 		public GameTime GameTime { get; set; }
 		public GraphicsDevice GraphicsDevice { get; set; }
 		public SpriteBatch SpriteBatch { get; set; }
+		public ICamera Camera { get; set; }
 	}
 
 	public class UpdateArgs : IUpdateArgs
 	{
 		public GameTime GameTime { get; set; }
 		public GraphicsDevice GraphicsDevice { get; set; }
+		public ICamera Camera { get; set; }
 	}
 }

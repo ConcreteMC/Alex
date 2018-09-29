@@ -13,12 +13,22 @@ namespace Alex.Blocks.Properties
 
 		public override BlockFace ParseValue(string value)
 		{
-			if (Enum.TryParse(value, out BlockFace result))
+			if (Enum.TryParse(value, true, out BlockFace result))
 			{
 				return result;
 			}
 
 			return BlockFace.None;
+		}
+
+		public override string ToString(BlockFace v)
+		{
+			return v.ToString().ToLowerInvariant();
+		}
+
+		public override object[] GetValidValues()
+		{
+			return (object[]) Enum.GetValues(typeof(BlockFace));
 		}
 	}
 }

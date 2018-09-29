@@ -1,252 +1,104 @@
-<Project Sdk="Microsoft.NET.Sdk">
-
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
-	  <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-	  <DefineConstants>TRACE;DEBUG;WINDOWS;NETCOREAPP2_0;MONOGAME;RELEASE;NETCOREAPP2_0</DefineConstants>
-	  <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <DefineConstants>$(DefineConstants);TRACE;DEBUG;MONOGAME;NETCOREAPP2_0;DESKTOPGL;WINDOWS;LINUX</DefineConstants>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <ApplicationIcon>Icon.ico</ApplicationIcon>
+    <StartupObject>Alex.Program</StartupObject>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Authors>kennyvv, TruDan</Authors>
+    <Version>1.0-DEV</Version>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <LangVersion>7.1</LangVersion>
+    <!--<RuntimeIdentifier>win10-x64</RuntimeIdentifier>-->
+    <MonoGamePlatform>DesktopGL</MonoGamePlatform>
+    <!--<ApplicationManifest>Properties\App.manifest</ApplicationManifest>-->
+
+    <!--<RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <PlatformTarget>x64</PlatformTarget>-->
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <PlatformTarget>x64</PlatformTarget>
-    <OutputPath>bin\Debug\</OutputPath>
+    <!--<OutputPath>bin\Debug\</OutputPath>-->
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Alex.cs" />
-    <None Remove="BlockFactory.cs" />
-    <None Remove="Blocks\Air.cs" />
-    <None Remove="Blocks\Block.cs" />
-    <None Remove="Blocks\Door.cs" />
-    <None Remove="Blocks\FlowingLava.cs" />
-    <None Remove="Blocks\FlowingWater.cs" />
-    <None Remove="Blocks\InvisibleBedrock.cs" />
-    <None Remove="Blocks\Lava.cs" />
-    <None Remove="Blocks\Properties\PropertyBool.cs" />
-    <None Remove="Blocks\Properties\PropertyFacing.cs" />
-    <None Remove="Blocks\State\BlockState.cs" />
-    <None Remove="Blocks\State\BlockStateContainer.cs" />
-    <None Remove="Blocks\State\BlockStatePaletteHashMap.cs" />
-    <None Remove="Blocks\State\BlockstatePaletteLinear.cs" />
-    <None Remove="Blocks\State\BlockStatePaletteRegistry.cs" />
-    <None Remove="Blocks\State\ExtendedBlockStorage.cs" />
-    <None Remove="Blocks\State\FlexibleStorage.cs" />
-    <None Remove="Blocks\State\IntIdentityHashBiMap.cs" />
-    <None Remove="Blocks\Water.cs" />
-    <None Remove="Blocks\WoodenDoor.cs" />
-    <None Remove="Entities\Entity.cs" />
-    <None Remove="Entities\EntityFactory.cs" />
-    <None Remove="Entities\LivingEntity.cs" />
-    <None Remove="Entities\Player.cs" />
-    <None Remove="Extensions.cs" />
-    <None Remove="Gamestates\DisconnectedState.cs" />
-    <None Remove="Gamestates\Gamestate.cs" />
-    <None Remove="Gamestates\GamestateManager.cs" />
-    <None Remove="Gamestates\LoadingWorldState.cs" />
-    <None Remove="Gamestates\LoginState.cs" />
-    <None Remove="Gamestates\MenuState.cs" />
-    <None Remove="Gamestates\Playing\CameraComponent.cs" />
-    <None Remove="Gamestates\Playing\InGameMenuState.cs" />
-    <None Remove="Gamestates\Playing\PlayingState.cs" />
-    <None Remove="Gamestates\ServerState.cs" />
-    <None Remove="Gamestates\SplashScreen.cs" />
-    <None Remove="Graphics\Models\BlockModel.cs" />
-    <None Remove="Graphics\Models\CachedResourcePackModel.cs" />
-    <None Remove="Graphics\Models\EntityModelRenderer.cs" />
-    <None Remove="Graphics\Models\LiquidBlockModel.cs" />
-    <None Remove="Graphics\Models\MultiStateCachedResourcePackModel.cs" />
-    <None Remove="Graphics\Models\ResourcePackModel.cs" />
-    <None Remove="Graphics\Overlays\Overlay.cs" />
-    <None Remove="Graphics\Overlays\WaterOverlay.cs" />
-    <None Remove="KeyBinds.cs" />
-    <None Remove="Program.cs" />
-    <None Remove="Rendering\Camera\Camera.cs" />
-    <None Remove="Rendering\Camera\FirstPersonCamera.cs" />
-    <None Remove="Rendering\ChunkManager.cs" />
-    <None Remove="Rendering\EntityManager.cs" />
-    <None Remove="Rendering\UI\Button.cs" />
-    <None Remove="Rendering\UI\ChatComponent.cs" />
-    <None Remove="Rendering\UI\Image.cs" />
-    <None Remove="Rendering\UI\Info.cs" />
-    <None Remove="Rendering\UI\InputField.cs" />
-    <None Remove="Rendering\UI\Label.cs" />
-    <None Remove="Rendering\UI\Logo.cs" />
-    <None Remove="Rendering\UI\TrackBar.cs" />
-    <None Remove="Rendering\UI\UIComponent.cs" />
-    <None Remove="ResourceManager.cs" />
-    <None Remove="Resources.Designer.cs" />
-    <None Remove="Settings.cs" />
-    <None Remove="SplashTexts.cs" />
-    <None Remove="Utils\AtlasGenerator.cs" />
-    <None Remove="Utils\Axis.cs" />
-    <None Remove="Utils\FastRandom.cs" />
-    <None Remove="Utils\FPSCounter.cs" />
-    <None Remove="Utils\MathUtils.cs" />
-    <None Remove="Utils\MiNETUtils.cs" />
-    <None Remove="Utils\PlotCell3F.cs" />
-    <None Remove="Utils\RayTracer.cs" />
-    <None Remove="Utils\TextureSide.cs" />
-    <None Remove="Utils\TextureUtils.cs" />
-    <None Remove="Utils\ThreadSafeList.cs" />
-    <None Remove="Utils\UVMap.cs" />
-    <None Remove="Worlds\AnvilWorldProvider.cs" />
-    <None Remove="Worlds\CachedWorld.cs" />
-    <None Remove="Worlds\ChunkColumn.cs" />
-    <None Remove="Worlds\Generators\IWorldGenerator.cs" />
-    <None Remove="Worlds\Generators\VoidWorldGenerator.cs" />
-    <None Remove="Worlds\Generators\WorldGenerator.cs" />
-    <None Remove="Worlds\SPWorldProvider.cs" />
-    <None Remove="Worlds\World.cs" />
+    <Compile Remove="Graphics\Items\**" />
+    <EmbeddedResource Remove="Graphics\Items\**" />
+    <None Remove="Graphics\Items\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="Alex.cs" />
-    <Compile Include="BlockFactory.cs" />
-    <Compile Include="Blocks\Air.cs" />
-    <Compile Include="Blocks\Block.cs" />
-    <Compile Include="Blocks\Door.cs" />
-    <Compile Include="Blocks\FlowingLava.cs" />
-    <Compile Include="Blocks\FlowingWater.cs" />
-    <Compile Include="Blocks\InvisibleBedrock.cs" />
-    <Compile Include="Blocks\Lava.cs" />
-    <Compile Include="Blocks\Properties\PropertyFacing.cs" />
-    <Compile Include="Blocks\Properties\PropertyBool.cs" />
-    <Compile Include="Blocks\Storage\FlexibleStorage.cs" />
-    <Compile Include="Blocks\State\BlockState.cs" />
-    <Compile Include="Blocks\Storage\BlockStateContainer.cs" />
-    <Compile Include="Blocks\Storage\Pallete\BlockStatePaletteHashMap.cs" />
-    <Compile Include="Blocks\Storage\Pallete\BlockstatePaletteLinear.cs" />
-    <Compile Include="Blocks\Storage\Pallete\BlockStatePaletteRegistry.cs" />
-    <Compile Include="Blocks\Storage\ExtendedBlockStorage.cs" />
-    <Compile Include="Blocks\Storage\IntIdentityHashBiMap.cs" />
-    <Compile Include="Blocks\Water.cs" />
-    <Compile Include="Blocks\WoodenDoor.cs" />
-    <Compile Include="Entities\Entity.cs" />
-    <Compile Include="Entities\EntityFactory.cs" />
-    <Compile Include="Entities\LivingEntity.cs" />
-    <Compile Include="Entities\Player.cs" />
-    <Compile Include="Extensions.cs" />
-    <Compile Include="Gamestates\DisconnectedState.cs" />
-    <Compile Include="Gamestates\Gamestate.cs" />
-    <Compile Include="Gamestates\GamestateManager.cs" />
-    <Compile Include="Gamestates\LoadingWorldState.cs" />
-    <Compile Include="Gamestates\LoginState.cs" />
-    <Compile Include="Gamestates\MenuState.cs" />
-    <Compile Include="Gamestates\Playing\CameraComponent.cs" />
-    <Compile Include="Gamestates\Playing\InGameMenuState.cs" />
-    <Compile Include="Gamestates\Playing\PlayingState.cs" />
-    <Compile Include="Gamestates\ServerState.cs" />
-    <Compile Include="Gamestates\SplashScreen.cs" />
-    <Compile Include="Graphics\Models\BlockModel.cs" />
-    <Compile Include="Graphics\Models\EntityModelRenderer.cs" />
-    <Compile Include="Graphics\Models\MultiStateCachedResourcePackModel.cs" />
-    <Compile Include="Graphics\Models\CachedResourcePackModel.cs" />
-    <Compile Include="Graphics\Models\ResourcePackModel.cs" />
-    <Compile Include="Graphics\Models\LiquidBlockModel.cs" />
-    <Compile Include="Graphics\Overlays\Overlay.cs" />
-    <Compile Include="Graphics\Overlays\WaterOverlay.cs" />
-    <Compile Include="KeyBinds.cs" />
-    <Compile Include="Program.cs" />
-    <Compile Include="Rendering\Camera\Camera.cs" />
-    <Compile Include="Rendering\Camera\FirstPersonCamera.cs" />
-    <Compile Include="Rendering\EntityManager.cs" />
-    <Compile Include="Rendering\ChunkManager.cs" />
-    <Compile Include="Rendering\UI\Button.cs" />
-    <Compile Include="Rendering\UI\ChatComponent.cs" />
-    <Compile Include="Rendering\UI\Image.cs" />
-    <Compile Include="Rendering\UI\Info.cs" />
-    <Compile Include="Rendering\UI\InputField.cs" />
-    <Compile Include="Rendering\UI\Label.cs" />
-    <Compile Include="Rendering\UI\Logo.cs" />
-    <Compile Include="Rendering\UI\TrackBar.cs" />
-    <Compile Include="Rendering\UI\UIComponent.cs" />
-    <Compile Include="ResourceManager.cs" />
-    <Compile Include="Resources.Designer.cs">
+    <None Remove="Icon.bmp" />
+    <None Remove="Icon.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Icon.bmp" />
+    <EmbeddedResource Include="Icon.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <RdXmlFile Include="rd.xml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CoreCompat.System.Drawing.v2" Version="5.2.0-preview1-r131" />
+    <PackageReference Include="CoreFNBT" Version="1.0.9" />
+    <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="1.0.0-alpha-26707-01" />
+    <PackageReference Include="MiNET" Version="1.0.1812">
+      <PrivateAssets></PrivateAssets>
+      <ExcludeAssets></ExcludeAssets>
+      <IncludeAssets></IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="MonoGame.Framework.DesktopGL.Core" Version="3.7.0.7" />
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+    <PackageReference Include="NLog" Version="4.5.6" />
+    <PackageReference Include="NLog.Config" Version="4.5.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Alex.API\Alex.API.csproj" />
+    <ProjectReference Include="..\Alex.Gui\Alex.Graphics.csproj" />
+    <ProjectReference Include="..\Alex.Networking\Alex.Networking.csproj" />
+    <ProjectReference Include="..\Alex.ResourcePackLib\Alex.ResourcePackLib.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Resources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Settings.cs" />
-    <Compile Include="SplashTexts.cs" />
-    <Compile Include="Utils\AtlasGenerator.cs" />
-    <Compile Include="Utils\Axis.cs" />
-    <Compile Include="Utils\FastRandom.cs" />
-    <Compile Include="Utils\FPSCounter.cs" />
-    <Compile Include="Utils\MathUtils.cs" />
-    <Compile Include="Utils\MiNETUtils.cs" />
-    <Compile Include="Utils\PlotCell3F.cs" />
-    <Compile Include="Utils\RayTracer.cs" />
-    <Compile Include="Utils\TextureSide.cs" />
-    <Compile Include="Utils\TextureUtils.cs" />
-    <Compile Include="Utils\ThreadSafeList.cs" />
-    <Compile Include="Utils\UVMap.cs" />
-    <Compile Include="Worlds\AnvilWorldProvider.cs" />
-    <Compile Include="Worlds\CachedWorld.cs" />
-    <Compile Include="Worlds\ChunkColumn.cs" />
-    <Compile Include="Worlds\Generators\IWorldGenerator.cs" />
-    <Compile Include="Worlds\Generators\VoidWorldGenerator.cs" />
-    <Compile Include="Worlds\Generators\WorldGenerator.cs" />
-    <Compile Include="Worlds\SPWorldProvider.cs" />
-    <Compile Include="Worlds\World.cs" />
   </ItemGroup>
 
-	<ItemGroup>
-		<RdXmlFile Include="rd.xml" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="Graphics\Items\" />
-	</ItemGroup>
-
-	<ItemGroup>
-    <PackageReference Include="CoreCompat.System.Drawing.v2" Version="5.2.0-preview1-r131" />
-    <PackageReference Include="log4net" Version="2.0.8" />
-    <PackageReference Include="Newtonsoft.Json" Version="11.0.1" />
+  <ItemGroup>
+    <EmbeddedResource Update="Resources.resx">
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <Generator>ResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
   </ItemGroup>
 
-	<ItemGroup>
-	  <ProjectReference Include="..\Alex.API\Alex.API.csproj" />
-	  <ProjectReference Include="..\Alex.ResourcePackLib\Alex.ResourcePackLib.csproj" />
-	</ItemGroup>
+  <ItemGroup>
+    <Folder Include="Worlds\Bedrock\" />
+  </ItemGroup>
 
-	<ItemGroup>
-	  <Reference Include="CoreFNBT">
-	    <HintPath>..\External\CoreFNBT.dll</HintPath>
-	  </Reference>
-	  <Reference Include="MiNET">
-	    <HintPath>..\CoreRT\External\MiNET.dll</HintPath>
-	  </Reference>
-	  <Reference Include="MonoGame.Framework">
-	    <HintPath>MonoGame.Framework.dll</HintPath>
-	  </Reference>
-	  <Reference Include="MonoGame.Framework.Content.Pipeline">
-	    <HintPath>MonoGame.Framework.Content.Pipeline.dll</HintPath>
-	  </Reference>
-	</ItemGroup>
-
-	<ItemGroup>
-	  <EmbeddedResource Update="Resources.resx">
-	    <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-	    <Generator>ResXFileCodeGenerator</Generator>
-	  </EmbeddedResource>
-	</ItemGroup>
-
-	<ItemGroup>
-	  <None Update="log4net.config">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
-	</ItemGroup>
-
-	<ItemGroup>
-		<MonoGameContentReference Update="Resources\shaders.mgcb">
-		</MonoGameContentReference>
-	</ItemGroup>
+	<Target Name="ChangeAliasesOfNugetRefs" BeforeTargets="FindReferenceAssembliesForReferences;ResolveReferences">
+		<ItemGroup>
+			<ReferencePath Condition="'%(FileName)' == 'fNbt'">
+				<Aliases>MiNETfNbt</Aliases>
+			</ReferencePath>
+		</ItemGroup>
+	</Target>
 
 </Project>

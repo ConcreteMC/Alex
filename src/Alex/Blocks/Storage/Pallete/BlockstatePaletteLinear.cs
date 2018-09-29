@@ -1,4 +1,5 @@
 ﻿using Alex.API.Blocks.State;
+using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks.State;
 
@@ -9,7 +10,7 @@ namespace Alex.Blocks.Storage.Pallete
 		private readonly IBlockState[] _states;
 		private readonly IBlockStatePaletteResizer _resizeHandler;
 		private readonly int _bits;
-		private int _arraySize;
+		private uint _arraySize;
 
 		public BlockStatePaletteLinear(int bitsIn, IBlockStatePaletteResizer resizeHandlerIn)
 		{
@@ -18,22 +19,22 @@ namespace Alex.Blocks.Storage.Pallete
 			this._resizeHandler = resizeHandlerIn;
 		}
 
-		public int IdFor(IBlockState state)
+		public uint IdFor(IBlockState state)
 		{
-			for (int i = 0; i < this._arraySize; i++)
+			for (uint i = 0; i < this._arraySize; i++)
 			{
-				if (this._states[i] == state)
+				if (this._states[i].Equals(state))
 				{
 					return i;
 				}
 			}
 
-			int j = this._arraySize;
+			uint j = this._arraySize;
 
 			if (j < this._states.Length)
 			{
 				this._states[j] = state;
-				++this._arraySize;
+				_arraySize++;
 				return j;
 			}
 			else
@@ -42,43 +43,19 @@ namespace Alex.Blocks.Storage.Pallete
 			}
 		}
 
-		public IBlockState GetBlockState(int indexKey)
+		public IBlockState GetBlockState(uint indexKey)
 		{
 			return indexKey >= 0 && indexKey < this._arraySize ? this._states[indexKey] : null;
 		}
 
-		/*
-			public void read(PacketBuffer buf)
-			{
-				this.arraySize = buf.readVarInt();
-
-				for (int i = 0; i < this.arraySize; ++i)
-				{
-					this.states[i] = Block.BLOCK_STATE_IDS.getByValue(buf.readVarInt());
-				}
-			}
-
-			public void write(PacketBuffer buf)
-			{
-				buf.writeVarInt(this.arraySize);
-
-				for (int i = 0; i < this.arraySize; ++i)
-				{
-					buf.writeVarInt(Block.BLOCK_STATE_IDS.get(this.states[i]));
-				}
-			}
-			*/
-		public int GetSerializedSize()
+		public void Read(IMinecraftStream ms)
 		{
-			int i = BlockState.GetVarIntSize(this._arraySize);
+			this._arraySize = (uint) ms.ReadVarInt();
 
-			for (int j = 0; j < this._arraySize; ++j)
+			for (int i = 0; i < _arraySize; ++i)
 			{
-				i += BlockState.GetVarIntSize(
-					BlockFactory.GetBlockStateId(_states[j])); /*Block.BLOCK_STATE_IDS.get(this._states[j]));*/
+				_states[i] = BlockFactory.GetBlockState(ms.ReadVarInt());
 			}
-
-			return i;
 		}
 	}
 }

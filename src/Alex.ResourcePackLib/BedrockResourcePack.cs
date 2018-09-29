@@ -4,20 +4,26 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Security.AccessControl;
+using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Models;
+using Alex.ResourcePackLib.Json.Models.Blocks;
+using Alex.ResourcePackLib.Json.Models.Entities;
+using Alex.ResourcePackLib.Json.Textures;
 using ICSharpCode.SharpZipLib.Zip;
-using log4net;
+
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
+using NLog;
 
 namespace Alex.ResourcePackLib
 {
 	public class BedrockResourcePack : IDisposable
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(BedrockResourcePack));
-
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BedrockResourcePack));
 		public IReadOnlyDictionary<string, EntityModel> EntityModels { get; private set; }
-		public IReadOnlyDictionary<string, Bitmap> EntityTextures { get; private set; }
+		public IReadOnlyDictionary<string, Bitmap> Textures { get; private set; }
+		public IReadOnlyDictionary<string, TextureInfoJson> TextureJsons { get; private set; }
+
 		public IReadOnlyDictionary<string, EntityDefinition> EntityDefinitions { get; private set; }
 
 	
@@ -37,6 +43,21 @@ namespace Alex.ResourcePackLib
 
 		}
 
+		public bool TryGetTexture(string name, out Bitmap texture)
+		{
+			return Textures.TryGetValue(NormalisePath(name), out texture);
+		}
+
+		public bool TryGetTextureJson(string name, out TextureInfoJson textureJson)
+		{
+			return TextureJsons.TryGetValue(NormalisePath(name), out textureJson);
+		}
+
+		private string NormalisePath(string path)
+		{
+			return path.Replace('\\', '/').ToLowerInvariant();
+		}
+
 		private void Load()
 		{
 			Dictionary<string, EntityDefinition> entityDefinitions = new Dictionary<string, EntityDefinition>();
@@ -44,7 +65,6 @@ namespace Alex.ResourcePackLib
 			{
 				if (entry.IsDirectory)
 				{
-					CheckDirectory(entry);
 					continue;
 				}
 			
@@ -75,19 +95,17 @@ namespace Alex.ResourcePackLib
 			}
 		}
 
-		private void CheckDirectory(ZipEntry entry)
-		{
-			
-		}
-
 		private void LoadEntityDefinition(ZipEntry entry, Dictionary<string, EntityDefinition> entityDefinitions)
 		{
 			var stream = new StreamReader(_archive.GetInputStream(entry));
 			var json = stream.ReadToEnd();
+			string fileName = Path.GetFileNameWithoutExtension(entry.Name);
+			
 
 			Dictionary<string, EntityDefinition> definitions = JsonConvert.DeserializeObject<Dictionary<string, EntityDefinition>>(json);
 			foreach (var def in definitions)
 			{
+				def.Value.Filename = fileName;
 				if (!entityDefinitions.ContainsKey(def.Key))
 				{
 					entityDefinitions.Add(def.Key, def.Value);
@@ -101,25 +119,37 @@ namespace Alex.ResourcePackLib
 			var json = stream.ReadToEnd();
 
 			Dictionary<string, Bitmap> textures = new Dictionary<string, Bitmap>();
+			Dictionary<string, TextureInfoJson> textureJsons = new Dictionary<string, TextureInfoJson>();
+
 			string[] definitions = JsonConvert.DeserializeObject<string[]>(json);
 			foreach (string def in definitions)
 			{
 				if (textures.ContainsKey(def))
 					continue;
-
-				if (def.StartsWith("textures/entity/"))
+				
+				var e = _archive.GetEntry(def + ".png");
+				if (e != null && e.IsFile)
 				{
-					var e = _archive.GetEntry(def + ".png");
-					if (e != null && e.IsFile)
+					Bitmap bmp = new Bitmap(_archive.GetInputStream(e));
+					textures.Add(NormalisePath(def), bmp);
+				}
+
+				e = _archive.GetEntry(def + ".json");
+				if (e != null && e.IsFile)
+				{
+					using(var eStream = _archive.GetInputStream(e))
+					using (var sr = new StreamReader(eStream))
 					{
-						Bitmap bmp = new Bitmap(_archive.GetInputStream(e));
-						textures.Add(def, bmp);
+						var textureJson = sr.ReadToEnd();
+						var textureInfo = MCJsonConvert.DeserializeObject<TextureInfoJson>(textureJson);
+						textureJsons.Add(NormalisePath(def), textureInfo);
 					}
 				}
-			}
+			}	
 
-			EntityTextures = textures;
-			Log.Info($"Imported {textures.Count} entity textures");
+			Textures = textures;
+			TextureJsons = textureJsons;
+			Log.Info($"Loaded {textures.Count} textures and {textureJsons.Count} texture definitions");
 		}
 
 		private void LoadMobs(ZipEntry entry)
@@ -127,7 +157,7 @@ namespace Alex.ResourcePackLib
 			var stream = new StreamReader(_archive.GetInputStream(entry));
 			var json = stream.ReadToEnd();
 
-			Dictionary<string, EntityModel> entries = JsonConvert.DeserializeObject<Dictionary<string, EntityModel>>(json);
+			Dictionary<string, EntityModel> entries = MCJsonConvert.DeserializeObject<Dictionary<string, EntityModel>>(json);
 			Dictionary<string, EntityModel> processedModels = new Dictionary<string, EntityModel>();
 			foreach (var e in entries)
 			{
@@ -139,7 +169,7 @@ namespace Alex.ResourcePackLib
 				if (processedModels.ContainsKey(e.Key))
 					continue;
 
-				ProcessModel(e.Value, entries, processedModels);
+				ProcessEntityModel(e.Value, entries, processedModels);
 			}
 
 			EntityModels = processedModels;
@@ -147,7 +177,7 @@ namespace Alex.ResourcePackLib
 			Log.Info($"Imported {processedModels.Count} entity models");
 		}
 
-		private void ProcessModel(EntityModel model, Dictionary<string, EntityModel> models, Dictionary<string, EntityModel> processedModels)
+		private void ProcessEntityModel(EntityModel model, Dictionary<string, EntityModel> models, Dictionary<string, EntityModel> processedModels)
 		{
 			string modelName = model.Name;
 			if (model.Name.Contains(":")) //This model inherits from another model.
@@ -161,7 +191,7 @@ namespace Alex.ResourcePackLib
 				{
 					if (models.TryGetValue(parent, out parentModel))
 					{
-						ProcessModel(parentModel, models, processedModels);
+						ProcessEntityModel(parentModel, models, processedModels);
 						parentModel = processedModels[parent];
 					}
 					else
@@ -194,25 +224,48 @@ namespace Alex.ResourcePackLib
 				Dictionary<string, EntityModelBone> bones =
 					model.Bones.Where(x => x != null && !string.IsNullOrWhiteSpace(x.Name)).ToDictionary(x => x.Name, e => e);
 
-				int inheritedBones = 0;
 				foreach (var bone in parentBones)
 				{
-					if (!bones.ContainsKey(bone.Key))
+					var parentBone = bone.Value;
+					if (bones.TryGetValue(bone.Key, out EntityModelBone val))
 					{
-						bones.Add(bone.Key, bone.Value);
-						inheritedBones++;
+						if (!val.Reset)
+						{
+							if (val.Cubes != null)
+							{
+								val.Cubes = val.Cubes.Concat(parentBone.Cubes).ToArray();
+							}
+							else
+							{
+								val.Cubes = parentBone.Cubes;
+							}
+							//val.Cubes.Concat(parentBone.Cubes);
+						}
+
+						bones[bone.Key] = val;
+					}
+					else
+					{
+						bones.Add(bone.Key, parentBone);
 					}
 				}
 
 				model.Bones = bones.Values.ToArray();
-				//Log.Info($"Processed {modelName} inherited {inheritedBones} bones from {parent}");
 			}
 
 			processedModels.Add(modelName, model);
 		}
 
+		private void ProcessBlockModel(BedrockBlockModel blockModel, Dictionary<string, BedrockBlockModel> blockModels,
+			List<string> processedModels)
+		{
+
+		}
+
 		public class EntityDefinition
 		{
+			[JsonIgnore] public string Filename { get; set; } = string.Empty;
+
 			public Dictionary<string, string> Textures;
 			public Dictionary<string, string> Geometry;
 		}

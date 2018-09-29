@@ -1,57 +1,92 @@
-﻿using Alex.API.World;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+﻿using Alex.API.Gui;
+using Alex.API.Gui.Elements;
+using Alex.API.Gui.Elements.Layout;
+using Alex.API.Gui.Graphics;
+using Alex.API.Utils;
+using Alex.API.World;
+using Alex.GameStates.Gui.Common;
 
-namespace Alex.Gamestates
+namespace Alex.GameStates
 {
-    public class LoadingWorldState : Gamestate
+    public class LoadingWorldState : GuiMenuStateBase
     {
-		private Texture2D Background { get; }
-	    public LoadingWorldState(GraphicsDevice graphics, Texture2D background) : base(graphics)
+	    private readonly GuiContainer   _progressBarContainer;
+	    private readonly GuiProgressBar _progressBar;
+	    private readonly GuiTextElement _textDisplay;
+	    private readonly GuiTextElement _percentageDisplay;
+		
+	    public string Text
 	    {
-		    Background = background;
-	    }
-
-	    private int Progress { get; set; } = 0;
-	    private string DisplayString { get; set; } = "Loading world...";
-	    public void UpdateProgress(LoadingState state, int percentage)
-	    {
-		    Progress = percentage;
-		    switch (state)
+		    get { return _textDisplay?.Text ?? string.Empty; }
+		    set
 		    {
-				case LoadingState.ConnectingToServer:
-					DisplayString = "Connecting to server...";
-					break;
-				case LoadingState.LoadingChunks:
-					DisplayString = $"Loading chunks: {percentage}%";
-					break;
-				case LoadingState.GeneratingVertices:
-					DisplayString = $"Initiating world: {percentage}%";
-					break;
-				case LoadingState.Spawning:
-					DisplayString = $"Getting ready...";
-					break;
+			    _textDisplay.Text = value;
 		    }
 	    }
 
-	    public override void Render2D(RenderArgs args)
+		public LoadingWorldState()
 	    {
-			args.SpriteBatch.Begin();
+		    AddGuiElement(_progressBarContainer = new GuiContainer()
+		    {
+			    Width  = 300,
+			    Height = 25,
 
-		    //Start draw background
-		    var retval = new Rectangle(
-			    args.SpriteBatch.GraphicsDevice.Viewport.X,
-			    args.SpriteBatch.GraphicsDevice.Viewport.Y,
-			    args.SpriteBatch.GraphicsDevice.Viewport.Width,
-			    args.SpriteBatch.GraphicsDevice.Viewport.Height);
-		    args.SpriteBatch.Draw(Background, retval, Color.White);
-		    //End draw backgroun
+			    Y = -25,
+					
+			    Anchor = Alignment.BottomCenter,
+		    });
 
-		   // string displayString = Generating ? $"Initializing world: {Progress}%" : $"Loading world: {Progress}%";
-		    var size = Alex.Font.MeasureString(DisplayString);
-			args.SpriteBatch.DrawString(Alex.Font, DisplayString, CenterScreen - (size / 2), Color.White);
+		    _progressBarContainer.AddChild(_textDisplay = new GuiTextElement()
+		    {
+			    Text      = Text,
+			    TextColor = TextColor.Black,
+					
+			    Anchor    = Alignment.TopLeft,
+			    HasShadow = false
+		    });
 
-		    args.SpriteBatch.End();
-		}
-    }
+		    _progressBarContainer.AddChild(_percentageDisplay = new GuiTextElement()
+		    {
+			    Text      = Text,
+			    TextColor = TextColor.Black,
+					
+			    Anchor    = Alignment.TopRight,
+			    HasShadow = false
+		    });
+
+		    _progressBarContainer.AddChild(_progressBar = new GuiProgressBar()
+		    {
+			    Width  = 300,
+			    Height = 9,
+					
+			    Anchor = Alignment.BottomFill,
+		    });
+	    }
+		
+	    public void UpdateProgress(LoadingState state, int percentage)
+	    {
+		    switch (state)
+		    {
+			    case LoadingState.ConnectingToServer:
+				    Text = "Connecting to server...";
+				    break;
+			    case LoadingState.LoadingChunks:
+				    Text = $"Loading chunks...";
+				    break;
+			    case LoadingState.GeneratingVertices:
+				    Text = $"Building world...";
+				    break;
+			    case LoadingState.Spawning:
+				    Text = $"Getting ready...";
+				    break;
+		    }
+
+		    UpdateProgress(percentage);
+	    }
+	    public void UpdateProgress(int value)
+	    {
+		    _progressBar.Value      = value;
+		    _percentageDisplay.Text = $"{value}%";
+	    }
+	}
 }

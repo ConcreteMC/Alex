@@ -9,10 +9,10 @@ namespace Alex.ResourcePackLib.Json.BlockStates
 		//public string ApplyModel;
 
 		//[JsonIgnore]
-		[JsonConverter(typeof(BlockStateMultipartConverter))]
+		[JsonConverter(typeof(SingleOrArrayConverter<BlockStateModel>))]
 		public BlockStateModel[] Apply = null;
 
-		[JsonConverter(typeof(BlockStateMultipartRuleConverter))]
+		[JsonConverter(typeof(SingleOrArrayConverter<MultiPartRule>))]
 		public MultiPartRule[] When = null;
 	}
 

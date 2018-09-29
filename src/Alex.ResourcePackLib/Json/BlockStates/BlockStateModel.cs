@@ -1,4 +1,4 @@
-﻿using Alex.ResourcePackLib.Json.Models;
+﻿using Alex.ResourcePackLib.Json.Models.Blocks;
 using Newtonsoft.Json;
 
 namespace Alex.ResourcePackLib.Json.BlockStates

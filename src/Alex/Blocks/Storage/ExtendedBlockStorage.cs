@@ -1,13 +1,13 @@
 ﻿using Alex.API.Blocks.State;
 using Alex.API.World;
-using log4net;
-using MiNET.Utils;
+using Alex.Utils;
+using NLog;
 
 namespace Alex.Blocks.Storage
 {
 	public class ExtendedBlockStorage
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(ExtendedBlockStorage));
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ExtendedBlockStorage));
 		/**
 		 * Contains the bottom-most Y block represented by this ExtendedBlockStorage. Typically a multiple of 16.
 		 */
@@ -23,23 +23,23 @@ namespace Alex.Blocks.Storage
 		 * Chunk from random tick updates for performance reasons.
 		 */
 		private int _tickRefCount;
-		private BlockStateContainer _data;
+		public BlockStateContainer Data;
 
 		/** The NibbleArray containing a block of Block-light data. */
-		private NibbleArray _blocklightArray;
+		public NibbleArray BlockLight;
 
 		/** The NibbleArray containing a block of Sky-light data. */
-		private NibbleArray _skylightArray;
+		public NibbleArray SkyLight;
 
 		public ExtendedBlockStorage(int y, bool storeSkylight)
 		{
 			this._yBase = y;
-			this._data = new BlockStateContainer();
-			this._blocklightArray = new NibbleArray(4096);
+			this.Data = new BlockStateContainer();
+			this.BlockLight = new NibbleArray(4096);
 
 			if (storeSkylight)
 			{
-				this._skylightArray = new NibbleArray(4096);
+				this.SkyLight = new NibbleArray(4096);
 			}
 		}
 
@@ -50,7 +50,7 @@ namespace Alex.Blocks.Storage
 
 		public IBlockState Get(int x, int y, int z)
 		{
-			return this._data.Get(x, y, z);
+			return this.Data.Get(x, y, z);
 		}
 
 		public void Set(int x, int y, int z, IBlockState state)
@@ -64,8 +64,8 @@ namespace Alex.Blocks.Storage
 			IBlockState iblockstate = this.Get(x, y, z);
 			if (iblockstate != null)
 			{
-				IBlock block = iblockstate.GetBlock();
-				
+				IBlock block = iblockstate.Block;
+
 				if (!(block is Air))
 				{
 					--this._blockRefCount;
@@ -77,7 +77,7 @@ namespace Alex.Blocks.Storage
 				}				
 			}
 
-			IBlock block1 = state.GetBlock();
+			IBlock block1 = state.Block;
 			if (!(block1 is Air))
 			{
 				++this._blockRefCount;
@@ -88,7 +88,7 @@ namespace Alex.Blocks.Storage
 				}
 			}
 
-			this._data.Set(x, y, z, state);
+			this.Data.Set(x, y, z, state);
 		}
 
 		/**
@@ -121,7 +121,7 @@ namespace Alex.Blocks.Storage
 		 */
 		public void SetExtSkylightValue(int x, int y, int z, int value)
 		{
-			this._skylightArray[GetCoordinateIndex(x,y,z)] = (byte) value;//.Set(x, y, z, value);
+			this.SkyLight[GetCoordinateIndex(x,y,z)] = (byte) value;//.Set(x, y, z, value);
 		}
 
 		/**
@@ -129,7 +129,7 @@ namespace Alex.Blocks.Storage
 		 */
 		public byte GetExtSkylightValue(int x, int y, int z)
 		{
-			return this._skylightArray[GetCoordinateIndex(x,y,z)]; //.get(x, y, z);
+			return this.SkyLight[GetCoordinateIndex(x,y,z)]; //.get(x, y, z);
 		}
 
 		/**
@@ -137,7 +137,7 @@ namespace Alex.Blocks.Storage
 		 */
 		public void SetExtBlocklightValue(int x, int y, int z, byte value)
 		{
-			this._blocklightArray[GetCoordinateIndex(x,y,z)] = value;//.set(x, y, z, value);
+			this.BlockLight[GetCoordinateIndex(x,y,z)] = value;//.set(x, y, z, value);
 		}
 
 		/**
@@ -145,7 +145,7 @@ namespace Alex.Blocks.Storage
 		 */
 		public int GetExtBlocklightValue(int x, int y, int z)
 		{
-			return this._blocklightArray[GetCoordinateIndex(x,y,z)];// .get(x, y, z);
+			return this.BlockLight[GetCoordinateIndex(x,y,z)];// .get(x, y, z);
 		}
 
 		public void RemoveInvalidBlocks()
@@ -159,7 +159,7 @@ namespace Alex.Blocks.Storage
 				{
 					for (int z = 0; z < 16; z++)
 					{
-						IBlock block = this.Get(x, y, z).GetBlock();
+						IBlock block = this.Get(x, y, z).Block;
 
 						if (!(block is Air))
 						{
@@ -173,43 +173,6 @@ namespace Alex.Blocks.Storage
 					}
 				}
 			}
-		}
-
-		public BlockStateContainer GetData()
-		{
-			return this._data;
-		}
-
-		/**
-		 * Returns the NibbleArray instance containing Block-light data.
-		 */
-		public NibbleArray GetBlocklightArray()
-		{
-			return this._blocklightArray;
-		}
-
-		/**
-		 * Returns the NibbleArray instance containing Sky-light data.
-		 */
-		public NibbleArray GetSkylightArray()
-		{
-			return this._skylightArray;
-		}
-
-		/**
-		 * Sets the NibbleArray instance used for Block-light values in this particular storage block.
-		 */
-		public void SetBlocklightArray(NibbleArray newBlocklightArray)
-		{
-			this._blocklightArray = newBlocklightArray;
-		}
-
-		/**
-		 * Sets the NibbleArray instance used for Sky-light values in this particular storage block.
-		 */
-		public void SetSkylightArray(NibbleArray newSkylightArray)
-		{
-			this._skylightArray = newSkylightArray;
 		}
 	}
 }

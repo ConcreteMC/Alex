@@ -1,7 +1,8 @@
-﻿using Alex.API.World;
+﻿using Alex.API.Utils;
+using Alex.API.World;
 using Alex.Blocks;
 using Microsoft.Xna.Framework;
-using MiNET.Utils;
+
 
 namespace Alex.Worlds.Generators
 {
@@ -34,6 +35,10 @@ namespace Alex.Worlds.Generators
 			return Vector3.Zero;
 		}
 
+		public LevelInfo GetInfo()
+		{
+			return new LevelInfo();
+		}
 		public void Initialize()
 		{
 			

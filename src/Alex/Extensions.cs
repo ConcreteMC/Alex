@@ -18,7 +18,19 @@ namespace Alex
 			
 		}
 
-	    public static void Init(GraphicsDevice gd)
+		public static float DistanceTo(this Vector3 a, Vector3 b)
+		{
+
+			return Vector3.Distance(a, b);
+		}
+
+		private static float Square(float num)
+		{
+			return num * num;
+		}
+
+
+		public static void Init(GraphicsDevice gd)
 	    {
             WhiteTexture = new Texture2D(gd, 1, 1);
             WhiteTexture.SetData(new Color[] { Color.White });
@@ -189,6 +201,7 @@ namespace Alex
 
 	    public static string StripIllegalCharacters(this string input)
 	    {
+		    if (input == null) return "null";
             return input.ToArray()
                     .Where(i => !Alex.Font.Characters.Contains(i))
                     .Aggregate(input, (current, i) => current.Replace(i.ToString(), ""));
@@ -265,6 +278,11 @@ namespace Alex
 			};
 
 			return new Guid(guidBytes);
+		}
+
+		public static bool IsBitSet(this byte b, int pos)
+		{
+			return (b & (1 << pos)) != 0;
 		}
 	}
 }

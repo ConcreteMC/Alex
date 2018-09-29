@@ -63,9 +63,9 @@ namespace Alex {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] blocks {
+        internal static byte[] Alex {
             get {
-                object obj = ResourceManager.GetObject("blocks", resourceCulture);
+                object obj = ResourceManager.GetObject("Alex", resourceCulture);
                 return ((byte[])(obj));
             }
         }
@@ -73,9 +73,55 @@ namespace Alex {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] blockstate_ids {
+        internal static byte[] DebugFont {
             get {
-                object obj = ResourceManager.GetObject("blockstate_ids", resourceCulture);
+                object obj = ResourceManager.GetObject("DebugFont", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 
+        ///[
+        ///  {
+        ///    &quot;id&quot;: 1,
+        ///    &quot;internalId&quot;: 1,
+        ///    &quot;name&quot;: &quot;item&quot;,
+        ///    &quot;displayName&quot;: &quot;Dropped item&quot;,
+        ///    &quot;type&quot;: &quot;mob&quot;,
+        ///    &quot;width&quot;: 0.25,
+        ///    &quot;height&quot;: 0.25,
+        ///    &quot;category&quot;: &quot;Drops&quot;
+        ///  },
+        ///  {
+        ///    &quot;id&quot;: 2,
+        ///    &quot;internalId&quot;: 2,
+        ///    &quot;name&quot;: &quot;xp_orb&quot;,
+        ///    &quot;displayName&quot;: &quot;Experience orb&quot;,
+        ///    &quot;type&quot;: &quot;mob&quot;,
+        ///    &quot;width&quot;: 0.5,
+        ///    &quot;height&quot;: 0.5,
+        ///    &quot;category&quot;: &quot;Drops&quot;
+        ///  },
+        ///  {
+        ///    &quot;id&quot;: 3,
+        ///    &quot;internalId&quot;: 3,
+        ///    &quot;name&quot;: &quot;area_effect_cloud&quot;,
+        ///    &quot;displayName&quot;: &quot;Area effect cloud&quot;,
+        ///    &quot;type [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string Entities {
+            get {
+                return ResourceManager.GetString("Entities", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] goodblur {
+            get {
+                object obj = ResourceManager.GetObject("goodblur", resourceCulture);
                 return ((byte[])(obj));
             }
         }
@@ -83,9 +129,9 @@ namespace Alex {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] blockstates_without_models_pretty {
+        internal static byte[] GradientBlur {
             get {
-                object obj = ResourceManager.GetObject("blockstates_without_models_pretty", resourceCulture);
+                object obj = ResourceManager.GetObject("GradientBlur", resourceCulture);
                 return ((byte[])(obj));
             }
         }
@@ -93,9 +139,59 @@ namespace Alex {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] ButtonState0 {
+        internal static byte[] grey_black_gradient01 {
             get {
-                object obj = ResourceManager.GetObject("ButtonState0", resourceCulture);
+                object obj = ResourceManager.GetObject("grey_black_gradient01", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {
+        ///	&quot;minecraft:air&quot;: {
+        ///		&quot;protocol_id&quot;: 0
+        ///	},
+        ///	&quot;minecraft:stone&quot;: {
+        ///		&quot;protocol_id&quot;: 1
+        ///	},
+        ///	&quot;minecraft:granite&quot;: {
+        ///		&quot;protocol_id&quot;: 2
+        ///	},
+        ///	&quot;minecraft:polished_granite&quot;: {
+        ///		&quot;protocol_id&quot;: 3
+        ///	},
+        ///	&quot;minecraft:diorite&quot;: {
+        ///		&quot;protocol_id&quot;: 4
+        ///	},
+        ///	&quot;minecraft:polished_diorite&quot;: {
+        ///		&quot;protocol_id&quot;: 5
+        ///	},
+        ///	&quot;minecraft:andesite&quot;: {
+        ///		&quot;protocol_id&quot;: 6
+        ///	},
+        ///	&quot;minecraft:polished_andesite&quot;: {
+        ///		&quot;protocol_id&quot;: 7
+        ///	},
+        ///	&quot;minecraft:grass_block&quot;: {
+        ///		&quot;protocol_id&quot;: 8
+        ///	},
+        ///	&quot;minecraft:dirt&quot;: {
+        ///		&quot;protocol_id&quot;: 9
+        ///	},
+        ///	&quot;minecraft:coar [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string Items {
+            get {
+                return ResourceManager.GetString("Items", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] logo {
+            get {
+                object obj = ResourceManager.GetObject("logo", resourceCulture);
                 return ((byte[])(obj));
             }
         }
@@ -103,9 +199,9 @@ namespace Alex {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] ButtonState1 {
+        internal static byte[] logo2 {
             get {
-                object obj = ResourceManager.GetObject("ButtonState1", resourceCulture);
+                object obj = ResourceManager.GetObject("logo2", resourceCulture);
                 return ((byte[])(obj));
             }
         }
@@ -113,50 +209,86 @@ namespace Alex {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] ButtonState2 {
+        internal static byte[] Minecraftia {
             get {
-                object obj = ResourceManager.GetObject("ButtonState2", resourceCulture);
+                object obj = ResourceManager.GetObject("Minecraftia", resourceCulture);
                 return ((byte[])(obj));
             }
         }
         
         /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
+        ///   Looks up a localized string similar to {
+        ///  &quot;minecraft:air&quot;: {
+        ///    &quot;states&quot;: [
+        ///      {
+        ///        &quot;id&quot;: 0,
+        ///        &quot;default&quot;: true
+        ///      }
+        ///    ]
+        ///  },
+        ///  &quot;minecraft:stone&quot;: {
+        ///    &quot;states&quot;: [
+        ///      {
+        ///        &quot;id&quot;: 1,
+        ///        &quot;default&quot;: true
+        ///      }
+        ///    ]
+        ///  },
+        ///  &quot;minecraft:granite&quot;: {
+        ///    &quot;states&quot;: [
+        ///      {
+        ///        &quot;id&quot;: 2,
+        ///        &quot;default&quot;: true
+        ///      }
+        ///    ]
+        ///  },
+        ///  &quot;minecraft:polished_granite&quot;: {
+        ///    &quot;states&quot;: [
+        ///      {
+        ///        &quot;id&quot;: 3,
+        ///        &quot;default&quot;: true
+        ///      }
+        ///    ]
+        ///  },
+        ///  &quot;minecraft:diorite&quot;: {
+        ///    &quot;states&quot; [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static byte[] crosshair {
+        internal static string NewBlocks {
             get {
-                object obj = ResourceManager.GetObject("crosshair", resourceCulture);
-                return ((byte[])(obj));
+                return ResourceManager.GetString("NewBlocks", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
+        ///   Looks up a localized string similar to {
+        ///  &quot;entity&quot;: {
+        ///    &quot;area_effect_cloud&quot;: {
+        ///      &quot;class&quot;: &quot;abp&quot;,
+        ///      &quot;display_name&quot;: &quot;Area Effect Cloud&quot;,
+        ///      &quot;id&quot;: 0,
+        ///      &quot;name&quot;: &quot;area_effect_cloud&quot;
+        ///    },
+        ///    &quot;armor_stand&quot;: {
+        ///      &quot;class&quot;: &quot;aiy&quot;,
+        ///      &quot;display_name&quot;: &quot;Armor Stand&quot;,
+        ///      &quot;height&quot;: 1.98,
+        ///      &quot;id&quot;: 1,
+        ///      &quot;name&quot;: &quot;armor_stand&quot;,
+        ///      &quot;width&quot;: 0.5
+        ///    },
+        ///    &quot;arrow&quot;: {
+        ///      &quot;class&quot;: &quot;all&quot;,
+        ///      &quot;display_name&quot;: &quot;Arrow&quot;,
+        ///      &quot;id&quot;: 2,
+        ///      &quot;name&quot;: &quot;arrow&quot;
+        ///    },
+        ///    &quot;bat&quot;: {
+        ///      &quot;class&quot;: &quot;agl&quot;,
+        ///      [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static byte[] grass {
+        internal static string NewEntities {
             get {
-                object obj = ResourceManager.GetObject("grass", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] mcbg {
-            get {
-                object obj = ResourceManager.GetObject("mcbg", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] Minecraftia1 {
-            get {
-                object obj = ResourceManager.GetObject("Minecraftia1", resourceCulture);
-                return ((byte[])(obj));
+                return ResourceManager.GetString("NewEntities", resourceCulture);
             }
         }
         
@@ -173,10 +305,76 @@ namespace Alex {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] wood {
+        internal static byte[] ProgressBar {
             get {
-                object obj = ResourceManager.GetObject("wood", resourceCulture);
+                object obj = ResourceManager.GetObject("ProgressBar", resourceCulture);
                 return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to [
+        ///	{
+        ///		&quot;runtimeID&quot;: 0,
+        ///		&quot;name&quot;: &quot;minecraft:air&quot;,
+        ///		&quot;id&quot;: 0,
+        ///		&quot;data&quot;: 0
+        ///	},
+        ///	{
+        ///		&quot;runtimeID&quot;: 1,
+        ///		&quot;name&quot;: &quot;minecraft:stone&quot;,
+        ///		&quot;id&quot;: 1,
+        ///		&quot;data&quot;: 0
+        ///	},
+        ///	{
+        ///		&quot;runtimeID&quot;: 2,
+        ///		&quot;name&quot;: &quot;minecraft:stone&quot;,
+        ///		&quot;id&quot;: 1,
+        ///		&quot;data&quot;: 1
+        ///	},
+        ///	{
+        ///		&quot;runtimeID&quot;: 3,
+        ///		&quot;name&quot;: &quot;minecraft:stone&quot;,
+        ///		&quot;id&quot;: 1,
+        ///		&quot;data&quot;: 2
+        ///	},
+        ///	{
+        ///		&quot;runtimeID&quot;: 4,
+        ///		&quot;name&quot;: &quot;minecraft:stone&quot;,
+        ///		&quot;id&quot;: 1,
+        ///		&quot;data&quot;: 3
+        ///	},
+        ///	{
+        ///		&quot;runtimeID&quot;: 5,
+        ///		&quot;name&quot;: &quot;minecraft:stone&quot;,
+        ///		&quot;id&quot;: 1,
+        ///		&quot;data&quot;: 4
+        ///	},
+        ///	{
+        ///		&quot;runtim [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string runtimeid_table {
+            get {
+                return ResourceManager.GetString("runtimeid_table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] Splash {
+            get {
+                object obj = ResourceManager.GetObject("Splash", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to .
+        /// </summary>
+        internal static string String1 {
+            get {
+                return ResourceManager.GetString("String1", resourceCulture);
             }
         }
     }

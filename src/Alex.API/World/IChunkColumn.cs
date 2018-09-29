@@ -1,4 +1,5 @@
 ﻿using System;
+using Alex.API.Blocks.State;
 using Alex.API.Graphics;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -6,12 +7,17 @@ namespace Alex.API.World
 {
 	public interface IChunkColumn : IDisposable
 	{
+		int X { get; }
+		int Z { get; }
+
+		IBlockState GetBlockState(int x, int y, int z);
+		void SetBlockState(int x, int y, int z, IBlockState state);
 		IBlock GetBlock(int bx, int by, int bz);
 		void SetBlock(int bx, int by, int bz, IBlock block);
 		void SetHeight(int bx, int bz, short h);
 		byte GetHeight(int bx, int bz);
-		void SetBiome(int bx, int bz, byte biome);
-		byte GetBiome(int bx, int bz);
+		void SetBiome(int bx, int bz, int biome);
+		int GetBiome(int bx, int bz);
 		byte GetBlocklight(int bx, int by, int bz);
 		void SetBlocklight(int bx, int by, int bz, byte data);
 		byte GetSkylight(int bx, int by, int bz);

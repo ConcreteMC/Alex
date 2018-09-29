@@ -1,43 +1,74 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Drawing;
+//using System.Reflection.Metadata.Ecma335;
+using System.Security.Cryptography.X509Certificates;
+using Alex.API.Blocks.State;
+using Alex.API.Entities;
 using Alex.API.Graphics;
+using Alex.API.Network;
+using Alex.API.Utils;
 using Alex.API.World;
-using Alex.Gamestates;
+using Alex.Entities;
+using Alex.GameStates;
+using Alex.Graphics.Models;
 using Alex.Rendering;
+using Alex.Rendering.Camera;
 using Alex.Utils;
-using log4net;
+using Alex.Worlds.Lighting;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MiNET.Blocks;
-using MiNET.Entities;
-using MiNET.Utils;
-using MiNET.Worlds;
-using EntityManager = Alex.Rendering.EntityManager;
+using NLog;
+using Block = Alex.Blocks.Block;
+using Color = Microsoft.Xna.Framework.Color;
+using EntityManager = Alex.Worlds.EntityManager;
+using MathF = System.MathF;
 
 namespace Alex.Worlds
 {
 	public class World : IWorld, IWorldReceiver
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(World));
-		
-        private GraphicsDevice Graphics { get; }
-		private Rendering.Camera.Camera Camera { get; }
-        public World(Alex alex, GraphicsDevice graphics, Rendering.Camera.Camera camera, WorldProvider worldProvider)
-        {
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(World));
+
+		private GraphicsDevice Graphics { get; }
+		public Rendering.Camera.Camera Camera { get; set; }
+
+		public LevelInfo WorldInfo { get; set; }
+
+		public Player Player { get; set; }
+		private Alex Alex { get; }
+		public World(Alex alex, GraphicsDevice graphics, Rendering.Camera.Camera camera, INetworkProvider networkProvider)
+		{
+			Alex = alex;
             Graphics = graphics;
 	        Camera = camera;
 
-			ChunkManager = new ChunkManager(alex, graphics, camera, this);
-			EntityManager = new EntityManager(graphics, this);
-
-	        WorldProvider = worldProvider;
-			WorldProvider.Init(this);
-
+			PhysicsEngine = new PhysicsManager(alex, this);
+			ChunkManager = new ChunkManager(alex, graphics, this);
+			EntityManager = new EntityManager(graphics, this, networkProvider);
+			Ticker = new TickManager(this);
+			 
 			ChunkManager.Start();
-        }
 
+	        alex.Resources.BedrockResourcePack.TryGetTexture("textures/entity/alex", out Bitmap rawTexture);
+	        var t = TextureUtils.BitmapToTexture2D(graphics, rawTexture);
+
+			Player = new Player(graphics, alex, alex.GameSettings.Username, this, t, networkProvider, PlayerIndex.One);
+	        Player.KnownPosition = new PlayerLocation(GetSpawnPoint());
+	        Camera.MoveTo(Player.KnownPosition, Vector3.Zero);
+
+	        PhysicsEngine.AddTickable(Player);
+		}
+
+		//public long WorldTime { get; private set; } = 6000;
+		public bool FreezeWorldTime { get; set; } = false;
+
+		public TickManager Ticker { get; }
 		public EntityManager EntityManager { get; }
 		public ChunkManager ChunkManager { get; private set; }
-		private WorldProvider WorldProvider { get; set; }
+		public PhysicsManager PhysicsEngine { get; set; }
+		//	private WorldProvider WorldProvider { get; set; }
 
 		public int Vertices
         {
@@ -54,6 +85,11 @@ namespace Alex.Worlds
             get { return ChunkManager.ChunkUpdates; }
         }
 
+		public int LowPriorityUpdates
+		{
+			get { return ChunkManager.LowPriortiyUpdates; }
+		}
+
 		public void ResetChunks()
         {
             ChunkManager.ClearChunks();
@@ -66,52 +102,78 @@ namespace Alex.Worlds
 
         public void Render(IRenderArgs args)
         {
-            Graphics.DepthStencilState = DepthStencilState.Default;
+			Graphics.DepthStencilState = DepthStencilState.Default;
             Graphics.SamplerStates[0] = SamplerState.PointWrap;
             
             ChunkManager.Draw(args);
-			EntityManager.Render(args, Camera);
+			EntityManager.Render(args);
+
+	        if (Camera is ThirdPersonCamera)
+	        {
+		        Player.Render(args);
+	        }
         }
 
 		public void Render2D(IRenderArgs args)
 		{
-			EntityManager.Render2D(args, Camera);
+			args.Camera = Camera;
+
+			EntityManager.Render2D(args);
 		}
 
-		public void Update(GameTime gameTime)
+		private float _fovModifier = -1;
+		public void Update(UpdateArgs args, SkyBox skyRenderer)
 		{
-			ChunkManager.Update();
-			EntityManager.Update(gameTime);
+			args.Camera = Camera;
+			if (Player.FOVModifier != _fovModifier)
+			{
+				_fovModifier = Player.FOVModifier;
+
+				Camera.FOV += _fovModifier;
+				Camera.UpdateProjectionMatrix();
+				Camera.FOV -= _fovModifier;
+			}
+			Camera.Update(args, Player);
+
+			ChunkManager.Update(args);
+			EntityManager.Update(args, skyRenderer);
+
+			var diffuseColor = Color.White.ToVector3() * skyRenderer.BrightnessModifier;
+			ChunkManager.AmbientLightColor = diffuseColor;
+
+			Player.ModelRenderer.DiffuseColor = diffuseColor;
+			Player.Update(args);
+
+			if (Player.IsInWater)
+			{
+				ChunkManager.FogColor = new Vector3(0.2666667F, 0.6862745F, 0.9607844F) * skyRenderer.BrightnessModifier;
+				ChunkManager.FogDistance = (float)Math.Pow(Alex.GameSettings.RenderDistance, 2) * 0.15f;
+			}
+			else
+			{
+				ChunkManager.FogColor = skyRenderer.WorldFogColor.ToVector3();
+				ChunkManager.FogDistance = (float) Math.Pow(Alex.GameSettings.RenderDistance, 2) * 0.8f;
+			}
+
+			PhysicsEngine.Update(args.GameTime);
+
+			if (Ticker.Update(args))
+			{
+				if (!FreezeWorldTime)
+				{
+					WorldInfo.Time++;
+				}
+
+				
+				//if (Player.IsSpawned)
+			}
 		}
 
+		public Vector3 SpawnPoint { get; set; } = Vector3.Zero;
         public Vector3 GetSpawnPoint()
         {
-	        if (WorldProvider != null)
-	        {
-		        return WorldProvider.GetSpawnPoint();
-	        }
-            return Vector3.Zero;
+	        return SpawnPoint;
         }
-
-	    public bool IsSolid(Vector3 location)
-	    {
-		    return IsSolid(location.X, location.Y, location.Z);
-	    }
-
-	    public bool IsSolid(float x, float y, float z)
-	    {
-		    return GetBlock(x, y, z).Solid;
-	    }
-
-		public bool IsTransparent(Vector3 location)
-		{
-			return IsTransparent(location.X, location.Y, location.Z);
-		}
-
-		public bool IsTransparent(float x, float y, float z)
-		{
-			return GetBlock(x, y, z).Transparent;
-		}
 
         public byte GetSkyLight(Vector3 position)
         {
@@ -156,6 +218,11 @@ namespace Alex.Worlds
             return 15;
         }
 
+		public IBlock GetBlock(BlockCoordinates position)
+		{
+			return GetBlock(position.X, position.Y, position.Z);
+		}
+
 		public IBlock GetBlock(Vector3 position)
         {
             return GetBlock(position.X, position.Y, position.Z);
@@ -173,22 +240,95 @@ namespace Alex.Worlds
             {
                 return chunk.GetBlock(x & 0xf, y & 0xff, z & 0xf);
             }
-            return BlockFactory.GetBlock(0, 0);
+            return BlockFactory.GetBlock(0);
         }
 
-	    public void SetBlock(float x, float y, float z, IBlock block)
+		public void SetBlock(Block block)
+		{
+			var x = block.Coordinates.X;
+			var y = block.Coordinates.Y;
+			var z = block.Coordinates.Z;
+
+			IChunkColumn chunk;
+			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
+			{
+				chunk.SetBlock(x & 0xf, y & 0xff, z & 0xf, block);
+				ChunkManager.ScheduleChunkUpdate(new ChunkCoordinates(x >> 4, z >> 4), ScheduleType.Full);
+
+				UpdateNeighbors(x, y, z);
+			}
+		}
+
+		public void SetBlock(float x, float y, float z, IBlock block)
 	    {
-		    SetBlock((int) x, (int) y, (int) z, block);
+		    SetBlock((int) Math.Floor(x), (int)Math.Floor(y), (int)Math.Floor(z), block);
 	    }
 
 	    public void SetBlock(int x, int y, int z, IBlock block)
 	    {
+		    var chunkCoords = new ChunkCoordinates(x >> 4, z >> 4);
+
 			IChunkColumn chunk;
-		    if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
+		    if (ChunkManager.TryGetChunk(chunkCoords, out chunk))
 		    {
 				chunk.SetBlock(x & 0xf, y & 0xff, z & 0xf, block);
-		    }
+				ChunkManager.ScheduleChunkUpdate(chunkCoords, ScheduleType.Full);
+
+			    UpdateNeighbors(x, y, z);
+			} 
 	    }
+
+		public void SetBlockState(int x, int y, int z, IBlockState block)
+		{
+			var chunkCoords = new ChunkCoordinates(x >> 4, z >> 4);
+
+			IChunkColumn chunk;
+			if (ChunkManager.TryGetChunk(chunkCoords, out chunk))
+			{
+				var cx = x & 0xf;
+				var cy = y & 0xff;
+				var cz = z & 0xf;
+
+				chunk.SetBlockState(cx, cy, cz, block);
+				
+				ChunkManager.ScheduleChunkUpdate(chunkCoords, ScheduleType.Full);
+
+				UpdateNeighbors(x,y,z);
+			}
+		}
+
+		private void UpdateNeighbors(int x, int y, int z)
+		{
+			var source = new BlockCoordinates(x, y, z);
+
+			ScheduleBlockUpdate(source, new BlockCoordinates(x + 1, y, z));
+			ScheduleBlockUpdate(source, new BlockCoordinates(x - 1, y, z));
+
+			ScheduleBlockUpdate(source, new BlockCoordinates(x, y, z + 1));
+			ScheduleBlockUpdate(source, new BlockCoordinates(x, y, z - 1));
+
+			ScheduleBlockUpdate(source, new BlockCoordinates(x, y + 1, z));
+			ScheduleBlockUpdate(source, new BlockCoordinates(x, y - 1, z));
+		}
+
+		private void ScheduleBlockUpdate(BlockCoordinates updatedBlock, BlockCoordinates block)
+		{
+			Ticker.ScheduleTick(() =>
+			{
+				GetBlock(block).BlockUpdate(this, block, updatedBlock);
+			}, 1);
+		}
+
+		public IBlockState GetBlockState(int x, int y, int z)
+		{
+			IChunkColumn chunk;
+			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
+			{
+				return chunk.GetBlockState(x & 0xf, y & 0xff, z & 0xf);
+			}
+
+			return BlockFactory.GetBlockState(0);
+		}
 
 		public int GetBiome(int x, int y, int z)
 		{
@@ -196,30 +336,49 @@ namespace Alex.Worlds
 			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 			{
 				Worlds.ChunkColumn realColumn = (Worlds.ChunkColumn) chunk;
-				return	realColumn.GetBiome((int) x & 0xf, (int) z & 0xf);
+				return	realColumn.GetBiome(x & 0xf, z & 0xf);
 			}
 
+			Log.Debug($"Failed getting biome: {x} | {y} | {z}");
 			return -1;
 		}
 
-		/*public void SetBlockState(float x, float y, float z, IBlockState blockState)
+		public void TickChunk(ChunkColumn chunkColumn)
 		{
-			SetBlockState((int)x, (int)y, (int)z, blockState);
+			var chunkCoords = new Vector3(chunkColumn.X >> 4, 0, chunkColumn.Z >> 4);
+
+			for (int x = 0; x < 16; x++)
+			{
+				for (int z = 0; z < 16; z++)
+				{
+					for (int y = chunkColumn.GetHeight(x, z); y > 1; y--)
+					{
+						var block = chunkColumn.GetBlock(x, y, z);
+						if (block.Tick(this, chunkCoords + new Vector3(x, y, z)))
+						{
+
+						}
+					}
+				}
+			}
 		}
 
-		public void SetBlockState(int x, int y, int z, IBlockState blockState)
+		private void InitiateChunk(ChunkColumn chunkColumn)
 		{
-		//	IChunkColumn chunk;
-		//	if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
-			//{
-		//		chunk.SetBlockState(x & 0xf, y & 0xff, z & 0xf, blockState);
-			//}
+			var chunkCoords = new BlockCoordinates(chunkColumn.X >> 4, 0, chunkColumn.Z >> 4);
+
+			for (int x = 0; x < 16; x++)
+			{
+				for (int z = 0; z < 16; z++)
+				{
+					for (int y = 255; y > 0; y--)
+					{
+						var block = (Block)chunkColumn.GetBlock(x, y, z);
+						block.BlockPlaced(this, chunkCoords + new BlockCoordinates(x, y, z));
+					}
+				}
+			}
 		}
-		
-		public IBlockState GetBlockState(float x, float y, float z)
-		{
-			throw new NotImplementedException();
-		}*/
 
 		private bool _destroyed = false;
 		public void Destroy()
@@ -227,21 +386,24 @@ namespace Alex.Worlds
 			if (_destroyed) return;
 			_destroyed = true;
 
+			PhysicsEngine.Stop();
 			EntityManager.Dispose();
-			WorldProvider.Dispose();
 			ChunkManager.Dispose();
+
+			PhysicsEngine.Dispose();
 		}
 
 		#region IWorldReceiver (Handle WorldProvider callbacks)
 
-		public Vector3 RequestPlayerPosition()
+		public IEntity GetPlayerEntity()
 		{
-			return Camera.Position;
+			return Player;
 		}
 
 		public void ChunkReceived(IChunkColumn chunkColumn, int x, int z, bool update)
 		{
 			ChunkManager.AddChunk(chunkColumn, new ChunkCoordinates(x, z), update);
+			//InitiateChunk(chunkColumn as ChunkColumn);
 		}
 
 		public void ChunkUnload(int x, int z)
@@ -252,16 +414,84 @@ namespace Alex.Worlds
 			EntityManager.UnloadEntities(chunkCoordinates);
 		}
 
+		public void SpawnEntity(long entityId, IEntity entity)
+		{
+			if (EntityManager.AddEntity(entityId, (Entity) entity))
+			{
+				PhysicsEngine.AddTickable((Entity) entity);
+			}
+		}
+
 		public void SpawnEntity(long entityId, Entity entity)
 		{
-			EntityManager.AddEntity(entityId, entity);
+			if (EntityManager.AddEntity(entityId, entity))
+			{
+				PhysicsEngine.AddTickable(entity);
+			}
 			//Log.Info($"Spawned entity {entityId} : {entity} at {entity.KnownPosition} with renderer {entity.GetModelRenderer()}");
 		}
 
 		public void DespawnEntity(long entityId)
 		{
+			if (EntityManager.TryGet(entityId, out IEntity entity))
+			{
+				PhysicsEngine.Remove(entity);
+			}
+
 			EntityManager.Remove(entityId);
-		//	Log.Info($"Despawned entity {entityId}");
+			//	Log.Info($"Despawned entity {entityId}");
+		}
+
+		public void UpdatePlayerPosition(PlayerLocation location)
+		{
+			Player.KnownPosition = location;
+		}
+
+		public void UpdateEntityPosition(long entityId, PlayerLocation position, bool relative = false, bool updateLook = false)
+		{
+			if (EntityManager.TryGet(entityId, out IEntity entity))
+			{
+				entity.KnownPosition.OnGround = position.OnGround;
+				if (!relative)
+				{
+					entity.KnownPosition = position;
+				}
+				else
+				{
+					entity.KnownPosition.X += position.X;
+					entity.KnownPosition.Y += position.Y;
+					entity.KnownPosition.Z += position.Z;	
+					//entity.KnownPosition.Move(position);
+					
+					if (updateLook)
+					{
+						//entity.KnownPosition.Yaw = position.Yaw;
+						entity.KnownPosition.Pitch = position.Pitch;
+					//	entity.KnownPosition.HeadYaw = position.HeadYaw;
+						entity.UpdateHeadYaw(position.HeadYaw);
+					}
+				}
+			}
+		}
+
+		public bool TryGetEntity(long entityId, out IEntity entity)
+		{
+			return EntityManager.TryGet(entityId, out entity);
+		}
+
+		public void SetTime(long worldTime)
+		{
+			WorldInfo.Time = worldTime;
+		}
+
+		public void SetRain(bool raining)
+		{
+			WorldInfo.Raining = raining;
+		}
+
+		public void SetBlockState(BlockCoordinates coordinates, IBlockState blockState)
+		{
+			SetBlockState(coordinates.X, coordinates.Y, coordinates.Z, blockState);
 		}
 
 		#endregion

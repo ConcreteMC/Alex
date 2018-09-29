@@ -4,12 +4,12 @@ namespace Alex.Blocks.Storage
 {
 	public class FlexibleStorage
 	{
-		private long[] _data;
+		public long[] _data;
 		private int _bitsPerEntry;
 		private int _size;
 		private long _maxEntryValue;
 
-		public FlexibleStorage(int bitsPerEntry, int size) : this(bitsPerEntry, new long[RoundToNearest(size * bitsPerEntry, 64) / 64])
+		public FlexibleStorage(int bitsPerEntry, int size) : this(bitsPerEntry, new long[RoundUp(size * bitsPerEntry, 64) / 64])
 		{
 		}
 
@@ -26,8 +26,8 @@ namespace Alex.Blocks.Storage
 			this._size = this._data.Length * 64 / this._bitsPerEntry;
 			this._maxEntryValue = (1L << this._bitsPerEntry) - 1;
 		}
-
-		public int this[int index]
+		
+		public uint this[int index]
 		{
 			get
 			{
@@ -36,18 +36,19 @@ namespace Alex.Blocks.Storage
 					throw new IndexOutOfRangeException();
 				}
 
+
 				int bitIndex = index * this._bitsPerEntry;
 				int startIndex = bitIndex / 64;
 				int endIndex = ((index + 1) * this._bitsPerEntry - 1) / 64;
 				int startBitSubIndex = bitIndex % 64;
 				if (startIndex == endIndex)
 				{
-					return (int)(this._data[startIndex] >> startBitSubIndex & this._maxEntryValue);
+					return (uint)(this._data[startIndex] >> startBitSubIndex & this._maxEntryValue);
 				}
 				else
 				{
 					int endBitSubIndex = 64 - startBitSubIndex;
-					return (int)((this._data[startIndex] >> startBitSubIndex | this._data[endIndex] << endBitSubIndex) & this._maxEntryValue);
+					return (uint)((this._data[startIndex] >> startBitSubIndex | this._data[endIndex] << endBitSubIndex) & this._maxEntryValue);
 				}
 			}
 			set
@@ -57,7 +58,7 @@ namespace Alex.Blocks.Storage
 					throw new IndexOutOfRangeException();
 				}
 
-				if (value < 0 || value > this._maxEntryValue)
+				if (value > this._maxEntryValue)
 				{
 					throw new Exception("Value cannot be outside of accepted range.");
 				}
@@ -75,18 +76,8 @@ namespace Alex.Blocks.Storage
 			}
 		}
 
-		public long[] GetBackingLongArray()
-		{
-			return _data;
-		}
-
-		public int Size()
-		{
-			return _size;
-		}
-
-
-		private static int RoundToNearest(int value, int roundTo)
+		public int Length => _size;
+		private static int RoundUp(int value, int roundTo)
 		{
 			if (roundTo == 0)
 			{
@@ -104,7 +95,7 @@ namespace Alex.Blocks.Storage
 				}
 
 				int remainder = value % roundTo;
-				return remainder != 0 ? value + roundTo - remainder : value;
+				return remainder == 0 ? value : value + roundTo - remainder;
 			}
 		}
 	}

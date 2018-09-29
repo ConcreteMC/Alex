@@ -1,7 +1,14 @@
 ﻿using System;
+using System.Text;
+using Alex.API.Graphics;
+using Alex.API.Network;
+using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks;
-using Alex.Graphics.Overlays;
+using Alex.GameStates.Gui.InGame;
+using Alex.GameStates.Hud;
+using Alex.Graphics.Models;
+using Alex.Gui.Elements;
 using Alex.Rendering.Camera;
 using Alex.Rendering.UI;
 using Alex.Utils;
@@ -10,42 +17,128 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-namespace Alex.Gamestates.Playing
+namespace Alex.GameStates.Playing
 {
-	public class PlayingState : Gamestate
+	public class PlayingState : GameState
 	{
-		private Alex Alex { get; }
+		private SkyBox SkyRenderer { get; }
 		private World World { get; }
-		private FirstPersonCamera Camera;
-		private CameraComponent CamComponent { get; }
 
 		private FpsMonitor FpsCounter { get; set; }
-		private Texture2D CrosshairTexture { get; set; }
 
-		private ChatComponent Chat { get; }
+		private WorldProvider WorldProvider { get; }
+		public INetworkProvider NetworkProvider { get; }
 
-		public PlayingState(Alex alex, GraphicsDevice graphics, WorldProvider worldProvider) : base(graphics)
+		private readonly PlayingHud _playingHud;
+		private readonly GuiDebugInfo _debugInfo;
+
+		public PlayingState(Alex alex, GraphicsDevice graphics, WorldProvider worldProvider, INetworkProvider networkProvider) : base(alex)
 		{
-			Alex = alex;
-			Chat = new ChatComponent();
+			NetworkProvider = networkProvider;
 
-			Camera = new FirstPersonCamera(alex.GameSettings.RenderDistance, Vector3.Zero, Vector3.Zero);
+			World = new World(alex, graphics, new FirstPersonCamera(alex.GameSettings.RenderDistance, Vector3.Zero, Vector3.Zero), networkProvider);
+			SkyRenderer = new SkyBox(alex, graphics, World);
 
-			World = new World(alex, graphics, Camera, worldProvider);
-			Camera.MoveTo(World.GetSpawnPoint(), Vector3.Zero);
+			WorldProvider = worldProvider;
+			if (worldProvider is SPWorldProvider)
+			{
+				World.FreezeWorldTime = true;
+			}
 
-			CamComponent = new CameraComponent(Camera, Graphics, World, alex.GameSettings);
+			var chat = new ChatComponent();
+
+			WorldProvider = worldProvider;
+			WorldProvider.Init(World, chat, out var info, out var chatProvider);
+			World.WorldInfo = info;
+			chat.ChatProvider = chatProvider;
+
+			_playingHud = new PlayingHud(Alex, World.Player, chat);
+			_debugInfo = new GuiDebugInfo();
+			FpsCounter = new FpsMonitor();
+			InitDebugInfo();
 		}
 
-		public override void Init(RenderArgs args)
+		protected override void OnLoad(IRenderArgs args)
 		{
-			Controls.Add("chatComponent", Chat);
+			World.SpawnPoint = WorldProvider.GetSpawnPoint();
+			World.Camera.MoveTo(World.GetSpawnPoint(), Vector3.Zero);
+			base.OnLoad(args);
+		}
 
-			FpsCounter = new FpsMonitor();
-			CrosshairTexture = TextureUtils.ImageToTexture2D(args.GraphicsDevice, Resources.crosshair);
+		protected override void OnShow()
+		{
+			Alex.IsMouseVisible = false;
 
-			Camera.MoveTo(World.GetSpawnPoint(), Vector3.Zero);
-            base.Init(args);
+			base.OnShow();
+			Alex.GuiManager.AddScreen(_playingHud);
+			Alex.GuiManager.AddScreen(_debugInfo);
+		}
+
+		protected override void OnHide()
+		{
+			Alex.GuiManager.RemoveScreen(_debugInfo);
+			Alex.GuiManager.RemoveScreen(_playingHud);
+			base.OnHide();
+		}
+
+		private void InitDebugInfo()
+		{
+			_debugInfo.AddDebugLeft(() =>
+			{
+				FpsCounter.Update();
+				return $"Alex {Alex.Version} ({FpsCounter.Value:##} FPS, {World.ChunkUpdates}:{World.LowPriorityUpdates} chunk updates)";
+			});
+			_debugInfo.AddDebugLeft(() =>
+			{
+				var pos = World.Player.KnownPosition;
+				var blockPos = pos.GetCoordinates3D();
+				return $"RenderPosition: (X={pos.X:F2}, Y={pos.Y:F2}, Z={pos.Z:F2}) / Block: ({blockPos.X:D}, {blockPos.Y:D}, {blockPos.Z:D})";
+			});
+			_debugInfo.AddDebugLeft(() =>
+			{
+				var pos = World.Player.KnownPosition;
+				return  $"Facing: {GetCardinalDirection(pos)} (HeadYaw={pos.HeadYaw:F2}, Yaw={pos.Yaw:F2}, Pitch={pos.Pitch:F2})";
+			});
+			_debugInfo.AddDebugLeft(() =>
+			{
+				var pos = World.Player.Velocity;
+				return $"Velocity: (X={pos.X:F2}, Y={pos.Y:F2}, Z={pos.Z:F2}) / SpeedFactor: {World.Player.Controller.LastSpeedFactor:F2}";
+			});
+			_debugInfo.AddDebugLeft(() => $"Vertices: {World.Vertices}");
+			_debugInfo.AddDebugLeft(() => $"Chunks: {World.ChunkCount}, {World.ChunkManager.RenderedChunks}");
+			_debugInfo.AddDebugLeft(() => $"Entities: {World.EntityManager.EntityCount}, {World.EntityManager.EntitiesRendered}");
+			_debugInfo.AddDebugLeft(() =>
+			{
+				var pos = World.Player.KnownPosition.GetCoordinates3D();
+				return $"Biome: {World.GetBiome(pos.X,pos.Y,pos.Z)}";
+			});
+
+			_debugInfo.AddDebugRight(() => Alex.DotnetRuntime);
+			_debugInfo.AddDebugRight(() => MemoryUsageDisplay);
+			_debugInfo.AddDebugRight(() => 
+			{
+				if (_raytracedBlock.Y > 0 && _raytracedBlock.Y < 256)
+				{
+					StringBuilder sb = new StringBuilder();
+					sb.AppendLine("Looking at: " + _raytracedBlock);
+					sb.AppendLine($"{SelBlock}");
+
+					if (SelBlock.BlockState != null)
+					{
+						var dict = SelBlock.BlockState.ToDictionary();
+						foreach (var kv in dict)
+						{
+							sb.AppendLine($"{kv.Key.Name}={kv.Value}");
+						}
+					}
+
+					return sb.ToString();
+				}
+				else
+				{
+					return string.Empty;
+				}
+			});
 		}
 
 		private float AspectRatio { get; set; }
@@ -53,37 +146,38 @@ namespace Alex.Gamestates.Playing
 		private string MemoryUsageDisplay { get; set; } = "";
 
 		private TimeSpan _previousMemUpdate = TimeSpan.Zero;
-		public override void OnUpdate(GameTime gameTime)
+		protected override void OnUpdate(GameTime gameTime)
 		{
-			if (Alex.IsActive)
+			var args = new UpdateArgs()
+			{
+				Camera = World.Camera,
+				GraphicsDevice = Graphics,
+				GameTime = gameTime
+			};
+
+		//	if (Alex.IsActive)
 			{
 				var newAspectRatio = Graphics.Viewport.AspectRatio;
 				if (AspectRatio != newAspectRatio)
 				{
-					Camera.UpdateAspectRatio(newAspectRatio);
+					World.Camera.UpdateAspectRatio(newAspectRatio);
 					AspectRatio = newAspectRatio;
 				}
 
-				CamComponent.Update(gameTime, !Chat.RenderChatInput);
-
 				UpdateRayTracer(Alex.GraphicsDevice, World);
 
-				CheckInput(gameTime);
-
-				World.Update(gameTime);
-
-				var headBlock = World.GetBlock(Camera.Position);
-				if (headBlock.BlockId == 8 || headBlock.BlockId == 9)
+				if (!_playingHud.Chat.Focused)
 				{
-					if (!_renderWaterOverlay)
-					{
-						_renderWaterOverlay = true;
-					}
-				}else if (_renderWaterOverlay)
+					World.Player.Controller.CheckInput = Alex.IsActive;
+					CheckInput(gameTime);
+				}
+				else
 				{
-					_renderWaterOverlay = false;
+					World.Player.Controller.CheckInput = false;
 				}
 
+				SkyRenderer.Update(args);
+				World.Update(args, SkyRenderer);
 
 				if (RenderDebug)
 				{
@@ -98,12 +192,10 @@ namespace Alex.Gamestates.Playing
 			base.OnUpdate(gameTime);
 		}
 
-		private bool _renderWaterOverlay = false;
-
 		private Vector3 _raytracedBlock;
 		protected void UpdateRayTracer(GraphicsDevice graphics, World world)
 		{
-			_raytracedBlock = RayTracer.Raytrace(graphics, world, Camera);
+			_raytracedBlock = RayTracer.Raytrace(graphics, world, World.Camera);
 			if (_raytracedBlock.Y > 0 && _raytracedBlock.Y < 256)
 			{
 				SelBlock = (Block)World.GetBlock(_raytracedBlock.X, _raytracedBlock.Y, _raytracedBlock.Z);
@@ -115,266 +207,72 @@ namespace Alex.Gamestates.Playing
 			}
 		}
 
-		private void ToggleWireframe()
-		{
-			RenderWireframe = !RenderWireframe;
-
-			if (RenderWireframe)
-			{
-				Graphics.RasterizerState.FillMode = FillMode.WireFrame;
-			}
-			else
-			{
-				Graphics.RasterizerState.FillMode = FillMode.Solid;
-			}
-		}
-
 		private Block SelBlock { get; set; } = new Air();
 		private Microsoft.Xna.Framework.BoundingBox RayTraceBoundingBox { get; set; }
 		private bool RenderDebug { get; set; } = true;
-		
+
 		private KeyboardState _oldKeyboardState;
-		private MouseState _oldMouseState;
-		protected void CheckInput(GameTime gameTime)
+		protected void CheckInput(GameTime gameTime) //TODO: Move this input out of the main update loop and use the new per-player based implementation by @TruDan
 		{
-			MouseState currentMouseState = Mouse.GetState();
-			if (currentMouseState != _oldMouseState)
-			{
-				if (currentMouseState.LeftButton == ButtonState.Pressed)
-				{
-					if (_raytracedBlock.Y > 0 && _raytracedBlock.Y < 256)
-					{
-						//World.SetBlock(_selectedBlock.X, _selectedBlock.Y, _selectedBlock.Z, new Air());
-					}
-				}
-
-				if (currentMouseState.RightButton == ButtonState.Pressed)
-				{
-					if (_raytracedBlock.Y > 0 && _raytracedBlock.Y < 256)
-					{
-					//	World.SetBlock(_selectedBlock.X, _selectedBlock.Y + 1, _selectedBlock.Z, new Stone());
-					}
-				}
-			}
-			_oldMouseState = currentMouseState;
-
 			KeyboardState currentKeyboardState = Keyboard.GetState();
 			if (currentKeyboardState != _oldKeyboardState)
 			{
-				if (currentKeyboardState.IsKeyDown(KeyBinds.Menu))
+				if (currentKeyboardState.IsKeyDown(KeyBinds.DebugInfo))
 				{
-					if (Chat.RenderChatInput)
+					RenderDebug = !RenderDebug;
+				}
+
+				if (currentKeyboardState.IsKeyDown(KeyBinds.ReBuildChunks))
+				{
+					World.RebuildChunks();
+				}
+
+				if (currentKeyboardState.IsKeyDown(KeyBinds.Fog) && !_oldKeyboardState.IsKeyDown(KeyBinds.Fog))
+				{
+					World.ChunkManager.OpaqueEffect.FogEnabled = !World.ChunkManager.OpaqueEffect.FogEnabled;
+					World.ChunkManager.TransparentEffect.FogEnabled = !World.ChunkManager.TransparentEffect.FogEnabled;
+				}
+
+				if (currentKeyboardState.IsKeyDown(KeyBinds.ChangeCamera))
+				{
+					if (World.Camera is FirstPersonCamera)
 					{
-						Chat.Dismiss();			
+						World.Camera = new ThirdPersonCamera(Alex.GameSettings.RenderDistance, World.Player.KnownPosition, Vector3.Zero);
 					}
 					else
 					{
-						Alex.GamestateManager.SetActiveState(new InGameMenuState(Alex, this, currentKeyboardState));
-					}
-				}
-
-				if (!Chat.RenderChatInput)
-				{
-					if (currentKeyboardState.IsKeyDown(KeyBinds.DebugInfo))
-					{
-						RenderDebug = !RenderDebug;
-					}
-
-					if (currentKeyboardState.IsKeyDown(KeyBinds.ToggleWireframe)) 
-					{
-						ToggleWireframe();
-					}
-
-					if (currentKeyboardState.IsKeyDown(KeyBinds.ToggleFreeCam))
-					{
-						CamComponent.IsFreeCam = !CamComponent.IsFreeCam;
-					}
-
-					if (currentKeyboardState.IsKeyDown(KeyBinds.ReBuildChunks))
-					{
-						World.RebuildChunks();
+						World.Camera = new FirstPersonCamera(Alex.GameSettings.RenderDistance, World.Player.KnownPosition, Vector3.Zero);
 					}
 				}
 			}
+
 			_oldKeyboardState = currentKeyboardState;
 		}
 
-		public override void Render2D(RenderArgs args)
+		protected void Draw2D(IRenderArgs args)
 		{
 			try
 			{
 				args.SpriteBatch.Begin();
 
-
-				if (_renderWaterOverlay)
-				{
-					//Start draw background
-					var retval = new Microsoft.Xna.Framework.Rectangle(
-						args.SpriteBatch.GraphicsDevice.Viewport.X,
-						args.SpriteBatch.GraphicsDevice.Viewport.Y,
-						args.SpriteBatch.GraphicsDevice.Viewport.Width,
-						args.SpriteBatch.GraphicsDevice.Viewport.Height);
-					args.SpriteBatch.FillRectangle(retval, new Color(Color.DarkBlue, 0.5f));
-					//End draw backgroun
-				}
-
-				args.SpriteBatch.Draw(CrosshairTexture,
-					new Vector2(CenterScreen.X - CrosshairTexture.Width / 2f, CenterScreen.Y - CrosshairTexture.Height / 2f));
-
 				if (_raytracedBlock.Y > 0 && _raytracedBlock.Y < 256)
 				{
 					args.SpriteBatch.RenderBoundingBox(
 						RayTraceBoundingBox,
-						Camera.ViewMatrix, Camera.ProjectionMatrix, Color.LightGray);
+						World.Camera.ViewMatrix, World.Camera.ProjectionMatrix, Color.LightGray);
 				}
 
 				World.Render2D(args);
-
-				if (RenderDebug)
-				{
-					RenderDebugScreen(args);
-				}
 			}
 			finally
 			{
 				args.SpriteBatch.End();
 			}
-
-		//	ActiveOverlays.ForEach(x => x.Render(args));
-
-			base.Render2D(args);
 		}
 
-		private void RenderDebugScreen(RenderArgs args)
+		public static string GetCardinalDirection(PlayerLocation cam)
 		{
-			DebugLeft(args);
-			DebugRight(args);
-		}
-
-		private void DebugRight(RenderArgs args)
-		{
-			var screenWidth = args.GraphicsDevice.Viewport.Width;
-			//var device = args.GraphicsDevice.Adapter.DeviceName;
-			var positionString = "";
-			var meisured = Vector2.Zero;
-			int y = 0;
-
-			positionString = Alex.DotnetRuntime;
-			meisured = Alex.Font.MeasureString(positionString);
-
-			args.SpriteBatch.FillRectangle(new Rectangle(screenWidth - (int)meisured.X, y, (int)meisured.X, (int)meisured.Y),
-				new Color(Color.Black, 64));
-			args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(screenWidth - (int)meisured.X, y), Color.White);
-
-			y += (int)meisured.Y;
-
-			positionString = MemoryUsageDisplay;
-			meisured = Alex.Font.MeasureString(positionString);
-
-			args.SpriteBatch.FillRectangle(new Rectangle(screenWidth - (int)meisured.X, y, (int)meisured.X, (int)meisured.Y),
-				new Color(Color.Black, 64));
-			args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(screenWidth - (int)meisured.X, y), Color.White);
-
-			y += (int)meisured.Y;
-
-			if (_raytracedBlock.Y > 0 && _raytracedBlock.Y < 256)
-			{
-				positionString = "Looking at: " + _raytracedBlock;
-				meisured = Alex.Font.MeasureString(positionString);
-
-				args.SpriteBatch.FillRectangle(new Rectangle(screenWidth - (int) meisured.X, y, (int) meisured.X, (int) meisured.Y),
-					new Color(Color.Black, 64));
-				args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(screenWidth - (int) meisured.X, y), Color.White);
-
-				y += (int) meisured.Y;
-
-				positionString = $"{SelBlock} ({SelBlock.BlockId}:{SelBlock.Metadata})";
-				meisured = Alex.Font.MeasureString(positionString);
-
-				args.SpriteBatch.FillRectangle(new Rectangle(screenWidth - (int) meisured.X, y, (int) meisured.X, (int) meisured.Y),
-					new Color(Color.Black, 64));
-				args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(screenWidth - (int) meisured.X, y), Color.White);
-
-				if (SelBlock.BlockState != null)
-				{
-					var dict = SelBlock.BlockState.ToDictionary();
-					foreach (var kv in dict)
-					{
-						y += (int)meisured.Y;
-
-						positionString = $"{kv.Key.Name}={kv.Value}";
-						meisured = Alex.Font.MeasureString(positionString);
-
-						args.SpriteBatch.FillRectangle(new Rectangle(screenWidth - (int)meisured.X, y, (int)meisured.X, (int)meisured.Y),
-							new Color(Color.Black, 64));
-						args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(screenWidth - (int)meisured.X, y), Color.White);
-					}
-				}
-			}
-		}
-
-		private void DebugLeft(RenderArgs args)
-		{
-			var fpsString = string.Format("Alex {0} ({1} FPS, {2} chunk updates)", Alex.Version,
-					 Math.Round(FpsCounter.Value), World.ChunkUpdates);
-			var meisured = Alex.Font.MeasureString(fpsString);
-
-			args.SpriteBatch.FillRectangle(new Rectangle(0, 0, (int)meisured.X, (int)meisured.Y),
-				new Color(Color.Black, 64));
-			args.SpriteBatch.DrawString(Alex.Font,
-				fpsString, new Vector2(0, 0),
-				Color.White);
-
-			var y = (int)meisured.Y;
-			var positionString = "Position: " + Camera.Position;
-			meisured = Alex.Font.MeasureString(positionString);
-
-			args.SpriteBatch.FillRectangle(new Rectangle(0, y, (int)meisured.X, (int)meisured.Y),
-				new Color(Color.Black, 64));
-			args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(0, y), Color.White);
-
-			y += (int)meisured.Y;
-			string facing = GetCardinalDirection(this.Camera);
-
-			positionString = string.Format("Facing: {0}", facing);
-			meisured = Alex.Font.MeasureString(positionString);
-
-			args.SpriteBatch.FillRectangle(new Rectangle(0, y, (int)meisured.X, (int)meisured.Y),
-				new Color(Color.Black, 64));
-			args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(0, y), Color.White);
-
-			y += (int)meisured.Y;
-
-
-			positionString = "Vertices: " + World.Vertices;
-			meisured = Alex.Font.MeasureString(positionString);
-
-			args.SpriteBatch.FillRectangle(new Rectangle(0, y, (int)meisured.X, (int)meisured.Y),
-				new Color(Color.Black, 64));
-			args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(0, y), Color.White);
-
-			y += (int)meisured.Y;
-
-			positionString = "Chunks: " + World.ChunkCount + ", " + World.ChunkManager.RenderedChunks;
-			meisured = Alex.Font.MeasureString(positionString);
-
-			args.SpriteBatch.FillRectangle(new Rectangle(0, y, (int)meisured.X, (int)meisured.Y),
-				new Color(Color.Black, 64));
-			args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(0, y), Color.White);
-
-			y += (int)meisured.Y;
-
-			positionString = $"Entities: {World.EntityManager.EntityCount}, {World.EntityManager.EntitiesRendered}";
-			meisured = Alex.Font.MeasureString(positionString);
-
-			args.SpriteBatch.FillRectangle(new Rectangle(0, y, (int)meisured.X, (int)meisured.Y),
-				new Color(Color.Black, 64));
-			args.SpriteBatch.DrawString(Alex.Font, positionString, new Vector2(0, y), Color.White);
-		}
-
-		public static string GetCardinalDirection(FirstPersonCamera cam)
-		{
-			double rotation = (360 - cam.Yaw) % 360;
+			double rotation = (360 - cam.HeadYaw) % 360;
 			if (rotation < 0)
 			{
 				rotation += 360.0;
@@ -474,18 +372,25 @@ namespace Alex.Gamestates.Playing
 			return readable.ToString("0.### ") + suffix;
 		}
 
-		public override void Render3D(RenderArgs args)
+		protected override void OnDraw(IRenderArgs args)
 		{
+			args.Camera = World.Camera;
+
 			FpsCounter.Update();
+			
+			SkyRenderer.Draw(args);
 
 			World.Render(args);
 
-			base.Render3D(args);
+			base.OnDraw(args);
+
+			Draw2D(args);
 		}
 
-		public override void Stop()
+		protected override void OnUnload()
 		{
 			World.Destroy();
+			WorldProvider.Dispose();
 		}
 	}
 }
