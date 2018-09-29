@@ -109,16 +109,6 @@ namespace Alex.GameStates
 				Text = "Who liek minecwaf?!"
 			});
 
-			GuiTextElement cc;
-			AddChild(cc = new GuiTextElement()
-			{
-				Anchor = Alignment.BottomRight,
-				Text = "github.com/kennyvv/Alex",
-				TextColor = TextColor.White,
-				TextOpacity = 0.5f,
-				Scale = 0.5f,
-				Margin = new Thickness(0, 0, 30, 5)
-			});
 
 			_debugInfo = new GuiDebugInfo();
 			_debugInfo.AddDebugRight(() => $"Cursor RenderPosition: {Alex.InputManager.CursorInputListener.GetCursorPosition()} / {Alex.GuiManager.FocusManager.CursorPosition}");
@@ -153,7 +143,7 @@ namespace Alex.GameStates
 			{
 				BackgroundOverlay = new Color(Color.Black, 0.15f),
 
-				Margin = new Thickness(15),
+				Margin = new Thickness(15, 15, 5, 15),
 
 				Width = 92,
 				Height = 128,

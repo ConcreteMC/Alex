@@ -15,6 +15,7 @@ using Alex.API.Localization;
 using Alex.API.Network;
 using Alex.API.Services;
 using Alex.API.World;
+using Alex.Gamestates.Login;
 using Alex.GameStates;
 using Alex.GameStates.Gui.MainMenu;
 using Alex.GameStates.Playing;
@@ -43,6 +44,7 @@ namespace Alex
 		public static string Username { get; set; }
 		public static string UUID { get; set; }
 		public static string AccessToken { get; set; }
+		public static string ClientToken { get; set; }
 		public static IPEndPoint ServerEndPoint { get; set; }
 		public static bool IsMultiplayer { get; set; } = false;
 
@@ -111,6 +113,48 @@ namespace Alex
 		private void Window_TextInput(object sender, TextInputEventArgs e)
 		{
 			OnCharacterInput?.Invoke(this, e);
+		}
+
+		public class JavaInfo
+		{
+			public string AccessToken;
+			public string Username;
+			public string RawUsername;
+			public string UUID;
+			public string ClientToken;
+		}
+
+		public static void SaveJava(string rawUsername)
+		{
+			File.WriteAllText("java.json", JsonConvert.SerializeObject(new JavaInfo()
+			{
+				AccessToken = AccessToken, Username = Username,
+				RawUsername = rawUsername,
+				UUID = UUID,
+				ClientToken = ClientToken
+			}));
+		}
+
+		public static bool TryLoadJava(out JavaInfo info)
+		{
+			info = null;
+			if (!File.Exists("java.json")) return false;
+			try
+			{
+				info = JsonConvert.DeserializeObject<JavaInfo>(File.ReadAllText("java.json"));
+
+				Alex.Username = info.Username;
+				Alex.AccessToken = info.AccessToken;
+				Alex.UUID = info.UUID;
+				Alex.ClientToken = info.ClientToken;
+
+				return true;
+			}
+			catch
+			{
+				File.Delete("java.json");
+				return false;
+			}
 		}
 
 		public void SaveSettings()
@@ -234,12 +278,14 @@ namespace Alex
 
 			GuiRenderer.LoadResourcePack(Resources.ResourcePack);
 
+			GameStateManager.AddState("selectGameVersion", new VersionSelectionState());
 			GameStateManager.AddState<TitleState>("title"); 
 			GameStateManager.AddState("options", new OptionsState());
 
 			if (!BypassTitleState)
 			{
-				GameStateManager.SetActiveState<TitleState>("title");
+				GameStateManager.SetActiveState("selectGameVersion");
+				//GameStateManager.SetActiveState<TitleState>("title");
 			}
 			else
 			{
