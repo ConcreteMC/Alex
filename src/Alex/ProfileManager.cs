@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using Alex.API.Services;
+using Alex.Utils;
 using Newtonsoft.Json;
 using NLog;
 
@@ -12,8 +14,11 @@ namespace Alex
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ProfileManager));
 		private List<SavedProfile> Profiles { get; }
 		public SavedProfile ActiveProfile { get; private set; } = null;
-		public ProfileManager()
+
+		private Alex Alex { get; }
+		public ProfileManager(Alex alex)
 		{
+			Alex = alex;
 			Profiles = new List<SavedProfile>();
 		}
 
@@ -31,7 +36,7 @@ namespace Alex
 				try
 				{
 					string contents = File.ReadAllText(ProfilesFile);
-					saveFile = JsonConvert.DeserializeObject<ProfilesFileFormat>(contents);
+					saveFile = JsonConvert.DeserializeObject<ProfilesFileFormat>(contents, new Texture2DJsonConverter(Alex.GraphicsDevice));
 				}
 				catch
 				{
@@ -49,7 +54,7 @@ namespace Alex
 						progressReceiver.UpdateProgress(75, StatusMessage);
 						foreach (var profile in profiles)
 						{
-							if (profile.UUID.Equals(saveFile.SelectedProfile))
+							if (profile.Profile.Uuid.Equals(saveFile.SelectedProfile))
 							{
 								progressReceiver.UpdateProgress(90, StatusMessage);
 								ActiveProfile = profile;
@@ -70,19 +75,28 @@ namespace Alex
 			progressReceiver.UpdateProgress(100, StatusMessage);
 		}
 
-		public void CreateProfile(ProfileType type, string accessToken, string username, string rawUsername,
-			string uuid, string clientToken, bool setActive = false)
+		public void SaveProfiles()
 		{
-			SavedProfile profile = new SavedProfile();
-			profile.Type = type;
-			profile.AccessToken = accessToken;
-			profile.Username = username;
-			profile.RawUsername = rawUsername;
-			profile.UUID = uuid;
-			profile.ClientToken = clientToken;
+			File.WriteAllText(ProfilesFile, JsonConvert.SerializeObject(new ProfilesFileFormat()
+			{
+				Profiles = Profiles.ToArray(),
+				SelectedProfile = ActiveProfile?.Profile.Uuid ?? string.Empty
+			}, Formatting.Indented, new Texture2DJsonConverter(Alex.GraphicsDevice)));
+		}
 
-			Profiles.Add(profile);
-			if (setActive) ActiveProfile = profile;
+		public void CreateOrUpdateProfile(ProfileType type, PlayerProfile profile, bool setActive = false)
+		{
+			SavedProfile savedProfile = new SavedProfile();
+			savedProfile.Type = type;
+			savedProfile.Profile = profile;
+
+			Profiles.Add(savedProfile);
+			if (setActive)
+			{
+				ActiveProfile = savedProfile;
+			}
+
+			Alex.UIThreadQueue.Enqueue(SaveProfiles);
 		}
 
 		private class ProfilesFileFormat
@@ -95,12 +109,7 @@ namespace Alex
 		public class SavedProfile
 		{
 			public ProfileType Type;
-
-			public string AccessToken;
-			public string Username;
-			public string RawUsername;
-			public string UUID;
-			public string ClientToken;
+			public PlayerProfile Profile;
 		}
 
 		public enum ProfileType

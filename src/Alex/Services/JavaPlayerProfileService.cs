@@ -77,7 +77,6 @@ namespace Alex.Services
 				var r = task.Result;
 				if (r.IsSuccess)
 				{
-					Alex.SaveJava(CurrentProfile.Username);
 					Alex.Instance.GameStateManager.SetActiveState<TitleState>();
 					return true;
 				}

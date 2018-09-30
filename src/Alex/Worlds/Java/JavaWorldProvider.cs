@@ -15,6 +15,7 @@ using Alex.API.Data;
 using Alex.API.Entities;
 using Alex.API.Json;
 using Alex.API.Network;
+using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Entities;
@@ -51,21 +52,17 @@ namespace Alex.Worlds.Java
 
 		private Alex Alex { get; }
 		private JavaClient Client { get; }
-		private string Username { get; }
-		private string UUID { get; }
-		private string AccessToken { get; }
+		private PlayerProfile Profile { get; }
 
 		private IPEndPoint Endpoint;
 		private ManualResetEvent _loginCompleteEvent = new ManualResetEvent(false);
 		private TcpClient TcpClient;
 
 		private System.Threading.Timer _gameTickTimer;
-		public JavaWorldProvider(Alex alex, IPEndPoint endPoint, string username, string uuid, string accessToken, out INetworkProvider networkProvider)
+		public JavaWorldProvider(Alex alex, IPEndPoint endPoint, PlayerProfile profile, out INetworkProvider networkProvider)
 		{
 			Alex = alex;
-			Username = username;
-			UUID = uuid;
-			AccessToken = accessToken;
+			Profile = profile;
 			Endpoint = endPoint;
 
 			TcpClient = new TcpClient();
@@ -242,7 +239,7 @@ namespace Alex.Worlds.Java
 			return Task.Run(() =>
 			{
 				progressReport(LoadingState.ConnectingToServer, 0);
-				Login(Username, UUID, AccessToken);
+				Login(Profile.Username, Profile.Uuid, Profile.AccessToken);
 				progressReport(LoadingState.ConnectingToServer, 99);
 
 				_loginCompleteEvent.WaitOne();

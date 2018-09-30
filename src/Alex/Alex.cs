@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -44,7 +45,7 @@ namespace Alex
 		public static string Username { get; set; }
 		public static string UUID { get; set; }
 		public static string AccessToken { get; set; }
-		public static string ClientToken { get; set; }
+
 		public static IPEndPoint ServerEndPoint { get; set; }
 		public static bool IsMultiplayer { get; set; } = false;
 		public static Texture2D LocalPlayerSkin { get; set; } = null;
@@ -68,6 +69,8 @@ namespace Alex
 		public GraphicsDeviceManager DeviceManager { get; }
 
 		public ProfileManager ProfileManager { get; }
+
+		internal ConcurrentQueue<Action> UIThreadQueue { get; }
 		public Alex(LaunchSettings launchSettings)
 		{
 			if (launchSettings.Server != null)
@@ -109,7 +112,8 @@ namespace Alex
 				}
 			};
 
-			ProfileManager = new ProfileManager();
+			ProfileManager = new ProfileManager(this);
+			UIThreadQueue = new ConcurrentQueue<Action>();
 		}
 
 		public static EventHandler<TextInputEventArgs> OnCharacterInput;
@@ -117,48 +121,6 @@ namespace Alex
 		private void Window_TextInput(object sender, TextInputEventArgs e)
 		{
 			OnCharacterInput?.Invoke(this, e);
-		}
-
-		public class JavaInfo
-		{
-			public string AccessToken;
-			public string Username;
-			public string RawUsername;
-			public string UUID;
-			public string ClientToken;
-		}
-
-		public static void SaveJava(string rawUsername)
-		{
-			File.WriteAllText("java.json", JsonConvert.SerializeObject(new JavaInfo()
-			{
-				AccessToken = AccessToken, Username = Username,
-				RawUsername = rawUsername,
-				UUID = UUID,
-				ClientToken = ClientToken
-			}));
-		}
-
-		public static bool TryLoadJava(out JavaInfo info)
-		{
-			info = null;
-			if (!File.Exists("java.json")) return false;
-			try
-			{
-				info = JsonConvert.DeserializeObject<JavaInfo>(File.ReadAllText("java.json"));
-
-				Alex.Username = info.Username;
-				Alex.AccessToken = info.AccessToken;
-				Alex.UUID = info.UUID;
-				Alex.ClientToken = info.ClientToken;
-
-				return true;
-			}
-			catch
-			{
-				File.Delete("java.json");
-				return false;
-			}
 		}
 
 		public void SaveSettings()
@@ -243,6 +205,7 @@ namespace Alex
 		protected override void UnloadContent()
 		{
 			SaveSettings();
+			ProfileManager.SaveProfiles();
 		}
 
 		protected override void Update(GameTime gameTime)
@@ -253,6 +216,15 @@ namespace Alex
 
 			GuiManager.Update(gameTime);
 			GameStateManager.Update(gameTime);
+
+			if (UIThreadQueue.TryDequeue(out Action a))
+			{
+				try
+				{
+					a.Invoke();
+				}
+				catch { }
+			}
 		}
 
 		protected override void Draw(GameTime gameTime)
@@ -319,7 +291,7 @@ namespace Alex
 		{
 			IsMultiplayer = true;
 
-			var javaProvider = new JavaWorldProvider(this, serverEndPoint, Username, UUID, AccessToken, out INetworkProvider networkProvider);
+			var javaProvider = new JavaWorldProvider(this, serverEndPoint, ProfileManager.ActiveProfile.Profile, out INetworkProvider networkProvider);
 
 			LoadWorld(javaProvider, networkProvider);
 		}

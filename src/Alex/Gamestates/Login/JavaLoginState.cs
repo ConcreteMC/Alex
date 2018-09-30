@@ -83,16 +83,16 @@ namespace Alex.Gamestates.Login
 			_playerProfileService = Alex.Services.GetService<IPlayerProfileService>();
 			_playerProfileService.Authenticate += PlayerProfileServiceOnAuthenticate;
 
-			if (Alex.TryLoadJava(out var info))
+			var activeProfile = Alex.ProfileManager.ActiveProfile?.Profile;
+			if (activeProfile != null)
 			{
-				Requester.ClientToken = info.ClientToken;
-
+				Requester.ClientToken = activeProfile.ClientToken;
 				_loginButton.Enabled = false;
 
-				_nameInput.Value = info.RawUsername;
+				_nameInput.Value = activeProfile.Username;
 
-				_errorMessage.Text = "Authenticating...";
-				Validate(info.AccessToken);
+				_errorMessage.Text = "Validating authentication token...";
+				Validate(activeProfile.AccessToken);
 			}
 		}
 
@@ -100,7 +100,8 @@ namespace Alex.Gamestates.Login
 		{
 			if (e.IsSuccess)
 			{
-				Alex.SaveJava(_nameInput.Value);
+				Alex.ProfileManager.CreateOrUpdateProfile(ProfileManager.ProfileType.Java, e.Profile, true);
+				//Alex.SaveJava(_nameInput.Value);
 				Alex.GameStateManager.SetActiveState<TitleState>();
 			}
 			else
@@ -124,28 +125,6 @@ namespace Alex.Gamestates.Login
 			_playerProfileService.TryAuthenticateAsync(_nameInput.Value, _passwordInput.Value);
 
 			//auth.Start();
-		}
-
-		private void JavaLoginResponse(Task<AuthenticateResponse> obj)
-		{
-			var auth = obj.Result;
-			if (auth.IsSuccess)
-			{
-				Alex.Username = auth.SelectedProfile.PlayerName;
-				Alex.AccessToken = auth.AccessToken;
-				Alex.UUID = auth.SelectedProfile.Value;
-				Alex.ClientToken = auth.ClientToken;
-
-				LoadPlayerSkin(Alex.UUID);
-				Validate(auth.AccessToken);
-			}
-			else
-			{
-				_errorMessage.Text = "Could not login: " + auth.Error.ErrorMessage;
-				_errorMessage.TextColor	= TextColor.Red;
-
-				_loginButton.Enabled = true;
-			}
 		}
 
 		private void LoadPlayerSkin(string uuid)
@@ -173,7 +152,6 @@ namespace Alex.Gamestates.Login
 				var r = task.Result;
 				if (r.IsSuccess)
 				{
-					Alex.SaveJava(_nameInput.Value);
 					Alex.GameStateManager.SetActiveState<TitleState>();
 				}
 				else
