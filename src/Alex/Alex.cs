@@ -66,6 +66,7 @@ namespace Alex
 
 		public GraphicsDeviceManager DeviceManager { get; }
 
+		public ProfileManager ProfileManager { get; }
 		public Alex(LaunchSettings launchSettings)
 		{
 			if (launchSettings.Server != null)
@@ -106,6 +107,8 @@ namespace Alex
 					DeviceManager.ApplyChanges();
 				}
 			};
+
+			ProfileManager = new ProfileManager();
 		}
 
 		public static EventHandler<TextInputEventArgs> OnCharacterInput;
@@ -265,6 +268,8 @@ namespace Alex
 			ConfigureServices();
 
 			Extensions.Init(GraphicsDevice);
+
+			ProfileManager.LoadProfiles(progressReceiver);
 
 			//	Log.Info($"Loading resources...");
 			Resources = new ResourceManager(GraphicsDevice);
