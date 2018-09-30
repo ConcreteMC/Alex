@@ -47,6 +47,7 @@ namespace Alex
 		public static string ClientToken { get; set; }
 		public static IPEndPoint ServerEndPoint { get; set; }
 		public static bool IsMultiplayer { get; set; } = false;
+		public static Texture2D LocalPlayerSkin { get; set; } = null;
 
 		public static IFont Font;
 		public static IFont DebugFont;
@@ -232,6 +233,8 @@ namespace Alex
 			Services.AddService<IListStorageProvider<SavedServerEntry>>(new SavedServerDataProvider(storage));
 
 			Services.AddService<IServerQueryProvider>(new ServerQueryProvider());
+			Services.AddService<IPlayerProfileService>(new JavaPlayerProfileService());
+
 		}
 
 		protected override void UnloadContent()

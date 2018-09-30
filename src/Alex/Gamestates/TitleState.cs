@@ -7,6 +7,7 @@ using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Graphics;
+using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.Entities;
 using Alex.GameStates.Gui.Common;
@@ -38,6 +39,7 @@ namespace Alex.GameStates
 		private GuiEntityModelView _playerView;
 
 		private readonly GuiImage _logo;
+		private IPlayerProfileService _playerProfileService;
 
 		private FpsMonitor FpsMonitor { get; }
 		public TitleState()
@@ -115,6 +117,15 @@ namespace Alex.GameStates
 			_debugInfo.AddDebugRight(() => $"Cursor Delta: {Alex.InputManager.CursorInputListener.GetCursorPositionDelta()}");
 			_debugInfo.AddDebugRight(() => $"Splash Text Scale: {_splashText.Scale:F3}");
 			_debugInfo.AddDebugLeft(() => $"FPS: {FpsMonitor.Value:F0}");
+
+
+			_playerProfileService = Alex.Services.GetService<IPlayerProfileService>();
+			_playerProfileService.ProfileChanged += PlayerProfileServiceOnProfileChanged;
+		}
+
+		private void PlayerProfileServiceOnProfileChanged(object sender, PlayerProfileChangedEventArgs e)
+		{
+			_playerView.Entity = new PlayerMob(e.Profile.Username, null, null, e.Profile.Skin);
 		}
 
 		private void DebugGoBackPressed()
@@ -136,10 +147,14 @@ namespace Alex.GameStates
 
 		protected override void OnLoad(IRenderArgs args)
 		{
-			Alex.Resources.BedrockResourcePack.TryGetTexture("textures/entity/alex", out Bitmap rawTexture);
-			var steve = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, rawTexture);
+			Texture2D skin = _playerProfileService.CurrentProfile?.Skin;
+			if (Alex.LocalPlayerSkin == null)
+			{
+				Alex.Resources.BedrockResourcePack.TryGetTexture("textures/entity/alex", out Bitmap rawTexture);
+				skin = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, rawTexture);
+			}
 
-			AddChild(_playerView = new GuiEntityModelView(new PlayerMob("", null, null, steve)) /*"geometry.humanoid.customSlim"*/
+			AddChild(_playerView = new GuiEntityModelView(new PlayerMob("", null, null, skin)) /*"geometry.humanoid.customSlim"*/
 			{
 				BackgroundOverlay = new Color(Color.Black, 0.15f),
 
