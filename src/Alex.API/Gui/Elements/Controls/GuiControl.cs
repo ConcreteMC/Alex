@@ -77,6 +77,18 @@ namespace Alex.API.Gui.Elements.Controls
         public bool Focused { get; private set; }
         public bool Highlighted { get; private set; }
 
+        public Keys AccessKey { get; set; } = Keys.None;
+        public int TabIndex { get; set; } = -1;
+
+        public bool Focus()
+        {
+            return FocusContext?.Focus(this) ?? false;
+        }
+
+        public void ClearFocus()
+        {
+            FocusContext?.ClearFocus(this);
+        }
 
         public void InvokeHighlightActivate()
         {

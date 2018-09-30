@@ -18,6 +18,8 @@ namespace Alex.API.Gui
             get { return this; }
         }
 
+        public IGuiControl FocusedControl { get; private set; }
+
         public GuiScreen()
         {
             AutoSizeMode = AutoSizeMode.None;
@@ -66,7 +68,24 @@ namespace Alex.API.Gui
 
             base.OnUpdate(gameTime);
         }
-        
+
+        public bool Focus(IGuiControl control)
+        {
+            FocusedControl?.InvokeFocusDeactivate();
+            FocusedControl = control;
+            FocusedControl?.InvokeFocusActivate();
+            return true;
+        }
+
+        public void ClearFocus(IGuiControl control)
+        {
+            if (FocusedControl == control)
+            {
+                FocusedControl?.InvokeFocusDeactivate();
+                FocusedControl = null;
+            }
+        }
+
         public void HandleContextActive()
         {
 

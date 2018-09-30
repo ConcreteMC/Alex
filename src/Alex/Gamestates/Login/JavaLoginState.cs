@@ -14,6 +14,7 @@ using Alex.GameStates.Gui.Common;
 using Alex.Networking.Java;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 using MojangSharp.Api;
 using MojangSharp.Endpoints;
 using MojangSharp.Responses;
@@ -39,6 +40,8 @@ namespace Alex.Gamestates.Login
 				Margin = new Thickness(0, 0, 5, 0)
 			}, _nameInput = new GuiTextInput()
 			{
+				TabIndex = 1,
+
 				Width = 200,
 
 				PlaceHolder = "Username...",
@@ -52,6 +55,8 @@ namespace Alex.Gamestates.Login
 				Margin = new Thickness(0, 0, 5, 0)
 			}, _passwordInput = new GuiTextInput()
 			{
+				TabIndex = 2,
+
 				Width = 200,
 
 				PlaceHolder = "Password...",
@@ -62,12 +67,16 @@ namespace Alex.Gamestates.Login
 
 			var buttonRow = AddGuiRow(_loginButton = new GuiButton(OnLoginButtonPressed)
 			{
+				AccessKey = Keys.Enter,
+
 				Text = "Login",
 				Margin = new Thickness(5),
 				Modern = false,
 				Width = 100
 			}, new GuiButton(OnCancelButtonPressed)
 			{
+				AccessKey = Keys.Escape,
+
 				TranslationKey = "gui.cancel",
 				Margin = new Thickness(5),
 				Modern = false,

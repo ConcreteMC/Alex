@@ -12,6 +12,10 @@ namespace Alex.API.Gui
         bool Focused { get; }
         bool Highlighted { get; }
 
+        Keys AccessKey { get; set; }
+        int TabIndex { get; set; }
+
+        bool Focus();
 
         void InvokeHighlightActivate();
         void InvokeHighlightDeactivate();

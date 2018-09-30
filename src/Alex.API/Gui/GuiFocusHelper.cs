@@ -6,6 +6,7 @@ using Alex.API.Input;
 using Alex.API.Input.Listeners;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 
 namespace Alex.API.Gui
 {
@@ -78,7 +79,36 @@ namespace Alex.API.Gui
 
         public void OnTextInput(object sender, TextInputEventArgs args)
         {
-            FocusedElement?.InvokeKeyInput(args.Character, args.Key);
+            //if (args.Key == Keys.None) return;
+
+            if (args.Key != Keys.None && TryGetElement(e => e is IGuiControl c && c.AccessKey == args.Key, out var controlByAccessKey))
+            {
+                FocusedElement = controlByAccessKey as IGuiControl;
+                return;
+            }
+
+            if (args.Key == Keys.Tab)
+            {
+                // Switch to next control
+                var activeTabIndex = FocusedElement?.TabIndex ?? -1;
+                var nextControl = GetNextTabIndexedControl(activeTabIndex);
+
+                if (nextControl == null)
+                {
+                    nextControl = GetNextTabIndexedControl(-1);
+                }
+
+                FocusedElement = nextControl;
+            }
+            else if (args.Key == Keys.Escape)
+            {
+                // Exit focus
+                FocusedElement = null;
+            }
+            else
+            {
+                FocusedElement?.InvokeKeyInput(args.Character, args.Key);
+            }
         }
 
         private void UpdateHighlightedElement()
@@ -169,6 +199,32 @@ namespace Alex.API.Gui
 
             element = null;
             return false;
+        }
+
+        private bool TryGetElement(GuiElementPredicate predicate, out IGuiElement element)
+        {
+            foreach (var screen in GuiManager.Screens.ToArray().Reverse())
+            {
+                if (screen.TryFindDeepestChild(predicate, out var matchedChild))
+                {
+                    element = matchedChild;
+                    return true;
+                }
+            }
+
+            element = null;
+            return false;
+        }
+
+        private IGuiControl GetNextTabIndexedControl(int activeIndex)
+        {
+            var allControls = GuiManager.Screens
+                                        .SelectMany(e => e.AllChildren)
+                                        .OfType<IGuiControl>();
+
+            return allControls.Where(c => c.TabIndex > activeIndex && activeIndex > -1)
+                              .OrderBy(c => c.TabIndex)
+                              .FirstOrDefault();
         }
     }
 }
