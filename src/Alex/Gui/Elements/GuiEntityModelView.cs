@@ -33,8 +33,16 @@ namespace Alex.Gui.Elements
             }
         }
 
-      
-        private Entity Entity { get; set; }
+
+        public Entity Entity
+        {
+            get => _entity;
+            set
+            {
+                _entity = value;
+            }
+        }
+
         private GuiEntityModelViewCamera Camera { get; }
         private bool _canRender;
         
@@ -82,6 +90,8 @@ namespace Alex.Gui.Elements
         }
         
         private Rectangle _previousBounds;
+        private Entity _entity;
+
         protected override void OnUpdate(GameTime gameTime)
         {
             base.OnUpdate(gameTime);

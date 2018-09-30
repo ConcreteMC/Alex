@@ -43,6 +43,31 @@ namespace Alex.Utils
 			texture = null;
 			return false;
 		}
+		public static bool TryGetSkin(Uri skinUri, GraphicsDevice graphics, out Texture2D texture)
+		{
+			try
+			{
+				byte[] data;
+				using (WebClient wc = new WebClient())
+				{
+					data = wc.DownloadData(skinUri);
+				}
+
+				using (MemoryStream ms = new MemoryStream(data))
+				{
+					texture = Texture2D.FromStream(graphics, ms);
+				}
+
+				return true;
+			}
+			catch
+			{
+
+			}
+
+			texture = null;
+			return false;
+		}
 
 
 		public class SKIN
