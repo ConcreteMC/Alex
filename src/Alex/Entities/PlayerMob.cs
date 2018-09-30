@@ -34,9 +34,10 @@ namespace Alex.Entities
 		private EntityModelRenderer.ModelBone _rightArmModel;
 		private EntityModelRenderer.ModelBone _leftLegModel;
 		private EntityModelRenderer.ModelBone _rightLegModel;
-
+		public string Name { get; }
 		public PlayerMob(string name, World level, INetworkProvider network, Texture2D skinTexture, bool skinSlim = true) : base(63, level, network)
 		{
+			Name = name;
 			Uuid = new UUID(Guid.NewGuid().ToByteArray());
 
 			Width = 0.6;

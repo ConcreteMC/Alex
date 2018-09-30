@@ -243,7 +243,7 @@ namespace Alex.Networking.Java.Packets
 				ServerBound = false
 			});
 			Register(Direction.ClientBound, ConnectionState.Play, 0x19, () => new PluginMessagePacket());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x1E, () => new UnloadChunk());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x1F, () => new UnloadChunk());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x21, () => new KeepAlivePacket());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x22, () => new ChunkDataPacket());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x25, () => new JoinGamePacket());
@@ -268,7 +268,7 @@ namespace Alex.Networking.Java.Packets
 			Register(Direction.ClientBound, ConnectionState.Play, 0x0F, () => new MultiBlockChange());
 
 			Register(Direction.ClientBound, ConnectionState.Play, 0x10, () => new TabCompleteClientBound());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x1F, () => new ChangeGameStatePacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x20, () => new ChangeGameStatePacket());
 
 			Register(Direction.ClientBound, ConnectionState.Play, 0x2F, () => new CombatEventPacket());
 		}

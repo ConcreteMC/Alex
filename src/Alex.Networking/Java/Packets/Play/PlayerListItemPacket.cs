@@ -8,6 +8,7 @@ namespace Alex.Networking.Java.Packets.Play
 		public PlayerListAction Action;
 		public AddPlayerEntry[] AddPlayerEntries = new AddPlayerEntry[0];
 		public RemovePlayerEntry[] RemovePlayerEntries = new RemovePlayerEntry[0];
+		public UpdateDisplayNameEntry[] UpdateDisplayNameEntries = new UpdateDisplayNameEntry[0];
 
 		public PlayerListItemPacket()
 		{
@@ -33,6 +34,28 @@ namespace Alex.Networking.Java.Packets.Play
 					entry.UUID = stream.ReadUuid();
 					RemovePlayerEntries[i] = entry;
 				}
+			}
+
+			if (Action == PlayerListAction.UpdateDisplayName)
+			{
+				ReadUpdateDisplayNameEntries(count, stream);
+			}
+		}
+
+		private void ReadUpdateDisplayNameEntries(int count, MinecraftStream stream)
+		{
+			UpdateDisplayNameEntries = new UpdateDisplayNameEntry[count];
+			for (int i = 0; i < count; i++)
+			{
+				var entry = new UpdateDisplayNameEntry();
+				entry.UUID = stream.ReadUuid();
+				entry.HasDisplayName = stream.ReadBool();
+				if (entry.HasDisplayName)
+				{
+					entry.DisplayName = stream.ReadString();
+				}
+
+				UpdateDisplayNameEntries[i] = entry;
 			}
 		}
 
@@ -132,6 +155,13 @@ namespace Alex.Networking.Java.Packets.Play
 					}
 					break;
 			}
+		}
+
+		public class UpdateDisplayNameEntry
+		{
+			public Guid UUID;
+			public bool HasDisplayName;
+			public string DisplayName;
 		}
 
 		public class AddPlayerEntry

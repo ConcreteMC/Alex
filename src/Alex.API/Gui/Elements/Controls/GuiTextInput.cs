@@ -44,8 +44,19 @@ namespace Alex.API.Gui.Elements.Controls
         private int _cursorPositionX;
         private float _cursorAlpha;
 
-	    public string PlaceHolder { get; set; } = string.Empty;
+	    private string _placeHolder = string.Empty;
 
+	    public string PlaceHolder
+	    {
+		    get { return _placeHolder; }
+		    set
+		    {
+			    _placeHolder = value;
+			    UpdateDisplayText();
+		    }
+	    }
+
+	    public bool IsPasswordInput { get; set; } = false;
         public GuiTextInput(string text = null)
         {
             MinWidth = 100;
@@ -73,11 +84,20 @@ namespace Alex.API.Gui.Elements.Controls
 			
 	        if (Focused)
             {
-	            var preCursor     = _textBuilder.Text.Substring(0, _textBuilder.CursorPosition);
-	            var cursorOffsetX = (int)_textElement.Font.MeasureString(preCursor, _textElement.Scale).X;
-	            _cursorPositionX = cursorOffsetX;
+	            if (IsPasswordInput)
+	            {
+		            var preCursor = _textElement.Text.Substring(0, _textBuilder.CursorPosition);
+		            var cursorOffsetX = (int)_textElement.Font.MeasureString(preCursor, _textElement.Scale).X;
+		            _cursorPositionX = cursorOffsetX;
+				}
+	            else
+	            {
+		            var preCursor = _textBuilder.Text.Substring(0, _textBuilder.CursorPosition);
+		            var cursorOffsetX = (int) _textElement.Font.MeasureString(preCursor, _textElement.Scale).X;
+		            _cursorPositionX = cursorOffsetX;
+	            }
 
-                var delta = (float)gameTime.TotalGameTime.TotalMilliseconds / 2;
+	            var delta = (float)gameTime.TotalGameTime.TotalMilliseconds / 2;
                 _cursorAlpha = (float)MathHelpers.SinInterpolation(0.1f, 0.5f, delta)*2;
             }
         }
@@ -161,7 +181,11 @@ namespace Alex.API.Gui.Elements.Controls
 		    else
 		    {
 			    _textElement.TextColor = Focused ? TextColor : InactiveTextColor;
-			    _textElement.Text      = value;
+			    if (IsPasswordInput)
+			    {
+				    value = new string('*', value.Length);
+			    }
+			    _textElement.Text = value;
 		    }
 	    }
 		

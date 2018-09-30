@@ -293,7 +293,7 @@ namespace Alex.Entities
 			textPosition.X = screenSpace.X;
 			textPosition.Y = screenSpace.Y;
 
-			float s = 0.5f;
+			float s = 1f;
 			var scale = new Vector2(s, s);
 
 			string clean = NameTag.StripIllegalCharacters();

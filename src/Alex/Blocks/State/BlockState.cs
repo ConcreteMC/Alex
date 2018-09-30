@@ -198,6 +198,44 @@ namespace Alex.Blocks.State
 			return false;
 		}
 
+		public bool ExactMatch(IBlockState o)
+		{
+			if (o is BlockState other)
+			{
+				if (Values.Count != other.Values.Count)
+				{
+					return false;
+				}
+
+				bool equal = true;
+				foreach (var pair in ToDictionary())
+				{
+					// value;
+					if (other.TryGetValue(pair.Key.Name, out string value))
+					{
+						// Require value be equal.
+						if (value != pair.Value)
+						{
+							equal = false;
+							break;
+						}
+					}
+					else
+					{
+						// Require key be present.
+						equal = false;
+						break;
+					}
+				}
+
+				return equal;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
 		public bool Equals(BlockState other)
 		{
 			if (ReferenceEquals(null, other)) return false;

@@ -42,12 +42,12 @@ namespace Alex.Blocks.Storage
 				}
 				else if (this._bits <= 8)
 				{
-					this.Palette = new BlockStatePaletteMap(this._bits, this);
+					this.Palette = new BlockStatePaletteLinear(this._bits, this);
 				}
 				else
 				{
 					this.Palette = RegistryBasedPalette;
-					this._bits = QuickMath.Log2(QuickMath.NextPow2(BlockFactory.AllBlockstates.Count));
+					this._bits = MathUtils.Log2DeBruijn(BlockFactory.AllBlockstates.Count);
 				}
 
 				this.Palette.IdFor(AirBlockState);
@@ -142,6 +142,7 @@ namespace Alex.Blocks.Storage
 			Storage = new FlexibleStorage(bits, blockStates);
 			if (bits <= 4)
 			{
+				bits = 4;
 				this.Palette = new BlockStatePaletteLinear(bits, this);
 			}
 			else if (bits <= 8)
@@ -151,7 +152,7 @@ namespace Alex.Blocks.Storage
 			else
 			{
 				this.Palette = RegistryBasedPalette;
-				this._bits = QuickMath.Log2(QuickMath.NextPow2(BlockFactory.AllBlockstates.Count));
+				this._bits = MathUtils.Log2DeBruijn(BlockFactory.AllBlockstates.Count);
 			}
 
 			_bits = bits;
@@ -184,18 +185,16 @@ namespace Alex.Blocks.Storage
 
 			Palette.Read(ms);
 
-			var backingArray = Storage._data;
-
 			int length = ms.ReadVarInt();
 
-			if (backingArray == null || backingArray.Length != length)
+			if (Storage._data.Length != length)
 			{
-				backingArray = new long[length];
+				Storage._data = new long[length];
 			}
 
-			for (int j = 0; j < backingArray.Length; j++)
+			for (int j = 0; j < length; j++)
 			{
-				backingArray[j] = ms.ReadLong();
+				Storage._data[j] = ms.ReadLong();
 			}
 		}
 	}

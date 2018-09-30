@@ -764,9 +764,15 @@ namespace Alex
 			else if (blockName == "minecraft:lilac" || blockName == "lilac") return new Lilac();
 			else if (blockName == "minecraft:rose_bush" || blockName == "rosebush") return new RoseBush();
 
+			else if (blockName == "minecraft:barrier" || blockName == "barrier") return new InvisibleBedrock(false);
+
 			else
 			{
 				var minetblock = MiNET.Blocks.BlockFactory.GetBlockByName(blockName);
+				if (minetblock == null)
+				{
+					minetblock = MiNET.Blocks.BlockFactory.GetBlockByName(blockName.Replace("minecraft:", ""));
+				}
 				if (minetblock != null)
 				{ 
 					return new Block(minetblock.GetRuntimeId())

@@ -8,8 +8,8 @@ namespace Alex.Blocks.Storage.Pallete
     {
 	    public uint IdFor(IBlockState state)
 	    {
-		    uint i = state.ID;
-		    return i == uint.MaxValue ? 0 : i;
+		    uint i = BlockFactory.GetBlockStateId(state);
+			return i == uint.MaxValue ? 0 : i;
 		}
 
 	    public IBlockState GetBlockState(uint indexKey)

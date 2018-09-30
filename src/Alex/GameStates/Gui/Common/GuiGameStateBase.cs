@@ -4,7 +4,9 @@ using System.Text;
 using Alex.API.GameStates;
 using Alex.API.Graphics;
 using Alex.API.Gui;
+using Alex.API.Gui.Elements;
 using Alex.API.Gui.Graphics;
+using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 
 namespace Alex.GameStates.Gui.Common
@@ -15,7 +17,26 @@ namespace Alex.GameStates.Gui.Common
 
         public GuiGameStateBase()
         {
-        }
+	        GuiTextElement cc;
+	        AddChild(cc = new GuiTextElement()
+	        {
+		        Anchor = Alignment.BottomLeft,
+		        Text = "github.com/kennyvv/Alex",
+		        TextColor = TextColor.White,
+		        TextOpacity = 0.5f,
+		        Scale = 0.5f,
+		        Margin = new Thickness(5, 0, 0, 5)
+	        });
+	        AddChild(new GuiTextElement()
+	        {
+		        Anchor = Alignment.BottomRight,
+		        Text = "Not affiliated with Mojang/Minecraft",
+		        TextColor = TextColor.White,
+		        TextOpacity = 0.5f,
+		        Scale = 0.5f,
+		        Margin = new Thickness(0, 0, 5, 5)
+	        });
+		}
 
         public IGameState ParentState { get; set; }
         public void Load(IRenderArgs args)
