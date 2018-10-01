@@ -50,6 +50,7 @@ namespace Alex.Services
 		        {
 			        long pingId = Rnd.NextUInt();
 					conn = new NetConnection(Direction.ClientBound, client.Client);
+			        conn.LogExceptions = false;
 			        //using (var conn = new NetConnection(Direction.ClientBound, client.Client))
 			        {
 				        AutoResetEvent ar = new AutoResetEvent(false);

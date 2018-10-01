@@ -235,12 +235,17 @@ namespace Alex.Worlds
 
 		public IBlock GetBlock(int x, int y, int z)
         {
-		    IChunkColumn chunk;
-            if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
-            {
-                return chunk.GetBlock(x & 0xf, y & 0xff, z & 0xf);
-            }
-            return BlockFactory.GetBlock(0);
+	      //  try
+	      //  {
+		        IChunkColumn chunk;
+		        if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
+		        {
+			        return chunk.GetBlock(x & 0xf, y & 0xff, z & 0xf);
+		        }
+			//}
+		//	catch { }
+
+	        return BlockFactory.GetBlock(0);
         }
 
 		public void SetBlock(Block block)

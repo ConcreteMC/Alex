@@ -42,6 +42,7 @@ namespace Alex.Graphics.Models.Entity
 			{
 				if (bone == null) continue;
 				if (bone.NeverRender) continue;
+				bool partOfHead = bone.Name.Contains("head");
 
 				if (bone.Cubes != null)
 				{
@@ -72,7 +73,7 @@ namespace Alex.Graphics.Models.Entity
 						var part = new ModelBoneCube(vertices, Texture, rotation, pivot, origin);
 
 						part.Mirror = bone.Mirror;
-						if (bone.Name.Contains("head"))
+						if (partOfHead)
 						{
 							part.ApplyHeadYaw = true;
 						}

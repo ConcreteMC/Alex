@@ -74,7 +74,7 @@ namespace Alex.API.World
 		void UpdatePlayerPosition(PlayerLocation location);
 		void UpdateEntityPosition(long entityId, PlayerLocation position, bool relative = false, bool updateLook = false);
 		bool TryGetEntity(long entityId, out IEntity entity);
-
+		
 		void SetTime(long worldTime);
 		void SetRain(bool raining);
 

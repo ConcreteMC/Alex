@@ -2,6 +2,8 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
@@ -40,6 +42,7 @@ namespace Alex.Networking.Java
 	        IsConnected = true;
 
 			PacketWriteQueue = new BlockingCollection<byte[]>();
+			HandlePacketQueue = new BlockingCollection<TemporaryPacketData>();
         }
 
         public EventHandler<PacketReceivedEventArgs> OnPacketReceived;
@@ -56,9 +59,24 @@ namespace Alex.Networking.Java
 		public bool IsConnected { get; private set; }
 
 		private BlockingCollection<byte[]> PacketWriteQueue { get; }
+		private BlockingCollection<TemporaryPacketData> HandlePacketQueue { get; }
+	    public bool LogExceptions { get; set; } = true;
+
+	    private class TemporaryPacketData
+	    {
+		    public Packet Packet;
+		    public byte[] Buffer;
+
+		    public TemporaryPacketData(Packet packet, byte[] buffer)
+		    {
+			    Packet = packet;
+			    Buffer = buffer;
+		    }
+	    }
 
 		private Task NetworkProcessing { get; set; }
 		private Task NetworkWriting { get; set; }
+		private Task PacketHandling { get; set; }
         public void Initialize()
         {
 	        Socket.Blocking = true;
@@ -68,9 +86,37 @@ namespace Alex.Networking.Java
 
 			NetworkWriting = new Task(SendQueue, CancellationToken.Token);
 			NetworkWriting.Start();
+
+	        PacketHandling = new Task(HandleQueuedPackets, CancellationToken.Token);
+			PacketHandling.Start();
         }
 
-        public void Stop()
+	    private void HandleQueuedPackets()
+	    {
+		    try
+		    {
+			    while (!CancellationToken.IsCancellationRequested)
+			    {
+				    var temp = HandlePacketQueue.Take(CancellationToken.Token);
+				    try
+				    {
+					    var packet = temp.Packet;
+					    packet.Decode(new MinecraftStream(new MemoryStream(temp.Buffer)));
+					    HandlePacket(packet);
+				    }
+				    catch (Exception e)
+				    {
+						Log.Warn($"Exception when handling packet!", e);
+				    }
+			    }
+		    }
+		    catch (OperationCanceledException)
+		    {
+
+		    }
+	    }
+
+	    public void Stop()
         {
             if (CancellationToken.IsCancellationRequested) return;
             CancellationToken.Cancel();
@@ -195,32 +241,59 @@ namespace Alex.Networking.Java
 							packet = MCPacketFactory.GetPacket(Direction, ConnectionState, packetId);
 							if (packet == null)
 							{
-								Log.Warn($"Unhandled packet in {ConnectionState}! 0x{packetId.ToString("x2")}");
+								if (UnhandledPacketsFilter[ConnectionState]
+									.TryAdd(packetId, 1))
+								{
+									Log.Debug($"Unhandled packet in {ConnectionState}! 0x{packetId.ToString("x2")}");
+								}
+								else
+								{
+									UnhandledPacketsFilter[ConnectionState][packetId] = UnhandledPacketsFilter[ConnectionState][packetId] + 1;
+								}
+
 								continue;
 							}
-	                       
-							packet.Decode(new MinecraftStream(new MemoryStream(packetData)));
-							HandlePacket(packet);
-						}
+
+	                        if (ConnectionState == ConnectionState.Play)
+	                        {
+		                        HandlePacketQueue.Add(new TemporaryPacketData(packet, packetData));
+							}
+	                        else
+	                        {
+		                        packet.Decode(new MinecraftStream(new MemoryStream(packetData)));
+		                        HandlePacket(packet);
+							}
+                        }
                     }
                 }
             }
             catch(Exception ex)
             {
-	            Log.Warn($"OH NO (0x{lastPacketId:X2}): " + ex);
                 if (ex is OperationCanceledException) return;
                 if (ex is EndOfStreamException) return;
-                if (ex is IOException) return;
+				if (ex is IOException) return;
 
-                Log.Error("An unhandled exception occured while processing network!", ex);
-            }
+				if (LogExceptions)
+					Log.Warn($"Failed to process network (Last packet: 0x{lastPacketId:X2} State: {ConnectionState}): " + ex);
+			}
             finally
             {
                 Disconnected(false);
             }
         }
 
-	    protected virtual void HandlePacket(Packets.Packet packet)
+
+	    private Dictionary<ConnectionState, ConcurrentDictionary<int, int>> UnhandledPacketsFilter =
+		    new Dictionary<ConnectionState, ConcurrentDictionary<int, int>>()
+		    {
+			    {ConnectionState.Handshake, new ConcurrentDictionary<int, int>() },
+			    {ConnectionState.Status, new ConcurrentDictionary<int, int>() },
+			    {ConnectionState.Login, new ConcurrentDictionary<int, int>() },
+			    {ConnectionState.Play, new ConcurrentDictionary<int, int>() },
+			};
+
+
+		protected virtual void HandlePacket(Packets.Packet packet)
 	    {
 			PacketReceivedEventArgs args = new PacketReceivedEventArgs(packet);
 		    OnPacketReceived?.Invoke(this, args);
@@ -327,6 +400,7 @@ namespace Alex.Networking.Java
 							mc.WriteVarInt(data.Length);
 							mc.Write(data);
 						}
+						catch (EndOfStreamException) { }
 					    catch (OperationCanceledException)
 					    {
 						    break;
@@ -381,14 +455,35 @@ namespace Alex.Networking.Java
 	    {
 			Stop();
 
+		    NetworkProcessing?.Wait();
+			NetworkProcessing?.Dispose();
+
+		    NetworkWriting?.Wait();
+			NetworkWriting?.Dispose();
+
+		    PacketWriteQueue?.Dispose();
+
+			PacketHandling?.Wait();
+			PacketHandling?.Dispose();
+
+		    HandlePacketQueue?.Dispose();
+
+		    CancellationToken?.Dispose();
+
 		    _readerStream?.Dispose();
 		    _sendStream?.Dispose();
-		    CancellationToken?.Dispose();
 		    Socket?.Dispose();
-		    PacketWriteQueue?.Dispose();
-		    NetworkProcessing?.Dispose();
-		    NetworkWriting?.Dispose();
-	    }
+
+			foreach (var state in UnhandledPacketsFilter)
+		    {
+			    foreach (var p in state.Value)
+			    {
+					Log.Warn($"({state.Key}) unhandled: 0x{p.Key:X2} * {p.Value}");
+			    }
+		    }
+
+			UnhandledPacketsFilter.Clear();
+		}
     }
 
     internal struct ReceivedData

@@ -271,6 +271,8 @@ namespace Alex.Networking.Java.Packets
 			Register(Direction.ClientBound, ConnectionState.Play, 0x20, () => new ChangeGameStatePacket());
 
 			Register(Direction.ClientBound, ConnectionState.Play, 0x2F, () => new CombatEventPacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x24, () => new ParticlePacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x42, () => new EntityEquipmentPacket());
 		}
 	}
 }

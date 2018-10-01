@@ -36,6 +36,13 @@ namespace Alex.Utils
 			}
 	    }
 
+	    public SlotData MainHand;
+	    public SlotData OffHand;
+	    public SlotData Helmet;
+	    public SlotData Chestplate;
+	    public SlotData Leggings;
+	    public SlotData Boots;
+
 	    public EventHandler<SlotChangedEventArgs> SlotChanged = null;
 	    public EventHandler<SelectedSlotChangedEventArgs> SelectedHotbarSlotChanged = null;
 

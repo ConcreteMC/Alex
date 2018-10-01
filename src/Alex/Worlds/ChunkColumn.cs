@@ -83,6 +83,9 @@ namespace Alex.Worlds
 
 		public void SetBlockState(int x, int y, int z, IBlockState blockState)
 		{
+			if ((x < 0 || x > ChunkWidth) || (y < 0 || y > ChunkHeight) || (z < 0 || z > ChunkDepth))
+				return;
+
 			Sections[y >> 4].Set(x, y - 16 * (y >> 4), z, blockState);
 			SetDirty();
 			_heightDirty = true;
@@ -91,10 +94,15 @@ namespace Alex.Worlds
 		private static IBlockState Air = BlockFactory.GetBlockState("minecraft:air");
 		public IBlockState GetBlockState(int bx, int by, int bz)
 		{
+			if ((bx < 0 || bx > ChunkWidth) || (by < 0 || by > ChunkHeight) || (bz < 0 || bz > ChunkDepth))
+				return Air;
+
 			var chunk = Sections[by >> 4];
 			if (chunk == null) return Air;
 
-			return chunk.Get(bx, by - 16 * (by >> 4), bz);
+			by = by - 16 * (by >> 4);
+			
+			return chunk.Get(bx, by, bz);
 		}
 
 		public IBlock GetBlock(int bx, int by, int bz)
@@ -108,6 +116,9 @@ namespace Alex.Worlds
 
 		public void SetBlock(int bx, int by, int bz, IBlock block)
 		{
+			if ((bx < 0 || bx > ChunkWidth) || (by < 0 || by > ChunkHeight) || (bz < 0 || bz > ChunkDepth))
+				return;
+
 			Sections[by >> 4].Set(bx, by - 16 * (by >> 4), bz, block.BlockState);
 			SetDirty();
 
@@ -116,43 +127,67 @@ namespace Alex.Worlds
 
 		public void SetHeight(int bx, int bz, short h)
 		{
+			if ((bx < 0 || bx > ChunkWidth) || (bz < 0 || bz > ChunkDepth))
+				return;
+
 			Height[((bz << 4) + (bx))] = h;
 			SetDirty();
 		}
 
 		public byte GetHeight(int bx, int bz)
 		{
+			if ((bx < 0 || bx > ChunkWidth) || (bz < 0 || bz > ChunkDepth))
+				return 0;
+
 			return (byte)Height[((bz << 4) + (bx))];
 		}
 
 		public void SetBiome(int bx, int bz, int biome)
 		{
+			if ((bx < 0 || bx > ChunkWidth) || (bz < 0 || bz > ChunkDepth))
+				return;
+
 			BiomeId[(bz << 4) + (bx)] = biome;
 			SetDirty();
 		}
 
 		public int GetBiome(int bx, int bz)
 		{
+			if ((bx < 0 || bx > ChunkWidth) || (bz < 0 || bz > ChunkDepth))
+				return 0;
+
 			return BiomeId[(bz << 4) + (bx)];
 		}
 
 		public byte GetBlocklight(int bx, int by, int bz)
 		{
+			if ((bx < 0 || bx > ChunkWidth) || (by < 0 || by > ChunkHeight) || (bz < 0 || bz > ChunkDepth))
+				return 0;
+
 			return (byte) Sections[@by >> 4].GetExtBlocklightValue(bx, @by - 16 * (@by >> 4), bz);
 		}
 
 		public void SetBlocklight(int bx, int by, int bz, byte data)
 		{
+			if ((bx < 0 || bx > ChunkWidth) || (by < 0 || by > ChunkHeight) || (bz < 0 || bz > ChunkDepth))
+				return;
+
 			Sections[@by >> 4].SetExtBlocklightValue(bx, @by - 16 * (@by >> 4), bz, data);
 		}
 
 		public byte GetSkylight(int bx, int by, int bz)
 		{
+			if ((bx < 0 || bx > ChunkWidth) || (by < 0 || by > ChunkHeight) || (bz < 0 || bz > ChunkDepth))
+				return 16;
+
 			return Sections[@by >> 4].GetExtSkylightValue(bx, @by - 16 * (@by >> 4), bz);
 		}
 
 		public void SetSkyLight(int bx, int by, int bz, byte data)
 		{
+			if ((bx < 0 || bx > ChunkWidth) || (by < 0 || by > ChunkHeight) || (bz < 0 || bz > ChunkDepth))
+				return;
+
 			Sections[@by >> 4].SetExtSkylightValue(bx, @by - 16 * (@by >> 4), bz, data);
 		}
 

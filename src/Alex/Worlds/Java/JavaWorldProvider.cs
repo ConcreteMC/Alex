@@ -548,10 +548,61 @@ namespace Alex.Worlds.Java
 			{
 				HandleCombatEventPacket(combatEventPacket);
 			}
+			else if (packet is EntityEquipmentPacket entityEquipmentPacket)
+			{
+				HandleEntityEquipmentPacket(entityEquipmentPacket);
+			}
 			else
 			{
-				Log.Warn($"Unhandled packet: 0x{packet.PacketId:x2} - {packet.ToString()}");
+				if (UnhandledPackets.TryAdd(packet.PacketId, packet.GetType()))
+				{
+					Log.Warn($"Unhandled packet: 0x{packet.PacketId:x2} - {packet.ToString()}");
+				}
 			}
+		}
+
+		private Dictionary<int, Type> UnhandledPackets = new Dictionary<int, Type>();
+
+		private void HandleEntityEquipmentPacket(EntityEquipmentPacket packet)
+		{
+			if (WorldReceiver.TryGetEntity(packet.EntityId, out IEntity e))
+			{
+				if (e is Entity entity)
+				{
+					switch (packet.Slot)
+					{
+						case EntityEquipmentPacket.SlotEnum.MainHand:
+							entity.Inventory.MainHand = packet.Item;
+							break;
+						case EntityEquipmentPacket.SlotEnum.OffHand:
+							entity.Inventory.OffHand = packet.Item;
+							break;
+						case EntityEquipmentPacket.SlotEnum.Boots:
+							entity.Inventory.Boots = packet.Item;
+							break;
+						case EntityEquipmentPacket.SlotEnum.Leggings:
+							entity.Inventory.Leggings = packet.Item;
+							break;
+						case EntityEquipmentPacket.SlotEnum.Chestplate:
+							entity.Inventory.Chestplate = packet.Item;
+							break;
+						case EntityEquipmentPacket.SlotEnum.Helmet:
+							entity.Inventory.Helmet = packet.Item;
+							break;
+					}
+					
+				}
+			}
+		}
+
+		private void HandleEntityMetadataPacket(EntityMetadataPacket packet)
+		{
+			//TODO: Handle entity metadata
+		}
+
+		private void HandleEntityStatusPacket(EntityStatusPacket packet)
+		{
+			//TODO: Do somethign with the packet.
 		}
 
 		private void HandleCombatEventPacket(CombatEventPacket packet)
@@ -616,16 +667,6 @@ namespace Alex.Worlds.Java
 		private void HandleBlockChangePacket(BlockChangePacket packet)
 		{
 			WorldReceiver?.SetBlockState(packet.Location, BlockFactory.GetBlockState(packet.PalleteId));
-		}
-
-		private void HandleEntityMetadataPacket(EntityMetadataPacket packet)
-		{
-			//TODO: Handle entity metadata
-		}
-
-		private void HandleEntityStatusPacket(EntityStatusPacket packet)
-		{
-			//TODO: Do somethign with the packet.
 		}
 
 		private void HandleHeldItemChangePacket(HeldItemChangePacket packet)
@@ -1059,6 +1100,7 @@ namespace Alex.Worlds.Java
 		private void HandleLoginSuccess(LoginSuccessPacket packet)
 		{
 			Client.ConnectionState = ConnectionState.Play;
+			//Client.UsePacketHandlerQueue = true;
 		}
 
 		private void HandleSetCompression(SetCompressionPacket packet)
@@ -1238,6 +1280,8 @@ namespace Alex.Worlds.Java
 
 			Client.Stop();
 			TcpClient.Dispose();
+
+			Client.Dispose();
 		}
 	}
 }

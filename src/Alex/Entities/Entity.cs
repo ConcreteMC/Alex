@@ -129,7 +129,14 @@ namespace Alex.Entities
 			if (now.Subtract(LastUpdatedTime).TotalMilliseconds >= 50)
 			{
 				LastUpdatedTime = now;
-				OnTick();
+				try
+				{
+					OnTick();
+				}
+				catch(Exception e)
+				{
+					Log.Warn($"Exception while trying to tick entity!", e);
+				}
 			}
 		}
 
