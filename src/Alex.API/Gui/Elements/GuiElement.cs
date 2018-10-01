@@ -50,7 +50,7 @@ namespace Alex.API.Gui.Elements
         public bool HasChildren => Children.Any();
 
         public int ChildCount => Children.Count;
-        internal IReadOnlyList<IGuiElement> AllChildren => Children;
+        internal IReadOnlyList<IGuiElement> AllChildren => Children.OfType<GuiElement>().SelectMany(c => new []{c}.Union(c.AllChildren)).ToList();
 
         #region Drawing
 

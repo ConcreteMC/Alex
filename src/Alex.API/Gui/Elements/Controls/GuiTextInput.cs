@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Alex.API.Gui.Graphics;
 using Alex.API.Input;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using TextCopy;
 
 namespace Alex.API.Gui.Elements.Controls
 {
@@ -55,8 +57,8 @@ namespace Alex.API.Gui.Elements.Controls
 			    UpdateDisplayText();
 		    }
 	    }
-
-	    public bool IsPasswordInput { get; set; } = false;
+		
+		public bool IsPasswordInput { get; set; } = false;
         public GuiTextInput(string text = null)
         {
             MinWidth = 100;
@@ -78,13 +80,96 @@ namespace Alex.API.Gui.Elements.Controls
         }
 
 		//private bool _isPlaceholder = false;
+		private KeyboardState _kbState;
+		private double _lastKeyInputTime = 0d;
+		private double _lastUpdate;
         protected override void OnUpdate(GameTime gameTime)
-        {
-            base.OnUpdate(gameTime);
+		{
+			var ms = gameTime.TotalGameTime.TotalMilliseconds;
+			_lastUpdate = ms;
+
+			base.OnUpdate(gameTime);
 			
 	        if (Focused)
-            {
-	            if (IsPasswordInput)
+			{
+					var kbState = Keyboard.GetState();
+				if(_kbState != kbState || (ms - _lastKeyInputTime > 150))
+				{
+					_kbState = kbState;
+
+					var keys    = kbState.GetPressedKeys();
+
+					var isShift = keys.Contains(Keys.LeftShift) || keys.Contains(Keys.RightShift);
+					var isCtrl = keys.Contains(Keys.LeftControl) || keys.Contains(Keys.RightControl);
+
+					if (keys.Contains(Keys.Home))
+					{
+						_textBuilder.CursorPosition = 0;
+					}
+					else if (keys.Contains(Keys.End))
+					{
+						_textBuilder.CursorPosition = _textBuilder.Length;
+					}
+					else if (isCtrl)
+					{
+						if (keys.Contains(Keys.C))
+						{
+							// Clipboard Copy
+							if (_textBuilder.SelectedText.Length > 0)
+							{
+								Clipboard.SetText(_textBuilder.SelectedText);
+							}
+						}
+						else if (keys.Contains(Keys.V))
+						{
+							// Clipboard Paste
+							var clipboardText = Clipboard.GetText();
+							if (!string.IsNullOrEmpty(clipboardText))
+							{
+								_textBuilder.Append(clipboardText);
+							}
+						}
+						else if (keys.Contains(Keys.A))
+						{
+							_textBuilder.SelectAll();
+						}
+					}
+					else
+					{
+
+						if (isShift && (keys.Contains(Keys.Left) || keys.Contains(Keys.Right)))
+						{
+							_textBuilder.IsSelecting = true;
+						}
+
+						if (keys.Contains(Keys.Left))
+						{
+							if (!isShift)
+							{
+								_textBuilder.ClearSelection();
+							}
+
+							_textBuilder.CursorPosition--;
+						}
+						else if (keys.Contains(Keys.Right))
+						{
+							if (!isShift)
+							{
+								_textBuilder.ClearSelection();
+							}
+
+							_textBuilder.CursorPosition++;
+						}
+					}
+
+					if (keys.Any())
+					{
+						_lastKeyInputTime = ms;
+					}
+				}
+
+
+				if (IsPasswordInput)
 	            {
 		            var preCursor = _textElement.Text.Substring(0, _textBuilder.CursorPosition);
 		            var cursorOffsetX = (int)_textElement.Font.MeasureString(preCursor, _textElement.Scale).X;
@@ -104,27 +189,32 @@ namespace Alex.API.Gui.Elements.Controls
 
         protected override void OnKeyInput(char character, Keys key)
         {
-            if (Focused)
-            {
-	            int originalLength = Value?.Length ?? 0;
-                if (key == Keys.Back)
-                {
-                    _textBuilder.RemoveCharacter();
-                }
-                else if (key == Keys.Left)
-                {
-                    _textBuilder.CursorPosition--;
-                }
-                else if (key == Keys.Right)
-                {
-                    _textBuilder.CursorPosition++;
-                }
-                else
-                {
-                    _textBuilder.AppendCharacter(character);
-                }
-            }
-        }
+			if (Focused)
+			{
+				if (key == Keys.Delete)
+				{
+					if (_textBuilder.Length != _textBuilder.CursorPosition)
+					{
+						_textBuilder.CursorPosition++;
+						_textBuilder.RemoveCharacter();
+					}
+					else if (_textBuilder.SelectedText.Length > 0)
+					{
+						_textBuilder.RemoveSelection();
+					}
+				}
+				else if(key == Keys.Back)
+				{
+					_textBuilder.RemoveCharacter();
+					_lastKeyInputTime = _lastUpdate;
+				}
+				else if (!char.IsControl(character))
+				{
+					_textBuilder.AppendCharacter(character);
+					_lastKeyInputTime = _lastUpdate;
+				}
+			}
+		}
 
         protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
         {
@@ -136,10 +226,25 @@ namespace Alex.API.Gui.Elements.Controls
 
             // Text
             if (Focused)
-            {
-                if (gameTime.TotalGameTime.Seconds % 2 == 0)
+			{
+				var textElementBounds = _textElement.RenderBounds;
+				if (_textBuilder.HasSelection)
+				{
+					var startX = textElementBounds.X + _textBuilder.SelectionStartPosition;
+					var endX = textElementBounds.X + _textBuilder.SelectionEndPosition;
+
+					var widthUntilSelectionStart =
+						_textElement.Font.MeasureString(_textBuilder
+														.Text.Substring(0, _textBuilder.SelectionStartPosition));
+
+					var selectedTextSize = _textElement.Font.MeasureString(_textBuilder.SelectedText, _textElement.Scale);
+					var sizeX = 1 + selectedTextSize.X;
+
+					graphics.FillRectangle(new Rectangle(textElementBounds.X + 1 + (int)widthUntilSelectionStart.X, textElementBounds.Y, (int)sizeX, textElementBounds.Height), _textColor.ForegroundColor);
+				}
+
+//                if (gameTime.TotalGameTime.Seconds % 2 < 1)
                 {
-                    var textElementBounds = _textElement.RenderBounds;
                     var offsetX = textElementBounds.X + _cursorPositionX + 1;
 
 					graphics.DrawLine(new Vector2(offsetX, textElementBounds.Top), new Vector2(offsetX, textElementBounds.Bottom), _textColor.ForegroundColor * _cursorAlpha);

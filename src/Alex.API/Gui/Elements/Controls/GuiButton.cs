@@ -7,8 +7,8 @@ using Microsoft.Xna.Framework;
 
 namespace Alex.API.Gui.Elements.Controls
 {
-    public class GuiButton : GuiControl
-    {
+    public class GuiButton : GuiControl, IGuiButton
+	{
 
         public string Text
         {
@@ -113,11 +113,17 @@ namespace Alex.API.Gui.Elements.Controls
 	    }
 
 	    protected override void OnCursorPressed(Point cursorPosition)
-        {
-            Action?.Invoke();
-        }
+		{
+			Focus();
+		}
 
-	    protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
+		protected override void OnFocusActivate()
+		{
+			Action?.Invoke();
+		}
+
+
+		protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
 	    {
 		    base.OnDraw(graphics, gameTime);
 	    }
