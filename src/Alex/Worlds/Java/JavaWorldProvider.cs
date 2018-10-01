@@ -754,19 +754,20 @@ namespace Alex.Worlds.Java
 			{
 				foreach (var entry in packet.AddPlayerEntries)
 				{
+					bool skinSlim = true;
 					foreach (var property in entry.Properties)
 					{
 						if (property.Name == "textures")
 						{
 							string json = Encoding.UTF8.GetString(Convert.FromBase64String(property.Value));
-							if (SkinUtils.TryGetSkin(json, Alex.GraphicsDevice, out var skin))
+							if (SkinUtils.TryGetSkin(json, Alex.GraphicsDevice, out var skin, out skinSlim))
 							{
 								t = skin;
 							}
 						}
 					}
 
-					PlayerMob entity = new PlayerMob(entry.Name, (World)WorldReceiver, Client, t, true);
+					PlayerMob entity = new PlayerMob(entry.Name, (World)WorldReceiver, Client, t, skinSlim);
 					entity.UpdateGamemode((Gamemode)entry.Gamemode);
 					entity.UUID = new UUID(entry.UUID.ToByteArray());
 

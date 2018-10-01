@@ -17,16 +17,8 @@ namespace Alex.Entities
 	public class PlayerMob : Mob
 	{
 		public UUID Uuid { get; private set; }
-		public Skin Skin { get; set; }
-
-		public short Boots { get; set; }
-		public short Leggings { get; set; }
-		public short Chest { get; set; }
-		public short Helmet { get; set; }
 
 		public Gamemode Gamemode { get; private set; }
-
-		//public Item ItemInHand { get; set; }
 
 		private EntityModel _model;
 
@@ -48,7 +40,7 @@ namespace Alex.Entities
 			IsSpawned = false;
 
 			NameTag = name;
-			Skin = new Skin { Slim = false, SkinData = Encoding.Default.GetBytes(new string('Z', 8192)) };
+			//Skin = new Skin { Slim = false, SkinData = Encoding.Default.GetBytes(new string('Z', 8192)) };
 
 		//	ItemInHand = new ItemAir();
 

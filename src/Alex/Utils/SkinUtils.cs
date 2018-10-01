@@ -10,8 +10,9 @@ namespace Alex.Utils
 {
 	public class SkinUtils
 	{
-		public static bool TryGetSkin(string json, GraphicsDevice graphics, out Texture2D texture)
+		public static bool TryGetSkin(string json, GraphicsDevice graphics, out Texture2D texture, out bool isSlim)
 		{
+			isSlim = false;
 			try
 			{
 				TexturesResponse r = JsonConvert.DeserializeObject<TexturesResponse>(json);
@@ -30,6 +31,8 @@ namespace Alex.Utils
 						{
 							texture = Texture2D.FromStream(graphics, ms);
 						}
+
+						isSlim = (r.textures.SKIN.metadata?.model == "slim");
 
 						return true;
 					}
@@ -69,15 +72,21 @@ namespace Alex.Utils
 			return false;
 		}
 
+		public class SkinMetadata
+		{
+			public string model { get; set; }
+		}
 
 		public class SKIN
 		{
 			public string url { get; set; }
+			public SkinMetadata metadata { get; set; } = null;
 		}
 
 		public class Textures
 		{
 			public SKIN SKIN { get; set; }
+			public SKIN CAPE { get; set; }
 		}
 
 		public class TexturesResponse
