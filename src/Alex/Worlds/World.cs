@@ -51,10 +51,20 @@ namespace Alex.Worlds
 			 
 			ChunkManager.Start();
 
-	        alex.Resources.BedrockResourcePack.TryGetTexture("textures/entity/alex", out Bitmap rawTexture);
-	        var t = TextureUtils.BitmapToTexture2D(graphics, rawTexture);
+			Skin skin = alex.ProfileManager.ActiveProfile?.Profile?.Skin;
+			if (skin == null)
+			{
+				alex.Resources.BedrockResourcePack.TryGetTexture("textures/entity/alex", out Bitmap rawTexture);
+				var t = TextureUtils.BitmapToTexture2D(graphics, rawTexture);
+				skin = new Skin()
+				{
+					Texture = t,
+					Slim = true
+				};
+			}
 
-			Player = new Player(graphics, alex, alex.GameSettings.Username, this, t, networkProvider, PlayerIndex.One);
+			Player = new Player(graphics, alex, alex.GameSettings.Username, this, skin, networkProvider, PlayerIndex.One);
+
 	        Player.KnownPosition = new PlayerLocation(GetSpawnPoint());
 	        Camera.MoveTo(Player.KnownPosition, Vector3.Zero);
 
@@ -484,8 +494,8 @@ namespace Alex.Worlds
 					{
 						//entity.KnownPosition.Yaw = position.Yaw;
 						entity.KnownPosition.Pitch = position.Pitch;
-					//	entity.KnownPosition.HeadYaw = position.HeadYaw;
-						entity.UpdateHeadYaw(position.HeadYaw);
+						entity.KnownPosition.HeadYaw = position.HeadYaw;
+					//	entity.UpdateHeadYaw(position.HeadYaw);
 					}
 				}
 			}

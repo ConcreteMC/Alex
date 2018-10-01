@@ -214,7 +214,7 @@ namespace Alex.Blocks.State
 					if (other.TryGetValue(pair.Key.Name, out string value))
 					{
 						// Require value be equal.
-						if (value != pair.Value)
+						if (!value.Equals(pair.Value))
 						{
 							equal = false;
 							break;

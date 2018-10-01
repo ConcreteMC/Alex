@@ -76,6 +76,7 @@ namespace Alex.Graphics.Models.Entity
 						if (partOfHead)
 						{
 							part.ApplyHeadYaw = true;
+							part.ApplyYaw = false;
 						}
 						else
 						{

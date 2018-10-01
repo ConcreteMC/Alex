@@ -110,7 +110,7 @@ namespace Alex.GameStates.Playing
 
 			if (InputManager.IsDown(InputCommand.MoveForwards))
 			{
-				moveVector.Z += 1;
+				moveVector.Z -= 1;
 				if (!Player.IsSprinting)
 				{
 					if (InputManager.IsBeginPress(InputCommand.MoveForwards) &&
@@ -131,13 +131,13 @@ namespace Alex.GameStates.Playing
 			}
 
 			if (InputManager.IsDown(InputCommand.MoveBackwards))
-				moveVector.Z -= 1;
+				moveVector.Z += 1;
 
 			if (InputManager.IsDown(InputCommand.MoveLeft))
-				moveVector.X += 1;
+				moveVector.X -= 1;
 
 			if (InputManager.IsDown(InputCommand.MoveRight))
-				moveVector.X -= 1;
+				moveVector.X += 1;
 
 			if (Player.IsFlying)
 			{
@@ -217,7 +217,7 @@ namespace Alex.GameStates.Playing
 				else
 				{
 					var mouseDelta = _previousMousePosition - e; //this.GlobalInputManager.CursorInputListener.GetCursorPositionDelta();
-					var look = new Vector2((-mouseDelta.X), (-mouseDelta.Y))
+					var look = new Vector2((-mouseDelta.X), (mouseDelta.Y))
 							   * (float)(gt.ElapsedGameTime.TotalSeconds * 30);
 					look = -look;
 

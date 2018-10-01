@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Text;
+using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 
 namespace Alex.Utils
 {
-	public class Skin
+	/*public class Skin
 	{
 		public bool Slim { get; set; }
 		public byte Alpha { get; set; }
@@ -68,5 +69,5 @@ namespace Alex.Utils
 
 			bitmap.Save(filename, ImageFormat.Png);
 		}
-	}
+	}*/
 }

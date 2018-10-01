@@ -23,7 +23,7 @@ namespace Alex.Entities
 		public float FOVModifier { get; set; } = 0;
 
 		public PlayerController Controller { get; }
-		public Player(GraphicsDevice graphics, Alex alex, string name, World world, Texture2D skin, INetworkProvider networkProvider, PlayerIndex playerIndex) : base(name, world, networkProvider, skin, true)
+		public Player(GraphicsDevice graphics, Alex alex, string name, World world, Skin skin, INetworkProvider networkProvider, PlayerIndex playerIndex) : base(name, world, networkProvider, skin.Texture, true)
 		{
 			DoRotationCalculations = false;
 			PlayerIndex = playerIndex;

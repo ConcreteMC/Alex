@@ -125,7 +125,7 @@ namespace Alex.GameStates
 
 		private void PlayerProfileServiceOnProfileChanged(object sender, PlayerProfileChangedEventArgs e)
 		{
-			_playerView.Entity = new PlayerMob(e.Profile.Username, null, null, e.Profile.Skin);
+			_playerView.Entity = new PlayerMob(e.Profile.Username, null, null, e.Profile.Skin.Texture, e.Profile.Skin.Slim);
 		}
 
 		private void DebugGoBackPressed()
@@ -147,14 +147,18 @@ namespace Alex.GameStates
 
 		protected override void OnLoad(IRenderArgs args)
 		{
-			Texture2D skin = _playerProfileService.CurrentProfile?.Skin;
-			if (Alex.LocalPlayerSkin == null)
+			Skin skin = Alex.ProfileManager.ActiveProfile?.Profile?.Skin;
+			if (skin == null)
 			{
 				Alex.Resources.BedrockResourcePack.TryGetTexture("textures/entity/alex", out Bitmap rawTexture);
-				skin = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, rawTexture);
+				skin = new Skin()
+				{
+					Slim = true,
+					Texture = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, rawTexture)
+				};
 			}
 
-			AddChild(_playerView = new GuiEntityModelView(new PlayerMob("", null, null, skin)) /*"geometry.humanoid.customSlim"*/
+			AddChild(_playerView = new GuiEntityModelView(new PlayerMob("", null, null, skin.Texture, skin.Slim)) /*"geometry.humanoid.customSlim"*/
 			{
 				BackgroundOverlay = new Color(Color.Black, 0.15f),
 

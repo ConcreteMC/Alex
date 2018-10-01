@@ -10,6 +10,10 @@ namespace Alex.Utils
 		{
 			return centreAngle + Clamp(NormDeg(targetAngle - centreAngle), -maximumDifference, maximumDifference);
 		}
+		public static float normalAbsoluteAngleDegrees(float angle)
+		{
+			return (angle %= 360f) >= 0 ? angle : (angle + 360f);
+		}
 
 		// normalizes a double degrees angle to between +180 and -180
 		public static float NormDeg(float a)
@@ -63,6 +67,7 @@ namespace Alex.Utils
 
 		public static float AngleToNotchianDegree(sbyte angle)
 		{
+			return (float) (angle * 360) / 256.0F;
 			return AngleToDegree(angle);
 		}
 

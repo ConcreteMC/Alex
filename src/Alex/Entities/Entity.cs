@@ -15,6 +15,7 @@ using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using NLog;
+using MathF = Alex.API.Utils.MathF;
 
 namespace Alex.Entities
 {
@@ -187,8 +188,9 @@ namespace Alex.Entities
 			//HealthManager.OnTick();
 		}
 
+		private float HeadRenderOffset = 0;
 		private int turnTicks;
-		private int turnTicksLimit = 20;
+		private int turnTicksLimit = 10;
 		private float lastRotationYawHead = 0f;
 		private Vector3 _previousPosition = Vector3.Zero;
 		private void UpdateRotations()
@@ -199,40 +201,42 @@ namespace Alex.Entities
 
 			IsMoving = distSQ > 0f || Velocity.LengthSquared() > 0f;
 
-			float maximumHeadBodyAngleDifference = 90;
-			const float MOVEMENT_THRESHOLD_SQ = 0.0001F;
+			float maximumHeadBodyAngleDifference = 75f;
+			const float MOVEMENT_THRESHOLD_SQ = 2.5f;
 			// if moving:
 			// 1) snap the body yaw (renderYawOffset) to the movement direction (rotationYaw)
 			// 2) constrain the head yaw (rotationYawHead) to be within +/- 90 of the body yaw (renderYawOffset)
 			if (distSQ > MOVEMENT_THRESHOLD_SQ)
 			{
-				//KnownPosition.Yaw = KnownPosition.Yaw;
-				float newRotationYawHead = MathUtils.ConstrainAngle(KnownPosition.HeadYaw, KnownPosition.Yaw,
+				//dragon.renderYawOffset = dragon.rotationYaw;
+				float newRotationYawHead = MathUtils.ConstrainAngle(KnownPosition.Yaw, KnownPosition.HeadYaw,
 					maximumHeadBodyAngleDifference);
-
-				KnownPosition.HeadYaw = newRotationYawHead;
+				KnownPosition.Yaw = newRotationYawHead;
 				lastRotationYawHead = newRotationYawHead;
 				turnTicks = 0;
-				return;
-			}
-
-			var changeInHeadYaw = Math.Abs(KnownPosition.HeadYaw - lastRotationYawHead);
-
-			if (changeInHeadYaw > 15)
-			{
-				turnTicks = 0;
-				lastRotationYawHead = KnownPosition.HeadYaw;
 			}
 			else
 			{
-				turnTicks++;
-				if (turnTicks > turnTicksLimit)
+				var changeInHeadYaw = Math.Abs(KnownPosition.HeadYaw - lastRotationYawHead);
+				if (changeInHeadYaw > 15f)
 				{
-					maximumHeadBodyAngleDifference = Math.Max(1f - (float)(turnTicks - turnTicksLimit) / turnTicksLimit, 0f) * 75f;
+					turnTicks = 0;
+					lastRotationYawHead = KnownPosition.HeadYaw;
 				}
-			}
+				else
+				{
+					turnTicks++;
+					if (turnTicks > turnTicksLimit)
+					{
+						maximumHeadBodyAngleDifference =
+							Math.Max(1f - (float) ((float)(turnTicks - turnTicksLimit) / turnTicksLimit), 0f) *
+							maximumHeadBodyAngleDifference;
+					}
+				}
 
-			KnownPosition.Yaw = MathUtils.ConstrainAngle(KnownPosition.Yaw, KnownPosition.HeadYaw, maximumHeadBodyAngleDifference);
+				KnownPosition.Yaw = MathUtils.ConstrainAngle(KnownPosition.Yaw, KnownPosition.HeadYaw,
+					maximumHeadBodyAngleDifference);
+			}
 		}
 
 		public BoundingBox BoundingBox => GetBoundingBox();

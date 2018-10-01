@@ -12,11 +12,13 @@ using MojangSharp;
 using MojangSharp.Endpoints;
 using MojangSharp.Responses;
 using Newtonsoft.Json;
+using NLog;
 
 namespace Alex.Services
 {
 	public class JavaPlayerProfileService : IPlayerProfileService
 	{
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(JavaPlayerProfileService));
 		private PlayerProfile _currentProfile;
 
 		public event EventHandler<PlayerProfileChangedEventArgs> ProfileChanged;
@@ -48,13 +50,21 @@ namespace Alex.Services
 			{
 				var profile = await new Profile(auth.SelectedProfile.Value).PerformRequestAsync();
 
+				bool skinSlim = false;
 				Texture2D texture = null;
+			
 				if (profile.Properties.SkinUri != null)
 				{
 					SkinUtils.TryGetSkin(profile.Properties.SkinUri, Alex.Instance.GraphicsDevice, out texture);
 				}
 
-				var playerProfile = new PlayerProfile(auth.SelectedProfile.Value, auth.SelectedProfile.PlayerName, texture,
+
+				//if (profile.Properties.SkinUri != null)
+				//	{
+				//	SkinUtils.TryGetSkin(profile.Properties.SkinUri, Alex.Instance.GraphicsDevice, out texture);
+				//	}
+
+				var playerProfile = new PlayerProfile(auth.SelectedProfile.Value, auth.SelectedProfile.PlayerName, new Skin(){Slim = skinSlim, Texture = texture},
 												auth.AccessToken, auth.ClientToken);
 
 				Authenticate?.Invoke(this, new PlayerProfileAuthenticateEventArgs(playerProfile));

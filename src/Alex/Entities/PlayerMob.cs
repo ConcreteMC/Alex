@@ -29,7 +29,7 @@ namespace Alex.Entities
 		public string Name { get; }
 		public PlayerMob(string name, World level, INetworkProvider network, Texture2D skinTexture, bool skinSlim = true) : base(63, level, network)
 		{
-			//	DoRotationCalculations = false;
+			//DoRotationCalculations = false;
 			Name = name;
 			Uuid = new UUID(Guid.NewGuid().ToByteArray());
 

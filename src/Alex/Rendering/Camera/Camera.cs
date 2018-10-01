@@ -85,11 +85,12 @@ namespace Alex.Rendering.Camera
 			Matrix rotationMatrix = Matrix.CreateRotationX(Rotation.Z) * //Pitch
 			                        Matrix.CreateRotationY(Rotation.Y); //Yaw
 
-	        Vector3 lookAtOffset = Vector3.Transform(Vector3.UnitZ, rotationMatrix);
+	        Vector3 lookAtOffset = Vector3.Transform(Vector3.Forward, rotationMatrix);
+	        Direction = lookAtOffset;
 
-	        Target = Position + lookAtOffset;
+			Target = Position + lookAtOffset;
 
-	        Direction = Vector3.Transform(Vector3.Forward, rotationMatrix);
+				//  Direction = Vector3.Transform(-Vector3.UnitZ, rotationMatrix);
 
 	        ViewMatrix = Matrix.CreateLookAt(Position, Target, Vector3.Up);
 		}

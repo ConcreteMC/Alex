@@ -17,7 +17,7 @@ namespace Alex.Blocks.State
 			Name = name;
 			PropertyType = propertyType;
 
-			_registeredTypes.TryAdd(name, this);
+			//_registeredTypes.TryAdd(name, this);
 		}
 
 		public abstract object ValueFromString(string value);

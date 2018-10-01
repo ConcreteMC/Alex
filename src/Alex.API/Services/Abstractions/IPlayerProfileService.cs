@@ -13,12 +13,12 @@ namespace Alex.API.Services
         public string Uuid { get; }
         public string Username { get; }
 
-        public Texture2D Skin { get; }
+        public Skin Skin { get; }
 
         public string AccessToken { get; }
         public string ClientToken { get; }
 
-        public PlayerProfile(string uuid, string username, Texture2D skin, string accessToken, string clientToken)
+        public PlayerProfile(string uuid, string username, Skin skin, string accessToken, string clientToken)
         {
             Uuid = uuid;
             Username = username;
