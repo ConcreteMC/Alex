@@ -7,6 +7,7 @@ using Alex.API.Input;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using TextCopy;
 
 namespace Alex.API.Gui.Elements.Controls
 {
@@ -79,6 +80,7 @@ namespace Alex.API.Gui.Elements.Controls
         }
 
 		//private bool _isPlaceholder = false;
+		private KeyboardState _kbState;
 		private double _lastKeyInputTime = 0d;
 		private double _lastUpdate;
         protected override void OnUpdate(GameTime gameTime)
@@ -90,35 +92,74 @@ namespace Alex.API.Gui.Elements.Controls
 			
 	        if (Focused)
 			{
-				if (ms - _lastKeyInputTime > 50)
-				{
-
 					var kbState = Keyboard.GetState();
+				if(_kbState != kbState || (ms - _lastKeyInputTime > 150))
+				{
+					_kbState = kbState;
+
 					var keys    = kbState.GetPressedKeys();
 
 					var isShift = keys.Contains(Keys.LeftShift) || keys.Contains(Keys.RightShift);
+					var isCtrl = keys.Contains(Keys.LeftControl) || keys.Contains(Keys.RightControl);
 
-
-					if (isShift && (keys.Contains(Keys.Left) || keys.Contains(Keys.Right)))
+					if (keys.Contains(Keys.Home))
 					{
-						_textBuilder.IsSelecting = true;
+						_textBuilder.CursorPosition = 0;
 					}
-
-					if (keys.Contains(Keys.Left))
+					else if (keys.Contains(Keys.End))
 					{
-						if (!isShift)
-						{
-							_textBuilder.ClearSelection();
-						}
-						_textBuilder.CursorPosition--;
+						_textBuilder.CursorPosition = _textBuilder.Length;
 					}
-					else if (keys.Contains(Keys.Right))
+					else if (isCtrl)
 					{
-						if (!isShift)
+						if (keys.Contains(Keys.C))
 						{
-							_textBuilder.ClearSelection();
+							// Clipboard Copy
+							if (_textBuilder.SelectedText.Length > 0)
+							{
+								Clipboard.SetText(_textBuilder.SelectedText);
+							}
 						}
-						_textBuilder.CursorPosition++;
+						else if (keys.Contains(Keys.V))
+						{
+							// Clipboard Paste
+							var clipboardText = Clipboard.GetText();
+							if (!string.IsNullOrEmpty(clipboardText))
+							{
+								_textBuilder.Append(clipboardText);
+							}
+						}
+						else if (keys.Contains(Keys.A))
+						{
+							_textBuilder.SelectAll();
+						}
+					}
+					else
+					{
+
+						if (isShift && (keys.Contains(Keys.Left) || keys.Contains(Keys.Right)))
+						{
+							_textBuilder.IsSelecting = true;
+						}
+
+						if (keys.Contains(Keys.Left))
+						{
+							if (!isShift)
+							{
+								_textBuilder.ClearSelection();
+							}
+
+							_textBuilder.CursorPosition--;
+						}
+						else if (keys.Contains(Keys.Right))
+						{
+							if (!isShift)
+							{
+								_textBuilder.ClearSelection();
+							}
+
+							_textBuilder.CursorPosition++;
+						}
 					}
 
 					if (keys.Any())
@@ -150,7 +191,19 @@ namespace Alex.API.Gui.Elements.Controls
         {
 			if (Focused)
 			{
-				if (key == Keys.Delete || key == Keys.Back)
+				if (key == Keys.Delete)
+				{
+					if (_textBuilder.Length != _textBuilder.CursorPosition)
+					{
+						_textBuilder.CursorPosition++;
+						_textBuilder.RemoveCharacter();
+					}
+					else if (_textBuilder.SelectedText.Length > 0)
+					{
+						_textBuilder.RemoveSelection();
+					}
+				}
+				else if(key == Keys.Back)
 				{
 					_textBuilder.RemoveCharacter();
 					_lastKeyInputTime = _lastUpdate;

@@ -122,6 +122,20 @@ namespace Alex.API.Input
             CursorPosition = pos + 1;
         }
 
+		public void Append(string str)
+		{
+			if (IsSelecting)
+			{
+				RemoveSelection();
+			}
+
+			var pos = CursorPosition;
+			_stringBuilder.Insert(pos, str);
+
+			TextChanged?.Invoke(this, Text);
+			CursorPosition = pos + str.Length;
+		}
+
 		public void RemoveSelection()
 		{
 			if (_stringBuilder.Length == 0 || !HasSelection) return;
@@ -202,6 +216,13 @@ namespace Alex.API.Input
 		{
 			_selectionStartPosition = -1;
 			IsSelecting = false;
+		}
+
+		public void SelectAll()
+		{
+			IsSelecting = true;
+			_selectionStartPosition = 0;
+			CursorPosition = Length;
 		}
     }
 }
