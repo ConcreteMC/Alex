@@ -264,8 +264,8 @@ namespace Alex
 
 			if (!BypassTitleState)
 			{
-				GameStateManager.SetActiveState("selectGameVersion");
-				//GameStateManager.SetActiveState<TitleState>("title");
+				//GameStateManager.SetActiveState("selectGameVersion");
+				GameStateManager.SetActiveState<TitleState>("title");
 			}
 			else
 			{

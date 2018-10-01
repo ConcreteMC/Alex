@@ -42,7 +42,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 
 		    Title = "Multiplayer";
 
-		    Footer.AddRow(row =>
+			Footer.AddRow(row =>
 		    {
 
 			    row.AddChild(JoinServerButton = new GuiButton("Join Server",
@@ -149,8 +149,8 @@ namespace Alex.GameStates.Gui.Multiplayer
 		
 	    private void OnCancelButtonPressed()
 	    {
-			Alex.GameStateManager.Back();
-		//	Alex.GameStateManager.SetActiveState<TitleState>();
+		//	Alex.GameStateManager.Back();
+			Alex.GameStateManager.SetActiveState<TitleState>();
 	    }
 
 	    private void OnRefreshButtonPressed()

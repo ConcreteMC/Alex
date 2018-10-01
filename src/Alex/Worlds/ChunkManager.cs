@@ -198,7 +198,11 @@ namespace Alex.Worlds
 					}
 					else
 					{
-						_updateResetEvent.WaitOne();
+						if (!_updateResetEvent.WaitOne(500))
+						{
+							if (CancelationToken.Token.IsCancellationRequested)
+								break;
+						}
 					}
 				}
 				catch (OperationCanceledException)

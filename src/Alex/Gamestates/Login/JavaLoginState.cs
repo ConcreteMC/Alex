@@ -21,88 +21,31 @@ using MojangSharp.Responses;
 
 namespace Alex.Gamestates.Login
 {
-	public class JavaLoginState : GuiMenuStateBase
+	public class JavaLoginState : BaseLoginState
 	{
-		private readonly GuiTextInput _nameInput;
-		private readonly GuiTextInput _passwordInput;
-		private readonly GuiButton _loginButton;
-		private readonly GuiTextElement _errorMessage;
-
 		private IPlayerProfileService _playerProfileService;
-		public JavaLoginState()
+		public JavaLoginState() : base("Mojang Login")
 		{
-			Title = "Mojang Login";
-			Body.ChildAnchor = Alignment.MiddleCenter;
 			
-			var usernameRow = AddGuiRow(new GuiTextElement()
-			{
-				Text = "Username:",
-				Margin = new Thickness(0, 0, 5, 0)
-			}, _nameInput = new GuiTextInput()
-			{
-				TabIndex = 1,
+		}
 
-				Width = 200,
-
-				PlaceHolder = "Username...",
-				Margin = new Thickness(5),
-			});
-			usernameRow.ChildAnchor = Alignment.MiddleCenter;
-
-			var passwordRow = AddGuiRow(new GuiTextElement()
-			{
-				Text = "Password:",
-				Margin = new Thickness(0, 0, 5, 0)
-			}, _passwordInput = new GuiTextInput()
-			{
-				TabIndex = 2,
-
-				Width = 200,
-
-				PlaceHolder = "Password...",
-				Margin = new Thickness(5),
-				IsPasswordInput = true
-			});
-			passwordRow.ChildAnchor = Alignment.MiddleCenter;
-
-			var buttonRow = AddGuiRow(_loginButton = new GuiButton(OnLoginButtonPressed)
-			{
-				AccessKey = Keys.Enter,
-
-				Text = "Login",
-				Margin = new Thickness(5),
-				Modern = false,
-				Width = 100
-			}, new GuiButton(OnCancelButtonPressed)
-			{
-				AccessKey = Keys.Escape,
-
-				TranslationKey = "gui.cancel",
-				Margin = new Thickness(5),
-				Modern = false,
-				Width = 100
-			});
-			buttonRow.ChildAnchor = Alignment.MiddleCenter;
-
-			AddGuiElement(_errorMessage = new GuiTextElement()
-			{
-				TextColor = TextColor.Yellow
-			});
-
-			_playerProfileService = Alex.Services.GetService<IPlayerProfileService>();
-			_playerProfileService.Authenticate += PlayerProfileServiceOnAuthenticate;
-
+		protected override void Initialized()
+		{
 			var activeProfile = Alex.ProfileManager.ActiveProfile?.Profile;
 			if (activeProfile != null)
 			{
+				DisableInput();
+
 				Requester.ClientToken = activeProfile.ClientToken;
-				_loginButton.Enabled = false;
+				LoginButton.Enabled = false;
 
-				_nameInput.Value = activeProfile.Username;
+				NameInput.Value = activeProfile.Username;
 
-				_errorMessage.Text = "Validating authentication token...";
+				ErrorMessage.Text = "Validating authentication token...";
 				Validate(activeProfile.AccessToken);
 			}
+			_playerProfileService = Alex.Services.GetService<IPlayerProfileService>();
+			_playerProfileService.Authenticate += PlayerProfileServiceOnAuthenticate;
 		}
 
 		private void PlayerProfileServiceOnAuthenticate(object sender, PlayerProfileAuthenticateEventArgs e)
@@ -111,46 +54,20 @@ namespace Alex.Gamestates.Login
 			{
 				Alex.ProfileManager.CreateOrUpdateProfile(ProfileManager.ProfileType.Java, e.Profile, true);
 				//Alex.SaveJava(_nameInput.Value);
-				Alex.GameStateManager.SetActiveState<TitleState>();
+				Alex.GameStateManager.SetActiveState("serverlist");
 			}
 			else
 			{
-				_errorMessage.Text      = "Could not login: " + e.ErrorMessage;
-				_errorMessage.TextColor = TextColor.Red;
+				ErrorMessage.Text      = "Could not login: " + e.ErrorMessage;
+				ErrorMessage.TextColor = TextColor.Red;
 
-				_loginButton.Enabled = true;
+				LoginButton.Enabled = true;
 			}
 		}
 
-		private void OnLoginButtonPressed()
+		protected override void LOginButtonPressed(string username, string password)
 		{
-			//var auth =
-			//	new Authenticate(new Credentials() {Username = _nameInput.Value, Password = _passwordInput.Value})
-			//		.PerformRequestAsync().ContinueWith(JavaLoginResponse);
-
-			_loginButton.Enabled = false;
-			_errorMessage.Text = "Authenticating...";
-
-			_playerProfileService.TryAuthenticateAsync(_nameInput.Value, _passwordInput.Value);
-
-			//auth.Start();
-		}
-
-		private void LoadPlayerSkin(string uuid)
-		{
-			Profile profile = new Profile(uuid);
-			profile.PerformRequestAsync().ContinueWith(task =>
-			{
-				var r = task.Result;
-				if (r.IsSuccess)
-				{
-					var skinUri = r.Properties.SkinUri;
-					if(SkinUtils.TryGetSkin(skinUri, Alex.GraphicsDevice, out var skin))
-					{
-						Alex.LocalPlayerSkin = skin;
-					}
-				}
-			});
+			_playerProfileService.TryAuthenticateAsync(NameInput.Value, PasswordInput.Value);
 		}
 
 		private void Validate(string accessToken)
@@ -161,26 +78,16 @@ namespace Alex.Gamestates.Login
 				var r = task.Result;
 				if (r.IsSuccess)
 				{
-					Alex.GameStateManager.SetActiveState<TitleState>();
+					Alex.GameStateManager.SetActiveState("serverlist");
 				}
 				else
 				{
-					_errorMessage.Text = "Could not login: " + r.Error.ErrorMessage;
-					_errorMessage.TextColor = TextColor.Red;
-
-					_loginButton.Enabled = true;
+					ErrorMessage.Text = "Could not login: " + r.Error.ErrorMessage;
+					ErrorMessage.TextColor = TextColor.Red;
 				}
+
+				EnableInput();
 			});
-		}
-
-		private void OnCancelButtonPressed()
-		{
-			Alex.GameStateManager.Back();
-		}
-
-		private void MenuButtonClicked()
-		{
-			Alex.GameStateManager.SetActiveState<TitleState>();
 		}
 	}
 }

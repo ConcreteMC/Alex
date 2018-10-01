@@ -24,8 +24,8 @@ namespace Alex.GameStates.Gui.Common
             set
             {
                 _title = value;
-                if(_headerTitle != null)
-                    _headerTitle.Text = value;
+                if(HeaderTitle != null)
+                    HeaderTitle.Text = value;
             }
         }
         public string TitleTranslationKey
@@ -34,8 +34,8 @@ namespace Alex.GameStates.Gui.Common
             set
             {
                 _titleTranslationKey = value;
-                if(_headerTitle != null)
-                    _headerTitle.TranslationKey = value;
+                if(HeaderTitle != null)
+                    HeaderTitle.TranslationKey = value;
             }
         }
 
@@ -43,7 +43,7 @@ namespace Alex.GameStates.Gui.Common
         protected GuiMultiStackContainer Body { get; }
         protected GuiMultiStackContainer Footer { get; }
 
-        private readonly GuiTextElement  _headerTitle;
+        protected readonly GuiTextElement  HeaderTitle;
 
         public GuiMenuStateBase()
         {
@@ -66,7 +66,7 @@ namespace Alex.GameStates.Gui.Common
                 ChildAnchor = Alignment.BottomCenter
             });
             
-            Header.AddChild(_headerTitle = new GuiTextElement()
+            Header.AddChild(HeaderTitle = new GuiTextElement()
             {
                 Text      = Title,
                 TextColor = TextColor.White,

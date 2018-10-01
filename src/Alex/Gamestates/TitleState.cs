@@ -32,6 +32,7 @@ namespace Alex.GameStates
 
 		private readonly GuiStackMenu _mainMenu;
 		private readonly GuiStackMenu _debugMenu;
+		private readonly GuiStackMenu _spMenu;
 
 		private readonly GuiTextElement _splashText;
 
@@ -42,6 +43,7 @@ namespace Alex.GameStates
 		private IPlayerProfileService _playerProfileService;
 
 		private FpsMonitor FpsMonitor { get; }
+
 		public TitleState()
 		{
 			FpsMonitor = new FpsMonitor();
@@ -63,11 +65,11 @@ namespace Alex.GameStates
 				BackgroundOverlay = new Color(Color.Black, 0.35f)
 			};
 
-			_mainMenu.AddMenuItem("Multiplayer", OnMultiplayerButtonPressed);
-			_mainMenu.AddMenuItem("Debug", OnDebugPressed);
+			_mainMenu.AddMenuItem("Multiplayer", OnMultiplayerButtonPressed, EnableMultiplayer);
+			_mainMenu.AddMenuItem("SinglePlayer", OnSinglePlayerPressed);
 
 			_mainMenu.AddMenuItem("Options", () => { Alex.GameStateManager.SetActiveState("options"); });
-			_mainMenu.AddMenuItem("Exit Game", () => { Alex.Exit(); });
+			_mainMenu.AddMenuItem("Exit", () => { Alex.Exit(); });
 
 			#endregion
 
@@ -82,13 +84,33 @@ namespace Alex.GameStates
 
 				ChildAnchor = Alignment.CenterY | Alignment.FillX,
 				BackgroundOverlay = new Color(Color.Black, 0.35f),
-				
+
 			};
 
 			_debugMenu.AddMenuItem("Debug Blockstates", DebugWorldButtonActivated);
 			_debugMenu.AddMenuItem("Debug Flatland", DebugFlatland);
 			_debugMenu.AddMenuItem("Debug Anvil", DebugAnvil);
 			_debugMenu.AddMenuItem("Go Back", DebugGoBackPressed);
+
+			#endregion
+
+			#region Create SPMenu
+
+			_spMenu = new GuiStackMenu()
+			{
+				Margin = new Thickness(15, 0, 15, 0),
+				Padding = new Thickness(0, 50, 0, 0),
+				Width = 125,
+				Anchor = Alignment.FillY | Alignment.MinX,
+
+				ChildAnchor = Alignment.CenterY | Alignment.FillX,
+				BackgroundOverlay = new Color(Color.Black, 0.35f),
+			};
+
+			_spMenu.AddMenuItem("SinglePlayer", () => {}, false);
+			_spMenu.AddMenuItem("Debug Worlds", OnDebugPressed);
+
+			_spMenu.AddMenuItem("Return to main menu", SpBackPressed);
 
 			#endregion
 
@@ -113,8 +135,10 @@ namespace Alex.GameStates
 
 
 			_debugInfo = new GuiDebugInfo();
-			_debugInfo.AddDebugRight(() => $"Cursor RenderPosition: {Alex.InputManager.CursorInputListener.GetCursorPosition()} / {Alex.GuiManager.FocusManager.CursorPosition}");
-			_debugInfo.AddDebugRight(() => $"Cursor Delta: {Alex.InputManager.CursorInputListener.GetCursorPositionDelta()}");
+			_debugInfo.AddDebugRight(() =>
+				$"Cursor RenderPosition: {Alex.InputManager.CursorInputListener.GetCursorPosition()} / {Alex.GuiManager.FocusManager.CursorPosition}");
+			_debugInfo.AddDebugRight(() =>
+				$"Cursor Delta: {Alex.InputManager.CursorInputListener.GetCursorPositionDelta()}");
 			_debugInfo.AddDebugRight(() => $"Splash Text Scale: {_splashText.Scale:F3}");
 			_debugInfo.AddDebugLeft(() => $"FPS: {FpsMonitor.Value:F0}");
 
@@ -123,26 +147,57 @@ namespace Alex.GameStates
 			_playerProfileService.ProfileChanged += PlayerProfileServiceOnProfileChanged;
 		}
 
+		private bool _mpEnabled = true;
+		public bool EnableMultiplayer
+		{
+			get { return _mpEnabled; }
+			set
+			{
+				_mpEnabled = value;
+				if (!value)
+				{
+					RemoveChild(_mainMenu);
+					AddChild(_spMenu);
+				}
+				else
+				{
+					DebugGoBackPressed();
+				}
+			}
+		}
+
 		private void PlayerProfileServiceOnProfileChanged(object sender, PlayerProfileChangedEventArgs e)
 		{
 			_playerView.Entity = new PlayerMob(e.Profile.Username, null, null, e.Profile.Skin.Texture, e.Profile.Skin.Slim);
 		}
 
+		private void OnSinglePlayerPressed()
+		{
+			RemoveChild(_mainMenu);
+			AddChild(_spMenu);
+		}
+
+		private void SpBackPressed()
+		{
+			RemoveChild(_spMenu);
+			AddChild(_mainMenu);
+		}
+
 		private void DebugGoBackPressed()
 		{
 			RemoveChild(_debugMenu);
-			AddChild(_mainMenu);
+			AddChild(_spMenu);
 		}
 
 		private void OnDebugPressed()
 		{
-			RemoveChild(_mainMenu);
+			RemoveChild(_spMenu);
 			AddChild(_debugMenu);
 		}
 
 		private void OnMultiplayerButtonPressed()
 		{
-			Alex.GameStateManager.SetActiveState("serverlist");
+			Alex.GameStateManager.SetActiveState("selectGameVersion");
 		}
 
 		protected override void OnLoad(IRenderArgs args)

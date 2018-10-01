@@ -35,5 +35,9 @@ namespace Alex.API.Gui.Elements.Controls
 			});
         }
 
-    }
+	    public void AddSpacer()
+	    {
+		    AddChild(new GuiStackMenuSpacer());
+	    }
+	}
 }

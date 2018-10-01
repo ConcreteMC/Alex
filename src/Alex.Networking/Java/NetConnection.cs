@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -458,10 +459,14 @@ namespace Alex.Networking.Java
 		    NetworkProcessing?.Wait();
 			NetworkProcessing?.Dispose();
 
-		    NetworkWriting?.Wait();
+		    ClearOutQueue(PacketWriteQueue);
+
+			NetworkWriting?.Wait();
 			NetworkWriting?.Dispose();
 
 		    PacketWriteQueue?.Dispose();
+
+		    ClearOutQueue(HandlePacketQueue);
 
 			PacketHandling?.Wait();
 			PacketHandling?.Dispose();
@@ -484,20 +489,12 @@ namespace Alex.Networking.Java
 
 			UnhandledPacketsFilter.Clear();
 		}
-    }
 
-    internal struct ReceivedData
-    {
-        public byte[] OldBuffer;
-        public byte[] Buffer;
-        public DateTime Time;
-
-        public ReceivedData(byte[] buffer, byte[] oldBuffer)
-        {
-            Buffer = buffer;
-            OldBuffer = oldBuffer;
-            Time = DateTime.UtcNow;
-        }
+	    private void ClearOutQueue<TType>(BlockingCollection<TType> collection)
+	    {
+			collection.CompleteAdding();
+		    while (collection.TryTake(out TType _)) {};
+	    }
     }
 
     internal struct SendData

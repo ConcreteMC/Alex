@@ -42,6 +42,10 @@ namespace Alex.Gamestates.Login
 			_mainMenu.AddMenuItem($"Java - Version {JavaProtocol.FriendlyName}", JavaEditionButtonPressed);
 			_mainMenu.AddMenuItem($"Bedrock - Unavailable", BedrockEditionButtonPressed, false);
 
+			_mainMenu.AddSpacer();
+			
+			_mainMenu.AddMenuItem($"Go Back", SinglePlayerButtonPressed);
+
 			AddChild(_mainMenu);
 
 			AddChild(_logo = new GuiImage(GuiTextures.AlexLogo)
@@ -60,6 +64,16 @@ namespace Alex.Gamestates.Login
 				Text = "Select the edition you want to play on...",
 				Scale = 1f
 			});
+		}
+
+		private void SinglePlayerButtonPressed()
+		{
+			Alex.GameStateManager.SetActiveState<TitleState>();
+			/*Alex.GameStateManager.SetAndUpdateActiveState<TitleState>(state =>
+			{
+				state.EnableMultiplayer = false;
+				return state;
+			});*/
 		}
 
 		private void BedrockEditionButtonPressed()

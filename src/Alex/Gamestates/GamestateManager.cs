@@ -107,7 +107,25 @@ namespace Alex.GameStates
 		    return SetActiveState<TStateType>(key);
 	    }
 
-	    public bool SetActiveState(IGameState state, bool keepHistory = true)
+	    public bool SetAndUpdateActiveState<TStateType>(Func<TStateType, TStateType> doActionBeforeSwitching) where TStateType : IGameState, new()
+	    {
+		    IGameState state = null;
+			var key = typeof(TStateType).FullName;
+		    if (States.TryGetValue(key, out state))
+		    {
+			    state = doActionBeforeSwitching.Invoke((TStateType)state);
+			    return SetActiveState(state);
+		    }
+
+		    state = new TStateType();
+		    state = doActionBeforeSwitching.Invoke((TStateType)state);
+			AddState(key, state);
+
+			return SetActiveState(state);
+	    }
+
+
+		public bool SetActiveState(IGameState state, bool keepHistory = true)
 	    {
 		    var current = ActiveState;
 		    current?.Hide();
