@@ -33,12 +33,40 @@ namespace Alex.API.Input
 			    }
 		    }
 	    }
-		
-	    public int Length => _stringBuilder.Length;
 
-        private int _cursorPosition;
+		public bool IsSelecting
+		{
+			get => _isSelecting;
+			set
+			{
+				if (_isSelecting == value) return;
 
-        public int CursorPosition
+				if (!_isSelecting && value)
+				{
+					_selectionStartPosition = CursorPosition;
+				}
+				
+				_isSelecting = value;
+			}
+		}
+
+		public int Length => _stringBuilder.Length;
+
+		public bool HasSelection => _selectionStartPosition > -1;
+
+		public int SelectionStartPosition => HasSelection ? Math.Min(_cursorPosition, _selectionStartPosition) : -1;
+
+		public int SelectionEndPosition => HasSelection ? Math.Max(_cursorPosition, _selectionStartPosition) : -1;
+
+		public string SelectedText => HasSelection ? 
+			Text.Substring(SelectionStartPosition, SelectionEndPosition - SelectionStartPosition) : string.Empty;
+
+
+		private int _cursorPosition;
+		private int _selectionStartPosition = -1;
+		private bool _isSelecting;
+
+		public int CursorPosition
         {
             get
             {
@@ -65,6 +93,12 @@ namespace Alex.API.Input
         {
 	        if (_stringBuilder.Length == 0) return;
 
+			if (IsSelecting)
+			{
+				RemoveSelection();
+				return;
+			}
+
             var pos = CursorPosition;
 	        if (pos == 0) return;
 
@@ -76,6 +110,11 @@ namespace Alex.API.Input
 
         public void AppendCharacter(char c)
         {
+			if (IsSelecting)
+			{
+				RemoveSelection();
+			}
+
             var pos = CursorPosition;
 	        _stringBuilder.Insert(pos, c);
 			
@@ -83,7 +122,42 @@ namespace Alex.API.Input
             CursorPosition = pos + 1;
         }
 
-	    public void AppendLine(string line)
+		public void RemoveSelection()
+		{
+			if (_stringBuilder.Length == 0 || !HasSelection) return;
+
+			var pos = CursorPosition;
+
+			var start = SelectionStartPosition;
+			_stringBuilder.Remove(start, SelectionEndPosition-start);
+			_selectionStartPosition = -1;
+			IsSelecting = false;
+
+			TextChanged?.Invoke(this, Text);
+			_cursorPosition = start;
+		}
+
+		public void SelectLeft(bool selectWord = false)
+		{
+			if (_selectionStartPosition < 0)
+			{
+				IsSelecting = true;
+				_selectionStartPosition = CursorPosition;
+			}
+			CursorPosition--;
+		}
+
+		public void SelectRight(bool selectWord = false)
+		{
+			if (_selectionStartPosition < 0)
+			{
+				IsSelecting             = true;
+				_selectionStartPosition = CursorPosition;
+			}
+			CursorPosition++;
+		}
+
+		public void AppendLine(string line)
 		{
 			var pos = CursorPosition;
 			_stringBuilder.Insert(pos, line);
@@ -120,6 +194,14 @@ namespace Alex.API.Input
 			
 		    TextChanged?.Invoke(this, string.Empty);
 			CursorPosition = 0;
-	    }
+			_selectionStartPosition = -1;
+			IsSelecting = false;
+		}
+
+		public void ClearSelection()
+		{
+			_selectionStartPosition = -1;
+			IsSelecting = false;
+		}
     }
 }

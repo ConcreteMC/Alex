@@ -147,20 +147,20 @@ namespace Alex.API.Gui
                 FocusedElement = HighlightedElement;
             }
 
-            if (HighlightedElement == FocusedElement && CursorInputListener.IsPressed(InputCommand.Click))
+            var isDown = CursorInputListener.IsDown(InputCommand.Click);
+            if (CursorPosition != _previousCursorPosition)
             {
-                HighlightedElement?.InvokeCursorPressed(CursorPosition);
+                HighlightedElement?.InvokeCursorMove(CursorPosition, _previousCursorPosition, isDown);
             }
 
-            var isDown = CursorInputListener.IsDown(InputCommand.Click);
             if (isDown)
             {
                 HighlightedElement?.InvokeCursorDown(CursorPosition);
             }
 
-            if (CursorPosition != _previousCursorPosition)
+            if (HighlightedElement == FocusedElement && CursorInputListener.IsPressed(InputCommand.Click))
             {
-                HighlightedElement?.InvokeCursorMove(CursorPosition, _previousCursorPosition, isDown);
+                HighlightedElement?.InvokeCursorPressed(CursorPosition);
             }
         }
 
