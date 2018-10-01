@@ -5,6 +5,7 @@ using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks;
+using Alex.Blocks.State;
 using Alex.GameStates.Gui.InGame;
 using Alex.GameStates.Hud;
 using Alex.Graphics.Models;
@@ -125,6 +126,11 @@ namespace Alex.GameStates.Playing
 
 					if (SelBlock.BlockState != null)
 					{
+						if (SelBlock.BlockState is BlockState s && s.IsMultiPart)
+						{
+							sb.AppendLine($"MultiPart=true");
+						}
+
 						var dict = SelBlock.BlockState.ToDictionary();
 						foreach (var kv in dict)
 						{

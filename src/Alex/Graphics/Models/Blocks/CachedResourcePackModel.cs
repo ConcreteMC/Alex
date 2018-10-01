@@ -437,6 +437,7 @@ namespace Alex.Graphics.Models.Blocks
 						faceColor = LightingUtils.AdjustColor(faceColor, cull,
 							GetLight(world, worldPosition + cullFace, model.Model.AmbientOcclusion), element.Shade);
 
+						//TODO: Rotate vertices
 						for (var index = 0; index < faceVertices.Length; index++)
 						{
 							var vert = faceVertices[index];

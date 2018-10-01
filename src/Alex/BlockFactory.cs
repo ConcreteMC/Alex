@@ -136,6 +136,7 @@ namespace Alex
 			int total = data.Count;
 			int done = 0;
 			int importCounter = 0;
+			int multipartBased = 0;
 
 			uint c = 0;
 			foreach (var entry in data)
@@ -174,7 +175,7 @@ namespace Alex
 							}
 						}
 					}
-
+				//	resourcePack.BlockStates.TryGetValue(entry.Key)
 					if (RegisteredBlockStates.TryGetValue(id, out IBlockState st))
 					{
 						Log.Warn($"Duplicate blockstate id (Existing: {st.Name}[{st.ToString()}] | New: {entry.Key}[{variantState.ToString()}]) ");
@@ -190,6 +191,8 @@ namespace Alex
 
 							cachedBlockModel = UnknownBlockModel;
 						}
+
+						if (variantState.IsMultiPart) multipartBased++;
 
 						string displayName = entry.Key;
 						var block = GetBlockByName(entry.Key);
@@ -295,7 +298,7 @@ namespace Alex
 			{
 				File.WriteAllBytes("generated\\blockFactoryChanges.txt", Encoding.UTF8.GetBytes(factoryBuilder.ToString()));
 			}
-
+			Log.Info($"Got {multipartBased} multi-part blockstate variants!");
 			return importCounter;
 		}
 
