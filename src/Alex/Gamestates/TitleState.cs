@@ -10,10 +10,12 @@ using Alex.API.Gui.Graphics;
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.Entities;
+using Alex.Gamestates.Login;
 using Alex.GameStates.Gui.Common;
 using Alex.GameStates.Gui.Multiplayer;
 using Alex.Gui;
 using Alex.Gui.Elements;
+using Alex.Networking.Java;
 using Alex.Utils;
 using Alex.Worlds;
 using Alex.Worlds.Generators;
@@ -114,6 +116,8 @@ namespace Alex.GameStates
 
 			#endregion
 
+			CreateProtocolMenu();
+
 			AddChild(_mainMenu);
 
 			AddChild(_logo = new GuiImage(GuiTextures.AlexLogo)
@@ -166,6 +170,59 @@ namespace Alex.GameStates
 			}
 		}
 
+		#region ProtocolMenu
+
+		private GuiStackMenu _protocolMenu;
+		private void CreateProtocolMenu()
+		{
+			_protocolMenu = new GuiStackMenu()
+			{
+				Margin = new Thickness(15, 0, 15, 0),
+				Padding = new Thickness(0, 50, 0, 0),
+				Width = 125,
+				Anchor = Alignment.FillY | Alignment.MinX,
+
+				ChildAnchor = Alignment.CenterY | Alignment.FillX,
+				BackgroundOverlay = new Color(Color.Black, 0.35f),
+			};
+
+			_protocolMenu.AddMenuItem($"Java - Version {JavaProtocol.FriendlyName}", JavaEditionButtonPressed);
+			_protocolMenu.AddMenuItem($"Bedrock - Unavailable", BedrockEditionButtonPressed, false);
+
+			_protocolMenu.AddMenuItem("Return to main menu", ProtocolBackPressed);
+		}
+
+		private void ProtocolBackPressed()
+		{
+			RemoveChild(_protocolMenu);
+			AddChild(_mainMenu);
+		}
+
+		private void SinglePlayerButtonPressed()
+		{
+			Alex.GameStateManager.SetActiveState<TitleState>();
+			/*Alex.GameStateManager.SetAndUpdateActiveState<TitleState>(state =>
+			{
+				state.EnableMultiplayer = false;
+				return state;
+			});*/
+		}
+
+		private void BedrockEditionButtonPressed()
+		{
+
+		}
+
+		private void JavaEditionButtonPressed()
+		{
+			Alex.GameStateManager.SetActiveState(new JavaLoginState(_backgroundSkyBox)
+			{
+				BackgroundOverlay = BackgroundOverlay
+			}, true);
+		}
+
+		#endregion
+
 		private void PlayerProfileServiceOnProfileChanged(object sender, PlayerProfileChangedEventArgs e)
 		{
 			_playerView.Entity = new PlayerMob(e.Profile.Username, null, null, e.Profile.Skin.Texture, e.Profile.Skin.Slim);
@@ -197,7 +254,9 @@ namespace Alex.GameStates
 
 		private void OnMultiplayerButtonPressed()
 		{
-			Alex.GameStateManager.SetActiveState("selectGameVersion");
+			RemoveChild(_mainMenu);
+			AddChild(_protocolMenu);
+		//	Alex.GameStateManager.SetActiveState("selectGameVersion");
 		}
 
 		protected override void OnLoad(IRenderArgs args)

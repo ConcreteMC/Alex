@@ -1,0 +1,80 @@
+﻿{
+  "version": "1.0.0",
+  "restore": {
+    "projectUniqueName": "D:\\Projects\\Alex\\src\\Alex\\Alex.csproj",
+    "projectName": "Alex",
+    "projectPath": "D:\\Projects\\Alex\\src\\Alex\\Alex.csproj",
+    "outputPath": "D:\\Projects\\Alex\\src\\Alex\\obj\\",
+    "projectStyle": "PackageReference",
+    "fallbackFolders": [
+      "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
+    ],
+    "originalTargetFrameworks": [
+      "netcoreapp2.0"
+    ],
+    "frameworks": {
+      "netcoreapp2.0": {
+        "projectReferences": {
+          "D:\\Projects\\Alex\\src\\Alex.API\\Alex.API.csproj": {
+            "projectPath": "D:\\Projects\\Alex\\src\\Alex.API\\Alex.API.csproj"
+          },
+          "D:\\Projects\\Alex\\src\\Alex.Gui\\Alex.Graphics.csproj": {
+            "projectPath": "D:\\Projects\\Alex\\src\\Alex.Gui\\Alex.Graphics.csproj"
+          },
+          "D:\\Projects\\Alex\\src\\Alex.Networking\\Alex.Networking.csproj": {
+            "projectPath": "D:\\Projects\\Alex\\src\\Alex.Networking\\Alex.Networking.csproj"
+          },
+          "D:\\Projects\\Alex\\src\\Alex.ResourcePackLib\\Alex.ResourcePackLib.csproj": {
+            "projectPath": "D:\\Projects\\Alex\\src\\Alex.ResourcePackLib\\Alex.ResourcePackLib.csproj"
+          }
+        }
+      }
+    },
+    "warningProperties": {
+      "warnAsError": [
+        "NU1605"
+      ]
+    }
+  },
+  "frameworks": {
+    "netcoreapp2.0": {
+      "dependencies": {
+        "CoreCompat.System.Drawing.v2": {
+          "target": "Package",
+          "version": "[5.2.0-preview1-r131, )"
+        },
+        "CoreFNBT": {
+          "target": "Package",
+          "version": "[1.0.9, )"
+        },
+        "Microsoft.NETCore.App": {
+          "suppressParent": "All",
+          "target": "Package",
+          "version": "[2.0.0, )",
+          "autoReferenced": true
+        },
+        "MonoGame.Framework.DesktopGL.Core": {
+          "target": "Package",
+          "version": "[3.7.0.7, )"
+        },
+        "NLog": {
+          "target": "Package",
+          "version": "[4.5.0, )"
+        },
+        "NLog.Config": {
+          "target": "Package",
+          "version": "[4.5.0, )"
+        },
+        "Newtonsoft.Json": {
+          "target": "Package",
+          "version": "[11.0.2, )"
+        }
+      },
+      "imports": [
+        "net461"
+      ],
+      "assetTargetFallback": true,
+      "warn": true
+    }
+  }
+}

@@ -10,6 +10,7 @@ using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using NLog;
+using Color = System.Drawing.Color;
 
 namespace Alex.Utils
 {
@@ -213,14 +214,14 @@ namespace Alex.Utils
 					{
 						for (int y = yi * noDataSection; y < (yi * noDataSection) + noDataSection; y++)
 						{
-							System.Drawing.Color color;
+							Color color;
 							if ((xi == 0 && yi == 0) || (xi == 1 && yi == 1))
 							{
-								color = System.Drawing.Color.Magenta;
+								color = Color.Magenta;
 							}
 							else
 							{
-								color = System.Drawing.Color.Black;
+								color = Color.Black;
 							}
 							modifiedBitmap.SetPixel(x, y, color);
 						}

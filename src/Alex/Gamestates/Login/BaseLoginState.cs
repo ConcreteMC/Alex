@@ -1,17 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
+using Alex.API.Graphics;
 using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
+using Alex.API.Gui.Graphics;
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.GameStates;
 using Alex.GameStates.Gui.Common;
+using Alex.Gui;
+using Chromely.CefGlue.Winapi;
+using Chromely.CefGlue.Winapi.ChromeHost;
+using Chromely.Core;
+using Chromely.Core.Helpers;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using MojangSharp.Api;
 using MojangSharp.Endpoints;
+using WinApi.Windows;
+using Thickness = Alex.API.Gui.Thickness;
 
 namespace Alex.Gamestates.Login
 {
@@ -22,20 +33,48 @@ namespace Alex.Gamestates.Login
 		protected readonly GuiButton LoginButton;
 		protected readonly GuiTextElement ErrorMessage;
 
-		protected BaseLoginState(string title)
+		private readonly GuiPanoramaSkyBox _backgroundSkyBox;
+		protected BaseLoginState(string title, GuiPanoramaSkyBox skyBox)
 		{
 			Title = title;
+
+			_backgroundSkyBox = skyBox;
+			Background = new GuiTexture2D(_backgroundSkyBox, TextureRepeatMode.Stretch);
+			BackgroundOverlay = Color.Transparent;
+
 			base.HeaderTitle.Anchor = Alignment.MiddleCenter;
-			Header.AddChild(new GuiTextElement()
+			base.HeaderTitle.FontStyle = FontStyle.Bold | FontStyle.DropShadow;
+			Footer.ChildAnchor = Alignment.MiddleCenter;
+			GuiTextElement t;
+			Footer.AddChild(t = new GuiTextElement()
 			{
 				Text = "We are NOT in anyway or form affiliated with Mojang/Minecraft or Microsoft!",
 				TextColor = TextColor.Yellow,
 				Scale = 1f,
 				FontStyle = FontStyle.DropShadow,
 
-				Anchor = Alignment.BottomCenter
+				Anchor = Alignment.MiddleCenter
 			});
 
+			GuiTextElement info;
+			Footer.AddChild(info = new GuiTextElement()
+			{
+				Text = "We will never collect/store or do anything with your data.",
+
+				TextColor = TextColor.Yellow,
+				Scale = 0.8f,
+				FontStyle = FontStyle.DropShadow,
+
+				Anchor = Alignment.MiddleCenter,
+				Padding = new Thickness(0, 5, 0, 0)
+			});
+			
+
+			/*
+			 *  "We will never collect/store or do anything with your data.\n" +
+					   "You can read more about the authentication method we use on here: https://wiki.vg/Authentication"
+			 */
+			Body.BackgroundOverlay = new Color(Color.Black, 0.5f);
 			Body.ChildAnchor = Alignment.MiddleCenter;
 
 			var usernameRow = AddGuiRow(new GuiTextElement()
@@ -93,10 +132,10 @@ namespace Alex.Gamestates.Login
 				TextColor = TextColor.Yellow
 			});
 
-			Initialized();
+			InitializedAsync();
 		}
 
-		protected abstract void Initialized();
+		protected abstract void InitializedAsync();
 
 		private void OnLoginButtonPressed()
 		{
@@ -125,6 +164,18 @@ namespace Alex.Gamestates.Login
 			LoginButton.Enabled = true;
 			PasswordInput.Enabled = true;
 			NameInput.Enabled = true;
+		}
+
+		protected override void OnUpdate(GameTime gameTime)
+		{
+			base.OnUpdate(gameTime);
+			_backgroundSkyBox.Update(gameTime);
+		}
+
+		protected override void OnDraw(IRenderArgs args)
+		{
+			base.OnDraw(args);
+			_backgroundSkyBox.Draw(args);
 		}
 	}
 }

@@ -1,16 +1,27 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Text.RegularExpressions;
+using System.Xml.Serialization;
 using Alex.API.Graphics;
 using Alex.API.Graphics.Typography;
+using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
+
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using BitmapFont = Alex.API.Graphics.Typography.BitmapFont;
 
 namespace Alex.API.Gui.Elements
 {
-    public class GuiTextElement : GuiElement
-    {
+	public class GuiTextClickedEvent : EventArgs
+	{
+		public Uri ClickedText;
+	}
+
+    public class GuiTextElement : GuiControl
+	{
 	    public static readonly Color DefaultTextBackgroundColor = new Color(Color.Black, 0.6f);
         
 	    private string _text;
@@ -18,7 +29,7 @@ namespace Alex.API.Gui.Elements
 	    private Vector2 _scale = Vector2.One;
 	    private Vector2? _rotationOrigin;
 	    private IFont _font;
-
+		
 	    public override Vector2 RotationOrigin
 	    {
 		    get
@@ -89,6 +100,18 @@ namespace Alex.API.Gui.Elements
 
 		private string _renderText = String.Empty;
 
+		public EventHandler<GuiTextClickedEvent> OnLinkClicked;
+
+		//public void AddClickable()
+
+		public class ClickableElement
+		{
+			public Rectangle Area { get; set; } 
+			public Action<GuiTextElement, string> ClickAction { get; set; }
+			public string Text { get; set; }
+		}
+
+		private List<ClickableElement> ClickableElements = new List<ClickableElement>();
 	    public GuiTextElement(bool hasBackground = false)
 	    {
 		    if (hasBackground)
@@ -182,7 +205,38 @@ namespace Alex.API.Gui.Elements
 				_renderText = text;
 
 				InvalidateLayout();
-	        }
+
+				var linkParser = new Regex(@"\b(?:https?://|www\.)\S+\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+				foreach (Match match in linkParser.Matches(text))
+				{
+					var l = GetSize(text.Substring(0, match.Index), scale);
+					var linkSize = GetSize(match.Value, scale);
+
+					Rectangle clickArea = new Rectangle((int)l.X, 0, (int)linkSize.X, (int)linkSize.Y);
+
+					ClickableElements.Add(new ClickableElement()
+					{
+						Area = clickArea,
+						//ClickAction = (s, val) => {
+							
+						//},
+						Text = match.Value
+					});
+				}
+			}
 		}
-    }
+
+		protected override void OnCursorPressed(Point cursorPosition)
+		{
+			base.OnCursorPressed(cursorPosition);
+			foreach (var c in ClickableElements.ToArray())
+			{
+				if (c.Area.Contains(cursorPosition))
+				{
+					OnLinkClicked?.Invoke(this, new GuiTextClickedEvent() { ClickedText = new Uri(c.Text) });
+					//c.ClickAction?.Invoke(this, c.Text);
+				}
+			}
+		}
+	}
 }

@@ -1,23 +1,14 @@
 ﻿using System;
-using System.Diagnostics;
-using System.IO;
 using System.Net;
-using System.Net.Sockets;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Threading;
-using Alex.API.Services;
-using Alex.Networking.Java;
-using Alex.Networking.Java.Packets;
-using Alex.Networking.Java.Packets.Handshake;
-using Alex.Networking.Java.Packets.Status;
-using Alex.Services;
-using Newtonsoft.Json;
+using Chromely.CefGlue.Winapi;
+using Chromely.CefGlue.Winapi.ChromeHost;
+using Chromely.Core;
+using Chromely.Core.Helpers;
 using NLog;
+using WinApi.Windows;
 
 namespace Alex
 {
-#if WINDOWS || LINUX
 	/// <summary>
 	/// The main class.
 	/// </summary>
@@ -46,6 +37,7 @@ namespace Alex
 			}
 
 		}
+
 
 		private static LaunchSettings ParseArguments(string[] args)
 		{
@@ -123,9 +115,6 @@ namespace Alex
 		}
 		
 	}
-#endif
-
-
 
 	public class LaunchSettings
 	{

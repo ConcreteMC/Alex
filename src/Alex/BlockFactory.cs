@@ -523,7 +523,7 @@ namespace Alex
 			else if (blockName == "minecraft:sand" || blockName == "sand") return new Sand();
 			else if (blockName == "minecraft:gravel" || blockName == "gravel") return new Gravel();
 			else if (blockName == "minecraft:sponge" || blockName == "sponge") return new Sponge();
-			else if (blockName == "minecraft:glass" || blockName == "glass") return new Glass();
+			else if (blockName == "minecraft:glass" || blockName == "glass") return new Blocks.Glass();
 			else if (blockName == "minecraft:dispenser" || blockName == "dispenser") return new Dispenser();
 			else if (blockName == "minecraft:sandstone" || blockName == "sandstone") return new Sandstone();
 			else if (blockName == "minecraft:note_block" || blockName == "noteblock") return new NoteBlock();

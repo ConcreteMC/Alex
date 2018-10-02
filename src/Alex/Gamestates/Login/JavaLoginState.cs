@@ -11,6 +11,7 @@ using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.GameStates;
 using Alex.GameStates.Gui.Common;
+using Alex.Gui;
 using Alex.Networking.Java;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
@@ -24,13 +25,16 @@ namespace Alex.Gamestates.Login
 	public class JavaLoginState : BaseLoginState
 	{
 		private IPlayerProfileService _playerProfileService;
-		public JavaLoginState() : base("Mojang Login")
+		public JavaLoginState(GuiPanoramaSkyBox skyBox) : base("Minecraft Login", skyBox)
 		{
 			
 		}
 
-		protected override void Initialized()
+		protected override async void InitializedAsync()
 		{
+			_playerProfileService = Alex.Services.GetService<IPlayerProfileService>();
+			_playerProfileService.Authenticate += PlayerProfileServiceOnAuthenticate;
+			
 			var activeProfile = Alex.ProfileManager.ActiveProfile?.Profile;
 			if (activeProfile != null)
 			{
@@ -42,10 +46,28 @@ namespace Alex.Gamestates.Login
 				NameInput.Value = activeProfile.Username;
 
 				ErrorMessage.Text = "Validating authentication token...";
-				Validate(activeProfile.AccessToken);
+				await Validate(activeProfile.AccessToken);
 			}
-			_playerProfileService = Alex.Services.GetService<IPlayerProfileService>();
-			_playerProfileService.Authenticate += PlayerProfileServiceOnAuthenticate;
+		}
+
+		private async Task Validate(string accessToken)
+		{
+			Validate validate = new Validate(accessToken);
+			await validate.PerformRequestAsync().ContinueWith(task =>
+			{
+				var r = task.Result;
+				if (r.IsSuccess)
+				{
+					Alex.GameStateManager.SetActiveState("serverlist");
+				}
+				else
+				{
+					ErrorMessage.Text = "Could not login: " + r.Error.ErrorMessage;
+					ErrorMessage.TextColor = TextColor.Red;
+				}
+
+				EnableInput();
+			});
 		}
 
 		private void PlayerProfileServiceOnAuthenticate(object sender, PlayerProfileAuthenticateEventArgs e)
@@ -68,26 +90,6 @@ namespace Alex.Gamestates.Login
 		protected override void LOginButtonPressed(string username, string password)
 		{
 			_playerProfileService.TryAuthenticateAsync(NameInput.Value, PasswordInput.Value);
-		}
-
-		private void Validate(string accessToken)
-		{
-			Validate validate = new Validate(accessToken);
-			validate.PerformRequestAsync().ContinueWith(task =>
-			{
-				var r = task.Result;
-				if (r.IsSuccess)
-				{
-					Alex.GameStateManager.SetActiveState("serverlist");
-				}
-				else
-				{
-					ErrorMessage.Text = "Could not login: " + r.Error.ErrorMessage;
-					ErrorMessage.TextColor = TextColor.Red;
-				}
-
-				EnableInput();
-			});
 		}
 	}
 }

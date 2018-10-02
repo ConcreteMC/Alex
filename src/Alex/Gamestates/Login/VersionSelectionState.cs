@@ -83,7 +83,7 @@ namespace Alex.Gamestates.Login
 
 		private void JavaEditionButtonPressed()
 		{
-			Alex.GameStateManager.SetActiveState(new JavaLoginState(), true);
+			//Alex.GameStateManager.SetActiveState(new JavaLoginState(), true);
 		}
 
 		private void MenuButtonClicked()
