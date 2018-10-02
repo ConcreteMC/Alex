@@ -68,7 +68,6 @@ namespace Alex.Gamestates.Login
 				Anchor = Alignment.MiddleCenter,
 				Padding = new Thickness(0, 5, 0, 0)
 			});
-			
 
 			/*
 			 *  "We will never collect/store or do anything with your data.\n" +

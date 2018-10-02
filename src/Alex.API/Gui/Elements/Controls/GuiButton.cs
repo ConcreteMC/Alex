@@ -57,9 +57,10 @@ namespace Alex.API.Gui.Elements.Controls
                 Text = text,
                 TextColor = TextColor.White,
 				TextOpacity = 0.875f,
-				FontStyle = FontStyle.DropShadow
+				FontStyle = FontStyle.DropShadow,
+				Enabled = false
             });
-
+			
 	        Modern = true;
 
         }
@@ -112,7 +113,12 @@ namespace Alex.API.Gui.Elements.Controls
 			TextElement.TextColor = TextColor.White;
 	    }
 
-	    protected override void OnCursorPressed(Point cursorPosition)
+		protected override void OnCursorMove(Point cursorPosition, Point previousCursorPosition, bool isCursorDown)
+		{
+			base.OnCursorMove(cursorPosition, previousCursorPosition, isCursorDown);
+		}
+
+		protected override void OnCursorPressed(Point cursorPosition)
 		{
 			Focus();
 		}
