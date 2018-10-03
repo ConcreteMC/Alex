@@ -71,7 +71,7 @@ namespace Alex.GameStates.Gui.Common
                 Text      = Title,
                 TextColor = TextColor.White,
                 Scale     = 1f,
-                FontStyle = FontStyle.DropShadow,
+                FontStyle = FontStyle.DropShadow | FontStyle.Bold,
                 
                 Anchor = Alignment.BottomCenter,
             });

@@ -29,7 +29,7 @@ namespace Alex.API.Gui.Elements.Controls
 			
 	    }
 		
-        public GuiButton(string text, Action action = null)
+        public GuiButton(string text, Action action = null, bool isTranslationKey = false)
         {
             Background	  = GuiTextures.ButtonDefault;
 	        DisabledBackground	  = GuiTextures.ButtonDisabled;
@@ -60,6 +60,11 @@ namespace Alex.API.Gui.Elements.Controls
 				FontStyle = FontStyle.DropShadow,
 				Enabled = false
             });
+
+	        if (isTranslationKey)
+	        {
+		        TextElement.TranslationKey = text;
+	        }
 			
 	        Modern = true;
 

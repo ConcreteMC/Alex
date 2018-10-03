@@ -28,10 +28,10 @@ namespace Alex.Gamestates.Login
 {
 	public abstract class BaseLoginState : GuiMenuStateBase
 	{
-		protected readonly GuiTextInput NameInput;
-		protected readonly GuiTextInput PasswordInput;
-		protected readonly GuiButton LoginButton;
-		protected readonly GuiTextElement ErrorMessage;
+		protected GuiTextInput NameInput;
+		protected GuiTextInput PasswordInput;
+		protected GuiButton LoginButton;
+		protected GuiTextElement ErrorMessage;
 
 		private readonly GuiPanoramaSkyBox _backgroundSkyBox;
 		protected BaseLoginState(string title, GuiPanoramaSkyBox skyBox)
@@ -42,6 +42,11 @@ namespace Alex.Gamestates.Login
 			Background = new GuiTexture2D(_backgroundSkyBox, TextureRepeatMode.Stretch);
 			BackgroundOverlay = Color.Transparent;
 
+			Initialize();
+		}
+
+		private void Initialize()
+		{
 			base.HeaderTitle.Anchor = Alignment.MiddleCenter;
 			base.HeaderTitle.FontStyle = FontStyle.Bold | FontStyle.DropShadow;
 			Footer.ChildAnchor = Alignment.MiddleCenter;

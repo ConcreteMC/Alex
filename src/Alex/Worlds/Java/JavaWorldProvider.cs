@@ -771,6 +771,8 @@ namespace Alex.Worlds.Java
 					entity.UpdateGamemode((Gamemode)entry.Gamemode);
 					entity.UUID = new UUID(entry.UUID.ToByteArray());
 
+					WorldReceiver?.AddPlayerListItem(new PlayerListItem(entity.Uuid, entry.Name, (Gamemode)entry.Gamemode, entry.Ping));
+
 					if (entry.HasDisplayName)
 					{
 						if (ChatObject.TryParse(entry.DisplayName, out ChatObject chat))
@@ -815,14 +817,15 @@ namespace Alex.Worlds.Java
 			{
 				foreach (var remove in packet.RemovePlayerEntries)
 				{
-					API.Utils.UUID uuid = new UUID(remove.UUID.ToByteArray());
-					if (_players.TryRemove(uuid, out PlayerMob removed))
+					WorldReceiver?.RemovePlayerListItem(new UUID(remove.UUID.ToByteArray()));
+				//	API.Utils.UUID uuid = new UUID(remove.UUID.ToByteArray());
+					/*if (_players.TryRemove(uuid, out PlayerMob removed))
 					{
 						if (removed.IsSpawned)
 						{
 							base.DespawnEntity(removed.EntityId);
 						}
-					}
+					}*/
 				}
 			}
 		}

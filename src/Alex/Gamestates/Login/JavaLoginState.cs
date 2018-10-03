@@ -34,19 +34,19 @@ namespace Alex.Gamestates.Login
 		{
 			_playerProfileService = Alex.Services.GetService<IPlayerProfileService>();
 			_playerProfileService.Authenticate += PlayerProfileServiceOnAuthenticate;
-			
-			var activeProfile = Alex.ProfileManager.ActiveProfile?.Profile;
+
+			var activeProfile = Alex.ProfileManager.ActiveProfile;
 			if (activeProfile != null)
 			{
 				DisableInput();
 
-				Requester.ClientToken = activeProfile.ClientToken;
+				Requester.ClientToken = activeProfile.Profile.ClientToken;
 				LoginButton.Enabled = false;
 
-				NameInput.Value = activeProfile.Username;
+				NameInput.Value = activeProfile.AccountUsername;
 
 				ErrorMessage.Text = "Validating authentication token...";
-				await Validate(activeProfile.AccessToken);
+				await Validate(activeProfile.Profile.AccessToken);
 			}
 		}
 
@@ -74,7 +74,7 @@ namespace Alex.Gamestates.Login
 		{
 			if (e.IsSuccess)
 			{
-				Alex.ProfileManager.CreateOrUpdateProfile(ProfileManager.ProfileType.Java, e.Profile, true);
+				Alex.ProfileManager.CreateOrUpdateProfile(ProfileManager.ProfileType.Java, e.Profile, NameInput.Value, true);
 				//Alex.SaveJava(_nameInput.Value);
 				Alex.GameStateManager.SetActiveState("serverlist");
 			}
@@ -83,7 +83,7 @@ namespace Alex.Gamestates.Login
 				ErrorMessage.Text      = "Could not login: " + e.ErrorMessage;
 				ErrorMessage.TextColor = TextColor.Red;
 
-				LoginButton.Enabled = true;
+				EnableInput();
 			}
 		}
 

@@ -74,6 +74,7 @@ namespace Alex.Worlds
 		//public long WorldTime { get; private set; } = 6000;
 		public bool FreezeWorldTime { get; set; } = false;
 
+		public PlayerList PlayerList { get; } = new PlayerList();
 		public TickManager Ticker { get; }
 		public EntityManager EntityManager { get; }
 		public ChunkManager ChunkManager { get; private set; }
@@ -519,6 +520,16 @@ namespace Alex.Worlds
 		public void SetBlockState(BlockCoordinates coordinates, IBlockState blockState)
 		{
 			SetBlockState(coordinates.X, coordinates.Y, coordinates.Z, blockState);
+		}
+
+		public void AddPlayerListItem(PlayerListItem item)
+		{
+			PlayerList.Entries.Add(item.UUID, item);
+		}
+
+		public void RemovePlayerListItem(UUID item)
+		{
+			PlayerList.Entries.Remove(item);
 		}
 
 		#endregion

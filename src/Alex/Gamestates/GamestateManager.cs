@@ -211,5 +211,10 @@ namespace Alex.GameStates
 	    {
 		    return ActiveState;
 	    }
+
+	    public IGameState GetPreviousState()
+	    {
+		    return History.Last.Value;
+	    }
 	}
 }

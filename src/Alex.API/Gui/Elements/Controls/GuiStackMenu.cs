@@ -26,9 +26,9 @@ namespace Alex.API.Gui.Elements.Controls
         {
         }
 
-        public void AddMenuItem(string label, Action action, bool enabled = true)
+        public void AddMenuItem(string label, Action action, bool enabled = true, bool isTranslationKey = false)
         {
-            AddChild(new GuiStackMenuItem(label, action)
+            AddChild(new GuiStackMenuItem(label, action, isTranslationKey)
             {
 				Enabled = enabled,
 				Modern = ModernStyle

@@ -1,45 +1,82 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
+using Alex.API.Gui.Elements.Layout;
+using Alex.API.Utils;
+using Alex.Entities;
 using Alex.GameStates.Gui.Common;
 using Alex.GameStates.Gui.MainMenu;
+using Alex.GameStates.Playing;
+using Microsoft.Xna.Framework;
 
 namespace Alex.GameStates.Gui.InGame
 {
     public class InGameMenuState : GuiInGameStateBase
     {
-
-        public InGameMenuState()
+	    private readonly GuiStackMenu _mainMenu;
+	    private readonly GuiStackContainer _playerList;
+		public InGameMenuState()
         {
-            BodyMinWidth = 200;
-            TitleTranslationKey = "menu.game";
+	        HeaderTitle.TranslationKey = "menu.game";
+	        HeaderTitle.Anchor = Alignment.TopCenter;
+	        HeaderTitle.Scale = 2f;
+	        HeaderTitle.FontStyle = FontStyle.DropShadow;
 
-            AddGuiRow(new GuiButton(OnReturnToGameButtonPressed)
-            {
-                TranslationKey = "menu.returnToGame",
-                Margin = new Thickness(0, 3, 0, 3),
-            });
+			_mainMenu = new GuiStackMenu()
+			{
+				Margin = new Thickness(15, 0, 15, 0),
+				Padding = new Thickness(0, 50, 0, 0),
+				Width = 125,
+				Anchor = Alignment.FillY | Alignment.MinX,
 
-            var r = AddGuiRow(new GuiButton(OnOptionsButtonPressed)
-            {
-                TranslationKey = "menu.options",
-                Margin = new Thickness(0, 20, 3, 3),
-            }, 
-                      new GuiButton(OnShareToLanButtonPressed)
-            {
-                TranslationKey = "menu.shareToLan",
-                Margin = new Thickness(3, 20, 0, 3),
-                Enabled = false
-            });
+				ChildAnchor = Alignment.CenterY | Alignment.FillX,
+				BackgroundOverlay = new Color(Color.Black, 0.35f)
+			};
 
-            AddGuiRow(new GuiButton(OnQuitButtonPressed)
-            {
-                TranslationKey = "menu.returnToMenu",
-                Margin = new Thickness(0, 3, 0, 3),
-            });
+	        _playerList = new GuiStackContainer()
+	        {
+		        Margin = new Thickness(15, 0, 15, 0),
+		        Padding = new Thickness(0, 0, 0, 0),
+				MinWidth = 125,
+				Anchor = Alignment.FillY | Alignment.MaxX,
+		        ChildAnchor = Alignment.TopLeft,
+				BackgroundOverlay = new Color(Color.Black, 0.35f)
+			};
+	        _playerList.Orientation = Orientation.Vertical;
+
+	        var previousState = Alex.GameStateManager.GetPreviousState();
+	        if (previousState is PlayingState s)
+	        {
+		        PlayerListItem[] players = s.World.PlayerList.Entries.Values.ToArray();
+		        for (var index = 0; index < players.Length; index++)
+		        {
+			        var p = players[index];
+			        _playerList.AddChild(new GuiTextElement()
+			        {
+				        Text = p.Username,
+				        BackgroundOverlay = (index % 2 == 0) ? new Color(Color.Black, 0.35f) : Color.Transparent
+					});
+		        }
+	        }
+		/*	AddChild(new GuiTextElement()
+			{
+				TranslationKey = "menu.game",
+				Anchor = Alignment.TopCenter,
+				Scale = 2f,
+				FontStyle = FontStyle.DropShadow
+			});*/
+
+			_mainMenu.AddMenuItem("menu.returnToGame", OnReturnToGameButtonPressed, isTranslationKey: true);
+	        _mainMenu.AddMenuItem("menu.options", OnOptionsButtonPressed, isTranslationKey: true);
+			_mainMenu.AddMenuItem("menu.returnToMenu", OnQuitButtonPressed, isTranslationKey: true);
+
+			AddChild(_mainMenu);
+			AddChild(_playerList);
         }
 
         private void OnReturnToGameButtonPressed()
@@ -52,11 +89,6 @@ namespace Alex.GameStates.Gui.InGame
         private void OnOptionsButtonPressed()
         {
             Alex.GameStateManager.SetActiveState<OptionsState>();
-        }
-
-        private void OnShareToLanButtonPressed()
-        {
-            
         }
 
         private void OnQuitButtonPressed()

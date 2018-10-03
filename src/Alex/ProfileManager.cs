@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Alex.API.Services;
 using Alex.Utils;
@@ -12,14 +13,14 @@ namespace Alex
 	public class ProfileManager
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ProfileManager));
-		private List<SavedProfile> Profiles { get; }
+		private Dictionary<string, SavedProfile> Profiles { get; }
 		public SavedProfile ActiveProfile { get; private set; } = null;
 
 		private Alex Alex { get; }
 		public ProfileManager(Alex alex)
 		{
 			Alex = alex;
-			Profiles = new List<SavedProfile>();
+			Profiles = new Dictionary<string, SavedProfile>();
 		}
 
 		private const string StatusMessage = "Loading profiles...";
@@ -64,7 +65,10 @@ namespace Alex
 					}
 
 					progressReceiver.UpdateProgress(99, StatusMessage);
-					Profiles.AddRange(profiles);
+					foreach (var profile in profiles)
+					{
+						Profiles.Add(profile.Profile.Uuid, profile);
+					}
 				}
 			}
 			else
@@ -79,18 +83,28 @@ namespace Alex
 		{
 			File.WriteAllText(ProfilesFile, JsonConvert.SerializeObject(new ProfilesFileFormat()
 			{
-				Profiles = Profiles.ToArray(),
+				Profiles = Profiles.Values.ToArray(),
 				SelectedProfile = ActiveProfile?.Profile.Uuid ?? string.Empty
 			}, Formatting.Indented, new Texture2DJsonConverter(Alex.GraphicsDevice)));
 		}
 
-		public void CreateOrUpdateProfile(ProfileType type, PlayerProfile profile, bool setActive = false)
+		public void CreateOrUpdateProfile(ProfileType type, PlayerProfile profile, string loginName, bool setActive = false)
 		{
-			SavedProfile savedProfile = new SavedProfile();
-			savedProfile.Type = type;
-			savedProfile.Profile = profile;
+			SavedProfile savedProfile;
+			if (Profiles.TryGetValue(profile.Uuid, out savedProfile))
+			{
+				savedProfile.Profile = profile;
+				Profiles[profile.Uuid] = savedProfile;
+			}
+			else
+			{
+				savedProfile = new SavedProfile();
+				savedProfile.Type = type;
+				savedProfile.Profile = profile;
+				savedProfile.AccountUsername = loginName;
+				Profiles.Add(profile.Uuid, savedProfile);
+			}
 
-			Profiles.Add(savedProfile);
 			if (setActive)
 			{
 				ActiveProfile = savedProfile;
@@ -110,6 +124,7 @@ namespace Alex
 		{
 			public ProfileType Type;
 			public PlayerProfile Profile;
+			public string AccountUsername;
 		}
 
 		public enum ProfileType

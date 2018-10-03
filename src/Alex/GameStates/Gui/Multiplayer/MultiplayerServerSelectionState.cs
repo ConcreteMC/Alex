@@ -175,7 +175,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 	    {
 		    foreach (var item in Items)
 		    {
-				item.Ping();
+				item.PingAsync();
 		    }
 	    }
 
@@ -290,7 +290,7 @@ namespace Alex.GameStates.Gui.Multiplayer
         {
             base.OnInit(renderer);
 			
-            Ping();
+            PingAsync();
         }
 
 	    private GraphicsDevice _graphicsDevice = null;
@@ -301,37 +301,36 @@ namespace Alex.GameStates.Gui.Multiplayer
 		    base.OnDraw(graphics, gameTime);
 	    }
 
-	    public void Ping()
-        {
-            if (PingCompleted) return;
-            PingCompleted = true;
+	    public async Task PingAsync()
+	    {
+		    if (PingCompleted) return;
+		    PingCompleted = true;
 
-            
-            var hostname = ServerAddress;
+		    var hostname = ServerAddress;
 
-            ushort port = 25565;
+		    ushort port = 25565;
 
-            var split = hostname.Split(':');
-            if (split.Length == 2)
-            {
-                if (ushort.TryParse(split[1], out port))
-                {
-                    QueryServer(split[0], port);
-                }
-                else
-                {
-                    SetErrorMessage("Invalid Server Address!");
-                }
-            }
-            else if (split.Length == 1)
-            {
-                QueryServer(split[0], port);
-            }
-            else
-            {
-                SetErrorMessage("Invalid Server Address!");
-            }
-        }
+		    var split = hostname.Split(':');
+		    if (split.Length == 2)
+		    {
+			    if (ushort.TryParse(split[1], out port))
+			    {
+				    QueryServer(split[0], port);
+			    }
+			    else
+			    {
+				    SetErrorMessage("Invalid Server Address!");
+			    }
+		    }
+		    else if (split.Length == 1)
+		    {
+			    QueryServer(split[0], port);
+		    }
+		    else
+		    {
+			    SetErrorMessage("Invalid Server Address!");
+		    }
+		}
 
         private void SetConnectingState(bool connecting)
         {
@@ -362,13 +361,13 @@ namespace Alex.GameStates.Gui.Multiplayer
             _pingStatus.SetOffline();
         }
 
-	    private void QueryServer(string address, ushort port)
+	    private async Task QueryServer(string address, ushort port)
 	    {
 		    SetErrorMessage(null);
 		    SetConnectingState(true);
 
 		    var queryProvider = Alex.Instance.Services.GetService<IServerQueryProvider>();
-		    queryProvider.QueryServerAsync(address, port, PingCallback).ContinueWith(QueryCompleted);
+		    await queryProvider.QueryServerAsync(address, port, PingCallback).ContinueWith(QueryCompleted);
 	    }
 
 	    private void PingCallback(ServerPingResponse response)

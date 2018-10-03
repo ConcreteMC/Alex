@@ -23,7 +23,7 @@ namespace Alex.GameStates.Playing
 	public class PlayingState : GameState
 	{
 		private SkyBox SkyRenderer { get; }
-		private World World { get; }
+		public World World { get; }
 
 		private FpsMonitor FpsCounter { get; set; }
 
