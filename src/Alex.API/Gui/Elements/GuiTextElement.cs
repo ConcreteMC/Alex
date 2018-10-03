@@ -175,7 +175,7 @@ namespace Alex.API.Gui.Elements
 		private void OnTextUpdated()
 	    {
 		    string text = _text;
-			if (Font != null && !string.IsNullOrWhiteSpace(text))
+			//if (Font != null && !string.IsNullOrWhiteSpace(text))
 		    if (string.IsNullOrWhiteSpace(text))
 		    {
 			    _renderText = string.Empty;
@@ -184,7 +184,7 @@ namespace Alex.API.Gui.Elements
 			    
 			    InvalidateLayout();
 		    }
-		    else if (Font != null)
+		    else
 			{
 				var scale = new Vector2(Scale, Scale);
 

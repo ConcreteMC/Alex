@@ -39,9 +39,9 @@ namespace Alex.API.Gui.Elements.Controls
 		    }
 	    }
 
-	    private TextInputBuilder _textBuilder;
+	    protected TextInputBuilder TextBuilder;
 
-        private GuiTextElement _textElement;
+        protected GuiTextElement TextElement;
 
         private int _cursorPositionX;
         private float _cursorAlpha;
@@ -65,15 +65,15 @@ namespace Alex.API.Gui.Elements.Controls
             MinHeight = 20;
             BackgroundOverlay = Color.Black;
 
-            _textBuilder = new TextInputBuilder(text);
-            AddChild(_textElement = new GuiTextElement()
+            TextBuilder = new TextInputBuilder(text);
+            AddChild(TextElement = new GuiTextElement()
             {
                 Anchor = Alignment.MiddleLeft,
-				Text = _textBuilder.Text
+				Text = TextBuilder.Text
             });
 
-	        _textBuilder.TextChanged += (s, v) => Value = v;
-	        Value = _textBuilder.Text;
+	        TextBuilder.TextChanged += (s, v) => Value = v;
+	        Value = TextBuilder.Text;
 
 
 			UpdateDisplayText();
@@ -104,20 +104,20 @@ namespace Alex.API.Gui.Elements.Controls
 
 					if (keys.Contains(Keys.Home))
 					{
-						_textBuilder.CursorPosition = 0;
+						TextBuilder.CursorPosition = 0;
 					}
 					else if (keys.Contains(Keys.End))
 					{
-						_textBuilder.CursorPosition = _textBuilder.Length;
+						TextBuilder.CursorPosition = TextBuilder.Length;
 					}
 					else if (isCtrl)
 					{
 						if (keys.Contains(Keys.C))
 						{
 							// Clipboard Copy
-							if (_textBuilder.SelectedText.Length > 0)
+							if (TextBuilder.SelectedText.Length > 0)
 							{
-								Clipboard.SetText(_textBuilder.SelectedText);
+								Clipboard.SetText(TextBuilder.SelectedText);
 							}
 						}
 						else if (keys.Contains(Keys.V))
@@ -126,12 +126,12 @@ namespace Alex.API.Gui.Elements.Controls
 							var clipboardText = Clipboard.GetText();
 							if (!string.IsNullOrEmpty(clipboardText))
 							{
-								_textBuilder.Append(clipboardText);
+								TextBuilder.Append(clipboardText);
 							}
 						}
 						else if (keys.Contains(Keys.A))
 						{
-							_textBuilder.SelectAll();
+							TextBuilder.SelectAll();
 						}
 					}
 					else
@@ -139,26 +139,26 @@ namespace Alex.API.Gui.Elements.Controls
 
 						if (isShift && (keys.Contains(Keys.Left) || keys.Contains(Keys.Right)))
 						{
-							_textBuilder.IsSelecting = true;
+							TextBuilder.IsSelecting = true;
 						}
 
 						if (keys.Contains(Keys.Left))
 						{
 							if (!isShift)
 							{
-								_textBuilder.ClearSelection();
+								TextBuilder.ClearSelection();
 							}
 
-							_textBuilder.CursorPosition--;
+							TextBuilder.CursorPosition--;
 						}
 						else if (keys.Contains(Keys.Right))
 						{
 							if (!isShift)
 							{
-								_textBuilder.ClearSelection();
+								TextBuilder.ClearSelection();
 							}
 
-							_textBuilder.CursorPosition++;
+							TextBuilder.CursorPosition++;
 						}
 					}
 
@@ -171,14 +171,14 @@ namespace Alex.API.Gui.Elements.Controls
 
 				if (IsPasswordInput)
 	            {
-		            var preCursor = _textElement.Text.Substring(0, _textBuilder.CursorPosition);
-		            var cursorOffsetX = (int)_textElement.Font.MeasureString(preCursor, _textElement.Scale).X;
+		            var preCursor = TextElement.Text.Substring(0, TextBuilder.CursorPosition);
+		            var cursorOffsetX = (int)TextElement.Font.MeasureString(preCursor, TextElement.Scale).X;
 		            _cursorPositionX = cursorOffsetX;
 				}
 	            else
 	            {
-		            var preCursor = _textBuilder.Text.Substring(0, _textBuilder.CursorPosition);
-		            var cursorOffsetX = (int) _textElement.Font.MeasureString(preCursor, _textElement.Scale).X;
+		            var preCursor = TextBuilder.Text.Substring(0, TextBuilder.CursorPosition);
+		            var cursorOffsetX = (int) TextElement.Font.MeasureString(preCursor, TextElement.Scale).X;
 		            _cursorPositionX = cursorOffsetX;
 	            }
 
@@ -193,24 +193,24 @@ namespace Alex.API.Gui.Elements.Controls
 			{
 				if (key == Keys.Delete)
 				{
-					if (_textBuilder.Length != _textBuilder.CursorPosition)
+					if (TextBuilder.Length != TextBuilder.CursorPosition)
 					{
-						_textBuilder.CursorPosition++;
-						_textBuilder.RemoveCharacter();
+						TextBuilder.CursorPosition++;
+						TextBuilder.RemoveCharacter();
 					}
-					else if (_textBuilder.SelectedText.Length > 0)
+					else if (TextBuilder.SelectedText.Length > 0)
 					{
-						_textBuilder.RemoveSelection();
+						TextBuilder.RemoveSelection();
 					}
 				}
 				else if(key == Keys.Back)
 				{
-					_textBuilder.RemoveCharacter();
+					TextBuilder.RemoveCharacter();
 					_lastKeyInputTime = _lastUpdate;
 				}
 				else if (!char.IsControl(character))
 				{
-					_textBuilder.AppendCharacter(character);
+					TextBuilder.AppendCharacter(character);
 					_lastKeyInputTime = _lastUpdate;
 				}
 			}
@@ -229,17 +229,17 @@ namespace Alex.API.Gui.Elements.Controls
             // Text
             if (Focused)
 			{
-				var textElementBounds = _textElement.RenderBounds;
-				if (_textBuilder.HasSelection)
+				var textElementBounds = TextElement.RenderBounds;
+				if (TextBuilder.HasSelection)
 				{
-					var startX = textElementBounds.X + _textBuilder.SelectionStartPosition;
-					var endX = textElementBounds.X + _textBuilder.SelectionEndPosition;
+					var startX = textElementBounds.X + TextBuilder.SelectionStartPosition;
+					var endX = textElementBounds.X + TextBuilder.SelectionEndPosition;
 
 					var widthUntilSelectionStart =
-						_textElement.Font.MeasureString(_textBuilder
-														.Text.Substring(0, _textBuilder.SelectionStartPosition));
+						TextElement.Font.MeasureString(TextBuilder
+														.Text.Substring(0, TextBuilder.SelectionStartPosition));
 
-					var selectedTextSize = _textElement.Font.MeasureString(_textBuilder.SelectedText, _textElement.Scale);
+					var selectedTextSize = TextElement.Font.MeasureString(TextBuilder.SelectedText, TextElement.Scale);
 					var sizeX = 1 + selectedTextSize.X;
 
 					graphics.FillRectangle(new Rectangle(textElementBounds.X + 1 + (int)widthUntilSelectionStart.X, textElementBounds.Y, (int)sizeX, textElementBounds.Height), _textColor.ForegroundColor);
@@ -274,33 +274,33 @@ namespace Alex.API.Gui.Elements.Controls
 	    {
 		    if (string.IsNullOrEmpty(value))
 		    {
-			    _textElement.TextColor = InactiveTextColor;
+			    TextElement.TextColor = InactiveTextColor;
 
 			    if (!string.IsNullOrWhiteSpace(PlaceHolder))
 			    {
-				    _textElement.Text = PlaceHolder;
+				    TextElement.Text = PlaceHolder;
 			    }
 			    else
 			    {
-				    _textElement.Text = " ";
+				    TextElement.Text = " ";
 			    }
 		    }
 		    else
 		    {
-			    _textElement.TextColor = Focused ? TextColor : InactiveTextColor;
+			    TextElement.TextColor = Focused ? TextColor : InactiveTextColor;
 			    if (IsPasswordInput)
 			    {
 				    value = new string('*', value.Length);
 			    }
-			    _textElement.Text = value;
+			    TextElement.Text = value;
 		    }
 	    }
 		
 	    protected override bool OnValueChanged(string value)
 	    {
-		    if (!_textBuilder.Text.Equals(value))
+		    if (!TextBuilder.Text.Equals(value))
 		    {
-			    _textBuilder.Text = value;
+			    TextBuilder.Text = value;
 		    }
 
 		    UpdateDisplayText(value);

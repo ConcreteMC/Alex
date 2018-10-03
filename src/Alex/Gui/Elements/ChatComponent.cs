@@ -14,7 +14,7 @@ using NLog;
 
 namespace Alex.Gui.Elements
 {
-	public class ChatComponent : GuiControl, IChatReceiver
+	public class ChatComponent : GuiTextInput, IChatReceiver
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ChatComponent));
 
@@ -24,11 +24,10 @@ namespace Alex.Gui.Elements
 
 		public IChatProvider ChatProvider;
 
-		private TextInputBuilder _textBuilder;
+	//	private TextInputBuilder _textBuilder;
 
 		public ChatComponent()
 		{
-			_textBuilder = new TextInputBuilder();
 			Anchor = Alignment.BottomLeft;
 
 			MaxHeight = Height;
@@ -44,30 +43,47 @@ namespace Alex.Gui.Elements
 
 			FocusOutlineThickness = Thickness.Zero;
 			HighlightOutlineThickness = Thickness.Zero;
+
+			BackgroundOverlay = Color.Transparent;
+			FocusOutlineColor = Color.Transparent;
+			HighlightOutlineColor = Color.Transparent;
+
+			base.TextElement.Anchor = Alignment.BottomLeft;
+
+			BorderColor = Color.Transparent;
+
 		}
-
-		private Vector2 Scale { get; set; } = Vector2.One;
-
-		private int _cursorPositionX;
-		private float _cursorAlpha;
 
 		protected override void OnFocusActivate()
 		{
+			//base.OnFocusActivate();
 			Alex.Instance.IsMouseVisible = true;
-			base.OnFocusActivate();
+			TextBuilder.Clear();
+			Value = string.Empty;
+			
+			ResetTabComplete();
+
+			TextElement.Text = string.Empty;
+			Dismiss();
 		}
 
 		protected override void OnFocusDeactivate()
 		{
+		//	base.OnFocusDeactivate();
 			Alex.Instance.IsMouseVisible = false;
-			base.OnFocusDeactivate();
+			TextBuilder.Clear();
+			Value = string.Empty;
+			ResetTabComplete();
+
+			TextElement.Text = string.Empty;
+			Dismiss();
 		}
 
 		protected override void OnUpdate(GameTime gameTime)
 		{
-			if (Focused)
+			/*if (Focused)
 			{
-				var msg = _textBuilder.Text;
+				var msg = Value;
 				var preCursor = msg.Substring(0, _textBuilder.CursorPosition);
 				var cursorOffsetX = (int) Font.MeasureString(preCursor, Scale).X;
 				_cursorPositionX = cursorOffsetX;
@@ -75,7 +91,7 @@ namespace Alex.Gui.Elements
 				var delta = (float) gameTime.TotalGameTime.TotalMilliseconds / 2;
 				_cursorAlpha = (float) MathHelpers.SinInterpolation(0.1f, 0.5f, delta) * 2;
 			}
-
+			*/
 			base.OnUpdate(gameTime);
 		}
 
@@ -91,21 +107,8 @@ namespace Alex.Gui.Elements
 
 			if (Focused)
 			{
-				var renderPos = (Bounds.BottomLeft() - new Vector2(0, 8)).ToPoint();
-
-				string msg = _textBuilder.Text;
-
-				graphics.FillRectangle(new Rectangle(renderPos.X, renderPos.Y - 2, Width, 10), new Color(Color.Black, 0.5f));
-
-				Font.DrawString(graphics.SpriteBatch, msg, renderPos.ToVector2(), TextColor.White);
-
-				if (gameTime.TotalGameTime.Seconds % 2 == 0)
-				{
-					var offsetX = renderPos.X + _cursorPositionX + 1;
-
-					graphics.DrawLine(new Vector2(offsetX, renderPos.Y), new Vector2(offsetX, renderPos.Y + 8),
-						Color.White * _cursorAlpha);
-				}
+				var renderPos = (TextElement.RenderBounds.BottomLeft() - new Vector2(0, 8)).ToPoint();
+				graphics.FillRectangle(new Rectangle(RenderBounds.X, (renderPos.Y) - 2, Width, 10), new Color(Color.Black, 0.5f));
 			}
 
 			KeyValuePair<DateTime, ChatObject>[] entries;
@@ -222,7 +225,7 @@ namespace Alex.Gui.Elements
 		{
 			if (Focused)
 			{
-				if (key == Keys.Back)
+				/*if (key == Keys.Back)
 				{
 					_textBuilder.RemoveCharacter();
 					ResetTabComplete();
@@ -271,8 +274,44 @@ namespace Alex.Gui.Elements
 					{
 						_textBuilder.AppendCharacter(character);
 					}
-				}
+				}*/
 
+				if (key == Keys.Tab)
+				{
+					if (_hasTabCompleteResults)
+					{
+						DoTabComplete(true);
+						_prevWasTab = true;
+						return true;
+					}
+
+					if (TextBuilder.Length == 0) return true;
+
+					TextBuilder.CursorPosition = 1;
+					string text = TextBuilder.GetAllBehindCursor(out _tabCompletePosition);
+					if (text.StartsWith('/'))
+					{
+						_tabCompletePosition += 1;
+						text = text.Substring(1, text.Length - 1);
+					}
+
+					ChatProvider?.RequestTabComplete(text, out _latestTransactionId);
+					return true;
+				}
+				else if (key == Keys.Enter)
+				{
+					SubmitMessage();
+					ResetTabComplete();
+				}
+				else
+				{
+					int prevLength = TextBuilder.Length;
+					base.OnKeyInput(character, key);
+					if (TextBuilder.Length != prevLength)
+					{
+						ResetTabComplete();
+					}
+				}
 				return true;
 			}
 
@@ -300,23 +339,23 @@ namespace Alex.Gui.Elements
 
 				if (_tabCompletePrevLength > 0)
 				{
-					_textBuilder.CursorPosition = _tabCompletePosition + _tabCompleteStart + _tabCompletePrevLength;
+					TextBuilder.CursorPosition = _tabCompletePosition + _tabCompleteStart + _tabCompletePrevLength;
 					for (int i = 0; i < _tabCompletePrevLength; i++)
 					{
-						_textBuilder.RemoveCharacter();
+						TextBuilder.RemoveCharacter();
 					}
 				}
 				else
 				{
-					_textBuilder.CursorPosition = _tabCompletePosition + _tabCompleteStart + _tabCompleteLength;
+					TextBuilder.CursorPosition = _tabCompletePosition + _tabCompleteStart + _tabCompleteLength;
 					for (int i = 0; i < _tabCompleteLength; i++)
 					{
-						_textBuilder.RemoveCharacter();
+						TextBuilder.RemoveCharacter();
 					}
 				}
 
-				_textBuilder.CursorPosition = _tabCompletePosition + _tabCompleteStart;
-				_textBuilder.AppendLine(firstMatch);
+				TextBuilder.CursorPosition = _tabCompletePosition + _tabCompleteStart;
+				TextBuilder.AppendLine(firstMatch);
 				_tabCompletePrevLength = firstMatch.Length;
 
 				if (incremental)
@@ -350,11 +389,11 @@ namespace Alex.Gui.Elements
 		{
 			if (add)
 			{
-				_textBuilder.CursorPosition += 1;
+				TextBuilder.CursorPosition += 1;
 			}
 			else
 			{
-				_textBuilder.CursorPosition -= 1;
+				TextBuilder.CursorPosition -= 1;
 			}
 		}
 
@@ -383,24 +422,28 @@ namespace Alex.Gui.Elements
 
 		public void Dismiss()
 		{
-			Enabled = false;
+			//Enabled = false;
 			//Focused = false;
 			_scrollValue = 0;
-			_textBuilder.Clear();
+
+			TextBuilder.Clear();
+			Value = string.Empty;
+
+			TextElement.Text = string.Empty;
 		}
 
 		private void SubmitMessage()
 		{
 			//Submit message
-			if (_textBuilder.Length > 0)
+			if (TextBuilder.Length > 0)
 			{
 				if (Alex.IsMultiplayer)
 				{
-					ChatProvider?.Send(_textBuilder.Text);
+					ChatProvider?.Send(TextBuilder.Text);
 				}
 				else
 				{
-					Receive(new ChatObject(_textBuilder.Text));
+					Receive(new ChatObject(TextBuilder.Text));
 				}
 			}
 
