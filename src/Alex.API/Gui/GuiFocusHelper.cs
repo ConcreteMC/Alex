@@ -87,28 +87,31 @@ namespace Alex.API.Gui
                 return;
             }
 
-            if (args.Key == Keys.Tab)
-            {
-                // Switch to next control
-                var activeTabIndex = FocusedElement?.TabIndex ?? -1;
-                var nextControl = GetNextTabIndexedControl(activeTabIndex);
+	        if (FocusedElement == null || !FocusedElement.InvokeKeyInput(args.Character, args.Key))
+	        {
+		        if (args.Key == Keys.Tab)
+		        {
+			        // Switch to next control
+			        var activeTabIndex = FocusedElement?.TabIndex ?? -1;
+			        var nextControl = GetNextTabIndexedControl(activeTabIndex);
 
-                if (nextControl == null)
-                {
-                    nextControl = GetNextTabIndexedControl(-1);
-                }
+			        if (nextControl == null)
+			        {
+				        nextControl = GetNextTabIndexedControl(-1);
+			        }
 
-                FocusedElement = nextControl;
-            }
-            else if (args.Key == Keys.Escape)
-            {
-                // Exit focus
-                FocusedElement = null;
-            }
-            else
-            {
-                FocusedElement?.InvokeKeyInput(args.Character, args.Key);
-            }
+			        FocusedElement = nextControl;
+		        }
+		        else if (args.Key == Keys.Escape)
+		        {
+			        // Exit focus
+			        FocusedElement = null;
+		        }
+		        else
+		        {
+
+		        }
+	        }
         }
 
         private void UpdateHighlightedElement()

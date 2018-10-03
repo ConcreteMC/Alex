@@ -51,6 +51,18 @@ namespace Alex.Gui.Elements
 		private int _cursorPositionX;
 		private float _cursorAlpha;
 
+		protected override void OnFocusActivate()
+		{
+			Alex.Instance.IsMouseVisible = true;
+			base.OnFocusActivate();
+		}
+
+		protected override void OnFocusDeactivate()
+		{
+			Alex.Instance.IsMouseVisible = false;
+			base.OnFocusDeactivate();
+		}
+
 		protected override void OnUpdate(GameTime gameTime)
 		{
 			if (Focused)
@@ -138,6 +150,8 @@ namespace Alex.Gui.Elements
 					{
 						DrawChatLine(graphics, line, alpha, ref offset);
 						renderedCount++;
+
+						if (renderedCount >= 10) break;
 					}
 
 					//	if (!Focused)
@@ -204,7 +218,7 @@ namespace Alex.Gui.Elements
 
 		private int _latestTransactionId = -1;
 		private int _tabCompletePosition = 0;
-		protected override void OnKeyInput(char character, Keys key)
+		protected override bool OnKeyInput(char character, Keys key)
 		{
 			if (Focused)
 			{
@@ -234,10 +248,10 @@ namespace Alex.Gui.Elements
 					{
 						DoTabComplete(true);
 						_prevWasTab = true;
-						return;
+						return true;
 					}
 
-					if (_textBuilder.Length == 0) return;
+					if (_textBuilder.Length == 0) return true;
 
 					_textBuilder.CursorPosition = 1;
 					string text = _textBuilder.GetAllBehindCursor(out _tabCompletePosition);
@@ -248,6 +262,7 @@ namespace Alex.Gui.Elements
 					}
 
 					ChatProvider?.RequestTabComplete(text, out _latestTransactionId);
+					return true;
 				}
 				else
 				{
@@ -257,7 +272,11 @@ namespace Alex.Gui.Elements
 						_textBuilder.AppendCharacter(character);
 					}
 				}
+
+				return true;
 			}
+
+			return false;
 		}
 
 		private void ResetTabComplete()

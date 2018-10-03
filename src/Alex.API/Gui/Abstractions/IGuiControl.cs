@@ -23,7 +23,7 @@ namespace Alex.API.Gui
         void InvokeFocusActivate();
         void InvokeFocusDeactivate();
         
-        void InvokeKeyInput(char character, Keys key);
+        bool InvokeKeyInput(char character, Keys key);
 
         void InvokeCursorDown(Vector2 cursorPosition);
         void InvokeCursorPressed(Vector2 cursorPosition);

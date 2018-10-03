@@ -187,7 +187,7 @@ namespace Alex.API.Gui.Elements.Controls
             }
         }
 
-        protected override void OnKeyInput(char character, Keys key)
+        protected override bool OnKeyInput(char character, Keys key)
         {
 			if (Focused)
 			{
@@ -214,7 +214,9 @@ namespace Alex.API.Gui.Elements.Controls
 					_lastKeyInputTime = _lastUpdate;
 				}
 			}
-		}
+
+	        return false;
+        }
 
         protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
         {

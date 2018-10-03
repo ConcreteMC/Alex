@@ -124,11 +124,15 @@ namespace Alex.API.Gui.Elements.Controls
         protected virtual void OnFocusDeactivate() { }
 
 
-        public void InvokeKeyInput(char character, Keys key)
+        public bool InvokeKeyInput(char character, Keys key)
         {
-            OnKeyInput(character, key);
+			return OnKeyInput(character, key);
         }
-        protected virtual void OnKeyInput(char character, Keys key) {}
+
+	    protected virtual bool OnKeyInput(char character, Keys key)
+	    {
+		    return false;
+	    }
 
 
         public void InvokeCursorDown(Vector2 cursorPosition)
