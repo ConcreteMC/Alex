@@ -61,7 +61,6 @@ namespace Alex.Graphics.Models.Entity
 						var pivot = bone.Pivot;
 						var rotation = bone.Rotation;
 
-						
 						VertexPositionNormalTexture[] vertices;
 						Cube built = new Cube(size, new Vector2(Texture.Width, Texture.Height));
 						built.Mirrored = bone.Mirror;

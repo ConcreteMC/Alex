@@ -242,6 +242,7 @@ namespace Alex.ResourcePackLib
 							//val.Cubes.Concat(parentBone.Cubes);
 						}
 
+						
 						bones[bone.Key] = val;
 					}
 					else
