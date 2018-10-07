@@ -24,8 +24,6 @@ namespace Alex.Gui.Elements
 
 		public IChatProvider ChatProvider;
 
-	//	private TextInputBuilder _textBuilder;
-
 		public ChatComponent()
 		{
 			Anchor = Alignment.BottomLeft;
@@ -51,13 +49,12 @@ namespace Alex.Gui.Elements
 			base.TextElement.Anchor = Alignment.BottomLeft;
 
 			BorderColor = Color.Transparent;
-
 		}
 
 		protected override void OnFocusActivate()
 		{
-			//base.OnFocusActivate();
 			Alex.Instance.IsMouseVisible = true;
+
 			TextBuilder.Clear();
 			Value = string.Empty;
 			
@@ -69,8 +66,8 @@ namespace Alex.Gui.Elements
 
 		protected override void OnFocusDeactivate()
 		{
-		//	base.OnFocusDeactivate();
 			Alex.Instance.IsMouseVisible = false;
+
 			TextBuilder.Clear();
 			Value = string.Empty;
 			ResetTabComplete();
