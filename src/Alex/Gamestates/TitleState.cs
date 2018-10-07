@@ -11,7 +11,6 @@ using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.Entities;
 using Alex.Gamestates;
-using Alex.Gamestates.Debug;
 using Alex.Gamestates.Login;
 using Alex.GameStates.Gui.Common;
 using Alex.GameStates.Gui.Multiplayer;
@@ -21,6 +20,7 @@ using Alex.Networking.Java;
 using Alex.Utils;
 using Alex.Worlds;
 using Alex.Worlds.Generators;
+using Microsoft.Identity.Client;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -211,7 +211,9 @@ namespace Alex.GameStates
 
 		private void BedrockEditionButtonPressed()
 		{
-
+			
+			PublicClientApplication pca = new PublicClientApplication("android-app://com.mojang.minecraftpe.H62DKCBHJP6WXXIV7RBFOGOL4NAK4E6Y"); 
+			
 		}
 
 		private void JavaEditionButtonPressed()
