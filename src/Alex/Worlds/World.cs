@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 //using System.Reflection.Metadata.Ecma335;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading;
 using Alex.API.Blocks.State;
 using Alex.API.Entities;
 using Alex.API.Graphics;
@@ -531,6 +532,41 @@ namespace Alex.Worlds
 		{
 			PlayerList.Entries.Remove(item);
 		}
+
+		#region Titles
+
+		private ChatObject TitleText;
+		private ChatObject SubtitleText;
+		private ManualResetEventSlim TitleResetEvent = new ManualResetEventSlim(false);
+		public void TitleSetTitle(ChatObject value)
+		{
+			TitleText = value;
+		}
+
+		public void TitleSetSubtitle(ChatObject value)
+		{
+			SubtitleText = value;
+		}
+
+		public void TitleSetTimes(int fadeIn, int stay, int fadeOut)
+		{
+			Ticker.ScheduleTick(() =>
+			{
+
+			}, stay + fadeOut);
+		}
+
+		public void TitleHide()
+		{
+			
+		}
+
+		public void TitleReset()
+		{
+			
+		}
+
+		#endregion
 
 		#endregion
 	}

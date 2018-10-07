@@ -99,6 +99,8 @@ namespace Alex.Networking.Java
 			    while (!CancellationToken.IsCancellationRequested)
 			    {
 				    var temp = HandlePacketQueue.Take(CancellationToken.Token);
+				    if (CancellationToken.IsCancellationRequested) return;
+
 				    try
 				    {
 					    var packet = temp.Packet;
@@ -245,7 +247,7 @@ namespace Alex.Networking.Java
 								if (UnhandledPacketsFilter[ConnectionState]
 									.TryAdd(packetId, 1))
 								{
-									Log.Debug($"Unhandled packet in {ConnectionState}! 0x{packetId.ToString("x2")}");
+									Log.Debug($"Unhandled packet in {ConnectionState}! 0x{packetId.ToString("x2")} = {(ConnectionState == ConnectionState.Play ? MCPacketFactory.GetPlayPacketName(packetId) : "Unknown")}");
 								}
 								else
 								{
@@ -483,7 +485,7 @@ namespace Alex.Networking.Java
 		    {
 			    foreach (var p in state.Value)
 			    {
-					Log.Warn($"({state.Key}) unhandled: 0x{p.Key:X2} * {p.Value}");
+					Log.Warn($"({state.Key}) unhandled: 0x{p.Key:X2} ({(state.Key == ConnectionState.Play ? MCPacketFactory.GetPlayPacketName(p.Key) : "Unknown")}) * {p.Value}");
 			    }
 		    }
 
@@ -493,7 +495,7 @@ namespace Alex.Networking.Java
 	    private void ClearOutQueue<TType>(BlockingCollection<TType> collection)
 	    {
 			collection.CompleteAdding();
-		    while (collection.TryTake(out TType _)) {};
+		    while (collection.TryTake(out var _, 0)) {};
 	    }
     }
 

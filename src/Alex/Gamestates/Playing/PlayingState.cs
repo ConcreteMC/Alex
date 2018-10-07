@@ -128,7 +128,7 @@ namespace Alex.GameStates.Playing
 					{
 						if (SelBlock.BlockState is BlockState s && s.IsMultiPart)
 						{
-							sb.AppendLine($"MultiPart=true");
+								sb.AppendLine($"MultiPart=true");
 						}
 
 						var dict = SelBlock.BlockState.ToDictionary();

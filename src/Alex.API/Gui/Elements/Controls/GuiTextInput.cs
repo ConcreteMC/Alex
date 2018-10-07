@@ -126,7 +126,7 @@ namespace Alex.API.Gui.Elements.Controls
 							var clipboardText = Clipboard.GetText();
 							if (!string.IsNullOrEmpty(clipboardText))
 							{
-								TextBuilder.Append(clipboardText);
+								TextBuilder.Append(clipboardText.StripIllegalCharacters(TextElement.Font));
 							}
 						}
 						else if (keys.Contains(Keys.A))

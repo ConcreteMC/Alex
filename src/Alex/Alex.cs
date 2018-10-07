@@ -21,6 +21,7 @@ using Alex.GameStates;
 using Alex.GameStates.Gui.MainMenu;
 using Alex.GameStates.Playing;
 using Alex.Gui;
+using Alex.Networking.Java.Packets;
 using Alex.Rendering;
 using Alex.ResourcePackLib;
 using Alex.Services;
@@ -239,6 +240,7 @@ namespace Alex
 
 		private void InitializeGame(IProgressReceiver progressReceiver)
 		{
+			MCPacketFactory.Load();
 			progressReceiver.UpdateProgress(0, "Initializing...");
 			ConfigureServices();
 
@@ -307,7 +309,15 @@ namespace Alex
 
 			worldProvider.Load(loadingScreen.UpdateProgress).ContinueWith(task =>
 			{
-				GameStateManager.SetActiveState("play");
+				if (networkProvider.IsConnected)
+				{
+					GameStateManager.SetActiveState("play");
+				}
+				else
+				{
+					GameStateManager.RemoveState("play");
+					worldProvider.Dispose();
+				}
 
 				GameStateManager.RemoveState("loading");
 			});

@@ -7,8 +7,8 @@ namespace Alex.API.Network
 {
     public interface INetworkProvider
     {
-	    void EntityAction(int entityId, EntityAction action);
+	    bool IsConnected { get; }
+		void EntityAction(int entityId, EntityAction action);
 	    void SendChatMessage(string message);
-
-    }
+	}
 }

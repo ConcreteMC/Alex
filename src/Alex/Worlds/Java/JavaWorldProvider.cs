@@ -20,6 +20,7 @@ using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Entities;
 using Alex.Gamestates;
+using Alex.GameStates;
 using Alex.Graphics.Models.Entity;
 using Alex.Networking.Java;
 using Alex.Networking.Java.Events;
@@ -86,18 +87,40 @@ namespace Alex.Worlds.Java
 			}
 			else
 			{
-				ShowDisconnect("disconnect.closed");
+				ShowDisconnect("disconnect.closed", true);
 			}
+
+			_loginCompleteEvent.Set();
 		}
 
-		public void ShowDisconnect(string reason)
+		public void ShowDisconnect(string reason, bool useTranslation = false)
 		{
-			if (Alex.GameStateManager.GetActiveState() is DisconnectedScreen) return;
-
-			Alex.GameStateManager.SetActiveState(new DisconnectedScreen()
+			if (Alex.GameStateManager.GetActiveState() is DisconnectedScreen s)
 			{
-				Reason = reason
-			}, false);
+				if (useTranslation)
+				{
+					s.DisconnectedTextElement.TranslationKey = reason;
+				}
+				else
+				{
+					s.DisconnectedTextElement.Text = reason;
+				}
+
+				return;
+			}
+
+			s = new DisconnectedScreen();
+			if (useTranslation)
+			{
+				s.DisconnectedTextElement.TranslationKey = reason;
+			}
+			else
+			{
+				s.DisconnectedTextElement.Text = reason;
+			}
+
+			Alex.GameStateManager.SetActiveState(s, false);
+			Alex.GameStateManager.RemoveState("play");
 		}
 
 		private PlayerLocation _lastSentLocation = new PlayerLocation(Vector3.Zero);
@@ -138,7 +161,7 @@ namespace Alex.Worlds.Java
 			if (_initiated)
 			{
 				var p = WorldReceiver.GetPlayerEntity();
-				if (p != null && p is Player player && Spawned)
+				if (p != null && p is Player player && Spawned && !Respawning)
 				{
 					player.IsSpawned = Spawned;
 
@@ -240,9 +263,12 @@ namespace Alex.Worlds.Java
 			{
 				progressReport(LoadingState.ConnectingToServer, 0);
 				Login(Profile.Username, Profile.Uuid, Profile.AccessToken);
+				if (_disconnected) return;
+
 				progressReport(LoadingState.ConnectingToServer, 99);
 
 				_loginCompleteEvent.WaitOne();
+				if (_disconnected) return;
 
 				progressReport(LoadingState.LoadingChunks, 0);
 
@@ -287,7 +313,7 @@ namespace Alex.Worlds.Java
 					count++;
 				});*/
 				progressReport(LoadingState.Spawning, 99);
-				SpinWait.SpinUntil(() => Spawned);
+				SpinWait.SpinUntil(() => Spawned || _disconnected);
 			});
 		}
 
@@ -552,6 +578,19 @@ namespace Alex.Worlds.Java
 			{
 				HandleEntityEquipmentPacket(entityEquipmentPacket);
 			}
+			else if (packet is RespawnPacket respawnPacket)
+			{
+				HandleRespawnPacket(respawnPacket);
+			}
+			else if (packet is TitlePacket titlePacket)
+			{
+				HandleTitlePacket(titlePacket);
+			}
+
+			else if (packet is DisconnectPacket disconnectPacket)
+			{
+				HandleDisconnectPacket(disconnectPacket);
+			}
 			else
 			{
 				if (UnhandledPackets.TryAdd(packet.PacketId, packet.GetType()))
@@ -562,6 +601,54 @@ namespace Alex.Worlds.Java
 		}
 
 		private Dictionary<int, Type> UnhandledPackets = new Dictionary<int, Type>();
+
+		private void HandleTitlePacket(TitlePacket packet)
+		{
+
+		}
+
+		public bool Respawning = false;
+		private void HandleRespawnPacket(RespawnPacket packet)
+		{
+			if (WorldReceiver is World w)
+			{
+				Respawning = true;
+				_dimension = packet.Dimension;
+				if (WorldReceiver.GetPlayerEntity() is Player player)
+				{
+					player.UpdateGamemode(packet.Gamemode);
+					//player.
+				}
+
+				new Thread(() =>
+				{
+					LoadingWorldState state = new LoadingWorldState();
+					state.UpdateProgress(LoadingState.LoadingChunks, 0);
+					Alex.GameStateManager.SetActiveState(state, true);
+					w.ChunkManager.ClearChunks();
+
+					int t = Alex.GameSettings.RenderDistance;
+					double radiusSquared = Math.Pow(t, 2);
+
+					var target = radiusSquared * 3;
+
+					while (Respawning)
+					{
+						int chunkProgress = (int) Math.Floor((w.ChunkManager.ChunkCount / target) * 100);
+						if (chunkProgress < 100)
+						{
+							state.UpdateProgress(LoadingState.LoadingChunks, chunkProgress);
+						}
+						else
+						{
+							state.UpdateProgress(LoadingState.Spawning, 99);
+						}
+					}
+
+					Alex.GameStateManager.Back();
+				}).Start();
+			}
+		}
 
 		private void HandleEntityEquipmentPacket(EntityEquipmentPacket packet)
 		{
@@ -727,6 +814,11 @@ namespace Alex.Worlds.Java
 		{
 			foreach(var id in packet.Entitys)
 			{
+				var p = _players.ToArray().FirstOrDefault(x => x.Value.EntityId == id);
+				if (p.Key != null)
+				{
+					_players.TryRemove(p.Key, out _);
+				}
 				base.DespawnEntity(id);
 			}
 		}
@@ -752,44 +844,57 @@ namespace Alex.Worlds.Java
 
 			if (packet.Action == PlayerListAction.AddPlayer)
 			{
-				foreach (var entry in packet.AddPlayerEntries)
-				{
-					bool skinSlim = true;
-					foreach (var property in entry.Properties)
+				//ThreadPool.QueueUserWorkItem(state =>
+				//{
+					foreach (var entry in packet.AddPlayerEntries)
 					{
-						if (property.Name == "textures")
+						string skinJson = null;
+						bool skinSlim = true;
+						foreach (var property in entry.Properties)
 						{
-							string json = Encoding.UTF8.GetString(Convert.FromBase64String(property.Value));
-							if (SkinUtils.TryGetSkin(json, Alex.GraphicsDevice, out var skin, out skinSlim))
+							if (property.Name == "textures")
 							{
-								t = skin;
+								skinJson = Encoding.UTF8.GetString(Convert.FromBase64String(property.Value));
+								
 							}
 						}
-					}
 
-					PlayerMob entity = new PlayerMob(entry.Name, (World)WorldReceiver, Client, t, skinSlim);
-					entity.UpdateGamemode((Gamemode)entry.Gamemode);
-					entity.UUID = new UUID(entry.UUID.ToByteArray());
+						PlayerMob entity = new PlayerMob(entry.Name, (World) WorldReceiver, Client, t, skinSlim);
+						entity.UpdateGamemode((Gamemode) entry.Gamemode);
+						entity.UUID = new UUID(entry.UUID.ToByteArray());
 
-					WorldReceiver?.AddPlayerListItem(new PlayerListItem(entity.Uuid, entry.Name, (Gamemode)entry.Gamemode, entry.Ping));
+						WorldReceiver?.AddPlayerListItem(new PlayerListItem(entity.Uuid, entry.Name,
+							(Gamemode) entry.Gamemode, entry.Ping));
 
-					if (entry.HasDisplayName)
-					{
-						if (ChatObject.TryParse(entry.DisplayName, out ChatObject chat))
+						if (entry.HasDisplayName)
 						{
-							entity.NameTag = chat.RawMessage;
+							if (ChatObject.TryParse(entry.DisplayName, out ChatObject chat))
+							{
+								entity.NameTag = chat.RawMessage;
+							}
+						}
+						else
+						{
+							entity.NameTag = entry.Name;
+						}
+
+						entity.HideNameTag = false;
+						entity.IsAlwaysShowName = true;
+
+						if (_players.TryAdd(entity.UUID, entity) && skinJson != null)
+						{
+							ThreadPool.QueueUserWorkItem(o =>
+							{
+								if (SkinUtils.TryGetSkin(skinJson, Alex.GraphicsDevice, out var skin, out skinSlim))
+								{
+									t = skin;
+								}
+
+								entity.UpdateSkin(t, skinSlim);
+							});
 						}
 					}
-					else
-					{
-						entity.NameTag = entry.Name;
-					}
-
-					entity.HideNameTag = false;
-					entity.IsAlwaysShowName = true;
-
-					_players.TryAdd(entity.UUID, entity);
-				}
+				//});
 			}
 
 			else if (packet.Action == PlayerListAction.UpdateDisplayName)
@@ -1027,6 +1132,8 @@ namespace Alex.Worlds.Java
 
 		private void HandlePlayerPositionAndLookPacket(PlayerPositionAndLookPacket packet)
 		{
+			Respawning = false;
+
 			//_spawned = true;
 			TeleportConfirm confirmation = new TeleportConfirm();
 			confirmation.TeleportId = packet.TeleportId;
@@ -1095,7 +1202,15 @@ namespace Alex.Worlds.Java
 
 		private void HandleDisconnectPacket(DisconnectPacket packet)
 		{
-			ShowDisconnect(packet.Message);
+			if (ChatObject.TryParse(packet.Message, out ChatObject o))
+			{
+				ShowDisconnect(o.RawMessage);
+			}
+			else
+			{
+				ShowDisconnect(packet.Message);
+			}
+
 			_disconnected = true;
 			Log.Info($"Received disconnect: {packet.Message}");
 			Client.Stop();

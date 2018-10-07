@@ -1,14 +1,20 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
 using Alex.Networking.Java.Packets.Handshake;
 using Alex.Networking.Java.Packets.Login;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Networking.Java.Packets.Status;
 using Alex.Networking.Java.Util;
+using Alex.Networking.Properties;
+using Newtonsoft.Json;
+using NLog;
 
 namespace Alex.Networking.Java.Packets
 {
 	public static class MCPacketFactory
 	{
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(MCPacketFactory));
 		private static PacketFactory<int, MinecraftStream, Packet> HandshakeFactory { get; }
 		private static PacketFactory<int, MinecraftStream, Packet> StatusFactory { get; }
 		private static PacketFactory<int, MinecraftStream, Packet> LoginFactory { get; }
@@ -273,6 +279,40 @@ namespace Alex.Networking.Java.Packets
 			Register(Direction.ClientBound, ConnectionState.Play, 0x2F, () => new CombatEventPacket());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x24, () => new ParticlePacket());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x42, () => new EntityEquipmentPacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x38, () => new RespawnPacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x4B, () => new TitlePacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x1b, () => new DisconnectPacket());
+			var deserial = JsonConvert.DeserializeObject<Dictionary<string, string>>(Resources.PlayPacketID);
+			foreach (var d in deserial)
+			{
+				try
+				{
+					int result = int.Parse(d.Key.Substring(2), NumberStyles.HexNumber);
+					{
+						_playPacketNames.Add(result, d.Value);
+						if (!ServerPlayFactory.TryGetPacket(result, out Packet p))
+						{
+							Log.Info($"Unimplemented clientbound packet: 0x{result:X2} : {d.Value}");
+						}
+					}
+				}
+				catch (Exception ex)
+				{
+					Log.Warn($"Failed to parse hex number...");
+				}
+			}
+		}
+
+		private static Dictionary<int, string> _playPacketNames = new Dictionary<int, string>();
+
+		public static string GetPlayPacketName(int id)
+		{
+			if (_playPacketNames.TryGetValue(id, out string result))
+			{
+				return result;
+			}
+
+			return "Unknown";
 		}
 	}
 }

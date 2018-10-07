@@ -10,7 +10,6 @@ namespace Alex.GameStates
 {
     public class LoadingWorldState : GuiMenuStateBase
     {
-	    private readonly GuiContainer   _progressBarContainer;
 	    private readonly GuiProgressBar _progressBar;
 	    private readonly GuiTextElement _textDisplay;
 	    private readonly GuiTextElement _percentageDisplay;
@@ -25,45 +24,53 @@ namespace Alex.GameStates
 	    }
 
 		public LoadingWorldState()
-	    {
-		    AddGuiElement(_progressBarContainer = new GuiContainer()
-		    {
-			    Width  = 300,
-			    Height = 25,
+		{
+			HeaderTitle.TranslationKey = "menu.loadingLevel";
 
-			    Y = -25,
-					
-			    Anchor = Alignment.BottomCenter,
-		    });
-
-		    _progressBarContainer.AddChild(_textDisplay = new GuiTextElement()
+		   _textDisplay = new GuiTextElement()
 		    {
 			    Text      = Text,
-			    TextColor = TextColor.Black,
+			    TextColor = TextColor.White,
 					
 			    Anchor    = Alignment.TopLeft,
 			    HasShadow = false
-		    });
+		    };
 
-		    _progressBarContainer.AddChild(_percentageDisplay = new GuiTextElement()
+		   _percentageDisplay = new GuiTextElement()
 		    {
 			    Text      = Text,
-			    TextColor = TextColor.Black,
+			    TextColor = TextColor.White,
 					
 			    Anchor    = Alignment.TopRight,
 			    HasShadow = false
-		    });
+		    };
 
-		    _progressBarContainer.AddChild(_progressBar = new GuiProgressBar()
+		    _progressBar = new GuiProgressBar()
 		    {
 			    Width  = 300,
 			    Height = 9,
 					
-			    Anchor = Alignment.BottomFill,
-		    });
-	    }
-		
-	    public void UpdateProgress(LoadingState state, int percentage)
+			    Anchor = Alignment.BottomFill,	
+		    };
+
+			var progContainer = new GuiContainer()
+			{
+				Width = 300,
+				Height = 25,
+			};
+
+			progContainer.AddChild(_textDisplay);
+			progContainer.AddChild(_percentageDisplay);
+			progContainer.AddChild(_progressBar);
+
+			var progressRow = Footer.AddRow(progContainer);
+
+			UpdateProgress(LoadingState.ConnectingToServer, 10);
+		}
+
+	    public LoadingState CurrentState { get; private set; } = LoadingState.ConnectingToServer;
+	    public int Percentage { get; private set; } = 0;
+		public void UpdateProgress(LoadingState state, int percentage)
 	    {
 		    switch (state)
 		    {
@@ -82,6 +89,8 @@ namespace Alex.GameStates
 		    }
 
 		    UpdateProgress(percentage);
+		    CurrentState = state;
+		    Percentage = percentage;
 	    }
 	    public void UpdateProgress(int value)
 	    {

@@ -4,6 +4,7 @@ using Alex.API;
 using Alex.API.Entities;
 using Alex.API.Graphics;
 using Alex.API.Graphics.Typography;
+using Alex.API.Json;
 using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.Graphics.Models;
@@ -306,8 +307,8 @@ namespace Alex.Entities
 
 			float s = 1f;
 			var scale = new Vector2(s, s);
-
-			string clean = NameTag.StripIllegalCharacters();
+	
+			string clean = NameTag;
 
 			var stringCenter = Alex.Font.MeasureString(clean, s);
 			var c = new Point((int)stringCenter.X, (int)stringCenter.Y);

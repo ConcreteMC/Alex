@@ -120,6 +120,8 @@ namespace Alex.Gui.Elements
 				int skipped = 0;
 				DateTime now = DateTime.UtcNow;
 				Vector2 offset = new Vector2(0, -33);
+
+				TextColor lastColor = TextColor.White;
 				foreach (var msg in entries)
 				{
 					var elapse = now - msg.Key;
@@ -146,9 +148,20 @@ namespace Alex.Gui.Elements
 					}
 
 					string message = msg.Value.RawMessage;
-					foreach (var line in CalculateLines(message))
+					
+					var lines = CalculateLines(message);
+					for (var index = 0; index < lines.Length; index++)
 					{
+						var line = lines[index];
+						if (lastColor != TextColor.White)
+						{
+							line = line + $"§{TextColor.Code}";
+						}
+
 						DrawChatLine(graphics, line, alpha, ref offset);
+
+						lastColor = FindLastColor(line);
+
 						renderedCount++;
 
 						if (renderedCount >= 10) break;
@@ -195,6 +208,21 @@ namespace Alex.Gui.Elements
 
 				output.Reverse();
 
+				bool insertColorChar = false;
+				for (int i = 0; i < output.Count; i++)
+				{
+					if (insertColorChar)
+					{
+						output[i] = "§" + output[i];
+					}
+
+					string v = output[i];
+					if (v.EndsWith($"§"))
+					{
+						insertColorChar = true;
+					}
+				}
+
 				return output.ToArray();
 			}
 			else
@@ -214,6 +242,21 @@ namespace Alex.Gui.Elements
 
 			Font.DrawString(graphics.SpriteBatch, text, renderPos + new Vector2(0, 2), TextColor.White, opacity: alpha);
 			offset.Y -= (size.Y + 2);
+		}
+
+		public static TextColor FindLastColor(string message)
+		{
+			TextColor last = TextColor.White;
+			for (int i = 0; i < message.Length - 1; i++)
+			{
+				if (message[i] == '§')
+				{
+					last = TextColor.GetColor(message[i + 1]);
+					i++;
+				}
+			}
+
+			return last;
 		}
 
 		private int _latestTransactionId = -1;

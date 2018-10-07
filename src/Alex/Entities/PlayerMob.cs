@@ -63,25 +63,7 @@ namespace Alex.Entities
 			Velocity = Vector3.Zero;
 			PositionOffset = 1.62f;
 
-			if(skinSlim){
-				if (Alex.Instance.Resources.BedrockResourcePack.EntityModels.TryGetValue("geometry.humanoid.customSlim",
-					out EntityModel m))
-				{
-					_model = m;
-					ModelRenderer = new EntityModelRenderer(_model, skinTexture);
-					UpdateModelParts();
-				}
-			}
-			else
-			{
-				if (Alex.Instance.Resources.BedrockResourcePack.EntityModels.TryGetValue("geometry.humanoid.custom",
-					out EntityModel m))
-				{
-					_model        = m;
-					ModelRenderer = new EntityModelRenderer(_model, skinTexture);
-					UpdateModelParts();
-				}
-			}
+			UpdateSkin(skinTexture, skinSlim);
 		}
 
 		public void UpdateGamemode(Gamemode gamemode)
@@ -179,6 +161,30 @@ namespace Alex.Entities
 			base.OnTick();
 
 			
+		}
+
+		internal void UpdateSkin(Texture2D skinTexture, bool skinSlim)
+		{
+			if (skinSlim)
+			{
+				if (Alex.Instance.Resources.BedrockResourcePack.EntityModels.TryGetValue("geometry.humanoid.customSlim",
+					out EntityModel m))
+				{
+					_model = m;
+					ModelRenderer = new EntityModelRenderer(_model, skinTexture);
+					UpdateModelParts();
+				}
+			}
+			else
+			{
+				if (Alex.Instance.Resources.BedrockResourcePack.EntityModels.TryGetValue("geometry.humanoid.custom",
+					out EntityModel m))
+				{
+					_model = m;
+					ModelRenderer = new EntityModelRenderer(_model, skinTexture);
+					UpdateModelParts();
+				}
+			}
 		}
 	}
 }

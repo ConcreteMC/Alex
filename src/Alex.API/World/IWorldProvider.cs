@@ -82,5 +82,11 @@ namespace Alex.API.World
 
 		void AddPlayerListItem(PlayerListItem item);
 		void RemovePlayerListItem(UUID item);
+
+		void TitleSetTitle(ChatObject value);
+		void TitleSetSubtitle(ChatObject value);
+		void TitleSetTimes(int fadeIn, int stay, int fadeOut);
+		void TitleHide();
+		void TitleReset();
 	};
 }

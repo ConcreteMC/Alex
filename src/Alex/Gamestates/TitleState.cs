@@ -10,6 +10,8 @@ using Alex.API.Gui.Graphics;
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.Entities;
+using Alex.Gamestates;
+using Alex.Gamestates.Debug;
 using Alex.Gamestates.Login;
 using Alex.GameStates.Gui.Common;
 using Alex.GameStates.Gui.Multiplayer;
@@ -72,7 +74,6 @@ namespace Alex.GameStates
 
 			_mainMenu.AddMenuItem("Options", () => { Alex.GameStateManager.SetActiveState("options"); });
 			_mainMenu.AddMenuItem("Exit", () => { Alex.Exit(); });
-
 			#endregion
 
 			#region Create DebugMenu
@@ -336,6 +337,7 @@ namespace Alex.GameStates
 			{
 				if (Alex.GuiManager.HasScreen(_debugInfo))
 				{
+					
 					Alex.GuiManager.RemoveScreen(_debugInfo);
 				}
 				else

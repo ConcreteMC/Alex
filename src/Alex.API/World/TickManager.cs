@@ -14,6 +14,7 @@ namespace Alex.API.World
 		private IWorld World { get; }
 		private ConcurrentDictionary<Action, long> _scheduledTicks { get; }
 		private long _tick = 0;
+		public long CurrentTick => _tick;
 	    public TickManager(IWorld world)
 	    {
 		    World = world;
