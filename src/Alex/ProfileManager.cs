@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Alex.API.Services;
+using Alex.Services;
 using Alex.Utils;
 using Newtonsoft.Json;
 using NLog;
@@ -27,6 +28,8 @@ namespace Alex
 		private const string ProfilesFile = "profiles.json";
 		public void LoadProfiles(IProgressReceiver progressReceiver)
 		{
+			JavaPlayerProfileService javaProfileService = Alex.Services.GetService<IPlayerProfileService>() as JavaPlayerProfileService;
+			
 			progressReceiver.UpdateProgress(0, StatusMessage);
 			if (File.Exists(ProfilesFile))
 			{

@@ -40,7 +40,7 @@ namespace Alex.Gamestates.Login
 			};
 
 			_mainMenu.AddMenuItem($"Java - Version {JavaProtocol.FriendlyName}", JavaEditionButtonPressed);
-			_mainMenu.AddMenuItem($"Bedrock - Unavailable", BedrockEditionButtonPressed, false);
+			_mainMenu.AddMenuItem($"Bedrock - Unavailable", BedrockEditionButtonPressed);
 
 			_mainMenu.AddSpacer();
 			

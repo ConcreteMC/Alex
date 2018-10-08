@@ -17,6 +17,7 @@ using Alex.GameStates.Gui.Multiplayer;
 using Alex.Gui;
 using Alex.Gui.Elements;
 using Alex.Networking.Java;
+using Alex.Services;
 using Alex.Utils;
 using Alex.Worlds;
 using Alex.Worlds.Generators;
@@ -25,13 +26,16 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using NLog;
 using Color = Microsoft.Xna.Framework.Color;
+using Logger = NLog.Logger;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace Alex.GameStates
 {
 	public class TitleState : GuiGameStateBase
 	{
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(TitleState));
 		private readonly GuiDebugInfo _debugInfo;
 
 		private readonly GuiStackMenu _mainMenu;
@@ -188,7 +192,7 @@ namespace Alex.GameStates
 			};
 
 			_protocolMenu.AddMenuItem($"Java - Version {JavaProtocol.FriendlyName}", JavaEditionButtonPressed);
-			_protocolMenu.AddMenuItem($"Bedrock - Unavailable", BedrockEditionButtonPressed, false);
+			_protocolMenu.AddMenuItem($"Bedrock - In Dev", BedrockEditionButtonPressed, true);
 
 			_protocolMenu.AddMenuItem("Return to main menu", ProtocolBackPressed);
 		}
@@ -211,9 +215,12 @@ namespace Alex.GameStates
 
 		private void BedrockEditionButtonPressed()
 		{
-			
-			PublicClientApplication pca = new PublicClientApplication("android-app://com.mojang.minecraftpe.H62DKCBHJP6WXXIV7RBFOGOL4NAK4E6Y"); 
-			
+			var client = Alex.Services.GetService<XBLMSAService>();
+			var t = client.AsyncBrowserLogin();
+			//Log.Info(t.Result.ToString);
+			//client.
+			//PublicClientApplication pca = new PublicClientApplication("android-app://com.mojang.minecraftpe.H62DKCBHJP6WXXIV7RBFOGOL4NAK4E6Y"); 
+
 		}
 
 		private void JavaEditionButtonPressed()
