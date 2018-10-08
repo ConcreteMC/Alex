@@ -192,7 +192,7 @@ namespace Alex.GameStates
 			};
 
 			_protocolMenu.AddMenuItem($"Java - Version {JavaProtocol.FriendlyName}", JavaEditionButtonPressed);
-			_protocolMenu.AddMenuItem($"Bedrock - In Dev", BedrockEditionButtonPressed, true);
+			_protocolMenu.AddMenuItem($"Bedrock - In Dev", BedrockEditionButtonPressed, false);
 
 			_protocolMenu.AddMenuItem("Return to main menu", ProtocolBackPressed);
 		}

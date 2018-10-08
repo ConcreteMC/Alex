@@ -124,14 +124,13 @@ namespace Alex.Services
 				.WithCustomSetting(CefSettingKeys.SingleProcess, true)
 #endif
 				.WithStartUrl(
-					$"https://login.live.com/ppsecure/InlineConnect.srf?id=80604&client_id={MSA_CLIENT_ID}&platform={PLATFORM_NAME}");
-
+					$"https://login.live.com/ppsecure/InlineConnect.srf?id=80604&client_id={MSA_CLIENT_ID}&platform={PLATFORM_NAME}");//CUSTOM HANDLERS
+			
 			var factory = WinapiHostFactory.Init();
-			using (var window = factory.CreateWindow(() => new CefGlueBrowserHost(config),
+			var browserHost = new CefGlueBrowserHost(config);
+			using (var window = factory.CreateWindow(() => browserHost,
 				"Microsoft Account Sign-In", constructionParams: new FrameWindowConstructionParams()))
 			{
-
-				window.SetStyle(WindowStyles.WS_POPUPWINDOW);
 				window.SetSize(config.HostWidth, config.HostHeight);
 				window.CenterToScreen();
 				window.Show();
