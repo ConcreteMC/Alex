@@ -1,0 +1,4 @@
+[submodule "MiNET"]
+	path = MiNET
+	url = https://github.com/NiclasOlofsson/MiNET.git
+	branch = master
