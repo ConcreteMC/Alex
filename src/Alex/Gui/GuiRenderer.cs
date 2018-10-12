@@ -119,7 +119,7 @@ namespace Alex.Gui
 
         private void LoadEmbeddedTextures()
         {
-            LoadTextureFromEmbeddedResource(GuiTextures.AlexLogo, Resources.logo2);
+           LoadTextureFromEmbeddedResource(GuiTextures.AlexLogo, Resources.logo2);
             LoadTextureFromEmbeddedResource(GuiTextures.ProgressBar, Resources.ProgressBar);
             LoadTextureFromEmbeddedResource(GuiTextures.SplashBackground, Resources.Splash);
         }
@@ -127,6 +127,8 @@ namespace Alex.Gui
 
         private void LoadResourcePackTextures(McResourcePack resourcePack)
         {
+			LoadTextureFromResourcePack(GuiTextures.AlexLogo, resourcePack, "");
+
             // First load Widgets
             resourcePack.TryGetTexture("gui/widgets", out _widgets);
             LoadWidgets(_widgets);
@@ -190,8 +192,8 @@ namespace Alex.Gui
                 _textureCache[guiTexture] = texture;
             }
         }
-        
-        private void LoadTextureFromSpriteSheet(GuiTextures guiTexture, Texture2D spriteSheet, Rectangle sliceRectangle, Thickness ninePatchThickness)
+
+		private void LoadTextureFromSpriteSheet(GuiTextures guiTexture, Texture2D spriteSheet, Rectangle sliceRectangle, Thickness ninePatchThickness)
         {
             _textureCache[guiTexture] = new NinePatchTexture2D(spriteSheet.Slice(sliceRectangle), ninePatchThickness);
         }

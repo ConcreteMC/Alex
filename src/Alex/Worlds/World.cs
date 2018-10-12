@@ -9,6 +9,7 @@ using Alex.API.Blocks.State;
 using Alex.API.Entities;
 using Alex.API.Graphics;
 using Alex.API.Network;
+using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Entities;
@@ -51,8 +52,8 @@ namespace Alex.Worlds
 			Ticker = new TickManager(this);
 			 
 			ChunkManager.Start();
-
-			Skin skin = alex.ProfileManager.ActiveProfile?.Profile?.Skin;
+			var profileService = alex.Services.GetService<IPlayerProfileService>();
+			Skin skin = profileService?.CurrentProfile?.Skin;
 			if (skin == null)
 			{
 				alex.Resources.BedrockResourcePack.TryGetTexture("textures/entity/alex", out Bitmap rawTexture);

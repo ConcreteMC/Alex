@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.API.Data.Servers
 {
@@ -15,6 +16,6 @@ namespace Alex.API.Data.Servers
         public string Host { get; set; }
         public ushort Port { get; set; }
 
-        public uint[] CachedIcon { get; set; }
+        public Texture2D CachedIcon { get; set; }
     }
 }

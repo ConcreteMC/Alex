@@ -6,6 +6,7 @@ using Alex.Blocks.State;
 using Alex.Blocks.Storage.Pallete;
 using Alex.Networking.Java.Util;
 using Alex.Utils;
+using fNbt;
 using fNbt.Tags;
 
 namespace Alex.Blocks.Storage
@@ -15,8 +16,8 @@ namespace Alex.Blocks.Storage
 		private static NLog.Logger Log = NLog.LogManager.GetCurrentClassLogger(typeof(BlockStateContainer));
 		private static readonly IBlockStatePalette RegistryBasedPalette = new BlockStatePaletteRegistry();
 		protected static IBlockState AirBlockState = new Air().GetDefaultState();
-		protected FlexibleStorage Storage;
-		protected IBlockStatePalette Palette;
+		public FlexibleStorage Storage;
+		public IBlockStatePalette Palette;
 		private int _bits;
 
 		public BlockStateContainer()

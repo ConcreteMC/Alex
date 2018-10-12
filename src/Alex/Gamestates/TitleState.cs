@@ -73,7 +73,7 @@ namespace Alex.GameStates
 				BackgroundOverlay = new Color(Color.Black, 0.35f)
 			};
 
-			_mainMenu.AddMenuItem("Multiplayer", OnMultiplayerButtonPressed, EnableMultiplayer);
+			_mainMenu.AddMenuItem("Multiplayer", JavaEditionButtonPressed, EnableMultiplayer);
 			_mainMenu.AddMenuItem("SinglePlayer", OnSinglePlayerPressed);
 
 			_mainMenu.AddMenuItem("Options", () => { Alex.GameStateManager.SetActiveState("options"); });
@@ -225,10 +225,10 @@ namespace Alex.GameStates
 
 		private void JavaEditionButtonPressed()
 		{
-			Alex.GameStateManager.SetActiveState(new JavaLoginState(_backgroundSkyBox)
+			Alex.GameStateManager.SetActiveState(new MultiplayerServerSelectionState(_backgroundSkyBox)
 			{
 				BackgroundOverlay = BackgroundOverlay
-			}, true);
+			}, false);
 		}
 
 		#endregion
@@ -271,7 +271,7 @@ namespace Alex.GameStates
 
 		protected override void OnLoad(IRenderArgs args)
 		{
-			Skin skin = Alex.ProfileManager.ActiveProfile?.Profile?.Skin;
+			Skin skin = _playerProfileService?.CurrentProfile?.Skin;
 			if (skin == null)
 			{
 				Alex.Resources.BedrockResourcePack.TryGetTexture("textures/entity/alex", out Bitmap rawTexture);

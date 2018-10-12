@@ -25,58 +25,33 @@ namespace Alex.Gamestates.Login
 	public class JavaLoginState : BaseLoginState
 	{
 		private IPlayerProfileService _playerProfileService;
-		public JavaLoginState(GuiPanoramaSkyBox skyBox) : base("Minecraft Login", skyBox)
+		private Action _loginSuccesAction;
+		public JavaLoginState(GuiPanoramaSkyBox skyBox, Action loginSuccesAction) : base("Minecraft Login", skyBox)
 		{
-			
+			_loginSuccesAction = loginSuccesAction;
 		}
 
-		protected override async void InitializedAsync()
+		protected override void Initialized()
 		{
 			_playerProfileService = Alex.Services.GetService<IPlayerProfileService>();
 			_playerProfileService.Authenticate += PlayerProfileServiceOnAuthenticate;
 
-			var activeProfile = Alex.ProfileManager.ActiveProfile;
-			if (activeProfile != null)
+			var activeProfile = Alex.ProfileManager.LastUsedProfile;
+			if (activeProfile != null && activeProfile.Type == ProfileManager.ProfileType.Java)
 			{
-				DisableInput();
-
 				Requester.ClientToken = activeProfile.Profile.ClientToken;
-				LoginButton.Enabled = false;
-
-				NameInput.Value = activeProfile.AccountUsername;
-
-				ErrorMessage.Text = "Validating authentication token...";
-				await Validate(activeProfile.Profile.AccessToken);
+				NameInput.Value = activeProfile.Profile.Username;
 			}
-		}
-
-		private async Task Validate(string accessToken)
-		{
-			Validate validate = new Validate(accessToken);
-			await validate.PerformRequestAsync().ContinueWith(task =>
-			{
-				var r = task.Result;
-				if (r.IsSuccess)
-				{
-					Alex.GameStateManager.SetActiveState("serverlist");
-				}
-				else
-				{
-					ErrorMessage.Text = "Could not login: " + r.Error.ErrorMessage;
-					ErrorMessage.TextColor = TextColor.Red;
-				}
-
-				EnableInput();
-			});
 		}
 
 		private void PlayerProfileServiceOnAuthenticate(object sender, PlayerProfileAuthenticateEventArgs e)
 		{
 			if (e.IsSuccess)
 			{
-				Alex.ProfileManager.CreateOrUpdateProfile(ProfileManager.ProfileType.Java, e.Profile, NameInput.Value, true);
+				Alex.ProfileManager.CreateOrUpdateProfile(ProfileManager.ProfileType.Java, e.Profile, true);
+				_loginSuccesAction?.Invoke();
 				//Alex.SaveJava(_nameInput.Value);
-				Alex.GameStateManager.SetActiveState("serverlist");
+				//Alex.GameStateManager.SetActiveState("serverlist");
 			}
 			else
 			{

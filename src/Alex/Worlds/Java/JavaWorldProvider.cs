@@ -34,9 +34,17 @@ using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MiNET.Net;
+using MiNET.Utils;
+using MiNET.Worlds;
 using Newtonsoft.Json;
 using NLog;
 using NLog.Fluent;
+using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
+using LevelInfo = Alex.API.World.LevelInfo;
+using Packet = Alex.Networking.Java.Packets.Packet;
+using PlayerLocation = Alex.API.Utils.PlayerLocation;
+using UUID = Alex.API.Utils.UUID;
 
 namespace Alex.Worlds.Java
 {
@@ -60,11 +68,13 @@ namespace Alex.Worlds.Java
 		private TcpClient TcpClient;
 
 		private System.Threading.Timer _gameTickTimer;
+		private DedicatedThreadPool ThreadPool;
 		public JavaWorldProvider(Alex alex, IPEndPoint endPoint, PlayerProfile profile, out INetworkProvider networkProvider)
 		{
 			Alex = alex;
 			Profile = profile;
 			Endpoint = endPoint;
+			ThreadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount));
 
 			TcpClient = new TcpClient();
 			Client = new JavaClient(this, TcpClient.Client);
@@ -121,6 +131,7 @@ namespace Alex.Worlds.Java
 
 			Alex.GameStateManager.SetActiveState(s, false);
 			Alex.GameStateManager.RemoveState("play");
+			Dispose();
 		}
 
 		private PlayerLocation _lastSentLocation = new PlayerLocation(Vector3.Zero);
@@ -262,7 +273,7 @@ namespace Alex.Worlds.Java
 			return Task.Run(() =>
 			{
 				progressReport(LoadingState.ConnectingToServer, 0);
-				Login(Profile.Username, Profile.Uuid, Profile.AccessToken);
+				Login(Profile.PlayerName, Profile.Uuid, Profile.AccessToken);
 				if (_disconnected) return;
 
 				progressReport(LoadingState.ConnectingToServer, 99);
@@ -407,7 +418,7 @@ namespace Alex.Worlds.Java
 
 			if (renderer.Texture == null)
 			{
-				Log.Warn($"Could not find textyre for entity type: {type.ToString()} ({(int) type})");
+				Log.Warn($"Could not find texture for entity type: {type.ToString()} ({(int) type})");
 				return;
 			}
 
@@ -883,7 +894,7 @@ namespace Alex.Worlds.Java
 
 						if (_players.TryAdd(entity.UUID, entity) && skinJson != null)
 						{
-							ThreadPool.QueueUserWorkItem(o =>
+							ThreadPool.QueueUserWorkItem(() =>
 							{
 								if (SkinUtils.TryGetSkin(skinJson, Alex.GraphicsDevice, out var skin, out skinSlim))
 								{
@@ -1092,7 +1103,7 @@ namespace Alex.Worlds.Java
 		{
 			_loginCompleteEvent?.Set();
 			//_chunkQueue.Add(chunk);
-			ThreadPool.QueueUserWorkItem(o =>
+			ThreadPool.QueueUserWorkItem(() =>
 			{
 				ChunkColumn result = null;// = new ChunkColumn();
 				if (chunk.GroundUp)
@@ -1253,7 +1264,7 @@ namespace Alex.Worlds.Java
 			if (!string.IsNullOrWhiteSpace(_accesToken))
 			{
 				try
-				{
+				{	
 					var baseAddress = "https://sessionserver.mojang.com/session/minecraft/join";
 
 					var http = (HttpWebRequest) WebRequest.Create(new Uri(baseAddress));

@@ -11,6 +11,7 @@ using Alex.Blocks.State;
 using Alex.Blocks.Storage;
 using Alex.Networking.Java.Util;
 using Alex.Utils;
+using fNbt;
 using fNbt.Tags;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

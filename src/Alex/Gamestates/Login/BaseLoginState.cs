@@ -136,10 +136,10 @@ namespace Alex.Gamestates.Login
 				TextColor = TextColor.Yellow
 			});
 
-			InitializedAsync();
+			Initialized();
 		}
 
-		protected abstract void InitializedAsync();
+		protected abstract void Initialized();
 
 		private void OnLoginButtonPressed()
 		{

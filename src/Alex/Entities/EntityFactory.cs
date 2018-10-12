@@ -14,12 +14,17 @@ using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json.Models;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
+using fNbt;
 using fNbt.Tags;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MiNET.Net;
+using MiNET.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
+using PlayerLocation = Alex.API.Utils.PlayerLocation;
+using UUID = Alex.API.Utils.UUID;
 
 namespace Alex.Entities
 {

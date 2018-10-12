@@ -11,6 +11,9 @@ using Alex.Networking.Java.Packets;
 using Alex.Networking.Java.Packets.Handshake;
 using Alex.Networking.Java.Packets.Status;
 using Alex.Utils;
+using Alex.Worlds.Bedrock;
+using MiNET.Client;
+using MiNET.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
@@ -26,7 +29,94 @@ namespace Alex.Services
             MCPacketFactory.Load();
         }
 
-        public async Task<ServerQueryResponse> QueryServerAsync(string hostname, ushort port, PingServerDelegate pingCallback = null)
+	    public async Task<ServerQueryResponse> QueryBedrockServerAsync(string hostname, ushort port, PingServerDelegate pingCallback = null)
+	    {
+		    return await QueryPeServerAsync(hostname, port, pingCallback);
+	    }
+
+	    private async Task<ServerQueryResponse> QueryPeServerAsync(string hostname, ushort port,
+		    PingServerDelegate pingCallback)
+	    {
+		    AutoResetEvent ar = new AutoResetEvent(false);
+		    Stopwatch sw = Stopwatch.StartNew();
+		    long pingTime = 0;
+
+		    using (var pool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount,
+			    ThreadType.Background, "BedrockQueryThread")))
+		    {
+			    BedrockClient client = null;
+			    try
+			    {
+				    var hostEntry = await Dns.GetHostEntryAsync(hostname);
+				    IPAddress ip = IPAddress.None;
+
+				    if (hostEntry.AddressList.Length > 0)
+				    {
+					    ip = hostEntry.AddressList[Rnd.Next(0, hostEntry.AddressList.Length - 1)];
+				    }
+
+				    client = new BedrockClient(new IPEndPoint(ip, (int) port), "", pool, null)
+				    {
+					    IgnoreUnConnectedPong = true
+				    };
+
+				    BedrockMotd motd = client.KnownMotd;
+
+					client.OnMotdReceivedHandler += (sender, m) =>
+				    {
+					    motd = m;
+					    ar.Set();
+					    pingTime = sw.ElapsedMilliseconds;
+					    pingCallback?.Invoke(new ServerPingResponse(true, pingTime));
+				    };
+
+				    client.StartClient();
+
+				    client.SendUnconnectedPing();
+				    sw.Restart();
+
+				    if (ar.WaitOne(10000))
+				    {
+					    client.StopClient();
+					    return new ServerQueryResponse(true, new ServerQueryStatus()
+					    {
+						    EndPoint = client.ServerEndpoint,
+						    Delay = pingTime,
+						    Success = true,
+						    Motd = motd.MOTD,
+						    ProtocolVersion = motd.ProtocolVersion,
+						    MaxNumberOfPlayers = motd.MaxPlayers,
+						    Version = motd.ClientVersion,
+						    NumberOfPlayers = motd.Players,
+
+						    Address = hostname,
+						    Port = port,
+						    WaitingOnPing = false
+					    });
+				    }
+				    else
+				    {
+					    return new ServerQueryResponse(false, "Server timed-out!", new ServerQueryStatus(){Success = false});
+				    }
+			    }
+			    catch (Exception e)
+			    {
+				    Log.Error($"Could not get bedrock query: {e.ToString()}");
+				    return new ServerQueryResponse(false, "Failed to connect...", new ServerQueryStatus()
+				    {
+						Success = false
+				    });
+			    }
+			    finally
+			    {
+				    client?.Dispose();
+				}
+		    }
+	    }
+
+
+
+	    public async Task<ServerQueryResponse> QueryServerAsync(string hostname, ushort port, PingServerDelegate pingCallback = null)
         {
             return await QueryJavaServerAsync(hostname, port, pingCallback);
         }
@@ -39,7 +129,7 @@ namespace Alex.Services
 			IPEndPoint endPoint = null;
 	        string jsonResponse = null;
 
-			try
+	        try
 	        {
 		        client = new TcpClient();
 
@@ -49,7 +139,7 @@ namespace Alex.Services
 		        if (client.Connected)
 		        {
 			        long pingId = Rnd.NextUInt();
-					conn = new NetConnection(Direction.ClientBound, client.Client);
+			        conn = new NetConnection(Direction.ClientBound, client.Client);
 			        conn.LogExceptions = false;
 			        //using (var conn = new NetConnection(Direction.ClientBound, client.Client))
 			        {
@@ -62,16 +152,18 @@ namespace Alex.Services
 						        jsonResponse = responsePacket.ResponseMsg;
 						        ar.Set();
 					        }
-							else if (args.Packet is PingPacket pong)
+					        else if (args.Packet is PingPacket pong)
 					        {
 						        if (pong.Payload == pingId)
 						        {
-							       pingCallback?.Invoke(new ServerPingResponse(true, sw.ElapsedMilliseconds));
-								}
+							        pingCallback?.Invoke(new ServerPingResponse(true, sw.ElapsedMilliseconds));
+						        }
 						        else
 						        {
-							        pingCallback?.Invoke(new ServerPingResponse(false, "Ping payload does not match!", sw.ElapsedMilliseconds));
-								}
+							        pingCallback?.Invoke(new ServerPingResponse(false, "Ping payload does not match!",
+								        sw.ElapsedMilliseconds));
+						        }
+								
 					        }
 				        };
 
@@ -95,25 +187,25 @@ namespace Alex.Services
 				        {
 					        long timeElapsed = sw.ElapsedMilliseconds;
 
-							var json = JsonConvert.DeserializeObject<ServerListPingJson>(jsonResponse);
+					        var json = JsonConvert.DeserializeObject<ServerListPingJson>(jsonResponse);
 
 					        if (pingCallback != null)
 					        {
-								conn.SendPacket(new PingPacket()
-								{
-									Payload = pingId,
-								});
+						        conn.SendPacket(new PingPacket()
+						        {
+							        Payload = pingId,
+						        });
 
-								sw.Restart();
+						        sw.Restart();
 					        }
 
 					        return new ServerQueryResponse(true, new ServerQueryStatus()
 					        {
 						        Delay = timeElapsed,
 						        Success = true,
-								WaitingOnPing = pingCallback != null,
+						        WaitingOnPing = pingCallback != null,
 
-								EndPoint = endPoint,
+						        EndPoint = endPoint,
 						        Address = hostname,
 						        Port = port,
 
@@ -133,9 +225,9 @@ namespace Alex.Services
 		        if (sw.IsRunning)
 			        sw.Stop();
 
-				Log.Error($"Could not get server query result, server returned \"{jsonResponse}\"");
+		        Log.Error($"Could not get server query result, server returned \"{jsonResponse}\"");
 
-				return new ServerQueryResponse(false, ex.Message, new ServerQueryStatus()
+		        return new ServerQueryResponse(false, ex.Message, new ServerQueryStatus()
 		        {
 			        Delay = sw.ElapsedMilliseconds,
 			        Success = false,
@@ -144,6 +236,13 @@ namespace Alex.Services
 			        Address = hostname,
 			        Port = port
 		        });
+	        }
+	        finally
+	        {
+		        //conn?.Stop();
+				//conn?.Dispose();
+				//conn?.Dispose();
+			//	client?.Close();
 	        }
             
             if(sw.IsRunning)

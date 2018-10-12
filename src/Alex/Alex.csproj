@@ -66,15 +66,9 @@
     <PackageReference Include="Chromely.CefGlue.Winapi" Version="66.0.0" />
     <PackageReference Include="Chromely.Core" Version="0.9.1" />
     <PackageReference Include="Chromely.Unofficial.CefGlue.NetStd" Version="66.0.3359.117" />
-    <PackageReference Include="CoreFNBT" Version="1.0.9" />
     <PackageReference Include="Hawezo.MojangSharp" Version="0.5.1" />
     <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="1.0.0-alpha-27002-01" />
     <PackageReference Include="Microsoft.Identity.Client" Version="2.2.0-preview" />
-    <PackageReference Include="MiNET" Version="1.0.1873">
-      <PrivateAssets></PrivateAssets>
-      <ExcludeAssets></ExcludeAssets>
-      <IncludeAssets></IncludeAssets>
-    </PackageReference>
     <PackageReference Include="MonoGame.Framework.DesktopGL.Core" Version="3.7.0.7" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <PackageReference Include="NLog" Version="4.5.6" />
@@ -86,6 +80,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\MiNET\src\MiNET\MiNET.Client\MiNET.Client.csproj" />
+    <ProjectReference Include="..\..\MiNET\src\MiNET\MiNET\MiNET.csproj" />
     <ProjectReference Include="..\Alex.API\Alex.API.csproj" />
     <ProjectReference Include="..\Alex.Gui\Alex.Graphics.csproj" />
     <ProjectReference Include="..\Alex.Networking\Alex.Networking.csproj" />
@@ -107,15 +103,8 @@
     </EmbeddedResource>
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Worlds\Bedrock\" />
-  </ItemGroup>
-
 	<Target Name="ChangeAliasesOfNugetRefs" BeforeTargets="FindReferenceAssembliesForReferences;ResolveReferences">
 		<ItemGroup>
-			<ReferencePath Condition="'%(FileName)' == 'fNbt'">
-				<Aliases>MiNETfNbt</Aliases>
-			</ReferencePath>
 			<ReferencePath Condition="'%(FileName)' == 'Splat'">
 				<Aliases>SuperSplat</Aliases>
 			</ReferencePath>

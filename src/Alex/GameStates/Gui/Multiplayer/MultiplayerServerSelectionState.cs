@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Data.Servers;
 using Alex.API.Graphics;
@@ -14,12 +15,16 @@ using Alex.API.Gui.Elements.Layout;
 using Alex.API.Gui.Graphics;
 using Alex.API.Services;
 using Alex.API.Utils;
+using Alex.Gamestates.Login;
 using Alex.GameStates.Gui.Common;
 using Alex.Graphics.Gui.Elements;
 using Alex.Gui;
 using Alex.Networking.Java;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MiNET;
+using MiNET.Net;
+using MiNET.Utils;
 
 namespace Alex.GameStates.Gui.Multiplayer
 {
@@ -141,10 +146,35 @@ namespace Alex.GameStates.Gui.Multiplayer
 
 	    private void OnJoinServerButtonPressed()
 	    {
-		    var entry = SelectedItem.SavedServerEntry;
+		    var authenticationService = Alex.Services.GetService<IPlayerProfileService>();
+
+			var entry = SelectedItem.SavedServerEntry;
 		    var ip = Dns.GetHostAddresses(entry.Host).FirstOrDefault();
 
-		    Alex.ConnectToServer(new IPEndPoint(ip, entry.Port));
+		    if (entry.ServerType == ServerType.Java)
+		    {
+			    if (authenticationService.CurrentProfile == null || (authenticationService.CurrentProfile.IsBedrock))
+			    {
+				    JavaLoginState loginState = new JavaLoginState(_skyBox,
+					    () =>
+					    {
+						    Alex.ConnectToServer(new IPEndPoint(ip, entry.Port),
+							    entry.ServerType == ServerType.Bedrock);
+					    });
+
+
+				    Alex.GameStateManager.SetActiveState(loginState, true);
+			    }
+			    else
+			    {
+				    Alex.ConnectToServer(new IPEndPoint(ip, entry.Port), false);
+			    }
+		    }
+
+		    else if (entry.ServerType == ServerType.Bedrock)
+		    {
+			    Alex.ConnectToServer(new IPEndPoint(ip, entry.Port), true);
+			}
 	    }
 		
 	    private void OnCancelButtonPressed()
@@ -155,6 +185,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 
 	    private void OnRefreshButtonPressed()
 	    {
+			SaveAll();
 			Load();
 	    }
 
@@ -166,19 +197,31 @@ namespace Alex.GameStates.Gui.Multiplayer
 		    foreach (var entry in _listProvider.Data.ToArray())
 		    {
 				AddItem(new GuiServerListEntryElement(entry));
-		    }
+			}
 
 		    PingAll();
 	    }
 
-	    public void PingAll()
+	    public async void PingAll()
 	    {
 		    foreach (var item in Items)
 		    {
-				item.PingAsync();
+			    await item.PingAsync();
 		    }
 	    }
 
+	    private void SaveAll()
+	    {
+		    foreach (var entry in _listProvider.Data.ToArray())
+		    {
+			    _listProvider.RemoveEntry(entry);
+			}
+
+		    foreach (var item in Items)
+		    {
+			    _listProvider.AddEntry(item.SavedServerEntry);
+		    }
+		}
 
 	    private void AddEditServerCallbackAction(SavedServerEntry obj)
 	    {
@@ -203,6 +246,17 @@ namespace Alex.GameStates.Gui.Multiplayer
 		    _skyBox.Draw(args);
 
 			base.OnDraw(args);
+	    }
+
+	    protected override void OnHide()
+	    {
+		    base.OnHide();
+			SaveAll();
+	    }
+
+	    protected override void OnUnload()
+	    {
+			base.OnUnload();
 	    }
     }
 
@@ -229,7 +283,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 
 	    internal SavedServerEntry SavedServerEntry;
 		
-	    public GuiServerListEntryElement(SavedServerEntry entry) : this(entry.Name, entry.Host + ":" + entry.Port)
+	    public GuiServerListEntryElement(SavedServerEntry entry) : this(entry.ServerType == ServerType.Java ? $"§oJAVA§r - {entry.Name}" : $"§oPOCKET§r - {entry.Name}", entry.Host + ":" + entry.Port)
 	    {
 		    SavedServerEntry = entry;
 	    }
@@ -289,9 +343,14 @@ namespace Alex.GameStates.Gui.Multiplayer
         protected override void OnInit(IGuiRenderer renderer)
         {
             base.OnInit(renderer);
-			
-            PingAsync();
-        }
+	        if (SavedServerEntry.CachedIcon != null)
+	        {
+		        ServerIcon = SavedServerEntry.CachedIcon;
+		        _serverIcon.Texture = ServerIcon;
+
+	        }
+			//   PingAsync();
+		}
 
 	    private GraphicsDevice _graphicsDevice = null;
 
@@ -315,7 +374,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 		    {
 			    if (ushort.TryParse(split[1], out port))
 			    {
-				    QueryServer(split[0], port);
+				    await QueryServer(split[0], port);
 			    }
 			    else
 			    {
@@ -324,7 +383,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 		    }
 		    else if (split.Length == 1)
 		    {
-			    QueryServer(split[0], port);
+			    await QueryServer(split[0], port);
 		    }
 		    else
 		    {
@@ -366,8 +425,19 @@ namespace Alex.GameStates.Gui.Multiplayer
 		    SetErrorMessage(null);
 		    SetConnectingState(true);
 
+		    ServerQueryResponse result;
 		    var queryProvider = Alex.Instance.Services.GetService<IServerQueryProvider>();
-		    await queryProvider.QueryServerAsync(address, port, PingCallback).ContinueWith(QueryCompleted);
+		    if (SavedServerEntry.ServerType == ServerType.Bedrock)
+		    {
+			    result = await queryProvider.QueryBedrockServerAsync(address, port,
+				    PingCallback); //;.ContinueWith(QueryCompleted);
+		    }
+		    else
+		    {
+			    result = await queryProvider.QueryServerAsync(address, port, PingCallback);
+		    }
+
+		    QueryCompleted(result);
 	    }
 
 	    private void PingCallback(ServerPingResponse response)
@@ -383,9 +453,9 @@ namespace Alex.GameStates.Gui.Multiplayer
 	    }
 
 	    private static readonly Regex FaviconRegex = new Regex(@"data:image/png;base64,(?<data>.+)", RegexOptions.Compiled);
-        private void QueryCompleted(Task<ServerQueryResponse> queryTask)
+        private void QueryCompleted(ServerQueryResponse response)
         {
-            var response = queryTask.Result;
+	        //   var response = queryTask.Result;
             SetConnectingState(false);
             
             if (response.Success)
@@ -398,11 +468,14 @@ namespace Alex.GameStates.Gui.Multiplayer
 					_pingStatus.SetPing(s.Delay);
 				}
 
-				if (s.ProtocolVersion < JavaProtocol.ProtocolVersion)
+				if (s.ProtocolVersion < (SavedServerEntry.ServerType == ServerType.Java ? JavaProtocol.ProtocolVersion : McpeProtocolInfo.ProtocolVersion))
 				{
-					_pingStatus.SetOutdated(s.Version);
+					if (SavedServerEntry.ServerType == ServerType.Java)
+					{
+						_pingStatus.SetOutdated(s.Version);
+					}
 				}
-				else if (s.ProtocolVersion > JavaProtocol.ProtocolVersion)
+				else if (s.ProtocolVersion > (SavedServerEntry.ServerType == ServerType.Java ? JavaProtocol.ProtocolVersion : McpeProtocolInfo.ProtocolVersion))
 				{
 					_pingStatus.SetOutdated($"Client out of date!");
 				}
@@ -419,6 +492,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 				            ServerIcon = Texture2D.FromStream(_graphicsDevice, ms);
 			            }
 
+			            SavedServerEntry.CachedIcon = ServerIcon;
 			            _serverIcon.Texture = ServerIcon;
 		            }
 	            }

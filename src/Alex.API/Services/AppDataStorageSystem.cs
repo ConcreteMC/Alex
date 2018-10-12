@@ -18,12 +18,13 @@ namespace Alex.API.Services
             var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create);
             AppDataDirectory = Path.Combine(appData, "Alex");
 
-            Directory.CreateDirectory(AppDataDirectory);
-        }
+			Directory.CreateDirectory(AppDataDirectory);
+	        Directory.CreateDirectory(Path.Combine(AppDataDirectory, "assets"));
+		}
         
         public bool TryWrite<T>(string key, T value)
         {
-            var fileName = GetFileName(key);
+            var fileName = GetFileName(key) + ".json";
 
             try
             {
@@ -38,9 +39,10 @@ namespace Alex.API.Services
                 return false;
             }
         }
+
         public bool TryRead<T>(string key, out T value)
         {
-            var fileName = GetFileName(key);
+            var fileName = GetFileName(key) + ".json";
 
             if (!File.Exists(fileName))
             {
@@ -62,9 +64,46 @@ namespace Alex.API.Services
             }
         }
 
-        private string GetFileName(string key)
+	    public bool TryWriteBytes(string key, byte[] value)
+	    {
+			var fileName = Path.Combine(AppDataDirectory, key);
+
+			try
+		    {
+				File.WriteAllBytes(fileName, value);
+			    return true;
+		    }
+		    catch (Exception ex)
+		    {
+			    return false;
+		    }
+		}
+
+	    public bool TryReadBytes(string key, out byte[] value)
+	    {
+		    var fileName = Path.Combine(AppDataDirectory, key);
+
+		    if (!File.Exists(fileName))
+		    {
+			    value = null;
+			    return false;
+		    }
+
+		    try
+		    {
+			    value = File.ReadAllBytes(fileName);
+			    return true;
+		    }
+		    catch (Exception ex)
+		    {
+			    value = null;
+			    return false;
+		    }
+		}
+
+	    private string GetFileName(string key)
         {
-            return FileKeySanitizeRegex.Replace(key.ToLowerInvariant(), "") + ".json";
+            return Path.Combine(AppDataDirectory, FileKeySanitizeRegex.Replace(key.ToLowerInvariant(), ""));
         }
     }
 }

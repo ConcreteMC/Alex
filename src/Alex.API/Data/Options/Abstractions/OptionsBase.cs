@@ -41,7 +41,7 @@ namespace Alex.API.Data.Options
             return opt;
         }
 
-        [NotifyPropertyChangedInvocator]
+       // [NotifyPropertyChangedInvocator]
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));

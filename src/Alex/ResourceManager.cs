@@ -7,8 +7,10 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
+using System.Text;
 using Alex.API;
 using Alex.API.Json;
+using Alex.API.Services;
 using Alex.Entities;
 using Alex.Rendering;
 using Alex.ResourcePackLib;
@@ -31,8 +33,10 @@ namespace Alex
 		
 		private GraphicsDevice Graphics { get; set; }
 
-		public ResourceManager(GraphicsDevice graphics)
+		private IStorageSystem Storage { get; }
+		public ResourceManager(GraphicsDevice graphics, IStorageSystem storageSystem)
 		{
+			Storage = storageSystem;
 			Graphics = graphics;
 			Atlas = new AtlasGenerator(Graphics);
 		}
@@ -53,38 +57,34 @@ namespace Alex
 
 					Log.Info($"Using assets version {latestSnapshotVersion.Id}");
 
-					string savedPath = Path.Combine("assets", latestSnapshotVersion.Id + ".zip");
-					if (!File.Exists(savedPath))
+					byte[] data;
+					string savedPath = Path.Combine("assets", $"java-{latestSnapshotVersion.Id}.zip");
+					if (Storage.TryReadBytes(savedPath, out data))
+					{
+						return data;
+					}
+					else
 					{
 						Log.Info("Downloading latest vanilla Minecraft resources...");
 						LauncherMeta meta = LauncherMeta.FromJson(wc.DownloadString(latestSnapshotVersion.Url));
 						byte[] clientData = wc.DownloadData(meta.Downloads.Client.Url);
-
-						File.WriteAllBytesAsync(savedPath, clientData);
-						File.WriteAllTextAsync(VersionFile, savedPath);
-
+						if (Storage.TryWriteBytes(savedPath, clientData))
+						{
+							Storage.TryWriteBytes(VersionFile, Encoding.Unicode.GetBytes(savedPath));
+						}
 						return clientData;
-					}
-					else
-					{
-						var data = File.ReadAllBytes(savedPath);
-
-						if (!File.Exists(VersionFile))
-							File.WriteAllTextAsync(VersionFile, savedPath);
-
-						return data;
 					}
 				}
 			}
 			catch
 			{
 				Log.Warn($"Failed to check for latest assets!");
-				if (File.Exists(VersionFile))
+				if (Storage.TryReadBytes(VersionFile, out byte[] value))
 				{
-					string content = File.ReadAllText(VersionFile);
-					if (File.Exists(content))
+					string content = Encoding.Unicode.GetString(value);
+					if (Storage.TryReadBytes(content, out value))
 					{
-						return File.ReadAllBytes(content);
+						return value;
 					}
 				}
 			}
@@ -152,7 +152,7 @@ namespace Alex
 				Directory.CreateDirectory(ResourcePackDirectory);
 			}
 
-			if (!File.Exists(BedrockResourcePackPath))
+			if (!Storage.TryReadBytes(BedrockResourcePackPath, out bedrockResources))
 			{
 				Log.Error(
 					$"Missing bedrock edition resources! Please put a copy of the bedrock resources in a zip archive with the path '{BedrockResourcePackPath}'");
@@ -180,8 +180,6 @@ namespace Alex
 				bedrockResources = null;
 				return false;
 			}
-
-			bedrockResources = File.ReadAllBytes(BedrockResourcePackPath);
 
 			return true;
 		}

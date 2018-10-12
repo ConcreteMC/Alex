@@ -10,14 +10,17 @@ using Alex.API.World;
 using Alex.Blocks;
 using Alex.Blocks.State;
 using Alex.Blocks.Storage;
-using Alex.Utils;
-using Alex.Worlds.Generators;
 using AutoMapper;
 using fNbt;
 using fNbt.Tags;
 using Microsoft.Xna.Framework;
+using MiNET.Utils;
+using MiNET.Worlds;
 using NLog;
-using NbtTag = fNbt.Tags.NbtTag;
+using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
+using IWorldGenerator = Alex.Worlds.Generators.IWorldGenerator;
+using LevelInfo = Alex.API.World.LevelInfo;
+using NibbleArray = Alex.Utils.NibbleArray;
 
 namespace Alex.Worlds
 {
@@ -159,7 +162,7 @@ namespace Alex.Worlds
 					nbt.LoadFromStream(regionFile, NbtCompression.ZLib);
 
 					//int version = nbt.RootTag["DataVersion"].IntValue;
-					fNbt.Tags.NbtCompound dataTag = (fNbt.Tags.NbtCompound)nbt.RootTag["Level"];
+					NbtCompound dataTag = (NbtCompound)nbt.RootTag["Level"];
 
 					bool isPocketEdition = false;
 					if (dataTag.Contains("MCPE BID"))
@@ -167,7 +170,7 @@ namespace Alex.Worlds
 						isPocketEdition = dataTag["MCPE BID"].ByteValue == 1;
 					}
 
-					fNbt.Tags.NbtList sections = dataTag["Sections"] as fNbt.Tags.NbtList;
+					NbtList sections = dataTag["Sections"] as NbtList;
 
 					Worlds.ChunkColumn chunk = new Worlds.ChunkColumn()
 					{
@@ -202,7 +205,7 @@ namespace Alex.Worlds
 
 					//if (chunk.biomeId.Length > 256) throw new Exception();
 
-					NbtTag heights = dataTag["HeightMap"] as fNbt.Tags.NbtIntArray;
+					NbtTag heights = dataTag["HeightMap"] as NbtIntArray;
 					if (heights != null)
 					{
 						int[] intHeights = heights.IntArrayValue;
@@ -226,7 +229,7 @@ namespace Alex.Worlds
 						}
 					}
 
-					fNbt.Tags.NbtList entities = dataTag["Entities"] as fNbt.Tags.NbtList;
+					NbtList entities = dataTag["Entities"] as NbtList;
 					if (entities != null)
 					{
 						chunk.Entities = entities.ToArray<NbtCompound>();
@@ -326,10 +329,10 @@ namespace Alex.Worlds
 			}
 		}
 
-		private void ReadSection(fNbt.Tags.NbtTag sectionTag, Worlds.ChunkColumn chunk, bool convertBid = true)
+		private void ReadSection(NbtTag sectionTag, Worlds.ChunkColumn chunk, bool convertBid = true)
 		{
 			int sectionIndex = sectionTag["Y"].ByteValue;
-			fNbt.Tags.NbtList palette = sectionTag["Palette"] as fNbt.Tags.NbtList;
+			NbtList palette = sectionTag["Palette"] as NbtList;
 			long[] blockStates = sectionTag["BlockStates"].LongArrayValue;
 
 			byte[] blockLight = sectionTag["BlockLight"].ByteArrayValue;
@@ -363,7 +366,7 @@ namespace Alex.Worlds
 			return (byte)(arr[index >> 1] >> ((index & 1) << 2) & 0xF);
 		}
 
-		private void ReadOldSection(fNbt.Tags.NbtTag sectionTag, Worlds.ChunkColumn chunk, bool convertBid = true)
+		private void ReadOldSection(NbtTag sectionTag, Worlds.ChunkColumn chunk, bool convertBid = true)
 		{
 			//throw new NotImplementedException("TODO: Implement a id:meta to blockstate converter.");
 

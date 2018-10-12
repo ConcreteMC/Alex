@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework.Graphics;
+using Newtonsoft.Json;
 
 namespace Alex.API.Services
 {
@@ -12,19 +13,25 @@ namespace Alex.API.Services
     {
         public string Uuid { get; }
         public string Username { get; }
+		public string PlayerName { get; }
 
         public Skin Skin { get; }
 
         public string AccessToken { get; }
         public string ClientToken { get; }
 
-        public PlayerProfile(string uuid, string username, Skin skin, string accessToken, string clientToken)
+		[JsonIgnore]
+		public bool IsBedrock { get; set; }
+
+	    public PlayerProfile(string uuid, string username, string playerName, Skin skin, string accessToken, string clientToken, bool isBedrock = false)
         {
             Uuid = uuid;
             Username = username;
+	        PlayerName = playerName;
             Skin = skin;
             AccessToken = accessToken;
             ClientToken = clientToken;
+	        IsBedrock = isBedrock;
         }
     }
 
@@ -67,6 +74,6 @@ namespace Alex.API.Services
         PlayerProfile CurrentProfile { get; }
 
         Task<bool> TryAuthenticateAsync(string username, string password);
-
+	    Task<bool> TryAuthenticateAsync(PlayerProfile profile);
     }
 }

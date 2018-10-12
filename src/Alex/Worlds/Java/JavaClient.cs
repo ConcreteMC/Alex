@@ -5,6 +5,7 @@ using Alex.API.Utils;
 using Alex.Networking.Java;
 using Alex.Networking.Java.Packets;
 using Alex.Networking.Java.Packets.Play;
+using MiNET.Utils;
 using NLog;
 
 namespace Alex.Worlds.Java
@@ -14,7 +15,7 @@ namespace Alex.Worlds.Java
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(JavaClient));
 
 		private IJavaProvider WorldReceiver { get; }
-		public JavaClient(JavaWorldProvider javaWorldProvider, Socket socket) : base(Direction.ClientBound, socket)
+		public JavaClient(JavaWorldProvider javaWorldProvider, Socket socket) : base(Direction.ClientBound, socket, null, null)
 		{
 			MCPacketFactory.Load();
 

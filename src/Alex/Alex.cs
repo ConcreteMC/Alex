@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -26,6 +27,7 @@ using Alex.Rendering;
 using Alex.ResourcePackLib;
 using Alex.Services;
 using Alex.Utils;
+using Alex.Worlds.Bedrock;
 using Alex.Worlds.Java;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -43,13 +45,8 @@ namespace Alex
 			$"{System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription}";
 
 		public const string Version = "1.0 DEV";
-		public static string Username { get; set; }
-		public static string UUID { get; set; }
-		public static string AccessToken { get; set; }
 
-		public static IPEndPoint ServerEndPoint { get; set; }
 		public static bool IsMultiplayer { get; set; } = false;
-		public static Texture2D LocalPlayerSkin { get; set; } = null;
 
 		public static IFont Font;
 		public static IFont DebugFont;
@@ -65,29 +62,15 @@ namespace Alex
 		public GuiRenderer GuiRenderer { get; private set; }
 		public GuiManager GuiManager { get; private set; }
 
-		private bool BypassTitleState { get; set; } = false;
-
 		public GraphicsDeviceManager DeviceManager { get; }
 
-		public ProfileManager ProfileManager { get; }
-
+		public ProfileManager ProfileManager { get; private set; }
+		
 		internal ConcurrentQueue<Action> UIThreadQueue { get; }
+
+		internal AppDataStorageSystem Storage { get; private set; }
 		public Alex(LaunchSettings launchSettings)
 		{
-			if (launchSettings.Server != null)
-			{
-				ServerEndPoint = launchSettings.Server;
-				if (launchSettings.ConnectOnLaunch)
-				{
-					IsMultiplayer = true;
-					BypassTitleState = true;
-				}
-			}
-
-			Username = launchSettings.Username;
-			AccessToken = launchSettings.AccesToken;
-			UUID = launchSettings.UUID;
-
 			Instance = this;
 
 			DeviceManager = new GraphicsDeviceManager(this)
@@ -113,7 +96,15 @@ namespace Alex
 				}
 			};
 
-			ProfileManager = new ProfileManager(this);
+			JsonConvert.DefaultSettings = () => new JsonSerializerSettings()
+			{
+				Converters = new List<JsonConverter>()
+				{
+					new Texture2DJsonConverter(GraphicsDevice)
+				},
+				Formatting = Formatting.Indented
+			};
+
 			UIThreadQueue = new ConcurrentQueue<Action>();
 		}
 
@@ -128,7 +119,7 @@ namespace Alex
 		{
 			if (GameSettings.IsDirty)
 			{
-				File.WriteAllText("settings.json", JsonConvert.SerializeObject(GameSettings, Formatting.Indented));
+				Storage.TryWrite("settings", GameSettings);
 			}
 		}
 
@@ -137,27 +128,6 @@ namespace Alex
 		protected override void Initialize()
 		{
 			Window.Title = "Alex - " + Version;
-			
-			if (File.Exists("settings.json"))
-			{
-				try
-				{
-					GameSettings = JsonConvert.DeserializeObject<Settings>(File.ReadAllText("settings.json"));
-					if (string.IsNullOrEmpty(Username))
-					{
-						Username = GameSettings.Username;
-					}
-				}
-				catch (Exception ex)
-				{
-				//	Log.Warn(ex, $"Failed to load settings!");
-				}
-			}
-			else
-			{
-				GameSettings = new Settings(string.Empty);
-				GameSettings.IsDirty = true;
-			}
 
 			// InitCamera();
 			this.Window.TextInput += Window_TextInput;
@@ -203,6 +173,8 @@ namespace Alex
 			Services.AddService<BrowserWindowProvider>(new BrowserWindowProvider());
 			Services.AddService(new XBLMSAService());
 
+			ProfileManager = new ProfileManager(this, storage);
+			Storage = storage;
 		}
 
 		protected override void UnloadContent()
@@ -246,35 +218,36 @@ namespace Alex
 			progressReceiver.UpdateProgress(0, "Initializing...");
 			ConfigureServices();
 
+			if (Storage.TryRead("settings", out Settings settings))
+			{
+				GameSettings = settings;
+			}
+			else
+			{
+				GameSettings = new Settings(string.Empty);
+				GameSettings.IsDirty = true;
+			}
+
 			Extensions.Init(GraphicsDevice);
 
 			ProfileManager.LoadProfiles(progressReceiver);
 
 			//	Log.Info($"Loading resources...");
-			Resources = new ResourceManager(GraphicsDevice);
-			if (!Resources.CheckResources(GraphicsDevice, GameSettings, progressReceiver, OnResourcePackPreLoadCompleted))
+			Resources = new ResourceManager(GraphicsDevice, Storage);
+			if (!Resources.CheckResources(GraphicsDevice, GameSettings, progressReceiver,
+				OnResourcePackPreLoadCompleted))
 			{
 				Exit();
 				return;
 			}
 
-			//Mouse.SetPosition(GraphicsDevice.Viewport.Width / 2, GraphicsDevice.Viewport.Height / 2);
-
 			GuiRenderer.LoadResourcePack(Resources.ResourcePack);
 
-			GameStateManager.AddState("selectGameVersion", new VersionSelectionState());
-			GameStateManager.AddState<TitleState>("title"); 
+			GameStateManager.AddState<TitleState>("title");
 			GameStateManager.AddState("options", new OptionsState());
 
-			if (!BypassTitleState)
-			{
-				//GameStateManager.SetActiveState("selectGameVersion");
-				GameStateManager.SetActiveState<TitleState>("title");
-			}
-			else
-			{
-				ConnectToServer();
-			}
+			GameStateManager.SetActiveState<TitleState>("title");
+
 
 			GameStateManager.RemoveState("splash");
 		}
@@ -286,18 +259,26 @@ namespace Alex
 			GuiManager.ApplyFont(font);
 		}
 
-		public void ConnectToServer()
+		public void ConnectToServer(IPEndPoint serverEndPoint, bool bedrock = false)
 		{
-			ConnectToServer(ServerEndPoint);
-		}
+			var authenticationService = Services.GetService<IPlayerProfileService>();
 
-		public void ConnectToServer(IPEndPoint serverEndPoint)
-		{
+			WorldProvider provider;
+			INetworkProvider networkProvider;
 			IsMultiplayer = true;
+			if (bedrock)
+			{
+				provider = new BedrockWorldProvider(this, serverEndPoint,
+					authenticationService.CurrentProfile, out networkProvider);
+			}
+			else
+			{
+				//if(Services.GetService<IPlayerProfileService>())
+				provider = new JavaWorldProvider(this, serverEndPoint, authenticationService.CurrentProfile,
+					out networkProvider);
+			}
 
-			var javaProvider = new JavaWorldProvider(this, serverEndPoint, ProfileManager.ActiveProfile.Profile, out INetworkProvider networkProvider);
-
-			LoadWorld(javaProvider, networkProvider);
+			LoadWorld(provider, networkProvider);
 		}
 
 		public void LoadWorld(WorldProvider worldProvider, INetworkProvider networkProvider)

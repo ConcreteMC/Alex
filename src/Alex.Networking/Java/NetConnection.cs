@@ -14,6 +14,7 @@ using Alex.Networking.Java.Events;
 using Alex.Networking.Java.Packets;
 using Alex.Networking.Java.Util;
 using Ionic.Zlib;
+using MiNET.Utils;
 using NLog;
 
 #endregion
@@ -29,11 +30,15 @@ namespace Alex.Networking.Java
         protected ConnectionConfirmed ConnectionConfirmed { get; }
         private Direction Direction { get; }
         private Socket Socket { get; }
-        public NetConnection(Direction direction, Socket socket, ConnectionConfirmed confirmdAction = null)
+
+		private DedicatedThreadPool ThreadPool { get; }
+
+		public NetConnection(Direction direction, Socket socket, ConnectionConfirmed confirmdAction = null, DedicatedThreadPool threadPool = null)
         {
             Direction = direction;
             Socket = socket;
             RemoteEndPoint = Socket.RemoteEndPoint;
+	        ThreadPool = threadPool;
 
             ConnectionConfirmed = confirmdAction;
 
@@ -75,20 +80,33 @@ namespace Alex.Networking.Java
 		    }
 	    }
 
-		private Task NetworkProcessing { get; set; }
-		private Task NetworkWriting { get; set; }
-		private Task PacketHandling { get; set; }
+		private Thread NetworkProcessing { get; set; }
+		private Thread NetworkWriting { get; set; }
+		private Thread PacketHandling { get; set; }
         public void Initialize()
         {
 	        Socket.Blocking = true;
 
-            NetworkProcessing = new Task(ProcessNetwork, CancellationToken.Token);
+	     /*   ThreadPool.QueueUserWorkItem(ProcessNetwork);
+	        ThreadPool.QueueUserWorkItem(SendQueue);
+	        ThreadPool.QueueUserWorkItem(HandleQueuedPackets);
+			*/
+		   	NetworkProcessing = new Thread(ProcessNetwork)
+            {
+				IsBackground = true
+            };
             NetworkProcessing.Start();
 
-			NetworkWriting = new Task(SendQueue, CancellationToken.Token);
+			NetworkWriting = new Thread(SendQueue)
+			{
+				IsBackground = true
+			};
 			NetworkWriting.Start();
 
-	        PacketHandling = new Task(HandleQueuedPackets, CancellationToken.Token);
+	        PacketHandling = new Thread(HandleQueuedPackets)
+	        {
+				IsBackground = true
+	        };
 			PacketHandling.Start();
         }
 
@@ -105,7 +123,7 @@ namespace Alex.Networking.Java
 				    {
 					    var packet = temp.Packet;
 					    packet.Decode(new MinecraftStream(new MemoryStream(temp.Buffer)));
-					    HandlePacket(packet);
+						HandlePacket(packet);
 				    }
 				    catch (Exception e)
 				    {
@@ -458,22 +476,23 @@ namespace Alex.Networking.Java
 	    {
 			Stop();
 
-		    NetworkProcessing?.Wait();
-			NetworkProcessing?.Dispose();
-
+		   // NetworkProcessing?.Wait();
+			//NetworkProcessing?.Dispose();
+		    NetworkProcessing = null;
 		    ClearOutQueue(PacketWriteQueue);
 
-			NetworkWriting?.Wait();
-			NetworkWriting?.Dispose();
-
-		    PacketWriteQueue?.Dispose();
+			//NetworkWriting?.Wait();
+			//NetworkWriting?.Dispose();
+			NetworkWriting = null;
+			//PacketWriteQueue?.Dispose();
 
 		    ClearOutQueue(HandlePacketQueue);
 
-			PacketHandling?.Wait();
-			PacketHandling?.Dispose();
+			//PacketHandling?.Wait();
+			//PacketHandling?.Dispose();
+			PacketHandling = null;
 
-		    HandlePacketQueue?.Dispose();
+			//HandlePacketQueue?.Dispose();
 
 		    CancellationToken?.Dispose();
 
@@ -481,7 +500,7 @@ namespace Alex.Networking.Java
 		    _sendStream?.Dispose();
 		    Socket?.Dispose();
 
-			foreach (var state in UnhandledPacketsFilter)
+			foreach (var state in UnhandledPacketsFilter.ToArray())
 		    {
 			    foreach (var p in state.Value)
 			    {

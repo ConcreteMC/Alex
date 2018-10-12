@@ -9,8 +9,8 @@ namespace Alex.API.Services
 	public delegate void PingServerDelegate(ServerPingResponse response);
     public interface IServerQueryProvider
     {
-
-        Task<ServerQueryResponse> QueryServerAsync(string hostname, ushort port, PingServerDelegate pingCallback = null);
+	    Task<ServerQueryResponse> QueryBedrockServerAsync(string hostname, ushort port, PingServerDelegate pingCallback = null);
+		Task<ServerQueryResponse> QueryServerAsync(string hostname, ushort port, PingServerDelegate pingCallback = null);
 
     }
 

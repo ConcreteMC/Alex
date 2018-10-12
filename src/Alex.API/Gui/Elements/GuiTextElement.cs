@@ -172,6 +172,7 @@ namespace Alex.API.Gui.Elements
 			size = new Size((int)Math.Floor(textSize.X), (int)Math.Floor(textSize.Y));
 		}
 
+		private static Regex LinkParser = new Regex(@"\b(?:https?://|www\.)\S+\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 		private void OnTextUpdated()
 	    {
 		    string text = _text;
@@ -206,8 +207,7 @@ namespace Alex.API.Gui.Elements
 
 				InvalidateLayout();
 
-				var linkParser = new Regex(@"\b(?:https?://|www\.)\S+\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-				foreach (Match match in linkParser.Matches(text))
+				foreach (Match match in LinkParser.Matches(text))
 				{
 					var l = GetSize(text.Substring(0, match.Index), scale);
 					var linkSize = GetSize(match.Value, scale);

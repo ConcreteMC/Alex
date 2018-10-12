@@ -31,15 +31,28 @@ namespace Alex.Utils
 		public override Texture2D ReadJson(JsonReader reader, Type objectType, Texture2D existingValue, bool hasExistingValue,
 			JsonSerializer serializer)
 		{
-			Texture2D result;
-			string base64Value = reader.Value.ToString();
-			byte[] data = Convert.FromBase64String(base64Value);
-			using (MemoryStream stream = new MemoryStream(data))
+			try
 			{
-				result = Texture2D.FromStream(GraphicsDevice, stream);
-			}
+				Texture2D result;
+				string base64Value = reader.Value.ToString();
 
-			return result;
+				if (string.IsNullOrWhiteSpace(base64Value))
+				{
+					return null;
+				}
+
+				byte[] data = Convert.FromBase64String(base64Value);
+				using (MemoryStream stream = new MemoryStream(data))
+				{
+					result = Texture2D.FromStream(GraphicsDevice, stream);
+				}
+
+				return result;
+			}
+			catch
+			{
+				return null;
+			}
 		}
 	}
 }

@@ -9,6 +9,7 @@ using Alex.GameStates;
 using Alex.Utils;
 using Microsoft.Xna.Framework.Graphics;
 using MojangSharp;
+using MojangSharp.Api;
 using MojangSharp.Endpoints;
 using MojangSharp.Responses;
 using Newtonsoft.Json;
@@ -64,10 +65,10 @@ namespace Alex.Services
 				//	SkinUtils.TryGetSkin(profile.Properties.SkinUri, Alex.Instance.GraphicsDevice, out texture);
 				//	}
 
-				var playerProfile = new PlayerProfile(auth.SelectedProfile.Value, auth.SelectedProfile.PlayerName, new Skin(){Slim = skinSlim, Texture = texture},
+				var playerProfile = new PlayerProfile(auth.SelectedProfile.Value, username, auth.SelectedProfile.PlayerName, new Skin(){Slim = skinSlim, Texture = texture},
 												auth.AccessToken, auth.ClientToken);
 
-				Authenticate?.Invoke(this, new PlayerProfileAuthenticateEventArgs(playerProfile));
+			//	Authenticate?.Invoke(this, new PlayerProfileAuthenticateEventArgs(playerProfile));
 				CurrentProfile = playerProfile;
 				return await Validate(auth.AccessToken);
 			}
@@ -76,6 +77,24 @@ namespace Alex.Services
 				Authenticate?.Invoke(this, new PlayerProfileAuthenticateEventArgs(auth.Error.ErrorMessage));
 				return false;
 			}
+		}
+
+		public async Task<bool> TryAuthenticateAsync(PlayerProfile profile)
+		{
+			if (profile.IsBedrock)
+			{
+				//Validate Bedrock account.
+				return false;
+			}
+
+			Requester.ClientToken = profile.ClientToken;
+			if (await Validate(profile.AccessToken))
+			{
+				CurrentProfile = profile;
+				return true;
+			}
+
+			return false;
 		}
 
 		private async Task<bool> Validate(string accessToken)
@@ -87,7 +106,8 @@ namespace Alex.Services
 				var r = task.Result;
 				if (r.IsSuccess)
 				{
-					Alex.Instance.GameStateManager.SetActiveState<TitleState>();
+					Authenticate?.Invoke(this, new PlayerProfileAuthenticateEventArgs(CurrentProfile));
+					//Alex.Instance.GameStateManager.SetActiveState<TitleState>();
 					return true;
 				}
 				else

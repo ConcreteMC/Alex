@@ -126,13 +126,14 @@ namespace Alex.GameStates.Gui.Multiplayer
 
         private void SaveServer(string name, string hostname, ushort port)
         {
-
             var entry = new SavedServerEntry()
             {
                 Name       = name,
                 Host       = hostname,
                 Port       = port,
-                ServerType = ServerType.Java
+                ServerType = _entry.ServerType,
+				CachedIcon = _entry.CachedIcon,
+				ListIndex = _entry.ListIndex
             };
             
             if (_entry != null)

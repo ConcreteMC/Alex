@@ -8,5 +8,8 @@ namespace Alex.API.Services
     {
         bool TryWrite<T>(string key, T value);
         bool TryRead<T>(string key, out T value);
-    }
+
+	    bool TryWriteBytes(string key, byte[] value);
+	    bool TryReadBytes(string key, out byte[] value);
+	}
 }
