@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using CefSharp;
 using Chromely.CefGlue.Winapi;
 using Chromely.CefGlue.Winapi.ChromeHost;
 using Chromely.Core;
@@ -23,7 +24,6 @@ namespace Alex.Gamestates.Login.MSA
 				.WithCustomSetting(CefSettingKeys.SingleProcess, true)
 #endif
 				.WithStartUrl("");
-
 
 			var factory = WinapiHostFactory.Init();
 			using (var window = factory.CreateWindow(() => new CefGlueBrowserHost(config),

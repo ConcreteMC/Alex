@@ -354,7 +354,8 @@ namespace Alex.Worlds.Bedrock
 								pallete = new uint[defStream.ReadInt32()];
 								for (int palletId = 0; palletId < pallete.Length; palletId++)
 								{
-							//		pallete[palletId] = 
+									NbtTagType t = defStream.ReadTagType();
+								//	pallete[palletId] = 
 								}
 							}
 
@@ -370,7 +371,8 @@ namespace Alex.Worlds.Bedrock
 									int x = (position >> 8) & 0xF;
 									int y = position & 0xF;
 									int z = (position >> 4) & 0xF;
-									section.Data.Set(x,y,z, BlockFactory.GetBlockState(pallete[state]));
+								//	MiNET.Blockstate state = MiNET.Blocks.BlockFactory.g
+									section.Set(x,y,z, BlockFactory.GetBlockState(pallete[state]));
 
 									position++;
 								}
@@ -380,29 +382,22 @@ namespace Alex.Worlds.Bedrock
 					}
 					else
 					{
+						byte[] blockIds = new byte[4096];
+						defStream.Read(blockIds, 0, blockIds.Length);
+
+						NibbleArray data = new NibbleArray(4096);
+						defStream.Read(data.Data, 0, data.Data.Length);
+
 						for (int x = 0; x < 16; x++)
 						{
 							for (int z = 0; z < 16; z++)
 							{
 								for (int y = 0; y < 16; y++)
 								{
-									section.Set(x,y,z, BlockFactory.GetBlockState(BlockFactory.GetBlockStateID(defStream.ReadByte(), 0)));
-								//	section.Set(x,y,z, BlockFactory.GetBlockState());
-								//	section.setBlockId(x, y, z, defStream.ReadByte());
-								}
-							}
-						}
-						for (int x = 0; x < 16; x++)
-						{
-							for (int z = 0; z < 16; z++)
-							{
-								for (int y = 0; y < 16; y += 2)
-								{
-									int states = defStream.ReadByte();
-									section.Data.Storage[GetIndex(x, y + 1, z)] = (uint) ((states >> 4) & 0xF);
-									section.Data.Storage[GetIndex(x,y,z)] = (uint) (states & 0xF);
-									//(x, y + 1, z, (states >> 4) & 0xF);
-									//section.setBlockData(x, y, z, states & 0xF);
+									int idx = (y << 8) + (z << 4) + x;
+									
+									var state = BlockFactory.GetBlockStateID(blockIds[idx], data[idx]);
+									section.Set(x,y,z, BlockFactory.GetBlockState(state));
 								}
 							}
 						}
