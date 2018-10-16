@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -22,6 +23,7 @@ using Alex.GameStates;
 using Alex.GameStates.Gui.MainMenu;
 using Alex.GameStates.Playing;
 using Alex.Gui;
+using Alex.Gui.Elements;
 using Alex.Networking.Java.Packets;
 using Alex.Rendering;
 using Alex.ResourcePackLib;
@@ -69,6 +71,8 @@ namespace Alex
 		internal ConcurrentQueue<Action> UIThreadQueue { get; }
 
 		internal AppDataStorageSystem Storage { get; private set; }
+
+		//public ChromiumWebBrowser CefWindow { get; private set; }
 		public Alex(LaunchSettings launchSettings)
 		{
 			Instance = this;
@@ -93,6 +97,8 @@ namespace Alex
 					DeviceManager.PreferredBackBufferWidth = Window.ClientBounds.Width;
 					DeviceManager.PreferredBackBufferHeight = Window.ClientBounds.Height;
 					DeviceManager.ApplyChanges();
+
+					//CefWindow.Size = new System.Drawing.Size(Window.ClientBounds.Width, Window.ClientBounds.Height);
 				}
 			};
 
@@ -137,11 +143,12 @@ namespace Alex
 
 		protected override void LoadContent()
 		{
-		//	if (!File.Exists(Path.Combine("assets", "DebugFont.xnb")))
-		//	{
-		//		File.WriteAllBytes(Path.Combine("assets", "DebugFont.xnb"), global::Alex.Resources.DebugFont);
-		//	}
+			//	if (!File.Exists(Path.Combine("assets", "DebugFont.xnb")))
+			//	{
+			//		File.WriteAllBytes(Path.Combine("assets", "DebugFont.xnb"), global::Alex.Resources.DebugFont);
+			//	}
 			//DebugFont = (WrappedSpriteFont) Content.Load<SpriteFont>("DebugFont");
+			//CefWindow = new ChromiumWebBrowser(GraphicsDevice, "http://google.com/");
 			DebugFont = (WrappedSpriteFont) Content.Load<SpriteFont>(global::Alex.Resources.DebugFont);
 			
 			_spriteBatch = new SpriteBatch(GraphicsDevice);
@@ -208,6 +215,7 @@ namespace Alex
 			GameStateManager.Draw(gameTime);
 
 			GuiManager.Draw(gameTime);
+		//	CefWindow.Draw(gameTime);
 
 			base.Draw(gameTime);
 		}

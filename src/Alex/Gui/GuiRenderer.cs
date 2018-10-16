@@ -30,7 +30,6 @@ namespace Alex.Gui
                 OnFontChanged();
             }
         }
-        public IFont DebugFont => Alex.DebugFont;
 
         public GuiScaledResolution ScaledResolution { get; set; }
 

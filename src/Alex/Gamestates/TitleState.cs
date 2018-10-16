@@ -26,6 +26,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MiNET.Utils;
 using NLog;
 using Color = Microsoft.Xna.Framework.Color;
 using Logger = NLog.Logger;
@@ -51,7 +52,7 @@ namespace Alex.GameStates
 		private IPlayerProfileService _playerProfileService;
 
 		private FpsMonitor FpsMonitor { get; }
-
+		private readonly ScoreboardView _scoreboard;
 		public TitleState()
 		{
 			FpsMonitor = new FpsMonitor();
@@ -150,7 +151,6 @@ namespace Alex.GameStates
 				$"Cursor Delta: {Alex.InputManager.CursorInputListener.GetCursorPositionDelta()}");
 			_debugInfo.AddDebugRight(() => $"Splash Text Scale: {_splashText.Scale:F3}");
 			_debugInfo.AddDebugLeft(() => $"FPS: {FpsMonitor.Value:F0}");
-
 
 			_playerProfileService = Alex.Services.GetService<IPlayerProfileService>();
 			_playerProfileService.ProfileChanged += PlayerProfileServiceOnProfileChanged;

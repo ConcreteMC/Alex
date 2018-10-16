@@ -293,10 +293,10 @@ namespace Alex.API.Gui
         }
         private void DrawDebugString(Vector2 position, string text, Color? background, Color color, int padding = 2, int xAlign = 0, int yAlign = 0)
         {
-            if (Renderer.DebugFont == null) return;
+            if (Renderer.Font == null) return;
 
             var p = position;
-            var s = Renderer.DebugFont.MeasureString(text) * DebugFontScale;
+            var s = Renderer.Font.MeasureString(text) * DebugFontScale;
 
             var bounds = new Rectangle(p.ToPoint(), s.ToPoint());
             bounds.Inflate(padding, padding);
@@ -335,7 +335,7 @@ namespace Alex.API.Gui
             }
             
             bounds.Inflate(-padding, -padding);
-            SpriteBatch.DrawString(p, text, Renderer.DebugFont, (TextColor) color, FontStyle.None, DebugFontScale);
+            SpriteBatch.DrawString(p, text, Renderer.Font, (TextColor) color, FontStyle.None, DebugFontScale);
         }
 
         #endregion

@@ -11,7 +11,6 @@ namespace Alex.API.Gui.Graphics
         void Init(GraphicsDevice graphics);
 
         IFont Font { get; set; }
-        IFont DebugFont { get; }
         
         TextureSlice2D GetTexture(GuiTextures guiTexture);
         Texture2D GetTexture2D(GuiTextures guiTexture);

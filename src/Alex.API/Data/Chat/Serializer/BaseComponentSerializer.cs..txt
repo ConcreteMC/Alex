@@ -1,0 +1,102 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
+namespace Alex.API.Data.Chat.Serializer
+{
+	public class BaseComponentSerializer : JsonConverter<BaseComponent>
+	{
+		public override void WriteJson(JsonWriter writer, BaseComponent value, JsonSerializer serializer)
+		{
+			
+		}
+
+		public override BaseComponent ReadJson(JsonReader reader, Type objectType, BaseComponent component, bool hasExistingValue,
+			JsonSerializer serializer)
+		{
+			if (reader.TokenType == JsonToken.StartObject)
+			{
+				JObject @object = JObject.Load(reader);
+				if (@object.has("color"))
+				{
+					component.setColor(ChatColor.valueOf(object.get("color").getAsString().toUpperCase(Locale.ROOT)));
+				}
+				if (@object.has("bold"))
+				{
+					component.setBold(object.get("bold").getAsBoolean());
+				}
+				if (@object.has("italic"))
+				{
+					component.setItalic(object.get("italic").getAsBoolean());
+				}
+				if (@object.has("underlined"))
+				{
+					component.setUnderlined(object.get("underlined").getAsBoolean());
+				}
+				if (@object.has("strikethrough"))
+				{
+					component.setStrikethrough(object.get("strikethrough").getAsBoolean());
+				}
+				if (@object.has("obfuscated"))
+				{
+					component.setObfuscated(object.get("obfuscated").getAsBoolean());
+				}
+				if (@object.has("insertion"))
+				{
+					component.setInsertion(object.get("insertion").getAsString());
+				}
+				if (@object.has("extra"))
+				{
+
+					//component.setExtra(Arrays.<BaseComponent>asList(context.< BaseComponent[] > deserialize(@object.get("extra"), BaseComponent[].class ) ) );
+				}
+
+				//Events
+				if (@object.has("clickEvent"))
+				{
+					var @event = @object["clickComponent"];
+					ClickEvent e = @object.Value<ClickEvent>("clickComponent");
+				//	e.value
+					//ClickEvent.Action a = @event["action"].ToObject<ClickEvent.Action>();
+					//ClickEvent.Action a = @event["action"].tos<ClickEvent.Action>();
+					//string v = @event["value"].getAsString();
+					//component.ClickEvent = 
+				}
+
+				if (@object.has("hoverEvent"))
+
+				{
+					HoverEvent he = @object.Value<HoverEvent>("hoverEvent");//.Value<HoverEvent>("hoverEvent");
+					BaseComponent[] res = he.value;
+					HoverEvent
+					component = he;
+
+					//component = (new HoverEvent(HoverEvent.Action.valueOf( event.get("action").getAsString()
+					//	.toUpperCase(Locale.ROOT) ), res ) );
+				}
+
+			}
+			else
+			{
+				JArray array = JArray.Load(reader);
+
+				var users = array.ToObject<BaseComponent>();
+
+				return users;
+			}
+
+			// This should not happen. Perhaps better to throw exception at this point?
+			return null;
+		}
+	}
+
+	public static class JsonExtensions
+	{
+		public static bool has(this JObject reader, string key)
+		{
+			reader.
+		}
+	}
+}

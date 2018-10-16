@@ -148,6 +148,7 @@ namespace Alex.API.Gui
         {
             foreach (var screen in Screens.ToArray())
             {
+	            if (screen == null) continue;
                 action.Invoke(screen);
             }
         }

@@ -53,12 +53,25 @@ namespace Alex.API.Utils
         public static readonly TextColor Pink        = new TextColor('d', 255,  85, 255,  63,  21,  62, "light_purple");
         public static readonly TextColor Yellow      = new TextColor('e', 255, 255,  85,  63,  63,  21, "yellow");
         public static readonly TextColor White       = new TextColor('f', 255, 255, 255,  63,  63,  63, "white");
-        // @formatter:on — enable formatter after this line
 
-        public string Name;
+		public static readonly TextColor Obfuscated = new TextColor('k', "magic");
+		public static readonly TextColor Bold = new TextColor('l', "bold");
+		public static readonly TextColor Strikethrough = new TextColor('m', "strikethrough");
+		public static readonly TextColor Underline = new TextColor('n', "underline");
+		public static readonly TextColor Italic = new TextColor('o', "italic");
+		public static readonly TextColor Reset = new TextColor('r', "reset");
+		// @formatter:on — enable formatter after this line
+
+		public string Name;
         public Color  ForegroundColor;
         public Color  BackgroundColor;
         public char   Code;
+
+	    public TextColor(char code, string name)
+	    {
+		    Name = name;
+		    Code = code;
+	    }
 
         public TextColor(char code, int r, int g, int b, int br, int bg, int bb, string name)
         {
@@ -81,7 +94,12 @@ namespace Alex.API.Utils
             BackgroundColor = Color.TransparentBlack;
 	    }
 
-        public static string Color2tag(string colorname)
+	    public override string ToString()
+	    {
+		    return $"§{Code}";
+	    }
+
+	    public static string Color2tag(string colorname)
         {
             switch (colorname.ToLower())
             {
@@ -122,7 +140,21 @@ namespace Alex.API.Utils
                     return "§e";
                 case "white":
                     return "§f";
-                default:
+
+	            case "obfuscated":
+		            return Obfuscated.ToString();
+				case "bold":
+		            return Bold.ToString();
+	            case "strikethrough":
+		            return Strikethrough.ToString();
+	            case "underline":
+		            return Underline.ToString();
+	            case "italic":
+		            return Italic.ToString();
+	            case "reset":
+		            return Reset.ToString();
+
+				default:
                     return "";
             }
         }
@@ -163,6 +195,20 @@ namespace Alex.API.Utils
                     return Yellow;
                 case 'f':
                     return White;
+
+				case 'k':
+					return Obfuscated;
+				case 'l':
+					return Bold;
+				case 'm':
+					return Strikethrough;
+				case 'n':
+					return Underline;
+				case 'o':
+					return Italic;
+				case 'r':
+					return Reset;
+
                 default:
                     return White;
             }
@@ -209,7 +255,21 @@ namespace Alex.API.Utils
                     return Yellow;
                 case "white":
                     return White;
-                default: return White;
+
+	            case "obfuscated":
+		            return Obfuscated;
+	            case "bold":
+		            return Bold;
+	            case "strikethrough":
+		            return Strikethrough;
+	            case "underline":
+		            return Underline;
+	            case "italic":
+		            return Italic;
+	            case "reset":
+		            return Reset;
+
+				default: return White;
             }
         }
 

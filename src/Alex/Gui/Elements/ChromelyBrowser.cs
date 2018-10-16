@@ -213,7 +213,7 @@ namespace Alex.Gui.Elements
 
 		public IBrowser GetBrowser()
 		{
-			throw new NotImplementedException();
+			return ActiveBrowser;
 		}
 
 		public IJavascriptObjectRepository JavascriptObjectRepository { get; }
@@ -325,7 +325,7 @@ namespace Alex.Gui.Elements
 
 		public Rect? GetViewRect()
 		{
-			throw new NotImplementedException();
+			return new Rect(0,0, Size.Width, Size.Height);
 		}
 
 		public bool GetScreenPoint(int viewX, int viewY, out int screenX, out int screenY)
@@ -446,6 +446,12 @@ namespace Alex.Gui.Elements
 		{
 			var screenInfo = new ScreenInfo(); //{ Width = _size.Width, Height = _size.Height, ScaleFactor = 1.0F };
 			return screenInfo;
+		}
+
+
+		public void Draw(GameTime gameTime)
+		{
+
 		}
 	}
 }

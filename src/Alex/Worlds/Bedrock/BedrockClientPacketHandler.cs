@@ -410,12 +410,13 @@ namespace Alex.Worlds.Bedrock
 				byte[] ba = new byte[512];
 				if (defStream.Read(ba, 0, 256 * 2) != 256 * 2) Log.Error($"Out of data height");
 
-				Buffer.BlockCopy(ba, 0, chunkColumn.Height, 0, 512);
+				Buffer.BlockCopy(ba, 0, chunkColumn.Height, 0, ba.Length);
 				//Log.Debug($"Heights:\n{Package.HexDump(ba)}");
 
 				//if (stream.Position >= stream.Length - 1) continue;
 				byte[] biomeIds = new byte[256];
 				if (defStream.Read(biomeIds, 0, 256) != 256) Log.Error($"Out of data biomeId");
+
 				for (int i = 0; i < biomeIds.Length; i++)
 				{
 					chunkColumn.BiomeId[i] = biomeIds[i];

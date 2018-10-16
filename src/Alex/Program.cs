@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using CefSharp;
 using Chromely.CefGlue.Winapi;
 using Chromely.CefGlue.Winapi.ChromeHost;
 using Chromely.Core;
@@ -30,6 +31,8 @@ namespace Alex
 				Log.Warn($"No server specified, ignoring connect argument.");
 			}
 
+			//Cef.Initialize(new Settings());
+
 			Log.Info($"Starting...");
 			using (var game = new Alex(launchSettings))
 			{
@@ -38,6 +41,11 @@ namespace Alex
 
 		}
 
+
+		private class Settings : AbstractCefSettings
+		{
+
+		}
 
 		private static LaunchSettings ParseArguments(string[] args)
 		{

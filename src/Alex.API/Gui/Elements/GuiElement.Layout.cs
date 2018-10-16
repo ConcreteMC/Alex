@@ -365,11 +365,11 @@ namespace Alex.API.Gui.Elements
         {
             var children = Children.Cast<GuiElement>().ToArray();
 
-            var size = MeasureChildrenCore(availableSize - Padding, children);
+            var size = MeasureChildrenCore(availableSize, children);
 
 	        ContentSize = size;
 
-			return size + Padding;
+			return size;
         }
         protected virtual Size MeasureChildrenCore(Size availableSize, IReadOnlyCollection<GuiElement> children)
         {

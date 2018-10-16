@@ -91,8 +91,8 @@ namespace Alex.API.Gui.Elements.Layout
 
             return size;
         }
-        
-        private Thickness CalculateOffset(Alignment alignment, Size size, Thickness margin, Thickness previousMargin)
+
+	    protected Thickness CalculateOffset(Alignment alignment, Size size, Thickness margin, Thickness previousMargin)
         {
             var offset = Thickness.Zero;
 

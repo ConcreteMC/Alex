@@ -120,7 +120,7 @@ namespace Alex.API.Gui.Elements
 		    }
 
 			Margin = new Thickness(2);
-	    }
+		}
 
 		protected override void OnInit(IGuiRenderer renderer)
         {
@@ -169,7 +169,7 @@ namespace Alex.API.Gui.Elements
 			string text = _text;
 			var textSize = GetSize(text, scale);
 
-			size = new Size((int)Math.Floor(textSize.X), (int)Math.Floor(textSize.Y));
+			size = new Size((int)Math.Round(textSize.X), (int)Math.Round(textSize.Y));
 		}
 
 		private static Regex LinkParser = new Regex(@"\b(?:https?://|www\.)\S+\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
