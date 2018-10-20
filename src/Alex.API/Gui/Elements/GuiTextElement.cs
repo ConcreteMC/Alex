@@ -131,8 +131,7 @@ namespace Alex.API.Gui.Elements
 	        OnTranslationKeyUpdated();
         }
 
-
-        protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
+		protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
         {
 	        var text = _renderText;
             if (!string.IsNullOrWhiteSpace(text))
@@ -189,17 +188,7 @@ namespace Alex.API.Gui.Elements
 			{
 				var scale = new Vector2(Scale, Scale);
 
-				var textSize = GetSize(text, scale);
-
-					/*while (textSize.X > RenderBounds.Width)
-					{
-						if (string.IsNullOrWhiteSpace(text)) break;
-
-						text = text.Substring(0, text.Length - 1);
-						textSize = GetSize(text, scale);
-					}*/
-			
-					//PreferredSize = new Size((int)Math.Floor(textSize.X), (int)Math.Floor(textSize.Y));
+				//PreferredSize = new Size((int)Math.Floor(textSize.X), (int)Math.Floor(textSize.Y));
 				//Width = (int)Math.Floor(textSize.X);
 				//Height = (int)Math.Floor(textSize.Y);
 

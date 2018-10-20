@@ -1,12 +1,17 @@
 ﻿using System;
 using System.Net;
+using Alex.API.Data.Chat;
+using Alex.API.Data.Chat.Serializer;
 using CefSharp;
 using Chromely.CefGlue.Winapi;
 using Chromely.CefGlue.Winapi.ChromeHost;
 using Chromely.Core;
 using Chromely.Core.Helpers;
+using log4net;
+using Newtonsoft.Json;
 using NLog;
 using WinApi.Windows;
+using LogManager = NLog.LogManager;
 
 namespace Alex
 {
@@ -23,6 +28,7 @@ namespace Alex
 		[STAThread]
 		static void Main(string[] args)
 		{
+			NLogAppender.Initialize();
 			LaunchSettings launchSettings = ParseArguments(args);
 
 			if (launchSettings.Server == null && launchSettings.ConnectOnLaunch)

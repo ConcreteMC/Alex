@@ -12,6 +12,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using Alex.API.Data;
+using Alex.API.Data.Chat;
+using Alex.API.Data.Chat.Serializer;
 using Alex.API.Entities;
 using Alex.API.Json;
 using Alex.API.Network;
@@ -22,6 +24,7 @@ using Alex.Entities;
 using Alex.Gamestates;
 using Alex.GameStates;
 using Alex.Graphics.Models.Entity;
+using Alex.Gui.Elements;
 using Alex.Networking.Java;
 using Alex.Networking.Java.Events;
 using Alex.Networking.Java.Packets;
@@ -273,7 +276,11 @@ namespace Alex.Worlds.Java
 			return Task.Run(() =>
 			{
 				progressReport(LoadingState.ConnectingToServer, 0);
-				Login(Profile.PlayerName, Profile.Uuid, Profile.AccessToken);
+				if (!Login(Profile.PlayerName, Profile.Uuid, Profile.AccessToken))
+				{
+					_disconnected = true;
+					ShowDisconnect("multiplayer.status.cannot_connect", true);
+				}
 				if (_disconnected) return;
 
 				progressReport(LoadingState.ConnectingToServer, 99);
@@ -1056,6 +1063,16 @@ namespace Alex.Worlds.Java
 
 		private void HandleChatMessagePacket(ChatMessagePacket packet)
 		{
+			/*try
+			{
+				var decodedChatComponent =
+					JsonConvert.DeserializeObject<BaseComponent>(packet.Message, new BaseComponentSerializer());
+			}
+			catch (Exception ex)
+			{
+				Log.Warn($"Failed to decode: " + ex);
+			}*/
+
 			if (ChatObject.TryParse(packet.Message, out ChatObject chat))
 			{
 				ChatReceiver?.Receive(chat);
@@ -1231,6 +1248,7 @@ namespace Alex.Worlds.Java
 		private void HandleLoginSuccess(LoginSuccessPacket packet)
 		{
 			Client.ConnectionState = ConnectionState.Play;
+			
 			//Client.UsePacketHandlerQueue = true;
 		}
 
@@ -1304,7 +1322,7 @@ namespace Alex.Worlds.Java
 
 			if (!authenticated)
 			{
-				ShowDisconnect("Could not verify your current login session!");
+				ShowDisconnect("disconnect.loginFailedInfo.invalidSession", true);
 				return;
 			}
 
@@ -1319,16 +1337,28 @@ namespace Alex.Worlds.Java
 			Client.InitEncryption(SharedSecret);
 		}
 
-		public void Login(string username, string uuid, string accessToken)
+		private bool Login(string username, string uuid, string accessToken)
 		{
 			try
 			{
-			//	_loginCompleteEvent = signalWhenReady;
+				//	_loginCompleteEvent = signalWhenReady;
 				_username = username;
 				_uuid = uuid;
 				_accesToken = accessToken;
 
-				TcpClient.Connect(Endpoint);
+				var ar = TcpClient.BeginConnect(Endpoint.Address, Endpoint.Port, null, null);
+				using (ar.AsyncWaitHandle)
+				{
+					if (!ar.AsyncWaitHandle.WaitOne(TimeSpan.FromSeconds(5), false))
+					{
+						TcpClient.Close();
+						return false;
+					}
+
+					TcpClient.EndConnect(ar);
+				}
+
+			//TcpClient.Connect(Endpoint);
 				//	ServerBound.InitEncryption();
 				Client.Initialize();
 
@@ -1345,10 +1375,16 @@ namespace Alex.Worlds.Java
 				loginStart.Username = _username;
 				SendPacket(loginStart);
 			}
+			catch (SocketException)
+			{
+				return false;
+			}
 			catch (Exception ex)
 			{
 				ShowDisconnect(ex.Message);
 			}
+
+			return true;
 		}
 
 		public sealed class JoinRequest

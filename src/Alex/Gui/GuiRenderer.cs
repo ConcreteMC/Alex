@@ -33,7 +33,7 @@ namespace Alex.Gui
 
         public GuiScaledResolution ScaledResolution { get; set; }
 
-        public CultureLanguage Language = new CultureLanguage(CultureInfo.DefaultThreadCurrentCulture ?? CultureInfo.GetCultureInfo("en-US"));
+        public CultureLanguage Language = new CultureLanguage(CultureInfo.InstalledUICulture ?? CultureInfo.GetCultureInfo("en-US"));
 
         private GraphicsDevice _graphicsDevice;
         private ResourceManager _resourceManager;
@@ -109,6 +109,20 @@ namespace Alex.Gui
             LoadLanguages(resourcePack);
             LoadResourcePackTextures(resourcePack);
         }
+
+	    public void SetLanguage(string cultureCode)
+	    {
+		    var matchingResults = _resourceManager.ResourcePack.Languages.Where(x => x.Value.CultureCode == cultureCode)
+			    .Select(x => x.Value).ToArray();
+
+		    if (matchingResults.Length <= 0) return;
+		    CultureLanguage newLanguage = new CultureLanguage(CultureInfo.CreateSpecificCulture(cultureCode));
+
+			foreach (var lang in matchingResults)
+		    {
+				newLanguage.Load(lang);
+		    }
+	    }
 
         private void LoadLanguages(McResourcePack resourcePack)
         {

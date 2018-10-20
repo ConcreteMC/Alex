@@ -5,21 +5,27 @@ using Alex.Networking.Java.Util;
 
 namespace Alex.Networking.Java.Packets.Login
 {
-    public class LoginPluginMessagePacket : Packet<LoginPluginMessagePacket>
+    public class LoginPluginResponsePacket : Packet<LoginPluginResponsePacket>
     {
-	    public LoginPluginMessagePacket()
-	    {
+	    public int MessageId;
+	    public bool Succesful;
+	    public byte[] Data;
 
+	    public LoginPluginResponsePacket()
+	    {
+		    PacketId = 0x02;
 	    }
 
 	    public override void Decode(MinecraftStream stream)
 	    {
-		    throw new NotImplementedException();
+		    
 	    }
 
 	    public override void Encode(MinecraftStream stream)
 	    {
-		    throw new NotImplementedException();
+		    stream.WriteVarInt(MessageId);
+			stream.WriteBool(Succesful);
+			stream.Write(Data);
 	    }
     }
 }

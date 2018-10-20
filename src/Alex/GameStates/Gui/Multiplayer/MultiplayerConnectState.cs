@@ -80,7 +80,7 @@ namespace Alex.GameStates.Gui.Multiplayer
             SetConnectingState(true);
 
             var queryProvider = GetService<IServerQueryProvider>();
-            queryProvider.QueryServerAsync(address, port).ContinueWith(ContinuationAction);
+	        queryProvider.QueryServerAsync(address, port);
         }
 
         private void SetConnectingState(bool connecting)
@@ -101,20 +101,6 @@ namespace Alex.GameStates.Gui.Multiplayer
         private void SetErrorMessage(string error)
         {
             _errorMessage.Text = error;
-        }
-
-        private void ContinuationAction(Task<ServerQueryResponse> queryTask)
-        {
-            var response = queryTask.Result;
-            
-            if (response.Success)
-            {
-                Alex.ConnectToServer(response.Status.EndPoint);
-			}
-	        else
-	        {
-		        SetConnectingState(false);
-	        }
         }
     }
 }

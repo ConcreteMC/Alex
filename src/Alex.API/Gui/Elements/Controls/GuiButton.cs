@@ -23,8 +23,10 @@ namespace Alex.API.Gui.Elements.Controls
 
         protected GuiTextElement TextElement { get; }
         protected Action Action { get; }
-		
-	    public GuiButton(Action action = null) : this(string.Empty, action)
+
+		public TextColor DisabledTextColor = TextColor.DarkGray;
+		public TextColor EnabledTextColor = TextColor.White;
+		public GuiButton(Action action = null) : this(string.Empty, action)
 	    {
 			
 	    }
@@ -52,7 +54,7 @@ namespace Alex.API.Gui.Elements.Controls
 
 	        AddChild(TextElement = new GuiTextElement()
             {
-				Margin =  Thickness.Zero,
+				Margin =  new Thickness(5),
                 Anchor = Alignment.MiddleCenter,
                 Text = text,
                 TextColor = TextColor.White,
@@ -60,7 +62,7 @@ namespace Alex.API.Gui.Elements.Controls
 				FontStyle = FontStyle.DropShadow,
 				Enabled = false
             });
-
+			
 	        if (isTranslationKey)
 	        {
 		        TextElement.TranslationKey = text;
@@ -83,10 +85,10 @@ namespace Alex.API.Gui.Elements.Controls
 				    Background = Color.Transparent;// new Color(Color.Black * 0.25f, 0.25f) ;
 				    DisabledBackground = Color.Transparent;
 				    FocusedBackground = Color.TransparentBlack;
-
 				    HighlightedBackground = new Color(Color.Black * 0.8f, 0.5f);
 
-				}
+				    OnModernChanged(false, true);
+			    }
 			    else
 			    {
 				    _isModern = false;
@@ -94,9 +96,16 @@ namespace Alex.API.Gui.Elements.Controls
 				    DisabledBackground = GuiTextures.ButtonDisabled;
 				    HighlightedBackground = GuiTextures.ButtonHover;
 				    FocusedBackground = GuiTextures.ButtonFocused;
+
+				    OnModernChanged(true, false);
 				}
 			}
 	    }
+
+		protected virtual void OnModernChanged(bool oldValue, bool newValue)
+		{
+
+		}
 
 	    protected override void OnHighlightActivate()
 	    {
@@ -115,7 +124,14 @@ namespace Alex.API.Gui.Elements.Controls
 	    {
 		    base.OnHighlightDeactivate();
 
-			TextElement.TextColor = TextColor.White;
+		    if (_isModern)
+		    {
+				OnEnabledChanged();
+			}
+		    else
+		    {
+			    TextElement.TextColor = TextColor.White;
+		    }
 	    }
 
 		protected override void OnCursorMove(Point cursorPosition, Point previousCursorPosition, bool isCursorDown)
@@ -139,18 +155,18 @@ namespace Alex.API.Gui.Elements.Controls
 		    base.OnDraw(graphics, gameTime);
 	    }
 
-	    protected override void OnEnabledChanged()
+		protected override void OnEnabledChanged()
 	    {
 		    if (_isModern)
 		    {
 			    if (!Enabled)
 			    {
-				    TextElement.TextColor = TextColor.DarkGray;
+				    TextElement.TextColor = DisabledTextColor;
 				    // TextElement.TextOpacity = 0.3f;
 			    }
 			    else
 			    {
-				    TextElement.TextColor = TextColor.White;
+				    TextElement.TextColor = EnabledTextColor;
 				    TextElement.TextOpacity = 1f;
 			    }
 		    }

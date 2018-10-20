@@ -3,16 +3,114 @@ using System.Collections.Generic;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using Alex.API.Data.Chat;
+using Alex.API.Data.Chat.Serializer;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using NLog;
 
 namespace Alex.API.Services
 {
+	using J = Newtonsoft.Json.JsonPropertyAttribute;
+	using N = Newtonsoft.Json.NullValueHandling;
+
 	public delegate void PingServerDelegate(ServerPingResponse response);
+	public delegate void ServerStatusDelegate(ServerQueryResponse reponse);
     public interface IServerQueryProvider
     {
-	    Task<ServerQueryResponse> QueryBedrockServerAsync(string hostname, ushort port, PingServerDelegate pingCallback = null);
-		Task<ServerQueryResponse> QueryServerAsync(string hostname, ushort port, PingServerDelegate pingCallback = null);
+	    Task QueryBedrockServerAsync(string hostname, ushort port, PingServerDelegate pingCallback = null, ServerStatusDelegate statusCallBack = null);
+		Task QueryServerAsync(string hostname, ushort port, PingServerDelegate pingCallback = null, ServerStatusDelegate statusCallBack = null);
 
     }
+
+	public class ServerListPingDescriptionJson
+	{
+		public string Text { get; set; }
+
+		public class DescriptionConverter : JsonConverter<Description>
+		{
+			public override Description ReadJson(JsonReader reader, Type objectType, Description existingValue,
+				bool hasExistingValue, JsonSerializer serializer)
+			{
+				if (reader.TokenType == JsonToken.StartObject)
+				{
+					JObject item = JObject.Load(reader);
+					return item.ToObject<Description>();
+				}
+				else if (reader.TokenType == JsonToken.String)
+				{
+					return new Description()
+					{
+						Text = (string)reader.Value
+					};
+				}
+
+				return null;
+			}
+
+			public override bool CanWrite
+			{
+				get { return false; }
+			}
+
+			public override void WriteJson(JsonWriter writer, Description value, JsonSerializer serializer)
+			{
+				throw new NotImplementedException();
+			}
+		}
+	}
+
+	public partial class ServerQuery
+	{
+		[J("version")] public Version Version { get; set; }
+		[J("players")] public Players Players { get; set; }
+
+		[JsonConverter(typeof(ServerListPingDescriptionJson.DescriptionConverter))]
+		[J("description")] public Description Description { get; set; }
+		[J("favicon")] public string Favicon { get; set; }
+		[J("modinfo")] public Modinfo Modinfo { get; set; }
+	}
+
+	public partial class Description
+	{
+		[J("extra")] public List<Extra> Extra { get; set; }
+		[J("text")] public string Text { get; set; }
+	}
+
+	public partial class Extra
+	{
+		[J("text")] public string Text { get; set; }
+		[J("color", NullValueHandling = N.Ignore)] public string Color { get; set; }
+		[J("bold", NullValueHandling = N.Ignore)] public bool? Bold { get; set; }
+		[J("italic", NullValueHandling = N.Ignore)] public bool? Italic { get; set; }
+		[J("underlined", NullValueHandling = N.Ignore)] public bool? Underlined { get; set; }
+		[J("strikethrough", NullValueHandling = N.Ignore)] public bool? Strikethrough { get; set; }
+		[J("obfuscated", NullValueHandling = N.Ignore)] public bool? Obfuscated { get; set; }
+	}
+
+	public partial class Modinfo
+	{
+		[J("type")] public string Type { get; set; }
+		[J("modList")] public List<object> ModList { get; set; }
+	}
+
+	public partial class Players
+	{
+		[J("max")] public int Max { get; set; }
+		[J("online")] public int Online { get; set; }
+	}
+
+	public partial class Version
+	{
+		[J("name")] public string Name { get; set; }
+		[J("protocol")] public int Protocol { get; set; }
+	}
+
+	public partial class ServerQuery
+	{
+		public static ServerQuery FromJson(string json) => JsonConvert.DeserializeObject<ServerQuery>(json);
+	}
+
 
 	public class ServerPingResponse
 	{
@@ -64,11 +162,6 @@ namespace Alex.API.Services
         public string Address { get; set; }
         public ushort Port { get; set; }
 
-        public string Motd { get; set; }
-        public string Version { get; set; }
-        public int ProtocolVersion { get; set; }
-        public int NumberOfPlayers { get; set; }
-        public int MaxNumberOfPlayers { get; set; }
-        public string FaviconDataRaw { get; set; }
+	    public ServerQuery Query { get; set; }
     }
 }

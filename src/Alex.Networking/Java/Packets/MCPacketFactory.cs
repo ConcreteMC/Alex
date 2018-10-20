@@ -214,6 +214,7 @@ namespace Alex.Networking.Java.Packets
 		{
 			Register(Direction.ServerBound, ConnectionState.Status, 0x00, () => new RequestPacket());
 			Register(Direction.ClientBound, ConnectionState.Status, 0x00, () => new ResponsePacket());
+
 			Register(Direction.ServerBound, ConnectionState.Status, 0x01, () => new PingPacket());
 			Register(Direction.ClientBound, ConnectionState.Status, 0x01, () => new PingPacket());
 		}
@@ -221,14 +222,16 @@ namespace Alex.Networking.Java.Packets
 		private static void RegisterLogin()
 		{
 			//Register(Direction.ServerBound, ConnectionState.Login, 0x00, () => new LoginPluginMessagePacket());
-			Register(Direction.ServerBound, ConnectionState.Login, 0x01, () => new LoginStartPacket());
-			Register(Direction.ServerBound, ConnectionState.Login, 0x02, () => new EncryptionResponsePacket());
+			Register(Direction.ServerBound, ConnectionState.Login, 0x00, () => new LoginStartPacket());
+			Register(Direction.ServerBound, ConnectionState.Login, 0x01, () => new EncryptionResponsePacket());
+			Register(Direction.ServerBound, ConnectionState.Login, 0x02, () => new LoginPluginResponsePacket());
 
 			//Register(Direction.ClientBound, ConnectionState.Login, 0x00, () => new LoginPluginMessagePacket());
 			Register(Direction.ClientBound, ConnectionState.Login, 0x00, () => new DisconnectPacket());
 			Register(Direction.ClientBound, ConnectionState.Login, 0x01, () => new EncryptionRequestPacket());
 			Register(Direction.ClientBound, ConnectionState.Login, 0x02, () => new LoginSuccessPacket());
 			Register(Direction.ClientBound, ConnectionState.Login, 0x03, () => new SetCompressionPacket());
+			Register(Direction.ClientBound, ConnectionState.Login, 0x04, () => new LoginPluginRequestPacket());
 		}
 
 		private static void RegisterPlay()

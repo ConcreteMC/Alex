@@ -47,7 +47,7 @@ namespace Alex.Networking.Java
 			ConnectionState = ConnectionState.Handshake;
 	        IsConnected = true;
 
-			PacketWriteQueue = new BlockingCollection<byte[]>();
+			PacketWriteQueue = new BlockingCollection<EnqueuedPacket>();
 			HandlePacketQueue = new BlockingCollection<TemporaryPacketData>();
         }
 
@@ -64,7 +64,7 @@ namespace Alex.Networking.Java
 
 		public bool IsConnected { get; private set; }
 
-		private BlockingCollection<byte[]> PacketWriteQueue { get; }
+		private BlockingCollection<EnqueuedPacket> PacketWriteQueue { get; }
 		private BlockingCollection<TemporaryPacketData> HandlePacketQueue { get; }
 	    public bool LogExceptions { get; set; } = true;
 
@@ -365,44 +365,10 @@ namespace Alex.Networking.Java
 	    {
 			if (packet.PacketId == -1) throw new Exception();
 
-		    byte[] encodedPacket;
-			using (MemoryStream ms = new MemoryStream())
-		    {
-			    using (MinecraftStream mc = new MinecraftStream(ms))
-			    {
-					mc.WriteVarInt(packet.PacketId);
-					packet.Encode(mc);
+			//if (packet.Log)
+			//	Log.Info($"Sending packet ({CompressionEnabled}:{EncryptionInitiated}): {packet} 0x{packet.PacketId:X2}");
 
-					encodedPacket = ms.ToArray();
-
-				    mc.Position = 0;
-					mc.SetLength(0);
-
-					if (CompressionEnabled)
-					{
-						if (encodedPacket.Length >= CompressionThreshold)
-						{
-							byte[] compressed;
-							CompressData(encodedPacket, out compressed);
-
-							mc.WriteVarInt(encodedPacket.Length);
-							mc.Write(compressed);
-						}
-						else //Uncompressed
-						{
-							mc.WriteVarInt(0);
-							mc.Write(encodedPacket);
-						}
-
-						encodedPacket = ms.ToArray();
-					}
-				}
-		    }
-
-			if (packet.Log)
-				Log.Info($"Sending packet ({CompressionEnabled}:{EncryptionInitiated}): {packet} 0x{packet.PacketId:X2}");
-
-			PacketWriteQueue.Add(encodedPacket);
+			PacketWriteQueue.Add(new EnqueuedPacket(packet, EncryptionInitiated, CompressionEnabled));
 	    }
 
 	    private MinecraftStream _sendStream;
@@ -417,7 +383,9 @@ namespace Alex.Networking.Java
 				    {
 					    try
 					    {
-						    byte[] data = PacketWriteQueue.Take(CancellationToken.Token);
+						    EnqueuedPacket packet = PacketWriteQueue.Take(CancellationToken.Token);
+						    var data = EncodePacket(packet);
+
 							mc.WriteVarInt(data.Length);
 							mc.Write(data);
 						}
@@ -429,6 +397,46 @@ namespace Alex.Networking.Java
 				    }
 			    }
 		    }
+	    }
+
+	    private byte[] EncodePacket(EnqueuedPacket enqueued)
+	    {
+		    var packet = enqueued.Packet;
+		    byte[] encodedPacket;
+		    using (MemoryStream ms = new MemoryStream())
+		    {
+			    using (MinecraftStream mc = new MinecraftStream(ms))
+			    {
+				    mc.WriteVarInt(packet.PacketId);
+				    packet.Encode(mc);
+
+				    encodedPacket = ms.ToArray();
+
+				    mc.Position = 0;
+				    mc.SetLength(0);
+
+				    if (enqueued.CompressionEnabled)
+				    {
+					    if (encodedPacket.Length >= CompressionThreshold)
+					    {
+						    byte[] compressed;
+						    CompressData(encodedPacket, out compressed);
+
+						    mc.WriteVarInt(encodedPacket.Length);
+						    mc.Write(compressed);
+					    }
+					    else //Uncompressed
+					    {
+						    mc.WriteVarInt(0);
+						    mc.Write(encodedPacket);
+					    }
+
+					    encodedPacket = ms.ToArray();
+				    }
+			    }
+		    }
+
+		    return encodedPacket;
 	    }
 
 		public static void CompressData(byte[] inData, out byte[] outData)
@@ -515,6 +523,20 @@ namespace Alex.Networking.Java
 	    {
 			collection.CompleteAdding();
 		    while (collection.TryTake(out var _, 0)) {};
+	    }
+
+	    private struct EnqueuedPacket
+	    {
+		    public Packet Packet;
+		    public bool Encryption;
+		    public bool CompressionEnabled;
+
+		    public EnqueuedPacket(Packet packet, bool encryption, bool compression)
+		    {
+			    Packet = packet;
+			    Encryption = encryption;
+			    CompressionEnabled = compression;
+		    }
 	    }
     }
 

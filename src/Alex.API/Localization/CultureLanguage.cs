@@ -23,6 +23,7 @@ namespace Alex.API.Localization
         {
             foreach (var translation in translations)
             {
+				if (_translations.ContainsKey(translation.Key)) continue;
                 _translations[translation.Key] = translation.Value;
             }
         }

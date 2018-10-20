@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -29,33 +30,79 @@ namespace Alex.Services
             MCPacketFactory.Load();
         }
 
-	    public async Task<ServerQueryResponse> QueryBedrockServerAsync(string hostname, ushort port, PingServerDelegate pingCallback = null)
+	    private static bool ResolveHostname(string hostname, out IPAddress address)
 	    {
-		    return await QueryPeServerAsync(hostname, port, pingCallback);
+		    IPAddress[] ipAddresses = Dns.GetHostAddresses(hostname);
+		    if (ipAddresses.Length <= 0)
+		    {
+			    address = default(IPAddress);
+			    return false;
+		    }
+
+		    address = ipAddresses[Rnd.Next(0, ipAddresses.Length - 1)];
+		    return true;
 	    }
 
-	    private async Task<ServerQueryResponse> QueryPeServerAsync(string hostname, ushort port,
-		    PingServerDelegate pingCallback)
+	    private class ResolveResult
 	    {
-		    AutoResetEvent ar = new AutoResetEvent(false);
-		    Stopwatch sw = Stopwatch.StartNew();
+		    public bool Success;
+		    public IPAddress Result;
+
+		    public ResolveResult(bool success, IPAddress result)
+		    {
+			    Success = success;
+			    Result = result;
+		    }
+	    }
+
+	    private static async Task<ResolveResult> ResolveHostnameAsync(string hostname)
+	    {
+		    IPAddress[] ipAddresses = await Dns.GetHostAddressesAsync(hostname);
+		    if (ipAddresses.Length <= 0)
+		    {
+			    return new ResolveResult(false, default(IPAddress));
+		    }
+
+		    return new ResolveResult(true, ipAddresses[Rnd.Next(0, ipAddresses.Length - 1)]);
+	    }
+
+		public async Task QueryBedrockServerAsync(string hostname, ushort port, PingServerDelegate pingCallback, ServerStatusDelegate statusCallBack)
+	    {
+		    await QueryPeServerAsync(hostname, port, pingCallback, statusCallBack);
+	    }
+
+		private async Task QueryPeServerAsync(string hostname, ushort port,
+		    PingServerDelegate pingCallback, ServerStatusDelegate statusCallBack)
+		{
+			ManualResetEventSlim ar = new ManualResetEventSlim(false);
+			Stopwatch sw = new Stopwatch();
 		    long pingTime = 0;
 
-		    using (var pool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount,
+			var result = await ResolveHostnameAsync(hostname);
+			if (!result.Success)
+			{
+				statusCallBack?.Invoke(new ServerQueryResponse(false, "multiplayer.status.cannot_resolve", new ServerQueryStatus()
+				{
+					Delay = sw.ElapsedMilliseconds,
+					Success = false,
+
+					EndPoint = null,
+					Address = hostname,
+					Port = port
+				}));
+
+				return;
+			}
+
+			using (var pool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount,
 			    ThreadType.Background, "BedrockQueryThread")))
 		    {
 			    BedrockClient client = null;
 			    try
 			    {
-				    var hostEntry = await Dns.GetHostEntryAsync(hostname);
-				    IPAddress ip = IPAddress.None;
+					IPEndPoint serverEndpoint = new IPEndPoint(result.Result, (int) port);
 
-				    if (hostEntry.AddressList.Length > 0)
-				    {
-					    ip = hostEntry.AddressList[Rnd.Next(0, hostEntry.AddressList.Length - 1)];
-				    }
-
-				    client = new BedrockClient(new IPEndPoint(ip, (int) port), "", pool, null)
+					client = new BedrockClient(serverEndpoint, $"Pinger{serverEndpoint.ToString()}", pool, null)
 				    {
 					    IgnoreUnConnectedPong = true
 				    };
@@ -64,48 +111,77 @@ namespace Alex.Services
 
 					client.OnMotdReceivedHandler += (sender, m) =>
 				    {
-					    motd = m;
+						motd = m;
+						pingTime = sw.ElapsedMilliseconds;
 					    ar.Set();
-					    pingTime = sw.ElapsedMilliseconds;
-					    pingCallback?.Invoke(new ServerPingResponse(true, pingTime));
+
+						pingCallback.BeginInvoke(new ServerPingResponse(true, pingTime), pingCallback.EndInvoke, null);
 				    };
 
 				    client.StartClient();
-
 				    client.SendUnconnectedPing();
 				    sw.Restart();
 
-				    if (ar.WaitOne(10000))
+					//ar.WaitAsync().Wait(TimeSpan.FromMilliseconds(10000));
+
+				    if (await WaitHandleHelpers.FromWaitHandle(ar.WaitHandle, TimeSpan.FromMilliseconds(10000)))
 				    {
 					    client.StopClient();
-					    return new ServerQueryResponse(true, new ServerQueryStatus()
+					    var m = client.KnownMotd;
+
+						statusCallBack?.Invoke(new ServerQueryResponse(true, new ServerQueryStatus()
 					    {
-						    EndPoint = client.ServerEndpoint,
+						    EndPoint = serverEndpoint,
 						    Delay = pingTime,
 						    Success = true,
-						    Motd = motd.MOTD,
-						    ProtocolVersion = motd.ProtocolVersion,
-						    MaxNumberOfPlayers = motd.MaxPlayers,
-						    Version = motd.ClientVersion,
-						    NumberOfPlayers = motd.Players,
 
 						    Address = hostname,
 						    Port = port,
-						    WaitingOnPing = false
-					    });
+						    WaitingOnPing = false,
+
+							Query = new ServerQuery()
+							{
+								Players = new Players()
+								{
+									Max = m.MaxPlayers,
+									Online = m.Players
+								},
+								Version = new API.Services.Version()
+								{
+									Protocol = m.ProtocolVersion,
+								},
+								Description = new Description()
+								{
+									Text = m.MOTD
+								},
+								Modinfo = null,
+								Favicon = null
+							}
+					    }));
 				    }
 				    else
 				    {
-					    return new ServerQueryResponse(false, "Server timed-out!", new ServerQueryStatus(){Success = false});
+					    statusCallBack?.Invoke(new ServerQueryResponse(false, "multiplayer.status.cannot_connect",
+						    new ServerQueryStatus()
+						    {
+								EndPoint = serverEndpoint,
+							    Delay = sw.ElapsedMilliseconds,
+							    Success = false,
+
+							    Address = hostname,
+							    Port = port,
+							    WaitingOnPing = false
+
+							}));
 				    }
 			    }
 			    catch (Exception e)
 			    {
 				    Log.Error($"Could not get bedrock query: {e.ToString()}");
-				    return new ServerQueryResponse(false, "Failed to connect...", new ServerQueryStatus()
+				    statusCallBack?.Invoke(new ServerQueryResponse(false, "Failed to connect...", new ServerQueryStatus()
 				    {
 						Success = false
-				    });
+				    }));
 			    }
 			    finally
 			    {
@@ -115,107 +191,146 @@ namespace Alex.Services
 	    }
 
 
-
-	    public async Task<ServerQueryResponse> QueryServerAsync(string hostname, ushort port, PingServerDelegate pingCallback = null)
+	    public async Task QueryServerAsync(string hostname, ushort port, PingServerDelegate pingCallback, ServerStatusDelegate statusCallBack)
         {
-            return await QueryJavaServerAsync(hostname, port, pingCallback);
+			await QueryJavaServerAsync(hostname, port, pingCallback, statusCallBack);
         }
 
-        private async Task<ServerQueryResponse> QueryJavaServerAsync(string hostname, ushort port, PingServerDelegate pingCallback)
+        private static async Task QueryJavaServerAsync(string hostname, ushort port, PingServerDelegate pingCallback, ServerStatusDelegate statusCallBack)
         {
-            var sw = Stopwatch.StartNew();
-	        TcpClient client = null;
-	        NetConnection conn = null;
 			IPEndPoint endPoint = null;
+	        var sw = Stopwatch.StartNew();
 	        string jsonResponse = null;
+			try
+			{
+				var result = await ResolveHostnameAsync(hostname);
+				if (!result.Success)
+				{
+					statusCallBack?.Invoke(new ServerQueryResponse(false, "multiplayer.status.cannot_resolve", new ServerQueryStatus()
+					{
+						Delay = sw.ElapsedMilliseconds,
+						Success = false,
 
-	        try
-	        {
-		        client = new TcpClient();
+						EndPoint = null,
+						Address = hostname,
+						Port = port
+					}));
 
-		        await client.ConnectAsync(hostname, port);
-		        endPoint = client.Client.RemoteEndPoint as IPEndPoint;
+					return;
+				}
 
-		        if (client.Connected)
+				using (TcpClient client = new TcpClient())
 		        {
-			        long pingId = Rnd.NextUInt();
-			        conn = new NetConnection(Direction.ClientBound, client.Client);
-			        conn.LogExceptions = false;
-			        //using (var conn = new NetConnection(Direction.ClientBound, client.Client))
+			        await client.ConnectAsync(result.Result, port);
+			        endPoint = client.Client.RemoteEndPoint as IPEndPoint;
+
+			        if (client.Connected)
 			        {
-				        AutoResetEvent ar = new AutoResetEvent(false);
-
-				        conn.OnPacketReceived += (sender, args) =>
+				        //conn = new NetConnection(Direction.ClientBound, client.Client);
+				        //conn.LogExceptions = false;
+				        using (var conn = new NetConnection(Direction.ClientBound, client.Client)
 				        {
-					        if (args.Packet is ResponsePacket responsePacket)
+					        LogExceptions = true
+				        })
+				        {
+					        long pingId = Rnd.NextUInt();
+
+							EventWaitHandle ar = new EventWaitHandle(false, EventResetMode.AutoReset);
+
+					        conn.OnPacketReceived += (sender, args) =>
 					        {
-						        jsonResponse = responsePacket.ResponseMsg;
+						        if (args.Packet is ResponsePacket responsePacket)
+						        {
+							        jsonResponse = responsePacket.ResponseMsg;
+							        ar.Set();
+						        }
+						        else if (args.Packet is PingPacket pong)
+						        {
+							        if (pong.Payload == pingId)
+							        {
+										pingCallback?.Invoke(new ServerPingResponse(true, sw.ElapsedMilliseconds));
+							        }
+							        else
+							        {
+										pingCallback?.Invoke(new ServerPingResponse(true, sw.ElapsedMilliseconds));
+									}
+						        }
+					        };
+
+					        bool connectionClosed = false;
+					        conn.OnConnectionClosed += (sender, args) =>
+					        {
+						        connectionClosed = true;
 						        ar.Set();
-					        }
-					        else if (args.Packet is PingPacket pong)
+					        };
+
+					        conn.Initialize();
+
+					        conn.SendPacket(new HandshakePacket()
 					        {
-						        if (pong.Payload == pingId)
-						        {
-							        pingCallback?.Invoke(new ServerPingResponse(true, sw.ElapsedMilliseconds));
-						        }
-						        else
-						        {
-							        pingCallback?.Invoke(new ServerPingResponse(false, "Ping payload does not match!",
-								        sw.ElapsedMilliseconds));
-						        }
-								
-					        }
-				        };
-
-				        conn.OnConnectionClosed += (sender, args) => { ar.Set(); };
-
-				        conn.Initialize();
-
-				        conn.SendPacket(new HandshakePacket()
-				        {
-					        NextState = ConnectionState.Status,
-					        ServerAddress = hostname,
-					        ServerPort = port,
-					        ProtocolVersion = JavaProtocol.ProtocolVersion
-				        });
-
-				        conn.ConnectionState = ConnectionState.Status;
-
-				        conn.SendPacket(new RequestPacket());
-
-				        if (ar.WaitOne(10000) && jsonResponse != null)
-				        {
-					        long timeElapsed = sw.ElapsedMilliseconds;
-
-					        var json = JsonConvert.DeserializeObject<ServerListPingJson>(jsonResponse);
-
-					        if (pingCallback != null)
-					        {
-						        conn.SendPacket(new PingPacket()
-						        {
-							        Payload = pingId,
-						        });
-
-						        sw.Restart();
-					        }
-
-					        return new ServerQueryResponse(true, new ServerQueryStatus()
-					        {
-						        Delay = timeElapsed,
-						        Success = true,
-						        WaitingOnPing = pingCallback != null,
-
-						        EndPoint = endPoint,
-						        Address = hostname,
-						        Port = port,
-
-						        Motd = json.Description?.Text,
-						        ProtocolVersion = json.Version?.Protocol ?? -1,
-						        Version = json.Version?.Name ?? string.Empty,
-						        NumberOfPlayers = json.Players?.Online ?? -1,
-						        MaxNumberOfPlayers = json.Players?.Max ?? -1,
-						        FaviconDataRaw = json.Favicon
+						        NextState = ConnectionState.Status,
+						        ServerAddress = hostname,
+						        ServerPort = port,
+						        ProtocolVersion = JavaProtocol.ProtocolVersion
 					        });
+
+					        conn.ConnectionState = ConnectionState.Status;
+
+					        conn.SendPacket(new RequestPacket());
+
+					        if (await WaitHandleHelpers.FromWaitHandle(ar, TimeSpan.FromMilliseconds(10000)) &&
+					            !connectionClosed && jsonResponse != null)
+					        {
+
+						        long timeElapsed = sw.ElapsedMilliseconds;
+						      //  Log.Debug($"Server json: " + jsonResponse);
+								var query = ServerQuery.FromJson(jsonResponse);
+
+						        if (pingCallback != null)
+						        {
+									conn.SendPacket(new PingPacket()
+							        {
+								        Payload = pingId,
+							        });
+
+							        sw.Restart();
+								}
+
+						        var r = new ServerQueryStatus()
+						        {
+							        Delay = timeElapsed,
+							        Success = true,
+							        WaitingOnPing = pingCallback != null && !connectionClosed,
+
+							        EndPoint = endPoint,
+							        Address = hostname,
+							        Port = port,
+
+									Query = query
+						        };
+
+								statusCallBack?.Invoke(new ServerQueryResponse(true, r));
+					        }
+					        else
+					        {
+						        statusCallBack?.Invoke(new ServerQueryResponse(false, "multiplayer.status.cannot_connect",
+							        new ServerQueryStatus()
+							        {
+								        EndPoint = endPoint,
+								        Delay = sw.ElapsedMilliseconds,
+								        Success = false,
+								        /* Motd = motd.MOTD,
+								         ProtocolVersion = motd.ProtocolVersion,
+								         MaxNumberOfPlayers = motd.MaxPlayers,
+								         Version = motd.ClientVersion,
+								         NumberOfPlayers = motd.Players,*/
+
+								        Address = hostname,
+								        Port = port,
+								        WaitingOnPing = false
+
+							        }));
+					        }
 				        }
 			        }
 		        }
@@ -227,7 +342,7 @@ namespace Alex.Services
 
 		        Log.Error($"Could not get server query result, server returned \"{jsonResponse}\"");
 
-		        return new ServerQueryResponse(false, ex.Message, new ServerQueryStatus()
+		        statusCallBack?.Invoke(new ServerQueryResponse(false, ex.Message, new ServerQueryStatus()
 		        {
 			        Delay = sw.ElapsedMilliseconds,
 			        Success = false,
@@ -235,7 +350,7 @@ namespace Alex.Services
 			        EndPoint = endPoint,
 			        Address = hostname,
 			        Port = port
-		        });
+		        }));
 	        }
 	        finally
 	        {
@@ -244,19 +359,6 @@ namespace Alex.Services
 				//conn?.Dispose();
 			//	client?.Close();
 	        }
-            
-            if(sw.IsRunning)
-                sw.Stop();
-
-			return new ServerQueryResponse(false, "Unknown Error", new ServerQueryStatus()
-            {
-                Delay   = sw.ElapsedMilliseconds,
-                Success = false,
-                
-                EndPoint = endPoint,
-                Address  = hostname,
-                Port     = port
-            });
         }
 
 	    public class ServerListPingJson
@@ -353,10 +455,18 @@ namespace Alex.Services
                             Delay   = sw.ElapsedMilliseconds,
                             Success = true,
 
-                            Version = serverData[2],
-                            Motd = serverData[3],
-                            NumberOfPlayers = int.Parse(serverData[4]),
-                            MaxNumberOfPlayers = int.Parse(serverData[5]),
+							Query = new ServerQuery()
+							{
+								Version = new API.Services.Version()
+								{
+									Name = serverData[2]
+								},
+								Players = new Players() { Online = int.Parse(serverData[4]), Max = int.Parse(serverData[5]) },
+								Description = new Description()
+								{
+									Text = serverData[3]
+								}
+							},
 
                             EndPoint = endPoint,
                             Address  = hostname,
@@ -397,4 +507,182 @@ namespace Alex.Services
             });
         }
     }
+
+	public static class WaitHandleHelpers{
+		/// <summary>
+		/// Wraps a <see cref="WaitHandle"/> with a <see cref="Task"/>. When the <see cref="WaitHandle"/> is signalled, the returned <see cref="Task"/> is completed. If the handle is already signalled, this method acts synchronously.
+		/// </summary>
+		/// <param name="handle">The <see cref="WaitHandle"/> to observe.</param>
+		public static Task FromWaitHandle(WaitHandle handle)
+		{
+			return FromWaitHandle(handle, Timeout.InfiniteTimeSpan, CancellationToken.None);
+		}
+
+		/// <summary>
+		/// Wraps a <see cref="WaitHandle"/> with a <see cref="Task{Boolean}"/>. If the <see cref="WaitHandle"/> is signalled, the returned task is completed with a <c>true</c> result. If the observation times out, the returned task is completed with a <c>false</c> result. If the handle is already signalled or the timeout is zero, this method acts synchronously.
+		/// </summary>
+		/// <param name="handle">The <see cref="WaitHandle"/> to observe.</param>
+		/// <param name="timeout">The timeout after which the <see cref="WaitHandle"/> is no longer observed.</param>
+		public static Task<bool> FromWaitHandle(WaitHandle handle, TimeSpan timeout)
+		{
+			return FromWaitHandle(handle, timeout, CancellationToken.None);
+		}
+
+		/// <summary>
+		/// Wraps a <see cref="WaitHandle"/> with a <see cref="Task{Boolean}"/>. If the <see cref="WaitHandle"/> is signalled, the returned task is (successfully) completed. If the observation is cancelled, the returned task is cancelled. If the handle is already signalled or the cancellation token is already cancelled, this method acts synchronously.
+		/// </summary>
+		/// <param name="handle">The <see cref="WaitHandle"/> to observe.</param>
+		/// <param name="token">The cancellation token that cancels observing the <see cref="WaitHandle"/>.</param>
+		public static Task FromWaitHandle(WaitHandle handle, CancellationToken token)
+		{
+			return FromWaitHandle(handle, Timeout.InfiniteTimeSpan, token);
+		}
+
+		/// <summary>
+		/// Wraps a <see cref="WaitHandle"/> with a <see cref="Task{Boolean}"/>. If the <see cref="WaitHandle"/> is signalled, the returned task is completed with a <c>true</c> result. If the observation times out, the returned task is completed with a <c>false</c> result. If the observation is cancelled, the returned task is cancelled. If the handle is already signalled, the timeout is zero, or the cancellation token is already cancelled, then this method acts synchronously.
+		/// </summary>
+		/// <param name="handle">The <see cref="WaitHandle"/> to observe.</param>
+		/// <param name="timeout">The timeout after which the <see cref="WaitHandle"/> is no longer observed.</param>
+		/// <param name="token">The cancellation token that cancels observing the <see cref="WaitHandle"/>.</param>
+		public static Task<bool> FromWaitHandle(WaitHandle handle, TimeSpan timeout, CancellationToken token)
+		{
+			// Handle synchronous cases.
+			var alreadySignalled = handle.WaitOne(0);
+			if (alreadySignalled)
+				return TaskConstants.BooleanTrue;
+			if (timeout == TimeSpan.Zero)
+				return TaskConstants.BooleanFalse;
+			if (token.IsCancellationRequested)
+				return TaskConstants<bool>.Canceled;
+
+			// Register all asynchronous cases.
+			return DoFromWaitHandle(handle, timeout, token);
+		}
+
+		private static async Task<bool> DoFromWaitHandle(WaitHandle handle, TimeSpan timeout, CancellationToken token)
+		{
+			var tcs = new TaskCompletionSource<bool>();
+			using (new ThreadPoolRegistration(handle, timeout, tcs))
+			using (token.Register(state => ((TaskCompletionSource<bool>)state).TrySetCanceled(), tcs, useSynchronizationContext: false))
+				return await tcs.Task.ConfigureAwait(false);
+		}
+
+		private sealed class ThreadPoolRegistration : IDisposable
+		{
+			private readonly RegisteredWaitHandle _registeredWaitHandle;
+
+			public ThreadPoolRegistration(WaitHandle handle, TimeSpan timeout, TaskCompletionSource<bool> tcs)
+			{
+				_registeredWaitHandle = ThreadPool.RegisterWaitForSingleObject(handle,
+					(state, timedOut) => ((TaskCompletionSource<bool>)state).TrySetResult(!timedOut), tcs,
+					timeout, executeOnlyOnce: true);
+			}
+
+			void IDisposable.Dispose() => _registeredWaitHandle.Unregister(null);
+		}
+	}
+
+	public static class TaskConstants
+	{
+		private static readonly Task<bool> booleanTrue = Task.FromResult(true);
+		private static readonly Task<int> intNegativeOne = Task.FromResult(-1);
+
+		/// <summary>
+		/// A task that has been completed with the value <c>true</c>.
+		/// </summary>
+		public static Task<bool> BooleanTrue
+		{
+			get
+			{
+				return booleanTrue;
+			}
+		}
+
+		/// <summary>
+		/// A task that has been completed with the value <c>false</c>.
+		/// </summary>
+		public static Task<bool> BooleanFalse
+		{
+			get
+			{
+				return TaskConstants<bool>.Default;
+			}
+		}
+
+		/// <summary>
+		/// A task that has been completed with the value <c>0</c>.
+		/// </summary>
+		public static Task<int> Int32Zero
+		{
+			get
+			{
+				return TaskConstants<int>.Default;
+			}
+		}
+
+		/// <summary>
+		/// A task that has been completed with the value <c>-1</c>.
+		/// </summary>
+		public static Task<int> Int32NegativeOne
+		{
+			get
+			{
+				return intNegativeOne;
+			}
+		}
+
+		/// <summary>
+		/// A <see cref="Task"/> that has been completed.
+		/// </summary>
+		public static Task Completed
+		{
+			get
+			{
+				return Task.CompletedTask;
+			}
+		}
+
+		/// <summary>
+		/// A task that has been canceled.
+		/// </summary>
+		public static Task Canceled
+		{
+			get
+			{
+				return TaskConstants<object>.Canceled;
+			}
+		}
+	}
+
+	/// <summary>
+	/// Provides completed task constants.
+	/// </summary>
+	/// <typeparam name="T">The type of the task result.</typeparam>
+	public static class TaskConstants<T>
+	{
+		private static readonly Task<T> defaultValue = Task.FromResult(default(T));
+		private static readonly Task<T> canceled = Task.FromCanceled<T>(new CancellationToken(true));
+
+		/// <summary>
+		/// A task that has been completed with the default value of <typeparamref name="T"/>.
+		/// </summary>
+		public static Task<T> Default
+		{
+			get
+			{
+				return defaultValue;
+			}
+		}
+
+		/// <summary>
+		/// A task that has been canceled.
+		/// </summary>
+		public static Task<T> Canceled
+		{
+			get
+			{
+				return canceled;
+			}
+		}
+	}
 }

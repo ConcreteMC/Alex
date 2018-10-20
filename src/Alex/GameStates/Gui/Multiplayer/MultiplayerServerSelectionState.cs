@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,6 +21,7 @@ using Alex.GameStates.Gui.Common;
 using Alex.Graphics.Gui.Elements;
 using Alex.Gui;
 using Alex.Networking.Java;
+using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET;
@@ -116,17 +118,17 @@ namespace Alex.GameStates.Gui.Multiplayer
 		
 	    public void OnAddItemButtonPressed()
 	    {
-		    Alex.GameStateManager.SetActiveState(new MultiplayerAddEditServerState(AddEditServerCallbackAction));
+		    Alex.GameStateManager.SetActiveState(new MultiplayerAddEditServerState(AddEditServerCallbackAction, _skyBox));
 	    }
 
 	    private void OnEditItemButtonPressed()
 	    {
-		    Alex.GameStateManager.SetActiveState(new MultiplayerAddEditServerState(SelectedItem.SavedServerEntry, AddEditServerCallbackAction));
+		    Alex.GameStateManager.SetActiveState(new MultiplayerAddEditServerState(SelectedItem.SavedServerEntry, AddEditServerCallbackAction, _skyBox));
 	    }
 		
 	    private void OnDeleteItemButtonPressed()
 	    {
-		    _toDelete = SelectedItem.SavedServerEntry;
+		    _toDelete = SelectedItem;
 		    Alex.GameStateManager.SetActiveState(new GuiConfirmState(new GuiConfirmState.GuiConfirmStateOptions()
 		    {
 				MessageTranslationKey = "selectServer.deleteQuestion",
@@ -134,22 +136,27 @@ namespace Alex.GameStates.Gui.Multiplayer
 		    }, DeleteServerCallbackAction));
 	    }
 
-	    private SavedServerEntry _toDelete;
+	    private GuiServerListEntryElement _toDelete;
 	    private void DeleteServerCallbackAction(bool confirm)
 	    {
 		    if (confirm)
 		    {
-			    _listProvider.RemoveEntry(_toDelete);
-			    Load();
+				RemoveItem(_toDelete);
+
+			    _listProvider.RemoveEntry(_toDelete.SavedServerEntry);
+			    //Load();
 		    }
 	    }
 
+		private FastRandom Rnd = new FastRandom();
 	    private void OnJoinServerButtonPressed()
 	    {
 		    var authenticationService = Alex.Services.GetService<IPlayerProfileService>();
 
 			var entry = SelectedItem.SavedServerEntry;
-		    var ip = Dns.GetHostAddresses(entry.Host).FirstOrDefault();
+		    var ips = Dns.GetHostAddresses(entry.Host).ToArray();
+		    IPAddress ip = ips[Rnd.Next(0, ips.Length - 1)];
+		    if (ip == null) return;
 
 		    if (entry.ServerType == ServerType.Java)
 		    {
@@ -185,29 +192,41 @@ namespace Alex.GameStates.Gui.Multiplayer
 
 	    private void OnRefreshButtonPressed()
 	    {
-			SaveAll();
-			Load();
+		    Task.Run(() =>
+		    {
+			    SaveAll();
+			    Load(true);
+		    });
 	    }
 
-	    public void Load()
+	    public void Load(bool useTask = false)
+	    {
+		    if (useTask)
+		    {
+			    Task.Run(() => { LoadH(); });
+		    }
+		    else
+		    {
+			    LoadH();
+		    }
+	    }
+
+	    private void LoadH()
 	    {
 		    _listProvider.Load();
-		
-			ClearItems();
+
+		    ClearItems();
 		    foreach (var entry in _listProvider.Data.ToArray())
 		    {
-				AddItem(new GuiServerListEntryElement(entry));
-			}
+			    AddItem(new GuiServerListEntryElement(entry));
+		    }
 
 		    PingAll();
-	    }
+		}
 
-	    public async void PingAll()
+	    public void PingAll()
 	    {
-		    foreach (var item in Items)
-		    {
-			    await item.PingAsync();
-		    }
+		    Parallel.ForEach(Items, element => element.PingAsync());
 	    }
 
 	    private void SaveAll()
@@ -225,9 +244,24 @@ namespace Alex.GameStates.Gui.Multiplayer
 
 	    private void AddEditServerCallbackAction(SavedServerEntry obj)
 	    {
-		    //if (obj == null) return;
+		    if (obj == null) return; //Cancelled.
 
-			Load();
+		    for (var index = 0; index < Items.Length; index++)
+		    {
+			    var entry = Items[index];
+
+			    if (entry.InternalIdentifier.Equals(obj.IntenalIdentifier))
+			    {
+					var newEntry = new GuiServerListEntryElement(obj);
+
+				    Items[index] = newEntry;
+
+				    newEntry.PingAsync();
+				    break;
+			    }
+		    }
+
+		    //Load();
 	    }
 
 	    protected override void OnUpdate(GameTime gameTime)
@@ -268,11 +302,6 @@ namespace Alex.GameStates.Gui.Multiplayer
         public string ServerAddress { get; set; }
 
         public Texture2D ServerIcon { get; private set; }
-        public string RawMotd { get; private set; }
-
-        public byte PingQuality { get; private set; }
-
-        public bool IsPingPending { get; private set; }
 		
         private readonly GuiTextureElement _serverIcon;
         private readonly GuiStackContainer _textWrapper;
@@ -282,7 +311,7 @@ namespace Alex.GameStates.Gui.Multiplayer
         private readonly GuiTextElement _serverMotd;
 
 	    internal SavedServerEntry SavedServerEntry;
-		
+		internal Guid InternalIdentifier = Guid.NewGuid();
 	    public GuiServerListEntryElement(SavedServerEntry entry) : this(entry.ServerType == ServerType.Java ? $"§oJAVA§r - {entry.Name}" : $"§oPOCKET§r - {entry.Name}", entry.Host + ":" + entry.Port)
 	    {
 		    SavedServerEntry = entry;
@@ -367,7 +396,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 
 		    var hostname = ServerAddress;
 
-		    ushort port = 25565;
+			ushort port = (ushort) (SavedServerEntry.ServerType == ServerType.Java ? 25565 : 19132);// 25565;
 
 		    var split = hostname.Split(':');
 		    if (split.Length == 2)
@@ -395,7 +424,7 @@ namespace Alex.GameStates.Gui.Multiplayer
         {
             if (connecting)
             {
-                _serverMotd.Text = "Pinging Server...";
+                _serverMotd.TranslationKey = "multiplayer.status.pinging";
             }
             else
             {
@@ -408,10 +437,11 @@ namespace Alex.GameStates.Gui.Multiplayer
         private void SetErrorMessage(string error)
         {
             _serverMotd.Text = error;
-
+	        
             if (!string.IsNullOrWhiteSpace(error))
             {
-                _serverMotd.TextColor = TextColor.Red;
+	            _serverMotd.TranslationKey = error;
+				_serverMotd.TextColor = TextColor.Red;
             }
             else
             {
@@ -425,19 +455,18 @@ namespace Alex.GameStates.Gui.Multiplayer
 		    SetErrorMessage(null);
 		    SetConnectingState(true);
 
-		    ServerQueryResponse result;
+		  //  ServerQueryResponse result;
 		    var queryProvider = Alex.Instance.Services.GetService<IServerQueryProvider>();
 		    if (SavedServerEntry.ServerType == ServerType.Bedrock)
 		    {
-			    result = await queryProvider.QueryBedrockServerAsync(address, port,
-				    PingCallback); //;.ContinueWith(QueryCompleted);
+			    await queryProvider.QueryBedrockServerAsync(address, port, PingCallback, QueryCompleted);//(ContinuationAction);
 		    }
 		    else
 		    {
-			    result = await queryProvider.QueryServerAsync(address, port, PingCallback);
+			    await queryProvider.QueryServerAsync(address, port, PingCallback, QueryCompleted);
 		    }
 
-		    QueryCompleted(result);
+		    //QueryCompleted(result);
 	    }
 
 	    private void PingCallback(ServerPingResponse response)
@@ -445,10 +474,10 @@ namespace Alex.GameStates.Gui.Multiplayer
 		    if (response.Success)
 		    {
 			    _pingStatus.SetPing(response.Ping);
-			}
+		    }
 		    else
 		    {
-				_pingStatus.SetOutdated(response.ErrorMessage);
+			    _pingStatus.SetOutdated(response.ErrorMessage);
 		    }
 	    }
 
@@ -461,30 +490,72 @@ namespace Alex.GameStates.Gui.Multiplayer
             if (response.Success)
 			{
                 var s = response.Status;
-				_pingStatus.SetPlayerCount(s.NumberOfPlayers, s.MaxNumberOfPlayers);
+				var q = s.Query;
+				_pingStatus.SetPlayerCount(q.Players.Online, q.Players.Online);
 
 				if (!s.WaitingOnPing)
 				{
 					_pingStatus.SetPing(s.Delay);
 				}
 
-				if (s.ProtocolVersion < (SavedServerEntry.ServerType == ServerType.Java ? JavaProtocol.ProtocolVersion : McpeProtocolInfo.ProtocolVersion))
+				if (q.Version.Protocol < (SavedServerEntry.ServerType == ServerType.Java ? JavaProtocol.ProtocolVersion : McpeProtocolInfo.ProtocolVersion))
 				{
 					if (SavedServerEntry.ServerType == ServerType.Java)
 					{
-						_pingStatus.SetOutdated(s.Version);
+						_pingStatus.SetOutdated(q.Version.Name);
 					}
 				}
-				else if (s.ProtocolVersion > (SavedServerEntry.ServerType == ServerType.Java ? JavaProtocol.ProtocolVersion : McpeProtocolInfo.ProtocolVersion))
+				else if (q.Version.Protocol > (SavedServerEntry.ServerType == ServerType.Java ? JavaProtocol.ProtocolVersion : McpeProtocolInfo.ProtocolVersion))
 				{
 					_pingStatus.SetOutdated($"Client out of date!");
 				}
 
-	            _serverMotd.Text = s.Motd;
+				if (q.Description.Extra != null)
+				{
+					StringBuilder builder = new StringBuilder();
+					foreach (var extra in q.Description.Extra)
+					{
+						if (extra.Color != null)
+							builder.Append(API.Utils.TextColor.GetColor(extra.Color).ToString());
 
-	            if (!string.IsNullOrWhiteSpace(s.FaviconDataRaw))
+						if (extra.Bold.HasValue)
+						{
+							builder.Append(ChatFormatting.Bold);
+						}
+
+						if (extra.Italic.HasValue)
+						{
+							builder.Append(ChatFormatting.Italic);
+						}
+
+						if (extra.Underlined.HasValue)
+						{
+							builder.Append(ChatFormatting.Underline);
+						}
+
+						if (extra.Strikethrough.HasValue)
+						{
+							builder.Append(ChatFormatting.Strikethrough);
+						}
+
+						if (extra.Obfuscated.HasValue)
+						{
+							builder.Append(ChatFormatting.Obfuscated);
+						}
+
+						builder.Append(extra.Text);
+					}
+
+					_serverMotd.Text = builder.ToString();
+				}
+				else
+				{
+					_serverMotd.Text = q.Description.Text;
+				}
+
+				if (!string.IsNullOrWhiteSpace(q.Favicon))
 	            {
-		            var match = FaviconRegex.Match(s.FaviconDataRaw);
+		            var match = FaviconRegex.Match(q.Favicon);
 		            if (match.Success && _graphicsDevice != null)
 		            {
 			            using (MemoryStream ms = new MemoryStream(Convert.FromBase64String(match.Groups["data"].Value)))
