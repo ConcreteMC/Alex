@@ -1,11 +1,14 @@
-﻿using Alex.API.Data;
+﻿using System;
+using Alex.API.Data;
 using Alex.API.Graphics.Textures;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
+using Alex.Graphics.Gui.Elements;
 using Alex.Items;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.Gui.Elements.Inventory
 {
@@ -18,8 +21,20 @@ namespace Alex.Gui.Elements.Inventory
             get { return _isSelected; }
             set { _isSelected = value; OnSelectedChanged(); }
         }
-        
-        public TextureSlice2D SelectedBackground { get;private set; }
+
+	    private string _name = String.Empty;
+	    public string Name
+	    {
+		    get { return _name; }
+		    set
+		    {
+			    _name = value;
+			    NameChanged(value);
+		    }
+	    }
+
+	    public TextureSlice2D SelectedBackground { get;private set; }
+	    private GuiTextureElement Texture { get; set; }
 
 	    private SlotData _item = new SlotData()
 	    {
@@ -44,11 +59,20 @@ namespace Alex.Gui.Elements.Inventory
             Height = 20;
             Width = 20;
 
-	        AddChild(_counTextElement = new GuiTextElement()
+	        AddChild(Texture = new GuiTextureElement()
+	        {
+				Anchor = Alignment.TopLeft,
+				
+				Height = 16,
+				Width = 16,
+				Margin = new Thickness(4, 4)
+	        });
+
+            AddChild(_counTextElement = new GuiTextElement()
 	        {
 		        TextColor = TextColor.White,
 		        Anchor = Alignment.BottomRight,
-		        Text = "-1",
+		        Text = "",
 				Scale = 0.75f,
 				Margin = new Thickness(0, 0, 5, 3)
 	        });
@@ -60,11 +84,38 @@ namespace Alex.Gui.Elements.Inventory
 	        _counTextElement.Font = renderer.Font;
         }
 
+	    private void NameChanged(string newName)
+	    {
+		    if (!string.IsNullOrWhiteSpace(newName))
+		    {
+			    if (ItemFactory.ResolveItemTexture(newName, out Texture2D texture))
+			    {
+					
+				    Texture.Texture = texture;
+                }
+			    else
+			    {
+					
+			    }
+            }
+		    else
+		    {
+			    Texture.Texture = null;
+		    }
+	    }
+
 	    private void SlotChanged(SlotData newValue)
 	    {
 		    if (_counTextElement != null)
 		    {
-			    _counTextElement.Text = newValue.Count.ToString();
+                if (newValue != null && newValue.Count != 0)
+			    {
+				    _counTextElement.Text = newValue.Count.ToString();
+                }
+			    else
+                {
+	                _counTextElement.Text = "";
+                }
 		    }
 	    }
 

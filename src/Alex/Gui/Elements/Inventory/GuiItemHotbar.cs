@@ -66,7 +66,7 @@ namespace Alex.Gui.Elements.Inventory
 	        {
 		        Anchor = Alignment.TopCenter,
 		        TextColor = TextColor.White,
-		        Text = "Unknown",
+		        Text = "",
 		        Margin = new Thickness(0, -5, 0, 5)
 	        });
 		}
@@ -93,8 +93,12 @@ namespace Alex.Gui.Elements.Inventory
 			    }
 
 			    items[childIndex].Item = e.Value;
+			    if (e.Value != null && ItemFactory.ResolveItemName(e.Value.ItemID, out string itemName))
+			    {
+				    items[childIndex].Name = itemName;
+			    }
 
-			    if (childIndex == SelectedIndex)
+                if (childIndex == SelectedIndex)
 			    {
 				    OnSelectedIndexChanged();
 			    }
@@ -111,11 +115,21 @@ namespace Alex.Gui.Elements.Inventory
 
 	        var item = items[SelectedIndex];
 	        item.IsSelected = true;
-
-	        if (ItemFactory.ResolveItemName(item.Item.ItemID, out string itemName))
+			
+	        if (item.Item != null && item.Item.ItemID > 0)
 	        {
-		        _itemNameTextElement.Text = itemName;
-
+		        if (!string.IsNullOrWhiteSpace(item.Name))
+		        {
+			        _itemNameTextElement.Text = item.Name;
+                }
+		        else
+		        {
+			        _itemNameTextElement.Text = $"{item.Item.ItemID}:{item.Item.ItemDamage}";
+		        }
+	        }
+	        else
+	        {
+		        _itemNameTextElement.Text = "";
 	        }
         }
 
