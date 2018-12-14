@@ -7,19 +7,18 @@ using Newtonsoft.Json;
 
 namespace Alex.API.Services
 {
-    public class AppDataStorageSystem : IStorageSystem
+    public class StorageSystem : IStorageSystem
     {
         private static readonly Regex FileKeySanitizeRegex = new Regex(@"[\W]", RegexOptions.Compiled);
 
-        private string AppDataDirectory { get; }
+        private string DataDirectory { get; }
 
-        public AppDataStorageSystem()
+        public StorageSystem(string directory)
         {
-            var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create);
-            AppDataDirectory = Path.Combine(appData, "Alex");
+	        DataDirectory = directory;
 
-			Directory.CreateDirectory(AppDataDirectory);
-	        Directory.CreateDirectory(Path.Combine(AppDataDirectory, "assets"));
+			Directory.CreateDirectory(DataDirectory);
+	        Directory.CreateDirectory(Path.Combine(DataDirectory, "assets"));
 		}
         
         public bool TryWrite<T>(string key, T value)
@@ -66,7 +65,7 @@ namespace Alex.API.Services
 
 	    public bool TryWriteBytes(string key, byte[] value)
 	    {
-			var fileName = Path.Combine(AppDataDirectory, key);
+			var fileName = Path.Combine(DataDirectory, key);
 
 			try
 		    {
@@ -81,7 +80,7 @@ namespace Alex.API.Services
 
 	    public bool TryReadBytes(string key, out byte[] value)
 	    {
-		    var fileName = Path.Combine(AppDataDirectory, key);
+		    var fileName = Path.Combine(DataDirectory, key);
 
 		    if (!File.Exists(fileName))
 		    {
@@ -103,7 +102,7 @@ namespace Alex.API.Services
 
 	    private string GetFileName(string key)
         {
-            return Path.Combine(AppDataDirectory, FileKeySanitizeRegex.Replace(key.ToLowerInvariant(), ""));
+            return Path.Combine(DataDirectory, FileKeySanitizeRegex.Replace(key.ToLowerInvariant(), ""));
         }
     }
 }

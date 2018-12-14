@@ -1,5 +1,6 @@
 ﻿extern alias CefGlueWIN;
 using System;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
@@ -32,10 +33,16 @@ namespace Alex
 		[STAThread]
 		static void Main(string[] args)
 		{
-			NLogAppender.Initialize();
 			LaunchSettings launchSettings = ParseArguments(args);
 
-			if (launchSettings.Server == null && launchSettings.ConnectOnLaunch)
+			if (!Directory.Exists(launchSettings.WorkDir))
+			{
+				Directory.CreateDirectory(launchSettings.WorkDir);
+			}
+
+			ConfigureNLog(launchSettings.WorkDir);
+
+            if (launchSettings.Server == null && launchSettings.ConnectOnLaunch)
 			{
 				launchSettings.ConnectOnLaunch = false;
 				Log.Warn($"No server specified, ignoring connect argument.");
@@ -51,6 +58,19 @@ namespace Alex
 
 		}
 
+		private static void ConfigureNLog(string baseDir)
+		{
+			string loggerConfigFile = Path.Combine(baseDir, "NLog.config");
+			if (!File.Exists(loggerConfigFile))
+			{
+				File.WriteAllText(loggerConfigFile, Resources.NLogConfig);
+			}
+
+			NLog.LogManager.Configuration = new NLog.Config.XmlLoggingConfiguration(loggerConfigFile, true);
+			LogManager.Configuration.Variables["basedir"] = baseDir;
+
+			NLogAppender.Initialize();
+        }
 
 		private class Settings : AbstractCefSettings
 		{
@@ -64,7 +84,8 @@ namespace Alex
 			bool           nextIsuuid        = false;
 			bool           nextIsaccessToken = false;
 			bool           nextIsUsername    = false;
-			
+			bool nextIsWorkDir = false;
+
 			foreach (var arg in args)
 			{
 				if (nextIsServer)
@@ -82,20 +103,30 @@ namespace Alex
 
 				if (nextIsaccessToken)
 				{
-					nextIsaccessToken         = false;
+					nextIsaccessToken = false;
 					launchSettings.AccesToken = arg;
+					continue;
 				}
 
 				if (nextIsuuid)
 				{
-					nextIsuuid          = false;
+					nextIsuuid = false;
 					launchSettings.UUID = arg;
+					continue;
 				}
 
 				if (nextIsUsername)
 				{
-					nextIsUsername          = false;
+					nextIsUsername = false;
 					launchSettings.Username = arg;
+					continue;
+				}
+
+				if (nextIsWorkDir)
+				{
+					nextIsWorkDir = false;
+					launchSettings.WorkDir = arg;
+					continue;
 				}
 
 				if (arg == "--server")
@@ -127,6 +158,11 @@ namespace Alex
 				{
 					launchSettings.ShowConsole = true;
 				}
+
+				if (arg == "--workDir")
+				{
+					nextIsWorkDir = true;
+				}
 			}
 
 			return launchSettings;
@@ -143,5 +179,12 @@ namespace Alex
 		public string UUID;
 		public string AccesToken;
 		public bool ShowConsole = false;
+		public string WorkDir;
+
+		public LaunchSettings()
+		{
+			var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create);
+			WorkDir = Path.Combine(appData, "Alex");
+        }
 	}
 }

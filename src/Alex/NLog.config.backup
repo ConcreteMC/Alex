@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<nlog xmlns="http://www.nlog-project.org/schemas/NLog.xsd"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+	<targets>
+		<target name="colouredConsole" xsi:type="ColoredConsole" useDefaultRowHighlightingRules="false"
+		        layout="${pad:padding=5:inner=${level:uppercase=true}}|${callsite:className=true:includeSourcePath=false:methodName=false:includeNamespace=false}|${message}" >
+			<highlight-row condition="level == LogLevel.Debug" foregroundColor="DarkGray" />
+			<highlight-row condition="level == LogLevel.Info" foregroundColor="Gray" />
+			<highlight-row condition="level == LogLevel.Warn" foregroundColor="Yellow" />
+			<highlight-row condition="level == LogLevel.Error" foregroundColor="Red" />
+			<highlight-row condition="level == LogLevel.Fatal" foregroundColor="Red" backgroundColor="White" />
+		</target>
+
+		<target name="infoFile" xsi:type="File"
+		        layout="${longdate} ${pad:padding=5:inner=${level:uppercase=true}} ${callsite:className=true:includeSourcePath=false:methodName=true:includeNamespace=true} ${message}"
+		        fileName="${basedir}/logs/info-${cached:cached=true:inner=${date:format=yyyy-MM-dd HH-mm-ss}}.log" keepFileOpen="true" />
+		<target name="errorFile" xsi:type="File"
+		        layout="${longdate} ${pad:padding=5:inner=${level:uppercase=true}} ${callsite:className=true:includeSourcePath=false:methodName=true:includeNamespace=true} ${message}"
+		        fileName="${basedir}/logs/error-${cached:cached=true:inner=${date:format=yyyy-MM-dd HH-mm-ss}}.log" keepFileOpen="true" />
+	</targets>
+
+	<rules>
+		<logger name="*" minlevel="Debug" writeTo="colouredConsole" />
+
+		<logger name="*" minlevel="Debug" maxlevel="Info" writeTo="infoFile" />
+		<logger name="*" minlevel="Warn" maxlevel="Fatal" writeTo="errorFile" />
+	</rules>
+</nlog>

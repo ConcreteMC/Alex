@@ -176,9 +176,7 @@ namespace Alex {
         ///		&quot;protocol_id&quot;: 8
         ///	},
         ///	&quot;minecraft:dirt&quot;: {
-        ///		&quot;protocol_id&quot;: 9
-        ///	},
-        ///	&quot;minecraft:coar [rest of string was truncated]&quot;;.
+        ///		&quot;protoco [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string Items {
             get {
@@ -293,6 +291,24 @@ namespace Alex {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot; ?&gt;
+        ///&lt;nlog xmlns=&quot;http://www.nlog-project.org/schemas/NLog.xsd&quot;
+        ///      xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;&gt;
+        ///
+        ///	&lt;variable name=&quot;basedir&quot; value=&quot;${basedir}&quot; /&gt;
+        ///
+        ///	&lt;targets&gt;
+        ///		&lt;target name=&quot;colouredConsole&quot; xsi:type=&quot;ColoredConsole&quot; useDefaultRowHighlightingRules=&quot;false&quot;
+        ///		        layout=&quot;${pad:padding=5:inner=${level:uppercase=true}}|${callsite:className=true:includeSourcePath=false:methodName=false:includeNamespace=false}|${message}&quot; &gt;
+        ///			&lt;highlight-row condi [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string NLogConfig {
+            get {
+                return ResourceManager.GetString("NLogConfig", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
         internal static byte[] no {
@@ -366,15 +382,6 @@ namespace Alex {
             get {
                 object obj = ResourceManager.GetObject("Splash", resourceCulture);
                 return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to .
-        /// </summary>
-        internal static string String1 {
-            get {
-                return ResourceManager.GetString("String1", resourceCulture);
             }
         }
     }

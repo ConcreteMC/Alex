@@ -70,12 +70,14 @@ namespace Alex
 		
 		internal ConcurrentQueue<Action> UIThreadQueue { get; }
 
-		internal AppDataStorageSystem Storage { get; private set; }
+		internal StorageSystem Storage { get; private set; }
 
+		private LaunchSettings LaunchSettings { get; }
 		//public ChromiumWebBrowser CefWindow { get; private set; }
 		public Alex(LaunchSettings launchSettings)
 		{
 			Instance = this;
+			LaunchSettings = launchSettings;
 
 			DeviceManager = new GraphicsDeviceManager(this)
 			{
@@ -170,7 +172,7 @@ namespace Alex
 		private void ConfigureServices()
 		{
 			XBLMSAService msa;
-			var storage = new AppDataStorageSystem();
+			var storage = new StorageSystem(LaunchSettings.WorkDir);
 			Services.AddService<IStorageSystem>(storage);
 			Services.AddService<IOptionsProvider>(new OptionsProvider(storage));
 
