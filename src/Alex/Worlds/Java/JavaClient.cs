@@ -5,8 +5,12 @@ using Alex.API.Utils;
 using Alex.Networking.Java;
 using Alex.Networking.Java.Packets;
 using Alex.Networking.Java.Packets.Play;
+using Microsoft.Xna.Framework;
+using MiNET;
 using MiNET.Utils;
 using NLog;
+using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
+using ConnectionState = Alex.Networking.Java.ConnectionState;
 
 namespace Alex.Worlds.Java
 {
@@ -64,5 +68,17 @@ namespace Alex.Worlds.Java
 				ServerBound = true
 			});
 		}
+
+	    public void BlockPlaced(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition)
+	    {
+	        SendPacket(new PlayerBlockPlacementPacket()
+	        {
+                CursorPosition = cursorPosition,
+                Location = position,
+                Face = face,
+                Hand = hand
+	        });
+
+        }
 	}
 }

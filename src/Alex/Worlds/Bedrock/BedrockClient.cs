@@ -7,9 +7,12 @@ using Alex.API.Data;
 using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.API.World;
+using Microsoft.Xna.Framework;
+using MiNET;
 using MiNET.Client;
 using MiNET.Net;
 using MiNET.Utils;
+using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 
 namespace Alex.Worlds.Bedrock
 {
@@ -73,7 +76,7 @@ namespace Alex.Worlds.Bedrock
 		}
 
 		public bool IgnoreUnConnectedPong = false;
-		protected override void OnUnConnectedPong(UnconnectedPong packet, IPEndPoint senderEndpoint)
+		protected override void OnUnconnectedPong(UnconnectedPong packet, IPEndPoint senderEndpoint)
 		{
 			KnownMotd = new BedrockMotd(packet.serverName);
 			OnMotdReceivedHandler?.Invoke(this, KnownMotd);
@@ -95,7 +98,12 @@ namespace Alex.Worlds.Bedrock
 			SendChat(message);
 		}
 
-		void IChatProvider.Send(string message)
+	    public void BlockPlaced(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition)
+	    {
+	        throw new NotImplementedException();
+	    }
+
+	    void IChatProvider.Send(string message)
 		{
 			SendChat(message);
 		}

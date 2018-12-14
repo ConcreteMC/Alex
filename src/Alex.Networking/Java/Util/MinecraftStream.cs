@@ -16,6 +16,7 @@ using Org.BouncyCastle.Crypto.Engines;
 using Org.BouncyCastle.Crypto.IO;
 using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Parameters;
+using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 
 namespace Alex.Networking.Java.Util
 {
@@ -271,8 +272,8 @@ namespace Alex.Networking.Java.Util
 		{
 			var val = ReadLong();
 			var x = Convert.ToSingle(val >> 38);
-			var y = Convert.ToSingle((val >> 26) & 0xFFF);
-			var z = Convert.ToSingle(val << 38 >> 38);
+			var y = Convert.ToSingle(val & 0xFFF);
+			var z = Convert.ToSingle((val << 38 >> 38) >> 12);
 			return new Vector3(x, y, z);
 		}
 
@@ -349,9 +350,14 @@ namespace Alex.Networking.Java.Util
 			var x = Convert.ToInt64(position.X);
 			var y = Convert.ToInt64(position.Y);
 			var z = Convert.ToInt64(position.Z);
-			var toSend = ((x & 0x3FFFFFF) << 38) | ((y & 0xFFF) << 26) | (z & 0x3FFFFFF);
+			var toSend = ((x & 0x3FFFFFF) << 38) | ((z & 0x3FFFFFF) << 12) | (y & 0xFFF);
 			WriteLong(toSend);
 		}
+
+	    public void WritePosition(BlockCoordinates pos)
+	    {
+            WritePosition(new Vector3(pos.X, pos.Y, pos.Z));
+	    }
 
 		public int WriteVarInt(int value)
 		{

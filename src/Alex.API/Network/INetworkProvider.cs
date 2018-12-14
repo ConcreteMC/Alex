@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 using Alex.API.Utils;
+using Microsoft.Xna.Framework;
+using MiNET;
 
 namespace Alex.API.Network
 {
@@ -10,5 +12,6 @@ namespace Alex.API.Network
 	    bool IsConnected { get; }
 		void EntityAction(int entityId, EntityAction action);
 	    void SendChatMessage(string message);
-	}
+        void BlockPlaced(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition);
+    }
 }

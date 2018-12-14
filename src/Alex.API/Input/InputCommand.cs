@@ -41,7 +41,9 @@
         HotBarSelect8,
         HotBarSelect9,
 
-        Click,
+        LeftClick,
+        MiddleClick,
+        RightClick,
         Exit,
 
         A,

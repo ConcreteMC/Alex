@@ -9,7 +9,9 @@ namespace Alex.API.Input.Listeners
     {
         public MouseInputListener(PlayerIndex playerIndex) : base(playerIndex)
         {
-            RegisterMap(InputCommand.Click, MouseButton.Left);
+            RegisterMap(InputCommand.LeftClick, MouseButton.Left);
+            RegisterMap(InputCommand.RightClick, MouseButton.Right);
+            RegisterMap(InputCommand.MiddleClick, MouseButton.Middle);
             RegisterMap(InputCommand.HotBarSelectPrevious, MouseButton.ScrollDown);
             RegisterMap(InputCommand.HotBarSelectNext, MouseButton.ScrollUp);
         }

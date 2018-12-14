@@ -145,12 +145,12 @@ namespace Alex.API.Gui
         {
             if (HighlightedElement == null) return;
 
-            if (CursorInputListener.IsBeginPress(InputCommand.Click))
+            if (CursorInputListener.IsBeginPress(InputCommand.LeftClick))
             {
                 FocusedElement = HighlightedElement;
             }
 
-            var isDown = CursorInputListener.IsDown(InputCommand.Click);
+            var isDown = CursorInputListener.IsDown(InputCommand.LeftClick);
             if (CursorPosition != _previousCursorPosition)
             {
                 HighlightedElement?.InvokeCursorMove(CursorPosition, _previousCursorPosition, isDown);
@@ -161,7 +161,7 @@ namespace Alex.API.Gui
                 HighlightedElement?.InvokeCursorDown(CursorPosition);
             }
 
-            if (HighlightedElement == FocusedElement && CursorInputListener.IsPressed(InputCommand.Click))
+            if (HighlightedElement == FocusedElement && CursorInputListener.IsPressed(InputCommand.LeftClick))
             {
                 HighlightedElement?.InvokeCursorPressed(CursorPosition);
             }

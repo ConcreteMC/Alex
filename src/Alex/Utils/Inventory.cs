@@ -32,6 +32,7 @@ namespace Alex.Utils
 
 				byte oldValue = _selectedSlot;
 			    _selectedSlot = (byte)value;
+		        MainHand = Slots[36 + value];
 			    SelectedHotbarSlotChanged?.Invoke(this, new SelectedSlotChangedEventArgs(oldValue, (byte)value));
 			}
 	    }
@@ -79,6 +80,10 @@ namespace Alex.Utils
 			    if (index < 0 || index >= Slots.Length) throw new IndexOutOfRangeException();
 
 			    Slots[index] = value;
+		        if (index == 36 + _selectedSlot)
+		        {
+		            MainHand = value;
+		        }
 			    SlotChanged?.Invoke(this, new SlotChangedEventArgs(index, value));
 			}
 	    }

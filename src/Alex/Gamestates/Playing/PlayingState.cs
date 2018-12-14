@@ -200,22 +200,74 @@ namespace Alex.GameStates.Playing
 			base.OnUpdate(gameTime);
 		}
 
+	    private Air _air = new Air();
 		private Vector3 _raytracedBlock;
+	    private Vector3 _adjacentBlock;
 		protected void UpdateRayTracer(GraphicsDevice graphics, World world)
 		{
-			_raytracedBlock = RayTracer.Raytrace(graphics, world, World.Camera);
-			if (_raytracedBlock.Y > 0 && _raytracedBlock.Y < 256)
-			{
-				SelBlock = (Block)World.GetBlock(_raytracedBlock.X, _raytracedBlock.Y, _raytracedBlock.Z);
-				RayTraceBoundingBox = SelBlock.GetBoundingBox(_raytracedBlock);
-			}
-			else
-			{
-				SelBlock = new Air();
-			}
+		    var camPos = world.Camera.Position;
+		    var lookVector = world.Camera.Direction;
+
+		    for (float x = 0.5f; x < 8f; x += 0.1f)
+		    {
+		        Vector3 targetPoint = camPos + (lookVector * x);
+		        var block = world.GetBlock(targetPoint) as Block;
+
+		        if (block != null && block.HasHitbox && !block.IsWater)
+		        {
+		            var bbox = block.GetBoundingBox(targetPoint.Floor());
+		            if (bbox.Contains(targetPoint) == ContainmentType.Contains)
+		            {
+		                _raytracedBlock = targetPoint;
+                        SelBlock = block;
+		                RayTraceBoundingBox = bbox;
+
+		                bool hasAdjacent = SetPlayerAdjacentSelectedBlock(world, x, camPos, lookVector);
+		                world.Player.Raytraced = targetPoint;
+		                world.Player.AdjacentRaytrace = _adjacentBlock;
+		                world.Player.HasRaytraceResult = true;
+		                world.Player.HasAdjacentRaytrace = hasAdjacent;
+                        return;
+		            }
+		        }
+		    }
+
+		    SelBlock = _air;
+		    _raytracedBlock.Y = 999;
+		    world.Player.HasRaytraceResult = false;
+		    world.Player.HasAdjacentRaytrace = false;
+
+		    /*_raytracedBlock = RayTracer.Raytrace(graphics, world, World.Camera);
+            if (_raytracedBlock.Y > 0 && _raytracedBlock.Y < 256)
+            {
+                SelBlock = (Block)World.GetBlock(_raytracedBlock.X, _raytracedBlock.Y, _raytracedBlock.Z);
+                RayTraceBoundingBox = SelBlock.GetBoundingBox(_raytracedBlock);
+            }
+            else
+            {
+                SelBlock = new Air();
+            }*/
 		}
 
-		private Block SelBlock { get; set; } = new Air();
+	    private bool SetPlayerAdjacentSelectedBlock(World world, float xStart, Vector3 camPos, Vector3 lookVector)
+	    {
+	        for (float x = xStart; x > 0.7f; x -= 0.1f)
+	        {
+	            Vector3 targetPoint = camPos + (lookVector * x);
+	            var block = world.GetBlock(targetPoint) as Block;
+
+	            if (block != null && (!block.Solid))
+	            {
+	                _adjacentBlock = targetPoint;
+	                return true;
+	            }
+            }
+
+	        return false;
+	    }
+
+
+	    private Block SelBlock { get; set; } = new Air();
 		private Microsoft.Xna.Framework.BoundingBox RayTraceBoundingBox { get; set; }
 		private bool RenderDebug { get; set; } = true;
 
@@ -268,7 +320,13 @@ namespace Alex.GameStates.Playing
 					args.SpriteBatch.RenderBoundingBox(
 						RayTraceBoundingBox,
 						World.Camera.ViewMatrix, World.Camera.ProjectionMatrix, Color.LightGray);
-				}
+
+				    /*var floored = _adjacentBlock.Floor();
+
+                    args.SpriteBatch.RenderBoundingBox(
+				        new BoundingBox(floored, floored + new Vector3(1,1,1)), 
+				        World.Camera.ViewMatrix, World.Camera.ProjectionMatrix, Color.Red);*/
+                }
 
 				World.Render2D(args);
 			}
