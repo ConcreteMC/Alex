@@ -31,5 +31,9 @@ namespace Alex.API.World
 		void SetBlockState(int x, int y, int z, IBlockState block);
 		IBlockState GetBlockState(int x, int y, int z);
 		int GetBiome(int x, int y, int z);
+		bool HasBlock(int x, int y, int z);
+		BlockCoordinates FindBlockPosition(BlockCoordinates coords, out IChunkColumn chunk);
+		IChunkColumn GetChunkColumn(int x, int z);
+
 	}
 }

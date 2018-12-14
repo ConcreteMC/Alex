@@ -10,6 +10,7 @@ using Alex.API.Utils;
 using fNbt;
 using fNbt.Tags;
 using Microsoft.Xna.Framework;
+using MiNET.Utils;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Engines;
 using Org.BouncyCastle.Crypto.IO;
@@ -277,17 +278,19 @@ namespace Alex.Networking.Java.Util
 
 		public SlotData ReadSlot()
 		{
-			short id = ReadShort();
+			bool present = ReadBool();
+			if (!present) return null;
+
+			int id = ReadVarInt();
 			byte count = 0;
 			short damage = 0;
 			NbtCompound nbt = null;
 
-			if (id != -1)
-			{
+			
 				count = (byte)ReadByte();
 			//	damage = ReadShort();
 				nbt = ReadNbtCompound();
-			}
+			
 
 			SlotData slot = new SlotData();
 			slot.Count = count;
@@ -499,13 +502,23 @@ namespace Alex.Networking.Java.Util
 
 		public NbtCompound ReadNbtCompound()
 		{
-			return null;
-			//byte d = (byte) ReadByte();
+			NbtTagType t = (NbtTagType) ReadByte();
+			if (t != NbtTagType.Compound) return null;
+			Position--;
+
+            NbtFile file = new NbtFile() { BigEndian = true, UseVarInt = false };
+
+			file.LoadFromStream(this, NbtCompression.None);
+
+			return file.RootTag;
 		}
 
 		public void WriteNbtCompound(NbtCompound compound)
 		{
-			WriteByte(0);
+			NbtFile f = new NbtFile(compound) { BigEndian = true, UseVarInt = false};
+			f.SaveToStream(this, NbtCompression.None);
+			
+			//WriteByte(0);
 		}
 
 		public ChatObject ReadChatObject()

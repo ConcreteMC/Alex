@@ -13,10 +13,10 @@ namespace Alex.Blocks
 			HasHitbox = false;
 
 			LightValue = 15;
-
+			LightOpacity = 255;
 			//BlockModel = BlockFactory.StationairyLavaModel;
 
-		//	BlockMaterial = Material.Lava;
+			//	BlockMaterial = Material.Lava;
 		}
 	}
 }

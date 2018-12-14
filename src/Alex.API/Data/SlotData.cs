@@ -9,7 +9,7 @@ namespace Alex.API.Data
 {
     public class SlotData
     {
-	    public short ItemID = -1;
+	    public int ItemID = -1;
 	    public short ItemDamage = 0;
 	    public byte Count = 0;
 

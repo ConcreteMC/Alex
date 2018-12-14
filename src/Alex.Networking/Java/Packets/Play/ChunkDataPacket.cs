@@ -12,12 +12,14 @@ namespace Alex.Networking.Java.Packets.Play
 		public int PrimaryBitmask;
 		public byte[] Buffer;
 		public List<NbtCompound> TileEntities;
+		public NbtCompound HeightMaps;
 		public bool GroundUp;
 
 		public ChunkDataPacket()
 		{
-			PacketId = 0x21;
+			PacketId = 0x22;
 			TileEntities = new List<NbtCompound>();
+			//HeightMaps = new NbtCompound();
 		}
 
 	
@@ -28,15 +30,17 @@ namespace Alex.Networking.Java.Packets.Play
 			GroundUp = stream.ReadBool();
 			PrimaryBitmask = stream.ReadVarInt();
 
+			HeightMaps = stream.ReadNbtCompound();
+
 			int i = stream.ReadVarInt();
 			Buffer = new byte[i];
 			stream.Read(Buffer, 0, Buffer.Length);
 
-			//int tileEntities = stream.ReadVarInt();
-			//for (int k = 0; k < tileEntities; k++)
-			//{
-			//	TileEntities.Add(stream.ReadNbtCompound());
-			//}
+			int tileEntities = stream.ReadVarInt();
+			for (int k = 0; k < tileEntities; k++)
+			{
+				TileEntities.Add(stream.ReadNbtCompound());
+			}
 		}
 
 		public override void Encode(MinecraftStream stream)
@@ -47,11 +51,11 @@ namespace Alex.Networking.Java.Packets.Play
 			stream.WriteVarInt(PrimaryBitmask);
 			stream.WriteVarInt(Buffer.Length);
 			stream.Write(Buffer, 0, Buffer.Length);
-			//stream.WriteVarInt(TileEntities.Count);
-			//foreach (var tileEntity in TileEntities)
-			//{
-			//	stream.WriteNbtCompound(tileEntity);
-			//}
+			stream.WriteVarInt(TileEntities.Count);
+			foreach (var tileEntity in TileEntities)
+			{
+				stream.WriteNbtCompound(tileEntity);
+			}
 		}
 	}
 }

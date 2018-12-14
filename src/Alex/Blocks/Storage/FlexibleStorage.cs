@@ -73,10 +73,12 @@ namespace Alex.Blocks.Storage
 				int startIndex = bitIndex / 64;
 				int endIndex = ((index + 1) * this._bitsPerEntry - 1) / 64;
 				int startBitSubIndex = bitIndex % 64;
+				//_data[startIndex] |= (((long) value) << startBitSubIndex);
 				this._data[startIndex] = this._data[startIndex] & ~(this._maxEntryValue << startBitSubIndex) | ((long)value & this._maxEntryValue) << startBitSubIndex;
 				if (startIndex != endIndex)
 				{
 					int endBitSubIndex = 64 - startBitSubIndex;
+					//_data[endIndex] = (((long) value >> (endBitSubIndex)));
 					this._data[endIndex] = this._data[endIndex] >> endBitSubIndex << endBitSubIndex | ((long)value & this._maxEntryValue) >> endBitSubIndex;
 				}
 			}

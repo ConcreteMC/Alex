@@ -5,6 +5,7 @@ using System.Drawing;
 //using System.Reflection.Metadata.Ecma335;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
+using System.Threading.Tasks;
 using Alex.API.Blocks.State;
 using Alex.API.Entities;
 using Alex.API.Graphics;
@@ -135,9 +136,13 @@ namespace Alex.Worlds
 		}
 
 		private float _fovModifier = -1;
-		public void Update(UpdateArgs args, SkyBox skyRenderer)
+		private Vector3 PreviousDirection = Vector3.Zero;
+		private bool UpdatingPriorities = false;
+        public void Update(UpdateArgs args, SkyBox skyRenderer)
 		{
-			args.Camera = Camera;
+			ChunkCoordinates oldPosition = new ChunkCoordinates(Player.KnownPosition);
+
+            args.Camera = Camera;
 			if (Player.FOVModifier != _fovModifier)
 			{
 				_fovModifier = Player.FOVModifier;
@@ -170,6 +175,25 @@ namespace Alex.Worlds
 
 			PhysicsEngine.Update(args.GameTime);
 
+			/*var dir = Camera.Direction;
+			if (dir != PreviousDirection && !UpdatingPriorities)
+			{
+				UpdatingPriorities = true;
+                ChunkManager.SkylightCalculator.UpdatePriority().ContinueWith((o) =>
+	                {
+		                UpdatingPriorities = false;
+	                });
+			}*/
+
+			//PreviousDirection = dir;
+
+            ChunkCoordinates c = new ChunkCoordinates(Player.KnownPosition);
+			if (c != oldPosition)
+			{
+				UpdateLightingAroundPlayer(c);
+			}
+
+
 			if (Ticker.Update(args))
 			{
 				if (!FreezeWorldTime)
@@ -181,6 +205,23 @@ namespace Alex.Worlds
 				//if (Player.IsSpawned)
 			}
 		}
+
+		private void UpdateLightingAroundPlayer(ChunkCoordinates center)
+		{
+			return;
+			int radiusSquared = 6;// (int) Math.Pow(Alex.GameSettings.RenderDistance, 2) / 3;
+			for (int x = -radiusSquared; x < radiusSquared; x++)
+			{
+				for (int z = -radiusSquared; z < radiusSquared; z++)
+				{
+					var cc = GetChunkColumn(center.X + x, center.Z + z);
+					if (cc != null && cc.SkyLightDirty)
+					{
+						ChunkUpdate(cc, ScheduleType.Skylight);
+					}
+				}
+			}
+        }
 
 		public Vector3 SpawnPoint { get; set; } = Vector3.Zero;
         public Vector3 GetSpawnPoint()
@@ -200,14 +241,14 @@ namespace Alex.Worlds
 
         public byte GetSkyLight(int x, int y, int z)
         {
-            if (y < 0 || y > ChunkColumn.ChunkHeight) return 15;
+            if (y < 0 || y > ChunkColumn.ChunkHeight) return 16;
 
 			IChunkColumn chunk;
 	        if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 	        {
 				return chunk.GetSkylight(x & 0xf, y & 0xff, z & 0xf);
             }
-            return 15;
+            return 16;
         }
 
         public byte GetBlockLight(Vector3 position)
@@ -290,7 +331,9 @@ namespace Alex.Worlds
 		    if (ChunkManager.TryGetChunk(chunkCoords, out chunk))
 		    {
 				chunk.SetBlock(x & 0xf, y & 0xff, z & 0xf, block);
-				ChunkManager.ScheduleChunkUpdate(chunkCoords, ScheduleType.Full);
+				ChunkManager.SkylightCalculator.UpdateHeightMap(new BlockCoordinates(x,y,z));
+
+				ChunkManager.ScheduleChunkUpdate(chunkCoords, ScheduleType.Full | ScheduleType.Skylight);
 
 			    UpdateNeighbors(x, y, z);
 			} 
@@ -308,10 +351,11 @@ namespace Alex.Worlds
 				var cz = z & 0xf;
 
 				chunk.SetBlockState(cx, cy, cz, block);
-				
-				ChunkManager.ScheduleChunkUpdate(chunkCoords, ScheduleType.Full);
+				ChunkManager.SkylightCalculator.UpdateHeightMap(new BlockCoordinates(x, y, z));
 
-				UpdateNeighbors(x,y,z);
+				ChunkManager.ScheduleChunkUpdate(chunkCoords, ScheduleType.Full | ScheduleType.Skylight);
+
+                UpdateNeighbors(x,y,z);
 			}
 		}
 
@@ -359,6 +403,25 @@ namespace Alex.Worlds
 
 			Log.Debug($"Failed getting biome: {x} | {y} | {z}");
 			return -1;
+		}
+
+		public bool HasBlock(int x, int y, int z)
+		{
+			
+			IChunkColumn chunk;
+			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
+			{
+				//Worlds.ChunkColumn realColumn = (Worlds.ChunkColumn)chunk;
+				return true;
+			}
+
+			return false;
+		}
+
+		public BlockCoordinates FindBlockPosition(BlockCoordinates coords, out IChunkColumn chunk)
+		{
+			ChunkManager.TryGetChunk(new ChunkCoordinates(coords.X >> 4, coords.Z >> 4), out chunk);
+			return new BlockCoordinates(coords.X & 0xf, coords.Y & 0xff, coords.Z & 0xf);
 		}
 
 		public void TickChunk(ChunkColumn chunkColumn)
@@ -432,9 +495,11 @@ namespace Alex.Worlds
 
 		public void ChunkReceived(IChunkColumn chunkColumn, int x, int z, bool update)
 		{
-			ChunkManager.AddChunk(chunkColumn, new ChunkCoordinates(x, z), update);
-			//InitiateChunk(chunkColumn as ChunkColumn);
-		}
+			var c = new ChunkCoordinates(x, z);
+
+			ChunkManager.AddChunk(chunkColumn, c, update);
+            //InitiateChunk(chunkColumn as ChunkColumn);
+        }
 
 		public void ChunkUnload(int x, int z)
 		{
@@ -442,6 +507,11 @@ namespace Alex.Worlds
 			ChunkManager.RemoveChunk(chunkCoordinates);
 
 			EntityManager.UnloadEntities(chunkCoordinates);
+		}
+
+		public void ChunkUpdate(IChunkColumn chunkColumn, ScheduleType type = ScheduleType.Skylight)
+		{
+			ChunkManager.ScheduleChunkUpdate(new ChunkCoordinates(chunkColumn.X, chunkColumn.Z), type);
 		}
 
 		public void SpawnEntity(long entityId, IEntity entity)

@@ -87,7 +87,9 @@ namespace Alex.GameStates.Playing
 			_debugInfo.AddDebugLeft(() =>
 			{
 				FpsCounter.Update();
-				return $"Alex {Alex.Version} ({FpsCounter.Value:##} FPS, {World.ChunkUpdates}:{World.LowPriorityUpdates} chunk updates)";
+				World.ChunkManager.GetPendingLightingUpdates(out int lowLight, out int midLight, out int highLight);
+
+				return $"Alex {Alex.Version} ({FpsCounter.Value:##} FPS, {World.ChunkUpdates}:{World.LowPriorityUpdates} chunk updates, H: {highLight} M: {midLight} L: {lowLight} lighting updates)";
 			});
 			_debugInfo.AddDebugLeft(() =>
 			{

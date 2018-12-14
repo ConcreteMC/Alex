@@ -39,7 +39,7 @@ namespace Alex.Blocks
 
 		public double AmbientOcclusionLightValue { get; set; } = 1.0;
 	    public int LightValue { get; set; } = 0;
-	    public int LightOpacity { get; set; } = 0;
+	    public int LightOpacity { get; set; } = 255;
 
 		//public BlockModel BlockModel { get; set; }
 		public IBlockState BlockState { get; set; }

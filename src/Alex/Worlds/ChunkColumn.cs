@@ -55,8 +55,9 @@ namespace Alex.Worlds
 		public bool IsLoaded = false;
 		public bool NeedSave = false;
 		public bool IsDirty { get; set; }
+		public bool SkyLightDirty { get; set; }
 
-		public ExtendedBlockStorage[] Sections = new ExtendedBlockStorage[16];
+        public ExtendedBlockStorage[] Sections = new ExtendedBlockStorage[16];
 		public int[] BiomeId = ArrayOf<int>.Create(256, 1);
 		public short[] Height = new short[256];
 
@@ -69,7 +70,9 @@ namespace Alex.Worlds
 		public ChunkColumn()
 		{
 			IsDirty = true;
-			for (int i = 0; i < Sections.Length; i++)
+			SkyLightDirty = true;
+
+            for (int i = 0; i < Sections.Length; i++)
 			{
 				var b = new ExtendedBlockStorage(i, true);
 				Sections[i] = b;
@@ -190,6 +193,7 @@ namespace Alex.Worlds
 				return;
 
 			Sections[@by >> 4].SetExtSkylightValue(bx, @by - 16 * (@by >> 4), bz, data);
+			SkyLightDirty = true;
 		}
 
 		private Vector3 Position => new Vector3(X * 16, 0, Z*16);
@@ -371,7 +375,7 @@ namespace Alex.Worlds
 						}
 
 						storage.Data.Read(ms);
-
+						/*
 						for (int y = 0; y < 16; y++)
 						{
 							for (int z = 0; z < 16; z++)
@@ -404,7 +408,7 @@ namespace Alex.Worlds
 									}
 								}
 							}
-						}
+						}*/
 					}
 					else
 					{
@@ -438,7 +442,7 @@ namespace Alex.Worlds
 			}
 			catch (Exception e)
 			{
-				Log.Warn($"Received supposedly corrupted chunk :D");
+				Log.Warn($"Received supposedly corrupted chunk:" + e);
 			}
 		}
 	}

@@ -7,6 +7,7 @@
     <ApplicationIcon>Icon.ico</ApplicationIcon>
     <StartupObject>Alex.Program</StartupObject>
     <Platforms>AnyCPU;x64</Platforms>
+	  <RuntimeIdentifiers>win10-x64;ubuntu.16.10-x64</RuntimeIdentifiers>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -65,17 +66,16 @@
     <PackageReference Include="CefSharp.Common" Version="67.0.0" />
     <PackageReference Include="Chromely.CefGlue.Winapi" Version="66.0.0" />
     <PackageReference Include="Chromely.Core" Version="0.9.1" />
-    <PackageReference Include="Chromely.Unofficial.CefGlue.NetStd" Version="66.0.3359.117" />
     <PackageReference Include="Hawezo.MojangSharp" Version="0.5.1" />
-    <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="1.0.0-alpha-27002-01" />
-    <PackageReference Include="Microsoft.Identity.Client" Version="2.2.0-preview" />
+    <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="1.0.0-alpha-27020-01" />
+    <PackageReference Include="Microsoft.Identity.Client" Version="2.3.0-preview" />
     <PackageReference Include="MonoGame.Framework.DesktopGL.Core" Version="3.7.0.7" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-    <PackageReference Include="NLog" Version="4.5.6" />
-    <PackageReference Include="NLog.Config" Version="4.5.6" />
-    <PackageReference Include="System.Reactive.Core" Version="4.1.1" />
-    <PackageReference Include="System.Reactive.Interfaces" Version="4.1.1" />
-    <PackageReference Include="System.Reactive.Linq" Version="4.1.1" />
+    <PackageReference Include="NLog" Version="4.5.10" />
+    <PackageReference Include="NLog.Config" Version="4.5.10" />
+    <PackageReference Include="System.Reactive.Core" Version="4.1.2" />
+    <PackageReference Include="System.Reactive.Interfaces" Version="4.1.2" />
+    <PackageReference Include="System.Reactive.Linq" Version="4.1.2" />
     <PackageReference Include="WinApi" Version="4.0.0" />
   </ItemGroup>
 
@@ -110,6 +110,9 @@
 			</ReferencePath>
 			<ReferencePath Condition="'%(FileName)' == 'System.Drawing.Common'">
 				<Aliases>CoreCompaty</Aliases>
+			</ReferencePath>
+			<ReferencePath Condition="'%(FileName)' == 'Chromely.CefGlue.Winapi'">
+				<Aliases>CefGlueWIN</Aliases>
 			</ReferencePath>
 		</ItemGroup>
 	</Target>

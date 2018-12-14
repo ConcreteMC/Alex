@@ -1,13 +1,17 @@
-﻿using Alex.API.Blocks.State;
+﻿using System.Text;
+using Alex.API.Blocks.State;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks.State;
+using NLog;
 
 namespace Alex.Blocks.Storage.Pallete
 {
 	public class BlockStatePaletteLinear : IBlockStatePalette
 	{
-		private readonly IBlockState[] _states;
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BlockStatePaletteLinear));
+
+        private readonly IBlockState[] _states;
 		private readonly IBlockStatePaletteResizer _resizeHandler;
 		private readonly int _bits;
 		private uint _arraySize;
@@ -52,7 +56,7 @@ namespace Alex.Blocks.Storage.Pallete
 		{
 			this._arraySize = (uint) ms.ReadVarInt();
 
-			for (int i = 0; i < _arraySize; i++)
+            for (int i = 0; i < _arraySize; i++)
 			{
 				_states[i] = BlockFactory.GetBlockState(ms.ReadVarInt());
 			}

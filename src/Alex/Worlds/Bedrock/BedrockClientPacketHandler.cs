@@ -373,7 +373,7 @@ namespace Alex.Worlds.Bedrock
 									int z = (position >> 4) & 0xF;
 								//	MiNET.Blockstate state = MiNET.Blocks.BlockFactory.g
 									section.Set(x,y,z, BlockFactory.GetBlockState(pallete[state]));
-
+										//ET.Blocks.BlockFactory.GetBlockById()
 									position++;
 								}
 							}

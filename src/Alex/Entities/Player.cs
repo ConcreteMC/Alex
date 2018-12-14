@@ -1,4 +1,5 @@
-﻿using Alex.API.Graphics;
+﻿using System;
+using Alex.API.Graphics;
 using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.GameStates.Playing;
@@ -37,6 +38,7 @@ namespace Alex.Entities
 
 		public override void Update(IUpdateArgs args)
 		{
+			ChunkCoordinates oldChunkCoordinates = new ChunkCoordinates(base.KnownPosition);
 			bool sprint = IsSprinting;
 			bool sneak = IsSneaking;
 
@@ -76,7 +78,7 @@ namespace Alex.Entities
 					Network.EntityAction((int)EntityId, EntityAction.StopSneaking);
 				}
 			}
-
+			
 			base.Update(args);
 
 		}

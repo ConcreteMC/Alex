@@ -1,10 +1,11 @@
-﻿using System;
+﻿extern alias CefGlueWIN;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using Alex.API.Gui.Elements;
-using Chromely.CefGlue.Winapi;
-using Chromely.CefGlue.Winapi.ChromeHost;
+using CefGlueWIN::Chromely.CefGlue.Winapi;
+using CefGlueWIN::Chromely.CefGlue.Winapi.ChromeHost;
 using Chromely.Core;
 using Chromely.Core.Helpers;
 using WinApi.Windows;

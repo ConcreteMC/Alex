@@ -45,6 +45,7 @@ using NLog;
 using NLog.Fluent;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using LevelInfo = Alex.API.World.LevelInfo;
+using NibbleArray = Alex.Utils.NibbleArray;
 using Packet = Alex.Networking.Java.Packets.Packet;
 using PlayerLocation = Alex.API.Utils.PlayerLocation;
 using UUID = Alex.API.Utils.UUID;
@@ -487,6 +488,10 @@ namespace Alex.Worlds.Java
 			else if (packet is ChunkDataPacket chunk)
 			{
 				HandleChunkData(chunk);
+			}
+			else if (packet is UpdateLightPacket updateLight)
+			{
+				HandleUpdateLightPacket(updateLight);
 			}
 			else if (packet is JoinGamePacket joinGame)
 			{
@@ -1115,8 +1120,38 @@ namespace Alex.Worlds.Java
 			}
 		}
 
-		//private BlockingCollection<ChunkDataPacket> _chunkQueue = new BlockingCollection<ChunkDataPacket>();
-		private void HandleChunkData(ChunkDataPacket chunk)
+		private void HandleUpdateLightPacket(UpdateLightPacket packet)
+		{
+			if (WorldReceiver.GetChunkColumn(packet.ChunkX, packet.ChunkZ) is ChunkColumn c)
+			{
+				for (int i = 0; i < packet.SkyLightArrays.Length; i++)
+				{
+					byte[] data = packet.SkyLightArrays[i];
+					if (data == null) continue;
+
+					NibbleArray n = new NibbleArray();
+					n.Data = data;
+
+					c.Sections[i].SkyLight = n;
+				}
+
+				for (int i = 0; i < packet.BlockLightArrays.Length; i++)
+				{
+					byte[] data = packet.BlockLightArrays[i];
+					if (data == null) continue;
+
+					NibbleArray n = new NibbleArray();
+					n.Data = data;
+
+					c.Sections[i].BlockLight = n;
+				}
+
+				WorldReceiver.ChunkUpdate(c);
+            }
+        }
+
+        //private BlockingCollection<ChunkDataPacket> _chunkQueue = new BlockingCollection<ChunkDataPacket>();
+        private void HandleChunkData(ChunkDataPacket chunk)
 		{
 			_loginCompleteEvent?.Set();
 			//_chunkQueue.Add(chunk);
@@ -1185,7 +1220,7 @@ namespace Alex.Worlds.Java
 				ClientStatusPacket clientStatus = new ClientStatusPacket();
 				clientStatus.ActionID = ClientStatusPacket.Action.PerformRespawnOrConfirmLogin;
 				SendPacket(clientStatus);
-
+				
 				Spawned = true;
 			}
 		}

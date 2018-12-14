@@ -35,11 +35,11 @@ namespace Alex.Blocks.Storage
 		{
 			this._yBase = y;
 			this.Data = new BlockStateContainer();
-			this.BlockLight = new NibbleArray(4096);
+			this.BlockLight = new NibbleArray(4096, 0);
 
 			if (storeSkylight)
 			{
-				this.SkyLight = new NibbleArray(4096);
+				this.SkyLight = new NibbleArray(4096, 0);
 			}
 		}
 
@@ -160,6 +160,10 @@ namespace Alex.Blocks.Storage
 					for (int z = 0; z < 16; z++)
 					{
 						IBlock block = this.Get(x, y, z).Block;
+						//if (block.LightValue > 0)
+						//{
+						//	SetExtBlocklightValue(x,y,z, (byte)block.LightValue);
+						//}
 
 						if (!(block is Air))
 						{

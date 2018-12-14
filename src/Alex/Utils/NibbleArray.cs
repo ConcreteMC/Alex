@@ -12,9 +12,13 @@ namespace Alex.Utils
 		{
 		}
 
-		public NibbleArray(int length)
+		public NibbleArray(int length, byte initialValue = 0)
 		{
 			Data = new byte[length / 2];
+			for (int i = 0; i < Data.Length; i++)
+			{
+				Data[i] = initialValue;
+			}
 		}
 
 		public int Length

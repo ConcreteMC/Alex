@@ -13,8 +13,6 @@ using Alex.API.Utils;
 using Alex.GameStates;
 using Alex.GameStates.Gui.Common;
 using Alex.Gui;
-using Chromely.CefGlue.Winapi;
-using Chromely.CefGlue.Winapi.ChromeHost;
 using Chromely.Core;
 using Chromely.Core.Helpers;
 using Microsoft.Xna.Framework;

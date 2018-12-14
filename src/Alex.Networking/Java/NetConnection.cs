@@ -127,7 +127,7 @@ namespace Alex.Networking.Java
 				    }
 				    catch (Exception e)
 				    {
-						Log.Warn($"Exception when handling packet!", e);
+						Log.Warn($"Exception when handling packet: " + e, e);
 				    }
 			    }
 		    }

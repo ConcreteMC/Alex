@@ -163,12 +163,13 @@ namespace Alex
 			GameStateManager.AddState("splash", splash);
 			GameStateManager.SetActiveState("splash");
 
-		//	Log.Info($"Initializing Alex...");
+			//	Log.Info($"Initializing Alex...");
 			ThreadPool.QueueUserWorkItem(o => { InitializeGame(splash); });
 		}
 
 		private void ConfigureServices()
 		{
+			XBLMSAService msa;
 			var storage = new AppDataStorageSystem();
 			Services.AddService<IStorageSystem>(storage);
 			Services.AddService<IOptionsProvider>(new OptionsProvider(storage));
@@ -178,10 +179,12 @@ namespace Alex
 			Services.AddService<IServerQueryProvider>(new ServerQueryProvider());
 			Services.AddService<IPlayerProfileService>(new JavaPlayerProfileService());
 			Services.AddService<BrowserWindowProvider>(new BrowserWindowProvider());
-			Services.AddService(new XBLMSAService());
+			Services.AddService(msa = new XBLMSAService());
 
 			ProfileManager = new ProfileManager(this, storage);
 			Storage = storage;
+
+			//msa.AsyncBrowserLogin();
 		}
 
 		protected override void UnloadContent()
@@ -267,22 +270,19 @@ namespace Alex
 			GuiManager.ApplyFont(font);
 		}
 
-		public void ConnectToServer(IPEndPoint serverEndPoint, bool bedrock = false)
+		public void ConnectToServer(IPEndPoint serverEndPoint, PlayerProfile profile, bool bedrock = false)
 		{
-			var authenticationService = Services.GetService<IPlayerProfileService>();
-
 			WorldProvider provider;
 			INetworkProvider networkProvider;
 			IsMultiplayer = true;
 			if (bedrock)
 			{
 				provider = new BedrockWorldProvider(this, serverEndPoint,
-					authenticationService.CurrentProfile, out networkProvider);
+					profile, out networkProvider);
 			}
 			else
 			{
-				//if(Services.GetService<IPlayerProfileService>())
-				provider = new JavaWorldProvider(this, serverEndPoint, authenticationService.CurrentProfile,
+				provider = new JavaWorldProvider(this, serverEndPoint, profile,
 					out networkProvider);
 			}
 

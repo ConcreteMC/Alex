@@ -167,5 +167,35 @@ namespace Alex.Worlds
 		{
 			ChunkManager.Dispose();
 		}
-	}
+
+		public IChunkColumn GetChunkColumn(int x, int z)
+		{
+			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x, z), out IChunkColumn val))
+			{
+				return val;
+			}
+			else
+			{
+				return null;
+			}
+		}
+
+        public bool HasBlock(int x, int y, int z)
+		{
+
+			IChunkColumn chunk;
+			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
+			{
+				//Worlds.ChunkColumn realColumn = (Worlds.ChunkColumn)chunk;
+				return true;
+			}
+
+			return false;
+		}
+		public BlockCoordinates FindBlockPosition(BlockCoordinates coords, out IChunkColumn chunk)
+		{
+			ChunkManager.TryGetChunk(new ChunkCoordinates(coords.X >> 4, coords.Z >> 4), out chunk);
+			return new BlockCoordinates(coords.X - (coords.X >> 4), coords.Y, coords.Z - (coords.Z >> 4));
+		}
+    }
 }

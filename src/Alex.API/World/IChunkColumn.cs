@@ -30,16 +30,19 @@ namespace Alex.API.World
 		object VertexLock { get; set; }
 		object UpdateLock { get; set; }
 		bool IsDirty { get; set; }
+		bool SkyLightDirty { get; set; }
 		ScheduleType Scheduled { get; set; }
 		int GetHeighest();
 		//void SetBlockState(int x, int y, int z, IBlockState blockState);
 	}
 
+	[Flags]
 	public enum ScheduleType
 	{
 		Unscheduled,
 		Full,
 		Border,
-		Scheduled
+		Scheduled,
+		Skylight
 	}
 }

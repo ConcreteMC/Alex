@@ -21,6 +21,7 @@ using Alex.GameStates.Gui.Common;
 using Alex.Graphics.Gui.Elements;
 using Alex.Gui;
 using Alex.Networking.Java;
+using Alex.Services;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -97,7 +98,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 	    protected override void OnShow()
 	    {
 		    base.OnShow();
-		    Load();
+		    Load(true);
 		}
 
 	    protected override void OnSelectedItemChanged(GuiServerListEntryElement newItem)
@@ -151,36 +152,48 @@ namespace Alex.GameStates.Gui.Multiplayer
 		private FastRandom Rnd = new FastRandom();
 	    private void OnJoinServerButtonPressed()
 	    {
-		    var authenticationService = Alex.Services.GetService<IPlayerProfileService>();
-
 			var entry = SelectedItem.SavedServerEntry;
 		    var ips = Dns.GetHostAddresses(entry.Host).ToArray();
 		    IPAddress ip = ips[Rnd.Next(0, ips.Length - 1)];
 		    if (ip == null) return;
 
-		    if (entry.ServerType == ServerType.Java)
+		    IPEndPoint target = new IPEndPoint(ip, entry.Port);
+
+		    var authenticationService = Alex.Services.GetService<IPlayerProfileService>();
+		    var currentProfile = authenticationService.CurrentProfile;
+
+			if (entry.ServerType == ServerType.Java)
 		    {
-			    if (authenticationService.CurrentProfile == null || (authenticationService.CurrentProfile.IsBedrock))
+			    if (currentProfile == null || (currentProfile.IsBedrock))
 			    {
 				    JavaLoginState loginState = new JavaLoginState(_skyBox,
-					    () =>
-					    {
-						    Alex.ConnectToServer(new IPEndPoint(ip, entry.Port),
-							    entry.ServerType == ServerType.Bedrock);
-					    });
+					    () => { Alex.ConnectToServer(target, authenticationService.CurrentProfile, false); });
 
 
 				    Alex.GameStateManager.SetActiveState(loginState, true);
 			    }
 			    else
 			    {
-				    Alex.ConnectToServer(new IPEndPoint(ip, entry.Port), false);
+				    Alex.ConnectToServer(target, currentProfile, false);
 			    }
 		    }
 
 		    else if (entry.ServerType == ServerType.Bedrock)
-		    {
-			    Alex.ConnectToServer(new IPEndPoint(ip, entry.Port), true);
+			{
+				if (currentProfile == null || (!currentProfile.IsBedrock))
+				{
+					//var msa = Alex.Services.GetService<XBLMSAService>();
+					//msa.AsyncBrowserLogin().Wait();
+				//	JavaLoginState loginState = new JavaLoginState(_skyBox,
+					//		() => { Alex.ConnectToServer(target, authenticationService.CurrentProfile, false); });
+
+
+			//		Alex.GameStateManager.SetActiveState(loginState, true);
+				}
+				else
+				{
+					Alex.ConnectToServer(target, currentProfile, true);
+				}
 			}
 	    }
 		
@@ -192,11 +205,12 @@ namespace Alex.GameStates.Gui.Multiplayer
 
 	    private void OnRefreshButtonPressed()
 	    {
-		    Task.Run(() =>
+		   /* Task.Run(() =>
 		    {
 			    SaveAll();
-			    Load(true);
-		    });
+			    Load(false);
+		    });*/
+			PingAll();
 	    }
 
 	    public void Load(bool useTask = false)
@@ -491,7 +505,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 			{
                 var s = response.Status;
 				var q = s.Query;
-				_pingStatus.SetPlayerCount(q.Players.Online, q.Players.Online);
+				_pingStatus.SetPlayerCount(q.Players.Online, q.Players.Max);
 
 				if (!s.WaitingOnPing)
 				{

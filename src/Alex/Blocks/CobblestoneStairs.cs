@@ -12,7 +12,7 @@ namespace Alex.Blocks
 			IsReplacible = false;
 			IsFullBlock = false;
 			IsFullCube = false;
-			LightOpacity = 255;
+			LightOpacity = 16;
 		}
 	}
 }

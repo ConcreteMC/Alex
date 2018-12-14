@@ -43,7 +43,7 @@ namespace Alex.Blocks.Storage
 				}
 				else if (this._bits <= 8)
 				{
-					this.Palette = new BlockStatePaletteLinear(this._bits, this);
+					this.Palette = new BlockStatePaletteMap(this._bits, this);
 				}
 				else
 				{
@@ -68,6 +68,7 @@ namespace Alex.Blocks.Storage
 
 				if (blockState != null)
 				{
+					//Storage[i] = blockState;
 					this.Set(i, blockState);
 				}
 			}
@@ -153,7 +154,7 @@ namespace Alex.Blocks.Storage
 			else
 			{
 				this.Palette = RegistryBasedPalette;
-				this._bits = MathUtils.Log2DeBruijn(BlockFactory.AllBlockstates.Count);
+				bits = MathUtils.Log2DeBruijn(BlockFactory.AllBlockstates.Count);
 			}
 
 			_bits = bits;
@@ -178,25 +179,39 @@ namespace Alex.Blocks.Storage
 
 		public void Read(MinecraftStream ms)
 		{
-			int bitsPerBlock = ms.ReadByte();
-			if (this._bits != bitsPerBlock)
-			{
-				SetBits(bitsPerBlock);
-			}
+			//Number of non-air blocks present in the chunk section,
+			//for lighting purposes. "Non-air" is defined as any block other than air, cave air, and void air (in particular, note that fluids such as water are still counted).
+            short blockCount = ms.ReadShort(); 
 
-			Palette.Read(ms);
+            int bits = ms.ReadByte();
+			
+			if (bits <= 4)
+			{
+				bits = 4;
+				this.Palette = new BlockStatePaletteLinear(bits, this);
+			}
+			else if (bits <= 8)
+			{
+				this.Palette = new BlockStatePaletteMap(bits, this);
+			}
+			else
+			{
+				this.Palette = RegistryBasedPalette;
+				bits = MathUtils.Log2DeBruijn(BlockFactory.AllBlockstates.Count);
+			}
+			this._bits = bits;
+
+            Palette.Read(ms);
 
 			int length = ms.ReadVarInt();
 
-			if (Storage._data.Length != length)
-			{
-				Storage._data = new long[length];
-			}
-
+			long[] data = new long[length];
 			for (int j = 0; j < length; j++)
 			{
-				Storage._data[j] = ms.ReadLong();
+				data[j] = ms.ReadLong();
 			}
+
+			Storage = new FlexibleStorage(bits, data);
 		}
 	}
 }

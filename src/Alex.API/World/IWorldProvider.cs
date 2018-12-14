@@ -67,8 +67,9 @@ namespace Alex.API.World
 		IChunkColumn GetChunkColumn(int x, int z);
 		void ChunkReceived(IChunkColumn chunkColumn, int x, int z, bool update);
 		void ChunkUnload(int x, int z);
+		void ChunkUpdate(IChunkColumn chunkColumn, ScheduleType type = ScheduleType.Skylight);
 
-		void SpawnEntity(long entityId, IEntity entity);
+        void SpawnEntity(long entityId, IEntity entity);
 		void DespawnEntity(long entityId);
 
 		void UpdatePlayerPosition(PlayerLocation location);

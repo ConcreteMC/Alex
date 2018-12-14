@@ -62,21 +62,17 @@ namespace Alex.Networking.Properties {
         
         /// <summary>
         ///   Looks up a localized string similar to {
-        ///        &quot;0x00&quot;: &quot;spawn_entity&quot;,
-        ///        &quot;0x01&quot;: &quot;spawn_entity_experience_orb&quot;,
-        ///        &quot;0x02&quot;: &quot;spawn_entity_weather&quot;,
-        ///        &quot;0x03&quot;: &quot;spawn_entity_living&quot;,
-        ///        &quot;0x04&quot;: &quot;spawn_entity_painting&quot;,
-        ///        &quot;0x05&quot;: &quot;named_entity_spawn&quot;,
-        ///        &quot;0x06&quot;: &quot;animation&quot;,
-        ///        &quot;0x07&quot;: &quot;statistics&quot;,
-        ///        &quot;0x08&quot;: &quot;block_break_animation&quot;,
-        ///        &quot;0x09&quot;: &quot;tile_entity_data&quot;,
-        ///        &quot;0x0a&quot;: &quot;block_action&quot;,
-        ///        &quot;0x0b&quot;: &quot;block_change&quot;,
-        ///        &quot;0x0c&quot;: &quot;boss_bar&quot;,
-        ///        &quot;0x0d&quot;: &quot;difficulty&quot;,
-        ///        &quot;0x0e&quot;: [rest of string was truncated]&quot;;.
+        ///       
+        ///                    &quot;0x00&quot;: &quot;spawn_entity&quot;,
+        ///                    &quot;0x01&quot;: &quot;spawn_entity_experience_orb&quot;,
+        ///                    &quot;0x02&quot;: &quot;spawn_entity_weather&quot;,
+        ///                    &quot;0x03&quot;: &quot;spawn_entity_living&quot;,
+        ///                    &quot;0x04&quot;: &quot;spawn_entity_painting&quot;,
+        ///                    &quot;0x05&quot;: &quot;named_entity_spawn&quot;,
+        ///                    &quot;0x06&quot;: &quot;animation&quot;,
+        ///                    &quot;0x07&quot;: &quot;statistics&quot;,
+        ///                    &quot;0x08&quot;: &quot;block_break_animation&quot;,
+        ///                    &quot;0x09&quot;: &quot;tile_entity_data&quot;, [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string PlayPacketID {
             get {

@@ -14,6 +14,7 @@ namespace Alex.Blocks
 			HasHitbox = false;
 
 			BlockMaterial = Material.Air;
+			LightOpacity = 0;
 		}
 	}
 }

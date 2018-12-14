@@ -267,14 +267,15 @@ namespace Alex.Networking.Java.Packets
 			Register(Direction.ClientBound, ConnectionState.Play, 0x39, () => new EntityHeadLook());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x3F, () => new EntityMetadataPacket());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x41, () => new EntityVelocity());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x52, () => new EntityPropertiesPacket());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x50, () => new EntityTeleport());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x53, () => new EntityPropertiesPacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x51, () => new EntityTeleport());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x35, () => new DestroyEntitiesPacket());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x15, () => new WindowItems());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x17, () => new SetSlot());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x1C, () => new EntityStatusPacket());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x0B, () => new BlockChangePacket());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x0F, () => new MultiBlockChange());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x57, () => new UpdateLightPacket());
 
 			Register(Direction.ClientBound, ConnectionState.Play, 0x10, () => new TabCompleteClientBound());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x20, () => new ChangeGameStatePacket());
@@ -310,6 +311,11 @@ namespace Alex.Networking.Java.Packets
 
 		public static string GetPlayPacketName(int id)
 		{
+			if (PlayFactory.TryGetPacket(id, out var p))
+			{
+				return p.GetType().Name.Replace("Packet", "");
+			}
+
 			if (_playPacketNames.TryGetValue(id, out string result))
 			{
 				return result;
