@@ -210,7 +210,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 			    SaveAll();
 			    Load(false);
 		    });*/
-			PingAll();
+			PingAll(true);
 	    }
 
 	    public void Load(bool useTask = false)
@@ -235,12 +235,12 @@ namespace Alex.GameStates.Gui.Multiplayer
 			    AddItem(new GuiServerListEntryElement(entry));
 		    }
 
-		    PingAll();
+		    PingAll(false);
 		}
 
-	    public void PingAll()
+	    public void PingAll(bool forcedPing)
 	    {
-		    Parallel.ForEach(Items, element => element.PingAsync());
+		    Parallel.ForEach(Items, element => element.PingAsync(forcedPing));
 	    }
 
 	    private void SaveAll()
@@ -270,7 +270,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 
 				    Items[index] = newEntry;
 
-				    newEntry.PingAsync();
+				    newEntry.PingAsync(false);
 				    break;
 			    }
 		    }
@@ -403,9 +403,9 @@ namespace Alex.GameStates.Gui.Multiplayer
 		    base.OnDraw(graphics, gameTime);
 	    }
 
-	    public async Task PingAsync()
+	    public async Task PingAsync(bool force)
 	    {
-		    if (PingCompleted) return;
+		    if (PingCompleted && !force) return;
 		    PingCompleted = true;
 
 		    var hostname = ServerAddress;

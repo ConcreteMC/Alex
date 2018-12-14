@@ -125,9 +125,9 @@ namespace Alex.API.Gui.Elements.Icons
 
             if (_isPending)
             {
-                var dt = gameTime.ElapsedGameTime.TotalSeconds / 20.0f;
+                var dt = gameTime.TotalGameTime.TotalSeconds;
 
-                _animationFrame = (int)((dt * 20.0f) % _connectingStates.Length);
+                _animationFrame = (int)((dt * 5) % _connectingStates.Length);
             }
         }
 

@@ -219,6 +219,7 @@ namespace Alex.Services
 					return;
 				}
 
+				bool waitingOnPing = true;
 				using (TcpClient client = new TcpClient())
 		        {
 			        await client.ConnectAsync(result.Result, port);
@@ -248,11 +249,13 @@ namespace Alex.Services
 						        {
 							        if (pong.Payload == pingId)
 							        {
-										pingCallback?.Invoke(new ServerPingResponse(true, sw.ElapsedMilliseconds));
+								        waitingOnPing = false;
+                                        pingCallback?.Invoke(new ServerPingResponse(true, sw.ElapsedMilliseconds));
 							        }
 							        else
 							        {
-										pingCallback?.Invoke(new ServerPingResponse(true, sw.ElapsedMilliseconds));
+								        waitingOnPing = false;
+                                        pingCallback?.Invoke(new ServerPingResponse(true, sw.ElapsedMilliseconds));
 									}
 						        }
 					        };
@@ -300,7 +303,7 @@ namespace Alex.Services
 						        {
 							        Delay = timeElapsed,
 							        Success = true,
-							        WaitingOnPing = pingCallback != null && !connectionClosed,
+							        WaitingOnPing = pingCallback != null && !waitingOnPing,
 
 							        EndPoint = endPoint,
 							        Address = hostname,
