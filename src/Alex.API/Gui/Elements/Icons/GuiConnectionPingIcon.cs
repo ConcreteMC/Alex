@@ -106,9 +106,17 @@ namespace Alex.API.Gui.Elements.Icons
 		    _playerCountElement.Text = $"§7{players}/{max}";
 	    }
 
-	    public void SetOutdated(string message)
+	    public void SetOutdated(string message, bool isTranslation = false)
 	    {
-		    _playerCountElement.Text = $"§4{message}";
+		    if (isTranslation)
+		    {
+			    _playerCountElement.TranslationKey = message;
+            }
+		    else
+		    {
+			    _playerCountElement.Text = $"§4{message}";
+		    }
+
 		    _isOutdated = true;
 			SetOffline();
 	    }

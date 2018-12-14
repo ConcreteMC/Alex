@@ -450,11 +450,12 @@ namespace Alex.GameStates.Gui.Multiplayer
 
         private void SetErrorMessage(string error)
         {
-            _serverMotd.Text = error;
+           // _serverMotd.Text = error;
 	        
             if (!string.IsNullOrWhiteSpace(error))
             {
-	            _serverMotd.TranslationKey = error;
+	            _serverMotd.Text = error;
+                _serverMotd.TranslationKey = error;
 				_serverMotd.TextColor = TextColor.Red;
             }
             else
@@ -521,7 +522,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 				}
 				else if (q.Version.Protocol > (SavedServerEntry.ServerType == ServerType.Java ? JavaProtocol.ProtocolVersion : McpeProtocolInfo.ProtocolVersion))
 				{
-					_pingStatus.SetOutdated($"Client out of date!");
+					_pingStatus.SetOutdated($"multiplayer.status.client_out_of_date", true);
 				}
 
 				if (q.Description.Extra != null)

@@ -345,7 +345,13 @@ namespace Alex.Services
 
 		        Log.Error($"Could not get server query result, server returned \"{jsonResponse}\"");
 
-		        statusCallBack?.Invoke(new ServerQueryResponse(false, ex.Message, new ServerQueryStatus()
+		        string msg = ex.Message;
+		        if (ex is SocketException)
+		        {
+			        msg = $"multiplayer.status.cannot_connect";
+		        }
+
+		        statusCallBack?.Invoke(new ServerQueryResponse(false, msg, new ServerQueryStatus()
 		        {
 			        Delay = sw.ElapsedMilliseconds,
 			        Success = false,
