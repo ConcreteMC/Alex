@@ -108,6 +108,7 @@ namespace Alex.Worlds
 
 			HighPriority = new ConcurrentQueue<ChunkCoordinates>();
 			LowPriority = new ConcurrentQueue<ChunkCoordinates>();
+			HighestPriority = new ConcurrentQueue<ChunkCoordinates>();
         }
 
 	    public void GetPendingLightingUpdates(out int low, out int mid, out int high)
@@ -124,6 +125,7 @@ namespace Alex.Worlds
 
 		//private ThreadSafeList<Entity> Entities { get; private set; } 
 
+		private ConcurrentQueue<ChunkCoordinates> HighestPriority { get; set; }
 	    private ConcurrentQueue<ChunkCoordinates> HighPriority { get; set; }
 	    private ConcurrentQueue<ChunkCoordinates> LowPriority { get; set; }
 		private ThreadSafeList<ChunkCoordinates> Enqueued { get; } = new ThreadSafeList<ChunkCoordinates>();
@@ -192,7 +194,11 @@ namespace Alex.Worlds
 					if (!UpdateResetEvent.IsSet) continue;
 					//bool doingLowPriority = false;
 					ChunkCoordinates? i = null;
-					if (HighPriority.TryDequeue(out ChunkCoordinates ci))
+					if (HighestPriority.TryDequeue(out ChunkCoordinates cicc))
+					{
+						i = cicc;
+					}
+					else if (HighPriority.TryDequeue(out ChunkCoordinates ci))
 					{
 						i = ci;
 					}
@@ -646,12 +652,33 @@ namespace Alex.Worlds
             }
 		}
 
-	    public void ScheduleChunkUpdate(ChunkCoordinates position, ScheduleType type)
+	    public void ScheduleChunkUpdate(ChunkCoordinates position, ScheduleType type, bool prioritize = false)
 	    {
 
 		    if (Chunks.TryGetValue(position, out IChunkColumn chunk))
 		    {
 			    var currentSchedule = chunk.Scheduled;
+			    if (prioritize)
+			    {
+				    chunk.Scheduled = type;
+					HighestPriority.Enqueue(position);
+
+				    if (!Enqueued.Contains(position))
+				    {
+					    Enqueued.TryAdd(position);
+				    }
+
+                     Interlocked.Increment(ref _chunkUpdates);
+				    _updateResetEvent.Set();
+
+				    if (type.HasFlag(ScheduleType.Skylight))
+				    {
+						SkylightCalculator.CalculateLighting(chunk, true, false, false);
+				    }
+
+				    return;
+			    }
+
                 if (type.HasFlag(ScheduleType.Skylight) && !currentSchedule.HasFlag(ScheduleType.Skylight))
                 {
 	                chunk.Scheduled = type;

@@ -766,8 +766,8 @@ namespace Alex.Worlds.Java
 
 		private void HandleMultiBlockChange(MultiBlockChange packet)
 		{
-			int cx = packet.ChunkX;
-			int cz = packet.ChunkZ;
+			int cx = packet.ChunkX * 16;
+			int cz = packet.ChunkZ * 16;
 			foreach (var blockUpdate in packet.Records)
 			{
 				WorldReceiver?.SetBlockState(new BlockCoordinates(blockUpdate.RelativeX + cx, blockUpdate.Y, blockUpdate.RelativeZ + cz), BlockFactory.GetBlockState(blockUpdate.BlockId));

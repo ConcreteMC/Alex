@@ -218,7 +218,7 @@ namespace Alex.GameStates.Playing
 		            var bbox = block.GetBoundingBox(targetPoint.Floor());
 		            if (bbox.Contains(targetPoint) == ContainmentType.Contains)
 		            {
-		                _raytracedBlock = targetPoint;
+		                _raytracedBlock = targetPoint.Floor();
                         SelBlock = block;
 		                RayTraceBoundingBox = bbox;
 

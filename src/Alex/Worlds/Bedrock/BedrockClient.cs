@@ -76,7 +76,7 @@ namespace Alex.Worlds.Bedrock
 		}
 
 		public bool IgnoreUnConnectedPong = false;
-		protected override void OnUnconnectedPong(UnconnectedPong packet, IPEndPoint senderEndpoint)
+		protected override void OnUnConnectedPong(UnconnectedPong packet, IPEndPoint senderEndpoint)
 		{
 			KnownMotd = new BedrockMotd(packet.serverName);
 			OnMotdReceivedHandler?.Invoke(this, KnownMotd);
@@ -103,7 +103,17 @@ namespace Alex.Worlds.Bedrock
 	        throw new NotImplementedException();
 	    }
 
-	    void IChatProvider.Send(string message)
+		public void UseItem(int hand)
+		{
+			throw new NotImplementedException();
+		}
+
+		public void HeldItemChanged(short slot)
+		{
+			throw new NotImplementedException();
+		}
+
+		void IChatProvider.Send(string message)
 		{
 			SendChat(message);
 		}

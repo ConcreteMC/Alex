@@ -333,7 +333,7 @@ namespace Alex.Worlds
 				chunk.SetBlock(x & 0xf, y & 0xff, z & 0xf, block);
 				ChunkManager.SkylightCalculator.UpdateHeightMap(new BlockCoordinates(x,y,z));
 
-				ChunkManager.ScheduleChunkUpdate(chunkCoords, ScheduleType.Full | ScheduleType.Skylight);
+				ChunkManager.ScheduleChunkUpdate(chunkCoords, ScheduleType.Full | ScheduleType.Skylight, true);
 
 			    UpdateNeighbors(x, y, z);
 			} 
@@ -353,7 +353,7 @@ namespace Alex.Worlds
 				chunk.SetBlockState(cx, cy, cz, block);
 				ChunkManager.SkylightCalculator.UpdateHeightMap(new BlockCoordinates(x, y, z));
 
-				ChunkManager.ScheduleChunkUpdate(chunkCoords, ScheduleType.Full | ScheduleType.Skylight);
+				ChunkManager.ScheduleChunkUpdate(chunkCoords, ScheduleType.Full | ScheduleType.Skylight, true);
 
                 UpdateNeighbors(x,y,z);
 			}

@@ -9,7 +9,7 @@ namespace Alex.Networking.Java.Packets.Play
 		    PacketId = 0x21;
 	    }
 
-	    public byte Slot;
+	    public short Slot;
 
 	    public override void Decode(MinecraftStream stream)
 	    {
@@ -18,7 +18,7 @@ namespace Alex.Networking.Java.Packets.Play
 
 	    public override void Encode(MinecraftStream stream)
 	    {
-		    stream.WriteByte(Slot);
+		    stream.WriteShort(Slot);
 	    }
     }
 }

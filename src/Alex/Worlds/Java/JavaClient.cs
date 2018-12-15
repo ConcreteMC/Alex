@@ -80,5 +80,21 @@ namespace Alex.Worlds.Java
 	        });
 
         }
+
+		public void UseItem(int hand)
+		{
+			SendPacket(new UseItemPacket()
+			{
+				Hand = hand
+			});
+		}
+
+		public void HeldItemChanged(short slot)
+		{
+			SendPacket(new HeldItemChangePacket()
+			{
+				Slot = slot
+			});
+		}
 	}
 }

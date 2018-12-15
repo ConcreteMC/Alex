@@ -7,6 +7,7 @@ using Alex.Blocks;
 using Alex.GameStates.Playing;
 using Alex.Graphics.Models.Entity;
 using Alex.ResourcePackLib.Json.Models.Entities;
+using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -41,11 +42,16 @@ namespace Alex.Entities
 		    NoAi = false;
 
 			Inventory = new Inventory(46);
-
+			Inventory.SelectedHotbarSlotChanged += SelectedHotbarSlotChanged;
 			MovementSpeed = 0.1;
 		}
 
-        private bool _destroyingBlock = false;
+	    private void SelectedHotbarSlotChanged(object sender, SelectedSlotChangedEventArgs e)
+	    {
+		    Network?.HeldItemChanged(e.NewValue);
+	    }
+
+	    private bool _destroyingBlock = false;
         private int _destroyingTick = 0;
 		public override void Update(IUpdateArgs args)
 		{
@@ -110,21 +116,23 @@ namespace Alex.Entities
 
 		    if (Controller.InputManager.IsPressed(InputCommand.RightClick))
 		    {
-                Log.Debug($"Right click!");
-		        if (Inventory.MainHand != null)
+               // Log.Debug($"Right click!");
+		        if (Inventory.MainHand != null && Inventory.MainHand.ItemID != -1 && Inventory.MainHand.ItemID != 0)
 		        {
 		            if (ItemFactory.ResolveItemName(Inventory.MainHand.ItemID, out string itemName))
 		            {
-		                if (!(BlockFactory.GetBlockState(itemName).Block is Air))
+			            var blockState = BlockFactory.GetBlockState(itemName);
+
+                        if (blockState != null && !(blockState.Block is Air))
 		                {
-		                    var r = Raytraced;
-		                    var adj = AdjacentRaytrace - Raytraced;
+			                var flooredAdj = AdjacentRaytrace.Floor();
+
+                            var adj = AdjacentRaytrace.Floor() - Raytraced.Floor();
 		                    adj.Normalize();
-		                    adj = adj.Floor();
 
 		                    BlockFace face = BlockFace.None;
-                            
-		                    if (adj == Vector3.Up)
+
+                            if (adj == Vector3.Up)
 		                    {
 		                        face = BlockFace.Up;
 		                    }
@@ -149,8 +157,16 @@ namespace Alex.Entities
 		                        face = BlockFace.East;
 		                    }
 
-                           // Network.BlockPlaced(new BlockCoordinates((int)r.X, (int)r.Y, (int)r.Z), face, 0, new Vector3(0.5f, 0.5f, 0.5f));
-                            Log.Debug($"Placed block: {itemName} on {r} face= {face} ({adj})");
+							var remainder = new Vector3(AdjacentRaytrace.X - flooredAdj.X, AdjacentRaytrace.Y - flooredAdj.Y, AdjacentRaytrace.Z - flooredAdj.Z);
+
+                            var r = Raytraced.Floor();
+                            Network.BlockPlaced(new BlockCoordinates((int)r.X, (int)r.Y, (int)r.Z), face, 0, remainder);
+                            Log.Debug($"Placed block: {itemName} on {r} face= {face} facepos={remainder} ({adj})");
+                        }
+		                else if (blockState == null)
+		                {
+							Network.UseItem(0);
+							Log.Debug($"Used item!");
 		                }
 		            }
 		        }

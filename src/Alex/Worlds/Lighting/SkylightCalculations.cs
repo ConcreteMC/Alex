@@ -47,7 +47,7 @@ namespace Alex.Worlds.Lighting
 	    private ConcurrentDictionary<ChunkCoordinates, ConcurrentQueue<LightingOperation>> MidPriorityQueue { get; set; }
 	    private ConcurrentDictionary<ChunkCoordinates, ConcurrentQueue<LightingOperation>> LowPriorityQueue { get; set; }
 
-        private Dictionary<ChunkCoordinates, byte[,]> HeightMaps { get; set; }
+        private ConcurrentDictionary<ChunkCoordinates, byte[,]> HeightMaps { get; set; }
         private IWorld World { get; }
 
         private Func<ChunkCoordinates, CheckResult> CheckDistance { get; }
@@ -61,7 +61,7 @@ namespace Alex.Worlds.Lighting
 			LowPriorityQueue = new ConcurrentDictionary<ChunkCoordinates, ConcurrentQueue<LightingOperation>>();
 
 			ResetEvent = new AutoResetEvent(false);
-		    HeightMaps = new Dictionary<ChunkCoordinates, byte[,]>();
+		    HeightMaps = new ConcurrentDictionary<ChunkCoordinates, byte[,]>();
         }
 
 	    private void GenerateHeightMap(IChunkColumn chunk)
@@ -120,6 +120,8 @@ namespace Alex.Worlds.Lighting
 				    break;
 			    }
 		    }
+
+		    
 	    }
 
         private void LightBox(LightingOperation op)
