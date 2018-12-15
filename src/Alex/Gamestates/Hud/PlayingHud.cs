@@ -65,7 +65,8 @@ namespace Alex.GameStates.Hud
 			}
 
 			if (!Chat.Focused)
-	        {
+			{
+				Chat.Enabled = false;
 		        if (InputManager.IsPressed(InputCommand.HotBarSelect1)) Player.Inventory.SelectedSlot = 0;
 		        if (InputManager.IsPressed(InputCommand.HotBarSelect2)) Player.Inventory.SelectedSlot = 1;
 		        if (InputManager.IsPressed(InputCommand.HotBarSelect3)) Player.Inventory.SelectedSlot = 2;

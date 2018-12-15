@@ -113,7 +113,9 @@ namespace Alex.GameStates.Playing
 			_debugInfo.AddDebugLeft(() =>
 			{
 				var pos = World.Player.KnownPosition.GetCoordinates3D();
-				return $"Biome: {World.GetBiome(pos.X,pos.Y,pos.Z)}";
+				var biomeId = World.GetBiome(pos.X, pos.Y, pos.Z);
+				var biome = BiomeUtils.GetBiomeById(biomeId);
+                return $"Biome: {biome.Name} ({biomeId})";
 			});
 
 			_debugInfo.AddDebugRight(() => Alex.DotnetRuntime);
@@ -122,8 +124,13 @@ namespace Alex.GameStates.Playing
 			{
 				if (_raytracedBlock.Y > 0 && _raytracedBlock.Y < 256)
 				{
-					StringBuilder sb = new StringBuilder();
-					sb.AppendLine("Looking at: " + _raytracedBlock);
+					var adj = _adjacentBlock.Floor() - _raytracedBlock.Floor();
+					adj.Normalize();
+
+					var face = adj.GetBlockFace();
+
+                    StringBuilder sb = new StringBuilder();
+					sb.AppendLine($"Target: {_raytracedBlock} Face: {face}");
 					sb.AppendLine($"{SelBlock}");
 
 					if (SelBlock.BlockState != null)
@@ -222,11 +229,21 @@ namespace Alex.GameStates.Playing
                         SelBlock = block;
 		                RayTraceBoundingBox = bbox;
 
-		                bool hasAdjacent = SetPlayerAdjacentSelectedBlock(world, x, camPos, lookVector);
-		                world.Player.Raytraced = targetPoint;
-		                world.Player.AdjacentRaytrace = _adjacentBlock;
-		                world.Player.HasRaytraceResult = true;
-		                world.Player.HasAdjacentRaytrace = hasAdjacent;
+			            world.Player.Raytraced = targetPoint;
+			            world.Player.HasRaytraceResult = true;
+
+                        if (SetPlayerAdjacentSelectedBlock(world, x, camPos, lookVector, out Vector3 rawAdjacent))
+                        {
+	                        _adjacentBlock = rawAdjacent.Floor();
+
+				            world.Player.AdjacentRaytrace = rawAdjacent;
+                            world.Player.HasAdjacentRaytrace = true;
+                        }
+			            else
+			            {
+				            world.Player.HasAdjacentRaytrace = false;
+			            }
+
                         return;
 		            }
 		        }
@@ -236,20 +253,9 @@ namespace Alex.GameStates.Playing
 		    _raytracedBlock.Y = 999;
 		    world.Player.HasRaytraceResult = false;
 		    world.Player.HasAdjacentRaytrace = false;
-
-		    /*_raytracedBlock = RayTracer.Raytrace(graphics, world, World.Camera);
-            if (_raytracedBlock.Y > 0 && _raytracedBlock.Y < 256)
-            {
-                SelBlock = (Block)World.GetBlock(_raytracedBlock.X, _raytracedBlock.Y, _raytracedBlock.Z);
-                RayTraceBoundingBox = SelBlock.GetBoundingBox(_raytracedBlock);
-            }
-            else
-            {
-                SelBlock = new Air();
-            }*/
 		}
 
-	    private bool SetPlayerAdjacentSelectedBlock(World world, float xStart, Vector3 camPos, Vector3 lookVector)
+	    private bool SetPlayerAdjacentSelectedBlock(World world, float xStart, Vector3 camPos, Vector3 lookVector, out Vector3 rawAdjacent)
 	    {
 	        for (float x = xStart; x > 0.7f; x -= 0.1f)
 	        {
@@ -258,11 +264,12 @@ namespace Alex.GameStates.Playing
 
 	            if (block != null && (!block.Solid))
 	            {
-	                _adjacentBlock = targetPoint;
+		            rawAdjacent = targetPoint;
 	                return true;
 	            }
             }
 
+			rawAdjacent = new Vector3(0, 0, 0);
 	        return false;
 	    }
 

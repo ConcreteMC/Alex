@@ -598,7 +598,7 @@ namespace Alex.Worlds
 				if (_renderedChunks.TryAdd(c.Key))
 				{
 					if (c.Value.SkyLightDirty)
-						SkylightCalculator.CalculateLighting(c.Value, true, true, false);
+						SkylightCalculator.CalculateLighting(c.Value, true, true);
                 }
 			}
 
@@ -673,7 +673,7 @@ namespace Alex.Worlds
 
 				    if (type.HasFlag(ScheduleType.Skylight))
 				    {
-						SkylightCalculator.CalculateLighting(chunk, true, false, false);
+						SkylightCalculator.CalculateLighting(chunk, true, false);
 				    }
 
 				    return;
@@ -682,7 +682,7 @@ namespace Alex.Worlds
                 if (type.HasFlag(ScheduleType.Skylight) && !currentSchedule.HasFlag(ScheduleType.Skylight))
                 {
 	                chunk.Scheduled = type;
-                    SkylightCalculator.CalculateLighting(chunk, true, false, false);
+                    SkylightCalculator.CalculateLighting(chunk, true, false);
                 }
 			    else
 			    {
@@ -765,7 +765,7 @@ namespace Alex.Worlds
 			
 			foreach (var chunk in Chunks.ToArray())
 		    {
-			    Chunks.TryRemove(chunk.Key, out IChunkColumn column);
+			    Chunks.TryRemove(chunk.Key, out IChunkColumn _);
 			    Enqueued.Remove(chunk.Key);
                 chunk.Value.Dispose();
 		    }

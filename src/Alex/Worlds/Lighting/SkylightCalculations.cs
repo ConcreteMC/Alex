@@ -331,7 +331,7 @@ namespace Alex.Worlds.Lighting
 	    {
 		    coordinates = ChunkCoordinates.Zero;
 
-		    if (HighPriorityQueue.Count == 0 && MidPriorityQueue.Count == 0 && LowPriorityQueue.Count == 0)
+		    if (!HasPending())
 			    return false;
 
 		    bool dequeued = false;
@@ -397,7 +397,7 @@ namespace Alex.Worlds.Lighting
 	    /// <summary>
 	    /// Queues the initial lighting pass for a newly generated chunk.
 	    /// </summary>
-	    public void CalculateLighting(IChunkColumn chunk, bool skyLight = true, bool initial = false, bool flush = false)
+	    public void CalculateLighting(IChunkColumn chunk, bool skyLight = true, bool initial = false)
 	    {
 		    if (!chunk.SkyLightDirty) return;
 		    // Set voxels above max height to 0xFF

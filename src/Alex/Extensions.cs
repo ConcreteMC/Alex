@@ -6,6 +6,7 @@ using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MiNET;
 
 namespace Alex
 {
@@ -203,6 +204,38 @@ namespace Alex
 	    {
 	        return new Vector3((float)Math.Floor(toFloor.X), (float)Math.Floor(toFloor.Y), (float)Math.Floor(toFloor.Z));
 	    }
+
+		public static BlockFace GetBlockFace(this Vector3 vector)
+		{
+			BlockFace face = BlockFace.None;
+
+			if (vector == Vector3.Up)
+			{
+				face = BlockFace.Up;
+			}
+			else if (vector == Vector3.Down)
+			{
+				face = BlockFace.Down;
+			}
+			else if (vector == Vector3.Backward)
+			{
+				face = BlockFace.South;
+			}
+			else if (vector == Vector3.Forward)
+			{
+				face = BlockFace.North;
+			}
+			else if (vector == Vector3.Left)
+			{
+				face = BlockFace.West;
+			}
+			else if (vector == Vector3.Right)
+			{
+				face = BlockFace.East;
+			}
+
+			return face;
+		}
 
 		public static void Fill<TType>(this TType[] data, TType value)
 		{

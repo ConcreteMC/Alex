@@ -1,4 +1,5 @@
 ﻿using System;
+using Alex.API.Data;
 using Alex.API.Graphics;
 using Alex.API.Input;
 using Alex.API.Network;
@@ -96,85 +97,96 @@ namespace Alex.Entities
 				}
 			}
 
-		    if (Controller.InputManager.IsDown(InputCommand.LeftClick)) //Destroying block.
-		    {
-                Log.Debug($"Left click!");
-		        if (_destroyingBlock)
-		        {
-		            _destroyingTick++;
-                }
-		        else
-		        {
-		            _destroyingBlock = true;
-		        }
-		    }
-            else if (_destroyingBlock && Controller.InputManager.IsUp(InputCommand.LeftClick))
-		    {
-		        _destroyingBlock = false;
-		        _destroyingTick = 0;
-		    }
+			if (Controller.CheckInput)
+			{
+				if (!_destroyingBlock && Controller.InputManager.IsDown(InputCommand.LeftClick)) //Destroying block.
+				{
+					StartBreakingBlock();
+				}
+				else if (_destroyingBlock && Controller.InputManager.IsUp(InputCommand.LeftClick))
+				{
+					StopBreakingBlock();
+				}
 
-		    if (Controller.InputManager.IsPressed(InputCommand.RightClick))
-		    {
-               // Log.Debug($"Right click!");
-		        if (Inventory.MainHand != null && Inventory.MainHand.ItemID != -1 && Inventory.MainHand.ItemID != 0)
-		        {
-		            if (ItemFactory.ResolveItemName(Inventory.MainHand.ItemID, out string itemName))
-		            {
-			            var blockState = BlockFactory.GetBlockState(itemName);
+				if (Controller.InputManager.IsPressed(InputCommand.RightClick))
+				{
+					bool handledClick = false;
+					// Log.Debug($"Right click!");
+					if (Inventory.MainHand != null && Inventory.MainHand.ItemID != -1 && Inventory.MainHand.ItemID != 0)
+					{
+						handledClick = HandleRightClick(Inventory.MainHand, 0);
+					}
 
-                        if (blockState != null && !(blockState.Block is Air))
-		                {
-			                var flooredAdj = AdjacentRaytrace.Floor();
+					if (!handledClick && Inventory.OffHand != null && Inventory.OffHand.ItemID != -1 &&
+					         Inventory.OffHand.ItemID != 0)
+					{
+						handledClick = HandleRightClick(Inventory.OffHand, 1);
+					}
 
-                            var adj = AdjacentRaytrace.Floor() - Raytraced.Floor();
-		                    adj.Normalize();
+				}
+            }
+			else if (_destroyingBlock)
+			{
+				StopBreakingBlock();
+			}
 
-		                    BlockFace face = BlockFace.None;
-
-                            if (adj == Vector3.Up)
-		                    {
-		                        face = BlockFace.Up;
-		                    }
-                            else if (adj == Vector3.Down)
-		                    {
-		                        face = BlockFace.Down;
-		                    }
-                            else if (adj == Vector3.Backward)
-		                    {
-		                        face = BlockFace.South;
-		                    }
-                            else if (adj == Vector3.Forward)
-		                    {
-		                        face = BlockFace.North;
-		                    }
-                            else if (adj == Vector3.Left)
-		                    {
-		                        face = BlockFace.West;
-		                    }
-                            else if (adj == Vector3.Right)
-		                    {
-		                        face = BlockFace.East;
-		                    }
-
-							var remainder = new Vector3(AdjacentRaytrace.X - flooredAdj.X, AdjacentRaytrace.Y - flooredAdj.Y, AdjacentRaytrace.Z - flooredAdj.Z);
-
-                            var r = Raytraced.Floor();
-                            Network.BlockPlaced(new BlockCoordinates((int)r.X, (int)r.Y, (int)r.Z), face, 0, remainder);
-                            Log.Debug($"Placed block: {itemName} on {r} face= {face} facepos={remainder} ({adj})");
-                        }
-		                else if (blockState == null)
-		                {
-							Network.UseItem(0);
-							Log.Debug($"Used item!");
-		                }
-		            }
-		        }
-		    }
-			
-			base.Update(args);
+            base.Update(args);
 
 		}
+
+	    private void BlockBreakTick()
+	    {
+		    _destroyingTick++;
+        }
+
+	    private void StartBreakingBlock()
+	    {
+		    _destroyingBlock = true;
+		    Log.Debug($"Start break block ({Raytraced.Floor()})");
+        }
+
+	    private void StopBreakingBlock()
+	    {
+		    Log.Debug($"Stopped breaking block. Ticks: {_destroyingTick}");
+
+		    _destroyingBlock = false;
+            _destroyingTick = 0;
+        }
+
+	    private bool HandleRightClick(SlotData slot, int hand)
+	    {
+            if (ItemFactory.ResolveItemName(slot.ItemID, out string itemName))
+            {
+                var blockState = BlockFactory.GetBlockState(itemName);
+
+                if (blockState != null && !(blockState.Block is Air) && HasRaytraceResult)
+                {
+                    var flooredAdj = AdjacentRaytrace.Floor();
+
+                    var adj = AdjacentRaytrace.Floor() - Raytraced.Floor();
+                    adj.Normalize();
+
+	                var face = adj.GetBlockFace();
+
+                    var remainder = new Vector3(AdjacentRaytrace.X - flooredAdj.X, AdjacentRaytrace.Y - flooredAdj.Y, AdjacentRaytrace.Z - flooredAdj.Z);
+
+                    var r = Raytraced.Floor();
+                    Network.BlockPlaced(new BlockCoordinates((int)r.X, (int)r.Y, (int)r.Z), face, hand, remainder);
+                    Log.Debug($"Placed block: {itemName} on {r} face= {face} facepos={remainder} ({adj})");
+
+	                return true;
+                }
+                else if (blockState == null)
+                {
+                    Network.UseItem(hand);
+                    Log.Debug($"Used item!");
+
+	                return true;
+                }
+            }
+
+		    return false;
+	    }
 
 		public override void TerrainCollision(Vector3 collisionPoint, Vector3 direction)
 		{
@@ -184,6 +196,11 @@ namespace Alex.Entities
 
 		public override void OnTick()
 		{
+			if (_destroyingBlock)
+			{
+				BlockBreakTick();
+			}
+
 			base.OnTick();
 		}
 	}
