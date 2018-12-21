@@ -180,7 +180,6 @@ namespace Alex
 
 			Services.AddService<IServerQueryProvider>(new ServerQueryProvider());
 			Services.AddService<IPlayerProfileService>(new JavaPlayerProfileService());
-			Services.AddService<BrowserWindowProvider>(new BrowserWindowProvider());
 			Services.AddService(msa = new XBLMSAService());
 
 			ProfileManager = new ProfileManager(this, storage);

@@ -98,7 +98,8 @@ namespace Alex.GameStates
 			_debugMenu.AddMenuItem("Debug Blockstates", DebugWorldButtonActivated);
 			_debugMenu.AddMenuItem("Debug Flatland", DebugFlatland);
 			_debugMenu.AddMenuItem("Debug Anvil", DebugAnvil);
-			_debugMenu.AddMenuItem("Go Back", DebugGoBackPressed);
+		//	_debugMenu.AddMenuItem("Debug XBL Login", BedrockEditionButtonPressed);
+            _debugMenu.AddMenuItem("Go Back", DebugGoBackPressed);
 
 			#endregion
 
@@ -217,10 +218,6 @@ namespace Alex.GameStates
 		{
 			var client = Alex.Services.GetService<XBLMSAService>();
 			var t = client.AsyncBrowserLogin();
-			//Log.Info(t.Result.ToString);
-			//client.
-			//PublicClientApplication pca = new PublicClientApplication("android-app://com.mojang.minecraftpe.H62DKCBHJP6WXXIV7RBFOGOL4NAK4E6Y"); 
-
 		}
 
 		private void JavaEditionButtonPressed()

@@ -1,17 +1,7 @@
-﻿extern alias CefGlueWIN;
-using System;
+﻿using System;
 using System.IO;
-using System.Linq;
 using System.Net;
-using System.Reflection;
-using Alex.API.Data.Chat;
-using Alex.API.Data.Chat.Serializer;
 using Alex.Services;
-using CefGlueWIN::Chromely.CefGlue.Winapi;
-using CefGlueWIN::Chromely.CefGlue.Winapi.ChromeHost;
-using CefSharp;
-using Chromely.Core;
-using Chromely.Core.Helpers;
 using log4net;
 using Newtonsoft.Json;
 using NLog;
@@ -51,7 +41,8 @@ namespace Alex
 			//Cef.Initialize(new Settings());
 
 			Log.Info($"Starting...");
-			using (var game = new Alex(launchSettings))
+			
+            using (var game = new Alex(launchSettings))
 			{
 				game.Run();
 			}
@@ -71,11 +62,6 @@ namespace Alex
 
 			NLogAppender.Initialize();
         }
-
-		private class Settings : AbstractCefSettings
-		{
-
-		}
 
 		private static LaunchSettings ParseArguments(string[] args)
 		{

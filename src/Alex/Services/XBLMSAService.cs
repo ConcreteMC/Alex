@@ -1,26 +1,11 @@
-﻿extern alias CefGlueWIN;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
-using Alex.MSA;
 using Alex.Utils;
-using CefGlueWIN::Chromely.CefGlue.Winapi;
-using CefGlueWIN::Chromely.CefGlue.Winapi.Browser.Handlers;
-using CefGlueWIN::Chromely.CefGlue.Winapi.ChromeHost;
-using CefGlueWIN::Xilium.CefGlue;
-using Chromely.Core;
-using Chromely.Core.Helpers;
-using Microsoft.Identity.Client;
 using Newtonsoft.Json;
 using NLog;
-using WinApi.User32;
-using WinApi.Windows;
 using Logger = NLog.Logger;
 
 namespace Alex.Services
@@ -37,16 +22,7 @@ namespace Alex.Services
 		public XBLMSAService()
 		{
 			//PublicClientApplication a = new PublicClientApplication(MSA_CLIENT_ID, "");
-
-			DeviceAuth auth = new DeviceAuth();
-			auth.Randomize();
-
-			if (string.IsNullOrWhiteSpace(auth.Puid))
-			{
-
-				//a.AcquireTokenByUsernamePasswordAsync()
-			}
-
+			
 			//PublicClientApplication a = new PublicClientApplication(MSA_CLIENT_ID);
 			//a.AcquireTokenByUsernamePasswordAsync()
 		}
@@ -119,83 +95,12 @@ namespace Alex.Services
 
 		public async Task<MsaBrowserResult> AsyncBrowserLogin()
 		{
-			var jsHandler = new MSAJSHandler();
+            //Login URL: https://login.live.com/ppsecure/InlineConnect.srf?id=80604&client_id={MSA_CLIENT_ID}&platform={PLATFORM_NAME}
+            //Window Size: 480, 64
 
-			ChromelyConfiguration config = ChromelyConfiguration
-				.Create()
-				//.WithAppArgs(new string[] { })
-				.WithHostSize(480, 640)
-#if RELEASE
-					.WithCustomSetting(CefSettingKeys.SingleProcess, false)
-#else
-				
-				.WithCustomSetting(CefSettingKeys.BrowserSubprocessPath, Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "CefSharp.BrowserSubprocess.exe"))
-			//	.WithCustomSetting(CefSettingKeys.SingleProcess, true)
-#endif
-				.WithDependencyCheck(true)
-				.WithDebuggingMode(true)
-				
-				.WithStartUrl(
-					$"https://login.live.com/ppsecure/InlineConnect.srf?id=80604&client_id={MSA_CLIENT_ID}&platform={PLATFORM_NAME}")
-				.RegisterCustomHandler(CefHandlerKey.RequestHandler, typeof(MSARequestHandler))
-				.RegisterJsHandler(new ChromelyJsHandler("loginHelper", jsHandler, null, false));
-			//.RegisterJsHandler("loginHelper", jsHandler, null, false);
-		//	ChromelySchemeHandler c = new ChromelySchemeHandler();
-			var factory = WinapiHostFactory.Init();
-
-			
-		//	var browserHost = new CefGlueBrowserHost(config);
-			CefGlueBrowserHost browserHost = new CefGlueBrowserHost(config);
-			await Task.Run(() => {
-				using (var window = factory.CreateWindow(() => browserHost,
-					"Microsoft Account Sign-In", constructionParams: new FrameWindowConstructionParams()))
-				{
-					window.SetSize(config.HostWidth, config.HostHeight);
-					window.CenterToScreen();
-					window.Show();
-
-					IEventLoop c = new EventLoop();
-					c.Run(window);
-				}
-			});
-
-			return null;
+            return null;
 			//request.PostData["client_id"] = MSA_CLIENT_ID;
 			//	request.PostData["cobrandid"] = MSA_COBRAND_ID;
-		}
-
-		private class MSAJSHandler
-		{
-			private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(MSAJSHandler));
-			public void Done(string xml)
-			{
-				Log.Info($"Done: {xml}");
-			}
-		}
-
-		private class MSARequestHandler : CefGlueRequestHandler
-		{
-			protected override CefReturnValue OnBeforeResourceLoad(CefBrowser browser, CefFrame frame, CefRequest request,
-				CefRequestCallback callback)
-			{
-			
-				if (request.Method == "POST")
-				{
-					
-				}
-				return base.OnBeforeResourceLoad(browser, frame, request, callback);
-			}
-
-			protected override void OnResourceLoadComplete(CefBrowser browser, CefFrame frame, CefRequest request, CefResponse response,
-				CefUrlRequestStatus status, long receivedContentLength)
-			{
-				if (request.Method == "post" && request.Url.Contains("post.srf"))
-				{
-					frame.ExecuteJavaScript("loginHelper.done(ServerData);", null, 0);
-				}
-
-				base.OnResourceLoadComplete(browser, frame, request, response, status, receivedContentLength);
-			}
 		}
 	}
 
