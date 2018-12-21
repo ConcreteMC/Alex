@@ -83409,10 +83409,10 @@
   },
   "minecraft:yellow_concrete_powder": {
     "states": [
-					{
-						"id": 8610,
-						"default": true
-					}
+      {
+        "id": 8610,
+        "default": true
+      }
     ]
   },
   "minecraft:lime_concrete_powder": {
@@ -106091,10 +106091,11 @@
   },
   "minecraft:bell": {
     "properties": {
-      "face": [
+      "attachment": [
         "floor",
-        "wall",
-        "ceiling"
+        "ceiling",
+        "single_wall",
+        "double_wall"
       ],
       "facing": [
         "north",
@@ -106106,7 +106107,7 @@
     "states": [
       {
         "properties": {
-          "face": "floor",
+          "attachment": "floor",
           "facing": "north"
         },
         "id": 10865,
@@ -106114,80 +106115,108 @@
       },
       {
         "properties": {
-          "face": "floor",
+          "attachment": "floor",
           "facing": "south"
         },
         "id": 10866
       },
       {
         "properties": {
-          "face": "floor",
+          "attachment": "floor",
           "facing": "west"
         },
         "id": 10867
       },
       {
         "properties": {
-          "face": "floor",
+          "attachment": "floor",
           "facing": "east"
         },
         "id": 10868
       },
       {
         "properties": {
-          "face": "wall",
+          "attachment": "ceiling",
           "facing": "north"
         },
         "id": 10869
       },
       {
         "properties": {
-          "face": "wall",
+          "attachment": "ceiling",
           "facing": "south"
         },
         "id": 10870
       },
       {
         "properties": {
-          "face": "wall",
+          "attachment": "ceiling",
           "facing": "west"
         },
         "id": 10871
       },
       {
         "properties": {
-          "face": "wall",
+          "attachment": "ceiling",
           "facing": "east"
         },
         "id": 10872
       },
       {
         "properties": {
-          "face": "ceiling",
+          "attachment": "single_wall",
           "facing": "north"
         },
         "id": 10873
       },
       {
         "properties": {
-          "face": "ceiling",
+          "attachment": "single_wall",
           "facing": "south"
         },
         "id": 10874
       },
       {
         "properties": {
-          "face": "ceiling",
+          "attachment": "single_wall",
           "facing": "west"
         },
         "id": 10875
       },
       {
         "properties": {
-          "face": "ceiling",
+          "attachment": "single_wall",
           "facing": "east"
         },
         "id": 10876
+      },
+      {
+        "properties": {
+          "attachment": "double_wall",
+          "facing": "north"
+        },
+        "id": 10877
+      },
+      {
+        "properties": {
+          "attachment": "double_wall",
+          "facing": "south"
+        },
+        "id": 10878
+      },
+      {
+        "properties": {
+          "attachment": "double_wall",
+          "facing": "west"
+        },
+        "id": 10879
+      },
+      {
+        "properties": {
+          "attachment": "double_wall",
+          "facing": "east"
+        },
+        "id": 10880
       }
     ]
   },
@@ -106203,13 +106232,13 @@
         "properties": {
           "hanging": "true"
         },
-        "id": 10877
+        "id": 10881
       },
       {
         "properties": {
           "hanging": "false"
         },
-        "id": 10878,
+        "id": 10882,
         "default": true
       }
     ]
@@ -106228,26 +106257,26 @@
         "properties": {
           "age": "0"
         },
-        "id": 10879,
+        "id": 10883,
         "default": true
       },
       {
         "properties": {
           "age": "1"
         },
-        "id": 10880
+        "id": 10884
       },
       {
         "properties": {
           "age": "2"
         },
-        "id": 10881
+        "id": 10885
       },
       {
         "properties": {
           "age": "3"
         },
-        "id": 10882
+        "id": 10886
       }
     ]
   },
@@ -106265,77 +106294,77 @@
         "properties": {
           "mode": "save"
         },
-        "id": 10883,
+        "id": 10887,
         "default": true
       },
       {
         "properties": {
           "mode": "load"
         },
-        "id": 10884
+        "id": 10888
       },
       {
         "properties": {
           "mode": "corner"
         },
-        "id": 10885
+        "id": 10889
       },
       {
         "properties": {
           "mode": "data"
         },
-        "id": 10886
+        "id": 10890
       }
     ]
   },
   "minecraft:jigsaw": {
     "properties": {
-      "facing": [
-        "north",
-        "east",
-        "south",
-        "west",
-        "up",
-        "down"
-      ]
+					"facing": [
+						"north",
+						"east",
+						"south",
+						"west",
+						"up",
+						"down"
+					]
     },
     "states": [
       {
         "properties": {
           "facing": "north"
         },
-        "id": 10887
+        "id": 10891
       },
       {
         "properties": {
           "facing": "east"
         },
-        "id": 10888
+        "id": 10892
       },
       {
         "properties": {
           "facing": "south"
         },
-        "id": 10889
+        "id": 10893
       },
       {
         "properties": {
           "facing": "west"
         },
-        "id": 10890
+        "id": 10894
       },
       {
         "properties": {
           "facing": "up"
         },
-        "id": 10891,
+        "id": 10895,
         "default": true
       },
       {
         "properties": {
           "facing": "down"
         },
-        "id": 10892
+        "id": 10896
       }
     ]
   }
