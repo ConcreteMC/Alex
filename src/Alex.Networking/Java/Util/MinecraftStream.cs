@@ -268,13 +268,35 @@ namespace Alex.Networking.Java.Util
 			return IPAddress.NetworkToHostOrder(BitConverter.ToInt64(l, 0));
 		}
 
-		public Vector3 ReadPosition()
+		public ulong ReadULong()
+		{
+			var l = Read(8);
+			return NetworkToHostOrder(BitConverter.ToUInt64(l, 0));
+		}
+
+        public Vector3 ReadPosition()
 		{
 			var val = ReadLong();
 			var x = Convert.ToSingle(val >> 38);
 			var y = Convert.ToSingle(val & 0xFFF);
 			var z = Convert.ToSingle((val << 38 >> 38) >> 12);
-			return new Vector3(x, y, z);
+
+			/*if (x >= (2^25))
+			{
+				x -= 2^26;
+			}
+
+			if (y >= (2^11))
+			{
+				y -= 2^12;
+			}
+
+			if (z >= (2^25))
+			{
+				z -= 2^26;
+			}*/
+
+            return new Vector3(x, y, z);
 		}
 
 		public SlotData ReadSlot()
@@ -335,12 +357,19 @@ namespace Alex.Networking.Java.Util
 				Array.Reverse(net);
 			return BitConverter.ToUInt16(net, 0);
 		}
+		private ulong NetworkToHostOrder(ulong network)
+		{
+			var net = BitConverter.GetBytes(network);
+			if (BitConverter.IsLittleEndian)
+				Array.Reverse(net);
+			return BitConverter.ToUInt64(net, 0);
+		}
 
-		#endregion
+        #endregion
 
-		#region Writer
+        #region Writer
 
-		public void Write(byte[] data)
+        public void Write(byte[] data)
 		{
 			this.Write(data, 0, data.Length);
 		}
@@ -350,7 +379,7 @@ namespace Alex.Networking.Java.Util
 			var x = Convert.ToInt64(position.X);
 			var y = Convert.ToInt64(position.Y);
 			var z = Convert.ToInt64(position.Z);
-			var toSend = ((x & 0x3FFFFFF) << 38) | ((z & 0x3FFFFFF) << 12) | (y & 0xFFF);
+			long toSend = ((x & 0x3FFFFFF) << 38) | ((z & 0x3FFFFFF) << 12) | (y & 0xFFF);
 			WriteLong(toSend);
 		}
 
@@ -438,7 +467,12 @@ namespace Alex.Networking.Java.Util
 			Write(BitConverter.GetBytes(IPAddress.HostToNetworkOrder(data)));
 		}
 
-		public void WriteUuid(Guid uuid)
+		public void WriteULong(ulong data)
+		{
+			Write(HostToNetworkOrderLong(data));
+		}
+
+        public void WriteUuid(Guid uuid)
 		{
 			var guid = uuid.ToByteArray();
 			var long1 = new byte[8];
@@ -478,9 +512,19 @@ namespace Alex.Networking.Java.Util
 			return bytes;
 		}
 
-		#endregion
+		private byte[] HostToNetworkOrderLong(ulong host)
+		{
+			var bytes = BitConverter.GetBytes(host);
 
-		private object _disposeLock = new object();
+			if (BitConverter.IsLittleEndian)
+				Array.Reverse(bytes);
+
+			return bytes;
+		}
+
+        #endregion
+
+        private object _disposeLock = new object();
 		private bool _disposed = false;
 		protected override void Dispose(bool disposing)
 		{

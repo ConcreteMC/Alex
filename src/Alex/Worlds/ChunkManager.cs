@@ -661,28 +661,28 @@ namespace Alex.Worlds
 			    if (prioritize)
 			    {
 				    chunk.Scheduled = type;
-					HighestPriority.Enqueue(position);
 
-				    if (!Enqueued.Contains(position))
+				    HighestPriority.Enqueue(position);
+                    if (!Enqueued.Contains(position))
 				    {
 					    Enqueued.TryAdd(position);
-				    }
+                    }
 
-                     Interlocked.Increment(ref _chunkUpdates);
+				    Interlocked.Increment(ref _chunkUpdates);
 				    _updateResetEvent.Set();
 
-				    if (type.HasFlag(ScheduleType.Skylight))
+                    if (type.HasFlag(ScheduleType.Skylight))
 				    {
-						SkylightCalculator.CalculateLighting(chunk, true, false);
+					    SkylightCalculator.CalculateLighting(chunk, true, true);
 				    }
 
-				    return;
+                    return;
 			    }
 
                 if (type.HasFlag(ScheduleType.Skylight) && !currentSchedule.HasFlag(ScheduleType.Skylight))
                 {
 	                chunk.Scheduled = type;
-                    SkylightCalculator.CalculateLighting(chunk, true, false);
+                    SkylightCalculator.CalculateLighting(chunk, true, true);
                 }
 			    else
 			    {
