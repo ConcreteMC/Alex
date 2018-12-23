@@ -29,7 +29,7 @@ namespace Alex
 		private static readonly Dictionary<uint, IBlockState> RegisteredBlockStates = new Dictionary<uint, IBlockState>();
 		private static readonly Dictionary<string, BlockStateVariantMapper> BlockStateByName = new Dictionary<string, BlockStateVariantMapper>();
 		private static readonly Dictionary<uint, BlockModel> ModelCache = new Dictionary<uint, BlockModel>();
-
+		private static readonly Dictionary<long, string> ProtocolIdToBlockName = new Dictionary<long, string>();
 		private static ResourcePackLib.Json.Models.Blocks.BlockModel CubeModel { get; set; }
 		public static readonly LiquidBlockModel StationairyWaterModel = new LiquidBlockModel()
 		{
@@ -104,7 +104,13 @@ namespace Alex
 		{
 			progressReceiver?.UpdateProgress(0, "Loading block models...");
 
-			if (resourcePack.TryGetBlockModel("cube_all", out ResourcePackLib.Json.Models.Blocks.BlockModel cube))
+			BlockEntries b = JsonConvert.DeserializeObject<BlockEntries>(Resources.BlocksProtocol);
+			foreach (var kv in b.Entries)
+			{
+				ProtocolIdToBlockName.TryAdd(kv.Value.ProtocolId, kv.Key);
+			}
+
+            if (resourcePack.TryGetBlockModel("cube_all", out ResourcePackLib.Json.Models.Blocks.BlockModel cube))
 			{
 				cube.Textures["all"] = "no_texture";
 				CubeModel = cube;
@@ -507,6 +513,16 @@ namespace Alex
 
 		}
 
+		public static IBlockState GetBlockStateByProtocolId(long protocolId)
+		{
+			if (ProtocolIdToBlockName.TryGetValue(protocolId, out string n))
+			{
+				return GetBlockState(n);
+			}
+
+			return AirState;
+		}
+
 		//TODO: Categorize and implement
 		private static Block GetBlockByName(string blockName)
 		{
@@ -860,5 +876,17 @@ namespace Alex
 
 			public static TableEntry[] FromJson(string json) => JsonConvert.DeserializeObject<TableEntry[]>(json);
 		}
-	}
+
+		public class BlockEntries
+		{
+			[JsonProperty("default")] public string Default { get; set; }
+			[JsonProperty("protocol_id")] public long ProtocolId { get; set; }
+			[JsonProperty("entries")] public ReadOnlyDictionary<string, ProtocolID> Entries { get; set; }
+		}
+
+        public class ProtocolID
+		{
+			[JsonProperty("protocol_id")] public long ProtocolId { get; set; }
+		}
+    }
 }

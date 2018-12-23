@@ -172,7 +172,20 @@ namespace Alex.Entities
 
                     var r = Raytraced.Floor();
                     Network.BlockPlaced(new BlockCoordinates((int)r.X, (int)r.Y, (int)r.Z), face, hand, remainder);
-                    Log.Debug($"Placed block: {itemName} on {r} face= {face} facepos={remainder} ({adj})");
+
+	                var coordR = new BlockCoordinates(r);
+
+                    var existingBlock = Level.GetBlock(coordR);
+	                if (existingBlock.IsReplacible || !existingBlock.Solid)
+	                {
+		                Level.SetBlockState(coordR, blockState);
+                    }
+	                else
+	                {
+		                Level.SetBlockState(new BlockCoordinates(r + adj), blockState);
+	                }
+
+	                Log.Debug($"Placed block: {itemName} on {r} face= {face} facepos={remainder} ({adj})");
 
 	                return true;
                 }

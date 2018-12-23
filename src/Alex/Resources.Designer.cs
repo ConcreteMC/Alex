@@ -71,6 +71,37 @@ namespace Alex {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {
+        ///    &quot;default&quot;: &quot;minecraft:air&quot;,
+        ///    &quot;protocol_id&quot;: 3,
+        ///    &quot;entries&quot;: {
+        ///      &quot;minecraft:air&quot;: {
+        ///        &quot;protocol_id&quot;: 0
+        ///      },
+        ///      &quot;minecraft:stone&quot;: {
+        ///        &quot;protocol_id&quot;: 1
+        ///      },
+        ///      &quot;minecraft:granite&quot;: {
+        ///        &quot;protocol_id&quot;: 2
+        ///      },
+        ///      &quot;minecraft:polished_granite&quot;: {
+        ///        &quot;protocol_id&quot;: 3
+        ///      },
+        ///      &quot;minecraft:diorite&quot;: {
+        ///        &quot;protocol_id&quot;: 4
+        ///      },
+        ///      &quot;minecraft:polished_diorite&quot;: {
+        ///        &quot;protocol_id&quot;: 5
+        ///      },
+        ///      &quot;minecraft:andesite&quot;: [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string BlocksProtocol {
+            get {
+                return ResourceManager.GetString("BlocksProtocol", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
         internal static byte[] DebugFont {
