@@ -152,7 +152,10 @@ namespace Alex
 			uint c = 0;
 			foreach (var entry in data)
 			{
-				var variantMap = new BlockStateVariantMapper();
+				double percentage = 100D * ((double)done / (double)total);
+				progressReceiver.UpdateProgress((int)percentage, $"Importing block models: {entry.Key}");
+
+                var variantMap = new BlockStateVariantMapper();
 				var state = new BlockState
 				{
 					Name = entry.Key
@@ -168,9 +171,6 @@ namespace Alex
 
 				foreach (var s in entry.Value.States)
 				{
-					double percentage = 100D * ((double)done / (double)total);
-					progressReceiver.UpdateProgress((int)percentage, $"Importing block models: {entry.Key}");
-
                     var id = s.ID;
 
 					BlockState variantState = (BlockState)(state).CloneSilent();
