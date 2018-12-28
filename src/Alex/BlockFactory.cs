@@ -168,7 +168,10 @@ namespace Alex
 
 				foreach (var s in entry.Value.States)
 				{
-					var id = s.ID;
+					double percentage = 100D * ((double)done / (double)total);
+					progressReceiver.UpdateProgress((int)percentage, $"Importing block models: {entry.Key}");
+
+                    var id = s.ID;
 
 					BlockState variantState = (BlockState)(state).CloneSilent();
 					variantState.ID = id;
@@ -303,9 +306,6 @@ namespace Alex
 				}
 
 				done++;
-
-				double percentage = 100D * ((double)done / (double)total);
-				progressReceiver.UpdateProgress((int)percentage, $"Importing block models: {entry.Key}");
 			}
 
 			if (GenerateClasses)
