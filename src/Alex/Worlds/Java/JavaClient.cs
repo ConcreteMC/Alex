@@ -81,6 +81,16 @@ namespace Alex.Worlds.Java
 
         }
 
+		public void PlayerDigging(DiggingStatus status, BlockCoordinates position, BlockFace face)
+		{
+			SendPacket(new PlayerDiggingPacket()
+			{
+				Face = face,
+				Location = position,
+				Status = status
+			});
+		}
+
 		public void UseItem(int hand)
 		{
 			SendPacket(new UseItemPacket()

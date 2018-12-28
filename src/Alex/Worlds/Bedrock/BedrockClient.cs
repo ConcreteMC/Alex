@@ -103,6 +103,11 @@ namespace Alex.Worlds.Bedrock
 	        throw new NotImplementedException();
 	    }
 
+		public void PlayerDigging(DiggingStatus status, BlockCoordinates position, BlockFace face)
+		{
+			throw new NotImplementedException();
+		}
+
 		public void UseItem(int hand)
 		{
 			throw new NotImplementedException();

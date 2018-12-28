@@ -102,13 +102,18 @@ namespace Alex
 		internal static int LoadResources(ResourceManager resources, McResourcePack resourcePack, bool replace,
 			bool reportMissing = false, IProgressReceiver progressReceiver = null)
 		{
-			progressReceiver?.UpdateProgress(0, "Loading block models...");
+			var blockEntries = resources.Registries.Blocks.Entries;
 
-			BlockEntries b = JsonConvert.DeserializeObject<BlockEntries>(Resources.BlocksProtocol);
-			foreach (var kv in b.Entries)
-			{
+            progressReceiver?.UpdateProgress(0, "Loading block registry...");
+            for(int i = 0; i < blockEntries.Count; i++)
+            {
+	            var kv = blockEntries.ElementAt(i);
 				ProtocolIdToBlockName.TryAdd(kv.Value.ProtocolId, kv.Key);
-			}
+
+	            progressReceiver?.UpdateProgress(i * (100 / blockEntries.Count), "Loading block registry...");
+            }
+
+            progressReceiver?.UpdateProgress(0, "Loading block models...");
 
             if (resourcePack.TryGetBlockModel("cube_all", out ResourcePackLib.Json.Models.Blocks.BlockModel cube))
 			{
@@ -523,6 +528,11 @@ namespace Alex
 			return AirState;
 		}
 
+		public static bool IsBlock(string name)
+		{
+			return BlockStateByName.ContainsKey(name);
+		}
+
 		//TODO: Categorize and implement
 		private static Block GetBlockByName(string blockName)
 		{
@@ -875,18 +885,6 @@ namespace Alex
 			public long Data { get; set; }
 
 			public static TableEntry[] FromJson(string json) => JsonConvert.DeserializeObject<TableEntry[]>(json);
-		}
-
-		public class BlockEntries
-		{
-			[JsonProperty("default")] public string Default { get; set; }
-			[JsonProperty("protocol_id")] public long ProtocolId { get; set; }
-			[JsonProperty("entries")] public ReadOnlyDictionary<string, ProtocolID> Entries { get; set; }
-		}
-
-        public class ProtocolID
-		{
-			[JsonProperty("protocol_id")] public long ProtocolId { get; set; }
 		}
     }
 }

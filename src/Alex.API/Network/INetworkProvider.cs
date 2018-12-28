@@ -13,6 +13,7 @@ namespace Alex.API.Network
 		void EntityAction(int entityId, EntityAction action);
 	    void SendChatMessage(string message);
         void BlockPlaced(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition);
+	    void PlayerDigging(DiggingStatus status, BlockCoordinates position, BlockFace face);
 	    void UseItem(int hand);
 	    void HeldItemChanged(short slot);
     }

@@ -360,6 +360,34 @@ namespace Alex {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {
+        ///  &quot;minecraft:sound_event&quot;: {
+        ///    &quot;protocol_id&quot;: 0,
+        ///    &quot;entries&quot;: {
+        ///      &quot;minecraft:ambient.cave&quot;: {
+        ///        &quot;protocol_id&quot;: 0
+        ///      },
+        ///      &quot;minecraft:ambient.underwater.enter&quot;: {
+        ///        &quot;protocol_id&quot;: 1
+        ///      },
+        ///      &quot;minecraft:ambient.underwater.exit&quot;: {
+        ///        &quot;protocol_id&quot;: 2
+        ///      },
+        ///      &quot;minecraft:ambient.underwater.loop&quot;: {
+        ///        &quot;protocol_id&quot;: 3
+        ///      },
+        ///      &quot;minecraft:ambient.underwater.loop.additions&quot;: {
+        ///        &quot;protocol_id&quot;: 4
+        ///      },
+        ///      &quot;minecraft:ambient.underwater.loop.additi [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string registries {
+            get {
+                return ResourceManager.GetString("registries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to [
         ///	{
         ///		&quot;runtimeID&quot;: 0,

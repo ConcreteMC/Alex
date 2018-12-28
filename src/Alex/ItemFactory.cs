@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
+using Alex.Blocks;
+using Alex.Items;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json.Models.Items;
 using Microsoft.Xna.Framework.Graphics;
@@ -15,16 +18,46 @@ namespace Alex
     {
 	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ItemFactory));
 
-        private static Dictionary<string, ItemMapper> _javaItemMappers = new Dictionary<string, ItemMapper>();
 		private static ResourceManager ResourceManager { get; set; }
 		private static McResourcePack ResourcePack { get; set; }
-	    public static void Init(ResourceManager resources, McResourcePack resourcePack)
+		private static IReadOnlyDictionary<string, Item> Items { get; set; }
+	    public static void Init(ResourceManager resources, McResourcePack resourcePack, IProgressReceiver progressReceiver = null)
 	    {
 		    ResourceManager = resources;
 		    ResourcePack = resourcePack;
 
-		    _javaItemMappers = JsonConvert.DeserializeObject<Dictionary<string, ItemMapper>>(Resources.Items);
+		    ItemEntry[] itemData = JsonConvert.DeserializeObject<ItemEntry[]>(Resources.Items);
 
+
+            Dictionary<string, Item> items = new Dictionary<string, Item>();
+		    foreach (var entry in resources.Registries.Items.Entries)
+		    {
+			    var blockState = BlockFactory.GetBlockState(entry.Key);
+
+			    Item item;
+			    if (blockState != null)
+			    {
+				    item = new ItemBlock(blockState);
+                }
+			    else
+			    {
+				    item = new Item();
+			    }
+
+			    item.DisplayName = entry.Key;
+
+			    var data = itemData.FirstOrDefault(x =>
+				    x.name.Equals(entry.Key.Substring(10), StringComparison.InvariantCultureIgnoreCase));
+			    if (data != null)
+			    {
+				    item.MaxStackSize = data.stackSize;
+				    item.DisplayName = data.displayName;
+			    }
+
+			    items.TryAdd(entry.Key, item);
+		    }
+
+			Items = new ReadOnlyDictionary<string, Item>(items);
 	    }
 
 	    public static bool ResolveItemTexture(string itemName, out Texture2D texture)
@@ -73,7 +106,7 @@ namespace Alex
 
 	    public static bool ResolveItemName(int protocolId, out string res)
 	    {
-		    var result = _javaItemMappers.FirstOrDefault(x => x.Value.ProtocolId == protocolId).Key;
+		    var result = ResourceManager.Registries.Items.Entries.FirstOrDefault(x => x.Value.ProtocolId == protocolId).Key;
 		    if (result != null)
 		    {
 			    res = result;
@@ -84,10 +117,23 @@ namespace Alex
 		    return false;
 	    }
 
-	    private class ItemMapper
+	    public static bool TryGetItem(string name, out Item item)
 	    {
-			[JsonProperty("protocol_id")]
-			public int ProtocolId { get; set; }
+		    return Items.TryGetValue(name, out item);
+	    }
+
+	    public static bool IsItem(string name)
+	    {
+		    return ResourceManager.Registries.Items.Entries.ContainsKey(name);
+	    }
+
+
+	    private class ItemEntry
+	    {
+		    public int id { get; set; }
+		    public string displayName { get; set; }
+		    public string name { get; set; }
+		    public int stackSize { get; set; }
 	    }
     }
 }

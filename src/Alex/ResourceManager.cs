@@ -28,8 +28,8 @@ namespace Alex
 		private LinkedList<McResourcePack> ActiveResourcePacks { get; } = new LinkedList<McResourcePack>();
 		public McResourcePack ResourcePack => ActiveResourcePacks.First.Value;
 		public BedrockResourcePack BedrockResourcePack { get; private set; }
-
-		public AtlasGenerator Atlas { get; private set; }
+		public Registries Registries { get; private set; }
+        public AtlasGenerator Atlas { get; private set; }
 		
 		private GraphicsDevice Graphics { get; set; }
 
@@ -194,7 +194,12 @@ namespace Alex
 				return false;
 			}
 
-			Log.Info($"Loading vanilla resources...");
+			Log.Info($"Loading registries...");
+			progressReceiver?.UpdateProgress(0, "Loading registries...");
+			Registries = JsonConvert.DeserializeObject<Registries>(Resources.registries);
+			progressReceiver?.UpdateProgress(100, "Loading registries...");
+
+            Log.Info($"Loading vanilla resources...");
 			using (MemoryStream stream = new MemoryStream(defaultResources))
 			{
 				ActiveResourcePacks.AddFirst(LoadResourcePack(progressReceiver, device, stream, true, true, true, preloadCallback));
@@ -231,8 +236,38 @@ namespace Alex
 					Log.Warn(e, $"Could not load resourcepack {file}!");
 				}
 			}
+			
+            return true;
+		}
+	}
 
-			return true;
+	public class Registries
+	{
+        [JsonProperty("minecraft:fluid")]
+        public RegistryBase Fluids { get; set; }
+
+        [JsonProperty("minecraft:block")]
+		public RegistryBase Blocks { get; set; }
+
+		[JsonProperty("minecraft:item")]
+		public RegistryBase Items { get; set; }
+
+        public class RegistryBase
+		{
+			[JsonProperty("default")]
+			public string Default { get; set; } = null;
+
+			[JsonProperty("protocol_id")]
+			public int ProtocolId { get; set; }
+
+			[JsonProperty("entries")]
+			public IReadOnlyDictionary<string, RegistryEntry> Entries { get; set; }
+		}
+
+		public class RegistryEntry
+		{
+			[JsonProperty("protocol_id")]
+			public int ProtocolId { get; set; }
 		}
 	}
 }

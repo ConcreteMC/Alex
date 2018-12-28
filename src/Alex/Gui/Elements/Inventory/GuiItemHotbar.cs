@@ -5,6 +5,7 @@ using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Layout;
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
+using Alex.Items;
 using Alex.Utils;
 using NLog;
 
@@ -95,7 +96,14 @@ namespace Alex.Gui.Elements.Inventory
 			    items[childIndex].Item = e.Value;
 			    if (e.Value != null && ItemFactory.ResolveItemName(e.Value.ItemID, out string itemName))
 			    {
-				    items[childIndex].Name = itemName;
+				    if (ItemFactory.TryGetItem(itemName, out Item item))
+				    {
+					    items[childIndex].Name = item.DisplayName;
+				    }
+				    else
+				    {
+					    items[childIndex].Name = itemName;
+				    }
 			    }
 
                 if (childIndex == SelectedIndex)
