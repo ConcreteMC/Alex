@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Layout;
@@ -7,6 +8,7 @@ using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Alex.Items;
 using Alex.Utils;
+using Microsoft.Xna.Framework;
 using NLog;
 
 namespace Alex.Gui.Elements.Inventory
@@ -63,14 +65,15 @@ namespace Alex.Gui.Elements.Inventory
 		        });
 	        }
 
-	        AddChild(_itemNameTextElement = new GuiTextElement()
+	       _itemNameTextElement = new GuiTextElement()
 	        {
 		        Anchor = Alignment.TopCenter,
 		        TextColor = TextColor.White,
 		        Text = "",
-		        Margin = new Thickness(0, -5, 0, 5)
-	        });
-		}
+		        Margin = new Thickness(0, -5, 0, 5),
+				FontStyle = FontStyle.DropShadow
+	        };
+        }
 
 	    private void SelectedHotbarSlotChanged(object sender, SelectedSlotChangedEventArgs e)
 	    {
@@ -142,11 +145,18 @@ namespace Alex.Gui.Elements.Inventory
 	        }
         }
 
-        protected override void OnInit(IGuiRenderer renderer)
+	    protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
+	    {
+		    Vector2 textSize =
+			    graphics.Font.MeasureString(_itemNameTextElement.Text, _itemNameTextElement.Scale);
+			graphics.DrawString(Bounds.TopCenter() + new Vector2(-textSize.X / 2f, -10), _itemNameTextElement.Text, _itemNameTextElement.TextColor, _itemNameTextElement.FontStyle, _itemNameTextElement.Scale);
+		    base.OnDraw(graphics, gameTime);
+	    }
+
+	    protected override void OnInit(IGuiRenderer renderer)
         {
             Background = renderer.GetTexture(GuiTextures.Inventory_HotBar);
-
-			
+	       
         }
 
 	    ~GuiItemHotbar()

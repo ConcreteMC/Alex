@@ -54,7 +54,7 @@ namespace Alex.Gui.Elements.Inventory
 		    }
 	    }
 
-	    public GuiInventoryItem()
+        public GuiInventoryItem()
         {
             Height = 20;
             Width = 20;
