@@ -305,7 +305,7 @@ namespace Alex
 				done++;
 
 				double percentage = 100D * ((double)done / (double)total);
-				progressReceiver.UpdateProgress((int)percentage, $"Importing block models...");
+				progressReceiver.UpdateProgress((int)percentage, $"Importing block models: {entry.Key}");
 			}
 
 			if (GenerateClasses)
