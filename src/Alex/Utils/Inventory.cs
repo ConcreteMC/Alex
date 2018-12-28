@@ -10,7 +10,7 @@ namespace Alex.Utils
 {
     public class Inventory
     {
-		private SlotData[] Slots { get; }
+		private Item[] Slots { get; }
 	    public int SlotCount => Slots.Length;
 
 	    private byte _selectedSlot = 0;
@@ -37,19 +37,19 @@ namespace Alex.Utils
 			}
 	    }
 
-	    public SlotData MainHand;
-	    public SlotData OffHand;
-	    public SlotData Helmet;
-	    public SlotData Chestplate;
-	    public SlotData Leggings;
-	    public SlotData Boots;
+	    public Item MainHand;
+	    public Item OffHand;
+	    public Item Helmet;
+	    public Item Chestplate;
+	    public Item Leggings;
+	    public Item Boots;
 
 	    public EventHandler<SlotChangedEventArgs> SlotChanged = null;
 	    public EventHandler<SelectedSlotChangedEventArgs> SelectedHotbarSlotChanged = null;
 
 	    public Inventory(int slots)
 	    {
-			Slots = new SlotData[slots];
+			Slots = new Item[slots];
 			Empty();
 	    }
 
@@ -57,17 +57,14 @@ namespace Alex.Utils
 	    {
 		    for (int i = 0; i < Slots.Length; i++)
 		    {
-			    Slots[i] = new SlotData()
+			    Slots[i] = new ItemAir()
 			    {
-					ItemID = -1,
-					Count = 0,
-					ItemDamage = 0,
-					Nbt = null
+					Count = 0
 			    };
 		    }
 		}
 
-	    public SlotData this[int index]
+	    public Item this[int index]
 	    {
 		    get
 		    {
@@ -92,9 +89,9 @@ namespace Alex.Utils
 	public class SlotChangedEventArgs : EventArgs
 	{
 		public int Index;
-		public SlotData Value;
+		public Item Value;
 
-		public SlotChangedEventArgs(int index, SlotData value)
+		public SlotChangedEventArgs(int index, Item value)
 		{
 			Index = index;
 			Value = value;

@@ -25,6 +25,7 @@ using Alex.Gamestates;
 using Alex.GameStates;
 using Alex.Graphics.Models.Entity;
 using Alex.Gui.Elements;
+using Alex.Items;
 using Alex.Networking.Java;
 using Alex.Networking.Java.Events;
 using Alex.Networking.Java.Packets;
@@ -673,34 +674,58 @@ namespace Alex.Worlds.Java
 			}
 		}
 
+		private Item GetItemFromSlotData(SlotData data)
+		{
+			if (ItemFactory.ResolveItemName(data.ItemID, out string name))
+			{
+				if (ItemFactory.TryGetItem(name, out Item item))
+				{
+					item.Count = data.Count;
+					item.Nbt = data.Nbt;
+
+					return item;
+				}
+			}
+
+			return null;
+		}
+
 		private void HandleEntityEquipmentPacket(EntityEquipmentPacket packet)
 		{
 			if (WorldReceiver.TryGetEntity(packet.EntityId, out IEntity e))
 			{
 				if (e is Entity entity)
 				{
-					switch (packet.Slot)
+					if (ItemFactory.ResolveItemName(packet.Item.ItemID, out string name))
 					{
-						case EntityEquipmentPacket.SlotEnum.MainHand:
-							entity.Inventory.MainHand = packet.Item;
-							break;
-						case EntityEquipmentPacket.SlotEnum.OffHand:
-							entity.Inventory.OffHand = packet.Item;
-							break;
-						case EntityEquipmentPacket.SlotEnum.Boots:
-							entity.Inventory.Boots = packet.Item;
-							break;
-						case EntityEquipmentPacket.SlotEnum.Leggings:
-							entity.Inventory.Leggings = packet.Item;
-							break;
-						case EntityEquipmentPacket.SlotEnum.Chestplate:
-							entity.Inventory.Chestplate = packet.Item;
-							break;
-						case EntityEquipmentPacket.SlotEnum.Helmet:
-							entity.Inventory.Helmet = packet.Item;
-							break;
+						if (ItemFactory.TryGetItem(name, out Item item))
+						{
+							item.Count = packet.Item.Count;
+							item.Nbt = packet.Item.Nbt;
+
+							switch (packet.Slot)
+							{
+								case EntityEquipmentPacket.SlotEnum.MainHand:
+									entity.Inventory.MainHand = item;
+									break;
+								case EntityEquipmentPacket.SlotEnum.OffHand:
+									entity.Inventory.OffHand = item;
+									break;
+								case EntityEquipmentPacket.SlotEnum.Boots:
+									entity.Inventory.Boots = item;
+									break;
+								case EntityEquipmentPacket.SlotEnum.Leggings:
+									entity.Inventory.Leggings = item;
+									break;
+								case EntityEquipmentPacket.SlotEnum.Chestplate:
+									entity.Inventory.Chestplate = item;
+									break;
+								case EntityEquipmentPacket.SlotEnum.Helmet:
+									entity.Inventory.Helmet = item;
+									break;
+							}
+                        }
 					}
-					
 				}
 			}
 		}
@@ -802,7 +827,7 @@ namespace Alex.Worlds.Java
 
 			if (packet.SlotId < inventory.SlotCount)
 			{
-				inventory[packet.SlotId] = packet.Slot;
+				inventory[packet.SlotId] = GetItemFromSlotData(packet.Slot);
 			}
 		}
 
@@ -828,7 +853,7 @@ namespace Alex.Worlds.Java
 						Log.Warn($"Slot index {i} is out of bounds (Max: {inventory.SlotCount})");
 						continue;
 					}
-					inventory[i] = packet.Slots[i];
+					inventory[i] = GetItemFromSlotData(packet.Slots[i]);
 				}
 			}
 		}

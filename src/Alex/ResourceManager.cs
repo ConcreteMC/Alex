@@ -122,7 +122,7 @@ namespace Alex
 
 			Log.Info($"Imported {imported} blockstate variants from resourcepack in {sw.ElapsedMilliseconds}ms!");
 
-			ItemFactory.Init(this, resourcePack);
+			ItemFactory.Init(this, resourcePack, progressReceiver);
 
 			var language = resourcePack.Languages.Values.FirstOrDefault();
 			if (language != null)

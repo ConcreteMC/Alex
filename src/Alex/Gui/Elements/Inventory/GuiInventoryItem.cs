@@ -36,15 +36,15 @@ namespace Alex.Gui.Elements.Inventory
 	    public TextureSlice2D SelectedBackground { get;private set; }
 	    private GuiTextureElement Texture { get; set; }
 
-	    private SlotData _item = new SlotData()
+	    private Item _item = new ItemAir()
 	    {
 		    Count = 0,
-		    ItemID = -1,
-		    ItemDamage = 0,
+		  //  ItemID = -1,
+		 //   ItemDamage = 0,
 		    Nbt = null
 	    };
 
-	    public SlotData Item
+	    public Item Item
 	    {
 		    get { return _item; }
 		    set
@@ -104,7 +104,7 @@ namespace Alex.Gui.Elements.Inventory
 		    }
 	    }
 
-	    private void SlotChanged(SlotData newValue)
+	    private void SlotChanged(Item newValue)
 	    {
 		    if (_counTextElement != null)
 		    {
@@ -129,7 +129,7 @@ namespace Alex.Gui.Elements.Inventory
         {
 			base.OnDraw(graphics, gameTime);
 			
-	        if (Item != null && Item.ItemID > 0)
+	       // if (Item != null && Item.ItemID > 0)
 	        {
 
 	        }

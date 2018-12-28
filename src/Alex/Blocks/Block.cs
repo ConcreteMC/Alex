@@ -4,18 +4,25 @@ using System.Security.AccessControl;
 using Alex.API.Blocks;
 using Alex.API.Blocks.State;
 using Alex.API.Graphics;
+using Alex.API.Items;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks.State;
 using Alex.Entities;
 using Alex.Graphics.Models;
 using Alex.Graphics.Models.Blocks;
+using Alex.Items;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.BlockStates;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
+using MiNET.Blocks;
+using MiNET.Items;
 using NLog;
 using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
+using Item = Alex.Items.Item;
+using ItemBlock = Alex.Items.ItemBlock;
+using ItemType = Alex.API.Utils.ItemType;
 
 namespace Alex.Blocks
 {
@@ -45,8 +52,9 @@ namespace Alex.Blocks
 		public IBlockState BlockState { get; set; }
 		public bool IsWater { get; set; } = false;
 		public bool IsSourceBlock { get; set; } = false;
+		public float Hardness { get; set; }
 
-		private IMaterial _material;
+        private IMaterial _material;
 
 		public IMaterial BlockMaterial
 		{
@@ -140,7 +148,80 @@ namespace Alex.Blocks
 			
 		}
 
-	    public string DisplayName { get; set; } = null;
+		public virtual IItem[] GetDrops(IItem tool)
+		{
+			return new IItem[] { new ItemBlock(BlockState) { Count = 1 } };
+		}
+
+        public double GetBreakTime(IItem miningTool)
+		{
+			double secondsForBreak = Hardness;
+			bool isHarvestable = GetDrops(miningTool)?.Length > 0;
+			if (isHarvestable)
+			{
+				secondsForBreak *= 1.5;
+			}
+			else
+			{
+				secondsForBreak *= 5;
+			}
+			if (secondsForBreak == 0D)
+			{
+				secondsForBreak = 0.05;
+			}
+
+			int tierMultiplier = 1;
+			switch (miningTool.Material)
+			{
+				case ItemMaterial.Wood:
+					tierMultiplier = 2;
+					break;
+				case ItemMaterial.Stone:
+					tierMultiplier = 4;
+					break;
+				case ItemMaterial.Gold:
+					tierMultiplier = 12;
+					break;
+				case ItemMaterial.Iron:
+					tierMultiplier = 6;
+					break;
+				case ItemMaterial.Diamond:
+					tierMultiplier = 8;
+					break;
+			}
+
+			if (isHarvestable)
+			{
+				switch (miningTool.ItemType)
+				{
+					case ItemType.Shears:
+						if (this is Wool)
+						{
+							return secondsForBreak / 5;
+						}
+						else if (this is Leaves || this is AcaciaLeaves || this is Cobweb)
+						{
+							return secondsForBreak / 15;
+						}
+						break;
+					case ItemType.Sword:
+						if (this is Cobweb)
+						{
+							return secondsForBreak / 15;
+						}
+						return secondsForBreak / 1.5;
+					case ItemType.Shovel:
+					case ItemType.Axe:
+					case ItemType.PickAxe:
+					case ItemType.Hoe:
+						return secondsForBreak / tierMultiplier;
+				}
+			}
+
+			return secondsForBreak;
+		}
+
+        public string DisplayName { get; set; } = null;
 	    public override string ToString()
 	    {
 		    return DisplayName ?? GetType().Name;

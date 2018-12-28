@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
+using Alex.API.Utils;
 using Alex.Blocks;
 using Alex.Items;
 using Alex.ResourcePackLib;
@@ -29,9 +30,14 @@ namespace Alex
 		    ItemEntry[] itemData = JsonConvert.DeserializeObject<ItemEntry[]>(Resources.Items);
 
 
+		    var ii = resources.Registries.Items.Entries;
+
             Dictionary<string, Item> items = new Dictionary<string, Item>();
-		    foreach (var entry in resources.Registries.Items.Entries)
+		    for(int i = 0; i < ii.Count; i++)
 		    {
+			    var entry = ii.ElementAt(i);
+                progressReceiver?.UpdateProgress(i * (100 / ii.Count), $"Processing Item: {entry.Key}");
+                
 			    var blockState = BlockFactory.GetBlockState(entry.Key);
 
 			    Item item;
@@ -44,7 +50,17 @@ namespace Alex
 				    item = new Item();
 			    }
 
-			    item.DisplayName = entry.Key;
+			    var minetItem = MiNET.Items.ItemFactory.GetItem(entry.Key.Replace("minecraft:", ""));
+			    if (minetItem != null)
+			    {
+				    if (Enum.TryParse<ItemType>(minetItem.ItemType.ToString(), out ItemType t))
+				    {
+					    item.ItemType = t;
+				    }
+				    item.Material = minetItem.ItemMaterial;
+			    }
+
+                item.DisplayName = entry.Key;
 
 			    var data = itemData.FirstOrDefault(x =>
 				    x.name.Equals(entry.Key.Substring(10), StringComparison.InvariantCultureIgnoreCase));

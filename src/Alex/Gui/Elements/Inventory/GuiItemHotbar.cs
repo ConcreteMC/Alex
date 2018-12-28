@@ -94,16 +94,17 @@ namespace Alex.Gui.Elements.Inventory
 			    }
 
 			    items[childIndex].Item = e.Value;
-			    if (e.Value != null && ItemFactory.ResolveItemName(e.Value.ItemID, out string itemName))
+			    if (e.Value != null)
 			    {
-				    if (ItemFactory.TryGetItem(itemName, out Item item))
+				    items[childIndex].Name = e.Value.DisplayName;
+				  /*  if (ItemFactory.TryGetItem(itemName, out Item item))
 				    {
 					    items[childIndex].Name = item.DisplayName;
 				    }
 				    else
 				    {
 					    items[childIndex].Name = itemName;
-				    }
+				    }*/
 			    }
 
                 if (childIndex == SelectedIndex)
@@ -124,7 +125,7 @@ namespace Alex.Gui.Elements.Inventory
 	        var item = items[SelectedIndex];
 	        item.IsSelected = true;
 			
-	        if (item.Item != null && item.Item.ItemID > 0)
+	        if (item.Item != null && !(item.Item is ItemAir))
 	        {
 		        if (!string.IsNullOrWhiteSpace(item.Name))
 		        {
@@ -132,7 +133,7 @@ namespace Alex.Gui.Elements.Inventory
                 }
 		        else
 		        {
-			        _itemNameTextElement.Text = $"{item.Item.ItemID}:{item.Item.ItemDamage}";
+			        //_itemNameTextElement.Text = $"{item.Item.ItemID}:{item.Item.ItemDamage}";
 		        }
 	        }
 	        else

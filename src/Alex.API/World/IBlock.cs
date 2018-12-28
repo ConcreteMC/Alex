@@ -1,6 +1,7 @@
 ﻿using Alex.API.Blocks;
 using Alex.API.Blocks.State;
 using Alex.API.Graphics;
+using Alex.API.Items;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 
@@ -29,8 +30,11 @@ namespace Alex.API.World
 		bool IsWater { get; set; }
 		bool IsSourceBlock { get; set; }
 		IMaterial BlockMaterial { get; set; }
+		float Hardness { get; set; }
 
-		bool Tick(IWorld world, Vector3 position);
+        bool Tick(IWorld world, Vector3 position);
 		void BlockUpdate(IWorld world, BlockCoordinates position, BlockCoordinates updatedBlock);
+		double GetBreakTime(IItem miningTool);
+
 	}
 }

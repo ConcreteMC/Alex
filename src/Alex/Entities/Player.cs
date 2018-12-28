@@ -57,7 +57,8 @@ namespace Alex.Entities
 
 		private BlockCoordinates _destroyingTarget = BlockCoordinates.Zero;
 	    private bool _destroyingBlock = false;
-        private int _destroyingTick = 0;
+        private DateTime _destroyingTick = DateTime.MaxValue;
+	    private double _destroyTimeNeeded = 0;
 	    private BlockFace _destroyingFace;
 
 	    public override void Update(IUpdateArgs args)
@@ -126,13 +127,12 @@ namespace Alex.Entities
 				{
 					bool handledClick = false;
 					// Log.Debug($"Right click!");
-					if (Inventory.MainHand != null && Inventory.MainHand.ItemID != -1 && Inventory.MainHand.ItemID != 0)
+					if (Inventory.MainHand != null && !(Inventory.MainHand is ItemAir))
 					{
 						handledClick = HandleRightClick(Inventory.MainHand, 0);
 					}
 
-					if (!handledClick && Inventory.OffHand != null && Inventory.OffHand.ItemID != -1 &&
-					         Inventory.OffHand.ItemID != 0)
+					if (!handledClick && Inventory.OffHand != null && !(Inventory.OffHand is ItemAir))
 					{
 						handledClick = HandleRightClick(Inventory.OffHand, 1);
 					}
@@ -150,14 +150,15 @@ namespace Alex.Entities
 
 	    private void BlockBreakTick()
 	    {
-		    _destroyingTick++;
+		    //_destroyingTick++;
         }
 
 	    private void StartBreakingBlock()
 	    {
 			var floored = Raytraced.Floor();
 
-		    if (!Level.GetBlock(floored).HasHitbox)
+		    var block = Level.GetBlock(floored);
+		    if (!block.HasHitbox)
 		    {
 			    return;
 		    }
@@ -165,34 +166,42 @@ namespace Alex.Entities
             _destroyingBlock = true;
 		    _destroyingTarget = floored;
 		    _destroyingFace = GetTargetFace();
+		    _destroyingTick = DateTime.UtcNow;
 
-            Log.Debug($"Start break block ({_destroyingTarget})");
+		    _destroyTimeNeeded = block.GetBreakTime(Inventory.MainHand);
+
+            Log.Debug($"Start break block ({_destroyingTarget}, {_destroyTimeNeeded} seconds.)");
 
             Network?.PlayerDigging(DiggingStatus.Started, _destroyingTarget, _destroyingFace);
         }
 
 	    private void StopBreakingBlock(bool sendToServer = true, bool forceCanceled = false)
 	    {
+		    var end = DateTime.UtcNow;
 		    _destroyingBlock = false;
-            var ticks = Interlocked.Exchange(ref _destroyingTick, 0);// = 0;
+           // var ticks = Interlocked.Exchange(ref _destroyingTick, 0);// = 0;
+		    var start = _destroyingTick;
+			_destroyingTick = DateTime.MaxValue;
+
+		    var timeRan = (end - start).TotalSeconds;
 
 		    if (!sendToServer)
 		    {
-			    Log.Debug($"Stopped breaking block, not notifying server. Ticks: {ticks}");
+			    Log.Debug($"Stopped breaking block, not notifying server. Time: {timeRan}");
                 return;
 		    }
 
-		    if ((Gamemode == Gamemode.Creative /* || ticks >= block.MiningTime */) && !forceCanceled)
+		    if ((Gamemode == Gamemode.Creative  || timeRan >= _destroyTimeNeeded) && !forceCanceled)
 		    {
 			    Network?.PlayerDigging(DiggingStatus.Finished, _destroyingTarget, _destroyingFace);
-			    Log.Debug($"Stopped breaking block. Ticks: {ticks}");
+			    Log.Debug($"Stopped breaking block. Time: {timeRan}");
 
 				Level.SetBlockState(_destroyingTarget, new Air().GetDefaultState());
             }
 		    else
 		    {
 			    Network?.PlayerDigging(DiggingStatus.Cancelled, _destroyingTarget, _destroyingFace);
-			    Log.Debug($"Cancelled breaking block. Ticks: {ticks}");
+			    Log.Debug($"Cancelled breaking block. Time: {timeRan}");
             }
 	    }
 
@@ -207,18 +216,18 @@ namespace Alex.Entities
 		    return adj.GetBlockFace();
         }
 
-	    private bool HandleRightClick(SlotData slot, int hand)
+	    private bool HandleRightClick(Item slot, int hand)
 	    {
-            if (ItemFactory.ResolveItemName(slot.ItemID, out string itemName))
+            //if (ItemFactory.ResolveItemName(slot.ItemID, out string itemName))
             {
 	            IBlockState blockState = null;
-	            if (ItemFactory.TryGetItem(itemName, out Item i))
-	            {
-		            if (i is ItemBlock ib)
+	         //   if (ItemFactory.TryGetItem(itemName, out Item i))
+	         //   {
+		            if (slot is ItemBlock ib)
 		            {
 			            blockState = ib.Block;
 		            }
-	            }
+	         //   }
 
                 if (blockState != null && !(blockState.Block is Air) && HasRaytraceResult)
                 {
@@ -245,7 +254,7 @@ namespace Alex.Entities
 		                Level.SetBlockState(new BlockCoordinates(raytraceFloored + adj), blockState);
 	                }
 
-	                Log.Debug($"Placed block: {itemName} on {raytraceFloored} face= {face} facepos={remainder} ({adj})");
+	                Log.Debug($"Placed block: {slot.DisplayName} on {raytraceFloored} face= {face} facepos={remainder} ({adj})");
 
 	                return true;
                 }

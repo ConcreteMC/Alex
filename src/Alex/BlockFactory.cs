@@ -207,6 +207,7 @@ namespace Alex
 
 						string displayName = entry.Key;
 						var block = GetBlockByName(entry.Key);
+
 						if (block == null)
 						{
 							block = new UnknownBlock(id);
@@ -218,12 +219,14 @@ namespace Alex
 							{
 								string className = ToPascalCase(block.Name.Substring(10));
 
-								factoryBuilder.AppendLine($"\t\t\telse if (blockName == \"{entry.Key.ToLowerInvariant()}\" || blockName == \"{className.ToLowerInvariant()}\") return new {className}();");
+								factoryBuilder.AppendLine(
+									$"\t\t\telse if (blockName == \"{entry.Key.ToLowerInvariant()}\" || blockName == \"{className.ToLowerInvariant()}\") return new {className}();");
 
 								SaveBlock(block, className, false);
 								Log.Info($"Saved un-implemnted block to file ({displayName})!");
 							}
 						}
+
 
 						if (block.IsSourceBlock && !(cachedBlockModel is MultiBlockModel) && !(cachedBlockModel is LiquidBlockModel))
 						{
@@ -534,7 +537,26 @@ namespace Alex
 		}
 
 		//TODO: Categorize and implement
+
 		private static Block GetBlockByName(string blockName)
+		{
+			var b = InternalGetBlockByName(blockName);
+
+            var minetblock = MiNET.Blocks.BlockFactory.GetBlockByName(blockName);
+			if (minetblock == null)
+			{
+				minetblock = MiNET.Blocks.BlockFactory.GetBlockByName(blockName.Replace("minecraft:", ""));
+			}
+
+			if (minetblock != null)
+			{
+				b.Hardness = minetblock.Hardness;
+			}
+
+			return b;
+		}
+
+		private static Block InternalGetBlockByName(string blockName)
 		{
 			blockName = blockName.ToLowerInvariant();
 			if (string.IsNullOrWhiteSpace(blockName)) return null;
@@ -812,6 +834,7 @@ namespace Alex
 						Transparent = minetblock.IsTransparent,
 						IsReplacible = minetblock.IsReplacible,
 						Drag = minetblock.FrictionFactor,
+						Hardness = minetblock.Hardness,
 						DisplayName = "MiNET:" + blockName
 					};
 				}
