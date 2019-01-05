@@ -123,8 +123,9 @@ namespace Alex.API.Utils
 		public Vector3 PreviewMove(Vector3 moveVector)
 		{
 			var movement = new Vector3(moveVector.X, moveVector.Y, moveVector.Z);
+			
 			movement = Vector3.Transform(movement,
-				Matrix.CreateRotationY((float)Yaw.ToRadians()));
+				Matrix.CreateRotationY(-MathHelper.ToRadians(Yaw)));
 
 			return ToVector3() + movement;
 		}

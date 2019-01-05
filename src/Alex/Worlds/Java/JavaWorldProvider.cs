@@ -1009,20 +1009,14 @@ namespace Alex.Worlds.Java
 		{
 			if (WorldReceiver.TryGetEntity(packet.EntityId, out var entity))
 			{
-				entity.UpdateHeadYaw(MathUtils.AngleToNotchianDegree(packet.HeadYaw));
+				entity.KnownPosition.HeadYaw = MathUtils.AngleToNotchianDegree(packet.HeadYaw);
+				//entity.UpdateHeadYaw(MathUtils.AngleToNotchianDegree(packet.HeadYaw));
 			}
 		}
 
 		private void HandleEntityLook(EntityLook packet)
 		{
-			if (WorldReceiver.TryGetEntity(packet.EntityId, out var entity))
-			{
-			//	entity.UpdateHeadYaw(MathUtils.AngleToNotchianDegree(packet.Yaw));
-				//entity.KnownPosition.HeadYaw = MathUtils.AngleToNotchianDegree(packet.Yaw);
-				entity.KnownPosition.HeadYaw = MathUtils.AngleToNotchianDegree(packet.Yaw);
-				entity.KnownPosition.Pitch = MathUtils.AngleToNotchianDegree(packet.Pitch);
-				entity.KnownPosition.OnGround = packet.OnGround;
-			}
+			WorldReceiver.UpdateEntityLook(packet.EntityId, MathUtils.AngleToNotchianDegree(packet.Yaw), MathUtils.AngleToNotchianDegree(packet.Pitch), packet.OnGround);
 		}
 
 		private void HandleEntityTeleport(EntityTeleport packet)

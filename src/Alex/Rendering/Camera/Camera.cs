@@ -89,9 +89,6 @@ namespace Alex.Rendering.Camera
 	        Direction = lookAtOffset;
 
 			Target = Position + lookAtOffset;
-
-				//  Direction = Vector3.Transform(-Vector3.UnitZ, rotationMatrix);
-
 	        ViewMatrix = Matrix.CreateLookAt(Position, Target, Vector3.Up);
 		}
 

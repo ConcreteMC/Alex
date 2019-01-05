@@ -579,6 +579,16 @@ namespace Alex.Worlds
             }
 		}
 
+		public void UpdateEntityLook(long entityId, float yaw, float pitch, bool onGround)
+		{
+			if (EntityManager.TryGet(entityId, out IEntity entity))
+			{
+				entity.KnownPosition.OnGround = onGround;
+				entity.KnownPosition.Pitch = pitch;
+				entity.KnownPosition.HeadYaw = yaw;
+			}
+		}
+
 		public bool TryGetEntity(long entityId, out IEntity entity)
 		{
 			return EntityManager.TryGet(entityId, out entity);
