@@ -82,10 +82,10 @@ namespace Alex.Rendering.Camera
         /// </summary>
         protected virtual void UpdateViewMatrix()
         {
-			Matrix rotationMatrix = Matrix.CreateRotationX(Rotation.Z) * //Pitch
-			                        Matrix.CreateRotationY(Rotation.Y); //Yaw
+			Matrix rotationMatrix = Matrix.CreateRotationX(-Rotation.Z) * //Pitch
+			                        Matrix.CreateRotationY(-Rotation.Y); //Yaw
 
-	        Vector3 lookAtOffset = Vector3.Transform(Vector3.Forward, rotationMatrix);
+	        Vector3 lookAtOffset = Vector3.Transform(Vector3.Backward, rotationMatrix);
 	        Direction = lookAtOffset;
 
 			Target = Position + lookAtOffset;

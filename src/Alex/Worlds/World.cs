@@ -548,7 +548,7 @@ namespace Alex.Worlds
 			Player.KnownPosition = location;
 		}
 
-		public void UpdateEntityPosition(long entityId, PlayerLocation position, bool relative = false, bool updateLook = false)
+		public void UpdateEntityPosition(long entityId, PlayerLocation position, bool relative = false, bool updateLook = false, bool updatePitch = false)
 		{
 			if (EntityManager.TryGet(entityId, out IEntity entity))
 			{
@@ -563,16 +563,20 @@ namespace Alex.Worlds
 					entity.KnownPosition.Y += position.Y;
 					entity.KnownPosition.Z += position.Z;	
 					//entity.KnownPosition.Move(position);
-					
-					if (updateLook)
-					{
-						//entity.KnownPosition.Yaw = position.Yaw;
-						entity.KnownPosition.Pitch = position.Pitch;
-						entity.KnownPosition.HeadYaw = position.HeadYaw;
-					//	entity.UpdateHeadYaw(position.HeadYaw);
-					}
 				}
-			}
+
+				if (updateLook)
+				{
+					//entity.KnownPosition.Yaw = position.Yaw;
+					if (updatePitch)
+					{
+						entity.KnownPosition.Pitch = position.Pitch;
+					}
+
+					entity.KnownPosition.HeadYaw = position.HeadYaw;
+					//	entity.UpdateHeadYaw(position.HeadYaw);
+				}
+            }
 		}
 
 		public bool TryGetEntity(long entityId, out IEntity entity)

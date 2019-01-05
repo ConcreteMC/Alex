@@ -119,7 +119,11 @@ namespace Alex.Entities
 					if (_destroyingTarget != new BlockCoordinates(Raytraced.Floor()))
 					{
 						StopBreakingBlock(true, true);
-						StartBreakingBlock();
+
+						if (Gamemode != Gamemode.Creative)
+						{
+							StartBreakingBlock();
+						}
 					}
 				}
 

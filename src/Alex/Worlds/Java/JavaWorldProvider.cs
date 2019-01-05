@@ -192,7 +192,7 @@ namespace Alex.Worlds.Java
 					if (pos.DistanceTo(_lastSentLocation) > 0.0f)
 					{
 						PlayerPositionAndLookPacketServerBound packet = new PlayerPositionAndLookPacketServerBound();
-						packet.Yaw = 180f - pos.HeadYaw;
+						packet.Yaw = pos.HeadYaw;
 						packet.Pitch = -pos.Pitch;
 						packet.X = pos.X;
 						packet.Y = pos.Y;
@@ -208,7 +208,7 @@ namespace Alex.Worlds.Java
 					{
 						PlayerLookPacket playerLook = new PlayerLookPacket();
 						playerLook.Pitch = -pos.Pitch;
-						playerLook.Yaw = 180f - pos.HeadYaw;
+						playerLook.Yaw = pos.HeadYaw;
 						playerLook.OnGround = pos.OnGround;
 
 						SendPacket(playerLook);
@@ -994,7 +994,7 @@ namespace Alex.Worlds.Java
 				MathUtils.AngleToNotchianDegree(packet.Pitch))
 			{
 				OnGround = packet.OnGround
-			}, true, true);
+			}, true, true, true);
 		}
 
 		private void HandleEntityRelativeMove(EntityRelativeMove packet)
@@ -1031,7 +1031,7 @@ namespace Alex.Worlds.Java
 			WorldReceiver.UpdateEntityPosition(packet.EntityID, new PlayerLocation(packet.X, packet.Y, packet.Z, yaw, yaw, MathUtils.AngleToNotchianDegree(packet.Pitch))
 			{
 				OnGround = packet.OnGround
-			}, updateLook: true);
+			}, updateLook: true, updatePitch:true);
 		}
 
 		private void HandleEntityVelocity(EntityVelocity packet)
@@ -1238,7 +1238,7 @@ namespace Alex.Worlds.Java
 			SendPacket(response);
 
 			UpdatePlayerPosition(
-				new PlayerLocation(packet.X, packet.Y, packet.Z, packet.Yaw, pitch: packet.Pitch));
+				new PlayerLocation(packet.X, packet.Y, packet.Z, packet.Yaw, packet.Yaw, pitch: packet.Pitch));
 
 			if (!Spawned)
 			{
