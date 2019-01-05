@@ -472,6 +472,7 @@ namespace Alex.Worlds
 			ChunkManager.Dispose();
 
 			PhysicsEngine.Dispose();
+			
 		}
 
 		#region IWorldReceiver (Handle WorldProvider callbacks)

@@ -118,6 +118,11 @@ namespace Alex.Worlds.Bedrock
 			throw new NotImplementedException();
 		}
 
+		public void Close()
+		{
+			base.StopClient();
+		}
+
 		void IChatProvider.Send(string message)
 		{
 			SendChat(message);

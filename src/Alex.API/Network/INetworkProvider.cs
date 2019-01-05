@@ -16,5 +16,6 @@ namespace Alex.API.Network
 	    void PlayerDigging(DiggingStatus status, BlockCoordinates position, BlockFace face);
 	    void UseItem(int hand);
 	    void HeldItemChanged(short slot);
+	    void Close();
     }
 }

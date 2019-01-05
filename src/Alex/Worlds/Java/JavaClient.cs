@@ -106,5 +106,10 @@ namespace Alex.Worlds.Java
 				Slot = slot
 			});
 		}
+
+		public void Close()
+		{
+			base.Dispose();
+		}
 	}
 }

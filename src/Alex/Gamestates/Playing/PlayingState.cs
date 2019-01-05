@@ -464,6 +464,7 @@ namespace Alex.GameStates.Playing
 		{
 			World.Destroy();
 			WorldProvider.Dispose();
+			NetworkProvider.Close();
 		}
 	}
 }

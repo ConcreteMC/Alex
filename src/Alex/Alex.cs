@@ -292,6 +292,8 @@ namespace Alex
 
 		public void LoadWorld(WorldProvider worldProvider, INetworkProvider networkProvider)
 		{
+			GameStateManager.RemoveState("play");
+
 			PlayingState playState = new PlayingState(this, GraphicsDevice, worldProvider, networkProvider);
 			GameStateManager.AddState("play", playState);
 
