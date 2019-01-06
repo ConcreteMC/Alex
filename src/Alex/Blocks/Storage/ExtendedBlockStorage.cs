@@ -43,6 +43,11 @@ namespace Alex.Blocks.Storage
 			}
 		}
 
+		public void ResetSkyLight()
+		{
+			this.SkyLight = new NibbleArray(4096, 0);
+		}
+
 		private static int GetCoordinateIndex(int x, int y, int z)
 		{
 			return (y << 8) + (z << 4) + x;

@@ -17,14 +17,17 @@ namespace Alex.GameStates.Hud
     {
         private readonly GuiItemHotbar _hotbar;
         private readonly PlayerController _playerController;
-	    public ChatComponent Chat;
-		private PlayerInputManager InputManager => _playerController.InputManager;
+	    public readonly ChatComponent Chat;
+	    public readonly TitleComponent Title;
+        private PlayerInputManager InputManager => _playerController.InputManager;
 
 		private Alex Alex { get; }
 		private Player Player { get; }
-        public PlayingHud(Alex game, Player player, ChatComponent chat) : base()
+        public PlayingHud(Alex game, Player player, ChatComponent chat, TitleComponent titleComponent) : base()
         {
-	        Alex = game;
+	        Title = titleComponent;
+
+            Alex = game;
 	        Player = player;
 
             _playerController = player.Controller;
@@ -44,6 +47,7 @@ namespace Alex.GameStates.Hud
             AddChild(_hotbar);
             AddChild(new GuiCrosshair());
 			AddChild(Chat);
+			AddChild(Title);
         }
 
         protected override void OnUpdate(GameTime gameTime)

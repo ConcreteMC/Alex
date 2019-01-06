@@ -128,6 +128,8 @@ namespace Alex
 						ModelName = "Unknown model",
 					}
 				});
+
+				AirState.Model = UnknownBlockModel;
 			}
 
 			RegisterBuiltinBlocks();
@@ -481,7 +483,7 @@ namespace Alex
 			return null;
 		}
 
-		private static readonly IBlockState AirState = new BlockState();
+		private static readonly IBlockState AirState = new BlockState(){Name = "Unknown", Block = new UnknownBlock(0)};
 
 		public static IBlockState GetBlockState(string palleteId)
 		{

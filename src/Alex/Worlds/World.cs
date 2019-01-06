@@ -308,14 +308,22 @@ namespace Alex.Worlds
 			var y = block.Coordinates.Y;
 			var z = block.Coordinates.Z;
 
-			IChunkColumn chunk;
-			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
+			var chunkCoords = new ChunkCoordinates(x >> 4, z >> 4);
+
+            IChunkColumn chunk;
+			if (ChunkManager.TryGetChunk(chunkCoords, out chunk))
 			{
-				chunk.SetBlock(x & 0xf, y & 0xff, z & 0xf, block);
-				ChunkManager.ScheduleChunkUpdate(new ChunkCoordinates(x >> 4, z >> 4), ScheduleType.Full);
+				var cx = x & 0xf;
+				var cy = y & 0xff;
+				var cz = z & 0xf;
+
+                chunk.SetBlock(cx, cy, cz, block);
+				ChunkManager.SkylightCalculator.UpdateHeightMap(new BlockCoordinates(x, y, z));
+                ChunkManager.ScheduleChunkUpdate(new ChunkCoordinates(x >> 4, z >> 4), ScheduleType.Full | ScheduleType.Skylight, true);
 
 				UpdateNeighbors(x, y, z);
-			}
+				CheckForUpdate(chunkCoords, cx, cz);
+            }
 		}
 
 		public void SetBlock(float x, float y, float z, IBlock block)
@@ -330,13 +338,18 @@ namespace Alex.Worlds
 			IChunkColumn chunk;
 		    if (ChunkManager.TryGetChunk(chunkCoords, out chunk))
 		    {
-				chunk.SetBlock(x & 0xf, y & 0xff, z & 0xf, block);
+			    var cx = x & 0xf;
+			    var cy = y & 0xff;
+			    var cz = z & 0xf;
+
+                chunk.SetBlock(cx, cy, cz, block);
 				ChunkManager.SkylightCalculator.UpdateHeightMap(new BlockCoordinates(x,y,z));
 
 				ChunkManager.ScheduleChunkUpdate(chunkCoords, ScheduleType.Full | ScheduleType.Skylight, true);
 
 			    UpdateNeighbors(x, y, z);
-			} 
+			    CheckForUpdate(chunkCoords, cx, cz);
+            } 
 	    }
 
 		public void SetBlockState(int x, int y, int z, IBlockState block)
@@ -350,14 +363,36 @@ namespace Alex.Worlds
 				var cy = y & 0xff;
 				var cz = z & 0xf;
 
-				chunk.SetBlockState(cx, cy, cz, block);
+                chunk.SetBlockState(cx, cy, cz, block);
 				ChunkManager.SkylightCalculator.UpdateHeightMap(new BlockCoordinates(x, y, z));
 
 				ChunkManager.ScheduleChunkUpdate(chunkCoords, ScheduleType.Full | ScheduleType.Skylight, true);
 
                 UpdateNeighbors(x,y,z);
-			}
+				CheckForUpdate(chunkCoords, cx, cz);
+            }
 		}
+
+		private void CheckForUpdate(ChunkCoordinates chunkCoords, int cx, int cz)
+		{
+			if (cx == 0)
+			{
+				ChunkManager.ScheduleChunkUpdate(chunkCoords - new ChunkCoordinates(1, 0), ScheduleType.Full | ScheduleType.Skylight, true);
+			}
+			else if (cx == 0xf)
+			{
+				ChunkManager.ScheduleChunkUpdate(chunkCoords + new ChunkCoordinates(1, 0), ScheduleType.Full | ScheduleType.Skylight, true);
+			}
+
+			if (cz == 0)
+			{
+				ChunkManager.ScheduleChunkUpdate(chunkCoords - new ChunkCoordinates(0, 1), ScheduleType.Full | ScheduleType.Skylight, true);
+			}
+			else if (cz == 0xf)
+			{
+				ChunkManager.ScheduleChunkUpdate(chunkCoords + new ChunkCoordinates(0, 1), ScheduleType.Full | ScheduleType.Skylight, true);
+			}
+        }
 
 		private void UpdateNeighbors(int x, int y, int z)
 		{
@@ -618,41 +653,6 @@ namespace Alex.Worlds
 		{
 			PlayerList.Entries.Remove(item);
 		}
-
-		#region Titles
-
-		private ChatObject TitleText;
-		private ChatObject SubtitleText;
-		private ManualResetEventSlim TitleResetEvent = new ManualResetEventSlim(false);
-		public void TitleSetTitle(ChatObject value)
-		{
-			TitleText = value;
-		}
-
-		public void TitleSetSubtitle(ChatObject value)
-		{
-			SubtitleText = value;
-		}
-
-		public void TitleSetTimes(int fadeIn, int stay, int fadeOut)
-		{
-			Ticker.ScheduleTick(() =>
-			{
-
-			}, stay + fadeOut);
-		}
-
-		public void TitleHide()
-		{
-			
-		}
-
-		public void TitleReset()
-		{
-			
-		}
-
-		#endregion
 
 		#endregion
 	}

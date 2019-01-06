@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Alex.API.Blocks.State;
 using Alex.API.Data;
 using Alex.API.Entities;
+using Alex.API.Gui.Elements;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 
@@ -15,7 +16,8 @@ namespace Alex.API.World
 
 		protected IWorldReceiver WorldReceiver { get; set; }
 		protected IChatReceiver ChatReceiver { get; set; }
-		protected WorldProvider()
+		public ITitleComponent TitleComponent { get; set; }
+        protected WorldProvider()
 		{
 			
 		}
@@ -84,11 +86,5 @@ namespace Alex.API.World
 
 		void AddPlayerListItem(PlayerListItem item);
 		void RemovePlayerListItem(UUID item);
-
-		void TitleSetTitle(ChatObject value);
-		void TitleSetSubtitle(ChatObject value);
-		void TitleSetTimes(int fadeIn, int stay, int fadeOut);
-		void TitleHide();
-		void TitleReset();
 	};
 }

@@ -45,6 +45,7 @@ using Newtonsoft.Json;
 using NLog;
 using NLog.Fluent;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
+using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
 using LevelInfo = Alex.API.World.LevelInfo;
 using NibbleArray = Alex.Utils.NibbleArray;
 using Packet = Alex.Networking.Java.Packets.Packet;
@@ -270,9 +271,10 @@ namespace Alex.Worlds.Java
 			});
 		}
 
+		private bool hasDoneInitialChunks = false;
 		private bool _initiated = false;
-		//private BlockingCollection<ChunkColumn> _generatingHelper = new BlockingCollection<ChunkColumn>();
-	//	private AutoResetEvent _chunkReceivedWaitEvent = new AutoResetEvent(false);
+		private BlockingCollection<IChunkColumn> _generatingHelper = new BlockingCollection<IChunkColumn>();
+		private int _chunksReceived = 0;
 		public override Task Load(ProgressReport progressReport)
 		{
 			return Task.Run(() =>
@@ -297,56 +299,47 @@ namespace Alex.Worlds.Java
 
 				var target = radiusSquared * 3;
 
-				int count = 0;
-			/*	ChunkColumn column = _generatingHelper.Take();
-				do
+                int loaded = 0;
+				SpinWait.SpinUntil(() =>
 				{
-					base.LoadChunk(column, column.X, column.Z, true);
-					progressReport(LoadingState.LoadingChunks, (int) Math.Floor((count / target) * 100));
-					count++;
-				} while (_generatingHelper.TryTake(out column, 1250) && !Spawned);
-
-				_generatingHelper = null;
-				*/
-
-				//while (!Spawned && _chunkReceivedWaitEvent.WaitOne(1250))
-			//	{
-			//		progressReport(LoadingState.LoadingChunks, (int)Math.Floor((count / target) * 100));
-			//		count++;
-			//	}
-
-				count = 0;
-
-				/*Parallel.ForEach(generatedChunks, (c) =>
-				{
-					cached.ChunkManager.UpdateChunk(c);
-
-					lock (_genLock)
+					if (_chunksReceived < target)
 					{
-						base.LoadChunk(c, c.X, c.Z, false);
-					}
+						progressReport(LoadingState.LoadingChunks, (int)Math.Floor((_chunksReceived / target) * 100));
+                    }
+					else if (loaded < _chunksReceived)
+					{
 
-					cached.ChunkManager.RemoveChunk(new ChunkCoordinates(c.X, c.Z), false);
+						if (_generatingHelper.TryTake(out IChunkColumn chunkColumn, 50))
+						{
+							base.LoadChunk(chunkColumn, chunkColumn.X, chunkColumn.Z, true);
+							loaded++;
+						}
 
-					progressReport(LoadingState.GeneratingVertices, (int)Math.Floor((count / target) * 100));
+						progressReport(LoadingState.GeneratingVertices, (loaded / _chunksReceived) * 100);
+                    }
+                    else
+					{
+						progressReport(LoadingState.Spawning, 99);
+                    }
 
-					count++;
-				});*/
-				progressReport(LoadingState.Spawning, 99);
-				SpinWait.SpinUntil(() => Spawned || _disconnected);
+                    return loaded >= target || _disconnected; // Spawned || _disconnected;
+
+				});
+
+				hasDoneInitialChunks = true;
 			});
 		}
 
 		public void ChunkReceived(IChunkColumn chunkColumn, int x, int z, bool update)
 		{
-			/*if (_generatingHelper != null && !Spawned)
+			if (!hasDoneInitialChunks)
 			{
-				_generatingHelper.Add((ChunkColumn)chunkColumn);
+                _generatingHelper.Add(chunkColumn);
+                _chunksReceived++;
 				return;
-			}*/
-			//_chunkReceivedWaitEvent.Set();
+			}
 
-			base.LoadChunk(chunkColumn, x, z, update);
+            base.LoadChunk(chunkColumn, x, z, update);
 		}
 
 		public void ChunkUnloaded(int x, int z)
@@ -628,7 +621,30 @@ namespace Alex.Worlds.Java
 
 		private void HandleTitlePacket(TitlePacket packet)
 		{
-
+			switch (packet.Action)
+			{
+				case TitlePacket.ActionEnum.SetTitle:
+					TitleComponent.SetTitle(packet.TitleText);
+					break;
+				case TitlePacket.ActionEnum.SetSubTitle:
+					TitleComponent.SetSubtitle(packet.SubtitleText);
+                    break;
+				case TitlePacket.ActionEnum.SetActionBar:
+					
+					break;
+				case TitlePacket.ActionEnum.SetTimesAndDisplay:
+					TitleComponent.SetTimes(packet.FadeIn, packet.Stay, packet.FadeOut);
+					break;
+				case TitlePacket.ActionEnum.Hide:
+					TitleComponent.Hide();
+					break;
+				case TitlePacket.ActionEnum.Reset:
+					TitleComponent.Reset();
+					break;
+				default:
+					Log.Warn($"Unknown Title Action: {(int) packet.Action}");
+					break;
+			}
 		}
 
 		public bool Respawning = false;
@@ -1141,9 +1157,10 @@ namespace Alex.Worlds.Java
 
 		private void HandleUpdateLightPacket(UpdateLightPacket packet)
 		{
+			return;
 			if (WorldReceiver.GetChunkColumn(packet.ChunkX, packet.ChunkZ) is ChunkColumn c)
 			{
-				for (int i = 0; i < packet.SkyLightArrays.Length; i++)
+				for (int i = 1; i < packet.SkyLightArrays.Length - 1; i++)
 				{
 					byte[] data = packet.SkyLightArrays[i];
 					if (data == null) continue;
@@ -1154,7 +1171,7 @@ namespace Alex.Worlds.Java
 					c.Sections[i].SkyLight = n;
 				}
 
-				for (int i = 0; i < packet.BlockLightArrays.Length; i++)
+				for (int i = 1; i < packet.BlockLightArrays.Length - 1; i++)
 				{
 					byte[] data = packet.BlockLightArrays[i];
 					if (data == null) continue;
@@ -1165,7 +1182,7 @@ namespace Alex.Worlds.Java
 					c.Sections[i].BlockLight = n;
 				}
 
-				WorldReceiver.ChunkUpdate(c);
+				WorldReceiver.ChunkUpdate(c, ScheduleType.Full);
             }
         }
 

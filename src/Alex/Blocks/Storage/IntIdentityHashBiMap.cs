@@ -18,7 +18,7 @@ namespace Alex.Blocks.Storage
 
 		public IntIdentityHashBiMap(int initialCapacity)
 		{
-			initialCapacity = (int)(initialCapacity / 0.8F);
+			//initialCapacity = (int)(initialCapacity / 0.8F);
 			_values = new TK[initialCapacity];
 			_keys = new uint[initialCapacity];
 			_byId = new TK[initialCapacity];

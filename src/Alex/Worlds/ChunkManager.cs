@@ -738,9 +738,14 @@ namespace Alex.Worlds
         {
             foreach (var i in Chunks)
             {
-                ScheduleChunkUpdate(i.Key, ScheduleType.Full);
+                ScheduleChunkUpdate(i.Key, ScheduleType.Full | ScheduleType.Skylight);
             }
         }
+
+	    public KeyValuePair<ChunkCoordinates, IChunkColumn>[]GetAllChunks()
+	    {
+		    return Chunks.ToArray();
+	    }
 
 	    public void ClearChunks()
 	    {

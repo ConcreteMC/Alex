@@ -57,7 +57,7 @@ namespace Alex.Worlds
 		public bool IsDirty { get; set; }
 		public bool SkyLightDirty { get; set; }
 
-        public ExtendedBlockStorage[] Sections = new ExtendedBlockStorage[16];
+		public ExtendedBlockStorage[] Sections = new ExtendedBlockStorage[16];
 		public int[] BiomeId = ArrayOf<int>.Create(256, 1);
 		public short[] Height = new short[256];
 
@@ -72,7 +72,7 @@ namespace Alex.Worlds
 			IsDirty = true;
 			SkyLightDirty = true;
 
-            for (int i = 0; i < Sections.Length; i++)
+			for (int i = 0; i < Sections.Length; i++)
 			{
 				var b = new ExtendedBlockStorage(i, true);
 				Sections[i] = b;
@@ -92,7 +92,24 @@ namespace Alex.Worlds
 
 			Sections[y >> 4].Set(x, y - 16 * (y >> 4), z, blockState);
 			SetDirty();
-			_heightDirty = true;
+
+			RecalculateHeight(x, z);
+
+            _heightDirty = true;
+		}
+
+		private void RecalculateHeight(int x, int z)
+		{
+			for (int y = 256 - 1; y > 0; --y)
+			{
+				if (GetBlock(x, y, z).Renderable)
+				{
+					SetHeight(x, z, (byte) y);
+					break;
+				}
+			}
+
+			GetHeighest();
 		}
 
 		private static IBlockState Air = BlockFactory.GetBlockState("minecraft:air");
@@ -126,7 +143,9 @@ namespace Alex.Worlds
 			Sections[by >> 4].Set(bx, by - 16 * (by >> 4), bz, block.BlockState);
 			SetDirty();
 
-			_heightDirty = true;
+			RecalculateHeight(bx, bz);
+
+            _heightDirty = true;
 		}
 
 		public void SetHeight(int bx, int bz, short h)

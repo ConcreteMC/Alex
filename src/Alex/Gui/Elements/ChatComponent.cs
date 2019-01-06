@@ -8,6 +8,7 @@ using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Graphics;
 using Alex.API.Input;
 using Alex.API.Utils;
+using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using NLog;
@@ -24,8 +25,10 @@ namespace Alex.Gui.Elements
 
 		public IChatProvider ChatProvider;
 
-		public ChatComponent()
+		private World _world;
+		public ChatComponent(World world)
 		{
+			_world = world;
 			Anchor = Alignment.BottomLeft;
 
 			MaxHeight = Height;
@@ -477,6 +480,25 @@ namespace Alex.Gui.Elements
 			//Submit message
 			if (TextBuilder.Length > 0)
 			{
+				if (TextBuilder.Text.StartsWith("!!"))
+				{
+					var parts = TextBuilder.Text.Substring(2).Split(',');
+					if (parts.Length == 2)
+					{
+						int x = int.Parse(parts[0]);
+						int y = int.Parse(parts[1]);
+						int z = int.Parse(parts[2]);
+
+						var state = _world.GetBlockState(x, y, z);
+						var column = _world.GetChunkColumn(x >> 4, z >> 4);
+
+						Receive(new ChatObject(
+							$"State: (Name: {state.Name}) (Model: {state.Model}) (Block: {state.Block})"));
+						Dismiss();
+						return;
+					}
+				}
+
 				if (Alex.IsMultiplayer)
 				{
 					ChatProvider?.Send(TextBuilder.Text);

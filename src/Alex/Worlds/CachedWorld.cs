@@ -145,7 +145,7 @@ namespace Alex.Worlds
 
 		public void RebuildChunks()
 		{
-			
+			ChunkManager.RebuildAll();
 		}
 
 		public void Render(IRenderArgs args)
