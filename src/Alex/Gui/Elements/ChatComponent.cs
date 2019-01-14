@@ -264,61 +264,11 @@ namespace Alex.Gui.Elements
 
 		private int _latestTransactionId = -1;
 		private int _tabCompletePosition = 0;
+		private LinkedListNode<string> _currentNode = null;
 		protected override bool OnKeyInput(char character, Keys key)
 		{
 			if (Focused)
 			{
-				/*if (key == Keys.Back)
-				{
-					_textBuilder.RemoveCharacter();
-					ResetTabComplete();
-				}
-				else if (key == Keys.Enter)
-				{
-					SubmitMessage();
-					ResetTabComplete();
-				}
-				else if (key == Keys.Delete)
-				{
-					if (_textBuilder.CursorPosition < _textBuilder.Length)
-					{
-						_textBuilder.CursorPosition++;
-						_textBuilder.RemoveCharacter();
-
-						ResetTabComplete();
-					}
-				}
-				else if (key == Keys.Tab)
-				{
-					if (_hasTabCompleteResults)
-					{
-						DoTabComplete(true);
-						_prevWasTab = true;
-						return true;
-					}
-
-					if (_textBuilder.Length == 0) return true;
-
-					_textBuilder.CursorPosition = 1;
-					string text = _textBuilder.GetAllBehindCursor(out _tabCompletePosition);
-					if (text.StartsWith('/'))
-					{
-						_tabCompletePosition += 1;
-						text = text.Substring(1, text.Length - 1);
-					}
-
-					ChatProvider?.RequestTabComplete(text, out _latestTransactionId);
-					return true;
-				}
-				else
-				{
-					ResetTabComplete();
-					if (Font.Characters.Any(x => x == character)) //Make sure it is a renderable character.
-					{
-						_textBuilder.AppendCharacter(character);
-					}
-				}*/
-
 				if (key == Keys.Tab)
 				{
 					if (_hasTabCompleteResults)
@@ -345,6 +295,30 @@ namespace Alex.Gui.Elements
 				{
 					SubmitMessage();
 					ResetTabComplete();
+				}
+				else if (key == Keys.Up && _currentNode != null)
+				{
+					if (_submittedMessages.Last != null && _currentNode != _submittedMessages.Last)
+					{
+						_currentNode = _submittedMessages.Last;
+					}
+					else if (_currentNode.Previous != null)
+					{
+						_currentNode = _currentNode.Previous;
+					}
+
+					TextBuilder.Clear();
+					TextBuilder.Append(_currentNode.Value);					
+				}
+				else if (key == Keys.Down && _currentNode != null)
+				{
+					var next = _currentNode.Next;
+
+					if (next != null)
+					{
+						TextBuilder.Clear();
+						TextBuilder.Append(next.Value);
+					}
 				}
 				else
 				{
@@ -475,6 +449,7 @@ namespace Alex.Gui.Elements
 			TextElement.Text = string.Empty;
 		}
 
+		private LinkedList<string> _submittedMessages = new LinkedList<string>();
 		private void SubmitMessage()
 		{
 			//Submit message
@@ -483,7 +458,7 @@ namespace Alex.Gui.Elements
 				if (TextBuilder.Text.StartsWith("!!"))
 				{
 					var parts = TextBuilder.Text.Substring(2).Split(',');
-					if (parts.Length == 2)
+					if (parts.Length == 3)
 					{
 						int x = int.Parse(parts[0]);
 						int y = int.Parse(parts[1]);
@@ -507,6 +482,9 @@ namespace Alex.Gui.Elements
 				{
 					Receive(new ChatObject(TextBuilder.Text));
 				}
+
+				_submittedMessages.AddLast(TextBuilder.Text);
+				_currentNode = _submittedMessages.Last;
 			}
 
 			Dismiss();

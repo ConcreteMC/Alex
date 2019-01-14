@@ -36,31 +36,35 @@ namespace Alex.Entities
 			new ConcurrentDictionary<string, Func<Texture2D, EntityModelRenderer>>();
 
 		private static IReadOnlyDictionary<long, EntityData> _idToData;
-
-		public static void Load()
+		public static void Load(IProgressReceiver progressReceiver)
 		{
-			Dictionary<long, EntityData> networkIdToData = new Dictionary<long, EntityData>();
+			progressReceiver?.UpdateProgress(0, "Loading entity data...");
 
-			JObject j = JObject.Parse(Resources.NewEntities);
-			foreach (var p in j["entity"])
+            Dictionary<long, EntityData> networkIdToData = new Dictionary<long, EntityData>();
+
+			EntityData[] entityObjects = JsonConvert.DeserializeObject<EntityData[]>(Resources.NewEntities);
+
+            for (int i = 0; i < entityObjects.Length; i++)
 			{
-				if (p.HasValues)
+                EntityData p = entityObjects[i];
+
+				progressReceiver?.UpdateProgress(100 * (i / entityObjects.Length), "Loading entity data...", p.Name);
+
+                networkIdToData.TryAdd(p.InternalId + 1, p);
+                /*foreach (var dd in p)
 				{
-					foreach (var dd in p)
-					{
-						EntityData data = new EntityData();
-						data.Id = dd["id"].Value<long>();
-						data.Name = dd["name"].Value<string>();
+					EntityData data = new EntityData();
+					data.Id = dd["id"].Value<long>();
+					data.Name = dd["name"].Value<string>();
 
-						data.DisplayName = dd["display_name"]?.Value<string>();
+					data.DisplayName = dd["display_name"]?.Value<string>();
 
-						if (dd["height"] != null) data.Height = dd["height"].Value<double>();
-						if (dd["width"] != null) data.Width = dd["width"].Value<double>();
+					if (dd["height"] != null) data.Height = dd["height"].Value<double>();
+					if (dd["width"] != null) data.Width = dd["width"].Value<double>();
 
-						networkIdToData.TryAdd(data.Id, data);
-					}
-				}
-			}
+					networkIdToData.TryAdd(data.Id, data);
+				}*/
+            }
 
 			_idToData = networkIdToData;
 		}
@@ -160,7 +164,10 @@ namespace Alex.Entities
 
 			foreach (var def in entityDefinitions)
 			{
-				try
+				double percentage = 100D * ((double)done / (double)total);
+				progressReceiver?.UpdateProgress((int)percentage, $"Importing entity definitions...", def.Key);
+
+                try
 				{
 					if (def.Value.Textures == null) continue;
 					if (def.Value.Geometry == null) continue;
@@ -180,12 +187,9 @@ namespace Alex.Entities
 					Log.Warn(ex, $"Failed to load model {def.Key}!");
 				}
 				finally
-				{
-					done++;
-
-					double percentage = 100D * ((double)done / (double)total);
-					progressReceiver?.UpdateProgress((int)percentage, $"Importing entity definitions...");
-				}
+                {
+	                done++;
+                }
 			}
 		}
 

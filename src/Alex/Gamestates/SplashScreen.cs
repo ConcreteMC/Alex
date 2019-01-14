@@ -14,7 +14,8 @@ namespace Alex.GameStates
 
 		private readonly GuiProgressBar _progressBar;
 		private readonly GuiTextElement _textDisplay;
-		private readonly GuiTextElement _percentageDisplay;
+		private readonly GuiTextElement _subTextDisplay;
+        private readonly GuiTextElement _percentageDisplay;
 		
 		public string Text
 		{
@@ -25,7 +26,16 @@ namespace Alex.GameStates
 			}
 		}
 
-		public SplashScreen()
+		public string SubText
+		{
+			get { return _subTextDisplay?.Text ?? string.Empty; }
+			set
+			{
+				_subTextDisplay.Text = value;
+			}
+		}
+
+        public SplashScreen()
 		{
 			Background = Color.White;
 			Background.TextureResource = GuiTextures.SplashBackground;
@@ -34,7 +44,7 @@ namespace Alex.GameStates
 			AddChild(_progressBarContainer = new GuiContainer()
 			{
 				Width  = 300,
-				Height = 25,
+				Height = 35,
 				Margin = new Thickness(12),
 				
 				Anchor = Alignment.BottomCenter,
@@ -63,9 +73,18 @@ namespace Alex.GameStates
 				Width  = 300,
 				Height = 9,
 				
-				Anchor = Alignment.BottomCenter,
+				Anchor = Alignment.MiddleCenter,
 			});
-		}
+
+			_progressBarContainer.AddChild(_subTextDisplay = new GuiTextElement()
+			{
+				Text = Text,
+				TextColor = TextColor.Black,
+
+				Anchor = Alignment.BottomLeft,
+				HasShadow = false
+			});
+        }
 		
 
 		public void UpdateProgress(int percentage, string statusMessage)
@@ -73,6 +92,16 @@ namespace Alex.GameStates
 			_progressBar.Value      = percentage;
 			_percentageDisplay.Text = $"{percentage}%";
 			Text = statusMessage;
+			SubText = "";
+
+		}
+
+		public void UpdateProgress(int percentage, string statusMessage, string sub)
+		{
+			_progressBar.Value = percentage;
+			_percentageDisplay.Text = $"{percentage}%";
+			Text = statusMessage;
+			SubText = sub;
 		}
 	}
 }

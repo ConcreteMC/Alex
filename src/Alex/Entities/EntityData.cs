@@ -1,11 +1,16 @@
 ﻿namespace Alex.Entities
 {
-	public class EntityData
+	using J = Newtonsoft.Json.JsonPropertyAttribute;
+
+    public class EntityData
     {
-        public long Id { get; set; }
-        public string Name { get; set; }
-        public string DisplayName { get; set; }
-        public double? Width { get; set; }
-        public double? Height { get; set; }
+	    [J("id")] public long Id { get; set; }
+	    [J("internalId")] public long InternalId { get; set; }
+	    [J("name")] public string Name { get; set; }
+	    [J("displayName")] public string DisplayName { get; set; }
+	    [J("width")] public long Width { get; set; }
+	    [J("height")] public long Height { get; set; }
+	    [J("type")] public string Type { get; set; }
+	    [J("category")] public string Category { get; set; }
     }
 }

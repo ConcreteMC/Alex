@@ -75,7 +75,10 @@ namespace Alex.Utils
 			    string key = bm.Key;
 			    count++;
 
-			    var r = new System.Drawing.Rectangle(0, 0, bm.Value.Width, bm.Value.Height);
+			    double percentage = 100D * ((double)processed / (double)total);
+			    progressReceiver.UpdateProgress((int)percentage, "Stitching textures...", key);
+
+                var r = new System.Drawing.Rectangle(0, 0, bm.Value.Width, bm.Value.Height);
 			    var destination = new System.Drawing.Rectangle(xi, yi, bm.Value.Width, bm.Value.Height);
 
 			    TextureUtils.CopyRegionIntoImage(bm.Value, r, ref bmp, destination);
@@ -103,8 +106,7 @@ namespace Alex.Utils
 
 			    done++;
 
-			    double percentage = 100D * ((double)processed / (double)total);
-			    progressReceiver.UpdateProgress((int)percentage, "Stitching textures...");
+			   
 			}
 
 		    return done;

@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Security.AccessControl;
 using Alex.ResourcePackLib.Json;
+using Alex.ResourcePackLib.Json.Converters;
 using Alex.ResourcePackLib.Json.Models;
 using Alex.ResourcePackLib.Json.Models.Blocks;
 using Alex.ResourcePackLib.Json.Models.Entities;
@@ -13,6 +14,7 @@ using ICSharpCode.SharpZipLib.Zip;
 
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using NLog;
 
 namespace Alex.ResourcePackLib
@@ -60,7 +62,9 @@ namespace Alex.ResourcePackLib
 
 		private void Load()
 		{
-			Dictionary<string, EntityDefinition> entityDefinitions = new Dictionary<string, EntityDefinition>();
+			Dictionary<string, ZipEntry> mobsTodo = new Dictionary<string, ZipEntry>();
+
+            Dictionary<string, EntityDefinition> entityDefinitions = new Dictionary<string, EntityDefinition>();
 			foreach (ZipEntry entry in _archive)
 			{
 				if (entry.IsDirectory)
@@ -70,18 +74,31 @@ namespace Alex.ResourcePackLib
 			
 				if (entry.IsFile)
 				{
-					CheckFile(entry, entityDefinitions);
+					CheckFile(entry, entityDefinitions, mobsTodo);
 				}
 			}
 
-			EntityDefinitions = entityDefinitions;
+			foreach (var todo in mobsTodo)
+			{
+				LoadMobs(todo.Value, true);
+			}
+
+			Log.Info($"Imported {EntityModels.Count} entity models!");
+
+            EntityDefinitions = entityDefinitions;
 			Log.Info($"Imported {EntityDefinitions.Count} entity definitions");
 		}
 
 		private bool EntitysLoaded { get; set; } = false;
-		private void CheckFile(ZipEntry entry, Dictionary<string, EntityDefinition> entityDefinitions)
+
+		private void CheckFile(ZipEntry entry, Dictionary<string, EntityDefinition> entityDefinitions, Dictionary<string, ZipEntry> mobsTodo)
 		{
-			if (entry.Name.EndsWith("mobs.json") && !EntitysLoaded)
+			if (entry.Name.StartsWith("models/entity/") && entry.Name.EndsWith(".json"))
+			{
+				mobsTodo.TryAdd(entry.Name, entry);
+				//LoadMobs(entry);
+			}
+			else if (entry.Name.EndsWith("mobs.json") && !EntitysLoaded)
 			{
 				LoadMobs(entry);
 			}
@@ -152,13 +169,41 @@ namespace Alex.ResourcePackLib
 			Log.Info($"Loaded {textures.Count} textures and {textureJsons.Count} texture definitions");
 		}
 
-		private void LoadMobs(ZipEntry entry)
+        /*private class MobsDefFile
+		{
+			[JsonProperty("format_version")]
+            public string FormatVersion { get; set; }
+
+			public Dictionary<string, EntityModel> Entries { get; }
+		}
+	}*/
+
+        private void LoadMobs(ZipEntry entry, bool add = false)
 		{
 			var stream = new StreamReader(_archive.GetInputStream(entry));
 			var json = stream.ReadToEnd();
 
-			Dictionary<string, EntityModel> entries = MCJsonConvert.DeserializeObject<Dictionary<string, EntityModel>>(json);
+			Dictionary<string, EntityModel> entries = new Dictionary<string, EntityModel>(); //MCJsonConvert.DeserializeObject<Dictionary<string, EntityModel>>(json);
+            JObject obj = JObject.Parse(json, new JsonLoadSettings());
+
+			foreach (var e in obj)
+			{
+				if (e.Key == "format_version") continue;
+				
+				entries.TryAdd(e.Key, e.Value.ToObject<EntityModel>(new JsonSerializer()
+				{
+					Converters = { new Vector3Converter(), new Vector2Converter()}
+				}));
+			}
+
 			Dictionary<string, EntityModel> processedModels = new Dictionary<string, EntityModel>();
+			if (add)
+			{
+				foreach (var pm in EntityModels)
+				{
+					processedModels.TryAdd(pm.Key, pm.Value);
+				}
+			}
 			foreach (var e in entries)
 			{
 				e.Value.Name = e.Key;
@@ -172,12 +217,18 @@ namespace Alex.ResourcePackLib
 				ProcessEntityModel(e.Value, entries, processedModels);
 			}
 
-			EntityModels = processedModels;
+			var retryCopy = new Dictionary<string, EntityModel>(_retryEntityModels);
 
-			Log.Info($"Imported {processedModels.Count} entity models");
+            foreach (var e in retryCopy)
+			{
+				ProcessEntityModel(e.Value, retryCopy, processedModels, true);
+			}
+
+			EntityModels = processedModels;
 		}
 
-		private void ProcessEntityModel(EntityModel model, Dictionary<string, EntityModel> models, Dictionary<string, EntityModel> processedModels)
+		private Dictionary<string, EntityModel> _retryEntityModels = new Dictionary<string, EntityModel>(); 
+		private void ProcessEntityModel(EntityModel model, Dictionary<string, EntityModel> models, Dictionary<string, EntityModel> processedModels, bool isRetry = false)
 		{
 			string modelName = model.Name;
 			if (model.Name.Contains(":")) //This model inherits from another model.
@@ -196,7 +247,16 @@ namespace Alex.ResourcePackLib
 					}
 					else
 					{
-						Log.Warn($"Failed to find parent model (Stage 1)! {model.Name}");
+						if (!isRetry)
+						{ 
+							_retryEntityModels.TryAdd(model.Name, model);
+
+							//Log.Warn($"Failed to find parent model, trying again later. (Stage 1)! {modelName} (Parent: {parent})");
+						}
+						else
+						{
+							Log.Warn($"Failed to find parent model for {modelName} (Parent: {parent})");
+						}
 						return;
 					}
 				}
@@ -254,7 +314,7 @@ namespace Alex.ResourcePackLib
 				model.Bones = bones.Values.ToArray();
 			}
 
-			processedModels.Add(modelName, model);
+			processedModels.TryAdd(modelName, model);
 		}
 
 		private void ProcessBlockModel(BedrockBlockModel blockModel, Dictionary<string, BedrockBlockModel> blockModels,

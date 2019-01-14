@@ -214,7 +214,7 @@ namespace Alex
 
 
 			Log.Info($"Loading known entity data...");
-			EntityFactory.Load();
+			EntityFactory.Load(progressReceiver);
 
 			foreach (string file in setings.ResourcePacks)
 			{

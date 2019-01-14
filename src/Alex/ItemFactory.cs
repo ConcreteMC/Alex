@@ -36,7 +36,7 @@ namespace Alex
 		    for(int i = 0; i < ii.Count; i++)
 		    {
 			    var entry = ii.ElementAt(i);
-                progressReceiver?.UpdateProgress(i * (100 / ii.Count), $"Processing Item: {entry.Key}");
+                progressReceiver?.UpdateProgress(i * (100 / ii.Count), $"Processing items...", entry.Key);
                 
 			    var blockState = BlockFactory.GetBlockState(entry.Key);
 

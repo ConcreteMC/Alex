@@ -364,13 +364,13 @@ namespace Alex.Worlds.Java
 					entity = new Entity((int) type, null, Client);
 				}
 
-				if (knownData.Height.HasValue)
+				//if (knownData.Height)
 				{
-					entity.Height = knownData.Height.Value;
+					entity.Height = knownData.Height;
 				}
 
-				if (knownData.Width.HasValue)
-					entity.Width = knownData.Width.Value;
+				//if (knownData.Width.HasValue)
+					entity.Width = knownData.Width;
 
 				if (string.IsNullOrWhiteSpace(entity.NameTag) && !string.IsNullOrWhiteSpace(knownData.Name))
 				{

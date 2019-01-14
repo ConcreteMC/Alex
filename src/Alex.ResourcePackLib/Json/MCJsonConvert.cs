@@ -9,7 +9,7 @@ namespace Alex.ResourcePackLib.Json
 	{
 		public const bool PrettyPrint = false;
 
-		private static readonly JsonSerializerSettings DefaultSettings = new JsonSerializerSettings()
+		public static readonly JsonSerializerSettings DefaultSettings = new JsonSerializerSettings()
 		{
 			ContractResolver = new CamelCasePropertyNamesContractResolver()
 			{

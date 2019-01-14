@@ -321,5 +321,6 @@ namespace Alex
 	public interface IProgressReceiver
 	{
 		void UpdateProgress(int percentage, string statusMessage);
-	}
+		void UpdateProgress(int percentage, string statusMessage, string sub);
+    }
 }
