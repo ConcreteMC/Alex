@@ -26,6 +26,6 @@
     <Folder Include="World\Storage\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\MiNET\src\MiNET\MiNET\MiNET.csproj" />
+    <ProjectReference Include="..\..\lib\MiNET\src\MiNET\MiNET\MiNET.csproj" />
   </ItemGroup>
 </Project>

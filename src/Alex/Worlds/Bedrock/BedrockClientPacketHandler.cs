@@ -145,6 +145,31 @@ namespace Alex.Worlds.Bedrock
 			UnhandledPackage(message);
 		}
 
+		public override void HandleMcpeLevelSoundEventOld(McpeLevelSoundEventOld message)
+		{
+			UnhandledPackage(message);
+        }
+
+		public override void HandleMcpeSpawnParticleEffect(McpeSpawnParticleEffect message)
+		{
+			UnhandledPackage(message);
+        }
+
+		public override void HandleMcpeAvailableEntityIdentifiers(McpeAvailableEntityIdentifiers message)
+		{
+			UnhandledPackage(message);
+        }
+
+		public override void HandleMcpeNetworkChunkPublisherUpdate(McpeNetworkChunkPublisherUpdate message)
+		{
+			UnhandledPackage(message);
+        }
+
+		public override void HandleMcpeBiomeDefinitionList(McpeBiomeDefinitionList message)
+		{
+			UnhandledPackage(message);
+        }
+
 		public override void HandleMcpeLevelSoundEvent(McpeLevelSoundEvent message)
 		{
 			UnhandledPackage(message);
@@ -708,6 +733,11 @@ namespace Alex.Worlds.Bedrock
 		}
 
 		public override void HandleMcpeNetworkStackLatencyPacket(McpeNetworkStackLatencyPacket message)
+		{
+			UnhandledPackage(message);
+		}
+
+		public override void HandleMcpeScriptCustomEventPacket(McpeScriptCustomEventPacket message)
 		{
 			UnhandledPackage(message);
 		}

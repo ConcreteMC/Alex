@@ -175,7 +175,7 @@ namespace Alex.Worlds
                 double radiusSquared = Math.Pow(Game.GameSettings.RenderDistance, 2);
 				try
 				{
-					if (SkylightCalculator.HasPending() && taskScheduler2.QueueSize < maxThreads)
+					if (SkylightCalculator.HasPending() && taskScheduler2.ScheduledTasks < maxThreads)
 					{
 						taskScheduler2.QueueUserWorkItem(() =>
 						{
