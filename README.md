@@ -1,9 +1,8 @@
 # Alex
 A Minecraft (Java & Bedrock Edition) client written in C#
 
-Notice
-------
-##### This client does NOT allow you to play without an official minecraft account. You also need access to the resources from both Java & Bedrock edition of Minecraft.
+##### This client does NOT allow you to play without an official minecraft account.  
+You also need access to the resources from both Java & Bedrock edition of Minecraft.
 
 About
 -----
