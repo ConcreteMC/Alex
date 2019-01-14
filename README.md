@@ -6,7 +6,7 @@ You also need access to the resources from both Java & Bedrock edition of Minecr
 Contributing
 ------------
 
-I'm looking for people that want to help me continue development on Alex.  C# experience required.
+I'm looking for people that want to help me continue development on Alex.  C# experience required, i'd obviously help you setup the client to get started and be there to answer any questions.
 
 * [Discord](https://discord.gg/txaahdU) - Join us on Discord!
 
