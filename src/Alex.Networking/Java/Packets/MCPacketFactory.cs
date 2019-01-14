@@ -286,7 +286,7 @@ namespace Alex.Networking.Java.Packets
 			Register(Direction.ClientBound, ConnectionState.Play, 0x39, () => new RespawnPacket());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x4C, () => new TitlePacket());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x1b, () => new DisconnectPacket());
-			var deserial = JsonConvert.DeserializeObject<Dictionary<string, string>>(Resources.PlayPacketID);
+			/*var deserial = JsonConvert.DeserializeObject<Dictionary<string, string>>(Resources.PlayPacketID);
 			foreach (var d in deserial)
 			{
 				try
@@ -304,7 +304,7 @@ namespace Alex.Networking.Java.Packets
 				{
 					Log.Warn($"Failed to parse hex number...");
 				}
-			}
+			}*/
 		}
 
 		private static Dictionary<int, string> _playPacketNames = new Dictionary<int, string>();
