@@ -59,6 +59,7 @@ namespace Alex.API.Gui.Elements.Controls
             ThumbBackground.RepeatMode = TextureRepeatMode.NoScaleCenterSlice;
             ThumbHighlightBackground.RepeatMode = TextureRepeatMode.NoScaleCenterSlice;
 
+
             MinWidth = 20;
             MinHeight = 20;
 
@@ -68,7 +69,7 @@ namespace Alex.API.Gui.Elements.Controls
             Margin = new Thickness(2);
 
             
-            Background.RepeatMode = TextureRepeatMode.NoScaleCenterSlice;
+           // Background.RepeatMode = TextureRepeatMode.NoScaleCenterSlice;
 
             AddChild(Label = new GuiAutoUpdatingTextElement(() => string.Format(DisplayFormat, Value))
             {

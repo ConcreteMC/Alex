@@ -24,7 +24,8 @@ namespace Alex.GameStates.Gui.MainMenu.Options
             Footer.AddChild(new GuiBackButton()
             {
                 TranslationKey = "gui.done",
-                Anchor = Alignment.TopFill
+                Anchor = Alignment.TopFill,
+				Modern = false
             });
         }
 
@@ -44,7 +45,8 @@ namespace Alex.GameStates.Gui.MainMenu.Options
         {
             return new GuiButton(() => Alex.GameStateManager.SetActiveState<TGameState>())
             {
-                TranslationKey = translationKey
+                TranslationKey = translationKey,
+	            Modern = false
             };
         }
         protected GuiSlider CreateSlider(string label, Func<AlexOptions, OptionsProperty<int>> optionsAccessor, int? minValue = null, int? maxValue = null, int? stepInterval = null)
