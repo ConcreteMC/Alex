@@ -6,7 +6,7 @@ namespace Alex.Networking.Java
 {
     public static class JavaProtocol
     {
-	    public const int ProtocolVersion = 451;
-	    public const string FriendlyName = "18W50A";
+	    public const int ProtocolVersion = 452;
+	    public const string FriendlyName = "19w02a";
     }
 }
