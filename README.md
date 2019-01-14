@@ -1,8 +1,14 @@
 # Alex
-A Minecraft (Java & Bedrock Edition) client written in C#
-
+A Minecraft (Java & Bedrock Edition) client written in C# 
 ##### This client does NOT allow you to play without an official minecraft account.  
 You also need access to the resources from both Java & Bedrock edition of Minecraft.
+
+Contributing
+------------
+
+I'm looking for people that want to help me continue development on Alex.  C# experience required, i'd obviously help you setup the client to get started and be there to answer any questions.
+
+* [Discord](https://discord.gg/txaahdU) - Join us on Discord!
 
 About
 -----
