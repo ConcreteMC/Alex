@@ -180,7 +180,8 @@ namespace Alex.GameStates.Gui.Multiplayer
 
 		    else if (entry.ServerType == ServerType.Bedrock)
 			{
-				if (currentProfile == null || (!currentProfile.IsBedrock))
+				Alex.ConnectToServer(target, currentProfile, true);
+                if (currentProfile == null || (!currentProfile.IsBedrock))
 				{
 					//var msa = Alex.Services.GetService<XBLMSAService>();
 					//msa.AsyncBrowserLogin().Wait();

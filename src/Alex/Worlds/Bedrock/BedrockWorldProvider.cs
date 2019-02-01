@@ -18,7 +18,7 @@ namespace Alex.Worlds.Bedrock
 {
 	public class BedrockWorldProvider : WorldProvider, IChatReceiver
 	{
-		private Alex Alex { get; }
+		public Alex Alex { get; }
 		private BedrockClient Client { get; }
 
 		private System.Threading.Timer _gameTickTimer;

@@ -99,10 +99,13 @@ namespace Alex
 			//RegisteredBlockStates.Add(Block.GetBlockStateID(), StationairyWaterModel);
 		}
 
-		internal static int LoadResources(ResourceManager resources, McResourcePack resourcePack, bool replace,
+		public static TableEntry[] RuntimeIdTable { get; private set; }
+        internal static int LoadResources(ResourceManager resources, McResourcePack resourcePack, bool replace,
 			bool reportMissing = false, IProgressReceiver progressReceiver = null)
-		{
-			var blockEntries = resources.Registries.Blocks.Entries;
+        {
+	        RuntimeIdTable = TableEntry.FromJson(Resources.runtimeid_table);
+
+            var blockEntries = resources.Registries.Blocks.Entries;
 
             progressReceiver?.UpdateProgress(0, "Loading block registry...");
             for(int i = 0; i < blockEntries.Count; i++)
