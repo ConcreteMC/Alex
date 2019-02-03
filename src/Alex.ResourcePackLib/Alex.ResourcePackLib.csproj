@@ -38,4 +38,8 @@
   <ItemGroup>
     <Folder Include="Json\Tags\Blocks\" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="BedrockResourcePack.cs.backup.cs" />
+    <None Include="BedrockResourcePack.cs.backup.cs" />
+  </ItemGroup>
 </Project>

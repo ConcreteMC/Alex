@@ -205,10 +205,35 @@ namespace Alex
 				ActiveResourcePacks.AddFirst(LoadResourcePack(progressReceiver, device, stream, true, true, true, preloadCallback));
 			}
 
+			var bedrockPath = Path.Combine("assets", "bedrock");
+
+            DirectoryInfo directory;
+            if (!Storage.TryGetDirectory(bedrockPath, out directory))
+			{
+				Log.Warn($"The bedrock resources required to play this game are not set-up correctly!");
+				Environment.Exit(1);
+				return false;
+			}
+
+            var directories = directory.GetDirectories();
+
+            if (!directories.Any(x => x.Name.Equals("models")))
+            {
+				Log.Warn($"Please make sure to extract the MC:Bedrock resource pack into \"{directory.FullName}\"");
+				Environment.Exit(1);
+				return false;
+            }
+
+            if (!directories.Any(x => x.Name.Equals("definitions")))
+            {
+				Log.Warn($"The required definition files are not found. We sadly cannot legally provide you those. Any questions can be asked on Discord.");
+				Environment.Exit(1);
+                return false;
+            }
 			//report(ResourcePack.AsciiFont);
 
 			Log.Info($"Loading bedrock resources...");
-			BedrockResourcePack = new BedrockResourcePack(bedrockResources);
+			BedrockResourcePack = new BedrockResourcePack(directory);
 
 			EntityFactory.LoadModels(this, device, true, progressReceiver);
 

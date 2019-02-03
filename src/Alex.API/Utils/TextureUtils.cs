@@ -36,6 +36,10 @@ namespace Alex.API.Utils
 
 		public static Texture2D BitmapToTexture2D(GraphicsDevice device, Bitmap bmp)
 		{
+			if (bmp == null)
+			{
+				return new Texture2D(device, 16, 16);
+			}
 			uint[] imgData = new uint[bmp.Width * bmp.Height];
 			Texture2D texture = new Texture2D(device, bmp.Width, bmp.Height);
 

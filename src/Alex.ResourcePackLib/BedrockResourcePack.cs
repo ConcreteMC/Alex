@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Security.AccessControl;
 using Alex.ResourcePackLib.Json;
@@ -22,27 +24,21 @@ namespace Alex.ResourcePackLib
 	public class BedrockResourcePack : IDisposable
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BedrockResourcePack));
-		public IReadOnlyDictionary<string, EntityModel> EntityModels { get; private set; }
-		public IReadOnlyDictionary<string, Bitmap> Textures { get; private set; }
-		public IReadOnlyDictionary<string, TextureInfoJson> TextureJsons { get; private set; }
+		private Dictionary<string, EntityModel> _processedModels = new Dictionary<string, EntityModel>();
+		public IReadOnlyDictionary<string, EntityModel> EntityModels => _processedModels;
 
-		public IReadOnlyDictionary<string, EntityDefinition> EntityDefinitions { get; private set; }
+        public IReadOnlyDictionary<string, Bitmap> Textures { get; private set; } = new ConcurrentDictionary<string, Bitmap>();
+		public IReadOnlyDictionary<string, TextureInfoJson> TextureJsons { get; private set; } = new ConcurrentDictionary<string, TextureInfoJson>();
 
-	
-		private ZipFile _archive;
-		public BedrockResourcePack(ZipFile archive)
+		public IReadOnlyDictionary<string, EntityDefinition> EntityDefinitions { get; private set; } = new ConcurrentDictionary<string, EntityDefinition>();
+
+		private readonly DirectoryInfo _workingDir;
+
+		public BedrockResourcePack(DirectoryInfo directory)
 		{
-			_archive = archive;
-			
+			_workingDir = directory;
+
 			Load();
-		}
-
-		public BedrockResourcePack(byte[] resourceData) : this(new ZipFile(new MemoryStream(resourceData))
-		{
-			IsStreamOwner = true
-		})
-		{
-
 		}
 
 		public bool TryGetTexture(string name, out Bitmap texture)
@@ -62,77 +58,203 @@ namespace Alex.ResourcePackLib
 
 		private void Load()
 		{
-			Dictionary<string, ZipEntry> mobsTodo = new Dictionary<string, ZipEntry>();
+            DirectoryInfo entityDirectory = null;
+            DirectoryInfo entityDirectory2 = null;
+            DirectoryInfo entityDefinitionsDir = null;
+            FileInfo mobsFile = null;
+
+            Dictionary<string, FileInfo> entityGeometry = new Dictionary<string, FileInfo>();
+            foreach (var dir in _workingDir.EnumerateDirectories())
+            {
+                if (entityDirectory2 == null && dir.Name.Equals("entity"))
+                {
+                    entityDirectory2 = dir;
+                    foreach (var file in dir.EnumerateFiles())
+                    {
+                        if (!entityGeometry.TryAdd(file.Name, file))
+                        {
+	                        if (entityGeometry.TryGetValue(file.Name, out var current))
+	                        {
+		                        if (current.LastWriteTimeUtc < file.LastWriteTimeUtc)
+		                        {
+			                        entityGeometry[file.Name] = file;
+									continue;
+		                        }
+	                        }
+                            Log.Warn($"Failed to add to entity geo dictionary (0)! {file.Name}");
+                        }
+                    }
+                    continue;
+                }
+
+                if (entityDefinitionsDir == null && dir.Name.Equals("definitions"))
+                {
+                    foreach (var d in dir.EnumerateDirectories())
+                    {
+                        if (d.Name.Equals("entity"))
+                        {
+                            entityDefinitionsDir = d;
+
+                            foreach (var file in d.EnumerateFiles())
+                            {
+                                if (!entityGeometry.TryAdd(file.Name, file))
+                                {
+	                                if (entityGeometry.TryGetValue(file.Name, out var current))
+	                                {
+		                                if (current.LastWriteTimeUtc < file.LastWriteTimeUtc)
+		                                {
+			                                entityGeometry[file.Name] = file;
+			                                continue;
+		                                }
+	                                }
+                                    Log.Warn($"Failed to add to entity geo dictionary (1)! {file.Name}");
+                                }
+                            }
+
+                            break;
+                        }
+                    }
+                }
+
+                if (dir.Name.Equals("models"))
+                {
+                    if (entityDirectory == null)
+                    {
+                        foreach (var d in dir.EnumerateDirectories())
+                        {
+                            if (d.Name.Equals("entity"))
+                            {
+                                entityDirectory = dir;
+
+                                foreach (var file in d.EnumerateFiles())
+                                {
+                                    if (!entityGeometry.TryAdd(file.Name, file))
+                                    {
+	                                    if (entityGeometry.TryGetValue(file.Name, out var current))
+	                                    {
+		                                    if (current.LastWriteTimeUtc < file.LastWriteTimeUtc)
+		                                    {
+			                                    entityGeometry[file.Name] = file;
+			                                    continue;
+		                                    }
+	                                    }
+                                        Log.Warn($"Failed to add to entity geo dictionary (2)! {file.Name}");
+                                    }
+                                }
+
+                                break;
+                            }
+                        }
+                    }
+
+                    if (mobsFile == null)
+                    {
+                        foreach (var file in dir.EnumerateFiles())
+                        {
+                            if (file.Name.Equals("mobs.json"))
+                            {
+                                mobsFile = file;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (entityDirectory != null && mobsFile != null && entityDefinitionsDir != null && entityDirectory2 != null)
+                    break;
+            }
+
+            if (entityDirectory == null || !entityDirectory.Exists)
+            {
+                Log.Warn("Could not find entity folder!");
+                return;
+            }
+
+            if (entityDefinitionsDir == null || !entityDefinitionsDir.Exists)
+            {
+                Log.Warn("Could not find entity definitions folder!");
+                return;
+            }
+
+            if (mobsFile == null || !mobsFile.Exists)
+            {
+                Log.Warn("Could not find mob entity definitions! ('mobs.json')");
+                return;
+            }
 
             Dictionary<string, EntityDefinition> entityDefinitions = new Dictionary<string, EntityDefinition>();
-			foreach (ZipEntry entry in _archive)
-			{
-				if (entry.IsDirectory)
-				{
-					continue;
-				}
-			
-				if (entry.IsFile)
-				{
-					CheckFile(entry, entityDefinitions, mobsTodo);
-				}
-			}
-
-			foreach (var todo in mobsTodo)
-			{
-				LoadMobs(todo.Value, true);
-			}
-
-			Log.Info($"Imported {EntityModels.Count} entity models!");
+            foreach (var def in entityDefinitionsDir.EnumerateFiles())
+            {
+                LoadEntityDefinition(def, entityDefinitions);
+            }
 
             EntityDefinitions = entityDefinitions;
-			Log.Info($"Imported {EntityDefinitions.Count} entity definitions");
-		}
 
-		private bool EntitysLoaded { get; set; } = false;
+            var res = new Dictionary<string, EntityModel>();
+            GetEntries(mobsFile, res);
 
-		private void CheckFile(ZipEntry entry, Dictionary<string, EntityDefinition> entityDefinitions, Dictionary<string, ZipEntry> mobsTodo)
+            int missed1 = LoadMobs(res);
+
+            res.Clear();
+
+            foreach (var file in entityGeometry.Values)
+            {
+                GetEntries(file, res);
+            }
+
+            int missed2 = LoadMobs(res);
+
+            if (missed1 > 0 || missed2 > 0)
+            {
+                Log.Warn($"Failed to process {missed1 + missed2} entity models");
+            }
+
+            Log.Info($"Processed {EntityModels.Count} entity models!");
+            Log.Info($"Processed {EntityDefinitions.Count} entity definitions");
+        }
+
+		private void LoadEntityDefinition(FileInfo entry, Dictionary<string, EntityDefinition> entityDefinitions)
 		{
-			if (entry.Name.StartsWith("models/entity/") && entry.Name.EndsWith(".json"))
+			using (var open = entry.OpenText())
 			{
-				mobsTodo.TryAdd(entry.Name, entry);
-				//LoadMobs(entry);
-			}
-			else if (entry.Name.EndsWith("mobs.json") && !EntitysLoaded)
-			{
-				LoadMobs(entry);
-			}
-			else if (entry.Name.EndsWith("textures_list.json"))
-			{
-				LoadTexture(entry);
-			}
-			else if (entry.Name.StartsWith("definitions/entity") && entry.Name.EndsWith(".json"))
-			{
-				LoadEntityDefinition(entry, entityDefinitions);
-			}
-		}
+				var json = open.ReadToEnd();
 
-		private void LoadEntityDefinition(ZipEntry entry, Dictionary<string, EntityDefinition> entityDefinitions)
-		{
-			var stream = new StreamReader(_archive.GetInputStream(entry));
-			var json = stream.ReadToEnd();
-			string fileName = Path.GetFileNameWithoutExtension(entry.Name);
-			
+				string fileName = Path.GetFileNameWithoutExtension(entry.Name);
 
-			Dictionary<string, EntityDefinition> definitions = JsonConvert.DeserializeObject<Dictionary<string, EntityDefinition>>(json);
-			foreach (var def in definitions)
-			{
-				def.Value.Filename = fileName;
-				if (!entityDefinitions.ContainsKey(def.Key))
+				Dictionary<string, EntityDefinition> definitions = JsonConvert.DeserializeObject<Dictionary<string, EntityDefinition>>(json);
+				foreach (var def in definitions)
 				{
-					entityDefinitions.Add(def.Key, def.Value);
+					def.Value.Filename = fileName;
+					if (!entityDefinitions.ContainsKey(def.Key))
+					{
+						entityDefinitions.Add(def.Key, def.Value);
+					}
+				}
+			}
+		}
+		private void GetEntries(FileInfo file, Dictionary<string, EntityModel> entries)
+		{
+			using (var open = file.OpenText())
+			{
+				var json = open.ReadToEnd();
+				JObject obj = JObject.Parse(json, new JsonLoadSettings());
+
+				foreach (var e in obj)
+				{
+					if (e.Key == "format_version") continue;
+					//if (e.Key == "minecraft:client_entity") continue;
+					//if (e.Key.Contains("zombie")) Console.WriteLine(e.Key);
+					entries.TryAdd(e.Key, e.Value.ToObject<EntityModel>(new JsonSerializer()
+					{
+						Converters = { new Vector3Converter(), new Vector2Converter() }
+					}));
 				}
 			}
 		}
 
-		private void LoadTexture(ZipEntry entry)
+       /* private void LoadTexture(ZipArchiveEntry entry)
 		{
-			var stream = new StreamReader(_archive.GetInputStream(entry));
+			var stream = new StreamReader(entry.Open());
 			var json = stream.ReadToEnd();
 
 			Dictionary<string, Bitmap> textures = new Dictionary<string, Bitmap>();
@@ -145,16 +267,16 @@ namespace Alex.ResourcePackLib
 					continue;
 				
 				var e = _archive.GetEntry(def + ".png");
-				if (e != null && e.IsFile)
+				if (e != null && e.IsFile())
 				{
-					Bitmap bmp = new Bitmap(_archive.GetInputStream(e));
+                    Bitmap bmp = new Bitmap(e.Open());
 					textures.Add(NormalisePath(def), bmp);
 				}
 
 				e = _archive.GetEntry(def + ".json");
-				if (e != null && e.IsFile)
+				if (e != null && e.IsFile())
 				{
-					using(var eStream = _archive.GetInputStream(e))
+					using(var eStream = e.Open())
 					using (var sr = new StreamReader(eStream))
 					{
 						var textureJson = sr.ReadToEnd();
@@ -167,7 +289,7 @@ namespace Alex.ResourcePackLib
 			Textures = textures;
 			TextureJsons = textureJsons;
 			Log.Info($"Loaded {textures.Count} textures and {textureJsons.Count} texture definitions");
-		}
+		}*/
 
         /*private class MobsDefFile
 		{
@@ -178,146 +300,177 @@ namespace Alex.ResourcePackLib
 		}
 	}*/
 
-        private void LoadMobs(ZipEntry entry, bool add = false)
-		{
-			var stream = new StreamReader(_archive.GetInputStream(entry));
-			var json = stream.ReadToEnd();
+        private Dictionary<string, TValue> OrderByLength<TValue>(Dictionary<string, TValue> dictionary)
+        {
+            return dictionary.OrderBy(obj => obj.Key.Length).ToDictionary(obj => obj.Key, obj => obj.Value);
+        }
 
-			Dictionary<string, EntityModel> entries = new Dictionary<string, EntityModel>(); //MCJsonConvert.DeserializeObject<Dictionary<string, EntityModel>>(json);
-            JObject obj = JObject.Parse(json, new JsonLoadSettings());
+        private Dictionary<string, TValue> OrderByChild<TValue>(Dictionary<string, TValue> dictionary)
+        {
+            return dictionary.OrderBy(obj => obj.Key.Contains(":")).ToDictionary(obj => obj.Key, obj => obj.Value);
+        }
 
-			foreach (var e in obj)
-			{
-				if (e.Key == "format_version") continue;
-				
-				entries.TryAdd(e.Key, e.Value.ToObject<EntityModel>(new JsonSerializer()
-				{
-					Converters = { new Vector3Converter(), new Vector2Converter()}
-				}));
-			}
+        private int LoadMobs(Dictionary<string, EntityModel> entries)
+        {
+            int c = 0;
 
-			Dictionary<string, EntityModel> processedModels = new Dictionary<string, EntityModel>();
-			if (add)
-			{
-				foreach (var pm in EntityModels)
-				{
-					processedModels.TryAdd(pm.Key, pm.Value);
-				}
-			}
-			foreach (var e in entries)
-			{
-				e.Value.Name = e.Key;
-			}
+            List<string> laterStages = new List<string>();
+            Dictionary<string, EntityModel> orderedDict = new Dictionary<string, EntityModel>();
+            Dictionary<string, EntityModel> failedToProcess = new Dictionary<string, EntityModel>();
 
-			foreach (var e in entries)
-			{
-				if (processedModels.ContainsKey(e.Key))
-					continue;
+            foreach (var (key, value) in entries)
+            {
+                if (!key.Contains(":"))
+                {
+                    if (!orderedDict.TryAdd(key, value))
+                    {
+                        Log.Warn($"Failed to add to dictionary! {key}");
+                    }
+                }
+                else
+                {
+                    if (!laterStages.Contains(key))
+                        laterStages.Add(key);
+                }
+            }
 
-				ProcessEntityModel(e.Value, entries, processedModels);
-			}
+            orderedDict = OrderByLength(orderedDict);
 
-			var retryCopy = new Dictionary<string, EntityModel>(_retryEntityModels);
 
+            foreach (var late in laterStages.ToArray())
+            {
+                var split = late.Split(':');
+                string parent = split[1];
+                string kid = split[0];
+
+                if (orderedDict.TryGetValue(parent, out EntityModel _))
+                {
+                    if (orderedDict.TryAdd(late, entries[late]))
+                    {
+                        laterStages.Remove(late);
+                    }
+                    else
+                    {
+                        Log.Warn($"Could not add to ordered dictionary!");
+                    }
+                }
+                else
+                {
+                    Log.Warn($"Unresolved entity: {late}");
+                }
+            }
+
+            orderedDict = OrderByChild(orderedDict);
+
+            foreach (var (key, value) in orderedDict)
+            {
+                value.Name = key;
+
+                if (_processedModels.ContainsKey(key))
+                    continue;
+
+                ProcessEntityModel(value, entries, failedToProcess, false);
+            }
+
+            var retryCopy = new Dictionary<string, EntityModel>(failedToProcess.ToArray());
+
+            int fix = 0;
             foreach (var e in retryCopy)
-			{
-				ProcessEntityModel(e.Value, retryCopy, processedModels, true);
-			}
+            {
+                if (ProcessEntityModel(e.Value, entries, failedToProcess, true))
+                {
+                    fix++;
+                }
+            }
 
-			EntityModels = processedModels;
-		}
+            c = retryCopy.Count;
 
-		private Dictionary<string, EntityModel> _retryEntityModels = new Dictionary<string, EntityModel>(); 
-		private void ProcessEntityModel(EntityModel model, Dictionary<string, EntityModel> models, Dictionary<string, EntityModel> processedModels, bool isRetry = false)
-		{
-			string modelName = model.Name;
-			if (model.Name.Contains(":")) //This model inherits from another model.
-			{
-				string[] split = model.Name.Split(':');
-				string parent = split[1];
-				modelName = split[0];
+            return failedToProcess.Count - fix;
+        }
 
-				EntityModel parentModel;
-				if (!processedModels.TryGetValue(parent, out parentModel))
-				{
-					if (models.TryGetValue(parent, out parentModel))
-					{
-						ProcessEntityModel(parentModel, models, processedModels);
-						parentModel = processedModels[parent];
-					}
-					else
-					{
-						if (!isRetry)
-						{ 
-							_retryEntityModels.TryAdd(model.Name, model);
+        private bool ProcessEntityModel(EntityModel model, Dictionary<string, EntityModel> models,
+            Dictionary<string, EntityModel> failedToProcess, bool isRetry = false)
+        {
+            string modelName = model.Name;
+            if (model.Name.Contains(":")) //This model inherits from another model.
+            {
+                string[] split = model.Name.Split(':');
+                string parent = split[1];
 
-							//Log.Warn($"Failed to find parent model, trying again later. (Stage 1)! {modelName} (Parent: {parent})");
-						}
-						else
-						{
-							Log.Warn($"Failed to find parent model for {modelName} (Parent: {parent})");
-						}
-						return;
-					}
-				}
+                if (!_processedModels.TryGetValue(parent, out var parentModel))
+                {
+                    if (!isRetry)
+                    {
+                        failedToProcess.TryAdd(modelName, model);
 
-				if (model.Bones == null)
-				{
-					model.Bones = new EntityModelBone[0];
-				}
+                        Log.Warn($"No parent model for {modelName}");
+                    }
 
-				if (parentModel == null)
-				{
-					Log.Warn($"Failed to find parent model (Stage 2)! {model.Name}");
-					return;
-				}
+                    return false;
+                }
 
-				if (parentModel.Bones == null || parentModel.Bones.Length == 0)
-				{
-					Log.Warn($"Parent models contains no bones! {model.Name}");
-					return;
-				}
+                modelName = split[0];
 
-				Dictionary<string, EntityModelBone> parentBones =
-					parentModel.Bones.Where(x => x != null && !string.IsNullOrWhiteSpace(x.Name)).ToDictionary(x => x.Name, e => e);
+                if (model.Bones == null)
+                {
+                    model.Bones = new EntityModelBone[0];
+                }
 
-				Dictionary<string, EntityModelBone> bones =
-					model.Bones.Where(x => x != null && !string.IsNullOrWhiteSpace(x.Name)).ToDictionary(x => x.Name, e => e);
+                if (parentModel == null)
+                {
+                    Log.Warn($"Pass 1 fail... {modelName}");
+                    return false;
+                }
 
-				foreach (var bone in parentBones)
-				{
-					var parentBone = bone.Value;
-					if (bones.TryGetValue(bone.Key, out EntityModelBone val))
-					{
-						if (!val.Reset)
-						{
-							if (val.Cubes != null)
-							{
-								val.Cubes = val.Cubes.Concat(parentBone.Cubes).ToArray();
-							}
-							else
-							{
-								val.Cubes = parentBone.Cubes;
-							}
-							//val.Cubes.Concat(parentBone.Cubes);
-						}
+                if (parentModel.Bones == null || parentModel.Bones.Length == 0)
+                {
+                    Log.Warn($"Parent models contains no bones! {modelName}");
+                    return false;
+                }
 
-						
-						bones[bone.Key] = val;
-					}
-					else
-					{
-						bones.Add(bone.Key, parentBone);
-					}
-				}
+                Dictionary<string, EntityModelBone> parentBones =
+                    parentModel.Bones.Where(x => x != null && !string.IsNullOrWhiteSpace(x.Name))
+                        .ToDictionary(x => x.Name, e => e);
 
-				model.Bones = bones.Values.ToArray();
-			}
+                Dictionary<string, EntityModelBone> bones =
+                    model.Bones.Where(x => x != null && !string.IsNullOrWhiteSpace(x.Name))
+                        .ToDictionary(x => x.Name, e => e);
 
-			processedModels.TryAdd(modelName, model);
-		}
+                foreach (var bone in parentBones)
+                {
+                    var parentBone = bone.Value;
+                    if (bones.TryGetValue(bone.Key, out EntityModelBone val))
+                    {
+                        if (!val.Reset)
+                        {
+                            if (val.Cubes != null)
+                            {
+                                val.Cubes = val.Cubes.Concat(parentBone.Cubes).ToArray();
+                            }
+                            else
+                            {
+                                val.Cubes = parentBone.Cubes;
+                            }
 
-		private void ProcessBlockModel(BedrockBlockModel blockModel, Dictionary<string, BedrockBlockModel> blockModels,
+                            //val.Cubes.Concat(parentBone.Cubes);
+                        }
+
+
+                        bones[bone.Key] = val;
+                    }
+                    else
+                    {
+                        bones.Add(bone.Key, parentBone);
+                    }
+                }
+
+                model.Bones = bones.Values.ToArray();
+            }
+
+            return _processedModels.TryAdd(modelName, model);
+        }
+
+        private void ProcessBlockModel(BedrockBlockModel blockModel, Dictionary<string, BedrockBlockModel> blockModels,
 			List<string> processedModels)
 		{
 
@@ -333,7 +486,7 @@ namespace Alex.ResourcePackLib
 
 		public void Dispose()
 		{
-			_archive?.Close();
+			//_archive?.Dispose();
 		}
 	}
 }

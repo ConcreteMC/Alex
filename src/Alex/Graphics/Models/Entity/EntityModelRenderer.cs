@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Graphics;
@@ -38,11 +39,28 @@ namespace Alex.Graphics.Models.Entity
 
 		private void Cache(Dictionary<string, ModelBone> modelBones)
 		{
+			List<EntityModelBone> headBones = new List<EntityModelBone>();
+
+			var headBone =
+				Model.Bones.FirstOrDefault(x => x.Name.Contains("head", StringComparison.InvariantCultureIgnoreCase));
+			if (headBone != null)
+			{
+				headBones.Add(headBone);
+				foreach (var bone in Model.Bones)
+				{
+					if (bone == headBone) continue;
+					if (bone.Parent.Equals(headBone.Name))
+					{
+						headBones.Add(bone);
+					}
+				}
+			}
+
 			foreach (var bone in Model.Bones)
 			{
 				if (bone == null) continue;
 				if (bone.NeverRender) continue;
-				bool partOfHead = bone.Name.Contains("head");
+				bool partOfHead = headBones.Contains(bone);
 
 				if (bone.Cubes != null)
 				{

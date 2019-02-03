@@ -61,7 +61,7 @@ namespace Alex.Utils
 			_atlas = TextureUtils.BitmapToTexture2D(Graphics, bitmap);
 			AtlasSize = new Vector2(_atlas.Width, _atlas.Height);
 
-            bitmap.Save("assets\\terrain.png", ImageFormat.Png);
+           // bitmap.Save("assets\\terrain.png", ImageFormat.Png);
 			Log.Info($"TextureAtlas generated! (Width:{_atlas.Width}px Height:{_atlas.Height}px)");
         }
 

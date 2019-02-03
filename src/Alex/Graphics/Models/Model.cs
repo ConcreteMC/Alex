@@ -43,7 +43,7 @@ namespace Alex.Graphics.Models
 
 	    }
 
-		protected class Cube
+		public sealed class Cube
 		{
 			public Vector3 Size;
 

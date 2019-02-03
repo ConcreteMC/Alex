@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 namespace Alex.API.Services
@@ -11,5 +12,7 @@ namespace Alex.API.Services
 
 	    bool TryWriteBytes(string key, byte[] value);
 	    bool TryReadBytes(string key, out byte[] value);
-	}
+
+	    bool TryGetDirectory(string key, out DirectoryInfo info);
+    }
 }
