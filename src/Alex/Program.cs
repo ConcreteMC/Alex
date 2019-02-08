@@ -57,6 +57,12 @@ namespace Alex
 				File.WriteAllText(loggerConfigFile, Resources.NLogConfig);
 			}
 
+			string logsDir = Path.Combine(baseDir, "logs");
+			if (!Directory.Exists(logsDir))
+			{
+				Directory.CreateDirectory(logsDir);
+			}
+
 			NLog.LogManager.Configuration = new NLog.Config.XmlLoggingConfiguration(loggerConfigFile, true);
 			LogManager.Configuration.Variables["basedir"] = baseDir;
 
