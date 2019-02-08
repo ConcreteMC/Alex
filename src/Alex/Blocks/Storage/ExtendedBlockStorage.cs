@@ -31,7 +31,10 @@ namespace Alex.Blocks.Storage
 		/** The NibbleArray containing a block of Sky-light data. */
 		public NibbleArray SkyLight;
 
-		public ExtendedBlockStorage(int y, bool storeSkylight)
+		public bool[] TransparentBlocks;
+		public bool[] SolidBlocks;
+
+        public ExtendedBlockStorage(int y, bool storeSkylight)
 		{
 			this._yBase = y;
 			this.Data = new BlockStateContainer();
@@ -41,7 +44,10 @@ namespace Alex.Blocks.Storage
 			{
 				this.SkyLight = new NibbleArray(4096, 0);
 			}
-		}
+
+			TransparentBlocks = new bool[16 * 16 * 16];
+			SolidBlocks = new bool[16 * 16 * 16];
+        }
 
 		public void ResetSkyLight()
 		{
@@ -94,12 +100,23 @@ namespace Alex.Blocks.Storage
 			}
 
 			this.Data.Set(x, y, z, state);
+			TransparentBlocks[GetCoordinateIndex(x, y, z)] = state.Block.Transparent;
+			SolidBlocks[GetCoordinateIndex(x, y, z)] = state.Block.Solid;
+        }
+
+		public bool IsTransparent(int x, int y, int z)
+		{
+			return TransparentBlocks[GetCoordinateIndex(x, y, z)];
+		}
+		public bool IsSolid(int x, int y, int z)
+		{
+			return SolidBlocks[GetCoordinateIndex(x, y, z)];
 		}
 
-		/**
+        /**
 		 * Returns whether or not this block storage's Chunk is fully empty, based on its internal reference count.
 		 */
-		public bool IsEmpty()
+        public bool IsEmpty()
 		{
 			return this._blockRefCount == 0;
 		}
@@ -165,12 +182,14 @@ namespace Alex.Blocks.Storage
 					for (int z = 0; z < 16; z++)
 					{
 						IBlock block = this.Get(x, y, z).Block;
-						//if (block.LightValue > 0)
-						//{
-						//	SetExtBlocklightValue(x,y,z, (byte)block.LightValue);
-						//}
+						TransparentBlocks[GetCoordinateIndex(x, y, z)] = block.Transparent;
+						SolidBlocks[GetCoordinateIndex(x, y, z)] = block.Solid;
+                        //if (block.LightValue > 0)
+                        //{
+                        //	SetExtBlocklightValue(x,y,z, (byte)block.LightValue);
+                        //}
 
-						if (!(block is Air))
+                        if (!(block is Air))
 						{
 							++this._blockRefCount;
 

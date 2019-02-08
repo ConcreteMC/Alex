@@ -436,7 +436,7 @@ namespace Alex.Worlds
 				return	realColumn.GetBiome(x & 0xf, z & 0xf);
 			}
 
-			Log.Debug($"Failed getting biome: {x} | {y} | {z}");
+			//Log.Debug($"Failed getting biome: {x} | {y} | {z}");
 			return -1;
 		}
 
@@ -453,7 +453,31 @@ namespace Alex.Worlds
 			return false;
 		}
 
-		public BlockCoordinates FindBlockPosition(BlockCoordinates coords, out IChunkColumn chunk)
+
+		public bool IsTransparent(int x, int y, int z)
+		{
+			IChunkColumn chunk;
+			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
+			{
+				return chunk.IsTransparent(x & 0xf, y & 0xff, z & 0xf);
+              //  return true;
+			}
+
+			return false;
+        }
+		public bool IsSolid(int x, int y, int z)
+		{
+			IChunkColumn chunk;
+			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
+			{
+				return chunk.IsSolid(x & 0xf, y & 0xff, z & 0xf);
+				//  return true;
+			}
+
+			return false;
+		}
+
+        public BlockCoordinates FindBlockPosition(BlockCoordinates coords, out IChunkColumn chunk)
 		{
 			ChunkManager.TryGetChunk(new ChunkCoordinates(coords.X >> 4, coords.Z >> 4), out chunk);
 			return new BlockCoordinates(coords.X & 0xf, coords.Y & 0xff, coords.Z & 0xf);

@@ -295,7 +295,23 @@ namespace Alex.Worlds
 			return _heighest;
 		}
 
-		public void Dispose()
+		public bool IsTransparent(int bx, int by, int bz)
+		{
+			if ((bx < 0 || bx > ChunkWidth) || (by < 0 || by > ChunkHeight) || (bz < 0 || bz > ChunkDepth))
+				return false;
+
+			return Sections[@by >> 4].IsTransparent(bx, @by - 16 * (@by >> 4), bz);
+        }
+
+		public bool IsSolid(int bx, int by, int bz)
+		{
+			if ((bx < 0 || bx > ChunkWidth) || (by < 0 || by > ChunkHeight) || (bz < 0 || bz > ChunkDepth))
+				return false;
+
+			return Sections[@by >> 4].IsSolid(bx, @by - 16 * (@by >> 4), bz);
+		}
+
+        public void Dispose()
 		{
 			if (VertexBuffer != null)
 			{

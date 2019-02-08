@@ -157,33 +157,69 @@ namespace Alex.Graphics.Models.Blocks
 			if (cZ < 0 || cZ > 16)
 				return false;
 
-			var block = world.GetBlockState(pos.X, pos.Y, pos.Z).Block;
-			//BlockFactory.
-			//var block = world.GetBlock(pos);
+			//var block = world.GetBlockState(pos.X, pos.Y, pos.Z).Block;
+			
+			//.GetBlockState(pos.X, pos.Y, pos.Z).Block;
+                                                                            //BlockFactory.
+                                                                            //var block = world.GetBlock(pos);
 
-			if (me.Transparent && block is UnknownBlock)
-			{
-				return true;
-			}
+          //if (me.Transparent)
+          //{
+		//	return true;
+         // }
 
-			if (me.Solid && me.Transparent)
-			{
-				//	if (IsFullCube && Name.Equals(block.Name)) return false;
-				if (block.Solid && !block.Transparent) return false;
-			}
-			else if (me.Transparent)
-			{
-				if (block.Solid && !block.Transparent) return false;
-			}
+          var blockTransparent = world.IsTransparent(pos.X, pos.Y, pos.Z);
+          var blockSolid = world.IsSolid(pos.X, pos.Y, pos.Z);
+            // if (me.Solid && blockTransparent)
+            // {
+            //     return false;
+            // }
+
+            if (me.Transparent)
+            {
+	            return true;
+            }
+
+            if (me.Solid && me.Transparent)
+            {
+	            //	if (IsFullCube && Name.Equals(block.Name)) return false;
+	            if (blockSolid && !blockTransparent) return false;
+            }
+            else if (me.Transparent)
+            {
+	            if (blockSolid && !blockTransparent) return false;
+            }
 
 
-			if (me.Solid && block.Transparent) return true;
-			//   if (me.Transparent && block.Transparent && !block.Solid) return false;
-			if (me.Transparent) return true;
-			if (!me.Transparent && block.Transparent) return true;
-			if (block.Solid && !block.Transparent) return false;
+            if (me.Solid && blockTransparent) return true;
+            //   if (me.Transparent && block.Transparent && !block.Solid) return false;
+            if (me.Transparent) return true;
+            if (!me.Transparent && blockTransparent) return true;
+            if (blockSolid && !blockTransparent) return false;
 
-			return true;
+            /*if (me.Transparent && block is UnknownBlock)
+            {
+                return true;
+            }
+
+            if (me.Solid && me.Transparent)
+            {
+                //	if (IsFullCube && Name.Equals(block.Name)) return false;
+                if (block.Solid && !block.Transparent) return false;
+            }
+            else if (me.Transparent)
+            {
+                if (block.Solid && !block.Transparent) return false;
+            }
+
+
+            if (me.Solid && block.Transparent) return true;
+            //   if (me.Transparent && block.Transparent && !block.Solid) return false;
+            if (me.Transparent) return true;
+            if (!me.Transparent && block.Transparent) return true;
+            if (block.Solid && !block.Transparent) return false;*/
+
+            return true;
 		}
 
 		protected Vector3 Min = Vector3.Zero;

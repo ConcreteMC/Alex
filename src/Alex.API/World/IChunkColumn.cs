@@ -34,6 +34,8 @@ namespace Alex.API.World
 		ScheduleType Scheduled { get; set; }
 		int GetHeighest();
 		//void SetBlockState(int x, int y, int z, IBlockState blockState);
+		bool IsTransparent(int x, int y, int z);
+		bool IsSolid(int bx, int by, int bz);
 	}
 
 	[Flags]

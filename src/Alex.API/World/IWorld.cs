@@ -35,5 +35,7 @@ namespace Alex.API.World
 		BlockCoordinates FindBlockPosition(BlockCoordinates coords, out IChunkColumn chunk);
 		IChunkColumn GetChunkColumn(int x, int z);
 
+		bool IsTransparent(int posX, int posY, int posZ);
+		bool IsSolid(int posX, int posY, int posZ);
 	}
 }

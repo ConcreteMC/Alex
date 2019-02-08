@@ -180,6 +180,30 @@ namespace Alex.Worlds
 			}
 		}
 
+		public bool IsTransparent(int x, int y, int z)
+		{
+			IChunkColumn chunk;
+			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
+			{
+				return chunk.IsTransparent(x & 0xf, y & 0xff, z & 0xf);
+				//  return true;
+			}
+
+			return false;
+        }
+
+		public bool IsSolid(int x, int y, int z)
+		{
+			IChunkColumn chunk;
+			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
+			{
+				return chunk.IsSolid(x & 0xf, y & 0xff, z & 0xf);
+				//  return true;
+			}
+
+			return false;
+		}
+
         public bool HasBlock(int x, int y, int z)
 		{
 
