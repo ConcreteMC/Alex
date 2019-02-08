@@ -27,8 +27,9 @@ namespace Alex.ResourcePackLib
 		private Dictionary<string, EntityModel> _processedModels = new Dictionary<string, EntityModel>();
 		public IReadOnlyDictionary<string, EntityModel> EntityModels => _processedModels;
 
-        public IReadOnlyDictionary<string, Bitmap> Textures { get; private set; } = new ConcurrentDictionary<string, Bitmap>();
-		public IReadOnlyDictionary<string, TextureInfoJson> TextureJsons { get; private set; } = new ConcurrentDictionary<string, TextureInfoJson>();
+		private ConcurrentDictionary<string, Bitmap> _bitmaps = new ConcurrentDictionary<string, Bitmap>();
+        public IReadOnlyDictionary<string, Bitmap> Textures => _bitmaps;
+        public IReadOnlyDictionary<string, TextureInfoJson> TextureJsons { get; private set; } = new ConcurrentDictionary<string, TextureInfoJson>();
 
 		public IReadOnlyDictionary<string, EntityDefinition> EntityDefinitions { get; private set; } = new ConcurrentDictionary<string, EntityDefinition>();
 
@@ -228,6 +229,31 @@ namespace Alex.ResourcePackLib
 					if (!entityDefinitions.ContainsKey(def.Key))
 					{
 						entityDefinitions.Add(def.Key, def.Value);
+						try
+						{
+							if (def.Value != null && def.Value.Textures != null)
+							{
+								foreach (var texture in def.Value.Textures)
+								{
+									string texturePath = Path.Combine(_workingDir.FullName, texture.Value + ".png");
+									if (File.Exists(texturePath))
+									{
+										Bitmap bmp = null;
+										using (FileStream fs = new FileStream(texturePath, FileMode.Open))
+										{
+											bmp = new Bitmap(fs);
+										}
+
+										if (bmp != null)
+											_bitmaps.TryAdd(texture.Value, bmp);
+									}
+								}
+							}
+						}
+						catch (Exception ex)
+						{
+							Log.Warn($"Could not load texture! {ex}");
+						}
 					}
 				}
 			}
@@ -356,7 +382,7 @@ namespace Alex.ResourcePackLib
                 }
                 else
                 {
-                    Log.Warn($"Unresolved entity: {late}");
+               //     Log.Warn($"Unresolved entity: {late}");
                 }
             }
 

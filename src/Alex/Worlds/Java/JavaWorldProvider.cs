@@ -376,7 +376,7 @@ namespace Alex.Worlds.Java
 				{
 					entity.NameTag = knownData.Name;
 				}
-			}
+            }
 
 			if (entity == null)
 			{

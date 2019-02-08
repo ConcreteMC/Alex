@@ -36,7 +36,7 @@ namespace Alex.Entities
 			new ConcurrentDictionary<string, Func<Texture2D, EntityModelRenderer>>();
 
 		private static IReadOnlyDictionary<long, EntityData> _idToData;
-		public static void Load(IProgressReceiver progressReceiver)
+		public static void Load(ResourceManager resourceManager, IProgressReceiver progressReceiver)
 		{
 			progressReceiver?.UpdateProgress(0, "Loading entity data...");
 
@@ -49,9 +49,18 @@ namespace Alex.Entities
                 EntityData p = entityObjects[i];
 
 				progressReceiver?.UpdateProgress(100 * (i / entityObjects.Length), "Loading entity data...", p.Name);
+				if (resourceManager.Registries.Entities.Entries.TryGetValue($"minecraft:{p.Name}",
+					out var registryEntry))
+				{
+					networkIdToData.TryAdd(registryEntry.ProtocolId, p);
+                    //networkIdToData.TryAdd(p.InternalId + 1, p);
+                }
+				else
+				{
+					Log.Warn($"Could not resolve {p.Name}'s protocol id!");
+				}
 
-                networkIdToData.TryAdd(p.InternalId + 1, p);
-                /*foreach (var dd in p)
+				/*foreach (var dd in p)
 				{
 					EntityData data = new EntityData();
 					data.Id = dd["id"].Value<long>();
@@ -113,6 +122,10 @@ namespace Alex.Entities
 				if (renderer != null)
 				{
 					return true;
+                }
+				else
+				{
+					Log.Warn($"No renderer found for {data.Name}");
 				}
 			}
 
@@ -181,7 +194,13 @@ namespace Alex.Entities
 						Add(resourceManager, graphics, def.Value, model, def.Value.Filename);
 						Add(resourceManager, graphics, def.Value, model, def.Key);
 					}
-				}
+					else if ((resourceManager.BedrockResourcePack.EntityModels.TryGetValue(def.Value.Geometry["default"] + ".v1.8",
+						         out model)) && model != null)
+					{
+						Add(resourceManager, graphics, def.Value, model, def.Value.Filename);
+						Add(resourceManager, graphics, def.Value, model, def.Key);
+					}
+                }
 				catch (Exception ex)
 				{
 					Log.Warn(ex, $"Failed to load model {def.Key}!");

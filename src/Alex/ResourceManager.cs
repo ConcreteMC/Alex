@@ -239,7 +239,7 @@ namespace Alex
 
 
 			Log.Info($"Loading known entity data...");
-			EntityFactory.Load(progressReceiver);
+			EntityFactory.Load(this, progressReceiver);
 
 			foreach (string file in setings.ResourcePacks)
 			{
@@ -276,6 +276,9 @@ namespace Alex
 
 		[JsonProperty("minecraft:item")]
 		public RegistryBase Items { get; set; }
+
+		[JsonProperty("minecraft:entity_type")]
+		public RegistryBase Entities { get; set; }
 
         public class RegistryBase
 		{
