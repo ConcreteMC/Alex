@@ -1,0 +1,33 @@
+﻿<#@ template language="C#" #>
+<#@ output extension=".cs" #>
+<#@ assembly name="System.Core" #>
+<#@ assembly name="Alex" #>
+<#@ assembly name="Alex.API" #>
+<#@ assembly name="Alex.Graphics" #>
+<#@ assembly name="Alex.ResourcePackLib" #>
+
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="Alex.ResourcePackLib.Json.Models.Entities" #>
+<#@ import namespace="ResourceConverter" #>
+
+<#
+
+	var EntityModels = ResourceConverterContext.EntityModels;
+	var CurrentModelName = ResourceConverterContext.CurrentModelName;
+	var CurrentModel = ResourceConverterContext.CurrentModel;
+
+#>
+
+namespace Alex.Entities.Models 
+{
+
+	public partial class <#= CurrentModelName #>Model
+	{
+	
+		
+
+	}
+
+}
