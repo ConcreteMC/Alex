@@ -140,7 +140,7 @@ namespace Alex
 		private static readonly string ResourcePackDirectory = Path.Combine(Root, "resourcepacks");
 		private static readonly string BedrockResourcePackPath = Path.Combine(Root, "bedrock.zip");
 
-		private bool CheckRequiredPaths(out byte[] javaResources, out byte[] bedrockResources)
+		private bool CheckRequiredPaths(out byte[] javaResources)
 		{
 			if (!Directory.Exists(Root))
 			{
@@ -152,14 +152,14 @@ namespace Alex
 				Directory.CreateDirectory(ResourcePackDirectory);
 			}
 
-			if (!Storage.TryReadBytes(BedrockResourcePackPath, out bedrockResources))
+		/*	if (!Storage.TryReadBytes(BedrockResourcePackPath, out bedrockResources))
 			{
 				Log.Error(
 					$"Missing bedrock edition resources! Please put a copy of the bedrock resources in a zip archive with the path '{BedrockResourcePackPath}'");
 				javaResources = null;
 				bedrockResources = null;
 				return false;
-			}
+			}*/
 
 			try
 			{
@@ -169,7 +169,7 @@ namespace Alex
 					Log.Error($"Could not load any assets! Are you connected to the internet?");
 
 					javaResources = null;
-					bedrockResources = null;
+					//bedrockResources = null;
 					return false;
 				}
 			}
@@ -177,7 +177,7 @@ namespace Alex
 			{
 				Log.Error(ex, $"Could not check for latests assets! Do you have a internet connection up?");
 				javaResources = null;
-				bedrockResources = null;
+				//bedrockResources = null;
 				return false;
 			}
 
@@ -187,9 +187,8 @@ namespace Alex
 		public bool CheckResources(GraphicsDevice device, Settings setings, IProgressReceiver progressReceiver, McResourcePack.McResourcePackPreloadCallback preloadCallback)
 		{
 			byte[] defaultResources;
-			byte[] bedrockResources;
 
-			if (!CheckRequiredPaths(out defaultResources, out bedrockResources))
+			if (!CheckRequiredPaths(out defaultResources))
 			{
 				return false;
 			}

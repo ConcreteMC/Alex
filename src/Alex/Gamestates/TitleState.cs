@@ -271,7 +271,7 @@ namespace Alex.GameStates
 			Skin skin = _playerProfileService?.CurrentProfile?.Skin;
 			if (skin == null)
 			{
-				Alex.Resources.BedrockResourcePack.TryGetTexture("textures/entity/alex", out Bitmap rawTexture);
+				Alex.Resources.ResourcePack.TryGetBitmap("entity/alex", out Bitmap rawTexture);
 				skin = new Skin()
 				{
 					Slim = true,
