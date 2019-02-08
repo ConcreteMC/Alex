@@ -311,6 +311,16 @@ namespace Alex.Worlds
 			return Sections[@by >> 4].IsSolid(bx, @by - 16 * (@by >> 4), bz);
 		}
 
+		public void GetBlockData(int bx, int by, int bz, out bool transparent, out bool solid)
+		{
+			transparent = false;
+			solid = false;
+			if ((bx < 0 || bx > ChunkWidth) || (by < 0 || by > ChunkHeight) || (bz < 0 || bz > ChunkDepth))
+				return;
+
+			Sections[@by >> 4].GetBlockData(bx, @by - 16 * (@by >> 4), bz, out transparent, out solid);
+        }
+
         public void Dispose()
 		{
 			if (VertexBuffer != null)

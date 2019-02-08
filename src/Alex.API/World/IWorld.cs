@@ -37,5 +37,6 @@ namespace Alex.API.World
 
 		bool IsTransparent(int posX, int posY, int posZ);
 		bool IsSolid(int posX, int posY, int posZ);
-	}
+		void GetBlockData(int posX, int posY, int posZ, out bool transparent, out bool solid);
+    }
 }

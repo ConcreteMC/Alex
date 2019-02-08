@@ -204,6 +204,21 @@ namespace Alex.Worlds
 			return false;
 		}
 
+		public void GetBlockData(int x, int y, int z, out bool transparent, out bool solid)
+		{
+			IChunkColumn chunk;
+			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
+			{
+				chunk.GetBlockData(x & 0xf, y & 0xff, z & 0xf, out transparent, out solid);
+				//return chunk.IsSolid(x & 0xf, y & 0xff, z & 0xf);
+				//  return true;
+			}
+
+			transparent = false;
+			solid = false;
+			//return false;
+		}
+
         public bool HasBlock(int x, int y, int z)
 		{
 

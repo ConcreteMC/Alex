@@ -29,7 +29,7 @@ namespace Alex.Worlds
 	    private Alex Game { get; }
 
         private int _chunkUpdates = 0;
-	    public int ChunkUpdates => Enqueued.Count;
+	    public int ChunkUpdates => _chunkUpdates;
 	    public int LowPriortiyUpdates => LowPriority.Count;
 	    public int ChunkCount => Chunks.Count;
 
@@ -84,7 +84,7 @@ namespace Alex.Worlds
 				ReferenceAlpha = 127,
 				//FogEnd = distance,
 				FogStart = fogStart,
-				FogEnabled = true
+				FogEnabled = false
 			};
 			//TransparentEffect.FogColor = new Vector3(0.5f, 0.5f, 0.5f);
 
@@ -100,7 +100,7 @@ namespace Alex.Worlds
 				FogStart = fogStart,
 				VertexColorEnabled = true,
 				LightingEnabled = true,
-				FogEnabled = true
+				FogEnabled = false
 			};
 
 			Updater = new Thread(ChunkUpdateThread)
@@ -169,9 +169,9 @@ namespace Alex.Worlds
 	    }
 		private void ChunkUpdateThread()
 		{
-		//	int maxThreads = Game.GameSettings.ChunkThreads / 2; //Environment.ProcessorCount / 2;
-			//DedicatedThreadPool taskScheduler = new DedicatedThreadPool(new DedicatedThreadPoolSettings(maxThreads, ThreadType.Foreground));
-
+			int maxThreads = Game.GameSettings.ChunkThreads; //Environment.ProcessorCount / 2;
+			DedicatedThreadPool taskScheduler = new DedicatedThreadPool(new DedicatedThreadPoolSettings(maxThreads, ThreadType.Background));
+			Stopwatch sw = new Stopwatch();
             while (!CancelationToken.IsCancellationRequested)
             {
                 double radiusSquared = Math.Pow(Game.GameSettings.RenderDistance, 2);
@@ -210,16 +210,21 @@ namespace Alex.Worlds
 
 						try
 						{
-							
-							if (Enqueued.Contains(i.Value) && IsWithinView(chunk, CameraBoundingFrustum))
+							var enqueued = Enqueued.Contains(i.Value);
+
+                            if (enqueued && IsWithinView(chunk, CameraBoundingFrustum))
 							{
-								//taskScheduler.QueueUserWorkItem(() =>
-								//{
-								Enqueued.Remove(i.Value);
+								taskScheduler.QueueUserWorkItem(() =>
+								{
+								
+								//sw.Restart();
 										UpdateChunk(chunk);
-								//});
+										Enqueued.Remove(i.Value);
+                                    //	sw.Stop();
+                                    //Log.Debug($"Chunk update took: {sw.ElapsedMilliseconds} ms");
+                                });
 							}
-							else
+							else if (enqueued)
 							{
 								if (Math.Abs(i.Value.DistanceTo(new ChunkCoordinates(CameraPosition))) <= radiusSquared)
 								{
@@ -251,13 +256,17 @@ namespace Alex.Worlds
 
 			if (!CancelationToken.IsCancellationRequested)
 				Log.Warn($"Chunk update loop has unexpectedly ended!");
-		}
+
+
+			taskScheduler.Dispose();
+
+        }
 
 	    private bool IsWithinView(IChunkColumn chunk, BoundingFrustum frustum)
 	    {
 		    var chunkPos = new Vector3(chunk.X * ChunkColumn.ChunkWidth, 0, chunk.Z * ChunkColumn.ChunkDepth);
 		    return frustum.Intersects(new Microsoft.Xna.Framework.BoundingBox(chunkPos,
-			    chunkPos + new Vector3(ChunkColumn.ChunkWidth, 16 * ((chunk.GetHeighest() >> 4) + 1),
+			    chunkPos + new Vector3(ChunkColumn.ChunkWidth, /*16 * ((chunk.GetHeighest() >> 4) + 1)*/ 256,
 				    ChunkColumn.ChunkDepth)));
 
 	    }

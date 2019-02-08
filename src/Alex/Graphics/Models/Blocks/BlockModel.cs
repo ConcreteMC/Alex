@@ -84,7 +84,7 @@ namespace Alex.Graphics.Models.Blocks
 					textureBottomLeft = From(startPosition, startPosition, startPosition);
 					textureBottomRight = From(endPosition, startPosition, startPosition);
 
-					normal = Vector3.Forward;
+					normal = Vector3.Backward;
 					faceColor = uvmap.ColorFront; // ew Color(0x00, 0xFF, 0x00);
 					break;
 				case BlockFace.North: //Negative Z
@@ -94,7 +94,7 @@ namespace Alex.Graphics.Models.Blocks
 					textureBottomLeft = From(startPosition, startPosition, endPosition);
 					textureBottomRight = From(endPosition, startPosition, endPosition);
 
-					normal = Vector3.Backward;
+					normal = Vector3.Forward;
 					faceColor = uvmap.ColorBack; // new Color(0xFF, 0x00, 0x00);
 					break;
 				case BlockFace.None:

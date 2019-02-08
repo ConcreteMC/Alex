@@ -36,7 +36,9 @@ namespace Alex.API.World
 		//void SetBlockState(int x, int y, int z, IBlockState blockState);
 		bool IsTransparent(int x, int y, int z);
 		bool IsSolid(int bx, int by, int bz);
-	}
+
+		void GetBlockData(int bx, int by, int bz, out bool transparent, out bool solid);
+    }
 
 	[Flags]
 	public enum ScheduleType

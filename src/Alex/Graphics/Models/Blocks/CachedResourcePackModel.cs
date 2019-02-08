@@ -92,11 +92,11 @@ namespace Alex.Graphics.Models.Blocks
 					cull = BlockFace.Down;
 					break;
 				case "north":
-					cullFace = Vector3.Backward;
+					cullFace = Vector3.Forward;
 					cull = BlockFace.North;
 					break;
 				case "south":
-					cullFace = Vector3.Forward;
+					cullFace = Vector3.Backward;
 					cull = BlockFace.South;
 					break;
 				case "west":
@@ -168,8 +168,7 @@ namespace Alex.Graphics.Models.Blocks
 		//	return true;
          // }
 
-          var blockTransparent = world.IsTransparent(pos.X, pos.Y, pos.Z);
-          var blockSolid = world.IsSolid(pos.X, pos.Y, pos.Z);
+
             // if (me.Solid && blockTransparent)
             // {
             //     return false;
@@ -179,6 +178,11 @@ namespace Alex.Graphics.Models.Blocks
             {
 	            return true;
             }
+
+            var blockTransparent = world.IsTransparent(pos.X, pos.Y, pos.Z);
+            var blockSolid = world.IsSolid(pos.X, pos.Y, pos.Z);
+
+            //  world.GetBlockData(pos.X, pos.Y, pos.Z, out bool blockTransparent, out bool blockSolid);
 
             if (me.Solid && me.Transparent)
             {

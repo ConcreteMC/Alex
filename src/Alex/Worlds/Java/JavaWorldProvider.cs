@@ -414,13 +414,13 @@ namespace Alex.Worlds.Java
 
 			if (renderer == null)
 			{
-				Log.Warn($"Could not find renderer for entity type: {type.ToString()} ({(int) type})");
+				Log.Debug($"Missing renderer for entity: {type.ToString()} ({(int) type})");
 				return;
 			}
 
 			if (renderer.Texture == null)
 			{
-				Log.Warn($"Could not find texture for entity type: {type.ToString()} ({(int) type})");
+				Log.Debug($"Missing texture for entity: {type.ToString()} ({(int) type})");
 				return;
 			}
 
@@ -903,7 +903,7 @@ namespace Alex.Worlds.Java
 		private ConcurrentDictionary<UUID, PlayerMob> _players = new ConcurrentDictionary<UUID, PlayerMob>();
 		private void HandlePlayerListItemPacket(PlayerListItemPacket packet)
 		{
-			Alex.Resources.BedrockResourcePack.TryGetTexture("textures/entity/alex", out Bitmap rawTexture);
+			Alex.Resources.ResourcePack.TryGetBitmap("entity/alex", out Bitmap rawTexture);
 	        var t = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, rawTexture);
 
 			if (packet.Action == PlayerListAction.AddPlayer)

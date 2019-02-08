@@ -57,7 +57,7 @@ namespace Alex.Worlds
 			Skin skin = profileService?.CurrentProfile?.Skin;
 			if (skin == null)
 			{
-				alex.Resources.BedrockResourcePack.TryGetTexture("textures/entity/alex", out Bitmap rawTexture);
+				alex.Resources.ResourcePack.TryGetBitmap("entity/alex", out Bitmap rawTexture);
 				var t = TextureUtils.BitmapToTexture2D(graphics, rawTexture);
 				skin = new Skin()
 				{
@@ -463,8 +463,9 @@ namespace Alex.Worlds
               //  return true;
 			}
 
-			return false;
+			return true;
         }
+
 		public bool IsSolid(int x, int y, int z)
 		{
 			IChunkColumn chunk;
@@ -475,6 +476,21 @@ namespace Alex.Worlds
 			}
 
 			return false;
+		}
+
+		public void GetBlockData(int x, int y, int z, out bool transparent, out bool solid)
+		{
+			IChunkColumn chunk;
+			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
+			{
+				chunk.GetBlockData(x & 0xf, y & 0xff, z & 0xf, out transparent, out solid);
+				//return chunk.IsSolid(x & 0xf, y & 0xff, z & 0xf);
+				//  return true;
+			}
+
+			transparent = false;
+			solid = false;
+			//return false;
 		}
 
         public BlockCoordinates FindBlockPosition(BlockCoordinates coords, out IChunkColumn chunk)

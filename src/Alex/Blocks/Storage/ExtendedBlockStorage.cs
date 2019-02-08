@@ -47,6 +47,12 @@ namespace Alex.Blocks.Storage
 
 			TransparentBlocks = new bool[16 * 16 * 16];
 			SolidBlocks = new bool[16 * 16 * 16];
+
+			for (int i = 0; i < TransparentBlocks.Length; i++)
+			{
+				TransparentBlocks[i] = true;
+				SolidBlocks[i] = false;
+			}
         }
 
 		public void ResetSkyLight()
@@ -108,9 +114,17 @@ namespace Alex.Blocks.Storage
 		{
 			return TransparentBlocks[GetCoordinateIndex(x, y, z)];
 		}
+
 		public bool IsSolid(int x, int y, int z)
 		{
 			return SolidBlocks[GetCoordinateIndex(x, y, z)];
+		}
+
+		public void GetBlockData(int bx, int by, int bz, out bool transparent, out bool solid)
+		{
+			var coords = GetCoordinateIndex(bx, by, bz);
+			transparent = TransparentBlocks[coords];
+			solid = SolidBlocks[coords];
 		}
 
         /**

@@ -32,7 +32,7 @@ namespace Alex
 	        UseBuiltinGenerator = false;
 	        IsDirty = false;
 
-	        ChunkThreads = Environment.ProcessorCount;
+	        ChunkThreads = 1;
 
         }
     }
