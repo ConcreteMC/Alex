@@ -107,7 +107,7 @@ namespace Templates {
 					{
 						builder.Append($"Cubes = new EntityModelCube[0]");
 					}
-					WriteLine($"\t\t\t\tnew EntityModelBone(){{ \r\n\t\t\t\t\tName = \"{bone.Name}\",\r\n\t\t\t\t\tParent = \"{bone.Parent}\",\r\n\t\t\t\t\tPivot = new Vector3({bone.Pivot.X}f,{bone.Pivot.Y}f,{bone.Pivot.Z}f),\r\n\t\t\t\t\tRotation = new Vector3({bone.Rotation.X}f,{bone.Rotation.Y}f,{bone.Rotation.Z}f),\r\n\t\t\t\t\tNeverRender = {bone.NeverRender.ToString().ToLower()},\r\n\t\t\t\t\tMirror = {bone.Mirror.ToString().ToLower()},\r\n\t\t\t\t\tReset = {bone.Reset.ToString().ToLower()},\r\n\t\t\t\t\t{builder.ToString()}\r\n\t\t\t\t}},");
+					WriteLine($"\t\t\t\tnew EntityModelBone(){{ \r\n\t\t\t\t\tName = \"{bone.Name}\",\r\n\t\t\t\t\tParent = \"{bone.Parent}\",\r\n\t\t\t\t\tPivot = new Vector3({bone.Pivot.X}f,{bone.Pivot.Y}f,{bone.Pivot.Z}f),\r\n\t\t\t\t\tRotation = new Vector3({bone.Rotation.X}f,{bone.Rotation.Y}f,{bone.Rotation.Z}f),\r\n\t\t\t\t\tNeverRender = {(bone.NeverRender ? "true" : "false")},\r\n\t\t\t\t\tMirror = {(bone.Mirror ? "true" : "false")},\r\n\t\t\t\t\tReset = {(bone.Reset ? "true" : "false")},\r\n\t\t\t\t\t{builder.ToString()}\r\n\t\t\t\t}},");
 				}
 				WriteLine("\t\t\t};");
 				}

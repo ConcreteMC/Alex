@@ -27,43 +27,59 @@ namespace ResourceConverter
             }
 
             var loader = new ResourceLoader(inputDirectory);
-
+			
             loader.Load();
 
-            var template = new EntityTemplate();
-            template.Initialize();
+			GenerateModelFiles(loader, outputDirectory, out var classMapping);
 
-//            template.Session["EntityModels"] = loader.EntityModels;
-            ResourceConverterContext.EntityModels = loader.EntityModels;
+        }
 
-            int count = 0;
-            int totalCount = loader.EntityModels.Count;
-            foreach (var model in loader.EntityModels)
-            {
-	            var pct = 100D * ((double)count / (double)totalCount);
+        private static void GenerateModelFactory(IReadOnlyDictionary<string, string> geometryToClass)
+        {
 
-                Log.Info($"Starting Template Processing for '{model.Key}'");
+        }
+		
+        private static void GenerateModelFiles(ResourceLoader loader, DirectoryInfo outputDirectory, out Dictionary<string, string> geometryToClass)
+        {
+	        geometryToClass = new Dictionary<string, string>();
 
-                //template.Session["CurrentModelName"] = model.Key;
-                //template.Session["CurrentModel"] = model.Value;
-                ResourceConverterContext.CurrentModelName = CodeTypeName(model.Value.Name);
-                ResourceConverterContext.CurrentModel = model.Value;
+               var template = new EntityTemplate();
+	        template.Initialize();
 
-                var output = template.TransformText();
-                var outputPath = Path.Combine(outputDirectoryPath, CodeTypeName(model.Value.Name) + "Model.cs");
-                if (File.Exists(outputPath))
-                {
-					Log.Warn($"Class already exists: {outputPath} ({count}/{totalCount}) - {pct:F1}%");
-                }
-                else
-                {
-	                File.WriteAllText(outputPath, output);
-	                Log.Info($"Successfully Processed Template for entity '{model.Key}' ({count}/{totalCount}) - {pct:F1}%");
-                }
+	        //            template.Session["EntityModels"] = loader.EntityModels;
+	        ResourceConverterContext.EntityModels = loader.EntityModels;
+			
+	        int count = 0;
+	        int totalCount = loader.EntityModels.Count;
+	        foreach (var model in loader.EntityModels)
+	        {
+		        var pct = 100D * ((double)count / (double)totalCount);
+
+		        Log.Info($"Starting Template Processing for '{model.Key}'");
+
+		        //template.Session["CurrentModelName"] = model.Key;
+		        //template.Session["CurrentModel"] = model.Value;
+		        ResourceConverterContext.CurrentModelName = CodeTypeName(model.Value.Name);
+		        ResourceConverterContext.CurrentModel = model.Value;
+
+		        var output = template.TransformText();
+		        var outputPath = Path.Combine(outputDirectory.FullName, CodeTypeName(model.Value.Name) + "Model.cs");
+		        if (File.Exists(outputPath))
+		        {
+			        Log.Warn($"Class already exists: {outputPath} ({count}/{totalCount}) - {pct:F1}%");
+		        }
+		        else
+		        {
+			        geometryToClass.Add(model.Key, ResourceConverterContext.CurrentModelName + "Model");
+                    File.WriteAllText(outputPath, output);
+			        Log.Info($"Successfully Processed Template for entity '{model.Key}' ({count}/{totalCount}) - {pct:F1}%");
+		        }
+
+		        
 
                 count++;
-                // Log.Info($"Successfully Processed Template for entity '{model.Key}' ({count}/{totalCount}) - {pct:F1}%");
-            }
+		        // Log.Info($"Successfully Processed Template for entity '{model.Key}' ({count}/{totalCount}) - {pct:F1}%");
+	        }
         }
 
         private static string CodeTypeName(string name)
