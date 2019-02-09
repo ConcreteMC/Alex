@@ -167,13 +167,18 @@ namespace Alex.Worlds
 			    }
 		    }
 	    }
-		private void ChunkUpdateThread()
+
+        private long _threadsRunning = 0;
+        private void ChunkUpdateThread()
 		{
 			int maxThreads = Game.GameSettings.ChunkThreads; //Environment.ProcessorCount / 2;
 			DedicatedThreadPool taskScheduler = new DedicatedThreadPool(new DedicatedThreadPoolSettings(maxThreads, ThreadType.Background));
 			Stopwatch sw = new Stopwatch();
+		   
             while (!CancelationToken.IsCancellationRequested)
             {
+                SpinWait.SpinUntil(() => Interlocked.Read(ref _threadsRunning) < maxThreads);
+
                 double radiusSquared = Math.Pow(Game.GameSettings.RenderDistance, 2);
 				try
 				{
@@ -204,6 +209,7 @@ namespace Alex.Worlds
 						IChunkColumn chunk = null;
 						if (Math.Abs(i.Value.DistanceTo(new ChunkCoordinates(CameraPosition))) > radiusSquared || !Chunks.TryGetValue(i.Value, out chunk))
 						{
+						    Enqueued.Remove(i.Value);
 							Interlocked.Decrement(ref _chunkUpdates);
 							continue;
 						}
@@ -212,17 +218,22 @@ namespace Alex.Worlds
 						{
 							var enqueued = Enqueued.Contains(i.Value);
 
-                            if (enqueued && IsWithinView(chunk, CameraBoundingFrustum))
-							{
-								taskScheduler.QueueUserWorkItem(() =>
-								{
-								
-								//sw.Restart();
-										UpdateChunk(chunk);
-										Enqueued.Remove(i.Value);
-                                    //	sw.Stop();
+						    if (enqueued && IsWithinView(chunk, CameraBoundingFrustum))
+						    {
+						        //taskScheduler.QueueUserWorkItem(() =>
+						        //{
+						        //sw.Restart();
+						        Interlocked.Increment(ref _threadsRunning);
+						        new Thread(() =>
+						        {
+						            UpdateChunk(chunk);
+						            Enqueued.Remove(i.Value);
+						            Interlocked.Decrement(ref _threadsRunning);
+						        }).Start();
+
+						    //	sw.Stop();
                                     //Log.Debug($"Chunk update took: {sw.ElapsedMilliseconds} ms");
-                                });
+                               // });
 							}
 							else if (enqueued)
 							{
@@ -230,7 +241,12 @@ namespace Alex.Worlds
 								{
 									LowPriority.Enqueue(i.Value);
 								}
-
+								else
+								{
+								    Enqueued.Remove(i.Value);
+								    Interlocked.Decrement(ref _chunkUpdates);
+								}
+                                
 								//	Interlocked.Decrement(ref _chunkUpdates);
 							}
 						}
@@ -281,12 +297,6 @@ namespace Alex.Worlds
 
 			try
 			{
-				if (chunk.Scheduled.HasFlag(ScheduleType.Skylight))
-				{
-					//SkylightCalculator.CalculateLighting(chunk, false);
-					//SkylightCalculator.CalculateSkylight((ChunkColumn)chunk);
-					//chunk.SkyLightDirty = false;
-				}
 
 			//	if (chunk.Scheduled.HasFlag(ScheduleType.Full))
 				{
@@ -606,6 +616,7 @@ namespace Alex.Worlds
                 }
 				else
 				{*/
+			    //SkylightCalculator.CalculateLighting(chunk, true, false);
 					ScheduleChunkUpdate(position, ScheduleType.Full);
 				//}
 
@@ -632,7 +643,7 @@ namespace Alex.Worlds
 					    Enqueued.TryAdd(position);
                     }
 
-				    Interlocked.Increment(ref _chunkUpdates);
+				    //Interlocked.Increment(ref _chunkUpdates);
 				//    _updateResetEvent.Set();
 
                     if (type.HasFlag(ScheduleType.Skylight))
@@ -652,10 +663,10 @@ namespace Alex.Worlds
 			    {
 				    if (currentSchedule != ScheduleType.Unscheduled)
 				    {
-					    if (currentSchedule != ScheduleType.Full)
+					    /*if (currentSchedule != ScheduleType.Full)
 					    {
 						    chunk.Scheduled = type;
-					    }
+					    }*/
 
 					    return;
 				    }
