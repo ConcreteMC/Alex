@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System.Text;
+using Microsoft.Xna.Framework;
 
 namespace Alex.ResourcePackLib.Json.Models.Entities
 {
@@ -10,6 +11,8 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 	{
 		public string Name { get; set; }
 		public string Material { get; set; } = string.Empty;
+
+		[J("parent", NullValueHandling = N.Ignore)]
 		public string Parent { get; set; } = string.Empty;
 		public EntityModelCube[] Cubes { get; set; }
         public Vector3 Pivot { get; set; }
@@ -23,7 +26,7 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 		public bool NeverRender { get; set; } = false;
 		public bool Mirror { get; set; } = false;
 		public bool Reset { get; set; } = false;
-	}
+    }
 
 	public sealed class EntityModelLocators
 	{

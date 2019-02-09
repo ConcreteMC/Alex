@@ -8,11 +8,12 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace ResourceConverter.Templates {
+namespace Templates {
     using System.Linq;
     using System.Text;
     using System.Collections.Generic;
     using Alex.ResourcePackLib.Json.Models.Entities;
+    using ResourceConverter;
     using System;
     
     
@@ -21,19 +22,19 @@ namespace ResourceConverter.Templates {
         public virtual string TransformText() {
             this.GenerationEnvironment = null;
             
-            #line 8 ".\Templates\EntityTemplate.tt"
+            #line 8 "Templates\EntityTemplate.tt"
             this.Write("\r\n");
             
             #line default
             #line hidden
             
-            #line 14 ".\Templates\EntityTemplate.tt"
+            #line 14 "Templates\EntityTemplate.tt"
             this.Write("\r\n");
             
             #line default
             #line hidden
             
-            #line 15 ".\Templates\EntityTemplate.tt"
+            #line 15 "Templates\EntityTemplate.tt"
 
 
 	var EntityModels = ResourceConverterContext.EntityModels;
@@ -45,20 +46,82 @@ namespace ResourceConverter.Templates {
             #line default
             #line hidden
             
-            #line 22 ".\Templates\EntityTemplate.tt"
-            this.Write("\r\nnamespace Alex.Entities.Models \r\n{\r\n\r\n\tpublic partial class ");
+            #line 22 "Templates\EntityTemplate.tt"
+            this.Write("\r\nusing Alex.ResourcePackLib.Json.Models.Entities;\r\nusing Microsoft.Xna.Framework" +
+                    ";\r\n\r\nnamespace Alex.Entities.Models \r\n{\r\n\r\n\tpublic partial class ");
             
             #line default
             #line hidden
             
-            #line 26 ".\Templates\EntityTemplate.tt"
+            #line 29 "Templates\EntityTemplate.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture( CurrentModelName ));
             
             #line default
             #line hidden
             
-            #line 26 ".\Templates\EntityTemplate.tt"
-            this.Write("Model\r\n\t{\r\n\t\r\n\t\t\r\n\r\n\t}\r\n\r\n}");
+            #line 29 "Templates\EntityTemplate.tt"
+            this.Write("Model : EntityModel\r\n\t{\r\n\t\tpublic ");
+            
+            #line default
+            #line hidden
+            
+            #line 31 "Templates\EntityTemplate.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture( CurrentModelName ));
+            
+            #line default
+            #line hidden
+            
+            #line 31 "Templates\EntityTemplate.tt"
+            this.Write("Model()\r\n\t\t{\r\n\t\t\t");
+            
+            #line default
+            #line hidden
+            
+            #line 33 "Templates\EntityTemplate.tt"
+
+				WriteLine($"Name = \"{CurrentModel.Name}\";");
+				WriteLine($"\t\t\tVisibleBoundsWidth = {CurrentModel.VisibleBoundsWidth};");
+				WriteLine($"\t\t\tVisibleBoundsHeight = {CurrentModel.VisibleBoundsHeight};");
+				WriteLine($"\t\t\tVisibleBoundsOffset = new Vector3({CurrentModel.VisibleBoundsOffset.X}f, {CurrentModel.VisibleBoundsOffset.Y}f, {CurrentModel.VisibleBoundsOffset.Z}f);");
+				WriteLine($"\t\t\tTexturewidth = {CurrentModel.Texturewidth};");
+				WriteLine($"\t\t\tTextureheight = {CurrentModel.Textureheight};");
+				if (CurrentModel.Bones != null)
+				{
+					WriteLine($"\t\t\tBones = new EntityModelBone[{CurrentModel.Bones.Length}]");
+					WriteLine("\t\t\t{");
+				foreach(var bone in CurrentModel.Bones)
+				{
+					StringBuilder builder = new StringBuilder();
+					if (bone.Cubes != null)
+					{
+						builder.Append($"Cubes = new EntityModelCube[{bone.Cubes.Length}]");
+						builder.Append("{\r\n");
+						foreach (var cube in bone.Cubes)
+						{
+							builder.Append(
+								$"\t\t\t\t\t\tnew EntityModelCube()\r\n\t\t\t\t\t\t{{\r\n\t\t\t\t\t\t\tOrigin = new Vector3({cube.Origin.X}f,{cube.Origin.Y}f,{cube.Origin.Z}f),\r\n\t\t\t\t\t\t\tSize = new Vector3({cube.Size.X}f, {cube.Size.Y}f, {cube.Size.Z}f),\r\n\t\t\t\t\t\t\tUv = new Vector2({cube.Uv.X}f, {cube.Uv.Y}f)\r\n\t\t\t\t\t\t}},\r\n");
+						}
+						builder.Append("\t\t\t\t\t}");
+					}
+					else
+					{
+						builder.Append($"Cubes = new EntityModelCube[0]");
+					}
+					WriteLine($"\t\t\t\tnew EntityModelBone(){{ \r\n\t\t\t\t\tName = \"{bone.Name}\",\r\n\t\t\t\t\tParent = \"{bone.Parent}\",\r\n\t\t\t\t\tPivot = new Vector3({bone.Pivot.X}f,{bone.Pivot.Y}f,{bone.Pivot.Z}f),\r\n\t\t\t\t\tRotation = new Vector3({bone.Rotation.X}f,{bone.Rotation.Y}f,{bone.Rotation.Z}f),\r\n\t\t\t\t\tNeverRender = {bone.NeverRender.ToString().ToLower()},\r\n\t\t\t\t\tMirror = {bone.Mirror.ToString().ToLower()},\r\n\t\t\t\t\tReset = {bone.Reset.ToString().ToLower()},\r\n\t\t\t\t\t{builder.ToString()}\r\n\t\t\t\t}},");
+				}
+				WriteLine("\t\t\t};");
+				}
+				else
+				{
+					WriteLine($"\t\t\tBones = new EntityModelBone[0];");
+				}
+			
+            
+            #line default
+            #line hidden
+            
+            #line 71 "Templates\EntityTemplate.tt"
+            this.Write("\t\t}\r\n\r\n\t}\r\n\r\n}");
             
             #line default
             #line hidden

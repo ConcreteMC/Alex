@@ -1,14 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using System.Text;
+using log4net;
+using NLog;
+using ResourceConverterCore.Properties;
+using LogManager = NLog.LogManager;
 
 namespace ResourceConverter
 {
     public class Program
     {
-
+	    private static readonly Logger Log = LogManager.GetCurrentClassLogger();
         private static string DefaultOutputDir
         {
             get => Path.Combine(Assembly.GetEntryAssembly().Location, "Output");
@@ -66,10 +68,36 @@ namespace ResourceConverter
                 return;
             }
 
+            var actualOutput = Path.Combine(outputDir, "output");
 
-            ResourceConverter.Run(inputDir, outputDir);
+            if (!Directory.Exists(actualOutput))
+	            Directory.CreateDirectory(actualOutput);
+
+			ConfigureNLog(outputDir);
+
+			ResourceConverter.Run(inputDir, actualOutput);
             Console.WriteLine("Completed.");
             Console.ReadLine();
+        }
+
+        private static void ConfigureNLog(string baseDir)
+        {
+	        string loggerConfigFile = Path.Combine(baseDir, "NLog.config");
+	        if (!File.Exists(loggerConfigFile))
+	        {
+		        File.WriteAllText(loggerConfigFile, Resources.NLogConfig);
+	        }
+
+	        string logsDir = Path.Combine(baseDir, "logs");
+	        if (!Directory.Exists(logsDir))
+	        {
+		        Directory.CreateDirectory(logsDir);
+	        }
+
+	        NLog.LogManager.Configuration = new NLog.Config.XmlLoggingConfiguration(loggerConfigFile, true);
+	        LogManager.Configuration.Variables["basedir"] = baseDir;
+
+	        NLogAppender.Initialize();
         }
     }
 }

@@ -353,7 +353,7 @@ namespace ResourceConverter
         private bool ProcessEntityModel(EntityModel model, Dictionary<string, EntityModel> models,
             Dictionary<string, EntityModel> failedToProcess, bool isRetry = false)
         {
-            string modelName = model.Name;
+               string modelName = model.Name;
             if (model.Name.Contains(":")) //This model inherits from another model.
             {
                 string[] split = model.Name.Split(':');

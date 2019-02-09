@@ -6,7 +6,7 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 	using R = Newtonsoft.Json.Required;
 	using N = Newtonsoft.Json.NullValueHandling;
 
-    public sealed class EntityModel
+    public class EntityModel
     {
 		public string Name { get; set; }
 
