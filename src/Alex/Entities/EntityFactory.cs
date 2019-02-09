@@ -220,7 +220,10 @@ namespace Alex.Entities
 	                done++;
                 }
 			}
-		}
+
+		    Log.Info($"Registered {(Assembly.GetExecutingAssembly().GetTypes().Count(t => t.Namespace == "Alex.Entities.Models"))} entity models");
+		    Log.Info($"Registered {_registeredRenderers.Count} entity model renderers");
+        }
 
 		private static void Add(ResourceManager resourceManager, GraphicsDevice graphics, BedrockResourcePack.EntityDefinition def, EntityModel model, string name)
 		{

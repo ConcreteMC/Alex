@@ -1,14 +1,11 @@
 # Alex
 A Minecraft (Java & Bedrock Edition) client written in C# 
-##### This client does NOT allow you to play without an official minecraft account.  
+
+##### This client requires a paid Minecraft account.
+
 You also need access to the resources from both Java & Bedrock edition of Minecraft.
 
-Contributing
-------------
-
-I'm looking for people that want to help me continue development on Alex.  C# experience required, i'd obviously help you setup the client to get started and be there to answer any questions.
-
-* [Discord](https://discord.gg/txaahdU) - Join us on Discord!
+As of the current state, there are still a few resources required from the Bedrock engine, work is being done on removing this dependency.
 
 About
 -----
@@ -18,6 +15,20 @@ This is a hobby project i work on from time to time, the end goal being it able 
 It can currently connect to any java 18w50a server, bedrock server support is coming as soon as the network implementation is done. I do not recommened trying the client out on a server you care about tho, seeing as any slightly decent anti-cheat will detect you as our movement physics do not currently match up with Vanilla. Some world interactions like building and destroying are implemented but only recommened to be used on private servers & in creative mode.
 
 Model rendering isn't yet quite perfect, but most models can be rendered.
+
+Cloning the Repository
+----------------------
+
+As we use submodules to add support for MC:Bedrock, you need to pull the submodules in order to compile Alex.
+
+The easiest method of doing this is to clone the repository using ```git clone --recursive https://github.com/kennyvv/Alex.git```
+
+Contributing
+------------
+
+I'm looking for people that want to help me continue development on Alex.  C# experience required, i'd obviously help you setup the client to get started and be there to answer any questions.
+
+* [Discord](https://discord.gg/txaahdU) - Join us on Discord!
 
 Awesome repositories
 ---------------------

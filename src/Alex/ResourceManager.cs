@@ -7,6 +7,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Text;
 using Alex.API;
 using Alex.API.Json;
@@ -243,7 +244,7 @@ namespace Alex
 			Log.Info($"Loading known entity data...");
 			EntityFactory.Load(this, progressReceiver);
 
-			foreach (string file in setings.ResourcePacks)
+            foreach (string file in setings.ResourcePacks)
 			{
 				try
 				{
