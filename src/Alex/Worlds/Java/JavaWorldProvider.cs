@@ -391,7 +391,7 @@ namespace Alex.Worlds.Java
 				if (!string.IsNullOrWhiteSpace(def.Key))
 				{
 					EntityModel model;
-					if (Alex.Resources.BedrockResourcePack.EntityModels.TryGetValue(def.Value.Geometry["default"],
+					if (ModelFactory.TryGetModel(def.Value.Geometry["default"],
 						    out model) && model != null)
 					{
 						var textures = def.Value.Textures;

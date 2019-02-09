@@ -210,7 +210,8 @@ namespace Alex
             if (!Storage.TryGetDirectory(bedrockPath, out directory))
 			{
 				Log.Warn($"The bedrock resources required to play this game are not set-up correctly!");
-				Environment.Exit(1);
+			    Console.ReadLine();
+                Environment.Exit(1);
 				return false;
 			}
 
@@ -219,13 +220,15 @@ namespace Alex
             if (!directories.Any(x => x.Name.Equals("models")))
             {
 				Log.Warn($"Please make sure to extract the MC:Bedrock resource pack into \"{directory.FullName}\"");
-				Environment.Exit(1);
+                Console.ReadLine();
+                Environment.Exit(1);
 				return false;
             }
 
             if (!directories.Any(x => x.Name.Equals("definitions")))
             {
 				Log.Warn($"The required definition files are not found. We sadly cannot legally provide you those. Any questions can be asked on Discord.");
+                Console.ReadLine();
 				Environment.Exit(1);
                 return false;
             }

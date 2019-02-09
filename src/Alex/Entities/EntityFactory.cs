@@ -188,7 +188,17 @@ namespace Alex.Entities
 					if (def.Value.Geometry.Count == 0) continue;
 
 					EntityModel model;
-					if ((resourceManager.BedrockResourcePack.EntityModels.TryGetValue(def.Value.Geometry["default"],
+				    if (ModelFactory.TryGetModel(def.Value.Geometry["default"], out model) && model != null)
+				    {
+				        Add(resourceManager, graphics, def.Value, model, def.Value.Filename);
+				        Add(resourceManager, graphics, def.Value, model, def.Key);
+                    }
+				    else if (ModelFactory.TryGetModel(def.Value.Geometry["default"] + ".v1.8", out model) && model != null)
+				    {
+				        Add(resourceManager, graphics, def.Value, model, def.Value.Filename);
+				        Add(resourceManager, graphics, def.Value, model, def.Key);
+				    }
+                    /*if ((resourceManager.BedrockResourcePack.EntityModels.TryGetValue(def.Value.Geometry["default"],
 						    out model)) && model != null)
 					{
 						Add(resourceManager, graphics, def.Value, model, def.Value.Filename);
@@ -199,7 +209,7 @@ namespace Alex.Entities
 					{
 						Add(resourceManager, graphics, def.Value, model, def.Value.Filename);
 						Add(resourceManager, graphics, def.Value, model, def.Key);
-					}
+					}*/
                 }
 				catch (Exception ex)
 				{

@@ -5,6 +5,7 @@ using System.Text;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Newtonsoft.Json;
 using NLog;
+using ResourceConverterCore.Converter;
 using Templates;
 
 namespace ResourceConverter
@@ -31,12 +32,21 @@ namespace ResourceConverter
             loader.Load();
 
 			GenerateModelFiles(loader, outputDirectory, out var classMapping);
-
+            using (var fs = File.CreateText(Path.Combine(outputDirectory.FullName, "ModelFactory.cs")))
+            {
+                GenerateModelFactory(classMapping,
+                fs);
+            }
         }
 
-        private static void GenerateModelFactory(IReadOnlyDictionary<string, string> geometryToClass)
+        private static void GenerateModelFactory(IReadOnlyDictionary<string, string> geometryToClass, StreamWriter stream)
         {
+            ModelFactoryContext.Models = geometryToClass;
 
+            var t = new ModelFactory();
+            t.Initialize();
+
+            stream.Write((string)t.TransformText());
         }
 		
         private static void GenerateModelFiles(ResourceLoader loader, DirectoryInfo outputDirectory, out Dictionary<string, string> geometryToClass)
@@ -63,7 +73,7 @@ namespace ResourceConverter
 		        ResourceConverterContext.CurrentModel = model.Value;
 
 		        var output = template.TransformText();
-		        var outputPath = Path.Combine(outputDirectory.FullName, CodeTypeName(model.Value.Name) + "Model.cs");
+		        var outputPath = Path.Combine(outputDirectory.FullName, "Models", CodeTypeName(model.Value.Name) + "Model.cs");
 		        if (File.Exists(outputPath))
 		        {
 			        Log.Warn($"Class already exists: {outputPath} ({count}/{totalCount}) - {pct:F1}%");
@@ -107,7 +117,7 @@ namespace ResourceConverter
 	        result = string.Empty;
 	        for (int i = 0; i < name.Length; i++)
 	        {
-		        if (name[i] == '.' || name[i] == ' ' || name[i] == '_')
+		        if (name[i] == '.' || name[i] == ' ' || name[i] == '_' || name[i] == ':')
 		        {
 			        upperCase = true;
 		        }

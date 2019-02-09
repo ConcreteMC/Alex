@@ -25,7 +25,7 @@ namespace Alex.ResourcePackLib
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BedrockResourcePack));
 		private Dictionary<string, EntityModel> _processedModels = new Dictionary<string, EntityModel>();
-		public IReadOnlyDictionary<string, EntityModel> EntityModels => _processedModels;
+		//public IReadOnlyDictionary<string, EntityModel> EntityModels => _processedModels;
 
 		private ConcurrentDictionary<string, Bitmap> _bitmaps = new ConcurrentDictionary<string, Bitmap>();
         public IReadOnlyDictionary<string, Bitmap> Textures => _bitmaps;
@@ -191,26 +191,26 @@ namespace Alex.ResourcePackLib
 
             EntityDefinitions = entityDefinitions;
 
-            var res = new Dictionary<string, EntityModel>();
-            GetEntries(mobsFile, res);
+           // var res = new Dictionary<string, EntityModel>();
+           // GetEntries(mobsFile, res);
 
-            int missed1 = LoadMobs(res);
+          //  int missed1 = LoadMobs(res);
 
-            res.Clear();
+           // res.Clear();
 
-            foreach (var file in entityGeometry.Values)
-            {
-                GetEntries(file, res);
-            }
+         //   foreach (var file in entityGeometry.Values)
+         //   {
+           //     GetEntries(file, res);
+         //   }
 
-            int missed2 = LoadMobs(res);
+          //  int missed2 = LoadMobs(res);
 
-            if (missed1 > 0 || missed2 > 0)
-            {
-                Log.Warn($"Failed to process {missed1 + missed2} entity models");
-            }
+          //  if (missed1 > 0 || missed2 > 0)
+           // {
+          //      Log.Warn($"Failed to process {missed1 + missed2} entity models");
+           // }
 
-            Log.Info($"Processed {EntityModels.Count} entity models!");
+          // Log.Info($"Processed {EntityModels.Count} entity models!");
             Log.Info($"Processed {EntityDefinitions.Count} entity definitions");
         }
 

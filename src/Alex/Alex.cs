@@ -249,6 +249,8 @@ namespace Alex
 			if (!Resources.CheckResources(GraphicsDevice, GameSettings, progressReceiver,
 				OnResourcePackPreLoadCompleted))
 			{
+                Console.WriteLine("Press enter to exit...");
+			    Console.ReadLine();
 				Exit();
 				return;
 			}

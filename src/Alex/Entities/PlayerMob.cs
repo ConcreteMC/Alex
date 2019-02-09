@@ -167,7 +167,7 @@ namespace Alex.Entities
 		{
 			if (skinSlim)
 			{
-				if (Alex.Instance.Resources.BedrockResourcePack.EntityModels.TryGetValue("geometry.humanoid.customSlim",
+				if (ModelFactory.TryGetModel("geometry.humanoid.customSlim",
 					out EntityModel m))
 				{
 					_model = m;
@@ -177,7 +177,7 @@ namespace Alex.Entities
 			}
 			else
 			{
-				if (Alex.Instance.Resources.BedrockResourcePack.EntityModels.TryGetValue("geometry.humanoid.custom",
+				if (ModelFactory.TryGetModel("geometry.humanoid.custom",
 					out EntityModel m))
 				{
 					_model = m;
