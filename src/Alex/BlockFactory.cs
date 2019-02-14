@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Alex.API.Blocks.State;
 using Alex.Blocks;
+using Alex.Blocks.Minecraft;
 using Alex.Blocks.Properties;
 using Alex.Blocks.State;
 using Alex.Graphics.Models.Blocks;
@@ -580,7 +581,7 @@ namespace Alex
 			else if (blockName == "minecraft:sand" || blockName == "sand") return new Sand();
 			else if (blockName == "minecraft:gravel" || blockName == "gravel") return new Gravel();
 			else if (blockName == "minecraft:sponge" || blockName == "sponge") return new Sponge();
-			else if (blockName == "minecraft:glass" || blockName == "glass") return new Blocks.Glass();
+			else if (blockName == "minecraft:glass" || blockName == "glass") return new Glass();
 			else if (blockName == "minecraft:dispenser" || blockName == "dispenser") return new Dispenser();
 			else if (blockName == "minecraft:sandstone" || blockName == "sandstone") return new Sandstone();
 			else if (blockName == "minecraft:note_block" || blockName == "noteblock") return new NoteBlock();
@@ -823,8 +824,11 @@ namespace Alex
 
 			else if (blockName == "minecraft:lilac" || blockName == "lilac") return new Lilac();
 			else if (blockName == "minecraft:rose_bush" || blockName == "rosebush") return new RoseBush();
+			else if (blockName == "minecraft:azure_bluet" || blockName == "azurebluet") return new AzureBluet();
+			else if (blockName == "minecraft:corn_flower" || blockName == "cornflower") return new CornFlower();
+			else if (blockName == "minecraft:oxeye_daisy" || blockName == "oxeyedaisy") return new OxeyeDaisy();
 
-			else if (blockName == "minecraft:barrier" || blockName == "barrier") return new InvisibleBedrock(false);
+            else if (blockName == "minecraft:barrier" || blockName == "barrier") return new InvisibleBedrock(false);
 
 			else
 			{

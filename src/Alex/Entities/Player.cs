@@ -7,6 +7,7 @@ using Alex.API.Input;
 using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.Blocks;
+using Alex.Blocks.Minecraft;
 using Alex.GameStates.Playing;
 using Alex.Graphics.Models.Entity;
 using Alex.Items;

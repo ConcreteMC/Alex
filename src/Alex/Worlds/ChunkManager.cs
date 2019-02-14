@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Schedulers;
 using Alex.API.Graphics;
+using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Utils;
 using Alex.Worlds.Lighting;
@@ -29,8 +30,8 @@ namespace Alex.Worlds
 	    private Alex Game { get; }
 
         private int _chunkUpdates = 0;
-	    public int ChunkUpdates => _chunkUpdates;
-	    public int LowPriortiyUpdates => LowPriority.Count;
+	    public int ChunkUpdates => Enqueued.Count;
+	    public int LowPriortiyUpdates => 0;
 	    public int ChunkCount => Chunks.Count;
 
 	    public AlphaTestEffect TransparentEffect { get; }
@@ -106,8 +107,8 @@ namespace Alex.Worlds
 			Updater = new Thread(ChunkUpdateThread)
             {IsBackground = true};
 
-			HighPriority = new ConcurrentQueue<ChunkCoordinates>();
-			LowPriority = new ConcurrentQueue<ChunkCoordinates>();
+			//HighPriority = new ConcurrentQueue<ChunkCoordinates>();
+			//LowPriority = new ConcurrentQueue<ChunkCoordinates>();
 			HighestPriority = new ConcurrentQueue<ChunkCoordinates>();
 
 			SkylightThread = new Thread(SkyLightUpdater)
@@ -132,8 +133,8 @@ namespace Alex.Worlds
 		//private ThreadSafeList<Entity> Entities { get; private set; } 
 
 		private ConcurrentQueue<ChunkCoordinates> HighestPriority { get; set; }
-	    private ConcurrentQueue<ChunkCoordinates> HighPriority { get; set; }
-	    private ConcurrentQueue<ChunkCoordinates> LowPriority { get; set; }
+	   // private ConcurrentQueue<ChunkCoordinates> HighPriority { get; set; }
+	   // private ConcurrentQueue<ChunkCoordinates> LowPriority { get; set; }
 		private ThreadSafeList<ChunkCoordinates> Enqueued { get; } = new ThreadSafeList<ChunkCoordinates>();
 		private ConcurrentDictionary<ChunkCoordinates, IChunkColumn> Chunks { get; }
 
@@ -172,97 +173,45 @@ namespace Alex.Worlds
         private void ChunkUpdateThread()
 		{
 			int maxThreads = Game.GameSettings.ChunkThreads; //Environment.ProcessorCount / 2;
-			DedicatedThreadPool taskScheduler = new DedicatedThreadPool(new DedicatedThreadPoolSettings(maxThreads, ThreadType.Background));
+			CustomThreadQueue taskScheduler = new CustomThreadQueue(maxThreads);
+
 			Stopwatch sw = new Stopwatch();
-		   
+
             while (!CancelationToken.IsCancellationRequested)
             {
-                SpinWait.SpinUntil(() => Interlocked.Read(ref _threadsRunning) < maxThreads);
+               // SpinWait.SpinUntil(() => Interlocked.Read(ref _threadsRunning) < maxThreads);
+                SpinWait.SpinUntil(() => taskScheduler.Running < maxThreads);
 
                 double radiusSquared = Math.Pow(Game.GameSettings.RenderDistance, 2);
 				try
 				{
-					ChunkCoordinates? i = null;
-					if (HighestPriority.TryDequeue(out ChunkCoordinates cicc))
-					{
-						i = cicc;
-					}
-					else if (HighPriority.TryDequeue(out ChunkCoordinates ci))
-					{
-						i = ci;
-					}
-					else
-					{
-						if (LowPriority.TryDequeue(out ChunkCoordinates cic))
+					if (HighestPriority.TryDequeue(out var coords))
+				   {
+						taskScheduler.QueueStart(() =>
 						{
-							i = cic;
-							//doingLowPriority = true;
-						}
-						else
-						{
-							i = null;
-						}
-					}
-
-					if (i.HasValue)
-					{
-						IChunkColumn chunk = null;
-						if (Math.Abs(i.Value.DistanceTo(new ChunkCoordinates(CameraPosition))) > radiusSquared || !Chunks.TryGetValue(i.Value, out chunk))
-						{
-						    Enqueued.Remove(i.Value);
-							Interlocked.Decrement(ref _chunkUpdates);
-							continue;
-						}
-
-						try
-						{
-							var enqueued = Enqueued.Contains(i.Value);
-
-						    if (enqueued && IsWithinView(chunk, CameraBoundingFrustum))
-						    {
-						        //taskScheduler.QueueUserWorkItem(() =>
-						        //{
-						        //sw.Restart();
-						        Interlocked.Increment(ref _threadsRunning);
-						        new Thread(() =>
-						        {
-						            UpdateChunk(chunk);
-						            Enqueued.Remove(i.Value);
-						            Interlocked.Decrement(ref _threadsRunning);
-						        }).Start();
-
-						    //	sw.Stop();
-                                    //Log.Debug($"Chunk update took: {sw.ElapsedMilliseconds} ms");
-                               // });
-							}
-							else if (enqueued)
+							if (Chunks.TryGetValue(coords, out var val))
 							{
-								if (Math.Abs(i.Value.DistanceTo(new ChunkCoordinates(CameraPosition))) <= radiusSquared)
-								{
-									LowPriority.Enqueue(i.Value);
-								}
-								else
-								{
-								    Enqueued.Remove(i.Value);
-								    Interlocked.Decrement(ref _chunkUpdates);
-								}
-                                
-								//	Interlocked.Decrement(ref _chunkUpdates);
+								UpdateChunk(val);
 							}
-						}
-						catch (TaskCanceledException)
-						{
-							break;
-						}
-					}
-					else
+                        });
+				   }
+				   else if (Enqueued.Count > 0)
 					{
-						//if (!_updateResetEvent.WaitOne(500))
+						//var cc = new ChunkCoordinates(CameraPosition);
+
+                        coords = Enqueued.MinBy(x => Math.Abs(x.DistanceTo(new ChunkCoordinates(CameraPosition))));
+						if (!IsWithinView(coords, CameraBoundingFrustum)) continue;
+						
+						Enqueued.Remove(coords);
+
+						taskScheduler.QueueTask(() =>
 						{
-							if (CancelationToken.Token.IsCancellationRequested)
-								break;
-						}
-					}
+							if (Chunks.TryGetValue(coords, out var val))
+							{
+								UpdateChunk(val);
+							}
+						});
+				   }
 				}
 				catch (OperationCanceledException)
 				{
@@ -282,12 +231,21 @@ namespace Alex.Worlds
 	    {
 		    var chunkPos = new Vector3(chunk.X * ChunkColumn.ChunkWidth, 0, chunk.Z * ChunkColumn.ChunkDepth);
 		    return frustum.Intersects(new Microsoft.Xna.Framework.BoundingBox(chunkPos,
-			    chunkPos + new Vector3(ChunkColumn.ChunkWidth, /*16 * ((chunk.GetHeighest() >> 4) + 1)*/ 256,
+			    chunkPos + new Vector3(ChunkColumn.ChunkWidth, 16 * ((chunk.GetHeighest() >> 4) + 1),
 				    ChunkColumn.ChunkDepth)));
 
 	    }
 
-		internal bool UpdateChunk(IChunkColumn chunk)
+	    private bool IsWithinView(ChunkCoordinates chunk, BoundingFrustum frustum)
+	    {
+		    var chunkPos = new Vector3(chunk.X * ChunkColumn.ChunkWidth, 0, chunk.Z * ChunkColumn.ChunkDepth);
+		    return frustum.Intersects(new Microsoft.Xna.Framework.BoundingBox(chunkPos,
+			    chunkPos + new Vector3(ChunkColumn.ChunkWidth, CameraPosition.Y,
+				    ChunkColumn.ChunkDepth)));
+
+	    }
+
+        internal bool UpdateChunk(IChunkColumn chunk)
 	    {
 			if (!Monitor.TryEnter(chunk.UpdateLock))
 			{
@@ -547,6 +505,7 @@ namespace Alex.Worlds
 		    }
 	    }
 
+	    private Vector3 CamDir = Vector3.Zero;
 		public void Update(IUpdateArgs args)
 	    {
 		  //  TransparentEffect.FogColor = skyRenderer.WorldFogColor.ToVector3();
@@ -558,6 +517,7 @@ namespace Alex.Worlds
 		    var camera = args.Camera;
 		    CameraBoundingFrustum = camera.BoundingFrustum;
 		    CameraPosition = camera.Position;
+		    CamDir = camera.Target;
 
 			var renderedChunks = Chunks.ToArray().Where(x =>
 		    {
@@ -674,14 +634,14 @@ namespace Alex.Worlds
 				    if (!Enqueued.Contains(position) && Enqueued.TryAdd(position))
 				    {
 					    chunk.Scheduled = type;
-                        if (IsWithinView(chunk, CameraBoundingFrustum))
+                        /*if (IsWithinView(chunk, CameraBoundingFrustum))
 					    {
 						    HighPriority.Enqueue(position);
 					    }
 					    else
 					    {
 						    LowPriority.Enqueue(position);
-					    }
+					    }*/
 
 					    Interlocked.Increment(ref _chunkUpdates);
 					//    _updateResetEvent.Set();

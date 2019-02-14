@@ -6,6 +6,7 @@ using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks;
+using Alex.Blocks.Minecraft;
 using Alex.ResourcePackLib.Json.BlockStates;
 using Microsoft.Xna.Framework;
 using NLog;

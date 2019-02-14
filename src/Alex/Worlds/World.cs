@@ -23,7 +23,7 @@ using Alex.Worlds.Lighting;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using NLog;
-using Block = Alex.Blocks.Block;
+using Block = Alex.Blocks.Minecraft.Block;
 using Color = Microsoft.Xna.Framework.Color;
 using EntityManager = Alex.Worlds.EntityManager;
 using MathF = System.MathF;

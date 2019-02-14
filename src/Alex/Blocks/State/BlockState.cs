@@ -7,6 +7,7 @@ using Alex.API.Blocks.Properties;
 using Alex.API.Blocks.State;
 using Alex.API.Graphics;
 using Alex.API.World;
+using Alex.Blocks.Minecraft;
 using Alex.Utils;
 using NLog;
 

@@ -5,6 +5,7 @@ using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks;
+using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
 using Alex.GameStates.Gui.InGame;
 using Alex.GameStates.Hud;
