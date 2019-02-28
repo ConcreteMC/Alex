@@ -264,6 +264,7 @@ namespace Alex
 
 
 			GameStateManager.RemoveState("splash");
+
 		}
 
 		private void OnResourcePackPreLoadCompleted(IFont font)

@@ -14,7 +14,8 @@ namespace Alex.API.Utils
         private bool _disallowAdd; // set to true when disposing queue but there are still tasks pending
         private bool _disposed; // set to true when disposing queue and no more tasks are pending
 
-        public int Running => _tasks.Count;
+        private long _runningTasks = 0;
+        public int Running => (int)Interlocked.Read(ref _runningTasks);
 
         public CustomThreadQueue(int poolSize)
         {
@@ -75,7 +76,9 @@ namespace Alex.API.Utils
                     }
                 }
 
+                Interlocked.Increment(ref _runningTasks);
                 task(); // process the found task
+                Interlocked.Decrement(ref _runningTasks);
                 lock (this._tasks)
                 {
                     this._workers.AddLast(Thread.CurrentThread);

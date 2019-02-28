@@ -72,8 +72,6 @@ namespace Alex.Worlds
 				    {
 					    if (e.NoAi) continue;
 
-					    
-
 						//TruncateVelocity(e, dt);
 
 						Vector3 collision, before = e.Velocity;

@@ -63,7 +63,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="BThreadPool" Version="1.0.4" />
     <PackageReference Include="Hawezo.MojangSharp" Version="0.5.1" />
     <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="1.0.0-alpha-27020-01" />
     <PackageReference Include="Microsoft.Identity.Client" Version="2.3.0-preview" />
@@ -73,6 +72,7 @@
     <PackageReference Include="System.Reactive.Core" Version="4.1.2" />
     <PackageReference Include="System.Reactive.Interfaces" Version="4.1.2" />
     <PackageReference Include="System.Reactive.Linq" Version="4.1.2" />
+    <PackageReference Include="UniversalThreadManagement" Version="0.1.0" />
     <PackageReference Include="WinApi" Version="4.0.0" />
   </ItemGroup>
 

@@ -372,6 +372,8 @@ namespace Alex.GameStates
 		{
 			base.OnShow();
 			Alex.GuiManager.AddScreen(_debugInfo);
+			//DebugWorldButtonActivated();
+
 		}
 
 		protected override void OnHide()

@@ -18,15 +18,19 @@ namespace Alex.Graphics.Models
 
 		private BasicEffect SkyPlaneEffect { get; set; }
 	    private BasicEffect CelestialPlaneEffect { get; set; }
+		private BasicEffect CloudsPlaneEffect { get; set; }
 
-	    private VertexBuffer SkyPlane { get; set; }
+	    private VertexBuffer CloudsPlane { get; set; }
+        private VertexBuffer SkyPlane { get; set; }
 	    private VertexBuffer CelestialPlane { get; set; }
 		private VertexBuffer MoonPlane { get; }
 
 		private Texture2D SunTexture { get; }
 		private Texture2D MoonTexture { get; }
+		private Texture2D CloudTexture { get; }
 
 		private bool CanRender { get; set; } = true;
+		public bool EnableClouds { get; set; } = true;
 
 		private World World { get; }
 
@@ -57,7 +61,17 @@ namespace Alex.Graphics.Models
 			    return;
 		    }
 
-			var d = alex.GameSettings.RenderDistance ^ 2;
+		    if (alex.Resources.ResourcePack.TryGetTexture("environment/clouds", out Texture2D cloudTexture))
+		    {
+			    CloudTexture = cloudTexture;
+			    EnableClouds = false;
+		    }
+		    else
+		    {
+			    EnableClouds = false;
+		    }
+
+            var d = alex.GameSettings.RenderDistance ^ 2;
 
 			CelestialPlaneEffect = new BasicEffect(device);
 			CelestialPlaneEffect.TextureEnabled = true;
@@ -111,7 +125,34 @@ namespace Alex.Graphics.Models
 			MoonPlane = new VertexBuffer(device, VertexPositionTexture.VertexDeclaration,
 				_moonPlaneVertices.Length, BufferUsage.WriteOnly);
 			MoonPlane.SetData<VertexPositionTexture>(_moonPlaneVertices);
+
+			if (EnableClouds)
+				SetupClouds(device, planeDistance);
 		}
+
+		private void SetupClouds(GraphicsDevice device, int planeDistance)
+		{
+			CloudsPlaneEffect = new BasicEffect(device);
+			CloudsPlaneEffect.Texture = CloudTexture;
+			CloudsPlaneEffect.TextureEnabled = true;
+			CloudsPlaneEffect.Alpha = 0.5f;
+			
+			var cloudVertices = new[]
+			{
+				new VertexPositionTexture(new Vector3(-planeDistance, 0, -planeDistance), new Vector2(0, 0)),
+				new VertexPositionTexture(new Vector3(planeDistance, 0, -planeDistance), new Vector2(1, 0)),
+				new VertexPositionTexture(new Vector3(-planeDistance, 0, planeDistance), new Vector2(0, 1)),
+
+				new VertexPositionTexture(new Vector3(planeDistance, 0, -planeDistance), new Vector2(1, 0)),
+				new VertexPositionTexture(new Vector3(planeDistance, 0, planeDistance), new Vector2(1, 1)),
+				new VertexPositionTexture(new Vector3(-planeDistance, 0, planeDistance), new Vector2(0, 1))
+			};
+
+
+            CloudsPlane = new VertexBuffer(device, VertexPositionTexture.VertexDeclaration,
+				cloudVertices.Length, BufferUsage.WriteOnly);
+			CloudsPlane.SetData<VertexPositionTexture>(cloudVertices);
+        }
 
 		private float CelestialAngle
 		{
@@ -236,6 +277,13 @@ namespace Alex.Graphics.Models
 		    CelestialPlaneEffect.View = camera.ViewMatrix;
 		    CelestialPlaneEffect.Projection = camera.ProjectionMatrix;
 
+		    if (EnableClouds)
+		    {
+			    CloudsPlaneEffect.View = camera.ViewMatrix;
+			    CloudsPlaneEffect.Projection = camera.ProjectionMatrix;
+		    }
+
+
 		    var depthState = renderArgs.GraphicsDevice.DepthStencilState;
 		    var raster = renderArgs.GraphicsDevice.RasterizerState;
 		    var bl = renderArgs.GraphicsDevice.BlendState;
@@ -253,6 +301,11 @@ namespace Alex.Graphics.Models
 		    DrawSun(renderArgs, camera.Position);
 
 			DrawMoon(renderArgs, camera.Position);
+
+			renderArgs.GraphicsDevice.BlendState = BlendState.AlphaBlend;
+
+            if (EnableClouds)
+				DrawClouds(renderArgs, camera.Position);
 
 			renderArgs.GraphicsDevice.BlendState = backup;
 
@@ -280,7 +333,22 @@ namespace Alex.Graphics.Models
 			renderArgs.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, 2);
 		}
 
-		private void DrawSun(IRenderArgs renderArgs, Vector3 position)
+		private void DrawClouds(IRenderArgs renderArgs, Vector3 position)
+		{
+			// Clouds
+			CloudsPlaneEffect.Texture = CloudTexture;
+			CloudsPlaneEffect.World = Matrix.CreateTranslation(position.X, 127, position.Z);
+            //CloudsPlaneEffect.AmbientLightColor = WorldSkyColor.ToVector3();
+
+            renderArgs.GraphicsDevice.SetVertexBuffer(CloudsPlane);
+			foreach (var pass in CloudsPlaneEffect.CurrentTechnique.Passes)
+			{
+				pass.Apply();
+			}
+			renderArgs.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, 2);
+		}
+
+        private void DrawSun(IRenderArgs renderArgs, Vector3 position)
 		{
 			// Sun
 			CelestialPlaneEffect.Texture = SunTexture;

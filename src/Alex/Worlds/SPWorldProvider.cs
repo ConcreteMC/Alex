@@ -13,10 +13,49 @@ using Alex.Entities;
 using Alex.Utils;
 using Alex.Worlds.Generators;
 using Microsoft.Xna.Framework;
+using MiNET;
 using NLog;
 
 namespace Alex.Worlds
 {
+	internal class DebugNetworkProvider : INetworkProvider
+	{
+		public bool IsConnected { get; } = true;
+		public void EntityAction(int entityId, EntityAction action)
+		{
+			
+		}
+
+		public void SendChatMessage(string message)
+		{
+			
+		}
+
+		public void BlockPlaced(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition)
+		{
+			
+		}
+
+		public void PlayerDigging(DiggingStatus status, BlockCoordinates position, BlockFace face)
+		{
+			
+		}
+
+		public void UseItem(int hand)
+		{
+			
+		}
+
+		public void HeldItemChanged(short slot)
+		{
+			
+		}
+
+		public void Close()
+		{
+			
+		}
+	}
 	public class SPWorldProvider : WorldProvider
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(SPWorldProvider));
@@ -25,8 +64,9 @@ namespace Alex.Worlds
 		private readonly List<ChunkCoordinates> _loadedChunks = new List<ChunkCoordinates>();
 		private ChunkCoordinates PreviousChunkCoordinates { get; set; } = new ChunkCoordinates(int.MaxValue, int.MaxValue);
 		private Alex Alex { get; }
-		public INetworkProvider Network { get; }
-		private CancellationTokenSource ThreadCancellationTokenSource;
+		public INetworkProvider Network { get; } = new DebugNetworkProvider();
+
+        private CancellationTokenSource ThreadCancellationTokenSource;
 
 		public SPWorldProvider(Alex alex, IWorldGenerator worldGenerator)
 		{
@@ -144,7 +184,7 @@ namespace Alex.Worlds
 			info = _generator.GetInfo();
 			chatProvider = null;
 
-			lock (genLock)
+			/*lock (genLock)
 			{
 				while (_preGeneratedChunks.TryDequeue(out ChunkColumn chunk))
 				{
@@ -156,7 +196,7 @@ namespace Alex.Worlds
 				}
 
 				_preGeneratedChunks = null;
-			}
+			}*/
 
 			UpdateThread = new Thread(RunThread)
 			{
@@ -189,8 +229,8 @@ namespace Alex.Worlds
 			return Task.Run(() =>
 			{
 				//Dictionary<ChunkCoordinates, IChunkColumn> newChunks = new Dictionary<ChunkCoordinates, IChunkColumn>();
-				using (CachedWorld cached = new CachedWorld(Alex))
-				{
+				//using (CachedWorld cached = new CachedWorld(Alex))
+				//{
 					int t = Alex.GameSettings.RenderDistance;
 					double radiusSquared = Math.Pow(t, 2);
 
@@ -201,17 +241,16 @@ namespace Alex.Worlds
 					//Log.Info($"Spawnpoint: {pp}");
 
 					Stopwatch sw = Stopwatch.StartNew();
-					List<ChunkColumn> generatedChunks = new List<ChunkColumn>();
+					//List<ChunkColumn> generatedChunks = new List<ChunkColumn>();
 					foreach (var chunk in GenerateChunks(new ChunkCoordinates(new PlayerLocation(pp.X, pp.Y, pp.Z)), t))
 					{
 						var c = (ChunkColumn) chunk;
-						generatedChunks.Add(c);
-
-						cached.ChunkManager.AddChunk(chunk, new ChunkCoordinates(c.X, c.Z), false);
+						count++;
+                    //generatedChunks.Add(c);
+                    base.LoadChunk(c, c.X, c.Z, true);
+						//cached.ChunkManager.AddChunk(chunk, new ChunkCoordinates(c.X, c.Z), false);
 
 						progressReport(LoadingState.LoadingChunks, (int)Math.Floor((count / target) * 100));
-
-						count++;
 					}
 
 					var loaded = sw.Elapsed;
@@ -219,7 +258,7 @@ namespace Alex.Worlds
 					count = 0;
 
 				
-					Parallel.ForEach(generatedChunks, (c) =>
+					/*Parallel.ForEach(generatedChunks, (c) =>
 					{
 						cached.ChunkManager.UpdateChunk(c);
 
@@ -238,11 +277,12 @@ namespace Alex.Worlds
 
 						count++;
 					});
+					*/
 					sw.Stop();
 					Log.Info($"Chunk pre-loading took {sw.Elapsed.TotalMilliseconds}ms (Loading: {loaded.TotalMilliseconds}ms Initializing: {(sw.Elapsed - loaded).TotalMilliseconds}ms)");
-
+				
 					PreviousChunkCoordinates = new ChunkCoordinates(new PlayerLocation(pp.X, pp.Y, pp.Z));
-				}
+				//}
 
 				//return newChunks.ToArray();
 			});

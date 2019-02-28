@@ -33,9 +33,9 @@ namespace Alex.ResourcePackLib.Json
 				case BlockFace.West:
 					return Vector3.Left;
 				case BlockFace.North:
-					return Vector3.Backward;
-				case BlockFace.South:
 					return Vector3.Forward;
+				case BlockFace.South:
+					return Vector3.Backward;
 				default:
 					return Vector3.Zero;
 			}

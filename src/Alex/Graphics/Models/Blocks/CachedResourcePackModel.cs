@@ -378,7 +378,7 @@ namespace Alex.Graphics.Models.Blocks
 			return result;
 		}
 
-		protected VertexPositionNormalTextureColor[] GetVertices(IWorld world, Vector3 position, IBlock baseBlock,
+        protected VertexPositionNormalTextureColor[] GetVertices(IWorld world, Vector3 position, IBlock baseBlock,
 			BlockStateModel[] models, IDictionary<string, FaceCache> faceCache)
 		{
 			var verts = new List<VertexPositionNormalTextureColor>(36);
