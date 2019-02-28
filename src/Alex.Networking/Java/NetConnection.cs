@@ -168,8 +168,15 @@ namespace Alex.Networking.Java
                 CancellationToken.Cancel();
             }
 
-            Socket.Shutdown(SocketShutdown.Both);
-            Socket.Close();
+            try
+            {
+                Socket.Shutdown(SocketShutdown.Both);
+                Socket.Close();
+            }
+            catch (Exception e)
+            {
+
+            }
 
             OnConnectionClosed?.Invoke(this, new ConnectionClosedEventArgs(this, notified));
 

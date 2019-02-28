@@ -23,17 +23,21 @@ using Alex.Gui;
 using Alex.Networking.Java;
 using Alex.Services;
 using Alex.Utils;
+using Alex.Worlds.Java;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET;
 using MiNET.Net;
 using MiNET.Utils;
+using NLog;
 
 namespace Alex.GameStates.Gui.Multiplayer
 {
     public class MultiplayerServerSelectionState : ListSelectionStateBase<GuiServerListEntryElement>
     {
-	    private GuiButton DirectConnectButton;
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger();
+
+        private GuiButton DirectConnectButton;
 	    private GuiButton JoinServerButton;
 	    private GuiButton AddServerButton;
 	    private GuiButton EditServerButton;
@@ -151,51 +155,64 @@ namespace Alex.GameStates.Gui.Multiplayer
 
 		private FastRandom Rnd = new FastRandom();
 	    private void OnJoinServerButtonPressed()
-	    {
-			var entry = SelectedItem.SavedServerEntry;
-		    var ips = Dns.GetHostAddresses(entry.Host).ToArray();
-		    IPAddress ip = ips[Rnd.Next(0, ips.Length - 1)];
-		    if (ip == null) return;
+        {
+            //TODO: Prevent joining if its unable to get pinged
+            var entry = SelectedItem.SavedServerEntry;
+            var ips = Dns.GetHostAddresses(entry.Host).ToArray();
+            try
+            {
+                IPAddress ip = ips[Rnd.Next(0, ips.Length - 1)];
+                if (ip == null) return;
 
-		    IPEndPoint target = new IPEndPoint(ip, entry.Port);
+                IPEndPoint target = new IPEndPoint(ip, entry.Port);
 
-		    var authenticationService = Alex.Services.GetService<IPlayerProfileService>();
-		    var currentProfile = authenticationService.CurrentProfile;
+                var authenticationService = Alex.Services.GetService<IPlayerProfileService>();
+                var currentProfile = authenticationService.CurrentProfile;
 
-			if (entry.ServerType == ServerType.Java)
-		    {
-			    if (currentProfile == null || (currentProfile.IsBedrock))
-			    {
-				    JavaLoginState loginState = new JavaLoginState(_skyBox,
-					    () => { Alex.ConnectToServer(target, authenticationService.CurrentProfile, false); });
-
-
-				    Alex.GameStateManager.SetActiveState(loginState, true);
-			    }
-			    else
-			    {
-				    Alex.ConnectToServer(target, currentProfile, false);
-			    }
-		    }
-
-		    else if (entry.ServerType == ServerType.Bedrock)
-			{
-				Alex.ConnectToServer(target, currentProfile, true);
-                if (currentProfile == null || (!currentProfile.IsBedrock))
-				{
-					//var msa = Alex.Services.GetService<XBLMSAService>();
-					//msa.AsyncBrowserLogin().Wait();
-				//	JavaLoginState loginState = new JavaLoginState(_skyBox,
-					//		() => { Alex.ConnectToServer(target, authenticationService.CurrentProfile, false); });
+                if (entry.ServerType == ServerType.Java)
+                {
+                    if (currentProfile == null || (currentProfile.IsBedrock))
+                    {
+                        JavaLoginState loginState = new JavaLoginState(_skyBox,
+                            () => { Alex.ConnectToServer(target, authenticationService.CurrentProfile, false); });
 
 
-			//		Alex.GameStateManager.SetActiveState(loginState, true);
-				}
-				else
-				{
-					Alex.ConnectToServer(target, currentProfile, true);
-				}
-			}
+                        Alex.GameStateManager.SetActiveState(loginState, true);
+                    }
+                    else
+                    {
+                        Alex.ConnectToServer(target, currentProfile, false);
+                    }
+                }
+
+                else if (entry.ServerType == ServerType.Bedrock)
+                {
+                    Alex.ConnectToServer(target, currentProfile, true);
+                    if (currentProfile == null || (!currentProfile.IsBedrock))
+                    {
+                        //var msa = Alex.Services.GetService<XBLMSAService>();
+                        //msa.AsyncBrowserLogin().Wait();
+                        //	JavaLoginState loginState = new JavaLoginState(_skyBox,
+                        //		() => { Alex.ConnectToServer(target, authenticationService.CurrentProfile, false); });
+
+
+                        //		Alex.GameStateManager.SetActiveState(loginState, true);
+                    }
+                    else
+                    {
+                        Alex.ConnectToServer(target, currentProfile, true);
+                    }
+                }
+            }catch(Exception ex)
+            {
+                Log.Error("Unable to connect to server!");
+                //return to the server select screen
+                Alex.GameStateManager.SetActiveState(new MultiplayerServerSelectionState(_skyBox)
+                {
+                    BackgroundOverlay = BackgroundOverlay
+                }, false);
+
+            }
 	    }
 		
 	    private void OnCancelButtonPressed()

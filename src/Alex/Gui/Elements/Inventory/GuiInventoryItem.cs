@@ -134,11 +134,23 @@ namespace Alex.Gui.Elements.Inventory
 
 	        }
 
-            if (IsSelected)
+            if (Item.isBlock)
             {
-                var bounds = RenderBounds;
-                bounds.Inflate(1, 1);
-                graphics.FillRectangle(bounds, SelectedBackground, TextureRepeatMode.NoRepeat);
+                if (IsSelected)
+                {
+                    var bounds = RenderBounds;
+                    bounds.Inflate(1, 1);
+                    //graphics.FillRectangle(bounds, SelectedBackground, TextureRepeatMode.NoRepeat);
+                }
+            }
+            else
+            {
+                if (IsSelected)
+                {
+                    var bounds = RenderBounds;
+                    bounds.Inflate(1, 1);
+                    graphics.FillRectangle(bounds, SelectedBackground, TextureRepeatMode.NoRepeat);
+                }
             }
         }
     }

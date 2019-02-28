@@ -6,6 +6,7 @@ using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks;
 using Alex.Blocks.State;
+using Alex.Utils.Debug;
 using Alex.GameStates.Gui.InGame;
 using Alex.GameStates.Hud;
 using Alex.Graphics.Models;
@@ -288,7 +289,24 @@ namespace Alex.GameStates.Playing
 			{
 				if (currentKeyboardState.IsKeyDown(KeyBinds.DebugInfo))
 				{
-					RenderDebug = !RenderDebug;
+					//RenderDebug = !RenderDebug;
+                    //are we holding down multiple keys?
+                    if (currentKeyboardState.GetPressedKeys().Length==1)
+                    {
+                        RenderDebug = !RenderDebug; //we're only holding f3 so do the normal debug menu
+                    }
+                    else
+                    {
+                        //MISC DEBUG MENU
+                        //try loading an advanced debug menu
+                        //bool isValid = MiscDebugManager.Instance.OnMiscDebug(currentKeyboardState.GetPressedKeys());
+                        bool isValid = Alex.Instance.Services.GetService<MiscDebugManager>().OnMiscDebug(currentKeyboardState.GetPressedKeys());
+                        if (!isValid)
+                        {
+                            //Invalid debug option, so use the normal F3 debug menu
+                            RenderDebug = !RenderDebug;
+                        }
+                    }
 				}
 
 				if (currentKeyboardState.IsKeyDown(KeyBinds.ReBuildChunks))

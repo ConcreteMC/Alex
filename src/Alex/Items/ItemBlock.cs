@@ -11,6 +11,7 @@ namespace Alex.Items
 	    public IBlockState Block { get; }
 	    public ItemBlock(IBlockState block)
 	    {
+            base.isBlock = true;
 		    this.Block = block;
 	    }
     }

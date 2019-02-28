@@ -75,6 +75,7 @@ namespace Alex.Worlds.Java
 
 		private System.Threading.Timer _gameTickTimer;
 		private DedicatedThreadPool ThreadPool;
+        private string reason = "";
 		public JavaWorldProvider(Alex alex, IPEndPoint endPoint, PlayerProfile profile, out INetworkProvider networkProvider)
 		{
 			Alex = alex;
@@ -96,44 +97,46 @@ namespace Alex.Worlds.Java
 		{
 			if (_disconnected) return;
 			_disconnected = true;
-
-			if (e.Graceful)
+            
+			/*if (e.Graceful)
 			{
 				ShowDisconnect("You've been disconnected!");
 			}
 			else
 			{
 				ShowDisconnect("disconnect.closed", true);
-			}
+			}*/
 
 			_loginCompleteEvent.Set();
 		}
 
 		public void ShowDisconnect(string reason, bool useTranslation = false)
 		{
+            Console.WriteLine(reason);
 			if (Alex.GameStateManager.GetActiveState() is DisconnectedScreen s)
 			{
 				if (useTranslation)
-				{
-					s.DisconnectedTextElement.TranslationKey = reason;
+                {
+                    Console.WriteLine(reason);
+                    s.DisconnectedTextElement.TranslationKey = reason;
 				}
 				else
 				{
-					s.DisconnectedTextElement.Text = reason;
-				}
+                    s.DisconnectedTextElement.Text = reason;
+                }
 
 				return;
 			}
 
-			s = new DisconnectedScreen();
+            s = new DisconnectedScreen();
 			if (useTranslation)
 			{
-				s.DisconnectedTextElement.TranslationKey = reason;
+                s.DisconnectedTextElement.TranslationKey = reason;
 			}
 			else
 			{
-				s.DisconnectedTextElement.Text = reason;
-			}
+                s.DisconnectedTextElement.Text = reason;
+            }
 
 			Alex.GameStateManager.SetActiveState(s, false);
 			Alex.GameStateManager.RemoveState("play");
@@ -1303,14 +1306,18 @@ namespace Alex.Worlds.Java
 		{
 			if (ChatObject.TryParse(packet.Message, out ChatObject o))
 			{
-				ShowDisconnect(o.RawMessage);
+                //Fix the chat message ([]s)
+                string msg = o.RawMessage;
+                msg = msg.Substring(1, o.RawMessage.Length - 3);
+				ShowDisconnect(msg);
 			}
+
 			else
 			{
 				ShowDisconnect(packet.Message);
 			}
 
-			_disconnected = true;
+            _disconnected = true;
 			Log.Info($"Received disconnect: {packet.Message}");
 			Client.Stop();
 		}

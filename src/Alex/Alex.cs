@@ -29,6 +29,7 @@ using Alex.Rendering;
 using Alex.ResourcePackLib;
 using Alex.Services;
 using Alex.Utils;
+using Alex.Utils.Debug;
 using Alex.Worlds.Bedrock;
 using Alex.Worlds.Java;
 using Microsoft.Xna.Framework;
@@ -180,9 +181,12 @@ namespace Alex
 
 			Services.AddService<IServerQueryProvider>(new ServerQueryProvider());
 			Services.AddService<IPlayerProfileService>(new JavaPlayerProfileService());
-			Services.AddService(msa = new XBLMSAService());
+            Services.AddService(msa = new XBLMSAService());
 
-			ProfileManager = new ProfileManager(this, storage);
+            //MISC DEBUG OPTIONS
+            Services.AddService(new MiscDebugManager());
+
+            ProfileManager = new ProfileManager(this, storage);
 			Storage = storage;
 
 			//msa.AsyncBrowserLogin();

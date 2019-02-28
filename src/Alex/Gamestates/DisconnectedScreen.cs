@@ -22,7 +22,7 @@ namespace Alex.Gamestates
 			Body.AddChild(DisconnectedTextElement = new GuiTextElement()
 			{
 				Text = Reason,
-				TextColor = TextColor.Red,
+				TextColor = TextColor.White,
 				Anchor = Alignment.MiddleCenter
 			});
 
@@ -34,7 +34,7 @@ namespace Alex.Gamestates
 			});
 		}
 
-		private void MenuButtonClicked()
+        private void MenuButtonClicked()
 		{
 			Alex.GameStateManager.SetActiveState<TitleState>();
 		}
