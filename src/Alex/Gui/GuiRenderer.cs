@@ -132,9 +132,9 @@ namespace Alex.Gui
 
         private void LoadEmbeddedTextures()
         {
-           LoadTextureFromEmbeddedResource(GuiTextures.AlexLogo, Resources.logo2);
-            LoadTextureFromEmbeddedResource(GuiTextures.ProgressBar, Resources.ProgressBar);
-            LoadTextureFromEmbeddedResource(GuiTextures.SplashBackground, Resources.Splash);
+           LoadTextureFromEmbeddedResource(GuiTextures.AlexLogo, ResourceManager.ReadResource("Alex.Resources.logo2.png"));
+            LoadTextureFromEmbeddedResource(GuiTextures.ProgressBar, ResourceManager.ReadResource("Alex.Resources.ProgressBar.png"));
+            LoadTextureFromEmbeddedResource(GuiTextures.SplashBackground, ResourceManager.ReadResource("Alex.Resources.Splash.png"));
         }
 
 

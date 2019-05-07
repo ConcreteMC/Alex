@@ -40,7 +40,7 @@ namespace Alex.Blocks.Storage
 				if (this._bits <= 4)
 				{
 					this._bits = 4;
-					this.Palette = new BlockStatePaletteLinear(this._bits, this);
+					this.Palette = new BlockStatePaletteMap(this._bits, this);
 				}
 				else if (this._bits <= 8)
 				{

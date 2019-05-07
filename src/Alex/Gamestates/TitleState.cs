@@ -291,7 +291,7 @@ namespace Alex.GameStates
 				Anchor = Alignment.BottomRight,
 			});
 
-			using (MemoryStream ms = new MemoryStream(Resources.GradientBlur))
+			using (MemoryStream ms = new MemoryStream(ResourceManager.ReadResource("Alex.Resources.GradientBlur.png")))
 			{
 				BackgroundOverlay = (TextureSlice2D)Texture2D.FromStream(args.GraphicsDevice, ms);
 			}

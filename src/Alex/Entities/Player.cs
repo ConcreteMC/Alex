@@ -173,6 +173,7 @@ namespace Alex.Entities
 		    _destroyingFace = GetTargetFace();
 		    _destroyingTick = DateTime.UtcNow;
 
+		    if (Inventory.MainHand == null) return;
 		    _destroyTimeNeeded = block.GetBreakTime(Inventory.MainHand);
 
             Log.Debug($"Start break block ({_destroyingTarget}, {_destroyTimeNeeded} seconds.)");

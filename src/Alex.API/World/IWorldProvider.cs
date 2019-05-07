@@ -32,12 +32,12 @@ namespace Alex.API.World
 			WorldReceiver.ChunkUnload(x, z);
 		}
 
-		protected void SpawnEntity(long entityId, IEntity entity)
+		public void SpawnEntity(long entityId, IEntity entity)
 		{
 			WorldReceiver.SpawnEntity(entityId, entity);
 		}
 
-		protected void DespawnEntity(long entityId)
+		public void DespawnEntity(long entityId)
 		{
 			WorldReceiver.DespawnEntity(entityId);
 		}

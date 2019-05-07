@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Security.Cryptography;
+using NLog;
 
 /// <summary>
 /// A class file to aide in working with ASN.1 encoded
@@ -472,7 +473,8 @@ namespace Alex.Networking.Java.Util.Encryption
 
       return new AsnMessage(privateKeyInfo.GetBytes(), "PKCS#8");
     }
-		public static RSACryptoServiceProvider DecodePublicKey(byte[] publicKeyBytes)
+    private static readonly Logger Log = LogManager.GetCurrentClassLogger();
+		public static RSA DecodePublicKey(byte[] publicKeyBytes)
 		{
 			MemoryStream ms = new MemoryStream(publicKeyBytes);
 			BinaryReader rd = new BinaryReader(ms);
@@ -493,6 +495,7 @@ namespace Alex.Networking.Java.Util.Encryption
 					case 0x8230:
 						rd.ReadInt16(); break;
 					default:
+                        Log.Warn($"PublicKey Decode Returning null!");
 						return null;
 				}
 
@@ -502,27 +505,37 @@ namespace Alex.Networking.Java.Util.Encryption
 				if (shortValue == 0x8103) rd.ReadByte();
 				else if (shortValue == 0x8203)
 					rd.ReadInt16();
-				else
-					return null;
+                else
+                {
+                    Log.Warn($"PublicKey Decode Returning null! (shortvalue 1)");
+                    return null;
+                }
 
-				byteValue = rd.ReadByte();
-				if (byteValue != 0x00)
-					return null;
+                byteValue = rd.ReadByte();
+                if (byteValue != 0x00)
+                {
+                    Log.Warn($"PublicKey Decode Returning null! (bytevalue)");
+                    return null;
+                }
 
-				shortValue = rd.ReadUInt16();
+                shortValue = rd.ReadUInt16();
 				if (shortValue == 0x8130) rd.ReadByte();
 				else if (shortValue == 0x8230)
 					rd.ReadInt16();
-				else
-					return null;
+                else
+                {
+                    Log.Warn($"PublicKey Decode Returning null! (Shortvalue 2)");
+                    return null;
+                }
 
 
-				CspParameters parms = new CspParameters();
+                CspParameters parms = new CspParameters();
 				parms.Flags = CspProviderFlags.NoFlags;
 				parms.KeyContainerName = Guid.NewGuid().ToString().ToUpperInvariant();
 				parms.ProviderType = ((Environment.OSVersion.Version.Major > 5) || ((Environment.OSVersion.Version.Major == 5) && (Environment.OSVersion.Version.Minor >= 1))) ? 0x18 : 1;
 
-				RSACryptoServiceProvider rsa = new RSACryptoServiceProvider(parms);
+                var rsa = RSA.Create();
+				//RSACryptoServiceProvider rsa = new RSACryptoServiceProvider(parms);
 				RSAParameters rsAparams = new RSAParameters();
 
 				rsAparams.Modulus = rd.ReadBytes(Helpers.DecodeIntegerSize(rd));
@@ -535,8 +548,9 @@ namespace Alex.Networking.Java.Util.Encryption
 				rsa.ImportParameters(rsAparams);
 				return rsa;
 			}
-			catch (Exception)
+			catch (Exception e)
 			{
+                Log.Warn($"PublicKey Decode Exception: {e}");
 				return null;
 			}
 			finally

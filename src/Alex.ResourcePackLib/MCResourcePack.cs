@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -18,6 +19,7 @@ using Alex.ResourcePackLib.Json.Models.Blocks;
 using Alex.ResourcePackLib.Json.Models.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Newtonsoft.Json;
 using NLog;
 using Color = Microsoft.Xna.Framework.Color;
 using MathHelper = Microsoft.Xna.Framework.MathHelper;
@@ -561,18 +563,22 @@ namespace Alex.ResourcePackLib
 						model.Elements = (BlockModelElement[])parent.Elements.Clone();
 					}
 
-					foreach (var kvp in parent.Textures)
+					foreach (var (k, value) in parent.Textures)
 					{
-						if (!model.Textures.ContainsKey(kvp.Key))
+						if (!model.Textures.ContainsKey(k))
 						{
-							model.Textures.Add(kvp.Key, kvp.Value);
+							model.Textures.Add(k, value);
 						}
+					}
+
+					foreach (var (name, value) in parent.Display)
+					{
+						model.Display[name] = value;
 					}
 				}
 			}
 
 			_blockModels.Add(key, model);
-
 			return model;
 		}
 		

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -12,12 +13,20 @@ using Alex.Blocks.State;
 using Alex.Blocks.Storage;
 using Alex.Blocks.Storage.Pallete;
 using Alex.Entities;
+using Alex.Graphics.Models.Entity;
+using Alex.ResourcePackLib.Json.Models.Entities;
+using Alex.Utils;
 using fNbt;
+using Microsoft.Xna.Framework.Graphics;
+using MiNET;
 using MiNET.Client;
 using MiNET.Net;
 using MiNET.Utils;
 using MiNET.Worlds;
+using Newtonsoft.Json;
 using NLog;
+using NibbleArray = MiNET.Utils.NibbleArray;
+using Player = Alex.Entities.Player;
 using PlayerLocation = Alex.API.Utils.PlayerLocation;
 using Skin = MiNET.Utils.Skins.Skin;
 using UUID = Alex.API.Utils.UUID;
@@ -29,14 +38,18 @@ namespace Alex.Worlds.Bedrock
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BedrockClientPacketHandler));
 
 		private BedrockClient BaseClient { get; }
-		public BedrockClientPacketHandler(BedrockClient client) : base(client)
+		private Alex AlexInstance { get; }
+		public BedrockClientPacketHandler(BedrockClient client, Alex alex) : base(client)
 		{
 			BaseClient = client;
+			AlexInstance = alex;
+			
+			AnvilWorldProvider.LoadBlockConverter();
 		}
 
 		private void UnhandledPackage(Packet packet)
 		{
-			Log.Warn($"Unhandled bedrock packet: {packet.GetType().Name} (0x{packet.Id:X2})");
+			//Log.Warn($"Unhandled bedrock packet: {packet.GetType().Name} (0x{packet.Id:X2})");
 		}
 
 		public override void HandleMcpePlayStatus(McpePlayStatus message)
@@ -46,7 +59,7 @@ namespace Alex.Worlds.Bedrock
 
 		public override void HandleMcpeText(McpeText message)
 		{
-			BaseClient.WorldProvider.Receive(new ChatObject(message.message));
+			BaseClient.WorldProvider?.GetChatReceiver?.Receive(new ChatObject(message.message));
 		}
 
 		public override void HandleMcpeSetTime(McpeSetTime message)
@@ -54,6 +67,7 @@ namespace Alex.Worlds.Bedrock
 			BaseClient.WorldReceiver?.SetTime(message.time);
 		}
 
+		private IReadOnlyDictionary<uint, Blockstate> _blockStateMap;
 		public override void HandleMcpeStartGame(McpeStartGame message)
 		{
 			Client.EntityId = message.runtimeEntityId;
@@ -63,19 +77,25 @@ namespace Alex.Worlds.Bedrock
 
 			BaseClient.WorldReceiver?.UpdatePlayerPosition(new API.Utils.PlayerLocation(new Microsoft.Xna.Framework.Vector3(Client.SpawnPoint.X, Client.SpawnPoint.Y, Client.SpawnPoint.Z), message.unknown1.X, message.unknown1.X, message.unknown1.Y));
 
-			Dictionary<int, BlockState> ourStates = new Dictionary<int, BlockState>();
+			Dictionary<uint, Blockstate> ourStates = new Dictionary<uint, Blockstate>();
 			foreach (var blockstate in message.blockstates)
 			{
-				//blockstate.Value.Name;
-				//blockstate.Value.Data;
-				BlockFactory.GetBlockState(blockstate.Value.Name);
+				var name = blockstate.Value.Name;
+
+				if (name.Equals("minecraft:grass", StringComparison.InvariantCultureIgnoreCase))
+					name = "minecraft:grass_block";
+
+				blockstate.Value.Name = name;
+				
+				//var state = BlockFactory.GetBlockState(name);
+				ourStates.TryAdd((uint)blockstate.Key, blockstate.Value);
 			}
 			
+			_blockStateMap = ourStates;
+			
+			//File.WriteAllText("blockies.json", JsonConvert.SerializeObject(message.blockstates, Formatting.Indented));
 			{
-				var packet = McpeRequestChunkRadius.CreateObject();
-				packet.chunkRadius = Client.ChunkRadius;
-
-				Client.SendPacket(packet);
+				BaseClient.RequestChunkRadius(Client.ChunkRadius);
 			}
 		}
 
@@ -86,11 +106,13 @@ namespace Alex.Worlds.Bedrock
 				BaseClient.WorldReceiver.UpdateEntityPosition(message.runtimeEntityId, new PlayerLocation(message.x, message.y, message.z, message.headYaw, message.yaw, message.pitch));
 				return;
 			}
+			
 			BaseClient.WorldReceiver.UpdatePlayerPosition(new 
 				PlayerLocation(message.x, message.y, message.z));
 
 			//BaseClient.SendMcpeMovePlayer();
-			//Client.CurrentLocation = new PlayerLocation(message.x, message.y, message.z);
+			Client.CurrentLocation = new MiNET.Utils.PlayerLocation(message.x, message.y, message.z);
+			BaseClient.SendMcpeMovePlayer();
 		}
 
 
@@ -108,22 +130,27 @@ namespace Alex.Worlds.Bedrock
         public override void HandleMcpeAddPlayer(McpeAddPlayer message)
 		{
 			UUID u = new UUID(message.uuid.GetBytes());
-			if (_players.TryGetValue(u, out var p))
+			if (_players.TryGetValue(u, out PlayerMob mob))
 			{
-				p.EntityId = message.runtimeEntityId;
-				p.KnownPosition = new PlayerLocation(message.x, message.y, message.z, message.headYaw, message.yaw, message.pitch);
-				p.IsSpawned = true;
+				mob.EntityId = message.runtimeEntityId;
+				mob.KnownPosition = new PlayerLocation(message.x, message.y, message.z, message.headYaw, message.yaw, message.pitch);
+
 				if (BaseClient.WorldReceiver is World w)
 				{
-					w.SpawnEntity(p.EntityId, p);
+					mob.IsSpawned = true;
+					Log.Info($"Spawned player entity: {mob.NameTag} at {mob.KnownPosition}");
+					w.SpawnEntity(mob.EntityId, mob);
+				}
+				else
+				{
+					mob.IsSpawned = false;
 				}
 			}
-            UnhandledPackage(message);
 		}
 
 		public override void HandleMcpePlayerList(McpePlayerList message)
 		{
-			BaseClient.WorldProvider.Alex.Resources.BedrockResourcePack.TryGetTexture("textures/entity/alex", out Bitmap rawTexture);
+			BaseClient.WorldProvider.Alex.Resources.ResourcePack.TryGetBitmap("entity/alex", out Bitmap rawTexture);
 			var t = TextureUtils.BitmapToTexture2D(BaseClient.WorldProvider.Alex.GraphicsDevice, rawTexture);
 
             if (message.records is PlayerAddRecords addRecords)
@@ -134,19 +161,109 @@ namespace Alex.Worlds.Bedrock
 					if (_players.ContainsKey(u)) continue;
 					
                     BaseClient.WorldReceiver?.AddPlayerListItem(new PlayerListItem(u, r.Username, Gamemode.Survival, 0));
-					PlayerMob m = new PlayerMob(r.Username, BaseClient.WorldReceiver as World, BaseClient, t, true);
+					PlayerMob m = new PlayerMob(r.DisplayName, BaseClient.WorldReceiver as World, BaseClient, t, true);
 					if (!_players.TryAdd(u, m))
 					{
 						Log.Warn($"Duplicate player record! {r.ClientUuid}");
 					}
+					else
+					{
+						Log.Info($"Player added to playerlist: {r.DisplayName}");
+					}
+				}
+			}
+		}
+
+		/*public void SpawnMob(int entityId, Guid uuid, EntityType type, PlayerLocation position, Microsoft.Xna.Framework.Vector3 velocity)
+		{
+			Entity entity = null;
+			if (EntityFactory.ModelByNetworkId((long) type, out var renderer, out EntityData knownData))
+			{
+				if (Enum.TryParse(knownData.Name, out type))
+				{
+					entity = type.Create(null);
+				}
+
+				if (entity == null)
+				{
+					entity = new Entity((int) type, null, BaseClient);
+				}
+
+				//if (knownData.Height)
+				{
+					entity.Height = knownData.Height;
+				}
+
+				//if (knownData.Width.HasValue)
+				entity.Width = knownData.Width;
+
+				if (string.IsNullOrWhiteSpace(entity.NameTag) && !string.IsNullOrWhiteSpace(knownData.Name))
+				{
+					entity.NameTag = knownData.Name;
 				}
 			}
 
-			UnhandledPackage(message);
-		}
+			if (entity == null)
+			{
+				Log.Warn($"Could not create entity of type: {(int) type}:{type.ToString()}");
+				return;
+			}
 
-        public override void HandleMcpeAddEntity(McpeAddEntity message)
+			if (renderer == null)
+			{
+				var def = AlexInstance.Resources.BedrockResourcePack.EntityDefinitions.FirstOrDefault(x =>
+					x.Value.Filename.Replace("_", "").Equals(type.ToString().ToLowerInvariant()));
+				if (!string.IsNullOrWhiteSpace(def.Key))
+				{
+					EntityModel model;
+					if (ModelFactory.TryGetModel(def.Value.Geometry["default"],
+						    out model) && model != null)
+					{
+						var textures = def.Value.Textures;
+						string texture;
+						if (!textures.TryGetValue("default", out texture))
+						{
+							texture = textures.FirstOrDefault().Value;
+						}
+
+						if (AlexInstance.Resources.BedrockResourcePack.Textures.TryGetValue(texture,
+							out Bitmap bmp))
+						{
+							Texture2D t = TextureUtils.BitmapToTexture2D(AlexInstance.GraphicsDevice, bmp);
+
+							renderer = new EntityModelRenderer(model, t);
+						}
+					}
+				}
+			}
+
+			if (renderer == null)
+			{
+				Log.Debug($"Missing renderer for entity: {type.ToString()} ({(int) type})");
+				return;
+			}
+
+			if (renderer.Texture == null)
+			{
+				Log.Debug($"Missing texture for entity: {type.ToString()} ({(int) type})");
+				return;
+			}
+
+			entity.ModelRenderer = renderer;
+
+			entity.KnownPosition = position;
+			entity.Velocity = velocity;
+			entity.EntityId = entityId;
+			entity.UUID = new UUID(uuid.ToByteArray());
+
+
+			BaseClient.WorldProvider.SpawnEntity(entityId, entity);
+		}*/
+
+
+		public override void HandleMcpeAddEntity(McpeAddEntity message)
 		{
+			//TODO: Spawn entitys
 			UnhandledPackage(message);
 		}
 
@@ -167,6 +284,11 @@ namespace Alex.Worlds.Bedrock
 
 		public override void HandleMcpeMoveEntity(McpeMoveEntity message)
 		{
+			if (message.runtimeEntityId != Client.EntityId)
+			{
+				BaseClient.WorldReceiver.UpdateEntityPosition(message.runtimeEntityId, new PlayerLocation(message.position));
+				return;
+			}
 			UnhandledPackage(message);
 		}
 
@@ -177,6 +299,7 @@ namespace Alex.Worlds.Bedrock
 
 		public override void HandleMcpeUpdateBlock(McpeUpdateBlock message)
 		{
+			
 			UnhandledPackage(message);
 		}
 
@@ -204,6 +327,11 @@ namespace Alex.Worlds.Bedrock
 		{
 			UnhandledPackage(message);
         }
+
+		public override void HandleMcpeLevelSoundEventV2(McpeLevelSoundEventV2 message)
+		{
+			UnhandledPackage(message);
+		}
 
 		public override void HandleMcpeNetworkChunkPublisherUpdate(McpeNetworkChunkPublisherUpdate message)
 		{
@@ -380,10 +508,9 @@ namespace Alex.Worlds.Bedrock
 					Log.Warn("Nothing to read");
 					return;
 				}
-
-				Log.Debug($"Reading {count} sections");
-
+				
 				ChunkColumn chunkColumn = new ChunkColumn();
+				chunkColumn.IsDirty = true;
 				chunkColumn.X = message.chunkX;
 				chunkColumn.Z = message.chunkZ;
 
@@ -393,91 +520,99 @@ namespace Alex.Worlds.Bedrock
 
                     int version = defStream.ReadByte();
 
-					if (version == 1 || version == 8)
-					{
-						int storageSize = defStream.ReadByte();
+                    if (version == 1 || version == 8)
+                    {
+	                    int storageSize = defStream.ReadByte();
 
-						for (int i = 0; i < storageSize; i++)
-						{
+	                    for (int storage = 0; storage < storageSize; storage++)
+	                    {
 
-							int paletteAndFlag = defStream.ReadByte();
-							bool isRuntime = (paletteAndFlag & 1) != 0;
-							int bitsPerBlock = paletteAndFlag >> 1;
-							int blocksPerWord = (int)Math.Floor(32f / bitsPerBlock);
-							int wordCount = (int)Math.Ceiling(4096.0f / blocksPerWord);
-							long blockIndex = defStream.BaseStream.Position;
-							defStream.Skip(wordCount * 4);
+		                    int paletteAndFlag = defStream.ReadByte();
+		                    bool isRuntime = (paletteAndFlag & 1) != 0;
+		                    int bitsPerBlock = paletteAndFlag >> 1;
+		                    int blocksPerWord = (int) Math.Floor(32f / bitsPerBlock);
+		                    int wordCount = (int) Math.Ceiling(4096.0f / blocksPerWord);
 
-							uint[] pallete = new uint[0];
-							if (isRuntime)
-							{
-								int palleteSize = VarInt.ReadSInt32(stream);
-								pallete = new uint[palleteSize];
-								for (int pi = 0; pi < pallete.Length; pi++)
-								{
-									pallete[pi] = (uint)VarInt.ReadSInt32(stream);
-								}
-							}
+		                    int[] indexes = new int[wordCount];
+		                    for (int w = 0; w < wordCount; w++)
+		                    {
+			                    int word = defStream.ReadInt32();
+			                    indexes[w] = word;
+		                    }
 
-							long afterPaletteIndex = defStream.BaseStream.Position;
-							defStream.BaseStream.Position = blockIndex;
+		                    uint[] pallete = new uint[0];
+		                    if (isRuntime)
+		                    {
+			                    int palleteSize = VarInt.ReadSInt32(stream);
+			                    pallete = new uint[palleteSize];
+			                    for (int pi = 0; pi < pallete.Length; pi++)
+			                    {
+				                    pallete[pi] = (uint) VarInt.ReadSInt32(stream);
+			                    }
+		                    }
 
-							int position = 0;
-							for (int wordi = 0; wordi < wordCount; wordi++)
-							{
-								int word = defStream.ReadInt32();
-								for (int block = 0; block < blocksPerWord; block++)
-								{
-									int state = (word >> ((position % blocksPerWord) * bitsPerBlock)) & ((1 << bitsPerBlock) - 1);
-									int x = (position >> 8) & 0xF;
-									int y = position & 0xF;
-									int z = (position >> 4) & 0xF;
-									
-									section.Set(x,y,z, BlockFactory.GetBlockState(pallete[state]));
+		                    long afterPaletteIndex = defStream.BaseStream.Position;
 
-									//section.setBlockId(x, y, z, localPallete.getBlockId(state));
-									//section.setBlockData(x, y, z, localPallete.getBlockData(state));
-									position++;
-								}
-							}
+		                    int position = 0;
+		                    for (int w = indexes.Length-1; w > 0; w--)
+		                    {
+			                    int word = indexes[w];
+			                    for (int block = 0; block < blocksPerWord; block++)
+			                    {
+				                    if (position >= 4096) continue; // padding bytes
+				                    
+				                    int state = (word >> ((position % blocksPerWord) * bitsPerBlock)) &
+				                                ((1 << bitsPerBlock) - 1);
+				                    int x = (position >> 8) & 0xF;
+				                    int y = position & 0xF;
+				                    int z = (position >> 4) & 0xF;
 
-							defStream.BaseStream.Position = afterPaletteIndex;
+				                    if (storage == 0)
+				                    {
+					                    if (_blockStateMap.TryGetValue(pallete[state], out var bs))
+					                    {
+						                    var result =
+							                    BlockFactory.RuntimeIdTable.FirstOrDefault(xx => xx.Name == bs.Name);
+						                    
+						                    uint res = 0;
+						                    bool ss = false;
+						                    if (result != null && result.Id >= 0)
+						                    {
+							                    res = BlockFactory.GetBlockStateID((int) result.Id, (byte) bs.Data);
+							                    ss = true;
+						                    }
 
-							/*int bitsPerBlock = defStream.ReadByte() >> 1;
-							int noBlocksPerWord = (int) Math.Floor(32f / bitsPerBlock);
-							int wordCount = (int) Math.Ceiling(4096f / noBlocksPerWord);
+						                    if (ss && AnvilWorldProvider.BlockStateMapper.TryGetValue(res, out res))
+						                    {
+							                    var a = BlockFactory.GetBlockState(res);
+							                    if (result.Data != 0)
+							                    {
+								                    a = ((BlockState)a).GetStateFromMeta((int) result.Data);
+							                    }
+							                    section.Set(15 - x, 15 - y, 15 - z, a);
+						                    }
+						                    else
+						                    {
+							                    section.Set(15 - x, 15 - y, 15 - z,
+								                    BlockFactory.GetBlockState(bs.Name));
+						                    }
+					                    }
+				                    }
+				                    else
+				                    {
+					                    //TODO.
+				                    }
 
-							byte[] data = defStream.ReadBytes(wordCount * 4);
+				                    //section.Set(x, 15 - y, z, BlockFactory.GetBlockStateByRuntimeId(pallete[state]));
 
-							int paletteCount = VarInt.ReadSInt32(stream);
-							int[] pallete = new int[paletteCount];
-							for (int j = 0; j < paletteCount; j++)
-							{
-								int index = VarInt.ReadSInt32(stream);
-								pallete[j] = index;
-							}
+				                   position++;
+			                    }
+		                    }
 
-
-							int position = 0;
-							for (int w = 0; w < wordCount; w++)
-							{
-								var word = pallete[w];
-							
-								for (int block = 0; block < noBlocksPerWord; block++)
-								{
-									int state = (word >> ((position % noBlocksPerWord) * bitsPerBlock)) & ((1 << bitsPerBlock) - 1);
-									int x = (position >> 8) & 0xF;
-									int y = position & 0xF;
-									int z = (position >> 4) & 0xF;
-									//	MiNET.Blockstate state = MiNET.Blocks.BlockFactory.g
-									section.Set(x, y, z, BlockFactory.GetBlockState(pallete[state]));
-									//ET.Blocks.BlockFactory.GetBlockById()
-									position++;
-								}
-							}*/
-						}
+		                    defStream.BaseStream.Position = afterPaletteIndex;
+	                    }
                     }
-					else
+                    else
 					{
 						byte[] blockIds = new byte[4096];
 						defStream.Read(blockIds, 0, blockIds.Length);
@@ -499,7 +634,7 @@ namespace Alex.Worlds.Bedrock
 									{
 										//	result[0].sRuntimeId
 
-										section.Set(x, y, z, BlockFactory.GetBlockState(result[0].RuntimeId));
+										section.Set(x, y, z, BlockFactory.GetBlockState((uint)result[0].RuntimeId));
 									}
 									//else
 									{
@@ -512,97 +647,7 @@ namespace Alex.Worlds.Bedrock
 						}
                     }
 
-					/*var section = chunkColumn.Sections[s];
-					byte version = defStream.ReadByte();
-					int storages = 1;
-
-					if (version == 8) //Versioon
-					{
-						storages = defStream.ReadByte();
-					}
-
-					if (version == 1 || version == 8)
-					{
-						
-						for (int si = 0; si < storages; si++)
-						{
-							var paletteAndFlag = (int)defStream.ReadByte();
-							PalleteType palleteType = (PalleteType) (paletteAndFlag >> 1);
-
-					        bool isRuntime = ((int)palleteType & 1) != 0;
-
-							int bitsPerBlock = paletteAndFlag >> 1;
-
-							int blocksPerWord = (int)Math.Floor(32D / bitsPerBlock);
-							int wordCount = (int)Math.Ceiling(4096.0 / blocksPerWord);
-
-					        long blockIndex = defStream.BaseStream.Position;
-					        defStream.Skip(wordCount * 4); //4 bytes per word.
-
-					        uint[] pallete;
-							if (isRuntime)
-							{
-								int palleteSize = defStream.ReadVarInt();
-								pallete = new uint[palleteSize];
-								for (int pi = 0; pi < pallete.Length; pi++)
-								{
-									pallete[pi] = (uint)defStream.ReadVarInt();
-								}
-							}
-							else
-							{
-								pallete = new uint[defStream.ReadInt32()];
-								for (int palletId = 0; palletId < pallete.Length; palletId++)
-								{
-									NbtTagType t = defStream.ReadTagType();
-								//	pallete[palletId] = 
-								}
-							}
-
-							long afterPaletteIndex = defStream.BaseStream.Position;
-							defStream.BaseStream.Position = blockIndex;
-							int position = 0;
-							for (int wordi = 0; wordi < wordCount; wordi++)
-							{
-								int word = defStream.ReadInt32();
-								for (int block = 0; block < blocksPerWord; block++)
-								{
-									int state = (word >> ((position % blocksPerWord) * bitsPerBlock)) & ((1 << bitsPerBlock) - 1);
-									int x = (position >> 8) & 0xF;
-									int y = position & 0xF;
-									int z = (position >> 4) & 0xF;
-								//	MiNET.Blockstate state = MiNET.Blocks.BlockFactory.g
-									section.Set(x,y,z, BlockFactory.GetBlockState(pallete[state]));
-										//ET.Blocks.BlockFactory.GetBlockById()
-									position++;
-								}
-							}
-							defStream.BaseStream.Position = afterPaletteIndex;
-						}
-					}
-					else
-					{
-						byte[] blockIds = new byte[4096];
-						defStream.Read(blockIds, 0, blockIds.Length);
-
-						NibbleArray data = new NibbleArray(4096);
-						defStream.Read(data.Data, 0, data.Data.Length);
-
-						for (int x = 0; x < 16; x++)
-						{
-							for (int z = 0; z < 16; z++)
-							{
-								for (int y = 0; y < 16; y++)
-								{
-									int idx = (y << 8) + (z << 4) + x;
-									
-									var state = BlockFactory.GetBlockStateID(blockIds[idx], data[idx]);
-									section.Set(x,y,z, BlockFactory.GetBlockState(state));
-								}
-							}
-						}
-					}*/
-
+                    //Make sure the section is saved.
 					chunkColumn.Sections[s] = section;
 				}
 
@@ -670,6 +715,7 @@ namespace Alex.Worlds.Bedrock
 					Log.Warn($"Still have data to read\n{Packet.HexDump(defStream.ReadBytes((int)(stream.Length - stream.Position)))}");
 				}
 
+				//Done processing this chunk, send to world
                 BaseClient.ChunkReceived(chunkColumn);
 			}
 
@@ -723,12 +769,13 @@ namespace Alex.Worlds.Bedrock
 
 		public override void HandleMcpeRequestChunkRadius(McpeRequestChunkRadius message)
 		{
-			UnhandledPackage(message);
+			BaseClient.RequestChunkRadius(Client.ChunkRadius);
 		}
 
 		public override void HandleMcpeChunkRadiusUpdate(McpeChunkRadiusUpdate message)
 		{
-			UnhandledPackage(message);
+			Client.ChunkRadius = message.chunkRadius;
+			//UnhandledPackage(message);
 		}
 
 		public override void HandleMcpeItemFrameDropItem(McpeItemFrameDropItem message)
@@ -813,6 +860,7 @@ namespace Alex.Worlds.Bedrock
 
 		public override void HandleMcpePlayerSkin(McpePlayerSkin message)
 		{
+			//TODO: Load skin
 			UnhandledPackage(message);
 		}
 
@@ -888,7 +936,14 @@ namespace Alex.Worlds.Bedrock
 
 		public override void HandleMcpeMoveEntityDelta(McpeMoveEntityDelta message)
 		{
-			UnhandledPackage(message);
+			if (message.runtimeEntityId != Client.EntityId)
+			{
+				//Log.Info($"Prev: {message.prevSentPosition} New: {message.currentPosition}");
+				if (message.prevSentPosition == null || message.currentPosition == null) return;
+				
+				BaseClient.WorldReceiver.UpdateEntityPosition(message.runtimeEntityId, new PlayerLocation(message.currentPosition),
+					true);
+			}
 		}
 
 		public override void HandleMcpeSetScoreboardIdentityPacket(McpeSetScoreboardIdentityPacket message)

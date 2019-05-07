@@ -1,7 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Net;
+using System.Threading;
+using Alex.Gui.Forms;
 using Alex.Services;
+using Eto.Forms;
 using log4net;
 using Newtonsoft.Json;
 using NLog;
@@ -41,12 +44,17 @@ namespace Alex
 			//Cef.Initialize(new Settings());
 
 			Log.Info($"Starting...");
+			var application = new Application();
+			var appThread = new Thread(() => application.Run());
+			//appThread.SetApartmentState(ApartmentState.STA);
+			appThread.Start();
 			
-            using (var game = new Alex(launchSettings))
+            using (var game = new Alex(launchSettings, application))
 			{
 				game.Run();
 			}
-
+            
+            application.Quit();
 		}
 
 		private static void ConfigureNLog(string baseDir)

@@ -42,7 +42,7 @@ namespace Alex.Entities
 
             Dictionary<long, EntityData> networkIdToData = new Dictionary<long, EntityData>();
 
-			EntityData[] entityObjects = JsonConvert.DeserializeObject<EntityData[]>(Resources.NewEntities);
+			EntityData[] entityObjects = JsonConvert.DeserializeObject<EntityData[]>(ResourceManager.ReadStringResource("Alex.Resources.NewEntities.txt"));
 
             for (int i = 0; i < entityObjects.Length; i++)
 			{

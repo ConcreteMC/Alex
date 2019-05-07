@@ -9,9 +9,11 @@ using Alex.API.Utils;
 using Alex.API.World;
 using Microsoft.Xna.Framework;
 using MiNET;
+using MiNET.Blocks;
 using MiNET.Client;
 using MiNET.Net;
 using MiNET.Utils;
+using NLog;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 
 namespace Alex.Worlds.Bedrock
@@ -54,19 +56,23 @@ namespace Alex.Worlds.Bedrock
 	}
 	public class BedrockClient : MiNetClient, INetworkProvider, IChatProvider, IDisposable
 	{
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BedrockClient));
+		
 		public ManualResetEventSlim ConnectionAcceptedWaitHandle { get; }
 		public BedrockWorldProvider WorldProvider { get; }
 		public EventHandler<BedrockMotd> OnMotdReceivedHandler;
 		public BedrockMotd KnownMotd = new BedrockMotd(string.Empty);
 
-		public BedrockClient(IPEndPoint endpoint, string username, DedicatedThreadPool threadPool, BedrockWorldProvider wp) : base(endpoint,
+		public BedrockClient(Alex alex,IPEndPoint endpoint, string username, DedicatedThreadPool threadPool, BedrockWorldProvider wp) : base(endpoint,
 			username, threadPool)
 		{
 			WorldProvider = wp;
 			ConnectionAcceptedWaitHandle = new ManualResetEventSlim(false);
-			MessageDispatcher = new McpeClientMessageDispatcher(new BedrockClientPacketHandler(this));
+			MessageDispatcher = new McpeClientMessageDispatcher(new BedrockClientPacketHandler(this, alex));
 			IsEmulator = true;
 			CurrentLocation = new MiNET.Utils.PlayerLocation(0,0,0);
+
+			base.ChunkRadius = alex.GameSettings.RenderDistance;
 		}
 
 		public override void OnConnectionRequestAccepted()
@@ -76,13 +82,13 @@ namespace Alex.Worlds.Bedrock
 		}
 
 		public bool IgnoreUnConnectedPong = false;
-		protected override void OnUnConnectedPong(UnconnectedPong packet, IPEndPoint senderEndpoint)
+		protected override void OnUnconnectedPong(UnconnectedPong packet, IPEndPoint senderEndpoint)
 		{
 			KnownMotd = new BedrockMotd(packet.serverName);
 			OnMotdReceivedHandler?.Invoke(this, KnownMotd);
 			if (IgnoreUnConnectedPong) return;
 
-			base.OnUnConnectedPong(packet, senderEndpoint);
+			base.OnUnconnectedPong(packet, senderEndpoint);
 		}
 
 		public bool IsConnected => base.HaveServer;
@@ -105,7 +111,8 @@ namespace Alex.Worlds.Bedrock
 
 		public void PlayerDigging(DiggingStatus status, BlockCoordinates position, BlockFace face)
 		{
-			throw new NotImplementedException();
+			Log.Debug($"Implement playerdigging status....");
+			return;
 		}
 
 		public void UseItem(int hand)
@@ -138,6 +145,14 @@ namespace Alex.Worlds.Bedrock
 			WorldProvider.ChunkReceived(chunkColumn);
 		}
 
+		public void RequestChunkRadius(int radius)
+		{
+			var packet = McpeRequestChunkRadius.CreateObject();
+			packet.chunkRadius = radius;
+
+			base.SendPacket(packet);
+		}
+		
 		public void Dispose()
 		{
 			StopClient();

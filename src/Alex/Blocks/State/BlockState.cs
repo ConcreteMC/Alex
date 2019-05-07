@@ -8,6 +8,7 @@ using Alex.API.Blocks.State;
 using Alex.API.Graphics;
 using Alex.API.World;
 using Alex.Blocks.Minecraft;
+using Alex.Blocks.Properties;
 using Alex.Utils;
 using NLog;
 
@@ -22,7 +23,7 @@ namespace Alex.Blocks.State
 		{
 
 		}
-
+		
 		public bool TryResolve(BlockState copyFrom, IStateProperty property, object value, out IBlockState result)
 		{
 			var valuesCopied = new Dictionary<IStateProperty, object>(copyFrom.Values, new StateComparer());
@@ -343,6 +344,35 @@ namespace Alex.Blocks.State
 		public IBlockState Clone()
 		{
 			return CloneSilent();
+		}
+		
+		public IBlockState GetStateFromMeta(int meta)
+		{
+			var p = StateProperty.Parse("facing");
+			
+			switch(meta) {
+				case 0:
+					return WithProperty(p,"down");
+					break;
+				case 1:
+					return WithProperty(p,"up");
+					break;
+				case 2:
+					return WithProperty(p,"north");
+					break;
+				case 3:
+					return WithProperty(p,"south");
+					break;
+				case 4:
+					return WithProperty(p,"west");
+					break;
+				case 5:
+					return WithProperty(p,"east");
+					break;				
+			
+			}
+
+			return this;
 		}
 	}
 

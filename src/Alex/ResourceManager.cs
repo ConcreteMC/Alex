@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.IO.Compression;
@@ -115,6 +116,9 @@ namespace Alex
 			{
 				Atlas.GenerateAtlas(resourcePack.TexturesAsBitmaps.Where(x => x.Key.StartsWith("block")).ToArray(),
 					progressReceiver);
+				
+				
+				//Atlas.Atlas.Save("atlas.png", ImageFormat.Png);
 			}
 
 			Stopwatch sw = Stopwatch.StartNew();
@@ -196,7 +200,7 @@ namespace Alex
 
 			Log.Info($"Loading registries...");
 			progressReceiver?.UpdateProgress(0, "Loading registries...");
-			Registries = JsonConvert.DeserializeObject<Registries>(Resources.registries);
+			Registries = JsonConvert.DeserializeObject<Registries>(ReadStringResource("Alex.Resources.registries.json"));
 			progressReceiver?.UpdateProgress(100, "Loading registries...");
 
             Log.Info($"Loading vanilla resources...");
@@ -266,6 +270,17 @@ namespace Alex
 			}
 			
             return true;
+		}
+
+		public static string ReadStringResource(string resource)
+		{
+			return Encoding.UTF8.GetString(ReadResource(resource));
+		}
+		
+		public static byte[] ReadResource(string resource)
+		{
+			var fontStream = Assembly.GetEntryAssembly().GetManifestResourceStream(resource);
+			return fontStream.ReadAllBytes();
 		}
 	}
 

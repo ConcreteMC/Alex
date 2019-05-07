@@ -262,6 +262,7 @@ namespace Alex.Worlds
 				return;
 			}
 
+			
 			IBlock block = stateId.Block;// BlockFactory.GetBlock(stateId);
 
 			if (!block.Renderable) return;
@@ -269,6 +270,7 @@ namespace Alex.Worlds
 			var blockPosition = new Vector3(x, y + (index * 16), z) + Position;
 
 			var vert = stateId.Model.GetVertices(world, blockPosition, block);
+
 		//	var result = new ChunkMesh.Entry(block.BlockStateResource.ID, vert, blockPosition);
 
 			if (block.Transparent)

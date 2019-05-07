@@ -22,7 +22,7 @@ namespace Alex.Utils
 
 	    private Texture2D _atlas;
 	    public Vector2 AtlasSize { get; private set; }
-		private Bitmap Atlas { get; set; } = null;
+		public Bitmap Atlas { get; set; } = null;
 	    private GraphicsDevice Graphics { get; }
 	    public AtlasGenerator(GraphicsDevice graphics)
 	    {
@@ -34,7 +34,7 @@ namespace Alex.Utils
 	        Log.Info($"Generating texture atlas out of {bitmaps.Length} bitmaps...");
 
 	        Bitmap no;
-	        using (MemoryStream ms = new MemoryStream(Resources.no))
+	        using (MemoryStream ms = new MemoryStream(ResourceManager.ReadResource("Alex.Resources.no.png")))
 	        {
 				no = new Bitmap(ms);
 	        }

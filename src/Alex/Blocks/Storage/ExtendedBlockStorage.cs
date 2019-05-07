@@ -75,7 +75,7 @@ namespace Alex.Blocks.Storage
 		{
 			if (state == null)
 			{
-				//Log.Warn($"State == null");
+				Log.Warn($"State == null");
 				return;
 			}
 
@@ -95,6 +95,7 @@ namespace Alex.Blocks.Storage
 				}				
 			}
 
+			//Log.Info($"{state.Name} = {state.Block.Name} == {state.ID}");
 			IBlock block1 = state.Block;
 			if (!(block1 is Air))
 			{

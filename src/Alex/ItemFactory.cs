@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Alex.API.Utils;
@@ -26,8 +27,11 @@ namespace Alex
 	    {
 		    ResourceManager = resources;
 		    ResourcePack = resourcePack;
-
-		    ItemEntry[] itemData = JsonConvert.DeserializeObject<ItemEntry[]>(Resources.Items);
+Items = new Dictionary<string, Item>();
+return;
+		    var raw = ResourceManager.ReadStringResource("Alex.Resources.Items.json");
+		    Debug.WriteLine($"RAW: {raw}");
+		    ItemEntry[] itemData = JsonConvert.DeserializeObject<ItemEntry[]>(raw);
 
 
 		    var ii = resources.Registries.Items.Entries;

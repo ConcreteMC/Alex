@@ -7,6 +7,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Threading;
 using Alex.API;
 using Alex.API.Data.Servers;
@@ -24,6 +25,7 @@ using Alex.GameStates.Gui.MainMenu;
 using Alex.GameStates.Playing;
 using Alex.Gui;
 using Alex.Gui.Elements;
+using Alex.Gui.Forms;
 using Alex.Networking.Java.Packets;
 using Alex.Rendering;
 using Alex.ResourcePackLib;
@@ -31,11 +33,13 @@ using Alex.Services;
 using Alex.Utils;
 using Alex.Worlds.Bedrock;
 using Alex.Worlds.Java;
+using Eto.Forms;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Newtonsoft.Json;
 using NLog;
+using TextInputEventArgs = Microsoft.Xna.Framework.TextInputEventArgs;
 
 namespace Alex
 {
@@ -74,8 +78,12 @@ namespace Alex
 
 		private LaunchSettings LaunchSettings { get; }
 		//public ChromiumWebBrowser CefWindow { get; private set; }
-		public Alex(LaunchSettings launchSettings)
+		
+		private Application EtoApplication { get; }
+		public Alex(LaunchSettings launchSettings, Application app)
 		{
+			EtoApplication = app;
+			
 			Instance = this;
 			LaunchSettings = launchSettings;
 
@@ -103,6 +111,7 @@ namespace Alex
 					//CefWindow.Size = new System.Drawing.Size(Window.ClientBounds.Width, Window.ClientBounds.Height);
 				}
 			};
+			
 
 			JsonConvert.DefaultSettings = () => new JsonSerializerSettings()
 			{
@@ -151,7 +160,10 @@ namespace Alex
 			//	}
 			//DebugFont = (WrappedSpriteFont) Content.Load<SpriteFont>("DebugFont");
 			//CefWindow = new ChromiumWebBrowser(GraphicsDevice, "http://google.com/");
-			DebugFont = (WrappedSpriteFont) Content.Load<SpriteFont>(global::Alex.Resources.DebugFont);
+
+			var fontStream = Assembly.GetEntryAssembly().GetManifestResourceStream("Alex.Resources.DebugFont.xnb");
+			
+			DebugFont = (WrappedSpriteFont) Content.Load<SpriteFont>(fontStream.ReadAllBytes());
 			
 			_spriteBatch = new SpriteBatch(GraphicsDevice);
 			InputManager = new InputManager(this);
@@ -178,13 +190,14 @@ namespace Alex
 
 			Services.AddService<IListStorageProvider<SavedServerEntry>>(new SavedServerDataProvider(storage));
 
-			Services.AddService<IServerQueryProvider>(new ServerQueryProvider());
+			Services.AddService<IServerQueryProvider>(new ServerQueryProvider(this));
 			Services.AddService<IPlayerProfileService>(new JavaPlayerProfileService());
-			Services.AddService(msa = new XBLMSAService());
+			Services.AddService(msa = new XBLMSAService(EtoApplication));
 
 			ProfileManager = new ProfileManager(this, storage);
 			Storage = storage;
 
+			//msa.DoXboxAuth();
 			//msa.AsyncBrowserLogin();
 		}
 

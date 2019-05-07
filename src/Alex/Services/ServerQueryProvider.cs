@@ -25,8 +25,11 @@ namespace Alex.Services
     {
 	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ServerQueryProvider));
 		private static FastRandom Rnd = new FastRandom();
-        public ServerQueryProvider()
+		
+		private Alex Alex { get; }
+        public ServerQueryProvider(Alex alex)
         {
+	        Alex = alex;
             MCPacketFactory.Load();
         }
 
@@ -102,7 +105,7 @@ namespace Alex.Services
 			    {
 					IPEndPoint serverEndpoint = new IPEndPoint(result.Result, (int) port);
 
-					client = new BedrockClient(serverEndpoint, $"Pinger{serverEndpoint.ToString()}", pool, null)
+					client = new BedrockClient(Alex, serverEndpoint, $"Pinger{serverEndpoint.ToString()}", pool, null)
 				    {
 					    IgnoreUnConnectedPong = true
 				    };

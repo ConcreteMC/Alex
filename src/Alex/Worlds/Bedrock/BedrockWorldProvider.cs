@@ -8,16 +8,20 @@ using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Entities;
 using Microsoft.Xna.Framework;
+using MiNET.Blocks;
 using MiNET.Net;
 using MiNET.Utils;
 using MiNET.Worlds;
+using NLog;
 using LevelInfo = Alex.API.World.LevelInfo;
 using PlayerLocation = Alex.API.Utils.PlayerLocation;
 
 namespace Alex.Worlds.Bedrock
 {
-	public class BedrockWorldProvider : WorldProvider, IChatReceiver
+	public class BedrockWorldProvider : WorldProvider
 	{
+		private static Logger Log = LogManager.GetCurrentClassLogger();
+		
 		public Alex Alex { get; }
 		private BedrockClient Client { get; }
 
@@ -27,7 +31,7 @@ namespace Alex.Worlds.Bedrock
 		{
 			Alex = alex;
 
-			Client = new BedrockClient(endPoint, profile.PlayerName, new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount)), this);
+			Client = new BedrockClient(alex, endPoint, profile.PlayerName, new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount)), this);
 			networkProvider = Client;
 		}
 
@@ -68,6 +72,7 @@ namespace Alex.Worlds.Bedrock
 
 			if (_initiated)
 			{
+				
 				var p = WorldReceiver.GetPlayerEntity();
 				if (p != null && p is Player player && Client.HasSpawned)
 				{
@@ -85,9 +90,11 @@ namespace Alex.Worlds.Bedrock
 
 					var pos = (PlayerLocation)player.KnownPosition.Clone();
 					Client.CurrentLocation = new MiNET.Utils.PlayerLocation(pos.X,
-						pos.Y, pos.Z, pos.HeadYaw,
+						pos.Y + Player.EyeLevel, pos.Z, pos.HeadYaw,
 						pos.Yaw, pos.Pitch);
 					Client.SendMcpeMovePlayer();
+					///Log.Info($"Sent move player");
+					
 					/*	if (pos.DistanceTo(_lastSentLocation) > 0.0f)
 						{
 							PlayerPositionAndLookPacketServerBound packet = new PlayerPositionAndLookPacketServerBound();
@@ -100,7 +107,7 @@ namespace Alex.Worlds.Bedrock
 	
 							SendPacket(packet);
 							_lastSentLocation = pos;
-	
+	public
 							_tickSinceLastPositionUpdate = 0;
 						}
 						else if (Math.Abs(pos.Pitch - _lastSentLocation.Pitch) > 0f || Math.Abs(pos.HeadYaw - _lastSentLocation.Yaw) > 0f)
@@ -166,14 +173,14 @@ namespace Alex.Worlds.Bedrock
 
 				progressReport(LoadingState.LoadingChunks, 0);
 
-				double radiusSquared = Math.Pow(Client.ChunkRadius, 2);
-				var target = radiusSquared * 3;
+				double radiusSquared = Math.Pow(Client.ChunkRadius, 2);var target = radiusSquared * 3;
 
 				while (!Client.PlayerStatusChangedWaitHandle.WaitOne(50))
 				{
 					progressReport(LoadingState.LoadingChunks, ((int)(_chunksReceived / target) * 100));
 				}
 
+				Client.IsEmulator = false;
 				progressReport(LoadingState.Spawning, 99);
 			});
 		}
@@ -182,17 +189,15 @@ namespace Alex.Worlds.Bedrock
 		public void ChunkReceived(ChunkColumn chunkColumn)
 		{
 			_chunksReceived++;
+			//sLog.Info($"Chunk received");
 			base.LoadChunk(chunkColumn, chunkColumn.X, chunkColumn.Z, true);
 		}
-
-		public void Receive(ChatObject message)
-		{
-			
-		}
-
+		
 		public void ReceivedTabComplete(int transactionId, int start, int length, TabCompleteMatch[] matches)
 		{
 			
 		}
+
+		public IChatReceiver GetChatReceiver => ChatReceiver;
 	}
 }

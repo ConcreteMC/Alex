@@ -1398,11 +1398,12 @@ namespace Alex.Worlds.Java
 			}
 
 			var cryptoProvider = AsnKeyBuilder.DecodePublicKey(packet.PublicKey);
-			var encrypted = cryptoProvider.Encrypt(SharedSecret, false);
+			Log.Info($"Crypto: {cryptoProvider == null} Pub: {packet.PublicKey} Shared: {SharedSecret}");
+			var encrypted = cryptoProvider.Encrypt(SharedSecret, RSAEncryptionPadding.Pkcs1);
 
 			EncryptionResponsePacket response = new EncryptionResponsePacket();
 			response.SharedSecret = encrypted;
-			response.VerifyToken = cryptoProvider.Encrypt(packet.VerifyToken, false);
+			response.VerifyToken = cryptoProvider.Encrypt(packet.VerifyToken, RSAEncryptionPadding.Pkcs1);
 			SendPacket(response);
 
 			Client.InitEncryption(SharedSecret);

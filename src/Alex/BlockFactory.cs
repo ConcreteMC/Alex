@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -15,6 +16,7 @@ using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json.BlockStates;
 using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using BlockState = Alex.Blocks.State.BlockState;
 using BlockStateVariant = Alex.ResourcePackLib.Json.BlockStates.BlockStateVariant;
 
@@ -101,10 +103,13 @@ namespace Alex
 		}
 
 		public static TableEntry[] RuntimeIdTable { get; private set; }
-        internal static int LoadResources(ResourceManager resources, McResourcePack resourcePack, bool replace,
+		internal static int LoadResources(ResourceManager resources, McResourcePack resourcePack, bool replace,
 			bool reportMissing = false, IProgressReceiver progressReceiver = null)
         {
-	        RuntimeIdTable = TableEntry.FromJson(Resources.runtimeid_table);
+	        var raw = ResourceManager.ReadStringResource("Alex.Resources.runtimeidtable.json");
+	        var raw2 = ResourceManager.ReadStringResource("Alex.Resources.PEBlocks.json");
+	        //RuntimeIdTable = JsonConvert.DeserializeObject<Dictionary<string, TableEntry>>(raw2).Values.ToArray();
+	        RuntimeIdTable = TableEntry.FromJson(raw);
 
             var blockEntries = resources.Registries.Blocks.Entries;
 
@@ -153,7 +158,7 @@ namespace Alex
 		{
 			StringBuilder factoryBuilder = new StringBuilder();
 
-			var data = BlockData.FromJson(Resources.NewBlocks);
+			var data = BlockData.FromJson(ResourceManager.ReadStringResource("Alex.Resources.NewBlocks.json"));
 			int total = data.Count;
 			int done = 0;
 			int importCounter = 0;
@@ -303,6 +308,11 @@ namespace Alex
 					Log.Warn($"Failed to register default blockstate! {state.Name} - {state.ID}");
 				}
 				*/
+			
+			if (variantMap._default == null)
+			{
+				variantMap._default = state;
+			}
 				if (!BlockStateByName.TryAdd(state.Name, variantMap))
 				{
 					Log.Warn($"Failed to add blockstate, key already exists! ({state.Name})");
@@ -540,6 +550,19 @@ namespace Alex
 
 			return AirState;
 		}
+		
+		public static IBlockState GetBlockStateByRuntimeId(long runtimeId)
+		{
+			var resultR = RuntimeIdTable.FirstOrDefault(x => x.RuntimeId == runtimeId);
+			if (resultR == null) return AirState;
+			string result = resultR.Name;
+			if (result == "minecraft:grass")
+			{
+				result = "minecraft:grass_block";
+			}
+			
+			return GetBlockState(result);
+		}
 
 		public static bool IsBlock(string name)
 		{
@@ -566,7 +589,7 @@ namespace Alex
 			return b;
 		}
 
-		private static Block InternalGetBlockByName(string blockName)
+		public static Block InternalGetBlockByName(string blockName)
 		{
 			blockName = blockName.ToLowerInvariant();
 			if (string.IsNullOrWhiteSpace(blockName)) return null;
@@ -909,7 +932,7 @@ namespace Alex
 		public partial class TableEntry
 		{
 			[JsonProperty("runtimeID")]
-			public uint RuntimeId { get; set; }
+			public long RuntimeId { get; set; }
 
 			[JsonProperty("name")]
 			public string Name { get; set; }
@@ -920,7 +943,13 @@ namespace Alex
 			[JsonProperty("data")]
 			public long Data { get; set; }
 
-			public static TableEntry[] FromJson(string json) => JsonConvert.DeserializeObject<TableEntry[]>(json);
+			public static TableEntry[] FromJson(string json)
+			{
+				return JsonConvert.DeserializeObject<TableEntry[]>(json, new JsonSerializerSettings()
+				{
+					
+				});
+			}
 		}
     }
 }

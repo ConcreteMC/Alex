@@ -250,7 +250,6 @@ namespace Alex.Graphics.Models.Blocks
 			foreach (var model in models)
 			{
 				if (model.Model == null) continue;
-				
 				for (var i = 0; i < model.Model.Elements.Length; i++)
 				{
 					var element = model.Model.Elements[i];

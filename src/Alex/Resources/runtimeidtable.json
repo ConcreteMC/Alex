@@ -1,4 +1,5 @@
-﻿[
+
+[
 	{
 		"runtimeID": 0,
 		"name": "minecraft:air",
@@ -1654,12 +1655,6 @@
 		"name": "minecraft:wool",
 		"id": 35,
 		"data": 15
-	},
-	{
-		"runtimeID": 276,
-		"name": "minecraft:36",
-		"id": 36,
-		"data": 0
 	},
 	{
 		"runtimeID": 277,
@@ -8226,12 +8221,6 @@
 		"data": 0
 	},
 	{
-		"runtimeID": 1371,
-		"name": "minecraft:166",
-		"id": 166,
-		"data": 0
-	},
-	{
 		"runtimeID": 1372,
 		"name": "minecraft:iron_trapdoor",
 		"id": 167,
@@ -12142,5 +12131,293 @@
 		"name": "minecraft:reserved6",
 		"id": 255,
 		"data": 0
+	},
+	{
+		"runtimeID": 2040,
+		"name": "minecraft:prismarine_stairs",
+		"id": 257,
+		"data": 0
+	},
+	{
+		"runtimeID": 2041,
+		"name": "minecraft:prismarine_stairs",
+		"id": 257,
+		"data": 1
+	},
+	{
+		"runtimeID": 2042,
+		"name": "minecraft:prismarine_stairs",
+		"id": 257,
+		"data": 2
+	},
+	{
+		"runtimeID": 2043,
+		"name": "minecraft:prismarine_stairs",
+		"id": 257,
+		"data": 3
+	},
+	{
+		"runtimeID": 2044,
+		"name": "minecraft:prismarine_stairs",
+		"id": 257,
+		"data": 4
+	},
+	{
+		"runtimeID": 2045,
+		"name": "minecraft:prismarine_stairs",
+		"id": 257,
+		"data": 5
+	},
+	{
+		"runtimeID": 2046,
+		"name": "minecraft:prismarine_stairs",
+		"id": 257,
+		"data": 6
+	},
+	{
+		"runtimeID": 2047,
+		"name": "minecraft:prismarine_stairs",
+		"id": 257,
+		"data": 7
+	},
+	{
+		"runtimeID": 2048,
+		"name": "minecraft:dark_prismarine_stairs",
+		"id": 258,
+		"data": 0
+	},
+	{
+		"runtimeID": 2049,
+		"name": "minecraft:dark_prismarine_stairs",
+		"id": 258,
+		"data": 1
+	},
+	{
+		"runtimeID": 2050,
+		"name": "minecraft:dark_prismarine_stairs",
+		"id": 258,
+		"data": 2
+	},
+	{
+		"runtimeID": 2051,
+		"name": "minecraft:dark_prismarine_stairs",
+		"id": 258,
+		"data": 3
+	},
+	{
+		"runtimeID": 2052,
+		"name": "minecraft:dark_prismarine_stairs",
+		"id": 258,
+		"data": 4
+	},
+	{
+		"runtimeID": 2053,
+		"name": "minecraft:dark_prismarine_stairs",
+		"id": 258,
+		"data": 5
+	},
+	{
+		"runtimeID": 2054,
+		"name": "minecraft:dark_prismarine_stairs",
+		"id": 258,
+		"data": 6
+	},
+	{
+		"runtimeID": 2055,
+		"name": "minecraft:dark_prismarine_stairs",
+		"id": 258,
+		"data": 7
+	},
+	{
+		"runtimeID": 2056,
+		"name": "minecraft:prismarine_bricks_stairs",
+		"id": 259,
+		"data": 0
+	},
+	{
+		"runtimeID": 2057,
+		"name": "minecraft:prismarine_bricks_stairs",
+		"id": 259,
+		"data": 1
+	},
+	{
+		"runtimeID": 2058,
+		"name": "minecraft:prismarine_bricks_stairs",
+		"id": 259,
+		"data": 2
+	},
+	{
+		"runtimeID": 2059,
+		"name": "minecraft:prismarine_bricks_stairs",
+		"id": 259,
+		"data": 3
+	},
+	{
+		"runtimeID": 2060,
+		"name": "minecraft:prismarine_bricks_stairs",
+		"id": 259,
+		"data": 4
+	},
+	{
+		"runtimeID": 2061,
+		"name": "minecraft:prismarine_bricks_stairs",
+		"id": 259,
+		"data": 5
+	},
+	{
+		"runtimeID": 2062,
+		"name": "minecraft:prismarine_bricks_stairs",
+		"id": 259,
+		"data": 6
+	},
+	{
+		"runtimeID": 2063,
+		"name": "minecraft:prismarine_bricks_stairs",
+		"id": 259,
+		"data": 7
+	},
+	{
+		"runtimeID": 2064,
+		"name": "minecraft:stripped_spruce_log",
+		"id": 260,
+		"data": 0
+	},
+	{
+		"runtimeID": 2065,
+		"name": "minecraft:stripped_spruce_log",
+		"id": 260,
+		"data": 1
+	},
+	{
+		"runtimeID": 2066,
+		"name": "minecraft:stripped_spruce_log",
+		"id": 260,
+		"data": 2
+	},
+	{
+		"runtimeID": 2067,
+		"name": "minecraft:stripped_spruce_log",
+		"id": 260,
+		"data": 3
+	},
+	{
+		"runtimeID": 2068,
+		"name": "minecraft:stripped_birch_log",
+		"id": 261,
+		"data": 0
+	},
+	{
+		"runtimeID": 2069,
+		"name": "minecraft:stripped_birch_log",
+		"id": 261,
+		"data": 1
+	},
+	{
+		"runtimeID": 2070,
+		"name": "minecraft:stripped_birch_log",
+		"id": 261,
+		"data": 2
+	},
+	{
+		"runtimeID": 2071,
+		"name": "minecraft:stripped_birch_log",
+		"id": 261,
+		"data": 3
+	},
+	{
+		"runtimeID": 2072,
+		"name": "minecraft:stripped_jungle_log",
+		"id": 262,
+		"data": 0
+	},
+	{
+		"runtimeID": 2073,
+		"name": "minecraft:stripped_jungle_log",
+		"id": 262,
+		"data": 1
+	},
+	{
+		"runtimeID": 2074,
+		"name": "minecraft:stripped_jungle_log",
+		"id": 262,
+		"data": 2
+	},
+	{
+		"runtimeID": 2075,
+		"name": "minecraft:stripped_jungle_log",
+		"id": 262,
+		"data": 3
+	},
+	{
+		"runtimeID": 2076,
+		"name": "minecraft:stripped_acacia_log",
+		"id": 263,
+		"data": 0
+	},
+	{
+		"runtimeID": 2077,
+		"name": "minecraft:stripped_acacia_log",
+		"id": 263,
+		"data": 1
+	},
+	{
+		"runtimeID": 2078,
+		"name": "minecraft:stripped_acacia_log",
+		"id": 263,
+		"data": 2
+	},
+	{
+		"runtimeID": 2079,
+		"name": "minecraft:stripped_acacia_log",
+		"id": 263,
+		"data": 3
+	},
+	{
+		"runtimeID": 2080,
+		"name": "minecraft:stripped_dark_oak_log",
+		"id": 264,
+		"data": 0
+	},
+	{
+		"runtimeID": 2081,
+		"name": "minecraft:stripped_dark_oak_log",
+		"id": 264,
+		"data": 1
+	},
+	{
+		"runtimeID": 2082,
+		"name": "minecraft:stripped_dark_oak_log",
+		"id": 264,
+		"data": 2
+	},
+	{
+		"runtimeID": 2083,
+		"name": "minecraft:stripped_dark_oak_log",
+		"id": 264,
+		"data": 3
+	},
+	{
+		"runtimeID": 2084,
+		"name": "minecraft:stripped_oak_log",
+		"id": 265,
+		"data": 0
+	},
+	{
+		"runtimeID": 2085,
+		"name": "minecraft:stripped_oak_log",
+		"id": 265,
+		"data": 1
+	},
+	{
+		"runtimeID": 2086,
+		"name": "minecraft:stripped_oak_log",
+		"id": 265,
+		"data": 2
+	},
+	{
+		"runtimeID": 2087,
+		"name": "minecraft:stripped_oak_log",
+		"id": 265,
+		"data": 3
 	}
 ]

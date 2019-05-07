@@ -46,6 +46,30 @@
     <Compile Remove="Graphics\Items\**" />
     <EmbeddedResource Remove="Graphics\Items\**" />
     <None Remove="Graphics\Items\**" />
+    <None Remove="Resources\DebugFont.xnb" />
+    <EmbeddedResource Include="Resources\DebugFont.xnb" />
+    <None Remove="Resources\logo2.png" />
+    <EmbeddedResource Include="Resources\logo2.png" />
+    <None Remove="Resources\Splash.png" />
+    <EmbeddedResource Include="Resources\Splash.png" />
+    <None Remove="Resources\ProgressBar.png" />
+    <EmbeddedResource Include="Resources\ProgressBar.png" />
+    <None Remove="Resources\registries.json" />
+    <EmbeddedResource Include="Resources\registries.json" />
+    <None Remove="Resources\no.png" />
+    <EmbeddedResource Include="Resources\no.png" />
+    <None Remove="Resources\runtimeid_table.json" />
+    <EmbeddedResource Include="Resources\runtimeidtable.json" />
+    <None Remove="Resources\NewBlocks.json" />
+    <EmbeddedResource Include="Resources\NewBlocks.json" />
+    <None Remove="Resources\Items.json" />
+    <EmbeddedResource Include="Resources\Items.json" />
+    <None Remove="Resources\NewEntities.txt" />
+    <EmbeddedResource Include="Resources\NewEntities.txt" />
+    <None Remove="Resources\GradientBlur.png" />
+    <EmbeddedResource Include="Resources\GradientBlur.png" />
+    <None Remove="Resources\PEBlocks.json" />
+    <EmbeddedResource Include="Resources\PEBlocks.json" />
   </ItemGroup>
 
   <ItemGroup>
@@ -63,6 +87,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Eto.Forms" Version="2.4.1" />
+    <PackageReference Include="Eto.Platform.Gtk" Version="2.4.1" />
+    <PackageReference Include="Eto.Platform.Windows" Version="2.4.1" />
     <PackageReference Include="Hawezo.MojangSharp" Version="0.5.1" />
     <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="1.0.0-alpha-27020-01" />
     <PackageReference Include="Microsoft.Identity.Client" Version="2.3.0-preview" />
