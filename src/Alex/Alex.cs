@@ -192,7 +192,7 @@ namespace Alex
 
 			Services.AddService<IServerQueryProvider>(new ServerQueryProvider(this));
 			Services.AddService<IPlayerProfileService>(new JavaPlayerProfileService());
-			Services.AddService(msa = new XBLMSAService(EtoApplication));
+			//Services.AddService(msa = new XBLMSAService(EtoApplication));
 
 			ProfileManager = new ProfileManager(this, storage);
 			Storage = storage;
