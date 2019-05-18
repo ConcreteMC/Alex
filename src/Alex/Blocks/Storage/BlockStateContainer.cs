@@ -146,7 +146,7 @@ namespace Alex.Blocks.Storage
 			if (bits <= 4)
 			{
 				bits = 4;
-				this.Palette = new BlockStatePaletteLinear(bits, this);
+				this.Palette = new BlockStatePaletteMap(bits, this);
 			}
 			else if (bits <= 8)
 			{
@@ -189,7 +189,7 @@ namespace Alex.Blocks.Storage
 			if (bits <= 4)
 			{
 				bits = 4;
-				this.Palette = new BlockStatePaletteLinear(bits, this);
+				this.Palette = new BlockStatePaletteMap(bits, this);
 			}
 			else if (bits <= 8)
 			{

@@ -580,7 +580,8 @@ namespace ResourceConverter
 	{
 
 		public @NAME@(int entityTypeId, World level, INetworkProvider network) : base(entityTypeId, level, network)
-		{
+		{		public Dictionary<string, string> Textures;
+		public Dictionary<string, string> Geometry;
 			Width = Length = 0.6;
 			Height = 1.80;
 		}

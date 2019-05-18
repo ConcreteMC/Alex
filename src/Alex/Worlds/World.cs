@@ -206,7 +206,7 @@ namespace Alex.Worlds
 			}
 		}
 
-		private void UpdateLightingAroundPlayer(ChunkCoordinates center)
+        private void UpdateLightingAroundPlayer(ChunkCoordinates center)
 		{
 			return;
 			int radiusSquared = 6;// (int) Math.Pow(Alex.GameSettings.RenderDistance, 2) / 3;

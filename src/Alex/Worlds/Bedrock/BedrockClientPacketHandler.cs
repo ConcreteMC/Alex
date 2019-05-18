@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Text;
+using Alex.API.Blocks.State;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks.State;
@@ -25,6 +26,7 @@ using MiNET.Utils;
 using MiNET.Worlds;
 using Newtonsoft.Json;
 using NLog;
+using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using NibbleArray = MiNET.Utils.NibbleArray;
 using Player = Alex.Entities.Player;
 using PlayerLocation = Alex.API.Utils.PlayerLocation;
@@ -49,7 +51,7 @@ namespace Alex.Worlds.Bedrock
 
 		private void UnhandledPackage(Packet packet)
 		{
-			//Log.Warn($"Unhandled bedrock packet: {packet.GetType().Name} (0x{packet.Id:X2})");
+			Log.Warn($"Unhandled bedrock packet: {packet.GetType().Name} (0x{packet.Id:X2})");
 		}
 
 		public override void HandleMcpePlayStatus(McpePlayStatus message)
@@ -103,7 +105,8 @@ namespace Alex.Worlds.Bedrock
 		{
 			if (message.runtimeEntityId != Client.EntityId)
 			{
-				BaseClient.WorldReceiver.UpdateEntityPosition(message.runtimeEntityId, new PlayerLocation(message.x, message.y, message.z, message.headYaw, message.yaw, message.pitch));
+				BaseClient.WorldReceiver.UpdateEntityPosition(message.runtimeEntityId, 
+					new PlayerLocation(message.x, message.y - Player.EyeLevel, message.z, message.headYaw, message.yaw, message.pitch));
 				return;
 			}
 			
@@ -138,7 +141,6 @@ namespace Alex.Worlds.Bedrock
 				if (BaseClient.WorldReceiver is World w)
 				{
 					mob.IsSpawned = true;
-					Log.Info($"Spawned player entity: {mob.NameTag} at {mob.KnownPosition}");
 					w.SpawnEntity(mob.EntityId, mob);
 				}
 				else
@@ -166,12 +168,23 @@ namespace Alex.Worlds.Bedrock
 					{
 						Log.Warn($"Duplicate player record! {r.ClientUuid}");
 					}
-					else
-					{
-						Log.Info($"Player added to playerlist: {r.DisplayName}");
-					}
 				}
 			}
+            else if (message.records is PlayerRemoveRecords removeRecords)
+            {
+	            foreach (var r in removeRecords)
+	            {
+		            var u = new UUID(r.ClientUuid.GetBytes());
+		            if (_players.TryRemove(u, out var player))
+		            {
+			            BaseClient.WorldReceiver?.RemovePlayerListItem(u);
+			            if (BaseClient.WorldReceiver is World w)
+			            {
+				            w.DespawnEntity(player.EntityId);
+			            }
+		            }
+	            }
+            }
 		}
 
 		/*public void SpawnMob(int entityId, Guid uuid, EntityType type, PlayerLocation position, Microsoft.Xna.Framework.Vector3 velocity)
@@ -286,7 +299,9 @@ namespace Alex.Worlds.Bedrock
 		{
 			if (message.runtimeEntityId != Client.EntityId)
 			{
-				BaseClient.WorldReceiver.UpdateEntityPosition(message.runtimeEntityId, new PlayerLocation(message.position));
+				BaseClient.WorldReceiver.UpdateEntityPosition(message.runtimeEntityId,
+					new PlayerLocation(message.position.X, message.position.Y - Player.EyeLevel, message.position.Z, 
+						message.position.HeadYaw, message.position.Yaw, message.position.Pitch));
 				return;
 			}
 			UnhandledPackage(message);
@@ -299,8 +314,44 @@ namespace Alex.Worlds.Bedrock
 
 		public override void HandleMcpeUpdateBlock(McpeUpdateBlock message)
 		{
+			if (message.storage != 0)
+			{
+				Log.Warn($"UPDATEBLOCK: Unsupported block storage! {message.storage}");
+				return;
+			}
 			
-			UnhandledPackage(message);
+			if (_blockStateMap.TryGetValue(message.blockRuntimeId, out var bs))
+			{
+				var result =
+					BlockFactory.RuntimeIdTable.FirstOrDefault(xx => xx.Name == bs.Name);
+				
+				uint res = 0;
+				bool ss = false;
+				if (result != null && result.Id >= 0)
+				{
+					res = BlockFactory.GetBlockStateID((int) result.Id, (byte) bs.Data);
+					ss = true;
+				}
+
+				if (ss && AnvilWorldProvider.BlockStateMapper.TryGetValue(res, out res))
+				{
+					var a = BlockFactory.GetBlockState(res);
+					BaseClient.WorldReceiver?.SetBlockState(
+						new BlockCoordinates(message.coordinates.X, message.coordinates.Y, message.coordinates.Z), 
+						a);
+				}
+				else
+				{
+
+					BaseClient.WorldReceiver?.SetBlockState(
+						new BlockCoordinates(message.coordinates.X, message.coordinates.Y, message.coordinates.Z),
+						BlockFactory.GetBlockState(bs.Name));
+				}
+			}
+			else
+			{
+				Log.Warn($"Received unknown block runtime id.");
+			}
 		}
 
 		public override void HandleMcpeAddPainting(McpeAddPainting message)
@@ -517,8 +568,7 @@ namespace Alex.Worlds.Bedrock
 				for (int s = 0; s < count; s++)
 				{
 					var section = chunkColumn.Sections[s];
-
-                    int version = defStream.ReadByte();
+					int version = defStream.ReadByte();
 
                     if (version == 1 || version == 8)
                     {
@@ -587,7 +637,32 @@ namespace Alex.Worlds.Bedrock
 							                    var a = BlockFactory.GetBlockState(res);
 							                    if (result.Data != 0)
 							                    {
-								                    a = ((BlockState)a).GetStateFromMeta((int) result.Data);
+								                    //TODO: In order for this to work, we need to fix blockstate properties.
+
+								                    int meta = (int) result.Data;
+								                    switch (meta)
+								                    {
+									                    case 0:
+										                    meta = 0;
+										                    break;
+									                    case 1:
+										                    meta = 5;
+										                    break;
+									                    case 2:
+										                    meta = 4;
+										                    break;
+									                    case 3:
+										                    meta = 3;
+										                    break;
+									                    case 4:
+										                    meta = 2;
+										                    break;
+									                    case 5:
+										                    meta = 1;
+										                    break;
+								                    }
+								                    Log.Warn($"METAAAA: " + meta);
+								                    a = GetBlockStateFromRotationMeta(a, meta);
 							                    }
 							                    section.Set(15 - x, 15 - y, 15 - z, a);
 						                    }
@@ -721,12 +796,36 @@ namespace Alex.Worlds.Bedrock
 
 			
 		}
-
-		private static int GetIndex(int x, int y, int z)
+		
+		private IBlockState GetBlockStateFromRotationMeta(IBlockState state, int meta)
 		{
-			return y << 8 | z << 4 | x;
-		}
+			var p = StateProperty.Parse("facing");
+			
+			switch(meta) {
+				case 0:
+					return state.WithProperty(p,"down");
+					break;
+				case 1:
+					return state.WithProperty(p,"up");
+					break;
+				case 2:
+					return state.WithProperty(p,"north");
+					break;
+				case 3:
+					return state.WithProperty(p,"south");
+					break;
+				case 4:
+					return state.WithProperty(p,"west");
+					break;
+				case 5:
+					return state.WithProperty(p,"east");
+					break;				
+			
+			}
 
+			return state;
+		}
+		
 		public override void HandleMcpeSetCommandsEnabled(McpeSetCommandsEnabled message)
 		{
 			UnhandledPackage(message);

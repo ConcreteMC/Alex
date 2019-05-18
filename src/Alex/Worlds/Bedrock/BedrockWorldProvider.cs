@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Data;
 using Alex.API.Network;
@@ -13,6 +16,7 @@ using MiNET.Net;
 using MiNET.Utils;
 using MiNET.Worlds;
 using NLog;
+using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
 using LevelInfo = Alex.API.World.LevelInfo;
 using PlayerLocation = Alex.API.Utils.PlayerLocation;
 
@@ -66,6 +70,8 @@ namespace Alex.Worlds.Bedrock
 		private bool _isSprinting = false;
 		private bool _initiated = false;
 		private bool _flying = false;
+		private PlayerLocation _lastLocation = new PlayerLocation();
+		private Stopwatch _stopwatch = Stopwatch.StartNew();
 		private void GameTick(object state)
 		{
 			if (WorldReceiver == null) return;
@@ -87,12 +93,22 @@ namespace Alex.Worlds.Bedrock
 						Client.SendPacket(settings);
 						//SendPlayerAbilities(player);
 					}
-
+					
 					var pos = (PlayerLocation)player.KnownPosition.Clone();
 					Client.CurrentLocation = new MiNET.Utils.PlayerLocation(pos.X,
 						pos.Y + Player.EyeLevel, pos.Z, pos.HeadYaw,
-						pos.Yaw, pos.Pitch);
+						pos.Yaw, -pos.Pitch);
 					Client.SendMcpeMovePlayer();
+
+					if (pos.DistanceTo(_lastLocation) > 16f && _stopwatch.ElapsedMilliseconds > 500)
+					{
+						_stopwatch.Stop();
+						_stopwatch.Reset();
+						_lastLocation = pos;
+						UnloadChunks(new ChunkCoordinates(pos), Client.ChunkRadius);
+						_stopwatch.Restart();
+					}
+					
 					///Log.Info($"Sent move player");
 					
 					/*	if (pos.DistanceTo(_lastSentLocation) > 0.0f)
@@ -142,6 +158,20 @@ namespace Alex.Worlds.Bedrock
 			}
 		}
 
+		private List<ChunkCoordinates> _loadedChunks = new List<ChunkCoordinates>();
+		private void UnloadChunks(ChunkCoordinates center, double maxViewDistance)
+		{
+			Parallel.ForEach(_loadedChunks.ToArray(), (chunkColumn) =>
+			{
+				if (chunkColumn.DistanceTo(center) > maxViewDistance)
+				{
+					//_chunkCache.TryRemove(chunkColumn.Key, out var waste);
+					UnloadChunk(chunkColumn.X, chunkColumn.Z);
+					_loadedChunks.Remove(chunkColumn);
+				}
+			});
+		}
+
 		protected override void Initiate(out LevelInfo info, out IChatProvider chatProvider)
 		{
 			info = new LevelInfo();
@@ -189,6 +219,11 @@ namespace Alex.Worlds.Bedrock
 		public void ChunkReceived(ChunkColumn chunkColumn)
 		{
 			_chunksReceived++;
+			var coords = new ChunkCoordinates(chunkColumn.X, chunkColumn.Z);
+			
+			if (!_loadedChunks.Contains(coords))
+				_loadedChunks.Add(coords);
+			
 			//sLog.Info($"Chunk received");
 			base.LoadChunk(chunkColumn, chunkColumn.X, chunkColumn.Z, true);
 		}

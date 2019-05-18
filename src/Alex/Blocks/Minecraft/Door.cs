@@ -43,7 +43,7 @@ namespace Alex.Blocks.Minecraft
 				{
 					if (bottom.IsOpen)
 					{
-						BlockState state = (BlockState)BlockState.WithProperty(OPEN, true);
+						BlockState state = (BlockState)BlockState.WithProperty(OPEN, true.ToString());
 						world.SetBlockState(position.X, position.Y, position.Z, state);
 					}
 				}
@@ -55,7 +55,7 @@ namespace Alex.Blocks.Minecraft
 				{
 					if (upper.IsUpper)
 					{
-						BlockState state = (BlockState) BlockState.WithProperty(UPPER, false);
+						BlockState state = (BlockState) BlockState.WithProperty(UPPER, false.ToString());
 						world.SetBlockState(position.X, position.Y, position.Z, state);
 					}
 				}
@@ -67,7 +67,7 @@ namespace Alex.Blocks.Minecraft
 		{
 			if (!IsUpper)
 			{
-				BlockState state = (BlockState)BlockState.WithProperty(OPEN, !IsOpen);
+				BlockState state = (BlockState)BlockState.WithProperty(OPEN, (!IsOpen).ToString());
 				world.SetBlockState(position.X, position.Y, position.Z, state);
 			}
 		}
@@ -79,7 +79,7 @@ namespace Alex.Blocks.Minecraft
 				var changedBlock = world.GetBlockState(updatedBlock.X, updatedBlock.Y, updatedBlock.Z);
 				if (!changedBlock.GetTypedValue(UPPER))
 				{
-					var myMeta = (BlockState) BlockState.WithProperty(OPEN, changedBlock.GetTypedValue(OPEN));
+					var myMeta = (BlockState) BlockState.WithProperty(OPEN, (changedBlock.GetTypedValue(OPEN)).ToString());
 					world.SetBlockState(position.X, position.Y, position.Z, myMeta);
 				}
 			}

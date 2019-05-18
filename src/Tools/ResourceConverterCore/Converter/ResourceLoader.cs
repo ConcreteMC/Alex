@@ -105,7 +105,7 @@ namespace ResourceConverter
                 return;
             }
 
-            //_definitionDirectory = directory;
+            _definitionDirectory = directory;
 
             foreach (var d in directory.EnumerateDirectories())
             {
@@ -133,6 +133,7 @@ namespace ResourceConverter
                 }
             }
         }
+        
         private void LoadModelEntityResources(DirectoryInfo directory)
         {
             if (_modelEntityDirectory == null)
@@ -253,6 +254,7 @@ namespace ResourceConverter
                 }
             }
         }
+        
         private void GetEntries(FileInfo file, Dictionary<string, EntityModel> entries)
         {
             using (var open = file.OpenText())

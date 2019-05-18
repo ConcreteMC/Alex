@@ -96,7 +96,28 @@ namespace Alex.Worlds.Bedrock
 
 		void INetworkProvider.EntityAction(int entityId, EntityAction action)
 		{
+			PlayerAction translated;
+			switch (action)
+			{
+				case EntityAction.StartSneaking:
+					translated = PlayerAction.StartSneak;
+					break;
+				case EntityAction.StopSneaking:
+					translated = PlayerAction.StopSneak;
+					break;
+
+				case EntityAction.StartSprinting:
+					translated = PlayerAction.StartSprint;
+					break;
+				case EntityAction.StopSprinting:
+					translated = PlayerAction.StopSprint;
+					break;
+
+				default:
+					return;
+			}
 			
+			SendPlayerAction(translated, null, null);
 		}
 
 		void INetworkProvider.SendChatMessage(string message)
@@ -104,25 +125,50 @@ namespace Alex.Worlds.Bedrock
 			SendChat(message);
 		}
 
-	    public void BlockPlaced(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition)
+		public void SendPlayerAction(PlayerAction action, BlockCoordinates? coordinates, int? blockFace )
+		{
+			McpePlayerAction packet = McpePlayerAction.CreateObject();
+			packet.actionId = (int) action;
+			
+			if (coordinates.HasValue)
+				packet.coordinates = new MiNET.Utils.BlockCoordinates(coordinates.Value.X, 
+					coordinates.Value.Y, coordinates.Value.Z);
+
+			if (blockFace.HasValue)
+				packet.face = blockFace.Value;
+			
+			SendPacket(packet);
+		}
+		
+	    public void PlayerDigging(DiggingStatus status, BlockCoordinates position, BlockFace face)
 	    {
-	        throw new NotImplementedException();
+		    if (status == DiggingStatus.Started)
+		    {
+			    SendPlayerAction(PlayerAction.StartBreak, position, (int)face);
+		    }
+		    else if (status == DiggingStatus.Finished)
+		    {
+			    SendPlayerAction(PlayerAction.StopBreak, position, (int)face);
+		    }
+		    else if (status == DiggingStatus.Cancelled)
+		    {
+			    SendPlayerAction(PlayerAction.AbortBreak, position, (int)face);
+		    }
 	    }
 
-		public void PlayerDigging(DiggingStatus status, BlockCoordinates position, BlockFace face)
-		{
-			Log.Debug($"Implement playerdigging status....");
-			return;
-		}
+	    public void BlockPlaced(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition)
+	    {
+		    Log.Warn("TODO: Implement Block Placement");
+	    }
 
-		public void UseItem(int hand)
+	    public void UseItem(int hand)
 		{
-			throw new NotImplementedException();
+			Log.Warn("TODO: Implement UseItem");
 		}
 
 		public void HeldItemChanged(short slot)
 		{
-			throw new NotImplementedException();
+			Log.Warn("TODO: Implement Held Item Changed");
 		}
 
 		public void Close()

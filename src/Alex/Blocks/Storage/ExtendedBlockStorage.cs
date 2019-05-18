@@ -63,7 +63,7 @@ namespace Alex.Blocks.Storage
 
 		private static int GetCoordinateIndex(int x, int y, int z)
 		{
-			return (y << 8) + (z << 4) + x;
+			return y << 8 | z << 4 | x;
 		}
 
 		public IBlockState Get(int x, int y, int z)

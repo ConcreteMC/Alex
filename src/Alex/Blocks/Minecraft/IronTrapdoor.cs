@@ -32,11 +32,11 @@ namespace Alex.Blocks.Minecraft
 		{
 			if (BlockState.GetTypedValue(OPEN))
 			{
-				world.SetBlockState(position.X, position.Y, position.Z, BlockState.WithProperty(OPEN, false));
+				world.SetBlockState(position.X, position.Y, position.Z, BlockState.WithProperty(OPEN, false.ToString()));
 			}
 			else
 			{
-				world.SetBlockState(position.X, position.Y, position.Z, BlockState.WithProperty(OPEN, true));
+				world.SetBlockState(position.X, position.Y, position.Z, BlockState.WithProperty(OPEN, true.ToString()));
 			}
 		}
 	}

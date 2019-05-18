@@ -51,6 +51,10 @@ namespace ResourceConverter
 		
         private static void GenerateModelFiles(ResourceLoader loader, DirectoryInfo outputDirectory, out Dictionary<string, string> geometryToClass)
         {
+	        var outDir = Path.Combine(outputDirectory.FullName, "Models");
+	        if (!Directory.Exists(outDir))
+		        Directory.CreateDirectory(outDir);
+		        
 	        geometryToClass = new Dictionary<string, string>();
 
                var template = new EntityTemplate();
@@ -73,7 +77,7 @@ namespace ResourceConverter
 		        ResourceConverterContext.CurrentModel = model.Value;
 
 		        var output = template.TransformText();
-		        var outputPath = Path.Combine(outputDirectory.FullName, "Models", CodeTypeName(model.Value.Name) + "Model.cs");
+		        var outputPath = Path.Combine(outDir, CodeTypeName(model.Value.Name) + "Model.cs");
 		        if (File.Exists(outputPath))
 		        {
 			        Log.Warn($"Class already exists: {outputPath} ({count}/{totalCount}) - {pct:F1}%");
