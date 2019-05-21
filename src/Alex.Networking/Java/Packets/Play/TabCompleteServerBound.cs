@@ -12,7 +12,7 @@ namespace Alex.Networking.Java.Packets.Play
 
 	    public TabCompleteServerBound()
 	    {
-		    PacketId = 0x05;
+		    PacketId = 0x06;
 	    }
 
 		public override void Decode(MinecraftStream stream)

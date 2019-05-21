@@ -6,7 +6,7 @@ namespace Alex.Networking.Java.Packets.Play
     {
 	    public PluginMessagePacket()
 	    {
-		    PacketId = 0x19;
+		    PacketId = 0x0B;
 	    }
 
 	    public string Channel;

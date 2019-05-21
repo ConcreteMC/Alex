@@ -10,7 +10,7 @@ namespace Alex.Networking.Java.Packets.Play
 	    public int Hand = 0;
 	    public UseItemPacket()
 	    {
-		    PacketId = 0x2A;
+		    PacketId = 0x2D;
 	    }
 
 	    public override void Decode(MinecraftStream stream)

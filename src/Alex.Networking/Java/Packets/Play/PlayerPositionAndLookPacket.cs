@@ -6,7 +6,7 @@ namespace Alex.Networking.Java.Packets.Play
 	{
 		public PlayerPositionAndLookPacket()
 		{
-			PacketId = 0x31;
+			PacketId = 0x12;
 		}
 
 		public double X;
@@ -44,7 +44,7 @@ namespace Alex.Networking.Java.Packets.Play
 	{
 		public PlayerPositionAndLookPacketServerBound()
 		{
-			PacketId = 0x11;
+			PacketId = 0x12;
 		}
 
 		public double X;

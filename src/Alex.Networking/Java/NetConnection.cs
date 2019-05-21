@@ -367,7 +367,7 @@ namespace Alex.Networking.Java
 
 			//if (packet.Log)
 			//	Log.Info($"Sending packet ({CompressionEnabled}:{EncryptionInitiated}): {packet} 0x{packet.PacketId:X2}");
-
+//if (packet.PacketId == 14) Log.Debug($"PACKET = {packet.ToString()}");
 			PacketWriteQueue.Add(new EnqueuedPacket(packet, EncryptionInitiated, CompressionEnabled));
 	    }
 

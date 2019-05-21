@@ -6,7 +6,7 @@ namespace Alex.Networking.Java.Packets.Play
     {
 	    public HeldItemChangePacket()
 	    {
-		    PacketId = 0x21;
+		    PacketId = 0x23;
 	    }
 
 	    public short Slot;

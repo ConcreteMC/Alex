@@ -1224,7 +1224,7 @@ namespace Alex.Worlds.Java
 		{
 			KeepAlivePacket response = new KeepAlivePacket();
 			response.KeepAliveid = packet.KeepAliveid;
-			response.PacketId = 0x0E;
+			//response.PacketId = 0x0E;
 
 			SendPacket(response);
 		}

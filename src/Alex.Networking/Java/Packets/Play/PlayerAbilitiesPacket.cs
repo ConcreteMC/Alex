@@ -7,7 +7,7 @@ namespace Alex.Networking.Java.Packets.Play
     {
 	    public PlayerAbilitiesPacket()
 	    {
-		    PacketId = 0x17;
+		    PacketId = 0x19;
 	    }
 
 	    public byte Flags;
