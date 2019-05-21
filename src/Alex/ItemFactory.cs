@@ -23,14 +23,17 @@ namespace Alex
 		private static ResourceManager ResourceManager { get; set; }
 		private static McResourcePack ResourcePack { get; set; }
 		private static IReadOnlyDictionary<string, Item> Items { get; set; }
+		private static SecondItemEntry[] SecItemEntries { get; set; }
 	    public static void Init(ResourceManager resources, McResourcePack resourcePack, IProgressReceiver progressReceiver = null)
 	    {
 		    ResourceManager = resources;
 		    ResourcePack = resourcePack;
-Items = new Dictionary<string, Item>();
-return;
-		    var raw = ResourceManager.ReadStringResource("Alex.Resources.Items.json");
-		    Debug.WriteLine($"RAW: {raw}");
+
+		    var otherRaw = ResourceManager.ReadStringResource("Alex.Resources.items3.json");
+		    SecItemEntries = JsonConvert.DeserializeObject<SecondItemEntry[]>(otherRaw);
+		    
+		    var raw = ResourceManager.ReadStringResource("Alex.Resources.items2.json");
+		    
 		    ItemEntry[] itemData = JsonConvert.DeserializeObject<ItemEntry[]>(raw);
 
 
@@ -142,18 +145,50 @@ return;
 		    return Items.TryGetValue(name, out item);
 	    }
 
+	    public static bool TryGetItem(short id, short meta, out Item item)
+	    {
+		    var entry = SecItemEntries.FirstOrDefault(x => x.Type == id);
+		    if (entry == null)
+		    {
+			    item = null;
+			    return false;
+		    }
+
+		    if (TryGetItem(entry.TextType, out item))
+		    {
+			    return true;
+		    }
+
+		    return false;
+	    }
+	    
 	    public static bool IsItem(string name)
 	    {
 		    return ResourceManager.Registries.Items.Entries.ContainsKey(name);
 	    }
 
 
-	    private class ItemEntry
+	    public class ItemEntry
 	    {
 		    public int id { get; set; }
 		    public string displayName { get; set; }
 		    public string name { get; set; }
 		    public int stackSize { get; set; }
+	    }
+
+	    private class SecondItemEntry
+	    {
+		    [JsonProperty("type")]
+		    public long Type { get; set; }
+
+		    [JsonProperty("meta")]
+		    public long Meta { get; set; }
+
+		    [JsonProperty("name")]
+		    public string Name { get; set; }
+
+		    [JsonProperty("text_type")]
+		    public string TextType { get; set; }
 	    }
     }
 }

@@ -15,6 +15,7 @@ using Alex.Blocks.Storage;
 using Alex.Blocks.Storage.Pallete;
 using Alex.Entities;
 using Alex.Graphics.Models.Entity;
+using Alex.Items;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
 using fNbt;
@@ -27,6 +28,7 @@ using MiNET.Worlds;
 using Newtonsoft.Json;
 using NLog;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
+using Inventory = Alex.Utils.Inventory;
 using NibbleArray = MiNET.Utils.NibbleArray;
 using Player = Alex.Entities.Player;
 using PlayerLocation = Alex.API.Utils.PlayerLocation;
@@ -502,12 +504,61 @@ namespace Alex.Worlds.Bedrock
 
 		public override void HandleMcpeInventoryContent(McpeInventoryContent message)
 		{
-			UnhandledPackage(message);
+			Inventory inventory = null;
+			if (message.inventoryId == 0x00)
+			{
+				if (BaseClient.WorldReceiver?.GetPlayerEntity() is Player player)
+				{
+					inventory = player.Inventory;
+				}
+			}
+
+			if (inventory == null) return;
+
+			for (var index = 0; index < message.input.Count; index++)
+			{
+				var slot = message.input[index];
+				
+				var usedIndex = index;
+				if (usedIndex < 9)
+				{
+					usedIndex += 36;
+				}
+				
+				if (ItemFactory.TryGetItem(slot.Id, slot.Metadata, out Item item))
+				{
+					inventory[usedIndex] = item;
+				}
+			}
 		}
 
 		public override void HandleMcpeInventorySlot(McpeInventorySlot message)
 		{
-			UnhandledPackage(message);
+			Inventory inventory = null;
+			if (message.inventoryId == 0x00)
+			{
+				if (BaseClient.WorldReceiver?.GetPlayerEntity() is Player player)
+				{
+					inventory = player.Inventory;
+				}
+			}
+
+			if (inventory == null) return;
+			
+			var index = (int)message.slot;
+			if (index <= 8)
+			{
+				index += 36;
+			}
+			else if (index >= 9 && index <= 35)
+			{
+				
+			}
+			
+			if (ItemFactory.TryGetItem(message.item.Id, message.item.Metadata, out Item item))
+			{
+				inventory[index] = item;
+			}
 		}
 
 		public override void HandleMcpeContainerSetData(McpeContainerSetData message)
