@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Alex.API.Blocks.State;
 using Alex.API.Graphics;
 using Microsoft.Xna.Framework.Graphics;
@@ -10,7 +11,10 @@ namespace Alex.API.World
 		int X { get; }
 		int Z { get; }
 
-		IBlockState GetBlockState(int x, int y, int z);
+		bool HighPriority { get; set; }
+
+
+        IBlockState GetBlockState(int x, int y, int z);
 		void SetBlockState(int x, int y, int z, IBlockState state);
 		IBlock GetBlock(int bx, int by, int bz);
 		void SetBlock(int bx, int by, int bz, IBlock block);
@@ -22,11 +26,13 @@ namespace Alex.API.World
 		void SetBlocklight(int bx, int by, int bz, byte data);
 		byte GetSkylight(int bx, int by, int bz);
 		void SetSkyLight(int bx, int by, int bz, byte data);
-		void GenerateMeshes(IWorld world, out ChunkMesh mesh);
-
+		Task<ChunkMesh> GenerateMeshes(IWorld world);
+		void UpdateChunk(GraphicsDevice device, IWorld world);
+		//ChunkMesh Mesh { get; set; }
 		VertexBuffer VertexBuffer { get; set; }
+		IndexBuffer IndexBuffer { get; set; }
 		VertexBuffer TransparentVertexBuffer { get; set; }
-
+		IndexBuffer TransparentIndexBuffer { get; set; }
 		object VertexLock { get; set; }
 		object UpdateLock { get; set; }
 		bool IsDirty { get; set; }
@@ -38,7 +44,12 @@ namespace Alex.API.World
 		bool IsSolid(int bx, int by, int bz);
 
 		void GetBlockData(int bx, int by, int bz, out bool transparent, out bool solid);
-    }
+		void ScheduleBlockUpdate(int x, int y, int z);
+		void DrawOpaque(GraphicsDevice device, BasicEffect effect, out int drawnIndices, out int indexSize);
+		void DrawTransparent(GraphicsDevice device, AlphaTestEffect effect, out int drawnIndices, out int indexSize);
+		
+		bool HasDirtySubChunks { get; }
+	}
 
 	[Flags]
 	public enum ScheduleType
@@ -47,6 +58,6 @@ namespace Alex.API.World
 		Full = 2,
 		Border = 4,
 		Scheduled = 8,
-		Skylight = 16
+		Lighting = 16
 	}
 }

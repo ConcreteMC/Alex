@@ -15,11 +15,11 @@ namespace Alex.API.Blocks.State
 
 		T GetTypedValue<T>(IStateProperty<T> property);
 
-		object GetValue(IStateProperty property);
+		object GetValue(string property);
 		//IBlockState WithProperty(IStateProperty property, object value);
-		IBlockState WithProperty(IStateProperty property, string value);
+		IBlockState WithProperty(string property, string value);
 		//IBlockState WithProperty<T>(IStateProperty<T> property, T value);
-		IDictionary<IStateProperty, string> ToDictionary();
+		IDictionary<string, string> ToDictionary();
 		IBlockState Clone();
 
 		//bool TryGetValue(IStateProperty property, out object value);

@@ -43,6 +43,8 @@ namespace Alex.GameStates
 		private readonly GuiStackMenu _debugMenu;
 		private readonly GuiStackMenu _spMenu;
 
+		private GuiButton _loginButton;
+		
 		private readonly GuiTextElement _splashText;
 
 		private readonly GuiPanoramaSkyBox _backgroundSkyBox;
@@ -98,6 +100,7 @@ namespace Alex.GameStates
 			_debugMenu.AddMenuItem("Debug Blockstates", DebugWorldButtonActivated);
 			_debugMenu.AddMenuItem("Debug Flatland", DebugFlatland);
 			_debugMenu.AddMenuItem("Debug Anvil", DebugAnvil);
+			_debugMenu.AddMenuItem("Debug Chunk", DebugChunkButtonActivated);
 		//	_debugMenu.AddMenuItem("Debug XBL Login", BedrockEditionButtonPressed);
             _debugMenu.AddMenuItem("Go Back", DebugGoBackPressed);
 
@@ -290,6 +293,13 @@ namespace Alex.GameStates
 
 				Anchor = Alignment.BottomRight,
 			});
+			
+			/*_playerView.AddChild(_loginButton = new GuiButton("Switch user", LoginBtnPressed)
+			{
+				Anchor = Alignment.BottomCenter,
+				Modern = false,
+				TranslationKey = ""
+			});*/
 
 			using (MemoryStream ms = new MemoryStream(ResourceManager.ReadResource("Alex.Resources.GradientBlur.png")))
 			{
@@ -301,6 +311,11 @@ namespace Alex.GameStates
 			Alex.IsMouseVisible = true;
 
 			Alex.GameStateManager.AddState("serverlist", new MultiplayerServerSelectionState(_backgroundSkyBox));
+		}
+
+		private void LoginBtnPressed()
+		{
+			Alex.GameStateManager.SetActiveState(new VersionSelectionState());
 		}
 
 		private float _rotation;
@@ -409,6 +424,11 @@ namespace Alex.GameStates
 		private void DebugWorldButtonActivated()
 		{
 			Debug(new DebugWorldGenerator());
+		}
+
+		private void DebugChunkButtonActivated()
+		{
+			Debug(new ChunkDebugWorldGenerator());
 		}
 	}
 }

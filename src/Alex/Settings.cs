@@ -17,7 +17,8 @@ namespace Alex
 		public bool UseBuiltinGenerator { get; set; }
 
 		public int ChunkThreads { get; set; } 
-
+		public bool ClientSideLighting { get; set; }
+		public bool UseAlexChunks { get; set; }
         public Settings(string username)
         {
             Username = username;
@@ -33,7 +34,8 @@ namespace Alex
 	        IsDirty = false;
 
 	        ChunkThreads = 1;
-
+	        ClientSideLighting = true;
+	        UseAlexChunks = false;
         }
     }
 }

@@ -9,9 +9,10 @@ namespace Alex.API.World
 	{
 		TickManager Ticker { get; }
 		LevelInfo WorldInfo { get; }
-		int Vertices { get; }
-		int ChunkCount { get; }
-		int ChunkUpdates { get; }
+		long Vertices { get; }
+
+        int ChunkCount { get; }
+		int ConcurrentChunkUpdates { get; }
 		void ResetChunks();
 		void RebuildChunks();
 		void Render(IRenderArgs args);
@@ -30,6 +31,7 @@ namespace Alex.API.World
 		void SetBlock(int x, int y, int z, IBlock block);
 		void SetBlockState(int x, int y, int z, IBlockState block);
 		IBlockState GetBlockState(int x, int y, int z);
+		IBlockState GetBlockState(BlockCoordinates coordinates);
 		int GetBiome(int x, int y, int z);
 		bool HasBlock(int x, int y, int z);
 		BlockCoordinates FindBlockPosition(BlockCoordinates coords, out IChunkColumn chunk);

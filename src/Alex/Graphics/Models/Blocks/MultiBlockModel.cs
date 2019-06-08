@@ -14,17 +14,27 @@ namespace Alex.Graphics.Models.Blocks
 			Models = models;
 		}
 
-	    public override VertexPositionNormalTextureColor[] GetVertices(IWorld world, Vector3 position, IBlock baseBlock)
+	    public override (VertexPositionNormalTextureColor[] vertices, int[] indexes) GetVertices(IWorld world, Vector3 position, IBlock baseBlock)
 	    {
 			List<VertexPositionNormalTextureColor> vertices = new List<VertexPositionNormalTextureColor>();
+			List<int> indexes = new List<int>();
+			
 		    for (var index = 0; index < Models.Length; index++)
 		    {
 			    var model = Models[index];
 			    model.Scale = 1f - (index * 0.001f);
-				vertices.AddRange(model.GetVertices(world, position, baseBlock));
+
+			    var verts = model.GetVertices(world, position, baseBlock);
+			    
+				for (int i = 0; i < verts.indexes.Length; i++)
+				{
+					indexes.Add(vertices.Count + verts.indexes[i]);
+				}
+				
+				vertices.AddRange(verts.vertices);
 		    }
 
-		    return vertices.ToArray();
+		    return (vertices.ToArray(), indexes.ToArray());
 	    }
     }
 }

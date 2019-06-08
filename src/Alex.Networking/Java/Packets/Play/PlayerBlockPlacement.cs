@@ -14,7 +14,7 @@ namespace Alex.Networking.Java.Packets.Play
         public BlockFace Face;
         public int Hand;
         public Vector3 CursorPosition;
-
+        public bool InsideBlock;
         public PlayerBlockPlacementPacket()
         {
             PacketId = 0x2C;
@@ -27,6 +27,7 @@ namespace Alex.Networking.Java.Packets.Play
 
         public override void Encode(MinecraftStream stream)
         {
+            stream.WriteVarInt(Hand);
             stream.WritePosition(Location);
             switch (Face)
             {
@@ -52,11 +53,11 @@ namespace Alex.Networking.Java.Packets.Play
                     stream.WriteVarInt(1);
                     break;
             }
-
-            stream.WriteVarInt(Hand);
+            
             stream.WriteFloat(CursorPosition.X);
             stream.WriteFloat(CursorPosition.Y);
             stream.WriteFloat(CursorPosition.Z);
+            stream.WriteBool(InsideBlock);
         }
     }
 }

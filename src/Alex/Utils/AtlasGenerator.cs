@@ -20,6 +20,7 @@ namespace Alex.Utils
 
 	    private Dictionary<string, TextureInfo> _atlasLocations = new Dictionary<string, TextureInfo>();
 
+	    private Texture2D[] _frames;
 	    private Texture2D _atlas;
 	    public Vector2 AtlasSize { get; private set; }
 		public Bitmap Atlas { get; set; } = null;
@@ -44,23 +45,108 @@ namespace Alex.Utils
 		        new KeyValuePair<string, Bitmap>("no_texture", no),
 	        }.Concat(bitmaps.Where(x => x.Value.Height == 16 && x.Value.Width == 16)).ToArray();
 		       
-	        var others = bitmaps.Where(x => x.Value.Height != 16 && x.Value.Width != 16).ToArray();
+	        var others = bitmaps.Where(x => x.Value.Height != 16 || x.Value.Width != 16).ToList();
 
-			var bitmap = new Bitmap(AtlasWidth, AtlasHeight);
+	        Bitmap[] waterFrames = new Bitmap[0];
+	        Bitmap[] lavaFrames = new Bitmap[0];
+	        Bitmap[] waterFlowFrames = new Bitmap[0];
+	        Bitmap[] lavaFlowFrames = new Bitmap[0];
+	        
+	        foreach (var other in others.ToArray())
+	        {
+		        if (other.Key.Contains("water") && other.Key.Contains("still"))
+		        {
+			        waterFrames = GetFrames(other.Value);
+			        others.Remove(other);
+		        }
+		        else if (other.Key.Contains("water") && other.Key.Contains("flow"))
+		        {
+			        waterFlowFrames = GetFrames(other.Value);
+			        others.Remove(other);
+		        }
+		        else if (other.Key.Contains("lava") && other.Key.Contains("still"))
+		        {
+			        lavaFrames = GetFrames(other.Value);
+			        others.Remove(other);
+		        }
+		        else if (other.Key.Contains("lava") && other.Key.Contains("flow"))
+		        {
+			        lavaFlowFrames = GetFrames(other.Value);
+			        others.Remove(other);
+		        }
+	        }
 
-	        int total = regular.Length + others.Length;
+	        var bitmap = new Bitmap(AtlasWidth, AtlasHeight);
 
+	        int total = regular.Length + others.Count;
+
+	        if (waterFrames.Length > 0)
+	        {
+		        total++;
+
+		        regular = regular.Append(new KeyValuePair<string, Bitmap>("block/water_still", waterFrames[0])).ToArray();
+	        }
+
+	        if (waterFlowFrames.Length > 0)
+	        {
+		        total++;
+
+		        regular = regular.Append(new KeyValuePair<string, Bitmap>("block/water_flow", waterFlowFrames[0])).ToArray();
+	        }
+	        
+	        if (lavaFrames.Length > 0)
+	        {
+		        total++;
+		        regular = regular.Append(new KeyValuePair<string, Bitmap>("block/lava_still", lavaFrames[0])).ToArray();
+	        }
+	        
+	        if (lavaFlowFrames.Length > 0)
+	        {
+		        total++;
+		        regular = regular.Append(new KeyValuePair<string, Bitmap>("block/lava_flow", lavaFlowFrames[0])).ToArray();
+	        }
+	        
 			int xi = 0, yi = 0, offsetX = 0, yRemaining = 0;
 	        int processedFiles = Process(ref bitmap, regular, ref xi, ref yi, ref offsetX, ref yRemaining, total, 0, progressReceiver);
 	        yi += 16;
 	        xi = 0;
-			Process(ref bitmap, others, ref xi, ref yi, ref offsetX, ref yRemaining, total, processedFiles, progressReceiver);
+			Process(ref bitmap, others.ToArray(), ref xi, ref yi, ref offsetX, ref yRemaining, total, processedFiles, progressReceiver);
 		
 			Atlas = bitmap;
 
 			_atlas = TextureUtils.BitmapToTexture2D(Graphics, bitmap);
 			AtlasSize = new Vector2(_atlas.Width, _atlas.Height);
 
+			var waterLocation = GetAtlasLocation("block/water_still");
+			var waterFlowLocation = GetAtlasLocation("block/water_flow");
+			
+			var lavaLocation = GetAtlasLocation("block/lava_still");
+			var lavaFlowLocation = GetAtlasLocation("block/lava_flow");
+			_frames = new Texture2D[Math.Max(waterFrames.Length, waterFlowFrames.Length)];
+			for (int i = 0; i < _frames.Length; i++)
+			{
+				var target = new Bitmap(bitmap);
+				var r = new System.Drawing.Rectangle(0, 0, 16, 16);
+				var destination = new System.Drawing.Rectangle((int) waterLocation.Position.X, (int) waterLocation.Position.Y, 16, 16);
+
+				if (waterFrames.Length > 0)
+					TextureUtils.CopyRegionIntoImage(waterFrames[((i % 3 == 0 ? i -1 : i) / 6) % waterFrames.Length], r, ref target, destination);
+				
+				destination = new System.Drawing.Rectangle((int) waterFlowLocation.Position.X, (int) waterFlowLocation.Position.Y, 16, 16);
+				if (waterFlowFrames.Length > 0)
+					TextureUtils.CopyRegionIntoImage(waterFlowFrames[i % waterFlowFrames.Length], r, ref target, destination);
+				
+				destination = new System.Drawing.Rectangle((int) lavaLocation.Position.X, (int) lavaLocation.Position.Y, 16, 16);
+				if (lavaFrames.Length > 0)
+					TextureUtils.CopyRegionIntoImage(lavaFrames[i % lavaFrames.Length], r, ref target, destination);
+				
+				destination = new System.Drawing.Rectangle((int) lavaFlowLocation.Position.X, (int) lavaFlowLocation.Position.Y, 16, 16);
+				if (lavaFlowFrames.Length > 0)
+					TextureUtils.CopyRegionIntoImage(lavaFlowFrames[i % lavaFlowFrames.Length], r, ref target, destination);
+				
+				_frames[i] = TextureUtils.BitmapToTexture2D(Graphics, target);
+			}
+			
            // bitmap.Save("assets\\terrain.png", ImageFormat.Png);
 			Log.Info($"TextureAtlas generated! (Width:{_atlas.Width}px Height:{_atlas.Height}px)");
         }
@@ -110,6 +196,25 @@ namespace Alex.Utils
 			}
 
 		    return done;
+	    }
+
+	    private Bitmap[] GetFrames(Bitmap source)
+	    {
+		    int ix = source.Width / 16;
+		    int iy = source.Height / 16;
+
+		    List<Bitmap> result = new List<Bitmap>();
+		    
+		    for (int x = 0; x < ix; x++)
+		    for(int y = 0; y < iy; y++)
+		    {
+			    Bitmap newBitmap = new Bitmap(16, 16);
+			    TextureUtils.CopyRegionIntoImage(source, new System.Drawing.Rectangle(x,y, 16, 16), ref newBitmap, new System.Drawing.Rectangle(0, 0, 16, 16));
+			    
+			    result.Add(newBitmap);
+		    }
+
+		    return result.ToArray();
 	    }
 
 	    private const int AtlasWidth = 512;
@@ -242,8 +347,15 @@ namespace Alex.Utils
 			//modifiedBitmap.Save("debug.png", ImageFormat.Png);
 		}
 
-	    public Texture2D GetAtlas()
-	    { 
+
+		public int GetFrameCount()
+		{
+			return _frames.Length;
+		}
+		
+		public Texture2D GetAtlas(int frame)
+		{
+			return _frames[frame % _frames.Length];
 		    return _atlas;
 	    }
 
@@ -251,6 +363,9 @@ namespace Alex.Utils
 	    {
 		    if (_atlasLocations.Count == 0) throw new Exception();
 
+		    if (file == "water_still" && !_atlasLocations.ContainsKey(file))
+			    file = "water_flow";
+		    
 		    return _atlasLocations.ContainsKey(file) ? _atlasLocations[file] : new TextureInfo(Vector2.Zero, TextureWidth, TextureHeight);
 	    }
 	}

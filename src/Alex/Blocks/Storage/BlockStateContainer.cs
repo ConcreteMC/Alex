@@ -16,7 +16,7 @@ namespace Alex.Blocks.Storage
 	{
 		private static NLog.Logger Log = NLog.LogManager.GetCurrentClassLogger(typeof(BlockStateContainer));
 		private static readonly IBlockStatePalette RegistryBasedPalette = new BlockStatePaletteRegistry();
-		protected static IBlockState AirBlockState = new Air().GetDefaultState();
+		protected static IBlockState AirBlockState = BlockFactory.GetBlockState("minecraft:air");// new Air().GetDefaultState();
 		public FlexibleStorage Storage;
 		public IBlockStatePalette Palette;
 		private int _bits;
@@ -169,7 +169,7 @@ namespace Alex.Blocks.Storage
 				{
 					foreach (var property in properties)
 					{
-						blockState = blockState.WithProperty(StateProperty.Parse(property.Name), property.StringValue);
+						blockState = blockState.WithProperty(property.Name, property.StringValue);
 					}
 				}
 

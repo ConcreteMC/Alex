@@ -34,6 +34,8 @@ namespace Alex.Blocks.Storage
 
 		public bool[] TransparentBlocks;
 		public bool[] SolidBlocks;
+		public bool[] ScheduledUpdates;
+		public bool[] ScheduledSkylightUpdates;
 
         public ExtendedBlockStorage(int y, bool storeSkylight)
 		{
@@ -43,20 +45,24 @@ namespace Alex.Blocks.Storage
 
 			if (storeSkylight)
 			{
-				this.SkyLight = new NibbleArray(4096, 0);
+				this.SkyLight = new NibbleArray(4096, (byte) (Alex.Instance.GameSettings.ClientSideLighting ? 0 : 0xff));
 			}
 
 			TransparentBlocks = new bool[16 * 16 * 16];
 			SolidBlocks = new bool[16 * 16 * 16];
+			ScheduledUpdates = new bool[16 * 16 * 16];
+			ScheduledSkylightUpdates = new bool[16 * 16 * 16];
 
 			for (int i = 0; i < TransparentBlocks.Length; i++)
 			{
-				TransparentBlocks[i] = true;
+				TransparentBlocks[i] = false;
 				SolidBlocks[i] = false;
 			}
         }
 
-		public void ResetSkyLight()
+        public bool IsDirty { get; set; }
+
+        public void ResetSkyLight()
 		{
 			this.SkyLight = new NibbleArray(4096, 0);
 		}
@@ -66,7 +72,27 @@ namespace Alex.Blocks.Storage
 			return y << 8 | z << 4 | x;
 		}
 
-		public IBlockState Get(int x, int y, int z)
+		public bool IsScheduled(int x, int y, int z)
+		{
+			return ScheduledUpdates[GetCoordinateIndex(x, y, z)];
+		}
+
+		public void SetScheduled(int x, int y, int z, bool value)
+		{
+			ScheduledUpdates[GetCoordinateIndex(x, y, z)] = value;
+		}
+
+		public bool IsLightingScheduled(int x, int y, int z)
+		{
+			return ScheduledSkylightUpdates[GetCoordinateIndex(x, y, z)];
+		}
+
+		public bool SetLightingScheduled(int x, int y, int z, bool value)
+		{
+			return ScheduledSkylightUpdates[GetCoordinateIndex(x, y, z)] = value;
+		}
+
+        public IBlockState Get(int x, int y, int z)
 		{
 			return this.Data.Get(x, y, z);
 		}
@@ -79,7 +105,9 @@ namespace Alex.Blocks.Storage
 				return;
 			}
 
-			IBlockState iblockstate = this.Get(x, y, z);
+			var coordsIndex = GetCoordinateIndex(x, y, z);
+
+            IBlockState iblockstate = this.Get(x, y, z);
 			if (iblockstate != null)
 			{
 				IBlock block = iblockstate.Block;
@@ -92,6 +120,11 @@ namespace Alex.Blocks.Storage
 					{
 						--this._tickRefCount;
 					}
+					
+					//var coordsIndex = GetCoordinateIndex(x, y, z);
+
+					TransparentBlocks[coordsIndex] = true;
+					SolidBlocks[coordsIndex] = false;
 				}				
 			}
 
@@ -105,12 +138,17 @@ namespace Alex.Blocks.Storage
 				{
 					++this._tickRefCount;
 				}
+				
+			
+				TransparentBlocks[coordsIndex] = block1.Transparent;
+				SolidBlocks[coordsIndex] = block1.Solid;
 			}
-
+			
 			this.Data.Set(x, y, z, state);
-			TransparentBlocks[GetCoordinateIndex(x, y, z)] = state.Block.Transparent;
-			SolidBlocks[GetCoordinateIndex(x, y, z)] = state.Block.Solid;
-        }
+			
+			ScheduledUpdates[coordsIndex] = true;
+			IsDirty = true;
+		}
 
 		public bool IsTransparent(int x, int y, int z)
 		{
@@ -159,7 +197,10 @@ namespace Alex.Blocks.Storage
 		 */
 		public void SetExtSkylightValue(int x, int y, int z, int value)
 		{
-			this.SkyLight[GetCoordinateIndex(x,y,z)] = (byte) value;//.Set(x, y, z, value);
+			var idx = GetCoordinateIndex(x, y, z);
+
+            this.SkyLight[idx] = (byte) value;//.Set(x, y, z, value);
+            ScheduledSkylightUpdates[idx] = true;
 		}
 
 		/**
@@ -198,8 +239,11 @@ namespace Alex.Blocks.Storage
 					for (int z = 0; z < 16; z++)
 					{
 						IBlock block = this.Get(x, y, z).Block;
-						TransparentBlocks[GetCoordinateIndex(x, y, z)] = block.Transparent;
-						SolidBlocks[GetCoordinateIndex(x, y, z)] = block.Solid;
+						
+						var idx = GetCoordinateIndex(x, y, z);
+						
+						TransparentBlocks[idx] = block.Transparent;
+						SolidBlocks[idx] = block.Solid;
                         //if (block.LightValue > 0)
                         //{
                         //	SetExtBlocklightValue(x,y,z, (byte)block.LightValue);

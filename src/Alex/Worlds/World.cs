@@ -84,24 +84,29 @@ namespace Alex.Worlds
 		public PhysicsManager PhysicsEngine { get; set; }
 		//	private WorldProvider WorldProvider { get; set; }
 
-		public int Vertices
+		public long Vertices
         {
             get { return ChunkManager.Vertices; }
         }
+
+		public int IndexBufferSize
+		{
+			get { return ChunkManager.IndexBufferSize; }
+		}
 
 		public int ChunkCount
         {
             get { return ChunkManager.ChunkCount; }
         }
 
-		public int ChunkUpdates
+		public int ConcurrentChunkUpdates
         {
-            get { return ChunkManager.ChunkUpdates; }
+            get { return ChunkManager.ConcurrentChunkUpdates; }
         }
 
-		public int LowPriorityUpdates
+		public int EnqueuedChunkUpdates
 		{
-			get { return ChunkManager.LowPriortiyUpdates; }
+			get { return ChunkManager.EnqueuedChunkUpdates; }
 		}
 
 		public void ResetChunks()
@@ -217,7 +222,7 @@ namespace Alex.Worlds
 					var cc = GetChunkColumn(center.X + x, center.Z + z);
 					if (cc != null && cc.SkyLightDirty)
 					{
-						ChunkUpdate(cc, ScheduleType.Skylight);
+						ChunkUpdate(cc, ScheduleType.Lighting);
 					}
 				}
 			}
@@ -319,7 +324,7 @@ namespace Alex.Worlds
 
                 chunk.SetBlock(cx, cy, cz, block);
 				ChunkManager.SkylightCalculator.UpdateHeightMap(new BlockCoordinates(x, y, z));
-                ChunkManager.ScheduleChunkUpdate(new ChunkCoordinates(x >> 4, z >> 4), ScheduleType.Full | ScheduleType.Skylight, true);
+                ChunkManager.ScheduleChunkUpdate(new ChunkCoordinates(x >> 4, z >> 4), ScheduleType.Scheduled | ScheduleType.Lighting, true);
 
 				UpdateNeighbors(x, y, z);
 				CheckForUpdate(chunkCoords, cx, cz);
@@ -345,7 +350,7 @@ namespace Alex.Worlds
                 chunk.SetBlock(cx, cy, cz, block);
 				ChunkManager.SkylightCalculator.UpdateHeightMap(new BlockCoordinates(x,y,z));
 
-				ChunkManager.ScheduleChunkUpdate(chunkCoords, ScheduleType.Full | ScheduleType.Skylight, true);
+				ChunkManager.ScheduleChunkUpdate(chunkCoords, ScheduleType.Scheduled | ScheduleType.Lighting, true);
 
 			    UpdateNeighbors(x, y, z);
 			    CheckForUpdate(chunkCoords, cx, cz);
@@ -366,7 +371,7 @@ namespace Alex.Worlds
                 chunk.SetBlockState(cx, cy, cz, block);
 				ChunkManager.SkylightCalculator.UpdateHeightMap(new BlockCoordinates(x, y, z));
 
-				ChunkManager.ScheduleChunkUpdate(chunkCoords, ScheduleType.Full | ScheduleType.Skylight, true);
+				ChunkManager.ScheduleChunkUpdate(chunkCoords, ScheduleType.Scheduled | ScheduleType.Lighting, true);
 
                 UpdateNeighbors(x,y,z);
 				CheckForUpdate(chunkCoords, cx, cz);
@@ -377,20 +382,20 @@ namespace Alex.Worlds
 		{
 			if (cx == 0)
 			{
-				ChunkManager.ScheduleChunkUpdate(chunkCoords - new ChunkCoordinates(1, 0), ScheduleType.Full | ScheduleType.Skylight, true);
+				ChunkManager.ScheduleChunkUpdate(chunkCoords - new ChunkCoordinates(1, 0), ScheduleType.Border | ScheduleType.Lighting, true);
 			}
 			else if (cx == 0xf)
 			{
-				ChunkManager.ScheduleChunkUpdate(chunkCoords + new ChunkCoordinates(1, 0), ScheduleType.Full | ScheduleType.Skylight, true);
+				ChunkManager.ScheduleChunkUpdate(chunkCoords + new ChunkCoordinates(1, 0), ScheduleType.Border | ScheduleType.Lighting, true);
 			}
 
 			if (cz == 0)
 			{
-				ChunkManager.ScheduleChunkUpdate(chunkCoords - new ChunkCoordinates(0, 1), ScheduleType.Full | ScheduleType.Skylight, true);
+				ChunkManager.ScheduleChunkUpdate(chunkCoords - new ChunkCoordinates(0, 1), ScheduleType.Border | ScheduleType.Lighting, true);
 			}
 			else if (cz == 0xf)
 			{
-				ChunkManager.ScheduleChunkUpdate(chunkCoords + new ChunkCoordinates(0, 1), ScheduleType.Full | ScheduleType.Skylight, true);
+				ChunkManager.ScheduleChunkUpdate(chunkCoords + new ChunkCoordinates(0, 1), ScheduleType.Border | ScheduleType.Lighting, true);
 			}
         }
 
@@ -425,6 +430,11 @@ namespace Alex.Worlds
 			}
 
 			return BlockFactory.GetBlockState(0);
+		}
+		
+		public IBlockState GetBlockState(BlockCoordinates coords)
+		{
+			return GetBlockState(coords.X, coords.Y, coords.Z);
 		}
 
 		public int GetBiome(int x, int y, int z)
@@ -585,7 +595,7 @@ namespace Alex.Worlds
 			EntityManager.UnloadEntities(chunkCoordinates);
 		}
 
-		public void ChunkUpdate(IChunkColumn chunkColumn, ScheduleType type = ScheduleType.Skylight)
+		public void ChunkUpdate(IChunkColumn chunkColumn, ScheduleType type = ScheduleType.Lighting)
 		{
 			ChunkManager.ScheduleChunkUpdate(new ChunkCoordinates(chunkColumn.X, chunkColumn.Z), type);
 		}

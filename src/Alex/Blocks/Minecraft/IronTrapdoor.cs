@@ -30,14 +30,14 @@ namespace Alex.Blocks.Minecraft
 
 		public override void Interact(IWorld world, BlockCoordinates position, BlockFace face, Entity sourceEntity)
 		{
-			if (BlockState.GetTypedValue(OPEN))
+			/*if (BlockState.GetTypedValue(OPEN))
 			{
 				world.SetBlockState(position.X, position.Y, position.Z, BlockState.WithProperty(OPEN, false.ToString()));
 			}
 			else
 			{
 				world.SetBlockState(position.X, position.Y, position.Z, BlockState.WithProperty(OPEN, true.ToString()));
-			}
+			}*/
 		}
 	}
 }

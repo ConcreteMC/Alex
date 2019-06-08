@@ -92,7 +92,7 @@ namespace Alex.GameStates.Playing
 				FpsCounter.Update();
 				World.ChunkManager.GetPendingLightingUpdates(out int lowLight, out int midLight, out int highLight);
 
-				return $"Alex {Alex.Version} ({FpsCounter.Value:##} FPS, {World.ChunkUpdates}:{World.LowPriorityUpdates} chunk updates, H: {highLight} M: {midLight} L: {lowLight} lighting updates)";
+				return $"Alex {Alex.Version} ({FpsCounter.Value:##} FPS, Queued: {World.EnqueuedChunkUpdates} Active: {World.ConcurrentChunkUpdates} chunk updates, H: {highLight} M: {midLight} L: {lowLight} lighting updates)";
 			});
 			_debugInfo.AddDebugLeft(() =>
 			{
@@ -110,7 +110,8 @@ namespace Alex.GameStates.Playing
 				var pos = World.Player.Velocity;
 				return $"Velocity: (X={pos.X:F2}, Y={pos.Y:F2}, Z={pos.Z:F2}) / SpeedFactor: {World.Player.Controller.LastSpeedFactor:F2}";
 			});
-			_debugInfo.AddDebugLeft(() => $"Vertices: {World.Vertices}");
+			_debugInfo.AddDebugLeft(() => $"Vertices: {World.Vertices:N0} ({GetBytesReadable((long)(World.Vertices * VertexPositionNormalTextureColor.VertexDeclaration.VertexStride))})");
+			_debugInfo.AddDebugLeft(() => $"IndexBuffer Elements: {World.IndexBufferSize:N0} ({GetBytesReadable(World.IndexBufferSize * 4)})");
 			_debugInfo.AddDebugLeft(() => $"Chunks: {World.ChunkCount}, {World.ChunkManager.RenderedChunks}");
 			_debugInfo.AddDebugLeft(() => $"Entities: {World.EntityManager.EntityCount}, {World.EntityManager.EntitiesRendered}");
 			_debugInfo.AddDebugLeft(() =>
@@ -146,7 +147,7 @@ namespace Alex.GameStates.Playing
 						var dict = SelBlock.BlockState.ToDictionary();
 						foreach (var kv in dict)
 						{
-							sb.AppendLine($"{kv.Key.Name}={kv.Value}");
+							sb.AppendLine($"{kv.Key}={kv.Value}");
 						}
 					}
 
@@ -348,7 +349,7 @@ namespace Alex.GameStates.Playing
 
 		public static string GetCardinalDirection(PlayerLocation cam)
 		{
-			double rotation = (360 - cam.HeadYaw) % 360;
+			double rotation = (cam.HeadYaw) % 360;
 			if (rotation < 0)
 			{
 				rotation += 360.0;
@@ -361,39 +362,39 @@ namespace Alex.GameStates.Playing
 		{
 			if (0 <= rotation && rotation < 22.5)
 			{
-				return "North";
+				return "South";
 			}
 			else if (22.5 <= rotation && rotation < 67.5)
 			{
-				return "North East";
+				return "South West";
 			}
 			else if (67.5 <= rotation && rotation < 112.5)
 			{
-				return "East";
+				return "West";
 			}
 			else if (112.5 <= rotation && rotation < 157.5)
 			{
-				return "South East";
+				return "North West"; //
 			}
 			else if (157.5 <= rotation && rotation < 202.5)
 			{
-				return "South";
+				return "North"; // 
 			}
 			else if (202.5 <= rotation && rotation < 247.5)
 			{
-				return "South West";
+				return "North East"; //
 			}
 			else if (247.5 <= rotation && rotation < 292.5)
 			{
-				return "West";
+				return "East";
 			}
 			else if (292.5 <= rotation && rotation < 337.5)
 			{
-				return "North West";
+				return "South East";
 			}
 			else if (337.5 <= rotation && rotation < 360.0)
 			{
-				return "North";
+				return "South";
 			}
 			else
 			{

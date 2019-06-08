@@ -140,7 +140,7 @@ namespace Alex
 						Model = CubeModel,
 						ModelName = "Unknown model",
 					}
-				});
+				}, null);
 
 				AirState.Model = UnknownBlockModel;
 			}
@@ -180,7 +180,7 @@ namespace Alex
 				{
 					foreach (var property in entry.Value.Properties)
 					{
-						state = (BlockState)state.WithPropertyNoResolve(new DynamicStateProperty(property.Key, property.Value), property.Value.FirstOrDefault(), false);
+						state = (BlockState)state.WithPropertyNoResolve(property.Key, property.Value.FirstOrDefault(), false);
 					}
 				}
 
@@ -196,11 +196,11 @@ namespace Alex
 					{
 						foreach (var property in s.Properties)
 						{
-							var prop = StateProperty.Parse(property.Key);
-							variantState = (Blocks.State.BlockState)variantState.WithPropertyNoResolve(prop, property.Value, false);
+							//var prop = StateProperty.Parse(property.Key);
+							variantState = (Blocks.State.BlockState)variantState.WithPropertyNoResolve(property.Key, property.Value, false);
 							if (s.Default)
 							{
-								state = (BlockState) state.WithPropertyNoResolve(prop, property.Value, false);
+								state = (BlockState) state.WithPropertyNoResolve(property.Key, property.Value, false);
 							}
 						}
 					}
@@ -244,6 +244,10 @@ namespace Alex
 								Log.Info($"Saved un-implemnted block to file ({displayName})!");
 							}
 						}
+						else
+						{
+							block.Name = entry.Key;
+						}
 
 
 						if (block.IsSourceBlock && !(cachedBlockModel is MultiBlockModel) && !(cachedBlockModel is LiquidBlockModel))
@@ -265,10 +269,10 @@ namespace Alex
 							block.Transparent = true;
 						}
 
+						variantState.Name = block.Name;
 						variantState.Block = block;
 						variantState.Model = cachedBlockModel;
-
-						block.Name = entry.Key;
+						
 						block.BlockState = variantState;
 						if (string.IsNullOrWhiteSpace(block.DisplayName) ||
 						    !block.DisplayName.Contains("minet", StringComparison.InvariantCultureIgnoreCase))
@@ -313,6 +317,7 @@ namespace Alex
 			{
 				variantMap._default = state;
 			}
+			
 				if (!BlockStateByName.TryAdd(state.Name, variantMap))
 				{
 					Log.Warn($"Failed to add blockstate, key already exists! ({state.Name})");
@@ -423,6 +428,15 @@ namespace Alex
 
 			if (name.Contains("water"))
 			{
+			/*	if (state.TryGetValue("level", out string lvl))
+				{
+					if (int.TryParse(lvl, out int actualLevel))
+					{
+						if (actualLevel < 7)
+							return FlowingWaterModel;
+					}
+				}
+				Log.Info($"WATER? {state.ToString()}");*/
 				return StationairyWaterModel;
 			}
 
@@ -441,17 +455,17 @@ namespace Alex
 					{
 						ss.IsMultiPart = true;
 					}
-					return new CachedResourcePackModel(resources, MultiPartModels.GetModels(state, blockStateResource));
+					return new CachedResourcePackModel(resources, MultiPartModels.GetModels(state, blockStateResource), null);
 				}
 
-				if (blockStateResource.Variants == null ||
+				if (blockStateResource?.Variants == null ||
 					blockStateResource.Variants.Count == 0)
 					return null;
 
 				if (blockStateResource.Variants.Count == 1)
 				{
 					var v = blockStateResource.Variants.FirstOrDefault();
-					return new CachedResourcePackModel(resources, new[] { v.Value.FirstOrDefault() });
+					return new CachedResourcePackModel(resources, new[] { v.Value.FirstOrDefault() }, v.Value);
 				}
 
 				BlockStateVariant blockStateVariant = null;
@@ -466,7 +480,7 @@ namespace Alex
 				
 					foreach (var kv in data)
 					{
-						if (variantBlockState.TryGetValue(kv.Key.Name, out string vValue))
+						if (variantBlockState.TryGetValue(kv.Key, out string vValue))
 						{
 							if (vValue.Equals(kv.Value, StringComparison.InvariantCultureIgnoreCase))
 							{
@@ -495,7 +509,7 @@ namespace Alex
 
 
 				var subVariant = blockStateVariant.FirstOrDefault();
-				return new CachedResourcePackModel(resources, new[] { subVariant });
+				return new CachedResourcePackModel(resources, new[] { subVariant }, blockStateVariant);
 			}
 
 			return null;
@@ -845,12 +859,17 @@ namespace Alex
 			else if (blockName == "minecraft:emerald_block" || blockName == "emeraldblock") return new EmeraldBlock();
 			else if (blockName == "minecraft:lapis_block" || blockName == "lapisblock") return new LapisBlock();
 
+			//Plants
 			else if (blockName == "minecraft:lilac" || blockName == "lilac") return new Lilac();
 			else if (blockName == "minecraft:rose_bush" || blockName == "rosebush") return new RoseBush();
 			else if (blockName == "minecraft:azure_bluet" || blockName == "azurebluet") return new AzureBluet();
 			else if (blockName == "minecraft:corn_flower" || blockName == "cornflower") return new CornFlower();
 			else if (blockName == "minecraft:oxeye_daisy" || blockName == "oxeyedaisy") return new OxeyeDaisy();
-
+			else if (blockName == "minecraft:attached_melon_stem" || blockName == "attachedmelonstem")
+				return new Stem();
+			else if (blockName == "minecraft:melon_stem" || blockName == "melonstem")
+				return new Stem();
+			
             else if (blockName == "minecraft:barrier" || blockName == "barrier") return new InvisibleBedrock(false);
 
 			else
@@ -903,7 +922,7 @@ namespace Alex
 						Uvlock = false,
 						Weight = 0
 					}
-				}),
+				}, null),
 			};
 
 			var result = new Block(palleteId)

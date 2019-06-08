@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using Alex.API.Graphics;
+using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -14,6 +15,40 @@ namespace Alex.Graphics.Models
 
 	    static Model()
 	    {
+		    QuadMesh = new Vector3[4][];
+
+		    QuadMesh[0] = new[]
+		    {
+			    new Vector3(1, 0, 1),
+			    new Vector3(0, 0, 0),
+			    new Vector3(0, 1, 0),
+			    new Vector3(1, 1, 1)
+		    };
+
+		    QuadMesh[1] = new[]
+		    {
+			    new Vector3(0, 0, 0),
+			    new Vector3(1, 0, 1),
+			    new Vector3(1, 1, 1),
+			    new Vector3(0, 1, 0)
+		    };
+
+		    QuadMesh[2] = new[]
+		    {
+			    new Vector3(0, 0, 1),
+			    new Vector3(1, 0, 0),
+			    new Vector3(1, 1, 0),
+			    new Vector3(0, 1, 1)
+		    };
+
+		    QuadMesh[3] = new[]
+		    {
+			    new Vector3(1, 0, 0),
+			    new Vector3(0, 0, 1),
+			    new Vector3(0, 1, 1),
+			    new Vector3(1, 1, 0)
+		    };
+		    
 			if (QuadVertices == null)
 				CalculateQuad();
 
@@ -23,25 +58,57 @@ namespace Alex.Graphics.Models
 
 	    private static void CalculateQuad()
 	    {
-		    QuadVertices = new VertexPositionNormalTextureColor[4];
-		    QuadVertices[0] = new VertexPositionNormalTextureColor();
-		    QuadVertices[0].Position = new Vector3(-1, 1, 0);
-		    QuadVertices[0].Color = Color.White;
-		    QuadVertices[1] = new VertexPositionNormalTextureColor();
-		    QuadVertices[1].Position = new Vector3(1, 1, 0);
-		    QuadVertices[1].Color = Color.White;
-		    QuadVertices[2] = new VertexPositionNormalTextureColor();
-		    QuadVertices[2].Position = new Vector3(-1, -1, 0);
-		    QuadVertices[2].Color = Color.White;
-		    QuadVertices[3] = new VertexPositionNormalTextureColor();
-		    QuadVertices[3].Position = new Vector3(1, -1, 0);
-		    QuadVertices[3].Color = Color.White;
+
 		}
 
 	    private static void CalculateCube()
 	    {
 
 	    }
+
+	    protected static readonly Vector3[] QuadNormals =
+	    {
+		    new Vector3(0, 0, 1),
+		    new Vector3(0, 0, -1),
+		    new Vector3(1, 0, 0),
+		    new Vector3(-1, 0, 0),
+		    new Vector3(0, 1, 0),
+		    new Vector3(0, -1, 0)
+	    };
+
+	    protected static readonly Vector3[][] QuadMesh;
+
+	    protected static readonly Vector3[][] FlatMesh = new Vector3[4][]
+	    {
+		    new[]
+		    {
+			    new Vector3(0, 0, 0),
+			    new Vector3(1, 0, 0),
+			    new Vector3(1, 1, 0),
+			    new Vector3(0, 1, 0)
+		    },
+		    new[]
+		    {
+			    new Vector3(0, 0, 0),
+			    new Vector3(0, 0, 1),
+			    new Vector3(0, 1, 1),
+			    new Vector3(0, 1, 0)
+		    },
+		    new[] //Flat BOTTOM
+		    {
+			    new Vector3(0, 0, 0),
+			    new Vector3(1, 0, 0),
+			    new Vector3(1, 0, 1),
+			    new Vector3(0, 0, 1)
+		    },
+		    new[] //Flat TOP
+		    {
+			    new Vector3(0, 1, 0),
+			    new Vector3(1, 1, 0),
+			    new Vector3(1, 1, 1),
+			    new Vector3(0, 1, 1)
+		    }
+	    };
 
 		public sealed class Cube
 		{

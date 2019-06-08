@@ -9,6 +9,7 @@ namespace Alex.Blocks.Minecraft
 			IsReplacible = false;
 
 			BlockMaterial = Material.Grass;
+			LightOpacity = 0;
 		}
 	}
 }

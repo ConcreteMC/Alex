@@ -328,8 +328,12 @@ namespace Alex.Worlds.Lighting
 	    }
 
 	    public bool TryLightNext(ChunkCoordinates ourCoordinates, out ChunkCoordinates coordinates)
-	    {
+	    {		    
 		    coordinates = ChunkCoordinates.Zero;
+		    if (!Alex.Instance.GameSettings.ClientSideLighting)
+		    {
+			    return false;
+		    }
 
 		    if (!HasPending())
 			    return false;
@@ -365,6 +369,8 @@ namespace Alex.Worlds.Lighting
 
 	    public void EnqueueOperation(ChunkCoordinates coords, BoundingBox box, bool skyLight, bool initial = false)
 	    {
+		    if (!Alex.Instance.GameSettings.ClientSideLighting) return;
+		    
 		    var op = new LightingOperation
 		    {
 			    SkyLight = skyLight, Box = box, Initial = initial, Coordinates = coords
@@ -399,6 +405,8 @@ namespace Alex.Worlds.Lighting
 	    /// </summary>
 	    public void CalculateLighting(IChunkColumn chunk, bool skyLight = true, bool initial = false)
 	    {
+		    if (!Alex.Instance.GameSettings.ClientSideLighting) return;
+		    
 		    if (!chunk.SkyLightDirty) return;
 		    // Set voxels above max height to 0xFF
 			if (initial)

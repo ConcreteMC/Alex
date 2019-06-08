@@ -1,21 +1,34 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
+using System.Runtime.Serialization.Formatters.Binary;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using NLog;
 
 namespace Alex.API.Graphics
 {
 	public sealed class ChunkMesh : IDisposable
 	{
-		public VertexPositionNormalTextureColor[] SolidVertices { get; }
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger();
+
+        public VertexPositionNormalTextureColor[] Vertices { get; set; }
 		public VertexPositionNormalTextureColor[] TransparentVertices { get; }
-		public ChunkMesh(VertexPositionNormalTextureColor[] solidEntries, VertexPositionNormalTextureColor[] transparentEntries)
+		
+		public int[] SolidIndexes { get; set; }
+		public int[] TransparentIndexes { get; set; }
+		
+		public ChunkMesh(VertexPositionNormalTextureColor[] entries, VertexPositionNormalTextureColor[] transparentEntries/*, 
+			IDictionary<Vector3, EntryPosition> positions*/, int[] solidIndexes, int[] transparentIndexes)
 		{
 			//var entries = new Dictionary<Vector3, EntryPosition>();
-
-			SolidVertices = solidEntries; //new VertexPositionNormalTextureColor[solidEntries.Sum(x => x.Vertices.Length)];
-			TransparentVertices = transparentEntries;//.SelectMany(x => x.Vertices).ToArray();// new VertexPositionNormalTextureColor[transparentEntries.Sum(x => x.Vertices.Length)];
-
+			TransparentVertices = transparentEntries;
+			Vertices = entries; //new VertexPositionNormalTextureColor[solidEntries.Sum(x => x.Vertices.Length)];
+		//	TransparentVertices = transparentEntries;//.SelectMany(x => x.Vertices).ToArray();// new VertexPositionNormalTextureColor[transparentEntries.Sum(x => x.Vertices.Length)];
+			SolidIndexes = solidIndexes;
+			TransparentIndexes = transparentIndexes;
 			/*int index = 0;
 			for (var i = 0; i < solidEntries.Length; i++)
 			{
@@ -43,23 +56,64 @@ namespace Alex.API.Graphics
 			}
 
 			EntryPositions = entries;*/
+
+			//EntryPositions = new ReadOnlyDictionary<Vector3, EntryPosition>(positions);
 		}
 
-	//	public IReadOnlyDictionary<Vector3, EntryPosition> EntryPositions { get; }
-
-		public sealed class Entry
+		public void Compress()
 		{
-			public VertexPositionNormalTextureColor[] Vertices;
-			public Vector3 Position;
-			public uint ID;
-			public Entry(uint id, VertexPositionNormalTextureColor[] vertices, 
-				Vector3 position)
+			List<CompressionGroup> compressionGroups = new List<CompressionGroup>();
+
+			var vertices = Vertices.ToList();
+
+			var matchingTextureCoordinates = vertices.GroupBy(x => x.TexCoords).ToArray();
+			foreach (var group in matchingTextureCoordinates)
 			{
-				ID = id;
-				Vertices = vertices;
-				Position = position;
+				var texCoords = group.Key;
+				var matchedByColor = group.GroupBy(x => x.Color).ToArray();
+
+				foreach (var match in matchedByColor)
+				{
+					List<CompressionItem> items = new List<CompressionItem>();
+					foreach (var item in match)
+					{
+						var index = vertices.IndexOf(item);
+						items.Add(new CompressionItem(index, item.Position));
+					}
+
+					compressionGroups.Add(new CompressionGroup(texCoords, match.Key, items.ToArray()));
+				}
+			}
+
+			CompressionGroup[] groups = compressionGroups.ToArray();
+        }
+
+		private class CompressionGroup
+		{
+			public Vector2 TextureCoordinates { get; }
+			public Color Color { get; }
+			public CompressionItem[] Items { get; }
+			public CompressionGroup(Vector2 textureCoordinates, Color color, CompressionItem[] items)
+			{
+				Color = color;
+				TextureCoordinates = textureCoordinates;
+				Items = items;
 			}
 		}
+
+		private struct CompressionItem
+		{
+			public int Index { get; set; }
+			public Vector3 Value { get; set; }
+
+			public CompressionItem(int index, Vector3 value)
+			{
+				Index = index;
+				Value = value;
+			}
+		}
+
+		//public IReadOnlyDictionary<Vector3, EntryPosition> EntryPositions { get; }
 
 		public sealed class EntryPosition
 		{
@@ -77,7 +131,9 @@ namespace Alex.API.Graphics
 
 		public void Dispose()
 		{
-			
+			Vertices = null;
+			SolidIndexes = null;
+			TransparentIndexes = null;
 		}
 	}
 }

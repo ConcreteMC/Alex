@@ -16,11 +16,11 @@ namespace Alex.Worlds
 		public TickManager Ticker { get; }
 		public LevelInfo WorldInfo { get; set; } = new LevelInfo();
 
-		public int Vertices => 0;
+		public long Vertices => 0;
 
 		public int ChunkCount => 0;
 
-		public int ChunkUpdates => 0;
+		public int ConcurrentChunkUpdates => 0;
 
 		internal ChunkManager ChunkManager { get; }
 		public CachedWorld(Alex alex)
@@ -129,6 +129,11 @@ namespace Alex.Worlds
 			}
 
 			return new Air().GetDefaultState();
+		}
+		
+		public IBlockState GetBlockState(BlockCoordinates coords)
+		{
+			return GetBlockState(coords.X, coords.Y, coords.Z);
 		}
 
 		public int GetBiome(int x, int y, int z)

@@ -19,6 +19,6 @@ namespace Alex.API.Data.Servers
 
         public Texture2D CachedIcon { get; set; }
 
-		public Guid IntenalIdentifier = Guid.NewGuid();
+        public Guid IntenalIdentifier = Guid.NewGuid();
     }
 }

@@ -36,7 +36,7 @@ namespace Alex.Blocks.Minecraft
 
 		public override void BlockPlaced(IWorld world, BlockCoordinates position)
 		{
-			if (IsUpper)
+			/*if (IsUpper)
 			{
 				Block below = (Block) world.GetBlock(position - new BlockCoordinates(0, 1, 0));
 				if (below is Door bottom)
@@ -59,22 +59,22 @@ namespace Alex.Blocks.Minecraft
 						world.SetBlockState(position.X, position.Y, position.Z, state);
 					}
 				}
-			}
+			}*/
 			//return false;
 		}
 
 		public override void Interact(IWorld world, BlockCoordinates position, BlockFace face, Entity sourceEntity)
 		{
-			if (!IsUpper)
+			/*if (!IsUpper)
 			{
 				BlockState state = (BlockState)BlockState.WithProperty(OPEN, (!IsOpen).ToString());
 				world.SetBlockState(position.X, position.Y, position.Z, state);
-			}
+			}*/
 		}
 
 		public override void BlockUpdate(IWorld world, BlockCoordinates position, BlockCoordinates updatedBlock)
 		{
-			if (IsUpper && updatedBlock.Y < position.Y)
+			/*if (IsUpper && updatedBlock.Y < position.Y)
 			{
 				var changedBlock = world.GetBlockState(updatedBlock.X, updatedBlock.Y, updatedBlock.Z);
 				if (!changedBlock.GetTypedValue(UPPER))
@@ -83,7 +83,7 @@ namespace Alex.Blocks.Minecraft
 					world.SetBlockState(position.X, position.Y, position.Z, myMeta);
 				}
 			}
-			Log.Info($"Door blockupdate called!");
+			Log.Info($"Door blockupdate called!");*/
 		}
 	}
 }
