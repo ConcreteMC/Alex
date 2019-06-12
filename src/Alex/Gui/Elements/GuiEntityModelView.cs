@@ -1,13 +1,9 @@
-﻿using Alex.API.Graphics;
-using Alex.API.Gui;
-using Alex.API.Gui.Elements;
+﻿using Alex.API.Gui.Elements;
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Alex.Entities;
 using Alex.GameStates;
-using Alex.Graphics.Models.Entity;
-using Alex.Rendering.Camera;
-using Alex.ResourcePackLib.Json.Models.Entities;
+using Alex.Graphics.Camera;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 

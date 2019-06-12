@@ -7,7 +7,6 @@ using Alex.API.World;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.BlockStates;
 using Alex.ResourcePackLib.Json.Models.Blocks;
-using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using NLog;
@@ -534,7 +533,7 @@ namespace Alex.Graphics.Models.Blocks
 							}
 						}
 
-						faceColor = LightingUtils.AdjustColor(faceColor, cullFace,
+						faceColor = AdjustColor(faceColor, cullFace,
 							GetLight(world, position + facing.GetVector3(),
 								false /*model.Model.AmbientOcclusion*/), element.Shade);
 

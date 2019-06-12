@@ -1,5 +1,4 @@
-﻿using System;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace Alex
 {
@@ -19,6 +18,7 @@ namespace Alex
 		public int ChunkThreads { get; set; } 
 		public bool ClientSideLighting { get; set; }
 		public bool UseAlexChunks { get; set; }
+		
         public Settings(string username)
         {
             Username = username;

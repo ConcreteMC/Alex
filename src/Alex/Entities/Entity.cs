@@ -1,22 +1,14 @@
 ﻿using System;
-using System.Collections;
-using Alex.API;
 using Alex.API.Entities;
 using Alex.API.Graphics;
 using Alex.API.Graphics.Typography;
-using Alex.API.Json;
 using Alex.API.Network;
 using Alex.API.Utils;
-using Alex.Graphics.Models;
 using Alex.Graphics.Models.Entity;
-using Alex.Rendering;
-using Alex.Rendering.Camera;
 using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using NLog;
-using MathF = Alex.API.Utils.MathF;
 
 namespace Alex.Entities
 {

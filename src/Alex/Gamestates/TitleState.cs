@@ -10,10 +10,9 @@ using Alex.API.Gui.Graphics;
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.Entities;
-using Alex.Gamestates;
-using Alex.Gamestates.Login;
 using Alex.GameStates.Gui.Common;
 using Alex.GameStates.Gui.Multiplayer;
+using Alex.Gamestates.Login;
 using Alex.Gui;
 using Alex.Gui.Elements;
 using Alex.Networking.Java;
@@ -21,16 +20,11 @@ using Alex.Services;
 using Alex.Utils;
 using Alex.Worlds;
 using Alex.Worlds.Generators;
-using Microsoft.Identity.Client;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using MiNET.Utils;
 using NLog;
 using Color = Microsoft.Xna.Framework.Color;
-using Logger = NLog.Logger;
-using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace Alex.GameStates
 {
@@ -417,7 +411,7 @@ namespace Alex.GameStates
 		{
 			Debug(new AnvilWorldProvider(Alex.GameSettings.Anvil)
 			{
-				MissingChunkProvider = new VoidWorldGenerator()
+				MissingChunkProvider = new EmptyWorldGenerator()
 			});
 		}
 

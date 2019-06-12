@@ -1,14 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Net;
-using System.Text;
 using Microsoft.Xna.Framework.Graphics;
+using MiNET.Utils.Skins;
 using Newtonsoft.Json;
 
 namespace Alex.Utils
 {
-	public class SkinUtils
+	public static class SkinUtils
 	{
 		public static bool TryGetSkin(string json, GraphicsDevice graphics, out Texture2D texture, out bool isSlim)
 		{
@@ -46,6 +46,7 @@ namespace Alex.Utils
 			texture = null;
 			return false;
 		}
+		
 		public static bool TryGetSkin(Uri skinUri, GraphicsDevice graphics, out Texture2D texture)
 		{
 			try
@@ -70,6 +71,42 @@ namespace Alex.Utils
 
 			texture = null;
 			return false;
+		}
+
+		public static bool TryGetBitmap(this Skin skin, out Bitmap result)
+		{
+			try
+			{
+				var bytes = skin.SkinData;
+
+				int width = 64;
+				var height = bytes.Length == 64 * 32 * 4 ? 32 : 64;
+
+				Bitmap bitmap = new Bitmap(width, height);
+
+				int i = 0;
+				for (int y = 0; y < bitmap.Height; y++)
+				{
+					for (int x = 0; x < bitmap.Width; x++)
+					{
+						byte r = bytes[i++];
+						byte g = bytes[i++];
+						byte b = bytes[i++];
+						byte a = bytes[i++];
+
+						Color color = Color.FromArgb(a, r, g, b);
+						bitmap.SetPixel(x, y, color);
+					}
+				}
+
+				result = bitmap;
+				return true;
+			}
+			catch
+			{
+				result = null;
+				return false;
+			}
 		}
 
 		public class SkinMetadata

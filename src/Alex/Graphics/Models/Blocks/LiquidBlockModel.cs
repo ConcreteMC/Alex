@@ -5,7 +5,6 @@ using Alex.API.Blocks.State;
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.API.World;
-using Alex.Blocks;
 using Alex.Blocks.Properties;
 using Alex.Blocks.State;
 using Alex.ResourcePackLib.Json;
@@ -333,7 +332,7 @@ namespace Alex.Graphics.Models.Blocks
 						vert.Position.X += position.X;
 						vert.Position.Z += position.Z;
 
-						vert.Color = LightingUtils.AdjustColor(new Color(68, 175, 245), f,
+						vert.Color = AdjustColor(new Color(68, 175, 245), f,
 							GetLight(world, position + d), false);
 
 						result.Add(vert);

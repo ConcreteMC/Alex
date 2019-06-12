@@ -5,20 +5,15 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Threading.Tasks.Schedulers;
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Utils;
 using Alex.Worlds.Lighting;
-using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MiNET.Utils;
 using NLog;
 using UniversalThreadManagement;
-using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
-using PlayerLocation = Alex.API.Utils.PlayerLocation;
 
 //using OpenTK.Graphics;
 

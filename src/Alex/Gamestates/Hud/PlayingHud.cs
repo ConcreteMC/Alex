@@ -8,7 +8,6 @@ using Alex.GameStates.Gui.InGame;
 using Alex.GameStates.Playing;
 using Alex.Gui.Elements;
 using Alex.Gui.Elements.Inventory;
-using Alex.Rendering.UI;
 using Microsoft.Xna.Framework;
 
 namespace Alex.GameStates.Hud

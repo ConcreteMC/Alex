@@ -1,20 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
-using System.Drawing.Imaging;
-using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Text;
-using Alex.API;
 using Alex.API.Json;
 using Alex.API.Services;
 using Alex.Entities;
-using Alex.Rendering;
+using Alex.Networking.Java;
 using Alex.ResourcePackLib;
 using Alex.Utils;
 using Microsoft.Xna.Framework.Graphics;
@@ -54,21 +50,29 @@ namespace Alex
 					                                (long) (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds);
 
 					VersionManifest manifest = VersionManifest.FromJson(rawJson);
-					Version latestSnapshotVersion =
-						manifest.Versions.OrderByDescending(x => x.ReleaseTime.ToUnixTimeSeconds()).FirstOrDefault();
+					Version version =
+						manifest.Versions.FirstOrDefault(x => x.Id == JavaProtocol.VersionId);//.OrderByDescending(x => x.ReleaseTime.ToUnixTimeSeconds()).FirstOrDefault();
 
-					Log.Info($"Using assets version {latestSnapshotVersion.Id}");
+					var latestVersion = manifest.Versions.OrderByDescending(x => x.ReleaseTime.ToUnixTimeSeconds())
+						.FirstOrDefault();
+					
+					Log.Info($"Using java assets version {version.Id} ({version.Type.ToString()})");
 
+					if (version.ReleaseTime < latestVersion.ReleaseTime)
+					{
+						Log.Info($"Java assets outdated, latest version is: {latestVersion.Id} ({latestVersion.Type.ToString()})");
+					}
+					
 					byte[] data;
-					string savedPath = Path.Combine("assets", $"java-{latestSnapshotVersion.Id}.zip");
+					string savedPath = Path.Combine("assets", $"java-{version.Id}.zip");
 					if (Storage.TryReadBytes(savedPath, out data))
 					{
 						return data;
 					}
 					else
 					{
-						Log.Info("Downloading latest vanilla Minecraft resources...");
-						LauncherMeta meta = LauncherMeta.FromJson(wc.DownloadString(latestSnapshotVersion.Url));
+						Log.Info("Downloading Minecraft:Java edition assets...");
+						LauncherMeta meta = LauncherMeta.FromJson(wc.DownloadString(version.Url));
 						byte[] clientData = wc.DownloadData(meta.Downloads.Client.Url);
 						if (Storage.TryWriteBytes(savedPath, clientData))
 						{

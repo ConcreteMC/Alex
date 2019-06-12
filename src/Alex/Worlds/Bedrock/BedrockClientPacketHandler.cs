@@ -1,23 +1,16 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using System.Text;
 using System.Threading;
 using Alex.API.Blocks.State;
 using Alex.API.Utils;
-using Alex.API.World;
-using Alex.Blocks.State;
 using Alex.Blocks.Storage;
-using Alex.Blocks.Storage.Pallete;
 using Alex.Entities;
-using Alex.Graphics.Models.Entity;
 using Alex.Items;
-using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
 using fNbt;
 using Microsoft.Xna.Framework.Graphics;
@@ -25,15 +18,12 @@ using MiNET;
 using MiNET.Client;
 using MiNET.Net;
 using MiNET.Utils;
-using MiNET.Worlds;
-using Newtonsoft.Json;
 using NLog;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using Inventory = Alex.Utils.Inventory;
 using NibbleArray = MiNET.Utils.NibbleArray;
 using Player = Alex.Entities.Player;
 using PlayerLocation = Alex.API.Utils.PlayerLocation;
-using Skin = MiNET.Utils.Skins.Skin;
 using UUID = Alex.API.Utils.UUID;
 
 namespace Alex.Worlds.Bedrock
@@ -155,18 +145,28 @@ namespace Alex.Worlds.Bedrock
 
 		public override void HandleMcpePlayerList(McpePlayerList message)
 		{
-			BaseClient.WorldProvider.Alex.Resources.ResourcePack.TryGetBitmap("entity/alex", out Bitmap rawTexture);
-			var t = TextureUtils.BitmapToTexture2D(BaseClient.WorldProvider.Alex.GraphicsDevice, rawTexture);
-
-            if (message.records is PlayerAddRecords addRecords)
+			if (message.records is PlayerAddRecords addRecords)
 			{
 				foreach (var r in addRecords)
 				{
 					var u = new API.Utils.UUID(r.ClientUuid.GetBytes());
 					if (_players.ContainsKey(u)) continue;
+
+					Texture2D skinTexture;
+					if (r.Skin.TryGetBitmap(out Bitmap skinBitmap))
+					{
+						skinTexture =
+							TextureUtils.BitmapToTexture2D(BaseClient.WorldProvider.Alex.GraphicsDevice, skinBitmap);
+					}
+					else
+					{
+						BaseClient.WorldProvider.Alex.Resources.ResourcePack.TryGetBitmap("entity/alex", out Bitmap rawTexture);
+						skinTexture = TextureUtils.BitmapToTexture2D(BaseClient.WorldProvider.Alex.GraphicsDevice, rawTexture);
+					}
 					
                     BaseClient.WorldReceiver?.AddPlayerListItem(new PlayerListItem(u, r.Username, Gamemode.Survival, 0));
-					PlayerMob m = new PlayerMob(r.DisplayName, BaseClient.WorldReceiver as World, BaseClient, t, true);
+					PlayerMob m = new PlayerMob(r.DisplayName, BaseClient.WorldReceiver as World, BaseClient, skinTexture, true);
+
 					if (!_players.TryAdd(u, m))
 					{
 						Log.Warn($"Duplicate player record! {r.ClientUuid}");
