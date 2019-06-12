@@ -92,7 +92,7 @@ namespace Alex.GameStates.Playing
 				FpsCounter.Update();
 				World.ChunkManager.GetPendingLightingUpdates(out int lowLight, out int midLight, out int highLight);
 
-				return $"Alex {Alex.Version} ({FpsCounter.Value:##} FPS, Queued: {World.EnqueuedChunkUpdates} Active: {World.ConcurrentChunkUpdates} chunk updates, H: {highLight} M: {midLight} L: {lowLight} lighting updates)";
+				return $"Alex {Alex.Version} ({FpsCounter.Value:##} FPS, Queued: {World.EnqueuedChunkUpdates} Active: {World.ConcurrentChunkUpdates} chunk updates"/*, H: {highLight} M: {midLight} L: {lowLight} lighting updates)"*/;
 			});
 			_debugInfo.AddDebugLeft(() =>
 			{
@@ -204,7 +204,8 @@ namespace Alex.GameStates.Playing
 					{
 						_previousMemUpdate = gameTime.TotalGameTime;
 						//Alex.Process.Refresh();
-						MemoryUsageDisplay = $"Allocated memory: {GetBytesReadable(Environment.WorkingSet)}";
+						MemoryUsageDisplay = $"Allocated memory: {GetBytesReadable(Environment.WorkingSet)}\n" +
+						                     $"VertexBuffer Pool: {GetBytesReadable(VertexBufferPool.GetMemoryUsage)}";
 					}
 				}
 			}
@@ -402,7 +403,7 @@ namespace Alex.GameStates.Playing
 			}
 		}
 
-		private static string GetBytesReadable(long i)
+		public static string GetBytesReadable(long i)
 		{
 			// Get absolute value
 			long absolute_i = (i < 0 ? -i : i);

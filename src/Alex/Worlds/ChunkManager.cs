@@ -310,75 +310,11 @@ namespace Alex.Worlds
 		    try
 		    {
 			    chunk.UpdateChunk(Graphics, World);
-			  /* var mesh = chunk.GenerateMeshes(World).Result;
 
-			    VertexBuffer opaqueVertexBuffer = chunk.VertexBuffer;
-			    IndexBuffer opaqueIndexBuffer ;//= chunk.IndexBuffer;
-			    
-			    if (opaqueVertexBuffer == null ||
-			        mesh.Vertices.Length > opaqueVertexBuffer.VertexCount)
-			    {
-				    opaqueVertexBuffer = RenewVertexBuffer(mesh.Vertices);
-				    opaqueIndexBuffer = RenewIndexBuffer(mesh.SolidIndexes);
-				    
-				    VertexBuffer oldBuffer;
-				    IndexBuffer oldIndexBuffer;
-				   // lock (chunk.VertexLock)
-				    {
-					    oldBuffer = chunk.VertexBuffer;
-					    oldIndexBuffer = chunk.IndexBuffer;
-					    
-					    chunk.VertexBuffer = opaqueVertexBuffer;
-					    chunk.IndexBuffer = opaqueIndexBuffer;
-				    }
+			    chunk.IsDirty = chunk.HasDirtySubChunks; //false;
+			    chunk.Scheduled = ScheduleType.Unscheduled;
 
-				    oldBuffer?.Dispose();
-				    oldIndexBuffer?.Dispose();
-			    }
-			    else if (mesh.Vertices.Length > 0)
-			    {
-				    chunk.VertexBuffer.SetData(mesh.Vertices);
-				    chunk.IndexBuffer.SetData(mesh.SolidIndexes);
-			    }
-
-			    VertexBuffer transparentVertexBuffer = chunk.TransparentVertexBuffer;
-
-			    if (transparentVertexBuffer == null ||
-			        mesh.TransparentVertices.Length > transparentVertexBuffer.VertexCount || mesh.TransparentIndexes.Length > chunk.TransparentIndexBuffer.IndexCount)
-			    {
-				    transparentVertexBuffer = RenewVertexBuffer(mesh.TransparentVertices);
-				    var transparentIndexBuffer = RenewIndexBuffer(mesh.TransparentIndexes);// = chunk.TransparentIndexBuffer;
-
-				    VertexBuffer oldBuffer;
-				    IndexBuffer oldIndexBuffer;
-				   // lock (chunk.VertexLock)
-				    {
-					    oldIndexBuffer = chunk.TransparentIndexBuffer;
-					    oldBuffer = chunk.TransparentVertexBuffer;
-					    chunk.TransparentVertexBuffer = transparentVertexBuffer;
-					    chunk.TransparentIndexBuffer = transparentIndexBuffer;
-				    }
-
-				    oldBuffer?.Dispose();
-				    oldIndexBuffer?.Dispose();
-			    }
-			    else if (mesh.TransparentVertices.Length > 0)
-			    {
-				    chunk.TransparentVertexBuffer.SetData(mesh.TransparentVertices);
-				    chunk.TransparentIndexBuffer.SetData(mesh.TransparentIndexes);
-			    }*/
-
-			  //if (chunk.HasDirtySubChunks)
-			  {
-				//  ScheduleChunkUpdate(new ChunkCoordinates(chunk.X, chunk.Z), ScheduleType.Full, false);
-			  }
-			  //else
-			  {
-				  chunk.IsDirty = chunk.HasDirtySubChunks;//false;
-				  chunk.Scheduled = ScheduleType.Unscheduled;
-			  }
-
-			  return true;
+			    return true;
 		    }
 		    catch (Exception ex)
 		    {
@@ -392,33 +328,6 @@ namespace Alex.Worlds
 		    }
 
 		    return false;
-	    }
-
-	    private VertexBuffer RenewVertexBuffer(VertexPositionNormalTextureColor[] vertices)
-	    {
-		    VertexBuffer buffer = new VertexBuffer(Graphics,
-			    VertexPositionNormalTextureColor.VertexDeclaration,
-			    vertices.Length,
-			    BufferUsage.WriteOnly);
-
-		    if (vertices.Length > 0)
-		    {
-			    buffer.SetData(vertices);
-		    }
-
-		    return buffer;
-	    }
-	    
-	    private IndexBuffer RenewIndexBuffer(int[] indices)
-	    {
-		    IndexBuffer buffer = new IndexBuffer(Graphics, IndexElementSize.ThirtyTwoBits, indices.Length, BufferUsage.WriteOnly);
-
-		    if (indices.Length > 0)
-		    {
-			    buffer.SetData(indices);
-		    }
-
-		    return buffer;
 	    }
 
 	    int currentFrame = 0;
@@ -496,114 +405,6 @@ namespace Alex.Worlds
 			    indexBufferSize += idxSize;
 		    }
 
-		    /*VertexBuffer[] buffers = new VertexBuffer[chunks.Length];
-		    IndexBuffer[] indexBuffers = new IndexBuffer[chunks.Length];
-		    
-		    VertexBuffer[] transparentBuffers = new VertexBuffer[chunks.Length];
-		    IndexBuffer[] transparentIndexBuffers = new IndexBuffer[chunks.Length];
-
-		    for (var index = 0; index < chunks.Length; index++)
-		    {
-			    var c = chunks[index];
-			    var chunk = c.Value;
-			    if (chunk == null) continue;
-
-			    VertexBuffer transparentBuffer = null;
-			    VertexBuffer buffer = null;
-			    buffer = chunk.VertexBuffer; 
-			    transparentBuffer = chunk.TransparentVertexBuffer;
-			    
-			    if (buffer != null)
-			    {
-				    buffers[index] = buffer;
-				    indexBuffers[index] = chunk.IndexBuffer;
-			    }
-			    
-			    if (transparentBuffer != null)
-			    {
-				    transparentBuffers[index] = transparentBuffer;
-				    transparentIndexBuffers[index] = chunk.TransparentIndexBuffer;
-			    }
-			    
-			    if ((chunk.IsDirty || (buffer == null || transparentBuffer == null)) &&
-			        chunk.Scheduled == ScheduleType.Unscheduled)
-			    {
-				    //	ScheduleChunkUpdate(c.Key, ScheduleType.Full);
-				    if (buffer == null || transparentBuffer == null)
-				    {
-					    tempFailed++;
-				    }
-
-				    continue;
-			    }
-
-			    if (buffer != null && transparentBuffer != null)
-				    tempChunks++;
-		    }
-
-		    //Render Solid
-			    if (drawn > 0) tempChunks++;
-		    device.DepthStencilState = DepthStencilState.Default;
-		    device.BlendState = BlendState.AlphaBlend;
-
-		    for (var index = 0; index < buffers.Length; index++)
-		    {
-			    var b = buffers[index];
-			    var c = indexBuffers[index];
-			    
-			    if (b == null || c == null)
-			    {
-				    continue;
-			    }
-			    
-			    if (c.IndexCount == 0) continue;
-			    if (b.VertexCount == 0) continue;
-
-			    device.SetVertexBuffer(b);
-			    device.Indices = c;
-			    
-			    foreach (var pass in OpaqueEffect.CurrentTechnique.Passes)
-			    {
-				    pass.Apply();
-				    //device.DrawPrimitives(PrimitiveType.TriangleList, 0, b.VertexCount /3);
-			    }
-
-			    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, c.IndexCount / 3);
-			   // device.DrawPrimitives(PrimitiveType.TriangleList, 0, b.VertexCount / 3);
-
-			   indexBufferSize += c.IndexCount;
-			    tempVertices += b.VertexCount;
-		    }
-
-		    //Render transparent blocks
-		    for (var index = 0; index < transparentBuffers.Length; index++)
-		    {
-			    var b = transparentBuffers[index];
-			    var c = transparentIndexBuffers[index];
-			    
-			    if (b == null || c == null)
-			    {
-				    continue;
-			    }
-
-			    if (c.IndexCount == 0) continue;
-			    if (b.VertexCount == 0) continue;
-
-			    device.SetVertexBuffer(b);
-			    device.Indices = c;
-			    
-			    foreach (var pass in TransparentEffect.CurrentTechnique.Passes)
-			    {
-				    pass.Apply();
-			    }
-
-			    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, c.IndexCount / 3);
-			    //device.DrawPrimitives(PrimitiveType.TriangleList, 0, b.VertexCount / 3);
-
-			    indexBufferSize += c.IndexCount;
-			    tempVertices += b.VertexCount;
-		    }*/
-
 		    Vertices = tempVertices;
 		    RenderedChunks = tempChunks;
 		    IndexBufferSize = indexBufferSize;
@@ -667,7 +468,10 @@ namespace Alex.Worlds
 			    camera.Position.Z));
 
             var renderedChunks = Chunks.ToArray().Where(x =>
-		    {
+            {
+	            if (Math.Abs(x.Key.DistanceTo(cameraChunkPos)) > radiusSquared)
+		            return false;
+			    
 			    var chunkPos = new Vector3(x.Key.X * ChunkColumn.ChunkWidth, 0, x.Key.Z * ChunkColumn.ChunkDepth);
 			    return camera.BoundingFrustum.Intersects(new Microsoft.Xna.Framework.BoundingBox(chunkPos,
 				    chunkPos + new Vector3(ChunkColumn.ChunkWidth, 16 * ((x.Value.GetHeighest() >> 4) + 1),

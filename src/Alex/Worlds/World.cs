@@ -622,6 +622,7 @@ namespace Alex.Worlds
 			if (EntityManager.TryGet(entityId, out IEntity entity))
 			{
 				PhysicsEngine.Remove(entity);
+				entity.Dispose();
 			}
 
 			EntityManager.Remove(entityId);

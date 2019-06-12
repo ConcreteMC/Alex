@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Text;
+using System.Threading;
 using Alex.API.Blocks.State;
 using Alex.API.Utils;
 using Alex.API.World;
@@ -600,328 +601,345 @@ namespace Alex.Worlds.Bedrock
 
 		public override void HandleMcpeFullChunkData(McpeFullChunkData message)
 		{
-			try
+			var chunkData = message.chunkData;
+			var cx = message.chunkX;
+			var cz = message.chunkZ;
+			message.PutPool();
+			
+			ThreadPool.QueueUserWorkItem(o =>
 			{
-				using (MemoryStream stream = new MemoryStream(message.chunkData))
+				try
 				{
-					NbtBinaryReader defStream = new NbtBinaryReader(stream, true);
-
-					int count = defStream.ReadByte();
-					if (count < 1)
+					using (MemoryStream stream = new MemoryStream(chunkData))
 					{
-						Log.Warn("Nothing to read");
-						return;
-					}
+						NbtBinaryReader defStream = new NbtBinaryReader(stream, true);
 
-					ChunkColumn chunkColumn = new ChunkColumn();
-					chunkColumn.IsDirty = true;
-					chunkColumn.X = message.chunkX;
-					chunkColumn.Z = message.chunkZ;
-					
-					for (int s = 0; s < count; s++)
-					{
-						var section = chunkColumn.Sections[s];
-						if (section == null) section = new ExtendedBlockStorage(s, true);
-
-						int version = defStream.ReadByte();
-
-						if (version == 1 || version == 8)
+						int count = defStream.ReadByte();
+						if (count < 1)
 						{
-							int storageSize = defStream.ReadByte();
+							Log.Warn("Nothing to read");
+							return;
+						}
 
-							for (int storage = 0; storage < storageSize; storage++)
+						ChunkColumn chunkColumn = new ChunkColumn();
+						chunkColumn.IsDirty = true;
+						chunkColumn.X = cx;
+						chunkColumn.Z = cz;
+
+						for (int s = 0; s < count; s++)
+						{
+							var section = chunkColumn.Sections[s];
+							if (section == null) section = new ChunkSection(s, true);
+
+							int version = defStream.ReadByte();
+
+							if (version == 1 || version == 8)
 							{
-								int paletteAndFlag = defStream.ReadByte();
-								bool isRuntime = (paletteAndFlag & 1) != 0;
-								int bitsPerBlock = paletteAndFlag >> 1;
-								int blocksPerWord = (int) Math.Floor(32f / bitsPerBlock);
-								int wordCount = (int) Math.Ceiling(4096.0f / blocksPerWord);
+								int storageSize = defStream.ReadByte();
 
-								int[] words = new int[wordCount];
-								for (int w = 0; w < wordCount; w++)
+								for (int storage = 0; storage < storageSize; storage++)
 								{
-									int word = defStream.ReadInt32();
-									words[w] = word;
-								}
+									int paletteAndFlag = defStream.ReadByte();
+									bool isRuntime = (paletteAndFlag & 1) != 0;
+									int bitsPerBlock = paletteAndFlag >> 1;
+									int blocksPerWord = (int) Math.Floor(32f / bitsPerBlock);
+									int wordCount = (int) Math.Ceiling(4096.0f / blocksPerWord);
 
-								uint[] pallete = new uint[0];
-
-								if (isRuntime)
-								{
-									int palleteSize = VarInt.ReadSInt32(stream);
-									pallete = new uint[palleteSize];
-									var copy = new uint[pallete.Length];
-									for (int pi = 0; pi < pallete.Length; pi++)
+									int[] words = new int[wordCount];
+									for (int w = 0; w < wordCount; w++)
 									{
-										var ui = (uint) VarInt.ReadSInt32(stream);
-										pallete[pi] = ui;
-										copy[pallete.Length - 1 - pi] = ui;
+										int word = defStream.ReadInt32();
+										words[w] = word;
 									}
 
-									if (palleteSize == 0) continue;
-									Array.Copy(copy, 1, pallete, 0, pallete.Length - 1);
-								}
+									uint[] pallete = new uint[0];
 
-								if (storage > 0) continue;
-								//long afterPaletteIndex = defStream.BaseStream.Position;
-
-								int position = 0;
-								for (int w = 0; w < words.Length; w++)
-								{
-									int word = words[w];
-									for (int block = 0; block < blocksPerWord; block++)
+									if (isRuntime)
 									{
-										if (position >= 4096) continue; // padding bytes
-
-										int state = (word >> ((position % blocksPerWord) * bitsPerBlock)) &
-										            ((1 << bitsPerBlock) - 1);
-										int x = (position >> 8) & 0xF;
-										int y = position & 0xF;
-										int z = (position >> 4) & 0xF;
-
-										if (storage == 0)
+										int palleteSize = VarInt.ReadSInt32(stream);
+										pallete = new uint[palleteSize];
+										var copy = new uint[pallete.Length];
+										for (int pi = 0; pi < pallete.Length; pi++)
 										{
-											if (state >= pallete.Length)
-											{
-												//   Log.Warn($"State > pallete lenght. ({state} >= {pallete.Length})");
-												continue;
-											}
+											var ui = (uint) VarInt.ReadSInt32(stream);
+											pallete[pi] = ui;
+											copy[(pallete.Length - pi) - 1] = ui;
+										}
 
-											if (_blockStateMap.TryGetValue(pallete[state], out var bs))
-											{
-												var result =
-													BlockFactory.RuntimeIdTable.FirstOrDefault(xx =>
-														xx.Name == bs.Name);
+										if (palleteSize == 0)
+										{
+											Log.Warn($"Pallete size is 0");
+											continue;
+										}
+										//Array.Copy(copy, 0, pallete, 0, pallete.Length );
+									}
 
-												uint res = 0;
-												bool ss = false;
-												if (result != null && result.Id >= 0)
+									//if (storage > 0) continue;
+									//long afterPaletteIndex = defStream.BaseStream.Position;
+
+									int position = 0;
+									//for (int w = words.Length - 1; w > 0; w--)
+									for(int w = 0; w < wordCount; w++)
+									{
+										int word = words[w];
+										for (int block = 0; block < blocksPerWord; block++)
+										{
+											if (position >= 4096) continue; // padding bytes
+
+											int state = (word >> ((position % blocksPerWord) * bitsPerBlock)) &
+											            ((1 << bitsPerBlock) - 1);
+											int x = (position >> 8) & 0xF;
+											int y = position & 0xF; 
+											int z = (position >> 4) & 0xF;
+
+											if (storage == 0)
+											{
+												if (state >= pallete.Length)
 												{
-													res = BlockFactory.GetBlockStateID((int) result.Id, (byte) bs.Data);
-													ss = true;
+													continue;
 												}
 
-												if (ss && AnvilWorldProvider.BlockStateMapper.TryGetValue(res, out res))
+												if (_blockStateMap.TryGetValue(pallete[state], out var bs))
 												{
-													var a = BlockFactory.GetBlockState(res);
-													if (result.Data != 0)
-													{
-														//TODO: In order for this to work, we need to fix blockstate properties.
+													var result =
+														BlockFactory.RuntimeIdTable.FirstOrDefault(xx =>
+															xx.Name == bs.Name);
 
-														int meta = (int) result.Data;
-														switch (meta)
+													uint res = 0;
+													bool ss = false;
+													if (result != null && result.Id >= 0)
+													{
+														res = BlockFactory.GetBlockStateID((int) result.Id,
+															(byte) bs.Data);
+														ss = true;
+													}
+
+													if (ss && AnvilWorldProvider.BlockStateMapper.TryGetValue(res,
+														    out res))
+													{
+														var a = BlockFactory.GetBlockState(res);
+														if (result.Data != 0)
 														{
-															case 0:
-																meta = 0;
-																break;
-															case 1:
-																meta = 5;
-																break;
-															case 2:
-																meta = 4;
-																break;
-															case 3:
-																meta = 3;
-																break;
-															case 4:
-																meta = 2;
-																break;
-															case 5:
-																meta = 1;
-																break;
+															//TODO: In order for this to work, we need to fix blockstate properties.
+
+															int meta = (int) result.Data;
+															switch (meta)
+															{
+																case 0:
+																	meta = 0;
+																	break;
+																case 1:
+																	meta = 5;
+																	break;
+																case 2:
+																	meta = 4;
+																	break;
+																case 3:
+																	meta = 3;
+																	break;
+																case 4:
+																	meta = 2;
+																	break;
+																case 5:
+																	meta = 1;
+																	break;
+															}
+
+															Log.Warn($"METAAAA: " + meta);
+															a = GetBlockStateFromRotationMeta(a, meta);
 														}
 
-														Log.Warn($"METAAAA: " + meta);
-														a = GetBlockStateFromRotationMeta(a, meta);
+														try
+														{
+															section.Set(15 - x, 15 - y, 15 - z, a);
+														}
+														catch (Exception ex)
+														{
+															Log.Warn($"Crash: Y {15 - y} X {15 - x} Z {15 - z}");
+															throw ex;
+														}
 													}
-
-													try
+													else
 													{
-														section.Set(15 - x, 15 - y, 15 - z, a);
-													}
-													catch (Exception ex)
-													{
-														Log.Warn($"Crash: Y {15 - y} X {15 - x} Z {15 - z}");
-														throw ex;
-													}
-												}
-												else
-												{
-													try
-													{
-														section.Set(15 - x, 15 - y, 15 - z,
-															BlockFactory.GetBlockState(bs.Name));
-													}
-													catch (Exception ex)
-													{
-														Log.Warn($"Crash: Y {15 - y} X {15 - x} Z {15 - z}");
-														throw ex;
+														try
+														{
+															section.Set(15 - x, 15 - y, 15 - z,
+																BlockFactory.GetBlockState(bs.Name));
+														}
+														catch (Exception ex)
+														{
+															Log.Warn($"Crash: Y {15 - y} X {15 - x} Z {15 - z}");
+															throw ex;
+														}
 													}
 												}
 											}
-										}
-										else
-										{
-											//TODO.
-										}
+											else
+											{
+												//TODO.
+											}
 
-										//section.Set(x, 15 - y, z, BlockFactory.GetBlockStateByRuntimeId(pallete[state]));
+											//section.Set(x, 15 - y, z, BlockFactory.GetBlockStateByRuntimeId(pallete[state]));
 
-										position++;
+											position++;
+										}
 									}
 								}
 							}
-						}
-						else
-						{
-							#region OldFormat 
-
-							byte[] blockIds = new byte[4096];
-							defStream.Read(blockIds, 0, blockIds.Length);
-
-							NibbleArray data = new NibbleArray(4096);
-							defStream.Read(data.Data, 0, data.Data.Length);
-
-							for (int x = 0; x < 16; x++)
+							else
 							{
+								#region OldFormat 
+
+								byte[] blockIds = new byte[4096];
+								defStream.Read(blockIds, 0, blockIds.Length);
+
+								NibbleArray data = new NibbleArray(4096);
+								defStream.Read(data.Data, 0, data.Data.Length);
+
+								for (int x = 0; x < 16; x++)
+								{
+									for (int z = 0; z < 16; z++)
+									{
+										for (int y = 0; y < 16; y++)
+										{
+											int idx = (x << 8) + (z << 4) + y;
+
+											var result = BlockFactory.RuntimeIdTable.Where(xx =>
+												xx.Id == blockIds[idx] && xx.Data == data[idx]).ToArray();
+											if (result.Length > 0)
+											{
+												//	result[0].sRuntimeId
+
+												section.Set(x, y, z,
+													BlockFactory.GetBlockState((uint) result[0].RuntimeId));
+											}
+
+											//else
+											{
+
+												var state = BlockFactory.GetBlockStateID(blockIds[idx], data[idx]);
+												//	section.Set(x, y, z, BlockFactory.GetBlockState(state));
+											}
+										}
+									}
+								}
+
+								#endregion
+							}
+
+							if (AlexInstance.GameSettings.UseAlexChunks)
+							{
+								//  Log.Info($"Alex chunk!");
+
+								Utils.NibbleArray skyLight = new Utils.NibbleArray(4096);
+								var rawSky = new Utils.NibbleArray(4096);
+								defStream.Read(rawSky.Data, 0, rawSky.Data.Length);
+
+								Utils.NibbleArray blockLight = new Utils.NibbleArray(4096);
+								var rawBlock = new Utils.NibbleArray(4096);
+								defStream.Read(rawBlock.Data, 0, rawBlock.Data.Length);
+
+								for (int x = 0; x < 16; x++)
+								for (int y = 0; y < 16; y++)
 								for (int z = 0; z < 16; z++)
 								{
-									for (int y = 0; y < 16; y++)
-									{
-										int idx = (x << 8) + (z << 4) + y;
+									var peIndex = (x * 256) + (z * 16) + y;
+									var sky = rawSky[peIndex];
+									var block = rawBlock[peIndex];
 
-										var result = BlockFactory.RuntimeIdTable.Where(xx =>
-											xx.Id == blockIds[idx] && xx.Data == data[idx]).ToArray();
-										if (result.Length > 0)
-										{
-											//	result[0].sRuntimeId
-
-											section.Set(x, y, z,
-												BlockFactory.GetBlockState((uint) result[0].RuntimeId));
-										}
-
-										//else
-										{
-
-											var state = BlockFactory.GetBlockStateID(blockIds[idx], data[idx]);
-											//	section.Set(x, y, z, BlockFactory.GetBlockState(state));
-										}
-									}
+									var idx = y << 8 | z << 4 | x;
+									skyLight[idx] = sky;
+									blockLight[idx] = block;
 								}
+
+								section.BlockLight = blockLight;
+								section.SkyLight = skyLight;
 							}
 
-							#endregion
+							section.RemoveInvalidBlocks();
+							section.ScheduledUpdates = new bool[16 * 16 * 16];
+							section.ScheduledSkylightUpdates = new bool[16 * 16 * 16];
+							//Make sure the section is saved.
+							chunkColumn.Sections[s] = section;
 						}
 
-						if (AlexInstance.GameSettings.UseAlexChunks)
+						//if (stream.Position >= stream.Length - 1) continue;
+
+
+						byte[] ba = new byte[512];
+						if (defStream.Read(ba, 0, 256 * 2) != 256 * 2) Log.Error($"Out of data height");
+
+						Buffer.BlockCopy(ba, 0, chunkColumn.Height, 0, 512);
+						//Log.Debug($"Heights:\n{Package.HexDump(ba)}");
+
+						//if (stream.Position >= stream.Length - 1) continue;
+
+						int[] biomeIds = new int[256];
+						for (int i = 0; i < biomeIds.Length; i++)
 						{
-							//  Log.Info($"Alex chunk!");
-
-							Utils.NibbleArray skyLight = new Utils.NibbleArray(4096);
-							var rawSky = new Utils.NibbleArray(4096);
-							defStream.Read(rawSky.Data, 0, rawSky.Data.Length);
-
-							Utils.NibbleArray blockLight = new Utils.NibbleArray(4096);
-							var rawBlock = new Utils.NibbleArray(4096);
-							defStream.Read(rawBlock.Data, 0, rawBlock.Data.Length);
-
-							for (int x = 0; x < 16; x++)
-							for (int y = 0; y < 16; y++)
-							for (int z = 0; z < 16; z++)
-							{
-								var peIndex = (x * 256) + (z * 16) + y;
-								var sky = rawSky[peIndex];
-								var block = rawBlock[peIndex];
-
-								var idx = y << 8 | z << 4 | x;
-								skyLight[idx] = sky;
-								blockLight[idx] = block;
-							}
-
-							section.BlockLight = blockLight;
-							section.SkyLight = skyLight;
+							biomeIds[i] = defStream.ReadByte();
 						}
 
-						//Make sure the section is saved.
-						chunkColumn.Sections[s] = section;
-					}
+						chunkColumn.BiomeId = biomeIds;
+						//if (defStream.Read(chunkColumn.BiomeId, 0, 256) != 256) Log.Error($"Out of data biomeId");
+						//Log.Debug($"biomeId:\n{Package.HexDump(chunk.biomeId)}");
 
-					//if (stream.Position >= stream.Length - 1) continue;
+						if (stream.Position >= stream.Length - 1)
+						{
+							BaseClient.ChunkReceived(chunkColumn);
+							return;
+						}
+
+						int borderBlock = VarInt.ReadSInt32(stream);
+						if (borderBlock > 0)
+						{
+							byte[] buf = new byte[borderBlock];
+							int len = defStream.Read(buf, 0, borderBlock);
+							Log.Warn($"??? Got borderblock {borderBlock}. Read {len} bytes");
+							Log.Debug($"{Packet.HexDump(buf)}");
+							for (int i = 0; i < borderBlock; i++)
+							{
+								int x = (buf[i] & 0xf0) >> 4;
+								int z = buf[i] & 0x0f;
+								Log.Debug($"Border block: x={x}, z={z}");
+							}
+						}
 
 
-					byte[] ba = new byte[512];
-					if (defStream.Read(ba, 0, 256 * 2) != 256 * 2) Log.Error($"Out of data height");
+						if (stream.Position < stream.Length - 1)
+						{
+							//Log.Debug($"Got NBT data\n{Package.HexDump(defStream.ReadBytes((int) (stream.Length - stream.Position)))}");
 
-					Buffer.BlockCopy(ba, 0, chunkColumn.Height, 0, 512);
-					//Log.Debug($"Heights:\n{Package.HexDump(ba)}");
+							while (stream.Position < stream.Length)
+							{
+								NbtFile file = new NbtFile()
+								{
+									BigEndian = false,
+									UseVarInt = true
+								};
 
-					//if (stream.Position >= stream.Length - 1) continue;
+								file.LoadFromStream(stream, NbtCompression.None);
 
-					int[] biomeIds = new int[256];
-					for (int i = 0; i < biomeIds.Length; i++)
-					{
-						biomeIds[i] = defStream.ReadByte();
-					}
+								Log.Debug($"Blockentity: {file.RootTag}");
+							}
+						}
 
-					chunkColumn.BiomeId = biomeIds;
-					//if (defStream.Read(chunkColumn.BiomeId, 0, 256) != 256) Log.Error($"Out of data biomeId");
-					//Log.Debug($"biomeId:\n{Package.HexDump(chunk.biomeId)}");
+						if (stream.Position < stream.Length - 1)
+						{
+							Log.Warn(
+								$"Still have data to read\n{Packet.HexDump(defStream.ReadBytes((int) (stream.Length - stream.Position)))}");
+						}
 
-					if (stream.Position >= stream.Length - 1)
-					{
+						//Done processing this chunk, send to world
 						BaseClient.ChunkReceived(chunkColumn);
-						return;
 					}
 
-					int borderBlock = VarInt.ReadSInt32(stream);
-					if (borderBlock > 0)
-					{
-						byte[] buf = new byte[borderBlock];
-						int len = defStream.Read(buf, 0, borderBlock);
-						Log.Warn($"??? Got borderblock {borderBlock}. Read {len} bytes");
-						Log.Debug($"{Packet.HexDump(buf)}");
-						for (int i = 0; i < borderBlock; i++)
-						{
-							int x = (buf[i] & 0xf0) >> 4;
-							int z = buf[i] & 0x0f;
-							Log.Debug($"Border block: x={x}, z={z}");
-						}
-					}
-
-
-					if (stream.Position < stream.Length - 1)
-					{
-						//Log.Debug($"Got NBT data\n{Package.HexDump(defStream.ReadBytes((int) (stream.Length - stream.Position)))}");
-
-						while (stream.Position < stream.Length)
-						{
-							NbtFile file = new NbtFile()
-							{
-								BigEndian = false,
-								UseVarInt = true
-							};
-
-							file.LoadFromStream(stream, NbtCompression.None);
-
-							Log.Debug($"Blockentity: {file.RootTag}");
-						}
-					}
-
-					if (stream.Position < stream.Length - 1)
-					{
-						Log.Warn(
-							$"Still have data to read\n{Packet.HexDump(defStream.ReadBytes((int) (stream.Length - stream.Position)))}");
-					}
-
-					//Done processing this chunk, send to world
-					BaseClient.ChunkReceived(chunkColumn);
 				}
-
-			}
-			catch (Exception ex)
-			{
-				Log.Error($"Exception in chunk loading: {ex.ToString()}");
-			}
+				catch (Exception ex)
+				{
+					Log.Error($"Exception in chunk loading: {ex.ToString()}");
+				}
+			});
 		}
 		
 		private IBlockState GetBlockStateFromRotationMeta(IBlockState state, int meta)

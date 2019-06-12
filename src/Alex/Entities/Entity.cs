@@ -327,5 +327,10 @@ namespace Alex.Entities
 				KnownPosition.OnGround = true;
 			}
 		}
+
+		public void Dispose()
+		{
+			ModelRenderer?.Dispose();
+		}
 	}
 }

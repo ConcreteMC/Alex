@@ -58,7 +58,8 @@ namespace Alex.Graphics.Models.Entity
 			{
 				IsDirty = false;
 				Effect?.Dispose();
-			//	Buffer?.Dispose();
+				Vertices = null;
+				//	Buffer?.Dispose();
 			}
 		}
 	}

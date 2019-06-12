@@ -9,11 +9,12 @@ using Alex.ResourcePackLib.Json.Models;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MiNET.Utils.Skins;
 using NLog;
 
 namespace Alex.Graphics.Models.Entity
 {
-	public partial class EntityModelRenderer : Model
+	public partial class EntityModelRenderer : Model, IDisposable
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(EntityModelRenderer));
 
@@ -140,6 +141,19 @@ namespace Alex.Graphics.Models.Entity
 		public override string ToString()
 		{
 			return Model.Name;
+		}
+
+		public void Dispose()
+		{
+			if (Bones != null && Bones.Any())
+			{
+				foreach (var bone in Bones.ToArray())
+				{
+					bone.Value.Dispose();
+				}
+			}
+			
+			Texture?.Dispose();
 		}
 	}
 }

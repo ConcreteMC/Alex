@@ -1,14 +1,15 @@
 ﻿using Alex.API.Blocks.State;
 using Alex.API.World;
 using Alex.Blocks.Minecraft;
+using Alex.ResourcePackLib.Json;
 using Alex.Utils;
 using NLog;
 
 namespace Alex.Blocks.Storage
 {
-	public class ExtendedBlockStorage
+	public class ChunkSection
 	{
-		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ExtendedBlockStorage));
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ChunkSection));
 		/**
 		 * Contains the bottom-most Y block represented by this ExtendedBlockStorage. Typically a multiple of 16.
 		 */
@@ -37,7 +38,11 @@ namespace Alex.Blocks.Storage
 		public bool[] ScheduledUpdates;
 		public bool[] ScheduledSkylightUpdates;
 
-        public ExtendedBlockStorage(int y, bool storeSkylight)
+		public bool SolidBorder { get; private set; } = false;
+		private bool[] FaceSolidity { get; set; } = new bool[6];
+		public bool HasAirPockets { get; private set; } = true;
+		
+        public ChunkSection(int y, bool storeSkylight)
 		{
 			this._yBase = y;
 			this.Data = new BlockStateContainer();
@@ -148,6 +153,14 @@ namespace Alex.Blocks.Storage
 			
 			ScheduledUpdates[coordsIndex] = true;
 			IsDirty = true;
+			
+			if (!block1.Solid)
+			{
+				if (x == 15 || y == 15 || z == 15 || x == 0 || y == 0 || z == 0)
+					CheckForSolidBorder(); //Update borders.
+
+				HasAirPockets = true;
+			}
 		}
 
 		public bool IsTransparent(int x, int y, int z)
@@ -261,6 +274,101 @@ namespace Alex.Blocks.Storage
 					}
 				}
 			}
+			
+			CheckForSolidBorder();
 		}
+		
+		private void CheckForSolidBorder()
+	    {
+	        bool[] solidity = new bool[6]
+	        {
+	            true,
+	            true,
+	            true,
+	            true,
+	            true,
+	            true
+	        };
+
+	        for (int y = 0; y < 16; y++)
+	        {
+	            for (int x = 0; x < 16; x++)
+	            {
+	                if (!SolidBlocks[GetCoordinateIndex(x, y, 0)])
+	                {
+	                    solidity[2] = false;
+	                    SolidBorder = false;
+                    }
+
+	                if (!SolidBlocks[GetCoordinateIndex(0, y, x)])
+	                {
+	                    SolidBorder = false;
+	                    solidity[4] = false;
+                    }
+
+	                if (!SolidBlocks[GetCoordinateIndex(x, y, 15)])
+	                {
+	                    SolidBorder = false;
+	                    solidity[3] = false;
+                    }
+
+	                if (!SolidBlocks[GetCoordinateIndex(15, y, x)])
+	                {
+	                    SolidBorder = false;
+	                    solidity[5] = false;
+                    }
+
+	                for (int xx = 0; xx < 16; xx++)
+	                {
+	                    if (!SolidBlocks[GetCoordinateIndex(xx, 0, x)])
+	                    {
+	                        SolidBorder = false;
+	                        solidity[0] = false;
+	                    }
+	                   // FaceSolidity[0] = true;
+
+                        if (!SolidBlocks[GetCoordinateIndex(xx, 15, x)])
+	                    {
+	                        SolidBorder = false;
+	                        solidity[1] = false;
+	                    }
+	                    //FaceSolidity[1] = true;
+                    }
+	            }
+	        }
+
+	        bool airPockets = false;
+
+	        for (int x = 1; x < 15; x++)
+	        {
+	            for (int y = 1; y < 15; y++)
+	            {
+	                for (int z = 1; z < 15; z++)
+	                {
+	                    if (!SolidBlocks[GetCoordinateIndex(x, y, z)])
+	                    {
+	                        airPockets = true;
+	                        break;
+	                    }
+	                }
+                    if (airPockets)
+                        break;
+	            }
+
+	            if (airPockets)
+	                break;
+	        }
+
+	        FaceSolidity = solidity;
+	        HasAirPockets = airPockets;
+	    }
+
+	    public bool IsFaceSolid(BlockFace face)
+	    {
+	        var intFace = (int) face;
+
+            if (face == BlockFace.None || intFace < 0 || intFace > 5) return false;
+	        return FaceSolidity[(int)intFace];
+	    }
 	}
 }

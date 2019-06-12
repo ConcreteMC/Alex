@@ -28,11 +28,6 @@ namespace Alex.API.World
 		void SetSkyLight(int bx, int by, int bz, byte data);
 		Task<ChunkMesh> GenerateMeshes(IWorld world);
 		void UpdateChunk(GraphicsDevice device, IWorld world);
-		//ChunkMesh Mesh { get; set; }
-		VertexBuffer VertexBuffer { get; set; }
-		IndexBuffer IndexBuffer { get; set; }
-		VertexBuffer TransparentVertexBuffer { get; set; }
-		IndexBuffer TransparentIndexBuffer { get; set; }
 		object VertexLock { get; set; }
 		object UpdateLock { get; set; }
 		bool IsDirty { get; set; }
@@ -49,6 +44,7 @@ namespace Alex.API.World
 		void DrawTransparent(GraphicsDevice device, AlphaTestEffect effect, out int drawnIndices, out int indexSize);
 		
 		bool HasDirtySubChunks { get; }
+		bool IsWallSectionSolid(int face, int y);
 	}
 
 	[Flags]
