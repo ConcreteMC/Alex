@@ -426,18 +426,23 @@ namespace Alex.Graphics.Models.Blocks
 
 		    var uvSize = resources.Atlas.AtlasSize;
 
-		    var tpw = (1f / uvSize.X); //0.0625
-		    var tph = (1f / uvSize.Y);
+		    var tpw = (resources.Atlas.TextureWidth / QuickMath.Max(x1, x2)) / uvSize.X; //0.0625
+            var tph = (resources.Atlas.TextureHeight / QuickMath.Max(y1, y2)) / uvSize.Y;
 
 		    textureLocation.X /= uvSize.X;
 		    textureLocation.Y /= uvSize.Y;
+            
+		   /* x1 = textureLocation.X + ((x1) * tpw);
+		    x2 = textureLocation.X + ((x2) * tpw);
+		    y1 = textureLocation.Y + ((y1) * tph);
+		    y2 = textureLocation.Y + ((y2) * tph);*/
 
-		    x1 = textureLocation.X + (x1 * tpw);
-		    x2 = textureLocation.X + (x2 * tpw);
-		    y1 = textureLocation.Y + (y1 * tph);
-		    y2 = textureLocation.Y + (y2 * tph);
+            x1 = textureLocation.X + x1 * (((textureInfo.Width / 16f) / uvSize.X));
+            x2 = textureLocation.X + x2 * (((textureInfo.Width / 16f) / uvSize.X));
+            y1 = textureLocation.Y + y1 * (((textureInfo.Height / 16f) / uvSize.Y));
+            y2 = textureLocation.Y + y2 * (((textureInfo.Height / 16f) / uvSize.Y));
 
-			var map = new UVMap(new Microsoft.Xna.Framework.Vector2(x1, y1),
+            var map = new UVMap(new Microsoft.Xna.Framework.Vector2(x1, y1),
 			    new Microsoft.Xna.Framework.Vector2(x2, y1), new Microsoft.Xna.Framework.Vector2(x1, y2),
 			    new Microsoft.Xna.Framework.Vector2(x2, y2), Color.White, Color.White, Color.White);
 

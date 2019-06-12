@@ -464,12 +464,12 @@ namespace Alex.Worlds
 
             var renderedChunks = Chunks.ToArray().Where(x =>
             {
-	            if (Math.Abs(x.Key.DistanceTo(cameraChunkPos)) > radiusSquared)
-		            return false;
+	           // if (Math.Abs(x.Key.DistanceTo(cameraChunkPos)) > radiusSquared)
+		       //     return false;
 			    
 			    var chunkPos = new Vector3(x.Key.X * ChunkColumn.ChunkWidth, 0, x.Key.Z * ChunkColumn.ChunkDepth);
 			    return camera.BoundingFrustum.Intersects(new Microsoft.Xna.Framework.BoundingBox(chunkPos,
-				    chunkPos + new Vector3(ChunkColumn.ChunkWidth, 16 * ((x.Value.GetHeighest() >> 4) + 1),
+				    chunkPos + new Vector3(ChunkColumn.ChunkWidth, 256/*16 * ((x.Value.GetHeighest() >> 4) + 1)*/,
 					    ChunkColumn.ChunkDepth)));
 		    }).ToArray();
 			

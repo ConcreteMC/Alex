@@ -52,7 +52,7 @@ namespace Alex.Worlds.Generators
 				}
 			}
 
-			//chunk.CalculateHeight();
+			chunk.CalculateHeight();
 		    return chunk;
 		}
 

@@ -98,8 +98,7 @@ namespace Alex
 			return null;
 		}
 
-		private McResourcePack LoadResourcePack(IProgressReceiver progressReceiver, GraphicsDevice graphics, Stream stream, bool replaceModels = false,
-			bool replaceTextures = false, bool reportMissingModels = false, McResourcePack.McResourcePackPreloadCallback preloadCallback = null)
+		private McResourcePack LoadResourcePack(IProgressReceiver progressReceiver, GraphicsDevice graphics, Stream stream, McResourcePack.McResourcePackPreloadCallback preloadCallback = null)
 		{
 			McResourcePack resourcePack = null;
 
@@ -111,27 +110,7 @@ namespace Alex
 			Log.Info($"Loaded {resourcePack.BlockModels.Count} block models from resourcepack");
 			Log.Info($"Loaded {resourcePack.ItemModels.Count} item models from resourcepack");
 
-			if (!replaceTextures)
-			{
-				Atlas.LoadResourcePackOnTop(resourcePack.TexturesAsBitmaps.Where(x => x.Key.StartsWith("block")).ToArray(),
-					progressReceiver);
-			}
-			else
-			{
-				Atlas.GenerateAtlas(resourcePack.TexturesAsBitmaps.Where(x => x.Key.StartsWith("block")).ToArray(),
-					progressReceiver);
-				
-				
-				//Atlas.Atlas.Save("atlas.png", ImageFormat.Png);
-			}
-
-			Stopwatch sw = Stopwatch.StartNew();
-			int imported = BlockFactory.LoadResources(this, resourcePack, replaceModels, reportMissingModels, progressReceiver);
-			sw.Stop();
-
-			Log.Info($"Imported {imported} blockstate variants from resourcepack in {sw.ElapsedMilliseconds}ms!");
-
-			ItemFactory.Init(this, resourcePack, progressReceiver);
+            ItemFactory.Init(this, resourcePack, progressReceiver);
 
 			var language = resourcePack.Languages.Values.FirstOrDefault();
 			if (language != null)
@@ -145,30 +124,44 @@ namespace Alex
 			return resourcePack;
 		}
 
-		private static string Root = "assets";
-		private static readonly string ResourcePackDirectory = Path.Combine(Root, "resourcepacks");
-		private static readonly string BedrockResourcePackPath = Path.Combine(Root, "bedrock.zip");
+        private void LoadModels(IProgressReceiver progressReceiver, McResourcePack resourcePack, bool replaceModels,
+            bool reportMissingModels)
+        {
+            Stopwatch sw = Stopwatch.StartNew();
+            int imported = BlockFactory.LoadResources(this, resourcePack, replaceModels, reportMissingModels, progressReceiver);
+            sw.Stop();
 
-		private bool CheckRequiredPaths(out byte[] javaResources)
+            Log.Info($"Imported {imported} blockstate variants from resourcepack in {sw.ElapsedMilliseconds}ms!");
+        }
+
+        private void LoadTextures(GraphicsDevice device, IProgressReceiver progressReceiver,
+            McResourcePack resourcePack, bool isFirst)
+        {
+            if (!isFirst)
+            {
+                Atlas.LoadResourcePackOnTop(ActiveResourcePacks.First().TexturesAsBitmaps.Where(x => x.Key.StartsWith("block")).ToArray(), resourcePack.TexturesAsBitmaps.Where(x => x.Key.StartsWith("block")).ToArray(),
+                    progressReceiver);
+            }
+            else
+            {
+                Atlas.GenerateAtlas(resourcePack.TexturesAsBitmaps.Where(x => x.Key.StartsWith("block")).ToArray(),
+                    progressReceiver);
+
+
+                //Atlas.Atlas.Save("atlas.png", ImageFormat.Png);
+            }
+        }
+
+        private bool CheckRequiredPaths(out byte[] javaResources)
 		{
-			if (!Directory.Exists(Root))
-			{
-				Directory.CreateDirectory(Root);
-			}
-
-			if (!Directory.Exists(ResourcePackDirectory))
-			{
-				Directory.CreateDirectory(ResourcePackDirectory);
-			}
-
-		/*	if (!Storage.TryReadBytes(BedrockResourcePackPath, out bedrockResources))
-			{
-				Log.Error(
-					$"Missing bedrock edition resources! Please put a copy of the bedrock resources in a zip archive with the path '{BedrockResourcePackPath}'");
-				javaResources = null;
-				bedrockResources = null;
-				return false;
-			}*/
+            /*	if (!Storage.TryReadBytes(BedrockResourcePackPath, out bedrockResources))
+                {
+                    Log.Error(
+                        $"Missing bedrock edition resources! Please put a copy of the bedrock resources in a zip archive with the path '{BedrockResourcePackPath}'");
+                    javaResources = null;
+                    bedrockResources = null;
+                    return false;
+                }*/
 
 			try
 			{
@@ -193,7 +186,7 @@ namespace Alex
 			return true;
 		}
 
-		public bool CheckResources(GraphicsDevice device, Settings setings, IProgressReceiver progressReceiver, McResourcePack.McResourcePackPreloadCallback preloadCallback)
+        public bool CheckResources(GraphicsDevice device, Settings setings, IProgressReceiver progressReceiver, McResourcePack.McResourcePackPreloadCallback preloadCallback)
 		{
 			byte[] defaultResources;
 
@@ -210,7 +203,7 @@ namespace Alex
             Log.Info($"Loading vanilla resources...");
 			using (MemoryStream stream = new MemoryStream(defaultResources))
 			{
-				ActiveResourcePacks.AddFirst(LoadResourcePack(progressReceiver, device, stream, true, true, true, preloadCallback));
+				ActiveResourcePacks.AddFirst(LoadResourcePack(progressReceiver, device, stream, preloadCallback));
 			}
 
 			var bedrockPath = Path.Combine("assets", "bedrock");
@@ -252,27 +245,46 @@ namespace Alex
 			Log.Info($"Loading known entity data...");
 			EntityFactory.Load(this, progressReceiver);
 
+            Storage.TryGetDirectory(Path.Combine("assets", "resourcepacks"), out DirectoryInfo root);
+
             foreach (string file in setings.ResourcePacks)
 			{
 				try
 				{
-					string resourcePackPath = Path.Combine(ResourcePackDirectory, file);
+					string resourcePackPath = Path.Combine(root.FullName, file);
 					if (File.Exists(resourcePackPath))
 					{
 						Log.Info($"Loading resourcepack {file}...");
 
 						using (FileStream stream = new FileStream(resourcePackPath, FileMode.Open))
 						{
-							ActiveResourcePacks.AddLast(LoadResourcePack(progressReceiver, device, stream, true, false, false, preloadCallback));
+							ActiveResourcePacks.AddLast(LoadResourcePack(progressReceiver, device, stream, null));
 						}
 					}
 				}
 				catch (Exception e)
 				{
-					Log.Warn(e, $"Could not load resourcepack {file}!");
+					Log.Warn(e, $"Could not load resourcepack {file}: {e.ToString()}");
 				}
 			}
-			
+
+            bool isFirst = true;
+            foreach (var resourcePack in ActiveResourcePacks)
+            {
+                LoadTextures(device, progressReceiver, resourcePack, isFirst);
+
+                if (isFirst)
+                    isFirst = false;
+            }
+
+            isFirst = true;
+            foreach (var resourcePack in ActiveResourcePacks)
+            {
+                LoadModels(progressReceiver, resourcePack, true, isFirst);
+                if (isFirst)
+                    isFirst = false;
+            }
+
             return true;
 		}
 

@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Alex.API.Utils;
+using Alex.GameStates.Playing;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -19,9 +22,8 @@ namespace Alex.Utils
 	    private Dictionary<string, TextureInfo> _atlasLocations = new Dictionary<string, TextureInfo>();
 
 	    private Texture2D[] _frames;
-	    private Texture2D _atlas;
-	    public Vector2 AtlasSize { get; private set; }
-		public Bitmap Atlas { get; set; } = null;
+        public Vector2 AtlasSize { get; private set; }
+
 	    private GraphicsDevice Graphics { get; }
 	    public AtlasGenerator(GraphicsDevice graphics)
 	    {
@@ -32,6 +34,8 @@ namespace Alex.Utils
         {
 	        Log.Info($"Generating texture atlas out of {bitmaps.Length} bitmaps...");
 
+            Dictionary<string, TextureInfo> atlasLocations = new Dictionary<string, TextureInfo>();
+
 	        Bitmap no;
 	        using (MemoryStream ms = new MemoryStream(ResourceManager.ReadResource("Alex.Resources.no.png")))
 	        {
@@ -41,9 +45,9 @@ namespace Alex.Utils
 	        var regular = new[]
 	        {
 		        new KeyValuePair<string, Bitmap>("no_texture", no),
-	        }.Concat(bitmaps.Where(x => x.Value.Height == 16 && x.Value.Width == 16)).ToArray();
+	        }.Concat(bitmaps.Where(x => x.Value.Height == TextureHeight && x.Value.Width == TextureWidth)).ToArray();
 		       
-	        var others = bitmaps.Where(x => x.Value.Height != 16 || x.Value.Width != 16).ToList();
+	        var others = bitmaps.Where(x => x.Value.Height != TextureHeight || x.Value.Width != TextureWidth).ToList();
 
 	        Bitmap[] waterFrames = new Bitmap[0];
 	        Bitmap[] lavaFrames = new Bitmap[0];
@@ -105,51 +109,55 @@ namespace Alex.Utils
 	        }
 	        
 			int xi = 0, yi = 0, offsetX = 0, yRemaining = 0;
-	        int processedFiles = Process(ref bitmap, regular, ref xi, ref yi, ref offsetX, ref yRemaining, total, 0, progressReceiver);
-	        yi += 16;
+	        int processedFiles = Process(ref bitmap, regular, ref xi, ref yi, ref offsetX, ref yRemaining, total, 0, atlasLocations, progressReceiver);
+	        yi += TextureHeight;
 	        xi = 0;
-			Process(ref bitmap, others.ToArray(), ref xi, ref yi, ref offsetX, ref yRemaining, total, processedFiles, progressReceiver);
-		
-			Atlas = bitmap;
+			Process(ref bitmap, others.ToArray(), ref xi, ref yi, ref offsetX, ref yRemaining, total, processedFiles, atlasLocations, progressReceiver);
 
-			_atlas = TextureUtils.BitmapToTexture2D(Graphics, bitmap);
-			AtlasSize = new Vector2(_atlas.Width, _atlas.Height);
-
-			var waterLocation = GetAtlasLocation("block/water_still");
-			var waterFlowLocation = GetAtlasLocation("block/water_flow");
+            var waterLocation = GetAtlasLocation("block/water_still", atlasLocations);
+			var waterFlowLocation = GetAtlasLocation("block/water_flow", atlasLocations);
 			
-			var lavaLocation = GetAtlasLocation("block/lava_still");
-			var lavaFlowLocation = GetAtlasLocation("block/lava_flow");
-			_frames = new Texture2D[Math.Max(waterFrames.Length, waterFlowFrames.Length)];
-			for (int i = 0; i < _frames.Length; i++)
+			var lavaLocation = GetAtlasLocation("block/lava_still", atlasLocations);
+			var lavaFlowLocation = GetAtlasLocation("block/lava_flow", atlasLocations);
+
+            long totalSize = 0;
+			var frames = new Texture2D[Math.Max(waterFrames.Length, waterFlowFrames.Length)];
+			for (int i = 0; i < frames.Length; i++)
 			{
 				var target = new Bitmap(bitmap);
-				var r = new System.Drawing.Rectangle(0, 0, 16, 16);
-				var destination = new System.Drawing.Rectangle((int) waterLocation.Position.X, (int) waterLocation.Position.Y, 16, 16);
+				var r = new System.Drawing.Rectangle(0, 0, TextureWidth, TextureHeight);
+				var destination = new System.Drawing.Rectangle((int) waterLocation.Position.X, (int) waterLocation.Position.Y, TextureWidth, TextureHeight);
 
 				if (waterFrames.Length > 0)
 					TextureUtils.CopyRegionIntoImage(waterFrames[((i % 3 == 0 ? i -1 : i) / 6) % waterFrames.Length], r, ref target, destination);
 				
-				destination = new System.Drawing.Rectangle((int) waterFlowLocation.Position.X, (int) waterFlowLocation.Position.Y, 16, 16);
+				destination = new System.Drawing.Rectangle((int) waterFlowLocation.Position.X, (int) waterFlowLocation.Position.Y, TextureWidth, TextureHeight);
 				if (waterFlowFrames.Length > 0)
 					TextureUtils.CopyRegionIntoImage(waterFlowFrames[i % waterFlowFrames.Length], r, ref target, destination);
 				
-				destination = new System.Drawing.Rectangle((int) lavaLocation.Position.X, (int) lavaLocation.Position.Y, 16, 16);
+				destination = new System.Drawing.Rectangle((int) lavaLocation.Position.X, (int) lavaLocation.Position.Y, TextureWidth, TextureHeight);
 				if (lavaFrames.Length > 0)
 					TextureUtils.CopyRegionIntoImage(lavaFrames[i % lavaFrames.Length], r, ref target, destination);
 				
-				destination = new System.Drawing.Rectangle((int) lavaFlowLocation.Position.X, (int) lavaFlowLocation.Position.Y, 16, 16);
+				destination = new System.Drawing.Rectangle((int) lavaFlowLocation.Position.X, (int) lavaFlowLocation.Position.Y, TextureWidth, TextureHeight);
 				if (lavaFlowFrames.Length > 0)
 					TextureUtils.CopyRegionIntoImage(lavaFlowFrames[i % lavaFlowFrames.Length], r, ref target, destination);
 				
-				_frames[i] = TextureUtils.BitmapToTexture2D(Graphics, target);
-			}
-			
-           // bitmap.Save("assets\\terrain.png", ImageFormat.Png);
-			Log.Info($"TextureAtlas generated! (Width:{_atlas.Width}px Height:{_atlas.Height}px)");
+				frames[i] = TextureUtils.BitmapToTexture2D(Graphics, target, out var size);
+                totalSize += size;
+            }
+
+            _frames = frames;
+            AtlasSize = new Vector2(bitmap.Width, bitmap.Height);
+            _atlasLocations = atlasLocations;
+
+            bitmap.Save("terrain.png", ImageFormat.Png);
+            Log.Info($"TextureAtlas generated! ({PlayingState.GetBytesReadable(totalSize)})");
+
+           // TexturesInWidth = bitmap.Width / TextureWidth;
         }
 
-	    private int Process(ref Bitmap bmp, KeyValuePair<string, Bitmap>[] data, ref int xi, ref int yi, ref int xOffset, ref int yRemaining, int total, int processed, IProgressReceiver progressReceiver)
+	    private int Process(ref Bitmap bmp, KeyValuePair<string, Bitmap>[] data, ref int xi, ref int yi, ref int xOffset, ref int yRemaining, int total, int processed, IDictionary<string, TextureInfo> locations, IProgressReceiver progressReceiver)
 	    {
 		    int done = processed;
 			var count = 0;
@@ -162,28 +170,28 @@ namespace Alex.Utils
 			    double percentage = 100D * ((double)processed / (double)total);
 			    progressReceiver.UpdateProgress((int)percentage, "Stitching textures...", key);
 
-                var r = new System.Drawing.Rectangle(0, 0, bm.Value.Width, bm.Value.Height);
-			    var destination = new System.Drawing.Rectangle(xi, yi, bm.Value.Width, bm.Value.Height);
+                var sourceRegion = new System.Drawing.Rectangle(0, 0, bm.Value.Width, bm.Value.Height);
+			    var targetRegion = new System.Drawing.Rectangle(xi, yi, bm.Value.Width, bm.Value.Height);
 
-			    TextureUtils.CopyRegionIntoImage(bm.Value, r, ref bmp, destination);
+			    TextureUtils.CopyRegionIntoImage(bm.Value, sourceRegion, ref bmp, targetRegion);
 
-			    if (!_atlasLocations.ContainsKey(key))
+			    if (!locations.ContainsKey(key))
 			    {
-				    _atlasLocations.Add(key, new TextureInfo(new Vector2(xi, yi), bm.Value.Width, bm.Value.Height));
+				    locations.Add(key, new TextureInfo(new Vector2(xi, yi), bm.Value.Width, bm.Value.Height));
 			    }
 
-			    if (bm.Value.Height > 16)
+			    if (bm.Value.Height > TextureHeight)
 			    {
 				    xOffset = xi;
 				    yRemaining = bm.Value.Height;
 			    }
 			    xi += bm.Value.Width;
 
-			    if (count == AtlasWidth / 16)
+			    if (count == AtlasWidth / TextureWidth)
 			    {
-				    yi += 16;
+				    yi += TextureHeight;
 				    xi = 0;
-				    yRemaining -= 16;
+				    yRemaining -= TextureHeight;
 
 				    count = 0;
 			    }
@@ -198,16 +206,16 @@ namespace Alex.Utils
 
 	    private Bitmap[] GetFrames(Bitmap source)
 	    {
-		    int ix = source.Width / 16;
-		    int iy = source.Height / 16;
+		    int ix = source.Width / TextureWidth;
+		    int iy = source.Height / TextureHeight;
 
 		    List<Bitmap> result = new List<Bitmap>();
 		    
 		    for (int x = 0; x < ix; x++)
 		    for(int y = 0; y < iy; y++)
 		    {
-			    Bitmap newBitmap = new Bitmap(16, 16);
-			    TextureUtils.CopyRegionIntoImage(source, new System.Drawing.Rectangle(x,y, 16, 16), ref newBitmap, new System.Drawing.Rectangle(0, 0, 16, 16));
+			    Bitmap newBitmap = new Bitmap(TextureWidth, TextureHeight);
+			    TextureUtils.CopyRegionIntoImage(source, new System.Drawing.Rectangle(x,y, TextureWidth, TextureHeight), ref newBitmap, new System.Drawing.Rectangle(0, 0, TextureWidth, TextureHeight));
 			    
 			    result.Add(newBitmap);
 		    }
@@ -215,135 +223,50 @@ namespace Alex.Utils
 		    return result.ToArray();
 	    }
 
-	    private const int AtlasWidth = 512;
-	    private const int AtlasHeight = 512;
+	    private int AtlasWidth = 512;
+	    private int AtlasHeight = 512;
 
 	    public int TextureWidth { get; private set; } = 16;
 	    public int TextureHeight { get; private set; }= 16;
 
-		public void LoadResourcePackOnTop(KeyValuePair<string, Bitmap>[] bitmapsRaw, IProgressReceiver progressReceiver)
+        public void LoadResourcePackOnTop(KeyValuePair<string, Bitmap>[] vanilla, KeyValuePair<string, Bitmap>[] bitmapsRaw, IProgressReceiver progressReceiver)
 		{
-			/*  string path = Path.Combine("assets", "minecraft", "textures", "blocks");
 
-			  int textureWidth = 16, textureHeight = 16;
-			  var bitmapsRaw = archive.Entries.Where(x =>
-				  x.FullName.Replace('/', '\\').StartsWith(path, StringComparison.InvariantCultureIgnoreCase) &&
-				  x.Name.EndsWith(".png")).ToArray();
-			  Dictionary<string, Bitmap> bitmaps = new Dictionary<string, Bitmap>();
-			  foreach (var entry in bitmapsRaw)
-			  {
-				  string name = entry.Name.Replace(".png", "");
-				  if (!bitmaps.ContainsKey(name))
-				  {
-					  using (Stream stream = entry.Open())
-					  {
-						  Bitmap texture = new Bitmap(stream);
-						  if (texture.Width > textureWidth && texture.Width % 16 == 0 && texture.Height > textureHeight && texture.Height % 16 == 0)
-						  {
-							  if (texture.Width == texture.Height)
-							  {
-								  textureWidth = texture.Width;
-								  textureHeight = texture.Height;
-							  }
-						  }
-						  bitmaps.Add(name, texture);
-					  }
-				  }
-			  }*/
-
-			int textureWidth = 16, textureHeight = 16;
+            int textureWidth = 16, textureHeight = 16;
 			Dictionary<string, Bitmap> bitmaps = new Dictionary<string, Bitmap>();
-			foreach (var bitmap in bitmapsRaw)
-			{
-				string name = Path.GetFullPath(bitmap.Key);
+            foreach (var bmp in vanilla)
+            {
+                string name = bmp.Key;
+                if (!bitmaps.ContainsKey(name))
+                {
+                    var bitmap = bitmapsRaw.FirstOrDefault(x =>
+                        x.Key.Equals(bmp.Key, StringComparison.InvariantCultureIgnoreCase));
+                    if (bitmap.Value == null) bitmap = bmp;
 
-				if (!bitmaps.ContainsKey(name))
-				{
-					var texture = bitmap.Value;
-					if (texture.Width > textureWidth && texture.Width % 16 == 0 && texture.Height > textureHeight &&
-					    texture.Height % 16 == 0)
-					{
-						if (texture.Width == texture.Height)
-						{
-							textureWidth = texture.Width;
-							textureHeight = texture.Height;
-						}
-					}
+                    var texture = bitmap.Value;
+                    if (texture.Width > textureWidth && texture.Width % 16 == 0 && texture.Height > textureHeight &&
+                        texture.Height % 16 == 0)
+                    {
+                        if (texture.Width == texture.Height)
+                        {
+                            textureWidth = texture.Width;
+                            textureHeight = texture.Height;
+                        }
+                    }
 
-					bitmaps.Add(name, texture);
-				}
-			}
+                    bitmaps.Add(name, texture);
+                }
+            }
 
+            AtlasWidth = 32 * textureWidth;
+            AtlasHeight = 32 * textureHeight;
 
-			Dictionary<string, TextureInfo> newLocations = new Dictionary<string, TextureInfo>();
-			int cx = 0;
-			int cy = 0;
-			//Log.Debug($"Texture Height: {textureHeight} Width: {textureWidth}");
-			Bitmap modifiedBitmap = new Bitmap(32 * textureWidth, 32 * textureHeight);
+            AtlasSize = new Vector2(AtlasWidth, AtlasHeight);
+            TextureHeight = textureHeight;
+            TextureWidth = textureWidth;
 
-			foreach (var loc in _atlasLocations)
-			{
-				System.Drawing.Rectangle target = new System.Drawing.Rectangle(cx, cy, textureWidth, textureHeight);
-
-				int w = textureWidth;
-				int h = textureHeight;
-
-				var atlasLocation = loc.Value;
-				if (bitmaps.TryGetValue(loc.Key, out Bitmap texture))
-				{
-					TextureUtils.CopyRegionIntoImage(texture, new System.Drawing.Rectangle(0, 0, textureWidth, textureHeight), ref modifiedBitmap, target);
-				}
-				else
-				{
-					w = 16;
-					h = 16;
-					TextureUtils.CopyRegionIntoImage(Atlas, new System.Drawing.Rectangle((int)atlasLocation.Position.X, (int)atlasLocation.Position.Y, 16, 16), ref modifiedBitmap, target);
-				}
-
-				newLocations.Add(loc.Key, new TextureInfo(new Vector2(cx, cy), w, h));
-
-				cx += textureWidth;
-				if (cx == modifiedBitmap.Width)
-				{
-					cx = 0;
-					cy += textureHeight;
-				}
-			}
-
-			int noDataSection = textureWidth / 2;
-			for (int xi = 0; xi < 2; xi++)
-			{
-				for (int yi = 0; yi < 2; yi++)
-				{
-					for (int x = xi * noDataSection; x < (xi * noDataSection) + noDataSection; x++)
-					{
-						for (int y = yi * noDataSection; y < (yi * noDataSection) + noDataSection; y++)
-						{
-							Color color;
-							if ((xi == 0 && yi == 0) || (xi == 1 && yi == 1))
-							{
-								color = Color.Magenta;
-							}
-							else
-							{
-								color = Color.Black;
-							}
-							modifiedBitmap.SetPixel(x, y, color);
-						}
-					}
-				}
-			}
-
-			Atlas = modifiedBitmap;
-			_atlasLocations = newLocations;
-			TextureWidth = textureWidth;
-			TextureHeight = textureHeight;
-
-			_atlas = TextureUtils.BitmapToTexture2D(Graphics, modifiedBitmap);
-		    AtlasSize = new Vector2(_atlas.Width, _atlas.Height);
-
-			//modifiedBitmap.Save("debug.png", ImageFormat.Png);
-		}
+            GenerateAtlas(bitmaps.ToArray(), progressReceiver);
+        }
 
 
 		public int GetFrameCount()
@@ -354,17 +277,19 @@ namespace Alex.Utils
 		public Texture2D GetAtlas(int frame)
 		{
 			return _frames[frame % _frames.Length];
-		    return _atlas;
-	    }
+        }
 
-	    public TextureInfo GetAtlasLocation(string file)
-	    {
-		    if (_atlasLocations.Count == 0) throw new Exception();
+	    public TextureInfo GetAtlasLocation(string file, IDictionary<string, TextureInfo> dictionary = null)
+        {
+            if (dictionary == null)
+                dictionary = _atlasLocations;
 
-		    if (file == "water_still" && !_atlasLocations.ContainsKey(file))
+		    if (dictionary.Count == 0) throw new Exception();
+
+		    if (file == "water_still" && !dictionary.ContainsKey(file))
 			    file = "water_flow";
 		    
-		    return _atlasLocations.ContainsKey(file) ? _atlasLocations[file] : new TextureInfo(Vector2.Zero, TextureWidth, TextureHeight);
+		    return dictionary.ContainsKey(file) ? dictionary[file] : new TextureInfo(Vector2.Zero, TextureWidth, TextureHeight);
 	    }
 	}
 }

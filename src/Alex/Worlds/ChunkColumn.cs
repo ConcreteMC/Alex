@@ -737,7 +737,7 @@ namespace Alex.Worlds
 
 						bool found = false;
 
-						if ((wasScheduled || wasLightingScheduled || scheduled.HasFlag(ScheduleType.Full)
+						if (true || (wasScheduled || wasLightingScheduled || scheduled.HasFlag(ScheduleType.Full)
 						     || (scheduled.HasFlag(ScheduleType.Lighting) /*&& cachedMesh == null*/) ||
 						     (scheduled.HasFlag(ScheduleType.Border) && (x == 0 || x == 15) && (z == 0 || z == 15))))
 						{
@@ -830,8 +830,8 @@ namespace Alex.Worlds
 						}
 						else if (cachedMesh != null &&
 						         cachedMesh.Positions.TryGetValue(vector, out ChunkMesh.EntryPosition position))
-						{/*
-							var cachedVertices = position.Transparent
+						{
+							/*var cachedVertices = position.Transparent
 								? cachedMesh.Mesh.TransparentVertices
 								: cachedMesh.Mesh.Vertices;
 
@@ -986,7 +986,7 @@ namespace Alex.Worlds
 
 		public void CalculateHeight()
 		{
-			for (int x = 0; x < 16; x++)
+            for (int x = 0; x < 16; x++)
 			{
 				for (int z = 0; z < 16; z++)
 				{
@@ -1002,47 +1002,14 @@ namespace Alex.Worlds
 			}
 
 			GetHeighest();
-		}
 
-		public void CalculateSkylight()
-		{
-			for (int x = 0; x < 16; x++)
-			{
-				for (int z = 0; z < 16; z++)
-				{
-					int light = 15;
-					for (int y = 256 - 1; y > 0; --y)
-					{
-						var block = GetBlock(x, y, z);
-						if (!block.Renderable) continue;
+            foreach (var section in Sections)
+            {
+                section?.RemoveInvalidBlocks();
+            }
+        }
 
-						if (block.Solid && !block.Transparent)
-						{
-							light = 0;
-						}
-						else
-						{
-							var lightOpacity = block.LightOpacity;
-							if (lightOpacity == 0 && light != 15)
-							{
-								lightOpacity = 1;
-							}
-
-							light -= lightOpacity;
-							//(int) Math.Round(prevLight *  (1D - block.LightOpacity));
-						}
-
-						if (light > 0)
-						{
-							SetSkyLight(x, y, z, (byte) light);
-						}
-
-					}
-				}
-			}
-		}
-
-		public void Read(MinecraftStream ms, int availableSections, bool groundUp, bool readSkylight)
+        public void Read(MinecraftStream ms, int availableSections, bool groundUp, bool readSkylight)
 		{
 			try
 			{

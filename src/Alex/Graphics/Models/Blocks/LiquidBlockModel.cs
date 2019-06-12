@@ -332,10 +332,11 @@ namespace Alex.Graphics.Models.Blocks
 						vert.Position.X += position.X;
 						vert.Position.Z += position.Z;
 
-						vert.Color = AdjustColor(new Color(68, 175, 245), f,
-							GetLight(world, position + d), false);
+                        if (IsWater) vert.Color = new Color(68, 175, 245);
+                        //vert.Color = AdjustColor(new Color(68, 175, 245), f,
+                        //	GetLight(world, position + d), false);
 
-						result.Add(vert);
+                        result.Add(vert);
 					}
 
 					for (var index = 0; index < indexes.Length; index++)

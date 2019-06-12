@@ -62,11 +62,11 @@ namespace Alex
 			Level = 8
 		};
 
-		private static BlockModel GetOrCacheModel(ResourceManager resources, McResourcePack resourcePack, IBlockState state, uint id)
+		private static BlockModel GetOrCacheModel(ResourceManager resources, McResourcePack resourcePack, IBlockState state, uint id, bool rebuild)
 		{
 			if (ModelCache.TryGetValue(id, out var r))
 			{
-				return r;
+                return r;
 			}
 			else
 			{
@@ -76,8 +76,7 @@ namespace Alex
 					return null;
 				}
 
-
-				if (state.GetTypedValue(WaterLoggedProperty))
+                if (state.GetTypedValue(WaterLoggedProperty))
 				{
 					result = new MultiBlockModel(result, StationairyWaterModel);
 				}
@@ -91,7 +90,7 @@ namespace Alex
 			}
 		}
 
-		private static bool _builtin = false;
+        private static bool _builtin = false;
 		private static void RegisterBuiltinBlocks()
 		{
 			if (_builtin)
@@ -205,23 +204,23 @@ namespace Alex
 						}
 					}
 				//	resourcePack.BlockStates.TryGetValue(entry.Key)
-					if (RegisteredBlockStates.TryGetValue(id, out IBlockState st))
+					if (!replace && RegisteredBlockStates.TryGetValue(id, out IBlockState st))
 					{
 						Log.Warn($"Duplicate blockstate id (Existing: {st.Name}[{st.ToString()}] | New: {entry.Key}[{variantState.ToString()}]) ");
 						continue;
 					}
 
 					{
-						var cachedBlockModel = GetOrCacheModel(resources, resourcePack, variantState, id);
+						var cachedBlockModel = GetOrCacheModel(resources, resourcePack, variantState, id, replace);
 						if (cachedBlockModel == null)
 						{
 							if (reportMissing)
 								Log.Warn($"Missing blockmodel for blockstate {entry.Key}[{variantState.ToString()}]");
 
 							cachedBlockModel = UnknownBlockModel;
-						}
+                        }
 
-						if (variantState.IsMultiPart) multipartBased++;
+                        if (variantState.IsMultiPart) multipartBased++;
 
 						string displayName = entry.Key;
 						var block = GetBlockByName(entry.Key);
@@ -298,8 +297,17 @@ namespace Alex
 
 						if (!RegisteredBlockStates.TryAdd(id, variantState))
 						{
-							Log.Warn($"Failed to add blockstate (variant), key already exists! ({variantState.ID} - {variantState.Name})");
-						}
+                            if (replace)
+                            {
+                                RegisteredBlockStates[id] = variantState;
+                                importCounter++;
+                            }
+                            else
+                            {
+                                Log.Warn(
+                                    $"Failed to add blockstate (variant), key already exists! ({variantState.ID} - {variantState.Name})");
+                            }
+                        }
 						else
 						{
 							importCounter++;
@@ -318,10 +326,18 @@ namespace Alex
 				variantMap._default = state;
 			}
 			
+
 				if (!BlockStateByName.TryAdd(state.Name, variantMap))
 				{
-					Log.Warn($"Failed to add blockstate, key already exists! ({state.Name})");
-				}
+                    if (replace)
+                    {
+                        BlockStateByName[state.Name] = variantMap;
+                    }
+                    else
+                    {
+                        Log.Warn($"Failed to add blockstate, key already exists! ({state.Name})");
+                    }
+                }
 				else
 				{
 					//foreach (var bsVariant in state.Variants.ToArray().Cast<BlockState>())
