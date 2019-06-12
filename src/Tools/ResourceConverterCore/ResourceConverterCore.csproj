@@ -18,7 +18,6 @@
 
 	<ItemGroup>
     <ProjectReference Include="..\..\Alex.API\Alex.API.csproj" />
-    <ProjectReference Include="..\..\Alex.Gui\Alex.Graphics.csproj" />
     <ProjectReference Include="..\..\Alex.ResourcePackLib\Alex.ResourcePackLib.csproj" />
     <ProjectReference Include="..\..\Alex\Alex.csproj" />
   </ItemGroup>
