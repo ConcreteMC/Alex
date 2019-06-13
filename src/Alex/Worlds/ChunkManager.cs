@@ -224,10 +224,19 @@ namespace Alex.Worlds
 
             while (!CancelationToken.IsCancellationRequested)
             {
-                SpinWait.SpinUntil(() => Interlocked.Read(ref _threadsRunning) < maxThreads);
+	            var cameraChunkPos = new ChunkCoordinates(new PlayerLocation(CameraPosition.X, CameraPosition.Y,
+		            CameraPosition.Z));
+                //SpinWait.SpinUntil(() => Interlocked.Read(ref _threadsRunning) < maxThreads);
 
-                var cameraChunkPos = new ChunkCoordinates(new PlayerLocation(CameraPosition.X, CameraPosition.Y,
-                   CameraPosition.Z));
+                foreach (var data in _chunkData.ToArray().Where(x =>
+	                QuickMath.Abs(cameraChunkPos.DistanceTo(x.Key)) > Game.GameSettings.RenderDistance))
+                {
+	                data.Value?.Dispose();
+	                _chunkData.TryRemove(data.Key, out _);
+                }
+
+                if (Interlocked.Read(ref _threadsRunning) >= maxThreads) continue;
+                
 
                 bool nonInView = false;
                 double radiusSquared = Math.Pow(Game.GameSettings.RenderDistance, 2);
@@ -385,6 +394,8 @@ namespace Alex.Worlds
                 }
 
                 device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, chunk.SolidIndexBuffer.IndexCount / 3);
+                indexBufferSize += chunk.SolidIndexBuffer.IndexCount / 3;
+                tempVertices += chunk.Buffer.VertexCount;
                 //chunk.DrawOpaque(device, OpaqueEffect, out int drawn, out int idxSize);
                 // tempVertices += drawn;
                 // indexBufferSize += idxSize;
@@ -410,12 +421,16 @@ namespace Alex.Worlds
                 }
 
                 device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, chunk.TransparentIndexBuffer.IndexCount / 3);
-
+                indexBufferSize += chunk.TransparentIndexBuffer.IndexCount / 3;
+                //tempVertices += chunk.Buffer.VertexCount;
                 //chunk.DrawTransparent(device, TransparentEffect, out int draw, out int idxSize);
                 // tempVertices += draw;
                 // indexBufferSize += idxSize;
             }
 
+		    tempChunks = chunks.Count(x => x.Value != null && (
+			    x.Value.SolidIndexBuffer.IndexCount > 0 || x.Value.TransparentIndexBuffer.IndexCount > 0));
+		    
 		    Vertices = tempVertices;
 		    RenderedChunks = tempChunks;
 		    IndexBufferSize = indexBufferSize;
@@ -480,7 +495,7 @@ namespace Alex.Worlds
 
             var renderedChunks = Chunks.ToArray().Where(x =>
             {
-	           if (Math.Abs(x.Key.DistanceTo(cameraChunkPos)) > radiusSquared)
+	           if (Math.Abs(x.Key.DistanceTo(cameraChunkPos)) > Game.GameSettings.RenderDistance)
 		           return false;
 			    
 			    var chunkPos = new Vector3(x.Key.X * ChunkColumn.ChunkWidth, 0, x.Key.Z * ChunkColumn.ChunkDepth);
@@ -717,7 +732,7 @@ namespace Alex.Worlds
                 if (currentChunkY < 0) currentChunkY = 0;
 
                 List<ChunkMesh> meshes = new List<ChunkMesh>();
-                for (var i = chunk.Sections.Length - 1; i >= currentChunkY; i--)
+                for (var i = chunk.Sections.Length - 1; i > 0; i--)
                 {
                     var section = chunk.Sections[i] as ChunkSection;
                     if (section == null || section.IsEmpty())
@@ -727,12 +742,18 @@ namespace Alex.Worlds
 
                     if (i > 0 && i < chunk.Sections.Length - 1)
                     {
-                        if (!section.HasAirPockets && chunk.CheckNeighbors(section, i, World).Count() == 6) //All surrounded by solid.
-                        {
-                            // Log.Info($"Found section with solid neigbors, skipping.");
-                            continue;
-                        }
+	                    var neighbors = chunk.CheckNeighbors(section, i, World).ToArray();
+
+	                    if (!section.HasAirPockets && neighbors.Length == 6) //All surrounded by solid.
+	                    {
+		                    // Log.Info($"Found section with solid neigbors, skipping.");
+		                    continue;
+	                    }
+
+	                    if (i < currentChunkY && neighbors.Length >= 6) continue;
                     }
+                    else if (i < currentChunkY) continue;
+                    
 
                     if (force || section.ScheduledUpdates.Any(x => x == true) || section.IsDirty)
                     {
@@ -1038,12 +1059,18 @@ namespace Alex.Worlds
         }
     }
 
-    internal class ChunkData
+    internal class ChunkData : IDisposable
     {
         public IndexBuffer SolidIndexBuffer { get; set; }
         public IndexBuffer TransparentIndexBuffer { get; set; }
         public VertexBuffer Buffer { get; set; }
 
 
+        public void Dispose()
+        {
+	        SolidIndexBuffer?.Dispose();
+	        TransparentIndexBuffer?.Dispose();
+	        Buffer?.Dispose();
+        }
     }
 }

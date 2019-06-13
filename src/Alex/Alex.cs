@@ -231,11 +231,13 @@ namespace Alex
 			if (Storage.TryRead("settings", out Settings settings))
 			{
 				GameSettings = settings;
+				//Console.WriteLine($"OLD SETTINGS: {settings.RenderDistance}");
 			}
 			else
 			{
 				GameSettings = new Settings(string.Empty);
 				GameSettings.IsDirty = true;
+				//Console.WriteLine($"NEW GAMESETTINGS");
 			}
 
 			Extensions.Init(GraphicsDevice);
