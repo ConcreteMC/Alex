@@ -654,6 +654,11 @@ namespace Alex.Worlds
 		        }
 	        }
 
+	        if (_chunkData.TryRemove(position, out var data))
+	        {
+		        data?.Dispose();
+	        }
+
 	        LowPriority.Remove(position);
 
 	        if (Enqueued.Remove(position))
@@ -687,6 +692,14 @@ namespace Alex.Worlds
 		    {
 				chunk.Value.Dispose();
 		    }
+
+		    var data = _chunkData.ToArray();
+		    _chunkData.Clear();
+		    foreach (var entry in data)
+		    {
+			    entry.Value?.Dispose();
+		    }
+		    
 			Enqueued.Clear();
 	    }
 
@@ -705,6 +718,14 @@ namespace Alex.Worlds
 			    Enqueued.Remove(chunk.Key);
                 chunk.Value.Dispose();
 		    }
+
+			foreach (var data in _chunkData.ToArray())
+			{
+				_chunkData.TryRemove(data.Key, out _);
+				data.Value?.Dispose();
+			}
+
+			_chunkData = null;
 	    }
 
 
