@@ -109,30 +109,8 @@ namespace Alex.Graphics.Models.Blocks
 
 		protected Matrix GetModelRotationMatrix(BlockStateModel model)
 		{
-			//360f - model.X
-			
-			float y = model.Y;
-			if (y >= 0)
-			{
-				//y = 360f - y;
-			}
-			//if (y == 0f) y = 180;
-			//else if (y == 180f) y = 0;
-			//else if (y == 90) y = 270;
-			//else if (y == 270) y = 90;*/
-
-			float x = model.X;
-			if (x >= 0)
-			{
-				x = x;
-			}
-			/*if (x == 0) x = 180;
-			else if (x == 180) x = 0;
-			else if (x == 90) x = 270;
-			else if (x == 270) x = 90;*/
-			
-			return Matrix.CreateRotationX(MathHelper.ToRadians(-x)) *
-			       Matrix.CreateRotationY(MathHelper.ToRadians(-y));
+			return Matrix.CreateRotationX(MathHelper.ToRadians(-model.X)) *
+			       Matrix.CreateRotationY(MathHelper.ToRadians(-model.Y));
 		}
 
 		protected string ResolveTexture(BlockStateModel var, string texture)
@@ -485,24 +463,27 @@ namespace Alex.Graphics.Models.Blocks
 					foreach (var faceElement in element.Faces)
 					{
 						var facing = faceElement.Key;
+						
 						GetCullFaceValues(faceElement.Value.CullFace, facing, out var cullFace);
 
 						var originalCullFace = cullFace;
 						
+						if (bsModel.Y > 0f)
+						{
+							var offset = (-bsModel.Y) / 90;
+							cullFace = RotateDirection(cullFace, offset, FACE_ROTATION, INVALID_FACE_ROTATION);
+							facing = RotateDirection(facing, offset, FACE_ROTATION, INVALID_FACE_ROTATION);
+						}
+
+						
 						if (bsModel.X > 0f)
 						{
-							var offset = bsModel.X / 90;
+							var offset = (-bsModel.X) / 90;
 							cullFace = RotateDirection(cullFace, offset, FACE_ROTATION_X, INVALID_FACE_ROTATION_X);
 							facing = RotateDirection(facing, offset, FACE_ROTATION_X, INVALID_FACE_ROTATION_X);
 						}
 
-						if (bsModel.Y > 0f)
-						{
-							var offset = bsModel.Y / 90;
-							cullFace = RotateDirection(cullFace, offset, FACE_ROTATION, INVALID_FACE_ROTATION);
-							facing = RotateDirection(facing, offset, FACE_ROTATION, INVALID_FACE_ROTATION);
-						}
-						
+
 						if (originalCullFace != BlockFace.None && !ShouldRenderFace(world, cullFace, position, baseBlock))
 							continue;
 
@@ -533,7 +514,31 @@ namespace Alex.Graphics.Models.Blocks
 							}
 						}
 
-						faceColor = AdjustColor(faceColor, cullFace,
+						/*switch (faceElement.Key)
+						{
+							case BlockFace.Down:
+								faceColor = Color.Turquoise;
+								break;
+							case BlockFace.Up:
+								faceColor = Color.Blue;
+								break;
+							case BlockFace.East:
+								faceColor = Color.Red;
+								break;
+							case BlockFace.West:
+								faceColor = Color.Yellow;
+								break;
+							case BlockFace.North:
+								faceColor = Color.Pink;
+								break;
+							case BlockFace.South:
+								faceColor = Color.LimeGreen;
+								break;
+							case BlockFace.None:
+								break;
+						}*/
+						
+						faceColor = AdjustColor(faceColor, facing,
 							GetLight(world, position + facing.GetVector3(),
 								false /*model.Model.AmbientOcclusion*/), element.Shade);
 

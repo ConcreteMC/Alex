@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Linq;
 using Alex.API.Graphics;
 using Alex.API.World;
-using Alex.Blocks;
 using Alex.ResourcePackLib.Json;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
-using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
 
 namespace Alex.Graphics.Models.Blocks
 {
@@ -456,17 +453,17 @@ namespace Alex.Graphics.Models.Blocks
 
 	    protected static BlockFace[] INVALID_FACE_ROTATION = new BlockFace[]
 	    {
-		    BlockFace.North,
-		    BlockFace.South,
+		    BlockFace.Up,
+		    BlockFace.Down,
 		    BlockFace.None
 	    };
 	    
 		protected static BlockFace[] FACE_ROTATION =
 		{
 			BlockFace.East,
-			BlockFace.Down,
+			BlockFace.South,
 			BlockFace.West,
-			BlockFace.Up
+			BlockFace.North
 		};
 
 		protected static BlockFace[] FACE_ROTATION_X =
@@ -510,11 +507,6 @@ namespace Alex.Graphics.Models.Blocks
 		public static Vector3 From(Vector3 x, Vector3 y, Vector3 z)
 		{
 			return new Vector3(x.X, y.Y, z.Z);
-		}
-
-		public static Vector3 From(int x, int y, int z)
-		{
-			return new Vector3(x, y, z);
 		}
 	}
 }

@@ -6,15 +6,25 @@
 		{
 			Transparent = true;
 			Solid = true;
+			
+			LightOpacity = 15;
 		}
 
 		public Fence(string name) : base(name)
 		{
 			Transparent = true;
 			Solid = true;
+			
+			LightOpacity = 15;
 		}
 
-		public Fence() { }
+		public Fence()
+		{
+			Transparent = true;
+			Solid = true;
+			
+			LightOpacity = 15;
+		}
 	}
 
 	public class OakFence : Fence
