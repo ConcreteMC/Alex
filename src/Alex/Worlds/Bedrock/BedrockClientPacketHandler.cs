@@ -628,7 +628,7 @@ namespace Alex.Worlds.Bedrock
 
 						for (int s = 0; s < count; s++)
 						{
-							var section = chunkColumn.Sections[s];
+							var section = chunkColumn.Sections[s] as ChunkSection;
 							if (section == null) section = new ChunkSection(s, true);
 
 							int version = defStream.ReadByte();

@@ -7,8 +7,8 @@ using NLog;
 
 namespace Alex.Blocks.Storage
 {
-	public class ChunkSection
-	{
+    public class ChunkSection : IChunkSection
+    {
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ChunkSection));
 		/**
 		 * Contains the bottom-most Y block represented by this ExtendedBlockStorage. Typically a multiple of 16.

@@ -63,7 +63,7 @@ namespace Alex.Worlds
 		public bool IsDirty { get; set; }
 		public bool SkyLightDirty { get; set; }
 
-		public ChunkSection[] Sections = new ChunkSection[16];
+        public IChunkSection[] Sections { get; set; } = new ChunkSection[16];
 		public int[] BiomeId = ArrayOf<int>.Create(256, 1);
 		public short[] Height = new short[256];
 		
@@ -116,7 +116,7 @@ namespace Alex.Worlds
 				return storage;
 			}
 
-			return section;
+			return (ChunkSection)section;
 		}
 
 		public void SetBlockState(int x, int y, int z, IBlockState blockState)
@@ -241,7 +241,7 @@ namespace Alex.Worlds
 			GetSection(by).SetExtBlocklightValue(bx, @by - 16 * (@by >> 4), bz, data);
 			
 			//_scheduledLightingUpdates[by << 8 | bz << 4 | bx] = true;
-			var section = Sections[by >> 4];
+			var section = (ChunkSection)Sections[by >> 4];
 			if (section == null) return;
 			section.ScheduledSkylightUpdates[by << 8 | bz << 4 | bx] = true;
         }
@@ -277,9 +277,9 @@ namespace Alex.Worlds
 
         #region New Chunk updates / Vertice building 
 
-		private VertexBuffer RenewVertexBuffer(GraphicsDevice graphicsDevice, VertexPositionNormalTextureColor[] vertices)
+		private DynamicVertexBuffer RenewVertexBuffer(GraphicsDevice graphicsDevice, VertexPositionNormalTextureColor[] vertices)
 		{
-			VertexBuffer buffer = VertexBufferPool.GetBuffer(graphicsDevice,
+            DynamicVertexBuffer buffer = VertexBufferPool.GetBuffer(graphicsDevice,
 				VertexPositionNormalTextureColor.VertexDeclaration,
 				vertices.Length,
 				BufferUsage.WriteOnly);
@@ -312,13 +312,13 @@ namespace Alex.Worlds
             return null;
 			}
 
-			private class SectionEntry : IDisposable
+			/*private class SectionEntry : IDisposable
 			{
 				public IndexBuffer SolidIndexBuffer { get; set; }
 				public IndexBuffer TransparentIndexBuffer { get; set; }
 
-				public VertexBuffer SolidBuffer { get; set; }
-				public VertexBuffer TransparentBuffer { get; set; }
+				public DynamicVertexBuffer SolidBuffer { get; set; }
+				//public VertexBuffer TransparentBuffer { get; set; }
 
 				public object _lock = new object();
 
@@ -329,22 +329,22 @@ namespace Alex.Worlds
 						SolidIndexBuffer?.Dispose();
 						TransparentIndexBuffer?.Dispose();
 						SolidBuffer?.Dispose();
-						TransparentBuffer?.Dispose();
+						//TransparentBuffer?.Dispose();
 					}
 				}
 			}
 
-			private SectionEntry[] SectionBuffers = ArrayOf<SectionEntry>.Create(16, null); 
+			private SectionEntry[] SectionBuffers = ArrayOf<SectionEntry>.Create(16, null); */
 
 			public void DrawOpaque(GraphicsDevice device, BasicEffect effect, out int drawnIndices, out int indexSize)
 			{
 				indexSize = 0;
 				drawnIndices = 0;
-				for (var index = 0; index < SectionBuffers.Length; index++)
+				/*for (var index = 0; index < SectionBuffers.Length; index++)
 				{
 					var section = SectionBuffers[index];
 
-					if (section == null /*|| !Monitor.TryEnter(section._lock)*/)
+					if (section == null /*|| !Monitor.TryEnter(section._lock)*)
 						continue;
 					try
 					{
@@ -370,46 +370,48 @@ namespace Alex.Worlds
 					{
 						//Monitor.Exit(section._lock);
 					}
-				}
+				}*/
 			}
 
 			public void DrawTransparent(GraphicsDevice device, AlphaTestEffect effect, out int drawnIndices, out int indexSize)
-			{
-				indexSize = 0;
-				drawnIndices = 0;
-				for (var index = 0; index < SectionBuffers.Length; index++)
-				{
-					var section = SectionBuffers[index];
+            {
+                drawnIndices = 0;
+                indexSize = 0;
+                /*indexSize = 0;
+                drawnIndices = 0;
+                for (var index = 0; index < SectionBuffers.Length; index++)
+                {
+                    var section = SectionBuffers[index];
 
-					if (section == null /*|| !Monitor.TryEnter(section._lock)*/)
-						continue;
-					try
-					{
-						var c = section.TransparentIndexBuffer;
-						var b = section.TransparentBuffer;
-						if (c.IndexCount == 0) continue;
-						if (b.VertexCount == 0) continue;
+                    if (section == null /*|| !Monitor.TryEnter(section._lock)*)
+                        continue;
+                    try
+                    {
+                        var c = section.TransparentIndexBuffer;
+                        var b = section.SolidBuffer;
+                        if (c.IndexCount == 0) continue;
+                        if (b.VertexCount == 0) continue;
 
-						device.SetVertexBuffer(b);
-						device.Indices = c;
+                        device.SetVertexBuffer(b);
+                        device.Indices = c;
 
-						foreach (var pass in effect.CurrentTechnique.Passes)
-						{
-							pass.Apply();
-							//device.DrawPrimitives(PrimitiveType.TriangleList, 0, b.VertexCount /3);
-						}
+                        foreach (var pass in effect.CurrentTechnique.Passes)
+                        {
+                            pass.Apply();
+                            //device.DrawPrimitives(PrimitiveType.TriangleList, 0, b.VertexCount /3);
+                        }
 
-						device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, c.IndexCount / 3);
+                        device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, c.IndexCount / 3);
 
-						drawnIndices += (b.VertexCount / 3);
-						indexSize += c.IndexCount;
-					}
-					finally
-					{
-						//Monitor.Exit(section._lock);
-					}
-				}
-			}
+                        drawnIndices += (b.VertexCount / 3);
+                        indexSize += c.IndexCount;
+                    }
+                    finally
+                    {
+                        //Monitor.Exit(section._lock);
+                    }
+                }*/
+            }
 
 			public bool HasDirtySubChunks
 			{
@@ -423,21 +425,21 @@ namespace Alex.Worlds
 					var section = Sections[y];
 					if (section == null) return false;
 
-					return section.IsFaceSolid((BlockFace) face);
+					return ((ChunkSection)section).IsFaceSolid((BlockFace) face);
 				}
 
 				return false;
 			}
 			
-			private IEnumerable<BlockFace> CheckNeighbors(ChunkSection section, int y, IWorld world)
+			internal IEnumerable<BlockFace> CheckNeighbors(ChunkSection section, int y, IWorld world)
 			{
 				List<BlockFace> faces = new List<BlockFace>();
 
-				var sectionUp = Sections[y + 1];
+				var sectionUp = (ChunkSection)Sections[y + 1];
 				if (sectionUp != null && sectionUp.IsFaceSolid(BlockFace.Down))
 					faces.Add(BlockFace.Up);
 
-				var sectionDown = Sections[y - 1];
+				var sectionDown = (ChunkSection)Sections[y - 1];
 				if (sectionDown != null && sectionDown.IsFaceSolid(BlockFace.Up))
 					faces.Add(BlockFace.Down);
 
@@ -506,403 +508,8 @@ namespace Alex.Worlds
 
 			private ChunkMeshCache[] _chunkMeshCache = null;
 
-			public void UpdateChunk(GraphicsDevice device, IWorld world)
-			{
-				var scheduled = Scheduled;
-
-				long reUseCounter = 0;
-				Dictionary<uint, (VertexPositionNormalTextureColor[] vertices, int[] indexes)> blocks =
-					new Dictionary<uint, (VertexPositionNormalTextureColor[] vertices, int[] indexes)>();
-
-				for (var index = Sections.Length - 1; index >= 0; index--)
-				{
-					var section = Sections[index];
-					if (section == null || section.IsEmpty())
-					{
-						continue;
-					}
-					
-					if (index > 0 && index < Sections.Length - 1)
-					{
-						if (!section.HasAirPockets && CheckNeighbors(section, index, world).Count() == 6) //All surrounded by solid.
-						{
-							// Log.Info($"Found section with solid neigbors, skipping.");
-							continue;
-						}
-					}
-
-					var buffer = SectionBuffers[index];
-					if (buffer == null || section.ScheduledUpdates.Any(x => x == true) || section.IsDirty)
-					{
-						var oldBuffer = buffer;
-
-						ChunkMeshCache oldMeshCache = null;
-						var hp = _isHighPriority;
-						if (hp)
-						{
-							oldMeshCache = _chunkMeshCache[index];
-						}
-
-						object lockObject = new object();
-						bool locked = false;
-						if (buffer != null)
-						{
-							//locked = true;
-							lockObject = buffer._lock;
-						}
-
-						try
-						{
-							//lock (lockObject)
-							{
-								ChunkMesh mesh = GenerateSectionMesh(world, oldMeshCache, ref section, index, ref blocks,
-									out var positions, ref reUseCounter);
-
-								var vertices = mesh.Vertices;
-								var transparentVertices = mesh.TransparentVertices;
-								var indexes = mesh.SolidIndexes;
-								var transIndexes = mesh.TransparentIndexes;
-								if (mesh.SolidIndexes.Length == 0 && mesh.TransparentIndexes.Length == 0)
-								{
-									if (!section.ScheduledUpdates.Any(x => x))
-										section.IsDirty = false;
-
-									/*if (X == 0 && Z == 1)
-									{
-										Log.Info($"!!!!!!! Not updating cause no mesh data: (x: {X} z: {Z}) {index} Empty: {section.IsEmpty()} " +
-										         $"Vertices: {mesh.Vertices.Length + mesh.TransparentVertices.Length} " +
-										         $"Indices: {mesh.SolidIndexes.Length + mesh.TransparentIndexes.Length}");
-									}*/
-
-									continue;
-								}
-
-								if (buffer == null)
-								{
-									buffer = new SectionEntry()
-									{
-										SolidBuffer = VertexBufferPool.GetBuffer(device,
-											VertexPositionNormalTextureColor.VertexDeclaration, vertices.Length,
-											BufferUsage.WriteOnly),
-										SolidIndexBuffer = new IndexBuffer(device,
-											IndexElementSize.ThirtyTwoBits,
-											indexes.Length, BufferUsage.WriteOnly),
-										TransparentBuffer = VertexBufferPool.GetBuffer(device,
-											VertexPositionNormalTextureColor.VertexDeclaration,
-											transparentVertices.Length,
-											BufferUsage.WriteOnly),
-										TransparentIndexBuffer = new IndexBuffer(device,
-											IndexElementSize.ThirtyTwoBits,
-											transIndexes.Length, BufferUsage.WriteOnly)
-									};
-
-
-									if (mesh.SolidIndexes.Length > 0)
-									{
-										buffer.SolidBuffer.SetData(vertices);
-										buffer.SolidIndexBuffer.SetData(indexes);
-									}
-
-									if (mesh.TransparentIndexes.Length > 0)
-									{
-										buffer.TransparentBuffer.SetData(transparentVertices);
-										buffer.TransparentIndexBuffer.SetData(transIndexes);
-									}
-
-								}
-								else
-								{
-									//lock (buffer._lock)
-									{
-										if (buffer.SolidBuffer.VertexCount != mesh.Vertices.Length)
-										{
-											var oldVerticeBuffer = buffer.SolidBuffer;
-											buffer.SolidBuffer = RenewVertexBuffer(device, vertices);
-											oldVerticeBuffer.Dispose();
-										}
-										else
-										{
-										//	buffer.SolidBuffer.SetData(mesh.Vertices);
-										}
-
-										if (buffer.TransparentBuffer.VertexCount != mesh.TransparentVertices.Length)
-										{
-											var oldVerticeBuffer = buffer.TransparentBuffer;
-											buffer.TransparentBuffer =
-												RenewVertexBuffer(device, transparentVertices);
-											oldVerticeBuffer.Dispose();
-										}
-										else
-										{
-											//buffer.TransparentBuffer.SetData(mesh.TransparentVertices);
-										}
-
-										if (buffer.SolidIndexBuffer.IndexCount != mesh.SolidIndexes.Length)
-										{
-											var oldIndexBuffer = buffer.SolidIndexBuffer;
-											buffer.SolidIndexBuffer = RenewIndexBuffer(device, indexes);
-											oldIndexBuffer.Dispose();
-										}
-										/*else if (mesh.SolidIndexes.Length > 0)
-										{
-											buffer.SolidIndexBuffer.SetData(mesh.SolidIndexes, 0,
-												mesh.SolidIndexes.Length, SetDataOptions.Discard);
-										}*/
-
-										if (buffer.TransparentIndexBuffer.IndexCount != mesh.TransparentIndexes.Length)
-										{
-											var oldIndexBuffer = buffer.TransparentIndexBuffer;
-											buffer.TransparentIndexBuffer =
-												RenewIndexBuffer(device, transIndexes);
-											oldIndexBuffer.Dispose();
-										}
-										/*else if (mesh.TransparentIndexes.Length > 0)
-										{
-											buffer.TransparentIndexBuffer.SetData(mesh.TransparentIndexes, 0,
-												mesh.TransparentIndexes.Length, SetDataOptions.Discard);
-										}*/
-									}
-								}
-
-								SectionBuffers[index] = buffer;
-
-								if (!section.ScheduledUpdates.Any(x => x))
-									section.IsDirty = false;
-
-								//Sections[index] = section;
-
-								if (hp)
-								{
-									_chunkMeshCache[index] = new ChunkMeshCache()
-									{
-										Mesh = mesh,
-										Positions = positions
-									};
-								}
-
-								if (oldMeshCache != null)
-								{
-									oldMeshCache?.Mesh?.Dispose();
-								}
-							}
-						}
-						finally
-						{
-							//if (locked)
-							//Monitor.Exit(lockObject);
-						}
-					}
-					else
-					{
-						
-					}
-
-					//Sections[index] = section;
-				}
-			}
-
-			private ChunkMesh GenerateSectionMesh(IWorld world, ChunkMeshCache cachedMesh,
-				ref ChunkSection section, int yIndex,
-				ref Dictionary<uint, (VertexPositionNormalTextureColor[] vertices, int[] indexes)> blocks,
-				out IDictionary<Vector3, ChunkMesh.EntryPosition> outputPositions, ref long reUseCounter)
-			{
-				var scheduled = Scheduled;
-				List<VertexPositionNormalTextureColor> solidVertices = new List<VertexPositionNormalTextureColor>();
-				List<VertexPositionNormalTextureColor> transparentVertices =
-					new List<VertexPositionNormalTextureColor>();
-				var positions = new ConcurrentDictionary<Vector3, ChunkMesh.EntryPosition>();
-
-				List<int> transparentIndexes = new List<int>();
-				List<int> solidIndexes = new List<int>();
-
-				//Dictionary<uint, (VertexPositionNormalTextureColor[] vertices, int[] indexes)> blocks =
-				//     new Dictionary<uint, (VertexPositionNormalTextureColor[] vertices, int[] indexes)>();
-
-				for (var y = 0; y < 16; y++)
-				for (var x = 0; x < ChunkWidth; x++)
-				for (var z = 0; z < ChunkDepth; z++)
-				{
-					var vector = new Vector3(x, y, z);
-
-					//if (scheduled.HasFlag(ScheduleType.Scheduled) || scheduled.HasFlag(ScheduleType.Border) || scheduled.HasFlag(ScheduleType.Full) || section.IsDirty)
-					{
-
-						bool wasScheduled = section.IsScheduled(x, y, z);
-						bool wasLightingScheduled = section.IsLightingScheduled(x, y, z);
-
-						/*if ((scheduled.HasFlag(ScheduleType.Border) &&
-					         ((x == 0 && z == 0) || (x == ChunkWidth && z == 0) || (x == 0 && z == ChunkDepth)))
-					        || (wasScheduled || wasLightingScheduled || scheduled.HasFlag(ScheduleType.Full)))*/
-						//if (true)
-
-						bool found = false;
-
-						if (true || (wasScheduled || wasLightingScheduled || scheduled.HasFlag(ScheduleType.Full)
-						     || (scheduled.HasFlag(ScheduleType.Lighting) /*&& cachedMesh == null*/) ||
-						     (scheduled.HasFlag(ScheduleType.Border) && (x == 0 || x == 15) && (z == 0 || z == 15))))
-						{
-							var blockState = section.Get(x, y, z);
-							if (blockState == null || !blockState.Block.Renderable) continue;
-
-						/*	if (!blocks.TryGetValue(blockState.ID, out var data))
-							{
-								data = blockState.Model.GetVertices(world, Vector3.Zero, blockState.Block);
-								blocks.Add(blockState.ID, data);
-							}
-							else
-							{
-								reUseCounter++;
-
-							}*/
-						var blockPosition = new Vector3(x, y + (yIndex * 16), z) + Position;
-						var data = blockState.Model.GetVertices(world, blockPosition, blockState.Block);
-						
-
-							if (data.vertices == null || data.indexes == null || data.vertices.Length == 0 || data.indexes.Length == 0)
-								continue;
-
-							bool transparent = blockState.Block.Transparent;
-
-							
-
-							//var data = CalculateBlockVertices(world, section,
-							//	yIndex,
-							//	x, y, z, out bool transparent);
-
-							if (data.vertices.Length > 0&& data.indexes.Length > 0)
-							{
-								int startVerticeIndex = transparent ? transparentVertices.Count : solidVertices.Count;
-								foreach (var vert in data.vertices)
-								{
-									//var vertex = vert;
-									//var vertex = new VertexPositionNormalTextureColor(vert.Position + blockPosition, Vector3.Zero, vert.TexCoords, vert.Color);
-									//vertex.Position += blockPosition;
-
-									if (transparent)
-									{
-										transparentVertices.Add(vert);
-									}
-									else
-									{
-										solidVertices.Add(vert);
-									}
-								}
-
-								int startIndex = transparent ? transparentIndexes.Count : solidIndexes.Count;
-								for (int i = 0; i < data.indexes.Length; i++)
-								{
-									//	var vert = data.vertices[data.indexes[i]];
-									var a = data.indexes[i];
-
-									if (transparent)
-									{
-										//transparentVertices.Add(vert);
-										transparentIndexes.Add(startVerticeIndex + a);
-
-										if (a > transparentVertices.Count)
-										{
-											Log.Warn($"INDEX > AVAILABLE VERTICES {a} > {transparentVertices.Count}");
-										}
-									}
-									else
-									{
-										//	solidVertices.Add(vert);
-										solidIndexes.Add(startVerticeIndex + a);
-
-										if (a > solidVertices.Count)
-										{
-											Log.Warn($"INDEX > AVAILABLE VERTICES {a} > {solidVertices.Count}");
-										}
-									}
-								}
-
-
-								positions.TryAdd(vector,
-									new ChunkMesh.EntryPosition(transparent, startIndex, data.indexes.Length));
-							}
-
-
-							if (wasScheduled)
-								section.SetScheduled(x, y, z, false);
-
-							if (wasLightingScheduled)
-								section.SetLightingScheduled(x, y, z, false);
-						}
-						else if (cachedMesh != null &&
-						         cachedMesh.Positions.TryGetValue(vector, out ChunkMesh.EntryPosition position))
-						{
-							/*var cachedVertices = position.Transparent
-								? cachedMesh.Mesh.TransparentVertices
-								: cachedMesh.Mesh.Vertices;
-
-							var cachedIndices = position.Transparent
-								? cachedMesh.Mesh.TransparentIndexes
-								: cachedMesh.Mesh.SolidIndexes;
-
-							if (cachedIndices == null) continue;
-
-							List<int> done = new List<int>();
-							Dictionary<int, int> indiceIndexMap = new Dictionary<int, int>();
-							for (var index = 0; index < position.Length; index++)
-							{
-								var u = cachedIndices[position.Index + index];
-								if (!done.Contains(u))
-								{
-									done.Add(u);
-									if (position.Transparent)
-									{
-										if (!indiceIndexMap.ContainsKey(u))
-										{
-											indiceIndexMap.Add(u, transparentVertices.Count);
-										}
-
-										transparentVertices.Add(
-											cachedVertices[u]);
-									}
-									else
-									{
-										if (!indiceIndexMap.ContainsKey(u))
-										{
-											indiceIndexMap.Add(u, solidVertices.Count);
-										}
-
-										solidVertices.Add(
-											cachedVertices[u]);
-									}
-								}
-
-							}
-
-
-							int startIndex = position.Transparent ? transparentIndexes.Count : solidIndexes.Count;
-							for (int i = 0; i < position.Length; i++)
-							{
-								var o = indiceIndexMap[cachedIndices[position.Index + i]];
-								if (position.Transparent)
-								{
-									transparentIndexes.Add(o);
-								}
-								else
-								{
-									solidIndexes.Add(o);
-								}
-							}
-
-							//TODO: Find a way to update just the color of the faces, without having to recalculate vertices
-							//We could save what vertices belong to what faces i suppose?
-							//We could also use a custom shader to light the blocks...
-
-							positions.TryAdd(vector,
-								new ChunkMesh.EntryPosition(position.Transparent, startIndex, position.Length));
-							found = true;*/
-						}
-					}
-				}
-
-				outputPositions = positions;
-				return new ChunkMesh(solidVertices.ToArray(), transparentVertices.ToArray(), solidIndexes.ToArray(),
-					transparentIndexes.ToArray());
-			}
+        
+			
 
 			private bool _heightDirty = true;
 		private int _heighest = -1;
@@ -965,9 +572,9 @@ namespace Alex.Worlds
 				TransparentVertexBuffer = null;
 			}*/
 			
-			foreach (var chunksSection in SectionBuffers)
+		//	foreach (var chunksSection in SectionBuffers)
 			{
-				chunksSection?.Dispose();
+		//		chunksSection?.Dispose();
 			}
 
 			if (_chunkMeshCache != null)
@@ -1018,7 +625,7 @@ namespace Alex.Worlds
 
 				for (int sectionY = 0; sectionY < this.Sections.Length; sectionY++)
 				{
-					var storage = this.Sections[sectionY];
+					var storage = (ChunkSection)this.Sections[sectionY];
 					if ((availableSections & (1 << sectionY)) != 0)
 					{
 						if (storage == null)

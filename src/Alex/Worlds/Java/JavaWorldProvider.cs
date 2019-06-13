@@ -1158,7 +1158,7 @@ namespace Alex.Worlds.Java
 		private void HandleUpdateLightPacket(UpdateLightPacket packet)
 		{
 			return;
-			if (WorldReceiver.GetChunkColumn(packet.ChunkX, packet.ChunkZ) is ChunkColumn c)
+			/*if (WorldReceiver.GetChunkColumn(packet.ChunkX, packet.ChunkZ) is ChunkColumn c)
 			{
 				for (int i = 1; i < packet.SkyLightArrays.Length - 1; i++)
 				{
@@ -1183,7 +1183,7 @@ namespace Alex.Worlds.Java
 				}
 
 				WorldReceiver.ChunkUpdate(c, ScheduleType.Full);
-            }
+            }*/
         }
 
         //private BlockingCollection<ChunkDataPacket> _chunkQueue = new BlockingCollection<ChunkDataPacket>();

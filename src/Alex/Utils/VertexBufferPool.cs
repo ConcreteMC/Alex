@@ -56,7 +56,7 @@ namespace Alex.Utils
         }
     }
 
-    public class PooledVertexBuffer : VertexBuffer
+    public class PooledVertexBuffer : DynamicVertexBuffer
     {
         public VertexBufferPool Parent { get; }
         public long PoolId { get; }

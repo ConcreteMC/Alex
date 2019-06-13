@@ -1,10 +1,31 @@
 ﻿using Alex.API.Blocks.State;
+using MiNET;
 
 namespace Alex.API.World
 {
-	public interface IChunkSection
-	{
-		IBlockState GetBlockState(int x, int y, int z);
-		void SetBlockState(int x, int y, int z, IBlockState state);
-	}
+    public interface IChunkSection
+    {
+        bool SolidBorder { get; }
+        bool HasAirPockets { get; }
+        bool IsDirty { get; set; }
+        void ResetSkyLight();
+        bool IsScheduled(int x, int y, int z);
+        void SetScheduled(int x, int y, int z, bool value);
+        bool IsLightingScheduled(int x, int y, int z);
+        bool SetLightingScheduled(int x, int y, int z, bool value);
+        IBlockState Get(int x, int y, int z);
+        void Set(int x, int y, int z, IBlockState state);
+        bool IsTransparent(int x, int y, int z);
+        bool IsSolid(int x, int y, int z);
+        void GetBlockData(int bx, int by, int bz, out bool transparent, out bool solid);
+        bool IsEmpty();
+        bool NeedsRandomTick();
+        int GetYLocation();
+        void SetExtSkylightValue(int x, int y, int z, int value);
+        byte GetExtSkylightValue(int x, int y, int z);
+        void SetExtBlocklightValue(int x, int y, int z, byte value);
+        int GetExtBlocklightValue(int x, int y, int z);
+        void RemoveInvalidBlocks();
+      //  bool IsFaceSolid(BlockFace face);
+    }
 }
