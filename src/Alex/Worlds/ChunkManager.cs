@@ -715,20 +715,22 @@ namespace Alex.Worlds
                         continue;
                     }
 
-                    if (i > 0 && i < chunk.Sections.Length - 1)
+                    if (i != currentChunkY)
                     {
-	                    var neighbors = chunk.CheckNeighbors(section, i, World).ToArray();
-
-	                    if (!section.HasAirPockets && neighbors.Length == 6) //All surrounded by solid.
+	                    if (i > 0 && i < chunk.Sections.Length - 1)
 	                    {
-		                    // Log.Info($"Found section with solid neigbors, skipping.");
-		                    continue;
-	                    }
+		                    var neighbors = chunk.CheckNeighbors(section, i, World).ToArray();
 
-	                    if (i < currentChunkY && neighbors.Length >= 6) continue;
+		                    if (!section.HasAirPockets && neighbors.Length == 6) //All surrounded by solid.
+		                    {
+			                    // Log.Info($"Found section with solid neigbors, skipping.");
+			                    continue;
+		                    }
+
+		                    if (i < currentChunkY && neighbors.Length >= 6) continue;
+	                    }
+	                    else if (i < currentChunkY) continue;
                     }
-                    else if (i < currentChunkY) continue;
-                    
 
                     if (force || section.ScheduledUpdates.Any(x => x == true) || section.IsDirty)
                     {

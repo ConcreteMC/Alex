@@ -599,6 +599,14 @@ namespace Alex.Worlds.Bedrock
 			Paletted16 = 16, // 2 blocks per word, max 65536 unique blockstates
 		}
 
+		public uint SwapBytes(uint x)
+		{
+			// swap adjacent 16-bit blocks
+			x = (x >> 16) | (x << 16);
+			// swap adjacent 8-bit blocks
+			return ((x & 0xFF00FF00) >> 8) | ((x & 0x00FF00FF) << 8);
+		}
+		
 		public override void HandleMcpeFullChunkData(McpeFullChunkData message)
 		{
 			var chunkData = message.chunkData;
@@ -645,11 +653,11 @@ namespace Alex.Worlds.Bedrock
 									int blocksPerWord = (int) Math.Floor(32f / bitsPerBlock);
 									int wordCount = (int) Math.Ceiling(4096.0f / blocksPerWord);
 
-									int[] words = new int[wordCount];
+									uint[] words = new uint[wordCount];
 									for (int w = 0; w < wordCount; w++)
 									{
 										int word = defStream.ReadInt32();
-										words[w] = word;
+										words[w] = SwapBytes((uint)word);
 									}
 
 									uint[] pallete = new uint[0];
@@ -658,12 +666,12 @@ namespace Alex.Worlds.Bedrock
 									{
 										int palleteSize = VarInt.ReadSInt32(stream);
 										pallete = new uint[palleteSize];
-										var copy = new uint[pallete.Length];
+										//var copy = new uint[pallete.Length];
 										for (int pi = 0; pi < pallete.Length; pi++)
 										{
 											var ui = (uint) VarInt.ReadSInt32(stream);
 											pallete[pi] = ui;
-											copy[(pallete.Length - pi) - 1] = ui;
+											//copy[(pallete.Length - pi) - 1] = ui;
 										}
 
 										if (palleteSize == 0)
@@ -681,13 +689,13 @@ namespace Alex.Worlds.Bedrock
 									//for (int w = words.Length - 1; w > 0; w--)
 									for(int w = 0; w < wordCount; w++)
 									{
-										int word = words[w];
+										 uint word = words[w];
 										for (int block = 0; block < blocksPerWord; block++)
 										{
-											if (position >= 4096) continue; // padding bytes
+											if (position >= 4096) break; // padding bytes
 
-											int state = (word >> ((position % blocksPerWord) * bitsPerBlock)) &
-											            ((1 << bitsPerBlock) - 1);
+											uint state =(uint)( (word >> ((position % blocksPerWord) * bitsPerBlock)) &
+											            ((1 << bitsPerBlock) - 1));
 											int x = (position >> 8) & 0xF;
 											int y = position & 0xF; 
 											int z = (position >> 4) & 0xF;
@@ -718,11 +726,41 @@ namespace Alex.Worlds.Bedrock
 														    out res))
 													{
 														var a = BlockFactory.GetBlockState(res);
+														
+														int meta = (int) bs.Data;
+														if (meta > 0)
+														{
+															/*switch (meta)
+															{
+																case 0:
+																	meta = 0;
+																	break;
+																case 1:
+																	meta = 5;
+																	break;
+																case 2:
+																	meta = 4;
+																	break;
+																case 3:
+																	meta = 3;
+																	break;
+																case 4:
+																	meta = 2;
+																	break;
+																case 5:
+																	meta = 1;
+																	break;
+															}*/
+
+															//Log.Warn($"{bs.Name} METAAAA: " + meta);
+															a = GetBlockStateFromRotationMeta(a, meta);
+														}
+
 														if (result.Data != 0)
 														{
 															//TODO: In order for this to work, we need to fix blockstate properties.
 
-															int meta = (int) result.Data;
+															meta = (int) result.Data;
 															switch (meta)
 															{
 																case 0:
@@ -745,13 +783,13 @@ namespace Alex.Worlds.Bedrock
 																	break;
 															}
 
-															Log.Warn($"METAAAA: " + meta);
+															Log.Warn($" METAAAA: " + meta);
 															a = GetBlockStateFromRotationMeta(a, meta);
 														}
 
 														try
 														{
-															section.Set(15 - x, 15 - y, 15 - z, a);
+															section.Set( x,  y,  z, a);
 														}
 														catch (Exception ex)
 														{
@@ -763,7 +801,7 @@ namespace Alex.Worlds.Bedrock
 													{
 														try
 														{
-															section.Set(15 - x, 15 - y, 15 - z,
+															section.Set(x, y, z,
 																BlockFactory.GetBlockState(bs.Name));
 														}
 														catch (Exception ex)
@@ -783,6 +821,7 @@ namespace Alex.Worlds.Bedrock
 
 											position++;
 										}
+										if (position >= 4096) break; 
 									}
 								}
 							}
@@ -857,8 +896,9 @@ namespace Alex.Worlds.Bedrock
 							}
 
 							section.RemoveInvalidBlocks();
-							section.ScheduledUpdates = new bool[16 * 16 * 16];
-							section.ScheduledSkylightUpdates = new bool[16 * 16 * 16];
+							section.IsDirty = true;
+							//section.ScheduledUpdates = new bool[16 * 16 * 16];
+							//section.ScheduledSkylightUpdates = new bool[16 * 16 * 16];
 							//Make sure the section is saved.
 							chunkColumn.Sections[s] = section;
 						}
@@ -944,28 +984,47 @@ namespace Alex.Worlds.Bedrock
 		
 		private IBlockState GetBlockStateFromRotationMeta(IBlockState state, int meta)
 		{
-			var p = "facing";
-			
-			switch(meta) {
-				case 0:
-					return state.WithProperty(p,"down");
-					break;
-				case 1:
-					return state.WithProperty(p,"up");
-					break;
-				case 2:
-					return state.WithProperty(p,"north");
-					break;
-				case 3:
-					return state.WithProperty(p,"south");
-					break;
-				case 4:
-					return state.WithProperty(p,"west");
-					break;
-				case 5:
-					return state.WithProperty(p,"east");
-					break;				
-			
+			var dict = state.ToDictionary();
+
+			if (dict.ContainsKey("level"))
+			{
+				return state.WithProperty("level", meta.ToString());
+			}
+
+			if (state.Name.Contains("slab", StringComparison.InvariantCultureIgnoreCase))
+			{
+				var isUpper = (meta & 0x08) == 0x08;
+				return state.WithProperty("type", isUpper ? "top" : "bottom");
+			}
+
+			if (dict.ContainsKey("facing"))
+			{
+				const string facing = "facing";
+
+				switch (meta)
+				{
+					case 0:
+						state = state.WithProperty(facing, "down");
+						break;
+					case 1:
+						state = state.WithProperty(facing, "up");
+						break;
+					case 2:
+						state = state.WithProperty(facing, "south");
+						break;
+					case 3:
+						state = state.WithProperty(facing, "north");
+						break;
+					case 4:
+						state = state.WithProperty(facing, "west");
+						break;
+					case 5:
+						state = state.WithProperty(facing, "east");
+						break;
+
+				}
+
+				return state.WithProperty("half", ((meta & 0x04) == 0x04) ? "bottom" : "top");
 			}
 
 			return state;
