@@ -8,6 +8,7 @@ using System.Numerics;
 using System.Threading;
 using Alex.API.Blocks.State;
 using Alex.API.Utils;
+using Alex.Blocks.State;
 using Alex.Blocks.Storage;
 using Alex.Entities;
 using Alex.Items;
@@ -607,6 +608,7 @@ namespace Alex.Worlds.Bedrock
 			return ((x & 0xFF00FF00) >> 8) | ((x & 0x00FF00FF) << 8);
 		}
 		
+		private static ConcurrentDictionary<uint, IBlockState> _convertedStates = new ConcurrentDictionary<uint, IBlockState>();
 		public override void HandleMcpeFullChunkData(McpeFullChunkData message)
 		{
 			var chunkData = message.chunkData;
@@ -707,117 +709,55 @@ namespace Alex.Worlds.Bedrock
 													continue;
 												}
 
-												if (_blockStateMap.TryGetValue(pallete[state], out var bs))
+												IBlockState translated = _convertedStates.GetOrAdd(pallete[state], u =>
 												{
-													var result =
-														BlockFactory.RuntimeIdTable.FirstOrDefault(xx =>
-															xx.Name == bs.Name);
-
-													uint res = 0;
-													bool ss = false;
-													if (result != null && result.Id >= 0)
+													if (_blockStateMap.TryGetValue(pallete[state], out var bs))
 													{
-														res = BlockFactory.GetBlockStateID((int) result.Id,
-															(byte) bs.Data);
-														ss = true;
-													}
 
-													if (ss && AnvilWorldProvider.BlockStateMapper.TryGetValue(res,
-														    out res))
-													{
-														var a = BlockFactory.GetBlockState(res);
-														
-														int meta = (int) bs.Data;
-														if (meta > 0)
+														var result =
+															BlockFactory.RuntimeIdTable.FirstOrDefault(xx =>
+																xx.Name == bs.Name);
+
+														if (result != null && result.Id >= 0)
 														{
-															/*switch (meta)
+															var res = BlockFactory.GetBlockStateID((int) result.Id,
+																(byte) bs.Data);
+
+															if (AnvilWorldProvider.BlockStateMapper.TryGetValue(res,
+																out var res2))
 															{
-																case 0:
-																	meta = 0;
-																	break;
-																case 1:
-																	meta = 5;
-																	break;
-																case 2:
-																	meta = 4;
-																	break;
-																case 3:
-																	meta = 3;
-																	break;
-																case 4:
-																	meta = 2;
-																	break;
-																case 5:
-																	meta = 1;
-																	break;
-															}*/
+																var t = BlockFactory.GetBlockState(res2);
+																t = TranslateBlockState(t, result.Id,
+																	bs.Data);
 
-															//Log.Warn($"{bs.Name} METAAAA: " + meta);
-															a = GetBlockStateFromRotationMeta(a, meta);
-														}
-
-														if (result.Data != 0)
-														{
-															//TODO: In order for this to work, we need to fix blockstate properties.
-
-															meta = (int) result.Data;
-															switch (meta)
-															{
-																case 0:
-																	meta = 0;
-																	break;
-																case 1:
-																	meta = 5;
-																	break;
-																case 2:
-																	meta = 4;
-																	break;
-																case 3:
-																	meta = 3;
-																	break;
-																case 4:
-																	meta = 2;
-																	break;
-																case 5:
-																	meta = 1;
-																	break;
+																return t;
 															}
-
-															Log.Warn($" METAAAA: " + meta);
-															a = GetBlockStateFromRotationMeta(a, meta);
+															else
+															{
+																Log.Info($"Did not find anvil statemap: {result.Name}");
+																return TranslateBlockState(BlockFactory.GetBlockState(result.Name),
+																	result.Id, bs.Data);
+															}
 														}
 
-														try
-														{
-															section.Set( x,  y,  z, a);
-														}
-														catch (Exception ex)
-														{
-															Log.Warn($"Crash: Y {15 - y} X {15 - x} Z {15 - z}");
-															throw ex;
-														}
+														return TranslateBlockState(BlockFactory.GetBlockState(bs.Name),
+															-1, bs.Data);
 													}
-													else
-													{
-														try
-														{
-															section.Set(x, y, z,
-																BlockFactory.GetBlockState(bs.Name));
-														}
-														catch (Exception ex)
-														{
-															Log.Warn($"Crash: Y {15 - y} X {15 - x} Z {15 - z}");
-															throw ex;
-														}
-													}
+
+													return null;
+												});
+
+												if (translated != null)
+												{
+													
+													
+													section.Set(x, y, z, translated);
 												}
 											}
 											else
 											{
 												//TODO.
 											}
-
-											//section.Set(x, 15 - y, z, BlockFactory.GetBlockStateByRuntimeId(pallete[state]));
 
 											position++;
 										}
@@ -982,49 +922,140 @@ namespace Alex.Worlds.Bedrock
 			});
 		}
 		
-		private IBlockState GetBlockStateFromRotationMeta(IBlockState state, int meta)
+		const string facing = "facing";
+		private IBlockState FixFacing(IBlockState state, int meta)
 		{
-			var dict = state.ToDictionary();
-
-			if (dict.ContainsKey("level"))
+			switch (meta)
 			{
-				return state.WithProperty("level", meta.ToString());
+				case 4:
+				case 0:
+					state = state.WithProperty(facing, "east");
+					break;
+				case 5:
+				case 1:
+					state = state.WithProperty(facing, "west");
+					break;
+				case 6:
+				case 2:
+					state = state.WithProperty(facing, "south");
+					break;
+				case 7:
+				case 3:
+					state = state.WithProperty(facing, "north");
+					break;
 			}
 
-			if (state.Name.Contains("slab", StringComparison.InvariantCultureIgnoreCase))
+			return state;
+		}
+		
+		private static string[] _slabs = new string[]
+		{
+			"minecraft:stone_slab",
+			"minecraft:smooth_stone_slab",
+			"minecraft:stone_brick_slab",
+			"minecraft:sandstone_slab",
+			"minecraft:acacia_slab",
+			"minecraft:birch_slab",
+			"minecraft:dark_oak_slab",
+			"minecraft:jungle_slab",
+			"minecraft:oak_slab",
+			"minecraft:spruce_slab",
+			"minecraft:purpur_slab",
+			"minecraft:quartz_slab",
+			"minecraft:red_sandstone_slab",
+			"minecraft:brick_slab",
+			"minecraft:cobblestone_slab",
+			"minecraft:nether_brick_slab",
+			"minecraft:petrified_oak_slab",
+			"minecraft:prismarine_slab",
+			"minecraft:prismarine_brick_slab",
+			"minecraft:dark_prismarine_slab",
+			"minecraft:polished_granite_slab",
+			"minecraft:smooth_red_sandstone_slab",
+			"minecraft:mossy_stone_brick_slab",
+			"minecraft:polished_diorite_slab",
+			"minecraft:mossy_cobblestone_slab",
+			"minecraft:end_stone_brick_slab",
+			"minecraft:smooth_sandstone_slab",
+			"minecraft:smooth_quartz_slab",
+			"minecraft:granite_slab",
+			"minecraft:andesite_slab",
+			"minecraft:red_nether_brick_slab",
+			"minecraft:polished_andesite_slab",
+			"minecraft:diorite_slab",
+			"minecraft:cut_sandstone_slab",
+			"minecraft:cut_red_sandstone_slab"
+		};
+		
+		private IBlockState TranslateBlockState(IBlockState state, long bid, int meta)
+		{
+			//var dict = state.ToDictionary();
+
+			if (bid >= 8 && bid <= 11) //water or lava
+			{
+				state = state.WithProperty("level", meta.ToString());
+			}
+			else if (bid == 44 || bid == 182 || bid == 126 /*|| _slabs.Any(x => x.Equals(state.Name, StringComparison.InvariantCultureIgnoreCase))*/) //Slabs
 			{
 				var isUpper = (meta & 0x08) == 0x08;
-				return state.WithProperty("type", isUpper ? "top" : "bottom");
-			}
-
-			if (dict.ContainsKey("facing"))
+				state = state.WithProperty("type", isUpper ? "top" : "bottom", true);
+				
+			} 
+			else if (bid == 77 || bid == 143) //Buttons
 			{
-				const string facing = "facing";
-
 				switch (meta)
 				{
 					case 0:
-						state = state.WithProperty(facing, "down");
-						break;
-					case 1:
-						state = state.WithProperty(facing, "up");
-						break;
-					case 2:
-						state = state.WithProperty(facing, "south");
-						break;
-					case 3:
-						state = state.WithProperty(facing, "north");
-						break;
 					case 4:
 						state = state.WithProperty(facing, "west");
 						break;
+					case 1:
 					case 5:
 						state = state.WithProperty(facing, "east");
 						break;
-
+					case 6:
+					case 2:
+						state = state.WithProperty(facing, "north");
+						break;
+					case 7:
+					case 3:
+						state = state.WithProperty(facing, "south");
+						break;
 				}
-
-				return state.WithProperty("half", ((meta & 0x04) == 0x04) ? "bottom" : "top");
+			}  
+			//Stairs
+			else if (bid == 163 || bid == 135 || bid == 108 || bid == 164 || bid == 136 || bid == 114 ||
+			         bid == 53 ||
+			         bid == 203 || bid == 156 || bid == 180 || bid == 128 || bid == 134 || bid == 109 || bid == 67)
+			{
+				//state = FixFacing(state, meta);
+				
+				state = ((BlockState)state).WithPropertyNoResolve("half", meta > 3 ? "top" : "bottom");
+				
+				switch (meta)
+				{
+					case 4:
+					case 0:
+						state = state.WithProperty(facing, "east", false, "waterlogged", "shape", "half");
+						break;
+					case 5:
+					case 1:
+						state = state.WithProperty(facing, "west", false, "waterlogged", "shape", "half");
+						break;
+					case 6:
+					case 2:
+						state = state.WithProperty(facing, "south", false, "waterlogged", "shape", "half");
+						break;
+					case 7:
+					case 3:
+						state = state.WithProperty(facing, "north", false, "waterlogged", "shape", "half");
+						break;
+				}
+			}
+			else if (bid == 96 || bid == 167 || state.Name.Contains("trapdoor")) //Trapdoors
+			{
+				state = FixFacing(state, meta);
+				state = state.WithProperty("open", meta > 3 ? "true" : "false");
 			}
 
 			return state;

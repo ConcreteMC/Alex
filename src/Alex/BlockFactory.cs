@@ -1,24 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Alex.API.Blocks.State;
-using Alex.Blocks;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.Properties;
 using Alex.Blocks.State;
 using Alex.Graphics.Models.Blocks;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json.BlockStates;
-using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using BlockState = Alex.Blocks.State.BlockState;
-using BlockStateVariant = Alex.ResourcePackLib.Json.BlockStates.BlockStateVariant;
 
 namespace Alex
 {
@@ -175,14 +169,27 @@ namespace Alex
 					Name = entry.Key
 				};
 
-				if (entry.Value.Properties != null)
+				var def = entry.Value.States.FirstOrDefault(x => x.Default);
+				if (def != null && def.Properties != null)
 				{
-					foreach (var property in entry.Value.Properties)
+					foreach (var property in def.Properties)
 					{
-						state = (BlockState)state.WithPropertyNoResolve(property.Key, property.Value.FirstOrDefault(), false);
+						state = (BlockState)state.WithPropertyNoResolve(property.Key, property.Value, false);
 					}
 				}
-
+				else
+				{
+					if (entry.Value.Properties != null)
+					{
+						foreach (var property in entry.Value.Properties)
+						{
+							state = (BlockState) state.WithPropertyNoResolve(property.Key,
+								property.Value.FirstOrDefault(), false);
+						}
+					}
+				}
+				
+				List<BlockState> variants = new List<BlockState>();
 				foreach (var s in entry.Value.States)
 				{
                     var id = s.ID;
@@ -203,7 +210,8 @@ namespace Alex
 							}
 						}
 					}
-				//	resourcePack.BlockStates.TryGetValue(entry.Key)
+
+					//	resourcePack.BlockStates.TryGetValue(entry.Key)
 					if (!replace && RegisteredBlockStates.TryGetValue(id, out IBlockState st))
 					{
 						Log.Warn($"Duplicate blockstate id (Existing: {st.Name}[{st.ToString()}] | New: {entry.Key}[{variantState.ToString()}]) ");
@@ -214,7 +222,7 @@ namespace Alex
 						var cachedBlockModel = GetOrCacheModel(resources, resourcePack, variantState, id, replace);
 						if (cachedBlockModel == null)
 						{
-							if (reportMissing)
+							//if (reportMissing)
 								Log.Warn($"Missing blockmodel for blockstate {entry.Key}[{variantState.ToString()}]");
 
 							cachedBlockModel = UnknownBlockModel;
@@ -313,6 +321,8 @@ namespace Alex
 							importCounter++;
 						}
 					}
+					
+					variants.Add(variantState);
 				}
 
 			/*	if (!RegisteredBlockStates.TryAdd(state.ID, state))
@@ -324,6 +334,11 @@ namespace Alex
 			if (variantMap._default == null)
 			{
 				variantMap._default = state;
+			}
+
+			foreach (var var in variants)
+			{
+				var.VariantMapper = variantMap;
 			}
 			
 

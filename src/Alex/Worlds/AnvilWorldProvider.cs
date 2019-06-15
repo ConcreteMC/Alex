@@ -1,25 +1,14 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
 using Alex.API.Utils;
 using Alex.API.World;
-using Alex.Blocks;
-using Alex.Blocks.State;
 using Alex.Blocks.Storage;
+using Alex.Utils;
+using Alex.Worlds.Generators;
 using fNbt;
-using fNbt.Tags;
 using Microsoft.Xna.Framework;
-using MiNET.Utils;
-using MiNET.Worlds;
 using NLog;
-using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
-using IWorldGenerator = Alex.Worlds.Generators.IWorldGenerator;
-using LevelInfo = Alex.API.World.LevelInfo;
-using NibbleArray = Alex.Utils.NibbleArray;
 
 namespace Alex.Worlds
 {
@@ -921,7 +910,7 @@ namespace Alex.Worlds
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(241, 0), GetBlockStateId("minecraft:pink_glazed_terracotta"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(242, 0), GetBlockStateId("minecraft:gray_glazed_terracotta"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(243, 0), GetBlockStateId("minecraft:light_gray_glazed_terracotta"));
-			BlockStateMapper.Add(BlockFactory.GetBlockStateID(244, 0), GetBlockStateId("minecraft:cyan_glazed_terracotta"));
+			BlockStateMapper.Add(BlockFactory.GetBlockStateID(244, 0), GetBlockStateId("minecraft:cyan_glazed_terra cotta"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(245, 0), GetBlockStateId("minecraft:purple_glazed_terracotta"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(246, 0), GetBlockStateId("minecraft:blue_glazed_terracotta"));
 			BlockStateMapper.Add(BlockFactory.GetBlockStateID(247, 0), GetBlockStateId("minecraft:brown_glazed_terracotta"));

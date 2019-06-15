@@ -707,15 +707,16 @@ namespace Alex.Worlds
                 if (currentChunkY < 0) currentChunkY = 0;
 
                 List<ChunkMesh> meshes = new List<ChunkMesh>();
-                for (var i = chunk.Sections.Length - 1; i > 0; i--)
+                for (var i = chunk.Sections.Length - 1; i >= 0; i--)
                 {
+	                if (i < 0) break;
                     var section = chunk.Sections[i] as ChunkSection;
                     if (section == null || section.IsEmpty())
                     {
                         continue;
                     }
 
-                    if (i != currentChunkY)
+                    if (i != currentChunkY && i != 0)
                     {
 	                    if (i > 0 && i < chunk.Sections.Length - 1)
 	                    {
@@ -731,6 +732,8 @@ namespace Alex.Worlds
 	                    }
 	                    else if (i < currentChunkY) continue;
                     }
+
+                    if (i == 0) force = true;
 
                     if (force || section.ScheduledUpdates.Any(x => x == true) || section.IsDirty)
                     {

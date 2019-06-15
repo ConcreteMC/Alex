@@ -468,6 +468,13 @@ namespace Alex.Graphics.Models.Blocks
 
 						var originalCullFace = cullFace;
 						
+						if (bsModel.X > 0f)
+						{
+							var offset = (-bsModel.X) / 90;
+							cullFace = RotateDirection(cullFace, offset, FACE_ROTATION_X, INVALID_FACE_ROTATION_X);
+							facing = RotateDirection(facing, offset, FACE_ROTATION_X, INVALID_FACE_ROTATION_X);
+						}
+
 						if (bsModel.Y > 0f)
 						{
 							var offset = (-bsModel.Y) / 90;
@@ -476,12 +483,6 @@ namespace Alex.Graphics.Models.Blocks
 						}
 
 						
-						if (bsModel.X > 0f)
-						{
-							var offset = (-bsModel.X) / 90;
-							cullFace = RotateDirection(cullFace, offset, FACE_ROTATION_X, INVALID_FACE_ROTATION_X);
-							facing = RotateDirection(facing, offset, FACE_ROTATION_X, INVALID_FACE_ROTATION_X);
-						}
 
 
 						if (originalCullFace != BlockFace.None && !ShouldRenderFace(world, cullFace, position, baseBlock))
@@ -542,35 +543,13 @@ namespace Alex.Graphics.Models.Blocks
 							GetLight(world, position + facing.GetVector3(),
 								false /*model.Model.AmbientOcclusion*/), element.Shade);
 
-                        //var text = ResolveTexture(bsModel, faceElement.Value.Texture);
-                        //var uv = faceElement.Value.UV;
-
-                       // var uvmap = GetTextureUVMap(Resources, text, uv.X1, uv.X2, uv.Y1, uv.Y2, faceVertices.Rotation);
-
-                        //TODO: Rotate vertices
+						//TODO: Rotate vertices
                         var initialIndex = verts.Count;
 						for (var index = 0; index < faceVertices.Vertices.Length; index++)
 						{
 							var vertex = faceVertices.Vertices[index];
 							vertex.Color = faceColor;
 							vertex.Position = position + vertex.Position;
-
-                           /* switch (index)
-                            {
-                                case 0:
-                                    vertex.TexCoords = uvmap.TopLeft;
-                                    break;
-                                case 1:
-                                    vertex.TexCoords = uvmap.TopRight;
-                                    break;
-                                case 2:
-                                    vertex.TexCoords = uvmap.BottomLeft;
-                                    break;
-                                case 3:
-                                    vertex.TexCoords = uvmap.BottomRight;
-                                    break;
-                            }*/
-
 
 							verts.Add(vertex);
 						}

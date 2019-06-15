@@ -201,12 +201,22 @@ namespace Alex.Worlds.Bedrock
 
 				double radiusSquared = Math.Pow(Client.ChunkRadius, 2);var target = radiusSquared * 3;
 
-				while (!Client.PlayerStatusChangedWaitHandle.WaitOne(50))
+				var statusChanged = false;
+				while (!statusChanged || !Client.HasSpawned)
 				{
 					progressReport(LoadingState.LoadingChunks, ((int)(_chunksReceived / target) * 100));
+
+					if (!statusChanged)
+					{
+						if (Client.PlayerStatusChangedWaitHandle.WaitOne(50))
+						{
+							statusChanged = true;
+							Client.IsEmulator = false;
+						}
+					}
 				}
 
-				Client.IsEmulator = false;
+				//Client.IsEmulator = false;
 				progressReport(LoadingState.Spawning, 99);
 			});
 		}

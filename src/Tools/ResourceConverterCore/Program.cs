@@ -22,12 +22,12 @@ namespace ResourceConverter
             {
                 // Show Help
                 Console.WriteLine("Usage:");
-                Console.WriteLine("\tResourceConverter.exe <inputDirectory> [outputDirectory]");
+                Console.WriteLine("\tResourceConverter.exe <inputDirectory> [outputDirectory] [type]");
                 Console.ReadLine();
             }
 
 
-            string inputDir = null, outputDir = null;
+            string inputDir = null, outputDir = null, type = null;
 
             if (args.Length == 1)
             {
@@ -39,6 +39,12 @@ namespace ResourceConverter
             {
                 inputDir = args[0];
                 outputDir = args[1];
+            }
+            else if(args.Length == 3)
+            {
+                inputDir = args[0];
+                outputDir = args[1];
+                type = args[2];
             }
 
             if (string.IsNullOrWhiteSpace(inputDir))
@@ -75,7 +81,7 @@ namespace ResourceConverter
 
 			ConfigureNLog(outputDir);
 
-			ResourceConverter.Run(inputDir, actualOutput);
+			ResourceConverter.Run(inputDir, actualOutput, type);
             Console.WriteLine("Completed.");
             Console.ReadLine();
         }

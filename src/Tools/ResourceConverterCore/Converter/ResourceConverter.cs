@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using Alex.ResourcePackLib.Json.Models.Entities;
-using Newtonsoft.Json;
 using NLog;
 using ResourceConverterCore.Converter;
 using Templates;
@@ -15,7 +12,7 @@ namespace ResourceConverter
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
         
 
-        public static void Run(string inputDirectoryPath, string outputDirectoryPath)
+        public static void Run(string inputDirectoryPath, string outputDirectoryPath, string type)
         {
             var inputDirectory = new DirectoryInfo(inputDirectoryPath);
             var outputDirectory = new DirectoryInfo(outputDirectoryPath);
@@ -27,15 +24,33 @@ namespace ResourceConverter
                 outputDirectory.Create();
             }
 
-            var loader = new ResourceLoader(inputDirectory);
-			
-            loader.Load();
-
-			GenerateModelFiles(loader, outputDirectory, out var classMapping);
-            using (var fs = File.CreateText(Path.Combine(outputDirectory.FullName, "ModelFactory.cs")))
+            if (type == "data")
             {
-                GenerateModelFactory(classMapping,
-                fs);
+	            StringBuilder sb = new StringBuilder();
+	            sb.AppendLine("[");
+	            foreach (var file in inputDirectory.GetFiles())
+	            {
+		            sb.Append($"\"{CodeName(Path.GetFileNameWithoutExtension(file.FullName))}\":");
+		            sb.Append(File.ReadAllText(file.FullName));
+		            sb.AppendLine(",");
+	            }
+
+	            sb.AppendLine("]");
+	            
+	            File.WriteAllText(Path.Combine(outputDirectoryPath, "blockTags.json"), sb.ToString());
+            }
+            else
+            {
+	            var loader = new ResourceLoader(inputDirectory);
+
+	            loader.Load();
+
+	            GenerateModelFiles(loader, outputDirectory, out var classMapping);
+	            using (var fs = File.CreateText(Path.Combine(outputDirectory.FullName, "ModelFactory.cs")))
+	            {
+		            GenerateModelFactory(classMapping,
+			            fs);
+	            }
             }
         }
 
