@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework;
 
 namespace Alex.API.Entities
 {
-	public interface IEntity : IPhysicsEntity
+	public interface IEntity : IPhysicsEntity, IDisposable
 	{
 		UUID UUID { get; set; }
 		long EntityId { get; set; }

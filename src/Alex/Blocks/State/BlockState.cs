@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,14 +7,14 @@ using Alex.API.Blocks.State;
 using Alex.API.Graphics;
 using Alex.API.World;
 using Alex.Blocks.Minecraft;
-using Alex.Blocks.Properties;
-using Alex.Utils;
 using NLog;
 
 namespace Alex.Blocks.State
 {
 	public sealed class BlockStateVariantMapper
 	{
+		private static NLog.Logger Log = NLog.LogManager.GetCurrentClassLogger(typeof(BlockStateVariantMapper));
+		
 		internal IBlockState _default;
 		private IList<IBlockState> Variants { get; } = new List<IBlockState>();
 
@@ -24,23 +23,44 @@ namespace Alex.Blocks.State
 
 		}
 		
-		public bool TryResolve(BlockState copyFrom, string property, string value, out IBlockState result)
+		public bool TryResolve(BlockState source, string property, string value, bool prioritize, out IBlockState result, params string[] requiredMatches)
 		{
-			var valuesCopied = copyFrom.ToDictionary();
-			valuesCopied[property] = value.ToString();
+			var copiedProperties = source.ToDictionary();
+			copiedProperties[property] = value.ToString();
 
 			int highestMatch = 0;
 			IBlockState highest = null;
 
-			foreach (var variant in Variants.ToArray())
+			foreach (var variant in Variants.ToArray().Where(x => (x.TryGetValue(property, out string xVal) && xVal.Equals(value, StringComparison.InvariantCultureIgnoreCase))))
 			{
+				bool valid = true;
+				foreach (var requiredMatch in requiredMatches)
+				{
+					if (!(copiedProperties.TryGetValue(requiredMatch, out string copyValue) && variant.TryGetValue(requiredMatch, out string variantValue) && copyValue == variantValue))
+					{
+						valid = false;
+						break;
+					}
+				}
+				
+				if (!valid)
+					continue;
+				
 				int matches = 0;
-				foreach (var copy in valuesCopied)
+				foreach (var copy in copiedProperties.Where(x => x.Key != property))
 				{
 					//Check if variant value matches copy value.
 					if (variant.TryGetValue(copy.Key, out string val) && copy.Value.Equals(val, StringComparison.InvariantCultureIgnoreCase))
 					{
 						matches++;
+					}
+				}
+
+				foreach (var variantProp in variant.ToDictionary())
+				{
+					if (!copiedProperties.ContainsKey(variantProp.Key))
+					{
+						matches--;
 					}
 				}
 
@@ -183,9 +203,9 @@ namespace Alex.Blocks.State
 			return WithProperty((IStateProperty)property, value);
 		}*/
 
-		public IBlockState WithProperty(string property, string value)
+		public IBlockState WithProperty(string property, string value, bool prioritize, params string[] requiredMatches)
 		{
-			if (VariantMapper.TryResolve(this, property, value, out IBlockState result))
+			if (VariantMapper.TryResolve(this, property, value, prioritize, out IBlockState result, requiredMatches))
 			{
 				return result;
 			}

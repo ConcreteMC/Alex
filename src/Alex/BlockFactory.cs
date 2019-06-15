@@ -1,24 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Alex.API.Blocks.State;
-using Alex.Blocks;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.Properties;
 using Alex.Blocks.State;
 using Alex.Graphics.Models.Blocks;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json.BlockStates;
-using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using BlockState = Alex.Blocks.State.BlockState;
-using BlockStateVariant = Alex.ResourcePackLib.Json.BlockStates.BlockStateVariant;
 
 namespace Alex
 {
@@ -62,11 +56,11 @@ namespace Alex
 			Level = 8
 		};
 
-		private static BlockModel GetOrCacheModel(ResourceManager resources, McResourcePack resourcePack, IBlockState state, uint id)
+		private static BlockModel GetOrCacheModel(ResourceManager resources, McResourcePack resourcePack, IBlockState state, uint id, bool rebuild)
 		{
 			if (ModelCache.TryGetValue(id, out var r))
 			{
-				return r;
+                return r;
 			}
 			else
 			{
@@ -76,8 +70,7 @@ namespace Alex
 					return null;
 				}
 
-
-				if (state.GetTypedValue(WaterLoggedProperty))
+                if (state.GetTypedValue(WaterLoggedProperty))
 				{
 					result = new MultiBlockModel(result, StationairyWaterModel);
 				}
@@ -91,7 +84,7 @@ namespace Alex
 			}
 		}
 
-		private static bool _builtin = false;
+        private static bool _builtin = false;
 		private static void RegisterBuiltinBlocks()
 		{
 			if (_builtin)
@@ -176,14 +169,27 @@ namespace Alex
 					Name = entry.Key
 				};
 
-				if (entry.Value.Properties != null)
+				var def = entry.Value.States.FirstOrDefault(x => x.Default);
+				if (def != null && def.Properties != null)
 				{
-					foreach (var property in entry.Value.Properties)
+					foreach (var property in def.Properties)
 					{
-						state = (BlockState)state.WithPropertyNoResolve(property.Key, property.Value.FirstOrDefault(), false);
+						state = (BlockState)state.WithPropertyNoResolve(property.Key, property.Value, false);
 					}
 				}
-
+				else
+				{
+					if (entry.Value.Properties != null)
+					{
+						foreach (var property in entry.Value.Properties)
+						{
+							state = (BlockState) state.WithPropertyNoResolve(property.Key,
+								property.Value.FirstOrDefault(), false);
+						}
+					}
+				}
+				
+				List<BlockState> variants = new List<BlockState>();
 				foreach (var s in entry.Value.States)
 				{
                     var id = s.ID;
@@ -204,24 +210,25 @@ namespace Alex
 							}
 						}
 					}
-				//	resourcePack.BlockStates.TryGetValue(entry.Key)
-					if (RegisteredBlockStates.TryGetValue(id, out IBlockState st))
+
+					//	resourcePack.BlockStates.TryGetValue(entry.Key)
+					if (!replace && RegisteredBlockStates.TryGetValue(id, out IBlockState st))
 					{
 						Log.Warn($"Duplicate blockstate id (Existing: {st.Name}[{st.ToString()}] | New: {entry.Key}[{variantState.ToString()}]) ");
 						continue;
 					}
 
 					{
-						var cachedBlockModel = GetOrCacheModel(resources, resourcePack, variantState, id);
+						var cachedBlockModel = GetOrCacheModel(resources, resourcePack, variantState, id, replace);
 						if (cachedBlockModel == null)
 						{
-							if (reportMissing)
+							//if (reportMissing)
 								Log.Warn($"Missing blockmodel for blockstate {entry.Key}[{variantState.ToString()}]");
 
 							cachedBlockModel = UnknownBlockModel;
-						}
+                        }
 
-						if (variantState.IsMultiPart) multipartBased++;
+                        if (variantState.IsMultiPart) multipartBased++;
 
 						string displayName = entry.Key;
 						var block = GetBlockByName(entry.Key);
@@ -298,13 +305,24 @@ namespace Alex
 
 						if (!RegisteredBlockStates.TryAdd(id, variantState))
 						{
-							Log.Warn($"Failed to add blockstate (variant), key already exists! ({variantState.ID} - {variantState.Name})");
-						}
+                            if (replace)
+                            {
+                                RegisteredBlockStates[id] = variantState;
+                                importCounter++;
+                            }
+                            else
+                            {
+                                Log.Warn(
+                                    $"Failed to add blockstate (variant), key already exists! ({variantState.ID} - {variantState.Name})");
+                            }
+                        }
 						else
 						{
 							importCounter++;
 						}
 					}
+					
+					variants.Add(variantState);
 				}
 
 			/*	if (!RegisteredBlockStates.TryAdd(state.ID, state))
@@ -317,11 +335,24 @@ namespace Alex
 			{
 				variantMap._default = state;
 			}
+
+			foreach (var var in variants)
+			{
+				var.VariantMapper = variantMap;
+			}
 			
+
 				if (!BlockStateByName.TryAdd(state.Name, variantMap))
 				{
-					Log.Warn($"Failed to add blockstate, key already exists! ({state.Name})");
-				}
+                    if (replace)
+                    {
+                        BlockStateByName[state.Name] = variantMap;
+                    }
+                    else
+                    {
+                        Log.Warn($"Failed to add blockstate, key already exists! ({state.Name})");
+                    }
+                }
 				else
 				{
 					//foreach (var bsVariant in state.Variants.ToArray().Cast<BlockState>())

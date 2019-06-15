@@ -1,23 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Net;
-using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Data;
 using Alex.API.Network;
 using Alex.API.Services;
-using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Entities;
+using Alex.Utils;
 using Microsoft.Xna.Framework;
-using MiNET.Blocks;
 using MiNET.Net;
 using MiNET.Utils;
-using MiNET.Worlds;
 using NLog;
 using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
-using LevelInfo = Alex.API.World.LevelInfo;
 using PlayerLocation = Alex.API.Utils.PlayerLocation;
 
 namespace Alex.Worlds.Bedrock
@@ -158,7 +154,7 @@ namespace Alex.Worlds.Bedrock
 			}
 		}
 
-		private List<ChunkCoordinates> _loadedChunks = new List<ChunkCoordinates>();
+		private ThreadSafeList<ChunkCoordinates> _loadedChunks = new ThreadSafeList<ChunkCoordinates>();
 		private void UnloadChunks(ChunkCoordinates center, double maxViewDistance)
 		{
 			Parallel.ForEach(_loadedChunks.ToArray(), (chunkColumn) =>
@@ -205,12 +201,22 @@ namespace Alex.Worlds.Bedrock
 
 				double radiusSquared = Math.Pow(Client.ChunkRadius, 2);var target = radiusSquared * 3;
 
-				while (!Client.PlayerStatusChangedWaitHandle.WaitOne(50))
+				var statusChanged = false;
+				while (!statusChanged || !Client.HasSpawned)
 				{
 					progressReport(LoadingState.LoadingChunks, ((int)(_chunksReceived / target) * 100));
+
+					if (!statusChanged)
+					{
+						if (Client.PlayerStatusChangedWaitHandle.WaitOne(50))
+						{
+							statusChanged = true;
+							Client.IsEmulator = false;
+						}
+					}
 				}
 
-				Client.IsEmulator = false;
+				//Client.IsEmulator = false;
 				progressReport(LoadingState.Spawning, 99);
 			});
 		}
@@ -221,8 +227,8 @@ namespace Alex.Worlds.Bedrock
 			_chunksReceived++;
 			var coords = new ChunkCoordinates(chunkColumn.X, chunkColumn.Z);
 			
-			if (!_loadedChunks.Contains(coords))
-				_loadedChunks.Add(coords);
+			//if (!_loadedChunks.Contains(coords))
+				_loadedChunks.TryAdd(coords);
 			
 			//sLog.Info($"Chunk received");
 			base.LoadChunk(chunkColumn, chunkColumn.X, chunkColumn.Z, true);

@@ -1,11 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
-//using System.Reflection.Metadata.Ecma335;
-using System.Security.Cryptography.X509Certificates;
-using System.Threading;
-using System.Threading.Tasks;
 using Alex.API.Blocks.State;
 using Alex.API.Entities;
 using Alex.API.Graphics;
@@ -13,20 +7,16 @@ using Alex.API.Network;
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.API.World;
+using Alex.Blocks.Minecraft;
 using Alex.Entities;
 using Alex.GameStates;
+using Alex.Graphics.Camera;
 using Alex.Graphics.Models;
-using Alex.Rendering;
-using Alex.Rendering.Camera;
-using Alex.Utils;
-using Alex.Worlds.Lighting;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using NLog;
-using Block = Alex.Blocks.Minecraft.Block;
 using Color = Microsoft.Xna.Framework.Color;
-using EntityManager = Alex.Worlds.EntityManager;
-using MathF = System.MathF;
+//using System.Reflection.Metadata.Ecma335;
 
 namespace Alex.Worlds
 {
@@ -35,13 +25,13 @@ namespace Alex.Worlds
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(World));
 
 		private GraphicsDevice Graphics { get; }
-		public Rendering.Camera.Camera Camera { get; set; }
+		public Camera Camera { get; set; }
 
 		public LevelInfo WorldInfo { get; set; }
 
 		public Player Player { get; set; }
 		private Alex Alex { get; }
-		public World(Alex alex, GraphicsDevice graphics, Rendering.Camera.Camera camera, INetworkProvider networkProvider)
+		public World(Alex alex, GraphicsDevice graphics, Camera camera, INetworkProvider networkProvider)
 		{
 			Alex = alex;
             Graphics = graphics;
@@ -622,6 +612,7 @@ namespace Alex.Worlds
 			if (EntityManager.TryGet(entityId, out IEntity entity))
 			{
 				PhysicsEngine.Remove(entity);
+				entity.Dispose();
 			}
 
 			EntityManager.Remove(entityId);

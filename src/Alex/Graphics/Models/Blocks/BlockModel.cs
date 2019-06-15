@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Linq;
 using Alex.API.Graphics;
 using Alex.API.World;
-using Alex.Blocks;
 using Alex.ResourcePackLib.Json;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
-using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
 
 namespace Alex.Graphics.Models.Blocks
 {
@@ -426,18 +423,23 @@ namespace Alex.Graphics.Models.Blocks
 
 		    var uvSize = resources.Atlas.AtlasSize;
 
-		    var tpw = (1f / uvSize.X); //0.0625
-		    var tph = (1f / uvSize.Y);
+		    var tpw = (resources.Atlas.TextureWidth / QuickMath.Max(x1, x2)) / uvSize.X; //0.0625
+            var tph = (resources.Atlas.TextureHeight / QuickMath.Max(y1, y2)) / uvSize.Y;
 
 		    textureLocation.X /= uvSize.X;
 		    textureLocation.Y /= uvSize.Y;
+            
+		   /* x1 = textureLocation.X + ((x1) * tpw);
+		    x2 = textureLocation.X + ((x2) * tpw);
+		    y1 = textureLocation.Y + ((y1) * tph);
+		    y2 = textureLocation.Y + ((y2) * tph);*/
 
-		    x1 = textureLocation.X + (x1 * tpw);
-		    x2 = textureLocation.X + (x2 * tpw);
-		    y1 = textureLocation.Y + (y1 * tph);
-		    y2 = textureLocation.Y + (y2 * tph);
+            x1 = textureLocation.X + x1 * (((textureInfo.Width / 16f) / uvSize.X));
+            x2 = textureLocation.X + x2 * (((textureInfo.Width / 16f) / uvSize.X));
+            y1 = textureLocation.Y + y1 * (((textureInfo.Height / 16f) / uvSize.Y));
+            y2 = textureLocation.Y + y2 * (((textureInfo.Height / 16f) / uvSize.Y));
 
-			var map = new UVMap(new Microsoft.Xna.Framework.Vector2(x1, y1),
+            var map = new UVMap(new Microsoft.Xna.Framework.Vector2(x1, y1),
 			    new Microsoft.Xna.Framework.Vector2(x2, y1), new Microsoft.Xna.Framework.Vector2(x1, y2),
 			    new Microsoft.Xna.Framework.Vector2(x2, y2), Color.White, Color.White, Color.White);
 
@@ -451,17 +453,17 @@ namespace Alex.Graphics.Models.Blocks
 
 	    protected static BlockFace[] INVALID_FACE_ROTATION = new BlockFace[]
 	    {
-		    BlockFace.North,
-		    BlockFace.South,
+		    BlockFace.Up,
+		    BlockFace.Down,
 		    BlockFace.None
 	    };
 	    
 		protected static BlockFace[] FACE_ROTATION =
 		{
 			BlockFace.East,
-			BlockFace.Down,
+			BlockFace.South,
 			BlockFace.West,
-			BlockFace.Up
+			BlockFace.North
 		};
 
 		protected static BlockFace[] FACE_ROTATION_X =
@@ -505,11 +507,6 @@ namespace Alex.Graphics.Models.Blocks
 		public static Vector3 From(Vector3 x, Vector3 y, Vector3 z)
 		{
 			return new Vector3(x.X, y.Y, z.Z);
-		}
-
-		public static Vector3 From(int x, int y, int z)
-		{
-			return new Vector3(x, y, z);
 		}
 	}
 }

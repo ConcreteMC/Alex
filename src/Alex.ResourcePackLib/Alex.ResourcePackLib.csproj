@@ -20,9 +20,6 @@
     <PackageReference Include="SharpZipLib" Version="1.0.0-alpha2" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Alex.API\Alex.API.csproj" />
-  </ItemGroup>
-  <ItemGroup>
     <Compile Update="Properties\Resources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -37,5 +34,8 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Json\Tags\Blocks\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Alex.API\Alex.API.csproj" />
   </ItemGroup>
 </Project>

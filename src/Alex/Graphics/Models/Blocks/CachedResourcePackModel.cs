@@ -7,7 +7,6 @@ using Alex.API.World;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.BlockStates;
 using Alex.ResourcePackLib.Json.Models.Blocks;
-using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using NLog;
@@ -110,30 +109,8 @@ namespace Alex.Graphics.Models.Blocks
 
 		protected Matrix GetModelRotationMatrix(BlockStateModel model)
 		{
-			//360f - model.X
-			
-			float y = model.Y;
-			if (y >= 0)
-			{
-				//y = 360f - y;
-			}
-			//if (y == 0f) y = 180;
-			//else if (y == 180f) y = 0;
-			//else if (y == 90) y = 270;
-			//else if (y == 270) y = 90;*/
-
-			float x = model.X;
-			if (x >= 0)
-			{
-				x = x;
-			}
-			/*if (x == 0) x = 180;
-			else if (x == 180) x = 0;
-			else if (x == 90) x = 270;
-			else if (x == 270) x = 90;*/
-			
-			return Matrix.CreateRotationX(MathHelper.ToRadians(-x)) *
-			       Matrix.CreateRotationY(MathHelper.ToRadians(-y));
+			return Matrix.CreateRotationX(MathHelper.ToRadians(-model.X)) *
+			       Matrix.CreateRotationY(MathHelper.ToRadians(-model.Y));
 		}
 
 		protected string ResolveTexture(BlockStateModel var, string texture)
@@ -367,7 +344,7 @@ namespace Alex.Graphics.Models.Blocks
 						
 						if (faceVertices == null) continue;
 
-						for (var index = 0; index < faceVertices.Length; index++)
+                        for (var index = 0; index < faceVertices.Length; index++)
 						{
 							var vert = faceVertices[index];
 
@@ -434,7 +411,7 @@ namespace Alex.Graphics.Models.Blocks
 							faceVertices[index] = vert;
 						}
 						
-						elementCache.Set(face.Key, (faceVertices, indexes));
+						elementCache.Set(face.Key, new FaceData(faceVertices, indexes, rotation, null));
 					}
 
 					if (!result.ContainsKey($"{bsModel.ModelName}:{bsModelIndex}:{i}"))
@@ -486,36 +463,40 @@ namespace Alex.Graphics.Models.Blocks
 					foreach (var faceElement in element.Faces)
 					{
 						var facing = faceElement.Key;
+						
 						GetCullFaceValues(faceElement.Value.CullFace, facing, out var cullFace);
 
 						var originalCullFace = cullFace;
 						
 						if (bsModel.X > 0f)
 						{
-							var offset = bsModel.X / 90;
+							var offset = (-bsModel.X) / 90;
 							cullFace = RotateDirection(cullFace, offset, FACE_ROTATION_X, INVALID_FACE_ROTATION_X);
 							facing = RotateDirection(facing, offset, FACE_ROTATION_X, INVALID_FACE_ROTATION_X);
 						}
 
 						if (bsModel.Y > 0f)
 						{
-							var offset = bsModel.Y / 90;
+							var offset = (-bsModel.Y) / 90;
 							cullFace = RotateDirection(cullFace, offset, FACE_ROTATION, INVALID_FACE_ROTATION);
 							facing = RotateDirection(facing, offset, FACE_ROTATION, INVALID_FACE_ROTATION);
 						}
-						
-						if (originalCullFace != BlockFace.None && !ShouldRenderFace(world, cullFace, position, baseBlock))
-							continue;
+
 						
 
-						(VertexPositionNormalTextureColor[] vertices, int[] indexes) faceVertices;
-						if (!elementCache.TryGet(faceElement.Key, out faceVertices) || faceVertices.vertices.Length == 0 || faceVertices.indexes.Length ==0)
+
+						if (originalCullFace != BlockFace.None && !ShouldRenderFace(world, cullFace, position, baseBlock))
+							continue;
+
+
+                        FaceData faceVertices;
+						if (!elementCache.TryGet(faceElement.Key, out faceVertices) || faceVertices.Vertices.Length == 0 || faceVertices.Indexes.Length ==0)
 						{
 							Log.Warn($"No vertices cached for face {faceElement.Key} in model {bsModel.ModelName}");
 							continue;
 						}
 
-						Color faceColor = faceVertices.vertices[0].Color;
+						Color faceColor = faceVertices.Vertices[0].Color;
 
 						if (faceElement.Value.TintIndex >= 0)
 						{
@@ -534,23 +515,48 @@ namespace Alex.Graphics.Models.Blocks
 							}
 						}
 
-						faceColor = LightingUtils.AdjustColor(faceColor, cullFace,
+						/*switch (faceElement.Key)
+						{
+							case BlockFace.Down:
+								faceColor = Color.Turquoise;
+								break;
+							case BlockFace.Up:
+								faceColor = Color.Blue;
+								break;
+							case BlockFace.East:
+								faceColor = Color.Red;
+								break;
+							case BlockFace.West:
+								faceColor = Color.Yellow;
+								break;
+							case BlockFace.North:
+								faceColor = Color.Pink;
+								break;
+							case BlockFace.South:
+								faceColor = Color.LimeGreen;
+								break;
+							case BlockFace.None:
+								break;
+						}*/
+						
+						faceColor = AdjustColor(faceColor, facing,
 							GetLight(world, position + facing.GetVector3(),
 								false /*model.Model.AmbientOcclusion*/), element.Shade);
 
 						//TODO: Rotate vertices
-						var initialIndex = verts.Count;
-						for (var index = 0; index < faceVertices.vertices.Length; index++)
+                        var initialIndex = verts.Count;
+						for (var index = 0; index < faceVertices.Vertices.Length; index++)
 						{
-							var vertex = faceVertices.vertices[index];
+							var vertex = faceVertices.Vertices[index];
 							vertex.Color = faceColor;
 							vertex.Position = position + vertex.Position;
+
 							verts.Add(vertex);
 						}
 						
-						for (var index = 0; index < faceVertices.indexes.Length; index++)
+						for (var index = 0; index < faceVertices.Indexes.Length; index++)
 						{
-							var idx = faceVertices.indexes[index];
+							var idx = faceVertices.Indexes[index];
 							/*var vertex = faceVertices.vertices[idx];
 
 							vertex.Color = faceColor;
@@ -574,16 +580,40 @@ namespace Alex.Graphics.Models.Blocks
 		
 		protected class FaceCache
 		{
-			private Dictionary<BlockFace, (VertexPositionNormalTextureColor[] vertices, int[] indexes)> _cache = new Dictionary<BlockFace, (VertexPositionNormalTextureColor[] vertices, int[] indexes)>();
-			public bool TryGet(BlockFace face, out (VertexPositionNormalTextureColor[] vertices, int[] indexes) vertices)
+			private Dictionary<BlockFace, FaceData> _cache = new Dictionary<BlockFace, FaceData>();
+			public bool TryGet(BlockFace face, out FaceData vertices)
 			{
 				return _cache.TryGetValue(face, out vertices);
 			}
 
-			public void Set(BlockFace face, (VertexPositionNormalTextureColor[] vertices, int[] indexes)vertices)
+			public void Set(BlockFace face, FaceData vertices)
 			{
 				_cache[face] = vertices;
 			}
 		}
+
+        protected class FaceData
+        {
+            public VertexPositionNormalTextureColor[] Vertices { get; set; }
+            public int[] Indexes { get; set; }
+            public int Rotation { get; set; }
+            public TexturePosition[] TexturePositions { get; set; }
+
+
+            public FaceData(VertexPositionNormalTextureColor[] vertices, int[] indices, int rotation, TexturePosition[] texturePositions)
+            {
+                Vertices = vertices;
+                Indexes = indices;
+                Rotation = rotation;
+            }
+
+            public enum TexturePosition
+            {
+                TopLeft,
+                BottomLeft,
+                TopRight,
+                BottomRight
+            }
+        }
 	}
 }

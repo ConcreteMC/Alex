@@ -1,34 +1,21 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
-using System.Globalization;
-using System.IO;
-using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Threading;
-using Alex.API;
 using Alex.API.Data.Servers;
-using Alex.API.Graphics;
 using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Input;
-using Alex.API.Localization;
 using Alex.API.Network;
 using Alex.API.Services;
 using Alex.API.World;
-using Alex.Gamestates.Login;
 using Alex.GameStates;
 using Alex.GameStates.Gui.MainMenu;
 using Alex.GameStates.Playing;
 using Alex.Gui;
-using Alex.Gui.Elements;
-using Alex.Gui.Forms;
 using Alex.Networking.Java.Packets;
-using Alex.Rendering;
-using Alex.ResourcePackLib;
 using Alex.Services;
 using Alex.Utils;
 using Alex.Worlds.Bedrock;
@@ -36,9 +23,7 @@ using Alex.Worlds.Java;
 using Eto.Forms;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using Newtonsoft.Json;
-using NLog;
 using TextInputEventArgs = Microsoft.Xna.Framework.TextInputEventArgs;
 
 namespace Alex
@@ -246,11 +231,13 @@ namespace Alex
 			if (Storage.TryRead("settings", out Settings settings))
 			{
 				GameSettings = settings;
+				//Console.WriteLine($"OLD SETTINGS: {settings.RenderDistance}");
 			}
 			else
 			{
 				GameSettings = new Settings(string.Empty);
 				GameSettings.IsDirty = true;
+				//Console.WriteLine($"NEW GAMESETTINGS");
 			}
 
 			Extensions.Init(GraphicsDevice);
@@ -334,7 +321,7 @@ namespace Alex
 		}
 	}
 
-	public interface IProgressReceiver
+    public interface IProgressReceiver
 	{
 		void UpdateProgress(int percentage, string statusMessage);
 		void UpdateProgress(int percentage, string statusMessage, string sub);

@@ -15,7 +15,7 @@ namespace Alex.API.Graphics
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
         public VertexPositionNormalTextureColor[] Vertices { get; set; }
-		public VertexPositionNormalTextureColor[] TransparentVertices { get; }
+		public VertexPositionNormalTextureColor[] TransparentVertices { get; set; }
 		
 		public int[] SolidIndexes { get; set; }
 		public int[] TransparentIndexes { get; set; }
@@ -134,6 +134,7 @@ namespace Alex.API.Graphics
 			Vertices = null;
 			SolidIndexes = null;
 			TransparentIndexes = null;
+			TransparentVertices = null;
 		}
 	}
 }

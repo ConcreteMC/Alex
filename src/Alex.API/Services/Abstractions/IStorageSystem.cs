@@ -14,5 +14,6 @@ namespace Alex.API.Services
 	    bool TryReadBytes(string key, out byte[] value);
 
 	    bool TryGetDirectory(string key, out DirectoryInfo info);
+        bool TryCreateDirectory(string key);
     }
 }

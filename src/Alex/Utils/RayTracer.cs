@@ -1,11 +1,8 @@
-﻿using Alex.Blocks;
-using Alex.Blocks.Minecraft;
-using Alex.Entities;
-using Alex.Rendering.Camera;
+﻿using Alex.Blocks.Minecraft;
+using Alex.Graphics.Camera;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
 
 namespace Alex.Utils
 {
@@ -35,7 +32,6 @@ namespace Alex.Utils
 
 			while (plotter.Next())
 			{
-				//var actual = plotter.Actual();
 				var v = plotter.Get();
 				var b = (Block)world.GetBlock(v);
 				if (b != null && b.Renderable && b.HasHitbox && b.GetBoundingBox(v.Floor()).Intersects(new BoundingBox(v, v)))

@@ -20,6 +20,7 @@ namespace Alex.API.Services
 			Directory.CreateDirectory(DataDirectory);
 	        Directory.CreateDirectory(Path.Combine(DataDirectory, "assets"));
 	        Directory.CreateDirectory(Path.Combine(DataDirectory, "assets", "bedrock"));
+            Directory.CreateDirectory(Path.Combine(DataDirectory, "assets", "resourcepacks"));
         }
         
         public bool TryWrite<T>(string key, T value)
@@ -114,7 +115,19 @@ namespace Alex.API.Services
 		    return false;
 	    }
 
-	    private string GetFileName(string key)
+        public bool TryCreateDirectory(string key)
+        {
+            var path = Path.Combine(DataDirectory, key);
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+                return true;
+            }
+
+            return false;
+        }
+
+        private string GetFileName(string key)
         {
             return Path.Combine(DataDirectory, FileKeySanitizeRegex.Replace(key.ToLowerInvariant(), ""));
         }

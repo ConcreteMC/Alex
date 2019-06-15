@@ -1,13 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
     <DefineConstants>TRACE;DEBUG;WINDOWS;MONOGAME;NETCOREAPP2_0;DESKTOPGL;WINDOWS;LINUX</DefineConstants>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <ApplicationIcon>Icon.ico</ApplicationIcon>
     <StartupObject>Alex.Program</StartupObject>
     <Platforms>AnyCPU;x64</Platforms>
-	  <RuntimeIdentifiers>win10-x64;ubuntu.16.10-x64</RuntimeIdentifiers>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -17,13 +16,17 @@
 
   <PropertyGroup>
     <LangVersion>7.1</LangVersion>
-    <!--<RuntimeIdentifier>win10-x64</RuntimeIdentifier>-->
-    <MonoGamePlatform>DesktopGL</MonoGamePlatform>
-    <!--<ApplicationManifest>Properties\App.manifest</ApplicationManifest>-->
-
-    <!--<RuntimeIdentifier>win-x64</RuntimeIdentifier>
-    <PlatformTarget>x64</PlatformTarget>-->
+	  <MonoGamePlatform>DesktopGL</MonoGamePlatform>
   </PropertyGroup>
+
+
+	<PropertyGroup Condition="'$(OS)' == 'WINDOWS_NT' ">
+		<RuntimeIdentifier>win10-x64</RuntimeIdentifier>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(OS)' != 'WINDOWS_NT' ">
+		<RuntimeIdentifier>ubuntu.16.10-x64</RuntimeIdentifier>
+	</PropertyGroup>
+
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -111,7 +114,6 @@
     <ProjectReference Include="..\..\lib\MiNET\src\MiNET\MiNET.Client\MiNET.Client.csproj" />
     <ProjectReference Include="..\..\lib\MiNET\src\MiNET\MiNET\MiNET.csproj" />
     <ProjectReference Include="..\Alex.API\Alex.API.csproj" />
-    <ProjectReference Include="..\Alex.Gui\Alex.Graphics.csproj" />
     <ProjectReference Include="..\Alex.Networking\Alex.Networking.csproj" />
     <ProjectReference Include="..\Alex.ResourcePackLib\Alex.ResourcePackLib.csproj" />
   </ItemGroup>

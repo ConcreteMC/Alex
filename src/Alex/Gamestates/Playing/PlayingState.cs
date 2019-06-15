@@ -4,15 +4,12 @@ using Alex.API.Graphics;
 using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.API.World;
-using Alex.Blocks;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
-using Alex.GameStates.Gui.InGame;
 using Alex.GameStates.Hud;
+using Alex.Graphics.Camera;
 using Alex.Graphics.Models;
 using Alex.Gui.Elements;
-using Alex.Rendering.Camera;
-using Alex.Rendering.UI;
 using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
@@ -92,7 +89,7 @@ namespace Alex.GameStates.Playing
 				FpsCounter.Update();
 				World.ChunkManager.GetPendingLightingUpdates(out int lowLight, out int midLight, out int highLight);
 
-				return $"Alex {Alex.Version} ({FpsCounter.Value:##} FPS, Queued: {World.EnqueuedChunkUpdates} Active: {World.ConcurrentChunkUpdates} chunk updates, H: {highLight} M: {midLight} L: {lowLight} lighting updates)";
+				return $"Alex {Alex.Version} ({FpsCounter.Value:##} FPS, Queued: {World.EnqueuedChunkUpdates} Active: {World.ConcurrentChunkUpdates} chunk updates"/*, H: {highLight} M: {midLight} L: {lowLight} lighting updates)"*/;
 			});
 			_debugInfo.AddDebugLeft(() =>
 			{
@@ -135,6 +132,8 @@ namespace Alex.GameStates.Playing
 
                     StringBuilder sb = new StringBuilder();
 					sb.AppendLine($"Target: {_raytracedBlock} Face: {face}");
+					sb.AppendLine(
+						$"Skylight: {World.GetSkyLight(_raytracedBlock)} Face Skylight: {World.GetSkyLight(_adjacentBlock)}");
 					sb.AppendLine($"{SelBlock}");
 
 					if (SelBlock.BlockState != null)
@@ -204,7 +203,8 @@ namespace Alex.GameStates.Playing
 					{
 						_previousMemUpdate = gameTime.TotalGameTime;
 						//Alex.Process.Refresh();
-						MemoryUsageDisplay = $"Allocated memory: {GetBytesReadable(Environment.WorkingSet)}";
+						MemoryUsageDisplay = $"Allocated memory: {GetBytesReadable(Environment.WorkingSet)}\n" +
+						                     $"VertexBuffer Pool: {GetBytesReadable(VertexBufferPool.GetMemoryUsage)}";
 					}
 				}
 			}
@@ -402,7 +402,7 @@ namespace Alex.GameStates.Playing
 			}
 		}
 
-		private static string GetBytesReadable(long i)
+		public static string GetBytesReadable(long i)
 		{
 			// Get absolute value
 			long absolute_i = (i < 0 ? -i : i);

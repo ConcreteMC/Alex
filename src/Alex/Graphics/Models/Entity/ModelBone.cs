@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.Utils;
@@ -9,7 +10,7 @@ namespace Alex.Graphics.Models.Entity
 {
 	public partial class EntityModelRenderer
 	{
-		public class ModelBone
+		public class ModelBone : IDisposable
 		{
 			private VertexBuffer Buffer { get; set; }
 			public ModelBoneCube[] Parts { get; }
@@ -99,7 +100,7 @@ namespace Alex.Graphics.Models.Entity
 				{
 					if (currentBuffer == null)
 					{
-						Buffer = new VertexBuffer(device,
+						Buffer = VertexBufferPool.GetBuffer(device,
 							VertexPositionNormalTexture.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
 						currentBuffer = Buffer;
 						currentBuffer.SetData(vertices);
@@ -108,7 +109,7 @@ namespace Alex.Graphics.Models.Entity
 					{
 						VertexBuffer oldBuffer = currentBuffer;
 
-						currentBuffer = new VertexBuffer(device, VertexPositionNormalTextureColor.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
+						currentBuffer = VertexBufferPool.GetBuffer(device, VertexPositionNormalTextureColor.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
 						currentBuffer.SetData(vertices);
 
 						Buffer = currentBuffer;
@@ -119,6 +120,11 @@ namespace Alex.Graphics.Models.Entity
 						currentBuffer.SetData(vertices);
 					}
 				}
+			}
+
+			public void Dispose()
+			{
+				Buffer?.Dispose();
 			}
 		}
 	}

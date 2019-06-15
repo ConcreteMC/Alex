@@ -6,6 +6,7 @@
 	    {
 		    Solid = true;
 		    Transparent = true;
-		}
+		    LightOpacity = 15;
+	    }
     }
 }

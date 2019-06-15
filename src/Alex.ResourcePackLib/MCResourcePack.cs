@@ -141,12 +141,14 @@ namespace Alex.ResourcePackLib
 					if (fileName.StartsWith("block"))
 					{
 						var model = LoadBlockModel(entry, modelMatch);
-						models.Add($"{model.Namespace}:{model.Name}", model);
+                        if (model != null)
+						    models.Add($"{model.Namespace}:{model.Name}", model);
 					}
 					else if (fileName.StartsWith("item"))
 					{
 						var item = LoadItemModel(entry, modelMatch);
-						items.Add($"{item.Namespace}:{item.Name}", item);
+                        if (item != null)
+						    items.Add($"{item.Namespace}:{item.Name}", item);
 					}
 
 					continue;
@@ -520,23 +522,33 @@ namespace Alex.ResourcePackLib
 
 		private BlockModel LoadBlockModel(ZipArchiveEntry entry, Match match)
 		{
-			string name      = match.Groups["filename"].Value;
-			string nameSpace = match.Groups["namespace"].Value;
+            try
+            {
+                string name = match.Groups["filename"].Value;
+                string nameSpace = match.Groups["namespace"].Value;
 
-			using (var r = new StreamReader(entry.Open()))
-			{
-				var blockModel = MCJsonConvert.DeserializeObject<BlockModel>(r.ReadToEnd());
-				blockModel.Name = name;// name.Replace("block/", "");
-				blockModel.Namespace = nameSpace;
-				if (blockModel.ParentName != null)
-				{
-					//blockModel.ParentName = blockModel.ParentName.Replace("block/", "");
-				}
-				//blockModel = ProcessBlockModel(blockModel);
-				//_blockModels[$"{nameSpace}:{name}"] = blockModel;
-				return blockModel;
-			}
-		}
+                using (var r = new StreamReader(entry.Open()))
+                {
+                    var blockModel = MCJsonConvert.DeserializeObject<BlockModel>(r.ReadToEnd());
+                    blockModel.Name = name; // name.Replace("block/", "");
+                    blockModel.Namespace = nameSpace;
+                    if (blockModel.ParentName != null)
+                    {
+                        //blockModel.ParentName = blockModel.ParentName.Replace("block/", "");
+                    }
+
+                    //blockModel = ProcessBlockModel(blockModel);
+                    //_blockModels[$"{nameSpace}:{name}"] = blockModel;
+                    return blockModel;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"Error loading blockmodel.");
+
+                return null;
+            }
+        }
 
 		private BlockModel ProcessBlockModel(BlockModel model, ref Dictionary<string, BlockModel> models)
 		{

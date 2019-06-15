@@ -18,7 +18,6 @@ using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.Gamestates.Login;
 using Alex.GameStates.Gui.Common;
-using Alex.Graphics.Gui.Elements;
 using Alex.Gui;
 using Alex.Networking.Java;
 using Alex.Services;
