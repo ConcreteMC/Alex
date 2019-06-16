@@ -89,10 +89,14 @@ namespace Alex.Gui.Elements.Inventory
 		{
 			var items = Children.OfType<GuiInventoryItem>().ToArray();
 
-			if (e.Index >= 36 && e.Index <= 44) //Hotbar
+			if ((Inventory.IsPeInventory && e.Index >= 0 && e.Index <= 8) || (!Inventory.IsPeInventory && e.Index >= 36 && e.Index <= 44)) //Hotbar
 		    {
 			    int childIndex = 8 - (44 - e.Index);
-			    if (childIndex < 0 || childIndex >= items.Length)
+                if (Inventory.IsPeInventory)
+                {
+                    childIndex = e.Index;
+                }
+			    else if (childIndex < 0 || childIndex >= items.Length)
 			    {
 				    Log.Warn($"Index out of range for hotbar: {childIndex}");
 					return;

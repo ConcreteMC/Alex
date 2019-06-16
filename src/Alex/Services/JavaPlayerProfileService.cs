@@ -103,6 +103,11 @@ namespace Alex.Services
 				.PerformRequestAsync()
 				.ContinueWith(task =>
 			{
+                if (task.IsFaulted)
+                {
+                    Authenticate?.Invoke(this, new PlayerProfileAuthenticateEventArgs("Validation faulted!"));
+                    return false;
+                }
 
 				var r = task.Result;
 				if (r.IsSuccess)

@@ -41,12 +41,6 @@ namespace Alex.Worlds.Bedrock
 			AlexInstance = alex;
 			
 			AnvilWorldProvider.LoadBlockConverter();
-
-            if (BaseClient.WorldReceiver?.GetPlayerEntity() is Player player)
-            {
-                player.Inventory.IsPeInventory = true;
-            }
-
         }
 
 		private void UnhandledPackage(Packet packet)
@@ -114,7 +108,12 @@ namespace Alex.Worlds.Bedrock
 			{
 				BaseClient.RequestChunkRadius(Client.ChunkRadius);
 			}
-		}
+
+            if (BaseClient.WorldReceiver?.GetPlayerEntity() is Player player)
+            {
+                player.Inventory.IsPeInventory = true;
+            }
+        }
 
 		public override void HandleMcpeMovePlayer(McpeMovePlayer message)
 		{
@@ -559,7 +558,9 @@ namespace Alex.Worlds.Bedrock
 				if (BaseClient.WorldReceiver?.GetPlayerEntity() is Player player)
 				{
 					inventory = player.Inventory;
-				}
+                    if (!inventory.IsPeInventory)
+                        player.Inventory.IsPeInventory = true;
+                }
 			}
 
 			if (inventory == null) return;
@@ -570,7 +571,7 @@ namespace Alex.Worlds.Bedrock
             {
                 item.Count = message.item.Count;
 				inventory[index] = item;
-                Log.Info($"Set inventory slot: {message.slot} Id: {message.item.Id}:{message.item.Metadata}");
+              //  Log.Info($"Set inventory slot: {message.slot} Id: {message.item.Id}:{message.item.Metadata} x {message.item.Count} Name: {item.DisplayName} IsPeInv: {inventory.IsPeInventory}");
             }
             else
             {
