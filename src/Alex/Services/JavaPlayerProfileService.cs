@@ -103,6 +103,7 @@ namespace Alex.Services
 				.PerformRequestAsync()
 				.ContinueWith(task =>
 			{
+
 				var r = task.Result;
 				if (r.IsSuccess)
 				{

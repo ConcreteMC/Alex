@@ -15,6 +15,7 @@ using Microsoft.Xna.Framework;
 using MiNET;
 using MiNET.Blocks;
 using MiNET.Client;
+using MiNET.Items;
 using MiNET.Net;
 using MiNET.Utils;
 using NLog;
@@ -329,21 +330,39 @@ namespace Alex.Worlds.Bedrock
 			SendPacket(packet);
 		}
 		
-	    public void PlayerDigging(DiggingStatus status, BlockCoordinates position, BlockFace face)
+	    public void PlayerDigging(DiggingStatus status, BlockCoordinates position, BlockFace face, Vector3 cursorPosition)
 	    {
-		    if (status == DiggingStatus.Started)
-		    {
-			    SendPlayerAction(PlayerAction.StartBreak, position, (int)face);
-		    }
-		    else if (status == DiggingStatus.Finished)
-		    {
-			    SendPlayerAction(PlayerAction.StopBreak, position, (int)face);
-		    }
-		    else if (status == DiggingStatus.Cancelled)
-		    {
-			    SendPlayerAction(PlayerAction.AbortBreak, position, (int)face);
-		    }
-	    }
+            if (WorldReceiver?.GetPlayerEntity() is Entities.Player player)
+            {
+                var item = player.Inventory[player.Inventory.SelectedSlot];
+                if (status == DiggingStatus.Started)
+                {
+                    SendPlayerAction(PlayerAction.StartBreak, position, (int) face);
+                }
+                else if (status == DiggingStatus.Finished)
+                {
+                    SendPlayerAction(PlayerAction.StopBreak, position, (int) face);
+                    var packet = McpeInventoryTransaction.CreateObject();
+                    packet.transaction = new Transaction()
+                    {
+                        ActionType = (int) McpeInventoryTransaction.ItemUseAction.Destroy,
+                        ClickPosition =
+                            new System.Numerics.Vector3(cursorPosition.X, cursorPosition.Y, cursorPosition.Z),
+                        TransactionType = McpeInventoryTransaction.TransactionType.ItemUse,
+                        EntityId = NetworkEntityId,
+                        Position = new MiNET.Utils.BlockCoordinates(position.X, position.Y, position.Z),
+                        //Item = MiNET.Items.ItemFactory.GetItem()
+                        
+                    };
+
+                    SendPacket(packet);
+                }
+                else if (status == DiggingStatus.Cancelled)
+                {
+                    SendPlayerAction(PlayerAction.AbortBreak, position, (int) face);
+                }
+            }
+        }
 
 	    public void BlockPlaced(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition)
 	    {

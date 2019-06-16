@@ -538,16 +538,17 @@ namespace Alex.Worlds.Bedrock
 				var slot = message.input[index];
 				
 				var usedIndex = index;
-				if (usedIndex < 9)
+
+                if (ItemFactory.TryGetItem(slot.Id, slot.Metadata, out Item item))
 				{
-					usedIndex += 36;
+                    item.Count = slot.Count;
+                    inventory[usedIndex] = item;
 				}
-				
-				if (ItemFactory.TryGetItem(slot.Id, slot.Metadata, out Item item))
-				{
-					inventory[usedIndex] = item;
-				}
-			}
+                else
+                {
+                    Log.Warn($"Failed to set slot: {index} Id: {slot.Id}:{slot.Metadata}");
+                }
+            }
 		}
 
 		public override void HandleMcpeInventorySlot(McpeInventorySlot message)
@@ -564,24 +565,21 @@ namespace Alex.Worlds.Bedrock
 			if (inventory == null) return;
 			
 			var index = (int)message.slot;
-			if (index <= 8)
-			{
-				index += 36;
-			}
-			else if (index >= 9 && index <= 35)
-			{
-				
-			}
-			
-			if (ItemFactory.TryGetItem(message.item.Id, message.item.Metadata, out Item item))
-			{
+
+            if (ItemFactory.TryGetItem(message.item.Id, message.item.Metadata, out Item item))
+            {
+                item.Count = message.item.Count;
 				inventory[index] = item;
-			}
+                Log.Info($"Set inventory slot: {message.slot} Id: {message.item.Id}:{message.item.Metadata}");
+            }
+            else
+            {
+                Log.Warn($"Failed to set slot: {message.slot} Id: {message.item.Id}:{message.item.Metadata}");
+            }
 		}
 
         public override void HandleMcpePlayerHotbar(McpePlayerHotbar message)
         {
-            
             UnhandledPackage(message);
         }
 
