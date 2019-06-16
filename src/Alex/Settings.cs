@@ -34,7 +34,7 @@ namespace Alex
 	        IsDirty = false;
 
 	        ChunkThreads = 1;
-	        ClientSideLighting = true;
+	        ClientSideLighting = false;
 	        UseAlexChunks = false;
         }
     }

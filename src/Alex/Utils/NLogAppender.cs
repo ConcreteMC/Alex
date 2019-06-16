@@ -40,13 +40,19 @@ namespace log4net
 		}
 
 		static LogEventInfo ConvertToNLog(LoggingEvent loggingEvent)
-		{
+        {
+            var msg = Convert.ToString(loggingEvent.MessageObject);
+            if (loggingEvent.ExceptionObject != null)
+            {
+                msg += $": {loggingEvent.ExceptionObject.ToString()}";
+            }
+
 			return new LogEventInfo
 			{
 				Exception = loggingEvent.ExceptionObject,
 				FormatProvider = null,
 				LoggerName = loggingEvent.LoggerName,
-				Message = Convert.ToString(loggingEvent.MessageObject),
+				Message = msg,
 				Level = ConvertLevel(loggingEvent.Level),
 				TimeStamp = loggingEvent.TimeStamp
 			};

@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO.Compression;
 using System.Net;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using Alex.API.Data;
 using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.API.World;
+using Alex.Gamestates;
+using Jose;
 using Microsoft.Xna.Framework;
 using MiNET;
 using MiNET.Blocks;
@@ -14,7 +18,12 @@ using MiNET.Client;
 using MiNET.Net;
 using MiNET.Utils;
 using NLog;
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.X509;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
+using NewtonsoftMapper = MiNET.NewtonsoftMapper;
+using Skin = MiNET.Utils.Skins.Skin;
 
 namespace Alex.Worlds.Bedrock
 {
@@ -63,9 +72,11 @@ namespace Alex.Worlds.Bedrock
 		public EventHandler<BedrockMotd> OnMotdReceivedHandler;
 		public BedrockMotd KnownMotd = new BedrockMotd(string.Empty);
 
+        private Alex Alex { get; }
 		public BedrockClient(Alex alex,IPEndPoint endpoint, string username, DedicatedThreadPool threadPool, BedrockWorldProvider wp) : base(endpoint,
 			username, threadPool)
-		{
+        {
+            Alex = alex;
 			WorldProvider = wp;
 			ConnectionAcceptedWaitHandle = new ManualResetEventSlim(false);
 			MessageDispatcher = new McpeClientMessageDispatcher(new BedrockClientPacketHandler(this, alex));
@@ -75,13 +86,190 @@ namespace Alex.Worlds.Bedrock
 			base.ChunkRadius = alex.GameSettings.RenderDistance;
 		}
 
-		public override void OnConnectionRequestAccepted()
+        public void ShowDisconnect(string reason, bool useTranslation = false)
+        {
+            if (Alex.GameStateManager.GetActiveState() is DisconnectedScreen s)
+            {
+                if (useTranslation)
+                {
+                    s.DisconnectedTextElement.TranslationKey = reason;
+                }
+                else
+                {
+                    s.DisconnectedTextElement.Text = reason;
+                }
+
+                return;
+            }
+
+            s = new DisconnectedScreen();
+            if (useTranslation)
+            {
+                s.DisconnectedTextElement.TranslationKey = reason;
+            }
+            else
+            {
+                s.DisconnectedTextElement.Text = reason;
+            }
+
+            Alex.GameStateManager.SetActiveState(s, false);
+            Alex.GameStateManager.RemoveState("play");
+            Dispose();
+        }
+
+        public override void OnConnectionRequestAccepted()
 		{
 			ConnectionAcceptedWaitHandle.Set();
-			base.OnConnectionRequestAccepted();
-		}
 
-		public bool IgnoreUnConnectedPong = false;
+            Thread.Sleep(50);
+            SendNewIncomingConnection();
+            //_connectedPingTimer = new Timer(state => SendConnectedPing(), null, 1000, 1000);
+            Thread.Sleep(50);
+            SendAlexLogin(Username);
+        }
+
+        private void SendAlexLogin(string username)
+        {
+            JWT.JsonMapper = new NewtonsoftMapper();
+
+            var clientKey = CryptoUtils.GenerateClientKey();
+
+            ECDsa signKey = ConvertToSingKeyFormat(clientKey);
+
+            byte[] data = CryptoUtils.CompressJwtBytes(EncodeJwt(username, clientKey, signKey, IsEmulator), EncodeSkinJwt(clientKey, signKey, username), CompressionLevel.Fastest);
+
+            McpeLogin loginPacket = new McpeLogin
+            {
+                protocolVersion = McpeProtocolInfo.ProtocolVersion,
+                payload = data
+            };
+
+            Session.CryptoContext = new CryptoContext()
+            {
+                ClientKey = clientKey,
+                UseEncryption = false,
+            };
+
+            SendPacket(loginPacket);
+        }
+
+        private static ECDsa ConvertToSingKeyFormat(AsymmetricCipherKeyPair key)
+        {
+            ECPublicKeyParameters pubAsyKey = (ECPublicKeyParameters)key.Public;
+            ECPrivateKeyParameters privAsyKey = (ECPrivateKeyParameters)key.Private;
+
+            var signParam = new ECParameters
+            {
+                Curve = ECCurve.NamedCurves.nistP384,
+                Q =
+                {
+                    X = pubAsyKey.Q.AffineXCoord.GetEncoded(),
+                    Y = pubAsyKey.Q.AffineYCoord.GetEncoded()
+                }
+            };
+            signParam.D = CryptoUtils.FixDSize(privAsyKey.D.ToByteArrayUnsigned(), signParam.Q.X.Length);
+            signParam.Validate();
+
+            return ECDsa.Create(signParam);
+        }
+
+        private string b64Key;
+        private byte[] EncodeJwt(string username, AsymmetricCipherKeyPair newKey, ECDsa signKey, bool isEmulator)
+        {
+            long iat = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            long exp = DateTimeOffset.UtcNow.AddDays(1).ToUnixTimeSeconds();
+
+            //ECDsa signKey = ConvertToSingKeyFormat(newKey);
+            b64Key = SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(newKey.Public).GetEncoded().EncodeBase64();
+
+            CertificateData certificateData = new CertificateData
+            {
+                Exp = exp,
+                Iat = iat,
+                ExtraData = new ExtraData
+                {
+                    DisplayName = username,
+                    Identity = Guid.NewGuid().ToString(),
+                    XUID = ""
+                },
+                Iss = "self",
+                IdentityPublicKey = b64Key,
+                CertificateAuthority = true,
+                Nbf = iat,
+                RandomNonce = new Random().Next(),
+            };
+
+            string val = JWT.Encode(certificateData, signKey, JwsAlgorithm.ES384, new Dictionary<string, object> { { "x5u", b64Key } }, new JwtSettings()
+            {
+                JsonMapper = new JWTMapper()
+            });
+
+            Log.Warn(JWT.Payload(val));
+
+            Log.Warn(string.Join(";", JWT.Headers(val)));
+
+            val = $@"{{ ""chain"": [""{val}""] }}";
+
+            return Encoding.UTF8.GetBytes(val);
+        }
+
+        private byte[] EncodeSkinJwt(AsymmetricCipherKeyPair newKey, ECDsa signKey, string username)
+        {
+            MiNET.Utils.Skins.Skin skin = new Skin
+            {
+                Slim = false,
+                SkinData = Encoding.Default.GetBytes(new string('Z', 8192)),
+                SkinId = "Standard_Custom",
+                CapeData = new byte[0],
+                SkinGeometryName = "geometry.humanoid.custom",
+                SkinGeometry = ""
+            };
+
+            string skin64 = Convert.ToBase64String(skin.SkinData);
+            string cape64 = Convert.ToBase64String(skin.CapeData);
+
+            string skinData = $@"
+{{
+	""CapeData"": """",
+	""ADRole"": 0,
+	""ClientRandomId"": {new Random().Next()},
+	""CurrentInputMode"": 1,
+	""DefaultInputMode"": 1,
+	""DeviceModel"": ""Alex"",
+	""DeviceOS"": 7,
+	""GameVersion"": ""{McpeProtocolInfo.GameVersion}"",
+	""IsEduMode"": {Config.GetProperty("EnableEdu", false).ToString().ToLower()},
+	""GuiScale"": 0,
+	""LanguageCode"": ""en_US"",
+	""PlatformOfflineId"": """",
+	""PlatformOnlineId"": """",
+	""SelfSignedId"": ""{Guid.NewGuid().ToString()}"",
+	""ServerAddress"": ""{base.ServerEndpoint.Address.ToString()}:{base.ServerEndpoint.Port.ToString()}"",
+	""SkinData"": ""{skin64}"",
+	""SkinId"": ""{skin.SkinId}"",
+    ""SkinGeometryName"": ""{skin.SkinGeometryName}"",
+    ""SkinGeometry"": ""{skin.SkinGeometry}"",
+    ""CapeData"": ""{cape64}"",
+	""TenantId"": ""38dd6634-1031-4c50-a9b4-d16cd9d97d57"",
+	""ThirdPartyName"": ""{username}"",
+	""UIProfile"": 0,
+	""IsAlex"": 1
+}}";
+
+         //  ECDsa signKey = ConvertToSingKeyFormat(newKey);
+           // string b64Key = SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(newKey.Public).GetEncoded().EncodeBase64();
+
+            string val = JWT.Encode(skinData, signKey, JwsAlgorithm.ES384, new Dictionary<string, object> { { "x5u", b64Key } }, new JwtSettings()
+            {
+                JsonMapper = new JWTMapper()
+            });
+
+          //  Log.Warn(JWT.Payload(val));
+
+            return Encoding.UTF8.GetBytes(val);
+        }
+
+        public bool IgnoreUnConnectedPong = false;
 		protected override void OnUnconnectedPong(UnconnectedPong packet, IPEndPoint senderEndpoint)
 		{
 			KnownMotd = new BedrockMotd(packet.serverName);
@@ -91,7 +279,8 @@ namespace Alex.Worlds.Bedrock
 			base.OnUnconnectedPong(packet, senderEndpoint);
 		}
 
-		public bool IsConnected => base.HaveServer;
+
+        public bool IsConnected => base.HaveServer;
 		public IWorldReceiver WorldReceiver { get; set; }
 
 		void INetworkProvider.EntityAction(int entityId, EntityAction action)
@@ -198,6 +387,7 @@ namespace Alex.Worlds.Bedrock
 
 			base.SendPacket(packet);
 		}
+
 		
 		public void Dispose()
 		{

@@ -67,7 +67,8 @@ namespace Alex.Worlds.Bedrock
 		private bool _initiated = false;
 		private bool _flying = false;
 		private PlayerLocation _lastLocation = new PlayerLocation();
-		private Stopwatch _stopwatch = Stopwatch.StartNew();
+        private PlayerLocation _lastSentLocation = new PlayerLocation();
+        private Stopwatch _stopwatch = Stopwatch.StartNew();
 		private void GameTick(object state)
 		{
 			if (WorldReceiver == null) return;
@@ -94,7 +95,10 @@ namespace Alex.Worlds.Bedrock
 					Client.CurrentLocation = new MiNET.Utils.PlayerLocation(pos.X,
 						pos.Y + Player.EyeLevel, pos.Z, pos.HeadYaw,
 						pos.Yaw, -pos.Pitch);
-					Client.SendMcpeMovePlayer();
+
+                    if (pos.DistanceTo(_lastSentLocation) > 0.0f) {
+                        Client.SendMcpeMovePlayer();
+                    }
 
 					if (pos.DistanceTo(_lastLocation) > 16f && _stopwatch.ElapsedMilliseconds > 500)
 					{

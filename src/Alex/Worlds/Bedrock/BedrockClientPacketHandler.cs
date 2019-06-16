@@ -51,9 +51,24 @@ namespace Alex.Worlds.Bedrock
 		public override void HandleMcpePlayStatus(McpePlayStatus message)
 		{
 			base.HandleMcpePlayStatus(message);
-		}
 
-		public override void HandleMcpeText(McpeText message)
+            if (message.status == 3)
+            {
+                var packet = McpeSetLocalPlayerAsInitializedPacket.CreateObject();
+                packet.runtimeEntityId = BaseClient.EntityId;
+                BaseClient.SendPacket(packet);
+            }
+        }
+
+        public override void HandleMcpeDisconnect(McpeDisconnect message)
+        {
+            Log.Info($"Received disconnect: {message.message}");
+            BaseClient.ShowDisconnect(message.message, false);
+            base.HandleMcpeDisconnect(message);
+        }
+
+
+        public override void HandleMcpeText(McpeText message)
 		{
 			BaseClient.WorldProvider?.GetChatReceiver?.Receive(new ChatObject(message.message));
 		}
