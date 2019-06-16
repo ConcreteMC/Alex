@@ -110,9 +110,15 @@ namespace Alex.Utils
 		    set
 		    {
 			    if (index < 0 || index >= Slots.Length) throw new IndexOutOfRangeException();
-
+                if (value.Count == 0)
+                {
+                    value = new ItemAir()
+                    {
+                        Count = 0
+                    };
+                }
 			    Slots[index] = value;
-		        if (index == 36 + _selectedSlot)
+		        if ((index == 36 + _selectedSlot && !IsPeInventory) || (index == _selectedSlot && IsPeInventory))
 		        {
 		            MainHand = value;
 		        }

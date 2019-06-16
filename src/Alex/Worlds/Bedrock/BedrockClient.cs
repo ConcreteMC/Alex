@@ -366,8 +366,23 @@ namespace Alex.Worlds.Bedrock
 
 	    public void BlockPlaced(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition)
 	    {
-		    Log.Warn("TODO: Implement Block Placement");
-	    }
+            var packet = McpeInventoryTransaction.CreateObject();
+            packet.transaction = new Transaction()
+            {
+                ActionType = (int)McpeInventoryTransaction.ItemUseAction.Place,
+                ClickPosition =
+                    new System.Numerics.Vector3(cursorPosition.X, cursorPosition.Y, cursorPosition.Z),
+                TransactionType = McpeInventoryTransaction.TransactionType.ItemUse,
+                EntityId = NetworkEntityId,
+                Position = new MiNET.Utils.BlockCoordinates(position.X, position.Y, position.Z),
+                Face = (int)face,
+                
+                //Item = MiNET.Items.ItemFactory.GetItem()
+
+            };
+
+            SendPacket(packet);
+        }
 
 	    public void UseItem(int hand)
 		{
