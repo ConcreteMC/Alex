@@ -178,7 +178,10 @@ namespace Alex.Entities
 
             Log.Debug($"Start break block ({_destroyingTarget}, {_destroyTimeNeeded} seconds.)");
 
-            Network?.PlayerDigging(DiggingStatus.Started, _destroyingTarget, _destroyingFace);
+            var flooredAdj = AdjacentRaytrace.Floor();
+            var remainder = new Vector3(AdjacentRaytrace.X - flooredAdj.X, AdjacentRaytrace.Y - flooredAdj.Y, AdjacentRaytrace.Z - flooredAdj.Z);
+
+            Network?.PlayerDigging(DiggingStatus.Started, _destroyingTarget, _destroyingFace, remainder);
         }
 
 	    private void StopBreakingBlock(bool sendToServer = true, bool forceCanceled = false)
@@ -191,7 +194,10 @@ namespace Alex.Entities
 
 		    var timeRan = (end - start).TotalSeconds;
 
-		    if (!sendToServer)
+            var flooredAdj = AdjacentRaytrace.Floor();
+            var remainder = new Vector3(AdjacentRaytrace.X - flooredAdj.X, AdjacentRaytrace.Y - flooredAdj.Y, AdjacentRaytrace.Z - flooredAdj.Z);
+
+            if (!sendToServer)
 		    {
 			    Log.Debug($"Stopped breaking block, not notifying server. Time: {timeRan}");
                 return;
@@ -199,14 +205,14 @@ namespace Alex.Entities
 
 		    if ((Gamemode == Gamemode.Creative  || timeRan >= _destroyTimeNeeded) && !forceCanceled)
 		    {
-			    Network?.PlayerDigging(DiggingStatus.Finished, _destroyingTarget, _destroyingFace);
+                Network?.PlayerDigging(DiggingStatus.Finished, _destroyingTarget, _destroyingFace, remainder);
 			    Log.Debug($"Stopped breaking block. Time: {timeRan}");
 
 				Level.SetBlockState(_destroyingTarget, new Air().GetDefaultState());
             }
 		    else
 		    {
-			    Network?.PlayerDigging(DiggingStatus.Cancelled, _destroyingTarget, _destroyingFace);
+			    Network?.PlayerDigging(DiggingStatus.Cancelled, _destroyingTarget, _destroyingFace, remainder);
 			    Log.Debug($"Cancelled breaking block. Time: {timeRan}");
             }
 	    }

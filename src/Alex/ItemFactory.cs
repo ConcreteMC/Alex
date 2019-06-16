@@ -154,7 +154,7 @@ namespace Alex
 			    return false;
 		    }
 
-		    if (TryGetItem(entry.TextType, out item))
+		    if (TryGetItem($"minecraft:{entry.TextType}", out item))
 		    {
 			    return true;
 		    }
