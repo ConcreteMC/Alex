@@ -41,7 +41,13 @@ namespace Alex.Worlds.Bedrock
 			AlexInstance = alex;
 			
 			AnvilWorldProvider.LoadBlockConverter();
-		}
+
+            if (BaseClient.WorldReceiver?.GetPlayerEntity() is Player player)
+            {
+                player.Inventory.IsPeInventory = true;
+            }
+
+        }
 
 		private void UnhandledPackage(Packet packet)
 		{
@@ -514,12 +520,7 @@ namespace Alex.Worlds.Bedrock
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpePlayerHotbar(McpePlayerHotbar message)
-		{
-			UnhandledPackage(message);
-		}
-
-		public override void HandleMcpeInventoryContent(McpeInventoryContent message)
+        public override void HandleMcpeInventoryContent(McpeInventoryContent message)
 		{
 			Inventory inventory = null;
 			if (message.inventoryId == 0x00)
@@ -578,7 +579,13 @@ namespace Alex.Worlds.Bedrock
 			}
 		}
 
-		public override void HandleMcpeContainerSetData(McpeContainerSetData message)
+        public override void HandleMcpePlayerHotbar(McpePlayerHotbar message)
+        {
+            
+            UnhandledPackage(message);
+        }
+
+        public override void HandleMcpeContainerSetData(McpeContainerSetData message)
 		{
 			UnhandledPackage(message);
 		}

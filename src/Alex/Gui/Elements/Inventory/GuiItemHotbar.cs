@@ -54,14 +54,16 @@ namespace Alex.Gui.Elements.Inventory
             Width = ItemWidth * ItemCount;
             Height = ItemWidth;
 
-	        for (int i = 0; i < 9; i++)
+            var hotbarItems = Inventory.GetHotbar();
+
+            for (int i = 0; i < 9; i++)
 	        {
 		        AddChild(new GuiInventoryItem()
 		        {
 			        Margin = new Thickness((i * ItemWidth), 0, 0, 0),
 			        IsSelected = i == SelectedIndex,
 			        Anchor = Alignment.TopLeft,
-			        Item = Inventory[36 + i]
+			        Item = hotbarItems[i]
 		        });
 	        }
 

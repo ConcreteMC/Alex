@@ -37,7 +37,9 @@ namespace Alex.Utils
 			}
 	    }
 
-	    public Item MainHand;
+        public bool IsPeInventory { get; set; } = false;
+
+        public Item MainHand;
 	    public Item OffHand;
 	    public Item Helmet;
 	    public Item Chestplate;
@@ -63,6 +65,28 @@ namespace Alex.Utils
 			    };
 		    }
 		}
+
+        public int[] PocketHotbar = new int[9];
+        public Item[] GetHotbar()
+        {
+            Item[] items = new Item[9];
+            if (!IsPeInventory)
+            {
+                for (int i = 0; i < 9; i++)
+                {
+                   items[i] = this[36 + i];
+                }
+            }
+            else
+            {
+                for (int i = 0; i < 9; i++)
+                {
+                    items[i] = this[PocketHotbar[i]];
+                }
+            }
+
+            return items;
+        }
 
 	    public Item this[int index]
 	    {
