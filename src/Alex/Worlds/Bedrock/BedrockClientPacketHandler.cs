@@ -11,7 +11,9 @@ using Alex.API.Utils;
 using Alex.Blocks.State;
 using Alex.Blocks.Storage;
 using Alex.Entities;
+using Alex.Graphics.Models.Entity;
 using Alex.Items;
+using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
 using fNbt;
 using Microsoft.Xna.Framework.Graphics;
@@ -211,15 +213,16 @@ namespace Alex.Worlds.Bedrock
             }
 		}
 
-		/*public void SpawnMob(int entityId, Guid uuid, EntityType type, PlayerLocation position, Microsoft.Xna.Framework.Vector3 velocity)
+		public void SpawnMob(long entityId, Guid uuid, EntityType type, PlayerLocation position, Microsoft.Xna.Framework.Vector3 velocity)
 		{
 			Entity entity = null;
-			if (EntityFactory.ModelByNetworkId((long) type, out var renderer, out EntityData knownData))
+			if (EntityFactory.ModelByType(type, out var renderer, out EntityData knownData))
 			{
-				if (Enum.TryParse(knownData.Name, out type))
-				{
-					entity = type.Create(null);
-				}
+				//if (Enum.TryParse(knownData.Name, out type))
+				//{
+				//	entity = type.Create(null);
+				//}
+                entity = type.Create(null);
 
 				if (entity == null)
 				{
@@ -295,18 +298,26 @@ namespace Alex.Worlds.Bedrock
 
 
 			BaseClient.WorldProvider.SpawnEntity(entityId, entity);
-		}*/
+		}
 
 
 		public override void HandleMcpeAddEntity(McpeAddEntity message)
 		{
 			//TODO: Spawn entitys
-			UnhandledPackage(message);
-		}
+            var type = message.entityType.Replace("minecraft:", "");
+            if (Enum.TryParse(typeof(EntityType), type, true, out object res))
+            {
+                SpawnMob(message.runtimeEntityId, Guid.NewGuid(), (EntityType)res, new PlayerLocation(message.x, message.y, message.z, message.headYaw, message.yaw, message.pitch), new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ));
+            }
+            else
+            {
+                Log.Warn($"Unknown mob: {type}");
+            }
+        }
 
 		public override void HandleMcpeRemoveEntity(McpeRemoveEntity message)
 		{
-			UnhandledPackage(message);
+			BaseClient.WorldReceiver?.DespawnEntity(message.entityIdSelf);
 		}
 
 		public override void HandleMcpeAddItemEntity(McpeAddItemEntity message)
@@ -323,15 +334,29 @@ namespace Alex.Worlds.Bedrock
 		{
 			if (message.runtimeEntityId != Client.EntityId)
 			{
-				BaseClient.WorldReceiver.UpdateEntityPosition(message.runtimeEntityId,
+                BaseClient.WorldReceiver.UpdateEntityPosition(message.runtimeEntityId,
 					new PlayerLocation(message.position.X, message.position.Y - Player.EyeLevel, message.position.Z, 
 						message.position.HeadYaw, message.position.Yaw, message.position.Pitch));
 				return;
 			}
+
+           // BaseClient.WorldReceiver.UpdateEntityPosition(message.runtimeEntityId, new PlayerLocation(message.position), true, true, true);
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeRiderJump(McpeRiderJump message)
+        public override void HandleMcpeMoveEntityDelta(McpeMoveEntityDelta message)
+        {
+            return;
+            if (message.runtimeEntityId != Client.EntityId)
+            {
+                //TODO: Fix delta reading on packets.
+                BaseClient.WorldReceiver.UpdateEntityPosition(message.runtimeEntityId,
+                    new PlayerLocation(message.Delta), true, true, true);
+                return;
+            }
+        }
+
+        public override void HandleMcpeRiderJump(McpeRiderJump message)
 		{
 			UnhandledPackage(message);
 		}
@@ -1289,19 +1314,7 @@ namespace Alex.Worlds.Bedrock
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeMoveEntityDelta(McpeMoveEntityDelta message)
-		{
-			if (message.runtimeEntityId != Client.EntityId)
-			{
-				//Log.Info($"Prev: {message.prevSentPosition} New: {message.currentPosition}");
-				if (message.prevSentPosition == null || message.currentPosition == null) return;
-				
-				BaseClient.WorldReceiver.UpdateEntityPosition(message.runtimeEntityId, new PlayerLocation(message.currentPosition),
-					true);
-			}
-		}
-
-		public override void HandleMcpeSetScoreboardIdentityPacket(McpeSetScoreboardIdentityPacket message)
+        public override void HandleMcpeSetScoreboardIdentityPacket(McpeSetScoreboardIdentityPacket message)
 		{
 			UnhandledPackage(message);
 		}

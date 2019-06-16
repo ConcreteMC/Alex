@@ -23,6 +23,7 @@ using MiNET.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
+using Model = Alex.Graphics.Models.Model;
 using PlayerLocation = Alex.API.Utils.PlayerLocation;
 using UUID = Alex.API.Utils.UUID;
 
@@ -36,31 +37,46 @@ namespace Alex.Entities
 			new ConcurrentDictionary<string, Func<Texture2D, EntityModelRenderer>>();
 
 		private static IReadOnlyDictionary<long, EntityData> _idToData;
+        private static IReadOnlyDictionary<EntityType, long> _typeToId; 
 		public static void Load(ResourceManager resourceManager, IProgressReceiver progressReceiver)
 		{
 			progressReceiver?.UpdateProgress(0, "Loading entity data...");
 
             Dictionary<long, EntityData> networkIdToData = new Dictionary<long, EntityData>();
-
+            Dictionary<EntityType, long> typeToId = new Dictionary<EntityType, long>();
 			EntityData[] entityObjects = JsonConvert.DeserializeObject<EntityData[]>(ResourceManager.ReadStringResource("Alex.Resources.NewEntities.txt"));
 
+            long unknownId = 0;
             for (int i = 0; i < entityObjects.Length; i++)
 			{
                 EntityData p = entityObjects[i];
 
+                long id = 0;
 				progressReceiver?.UpdateProgress(100 * (i / entityObjects.Length), "Loading entity data...", p.Name);
 				if (resourceManager.Registries.Entities.Entries.TryGetValue($"minecraft:{p.Name}",
 					out var registryEntry))
-				{
+                {
+                    id = registryEntry.ProtocolId;
 					networkIdToData.TryAdd(registryEntry.ProtocolId, p);
                     //networkIdToData.TryAdd(p.InternalId + 1, p);
                 }
 				else
 				{
 					Log.Warn($"Could not resolve {p.Name}'s protocol id!");
-				}
+                    id = unknownId++;
+                }
 
-				/*foreach (var dd in p)
+                if (EntityType.TryParse(p.Name.Replace("_", ""), true, out EntityType entType))
+                {
+                    typeToId.TryAdd(entType, id);
+                }
+                else
+                {
+                    Log.Warn($"Could not add entity type: {p.Name}");
+                }
+
+
+                /*foreach (var dd in p)
 				{
 					EntityData data = new EntityData();
 					data.Id = dd["id"].Value<long>();
@@ -76,7 +92,8 @@ namespace Alex.Entities
             }
 
 			_idToData = networkIdToData;
-		}
+            _typeToId = typeToId;
+        }
 
 		public static bool TryLoadEntity(NbtCompound nbt, long entityId, out Entity entity)
 		{
@@ -132,6 +149,18 @@ namespace Alex.Entities
 			renderer = null;
 			return false;
 		}
+
+        public static bool ModelByType(EntityType type, out EntityModelRenderer renderer, out EntityData data)
+        {
+            if (_typeToId.TryGetValue(type, out long id))
+            {
+                return ModelByNetworkId(id, out renderer, out data);
+            }
+
+            renderer = null;
+            data = null;
+            return false;
+        }
 
 		private static EntityModelRenderer TryGetRendererer(EntityData data, Texture2D texture)
 		{
