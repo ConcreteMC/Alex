@@ -86,8 +86,8 @@ namespace Alex.GameStates.Playing
 		{
 			_debugInfo.AddDebugLeft(() =>
 			{
-				FpsCounter.Update();
-				World.ChunkManager.GetPendingLightingUpdates(out int lowLight, out int midLight, out int highLight);
+				//FpsCounter.Update();
+				//World.ChunkManager.GetPendingLightingUpdates(out int lowLight, out int midLight, out int highLight);
 
 				return $"Alex {Alex.Version} ({FpsCounter.Value:##} FPS, Queued: {World.EnqueuedChunkUpdates} Active: {World.ConcurrentChunkUpdates} chunk updates"/*, H: {highLight} M: {midLight} L: {lowLight} lighting updates)"*/;
 			});
@@ -344,13 +344,7 @@ namespace Alex.GameStates.Playing
 					args.SpriteBatch.RenderBoundingBox(
 						RayTraceBoundingBox,
 						World.Camera.ViewMatrix, World.Camera.ProjectionMatrix, Color.LightGray);
-
-				    /*var floored = _adjacentBlock.Floor();
-
-                    args.SpriteBatch.RenderBoundingBox(
-				        new BoundingBox(floored, floored + new Vector3(1,1,1)), 
-				        World.Camera.ViewMatrix, World.Camera.ProjectionMatrix, Color.Red);*/
-                }
+				}
 
 				World.Render2D(args);
 			}
