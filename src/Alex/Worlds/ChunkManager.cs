@@ -769,7 +769,7 @@ namespace Alex.Worlds
 	                {
 		                data = new ChunkData()
 		                {
-			                Buffer = VertexBufferPool.GetBuffer(Graphics,
+			                Buffer = GpuResourceManager.GetBuffer(Graphics,
 				                VertexPositionNormalTextureColor.VertexDeclaration, vertexArray.Length,
 				                BufferUsage.WriteOnly),
 			                SolidIndexBuffer = new IndexBuffer(Graphics, IndexElementSize.ThirtyTwoBits,
@@ -782,7 +782,7 @@ namespace Alex.Worlds
 	                if (vertexArray.Length >= data.Buffer.VertexCount)
 	                {
 		                var oldBuffer = data.Buffer;
-		                VertexBuffer newBuffer = VertexBufferPool.GetBuffer(Graphics,
+		                VertexBuffer newBuffer = GpuResourceManager.GetBuffer(Graphics,
 			                VertexPositionNormalTextureColor.VertexDeclaration, vertexArray.Length,
 			                BufferUsage.WriteOnly);
 

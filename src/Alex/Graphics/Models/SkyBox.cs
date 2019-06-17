@@ -4,9 +4,6 @@ using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Color = Microsoft.Xna.Framework.Color;
-using MathF = System.MathF;
-using MathHelper = Microsoft.Xna.Framework.MathHelper;
 
 namespace Alex.Graphics.Models
 {
@@ -94,7 +91,7 @@ namespace Alex.Graphics.Models
 				new VertexPositionColor(new Vector3(planeDistance, 0, planeDistance), Color.White),
 				new VertexPositionColor(new Vector3(-planeDistance, 0, planeDistance), Color.White)
 			};
-			SkyPlane = VertexBufferPool.GetBuffer(device, VertexPositionColor.VertexDeclaration,
+			SkyPlane = GpuResourceManager.GetBuffer(device, VertexPositionColor.VertexDeclaration,
 				plane.Length, BufferUsage.WriteOnly);
 			SkyPlane.SetData<VertexPositionColor>(plane);
 
@@ -108,7 +105,7 @@ namespace Alex.Graphics.Models
 				new VertexPositionTexture(new Vector3(planeDistance, 0, planeDistance), new Vector2(1, 1)),
 				new VertexPositionTexture(new Vector3(-planeDistance, 0, planeDistance), new Vector2(0, 1))
 			};
-			CelestialPlane = VertexBufferPool.GetBuffer(device, VertexPositionTexture.VertexDeclaration,
+			CelestialPlane = GpuResourceManager.GetBuffer(device, VertexPositionTexture.VertexDeclaration,
 				celestialPlane.Length, BufferUsage.WriteOnly);
 			CelestialPlane.SetData<VertexPositionTexture>(celestialPlane);
 
@@ -122,7 +119,7 @@ namespace Alex.Graphics.Models
 				new VertexPositionTexture(new Vector3(planeDistance, 0, planeDistance), new Vector2(MoonX, MoonY)),
 				new VertexPositionTexture(new Vector3(-planeDistance, 0, planeDistance), new Vector2(0, MoonY)),
 			};
-			MoonPlane = VertexBufferPool.GetBuffer(device, VertexPositionTexture.VertexDeclaration,
+			MoonPlane = GpuResourceManager.GetBuffer(device, VertexPositionTexture.VertexDeclaration,
 				_moonPlaneVertices.Length, BufferUsage.WriteOnly);
 			MoonPlane.SetData<VertexPositionTexture>(_moonPlaneVertices);
 
@@ -149,7 +146,7 @@ namespace Alex.Graphics.Models
 			};
 
 
-            CloudsPlane = VertexBufferPool.GetBuffer(device, VertexPositionTexture.VertexDeclaration,
+            CloudsPlane = GpuResourceManager.GetBuffer(device, VertexPositionTexture.VertexDeclaration,
 				cloudVertices.Length, BufferUsage.WriteOnly);
 			CloudsPlane.SetData<VertexPositionTexture>(cloudVertices);
         }

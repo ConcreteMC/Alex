@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.IO;
+using System.Threading;
 using Alex.API.Graphics;
 using Alex.API.Graphics.Textures;
 using Alex.API.Gui;
@@ -21,7 +22,6 @@ using Alex.Utils;
 using Alex.Worlds;
 using Alex.Worlds.Generators;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using NLog;
 using Color = Microsoft.Xna.Framework.Color;
@@ -148,6 +148,7 @@ namespace Alex.GameStates
 			_debugInfo.AddDebugRight(() =>
 				$"Cursor Delta: {Alex.InputManager.CursorInputListener.GetCursorPositionDelta()}");
 			_debugInfo.AddDebugRight(() => $"Splash Text Scale: {_splashText.Scale:F3}");
+			_debugInfo.AddDebugRight(() => $"GPU Memory: {API.Extensions.GetBytesReadable(GpuResourceManager.GetMemoryUsage)}");
 			_debugInfo.AddDebugLeft(() => $"FPS: {FpsMonitor.Value:F0}");
 
 			_playerProfileService = Alex.Services.GetService<IPlayerProfileService>();
@@ -294,11 +295,20 @@ namespace Alex.GameStates
 				Modern = false,
 				TranslationKey = ""
 			});*/
-
-			using (MemoryStream ms = new MemoryStream(ResourceManager.ReadResource("Alex.Resources.GradientBlur.png")))
+			
+			AutoResetEvent reset = new AutoResetEvent(false);
+			Alex.UIThreadQueue.Enqueue(() =>
 			{
-				BackgroundOverlay = (TextureSlice2D)Texture2D.FromStream(args.GraphicsDevice, ms);
-			}
+				using (MemoryStream ms = new MemoryStream(ResourceManager.ReadResource("Alex.Resources.GradientBlur.png")))
+				{
+					BackgroundOverlay = (TextureSlice2D)GpuResourceManager.GetTexture2D(args.GraphicsDevice, ms);
+				}
+
+				reset.Set();
+			});
+			reset.WaitOne();
+			reset.Dispose();
+			
 			BackgroundOverlay.Mask = new Color(Color.White, 0.5f);
 
 			_splashText.Text = SplashTexts.GetSplashText();

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using Alex.API.Graphics;
 using Alex.API.Graphics.Textures;
 using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
@@ -10,7 +11,6 @@ using Alex.API.Utils;
 using Alex.ResourcePackLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace Alex.Gui
 {
@@ -223,7 +223,7 @@ namespace Alex.Gui
                 return texture;
             }
 
-            return (TextureSlice2D)new Texture2D(_graphicsDevice, 1, 1);
+            return (TextureSlice2D)GpuResourceManager.GetTexture2D(_graphicsDevice, 1, 1);
         }
 
         public Texture2D GetTexture2D(GuiTextures guiTexture)

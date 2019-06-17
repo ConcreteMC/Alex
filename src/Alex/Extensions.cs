@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
+using Alex.API.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -48,7 +48,7 @@ namespace Alex
 
 		public static void Init(GraphicsDevice gd)
 	    {
-            WhiteTexture = new Texture2D(gd, 1, 1);
+            WhiteTexture = GpuResourceManager.GetTexture2D(gd, 1, 1);
             WhiteTexture.SetData(new Color[] { Color.White });
         }
 

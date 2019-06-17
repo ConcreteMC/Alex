@@ -59,7 +59,7 @@ namespace Alex.API.Gui.Graphics
 
         public void DrawRectangle(Rectangle bounds, Color color, int thicknessLeft, int thicknessTop, int thicknessRight, int thicknessBottom)
         {
-            var texture = new Texture2D(Graphics, 1, 1, false, SurfaceFormat.Color);
+            var texture = GpuResourceManager.GetTexture2D(Graphics, 1, 1, false, SurfaceFormat.Color);
             texture.SetData(new Color[] {color});
 
             // MinY
@@ -93,7 +93,7 @@ namespace Alex.API.Gui.Graphics
 
         public void FillRectangle(Rectangle bounds, Color color)
         {
-            var texture = new Texture2D(Graphics, 1, 1, false, SurfaceFormat.Color);
+            var texture = GpuResourceManager.GetTexture2D(Graphics, 1, 1, false, SurfaceFormat.Color);
             texture.SetData(new Color[] {color});
 
             SpriteBatch.Draw(texture, bounds, Color.White);

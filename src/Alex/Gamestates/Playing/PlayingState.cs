@@ -204,7 +204,7 @@ namespace Alex.GameStates.Playing
 						_previousMemUpdate = gameTime.TotalGameTime;
 						//Alex.Process.Refresh();
 						MemoryUsageDisplay = $"Allocated memory: {GetBytesReadable(Environment.WorkingSet)}\n" +
-						                     $"VertexBuffer Pool: {GetBytesReadable(VertexBufferPool.GetMemoryUsage)}";
+						                     $"GPU Memory: {GetBytesReadable(GpuResourceManager.GetMemoryUsage)}";
 					}
 				}
 			}
