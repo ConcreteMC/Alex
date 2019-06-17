@@ -171,7 +171,11 @@ namespace Alex
 			XBLMSAService msa;
 			var storage = new StorageSystem(LaunchSettings.WorkDir);
 			Services.AddService<IStorageSystem>(storage);
-			Services.AddService<IOptionsProvider>(new OptionsProvider(storage));
+			
+			var optionsProvider = new OptionsProvider(storage);
+			optionsProvider.Load();
+			
+			Services.AddService<IOptionsProvider>(optionsProvider);
 
 			Services.AddService<IListStorageProvider<SavedServerEntry>>(new SavedServerDataProvider(storage));
 
@@ -182,6 +186,8 @@ namespace Alex
 			ProfileManager = new ProfileManager(this, storage);
 			Storage = storage;
 
+			//IsFixedTimeStep = optionsProvider.AlexOptions.VideoOptions.UseVsync;
+
 			//msa.DoXboxAuth();
 			//msa.AsyncBrowserLogin();
 		}
@@ -190,6 +196,8 @@ namespace Alex
 		{
 			SaveSettings();
 			ProfileManager.SaveProfiles();
+			
+			Services.GetService<IOptionsProvider>().Save();
 		}
 
 		protected override void Update(GameTime gameTime)
@@ -226,8 +234,9 @@ namespace Alex
 		{
 			MCPacketFactory.Load();
 			progressReceiver.UpdateProgress(0, "Initializing...");
+			
 			ConfigureServices();
-
+			
 			if (Storage.TryRead("settings", out Settings settings))
 			{
 				GameSettings = settings;

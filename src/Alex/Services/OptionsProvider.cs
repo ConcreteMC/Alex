@@ -3,12 +3,17 @@ using System.Collections.Generic;
 using System.Text;
 using Alex.API.Data.Options;
 using Alex.API.Services;
+using GLib;
+using Newtonsoft.Json;
+using NLog;
 
 namespace Alex.Services
 {
     public class OptionsProvider : IOptionsProvider
     {
-        private const string StorageKey = "SavedServers";
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(OptionsProvider));
+        
+        private const string StorageKey = "gamesettings";
 
         public AlexOptions AlexOptions { get; private set; }
 
@@ -18,6 +23,7 @@ namespace Alex.Services
         {
             _storage = storage;
             AlexOptions = new AlexOptions();
+
             Load();
         }
 
@@ -31,8 +37,9 @@ namespace Alex.Services
 
         public void Save()
         {
-            if (_storage.TryWrite(StorageKey, AlexOptions))
+            if (!_storage.TryWrite(StorageKey, AlexOptions))
             {
+                
             }
         }
 

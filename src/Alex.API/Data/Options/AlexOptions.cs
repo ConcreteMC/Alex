@@ -16,7 +16,7 @@ namespace Alex.API.Data.Options
 
         public AlexOptions()
         {
-            FieldOfVision = DefineRangedProperty(80, 30, 120);
+            FieldOfVision = DefineRangedProperty(70, 30, 120);
 
             VideoOptions = DefineBranch<VideoOptions>();
             SoundOptions = DefineBranch<SoundOptions>();

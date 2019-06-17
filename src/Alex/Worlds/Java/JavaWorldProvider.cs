@@ -14,6 +14,7 @@ using System.Timers;
 using Alex.API.Data;
 using Alex.API.Data.Chat;
 using Alex.API.Data.Chat.Serializer;
+using Alex.API.Data.Options;
 using Alex.API.Entities;
 using Alex.API.Json;
 using Alex.API.Network;
@@ -68,6 +69,9 @@ namespace Alex.Worlds.Java
 		private Alex Alex { get; }
 		private JavaClient Client { get; }
 		private PlayerProfile Profile { get; }
+		
+		private IOptionsProvider OptionsProvider { get; }
+		private AlexOptions Options => OptionsProvider.AlexOptions;
 
 		private IPEndPoint Endpoint;
 		private ManualResetEvent _loginCompleteEvent = new ManualResetEvent(false);
@@ -80,6 +84,9 @@ namespace Alex.Worlds.Java
 			Alex = alex;
 			Profile = profile;
 			Endpoint = endPoint;
+			
+			OptionsProvider = alex.Services.GetService<IOptionsProvider>();
+			
 			ThreadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount));
 
 			TcpClient = new TcpClient();
@@ -294,7 +301,7 @@ namespace Alex.Worlds.Java
 
 				progressReport(LoadingState.LoadingChunks, 0);
 
-				int t = Alex.GameSettings.RenderDistance;
+				int t = Options.VideoOptions.RenderDistance;
 				double radiusSquared = Math.Pow(t, 2);
 
 				var target = radiusSquared * 3;
@@ -667,7 +674,7 @@ namespace Alex.Worlds.Java
 					Alex.GameStateManager.SetActiveState(state, true);
 					w.ChunkManager.ClearChunks();
 
-					int t = Alex.GameSettings.RenderDistance;
+					int t = Options.VideoOptions.RenderDistance;
 					double radiusSquared = Math.Pow(t, 2);
 
 					var target = radiusSquared * 3;
@@ -1137,7 +1144,7 @@ namespace Alex.Worlds.Java
 			ClientSettingsPacket settings = new ClientSettingsPacket();
 			settings.ChatColors = true;
 			settings.ChatMode = 0;
-			settings.ViewDistance = (byte)Alex.GameSettings.RenderDistance;
+			settings.ViewDistance = (byte)Options.VideoOptions.RenderDistance;
 			settings.SkinParts = 255;
 			settings.MainHand = 1;
 			settings.Locale = "en_US";

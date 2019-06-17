@@ -2,6 +2,7 @@
 using System.Text;
 using Alex.API.Graphics;
 using Alex.API.Network;
+using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks.Minecraft;
@@ -30,12 +31,12 @@ namespace Alex.GameStates.Playing
 
 		private readonly PlayingHud _playingHud;
 		private readonly GuiDebugInfo _debugInfo;
-
+		
 		public PlayingState(Alex alex, GraphicsDevice graphics, WorldProvider worldProvider, INetworkProvider networkProvider) : base(alex)
 		{
 			NetworkProvider = networkProvider;
 
-			World = new World(alex, graphics, new FirstPersonCamera(alex.GameSettings.RenderDistance, Vector3.Zero, Vector3.Zero), networkProvider);
+			World = new World(alex, graphics, Options, new FirstPersonCamera(Options.VideoOptions.RenderDistance, Vector3.Zero, Vector3.Zero), networkProvider);
 			SkyRenderer = new SkyBox(alex, graphics, World);
 
 			WorldProvider = worldProvider;
@@ -160,7 +161,6 @@ namespace Alex.GameStates.Playing
 		}
 
 		private float AspectRatio { get; set; }
-		private bool RenderWireframe { get; set; } = false;
 		private string MemoryUsageDisplay { get; set; } = "";
 
 		private TimeSpan _previousMemUpdate = TimeSpan.Zero;
@@ -316,11 +316,11 @@ namespace Alex.GameStates.Playing
 				{
 					if (World.Camera is FirstPersonCamera)
 					{
-						World.Camera = new ThirdPersonCamera(Alex.GameSettings.RenderDistance, World.Player.KnownPosition, Vector3.Zero);
+						World.Camera = new ThirdPersonCamera(Options.VideoOptions.RenderDistance, World.Player.KnownPosition, Vector3.Zero);
 					}
 					else
 					{
-						World.Camera = new FirstPersonCamera(Alex.GameSettings.RenderDistance, World.Player.KnownPosition, Vector3.Zero);
+						World.Camera = new FirstPersonCamera(Options.VideoOptions.RenderDistance, World.Player.KnownPosition, Vector3.Zero);
 					}
 				}
 

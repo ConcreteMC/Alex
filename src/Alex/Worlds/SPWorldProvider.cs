@@ -5,8 +5,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Data;
+using Alex.API.Data.Options;
 using Alex.API.Graphics;
 using Alex.API.Network;
+using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Entities;
@@ -68,9 +70,13 @@ namespace Alex.Worlds
 
         private CancellationTokenSource ThreadCancellationTokenSource;
 
+        private IOptionsProvider OptionsProvider { get; }
+        private AlexOptions Options => OptionsProvider.AlexOptions;
 		public SPWorldProvider(Alex alex, IWorldGenerator worldGenerator)
 		{
 			Alex = alex;
+			OptionsProvider = alex.Services.GetService<IOptionsProvider>();
+			
 			_generator = worldGenerator;
 		
 			ThreadCancellationTokenSource = new CancellationTokenSource();
@@ -94,7 +100,7 @@ namespace Alex.Worlds
 				{
 					PreviousChunkCoordinates = currentCoordinates;
 
-					foreach(var chunk in GenerateChunks(currentCoordinates, Alex.GameSettings.RenderDistance))
+					foreach(var chunk in GenerateChunks(currentCoordinates, Options.VideoOptions.RenderDistance))
 					{
 						var c = (ChunkColumn) chunk;
 
@@ -231,7 +237,7 @@ namespace Alex.Worlds
 				//Dictionary<ChunkCoordinates, IChunkColumn> newChunks = new Dictionary<ChunkCoordinates, IChunkColumn>();
 				//using (CachedWorld cached = new CachedWorld(Alex))
 				//{
-					int t = Alex.GameSettings.RenderDistance;
+					int t = Options.VideoOptions.RenderDistance;
 					double radiusSquared = Math.Pow(t, 2);
 
 					var target = radiusSquared * 3;

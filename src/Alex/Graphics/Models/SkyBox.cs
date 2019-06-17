@@ -1,5 +1,7 @@
 ﻿using System;
+using Alex.API.Data.Options;
 using Alex.API.Graphics;
+using Alex.API.Services;
 using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
@@ -33,10 +35,13 @@ namespace Alex.Graphics.Models
 
 	    private readonly VertexPositionTexture[] _moonPlaneVertices;
 		private Alex Game { get; }
+		private IOptionsProvider OptionsProvider { get; }
+		private AlexOptions Options => OptionsProvider.AlexOptions;
 		public SkyBox(Alex alex, GraphicsDevice device, World world)
 		{
 			World = world;
 			Game = alex;
+			OptionsProvider = alex.Services.GetService<IOptionsProvider>();
 
 		    if (alex.Resources.ResourcePack.TryGetTexture("environment/sun", out Texture2D sun))
 		    {
@@ -68,7 +73,7 @@ namespace Alex.Graphics.Models
 			    EnableClouds = false;
 		    }
 
-            var d = alex.GameSettings.RenderDistance ^ 2;
+            var d = Options.VideoOptions.RenderDistance ^ 2;
 
 			CelestialPlaneEffect = new BasicEffect(device);
 			CelestialPlaneEffect.TextureEnabled = true;
@@ -223,7 +228,7 @@ namespace Alex.Graphics.Models
 		{
 			get
 			{
-				float blendFactor = ((Game.GameSettings.RenderDistance ^2) / 100f) * 0.45f;
+				float blendFactor = ((Options.VideoOptions.RenderDistance ^2) / 100f) * 0.45f;
 
 				float Blend(float source, float destination) => destination + (source - destination) * blendFactor;
 

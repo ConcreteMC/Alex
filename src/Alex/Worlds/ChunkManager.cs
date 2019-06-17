@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Alex.API.Data.Options;
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.API.World;
@@ -46,11 +47,18 @@ namespace Alex.Worlds
 	    private int FrameCount { get; set; } = 1;
         private ConcurrentDictionary<ChunkCoordinates, ChunkData> _chunkData = new ConcurrentDictionary<ChunkCoordinates, ChunkData>();
 
-        public ChunkManager(Alex alex, GraphicsDevice graphics, IWorld world)
+        private AlexOptions Options { get; }
+        public ChunkManager(Alex alex, GraphicsDevice graphics, AlexOptions option, IWorld world)
         {
 	        Game = alex;
 	        Graphics = graphics;
 	        World = world;
+	        Options = option;
+	        
+	        Options.VideoOptions.ChunkThreads.ValueChanged += ChunkThreadsOnValueChanged;
+	        Options.FieldOfVision.ValueChanged += FieldOfVisionOnValueChanged;
+	        Options.VideoOptions.RenderDistance.ValueChanged += RenderDistanceOnValueChanged;
+	        
 	        Chunks = new ConcurrentDictionary<ChunkCoordinates, IChunkColumn>();
 
 	        SkylightCalculator = new SkylightCalculations(world, coordinates =>
@@ -60,7 +68,7 @@ namespace Alex.Worlds
 			        if (IsWithinView(coordinates, CameraBoundingFrustum))
 			        {
 				        var distance = new ChunkCoordinates(CameraPosition).DistanceTo(coordinates);
-				        if (Math.Abs(distance) < Game.GameSettings.RenderDistance / 2d)
+				        if (Math.Abs(distance) < Options.VideoOptions.RenderDistance / 2d)
 					        //if (column.SkyLightDirty) //Initial
 				        {
 					        return SkylightCalculations.CheckResult.HighPriority;
@@ -125,6 +133,21 @@ namespace Alex.Worlds
 		        IsBackground = true
 	        };
 	        //TaskSchedular.MaxThreads = alex.GameSettings.ChunkThreads;
+        }
+
+        private void RenderDistanceOnValueChanged(int oldvalue, int newvalue)
+        {
+	        
+        }
+
+        private void FieldOfVisionOnValueChanged(int oldvalue, int newvalue)
+        {
+	        
+        }
+
+        private void ChunkThreadsOnValueChanged(int oldvalue, int newvalue)
+        {
+	        
         }
 
         public void GetPendingLightingUpdates(out int low, out int mid, out int high)
@@ -220,17 +243,19 @@ namespace Alex.Worlds
         
         private void ChunkUpdateThread()
 		{
-			int maxThreads = Game.GameSettings.ChunkThreads; //Environment.ProcessorCount / 2;
+			 //Environment.ProcessorCount / 2;
 			Stopwatch sw = new Stopwatch();
 
             while (!CancelationToken.IsCancellationRequested)
             {
+	            int maxThreads = Options.VideoOptions.ChunkThreads;
+	            
 	            var cameraChunkPos = new ChunkCoordinates(new PlayerLocation(CameraPosition.X, CameraPosition.Y,
 		            CameraPosition.Z));
                 //SpinWait.SpinUntil(() => Interlocked.Read(ref _threadsRunning) < maxThreads);
 
                 foreach (var data in _chunkData.ToArray().Where(x =>
-	                QuickMath.Abs(cameraChunkPos.DistanceTo(x.Key)) > Game.GameSettings.RenderDistance))
+	                QuickMath.Abs(cameraChunkPos.DistanceTo(x.Key)) > Options.VideoOptions.RenderDistance))
                 {
 	                data.Value?.Dispose();
 	                _chunkData.TryRemove(data.Key, out _);
@@ -241,7 +266,7 @@ namespace Alex.Worlds
 
                 var renderedChunks = Chunks.ToArray().Where(x =>
                 {
-	                if (Math.Abs(x.Key.DistanceTo(cameraChunkPos)) > Game.GameSettings.RenderDistance)
+	                if (Math.Abs(x.Key.DistanceTo(cameraChunkPos)) > Options.VideoOptions.RenderDistance)
 		                return false;
 			    
 	                var chunkPos = new Vector3(x.Key.X * ChunkColumn.ChunkWidth, 0, x.Key.Z * ChunkColumn.ChunkDepth);
@@ -275,7 +300,7 @@ namespace Alex.Worlds
                 {
 	                if (HighestPriority.TryDequeue(out var coords))
 	                {
-                        if (Math.Abs(cameraChunkPos.DistanceTo(coords)) > Game.GameSettings.RenderDistance)
+                        if (Math.Abs(cameraChunkPos.DistanceTo(coords)) > Options.VideoOptions.RenderDistance)
                         {
                             if (!Enqueued.Contains(coords))
                                 Enqueued.Add(coords);
@@ -302,7 +327,7 @@ namespace Alex.Worlds
 			                coords = Enqueued.MinBy(x => Math.Abs(x.DistanceTo(new ChunkCoordinates(CameraPosition))));
 		                }
 
-                        if (Math.Abs(cameraChunkPos.DistanceTo(coords)) <= Game.GameSettings.RenderDistance)
+                        if (Math.Abs(cameraChunkPos.DistanceTo(coords)) <= Options.VideoOptions.RenderDistance)
                         {
                             if (!_workItems.ContainsKey(coords))
                             {

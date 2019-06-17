@@ -16,7 +16,7 @@ namespace Alex.GameStates.Gui.MainMenu
         {
             TitleTranslationKey = "options.title";
 
-            AddGuiRow(CreateSlider("FOV", o => o.FieldOfVision, 30, 120, 1),              CreateLinkButton<VideoOptionsState>("options.video"));
+            AddGuiRow(CreateSlider("FOV: {0}", o => o.FieldOfVision, 30, 120, 1),              CreateLinkButton<VideoOptionsState>("options.video"));
 
             AddGuiRow(CreateLinkButton<ResourcePackOptionsState>("options.resourcepack"), CreateLinkButton<SoundOptionsState>("options.sounds"));
             AddGuiRow(CreateLinkButton<LanguageOptionsState>("options.language"),         CreateLinkButton<ControlOptionsState>("options.controls"));

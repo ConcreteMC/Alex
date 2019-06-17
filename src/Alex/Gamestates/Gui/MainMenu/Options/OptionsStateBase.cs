@@ -8,11 +8,14 @@ using Alex.API.Gui.Elements.Controls;
 using Alex.API.Services;
 using Alex.GameStates.Gui.Common;
 using Alex.Gui.Elements;
+using NLog;
 
 namespace Alex.GameStates.Gui.MainMenu.Options
 {
     public class OptionsStateBase : GuiMenuStateBase
     {
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(OptionsStateBase));
+        
         protected AlexOptions Options => _optionsProvider.AlexOptions;
 
         private readonly IOptionsProvider _optionsProvider;
@@ -34,11 +37,19 @@ namespace Alex.GameStates.Gui.MainMenu.Options
             _optionsProvider.Load();
             base.OnShow();
         }
+        
         protected override void OnHide()
         {
             _optionsProvider.Save();
 
             base.OnHide();
+        }
+
+        protected override void OnUnload()
+        {
+            _optionsProvider.Save();
+            
+            base.OnUnload();
         }
 
         protected GuiButton CreateLinkButton<TGameState>(string translationKey) where TGameState : class,IGameState, new()
@@ -52,7 +63,7 @@ namespace Alex.GameStates.Gui.MainMenu.Options
         protected GuiSlider CreateSlider(string label, Func<AlexOptions, OptionsProperty<int>> optionsAccessor, int? minValue = null, int? maxValue = null, int? stepInterval = null)
         {
             var slider = CreateValuedControl<GuiSlider, double, int>(label, optionsAccessor);
-            
+
             if (minValue.HasValue)
             {
                 slider.MinValue = minValue.Value;

@@ -6,7 +6,9 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using Alex.API.Data;
+using Alex.API.Data.Options;
 using Alex.API.Network;
+using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Gamestates;
@@ -74,7 +76,9 @@ namespace Alex.Worlds.Bedrock
 		public BedrockMotd KnownMotd = new BedrockMotd(string.Empty);
 
         private Alex Alex { get; }
-		public BedrockClient(Alex alex,IPEndPoint endpoint, string username, DedicatedThreadPool threadPool, BedrockWorldProvider wp) : base(endpoint,
+        private IOptionsProvider OptionsProvider { get; }
+        private AlexOptions Options => OptionsProvider.AlexOptions;
+		public BedrockClient(Alex alex, IPEndPoint endpoint, string username, DedicatedThreadPool threadPool, BedrockWorldProvider wp) : base(endpoint,
 			username, threadPool)
         {
             Alex = alex;
@@ -83,11 +87,20 @@ namespace Alex.Worlds.Bedrock
 			MessageDispatcher = new McpeClientMessageDispatcher(new BedrockClientPacketHandler(this, alex));
 			IsEmulator = true;
 			CurrentLocation = new MiNET.Utils.PlayerLocation(0,0,0);
-
-			base.ChunkRadius = alex.GameSettings.RenderDistance;
+			OptionsProvider = alex.Services.GetService<IOptionsProvider>();
+			
+			base.ChunkRadius = Options.VideoOptions.RenderDistance;
+			
+			Options.VideoOptions.RenderDistance.Bind(RenderDistanceChanged);
 		}
 
-        public void ShowDisconnect(string reason, bool useTranslation = false)
+		private void RenderDistanceChanged(int oldvalue, int newvalue)
+		{
+			base.ChunkRadius = newvalue;
+			RequestChunkRadius(newvalue);
+		}
+
+		public void ShowDisconnect(string reason, bool useTranslation = false)
         {
             if (Alex.GameStateManager.GetActiveState() is DisconnectedScreen s)
             {

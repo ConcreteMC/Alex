@@ -4,11 +4,13 @@ using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
+using NLog;
 
 namespace Alex.API.Services
 {
     public class StorageSystem : IStorageSystem
     {
+	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(StorageSystem));
         private static readonly Regex FileKeySanitizeRegex = new Regex(@"[\W]", RegexOptions.Compiled);
 
         private string DataDirectory { get; }
@@ -37,6 +39,7 @@ namespace Alex.API.Services
             }
             catch (Exception ex)
             {
+	            Log.Warn($"Could not write to storage! {ex.ToString()}");
                 return false;
             }
         }

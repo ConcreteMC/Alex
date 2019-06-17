@@ -1,6 +1,8 @@
-﻿using Alex.API.GameStates;
+﻿using Alex.API.Data.Options;
+using Alex.API.GameStates;
 using Alex.API.Graphics;
 using Alex.API.Gui;
+using Alex.API.Services;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -15,10 +17,14 @@ namespace Alex.GameStates
 		protected Alex Alex { get; }
 
 		public IGameState ParentState { get; set; } = null;
+		
+		private IOptionsProvider OptionsProvider { get; }
+		public AlexOptions Options => OptionsProvider.AlexOptions;
 		public GameState(Alex alex)
 		{
 			Alex = alex;
 			Graphics = alex.GraphicsDevice;
+			OptionsProvider = GetService<IOptionsProvider>();
 		}
 
 		public Viewport Viewport => Graphics.Viewport;

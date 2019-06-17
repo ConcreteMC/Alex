@@ -8,11 +8,13 @@ using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using NLog;
 
 namespace Alex.API.Gui.Elements.Controls
 {
     public class GuiSlider : GuiControl, IValuedControl<double>
     {
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(GuiSlider));
         public event EventHandler<double> ValueChanged; 
 
         public double MinValue { get; set; } = 0.0d;
@@ -76,7 +78,8 @@ namespace Alex.API.Gui.Elements.Controls
                 Margin      =  Thickness.Zero,
                 Anchor      = Alignment.MiddleCenter,
                 TextColor   = TextColor.White,
-                FontStyle   = FontStyle.DropShadow
+                FontStyle   = FontStyle.DropShadow,
+                Enabled = false
             });
         }
 
@@ -97,7 +100,7 @@ namespace Alex.API.Gui.Elements.Controls
 
             var diff = MathHelpers.RoundToNearestInterval(Math.Abs(MinValue - MaxValue), StepInterval);
             
-            _thumbOffsetX = ((RenderBounds.Width - ThumbWidth) / (double) diff) * val;
+            _thumbOffsetX = ((RenderBounds.Width - ThumbWidth) / (double) diff) * (val - MinValue);
         }
 
         protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)

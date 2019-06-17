@@ -69,7 +69,8 @@ namespace Alex.API.Gui.Elements.Controls
             AddChild(TextElement = new GuiTextElement()
             {
                 Anchor = Alignment.MiddleLeft,
-				Text = TextBuilder.Text
+				Text = TextBuilder.Text,
+				Enabled = false
             });
 
 	        TextBuilder.TextChanged += (s, v) => Value = v;

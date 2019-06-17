@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using Alex.API.Blocks.State;
+using Alex.API.Data.Options;
 using Alex.API.Entities;
 using Alex.API.Graphics;
 using Alex.API.Network;
@@ -32,14 +33,16 @@ namespace Alex.Worlds
 
 		public Player Player { get; set; }
 		private Alex Alex { get; }
-		public World(Alex alex, GraphicsDevice graphics, Camera camera, INetworkProvider networkProvider)
+		private AlexOptions Options { get; }
+		public World(Alex alex, GraphicsDevice graphics, AlexOptions options, Camera camera, INetworkProvider networkProvider)
 		{
 			Alex = alex;
             Graphics = graphics;
 	        Camera = camera;
-
+	        Options = options;
+	        
 			PhysicsEngine = new PhysicsManager(alex, this);
-			ChunkManager = new ChunkManager(alex, graphics, this);
+			ChunkManager = new ChunkManager(alex, graphics, options, this);
 			EntityManager = new EntityManager(graphics, this, networkProvider);
 			Ticker = new TickManager(this);
 			 
@@ -62,7 +65,15 @@ namespace Alex.Worlds
 	        Player.KnownPosition = new PlayerLocation(GetSpawnPoint());
 	        Camera.MoveTo(Player.KnownPosition, Vector3.Zero);
 
+	        Options.FieldOfVision.ValueChanged += FieldOfVisionOnValueChanged;
+	        Camera.FOV = Options.FieldOfVision.Value;
+		        
 	        PhysicsEngine.AddTickable(Player);
+		}
+
+		private void FieldOfVisionOnValueChanged(int oldvalue, int newvalue)
+		{
+			Camera.FOV = newvalue;
 		}
 
 		//public long WorldTime { get; private set; } = 6000;
@@ -166,12 +177,12 @@ namespace Alex.Worlds
 			if (Player.IsInWater)
 			{
 				ChunkManager.FogColor = new Vector3(0.2666667F, 0.6862745F, 0.9607844F) * skyRenderer.BrightnessModifier;
-				ChunkManager.FogDistance = (float)Math.Pow(Alex.GameSettings.RenderDistance, 2) * 0.15f;
+				ChunkManager.FogDistance = (float)Math.Pow(Options.VideoOptions.RenderDistance, 2) * 0.15f;
 			}
 			else
 			{
 				ChunkManager.FogColor = skyRenderer.WorldFogColor.ToVector3();
-				ChunkManager.FogDistance = (float) Math.Pow(Alex.GameSettings.RenderDistance, 2) * 0.8f;
+				ChunkManager.FogDistance = (float) Math.Pow(Options.VideoOptions.RenderDistance, 2) * 0.8f;
 			}
 
 			PhysicsEngine.Update(args.GameTime);
@@ -210,7 +221,7 @@ namespace Alex.Worlds
         private void UpdateLightingAroundPlayer(ChunkCoordinates center)
 		{
 			return;
-			int radiusSquared = 6;// (int) Math.Pow(Alex.GameSettings.RenderDistance, 2) / 3;
+			int radiusSquared = 6;// (int) Math.Pow(Options.VideoOptions.RenderDistance, 2) / 3;
 			for (int x = -radiusSquared; x < radiusSquared; x++)
 			{
 				for (int z = -radiusSquared; z < radiusSquared; z++)
