@@ -21,16 +21,23 @@ namespace Alex.API.Graphics
         
         private Dictionary<long, PooledTexture2D> Textures { get; }
         private Dictionary<long, PooledVertexBuffer> Buffers { get; }
+        private Dictionary<long, PooledIndexBuffer> IndexBuffers { get; }
+        
         private long _bufferId = 0;
         private long _estMemoryUsage = 0;
         private long _textureId = 0;
+        private long _indexBufferId = 0;
+        
         public long EstMemoryUsage => Buffers.Values.Sum(x => x.VertexDeclaration.VertexStride * x.VertexCount) + _textureMemoryUsage;
 
         private long _textureMemoryUsage = 0;
+        private long _indexMemoryUsage = 0;
+        
         public GpuResourceManager()
         {
             Textures = new Dictionary<long, PooledTexture2D>();
             Buffers = new Dictionary<long, PooledVertexBuffer>();
+            IndexBuffers = new Dictionary<long, PooledIndexBuffer>();
         }
         
         public PooledVertexBuffer CreateBuffer(GraphicsDevice device, VertexDeclaration vertexDeclaration,
@@ -80,6 +87,29 @@ namespace Alex.API.Graphics
             return texture;
         }
 
+        public PooledIndexBuffer CreateIndexBuffer(GraphicsDevice graphicsDevice, IndexElementSize indexElementSize,
+            int indexCount, BufferUsage bufferUsage)
+        {
+            var id = Interlocked.Increment(ref _indexBufferId);
+            var buffer = new PooledIndexBuffer(this, id, graphicsDevice, indexElementSize, indexCount, bufferUsage);
+            
+            IndexBuffers.Add(id, buffer);
+
+            var size = 0;
+            if (indexElementSize == IndexElementSize.SixteenBits)
+            {
+                size = indexCount * 2;
+            }
+            else if (indexElementSize == IndexElementSize.ThirtyTwoBits)
+            {
+                size = indexCount * 4;
+            }
+            
+            Interlocked.Add(ref _indexMemoryUsage, size);
+            
+            return buffer;
+        }
+
         public void Disposed(PooledVertexBuffer buffer)
         {
             var size = buffer.VertexDeclaration.VertexStride * buffer.VertexCount;
@@ -98,6 +128,26 @@ namespace Alex.API.Graphics
             Textures.Remove(buffer.PoolId);
             
             Interlocked.Add(ref _textureMemoryUsage, -(buffer.Height * buffer.Width * 4));
+        }
+
+        public void Disposed(PooledIndexBuffer buffer)
+        {
+            var size = 0;
+            if (buffer.IndexElementSize == IndexElementSize.SixteenBits)
+            {
+                size = buffer.IndexCount * 2;
+            }
+            else if (buffer.IndexElementSize == IndexElementSize.ThirtyTwoBits)
+            {
+                size = buffer.IndexCount * 4;
+            }
+
+            Log.Debug($"Disposing of indexbuffer {buffer.PoolId}, lifetime: {DateTime.UtcNow - buffer.CreatedTime} Memory usage: {Extensions.GetBytesReadable(size)}");
+
+            //Interlocked.Add(ref _estMemoryUsage, -size);
+            IndexBuffers.Remove(buffer.PoolId);
+            
+            Interlocked.Add(ref _indexMemoryUsage, -size);
         }
         
         public static PooledVertexBuffer GetBuffer(GraphicsDevice device, VertexDeclaration vertexDeclaration,
@@ -132,6 +182,12 @@ namespace Alex.API.Graphics
              texture.Dispose();
 
              return pooled;
+        }
+
+        public static PooledIndexBuffer GetIndexBuffer(GraphicsDevice graphicsDevice, IndexElementSize indexElementSize,
+            int indexCount, BufferUsage bufferUsage)
+        {
+            return _instance.CreateIndexBuffer(graphicsDevice, indexElementSize, indexCount, bufferUsage);
         }
     }
     
@@ -195,6 +251,27 @@ namespace Alex.API.Graphics
         protected override void Dispose(bool disposing)
         {
             Parent?.Disposed(this);
+            base.Dispose(disposing);
+        }
+    }
+
+    public class PooledIndexBuffer : IndexBuffer
+    { 
+        public GpuResourceManager Parent { get; }
+        public long PoolId { get; }
+        internal DateTime CreatedTime { get; }
+        
+        public PooledIndexBuffer(GpuResourceManager parent, long id, GraphicsDevice graphicsDevice, IndexElementSize indexElementSize, int indexCount, BufferUsage bufferUsage) : base(graphicsDevice, indexElementSize, indexCount, bufferUsage)
+        {
+            Parent = parent;
+            PoolId = id;
+            CreatedTime = DateTime.UtcNow;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            Parent?.Disposed(this);
+            
             base.Dispose(disposing);
         }
     }

@@ -284,7 +284,7 @@ namespace Alex.Worlds
 	    
 		private IndexBuffer RenewIndexBuffer(GraphicsDevice graphicsDevice, int[] vertices)
 		{
-			IndexBuffer buffer = new IndexBuffer(graphicsDevice, IndexElementSize.ThirtyTwoBits, vertices.Length, BufferUsage.WriteOnly);
+			IndexBuffer buffer = GpuResourceManager.GetIndexBuffer(graphicsDevice, IndexElementSize.ThirtyTwoBits, vertices.Length, BufferUsage.WriteOnly);
 
 			if (vertices.Length > 0)
 			{

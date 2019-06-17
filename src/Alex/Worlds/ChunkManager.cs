@@ -772,9 +772,9 @@ namespace Alex.Worlds
 			                Buffer = GpuResourceManager.GetBuffer(Graphics,
 				                VertexPositionNormalTextureColor.VertexDeclaration, vertexArray.Length,
 				                BufferUsage.WriteOnly),
-			                SolidIndexBuffer = new IndexBuffer(Graphics, IndexElementSize.ThirtyTwoBits,
+			                SolidIndexBuffer = GpuResourceManager.GetIndexBuffer(Graphics, IndexElementSize.ThirtyTwoBits,
 				                solidArray.Length, BufferUsage.WriteOnly),
-			                TransparentIndexBuffer = new IndexBuffer(Graphics, IndexElementSize.ThirtyTwoBits,
+			                TransparentIndexBuffer = GpuResourceManager.GetIndexBuffer(Graphics, IndexElementSize.ThirtyTwoBits,
 				                transparentArray.Length, BufferUsage.WriteOnly)
 		                };
 	                }
@@ -799,7 +799,7 @@ namespace Alex.Worlds
 	                if (solidArray.Length > data.SolidIndexBuffer.IndexCount)
 	                {
 		                var old = data.SolidIndexBuffer;
-		                var newSolidBuffer = new IndexBuffer(Graphics, IndexElementSize.ThirtyTwoBits,
+		                var newSolidBuffer = GpuResourceManager.GetIndexBuffer(Graphics, IndexElementSize.ThirtyTwoBits,
 			                solidArray.Length,
 			                BufferUsage.WriteOnly);
 
@@ -815,7 +815,7 @@ namespace Alex.Worlds
 	                if (transparentArray.Length > data.TransparentIndexBuffer.IndexCount)
 	                {
 		                var old = data.TransparentIndexBuffer;
-		                var newSolidBuffer = new IndexBuffer(Graphics, IndexElementSize.ThirtyTwoBits,
+		                var newSolidBuffer = GpuResourceManager.GetIndexBuffer(Graphics, IndexElementSize.ThirtyTwoBits,
 			                transparentArray.Length,
 			                BufferUsage.WriteOnly);
 
