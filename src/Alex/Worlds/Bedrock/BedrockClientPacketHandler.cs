@@ -303,8 +303,7 @@ namespace Alex.Worlds.Bedrock
 
 		public override void HandleMcpeAddEntity(McpeAddEntity message)
 		{
-			//TODO: Spawn entitys
-            var type = message.entityType.Replace("minecraft:", "");
+			var type = message.entityType.Replace("minecraft:", "");
             if (Enum.TryParse(typeof(EntityType), type, true, out object res))
             {
                 SpawnMob(message.runtimeEntityId, Guid.NewGuid(), (EntityType)res, new PlayerLocation(message.x, message.y, message.z, message.headYaw, message.yaw, message.pitch), new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ));

@@ -399,12 +399,12 @@ namespace Alex.Worlds
                 }
 
                 device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, chunk.TransparentIndexBuffer.IndexCount / 3);
-                indexBufferSize += chunk.TransparentIndexBuffer.IndexCount / 3;
+                indexBufferSize += chunk.TransparentIndexBuffer.IndexCount;
                 //tempVertices += chunk.Buffer.VertexCount;
                 //chunk.DrawTransparent(device, TransparentEffect, out int draw, out int idxSize);
                 // tempVertices += draw;
                 // indexBufferSize += idxSize;
-            }
+		    }
 
 		    tempChunks = chunks.Count(x => x.Value != null && (
 			    x.Value.SolidIndexBuffer.IndexCount > 0 || x.Value.TransparentIndexBuffer.IndexCount > 0));

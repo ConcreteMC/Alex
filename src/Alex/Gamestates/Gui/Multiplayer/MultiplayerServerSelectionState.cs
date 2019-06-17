@@ -4,7 +4,6 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Data.Servers;
 using Alex.API.Graphics;
@@ -16,15 +15,13 @@ using Alex.API.Gui.Elements.Layout;
 using Alex.API.Gui.Graphics;
 using Alex.API.Services;
 using Alex.API.Utils;
-using Alex.Gamestates.Login;
 using Alex.GameStates.Gui.Common;
+using Alex.Gamestates.Login;
 using Alex.Gui;
 using Alex.Networking.Java;
-using Alex.Services;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MiNET;
 using MiNET.Net;
 using MiNET.Utils;
 
@@ -179,16 +176,13 @@ namespace Alex.GameStates.Gui.Multiplayer
 
 		    else if (entry.ServerType == ServerType.Bedrock)
 			{
-				Alex.ConnectToServer(target, currentProfile, true);
-                if (currentProfile == null || (!currentProfile.IsBedrock))
+				if (currentProfile == null || (currentProfile.IsBedrock))
 				{
-					//var msa = Alex.Services.GetService<XBLMSAService>();
-					//msa.AsyncBrowserLogin().Wait();
-				//	JavaLoginState loginState = new JavaLoginState(_skyBox,
-					//		() => { Alex.ConnectToServer(target, authenticationService.CurrentProfile, false); });
+					JavaLoginState loginState = new JavaLoginState(_skyBox,
+						() => { Alex.ConnectToServer(target, authenticationService.CurrentProfile, true); });
 
 
-			//		Alex.GameStateManager.SetActiveState(loginState, true);
+					Alex.GameStateManager.SetActiveState(loginState, true);
 				}
 				else
 				{
