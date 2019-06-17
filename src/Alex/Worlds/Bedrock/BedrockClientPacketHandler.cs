@@ -347,13 +347,13 @@ namespace Alex.Worlds.Bedrock
         public override void HandleMcpeMoveEntityDelta(McpeMoveEntityDelta message)
         {
             return;
-            if (message.runtimeEntityId != Client.EntityId)
+          /*  if (message.runtimeEntityId != Client.EntityId)
             {
                 //TODO: Fix delta reading on packets.
                 BaseClient.WorldReceiver.UpdateEntityPosition(message.runtimeEntityId,
                     new PlayerLocation(message.Delta), true, true, true);
                 return;
-            }
+            }*/
         }
 
         public override void HandleMcpeRiderJump(McpeRiderJump message)
