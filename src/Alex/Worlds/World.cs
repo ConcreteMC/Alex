@@ -16,6 +16,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using NLog;
 using Color = Microsoft.Xna.Framework.Color;
+
 //using System.Reflection.Metadata.Ecma335;
 
 namespace Alex.Worlds
@@ -107,6 +108,11 @@ namespace Alex.Worlds
         public void RebuildChunks()
         {
             ChunkManager.RebuildAll();
+        }
+
+        public void ToggleWireFrame()
+        {
+	        ChunkManager.UseWireFrames = !ChunkManager.UseWireFrames;
         }
 
         public void Render(IRenderArgs args)

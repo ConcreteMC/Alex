@@ -291,6 +291,14 @@ namespace Alex.GameStates.Playing
 				if (currentKeyboardState.IsKeyDown(KeyBinds.DebugInfo))
 				{
 					RenderDebug = !RenderDebug;
+					if (!RenderDebug)
+					{
+						Alex.GuiManager.RemoveScreen(_debugInfo);
+					}
+					else
+					{
+						Alex.GuiManager.AddScreen(_debugInfo);
+					}
 				}
 
 				if (currentKeyboardState.IsKeyDown(KeyBinds.ReBuildChunks))
@@ -314,6 +322,11 @@ namespace Alex.GameStates.Playing
 					{
 						World.Camera = new FirstPersonCamera(Alex.GameSettings.RenderDistance, World.Player.KnownPosition, Vector3.Zero);
 					}
+				}
+
+				if (currentKeyboardState.IsKeyDown(KeyBinds.ToggleWireframe))
+				{
+					World.ToggleWireFrame();
 				}
 			}
 

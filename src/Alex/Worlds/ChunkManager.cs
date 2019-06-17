@@ -305,6 +305,7 @@ namespace Alex.Worlds
 	    int framerate = 12;     // Animate at 12 frames per second
 	    float timer = 0.0f;
 	    
+	    public bool UseWireFrames { get; set; } = false;
 	    public void Draw(IRenderArgs args)
 	    {
 		    timer += (float)args.GameTime.ElapsedGameTime.TotalSeconds;
@@ -349,6 +350,16 @@ namespace Alex.Worlds
 			    {
 				    chunks[index] = new KeyValuePair<ChunkCoordinates, ChunkData>(c, null);
 			    }
+		    }
+
+		    RasterizerState originalState = null;
+		    bool usingWireFrames = UseWireFrames;
+		    if (usingWireFrames)
+		    {
+			    originalState = device.RasterizerState;
+			    RasterizerState rasterizerState = new RasterizerState();
+			    rasterizerState.FillMode = FillMode.WireFrame;
+			    device.RasterizerState = rasterizerState;
 		    }
 
 		    device.DepthStencilState = DepthStencilState.Default;
@@ -405,6 +416,9 @@ namespace Alex.Worlds
                 // tempVertices += draw;
                 // indexBufferSize += idxSize;
 		    }
+
+		    if (usingWireFrames)
+				device.RasterizerState = originalState;
 
 		    tempChunks = chunks.Count(x => x.Value != null && (
 			    x.Value.SolidIndexBuffer.IndexCount > 0 || x.Value.TransparentIndexBuffer.IndexCount > 0));
