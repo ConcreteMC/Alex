@@ -193,10 +193,10 @@ namespace Alex.Worlds
         {
 	        CancellationTokenSource taskCancelationToken = CancellationTokenSource.CreateLinkedTokenSource(CancelationToken.Token);
 	        
-	       // Interlocked.Increment(ref _threadsRunning);
+	        Interlocked.Increment(ref _threadsRunning);
 	        var task = Task.Factory.StartNew(() =>
 	        {
-		        Interlocked.Increment(ref _threadsRunning);
+		        
 		        if (Chunks.TryGetValue(coords, out var val))
 		        {
 			        UpdateChunk(coords, val);
@@ -234,6 +234,37 @@ namespace Alex.Worlds
                 {
 	                data.Value?.Dispose();
 	                _chunkData.TryRemove(data.Key, out _);
+                }
+                
+                //var cameraChunkPos = new ChunkCoordinates(new PlayerLocation(camera.Position.X, camera.Position.Y,
+	           //     camera.Position.Z));
+
+                var renderedChunks = Chunks.ToArray().Where(x =>
+                {
+	                if (Math.Abs(x.Key.DistanceTo(cameraChunkPos)) > Game.GameSettings.RenderDistance)
+		                return false;
+			    
+	                var chunkPos = new Vector3(x.Key.X * ChunkColumn.ChunkWidth, 0, x.Key.Z * ChunkColumn.ChunkDepth);
+	                return CameraBoundingFrustum.Intersects(new Microsoft.Xna.Framework.BoundingBox(chunkPos,
+		                chunkPos + new Vector3(ChunkColumn.ChunkWidth, 256/*16 * ((x.Value.GetHeighest() >> 4) + 1)*/,
+			                ChunkColumn.ChunkDepth)));
+                }).ToArray();
+			
+                foreach (var c in renderedChunks)
+                {
+	                if (_renderedChunks.TryAdd(c.Key))
+	                {
+		                if (c.Value.SkyLightDirty)
+			                SkylightCalculator.CalculateLighting(c.Value, true, true);
+	                }
+                }
+			
+                foreach (var c in _renderedChunks.ToArray())
+                {
+	                if (!renderedChunks.Any(x => x.Key.Equals(c)))
+	                {
+		                _renderedChunks.Remove(c);
+	                }
                 }
 
                 if (Interlocked.Read(ref _threadsRunning) >= maxThreads) continue;
@@ -479,37 +510,6 @@ namespace Alex.Worlds
 		    CameraBoundingFrustum = camera.BoundingFrustum;
 		    CameraPosition = camera.Position;
 		    CamDir = camera.Target;
-
-		    var cameraChunkPos = new ChunkCoordinates(new PlayerLocation(camera.Position.X, camera.Position.Y,
-			    camera.Position.Z));
-
-            var renderedChunks = Chunks.ToArray().Where(x =>
-            {
-	           if (Math.Abs(x.Key.DistanceTo(cameraChunkPos)) > Game.GameSettings.RenderDistance)
-		           return false;
-			    
-			    var chunkPos = new Vector3(x.Key.X * ChunkColumn.ChunkWidth, 0, x.Key.Z * ChunkColumn.ChunkDepth);
-			    return camera.BoundingFrustum.Intersects(new Microsoft.Xna.Framework.BoundingBox(chunkPos,
-				    chunkPos + new Vector3(ChunkColumn.ChunkWidth, 256/*16 * ((x.Value.GetHeighest() >> 4) + 1)*/,
-					    ChunkColumn.ChunkDepth)));
-		    }).ToArray();
-			
-			foreach (var c in renderedChunks)
-			{
-				if (_renderedChunks.TryAdd(c.Key))
-				{
-					if (c.Value.SkyLightDirty)
-						SkylightCalculator.CalculateLighting(c.Value, true, true);
-                }
-			}
-			
-		    foreach (var c in _renderedChunks.ToArray())
-		    {
-			    if (!renderedChunks.Any(x => x.Key.Equals(c)))
-			    {
-				    _renderedChunks.Remove(c);
-			    }
-		    }
 	    }
 
         public void AddChunk(IChunkColumn chunk, ChunkCoordinates position, bool doUpdates = false)
