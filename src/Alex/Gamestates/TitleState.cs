@@ -230,7 +230,11 @@ namespace Alex.GameStates
 
 		private void PlayerProfileServiceOnProfileChanged(object sender, PlayerProfileChangedEventArgs e)
 		{
-			_playerView.Entity = new PlayerMob(e.Profile.Username, null, null, e.Profile.Skin.Texture, e.Profile.Skin.Slim);
+			if (e.Profile.Skin.Texture != null)
+			{
+				_playerView.Entity = new PlayerMob(e.Profile.Username, null, null, e.Profile.Skin.Texture,
+					e.Profile.Skin.Slim);
+			}
 		}
 
 		private void OnSinglePlayerPressed()

@@ -176,10 +176,10 @@ namespace Alex.GameStates.Gui.Multiplayer
 
 		    else if (entry.ServerType == ServerType.Bedrock)
 			{
-				if (currentProfile == null || (currentProfile.IsBedrock))
+				if (currentProfile == null || (!currentProfile.IsBedrock))
 				{
-					JavaLoginState loginState = new JavaLoginState(_skyBox,
-						() => { Alex.ConnectToServer(target, authenticationService.CurrentProfile, true); });
+					BEDeviceCodeLoginState loginState = new BEDeviceCodeLoginState(_skyBox,
+						(profile) => { Alex.ConnectToServer(target, profile, true); });
 
 
 					Alex.GameStateManager.SetActiveState(loginState, true);

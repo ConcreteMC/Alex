@@ -12,6 +12,7 @@ using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Gamestates;
+using Alex.Services;
 using Jose;
 using Microsoft.Xna.Framework;
 using MiNET;
@@ -77,6 +78,7 @@ namespace Alex.Worlds.Bedrock
 
         private Alex Alex { get; }
         private IOptionsProvider OptionsProvider { get; }
+        private XBLMSAService XblmsaService { get; }
         private AlexOptions Options => OptionsProvider.AlexOptions;
 		public BedrockClient(Alex alex, IPEndPoint endpoint, string username, DedicatedThreadPool threadPool, BedrockWorldProvider wp) : base(endpoint,
 			username, threadPool)
@@ -88,6 +90,7 @@ namespace Alex.Worlds.Bedrock
 			IsEmulator = true;
 			CurrentLocation = new MiNET.Utils.PlayerLocation(0,0,0);
 			OptionsProvider = alex.Services.GetService<IOptionsProvider>();
+			XblmsaService = alex.Services.GetService<XBLMSAService>();
 			
 			base.ChunkRadius = Options.VideoOptions.RenderDistance;
 			
@@ -146,11 +149,34 @@ namespace Alex.Worlds.Bedrock
         {
             JWT.JsonMapper = new NewtonsoftMapper();
 
-            var clientKey = CryptoUtils.GenerateClientKey();
+            var clientKey = XblmsaService.MinecraftKeyPair;// CryptoUtils.GenerateClientKey();
 
             ECDsa signKey = ConvertToSingKeyFormat(clientKey);
 
-            byte[] data = CryptoUtils.CompressJwtBytes(EncodeJwt(username, clientKey, signKey, IsEmulator), EncodeSkinJwt(clientKey, signKey, username), CompressionLevel.Fastest);
+			string identity, xuid = "";
+			byte[] certChain = null;
+            if (XblmsaService.MinecraftChain != null)
+            {
+	            var element = XblmsaService.DecodedChain.Chain[1];
+
+                Username = username = element.ExtraData.DisplayName;
+                identity = element.ExtraData.Identity;
+                xuid = element.ExtraData.Xuid;
+
+                certChain = XblmsaService.MinecraftChain;
+				Log.Info($"Using signed certificate chain");
+            }
+            else
+            {
+				certChain = EncodeJwt(username, clientKey, signKey, IsEmulator);
+			
+            }
+
+	        //XblmsaService
+	        
+	        var skinData = EncodeSkinJwt(clientKey, signKey, username);
+
+	        byte[] data = CryptoUtils.CompressJwtBytes(certChain, skinData, CompressionLevel.Fastest);
 
             McpeLogin loginPacket = new McpeLogin
             {
@@ -160,11 +186,13 @@ namespace Alex.Worlds.Bedrock
 
             Session.CryptoContext = new CryptoContext()
             {
-                ClientKey = clientKey,
-                UseEncryption = false,
+	            ClientKey = clientKey,
+	            UseEncryption = false,
             };
 
             SendPacket(loginPacket);
+
+        //    Session.CryptoContext.UseEncryption = true;
         }
 
         private static ECDsa ConvertToSingKeyFormat(AsymmetricCipherKeyPair key)
