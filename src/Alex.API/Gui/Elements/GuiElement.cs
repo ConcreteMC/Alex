@@ -69,9 +69,9 @@ namespace Alex.API.Gui.Elements
         #region Drawing
 
 
-        [DebuggerVisible] public virtual Vector2 RenderPosition => Position.ToVector2();
-        [DebuggerVisible] public virtual Size RenderSize => Size;
-        [DebuggerVisible] public virtual Rectangle RenderBounds => Bounds;
+        [DebuggerVisible] public virtual Vector2 RenderPosition { get; set; }
+        [DebuggerVisible] public virtual Size RenderSize { get; set; }
+        [DebuggerVisible] public virtual Rectangle RenderBounds { get; set; }
         [DebuggerVisible] public bool IsVisible { get; set; } = true;
 
         public void Draw(GuiSpriteBatch graphics, GameTime gameTime)

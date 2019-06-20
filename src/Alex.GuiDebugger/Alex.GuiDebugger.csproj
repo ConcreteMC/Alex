@@ -4,17 +4,24 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <UseWPF>true</UseWPF>
+    <ApplicationIcon>Resources\Alex.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <None Remove="Controls\PropertyGrid.xaml" />
     <None Remove="Properties\DesignTimeResources.xaml" />
+    <None Remove="Resources\Alex.ico" />
     <None Remove="Styles\Brushes.xaml" />
     <None Remove="Themes\Generic.xaml" />
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="Resources\Alex.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="EasyPipes" Version="1.1.0" />
+    <PackageReference Include="MahApps.Metro" Version="2.0.0-alpha0391" />
   </ItemGroup>
 
   <ItemGroup>

@@ -442,9 +442,9 @@ namespace Alex.API.Gui.Elements
 
         protected virtual void OnAfterArrange()
         {
-            //RenderBounds = Bounds;
-            //RenderSize = Size;
-            //RenderPosition = Position.ToVector2();
+            RenderBounds = Bounds;
+            RenderSize = Size;
+            RenderPosition = Position.ToVector2();
         }
 
         protected virtual void ArrangeCore(Rectangle newBounds)

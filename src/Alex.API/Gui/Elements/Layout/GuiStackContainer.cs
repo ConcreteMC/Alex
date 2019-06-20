@@ -345,6 +345,8 @@ namespace Alex.API.Gui.Elements.Layout
 			}
 
 			HorizontalScrollBar.IsVisible = _hasHorizontalScroll;
+
+			ScrollOffset = new Point(HorizontalScrollBar.ScrollOffsetValue, VerticalScrollBar.ScrollOffsetValue);
 		}
 		
 		protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)

@@ -15,8 +15,9 @@
 
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="10" SharedSizeGroup="PaddingCol" />
+                <ColumnDefinition Width="0" SharedSizeGroup="PaddingCol" />
                 <ColumnDefinition Width="*" SharedSizeGroup="NameCol" />
+                <ColumnDefinition Width="5" SharedSizeGroup="PaddingCol2" />
                 <ColumnDefinition Width="2*" SharedSizeGroup="ValueCol" />
             </Grid.ColumnDefinitions>
         </Grid>
@@ -29,14 +30,15 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition SharedSizeGroup="PaddingCol" />
                                 <ColumnDefinition SharedSizeGroup="NameCol" />
+                                <ColumnDefinition SharedSizeGroup="PaddingCol2" />
                                 <ColumnDefinition SharedSizeGroup="ValueCol" />
                             </Grid.ColumnDefinitions>
 
                             <TextBlock Grid.Column="1" Text="{Binding Name}" />
 
-                            <TextBlock Grid.Column="2" Text="{Binding ValueString}" />
+                            <TextBlock Grid.Column="3" Text="{Binding ValueString}" />
 
-                            <ContentControl Grid.Column="2" Content="{Binding Value}" />
+                            <!--<ContentControl Grid.Column="2" Content="{Binding Value}" />-->
 
                         </Grid>
                     </DataTemplate>

@@ -6,5 +6,9 @@
 
 
     <Style x:Key="PropertyGridTreeView" TargetType="TreeView" />
+    <Style TargetType="{x:Type TreeView}">
+        <Setter Property="Background" Value="#1c1c1c" />
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
 
 </ResourceDictionary>

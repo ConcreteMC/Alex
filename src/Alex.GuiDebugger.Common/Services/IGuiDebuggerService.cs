@@ -12,5 +12,9 @@ namespace Alex.GuiDebugger.Common.Services
 
 		GuiElementInfo[] GetAllGuiElementInfos();
 
+		GuiElementPropertyInfo[] GetElementPropertyInfos(Guid id);
+
+		bool SetElementPropertyValue(Guid id, string propertyName, string propertyValue);
+
 	}
 }

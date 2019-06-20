@@ -78,6 +78,7 @@ namespace Alex.API.Gui.Graphics
 
         public IDisposable BeginClipBounds(Rectangle scissorRectangle, bool mergeBounds = false)
         {
+            var currentScissorTestEnable = Context.RasterizerState.ScissorTestEnable;
             var currentScissorRectangle = Context.ScissorRectangle;
 
             if (mergeBounds && Context.ScissorRectangle != Rectangle.Empty)
@@ -89,7 +90,16 @@ namespace Alex.API.Gui.Graphics
                 Context.ScissorRectangle = scissorRectangle;
             }
 
-            return new ContextDisposable(() => Context.ScissorRectangle = currentScissorRectangle);
+            var currentRasterizerState = Context.RasterizerState;
+            var newRasterizerState = CopyRasterizerState(Context.RasterizerState);
+            newRasterizerState.ScissorTestEnable = true;
+            Context.RasterizerState = newRasterizerState;
+
+            return new ContextDisposable(() =>
+            {
+                Context.RasterizerState = currentRasterizerState;
+                Context.ScissorRectangle = currentScissorRectangle;
+            });
         }
 
         private void OnGraphicsContextDisposed(object sender, EventArgs e)
@@ -98,6 +108,22 @@ namespace Alex.API.Gui.Graphics
             {
                 Begin();
             }
+        }
+
+        private RasterizerState CopyRasterizerState(RasterizerState rasterizerState)
+        {
+            return new RasterizerState()
+            {
+                CullMode = rasterizerState.CullMode,
+                DepthBias = rasterizerState.DepthBias,
+                DepthClipEnable = rasterizerState.DepthClipEnable,
+                FillMode = rasterizerState.FillMode,
+                MultiSampleAntiAlias = rasterizerState.MultiSampleAntiAlias,
+                Name = rasterizerState.Name,
+                ScissorTestEnable = rasterizerState.ScissorTestEnable,
+                SlopeScaleDepthBias = rasterizerState.SlopeScaleDepthBias,
+                Tag = rasterizerState.Tag
+            };
         }
 
         #endregion

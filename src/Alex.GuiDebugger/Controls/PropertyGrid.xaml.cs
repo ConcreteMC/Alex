@@ -84,29 +84,29 @@ namespace Alex.GuiDebugger.Controls
 		private static void OnItemPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
 		{
 			// Reload property items
-			((PropertyGrid) d).LoadPropertyItems(e.NewValue);
+			//((PropertyGrid) d).LoadPropertyItems(e.NewValue);
 		}
 
-		private void LoadPropertyItems(object obj)
-		{
-			if (obj == null)
-			{
-				PropertyItems.Clear();
-				return;
-			}
+		//private void LoadPropertyItems(object obj)
+		//{
+		//	if (obj == null)
+		//	{
+		//		PropertyItems.Clear();
+		//		return;
+		//	}
 
-			if (obj is GuiElementInfo guiElementInfo)
-			{
-				PropertyItems.Clear();
-				foreach (var propInfo in guiElementInfo.PropertyInfos)
-				{
-					PropertyItems.Add(new PropertyGridItem()
-					{
-						Name = propInfo.Name,
-						Value = propInfo.StringValue
-					});
-				}
-			}
-		}
+		//	if (obj is GuiElementInfo guiElementInfo)
+		//	{
+		//		PropertyItems.Clear();
+		//		foreach (var propInfo in guiElementInfo.PropertyInfos)
+		//		{
+		//			PropertyItems.Add(new PropertyGridItem()
+		//			{
+		//				Name = propInfo.Name,
+		//				Value = propInfo.StringValue
+		//			});
+		//		}
+		//	}
+		//}
 	}
 }

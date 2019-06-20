@@ -400,6 +400,57 @@ namespace Alex.Gui
 			return GuiManager.Screens.Select(BuildGuiElementInfo).ToArray();
 		}
 
+		public GuiElementPropertyInfo[] GetElementPropertyInfos(Guid id)
+		{
+			var element = FindGuiElementById(id);
+			if(element == null) return new GuiElementPropertyInfo[0];
+
+			var infos = BuildGuiElementPropertyInfos(element);
+			return infos;
+		}
+
+		public bool SetElementPropertyValue(Guid id, string propertyName, string propertyValue)
+		{
+			var element = FindGuiElementById(id);
+			if (element == null) return false;
+
+			var property = element.GetType().GetProperty(propertyName);
+			if (property == null) return false;
+
+			try
+			{
+				var propType = property.PropertyType;
+				var value    = ConvertPropertyType(propType, propertyValue);
+				property.SetValue(element, value);
+				return true;
+			}
+			catch
+			{
+				return false;
+			}
+
+		}
+
+		private object ConvertPropertyType(Type targetType, string value)
+		{
+			if (targetType.IsEnum)
+			{
+				return Enum.Parse(targetType, value, true);
+			}
+
+			if (targetType == typeof(Size))
+			{
+				return Size.Parse(value);
+			}
+
+			if (targetType == typeof(Thickness))
+			{
+				return Thickness.Parse(value);
+			}
+
+			return null;
+		}
+
 		private IGuiElement FindGuiElementById(Guid id)
 		{
 			foreach (var screen in GuiManager.Screens.ToArray())
@@ -418,7 +469,6 @@ namespace Alex.Gui
 			var info = new GuiElementInfo();
 			info.Id = guiElement.Id;
 			info.ElementType = guiElement.GetType().Name;
-			info.PropertyInfos = BuildGuiElementPropertyInfos(guiElement);
 
 			info.ChildElements = guiElement.ChildElements.Select(BuildGuiElementInfo).ToArray();
 			return info;

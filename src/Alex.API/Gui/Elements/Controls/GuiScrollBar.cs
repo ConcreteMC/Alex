@@ -7,14 +7,22 @@ namespace Alex.API.Gui.Elements.Controls
 {
 	public class GuiScrollBar : GuiElement
 	{
-
-		public Orientation Orientation { get; set; } = Orientation.Vertical;
+		public Orientation Orientation
+		{
+			get => _orientation;
+			set
+			{
+				_orientation = value;
+				OnOrientationChanged();
+			}
+		}
 
 		private GuiButton ScrollDecreaseButton;
 		private GuiButton ScrollIncreaseButton;
 		
 		public GuiTexture2D ThumbBackground;
 		public GuiTexture2D ThumbHighlightBackground;
+		private Orientation _orientation = Orientation.Vertical;
 
 		public int ScrollButtonStep { get; set; } = 5;
 		public int ScrollOffsetValue { get; set; }
@@ -35,8 +43,16 @@ namespace Alex.API.Gui.Elements.Controls
 			Padding   = Thickness.Zero;
 			Margin    = Thickness.Zero;
 
-			AddChild(ScrollDecreaseButton = new GuiButton(() => ScrollOffsetValue -= ScrollButtonStep));
-			AddChild(ScrollIncreaseButton = new GuiButton(() => ScrollOffsetValue += ScrollButtonStep));
+			AddChild(ScrollDecreaseButton = new GuiButton(() => ScrollOffsetValue -= ScrollButtonStep)
+			{
+				Width = 10,
+				Height = 10
+			});
+			AddChild(ScrollIncreaseButton = new GuiButton(() => ScrollOffsetValue += ScrollButtonStep)
+			{
+				Width = 10,
+				Height = 10
+			});
 		}
 		
 		protected override void OnInit(IGuiRenderer renderer)
@@ -45,6 +61,20 @@ namespace Alex.API.Gui.Elements.Controls
 
 			ThumbBackground.TryResolveTexture(renderer);
 			ThumbHighlightBackground.TryResolveTexture(renderer);
+		}
+
+		private void OnOrientationChanged()
+		{
+			if (Orientation == Orientation.Vertical)
+			{
+				ScrollDecreaseButton.Anchor = Alignment.BottomFill;
+				ScrollIncreaseButton.Anchor = Alignment.TopFill;
+			}
+			else
+			{
+				ScrollDecreaseButton.Anchor = Alignment.FillRight;
+				ScrollIncreaseButton.Anchor = Alignment.FillLeft;
+			}
 		}
 	}
 }

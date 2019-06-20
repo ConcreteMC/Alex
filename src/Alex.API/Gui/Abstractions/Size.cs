@@ -36,6 +36,24 @@ namespace Alex.API.Gui
             Height = value;
         }
 
+        public static Size Parse(string value)
+        {
+            if (value == null) return Zero;
+
+            if (value.IndexOf(',') > 0)
+            {
+                var split = value.Split(',', 2);
+                var w = int.Parse(split[0]);
+                var h = int.Parse(split[1]);
+                return new Size(w, h);
+            }
+            else
+            {
+                return new Size(int.Parse(value));
+            }
+
+        }
+
         public Point ToPoint()
         {
             return new Point(Width, Height);

@@ -21,7 +21,7 @@ namespace Alex.GuiDebugger.Windows
 	/// <summary>
 	/// Interaction logic for MainWindow.xaml
 	/// </summary>
-	public partial class MainWindow : Window
+	public partial class MainWindow
 	{
 		private MainViewModel _mainViewModel;
 
@@ -42,16 +42,42 @@ namespace Alex.GuiDebugger.Windows
 			}
 		}
 
+		private void OnRefreshPropertiesButtonClick(object sender, RoutedEventArgs e)
+		{
+			if (_elementTreeView.SelectedItem is GuiElementInfo elementInfo)
+			{
+				var items = App.GuiDebuggerService.GetElementPropertyInfos(elementInfo.Id);
+				_mainViewModel.SelectedGuiElementPropertyInfos.Clear();
+
+				foreach (var item in items)
+				{
+					_mainViewModel.SelectedGuiElementPropertyInfos.Add(item);
+				}
+			}
+			else
+			{
+				_mainViewModel.SelectedGuiElementPropertyInfos.Clear();
+			}
+		}
+
 		private void OnTreeViewSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
 		{
 			var item = e.NewValue as GuiElementInfo;
 			if (item == null)
 			{
 				App.GuiDebuggerService.DisableHighlight();
+				_mainViewModel.SelectedGuiElementPropertyInfos.Clear();
 			}
 			else
 			{
 				App.GuiDebuggerService.HighlightGuiElement(item.Id);
+				_mainViewModel.SelectedGuiElementPropertyInfos.Clear();
+
+				var infos = App.GuiDebuggerService.GetElementPropertyInfos(item.Id);
+				foreach (var info in infos)
+				{
+					_mainViewModel.SelectedGuiElementPropertyInfos.Add(info);
+				}
 			}
 		}
 	}

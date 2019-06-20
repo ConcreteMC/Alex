@@ -7,8 +7,10 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/Alex.GuiDebugger;Component/Styles/Brushes.xaml" />
-                <ResourceDictionary Source="/Alex.GuiDebugger;Component/Themes/Generic.xaml" />
+                <ResourceDictionary Source="/MahApps.Metro;Component/Styles/Controls.xaml" />
+                <ResourceDictionary Source="/MahApps.Metro;Component/Styles/Fonts.xaml" />
+                <ResourceDictionary Source="/MahApps.Metro;Component/Styles/Themes/Dark.Red.xaml" />
+                <ResourceDictionary Source="/MahApps.Metro;Component/Styles/VS/Styles.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

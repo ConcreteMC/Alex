@@ -14,9 +14,6 @@ namespace Alex.GuiDebugger.Common
 		public string ElementType { get; set; }
 		
 		[DataMember]
-		public GuiElementPropertyInfo[] PropertyInfos { get; set; }
-		
-		[DataMember]
 		public GuiElementInfo[] ChildElements { get; set; }
 
 	}

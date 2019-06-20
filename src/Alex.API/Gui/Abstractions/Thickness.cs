@@ -55,7 +55,37 @@ namespace Alex.API.Gui
 		{
 			return new Thickness(MathHelper.Clamp(value.Left, minValue.Left, maxValue.Left), MathHelper.Clamp(value.Top, minValue.Top, maxValue.Top), MathHelper.Clamp(value.Right, minValue.Right, maxValue.Right), MathHelper.Clamp(value.Bottom, minValue.Bottom, maxValue.Bottom));
 		}
+		
+		public static Thickness Parse(string value)
+		{
+			if (value == null) return Zero;
 
+			if (value.IndexOf(',') > 0)
+			{
+				var split = value.Split(',');
+
+				if (split.Length == 4)
+				{
+					var l = int.Parse(split[0]);
+					var t = int.Parse(split[1]);
+					var r = int.Parse(split[2]);
+					var b = int.Parse(split[3]);
+					return new Thickness(l, t, r, b);
+				}
+				else if (split.Length == 2)
+				{
+					var v = int.Parse(split[0]);
+					var h = int.Parse(split[1]);
+					return new Thickness(v, h);
+				}
+				else throw new FormatException("value is not in a correct format.");
+			}
+			else
+			{
+				return new Thickness(int.Parse(value));
+			}
+
+		}
 		public Vector2 ToVector2()
 		{
 			return new Vector2(Horizontal, Vertical);
