@@ -437,18 +437,18 @@ namespace Alex.API.Gui.Elements
 
         protected virtual void OnBeforeArrange(Rectangle newBounds)
         {
-            //if (ParentElement != null && ClipToBounds)
-            //{
-            //    RenderBounds   = Rectangle.Intersect(newBounds, ParentElement.RenderBounds);
-            //    RenderSize     = RenderBounds.Size;
-            //    RenderPosition = RenderBounds.Location.ToVector2();
-            //}
-            //else
-            //{
-            //    RenderBounds   = newBounds;
-            //    RenderSize     = RenderBounds.Size;
-            //    RenderPosition = RenderBounds.Location.ToVector2();
-            //}
+            if (ParentElement != null && ClipToBounds && !ParentElement.RenderBounds.Contains(newBounds))
+            {
+                RenderBounds = Rectangle.Intersect(newBounds, ParentElement.RenderBounds);
+                RenderSize = newBounds.Size;
+                RenderPosition = newBounds.Location.ToVector2();
+            }
+            else
+            {
+                RenderBounds = newBounds;
+                RenderSize = RenderBounds.Size;
+                RenderPosition = RenderBounds.Location.ToVector2();
+            }
         }
 
         protected virtual void OnAfterArrange()
@@ -461,9 +461,9 @@ namespace Alex.API.Gui.Elements
             //}
             //else
             //{
-                RenderBounds   = Bounds;
-                RenderSize     = Size;
-                RenderPosition = Position.ToVector2();
+            //    RenderBounds   = Bounds;
+            //    RenderSize     = Size;
+            //    RenderPosition = Position.ToVector2();
             //}
         }
 

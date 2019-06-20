@@ -78,7 +78,9 @@ namespace Alex.API.Gui.Graphics
 
         public IDisposable BeginClipBounds(Rectangle scissorRectangle, bool mergeBounds = false)
         {
-            var currentScissorTestEnable = Context.RasterizerState.ScissorTestEnable;
+            var shouldBegin = _hasBegun;
+            End();
+
             var currentScissorRectangle = Context.ScissorRectangle;
 
             if (mergeBounds && Context.ScissorRectangle != Rectangle.Empty)
@@ -94,6 +96,9 @@ namespace Alex.API.Gui.Graphics
             var newRasterizerState = CopyRasterizerState(Context.RasterizerState);
             newRasterizerState.ScissorTestEnable = true;
             Context.RasterizerState = newRasterizerState;
+
+            if(shouldBegin)
+                Begin();
 
             return new ContextDisposable(() =>
             {

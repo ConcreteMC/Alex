@@ -80,6 +80,8 @@ namespace Alex.API.Gui.Elements
 
             if (ClipToBounds)
             {
+                if (RenderBounds.IsEmpty) return;
+
                 using (graphics.BeginClipBounds(RenderBounds, true))
                 {
                     if (_initialised)
