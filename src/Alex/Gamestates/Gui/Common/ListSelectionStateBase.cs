@@ -10,7 +10,8 @@ using Microsoft.Xna.Framework;
 
 namespace Alex.GameStates.Gui.Common
 {
-    public class ListSelectionStateBase<TGuiListItemContainer> : GuiMenuStateBase where TGuiListItemContainer : GuiSelectionListItem
+    public class ListSelectionStateBase<TGuiListItemContainer> : GuiMenuStateBase 
+		where TGuiListItemContainer : GuiSelectionListItem
     {
 	    public override int BodyMinWidth => 356;
 

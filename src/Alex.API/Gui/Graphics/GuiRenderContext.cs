@@ -20,6 +20,7 @@ namespace Alex.API.Gui.Graphics
         private readonly GraphicsDevice _graphicsDevice;
         private readonly IGuiRenderer _renderer;
         private Texture2D _colorTexture;
+        private Matrix _renderMatrix = Matrix.Identity;
 
         private bool _beginSpriteBatchAfterContext;
         private bool _hasBegun;
@@ -48,7 +49,7 @@ namespace Alex.API.Gui.Graphics
         {
             if (_hasBegun) return;
 			
-            SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, null, ScaledResolution.TransformMatrix);
+            SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, null, ScaledResolution.TransformMatrix * _renderMatrix);
         
             _hasBegun = true;
 
@@ -74,6 +75,24 @@ namespace Alex.API.Gui.Graphics
             context.Disposed += OnGraphicsContextDisposed;
 
             return context;
+        }
+
+        public IDisposable BeginTransform(Matrix transformMatrix, bool mergeTransform = false)
+        {
+            var shouldBegin = _hasBegun;
+            End();
+
+            var previousRenderMatrix = _renderMatrix;
+            if (mergeTransform)
+                _renderMatrix = _renderMatrix * transformMatrix;
+            else
+                _renderMatrix = transformMatrix;
+
+            if (shouldBegin)
+                Begin();
+            
+
+            return new ContextDisposable(() => { _renderMatrix = previousRenderMatrix; });
         }
 
         public IDisposable BeginClipBounds(Rectangle scissorRectangle, bool mergeBounds = false)

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Alex.API.Gui.Elements.Layout
 {
-    public class GuiMultiStackContainer : GuiStackContainer
+    public class GuiMultiStackContainer : GuiScrollableStackContainer
     {
         private List<GuiStackContainer> _rows = new List<GuiStackContainer>();
 

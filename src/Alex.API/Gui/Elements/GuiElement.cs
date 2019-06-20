@@ -74,15 +74,29 @@ namespace Alex.API.Gui.Elements
         [DebuggerVisible] public virtual Rectangle RenderBounds { get; set; }
         [DebuggerVisible] public bool IsVisible { get; set; } = true;
 
+        public Matrix RenderTransform { get; set; } = Matrix.Identity;
+
         public void Draw(GuiSpriteBatch graphics, GameTime gameTime)
         {
             if (!IsVisible) return;
 
-            if (ClipToBounds)
+            using (graphics.BeginTransform(RenderTransform, true))
             {
-                if (RenderBounds.IsEmpty) return;
+                if (ClipToBounds)
+                {
+                    if (RenderBounds.IsEmpty) return;
 
-                using (graphics.BeginClipBounds(RenderBounds, true))
+                    using (graphics.BeginClipBounds(RenderBounds, true))
+                    {
+                        if (_initialised)
+                        {
+                            OnDraw(graphics, gameTime);
+                        }
+
+                        ForEachChild(c => c.Draw(graphics, gameTime));
+                    }
+                }
+                else
                 {
                     if (_initialised)
                     {
@@ -91,15 +105,6 @@ namespace Alex.API.Gui.Elements
 
                     ForEachChild(c => c.Draw(graphics, gameTime));
                 }
-            }
-            else
-            {
-                if (_initialised)
-                {
-                    OnDraw(graphics, gameTime);
-                }
-
-                ForEachChild(c => c.Draw(graphics, gameTime));
             }
         }
 
