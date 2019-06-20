@@ -278,11 +278,15 @@ namespace Alex.API.Gui.Elements
         {
             if (!IsMeasureComplete)
             {
+                OnBeforeMeasure();
+
                 UpdatePreferredSize();
 
                 var size = MeasureCore(availableSize - Margin);
 
                 Size = size;
+
+                OnAfterMeasure();
 
                 IsMeasureComplete = true;
             }
@@ -317,6 +321,7 @@ namespace Alex.API.Gui.Elements
             }
 
             size = Size.Clamp(size, PreferredMinSize, PreferredMaxSize);
+            size = Size.Clamp(size, size, availableSize);
 
             LayoutWidth  = size.Height;
             LayoutHeight = size.Width;
@@ -356,6 +361,8 @@ namespace Alex.API.Gui.Elements
                 }
             }
 
+            size = Size.Clamp(size, size, availableSize);
+
             var childSize = MeasureChildren(size);
 
             return Size.Max(size, childSize);
@@ -382,7 +389,21 @@ namespace Alex.API.Gui.Elements
                 size = Size.Max(size, childSize);
             }
 
+            if (size.Height > availableSize.Height)
+            {
+                size.Height = size.Height - availableSize.Height;
+            }
+
             return size;
+        }
+
+        protected virtual void OnBeforeMeasure()
+        {
+
+        }
+        protected virtual void OnAfterMeasure()
+        {
+
         }
 
         #endregion
@@ -393,6 +414,8 @@ namespace Alex.API.Gui.Elements
         {
             if (!IsArrangeComplete)
             {
+                OnBeforeArrange(newBounds);
+
                 OuterBounds = newBounds + Margin;
                 InnerBounds = newBounds - Padding;
                 Bounds      = newBounds;
@@ -404,9 +427,23 @@ namespace Alex.API.Gui.Elements
 
                 ArrangeCore(newBounds);
 
+                OnAfterArrange();
+
                 IsArrangeComplete = true;
             }
 
+        }
+
+        protected virtual void OnBeforeArrange(Rectangle newBounds)
+        {
+
+        }
+
+        protected virtual void OnAfterArrange()
+        {
+            //RenderBounds = Bounds;
+            //RenderSize = Size;
+            //RenderPosition = Position.ToVector2();
         }
 
         protected virtual void ArrangeCore(Rectangle newBounds)

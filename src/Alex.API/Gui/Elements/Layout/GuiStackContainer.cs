@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using Alex.API.Gui.Elements.Controls;
+using Alex.API.Gui.Graphics;
 using Microsoft.Xna.Framework;
 
 namespace Alex.API.Gui.Elements.Layout
@@ -29,12 +31,7 @@ namespace Alex.API.Gui.Elements.Layout
                 UpdateLayoutAlignments();
             }
         }
-
-        public GuiStackContainer()
-        {
-
-        }
-
+		
         protected override Size MeasureChildrenCore(Size availableSize, IReadOnlyCollection<GuiElement> children)
         {
             var containerSize = availableSize;
@@ -56,10 +53,22 @@ namespace Alex.API.Gui.Elements.Layout
 
             var size = Size.Zero;
             Thickness lastOffset = Thickness.Zero;
-            
+
+			if (HorizontalScrollBar != null)
+			{
+				HorizontalScrollBar.Measure(new Size(widthOverride == 0 ? containerSize.Width : widthOverride,
+													 heightOverride == 0 ? containerSize.Height : heightOverride));
+			}
+			if (VerticalScrollBar != null)
+			{
+				VerticalScrollBar.Measure(new Size(widthOverride == 0 ? containerSize.Width : widthOverride,
+													 heightOverride == 0 ? containerSize.Height : heightOverride));
+			}
 
             foreach (var child in children)
             {
+				if(child == HorizontalScrollBar || child == VerticalScrollBar) continue;
+				
                 containerSize += lastOffset;
 
                 var thisOffset = CalculateOffset(alignment, Size.Zero, child.Margin, lastOffset);
@@ -190,6 +199,7 @@ namespace Alex.API.Gui.Elements.Layout
 
         protected override void ArrangeChildrenCore(Rectangle finalRect, IReadOnlyCollection<GuiElement> children)
         {
+			finalRect = new Rectangle(finalRect.Location - ScrollOffset, finalRect.Size);
             var positioningBounds = finalRect + Padding;
 
             var alignment = NormalizeAlignmentForArrange(Orientation, ChildAnchor);
@@ -209,8 +219,24 @@ namespace Alex.API.Gui.Elements.Layout
 
 			var lastOffset = Thickness.Zero;
 
+			if (HorizontalScrollBar != null)
+			{
+				PositionChild(HorizontalScrollBar, HorizontalScrollBar.Anchor, positioningBounds, Thickness.Zero,
+							  offset,              true);
+			}
+			
+			if (VerticalScrollBar != null)
+			{
+				PositionChild(VerticalScrollBar, VerticalScrollBar.Anchor, positioningBounds, Thickness.Zero,
+							  offset,              true);
+			}
+
             foreach (var child in children)
             {
+				if (child == HorizontalScrollBar || child == VerticalScrollBar)
+				{
+					continue;
+				}
                 //offset -= lastOffset;
 
                 var layoutBounds = PositionChild(child, alignment, positioningBounds, lastOffset, offset, true);
@@ -239,14 +265,91 @@ namespace Alex.API.Gui.Elements.Layout
         }
         protected override void OnChildAdded(IGuiElement element)
         {
-            UpdateLayoutAlignment(element);
+				UpdateLayoutAlignment(element);
         }
         private void UpdateLayoutAlignment(IGuiElement element)
-        {
-            element.Anchor = _childAnchor;
-            InvalidateLayout();
-        }
+		{
+			if (element != HorizontalScrollBar && element != VerticalScrollBar)
+			{
+				element.Anchor = _childAnchor;
+			}
+
+			InvalidateLayout();
+		}
     
+		protected const int ScrollBarSize = 5;
+
+		public ScrollMode VerticalScrollMode { get; set; } = ScrollMode.Auto;
+		public ScrollMode HorizontalScrollMode { get; set; } = ScrollMode.Auto;
+
+		private bool _hasVerticalScroll;
+		private bool _hasHorizontalScroll;
+		public Point ScrollOffset { get; set; } = Point.Zero;
+
+		protected GuiScrollBar VerticalScrollBar;
+		protected GuiScrollBar HorizontalScrollBar;
+
+		public GuiStackContainer()
+		{
+				AddChild(VerticalScrollBar = new GuiScrollBar()
+				{
+					Orientation = Orientation.Vertical,
+					Anchor      = Alignment.FillRight,
+					Width = 10,
+					MaxWidth = 10
+				});
+				AddChild(HorizontalScrollBar = new GuiScrollBar()
+				{
+					Orientation = Orientation.Horizontal,
+					Anchor      = Alignment.BottomFill,
+					Height = 10,
+					MaxHeight = 10
+				});
+			
+		}
+		
+		protected override void OnAfterMeasure()
+		{
+			UpdateScroll();
+			base.OnAfterMeasure();
+		}
+
+		protected virtual void UpdateScroll()
+		{
+			if (VerticalScrollMode == ScrollMode.Auto)
+			{
+				_hasVerticalScroll = ContentSize.Height > Size.Height;
+			}
+			else if (VerticalScrollMode == ScrollMode.Hidden)
+			{
+				_hasVerticalScroll = false;
+			}
+			else if (VerticalScrollMode == ScrollMode.Visible)
+			{
+				_hasVerticalScroll = true;
+			}
+			VerticalScrollBar.IsVisible = _hasVerticalScroll;
+
+			if (HorizontalScrollMode == ScrollMode.Auto)
+			{
+				_hasHorizontalScroll = ContentSize.Width > Size.Width;
+			}
+			else if (HorizontalScrollMode == ScrollMode.Hidden)
+			{
+				_hasHorizontalScroll = false;
+			}
+			else if (HorizontalScrollMode == ScrollMode.Visible)
+			{
+				_hasHorizontalScroll = true;
+			}
+
+			HorizontalScrollBar.IsVisible = _hasHorizontalScroll;
+		}
+		
+		protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
+		{
+			base.OnDraw(graphics, gameTime);
+		}
     }
 }
 

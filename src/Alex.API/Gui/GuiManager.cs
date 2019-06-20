@@ -9,9 +9,24 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.API.Gui
 {
+    public class GuiDrawScreenEventArgs : EventArgs
+    {
+        public GuiScreen Screen { get; }
+
+        public GameTime GameTime { get; }
+
+        internal GuiDrawScreenEventArgs(GuiScreen screen, GameTime gameTime)
+        {
+            Screen = screen;
+            GameTime = gameTime;
+        }
+    }
+
     public class GuiManager
     {
-        private GuiDebugHelper DebugHelper { get; }
+        //private GuiDebugHelper DebugHelper { get; }
+
+        public event EventHandler<GuiDrawScreenEventArgs> DrawScreen;
 
         private Game Game { get; }
         private GraphicsDevice GraphicsDevice { get; set; }
@@ -45,7 +60,7 @@ namespace Alex.API.Gui
             GuiSpriteBatch = new GuiSpriteBatch(guiRenderer, Game.GraphicsDevice, SpriteBatch);
             GuiRenderArgs = new GuiRenderArgs(Game.GraphicsDevice, SpriteBatch, ScaledResolution, GuiRenderer, new GameTime());
 
-            DebugHelper = new GuiDebugHelper(this);
+            //DebugHelper = new GuiDebugHelper(this);
         }
 
         private void ScaledResolutionOnScaleChanged(object sender, UiScaleEventArgs args)
@@ -121,7 +136,7 @@ namespace Alex.API.Gui
                 }
             }
 
-            DebugHelper.Update(gameTime);
+            //DebugHelper.Update(gameTime);
         }
         
         public void Draw(GameTime gameTime)
@@ -134,7 +149,8 @@ namespace Alex.API.Gui
                 {
 					screen.Draw(GuiSpriteBatch, gameTime);
 
-                    DebugHelper.DrawScreen(screen);
+                    DrawScreen?.Invoke(this, new GuiDrawScreenEventArgs(screen, gameTime));
+                    //DebugHelper.DrawScreen(screen);
                 });
             }
             finally

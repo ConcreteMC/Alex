@@ -45,6 +45,8 @@ namespace Alex.API.Gui
 		private GuiElement TopMostHighlighted;
 		private GuiElement TopMostFocused;
 
+
+
 		internal GuiDebugHelper(GuiManager manager)
 		{
 			GuiManager = manager;

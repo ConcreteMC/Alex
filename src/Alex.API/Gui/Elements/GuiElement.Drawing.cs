@@ -21,6 +21,8 @@ namespace Alex.API.Gui.Elements
 
         public virtual Vector2 RotationOrigin { get; set; } = Vector2.Zero;
 
+        public bool ClipToBounds { get; set; } = true;
+
         public GuiTexture2D Background;
         public GuiTexture2D BackgroundOverlay;
 

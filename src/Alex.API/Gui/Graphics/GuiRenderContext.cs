@@ -76,6 +76,22 @@ namespace Alex.API.Gui.Graphics
             return context;
         }
 
+        public IDisposable BeginClipBounds(Rectangle scissorRectangle, bool mergeBounds = false)
+        {
+            var currentScissorRectangle = Context.ScissorRectangle;
+
+            if (mergeBounds && Context.ScissorRectangle != Rectangle.Empty)
+            {
+                Context.ScissorRectangle = Rectangle.Intersect(Context.ScissorRectangle, scissorRectangle);
+            }
+            else
+            {
+                Context.ScissorRectangle = scissorRectangle;
+            }
+
+            return new ContextDisposable(() => Context.ScissorRectangle = currentScissorRectangle);
+        }
+
         private void OnGraphicsContextDisposed(object sender, EventArgs e)
         {
             if (_beginSpriteBatchAfterContext)
@@ -333,5 +349,20 @@ namespace Alex.API.Gui.Graphics
         }
 
         #endregion
+    }
+
+    internal class ContextDisposable : IDisposable
+    {
+        private readonly Action _onDisposeAction;
+
+        public ContextDisposable(Action onDisposeAction)
+        {
+            _onDisposeAction = onDisposeAction;
+        }
+
+        public void Dispose()
+        {
+            _onDisposeAction?.Invoke();
+        }
     }
 }

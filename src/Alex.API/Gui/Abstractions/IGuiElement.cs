@@ -10,10 +10,13 @@ namespace Alex.API.Gui
 {
     public interface IGuiElement
     {
+        Guid Id { get; }
+
         IGuiScreen Screen { get; }
         IGuiElement ParentElement { get; set; }
         IGuiFocusContext FocusContext { get; set; }
 
+        IGuiElement[] ChildElements { get; }
         bool HasChildren { get; }
         int X { set; }
         int Y { set; }

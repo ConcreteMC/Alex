@@ -24,6 +24,7 @@ using Eto.Forms;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
+using GuiDebugHelper = Alex.Gui.GuiDebugHelper;
 using TextInputEventArgs = Microsoft.Xna.Framework.TextInputEventArgs;
 
 namespace Alex
@@ -52,6 +53,7 @@ namespace Alex
 		public InputManager InputManager { get; private set; }
 		public GuiRenderer GuiRenderer { get; private set; }
 		public GuiManager GuiManager { get; private set; }
+		public GuiDebugHelper GuiDebugHelper { get; private set; }
 
 		public GraphicsDeviceManager DeviceManager { get; }
 
@@ -154,6 +156,7 @@ namespace Alex
 			InputManager = new InputManager(this);
 			GuiRenderer = new GuiRenderer(this);
 			GuiManager = new GuiManager(this, InputManager, GuiRenderer);
+			GuiDebugHelper = new GuiDebugHelper(GuiManager);
 			OnCharacterInput += GuiManager.FocusManager.OnTextInput;
 
 			GameStateManager = new GameStateManager(GraphicsDevice, _spriteBatch, GuiManager);
@@ -190,6 +193,7 @@ namespace Alex
 		{
 			SaveSettings();
 			ProfileManager.SaveProfiles();
+			GuiDebugHelper.Dispose();
 		}
 
 		protected override void Update(GameTime gameTime)
@@ -200,6 +204,7 @@ namespace Alex
 
 			GuiManager.Update(gameTime);
 			GameStateManager.Update(gameTime);
+			GuiDebugHelper.Update(gameTime);
 
 			if (UIThreadQueue.TryDequeue(out Action a))
 			{
@@ -217,7 +222,7 @@ namespace Alex
 			GameStateManager.Draw(gameTime);
 
 			GuiManager.Draw(gameTime);
-		//	CefWindow.Draw(gameTime);
+			//	CefWindow.Draw(gameTime);
 
 			base.Draw(gameTime);
 		}

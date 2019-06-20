@@ -25,6 +25,17 @@ As we use submodules to add support for MC:Bedrock, you need to pull the submodu
 
 The easiest method of doing this is to clone the repository using ```git clone --recursive https://github.com/kennyvv/Alex.git```
 
+Building on Windows
+-------------------
+
+To build on windows, you must install Gtk. See [GTK Project](https://www.gtk.org/download/windows.php) for info. Or else use these commands in CMD.
+```
+git clone https://github.com/Microsoft/vcpkg
+cd vcpkg
+.\bootstrap-vcpkg.bat
+vcpkg install gtk:x64-windows
+```
+
 Contributing
 ------------
 

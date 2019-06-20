@@ -12,6 +12,8 @@ namespace Alex.API.Gui.Elements
     
     public partial class GuiElement : IGuiElement
     {
+        public Guid Id { get; } = Guid.NewGuid();
+
         private IGuiScreen _screen;
         private IGuiElement _parentElement;
         private IGuiFocusContext _focusContext;
@@ -46,6 +48,11 @@ namespace Alex.API.Gui.Elements
             set { _focusContext = value; }
         }
 
+        public IGuiElement[] ChildElements
+        {
+            get => Children.ToArray();
+        }
+
         protected List<IGuiElement> Children { get; } = new List<IGuiElement>();
         public bool HasChildren => Children.Any();
 
@@ -54,23 +61,40 @@ namespace Alex.API.Gui.Elements
 
         #region Drawing
 
-       
 
         public virtual Vector2 RenderPosition => Position.ToVector2();
         public virtual Size RenderSize => Size;
         public virtual Rectangle RenderBounds => Bounds;
-        
+        public bool IsVisible { get; set; } = true;
+
         public void Draw(GuiSpriteBatch graphics, GameTime gameTime)
         {
-            if (_initialised)
-            {
-                OnDraw(graphics, gameTime);
-            }
+            if (!IsVisible) return;
 
-            ForEachChild(c => c.Draw(graphics, gameTime));
+            if (ClipToBounds)
+            {
+                using (graphics.BeginClipBounds(RenderBounds, true))
+                {
+                    if (_initialised)
+                    {
+                        OnDraw(graphics, gameTime);
+                    }
+
+                    ForEachChild(c => c.Draw(graphics, gameTime));
+                }
+            }
+            else
+            {
+                if (_initialised)
+                {
+                    OnDraw(graphics, gameTime);
+                }
+
+                ForEachChild(c => c.Draw(graphics, gameTime));
+            }
         }
 
-        
+
         #endregion
 
         private IGuiRenderer _guiRenderer;
