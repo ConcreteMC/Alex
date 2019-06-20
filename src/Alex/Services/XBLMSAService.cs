@@ -230,6 +230,7 @@ namespace Alex.Services
 
 		                    //DecodedChain = JsonConvert.DeserializeObject<ChainData>(rawResponse);
 		                    MinecraftChain = Encoding.UTF8.GetBytes(rawResponse);
+                            Log.Info($"Chain: {rawResponse}");
 	                    }
                     }
                     catch (Exception ex)
