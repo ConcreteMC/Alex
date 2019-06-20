@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Data.Servers;
 using Alex.API.Graphics;
@@ -567,10 +568,18 @@ namespace Alex.GameStates.Gui.Multiplayer
 		            var match = FaviconRegex.Match(q.Favicon);
 		            if (match.Success && _graphicsDevice != null)
 		            {
-			            using (MemoryStream ms = new MemoryStream(Convert.FromBase64String(match.Groups["data"].Value)))
-			            {
-				            ServerIcon = GpuResourceManager.GetTexture2D(_graphicsDevice, ms);
-			            }
+                        AutoResetEvent reset = new AutoResetEvent(false);
+                        Alex.Instance.UIThreadQueue.Enqueue(() =>
+                        {
+                            using (MemoryStream ms = new MemoryStream(Convert.FromBase64String(match.Groups["data"].Value)))
+                            {
+                                ServerIcon = GpuResourceManager.GetTexture2D(_graphicsDevice, ms);
+                            }
+
+                            reset.Set();
+                        });
+
+                        reset.WaitOne();
 
 			            SavedServerEntry.CachedIcon = ServerIcon;
 			            _serverIcon.Texture = ServerIcon;
