@@ -1,18 +1,22 @@
 ﻿using System;
+using System.Runtime.Serialization;
 using ProtoBuf;
 
 namespace Alex.GuiDebugger.Common
 {
-	[ProtoContract]
+	[DataContract]
 	public class GuiElementInfo
 	{
-		[ProtoMember(1)]
+		[DataMember]
+		public Guid Id { get; set; }
+		
+		[DataMember]
 		public string ElementType { get; set; }
-
-		[ProtoMember(2)]
+		
+		[DataMember]
 		public GuiElementPropertyInfo[] PropertyInfos { get; set; }
 		
-		[ProtoMember(3)]
+		[DataMember]
 		public GuiElementInfo[] ChildElements { get; set; }
 
 	}

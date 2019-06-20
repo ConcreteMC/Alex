@@ -2,6 +2,7 @@
     x:Class="Alex.GuiDebugger.Windows.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:common="clr-namespace:Alex.GuiDebugger.Common;assembly=Alex.GuiDebugger.Common"
     xmlns:controls="clr-namespace:Alex.GuiDebugger.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Alex.GuiDebugger"
@@ -30,28 +31,41 @@
 
     <DockPanel>
         <ToolBar DockPanel.Dock="Top" ToolBarTray.IsLocked="True">
-            <ToggleButton>Show Selection</ToggleButton>
+            <Button Click="OnRefreshButtonClick">Refresh</Button>
+            <ToggleButton IsEnabled="False">Show Selection</ToggleButton>
         </ToolBar>
         <Grid>
-            <TabControl>
-                <TabItem Header="Element Tree">
-                    <TreeView Name="_elementTreeView" ItemsSource="{Binding ElementTreeItems}">
-                        <TreeView.Resources>
-                            <HierarchicalDataTemplate DataType="{x:Type models:GuiElementItem}" ItemsSource="{Binding Children}">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{Binding Type}" />
-                                    <TextBlock Foreground="Blue" Text=" [" />
-                                    <TextBlock Foreground="Blue" Text="{Binding Children.Count}" />
-                                    <TextBlock Foreground="Blue" Text="]" />
-                                </StackPanel>
-                            </HierarchicalDataTemplate>
-                        </TreeView.Resources>
-                    </TreeView>
-                </TabItem>
-                <TabItem Header="Properties">
-                    <controls:PropertyGrid Item="{Binding ElementName=_elementTreeView, Path=SelectedItem, Mode=OneWay}" />
-                </TabItem>
-            </TabControl>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <TreeView
+                Name="_elementTreeView"
+                Grid.Row="0"
+                ItemsSource="{Binding ElementTreeItems}"
+                SelectedItemChanged="OnTreeViewSelectedItemChanged">
+                <TreeView.Resources>
+                    <HierarchicalDataTemplate DataType="{x:Type common:GuiElementInfo}" ItemsSource="{Binding ChildElements}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding ElementType}" />
+                            <TextBlock Foreground="Blue" Text=" [" />
+                            <TextBlock Foreground="Blue" Text="{Binding ChildElements.Length}" />
+                            <TextBlock Foreground="Blue" Text="]" />
+                        </StackPanel>
+                    </HierarchicalDataTemplate>
+                </TreeView.Resources>
+            </TreeView>
+
+            <GridSplitter
+                Grid.Row="1"
+                Height="3"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                ResizeBehavior="PreviousAndNext"
+                ResizeDirection="Rows" />
+            <controls:PropertyGrid Grid.Row="2" Item="{Binding ElementName=_elementTreeView, Path=SelectedItem, Mode=OneWay}" />
         </Grid>
     </DockPanel>
 </Window>

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -11,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Alex.GuiDebugger.Common;
 using Alex.GuiDebugger.Models;
 
 namespace Alex.GuiDebugger.Controls
@@ -33,14 +35,49 @@ namespace Alex.GuiDebugger.Controls
 		}
 
 		#endregion
-		
-		public ObservableCollection<PropertyGridItem> PropertyItems { get; set; }
 
+		#region PropertyItems
+
+		public static readonly DependencyProperty PropertyItemsProperty =
+			DependencyProperty.Register(nameof(PropertyItems), typeof(ObservableCollection<PropertyGridItem>), typeof(PropertyGrid), new PropertyMetadata(default(ObservableCollection<PropertyGridItem>)));
+
+		public ObservableCollection<PropertyGridItem> PropertyItems
+		{
+			get { return (ObservableCollection<PropertyGridItem>) GetValue(PropertyItemsProperty); }
+			set { SetValue(PropertyItemsProperty, value); }
+		}
+
+		#endregion
+		
 		public PropertyGrid()
 		{
 			PropertyItems = new ObservableCollection<PropertyGridItem>();
 			InitializeComponent();
 			DataContext = this;
+
+			if (DesignerProperties.GetIsInDesignMode(this))
+			{
+				PropertyItems.Add(new PropertyGridItem()
+				{
+					Name = "Id",
+					Value = Guid.NewGuid()
+				});
+				PropertyItems.Add(new PropertyGridItem()
+				{
+					Name = "X",
+					Value = 0
+				});
+				PropertyItems.Add(new PropertyGridItem()
+				{
+					Name  = "Y",
+					Value = 0
+				});
+				PropertyItems.Add(new PropertyGridItem()
+				{
+					Name  = "Position",
+					Value = "0, 0"
+				});
+			}
 		}
 
 		
@@ -58,8 +95,18 @@ namespace Alex.GuiDebugger.Controls
 				return;
 			}
 
-
-
+			if (obj is GuiElementInfo guiElementInfo)
+			{
+				PropertyItems.Clear();
+				foreach (var propInfo in guiElementInfo.PropertyInfos)
+				{
+					PropertyItems.Add(new PropertyGridItem()
+					{
+						Name = propInfo.Name,
+						Value = propInfo.StringValue
+					});
+				}
+			}
 		}
 	}
 }

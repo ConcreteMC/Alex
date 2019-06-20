@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Graphics.Textures;
+using Alex.API.Gui.Attributes;
 using Alex.API.Gui.Graphics;
 using Microsoft.Xna.Framework;
 
@@ -12,13 +13,13 @@ namespace Alex.API.Gui.Elements
     
     public partial class GuiElement : IGuiElement
     {
-        public Guid Id { get; } = Guid.NewGuid();
+        [DebuggerVisible] public Guid Id { get; } = Guid.NewGuid();
 
         private IGuiScreen _screen;
         private IGuiElement _parentElement;
         private IGuiFocusContext _focusContext;
 
-        public IGuiScreen Screen
+       [DebuggerVisible(Visible = false)] public IGuiScreen Screen
         {
             get => _screen;
             private set
@@ -29,7 +30,8 @@ namespace Alex.API.Gui.Elements
                 InvalidateLayout();
             }
         }
-        public IGuiElement ParentElement
+        
+       [DebuggerVisible(Visible = false)] public IGuiElement ParentElement
         {
             get => _parentElement;
             set
@@ -42,30 +44,35 @@ namespace Alex.API.Gui.Elements
             }
         }
 
-        public virtual IGuiFocusContext FocusContext 
+       
+       [DebuggerVisible(Visible = false)] public virtual IGuiFocusContext FocusContext 
         {
             get { return _focusContext ?? ParentElement?.FocusContext ?? Screen; }
             set { _focusContext = value; }
         }
 
-        public IGuiElement[] ChildElements
+       
+       [DebuggerVisible(Visible = false)] public IGuiElement[] ChildElements
         {
             get => Children.ToArray();
         }
 
-        protected List<IGuiElement> Children { get; } = new List<IGuiElement>();
-        public bool HasChildren => Children.Any();
+       
+       [DebuggerVisible(Visible = false)] protected List<IGuiElement> Children { get; } = new List<IGuiElement>();
+       
+        [DebuggerVisible(Visible = false)] public bool HasChildren => Children.Any();
 
         public int ChildCount => Children.Count;
-        internal IReadOnlyList<IGuiElement> AllChildren => Children.OfType<GuiElement>().SelectMany(c => new []{c}.Union(c.AllChildren)).ToList();
+       
+        [DebuggerVisible(Visible = false)] internal IReadOnlyList<IGuiElement> AllChildren => Children.OfType<GuiElement>().SelectMany(c => new []{c}.Union(c.AllChildren)).ToList();
 
         #region Drawing
 
 
-        public virtual Vector2 RenderPosition => Position.ToVector2();
-        public virtual Size RenderSize => Size;
-        public virtual Rectangle RenderBounds => Bounds;
-        public bool IsVisible { get; set; } = true;
+        [DebuggerVisible] public virtual Vector2 RenderPosition => Position.ToVector2();
+        [DebuggerVisible] public virtual Size RenderSize => Size;
+        [DebuggerVisible] public virtual Rectangle RenderBounds => Bounds;
+        [DebuggerVisible] public bool IsVisible { get; set; } = true;
 
         public void Draw(GuiSpriteBatch graphics, GameTime gameTime)
         {

@@ -1,19 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using System.Text;
 using ProtoBuf;
 
 namespace Alex.GuiDebugger.Common
 {
 
-	[ProtoContract]
+	[DataContract]
 	public class GuiElementPropertyInfo
 	{
-
-		[ProtoMember(1)]
+		
+		[DataMember]
 		public string Name { get; set; }
-
-		[ProtoMember(2)]
+		
+		[DataMember]
 		public string StringValue { get; set; }
 	}
 }

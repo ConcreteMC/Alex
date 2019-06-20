@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using Alex.API.Graphics;
 using Alex.API.Graphics.Typography;
+using Alex.API.Gui.Attributes;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
@@ -30,7 +31,7 @@ namespace Alex.API.Gui.Elements
 	    private Vector2? _rotationOrigin;
 	    private IFont _font;
 		
-	    public override Vector2 RotationOrigin
+		[DebuggerVisible] public override Vector2 RotationOrigin
 	    {
 		    get
 		    {
@@ -42,7 +43,7 @@ namespace Alex.API.Gui.Elements
 
 	    private string _translationKey;
 
-	    public string TranslationKey
+		[DebuggerVisible] public string TranslationKey
 	    {
 		    get => _translationKey;
 		    set 
@@ -52,7 +53,7 @@ namespace Alex.API.Gui.Elements
 		    }
 	    }
 		
-	    public string Text
+		[DebuggerVisible] public string Text
         {
             get => _text;
             set
@@ -61,14 +62,14 @@ namespace Alex.API.Gui.Elements
                 OnTextUpdated();
             }
         }
-		public TextColor TextColor { get; set; } = TextColor.White;
-		public float TextOpacity
+		[DebuggerVisible] public TextColor TextColor { get; set; } = TextColor.White;
+		[DebuggerVisible] public float TextOpacity
 	    {
 		    get => _textOpacity;
 		    set => _textOpacity = value;
 	    }
 
-	    public float Scale
+		[DebuggerVisible] public float Scale
         {
             get => _scale.X;
             set
@@ -80,7 +81,7 @@ namespace Alex.API.Gui.Elements
 
 	    private FontStyle _fontStyle;
 
-	    public FontStyle FontStyle
+		[DebuggerVisible] public FontStyle FontStyle
 	    {
 		    get => _fontStyle;
 		    set => _fontStyle = value;
@@ -88,7 +89,7 @@ namespace Alex.API.Gui.Elements
 
 	    public bool HasShadow { get; set; } = true;
 
-	    public IFont Font
+		[DebuggerVisible] public IFont Font
 	    {
 		    get => _font;
 		    set

@@ -1,15 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
+using Alex.API.Gui.Attributes;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Layout;
 using Alex.API.Gui.Graphics;
 using Alex.API.Input;
 using Alex.API.Utils;
 using Alex.Gui.Debug;
+using Alex.GuiDebugger.Common;
+using Alex.GuiDebugger.Common.Services;
+using EasyPipes;
 using Eto;
 using Eto.Direct2D;
 using Eto.Forms;
@@ -23,7 +29,7 @@ using Mouse = Microsoft.Xna.Framework.Input.Mouse;
 
 namespace Alex.Gui
 {
-    public class GuiDebugHelper : IDisposable
+    public class GuiDebugHelper : IGuiDebuggerService, IDisposable
     {
 		private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
 		
@@ -36,7 +42,7 @@ namespace Alex.Gui
 		private static readonly Color BoundsBackground = Color.LightSeaGreen * 0.2f;
 		private static readonly Color InnerBoundsBackground = Color.CornflowerBlue * 0.1f;
 
-		public bool Enabled { get; set; } = false;
+		public bool Enabled { get; set; } = true;
 		public bool BoundingBoxesEnabled { get; set; } = true;
 		public bool BoundingBoxesHoverEnabled { get; set; } = true;
 		public bool HoverInfoEnabled { get; set; } = false;
@@ -55,32 +61,20 @@ namespace Alex.Gui
 		private GuiElement TopMostHighlighted;
 		private GuiElement TopMostFocused;
 
-		private int _lastCount = -1;
-		private GameTime _lastUpdate = new GameTime(TimeSpan.Zero, TimeSpan.Zero);
-
-		private GuiDebugForm _debugWindow;
-
-		private Application _etoApplication;
-
-		private Thread _etoAppThread;
+		private IGuiElement HighlightedElement;
+		private Server _server;
 
 		internal GuiDebugHelper(GuiManager manager)
 		{
-			//Gtk.Application.Init();
-			_etoApplication = new Application(new Eto.GtkSharp.Platform());
-			_debugWindow = new GuiDebugForm()
-			{
-			};
-			_etoApplication.MainForm = _debugWindow;
 			GuiManager = manager;
-			_etoAppThread = new Thread(() => _etoApplication.Run());
-			_etoAppThread.SetApartmentState(ApartmentState.STA);
-			//_etoApplication.Attach();
 
 			GuiManager.DrawScreen -= GuiManagerOnDrawScreen;
 			GuiManager.DrawScreen += GuiManagerOnDrawScreen;
 			
-			_etoAppThread.Start();
+			_server = new Server(GuiDebuggerConstants.NamedPipeName);
+			_server.RegisterService<IGuiDebuggerService>(this);
+			_server.Start();
+			
 		}
 
 		private void GuiManagerOnDrawScreen(object sender, GuiDrawScreenEventArgs e)
@@ -88,30 +82,9 @@ namespace Alex.Gui
 			DrawScreen(e.Screen);
 		}
 
-		private void Show()
-		{
-
-		}
-
-		private void Hide()
-		{
-
-		}
 
 		public void Update(GameTime gameTime)
 		{
-			var count = GuiManager.Screens.Count;
-
-			if (count != _lastCount && (gameTime.TotalGameTime - _lastUpdate.TotalGameTime > TimeSpan.FromSeconds(5)))
-			{
-				Log.Debug("Reloading DebugWindow ControlTreeView");
-				_debugWindow.ReloadControlTreeView(GuiManager);
-				//_etoApplication.Invoke(() => _debugWindow.ReloadControlTreeView(GuiManager));
-				_lastUpdate = gameTime;
-				_lastCount = count;
-			}
-			
-			//_etoApplication.RunIteration();
 
 			_previousKeyboard = _currentKeyboard;
 			_currentKeyboard = Keyboard.GetState();
@@ -122,23 +95,6 @@ namespace Alex.Gui
 			if (_previousKeyboard.IsKeyDown(ToggleDebugHotKey) && _currentKeyboard.IsKeyUp(ToggleDebugHotKey))
 			{
 				Enabled = !Enabled;
-
-				if (Enabled)
-				{
-					var bounds = _debugWindow.ParentWindow.Bounds;
-					var alexBounds = Alex.Instance.Window.ClientBounds;
-
-					bounds.Left = alexBounds.Right + 2;
-					bounds.Top = alexBounds.Top;
-					bounds.Bottom = alexBounds.Bottom;
-					bounds.Right = bounds.Left + 300;
-					_debugWindow.ParentWindow.Bounds = bounds;
-					_debugWindow.Show();
-				}
-				else
-				{
-					_debugWindow.Close();
-				}
 			}
 
 			if (!Enabled) return;
@@ -177,35 +133,39 @@ namespace Alex.Gui
 		{
 			if (!Enabled) return;
 
-			if (BoundingBoxesEnabled)
+			if (HighlightedElement != null)
 			{
-				screen.ForEachChild(c => DrawElementRecursive(c));
+				DrawDebug(HighlightedElement);
 			}
+			//if (BoundingBoxesEnabled)
+			//{
+			//	screen.ForEachChild(c => DrawElementRecursive(c));
+			//}
 
-			if (BoundingBoxesHoverEnabled)
-			{
-				DrawDebug(TopMostHighlighted);
-			}
+			//if (BoundingBoxesHoverEnabled)
+			//{
+			//	DrawDebug(TopMostHighlighted);
+			//}
 
-			// draw info at cursor
-			if (HoverInfoEnabled)
-			{
-				var e = TopMostFocused ?? TopMostHighlighted;
-				if (e != null)
-				{
-					var p = e.ParentElement as GuiElement;
+			//// draw info at cursor
+			//if (HoverInfoEnabled)
+			//{
+			//	var e = TopMostFocused ?? TopMostHighlighted;
+			//	if (e != null)
+			//	{
+			//		var p = e.ParentElement as GuiElement;
 
-					var info = GetElementInfo(e);
+			//		var info = GetElementInfo(e);
 
-					DrawDebugString(CursorPosition, info, Color.WhiteSmoke * 0.85f, Color.Black, 2, 1, 1);
+			//		DrawDebugString(CursorPosition, info, Color.WhiteSmoke * 0.85f, Color.Black, 2, 1, 1);
 
-					if (p != null)
-					{
-						var infoParent = GetElementInfo(p);
-						DrawDebugString(CursorPosition, infoParent, Color.WhiteSmoke * 0.85f, Color.Black, 2, -1, 1);
-					}
-				}
-			}
+			//		if (p != null)
+			//		{
+			//			var infoParent = GetElementInfo(p);
+			//			DrawDebugString(CursorPosition, infoParent, Color.WhiteSmoke * 0.85f, Color.Black, 2, -1, 1);
+			//		}
+			//	}
+			//}
 		}
 
 		private string GetElementInfo(GuiElement e)
@@ -420,10 +380,82 @@ namespace Alex.Gui
 
 		public void Dispose()
 		{
-			_debugWindow?.Dispose();
-			_etoApplication?.Quit();
-			_etoApplication?.Dispose();
-			_etoAppThread.Join();
+			_server.Stop();
+		}
+
+		public void HighlightGuiElement(Guid id)
+		{
+			var element = FindGuiElementById(id);
+			HighlightedElement = element;
+
+		}
+
+		public void DisableHighlight()
+		{
+			HighlightedElement = null;
+		}
+
+		public GuiElementInfo[] GetAllGuiElementInfos()
+		{
+			return GuiManager.Screens.Select(BuildGuiElementInfo).ToArray();
+		}
+
+		private IGuiElement FindGuiElementById(Guid id)
+		{
+			foreach (var screen in GuiManager.Screens.ToArray())
+			{
+				if (screen.TryFindDeepestChild(e => e.Id.Equals(id), out IGuiElement foundElement))
+				{
+					return foundElement;
+				}
+			}
+
+			return null;
+		}
+
+		private GuiElementInfo BuildGuiElementInfo(IGuiElement guiElement)
+		{
+			var info = new GuiElementInfo();
+			info.Id = guiElement.Id;
+			info.ElementType = guiElement.GetType().Name;
+			info.PropertyInfos = BuildGuiElementPropertyInfos(guiElement);
+
+			info.ChildElements = guiElement.ChildElements.Select(BuildGuiElementInfo).ToArray();
+			return info;
+		}
+
+		private GuiElementPropertyInfo[] BuildGuiElementPropertyInfos(IGuiElement guiElement)
+		{
+			var properties = guiElement.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public);
+
+			var infos = new List<GuiElementPropertyInfo>();
+			foreach (var prop in properties)
+			{
+				var attr = prop.GetCustomAttribute<DebuggerVisibleAttribute>(true);
+				if (attr == null) continue;
+				if (!attr.Visible) continue;
+
+				if(typeof(IGuiElement).IsAssignableFrom(prop.PropertyType)) continue;
+				
+				string val = null;
+				try
+				{
+					val = prop.GetValue(guiElement)?.ToString();
+					
+				}
+				catch(Exception ex)
+				{
+					val = "Exception - " + ex.Message;
+				}
+
+				infos.Add(new GuiElementPropertyInfo()
+				{
+					Name        = prop.Name,
+					StringValue = val
+				});
+			}
+
+			return infos.ToArray();
 		}
 	}
 }

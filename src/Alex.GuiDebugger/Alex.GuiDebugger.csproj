@@ -8,8 +8,13 @@
 
   <ItemGroup>
     <None Remove="Controls\PropertyGrid.xaml" />
+    <None Remove="Properties\DesignTimeResources.xaml" />
     <None Remove="Styles\Brushes.xaml" />
     <None Remove="Themes\Generic.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="EasyPipes" Version="1.1.0" />
   </ItemGroup>
 
   <ItemGroup>

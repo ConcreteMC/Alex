@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Alex.API.Gui.Attributes;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
@@ -8,12 +9,12 @@ namespace Alex.API.Gui
 {
     public interface IGuiControl : IGuiElement
     {
-        bool Enabled { get; }
-        bool Focused { get; }
-        bool Highlighted { get; }
+        [DebuggerVisible] bool Enabled { get; }
+        [DebuggerVisible] bool Focused { get; }
+        [DebuggerVisible] bool Highlighted { get; }
 
-        Keys AccessKey { get; set; }
-        int TabIndex { get; set; }
+        [DebuggerVisible] Keys AccessKey { get; set; }
+        [DebuggerVisible] int TabIndex { get; set; }
 
         bool Focus();
 

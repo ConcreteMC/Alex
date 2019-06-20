@@ -8,6 +8,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="/Alex.GuiDebugger;Component/Styles/Brushes.xaml" />
+                <ResourceDictionary Source="/Alex.GuiDebugger;Component/Themes/Generic.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

@@ -4,15 +4,16 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Text;
 using System.Windows;
+using Alex.GuiDebugger.Common;
 using Alex.GuiDebugger.Models;
 
 namespace Alex.GuiDebugger.ViewModels
 {
 	public class MainViewModel : ViewModelBase
 	{
-		private ObservableCollection<GuiElementItem> _elementTreeItems;
+		private ObservableCollection<GuiElementInfo> _elementTreeItems;
 
-		public ObservableCollection<GuiElementItem> ElementTreeItems
+		public ObservableCollection<GuiElementInfo> ElementTreeItems
 		{
 			get => _elementTreeItems;
 			set
@@ -25,28 +26,29 @@ namespace Alex.GuiDebugger.ViewModels
 		
 		public MainViewModel()
 		{
-			if (DesignerProperties.GetIsInDesignMode(new DependencyObject()))
-			{
-				ElementTreeItems = new ObservableCollection<GuiElementItem>();
-				ElementTreeItems.Add(new GuiElementItem()
-				{
-					Type = "GuiScreen",
-					Children =
-					{
-						new GuiElementItem()
-						{
-							Type = "GuiMultiStackContainer",
-							Children =
-							{
-								new GuiElementItem()
-								{
-									Type = "GuiText"
-								}
-							}
-						}
-					}
-				});
-			}
+			ElementTreeItems = new ObservableCollection<GuiElementInfo>();
+			//if (DesignerProperties.GetIsInDesignMode(new DependencyObject()))
+			//{
+			//	ElementTreeItems = new ObservableCollection<GuiElementInfo>();
+			//	ElementTreeItems.Add(new GuiElementInfo()
+			//	{
+			//		ElementType = "GuiScreen",
+			//		ChildElements = 
+			//		{
+			//			new GuiElementInfo()
+			//			{
+			//				ElementType = "GuiMultiStackContainer",
+			//				ChildElements = 
+			//				{
+			//					new GuiElementInfo()
+			//					{
+			//						ElementType = "GuiText"
+			//					}
+			//				}
+			//			}
+			//		}
+			//	});
+			//}
 		}
 
 	}

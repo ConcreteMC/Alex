@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Alex.API.Gui.Attributes;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Graphics;
 using Microsoft.Xna.Framework;
@@ -11,7 +12,7 @@ namespace Alex.API.Gui.Elements.Layout
         private Orientation _orientation = Orientation.Vertical;
         private Alignment _childAnchor = Alignment.TopCenter;
 
-        public virtual Orientation Orientation
+		[DebuggerVisible] public virtual Orientation Orientation
         {
             get => _orientation;
             set
@@ -22,7 +23,7 @@ namespace Alex.API.Gui.Elements.Layout
         }
 
 
-        public Alignment ChildAnchor
+		[DebuggerVisible] public Alignment ChildAnchor
         {
             get => _childAnchor;
             set
