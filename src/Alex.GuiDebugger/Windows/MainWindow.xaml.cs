@@ -29,6 +29,14 @@ namespace Alex.GuiDebugger.Windows
 		{
 			InitializeComponent();
 			DataContext = _mainViewModel = new MainViewModel();
+
+			PropertyGridItem.ValueChanged -= PropertyGridItemOnValueChanged;
+			PropertyGridItem.ValueChanged += PropertyGridItemOnValueChanged;
+		}
+
+		private void PropertyGridItemOnValueChanged(object sender, PropertyGridItemValueChangedEventArgs e)
+		{
+			App.GuiDebuggerService.SetElementPropertyValue(e.ElementId, e.PropertyName, e.NewValue);
 		}
 
 		private void OnRefreshButtonClick(object sender, RoutedEventArgs e)
@@ -51,7 +59,7 @@ namespace Alex.GuiDebugger.Windows
 
 				foreach (var item in items)
 				{
-					_mainViewModel.SelectedGuiElementPropertyInfos.Add(item);
+					_mainViewModel.SelectedGuiElementPropertyInfos.Add(new PropertyGridItem(elementInfo.Id, item.Name, item.StringValue));
 				}
 			}
 			else
@@ -76,9 +84,10 @@ namespace Alex.GuiDebugger.Windows
 				var infos = App.GuiDebuggerService.GetElementPropertyInfos(item.Id);
 				foreach (var info in infos)
 				{
-					_mainViewModel.SelectedGuiElementPropertyInfos.Add(info);
+					_mainViewModel.SelectedGuiElementPropertyInfos.Add(new PropertyGridItem(item.Id, info.Name, info.StringValue));
 				}
 			}
 		}
+
 	}
 }

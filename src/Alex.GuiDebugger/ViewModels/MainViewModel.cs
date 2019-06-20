@@ -12,7 +12,7 @@ namespace Alex.GuiDebugger.ViewModels
 	public class MainViewModel : ViewModelBase
 	{
 		private ObservableCollection<GuiElementInfo> _elementTreeItems;
-		private ObservableCollection<GuiElementPropertyInfo> _selectedGuiElementPropertyInfos;
+		private ObservableCollection<PropertyGridItem> _selectedGuiElementPropertyInfos;
 
 		public ObservableCollection<GuiElementInfo> ElementTreeItems
 		{
@@ -25,7 +25,7 @@ namespace Alex.GuiDebugger.ViewModels
 			}
 		}
 
-		public ObservableCollection<GuiElementPropertyInfo> SelectedGuiElementPropertyInfos
+		public ObservableCollection<PropertyGridItem> SelectedGuiElementPropertyInfos
 		{
 			get => _selectedGuiElementPropertyInfos;
 			set
@@ -39,7 +39,7 @@ namespace Alex.GuiDebugger.ViewModels
 		public MainViewModel()
 		{
 			ElementTreeItems = new ObservableCollection<GuiElementInfo>();
-			SelectedGuiElementPropertyInfos = new ObservableCollection<GuiElementPropertyInfo>();
+			SelectedGuiElementPropertyInfos = new ObservableCollection<PropertyGridItem>();
 			//if (DesignerProperties.GetIsInDesignMode(new DependencyObject()))
 			//{
 			//	ElementTreeItems = new ObservableCollection<GuiElementInfo>();

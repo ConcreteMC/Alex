@@ -12,7 +12,6 @@ using Alex.API.Gui.Elements.Layout;
 using Alex.API.Gui.Graphics;
 using Alex.API.Input;
 using Alex.API.Utils;
-using Alex.Gui.Debug;
 using Alex.GuiDebugger.Common;
 using Alex.GuiDebugger.Common.Services;
 using EasyPipes;
@@ -448,7 +447,27 @@ namespace Alex.Gui
 				return Thickness.Parse(value);
 			}
 
-			return null;
+			if (targetType == typeof(int))
+			{
+				return int.Parse(value);
+			}
+			
+			if (targetType == typeof(double))
+			{
+				return double.Parse(value);
+			}
+			
+			if (targetType == typeof(float))
+			{
+				return float.Parse(value);
+			}
+			
+			if (targetType == typeof(bool))
+			{
+				return bool.Parse(value);
+			}
+
+			return Convert.ChangeType(value, targetType);
 		}
 
 		private IGuiElement FindGuiElementById(Guid id)

@@ -57,26 +57,26 @@ namespace Alex.GuiDebugger.Controls
 
 			if (DesignerProperties.GetIsInDesignMode(this))
 			{
-				PropertyItems.Add(new PropertyGridItem()
-				{
-					Name = "Id",
-					Value = Guid.NewGuid()
-				});
-				PropertyItems.Add(new PropertyGridItem()
-				{
-					Name = "X",
-					Value = 0
-				});
-				PropertyItems.Add(new PropertyGridItem()
-				{
-					Name  = "Y",
-					Value = 0
-				});
-				PropertyItems.Add(new PropertyGridItem()
-				{
-					Name  = "Position",
-					Value = "0, 0"
-				});
+				//PropertyItems.Add(new PropertyGridItem()
+				//{
+				//	Name = "Id",
+				//	Value = Guid.NewGuid()
+				//});
+				//PropertyItems.Add(new PropertyGridItem()
+				//{
+				//	Name = "X",
+				//	Value = 0
+				//});
+				//PropertyItems.Add(new PropertyGridItem()
+				//{
+				//	Name  = "Y",
+				//	Value = 0
+				//});
+				//PropertyItems.Add(new PropertyGridItem()
+				//{
+				//	Name  = "Position",
+				//	Value = "0, 0"
+				//});
 			}
 		}
 

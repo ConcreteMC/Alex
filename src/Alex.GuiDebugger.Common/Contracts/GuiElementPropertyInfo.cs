@@ -12,9 +12,9 @@ namespace Alex.GuiDebugger.Common
 	{
 		
 		[DataMember]
-		public string Name { get; set; }
+		public virtual string Name { get; set; }
 		
 		[DataMember]
-		public string StringValue { get; set; }
+		public virtual string StringValue { get; set; }
 	}
 }

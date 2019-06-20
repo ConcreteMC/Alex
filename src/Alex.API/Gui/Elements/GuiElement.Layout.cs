@@ -437,14 +437,34 @@ namespace Alex.API.Gui.Elements
 
         protected virtual void OnBeforeArrange(Rectangle newBounds)
         {
-
+            //if (ParentElement != null && ClipToBounds)
+            //{
+            //    RenderBounds   = Rectangle.Intersect(newBounds, ParentElement.RenderBounds);
+            //    RenderSize     = RenderBounds.Size;
+            //    RenderPosition = RenderBounds.Location.ToVector2();
+            //}
+            //else
+            //{
+            //    RenderBounds   = newBounds;
+            //    RenderSize     = RenderBounds.Size;
+            //    RenderPosition = RenderBounds.Location.ToVector2();
+            //}
         }
 
         protected virtual void OnAfterArrange()
         {
-            RenderBounds = Bounds;
-            RenderSize = Size;
-            RenderPosition = Position.ToVector2();
+            //if (ParentElement != null && ClipToBounds)
+            //{
+            //    RenderBounds   = Rectangle.Intersect(Bounds, ParentElement.RenderBounds);
+            //    RenderSize     = RenderBounds.Size;
+            //    RenderPosition = RenderBounds.Location.ToVector2();
+            //}
+            //else
+            //{
+                RenderBounds   = Bounds;
+                RenderSize     = Size;
+                RenderPosition = Position.ToVector2();
+            //}
         }
 
         protected virtual void ArrangeCore(Rectangle newBounds)
