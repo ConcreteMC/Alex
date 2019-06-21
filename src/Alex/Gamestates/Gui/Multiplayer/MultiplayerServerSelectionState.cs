@@ -88,7 +88,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 			    });
 		    });
 
-			Background = new GuiTexture2D(_skyBox, TextureRepeatMode.Stretch);
+		    Background = new GuiTexture2D(_skyBox, TextureRepeatMode.Stretch);
 		}
 
 	    protected override void OnShow()
@@ -193,8 +193,8 @@ namespace Alex.GameStates.Gui.Multiplayer
 		
 	    private void OnCancelButtonPressed()
 	    {
-		//	Alex.GameStateManager.Back();
-			Alex.GameStateManager.SetActiveState<TitleState>();
+			Alex.GameStateManager.Back();
+			//Alex.GameStateManager.SetActiveState("title");
 	    }
 
 	    private void OnRefreshButtonPressed()

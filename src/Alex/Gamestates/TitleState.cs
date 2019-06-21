@@ -12,6 +12,7 @@ using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.Entities;
 using Alex.GameStates.Gui.Common;
+using Alex.Gamestates.Gui.MainMenu;
 using Alex.GameStates.Gui.Multiplayer;
 using Alex.Gamestates.Login;
 using Alex.Gui;
@@ -138,9 +139,8 @@ namespace Alex.GameStates
 				Margin = new Thickness(240, 15, 0, 0),
 				Anchor = Alignment.TopCenter,
 
-				Text = "Who liek minecwaf?!"
+				Text = "Who liek minecwaf?!",
 			});
-
 
 			_debugInfo = new GuiDebugInfo();
 			_debugInfo.AddDebugRight(() =>
@@ -223,7 +223,7 @@ namespace Alex.GameStates
 			Alex.GameStateManager.SetActiveState(new MultiplayerServerSelectionState(_backgroundSkyBox)
 			{
 				BackgroundOverlay = BackgroundOverlay
-			}, false);
+			}, true);
 		}
 
 		#endregion
@@ -285,20 +285,22 @@ namespace Alex.GameStates
 			{
 				BackgroundOverlay = new Color(Color.Black, 0.15f),
 
-				Margin = new Thickness(15, 15, 5, 15),
+				Margin = new Thickness(15, 15, 5, 40),
 
 				Width = 92,
 				Height = 128,
 
 				Anchor = Alignment.BottomRight,
 			});
-			
-			/*_playerView.AddChild(_loginButton = new GuiButton("Switch user", LoginBtnPressed)
+
+			AddChild(_loginButton = new GuiButton("Switch user", LoginBtnPressed)
 			{
-				Anchor = Alignment.BottomCenter,
+				Anchor = Alignment.BottomRight,
 				Modern = false,
-				TranslationKey = ""
-			});*/
+				TranslationKey = "",
+				Margin = new Thickness(15, 15, 6, 15),
+				Width = 90
+			});
 			
 			AutoResetEvent reset = new AutoResetEvent(false);
 			Alex.UIThreadQueue.Enqueue(() =>
@@ -319,11 +321,13 @@ namespace Alex.GameStates
 			Alex.IsMouseVisible = true;
 
 			Alex.GameStateManager.AddState("serverlist", new MultiplayerServerSelectionState(_backgroundSkyBox));
+			//Alex.GameStateManager.AddState("profileSelection", new ProfileSelectionState(_backgroundSkyBox));
 		}
 
 		private void LoginBtnPressed()
 		{
-			Alex.GameStateManager.SetActiveState(new VersionSelectionState());
+			Alex.GameStateManager.SetActiveState(new ProfileSelectionState(_backgroundSkyBox), true);
+			//Alex.GameStateManager.SetActiveState(new VersionSelectionState());
 		}
 
 		private float _rotation;
