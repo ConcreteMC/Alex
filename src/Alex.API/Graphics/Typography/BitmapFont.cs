@@ -152,7 +152,7 @@ namespace Alex.API.Graphics.Typography
 
                     if (firstGlyphOfLine)
                     {
-                        offset.X += CharacterSpacing;
+                       // offset.X += CharacterSpacing;
 	                    firstGlyphOfLine = false;
 					}
 
@@ -311,7 +311,7 @@ namespace Alex.API.Graphics.Typography
 
 					if (firstGlyphOfLine)
 					{
-						offset.X += CharacterSpacing;
+					//	offset.X += CharacterSpacing;
 						firstGlyphOfLine = false;
 					}
 

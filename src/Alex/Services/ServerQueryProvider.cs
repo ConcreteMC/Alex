@@ -346,7 +346,7 @@ namespace Alex.Services
 		        if (sw.IsRunning)
 			        sw.Stop();
 
-		        Log.Error($"Could not get server query result, server returned \"{jsonResponse}\"");
+		        Log.Error($"Could not get server query result! Exception: {ex.ToString()}");
 
 		        string msg = ex.Message;
 		        if (ex is SocketException)

@@ -153,8 +153,11 @@ namespace Alex.Worlds.Bedrock
 
             ECDsa signKey = ConvertToSingKeyFormat(clientKey);
 
-			string identity, xuid = "";
+            string b64Key = SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(clientKey.Public).GetEncoded().EncodeBase64();
+
+            string identity, xuid = "";
 			byte[] certChain = null;
+
             if (XblmsaService.MinecraftChain != null)
             {
 	            var element = XblmsaService.DecodedChain.Chain[1];
@@ -162,19 +165,38 @@ namespace Alex.Worlds.Bedrock
                 Username = username = element.ExtraData.DisplayName;
                 identity = element.ExtraData.Identity;
                 xuid = element.ExtraData.Xuid;
-
+                
                 certChain = XblmsaService.MinecraftChain;
-				Log.Info($"Using signed certificate chain");
+                Log.Info($"Using signed certificate chain");
             }
             else
             {
-				certChain = EncodeJwt(username, clientKey, signKey, IsEmulator);
-			
+                long iat = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                long exp = DateTimeOffset.UtcNow.AddDays(1).ToUnixTimeSeconds();
+
+                //ECDsa signKey = ConvertToSingKeyFormat(newKey);
+
+                CertificateData certificateData = new CertificateData
+                {
+                    Exp = exp,
+                    Iat = iat,
+                    ExtraData = new ExtraData
+                    {
+                        DisplayName = username,
+                        Identity = Guid.NewGuid().ToString(),
+                        XUID = ""
+                    },
+                    Iss = "self",
+                    IdentityPublicKey = b64Key,
+                    CertificateAuthority = true,
+                    Nbf = iat,
+                    RandomNonce = new Random().Next(),
+                };
+
+                certChain = EncodeJwt(certificateData, b64Key, signKey, IsEmulator);
             }
 
-	        //XblmsaService
-	        
-	        var skinData = EncodeSkinJwt(clientKey, signKey, username);
+            var skinData = EncodeSkinJwt(clientKey, signKey, username, b64Key);
 
 	        byte[] data = CryptoUtils.CompressJwtBytes(certChain, skinData, CompressionLevel.Fastest);
 
@@ -215,31 +237,13 @@ namespace Alex.Worlds.Bedrock
             return ECDsa.Create(signParam);
         }
 
-        private string b64Key;
-        private byte[] EncodeJwt(string username, AsymmetricCipherKeyPair newKey, ECDsa signKey, bool isEmulator)
+        private byte[] EncodeJwt(CertificateData certificateData, string b64Key, ECDsa signKey, bool isEmulator)
         {
-            long iat = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-            long exp = DateTimeOffset.UtcNow.AddDays(1).ToUnixTimeSeconds();
+           // long iat = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+           // long exp = DateTimeOffset.UtcNow.AddDays(1).ToUnixTimeSeconds();
 
             //ECDsa signKey = ConvertToSingKeyFormat(newKey);
-            b64Key = SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(newKey.Public).GetEncoded().EncodeBase64();
-
-            CertificateData certificateData = new CertificateData
-            {
-                Exp = exp,
-                Iat = iat,
-                ExtraData = new ExtraData
-                {
-                    DisplayName = username,
-                    Identity = Guid.NewGuid().ToString(),
-                    XUID = ""
-                },
-                Iss = "self",
-                IdentityPublicKey = b64Key,
-                CertificateAuthority = true,
-                Nbf = iat,
-                RandomNonce = new Random().Next(),
-            };
+         //   b64Key = SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(newKey.Public).GetEncoded().EncodeBase64();
 
             string val = JWT.Encode(certificateData, signKey, JwsAlgorithm.ES384, new Dictionary<string, object> { { "x5u", b64Key } }, new JwtSettings()
             {
@@ -255,7 +259,7 @@ namespace Alex.Worlds.Bedrock
             return Encoding.UTF8.GetBytes(val);
         }
 
-        private byte[] EncodeSkinJwt(AsymmetricCipherKeyPair newKey, ECDsa signKey, string username)
+        private byte[] EncodeSkinJwt(AsymmetricCipherKeyPair newKey, ECDsa signKey, string username, string x5u)
         {
             MiNET.Utils.Skins.Skin skin = new Skin
             {
@@ -301,7 +305,7 @@ namespace Alex.Worlds.Bedrock
          //  ECDsa signKey = ConvertToSingKeyFormat(newKey);
            // string b64Key = SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(newKey.Public).GetEncoded().EncodeBase64();
 
-            string val = JWT.Encode(skinData, signKey, JwsAlgorithm.ES384, new Dictionary<string, object> { { "x5u", b64Key } }, new JwtSettings()
+            string val = JWT.Encode(skinData, signKey, JwsAlgorithm.ES384, new Dictionary<string, object> { { "x5u", x5u } }, new JwtSettings()
             {
                 JsonMapper = new JWTMapper()
             });
