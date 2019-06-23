@@ -4,8 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Alex.API.Services;
+using Alex.API.Utils;
 using Alex.Services;
 using Alex.Utils;
+using Eto.Drawing;
 using Newtonsoft.Json;
 using NLog;
 
@@ -59,6 +61,7 @@ namespace Alex
 					if (!string.IsNullOrWhiteSpace(saveFile.SelectedProfile))
 					{
 						progressReceiver.UpdateProgress(75, StatusMessage);
+
 						foreach (var profile in profiles)
 						{
 							profile.Profile.IsBedrock = profile.Type == ProfileType.Bedrock;
@@ -101,6 +104,15 @@ namespace Alex
 
 		public void CreateOrUpdateProfile(ProfileType type, PlayerProfile profile, bool setActive = false)
 		{
+			if (profile.Skin.Texture == null)
+			{
+				if (Alex.Resources.ResourcePack.TryGetBitmap("entity/alex", out var rawTexture))
+				{
+					profile.Skin.Texture = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, rawTexture);
+					profile.Skin.Slim = true;
+				}
+				
+			}
 			SavedProfile savedProfile;
 			if (Profiles.TryGetValue(profile.Uuid, out savedProfile))
 			{
@@ -118,6 +130,8 @@ namespace Alex
 			if (setActive)
 			{
 				//ActiveProfile = savedProfile;
+				Alex.Services.GetService<IPlayerProfileService>()?.Force(profile);
+				//_playerProfileService.Force(profile);
 			}
 
 			Alex.UIThreadQueue.Enqueue(SaveProfiles);

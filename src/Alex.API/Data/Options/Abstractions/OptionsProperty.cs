@@ -35,6 +35,11 @@ namespace Alex.API.Data.Options
 
         private readonly OptionsPropertyValidator<TProperty> _validator;
 
+        public OptionsProperty()
+        {
+
+        }
+
         internal OptionsProperty(TProperty defaultValue, OptionsPropertyValidator<TProperty> validator = null)
         {
             _defaultValue = defaultValue;

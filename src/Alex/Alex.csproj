@@ -84,18 +84,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <RdXmlFile Include="rd.xml" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Eto.Forms" Version="2.4.1" />
-    <PackageReference Include="Eto.Platform.Gtk" Version="2.4.1" />
-    <PackageReference Include="Eto.Platform.Windows" Version="2.4.1" />
+    <PackageReference Include="Eto.Forms" Version="2.5.0-beta.1" />
+    <PackageReference Include="Eto.Platform.Gtk" Version="2.5.0-beta.1" />
+    <PackageReference Include="Eto.Platform.Wpf" Version="2.5.0-beta.1" />
+    <PackageReference Include="GtkSharp" Version="3.22.24.37" />
     <PackageReference Include="Hawezo.MojangSharp" Version="0.5.1" />
     <PackageReference Include="Microsoft.Identity.Client" Version="2.3.0-preview" />
     <PackageReference Include="MonoGame.Framework.DesktopGL.Core" Version="3.7.0.7" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
     <PackageReference Include="NLog" Version="4.5.10" />
+    <PackageReference Include="Portable.BouncyCastle" Version="1.8.5" />
     <PackageReference Include="System.Reactive.Core" Version="4.1.2" />
     <PackageReference Include="System.Reactive.Interfaces" Version="4.1.2" />
     <PackageReference Include="System.Reactive.Linq" Version="4.1.2" />
