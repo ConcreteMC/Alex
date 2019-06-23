@@ -276,7 +276,6 @@ namespace Alex.Worlds.Bedrock
 
             string skinData = $@"
 {{
-	""CapeData"": """",
 	""ADRole"": 0,
 	""ClientRandomId"": {new Random().Next()},
 	""CurrentInputMode"": 1,
