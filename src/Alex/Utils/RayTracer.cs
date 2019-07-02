@@ -44,7 +44,7 @@ namespace Alex.Utils
 			return new Vector3(0, -255, 0);
 		}
 
-		public static bool CanSee(GraphicsDevice graphics, World world, Camera camera, Vector3 target)
+		public static bool CanSee(GraphicsDevice graphics, World world, Camera camera, Vector3 target, int maxDistance)
 		{
 			var projectionMatrix = camera.ProjectionMatrix;
 			var viewMatrix = camera.ViewMatrix;
@@ -69,7 +69,7 @@ namespace Alex.Utils
 			var d = (target - myPosition);
 			d.Normalize();
 
-			plotter.Plot(myPosition, d, Alex.Instance.GameSettings.RenderDistance^2);
+			plotter.Plot(myPosition, d, maxDistance^2);
 			
 			while (plotter.Next())
 			{

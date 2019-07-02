@@ -2,6 +2,7 @@
 using System.Text;
 using Alex.API.Graphics;
 using Alex.API.Network;
+using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks.Minecraft;
@@ -30,12 +31,12 @@ namespace Alex.GameStates.Playing
 
 		private readonly PlayingHud _playingHud;
 		private readonly GuiDebugInfo _debugInfo;
-
+		
 		public PlayingState(Alex alex, GraphicsDevice graphics, WorldProvider worldProvider, INetworkProvider networkProvider) : base(alex)
 		{
 			NetworkProvider = networkProvider;
 
-			World = new World(alex, graphics, new FirstPersonCamera(alex.GameSettings.RenderDistance, Vector3.Zero, Vector3.Zero), networkProvider);
+			World = new World(alex, graphics, Options, new FirstPersonCamera(Options.VideoOptions.RenderDistance, Vector3.Zero, Vector3.Zero), networkProvider);
 			SkyRenderer = new SkyBox(alex, graphics, World);
 
 			WorldProvider = worldProvider;
@@ -86,8 +87,8 @@ namespace Alex.GameStates.Playing
 		{
 			_debugInfo.AddDebugLeft(() =>
 			{
-				FpsCounter.Update();
-				World.ChunkManager.GetPendingLightingUpdates(out int lowLight, out int midLight, out int highLight);
+				//FpsCounter.Update();
+				//World.ChunkManager.GetPendingLightingUpdates(out int lowLight, out int midLight, out int highLight);
 
 				return $"Alex {Alex.Version} ({FpsCounter.Value:##} FPS, Queued: {World.EnqueuedChunkUpdates} Active: {World.ConcurrentChunkUpdates} chunk updates"/*, H: {highLight} M: {midLight} L: {lowLight} lighting updates)"*/;
 			});
@@ -160,7 +161,6 @@ namespace Alex.GameStates.Playing
 		}
 
 		private float AspectRatio { get; set; }
-		private bool RenderWireframe { get; set; } = false;
 		private string MemoryUsageDisplay { get; set; } = "";
 
 		private TimeSpan _previousMemUpdate = TimeSpan.Zero;
@@ -204,7 +204,7 @@ namespace Alex.GameStates.Playing
 						_previousMemUpdate = gameTime.TotalGameTime;
 						//Alex.Process.Refresh();
 						MemoryUsageDisplay = $"Allocated memory: {GetBytesReadable(Environment.WorkingSet)}\n" +
-						                     $"VertexBuffer Pool: {GetBytesReadable(VertexBufferPool.GetMemoryUsage)}";
+						                     $"GPU Memory: {GetBytesReadable(GpuResourceManager.GetMemoryUsage)}";
 					}
 				}
 			}
@@ -291,6 +291,14 @@ namespace Alex.GameStates.Playing
 				if (currentKeyboardState.IsKeyDown(KeyBinds.DebugInfo))
 				{
 					RenderDebug = !RenderDebug;
+					if (!RenderDebug)
+					{
+						Alex.GuiManager.RemoveScreen(_debugInfo);
+					}
+					else
+					{
+						Alex.GuiManager.AddScreen(_debugInfo);
+					}
 				}
 
 				if (currentKeyboardState.IsKeyDown(KeyBinds.ReBuildChunks))
@@ -308,12 +316,17 @@ namespace Alex.GameStates.Playing
 				{
 					if (World.Camera is FirstPersonCamera)
 					{
-						World.Camera = new ThirdPersonCamera(Alex.GameSettings.RenderDistance, World.Player.KnownPosition, Vector3.Zero);
+						World.Camera = new ThirdPersonCamera(Options.VideoOptions.RenderDistance, World.Player.KnownPosition, Vector3.Zero);
 					}
 					else
 					{
-						World.Camera = new FirstPersonCamera(Alex.GameSettings.RenderDistance, World.Player.KnownPosition, Vector3.Zero);
+						World.Camera = new FirstPersonCamera(Options.VideoOptions.RenderDistance, World.Player.KnownPosition, Vector3.Zero);
 					}
+				}
+
+				if (currentKeyboardState.IsKeyDown(KeyBinds.ToggleWireframe))
+				{
+					World.ToggleWireFrame();
 				}
 			}
 
@@ -331,13 +344,7 @@ namespace Alex.GameStates.Playing
 					args.SpriteBatch.RenderBoundingBox(
 						RayTraceBoundingBox,
 						World.Camera.ViewMatrix, World.Camera.ProjectionMatrix, Color.LightGray);
-
-				    /*var floored = _adjacentBlock.Floor();
-
-                    args.SpriteBatch.RenderBoundingBox(
-				        new BoundingBox(floored, floored + new Vector3(1,1,1)), 
-				        World.Camera.ViewMatrix, World.Camera.ProjectionMatrix, Color.Red);*/
-                }
+				}
 
 				World.Render2D(args);
 			}

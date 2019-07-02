@@ -56,7 +56,17 @@ namespace Alex.API.Data.Options
                 property.ResetToDefault();
             }
         }
-        
+
+        public object GetValue()
+        {
+            return null;
+        }
+
+        public void SetValue(object obj)
+        {
+            
+        }
+
         #endregion
     }
 }

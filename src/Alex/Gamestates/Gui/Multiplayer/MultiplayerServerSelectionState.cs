@@ -16,15 +16,13 @@ using Alex.API.Gui.Elements.Layout;
 using Alex.API.Gui.Graphics;
 using Alex.API.Services;
 using Alex.API.Utils;
-using Alex.Gamestates.Login;
 using Alex.GameStates.Gui.Common;
+using Alex.Gamestates.Login;
 using Alex.Gui;
 using Alex.Networking.Java;
-using Alex.Services;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MiNET;
 using MiNET.Net;
 using MiNET.Utils;
 
@@ -91,7 +89,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 			    });
 		    });
 
-			Background = new GuiTexture2D(_skyBox, TextureRepeatMode.Stretch);
+		    Background = new GuiTexture2D(_skyBox, TextureRepeatMode.Stretch);
 		}
 
 	    protected override void OnShow()
@@ -179,16 +177,13 @@ namespace Alex.GameStates.Gui.Multiplayer
 
 		    else if (entry.ServerType == ServerType.Bedrock)
 			{
-				Alex.ConnectToServer(target, currentProfile, true);
-                if (currentProfile == null || (!currentProfile.IsBedrock))
+				if (currentProfile == null || (!currentProfile.IsBedrock))
 				{
-					//var msa = Alex.Services.GetService<XBLMSAService>();
-					//msa.AsyncBrowserLogin().Wait();
-				//	JavaLoginState loginState = new JavaLoginState(_skyBox,
-					//		() => { Alex.ConnectToServer(target, authenticationService.CurrentProfile, false); });
+					BEDeviceCodeLoginState loginState = new BEDeviceCodeLoginState(_skyBox,
+						(profile) => { Alex.ConnectToServer(target, profile, true); });
 
 
-			//		Alex.GameStateManager.SetActiveState(loginState, true);
+					Alex.GameStateManager.SetActiveState(loginState, true);
 				}
 				else
 				{
@@ -199,8 +194,8 @@ namespace Alex.GameStates.Gui.Multiplayer
 		
 	    private void OnCancelButtonPressed()
 	    {
-		//	Alex.GameStateManager.Back();
-			Alex.GameStateManager.SetActiveState<TitleState>();
+			Alex.GameStateManager.Back();
+			//Alex.GameStateManager.SetActiveState("title");
 	    }
 
 	    private void OnRefreshButtonPressed()
@@ -573,10 +568,18 @@ namespace Alex.GameStates.Gui.Multiplayer
 		            var match = FaviconRegex.Match(q.Favicon);
 		            if (match.Success && _graphicsDevice != null)
 		            {
-			            using (MemoryStream ms = new MemoryStream(Convert.FromBase64String(match.Groups["data"].Value)))
-			            {
-				            ServerIcon = Texture2D.FromStream(_graphicsDevice, ms);
-			            }
+                        AutoResetEvent reset = new AutoResetEvent(false);
+                        Alex.Instance.UIThreadQueue.Enqueue(() =>
+                        {
+                            using (MemoryStream ms = new MemoryStream(Convert.FromBase64String(match.Groups["data"].Value)))
+                            {
+                                ServerIcon = GpuResourceManager.GetTexture2D(_graphicsDevice, ms);
+                            }
+
+                            reset.Set();
+                        });
+
+                        reset.WaitOne();
 
 			            SavedServerEntry.CachedIcon = ServerIcon;
 			            _serverIcon.Texture = ServerIcon;

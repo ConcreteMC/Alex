@@ -1,27 +1,17 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Blocks.State;
 using Alex.API.Graphics;
-using Alex.API.Utils;
 using Alex.API.World;
-using Alex.Blocks;
 using Alex.Blocks.Minecraft;
-using Alex.Blocks.State;
 using Alex.Blocks.Storage;
 using Alex.Networking.Java.Util;
 using Alex.ResourcePackLib.Json;
-using Alex.Utils;
 using fNbt;
-using fNbt.Tags;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-
 using NLog;
 
 namespace Alex.Worlds
@@ -279,7 +269,7 @@ namespace Alex.Worlds
 
 		private DynamicVertexBuffer RenewVertexBuffer(GraphicsDevice graphicsDevice, VertexPositionNormalTextureColor[] vertices)
 		{
-            DynamicVertexBuffer buffer = VertexBufferPool.GetBuffer(graphicsDevice,
+            DynamicVertexBuffer buffer = GpuResourceManager.GetBuffer(graphicsDevice,
 				VertexPositionNormalTextureColor.VertexDeclaration,
 				vertices.Length,
 				BufferUsage.WriteOnly);
@@ -294,7 +284,7 @@ namespace Alex.Worlds
 	    
 		private IndexBuffer RenewIndexBuffer(GraphicsDevice graphicsDevice, int[] vertices)
 		{
-			IndexBuffer buffer = new IndexBuffer(graphicsDevice, IndexElementSize.ThirtyTwoBits, vertices.Length, BufferUsage.WriteOnly);
+			IndexBuffer buffer = GpuResourceManager.GetIndexBuffer(graphicsDevice, IndexElementSize.ThirtyTwoBits, vertices.Length, BufferUsage.WriteOnly);
 
 			if (vertices.Length > 0)
 			{

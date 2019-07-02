@@ -6,10 +6,13 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using Alex.API.Data;
+using Alex.API.Data.Options;
 using Alex.API.Network;
+using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Gamestates;
+using Alex.Services;
 using Jose;
 using Microsoft.Xna.Framework;
 using MiNET;
@@ -74,7 +77,10 @@ namespace Alex.Worlds.Bedrock
 		public BedrockMotd KnownMotd = new BedrockMotd(string.Empty);
 
         private Alex Alex { get; }
-		public BedrockClient(Alex alex,IPEndPoint endpoint, string username, DedicatedThreadPool threadPool, BedrockWorldProvider wp) : base(endpoint,
+        private IOptionsProvider OptionsProvider { get; }
+        private XBLMSAService XblmsaService { get; }
+        private AlexOptions Options => OptionsProvider.AlexOptions;
+		public BedrockClient(Alex alex, IPEndPoint endpoint, string username, DedicatedThreadPool threadPool, BedrockWorldProvider wp) : base(endpoint,
 			username, threadPool)
         {
             Alex = alex;
@@ -83,11 +89,21 @@ namespace Alex.Worlds.Bedrock
 			MessageDispatcher = new McpeClientMessageDispatcher(new BedrockClientPacketHandler(this, alex));
 			IsEmulator = true;
 			CurrentLocation = new MiNET.Utils.PlayerLocation(0,0,0);
-
-			base.ChunkRadius = alex.GameSettings.RenderDistance;
+			OptionsProvider = alex.Services.GetService<IOptionsProvider>();
+			XblmsaService = alex.Services.GetService<XBLMSAService>();
+			
+			base.ChunkRadius = Options.VideoOptions.RenderDistance;
+			
+			Options.VideoOptions.RenderDistance.Bind(RenderDistanceChanged);
 		}
 
-        public void ShowDisconnect(string reason, bool useTranslation = false)
+		private void RenderDistanceChanged(int oldvalue, int newvalue)
+		{
+			base.ChunkRadius = newvalue;
+			RequestChunkRadius(newvalue);
+		}
+
+		public void ShowDisconnect(string reason, bool useTranslation = false)
         {
             if (Alex.GameStateManager.GetActiveState() is DisconnectedScreen s)
             {
@@ -133,11 +149,56 @@ namespace Alex.Worlds.Bedrock
         {
             JWT.JsonMapper = new NewtonsoftMapper();
 
-            var clientKey = CryptoUtils.GenerateClientKey();
+            var clientKey = XblmsaService.MinecraftKeyPair;// CryptoUtils.GenerateClientKey();
 
             ECDsa signKey = ConvertToSingKeyFormat(clientKey);
 
-            byte[] data = CryptoUtils.CompressJwtBytes(EncodeJwt(username, clientKey, signKey, IsEmulator), EncodeSkinJwt(clientKey, signKey, username), CompressionLevel.Fastest);
+            string b64Key = SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(clientKey.Public).GetEncoded().EncodeBase64();
+
+            string identity, xuid = "";
+			byte[] certChain = null;
+
+            if (XblmsaService.MinecraftChain != null)
+            {
+	            var element = XblmsaService.DecodedChain.Chain[1];
+
+                Username = username = element.ExtraData.DisplayName;
+                identity = element.ExtraData.Identity;
+                xuid = element.ExtraData.Xuid;
+                
+                certChain = XblmsaService.MinecraftChain;
+                Log.Info($"Using signed certificate chain");
+            }
+            else
+            {
+                long iat = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                long exp = DateTimeOffset.UtcNow.AddDays(1).ToUnixTimeSeconds();
+
+                //ECDsa signKey = ConvertToSingKeyFormat(newKey);
+
+                CertificateData certificateData = new CertificateData
+                {
+                    Exp = exp,
+                    Iat = iat,
+                    ExtraData = new ExtraData
+                    {
+                        DisplayName = username,
+                        Identity = Guid.NewGuid().ToString(),
+                        XUID = ""
+                    },
+                    Iss = "self",
+                    IdentityPublicKey = b64Key,
+                    CertificateAuthority = true,
+                    Nbf = iat,
+                    RandomNonce = new Random().Next(),
+                };
+
+                certChain = EncodeJwt(certificateData, b64Key, signKey, IsEmulator);
+            }
+
+            var skinData = EncodeSkinJwt(clientKey, signKey, username, b64Key);
+
+	        byte[] data = CryptoUtils.CompressJwtBytes(certChain, skinData, CompressionLevel.Fastest);
 
             McpeLogin loginPacket = new McpeLogin
             {
@@ -147,11 +208,13 @@ namespace Alex.Worlds.Bedrock
 
             Session.CryptoContext = new CryptoContext()
             {
-                ClientKey = clientKey,
-                UseEncryption = false,
+	            ClientKey = clientKey,
+	            UseEncryption = false,
             };
 
             SendPacket(loginPacket);
+
+        //    Session.CryptoContext.UseEncryption = true;
         }
 
         private static ECDsa ConvertToSingKeyFormat(AsymmetricCipherKeyPair key)
@@ -174,31 +237,13 @@ namespace Alex.Worlds.Bedrock
             return ECDsa.Create(signParam);
         }
 
-        private string b64Key;
-        private byte[] EncodeJwt(string username, AsymmetricCipherKeyPair newKey, ECDsa signKey, bool isEmulator)
+        private byte[] EncodeJwt(CertificateData certificateData, string b64Key, ECDsa signKey, bool isEmulator)
         {
-            long iat = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-            long exp = DateTimeOffset.UtcNow.AddDays(1).ToUnixTimeSeconds();
+           // long iat = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+           // long exp = DateTimeOffset.UtcNow.AddDays(1).ToUnixTimeSeconds();
 
             //ECDsa signKey = ConvertToSingKeyFormat(newKey);
-            b64Key = SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(newKey.Public).GetEncoded().EncodeBase64();
-
-            CertificateData certificateData = new CertificateData
-            {
-                Exp = exp,
-                Iat = iat,
-                ExtraData = new ExtraData
-                {
-                    DisplayName = username,
-                    Identity = Guid.NewGuid().ToString(),
-                    XUID = ""
-                },
-                Iss = "self",
-                IdentityPublicKey = b64Key,
-                CertificateAuthority = true,
-                Nbf = iat,
-                RandomNonce = new Random().Next(),
-            };
+         //   b64Key = SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(newKey.Public).GetEncoded().EncodeBase64();
 
             string val = JWT.Encode(certificateData, signKey, JwsAlgorithm.ES384, new Dictionary<string, object> { { "x5u", b64Key } }, new JwtSettings()
             {
@@ -214,7 +259,7 @@ namespace Alex.Worlds.Bedrock
             return Encoding.UTF8.GetBytes(val);
         }
 
-        private byte[] EncodeSkinJwt(AsymmetricCipherKeyPair newKey, ECDsa signKey, string username)
+        private byte[] EncodeSkinJwt(AsymmetricCipherKeyPair newKey, ECDsa signKey, string username, string x5u)
         {
             MiNET.Utils.Skins.Skin skin = new Skin
             {
@@ -231,7 +276,6 @@ namespace Alex.Worlds.Bedrock
 
             string skinData = $@"
 {{
-	""CapeData"": """",
 	""ADRole"": 0,
 	""ClientRandomId"": {new Random().Next()},
 	""CurrentInputMode"": 1,
@@ -260,7 +304,7 @@ namespace Alex.Worlds.Bedrock
          //  ECDsa signKey = ConvertToSingKeyFormat(newKey);
            // string b64Key = SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(newKey.Public).GetEncoded().EncodeBase64();
 
-            string val = JWT.Encode(skinData, signKey, JwsAlgorithm.ES384, new Dictionary<string, object> { { "x5u", b64Key } }, new JwtSettings()
+            string val = JWT.Encode(skinData, signKey, JwsAlgorithm.ES384, new Dictionary<string, object> { { "x5u", x5u } }, new JwtSettings()
             {
                 JsonMapper = new JWTMapper()
             });

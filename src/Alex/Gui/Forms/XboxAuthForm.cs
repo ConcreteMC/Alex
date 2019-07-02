@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Threading;
+using Alex.Services;
 using Eto.Forms;
 using Newtonsoft.Json;
 
@@ -10,7 +11,7 @@ namespace Alex.Gui.Forms
 {
     public class XboxAuthForm : Form
     {
-        private WebView MainWebView { get; }
+        public WebView MainWebView { get; }
         
         private string _accessToken = null;
         private string _refreshToken = null;
@@ -32,7 +33,7 @@ namespace Alex.Gui.Forms
         // accessBody is the request body used with the refreshUri to get the access token using the authorization code.
         // refreshBody is the request body used with the refreshUri to get the access token using a refresh token.
 
-        private string CodeQueryString = "?client_id={0}&scope=service::user.auth.xboxlive.com::MBI_SSL&response_type=token&redirect_uri={1}&display=touch&locale=en";
+        private string CodeQueryString = "?client_id={0}&redirect_uri={1}&response_type={3}&display=touch&scope={2}&locale=en";
         private string AccessBody = "client_id={0}&code={1}&grant_type=authorization_code&redirect_uri={2}";
         private string RefreshBody = "client_id={0}&grant_type=refresh_token&redirect_uri={1}&refresh_token={2}";
 
@@ -45,8 +46,12 @@ namespace Alex.Gui.Forms
         public string Error { get { return this._error; } }
         public string AuthCode => _authorizationCode;
         
-        public XboxAuthForm()
+        private XBLMSAService Service { get; }
+        public bool UseTokenRequest { get; set; } = true;
+        public XboxAuthForm(XBLMSAService service, bool useTokenRequest)
         {
+            UseTokenRequest = useTokenRequest;
+            Service = service;
             this.ClientSize = new Eto.Drawing.Size(600, 400);
 
             this.Title = "Sign-in to Xbox Live";
@@ -57,9 +62,21 @@ namespace Alex.Gui.Forms
             this.Content = MainWebView;
 
             _clientId = "00000000441cc96b";
-            MainWebView.Url = new Uri(string.Format(this.AuthorizationUri + this.CodeQueryString, this._clientId, RedirectUri));
+          // _clientId = "0000000048093EE3";
+            MainWebView.Url = new Uri(string.Format(this.AuthorizationUri + this.CodeQueryString, this._clientId, RedirectUri, WebUtility.UrlEncode("service::user.auth.xboxlive.com::MBI_SSL"), UseTokenRequest ? "token" : "code"));
+            MainWebView.DocumentLoaded += MainWebViewOnDocumentLoaded;
         }
 
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+           
+        }
+
+        private void MainWebViewOnDocumentLoaded(object sender, WebViewLoadedEventArgs e)
+        {
+            
+        }
 
         private void MainWebViewOnNavigated(object sender, WebViewLoadedEventArgs e)
         {
@@ -72,10 +89,18 @@ namespace Alex.Gui.Forms
 
             if (e.Uri.AbsolutePath.Equals(RedirectPath))
             {
+               // Console.WriteLine($"{sender.GetType()}");
+                //Console.WriteLine($"RESPONSE: {e.Uri.Query} | {e.Uri.ToString()}");
+
+                if (UseTokenRequest)
+                {
+                    HandleTokenResponse(e.Uri);
+                    this.Close();
+                    return;
+                }
                 
-                Console.WriteLine($"RESPONSE: {e.Uri.Query}");
-     
-                if (parameters.ContainsKey("code"))
+                
+                if (parameters != null && parameters.ContainsKey("code"))
                 {
                     this._authorizationCode = parameters["code"];
                     
@@ -100,7 +125,7 @@ namespace Alex.Gui.Forms
                 {
                     this._error = WebUtility.UrlDecode(parameters["error_description"]);
                 }
-
+                
                 this.Close();
             }
             else if (e.Uri.AbsolutePath.Equals(ErrorPath))
@@ -113,7 +138,37 @@ namespace Alex.Gui.Forms
             }
         }
 
-        public string RefreshAccessToken(string refreshToken)
+        private void HandleTokenResponse(Uri uri)
+        {
+            const string i = "access_token=";
+            const string b = "&token_type=";
+                
+            var s = uri.ToString();
+            var idx = s.IndexOf(i);
+            var idx2 = s.IndexOf(b);
+                
+            var accesToken = s.Substring(idx + i.Length, idx2 - (idx + i.Length));
+            accesToken = WebUtility.UrlDecode(accesToken);
+                
+            this._accessToken = accesToken;
+                
+            Console.WriteLine($"YAY TOKEN: {accesToken}");
+            Console.WriteLine();
+
+            var theRest = s.Substring(idx2);
+
+            if (!string.IsNullOrEmpty(theRest))
+            {
+                Dictionary<string, string> parameters = ParseFragment(theRest, new char[] { '&', '?' });
+                this._refreshToken = parameters["refresh_token"];
+                this._expiration = int.Parse(parameters["expires_in"]);
+            }
+            
+            Console.WriteLine(theRest);
+            Console.WriteLine();
+        }
+
+        public BedrockTokenPair RefreshAccessToken(string refreshToken)
         {
             if (string.IsNullOrEmpty(refreshToken))
             {
@@ -127,13 +182,20 @@ namespace Alex.Gui.Forms
                 this._accessToken = tokens.AccessToken;
                 this._refreshToken = tokens.RefreshToken;
                 this._expiration = tokens.Expiration;
+                
+                return new BedrockTokenPair()
+                {
+                    AccessToken = tokens.AccessToken,
+                    ExpiryTime = DateTime.UtcNow.AddSeconds(tokens.Expiration),
+                    RefreshToken = tokens.RefreshToken
+                };
             }
             catch (WebException)
             {
                 this._error = "RefreshAccessToken failed likely due to an invalid client ID or refresh token";
             }
 
-            return this._accessToken;
+            return null;
         }
         
         private Dictionary<string, string> ParseFragment(string queryString, char[] delimeters)

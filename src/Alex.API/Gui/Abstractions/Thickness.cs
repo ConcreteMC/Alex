@@ -218,5 +218,10 @@ namespace Alex.API.Gui
 		}
 	
 		#endregion
-	}
+
+        public override string ToString()
+        {
+            return $"Top: {Top} Bottom: {Bottom} Left: {Left} Right: {Right}";
+        }
+    }
 }

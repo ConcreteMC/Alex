@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.IO;
+using System.Threading;
 using Alex.API.Graphics;
 using Alex.API.Graphics.Textures;
 using Alex.API.Gui;
@@ -11,6 +12,7 @@ using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.Entities;
 using Alex.GameStates.Gui.Common;
+using Alex.Gamestates.Gui.MainMenu;
 using Alex.GameStates.Gui.Multiplayer;
 using Alex.Gamestates.Login;
 using Alex.Gui;
@@ -21,7 +23,6 @@ using Alex.Utils;
 using Alex.Worlds;
 using Alex.Worlds.Generators;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using NLog;
 using Color = Microsoft.Xna.Framework.Color;
@@ -138,9 +139,8 @@ namespace Alex.GameStates
 				Margin = new Thickness(240, 15, 0, 0),
 				Anchor = Alignment.TopCenter,
 
-				Text = "Who liek minecwaf?!"
+				Text = "Who liek minecwaf?!",
 			});
-
 
 			_debugInfo = new GuiDebugInfo();
 			_debugInfo.AddDebugRight(() =>
@@ -148,6 +148,7 @@ namespace Alex.GameStates
 			_debugInfo.AddDebugRight(() =>
 				$"Cursor Delta: {Alex.InputManager.CursorInputListener.GetCursorPositionDelta()}");
 			_debugInfo.AddDebugRight(() => $"Splash Text Scale: {_splashText.Scale:F3}");
+			_debugInfo.AddDebugRight(() => $"GPU Memory: {API.Extensions.GetBytesReadable(GpuResourceManager.GetMemoryUsage)}");
 			_debugInfo.AddDebugLeft(() => $"FPS: {FpsMonitor.Value:F0}");
 
 			_playerProfileService = Alex.Services.GetService<IPlayerProfileService>();
@@ -222,14 +223,18 @@ namespace Alex.GameStates
 			Alex.GameStateManager.SetActiveState(new MultiplayerServerSelectionState(_backgroundSkyBox)
 			{
 				BackgroundOverlay = BackgroundOverlay
-			}, false);
+			}, true);
 		}
 
 		#endregion
 
 		private void PlayerProfileServiceOnProfileChanged(object sender, PlayerProfileChangedEventArgs e)
 		{
-			_playerView.Entity = new PlayerMob(e.Profile.Username, null, null, e.Profile.Skin.Texture, e.Profile.Skin.Slim);
+			if (e.Profile.Skin.Texture != null)
+			{
+				_playerView.Entity = new PlayerMob(e.Profile.Username, null, null, e.Profile.Skin.Texture,
+					e.Profile.Skin.Slim);
+			}
 		}
 
 		private void OnSinglePlayerPressed()
@@ -280,36 +285,49 @@ namespace Alex.GameStates
 			{
 				BackgroundOverlay = new Color(Color.Black, 0.15f),
 
-				Margin = new Thickness(15, 15, 5, 15),
+				Margin = new Thickness(15, 15, 5, 40),
 
 				Width = 92,
 				Height = 128,
 
 				Anchor = Alignment.BottomRight,
 			});
-			
-			/*_playerView.AddChild(_loginButton = new GuiButton("Switch user", LoginBtnPressed)
-			{
-				Anchor = Alignment.BottomCenter,
-				Modern = false,
-				TranslationKey = ""
-			});*/
 
-			using (MemoryStream ms = new MemoryStream(ResourceManager.ReadResource("Alex.Resources.GradientBlur.png")))
+			AddChild(_loginButton = new GuiButton("Switch user", LoginBtnPressed)
 			{
-				BackgroundOverlay = (TextureSlice2D)Texture2D.FromStream(args.GraphicsDevice, ms);
-			}
+				Anchor = Alignment.BottomRight,
+				Modern = false,
+				TranslationKey = "",
+				Margin = new Thickness(15, 15, 6, 15),
+				Width = 90
+			});
+			
+			AutoResetEvent reset = new AutoResetEvent(false);
+			Alex.UIThreadQueue.Enqueue(() =>
+			{
+				using (MemoryStream ms = new MemoryStream(ResourceManager.ReadResource("Alex.Resources.GradientBlur.png")))
+				{
+					BackgroundOverlay = (TextureSlice2D)GpuResourceManager.GetTexture2D(args.GraphicsDevice, ms);
+				}
+
+				reset.Set();
+			});
+			reset.WaitOne();
+			reset.Dispose();
+			
 			BackgroundOverlay.Mask = new Color(Color.White, 0.5f);
 
 			_splashText.Text = SplashTexts.GetSplashText();
 			Alex.IsMouseVisible = true;
 
 			Alex.GameStateManager.AddState("serverlist", new MultiplayerServerSelectionState(_backgroundSkyBox));
+			//Alex.GameStateManager.AddState("profileSelection", new ProfileSelectionState(_backgroundSkyBox));
 		}
 
 		private void LoginBtnPressed()
 		{
-			Alex.GameStateManager.SetActiveState(new VersionSelectionState());
+			Alex.GameStateManager.SetActiveState(new ProfileSelectionState(_backgroundSkyBox), true);
+			//Alex.GameStateManager.SetActiveState(new VersionSelectionState());
 		}
 
 		private float _rotation;

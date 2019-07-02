@@ -151,7 +151,7 @@ namespace Alex.Utils
             AtlasSize = new Vector2(bitmap.Width, bitmap.Height);
             _atlasLocations = atlasLocations;
 
-            bitmap.Save("terrain.png", ImageFormat.Png);
+           // bitmap.Save("terrain.png", ImageFormat.Png);
             Log.Info($"TextureAtlas generated! ({PlayingState.GetBytesReadable(totalSize)})");
 
            // TexturesInWidth = bitmap.Width / TextureWidth;

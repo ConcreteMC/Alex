@@ -1,7 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using Alex.API.Graphics;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.API.Data
@@ -125,7 +125,7 @@ namespace Alex.API.Data
 				    return false;
 			    }
 
-				icon = new Texture2D(device, Width, Height);
+				icon = GpuResourceManager.GetTexture2D(device, Width, Height);
 				icon.SetData(Icon);
 			    return true;
 		    }

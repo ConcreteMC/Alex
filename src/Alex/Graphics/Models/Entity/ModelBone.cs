@@ -100,7 +100,7 @@ namespace Alex.Graphics.Models.Entity
 				{
 					if (currentBuffer == null)
 					{
-						Buffer = VertexBufferPool.GetBuffer(device,
+						Buffer = GpuResourceManager.GetBuffer(device,
 							VertexPositionNormalTexture.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
 						currentBuffer = Buffer;
 						currentBuffer.SetData(vertices);
@@ -109,7 +109,7 @@ namespace Alex.Graphics.Models.Entity
 					{
 						VertexBuffer oldBuffer = currentBuffer;
 
-						currentBuffer = VertexBufferPool.GetBuffer(device, VertexPositionNormalTextureColor.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
+						currentBuffer = GpuResourceManager.GetBuffer(device, VertexPositionNormalTextureColor.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
 						currentBuffer.SetData(vertices);
 
 						Buffer = currentBuffer;

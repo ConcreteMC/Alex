@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using Alex.API.Gui;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -32,7 +30,7 @@ namespace Alex.API.Graphics.Textures
 
         private static Texture2D CreateTexture(GraphicsDevice graphics, Rectangle bounds, Color color)
         {
-            var texture = new Texture2D(graphics, bounds.Width, bounds.Height, false, SurfaceFormat.Color);
+            var texture = GpuResourceManager.GetTexture2D(graphics, bounds.Width, bounds.Height, false, SurfaceFormat.Color);
             var data = new Color[bounds.Width * bounds.Height];
 
             for (var i = 0; i < data.Length; i++)

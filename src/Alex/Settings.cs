@@ -8,14 +8,12 @@ namespace Alex
 	    internal bool IsDirty { get; set; }
 
         public string Username { get; set; }
-        public int RenderDistance { get; set; }
         public double MouseSensitivy { get; set; }
 		public string[] ResourcePacks { get; set; }
 
 	    public string Anvil { get; set; }
 		public bool UseBuiltinGenerator { get; set; }
-
-		public int ChunkThreads { get; set; } 
+		
 		public bool ClientSideLighting { get; set; }
 		public bool UseAlexChunks { get; set; }
 		
@@ -26,14 +24,12 @@ namespace Alex
 	        {
 				
 	        };
-	        RenderDistance = 6;
-            MouseSensitivy = 1.0;
+	        MouseSensitivy = 1.0;
 
 	        Anvil = string.Empty;
 	        UseBuiltinGenerator = false;
 	        IsDirty = false;
-
-	        ChunkThreads = 1;
+	        
 	        ClientSideLighting = false;
 	        UseAlexChunks = false;
         }

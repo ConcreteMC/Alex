@@ -2,7 +2,6 @@
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using System.Runtime.InteropServices;
 using Alex.API.Graphics;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -55,13 +54,13 @@ namespace Alex.API.Utils
 			if (bmp == null)
             {
                 byteSize = 16 * 16 * 32;
-				return new Texture2D(device, 16, 16);
+				return GpuResourceManager.GetTexture2D(device, 16, 16);
 			}
 
             byteSize = 0;
 
             uint[] imgData = new uint[bmp.Width * bmp.Height];
-			Texture2D texture = new Texture2D(device, bmp.Width, bmp.Height);
+			Texture2D texture = GpuResourceManager.GetTexture2D(device, bmp.Width, bmp.Height);
 
 			LockBitmap locked = new LockBitmap(bmp);
 			locked.LockBits();

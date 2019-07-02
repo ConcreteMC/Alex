@@ -150,8 +150,14 @@ namespace Alex.API.Gui.Elements
 
 	    private Vector2 GetSize(string text, Vector2 scale)
 	    {
-		    return Font?.MeasureString(text, scale) ?? Vector2.Zero;
-		}
+		    var size= Font?.MeasureString(text, scale) ?? Vector2.Zero;
+            if (FontStyle.HasFlag(FontStyle.Bold))
+            {
+                size.X += text.Length * scale.X;
+            }
+
+            return size;
+        }
 
 	    private void OnTranslationKeyUpdated()
 	    {
@@ -169,7 +175,7 @@ namespace Alex.API.Gui.Elements
 			string text = _text;
 			var textSize = GetSize(text, scale);
 
-			size = new Size((int)Math.Round(textSize.X), (int)Math.Round(textSize.Y));
+			size = new Size((int)Math.Ceiling(textSize.X), (int)Math.Ceiling(textSize.Y));
 		}
 
 		private static Regex LinkParser = new Regex(@"\b(?:https?://|www\.)\S+\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);

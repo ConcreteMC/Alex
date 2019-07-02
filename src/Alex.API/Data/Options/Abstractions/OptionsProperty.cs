@@ -8,7 +8,7 @@ namespace Alex.API.Data.Options
     public delegate TProperty OptionsPropertyValidator<TProperty>(TProperty currentValue, TProperty newValue);
 
     [Serializable]
-    [JsonConverter(typeof(OptionsPropertyJsonConverter<>))]
+    [JsonConverter(typeof(OptionsPropertyJsonConverter))]
     public class OptionsProperty<TProperty> : IOptionsProperty
     {
         public event OptionsPropertyChangedDelegate<TProperty> ValueChanged;
@@ -35,9 +35,16 @@ namespace Alex.API.Data.Options
 
         private readonly OptionsPropertyValidator<TProperty> _validator;
 
+        public OptionsProperty()
+        {
+
+        }
+
         internal OptionsProperty(TProperty defaultValue, OptionsPropertyValidator<TProperty> validator = null)
         {
             _defaultValue = defaultValue;
+            _value = defaultValue;
+            
             _validator = validator;
         }
 
@@ -45,7 +52,20 @@ namespace Alex.API.Data.Options
         {
             Value = _defaultValue;
         }
-        
+
+        public object GetValue()
+        {
+            return Value;
+        }
+
+        public void SetValue(object obj)
+        {
+            if (obj is TProperty)
+            {
+                Value = (TProperty) obj;
+            }
+        }
+
         [OnDeserialized]
         private void OnDeserialized(StreamingContext context)
         {
@@ -78,23 +98,47 @@ namespace Alex.API.Data.Options
 
     }
 
-    public class OptionsPropertyJsonConverter<TProperty> : JsonConverter<OptionsProperty<TProperty>> where TProperty : class
+    public class OptionsPropertyJsonConverter : JsonConverter<IOptionsProperty>
     {
-        public override void WriteJson(JsonWriter writer, OptionsProperty<TProperty> value, JsonSerializer serializer)
+        /*public override void WriteJson(JsonWriter writer, OptionsProperty<TProperty> value, JsonSerializer serializer)
         {
             serializer.Serialize(writer, value.Value);
         }
 
         public override OptionsProperty<TProperty> ReadJson(JsonReader reader, Type objectType, OptionsProperty<TProperty> existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
-            var value = serializer.Deserialize(reader, typeof(TProperty)) as TProperty;
+            var value = serializer.Deserialize(reader, typeof(TProperty));
+
+            if ((value is TProperty) && hasExistingValue)
+            {
+                existingValue.Value = (TProperty) value;
+            }
+
+            return new OptionsProperty<TProperty>((TProperty)value);
+        }*/
+
+        public override void WriteJson(JsonWriter writer, IOptionsProperty value, JsonSerializer serializer)
+        {
+            serializer.Serialize(writer, value.GetValue());
+        }
+
+        public override IOptionsProperty ReadJson(JsonReader reader, Type objectType, IOptionsProperty existingValue, bool hasExistingValue,
+            JsonSerializer serializer)
+        {
+            var value = serializer.Deserialize(reader);
 
             if (hasExistingValue)
             {
-                existingValue.Value = value;
+                existingValue.SetValue(value);
             }
 
-            return new OptionsProperty<TProperty>(value);
+            var d1 = typeof(OptionsProperty<>);
+            Type[] typeArgs = { value.GetType() };
+            var makeme = d1.MakeGenericType(typeArgs);
+            return (IOptionsProperty) Activator.CreateInstance(makeme);
+            
+            
+            //return new OptionsProperty<TProperty>((TProperty)value);
         }
     }
 }

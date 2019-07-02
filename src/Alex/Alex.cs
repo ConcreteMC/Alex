@@ -15,6 +15,7 @@ using Alex.GameStates;
 using Alex.GameStates.Gui.MainMenu;
 using Alex.GameStates.Playing;
 using Alex.Gui;
+using Alex.Gui.Forms;
 using Alex.Networking.Java.Packets;
 using Alex.Services;
 using Alex.Utils;
@@ -173,26 +174,31 @@ namespace Alex
 		{
 			XBLMSAService msa;
 			var storage = new StorageSystem(LaunchSettings.WorkDir);
+			ProfileManager = new ProfileManager(this, storage);
+			
 			Services.AddService<IStorageSystem>(storage);
-			Services.AddService<IOptionsProvider>(new OptionsProvider(storage));
+			
+			var optionsProvider = new OptionsProvider(storage);
+			optionsProvider.Load();
+			
+			Services.AddService<IOptionsProvider>(optionsProvider);
 
 			Services.AddService<IListStorageProvider<SavedServerEntry>>(new SavedServerDataProvider(storage));
-
+			
+			Services.AddService(msa = new XBLMSAService(EtoApplication));
+			
 			Services.AddService<IServerQueryProvider>(new ServerQueryProvider(this));
-			Services.AddService<IPlayerProfileService>(new JavaPlayerProfileService());
-			//Services.AddService(msa = new XBLMSAService(EtoApplication));
-
-			ProfileManager = new ProfileManager(this, storage);
+			Services.AddService<IPlayerProfileService>(new PlayerProfileService(msa, ProfileManager));
+			
 			Storage = storage;
-
-			//msa.DoXboxAuth();
-			//msa.AsyncBrowserLogin();
 		}
 
 		protected override void UnloadContent()
 		{
 			SaveSettings();
 			ProfileManager.SaveProfiles();
+			
+			Services.GetService<IOptionsProvider>().Save();
 			GuiDebugHelper.Dispose();
 		}
 
@@ -231,8 +237,9 @@ namespace Alex
 		{
 			MCPacketFactory.Load();
 			progressReceiver.UpdateProgress(0, "Initializing...");
+			
 			ConfigureServices();
-
+			
 			if (Storage.TryRead("settings", out Settings settings))
 			{
 				GameSettings = settings;

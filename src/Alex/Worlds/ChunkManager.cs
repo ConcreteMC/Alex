@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Alex.API.Data.Options;
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.API.World;
@@ -46,11 +47,18 @@ namespace Alex.Worlds
 	    private int FrameCount { get; set; } = 1;
         private ConcurrentDictionary<ChunkCoordinates, ChunkData> _chunkData = new ConcurrentDictionary<ChunkCoordinates, ChunkData>();
 
-        public ChunkManager(Alex alex, GraphicsDevice graphics, IWorld world)
+        private AlexOptions Options { get; }
+        public ChunkManager(Alex alex, GraphicsDevice graphics, AlexOptions option, IWorld world)
         {
 	        Game = alex;
 	        Graphics = graphics;
 	        World = world;
+	        Options = option;
+	        
+	        Options.VideoOptions.ChunkThreads.ValueChanged += ChunkThreadsOnValueChanged;
+	        Options.FieldOfVision.ValueChanged += FieldOfVisionOnValueChanged;
+	        Options.VideoOptions.RenderDistance.ValueChanged += RenderDistanceOnValueChanged;
+	        
 	        Chunks = new ConcurrentDictionary<ChunkCoordinates, IChunkColumn>();
 
 	        SkylightCalculator = new SkylightCalculations(world, coordinates =>
@@ -60,7 +68,7 @@ namespace Alex.Worlds
 			        if (IsWithinView(coordinates, CameraBoundingFrustum))
 			        {
 				        var distance = new ChunkCoordinates(CameraPosition).DistanceTo(coordinates);
-				        if (Math.Abs(distance) < Game.GameSettings.RenderDistance / 2d)
+				        if (Math.Abs(distance) < Options.VideoOptions.RenderDistance / 2d)
 					        //if (column.SkyLightDirty) //Initial
 				        {
 					        return SkylightCalculations.CheckResult.HighPriority;
@@ -125,6 +133,21 @@ namespace Alex.Worlds
 		        IsBackground = true
 	        };
 	        //TaskSchedular.MaxThreads = alex.GameSettings.ChunkThreads;
+        }
+
+        private void RenderDistanceOnValueChanged(int oldvalue, int newvalue)
+        {
+	        
+        }
+
+        private void FieldOfVisionOnValueChanged(int oldvalue, int newvalue)
+        {
+	        
+        }
+
+        private void ChunkThreadsOnValueChanged(int oldvalue, int newvalue)
+        {
+	        
         }
 
         public void GetPendingLightingUpdates(out int low, out int mid, out int high)
@@ -193,10 +216,10 @@ namespace Alex.Worlds
         {
 	        CancellationTokenSource taskCancelationToken = CancellationTokenSource.CreateLinkedTokenSource(CancelationToken.Token);
 	        
-	       // Interlocked.Increment(ref _threadsRunning);
+	        Interlocked.Increment(ref _threadsRunning);
 	        var task = Task.Factory.StartNew(() =>
 	        {
-		        Interlocked.Increment(ref _threadsRunning);
+		        
 		        if (Chunks.TryGetValue(coords, out var val))
 		        {
 			        UpdateChunk(coords, val);
@@ -220,20 +243,53 @@ namespace Alex.Worlds
         
         private void ChunkUpdateThread()
 		{
-			int maxThreads = Game.GameSettings.ChunkThreads; //Environment.ProcessorCount / 2;
+			 //Environment.ProcessorCount / 2;
 			Stopwatch sw = new Stopwatch();
 
             while (!CancelationToken.IsCancellationRequested)
             {
+	            int maxThreads = Options.VideoOptions.ChunkThreads;
+	            
 	            var cameraChunkPos = new ChunkCoordinates(new PlayerLocation(CameraPosition.X, CameraPosition.Y,
 		            CameraPosition.Z));
                 //SpinWait.SpinUntil(() => Interlocked.Read(ref _threadsRunning) < maxThreads);
 
                 foreach (var data in _chunkData.ToArray().Where(x =>
-	                QuickMath.Abs(cameraChunkPos.DistanceTo(x.Key)) > Game.GameSettings.RenderDistance))
+	                QuickMath.Abs(cameraChunkPos.DistanceTo(x.Key)) > Options.VideoOptions.RenderDistance))
                 {
 	                data.Value?.Dispose();
 	                _chunkData.TryRemove(data.Key, out _);
+                }
+                
+                //var cameraChunkPos = new ChunkCoordinates(new PlayerLocation(camera.Position.X, camera.Position.Y,
+	           //     camera.Position.Z));
+
+                var renderedChunks = Chunks.ToArray().Where(x =>
+                {
+	                if (Math.Abs(x.Key.DistanceTo(cameraChunkPos)) > Options.VideoOptions.RenderDistance)
+		                return false;
+			    
+	                var chunkPos = new Vector3(x.Key.X * ChunkColumn.ChunkWidth, 0, x.Key.Z * ChunkColumn.ChunkDepth);
+	                return CameraBoundingFrustum.Intersects(new Microsoft.Xna.Framework.BoundingBox(chunkPos,
+		                chunkPos + new Vector3(ChunkColumn.ChunkWidth, 256/*16 * ((x.Value.GetHeighest() >> 4) + 1)*/,
+			                ChunkColumn.ChunkDepth)));
+                }).ToArray();
+			
+                foreach (var c in renderedChunks)
+                {
+	                if (_renderedChunks.TryAdd(c.Key))
+	                {
+		                if (c.Value.SkyLightDirty)
+			                SkylightCalculator.CalculateLighting(c.Value, true, true);
+	                }
+                }
+			
+                foreach (var c in _renderedChunks.ToArray())
+                {
+	                if (!renderedChunks.Any(x => x.Key.Equals(c)))
+	                {
+		                _renderedChunks.Remove(c);
+	                }
                 }
 
                 if (Interlocked.Read(ref _threadsRunning) >= maxThreads) continue;
@@ -244,7 +300,7 @@ namespace Alex.Worlds
                 {
 	                if (HighestPriority.TryDequeue(out var coords))
 	                {
-                        if (Math.Abs(cameraChunkPos.DistanceTo(coords)) > Game.GameSettings.RenderDistance)
+                        if (Math.Abs(cameraChunkPos.DistanceTo(coords)) > Options.VideoOptions.RenderDistance)
                         {
                             if (!Enqueued.Contains(coords))
                                 Enqueued.Add(coords);
@@ -271,7 +327,7 @@ namespace Alex.Worlds
 			                coords = Enqueued.MinBy(x => Math.Abs(x.DistanceTo(new ChunkCoordinates(CameraPosition))));
 		                }
 
-                        if (Math.Abs(cameraChunkPos.DistanceTo(coords)) <= Game.GameSettings.RenderDistance)
+                        if (Math.Abs(cameraChunkPos.DistanceTo(coords)) <= Options.VideoOptions.RenderDistance)
                         {
                             if (!_workItems.ContainsKey(coords))
                             {
@@ -305,6 +361,7 @@ namespace Alex.Worlds
 	    int framerate = 12;     // Animate at 12 frames per second
 	    float timer = 0.0f;
 	    
+	    public bool UseWireFrames { get; set; } = false;
 	    public void Draw(IRenderArgs args)
 	    {
 		    timer += (float)args.GameTime.ElapsedGameTime.TotalSeconds;
@@ -349,6 +406,16 @@ namespace Alex.Worlds
 			    {
 				    chunks[index] = new KeyValuePair<ChunkCoordinates, ChunkData>(c, null);
 			    }
+		    }
+
+		    RasterizerState originalState = null;
+		    bool usingWireFrames = UseWireFrames;
+		    if (usingWireFrames)
+		    {
+			    originalState = device.RasterizerState;
+			    RasterizerState rasterizerState = new RasterizerState();
+			    rasterizerState.FillMode = FillMode.WireFrame;
+			    device.RasterizerState = rasterizerState;
 		    }
 
 		    device.DepthStencilState = DepthStencilState.Default;
@@ -399,12 +466,15 @@ namespace Alex.Worlds
                 }
 
                 device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, chunk.TransparentIndexBuffer.IndexCount / 3);
-                indexBufferSize += chunk.TransparentIndexBuffer.IndexCount / 3;
+                indexBufferSize += chunk.TransparentIndexBuffer.IndexCount;
                 //tempVertices += chunk.Buffer.VertexCount;
                 //chunk.DrawTransparent(device, TransparentEffect, out int draw, out int idxSize);
                 // tempVertices += draw;
                 // indexBufferSize += idxSize;
-            }
+		    }
+
+		    if (usingWireFrames)
+				device.RasterizerState = originalState;
 
 		    tempChunks = chunks.Count(x => x.Value != null && (
 			    x.Value.SolidIndexBuffer.IndexCount > 0 || x.Value.TransparentIndexBuffer.IndexCount > 0));
@@ -465,37 +535,6 @@ namespace Alex.Worlds
 		    CameraBoundingFrustum = camera.BoundingFrustum;
 		    CameraPosition = camera.Position;
 		    CamDir = camera.Target;
-
-		    var cameraChunkPos = new ChunkCoordinates(new PlayerLocation(camera.Position.X, camera.Position.Y,
-			    camera.Position.Z));
-
-            var renderedChunks = Chunks.ToArray().Where(x =>
-            {
-	           if (Math.Abs(x.Key.DistanceTo(cameraChunkPos)) > Game.GameSettings.RenderDistance)
-		           return false;
-			    
-			    var chunkPos = new Vector3(x.Key.X * ChunkColumn.ChunkWidth, 0, x.Key.Z * ChunkColumn.ChunkDepth);
-			    return camera.BoundingFrustum.Intersects(new Microsoft.Xna.Framework.BoundingBox(chunkPos,
-				    chunkPos + new Vector3(ChunkColumn.ChunkWidth, 256/*16 * ((x.Value.GetHeighest() >> 4) + 1)*/,
-					    ChunkColumn.ChunkDepth)));
-		    }).ToArray();
-			
-			foreach (var c in renderedChunks)
-			{
-				if (_renderedChunks.TryAdd(c.Key))
-				{
-					if (c.Value.SkyLightDirty)
-						SkylightCalculator.CalculateLighting(c.Value, true, true);
-                }
-			}
-			
-		    foreach (var c in _renderedChunks.ToArray())
-		    {
-			    if (!renderedChunks.Any(x => x.Key.Equals(c)))
-			    {
-				    _renderedChunks.Remove(c);
-			    }
-		    }
 	    }
 
         public void AddChunk(IChunkColumn chunk, ChunkCoordinates position, bool doUpdates = false)
@@ -769,12 +808,12 @@ namespace Alex.Worlds
 	                {
 		                data = new ChunkData()
 		                {
-			                Buffer = VertexBufferPool.GetBuffer(Graphics,
+			                Buffer = GpuResourceManager.GetBuffer(Graphics,
 				                VertexPositionNormalTextureColor.VertexDeclaration, vertexArray.Length,
 				                BufferUsage.WriteOnly),
-			                SolidIndexBuffer = new IndexBuffer(Graphics, IndexElementSize.ThirtyTwoBits,
+			                SolidIndexBuffer = GpuResourceManager.GetIndexBuffer(Graphics, IndexElementSize.ThirtyTwoBits,
 				                solidArray.Length, BufferUsage.WriteOnly),
-			                TransparentIndexBuffer = new IndexBuffer(Graphics, IndexElementSize.ThirtyTwoBits,
+			                TransparentIndexBuffer = GpuResourceManager.GetIndexBuffer(Graphics, IndexElementSize.ThirtyTwoBits,
 				                transparentArray.Length, BufferUsage.WriteOnly)
 		                };
 	                }
@@ -782,7 +821,7 @@ namespace Alex.Worlds
 	                if (vertexArray.Length >= data.Buffer.VertexCount)
 	                {
 		                var oldBuffer = data.Buffer;
-		                VertexBuffer newBuffer = VertexBufferPool.GetBuffer(Graphics,
+		                VertexBuffer newBuffer = GpuResourceManager.GetBuffer(Graphics,
 			                VertexPositionNormalTextureColor.VertexDeclaration, vertexArray.Length,
 			                BufferUsage.WriteOnly);
 
@@ -799,7 +838,7 @@ namespace Alex.Worlds
 	                if (solidArray.Length > data.SolidIndexBuffer.IndexCount)
 	                {
 		                var old = data.SolidIndexBuffer;
-		                var newSolidBuffer = new IndexBuffer(Graphics, IndexElementSize.ThirtyTwoBits,
+		                var newSolidBuffer = GpuResourceManager.GetIndexBuffer(Graphics, IndexElementSize.ThirtyTwoBits,
 			                solidArray.Length,
 			                BufferUsage.WriteOnly);
 
@@ -815,7 +854,7 @@ namespace Alex.Worlds
 	                if (transparentArray.Length > data.TransparentIndexBuffer.IndexCount)
 	                {
 		                var old = data.TransparentIndexBuffer;
-		                var newSolidBuffer = new IndexBuffer(Graphics, IndexElementSize.ThirtyTwoBits,
+		                var newSolidBuffer = GpuResourceManager.GetIndexBuffer(Graphics, IndexElementSize.ThirtyTwoBits,
 			                transparentArray.Length,
 			                BufferUsage.WriteOnly);
 

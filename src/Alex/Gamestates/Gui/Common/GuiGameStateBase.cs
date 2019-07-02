@@ -8,11 +8,14 @@ using Alex.API.Gui.Elements;
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
+using NLog;
 
 namespace Alex.GameStates.Gui.Common
 {
     public class GuiGameStateBase : GuiScreen, IGameState
     {
+	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(GuiGameStateBase));
+	    
         protected Alex Alex => Alex.Instance;
 
         public GuiGameStateBase()
@@ -62,18 +65,18 @@ namespace Alex.GameStates.Gui.Common
         
         public void Show()
         {
-            Alex.GuiManager.AddScreen(this);
+	        Alex.GuiManager.AddScreen(this);
             OnShow();
             InvalidateLayout();
         }
 
         public void Hide()
         {
-            OnHide();
+	        OnHide();
             Alex.GuiManager.RemoveScreen(this);
         }
 
-        protected TService GetService<TService>() where TService : class
+        public TService GetService<TService>() where TService : class
         {
             return Alex.Services.GetService<TService>();
         }

@@ -75,5 +75,6 @@ namespace Alex.API.Services
 
         Task<bool> TryAuthenticateAsync(string username, string password);
 	    Task<bool> TryAuthenticateAsync(PlayerProfile profile);
+        void Force(PlayerProfile profile);
     }
 }
