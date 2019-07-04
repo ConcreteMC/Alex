@@ -1,25 +1,32 @@
 using System.Drawing;
+using System.Linq;
 using Alex.API.Graphics;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Graphics;
+using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.GameStates;
 using Alex.GameStates.Gui.Common;
 using Alex.Gamestates.Gui.MainMenu.Profile;
 using Alex.Gui;
 using Microsoft.Xna.Framework;
+using NLog;
 
 namespace Alex.Gamestates.Gui.MainMenu
 {
     public class ProfileSelectionState : ListSelectionStateBase<ProfileEntry>
     {
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ProfileSelectionState));
+        
         private GuiPanoramaSkyBox _skyBox;
+        private IPlayerProfileService ProfileService { get; } 
         public ProfileSelectionState(GuiPanoramaSkyBox skyBox)
         {
             _skyBox = skyBox;
+            ProfileService = GetService<IPlayerProfileService>();
             
-            Title = "Select Profile (Unfinished)";
+            Title = "Select Profile";
             
             Background = new GuiTexture2D(_skyBox, TextureRepeatMode.Stretch);
 
@@ -57,6 +64,12 @@ namespace Alex.Gamestates.Gui.MainMenu
                     Texture = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, rawTexture)
                 };
             }
+            
+            foreach (var profile in ProfileService.GetJavaProfiles().Concat(ProfileService.GetBedrockProfiles()))
+            {
+                ProfileEntry entry = new ProfileEntry(profile, _defaultSkin);
+                AddItem(entry);
+            }
         }
 
         private void EditClicked()
@@ -66,8 +79,8 @@ namespace Alex.Gamestates.Gui.MainMenu
 
         private void AddClicked()
         {
-            ProfileEntry entry = new ProfileEntry(_defaultSkin);
-            AddItem(entry);
+          //  ProfileEntry entry = new ProfileEntry(_defaultSkin);
+          //  AddItem(entry);
         }
 
         private void OnCancelButtonPressed()
@@ -96,8 +109,6 @@ namespace Alex.Gamestates.Gui.MainMenu
         private Skin _defaultSkin = null;
         protected override void OnLoad(IRenderArgs args)
         {
-            
-
             base.OnLoad(args);
         }
     }

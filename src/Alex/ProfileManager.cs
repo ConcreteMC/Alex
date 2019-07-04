@@ -42,15 +42,7 @@ namespace Alex
 
 			//	ProfilesFileFormat saveFile = null;
 				SavedProfile[] profiles = null;
-				try
-				{
-					//string contents = File.ReadAllText(ProfilesFile);
-					//saveFile = JsonConvert.DeserializeObject<ProfilesFileFormat>(contents, new Texture2DJsonConverter(Alex.GraphicsDevice));
-				}
-				catch
-				{
-					Log.Warn($"Correct profiles savefile!");
-				}
+				
 
 				progressReceiver.UpdateProgress(50, StatusMessage);
 
@@ -81,6 +73,10 @@ namespace Alex
 					{
 						Profiles.Add(profile.Profile.Uuid, profile);
 					}
+				}
+				else
+				{
+					Log.Warn($"Profiles file not found.");
 				}
 			}
 			else

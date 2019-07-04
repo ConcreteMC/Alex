@@ -3,6 +3,7 @@ using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Graphics;
+using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.Entities;
 using Alex.Gui.Elements;
@@ -17,7 +18,7 @@ namespace Alex.Gamestates.Gui.MainMenu.Profile
     {
         private GuiTextElement _serverName;
         public GuiEntityModelView ModelView { get; }
-        public ProfileEntry(Skin defaultSkin)
+        public ProfileEntry(PlayerProfile profile, Skin defaultSelection)
         {
             MinWidth = 92;
             MaxWidth = 92;
@@ -28,7 +29,15 @@ namespace Alex.Gamestates.Gui.MainMenu.Profile
             
             AddChild(_serverName = new GuiTextElement()
             {
-                Text = "My Profile",
+                Text = profile.Username,
+                Margin = Thickness.Zero,
+                Anchor = Alignment.TopCenter,
+                Enabled = false
+            });
+            
+            AddChild(_serverName = new GuiTextElement()
+            {
+                Text = profile.IsBedrock ? "Bedrock" : "Java",
                 Margin = Thickness.Zero,
                 Anchor = Alignment.BottomCenter,
                 Enabled = false
@@ -39,7 +48,7 @@ namespace Alex.Gamestates.Gui.MainMenu.Profile
            // AutoSizeMode = AutoSizeMode.GrowAndShrink;
            // BackgroundOverlay = new GuiTexture2D(GuiTextures.OptionsBackground);
 
-            ModelView = new GuiEntityModelView(new PlayerMob("", null, null, defaultSkin.Texture, defaultSkin.Slim)) /*"geometry.humanoid.customSlim"*/
+            ModelView = new GuiEntityModelView(new PlayerMob(profile.Username, null, null, profile.Skin?.Texture ?? defaultSelection.Texture, profile.Skin?.Slim ?? defaultSelection.Slim)) /*"geometry.humanoid.customSlim"*/
             {
                 BackgroundOverlay = new Color(Color.Black, 0.15f),
                 Background = null,
