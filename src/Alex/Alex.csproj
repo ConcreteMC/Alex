@@ -71,6 +71,8 @@
     <EmbeddedResource Include="Resources\items2.json" />
     <None Remove="Resources\items3.json" />
     <EmbeddedResource Include="Resources\items3.json" />
+    <None Remove="Resources\resources.zip" />
+    <EmbeddedResource Include="Resources\resources.zip" />
   </ItemGroup>
 
   <ItemGroup>

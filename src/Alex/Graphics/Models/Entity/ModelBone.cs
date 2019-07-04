@@ -33,7 +33,6 @@ namespace Alex.Graphics.Models.Entity
 				if (Buffer == null)
 					return;
 				
-				var old = args.GraphicsDevice.Indices;
 				args.GraphicsDevice.Indices = Buffer;
 
 				int idx = 0;
@@ -122,36 +121,6 @@ namespace Alex.Graphics.Models.Entity
 					
 					currentBuffer?.Dispose();
 				}
-
-				/*long index = 0;
-				var vertices = Parts.SelectMany(x => x.Vertices).ToArray();
-
-				VertexBuffer currentBuffer = Buffer;
-				
-				if (vertices.Length > 0 && (Buffer == null || currentBuffer.VertexCount != vertices.Length))
-				{
-					if (currentBuffer == null)
-					{
-						Buffer = GpuResourceManager.GetBuffer(this, device,
-							VertexPositionNormalTexture.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
-						currentBuffer = Buffer;
-						currentBuffer.SetData(vertices);
-					}
-					else if (vertices.Length > currentBuffer.VertexCount)
-					{
-						VertexBuffer oldBuffer = currentBuffer;
-
-						currentBuffer = GpuResourceManager.GetBuffer(this, device, VertexPositionNormalTextureColor.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
-						currentBuffer.SetData(vertices);
-
-						Buffer = currentBuffer;
-						oldBuffer.Dispose();
-					}
-					else
-					{
-						currentBuffer.SetData(vertices);
-					}
-				}*/
 			}
 
 			public void Dispose()

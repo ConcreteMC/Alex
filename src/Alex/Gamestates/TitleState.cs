@@ -281,20 +281,10 @@ namespace Alex.GameStates
 					Texture = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, rawTexture)
 				};
 			}
+			
+				var entity = new PlayerMob("", null, null, skin.Texture, skin.Slim);
 
-			Entity entity;
-			if (EntityFactory.ModelByType(EntityType.Cow, out var renderer, out EntityData data))
-			{
-				entity = new Cow(null);
-				entity.ModelRenderer = renderer;
-				
-			}
-			else
-			{
-				entity = new PlayerMob("", null, null, skin.Texture, skin.Slim);
-			}
-
-			AddChild(_playerView = new GuiEntityModelView(entity/*new PlayerMob("", null, null, skin.Texture, skin.Slim)*/ ) /*"geometry.humanoid.customSlim"*/
+				AddChild(_playerView = new GuiEntityModelView(entity/*new PlayerMob("", null, null, skin.Texture, skin.Slim)*/ ) /*"geometry.humanoid.customSlim"*/
 			{
 				BackgroundOverlay = new Color(Color.Black, 0.15f),
 
