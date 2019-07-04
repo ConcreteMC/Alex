@@ -20,10 +20,12 @@ namespace Alex.API.Gui
 
         public IGuiControl FocusedControl { get; private set; }
 
+
         public GuiScreen()
         {
             AutoSizeMode = AutoSizeMode.None;
             Anchor = Alignment.Fill;
+            ClipToBounds = true;
         }
 
         public void UpdateSize(int width, int height)

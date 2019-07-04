@@ -309,6 +309,7 @@ namespace Alex.API.Graphics.Typography
 				{
 					var glyph = GetGlyphOrDefault(c);
 
+
 					if (firstGlyphOfLine)
 					{
 					//	offset.X += CharacterSpacing;
@@ -329,6 +330,7 @@ namespace Alex.API.Graphics.Typography
 						if (styleBold)
 						{
 							var boldShadowP = Vector2.Transform(shadowP + Vector2.UnitX, transformation);
+
 							sb.Draw(glyph.Texture, boldShadowP, styleColor.BackgroundColor * opacity, rotation, originVal, scaleVal, effects, layerDepth);
 						}
 						

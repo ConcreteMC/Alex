@@ -437,17 +437,17 @@ namespace Alex.API.Gui.Elements
 
         protected virtual void OnBeforeArrange(Rectangle newBounds)
         {
-            if (ParentElement != null && ClipToBounds && !ParentElement.RenderBounds.Contains(newBounds))
+            if (this.TryFindParent(e => e.ClipToBounds, out var parentClip))
             {
-                RenderBounds = Rectangle.Intersect(newBounds, ParentElement.RenderBounds);
+                RenderBounds = Rectangle.Intersect(newBounds, parentClip.RenderBounds);
                 RenderSize = newBounds.Size;
                 RenderPosition = newBounds.Location.ToVector2();
             }
             else
             {
                 RenderBounds = newBounds;
-                RenderSize = RenderBounds.Size;
-                RenderPosition = RenderBounds.Location.ToVector2();
+                RenderSize = newBounds.Size;
+                RenderPosition = newBounds.Location.ToVector2();
             }
         }
 

@@ -27,7 +27,9 @@ namespace Alex.API.Gui
         [DebuggerVisible] Vector2 RenderPosition { get; }
         [DebuggerVisible] Size RenderSize { get; }
         [DebuggerVisible] Rectangle RenderBounds { get; }
-        
+        [DebuggerVisible] bool ClipToBounds { get; }
+
+
 
         void Init(IGuiRenderer renderer, bool force = false);
 

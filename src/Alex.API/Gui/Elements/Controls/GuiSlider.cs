@@ -44,12 +44,18 @@ namespace Alex.API.Gui.Elements.Controls
 
         public GuiTexture2D ThumbBackground;
         public GuiTexture2D ThumbHighlightBackground;
-        public int ThumbWidth { get; set; } = 10;
+
+        public int ThumbWidth
+        {
+            get => _thumbWidth;
+            set { _thumbWidth = value; }
+        }
 
         public GuiTextElement Label { get; private set; }
         public string DisplayFormat { get; set; } = "{0:F2}";
 
         private double _thumbOffsetX;
+        private int _thumbWidth = 10;
 
         public GuiSlider()
         {

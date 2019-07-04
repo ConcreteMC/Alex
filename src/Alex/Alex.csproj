@@ -44,10 +44,12 @@
     <EmbeddedResource Remove="Graphics\Items\**" />
     <None Remove="Graphics\Items\**" />
     <None Remove="Resources\DebugFont.xnb" />
+    <None Remove="Resources\ScrollBar.png" />
     <EmbeddedResource Include="Resources\DebugFont.xnb" />
     <None Remove="Resources\logo2.png" />
     <EmbeddedResource Include="Resources\logo2.png" />
     <None Remove="Resources\Splash.png" />
+    <EmbeddedResource Include="Resources\ScrollBar.png" />
     <EmbeddedResource Include="Resources\Splash.png" />
     <None Remove="Resources\ProgressBar.png" />
     <EmbeddedResource Include="Resources\ProgressBar.png" />
