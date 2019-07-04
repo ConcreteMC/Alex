@@ -96,7 +96,7 @@ namespace Alex.Graphics.Models
 				new VertexPositionColor(new Vector3(planeDistance, 0, planeDistance), Color.White),
 				new VertexPositionColor(new Vector3(-planeDistance, 0, planeDistance), Color.White)
 			};
-			SkyPlane = GpuResourceManager.GetBuffer(device, VertexPositionColor.VertexDeclaration,
+			SkyPlane = GpuResourceManager.GetBuffer(this, device, VertexPositionColor.VertexDeclaration,
 				plane.Length, BufferUsage.WriteOnly);
 			SkyPlane.SetData<VertexPositionColor>(plane);
 
@@ -110,7 +110,7 @@ namespace Alex.Graphics.Models
 				new VertexPositionTexture(new Vector3(planeDistance, 0, planeDistance), new Vector2(1, 1)),
 				new VertexPositionTexture(new Vector3(-planeDistance, 0, planeDistance), new Vector2(0, 1))
 			};
-			CelestialPlane = GpuResourceManager.GetBuffer(device, VertexPositionTexture.VertexDeclaration,
+			CelestialPlane = GpuResourceManager.GetBuffer(this, device, VertexPositionTexture.VertexDeclaration,
 				celestialPlane.Length, BufferUsage.WriteOnly);
 			CelestialPlane.SetData<VertexPositionTexture>(celestialPlane);
 
@@ -124,7 +124,7 @@ namespace Alex.Graphics.Models
 				new VertexPositionTexture(new Vector3(planeDistance, 0, planeDistance), new Vector2(MoonX, MoonY)),
 				new VertexPositionTexture(new Vector3(-planeDistance, 0, planeDistance), new Vector2(0, MoonY)),
 			};
-			MoonPlane = GpuResourceManager.GetBuffer(device, VertexPositionTexture.VertexDeclaration,
+			MoonPlane = GpuResourceManager.GetBuffer(this, device, VertexPositionTexture.VertexDeclaration,
 				_moonPlaneVertices.Length, BufferUsage.WriteOnly);
 			MoonPlane.SetData<VertexPositionTexture>(_moonPlaneVertices);
 
@@ -151,7 +151,7 @@ namespace Alex.Graphics.Models
 			};
 
 
-            CloudsPlane = GpuResourceManager.GetBuffer(device, VertexPositionTexture.VertexDeclaration,
+            CloudsPlane = GpuResourceManager.GetBuffer(this, device, VertexPositionTexture.VertexDeclaration,
 				cloudVertices.Length, BufferUsage.WriteOnly);
 			CloudsPlane.SetData<VertexPositionTexture>(cloudVertices);
         }

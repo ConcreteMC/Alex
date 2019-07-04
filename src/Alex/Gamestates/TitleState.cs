@@ -307,7 +307,7 @@ namespace Alex.GameStates
 			{
 				using (MemoryStream ms = new MemoryStream(ResourceManager.ReadResource("Alex.Resources.GradientBlur.png")))
 				{
-					BackgroundOverlay = (TextureSlice2D)GpuResourceManager.GetTexture2D(args.GraphicsDevice, ms);
+					BackgroundOverlay = (TextureSlice2D)GpuResourceManager.GetTexture2D(this, args.GraphicsDevice, ms);
 				}
 
 				reset.Set();

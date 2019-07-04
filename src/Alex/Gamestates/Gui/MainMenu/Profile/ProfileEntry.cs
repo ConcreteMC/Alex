@@ -16,7 +16,6 @@ namespace Alex.Gamestates.Gui.MainMenu.Profile
 {
     public class ProfileEntry : GuiSelectionListItem
     {
-        private GuiTextElement _serverName;
         public GuiEntityModelView ModelView { get; }
         public ProfileEntry(PlayerProfile profile, Skin defaultSelection)
         {
@@ -27,7 +26,7 @@ namespace Alex.Gamestates.Gui.MainMenu.Profile
             
            // AutoSizeMode = AutoSizeMode.GrowOnly;
             
-            AddChild(_serverName = new GuiTextElement()
+            AddChild(new GuiTextElement()
             {
                 Text = profile.Username,
                 Margin = Thickness.Zero,
@@ -35,7 +34,7 @@ namespace Alex.Gamestates.Gui.MainMenu.Profile
                 Enabled = false
             });
             
-            AddChild(_serverName = new GuiTextElement()
+            AddChild(new GuiTextElement()
             {
                 Text = profile.IsBedrock ? "Bedrock" : "Java",
                 Margin = Thickness.Zero,

@@ -40,21 +40,21 @@ namespace Alex.API.Graphics
             IndexBuffers = new Dictionary<long, PooledIndexBuffer>();
         }
         
-        public PooledVertexBuffer CreateBuffer(GraphicsDevice device, VertexDeclaration vertexDeclaration,
+        public PooledVertexBuffer CreateBuffer(object caller, GraphicsDevice device, VertexDeclaration vertexDeclaration,
             int vertexCount, BufferUsage bufferUsage)
         {
             long id = Interlocked.Increment(ref _bufferId);
-            PooledVertexBuffer buffer = new PooledVertexBuffer(this, id, device, vertexDeclaration, vertexCount, bufferUsage);
+            PooledVertexBuffer buffer = new PooledVertexBuffer(this, id, caller, device, vertexDeclaration, vertexCount, bufferUsage);
             Buffers.Add(id, buffer);
 
             //  var size = Interlocked.Add(ref _estMemoryUsage, vertexDeclaration.VertexStride * vertexCount);
             return buffer;
         }
         
-        public PooledTexture2D CreateTexture2D(GraphicsDevice graphicsDevice, int width, int height)
+        public PooledTexture2D CreateTexture2D(object caller, GraphicsDevice graphicsDevice, int width, int height)
         {
             var id = Interlocked.Increment(ref _textureId);
-            var texture = new PooledTexture2D(_instance, id, graphicsDevice, width, height); 
+            var texture = new PooledTexture2D(_instance, id, caller, graphicsDevice, width, height); 
             
             Textures.Add(id, texture);
 
@@ -63,10 +63,10 @@ namespace Alex.API.Graphics
             return texture;
         }
         
-        public PooledTexture2D CreateTexture2D(GraphicsDevice graphicsDevice, int width, int height, bool mipmap, SurfaceFormat format)
+        public PooledTexture2D CreateTexture2D(object caller, GraphicsDevice graphicsDevice, int width, int height, bool mipmap, SurfaceFormat format)
         {
             var id = Interlocked.Increment(ref _textureId);
-            var texture = new PooledTexture2D(_instance, id, graphicsDevice, width, height, mipmap, format); 
+            var texture = new PooledTexture2D(_instance, id, caller, graphicsDevice, width, height, mipmap, format); 
             
             Textures.Add(id, texture);
             
@@ -75,10 +75,10 @@ namespace Alex.API.Graphics
             return texture;
         }
         
-        public PooledTexture2D CreateTexture2D(GraphicsDevice graphicsDevice, int width, int height, bool mipmap, SurfaceFormat format, int arraySize)
+        public PooledTexture2D CreateTexture2D(object caller, GraphicsDevice graphicsDevice, int width, int height, bool mipmap, SurfaceFormat format, int arraySize)
         {
             var id = Interlocked.Increment(ref _textureId);
-            var texture = new PooledTexture2D(_instance, id, graphicsDevice, width, height, mipmap, format, arraySize); 
+            var texture = new PooledTexture2D(_instance, id, caller, graphicsDevice, width, height, mipmap, format, arraySize); 
             
             Textures.Add(id, texture);
             
@@ -87,11 +87,11 @@ namespace Alex.API.Graphics
             return texture;
         }
 
-        public PooledIndexBuffer CreateIndexBuffer(GraphicsDevice graphicsDevice, IndexElementSize indexElementSize,
+        public PooledIndexBuffer CreateIndexBuffer(object caller, GraphicsDevice graphicsDevice, IndexElementSize indexElementSize,
             int indexCount, BufferUsage bufferUsage)
         {
             var id = Interlocked.Increment(ref _indexBufferId);
-            var buffer = new PooledIndexBuffer(this, id, graphicsDevice, indexElementSize, indexCount, bufferUsage);
+            var buffer = new PooledIndexBuffer(this, id, caller, graphicsDevice, indexElementSize, indexCount, bufferUsage);
             
             IndexBuffers.Add(id, buffer);
 
@@ -113,7 +113,7 @@ namespace Alex.API.Graphics
         public void Disposed(PooledVertexBuffer buffer)
         {
             var size = buffer.VertexDeclaration.VertexStride * buffer.VertexCount;
-            Log.Debug($"Disposing of buffer {buffer.PoolId}, lifetime: {DateTime.UtcNow - buffer.CreatedTime} Memory usage: {Extensions.GetBytesReadable(size)}");
+            Log.Debug($"Disposing of buffer {buffer.PoolId}, lifetime: {DateTime.UtcNow - buffer.CreatedTime} Creator: {buffer.Owner ?? "N/A"} Memory usage: {Extensions.GetBytesReadable(size)}");
 
             //Interlocked.Add(ref _estMemoryUsage, -size);
             Buffers.Remove(buffer.PoolId);
@@ -122,7 +122,7 @@ namespace Alex.API.Graphics
         public void Disposed(PooledTexture2D buffer)
         {
             var size = buffer.Height * buffer.Width * 4;
-            Log.Debug($"Disposing of texture {buffer.PoolId}, lifetime: {DateTime.UtcNow - buffer.CreatedTime} Memory usage: {Extensions.GetBytesReadable(size)}");
+            Log.Debug($"Disposing of texture {buffer.PoolId}, lifetime: {DateTime.UtcNow - buffer.CreatedTime} Creator: {buffer.Owner ?? "N/A"} Memory usage: {Extensions.GetBytesReadable(size)}");
 
             //Interlocked.Add(ref _estMemoryUsage, -size);
             Textures.Remove(buffer.PoolId);
@@ -142,7 +142,7 @@ namespace Alex.API.Graphics
                 size = buffer.IndexCount * 4;
             }
 
-            Log.Debug($"Disposing of indexbuffer {buffer.PoolId}, lifetime: {DateTime.UtcNow - buffer.CreatedTime} Memory usage: {Extensions.GetBytesReadable(size)}");
+            Log.Debug($"Disposing of indexbuffer {buffer.PoolId}, lifetime: {DateTime.UtcNow - buffer.CreatedTime} Creator: {buffer.Owner ?? "N/A"} Memory usage: {Extensions.GetBytesReadable(size)}");
 
             //Interlocked.Add(ref _estMemoryUsage, -size);
             IndexBuffers.Remove(buffer.PoolId);
@@ -150,31 +150,31 @@ namespace Alex.API.Graphics
             Interlocked.Add(ref _indexMemoryUsage, -size);
         }
         
-        public static PooledVertexBuffer GetBuffer(GraphicsDevice device, VertexDeclaration vertexDeclaration,
+        public static PooledVertexBuffer GetBuffer(object caller, GraphicsDevice device, VertexDeclaration vertexDeclaration,
             int vertexCount, BufferUsage bufferUsage)
         {
-            return _instance.CreateBuffer(device, vertexDeclaration, vertexCount, bufferUsage);
+            return _instance.CreateBuffer(caller, device, vertexDeclaration, vertexCount, bufferUsage);
         }
         
-        public static PooledTexture2D GetTexture2D(GraphicsDevice graphicsDevice, int width, int height)
+        public static PooledTexture2D GetTexture2D(object caller, GraphicsDevice graphicsDevice, int width, int height)
         {
-            return _instance.CreateTexture2D(graphicsDevice, width, height);
+            return _instance.CreateTexture2D(caller, graphicsDevice, width, height);
         }
         
-        public static PooledTexture2D GetTexture2D(GraphicsDevice graphicsDevice, int width, int height, bool mipmap, SurfaceFormat format)
+        public static PooledTexture2D GetTexture2D(object caller, GraphicsDevice graphicsDevice, int width, int height, bool mipmap, SurfaceFormat format)
         {
-            return _instance.CreateTexture2D(graphicsDevice, width, height, mipmap, format);
+            return _instance.CreateTexture2D(caller, graphicsDevice, width, height, mipmap, format);
         }
         
-        public static PooledTexture2D GetTexture2D(GraphicsDevice graphicsDevice, int width, int height, bool mipmap, SurfaceFormat format, int arraySize)
+        public static PooledTexture2D GetTexture2D(object caller, GraphicsDevice graphicsDevice, int width, int height, bool mipmap, SurfaceFormat format, int arraySize)
         {
-            return _instance.CreateTexture2D(graphicsDevice, width, height, mipmap, format, arraySize);
+            return _instance.CreateTexture2D(caller, graphicsDevice, width, height, mipmap, format, arraySize);
         }
 
-        public static PooledTexture2D GetTexture2D(GraphicsDevice graphicsDevice, Stream stream)
+        public static PooledTexture2D GetTexture2D(object caller, GraphicsDevice graphicsDevice, Stream stream)
         {
              var texture = Texture2D.FromStream(graphicsDevice, stream);
-             var pooled = GetTexture2D(texture.GraphicsDevice, texture.Width, texture.Height, false, texture.Format);
+             var pooled = GetTexture2D(caller, texture.GraphicsDevice, texture.Width, texture.Height, false, texture.Format);
              
              uint[] imgData = new uint[texture.Height * texture.Width];
              texture.GetData(imgData);
@@ -184,25 +184,26 @@ namespace Alex.API.Graphics
              return pooled;
         }
 
-        public static PooledIndexBuffer GetIndexBuffer(GraphicsDevice graphicsDevice, IndexElementSize indexElementSize,
+        public static PooledIndexBuffer GetIndexBuffer(object caller, GraphicsDevice graphicsDevice, IndexElementSize indexElementSize,
             int indexCount, BufferUsage bufferUsage)
         {
-            return _instance.CreateIndexBuffer(graphicsDevice, indexElementSize, indexCount, bufferUsage);
+            return _instance.CreateIndexBuffer(caller, graphicsDevice, indexElementSize, indexCount, bufferUsage);
         }
     }
     
-    public class PooledVertexBuffer : DynamicVertexBuffer
+    public class PooledVertexBuffer : DynamicVertexBuffer, IGpuResource
     {
         public GpuResourceManager Parent { get; }
         public long PoolId { get; }
-        internal DateTime CreatedTime { get; }
-        internal object Creator { get; set; }
+        public object Owner { get; }
+        public DateTime CreatedTime { get; }
 
-        public PooledVertexBuffer(GpuResourceManager parent, long id, GraphicsDevice graphicsDevice, VertexDeclaration vertexDeclaration, int vertexCount, BufferUsage bufferUsage) : base(graphicsDevice, vertexDeclaration, vertexCount, bufferUsage)
+        public PooledVertexBuffer(GpuResourceManager parent, long id, object owner, GraphicsDevice graphicsDevice, VertexDeclaration vertexDeclaration, int vertexCount, BufferUsage bufferUsage) : base(graphicsDevice, vertexDeclaration, vertexCount, bufferUsage)
         {
             Parent = parent;
             PoolId = id;
             CreatedTime = DateTime.UtcNow;
+            Owner = owner;
         }
 
         protected override void Dispose(bool disposing)
@@ -214,31 +215,35 @@ namespace Alex.API.Graphics
         }
     }
 
-    public class PooledTexture2D : Texture2D
+    public class PooledTexture2D : Texture2D, IGpuResource
     {
         public GpuResourceManager Parent { get; }
         public long PoolId { get; }
-        internal DateTime CreatedTime { get; }
+        public object Owner { get; }
+        public DateTime CreatedTime { get; }
 
-        public PooledTexture2D(GpuResourceManager parent, long id, GraphicsDevice graphicsDevice, int width, int height) : base(graphicsDevice, width, height)
+        public PooledTexture2D(GpuResourceManager parent, long id, object owner, GraphicsDevice graphicsDevice, int width, int height) : base(graphicsDevice, width, height)
         {
             Parent = parent;
             PoolId = id;
             CreatedTime = DateTime.UtcNow;
+            Owner = owner;
         }
 
-        public PooledTexture2D(GpuResourceManager parent, long id, GraphicsDevice graphicsDevice, int width, int height, bool mipmap, SurfaceFormat format) : base(graphicsDevice, width, height, mipmap, format)
+        public PooledTexture2D(GpuResourceManager parent, long id, object owner, GraphicsDevice graphicsDevice, int width, int height, bool mipmap, SurfaceFormat format) : base(graphicsDevice, width, height, mipmap, format)
         {
             Parent = parent;
             PoolId = id;
             CreatedTime = DateTime.UtcNow;
+            Owner = owner;
         }
 
-        public PooledTexture2D(GpuResourceManager parent, long id, GraphicsDevice graphicsDevice, int width, int height, bool mipmap, SurfaceFormat format, int arraySize) : base(graphicsDevice, width, height, mipmap, format, arraySize)
+        public PooledTexture2D(GpuResourceManager parent, long id, object owner, GraphicsDevice graphicsDevice, int width, int height, bool mipmap, SurfaceFormat format, int arraySize) : base(graphicsDevice, width, height, mipmap, format, arraySize)
         {
             Parent = parent;
             PoolId = id;
             CreatedTime = DateTime.UtcNow;
+            Owner = owner;
         }
 
         /*public PooledTexture2D(GpuResourceManager parent, long id, GraphicsDevice graphicsDevice, int width, int height, bool mipmap, SurfaceFormat format, SurfaceType type, bool shared, int arraySize) : base(graphicsDevice, width, height, mipmap, format, type, shared, arraySize)
@@ -255,17 +260,19 @@ namespace Alex.API.Graphics
         }
     }
 
-    public class PooledIndexBuffer : IndexBuffer
+    public class PooledIndexBuffer : IndexBuffer, IGpuResource
     { 
         public GpuResourceManager Parent { get; }
         public long PoolId { get; }
-        internal DateTime CreatedTime { get; }
+        public object Owner { get; }
+        public DateTime CreatedTime { get; }
         
-        public PooledIndexBuffer(GpuResourceManager parent, long id, GraphicsDevice graphicsDevice, IndexElementSize indexElementSize, int indexCount, BufferUsage bufferUsage) : base(graphicsDevice, indexElementSize, indexCount, bufferUsage)
+        public PooledIndexBuffer(GpuResourceManager parent, long id, object owner, GraphicsDevice graphicsDevice, IndexElementSize indexElementSize, int indexCount, BufferUsage bufferUsage) : base(graphicsDevice, indexElementSize, indexCount, bufferUsage)
         {
             Parent = parent;
             PoolId = id;
             CreatedTime = DateTime.UtcNow;
+            Owner = owner;
         }
 
         protected override void Dispose(bool disposing)
@@ -274,5 +281,14 @@ namespace Alex.API.Graphics
             
             base.Dispose(disposing);
         }
+    }
+
+    public interface IGpuResource
+    {
+        GpuResourceManager Parent { get; }
+        DateTime CreatedTime { get; }
+        long PoolId { get; }
+        
+        object Owner { get; }
     }
 }
