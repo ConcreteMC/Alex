@@ -45,19 +45,30 @@ namespace Alex.Graphics.Models.Entity
 					if (effect == null) continue;
 					
 					var yaw = part.ApplyYaw ? MathUtils.ToRadians(180f - position.Yaw) : 0f;
+					
 					var headYaw = part.ApplyHeadYaw ? MathUtils.ToRadians(180f - position.HeadYaw) : 0f;
 					var pitch = part.ApplyPitch ? MathUtils.ToRadians(position.Pitch) : 0f;
 
 					var rot = _rotation + part.Rotation;
 
-					Matrix rotMatrix = Matrix.CreateTranslation(-part.Pivot) * Matrix.CreateRotationX((rot.X)) *
-					                   Matrix.CreateRotationY((rot.Y)) *
-					                   Matrix.CreateRotationZ((rot.Z)) * Matrix.CreateTranslation(part.Pivot);
+					Matrix rotMatrix = Matrix.CreateTranslation(-part.Pivot) 
+					                   * Matrix.CreateFromYawPitchRoll(
+						                   MathUtils.ToRadians(rot.Y), 
+						                   MathUtils.ToRadians(rot.X), 
+						                   MathUtils.ToRadians(rot.Z)
+						                   )  
+					                   * Matrix.CreateTranslation(part.Pivot);
 
-					effect.World = rotMatrix * Matrix.CreateRotationY(yaw) *
-					               (Matrix.CreateTranslation(-part.Pivot) * Matrix.CreateFromYawPitchRoll(headYaw, -pitch, 0f) *
-					                Matrix.CreateTranslation(part.Pivot))
-					               * (Matrix.CreateScale(1f / 16f) * Matrix.CreateTranslation(position));
+					if (part.ApplyYaw)
+						rotMatrix *= Matrix.CreateRotationY(yaw);
+
+					var rotMatrix2 = Matrix.CreateTranslation(-part.Pivot) *
+						Matrix.CreateFromYawPitchRoll(headYaw, pitch, 0f) *
+					                 Matrix.CreateTranslation(part.Pivot);
+					
+					effect.World =  (rotMatrix2 *
+					               rotMatrix 
+					              ) * (Matrix.CreateScale(1f / 16f) * Matrix.CreateTranslation(position));
 
 					//Effect.World = world * (Matrix.CreateScale(1f / 16f) * Matrix.CreateTranslation(position));
 					effect.View = args.Camera.ViewMatrix;

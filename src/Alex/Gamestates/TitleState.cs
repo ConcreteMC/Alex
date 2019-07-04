@@ -11,6 +11,7 @@ using Alex.API.Gui.Graphics;
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.Entities;
+using Alex.Entities.Passive;
 using Alex.GameStates.Gui.Common;
 using Alex.Gamestates.Gui.MainMenu;
 using Alex.GameStates.Gui.Multiplayer;
@@ -281,7 +282,19 @@ namespace Alex.GameStates
 				};
 			}
 
-			AddChild(_playerView = new GuiEntityModelView(new PlayerMob("", null, null, skin.Texture, skin.Slim)) /*"geometry.humanoid.customSlim"*/
+			Entity entity;
+			if (EntityFactory.ModelByType(EntityType.Cow, out var renderer, out EntityData data))
+			{
+				entity = new Cow(null);
+				entity.ModelRenderer = renderer;
+				
+			}
+			else
+			{
+				entity = new PlayerMob("", null, null, skin.Texture, skin.Slim);
+			}
+
+			AddChild(_playerView = new GuiEntityModelView(entity/*new PlayerMob("", null, null, skin.Texture, skin.Slim)*/ ) /*"geometry.humanoid.customSlim"*/
 			{
 				BackgroundOverlay = new Color(Color.Black, 0.15f),
 

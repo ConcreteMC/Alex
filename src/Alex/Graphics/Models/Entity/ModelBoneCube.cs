@@ -20,17 +20,16 @@ namespace Alex.Graphics.Models.Entity
 
 			public Vector3 Rotation { get; set; } = Vector3.Zero;
 			public Vector3 Pivot { get; private set; } = Vector3.Zero;
-
+			public Vector3 Origin { get; private set; } = Vector3.Zero;
 			public ModelBoneCube(short[] indexes, Texture2D texture, Vector3 rotation, Vector3 pivot,
 				Vector3 origin)
 			{
-				
 				//Vertices = (VertexPositionNormalTexture[]) textures.Clone();
 				Texture = texture;
 				Rotation = rotation;
 				Pivot = pivot;
 				Indexes = indexes;
-
+				Origin = origin;
 				//for (int i = 0; i < Vertices.Length; i++)
 				//{
 				//	Vertices[i].Position += origin;
