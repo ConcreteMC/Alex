@@ -12,7 +12,7 @@ namespace Alex.Graphics.Models.Entity
 	{
 		public class ModelBone : IDisposable
 		{
-			private VertexBuffer Buffer { get; set; }
+			private IndexBuffer Buffer { get; set; }
 			public ModelBoneCube[] Parts { get; }
 
 			private Vector3 _rotation = Vector3.Zero;
@@ -30,8 +30,13 @@ namespace Alex.Graphics.Models.Entity
 			private bool _isDirty = true;
 			public void Render(IRenderArgs args, PlayerLocation position)
 			{
-				args.GraphicsDevice.SetVertexBuffer(Buffer);
+				if (Buffer == null)
+					return;
+				
+				var old = args.GraphicsDevice.Indices;
+				args.GraphicsDevice.Indices = Buffer;
 
+				int idx = 0;
 				for (var index = 0; index < Parts.Length; index++)
 				{
 					var part = Parts[index];
@@ -62,9 +67,9 @@ namespace Alex.Graphics.Models.Entity
 					{
 						pass.Apply();
 					}
-
-					args.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, index * (Buffer.VertexCount / Parts.Length), part.Vertices.Length / 3);
-					//part.Render(args, position, _rotation);
+					
+					args.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, idx, part.Indexes.Length / 3);
+					idx += part.Indexes.Length;
 				}
 			}
 
@@ -92,6 +97,22 @@ namespace Alex.Graphics.Models.Entity
 
 			private void UpdateVertexBuffer(GraphicsDevice device)
 			{
+				var indices = Parts.SelectMany(x => x.Indexes).ToArray();
+
+				IndexBuffer currentBuffer = Buffer;
+
+				if (indices.Length > 0 && (Buffer == null || currentBuffer.IndexCount != indices.Length))
+				{
+					IndexBuffer buffer = GpuResourceManager.GetIndexBuffer(this, device, IndexElementSize.SixteenBits,
+						indices.Length, BufferUsage.None);
+
+					buffer.SetData(indices);
+					Buffer = buffer;
+					
+					currentBuffer?.Dispose();
+				}
+
+				/*long index = 0;
 				var vertices = Parts.SelectMany(x => x.Vertices).ToArray();
 
 				VertexBuffer currentBuffer = Buffer;
@@ -119,7 +140,7 @@ namespace Alex.Graphics.Models.Entity
 					{
 						currentBuffer.SetData(vertices);
 					}
-				}
+				}*/
 			}
 
 			public void Dispose()
