@@ -6,6 +6,7 @@ using System.Text;
 using System.Windows;
 using Alex.GuiDebugger.Common;
 using Alex.GuiDebugger.Models;
+using Catel.MVVM;
 
 namespace Alex.GuiDebugger.ViewModels
 {
@@ -14,54 +15,14 @@ namespace Alex.GuiDebugger.ViewModels
 		private ObservableCollection<GuiElementInfo> _elementTreeItems;
 		private ObservableCollection<PropertyGridItem> _selectedGuiElementPropertyInfos;
 
-		public ObservableCollection<GuiElementInfo> ElementTreeItems
-		{
-			get => _elementTreeItems;
-			set
-			{
-				if (Equals(value, _elementTreeItems)) return;
-				_elementTreeItems = value;
-				OnPropertyChanged();
-			}
-		}
+		public ObservableCollection<GuiElementInfo> ElementTreeItems { get; set; }
 
-		public ObservableCollection<PropertyGridItem> SelectedGuiElementPropertyInfos
-		{
-			get => _selectedGuiElementPropertyInfos;
-			set
-			{
-				if (Equals(value, _selectedGuiElementPropertyInfos)) return;
-				_selectedGuiElementPropertyInfos = value;
-				OnPropertyChanged();
-			}
-		}
+		public ObservableCollection<PropertyGridItem> SelectedGuiElementPropertyInfos { get; set; }
 
 		public MainViewModel()
 		{
 			ElementTreeItems = new ObservableCollection<GuiElementInfo>();
 			SelectedGuiElementPropertyInfos = new ObservableCollection<PropertyGridItem>();
-			//if (DesignerProperties.GetIsInDesignMode(new DependencyObject()))
-			//{
-			//	ElementTreeItems = new ObservableCollection<GuiElementInfo>();
-			//	ElementTreeItems.Add(new GuiElementInfo()
-			//	{
-			//		ElementType = "GuiScreen",
-			//		ChildElements = 
-			//		{
-			//			new GuiElementInfo()
-			//			{
-			//				ElementType = "GuiMultiStackContainer",
-			//				ChildElements = 
-			//				{
-			//					new GuiElementInfo()
-			//					{
-			//						ElementType = "GuiText"
-			//					}
-			//				}
-			//			}
-			//		}
-			//	});
-			//}
 		}
 
 	}

@@ -2,13 +2,22 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
+using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media;
 using System.Windows.Threading;
 using Alex.GuiDebugger.Common;
 using Alex.GuiDebugger.Common.Services;
+using Catel.IoC;
+using Catel.Logging;
+using Catel.Services;
 using EasyPipes;
+using Orchestra.Markup;
+using Orchestra.Services;
+using Orchestra.Views;
 
 namespace Alex.GuiDebugger
 {
@@ -17,31 +26,53 @@ namespace Alex.GuiDebugger
 	/// </summary>
 	public partial class App : Application
 	{
+		#region Constants
 
-		public static IGuiDebuggerService GuiDebuggerService { get; private set; }
+		private static readonly ILog Log = LogManager.GetCurrentClassLogger();
 
-		private Client _server;
+		#endregion
 
-		protected override void OnExit(ExitEventArgs e)
+		#region Fields
+
+		private readonly Stopwatch _stopwatch;
+
+		#endregion
+		
+		#region Constructors
+
+		public App()
 		{
-			base.OnExit(e);
+			_stopwatch = new Stopwatch();
+			_stopwatch.Start();
 		}
+
+		#endregion
+
+		#region Methods
 
 		protected override void OnStartup(StartupEventArgs e)
 		{
-			DispatcherUnhandledException += OnDispatcherUnhandledException;
+#if DEBUG
+			LogManager.AddDebugListener(true);
+#endif
+			
+			var languageService = ServiceLocator.Default.ResolveType<ILanguageService>();
 
-			_server = new Client(GuiDebuggerConstants.NamedPipeName);
-			GuiDebuggerService = _server.GetServiceProxy<IGuiDebuggerService>();
+			// Note: it's best to use .CurrentUICulture in actual apps since it will use the preferred language
+			// of the user. But in order to demo multilingual features for devs (who mostly have en-US as .CurrentUICulture),
+			// we use .CurrentCulture for the sake of the demo
+			languageService.PreferredCulture = CultureInfo.CurrentCulture;
+			languageService.FallbackCulture  = new CultureInfo("en-US");
+			
+			var serviceLocator = ServiceLocator.Default;
+			var shellService   = serviceLocator.ResolveType<IShellService>();
+			shellService.CreateAsync<ShellWindow>();
 
-			base.OnStartup(e);
+			_stopwatch.Stop();
+
+			Log.Info("Elapsed startup stopwatch time: {0}", _stopwatch.Elapsed);
 		}
 
-		private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
-		{
-			MessageBox.Show(MainWindow, e.Exception.Message, "Unhandled Exception", MessageBoxButton.OK);
-			e.Handled = true;
-
-		}
+		#endregion
 	}
 }

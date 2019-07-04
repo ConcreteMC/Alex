@@ -13,7 +13,13 @@ namespace Alex.GuiDebugger.Common
 		
 		[DataMember]
 		public virtual string Name { get; set; }
-		
+
+		[DataMember]
+		public virtual Type Type { get; set; }
+
+		[DataMember]
+		public virtual object Value { get; set; }
+
 		[DataMember]
 		public virtual string StringValue { get; set; }
 	}

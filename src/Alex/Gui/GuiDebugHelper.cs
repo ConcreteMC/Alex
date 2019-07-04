@@ -501,11 +501,11 @@ namespace Alex.Gui
 				if (!attr.Visible) continue;
 
 				if(typeof(IGuiElement).IsAssignableFrom(prop.PropertyType)) continue;
-				
-				string val = null;
+
+				object val = null;
 				try
 				{
-					val = prop.GetValue(guiElement)?.ToString();
+					val = prop.GetValue(guiElement);
 					
 				}
 				catch(Exception ex)
@@ -516,7 +516,9 @@ namespace Alex.Gui
 				infos.Add(new GuiElementPropertyInfo()
 				{
 					Name        = prop.Name,
-					StringValue = val
+					Type = prop.PropertyType,
+					Value = val,
+					StringValue = val?.ToString()
 				});
 			}
 

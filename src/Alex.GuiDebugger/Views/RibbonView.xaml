@@ -1,0 +1,35 @@
+﻿<catel:UserControl
+    x:Class="Alex.GuiDebugger.Views.RibbonView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:catel="http://schemas.catelproject.com"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:fluent="urn:fluent-ribbon"
+    xmlns:markup="clr-namespace:Alex.GuiDebugger.Markup"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:orc="http://schemas.wildgums.com/orc/controls"
+    xmlns:ribbonexample="clr-namespace:Alex.GuiDebugger.Fonts"
+    d:DesignHeight="200"
+    d:DesignWidth="200"
+    mc:Ignorable="d">
+    <Grid>
+        <fluent:Ribbon
+            x:Name="ribbon"
+            AutomaticStateManagement="False"
+            CanCustomizeRibbon="False"
+            IsQuickAccessToolBarVisible="False">
+            <fluent:Ribbon.Tabs>
+                <fluent:RibbonTabItem Header="View">
+
+                    <fluent:RibbonGroupBox Header="Elements">
+
+                        <fluent:Button
+                            Command="{catel:CommandManagerBinding View.Refresh}"
+                            Header="Refresh"
+                            LargeIcon="{markup:FontImage {x:Static ribbonexample:FontAwesome.Refresh}}" />
+                    </fluent:RibbonGroupBox>
+                </fluent:RibbonTabItem>
+            </fluent:Ribbon.Tabs>
+        </fluent:Ribbon>
+    </Grid>
+</catel:UserControl>

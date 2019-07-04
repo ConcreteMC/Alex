@@ -13,8 +13,10 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Alex.GuiDebugger.Common;
+using Alex.GuiDebugger.Common.Services;
 using Alex.GuiDebugger.Models;
 using Alex.GuiDebugger.ViewModels;
+using Catel.IoC;
 
 namespace Alex.GuiDebugger.Windows
 {
@@ -34,14 +36,19 @@ namespace Alex.GuiDebugger.Windows
 			PropertyGridItem.ValueChanged += PropertyGridItemOnValueChanged;
 		}
 
+		private IGuiDebuggerService GuiDebuggerService
+		{
+			get => this.GetDependencyResolver().Resolve<IGuiDebuggerService>();
+		}
+
 		private void PropertyGridItemOnValueChanged(object sender, PropertyGridItemValueChangedEventArgs e)
 		{
-			App.GuiDebuggerService.SetElementPropertyValue(e.ElementId, e.PropertyName, e.NewValue);
+			GuiDebuggerService.SetElementPropertyValue(e.ElementId, e.PropertyName, e.NewValue);
 		}
 
 		private void OnRefreshButtonClick(object sender, RoutedEventArgs e)
 		{
-			var items = App.GuiDebuggerService.GetAllGuiElementInfos();
+			var items = GuiDebuggerService.GetAllGuiElementInfos();
 			_mainViewModel.ElementTreeItems.Clear();
 
 			foreach (var item in items)
@@ -54,7 +61,7 @@ namespace Alex.GuiDebugger.Windows
 		{
 			if (_elementTreeView.SelectedItem is GuiElementInfo elementInfo)
 			{
-				var items = App.GuiDebuggerService.GetElementPropertyInfos(elementInfo.Id);
+				var items = GuiDebuggerService.GetElementPropertyInfos(elementInfo.Id);
 				_mainViewModel.SelectedGuiElementPropertyInfos.Clear();
 
 				foreach (var item in items)
@@ -73,15 +80,15 @@ namespace Alex.GuiDebugger.Windows
 			var item = e.NewValue as GuiElementInfo;
 			if (item == null)
 			{
-				App.GuiDebuggerService.DisableHighlight();
+				GuiDebuggerService.DisableHighlight();
 				_mainViewModel.SelectedGuiElementPropertyInfos.Clear();
 			}
 			else
 			{
-				App.GuiDebuggerService.HighlightGuiElement(item.Id);
+				GuiDebuggerService.HighlightGuiElement(item.Id);
 				_mainViewModel.SelectedGuiElementPropertyInfos.Clear();
 
-				var infos = App.GuiDebuggerService.GetElementPropertyInfos(item.Id);
+				var infos = GuiDebuggerService.GetElementPropertyInfos(item.Id);
 				foreach (var info in infos)
 				{
 					_mainViewModel.SelectedGuiElementPropertyInfos.Add(new PropertyGridItem(item.Id, info.Name, info.StringValue));

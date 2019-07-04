@@ -1,14 +1,94 @@
-﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:markup="clr-namespace:Alex.GuiDebugger.Markup"
+    xmlns:numerics="clr-namespace:System.Numerics;assembly=System.Numerics.Vectors"
+    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
 
     <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="/Alex.GuiDebugger;Component/Styles/Brushes.xaml" />
+        <!--<ResourceDictionary Source="/Alex.GuiDebugger;Component/Styles/Brushes.xaml" />-->
     </ResourceDictionary.MergedDictionaries>
 
+    <DataTemplate x:Key="StringPropertyEditorTemplate" DataType="{x:Type sys:String}">
+        <TextBox Text="{Binding}" />
+    </DataTemplate>
 
-    <Style x:Key="PropertyGridTreeView" TargetType="TreeView" />
+    <DataTemplate x:Key="BooleanPropertyEditorTemplate" DataType="{x:Type sys:Boolean}">
+        <CheckBox IsChecked="{Binding}" />
+    </DataTemplate>
+
+    <DataTemplate x:Key="ThicknessPropertyEditorTemplate" DataType="{x:Type Thickness}">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+
+            <TextBox Grid.Column="0" Text="{Binding Left}" />
+            <TextBox Grid.Column="1" Text="{Binding Top}" />
+            <TextBox Grid.Column="2" Text="{Binding Right}" />
+            <TextBox Grid.Column="3" Text="{Binding Bottom}" />
+        </Grid>
+    </DataTemplate>
+
+    <DataTemplate x:Key="SizePropertyEditorTemplate" DataType="{x:Type Size}">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+
+            <TextBox Grid.Column="0" Text="{Binding Width}" />
+            <TextBox Grid.Column="1" Text="{Binding Height}" />
+        </Grid>
+    </DataTemplate>
+
+    <DataTemplate x:Key="PointPropertyEditorTemplate" DataType="{x:Type Point}">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+
+            <TextBox Grid.Column="0" Text="{Binding X}" />
+            <TextBox Grid.Column="1" Text="{Binding Y}" />
+        </Grid>
+    </DataTemplate>
+    <DataTemplate x:Key="Vector2PropertyEditorTemplate" DataType="{x:Type numerics:Vector2}">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+
+            <!--<TextBox Grid.Column="0" Text="{Binding X}" />
+            <TextBox Grid.Column="1" Text="{Binding Y}" />-->
+        </Grid>
+    </DataTemplate>
+
+    <markup:DynamicTemplateSelector x:Key="DynamicTemplateSelector" />
+
+    <Style x:Key="GuiElementPropertyEditor" TargetType="ContentPresenter">
+        <Setter Property="ContentTemplateSelector" Value="{StaticResource DynamicTemplateSelector}" />
+        <Setter Property="markup:DynamicTemplateSelector.Templates">
+            <Setter.Value>
+                <markup:TemplateCollection>
+                    <markup:Template DataTemplate="{StaticResource StringPropertyEditorTemplate}" Value="{x:Type sys:String}" />
+                    <markup:Template DataTemplate="{StaticResource BooleanPropertyEditorTemplate}" Value="{x:Type sys:Boolean}" />
+                    <markup:Template DataTemplate="{StaticResource ThicknessPropertyEditorTemplate}" Value="{x:Type Thickness}" />
+                    <markup:Template DataTemplate="{StaticResource SizePropertyEditorTemplate}" Value="{x:Type Size}" />
+                    <markup:Template DataTemplate="{StaticResource PointPropertyEditorTemplate}" Value="{x:Type Point}" />
+                </markup:TemplateCollection>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--<Style x:Key="PropertyGridTreeView" TargetType="TreeView" />
     <Style TargetType="{x:Type TreeView}">
         <Setter Property="Background" Value="#1c1c1c" />
         <Setter Property="BorderThickness" Value="0" />
-    </Style>
+    </Style>-->
 
 </ResourceDictionary>
