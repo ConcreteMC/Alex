@@ -216,7 +216,8 @@ namespace Alex.API.Gui.Elements.Layout
 
 			foreach (var child in children)
 			{
-				if (child is GuiScrollBar) continue;
+				if (!ShouldPositionChild(child)) continue;
+				
 				//offset -= lastOffset;
 
 				var layoutBounds = PositionChild(child, alignment, positioningBounds, lastOffset, offset, true);

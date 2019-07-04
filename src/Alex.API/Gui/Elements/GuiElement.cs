@@ -74,13 +74,14 @@ namespace Alex.API.Gui.Elements
         [DebuggerVisible] public virtual Rectangle RenderBounds { get; set; }
         [DebuggerVisible] public bool IsVisible { get; set; } = true;
 
+        public Matrix LayoutTransform { get; set; } = Matrix.Identity;
         public Matrix RenderTransform { get; set; } = Matrix.Identity;
 
         public void Draw(GuiSpriteBatch graphics, GameTime gameTime)
         {
             if (!IsVisible) return;
 
-            using (graphics.BeginTransform(RenderTransform, true))
+            //using (graphics.BeginTransform(RenderTransform))
             {
                 if (ClipToBounds)
                 {

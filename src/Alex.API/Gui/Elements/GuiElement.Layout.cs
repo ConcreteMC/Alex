@@ -483,8 +483,14 @@ namespace Alex.API.Gui.Elements
         {
             foreach (var child in children)
             {
-                PositionChild(child, child.Anchor, newBounds, Padding, Thickness.Zero);
+                if(ShouldPositionChild(child))
+                    PositionChild(child, child.Anchor, newBounds, Padding, Thickness.Zero);
             }
+        }
+
+        protected virtual bool ShouldPositionChild(GuiElement child)
+        {
+            return true;
         }
 
         protected LayoutBoundingRectangle PositionChild(GuiElement child,           Alignment alignment,

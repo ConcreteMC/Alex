@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Text;
 using Alex.API.Gui.Graphics;
 using Microsoft.Xna.Framework;
+using NLog;
 
 namespace Alex.API.Gui.Elements.Controls
 {
@@ -19,6 +21,8 @@ namespace Alex.API.Gui.Elements.Controls
 
 	public class GuiScrollBar : GuiElement
 	{
+		private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
+
 		public event EventHandler<ScrollOffsetValueChangedEventArgs> ScrollOffsetValueChanged; 
 
 		public Orientation Orientation
@@ -48,8 +52,14 @@ namespace Alex.API.Gui.Elements.Controls
 			get => _scrollOffsetValue;
 			set
 			{
+				if (value == _scrollOffsetValue) return;
+
+				var prevValue = _scrollOffsetValue;
 				_scrollOffsetValue = Math.Clamp(value, 0, _maxScrollOffset);
 				ScrollOffsetValueChanged?.Invoke(this, new ScrollOffsetValueChangedEventArgs(_scrollOffsetValue));
+
+				Log.Info($"ScrollDecreaseButton.Click {{ScrollOffsetValue=({prevValue} => {_scrollOffsetValue}), ScrollButtonStep={ScrollButtonStep}, MaxScrollOffset={MaxScrollOffset}}}");
+				Debug.WriteLine($"ScrollDecreaseButton.Click {{ScrollOffsetValue=({prevValue} => {_scrollOffsetValue}), ScrollButtonStep={ScrollButtonStep}, MaxScrollOffset={MaxScrollOffset}}}");
 			}
 		}
 
@@ -58,8 +68,10 @@ namespace Alex.API.Gui.Elements.Controls
 			get => _maxScrollOffset;
 			set
 			{
+				if (value == _maxScrollOffset) return;
+
 				_maxScrollOffset = value;
-				ScrollOffsetValue = Math.Clamp(ScrollOffsetValue, 0, _maxScrollOffset);
+				ScrollOffsetValue = ScrollOffsetValue;
 			}
 		}
 

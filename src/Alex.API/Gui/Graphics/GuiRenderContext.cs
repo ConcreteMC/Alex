@@ -49,7 +49,7 @@ namespace Alex.API.Gui.Graphics
         {
             if (_hasBegun) return;
 			
-            SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, null, ScaledResolution.TransformMatrix * _renderMatrix);
+            SpriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, null, ScaledResolution.TransformMatrix * _renderMatrix);
         
             _hasBegun = true;
 
@@ -77,7 +77,7 @@ namespace Alex.API.Gui.Graphics
             return context;
         }
 
-        public IDisposable BeginTransform(Matrix transformMatrix, bool mergeTransform = false)
+        public IDisposable BeginTransform(Matrix transformMatrix, bool mergeTransform = true)
         {
             var shouldBegin = _hasBegun;
             End();
@@ -102,9 +102,9 @@ namespace Alex.API.Gui.Graphics
 
             var currentScissorRectangle = Context.ScissorRectangle;
 
-            if (mergeBounds && Context.ScissorRectangle != Rectangle.Empty)
+            if (mergeBounds && currentScissorRectangle != Rectangle.Empty)
             {
-                Context.ScissorRectangle = Rectangle.Intersect(Context.ScissorRectangle, scissorRectangle);
+                Context.ScissorRectangle = Rectangle.Intersect(currentScissorRectangle, scissorRectangle);
             }
             else
             {
