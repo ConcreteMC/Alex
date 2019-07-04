@@ -573,7 +573,7 @@ namespace Alex.GameStates.Gui.Multiplayer
                         {
                             using (MemoryStream ms = new MemoryStream(Convert.FromBase64String(match.Groups["data"].Value)))
                             {
-                                ServerIcon = GpuResourceManager.GetTexture2D(_graphicsDevice, ms);
+                                ServerIcon = GpuResourceManager.GetTexture2D(this, _graphicsDevice, ms);
                             }
 
                             reset.Set();

@@ -44,7 +44,7 @@ namespace Alex.ResourcePackLib
 		private readonly Dictionary<string, BlockStateResource> _blockStates   = new Dictionary<string, BlockStateResource>();
 		private readonly Dictionary<string, BlockModel>         _blockModels   = new Dictionary<string, BlockModel>();
 		private readonly Dictionary<string, ResourcePackItem>   _itemModels    = new Dictionary<string, ResourcePackItem>();
-		private readonly Dictionary<string, Texture2D>          _textureCache  = new Dictionary<string, Texture2D>();
+		//private readonly Dictionary<string, Texture2D>          _textureCache  = new Dictionary<string, Texture2D>();
 		private readonly Dictionary<string, Bitmap>             _bitmapCache   = new Dictionary<string, Bitmap>();
 		private readonly Dictionary<string, LanguageResource>	_languageCache = new Dictionary<string, LanguageResource>();
 
@@ -54,7 +54,7 @@ namespace Alex.ResourcePackLib
 		public IReadOnlyDictionary<string, BlockModel>         BlockModels       => _blockModels;
 		public IReadOnlyDictionary<string, ResourcePackItem>   ItemModels        => _itemModels;
 		public IReadOnlyDictionary<string, Bitmap>             TexturesAsBitmaps => _bitmapCache;
-		public IReadOnlyDictionary<string, Texture2D>          Textures          => _textureCache;
+		//public IReadOnlyDictionary<string, Texture2D>          Textures          => _textureCache;
 		public IReadOnlyDictionary<string, LanguageResource>   Languages		 => _languageCache;
 		
 		public ResourcePackInfo Info { get; private set; }
@@ -323,36 +323,17 @@ namespace Alex.ResourcePackLib
 				bmp = LoadBitmap(entry, match);
 			}
 			
-			_textureCache[match.Groups["filename"].Value] = TextureUtils.ImageToTexture2D(Graphics, bmp);
-		}
-
-		public bool TryGetTexture(BlockModel model, string textureName, out Texture2D texture)
-		{
-			while (textureName.StartsWith("#"))
-			{
-				if (!model.Textures.TryGetValue(textureName.TrimStart('#'), out textureName))
-				{
-					texture = null;
-					return false;
-				}
-			}
-
-			if (_textureCache.TryGetValue(textureName, out texture))
-				return true;
-
-			texture = null;
-			return false;
+		//	_textureCache[match.Groups["filename"].Value] = TextureUtils.ImageToTexture2D(Graphics, bmp);
 		}
 
 		public bool TryGetTexture(string textureName, out Texture2D texture)
 		{
-			if (_textureCache.TryGetValue(textureName, out texture))
-				return true;
+		//	if (_textureCache.TryGetValue(textureName, out texture))
+		//		return true;
 
 			if (TryGetBitmap(textureName, out Bitmap bmp))
 			{
 				texture = TextureUtils.BitmapToTexture2D(Graphics, bmp);
-				_textureCache[textureName] = texture;
 				return true;
 			}
 

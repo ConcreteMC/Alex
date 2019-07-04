@@ -23,7 +23,7 @@ namespace Alex.Entities.Models
 					Name = "body",
 					Parent = "",
 					Pivot = new Vector3(0f,13f,2f),
-					Rotation = new Vector3(0f,0f,0f),
+					Rotation = new Vector3(-90f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,

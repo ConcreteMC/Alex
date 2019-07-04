@@ -48,19 +48,18 @@ namespace Alex.API.Utils
             return BitmapToTexture2D(device, bmp, out _);
         }
 
-
         public static Texture2D BitmapToTexture2D(GraphicsDevice device, Bitmap bmp, out long byteSize)
 		{
 			if (bmp == null)
             {
                 byteSize = 16 * 16 * 32;
-				return GpuResourceManager.GetTexture2D(device, 16, 16);
+				return GpuResourceManager.GetTexture2D("Alex.Api.Utils.TextureUtils", device, 16, 16);
 			}
 
             byteSize = 0;
 
             uint[] imgData = new uint[bmp.Width * bmp.Height];
-			Texture2D texture = GpuResourceManager.GetTexture2D(device, bmp.Width, bmp.Height);
+			Texture2D texture = GpuResourceManager.GetTexture2D("Alex.Api.Utils.TextureUtils", device, bmp.Width, bmp.Height);
 
 			LockBitmap locked = new LockBitmap(bmp);
 			locked.LockBits();

@@ -808,12 +808,12 @@ namespace Alex.Worlds
 	                {
 		                data = new ChunkData()
 		                {
-			                Buffer = GpuResourceManager.GetBuffer(Graphics,
+			                Buffer = GpuResourceManager.GetBuffer(this, Graphics,
 				                VertexPositionNormalTextureColor.VertexDeclaration, vertexArray.Length,
 				                BufferUsage.WriteOnly),
-			                SolidIndexBuffer = GpuResourceManager.GetIndexBuffer(Graphics, IndexElementSize.ThirtyTwoBits,
+			                SolidIndexBuffer = GpuResourceManager.GetIndexBuffer(this, Graphics, IndexElementSize.ThirtyTwoBits,
 				                solidArray.Length, BufferUsage.WriteOnly),
-			                TransparentIndexBuffer = GpuResourceManager.GetIndexBuffer(Graphics, IndexElementSize.ThirtyTwoBits,
+			                TransparentIndexBuffer = GpuResourceManager.GetIndexBuffer(this, Graphics, IndexElementSize.ThirtyTwoBits,
 				                transparentArray.Length, BufferUsage.WriteOnly)
 		                };
 	                }
@@ -821,7 +821,7 @@ namespace Alex.Worlds
 	                if (vertexArray.Length >= data.Buffer.VertexCount)
 	                {
 		                var oldBuffer = data.Buffer;
-		                VertexBuffer newBuffer = GpuResourceManager.GetBuffer(Graphics,
+		                VertexBuffer newBuffer = GpuResourceManager.GetBuffer(this,Graphics,
 			                VertexPositionNormalTextureColor.VertexDeclaration, vertexArray.Length,
 			                BufferUsage.WriteOnly);
 
@@ -838,7 +838,7 @@ namespace Alex.Worlds
 	                if (solidArray.Length > data.SolidIndexBuffer.IndexCount)
 	                {
 		                var old = data.SolidIndexBuffer;
-		                var newSolidBuffer = GpuResourceManager.GetIndexBuffer(Graphics, IndexElementSize.ThirtyTwoBits,
+		                var newSolidBuffer = GpuResourceManager.GetIndexBuffer(this, Graphics, IndexElementSize.ThirtyTwoBits,
 			                solidArray.Length,
 			                BufferUsage.WriteOnly);
 
@@ -854,7 +854,7 @@ namespace Alex.Worlds
 	                if (transparentArray.Length > data.TransparentIndexBuffer.IndexCount)
 	                {
 		                var old = data.TransparentIndexBuffer;
-		                var newSolidBuffer = GpuResourceManager.GetIndexBuffer(Graphics, IndexElementSize.ThirtyTwoBits,
+		                var newSolidBuffer = GpuResourceManager.GetIndexBuffer(this, Graphics, IndexElementSize.ThirtyTwoBits,
 			                transparentArray.Length,
 			                BufferUsage.WriteOnly);
 

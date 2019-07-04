@@ -184,7 +184,7 @@ namespace Alex.Graphics.Models
 				_btmRightBack = new Vector3(1.0f, 0.0f, 1.0f) * Size;
 			}
 
-			public VertexPositionNormalTexture[] Front, Back, Left, Right, Top, Bottom;
+			public (VertexPositionNormalTexture[] vertices, short[] indexes) Front, Back, Left, Right, Top, Bottom;
 
 			private readonly Vector3 _topLeftFront;
 			private readonly Vector3 _topLeftBack;
@@ -215,111 +215,138 @@ namespace Alex.Graphics.Models
 				Bottom = GetBottomVertex(bottom);
 			}
 
-			private VertexPositionNormalTexture[] GetLeftVertex(Vector2 uv)
+			private (VertexPositionNormalTexture[] vertices, short[] indexes) GetLeftVertex(Vector2 uv)
 			{
 				Vector3 normal = new Vector3(-1.0f, 0.0f, 0.0f) * Size;
 
 				var map = GetTextureMapping(uv + new Vector2(Size.Z + Size.X, Size.Z), Size.Z, Size.Y);
 
 				// Add the vertices for the RIGHT face. 
-				return new VertexPositionNormalTexture[]
+				return (new VertexPositionNormalTexture[]
 				{
 					new VertexPositionNormalTexture(_topLeftFront, normal, map.TopLeft),
 					new VertexPositionNormalTexture(_btmLeftFront , normal, map.BotLeft),
 					new VertexPositionNormalTexture(_btmLeftBack, normal, map.BotRight),
 					new VertexPositionNormalTexture(_topLeftBack , normal, map.TopRight),
-					new VertexPositionNormalTexture(_topLeftFront , normal, map.TopLeft),
-					new VertexPositionNormalTexture(_btmLeftBack, normal, map.BotRight),
-				};
+					//new VertexPositionNormalTexture(_topLeftFront , normal, map.TopLeft),
+					//new VertexPositionNormalTexture(_btmLeftBack, normal, map.BotRight),
+				}, new short[]
+				{
+					0, 1, 2, 
+					3, 0, 2
+					//0, 1, 2, 3, 0, 2
+				});
 			}
 
-			private VertexPositionNormalTexture[] GetRightVertex(Vector2 uv)
+			private (VertexPositionNormalTexture[] vertices, short[] indexes) GetRightVertex(Vector2 uv)
 			{
 				Vector3 normal = new Vector3(1.0f, 0.0f, 0.0f) * Size;
 
 				var map = GetTextureMapping(uv + new Vector2(0, Size.Z), Size.Z, Size.Y);
 
 				// Add the vertices for the RIGHT face. 
-				return new VertexPositionNormalTexture[]
+				return (new VertexPositionNormalTexture[]
 				{
 					new VertexPositionNormalTexture(_topRightFront, normal, map.TopRight),
 					new VertexPositionNormalTexture(_btmRightBack , normal, map.BotLeft),
 					new VertexPositionNormalTexture(_btmRightFront, normal, map.BotRight),
 					new VertexPositionNormalTexture(_topRightBack , normal, map.TopLeft),
-					new VertexPositionNormalTexture(_btmRightBack , normal, map.BotLeft),
-					new VertexPositionNormalTexture(_topRightFront, normal, map.TopRight),
-				};
+					//new VertexPositionNormalTexture(_btmRightBack , normal, map.BotLeft),
+					//new VertexPositionNormalTexture(_topRightFront, normal, map.TopRight),
+				}, new short[]
+				{
+					0, 1, 2, 
+					3, 1, 0
+				});
 			}
 
-			private VertexPositionNormalTexture[] GetFrontVertex(Vector2 uv)
+			private (VertexPositionNormalTexture[] vertices, short[] indexes) GetFrontVertex(Vector2 uv)
 			{
 				Vector3 normal = new Vector3(0.0f, 0.0f, 1.0f) * Size;
 
 				var map = GetTextureMapping(uv + new Vector2(Size.Z, Size.Z), Size.X, Size.Y);
 
 				// Add the vertices for the RIGHT face. 
-				return new VertexPositionNormalTexture[]
+				return (new VertexPositionNormalTexture[]
 				{
 					new VertexPositionNormalTexture(_topLeftFront , normal, map.TopLeft),
 					new VertexPositionNormalTexture(_topRightFront, normal, map.TopRight),
 					new VertexPositionNormalTexture(_btmLeftFront , normal, map.BotLeft),
-					new VertexPositionNormalTexture(_btmLeftFront , normal, map.BotLeft),
-					new VertexPositionNormalTexture(_topRightFront, normal, map.TopRight),
+					//new VertexPositionNormalTexture(_btmLeftFront , normal, map.BotLeft),
+					//new VertexPositionNormalTexture(_topRightFront, normal, map.TopRight),
 					new VertexPositionNormalTexture(_btmRightFront, normal, map.BotRight),
-				};
+				}, new short[]
+				{
+					0, 1, 2, 
+					2, 1, 3
+					//0, 2, 1, 2, 3, 1
+				});
 			}
-			private VertexPositionNormalTexture[] GetBackVertex(Vector2 uv)
+			private (VertexPositionNormalTexture[] vertices, short[] indexes) GetBackVertex(Vector2 uv)
 			{
 				Vector3 normal = new Vector3(0.0f, 0.0f, -1.0f) * Size;
 
 				var map = GetTextureMapping(uv + new Vector2(Size.Z + Size.Z + Size.X, Size.Z), Size.X, Size.Y);
 
 				// Add the vertices for the RIGHT face. 
-				return new VertexPositionNormalTexture[]
+				return (new VertexPositionNormalTexture[]
 				{
 					new VertexPositionNormalTexture(_topLeftBack , normal, map.TopRight),
 					new VertexPositionNormalTexture(_btmLeftBack , normal, map.BotRight),
 					new VertexPositionNormalTexture(_topRightBack, normal, map.TopLeft),
-					new VertexPositionNormalTexture(_btmLeftBack , normal, map.BotRight),
+					//new VertexPositionNormalTexture(_btmLeftBack , normal, map.BotRight),
 					new VertexPositionNormalTexture(_btmRightBack, normal, map.BotLeft),
-					new VertexPositionNormalTexture(_topRightBack, normal, map.TopLeft),
-				};
+					//new VertexPositionNormalTexture(_topRightBack, normal, map.TopLeft),
+				}, new short[]
+				{
+					0, 1, 2,
+					1, 3, 2
+					//0, 1, 2, 1, 3, 2
+				});
 			}
 
-			private VertexPositionNormalTexture[] GetTopVertex(Vector2 uv)
+			private (VertexPositionNormalTexture[] vertices, short[] indexes) GetTopVertex(Vector2 uv)
 			{
 				Vector3 normal = new Vector3(0.0f, 1.0f, 0.0f) * Size;
 
 				var map = GetTextureMapping(uv + new Vector2(Size.Z, 0), Size.X, Size.Z);
 
 				// Add the vertices for the RIGHT face. 
-				return new VertexPositionNormalTexture[]
+				return (new VertexPositionNormalTexture[]
 				{
 					new VertexPositionNormalTexture(_topLeftFront , normal, map.BotLeft),
 					new VertexPositionNormalTexture(_topLeftBack  , normal, map.TopLeft),
 					new VertexPositionNormalTexture(_topRightBack , normal, map.TopRight),
-					new VertexPositionNormalTexture(_topLeftFront , normal, map.BotLeft),
-					new VertexPositionNormalTexture(_topRightBack , normal, map.TopRight),
+					//new VertexPositionNormalTexture(_topLeftFront , normal, map.BotLeft),
+				//	new VertexPositionNormalTexture(_topRightBack , normal, map.TopRight),
 					new VertexPositionNormalTexture(_topRightFront, normal, map.BotRight),
-				};
+				}, new short[]
+				{
+					0, 1, 2, 
+					0, 2, 3
+				});
 			}
 
-			private VertexPositionNormalTexture[] GetBottomVertex(Vector2 uv)
+			private (VertexPositionNormalTexture[] vertices, short[] indexes) GetBottomVertex(Vector2 uv)
 			{
 				Vector3 normal = new Vector3(0.0f, -1.0f, 0.0f) * Size;
 
 				var map = GetTextureMapping(uv + new Vector2(Size.Z + Size.X, 0), Size.X, Size.Z);
 
 				// Add the vertices for the RIGHT face. 
-				return new VertexPositionNormalTexture[]
+				return (new VertexPositionNormalTexture[]
 				{
 					new VertexPositionNormalTexture(_btmLeftFront , normal, map.TopLeft),
 					new VertexPositionNormalTexture(_btmRightBack , normal, map.BotRight),
 					new VertexPositionNormalTexture(_btmLeftBack  , normal, map.BotLeft),
-					new VertexPositionNormalTexture(_btmLeftFront , normal, map.TopLeft),
+					//new VertexPositionNormalTexture(_btmLeftFront , normal, map.TopLeft),
 					new VertexPositionNormalTexture(_btmRightFront, normal, map.TopRight),
-					new VertexPositionNormalTexture(_btmRightBack , normal, map.BotRight),
-				};
+					//new VertexPositionNormalTexture(_btmRightBack , normal, map.BotRight),
+				}, new short[]
+				{
+					0, 1, 2, 
+					0, 3, 1
+				});
 			}
 
 			private TextureMapping GetTextureMapping(Vector2 textureOffset, float regionWidth, float regionHeight)

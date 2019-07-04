@@ -11,6 +11,7 @@ using Alex.API.Gui.Graphics;
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.Entities;
+using Alex.Entities.Passive;
 using Alex.GameStates.Gui.Common;
 using Alex.Gamestates.Gui.MainMenu;
 using Alex.GameStates.Gui.Multiplayer;
@@ -280,8 +281,10 @@ namespace Alex.GameStates
 					Texture = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, rawTexture)
 				};
 			}
+			
+				var entity = new PlayerMob("", null, null, skin.Texture, skin.Slim);
 
-			AddChild(_playerView = new GuiEntityModelView(new PlayerMob("", null, null, skin.Texture, skin.Slim)) /*"geometry.humanoid.customSlim"*/
+				AddChild(_playerView = new GuiEntityModelView(entity/*new PlayerMob("", null, null, skin.Texture, skin.Slim)*/ ) /*"geometry.humanoid.customSlim"*/
 			{
 				BackgroundOverlay = new Color(Color.Black, 0.15f),
 
@@ -307,7 +310,7 @@ namespace Alex.GameStates
 			{
 				using (MemoryStream ms = new MemoryStream(ResourceManager.ReadResource("Alex.Resources.GradientBlur.png")))
 				{
-					BackgroundOverlay = (TextureSlice2D)GpuResourceManager.GetTexture2D(args.GraphicsDevice, ms);
+					BackgroundOverlay = (TextureSlice2D)GpuResourceManager.GetTexture2D(this, args.GraphicsDevice, ms);
 				}
 
 				reset.Set();
