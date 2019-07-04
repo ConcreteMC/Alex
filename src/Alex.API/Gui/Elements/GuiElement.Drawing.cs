@@ -22,7 +22,7 @@ namespace Alex.API.Gui.Elements
 
         [DebuggerVisible] public virtual Vector2 RotationOrigin { get; set; } = Vector2.Zero;
 
-        [DebuggerVisible] public bool ClipToBounds { get; set; } = true;
+        [DebuggerVisible] public bool ClipToBounds { get; set; } = false;
 
         public GuiTexture2D Background;
         public GuiTexture2D BackgroundOverlay;

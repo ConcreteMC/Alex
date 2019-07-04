@@ -18,6 +18,11 @@ namespace Alex.API.Gui
             get { return this; }
         }
 
+        public override IGuiScreen Screen
+        {
+            get => this;
+        }
+
         public IGuiControl FocusedControl { get; private set; }
 
 

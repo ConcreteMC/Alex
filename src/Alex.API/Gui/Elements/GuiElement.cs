@@ -22,17 +22,24 @@ namespace Alex.API.Gui.Elements
 		private IGuiElement      _parentElement;
 		private IGuiFocusContext _focusContext;
 
+		//[DebuggerVisible(Visible = false)]
+		//public IGuiScreen Screen
+		//{
+		//	get => _screen;
+		//	private set
+		//	{
+		//		var currentScreen = _screen;
+		//		_screen = value;
+		//		OnScreenChanged(currentScreen, _screen);
+
+		//		InvalidateLayout();
+		//	}
+		//}
+
 		[DebuggerVisible(Visible = false)]
-		public IGuiScreen Screen
+		public virtual IGuiScreen Screen
 		{
-			get => _screen;
-			private set
-			{
-				var currentScreen = _screen;
-				_screen = value;
-				OnScreenChanged(currentScreen, _screen);
-				InvalidateLayout();
-			}
+			get => ParentElement?.Screen;
 		}
 
 		[DebuggerVisible(Visible = false)]
@@ -41,10 +48,13 @@ namespace Alex.API.Gui.Elements
 			get => _parentElement;
 			set
 			{
+				var previousParent = _parentElement;
 				_parentElement = value;
-				TryFindParentOfType<IGuiScreen>(e => true, out IGuiScreen screen);
-				Screen = screen;
-				OnParentElementChanged(_parentElement);
+				//TryFindParentOfType<IGuiScreen>(e => true, out IGuiScreen screen);
+				//Screen = screen;
+
+				OnParentElementChanged(previousParent, _parentElement);
+
 				InvalidateLayout();
 			}
 		}
@@ -149,7 +159,10 @@ namespace Alex.API.Gui.Elements
 
 		public void Update(GameTime gameTime)
 		{
-			OnUpdate(gameTime);
+			if (_initialised)
+			{
+				OnUpdate(gameTime);
+			}
 
 			ForEachChild(c => c.Update(gameTime));
 		}
@@ -164,15 +177,17 @@ namespace Alex.API.Gui.Elements
 			if (element == this) return;
 			if (element.ParentElement == this) return;
 			if (Children.Contains(element)) return;
-
-			element.ParentElement = this;
+			
 			Children.Add(element);
+			element.ParentElement = this;
+
 			if (_initialised)
 			{
 				element.Init(_guiRenderer);
 			}
 
 			OnChildAdded(element);
+
 			InvalidateLayout();
 		}
 
@@ -183,7 +198,10 @@ namespace Alex.API.Gui.Elements
 			OnChildRemoved(element);
 
 			Children.Remove(element);
-			element.ParentElement = null;
+			
+			if(element.ParentElement == this)
+				element.ParentElement = null;
+			
 			InvalidateLayout();
 		}
 
@@ -339,8 +357,9 @@ namespace Alex.API.Gui.Elements
 		{
 		}
 
-		protected virtual void OnParentElementChanged(IGuiElement parentElement)
+		protected virtual void OnParentElementChanged(IGuiElement previousParent, IGuiElement newParent)
 		{
+			ForEachChild(e => e.ParentElement = this);
 		}
 
 		protected virtual void OnUpdateLayout()

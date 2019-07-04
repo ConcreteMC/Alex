@@ -53,12 +53,7 @@ namespace Alex.GameStates
 
         public void AddState(string name, IGameState state)
         {
-            state.Load(new RenderArgs()
-            {
-                SpriteBatch = SpriteBatch,
-                GraphicsDevice = Graphics,
-                GameTime = new GameTime()
-            });
+			EnsureStateLoaded(state);
 
             States.AddOrUpdate(name, state, (s, gamestate) =>
             {
@@ -90,6 +85,18 @@ namespace Alex.GameStates
 
 		    return false;
 	    }
+
+		private void EnsureStateLoaded(IGameState state)
+		{
+			//if(state.IsLoaded) return;
+			state.Load(new RenderArgs()
+			{
+				SpriteBatch    = SpriteBatch,
+				GraphicsDevice = Graphics,
+				GameTime       = new GameTime()
+			});
+		}
+
 	    public bool SetActiveState<TStateType>(string key) where TStateType : IGameState, new()
 	    {
 		    if (!States.TryGetValue(key, out var state))
@@ -127,6 +134,8 @@ namespace Alex.GameStates
 
 		public bool SetActiveState(IGameState state, bool keepHistory = true)
 	    {
+			EnsureStateLoaded(state);
+
 		    var current = ActiveState;
 		    current?.Hide();
 

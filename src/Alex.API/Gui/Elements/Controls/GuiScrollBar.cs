@@ -66,7 +66,7 @@ namespace Alex.API.Gui.Elements.Controls
 				Debug.WriteLine($"ScrollOffsetValue.Change {{ScrollOffsetValue=({prevValue} => {_scrollOffsetValue}), ScrollButtonStep={ScrollButtonStep}, MaxScrollOffset={MaxScrollOffset}}}");
 			}
 		}
-		
+
 		public int MaxScrollOffset
 		{
 			get => _maxScrollOffset;
@@ -121,23 +121,22 @@ namespace Alex.API.Gui.Elements.Controls
 
 			AddChild(Track = new GuiButton()
 			{
-				MinWidth = 10,
+				MinWidth  = 10,
 				MinHeight = 10,
-				Margin = new Thickness(0, 0, 0, 0),
+				Margin    = new Thickness(0, 0, 0, 0),
 
-				Background = GuiTextures.ScrollBarTrackDefault,
+				Background            = GuiTextures.ScrollBarTrackDefault,
 				HighlightedBackground = GuiTextures.ScrollBarTrackHover,
-				FocusedBackground = GuiTextures.ScrollBarTrackFocused,
-				DisabledBackground = GuiTextures.ScrollBarTrackDisabled
-
+				FocusedBackground     = GuiTextures.ScrollBarTrackFocused,
+				DisabledBackground    = GuiTextures.ScrollBarTrackDisabled
 			});
 
 			Track.Background.RepeatMode            = TextureRepeatMode.NoScaleCenterSlice;
 			Track.HighlightedBackground.RepeatMode = TextureRepeatMode.NoScaleCenterSlice;
 			Track.FocusedBackground.RepeatMode     = TextureRepeatMode.NoScaleCenterSlice;
 			Track.DisabledBackground.RepeatMode    = TextureRepeatMode.NoScaleCenterSlice;
-			
-			Track.CursorMove += TrackOnCursorMove;
+
+			Track.CursorMove    += TrackOnCursorMove;
 			Track.CursorPressed += TrackOnCursorPressed;
 
 			Orientation = Orientation.Vertical;
@@ -150,7 +149,7 @@ namespace Alex.API.Gui.Elements.Controls
 
 		private void TrackOnCursorMove(object sender, GuiCursorMoveEventArgs e)
 		{
-			if(e.IsCursorDown)
+			if (e.IsCursorDown)
 				SetValueFromCursor(e.CursorPosition);
 		}
 
@@ -159,7 +158,7 @@ namespace Alex.API.Gui.Elements.Controls
 			var percentageClicked = Orientation == Orientation.Vertical
 										? (relativePosition.Y / (float) RenderBounds.Height)
 										: (relativePosition.X / (float) RenderBounds.Width);
-			
+
 			ScrollOffsetValue = (int) Math.Round(MaxScrollOffset * percentageClicked);
 		}
 
@@ -170,7 +169,7 @@ namespace Alex.API.Gui.Elements.Controls
 			ThumbBackground.TryResolveTexture(renderer);
 			ThumbHighlightBackground.TryResolveTexture(renderer);
 		}
-		
+
 		private void OnScrollOffsetValueChanged(int prevValue, int scrollOffsetValue)
 		{
 			UpdateTrack();
@@ -204,7 +203,9 @@ namespace Alex.API.Gui.Elements.Controls
 		private void UpdateTrack()
 		{
 			var containerSize = Orientation == Orientation.Vertical ? RenderBounds.Height : RenderBounds.Width;
-			var trackSize = Orientation == Orientation.Vertical ? (containerSize - ScrollUpButton.Height - ScrollDownButton.Height) : (containerSize - ScrollUpButton.Width - ScrollDownButton.Width);
+			var trackSize = Orientation == Orientation.Vertical
+								? (containerSize - ScrollUpButton.Height - ScrollDownButton.Height)
+								: (containerSize - ScrollUpButton.Width - ScrollDownButton.Width);
 			var maxOffset = MaxScrollOffset;
 
 			var contentSize = containerSize + maxOffset;
@@ -217,14 +218,14 @@ namespace Alex.API.Gui.Elements.Controls
 				else
 					Track.Width = trackSize;
 
-				Track.Enabled = false;
-				ScrollUpButton.Enabled = false;
+				Track.Enabled            = false;
+				ScrollUpButton.Enabled   = false;
 				ScrollDownButton.Enabled = false;
 			}
 			else
 			{
 				var size = (int) Math.Floor(visibleSizeAsPercentage * trackSize);
-				
+
 
 				if (Orientation == Orientation.Vertical)
 					Track.Height = size;
@@ -233,7 +234,7 @@ namespace Alex.API.Gui.Elements.Controls
 
 				Track.Enabled = true;
 
-				ScrollUpButton.Enabled = (ScrollOffsetValue > 0);
+				ScrollUpButton.Enabled   = (ScrollOffsetValue > 0);
 				ScrollDownButton.Enabled = (ScrollOffsetValue < MaxScrollOffset);
 			}
 		}

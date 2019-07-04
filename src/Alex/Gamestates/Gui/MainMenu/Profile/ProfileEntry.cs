@@ -17,6 +17,7 @@ namespace Alex.Gamestates.Gui.MainMenu.Profile
     {
         private GuiTextElement _serverName;
         public GuiEntityModelView ModelView { get; }
+
         public ProfileEntry(Skin defaultSkin)
         {
             MinWidth = 92;

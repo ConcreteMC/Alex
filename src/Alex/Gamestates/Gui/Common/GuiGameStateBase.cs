@@ -17,6 +17,12 @@ namespace Alex.GameStates.Gui.Common
 	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(GuiGameStateBase));
 	    
         protected Alex Alex => Alex.Instance;
+		
+
+		public bool IsLoaded { get; private set; }
+		public bool IsShown  { get; private set; }
+
+		public IGameState ParentState { get; set; }
 
         public GuiGameStateBase()
         {
@@ -40,10 +46,10 @@ namespace Alex.GameStates.Gui.Common
 		        Margin = new Thickness(0, 0, 5, 5)
 	        });
 		}
-
-        public IGameState ParentState { get; set; }
         public void Load(IRenderArgs args)
         {
+			if(IsLoaded) return;
+			IsLoaded = true;
             OnLoad(args);
 
             //Init(Alex.GuiManager.GuiRenderer);
@@ -52,7 +58,9 @@ namespace Alex.GameStates.Gui.Common
         }
 
         public void Unload()
-        {
+		{
+			if (!IsLoaded) return;
+			IsLoaded = false;
             OnUnload();
         }
 
@@ -65,16 +73,24 @@ namespace Alex.GameStates.Gui.Common
         
         public void Show()
         {
+			if(IsShown) return;
+			
 	        Alex.GuiManager.AddScreen(this);
             OnShow();
+			
+			IsShown = true;
+
             InvalidateLayout();
         }
 
         public void Hide()
         {
+			if(!IsShown) return;
+			IsShown = false;
+
 	        OnHide();
             Alex.GuiManager.RemoveScreen(this);
-        }
+		}
 
         public TService GetService<TService>() where TService : class
         {
