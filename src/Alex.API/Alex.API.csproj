@@ -26,6 +26,7 @@
   <ItemGroup>
     <Folder Include="Data\Options\JsonConverters\" />
     <Folder Include="Data\Tags\" />
+    <Folder Include="Gui\Abstractions\" />
     <Folder Include="Mojang\" />
     <Folder Include="World\Storage\" />
   </ItemGroup>
