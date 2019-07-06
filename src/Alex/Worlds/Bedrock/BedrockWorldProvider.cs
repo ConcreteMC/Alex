@@ -32,7 +32,7 @@ namespace Alex.Worlds.Bedrock
 		{
 			Alex = alex;
 
-			Client = new BedrockClient(alex, endPoint, profile.PlayerName, new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount)), this);
+			Client = new BedrockClient(alex, endPoint, profile, new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount)), this);
 			networkProvider = Client;
 		}
 
@@ -252,5 +252,11 @@ namespace Alex.Worlds.Bedrock
 		}
 
 		public IChatReceiver GetChatReceiver => ChatReceiver;
+
+		public override void Dispose()
+		{
+			base.Dispose();
+			Client.Dispose();
+		}
 	}
 }

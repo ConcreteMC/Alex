@@ -5,6 +5,7 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Alex.API.Data;
 using Alex.API.Data.Options;
 using Alex.API.Entities;
@@ -82,9 +83,14 @@ namespace Alex.Worlds.Bedrock
         private IOptionsProvider OptionsProvider { get; }
         private XBLMSAService XblmsaService { get; }
         private AlexOptions Options => OptionsProvider.AlexOptions;
-		public BedrockClient(Alex alex, IPEndPoint endpoint, string username, DedicatedThreadPool threadPool, BedrockWorldProvider wp) : base(endpoint,
-			username, threadPool)
-        {
+        private DedicatedThreadPool _threadPool;
+        
+        public PlayerProfile PlayerProfile { get; }
+		public BedrockClient(Alex alex, IPEndPoint endpoint, PlayerProfile playerProfile, DedicatedThreadPool threadPool, BedrockWorldProvider wp) : base(endpoint,
+			playerProfile.Username, threadPool)
+		{
+			PlayerProfile = playerProfile;
+	        
             Alex = alex;
 			WorldProvider = wp;
 			ConnectionAcceptedWaitHandle = new ManualResetEventSlim(false);
@@ -97,7 +103,9 @@ namespace Alex.Worlds.Bedrock
 			base.ChunkRadius = Options.VideoOptions.RenderDistance;
 			
 			Options.VideoOptions.RenderDistance.Bind(RenderDistanceChanged);
-		}
+
+			_threadPool = threadPool;
+        }
 
 		private void RenderDistanceChanged(int oldvalue, int newvalue)
 		{
@@ -464,7 +472,9 @@ namespace Alex.Worlds.Bedrock
 
 		public void Close()
 		{
-			base.StopClient();
+			SendDisconnectionNotification();
+
+			Task.Delay(500).ContinueWith(task => { base.StopClient(); });
 		}
 
 		void IChatProvider.Send(string message)
@@ -503,7 +513,9 @@ namespace Alex.Worlds.Bedrock
 		
 		public void Dispose()
 		{
-			StopClient();
+			Close();
+			_threadPool.Dispose();
+			//_threadPool.WaitForThreadsExit();
 		}
 	}
 }

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -1255,7 +1256,16 @@ namespace Alex.Worlds.Bedrock
 
 		public override void HandleMcpeTransfer(McpeTransfer message)
 		{
-			UnhandledPackage(message);
+			BaseClient.SendDisconnectionNotification();
+			BaseClient.StopClient();
+			
+			IPHostEntry hostEntry = Dns.GetHostEntry(message.serverAddress);
+
+			if (hostEntry.AddressList.Length > 0)
+			{
+				var ip = hostEntry.AddressList[0];
+				AlexInstance.ConnectToServer(new IPEndPoint(ip, message.port), BaseClient.PlayerProfile, true);
+			}
 		}
 
 		public override void HandleMcpePlaySound(McpePlaySound message)

@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using log4net;
 using MiNET.Entities.Passive;
+using MiNET.Net;
 using MiNET.Plugins.Attributes;
 using MiNET.Worlds;
 
@@ -49,6 +50,16 @@ namespace MiNET.AlexDebug
             }
             
             player.ChangeDimension(targetLevel, player.SpawnPosition, targetLevel.Dimension);
+        }
+
+        [Command(Name = "transfer", Aliases = new[] {"transfer"})]
+        public void ServerTransferTest(Player player)
+        {
+            McpeTransfer transfer = McpeTransfer.CreateObject();
+            transfer.serverAddress = "test.pmmp.io";
+            transfer.port = 19132;
+            
+            player.SendPacket(transfer);
         }
     }
 }

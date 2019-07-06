@@ -36,7 +36,7 @@ namespace Alex.Gamestates
 
 		private void MenuButtonClicked()
 		{
-			Alex.GameStateManager.SetActiveState<TitleState>();
+			Alex.GameStateManager.SetActiveState<TitleState>("title");
 		}
 
 	    protected override void OnShow()
