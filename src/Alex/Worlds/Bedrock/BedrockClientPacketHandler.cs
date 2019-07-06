@@ -846,8 +846,6 @@ namespace Alex.Worlds.Bedrock
 
 												if (translated != null)
 												{
-													
-													
 													section.Set(x, y, z, translated);
 												}
 											}
@@ -879,22 +877,47 @@ namespace Alex.Worlds.Bedrock
 										for (int y = 0; y < 16; y++)
 										{
 											int idx = (x << 8) + (z << 4) + y;
+											var id = blockIds[idx];
+											var meta = data[idx];
 
-											var result = BlockFactory.RuntimeIdTable.Where(xx =>
-												xx.Id == blockIds[idx] && xx.Data == data[idx]).ToArray();
-											if (result.Length > 0)
+											IBlockState result = null;
+
+											if (id > 0 && result == null)
 											{
-												//	result[0].sRuntimeId
+												var res = BlockFactory.GetBlockStateID(id, meta);
 
-												section.Set(x, y, z,
-													BlockFactory.GetBlockState((uint) result[0].RuntimeId));
+												if (AnvilWorldProvider.BlockStateMapper.TryGetValue(res,
+													out var res2))
+												{
+													var t = BlockFactory.GetBlockState(res2);
+													t = TranslateBlockState(t, id,
+														meta);
+
+													result = t;
+												}
+												else
+												{
+													Log.Info($"Did not find anvil statemap: {result.Name}");
+													result = TranslateBlockState(BlockFactory.GetBlockState(res),
+														id, meta);
+												}
 											}
 
-											//else
+											if (result == null)
 											{
+												var results = BlockFactory.RuntimeIdTable.Where(xx =>
+													xx.Id == id && xx.Data == meta).ToArray();
 
-												var state = BlockFactory.GetBlockStateID(blockIds[idx], data[idx]);
-												//	section.Set(x, y, z, BlockFactory.GetBlockState(state));
+												if (results.Length > 0)
+												{
+													result = TranslateBlockState(
+														BlockFactory.GetBlockState((uint) results[0].RuntimeId), id, meta);
+												}
+											}
+
+											if (result != null)
+											{
+												section.Set(x, y, z, result);
 											}
 										}
 									}
@@ -1236,7 +1259,8 @@ namespace Alex.Worlds.Bedrock
 
 		public override void HandleMcpeAvailableCommands(McpeAvailableCommands message)
 		{
-			UnhandledPackage(message);
+			BaseClient.LoadCommands(message.CommandSet);
+			//UnhandledPackage(message);
 		}
 
 		public override void HandleMcpeCommandOutput(McpeCommandOutput message)

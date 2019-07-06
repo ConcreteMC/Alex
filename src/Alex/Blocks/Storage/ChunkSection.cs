@@ -60,7 +60,7 @@ namespace Alex.Blocks.Storage
 
 			for (int i = 0; i < TransparentBlocks.Length; i++)
 			{
-				TransparentBlocks[i] = false;
+				TransparentBlocks[i] = true;
 				SolidBlocks[i] = false;
 			}
         }

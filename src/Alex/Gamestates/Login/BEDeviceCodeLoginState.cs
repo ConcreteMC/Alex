@@ -153,7 +153,7 @@ namespace Alex.Gamestates.Login
 							       Slim = true,
 							       Texture = null
 						       }, result.token.AccessToken,
-						        result.token.RefreshToken,
+						        JsonConvert.SerializeObject(result.token),
 						        true);
 
 					        Alex.ProfileManager.CreateOrUpdateProfile(ProfileManager.ProfileType.Bedrock,profile, true);

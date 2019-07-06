@@ -503,6 +503,7 @@ namespace Alex.Worlds
 				chunk.GetBlockData(x & 0xf, y & 0xff, z & 0xf, out transparent, out solid);
 				//return chunk.IsSolid(x & 0xf, y & 0xff, z & 0xf);
 				//  return true;
+				return;
 			}
 
 			transparent = false;

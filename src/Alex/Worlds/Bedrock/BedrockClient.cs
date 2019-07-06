@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.IO.Compression;
 using System.Net;
 using System.Security.Cryptography;
@@ -22,7 +24,9 @@ using MiNET.Blocks;
 using MiNET.Client;
 using MiNET.Items;
 using MiNET.Net;
+using MiNET.Plugins;
 using MiNET.Utils;
+using Newtonsoft.Json;
 using NLog;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Parameters;
@@ -495,6 +499,16 @@ namespace Alex.Worlds.Bedrock
 		void IChatProvider.RequestTabComplete(string text, out int transactionId)
 		{
 			transactionId = 0;
+			return;
+			List<TabCompleteMatch> matches = new List<TabCompleteMatch>();
+			foreach (var command in _availableCommandSet)
+			{
+				foreach (var a in command.Value.Versions)
+				{
+					//if (a.)
+				}
+			}
+			WorldProvider?.GetChatReceiver.ReceivedTabComplete(transactionId, 0, 0, matches.ToArray());
 		}
 
 		public void ChunkReceived(ChunkColumn chunkColumn)
@@ -516,6 +530,18 @@ namespace Alex.Worlds.Bedrock
 			Close();
 			_threadPool.Dispose();
 			//_threadPool.WaitForThreadsExit();
+		}
+
+		private CommandSet _availableCommandSet;
+		public void LoadCommands(CommandSet commandSet)
+		{
+			_availableCommandSet = commandSet;
+			/*ThreadPool.QueueUserWorkItem(o =>
+			{
+				Debug.WriteLine($"Saving commands!");
+				File.WriteAllText("commands.json", JsonConvert.SerializeObject(commandSet, Formatting.Indented));
+				//Log.Info($"Commands: {JsonConvert.SerializeObject(commandSet, Formatting.Indented)}");
+			});*/
 		}
 	}
 }
