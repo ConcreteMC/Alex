@@ -17,6 +17,7 @@ namespace Alex.Graphics.Models.Entity
 		private EntityModel Model { get; }
 		private IReadOnlyDictionary<string, ModelBone> Bones { get; }
 		public Texture2D Texture { get; set; }
+		private VertexBuffer VertexBuffer { get; set; }
 		public EntityModelRenderer(EntityModel model, Texture2D texture)
 		{
 			Model = model;
@@ -52,6 +53,8 @@ namespace Alex.Graphics.Models.Entity
 					}
 				}
 			}
+			
+			List<VertexPositionNormalTexture> vertices = new List<VertexPositionNormalTexture>();
 
 			foreach (var bone in Model.Bones)
 			{
@@ -76,21 +79,31 @@ namespace Alex.Graphics.Models.Entity
 						var pivot = bone.Pivot;
 						var rotation = bone.Rotation;
 
-						VertexPositionNormalTexture[] vertices;
+						//VertexPositionNormalTexture[] vertices;
 						Cube built = new Cube(size, new Vector2(Texture.Width, Texture.Height));
 						built.Mirrored = bone.Mirror;
 						built.BuildCube(cube.Uv);
 
-						vertices = built.Front.Concat(built.Back).Concat(built.Top).Concat(built.Bottom).Concat(built.Left)
-							.Concat(built.Right).ToArray();
+						vertices = ModifyCubeIndexes(vertices, ref built.Front, origin);
+						vertices = ModifyCubeIndexes(vertices, ref built.Back, origin);
+						vertices = ModifyCubeIndexes(vertices, ref built.Top, origin);
+						vertices = ModifyCubeIndexes(vertices, ref built.Bottom, origin);
+						vertices = ModifyCubeIndexes(vertices, ref built.Left, origin);
+						vertices = ModifyCubeIndexes(vertices, ref built.Right, origin);
 
-						var part = new ModelBoneCube(vertices, Texture, rotation, pivot, origin);
+						var part = new ModelBoneCube(built.Front.indexes
+							.Concat(built.Back.indexes)
+							.Concat(built.Top.indexes)
+							.Concat(built.Bottom.indexes)
+							.Concat(built.Left.indexes)
+							.Concat(built.Right.indexes)
+							.ToArray(), Texture, rotation, pivot, origin);
 
 						part.Mirror = bone.Mirror;
 						if (partOfHead)
 						{
 							part.ApplyHeadYaw = true;
-							part.ApplyYaw = false;
+							part.ApplyYaw = true;
 						}
 						else
 						{
@@ -109,10 +122,37 @@ namespace Alex.Graphics.Models.Entity
 					}
 				}
 			}
+
+			VertexBuffer = GpuResourceManager.GetBuffer(this, Alex.Instance.GraphicsDevice,
+				VertexPositionNormalTexture.VertexDeclaration, vertices.Count, BufferUsage.None);
+			VertexBuffer.SetData(vertices.ToArray());
+		}
+
+		private List<VertexPositionNormalTexture> ModifyCubeIndexes(List<VertexPositionNormalTexture> vertices,
+			ref (VertexPositionNormalTexture[] vertices, short[] indexes) data, Vector3 offset)
+		{
+			var startIndex = (short)vertices.Count;
+			foreach (var vertice in data.vertices)
+			{
+				var vertex = vertice;
+				vertex.Position += offset;
+				vertices.Add(vertex);
+			}
+			
+			//vertices.AddRange(data.vertices);
+			
+			for (int i = 0; i < data.indexes.Length; i++)
+			{
+				data.indexes[i] += startIndex;
+			}
+
+			return vertices;
 		}
 
 		public void Render(IRenderArgs args, PlayerLocation position)
 		{
+			args.GraphicsDevice.SetVertexBuffer(VertexBuffer);
+			
 			foreach (var bone in Bones)
 			{
 				bone.Value.Render(args, position);
@@ -150,6 +190,7 @@ namespace Alex.Graphics.Models.Entity
 			}
 			
 			Texture?.Dispose();
+			VertexBuffer?.Dispose();
 		}
 	}
 }

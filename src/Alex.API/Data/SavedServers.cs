@@ -125,7 +125,7 @@ namespace Alex.API.Data
 				    return false;
 			    }
 
-				icon = GpuResourceManager.GetTexture2D(device, Width, Height);
+				icon = GpuResourceManager.GetTexture2D(this, device, Width, Height);
 				icon.SetData(Icon);
 			    return true;
 		    }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Alex.API.Graphics;
 using Alex.API.Graphics.Textures;
 using Alex.API.Graphics.Typography;

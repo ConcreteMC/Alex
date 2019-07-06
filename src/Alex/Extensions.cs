@@ -48,7 +48,7 @@ namespace Alex
 
 		public static void Init(GraphicsDevice gd)
 	    {
-            WhiteTexture = GpuResourceManager.GetTexture2D(gd, 1, 1);
+            WhiteTexture = GpuResourceManager.GetTexture2D("Alex.Extensions", gd, 1, 1);
             WhiteTexture.SetData(new Color[] { Color.White });
         }
 

@@ -12,26 +12,28 @@ namespace Alex.Graphics.Models.Entity
 		public class ModelBoneCube : IDisposable
 		{
 			public AlphaTestEffect Effect { get; private set; }
-			public VertexPositionNormalTexture[] Vertices { get; private set; }
-
+			//public VertexPositionNormalTexture[] Vertices { get; private set; }
+			public short[] Indexes { get; private set; }
+			
 			public bool IsDirty { get; private set; }
 			public Texture2D Texture { get; private set; }
 
 			public Vector3 Rotation { get; set; } = Vector3.Zero;
 			public Vector3 Pivot { get; private set; } = Vector3.Zero;
-
-			public ModelBoneCube(VertexPositionNormalTexture[] textures, Texture2D texture, Vector3 rotation, Vector3 pivot,
+			public Vector3 Origin { get; private set; } = Vector3.Zero;
+			public ModelBoneCube(short[] indexes, Texture2D texture, Vector3 rotation, Vector3 pivot,
 				Vector3 origin)
 			{
-				Vertices = (VertexPositionNormalTexture[]) textures.Clone();
+				//Vertices = (VertexPositionNormalTexture[]) textures.Clone();
 				Texture = texture;
 				Rotation = rotation;
 				Pivot = pivot;
-
-				for (int i = 0; i < Vertices.Length; i++)
-				{
-					Vertices[i].Position += origin;
-				}
+				Indexes = indexes;
+				Origin = origin;
+				//for (int i = 0; i < Vertices.Length; i++)
+				//{
+				//	Vertices[i].Position += origin;
+				//}
 
 				IsDirty = true;
 			}
@@ -58,7 +60,7 @@ namespace Alex.Graphics.Models.Entity
 			{
 				IsDirty = false;
 				Effect?.Dispose();
-				Vertices = null;
+				//Vertices = null;
 				//	Buffer?.Dispose();
 			}
 		}

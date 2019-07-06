@@ -269,7 +269,7 @@ namespace Alex.Worlds
 
 		private DynamicVertexBuffer RenewVertexBuffer(GraphicsDevice graphicsDevice, VertexPositionNormalTextureColor[] vertices)
 		{
-            DynamicVertexBuffer buffer = GpuResourceManager.GetBuffer(graphicsDevice,
+            DynamicVertexBuffer buffer = GpuResourceManager.GetBuffer(this, graphicsDevice,
 				VertexPositionNormalTextureColor.VertexDeclaration,
 				vertices.Length,
 				BufferUsage.WriteOnly);
@@ -284,7 +284,7 @@ namespace Alex.Worlds
 	    
 		private IndexBuffer RenewIndexBuffer(GraphicsDevice graphicsDevice, int[] vertices)
 		{
-			IndexBuffer buffer = GpuResourceManager.GetIndexBuffer(graphicsDevice, IndexElementSize.ThirtyTwoBits, vertices.Length, BufferUsage.WriteOnly);
+			IndexBuffer buffer = GpuResourceManager.GetIndexBuffer(this, graphicsDevice, IndexElementSize.ThirtyTwoBits, vertices.Length, BufferUsage.WriteOnly);
 
 			if (vertices.Length > 0)
 			{

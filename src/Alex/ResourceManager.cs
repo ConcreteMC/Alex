@@ -210,26 +210,41 @@ namespace Alex
 
             DirectoryInfo directory;
             if (!Storage.TryGetDirectory(bedrockPath, out directory))
-			{
-				Log.Warn($"The bedrock resources required to play this game are not set-up correctly!");
-			    Console.ReadLine();
-                Environment.Exit(1);
-				return false;
-			}
+            {
+	            Log.Warn($"The bedrock resources required to play this game are not set-up correctly!");
+	            Console.ReadLine();
+	            Environment.Exit(1);
+	            return false;
+            }
 
-            var directories = directory.GetDirectories();
-
-            if (!directories.Any(x => x.Name.Equals("models")))
+            /*if (!directories.Any(x => x.Name.Equals("models")))
             {
 				Log.Warn($"Please make sure to extract the MC:Bedrock resource pack into \"{directory.FullName}\"");
                 Console.ReadLine();
                 Environment.Exit(1);
 				return false;
+            }*/
+
+            if (directory.GetFileSystemInfos().Length == 0)
+            {
+	            Log.Info($"Extracting required resources...");
+	            progressReceiver?.UpdateProgress(50, "Extracting resources...");
+	            
+	            byte[] zipped = ReadResource("Alex.Resources.resources.zip");
+	            using (MemoryStream ms = new MemoryStream(zipped))
+	            {
+		            using (ZipArchive archive = new ZipArchive(ms, ZipArchiveMode.Read))
+		            {
+			            archive.ExtractToDirectory(directory.FullName);
+		            }
+	            }
             }
+            
+            var directories = directory.GetDirectories();
 
             if (!directories.Any(x => x.Name.Equals("definitions")))
             {
-				Log.Warn($"The required definition files are not found. We sadly cannot legally provide you those. Any questions can be asked on Discord.");
+				Log.Warn($"The required definition files are not found. Any questions can be asked on Discord.");
                 Console.ReadLine();
 				Environment.Exit(1);
                 return false;

@@ -261,7 +261,7 @@ namespace ResourceConverter
 			Log.Info($"Processed {EntityDefinitions.Count} entity definitions");
 		}
 
-		private void Cache(EntityModel model, Dictionary<string, EntityModelRenderer.ModelBone> modelBones)
+		/*private void Cache(EntityModel model, Dictionary<string, EntityModelRenderer.ModelBone> modelBones)
 		{
 			foreach (var bone in model.Bones)
 			{
@@ -319,7 +319,7 @@ namespace ResourceConverter
 					}
 				}
 			}
-		}
+		}*/
 
         private void LoadEntityDefinition(FileInfo entry, Dictionary<string, EntityDefinition> entityDefinitions)
 		{

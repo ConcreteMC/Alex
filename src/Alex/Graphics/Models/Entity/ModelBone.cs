@@ -12,7 +12,7 @@ namespace Alex.Graphics.Models.Entity
 	{
 		public class ModelBone : IDisposable
 		{
-			private VertexBuffer Buffer { get; set; }
+			private IndexBuffer Buffer { get; set; }
 			public ModelBoneCube[] Parts { get; }
 
 			private Vector3 _rotation = Vector3.Zero;
@@ -30,8 +30,12 @@ namespace Alex.Graphics.Models.Entity
 			private bool _isDirty = true;
 			public void Render(IRenderArgs args, PlayerLocation position)
 			{
-				args.GraphicsDevice.SetVertexBuffer(Buffer);
+				if (Buffer == null)
+					return;
+				
+				args.GraphicsDevice.Indices = Buffer;
 
+				int idx = 0;
 				for (var index = 0; index < Parts.Length; index++)
 				{
 					var part = Parts[index];
@@ -40,19 +44,30 @@ namespace Alex.Graphics.Models.Entity
 					if (effect == null) continue;
 					
 					var yaw = part.ApplyYaw ? MathUtils.ToRadians(180f - position.Yaw) : 0f;
+					
 					var headYaw = part.ApplyHeadYaw ? MathUtils.ToRadians(180f - position.HeadYaw) : 0f;
 					var pitch = part.ApplyPitch ? MathUtils.ToRadians(position.Pitch) : 0f;
 
 					var rot = _rotation + part.Rotation;
 
-					Matrix rotMatrix = Matrix.CreateTranslation(-part.Pivot) * Matrix.CreateRotationX((rot.X)) *
-					                   Matrix.CreateRotationY((rot.Y)) *
-					                   Matrix.CreateRotationZ((rot.Z)) * Matrix.CreateTranslation(part.Pivot);
+					Matrix rotMatrix = Matrix.CreateTranslation(-part.Pivot) 
+					                   * Matrix.CreateFromYawPitchRoll(
+						                   MathUtils.ToRadians(rot.Y), 
+						                   MathUtils.ToRadians(rot.X), 
+						                   MathUtils.ToRadians(rot.Z)
+						                   )  
+					                   * Matrix.CreateTranslation(part.Pivot);
 
-					effect.World = rotMatrix * Matrix.CreateRotationY(yaw) *
-					               (Matrix.CreateTranslation(-part.Pivot) * Matrix.CreateFromYawPitchRoll(headYaw, -pitch, 0f) *
-					                Matrix.CreateTranslation(part.Pivot))
-					               * (Matrix.CreateScale(1f / 16f) * Matrix.CreateTranslation(position));
+					if (part.ApplyYaw)
+						rotMatrix *= Matrix.CreateRotationY(yaw);
+
+					var rotMatrix2 = Matrix.CreateTranslation(-part.Pivot) *
+						Matrix.CreateFromYawPitchRoll(headYaw, pitch, 0f) *
+					                 Matrix.CreateTranslation(part.Pivot);
+					
+					effect.World =  (rotMatrix2 *
+					               rotMatrix 
+					              ) * (Matrix.CreateScale(1f / 16f) * Matrix.CreateTranslation(position));
 
 					//Effect.World = world * (Matrix.CreateScale(1f / 16f) * Matrix.CreateTranslation(position));
 					effect.View = args.Camera.ViewMatrix;
@@ -62,9 +77,9 @@ namespace Alex.Graphics.Models.Entity
 					{
 						pass.Apply();
 					}
-
-					args.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, index * (Buffer.VertexCount / Parts.Length), part.Vertices.Length / 3);
-					//part.Render(args, position, _rotation);
+					
+					args.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, idx, part.Indexes.Length / 3);
+					idx += part.Indexes.Length;
 				}
 			}
 
@@ -92,33 +107,19 @@ namespace Alex.Graphics.Models.Entity
 
 			private void UpdateVertexBuffer(GraphicsDevice device)
 			{
-				var vertices = Parts.SelectMany(x => x.Vertices).ToArray();
+				var indices = Parts.SelectMany(x => x.Indexes).ToArray();
 
-				VertexBuffer currentBuffer = Buffer;
-				
-				if (vertices.Length > 0 && (Buffer == null || currentBuffer.VertexCount != vertices.Length))
+				IndexBuffer currentBuffer = Buffer;
+
+				if (indices.Length > 0 && (Buffer == null || currentBuffer.IndexCount != indices.Length))
 				{
-					if (currentBuffer == null)
-					{
-						Buffer = GpuResourceManager.GetBuffer(device,
-							VertexPositionNormalTexture.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
-						currentBuffer = Buffer;
-						currentBuffer.SetData(vertices);
-					}
-					else if (vertices.Length > currentBuffer.VertexCount)
-					{
-						VertexBuffer oldBuffer = currentBuffer;
+					IndexBuffer buffer = GpuResourceManager.GetIndexBuffer(this, device, IndexElementSize.SixteenBits,
+						indices.Length, BufferUsage.None);
 
-						currentBuffer = GpuResourceManager.GetBuffer(device, VertexPositionNormalTextureColor.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
-						currentBuffer.SetData(vertices);
-
-						Buffer = currentBuffer;
-						oldBuffer.Dispose();
-					}
-					else
-					{
-						currentBuffer.SetData(vertices);
-					}
+					buffer.SetData(indices);
+					Buffer = buffer;
+					
+					currentBuffer?.Dispose();
 				}
 			}
 
