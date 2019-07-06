@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using Alex.API.Blocks.State;
 using Alex.API.Data;
+using Alex.API.Entities;
 using Alex.API.Graphics;
 using Alex.API.Input;
 using Alex.API.Network;
@@ -17,6 +19,7 @@ using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET;
+using MiNET.Net;
 using NLog;
 using Inventory = Alex.Utils.Inventory;
 using Ray = MiNET.Utils.Ray;
@@ -107,7 +110,22 @@ namespace Alex.Entities
 
 			if (Controller.CheckInput)
 			{
-				if (!_destroyingBlock && Controller.InputManager.IsDown(InputCommand.LeftClick)) //Destroying block.
+				var hitEntity = HitEntity;
+				if (hitEntity != null && Controller.InputManager.IsPressed(InputCommand.LeftClick))
+				{
+					if (_destroyingBlock)
+						StopBreakingBlock(forceCanceled:true);
+					
+					InteractWithEntity(hitEntity, true);
+				}
+				else if (hitEntity != null && Controller.InputManager.IsPressed(InputCommand.RightClick))
+				{
+					if (_destroyingBlock)
+						StopBreakingBlock(forceCanceled:true);
+					
+					InteractWithEntity(hitEntity, false);
+				}
+				else if (hitEntity == null && !_destroyingBlock && Controller.InputManager.IsDown(InputCommand.LeftClick)) //Destroying block.
 				{
 					StartBreakingBlock();
 				}
@@ -127,8 +145,7 @@ namespace Alex.Entities
 						}
 					}
 				}
-
-				if (Controller.InputManager.IsPressed(InputCommand.RightClick))
+				else if (Controller.InputManager.IsPressed(InputCommand.RightClick))
 				{
 					bool handledClick = false;
 					// Log.Debug($"Right click!");
@@ -148,10 +165,56 @@ namespace Alex.Entities
 			{
 				StopBreakingBlock();
 			}
+			
+			UpdateRayTracer();
 
             base.Update(args);
 
 		}
+
+	    private void InteractWithEntity(IEntity entity, bool attack)
+	    {
+		    if (attack)
+		    {
+			    Network?.EntityInteraction(this, entity, McpeInventoryTransaction.ItemUseOnEntityAction.Attack);
+		    }
+		    else
+		    {
+			    Network?.EntityInteraction(this, entity, McpeInventoryTransaction.ItemUseOnEntityAction.Interact);
+		    }
+	    }
+
+	    public IEntity HitEntity { get; private set; } = null;
+	    public IEntity[] EntitiesInRange { get; private set; } = null;
+	    
+	    private void UpdateRayTracer()
+	    {
+		    var camPos = Level.Camera.Position;
+		    var lookVector = Level.Camera.Direction;
+
+		    var entities = Level.EntityManager.GetEntities(camPos, 8);
+		    EntitiesInRange = entities.ToArray();
+		    
+		    if (EntitiesInRange.Length == 0) return;
+		    
+		    IEntity hitEntity = null;
+		    for (float x = 0.5f; x < 8f; x += 0.1f)
+		    {
+			    Vector3 targetPoint = camPos + (lookVector * x);
+			    var entity = EntitiesInRange.FirstOrDefault(xx =>
+				    xx.GetBoundingBox().Contains(targetPoint) == ContainmentType.Contains);
+
+			    if (entity != null)
+			    {
+				    hitEntity = entity;
+				    break;
+			    }
+		    }
+
+		    HitEntity = hitEntity;
+		    
+		    
+	    }
 
 	    private void BlockBreakTick()
 	    {
@@ -230,7 +293,7 @@ namespace Alex.Entities
 
 	    private bool HandleRightClick(Item slot, int hand)
 	    {
-            //if (ItemFactory.ResolveItemName(slot.ItemID, out string itemName))
+		    //if (ItemFactory.ResolveItemName(slot.ItemID, out string itemName))
             {
 	            IBlockState blockState = null;
 	         //   if (ItemFactory.TryGetItem(itemName, out Item i))

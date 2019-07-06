@@ -65,8 +65,11 @@ namespace Alex
 					    item.ItemType = t;
 				    }
 				    item.Material = minetItem.ItemMaterial;
+				    item.Meta = minetItem.Metadata;
+				    item.Id = minetItem.Id;
 			    }
-
+			    
+			    item.Name = entry.Key;
                 item.DisplayName = entry.Key;
 
 			    var data = itemData.FirstOrDefault(x =>

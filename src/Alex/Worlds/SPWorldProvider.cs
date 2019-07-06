@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Data;
 using Alex.API.Data.Options;
+using Alex.API.Entities;
 using Alex.API.Graphics;
 using Alex.API.Network;
 using Alex.API.Services;
@@ -16,6 +17,7 @@ using Alex.Utils;
 using Alex.Worlds.Generators;
 using Microsoft.Xna.Framework;
 using MiNET;
+using MiNET.Net;
 using NLog;
 
 namespace Alex.Worlds
@@ -39,6 +41,11 @@ namespace Alex.Worlds
 		}
 
 		public void PlayerDigging(DiggingStatus status, BlockCoordinates position, BlockFace face, Vector3 cursorPosition)
+		{
+			
+		}
+
+		public void EntityInteraction(IEntity player, IEntity target, McpeInventoryTransaction.ItemUseOnEntityAction action)
 		{
 			
 		}

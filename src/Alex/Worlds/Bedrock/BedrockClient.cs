@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using Alex.API.Data;
 using Alex.API.Data.Options;
+using Alex.API.Entities;
 using Alex.API.Network;
 using Alex.API.Services;
 using Alex.API.Utils;
@@ -27,6 +28,7 @@ using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.X509;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using NewtonsoftMapper = MiNET.NewtonsoftMapper;
+using Player = Alex.Entities.Player;
 using Skin = MiNET.Utils.Skins.Skin;
 
 namespace Alex.Worlds.Bedrock
@@ -427,6 +429,28 @@ namespace Alex.Worlds.Bedrock
 
             SendPacket(packet);
         }
+
+	    public void EntityInteraction(IEntity player, IEntity target,
+		    McpeInventoryTransaction.ItemUseOnEntityAction action)
+	    {
+		    if (player is Player p)
+		    {
+			    var itemInHand = p.Inventory[p.Inventory.SelectedSlot];
+			    
+			   // WorldProvider?.GetChatReceiver?.Receive(new ChatObject($"(CLIENT) Hit entity: {target.EntityId} | Action: {action.ToString()} | Item: {itemInHand.Id}:{itemInHand.Meta} ({itemInHand.Name})"));
+			    
+			    var packet = McpeInventoryTransaction.CreateObject();
+			    packet.transaction = new Transaction()
+			    {
+				    TransactionType = McpeInventoryTransaction.TransactionType.ItemUseOnEntity,
+				    ActionType = (int) action,
+				    Item = MiNET.Items.ItemFactory.GetItem(itemInHand.Id, itemInHand.Meta, itemInHand.Count),
+				    EntityId = target.EntityId
+			    };
+			    
+			    SendPacket(packet);
+		    }
+	    }
 
 	    public void UseItem(int hand)
 		{

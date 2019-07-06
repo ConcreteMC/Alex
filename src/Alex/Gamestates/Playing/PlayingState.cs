@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Linq;
 using System.Text;
+using Alex.API.Entities;
 using Alex.API.Graphics;
 using Alex.API.Network;
 using Alex.API.Services;
@@ -158,6 +160,15 @@ namespace Alex.GameStates.Playing
 					return string.Empty;
 				}
 			});
+			
+			_debugInfo.AddDebugRight(() =>
+			{
+				var player = World.Player;
+				if (player == null || player.HitEntity == null) return string.Empty;
+
+				var entity = player.HitEntity;
+				return $"Hit entity: {entity.EntityId} / {entity.ToString()}";
+			});
 		}
 
 		private float AspectRatio { get; set; }
@@ -281,14 +292,19 @@ namespace Alex.GameStates.Playing
 	    private Block SelBlock { get; set; } = new Air();
 		private Microsoft.Xna.Framework.BoundingBox RayTraceBoundingBox { get; set; }
 		private bool RenderDebug { get; set; } = true;
-
+		private bool RenderBoundingBoxes { get; set; } = false;
+		
 		private KeyboardState _oldKeyboardState;
 		protected void CheckInput(GameTime gameTime) //TODO: Move this input out of the main update loop and use the new per-player based implementation by @TruDan
 		{
 			KeyboardState currentKeyboardState = Keyboard.GetState();
 			if (currentKeyboardState != _oldKeyboardState)
 			{
-				if (currentKeyboardState.IsKeyDown(KeyBinds.DebugInfo))
+				if (KeyBinds.EntityBoundingBoxes.All(x => currentKeyboardState.IsKeyDown(x)))
+				{
+					RenderBoundingBoxes = !RenderBoundingBoxes;
+				} 
+				else if (currentKeyboardState.IsKeyDown(KeyBinds.DebugInfo))
 				{
 					RenderDebug = !RenderDebug;
 					if (!RenderDebug)
@@ -344,6 +360,21 @@ namespace Alex.GameStates.Playing
 					args.SpriteBatch.RenderBoundingBox(
 						RayTraceBoundingBox,
 						World.Camera.ViewMatrix, World.Camera.ProjectionMatrix, Color.LightGray);
+				}
+
+				if (RenderBoundingBoxes)
+				{
+					var hitEntity = World.Player?.HitEntity;
+
+					var entities = World.Player?.EntitiesInRange;
+					if (entities != null)
+					{
+						foreach (var entity in entities)
+						{
+							args.SpriteBatch.RenderBoundingBox(entity.GetBoundingBox(), World.Camera.ViewMatrix,
+								World.Camera.ProjectionMatrix, entity == hitEntity ? Color.Red : Color.Yellow);
+						}
+					}
 				}
 
 				World.Render2D(args);

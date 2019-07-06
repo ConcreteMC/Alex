@@ -9,7 +9,10 @@ using ItemType = Alex.API.Utils.ItemType;
 namespace Alex.Items
 {
     public class Item : IItem
-	{
+    {
+	    public short Id { get; set; }
+	    public short Meta { get; set; } = 0;
+		public string Name { get; set; }
 		public string DisplayName { get; set; }
 	    public int MaxStackSize { get; set; }= 64;
 		public int Count { get; set; } = 1;
