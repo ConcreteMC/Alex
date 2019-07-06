@@ -2,6 +2,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFrameworks>netcoreapp2.0</TargetFrameworks>
+    <Platforms>x64</Platforms>
   </PropertyGroup>
   <ItemGroup>
     <Compile Update="**\*.xaml.cs">

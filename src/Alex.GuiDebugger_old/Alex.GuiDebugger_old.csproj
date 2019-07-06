@@ -14,7 +14,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Platforms>AnyCPU;x64;x86</Platforms>
+    <Platforms>x64</Platforms>
   </PropertyGroup>
 
   <PropertyGroup>
