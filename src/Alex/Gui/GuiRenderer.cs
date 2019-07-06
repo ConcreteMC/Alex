@@ -277,7 +277,7 @@ namespace Alex.Gui
 				return texture;
 			}
 
-			return (TextureSlice2D) GpuResourceManager.GetTexture2D(_graphicsDevice, 1, 1);
+			return (TextureSlice2D) GpuResourceManager.GetTexture2D(this, _graphicsDevice, 1, 1);
 		}
 
 		public Texture2D GetTexture2D(GuiTextures guiTexture)
