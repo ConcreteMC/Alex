@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using log4net;
 using MiNET.Entities.Passive;
 using MiNET.Plugins.Attributes;
+using MiNET.Worlds;
 
 namespace MiNET.AlexDebug
 {
@@ -26,6 +27,28 @@ namespace MiNET.AlexDebug
             villager.SpawnEntity();
             
             player.SendMessage("Entity spawned.");
+        }
+
+        [Command(Name = "wt", Aliases = new[]{"wt"})]
+        public void TestWorldTransfers(Player player)
+        {
+            var targetLevel = player.Level;
+            if (player.Level.LevelId != "w2")
+            {
+                targetLevel = Core.LevelManager.GetLevel(player, "w2");
+            }
+            else
+            {
+                targetLevel = Core.LevelManager.GetLevel(player, Dimension.Overworld.ToString());
+            }
+
+            if (targetLevel == player.Level)
+            {
+                player.SendMessage($"Could not transfer.");
+                return;
+            }
+            
+            player.ChangeDimension(targetLevel, player.SpawnPosition, targetLevel.Dimension);
         }
     }
 }

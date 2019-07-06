@@ -6,11 +6,14 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Threading;
+using System.Threading.Tasks;
 using Alex.API.Blocks.State;
 using Alex.API.Utils;
+using Alex.API.World;
 using Alex.Blocks.State;
 using Alex.Blocks.Storage;
 using Alex.Entities;
+using Alex.GameStates;
 using Alex.Graphics.Models.Entity;
 using Alex.Items;
 using Alex.ResourcePackLib.Json.Models.Entities;
@@ -69,7 +72,6 @@ namespace Alex.Worlds.Bedrock
             base.HandleMcpeDisconnect(message);
         }
 
-
         public override void HandleMcpeText(McpeText message)
 		{
 			BaseClient.WorldProvider?.GetChatReceiver?.Receive(new ChatObject(message.message));
@@ -78,6 +80,7 @@ namespace Alex.Worlds.Bedrock
 		public override void HandleMcpeSetTime(McpeSetTime message)
 		{
 			BaseClient.WorldReceiver?.SetTime(message.time);
+			_changeDimensionResetEvent.Set();
 		}
 
 		private IReadOnlyDictionary<uint, Blockstate> _blockStateMap;
@@ -633,6 +636,54 @@ namespace Alex.Worlds.Bedrock
 			UnhandledPackage(message);
 		}
 
+		private AutoResetEvent _changeDimensionResetEvent = new AutoResetEvent(false);
+		public override void HandleMcpeChangeDimension(McpeChangeDimension message)
+		{
+			base.HandleMcpeChangeDimension(message);
+			if (BaseClient.WorldProvider is BedrockWorldProvider provider)
+			{
+				LoadingWorldState loadingWorldState = new LoadingWorldState();
+				AlexInstance.GameStateManager.SetActiveState(loadingWorldState, true);
+				loadingWorldState.UpdateProgress(LoadingState.LoadingChunks, 0);
+				
+				
+				foreach (var loadedChunk in provider.LoadedChunks)
+				{
+					provider.UnloadChunk(loadedChunk);
+				}
+				
+				ThreadPool.QueueUserWorkItem(async o =>
+				{
+					double radiusSquared = Math.Pow(Client.ChunkRadius, 2);
+					var target = radiusSquared * 3;
+
+					int percentage = 0;
+					bool ready = false;
+					
+					do
+					{
+						percentage = (int) (provider.LoadedChunks.Count() / target) * 100;
+						
+						loadingWorldState.UpdateProgress(LoadingState.LoadingChunks,
+							percentage);
+
+						if (!ready)
+						{
+							if (_changeDimensionResetEvent.WaitOne(0))
+								ready = true;
+						}
+						else
+						{
+							await Task.Delay(50);
+						}
+						
+					} while (!ready || percentage < 99);
+					
+					AlexInstance.GameStateManager.Back();
+				});
+			}
+		}
+		
 		enum PalleteType : byte
 		{
 			Paletted1 = 1,   // 32 blocks per word, max 2 unique blockstates

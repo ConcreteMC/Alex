@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using log4net;
+using MiNET.Blocks;
 using MiNET.Plugins;
 using MiNET.Worlds;
 using NLog;
@@ -11,6 +13,7 @@ namespace MiNET.AlexDebug
     {
         //private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(PluginCore));
         private static readonly ILog Log = LogManager.GetLogger(typeof(PluginCore));
+        public LevelManager LevelManager { get; private set; }
         public PluginCore()
         {
             
@@ -22,11 +25,29 @@ namespace MiNET.AlexDebug
             Context.LevelManager.LevelCreated += LevelManagerOnLevelCreated;
             Context.Server.PlayerFactory.PlayerCreated += OnPlayerCreated;
             Context.PluginManager.LoadCommands(new CommandHandler(this));
+            Context.LevelManager.Levels.Add(new Level(Context.LevelManager, "w2", new AnvilWorldProvider()
+                {
+                    MissingChunkProvider = new SuperflatGenerator(Dimension.Overworld)
+                    {
+                        BlockLayers = new List<Block>()
+                        {
+                            BlockFactory.GetBlockById(7),
+                            BlockFactory.GetBlockById(3),
+                            BlockFactory.GetBlockById(3),
+                            BlockFactory.GetBlockById(12)
+                        }
+                    }
+                }, 
+                new EntityManager(), GameMode.Creative, Difficulty.Easy));
             
+            // Context.LevelManager.GetLevel(null, "")
+           
             foreach (var level in Context.LevelManager.Levels)
             {
                 LinkLevelEvents(level);
             }
+
+            LevelManager = Context.LevelManager;
         }
         
         private void LevelManagerOnLevelCreated(object sender, LevelEventArgs e)

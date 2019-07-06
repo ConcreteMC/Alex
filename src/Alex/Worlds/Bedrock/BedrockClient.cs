@@ -469,7 +469,17 @@ namespace Alex.Worlds.Bedrock
 
 		void IChatProvider.Send(string message)
 		{
-			SendChat(message);
+			if (message[0] == '/')
+			{
+				McpeCommandRequest commandRequest = McpeCommandRequest.CreateObject();
+				commandRequest.command = message;
+				commandRequest.unknownUuid = new MiNET.Net.UUID(Guid.NewGuid().ToString());
+				SendPacket(commandRequest);
+			}
+			else
+			{
+				SendChat(message);
+			}
 		}
 
 		void IChatProvider.RequestTabComplete(string text, out int transactionId)

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
@@ -166,10 +167,17 @@ namespace Alex.Worlds.Bedrock
 				if (chunkColumn.DistanceTo(center) > maxViewDistance)
 				{
 					//_chunkCache.TryRemove(chunkColumn.Key, out var waste);
-					UnloadChunk(chunkColumn.X, chunkColumn.Z);
-					_loadedChunks.Remove(chunkColumn);
+					UnloadChunk(chunkColumn);
 				}
 			});
+		}
+
+		public IEnumerable<ChunkCoordinates> LoadedChunks => _loadedChunks.ToArray();
+		
+		public void UnloadChunk(ChunkCoordinates coordinates)
+		{
+			UnloadChunk(coordinates.X, coordinates.Z);
+			_loadedChunks.Remove(coordinates);
 		}
 
 		protected override void Initiate(out LevelInfo info, out IChatProvider chatProvider)
