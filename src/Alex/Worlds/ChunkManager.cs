@@ -206,7 +206,7 @@ namespace Alex.Worlds
 			    }
 		    }
 	    }
-
+        
 		private ConcurrentDictionary<ChunkCoordinates, CancellationTokenSource> _workItems = new ConcurrentDictionary<ChunkCoordinates, CancellationTokenSource>();
         private long _threadsRunning = 0;
       //  private SmartThreadPool TaskSchedular = new SmartThreadPool();
@@ -217,9 +217,15 @@ namespace Alex.Worlds
 	        CancellationTokenSource taskCancelationToken = CancellationTokenSource.CreateLinkedTokenSource(CancelationToken.Token);
 	        
 	        Interlocked.Increment(ref _threadsRunning);
+			
+	        //_tasksQueue.
+	        if (_workItems.TryAdd(coords, taskCancelationToken))
+	        {
+		        Enqueued.Remove(coords);
+	        }
+	        
 	        var task = Task.Factory.StartNew(() =>
 	        {
-		        
 		        if (Chunks.TryGetValue(coords, out var val))
 		        {
 			        UpdateChunk(coords, val);
@@ -229,15 +235,10 @@ namespace Alex.Worlds
 		        _workItems.TryRemove(coords, out _);
 		        
 	        }, taskCancelationToken.Token, TaskCreationOptions.None, _priorityTaskScheduler);
-	        
+
 	        if (priority == WorkItemPriority.Highest)
 	        {
-		        _priorityTaskScheduler.Prioritize(task);
-	        }
-
-	        if (_workItems.TryAdd(coords, taskCancelationToken))
-	        {
-		        Enqueued.Remove(coords);
+		         _priorityTaskScheduler.Prioritize(task);
 	        }
         }
         
@@ -364,17 +365,6 @@ namespace Alex.Worlds
 	    public bool UseWireFrames { get; set; } = false;
 	    public void Draw(IRenderArgs args)
 	    {
-		    timer += (float)args.GameTime.ElapsedGameTime.TotalSeconds;
-		    if (timer >= (1.0f / framerate ))
-		    {
-			    timer -= 1.0f / framerate ;
-			    currentFrame = (currentFrame + 1) % FrameCount;
-
-			    var frame = Game.Resources.Atlas.GetAtlas(currentFrame);
-			    OpaqueEffect.Texture = frame;
-			    TransparentEffect.Texture = frame;
-		    }
-
 		    var device = args.GraphicsDevice;
 		    var camera = args.Camera;
 
@@ -533,6 +523,17 @@ namespace Alex.Worlds
 	    private Vector3 CamDir = Vector3.Zero;
 		public void Update(IUpdateArgs args)
 	    {
+		    timer += (float)args.GameTime.ElapsedGameTime.TotalSeconds;
+		    if (timer >= (1.0f / framerate ))
+		    {
+			    timer -= 1.0f / framerate ;
+			    currentFrame = (currentFrame + 1) % FrameCount;
+
+			    var frame = Game.Resources.Atlas.GetAtlas(currentFrame);
+			    OpaqueEffect.Texture = frame;
+			    TransparentEffect.Texture = frame;
+		    }
+		    
 		  //  TransparentEffect.FogColor = skyRenderer.WorldFogColor.ToVector3();
 		 //   OpaqueEffect.FogColor = skyRenderer.WorldFogColor.ToVector3();
 
@@ -585,7 +586,7 @@ namespace Alex.Worlds
 				ScheduleChunkUpdate(new ChunkCoordinates(position.X, position.Z - 1), ScheduleType.Border);
             }
 		}
-
+        
 	    public void ScheduleChunkUpdate(ChunkCoordinates position, ScheduleType type, bool prioritize = false)
 	    {
 

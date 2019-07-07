@@ -221,9 +221,9 @@ namespace Alex.GameStates.Playing
 							   * (float)(gt.ElapsedGameTime.TotalSeconds * 30);
 					look = -look;
 
-					Player.KnownPosition.Yaw -= look.X;
+					Player.KnownPosition.HeadYaw -= look.X;
 					Player.KnownPosition.Pitch -= look.Y;
-					Player.KnownPosition.Yaw = MathUtils.NormDeg(Player.KnownPosition.Yaw);
+					Player.KnownPosition.HeadYaw = MathUtils.NormDeg(Player.KnownPosition.HeadYaw);
 					Player.KnownPosition.Pitch = MathHelper.Clamp(Player.KnownPosition.Pitch, -89.9f, 89.9f);
 
 					//Player.KnownPosition.Pitch = MathHelper.Clamp(Player.KnownPosition.Pitch + look.Y, -89.9f, 89.9f);

@@ -44,7 +44,7 @@ namespace Alex.Entities
 
         public Player(GraphicsDevice graphics, Alex alex, string name, World world, Skin skin, INetworkProvider networkProvider, PlayerIndex playerIndex) : base(name, world, networkProvider, skin.Texture, true)
 		{
-			DoRotationCalculations = false;
+		//	DoRotationCalculations = false;
 			PlayerIndex = playerIndex;
 		    Controller = new PlayerController(graphics, world, alex.GameSettings, alex.InputManager, this, playerIndex); 
 		    NoAi = false;
@@ -81,7 +81,7 @@ namespace Alex.Entities
 			}
 			
 			Controller.Update(args.GameTime);
-			KnownPosition.HeadYaw = KnownPosition.Yaw;
+			//KnownPosition.HeadYaw = KnownPosition.Yaw;
 
 			if (IsSprinting && !sprint)
 			{

@@ -137,7 +137,7 @@ namespace Alex.API.Utils
 			var movement = new Vector3(moveVector.X, moveVector.Y, moveVector.Z);
 			
 			movement = Vector3.Transform(movement,
-				Matrix.CreateRotationY(-MathHelper.ToRadians(Yaw)));
+				Matrix.CreateRotationY(-MathHelper.ToRadians(HeadYaw)));
 
 			return ToVector3() + movement;
 		}

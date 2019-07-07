@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using Alex.API.Entities;
 using Alex.API.Graphics;
 using Alex.API.Network;
@@ -92,7 +93,7 @@ namespace Alex.GameStates.Playing
 				//FpsCounter.Update();
 				//World.ChunkManager.GetPendingLightingUpdates(out int lowLight, out int midLight, out int highLight);
 
-				return $"Alex {Alex.Version} ({FpsCounter.Value:##} FPS, Queued: {World.EnqueuedChunkUpdates} Active: {World.ConcurrentChunkUpdates} chunk updates"/*, H: {highLight} M: {midLight} L: {lowLight} lighting updates)"*/;
+				return $"Alex {Alex.Version} ({FpsCounter.Value:##} FPS, Chunk Updates: {World.EnqueuedChunkUpdates} queued, {World.ConcurrentChunkUpdates} active"/*, H: {highLight} M: {midLight} L: {lowLight} lighting updates)"*/;
 			});
 			_debugInfo.AddDebugLeft(() =>
 			{
@@ -123,7 +124,17 @@ namespace Alex.GameStates.Playing
 			});
 
 			_debugInfo.AddDebugRight(() => Alex.DotnetRuntime);
-			_debugInfo.AddDebugRight(() => MemoryUsageDisplay);
+			//_debugInfo.AddDebugRight(() => MemoryUsageDisplay);
+			_debugInfo.AddDebugRight(() => $"RAM: {GetBytesReadable(Environment.WorkingSet, 2)}");
+			_debugInfo.AddDebugRight(() => $"GPU: {GetBytesReadable(GpuResourceManager.GetMemoryUsage, 2)}");
+			_debugInfo.AddDebugRight(() =>
+			{
+				ThreadPool.GetMaxThreads(out int maxThreads, out int maxCompletionPorts);
+				ThreadPool.GetAvailableThreads(out int availableThreads, out int availableComplPorts);
+
+				return
+					$"Threads: {(maxThreads - availableThreads):00}/{maxThreads}\nCompl.ports: {(maxCompletionPorts - availableComplPorts):00}/{maxCompletionPorts}";
+			});
 			_debugInfo.AddDebugRight(() => 
 			{
 				if (_raytracedBlock.Y > 0 && _raytracedBlock.Y < 256)
@@ -207,17 +218,6 @@ namespace Alex.GameStates.Playing
 
 				SkyRenderer.Update(args);
 				World.Update(args, SkyRenderer);
-
-				if (RenderDebug)
-				{
-					if (gameTime.TotalGameTime - _previousMemUpdate > TimeSpan.FromSeconds(5))
-					{
-						_previousMemUpdate = gameTime.TotalGameTime;
-						//Alex.Process.Refresh();
-						MemoryUsageDisplay = $"Allocated memory: {GetBytesReadable(Environment.WorkingSet)}\n" +
-						                     $"GPU Memory: {GetBytesReadable(GpuResourceManager.GetMemoryUsage)}";
-					}
-				}
 			}
 			base.OnUpdate(gameTime);
 		}
@@ -332,11 +332,17 @@ namespace Alex.GameStates.Playing
 				{
 					if (World.Camera is FirstPersonCamera)
 					{
-						World.Camera = new ThirdPersonCamera(Options.VideoOptions.RenderDistance, World.Player.KnownPosition, Vector3.Zero);
+						World.Camera = new ThirdPersonCamera(Options.VideoOptions.RenderDistance, World.Camera.Position, Vector3.Zero)
+						{
+							FOV = World.Camera.FOV
+						};
 					}
 					else
 					{
-						World.Camera = new FirstPersonCamera(Options.VideoOptions.RenderDistance, World.Player.KnownPosition, Vector3.Zero);
+						World.Camera = new FirstPersonCamera(Options.VideoOptions.RenderDistance, World.Camera.Position, Vector3.Zero)
+						{
+							FOV = World.Camera.FOV
+						};
 					}
 				}
 
@@ -440,7 +446,7 @@ namespace Alex.GameStates.Playing
 			}
 		}
 
-		public static string GetBytesReadable(long i)
+		public static string GetBytesReadable(long i, int decimals = 4)
 		{
 			// Get absolute value
 			long absolute_i = (i < 0 ? -i : i);
@@ -484,7 +490,7 @@ namespace Alex.GameStates.Playing
 			// Divide by 1024 to get fractional value
 			readable = (readable / 1024);
 			// Return formatted number with suffix
-			return readable.ToString("0.### ") + suffix;
+			return readable.ToString($"F{decimals}") + suffix;
 		}
 
 		protected override void OnDraw(IRenderArgs args)

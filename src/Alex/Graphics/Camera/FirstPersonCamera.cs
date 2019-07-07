@@ -16,7 +16,7 @@ namespace Alex.Graphics.Camera
 	    public override void Update(IUpdateArgs args, IEntity entity)
 	    {
 		    MoveTo(entity.KnownPosition + new Vector3(0, Player.EyeLevel, 0),
-			    new Vector3(MathHelper.ToRadians(entity.KnownPosition.HeadYaw), MathHelper.ToRadians(entity.KnownPosition.Yaw), MathHelper.ToRadians(entity.KnownPosition.Pitch)));
+			    new Vector3(MathHelper.ToRadians(entity.KnownPosition.HeadYaw), MathHelper.ToRadians(entity.KnownPosition.HeadYaw), MathHelper.ToRadians(entity.KnownPosition.Pitch)));
 	    }
 	}
 }
