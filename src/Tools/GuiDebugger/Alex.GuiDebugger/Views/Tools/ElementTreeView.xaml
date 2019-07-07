@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:models="clr-namespace:Alex.GuiDebugger.Models"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="Alex.GuiDebugger.Views.ElementTreeView">
+             x:Class="Alex.GuiDebugger.Views.Tools.ElementTreeView">
     
   <Grid>
 

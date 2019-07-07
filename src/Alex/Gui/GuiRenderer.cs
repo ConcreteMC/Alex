@@ -181,6 +181,15 @@ namespace Alex.Gui
 			// Backgrounds
 			LoadTextureFromResourcePack(GuiTextures.OptionsBackground, resourcePack, "gui/options_background", 2f);
 
+			// Load Gui Containers
+			{
+				Texture2D containerSprite;
+				if (resourcePack.TryGetTexture("gui/container/inventory", out containerSprite))
+				{
+					LoadTextureFromSpriteSheet(GuiTextures.InventoryPlayerBackground, containerSprite, new Rectangle(0, 0, 176, 166));
+				}
+			}
+
 			// Panorama
 			LoadTextureFromResourcePack(GuiTextures.Panorama0, resourcePack, "gui/title/background/panorama_0");
 			LoadTextureFromResourcePack(GuiTextures.Panorama1, resourcePack, "gui/title/background/panorama_1");
@@ -244,6 +253,7 @@ namespace Alex.Gui
 			LoadTextureFromSpriteSheet(GuiTextures.ScrollBarDownButtonDisabled, spriteSheet, ScrollBarDownButtonDisabled);
 		}
 
+
 		private TextureSlice2D LoadTextureFromEmbeddedResource(GuiTextures guiTexture, byte[] resource)
 		{
 			_textureCache[guiTexture] = TextureUtils.ImageToTexture2D(_graphicsDevice, resource);
@@ -277,7 +287,7 @@ namespace Alex.Gui
 				return texture;
 			}
 
-			return (TextureSlice2D) GpuResourceManager.GetTexture2D(_graphicsDevice, 1, 1);
+			return (TextureSlice2D) GpuResourceManager.GetTexture2D(this, _graphicsDevice, 1, 1);
 		}
 
 		public Texture2D GetTexture2D(GuiTextures guiTexture)

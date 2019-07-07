@@ -60,7 +60,10 @@ namespace Alex.Gui.Elements.Inventory
 	        {
 		        AddChild(new GuiInventoryItem()
 		        {
+					Width = ItemWidth,
+					Height = ItemWidth,
 			        Margin = new Thickness((i * ItemWidth), 0, 0, 0),
+					HighlightedBackground = GuiTextures.Inventory_HotBar_SelectedItemOverlay,
 			        IsSelected = i == SelectedIndex,
 			        Anchor = Alignment.TopLeft,
 			        Item = hotbarItems[i]

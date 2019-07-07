@@ -1,8 +1,7 @@
-﻿using Avalonia;
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 
-namespace Alex.GuiDebugger.Views
+namespace Alex.GuiDebugger.Views.Tools
 {
     public class ElementTreeView : UserControl
     {

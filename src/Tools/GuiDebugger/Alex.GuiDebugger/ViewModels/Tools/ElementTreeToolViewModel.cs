@@ -1,16 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Text;
 using Alex.GuiDebugger.Models;
+using Dock.Model.Controls;
 
-namespace Alex.GuiDebugger.ViewModels
+namespace Alex.GuiDebugger.ViewModels.Tools
 {
-    public class ElementTreeViewModel : ViewModelBase
+    public class ElementTreeToolViewModel : ToolTab
     {
         public ObservableCollection<ElementTreeItem> ElementTreeItems { get; set; }
 
-        public ElementTreeViewModel(IEnumerable<ElementTreeItem> elementTreeItems)
+        public ElementTreeToolViewModel(IEnumerable<ElementTreeItem> elementTreeItems)
         {
             ElementTreeItems = new ObservableCollection<ElementTreeItem>(elementTreeItems);
         }

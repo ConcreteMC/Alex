@@ -6,7 +6,7 @@
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <ApplicationIcon>Icon.ico</ApplicationIcon>
     <StartupObject>Alex.Program</StartupObject>
-    <Platforms>x64</Platforms>
+    <Platforms>x64;AnyCPU</Platforms>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -35,9 +35,17 @@
     <!--<OutputPath>bin\Debug\</OutputPath>-->
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+	  <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	</PropertyGroup>
 
   <ItemGroup>
     <Compile Remove="Graphics\Items\**" />
@@ -88,6 +96,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="EasyPipes" Version="1.1.0" />
     <PackageReference Include="Eto.Forms" Version="2.5.0-beta.1" />
     <PackageReference Include="Eto.Platform.Gtk" Version="2.5.0-beta.1" />
     <PackageReference Include="Eto.Platform.Wpf" Version="2.5.0-beta.1" />
