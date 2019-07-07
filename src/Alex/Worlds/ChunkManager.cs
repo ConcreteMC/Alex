@@ -421,16 +421,21 @@ namespace Alex.Worlds
 		    device.DepthStencilState = DepthStencilState.Default;
 		    device.BlendState = BlendState.AlphaBlend;
 
+	        VertexBuffer[] buffers = new VertexBuffer[chunks.Length];     
+
             for (var index = 0; index < chunks.Length; index++)
             {
 	            var chunk = chunks[index].Value;
 	            if (chunk == null) continue;
 
-                if (chunk.SolidIndexBuffer.IndexCount == 0)
+                buffers[index] = chunk.Buffer;
+
+                var buffer = chunk.SolidIndexBuffer;
+                if (buffer.IndexCount == 0)
                     continue;
 
-                device.SetVertexBuffer(chunk.Buffer);
-                device.Indices = chunk.SolidIndexBuffer;
+                device.SetVertexBuffer(buffers[index]);
+                device.Indices = buffer;
 
                 foreach (var pass in OpaqueEffect.CurrentTechnique.Passes)
                 {
@@ -438,8 +443,9 @@ namespace Alex.Worlds
                     //device.DrawPrimitives(PrimitiveType.TriangleList, 0, b.VertexCount /3);
                 }
 
-                device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, chunk.SolidIndexBuffer.IndexCount / 3);
-                indexBufferSize += chunk.SolidIndexBuffer.IndexCount / 3;
+                device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, buffer.IndexCount / 3);
+                indexBufferSize += buffer.IndexCount;
+
                 tempVertices += chunk.Buffer.VertexCount;
                 //chunk.DrawOpaque(device, OpaqueEffect, out int drawn, out int idxSize);
                 // tempVertices += drawn;
@@ -453,11 +459,12 @@ namespace Alex.Worlds
 			    var chunk = chunks[index].Value;
 			    if (chunk == null) continue;
 
-                if (chunk.TransparentIndexBuffer.IndexCount == 0)
+		        var buffer = chunk.TransparentIndexBuffer;
+                if (buffer.IndexCount == 0)
                     continue;
 
-                device.SetVertexBuffer(chunk.Buffer);
-                device.Indices = chunk.TransparentIndexBuffer;
+		        device.SetVertexBuffer(buffers[index]);
+                device.Indices = buffer;
 
                 foreach (var pass in TransparentEffect.CurrentTechnique.Passes)
                 {
@@ -465,8 +472,8 @@ namespace Alex.Worlds
                     //device.DrawPrimitives(PrimitiveType.TriangleList, 0, b.VertexCount /3);
                 }
 
-                device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, chunk.TransparentIndexBuffer.IndexCount / 3);
-                indexBufferSize += chunk.TransparentIndexBuffer.IndexCount;
+                device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, buffer.IndexCount / 3);
+                indexBufferSize += buffer.IndexCount;
                 //tempVertices += chunk.Buffer.VertexCount;
                 //chunk.DrawTransparent(device, TransparentEffect, out int draw, out int idxSize);
                 // tempVertices += draw;
@@ -818,17 +825,26 @@ namespace Alex.Worlds
 		                };
 	                }
 
+                    VertexBuffer oldBuffer = data.Buffer;
+
+                    VertexBuffer newVertexBuffer = null;
+                    IndexBuffer newsolidIndexBuffer = null;
+                    IndexBuffer newTransparentIndexBuffer = null;
+
+                    IndexBuffer oldSolidIndexBuffer = data.SolidIndexBuffer;
+                    IndexBuffer oldTransparentIndexBuffer = data.TransparentIndexBuffer;
+
 	                if (vertexArray.Length >= data.Buffer.VertexCount)
 	                {
-		                var oldBuffer = data.Buffer;
+		               // var oldBuffer = data.Buffer;
 		                VertexBuffer newBuffer = GpuResourceManager.GetBuffer(this,Graphics,
 			                VertexPositionNormalTextureColor.VertexDeclaration, vertexArray.Length,
 			                BufferUsage.WriteOnly);
 
 		                newBuffer.SetData(vertexArray);
-
-		                data.Buffer = newBuffer;
-		                oldBuffer?.Dispose();
+	                    newVertexBuffer = newBuffer;
+	                    //  data.Buffer = newBuffer;
+	                    //  oldBuffer?.Dispose();
 	                }
 	                else
 	                {
@@ -837,35 +853,55 @@ namespace Alex.Worlds
 
 	                if (solidArray.Length > data.SolidIndexBuffer.IndexCount)
 	                {
-		                var old = data.SolidIndexBuffer;
+		              //  var old = data.SolidIndexBuffer;
 		                var newSolidBuffer = GpuResourceManager.GetIndexBuffer(this, Graphics, IndexElementSize.ThirtyTwoBits,
 			                solidArray.Length,
 			                BufferUsage.WriteOnly);
 
 		                newSolidBuffer.SetData(solidArray);
-		                data.SolidIndexBuffer = newSolidBuffer;
-		                old?.Dispose();
+	                    newsolidIndexBuffer = newSolidBuffer;
+	                    //  data.SolidIndexBuffer = newSolidBuffer;
+	                    //   old?.Dispose();
 	                }
 	                else
 	                {
-		                data.SolidIndexBuffer.SetData(solidIndexes.ToArray());
+		                data.SolidIndexBuffer.SetData(solidArray);
 	                }
 
 	                if (transparentArray.Length > data.TransparentIndexBuffer.IndexCount)
 	                {
-		                var old = data.TransparentIndexBuffer;
+		              //  var old = data.TransparentIndexBuffer;
 		                var newSolidBuffer = GpuResourceManager.GetIndexBuffer(this, Graphics, IndexElementSize.ThirtyTwoBits,
 			                transparentArray.Length,
 			                BufferUsage.WriteOnly);
 
 		                newSolidBuffer.SetData(transparentArray);
-		                data.TransparentIndexBuffer = newSolidBuffer;
-		                old?.Dispose();
+	                    newTransparentIndexBuffer = newSolidBuffer;
+	                    //  data.TransparentIndexBuffer = newSolidBuffer;
+	                    //  old?.Dispose();
 	                }
 	                else
 	                {
-		                data.TransparentIndexBuffer.SetData(transparentIndexes.ToArray());
+		                data.TransparentIndexBuffer.SetData(transparentArray);
 	                }
+
+                    if (newVertexBuffer != null)
+                    {
+                        data.Buffer = newVertexBuffer;
+                        oldBuffer?.Dispose();
+                    }
+
+                    if (newTransparentIndexBuffer != null)
+                    {
+                        data.TransparentIndexBuffer = newTransparentIndexBuffer;
+                        oldTransparentIndexBuffer?.Dispose();
+                    }
+
+                    if (newsolidIndexBuffer != null)
+                    {
+                        data.SolidIndexBuffer = newsolidIndexBuffer;
+                        oldSolidIndexBuffer?.Dispose();
+                    }
                 }
                 else
                 {
@@ -892,6 +928,29 @@ namespace Alex.Worlds
                 //Enqueued.Remove(new ChunkCoordinates(chunk.X, chunk.Z));
                 Interlocked.Decrement(ref _chunkUpdates);
                 Monitor.Exit(chunk.UpdateLock);
+            }
+
+            return false;
+        }
+
+        private bool HasScheduledNeighbors(IWorld world, BlockCoordinates coordinates)
+        {
+            var x = coordinates.X;
+            var y = coordinates.Y;
+            var z = coordinates.Z;
+
+            for (int xOffset = -1; xOffset < 1; xOffset++)
+            {
+                if (xOffset == 0) continue;
+
+                if (world.IsScheduled(x + xOffset, y, z) || world.IsTransparent(x + xOffset, y, z))
+                    return true;
+
+                if (world.IsScheduled(x, y, z + xOffset) || world.IsTransparent(x, y, z + xOffset))
+                    return true;
+
+                if (world.IsScheduled(x, y + xOffset, z) || world.IsTransparent(x, y + xOffset, z))
+                    return true;
             }
 
             return false;
@@ -949,16 +1008,26 @@ namespace Alex.Worlds
                                         reUseCounter++;
 
                                     }*/
-                                var blockPosition = new Vector3(x, y + (yIndex * 16), z) + chunkPosition;
-                                var data = blockState.Model.GetVertices(world, blockPosition, blockState.Block);
+                                var blockPosition = new Vector3(x, y + (yIndex << 4), z) + chunkPosition;
 
+                                (VertexPositionNormalTextureColor[] vertices, int[] indexes) data;
+                                
+                                if (!section.New && !section.IsRendered(x, y, z) && !HasScheduledNeighbors(world, blockPosition))
+                                {
+                                    continue;
+                                }
+
+                                data = blockState.Model.GetVertices(world, blockPosition, blockState.Block);
+
+                                if (data.vertices.Length == 0 || data.indexes.Length == 0)
+                                {
+                                    section.SetRendered(x, y, z, false);
+                                }
 
                                 if (data.vertices == null || data.indexes == null || data.vertices.Length == 0 || data.indexes.Length == 0)
                                     continue;
 
                                 bool transparent = blockState.Block.Transparent;
-
-
 
                                 //var data = CalculateBlockVertices(world, section,
                                 //	yIndex,
@@ -966,6 +1035,8 @@ namespace Alex.Worlds
 
                                 if (data.vertices.Length > 0 && data.indexes.Length > 0)
                                 {
+                                    section.SetRendered(x, y, z, true);
+
                                     int startVerticeIndex = solidVertices.Count; //transparent ? transparentVertices.Count : solidVertices.Count;
                                     foreach (var vert in data.vertices)
                                     {
@@ -1093,6 +1164,8 @@ namespace Alex.Worlds
                             }
                         }
                     }
+
+            section.New = false;
 
             outputPositions = positions;
             return new ChunkMesh(solidVertices.ToArray(), null/*transparentVertices.ToArray()*/, solidIndexes.ToArray(),
