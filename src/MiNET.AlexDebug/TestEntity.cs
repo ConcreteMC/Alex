@@ -1,14 +1,15 @@
+using MiNET.Entities;
 using MiNET.Entities.Passive;
 using MiNET.Worlds;
 using NLog;
 
 namespace MiNET.AlexDebug
 {
-    public class TestEntity : Cow
+    public class TestEntity : Entity
     {
         private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(PluginCore));
         
-        public TestEntity(Level level) : base(level)
+        public TestEntity(Level level, EntityType type) : base(type, level)
         {
             
         }

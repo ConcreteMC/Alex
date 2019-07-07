@@ -24,14 +24,16 @@ namespace Alex.API.Graphics
         private Dictionary<long, PooledIndexBuffer> IndexBuffers { get; }
         
         private long _bufferId = 0;
-        private long _estMemoryUsage = 0;
+      //  private long _estMemoryUsage = 0;
         private long _textureId = 0;
         private long _indexBufferId = 0;
-        
-        public long EstMemoryUsage => Buffers.Values.Sum(x => x.VertexDeclaration.VertexStride * x.VertexCount) + _textureMemoryUsage;
 
-        private long _textureMemoryUsage = 0;
-        private long _indexMemoryUsage = 0;
+        public long EstMemoryUsage => _totalMemoryUsage;// Buffers.Values.ToArray().Sum(x => x.MemoryUsage) + Textures.Values.ToArray().Sum(x => x.MemoryUsage) + IndexBuffers.Values.ToArray().Sum(x => x.MemoryUsage);
+
+        private long _totalMemoryUsage = 0;
+        
+     //   private long _textureMemoryUsage = 0;
+      //  private long _indexMemoryUsage = 0;
         
         public GpuResourceManager()
         {
@@ -47,7 +49,7 @@ namespace Alex.API.Graphics
             PooledVertexBuffer buffer = new PooledVertexBuffer(this, id, caller, device, vertexDeclaration, vertexCount, bufferUsage);
             Buffers.Add(id, buffer);
 
-            //  var size = Interlocked.Add(ref _estMemoryUsage, vertexDeclaration.VertexStride * vertexCount);
+            var size = Interlocked.Add(ref _totalMemoryUsage, buffer.MemoryUsage);
             return buffer;
         }
         
@@ -58,8 +60,8 @@ namespace Alex.API.Graphics
             
             Textures.Add(id, texture);
 
-            Interlocked.Add(ref _textureMemoryUsage, texture.Height * texture.Width * 4);
-            
+          //  Interlocked.Add(ref _textureMemoryUsage, texture.Height * texture.Width * 4);
+          Interlocked.Add(ref _totalMemoryUsage, texture.MemoryUsage);
             return texture;
         }
         
@@ -70,8 +72,8 @@ namespace Alex.API.Graphics
             
             Textures.Add(id, texture);
             
-            Interlocked.Add(ref _textureMemoryUsage, texture.Height * texture.Width * 4);
-            
+        //    Interlocked.Add(ref _textureMemoryUsage, texture.Height * texture.Width * 4);
+        Interlocked.Add(ref _totalMemoryUsage, texture.MemoryUsage);
             return texture;
         }
         
@@ -82,8 +84,8 @@ namespace Alex.API.Graphics
             
             Textures.Add(id, texture);
             
-            Interlocked.Add(ref _textureMemoryUsage, texture.Height * texture.Width * 4);
-            
+        //    Interlocked.Add(ref _textureMemoryUsage, texture.Height * texture.Width * 4);
+        Interlocked.Add(ref _totalMemoryUsage, texture.MemoryUsage);
             return texture;
         }
 
@@ -95,59 +97,39 @@ namespace Alex.API.Graphics
             
             IndexBuffers.Add(id, buffer);
 
-            var size = 0;
-            if (indexElementSize == IndexElementSize.SixteenBits)
-            {
-                size = indexCount * 2;
-            }
-            else if (indexElementSize == IndexElementSize.ThirtyTwoBits)
-            {
-                size = indexCount * 4;
-            }
-            
-            Interlocked.Add(ref _indexMemoryUsage, size);
-            
+            //   Interlocked.Add(ref _indexMemoryUsage, size);
+         Interlocked.Add(ref _totalMemoryUsage, buffer.MemoryUsage);
             return buffer;
         }
 
         public void Disposed(PooledVertexBuffer buffer)
         {
-            var size = buffer.VertexDeclaration.VertexStride * buffer.VertexCount;
-            Log.Debug($"Disposing of buffer {buffer.PoolId}, lifetime: {DateTime.UtcNow - buffer.CreatedTime} Creator: {buffer.Owner ?? "N/A"} Memory usage: {Extensions.GetBytesReadable(size)}");
+            Log.Debug($"Disposing of buffer {buffer.PoolId}, lifetime: {DateTime.UtcNow - buffer.CreatedTime} Creator: {buffer.Owner ?? "N/A"} Memory usage: {Extensions.GetBytesReadable(buffer.MemoryUsage)}");
 
             //Interlocked.Add(ref _estMemoryUsage, -size);
             Buffers.Remove(buffer.PoolId);
+            
+            Interlocked.Add(ref _totalMemoryUsage, -buffer.MemoryUsage);
         }
         
         public void Disposed(PooledTexture2D buffer)
         {
-            var size = buffer.Height * buffer.Width * 4;
-            Log.Debug($"Disposing of texture {buffer.PoolId}, lifetime: {DateTime.UtcNow - buffer.CreatedTime} Creator: {buffer.Owner ?? "N/A"} Memory usage: {Extensions.GetBytesReadable(size)}");
+            Log.Debug($"Disposing of texture {buffer.PoolId}, lifetime: {DateTime.UtcNow - buffer.CreatedTime} Creator: {buffer.Owner ?? "N/A"} Memory usage: {Extensions.GetBytesReadable(buffer.MemoryUsage)}");
 
             //Interlocked.Add(ref _estMemoryUsage, -size);
             Textures.Remove(buffer.PoolId);
-            
-            Interlocked.Add(ref _textureMemoryUsage, -(buffer.Height * buffer.Width * 4));
+            Interlocked.Add(ref _totalMemoryUsage, -buffer.MemoryUsage);
+           // Interlocked.Add(ref _textureMemoryUsage, -(buffer.Height * buffer.Width * 4));
         }
 
         public void Disposed(PooledIndexBuffer buffer)
         {
-            var size = 0;
-            if (buffer.IndexElementSize == IndexElementSize.SixteenBits)
-            {
-                size = buffer.IndexCount * 2;
-            }
-            else if (buffer.IndexElementSize == IndexElementSize.ThirtyTwoBits)
-            {
-                size = buffer.IndexCount * 4;
-            }
-
-            Log.Debug($"Disposing of indexbuffer {buffer.PoolId}, lifetime: {DateTime.UtcNow - buffer.CreatedTime} Creator: {buffer.Owner ?? "N/A"} Memory usage: {Extensions.GetBytesReadable(size)}");
+            Log.Debug($"Disposing of indexbuffer {buffer.PoolId}, lifetime: {DateTime.UtcNow - buffer.CreatedTime} Creator: {buffer.Owner ?? "N/A"} Memory usage: {Extensions.GetBytesReadable(buffer.MemoryUsage)}");
 
             //Interlocked.Add(ref _estMemoryUsage, -size);
             IndexBuffers.Remove(buffer.PoolId);
-            
-            Interlocked.Add(ref _indexMemoryUsage, -size);
+            Interlocked.Add(ref _totalMemoryUsage, -buffer.MemoryUsage);
+           // Interlocked.Add(ref _indexMemoryUsage, -size);
         }
         
         public static PooledVertexBuffer GetBuffer(object caller, GraphicsDevice device, VertexDeclaration vertexDeclaration,
@@ -198,6 +180,11 @@ namespace Alex.API.Graphics
         public object Owner { get; }
         public DateTime CreatedTime { get; }
 
+        public long MemoryUsage
+        {
+            get { return VertexDeclaration.VertexStride * VertexCount; }
+        }
+        
         public PooledVertexBuffer(GpuResourceManager parent, long id, object owner, GraphicsDevice graphicsDevice, VertexDeclaration vertexDeclaration, int vertexCount, BufferUsage bufferUsage) : base(graphicsDevice, vertexDeclaration, vertexCount, bufferUsage)
         {
             Parent = parent;
@@ -221,7 +208,12 @@ namespace Alex.API.Graphics
         public long PoolId { get; }
         public object Owner { get; }
         public DateTime CreatedTime { get; }
-
+        
+        public long MemoryUsage
+        {
+            get { return GetFormatSize(Format) * Width * Height * LevelCount; }
+        }
+        
         public PooledTexture2D(GpuResourceManager parent, long id, object owner, GraphicsDevice graphicsDevice, int width, int height) : base(graphicsDevice, width, height)
         {
             Parent = parent;
@@ -246,6 +238,42 @@ namespace Alex.API.Graphics
             Owner = owner;
         }
 
+        private static int GetFormatSize(SurfaceFormat format)
+        {
+            switch (format)
+            {
+                case SurfaceFormat.Dxt1:
+                    return 8;
+                case SurfaceFormat.Dxt3:
+                case SurfaceFormat.Dxt5:
+                    return 16;
+                case SurfaceFormat.Alpha8:
+                    return 1;
+                case SurfaceFormat.Bgr565:
+                case SurfaceFormat.Bgra4444:
+                case SurfaceFormat.Bgra5551:
+                case SurfaceFormat.HalfSingle:
+                case SurfaceFormat.NormalizedByte2:
+                    return 2;
+                case SurfaceFormat.Color:
+                case SurfaceFormat.Single:
+                case SurfaceFormat.Rg32:
+                case SurfaceFormat.HalfVector2:
+                case SurfaceFormat.NormalizedByte4:
+                case SurfaceFormat.Rgba1010102:
+                case SurfaceFormat.Bgra32:
+                    return 4;
+                case SurfaceFormat.HalfVector4:
+                case SurfaceFormat.Rgba64:
+                case SurfaceFormat.Vector2:
+                    return 8;
+                case SurfaceFormat.Vector4:
+                    return 16;
+                default:
+                    throw new ArgumentException("Should be a value defined in SurfaceFormat", "Format");
+            }
+        }
+
         /*public PooledTexture2D(GpuResourceManager parent, long id, GraphicsDevice graphicsDevice, int width, int height, bool mipmap, SurfaceFormat format, SurfaceType type, bool shared, int arraySize) : base(graphicsDevice, width, height, mipmap, format, type, shared, arraySize)
         {
             Parent = parent;
@@ -266,6 +294,11 @@ namespace Alex.API.Graphics
         public long PoolId { get; }
         public object Owner { get; }
         public DateTime CreatedTime { get; }
+        
+        public long MemoryUsage
+        {
+            get { return (IndexElementSize == IndexElementSize.SixteenBits ? 2 : 4) * IndexCount; }
+        }
         
         public PooledIndexBuffer(GpuResourceManager parent, long id, object owner, GraphicsDevice graphicsDevice, IndexElementSize indexElementSize, int indexCount, BufferUsage bufferUsage) : base(graphicsDevice, indexElementSize, indexCount, bufferUsage)
         {
@@ -290,5 +323,7 @@ namespace Alex.API.Graphics
         long PoolId { get; }
         
         object Owner { get; }
+        
+        long MemoryUsage { get; }
     }
 }

@@ -1,5 +1,8 @@
+using System;
 using System.Linq.Expressions;
+using System.Numerics;
 using log4net;
+using MiNET.Entities;
 using MiNET.Entities.Passive;
 using MiNET.Net;
 using MiNET.Plugins.Attributes;
@@ -20,14 +23,33 @@ namespace MiNET.AlexDebug
         [Command(Name = "testentity", Aliases = new[]{"testentity"})]
         public void SpawnTestEntity(Player player)
         {
-            TestEntity villager = new TestEntity(player.Level);
-            villager.KnownPosition = player.KnownPosition;
-            villager.NoAi = true;
-            
-            player.Level.AddEntity(villager);
-            villager.SpawnEntity();
-            
-            player.SendMessage("Entity spawned.");
+            var position = player.KnownPosition;
+         //   position.Y = player.Level.GetHeight(position);
+
+         int count = 0;
+         Vector3 offset = Vector3.Zero;
+         foreach (var i in Enum.GetValues(typeof(EntityType)))
+         {
+             try
+             {
+                 TestEntity villager = new TestEntity(player.Level, (EntityType) i);
+                 villager.KnownPosition = position + (offset);
+                 villager.NoAi = true;
+
+                 var boundingBox = villager.GetBoundingBox();
+                 offset += new Vector3((float) boundingBox.Width + 2, 0,0);
+                 count++;
+                 
+                 player.Level.AddEntity(villager);
+                 villager.SpawnEntity();
+             }
+             catch(Exception ex)
+             {
+                Log.Warn($"Could not spawn entity: {ex.ToString()}"); 
+             }
+         }
+
+            player.SendMessage($"Spawned {count} entities");
         }
 
         [Command(Name = "wt", Aliases = new[]{"wt"})]
