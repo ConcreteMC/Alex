@@ -6,7 +6,7 @@ using ReactiveUI;
 
 namespace Alex.GuiDebugger.ViewModels
 {
-    public class MainWindowViewModel : ViewModelBase
+    public class MainWindowViewModel : ReactiveObject
     {
         private IDockFactory _factory;
         private IView        _layout;

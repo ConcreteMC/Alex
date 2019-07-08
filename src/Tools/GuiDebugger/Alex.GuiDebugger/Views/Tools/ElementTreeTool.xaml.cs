@@ -6,12 +6,11 @@ using Avalonia.Markup.Xaml;
 
 namespace Alex.GuiDebugger.Views.Tools
 {
-    public class ElementTreeView : UserControl
+    public class ElementTreeTool : UserControl
     {
-        public ElementTreeView()
+        public ElementTreeTool()
         {
             this.InitializeComponent();
-            DataContext = new ElementTreeToolViewModel();
         }
 
         private void InitializeComponent()

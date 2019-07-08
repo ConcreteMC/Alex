@@ -3,14 +3,9 @@
     <OutputType>Exe</OutputType>
     <TargetFrameworks>netcoreapp2.0</TargetFrameworks>
     <Platforms>AnyCPU;x64</Platforms>
+    <EnableDefaultCompileItems>False</EnableDefaultCompileItems>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Update="**\*.xaml.cs">
-      <DependentUpon>%(Filename)</DependentUpon>
-    </Compile>
-    <AvaloniaResource Include="**\*.xaml">
-      <SubType>Designer</SubType>
-    </AvaloniaResource>
     <AvaloniaResource Include="Assets\*" />
   </ItemGroup>
   <ItemGroup>
@@ -18,15 +13,36 @@
     <PackageReference Include="Avalonia.Desktop" Version="0.8.1" />
     <PackageReference Include="Avalonia.ReactiveUI" Version="0.8.1" />
     <PackageReference Include="Dock.Avalonia" Version="0.8.0" />
+    <PackageReference Include="Dock.Avalonia.Editor" Version="0.8.0" />
+    <PackageReference Include="Dock.CodeGen" Version="0.8.0" />
     <PackageReference Include="Dock.Model.ReactiveUI" Version="0.8.0" />
+    <PackageReference Include="Dock.Serializer" Version="0.8.0" />
     <PackageReference Include="JKang.IpcServiceFramework.Client" Version="2.2.2" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\Alex.GuiDebugger.Common\Alex.GuiDebugger.Common.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="Views\Tools\ElementTreeView.xaml.cs">
+    <Compile Update="**\*.xaml.cs">
       <DependentUpon>%(Filename)</DependentUpon>
+      <SubType>Code</SubType>
     </Compile>
+    <AvaloniaResource Include="**\*.xaml">
+      <SubType>Designer</SubType>
+    </AvaloniaResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="**\*.cs" Exclude="obj\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <AvaloniaResource Remove="Views\Documents\ElementTreeDocument.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="Views\Documents\ElementTreeDocument.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Views\Documents\ElementTreeDocument.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </EmbeddedResource>
   </ItemGroup>
 </Project>

@@ -5,7 +5,7 @@ using Dock.Model;
 
 namespace Alex.GuiDebugger.ViewModels
 {
-    public class MainViewModel : DockBase
+    public class MainView : DockBase
     {
     }
 }

@@ -2,11 +2,11 @@
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 
-namespace Alex.GuiDebugger.Views
+namespace Alex.GuiDebugger.Views.Documents
 {
-	public class MainView : UserControl
+	public class ElementTreeDocument : UserControl
 	{
-		public MainView()
+		public ElementTreeDocument()
 		{
 			this.InitializeComponent();
 		}

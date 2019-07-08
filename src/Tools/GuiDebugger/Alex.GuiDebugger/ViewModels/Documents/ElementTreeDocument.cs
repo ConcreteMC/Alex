@@ -2,7 +2,7 @@
 
 namespace Alex.GuiDebugger.ViewModels.Documents
 {
-    public class ElementTreeDocumentViewModel : DocumentTab
+    public class ElementTreeDocument : DocumentTab
     {
 
     }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Alex.GuiDebugger.Common;
 using Alex.GuiDebugger.Common.Services;
@@ -39,8 +40,8 @@ namespace Alex.GuiDebugger.Services
 
 		public async Task<ICollection<ElementTreeItem>> GetElementTreeItems()
 		{
-			var items = await _ipcServiceClient.InvokeAsync(x => x.GetAllGuiElementInfos());
-			return items.Select(ConvertItem).ToList();
+			var items = await _ipcServiceClient.InvokeAsync(x => x.GetAllGuiElementInfos(), new CancellationTokenSource(5000).Token);
+			return items?.Select(ConvertItem).ToList() ?? new List<ElementTreeItem>();
 		}
 
 		private ElementTreeItem ConvertItem(GuiElementInfo guiElementInfo)

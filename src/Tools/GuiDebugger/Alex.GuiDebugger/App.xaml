@@ -2,9 +2,31 @@
     x:Class="Alex.GuiDebugger.App"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="clr-namespace:Alex.GuiDebugger">
+    xmlns:Documents="clr-namespace:Alex.GuiDebugger.ViewModels.Documents;assembly=Alex.GuiDebugger"
+    xmlns:Tools="clr-namespace:Alex.GuiDebugger.ViewModels.Tools;assembly=Alex.GuiDebugger"
+    xmlns:Views="clr-namespace:Alex.GuiDebugger.ViewModels;assembly=Alex.GuiDebugger"
+    xmlns:editor="clr-namespace:Dock.Avalonia.Editor.Controls;assembly=Dock.Avalonia.Editor"
+    xmlns:idc="clr-namespace:Dock.Avalonia.Controls;assembly=Dock.Avalonia"
+    xmlns:local="clr-namespace:Alex.GuiDebugger"
+    xmlns:tools="clr-namespace:Alex.GuiDebugger.Views.Tools;assembly=Alex.GuiDebugger"
+    xmlns:views="clr-namespace:Alex.GuiDebugger.Views;assembly=Alex.GuiDebugger">
     <Application.DataTemplates>
-        <local:ViewLocator />
+        <DataTemplate DataType="Documents:ElementTreeDocument">
+            <Grid>
+                Hi, i'm a document!
+            </Grid>
+        </DataTemplate>
+        <DataTemplate DataType="Tools:ElementTreeTool">
+            <tools:ElementTreeTool />
+        </DataTemplate>
+        <DataTemplate DataType="Tools:EditorTool">
+            <editor:LayoutEditorControl DataContext="{Binding Context}" />
+        </DataTemplate>
+        <DataTemplate DataType="Views:MainView">
+            <Grid>
+                <ContentControl Content="{Binding CurrentView}" />
+            </Grid>
+        </DataTemplate>
     </Application.DataTemplates>
 
     <Application.Resources>
@@ -22,5 +44,6 @@
         <StyleInclude Source="avares://Dock.Avalonia/Controls/DockTarget.xaml" />
         <StyleInclude Source="avares://Dock.Avalonia/Controls/DockToolChrome.xaml" />
         <StyleInclude Source="avares://Dock.Avalonia/Controls/MetroWindow.xaml" />
+        <StyleInclude Source="avares://Alex.GuiDebugger/Alex.BaseDark.xaml" />
     </Application.Styles>
 </Application>

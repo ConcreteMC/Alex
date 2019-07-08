@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using Alex.GuiDebugger.ViewModels;
+using Alex.GuiDebugger.ViewModels.Tools;
 using Dock.Avalonia.Controls;
 using Dock.Model;
 using Dock.Model.Controls;
@@ -19,6 +20,12 @@ namespace Alex.GuiDebugger
 
 		public override IDock CreateLayout()
 		{
+			var elementTreeView = new ElementTreeTool()
+			{
+				Id = "ElementTree",
+				Title = "Element Tree"
+			};
+
 			var mainLayout = new LayoutDock()
 			{
 				Id          = $"MainLayout",
@@ -45,8 +52,8 @@ namespace Alex.GuiDebugger
 								  Id          = "LeftPaneTop",
 								  Title       = "LeftPaneTop",
 								  Proportion  = double.NaN,
-								  CurrentView = null,
-								  Views       = CreateList<IView>()
+								  CurrentView = elementTreeView,
+								  Views       = CreateList<IView>(elementTreeView)
 							  },
 							  new SplitterDock()
 							  {
@@ -129,7 +136,7 @@ namespace Alex.GuiDebugger
 					)
 			};
 
-			var mainView = new MainViewModel
+			var mainView = new MainView
 			{
 				Id          = "Main",
 				Title       = "Main",
@@ -169,7 +176,7 @@ namespace Alex.GuiDebugger
                 [nameof(IDockWindow)] = () => _context,
                 [nameof(IDocumentTab)] = () => _context,
                 [nameof(IToolTab)] = () => _context,
-                //["Document1"] = () => new Document1(),
+                ["ElementTree"] = () => new ElementTreeTool(),
                 //["Document2"] = () => new Document2(),
                 //["LeftTop1"] = () => new LeftTopTool1(),
                 //["LeftTop2"] = () => new LeftTopTool2(),

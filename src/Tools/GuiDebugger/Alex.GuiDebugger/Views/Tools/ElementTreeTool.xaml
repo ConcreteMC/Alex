@@ -1,0 +1,34 @@
+﻿<UserControl
+    x:Class="Alex.GuiDebugger.Views.Tools.ElementTreeTool"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="clr-namespace:Alex.GuiDebugger.Models"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+
+    <Grid Background="WhiteSmoke" Focusable="True">
+        <StackPanel>
+            <TextBlock Text="{Binding Id}" />
+            <TextBlock Text="{Binding Title}" />
+            <TextBlock Text="{Binding Context}" />
+
+            <TreeView>
+                <TreeView.DataTemplates>
+                    <TreeDataTemplate DataType="{x:Type models:ElementTreeItem}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding ElementType}" />
+                            <TextBlock Text="[" />
+                            <TextBlock Text="{Binding ChildElements.Count}" />
+                            <TextBlock Text="]" />
+                        </StackPanel>
+                    </TreeDataTemplate>
+                </TreeView.DataTemplates>
+
+            </TreeView>
+        </StackPanel>
+    </Grid>
+
+</UserControl>
