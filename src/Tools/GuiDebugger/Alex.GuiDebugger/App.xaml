@@ -22,6 +22,5 @@
         <StyleInclude Source="avares://Dock.Avalonia/Controls/DockTarget.xaml" />
         <StyleInclude Source="avares://Dock.Avalonia/Controls/DockToolChrome.xaml" />
         <StyleInclude Source="avares://Dock.Avalonia/Controls/MetroWindow.xaml" />
-        <StyleInclude Source="avares://Alex.GuiDebugger/Alex.BaseDark.xaml" />
     </Application.Styles>
 </Application>

@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Text;
 using Alex.GuiDebugger.Models;
 using Alex.GuiDebugger.Services;
 using Dock.Model.Controls;
 using DynamicData;
 
-namespace Alex.GuiDebugger.ViewModels
+namespace Alex.GuiDebugger.ViewModels.Tools
 {
     public class ElementTreeToolViewModel : ToolTab
     {

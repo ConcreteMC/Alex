@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Alex.GuiDebugger.Common;
 using Alex.GuiDebugger.Common.Services;
 using Alex.GuiDebugger.Models;
-using EasyPipes;
 using JKang.IpcServiceFramework;
 
 namespace Alex.GuiDebugger.Services

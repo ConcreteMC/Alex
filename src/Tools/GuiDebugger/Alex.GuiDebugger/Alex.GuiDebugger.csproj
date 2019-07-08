@@ -19,10 +19,14 @@
     <PackageReference Include="Avalonia.ReactiveUI" Version="0.8.1" />
     <PackageReference Include="Dock.Avalonia" Version="0.8.0" />
     <PackageReference Include="Dock.Model.ReactiveUI" Version="0.8.0" />
-    <PackageReference Include="EasyPipes" Version="1.1.0" />
     <PackageReference Include="JKang.IpcServiceFramework.Client" Version="2.2.2" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\Alex.GuiDebugger.Common\Alex.GuiDebugger.Common.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="Views\Tools\ElementTreeView.xaml.cs">
+      <DependentUpon>%(Filename)</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>
