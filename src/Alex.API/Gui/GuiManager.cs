@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Alex.API.GameStates;
 using Alex.API.Graphics.Typography;
+using Alex.API.Gui.Dialogs;
 using Alex.API.Gui.Graphics;
 using Alex.API.Input;
 using Microsoft.Xna.Framework;
@@ -43,6 +45,8 @@ namespace Alex.API.Gui
         public GuiSpriteBatch GuiSpriteBatch { get; private set; }
 
         public List<GuiScreen> Screens { get; } = new List<GuiScreen>();
+
+        public GuiDialogBase ActiveDialog { get; private set; }
         
         public GuiManager(Game game, InputManager inputManager, IGuiRenderer guiRenderer)
         {
@@ -93,6 +97,30 @@ namespace Alex.API.Gui
             _doInit = true;
         }
 
+        public void ShowDialog(GuiDialogBase dialog)
+        {
+            if(ActiveDialog != null) RemoveScreen(ActiveDialog);
+            ActiveDialog = dialog;
+            AddScreen(ActiveDialog);
+        }
+
+        public void HideDialog(GuiDialogBase dialog)
+        {
+            if(ActiveDialog == dialog) RemoveScreen(ActiveDialog);
+        }
+
+        public void HideDialog<TGuiDialog>() where TGuiDialog : GuiDialogBase
+        {
+            foreach (var screen in Screens.ToArray())
+            {
+                if (screen is TGuiDialog dialog)
+                {
+                    Screens.Remove(dialog);
+                    if(ActiveDialog == dialog) ActiveDialog = Screens.ToArray().LastOrDefault(e => e is TGuiDialog) as GuiDialogBase;
+                }
+            }
+        }
+        
         public void AddScreen(GuiScreen screen)
         {
             screen.Init(GuiRenderer);

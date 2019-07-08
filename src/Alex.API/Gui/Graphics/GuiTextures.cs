@@ -59,5 +59,7 @@
         ServerPingPending5,
 
         DefaultServerIcon,
+
+        InventoryPlayerBackground
     }
 }

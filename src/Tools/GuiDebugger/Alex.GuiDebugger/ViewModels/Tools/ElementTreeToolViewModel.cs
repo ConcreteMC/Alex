@@ -1,9 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Alex.GuiDebugger.Models;
-using Alex.GuiDebugger.Services;
 using Dock.Model.Controls;
-using DynamicData;
 
 namespace Alex.GuiDebugger.ViewModels.Tools
 {
@@ -11,19 +9,9 @@ namespace Alex.GuiDebugger.ViewModels.Tools
     {
         public ObservableCollection<ElementTreeItem> ElementTreeItems { get; set; }
 
-        private AlexGuiDebuggerInteraction _alexGuiDebuggerInteraction = AlexGuiDebuggerInteraction.Instance;
-
-        public ElementTreeToolViewModel()
+        public ElementTreeToolViewModel(IEnumerable<ElementTreeItem> elementTreeItems)
         {
-            ElementTreeItems = new ObservableCollection<ElementTreeItem>();
-            Refresh();
-        }
-
-        public void Refresh()
-        {
-            var items = _alexGuiDebuggerInteraction.GetElementTreeItems().Result;
-            ElementTreeItems.Clear();
-            ElementTreeItems.AddRange(items);
+            ElementTreeItems = new ObservableCollection<ElementTreeItem>(elementTreeItems);
         }
 
     }

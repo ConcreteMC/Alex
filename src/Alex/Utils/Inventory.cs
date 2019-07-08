@@ -46,8 +46,8 @@ namespace Alex.Utils
 	    public Item Leggings;
 	    public Item Boots;
 
-	    public EventHandler<SlotChangedEventArgs> SlotChanged = null;
-	    public EventHandler<SelectedSlotChangedEventArgs> SelectedHotbarSlotChanged = null;
+	    public event EventHandler<SlotChangedEventArgs> SlotChanged = null;
+	    public event EventHandler<SelectedSlotChangedEventArgs> SelectedHotbarSlotChanged = null;
 
 	    public Inventory(int slots)
 	    {
