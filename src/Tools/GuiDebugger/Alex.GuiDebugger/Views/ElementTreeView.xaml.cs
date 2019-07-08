@@ -1,4 +1,5 @@
-﻿using Avalonia;
+﻿using Alex.GuiDebugger.ViewModels.Tools;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 
@@ -9,6 +10,7 @@ namespace Alex.GuiDebugger.Views
         public ElementTreeView()
         {
             this.InitializeComponent();
+            DataContext = new ElementTreeToolViewModel();
         }
 
         private void InitializeComponent()

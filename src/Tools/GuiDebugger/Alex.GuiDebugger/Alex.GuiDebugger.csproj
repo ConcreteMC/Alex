@@ -2,7 +2,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFrameworks>netcoreapp2.0</TargetFrameworks>
-    <Platforms>x64</Platforms>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
   <ItemGroup>
     <Compile Update="**\*.xaml.cs">
@@ -14,8 +14,14 @@
     <AvaloniaResource Include="Assets\*" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="0.8.0" />
-    <PackageReference Include="Avalonia.Desktop" Version="0.8.0" />
-    <PackageReference Include="Avalonia.ReactiveUI" Version="0.8.0" />
+    <PackageReference Include="Avalonia" Version="0.8.1" />
+    <PackageReference Include="Avalonia.Desktop" Version="0.8.1" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="0.8.1" />
+    <PackageReference Include="Dock.Avalonia" Version="0.8.0" />
+    <PackageReference Include="Dock.Model.ReactiveUI" Version="0.8.0" />
+    <PackageReference Include="EasyPipes" Version="1.1.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Alex.GuiDebugger.Common\Alex.GuiDebugger.Common.csproj" />
   </ItemGroup>
 </Project>
