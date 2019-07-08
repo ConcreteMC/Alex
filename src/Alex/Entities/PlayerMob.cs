@@ -113,14 +113,14 @@ namespace Alex.Entities
 			// Test arm rotations
 			if (_leftArmModel != null && _rightArmModel != null)
 			{
-				var lArmRot = new Vector3((0.5f + MathF.Sin(_armRotation)) / 7.5f, 0f,
-					0.1f + (MathF.Cos(_armRotation) / 7.5f));
+				var lArmRot = new Vector3((0.5f + MathF.Sin(_armRotation)) * 7.5f, 0f,
+					0.1f + (MathF.Cos(_armRotation) * 1.5f));
 
-				var rArmRot = new Vector3((0.5f + MathF.Sin(_armRotation)) / -7.5f, 0f, -0.1f + (MathF.Cos(_armRotation) / -7.5f));
+				//var rArmRot = new Vector3((0.5f + MathF.Cos(_armRotation)) * -7.5f, 0f, 0.1f + (MathF.Sin(_armRotation) * -1.5f));
 
 				_leftArmModel.Rotation = lArmRot;
-				_rightArmModel.Rotation = rArmRot;
-				_rightSleeveModel.Rotation = rArmRot;
+				_rightArmModel.Rotation = -lArmRot;
+				_rightSleeveModel.Rotation = -lArmRot;
 				_leftSleeveModel.Rotation = lArmRot;
 			}
 
@@ -137,10 +137,10 @@ namespace Alex.Entities
 
 				if (distSQ > 0f)
 				{
-					_legRotation += (distSQ / dt);
+					_legRotation += ((new Vector3(Velocity.X, 0, Velocity.Z).LengthSquared()) * dt);
 
-					lLegRot = new Vector3(MathF.Sin(_legRotation), 0f, 0f);
-					rLegRot = new Vector3(-MathF.Sin(_legRotation), 0f, 0f);
+					lLegRot = new Vector3(MathF.Sin(_legRotation) * 24.5f, 0f, 0f);
+					rLegRot = new Vector3(-MathF.Sin(_legRotation) * 24.5f, 0f, 0f);
 
 					_prevUpdatePosition = pos;
 				}

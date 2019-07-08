@@ -310,7 +310,7 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "UMouth",
-					Parent = "",
+					Parent = "Head",
 					Pivot = new Vector3(0f,20.05f,-10f),
 					Rotation = new Vector3(30f,0f,0f),
 					NeverRender = false,
@@ -327,7 +327,7 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "LMouth",
-					Parent = "",
+					Parent = "Head",
 					Pivot = new Vector3(0f,20f,-10f),
 					Rotation = new Vector3(30f,0f,0f),
 					NeverRender = false,
@@ -344,7 +344,7 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "Ear1",
-					Parent = "",
+					Parent = "Head",
 					Pivot = new Vector3(0f,20f,-10f),
 					Rotation = new Vector3(30f,0f,0f),
 					NeverRender = false,
@@ -361,7 +361,7 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "Ear2",
-					Parent = "",
+					Parent = "Head",
 					Pivot = new Vector3(0f,20f,-10f),
 					Rotation = new Vector3(30f,0f,0f),
 					NeverRender = false,
@@ -378,7 +378,7 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "MuleEarL",
-					Parent = "",
+					Parent = "Head",
 					Pivot = new Vector3(0f,20f,-10f),
 					Rotation = new Vector3(30f,0f,15f),
 					NeverRender = false,
@@ -395,7 +395,7 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "MuleEarR",
-					Parent = "",
+					Parent = "Head",
 					Pivot = new Vector3(0f,20f,-10f),
 					Rotation = new Vector3(30f,0f,-15f),
 					NeverRender = false,
@@ -412,7 +412,7 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "Neck",
-					Parent = "",
+					Parent = "Head",
 					Pivot = new Vector3(0f,20f,-10f),
 					Rotation = new Vector3(30f,0f,0f),
 					NeverRender = false,
@@ -650,7 +650,7 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "Mane",
-					Parent = "",
+					Parent = "Head",
 					Pivot = new Vector3(0f,20f,-10f),
 					Rotation = new Vector3(30f,0f,0f),
 					NeverRender = false,

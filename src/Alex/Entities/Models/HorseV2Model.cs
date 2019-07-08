@@ -140,7 +140,7 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "UMouth",
-					Parent = "",
+					Parent = "Head",
 					Pivot = new Vector3(0f,28f,-11f),
 					Rotation = new Vector3(30f,0f,0f),
 					NeverRender = false,
@@ -157,7 +157,7 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "Ear1",
-					Parent = "",
+					Parent = "Head",
 					Pivot = new Vector3(0f,17f,-8f),
 					Rotation = new Vector3(30f,0f,5f),
 					NeverRender = false,
@@ -174,7 +174,7 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "Ear2",
-					Parent = "",
+					Parent = "Head",
 					Pivot = new Vector3(0f,17f,-8f),
 					Rotation = new Vector3(30f,0f,-5f),
 					NeverRender = false,
@@ -191,7 +191,7 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "MuleEarL",
-					Parent = "",
+					Parent = "Head",
 					Pivot = new Vector3(0f,17f,-8f),
 					Rotation = new Vector3(30f,0f,15f),
 					NeverRender = false,
@@ -208,7 +208,7 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "MuleEarR",
-					Parent = "",
+					Parent = "Head",
 					Pivot = new Vector3(0f,17f,-8f),
 					Rotation = new Vector3(30f,0f,-15f),
 					NeverRender = false,
@@ -225,7 +225,7 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "Neck",
-					Parent = "",
+					Parent = "Head",
 					Pivot = new Vector3(0f,17f,-8f),
 					Rotation = new Vector3(30f,0f,0f),
 					NeverRender = false,

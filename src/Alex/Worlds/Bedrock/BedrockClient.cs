@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.IO.Compression;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Alex.API.Data;
 using Alex.API.Data.Options;
+using Alex.API.Entities;
 using Alex.API.Network;
 using Alex.API.Services;
 using Alex.API.Utils;
@@ -20,13 +24,16 @@ using MiNET.Blocks;
 using MiNET.Client;
 using MiNET.Items;
 using MiNET.Net;
+using MiNET.Plugins;
 using MiNET.Utils;
+using Newtonsoft.Json;
 using NLog;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.X509;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using NewtonsoftMapper = MiNET.NewtonsoftMapper;
+using Player = Alex.Entities.Player;
 using Skin = MiNET.Utils.Skins.Skin;
 
 namespace Alex.Worlds.Bedrock
@@ -80,9 +87,14 @@ namespace Alex.Worlds.Bedrock
         private IOptionsProvider OptionsProvider { get; }
         private XBLMSAService XblmsaService { get; }
         private AlexOptions Options => OptionsProvider.AlexOptions;
-		public BedrockClient(Alex alex, IPEndPoint endpoint, string username, DedicatedThreadPool threadPool, BedrockWorldProvider wp) : base(endpoint,
-			username, threadPool)
-        {
+        private DedicatedThreadPool _threadPool;
+        
+        public PlayerProfile PlayerProfile { get; }
+		public BedrockClient(Alex alex, IPEndPoint endpoint, PlayerProfile playerProfile, DedicatedThreadPool threadPool, BedrockWorldProvider wp) : base(endpoint,
+			playerProfile.Username, threadPool)
+		{
+			PlayerProfile = playerProfile;
+	        
             Alex = alex;
 			WorldProvider = wp;
 			ConnectionAcceptedWaitHandle = new ManualResetEventSlim(false);
@@ -95,7 +107,9 @@ namespace Alex.Worlds.Bedrock
 			base.ChunkRadius = Options.VideoOptions.RenderDistance;
 			
 			Options.VideoOptions.RenderDistance.Bind(RenderDistanceChanged);
-		}
+
+			_threadPool = threadPool;
+        }
 
 		private void RenderDistanceChanged(int oldvalue, int newvalue)
 		{
@@ -428,6 +442,28 @@ namespace Alex.Worlds.Bedrock
             SendPacket(packet);
         }
 
+	    public void EntityInteraction(IEntity player, IEntity target,
+		    McpeInventoryTransaction.ItemUseOnEntityAction action)
+	    {
+		    if (player is Player p)
+		    {
+			    var itemInHand = p.Inventory[p.Inventory.SelectedSlot];
+			    
+			   // WorldProvider?.GetChatReceiver?.Receive(new ChatObject($"(CLIENT) Hit entity: {target.EntityId} | Action: {action.ToString()} | Item: {itemInHand.Id}:{itemInHand.Meta} ({itemInHand.Name})"));
+			    
+			    var packet = McpeInventoryTransaction.CreateObject();
+			    packet.transaction = new Transaction()
+			    {
+				    TransactionType = McpeInventoryTransaction.TransactionType.ItemUseOnEntity,
+				    ActionType = (int) action,
+				    Item = MiNET.Items.ItemFactory.GetItem(itemInHand.Id, itemInHand.Meta, itemInHand.Count),
+				    EntityId = target.EntityId
+			    };
+			    
+			    SendPacket(packet);
+		    }
+	    }
+
 	    public void UseItem(int hand)
 		{
 			Log.Warn("TODO: Implement UseItem");
@@ -440,17 +476,39 @@ namespace Alex.Worlds.Bedrock
 
 		public void Close()
 		{
-			base.StopClient();
+			SendDisconnectionNotification();
+
+			Task.Delay(500).ContinueWith(task => { base.StopClient(); });
 		}
 
 		void IChatProvider.Send(string message)
 		{
-			SendChat(message);
+			if (message[0] == '/')
+			{
+				McpeCommandRequest commandRequest = McpeCommandRequest.CreateObject();
+				commandRequest.command = message;
+				commandRequest.unknownUuid = new MiNET.Net.UUID(Guid.NewGuid().ToString());
+				SendPacket(commandRequest);
+			}
+			else
+			{
+				SendChat(message);
+			}
 		}
 
 		void IChatProvider.RequestTabComplete(string text, out int transactionId)
 		{
 			transactionId = 0;
+			return;
+			List<TabCompleteMatch> matches = new List<TabCompleteMatch>();
+			foreach (var command in _availableCommandSet)
+			{
+				foreach (var a in command.Value.Versions)
+				{
+					//if (a.)
+				}
+			}
+			WorldProvider?.GetChatReceiver.ReceivedTabComplete(transactionId, 0, 0, matches.ToArray());
 		}
 
 		public void ChunkReceived(ChunkColumn chunkColumn)
@@ -469,7 +527,21 @@ namespace Alex.Worlds.Bedrock
 		
 		public void Dispose()
 		{
-			StopClient();
+			Close();
+			_threadPool.Dispose();
+			//_threadPool.WaitForThreadsExit();
+		}
+
+		private CommandSet _availableCommandSet;
+		public void LoadCommands(CommandSet commandSet)
+		{
+			_availableCommandSet = commandSet;
+			/*ThreadPool.QueueUserWorkItem(o =>
+			{
+				Debug.WriteLine($"Saving commands!");
+				File.WriteAllText("commands.json", JsonConvert.SerializeObject(commandSet, Formatting.Indented));
+				//Log.Info($"Commands: {JsonConvert.SerializeObject(commandSet, Formatting.Indented)}");
+			});*/
 		}
 	}
 }

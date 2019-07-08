@@ -495,7 +495,19 @@ namespace Alex.Worlds
 			return false;
 		}
 
-		public void GetBlockData(int x, int y, int z, out bool transparent, out bool solid)
+	    public bool IsScheduled(int x, int y, int z)
+	    {
+	        IChunkColumn chunk;
+	        if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
+	        {
+	            return chunk.IsScheduled(x & 0xf, y & 0xff, z & 0xf);
+	            //  return true;
+	        }
+
+	        return false;
+        }
+
+	    public void GetBlockData(int x, int y, int z, out bool transparent, out bool solid)
 		{
 			IChunkColumn chunk;
 			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
@@ -503,6 +515,7 @@ namespace Alex.Worlds
 				chunk.GetBlockData(x & 0xf, y & 0xff, z & 0xf, out transparent, out solid);
 				//return chunk.IsSolid(x & 0xf, y & 0xff, z & 0xf);
 				//  return true;
+				return;
 			}
 
 			transparent = false;

@@ -96,7 +96,8 @@ namespace Alex.Services
 				{
 					//Validate Bedrock account.
 					//BedrockTokenPair tokenPair = JsonConvert.DeserializeObject<BedrockTokenPair>(profile.ClientToken);
-					return await XblService.RefreshTokenAsync(profile.ClientToken).ContinueWith(task =>
+					BedrockTokenPair tokenPair = JsonConvert.DeserializeObject<BedrockTokenPair>(profile.ClientToken);
+					return await XblService.RefreshTokenAsync(tokenPair.RefreshToken).ContinueWith(task =>
 						{
 							if (task.IsFaulted)
 							{
@@ -121,6 +122,8 @@ namespace Alex.Services
 							}
 							else
 							{
+								Log.Warn($"Authentication unknown error.");
+								
 								Authenticate?.Invoke(this, new PlayerProfileAuthenticateEventArgs("Unknown error!"));
 								return false;
 							}

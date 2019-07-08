@@ -105,10 +105,12 @@ namespace Alex.Services
 			    {
 					IPEndPoint serverEndpoint = new IPEndPoint(result.Result, (int) port);
 
-					client = new BedrockClient(Alex, serverEndpoint, $"Pinger{serverEndpoint.ToString()}", pool, null)
-				    {
-					    IgnoreUnConnectedPong = true
-				    };
+					client = new BedrockClient(Alex, serverEndpoint,
+						new PlayerProfile(string.Empty, $"Pinger{serverEndpoint.ToString()}",
+							$"Pinger{serverEndpoint.ToString()}", null, null, null, true), pool, null)
+					{
+						IgnoreUnConnectedPong = true
+					};
 
 				    BedrockMotd motd = client.KnownMotd;
 

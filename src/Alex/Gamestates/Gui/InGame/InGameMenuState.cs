@@ -13,11 +13,14 @@ using Alex.GameStates.Gui.Common;
 using Alex.GameStates.Gui.MainMenu;
 using Alex.GameStates.Playing;
 using Microsoft.Xna.Framework;
+using NLog;
 
 namespace Alex.GameStates.Gui.InGame
 {
     public class InGameMenuState : GuiInGameStateBase
     {
+	    private static Logger Log = LogManager.GetCurrentClassLogger();
+	    
 	    private readonly GuiStackMenu _mainMenu;
 	    private readonly GuiStackContainer _playerList;
 		public InGameMenuState()
@@ -93,7 +96,10 @@ namespace Alex.GameStates.Gui.InGame
 
         private void OnQuitButtonPressed()
         {
-            Alex.GameStateManager.SetActiveState<TitleState>();
+	        if (!Alex.GameStateManager.SetActiveState("title"))
+	        {
+		        Log.Warn($"Could not go back to titlestate.");
+	        }
 
             Alex.GameStateManager.RemoveState("serverMenu");
             Alex.GameStateManager.RemoveState("play");

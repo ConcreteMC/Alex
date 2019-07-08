@@ -4,13 +4,17 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Numerics;
 using System.Threading;
+using System.Threading.Tasks;
 using Alex.API.Blocks.State;
 using Alex.API.Utils;
+using Alex.API.World;
 using Alex.Blocks.State;
 using Alex.Blocks.Storage;
 using Alex.Entities;
+using Alex.GameStates;
 using Alex.Graphics.Models.Entity;
 using Alex.Items;
 using Alex.ResourcePackLib.Json.Models.Entities;
@@ -69,7 +73,6 @@ namespace Alex.Worlds.Bedrock
             base.HandleMcpeDisconnect(message);
         }
 
-
         public override void HandleMcpeText(McpeText message)
 		{
 			BaseClient.WorldProvider?.GetChatReceiver?.Receive(new ChatObject(message.message));
@@ -78,6 +81,7 @@ namespace Alex.Worlds.Bedrock
 		public override void HandleMcpeSetTime(McpeSetTime message)
 		{
 			BaseClient.WorldReceiver?.SetTime(message.time);
+			_changeDimensionResetEvent.Set();
 		}
 
 		private IReadOnlyDictionary<uint, Blockstate> _blockStateMap;
@@ -633,6 +637,54 @@ namespace Alex.Worlds.Bedrock
 			UnhandledPackage(message);
 		}
 
+		private AutoResetEvent _changeDimensionResetEvent = new AutoResetEvent(false);
+		public override void HandleMcpeChangeDimension(McpeChangeDimension message)
+		{
+			base.HandleMcpeChangeDimension(message);
+			if (BaseClient.WorldProvider is BedrockWorldProvider provider)
+			{
+				LoadingWorldState loadingWorldState = new LoadingWorldState();
+				AlexInstance.GameStateManager.SetActiveState(loadingWorldState, true);
+				loadingWorldState.UpdateProgress(LoadingState.LoadingChunks, 0);
+				
+				
+				foreach (var loadedChunk in provider.LoadedChunks)
+				{
+					provider.UnloadChunk(loadedChunk);
+				}
+				
+				ThreadPool.QueueUserWorkItem(async o =>
+				{
+					double radiusSquared = Math.Pow(Client.ChunkRadius, 2);
+					var target = radiusSquared * 3;
+
+					int percentage = 0;
+					bool ready = false;
+					
+					do
+					{
+						percentage = (int) (provider.LoadedChunks.Count() / target) * 100;
+						
+						loadingWorldState.UpdateProgress(LoadingState.LoadingChunks,
+							percentage);
+
+						if (!ready)
+						{
+							if (_changeDimensionResetEvent.WaitOne(0))
+								ready = true;
+						}
+						else
+						{
+							await Task.Delay(50);
+						}
+						
+					} while (!ready || percentage < 99);
+					
+					AlexInstance.GameStateManager.Back();
+				});
+			}
+		}
+		
 		enum PalleteType : byte
 		{
 			Paletted1 = 1,   // 32 blocks per word, max 2 unique blockstates
@@ -794,8 +846,6 @@ namespace Alex.Worlds.Bedrock
 
 												if (translated != null)
 												{
-													
-													
 													section.Set(x, y, z, translated);
 												}
 											}
@@ -827,22 +877,47 @@ namespace Alex.Worlds.Bedrock
 										for (int y = 0; y < 16; y++)
 										{
 											int idx = (x << 8) + (z << 4) + y;
+											var id = blockIds[idx];
+											var meta = data[idx];
 
-											var result = BlockFactory.RuntimeIdTable.Where(xx =>
-												xx.Id == blockIds[idx] && xx.Data == data[idx]).ToArray();
-											if (result.Length > 0)
+											IBlockState result = null;
+
+											if (id > 0 && result == null)
 											{
-												//	result[0].sRuntimeId
+												var res = BlockFactory.GetBlockStateID(id, meta);
 
-												section.Set(x, y, z,
-													BlockFactory.GetBlockState((uint) result[0].RuntimeId));
+												if (AnvilWorldProvider.BlockStateMapper.TryGetValue(res,
+													out var res2))
+												{
+													var t = BlockFactory.GetBlockState(res2);
+													t = TranslateBlockState(t, id,
+														meta);
+
+													result = t;
+												}
+												else
+												{
+													Log.Info($"Did not find anvil statemap: {result.Name}");
+													result = TranslateBlockState(BlockFactory.GetBlockState(res),
+														id, meta);
+												}
 											}
 
-											//else
+											if (result == null)
 											{
+												var results = BlockFactory.RuntimeIdTable.Where(xx =>
+													xx.Id == id && xx.Data == meta).ToArray();
 
-												var state = BlockFactory.GetBlockStateID(blockIds[idx], data[idx]);
-												//	section.Set(x, y, z, BlockFactory.GetBlockState(state));
+												if (results.Length > 0)
+												{
+													result = TranslateBlockState(
+														BlockFactory.GetBlockState((uint) results[0].RuntimeId), id, meta);
+												}
+											}
+
+											if (result != null)
+											{
+												section.Set(x, y, z, result);
 											}
 										}
 									}
@@ -1184,7 +1259,8 @@ namespace Alex.Worlds.Bedrock
 
 		public override void HandleMcpeAvailableCommands(McpeAvailableCommands message)
 		{
-			UnhandledPackage(message);
+			BaseClient.LoadCommands(message.CommandSet);
+			//UnhandledPackage(message);
 		}
 
 		public override void HandleMcpeCommandOutput(McpeCommandOutput message)
@@ -1204,7 +1280,16 @@ namespace Alex.Worlds.Bedrock
 
 		public override void HandleMcpeTransfer(McpeTransfer message)
 		{
-			UnhandledPackage(message);
+			BaseClient.SendDisconnectionNotification();
+			BaseClient.StopClient();
+			
+			IPHostEntry hostEntry = Dns.GetHostEntry(message.serverAddress);
+
+			if (hostEntry.AddressList.Length > 0)
+			{
+				var ip = hostEntry.AddressList[0];
+				AlexInstance.ConnectToServer(new IPEndPoint(ip, message.port), BaseClient.PlayerProfile, true);
+			}
 		}
 
 		public override void HandleMcpePlaySound(McpePlaySound message)

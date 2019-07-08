@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -290,5 +291,15 @@ namespace Alex
 		{
 			return (b & (1 << pos)) != 0;
 		}
-	}
+
+	    public static bool Any(this BitArray source, Func<bool, bool> predicate)
+	    {
+	        foreach (bool source1 in source)
+	        {
+	            if (predicate(source1))
+	                return true;
+	        }
+	        return false;
+	    }
+    }
 }
