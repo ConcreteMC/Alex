@@ -13,7 +13,7 @@
     <Application.DataTemplates>
         <DataTemplate DataType="Documents:ElementTreeDocument">
             <Grid>
-                Hi, i'm a document!
+                <TextBlock Text="Hi, i'm a document!" />
             </Grid>
         </DataTemplate>
         <DataTemplate DataType="Tools:ElementTreeTool">
@@ -30,20 +30,19 @@
     </Application.DataTemplates>
 
     <Application.Resources>
-        <SolidColorBrush x:Key="ApplicationAccentBrushLow">#007ACC</SolidColorBrush>
-        <SolidColorBrush x:Key="ApplicationAccentBrushMed">#1C97EA</SolidColorBrush>
-        <SolidColorBrush x:Key="ApplicationAccentBrushHigh">#52B0EF</SolidColorBrush>
-        <SolidColorBrush x:Key="ApplicationAccentForegroundBrush">#ff503f</SolidColorBrush>
+        <SolidColorBrush x:Key="ApplicationAccentBrushLow">#33FF503F</SolidColorBrush>
+        <SolidColorBrush x:Key="ApplicationAccentBrushMed">#CCFF503F</SolidColorBrush>
+        <SolidColorBrush x:Key="ApplicationAccentBrushHigh">#66FF503F</SolidColorBrush>
+        <SolidColorBrush x:Key="ApplicationAccentForegroundBrush">#FFDEDEDE</SolidColorBrush>
     </Application.Resources>
 
     <Application.Styles>
         <StyleInclude Source="avares://Avalonia.Themes.Default/DefaultTheme.xaml" />
-        <StyleInclude Source="avares://Avalonia.Themes.Default/Accents/BaseDark.xaml" />
+        <StyleInclude Source="avares://Alex.GuiDebugger/Alex.BaseDark.xaml" />
         <StyleInclude Source="avares://Dock.Avalonia/Controls/DockPanelSplitter.xaml" />
         <StyleInclude Source="avares://Dock.Avalonia/Controls/ProportionalStackPanelSplitter.xaml" />
         <StyleInclude Source="avares://Dock.Avalonia/Controls/DockTarget.xaml" />
         <StyleInclude Source="avares://Dock.Avalonia/Controls/DockToolChrome.xaml" />
         <StyleInclude Source="avares://Dock.Avalonia/Controls/MetroWindow.xaml" />
-        <StyleInclude Source="avares://Alex.GuiDebugger/Alex.BaseDark.xaml" />
     </Application.Styles>
 </Application>

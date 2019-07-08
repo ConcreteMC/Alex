@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -34,7 +35,9 @@ namespace Alex.GuiDebugger.Services
 		{
 			_ipcServiceClient = new IpcServiceClientBuilder<IGuiDebuggerService>()
 				.UseNamedPipe(GuiDebuggerConstants.NamedPipeName)
+				.UseTcp(IPAddress.Loopback, GuiDebuggerConstants.TcpEndpointPort)
 				.Build();
+
 		}
 
 

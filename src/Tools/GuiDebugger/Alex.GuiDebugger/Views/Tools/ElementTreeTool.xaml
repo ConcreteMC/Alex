@@ -9,13 +9,11 @@
     d:DesignWidth="800"
     mc:Ignorable="d">
 
-    <Grid Background="WhiteSmoke" Focusable="True">
+    <Grid Focusable="True">
         <StackPanel>
-            <TextBlock Text="{Binding Id}" />
-            <TextBlock Text="{Binding Title}" />
-            <TextBlock Text="{Binding Context}" />
+          <Button Name="RefreshButton">Refresh</Button>
 
-            <TreeView>
+            <TreeView Items="{Binding ElementTreeItems}">
                 <TreeView.DataTemplates>
                     <TreeDataTemplate DataType="{x:Type models:ElementTreeItem}">
                         <StackPanel Orientation="Horizontal">

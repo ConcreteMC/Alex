@@ -163,7 +163,6 @@ namespace Alex
 			GuiManager = new GuiManager(this, InputManager, GuiRenderer);
 
 			GuiDebugHelper = new GuiDebugHelper(GuiManager);
-			Services.AddService<IGuiDebuggerService>(GuiDebugHelper);
 
 			AlexIpcService = new AlexIpcService();
 			Services.AddService<AlexIpcService>(AlexIpcService);

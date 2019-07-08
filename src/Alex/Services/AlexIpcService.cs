@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
+using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,8 +26,9 @@ namespace Alex.Services
 			ServiceCollection = ConfigureServices(new ServiceCollection());
 
 			_host = new IpcServiceHostBuilder(ServiceCollection.BuildServiceProvider())
-				.AddNamedPipeEndpoint<IGuiDebuggerService>(name: "guiDebugger",
+				.AddNamedPipeEndpoint<IGuiDebuggerService>(name: "guiDebuggerNamedPipeEndpoint",
 														   pipeName: GuiDebuggerConstants.NamedPipeName)
+				.AddTcpEndpoint<IGuiDebuggerService>(name: "guiDebuggerTcpEndpoint", ipEndpoint: IPAddress.Loopback, port: GuiDebuggerConstants.TcpEndpointPort)
 				.Build();
 
 		}
@@ -46,7 +48,7 @@ namespace Alex.Services
 			services.AddIpc(x =>
 			{
 				x.AddNamedPipe(options => { options.ThreadCount = 2; })
-				 .AddService<IGuiDebuggerService>(s => Alex.Instance.GuiDebugHelper);
+				 .AddService<IGuiDebuggerService, GuiDebuggerService>();
 			});
 
 			return services;

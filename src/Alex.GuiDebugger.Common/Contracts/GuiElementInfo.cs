@@ -3,17 +3,23 @@ using System.Runtime.Serialization;
 
 namespace Alex.GuiDebugger.Common
 {
-	[DataContract]
 	public class GuiElementInfo
 	{
-		[DataMember]
 		public Guid Id { get; set; }
 		
-		[DataMember]
 		public string ElementType { get; set; }
 		
-		[DataMember]
 		public GuiElementInfo[] ChildElements { get; set; }
 
+		public GuiElementInfo()
+		{
+
+		}
+
+		public GuiElementInfo(Guid id, string elementType) : this()
+		{
+			Id = id;
+			ElementType = elementType;
+		}
 	}
 }

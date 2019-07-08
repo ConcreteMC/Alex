@@ -16,6 +16,8 @@
     BorderBrush="{DynamicResource ThemeBorderLowBrush}"
     BorderThickness="1"
     Foreground="{DynamicResource ThemeForegroundBrush}"
+    Icon="/Assets/Alex.ico"
+
     RenderOptions.BitmapInterpolationMode="HighQuality"
     UseLayoutRounding="True"
     WindowStartupLocation="CenterScreen"
@@ -73,10 +75,6 @@
                 </MenuItem>
             </MenuItem>
         </Menu>
-        <idc:NavigationControl
-            Grid.Row="1"
-            Margin="4"
-            DataContext="{Binding Layout}" />
         <idc:DockControl
             Grid.Row="2"
             Margin="4"

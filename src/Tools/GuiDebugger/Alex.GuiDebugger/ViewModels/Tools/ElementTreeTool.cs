@@ -4,16 +4,20 @@ using Alex.GuiDebugger.Models;
 using Alex.GuiDebugger.Services;
 using Dock.Model.Controls;
 using DynamicData;
+using ReactiveUI;
 
 namespace Alex.GuiDebugger.ViewModels.Tools
 {
     public class ElementTreeTool : ToolTab
     {
-        public ObservableCollection<ElementTreeItem> ElementTreeItems { get; set; }
+        public ObservableCollection<ElementTreeItem> ElementTreeItems { get; }
+
+        public ReactiveCommand RefreshCommand { get; }
 
         public ElementTreeTool()
         {
             ElementTreeItems = new ObservableCollection<ElementTreeItem>();
+            RefreshCommand = ReactiveCommand.Create(Refresh);
             //Refresh();
         }
 

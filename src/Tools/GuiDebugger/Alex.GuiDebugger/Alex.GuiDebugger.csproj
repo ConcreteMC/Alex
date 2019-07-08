@@ -6,9 +6,6 @@
     <EnableDefaultCompileItems>False</EnableDefaultCompileItems>
   </PropertyGroup>
   <ItemGroup>
-    <AvaloniaResource Include="Assets\*" />
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="Avalonia" Version="0.8.1" />
     <PackageReference Include="Avalonia.Desktop" Version="0.8.1" />
     <PackageReference Include="Avalonia.ReactiveUI" Version="0.8.1" />
@@ -32,17 +29,9 @@
     </AvaloniaResource>
   </ItemGroup>
   <ItemGroup>
+    <AvaloniaResource Include="Assets\**\*" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="**\*.cs" Exclude="obj\**" />
-  </ItemGroup>
-  <ItemGroup>
-    <AvaloniaResource Remove="Views\Documents\ElementTreeDocument.xaml" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Remove="Views\Documents\ElementTreeDocument.xaml" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Views\Documents\ElementTreeDocument.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </EmbeddedResource>
   </ItemGroup>
 </Project>
