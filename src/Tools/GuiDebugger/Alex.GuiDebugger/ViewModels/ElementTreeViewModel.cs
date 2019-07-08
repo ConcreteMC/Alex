@@ -23,7 +23,7 @@ namespace Alex.GuiDebugger.ViewModels
 
         public void Refresh()
         {
-            var items = _alexGuiDebuggerInteraction.GetElementTreeItems();
+            var items = _alexGuiDebuggerInteraction.GetElementTreeItems().Result;
             ElementTreeItems.Clear();
             ElementTreeItems.AddRange(items);
         }

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.705
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29021.104
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Alex", "Alex\Alex.csproj", "{C360D9A4-C1AC-4A41-8A49-ADE1306DB389}"
 EndProject
@@ -78,6 +78,10 @@ Global
 		{3C7A4E74-D66B-4B8E-9165-380E52AF25FD}.Debug|x64.Build.0 = Debug|x64
 		{3C7A4E74-D66B-4B8E-9165-380E52AF25FD}.Release|x64.ActiveCfg = Release|x64
 		{3C7A4E74-D66B-4B8E-9165-380E52AF25FD}.Release|x64.Build.0 = Release|x64
+		{A5C2A962-01D1-42E1-9451-27F3E13DBD26}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A5C2A962-01D1-42E1-9451-27F3E13DBD26}.Debug|x64.Build.0 = Debug|Any CPU
+		{A5C2A962-01D1-42E1-9451-27F3E13DBD26}.Release|x64.ActiveCfg = Release|Any CPU
+		{A5C2A962-01D1-42E1-9451-27F3E13DBD26}.Release|x64.Build.0 = Release|Any CPU
 		{D17BB89F-2A8B-42AE-8E9A-21281C010B4B}.Debug|x64.ActiveCfg = Debug|x64
 		{D17BB89F-2A8B-42AE-8E9A-21281C010B4B}.Debug|x64.Build.0 = Debug|x64
 		{D17BB89F-2A8B-42AE-8E9A-21281C010B4B}.Release|x64.ActiveCfg = Release|x64

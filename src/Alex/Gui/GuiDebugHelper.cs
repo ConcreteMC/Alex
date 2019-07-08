@@ -14,7 +14,6 @@ using Alex.API.Input;
 using Alex.API.Utils;
 using Alex.GuiDebugger.Common;
 using Alex.GuiDebugger.Common.Services;
-using EasyPipes;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using NLog;
@@ -57,7 +56,6 @@ namespace Alex.Gui
 		private GuiElement TopMostFocused;
 
 		private IGuiElement HighlightedElement;
-		private Server _server;
 
 		internal GuiDebugHelper(GuiManager manager)
 		{
@@ -65,11 +63,6 @@ namespace Alex.Gui
 
 			GuiManager.DrawScreen -= GuiManagerOnDrawScreen;
 			GuiManager.DrawScreen += GuiManagerOnDrawScreen;
-			
-			_server = new Server(GuiDebuggerConstants.NamedPipeName);
-			_server.RegisterService<IGuiDebuggerService>(this);
-			_server.Start();
-			
 		}
 
 		private void GuiManagerOnDrawScreen(object sender, GuiDrawScreenEventArgs e)
@@ -375,7 +368,7 @@ namespace Alex.Gui
 
 		public void Dispose()
 		{
-			_server.Stop();
+
 		}
 
 		public void HighlightGuiElement(Guid id)

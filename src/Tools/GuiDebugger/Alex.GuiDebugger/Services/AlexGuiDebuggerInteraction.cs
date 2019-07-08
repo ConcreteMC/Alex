@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Alex.GuiDebugger.Common;
 using Alex.GuiDebugger.Common.Services;
 using Alex.GuiDebugger.Models;
 using EasyPipes;
+using JKang.IpcServiceFramework;
 
 namespace Alex.GuiDebugger.Services
 {
@@ -26,20 +28,19 @@ namespace Alex.GuiDebugger.Services
 
 		#endregion
 
-		private Client _client;
-
-		public IGuiDebuggerService GuiDebuggerService { get; }
-
+		private IpcServiceClient<IGuiDebuggerService> _ipcServiceClient;
+		
 		public AlexGuiDebuggerInteraction()
 		{
-			_client = new Client(GuiDebuggerConstants.NamedPipeName);
-			GuiDebuggerService = _client.GetServiceProxy<IGuiDebuggerService>();
+			_ipcServiceClient = new IpcServiceClientBuilder<IGuiDebuggerService>()
+				.UseNamedPipe(GuiDebuggerConstants.NamedPipeName)
+				.Build();
 		}
 
 
-		public ICollection<ElementTreeItem> GetElementTreeItems()
+		public async Task<ICollection<ElementTreeItem>> GetElementTreeItems()
 		{
-			var items = GuiDebuggerService.GetAllGuiElementInfos();
+			var items = await _ipcServiceClient.InvokeAsync(x => x.GetAllGuiElementInfos());
 			return items.Select(ConvertItem).ToList();
 		}
 

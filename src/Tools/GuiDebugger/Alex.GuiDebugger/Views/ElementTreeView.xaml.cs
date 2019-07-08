@@ -1,4 +1,4 @@
-﻿using Alex.GuiDebugger.ViewModels.Tools;
+﻿using Alex.GuiDebugger.ViewModels;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;

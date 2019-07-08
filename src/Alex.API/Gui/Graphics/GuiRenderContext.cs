@@ -400,7 +400,7 @@ namespace Alex.API.Gui.Graphics
             {
                 if (_colorTexture == null)
                 {
-                    _colorTexture = GpuResourceManager.GetTexture2D(_graphicsDevice, 1, 1, false, SurfaceFormat.Color);
+                    _colorTexture = GpuResourceManager.GetTexture2D(this, _graphicsDevice, 1, 1, false, SurfaceFormat.Color);
                     _colorTexture.SetData(new [] { Color.White });
                 }
 

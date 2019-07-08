@@ -5,4 +5,8 @@
     <Platforms>x64</Platforms>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="JKang.IpcServiceFramework.Core" Version="2.2.2" />
+  </ItemGroup>
+
 </Project>

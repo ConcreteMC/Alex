@@ -1,26 +1,27 @@
-<Application xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:Alex.GuiDebugger"
-             x:Class="Alex.GuiDebugger.App">
+<Application
+    x:Class="Alex.GuiDebugger.App"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:Alex.GuiDebugger">
     <Application.DataTemplates>
-        <local:ViewLocator/>
+        <local:ViewLocator />
     </Application.DataTemplates>
-  
-  <Application.Resources>
-    <SolidColorBrush x:Key="ApplicationAccentBrushLow">#007ACC</SolidColorBrush>
-    <SolidColorBrush x:Key="ApplicationAccentBrushMed">#1C97EA</SolidColorBrush>
-    <SolidColorBrush x:Key="ApplicationAccentBrushHigh">#52B0EF</SolidColorBrush>
-    <SolidColorBrush x:Key="ApplicationAccentForegroundBrush">#ff503f</SolidColorBrush>
-  </Application.Resources>
-  
+
+    <Application.Resources>
+        <SolidColorBrush x:Key="ApplicationAccentBrushLow">#007ACC</SolidColorBrush>
+        <SolidColorBrush x:Key="ApplicationAccentBrushMed">#1C97EA</SolidColorBrush>
+        <SolidColorBrush x:Key="ApplicationAccentBrushHigh">#52B0EF</SolidColorBrush>
+        <SolidColorBrush x:Key="ApplicationAccentForegroundBrush">#ff503f</SolidColorBrush>
+    </Application.Resources>
+
     <Application.Styles>
-        <StyleInclude Source="avares://Avalonia.Themes.Default/DefaultTheme.xaml"/>
-        <StyleInclude Source="avares://Avalonia.Themes.Default/Accents/BaseDark.xaml"/>
-      <StyleInclude Source="avares://Dock.Avalonia/Controls/DockPanelSplitter.xaml"/>
-      <StyleInclude Source="avares://Dock.Avalonia/Controls/ProportionalStackPanelSplitter.xaml"/>
-      <StyleInclude Source="avares://Dock.Avalonia/Controls/DockTarget.xaml"/>
-      <StyleInclude Source="avares://Dock.Avalonia/Controls/DockToolChrome.xaml"/>
-      <StyleInclude Source="avares://Dock.Avalonia/Controls/MetroWindow.xaml"/>
-      <StyleInclude Source="/Alex.BaseDark.xaml"/>
+        <StyleInclude Source="avares://Avalonia.Themes.Default/DefaultTheme.xaml" />
+        <StyleInclude Source="avares://Avalonia.Themes.Default/Accents/BaseDark.xaml" />
+        <StyleInclude Source="avares://Dock.Avalonia/Controls/DockPanelSplitter.xaml" />
+        <StyleInclude Source="avares://Dock.Avalonia/Controls/ProportionalStackPanelSplitter.xaml" />
+        <StyleInclude Source="avares://Dock.Avalonia/Controls/DockTarget.xaml" />
+        <StyleInclude Source="avares://Dock.Avalonia/Controls/DockToolChrome.xaml" />
+        <StyleInclude Source="avares://Dock.Avalonia/Controls/MetroWindow.xaml" />
+        <StyleInclude Source="avares://Alex.GuiDebugger/Alex.BaseDark.xaml" />
     </Application.Styles>
 </Application>

@@ -16,12 +16,16 @@ using Alex.GameStates.Gui.MainMenu;
 using Alex.GameStates.Playing;
 using Alex.Gui;
 using Alex.Gui.Forms;
+using Alex.GuiDebugger.Common;
+using Alex.GuiDebugger.Common.Services;
 using Alex.Networking.Java.Packets;
 using Alex.Services;
 using Alex.Utils;
 using Alex.Worlds.Bedrock;
 using Alex.Worlds.Java;
 using Eto.Forms;
+using JKang.IpcServiceFramework;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
@@ -157,7 +161,14 @@ namespace Alex
 			InputManager = new InputManager(this);
 			GuiRenderer = new GuiRenderer(this);
 			GuiManager = new GuiManager(this, InputManager, GuiRenderer);
+
 			GuiDebugHelper = new GuiDebugHelper(GuiManager);
+			Services.AddService<IGuiDebuggerService>(GuiDebugHelper);
+
+			AlexIpcService = new AlexIpcService();
+			Services.AddService<AlexIpcService>(AlexIpcService);
+			AlexIpcService.Start();
+
 			OnCharacterInput += GuiManager.FocusManager.OnTextInput;
 
 			GameStateManager = new GameStateManager(GraphicsDevice, _spriteBatch, GuiManager);
@@ -170,12 +181,15 @@ namespace Alex
 			ThreadPool.QueueUserWorkItem(o => { InitializeGame(splash); });
 		}
 
+		private AlexIpcService AlexIpcService;
+
 		private void ConfigureServices()
 		{
 			XBLMSAService msa;
 			var storage = new StorageSystem(LaunchSettings.WorkDir);
 			ProfileManager = new ProfileManager(this, storage);
-			
+
+
 			Services.AddService<IStorageSystem>(storage);
 			
 			var optionsProvider = new OptionsProvider(storage);
@@ -199,6 +213,7 @@ namespace Alex
 			ProfileManager.SaveProfiles();
 			
 			Services.GetService<IOptionsProvider>().Save();
+			AlexIpcService.Stop();
 			GuiDebugHelper.Dispose();
 		}
 
