@@ -162,10 +162,27 @@ namespace Alex.Services
 					val = "Exception - " + ex.Message;
 				}
 
+				//infos.Add(new GuiElementPropertyInfo()
+				//{
+				//	Name        = prop.Name,
+				//	Type        = prop.PropertyType,
+				//	Value       = val,
+				//	StringValue = val?.ToString()
+				//});
+
+				var propType = prop.PropertyType;
+
+
+				if (propType.Assembly != typeof(IGuiDebuggerService).Assembly)
+				{
+					propType = typeof(string);
+					val = val?.ToString();
+				}
+
 				infos.Add(new GuiElementPropertyInfo()
 				{
 					Name        = prop.Name,
-					Type        = prop.PropertyType,
+					Type        = propType,
 					Value       = val,
 					StringValue = val?.ToString()
 				});

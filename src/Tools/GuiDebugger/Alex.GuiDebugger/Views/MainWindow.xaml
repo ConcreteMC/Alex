@@ -26,6 +26,7 @@
     <idc:MetroWindow.Resources>
         <id:DockDropHandler x:Key="DockDropHandler0" Id="0" />
     </idc:MetroWindow.Resources>
+
     <Grid Background="Transparent" RowDefinitions="Auto,Auto,*,25">
         <i:Interaction.Behaviors>
             <id:DropBehavior Context="{Binding Layout}" Handler="{StaticResource DockDropHandler0}" />
@@ -75,6 +76,7 @@
                 </MenuItem>
             </MenuItem>
         </Menu>
+        <idc:NavigationControl DataContext="{Binding Layout}" Margin="4" Grid.Row="1"/>
         <idc:DockControl
             Grid.Row="2"
             Margin="4"

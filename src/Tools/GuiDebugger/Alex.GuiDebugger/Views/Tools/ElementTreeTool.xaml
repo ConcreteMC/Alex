@@ -9,24 +9,27 @@
     d:DesignWidth="800"
     mc:Ignorable="d">
 
-    <Grid Focusable="True">
-        <StackPanel>
-          <Button Name="RefreshButton">Refresh</Button>
+    <Grid Focusable="True" RowDefinitions="Auto,*">
+        <Button Name="RefreshButton" Grid.Row="0">Refresh</Button>
 
-            <TreeView Items="{Binding ElementTreeItems}">
-                <TreeView.DataTemplates>
-                    <TreeDataTemplate DataType="{x:Type models:ElementTreeItem}">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding ElementType}" />
-                            <TextBlock Text="[" />
-                            <TextBlock Text="{Binding ChildElements.Count}" />
-                            <TextBlock Text="]" />
-                        </StackPanel>
-                    </TreeDataTemplate>
-                </TreeView.DataTemplates>
+        <TreeView
+            Name="TreeView"
+            Grid.Row="1"
+            VerticalAlignment="Stretch"
+            Items="{Binding ElementTreeItems}"
+            SelectionMode="Single">
+            <TreeView.DataTemplates>
+                <TreeDataTemplate DataType="{x:Type models:ElementTreeItem}" ItemsSource="{Binding Children}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding ElementType}" />
+                        <TextBlock Text="[" />
+                        <TextBlock Text="{Binding Children.Length}" />
+                        <TextBlock Text="]" />
+                    </StackPanel>
+                </TreeDataTemplate>
+            </TreeView.DataTemplates>
 
-            </TreeView>
-        </StackPanel>
+        </TreeView>
     </Grid>
 
 </UserControl>

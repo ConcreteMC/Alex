@@ -24,11 +24,11 @@ namespace Alex.GuiDebugger.Factories
 
 		public override IDock CreateLayout()
 		{
-			var elementTreeDocument = new ElementTreeDocument
-			{
-				Id    = "ElementTreeDocument",
-				Title = "ElementTreeDocument"
-			};
+			//var elementTreeDocument = new ElementTreeDocument
+			//{
+			//	Id    = "ElementTreeDocument",
+			//	Title = "ElementTreeDocument"
+			//};
 
 			var elementTreeTool = new ElementTreeTool
 			{
@@ -36,6 +36,38 @@ namespace Alex.GuiDebugger.Factories
 				Title = "ElementTreeTool"
 			};
 
+			var leftPaneTop = new ToolDock()
+			{
+				Id          = "LeftPaneTop",
+				Title       = "LeftPaneTop",
+				Proportion  = double.NaN,
+				CurrentView = elementTreeTool,
+				Views       = CreateList<IView>(elementTreeTool)
+			};
+			var leftPane = new LayoutDock()
+			{
+				Id          = "LeftPane",
+				Title       = "LeftPane",
+				Proportion  = double.NaN,
+				Orientation = Orientation.Vertical,
+				CurrentView = null,
+				Views       = CreateList<IView>(leftPaneTop)
+			};
+			var leftSplitter = new SplitterDock()
+			{
+				Id    = "LeftSplitter",
+				Title = "LeftSplitter"
+			};
+			var documentsPane = new DocumentDock()
+			{
+				Id         = "DocumentsPane",
+				Title      = "DocumentsPane",
+				Proportion = double.NaN,
+				CurrentView = null,
+				Views = CreateList<IView>()
+				//CurrentView = elementTreeDocument,
+				//Views = CreateList<IView>(elementTreeDocument)
+			};
 			var mainLayout = new LayoutDock
 			{
 				Id          = "MainLayout",
@@ -43,35 +75,7 @@ namespace Alex.GuiDebugger.Factories
 				Proportion  = double.NaN,
 				Orientation = Orientation.Horizontal,
 				CurrentView = null,
-				Views = CreateList<IView>(new LayoutDock()
-										  {
-											  Id          = "LeftPane",
-											  Title       = "LeftPane",
-											  Proportion  = double.NaN,
-											  Orientation = Orientation.Vertical,
-											  CurrentView = null,
-											  Views = CreateList<IView>(new ToolDock()
-											  {
-												  Id          = "LeftPaneTop",
-												  Title       = "LeftPaneTop",
-												  Proportion  = double.NaN,
-												  CurrentView = elementTreeTool,
-												  Views       = CreateList<IView>(elementTreeTool)
-											  })
-										  },
-										  new SplitterDock()
-										  {
-											  Id    = "LeftSplitter",
-											  Title = "LeftSplitter"
-										  },
-										  new DocumentDock()
-										  {
-											  Id         = "DocumentsPane",
-											  Title      = "DocumentsPane",
-											  Proportion = double.NaN,
-											  CurrentView = elementTreeDocument,
-											  Views = CreateList<IView>(elementTreeDocument)
-										  })
+				Views       = CreateList<IView>(leftPane, leftSplitter, documentsPane)
 			};
 
 			var mainView = new MainView
@@ -82,41 +86,55 @@ namespace Alex.GuiDebugger.Factories
 				Views       = CreateList<IView>(mainLayout)
 			};
 
+
 			var root = CreateRootDock();
 
-			root.Id    = "Root";
-			root.Title = "Root";
+			root.Id             = "Root";
+			root.Title          = "Root";
 			root.CurrentView    = mainView;
 			root.DefaultView    = mainView;
 			root.Views          = CreateList<IView>(mainView);
 			root.Left           = CreatePinDock();
 			root.Left.Alignment = Alignment.Left;
 
+			AddAllViews(root, mainView, mainLayout, documentsPane, leftSplitter, leftPane, leftPaneTop, elementTreeTool);
+
 			return root;
 		}
+
+		private void AddAllViews(params IView[] views)
+		{
+			if(ViewLocator == null) ViewLocator = new Dictionary<string, Func<IView>>();
+
+			foreach (var view in views)
+			{
+				ViewLocator[view.Id] = () => view;
+			}
+		}
+
 		public override void InitLayout(IView layout)
 		{
 			this.ContextLocator = new Dictionary<string, Func<object>>
 			{
-				[nameof(IRootDock)] = () => _context,
-				[nameof(IPinDock)] = () => _context,
-				[nameof(ILayoutDock)] = () => _context,
+				[nameof(IRootDock)]     = () => _context,
+				[nameof(IPinDock)]      = () => _context,
+				[nameof(ILayoutDock)]   = () => _context,
 				[nameof(IDocumentDock)] = () => _context,
-				[nameof(IToolDock)] = () => _context,
+				[nameof(IToolDock)]     = () => _context,
 				[nameof(ISplitterDock)] = () => _context,
-				[nameof(IDockWindow)] = () => _context,
-				[nameof(IDocumentTab)] = () => _context,
-				[nameof(IToolTab)] = () => _context,
+				[nameof(IDockWindow)]   = () => _context,
+				[nameof(IDocumentTab)]  = () => _context,
+				[nameof(IToolTab)]      = () => _context,
 				["ElementTreeDocument"] = () => new ElementTreeDocumentModel(),
-				["ElementTreeTool"] = () => new ElementTreeToolModel(),
-				["LeftPane"] = () => _context,
-				["LeftPaneTop"] = () => _context,
-				["ElementTreeTool"] = () => _context,
-				["DocumentsPane"] = () => _context,
-				["MainLayout"] = () => _context,
-				["LeftSplitter"] = () => _context,
-				["MainLayout"] = () => _context,
-				["Main"] = () => layout,
+				["ElementTreeTool"]     = () => new ElementTreeToolModel(),
+				["LeftPane"]            = () => _context,
+				["LeftPaneTop"]         = () => _context,
+				["ElementTreeTool"]     = () => _context,
+				["DocumentsPane"]       = () => _context,
+				["MainLayout"]          = () => _context,
+				["LeftSplitter"]        = () => _context,
+				["MainLayout"]          = () => _context,
+				["Main"]                = () => layout,
 				["Editor"] = () => new LayoutEditor()
 				{
 					Layout = layout

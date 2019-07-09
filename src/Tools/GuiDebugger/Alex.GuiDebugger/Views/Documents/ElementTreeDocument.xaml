@@ -7,11 +7,27 @@
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d">
-    <Grid Background="Gray" Focusable="True">
-        <StackPanel>
-            <TextBlock Text="{Binding Id}" />
-            <TextBlock Text="{Binding Title}" />
-            <TextBlock Text="{Binding Context}" />
-        </StackPanel>
+    <Grid
+        Background="Gray"
+        Focusable="True"
+        RowDefinitions="Auto,*">
+
+        <Button Grid.Row="0" Command="{Binding RefreshPropertiesCommand}">Refresh Properties</Button>
+
+        <DataGrid
+            Name="PropertiesDataGrid"
+            Grid.Row="1" CanUserResizeColumns="True" CanUserReorderColumns="False">
+          <DataGrid.Columns>
+            <DataGridTextColumn
+                Width="*"
+                    Binding="{Binding Name}"
+                    Header="Name" />
+            <DataGridTextColumn
+                Width="2*"
+                    Binding="{Binding Value}"
+                    Header="Value" />
+            </DataGrid.Columns>
+        </DataGrid>
+
     </Grid>
 </UserControl>

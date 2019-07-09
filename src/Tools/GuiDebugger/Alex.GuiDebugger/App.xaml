@@ -8,13 +8,12 @@
     xmlns:editor="clr-namespace:Dock.Avalonia.Editor.Controls;assembly=Dock.Avalonia.Editor"
     xmlns:idc="clr-namespace:Dock.Avalonia.Controls;assembly=Dock.Avalonia"
     xmlns:local="clr-namespace:Alex.GuiDebugger"
+    xmlns:documents="clr-namespace:Alex.GuiDebugger.Views.Documents"
     xmlns:tools="clr-namespace:Alex.GuiDebugger.Views.Tools;assembly=Alex.GuiDebugger"
     xmlns:views="clr-namespace:Alex.GuiDebugger.Views;assembly=Alex.GuiDebugger">
     <Application.DataTemplates>
         <DataTemplate DataType="Documents:ElementTreeDocument">
-            <Grid>
-                <TextBlock Text="Hi, i'm a document!" />
-            </Grid>
+            <documents:ElementTreeDocument />
         </DataTemplate>
         <DataTemplate DataType="Tools:ElementTreeTool">
             <tools:ElementTreeTool />

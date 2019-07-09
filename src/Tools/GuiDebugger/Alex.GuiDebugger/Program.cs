@@ -34,11 +34,11 @@ namespace Alex.GuiDebugger
                 var   factory    = new DefaultDockFactory(new DockData());
                 IDock layout     = null;
 
-                string path = serializer.GetBasePath("Layout.json");
-                if (serializer.Exists(path))
-                {
-                    layout = serializer.Load<RootDock>(path);
-                }
+                //string path = serializer.GetBasePath("Layout.json");
+                //if (serializer.Exists(path))
+                //{
+                //    layout = serializer.Load<RootDock>(path);
+                //}
 
                 BuildAvaloniaApp().Start<MainWindow>(() =>
                 {
@@ -53,7 +53,7 @@ namespace Alex.GuiDebugger
                     dock.Close();
                 }
 
-                serializer.Save(path, vm.Layout);
+                //serializer.Save(path, vm.Layout);
             }
             catch (Exception ex)
             {
@@ -64,8 +64,9 @@ namespace Alex.GuiDebugger
         // Avalonia configuration, don't remove; also used by visual designer.
         public static AppBuilder BuildAvaloniaApp()
             => AppBuilder.Configure<App>()
+                .UseReactiveUI()
+                .UseDataGrid()
                 .UsePlatformDetect()
-                .LogToDebug()
-                .UseReactiveUI();
+                .LogToDebug();
     }
 }

@@ -1,24 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>netcoreapp2.0</TargetFrameworks>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <DefineConstants>TRACE;DEBUG;WINDOWS;MONOGAME;NETCOREAPP2_0;DESKTOPGL;WINDOWS;LINUX</DefineConstants>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <Platforms>AnyCPU;x64</Platforms>
-    <EnableDefaultCompileItems>False</EnableDefaultCompileItems>
   </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="Avalonia" Version="0.8.1" />
-    <PackageReference Include="Avalonia.Desktop" Version="0.8.1" />
-    <PackageReference Include="Avalonia.ReactiveUI" Version="0.8.1" />
-    <PackageReference Include="Dock.Avalonia" Version="0.8.0" />
-    <PackageReference Include="Dock.Avalonia.Editor" Version="0.8.0" />
-    <PackageReference Include="Dock.CodeGen" Version="0.8.0" />
-    <PackageReference Include="Dock.Model.ReactiveUI" Version="0.8.0" />
-    <PackageReference Include="Dock.Serializer" Version="0.8.0" />
-    <PackageReference Include="JKang.IpcServiceFramework.Client" Version="2.2.2" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\Alex.GuiDebugger.Common\Alex.GuiDebugger.Common.csproj" />
-  </ItemGroup>
+
+  <PropertyGroup>
+    <Authors>kennyvv, TruDan</Authors>
+    <Version>1.0-DEV</Version>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <LangVersion>7.1</LangVersion>
+    <MonoGamePlatform>DesktopGL</MonoGamePlatform>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Update="**\*.xaml.cs">
       <DependentUpon>%(Filename)</DependentUpon>
@@ -29,9 +26,28 @@
     </AvaloniaResource>
   </ItemGroup>
   <ItemGroup>
-    <AvaloniaResource Include="Assets\**\*" />
+    <AvaloniaResource Include="Assets\*" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="**\*.cs" Exclude="obj\**" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL.Core" Version="3.7.0.7" />
+    <PackageReference Include="Avalonia" Version="0.8.1" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" Version="0.8.1" />
+    <PackageReference Include="Avalonia.Desktop" Version="0.8.1" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="0.8.1" />
+    <PackageReference Include="Avalonia.Xaml.Behaviors" Version="0.8.0" />
+    <PackageReference Include="Avalonia.Xaml.Interactions" Version="0.8.0" />
+    <PackageReference Include="Avalonia.Xaml.Interactions.Custom" Version="0.8.0" />
+    <PackageReference Include="Avalonia.Xaml.Interactivity" Version="0.8.0" />
+    <PackageReference Include="Dock.Avalonia" Version="0.8.0" />
+    <PackageReference Include="Dock.Avalonia.Editor" Version="0.8.0" />
+    <PackageReference Include="Dock.CodeGen" Version="0.8.0" />
+    <PackageReference Include="Dock.Model" Version="0.8.0" />
+    <PackageReference Include="Dock.Model.ReactiveUI" Version="0.8.0" />
+    <PackageReference Include="Dock.Serializer" Version="0.8.0" />
+    <PackageReference Include="JKang.IpcServiceFramework.Client" Version="2.2.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <!--<ProjectReference Include="..\..\..\Alex.API\Alex.API.csproj" />-->
+    <ProjectReference Include="..\..\..\Alex.GuiDebugger.Common\Alex.GuiDebugger.Common.csproj" />
   </ItemGroup>
 </Project>
