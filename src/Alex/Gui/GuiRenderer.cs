@@ -11,6 +11,7 @@ using Alex.API.Utils;
 using Alex.ResourcePackLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using RocketUI;
 
 namespace Alex.Gui
 {
@@ -181,6 +182,15 @@ namespace Alex.Gui
 			// Backgrounds
 			LoadTextureFromResourcePack(GuiTextures.OptionsBackground, resourcePack, "gui/options_background", 2f);
 
+			// Load Gui Containers
+			{
+				Texture2D containerSprite;
+				if (resourcePack.TryGetTexture("gui/container/inventory", out containerSprite))
+				{
+					LoadTextureFromSpriteSheet(GuiTextures.InventoryPlayerBackground, containerSprite, new Rectangle(0, 0, 176, 166));
+				}
+			}
+
 			// Panorama
 			LoadTextureFromResourcePack(GuiTextures.Panorama0, resourcePack, "gui/title/background/panorama_0");
 			LoadTextureFromResourcePack(GuiTextures.Panorama1, resourcePack, "gui/title/background/panorama_1");
@@ -243,6 +253,7 @@ namespace Alex.Gui
 			LoadTextureFromSpriteSheet(GuiTextures.ScrollBarDownButtonFocused,  spriteSheet, ScrollBarDownButtonFocus);
 			LoadTextureFromSpriteSheet(GuiTextures.ScrollBarDownButtonDisabled, spriteSheet, ScrollBarDownButtonDisabled);
 		}
+
 
 		private TextureSlice2D LoadTextureFromEmbeddedResource(GuiTextures guiTexture, byte[] resource)
 		{

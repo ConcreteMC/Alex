@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Runtime.Serialization;
-using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 
 namespace Alex.API.Data.Options

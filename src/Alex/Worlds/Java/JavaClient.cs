@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.Sockets;
+using Alex.API.Entities;
 using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.Networking.Java;
@@ -7,10 +8,11 @@ using Alex.Networking.Java.Packets;
 using Alex.Networking.Java.Packets.Play;
 using Microsoft.Xna.Framework;
 using MiNET;
-using MiNET.Utils;
+using MiNET.Net;
 using NLog;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using ConnectionState = Alex.Networking.Java.ConnectionState;
+using Packet = Alex.Networking.Java.Packets.Packet;
 
 namespace Alex.Worlds.Java
 {
@@ -89,6 +91,11 @@ namespace Alex.Worlds.Java
 				Location = position,
 				Status = status
 			});
+		}
+
+		public void EntityInteraction(IEntity player, IEntity target, McpeInventoryTransaction.ItemUseOnEntityAction action)
+		{
+			throw new NotImplementedException();
 		}
 
 		public void UseItem(int hand)

@@ -4,6 +4,7 @@ using Alex.Blocks.Minecraft;
 using Alex.ResourcePackLib.Json;
 using Alex.Utils;
 using NLog;
+using BitArray = Alex.API.Utils.BitArray;
 
 namespace Alex.Blocks.Storage
 {
@@ -33,12 +34,13 @@ namespace Alex.Blocks.Storage
 		/** The NibbleArray containing a block of Sky-light data. */
 		public NibbleArray SkyLight;
 
-		public bool[] TransparentBlocks;
-		public bool[] SolidBlocks;
-		public bool[] ScheduledUpdates;
-		public bool[] ScheduledSkylightUpdates;
+        public BitArray TransparentBlocks;
+        public BitArray SolidBlocks;
+        public BitArray ScheduledUpdates;
+        public BitArray ScheduledSkylightUpdates;
+        public BitArray RenderedBlocks;
 
-		public bool SolidBorder { get; private set; } = false;
+        public bool SolidBorder { get; private set; } = false;
 		private bool[] FaceSolidity { get; set; } = new bool[6];
 		public bool HasAirPockets { get; private set; } = true;
 		
@@ -53,19 +55,21 @@ namespace Alex.Blocks.Storage
 				this.SkyLight = new NibbleArray(4096, (byte) (Alex.Instance.GameSettings.ClientSideLighting ? 0 : 0xff));
 			}
 
-			TransparentBlocks = new bool[16 * 16 * 16];
-			SolidBlocks = new bool[16 * 16 * 16];
-			ScheduledUpdates = new bool[16 * 16 * 16];
-			ScheduledSkylightUpdates = new bool[16 * 16 * 16];
+		    TransparentBlocks = new BitArray(new byte[(16 * 16 * 16) / 8]);
+		    SolidBlocks = new BitArray(new byte[(16 * 16 * 16) / 8]);
+		    ScheduledUpdates = new BitArray(new byte[(16 * 16 * 16) / 8]);
+		    ScheduledSkylightUpdates = new BitArray(new byte[(16 * 16 * 16) / 8]);
+            RenderedBlocks = new BitArray(new byte[(16 * 16 * 16) / 8]);
 
-			for (int i = 0; i < TransparentBlocks.Length; i++)
+            for (int i = 0; i < TransparentBlocks.Length; i++)
 			{
-				TransparentBlocks[i] = false;
+				TransparentBlocks[i] = true;
 				SolidBlocks[i] = false;
 			}
         }
 
         public bool IsDirty { get; set; }
+        public bool New { get; set; } = true;
 
         public void ResetSkyLight()
 		{
@@ -74,27 +78,43 @@ namespace Alex.Blocks.Storage
 
 		private static int GetCoordinateIndex(int x, int y, int z)
 		{
-			return y << 8 | z << 4 | x;
+			return (y << 8 | z << 4 | x);
 		}
 
-		public bool IsScheduled(int x, int y, int z)
+        public void SetRendered(int x, int y, int z, bool value)
+        {
+            RenderedBlocks[GetCoordinateIndex(x, y, z)] = value;
+        }
+
+        public bool IsRendered(int x, int y, int z)
+        {
+            return RenderedBlocks[GetCoordinateIndex(x, y, z)];
+        }
+
+        public bool IsScheduled(int x, int y, int z)
 		{
-			return ScheduledUpdates[GetCoordinateIndex(x, y, z)];
+		    return ScheduledUpdates.Get(GetCoordinateIndex(x, y, z)); // ScheduledUpdates[GetCoordinateIndex(x, y, z)];
 		}
 
 		public void SetScheduled(int x, int y, int z, bool value)
 		{
-			ScheduledUpdates[GetCoordinateIndex(x, y, z)] = value;
+            ScheduledUpdates.Set(GetCoordinateIndex(x,y,z), value);
+            //ScheduledUpdates[GetCoordinateIndex(x, y, z)] = value;
 		}
 
 		public bool IsLightingScheduled(int x, int y, int z)
 		{
-			return ScheduledSkylightUpdates[GetCoordinateIndex(x, y, z)];
+		    return
+		        ScheduledSkylightUpdates.Get(GetCoordinateIndex(x, y,
+		            z)); //ScheduledSkylightUpdates[GetCoordinateIndex(x, y, z)];
 		}
 
 		public bool SetLightingScheduled(int x, int y, int z, bool value)
 		{
-			return ScheduledSkylightUpdates[GetCoordinateIndex(x, y, z)] = value;
+		    ScheduledSkylightUpdates.Set(GetCoordinateIndex(x, y, z),
+		        value); //ScheduledSkylightUpdates[GetCoordinateIndex(x, y, z)] = value;
+
+		    return value;
 		}
 
         public IBlockState Get(int x, int y, int z)
@@ -128,9 +148,11 @@ namespace Alex.Blocks.Storage
 					
 					//var coordsIndex = GetCoordinateIndex(x, y, z);
 
-					TransparentBlocks[coordsIndex] = true;
-					SolidBlocks[coordsIndex] = false;
-				}				
+					//TransparentBlocks[coordsIndex] = true;
+				    //SolidBlocks[coordsIndex] = false;
+				    TransparentBlocks.Set(coordsIndex, true);
+				    SolidBlocks.Set(coordsIndex, false);
+                }				
 			}
 
 			//Log.Info($"{state.Name} = {state.Block.Name} == {state.ID}");
@@ -144,14 +166,16 @@ namespace Alex.Blocks.Storage
 					++this._tickRefCount;
 				}
 				
-			
-				TransparentBlocks[coordsIndex] = block1.Transparent;
-				SolidBlocks[coordsIndex] = block1.Solid;
-			}
+			    TransparentBlocks.Set(coordsIndex, block1.Transparent);
+			    SolidBlocks.Set(coordsIndex, block1.Transparent);
+                //TransparentBlocks[coordsIndex] = block1.Transparent;
+                //SolidBlocks[coordsIndex] = block1.Solid;
+            }
 			
 			this.Data.Set(x, y, z, state);
-			
-			ScheduledUpdates[coordsIndex] = true;
+
+            ScheduledUpdates.Set(coordsIndex, true);
+			//ScheduledUpdates[coordsIndex] = true;
 			IsDirty = true;
 			
 			if (!block1.Solid)
@@ -165,19 +189,19 @@ namespace Alex.Blocks.Storage
 
 		public bool IsTransparent(int x, int y, int z)
 		{
-			return TransparentBlocks[GetCoordinateIndex(x, y, z)];
+			return TransparentBlocks.Get(GetCoordinateIndex(x, y, z));
 		}
 
 		public bool IsSolid(int x, int y, int z)
 		{
-			return SolidBlocks[GetCoordinateIndex(x, y, z)];
+		    return SolidBlocks.Get(GetCoordinateIndex(x, y, z));// SolidBlocks[GetCoordinateIndex(x, y, z)];
 		}
 
 		public void GetBlockData(int bx, int by, int bz, out bool transparent, out bool solid)
 		{
 			var coords = GetCoordinateIndex(bx, by, bz);
-			transparent = TransparentBlocks[coords];
-			solid = SolidBlocks[coords];
+		    transparent = TransparentBlocks.Get(coords);// TransparentBlocks[coords];
+		    solid = SolidBlocks.Get(coords);// SolidBlocks[coords];
 		}
 
         /**
@@ -213,7 +237,8 @@ namespace Alex.Blocks.Storage
 			var idx = GetCoordinateIndex(x, y, z);
 
             this.SkyLight[idx] = (byte) value;//.Set(x, y, z, value);
-            ScheduledSkylightUpdates[idx] = true;
+          //  ScheduledSkylightUpdates[idx] = true;
+            ScheduledSkylightUpdates.Set(idx, true);
 		}
 
 		/**
@@ -255,8 +280,10 @@ namespace Alex.Blocks.Storage
 						
 						var idx = GetCoordinateIndex(x, y, z);
 						
-						TransparentBlocks[idx] = block.Transparent;
-						SolidBlocks[idx] = block.Solid;
+                        TransparentBlocks.Set(idx, block.Transparent);
+                        SolidBlocks.Set(idx, block.Solid);
+					//	TransparentBlocks[idx] = block.Transparent;
+					//	SolidBlocks[idx] = block.Solid;
                         //if (block.LightValue > 0)
                         //{
                         //	SetExtBlocklightValue(x,y,z, (byte)block.LightValue);
@@ -370,5 +397,5 @@ namespace Alex.Blocks.Storage
             if (face == BlockFace.None || intFace < 0 || intFace > 5) return false;
 	        return FaceSolidity[(int)intFace];
 	    }
-	}
+    }
 }

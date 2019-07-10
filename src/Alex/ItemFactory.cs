@@ -1,17 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using Alex.API.Utils;
-using Alex.Blocks;
 using Alex.Items;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json.Models.Items;
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using NLog;
 
 namespace Alex
@@ -65,8 +61,11 @@ namespace Alex
 					    item.ItemType = t;
 				    }
 				    item.Material = minetItem.ItemMaterial;
+				    item.Meta = minetItem.Metadata;
+				    item.Id = minetItem.Id;
 			    }
-
+			    
+			    item.Name = entry.Key;
                 item.DisplayName = entry.Key;
 
 			    var data = itemData.FirstOrDefault(x =>

@@ -15,23 +15,16 @@ using Alex.Gui.Forms;
 using Alex.Utils;
 using Eto.Forms;
 using Jose;
-using Jose.netstandard1_4;
 using MiNET;
 using MiNET.Net;
 using MiNET.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
-using Org.BouncyCastle.Asn1;
-using Org.BouncyCastle.Asn1.Nist;
-using Org.BouncyCastle.Asn1.Ocsp;
 using Org.BouncyCastle.Asn1.Sec;
-using Org.BouncyCastle.Asn1.X509;
-using Org.BouncyCastle.Asn1.X9;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Generators;
 using Org.BouncyCastle.Crypto.Parameters;
-using Org.BouncyCastle.Crypto.Signers;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509;
 using Logger = NLog.Logger;
@@ -134,7 +127,7 @@ namespace Alex.Services
             }
 			else
 			{
-				await Task.Run(() =>
+			/*	await Task.Run(() =>
 				{
 					EtoApplication.AsyncInvoke(async () =>
 					{
@@ -159,7 +152,7 @@ namespace Alex.Services
 
 						authForm.Show();
 					});
-				});
+				});*/
 			}
 		}
 
@@ -704,7 +697,14 @@ Console.WriteLine($"User request: {JsonConvert.SerializeObject(r)}");
 		public async Task<(bool success, BedrockTokenPair token)> RefreshTokenAsync(string refreshToken)
 		{
 			var a = new XboxAuthForm(this, false);
+			a.ClientId = MSA_CLIENT_ID;
+			
 			var token = a.RefreshAccessToken(refreshToken);
+			if (token?.AccessToken == null)
+			{
+				Log.Warn($"Could not get access_token: {a.Error}");
+				return (false, null);
+			}
 			
 			var userToken = await DoUserAuth(token.AccessToken);
 
@@ -728,7 +728,7 @@ Console.WriteLine($"User request: {JsonConvert.SerializeObject(r)}");
 			var response = await Send(request);
 			if (response.Status != HttpStatusCode.OK)
 				throw new Exception("Failed to start sign in flow: non-200 status code");
-			Log.Info($"Body: " + response.Body);
+		//	Log.Info($"Body: " + response.Body);
 			return JsonConvert.DeserializeObject<MsaDeviceAuthConnectResponse>(response.Body);
 		}
 		//MsaDeviceAuthPollState
@@ -758,7 +758,7 @@ Console.WriteLine($"User request: {JsonConvert.SerializeObject(r)}");
 			var response = await Send(request);
 			if (response.Status != HttpStatusCode.OK)
 				throw new Exception("Failed to start sign in flow: non-200 status code");
-			Log.Info($"Body: " + response.Body);
+		//	Log.Info($"Body: " + response.Body);
 			return JsonConvert.DeserializeObject<MsaDeviceAuthConnectResponse>(response.Body);
 		}
 

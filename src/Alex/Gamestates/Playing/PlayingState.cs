@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Linq;
 using System.Text;
+using System.Threading;
 using Alex.API.Graphics;
 using Alex.API.Network;
-using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks.Minecraft;
@@ -83,6 +84,10 @@ namespace Alex.GameStates.Playing
 			base.OnHide();
 		}
 
+		private long _ramUsage = 0;
+		private long _threadsUsed, _maxThreads, _complPortUsed, _maxComplPorts;
+		private Biome _currentBiome = BiomeUtils.GetBiomeById(0);
+		private int _currentBiomeId = 0;
 		private void InitDebugInfo()
 		{
 			_debugInfo.AddDebugLeft(() =>
@@ -90,7 +95,7 @@ namespace Alex.GameStates.Playing
 				//FpsCounter.Update();
 				//World.ChunkManager.GetPendingLightingUpdates(out int lowLight, out int midLight, out int highLight);
 
-				return $"Alex {Alex.Version} ({FpsCounter.Value:##} FPS, Queued: {World.EnqueuedChunkUpdates} Active: {World.ConcurrentChunkUpdates} chunk updates"/*, H: {highLight} M: {midLight} L: {lowLight} lighting updates)"*/;
+				return $"Alex {Alex.Version} ({FpsCounter.Value:##} FPS, Chunk Updates: {World.EnqueuedChunkUpdates} queued, {World.ConcurrentChunkUpdates} active"/*, H: {highLight} M: {midLight} L: {lowLight} lighting updates)"*/;
 			});
 			_debugInfo.AddDebugLeft(() =>
 			{
@@ -114,14 +119,18 @@ namespace Alex.GameStates.Playing
 			_debugInfo.AddDebugLeft(() => $"Entities: {World.EntityManager.EntityCount}, {World.EntityManager.EntitiesRendered}");
 			_debugInfo.AddDebugLeft(() =>
 			{
-				var pos = World.Player.KnownPosition.GetCoordinates3D();
-				var biomeId = World.GetBiome(pos.X, pos.Y, pos.Z);
-				var biome = BiomeUtils.GetBiomeById(biomeId);
-                return $"Biome: {biome.Name} ({biomeId})";
+				return $"Biome: {_currentBiome.Name} ({_currentBiomeId})";
 			});
 
 			_debugInfo.AddDebugRight(() => Alex.DotnetRuntime);
-			_debugInfo.AddDebugRight(() => MemoryUsageDisplay);
+			//_debugInfo.AddDebugRight(() => MemoryUsageDisplay);
+			_debugInfo.AddDebugRight(() => $"RAM: {GetBytesReadable(_ramUsage, 2)}");
+			_debugInfo.AddDebugRight(() => $"GPU: {GetBytesReadable(GpuResourceManager.GetMemoryUsage, 2)}");
+			_debugInfo.AddDebugRight(() =>
+			{
+				return
+					$"Threads: {(_threadsUsed):00}/{_maxThreads}\nCompl.ports: {_complPortUsed:00}/{_maxComplPorts}";
+			});
 			_debugInfo.AddDebugRight(() => 
 			{
 				if (_raytracedBlock.Y > 0 && _raytracedBlock.Y < 256)
@@ -158,12 +167,21 @@ namespace Alex.GameStates.Playing
 					return string.Empty;
 				}
 			});
+			
+			_debugInfo.AddDebugRight(() =>
+			{
+				var player = World.Player;
+				if (player == null || player.HitEntity == null) return string.Empty;
+
+				var entity = player.HitEntity;
+				return $"Hit entity: {entity.EntityId} / {entity.ToString()}";
+			});
 		}
 
 		private float AspectRatio { get; set; }
 		private string MemoryUsageDisplay { get; set; } = "";
 
-		private TimeSpan _previousMemUpdate = TimeSpan.Zero;
+		private DateTime _previousMemUpdate = DateTime.UtcNow;
 		protected override void OnUpdate(GameTime gameTime)
 		{
 			var args = new UpdateArgs()
@@ -197,15 +215,29 @@ namespace Alex.GameStates.Playing
 				SkyRenderer.Update(args);
 				World.Update(args, SkyRenderer);
 
-				if (RenderDebug)
+				var now = DateTime.UtcNow;
+				if (now - _previousMemUpdate > TimeSpan.FromSeconds(5))
 				{
-					if (gameTime.TotalGameTime - _previousMemUpdate > TimeSpan.FromSeconds(5))
+					_previousMemUpdate = now;
+
+					//Task.Run(() =>
 					{
-						_previousMemUpdate = gameTime.TotalGameTime;
-						//Alex.Process.Refresh();
-						MemoryUsageDisplay = $"Allocated memory: {GetBytesReadable(Environment.WorkingSet)}\n" +
-						                     $"GPU Memory: {GetBytesReadable(GpuResourceManager.GetMemoryUsage)}";
-					}
+						_ramUsage = Environment.WorkingSet;
+
+						ThreadPool.GetMaxThreads(out int maxThreads, out int maxCompletionPorts);
+						ThreadPool.GetAvailableThreads(out int availableThreads, out int availableComplPorts);
+						_threadsUsed = maxThreads - availableThreads;
+						_complPortUsed = maxCompletionPorts - availableComplPorts;
+
+						_maxThreads = maxThreads;
+						_maxComplPorts = maxCompletionPorts;
+						
+						var pos = World.Player.KnownPosition.GetCoordinates3D();
+						var biomeId = World.GetBiome(pos.X, pos.Y, pos.Z);
+						var biome = BiomeUtils.GetBiomeById(biomeId);
+						_currentBiomeId = biomeId;
+						_currentBiome = biome;
+					}//);
 				}
 			}
 			base.OnUpdate(gameTime);
@@ -281,14 +313,19 @@ namespace Alex.GameStates.Playing
 	    private Block SelBlock { get; set; } = new Air();
 		private Microsoft.Xna.Framework.BoundingBox RayTraceBoundingBox { get; set; }
 		private bool RenderDebug { get; set; } = true;
-
+		private bool RenderBoundingBoxes { get; set; } = false;
+		
 		private KeyboardState _oldKeyboardState;
 		protected void CheckInput(GameTime gameTime) //TODO: Move this input out of the main update loop and use the new per-player based implementation by @TruDan
 		{
 			KeyboardState currentKeyboardState = Keyboard.GetState();
 			if (currentKeyboardState != _oldKeyboardState)
 			{
-				if (currentKeyboardState.IsKeyDown(KeyBinds.DebugInfo))
+				if (KeyBinds.EntityBoundingBoxes.All(x => currentKeyboardState.IsKeyDown(x)))
+				{
+					RenderBoundingBoxes = !RenderBoundingBoxes;
+				} 
+				else if (currentKeyboardState.IsKeyDown(KeyBinds.DebugInfo))
 				{
 					RenderDebug = !RenderDebug;
 					if (!RenderDebug)
@@ -316,11 +353,17 @@ namespace Alex.GameStates.Playing
 				{
 					if (World.Camera is FirstPersonCamera)
 					{
-						World.Camera = new ThirdPersonCamera(Options.VideoOptions.RenderDistance, World.Player.KnownPosition, Vector3.Zero);
+						World.Camera = new ThirdPersonCamera(Options.VideoOptions.RenderDistance, World.Camera.Position, Vector3.Zero)
+						{
+							FOV = World.Camera.FOV
+						};
 					}
 					else
 					{
-						World.Camera = new FirstPersonCamera(Options.VideoOptions.RenderDistance, World.Player.KnownPosition, Vector3.Zero);
+						World.Camera = new FirstPersonCamera(Options.VideoOptions.RenderDistance, World.Camera.Position, Vector3.Zero)
+						{
+							FOV = World.Camera.FOV
+						};
 					}
 				}
 
@@ -344,6 +387,21 @@ namespace Alex.GameStates.Playing
 					args.SpriteBatch.RenderBoundingBox(
 						RayTraceBoundingBox,
 						World.Camera.ViewMatrix, World.Camera.ProjectionMatrix, Color.LightGray);
+				}
+
+				if (RenderBoundingBoxes)
+				{
+					var hitEntity = World.Player?.HitEntity;
+
+					var entities = World.Player?.EntitiesInRange;
+					if (entities != null)
+					{
+						foreach (var entity in entities)
+						{
+							args.SpriteBatch.RenderBoundingBox(entity.GetBoundingBox(), World.Camera.ViewMatrix,
+								World.Camera.ProjectionMatrix, entity == hitEntity ? Color.Red : Color.Yellow);
+						}
+					}
 				}
 
 				World.Render2D(args);
@@ -409,7 +467,7 @@ namespace Alex.GameStates.Playing
 			}
 		}
 
-		public static string GetBytesReadable(long i)
+		public static string GetBytesReadable(long i, int decimals = 4)
 		{
 			// Get absolute value
 			long absolute_i = (i < 0 ? -i : i);
@@ -453,7 +511,7 @@ namespace Alex.GameStates.Playing
 			// Divide by 1024 to get fractional value
 			readable = (readable / 1024);
 			// Return formatted number with suffix
-			return readable.ToString("0.### ") + suffix;
+			return readable.ToString($"F{decimals}") + suffix;
 		}
 
 		protected override void OnDraw(IRenderArgs args)

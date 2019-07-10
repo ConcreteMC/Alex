@@ -1,35 +1,89 @@
-﻿<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:views="clr-namespace:Alex.GuiDebugger.Views"
-        xmlns:vm="clr-namespace:Alex.GuiDebugger.ViewModels"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-        x:Class="Alex.GuiDebugger.Views.MainWindow"
-        MinWidth="256"
-        MinHeight="256"
-        Icon="/Assets/Alex.ico"
-        Title="Alex GUI Inspector">
+﻿<idc:MetroWindow
+    x:Class="Alex.GuiDebugger.Views.MainWindow"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
+    xmlns:id="clr-namespace:Dock.Avalonia;assembly=Dock.Avalonia"
+    xmlns:idc="clr-namespace:Dock.Avalonia.Controls;assembly=Dock.Avalonia"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:views="clr-namespace:Alex.GuiDebugger.Views"
+    Title="Alex GUI Debugger"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    id:DragBehavior.IsEnabled="True"
+    id:DropBehavior.IsEnabled="True"
+    BorderBrush="{DynamicResource ThemeBorderLowBrush}"
+    BorderThickness="1"
+    Foreground="{DynamicResource ThemeForegroundBrush}"
+    Icon="/Assets/Alex.ico"
 
-  <Design.DataContext>
-    <vm:MainWindowViewModel/>
-  </Design.DataContext>
-  
-  <DockPanel>
-    <Grid>
-      <Grid.RowDefinitions>
-        <RowDefinition />
-      </Grid.RowDefinitions>
-    
-      <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="*" />
-        <ColumnDefinition Width="Auto" />
-        <ColumnDefinition Width="4*" />
-      </Grid.ColumnDefinitions>
+    RenderOptions.BitmapInterpolationMode="HighQuality"
+    UseLayoutRounding="True"
+    WindowStartupLocation="CenterScreen"
+    WindowState="Normal"
+    mc:Ignorable="d">
+    <idc:MetroWindow.Resources>
+        <id:DockDropHandler x:Key="DockDropHandler0" Id="0" />
+    </idc:MetroWindow.Resources>
 
-      <views:ElementTreeView Grid.Column="0" />
-      <GridSplitter Grid.Column="1" />
+    <Grid Background="Transparent" RowDefinitions="Auto,Auto,*,25">
+        <i:Interaction.Behaviors>
+            <id:DropBehavior Context="{Binding Layout}" Handler="{StaticResource DockDropHandler0}" />
+        </i:Interaction.Behaviors>
+        <Menu Grid.Row="0">
+            <MenuItem Header="_File">
+                <MenuItem x:Name="FileNew" Header="_New" />
+                <Separator />
+                <MenuItem x:Name="FileOpen" Header="_Open..." />
+                <Separator />
+                <MenuItem x:Name="FileSaveAs" Header="Save _As..." />
+                <Separator />
+                <MenuItem x:Name="FileGenerateCode" Header="_Generate Code..." />
+            </MenuItem>
+            <MenuItem Header="_View">
+                <MenuItem Header="_Windows">
+                    <MenuItem
+                        x:Name="ViewWindowsExit"
+                        Command="{Binding Layout.ExitWindows}"
+                        Header="_Exit" />
+                    <Separator />
+                    <MenuItem
+                        x:Name="ViewWindowsShow"
+                        Command="{Binding Layout.ShowWindows}"
+                        Header="_Show" />
+                </MenuItem>
+                <Separator />
+                <MenuItem x:Name="ViewEditor" Header="_Editor..." />
+            </MenuItem>
+            <MenuItem Header="_Options">
+                <MenuItem x:Name="OptionsDragBehaviorIsEnabled" Header="Drag Behaviors Enabled">
+                    <MenuItem.Icon>
+                        <CheckBox
+                            BorderThickness="0"
+                            IsChecked="{Binding $self.(id:DragBehavior.IsEnabled)}"
+                            IsHitTestVisible="False" />
+                    </MenuItem.Icon>
+                </MenuItem>
+                <Separator />
+                <MenuItem x:Name="OptionsDropBehaviorIsEnabled" Header="Drop Behaviors Enabled">
+                    <MenuItem.Icon>
+                        <CheckBox
+                            BorderThickness="0"
+                            IsChecked="{Binding $self.(id:DropBehavior.IsEnabled)}"
+                            IsHitTestVisible="False" />
+                    </MenuItem.Icon>
+                </MenuItem>
+            </MenuItem>
+        </Menu>
+        <idc:NavigationControl DataContext="{Binding Layout}" Margin="4" Grid.Row="1"/>
+        <idc:DockControl
+            Grid.Row="2"
+            Margin="4"
+            DataContext="{Binding Layout}" />
+        <TextBlock
+            Grid.Row="3"
+            Margin="4"
+            Text="{Binding Layout.FocusedView}" />
     </Grid>
-  </DockPanel>
-  
-</Window>
+</idc:MetroWindow>

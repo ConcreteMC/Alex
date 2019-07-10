@@ -1,12 +1,4 @@
-﻿using System;
-using Alex.API.Data.Options;
-using Alex.API.GameStates;
-using Alex.API.Gui;
-using Alex.API.Gui.Elements;
-using Alex.API.Gui.Elements.Controls;
-using Alex.GameStates.Gui.Common;
-using Alex.GameStates.Gui.MainMenu.Options;
-using Alex.Gui.Elements;
+﻿using Alex.GameStates.Gui.MainMenu.Options;
 
 namespace Alex.GameStates.Gui.MainMenu
 {

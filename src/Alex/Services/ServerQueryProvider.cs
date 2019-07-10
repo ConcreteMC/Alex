@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,7 +12,6 @@ using Alex.Networking.Java.Packets.Handshake;
 using Alex.Networking.Java.Packets.Status;
 using Alex.Utils;
 using Alex.Worlds.Bedrock;
-using MiNET.Client;
 using MiNET.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -105,10 +103,12 @@ namespace Alex.Services
 			    {
 					IPEndPoint serverEndpoint = new IPEndPoint(result.Result, (int) port);
 
-					client = new BedrockClient(Alex, serverEndpoint, $"Pinger{serverEndpoint.ToString()}", pool, null)
-				    {
-					    IgnoreUnConnectedPong = true
-				    };
+					client = new BedrockClient(Alex, serverEndpoint,
+						new PlayerProfile(string.Empty, $"Pinger{serverEndpoint.ToString()}",
+							$"Pinger{serverEndpoint.ToString()}", null, null, null, true), pool, null)
+					{
+						IgnoreUnConnectedPong = true
+					};
 
 				    BedrockMotd motd = client.KnownMotd;
 

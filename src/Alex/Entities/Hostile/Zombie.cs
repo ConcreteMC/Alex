@@ -1,4 +1,3 @@
-using Alex.Utils;
 using Alex.Worlds;
 
 namespace Alex.Entities.Hostile

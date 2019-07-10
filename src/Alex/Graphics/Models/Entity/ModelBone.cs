@@ -45,7 +45,7 @@ namespace Alex.Graphics.Models.Entity
 					
 					var yaw = part.ApplyYaw ? MathUtils.ToRadians(180f - position.Yaw) : 0f;
 					
-					var headYaw = part.ApplyHeadYaw ? MathUtils.ToRadians(180f - position.HeadYaw) : 0f;
+					var headYaw = part.ApplyHeadYaw ? MathUtils.ToRadians(-(position.HeadYaw - position.Yaw)) : 0f;
 					var pitch = part.ApplyPitch ? MathUtils.ToRadians(position.Pitch) : 0f;
 
 					var rot = _rotation + part.Rotation;

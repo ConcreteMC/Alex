@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Entities;
 using Alex.API.Graphics;
@@ -152,5 +153,11 @@ namespace Alex.Worlds
 	    {
 		    return Entities.TryGetValue(id, out entity);
 	    }
-    }
+
+
+	    public IEnumerable<IEntity> GetEntities(Vector3 camPos, int radius)
+	    {
+		    return Entities.Values.ToArray().Where(x => Math.Abs(x.KnownPosition.DistanceTo(new PlayerLocation(camPos))) < radius).ToArray();
+	    }
+	}
 }

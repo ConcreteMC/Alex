@@ -1,19 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Net;
-using System.Reflection;
-using System.Security.Policy;
-using System.Text;
-using System.Xml;
 using Alex.API.Json;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using NLog;
-using NLog.Internal;
 
 namespace Alex.API.Utils
 {

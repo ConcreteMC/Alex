@@ -20,7 +20,11 @@ namespace Alex
 
 	    public static Keys Menu = Keys.Escape;
 	    public static Keys DebugInfo = Keys.F3;
-
+		public static Keys[] EntityBoundingBoxes = new Keys[]
+		{
+			DebugInfo, Keys.B
+		};
+		
         public static Keys Chat = Keys.T;
 
 	    public static Keys ChangeCamera = Keys.F5;

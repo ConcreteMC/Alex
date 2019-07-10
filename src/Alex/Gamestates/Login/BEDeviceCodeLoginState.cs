@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using Alex.API.Graphics;
 using Alex.API.Graphics.Typography;
-using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Graphics;
@@ -14,11 +11,11 @@ using Alex.API.Utils;
 using Alex.GameStates.Gui.Common;
 using Alex.Gui;
 using Alex.Services;
-using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using Newtonsoft.Json;
 using NLog;
+using RocketUI;
 
 namespace Alex.Gamestates.Login
 {
@@ -153,7 +150,7 @@ namespace Alex.Gamestates.Login
 							       Slim = true,
 							       Texture = null
 						       }, result.token.AccessToken,
-						        result.token.RefreshToken,
+						        JsonConvert.SerializeObject(result.token),
 						        true);
 
 					        Alex.ProfileManager.CreateOrUpdateProfile(ProfileManager.ProfileType.Bedrock,profile, true);

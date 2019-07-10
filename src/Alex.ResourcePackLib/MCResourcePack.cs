@@ -1,29 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Alex.API;
 using Alex.API.Graphics;
 using Alex.API.Graphics.Typography;
 using Alex.API.Utils;
-using Alex.API.World;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.BlockStates;
-using Alex.ResourcePackLib.Json.Models;
 using Alex.ResourcePackLib.Json.Models.Blocks;
 using Alex.ResourcePackLib.Json.Models.Items;
-using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Newtonsoft.Json;
 using NLog;
 using Color = Microsoft.Xna.Framework.Color;
 using MathHelper = Microsoft.Xna.Framework.MathHelper;
-using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace Alex.ResourcePackLib
 {

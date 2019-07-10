@@ -21,7 +21,7 @@
 			</Grid.ColumnDefinitions>
 		</Grid>
 
-		<TreeView ItemsSource="{Binding Properties}">
+		<TreeView ItemsSource="{Binding Properties, Mode=OneWay}">
 			<TreeView.Resources>
 				<ResourceDictionary>
 					<DataTemplate DataType="{x:Type models:GuiDebuggerElementPropertyInfo}">
@@ -37,7 +37,7 @@
 
 							<ContentPresenter
 								Grid.Column="3"
-								Content="{Binding Value}"
+								Content="{Binding Path=Value}"
 								Style="{DynamicResource GuiElementPropertyEditor}" />
 
 							<!--<TextBox Grid.Column="3" Text="{Binding StringValue}" />-->

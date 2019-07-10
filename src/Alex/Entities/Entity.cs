@@ -204,7 +204,7 @@ namespace Alex.Entities
 				//dragon.renderYawOffset = dragon.rotationYaw;
 				float newRotationYawHead = MathUtils.ConstrainAngle(KnownPosition.Yaw, KnownPosition.HeadYaw,
 					maximumHeadBodyAngleDifference);
-				KnownPosition.Yaw = newRotationYawHead;
+				KnownPosition.HeadYaw = newRotationYawHead;
 				lastRotationYawHead = newRotationYawHead;
 				turnTicks = 0;
 			}

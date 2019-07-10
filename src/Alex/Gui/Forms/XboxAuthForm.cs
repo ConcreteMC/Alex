@@ -2,14 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
-using System.Threading;
+using System.Net.Http;
 using Alex.Services;
 using Eto.Forms;
 using Newtonsoft.Json;
 
 namespace Alex.Gui.Forms
 {
-    public class XboxAuthForm : Form
+    public class XboxAuthForm //: Form
     {
         public WebView MainWebView { get; }
         
@@ -35,7 +35,7 @@ namespace Alex.Gui.Forms
 
         private string CodeQueryString = "?client_id={0}&redirect_uri={1}&response_type={3}&display=touch&scope={2}&locale=en";
         private string AccessBody = "client_id={0}&code={1}&grant_type=authorization_code&redirect_uri={2}";
-        private string RefreshBody = "client_id={0}&grant_type=refresh_token&redirect_uri={1}&refresh_token={2}";
+        private string RefreshBody = "?client_id={0}&grant_type=refresh_token&refresh_token={1}&scope={2}";
 
         private string _clientId = null;
         private string _uri = null;
@@ -45,33 +45,41 @@ namespace Alex.Gui.Forms
         public int Expiration { get { return this._expiration; } }
         public string Error { get { return this._error; } }
         public string AuthCode => _authorizationCode;
-        
+
+        public string ClientId
+        {
+            get { return _clientId; }
+            set { _clientId = value; }
+        }
+
         private XBLMSAService Service { get; }
         public bool UseTokenRequest { get; set; } = true;
         public XboxAuthForm(XBLMSAService service, bool useTokenRequest)
         {
             UseTokenRequest = useTokenRequest;
             Service = service;
-            this.ClientSize = new Eto.Drawing.Size(600, 400);
-
-            this.Title = "Sign-in to Xbox Live";
+            _clientId = "00000000441cc96b";
             
-            MainWebView = new WebView();
+          //  this.ClientSize = new Eto.Drawing.Size(600, 400);
+
+          //  this.Title = "Sign-in to Xbox Live";
+            
+            /*MainWebView = new WebView();
 
             MainWebView.Navigated += MainWebViewOnNavigated;
-            this.Content = MainWebView;
+         //   this.Content = MainWebView;
 
-            _clientId = "00000000441cc96b";
+            
           // _clientId = "0000000048093EE3";
             MainWebView.Url = new Uri(string.Format(this.AuthorizationUri + this.CodeQueryString, this._clientId, RedirectUri, WebUtility.UrlEncode("service::user.auth.xboxlive.com::MBI_SSL"), UseTokenRequest ? "token" : "code"));
-            MainWebView.DocumentLoaded += MainWebViewOnDocumentLoaded;
+            MainWebView.DocumentLoaded += MainWebViewOnDocumentLoaded;*/
         }
 
-        protected override void OnShown(EventArgs e)
-        {
-            base.OnShown(e);
+       // protected override void OnShown(EventArgs e)
+       // {
+       //     base.OnShown(e);
            
-        }
+       // }
 
         private void MainWebViewOnDocumentLoaded(object sender, WebViewLoadedEventArgs e)
         {
@@ -95,7 +103,7 @@ namespace Alex.Gui.Forms
                 if (UseTokenRequest)
                 {
                     HandleTokenResponse(e.Uri);
-                    this.Close();
+                //    this.Close();
                     return;
                 }
                 
@@ -126,14 +134,14 @@ namespace Alex.Gui.Forms
                     this._error = WebUtility.UrlDecode(parameters["error_description"]);
                 }
                 
-                this.Close();
+             //   this.Close();
             }
             else if (e.Uri.AbsolutePath.Equals(ErrorPath))
             {
                 if (parameters.ContainsKey("error_description"))
                 {
                     this._error = WebUtility.UrlDecode(parameters["error_description"]);
-                    this.Close(); ;
+               //     this.Close(); ;
                 }
             }
         }
@@ -177,8 +185,16 @@ namespace Alex.Gui.Forms
 
             try
             {
-                var refreshTokenRequestBody = string.Format(this.RefreshBody, this._clientId, WebUtility.UrlEncode(RedirectUri), refreshToken);
-                AccessTokens tokens = GetTokens(this.RefreshUri, refreshTokenRequestBody);
+               // var refreshTokenRequestBody = string.Format(this.RefreshBody, this._clientId,  WebUtility.UrlEncode(refreshToken), WebUtility.UrlEncode("service::user.auth.xboxlive.com::MBI_SSL"));
+               // Console.WriteLine($"{refreshTokenRequestBody}");
+                AccessTokens tokens = GetTokensUsingGET($"{this.RefreshUri}", new Dictionary<string, string> { 
+                    { "client_id", _clientId  }, 
+                   // { "client_secret", ClientSecret },
+                    { "grant_type", "refresh_token" },
+                    { "scope", "service::user.auth.xboxlive.com::MBI_SSL" },
+                    { "redirect_uri", RedirectUri },
+                    { "refresh_token", refreshToken }
+                });
                 this._accessToken = tokens.AccessToken;
                 this._refreshToken = tokens.RefreshToken;
                 this._expiration = tokens.Expiration;
@@ -190,9 +206,9 @@ namespace Alex.Gui.Forms
                     RefreshToken = tokens.RefreshToken
                 };
             }
-            catch (WebException)
+            catch (WebException ex)
             {
-                this._error = "RefreshAccessToken failed likely due to an invalid client ID or refresh token";
+                this._error = "RefreshAccessToken failed likely due to an invalid client ID or refresh token\n" + ex.ToString();
             }
 
             return null;
@@ -243,6 +259,32 @@ namespace Alex.Gui.Forms
             }
 
             return tokens;
+        }
+        
+        private static AccessTokens GetTokensUsingGET(string uri, Dictionary<string, string> parameters)
+        {
+            AccessTokens tokens = null;
+
+            using (var client = GetHttpClient())
+            {
+                var encodedContent = new FormUrlEncodedContent (parameters);
+                var response = client.PostAsync(uri, encodedContent).Result;
+
+                var res = response.Content.ReadAsStringAsync().Result;
+                
+              //  Console.WriteLine($"GET RESULT: {res}");
+                tokens = JsonConvert.DeserializeObject<AccessTokens>(res);
+            }
+
+            return tokens;
+        }
+        
+        private static HttpClient GetHttpClient()
+        {
+            HttpClient client = new HttpClient();
+            client.DefaultRequestHeaders.Add("Cache-Control", "no-cache");
+
+            return client;
         }
 
     }

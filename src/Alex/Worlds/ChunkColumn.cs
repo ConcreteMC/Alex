@@ -91,7 +91,7 @@ namespace Alex.Worlds
 
 			var section = Sections[y >> 4];
 			if (section == null) return;
-			section.SetScheduled(x, y - 16 * (y >> 4), z, true);
+			section.SetScheduled(x, y - ((y >> 4) << 4), z, true);
 		// _scheduledUpdates[y << 8 | z << 4 | x] = true;
 		//_scheduledUpdates.Add(y << 8 | z << 4 | x);
 		}
@@ -114,7 +114,7 @@ namespace Alex.Worlds
 			if ((x < 0 || x > ChunkWidth) || (y < 0 || y > ChunkHeight) || (z < 0 || z > ChunkDepth))
 				return;
 
-			GetSection(y).Set(x, y - 16 * (y >> 4), z, blockState);
+			GetSection(y).Set(x, y - ((y >> 4) << 4), z, blockState);
 			SetDirty();
 
 			RecalculateHeight(x, z);
@@ -150,7 +150,7 @@ namespace Alex.Worlds
 			var chunk = Sections[by >> 4];
 			if (chunk == null) return Air;
 
-			by = by - 16 * (by >> 4);
+			by = by - ((@by >> 4) << 4);
 			
 			return chunk.Get(bx, by, bz);
 		}
@@ -169,7 +169,7 @@ namespace Alex.Worlds
 			if ((bx < 0 || bx > ChunkWidth) || (by < 0 || by > ChunkHeight) || (bz < 0 || bz > ChunkDepth))
 				return;
 
-			GetSection(by).Set(bx, by - 16 * (by >> 4), bz, block.BlockState);
+			GetSection(by).Set(bx, by - ((@by >> 4) << 4), bz, block.BlockState);
 			SetDirty();
 
 			RecalculateHeight(bx, bz);
@@ -220,7 +220,7 @@ namespace Alex.Worlds
 			var section = Sections[by >> 4];
 			if (section == null) return 0;
 
-			return (byte) section.GetExtBlocklightValue(bx, @by - 16 * (@by >> 4), bz);
+			return (byte) section.GetExtBlocklightValue(bx, @by - ((@by >> 4) << 4), bz);
 		}
 
 		public void SetBlocklight(int bx, int by, int bz, byte data)
@@ -228,7 +228,7 @@ namespace Alex.Worlds
 			if ((bx < 0 || bx > ChunkWidth) || (by < 0 || by > ChunkHeight) || (bz < 0 || bz > ChunkDepth))
 				return;
 
-			GetSection(by).SetExtBlocklightValue(bx, @by - 16 * (@by >> 4), bz, data);
+			GetSection(by).SetExtBlocklightValue(bx, @by - ((@by >> 4) << 4), bz, data);
 			
 			//_scheduledLightingUpdates[by << 8 | bz << 4 | bx] = true;
 			var section = (ChunkSection)Sections[by >> 4];
@@ -244,7 +244,7 @@ namespace Alex.Worlds
 			var section = Sections[by >> 4];
 			if (section == null) return 16;
 
-            return section.GetExtSkylightValue(bx, @by - 16 * (@by >> 4), bz);
+            return section.GetExtSkylightValue(bx, by - ((@by >> 4) << 4), bz);
 		}
 
 		public void SetSkyLight(int bx, int by, int bz, byte data)
@@ -252,7 +252,7 @@ namespace Alex.Worlds
 			if ((bx < 0 || bx > ChunkWidth) || (by < 0 || by > ChunkHeight) || (bz < 0 || bz > ChunkDepth))
 				return;
 
-			GetSection(by).SetExtSkylightValue(bx, @by - 16 * (@by >> 4), bz, data);
+			GetSection(by).SetExtSkylightValue(bx, by - ((@by >> 4) << 4), bz, data);
 			SkyLightDirty = true;
 
             //	_scheduledLightingUpdates[by << 8 | bz << 4 | bx] = true;
@@ -523,7 +523,7 @@ namespace Alex.Worlds
 			if (section == null) return true;
 
 
-            return section.IsTransparent(bx, @by - 16 * (@by >> 4), bz);
+            return section.IsTransparent(bx, @by - ((@by >> 4) << 4), bz);
         }
 
 		public bool IsSolid(int bx, int by, int bz)
@@ -534,10 +534,21 @@ namespace Alex.Worlds
 			var section = Sections[@by >> 4];
 			if (section == null) return true;
 
-            return section.IsSolid(bx, @by - 16 * (@by >> 4), bz);
+            return section.IsSolid(bx, @by - ((@by >> 4) << 4), bz);
 		}
 
-		public void GetBlockData(int bx, int by, int bz, out bool transparent, out bool solid)
+	    public bool IsScheduled(int bx, int @by, int bz)
+	    {
+	        if ((bx < 0 || bx > ChunkWidth) || (by < 0 || by > ChunkHeight) || (bz < 0 || bz > ChunkDepth))
+	            return false;
+
+	        var section = Sections[@by >> 4];
+	        if (section == null) return false;
+
+	        return section.IsScheduled(bx, @by - ((@by >> 4) << 4), bz);
+        }
+
+	    public void GetBlockData(int bx, int by, int bz, out bool transparent, out bool solid)
 		{
 			transparent = false;
 			solid = false;
@@ -547,7 +558,7 @@ namespace Alex.Worlds
 			var section = Sections[@by >> 4];
 			if (section == null) return;
 
-            section.GetBlockData(bx, @by - 16 * (@by >> 4), bz, out transparent, out solid);
+            section.GetBlockData(bx, @by - ((@by >> 4) << 4), bz, out transparent, out solid);
         }
 
         public void Dispose()

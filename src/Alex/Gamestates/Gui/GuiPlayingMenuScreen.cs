@@ -1,6 +1,5 @@
 ﻿using Alex.API.Gui;
 using Alex.API.Gui.Graphics;
-using Microsoft.Xna.Framework;
 
 namespace Alex.GameStates.Gui
 {

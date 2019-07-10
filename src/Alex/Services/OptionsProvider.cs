@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Alex.API.Data.Options;
+﻿using Alex.API.Data.Options;
 using Alex.API.Services;
-using GLib;
-using Newtonsoft.Json;
 using NLog;
 
 namespace Alex.Services

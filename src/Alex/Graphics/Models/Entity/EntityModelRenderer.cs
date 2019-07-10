@@ -52,6 +52,15 @@ namespace Alex.Graphics.Models.Entity
 						headBones.Add(bone);
 					}
 				}
+
+				foreach (var bone in Model.Bones.Where(x =>
+					!headBones.Any(hb => hb.Name.Equals(x.Name, StringComparison.InvariantCultureIgnoreCase))))
+				{
+					if (headBones.Any(x => x.Name.Equals(bone.Name, StringComparison.InvariantCultureIgnoreCase)))
+					{
+						headBones.Add(bone);
+					}
+				}
 			}
 			
 			List<VertexPositionNormalTexture> vertices = new List<VertexPositionNormalTexture>();

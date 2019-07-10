@@ -148,6 +148,7 @@ namespace Alex.Graphics.Models.Blocks
 				return false;
 			
 			world.GetBlockData(pos.X, pos.Y, pos.Z, out bool blockTransparent, out bool blockSolid);
+
 			if (me.Solid && me.Transparent)
 			{
 				//	if (IsFullCube && Name.Equals(block.Name)) return false;
@@ -165,8 +166,9 @@ namespace Alex.Graphics.Models.Blocks
 			if (me.Transparent) return true;
 			if (!me.Transparent && blockTransparent) return true;
 			if (blockSolid && !blockTransparent) return false;
-
-            return true;
+			if (me.Solid && blockSolid) return false;
+			
+			return true;
 		}
 
 		protected Vector3 Min = Vector3.Zero;
@@ -485,7 +487,7 @@ namespace Alex.Graphics.Models.Blocks
 						
 
 
-						if (originalCullFace != BlockFace.None && !ShouldRenderFace(world, cullFace, position, baseBlock))
+						if (originalCullFace != BlockFace.None && !ShouldRenderFace(world, facing, position, baseBlock))
 							continue;
 
 

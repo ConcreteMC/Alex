@@ -8,7 +8,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Data.Servers;
 using Alex.API.Graphics;
-using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Elements.Icons;
@@ -25,11 +24,15 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET.Net;
 using MiNET.Utils;
+using NLog;
+using RocketUI;
 
 namespace Alex.GameStates.Gui.Multiplayer
 {
     public class MultiplayerServerSelectionState : ListSelectionStateBase<GuiServerListEntryElement>
     {
+	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(MultiplayerServerSelectionState));
+	    
 	    private GuiButton DirectConnectButton;
 	    private GuiButton JoinServerButton;
 	    private GuiButton AddServerButton;
@@ -147,7 +150,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 	    }
 
 		private FastRandom Rnd = new FastRandom();
-	    private void OnJoinServerButtonPressed()
+	    private async void OnJoinServerButtonPressed()
 	    {
 			var entry = SelectedItem.SavedServerEntry;
 		    var ips = Dns.GetHostAddresses(entry.Host).ToArray();
@@ -174,15 +177,34 @@ namespace Alex.GameStates.Gui.Multiplayer
 				    Alex.ConnectToServer(target, currentProfile, false);
 			    }
 		    }
-
-		    else if (entry.ServerType == ServerType.Bedrock)
+			else if (entry.ServerType == ServerType.Bedrock)
 			{
+				if (currentProfile == null || (!currentProfile.IsBedrock))
+				{
+					foreach (var profile in authenticationService.GetBedrockProfiles())
+					{
+						profile.IsBedrock = true;
+						Log.Debug($"BEDROCK PROFILE: {profile.Username}");
+						
+						var task = await authenticationService.TryAuthenticateAsync(profile);
+
+						if (task)
+						{
+							currentProfile = profile;
+							break;
+						}
+						else
+						{
+							Log.Warn($"Profile auth failed.");
+						}
+					}
+				}
+
 				if (currentProfile == null || (!currentProfile.IsBedrock))
 				{
 					BEDeviceCodeLoginState loginState = new BEDeviceCodeLoginState(_skyBox,
 						(profile) => { Alex.ConnectToServer(target, profile, true); });
-
-
+					
 					Alex.GameStateManager.SetActiveState(loginState, true);
 				}
 				else

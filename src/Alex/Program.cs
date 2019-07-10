@@ -1,15 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Net;
-using System.Runtime.InteropServices;
-using System.Threading;
-using Alex.Gui.Forms;
-using Alex.Services;
 using Eto.Forms;
 using log4net;
-using Newtonsoft.Json;
 using NLog;
-using WinApi.Windows;
 using LogManager = NLog.LogManager;
 
 namespace Alex

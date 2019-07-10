@@ -1,13 +1,47 @@
-<Application xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:Alex.GuiDebugger"
-             x:Class="Alex.GuiDebugger.App">
+<Application
+    x:Class="Alex.GuiDebugger.App"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Documents="clr-namespace:Alex.GuiDebugger.ViewModels.Documents;assembly=Alex.GuiDebugger"
+    xmlns:Tools="clr-namespace:Alex.GuiDebugger.ViewModels.Tools;assembly=Alex.GuiDebugger"
+    xmlns:Views="clr-namespace:Alex.GuiDebugger.ViewModels;assembly=Alex.GuiDebugger"
+    xmlns:editor="clr-namespace:Dock.Avalonia.Editor.Controls;assembly=Dock.Avalonia.Editor"
+    xmlns:idc="clr-namespace:Dock.Avalonia.Controls;assembly=Dock.Avalonia"
+    xmlns:local="clr-namespace:Alex.GuiDebugger"
+    xmlns:documents="clr-namespace:Alex.GuiDebugger.Views.Documents"
+    xmlns:tools="clr-namespace:Alex.GuiDebugger.Views.Tools;assembly=Alex.GuiDebugger"
+    xmlns:views="clr-namespace:Alex.GuiDebugger.Views;assembly=Alex.GuiDebugger">
     <Application.DataTemplates>
-        <local:ViewLocator/>
+        <DataTemplate DataType="Documents:ElementTreeDocument">
+            <documents:ElementTreeDocument />
+        </DataTemplate>
+        <DataTemplate DataType="Tools:ElementTreeTool">
+            <tools:ElementTreeTool />
+        </DataTemplate>
+        <DataTemplate DataType="Tools:EditorTool">
+            <editor:LayoutEditorControl DataContext="{Binding Context}" />
+        </DataTemplate>
+        <DataTemplate DataType="Views:MainView">
+            <Grid>
+                <ContentControl Content="{Binding CurrentView}" />
+            </Grid>
+        </DataTemplate>
     </Application.DataTemplates>
 
+    <Application.Resources>
+        <SolidColorBrush x:Key="ApplicationAccentBrushLow">#33FF503F</SolidColorBrush>
+        <SolidColorBrush x:Key="ApplicationAccentBrushMed">#CCFF503F</SolidColorBrush>
+        <SolidColorBrush x:Key="ApplicationAccentBrushHigh">#66FF503F</SolidColorBrush>
+        <SolidColorBrush x:Key="ApplicationAccentForegroundBrush">#FFDEDEDE</SolidColorBrush>
+    </Application.Resources>
+
     <Application.Styles>
-        <StyleInclude Source="avares://Avalonia.Themes.Default/DefaultTheme.xaml"/>
-        <StyleInclude Source="avares://Avalonia.Themes.Default/Accents/BaseDark.xaml"/>
+        <StyleInclude Source="avares://Avalonia.Themes.Default/DefaultTheme.xaml" />
+        <StyleInclude Source="avares://Alex.GuiDebugger/Alex.BaseDark.xaml" />
+        <StyleInclude Source="avares://Dock.Avalonia/Controls/DockPanelSplitter.xaml" />
+        <StyleInclude Source="avares://Dock.Avalonia/Controls/ProportionalStackPanelSplitter.xaml" />
+        <StyleInclude Source="avares://Dock.Avalonia/Controls/DockTarget.xaml" />
+        <StyleInclude Source="avares://Dock.Avalonia/Controls/DockToolChrome.xaml" />
+        <StyleInclude Source="avares://Dock.Avalonia/Controls/MetroWindow.xaml" />
     </Application.Styles>
 </Application>

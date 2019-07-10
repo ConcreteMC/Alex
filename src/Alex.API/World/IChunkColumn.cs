@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Threading.Tasks;
 using Alex.API.Blocks.State;
-using Alex.API.Graphics;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.API.World
@@ -38,8 +36,9 @@ namespace Alex.API.World
 		//void SetBlockState(int x, int y, int z, IBlockState blockState);
 		bool IsTransparent(int x, int y, int z);
 		bool IsSolid(int bx, int by, int bz);
+	    bool IsScheduled(int bx, int by, int bz);
 
-		void GetBlockData(int bx, int by, int bz, out bool transparent, out bool solid);
+        void GetBlockData(int bx, int by, int bz, out bool transparent, out bool solid);
 		void ScheduleBlockUpdate(int x, int y, int z);
 		void DrawOpaque(GraphicsDevice device, BasicEffect effect, out int drawnIndices, out int indexSize);
 		void DrawTransparent(GraphicsDevice device, AlphaTestEffect effect, out int drawnIndices, out int indexSize);

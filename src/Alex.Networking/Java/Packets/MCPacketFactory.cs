@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using Alex.Networking.Java.Packets.Handshake;
 using Alex.Networking.Java.Packets.Login;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Networking.Java.Packets.Status;
 using Alex.Networking.Java.Util;
-using Alex.Networking.Properties;
-using Newtonsoft.Json;
 using NLog;
 
 namespace Alex.Networking.Java.Packets
