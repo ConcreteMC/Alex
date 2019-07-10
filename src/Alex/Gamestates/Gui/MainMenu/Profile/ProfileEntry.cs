@@ -29,14 +29,6 @@ namespace Alex.Gamestates.Gui.MainMenu.Profile
                 Anchor = Alignment.TopCenter,
                 Enabled = false
             });
-            
-            AddChild(new GuiTextElement()
-            {
-                Text = profile.IsBedrock ? "Bedrock" : "Java",
-                Margin = Thickness.Zero,
-                Anchor = Alignment.BottomCenter,
-                Enabled = false
-            });
 
             Margin = new Thickness(0, 8);
             Anchor = Alignment.FillY;
@@ -57,6 +49,16 @@ namespace Alex.Gamestates.Gui.MainMenu.Profile
             };
             
             AddChild(ModelView);
+
+            AddChild(new GuiTextElement()
+            {
+                Text = profile.IsBedrock ? "Bedrock" : "Java",
+                Margin = Thickness.Zero,
+                Anchor = Alignment.BottomCenter,
+                Enabled = false,
+                BackgroundOverlay = new Color(Color.Black, 0.5f),
+                Background = null
+            });
         }
         
         private readonly float _playerViewDepth = -512.0f;
@@ -76,7 +78,7 @@ namespace Alex.Gamestates.Gui.MainMenu.Profile
             var pitch = (float)mouseDelta.GetPitch();
             var yaw = (float)headYaw;
 
-            ModelView.SetEntityRotation(-yaw, -pitch, -headYaw);
+            ModelView.SetEntityRotation(-yaw, pitch, -headYaw);
         }
     }
 }

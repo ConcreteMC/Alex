@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using Microsoft.Xna.Framework.Graphics;
 using NLog;
@@ -40,7 +41,23 @@ namespace Alex.API.Graphics
             Buffers = new Dictionary<long, PooledVertexBuffer>();
             IndexBuffers = new Dictionary<long, PooledIndexBuffer>();
         }
-        
+
+        public IEnumerable<IGpuResource> GetResources()
+        {
+            var textures = Textures.Values.ToArray();
+            var buffers = Buffers.Values.ToArray();
+            var indexBuffers = IndexBuffers.Values.ToArray();
+
+            foreach (var texture in textures)
+                yield return texture;
+
+            foreach (var buffer in buffers)
+                yield return buffer;
+
+            foreach (var indexBuffer in indexBuffers)
+                yield return indexBuffer;
+        }
+
         public PooledVertexBuffer CreateBuffer(object caller, GraphicsDevice device, VertexDeclaration vertexDeclaration,
             int vertexCount, BufferUsage bufferUsage)
         {

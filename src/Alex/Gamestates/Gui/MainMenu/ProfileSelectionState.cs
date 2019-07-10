@@ -1,3 +1,4 @@
+using System;
 using System.Drawing;
 using System.Linq;
 using Alex.API.Graphics;
@@ -63,11 +64,18 @@ namespace Alex.Gamestates.Gui.MainMenu
                     Texture = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, rawTexture)
                 };
             }
-            
+
+            var activeProfile = ProfileService.CurrentProfile;
             foreach (var profile in ProfileService.GetJavaProfiles().Concat(ProfileService.GetBedrockProfiles()))
             {
                 ProfileEntry entry = new ProfileEntry(profile, _defaultSkin);
                 AddItem(entry);
+
+                if (activeProfile != null &&
+                    profile.Uuid.Equals(activeProfile.Uuid, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    Focus(entry);
+                }
             }
         }
 

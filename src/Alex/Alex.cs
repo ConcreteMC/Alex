@@ -24,6 +24,7 @@ using Eto.Forms;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
+using StackExchange.Profiling;
 using GuiDebugHelper = Alex.Gui.GuiDebugHelper;
 using TextInputEventArgs = Microsoft.Xna.Framework.TextInputEventArgs;
 
@@ -197,8 +198,11 @@ namespace Alex
 			
 			Services.AddService<IServerQueryProvider>(new ServerQueryProvider(this));
 			Services.AddService<IPlayerProfileService>(new PlayerProfileService(msa, ProfileManager));
-			
-			Storage = storage;
+
+            var profilingService = new ProfilerService();
+            Services.AddService<ProfilerService>(profilingService);
+
+            Storage = storage;
 		}
 
 		protected override void UnloadContent()

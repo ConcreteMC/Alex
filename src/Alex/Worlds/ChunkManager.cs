@@ -15,6 +15,7 @@ using Alex.Worlds.Lighting;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using NLog;
+using StackExchange.Profiling;
 using UniversalThreadManagement;
 
 //using OpenTK.Graphics;
@@ -212,36 +213,38 @@ namespace Alex.Worlds
       //  private SmartThreadPool TaskSchedular = new SmartThreadPool();
 
 		private ReprioritizableTaskScheduler _priorityTaskScheduler = new ReprioritizableTaskScheduler();
+
         private void Schedule(ChunkCoordinates coords, WorkItemPriority priority)
         {
-	        CancellationTokenSource taskCancelationToken = CancellationTokenSource.CreateLinkedTokenSource(CancelationToken.Token);
-	        
-	        Interlocked.Increment(ref _threadsRunning);
-			
-	        //_tasksQueue.
-	        if (_workItems.TryAdd(coords, taskCancelationToken))
-	        {
-		        Enqueued.Remove(coords);
-	        }
-	        
-	        var task = Task.Factory.StartNew(() =>
-	        {
-		        if (Chunks.TryGetValue(coords, out var val))
-		        {
-			        UpdateChunk(coords, val);
-		        }
+            CancellationTokenSource taskCancelationToken =
+                CancellationTokenSource.CreateLinkedTokenSource(CancelationToken.Token);
 
-		        Interlocked.Decrement(ref _threadsRunning);
-		        _workItems.TryRemove(coords, out _);
-		        
-	        }, taskCancelationToken.Token, TaskCreationOptions.None, _priorityTaskScheduler);
+            Interlocked.Increment(ref _threadsRunning);
 
-	        if (priority == WorkItemPriority.Highest)
-	        {
-		         _priorityTaskScheduler.Prioritize(task);
-	        }
+            //_tasksQueue.
+            if (_workItems.TryAdd(coords, taskCancelationToken))
+            {
+                Enqueued.Remove(coords);
+            }
+
+            var task = Task.Factory.StartNew(() =>
+            {
+                if (Chunks.TryGetValue(coords, out var val))
+                {
+                    UpdateChunk(coords, val);
+                }
+
+                Interlocked.Decrement(ref _threadsRunning);
+                _workItems.TryRemove(coords, out _);
+
+            }, taskCancelationToken.Token, TaskCreationOptions.None, _priorityTaskScheduler);
+
+            if (priority == WorkItemPriority.Highest)
+            {
+                _priorityTaskScheduler.Prioritize(task);
+            }
         }
-        
+
         private void ChunkUpdateThread()
 		{
 			 //Environment.ProcessorCount / 2;
@@ -736,6 +739,8 @@ namespace Alex.Worlds
 
         internal bool UpdateChunk(ChunkCoordinates coordinates, IChunkColumn c)
         {
+            var profiler = MiniProfiler.StartNew("Chunk update");
+            
             var chunk = c as ChunkColumn;
             if (!Monitor.TryEnter(chunk.UpdateLock))
             {
@@ -754,40 +759,49 @@ namespace Alex.Worlds
                 if (currentChunkY < 0) currentChunkY = 0;
 
                 List<ChunkMesh> meshes = new List<ChunkMesh>();
-                for (var i = chunk.Sections.Length - 1; i >= 0; i--)
+                using (var step = profiler.Step("Section Updates"))
                 {
-	                if (i < 0) break;
-                    var section = chunk.Sections[i] as ChunkSection;
-                    if (section == null || section.IsEmpty())
+                    for (var i = chunk.Sections.Length - 1; i >= 0; i--)
                     {
-                        continue;
-                    }
+                        if (i < 0) break;
+                        var section = chunk.Sections[i] as ChunkSection;
+                        if (section == null || section.IsEmpty())
+                        {
+                            continue;
+                        }
 
-                    if (i != currentChunkY && i != 0)
-                    {
-	                    if (i > 0 && i < chunk.Sections.Length - 1)
-	                    {
-		                    var neighbors = chunk.CheckNeighbors(section, i, World).ToArray();
+                        if (i != currentChunkY && i != 0)
+                        {
+                            using (var neighBorProfiler = profiler.Step("Neighbor checks"))
+                            {
+                                if (i > 0 && i < chunk.Sections.Length - 1)
+                                {
+                                    var neighbors = chunk.CheckNeighbors(section, i, World).ToArray();
 
-		                    if (!section.HasAirPockets && neighbors.Length == 6) //All surrounded by solid.
-		                    {
-			                    // Log.Info($"Found section with solid neigbors, skipping.");
-			                    continue;
-		                    }
+                                    if (!section.HasAirPockets && neighbors.Length == 6) //All surrounded by solid.
+                                    {
+                                        // Log.Info($"Found section with solid neigbors, skipping.");
+                                        continue;
+                                    }
 
-		                    if (i < currentChunkY && neighbors.Length >= 6) continue;
-	                    }
-	                    else if (i < currentChunkY) continue;
-                    }
+                                    if (i < currentChunkY && neighbors.Length >= 6) continue;
+                                }
+                                else if (i < currentChunkY) continue;
+                            }
+                        }
 
-                    if (i == 0) force = true;
+                        if (i == 0) force = true;
 
-                    if (force || section.ScheduledUpdates.Any(x => x == true) || section.IsDirty)
-                    {
-                        var sectionMesh = GenerateSectionMesh(World, chunk.Scheduled,
-                            new Vector3(chunk.X * 16f, 0, chunk.Z * 16f), ref section, i, out _);
+                        if (force || section.ScheduledUpdates.Any(x => x == true) || section.IsDirty)
+                        {
+                            using (var meshProfiler = profiler.Step("Mesh Generation"))
+                            {
+                                var sectionMesh = GenerateSectionMesh(World, chunk.Scheduled,
+                                    new Vector3(chunk.X * 16f, 0, chunk.Z * 16f), ref section, i, out _);
 
-                        meshes.Add(sectionMesh);
+                                meshes.Add(sectionMesh);
+                            }
+                        }
                     }
                 }
 
@@ -807,101 +821,107 @@ namespace Alex.Worlds
 
                 if (vertices.Count > 0)
                 {
-
-	                var vertexArray = vertices.ToArray();
-	                var solidArray = solidIndexes.ToArray();
-	                var transparentArray = transparentIndexes.ToArray();
-
-	                if (data == null)
-	                {
-		                data = new ChunkData()
-		                {
-			                Buffer = GpuResourceManager.GetBuffer(this, Graphics,
-				                VertexPositionNormalTextureColor.VertexDeclaration, vertexArray.Length,
-				                BufferUsage.WriteOnly),
-			                SolidIndexBuffer = GpuResourceManager.GetIndexBuffer(this, Graphics, IndexElementSize.ThirtyTwoBits,
-				                solidArray.Length, BufferUsage.WriteOnly),
-			                TransparentIndexBuffer = GpuResourceManager.GetIndexBuffer(this, Graphics, IndexElementSize.ThirtyTwoBits,
-				                transparentArray.Length, BufferUsage.WriteOnly)
-		                };
-	                }
-
-                    VertexBuffer oldBuffer = data.Buffer;
-
-                    VertexBuffer newVertexBuffer = null;
-                    IndexBuffer newsolidIndexBuffer = null;
-                    IndexBuffer newTransparentIndexBuffer = null;
-
-                    IndexBuffer oldSolidIndexBuffer = data.SolidIndexBuffer;
-                    IndexBuffer oldTransparentIndexBuffer = data.TransparentIndexBuffer;
-
-	                if (vertexArray.Length >= data.Buffer.VertexCount)
-	                {
-		               // var oldBuffer = data.Buffer;
-		                VertexBuffer newBuffer = GpuResourceManager.GetBuffer(this,Graphics,
-			                VertexPositionNormalTextureColor.VertexDeclaration, vertexArray.Length,
-			                BufferUsage.WriteOnly);
-
-		                newBuffer.SetData(vertexArray);
-	                    newVertexBuffer = newBuffer;
-	                    //  data.Buffer = newBuffer;
-	                    //  oldBuffer?.Dispose();
-	                }
-	                else
-	                {
-		                data.Buffer.SetData(vertexArray);
-	                }
-
-	                if (solidArray.Length > data.SolidIndexBuffer.IndexCount)
-	                {
-		              //  var old = data.SolidIndexBuffer;
-		                var newSolidBuffer = GpuResourceManager.GetIndexBuffer(this, Graphics, IndexElementSize.ThirtyTwoBits,
-			                solidArray.Length,
-			                BufferUsage.WriteOnly);
-
-		                newSolidBuffer.SetData(solidArray);
-	                    newsolidIndexBuffer = newSolidBuffer;
-	                    //  data.SolidIndexBuffer = newSolidBuffer;
-	                    //   old?.Dispose();
-	                }
-	                else
-	                {
-		                data.SolidIndexBuffer.SetData(solidArray);
-	                }
-
-	                if (transparentArray.Length > data.TransparentIndexBuffer.IndexCount)
-	                {
-		              //  var old = data.TransparentIndexBuffer;
-		                var newSolidBuffer = GpuResourceManager.GetIndexBuffer(this, Graphics, IndexElementSize.ThirtyTwoBits,
-			                transparentArray.Length,
-			                BufferUsage.WriteOnly);
-
-		                newSolidBuffer.SetData(transparentArray);
-	                    newTransparentIndexBuffer = newSolidBuffer;
-	                    //  data.TransparentIndexBuffer = newSolidBuffer;
-	                    //  old?.Dispose();
-	                }
-	                else
-	                {
-		                data.TransparentIndexBuffer.SetData(transparentArray);
-	                }
-
-                    if (newVertexBuffer != null)
+                    using (var bufferProfiler = profiler.Step("Buffer Creation"))
                     {
-                        data.Buffer = newVertexBuffer;
-                        oldBuffer?.Dispose();
-                    }
+                        var vertexArray = vertices.ToArray();
+                        var solidArray = solidIndexes.ToArray();
+                        var transparentArray = transparentIndexes.ToArray();
 
-                    if (newTransparentIndexBuffer != null)
-                    {
-                        data.TransparentIndexBuffer = newTransparentIndexBuffer;
-                        oldTransparentIndexBuffer?.Dispose();
-                    }
+                        if (data == null)
+                        {
+                            data = new ChunkData()
+                            {
+                                Buffer = GpuResourceManager.GetBuffer(this, Graphics,
+                                    VertexPositionNormalTextureColor.VertexDeclaration, vertexArray.Length,
+                                    BufferUsage.WriteOnly),
+                                SolidIndexBuffer = GpuResourceManager.GetIndexBuffer(this, Graphics,
+                                    IndexElementSize.ThirtyTwoBits,
+                                    solidArray.Length, BufferUsage.WriteOnly),
+                                TransparentIndexBuffer = GpuResourceManager.GetIndexBuffer(this, Graphics,
+                                    IndexElementSize.ThirtyTwoBits,
+                                    transparentArray.Length, BufferUsage.WriteOnly)
+                            };
+                        }
 
-                    if (newsolidIndexBuffer != null)
-                    {
-                        data.SolidIndexBuffer = newsolidIndexBuffer;
-                        oldSolidIndexBuffer?.Dispose();
+                        VertexBuffer oldBuffer = data.Buffer;
+
+                        VertexBuffer newVertexBuffer = null;
+                        IndexBuffer newsolidIndexBuffer = null;
+                        IndexBuffer newTransparentIndexBuffer = null;
+
+                        IndexBuffer oldSolidIndexBuffer = data.SolidIndexBuffer;
+                        IndexBuffer oldTransparentIndexBuffer = data.TransparentIndexBuffer;
+
+                        if (vertexArray.Length >= data.Buffer.VertexCount)
+                        {
+                            // var oldBuffer = data.Buffer;
+                            VertexBuffer newBuffer = GpuResourceManager.GetBuffer(this, Graphics,
+                                VertexPositionNormalTextureColor.VertexDeclaration, vertexArray.Length,
+                                BufferUsage.WriteOnly);
+
+                            newBuffer.SetData(vertexArray);
+                            newVertexBuffer = newBuffer;
+                            //  data.Buffer = newBuffer;
+                            //  oldBuffer?.Dispose();
+                        }
+                        else
+                        {
+                            data.Buffer.SetData(vertexArray);
+                        }
+
+                        if (solidArray.Length > data.SolidIndexBuffer.IndexCount)
+                        {
+                            //  var old = data.SolidIndexBuffer;
+                            var newSolidBuffer = GpuResourceManager.GetIndexBuffer(this, Graphics,
+                                IndexElementSize.ThirtyTwoBits,
+                                solidArray.Length,
+                                BufferUsage.WriteOnly);
+
+                            newSolidBuffer.SetData(solidArray);
+                            newsolidIndexBuffer = newSolidBuffer;
+                            //  data.SolidIndexBuffer = newSolidBuffer;
+                            //   old?.Dispose();
+                        }
+                        else
+                        {
+                            data.SolidIndexBuffer.SetData(solidArray);
+                        }
+
+                        if (transparentArray.Length > data.TransparentIndexBuffer.IndexCount)
+                        {
+                            //  var old = data.TransparentIndexBuffer;
+                            var newSolidBuffer = GpuResourceManager.GetIndexBuffer(this, Graphics,
+                                IndexElementSize.ThirtyTwoBits,
+                                transparentArray.Length,
+                                BufferUsage.WriteOnly);
+
+                            newSolidBuffer.SetData(transparentArray);
+                            newTransparentIndexBuffer = newSolidBuffer;
+                            //  data.TransparentIndexBuffer = newSolidBuffer;
+                            //  old?.Dispose();
+                        }
+                        else
+                        {
+                            data.TransparentIndexBuffer.SetData(transparentArray);
+                        }
+
+                        if (newVertexBuffer != null)
+                        {
+                            data.Buffer = newVertexBuffer;
+                            oldBuffer?.Dispose();
+                        }
+
+                        if (newTransparentIndexBuffer != null)
+                        {
+                            data.TransparentIndexBuffer = newTransparentIndexBuffer;
+                            oldTransparentIndexBuffer?.Dispose();
+                        }
+
+                        if (newsolidIndexBuffer != null)
+                        {
+                            data.SolidIndexBuffer = newsolidIndexBuffer;
+                            oldSolidIndexBuffer?.Dispose();
+                        }
                     }
                 }
                 else
