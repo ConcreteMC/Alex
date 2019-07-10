@@ -19,7 +19,7 @@ namespace Alex {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -112,34 +112,35 @@ namespace Alex {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 
-        ///[
-        ///  {
-        ///    &quot;id&quot;: 1,
-        ///    &quot;internalId&quot;: 1,
-        ///    &quot;name&quot;: &quot;item&quot;,
-        ///    &quot;displayName&quot;: &quot;Dropped item&quot;,
-        ///    &quot;type&quot;: &quot;mob&quot;,
-        ///    &quot;width&quot;: 0.25,
-        ///    &quot;height&quot;: 0.25,
-        ///    &quot;category&quot;: &quot;Drops&quot;
-        ///  },
-        ///  {
-        ///    &quot;id&quot;: 2,
-        ///    &quot;internalId&quot;: 2,
-        ///    &quot;name&quot;: &quot;xp_orb&quot;,
-        ///    &quot;displayName&quot;: &quot;Experience orb&quot;,
-        ///    &quot;type&quot;: &quot;mob&quot;,
-        ///    &quot;width&quot;: 0.5,
-        ///    &quot;height&quot;: 0.5,
-        ///    &quot;category&quot;: &quot;Drops&quot;
-        ///  },
-        ///  {
-        ///    &quot;id&quot;: 3,
-        ///    &quot;internalId&quot;: 3,
-        ///    &quot;name&quot;: &quot;area_effect_cloud&quot;,
-        ///    &quot;displayName&quot;: &quot;Area effect cloud&quot;,
-        ///    &quot;type [rest of string was truncated]&quot;;.
+        ///   Looks up a localized string similar to [
+        ///	{
+        ///		&quot;id&quot;: 0,
+        ///		&quot;internalId&quot;: 0,
+        ///		&quot;name&quot;: &quot;area_effect_cloud&quot;,
+        ///		&quot;displayName&quot;: &quot;Area Effect Cloud&quot;,
+        ///		&quot;width&quot;: 6,
+        ///		&quot;height&quot;: 0.5,
+        ///		&quot;type&quot;: &quot;mob&quot;,
+        ///		&quot;category&quot;: &quot;Hostile mobs&quot;
+        ///	},
+        ///	{
+        ///		&quot;id&quot;: 1,
+        ///		&quot;internalId&quot;: 1,
+        ///		&quot;name&quot;: &quot;armor_stand&quot;,
+        ///		&quot;displayName&quot;: &quot;Armor Stand&quot;,
+        ///		&quot;width&quot;: 0.5,
+        ///		&quot;height&quot;: 1.975,
+        ///		&quot;type&quot;: &quot;mob&quot;,
+        ///		&quot;category&quot;: &quot;Hostile mobs&quot;
+        ///	},
+        ///	{
+        ///		&quot;id&quot;: 2,
+        ///		&quot;internalId&quot;: 2,
+        ///		&quot;name&quot;: &quot;arrow&quot;,
+        ///		&quot;displayName&quot;: &quot;Arrow&quot;,
+        ///		&quot;width&quot;: 0.5,
+        ///		&quot;height&quot;: 0.5,
+        ///		&quot;type&quot;: &quot;mo [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string Entities {
             get {
@@ -178,36 +179,37 @@ namespace Alex {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {
-        ///	&quot;minecraft:air&quot;: {
-        ///		&quot;protocol_id&quot;: 0
-        ///	},
-        ///	&quot;minecraft:stone&quot;: {
-        ///		&quot;protocol_id&quot;: 1
-        ///	},
-        ///	&quot;minecraft:granite&quot;: {
-        ///		&quot;protocol_id&quot;: 2
-        ///	},
-        ///	&quot;minecraft:polished_granite&quot;: {
-        ///		&quot;protocol_id&quot;: 3
-        ///	},
-        ///	&quot;minecraft:diorite&quot;: {
-        ///		&quot;protocol_id&quot;: 4
-        ///	},
-        ///	&quot;minecraft:polished_diorite&quot;: {
-        ///		&quot;protocol_id&quot;: 5
-        ///	},
-        ///	&quot;minecraft:andesite&quot;: {
-        ///		&quot;protocol_id&quot;: 6
-        ///	},
-        ///	&quot;minecraft:polished_andesite&quot;: {
-        ///		&quot;protocol_id&quot;: 7
-        ///	},
-        ///	&quot;minecraft:grass_block&quot;: {
-        ///		&quot;protocol_id&quot;: 8
-        ///	},
-        ///	&quot;minecraft:dirt&quot;: {
-        ///		&quot;protoco [rest of string was truncated]&quot;;.
+        ///   Looks up a localized string similar to [
+        ///  {
+        ///    &quot;id&quot;: 0,
+        ///    &quot;displayName&quot;: &quot;Air&quot;,
+        ///    &quot;name&quot;: &quot;air&quot;,
+        ///    &quot;stackSize&quot;: 64
+        ///  },
+        ///  {
+        ///    &quot;id&quot;: 1,
+        ///    &quot;displayName&quot;: &quot;Stone&quot;,
+        ///    &quot;name&quot;: &quot;stone&quot;,
+        ///    &quot;stackSize&quot;: 64
+        ///  },
+        ///  {
+        ///    &quot;id&quot;: 2,
+        ///    &quot;displayName&quot;: &quot;Granite&quot;,
+        ///    &quot;name&quot;: &quot;granite&quot;,
+        ///    &quot;stackSize&quot;: 64
+        ///  },
+        ///  {
+        ///    &quot;id&quot;: 3,
+        ///    &quot;displayName&quot;: &quot;Polished Granite&quot;,
+        ///    &quot;name&quot;: &quot;polished_granite&quot;,
+        ///    &quot;stackSize&quot;: 64
+        ///  },
+        ///  {
+        ///    &quot;id&quot;: 4,
+        ///    &quot;displayName&quot;: &quot;Diorite&quot;,
+        ///    &quot;name&quot;: &quot;diorite&quot;,
+        ///    &quot;stackSize&quot;: 64
+        ///  }, [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string Items {
             get {
@@ -289,31 +291,33 @@ namespace Alex {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {
-        ///  &quot;entity&quot;: {
-        ///    &quot;area_effect_cloud&quot;: {
-        ///      &quot;class&quot;: &quot;abp&quot;,
-        ///      &quot;display_name&quot;: &quot;Area Effect Cloud&quot;,
-        ///      &quot;id&quot;: 0,
-        ///      &quot;name&quot;: &quot;area_effect_cloud&quot;
-        ///    },
-        ///    &quot;armor_stand&quot;: {
-        ///      &quot;class&quot;: &quot;aiy&quot;,
-        ///      &quot;display_name&quot;: &quot;Armor Stand&quot;,
-        ///      &quot;height&quot;: 1.98,
-        ///      &quot;id&quot;: 1,
-        ///      &quot;name&quot;: &quot;armor_stand&quot;,
-        ///      &quot;width&quot;: 0.5
-        ///    },
-        ///    &quot;arrow&quot;: {
-        ///      &quot;class&quot;: &quot;all&quot;,
-        ///      &quot;display_name&quot;: &quot;Arrow&quot;,
-        ///      &quot;id&quot;: 2,
-        ///      &quot;name&quot;: &quot;arrow&quot;
-        ///    },
-        ///    &quot;bat&quot;: {
-        ///      &quot;class&quot;: &quot;agl&quot;,
-        ///      [rest of string was truncated]&quot;;.
+        ///   Looks up a localized string similar to [
+        ///  {
+        ///    &quot;id&quot;: 0,
+        ///    &quot;internalId&quot;: 0,
+        ///    &quot;name&quot;: &quot;area_effect_cloud&quot;,
+        ///    &quot;displayName&quot;: &quot;Area Effect Cloud&quot;,
+        ///    &quot;width&quot;: 6,
+        ///    &quot;height&quot;: 0.5,
+        ///    &quot;type&quot;: &quot;mob&quot;,
+        ///    &quot;category&quot;: &quot;Hostile mobs&quot;
+        ///  },
+        ///  {
+        ///    &quot;id&quot;: 1,
+        ///    &quot;internalId&quot;: 1,
+        ///    &quot;name&quot;: &quot;armor_stand&quot;,
+        ///    &quot;displayName&quot;: &quot;Armor Stand&quot;,
+        ///    &quot;width&quot;: 0.5,
+        ///    &quot;height&quot;: 1.975,
+        ///    &quot;type&quot;: &quot;mob&quot;,
+        ///    &quot;category&quot;: &quot;Hostile mobs&quot;
+        ///  },
+        ///  {
+        ///    &quot;id&quot;: 2,
+        ///    &quot;internalId&quot;: 2,
+        ///    &quot;name&quot;: &quot;arrow&quot;,
+        ///    &quot;displayName&quot;: &quot;Arrow&quot;,
+        ///    [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string NewEntities {
             get {
@@ -331,7 +335,7 @@ namespace Alex {
         ///	&lt;targets&gt;
         ///		&lt;target name=&quot;colouredConsole&quot; xsi:type=&quot;ColoredConsole&quot; useDefaultRowHighlightingRules=&quot;false&quot;
         ///		        layout=&quot;${pad:padding=5:inner=${level:uppercase=true}}|${callsite:className=true:includeSourcePath=false:methodName=false:includeNamespace=false}|${message}&quot; &gt;
-        ///			&lt;highlight-row condi [rest of string was truncated]&quot;;.
+        ///			&lt;highlight- [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string NLogConfig {
             get {
@@ -379,7 +383,7 @@ namespace Alex {
         ///      &quot;minecraft:ambient.underwater.loop.additions&quot;: {
         ///        &quot;protocol_id&quot;: 4
         ///      },
-        ///      &quot;minecraft:ambient.underwater.loop.additi [rest of string was truncated]&quot;;.
+        ///      &quot;minecraft:ambient.und [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string registries {
             get {
@@ -388,7 +392,8 @@ namespace Alex {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to [
+        ///   Looks up a localized string similar to 
+        ///[
         ///	{
         ///		&quot;runtimeID&quot;: 0,
         ///		&quot;name&quot;: &quot;minecraft:air&quot;,
@@ -426,11 +431,21 @@ namespace Alex {
         ///		&quot;data&quot;: 4
         ///	},
         ///	{
-        ///		&quot;runtim [rest of string was truncated]&quot;;.
+        ///		&quot;runt [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string runtimeid_table {
             get {
                 return ResourceManager.GetString("runtimeid_table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] ScrollBar {
+            get {
+                object obj = ResourceManager.GetObject("ScrollBar", resourceCulture);
+                return ((byte[])(obj));
             }
         }
         

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Alex.Utils;
-using Alex.Worlds;
+﻿using Alex.Worlds;
 
 namespace Alex.Entities.Hostile
 {

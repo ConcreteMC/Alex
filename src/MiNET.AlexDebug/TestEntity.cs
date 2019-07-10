@@ -1,5 +1,4 @@
 using MiNET.Entities;
-using MiNET.Entities.Passive;
 using MiNET.Worlds;
 using NLog;
 

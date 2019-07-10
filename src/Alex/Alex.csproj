@@ -6,7 +6,7 @@
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <ApplicationIcon>Icon.ico</ApplicationIcon>
     <StartupObject>Alex.Program</StartupObject>
-    <Platforms>x64</Platforms>
+    <Platforms>x64;AnyCPU</Platforms>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -35,19 +35,29 @@
     <!--<OutputPath>bin\Debug\</OutputPath>-->
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+	  <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	</PropertyGroup>
 
   <ItemGroup>
     <Compile Remove="Graphics\Items\**" />
     <EmbeddedResource Remove="Graphics\Items\**" />
     <None Remove="Graphics\Items\**" />
     <None Remove="Resources\DebugFont.xnb" />
+    <None Remove="Resources\ScrollBar.png" />
     <EmbeddedResource Include="Resources\DebugFont.xnb" />
     <None Remove="Resources\logo2.png" />
     <EmbeddedResource Include="Resources\logo2.png" />
     <None Remove="Resources\Splash.png" />
+    <EmbeddedResource Include="Resources\ScrollBar.png" />
     <EmbeddedResource Include="Resources\Splash.png" />
     <None Remove="Resources\ProgressBar.png" />
     <EmbeddedResource Include="Resources\ProgressBar.png" />
@@ -86,11 +96,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="EasyPipes" Version="1.1.0" />
     <PackageReference Include="Eto.Forms" Version="2.5.0-beta.1" />
     <PackageReference Include="Eto.Platform.Gtk" Version="2.5.0-beta.1" />
     <PackageReference Include="Eto.Platform.Wpf" Version="2.5.0-beta.1" />
     <PackageReference Include="GtkSharp" Version="3.22.24.37" />
     <PackageReference Include="Hawezo.MojangSharp" Version="0.5.1" />
+    <PackageReference Include="JKang.IpcServiceFramework.Server" Version="2.2.2" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.2.0" />
     <PackageReference Include="Microsoft.Identity.Client" Version="2.3.0-preview" />
     <PackageReference Include="MonoGame.Framework.DesktopGL.Core" Version="3.7.0.7" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
@@ -107,6 +120,7 @@
     <ProjectReference Include="..\..\lib\MiNET\src\MiNET\MiNET.Client\MiNET.Client.csproj" />
     <ProjectReference Include="..\..\lib\MiNET\src\MiNET\MiNET\MiNET.csproj" />
     <ProjectReference Include="..\Alex.API\Alex.API.csproj" />
+    <ProjectReference Include="..\Alex.GuiDebugger.Common\Alex.GuiDebugger.Common.csproj" />
     <ProjectReference Include="..\Alex.Networking\Alex.Networking.csproj" />
     <ProjectReference Include="..\Alex.ResourcePackLib\Alex.ResourcePackLib.csproj" />
   </ItemGroup>

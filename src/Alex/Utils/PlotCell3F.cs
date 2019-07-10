@@ -1,5 +1,4 @@
 ﻿using System;
-using Alex.Worlds;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Utils

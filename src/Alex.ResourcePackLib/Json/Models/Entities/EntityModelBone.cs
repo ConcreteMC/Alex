@@ -1,5 +1,4 @@
-﻿using System.Text;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 
 namespace Alex.ResourcePackLib.Json.Models.Entities
 {

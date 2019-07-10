@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 using Alex.API.Graphics.Textures;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
@@ -17,7 +15,9 @@ namespace Alex.API.Graphics.Typography
         Vector2 MeasureString(string text, Vector2 scale);
         void MeasureString(string text, out Vector2 size);
 
-        void DrawString(SpriteBatch   sb, string text, Vector2 position,
+        void DrawString(SpriteBatch   sb, 
+                        string text, 
+                        Vector2 position,
                         TextColor     color,
                         FontStyle     style      = FontStyle.None, Vector2? scale = null,
                         float         opacity    = 1f,

@@ -1,9 +1,7 @@
 using System;
-using System.Linq.Expressions;
 using System.Numerics;
 using log4net;
 using MiNET.Entities;
-using MiNET.Entities.Passive;
 using MiNET.Net;
 using MiNET.Plugins.Attributes;
 using MiNET.Worlds;

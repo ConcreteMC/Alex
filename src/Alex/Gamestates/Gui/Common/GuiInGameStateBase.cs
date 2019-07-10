@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Alex.API.Graphics;
-using Alex.API.Gui;
-using Alex.API.Gui.Elements;
+﻿using Alex.API.Graphics;
 using Microsoft.Xna.Framework;
 
 namespace Alex.GameStates.Gui.Common

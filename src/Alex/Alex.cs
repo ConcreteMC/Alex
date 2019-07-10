@@ -15,7 +15,6 @@ using Alex.GameStates;
 using Alex.GameStates.Gui.MainMenu;
 using Alex.GameStates.Playing;
 using Alex.Gui;
-using Alex.Gui.Forms;
 using Alex.Networking.Java.Packets;
 using Alex.Services;
 using Alex.Utils;
@@ -25,6 +24,7 @@ using Eto.Forms;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
+using GuiDebugHelper = Alex.Gui.GuiDebugHelper;
 using TextInputEventArgs = Microsoft.Xna.Framework.TextInputEventArgs;
 
 namespace Alex
@@ -53,6 +53,7 @@ namespace Alex
 		public InputManager InputManager { get; private set; }
 		public GuiRenderer GuiRenderer { get; private set; }
 		public GuiManager GuiManager { get; private set; }
+		public GuiDebugHelper GuiDebugHelper { get; private set; }
 
 		public GraphicsDeviceManager DeviceManager { get; }
 
@@ -155,6 +156,13 @@ namespace Alex
 			InputManager = new InputManager(this);
 			GuiRenderer = new GuiRenderer(this);
 			GuiManager = new GuiManager(this, InputManager, GuiRenderer);
+
+			GuiDebugHelper = new GuiDebugHelper(GuiManager);
+
+			AlexIpcService = new AlexIpcService();
+			Services.AddService<AlexIpcService>(AlexIpcService);
+			AlexIpcService.Start();
+
 			OnCharacterInput += GuiManager.FocusManager.OnTextInput;
 
 			GameStateManager = new GameStateManager(GraphicsDevice, _spriteBatch, GuiManager);
@@ -167,12 +175,15 @@ namespace Alex
 			ThreadPool.QueueUserWorkItem(o => { InitializeGame(splash); });
 		}
 
+		private AlexIpcService AlexIpcService;
+
 		private void ConfigureServices()
 		{
 			XBLMSAService msa;
 			var storage = new StorageSystem(LaunchSettings.WorkDir);
 			ProfileManager = new ProfileManager(this, storage);
-			
+
+
 			Services.AddService<IStorageSystem>(storage);
 			
 			var optionsProvider = new OptionsProvider(storage);
@@ -196,6 +207,8 @@ namespace Alex
 			ProfileManager.SaveProfiles();
 			
 			Services.GetService<IOptionsProvider>().Save();
+			AlexIpcService.Stop();
+			GuiDebugHelper.Dispose();
 		}
 
 		protected override void Update(GameTime gameTime)
@@ -206,6 +219,7 @@ namespace Alex
 
 			GuiManager.Update(gameTime);
 			GameStateManager.Update(gameTime);
+			GuiDebugHelper.Update(gameTime);
 
 			if (UIThreadQueue.TryDequeue(out Action a))
 			{
@@ -223,7 +237,7 @@ namespace Alex
 			GameStateManager.Draw(gameTime);
 
 			GuiManager.Draw(gameTime);
-		//	CefWindow.Draw(gameTime);
+			//	CefWindow.Draw(gameTime);
 
 			base.Draw(gameTime);
 		}

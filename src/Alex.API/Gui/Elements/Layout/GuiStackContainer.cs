@@ -1,252 +1,274 @@
 ﻿using System;
 using System.Collections.Generic;
+
+using Alex.API.Gui.Elements.Controls;
+using Alex.API.Gui.Graphics;
 using Microsoft.Xna.Framework;
+using RocketUI;
 
 namespace Alex.API.Gui.Elements.Layout
 {
-    public class GuiStackContainer : GuiContainer
-    {
-        private Orientation _orientation = Orientation.Vertical;
-        private Alignment _childAnchor = Alignment.TopCenter;
+	public class GuiStackContainer : GuiContainer
+	{
+		private Orientation _orientation = Orientation.Vertical;
+		private Alignment   _childAnchor = Alignment.TopCenter;
 
-        public virtual Orientation Orientation
-        {
-            get => _orientation;
-            set
-            {
-                _orientation = value;
-                InvalidateLayout();
-            }
-        }
+		[DebuggerVisible]
+		public virtual Orientation Orientation
+		{
+			get => _orientation;
+			set
+			{
+				_orientation = value;
+				InvalidateLayout();
+			}
+		}
 
 
-        public Alignment ChildAnchor
-        {
-            get => _childAnchor;
-            set
-            {
-                _childAnchor = value;
-                UpdateLayoutAlignments();
-            }
-        }
+		[DebuggerVisible]
+		public Alignment ChildAnchor
+		{
+			get => _childAnchor;
+			set
+			{
+				_childAnchor = value;
+				UpdateLayoutAlignments();
+			}
+		}
 
-        public GuiStackContainer()
-        {
+		protected override Size MeasureChildrenCore(Size availableSize, IReadOnlyCollection<GuiElement> children)
+		{
+			var containerSize = availableSize;
 
-        }
+			var alignment = ChildAnchor;
 
-        protected override Size MeasureChildrenCore(Size availableSize, IReadOnlyCollection<GuiElement> children)
-        {
-            var containerSize = availableSize;
+			int widthOverride = 0, heightOverride = 0;
 
-            var alignment = ChildAnchor;
+			if (Orientation == Orientation.Horizontal && (alignment & Alignment.FillX) != 0)
+			{
+				widthOverride = (int) (availableSize.Width / (float) children.Count);
+			}
 
-            int widthOverride = 0, heightOverride = 0;
+			if (Orientation == Orientation.Vertical && (alignment & Alignment.FillY) != 0)
+			{
+				heightOverride = (int) (availableSize.Height / (float) children.Count);
+			}
 
-            if (Orientation == Orientation.Horizontal && (alignment & Alignment.FillX) != 0)
-            {
-                widthOverride = (int) (availableSize.Width / (float) children.Count);
-            }
 
-            if (Orientation == Orientation.Vertical && (alignment & Alignment.FillY) != 0)
-            {
-                heightOverride = (int) (availableSize.Height / (float) children.Count);
-            }
-            
+			var       size       = Size.Zero;
+			Thickness lastOffset = Thickness.Zero;
 
-            var size = Size.Zero;
-            Thickness lastOffset = Thickness.Zero;
-            
 
-            foreach (var child in children)
-            {
-                containerSize += lastOffset;
+			foreach (var child in children)
+			{
+				if (!ShouldPositionChild(child)) continue;
 
-                var thisOffset = CalculateOffset(alignment, Size.Zero, child.Margin, lastOffset);
+				containerSize += lastOffset;
 
-                var childSize = child.Measure(new Size(widthOverride == 0 ? containerSize.Width : widthOverride, 
-                                                       heightOverride == 0 ? containerSize.Height : heightOverride)) - thisOffset;
-                
-                var offset = CalculateOffset(alignment, childSize, child.Margin, lastOffset);
+				var thisOffset = CalculateOffset(alignment, Size.Zero, child.Margin, lastOffset);
 
-                if (Orientation == Orientation.Vertical)
-                {
-                    size.Width = Math.Max(size.Width, childSize.Width);
-                    size.Height += childSize.Height;
+				var childSize = child.Measure(new Size(widthOverride == 0 ? containerSize.Width : widthOverride,
+													   heightOverride == 0 ? containerSize.Height : heightOverride)) -
+								thisOffset;
 
-                    containerSize.Height -= offset.Vertical;
-                }
-                else if (Orientation == Orientation.Horizontal)
-                {
-                    size.Width += childSize.Width;
-                    size.Height = Math.Max(size.Height, childSize.Height);
+				var offset = CalculateOffset(alignment, childSize, child.Margin, lastOffset);
 
-                    containerSize.Width -= offset.Horizontal;
-                }
+				if (Orientation == Orientation.Vertical)
+				{
+					size.Width  =  Math.Max(size.Width, childSize.Width);
+					size.Height += childSize.Height;
 
-                lastOffset = thisOffset;
-            }
+					containerSize.Height -= offset.Vertical;
+				}
+				else if (Orientation == Orientation.Horizontal)
+				{
+					size.Width  += childSize.Width;
+					size.Height =  Math.Max(size.Height, childSize.Height);
 
-            size -= lastOffset;
+					containerSize.Width -= offset.Horizontal;
+				}
 
-            return size;
-        }
+				lastOffset = thisOffset;
+			}
 
-	    protected Thickness CalculateOffset(Alignment alignment, Size size, Thickness margin, Thickness previousMargin)
-        {
-            var offset = Thickness.Zero;
+			size -= lastOffset;
 
-            var vertical   = (alignment & (Alignment.OrientationY));
-            var horizontal = (alignment & (Alignment.OrientationX));
+			return size;
+		}
 
-            if (Orientation == Orientation.Vertical)
-            {
-                if((vertical & Alignment.MinY) != 0)
-                {
-                    offset.Top -= Math.Min(previousMargin.Bottom, margin.Top);
-                    offset.Top += size.Height + margin.Bottom;
-                }
-                else if((vertical & Alignment.MaxY) != 0)
-                {
-                    offset.Bottom -= Math.Min(previousMargin.Top, margin.Bottom);
-                    offset.Bottom += size.Height + margin.Top;
-                }
-                else if ((vertical & Alignment.FillY) != 0)
-                {
-                    offset.Top -= Math.Min(previousMargin.Bottom, margin.Top);
-                    offset.Top += size.Height + margin.Bottom;
-                }
-            }
-            else if (Orientation == Orientation.Horizontal)
-            {
-                if((horizontal & Alignment.MinX) != 0)
-                {
-                    offset.Left -= Math.Min(previousMargin.Right, margin.Left);
-                    offset.Left += size.Width + margin.Right;
-                }
-                else if((horizontal & Alignment.MaxX) != 0)
-                {
-                    offset.Right -= Math.Min(previousMargin.Left, margin.Right);
-                    offset.Right += size.Width + margin.Left;
-                }
-                else if ((horizontal & Alignment.FillX) != 0)
-                {
-                    offset.Left -= Math.Min(previousMargin.Right, margin.Left);
-                    offset.Left += size.Width + margin.Right;
-                }
-            }
+		protected Thickness CalculateOffset(Alignment alignment, Size size, Thickness margin, Thickness previousMargin)
+		{
+			var offset = Thickness.Zero;
 
-            return offset;
-        }
+			var vertical   = (alignment & (Alignment.OrientationY));
+			var horizontal = (alignment & (Alignment.OrientationX));
 
-        public static Alignment NormalizeAlignmentForArrange(Orientation orientation, Alignment alignment)
-        {
-            var vertical = (alignment & (Alignment.OrientationY));
-            var horizontal = (alignment & (Alignment.OrientationX));
+			if (Orientation == Orientation.Vertical)
+			{
+				if ((vertical & Alignment.MinY) != 0)
+				{
+					offset.Top -= Math.Min(previousMargin.Bottom, margin.Top);
+					offset.Top += size.Height + margin.Bottom;
+				}
+				else if ((vertical & Alignment.MaxY) != 0)
+				{
+					offset.Bottom -= Math.Min(previousMargin.Top, margin.Bottom);
+					offset.Bottom += size.Height + margin.Top;
+				}
+				else if ((vertical & Alignment.FillY) != 0)
+				{
+					offset.Top -= Math.Min(previousMargin.Bottom, margin.Top);
+					offset.Top += size.Height + margin.Bottom;
+				}
+			}
+			else if (Orientation == Orientation.Horizontal)
+			{
+				if ((horizontal & Alignment.MinX) != 0)
+				{
+					offset.Left -= Math.Min(previousMargin.Right, margin.Left);
+					offset.Left += size.Width + margin.Right;
+				}
+				else if ((horizontal & Alignment.MaxX) != 0)
+				{
+					offset.Right -= Math.Min(previousMargin.Left, margin.Right);
+					offset.Right += size.Width + margin.Left;
+				}
+				else if ((horizontal & Alignment.FillX) != 0)
+				{
+					offset.Left -= Math.Min(previousMargin.Right, margin.Left);
+					offset.Left += size.Width + margin.Right;
+				}
+			}
 
-            if (orientation == Orientation.Vertical)
-            {
-                if((vertical & Alignment.FillY) != 0)
-                {
-                    vertical = Alignment.MinY;
+			return offset;
+		}
+
+		public static Alignment NormalizeAlignmentForArrange(Orientation orientation, Alignment alignment)
+		{
+			var vertical   = (alignment & (Alignment.OrientationY));
+			var horizontal = (alignment & (Alignment.OrientationX));
+
+			if (orientation == Orientation.Vertical)
+			{
+				if ((vertical & Alignment.FillY) != 0)
+				{
+					vertical = Alignment.MinY;
 				}
 				else if ((vertical & Alignment.CenterY) != 0)
-                {
-	                vertical = Alignment.MinY;
-                }
-				else if((vertical & Alignment.MaxY) != 0)
-                {
-                    vertical = Alignment.MaxY;
-                }
-                else
-                // if((vertical & Alignment.MinY) != 0)
-                {
-                    vertical = Alignment.MinY;
-                }
-            }
-            else if (orientation == Orientation.Horizontal)
-            {
-                if((horizontal & Alignment.FillX) != 0)
-                {
-                    horizontal = Alignment.MinX;
+				{
+					vertical = Alignment.MinY;
+				}
+				else if ((vertical & Alignment.MaxY) != 0)
+				{
+					vertical = Alignment.MaxY;
+				}
+				else
+					// if((vertical & Alignment.MinY) != 0)
+				{
+					vertical = Alignment.MinY;
+				}
+			}
+			else if (orientation == Orientation.Horizontal)
+			{
+				if ((horizontal & Alignment.FillX) != 0)
+				{
+					horizontal = Alignment.MinX;
 				}
 				else if ((horizontal & Alignment.CenterX) != 0)
-                {
-	                horizontal = Alignment.MinX;
-                }
-				else if((horizontal & Alignment.MaxX) != 0)
-                {
-                    horizontal = Alignment.MaxX;
-                }
-                else
-                // if((horizontal & Alignment.MinX) != 0)
-                {
-                    horizontal = Alignment.MinX;
-                }
-            }
+				{
+					horizontal = Alignment.MinX;
+				}
+				else if ((horizontal & Alignment.MaxX) != 0)
+				{
+					horizontal = Alignment.MaxX;
+				}
+				else
+					// if((horizontal & Alignment.MinX) != 0)
+				{
+					horizontal = Alignment.MinX;
+				}
+			}
 
-            return (vertical | horizontal);
-        }
+			return (vertical | horizontal);
+		}
 
-        protected override void ArrangeChildrenCore(Rectangle finalRect, IReadOnlyCollection<GuiElement> children)
-        {
-            var positioningBounds = finalRect + Padding;
+		protected override void ArrangeChildrenCore(Rectangle finalRect, IReadOnlyCollection<GuiElement> children)
+		{
+			var originalBounds = finalRect;
+			finalRect = new Rectangle(finalRect.Location, finalRect.Size);
+			var positioningBounds = finalRect + Padding;
 
-            var alignment = NormalizeAlignmentForArrange(Orientation, ChildAnchor);
+			var alignment = NormalizeAlignmentForArrange(Orientation, ChildAnchor);
 
-	        var childSize = ContentSize;
-			var offset = Padding;
+			var childSize = ContentSize;
+			var offset    = Padding;
 
-	        if (ChildAnchor.HasFlag(Alignment.CenterX))
-	        {
-				offset.Left = Math.Max(Padding.Left, (int)((positioningBounds.Width - childSize.Width) / 2f));
+			if (ChildAnchor.HasFlag(Alignment.CenterX))
+			{
+				offset.Left = Math.Max(Padding.Left, (int) ((positioningBounds.Width - childSize.Width) / 2f));
 			}
 
 			if (ChildAnchor.HasFlag(Alignment.CenterY))
 			{
-				offset.Top = Math.Max(Padding.Top, (int)((positioningBounds.Height - childSize.Height) / 2f));
+				offset.Top = Math.Max(Padding.Top, (int) ((positioningBounds.Height - childSize.Height) / 2f));
 			}
 
 			var lastOffset = Thickness.Zero;
 
-            foreach (var child in children)
-            {
-                //offset -= lastOffset;
 
-                var layoutBounds = PositionChild(child, alignment, positioningBounds, lastOffset, offset, true);
+			foreach (var child in children)
+			{
+				if (!ShouldPositionChild(child)) continue;
+				
+				//offset -= lastOffset;
 
-                var currentOffset = CalculateOffset(alignment, layoutBounds.Size, layoutBounds.Margin, lastOffset);
+				var layoutBounds = PositionChild(child, alignment, positioningBounds, lastOffset, offset, true);
 
-                offset += currentOffset;
+				var currentOffset = CalculateOffset(alignment, layoutBounds.Size, layoutBounds.Margin, lastOffset);
 
-                //if (Orientation == Orientation.Vertical)
-                //{
-                //    size.Width  =  Math.Max(size.Width, childSize.Width - lastOffset.Horizontal);
-                //    size.Height += offset.Vertical;
-                //}
-                //else if (Orientation == Orientation.Horizontal)
-                //{
-                //    size.Width  += offset.Horizontal;
-                //    size.Height =  Math.Max(size.Height, childSize.Height - lastOffset.Vertical);
-                //}
-                lastOffset = CalculateOffset(alignment, Size.Zero, layoutBounds.Margin, lastOffset);
-            }
-        }
+				offset += currentOffset;
 
-        private void UpdateLayoutAlignments()
-        {
-            ForEachChild(UpdateLayoutAlignment);
-        }
-        protected override void OnChildAdded(IGuiElement element)
-        {
-            UpdateLayoutAlignment(element);
-        }
-        private void UpdateLayoutAlignment(IGuiElement element)
-        {
-            element.Anchor = _childAnchor;
-            InvalidateLayout();
-        }
-    
-    }
+				//if (Orientation == Orientation.Vertical)
+				//{
+				//    size.Width  =  Math.Max(size.Width, childSize.Width - lastOffset.Horizontal);
+				//    size.Height += offset.Vertical;
+				//}
+				//else if (Orientation == Orientation.Horizontal)
+				//{
+				//    size.Width  += offset.Horizontal;
+				//    size.Height =  Math.Max(size.Height, childSize.Height - lastOffset.Vertical);
+				//}
+				lastOffset = CalculateOffset(alignment, Size.Zero, layoutBounds.Margin, lastOffset);
+			}
+		}
+
+		private void UpdateLayoutAlignments()
+		{
+			ForEachChild(UpdateLayoutAlignment);
+		}
+
+		protected override void OnChildAdded(IGuiElement element)
+		{
+			UpdateLayoutAlignment(element);
+		}
+
+		private void UpdateLayoutAlignment(IGuiElement element)
+		{
+			if (ShouldPositionChild(element as GuiElement))
+			{
+				element.Anchor = ChildAnchor;
+			}
+			InvalidateLayout();
+		}
+
+
+		public GuiStackContainer()
+		{
+		}
+
+		protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
+		{
+			base.OnDraw(graphics, gameTime);
+		}
+	}
 }
-

@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data.SqlTypes;
-using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -97,7 +94,8 @@ namespace Alex.API.Graphics
             action.Invoke(_blendFactorProperty);
         }
 
-        public static GraphicsContext CreateContext(GraphicsDevice    graphicsDevice, BlendState blendState = null,
+        public static GraphicsContext CreateContext(GraphicsDevice    graphicsDevice, 
+                                                    BlendState blendState = null,
                                                     DepthStencilState depthStencilState = null,
                                                     RasterizerState   rasterizerState   = null,
                                                     SamplerState      samplerState      = null)

@@ -1,5 +1,4 @@
-﻿using System.Net.NetworkInformation;
-using Alex.Networking.Java.Util;
+﻿using Alex.Networking.Java.Util;
 
 namespace Alex.Networking.Java.Packets.Play
 {

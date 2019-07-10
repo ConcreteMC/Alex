@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using Alex.Blocks.State;
 
 namespace Alex.Blocks.Properties

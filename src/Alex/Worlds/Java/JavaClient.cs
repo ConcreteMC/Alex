@@ -9,7 +9,6 @@ using Alex.Networking.Java.Packets.Play;
 using Microsoft.Xna.Framework;
 using MiNET;
 using MiNET.Net;
-using MiNET.Utils;
 using NLog;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using ConnectionState = Alex.Networking.Java.ConnectionState;

@@ -20,6 +20,23 @@
         ButtonFocused,
         ButtonDisabled,
 
+        ScrollBarBackground,
+
+        ScrollBarTrackDefault,
+        ScrollBarTrackHover,
+        ScrollBarTrackFocused,
+        ScrollBarTrackDisabled,
+
+        ScrollBarUpButtonDefault,
+        ScrollBarUpButtonHover,
+        ScrollBarUpButtonFocused,
+        ScrollBarUpButtonDisabled,
+
+        ScrollBarDownButtonDefault,
+        ScrollBarDownButtonHover,
+        ScrollBarDownButtonFocused,
+        ScrollBarDownButtonDisabled,
+
         Panorama0,
         Panorama1,
         Panorama2,
@@ -42,5 +59,7 @@
         ServerPingPending5,
 
         DefaultServerIcon,
+
+        InventoryPlayerBackground
     }
 }

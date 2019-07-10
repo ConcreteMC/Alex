@@ -1,6 +1,5 @@
 ﻿using System.Text;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 
 namespace Alex.API.Data.Chat
 {

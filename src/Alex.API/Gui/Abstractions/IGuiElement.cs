@@ -1,28 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Graphics;
-using Alex.API.Gui.Layout;
 using Microsoft.Xna.Framework;
+using RocketUI;
 
 namespace Alex.API.Gui
 {
     public interface IGuiElement
     {
+        [DebuggerVisible] Guid Id { get; }
+
         IGuiScreen Screen { get; }
         IGuiElement ParentElement { get; set; }
         IGuiFocusContext FocusContext { get; set; }
 
-        bool HasChildren { get; }
-        int X { set; }
-        int Y { set; }
-        
+        IGuiElement[] ChildElements { get; }
 
-        Vector2 RenderPosition { get; }
-        Size RenderSize { get; }
-        Rectangle RenderBounds { get; }
+        [DebuggerVisible] bool HasChildren { get; }
+        [DebuggerVisible] int X { set; }
+        [DebuggerVisible] int Y { set; }
         
+        
+        [DebuggerVisible] Vector2 RenderPosition { get; }
+        [DebuggerVisible] Size RenderSize { get; }
+        [DebuggerVisible] Rectangle RenderBounds { get; }
+        [DebuggerVisible] bool ClipToBounds { get; }
+
+
 
         void Init(IGuiRenderer renderer, bool force = false);
 
@@ -51,45 +56,46 @@ namespace Alex.API.Gui
         #region Layout Engine
 
         #region Properties
-        int MinWidth  { get; set;}
-        int MinHeight { get; set; }
-        int MaxWidth  { get; set; }
-        int MaxHeight { get; set; }
-
-        int Width  { get; set; }
-        int Height { get; set; }
-
-        Thickness Margin  { get; }
-        Thickness Padding { get; }
-
-        AutoSizeMode AutoSizeMode { get; }
-        Alignment Anchor { get; set; }
+        [DebuggerVisible] int MinWidth  { get; set;}
+        [DebuggerVisible] int MinHeight { get; set; }
+        [DebuggerVisible] int MaxWidth  { get; set; }
+        [DebuggerVisible] int MaxHeight { get; set; }
+        
+        [DebuggerVisible] int Width  { get; set; }
+        [DebuggerVisible] int Height { get; set; }
+        
+        [DebuggerVisible] Thickness Margin  { get; }
+        [DebuggerVisible] Thickness Padding { get; }
+        
+        [DebuggerVisible] AutoSizeMode AutoSizeMode { get; }
+        [DebuggerVisible] Alignment Anchor { get; set; }
 
         #endregion
 
 
         #region Layout Calculation State Properties
 
-        int LayoutOffsetX { get; }
-        int LayoutOffsetY { get; }
-        int LayoutWidth   { get; }
-        int LayoutHeight  { get; }
+        [DebuggerVisible] int LayoutOffsetX { get; }
+        [DebuggerVisible] int LayoutOffsetY { get; }
+        [DebuggerVisible] int LayoutWidth   { get; }
+        [DebuggerVisible] int LayoutHeight  { get; }
         
-        bool IsLayoutDirty { get; }
+        [DebuggerVisible] bool IsLayoutDirty { get; }
 
-        Size PreferredSize { get; }
-        Size PreferredMinSize { get; }
-        Size PreferredMaxSize { get; }
+        [DebuggerVisible] Size PreferredSize { get; }
+        [DebuggerVisible] Size PreferredMinSize { get; }
+        [DebuggerVisible] Size PreferredMaxSize { get; }
 
         #endregion
         
         #region Calculated Properties
 
-        Rectangle OuterBounds { get; }
-        Rectangle Bounds { get; }
-        Rectangle InnerBounds { get; }
-        Point Position { get; }
-        Size Size { get; }
+        [DebuggerVisible] Rectangle OuterBounds { get; }
+        [DebuggerVisible] Rectangle Bounds { get; }
+        [DebuggerVisible] Rectangle InnerBounds { get; }
+        [DebuggerVisible] Point Position { get; }
+        
+        [DebuggerVisible] Size Size { get; }
         
         #endregion
 

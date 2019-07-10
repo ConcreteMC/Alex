@@ -1,0 +1,34 @@
+﻿<catel:UserControl
+	x:Class="Alex.GuiDebugger.Views.StatusBarView"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:catel="http://schemas.catelproject.com"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:orc="http://schemas.wildgums.com/orc/controls"
+	d:DesignHeight="20"
+	d:DesignWidth="600"
+	mc:Ignorable="d">
+
+	<Grid HorizontalAlignment="Right">
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="*" />
+		</Grid.ColumnDefinitions>
+
+		<StackPanel
+			x:Name="stackPanel"
+			HorizontalAlignment="Right"
+			Orientation="Horizontal">
+
+			<TextBlock Text="{Binding ProductName}" />
+
+			<Separator Width="{Binding ElementName=stackPanel, Path=ActualHeight}" Margin="3,0,3,0">
+				<Separator.LayoutTransform>
+					<RotateTransform Angle="90" />
+				</Separator.LayoutTransform>
+			</Separator>
+
+			<TextBlock Text="{Binding Version}" />
+		</StackPanel>
+	</Grid>
+</catel:UserControl>

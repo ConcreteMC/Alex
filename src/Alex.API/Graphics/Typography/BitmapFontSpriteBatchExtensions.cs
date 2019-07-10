@@ -1,9 +1,7 @@
 ﻿using System;
-using Alex.API.Graphics.Textures;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Color = Microsoft.Xna.Framework.Color;
 
 namespace Alex.API.Graphics.Typography
 {

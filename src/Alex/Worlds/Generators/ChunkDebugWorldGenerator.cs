@@ -1,7 +1,6 @@
 using Alex.API.Blocks.State;
 using Alex.API.Utils;
 using Alex.API.World;
-using Alex.Blocks.Minecraft;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Worlds.Generators

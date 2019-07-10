@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using log4net;
 using MiNET.Blocks;
 using MiNET.Plugins;
 using MiNET.Worlds;
-using NLog;
 using LogManager = log4net.LogManager;
 
 namespace MiNET.AlexDebug

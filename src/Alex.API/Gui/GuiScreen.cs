@@ -1,11 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using Alex.API.Gui.Elements;
-using Alex.API.Gui.Elements.Controls;
-using Alex.API.Gui.Graphics;
-using Alex.API.Input;
+﻿using Alex.API.Gui.Elements;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
+using RocketUI;
 
 namespace Alex.API.Gui
 {
@@ -18,12 +13,19 @@ namespace Alex.API.Gui
             get { return this; }
         }
 
+        public override IGuiScreen Screen
+        {
+            get => this;
+        }
+
         public IGuiControl FocusedControl { get; private set; }
+
 
         public GuiScreen()
         {
             AutoSizeMode = AutoSizeMode.None;
             Anchor = Alignment.Fill;
+            ClipToBounds = true;
         }
 
         public void UpdateSize(int width, int height)

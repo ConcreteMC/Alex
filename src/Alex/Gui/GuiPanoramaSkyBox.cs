@@ -1,10 +1,8 @@
 ﻿using System;
-using System.IO;
 using Alex.API.Graphics;
 using Alex.API.Graphics.Textures;
 using Alex.API.Gui.Graphics;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.Gui

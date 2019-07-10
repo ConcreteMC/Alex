@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Text;
 using Alex.API.Graphics.Typography;
 using Alex.API.Gui.Elements;
@@ -9,8 +7,8 @@ using Alex.API.Gui.Graphics;
 using Alex.API.Input;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using RocketUI;
 
 namespace Alex.API.Gui
 {
@@ -44,6 +42,8 @@ namespace Alex.API.Gui
 		private Vector2 CursorPosition;
 		private GuiElement TopMostHighlighted;
 		private GuiElement TopMostFocused;
+
+
 
 		internal GuiDebugHelper(GuiManager manager)
 		{

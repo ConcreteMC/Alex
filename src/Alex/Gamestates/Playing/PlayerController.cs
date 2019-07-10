@@ -2,7 +2,7 @@
 using Alex.API.Input;
 using Alex.API.Input.Listeners;
 using Alex.Entities;
-using Alex.GameStates.Gui.InGame;
+using Alex.Gui.Dialogs.Containers;
 using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
@@ -50,6 +50,9 @@ namespace Alex.GameStates.Playing
 	    private bool IgnoreNextUpdate { get; set; } = false;
 		private DateTime _lastForward = DateTime.UtcNow;
 		private Vector2 _previousMousePosition = Vector2.Zero;
+
+		private GuiPlayerInventoryDialog _guiPlayerInventoryDialog = null;
+
 		public void Update(GameTime gameTime)
 	    {
 		   UpdatePlayerInput(gameTime);
@@ -74,7 +77,19 @@ namespace Alex.GameStates.Playing
 		    {
 			    
 			}
-	    }
+			else if (InputManager.IsPressed(InputCommand.ToggleInventory))
+			{
+				if (_guiPlayerInventoryDialog == null)
+				{
+					Alex.Instance.GuiManager.ShowDialog(_guiPlayerInventoryDialog = new GuiPlayerInventoryDialog(Player, Player.Inventory));
+				}
+				else
+				{
+					Alex.Instance.GuiManager.HideDialog(_guiPlayerInventoryDialog);
+					_guiPlayerInventoryDialog = null;
+				}
+			}
+		}
 
 	    public float LastSpeedFactor = 0f;
 	    private void CheckMovementInput(GameTime gt)

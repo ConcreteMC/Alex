@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using RocketUI;
 
 namespace Alex.API.Gui.Elements.Layout
 {
-    public class GuiMultiStackContainer : GuiStackContainer
+    public class GuiMultiStackContainer : GuiScrollableStackContainer
     {
         private List<GuiStackContainer> _rows = new List<GuiStackContainer>();
 

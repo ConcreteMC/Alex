@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO.Compression;
-using System.Text;
+﻿using System.IO.Compression;
 
 namespace Alex.ResourcePackLib
 {

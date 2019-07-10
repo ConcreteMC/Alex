@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using Alex.API.Data.Options;
 using Alex.API.GameStates;
 using Alex.API.Gui;
@@ -9,6 +7,7 @@ using Alex.API.Services;
 using Alex.GameStates.Gui.Common;
 using Alex.Gui.Elements;
 using NLog;
+using RocketUI;
 
 namespace Alex.GameStates.Gui.MainMenu.Options
 {

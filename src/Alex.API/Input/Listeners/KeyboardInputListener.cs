@@ -30,6 +30,8 @@ namespace Alex.API.Input.Listeners
             RegisterMap(InputCommand.RebuildChunks, Keys.F9);
             RegisterMap(InputCommand.ToggleWireframe, Keys.F10);
 
+            RegisterMap(InputCommand.ToggleInventory, Keys.E);
+
             
             RegisterMap(InputCommand.HotBarSelect1, Keys.D1);
             RegisterMap(InputCommand.HotBarSelect2, Keys.D2);

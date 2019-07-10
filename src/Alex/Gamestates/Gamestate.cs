@@ -16,6 +16,9 @@ namespace Alex.GameStates
 
 		protected Alex Alex { get; }
 
+		public bool IsLoaded { get; private set; }
+		public bool IsShown { get; private set; }
+
 		public IGameState ParentState { get; set; } = null;
 		
 		private IOptionsProvider OptionsProvider { get; }
@@ -40,6 +43,9 @@ namespace Alex.GameStates
 
 		public void Load(IRenderArgs args)
 		{
+			if(IsLoaded) return;
+			IsLoaded = true;
+
 			OnLoad(args);
 
 			if (Gui != null)
@@ -50,6 +56,9 @@ namespace Alex.GameStates
 
 		public void Unload()
 		{
+			if(!IsLoaded) return;
+			IsLoaded = false;
+
 			OnUnload();
 		}
 
@@ -65,6 +74,8 @@ namespace Alex.GameStates
 
 		public void Update(GameTime gameTime)
 		{
+			if(!IsLoaded) return;
+
 			OnUpdate(gameTime);
 
 			if (Gui != null)
@@ -75,15 +86,22 @@ namespace Alex.GameStates
 
 		public void Show()
 		{
+			if(IsShown) return;
+
 			if (Gui != null)
 			{
 				Alex.GuiManager.AddScreen(Gui);
 			}
 			OnShow();
+
+			IsShown = true;
 		}
 
 		public void Hide()
 		{
+			if(!IsShown) return;
+			IsShown = false;
+
 			OnHide();
 			
 			if (Gui != null)

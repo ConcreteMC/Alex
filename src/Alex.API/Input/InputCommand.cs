@@ -26,6 +26,8 @@
         ToggleCameraFree,
         ToggleWireframe,
         
+		ToggleInventory,
+
         RebuildChunks,
 
 
