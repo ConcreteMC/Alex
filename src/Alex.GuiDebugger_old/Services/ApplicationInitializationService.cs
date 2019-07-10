@@ -71,7 +71,7 @@ namespace Alex.GuiDebugger.Services
 
         public override async Task InitializeAfterCreatingShellAsync()
         {
-
+            _serviceLocator.RegisterTypeAndInstantiate<PollingService>();
             Log.Info("Delay to show the splash screen");
 
             Thread.Sleep(2500);

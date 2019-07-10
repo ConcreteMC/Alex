@@ -26,7 +26,7 @@ namespace Alex.API.Gui
 
     public class GuiManager
     {
-        //private GuiDebugHelper DebugHelper { get; }
+       // public GuiDebugHelper DebugHelper { get; }
 
         public event EventHandler<GuiDrawScreenEventArgs> DrawScreen;
 
@@ -64,7 +64,7 @@ namespace Alex.API.Gui
             GuiSpriteBatch = new GuiSpriteBatch(guiRenderer, Game.GraphicsDevice, SpriteBatch);
             GuiRenderArgs = new GuiRenderArgs(Game.GraphicsDevice, SpriteBatch, ScaledResolution, GuiRenderer, new GameTime());
 
-            //DebugHelper = new GuiDebugHelper(this);
+          //  DebugHelper = new GuiDebugHelper(this);
         }
 
         private void ScaledResolutionOnScaleChanged(object sender, UiScaleEventArgs args)
@@ -164,7 +164,7 @@ namespace Alex.API.Gui
                 }
             }
 
-            //DebugHelper.Update(gameTime);
+           // DebugHelper.Update(gameTime);
         }
         
         public void Draw(GameTime gameTime)
@@ -178,7 +178,7 @@ namespace Alex.API.Gui
 					screen.Draw(GuiSpriteBatch, gameTime);
 
                     DrawScreen?.Invoke(this, new GuiDrawScreenEventArgs(screen, gameTime));
-                    //DebugHelper.DrawScreen(screen);
+                  //  DebugHelper.DrawScreen(screen);
                 });
             }
             finally

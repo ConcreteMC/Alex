@@ -14,5 +14,6 @@ namespace Alex.GuiDebugger.Services
 
 		void RefreshProperties(GuiDebuggerElementInfo elementInfo);
 
-	}
+        void HighlightGuiElement(GuiDebuggerElementInfo elementInfo);
+    }
 }

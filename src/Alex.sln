@@ -1,4 +1,5 @@
-﻿Microsoft Visual Studio Solution File, Format Version 12.00
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29021.104
 MinimumVisualStudioVersion = 10.0.40219.1
@@ -98,6 +99,7 @@ Global
 		{BA612A7B-9397-4520-973D-3E2F07302D51}.Release|x64.ActiveCfg = Release|x64
 		{BA612A7B-9397-4520-973D-3E2F07302D51}.Release|x64.Build.0 = Release|x64
 		{1EC13D82-9D46-4BBB-A89B-CE0C75BB8B8B}.Debug|x64.ActiveCfg = Debug|x64
+		{1EC13D82-9D46-4BBB-A89B-CE0C75BB8B8B}.Debug|x64.Build.0 = Debug|x64
 		{1EC13D82-9D46-4BBB-A89B-CE0C75BB8B8B}.Release|x64.ActiveCfg = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution

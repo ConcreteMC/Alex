@@ -1,4 +1,7 @@
-﻿namespace Alex.GuiDebugger.Views
+﻿using Alex.GuiDebugger.Common.Services;
+using Catel.IoC;
+
+namespace Alex.GuiDebugger.Views
 {
     using Catel.Windows.Controls;
 
@@ -14,6 +17,9 @@
         public MainView()
         {
             InitializeComponent();
+            var serviceLocator = this.GetServiceLocator();
+            var debuggerService = serviceLocator.ResolveType<IGuiDebuggerService>();
+            debuggerService.EnableUIDebugging();
         }
 
     }

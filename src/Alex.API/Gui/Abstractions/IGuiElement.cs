@@ -18,8 +18,8 @@ namespace Alex.API.Gui
         IGuiElement[] ChildElements { get; }
 
         [DebuggerVisible] bool HasChildren { get; }
-        [DebuggerVisible] int X { set; }
-        [DebuggerVisible] int Y { set; }
+        int X { set; }
+        int Y { set; }
         
         
         [DebuggerVisible] Vector2 RenderPosition { get; }

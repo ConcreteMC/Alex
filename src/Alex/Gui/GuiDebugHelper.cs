@@ -29,7 +29,7 @@ namespace Alex.Gui
 		private static readonly Color BoundsBackground = Color.LightSeaGreen * 0.2f;
 		private static readonly Color InnerBoundsBackground = Color.CornflowerBlue * 0.1f;
 
-		public bool Enabled { get; set; } = true;
+		public bool Enabled { get; set; } = false;
 		public bool BoundingBoxesEnabled { get; set; } = true;
 		public bool BoundingBoxesHoverEnabled { get; set; } = true;
 		public bool HoverInfoEnabled { get; set; } = false;
@@ -45,7 +45,7 @@ namespace Alex.Gui
 		private MouseState _previousMouse, _currentMouse;
 
 		private Vector2 CursorPosition;
-		private GuiElement TopMostHighlighted;
+		private GuiElement _topMostHighlighted;
 		private GuiElement TopMostFocused;
 
 		public IGuiElement HighlightedElement;
@@ -58,7 +58,12 @@ namespace Alex.Gui
 			GuiManager.DrawScreen += GuiManagerOnDrawScreen;
 		}
 
-		private void GuiManagerOnDrawScreen(object sender, GuiDrawScreenEventArgs e)
+        public GuiElement TopMostHighlighted
+        {
+            get { return _topMostHighlighted; }
+        }
+
+        private void GuiManagerOnDrawScreen(object sender, GuiDrawScreenEventArgs e)
 		{
 			DrawScreen(e.Screen);
 		}
@@ -76,7 +81,7 @@ namespace Alex.Gui
 			if (_previousKeyboard.IsKeyDown(ToggleDebugHotKey) && _currentKeyboard.IsKeyUp(ToggleDebugHotKey))
 			{
 				Enabled = !Enabled;
-			}
+            }
 
 			if (!Enabled) return;
 			if (!BoundingBoxesEnabled) return;
@@ -84,7 +89,7 @@ namespace Alex.Gui
 			if ((_previousMouse.LeftButton == ButtonState.Pressed && _currentMouse.LeftButton != ButtonState.Pressed)
 				|| (_previousMouse.RightButton == ButtonState.Pressed && _currentMouse.RightButton != ButtonState.Pressed))
 				{
-				TopMostFocused = TopMostFocused == null ? TopMostHighlighted : null;
+				TopMostFocused = TopMostFocused == null ? _topMostHighlighted : null;
 			}
 
 			if (_previousKeyboard.IsKeyDown(Keys.Escape) && _currentKeyboard.IsKeyUp(Keys.Escape))
@@ -101,11 +106,11 @@ namespace Alex.Gui
 			if (GuiManager.FocusManager.TryGetElementAt(CursorPosition, e => e is GuiElement c,
 														out var controlMatchingPosition))
 			{
-				TopMostHighlighted = controlMatchingPosition as GuiElement;
+				_topMostHighlighted = controlMatchingPosition as GuiElement;
 			}
 			else
 			{
-				TopMostHighlighted = null;
+				_topMostHighlighted = null;
 			}
 
 		}
@@ -114,40 +119,44 @@ namespace Alex.Gui
 		{
 			if (!Enabled) return;
 
-			if (HighlightedElement != null)
-			{
-				DrawDebug(HighlightedElement);
-			}
-			//if (BoundingBoxesEnabled)
-			//{
-			//	screen.ForEachChild(c => DrawElementRecursive(c));
-			//}
+            using (SpriteBatch.BeginClipBounds(screen.RenderBounds, false))
+            {
+                
+			    if (HighlightedElement != null)
+			    {
+				    DrawDebug(HighlightedElement);
+			    }
+                //if (BoundingBoxesEnabled)
+                //{
+                //	screen.ForEachChild(c => DrawElementRecursive(c));
+                //}
 
-			//if (BoundingBoxesHoverEnabled)
-			//{
-			//	DrawDebug(TopMostHighlighted);
-			//}
+                //if (BoundingBoxesHoverEnabled)
+                //{
+                //	DrawDebug(TopMostHighlighted);
+                //}
 
-			//// draw info at cursor
-			//if (HoverInfoEnabled)
-			//{
-			//	var e = TopMostFocused ?? TopMostHighlighted;
-			//	if (e != null)
-			//	{
-			//		var p = e.ParentElement as GuiElement;
+                //// draw info at cursor
+                //if (HoverInfoEnabled)
+                //{
+                //	var e = TopMostFocused ?? TopMostHighlighted;
+                //	if (e != null)
+                //	{
+                //		var p = e.ParentElement as GuiElement;
 
-			//		var info = GetElementInfo(e);
+                //		var info = GetElementInfo(e);
 
-			//		DrawDebugString(CursorPosition, info, Color.WhiteSmoke * 0.85f, Color.Black, 2, 1, 1);
+                //		DrawDebugString(CursorPosition, info, Color.WhiteSmoke * 0.85f, Color.Black, 2, 1, 1);
 
-			//		if (p != null)
-			//		{
-			//			var infoParent = GetElementInfo(p);
-			//			DrawDebugString(CursorPosition, infoParent, Color.WhiteSmoke * 0.85f, Color.Black, 2, -1, 1);
-			//		}
-			//	}
-			//}
-		}
+                //		if (p != null)
+                //		{
+                //			var infoParent = GetElementInfo(p);
+                //			DrawDebugString(CursorPosition, infoParent, Color.WhiteSmoke * 0.85f, Color.Black, 2, -1, 1);
+                //		}
+                //	}
+                //}   
+            }
+        }
 
 		private string GetElementInfo(GuiElement e)
 		{
@@ -197,9 +206,9 @@ namespace Alex.Gui
 
 		private void DrawDebug(IGuiElement element)
 		{
-			if (element == null) return;
+            if (element == null) return;
 			if (!Enabled) return;
-			var isHighlighted = element == TopMostHighlighted;
+			var isHighlighted = element == _topMostHighlighted;
 
 
 			if (element.OuterBounds != element.Bounds)

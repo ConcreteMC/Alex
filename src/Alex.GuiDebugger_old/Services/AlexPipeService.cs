@@ -38,6 +38,11 @@ namespace Alex.GuiDebugger.Services
             _client = client;
         }
 
+        public Guid? TryGetElementUnderCursor()
+        {
+            return _client.InvokeAsync(x => x.TryGetElementUnderCursor()).GetAwaiter().GetResult();
+        }
+
         public void HighlightGuiElement(Guid id)
         {
             _client.InvokeAsync(x => x.HighlightGuiElement(id)).Wait();
@@ -61,6 +66,16 @@ namespace Alex.GuiDebugger.Services
         public bool SetElementPropertyValue(Guid id, string propertyName, string propertyValue)
         {
             return _client.InvokeAsync(x => x.SetElementPropertyValue(id, propertyName, propertyValue)).Result;
+        }
+
+        public void EnableUIDebugging()
+        {
+            _client.InvokeAsync(x => x.EnableUIDebugging()).Wait();
+        }
+
+        public bool IsUIDebuggingEnabled()
+        {
+            return _client.InvokeAsync(x => x.IsUIDebuggingEnabled()).GetAwaiter().GetResult();
         }
     }
 }

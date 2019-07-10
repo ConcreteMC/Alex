@@ -3,9 +3,10 @@
 namespace Alex.GuiDebugger.Common.Services
 {
 	public interface IGuiDebuggerService
-	{
+    {
+        Guid? TryGetElementUnderCursor();
 
-		void HighlightGuiElement(Guid id);
+        void HighlightGuiElement(Guid id);
 		void DisableHighlight();
 
 		GuiElementInfo[] GetAllGuiElementInfos();
@@ -13,6 +14,7 @@ namespace Alex.GuiDebugger.Common.Services
 		GuiElementPropertyInfo[] GetElementPropertyInfos(Guid id);
 
 		bool SetElementPropertyValue(Guid id, string propertyName, string propertyValue);
-
-	}
+        void EnableUIDebugging();
+        bool IsUIDebuggingEnabled();
+    }
 }

@@ -17,6 +17,11 @@ namespace Alex.Services
 
 		protected GuiManager GuiManager => Alex.Instance.GuiManager;
 
+        public Guid? TryGetElementUnderCursor()
+        {
+            return Alex.Instance.GuiDebugHelper.TopMostHighlighted?.Id;
+        }
+
 		public void HighlightGuiElement(Guid id)
 		{
 			Log.Info($"IGuiDebuggerService.HighlightGuiElement(id: {id.ToString()})");
@@ -76,13 +81,23 @@ namespace Alex.Services
 			}
 		}
 
-		private IGuiElement FindGuiElementById(Guid id)
+        public void EnableUIDebugging()
+        {
+            Alex.Instance.GuiDebugHelper.Enabled = true;
+        }
+
+        public bool IsUIDebuggingEnabled()
+        {
+            return Alex.Instance.GuiDebugHelper.Enabled;
+        }
+
+        private IGuiElement FindGuiElementById(Guid id)
 		{
 			foreach (var screen in GuiManager.Screens.ToArray())
 			{
 				if (screen.TryFindDeepestChild(e => e.Id.Equals(id), out IGuiElement foundElement))
 				{
-					return foundElement;
+                    return foundElement;
 				}
 			}
 
