@@ -1,19 +1,14 @@
 ﻿using System;
 using System.Linq;
-using System.Threading;
 using Alex.API.Blocks.State;
-using Alex.API.Data;
 using Alex.API.Entities;
 using Alex.API.Graphics;
 using Alex.API.Input;
 using Alex.API.Network;
 using Alex.API.Utils;
-using Alex.Blocks;
 using Alex.Blocks.Minecraft;
 using Alex.GameStates.Playing;
-using Alex.Graphics.Models.Entity;
 using Alex.Items;
-using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
@@ -22,7 +17,6 @@ using MiNET;
 using MiNET.Net;
 using NLog;
 using Inventory = Alex.Utils.Inventory;
-using Ray = MiNET.Utils.Ray;
 
 namespace Alex.Entities
 {

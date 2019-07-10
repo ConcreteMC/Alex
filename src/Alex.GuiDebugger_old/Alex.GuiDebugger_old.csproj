@@ -34,6 +34,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="JKang.IpcServiceFramework.Client" Version="2.2.2" />
     <PackageReference Include="LoadAssembliesOnStartup.Fody" Version="3.0.8" PrivateAssets="all" />
     <PackageReference Include="ModuleInit.Fody" Version="1.9.0" PrivateAssets="all" />
     <PackageReference Include="Obsolete.Fody" Version="4.4.3" PrivateAssets="all" />
@@ -49,6 +50,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Alex.GuiDebugger.Common\Alex.GuiDebugger.Common.csproj" />
+    <ProjectReference Include="..\RocketUI\RocketUI.csproj" />
   </ItemGroup>
 
   <ItemGroup Condition="Exists('Properties\DesignTimeResources.xaml')">

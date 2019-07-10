@@ -1,11 +1,9 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using Alex.GuiDebugger.Models;
 using Alex.GuiDebugger.Services;
 using Alex.GuiDebugger.ViewModels;
 using Alex.GuiDebugger.ViewModels.Documents;
 using Avalonia;
-using Alex.GuiDebugger.ViewModels.Tools;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Dock.Model.Controls;

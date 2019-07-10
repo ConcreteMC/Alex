@@ -1,7 +1,4 @@
 ﻿using System;
-using Alex.API.Gui;
-using Alex.API.Utils;
-using Microsoft.Xna.Framework;
 
 namespace Alex.API.Gui.Elements.Controls
 {

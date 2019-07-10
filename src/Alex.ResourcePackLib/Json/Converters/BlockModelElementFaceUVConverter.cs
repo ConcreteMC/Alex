@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using Alex.ResourcePackLib.Json.Models;
 using Alex.ResourcePackLib.Json.Models.Blocks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;

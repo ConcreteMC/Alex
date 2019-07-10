@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using Alex.Networking.Java.Util;
 
 namespace Alex.Networking.Java.Packets.Play

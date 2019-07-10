@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using Alex.API.Gui.Elements.Layout;
-using Microsoft.Xna.Framework.Input;
 
 namespace Alex.API.Gui.Elements.Controls
 {

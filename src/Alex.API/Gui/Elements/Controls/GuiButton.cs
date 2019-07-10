@@ -1,9 +1,9 @@
 ﻿using System;
 using Alex.API.Graphics.Typography;
-using Alex.API.Gui;
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
+using RocketUI;
 
 namespace Alex.API.Gui.Elements.Controls
 {
@@ -47,8 +47,8 @@ namespace Alex.API.Gui.Elements.Controls
             MinHeight = 20;
 	        MinWidth = 20;
 
-	        MaxHeight = 22;
-	        MaxWidth = 200;
+	        //MaxHeight = 22;
+	        //MaxWidth = 200;
 			Padding = new Thickness(5, 5);
 			Margin = new Thickness(2);
 

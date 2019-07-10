@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using Alex.API.Gui.Attributes;
+
 using Alex.API.Gui.Layout;
 using Microsoft.Xna.Framework;
+using RocketUI;
 
 namespace Alex.API.Gui.Elements
 {
@@ -390,10 +391,10 @@ namespace Alex.API.Gui.Elements
                 size = Size.Max(size, childSize);
             }
 
-            if (size.Height > availableSize.Height)
-            {
-                size.Height = size.Height - availableSize.Height;
-            }
+            //if (size.Height > availableSize.Height)
+            //{
+            //    size.Height -= availableSize.Height;
+            //}
 
             return size;
         }

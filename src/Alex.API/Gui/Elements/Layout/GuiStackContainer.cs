@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using Alex.API.Gui.Attributes;
+
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Graphics;
 using Microsoft.Xna.Framework;
+using RocketUI;
 
 namespace Alex.API.Gui.Elements.Layout
 {
@@ -60,7 +61,8 @@ namespace Alex.API.Gui.Elements.Layout
 
 			foreach (var child in children)
 			{
-				if (child is GuiScrollBar) continue;
+				if (!ShouldPositionChild(child)) continue;
+
 				containerSize += lastOffset;
 
 				var thisOffset = CalculateOffset(alignment, Size.Zero, child.Margin, lastOffset);
@@ -252,7 +254,10 @@ namespace Alex.API.Gui.Elements.Layout
 
 		private void UpdateLayoutAlignment(IGuiElement element)
 		{
-
+			if (ShouldPositionChild(element as GuiElement))
+			{
+				element.Anchor = ChildAnchor;
+			}
 			InvalidateLayout();
 		}
 

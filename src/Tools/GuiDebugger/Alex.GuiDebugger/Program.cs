@@ -7,7 +7,6 @@ using Avalonia.Logging.Serilog;
 using Alex.GuiDebugger.ViewModels;
 using Alex.GuiDebugger.Views;
 using Dock.Model;
-using Dock.Model.Controls;
 using Dock.Serializer;
 
 namespace Alex.GuiDebugger

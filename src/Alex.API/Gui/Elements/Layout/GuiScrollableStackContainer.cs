@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Text;
-using Alex.API.Gui.Attributes;
+using System.Linq;
 using Alex.API.Gui.Elements.Controls;
 using Microsoft.Xna.Framework;
 using NLog;
+using RocketUI;
 
 namespace Alex.API.Gui.Elements.Layout
 {
@@ -200,7 +201,7 @@ namespace Alex.API.Gui.Elements.Layout
 				heightOverride = (int) (availableSize.Height / (float) children.Count);
 			}
 
-			var baseVal = base.MeasureChildrenCore(availableSize, children);
+			var baseVal = base.MeasureChildrenCore(availableSize, new ReadOnlyCollection<GuiElement>(children.Where(ShouldPositionChild).ToList()));
 
 			if (HorizontalScrollBar != null)
 			{
@@ -215,16 +216,6 @@ namespace Alex.API.Gui.Elements.Layout
 			}
 
 			return baseVal;
-		}
-
-		protected override void OnChildAdded(IGuiElement element)
-		{
-			base.OnChildAdded(element);
-
-			if (element != HorizontalScrollBar && element != VerticalScrollBar)
-			{
-				element.Anchor = ChildAnchor;
-			}
 		}
 	}
 }

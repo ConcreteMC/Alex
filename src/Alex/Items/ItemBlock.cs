@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Alex.API.Blocks.State;
-using Alex.Blocks;
+﻿using Alex.API.Blocks.State;
 
 namespace Alex.Items
 {

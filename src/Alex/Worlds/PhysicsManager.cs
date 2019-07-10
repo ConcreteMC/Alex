@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Threading;
-using Alex.API;
 using Alex.API.Entities;
 using Alex.API.Utils;
 using Alex.API.World;
@@ -9,7 +7,6 @@ using Alex.Entities;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
 using NLog;
-using MathF = System.MathF;
 
 namespace Alex.Worlds
 {

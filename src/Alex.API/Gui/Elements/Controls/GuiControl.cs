@@ -1,12 +1,12 @@
 ﻿using System;
-using Alex.API.Graphics;
-using Alex.API.Graphics.Textures;
 using Alex.API.Gui.Elements.Layout;
-using Alex.API.Gui.Events;
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using RocketUI;
+using GuiCursorEventArgs = Alex.API.Gui.Events.GuiCursorEventArgs;
+using GuiCursorMoveEventArgs = Alex.API.Gui.Events.GuiCursorMoveEventArgs;
 
 namespace Alex.API.Gui.Elements.Controls
 {

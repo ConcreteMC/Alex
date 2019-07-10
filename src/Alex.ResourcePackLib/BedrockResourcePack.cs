@@ -3,20 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using System.IO.Compression;
-using System.Linq;
-using System.Security.AccessControl;
-using Alex.ResourcePackLib.Json;
-using Alex.ResourcePackLib.Json.Converters;
-using Alex.ResourcePackLib.Json.Models;
-using Alex.ResourcePackLib.Json.Models.Blocks;
-using Alex.ResourcePackLib.Json.Models.Entities;
-using Alex.ResourcePackLib.Json.Textures;
-using ICSharpCode.SharpZipLib.Zip;
-
-using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using NLog;
 
 namespace Alex.ResourcePackLib

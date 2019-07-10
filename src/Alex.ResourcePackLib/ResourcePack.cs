@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.IO.Compression;
-using System.Text;
 using Alex.ResourcePackLib.Generic;
 using Alex.ResourcePackLib.Json;
 

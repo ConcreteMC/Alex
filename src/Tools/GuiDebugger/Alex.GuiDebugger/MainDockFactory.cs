@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using Alex.GuiDebugger.ViewModels;
 using Alex.GuiDebugger.ViewModels.Tools;
 using Dock.Avalonia.Controls;

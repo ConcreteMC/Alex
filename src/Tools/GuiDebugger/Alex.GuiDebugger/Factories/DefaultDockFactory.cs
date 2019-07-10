@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using Alex.GuiDebugger.Models;
 using Alex.GuiDebugger.ViewModels;
-using Alex.GuiDebugger.ViewModels.Documents;
 using Alex.GuiDebugger.ViewModels.Tools;
-using Alex.GuiDebugger.Views;
 using Dock.Avalonia.Controls;
 using Dock.Avalonia.Editor;
 using Dock.Model;

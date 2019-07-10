@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using Alex.GuiDebugger.Models;
 using Alex.GuiDebugger.Services;
 using Dock.Model.Controls;

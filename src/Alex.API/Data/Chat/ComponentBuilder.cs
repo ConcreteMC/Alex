@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using Alex.API.Input.Listeners;
 using Alex.API.Utils;
-using Microsoft.Xna.Framework.Input;
 
 namespace Alex.API.Data.Chat
 {

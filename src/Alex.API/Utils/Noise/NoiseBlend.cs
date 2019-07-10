@@ -1,6 +1,4 @@
-﻿using Microsoft.Xna.Framework;
-
-namespace Alex.API.Utils.Noise
+﻿namespace Alex.API.Utils.Noise
 {
 	public class NoiseBlender : SelectorModule, IModule3D, IModule2D
 	{

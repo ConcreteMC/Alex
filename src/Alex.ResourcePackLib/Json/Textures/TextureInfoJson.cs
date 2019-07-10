@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using Alex.ResourcePackLib.Json.Converters;
 using Microsoft.Xna.Framework;
 using Newtonsoft.Json;

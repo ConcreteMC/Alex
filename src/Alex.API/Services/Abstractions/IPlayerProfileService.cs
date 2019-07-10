@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 using Alex.API.Utils;
-using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
 
 namespace Alex.API.Services

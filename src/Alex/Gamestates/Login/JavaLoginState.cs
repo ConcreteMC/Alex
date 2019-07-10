@@ -1,24 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
-using Alex.API.Gui;
-using Alex.API.Gui.Elements;
-using Alex.API.Gui.Elements.Controls;
-using Alex.API.Gui.Graphics;
 using Alex.API.Services;
 using Alex.API.Utils;
-using Alex.GameStates;
-using Alex.GameStates.Gui.Common;
 using Alex.Gui;
-using Alex.Networking.Java;
-using Alex.Utils;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
 using MojangSharp.Api;
-using MojangSharp.Endpoints;
-using MojangSharp.Responses;
 
 namespace Alex.Gamestates.Login
 {

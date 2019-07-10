@@ -1,13 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Alex.API.Network;
-using Alex.API.Utils;
-using Alex.API.World;
-using Alex.Blocks;
-using Alex.Utils;
+﻿using Alex.API.Network;
 using Alex.Worlds;
-using Microsoft.Xna.Framework;
 
 namespace Alex.Entities
 {

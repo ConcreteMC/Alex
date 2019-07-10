@@ -1,5 +1,4 @@
-﻿using Alex.Utils;
-using Alex.Worlds;
+﻿using Alex.Worlds;
 
 namespace Alex.Entities.Passive
 {

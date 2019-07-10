@@ -1,5 +1,4 @@
-﻿using Alex.ResourcePackLib.Json.Converters;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace Alex.ResourcePackLib.Json.Models.Blocks
 {

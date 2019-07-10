@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Specialized;
-using Avalonia;
 using Avalonia.Collections;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
@@ -23,29 +22,29 @@ namespace Alex.GuiDebugger.Views.Documents
 		{
 			base.OnDataContextChanged(e);
 
-			UpdateView();
+			//UpdateView();
 
-			if (DataContext is ViewModels.Documents.ElementTreeDocument vm)
-			{
-				vm.Properties.CollectionChanged += PropertiesOnCollectionChanged;
-			}
+			//if (DataContext is ViewModels.Documents.ElementTreeDocument vm)
+			//{
+			//	vm.Properties.CollectionChanged += PropertiesOnCollectionChanged;
+			//}
 		}
 
-		private void PropertiesOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-		{
-			UpdateView();
-		}
+		//private void PropertiesOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+		//{
+		//	UpdateView();
+		//}
 
-		private void UpdateView()
-		{
-			if (DataContext is ViewModels.Documents.ElementTreeDocument vm)
-			{
-				var dg = this.FindControl<DataGrid>("PropertiesDataGrid");
-				dg.IsReadOnly = true;
+		//private void UpdateView()
+		//{
+		//	if (DataContext is ViewModels.Documents.ElementTreeDocument vm)
+		//	{
+		//		var dg = this.FindControl<DataGrid>("PropertiesDataGrid");
+		//		dg.IsReadOnly = true;
 
-				var collection = new DataGridCollectionView(vm.Properties);
-				dg.Items = collection;
-			}
-		}
+		//		var collection = new DataGridCollectionView(vm.Properties);
+		//		dg.Items = collection;
+		//	}
+		//}
 	}
 }

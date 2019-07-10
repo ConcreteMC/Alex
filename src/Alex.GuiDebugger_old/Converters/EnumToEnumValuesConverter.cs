@@ -2,12 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Alex.API.Gui
+namespace Alex.GuiDebugger.Converters
 {
-	public enum ScrollMode
+	class EnumToEnumValuesConverter
 	{
-		Hidden,
-		Auto,
-		Visible
 	}
 }

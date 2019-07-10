@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Threading.Tasks;
 using Alex.API.Blocks.State;
-using Alex.API.Graphics;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.API.World

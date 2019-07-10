@@ -1,17 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using Alex.API.Utils;
 using Alex.GameStates.Playing;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using NLog;
-using Color = System.Drawing.Color;
 
 namespace Alex.Utils
 {

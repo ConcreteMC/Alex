@@ -4,7 +4,6 @@ using Alex.GuiDebugger.Models;
 using Alex.GuiDebugger.Services;
 using Dock.Model.Controls;
 using DynamicData;
-using Newtonsoft.Json;
 using ReactiveUI;
 
 namespace Alex.GuiDebugger.ViewModels.Documents

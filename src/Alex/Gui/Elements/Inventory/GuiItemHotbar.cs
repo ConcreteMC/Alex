@@ -1,7 +1,5 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using Alex.API.Graphics.Typography;
-using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Layout;
 using Alex.API.Gui.Graphics;
@@ -10,6 +8,7 @@ using Alex.Items;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
 using NLog;
+using RocketUI;
 
 namespace Alex.Gui.Elements.Inventory
 {

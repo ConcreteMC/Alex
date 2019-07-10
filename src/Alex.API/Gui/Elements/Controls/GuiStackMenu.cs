@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using Alex.API.Gui.Elements.Layout;
-using Microsoft.Xna.Framework;
 
 namespace Alex.API.Gui.Elements.Controls
 {

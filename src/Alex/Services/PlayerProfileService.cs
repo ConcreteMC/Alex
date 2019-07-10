@@ -1,18 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Alex.API.Services;
 using Alex.API.Utils;
-using Alex.GameStates;
-using Alex.Gui.Forms;
 using Alex.Utils;
 using Microsoft.Xna.Framework.Graphics;
-using MojangSharp;
 using MojangSharp.Api;
 using MojangSharp.Endpoints;
-using MojangSharp.Responses;
 using Newtonsoft.Json;
 using NLog;
 
