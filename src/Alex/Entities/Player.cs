@@ -46,6 +46,8 @@ namespace Alex.Entities
 			Inventory = new Inventory(46);
 			Inventory.SelectedHotbarSlotChanged += SelectedHotbarSlotChanged;
 			MovementSpeed = 0.1;
+
+			SnapHeadYawRotationOnMovement = false;
 		}
 
 	    private void SelectedHotbarSlotChanged(object sender, SelectedSlotChangedEventArgs e)

@@ -186,6 +186,7 @@ namespace Alex.Entities
 		private int turnTicksLimit = 10;
 		private float lastRotationYawHead = 0f;
 		private Vector3 _previousPosition = Vector3.Zero;
+		protected bool SnapHeadYawRotationOnMovement { get; set; } = true;
 		private void UpdateRotations()
 		{
 			double deltaX = KnownPosition.X - _previousPosition.X;
@@ -204,7 +205,12 @@ namespace Alex.Entities
 				//dragon.renderYawOffset = dragon.rotationYaw;
 				float newRotationYawHead = MathUtils.ConstrainAngle(KnownPosition.Yaw, KnownPosition.HeadYaw,
 					maximumHeadBodyAngleDifference);
-				KnownPosition.HeadYaw = newRotationYawHead;
+				
+				if (SnapHeadYawRotationOnMovement)
+				{
+					KnownPosition.HeadYaw = newRotationYawHead;
+				}
+
 				lastRotationYawHead = newRotationYawHead;
 				turnTicks = 0;
 			}

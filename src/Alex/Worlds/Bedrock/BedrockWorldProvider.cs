@@ -109,52 +109,6 @@ namespace Alex.Worlds.Bedrock
 						UnloadChunks(new ChunkCoordinates(pos), Client.ChunkRadius);
 						_stopwatch.Restart();
 					}
-					
-					///Log.Info($"Sent move player");
-					
-					/*	if (pos.DistanceTo(_lastSentLocation) > 0.0f)
-						{
-							PlayerPositionAndLookPacketServerBound packet = new PlayerPositionAndLookPacketServerBound();
-							packet.Yaw = 180f - pos.HeadYaw;
-							packet.Pitch = -pos.Pitch;
-							packet.X = pos.X;
-							packet.Y = pos.Y;
-							packet.Z = pos.Z;
-							packet.OnGround = pos.OnGround;
-	
-							SendPacket(packet);
-							_lastSentLocation = pos;
-	public
-							_tickSinceLastPositionUpdate = 0;
-						}
-						else if (Math.Abs(pos.Pitch - _lastSentLocation.Pitch) > 0f || Math.Abs(pos.HeadYaw - _lastSentLocation.Yaw) > 0f)
-						{
-							PlayerLookPacket playerLook = new PlayerLookPacket();
-							playerLook.Pitch = -pos.Pitch;
-							playerLook.Yaw = 180f - pos.HeadYaw;
-							playerLook.OnGround = pos.OnGround;
-	
-							SendPacket(playerLook);
-	
-							_tickSinceLastPositionUpdate = 0;
-						}
-						else if (_tickSinceLastPositionUpdate >= 20)
-						{
-							PlayerPosition packet = new PlayerPosition();
-							packet.FeetY = pos.Y;
-							packet.X = pos.X;
-							packet.Z = pos.Z;
-							packet.OnGround = pos.OnGround;
-	
-							SendPacket(packet);
-							_lastSentLocation = pos;
-	
-							_tickSinceLastPositionUpdate = 0;
-						}
-						else
-						{
-							_tickSinceLastPositionUpdate++;
-						}*/
 				}
 			}
 		}

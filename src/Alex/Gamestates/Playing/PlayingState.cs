@@ -350,14 +350,14 @@ namespace Alex.GameStates.Playing
 				{
 					if (World.Camera is FirstPersonCamera)
 					{
-						World.Camera = new ThirdPersonCamera(Options.VideoOptions.RenderDistance, World.Camera.Position, Vector3.Zero)
+						World.Camera = new ThirdPersonCamera(Options.VideoOptions.RenderDistance, World.Camera.Position, World.Camera.Rotation)
 						{
 							FOV = World.Camera.FOV
 						};
 					}
 					else
 					{
-						World.Camera = new FirstPersonCamera(Options.VideoOptions.RenderDistance, World.Camera.Position, Vector3.Zero)
+						World.Camera = new FirstPersonCamera(Options.VideoOptions.RenderDistance, World.Camera.Position, World.Camera.Rotation)
 						{
 							FOV = World.Camera.FOV
 						};
