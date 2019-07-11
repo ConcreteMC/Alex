@@ -25,9 +25,7 @@ namespace Alex.GameStates.Playing
 		private SkyBox SkyRenderer { get; }
 		public World World { get; }
 
-		private FpsMonitor FpsCounter { get; set; }
-
-		private WorldProvider WorldProvider { get; }
+        private WorldProvider WorldProvider { get; }
 		public INetworkProvider NetworkProvider { get; }
 
 		private readonly PlayingHud _playingHud;
@@ -57,8 +55,7 @@ namespace Alex.GameStates.Playing
 
 			_playingHud = new PlayingHud(Alex, World.Player, chat, title);
 			_debugInfo = new GuiDebugInfo();
-			FpsCounter = new FpsMonitor();
-			InitDebugInfo();
+            InitDebugInfo();
 		}
 
 		protected override void OnLoad(IRenderArgs args)
@@ -95,7 +92,7 @@ namespace Alex.GameStates.Playing
 				//FpsCounter.Update();
 				//World.ChunkManager.GetPendingLightingUpdates(out int lowLight, out int midLight, out int highLight);
 
-				return $"Alex {Alex.Version} ({FpsCounter.Value:##} FPS, Chunk Updates: {World.EnqueuedChunkUpdates} queued, {World.ConcurrentChunkUpdates} active"/*, H: {highLight} M: {midLight} L: {lowLight} lighting updates)"*/;
+				return $"Alex {Alex.Version} ({Alex.FpsMonitor.Value:##} FPS, Chunk Updates: {World.EnqueuedChunkUpdates} queued, {World.ConcurrentChunkUpdates} active"/*, H: {highLight} M: {midLight} L: {lowLight} lighting updates)"*/;
 			});
 			_debugInfo.AddDebugLeft(() =>
 			{
@@ -518,9 +515,7 @@ namespace Alex.GameStates.Playing
 		{
 			args.Camera = World.Camera;
 
-			FpsCounter.Update();
-			
-			SkyRenderer.Draw(args);
+            SkyRenderer.Draw(args);
 
 			World.Render(args);
 

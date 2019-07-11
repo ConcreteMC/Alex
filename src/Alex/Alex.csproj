@@ -106,6 +106,7 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.2.0" />
     <PackageReference Include="Microsoft.Identity.Client" Version="2.3.0-preview" />
     <PackageReference Include="MiniProfiler.EntityFrameworkCore" Version="4.0.180" />
+    <PackageReference Include="Mono.Cecil" Version="0.10.4" />
     <PackageReference Include="MonoGame.Framework.DesktopGL.Core" Version="3.7.0.7" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
     <PackageReference Include="NLog" Version="4.5.10" />

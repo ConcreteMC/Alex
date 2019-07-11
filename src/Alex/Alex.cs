@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Reflection;
 using System.Threading;
@@ -16,6 +17,7 @@ using Alex.GameStates.Gui.MainMenu;
 using Alex.GameStates.Playing;
 using Alex.Gui;
 using Alex.Networking.Java.Packets;
+using Alex.Plugins;
 using Alex.Services;
 using Alex.Utils;
 using Alex.Worlds.Bedrock;
@@ -68,6 +70,8 @@ namespace Alex
 		//public ChromiumWebBrowser CefWindow { get; private set; }
 		
 		private Application EtoApplication { get; }
+        public PluginManager PluginManager { get; }
+        public FpsMonitor FpsMonitor { get; }
 		public Alex(LaunchSettings launchSettings, Application app)
 		{
 			EtoApplication = app;
@@ -111,6 +115,9 @@ namespace Alex
 			};
 
 			UIThreadQueue = new ConcurrentQueue<Action>();
+
+            PluginManager = new PluginManager(this);
+            FpsMonitor = new FpsMonitor();
 		}
 
 		public static EventHandler<TextInputEventArgs> OnCharacterInput;
@@ -213,7 +220,9 @@ namespace Alex
 			Services.GetService<IOptionsProvider>().Save();
 			AlexIpcService.Stop();
 			GuiDebugHelper.Dispose();
-		}
+
+            PluginManager.UnloadAll();
+        }
 
 		protected override void Update(GameTime gameTime)
 		{
@@ -237,7 +246,9 @@ namespace Alex
 
 		protected override void Draw(GameTime gameTime)
 		{
-			GraphicsDevice.RasterizerState = RasterizerState.CullClockwise;
+            FpsMonitor.Update();
+
+            GraphicsDevice.RasterizerState = RasterizerState.CullClockwise;
 			GameStateManager.Draw(gameTime);
 
 			GuiManager.Draw(gameTime);
@@ -267,7 +278,26 @@ namespace Alex
 
 			Extensions.Init(GraphicsDevice);
 
-			ProfileManager.LoadProfiles(progressReceiver);
+            string pluginDirectoryPaths = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+
+            if (!string.IsNullOrWhiteSpace(GameSettings.PluginDirectory))
+            {
+                pluginDirectoryPaths = GameSettings.PluginDirectory;
+            }
+
+            foreach (string dirPath in pluginDirectoryPaths.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                string directory = dirPath;
+                if (!Path.IsPathRooted(directory))
+                {
+                    directory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), dirPath);
+                }
+
+                PluginManager.DiscoverPlugins(directory);
+            }
+
+
+            ProfileManager.LoadProfiles(progressReceiver);
 
 			//	Log.Info($"Loading resources...");
 			Resources = new ResourceManager(GraphicsDevice, Storage);

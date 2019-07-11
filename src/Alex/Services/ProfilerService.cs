@@ -10,6 +10,9 @@ namespace Alex.Services
     public class ProfilerService : DefaultProfilerProvider
     {
         private ConcurrentDictionary<Guid, MiniProfiler> _profilers = new ConcurrentDictionary<Guid, MiniProfiler>();
+        public event EventHandler<ProfilerStartedEvent> OnProfilerStarted;
+        public event EventHandler<ProfilerStoppedEvent> OnProfilerStopped;
+        
         public ProfilerService()
         {
             MiniProfiler.DefaultOptions.StopwatchProvider = GetStopwatch;
@@ -19,7 +22,10 @@ namespace Alex.Services
         public override MiniProfiler Start(string profilerName, MiniProfilerBaseOptions options)
         {
             var profiler = base.Start(profilerName, options);
-            _profilers.TryAdd(profiler.Id, profiler);
+            if (_profilers.TryAdd(profiler.Id, profiler))
+            {
+                OnProfilerStarted?.Invoke(this, new ProfilerStartedEvent(profiler.Id, profiler));
+            }
 
             return profiler;
         }
@@ -40,7 +46,7 @@ namespace Alex.Services
         {
             if (_profilers.TryRemove(profiler.Id, out _))
             {
-
+                OnProfilerStopped?.Invoke(this, new ProfilerStoppedEvent(profiler.Id, new TimeSpan(profiler.GetStopwatch().ElapsedTicks), profiler));
             }
         }
 
@@ -67,6 +73,33 @@ namespace Alex.Services
             {
                 Watch.Stop();
             }
+        }
+    }
+
+    public class ProfilerEvent
+    {
+        public Guid Id { get; }
+        public MiniProfiler Profiler { get; }
+        public ProfilerEvent(Guid id, MiniProfiler profiler)
+        {
+            Id = id;
+            Profiler = profiler;
+        }
+    }
+
+    public class ProfilerStoppedEvent : ProfilerEvent
+    {
+        public TimeSpan ElapsedTime { get; }
+        public ProfilerStoppedEvent(Guid id, TimeSpan elapsedTime, MiniProfiler profiler) : base(id, profiler)
+        {
+            ElapsedTime = elapsedTime;
+        }
+    }
+
+    public class ProfilerStartedEvent : ProfilerEvent
+    {
+        public ProfilerStartedEvent(Guid id, MiniProfiler profiler) : base(id, profiler)
+        {
         }
     }
 }

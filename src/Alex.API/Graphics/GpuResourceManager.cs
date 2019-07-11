@@ -18,6 +18,8 @@ namespace Alex.API.Graphics
         {
             _instance = new GpuResourceManager();
         }
+
+        public static GpuResourceManager Instance => _instance;
         
         private Dictionary<long, PooledTexture2D> Textures { get; }
         private Dictionary<long, PooledVertexBuffer> Buffers { get; }

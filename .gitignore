@@ -327,3 +327,4 @@ ASALocalRun/
 
 # NVidia Nsight GPU debugger configuration file
 *.nvuser
+/src/Plugins/Output/netcoreapp2.2

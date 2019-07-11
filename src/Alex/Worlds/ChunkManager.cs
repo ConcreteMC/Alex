@@ -949,6 +949,8 @@ namespace Alex.Worlds
                 //Enqueued.Remove(new ChunkCoordinates(chunk.X, chunk.Z));
                 Interlocked.Decrement(ref _chunkUpdates);
                 Monitor.Exit(chunk.UpdateLock);
+
+                profiler.Stop();
             }
 
             return false;
