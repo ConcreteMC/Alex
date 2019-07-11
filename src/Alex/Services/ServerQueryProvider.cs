@@ -95,8 +95,7 @@ namespace Alex.Services
 				return;
 			}
 
-			using (var pool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount,
-			    ThreadType.Background, "BedrockQueryThread")))
+			using(DedicatedThreadPool threadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(4, ThreadType.Background, "ServerPingThread")))
 		    {
 			    BedrockClient client = null;
 			    try
@@ -105,7 +104,7 @@ namespace Alex.Services
 
 					client = new BedrockClient(Alex, serverEndpoint,
 						new PlayerProfile(string.Empty, $"Pinger{serverEndpoint.ToString()}",
-							$"Pinger{serverEndpoint.ToString()}", null, null, null, true), pool, null)
+							$"Pinger{serverEndpoint.ToString()}", null, null, null, true), threadPool, null)
 					{
 						IgnoreUnConnectedPong = true
 					};

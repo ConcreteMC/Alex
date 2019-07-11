@@ -694,6 +694,14 @@ Console.WriteLine($"User request: {JsonConvert.SerializeObject(r)}");
 			}
 		}
 
+		public async Task<bool> TryAuthenticate(string accessToken)
+		{
+			var userToken = await DoUserAuth(accessToken);
+			var xsts = await DoXsts(null, null, userToken.Token);
+
+			return await RequestMinecraftChain(xsts, MinecraftKeyPair);
+		}
+
 		public async Task<(bool success, BedrockTokenPair token)> RefreshTokenAsync(string refreshToken)
 		{
 			var a = new XboxAuthForm(this, false);
@@ -706,11 +714,7 @@ Console.WriteLine($"User request: {JsonConvert.SerializeObject(r)}");
 				return (false, null);
 			}
 			
-			var userToken = await DoUserAuth(token.AccessToken);
-
-			var xsts = await DoXsts(null, null, userToken.Token);
-
-			return (await RequestMinecraftChain(xsts, MinecraftKeyPair), new BedrockTokenPair()
+			return (await TryAuthenticate(token.AccessToken), new BedrockTokenPair()
 			{
 				AccessToken = token.AccessToken,
 				ExpiryTime = token.ExpiryTime,

@@ -32,7 +32,7 @@ namespace Alex.Worlds.Bedrock
 		{
 			Alex = alex;
 
-			Client = new BedrockClient(alex, endPoint, profile, new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount)), this);
+			Client = new BedrockClient(alex, endPoint, profile, new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount, ThreadType.Background, "BedrockClientThread")), this);
 			networkProvider = Client;
 		}
 

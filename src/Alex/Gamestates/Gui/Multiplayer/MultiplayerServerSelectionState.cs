@@ -150,71 +150,74 @@ namespace Alex.GameStates.Gui.Multiplayer
 	    }
 
 		private FastRandom Rnd = new FastRandom();
-	    private async void OnJoinServerButtonPressed()
-	    {
-			var entry = SelectedItem.SavedServerEntry;
-		    var ips = Dns.GetHostAddresses(entry.Host).ToArray();
-		    IPAddress ip = ips[Rnd.Next(0, ips.Length - 1)];
-		    if (ip == null) return;
-
-		    IPEndPoint target = new IPEndPoint(ip, entry.Port);
-
-		    var authenticationService = Alex.Services.GetService<IPlayerProfileService>();
-		    var currentProfile = authenticationService.CurrentProfile;
-
-			if (entry.ServerType == ServerType.Java)
-		    {
-			    if (currentProfile == null || (currentProfile.IsBedrock))
-			    {
-				    JavaLoginState loginState = new JavaLoginState(_skyBox,
-					    () => { Alex.ConnectToServer(target, authenticationService.CurrentProfile, false); });
-
-
-				    Alex.GameStateManager.SetActiveState(loginState, true);
-			    }
-			    else
-			    {
-				    Alex.ConnectToServer(target, currentProfile, false);
-			    }
-		    }
-			else if (entry.ServerType == ServerType.Bedrock)
+		private void OnJoinServerButtonPressed()
+		{
+			Task.Run(async () =>
 			{
-				if (currentProfile == null || (!currentProfile.IsBedrock))
-				{
-					foreach (var profile in authenticationService.GetBedrockProfiles())
-					{
-						profile.IsBedrock = true;
-						Log.Debug($"BEDROCK PROFILE: {profile.Username}");
-						
-						var task = await authenticationService.TryAuthenticateAsync(profile);
+				var entry = SelectedItem.SavedServerEntry;
+				var ips = Dns.GetHostAddresses(entry.Host).ToArray();
+				IPAddress ip = ips[Rnd.Next(0, ips.Length - 1)];
+				if (ip == null) return;
 
-						if (task)
-						{
-							currentProfile = profile;
-							break;
-						}
-						else
-						{
-							Log.Warn($"Profile auth failed.");
-						}
+				IPEndPoint target = new IPEndPoint(ip, entry.Port);
+
+				var authenticationService = Alex.Services.GetService<IPlayerProfileService>();
+				var currentProfile = authenticationService.CurrentProfile;
+
+				if (entry.ServerType == ServerType.Java)
+				{
+					if (currentProfile == null || (currentProfile.IsBedrock))
+					{
+						JavaLoginState loginState = new JavaLoginState(_skyBox,
+							() => { Alex.ConnectToServer(target, authenticationService.CurrentProfile, false); });
+
+
+						Alex.GameStateManager.SetActiveState(loginState, true);
+					}
+					else
+					{
+						Alex.ConnectToServer(target, currentProfile, false);
 					}
 				}
+				else if (entry.ServerType == ServerType.Bedrock)
+				{
+					if (currentProfile == null || (!currentProfile.IsBedrock))
+					{
+						foreach (var profile in authenticationService.GetBedrockProfiles())
+						{
+							profile.IsBedrock = true;
+							Log.Debug($"BEDROCK PROFILE: {profile.Username}");
 
-				if (currentProfile == null || (!currentProfile.IsBedrock))
-				{
-					BEDeviceCodeLoginState loginState = new BEDeviceCodeLoginState(_skyBox,
-						(profile) => { Alex.ConnectToServer(target, profile, true); });
-					
-					Alex.GameStateManager.SetActiveState(loginState, true);
+							var task = await authenticationService.TryAuthenticateAsync(profile);
+
+							if (task)
+							{
+								currentProfile = profile;
+								break;
+							}
+							else
+							{
+								Log.Warn($"Profile auth failed.");
+							}
+						}
+					}
+
+					if (currentProfile == null || (!currentProfile.IsBedrock))
+					{
+						BEDeviceCodeLoginState loginState = new BEDeviceCodeLoginState(_skyBox,
+							(profile) => { Alex.ConnectToServer(target, profile, true); });
+
+						Alex.GameStateManager.SetActiveState(loginState, true);
+					}
+					else
+					{
+						Alex.ConnectToServer(target, currentProfile, true);
+					}
 				}
-				else
-				{
-					Alex.ConnectToServer(target, currentProfile, true);
-				}
-			}
-	    }
-		
-	    private void OnCancelButtonPressed()
+			});
+		}
+
+		private void OnCancelButtonPressed()
 	    {
 			Alex.GameStateManager.Back();
 			//Alex.GameStateManager.SetActiveState("title");

@@ -44,20 +44,32 @@ namespace Alex.API.Graphics
             IndexBuffers = new Dictionary<long, PooledIndexBuffer>();
         }
 
+        private object _resourceLock = new object();
+        private List<IGpuResource> _resources = new List<IGpuResource>();
+        private Queue<(bool, IGpuResource)> _buffer = new Queue<(bool, IGpuResource)>();
+
         public IEnumerable<IGpuResource> GetResources()
         {
-            var textures = Textures.Values.ToArray();
-            var buffers = Buffers.Values.ToArray();
-            var indexBuffers = IndexBuffers.Values.ToArray();
+            lock (_resourceLock)
+            {
+                foreach (var r in _resources.ToArray())
+                {
+                    yield return r;
+                }
+            }
 
-            foreach (var texture in textures)
-                yield return texture;
-
-            foreach (var buffer in buffers)
-                yield return buffer;
-
-            foreach (var indexBuffer in indexBuffers)
-                yield return indexBuffer;
+            while (_buffer.TryDequeue(out var resource))
+            {
+                if (resource.Item1)
+                {
+                    _resources.Add(resource.Item2);
+                    yield return resource.Item2;
+                }
+                else
+                {
+                    _resources.Remove(resource.Item2);
+                }
+            }
         }
 
         public PooledVertexBuffer CreateBuffer(object caller, GraphicsDevice device, VertexDeclaration vertexDeclaration,
@@ -66,7 +78,9 @@ namespace Alex.API.Graphics
             long id = Interlocked.Increment(ref _bufferId);
             PooledVertexBuffer buffer = new PooledVertexBuffer(this, id, caller, device, vertexDeclaration, vertexCount, bufferUsage);
             Buffers.Add(id, buffer);
-
+            
+            _buffer.Enqueue((true, buffer));
+            
             var size = Interlocked.Add(ref _totalMemoryUsage, buffer.MemoryUsage);
             return buffer;
         }
@@ -77,7 +91,8 @@ namespace Alex.API.Graphics
             var texture = new PooledTexture2D(_instance, id, caller, graphicsDevice, width, height); 
             
             Textures.Add(id, texture);
-
+            _buffer.Enqueue((true, texture));
+            
           //  Interlocked.Add(ref _textureMemoryUsage, texture.Height * texture.Width * 4);
           Interlocked.Add(ref _totalMemoryUsage, texture.MemoryUsage);
             return texture;
@@ -87,6 +102,7 @@ namespace Alex.API.Graphics
         {
             var id = Interlocked.Increment(ref _textureId);
             var texture = new PooledTexture2D(_instance, id, caller, graphicsDevice, width, height, mipmap, format); 
+            _buffer.Enqueue((true,texture));
             
             Textures.Add(id, texture);
             
@@ -99,6 +115,7 @@ namespace Alex.API.Graphics
         {
             var id = Interlocked.Increment(ref _textureId);
             var texture = new PooledTexture2D(_instance, id, caller, graphicsDevice, width, height, mipmap, format, arraySize); 
+            _buffer.Enqueue((true,texture));
             
             Textures.Add(id, texture);
             
@@ -112,6 +129,7 @@ namespace Alex.API.Graphics
         {
             var id = Interlocked.Increment(ref _indexBufferId);
             var buffer = new PooledIndexBuffer(this, id, caller, graphicsDevice, indexElementSize, indexCount, bufferUsage);
+            _buffer.Enqueue((true,buffer));
             
             IndexBuffers.Add(id, buffer);
 
@@ -126,6 +144,7 @@ namespace Alex.API.Graphics
 
             //Interlocked.Add(ref _estMemoryUsage, -size);
             Buffers.Remove(buffer.PoolId);
+            _buffer.Enqueue((false,buffer));
             
             Interlocked.Add(ref _totalMemoryUsage, -buffer.MemoryUsage);
         }
@@ -136,6 +155,7 @@ namespace Alex.API.Graphics
 
             //Interlocked.Add(ref _estMemoryUsage, -size);
             Textures.Remove(buffer.PoolId);
+            _buffer.Enqueue((false,buffer));
             Interlocked.Add(ref _totalMemoryUsage, -buffer.MemoryUsage);
            // Interlocked.Add(ref _textureMemoryUsage, -(buffer.Height * buffer.Width * 4));
         }
@@ -146,6 +166,7 @@ namespace Alex.API.Graphics
 
             //Interlocked.Add(ref _estMemoryUsage, -size);
             IndexBuffers.Remove(buffer.PoolId);
+            _buffer.Enqueue((false,buffer));
             Interlocked.Add(ref _totalMemoryUsage, -buffer.MemoryUsage);
            // Interlocked.Add(ref _indexMemoryUsage, -size);
         }

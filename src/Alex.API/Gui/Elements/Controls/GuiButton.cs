@@ -141,14 +141,9 @@ namespace Alex.API.Gui.Elements.Controls
 
 		protected override void OnCursorPressed(Point cursorPosition)
 		{
-			Focus();
-		}
-
-		protected override void OnFocusActivate()
-		{
+			//Focus();
 			Action?.Invoke();
 		}
-
 
 		protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
 	    {

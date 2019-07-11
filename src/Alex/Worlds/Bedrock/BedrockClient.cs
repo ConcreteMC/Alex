@@ -85,15 +85,17 @@ namespace Alex.Worlds.Bedrock
         private DedicatedThreadPool _threadPool;
         
         public PlayerProfile PlayerProfile { get; }
+        private CancellationTokenSource CancellationTokenSource { get; }
 		public BedrockClient(Alex alex, IPEndPoint endpoint, PlayerProfile playerProfile, DedicatedThreadPool threadPool, BedrockWorldProvider wp) : base(endpoint,
 			playerProfile.Username, threadPool)
 		{
 			PlayerProfile = playerProfile;
-	        
+			CancellationTokenSource = new CancellationTokenSource();
+			
             Alex = alex;
 			WorldProvider = wp;
 			ConnectionAcceptedWaitHandle = new ManualResetEventSlim(false);
-			MessageDispatcher = new McpeClientMessageDispatcher(new BedrockClientPacketHandler(this, alex));
+			MessageDispatcher = new McpeClientMessageDispatcher(new BedrockClientPacketHandler(this, alex, CancellationTokenSource.Token));
 			IsEmulator = true;
 			CurrentLocation = new MiNET.Utils.PlayerLocation(0,0,0);
 			OptionsProvider = alex.Services.GetService<IOptionsProvider>();

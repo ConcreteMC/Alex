@@ -25,6 +25,7 @@ using Alex.Worlds.Java;
 using Eto.Forms;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MiNET.Utils;
 using Newtonsoft.Json;
 using StackExchange.Profiling;
 using GuiDebugHelper = Alex.Gui.GuiDebugHelper;
@@ -72,7 +73,7 @@ namespace Alex
 		private Application EtoApplication { get; }
         public PluginManager PluginManager { get; }
         public FpsMonitor FpsMonitor { get; }
-		public Alex(LaunchSettings launchSettings, Application app)
+        public Alex(LaunchSettings launchSettings, Application app)
 		{
 			EtoApplication = app;
 			
@@ -180,7 +181,7 @@ namespace Alex
 			GameStateManager.SetActiveState("splash");
 
 			//	Log.Info($"Initializing Alex...");
-			ThreadPool.QueueUserWorkItem(o => { InitializeGame(splash); });
+			ThreadPool.QueueUserWorkItem((o) => { InitializeGame(splash); });
 		}
 
 		private AlexIpcService AlexIpcService;

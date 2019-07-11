@@ -90,6 +90,21 @@ namespace Alex.Services
 					//Validate Bedrock account.
 					//BedrockTokenPair tokenPair = JsonConvert.DeserializeObject<BedrockTokenPair>(profile.ClientToken);
 					BedrockTokenPair tokenPair = JsonConvert.DeserializeObject<BedrockTokenPair>(profile.ClientToken);
+					if (tokenPair.ExpiryTime < DateTime.UtcNow && await XblService.TryAuthenticate(profile.AccessToken))
+					{
+						var p = new PlayerProfile(profile.Uuid, profile.Username, profile.PlayerName,
+							profile.Skin, profile.AccessToken,
+							profile.ClientToken,
+							true);
+								
+						ProfileManager.CreateOrUpdateProfile(ProfileManager.ProfileType.Bedrock, p);
+
+						CurrentProfile = p;
+								
+						Authenticate?.Invoke(this, new PlayerProfileAuthenticateEventArgs(CurrentProfile));
+						return true;
+					}
+					
 					return await XblService.RefreshTokenAsync(tokenPair.RefreshToken).ContinueWith(task =>
 						{
 							if (task.IsFaulted)
