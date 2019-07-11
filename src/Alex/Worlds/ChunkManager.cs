@@ -733,15 +733,13 @@ namespace Alex.Worlds
                         if (transparentArray.Length > data.TransparentIndexBuffer.IndexCount)
                         {
                             //  var old = data.TransparentIndexBuffer;
-                            var newSolidBuffer = GpuResourceManager.GetIndexBuffer(this, Graphics,
+                            var newTransparentBuffer = GpuResourceManager.GetIndexBuffer(this, Graphics,
                                 IndexElementSize.ThirtyTwoBits,
                                 transparentArray.Length,
                                 BufferUsage.WriteOnly);
 
-                            newSolidBuffer.SetData(transparentArray);
-                            newTransparentIndexBuffer = newSolidBuffer;
-                            //  data.TransparentIndexBuffer = newSolidBuffer;
-                            //  old?.Dispose();
+                            newTransparentBuffer.SetData(transparentArray);
+                            newTransparentIndexBuffer = newTransparentBuffer;
                         }
                         else
                         {
@@ -830,11 +828,19 @@ namespace Alex.Worlds
         private ChunkMesh GenerateSectionMesh(IWorld world, ScheduleType scheduled, Vector3 chunkPosition,
 	        ref ChunkSection section, int yIndex)
         {
+			Dictionary<Vector3, ChunkMesh.EntryPosition> positions = new Dictionary<Vector3, ChunkMesh.EntryPosition>();
+			
 	        List<VertexPositionNormalTextureColor> solidVertices = new List<VertexPositionNormalTextureColor>();
 
 	        List<int> transparentIndexes = new List<int>();
 	        List<int> solidIndexes = new List<int>();
 
+	        var force = section.New || section.MeshCache == null || section.MeshPositions == null;
+
+	        var cached = section.MeshCache;
+	        var positionCache = section.MeshPositions;
+	        
+	        Dictionary<int, int> processedIndices = new Dictionary<int, int>();
 	        for (var y = 0; y < 16; y++)
 	        for (var x = 0; x < ChunkColumn.ChunkWidth; x++)
 	        for (var z = 0; z < ChunkColumn.ChunkDepth; z++)
@@ -843,55 +849,99 @@ namespace Alex.Worlds
 		        bool wasLightingScheduled = section.IsLightingScheduled(x, y, z);
 		        
 		        var blockPosition = new Vector3(x, y + (yIndex << 4), z) + chunkPosition;
+
+		        var isBorderBlock = (scheduled == ScheduleType.Border && (x == 0 || x == 15) || (z == 0 || z == 15));
 		        
-		        var blockState = section.Get(x, y, z);
-		        if ((blockState == null || !blockState.Block.Renderable) || (!section.New && !section.IsRendered(x, y, z) &&
-		                                                                     !HasScheduledNeighbors(world, blockPosition)))
-		        {
-			        continue;
-		        }
-
-		        var data = blockState.Model.GetVertices(world, blockPosition, blockState.Block);
-
-		        if (data.vertices.Length == 0 ||
-		            data.indexes.Length == 0)
-		        {
-			        section.SetRendered(x, y, z, false);
-		        }
-		        
-		        if (data.vertices == null || data.indexes == null || data.vertices.Length == 0 ||
-		            data.indexes.Length == 0)
-		        {
-			        //section.SetRendered(x, y, z, false);
-			        continue;
-		        }
-
-		        bool transparent = blockState.Block.Transparent;
-
-		        if (data.vertices.Length > 0 && data.indexes.Length > 0)
-		        {
-			        section.SetRendered(x, y, z, true);
-
-			        int startVerticeIndex = solidVertices.Count;
-			        foreach (var vert in data.vertices)
+		        var neighborsScheduled = HasScheduledNeighbors(world, blockPosition);
+			        var blockState = section.Get(x, y, z);
+			        if ((blockState == null || !blockState.Block.Renderable) ||
+			            (!section.New && !section.IsRendered(x, y, z) &&
+			             !neighborsScheduled && !isBorderBlock))
 			        {
-				        solidVertices.Add(vert);
+				        continue;
 			        }
 
-			        for (int i = 0; i < data.indexes.Length; i++)
+			        if (force || wasScheduled || neighborsScheduled ||  isBorderBlock)
 			        {
-				        var a = data.indexes[i];
+				        var data = blockState.Model.GetVertices(world, blockPosition, blockState.Block);
 
-				        if (transparent)
+				        if (data.vertices.Length == 0 ||
+				            data.indexes.Length == 0)
 				        {
-					        transparentIndexes.Add(startVerticeIndex + a);
+					        section.SetRendered(x, y, z, false);
 				        }
-				        else
+
+				        if (data.vertices == null || data.indexes == null || data.vertices.Length == 0 ||
+				            data.indexes.Length == 0)
 				        {
-					        solidIndexes.Add(startVerticeIndex + a);
+					        //section.SetRendered(x, y, z, false);
+					        continue;
+				        }
+
+				        bool transparent = blockState.Block.Transparent;
+
+				        if (data.vertices.Length > 0 && data.indexes.Length > 0)
+				        {
+					        section.SetRendered(x, y, z, true);
+
+					        int startVerticeIndex = solidVertices.Count;
+					        foreach (var vert in data.vertices)
+					        {
+						        solidVertices.Add(vert);
+					        }
+
+					        int startIndex = transparent ? transparentIndexes.Count : solidIndexes.Count;
+					        for (int i = 0; i < data.indexes.Length; i++)
+					        {
+						        var a = data.indexes[i];
+
+						        if (transparent)
+						        {
+							        transparentIndexes.Add(startVerticeIndex + a);
+						        }
+						        else
+						        {
+							        solidIndexes.Add(startVerticeIndex + a);
+						        }
+					        }
+
+					        positions.TryAdd(new Vector3(x, y, z),
+						        new ChunkMesh.EntryPosition(transparent, startIndex, data.indexes.Length));
 				        }
 			        }
-		        }
+			        else
+			        {
+				        if (positionCache.TryGetValue(new Vector3(x, y, z), out var pos))
+				        {
+					        var indices = pos.Transparent ? cached.TransparentIndexes : cached.SolidIndexes;
+
+					        var indiceIndex = pos.Transparent ? transparentIndexes.Count : solidIndexes.Count;
+					        for (int index = 0; index < pos.Length; index++)
+					        {
+						        var indice = indices[pos.Index + index];
+						        if (!processedIndices.TryGetValue(indice, out var newIndex))
+						        {
+							        newIndex = solidVertices.Count;
+							        var vertice = cached.Vertices[indice];
+							        solidVertices.Add(vertice);
+							        
+							        processedIndices.Add(indice, newIndex);
+						        }
+
+						        if (pos.Transparent)
+						        {
+							        transparentIndexes.Add(newIndex);
+						        }
+						        else
+						        {
+							        solidIndexes.Add(newIndex);
+						        }
+					        }
+					        
+					        positions.TryAdd(new Vector3(x, y, z),
+						        new ChunkMesh.EntryPosition(pos.Transparent, indiceIndex, pos.Length));
+				        }
+			        }
 
 		        if (wasScheduled)
 			        section.SetScheduled(x, y, z, false);
@@ -904,6 +954,9 @@ namespace Alex.Worlds
 
 	        var mesh = new ChunkMesh(solidVertices.ToArray(), solidIndexes.ToArray(),
 		        transparentIndexes.ToArray());
+
+	        section.MeshCache = mesh;
+	        section.MeshPositions = positions;
 	        
 	        return mesh;
         }

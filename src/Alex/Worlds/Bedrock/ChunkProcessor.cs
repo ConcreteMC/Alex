@@ -67,12 +67,20 @@ namespace Alex.Worlds.Bedrock
 
         private void Worker()
         {
-	       // while (!CancellationToken.IsCancellationRequested)
+	        try
 	        {
-		        while (QueuedChunks.TryTake(out var queuedChunk, 1000, CancellationToken))
+		        // while (!CancellationToken.IsCancellationRequested)
 		        {
-			        HandleChunk(queuedChunk.ChunkData, queuedChunk.ChunkX, queuedChunk.ChunkZ, queuedChunk.Callback);
+			        while (QueuedChunks.TryTake(out var queuedChunk, 1000, CancellationToken))
+			        {
+				        HandleChunk(queuedChunk.ChunkData, queuedChunk.ChunkX, queuedChunk.ChunkZ,
+					        queuedChunk.Callback);
+			        }
 		        }
+	        }
+	        catch (OperationCanceledException)
+	        {
+		        
 	        }
 
 	        Thread.Yield();

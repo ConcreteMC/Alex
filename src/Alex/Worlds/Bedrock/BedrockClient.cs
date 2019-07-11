@@ -96,7 +96,6 @@ namespace Alex.Worlds.Bedrock
 			WorldProvider = wp;
 			ConnectionAcceptedWaitHandle = new ManualResetEventSlim(false);
 			MessageDispatcher = new McpeClientMessageDispatcher(new BedrockClientPacketHandler(this, alex, CancellationTokenSource.Token));
-			IsEmulator = true;
 			CurrentLocation = new MiNET.Utils.PlayerLocation(0,0,0);
 			OptionsProvider = alex.Services.GetService<IOptionsProvider>();
 			XblmsaService = alex.Services.GetService<XBLMSAService>();
@@ -148,11 +147,10 @@ namespace Alex.Worlds.Bedrock
         public override void OnConnectionRequestAccepted()
 		{
 			ConnectionAcceptedWaitHandle.Set();
-
-            Thread.Sleep(50);
+			
             SendNewIncomingConnection();
             //_connectedPingTimer = new Timer(state => SendConnectedPing(), null, 1000, 1000);
-            Thread.Sleep(50);
+
             SendAlexLogin(Username);
         }
 
@@ -204,7 +202,7 @@ namespace Alex.Worlds.Bedrock
                     RandomNonce = new Random().Next(),
                 };
 
-                certChain = EncodeJwt(certificateData, b64Key, signKey, IsEmulator);
+                certChain = EncodeJwt(certificateData, b64Key, signKey);
             }
 
             var skinData = EncodeSkinJwt(clientKey, signKey, username, b64Key);
@@ -248,15 +246,9 @@ namespace Alex.Worlds.Bedrock
             return ECDsa.Create(signParam);
         }
 
-        private byte[] EncodeJwt(CertificateData certificateData, string b64Key, ECDsa signKey, bool isEmulator)
+        private byte[] EncodeJwt(CertificateData certificateData, string b64Key, ECDsa signKey)
         {
-           // long iat = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-           // long exp = DateTimeOffset.UtcNow.AddDays(1).ToUnixTimeSeconds();
-
-            //ECDsa signKey = ConvertToSingKeyFormat(newKey);
-         //   b64Key = SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(newKey.Public).GetEncoded().EncodeBase64();
-
-            string val = JWT.Encode(certificateData, signKey, JwsAlgorithm.ES384, new Dictionary<string, object> { { "x5u", b64Key } }, new JwtSettings()
+	        string val = JWT.Encode(certificateData, signKey, JwsAlgorithm.ES384, new Dictionary<string, object> { { "x5u", b64Key } }, new JwtSettings()
             {
                 JsonMapper = new JWTMapper()
             });
@@ -312,15 +304,10 @@ namespace Alex.Worlds.Bedrock
 	""IsAlex"": 1
 }}";
 
-         //  ECDsa signKey = ConvertToSingKeyFormat(newKey);
-           // string b64Key = SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(newKey.Public).GetEncoded().EncodeBase64();
-
             string val = JWT.Encode(skinData, signKey, JwsAlgorithm.ES384, new Dictionary<string, object> { { "x5u", x5u } }, new JwtSettings()
             {
                 JsonMapper = new JWTMapper()
             });
-
-          //  Log.Warn(JWT.Payload(val));
 
             return Encoding.UTF8.GetBytes(val);
         }
@@ -473,6 +460,7 @@ namespace Alex.Worlds.Bedrock
 
 		public void Close()
 		{
+			CancellationTokenSource?.Cancel();
 			SendDisconnectionNotification();
 
 			Task.Delay(500).ContinueWith(task => { base.StopClient(); });

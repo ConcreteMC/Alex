@@ -61,15 +61,21 @@ namespace Alex.Worlds.Bedrock
 
 		public override void HandleMcpePlayStatus(McpePlayStatus message)
 		{
-			base.HandleMcpePlayStatus(message);
+			Client.PlayerStatus = message.status;
 
-            if (message.status == 3)
-            {
-                var packet = McpeSetLocalPlayerAsInitializedPacket.CreateObject();
-                packet.runtimeEntityId = BaseClient.EntityId;
-                BaseClient.SendPacket(packet);
-            }
-        }
+			if (Client.PlayerStatus == 3)
+			{
+				Client.HasSpawned = true;
+
+				Client.PlayerStatusChangedWaitHandle.Set();
+
+				Client.SendMcpeMovePlayer();
+				
+				var packet = McpeSetLocalPlayerAsInitializedPacket.CreateObject();
+				packet.runtimeEntityId = BaseClient.EntityId;
+				BaseClient.SendPacket(packet);
+			}
+		}
 
         public override void HandleMcpeDisconnect(McpeDisconnect message)
         {

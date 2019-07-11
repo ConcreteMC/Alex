@@ -26,7 +26,7 @@ namespace MetricsPlugin
         private IList<IMetricTask> MetricTasks { get; set; }
 
         private bool _isRunning { get; set; }
-        private Thread _thread { get; set; }
+        private Timer _metricTimer { get; set; }
         private CancellationTokenSource _threadCancellationTokenSource;
         private CancellationToken _threadCancellationToken;
         public MetricsPlugin()
@@ -56,11 +56,7 @@ namespace MetricsPlugin
 
             _threadCancellationTokenSource = new CancellationTokenSource();
 
-            _thread = new Thread(Run);
-            _thread.IsBackground = true;
-            _thread.Name = "Alex.MetricsPlugin.Runner";
-
-            _thread.Start();
+            _metricTimer = new Timer(async state => await Run(), null, 0, 1000);
 
             Log.Info($"Metrics plugin enabled!");
         }
@@ -79,6 +75,8 @@ namespace MetricsPlugin
             if (!_isRunning) return;
             _isRunning = !_isRunning;
 
+            _metricTimer.Change(Timeout.Infinite, Timeout.Infinite);
+
             _threadCancellationTokenSource.Cancel();
 
             //_thread.Abort();
@@ -87,10 +85,10 @@ namespace MetricsPlugin
             Log.Info($"Metrics plugin disabled!");
         }
 
-        private async void Run()
+        private async Task Run()
         {
-            while (_isRunning)
-            {
+           // while (_isRunning)
+           // {
                 Parallel.ForEach(MetricTasks.ToArray(), task => { task.Run(); });
 
                 var healthStatus = await Health.HealthCheckRunner.ReadAsync(_threadCancellationToken);
@@ -101,9 +99,7 @@ namespace MetricsPlugin
                 }
 
                 await Task.WhenAll(Metrics.ReportRunner.RunAllAsync(_threadCancellationToken));
-
-                Thread.Sleep(1000);
-            }
+                // }
 
         }
     }
