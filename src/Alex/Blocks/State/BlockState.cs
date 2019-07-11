@@ -7,6 +7,7 @@ using Alex.API.Blocks.State;
 using Alex.API.Graphics;
 using Alex.API.World;
 using Alex.Blocks.Minecraft;
+using Alex.ResourcePackLib.Json.BlockStates;
 using NLog;
 
 namespace Alex.Blocks.State
@@ -117,6 +118,9 @@ namespace Alex.Blocks.State
 		public IBlock Block { get; set; } = new Air();
 		public bool IsMultiPart { get; set; } = false;
 
+		//TODO: Remove
+		internal BlockStateResource MultiPartHelper { get; set; }
+		
 		public BlockStateVariantMapper VariantMapper { get; set; }
 
 		public T GetTypedValue<T>(IStateProperty<T> property)

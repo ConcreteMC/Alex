@@ -484,6 +484,7 @@ namespace Alex
 				{
 					if (state is BlockState ss)
 					{
+						ss.MultiPartHelper = blockStateResource;
 						ss.IsMultiPart = true;
 					}
 					return new CachedResourcePackModel(resources, MultiPartModels.GetModels(state, blockStateResource), null);
@@ -805,9 +806,11 @@ namespace Alex
 			else if (blockName == "minecraft:dark_oak_door" || blockName == "darkoakdoor") return new DarkOakDoor();
 			else if (blockName == "minecraft:iron_door" || blockName == "irondoor") return new IronDoor();
 
-			else if (blockName == "minecraft:iron_trapdoor" || blockName == "irontrapdoor") return new IronTrapdoor();
-			else if (blockName == "minecraft:spruce_trapdoor" || blockName == "sprucetrapdoro") return new Trapdoor("minecraft:spruce_trapdoor");
-
+			else if (blockName == "minecraft:iron_trapdoor" || blockName == "irontrapdoor") return new Trapdoor("minecraft:iron_trapdoor");
+			else if (blockName == "minecraft:spruce_trapdoor" || blockName == "sprucetrapdoor") return new Trapdoor("minecraft:spruce_trapdoor");
+			else if (blockName == "minecraft:oak_trapdoor" || blockName == "oaktrapdoor") return new Trapdoor("minecraft:oak_trapdoor");
+			else if (blockName.EndsWith("_trapdoor")) return new Trapdoor(blockName);
+			
 			//Slabs
 			else if (blockName == "minecraft:stone_slab" || blockName == "stoneslab") return new StoneSlab();
 			else if (blockName == "minecraft:red_sandstone_slab" || blockName == "redsandstoneslab") return new RedSandstoneSlab();

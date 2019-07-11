@@ -30,7 +30,7 @@ namespace Alex.API.World
 		bool IsSourceBlock { get; set; }
 		IMaterial BlockMaterial { get; set; }
 		float Hardness { get; set; }
-
+		
         bool Tick(IWorld world, Vector3 position);
 		void BlockUpdate(IWorld world, BlockCoordinates position, BlockCoordinates updatedBlock);
 		double GetBreakTime(IItem miningTool);

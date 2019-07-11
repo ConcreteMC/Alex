@@ -8,6 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\lib\MiNET\src\MiNET\MiNET.Client\MiNET.Client.csproj" />
       <ProjectReference Include="..\Alex\Alex.csproj" />
     </ItemGroup>
 

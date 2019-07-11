@@ -1,4 +1,7 @@
-﻿namespace Alex.Blocks.Minecraft
+﻿using Alex.API.Utils;
+using Alex.API.World;
+
+namespace Alex.Blocks.Minecraft
 {
 	public class Fence : Block
 	{
@@ -24,6 +27,11 @@
 			Solid = true;
 			
 			LightOpacity = 15;
+		}
+
+		public override void BlockUpdate(IWorld world, BlockCoordinates position, BlockCoordinates updatedBlock)
+		{
+			base.BlockUpdate(world, position, updatedBlock);
 		}
 	}
 

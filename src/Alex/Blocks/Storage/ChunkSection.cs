@@ -186,8 +186,8 @@ namespace Alex.Blocks.Storage
 			
 			if (!block1.Solid)
 			{
-				if (x == 15 || y == 15 || z == 15 || x == 0 || y == 0 || z == 0)
-					CheckForSolidBorder(); //Update borders.
+				//if (x == 15 || y == 15 || z == 15 || x == 0 || y == 0 || z == 0)
+				//%	CheckForSolidBorder(); //Update borders.
 
 				HasAirPockets = true;
 			}

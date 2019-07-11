@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Linq;
+using Alex.API.Graphics;
 using Alex.Services;
 using App.Metrics;
 using App.Metrics.Gauge;
@@ -18,11 +20,13 @@ namespace MetricsPlugin.Metrics
         private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
 
         private ConcurrentDictionary<Guid, MiniProfiler> _chunkProfilers = new ConcurrentDictionary<Guid, MiniProfiler>();
-
+        private ConcurrentDictionary<Guid, MiniProfiler> _networkChunkProfilers = new ConcurrentDictionary<Guid, MiniProfiler>();
         private ProfilerService ProfilerService { get; }
         private IMetricsRoot Metrics { get; set; }
         private IGauge FpsMeter { get; set; }
         private ITimer ChunkUpdateTime { get; set; }
+        private ITimer ChunkMeshTimer { get; set; }
+        private ITimer NetworkChunkProcessing { get; set; }
         private Alex.Alex Alex { get; }
         public ProfilerMetrics(Alex.Alex alex)
         {
@@ -36,7 +40,11 @@ namespace MetricsPlugin.Metrics
 
         private void ProfilerServiceOnOnProfilerStarted(object sender, ProfilerStartedEvent e)
         {
-            if (e.Profiler.Name.Contains("chunk", StringComparison.InvariantCultureIgnoreCase))
+            if (e.Profiler.Name.Equals("BEToJavaColumn", StringComparison.InvariantCultureIgnoreCase))
+            {
+                _networkChunkProfilers.TryAdd(e.Id, e.Profiler);
+            }
+            else if (e.Profiler.Name.Contains("chunk", StringComparison.InvariantCultureIgnoreCase))
             {
                 _chunkProfilers.TryAdd(e.Id, e.Profiler);
             }
@@ -44,9 +52,13 @@ namespace MetricsPlugin.Metrics
 
         private void ProfilerServiceOnOnProfilerStopped(object sender, ProfilerStoppedEvent e)
         {
-            if (_chunkProfilers.TryRemove(e.Id, out _))
-          {
-              ChunkUpdateTime.Record((long) e.ElapsedTime.TotalMilliseconds, TimeUnit.Milliseconds);
+            if (_networkChunkProfilers.TryRemove(e.Id, out _))
+            {
+                NetworkChunkProcessing.Record((long) e.ElapsedTime.TotalMilliseconds, TimeUnit.Milliseconds);
+            }
+            else if (_chunkProfilers.TryRemove(e.Id, out _))
+            {
+                ChunkUpdateTime.Record((long) e.ElapsedTime.TotalMilliseconds, TimeUnit.Milliseconds);
             }
             else
             {
@@ -68,6 +80,24 @@ namespace MetricsPlugin.Metrics
            {
                Context = Context,
                Name = "Chunk Update Time",
+               MeasurementUnit = Unit.Custom("MS"),
+               DurationUnit = TimeUnit.Milliseconds,
+               RateUnit = TimeUnit.Milliseconds
+           });
+           
+           ChunkMeshTimer = metrics.Provider.Timer.Instance(new TimerOptions()
+           {
+               Context = Context,
+               Name = "Chunk Meshing",
+               MeasurementUnit = Unit.Custom("MS"),
+               DurationUnit = TimeUnit.Milliseconds,
+               RateUnit = TimeUnit.Milliseconds
+           });
+           
+           NetworkChunkProcessing = metrics.Provider.Timer.Instance(new TimerOptions()
+           {
+               Context = Context,
+               Name = "Chunk Processing",
                MeasurementUnit = Unit.Custom("MS"),
                DurationUnit = TimeUnit.Milliseconds,
                RateUnit = TimeUnit.Milliseconds

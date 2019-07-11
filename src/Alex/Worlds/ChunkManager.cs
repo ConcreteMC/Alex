@@ -9,7 +9,9 @@ using Alex.API.Data.Options;
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.API.World;
+using Alex.Blocks.State;
 using Alex.Blocks.Storage;
+using Alex.Graphics.Models.Blocks;
 using Alex.Utils;
 using Alex.Worlds.Lighting;
 using Microsoft.Xna.Framework;
@@ -141,7 +143,7 @@ namespace Alex.Worlds
             //_tasksQueue.
             if (_workItems.TryAdd(coords, taskCancelationToken))
             {
-                Enqueued.Remove(coords);
+	            Enqueued.Remove(coords);
             }
 
             var task = Task.Factory.StartNew(() =>
@@ -425,23 +427,9 @@ namespace Alex.Worlds
                 return chunk;
             });
 
-	        //SkylightCalculator.CalculateLighting(chunk, true, true, false);
-
             if (doUpdates)
 			{
-				/*if (new ChunkCoordinates(CameraPosition).DistanceTo(position) < 6)
-				{
-					ScheduleChunkUpdate(position, ScheduleType.Full | ScheduleType.Skylight);
-					/*ScheduleChunkUpdate(new ChunkCoordinates(position.X + 1, position.Z), ScheduleType.Border | ScheduleType.Skylight);
-					ScheduleChunkUpdate(new ChunkCoordinates(position.X - 1, position.Z), ScheduleType.Border | ScheduleType.Skylight);
-					ScheduleChunkUpdate(new ChunkCoordinates(position.X, position.Z + 1), ScheduleType.Border | ScheduleType.Skylight);
-					ScheduleChunkUpdate(new ChunkCoordinates(position.X, position.Z - 1), ScheduleType.Border | ScheduleType.Skylight);
-                }
-				else
-				{*/
-			    //SkylightCalculator.CalculateLighting(chunk, true, false);
-					ScheduleChunkUpdate(position, ScheduleType.Full);
-				//}
+				ScheduleChunkUpdate(position, ScheduleType.Full);
 
 				ScheduleChunkUpdate(new ChunkCoordinates(position.X + 1, position.Z), ScheduleType.Border);
 				ScheduleChunkUpdate(new ChunkCoordinates(position.X - 1, position.Z), ScheduleType.Border);
@@ -449,48 +437,42 @@ namespace Alex.Worlds
 				ScheduleChunkUpdate(new ChunkCoordinates(position.X, position.Z - 1), ScheduleType.Border);
             }
 		}
-        
-	    public void ScheduleChunkUpdate(ChunkCoordinates position, ScheduleType type, bool prioritize = false)
-	    {
 
-		    if (Chunks.TryGetValue(position, out IChunkColumn chunk))
-		    {
-			    var currentSchedule = chunk.Scheduled;
-			    if (prioritize)
-			    {
-				    chunk.Scheduled = type;
+        public void ScheduleChunkUpdate(ChunkCoordinates position, ScheduleType type, bool prioritize = false)
+        {
 
-                    if (!Enqueued.Contains(position) && Enqueued.TryAdd(position))
-                    {
-	                    HighestPriority.Enqueue(position);
-                    }
+	        if (Chunks.TryGetValue(position, out IChunkColumn chunk))
+	        {
+		        var currentSchedule = chunk.Scheduled;
+		        if (prioritize)
+		        {
+			        chunk.Scheduled = type;
 
-                    return;
-			    }
+			        if (!Enqueued.Contains(position) && Enqueued.TryAdd(position))
+			        {
+				        HighestPriority.Enqueue(position);
+			        }
 
-                if (Game.GameSettings.ClientSideLighting && type.HasFlag(ScheduleType.Lighting) && !currentSchedule.HasFlag(ScheduleType.Lighting))
-                {
-	                chunk.Scheduled = type;
-                }
-			    else
-			    {
-				    if (currentSchedule != ScheduleType.Unscheduled)
-				    {
-					    return;
-				    }
+			        return;
+		        }
 
-				    if (!_workItems.ContainsKey(position) &&
-				        !Enqueued.Contains(position) && Enqueued.TryAdd(position))
-				    {
-					    chunk.Scheduled = type;
 
-					    Interlocked.Increment(ref _chunkUpdates);
-				    }    
-			    }
-		    }
-	    }
+		        if (currentSchedule != ScheduleType.Unscheduled)
+		        {
+			        return;
+		        }
 
-	    public void RemoveChunk(ChunkCoordinates position, bool dispose = true)
+		        if (!_workItems.ContainsKey(position) &&
+		            !Enqueued.Contains(position) && Enqueued.TryAdd(position))
+		        {
+			        chunk.Scheduled = type;
+
+			        Interlocked.Increment(ref _chunkUpdates);
+		        }
+	        }
+        }
+
+        public void RemoveChunk(ChunkCoordinates position, bool dispose = true)
         {
 	        if (_workItems.TryGetValue(position, out var r))
 	        {
@@ -602,7 +584,7 @@ namespace Alex.Worlds
                 if (currentChunkY < 0) currentChunkY = 0;
 
                 List<ChunkMesh> meshes = new List<ChunkMesh>();
-                using (var step = profiler.Step("Section Updates"))
+                using (var step = profiler.Step("chunk.sections"))
                 {
                     for (var i = chunk.Sections.Length - 1; i >= 0; i--)
                     {
@@ -637,7 +619,7 @@ namespace Alex.Worlds
 
                         if (force || section.ScheduledUpdates.Any(x => x == true) || section.IsDirty)
                         {
-                            using (var meshProfiler = profiler.Step("Mesh Generation"))
+                            using (var meshProfiler = profiler.Step("chunk.meshing"))
                             {
                                 var sectionMesh = GenerateSectionMesh(World, chunk.Scheduled,
                                     new Vector3(chunk.X * 16f, 0, chunk.Z * 16f), ref section, i);
@@ -664,7 +646,7 @@ namespace Alex.Worlds
 
                 if (vertices.Count > 0)
                 {
-                    using (var bufferProfiler = profiler.Step("Buffer Creation"))
+                    using (var bufferProfiler = profiler.Step("chunk.buffer"))
                     {
                         var vertexArray = vertices.ToArray();
                         var solidArray = solidIndexes.ToArray();
@@ -854,6 +836,15 @@ namespace Alex.Worlds
 		        
 		        var neighborsScheduled = HasScheduledNeighbors(world, blockPosition);
 			        var blockState = section.Get(x, y, z);
+
+			        var model = blockState.Model;
+			        if (blockState is BlockState state && state.IsMultiPart)
+			        {
+				        model = new CachedResourcePackModel(Game.Resources,
+					        MultiPartModels.GetBlockStateModels(world, blockPosition, state, state.MultiPartHelper), null);
+				       // blockState.Block.Update(world, blockPosition);
+			        }
+			        
 			        if ((blockState == null || !blockState.Block.Renderable) ||
 			            (!section.New && !section.IsRendered(x, y, z) &&
 			             !neighborsScheduled && !isBorderBlock))
@@ -863,8 +854,8 @@ namespace Alex.Worlds
 
 			        if (force || wasScheduled || neighborsScheduled ||  isBorderBlock)
 			        {
-				        var data = blockState.Model.GetVertices(world, blockPosition, blockState.Block);
-
+				        var data = model.GetVertices(world, blockPosition, blockState.Block);
+							
 				        if (data.vertices.Length == 0 ||
 				            data.indexes.Length == 0)
 				        {

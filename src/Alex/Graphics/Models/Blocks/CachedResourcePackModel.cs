@@ -185,7 +185,11 @@ namespace Alex.Graphics.Models.Blocks
 				
 				if (model == null) continue;
 				
-				bool isFlat = model.Elements.Sum(x => x.Faces.Count) == 2 && model.Elements.Length == 1;
+				bool isFlat = !model.Name.Contains("rail") && model.Elements.Sum(x => x.Faces.Count) == 2 && model.Elements.Length == 1;
+				if (model.Name.Contains("vine"))
+				{
+					isFlat = true;
+				}
 				
 				var modelRot = GetModelRotationMatrix(bsModel);
 				

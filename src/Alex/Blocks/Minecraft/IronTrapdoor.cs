@@ -26,6 +26,7 @@ namespace Alex.Blocks.Minecraft
 		{
 			Solid = true;
 			IsFullCube = false;
+			Transparent = true;
 		}
 
 		public override void Interact(IWorld world, BlockCoordinates position, BlockFace face, Entity sourceEntity)

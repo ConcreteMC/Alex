@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
+using System.Threading;
+using Alex.Worlds.Bedrock;
 using Eto.Forms;
 using log4net;
 using NLog;
@@ -185,5 +188,41 @@ namespace Alex
 			var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create);
 			WorkDir = Path.Combine(appData, "Alex");
         }
+	}
+	
+	public class Testing
+	{
+		private ChunkProcessor _chunkProcessor { get; set; }
+		// private Queue<byte[]> _
+		private byte[][] data;
+
+		public Testing()
+		{
+			_chunkProcessor = new ChunkProcessor(4, false, CancellationToken.None);
+            
+			Random rnd = new Random();
+			var files = Directory.GetFiles("samplechunkdata");
+			data = new byte[files.Length][];
+			for (var index = 0; index < files.Length; index++)
+			{
+				var file = files[index];
+				data[index] = File.ReadAllBytes(file);
+			}
+			//var file = files[rnd.Next() % files.Length - 1];
+
+			//data = File.ReadAllBytes(file);
+		}
+
+
+		public void Run()
+		{
+			Stopwatch sw = Stopwatch.StartNew();
+			for (int i = 0; i < 100000; i++)
+			{
+				_chunkProcessor.HandleChunkData(data[i % data.Length], 0, 0, column => { });
+			}
+			sw.Stop();
+			Console.WriteLine($"Processing 100000 chunks took: {sw.ElapsedMilliseconds}ms");
+		}
 	}
 }

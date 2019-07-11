@@ -8,9 +8,12 @@ using Alex.API.Blocks.State;
 using Alex.Blocks.State;
 using Alex.Blocks.Storage;
 using fNbt;
+using JetBrains.Profiler.Api;
+using MiNET;
 using MiNET.Net;
 using MiNET.Utils;
 using NLog;
+using StackExchange.Profiling;
 
 namespace Alex.Worlds.Bedrock
 {
@@ -34,15 +37,19 @@ namespace Alex.Worlds.Bedrock
 	        CancellationToken = cancellationToken;
 	        
 	        Threads = new Thread[workerThreads];
-	        
 	        //for(int i = 0; i < workerThreads; i++) DispatchWorker();
         }
 
         public void HandleChunkData(byte[] chunkData, int cx, int cz, Action<ChunkColumn> callback)
         {
-	        QueuedChunks.Add(new QueuedChunk(chunkData, cx, cz, callback));
+	        ThreadPool.QueueUserWorkItem(o =>
+	        {
+		        HandleChunk(chunkData, cx, cz,
+			       callback);
+	        });
+	        //QueuedChunks.Add(new QueuedChunk(chunkData, cx, cz, callback));
 
-	        DispatchWorker();
+	        //DispatchWorker();
         }
 
         private object _workerLock = new object();
@@ -90,6 +97,9 @@ namespace Alex.Worlds.Bedrock
 
         private void HandleChunk(byte[] chunkData, int cx, int cz, Action<ChunkColumn> callback)
         {
+	        MeasureProfiler.StartCollectingData();
+	        var profiler = MiniProfiler.StartNew("BEToJavaColumn");
+
 	        try
 	        {
 		        using (MemoryStream stream = new MemoryStream(chunkData))
@@ -397,6 +407,11 @@ namespace Alex.Worlds.Bedrock
 	        {
 		        Log.Error($"Exception in chunk loading: {ex.ToString()}");
 	        }
+	        finally
+	        {
+		        profiler?.Stop();
+		        MeasureProfiler.SaveData();
+	        }
         }
         
         private uint SwapBytes(uint x)
@@ -409,6 +424,31 @@ namespace Alex.Worlds.Bedrock
 
         const string facing = "facing";
 		private IBlockState FixFacing(IBlockState state, int meta)
+		{
+			switch (meta)
+			{
+				case 4:
+				case 0:
+					state = state.WithProperty(facing, "east");
+					break;
+				case 5:
+				case 1:
+					state = state.WithProperty(facing, "west");
+					break;
+				case 6:
+				case 2:
+					state = state.WithProperty(facing, "south");
+					break;
+				case 7:
+				case 3:
+					state = state.WithProperty(facing, "north");
+					break;
+			}
+
+			return state;
+		}
+		
+		private IBlockState FixFacingTrapdoor(IBlockState state, int meta)
 		{
 			switch (meta)
 			{
@@ -507,7 +547,45 @@ namespace Alex.Worlds.Bedrock
 						state = state.WithProperty(facing, "south");
 						break;
 				}
-			}  
+			}
+			else if (bid == 69 || state.Name.Contains("lever")) //Lever
+			{
+				state = FixFacing(state, meta & ~0x08);
+				var modifiedMeta = meta & ~0x08;
+				if (modifiedMeta >= 1 && modifiedMeta <= 4)
+				{
+					state = state.WithProperty("face", "wall");
+				}
+				else if (modifiedMeta == 7 || modifiedMeta == 0)
+				{
+					state = state.WithProperty("face", "floor");
+				}
+				else if (modifiedMeta == 6 || modifiedMeta == 5)
+				{
+					state = state.WithProperty("face", "ceiling");
+				}
+				
+				switch (modifiedMeta)
+				{
+					case 1:
+						state = state.WithProperty(facing, "east");
+						break;
+					case 2:
+						state = state.WithProperty(facing, "west");
+						break;
+					case 3:
+						state = state.WithProperty(facing, "south");
+						break;
+					case 4:
+						state = state.WithProperty(facing, "north");
+						break;
+				}
+			}
+			else if (bid == 65) //Ladder
+			{
+				var face = ((BlockFace) meta).ToString();
+				state = state.WithProperty(facing, face);
+			}
 			//Stairs
 			else if (bid == 163 || bid == 135 || bid == 108 || bid == 164 || bid == 136 || bid == 114 ||
 			         bid == 53 ||
@@ -539,13 +617,79 @@ namespace Alex.Worlds.Bedrock
 			}
 			else if (bid == 96 || bid == 167 || state.Name.Contains("trapdoor")) //Trapdoors
 			{
-				state = FixFacing(state, meta);
-				state = state.WithProperty("open", meta > 3 ? "true" : "false");
+				state = FixFacingTrapdoor(state, (meta & ~0x04) & ~0x08);
+				state = state.WithProperty("half", ((meta & (1 << 0x04)) != 0 ? "top" : "bottom"));
+				state = state.WithProperty("open", ((meta & (1 << 0x08)) != 0 ? "false" : "true"));
 			}
-
+			else if (bid == 106 || state.Name.Contains("vine"))
+			{
+				state = FixVinesRotation(state, meta);
+			}
 			return state;
 		}
 
+		private IBlockState FixVinesRotation(IBlockState state, int meta)
+		{
+			const byte North = 0x01;
+			const byte East = 0x02;
+			const byte West = 0x04;
+			const byte South = 0x08;
+			
+			bool hasNorth = (meta & North) == North;
+			bool hasEast = (meta & East) == East;
+			bool hasSouth = (meta & South) == South;
+			bool hasWest = (meta & West) == West;
+
+			state = state.WithProperty("east", hasEast.ToString())
+				.WithProperty("north", hasNorth.ToString())
+				.WithProperty("south", hasSouth.ToString())
+				.WithProperty("west", hasWest.ToString());
+
+			/*bool hasNorthTop = (onTop.Metadata & North) == North;
+			bool hasEastTop = (onTop.Metadata & East) == East;
+			bool hasSouthTop = (onTop.Metadata & South) == South;
+			bool hasWestTop = (onTop.Metadata & West) == West;
+
+			bool haveFaceBlock = false;
+
+			if (hasNorth && level.GetBlock(Coordinates + Level.South).IsSolid)
+			{
+				haveFaceBlock = true;
+			}
+			else if (hasEast && level.GetBlock(Coordinates + Level.West).IsSolid)
+			{
+				haveFaceBlock = true;
+			}
+			else if (hasSouth && level.GetBlock(Coordinates + Level.North).IsSolid)
+			{
+				haveFaceBlock = true;
+			}
+			else if (hasWest && level.GetBlock(Coordinates + Level.East).IsSolid)
+			{
+				haveFaceBlock = true;
+			}
+
+			bool hasVineTop = false;
+			if (hasNorth && hasNorthTop)
+			{
+				hasVineTop = true;
+			}
+			else if (hasEast && hasEastTop)
+			{
+				hasVineTop = true;
+			}
+			else if (hasSouth && hasSouthTop)
+			{
+				hasVineTop = true;
+			}
+			else if (hasWest && hasWestTop)
+			{
+				hasVineTop = true;
+			}*/
+
+			return state;
+		}
+		
 		private class QueuedChunk
 		{
 			public byte[] ChunkData { get; }
