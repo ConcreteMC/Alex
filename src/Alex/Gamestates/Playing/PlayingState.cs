@@ -354,6 +354,8 @@ namespace Alex.GameStates.Playing
 						{
 							FOV = World.Camera.FOV
 						};
+						
+						World.Camera.UpdateAspectRatio(Graphics.Viewport.AspectRatio);
 					}
 					else
 					{
@@ -361,6 +363,8 @@ namespace Alex.GameStates.Playing
 						{
 							FOV = World.Camera.FOV
 						};
+						
+						World.Camera.UpdateAspectRatio(Graphics.Viewport.AspectRatio);
 					}
 				}
 
