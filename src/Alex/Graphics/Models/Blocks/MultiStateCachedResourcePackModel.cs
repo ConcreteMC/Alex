@@ -174,10 +174,10 @@ namespace Alex.Graphics.Models.Blocks
 			}
 
 			var newPos = new BlockCoordinates(position + direction);
-			var blockState = world.GetBlockState((int) newPos.X, (int) newPos.Y, (int) newPos.Z);
+			var blockState = world.GetBlockState(newPos);
 			var block = blockState.Block;
 
-			var canAttach = block.Solid && (block.IsFullCube || blockState.Name.Equals(baseblockState.Name));
+			var canAttach = block.Solid && (block.IsFullCube || (blockState.Name.Equals(baseblockState.Name, StringComparison.InvariantCultureIgnoreCase)));
 
 			if (value == "true")
 			{

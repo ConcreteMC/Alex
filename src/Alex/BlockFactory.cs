@@ -681,6 +681,7 @@ namespace Alex
 			else if (blockName == "minecraft:wall_sign" || blockName == "wallsign") return new WallSign();
 			else if (blockName == "minecraft:lever" || blockName == "lever") return new Lever();
 			else if (blockName == "minecraft:stone_pressure_plate" || blockName == "stonepressureplate") return new StonePressurePlate();
+			else if (blockName == "minecraft:oak_pressure_plate" || blockName == "oakpressureplate") return new StonePressurePlate(); 
 			else if (blockName == "minecraft:torch" || blockName == "torch") return new Torch();
 			else if (blockName == "minecraft:wall_torch" || blockName == "walltorch") return new Torch(true); 
 			else if (blockName == "minecraft:redstone_torch" || blockName == "redstonetorch") return new RedstoneTorch();

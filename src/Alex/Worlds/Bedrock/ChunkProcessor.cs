@@ -20,6 +20,12 @@ namespace Alex.Worlds.Bedrock
     public class ChunkProcessor : IDisposable
     {
 	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ChunkProcessor));
+
+	    //private static readonly IReadOnlyDictionary<int, int> PeToJava
+	    static ChunkProcessor()
+	    {
+		    
+	    }
 	    
 	    private bool UseAlexChunks { get; }
 	    private BlockingCollection<QueuedChunk> QueuedChunks { get; }
@@ -198,16 +204,26 @@ namespace Alex.Worlds.Bedrock
 
 												        if (result != null && result.Id >= 0)
 												        {
+													        var reverseMap = MiNET.Worlds.AnvilWorldProvider.Convert.FirstOrDefault(map =>
+														        map.Value.Item1 == result.Id);
+
+													        var id = result.Id;
+													        if (reverseMap.Value != null)
+													        {
+														        id = reverseMap.Key;
+													        }
+													        
 													        var res = BlockFactory.GetBlockStateID(
-														        (int) result.Id,
+														        (int) id,
 														        (byte) bs.Data);
 
 													        if (AnvilWorldProvider.BlockStateMapper.TryGetValue(
 														        res,
 														        out var res2))
 													        {
+														        
 														        var t = BlockFactory.GetBlockState(res2);
-														        t = TranslateBlockState(t, result.Id,
+														        t = TranslateBlockState(t, id,
 															        bs.Data);
 
 														        return t;
@@ -218,7 +234,7 @@ namespace Alex.Worlds.Bedrock
 															        $"Did not find anvil statemap: {result.Name}");
 														        return TranslateBlockState(
 															        BlockFactory.GetBlockState(result.Name),
-															        result.Id, bs.Data);
+															        id, bs.Data);
 													        }
 												        }
 
@@ -317,12 +333,10 @@ namespace Alex.Worlds.Bedrock
 				        if (UseAlexChunks)
 				        {
 					        //  Log.Info($"Alex chunk!");
-
-					        Utils.NibbleArray skyLight = new Utils.NibbleArray(4096);
+					        
 					        var rawSky = new Utils.NibbleArray(4096);
 					        defStream.Read(rawSky.Data, 0, rawSky.Data.Length);
-
-					        Utils.NibbleArray blockLight = new Utils.NibbleArray(4096);
+					        
 					        var rawBlock = new Utils.NibbleArray(4096);
 					        defStream.Read(rawBlock.Data, 0, rawBlock.Data.Length);
 
@@ -335,12 +349,10 @@ namespace Alex.Worlds.Bedrock
 						        var block = rawBlock[peIndex];
 
 						        var idx = y << 8 | z << 4 | x;
-						        skyLight[idx] = sky;
-						        blockLight[idx] = block;
+						        
+						        section.SkyLight[idx] = sky;
+						        section.BlockLight[idx] = block;
 					        }
-
-					        section.BlockLight = blockLight;
-					        section.SkyLight = skyLight;
 				        }
 
 				        section.RemoveInvalidBlocks();
@@ -625,6 +637,20 @@ namespace Alex.Worlds.Bedrock
 			{
 				state = FixVinesRotation(state, meta);
 			}
+			/*else if (bid == 64 || bid == 71 || bid == 193 || bid == 194 || bid == 195 || bid == 196 || bid == 197) //Doors
+			{
+				var isUpper = (meta & 0x08) == 0x08;
+				state = state.WithProperty("half", isUpper ? "upper" : "lower");
+				if (isUpper)
+				{
+					bool isOpen = (meta & 0x04) == 0x04;
+					state = state.WithProperty("open", isOpen ? "true" : "false");
+				}
+				else
+				{
+					state = FixFacing(state, meta & ~0x08);
+				}
+			}*/
 			return state;
 		}
 

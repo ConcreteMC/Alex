@@ -319,7 +319,7 @@ namespace Alex.Graphics.Models.Blocks
 						
 						text = ResolveTexture(bsModel, text);
 						
-						if (((face.Key == BlockFace.Up) || face.Key == BlockFace.East) && !useCrossRendering && !useFlat)
+						if (((face.Key == BlockFace.Up) || face.Key == BlockFace.East) && bsModel.ModelName.Contains("piston") && !useCrossRendering && !useFlat)
 						{
 							if (rotation == 90)
 							{
