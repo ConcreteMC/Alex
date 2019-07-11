@@ -5,6 +5,7 @@
     <DefineConstants>TRACE;DEBUG;WINDOWS;MONOGAME;NETCOREAPP2_0;DESKTOPGL;WINDOWS;LINUX</DefineConstants>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <Platforms>AnyCPU;x64</Platforms>
+    <Configurations>Debug;Release;Appveyor</Configurations>
   </PropertyGroup>
 
   <PropertyGroup>

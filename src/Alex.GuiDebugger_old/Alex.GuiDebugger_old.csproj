@@ -5,6 +5,7 @@
     <OutputType>WinExe</OutputType>
     <UseWPF>true</UseWPF>
     <ApplicationIcon>Resources\Icons\Alex.ico</ApplicationIcon>
+    <Configurations>Debug;Release;Appveyor</Configurations>
   </PropertyGroup>
 
   <PropertyGroup>

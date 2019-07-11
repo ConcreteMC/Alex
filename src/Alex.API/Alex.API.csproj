@@ -8,7 +8,7 @@
     <OldToolsVersion>2.0</OldToolsVersion>
     <LangVersion>7.3</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Configurations>Release;Debug</Configurations>
+    <Configurations>Release;Debug;Appveyor</Configurations>
     <Platforms>x64;AnyCPU</Platforms>
   </PropertyGroup>
   <ItemGroup>
