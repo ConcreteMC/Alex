@@ -348,7 +348,7 @@ namespace Alex.Worlds.Bedrock
 
 			        if (stream.Position >= stream.Length - 1)
 			        {
-				        callback(chunkColumn);
+				        callback?.Invoke(chunkColumn);
 				        return;
 			        }
 
@@ -381,7 +381,7 @@ namespace Alex.Worlds.Bedrock
 			        }
 
 			        //Done processing this chunk, send to world
-			        callback(chunkColumn);
+			        callback?.Invoke(chunkColumn);
 		        }
 
 	        }

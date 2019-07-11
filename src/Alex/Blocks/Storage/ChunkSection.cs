@@ -1,8 +1,11 @@
-﻿using Alex.API.Blocks.State;
+﻿using System.Collections.Generic;
+using Alex.API.Blocks.State;
+using Alex.API.Graphics;
 using Alex.API.World;
 using Alex.Blocks.Minecraft;
 using Alex.ResourcePackLib.Json;
 using Alex.Utils;
+using Microsoft.Xna.Framework;
 using NLog;
 using BitArray = Alex.API.Utils.BitArray;
 
@@ -43,6 +46,9 @@ namespace Alex.Blocks.Storage
         public bool SolidBorder { get; private set; } = false;
 		private bool[] FaceSolidity { get; set; } = new bool[6];
 		public bool HasAirPockets { get; private set; } = true;
+
+		internal ChunkMesh MeshCache { get; set; } = null;
+		internal IReadOnlyDictionary<Vector3, ChunkMesh.EntryPosition> MeshPositions { get; set; } = null;
 		
         public ChunkSection(int y, bool storeSkylight)
 		{

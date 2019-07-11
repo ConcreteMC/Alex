@@ -90,7 +90,6 @@ namespace Alex.Worlds
 	        Updater = new Thread(ChunkUpdateThread)
 		        {IsBackground = true};
 	        
-	        LowPriority = new ThreadSafeList<ChunkCoordinates>();
 	        HighestPriority = new ConcurrentQueue<ChunkCoordinates>();
 	        //TaskSchedular.MaxThreads = alex.GameSettings.ChunkThreads;
         }
@@ -116,7 +115,6 @@ namespace Alex.Worlds
 	    }
 	    
 		private ConcurrentQueue<ChunkCoordinates> HighestPriority { get; set; }
-		private ThreadSafeList<ChunkCoordinates> LowPriority { get; set; }
 		private ThreadSafeList<ChunkCoordinates> Enqueued { get; } = new ThreadSafeList<ChunkCoordinates>();
 		private ConcurrentDictionary<ChunkCoordinates, IChunkColumn> Chunks { get; }
 
@@ -232,8 +230,8 @@ namespace Alex.Worlds
                         }
                         else
                         {
-
-                            Schedule(coords, WorkItemPriority.Highest);
+	                        Enqueued.Remove(coords);
+	                        Schedule(coords, WorkItemPriority.Highest);
                         }
 
                         //Enqueued.Remove(coords);
@@ -404,11 +402,6 @@ namespace Alex.Worlds
 			    TransparentEffect.Texture = frame;
 		    }
 		    
-		  //  TransparentEffect.FogColor = skyRenderer.WorldFogColor.ToVector3();
-		 //   OpaqueEffect.FogColor = skyRenderer.WorldFogColor.ToVector3();
-
-		    //   OpaqueEffect.AmbientLightColor = TransparentEffect.DiffuseColor =
-			//    Color.White.ToVector3() * new Vector3((skyRenderer.BrightnessModifier));
 			var camera = args.Camera;
 		    CameraBoundingFrustum = camera.BoundingFrustum;
 		    CameraPosition = camera.Position;
@@ -472,31 +465,17 @@ namespace Alex.Worlds
 	                    HighestPriority.Enqueue(position);
                     }
 
-				    //Interlocked.Increment(ref _chunkUpdates);
-				//    _updateResetEvent.Set();
-
-                    if (type.HasFlag(ScheduleType.Lighting) && Game.GameSettings.ClientSideLighting)
-				    {
-					 //   SkylightCalculator.CalculateLighting(chunk, true, true);
-				    }
-
                     return;
 			    }
 
                 if (Game.GameSettings.ClientSideLighting && type.HasFlag(ScheduleType.Lighting) && !currentSchedule.HasFlag(ScheduleType.Lighting))
                 {
 	                chunk.Scheduled = type;
-                    //SkylightCalculator.CalculateLighting(chunk, true, true);
                 }
 			    else
 			    {
 				    if (currentSchedule != ScheduleType.Unscheduled)
 				    {
-					    /*if (currentSchedule != ScheduleType.Full)
-					    {
-						    chunk.Scheduled = type;
-					    }*/
-
 					    return;
 				    }
 
@@ -506,8 +485,7 @@ namespace Alex.Worlds
 					    chunk.Scheduled = type;
 
 					    Interlocked.Increment(ref _chunkUpdates);
-					//    _updateResetEvent.Set();
-                    }    
+				    }    
 			    }
 		    }
 	    }
@@ -533,8 +511,6 @@ namespace Alex.Worlds
 	        {
 		        data?.Dispose();
 	        }
-
-	        LowPriority.Remove(position);
 
 	        if (Enqueued.Remove(position))
 	        {
@@ -664,8 +640,8 @@ namespace Alex.Worlds
                             using (var meshProfiler = profiler.Step("Mesh Generation"))
                             {
                                 var sectionMesh = GenerateSectionMesh(World, chunk.Scheduled,
-                                    new Vector3(chunk.X * 16f, 0, chunk.Z * 16f), ref section, i, out _);
-
+                                    new Vector3(chunk.X * 16f, 0, chunk.Z * 16f), ref section, i);
+                                
                                 meshes.Add(sectionMesh);
                             }
                         }
@@ -852,219 +828,84 @@ namespace Alex.Worlds
         }
 
         private ChunkMesh GenerateSectionMesh(IWorld world, ScheduleType scheduled, Vector3 chunkPosition,
-                ref ChunkSection section, int yIndex,
-               // ref Dictionary<uint, (VertexPositionNormalTextureColor[] vertices, int[] indexes)> blocks,
-                out IDictionary<Vector3, ChunkMesh.EntryPosition> outputPositions/*, ref long reUseCounter*/)
+	        ref ChunkSection section, int yIndex)
         {
-            List<VertexPositionNormalTextureColor> solidVertices = new List<VertexPositionNormalTextureColor>();
-            /*List<VertexPositionNormalTextureColor> transparentVertices =
-                new List<VertexPositionNormalTextureColor>();*/
-            var positions = new ConcurrentDictionary<Vector3, ChunkMesh.EntryPosition>();
+	        List<VertexPositionNormalTextureColor> solidVertices = new List<VertexPositionNormalTextureColor>();
 
-            List<int> transparentIndexes = new List<int>();
-            List<int> solidIndexes = new List<int>();
+	        List<int> transparentIndexes = new List<int>();
+	        List<int> solidIndexes = new List<int>();
 
-            //Dictionary<uint, (VertexPositionNormalTextureColor[] vertices, int[] indexes)> blocks =
-            //     new Dictionary<uint, (VertexPositionNormalTextureColor[] vertices, int[] indexes)>();
+	        for (var y = 0; y < 16; y++)
+	        for (var x = 0; x < ChunkColumn.ChunkWidth; x++)
+	        for (var z = 0; z < ChunkColumn.ChunkDepth; z++)
+	        {
+		        bool wasScheduled = section.IsScheduled(x, y, z);
+		        bool wasLightingScheduled = section.IsLightingScheduled(x, y, z);
+		        
+		        var blockPosition = new Vector3(x, y + (yIndex << 4), z) + chunkPosition;
+		        
+		        var blockState = section.Get(x, y, z);
+		        if ((blockState == null || !blockState.Block.Renderable) || (!section.New && !section.IsRendered(x, y, z) &&
+		                                                                     !HasScheduledNeighbors(world, blockPosition)))
+		        {
+			        continue;
+		        }
 
-            for (var y = 0; y < 16; y++)
-                for (var x = 0; x < ChunkColumn.ChunkWidth; x++)
-                    for (var z = 0; z < ChunkColumn.ChunkDepth; z++)
-                    {
-                        var vector = new Vector3(x, y, z);
+		        var data = blockState.Model.GetVertices(world, blockPosition, blockState.Block);
 
-                        //if (scheduled.HasFlag(ScheduleType.Scheduled) || scheduled.HasFlag(ScheduleType.Border) || scheduled.HasFlag(ScheduleType.Full) || section.IsDirty)
-                        {
+		        if (data.vertices.Length == 0 ||
+		            data.indexes.Length == 0)
+		        {
+			        section.SetRendered(x, y, z, false);
+		        }
+		        
+		        if (data.vertices == null || data.indexes == null || data.vertices.Length == 0 ||
+		            data.indexes.Length == 0)
+		        {
+			        //section.SetRendered(x, y, z, false);
+			        continue;
+		        }
 
-                            bool wasScheduled = section.IsScheduled(x, y, z);
-                            bool wasLightingScheduled = section.IsLightingScheduled(x, y, z);
+		        bool transparent = blockState.Block.Transparent;
 
-                            /*if ((scheduled.HasFlag(ScheduleType.Border) &&
-                                 ((x == 0 && z == 0) || (x == ChunkWidth && z == 0) || (x == 0 && z == ChunkDepth)))
-                                || (wasScheduled || wasLightingScheduled || scheduled.HasFlag(ScheduleType.Full)))*/
-                            //if (true)
+		        if (data.vertices.Length > 0 && data.indexes.Length > 0)
+		        {
+			        section.SetRendered(x, y, z, true);
 
-                            bool found = false;
+			        int startVerticeIndex = solidVertices.Count;
+			        foreach (var vert in data.vertices)
+			        {
+				        solidVertices.Add(vert);
+			        }
 
-                            if (true || (wasScheduled || wasLightingScheduled || scheduled.HasFlag(ScheduleType.Full)
-                                 || (scheduled.HasFlag(ScheduleType.Lighting) /*&& cachedMesh == null*/) ||
-                                 (scheduled.HasFlag(ScheduleType.Border) && (x == 0 || x == 15) && (z == 0 || z == 15))))
-                            {
-                                var blockState = section.Get(x, y, z);
-                                if (blockState == null || !blockState.Block.Renderable) continue;
+			        for (int i = 0; i < data.indexes.Length; i++)
+			        {
+				        var a = data.indexes[i];
 
-                                /*	if (!blocks.TryGetValue(blockState.ID, out var data))
-                                    {
-                                        data = blockState.Model.GetVertices(world, Vector3.Zero, blockState.Block);
-                                        blocks.Add(blockState.ID, data);
-                                    }
-                                    else
-                                    {
-                                        reUseCounter++;
+				        if (transparent)
+				        {
+					        transparentIndexes.Add(startVerticeIndex + a);
+				        }
+				        else
+				        {
+					        solidIndexes.Add(startVerticeIndex + a);
+				        }
+			        }
+		        }
 
-                                    }*/
-                                var blockPosition = new Vector3(x, y + (yIndex << 4), z) + chunkPosition;
+		        if (wasScheduled)
+			        section.SetScheduled(x, y, z, false);
 
-                                (VertexPositionNormalTextureColor[] vertices, int[] indexes) data;
-                                
-                                if (!section.New && !section.IsRendered(x, y, z) && !HasScheduledNeighbors(world, blockPosition))
-                                {
-                                    continue;
-                                }
+		        if (wasLightingScheduled)
+			        section.SetLightingScheduled(x, y, z, false);
+	        }
 
-                                data = blockState.Model.GetVertices(world, blockPosition, blockState.Block);
+	        section.New = false;
 
-                                if (data.vertices.Length == 0 || data.indexes.Length == 0)
-                                {
-                                    section.SetRendered(x, y, z, false);
-                                }
-
-                                if (data.vertices == null || data.indexes == null || data.vertices.Length == 0 || data.indexes.Length == 0)
-                                    continue;
-
-                                bool transparent = blockState.Block.Transparent;
-
-                                //var data = CalculateBlockVertices(world, section,
-                                //	yIndex,
-                                //	x, y, z, out bool transparent);
-
-                                if (data.vertices.Length > 0 && data.indexes.Length > 0)
-                                {
-                                    section.SetRendered(x, y, z, true);
-
-                                    int startVerticeIndex = solidVertices.Count; //transparent ? transparentVertices.Count : solidVertices.Count;
-                                    foreach (var vert in data.vertices)
-                                    {
-                                        //var vertex = vert;
-                                        //var vertex = new VertexPositionNormalTextureColor(vert.Position + blockPosition, Vector3.Zero, vert.TexCoords, vert.Color);
-                                        //vertex.Position += blockPosition;
-
-                                        //if (transparent)
-                                        //{
-                                        //transparentVertices.Add(vert);
-                                        //}
-                                        //else
-                                        {
-                                            solidVertices.Add(vert);
-                                        }
-                                    }
-
-                                    int startIndex = transparent ? transparentIndexes.Count : solidIndexes.Count;
-                                    for (int i = 0; i < data.indexes.Length; i++)
-                                    {
-                                        //	var vert = data.vertices[data.indexes[i]];
-                                        var a = data.indexes[i];
-
-                                        if (transparent)
-                                        {
-                                            //transparentVertices.Add(vert);
-                                            transparentIndexes.Add(startVerticeIndex + a);
-
-                                            if (a > solidVertices.Count)
-                                            {
-                                                Log.Warn($"INDEX > AVAILABLE VERTICES {a} > {solidVertices.Count}");
-                                            }
-                                        }
-                                        else
-                                        {
-                                            //	solidVertices.Add(vert);
-                                            solidIndexes.Add(startVerticeIndex + a);
-
-                                            if (a > solidVertices.Count)
-                                            {
-                                                Log.Warn($"INDEX > AVAILABLE VERTICES {a} > {solidVertices.Count}");
-                                            }
-                                        }
-                                    }
-
-
-                                    positions.TryAdd(vector,
-                                        new ChunkMesh.EntryPosition(transparent, startIndex, data.indexes.Length));
-                                }
-
-
-                                if (wasScheduled)
-                                    section.SetScheduled(x, y, z, false);
-
-                                if (wasLightingScheduled)
-                                    section.SetLightingScheduled(x, y, z, false);
-                            }
-                            //else if (cachedMesh != null &&
-                            //         cachedMesh.Positions.TryGetValue(vector, out ChunkMesh.EntryPosition position))
-                            {
-                                /*var cachedVertices = position.Transparent
-                                    ? cachedMesh.Mesh.TransparentVertices
-                                    : cachedMesh.Mesh.Vertices;
-
-                                var cachedIndices = position.Transparent
-                                    ? cachedMesh.Mesh.TransparentIndexes
-                                    : cachedMesh.Mesh.SolidIndexes;
-
-                                if (cachedIndices == null) continue;
-
-                                List<int> done = new List<int>();
-                                Dictionary<int, int> indiceIndexMap = new Dictionary<int, int>();
-                                for (var index = 0; index < position.Length; index++)
-                                {
-                                    var u = cachedIndices[position.Index + index];
-                                    if (!done.Contains(u))
-                                    {
-                                        done.Add(u);
-                                        if (position.Transparent)
-                                        {
-                                            if (!indiceIndexMap.ContainsKey(u))
-                                            {
-                                                indiceIndexMap.Add(u, transparentVertices.Count);
-                                            }
-
-                                            transparentVertices.Add(
-                                                cachedVertices[u]);
-                                        }
-                                        else
-                                        {
-                                            if (!indiceIndexMap.ContainsKey(u))
-                                            {
-                                                indiceIndexMap.Add(u, solidVertices.Count);
-                                            }
-
-                                            solidVertices.Add(
-                                                cachedVertices[u]);
-                                        }
-                                    }
-
-                                }
-
-
-                                int startIndex = position.Transparent ? transparentIndexes.Count : solidIndexes.Count;
-                                for (int i = 0; i < position.Length; i++)
-                                {
-                                    var o = indiceIndexMap[cachedIndices[position.Index + i]];
-                                    if (position.Transparent)
-                                    {
-                                        transparentIndexes.Add(o);
-                                    }
-                                    else
-                                    {
-                                        solidIndexes.Add(o);
-                                    }
-                                }
-
-                                //TODO: Find a way to update just the color of the faces, without having to recalculate vertices
-                                //We could save what vertices belong to what faces i suppose?
-                                //We could also use a custom shader to light the blocks...
-
-                                positions.TryAdd(vector,
-                                    new ChunkMesh.EntryPosition(position.Transparent, startIndex, position.Length));
-                                found = true;*/
-                            }
-                        }
-                    }
-
-            section.New = false;
-
-            outputPositions = positions;
-            return new ChunkMesh(solidVertices.ToArray(), null/*transparentVertices.ToArray()*/, solidIndexes.ToArray(),
-                transparentIndexes.ToArray());
+	        var mesh = new ChunkMesh(solidVertices.ToArray(), solidIndexes.ToArray(),
+		        transparentIndexes.ToArray());
+	        
+	        return mesh;
         }
     }
 
