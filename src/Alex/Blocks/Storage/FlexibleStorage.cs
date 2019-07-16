@@ -66,7 +66,7 @@ namespace Alex.Blocks.Storage
 
 				if (value > this._maxEntryValue)
 				{
-					throw new Exception("Value cannot be outside of accepted range.");
+					throw new Exception($"Value cannot be outside of accepted range: Value: {value} RangeLimit: {this._maxEntryValue}");
 				}
 
 				int bitIndex = index * this._bitsPerEntry;

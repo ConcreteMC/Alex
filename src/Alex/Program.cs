@@ -4,7 +4,6 @@ using System.IO;
 using System.Net;
 using System.Threading;
 using Alex.Worlds.Bedrock;
-using Eto.Forms;
 using log4net;
 using NLog;
 using LogManager = NLog.LogManager;
@@ -42,21 +41,11 @@ namespace Alex
 			//Cef.Initialize(new Settings());
 
 			Log.Info($"Starting...");
-			Application application = null;
-			/*if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-			{
-				application = new Application();
-				var appThread = new Thread(() => application.Run());
-				//appThread.SetApartmentState(ApartmentState.STA);
-				appThread.Start();
-			}*/
 
-			using (var game = new Alex(launchSettings, application))
+			using (var game = new Alex(launchSettings))
 			{
 				game.Run();
 			}
-            
-            application?.Quit();
 		}
 
 		private static void ConfigureNLog(string baseDir)

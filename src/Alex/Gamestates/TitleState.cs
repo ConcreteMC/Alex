@@ -143,11 +143,6 @@ namespace Alex.GameStates
 			});
 
 			_debugInfo = new GuiDebugInfo();
-			_debugInfo.AddDebugRight(() =>
-				$"Cursor RenderPosition: {Alex.InputManager.CursorInputListener.GetCursorPosition()} / {Alex.GuiManager.FocusManager.CursorPosition}");
-			_debugInfo.AddDebugRight(() =>
-				$"Cursor Delta: {Alex.InputManager.CursorInputListener.GetCursorPositionDelta()}");
-			_debugInfo.AddDebugRight(() => $"Splash Text Scale: {_splashText.Scale:F3}");
 			_debugInfo.AddDebugRight(() => $"GPU Memory: {API.Extensions.GetBytesReadable(GpuResourceManager.GetMemoryUsage)}");
 			_debugInfo.AddDebugLeft(() => $"FPS: {FpsMonitor.Value:F0}");
 

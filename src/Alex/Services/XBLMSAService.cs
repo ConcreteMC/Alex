@@ -13,7 +13,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Alex.Gui.Forms;
 using Alex.Utils;
-using Eto.Forms;
 using Jose;
 using MiNET;
 using MiNET.Net;
@@ -44,14 +43,18 @@ namespace Alex.Services
 		private const string XblAuth = "https://xsts.auth.xboxlive.com/xsts/authorize";
 		private const string MinecraftAuthUrl = "https://multiplayer.minecraft.net/authentication";
 		
-		private static FastRandom RND = new FastRandom();
+		private const string _clientId = "00000000441cc96b";
 		
-		private Application EtoApplication { get; }
+		private string AuthorizationUri = "https://login.live.com/oauth20_authorize.srf";  // Authorization code endpoint
+		private string RedirectUri = "https://login.live.com/oauth20_desktop.srf";  // Callback endpoint
+		private string RefreshUri = "https://login.live.com/oauth20_token.srf";  // Get tokens endpoint
+		
+		private static FastRandom RND = new FastRandom();
+
 		private ECDsa EcDsa { get; }
 		public AsymmetricCipherKeyPair BouncyKeyPair { get; }
-		public XBLMSAService(Application etoApplication)
+		public XBLMSAService()
 		{
-			EtoApplication = etoApplication;
 			BouncyKeyPair = GenerateKeys();
 			EcDsa = ConvertToSingKeyFormat(BouncyKeyPair);
 		}
@@ -223,7 +226,7 @@ namespace Alex.Services
 
 		                    //DecodedChain = JsonConvert.DeserializeObject<ChainData>(rawResponse);
 		                    MinecraftChain = Encoding.UTF8.GetBytes(rawResponse);
-                            Log.Info($"Chain: {rawResponse}");
+                            Log.Debug($"Chain: {rawResponse}");
 	                    }
                     }
                     catch (Exception ex)
@@ -234,7 +237,7 @@ namespace Alex.Services
 				}
 			}
 			
-			Log.Info($"Xbox login processed!");
+			Log.Debug($"Xbox login processed!");
 			return true;
         }
 		
@@ -244,12 +247,9 @@ namespace Alex.Services
 			var authRequest = new AuthRequest
 			{
 				RelyingParty = "https://multiplayer.minecraft.net/",
-				//RelyingParty = "http://xboxlive.com",
 				TokenType = "JWT",
 				Properties = new Dictionary<string, object>()
 				{
-				//	{"DeviceToken", deviceToken.Token},
-				//	{"TitleToken", titleToken.Token},
 					{"UserTokens", new string[] {userToken}},
 					{ "SandboxId", "RETAIL" },
 					{"ProofKey", new Dictionary<string, string>()
@@ -272,9 +272,6 @@ namespace Alex.Services
 					XblAuth))
 				{
 					r.Headers.Add("x-xbl-contract-version", "1");
-
-					var json = JsonConvert.SerializeObject(authRequest);
-					Console.WriteLine(json);
 					r.Content = SetHttpContent(authRequest, out var jsonData);
 
 					Sign(r, jsonData);
@@ -291,9 +288,7 @@ namespace Alex.Services
 							JsonConvert.DeserializeObject<AuthResponse<XuiDisplayClaims<XstsXui>>>(
 								rawResponse);
 
-						Console.WriteLine($"Xsts Auth: {rawResponse}");
-
-						Console.WriteLine();
+						Log.Debug($"Xsts Auth: {rawResponse}");
 					}
 				}
 			}
@@ -327,15 +322,14 @@ namespace Alex.Services
 			};
 			
 			AuthResponse<TitleDisplayClaims> titleAuthResponse;
-		//	using (var client = new HttpClient())
-		var client = GetClient();
+			var client = GetClient();
 			using (var r = new HttpRequestMessage(HttpMethod.Post,
 				TitleAuth))
 			{
 				r.Headers.Add("x-xbl-contract-version", "1");
 							
-				var json = JsonConvert.SerializeObject(authRequest);
-				Console.WriteLine(json);
+				//var json = JsonConvert.SerializeObject(authRequest);
+				//Console.WriteLine(json);
 				r.Content = SetHttpContent(authRequest, out var jsonData);
 							
 				Sign(r, jsonData);
@@ -350,9 +344,7 @@ namespace Alex.Services
 						JsonConvert.DeserializeObject<AuthResponse<TitleDisplayClaims>>(
 							await response.Content.ReadAsStringAsync());
 
-					Console.WriteLine($"Title Auth: {JsonConvert.SerializeObject(titleAuthResponse)}");
-								
-					Console.WriteLine();
+					Log.Debug($"Title Auth: {JsonConvert.SerializeObject(titleAuthResponse)}");
 				}
 			}
 
@@ -393,14 +385,7 @@ namespace Alex.Services
 				{
 					r.Headers.Add("x-xbl-contract-version", "1");
 
-					var json = JsonConvert.SerializeObject(authRequest);
-					Console.WriteLine(json);
-
 					r.Content = SetHttpContent(authRequest, out var jsonData);
-
-
-					//Console.WriteLine();
-					//Console.WriteLine(JsonConvert.SerializeObject(r));
 					Sign(r, jsonData);
 
 					using (var response = await client
@@ -408,15 +393,12 @@ namespace Alex.Services
 						.ConfigureAwait(false))
 					{
 						response.EnsureSuccessStatusCode();
-Console.WriteLine();
-Console.WriteLine($"User request: {JsonConvert.SerializeObject(r)}");
+
 						authResponse =
 							JsonConvert.DeserializeObject<AuthResponse<XuiDisplayClaims<Xui>>>(
 								await response.Content.ReadAsStringAsync());
 
-						Console.WriteLine($"User Auth Result: {JsonConvert.SerializeObject(authResponse)}");
-
-						Console.WriteLine();
+						Log.Debug($"User Auth Result: {JsonConvert.SerializeObject(authResponse)}");
 					}
 				}
 			}
@@ -704,13 +686,9 @@ Console.WriteLine($"User request: {JsonConvert.SerializeObject(r)}");
 
 		public async Task<(bool success, BedrockTokenPair token)> RefreshTokenAsync(string refreshToken)
 		{
-			var a = new XboxAuthForm(this, false);
-			a.ClientId = MSA_CLIENT_ID;
-			
-			var token = a.RefreshAccessToken(refreshToken);
+			var token = RefreshAccessToken(refreshToken);
 			if (token?.AccessToken == null)
 			{
-				Log.Warn($"Could not get access_token: {a.Error}");
 				return (false, null);
 			}
 			
@@ -720,6 +698,38 @@ Console.WriteLine($"User request: {JsonConvert.SerializeObject(r)}");
 				ExpiryTime = token.ExpiryTime,
 				RefreshToken = token.RefreshToken
 			});
+		}
+		
+		public BedrockTokenPair RefreshAccessToken(string refreshToken)
+		{
+			if (string.IsNullOrEmpty(refreshToken))
+			{
+				throw new ArgumentException("The refresh token is missing.");
+			}
+
+			try
+			{
+				AccessTokens tokens = GetTokensUsingGET($"{this.RefreshUri}", new Dictionary<string, string> { 
+					{ "client_id", MSA_CLIENT_ID  },
+					{ "grant_type", "refresh_token" },
+					{ "scope", "service::user.auth.xboxlive.com::MBI_SSL" },
+					{ "redirect_uri", RedirectUri },
+					{ "refresh_token", refreshToken }
+				});
+
+				return new BedrockTokenPair()
+				{
+					AccessToken = tokens.AccessToken,
+					ExpiryTime = DateTime.UtcNow.AddSeconds(tokens.Expiration),
+					RefreshToken = tokens.RefreshToken
+				};
+			}
+			catch (WebException ex)
+			{
+				Log.Warn("RefreshAccessToken failed likely due to an invalid client ID or refresh token\n" + ex.ToString());
+			}
+
+			return null;
 		}
 
 		public async Task<MsaDeviceAuthConnectResponse> StartDeviceAuthConnect()
@@ -772,6 +782,61 @@ Console.WriteLine($"User request: {JsonConvert.SerializeObject(r)}");
 		{
 			_httpClient.DefaultRequestHeaders.Add("Cache-Control", "no-cache");
 			return _httpClient;
+		}
+		
+		private static AccessTokens GetTokens(string uri, string body)
+		{
+			AccessTokens tokens = null;
+			var request = (HttpWebRequest)WebRequest.Create(uri);
+			request.Method = "POST";
+			request.Accept = "application/json";
+			request.ContentType = "application/x-www-form-urlencoded";
+
+			request.ContentLength = body.Length;
+
+			using (Stream requestStream = request.GetRequestStream())
+			{
+				StreamWriter writer = new StreamWriter(requestStream);
+				writer.Write(body);
+				writer.Close();
+			}
+
+			var response = (HttpWebResponse)request.GetResponse();
+
+			using (Stream responseStream = response.GetResponseStream())
+			{
+				var reader = new StreamReader(responseStream);
+				string json = reader.ReadToEnd();
+				reader.Close();
+				tokens = JsonConvert.DeserializeObject(json, typeof(AccessTokens)) as AccessTokens;
+			}
+
+			return tokens;
+		}
+        
+		private static AccessTokens GetTokensUsingGET(string uri, Dictionary<string, string> parameters)
+		{
+			AccessTokens tokens = null;
+
+			using (var client = GetHttpClient())
+			{
+				var encodedContent = new FormUrlEncodedContent (parameters);
+				var response = client.PostAsync(uri, encodedContent).Result;
+
+				var res = response.Content.ReadAsStringAsync().Result;
+                
+				tokens = JsonConvert.DeserializeObject<AccessTokens>(res);
+			}
+
+			return tokens;
+		}
+        
+		private static HttpClient GetHttpClient()
+		{
+			HttpClient client = new HttpClient();
+			client.DefaultRequestHeaders.Add("Cache-Control", "no-cache");
+
+			return client;
 		}
 
 		private struct Request

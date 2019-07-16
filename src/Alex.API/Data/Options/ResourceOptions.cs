@@ -17,7 +17,7 @@ namespace Alex.API.Data.Options
         public ResourceOptions()
         {
             PluginDirectory = new OptionsProperty<string>(null);
-            LoadedResourcesPacks = new OptionsProperty<string[]>(new string[0], Validator);
+            LoadedResourcesPacks = new OptionsProperty<string[]>(new string[0]);
         }
 
         private string[] Validator(string[] currentvalue, string[] newvalue)

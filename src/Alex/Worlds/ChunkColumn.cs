@@ -220,7 +220,7 @@ namespace Alex.Worlds
 			var section = Sections[by >> 4];
 			if (section == null) return 0;
 
-			return (byte) section.GetExtBlocklightValue(bx, @by - ((@by >> 4) << 4), bz);
+			return (byte) section.GetBlocklight(bx, @by - ((@by >> 4) << 4), bz);
 		}
 
 		public void SetBlocklight(int bx, int by, int bz, byte data)
@@ -228,7 +228,7 @@ namespace Alex.Worlds
 			if ((bx < 0 || bx > ChunkWidth) || (by < 0 || by > ChunkHeight) || (bz < 0 || bz > ChunkDepth))
 				return;
 
-			GetSection(by).SetExtBlocklightValue(bx, @by - ((@by >> 4) << 4), bz, data);
+			GetSection(by).SetBlocklight(bx, @by - ((@by >> 4) << 4), bz, data);
 			
 			//_scheduledLightingUpdates[by << 8 | bz << 4 | bx] = true;
 			var section = (ChunkSection)Sections[by >> 4];
@@ -244,7 +244,7 @@ namespace Alex.Worlds
 			var section = Sections[by >> 4];
 			if (section == null) return 16;
 
-            return section.GetExtSkylightValue(bx, by - ((@by >> 4) << 4), bz);
+            return section.GetSkylight(bx, by - ((@by >> 4) << 4), bz);
 		}
 
 		public void SetSkyLight(int bx, int by, int bz, byte data)
@@ -252,7 +252,7 @@ namespace Alex.Worlds
 			if ((bx < 0 || bx > ChunkWidth) || (by < 0 || by > ChunkHeight) || (bz < 0 || bz > ChunkDepth))
 				return;
 
-			GetSection(by).SetExtSkylightValue(bx, by - ((@by >> 4) << 4), bz, data);
+			GetSection(by).SetSkylight(bx, by - ((@by >> 4) << 4), bz, data);
 			SkyLightDirty = true;
 
             //	_scheduledLightingUpdates[by << 8 | bz << 4 | bx] = true;
@@ -634,7 +634,7 @@ namespace Alex.Worlds
 							storage = new ChunkSection(sectionY, readSkylight);
 						}
 
-						storage.Data.Read(ms);
+					//	storage.Data.Read(ms);
 						/*
 						for (int y = 0; y < 16; y++)
 						{

@@ -18,16 +18,15 @@ namespace Alex.Blocks.Storage
 
 		public IntIdentityHashBiMap(int initialCapacity)
 		{
-			//initialCapacity = (int)(initialCapacity / 0.8F);
 			_values = new TK[initialCapacity];
 			_keys = new uint[initialCapacity];
 			_byId = new TK[initialCapacity];
 		}
 
-		public uint GetId(TK p1868151)
+		public uint GetId(TK value)
 		{
-			if (p1868151 == null) return uint.MaxValue;
-			return GetValue(GetIndex(p1868151, HashObject(p1868151)));
+			if (value == null) return uint.MaxValue;
+			return GetValue(GetIndex(value, HashObject(value)));
 		}
 
 		public TK Get(uint idIn)
@@ -40,9 +39,6 @@ namespace Alex.Blocks.Storage
 			return index == uint.MaxValue ? uint.MaxValue : _keys[index];
 		}
 
-		/**
-	     * Adds the given object while expanding this map
-	     */
 		public uint Add(TK objectIn)
 		{
 			uint i = NextId();
@@ -81,10 +77,7 @@ namespace Alex.Blocks.Storage
 				}
 			}
 		}
-
-		/**
-	     * Puts the provided object value with the integer key.
-	     */
+		
 		public void Put(TK objectIn, uint intKey)
 		{
 			uint i = (uint)Math.Max(intKey, _mapSize + 1);

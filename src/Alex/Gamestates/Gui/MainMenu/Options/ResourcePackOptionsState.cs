@@ -9,14 +9,18 @@ using Alex.API.Utils;
 using Alex.GameStates.Gui.MainMenu.Options.Elements;
 using Alex.Gui;
 using Alex.Gui.Elements;
+using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Generic;
 using Microsoft.Xna.Framework;
+using NLog;
 using RocketUI;
 
 namespace Alex.GameStates.Gui.MainMenu.Options
 {
     public class ResourcePackOptionsState : OptionsStateBase
     {
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ResourcePackOptionsState));
+        
         protected ResourcePackEntry[] Items => _items.ToArray();
         private List<ResourcePackEntry> _items { get; } = new List<ResourcePackEntry>();
 
@@ -121,20 +125,27 @@ namespace Alex.GameStates.Gui.MainMenu.Options
             
             foreach (var resource in Alex.Resources.ResourcePackDirectory.EnumerateFiles())
             {
-                if (resource.FullName.EndsWith(".zip", StringComparison.InvariantCultureIgnoreCase))
+                try
                 {
-                    if (Alex.Resources.TryLoadResourcePackInfo(resource.FullName, out ResourcePackManifest packInfo))
+                    if (resource.FullName.EndsWith(".zip", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        var item = new ResourcePackEntry(packInfo, resource.FullName);
-
-                        if (enabled.Any(x =>
-                            resource.Name.Equals(Path.GetFileName(x), StringComparison.InvariantCultureIgnoreCase)))
+                        if (Alex.Resources.TryLoadResourcePackInfo(resource.FullName,
+                            out ResourcePackManifest packInfo))
                         {
-                            item.SetLoaded(true);
+                            var item = new ResourcePackEntry(packInfo, resource.FullName);
+
+                            if (enabled.Any(x => x.ToLower().Contains(resource.Name.ToLower())))
+                            {
+                                item.SetLoaded(true);
+                            }
+
+                            AddItem(item);
                         }
-                        
-                        AddItem(item);
                     }
+                }
+                catch (InvalidResourcePackException ex)
+                {
+                    Log.Warn($"Error while loading resourcepack: {ex.ToString()}");
                 }
             }
         }

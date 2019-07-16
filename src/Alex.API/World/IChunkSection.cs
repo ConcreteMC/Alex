@@ -20,10 +20,10 @@ namespace Alex.API.World
         bool IsEmpty();
         bool NeedsRandomTick();
         int GetYLocation();
-        void SetExtSkylightValue(int x, int y, int z, int value);
-        byte GetExtSkylightValue(int x, int y, int z);
-        void SetExtBlocklightValue(int x, int y, int z, byte value);
-        int GetExtBlocklightValue(int x, int y, int z);
+        void SetSkylight(int x, int y, int z, int value);
+        byte GetSkylight(int x, int y, int z);
+        void SetBlocklight(int x, int y, int z, byte value);
+        int GetBlocklight(int x, int y, int z);
         void RemoveInvalidBlocks();
       //  bool IsFaceSolid(BlockFace face);
     }

@@ -98,9 +98,6 @@
 
   <ItemGroup>
     <PackageReference Include="EasyPipes" Version="1.1.0" />
-    <PackageReference Include="Eto.Forms" Version="2.5.0-beta.1" />
-    <PackageReference Include="Eto.Platform.Gtk" Version="2.5.0-beta.1" />
-    <PackageReference Include="Eto.Platform.Wpf" Version="2.5.0-beta.1" />
     <PackageReference Include="GtkSharp" Version="3.22.24.37" />
     <PackageReference Include="Hawezo.MojangSharp" Version="0.5.1" />
     <PackageReference Include="JetBrains.Profiler.Api" Version="1.0.19" />

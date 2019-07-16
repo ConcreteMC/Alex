@@ -22,7 +22,6 @@ using Alex.Services;
 using Alex.Utils;
 using Alex.Worlds.Bedrock;
 using Alex.Worlds.Java;
-using Eto.Forms;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET.Utils;
@@ -70,14 +69,10 @@ namespace Alex
 
 		private LaunchSettings LaunchSettings { get; }
 		//public ChromiumWebBrowser CefWindow { get; private set; }
-		
-		private Application EtoApplication { get; }
-        public PluginManager PluginManager { get; }
+		public PluginManager PluginManager { get; }
         public FpsMonitor FpsMonitor { get; }
-        public Alex(LaunchSettings launchSettings, Application app)
+        public Alex(LaunchSettings launchSettings)
 		{
-			EtoApplication = app;
-			
 			Instance = this;
 			LaunchSettings = launchSettings;
 
@@ -186,7 +181,7 @@ namespace Alex
 
 			Services.AddService<IListStorageProvider<SavedServerEntry>>(new SavedServerDataProvider(storage));
 			
-			Services.AddService(msa = new XBLMSAService(EtoApplication));
+			Services.AddService(msa = new XBLMSAService());
 			
 			Services.AddService<IServerQueryProvider>(new ServerQueryProvider(this));
 			Services.AddService<IPlayerProfileService>(new PlayerProfileService(msa, ProfileManager));

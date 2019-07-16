@@ -319,6 +319,8 @@ namespace Alex.Worlds
 
 		private void ReadSection(NbtTag sectionTag, Worlds.ChunkColumn chunk, bool convertBid = true)
 		{
+			//TODO: Re-implement setdatafromnbt.
+			
 			int sectionIndex = sectionTag["Y"].ByteValue;
 			NbtList palette = sectionTag["Palette"] as NbtList;
 			long[] blockStates = sectionTag["BlockStates"].LongArrayValue;
@@ -327,7 +329,7 @@ namespace Alex.Worlds
 			byte[] skyLight = sectionTag["SkyLight"].ByteArrayValue;
 
 			var section = new ChunkSection(sectionIndex, ReadSkyLight);
-			section.Data.SetDataFromNbt(palette, blockStates);
+			//section.Data.SetDataFromNbt(palette, blockStates);
 
 			if (ReadSkyLight)
 			{
@@ -376,7 +378,7 @@ namespace Alex.Worlds
 
 				if (BlockStateMapper.TryGetValue(blockStateId, out blockStateId))
 				{
-					section.Data.Set(i, BlockFactory.GetBlockState(blockStateId));
+					//section.Data.Set(i, BlockFactory.GetBlockState(blockStateId));
 				}
 
 				//section.GetData().Set(i, BlockFactory.GetBlockState(blockStateId));
