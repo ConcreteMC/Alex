@@ -90,6 +90,8 @@ namespace Alex.Worlds
 		        LightingEnabled = true,
 		        FogEnabled = false
 	        };
+	        
+	        //if (alex.)
 
 	        FrameCount = alex.Resources.Atlas.GetFrameCount();
 
@@ -388,9 +390,10 @@ namespace Alex.Worlds
 			    foreach (var pass in effect.CurrentTechnique.Passes)
 			    {
 				    pass.Apply();
+				    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, buffer.IndexCount / 3);
 			    }
 
-			    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, buffer.IndexCount / 3);
+			    
 			    verticeCount += chunk.Buffer.VertexCount;
 		    }
 

@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Threading;
@@ -80,8 +81,10 @@ namespace Alex
 			{
 				PreferMultiSampling = false,
 				SynchronizeWithVerticalRetrace = false,
-				GraphicsProfile = GraphicsProfile.HiDef,
+				GraphicsProfile = GraphicsProfile.Reach,
 			};
+			
+
 			Content.RootDirectory = "assets";
 
 			IsFixedTimeStep = false;
@@ -130,7 +133,18 @@ namespace Alex
 
 			// InitCamera();
 			this.Window.TextInput += Window_TextInput;
-
+			
+			var currentAdapter = GraphicsAdapter.Adapters.FirstOrDefault(x => x == GraphicsDevice.Adapter);
+			if (currentAdapter != null)
+			{
+				if (currentAdapter.IsProfileSupported(GraphicsProfile.HiDef))
+				{
+					DeviceManager.GraphicsProfile = GraphicsProfile.HiDef;
+				}
+			}
+			
+			DeviceManager.ApplyChanges();
+			
 			base.Initialize();
 		}
 
@@ -165,6 +179,16 @@ namespace Alex
 
 		private AlexIpcService AlexIpcService;
 
+		private void SetVSync(bool enabled)
+		{
+			UIThreadQueue.Enqueue(() =>
+			{
+				base.IsFixedTimeStep = enabled;
+				DeviceManager.SynchronizeWithVerticalRetrace = enabled;
+				DeviceManager.ApplyChanges();
+			});
+		}
+		
 		private void ConfigureServices()
 		{
 			XBLMSAService msa;
@@ -176,6 +200,12 @@ namespace Alex
 			
 			var optionsProvider = new OptionsProvider(storage);
 			optionsProvider.Load();
+			
+			optionsProvider.AlexOptions.VideoOptions.UseVsync.Bind((value, newValue) => { SetVSync(newValue); });
+			if (optionsProvider.AlexOptions.VideoOptions.UseVsync.Value)
+			{
+				SetVSync(true);
+			}
 			
 			Services.AddService<IOptionsProvider>(optionsProvider);
 
