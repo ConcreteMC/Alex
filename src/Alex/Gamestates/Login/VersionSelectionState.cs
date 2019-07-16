@@ -1,29 +1,35 @@
-﻿using Alex.API.Gui.Elements;
+﻿using System;
+using Alex.API.Graphics;
+using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Graphics;
+using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.GameStates;
 using Alex.GameStates.Gui.Common;
+using Alex.Gui;
 using Alex.Networking.Java;
 using Microsoft.Xna.Framework;
+using MiNET.Net;
 using RocketUI;
 
 namespace Alex.Gamestates.Login
 {
-	public class VersionSelectionState : GuiGameStateBase
+	public class VersionSelectionState : GuiMenuStateBase
 	{
 		private readonly GuiStackMenu _mainMenu;
 		private readonly GuiImage _logo;
 		private readonly GuiTextElement _textElement;
-		public VersionSelectionState()
+		private GuiPanoramaSkyBox _skyBox;
+		private Action JavaConfirmed { get; }
+		private Action<PlayerProfile> BedrockConfirmed { get; }
+		public VersionSelectionState(GuiPanoramaSkyBox skyBox, Action onJavaConfirmed, Action<PlayerProfile> onBedrockConfirmed)
 		{
-			Background = new GuiTexture2D
-			{
-				TextureResource = GuiTextures.OptionsBackground,
-				RepeatMode = TextureRepeatMode.Tile,
-				Scale = new Vector2(2f, 2f),
-			};
-			BackgroundOverlay = new Color(Color.Black, 0.65f);
+			_skyBox = skyBox;
+			JavaConfirmed = onJavaConfirmed;
+			BedrockConfirmed = onBedrockConfirmed;
+			
+			Background = new GuiTexture2D(_skyBox, TextureRepeatMode.Stretch);
 
 			_mainMenu = new GuiStackMenu()
 			{
@@ -37,7 +43,7 @@ namespace Alex.Gamestates.Login
 			};
 
 			_mainMenu.AddMenuItem($"Java - Version {JavaProtocol.FriendlyName}", JavaEditionButtonPressed);
-			_mainMenu.AddMenuItem($"Bedrock - Unavailable", BedrockEditionButtonPressed);
+			_mainMenu.AddMenuItem($"Bedrock - Version {McpeProtocolInfo.GameVersion}", BedrockEditionButtonPressed);
 
 			_mainMenu.AddSpacer();
 			
@@ -65,7 +71,7 @@ namespace Alex.Gamestates.Login
 
 		private void SinglePlayerButtonPressed()
 		{
-			Alex.GameStateManager.SetActiveState<TitleState>();
+			Alex.GameStateManager.Back();
 			/*Alex.GameStateManager.SetAndUpdateActiveState<TitleState>(state =>
 			{
 				state.EnableMultiplayer = false;
@@ -75,17 +81,38 @@ namespace Alex.Gamestates.Login
 
 		private void BedrockEditionButtonPressed()
 		{
-			
+			BEDeviceCodeLoginState state = new BEDeviceCodeLoginState(_skyBox, BedrockConfirmed);
+			Alex.GameStateManager.SetActiveState(state, true);
 		}
 
 		private void JavaEditionButtonPressed()
 		{
+			JavaLoginState loginState = new JavaLoginState(_skyBox, JavaConfirmed);
+			Alex.GameStateManager.SetActiveState(loginState, true);
 			//Alex.GameStateManager.SetActiveState(new JavaLoginState(), true);
 		}
 
 		private void MenuButtonClicked()
 		{
 			Alex.GameStateManager.SetActiveState<TitleState>();
+		}
+
+		protected override void OnUpdate(GameTime gameTime)
+		{
+			base.OnUpdate(gameTime);
+			_skyBox.Update(gameTime);
+		}
+		
+		protected override void OnDraw(IRenderArgs args)
+		{
+			if (!_skyBox.Loaded)
+			{
+				_skyBox.Load(Alex.GuiRenderer);
+			}
+
+			_skyBox.Draw(args);
+            
+			base.OnDraw(args);
 		}
 	}
 }

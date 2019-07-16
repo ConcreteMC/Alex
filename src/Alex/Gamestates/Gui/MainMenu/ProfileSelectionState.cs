@@ -8,6 +8,7 @@ using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.GameStates.Gui.Common;
 using Alex.Gamestates.Gui.MainMenu.Profile;
+using Alex.Gamestates.Login;
 using Alex.Gui;
 using Microsoft.Xna.Framework;
 using NLog;
@@ -21,8 +22,12 @@ namespace Alex.Gamestates.Gui.MainMenu
         
         private GuiPanoramaSkyBox _skyBox;
         private IPlayerProfileService ProfileService { get; } 
-        public ProfileSelectionState(GuiPanoramaSkyBox skyBox)
+        private Alex Alex { get; }
+
+        private GuiButton _addBtn, _editBtn, _deleteBtn, _cancelBtn, _selectBtn;
+        public ProfileSelectionState(GuiPanoramaSkyBox skyBox, Alex alex)
         {
+            Alex = alex;
             _skyBox = skyBox;
             ProfileService = GetService<IPlayerProfileService>();
             
@@ -35,22 +40,30 @@ namespace Alex.Gamestates.Gui.MainMenu
             
             Footer.AddRow(row =>
             {
-                row.AddChild(new GuiButton("Add", AddClicked)
+                row.AddChild(_addBtn = new GuiButton("Add", AddClicked)
                 {
-
+                    
                 });
-                row.AddChild(new GuiButton("Cancel", OnCancelButtonPressed)
+                row.AddChild(_editBtn = new GuiButton("Edit", EditClicked)
                 {
-                  //  TranslationKey = "gui.cancel"
+                    Enabled = false
+                });
+                row.AddChild(_deleteBtn = new GuiButton("Delete", DeleteClicked)
+                {
+                    Enabled = false
                 });
             });
             
             Footer.AddRow(row =>
             {
-                row.ChildAnchor = Alignment.CenterX;
-                row.AddChild(new GuiButton("Edit", EditClicked)
+             //   row.ChildAnchor = Alignment.CenterX;
+             row.AddChild(_selectBtn = new GuiButton("Select Profile", OnProfileSelect)
+             {
+                 Enabled = false
+             });
+             
+                row.AddChild(_cancelBtn = new GuiButton("Cancel", OnCancelButtonPressed)
                 {
-                    Enabled = false
                 });
                 
             });
@@ -65,29 +78,83 @@ namespace Alex.Gamestates.Gui.MainMenu
                 };
             }
 
+            Reload();
+        }
+
+        private void SetButtonState(bool itemSelected)
+        {
+            _selectBtn.Enabled = itemSelected;
+            _deleteBtn.Enabled = itemSelected;
+            _editBtn.Enabled = itemSelected;
+        }
+        
+        private void OnProfileSelect()
+        {
+            var selected = SelectedItem;
+            if (selected == null)
+            {
+                SetButtonState(false);
+                return;
+            }
+            
+            ProfileService.Force(selected.Profile);
+            
+            OnCancelButtonPressed();
+        }
+
+        private void Reload()
+        {
+            ClearItems();
+            
             var activeProfile = ProfileService.CurrentProfile;
             foreach (var profile in ProfileService.GetJavaProfiles().Concat(ProfileService.GetBedrockProfiles()))
             {
-                ProfileEntry entry = new ProfileEntry(profile, _defaultSkin);
+                ProfileEntry entry = new ProfileEntry(profile, _defaultSkin, OnDoubleClick);
                 AddItem(entry);
 
                 if (activeProfile != null &&
                     profile.Uuid.Equals(activeProfile.Uuid, StringComparison.InvariantCultureIgnoreCase))
                 {
                     Focus(entry);
+                    _previous = entry;
                 }
             }
+        }
+
+        private void OnDoubleClick(ProfileEntry profile)
+        {
+            Focus(profile);
+            
+            ProfileService.Force(profile.Profile);
+            OnCancelButtonPressed();
+        }
+
+        private void OnBedrockConfirmed(PlayerProfile profile)
+        {
+            Reload();
+            
+            //ProfileEntry entry = new ProfileEntry(profile, _defaultSkin);
+           // AddItem(entry);
+        }
+
+        private void OnJavaConfirmed()
+        {
+            Reload();
         }
 
         private void EditClicked()
         {
             
         }
+        
+        private void DeleteClicked()
+        {
+            
+        }
 
         private void AddClicked()
         {
-          //  ProfileEntry entry = new ProfileEntry(_defaultSkin);
-          //  AddItem(entry);
+            Alex.GameStateManager.SetActiveState(new VersionSelectionState(_skyBox, OnJavaConfirmed, OnBedrockConfirmed), true);
         }
 
         private void OnCancelButtonPressed()
@@ -117,6 +184,24 @@ namespace Alex.Gamestates.Gui.MainMenu
         protected override void OnLoad(IRenderArgs args)
         {
             base.OnLoad(args);
+        }
+
+        private ProfileEntry _previous = null;
+        protected override void OnSelectedItemChanged(ProfileEntry newItem)
+        {
+            base.OnSelectedItemChanged(newItem);
+
+            if (_previous != null)
+            {
+                ClearFocus(_previous);
+            }
+
+            if (newItem != null)
+            {
+                SetButtonState(true);
+            }else{
+                SetButtonState(false);
+            }
         }
     }
 }

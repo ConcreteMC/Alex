@@ -1,3 +1,5 @@
+using System;
+using System.Diagnostics;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Services;
@@ -13,8 +15,13 @@ namespace Alex.Gamestates.Gui.MainMenu.Profile
     public class ProfileEntry : GuiSelectionListItem
     {
         public GuiEntityModelView ModelView { get; }
-        public ProfileEntry(PlayerProfile profile, Skin defaultSelection)
+        public PlayerProfile Profile { get; }
+        private Action<ProfileEntry> OnDoubleClick { get; }
+        public ProfileEntry(PlayerProfile profile, Skin defaultSelection, Action<ProfileEntry> onDoubleClick)
         {
+            Profile = profile;
+            OnDoubleClick = onDoubleClick;
+            
             MinWidth = 92;
             MaxWidth = 92;
             MinHeight = 128;
@@ -79,6 +86,35 @@ namespace Alex.Gamestates.Gui.MainMenu.Profile
             var yaw = (float)headYaw;
 
             ModelView.SetEntityRotation(-yaw, pitch, -headYaw);
+        }
+
+        private Stopwatch _previousClick = null;
+        private bool FirstClick = true;
+        protected override void OnCursorPressed(Point cursorPosition)
+        {
+            base.OnCursorPressed(cursorPosition);
+
+            if (_previousClick == null)
+            {
+                _previousClick = Stopwatch.StartNew();
+                FirstClick = false;
+                return;
+            }
+
+            if (FirstClick)
+            {
+                _previousClick.Restart();
+                FirstClick = false;
+            }
+            else
+            {
+                if (_previousClick.ElapsedMilliseconds < 150)
+                {
+                    OnDoubleClick?.Invoke(this);
+                }
+
+                FirstClick = true;
+            }
         }
     }
 }

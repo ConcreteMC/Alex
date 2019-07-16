@@ -327,7 +327,7 @@ namespace Alex.GameStates
 
 		private void LoginBtnPressed()
 		{
-			Alex.GameStateManager.SetActiveState(new ProfileSelectionState(_backgroundSkyBox), true);
+			Alex.GameStateManager.SetActiveState(new ProfileSelectionState(_backgroundSkyBox, Alex), true);
 			//Alex.GameStateManager.SetActiveState(new VersionSelectionState());
 		}
 
