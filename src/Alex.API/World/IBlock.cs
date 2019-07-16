@@ -10,6 +10,7 @@ namespace Alex.API.World
 	{
 		bool Solid { get; set; }
 		bool Transparent { get; set; }
+		bool Animated { get; set; }
 		bool Renderable { get; set; }
 		bool HasHitbox { get; set; }
 		float Drag { get; set; }

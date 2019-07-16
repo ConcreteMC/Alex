@@ -17,6 +17,7 @@ namespace Alex.Blocks.Minecraft
 
 			IsWater = true;
 			IsSourceBlock = true;
+			Animated = true;
 			//BlockMaterial = Material.Water;
 		}
 

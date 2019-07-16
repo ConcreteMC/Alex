@@ -22,6 +22,7 @@ namespace Alex.Blocks.Minecraft
 
 		public bool Solid { get; set; }
 		public bool Transparent { get; set; }
+		public bool Animated { get; set; } = false;
 		public bool Renderable { get; set; }
 		public bool HasHitbox { get; set; }
 		public bool IsBlockNormalCube { get; set; } = false;

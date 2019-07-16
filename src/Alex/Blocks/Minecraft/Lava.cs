@@ -11,6 +11,7 @@ namespace Alex.Blocks.Minecraft
 
 			LightValue = 15;
 			LightOpacity = 255;
+			Animated = true;
 			//BlockModel = BlockFactory.StationairyLavaModel;
 
 			//	BlockMaterial = Material.Lava;
