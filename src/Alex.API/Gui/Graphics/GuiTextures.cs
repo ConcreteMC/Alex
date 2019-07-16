@@ -60,6 +60,9 @@
 
         DefaultServerIcon,
 
-        InventoryPlayerBackground
+        InventoryPlayerBackground,
+        
+        GreenCheckMark,
+        GreyCheckMark
     }
 }

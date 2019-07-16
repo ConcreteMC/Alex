@@ -26,7 +26,6 @@ namespace Alex.GameStates.Gui.Common
 				ChildAnchor = Alignment.TopFill,
             });
 	        ListContainer.SelectedItemChanged += HandleSelectedItemChanged;
-			//ListContainer.Margin = new Thickness(0, Header.Height, 0, Footer.Height);
         }
 
 	    protected override void OnUpdate(GameTime gameTime)

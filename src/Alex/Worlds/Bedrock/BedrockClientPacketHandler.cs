@@ -9,6 +9,7 @@ using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Blocks.State;
+using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks.State;
@@ -43,18 +44,22 @@ namespace Alex.Worlds.Bedrock
 		private Alex AlexInstance { get; }
         private CancellationToken CancellationToken { get; }
         private ChunkProcessor ChunkProcessor { get; }
-		public BedrockClientPacketHandler(BedrockClient client, Alex alex, CancellationToken cancellationToken) : base(client)
-		{
-			BaseClient = client;
-			AlexInstance = alex;
-			CancellationToken = cancellationToken;
-			
-			AnvilWorldProvider.LoadBlockConverter();
-			
-			ChunkProcessor = new ChunkProcessor(4, alex.GameSettings.UseAlexChunks, cancellationToken);
+
+        public BedrockClientPacketHandler(BedrockClient client, Alex alex, CancellationToken cancellationToken) :
+	        base(client)
+        {
+	        BaseClient = client;
+	        AlexInstance = alex;
+	        CancellationToken = cancellationToken;
+
+	        AnvilWorldProvider.LoadBlockConverter();
+
+	        ChunkProcessor = new ChunkProcessor(4,
+		        alex.Services.GetService<IOptionsProvider>().AlexOptions.MiscelaneousOptions.ServerSideLighting,
+		        cancellationToken);
         }
 
-		private void UnhandledPackage(Packet packet)
+        private void UnhandledPackage(Packet packet)
 		{
 			Log.Warn($"Unhandled bedrock packet: {packet.GetType().Name} (0x{packet.Id:X2})");
 		}

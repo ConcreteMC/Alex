@@ -7,11 +7,13 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Text;
+using Alex.API.Data.Options;
 using Alex.API.Json;
 using Alex.API.Services;
 using Alex.Entities;
 using Alex.Networking.Java;
 using Alex.ResourcePackLib;
+using Alex.ResourcePackLib.Generic;
 using Alex.Utils;
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
@@ -32,11 +34,14 @@ namespace Alex
 		private GraphicsDevice Graphics { get; set; }
 
 		private IStorageSystem Storage { get; }
-		public ResourceManager(GraphicsDevice graphics, IStorageSystem storageSystem)
+		private IOptionsProvider Options { get; }
+		public ResourceManager(GraphicsDevice graphics, IStorageSystem storageSystem, IOptionsProvider options)
 		{
 			Storage = storageSystem;
 			Graphics = graphics;
 			Atlas = new AtlasGenerator(Graphics);
+
+			Options = options;
 		}
 
 		private static readonly string VersionFile = Path.Combine("assets", "version.txt");
@@ -96,6 +101,28 @@ namespace Alex
 			}
 
 			return null;
+		}
+
+		public bool TryLoadResourcePackInfo(string file, out ResourcePackManifest manifest)
+		{
+			manifest = default;
+			if (!File.Exists(file))
+			{
+				return false;
+			}
+
+			ResourcePackLib.ResourcePack info;
+			using(FileStream stream = File.OpenRead(file))
+			using (var archive = new ZipArchive(stream, ZipArchiveMode.Read))
+				info = ResourcePackLib.ResourcePack.LoadFromArchive(archive);
+
+			if (info == null || info == default)
+			{
+				return false;
+			}
+
+			manifest = info.Info;
+			return true;
 		}
 
 		private McResourcePack LoadResourcePack(IProgressReceiver progressReceiver, GraphicsDevice graphics, Stream stream, McResourcePack.McResourcePackPreloadCallback preloadCallback = null)
@@ -186,7 +213,8 @@ namespace Alex
 			return true;
 		}
 
-        public bool CheckResources(GraphicsDevice device, Settings setings, IProgressReceiver progressReceiver, McResourcePack.McResourcePackPreloadCallback preloadCallback)
+        public DirectoryInfo ResourcePackDirectory { get; private set; } = null;
+        public bool CheckResources(GraphicsDevice device, IProgressReceiver progressReceiver, McResourcePack.McResourcePackPreloadCallback preloadCallback)
 		{
 			byte[] defaultResources;
 
@@ -261,8 +289,9 @@ namespace Alex
 			EntityFactory.Load(this, progressReceiver);
 
             Storage.TryGetDirectory(Path.Combine("assets", "resourcepacks"), out DirectoryInfo root);
-
-            foreach (string file in setings.ResourcePacks)
+            ResourcePackDirectory = root;
+            
+            foreach (string file in Options.AlexOptions.ResourceOptions.LoadedResourcesPacks.Value)
 			{
 				try
 				{

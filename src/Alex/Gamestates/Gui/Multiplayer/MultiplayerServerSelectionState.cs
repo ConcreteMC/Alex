@@ -353,9 +353,8 @@ namespace Alex.GameStates.Gui.Multiplayer
 
 	    private GuiServerListEntryElement(string serverName, string serverAddress)
 	    {
-		    Width = 335;
-		    MaxWidth = 335;
-
+		    SetFixedSize(355, 36);
+		    
             ServerName = serverName;
             ServerAddress = serverAddress;
 
@@ -394,7 +393,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 
             _textWrapper.AddChild(_serverMotd = new GuiTextElement()
             {
-				Text = "Pinging server...",
+				TranslationKey = "multiplayer.status.pinging",
 				Margin = new Thickness(0, 0, 5, 0),
 				
 				//Anchor = center

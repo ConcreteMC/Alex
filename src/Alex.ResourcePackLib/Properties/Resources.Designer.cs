@@ -19,7 +19,7 @@ namespace Alex.ResourcePackLib.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -61,12 +61,14 @@ namespace Alex.ResourcePackLib.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
+        ///   Looks up a localized string similar to ‰PNG
+        ///
+        ///        ///IHDR€€Ã&gt;aËgAMA±üa+IDATxÚígeeÕ†ÃˆŠ        ///QÄQPÑˆbL411$š¨	ßôGøÝó7ü*Æh¢HŒ        ///‰±`WÄŽ`Ã2ï\;\ç½Xî)L…™³““Óvyö³Ö³Ö½ê¾àŸøÄ¡Í~;o·û)Ø3À~Û3À~Û3À~Û3À~Û3À~Û3À~Û3À~Û3À~Û3À~Û3À~Û3À~Û3À~;w·í\°Ÿ…½Øo{Øo{Øoç!ØOÁù±=ãÏØ\tÑE›‹/¾xùÌ;ß÷po—_~ùæYÏzÖæ™Ï|ææH`¯ÎáMâï1Ày¾ÍÔß3ÀÞ
+        ///ØoçêöÏþóØVÀÞxînÿýïWÅ?Œñïÿ{óŸÿügoœËDþë_ÿºúÿøÇÂÿú×¿ö~€sR—8°ØöÚ÷¼_xá…›ßþö·GWû©{úš¿¯mÏ~ö³7ûÛßöðtÜ¶ÛíæÒK/]Þ%ö‘}¤í²Ë.{z1À~ô£ÍW¾ò•Í[Þò–å¦+W\qÅò:Ÿ6œ8ÏþóOê¨˜à/ùËS›þþ÷¿o~ýë_o&gt;ó™Ï,DÿÜç&gt;· ØÇ{lc×]wÝyÇÌÃ [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static byte[] unknown_pack {
+        internal static string unknown_pack {
             get {
-                object obj = ResourceManager.GetObject("unknown_pack", resourceCulture);
-                return ((byte[])(obj));
+                return ResourceManager.GetString("unknown_pack", resourceCulture);
             }
         }
     }

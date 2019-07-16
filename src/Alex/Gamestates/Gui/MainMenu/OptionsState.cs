@@ -1,10 +1,11 @@
 ﻿using Alex.GameStates.Gui.MainMenu.Options;
+using Alex.Gui;
 
 namespace Alex.GameStates.Gui.MainMenu
 {
     public class OptionsState : OptionsStateBase
     {
-        public OptionsState() : base()
+        public OptionsState(GuiPanoramaSkyBox skyBox) : base(skyBox)
         {
             TitleTranslationKey = "options.title";
 

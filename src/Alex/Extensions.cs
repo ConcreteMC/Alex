@@ -34,77 +34,11 @@ namespace Alex
 			}
 
 		}
-		
-		public static float DistanceTo(this Vector3 a, Vector3 b)
-		{
-
-			return Vector3.Distance(a, b);
-		}
-
-		private static float Square(float num)
-		{
-			return num * num;
-		}
-
 
 		public static void Init(GraphicsDevice gd)
 	    {
             WhiteTexture = GpuResourceManager.GetTexture2D("Alex.Extensions", gd, 1, 1);
             WhiteTexture.SetData(new Color[] { Color.White });
-        }
-
-        public static IEnumerable<T> TakeLast<T>(this IEnumerable<T> source, int N)
-        {
-            return source.Skip(Math.Max(0, source.Count() - N));
-        }
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        private static extern int MapVirtualKey(int uCode, int uMapType);
-
-        public static bool RepresentsPrintableChar(this Keys key)
-        {
-            return !char.IsControl((char)MapVirtualKey((int)key, 2));
-        }
-
-        public static bool IsKeyAChar(this Keys key)
-        {
-            return key >= Keys.A && key <= Keys.Z;
-        }
-
-        public static bool IsKeyADigit(this Keys key)
-        {
-            return (key >= Keys.D0 && key <= Keys.D9) || (key >= Keys.NumPad0 && key <= Keys.NumPad9);
-        }
-
-        [DllImport("user32.dll")]
-        static extern short VkKeyScan(char c);
-
-        [DllImport("user32.dll", SetLastError = true)]
-        static extern int ToAscii(
-            uint uVirtKey,
-            uint uScanCode,
-            byte[] lpKeyState,
-            out uint lpChar,
-            uint flags
-            );
-
-        public static char GetModifiedChar(this char c)
-        {
-            short vkKeyScanResult = VkKeyScan(c);
-
-            if (vkKeyScanResult == -1)
-                return c;
-
-            uint code = (uint)vkKeyScanResult & 0xff;
-
-            byte[] b = new byte[256];
-            b[0x10] = 0x80;
-
-            uint r;
-            if (1 != ToAscii(code, code, b, out r, 0))
-                throw new ApplicationException("Could not translate modified state");
-
-            return (char)r;
         }
 
         /// <summary>
@@ -291,15 +225,5 @@ namespace Alex
 		{
 			return (b & (1 << pos)) != 0;
 		}
-
-	    public static bool Any(this BitArray source, Func<bool, bool> predicate)
-	    {
-	        foreach (bool source1 in source)
-	        {
-	            if (predicate(source1))
-	                return true;
-	        }
-	        return false;
-	    }
-    }
+	}
 }

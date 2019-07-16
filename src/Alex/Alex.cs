@@ -27,6 +27,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET.Utils;
 using Newtonsoft.Json;
+using NLog;
 using StackExchange.Profiling;
 using GuiDebugHelper = Alex.Gui.GuiDebugHelper;
 using TextInputEventArgs = Microsoft.Xna.Framework.TextInputEventArgs;
@@ -35,7 +36,7 @@ namespace Alex
 {
 	public partial class Alex : Microsoft.Xna.Framework.Game
 	{
-		//private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Alex));
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Alex));
 
 		public static string DotnetRuntime { get; } =
 			$"{System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription}";
@@ -128,16 +129,6 @@ namespace Alex
 			OnCharacterInput?.Invoke(this, e);
 		}
 
-		public void SaveSettings()
-		{
-			if (GameSettings.IsDirty)
-			{
-				Storage.TryWrite("settings", GameSettings);
-			}
-		}
-
-		internal Settings GameSettings { get; private set; }
-
 		protected override void Initialize()
 		{
 			Window.Title = "Alex - " + Version;
@@ -150,13 +141,6 @@ namespace Alex
 
 		protected override void LoadContent()
 		{
-			//	if (!File.Exists(Path.Combine("assets", "DebugFont.xnb")))
-			//	{
-			//		File.WriteAllBytes(Path.Combine("assets", "DebugFont.xnb"), global::Alex.Resources.DebugFont);
-			//	}
-			//DebugFont = (WrappedSpriteFont) Content.Load<SpriteFont>("DebugFont");
-			//CefWindow = new ChromiumWebBrowser(GraphicsDevice, "http://google.com/");
-
 			var fontStream = Assembly.GetEntryAssembly().GetManifestResourceStream("Alex.Resources.DebugFont.xnb");
 			
 			DebugFont = (WrappedSpriteFont) Content.Load<SpriteFont>(fontStream.ReadAllBytes());
@@ -215,7 +199,6 @@ namespace Alex
 
 		protected override void UnloadContent()
 		{
-			SaveSettings();
 			ProfileManager.SaveProfiles();
 			
 			Services.GetService<IOptionsProvider>().Save();
@@ -241,7 +224,10 @@ namespace Alex
 				{
 					a.Invoke();
 				}
-				catch { }
+				catch (Exception ex)
+				{
+					Log.Warn($"Exception on UIThreadQueue: {ex.ToString()}");
+				}
 			}
 		}
 
@@ -264,26 +250,17 @@ namespace Alex
 			progressReceiver.UpdateProgress(0, "Initializing...");
 			
 			ConfigureServices();
-			
-			if (Storage.TryRead("settings", out Settings settings))
-			{
-				GameSettings = settings;
-				//Console.WriteLine($"OLD SETTINGS: {settings.RenderDistance}");
-			}
-			else
-			{
-				GameSettings = new Settings(string.Empty);
-				GameSettings.IsDirty = true;
-				//Console.WriteLine($"NEW GAMESETTINGS");
-			}
+
+			var options = Services.GetService<IOptionsProvider>();
 
 			Extensions.Init(GraphicsDevice);
 
             string pluginDirectoryPaths = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
 
-            if (!string.IsNullOrWhiteSpace(GameSettings.PluginDirectory))
+            var pluginDir = options.AlexOptions.ResourceOptions.PluginDirectory;
+            if (!string.IsNullOrWhiteSpace(pluginDir))
             {
-                pluginDirectoryPaths = GameSettings.PluginDirectory;
+                pluginDirectoryPaths = pluginDir;
             }
 
             foreach (string dirPath in pluginDirectoryPaths.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
@@ -301,8 +278,8 @@ namespace Alex
             ProfileManager.LoadProfiles(progressReceiver);
 
 			//	Log.Info($"Loading resources...");
-			Resources = new ResourceManager(GraphicsDevice, Storage);
-			if (!Resources.CheckResources(GraphicsDevice, GameSettings, progressReceiver,
+			Resources = new ResourceManager(GraphicsDevice, Storage, options);
+			if (!Resources.CheckResources(GraphicsDevice, progressReceiver,
 				OnResourcePackPreLoadCompleted))
 			{
                 Console.WriteLine("Press enter to exit...");
@@ -314,7 +291,6 @@ namespace Alex
 			GuiRenderer.LoadResourcePack(Resources.ResourcePack);
 
 			GameStateManager.AddState<TitleState>("title");
-			GameStateManager.AddState("options", new OptionsState());
 
 			GameStateManager.SetActiveState<TitleState>("title");
 

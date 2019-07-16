@@ -12,6 +12,7 @@ using Alex.API.Utils;
 using Alex.Entities;
 using Alex.GameStates.Gui.Common;
 using Alex.Gamestates.Gui.MainMenu;
+using Alex.GameStates.Gui.MainMenu;
 using Alex.GameStates.Gui.Multiplayer;
 using Alex.Gui;
 using Alex.Gui.Elements;
@@ -93,7 +94,7 @@ namespace Alex.GameStates
 
 			_debugMenu.AddMenuItem("Debug Blockstates", DebugWorldButtonActivated);
 			_debugMenu.AddMenuItem("Debug Flatland", DebugFlatland);
-			_debugMenu.AddMenuItem("Debug Anvil", DebugAnvil);
+			//_debugMenu.AddMenuItem("Debug Anvil", DebugAnvil);
 			_debugMenu.AddMenuItem("Debug Chunk", DebugChunkButtonActivated);
 		//	_debugMenu.AddMenuItem("Debug XBL Login", BedrockEditionButtonPressed);
             _debugMenu.AddMenuItem("Go Back", DebugGoBackPressed);
@@ -152,6 +153,8 @@ namespace Alex.GameStates
 
 			_playerProfileService = Alex.Services.GetService<IPlayerProfileService>();
 			_playerProfileService.ProfileChanged += PlayerProfileServiceOnProfileChanged;
+			
+			Alex.GameStateManager.AddState("options", new OptionsState(_backgroundSkyBox));
 		}
 
 		private bool _mpEnabled = true;
@@ -428,7 +431,7 @@ namespace Alex.GameStates
 
 		private void DebugAnvil()
 		{
-			Debug(new AnvilWorldProvider(Alex.GameSettings.Anvil)
+			Debug(new AnvilWorldProvider()
 			{
 				MissingChunkProvider = new EmptyWorldGenerator()
 			});

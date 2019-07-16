@@ -40,7 +40,7 @@ namespace Alex.Entities
 		{
 		//	DoRotationCalculations = false;
 			PlayerIndex = playerIndex;
-		    Controller = new PlayerController(graphics, world, alex.GameSettings, alex.InputManager, this, playerIndex); 
+		    Controller = new PlayerController(graphics, world, alex.InputManager, this, playerIndex); 
 		    NoAi = false;
 
 			Inventory = new Inventory(46);

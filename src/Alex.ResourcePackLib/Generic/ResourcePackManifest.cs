@@ -1,5 +1,6 @@
 ﻿using System.Drawing;
 using System.IO;
+using System.Text;
 using Alex.ResourcePackLib.Properties;
 
 namespace Alex.ResourcePackLib.Generic
@@ -12,7 +13,7 @@ namespace Alex.ResourcePackLib.Generic
 	    {
 		    if (UnknownPack == null)
 		    {
-			    using (MemoryStream ms = new MemoryStream(Resources.unknown_pack))
+			    using (MemoryStream ms = new MemoryStream(Encoding.Default.GetBytes(Resources.unknown_pack)))
 			    {
 				    UnknownPack = new Bitmap(ms);
 			    }

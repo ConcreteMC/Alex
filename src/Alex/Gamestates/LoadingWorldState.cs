@@ -74,16 +74,20 @@ namespace Alex.GameStates
 		    switch (state)
 		    {
 			    case LoadingState.ConnectingToServer:
-				    Text = "Connecting to server...";
+				   // Text = "Connecting to server...";
+				    _textDisplay.TranslationKey = "connect.connecting";
 				    break;
 			    case LoadingState.LoadingChunks:
-				    Text = $"Loading chunks...";
+				  //  Text = $"Loading chunks...";
+				  _textDisplay.TranslationKey = "menu.loadingLevel";
 				    break;
 			    case LoadingState.GeneratingVertices:
-				    Text = $"Building world...";
+				  //  Text = $"Building world...";
+				  _textDisplay.TranslationKey = "menu.generatingTerrain";
 				    break;
 			    case LoadingState.Spawning:
-				    Text = $"Getting ready...";
+				  //  Text = $"Getting ready...";
+				  _textDisplay.TranslationKey = "connect.joining";
 				    break;
 		    }
 

@@ -94,7 +94,7 @@ namespace Alex.GameStates.Gui.InGame
 
         private void OnOptionsButtonPressed()
         {
-            Alex.GameStateManager.SetActiveState<OptionsState>();
+            Alex.GameStateManager.SetActiveState("options");
         }
 
         private void OnQuitButtonPressed()

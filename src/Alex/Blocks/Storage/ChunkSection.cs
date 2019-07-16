@@ -58,7 +58,7 @@ namespace Alex.Blocks.Storage
 
 			if (storeSkylight)
 			{
-				this.SkyLight = new NibbleArray(4096, (byte) (Alex.Instance.GameSettings.ClientSideLighting ? 0 : 0xff));
+				this.SkyLight = new NibbleArray(4096, 0xff);
 			}
 
 		    TransparentBlocks = new BitArray(new byte[(16 * 16 * 16) / 8]);

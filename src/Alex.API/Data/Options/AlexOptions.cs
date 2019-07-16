@@ -13,6 +13,12 @@ namespace Alex.API.Data.Options
 
         [DataMember]
         public SoundOptions SoundOptions { get; }
+        
+        [DataMember]
+        public ResourceOptions ResourceOptions { get; }
+        
+        [DataMember]
+        public MiscelaneousOptions MiscelaneousOptions { get; }
 
         public AlexOptions()
         {
@@ -20,6 +26,8 @@ namespace Alex.API.Data.Options
 
             VideoOptions = DefineBranch<VideoOptions>();
             SoundOptions = DefineBranch<SoundOptions>();
+            ResourceOptions = DefineBranch<ResourceOptions>();
+            MiscelaneousOptions = DefineBranch<MiscelaneousOptions>();
         }
     }
 }

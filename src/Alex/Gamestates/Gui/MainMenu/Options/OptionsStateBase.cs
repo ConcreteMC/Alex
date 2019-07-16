@@ -1,11 +1,15 @@
 ﻿using System;
 using Alex.API.Data.Options;
 using Alex.API.GameStates;
+using Alex.API.Graphics;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements.Controls;
+using Alex.API.Gui.Graphics;
 using Alex.API.Services;
 using Alex.GameStates.Gui.Common;
+using Alex.Gui;
 using Alex.Gui.Elements;
+using Microsoft.Xna.Framework;
 using NLog;
 using RocketUI;
 
@@ -19,8 +23,10 @@ namespace Alex.GameStates.Gui.MainMenu.Options
 
         private readonly IOptionsProvider _optionsProvider;
 
-        public OptionsStateBase()
+        private GuiPanoramaSkyBox _skyBox;
+        public OptionsStateBase(GuiPanoramaSkyBox skyBox)
         {
+            _skyBox = skyBox;
             _optionsProvider = GetService<IOptionsProvider>();
 
             Footer.AddChild(new GuiBackButton()
@@ -29,6 +35,8 @@ namespace Alex.GameStates.Gui.MainMenu.Options
                 Anchor = Alignment.TopFill,
 				Modern = false
             });
+            
+            Background = new GuiTexture2D(_skyBox, TextureRepeatMode.Stretch);
         }
 
         protected override void OnShow()
@@ -51,14 +59,48 @@ namespace Alex.GameStates.Gui.MainMenu.Options
             base.OnUnload();
         }
 
-        protected GuiButton CreateLinkButton<TGameState>(string translationKey) where TGameState : class,IGameState, new()
+        protected GuiButton CreateLinkButton<TGameState>(string translationKey) where TGameState : class, IGameState
         {
-            return new GuiButton(() => Alex.GameStateManager.SetActiveState<TGameState>())
+            TGameState state = null;
+            foreach (var constructor in (typeof(TGameState).GetConstructors()))
+            {
+                bool canConstruct = true;
+                object[] passedParameters = new object[0];
+                var objparams = constructor.GetParameters();
+                
+                passedParameters = new object[objparams.Length];
+
+                for (var index = 0; index < objparams.Length; index++)
+                {
+                    var param = objparams[index];
+                    if (param.ParameterType == typeof(GuiPanoramaSkyBox))
+                    {
+                        passedParameters[index] = _skyBox;
+                    }
+                    else
+                    {
+                        canConstruct = false;
+                        break;
+                    }
+                }
+
+                if (canConstruct)
+                {
+                    state = (TGameState) constructor.Invoke(passedParameters);
+                    break;
+                }
+            }
+            
+            if (state == null)
+                throw new Exception($"Can not create linkbutton with type {typeof(TGameState)}");
+            
+            return new GuiButton(() => Alex.GameStateManager.SetActiveState(state))
             {
                 TranslationKey = translationKey,
 	            Modern = false
             };
         }
+
         protected GuiSlider CreateSlider(string label, Func<AlexOptions, OptionsProperty<int>> optionsAccessor, int? minValue = null, int? maxValue = null, int? stepInterval = null)
         {
             var slider = CreateValuedControl<GuiSlider, double, int>(label, optionsAccessor);
@@ -101,6 +143,7 @@ namespace Alex.GameStates.Gui.MainMenu.Options
 
             return slider;
         }
+        
         protected TControl CreateValuedControl<TControl, TValue>(string label, Func<AlexOptions, OptionsProperty<TValue>> propertyAccessor)
             where TControl : IGuiControl, IValuedControl<TValue>, new()
             where TValue : IConvertible
@@ -115,6 +158,7 @@ namespace Alex.GameStates.Gui.MainMenu.Options
 
             return control;
         }
+        
         protected TControl CreateValuedControl<TControl, TValue, TPropertyValue>(string label, Func<AlexOptions, OptionsProperty<TPropertyValue>> propertyAccessor) 
             where TControl : IGuiControl, IValuedControl<TValue>, new() 
             where TValue : IConvertible 
@@ -129,6 +173,24 @@ namespace Alex.GameStates.Gui.MainMenu.Options
             control.ValueChanged += (s, v) => property.Value = (TPropertyValue) Convert.ChangeType(v, typeof(TPropertyValue));
 
             return control;
+        }
+
+        protected override void OnUpdate(GameTime gameTime)
+        {
+            base.OnUpdate(gameTime);
+            _skyBox.Update(gameTime);
+        }
+
+        protected override void OnDraw(IRenderArgs args)
+        {
+            if (!_skyBox.Loaded)
+            {
+                _skyBox.Load(Alex.GuiRenderer);
+            }
+
+            _skyBox.Draw(args);
+            
+            base.OnDraw(args);
         }
     }
 }

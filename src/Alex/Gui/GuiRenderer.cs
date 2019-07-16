@@ -57,6 +57,8 @@ namespace Alex.Gui
 
 		private static readonly Rectangle WidgetHotBarSeparated = new Rectangle(24, 23, 22, 22);
 
+		private static readonly Rectangle WidgetGreen = new Rectangle(208, 0, 15, 15);
+		private static readonly Rectangle WidgetGrey = new Rectangle(224, 0, 15, 15);
 		#endregion
 
 		#region Icons
@@ -215,6 +217,9 @@ namespace Alex.Gui
 			LoadTextureFromSpriteSheet(GuiTextures.ButtonDisabled, spriteSheet, WidgetButtonDisabled);
 			LoadTextureFromSpriteSheet(GuiTextures.PanelGeneric, spriteSheet, WidgetHotBarSeparated,
 									   new Thickness(5));
+			
+			LoadTextureFromSpriteSheet(GuiTextures.GreenCheckMark, spriteSheet, WidgetGreen);
+			LoadTextureFromSpriteSheet(GuiTextures.GreyCheckMark, spriteSheet, WidgetGrey);
 		}
 
 		private void LoadIcons(Texture2D spriteSheet)

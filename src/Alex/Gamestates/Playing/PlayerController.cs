@@ -24,18 +24,16 @@ namespace Alex.GameStates.Playing
 
         private GraphicsDevice Graphics { get; }
         private World World { get; }
-        private Settings GameSettings { get; }
 
-		private Player Player { get; }
+        private Player Player { get; }
 		private InputManager GlobalInputManager { get; }
 
-		public PlayerController(GraphicsDevice graphics, World world, Settings settings, InputManager inputManager, Player player, PlayerIndex playerIndex)
+		public PlayerController(GraphicsDevice graphics, World world, InputManager inputManager, Player player, PlayerIndex playerIndex)
 		{
 			Player = player;
             Graphics = graphics;
             World = world;
-            GameSettings = settings;
-			PlayerIndex = playerIndex;
+            PlayerIndex = playerIndex;
 
             IsFreeCam = true;
 
