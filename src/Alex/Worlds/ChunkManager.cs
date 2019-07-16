@@ -373,6 +373,12 @@ namespace Alex.Worlds
 			    if (chunk == null) continue;
 
 			    var buffer = animated ? chunk.AnimatedIndexBuffer : (transparent ? chunk.TransparentIndexBuffer : chunk.SolidIndexBuffer);
+			    if (buffer.IsDisposed)
+			    {
+				    Log.Warn($"Tried to use a disposed buffer: {buffer.Name}");
+					continue;    
+			    }
+			    
 			    if (buffer.IndexCount == 0)
 				    continue;
 
@@ -681,21 +687,21 @@ namespace Alex.Worlds
                             };
                         }
 
-                        VertexBuffer oldBuffer = data.Buffer;
+                        PooledVertexBuffer oldBuffer = data.Buffer;
 
-                        VertexBuffer newVertexBuffer = null;
-                        IndexBuffer newsolidIndexBuffer = null;
-                        IndexBuffer newTransparentIndexBuffer = null;
-                        IndexBuffer newAnimatedIndexBuffer = null;
+                        PooledVertexBuffer newVertexBuffer = null;
+                        PooledIndexBuffer newsolidIndexBuffer = null;
+                        PooledIndexBuffer newTransparentIndexBuffer = null;
+                        PooledIndexBuffer newAnimatedIndexBuffer = null;
                         
-                        IndexBuffer oldAnimatedIndexBuffer = data.AnimatedIndexBuffer;
-                        IndexBuffer oldSolidIndexBuffer = data.SolidIndexBuffer;
-                        IndexBuffer oldTransparentIndexBuffer = data.TransparentIndexBuffer;
+                        PooledIndexBuffer oldAnimatedIndexBuffer = data.AnimatedIndexBuffer;
+                        PooledIndexBuffer oldSolidIndexBuffer = data.SolidIndexBuffer;
+                        PooledIndexBuffer oldTransparentIndexBuffer = data.TransparentIndexBuffer;
 
                         if (vertexArray.Length >= data.Buffer.VertexCount)
                         {
                             // var oldBuffer = data.Buffer;
-                            VertexBuffer newBuffer = GpuResourceManager.GetBuffer(this, Graphics,
+                            PooledVertexBuffer newBuffer = GpuResourceManager.GetBuffer(this, Graphics,
                                 VertexPositionNormalTextureColor.VertexDeclaration, vertexArray.Length,
                                 BufferUsage.WriteOnly);
 
@@ -762,25 +768,25 @@ namespace Alex.Worlds
                         if (newVertexBuffer != null)
                         {
                             data.Buffer = newVertexBuffer;
-                            oldBuffer?.Dispose();
+                            oldBuffer?.MarkForDisposal();
                         }
 
                         if (newTransparentIndexBuffer != null)
                         {
                             data.TransparentIndexBuffer = newTransparentIndexBuffer;
-                            oldTransparentIndexBuffer?.Dispose();
+                            oldTransparentIndexBuffer?.MarkForDisposal();
                         }
                         
                         if (newAnimatedIndexBuffer != null)
                         {
 	                        data.AnimatedIndexBuffer = newAnimatedIndexBuffer;
-	                        oldAnimatedIndexBuffer?.Dispose();
+	                        oldAnimatedIndexBuffer?.MarkForDisposal();
                         }
 
                         if (newsolidIndexBuffer != null)
                         {
                             data.SolidIndexBuffer = newsolidIndexBuffer;
-                            oldSolidIndexBuffer?.Dispose();
+                            oldSolidIndexBuffer?.MarkForDisposal();
                         }
                     }
                 }

@@ -498,7 +498,7 @@ namespace Alex.Graphics.Models.Blocks
                         FaceData faceVertices;
 						if (!elementCache.TryGet(faceElement.Key, out faceVertices) || faceVertices.Vertices.Length == 0 || faceVertices.Indexes.Length ==0)
 						{
-							Log.Warn($"No vertices cached for face {faceElement.Key} in model {bsModel.ModelName}");
+							//Log.Debug($"No vertices cached for face {faceElement.Key} in model {bsModel.ModelName}");
 							continue;
 						}
 

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using NLog;
 using log4net.Appender;
 using log4net.Config;
@@ -18,10 +20,11 @@ namespace log4net
 			var logger = GetLoggerFromCacheSafe(loggingEvent);
 
 			var logEvent = ConvertToNLog(loggingEvent);
-
-			logger.Log(logEvent);
+			
+			logger.Log(typeof(log4net.Core.LogImpl), logEvent);
 		}
 
+		[MethodImpl(MethodImplOptions.NoInlining)]
 		Logger GetLoggerFromCacheSafe(LoggingEvent loggingEvent)
 		{
 			Logger logger;
@@ -33,7 +36,9 @@ namespace log4net
 				if (_cache.TryGetValue(loggingEvent.LoggerName, out logger))
 					return logger;
 
-				logger = NLog.LogManager.GetLogger(loggingEvent.LoggerName);
+				logger =  NLog.LogManager.GetLogger(loggingEvent.LoggerName);
+					
+					//	logger = NLog.LogManager.GetLogger(loggingEvent.LoggerName);
 				_cache = new Dictionary<string, Logger>(_cache) { { loggingEvent.LoggerName, logger } };
 			}
 			return logger;
