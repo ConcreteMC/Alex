@@ -833,7 +833,37 @@ namespace Alex.Worlds.Bedrock
 
 		public override void HandleMcpeSetTitle(McpeSetTitle message)
 		{
-			UnhandledPackage(message);
+			var titleComponent = BaseClient.WorldProvider?.TitleComponent;
+			if (titleComponent == null)
+				return;
+			
+			switch ((TitleType) message.type)
+			{
+				case TitleType.Clear:
+					titleComponent.Hide();
+					break;
+				case TitleType.Reset:
+					titleComponent.Reset();
+					break;
+				case TitleType.Title:
+					titleComponent.SetTimes(message.fadeInTime, message.stayTime, message.fadeOutTime);
+					titleComponent.SetTitle(new ChatObject(message.text));
+					titleComponent.Show();
+					break;
+				case TitleType.SubTitle:
+					titleComponent.SetTimes(message.fadeInTime, message.stayTime, message.fadeOutTime);
+					titleComponent.SetSubtitle(new ChatObject(message.text));
+					titleComponent.Show();
+					break;
+				case TitleType.ActionBar:
+					
+					break;
+				case TitleType.AnimationTimes:
+					titleComponent.SetTimes(message.fadeInTime, message.stayTime, message.fadeOutTime);
+					break;
+			}
+	
+			//UnhandledPackage(message);
 		}
 
 		public override void HandleMcpeAddBehaviorTree(McpeAddBehaviorTree message)

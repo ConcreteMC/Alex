@@ -55,7 +55,13 @@ namespace MiNET.AlexDebug
         
         private void LinkLevelEvents(Level level)
         {
-            
+            level.PlayerAdded += LevelOnPlayerAdded;
+        }
+
+        private void LevelOnPlayerAdded(object sender, LevelEventArgs e)
+        {
+            e.Player.SendTitle("MiNET Debug Plugin", TitleType.SubTitle);
+            e.Player.SendTitle("Alex");
         }
 
         private void OnPlayerCreated(object sender, PlayerEventArgs e)

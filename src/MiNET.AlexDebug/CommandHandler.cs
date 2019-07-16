@@ -18,6 +18,13 @@ namespace MiNET.AlexDebug
             Core = core;
         }
 
+        [Command(Name = "title", Aliases = new string[]{ "title" })]
+        public void TestTitles(Player player)
+        {
+            player.SendTitle("MiNET Debug Plugin", TitleType.SubTitle);
+            player.SendTitle("Alex");
+        }
+
         [Command(Name = "testentity", Aliases = new[]{"testentity"})]
         public void SpawnTestEntity(Player player)
         {

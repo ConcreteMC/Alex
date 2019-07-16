@@ -43,12 +43,16 @@ namespace Alex.Gui.Elements
 	    #region Titles
 
 	    private ManualResetEventSlim TitleResetEvent = new ManualResetEventSlim(false);
+	    
+	    public void Show()
+	    {
+		    _hidden = false;
+		    _hideTime = DateTime.UtcNow + TimeSpan.FromMilliseconds((_fadeIn + _fadeOut + _stay) * 50);
+	    }
+	    
 	    public void SetTitle(ChatObject value)
 	    {
 		    _title.Text = value.RawMessage;
-
-		    _hidden = false;
-		    _hideTime = DateTime.UtcNow + TimeSpan.FromMilliseconds((_fadeIn + _fadeOut + _stay) * 50);
 
 		    AddChild(_title);
 		    AddChild(_subTitle);

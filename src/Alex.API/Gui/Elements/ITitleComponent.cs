@@ -4,6 +4,7 @@ namespace Alex.API.Gui.Elements
 {
     public interface ITitleComponent
     {
+        void Show();
         void Hide();
         void Reset();
         void SetSubtitle(ChatObject value);
