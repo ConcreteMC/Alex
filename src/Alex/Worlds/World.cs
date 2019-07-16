@@ -40,20 +40,24 @@ namespace Alex.Worlds
 		public Player Player { get; set; }
 		private Alex Alex { get; }
 		private AlexOptions Options { get; }
-		public World(Alex alex, GraphicsDevice graphics, AlexOptions options, Camera camera, INetworkProvider networkProvider)
+
+		public World(Alex alex, GraphicsDevice graphics, AlexOptions options, Camera camera,
+			INetworkProvider networkProvider)
 		{
 			Alex = alex;
-            Graphics = graphics;
-	        Camera = camera;
-	        Options = options;
-	        
+			Graphics = graphics;
+			Camera = camera;
+			Options = options;
+
 			PhysicsEngine = new PhysicsManager(alex, this);
 			ChunkManager = new ChunkManager(alex, graphics, options, this);
 			EntityManager = new EntityManager(graphics, this, networkProvider);
 			Ticker = new TickManager(this);
-			 
+			PlayerList = new PlayerList();
+
 			ChunkManager.Start();
 			var profileService = alex.Services.GetService<IPlayerProfileService>();
+			string username = string.Empty;
 			Skin skin = profileService?.CurrentProfile?.Skin;
 			if (skin == null)
 			{
@@ -66,15 +70,20 @@ namespace Alex.Worlds
 				};
 			}
 
-			Player = new Player(graphics, alex, alex.GameSettings.Username, this, skin, networkProvider, PlayerIndex.One);
+			if (!string.IsNullOrWhiteSpace(profileService?.CurrentProfile?.Username))
+			{
+				username = profileService.CurrentProfile.Username;
+			}
 
-	        Player.KnownPosition = new PlayerLocation(GetSpawnPoint());
-	        Camera.MoveTo(Player.KnownPosition, Vector3.Zero);
+			Player = new Player(graphics, alex, username, this, skin, networkProvider, PlayerIndex.One);
 
-	        Options.FieldOfVision.ValueChanged += FieldOfVisionOnValueChanged;
-	        Camera.FOV = Options.FieldOfVision.Value;
-		        
-	        PhysicsEngine.AddTickable(Player);
+			Player.KnownPosition = new PlayerLocation(GetSpawnPoint());
+			Camera.MoveTo(Player.KnownPosition, Vector3.Zero);
+
+			Options.FieldOfVision.ValueChanged += FieldOfVisionOnValueChanged;
+			Camera.FOV = Options.FieldOfVision.Value;
+
+			PhysicsEngine.AddTickable(Player);
 		}
 
 		private void FieldOfVisionOnValueChanged(int oldvalue, int newvalue)
@@ -85,7 +94,7 @@ namespace Alex.Worlds
 		//public long WorldTime { get; private set; } = 6000;
 		public bool FreezeWorldTime { get; set; } = false;
 
-		public PlayerList PlayerList { get; } = new PlayerList();
+		public PlayerList PlayerList { get; }
 		public TickManager Ticker { get; }
 		public EntityManager EntityManager { get; }
 		public ChunkManager ChunkManager { get; private set; }

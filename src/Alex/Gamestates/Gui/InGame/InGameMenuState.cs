@@ -41,27 +41,14 @@ namespace Alex.GameStates.Gui.InGame
 	        {
 		        Margin = new Thickness(15, 0, 15, 0),
 		        Padding = new Thickness(0, 0, 0, 0),
+		        Width = 125,
 				MinWidth = 125,
-				Anchor = Alignment.FillY | Alignment.MaxX,
-		        ChildAnchor = Alignment.TopLeft,
+				Anchor = Alignment.FillRight,
+		        ChildAnchor = Alignment.CenterY | Alignment.FillX,
 				BackgroundOverlay = new Color(Color.Black, 0.35f)
 			};
 	        _playerList.Orientation = Orientation.Vertical;
-
-	        var previousState = Alex.GameStateManager.GetPreviousState();
-	        if (previousState is PlayingState s)
-	        {
-		        PlayerListItem[] players = s.World.PlayerList.Entries.Values.ToArray();
-		        for (var index = 0; index < players.Length; index++)
-		        {
-			        var p = players[index];
-			        _playerList.AddChild(new GuiTextElement()
-			        {
-				        Text = p.Username,
-				        BackgroundOverlay = (index % 2 == 0) ? new Color(Color.Black, 0.35f) : Color.Transparent
-					});
-		        }
-	        }
+	        
 		/*	AddChild(new GuiTextElement()
 			{
 				TranslationKey = "menu.game",
@@ -78,7 +65,27 @@ namespace Alex.GameStates.Gui.InGame
 			AddChild(_playerList);
         }
 
-        private void OnReturnToGameButtonPressed()
+		protected override void OnShow()
+		{
+			//var previousState = Alex.GameStateManager.GetPreviousState();
+			if (Alex.GameStateManager.TryGetState("play", out PlayingState s))
+			//if (previousState is PlayingState s)
+			{
+				PlayerListItem[] players = s.World.PlayerList.Entries.Values.ToArray();
+				for (var index = 0; index < players.Length; index++)
+				{
+					var p = players[index];
+					_playerList.AddChild(new PlayerListItemElement(p.Username)
+					{
+						BackgroundOverlay = (index % 2 == 0) ? new Color(Color.Black, 0.35f) : Color.Transparent
+					});
+				}
+			}
+			
+			base.OnShow();
+		}
+
+		private void OnReturnToGameButtonPressed()
         {
             Alex.IsMouseVisible = false;
             Alex.GameStateManager.Back();

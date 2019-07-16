@@ -15,7 +15,7 @@ namespace Alex.API.Utils
 	public class PlayerListItem
 	{
 		public UUID UUID { get; set; }
-		public string Username { get; set; } = "";
+		public string Username { get; set; }
 		public Gamemode Gamemode { get; set; } = Gamemode.Survival;
 		public int Ping { get; set; } = 0;
 

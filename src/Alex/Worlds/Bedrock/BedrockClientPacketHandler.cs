@@ -203,7 +203,7 @@ namespace Alex.Worlds.Bedrock
 						skinTexture = TextureUtils.BitmapToTexture2D(BaseClient.WorldProvider.Alex.GraphicsDevice, rawTexture);
 					}
 					
-                    BaseClient.WorldReceiver?.AddPlayerListItem(new PlayerListItem(u, r.Username, Gamemode.Survival, 0));
+                    BaseClient.WorldReceiver?.AddPlayerListItem(new PlayerListItem(u, r.DisplayName, Gamemode.Survival, 0));
 					PlayerMob m = new PlayerMob(r.DisplayName, BaseClient.WorldReceiver as World, BaseClient, skinTexture, true);
 
 					if (!_players.TryAdd(u, m))

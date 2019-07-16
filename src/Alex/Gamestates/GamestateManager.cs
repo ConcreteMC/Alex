@@ -61,6 +61,21 @@ namespace Alex.GameStates
             });
         }
 
+        public bool TryGetState<TStateType>(string name, out TStateType state) where TStateType : class, IGameState
+        {
+	        if (States.TryGetValue(name, out IGameState s))
+	        {
+		        if (s is TStateType)
+		        {
+			        state = (TStateType) s;
+			        return true;
+		        }
+	        }
+
+	        state = default;
+	        return false;
+        }
+
 	    public bool RemoveState(string name)
 	    {
 		    IGameState state;
