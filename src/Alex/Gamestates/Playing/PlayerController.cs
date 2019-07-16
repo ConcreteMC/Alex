@@ -121,7 +121,7 @@ namespace Alex.GameStates.Playing
 		    }
 
 		//	float speedFactor = (((float) Player.MovementSpeed) * modifier);
-		    float speedFactor = Player.IsFlying ? (float)Player.FlyingSpeed : ((float) Player.MovementSpeed * modifier);
+		    float speedFactor = (Player.IsFlying ? (float)Player.FlyingSpeed : (float) Player.MovementSpeed) * modifier;
 
 			if (InputManager.IsDown(InputCommand.MoveForwards))
 			{
@@ -206,15 +206,31 @@ namespace Alex.GameStates.Playing
 		//	if (moveVector != Vector3.Zero)
 			{
 				var velocity = moveVector * speedFactor;
-				if ((Player.Velocity * new Vector3(1, 0, 1)).Length() < velocity.Length())
+				if (Player.IsFlying)
 				{
-					var old = Player.Velocity;
-					Player.Velocity += new Vector3(velocity.X - old.X, 0, velocity.Z - old.Z);
+					if ((Player.Velocity * new Vector3(1, 1, 1)).Length() < velocity.Length())
+					{
+						var old = Player.Velocity;
+						Player.Velocity += new Vector3(velocity.X - old.X, velocity.Y - old.Y, velocity.Z - old.Z);
+					}
+					else
+					{
+						Player.Velocity = new Vector3(velocity.X, velocity.Y, velocity.Z);
+					}
 				}
 				else
 				{
-					Player.Velocity = new Vector3(velocity.X, Player.Velocity.Y, velocity.Z);
+					if ((Player.Velocity * new Vector3(1, 0, 1)).Length() < velocity.Length())
+					{
+						var old = Player.Velocity;
+						Player.Velocity += new Vector3(velocity.X - old.X, 0, velocity.Z - old.Z);
+					}
+					else
+					{
+						Player.Velocity = new Vector3(velocity.X, Player.Velocity.Y, velocity.Z);
+					}
 				}
+
 				//speedFactor *= 20;
 				//Player.Velocity += (moveVector * speedFactor);// new Vector3(moveVector.X * speedFactor, moveVector.Y * (speedFactor), moveVector.Z * speedFactor);
 			}
