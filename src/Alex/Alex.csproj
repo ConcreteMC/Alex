@@ -16,7 +16,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <LangVersion>7.1</LangVersion>
+    <LangVersion>8</LangVersion>
 	  <MonoGamePlatform>DesktopGL</MonoGamePlatform>
   </PropertyGroup>
 

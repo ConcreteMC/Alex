@@ -403,6 +403,19 @@ namespace Alex.GameStates.Playing
 								World.Camera.ProjectionMatrix, entity == hitEntity ? Color.Red : Color.Yellow);
 						}
 					}
+					
+					if (World?.Player != null)
+						args.SpriteBatch.RenderBoundingBox(World.Player.GetBoundingBox(), World.Camera.ViewMatrix,
+							World.Camera.ProjectionMatrix, Color.Red);
+
+					if (World.PhysicsEngine.LastKnownHit != null)
+					{
+						foreach (var bb in World.PhysicsEngine.LastKnownHit)
+						{
+							args.SpriteBatch.RenderBoundingBox(bb, World.Camera.ViewMatrix,
+								World.Camera.ProjectionMatrix, Color.YellowGreen);
+						}
+					}
 				}
 
 				World.Render2D(args);

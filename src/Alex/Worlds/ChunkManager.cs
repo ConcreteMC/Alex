@@ -211,7 +211,7 @@ namespace Alex.Worlds
 			
                 foreach (var c in _renderedChunks.ToArray())
                 {
-	                if (!renderedChunks.Any(x => x.Key.Equals(c.Coordinates)))
+	                if (c == null || c.Coordinates == default || !renderedChunks.Any(x => x.Key.Equals(c.Coordinates)))
 	                {
 		                _renderedChunks.Remove(c);
 	                }
@@ -316,6 +316,8 @@ namespace Alex.Worlds
 		    var indexBufferSize = 0;
 
 		    ChunkData[] chunks = _renderedChunks.ToArray();
+		 //   ChunkData[] chunks = new ChunkData[_renderedChunks.Count];
+		 //   _renderedChunks.CopyTo(chunks, 0, chunks.Length);
 		    
 		    tempVertices += DrawChunks(device, chunks, OpaqueEffect, false);
 

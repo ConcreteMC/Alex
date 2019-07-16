@@ -47,18 +47,18 @@ namespace Alex.Entities
 		public double Height { get; set; } = 1;
 		public double Width { get; set; } = 1;
 		public double Length { get; set; } = 1;
-		public double Drag { get; set; } = 0.02;
-		public double Gravity { get; set; } = 0.08;
-		public float TerminalVelocity { get; set; } = 3.92f;
+		public double Drag { get; set; } = 0.4f;
+		public double Gravity { get; set; } = 1.6f;
+		public float TerminalVelocity { get; set; } = 78.4f;
 
+		public double MovementSpeed { get; set; } = 0.1F;
+		public double FlyingSpeed { get; set; } = 0.4F;
+		
 		public int Data { get; set; }
 		public UUID UUID { get; set; } = new UUID(Guid.Empty.ToByteArray());
 
 		public bool CanFly { get; set; } = false;
 		public bool IsFlying { get; set; } = false;
-
-		public double MovementSpeed { get; set; } = 0.1;
-		public double FlyingSpeed { get; set; } = 0.4000000059604645;
 
 		public INetworkProvider Network { get; set; }
 		public Inventory Inventory { get; protected set; }
@@ -109,9 +109,11 @@ namespace Alex.Entities
 		public bool IsChested { get; set; }
 		public bool IsStackable { get; set; }
 
+		public bool RenderEntity { get; set; } = true;
 		public void Render(IRenderArgs renderArgs)
 		{
-			ModelRenderer.Render(renderArgs, KnownPosition);
+			if (RenderEntity)
+				ModelRenderer.Render(renderArgs, KnownPosition);
 		}
 
 		public virtual void Update(IUpdateArgs args)
@@ -153,7 +155,7 @@ namespace Alex.Entities
 			if (IsNoAi) return;
 		//	IsMoving = Velocity.LengthSquared() > 0f;
 
-			var feetBlock = Level?.GetBlock(KnownPosition.GetCoordinates3D());
+			var feetBlock = Level?.GetBlock(new BlockCoordinates(KnownPosition));
 			if (feetBlock != null)
 			{
 				if (!feetBlock.Solid)
@@ -162,6 +164,13 @@ namespace Alex.Entities
 					{
 						KnownPosition.OnGround = false;
 					}
+					else
+					{
+					}
+				}
+				else
+				{
+					//KnownPosition.OnGround = true;
 				}
 			}
 
@@ -242,6 +251,11 @@ namespace Alex.Entities
 		public BoundingBox GetBoundingBox()
 		{
 			var pos = KnownPosition;
+			return GetBoundingBox(pos);
+		}
+		
+		public BoundingBox GetBoundingBox(Vector3 pos)
+		{
 			double halfWidth = Width / 2D;
 
 			return new BoundingBox(new Vector3((float)(pos.X - halfWidth), pos.Y, (float)(pos.Z - halfWidth)), new Vector3((float)(pos.X + halfWidth), (float)(pos.Y + Height), (float)(pos.Z + halfWidth)));

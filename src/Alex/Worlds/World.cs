@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Drawing;
+using System.Threading;
 using Alex.API.Blocks.State;
 using Alex.API.Data.Options;
 using Alex.API.Entities;
@@ -15,8 +17,12 @@ using Alex.Graphics.Camera;
 using Alex.Graphics.Models;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MiNET.Utils;
 using NLog;
+using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
+using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
 using Color = Microsoft.Xna.Framework.Color;
+using PlayerLocation = Alex.API.Utils.PlayerLocation;
 
 //using System.Reflection.Metadata.Ecma335;
 
@@ -84,7 +90,6 @@ namespace Alex.Worlds
 		public EntityManager EntityManager { get; }
 		public ChunkManager ChunkManager { get; private set; }
 		public PhysicsManager PhysicsEngine { get; set; }
-		//	private WorldProvider WorldProvider { get; set; }
 
 		public long Vertices
         {
@@ -148,13 +153,10 @@ namespace Alex.Worlds
 		}
 
 		private float _fovModifier = -1;
-		private Vector3 PreviousDirection = Vector3.Zero;
 		private bool UpdatingPriorities = false;
         public void Update(UpdateArgs args, SkyBox skyRenderer)
 		{
-			ChunkCoordinates oldPosition = new ChunkCoordinates(Player.KnownPosition);
-
-            args.Camera = Camera;
+			args.Camera = Camera;
 			if (Player.FOVModifier != _fovModifier)
 			{
 				_fovModifier = Player.FOVModifier;
@@ -167,7 +169,8 @@ namespace Alex.Worlds
 
 			ChunkManager.Update(args);
 			EntityManager.Update(args, skyRenderer);
-
+			PhysicsEngine.Update(args.GameTime);
+			
 			var diffuseColor = Color.White.ToVector3() * skyRenderer.BrightnessModifier;
 			ChunkManager.AmbientLightColor = diffuseColor;
 
@@ -184,58 +187,17 @@ namespace Alex.Worlds
 				ChunkManager.FogColor = skyRenderer.WorldFogColor.ToVector3();
 				ChunkManager.FogDistance = (float) Math.Pow(Options.VideoOptions.RenderDistance, 2) * 0.8f;
 			}
-
-			PhysicsEngine.Update(args.GameTime);
-
-			/*var dir = Camera.Direction;
-			if (dir != PreviousDirection && !UpdatingPriorities)
-			{
-				UpdatingPriorities = true;
-                ChunkManager.SkylightCalculator.UpdatePriority().ContinueWith((o) =>
-	                {
-		                UpdatingPriorities = false;
-	                });
-			}*/
-
-			//PreviousDirection = dir;
-
-            ChunkCoordinates c = new ChunkCoordinates(Player.KnownPosition);
-			if (c != oldPosition)
-			{
-				UpdateLightingAroundPlayer(c);
-			}
-
-
+			
 			if (Ticker.Update(args))
 			{
 				if (!FreezeWorldTime)
 				{
 					WorldInfo.Time++;
 				}
-
-				
-				//if (Player.IsSpawned)
 			}
 		}
-
-        private void UpdateLightingAroundPlayer(ChunkCoordinates center)
-		{
-			return;
-			int radiusSquared = 6;// (int) Math.Pow(Options.VideoOptions.RenderDistance, 2) / 3;
-			for (int x = -radiusSquared; x < radiusSquared; x++)
-			{
-				for (int z = -radiusSquared; z < radiusSquared; z++)
-				{
-					var cc = GetChunkColumn(center.X + x, center.Z + z);
-					if (cc != null && cc.SkyLightDirty)
-					{
-						ChunkUpdate(cc, ScheduleType.Lighting);
-					}
-				}
-			}
-        }
-
-		public Vector3 SpawnPoint { get; set; } = Vector3.Zero;
+        
+        public Vector3 SpawnPoint { get; set; } = Vector3.Zero;
         public Vector3 GetSpawnPoint()
         {
 	        return SpawnPoint;

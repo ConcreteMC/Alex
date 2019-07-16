@@ -165,6 +165,14 @@ namespace Alex.Utils
 			}
 		}
 
+		public T[] ToArray()
+		{
+			using (RwLock.Write())
+			{
+				return Items.ToArray();
+			}
+		}
+
 		public Task AddAsync(T item)
 		{
 			return Task.Run(() => { TryAdd(item); });

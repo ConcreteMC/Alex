@@ -45,9 +45,12 @@ namespace Alex.Entities
 
 			Inventory = new Inventory(46);
 			Inventory.SelectedHotbarSlotChanged += SelectedHotbarSlotChanged;
-			MovementSpeed = 0.1;
+			MovementSpeed = 4.317f;
+			FlyingSpeed = 10.89f;
 
 			SnapHeadYawRotationOnMovement = false;
+
+			RenderEntity = true;
 		}
 
 	    private void SelectedHotbarSlotChanged(object sender, SelectedSlotChangedEventArgs e)
