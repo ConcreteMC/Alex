@@ -57,40 +57,84 @@ namespace Alex.API.Utils
 			}
 
             byteSize = 0;
-
-            uint[] imgData = new uint[bmp.Width * bmp.Height];
+            
+			var depth = System.Drawing.Bitmap.GetPixelFormatSize(bmp.PixelFormat);
+			
+			uint[] imgData = new uint[bmp.Width * bmp.Height];
 			Texture2D texture = GpuResourceManager.GetTexture2D("Alex.Api.Utils.TextureUtils", device, bmp.Width, bmp.Height);
 
+			byte[] data = new byte[bmp.Width * bmp.Height * (depth / 8)];
 			LockBitmap locked = new LockBitmap(bmp);
+			
 			locked.LockBits();
-				Buffer.BlockCopy(locked.Pixels, 0, imgData, 0, locked.Pixels.Length);
+			data = new byte[locked.Pixels.Length];
+				Buffer.BlockCopy(locked.Pixels, 0, data, 0, locked.Pixels.Length);
 			locked.UnlockBits();
 
-			for (int i = 0; i < imgData.Length; i++)
+			/*for (int i = 0; i < imgData.Length; i++)
 			{
 				var val = imgData[i];
 				imgData[i] = (val & 0x000000FF) << 16 | (val & 0x0000FF00) | (val & 0x00FF0000) >> 16 | (val & 0xFF000000);
-			}
+			}*/
 
-            /*	unsafe
+			int idx = 0;
+			if(depth == 32)
+			{
+				//var o = (uint*) origdata.Scan0.ToPointer();
+				for (int i = 0; i < data.Length; i += 4)
+				{
+					//var val = o[i];
+					var r = data[i + 0];
+					var g = data[i + 1];
+					var b = data[i + 2];
+					var a = data[i + 3];
+					imgData[idx++] = (uint) ((a << 24) | (r << 16) | (g << 8) | b);
+				}
+			}
+			else if (depth == 24)
+			{
+				//var o = (byte*) origdata.Scan0.ToPointer();
+				for (int i = 0; i < data.Length; i+= 3)
+				{
+					var r = data[i];
+					var g = data[i + 1];
+					var b = data[i + 2];
+					var a = (byte)255;
+					imgData[idx++] = (uint) ((a << 24) | (r << 16) | (g << 8) | b);
+				}
+			}
+			
+            	/*unsafe
                 {
                     BitmapData origdata =
                         bmp.LockBits(new System.Drawing.Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadOnly, bmp.PixelFormat);
 
-                    fixed (uint* ptrDest = imgData)
+                    
+                    //fixed (uint* ptrDest = imgData)
+                    if(depth == 32)
                     {
                         var o = (uint*) origdata.Scan0.ToPointer();
-                        for (int i = 0; i < imgData.Length; i++)
+                        for (int i = 0; i < imgData.Length; i ++)
                         {
                             var val = o[i];
-                            ptrDest[i] = (val & 0x000000FF) << 16 | (val & 0x0000FF00) | (val & 0x00FF0000) >> 16 | (val & 0xFF000000);
+                            imgData[i] = (val & 0x000000FF) << 16 | (val & 0x0000FF00) | (val & 0x00FF0000) >> 16 | (val & 0xFF000000);
                         }
+                    }
+                    else if (depth == 24)
+                    {
+	                    var o = (byte*) origdata.Scan0.ToPointer();
+	                    for (int i = 0; i < imgData.Length; i++)
+	                    {
+		                   // var val = o[i];
+		                   // imgData[i] = (uint) ((128) << 16 | (o[i + 2]) | (o[i + 1]) >> 16 | (o[i]));
+		                   imgData[i] = (uint) ((o[i + 2] << 16) | (o[i + 1] << 8) | (o[i] << 0));
+	                    }
                     }
 
                     bmp.UnlockBits(origdata);
                 }*/
 
-            byteSize = imgData.Length * 4;
+                byteSize = imgData.Length * 4;
 
             texture.SetData(imgData);
 

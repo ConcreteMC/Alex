@@ -1,12 +1,17 @@
 ﻿using System;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.Linq;
 using Alex.API.Data.Options;
 using Alex.API.Graphics;
 using Alex.API.Services;
+using Alex.API.Utils;
 using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Color = Microsoft.Xna.Framework.Color;
+using MathF = System.MathF;
 
 namespace Alex.Graphics.Models
 {
@@ -30,7 +35,7 @@ namespace Alex.Graphics.Models
 		private Texture2D CloudTexture { get; }
 
 		private bool CanRender { get; set; } = true;
-		public bool EnableClouds { get; set; } = true;
+		public bool EnableClouds { get; set; } = false;
 
 		private World World { get; }
 
@@ -301,7 +306,7 @@ namespace Alex.Graphics.Models
 			var backup = renderArgs.GraphicsDevice.BlendState;
 		    renderArgs.GraphicsDevice.BlendState = BlendState.Additive;
 		    renderArgs.GraphicsDevice.DepthStencilState = DepthStencilState.DepthRead;
-			
+
 		    DrawSun(renderArgs, camera.Position);
 
 			DrawMoon(renderArgs, camera.Position);
@@ -364,8 +369,9 @@ namespace Alex.Graphics.Models
 			foreach (var pass in CelestialPlaneEffect.CurrentTechnique.Passes)
 			{
 				pass.Apply();
+				renderArgs.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, 2);
 			}
-			renderArgs.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, 2);
+			
 		}
 
 		private void DrawMoon(IRenderArgs renderArgs, Vector3 position)
@@ -379,8 +385,9 @@ namespace Alex.Graphics.Models
 			foreach (var pass in CelestialPlaneEffect.CurrentTechnique.Passes)
 			{
 				pass.Apply();
+				renderArgs.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, MoonPlane.VertexCount);
 			}
-			renderArgs.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, MoonPlane.VertexCount);
+			
 		}
 
 		private void DrawVoid(IRenderArgs renderArgs, Vector3 position)
