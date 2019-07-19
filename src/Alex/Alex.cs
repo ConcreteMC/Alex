@@ -72,6 +72,7 @@ namespace Alex
 		//public ChromiumWebBrowser CefWindow { get; private set; }
 		public PluginManager PluginManager { get; }
         public FpsMonitor FpsMonitor { get; }
+        private IPlayerProfileService ProfileService { get; set; }
         public Alex(LaunchSettings launchSettings)
 		{
 			Instance = this;
@@ -254,7 +255,7 @@ namespace Alex
 			Services.AddService(msa = new XBLMSAService());
 			
 			Services.AddService<IServerQueryProvider>(new ServerQueryProvider(this));
-			Services.AddService<IPlayerProfileService>(new PlayerProfileService(msa, ProfileManager));
+			Services.AddService<IPlayerProfileService>(ProfileService = new PlayerProfileService(msa, ProfileManager));
 
             var profilingService = new ProfilerService();
             Services.AddService<ProfilerService>(profilingService);
@@ -357,8 +358,14 @@ namespace Alex
 
 			GameStateManager.AddState<TitleState>("title");
 
-			GameStateManager.SetActiveState<TitleState>("title");
-
+			if (LaunchSettings.ConnectOnLaunch && ProfileService.CurrentProfile != null)
+			{
+				ConnectToServer(LaunchSettings.Server, ProfileService.CurrentProfile, LaunchSettings.ConnectToBedrock);
+			}
+			else
+			{
+				GameStateManager.SetActiveState<TitleState>("title");
+			}
 
 			GameStateManager.RemoveState("splash");
 

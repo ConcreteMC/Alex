@@ -125,6 +125,11 @@ namespace Alex
 					nextIsServer = true;
 				}
 
+				if (arg == "--bedrock")
+				{
+					launchSettings.ConnectToBedrock = true;
+				}
+
 				if (arg == "--accessToken")
 				{
 					nextIsaccessToken = true;
@@ -171,6 +176,7 @@ namespace Alex
 		public string AccesToken;
 		public bool ShowConsole = false;
 		public string WorkDir;
+		public bool ConnectToBedrock = false;
 
 		public LaunchSettings()
 		{
