@@ -21,6 +21,7 @@ using Alex.Networking.Java.Packets;
 using Alex.Plugins;
 using Alex.Services;
 using Alex.Utils;
+using Alex.Worlds;
 using Alex.Worlds.Bedrock;
 using Alex.Worlds.Java;
 using Microsoft.Xna.Framework;
@@ -300,33 +301,35 @@ namespace Alex
 		protected override void Draw(GameTime gameTime)
 		{
             FpsMonitor.Update();
-
-            GraphicsDevice.RasterizerState = RasterizerState.CullClockwise;
-			GameStateManager.Draw(gameTime);
-
+            GameStateManager.Draw(gameTime);
 			GuiManager.Draw(gameTime);
-			//	CefWindow.Draw(gameTime);
-
+			
 			base.Draw(gameTime);
 		}
 
 		private void InitializeGame(IProgressReceiver progressReceiver)
 		{
-			MCPacketFactory.Load();
 			progressReceiver.UpdateProgress(0, "Initializing...");
-			
+			Extensions.Init(GraphicsDevice);
+			MCPacketFactory.Load();
+
 			ConfigureServices();
 
 			var options = Services.GetService<IOptionsProvider>();
 
-			Extensions.Init(GraphicsDevice);
-
-            string pluginDirectoryPaths = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+			string pluginDirectoryPaths = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
 
             var pluginDir = options.AlexOptions.ResourceOptions.PluginDirectory;
             if (!string.IsNullOrWhiteSpace(pluginDir))
             {
                 pluginDirectoryPaths = pluginDir;
+            }
+            else
+            {
+	            if (!string.IsNullOrWhiteSpace(LaunchSettings.WorkDir) && Directory.Exists(LaunchSettings.WorkDir))
+	            {
+		            pluginDirectoryPaths = LaunchSettings.WorkDir;
+	            }
             }
 
             foreach (string dirPath in pluginDirectoryPaths.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
@@ -355,6 +358,7 @@ namespace Alex
 			}
 
 			GuiRenderer.LoadResourcePack(Resources.ResourcePack);
+			AnvilWorldProvider.LoadBlockConverter();
 
 			GameStateManager.AddState<TitleState>("title");
 

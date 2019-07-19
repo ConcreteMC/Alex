@@ -35,7 +35,7 @@ namespace Alex.API.Data.Options
             GuiScale = DefineRangedProperty(0, 0, 3);
             ChunkThreads = DefineRangedProperty(Environment.ProcessorCount / 2, 1, Environment.ProcessorCount);
             MaxFramerate = DefineRangedProperty(60, 1, 999);
-            Brightness = DefineRangedProperty(0, 0, 100);
+            Brightness = DefineRangedProperty(50, 0, 100);
         }
     }
 }

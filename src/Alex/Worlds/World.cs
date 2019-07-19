@@ -163,6 +163,7 @@ namespace Alex.Worlds
 
 		private float _fovModifier = -1;
 		private bool UpdatingPriorities = false;
+		private float BrightnessMod = 0f;
         public void Update(UpdateArgs args, SkyBox skyRenderer)
 		{
 			args.Camera = Camera;
@@ -176,11 +177,12 @@ namespace Alex.Worlds
 			}
 			Camera.Update(args, Player);
 
+			BrightnessMod = skyRenderer.BrightnessModifier;
 			ChunkManager.Update(args);
 			EntityManager.Update(args, skyRenderer);
 			PhysicsEngine.Update(args.GameTime);
 			
-			var diffuseColor = Color.White.ToVector3() * skyRenderer.BrightnessModifier;
+			var diffuseColor = Color.White.ToVector3() * BrightnessModifier;
 			ChunkManager.AmbientLightColor = diffuseColor;
 
 			Player.ModelRenderer.DiffuseColor = diffuseColor;
@@ -188,7 +190,7 @@ namespace Alex.Worlds
 
 			if (Player.IsInWater)
 			{
-				ChunkManager.FogColor = new Vector3(0.2666667F, 0.6862745F, 0.9607844F) * skyRenderer.BrightnessModifier;
+				ChunkManager.FogColor = new Vector3(0.2666667F, 0.6862745F, 0.9607844F) * BrightnessModifier;
 				ChunkManager.FogDistance = (float)Math.Pow(Options.VideoOptions.RenderDistance, 2) * 0.15f;
 			}
 			else
@@ -207,6 +209,12 @@ namespace Alex.Worlds
 		}
         
         public Vector3 SpawnPoint { get; set; } = Vector3.Zero;
+
+        public float BrightnessModifier
+        {
+	        get { return (BrightnessMod + ((Options.VideoOptions.Brightness - 50f) * (0.5f / 100f))); }
+        }
+
         public Vector3 GetSpawnPoint()
         {
 	        return SpawnPoint;
