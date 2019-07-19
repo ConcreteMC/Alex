@@ -24,6 +24,7 @@ namespace Alex.API.Gui
         bool InvokeKeyInput(char character, Keys key);
 
         void InvokeCursorDown(Vector2 cursorPosition);
+        void InvokeCursorUp(Vector2 cursorPosition);
         void InvokeCursorPressed(Vector2 cursorPosition);
         void InvokeCursorMove(Vector2 cursorPosition, Vector2 previousCursorPosition, bool isCursorDown);
 

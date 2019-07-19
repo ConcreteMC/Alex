@@ -143,6 +143,22 @@ namespace Alex.GameStates.Gui.MainMenu.Options
 
             return slider;
         }
+
+        protected GuiEnumSwitchButton<TEnum> CreateSwitch<TEnum>(string displayFormat, Func<AlexOptions, OptionsProperty<TEnum>> optionsAccessor) where TEnum : Enum
+        {
+            var @switch = CreateValuedControl<GuiEnumSwitchButton<TEnum>, TEnum>(displayFormat, optionsAccessor);// {Modern = false, DisplayFormat = displayFormat};
+            @switch.Modern = false;
+            return @switch;
+        }
+
+        protected GuiToggleButton CreateToggle(string displayFormat,
+            Func<AlexOptions, OptionsProperty<bool>> optionsAccessor)
+        {
+            var sw = CreateValuedControl<GuiToggleButton, bool>(displayFormat, optionsAccessor);
+            sw.Modern = false;
+            
+            return sw;
+        }
         
         protected TControl CreateValuedControl<TControl, TValue>(string label, Func<AlexOptions, OptionsProperty<TValue>> propertyAccessor)
             where TControl : IGuiControl, IValuedControl<TValue>, new()

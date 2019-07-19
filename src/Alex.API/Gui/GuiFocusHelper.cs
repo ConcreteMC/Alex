@@ -139,6 +139,7 @@ namespace Alex.API.Gui
             }
         }
 
+        private bool _cursorDown = false;
         private void UpdateInput()
         {
             if (HighlightedElement == null) return;
@@ -163,6 +164,13 @@ namespace Alex.API.Gui
             {
                 HighlightedElement?.InvokeCursorPressed(CursorPosition);
             }
+
+            if (!isDown && _cursorDown)
+            {
+                HighlightedElement?.InvokeCursorUp(CursorPosition);
+            }
+            
+            _cursorDown = isDown;
         }
 
         private bool TryFindNextControl(Vector2 scanVector, out IGuiElement nextControl)

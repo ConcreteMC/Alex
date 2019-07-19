@@ -69,11 +69,11 @@ namespace Alex.API.Gui.Elements.Controls
 
             MaxHeight = 22;
             MaxWidth  = 200;
-            Padding = new Thickness(5, 5);
+            //Padding = new Thickness(5, 5);
             Margin = new Thickness(2);
+            Height = 20;
 
-            
-           // Background.RepeatMode = TextureRepeatMode.NoScaleCenterSlice;
+            // Background.RepeatMode = TextureRepeatMode.NoScaleCenterSlice;
 
             AddChild(Label = new GuiAutoUpdatingTextElement(() => string.Format(DisplayFormat, Value))
             {
@@ -135,16 +135,43 @@ namespace Alex.API.Gui.Elements.Controls
 
             Label.TextColor = TextColor.White;
         }
-
-
+        
         protected override void OnCursorPressed(Point cursorPosition)
         {
             SetValueFromCursor(cursorPosition);
         }
 
+        protected override void OnCursorDown(Point cursorPosition)
+        {
+            if (Focused)
+                _cursorDown = true;
+            
+            base.OnCursorDown(cursorPosition);
+        }
+
+        protected override void OnCursorUp(Point cursorPosition)
+        {
+            _cursorDown = false;
+            base.OnCursorUp(cursorPosition);
+        }
+
+        private bool _cursorDown = false;
+        protected override void OnCursorLeave(Point cursorPosition)
+        {
+            _cursorDown = false;
+            base.OnCursorLeave(cursorPosition);
+        }
+
+        protected override void OnCursorEnter(Point cursorPosition)
+        {
+            base.OnCursorEnter(cursorPosition);
+        }
+
         protected override void OnCursorMove(Point relativeNewPosition, Point relativeOldPosition, bool isCursorDown)
         {
-            if (isCursorDown)
+            if (!isCursorDown && _cursorDown) _cursorDown = false;
+            
+            if (isCursorDown && _cursorDown)
             {
                 SetValueFromCursor(relativeNewPosition);
             }

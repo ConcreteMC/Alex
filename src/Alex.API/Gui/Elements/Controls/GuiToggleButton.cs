@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.Xna.Framework;
 
 namespace Alex.API.Gui.Elements.Controls
 {
@@ -16,9 +17,10 @@ namespace Alex.API.Gui.Elements.Controls
 	            if (value != _value)
 	            {
 		            _value = value;
-		            TextElement.Text = string.Format(DisplayFormat, _value);
 		            ValueChanged?.Invoke(this, _value);
 	            }
+	            
+	            TextElement.Text = string.Format(DisplayFormat, _value);
             }
         }
 
@@ -28,6 +30,10 @@ namespace Alex.API.Gui.Elements.Controls
 	    {
 
 	    }
-		
+
+	    protected override void OnCursorPressed(Point cursorPosition)
+	    {
+		    Value = !_value;
+	    }
     }
 }

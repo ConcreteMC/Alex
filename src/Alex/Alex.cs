@@ -96,8 +96,17 @@ namespace Alex
 				if (DeviceManager.PreferredBackBufferWidth != Window.ClientBounds.Width ||
 				    DeviceManager.PreferredBackBufferHeight != Window.ClientBounds.Height)
 				{
-					DeviceManager.PreferredBackBufferWidth = Window.ClientBounds.Width;
-					DeviceManager.PreferredBackBufferHeight = Window.ClientBounds.Height;
+					if (DeviceManager.IsFullScreen)
+					{
+						DeviceManager.PreferredBackBufferWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
+						DeviceManager.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
+					}
+					else
+					{
+						DeviceManager.PreferredBackBufferWidth = Window.ClientBounds.Width;
+						DeviceManager.PreferredBackBufferHeight = Window.ClientBounds.Height;
+					}
+
 					DeviceManager.ApplyChanges();
 
 					//CefWindow.Size = new System.Drawing.Size(Window.ClientBounds.Width, Window.ClientBounds.Height);
@@ -173,6 +182,7 @@ namespace Alex
 			GameStateManager.AddState("splash", splash);
 			GameStateManager.SetActiveState("splash");
 
+			WindowSize = this.Window.ClientBounds.Size;
 			//	Log.Info($"Initializing Alex...");
 			ThreadPool.QueueUserWorkItem((o) => { InitializeGame(splash); });
 		}
@@ -186,6 +196,30 @@ namespace Alex
 				base.IsFixedTimeStep = enabled;
 				DeviceManager.SynchronizeWithVerticalRetrace = enabled;
 				DeviceManager.ApplyChanges();
+			});
+		}
+
+		private Point WindowSize { get; set; }
+		private void SetFullscreen(bool enabled)
+		{
+			UIThreadQueue.Enqueue(() =>
+			{
+				if (this.DeviceManager.IsFullScreen != enabled)
+				{
+					if (enabled)
+					{
+						WindowSize = Window.ClientBounds.Size;
+					}
+					else
+					{
+						DeviceManager.PreferredBackBufferWidth = WindowSize.X;
+						DeviceManager.PreferredBackBufferHeight =WindowSize.Y;
+						this.DeviceManager.ApplyChanges();
+					}
+					
+					this.DeviceManager.IsFullScreen = enabled;
+					this.DeviceManager.ApplyChanges();
+				}
 			});
 		}
 		
@@ -205,6 +239,12 @@ namespace Alex
 			if (optionsProvider.AlexOptions.VideoOptions.UseVsync.Value)
 			{
 				SetVSync(true);
+			}
+			
+			optionsProvider.AlexOptions.VideoOptions.Fullscreen.Bind((value, newValue) => { SetFullscreen(newValue); });
+			if (optionsProvider.AlexOptions.VideoOptions.Fullscreen.Value)
+			{
+				SetFullscreen(true);
 			}
 			
 			Services.AddService<IOptionsProvider>(optionsProvider);

@@ -14,6 +14,7 @@ namespace Alex.API.Gui.Elements.Controls
     {
         public event EventHandler<GuiCursorMoveEventArgs> CursorMove;
         public event EventHandler<GuiCursorEventArgs> CursorDown;
+        public event EventHandler<GuiCursorEventArgs> CursorUp;
         public event EventHandler<GuiCursorEventArgs> CursorPressed;
 
         public event EventHandler<GuiCursorEventArgs> CursorEnter;
@@ -153,6 +154,15 @@ namespace Alex.API.Gui.Elements.Controls
             OnCursorDown(pos);
         }
         protected virtual void OnCursorDown(Point cursorPosition) { }
+        
+        public void InvokeCursorUp(Vector2 cursorPosition)
+        {
+            var pos = (cursorPosition - RenderPosition).ToPoint();
+            CursorUp?.Invoke(this, new GuiCursorEventArgs(pos));
+
+            OnCursorUp(pos);
+        }
+        protected virtual void OnCursorUp(Point cursorPosition) { }
 
         public void InvokeCursorPressed(Vector2 cursorPosition)
         {
