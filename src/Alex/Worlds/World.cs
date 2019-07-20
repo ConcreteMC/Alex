@@ -400,7 +400,8 @@ namespace Alex.Worlds
 		{
 			Ticker.ScheduleTick(() =>
 			{
-				GetBlock(block).BlockUpdate(this, block, updatedBlock);
+				GetBlockState(block).Block.BlockUpdate(this, block, updatedBlock);
+				//GetBlock(block).BlockUpdate(this, block, updatedBlock);
 			}, 1);
 		}
 
@@ -520,23 +521,6 @@ namespace Alex.Worlds
 						{
 
 						}
-					}
-				}
-			}
-		}
-
-		private void InitiateChunk(ChunkColumn chunkColumn)
-		{
-			var chunkCoords = new BlockCoordinates(chunkColumn.X >> 4, 0, chunkColumn.Z >> 4);
-
-			for (int x = 0; x < 16; x++)
-			{
-				for (int z = 0; z < 16; z++)
-				{
-					for (int y = 255; y > 0; y--)
-					{
-						var block = (Block)chunkColumn.GetBlock(x, y, z);
-						block.BlockPlaced(this, chunkCoords + new BlockCoordinates(x, y, z));
 					}
 				}
 			}

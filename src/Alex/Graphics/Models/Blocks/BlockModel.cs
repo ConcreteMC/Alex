@@ -451,14 +451,15 @@ namespace Alex.Graphics.Models.Blocks
 			return map;
 	    }
 
-	    protected static BlockFace[] INVALID_FACE_ROTATION = new BlockFace[]
+	    public static BlockFace[] INVALID_FACE_ROTATION = new BlockFace[]
 	    {
 		    BlockFace.Up,
 		    BlockFace.Down,
 		    BlockFace.None
 	    };
 	    
-		protected static BlockFace[] FACE_ROTATION =
+
+	    public static BlockFace[] FACE_ROTATION =
 		{
 			BlockFace.East,
 			BlockFace.South,
@@ -466,7 +467,7 @@ namespace Alex.Graphics.Models.Blocks
 			BlockFace.North
 		};
 
-		protected static BlockFace[] FACE_ROTATION_X =
+		public static BlockFace[] FACE_ROTATION_X =
 		{
 			BlockFace.North,
 			BlockFace.Down,
@@ -474,7 +475,7 @@ namespace Alex.Graphics.Models.Blocks
 			BlockFace.Up
 		};
 		
-		protected static BlockFace[] INVALID_FACE_ROTATION_X = new BlockFace[]
+		public static BlockFace[] INVALID_FACE_ROTATION_X = new BlockFace[]
 		{
 			BlockFace.East,
 			BlockFace.West,
@@ -482,7 +483,7 @@ namespace Alex.Graphics.Models.Blocks
 		};
 
 
-		protected BlockFace RotateDirection(BlockFace val, int offset, BlockFace[] rots, BlockFace[] invalid){
+		public static BlockFace RotateDirection(BlockFace val, int offset, BlockFace[] rots, BlockFace[] invalid){
 			foreach(var d in invalid) {
 				if (d == val) {
 					return val;

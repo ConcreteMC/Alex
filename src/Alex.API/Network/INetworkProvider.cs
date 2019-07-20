@@ -16,6 +16,8 @@ namespace Alex.API.Network
 
 	    void EntityInteraction(IEntity player, IEntity target,
 		    McpeInventoryTransaction.ItemUseOnEntityAction action);
+
+	    void WorldInteraction(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition);
 	    void UseItem(int hand);
 	    void HeldItemChanged(short slot);
 	    void Close();

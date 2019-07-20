@@ -9,6 +9,7 @@ using Alex.API.Data.Options;
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.API.World;
+using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
 using Alex.Blocks.Storage;
 using Alex.Graphics.Models.Blocks;
@@ -247,7 +248,7 @@ namespace Alex.Worlds
 		
         public void AddChunk(IChunkColumn chunk, ChunkCoordinates position, bool doUpdates = false)
         {
-            Chunks.AddOrUpdate(position, coordinates =>
+            var c = Chunks.AddOrUpdate(position, coordinates =>
             {
 	           
                 return chunk;
@@ -271,7 +272,9 @@ namespace Alex.Worlds
 				ScheduleChunkUpdate(new ChunkCoordinates(position.X, position.Z + 1), ScheduleType.Border);
 				ScheduleChunkUpdate(new ChunkCoordinates(position.X, position.Z - 1), ScheduleType.Border);
             }
-		}
+
+            //InitiateChunk(c, position);
+        }
 
         public void RemoveChunk(ChunkCoordinates position, bool dispose = true)
         {
@@ -403,6 +406,26 @@ namespace Alex.Worlds
 	    #endregion
 	    
 	    #region Chunk Updates
+	    
+	    private void InitiateChunk(IChunkColumn chunkColumn, ChunkCoordinates chunkCoordinates)
+	    {
+		    var chunkCoords = new BlockCoordinates(chunkCoordinates.X * 16, 0, chunkCoordinates.Z * 16);
+
+		    for (int x = 0; x < 16; x++)
+		    {
+			    for (int z = 0; z < 16; z++)
+			    {
+				    for (int y = 255; y > 0; y--)
+				    {
+					    var blockState = chunkColumn.GetBlockState(x, y, z);
+					    if (blockState.Block is Block b)
+					    {
+						    b.BlockPlaced(World, blockState, chunkCoords + new BlockCoordinates(x, y, z));
+					    }
+				    }
+			    }
+		    }
+	    }
 	    
 	    private void ChunkUpdateThread()
 		{
@@ -890,6 +913,14 @@ namespace Alex.Worlds
 				        model = new CachedResourcePackModel(Game.Resources,
 					        MultiPartModels.GetBlockStateModels(world, blockPosition, state, state.MultiPartHelper), null);
 				       // blockState.Block.Update(world, blockPosition);
+			        }
+
+			        if (blockState != null && ((force && blockState.Block.RequiresUpdate) || (wasScheduled && blockState.Block.RequiresUpdate)))
+			        {
+				        blockState = blockState.Block.BlockPlaced(world, blockState, blockPosition);
+				        section.Set(x, y, z, blockState);
+
+				        model = blockState.Model;
 			        }
 			        
 			        if ((blockState == null || !blockState.Block.Renderable) ||

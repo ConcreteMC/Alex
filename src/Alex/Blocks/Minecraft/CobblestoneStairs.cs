@@ -1,6 +1,6 @@
 namespace Alex.Blocks.Minecraft
 {
-	public class CobblestoneStairs : Block
+	public class CobblestoneStairs : Stairs
 	{
 		public CobblestoneStairs() : base(3110)
 		{

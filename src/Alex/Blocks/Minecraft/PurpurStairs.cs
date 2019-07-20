@@ -1,6 +1,6 @@
 namespace Alex.Blocks.Minecraft
 {
-	public class PurpurStairs : Block
+	public class PurpurStairs : Stairs
 	{
 		public PurpurStairs() : base(7998)
 		{

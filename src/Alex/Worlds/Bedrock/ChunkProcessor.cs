@@ -605,23 +605,19 @@ namespace Alex.Worlds.Bedrock
 			{
 				//state = FixFacing(state, meta);
 				
-				state = ((BlockState)state).WithPropertyNoResolve("half", meta > 3 ? "top" : "bottom");
+				state = ((BlockState)state).WithPropertyNoResolve("half", (meta & 0x04) == 0x04 ? "top" : "bottom");
 				
-				switch (meta)
+				switch (meta & ~0x04)
 				{
-					case 4:
 					case 0:
 						state = state.WithProperty(facing, "east", false, "waterlogged", "shape", "half");
 						break;
-					case 5:
 					case 1:
 						state = state.WithProperty(facing, "west", false, "waterlogged", "shape", "half");
 						break;
-					case 6:
 					case 2:
 						state = state.WithProperty(facing, "south", false, "waterlogged", "shape", "half");
 						break;
-					case 7:
 					case 3:
 						state = state.WithProperty(facing, "north", false, "waterlogged", "shape", "half");
 						break;
@@ -637,29 +633,32 @@ namespace Alex.Worlds.Bedrock
 			{
 				state = FixVinesRotation(state, meta);
 			}
-			/*else if (bid == 64 || bid == 71 || bid == 193 || bid == 194 || bid == 195 || bid == 196 || bid == 197) //Doors
+			else if (bid == 64 || bid == 71 || bid == 193 || bid == 194 || bid == 195 || bid == 196 || bid == 197) //Doors
 			{
-				var isUpper = (meta & 0x08) == 0x08;
-				state = state.WithProperty("half", isUpper ? "upper" : "lower");
+				var isUpper = (meta & (1 << 0x08)) != 0;
+				
 				if (isUpper)
 				{
-					bool isOpen = (meta & 0x04) == 0x04;
-					state = state.WithProperty("open", isOpen ? "true" : "false");
+					//state = state.WithProperty("hinge", (meta & 0x01) == 0x01 ? "right" : "left");
+					state = state.WithProperty("half", "upper");
 				}
 				else
 				{
-					state = FixFacing(state, meta & ~0x08);
+					bool isOpen = (meta & 0x04) == 0x04;
+					state = state.WithProperty("half", "lower");
+					state = state.WithProperty("open", isOpen ? "true" : "false");
+					state = FixFacing(state, meta & 0x03);
 				}
-			}*/
+			}
 			return state;
 		}
 
 		private IBlockState FixVinesRotation(IBlockState state, int meta)
 		{
-			const byte North = 0x01;
-			const byte East = 0x02;
-			const byte West = 0x04;
-			const byte South = 0x08;
+			const byte North = 0x04;
+			const byte East = 0x08;
+			const byte West = 0x02;
+			const byte South = 0x01;
 			
 			bool hasNorth = (meta & North) == North;
 			bool hasEast = (meta & East) == East;

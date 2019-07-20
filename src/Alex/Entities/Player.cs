@@ -158,6 +158,14 @@ namespace Alex.Entities
 						handledClick = HandleRightClick(Inventory.OffHand, 1);
 					}
 
+					if (!handledClick)
+					{
+						var flooredAdj = AdjacentRaytrace.Floor();
+						var remainder = new Vector3(AdjacentRaytrace.X - flooredAdj.X, AdjacentRaytrace.Y - flooredAdj.Y, AdjacentRaytrace.Z - flooredAdj.Z);
+						Network?.BlockPlaced(Raytraced, GetTargetFace(), 0, remainder);
+
+						handledClick = true;
+					}
 				}
             }
 			else if (_destroyingBlock)

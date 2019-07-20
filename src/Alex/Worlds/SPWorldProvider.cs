@@ -48,6 +48,11 @@ namespace Alex.Worlds
 			
 		}
 
+		public void WorldInteraction(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition)
+		{
+			
+		}
+
 		public void UseItem(int hand)
 		{
 			

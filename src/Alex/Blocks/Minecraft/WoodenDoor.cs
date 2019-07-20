@@ -67,11 +67,7 @@ namespace Alex.Blocks.Minecraft
 		{
 			Toggle(world, position);
 		}
-
-		public override void BlockPlaced(IWorld world, BlockCoordinates position)
-		{ 
-		}
-
+		
 		public byte GetMetaFromState(IBlockState state)
 		{
 			byte i = 0;

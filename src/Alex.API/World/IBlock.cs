@@ -21,6 +21,7 @@ namespace Alex.API.World
 		bool IsFullBlock { get; set; }
 		bool RandomTicked { get; set; }
 		bool IsReplacible { get; set; }
+		bool RequiresUpdate { get; set; }
 		//IBlockState BlockState { get; set; }
 
 		double AmbientOcclusionLightValue { get; set; }
@@ -34,6 +35,7 @@ namespace Alex.API.World
 		
         bool Tick(IWorld world, Vector3 position);
 		void BlockUpdate(IWorld world, BlockCoordinates position, BlockCoordinates updatedBlock);
+		IBlockState BlockPlaced(IWorld world, IBlockState state, BlockCoordinates position);
 		double GetBreakTime(IItem miningTool);
 
 	}

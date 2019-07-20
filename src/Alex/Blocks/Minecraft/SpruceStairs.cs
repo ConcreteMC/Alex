@@ -1,6 +1,6 @@
 namespace Alex.Blocks.Minecraft
 {
-	public class SpruceStairs : Block
+	public class SpruceStairs : Stairs
 	{
 		public SpruceStairs() : base(4805)
 		{

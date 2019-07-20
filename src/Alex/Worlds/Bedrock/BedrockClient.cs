@@ -448,6 +448,26 @@ namespace Alex.Worlds.Bedrock
 		    }
 	    }
 
+	    public void WorldInteraction(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition)
+	    {
+		    var packet = McpeInventoryTransaction.CreateObject();
+		    packet.transaction = new Transaction()
+		    {
+			    ActionType = (int)McpeInventoryTransaction.ItemUseAction.Use,
+			    ClickPosition =
+				    new System.Numerics.Vector3(cursorPosition.X, cursorPosition.Y, cursorPosition.Z),
+			    TransactionType = McpeInventoryTransaction.TransactionType.ItemUse,
+			    EntityId = NetworkEntityId,
+			    Position = new MiNET.Utils.BlockCoordinates(position.X, position.Y, position.Z),
+			    Face = (int)face,
+                
+			    //Item = MiNET.Items.ItemFactory.GetItem()
+
+		    };
+
+		    SendPacket(packet);
+	    }
+
 	    public void UseItem(int hand)
 		{
 			Log.Warn("TODO: Implement UseItem");

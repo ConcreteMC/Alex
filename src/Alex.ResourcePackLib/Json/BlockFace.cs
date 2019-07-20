@@ -60,5 +60,27 @@ namespace Alex.ResourcePackLib.Json
 					return BlockCoordinates.Zero;
 			}
 		}
+		
+		public static BlockFace Opposite(this BlockFace face)
+		{
+			switch (face)
+			{
+				case BlockFace.Down:
+					return BlockFace.Up;
+				case BlockFace.Up:
+					return BlockFace.Down;
+				case BlockFace.East:
+					return BlockFace.West;
+				case BlockFace.West:
+					return BlockFace.East;
+				case BlockFace.North:
+					return BlockFace.South;
+				case BlockFace.South:
+					return BlockFace.North;
+
+					default:
+					return BlockFace.None;
+			}
+		}
 	}
 }

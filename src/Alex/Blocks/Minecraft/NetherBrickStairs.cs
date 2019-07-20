@@ -1,6 +1,6 @@
 namespace Alex.Blocks.Minecraft
 {
-	public class NetherBrickStairs : Block
+	public class NetherBrickStairs : Stairs
 	{
 		public NetherBrickStairs() : base(4449)
 		{

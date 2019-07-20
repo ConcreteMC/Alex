@@ -1,6 +1,6 @@
 namespace Alex.Blocks.Minecraft
 {
-	public class JungleStairs : Block
+	public class JungleStairs : Stairs
 	{
 		public JungleStairs() : base(4965)
 		{

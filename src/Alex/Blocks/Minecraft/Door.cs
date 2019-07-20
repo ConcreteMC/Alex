@@ -1,8 +1,11 @@
-﻿using Alex.API.Utils;
+﻿using System;
+using Alex.API.Blocks.State;
+using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks.Properties;
 using Alex.Entities;
 using Alex.ResourcePackLib.Json;
+using Microsoft.Xna.Framework;
 using NLog;
 
 namespace Alex.Blocks.Minecraft
@@ -31,35 +34,57 @@ namespace Alex.Blocks.Minecraft
 		public Door(uint blockId) : base(blockId)
 		{
 			Transparent = true;
+			RequiresUpdate = true;
 		}
 
-		public override void BlockPlaced(IWorld world, BlockCoordinates position)
+		private IBlockState Update(IWorld world, IBlockState blockState, BlockCoordinates coordinates, BlockCoordinates updated)
 		{
-			/*if (IsUpper)
+			var updatedBlock = world.GetBlockState(updated);
+			if (!(updatedBlock.Block is Door))
+				return blockState;
+
+			bool isUpper = false;
+			if (blockState.TryGetValue("half", out string half))
 			{
-				Block below = (Block) world.GetBlock(position - new BlockCoordinates(0, 1, 0));
-				if (below is Door bottom)
+				isUpper = half.Equals("upper", StringComparison.InvariantCultureIgnoreCase);
+			}
+			
+			if (updated == coordinates + BlockCoordinates.Up && !isUpper)
+			{
+				/*if (updatedBlock.TryGetValue("hinge", out var hingeValue))
 				{
-					if (bottom.IsOpen)
-					{
-						BlockState state = (BlockState)BlockState.WithProperty(OPEN, true.ToString());
-						world.SetBlockState(position.X, position.Y, position.Z, state);
-					}
+					blockState = blockState.WithProperty("hinge", hingeValue, false, "half", "open", "facing");
+				}*/
+			}
+			else if (updated == coordinates + BlockCoordinates.Down && isUpper)
+			{
+				if (updatedBlock.TryGetValue("open", out string open))
+				{
+					blockState = blockState.WithProperty("open", open, false, "half", "hinge");
 				}
+
+				if (updatedBlock.TryGetValue("facing", out var facing))
+				{
+					blockState = blockState.WithProperty("facing",
+						facing, false, "half", "hinge", "open");
+				}
+			}
+
+			return blockState;
+		}
+
+		public override IBlockState BlockPlaced(IWorld world, IBlockState state, BlockCoordinates position)
+		{
+			if (state.TryGetValue("half", out string half) && half.Equals("upper", StringComparison.InvariantCultureIgnoreCase))
+			{
+				return Update(world, state, position, position + BlockCoordinates.Down);
 			}
 			else
 			{
-				Block up = (Block)world.GetBlock(position + new BlockCoordinates(0, 1, 0));
-				if (up is Door upper)
-				{
-					if (upper.IsUpper)
-					{
-						BlockState state = (BlockState) BlockState.WithProperty(UPPER, false.ToString());
-						world.SetBlockState(position.X, position.Y, position.Z, state);
-					}
-				}
-			}*/
-			//return false;
+				return Update(world, state, position, position + BlockCoordinates.Up);
+			}
+			
+			return base.BlockPlaced(world, state, position);
 		}
 
 		public override void Interact(IWorld world, BlockCoordinates position, BlockFace face, Entity sourceEntity)
@@ -73,6 +98,11 @@ namespace Alex.Blocks.Minecraft
 
 		public override void BlockUpdate(IWorld world, BlockCoordinates position, BlockCoordinates updatedBlock)
 		{
+			var newValue = Update(world, BlockState, position, updatedBlock);
+			if (newValue != BlockState)
+			{
+				world.SetBlockState(position.X, position.Y, position.Z, newValue);
+			}
 			/*if (IsUpper && updatedBlock.Y < position.Y)
 			{
 				var changedBlock = world.GetBlockState(updatedBlock.X, updatedBlock.Y, updatedBlock.Z);

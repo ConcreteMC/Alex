@@ -21,7 +21,7 @@ namespace Alex.Blocks.Minecraft
 			//BlockMaterial = Material.Water;
 		}
 
-		public override void BlockPlaced(IWorld world, BlockCoordinates position)
+		/*public override void BlockPlaced(IWorld world, BlockCoordinates position)
 		{
 			if (BlockState != null)
 			{
@@ -35,6 +35,6 @@ namespace Alex.Blocks.Minecraft
 				}
 			}
 			base.BlockPlaced(world, position);
-		}
+		}*/
 	}
 }

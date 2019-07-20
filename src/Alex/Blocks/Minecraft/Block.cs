@@ -31,6 +31,7 @@ namespace Alex.Blocks.Minecraft
 
 		public bool RandomTicked { get; set; } = false;
 		public bool IsReplacible { get; set; } = false;
+		public bool RequiresUpdate { get; set; } = false;
 
 		public float Drag { get; set; }
 		public string Name { get; set; }
@@ -106,8 +107,9 @@ namespace Alex.Blocks.Minecraft
 		    return BlockState.Model.GetBoundingBox(blockPosition, this);
 		}
 
-		public virtual void BlockPlaced(IWorld world, BlockCoordinates position)
+		public virtual IBlockState BlockPlaced(IWorld world, IBlockState state, BlockCoordinates position)
 		{
+			return state;
 			/*if (BlockState is BlockState s)
 			{
 				if (s.IsMultiPart)

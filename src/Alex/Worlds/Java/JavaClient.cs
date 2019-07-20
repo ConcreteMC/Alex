@@ -98,6 +98,11 @@ namespace Alex.Worlds.Java
 			throw new NotImplementedException();
 		}
 
+		public void WorldInteraction(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition)
+		{
+			throw new NotImplementedException();
+		}
+
 		public void UseItem(int hand)
 		{
 			SendPacket(new UseItemPacket()
