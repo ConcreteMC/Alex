@@ -301,6 +301,8 @@ namespace Alex
 		protected override void Draw(GameTime gameTime)
 		{
             FpsMonitor.Update();
+            GraphicsDevice.RasterizerState = RasterizerState.CullClockwise;
+            
             GameStateManager.Draw(gameTime);
 			GuiManager.Draw(gameTime);
 			

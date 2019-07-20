@@ -316,7 +316,9 @@ namespace Alex.Graphics.Models.Blocks
 								}
 								break;
 						}
-						
+
+						float x1 = uv.X1, x2 = uv.X2, y1 = uv.Y1, y2 = uv.Y2;
+
 						text = ResolveTexture(bsModel, text);
 						
 						if (((face.Key == BlockFace.Up) || face.Key == BlockFace.East) && bsModel.ModelName.Contains("piston") && !useCrossRendering && !useFlat)
@@ -339,7 +341,7 @@ namespace Alex.Graphics.Models.Blocks
 							}
 						}
 						
-						var uvmap = GetTextureUVMap(Resources, text, uv.X1, uv.X2, uv.Y1, uv.Y2, rotation);
+						var uvmap = GetTextureUVMap(Resources, text, x1, x2, y1, y2, rotation);
 						
 						int[] indexes;
 						var faceVertices = useCrossRendering
@@ -546,7 +548,7 @@ namespace Alex.Graphics.Models.Blocks
 						}*/
 						
 						faceColor = AdjustColor(faceColor, facing,
-							GetLight(world, position + facing.GetVector3(),
+							GetLight(world, position + cullFace.GetVector3(),
 								false /*model.Model.AmbientOcclusion*/), element.Shade);
 
 						//TODO: Rotate vertices

@@ -141,6 +141,8 @@ namespace Alex.GameStates.Playing
 					sb.AppendLine($"Target: {_raytracedBlock} Face: {face}");
 					sb.AppendLine(
 						$"Skylight: {World.GetSkyLight(_raytracedBlock)} Face Skylight: {World.GetSkyLight(_adjacentBlock)}");
+					sb.AppendLine(
+						$"Blocklight: {World.GetBlockLight(_raytracedBlock)} Face Blocklight: {World.GetBlockLight(_adjacentBlock)}");
 					sb.AppendLine($"{SelBlock}");
 
 					if (SelBlock.BlockState != null)

@@ -1,5 +1,6 @@
 using System;
 using System.Numerics;
+using System.Threading.Tasks;
 using log4net;
 using MiNET.Entities;
 using MiNET.Net;
@@ -87,6 +88,34 @@ namespace MiNET.AlexDebug
             transfer.port = 19132;
             
             player.SendPacket(transfer);
+        }
+        
+        [Command(Aliases = new[] {"cbl"})]
+        public void CalculateBlockLight(Player player)
+        {
+            Task.Run(() =>
+            {
+                LevelManager.RecalculateBlockLight(player.Level, (AnvilWorldProvider) player.Level.WorldProvider);
+                player.CleanCache();
+                player.ForcedSendChunks(() => { player.SendMessage("Calculated blocklights and resent chunks."); });
+            });
+        }
+
+        [Command(Aliases = new []{"time"})]
+        public void SetTimeCommand(Player player, TimeOfDay timeOfDay)
+        {
+            player.Level.WorldTime = (int) timeOfDay;
+            player.SendSetTime();
+            
+            player.SendMessage($"Set the time to {(int) timeOfDay}");
+        }
+
+        public enum TimeOfDay : int
+        {
+            Sunrise = 23000,
+            Day = 1000,
+            Sunset = 12000,
+            Night = 13000
         }
     }
 }
