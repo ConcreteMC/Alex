@@ -22,12 +22,20 @@ namespace Alex.Graphics.Models.Entity
 				set { _rotation = value; }
 			}
 
+			private Vector3 _position = Vector3.Zero;
+			public Vector3 Position
+			{
+				get { return _position; }
+				set { _position = value; }
+			}
+
 			public ModelBone(ModelBoneCube[] parts)
 			{
 				Parts = parts;
 			}
 
 			private bool _isDirty = true;
+
 			public void Render(IRenderArgs args, PlayerLocation position)
 			{
 				if (Buffer == null)
@@ -65,7 +73,7 @@ namespace Alex.Graphics.Models.Entity
 						Matrix.CreateFromYawPitchRoll(headYaw, pitch, 0f) *
 					                 Matrix.CreateTranslation(part.Pivot);
 					
-					effect.World =  (rotMatrix2 *
+					effect.World = Matrix.CreateTranslation(_position) * (rotMatrix2 *
 					               rotMatrix 
 					              ) * (Matrix.CreateScale(1f / 16f) * Matrix.CreateTranslation(position));
 

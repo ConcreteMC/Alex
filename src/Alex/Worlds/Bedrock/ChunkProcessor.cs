@@ -654,6 +654,13 @@ namespace Alex.Worlds.Bedrock
 					state = FixFacing(state, (meta & 0x3));
 				}
 			}
+			else if (bid == 50) //Torch
+			{
+				if (meta >= 1 && meta <= 4)
+				{
+					
+				}
+			}
 			return state;
 		}
 

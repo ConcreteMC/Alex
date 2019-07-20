@@ -7,11 +7,13 @@ using Alex.API.World;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.BlockStates;
 using Alex.ResourcePackLib.Json.Models.Blocks;
+using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using NLog;
 using WinApi.User32;
 using MathF = Alex.API.Utils.MathF;
+using Matrix = System.Drawing.Drawing2D.Matrix;
 
 namespace Alex.Graphics.Models.Blocks
 {
@@ -218,8 +220,8 @@ namespace Alex.Graphics.Models.Blocks
 						y1 = uv.Y1;
 						y2 = uv.Y2;
 					}
-
-					var verts = GetFaceVertices(face.Key, Vector3.Zero, Vector3.One,
+					
+					var verts = GetFaceVertices(face.Key, element.From, element.To,
 						GetTextureUVMap(Resources, ResolveTexture(raw, face.Value.Texture), x1, x2, y1, y2, face.Value.Rotation),
 						out int[] indexes);
 
@@ -229,42 +231,16 @@ namespace Alex.Graphics.Models.Blocks
 					for (int i = 0; i < verts.Length; i++)
 					{
 						var v = verts[i];
-						if (v.Position.X < 0.5f)
-						{
-							v.Position.X = element.From.X / 16f;
-						}
-						else
-						{
-							v.Position.X = element.To.X / 16f;
-						}
-
-						if (v.Position.Y < 0.5f)
-						{
-							v.Position.Y = element.From.Y / 16f;
-						}
-						else
-						{
-							v.Position.Y = element.To.Y/ 16f;
-						}
-
-						if (v.Position.Z < 0.5f)
-						{
-							v.Position.Z = element.From.Z / 16f;
-						}
-						else
-						{
-							v.Position.Z = element.To.Z / 16f;
-						}
-
+						
 						if (element.Rotation.Axis != Axis.Undefined)
 						{
 							var r = element.Rotation;
 							var angle = (float) (r.Angle * (Math.PI / 180f));
 							
-							angle = r.Axis == Axis.Z ? -angle : angle;
+							//angle = r.Axis == Axis.Z ? angle : -angle;
 							//angle = r.Axis == Axis.Y ? -angle : angle;
 							
-							var origin = r.Origin / 16f;
+							var origin = r.Origin;
 							
 							var c = MathF.Cos(angle);
 							var s = MathF.Sin(angle);
@@ -308,11 +284,11 @@ namespace Alex.Graphics.Models.Blocks
 							var rotX = (float) (raw.X * (Math.PI / 180f));
 							var c = MathF.Cos(rotX);
 							var s = MathF.Sin(rotX);
-							var z = v.Position.Z - 0.5f;
-							var y = v.Position.Y - 0.5f;
+							var z = v.Position.Z - 8f;
+							var y = v.Position.Y - 8f;
 
-							v.Position.Z = 0.5f + (z * c - y * s);
-							v.Position.Y = 0.5f + (y * c + z * s);
+							v.Position.Z = 8f + (z * c - y * s);
+							v.Position.Y = 8f + (y * c + z * s);
 						}
 
 						if (raw.Y > 0)
@@ -320,13 +296,15 @@ namespace Alex.Graphics.Models.Blocks
 							var rotX = (float) (raw.Y * (Math.PI / 180f));
 							var c = MathF.Cos(rotX);
 							var s = MathF.Sin(rotX);
-							var z = v.Position.X - 0.5f;
-							var y = v.Position.Z - 0.5f;
+							var z = v.Position.X - 8f;
+							var y = v.Position.Z - 8f;
 
-							v.Position.X = 0.5f + (z * c - y * s);
-							v.Position.Z = 0.5f + (y * c + z * s);
+							v.Position.X = 8f + (z * c - y * s);
+							v.Position.Z = 8f + (y * c + z * s);
 						}
-
+						
+						v.Position /= 16f;
+						
 						if (v.Position.X < minX)
 						{
 							minX = v.Position.X;
