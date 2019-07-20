@@ -26,128 +26,6 @@ namespace Alex.Graphics.Models.Blocks
 			return new BoundingBox(position, position + Vector3.One);
 	    }
 
-	    protected VertexPositionNormalTextureColor[] GetQuadVertices(BlockFace face, Vector3 from, Vector3 to, UVMap uv, out int[] indicies)
-	    {
-		    indicies = new[] { 0, 1, 3, 1, 2, 3 };
-		    
-		    Vector3[] unit;
-		    Vector3 normal;
-		    Color faceColor;
-		    switch (face)
-		    {
-			    case BlockFace.West: //Negative X
-				    normal = Vector3.Left;
-				    faceColor = uv.ColorLeft;
-				    unit = QuadMesh[1];
-				    break;
-			    case BlockFace.East: //Positive X
-				    normal = Vector3.Right;
-				    faceColor = uv.ColorRight;
-				    unit = QuadMesh[0];
-				    break;
-			    case BlockFace.South: //Positive Z
-				    normal = Vector3.Backward;
-				    faceColor = uv.ColorBack;
-				    unit = QuadMesh[3];
-				    break;
-			    case BlockFace.North: //Negative Z
-				    normal = Vector3.Forward;
-				    faceColor = uv.ColorFront;
-				    unit = QuadMesh[2];
-				    break;
-				default:
-				    return null;	
-		    }
-
-		    var size = (to - from);
-		    var quad = new VertexPositionNormalTextureColor[4];
-		    
-		    for (int i = 0; i < 4; i++)
-		    {
-			    Vector2 texture = Vector2.Zero;
-			    Vector3 pos = unit[i];
-			    switch (i)
-			    {
-				    case 0:
-					    texture = uv.BottomLeft;
-					    break;
-				    case 1:
-					    texture = uv.BottomRight;
-					    break;
-				    case 2:
-					    texture = uv.TopRight;
-					    break;
-				    case 3:
-					    texture = uv.TopLeft;
-					    break;
-			    }
-			    
-			    quad[i] = new VertexPositionNormalTextureColor( (pos * size) , normal, texture, faceColor);
-		    }
-		    return quad;
-	    }
-	    
-	    protected VertexPositionNormalTextureColor[] GetFlatVertices(BlockFace face, Vector3 from, Vector3 to, UVMap uv, out int[] indicies)
-	    {
-		    indicies = new[] { 0, 1, 3, 1, 2, 3 };
-
-		    Vector3[] unit;
-		    Vector3 normal;
-		    Color faceColor;
-		    switch (face)
-		    {
-			    case BlockFace.South: //Positive Z
-				    normal = Vector3.Backward;
-				    faceColor = uv.ColorFront;
-				    unit = FlatMesh[0];
-				    break;
-			    case BlockFace.North: //Negative Z
-				    normal = Vector3.Forward;
-				    faceColor = uv.ColorBack;
-				    unit = FlatMesh[0];
-				    break;
-			    case BlockFace.Up:
-				    normal = Vector3.Up;
-				    faceColor = uv.ColorTop;
-				    unit = FlatMesh[3];
-				    break;
-			    case BlockFace.Down:
-				    normal = Vector3.Down;
-				    faceColor = uv.ColorBottom;
-				    unit = FlatMesh[2];
-				    break;
-			    default:
-				    return null;	
-		    }
-
-		    var size = (to - from);
-		    var quad = new VertexPositionNormalTextureColor[4];
-		    
-		    for (int i = 0; i < 4; i++)
-		    {
-			    Vector2 texture = Vector2.Zero;
-			    Vector3 pos = unit[i];
-			    switch (i)
-			    {
-				    case 0:
-					    texture = uv.BottomLeft;
-					    break;
-				    case 1:
-					    texture = uv.BottomRight;
-					    break;
-				    case 2:
-					    texture = uv.TopRight;
-					    break;
-				    case 3:
-					    texture = uv.TopLeft;
-					    break;
-			    }
-			    
-			    quad[i] = new VertexPositionNormalTextureColor( (pos * size) , normal, texture, faceColor);
-		    }
-		    return quad;
-	    }
-	    
 	    protected VertexPositionNormalTextureColor[] GetFaceVertices(BlockFace blockFace, Vector3 startPosition, Vector3 endPosition, UVMap uvmap, out int[] indexes)
 		{
 			var size = (endPosition - startPosition);
@@ -229,12 +107,6 @@ namespace Alex.Graphics.Models.Blocks
 			var bottomRight = new VertexPositionNormalTextureColor(positionBottomRight, normal, uvmap.BottomRight,
 				faceColor);
 
-			/*
-			 * return new[]
-			{
-				topLeft, topRight, bottomLeft, bottomRight
-			};
-			 */
 			switch (blockFace)
 			{
 				case BlockFace.Up:
@@ -244,11 +116,6 @@ namespace Alex.Graphics.Models.Blocks
 						3, 2, 1
 					};
 					break;
-				/*return (new[]
-				{
-					bottomLeft, topLeft, topRight,
-					bottomRight, bottomLeft, topRight
-				});*/
 				case BlockFace.Down:
 					indexes = new[]
 					{
@@ -256,11 +123,6 @@ namespace Alex.Graphics.Models.Blocks
 						2, 3, 1
 					};
 					break;
-				/*return (new[]
-				{
-					topLeft, bottomLeft, topRight,
-					bottomLeft, bottomRight, topRight
-				});*/
 				case BlockFace.North:
 					indexes = new[]
 					{
@@ -268,11 +130,6 @@ namespace Alex.Graphics.Models.Blocks
 						2, 3, 1
 					};
 					break;
-					/*return (new[]
-					{
-						topLeft, bottomLeft, topRight,
-						bottomLeft, bottomRight, topRight
-					});*/
 				case BlockFace.East:
 					indexes = new[]
 					{
@@ -280,11 +137,6 @@ namespace Alex.Graphics.Models.Blocks
 						3, 2, 1
 					};
 					break;
-					/*return (new[]
-					{
-						bottomLeft, topLeft, topRight,
-						bottomRight, bottomLeft, topRight
-					});*/
 				case BlockFace.South:
 					indexes = new[]
 					{
@@ -292,11 +144,6 @@ namespace Alex.Graphics.Models.Blocks
 						3, 2, 1
 					};
 					break;
-					/*return (new[]
-					{
-						bottomLeft, topLeft, topRight,
-						bottomRight, bottomLeft, topRight
-					});*/
 				case BlockFace.West:
 					indexes = new[]
 					{
@@ -304,11 +151,6 @@ namespace Alex.Graphics.Models.Blocks
 						2, 3, 1
 					};
 					break;
-					/*return (new[]
-					{
-						topLeft, bottomLeft, topRight,
-						bottomLeft, bottomRight, topRight
-					});*/
 				default:
 					indexes = new int[0];
 					break;

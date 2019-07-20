@@ -22,9 +22,10 @@ namespace Alex.Graphics.Models.Blocks
 		public BlockStateModel[] Models { get; set; }
 		protected ResourceManager Resources { get; }
 		private readonly IDictionary<string, FaceCache> _elementCache;
-
-		private float Height = 1f, Width = 1f, Depth = 1f;
-		public CachedResourcePackModel(ResourceManager resources, BlockStateModel[] models, BlockStateVariant variant)
+		
+		protected Vector3 Min = new Vector3(float.MaxValue);
+		protected Vector3 Max = new Vector3(float.MinValue);
+		public CachedResourcePackModel(ResourceManager resources, BlockStateModel[] models)
 		{
 			Resources = resources;
 			Models = models;
@@ -38,44 +39,6 @@ namespace Alex.Graphics.Models.Blocks
 		public override BoundingBox GetBoundingBox(Vector3 position, IBlock requestingBlock)
 		{
 			return new BoundingBox(position + (Min), position + ((Max)));
-			//return new BoundingBox(position, position + new Vector3(Width / 16f, Height / 16f, Depth / 16f));
-			return base.GetBoundingBox(position, requestingBlock);
-		}
-
-		protected Matrix GetElementRotationMatrix(BlockModelElementRotation elementRotation, out float rescale)
-		{
-			if (elementRotation.Axis == Axis.Undefined)
-			{
-				rescale = 1f;
-				return Matrix.Identity;
-			}
-
-			Matrix faceRotationMatrix = Matrix.Identity;
-			
-			var elementRotationOrigin =
-				elementRotation
-					.Origin; // new Vector3(elementRotation.Origin.X, elementRotation.Origin.Y, elementRotation.Origin.Z);
-
-			var elementAngle = MathHelper.ToRadians((float) (elementRotation.Angle));
-			
-			faceRotationMatrix = Matrix.CreateTranslation(-elementRotationOrigin);
-			if (elementRotation.Axis == Axis.X)
-			{
-				faceRotationMatrix *= Matrix.CreateRotationX(elementAngle);
-			}
-			else if (elementRotation.Axis == Axis.Y)
-			{
-				faceRotationMatrix *= Matrix.CreateRotationY(elementAngle);
-			}
-			else if (elementRotation.Axis == Axis.Z)
-			{
-				faceRotationMatrix *= Matrix.CreateRotationZ(elementAngle);
-			}
-
-			faceRotationMatrix *= Matrix.CreateTranslation(elementRotationOrigin);
-			
-			rescale = 1f / (float) Math.Cos(elementAngle);;
-			return faceRotationMatrix;
 		}
 
 		protected void GetCullFaceValues(string facename, BlockFace facing, out BlockFace cullFace)
@@ -107,12 +70,6 @@ namespace Alex.Graphics.Models.Blocks
 					cullFace = facing;
 					break;
 			}
-		}
-
-		protected Matrix GetModelRotationMatrix(BlockStateModel model)
-		{
-			return Matrix.CreateRotationX(MathHelper.ToRadians(-model.X)) *
-			       Matrix.CreateRotationY(MathHelper.ToRadians(-model.Y));
 		}
 
 		protected string ResolveTexture(BlockStateModel var, string texture)
@@ -172,12 +129,7 @@ namespace Alex.Graphics.Models.Blocks
 			
 			return true;
 		}
-
-		protected Vector3 Min = new Vector3(float.MaxValue);
-		protected Vector3 Max = new Vector3(float.MinValue);
-
-		private static int BlockFaceLength = Enum.GetValues(typeof(BlockFace)).Length;
-
+		
 		protected IDictionary<string, FaceCache> CalculateModel(BlockStateModel[] models)
 		{
 			Dictionary<string, FaceCache> result = new Dictionary<string, FaceCache>();
@@ -223,6 +175,9 @@ namespace Alex.Graphics.Models.Blocks
 			for (var index = 0; index < model.Elements.Length; index++)
 			{
 				var element = model.Elements[index];
+				element.To *= Scale;
+				element.From *= Scale;
+				
 				FaceCache cache = new FaceCache();
 
 				foreach (var face in element.Faces)
@@ -305,46 +260,44 @@ namespace Alex.Graphics.Models.Blocks
 						{
 							var r = element.Rotation;
 							var angle = (float) (r.Angle * (Math.PI / 180f));
-							angle = r.Axis == Axis.Z ? angle : -angle;
-
+							
+						//	angle = r.Axis == Axis.Z ? -angle : angle;
+						//	angle = r.Axis == Axis.Y ? -angle : angle;
+							
+							var origin = r.Origin / 16f;
+							
+							var c = MathF.Cos(angle);
+							var s = MathF.Sin(angle);
+							
 							switch (r.Axis)
 							{
 								case Axis.Y:
 								{
-									var c = MathF.Cos(angle);
-									var s = MathF.Sin(angle);
+									var x = v.Position.X - origin.X;
+									var z = v.Position.Z - origin.Z;
 
-									var x = v.Position.X - (r.Origin.X / 16f);
-									var z = v.Position.Z - (r.Origin.Z / 16f);
-
-									v.Position.X = r.Origin.X/16f + x * c - z * s;
-									v.Position.Z = r.Origin.Z/16f + z * c + x * s;
+									v.Position.X = origin.X + (x * c - z * s);
+									v.Position.Z = origin.Z + (z * c + x * s);
 								}
 									break;
 
 								case Axis.X:
 								{
-									var c = MathF.Cos(angle);
-									var s = MathF.Sin(angle);
+									var x = v.Position.Z - origin.Z;
+									var z = v.Position.Y - origin.Y;
 
-									var x = v.Position.Z- (r.Origin.Z / 16f);
-									var z = v.Position.Y- (r.Origin.Y / 16f);
-
-									v.Position.Z = (r.Origin.Z / 16f) + x * c - z * s;
-									v.Position.Y = (r.Origin.Y / 16f) + z * c + x * s;
+									v.Position.Z = origin.Z + (x * c - z * s);
+									v.Position.Y = origin.Y + (z * c + x * s);
 								}
 									break;
 
 								case Axis.Z:
 								{
-									var c = MathF.Cos(angle);
-									var s = MathF.Sin(angle);
+									var x = v.Position.X - origin.X;
+									var z = v.Position.Y - origin.Y;
 
-									var x = v.Position.X - (r.Origin.X / 16f);
-									var z = v.Position.Y - (r.Origin.Y / 16f);
-
-									v.Position.X = (r.Origin.X / 16f) + x * c - z * s;
-									v.Position.Y = (r.Origin.Y / 16f) + z * c + x * s;
+									v.Position.X = origin.X + (x * c - z * s);
+									v.Position.Y = origin.Y + (z * c + x * s);
 								}
 									break;
 							}
@@ -478,20 +431,9 @@ namespace Alex.Graphics.Models.Blocks
 
 					cache.Set(face.Key, new FaceData(verts, indexes, face.Value.Rotation, null));
 				}
-
-				
-				
 				faceCaches.Add(index.ToString(), cache);
 			}
-			
-			/*Min.X = facesMinX;
-			Min.Y = facesMinY;
-			Min.Z = facesMinZ;
-					
-			Max.X = facesMaxX;
-			Max.Y = facesMaxY;
-			Max.Z = facesMaxZ;*/
-			
+
 			min = new Vector3(facesMinX, facesMinY, facesMinZ);
 			max = new Vector3(facesMaxX, facesMaxY, facesMaxZ);
 
@@ -547,9 +489,6 @@ namespace Alex.Graphics.Models.Blocks
 							facing = RotateDirection(facing, offset, FACE_ROTATION, INVALID_FACE_ROTATION);
 						}
 
-						
-
-
 						if (originalCullFace != BlockFace.None && !ShouldRenderFace(world, facing, position, baseBlock))
 							continue;
 
@@ -579,30 +518,6 @@ namespace Alex.Graphics.Models.Blocks
 								}
 							}
 						}
-
-						/*switch (faceElement.Key)
-						{
-							case BlockFace.Down:
-								faceColor = Color.Turquoise;
-								break;
-							case BlockFace.Up:
-								faceColor = Color.Blue;
-								break;
-							case BlockFace.East:
-								faceColor = Color.Red;
-								break;
-							case BlockFace.West:
-								faceColor = Color.Yellow;
-								break;
-							case BlockFace.North:
-								faceColor = Color.Pink;
-								break;
-							case BlockFace.South:
-								faceColor = Color.LimeGreen;
-								break;
-							case BlockFace.None:
-								break;
-						}*/
 						
 						faceColor = AdjustColor(faceColor, facing,
 							GetLight(world, position + cullFace.GetVector3(),

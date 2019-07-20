@@ -911,7 +911,7 @@ namespace Alex.Worlds
 			        if (blockState is BlockState state && state.IsMultiPart)
 			        {
 				        model = new CachedResourcePackModel(Game.Resources,
-					        MultiPartModels.GetBlockStateModels(world, blockPosition, state, state.MultiPartHelper), null);
+					        MultiPartModels.GetBlockStateModels(world, blockPosition, state, state.MultiPartHelper));
 				       // blockState.Block.Update(world, blockPosition);
 			        }
 

@@ -523,8 +523,8 @@ namespace Alex.Worlds.Bedrock
 			"minecraft:cut_sandstone_slab",
 			"minecraft:cut_red_sandstone_slab"
 		};
-		
-		private IBlockState TranslateBlockState(IBlockState state, long bid, int meta)
+
+		internal IBlockState TranslateBlockState(IBlockState state, long bid, int meta)
 		{
 			//var dict = state.ToDictionary();
 

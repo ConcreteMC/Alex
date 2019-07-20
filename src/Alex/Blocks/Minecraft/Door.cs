@@ -51,10 +51,10 @@ namespace Alex.Blocks.Minecraft
 			
 			if (updated == coordinates + BlockCoordinates.Up && !isUpper)
 			{
-				/*if (updatedBlock.TryGetValue("hinge", out var hingeValue))
+				if (updatedBlock.TryGetValue("hinge", out var hingeValue))
 				{
 					blockState = blockState.WithProperty("hinge", hingeValue, false, "half", "open", "facing");
-				}*/
+				}
 			}
 			else if (updated == coordinates + BlockCoordinates.Down && isUpper)
 			{
@@ -98,8 +98,8 @@ namespace Alex.Blocks.Minecraft
 
 		public override void BlockUpdate(IWorld world, BlockCoordinates position, BlockCoordinates updatedBlock)
 		{
-			if (updatedBlock != position - new BlockCoordinates(0, 1, 0))
-				return;
+			//if (updatedBlock != position - new BlockCoordinates(0, 1, 0))
+			//	return;
 			
 			var newValue = Update(world, BlockState, position, updatedBlock);
 			if (newValue != BlockState)

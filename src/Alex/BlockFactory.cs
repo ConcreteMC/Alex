@@ -133,7 +133,7 @@ namespace Alex
 						Model = CubeModel,
 						ModelName = "Unknown model",
 					}
-				}, null);
+				});
 
 				AirState.Model = UnknownBlockModel;
 			}
@@ -160,10 +160,10 @@ namespace Alex
 			uint c = 0;
 			foreach (var entry in data)
 			{
-				double percentage = 100D * ((double)done / (double)total);
-				progressReceiver.UpdateProgress((int)percentage, $"Importing block models...", entry.Key);
+				double percentage = 100D * ((double) done / (double) total);
+				progressReceiver.UpdateProgress((int) percentage, $"Importing block models...", entry.Key);
 
-                var variantMap = new BlockStateVariantMapper();
+				var variantMap = new BlockStateVariantMapper();
 				var state = new BlockState
 				{
 					Name = entry.Key
@@ -174,7 +174,7 @@ namespace Alex
 				{
 					foreach (var property in def.Properties)
 					{
-						state = (BlockState)state.WithPropertyNoResolve(property.Key, property.Value, false);
+						state = (BlockState) state.WithPropertyNoResolve(property.Key, property.Value, false);
 					}
 				}
 				else
@@ -188,13 +188,13 @@ namespace Alex
 						}
 					}
 				}
-				
+
 				List<BlockState> variants = new List<BlockState>();
 				foreach (var s in entry.Value.States)
 				{
-                    var id = s.ID;
+					var id = s.ID;
 
-					BlockState variantState = (BlockState)(state).CloneSilent();
+					BlockState variantState = (BlockState) (state).CloneSilent();
 					variantState.ID = id;
 					variantState.VariantMapper = variantMap;
 
@@ -203,7 +203,9 @@ namespace Alex
 						foreach (var property in s.Properties)
 						{
 							//var prop = StateProperty.Parse(property.Key);
-							variantState = (Blocks.State.BlockState)variantState.WithPropertyNoResolve(property.Key, property.Value, false);
+							variantState =
+								(Blocks.State.BlockState) variantState.WithPropertyNoResolve(property.Key,
+									property.Value, false);
 							if (s.Default)
 							{
 								state = (BlockState) state.WithPropertyNoResolve(property.Key, property.Value, false);
@@ -214,7 +216,8 @@ namespace Alex
 					//	resourcePack.BlockStates.TryGetValue(entry.Key)
 					if (!replace && RegisteredBlockStates.TryGetValue(id, out IBlockState st))
 					{
-						Log.Warn($"Duplicate blockstate id (Existing: {st.Name}[{st.ToString()}] | New: {entry.Key}[{variantState.ToString()}]) ");
+						Log.Warn(
+							$"Duplicate blockstate id (Existing: {st.Name}[{st.ToString()}] | New: {entry.Key}[{variantState.ToString()}]) ");
 						continue;
 					}
 
@@ -223,12 +226,12 @@ namespace Alex
 						if (cachedBlockModel == null)
 						{
 							//if (reportMissing)
-								Log.Warn($"Missing blockmodel for blockstate {entry.Key}[{variantState.ToString()}]");
+							Log.Warn($"Missing blockmodel for blockstate {entry.Key}[{variantState.ToString()}]");
 
 							cachedBlockModel = UnknownBlockModel;
-                        }
+						}
 
-                        if (variantState.IsMultiPart) multipartBased++;
+						if (variantState.IsMultiPart) multipartBased++;
 
 						string displayName = entry.Key;
 						var block = GetBlockByName(entry.Key);
@@ -239,17 +242,6 @@ namespace Alex
 							displayName = $"(Not implemented) {displayName}";
 
 							block.Name = entry.Key;
-
-							if (s.Default && GenerateClasses)
-							{
-								string className = ToPascalCase(block.Name.Substring(10));
-
-								factoryBuilder.AppendLine(
-									$"\t\t\telse if (blockName == \"{entry.Key.ToLowerInvariant()}\" || blockName == \"{className.ToLowerInvariant()}\") return new {className}();");
-
-								SaveBlock(block, className, false);
-								Log.Info($"Saved un-implemnted block to file ({displayName})!");
-							}
 						}
 						else
 						{
@@ -257,7 +249,8 @@ namespace Alex
 						}
 
 
-						if (block.IsSourceBlock && !(cachedBlockModel is MultiBlockModel) && !(cachedBlockModel is LiquidBlockModel))
+						if (block.IsSourceBlock && !(cachedBlockModel is MultiBlockModel) &&
+						    !(cachedBlockModel is LiquidBlockModel))
 						{
 							if (block.IsWater)
 							{
@@ -279,7 +272,7 @@ namespace Alex
 						variantState.Name = block.Name;
 						variantState.Block = block;
 						variantState.Model = cachedBlockModel;
-						
+
 						block.BlockState = variantState;
 						if (string.IsNullOrWhiteSpace(block.DisplayName) ||
 						    !block.DisplayName.Contains("minet", StringComparison.InvariantCultureIgnoreCase))
@@ -298,127 +291,62 @@ namespace Alex
 						{
 							if (!variantMap.TryAdd(variantState))
 							{
-								Log.Warn($"Could not add variant to variantmapper! ({variantState.ID} - {variantState.Name})");
+								Log.Warn(
+									$"Could not add variant to variantmapper! ({variantState.ID} - {variantState.Name})");
 								continue;
 							}
 						}
 
 						if (!RegisteredBlockStates.TryAdd(id, variantState))
 						{
-                            if (replace)
-                            {
-                                RegisteredBlockStates[id] = variantState;
-                                importCounter++;
-                            }
-                            else
-                            {
-                                Log.Warn(
-                                    $"Failed to add blockstate (variant), key already exists! ({variantState.ID} - {variantState.Name})");
-                            }
-                        }
+							if (replace)
+							{
+								RegisteredBlockStates[id] = variantState;
+								importCounter++;
+							}
+							else
+							{
+								Log.Warn(
+									$"Failed to add blockstate (variant), key already exists! ({variantState.ID} - {variantState.Name})");
+							}
+						}
 						else
 						{
 							importCounter++;
 						}
 					}
-					
+
 					variants.Add(variantState);
 				}
 
-			/*	if (!RegisteredBlockStates.TryAdd(state.ID, state))
+				if (variantMap._default == null)
 				{
-					Log.Warn($"Failed to register default blockstate! {state.Name} - {state.ID}");
+					variantMap._default = state;
 				}
-				*/
-			
-			if (variantMap._default == null)
-			{
-				variantMap._default = state;
-			}
 
-			foreach (var var in variants)
-			{
-				var.VariantMapper = variantMap;
-			}
-			
+				foreach (var var in variants)
+				{
+					var.VariantMapper = variantMap;
+				}
+
 
 				if (!BlockStateByName.TryAdd(state.Name, variantMap))
 				{
-                    if (replace)
-                    {
-                        BlockStateByName[state.Name] = variantMap;
-                    }
-                    else
-                    {
-                        Log.Warn($"Failed to add blockstate, key already exists! ({state.Name})");
-                    }
-                }
-				else
-				{
-					//foreach (var bsVariant in state.Variants.ToArray().Cast<BlockState>())
-					//{
-					//	bsVariant.Variants.AddRange(state.Variants.Where(x => !x.ID.Equals(bsVariant.ID)));
-					//}
+					if (replace)
+					{
+						BlockStateByName[state.Name] = variantMap;
+					}
+					else
+					{
+						Log.Warn($"Failed to add blockstate, key already exists! ({state.Name})");
+					}
 				}
 
 				done++;
 			}
 
-			if (GenerateClasses)
-			{
-				File.WriteAllBytes("generated\\blockFactoryChanges.txt", Encoding.UTF8.GetBytes(factoryBuilder.ToString()));
-			}
 			Log.Info($"Got {multipartBased} multi-part blockstate variants!");
 			return importCounter;
-		}
-
-		private static void SaveBlock(Block block, string className, bool hasMeta)
-		{
-			StringBuilder builder = new StringBuilder();
-			builder.AppendLine("using Alex.Utils;");
-			builder.AppendLine("using Alex.Worlds;");
-			builder.AppendLine();
-			builder.AppendLine("namespace Alex.Blocks");
-			builder.AppendLine("{");
-
-			builder.AppendLine($"\tpublic class {className} : Block");
-			builder.AppendLine("\t{");
-			builder.AppendLine($"\t\tpublic {className}() : base({block.BlockState.ID.ToString()})");
-			builder.AppendLine("\t\t{");
-			builder.AppendLine($"\t\t\tSolid = {block.Solid.ToString().ToLower()};");
-			builder.AppendLine($"\t\t\tTransparent = {block.Transparent.ToString().ToLower()};");
-			builder.AppendLine($"\t\t\tIsReplacible = {block.IsReplacible.ToString().ToLower()};");
-			builder.AppendLine($"\t\t\tIsFullBlock = {block.IsFullBlock.ToString().ToLower()};");
-			builder.AppendLine($"\t\t\tIsFullCube = {block.IsFullCube.ToString().ToLower()};");
-
-			if (block.LightOpacity != 0)
-			{
-				builder.AppendLine($"\t\t\tLightOpacity = {block.LightOpacity};");
-			}
-
-			if (block.Drag > 0)
-			{
-				builder.AppendLine($"\t\t\tDrag = {block.Drag:F}f;");
-			}
-
-			if (block.LightValue > 0)
-			{
-				builder.AppendLine($"\t\t\tLightValue = {block.LightValue};");
-			}
-
-			builder.AppendLine("\t\t}");
-			builder.AppendLine("\t}");
-
-			builder.AppendLine("}");
-
-			if (hasMeta)
-			{
-				File.WriteAllBytes($"generated\\blocks\\withMeta\\{className}.cs", Encoding.UTF8.GetBytes(builder.ToString()));
-			}
-			else
-			{
-				File.WriteAllBytes($"generated\\blocks\\{className}.cs", Encoding.UTF8.GetBytes(builder.ToString()));
-			}
 		}
 
 		public static string ToPascalCase(string original)
@@ -487,7 +415,7 @@ namespace Alex
 						ss.MultiPartHelper = blockStateResource;
 						ss.IsMultiPart = true;
 					}
-					return new CachedResourcePackModel(resources, MultiPartModels.GetModels(state, blockStateResource), null);
+					return new CachedResourcePackModel(resources, MultiPartModels.GetModels(state, blockStateResource));
 				}
 
 				if (blockStateResource?.Variants == null ||
@@ -497,7 +425,7 @@ namespace Alex
 				if (blockStateResource.Variants.Count == 1)
 				{
 					var v = blockStateResource.Variants.FirstOrDefault();
-					return new CachedResourcePackModel(resources, new[] { v.Value.FirstOrDefault() }, v.Value);
+					return new CachedResourcePackModel(resources, new[] { v.Value.FirstOrDefault() });
 				}
 
 				BlockStateVariant blockStateVariant = null;
@@ -541,7 +469,7 @@ namespace Alex
 
 
 				var subVariant = blockStateVariant.FirstOrDefault();
-				return new CachedResourcePackModel(resources, new[] { subVariant }, blockStateVariant);
+				return new CachedResourcePackModel(resources, new[] { subVariant });
 			}
 
 			return null;
@@ -957,7 +885,7 @@ namespace Alex
 						Uvlock = false,
 						Weight = 0
 					}
-				}, null),
+				}),
 			};
 
 			var result = new Block(palleteId)

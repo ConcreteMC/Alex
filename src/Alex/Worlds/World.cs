@@ -334,10 +334,10 @@ namespace Alex.Worlds
 
                 chunk.SetBlock(cx, cy, cz, block);
 
-                ChunkManager.ScheduleChunkUpdate(chunkCoords, ScheduleType.Scheduled | ScheduleType.Lighting, true);
-
-			    UpdateNeighbors(x, y, z);
+                UpdateNeighbors(x, y, z);
 			    CheckForUpdate(chunkCoords, cx, cz);
+			    
+			    ChunkManager.ScheduleChunkUpdate(chunkCoords, ScheduleType.Scheduled | ScheduleType.Lighting, true);
             } 
 	    }
 
@@ -352,12 +352,12 @@ namespace Alex.Worlds
 				var cy = y & 0xff;
 				var cz = z & 0xf;
 
-                chunk.SetBlockState(cx, cy, cz, block);
-
-                ChunkManager.ScheduleChunkUpdate(chunkCoords, ScheduleType.Scheduled | ScheduleType.Lighting, true);
+				chunk.SetBlockState(cx, cy, cz, block);
 
                 UpdateNeighbors(x,y,z);
 				CheckForUpdate(chunkCoords, cx, cz);
+				
+				ChunkManager.ScheduleChunkUpdate(chunkCoords, ScheduleType.Scheduled | ScheduleType.Lighting, true);
             }
 		}
 
@@ -505,28 +505,7 @@ namespace Alex.Worlds
 			ChunkManager.TryGetChunk(new ChunkCoordinates(coords.X >> 4, coords.Z >> 4), out chunk);
 			return new BlockCoordinates(coords.X & 0xf, coords.Y & 0xff, coords.Z & 0xf);
 		}
-
-		public void TickChunk(ChunkColumn chunkColumn)
-		{
-			var chunkCoords = new Vector3(chunkColumn.X >> 4, 0, chunkColumn.Z >> 4);
-
-			for (int x = 0; x < 16; x++)
-			{
-				for (int z = 0; z < 16; z++)
-				{
-					for (int y = chunkColumn.GetHeight(x, z); y > 1; y--)
-					{
-						var block = chunkColumn.GetBlock(x, y, z);
-						if (block.Tick(this, chunkCoords + new Vector3(x, y, z)))
-						{
-
-						}
-					}
-				}
-			}
-		}
-
-		private bool _destroyed = false;
+        private bool _destroyed = false;
 		public void Destroy()
 		{
 			if (_destroyed) return;
