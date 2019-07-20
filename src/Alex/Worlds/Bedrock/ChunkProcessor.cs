@@ -540,7 +540,7 @@ namespace Alex.Worlds.Bedrock
 			} 
 			else if (bid == 77 || bid == 143) //Buttons
 			{
-				switch (meta)
+				switch (meta & ~0x08)
 				{
 					case 0:
 					case 4:
@@ -559,6 +559,8 @@ namespace Alex.Worlds.Bedrock
 						state = state.WithProperty(facing, "south");
 						break;
 				}
+				
+				state = state.WithProperty("powered", (meta & 0x08) == 0x08 ? "true" : "false");
 			}
 			else if (bid == 69 || state.Name.Contains("lever")) //Lever
 			{
@@ -592,6 +594,8 @@ namespace Alex.Worlds.Bedrock
 						state = state.WithProperty(facing, "north");
 						break;
 				}
+
+				state = state.WithProperty("powered", (meta & 0x08) == 0x08 ? "true" : "false");
 			}
 			else if (bid == 65) //Ladder
 			{

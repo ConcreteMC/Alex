@@ -261,8 +261,8 @@ namespace Alex.Graphics.Models.Blocks
 							var r = element.Rotation;
 							var angle = (float) (r.Angle * (Math.PI / 180f));
 							
-						//	angle = r.Axis == Axis.Z ? -angle : angle;
-						//	angle = r.Axis == Axis.Y ? -angle : angle;
+							angle = r.Axis == Axis.Z ? -angle : angle;
+							//angle = r.Axis == Axis.Y ? -angle : angle;
 							
 							var origin = r.Origin / 16f;
 							
