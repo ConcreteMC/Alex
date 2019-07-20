@@ -4,6 +4,7 @@ using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.Graphics.Models.Entity;
 using Alex.ResourcePackLib.Json.Models.Entities;
+using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -55,7 +56,8 @@ namespace Alex.Entities
 
 			HideNameTag = false;
 			IsAlwaysShowName = true;
-
+			ShowItemInHand = true;
+			
 			IsInWater = false;
 			NoAi = true;
 			//HealthManager.IsOnFire = false;
@@ -63,6 +65,8 @@ namespace Alex.Entities
 			PositionOffset = 1.62f;
 
 			UpdateSkin(skinTexture, skinSlim);
+			
+			//Inventory = new Inventory(46);
 		}
 
 		public void UpdateGamemode(Gamemode gamemode)
@@ -72,6 +76,9 @@ namespace Alex.Entities
 
 		private void UpdateModelParts()
 		{
+			if (ModelRenderer == null)
+				return;
+			
 			ModelRenderer.GetBone("body", out _body);
 			ModelRenderer.GetBone("rightArm", out _rightArmModel);
 			ModelRenderer.GetBone("leftArm", out _leftArmModel);

@@ -1,4 +1,5 @@
 ﻿using Alex.API.Items;
+using Alex.Graphics.Models.Items;
 using fNbt;
 using MiNET.Items;
 using ItemType = Alex.API.Utils.ItemType;
@@ -16,5 +17,6 @@ namespace Alex.Items
         public ItemMaterial Material { get; set; } = ItemMaterial.None;
 		public ItemType ItemType { get; set; }
 		public NbtCompound Nbt { get; set; }
+		public ItemModelRenderer Renderer { get; set; }
     }
 }

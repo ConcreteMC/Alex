@@ -43,14 +43,16 @@ namespace Alex.Entities
 		    Controller = new PlayerController(graphics, world, alex.InputManager, this, playerIndex); 
 		    NoAi = false;
 
-			Inventory = new Inventory(46);
-			Inventory.SelectedHotbarSlotChanged += SelectedHotbarSlotChanged;
+			//Inventory = new Inventory(46);
+			//Inventory.SelectedHotbarSlotChanged += SelectedHotbarSlotChanged;
+			//base.Inventory.IsPeInventory = true;
 			MovementSpeed = 4.317f;
 			FlyingSpeed = 10.89f;
 
 			SnapHeadYawRotationOnMovement = false;
 
 			RenderEntity = true;
+			
 		}
 
 	    private void SelectedHotbarSlotChanged(object sender, SelectedSlotChangedEventArgs e)

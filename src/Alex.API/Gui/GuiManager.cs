@@ -102,11 +102,17 @@ namespace Alex.API.Gui
             if(ActiveDialog != null) RemoveScreen(ActiveDialog);
             ActiveDialog = dialog;
             AddScreen(ActiveDialog);
+
+            Game.IsMouseVisible = true;
         }
 
         public void HideDialog(GuiDialogBase dialog)
         {
-            if(ActiveDialog == dialog) RemoveScreen(ActiveDialog);
+            if (ActiveDialog == dialog)
+            {
+                Game.IsMouseVisible = false;
+                RemoveScreen(ActiveDialog);
+            }
         }
 
         public void HideDialog<TGuiDialog>() where TGuiDialog : GuiDialogBase

@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using Alex.API.Utils;
+using Alex.Graphics.Models.Items;
 using Alex.Items;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json.Models.Items;
@@ -20,6 +22,8 @@ namespace Alex
 		private static McResourcePack ResourcePack { get; set; }
 		private static IReadOnlyDictionary<string, Item> Items { get; set; }
 		private static SecondItemEntry[] SecItemEntries { get; set; }
+		
+		private static ConcurrentDictionary<string, ItemModelRenderer> ItemRenderers { get; } = new ConcurrentDictionary<string, ItemModelRenderer>();
 	    public static void Init(ResourceManager resources, McResourcePack resourcePack, IProgressReceiver progressReceiver = null)
 	    {
 		    ResourceManager = resources;
@@ -35,6 +39,8 @@ namespace Alex
 
 		    var ii = resources.Registries.Items.Entries;
 
+		    LoadModels();
+		    
             Dictionary<string, Item> items = new Dictionary<string, Item>();
 		    for(int i = 0; i < ii.Count; i++)
 		    {
@@ -76,10 +82,73 @@ namespace Alex
 				    item.DisplayName = data.displayName;
 			    }
 
+			    
+			    foreach (var it in ResourcePack.ItemModels)
+			    {
+				    if (it.Key.Contains(entry.Key.Replace("minecraft:", ""),
+					    StringComparison.InvariantCultureIgnoreCase))
+				    {
+					    //Log.Info($"Model found: {entry.Key} = {it.Key}");
+					    ItemModelRenderer renderer;
+					    if (ItemRenderers.TryGetValue(it.Key, out renderer))
+					    {
+
+					    }
+					    else if (ItemRenderers.TryGetValue(entry.Key, out renderer))
+
+					    {
+
+					    }
+
+					    if (renderer != null)
+					    {
+						    Log.Info($"Found renderer for {entry.Key}, textures: {it.Value.Textures.Count}");
+						    item.Renderer = renderer;
+						    break;
+					    }
+				    }
+			    }
+
+			   /* if (ResourcePack.ItemModels.TryGetValue(entry.Key.Replace("minecraft:", "minecraft:item/"), out ResourcePackItem iii))
+			    {
+				    ItemModelRenderer renderer;
+				    if (ItemRenderers.TryGetValue(entry.Key, out renderer))
+				    {
+
+				    }
+				    else if (ItemRenderers.TryGetValue(entry.Key, out renderer))
+
+				    {
+
+				    }
+
+				    if (renderer != null)
+				    {
+					    Log.Info($"Found renderer for {entry.Key}, textures: {iii.Textures.Count}");
+				    }
+
+				    item.Renderer = renderer;
+			    }*/
+
+			 //   Log.Info($"Loaded item: {entry.Key} (Renderer: {item.Renderer != null})");
 			    items.TryAdd(entry.Key, item);
 		    }
 
 			Items = new ReadOnlyDictionary<string, Item>(items);
+	    }
+
+	    private static void LoadModels()
+	    {
+		    foreach (var model in ResourcePack.ItemModels)
+		    {
+			    if (model.Value == null || model.Value.Textures == null || model.Value.Textures.Count == 0)
+				    continue;
+			    
+			    var renderer = ItemRenderers.AddOrUpdate(model.Key,
+				    (a) => { return new ItemModelRenderer(model.Value, ResourcePack); },
+				    (s, renderer) => { return new ItemModelRenderer(model.Value, ResourcePack); });
+			    
+		    }
 	    }
 
 	    public static bool ResolveItemTexture(string itemName, out Texture2D texture)

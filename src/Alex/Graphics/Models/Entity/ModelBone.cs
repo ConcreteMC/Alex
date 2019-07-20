@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using Alex.API.Entities;
 using Alex.API.Graphics;
 using Alex.API.Utils;
+using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -28,10 +31,14 @@ namespace Alex.Graphics.Models.Entity
 				get { return _position; }
 				set { _position = value; }
 			}
+			
+			private List<IAttachable> Attachables { get; } = new List<IAttachable>();
 
-			public ModelBone(ModelBoneCube[] parts)
+			private EntityModelBone OriginalBone { get; }
+			public ModelBone(ModelBoneCube[] parts, EntityModelBone originalBone)
 			{
 				Parts = parts;
+				OriginalBone = originalBone;
 			}
 
 			private bool _isDirty = true;
@@ -89,6 +96,11 @@ namespace Alex.Graphics.Models.Entity
 					args.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, idx, part.Indexes.Length / 3);
 					idx += part.Indexes.Length;
 				}
+
+				foreach (var attach in Attachables.ToArray())
+				{
+					attach.Render(args);
+				}
 			}
 
 			public void Update(IUpdateArgs args, PlayerLocation position, Vector3 diffuseColor)
@@ -105,6 +117,21 @@ namespace Alex.Graphics.Models.Entity
 
 					_isDirty = true;
 					part.Update(args);
+				}
+
+				foreach (var attachable in Attachables.ToArray())
+				{
+					var rot = _rotation + OriginalBone.Rotation;
+
+					Matrix rotMatrix = (Matrix.CreateTranslation(-OriginalBone.Pivot) 
+					                   * Matrix.CreateFromYawPitchRoll(
+						                   MathUtils.ToRadians(rot.Y), 
+						                   MathUtils.ToRadians(rot.X), 
+						                   MathUtils.ToRadians(rot.Z)
+					                   )  
+					                   * Matrix.CreateTranslation(OriginalBone.Pivot));
+
+					attachable.Update(Vector3.Transform(position.ToVector3(), rotMatrix));
 				}
 
 				if (_isDirty)
@@ -131,6 +158,18 @@ namespace Alex.Graphics.Models.Entity
 				}
 			}
 
+			public void Attach(IAttachable attachable)
+			{
+				if (!Attachables.Contains(attachable))
+					Attachables.Add(attachable);
+			}
+
+			public void Detach(IAttachable attachable)
+			{
+				if (Attachables.Contains(attachable))
+					Attachables.Remove(attachable);
+			}
+			
 			public void Dispose()
 			{
 				Buffer?.Dispose();

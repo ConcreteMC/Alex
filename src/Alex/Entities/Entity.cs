@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Linq;
 using Alex.API.Entities;
 using Alex.API.Graphics;
 using Alex.API.Graphics.Typography;
 using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.Graphics.Models.Entity;
+using Alex.Graphics.Models.Items;
 using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
@@ -62,6 +64,7 @@ namespace Alex.Entities
 
 		public INetworkProvider Network { get; set; }
 		public Inventory Inventory { get; protected set; }
+		private ItemModelRenderer ItemRenderer { get; set; } = null;
 		public Entity(int entityTypeId, World level, INetworkProvider network)
 		{
 			Network = network;
@@ -70,8 +73,107 @@ namespace Alex.Entities
 			Level = level;
 			EntityTypeId = entityTypeId;
 			KnownPosition = new PlayerLocation();
-			Inventory = new Inventory(0);
-		//	HealthManager = new HealthManager(this);
+			Inventory = new Inventory(46);
+			//	HealthManager = new HealthManager(this);
+			
+			Inventory.SlotChanged += OnInventorySlotChanged;
+		}
+
+		private void OnInventorySlotChanged(object sender, SlotChangedEventArgs e)
+		{
+			var inHand = Inventory.MainHand;
+			Log.Info($"Inventory slot changed.");
+			
+			if (inHand == null && ItemRenderer != null)
+			{
+				ItemRenderer = null;
+				return;
+			}
+
+			if (inHand != null)
+			{
+				if (!string.IsNullOrWhiteSpace(inHand.Name))
+				{
+					/*var itemModel = Alex.Instance.Resources.ResourcePack.ItemModels.FirstOrDefault(x =>
+						x.Key.Contains(inHand.Name, StringComparison.InvariantCultureIgnoreCase));
+					
+					ItemRenderer = new ItemModelRenderer(itemModel.Value, Alex.Instance.Resources.ResourcePack);*/
+
+					var renderer = inHand.Renderer;
+					if (renderer == null)
+					{
+						Log.Warn($"No renderer for item: {inHand.Name}");
+						return;
+					}
+					
+					var itemModel = renderer.Model;
+
+					ItemRenderer = renderer;
+					
+					Log.Info($"Setup item-renderer for {itemModel.Name}");
+					
+					if (this is Player)
+					{
+						Log.Info($"This is a player");
+						
+						/*if (itemModel.Display.TryGetValue("firstperson_righthand", out var value))
+						{
+							Log.Info($"First Person item model rendering ready.");
+							
+							ItemRenderer.World = Matrix.CreateScale(value.Scale) *
+							                     Matrix.CreateRotationX(value.Rotation.X) *
+							                     Matrix.CreateRotationY(value.Rotation.Y) *
+							                     Matrix.CreateRotationZ(value.Rotation.Z) *
+							                     Matrix.CreateTranslation(value.Translation);
+						}*/
+						if (itemModel.Display.TryGetValue("thirdperson_righthand", out var value))
+						{
+							if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
+							{
+								Log.Info($"Third Person item model rendering ready.");
+
+								ItemRenderer.World = 
+								                     Matrix.CreateRotationX(value.Rotation.X) *
+								                     Matrix.CreateRotationY(value.Rotation.Y) *
+								                     Matrix.CreateRotationZ(value.Rotation.Z) *
+								                     Matrix.CreateScale(value.Scale) * Matrix.CreateTranslation(value.Translation);
+
+								bone.Attach(ItemRenderer);
+							}
+							else
+							{
+								Log.Warn($"Bone not found: rightItem");
+							}
+						}
+						else
+						{
+							Log.Warn($"Failed to get item model display element!");
+						}
+					}
+					else
+					{
+						if (itemModel.Display.TryGetValue("thirdperson_righthand", out var value))
+						{
+							if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
+							{
+								Log.Info($"Third Person item model rendering ready.");
+								
+								ItemRenderer.World = Matrix.CreateScale(value.Scale) *
+								                     Matrix.CreateRotationX(value.Rotation.X) *
+								                     Matrix.CreateRotationY(value.Rotation.Y) *
+								                     Matrix.CreateRotationZ(value.Rotation.Z) *
+								                     Matrix.CreateTranslation(value.Translation);
+								
+								bone.Attach(ItemRenderer);
+							}
+						}
+						else
+						{
+							Log.Warn($"Failed to get item model display element!");
+						}
+					}
+				}
+			}
 		}
 
 		public bool IsSneaking { get; set; }
@@ -110,17 +212,34 @@ namespace Alex.Entities
 		public bool IsStackable { get; set; }
 
 		public bool RenderEntity { get; set; } = true;
+		public bool ShowItemInHand { get; set; } = false;
 		public void Render(IRenderArgs renderArgs)
 		{
+			if (ShowItemInHand)
+			{
+				ItemRenderer?.Render(renderArgs.GraphicsDevice);
+			}
+
 			if (RenderEntity)
+			{
 				ModelRenderer.Render(renderArgs, KnownPosition);
+			}
 		}
 
 		public virtual void Update(IUpdateArgs args)
 		{
 			var now = DateTime.UtcNow;
 
-			ModelRenderer.Update(args, KnownPosition);
+			if (ShowItemInHand)
+			{
+				//ItemRenderer?.World = 
+				ItemRenderer?.Update(args.GraphicsDevice, args.Camera);
+			}
+			
+			if (RenderEntity)
+			{
+				ModelRenderer.Update(args, KnownPosition);
+			}
 
 			if (now.Subtract(LastUpdatedTime).TotalMilliseconds >= 50)
 			{
