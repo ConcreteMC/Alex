@@ -635,7 +635,7 @@ namespace Alex.Worlds.Bedrock
 			}
 			else if (bid == 64 || bid == 71 || bid == 193 || bid == 194 || bid == 195 || bid == 196 || bid == 197) //Doors
 			{
-				var isUpper = (meta & (1 << 0x08)) != 0;
+				var isUpper = (meta & 0x08) == 0x08;
 				
 				if (isUpper)
 				{
@@ -647,7 +647,7 @@ namespace Alex.Worlds.Bedrock
 					bool isOpen = (meta & 0x04) == 0x04;
 					state = state.WithProperty("half", "lower");
 					state = state.WithProperty("open", isOpen ? "true" : "false");
-					state = FixFacing(state, meta & 0x03);
+					state = FixFacing(state, (meta & 0x3));
 				}
 			}
 			return state;

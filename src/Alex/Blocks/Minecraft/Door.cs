@@ -98,6 +98,9 @@ namespace Alex.Blocks.Minecraft
 
 		public override void BlockUpdate(IWorld world, BlockCoordinates position, BlockCoordinates updatedBlock)
 		{
+			if (updatedBlock != position - new BlockCoordinates(0, 1, 0))
+				return;
+			
 			var newValue = Update(world, BlockState, position, updatedBlock);
 			if (newValue != BlockState)
 			{
