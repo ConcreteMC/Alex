@@ -6,6 +6,7 @@
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <Platforms>AnyCPU;x64</Platforms>
     <Configurations>Debug;Release;Appveyor</Configurations>
+    <NoBuild>true</NoBuild>
   </PropertyGroup>
 
   <PropertyGroup>
