@@ -71,6 +71,7 @@ namespace Alex.Graphics.Models.Entity
 			//	if (bone.NeverRender) continue;
 				bool partOfHead = headBones.Contains(bone);
 
+				//bone.Pivot = new Vector3(-bone.Pivot.X, bone.Pivot.Y, bone.Pivot.Z);
 				List<ModelBoneCube> c = new List<ModelBoneCube>();
 				ModelBone modelBone;
 				

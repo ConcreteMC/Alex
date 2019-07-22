@@ -126,17 +126,15 @@ namespace Alex.Entities
 							                     Matrix.CreateRotationZ(value.Rotation.Z) *
 							                     Matrix.CreateTranslation(value.Translation);
 						}*/
-						if (itemModel.Display.TryGetValue("thirdperson_righthand", out var value))
+						if (itemModel.Display.TryGetValue("firstperson_righthand", out var value))
 						{
+							ItemRenderer.Rotation = value.Rotation;
+							ItemRenderer.Translation = value.Translation;
+							ItemRenderer.Scale = value.Scale;
+							
 							if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
 							{
 								Log.Info($"Third Person item model rendering ready.");
-
-								ItemRenderer.World = 
-								                     Matrix.CreateRotationX(value.Rotation.X) *
-								                     Matrix.CreateRotationY(value.Rotation.Y) *
-								                     Matrix.CreateRotationZ(value.Rotation.Z) *
-								                     Matrix.CreateScale(value.Scale) * Matrix.CreateTranslation(value.Translation);
 
 								bone.Attach(ItemRenderer);
 							}
@@ -154,16 +152,14 @@ namespace Alex.Entities
 					{
 						if (itemModel.Display.TryGetValue("thirdperson_righthand", out var value))
 						{
+							ItemRenderer.Rotation = value.Rotation;
+							ItemRenderer.Translation = value.Translation;
+							ItemRenderer.Scale = value.Scale;
+							
 							if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
 							{
 								Log.Info($"Third Person item model rendering ready.");
-								
-								ItemRenderer.World = Matrix.CreateScale(value.Scale) *
-								                     Matrix.CreateRotationX(value.Rotation.X) *
-								                     Matrix.CreateRotationY(value.Rotation.Y) *
-								                     Matrix.CreateRotationZ(value.Rotation.Z) *
-								                     Matrix.CreateTranslation(value.Translation);
-								
+
 								bone.Attach(ItemRenderer);
 							}
 						}
@@ -230,15 +226,15 @@ namespace Alex.Entities
 		{
 			var now = DateTime.UtcNow;
 
+			if (RenderEntity || ShowItemInHand)
+			{
+				ModelRenderer.Update(args, KnownPosition);
+			}
+			
 			if (ShowItemInHand)
 			{
 				//ItemRenderer?.World = 
 				ItemRenderer?.Update(args.GraphicsDevice, args.Camera);
-			}
-			
-			if (RenderEntity)
-			{
-				ModelRenderer.Update(args, KnownPosition);
 			}
 
 			if (now.Subtract(LastUpdatedTime).TotalMilliseconds >= 50)

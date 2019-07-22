@@ -283,7 +283,7 @@ namespace Alex.GameStates
 				
 				//entity.Inventory[entity.Inventory.SelectedSlot] =
 
-				if (ItemFactory.TryGetItem("minecraft:bucket", out var sword))
+				if (ItemFactory.TryGetItem("minecraft:diamond_sword", out var sword))
 				{
 					entity.Inventory[entity.Inventory.SelectedSlot] = sword;
 					entity.Inventory.MainHand = sword;

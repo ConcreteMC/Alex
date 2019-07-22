@@ -7,6 +7,7 @@ using Alex.API.Graphics;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Models.Items;
+using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Color = Microsoft.Xna.Framework.Color;
@@ -20,7 +21,10 @@ namespace Alex.Graphics.Models.Items
 		public short[] Indexes { get; set; } = null;
 
 		private BasicEffect Effect { get; set; } = null;
-		public Matrix World { get; set; } = Matrix.Identity;
+		public Vector3 Offset { get; set; } = Vector3.Zero;
+		public Vector3 Rotation { get; set; } = Vector3.Zero;
+		public Vector3 Translation { get; set; }= Vector3.Zero;
+		public Vector3 Scale { get; set; }= Vector3.Zero;
 		public ItemModelRenderer(ResourcePackItem model, McResourcePack resourcePack)
 		{
 			Model = model;
@@ -29,8 +33,9 @@ namespace Alex.Graphics.Models.Items
 		
 		public void Update(Vector3 attachmentPoint)
 		{
-			Effect.World = World *
-			               Microsoft.Xna.Framework.Matrix.CreateTranslation(attachmentPoint);
+			Offset = attachmentPoint;
+			//Effect.World = World *
+			//               Microsoft.Xna.Framework.Matrix.CreateTranslation(attachmentPoint);
 		}
 
 		public void Render(IRenderArgs args)
@@ -48,7 +53,10 @@ namespace Alex.Graphics.Models.Items
 
 			Effect.Projection = camera.ProjectionMatrix;
 			Effect.View = camera.ViewMatrix;
-			//Effect.World = World * Matrix.CreateTranslation(camera.Position);
+			Effect.World = Matrix.CreateRotationX(MathUtils.ToRadians(Rotation.X)) *
+				Matrix.CreateRotationY(MathUtils.ToRadians(Rotation.Y)) *
+				Matrix.CreateRotationZ(MathUtils.ToRadians(Rotation.Z)) *
+				Matrix.CreateScale(Scale) * Matrix.CreateTranslation(camera.Position + ((Offset + Translation) * (1/16f)));
 		}
 		
 		public void Render(GraphicsDevice device)

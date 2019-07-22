@@ -43,6 +43,8 @@ namespace Alex.Graphics.Models.Entity
 
 			private bool _isDirty = true;
 
+			private Matrix RotationMatrix = Matrix.Identity;
+			
 			public void Render(IRenderArgs args, PlayerLocation position)
 			{
 				if (Buffer == null)
@@ -119,19 +121,13 @@ namespace Alex.Graphics.Models.Entity
 					part.Update(args);
 				}
 
+
+				var yaw = MathUtils.ToRadians(180f - position.Yaw);
+				var pitch = MathUtils.ToRadians(position.Pitch);
+
 				foreach (var attachable in Attachables.ToArray())
 				{
-					var rot = _rotation + OriginalBone.Rotation;
-
-					Matrix rotMatrix = (Matrix.CreateTranslation(-OriginalBone.Pivot) 
-					                   * Matrix.CreateFromYawPitchRoll(
-						                   MathUtils.ToRadians(rot.Y), 
-						                   MathUtils.ToRadians(rot.X), 
-						                   MathUtils.ToRadians(rot.Z)
-					                   )  
-					                   * Matrix.CreateTranslation(OriginalBone.Pivot));
-
-					attachable.Update(Vector3.Transform(position.ToVector3(), rotMatrix));
+					attachable.Update(OriginalBone.Pivot);
 				}
 
 				if (_isDirty)
