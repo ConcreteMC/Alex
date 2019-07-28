@@ -6,6 +6,7 @@ using Alex.API.Gui.Elements;
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Alex.Entities;
+using Alex.Graphics.Models.Entity;
 using Alex.Gui.Elements;
 using Alex.Gui.Elements.Inventory;
 using Alex.Utils;
@@ -62,13 +63,31 @@ namespace Alex.Gui.Dialogs.Containers
                 Anchor = Alignment.TopCenter,
                 Margin = new Thickness(0, 0, 0, 200)
             });
-            
-            /*ContentContainer.AddChild(_playerEntityModelView = new GuiEntityModelView(player)
+
+            var texture = player.ModelRenderer.Texture;
+            if (texture == null)
             {
-                Margin = new Thickness(26, 8, 0, 0),
-                Width = 49,
-                Height = 70
-            });*/
+                
+            }
+            
+            var modelRenderer = player.ModelRenderer;
+            var mob = new PlayerMob(player.Name, player.Level, player.Network,
+                player.ModelRenderer.Texture, true)
+            {
+                ModelRenderer = modelRenderer,
+            };
+
+            ContentContainer.AddChild(_playerEntityModelView =
+                new GuiEntityModelView(mob)
+                {
+                    Margin = new Thickness(7, 25),
+                    Width = 49,
+                    Height = 70,
+                    Anchor = Alignment.TopLeft,
+                    AutoSizeMode = AutoSizeMode.None,
+                    Background = null,
+                    BackgroundOverlay =  null
+                });
 
             int lx = 7, ly = 83;
 
@@ -260,6 +279,7 @@ namespace Alex.Gui.Dialogs.Containers
             }
         }
         
+        private readonly float _playerViewDepth = -512.0f;
         protected override void OnUpdate(GameTime gameTime)
         {
             base.OnUpdate(gameTime);
@@ -270,6 +290,29 @@ namespace Alex.Gui.Dialogs.Containers
                 TextOverlay.RenderPosition = renderPos.Value;
                 
                 Marqueue(gameTime);
+            }
+            
+            var mousePos = Alex.Instance.InputManager.CursorInputListener.GetCursorPosition();
+
+            mousePos = Vector2.Transform(mousePos, Alex.Instance.GuiManager.ScaledResolution.InverseTransformMatrix);
+            var playerPos = _playerEntityModelView.RenderBounds.Center.ToVector2();
+
+            var mouseDelta = (new Vector3(playerPos.X, playerPos.Y, _playerViewDepth) - new Vector3(mousePos.X, mousePos.Y, 0.0f));
+            mouseDelta.Normalize();
+
+            var headYaw = (float)mouseDelta.GetYaw();
+            var pitch = (float)mouseDelta.GetPitch();
+            var yaw = (float)headYaw;
+
+            _playerEntityModelView.SetEntityRotation(-yaw, pitch, -headYaw);
+
+            if (Inventory != null)
+            {
+                _playerEntityModelView.Entity.ShowItemInHand = true;
+                
+                _playerEntityModelView.Entity.Inventory[Inventory.SelectedSlot] = Inventory[Inventory.SelectedSlot];
+                _playerEntityModelView.Entity.Inventory.MainHand = Inventory.MainHand;
+                _playerEntityModelView.Entity.Inventory.SelectedSlot = Inventory.SelectedSlot;
             }
         }
 
