@@ -28,23 +28,38 @@ namespace Alex.ResourcePackLib.Json.Converters
 			if (obj.Type == JTokenType.Array)
 			{
 				var arr = (JArray)obj;
-				if (arr.Count == 3 && arr.All(token => token.Type == JTokenType.Integer))
+				if (arr.Count == 3)
 				{
-					return new Vector3()
+					var v3 = new Vector3();
+
+					if (arr[0].Type == JTokenType.Integer)
 					{
-						X = arr[0].Value<int>(),
-						Y = arr[1].Value<int>(),
-						Z = arr[2].Value<int>()
-					};
-				}
-				else if(arr.Count == 3 && arr.All(token => token.Type == JTokenType.Float))
-				{
-					return new Vector3()
+						v3.X = arr[0].Value<int>();
+					}
+					else if (arr[0].Type == JTokenType.Float)
 					{
-						X = arr[0].Value<float>(),
-						Y = arr[1].Value<float>(),
-						Z = arr[2].Value<float>()
-					};
+						v3.X = arr[0].Value<float>();
+					}
+					
+					if (arr[1].Type == JTokenType.Integer)
+					{
+						v3.Y = arr[1].Value<int>();
+					}
+					else if (arr[1].Type == JTokenType.Float)
+					{
+						v3.Y = arr[1].Value<float>();
+					}
+
+					if (arr[2].Type == JTokenType.Integer)
+					{
+						v3.Z = arr[2].Value<int>();
+					}
+					else if (arr[2].Type == JTokenType.Float)
+					{
+						v3.Z = arr[2].Value<float>();
+					}
+
+					return v3;
 				}
 			}
 
@@ -77,21 +92,29 @@ namespace Alex.ResourcePackLib.Json.Converters
 			if (obj.Type == JTokenType.Array)
 			{
 				var arr = (JArray)obj;
-				if (arr.Count == 2 && arr.All(token => token.Type == JTokenType.Integer))
+				if (arr.Count == 2)
 				{
-					return new Vector2()
+					var v3 = new Vector2();
+
+					if (arr[0].Type == JTokenType.Integer)
 					{
-						X = arr[0].Value<int>(),
-						Y = arr[1].Value<int>()
-					};
-				}
-				else if (arr.Count == 2 && arr.All(token => token.Type == JTokenType.Float))
-				{
-					return new Vector2()
+						v3.X = arr[0].Value<int>();
+					}
+					else if (arr[0].Type == JTokenType.Float)
 					{
-						X = arr[0].Value<float>(),
-						Y = arr[1].Value<float>()
-					};
+						v3.X = arr[0].Value<float>();
+					}
+					
+					if (arr[1].Type == JTokenType.Integer)
+					{
+						v3.Y = arr[1].Value<int>();
+					}
+					else if (arr[1].Type == JTokenType.Float)
+					{
+						v3.Y = arr[1].Value<float>();
+					}
+
+					return v3;
 				}
 			}
 
@@ -102,5 +125,5 @@ namespace Alex.ResourcePackLib.Json.Converters
 		{
 			return typeof(Vector2).IsAssignableFrom(objectType);
 		}
-	}
+}
 }

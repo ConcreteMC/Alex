@@ -159,6 +159,11 @@ namespace Alex
 				{
 					nextIsWorkDir = true;
 				}
+
+				if (arg == "--debug")
+				{
+					launchSettings.ModelDebugging = true;
+				}
 			}
 
 			return launchSettings;
@@ -177,7 +182,8 @@ namespace Alex
 		public bool ShowConsole = false;
 		public string WorkDir;
 		public bool ConnectToBedrock = false;
-
+		public bool ModelDebugging = false;
+		
 		public LaunchSettings()
 		{
 			var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create);
