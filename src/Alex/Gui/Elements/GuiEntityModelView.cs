@@ -39,7 +39,7 @@ namespace Alex.Gui.Elements
             }
         }
 
-        private GuiEntityModelViewCamera Camera { get; }
+        public GuiEntityModelViewCamera Camera { get; }
         private bool _canRender;
         
         public GuiEntityModelView(Entity entity)
@@ -221,7 +221,7 @@ namespace Alex.Gui.Elements
             }
         }
         
-        class GuiEntityModelViewCamera : Camera
+        public class GuiEntityModelViewCamera : Camera
         {
             private readonly GuiEntityModelView _modelView;
 
@@ -250,7 +250,7 @@ namespace Alex.Gui.Elements
 
                 Direction = Vector3.Transform(Vector3.Forward, rotationMatrix);
 
-                ViewMatrix = Matrix.CreateLookAt(Target + lookAtOffset, Target + (Vector3.Up * 1.8f), Vector3.Up);
+                ViewMatrix = Matrix.CreateLookAt(Target + lookAtOffset, Target + (Vector3.Up * Player.EyeLevel), Vector3.Up);
             }
 
             public override void UpdateProjectionMatrix()
