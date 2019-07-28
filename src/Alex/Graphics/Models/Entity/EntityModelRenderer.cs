@@ -128,6 +128,7 @@ namespace Alex.Graphics.Models.Entity
 				}
 
 				modelBone = new ModelBone(c.ToArray(), bone);
+				modelBone.UpdateRotationMatrix = !bone.NeverRender;
 					if (!modelBones.TryAdd(bone.Name, modelBone))
 					{
 						Log.Warn($"Failed to add bone! {Model.Name}:{bone.Name}");
@@ -178,6 +179,17 @@ namespace Alex.Graphics.Models.Entity
 			foreach (var bone in Bones)
 			{
 				bone.Value.Update(args, position, DiffuseColor);
+			}
+
+			foreach (var bone in Bones.Where(x => !string.IsNullOrWhiteSpace(x.Value.Parent)))
+			{
+				var parent = Bones.FirstOrDefault(x =>
+					x.Key.Equals(bone.Value.Parent, StringComparison.InvariantCultureIgnoreCase));
+
+				if (parent.Value != null)
+				{
+					bone.Value.RotationMatrix = parent.Value.RotationMatrix;
+				}
 			}
 		}
 

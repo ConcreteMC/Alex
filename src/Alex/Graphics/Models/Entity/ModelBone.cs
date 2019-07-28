@@ -35,6 +35,7 @@ namespace Alex.Graphics.Models.Entity
 			private List<IAttachable> Attachables { get; } = new List<IAttachable>();
 
 			private EntityModelBone OriginalBone { get; }
+			public string Parent => OriginalBone.Parent;
 			public ModelBone(ModelBoneCube[] parts, EntityModelBone originalBone)
 			{
 				Parts = parts;
@@ -43,8 +44,8 @@ namespace Alex.Graphics.Models.Entity
 
 			private bool _isDirty = true;
 
-			private Matrix RotationMatrix = Matrix.Identity;
-			
+			public Matrix RotationMatrix = Matrix.Identity;
+			public bool UpdateRotationMatrix = true;
 			public void Render(IRenderArgs args, PlayerLocation position)
 			{
 				if (Buffer == null)
@@ -82,9 +83,15 @@ namespace Alex.Graphics.Models.Entity
 						Matrix.CreateFromYawPitchRoll(headYaw, pitch, 0f) *
 					                 Matrix.CreateTranslation(part.Pivot);
 					
-					effect.World = Matrix.CreateTranslation(_position) * (rotMatrix2 *
-					               rotMatrix 
-					              ) * (Matrix.CreateScale(1f / 16f) * Matrix.CreateTranslation(position));
+					var rotateMatrix = (rotMatrix2 *
+					                  rotMatrix);
+
+					if (UpdateRotationMatrix)
+					{
+						RotationMatrix = rotateMatrix;
+					}
+					
+					effect.World = rotateMatrix * (Matrix.CreateScale(1f / 16f) * Matrix.CreateTranslation(position));
 
 					//Effect.World = world * (Matrix.CreateScale(1f / 16f) * Matrix.CreateTranslation(position));
 					effect.View = args.Camera.ViewMatrix;
@@ -121,13 +128,9 @@ namespace Alex.Graphics.Models.Entity
 					part.Update(args);
 				}
 
-
-				var yaw = MathUtils.ToRadians(180f - position.Yaw);
-				var pitch = MathUtils.ToRadians(position.Pitch);
-
 				foreach (var attachable in Attachables.ToArray())
 				{
-					attachable.Update(OriginalBone.Pivot);
+					attachable.Update(Vector3.Transform(OriginalBone.Pivot, RotationMatrix),  position.Yaw);
 				}
 
 				if (_isDirty)

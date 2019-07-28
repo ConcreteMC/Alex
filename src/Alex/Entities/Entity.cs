@@ -110,22 +110,8 @@ namespace Alex.Entities
 
 					ItemRenderer = renderer;
 					
-					Log.Info($"Setup item-renderer for {itemModel.Name}");
-					
 					if (this is Player)
 					{
-						Log.Info($"This is a player");
-						
-						/*if (itemModel.Display.TryGetValue("firstperson_righthand", out var value))
-						{
-							Log.Info($"First Person item model rendering ready.");
-							
-							ItemRenderer.World = Matrix.CreateScale(value.Scale) *
-							                     Matrix.CreateRotationX(value.Rotation.X) *
-							                     Matrix.CreateRotationY(value.Rotation.Y) *
-							                     Matrix.CreateRotationZ(value.Rotation.Z) *
-							                     Matrix.CreateTranslation(value.Translation);
-						}*/
 						if (itemModel.Display.TryGetValue("firstperson_righthand", out var value))
 						{
 							ItemRenderer.Rotation = value.Rotation;
@@ -134,7 +120,7 @@ namespace Alex.Entities
 							
 							if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
 							{
-								Log.Info($"Third Person item model rendering ready.");
+								Log.Info($"First Person item model rendering ready.");
 
 								bone.Attach(ItemRenderer);
 							}

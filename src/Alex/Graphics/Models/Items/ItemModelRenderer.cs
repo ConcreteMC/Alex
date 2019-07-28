@@ -30,9 +30,11 @@ namespace Alex.Graphics.Models.Items
 			Model = model;
 			Cache(resourcePack);
 		}
-		
-		public void Update(Vector3 attachmentPoint)
+
+		private float Yaw { get; set; } = 0;
+		public void Update(Vector3 attachmentPoint, float positionYaw)
 		{
+			Yaw = positionYaw;
 			Offset = attachmentPoint;
 			//Effect.World = World *
 			//               Microsoft.Xna.Framework.Matrix.CreateTranslation(attachmentPoint);
@@ -53,10 +55,13 @@ namespace Alex.Graphics.Models.Items
 
 			Effect.Projection = camera.ProjectionMatrix;
 			Effect.View = camera.ViewMatrix;
-			Effect.World = Matrix.CreateRotationX(MathUtils.ToRadians(Rotation.X)) *
+			/*Effect.World = Matrix.CreateRotationX(MathUtils.ToRadians(Rotation.X)) *
 				Matrix.CreateRotationY(MathUtils.ToRadians(Rotation.Y)) *
 				Matrix.CreateRotationZ(MathUtils.ToRadians(Rotation.Z)) *
-				Matrix.CreateScale(Scale) * Matrix.CreateTranslation(camera.Position + ((Offset + Translation) * (1/16f)));
+				Matrix.CreateScale(Scale) * (Matrix.CreateTranslation(-(Translation * (1/16f))) * Matrix.CreateRotationY(MathUtils.ToRadians(-(Yaw))) * Matrix.CreateTranslation((Translation * (1/16f)))) * (Matrix.CreateTranslation(camera.Position + ((Offset + Translation) * (1/16f))));
+			*/
+			
+			Effect.World = Matrix.CreateScale(Scale) * Matrix.CreateTranslation(Translation * (1f/16f)) * Matrix.CreateRotationY(MathUtils.ToRadians((270f - Yaw))) * (Matrix.CreateTranslation(camera.Position + ((Offset) * (1/16f))));
 		}
 		
 		public void Render(GraphicsDevice device)
@@ -105,11 +110,8 @@ namespace Alex.Graphics.Models.Items
 
 					    ItemModelCube built = new ItemModelCube(new Vector3(1f / texture.Width));
 					    built.BuildCube(color);
-					    
-					    //var origin = new Vector3(toolPosX + (1f / texture.Width) * x, toolPosY - (1f / texture.Height) * y,
-						//    toolPosZ);
 
-						var origin = new Vector3(toolPosX + (1f / texture.Width) * x, toolPosY - (1f / texture.Height) * y, toolPosZ);
+					    var origin = new Vector3(toolPosX + (1f / texture.Width) * x, toolPosY - (1f / texture.Height) * y, toolPosZ);
 						
 					    vertices = ModifyCubeIndexes(vertices, ref built.Front, origin);
 					    vertices = ModifyCubeIndexes(vertices, ref built.Back, origin);
@@ -127,64 +129,24 @@ namespace Alex.Graphics.Models.Items
 						    .ToArray();
 
 					    indexes.AddRange(indices);
-					    
-					    /*
-					    #region Front Face
-					    
-					    vertices[i++] = new VertexPositionColor(
-						    new Vector3(toolPosX + (1f / texture.Width) * x, toolPosY - (1f / texture.Height) * y,
-							    toolPosZ), color);
-					    
-					    vertices[i++] = new VertexPositionColor(
-						    new Vector3(toolPosX + (1f / texture.Width) * (x + 1f),
-							    toolPosY - (1f / texture.Height) * (y + 1f), toolPosZ), color);
-					    
-					    vertices[i++] = new VertexPositionColor(
-						    new Vector3(toolPosX + (1f / texture.Width) * (x + 1f),
-							    toolPosY - (1f / texture.Height) * y, toolPosZ), color);
-					    
-					    vertices[i++] = new VertexPositionColor(
-						    new Vector3(toolPosX + (1f / texture.Width) * x, toolPosY - (1f / texture.Height) * y,
-							    toolPosZ), color);
-					    
-					    vertices[i++] = new VertexPositionColor(
-						    new Vector3(toolPosX + (1f / texture.Width) * x,
-							    toolPosY - (1f / texture.Height) * (y + 1f), toolPosZ), color);
-					    
-					    vertices[i++] = new VertexPositionColor(
-						    new Vector3(toolPosX + (1f / texture.Width) * (x + 1f),
-							    toolPosY - (1f / texture.Height) * (y + 1f), toolPosZ), color);
-					    
-					    #endregion
-					    
-					    vertices[i++] = new VertexPositionColor(
-						    new Vector3(toolPosX + (1f / texture.Width) * x, toolPosY - (1f / texture.Height) * y,
-							    toolPosZ + (3f / texture.Width)), color);
-					    
-					    vertices[i++] = new VertexPositionColor(
-						    new Vector3(toolPosX + (1f / texture.Width) * (x + 1f),
-							    toolPosY - (1f / texture.Height) * y, toolPosZ+ (3f / texture.Width)), color);
-					    
-					    vertices[i++] = new VertexPositionColor(
-						    new Vector3(toolPosX + (1f / texture.Width) * (x + 1f),
-							    toolPosY - (1f / texture.Height) * (y + 1f), toolPosZ+ (3f / texture.Width)), color);
-					    
-					    vertices[i++] = new VertexPositionColor(
-						    new Vector3(toolPosX + (1f / texture.Width) * x, toolPosY - (1f / texture.Height) * y,
-							    toolPosZ+ (3f / texture.Width)), color);
-					    
-					    vertices[i++] = new VertexPositionColor(
-						    new Vector3(toolPosX + (1f / texture.Width) * (x + 1f),
-							    toolPosY - (1f / texture.Height) * (y + 1f), toolPosZ+ (3f / texture.Width)), color);
-					    
-					    vertices[i++] = new VertexPositionColor(
-						    new Vector3(toolPosX + (1f / texture.Width) * (x),
-							    toolPosY - (1f / texture.Height) * (y + 1f), toolPosZ+ (3f / texture.Width)), color);*/
 				    }
 			    }
 		    }
 
 		    Vertices = vertices.ToArray();
+
+		    for (var index = 0; index < Vertices.Length; index++)
+		    {
+			    var vertice = Vertices[index];
+
+			    vertice.Position = Vector3.Transform(vertice.Position,
+				    Matrix.CreateRotationX(MathUtils.ToRadians(Rotation.X)) *
+				    Matrix.CreateRotationY(MathUtils.ToRadians(Rotation.Y)) *
+				    Matrix.CreateRotationZ(MathUtils.ToRadians(Rotation.Z)));
+
+			    Vertices[index] = vertice;
+		    }
+
 		    Indexes = indexes.ToArray();
 
 		    // int verticesPerTool = TOOL_TEXTURE_SIZE * TOOL_TEXTURE_SIZE * 36;
