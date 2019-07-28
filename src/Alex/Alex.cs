@@ -235,7 +235,7 @@ namespace Alex
 			Services.AddService<IStorageSystem>(storage);
 			
 			var optionsProvider = new OptionsProvider(storage);
-			optionsProvider.Load();
+			//optionsProvider.Load();
 			
 			optionsProvider.AlexOptions.VideoOptions.UseVsync.Bind((value, newValue) => { SetVSync(newValue); });
 			if (optionsProvider.AlexOptions.VideoOptions.UseVsync.Value)
