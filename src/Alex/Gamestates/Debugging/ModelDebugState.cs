@@ -15,6 +15,7 @@ using Alex.API.Utils;
 using Alex.Blocks.State;
 using Alex.Entities;
 using Alex.GameStates;
+using Alex.Gamestates.Debugging;
 using Alex.GameStates.Gui.Common;
 using Alex.GameStates.Playing;
 using Alex.Graphics.Camera;
@@ -42,22 +43,16 @@ namespace Alex.Gamestates.Debug
         private readonly GuiStackMenu _mainMenu;
         private readonly GuiContainer _menuContainer;
         
-        private FirstPersonCamera Camera { get; } = new FirstPersonCamera(16, Vector3.Zero, Vector3.Zero);
+      //  private FirstPersonCamera Camera { get; } = new FirstPersonCamera(16, Vector3.Zero, Vector3.Zero);
 
-        private AlphaTestEffect _alphaEffect = null;
-        private BasicEffect _basicEffect = null;
-        private Effect _currentEffect;
-        
-        
         private readonly GuiDebugInfo _debugInfo;
         private long _ramUsage = 0;
         private long _threadsUsed, _maxThreads, _complPortUsed, _maxComplPorts;
+
+        private DebugModelRenderer _modelRenderer;
         
-        private World World { get; }
         public ModelDebugState()
         {
-            World = new World(Alex, Alex.GraphicsDevice, Alex.Services.GetService<IOptionsProvider>().AlexOptions,
-                Camera, new DebugNetworkProvider());
             _debugInfo = new GuiDebugInfo();
             
             Background = new Color(Color.DeepSkyBlue.ToVector3());
@@ -87,11 +82,11 @@ namespace Alex.Gamestates.Debug
             
             _mainMenu.AddMenuItem("Skip", () => { Task.Run(() =>
             {
-                ModelExplorer.Skip();
+                _modelRenderer.ModelExplorer.Skip();
             }); });
             _mainMenu.AddMenuItem("Next", NextModel);
             _mainMenu.AddMenuItem("Previous", PrevModel);
-            _mainMenu.AddMenuItem("Switch Models", SwitchModelExplorers);
+            _mainMenu.AddMenuItem("Switch Models", () => { _modelRenderer.SwitchModelExplorers(); });
             
             AddChild(_mainMenu);
 
@@ -107,30 +102,20 @@ namespace Alex.Gamestates.Debug
             
             _debugInfo.AddDebugRight(() =>
             {
-                if (ModelExplorer == null)
+                if (_modelRenderer?.ModelExplorer == null)
                     return string.Empty;
                 
-                return ModelExplorer.GetDebugInfo();
+                return _modelRenderer.ModelExplorer.GetDebugInfo();
             });
 
             _keyState = Keyboard.GetState();
-            
-           ModelExplorer = BlockModelExplorer = new BlockModelExplorer(Alex, World);
-           EntityModelExplorer = new EntityModelExplorer(Alex, World);
-        }
 
-        private BlockModelExplorer BlockModelExplorer { get; }
-        private EntityModelExplorer EntityModelExplorer { get; }
-        private void SwitchModelExplorers()
-        {
-            if (ModelExplorer == BlockModelExplorer)
+            AddChild(_modelRenderer = new DebugModelRenderer(Alex)
             {
-                ModelExplorer = EntityModelExplorer;
-            }
-            else if (ModelExplorer == EntityModelExplorer)
-            {
-                ModelExplorer = BlockModelExplorer;
-            }
+                Anchor = Alignment.MiddleCenter,
+                Width = 100,
+                Height = 100
+            });
         }
 
         protected override void OnShow()
@@ -151,12 +136,12 @@ namespace Alex.Gamestates.Debug
 
         private void PrevModel()
         {
-            ModelExplorer.Previous();
+            _modelRenderer.ModelExplorer.Previous();
         }
 
         private void NextModel()
         {
-            ModelExplorer.Next();
+            _modelRenderer.ModelExplorer.Next();
         }
 
         private Rectangle GetBounds()
@@ -164,50 +149,12 @@ namespace Alex.Gamestates.Debug
             return new Rectangle(_menuContainer.RenderBounds.Right, 0, RenderBounds.Width - _menuContainer.RenderBounds.Right, RenderBounds.Height);   
         }
         
-        private Rectangle _previousBounds;
-        private static Vector3 _rotationCenter = Vector3.One / 2f;
         private DateTime _previousMemUpdate = DateTime.UtcNow;
-        private int _previousIndex = -1;
-        
-        private Vector3 _rotation = Vector3.Zero;
+
+        //private Vector3 _rotation = Vector3.Zero;
         private KeyboardState _keyState = default;
         protected override void OnUpdate(GameTime gameTime)
         {
-            base.OnUpdate(gameTime);
-
-            /*_rotation += (float)gameTime.ElapsedGameTime.TotalSeconds;*/
-
-            var world = Matrix.CreateTranslation(-_rotationCenter) * Matrix.CreateRotationX(MathHelper.ToRadians(_rotation.X)) *
-                        Matrix.CreateRotationY(MathHelper.ToRadians(_rotation.Y)) *
-                        Matrix.CreateRotationZ(MathHelper.ToRadians(_rotation.Z)) * Matrix.CreateTranslation(_rotationCenter) * Matrix.CreateTranslation(Vector3.Backward * 6);
-            
-            ModelExplorer?.SetRotation(_rotation);
-            
-            if (_basicEffect == null)
-            {
-                _basicEffect = new BasicEffect(Alex.GraphicsDevice);
-                _basicEffect.VertexColorEnabled = true;
-                _basicEffect.TextureEnabled = true;
-            }
-            
-            if (_alphaEffect == null)
-            {
-                _alphaEffect = new AlphaTestEffect(Alex.GraphicsDevice);
-                _alphaEffect.VertexColorEnabled = true;
-            }
-            
-            _alphaEffect.Projection = _basicEffect.Projection = Camera.ProjectionMatrix;
-            _alphaEffect.View = _basicEffect.View = Camera.ViewMatrix;
-            _alphaEffect.World  = _basicEffect.World = world;
-
-            var bounds = Screen.RenderBounds;
-
-            if (bounds != _previousBounds)
-            {
-                Camera.UpdateAspectRatio(bounds.Width / (float)bounds.Height);
-                _previousBounds = bounds;
-            }
-
             var now = DateTime.UtcNow;
             if (now - _previousMemUpdate > TimeSpan.FromSeconds(5))
             {
@@ -228,109 +175,40 @@ namespace Alex.Gamestates.Debug
             }
 
 
+            var location = _modelRenderer.EntityPosition;
             var keyState = Keyboard.GetState();
 
            // if (keyState != _keyState)
             {
                 if (keyState.IsKeyDown(Keys.W) )
                 {
-                    _rotation.X += (float)gameTime.ElapsedGameTime.TotalSeconds;
+                    location.Pitch += (float)gameTime.ElapsedGameTime.TotalSeconds;
                 }
                 else if (keyState.IsKeyDown(Keys.S))
                 {
-                    _rotation.X -= (float)gameTime.ElapsedGameTime.TotalSeconds;
+                    location.Pitch -= (float)gameTime.ElapsedGameTime.TotalSeconds;
                 }
                 
                 if (keyState.IsKeyDown(Keys.A))
                 {
-                    _rotation.Y += (float)gameTime.ElapsedGameTime.TotalSeconds;
+                    location.Yaw += (float)gameTime.ElapsedGameTime.TotalSeconds;
                 }
                 else if (keyState.IsKeyDown(Keys.D))
                 {
-                    _rotation.Y-= (float)gameTime.ElapsedGameTime.TotalSeconds;
+                    location.Yaw -= (float)gameTime.ElapsedGameTime.TotalSeconds;
                 }
 
                 if (keyState.IsKeyUp(Keys.R) && _keyState.IsKeyDown(Keys.R))
                 {
-                    _rotation = Vector3.Zero;
+                    //_rotation = Vector3.Zero;
                 }
             }
+
+            _modelRenderer.EntityPosition = location;
             
             _keyState = keyState;
-            /*var updateArgs = new UpdateArgs()
-            {
-                GraphicsDevice = Alex.Instance.GraphicsDevice,
-                GameTime       = gameTime,
-                Camera         = Camera
-            };*/
-            
-            Camera.UpdateProjectionMatrix();
-            
-            ModelExplorer.Update(new UpdateArgs()
-            {
-                Camera = Camera,
-                GameTime = gameTime,
-                GraphicsDevice = Alex.GraphicsDevice
-            }, _alphaEffect, _basicEffect, out _currentEffect);
 
-             Camera.MoveTo(Vector3.Zero, Vector3.Zero);
-            
-        }
-
-        private ModelExplorer ModelExplorer { get; set; }
-        protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
-        {
-            base.OnDraw(graphics, gameTime);
-
-            var bounds = RenderBounds;// GetBounds();
-                
-            bounds.Inflate(-3, -3);
-
-            var p = graphics.Project(bounds.Location.ToVector2());
-            var p2 = graphics.Project(bounds.Location.ToVector2() + bounds.Size.ToVector2());
-                
-            var newViewport = new Viewport();
-            newViewport.X      = (int)p.X;
-            newViewport.Y      = (int)p.Y;
-            newViewport.Width  = (int) (p2.X - p.X);
-            newViewport.Height = (int) (p2.Y - p.Y);
-
-            //context.Viewport = newViewport;
-
-            using (var context = graphics.BranchContext(BlendState.AlphaBlend, DepthStencilState.Default,
-                RasterizerState.CullClockwise, SamplerState.PointWrap))
-            {
-                context.Viewport = newViewport;
-                //graphics.Begin();
-
-                if (_currentEffect != null)
-                {
-                    foreach (var pass in _currentEffect.CurrentTechnique.Passes)
-                    {
-                        pass.Apply();
-
-                        ModelExplorer.Render(context, new RenderArgs()
-                        {
-                            Camera = Camera,
-                            GameTime = gameTime,
-                            GraphicsDevice = context.GraphicsDevice,
-                            SpriteBatch = graphics.SpriteBatch
-                        });
-                    }
-                }
-                else
-                {
-                    ModelExplorer.Render(context, new RenderArgs()
-                    {
-                        Camera = Camera,
-                        GameTime = gameTime,
-                        GraphicsDevice =  context.GraphicsDevice,
-                        SpriteBatch = graphics.SpriteBatch
-                    });
-                }
-
-               // graphics.End();
-            }
+            base.OnUpdate(gameTime);
         }
     }
 
@@ -432,12 +310,14 @@ namespace Alex.Gamestates.Debug
             }
         }
         
-        private PlayerLocation Location { get; } = new PlayerLocation(Vector3.Backward * 3);
+        private PlayerLocation Location { get; set; } = new PlayerLocation(Vector3.Zero);
 
-        public override void SetRotation(Vector3 rotation)
+        public override void SetLocation(PlayerLocation location)
         {
-            Location.Yaw = Location.HeadYaw = MathUtils.RadianToDegree(rotation.Y);
-            Location.Pitch = MathUtils.RadianToDegree(rotation.Z);
+            Location = location;
+            
+          //  Location.Yaw = Location.HeadYaw = MathUtils.RadianToDegree(rotation.Y);
+          //  Location.Pitch = MathUtils.RadianToDegree(rotation.Z);
         }
         
         public override void Render(GraphicsContext context, RenderArgs renderArgs)
@@ -450,28 +330,8 @@ namespace Alex.Gamestates.Debug
         }
 
         private int _previousIndex = -1;
-        public override void Update(UpdateArgs args, AlphaTestEffect alphaEffect, BasicEffect basicEffect, out Effect currentEffect)
+        public override void Update(UpdateArgs args)
         {
-            var block = _entityDefinitions[_index];
-            currentEffect = null;
-            
-            /*if (_index != _previousIndex)
-            {
-                if (block.Block.Animated)
-                {
-                    alphaEffect.Texture = Alex.Resources.Atlas.GetAtlas(0);
-                    basicEffect.Texture = Alex.Resources.Atlas.GetAtlas(0);
-                }
-                else
-                {
-                    alphaEffect.Texture = Alex.Resources.Atlas.GetStillAtlas();
-                    basicEffect.Texture = Alex.Resources.Atlas.GetStillAtlas();
-                }
-
-                _previousIndex = _index;
-            }
-            
-            currentEffect = (block.Block.Transparent || block.Block.Animated) ? (Effect) alphaEffect : basicEffect;*/
             _currentRenderer?.Update(args, Location);
         }
 
@@ -509,6 +369,10 @@ namespace Alex.Gamestates.Debug
         private PooledVertexBuffer _buffer = null;
         private PooledIndexBuffer _indexBuffer = null;
         
+        private AlphaTestEffect _alphaEffect = null;
+        private BasicEffect _basicEffect = null;
+        private Effect _currentEffect;
+
         private void SetVertices()
         {
             var b = _blockStates[_index];
@@ -601,33 +465,71 @@ namespace Alex.Gamestates.Debug
             if (!_canRender)
                 return;
             
-            context.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0,
-                _indexBuffer.IndexCount / 3);
+            if (_currentEffect != null)
+            {
+                foreach (var pass in _currentEffect.CurrentTechnique.Passes)
+                {
+                    pass.Apply();
 
+                    context.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0,
+                        _indexBuffer.IndexCount / 3);
+                }
+            }
         }
 
-        private int _previousIndex = -1;
-        public override void Update(UpdateArgs args, AlphaTestEffect alphaEffect, BasicEffect basicEffect, out Effect currentEffect)
+        public override void SetLocation(PlayerLocation location)
         {
+           // _rotation.Y = MathUtils.RadianToDegree(rotation.Y);
+         //   _rotation.Z = MathUtils.RadianToDegree(rotation.Z);
+          //  _rotation.X = MathUtils.RadianToDegree(rotation.X);
+          _location = location;
+        }
+
+        private static Vector3 _rotationCenter = Vector3.One / 2f;
+        private PlayerLocation _location = new PlayerLocation(Vector3.Zero);
+        private int _previousIndex = -1;
+        public override void Update(UpdateArgs args)
+        {
+            var world = Matrix.CreateTranslation(-_rotationCenter) * Matrix.CreateRotationX(MathHelper.ToRadians(_location.Pitch)) *
+                        Matrix.CreateRotationY(MathHelper.ToRadians(_location.Yaw)) *
+                        Matrix.CreateRotationZ(MathHelper.ToRadians(_location.Pitch)) * Matrix.CreateTranslation(_rotationCenter);
+
+            if (_basicEffect == null)
+            {
+                _basicEffect = new BasicEffect(Alex.GraphicsDevice);
+                _basicEffect.VertexColorEnabled = true;
+                _basicEffect.TextureEnabled = true;
+            }
+            
+            if (_alphaEffect == null)
+            {
+                _alphaEffect = new AlphaTestEffect(Alex.GraphicsDevice);
+                _alphaEffect.VertexColorEnabled = true;
+            }
+            
+            _alphaEffect.Projection = _basicEffect.Projection = args.Camera.ProjectionMatrix;
+            _alphaEffect.View = _basicEffect.View = args.Camera.ViewMatrix;
+            _alphaEffect.World  = _basicEffect.World = world;
+            
             var block = _blockStates[_index];
             
             if (_index != _previousIndex)
             {
                 if (block.Block.Animated)
                 {
-                    alphaEffect.Texture = Alex.Resources.Atlas.GetAtlas(0);
-                    basicEffect.Texture = Alex.Resources.Atlas.GetAtlas(0);
+                    _alphaEffect.Texture = Alex.Resources.Atlas.GetAtlas(0);
+                    _basicEffect.Texture = Alex.Resources.Atlas.GetAtlas(0);
                 }
                 else
                 {
-                    alphaEffect.Texture = Alex.Resources.Atlas.GetStillAtlas();
-                    basicEffect.Texture = Alex.Resources.Atlas.GetStillAtlas();
+                    _alphaEffect.Texture = Alex.Resources.Atlas.GetStillAtlas();
+                    _basicEffect.Texture = Alex.Resources.Atlas.GetStillAtlas();
                 }
 
                 _previousIndex = _index;
             }
             
-            currentEffect = (block.Block.Transparent || block.Block.Animated) ? (Effect) alphaEffect : basicEffect;
+            _currentEffect = (block.Block.Transparent || block.Block.Animated) ? (Effect) _alphaEffect : _basicEffect;
         }
 
         public override string GetDebugInfo()
@@ -662,10 +564,10 @@ namespace Alex.Gamestates.Debug
         public abstract void Previous();
         public abstract void Skip();
         public abstract void Render(GraphicsContext context, RenderArgs renderArgs);
-        public abstract void Update(UpdateArgs args, AlphaTestEffect alphaEffect, BasicEffect basicEffect, out Effect currentEffect);
+        public abstract void Update(UpdateArgs args);
         public abstract string GetDebugInfo();
 
-        public virtual void SetRotation(Vector3 rotation)
+        public virtual void SetLocation(PlayerLocation location)
         {
             
         }

@@ -3,7 +3,7 @@
     "Alex": {
       "commandName": "Project",
       "workingDirectory": "bin/x64/Debug/netcoreapp2.2/",
-      "commandLineArgs": ""
+      "commandLineArgs": "--debug"
     }
   }
 }
