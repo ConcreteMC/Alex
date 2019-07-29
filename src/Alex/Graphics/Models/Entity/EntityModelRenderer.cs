@@ -161,7 +161,8 @@ namespace Alex.Graphics.Models.Entity
 		public void Render(IRenderArgs args, PlayerLocation position)
 		{
 			args.GraphicsDevice.SetVertexBuffer(VertexBuffer);
-			
+
+			if (Bones == null) return;
 			foreach (var bone in Bones)
 			{
 				bone.Value.Render(args, position);
@@ -172,6 +173,7 @@ namespace Alex.Graphics.Models.Entity
 
 		public void Update(IUpdateArgs args, PlayerLocation position)
 		{
+			if (Bones == null) return;
 			foreach (var bone in Bones)
 			{
 				bone.Value.Update(args, position, DiffuseColor);
