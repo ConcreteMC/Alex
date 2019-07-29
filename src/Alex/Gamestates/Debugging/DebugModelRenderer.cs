@@ -78,8 +78,6 @@ namespace Alex.Gamestates.Debugging
 
         protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
         {
-            base.OnDraw(graphics, gameTime);
-            
             var renderArgs = new RenderArgs()
             {
                 GraphicsDevice = graphics.SpriteBatch.GraphicsDevice,
@@ -87,9 +85,17 @@ namespace Alex.Gamestates.Debugging
                 GameTime       = gameTime,
                 Camera         = Camera,
             };
-
-            using (var context = graphics.BranchContext(BlendState.AlphaBlend, DepthStencilState.Default,
-                RasterizerState.CullClockwise, SamplerState.PointWrap))
+            ClipToBounds = false;
+            using (var context = graphics.BranchContext(BlendState.AlphaBlend, new DepthStencilState()
+                {
+                    DepthBufferEnable = true,
+                    StencilEnable = true
+                },
+                new RasterizerState()
+                {
+                    CullMode = CullMode.None,
+                    FillMode = FillMode.Solid
+                }, SamplerState.PointClamp))
             {
                 var bounds = RenderBounds;
                 
@@ -103,7 +109,7 @@ namespace Alex.Gamestates.Debugging
                 newViewport.Y      = (int)p.Y;
                 newViewport.Width  = (int) (p2.X - p.X);
                 newViewport.Height = (int) (p2.Y - p.Y);
-
+                Camera.UpdateAspectRatio(newViewport.AspectRatio);
                 Camera.Viewport    = newViewport;
                 Camera.UpdateProjectionMatrix();
 
@@ -126,10 +132,10 @@ namespace Alex.Gamestates.Debugging
             public Viewport Viewport { get; set; }
             public Vector3 EntityPositionOffset { get; set; } = new Vector3(0f, 0f, -6f);
 
-            public DebugModelRendererCamera(DebugModelRenderer guiEntityModelView) : base(1)
+            public DebugModelRendererCamera(DebugModelRenderer guiEntityModelView) : base(1 * 16 * 16)
             {
                 _modelView = guiEntityModelView;
-                Viewport = new Viewport(256, 128, 128, 256, 0.01f, 16.0f);
+                Viewport = new Viewport(256, 128, 128, 256, 0f, 128.0f);
                 Position = _modelView.EntityPosition;
                 Rotation = Vector3.Zero;
                 FOV = 25.0f;
@@ -148,7 +154,7 @@ namespace Alex.Gamestates.Debugging
 
                 Direction = Vector3.Transform(Vector3.Forward, rotationMatrix);
 
-                ViewMatrix = Matrix.CreateLookAt(Target + lookAtOffset, Target + (Vector3.Up * 1.8f), Vector3.Up);
+                ViewMatrix = Matrix.CreateLookAt(Target + lookAtOffset, Target, Vector3.Up);
             }
 
             public override void UpdateProjectionMatrix()

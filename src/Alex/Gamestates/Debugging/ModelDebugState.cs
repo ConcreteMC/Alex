@@ -112,9 +112,9 @@ namespace Alex.Gamestates.Debug
 
             AddChild(_modelRenderer = new DebugModelRenderer(Alex)
             {
-                Anchor = Alignment.MiddleCenter,
-                Width = 100,
-                Height = 100
+                Anchor = Alignment.Fill,
+               // Width = 100,
+               // Height = 100
             });
         }
 
@@ -153,6 +153,7 @@ namespace Alex.Gamestates.Debug
 
         //private Vector3 _rotation = Vector3.Zero;
         private KeyboardState _keyState = default;
+        private float _i = 0;
         protected override void OnUpdate(GameTime gameTime)
         {
             var now = DateTime.UtcNow;
@@ -204,7 +205,9 @@ namespace Alex.Gamestates.Debug
                 }
             }
 
-            _modelRenderer.EntityPosition = location;
+           // _i += (float) gameTime.ElapsedGameTime.TotalSeconds;
+
+            _modelRenderer.EntityPosition = location;// new PlayerLocation(Math.Cos(_i) * 6, 0, Math.Sin(_i) * 6);
             
             _keyState = keyState;
 
@@ -490,9 +493,9 @@ namespace Alex.Gamestates.Debug
         private int _previousIndex = -1;
         public override void Update(UpdateArgs args)
         {
-            var world = Matrix.CreateTranslation(-_rotationCenter) * Matrix.CreateRotationX(MathHelper.ToRadians(_location.Pitch)) *
+            var world = Matrix.CreateTranslation(-_rotationCenter) * (Matrix.CreateRotationX(MathHelper.ToRadians(_location.Pitch)) *
                         Matrix.CreateRotationY(MathHelper.ToRadians(_location.Yaw)) *
-                        Matrix.CreateRotationZ(MathHelper.ToRadians(_location.Pitch)) * Matrix.CreateTranslation(_rotationCenter);
+                        Matrix.CreateRotationZ(MathHelper.ToRadians(_location.Pitch))) * Matrix.CreateTranslation(_rotationCenter);
 
             if (_basicEffect == null)
             {
@@ -509,7 +512,7 @@ namespace Alex.Gamestates.Debug
             
             _alphaEffect.Projection = _basicEffect.Projection = args.Camera.ProjectionMatrix;
             _alphaEffect.View = _basicEffect.View = args.Camera.ViewMatrix;
-            _alphaEffect.World  = _basicEffect.World = world;
+          //  _alphaEffect.World  = _basicEffect.World = world;
             
             var block = _blockStates[_index];
             
