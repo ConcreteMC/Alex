@@ -76,6 +76,12 @@ namespace Alex.Graphics.Models.Entity
 						                   )  
 					                   * Matrix.CreateTranslation(part.Pivot);
 
+					
+					if (UpdateRotationMatrix)
+					{
+						RotationMatrix = rotMatrix;
+					}
+					
 					if (part.ApplyYaw)
 						rotMatrix *= Matrix.CreateRotationY(yaw);
 
@@ -86,11 +92,6 @@ namespace Alex.Graphics.Models.Entity
 					var rotateMatrix = (rotMatrix2 *
 					                  rotMatrix);
 
-					if (UpdateRotationMatrix)
-					{
-						RotationMatrix = rotateMatrix;
-					}
-					
 					effect.World = rotateMatrix * (Matrix.CreateScale(1f / 16f) * Matrix.CreateTranslation(position));
 
 					//Effect.World = world * (Matrix.CreateScale(1f / 16f) * Matrix.CreateTranslation(position));

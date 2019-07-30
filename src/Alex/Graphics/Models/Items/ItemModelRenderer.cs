@@ -61,7 +61,22 @@ namespace Alex.Graphics.Models.Items
 				Matrix.CreateScale(Scale) * (Matrix.CreateTranslation(-(Translation * (1/16f))) * Matrix.CreateRotationY(MathUtils.ToRadians(-(Yaw))) * Matrix.CreateTranslation((Translation * (1/16f)))) * (Matrix.CreateTranslation(camera.Position + ((Offset + Translation) * (1/16f))));
 			*/
 			
-			Effect.World = Matrix.CreateScale(Scale) * Matrix.CreateTranslation(Translation * (1f/16f)) * Matrix.CreateRotationY(MathUtils.ToRadians((270f - Yaw))) * (Matrix.CreateTranslation(camera.Position + ((Offset) * (1/16f))));
+			//Effect.World = Matrix.CreateScale(Scale) * Matrix.CreateTranslation(Translation * (1f/16f)) * Matrix.CreateRotationY(MathUtils.ToRadians((270f - Yaw))) * (Matrix.CreateTranslation(camera.Position + ((Offset) * (1/16f))));
+			//Effect.World = Matrix.CreateTranslation(Translation) *
+			//               Matrix.CreateRotationY(MathUtils.ToRadians(270f - Yaw)) * Matrix.CreateScale(Scale) * Matrix.CreateTranslation(camera.Position + Offset);
+
+			Matrix characterMatrix = 
+				Matrix.CreateRotationY(MathUtils.ToRadians(-Yaw)) *
+			                         Matrix.CreateTranslation(camera.Position);
+
+			var pieceMatrix =
+				Matrix.CreateScale(Scale) *
+						Matrix.CreateRotationX(Rotation.X) *
+						Matrix.CreateRotationY(Rotation.Y) *
+						Matrix.CreateRotationZ(Rotation.Z) *
+			            Matrix.CreateTranslation((Translation * (1f/16f) + Offset * (1f/16f)));
+			
+			Effect.World = pieceMatrix * characterMatrix;
 		}
 		
 		public void Render(GraphicsDevice device)
@@ -139,11 +154,11 @@ namespace Alex.Graphics.Models.Items
 		    {
 			    var vertice = Vertices[index];
 
-			    vertice.Position = Vector3.Transform(vertice.Position,
+			   /* vertice.Position = Vector3.Transform(vertice.Position,
 				    Matrix.CreateRotationX(MathUtils.ToRadians(Rotation.X)) *
 				    Matrix.CreateRotationY(MathUtils.ToRadians(Rotation.Y)) *
 				    Matrix.CreateRotationZ(MathUtils.ToRadians(Rotation.Z)));
-
+*/
 			    Vertices[index] = vertice;
 		    }
 
