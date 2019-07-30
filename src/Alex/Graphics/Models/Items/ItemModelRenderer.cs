@@ -21,7 +21,7 @@ namespace Alex.Graphics.Models.Items
 		public short[] Indexes { get; set; } = null;
 
 		private BasicEffect Effect { get; set; } = null;
-		public Vector3 Offset { get; set; } = Vector3.Zero;
+
 		public Vector3 Rotation { get; set; } = Vector3.Zero;
 		public Vector3 Translation { get; set; }= Vector3.Zero;
 		public Vector3 Scale { get; set; }= Vector3.Zero;
@@ -31,13 +31,10 @@ namespace Alex.Graphics.Models.Items
 			Cache(resourcePack);
 		}
 
-		private float Yaw { get; set; } = 0;
-		public void Update(Vector3 attachmentPoint, float positionYaw)
+		private Matrix ParentMatrix = Matrix.Identity;
+		public void Update(Matrix parentMatrix)
 		{
-			Yaw = positionYaw;
-			Offset = attachmentPoint;
-			//Effect.World = World *
-			//               Microsoft.Xna.Framework.Matrix.CreateTranslation(attachmentPoint);
+			ParentMatrix = parentMatrix;
 		}
 
 		public void Render(IRenderArgs args)
@@ -55,28 +52,15 @@ namespace Alex.Graphics.Models.Items
 
 			Effect.Projection = camera.ProjectionMatrix;
 			Effect.View = camera.ViewMatrix;
-			/*Effect.World = Matrix.CreateRotationX(MathUtils.ToRadians(Rotation.X)) *
-				Matrix.CreateRotationY(MathUtils.ToRadians(Rotation.Y)) *
-				Matrix.CreateRotationZ(MathUtils.ToRadians(Rotation.Z)) *
-				Matrix.CreateScale(Scale) * (Matrix.CreateTranslation(-(Translation * (1/16f))) * Matrix.CreateRotationY(MathUtils.ToRadians(-(Yaw))) * Matrix.CreateTranslation((Translation * (1/16f)))) * (Matrix.CreateTranslation(camera.Position + ((Offset + Translation) * (1/16f))));
-			*/
+
+			var scale = Scale * 16f;
 			
-			//Effect.World = Matrix.CreateScale(Scale) * Matrix.CreateTranslation(Translation * (1f/16f)) * Matrix.CreateRotationY(MathUtils.ToRadians((270f - Yaw))) * (Matrix.CreateTranslation(camera.Position + ((Offset) * (1/16f))));
-			//Effect.World = Matrix.CreateTranslation(Translation) *
-			//               Matrix.CreateRotationY(MathUtils.ToRadians(270f - Yaw)) * Matrix.CreateScale(Scale) * Matrix.CreateTranslation(camera.Position + Offset);
-
-			Matrix characterMatrix = 
-				Matrix.CreateRotationY(MathUtils.ToRadians(-Yaw)) *
-			                         Matrix.CreateTranslation(camera.Position);
-
 			var pieceMatrix =
-				Matrix.CreateScale(Scale) *
-						Matrix.CreateRotationX(Rotation.X) *
-						Matrix.CreateRotationY(Rotation.Y) *
-						Matrix.CreateRotationZ(Rotation.Z) *
-			            Matrix.CreateTranslation((Translation * (1f/16f) + Offset * (1f/16f)));
+				Matrix.CreateScale(scale) *
+						Matrix.CreateFromYawPitchRoll(MathUtils.ToRadians(Rotation.Y), MathUtils.ToRadians(Rotation.X), MathUtils.ToRadians(180f - Rotation.Z)) *
+				Matrix.CreateTranslation(-new Vector3(Translation.X * scale.X, Translation.Y, Translation.Z * scale.Z));
 			
-			Effect.World = pieceMatrix * characterMatrix;
+			Effect.World = pieceMatrix * ParentMatrix;
 		}
 		
 		public void Render(GraphicsDevice device)
@@ -84,8 +68,6 @@ namespace Alex.Graphics.Models.Items
 			if (Effect == null || Vertices == null || Vertices.Length == 0)
 				return;
 			
-			//Effect.World = Microsoft.Xna.Framework.Matrix.CreateScale(1f/16f) * Microsoft.Xna.Framework.Matrix.CreateTranslation(renderPosition);
-
 			foreach (var a in Effect.CurrentTechnique.Passes)
 			{
 				a.Apply();
@@ -153,18 +135,10 @@ namespace Alex.Graphics.Models.Items
 		    for (var index = 0; index < Vertices.Length; index++)
 		    {
 			    var vertice = Vertices[index];
-
-			   /* vertice.Position = Vector3.Transform(vertice.Position,
-				    Matrix.CreateRotationX(MathUtils.ToRadians(Rotation.X)) *
-				    Matrix.CreateRotationY(MathUtils.ToRadians(Rotation.Y)) *
-				    Matrix.CreateRotationZ(MathUtils.ToRadians(Rotation.Z)));
-*/
 			    Vertices[index] = vertice;
 		    }
 
 		    Indexes = indexes.ToArray();
-
-		    // int verticesPerTool = TOOL_TEXTURE_SIZE * TOOL_TEXTURE_SIZE * 36;
 	    }
 	    
 	    private List<VertexPositionColor> ModifyCubeIndexes(List<VertexPositionColor> vertices,
@@ -187,141 +161,6 @@ namespace Alex.Graphics.Models.Items
 
 		    return vertices;
 	    }
-	    
-	     protected VertexPositionColor[] GetFaceVertices(BlockFace blockFace, Vector3 startPosition, Vector3 endPosition, Color faceColor, out int[] indexes)
-		{
-			var size = (endPosition - startPosition);
-			
-			Vector3 normal = Vector3.Zero;
-			Vector3 positionTopLeft = Vector3.Zero, positionBottomLeft = Vector3.Zero, positionBottomRight = Vector3.Zero, positionTopRight = Vector3.Zero;
-
-			switch (blockFace)
-			{
-				case BlockFace.Up: //Positive Y
-					positionTopLeft = From(startPosition, endPosition, endPosition);
-					positionTopRight = From(endPosition, endPosition, endPosition);
-
-					positionBottomLeft = From(startPosition, endPosition, startPosition);
-					positionBottomRight = From(endPosition, endPosition, startPosition);
-
-					normal = Vector3.Up;
-					break;
-				case BlockFace.Down: //Negative Y
-					positionTopLeft = From(startPosition, startPosition, endPosition);
-					positionTopRight = From(endPosition, startPosition, endPosition);
-
-					positionBottomLeft = From(startPosition, startPosition, startPosition);
-					positionBottomRight = From(endPosition, startPosition, startPosition);
-
-					normal = Vector3.Down;
-					break;
-				case BlockFace.West: //Negative X
-					positionTopLeft = From(startPosition, endPosition, startPosition);
-					positionTopRight = From(startPosition, endPosition, endPosition);
-
-					positionBottomLeft = From(startPosition, startPosition, startPosition);
-					positionBottomRight = From(startPosition, startPosition, endPosition);
-
-					normal = Vector3.Left;
-					break;
-				case BlockFace.East: //Positive X
-					positionTopLeft = From(endPosition, endPosition, startPosition);
-					positionTopRight = From(endPosition, endPosition, endPosition);
-
-					positionBottomLeft = From(endPosition, startPosition, startPosition);
-					positionBottomRight = From(endPosition, startPosition, endPosition);
-
-					normal = Vector3.Right;
-					break;
-				case BlockFace.South: //Positive Z
-					positionTopLeft = From(startPosition, endPosition, startPosition);
-					positionTopRight = From(endPosition, endPosition, startPosition);
-
-					positionBottomLeft = From(startPosition, startPosition, startPosition);
-					positionBottomRight = From(endPosition, startPosition, startPosition);
-
-					normal = Vector3.Backward;
-					break;
-				case BlockFace.North: //Negative Z
-					positionTopLeft = From(startPosition, endPosition, endPosition);
-					positionTopRight = From(endPosition, endPosition, endPosition);
-
-					positionBottomLeft = From(startPosition, startPosition, endPosition);
-					positionBottomRight = From(endPosition, startPosition, endPosition);
-
-					normal = Vector3.Forward;
-					break;
-				case BlockFace.None:
-					break;
-			}
-
-			var topLeft = new VertexPositionColor(positionTopLeft, faceColor);
-			var topRight = new VertexPositionColor(positionTopRight, faceColor);
-			var bottomLeft = new VertexPositionColor(positionBottomLeft, faceColor);
-			var bottomRight = new VertexPositionColor(positionBottomRight, faceColor);
-
-			switch (blockFace)
-			{
-				case BlockFace.Up:
-					indexes = new int[]
-					{
-						2, 0, 1,
-						3, 2, 1
-					};
-					break;
-				case BlockFace.Down:
-					indexes = new[]
-					{
-						0, 2, 1,
-						2, 3, 1
-					};
-					break;
-				case BlockFace.North:
-					indexes = new[]
-					{
-						0, 2, 1,
-						2, 3, 1
-					};
-					break;
-				case BlockFace.East:
-					indexes = new[]
-					{
-						2, 0, 1,
-						3, 2, 1
-					};
-					break;
-				case BlockFace.South:
-					indexes = new[]
-					{
-						2, 0, 1,
-						3, 2, 1
-					};
-					break;
-				case BlockFace.West:
-					indexes = new[]
-					{
-						0, 2, 1,
-						2, 3, 1
-					};
-					break;
-				default:
-					indexes = new int[0];
-					break;
-			}
-			
-			return new[]
-			{
-				topLeft, topRight, bottomLeft, bottomRight
-			};
-
-			return new VertexPositionColor[0];
-		}
-	     
-	     private static Vector3 From(Vector3 x, Vector3 y, Vector3 z)
-	     {
-		     return new Vector3(x.X, y.Y, z.Z);
-	     }
-	     
     }
 
     public sealed class ItemModelCube

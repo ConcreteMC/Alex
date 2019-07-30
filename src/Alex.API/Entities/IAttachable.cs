@@ -5,7 +5,7 @@ namespace Alex.API.Entities
 {
     public interface IAttachable
     {
-        void Update(Vector3 attachementPoint, float positionYaw);
+        void Update(Matrix parentMatrix);
         void Render(IRenderArgs args);
     }
 }

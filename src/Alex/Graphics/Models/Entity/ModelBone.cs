@@ -46,7 +46,8 @@ namespace Alex.Graphics.Models.Entity
 
 			public Matrix RotationMatrix = Matrix.Identity;
 			public bool UpdateRotationMatrix = true;
-			public void Render(IRenderArgs args, PlayerLocation position)
+			private Matrix CharacterMatrix { get; set; }
+			public void Render(IRenderArgs args, PlayerLocation position, Matrix characterMatrix)
 			{
 				if (Buffer == null)
 					return;
@@ -61,8 +62,6 @@ namespace Alex.Graphics.Models.Entity
 					AlphaTestEffect effect = part.Effect;
 					if (effect == null) continue;
 					
-					var yaw = part.ApplyYaw ? MathUtils.ToRadians(180f - position.Yaw) : 0f;
-					
 					var headYaw = part.ApplyHeadYaw ? MathUtils.ToRadians(-(position.HeadYaw - position.Yaw)) : 0f;
 					var pitch = part.ApplyPitch ? MathUtils.ToRadians(position.Pitch) : 0f;
 
@@ -76,25 +75,16 @@ namespace Alex.Graphics.Models.Entity
 						                   )  
 					                   * Matrix.CreateTranslation(part.Pivot);
 
-					
-					if (UpdateRotationMatrix)
-					{
-						RotationMatrix = rotMatrix;
-					}
-					
-					if (part.ApplyYaw)
-						rotMatrix *= Matrix.CreateRotationY(yaw);
-
 					var rotMatrix2 = Matrix.CreateTranslation(-part.Pivot) *
 						Matrix.CreateFromYawPitchRoll(headYaw, pitch, 0f) *
 					                 Matrix.CreateTranslation(part.Pivot);
 					
-					var rotateMatrix = (rotMatrix2 *
+					var rotateMatrix = Matrix.CreateTranslation(part.Origin) * (rotMatrix2 *
 					                  rotMatrix);
-
-					effect.World = rotateMatrix * (Matrix.CreateScale(1f / 16f) * Matrix.CreateTranslation(position));
-
-					//Effect.World = world * (Matrix.CreateScale(1f / 16f) * Matrix.CreateTranslation(position));
+					
+					RotationMatrix = rotateMatrix * characterMatrix;
+						
+					effect.World = rotateMatrix * characterMatrix;
 					effect.View = args.Camera.ViewMatrix;
 					effect.Projection = args.Camera.ProjectionMatrix;
 
@@ -113,8 +103,9 @@ namespace Alex.Graphics.Models.Entity
 				}
 			}
 
-			public void Update(IUpdateArgs args, PlayerLocation position, Vector3 diffuseColor)
+			public void Update(IUpdateArgs args, Matrix characterMatrix, Vector3 diffuseColor)
 			{
+				CharacterMatrix = characterMatrix;
 				foreach (var part in Parts)
 				{
 					if (part.Effect != null)
@@ -131,7 +122,7 @@ namespace Alex.Graphics.Models.Entity
 
 				foreach (var attachable in Attachables.ToArray())
 				{
-					attachable.Update(Vector3.Transform(OriginalBone.Pivot, RotationMatrix),  position.Yaw);
+					attachable.Update(RotationMatrix);
 				}
 
 				if (_isDirty)

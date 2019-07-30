@@ -166,8 +166,14 @@ namespace Alex.Worlds
 			
 	        if (Camera is ThirdPersonCamera)
 	        {
-		        Player.Render(args);
+		        Player.RenderEntity = true;
 	        }
+	        else
+	        {
+		        Player.RenderEntity = false;
+	        }
+	        
+	        Player.Render(args);
         }
 
 		public void Render2D(IRenderArgs args)

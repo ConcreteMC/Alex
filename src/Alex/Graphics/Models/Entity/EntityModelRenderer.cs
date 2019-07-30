@@ -4,6 +4,7 @@ using System.Linq;
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.ResourcePackLib.Json.Models.Entities;
+using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using NLog;
@@ -148,7 +149,7 @@ namespace Alex.Graphics.Models.Entity
 			foreach (var vertice in data.vertices)
 			{
 				var vertex = vertice;
-				vertex.Position += offset;
+				//vertex.Position += offset;
 				vertices.Add(vertex);
 			}
 			
@@ -168,17 +169,20 @@ namespace Alex.Graphics.Models.Entity
 			
 			foreach (var bone in Bones)
 			{
-				bone.Value.Render(args, position);
+				bone.Value.Render(args, position, CharacterMatrix);
 			}
 		}
 
 		public Vector3 DiffuseColor { get; set; } = Color.White.ToVector3();
-
+		private Matrix CharacterMatrix { get; set; } = Matrix.Identity;
 		public void Update(IUpdateArgs args, PlayerLocation position)
 		{
+			CharacterMatrix = Matrix.CreateScale(1 / 16f) *
+			                         Matrix.CreateRotationY(MathUtils.ToRadians((180f - position.Yaw))) *
+			                         Matrix.CreateTranslation(position);
 			foreach (var bone in Bones)
 			{
-				bone.Value.Update(args, position, DiffuseColor);
+				bone.Value.Update(args, CharacterMatrix, DiffuseColor);
 			}
 
 			foreach (var bone in Bones.Where(x => !string.IsNullOrWhiteSpace(x.Value.Parent)))

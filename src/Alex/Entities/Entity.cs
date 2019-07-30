@@ -112,7 +112,7 @@ namespace Alex.Entities
 					
 					if (this is Player)
 					{
-						if (itemModel.Display.TryGetValue("firstperson_righthand", out var value))
+						if (itemModel.Display.TryGetValue("thirdperson_righthand", out var value))
 						{
 							ItemRenderer.Rotation = value.Rotation;
 							ItemRenderer.Translation = value.Translation;
@@ -197,15 +197,15 @@ namespace Alex.Entities
 		public bool ShowItemInHand { get; set; } = false;
 		public void Render(IRenderArgs renderArgs)
 		{
+			if (RenderEntity)
+			{
+				ModelRenderer.Render(renderArgs, KnownPosition);
+			}
 			if (ShowItemInHand)
 			{
 				ItemRenderer?.Render(renderArgs.GraphicsDevice);
 			}
 
-			if (RenderEntity)
-			{
-				ModelRenderer.Render(renderArgs, KnownPosition);
-			}
 		}
 
 		public virtual void Update(IUpdateArgs args)

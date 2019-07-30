@@ -143,7 +143,7 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "rightItem",
-					Parent = "rightArm",
+					Parent = "leftArm",
 					Pivot = new Vector3(-6f,15f,1f),
 					Rotation = new Vector3(0f,0f,0f),
 					NeverRender = true,
