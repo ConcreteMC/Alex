@@ -49,9 +49,9 @@ namespace Alex.Graphics.Models
 			Game = alex;
 			OptionsProvider = alex.Services.GetService<IOptionsProvider>();
 
-		    if (alex.Resources.ResourcePack.TryGetTexture("environment/sun", out Texture2D sun))
+		    if (alex.Resources.ResourcePack.TryGetBitmap("environment/sun", out var sun))
 		    {
-			    SunTexture = sun;
+			    SunTexture = TextureUtils.BitmapToTexture2D(device, sun);
 		    }
 		    else
 		    {
@@ -59,9 +59,9 @@ namespace Alex.Graphics.Models
 			    return;
 		    }
 
-		    if (alex.Resources.ResourcePack.TryGetTexture("environment/moon_phases", out Texture2D moonPhases))
+		    if (alex.Resources.ResourcePack.TryGetBitmap("environment/moon_phases", out var moonPhases))
 		    {
-			    MoonTexture = moonPhases;
+			    MoonTexture = TextureUtils.BitmapToTexture2D(device, moonPhases);
 		    }
 		    else
 		    {
@@ -69,9 +69,9 @@ namespace Alex.Graphics.Models
 			    return;
 		    }
 
-		    if (alex.Resources.ResourcePack.TryGetTexture("environment/clouds", out Texture2D cloudTexture))
+		    if (alex.Resources.ResourcePack.TryGetBitmap("environment/clouds", out var cloudTexture))
 		    {
-			    CloudTexture = cloudTexture;
+			    CloudTexture = TextureUtils.BitmapToTexture2D(device, cloudTexture);
 			    EnableClouds = false;
 		    }
 		    else

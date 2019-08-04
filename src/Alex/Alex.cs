@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -32,6 +33,7 @@ using Newtonsoft.Json;
 using NLog;
 using StackExchange.Profiling;
 using GuiDebugHelper = Alex.Gui.GuiDebugHelper;
+using Point = Microsoft.Xna.Framework.Point;
 using TextInputEventArgs = Microsoft.Xna.Framework.TextInputEventArgs;
 
 namespace Alex
@@ -386,11 +388,11 @@ namespace Alex
 
 		}
 
-		private void OnResourcePackPreLoadCompleted(IFont font)
+		private void OnResourcePackPreLoadCompleted(Bitmap fontBitmap, List<char> bitmapCharacters)
 		{
-			Font = font;
+			Font = new BitmapFont(GraphicsDevice, fontBitmap, 16, bitmapCharacters);
 
-			GuiManager.ApplyFont(font);
+			GuiManager.ApplyFont(Font);
 		}
 
 		public void ConnectToServer(IPEndPoint serverEndPoint, PlayerProfile profile, bool bedrock = false)

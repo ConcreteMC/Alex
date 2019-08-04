@@ -125,13 +125,13 @@ namespace Alex
 			return true;
 		}
 
-		private McResourcePack LoadResourcePack(IProgressReceiver progressReceiver, GraphicsDevice graphics, Stream stream, McResourcePack.McResourcePackPreloadCallback preloadCallback = null)
+		private McResourcePack LoadResourcePack(IProgressReceiver progressReceiver, Stream stream, McResourcePack.McResourcePackPreloadCallback preloadCallback = null)
 		{
 			McResourcePack resourcePack = null;
 
 			using (var archive = new ZipArchive(stream, ZipArchiveMode.Read, false))
 			{
-				resourcePack = new McResourcePack(archive, graphics, preloadCallback);
+				resourcePack = new McResourcePack(archive, preloadCallback);
 			}
 
 			Log.Info($"Loaded {resourcePack.BlockModels.Count} block models from resourcepack");
@@ -231,7 +231,7 @@ namespace Alex
             Log.Info($"Loading vanilla resources...");
 			using (MemoryStream stream = new MemoryStream(defaultResources))
 			{
-				ActiveResourcePacks.AddFirst(LoadResourcePack(progressReceiver, device, stream, preloadCallback));
+				ActiveResourcePacks.AddFirst(LoadResourcePack(progressReceiver, stream, preloadCallback));
 			}
 
 			var bedrockPath = Path.Combine("assets", "bedrock");
@@ -302,7 +302,7 @@ namespace Alex
 
 						using (FileStream stream = new FileStream(resourcePackPath, FileMode.Open))
 						{
-							ActiveResourcePacks.AddLast(LoadResourcePack(progressReceiver, device, stream, null));
+							ActiveResourcePacks.AddLast(LoadResourcePack(progressReceiver, stream, null));
 						}
 					}
 				}

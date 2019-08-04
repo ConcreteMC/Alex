@@ -172,10 +172,12 @@ namespace Alex.Gui
 			LoadTextureFromResourcePack(GuiTextures.AlexLogo, resourcePack, "");
 
 			// First load Widgets
-			resourcePack.TryGetTexture("gui/widgets", out _widgets);
+			resourcePack.TryGetBitmap("gui/widgets", out var widgetsBmp);
+			_widgets = TextureUtils.BitmapToTexture2D(_graphicsDevice, widgetsBmp);
 			LoadWidgets(_widgets);
 
-			resourcePack.TryGetTexture("gui/icons", out _icons);
+			resourcePack.TryGetBitmap("gui/icons", out var icons);
+			_icons = TextureUtils.BitmapToTexture2D(_graphicsDevice, icons);
 			LoadIcons(_icons);
 
 			_scrollbar = TextureUtils.ImageToTexture2D(_graphicsDevice, ResourceManager.ReadResource("Alex.Resources.ScrollBar.png"));
@@ -187,8 +189,9 @@ namespace Alex.Gui
 			// Load Gui Containers
 			{
 				Texture2D containerSprite;
-				if (resourcePack.TryGetTexture("gui/container/inventory", out containerSprite))
+				if (resourcePack.TryGetBitmap("gui/container/inventory", out var bmp))
 				{
+					containerSprite = TextureUtils.BitmapToTexture2D(_graphicsDevice, bmp);
 					LoadTextureFromSpriteSheet(GuiTextures.InventoryPlayerBackground, containerSprite, new Rectangle(0, 0, 176, 166));
 				}
 			}
@@ -269,9 +272,9 @@ namespace Alex.Gui
 		private void LoadTextureFromResourcePack(GuiTextures guiTexture, McResourcePack resourcePack, string path,
 												 float       scale = 1f)
 		{
-			if (resourcePack.TryGetTexture(path, out var texture))
+			if (resourcePack.TryGetBitmap(path, out var texture))
 			{
-				_textureCache[guiTexture] = texture;
+				_textureCache[guiTexture] = TextureUtils.BitmapToTexture2D(_graphicsDevice, texture);
 			}
 		}
 
