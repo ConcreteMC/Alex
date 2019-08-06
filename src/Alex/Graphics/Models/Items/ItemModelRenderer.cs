@@ -25,6 +25,8 @@ namespace Alex.Graphics.Models.Items
 		public Vector3 Rotation { get; set; } = Vector3.Zero;
 		public Vector3 Translation { get; set; }= Vector3.Zero;
 		public Vector3 Scale { get; set; }= Vector3.Zero;
+		
+		
 		public ItemModelRenderer(ResourcePackItem model, McResourcePack resourcePack)
 		{
 			Model = model;
@@ -54,13 +56,30 @@ namespace Alex.Graphics.Models.Items
 			Effect.View = camera.ViewMatrix;
 
 			var scale = Scale * 16f;
+
+			var a = 1f / 16f;
+			var pivot = new Vector3(0.5f, 0.5f, 0.5f) * a;
+			
+			/*var pieceMatrix =
+				Matrix.CreateTranslation(-pivot) *
+				Matrix.CreateScale(scale) *
+						Matrix.CreateFromYawPitchRoll(MathUtils.ToRadians(180f - Rotation.Y), MathUtils.ToRadians(180f - Rotation.X), MathUtils.ToRadians(-Rotation.Z)) * 
+				Matrix.CreateTranslation(new Vector3(Translation.X, Translation.Y, (Translation.Z)));*/
 			
 			var pieceMatrix =
+				/*Matrix.CreateTranslation(-pivot) */
 				Matrix.CreateScale(scale) *
-						Matrix.CreateFromYawPitchRoll(MathUtils.ToRadians(Rotation.Y), MathUtils.ToRadians(Rotation.X), MathUtils.ToRadians(180f - Rotation.Z)) *
-				Matrix.CreateTranslation(-new Vector3(Translation.X * scale.X, Translation.Y, Translation.Z * scale.Z));
+				/*Matrix.CreateFromYawPitchRoll(MathUtils.ToRadians(180f - Rotation.Y), MathUtils.ToRadians(180f - Rotation.X), MathUtils.ToRadians(-Rotation.Z)) * */
+				Matrix.CreateFromYawPitchRoll(MathUtils.ToRadians(- Rotation.Y),0f, MathUtils.ToRadians(-Rotation.Z)) *
+				Matrix.CreateTranslation(new Vector3(Translation.X, Translation.Y + 8f, (Translation.Z - 8f)));
 			
 			Effect.World = pieceMatrix * ParentMatrix;
+		}
+
+		private void DrawLine(GraphicsDevice device, Vector3 start, Vector3 end, Color color)
+		{
+			var vertices = new[] { new VertexPositionColor(start, color),  new VertexPositionColor(end, color) };
+			device.DrawUserPrimitives(PrimitiveType.LineList, vertices, 0, 1);
 		}
 		
 		public void Render(GraphicsDevice device)
@@ -71,6 +90,11 @@ namespace Alex.Graphics.Models.Items
 			foreach (var a in Effect.CurrentTechnique.Passes)
 			{
 				a.Apply();
+
+				DrawLine(device, Vector3.Zero, Vector3.Up, Color.Green);
+				DrawLine(device, Vector3.Zero, Vector3.Forward, Color.Blue);
+				DrawLine(device, Vector3.Zero, Vector3.Right, Color.Red);
+				
 				device.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, Vertices, 0, Vertices.Length, Indexes, 0, Indexes.Length / 3);
 			}
 		}
