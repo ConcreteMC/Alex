@@ -115,6 +115,11 @@ namespace Alex.API.Gui.Elements
 		    {
 			    BackgroundOverlay = DefaultTextBackgroundColor;
 		    }
+		    else
+		    {
+			    Background = null;
+			    BackgroundOverlay = null;
+		    }
 
 			Margin = new Thickness(2);
 		}
@@ -133,13 +138,17 @@ namespace Alex.API.Gui.Elements
 	        var text = _renderText;
             if (!string.IsNullOrWhiteSpace(text))
             {
+	            //base.OnDraw(graphics, gameTime);
+	            
 				/*var size = Font.MeasureString(text, Scale);
 				while (size.X > RenderBounds.Width && text.Length >= 1)
 				{
 					text = text.Substring(0, text.Length - 1);
 					size = Font.MeasureString(text, Scale);
 				}*/
-				graphics.DrawString(RenderPosition, text, Font, TextColor, FontStyle, Scale, Rotation, RotationOrigin, TextOpacity);
+				
+	            graphics.FillRectangle(new Rectangle(RenderPosition.ToPoint(), GetSize(text, _scale).ToPoint()), Background);
+	            graphics.DrawString(RenderPosition, text, Font, TextColor, FontStyle, Scale, Rotation, RotationOrigin, TextOpacity);
 			}
         }
 

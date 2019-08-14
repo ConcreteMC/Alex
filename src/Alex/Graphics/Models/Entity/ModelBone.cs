@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using Alex.API.Entities;
 using Alex.API.Graphics;
 using Alex.API.Utils;
+using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -22,13 +25,29 @@ namespace Alex.Graphics.Models.Entity
 				set { _rotation = value; }
 			}
 
-			public ModelBone(ModelBoneCube[] parts)
+			private Vector3 _position = Vector3.Zero;
+			public Vector3 Position
+			{
+				get { return _position; }
+				set { _position = value; }
+			}
+			
+			private List<IAttachable> Attachables { get; } = new List<IAttachable>();
+
+			private EntityModelBone OriginalBone { get; }
+			public string Parent => OriginalBone.Parent;
+			public ModelBone(ModelBoneCube[] parts, EntityModelBone originalBone)
 			{
 				Parts = parts;
+				OriginalBone = originalBone;
 			}
 
 			private bool _isDirty = true;
-			public void Render(IRenderArgs args, PlayerLocation position)
+
+			public Matrix RotationMatrix = Matrix.Identity;
+			public bool UpdateRotationMatrix = true;
+			private Matrix CharacterMatrix { get; set; }
+			public void Render(IRenderArgs args, PlayerLocation position, Matrix characterMatrix)
 			{
 				if (Buffer == null)
 					return;
@@ -43,8 +62,6 @@ namespace Alex.Graphics.Models.Entity
 					AlphaTestEffect effect = part.Effect;
 					if (effect == null) continue;
 					
-					var yaw = part.ApplyYaw ? MathUtils.ToRadians(180f - position.Yaw) : 0f;
-					
 					var headYaw = part.ApplyHeadYaw ? MathUtils.ToRadians(-(position.HeadYaw - position.Yaw)) : 0f;
 					var pitch = part.ApplyPitch ? MathUtils.ToRadians(position.Pitch) : 0f;
 
@@ -58,18 +75,16 @@ namespace Alex.Graphics.Models.Entity
 						                   )  
 					                   * Matrix.CreateTranslation(part.Pivot);
 
-					if (part.ApplyYaw)
-						rotMatrix *= Matrix.CreateRotationY(yaw);
-
 					var rotMatrix2 = Matrix.CreateTranslation(-part.Pivot) *
 						Matrix.CreateFromYawPitchRoll(headYaw, pitch, 0f) *
 					                 Matrix.CreateTranslation(part.Pivot);
 					
-					effect.World =  (rotMatrix2 *
-					               rotMatrix 
-					              ) * (Matrix.CreateScale(1f / 16f) * Matrix.CreateTranslation(position));
-
-					//Effect.World = world * (Matrix.CreateScale(1f / 16f) * Matrix.CreateTranslation(position));
+					var rotateMatrix = Matrix.CreateTranslation(part.Origin) * (rotMatrix2 *
+					                  rotMatrix);
+					
+					RotationMatrix = rotateMatrix * characterMatrix;
+						
+					effect.World = rotateMatrix * characterMatrix;
 					effect.View = args.Camera.ViewMatrix;
 					effect.Projection = args.Camera.ProjectionMatrix;
 
@@ -81,10 +96,16 @@ namespace Alex.Graphics.Models.Entity
 					args.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, idx, part.Indexes.Length / 3);
 					idx += part.Indexes.Length;
 				}
+
+				foreach (var attach in Attachables.ToArray())
+				{
+					attach.Render(args);
+				}
 			}
 
-			public void Update(IUpdateArgs args, PlayerLocation position, Vector3 diffuseColor)
+			public void Update(IUpdateArgs args, Matrix characterMatrix, Vector3 diffuseColor)
 			{
+				CharacterMatrix = characterMatrix;
 				foreach (var part in Parts)
 				{
 					if (part.Effect != null)
@@ -97,6 +118,11 @@ namespace Alex.Graphics.Models.Entity
 
 					_isDirty = true;
 					part.Update(args);
+				}
+
+				foreach (var attachable in Attachables.ToArray())
+				{
+					attachable.Update(RotationMatrix);
 				}
 
 				if (_isDirty)
@@ -123,6 +149,18 @@ namespace Alex.Graphics.Models.Entity
 				}
 			}
 
+			public void Attach(IAttachable attachable)
+			{
+				if (!Attachables.Contains(attachable))
+					Attachables.Add(attachable);
+			}
+
+			public void Detach(IAttachable attachable)
+			{
+				if (Attachables.Contains(attachable))
+					Attachables.Remove(attachable);
+			}
+			
 			public void Dispose()
 			{
 				Buffer?.Dispose();

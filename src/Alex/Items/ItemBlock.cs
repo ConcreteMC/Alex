@@ -8,6 +8,8 @@ namespace Alex.Items
 	    public ItemBlock(IBlockState block)
 	    {
 		    this.Block = block;
+		    Name = block.Block.Name;
+		    DisplayName = block.Block.DisplayName;
 	    }
     }
 }

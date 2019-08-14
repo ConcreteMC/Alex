@@ -79,10 +79,12 @@ namespace Alex.GameStates.Playing
 			{
 				if (_guiPlayerInventoryDialog == null)
 				{
+					_allowMovementInput = false;
 					Alex.Instance.GuiManager.ShowDialog(_guiPlayerInventoryDialog = new GuiPlayerInventoryDialog(Player, Player.Inventory));
 				}
 				else
 				{
+					_allowMovementInput = true;
 					Alex.Instance.GuiManager.HideDialog(_guiPlayerInventoryDialog);
 					_guiPlayerInventoryDialog = null;
 				}
