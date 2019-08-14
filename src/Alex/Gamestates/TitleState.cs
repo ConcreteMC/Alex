@@ -283,7 +283,7 @@ namespace Alex.GameStates
 				
 				//entity.Inventory[entity.Inventory.SelectedSlot] =
 
-				if (ItemFactory.TryGetItem("minecraft:diamond_sword", out var sword))
+			/*	if (ItemFactory.TryGetItem("minecraft:diamond_sword", out var sword))
 				{
 					entity.Inventory[entity.Inventory.SelectedSlot] = sword;
 					entity.Inventory.MainHand = sword;
@@ -291,7 +291,7 @@ namespace Alex.GameStates
 				else
 				{
 					Log.Warn($"Could not get diamond sword!");
-				}
+				}*/
 				
 				AddChild(_playerView = new GuiEntityModelView(entity/*new PlayerMob("", null, null, skin.Texture, skin.Slim)*/ ) /*"geometry.humanoid.customSlim"*/
 			{
