@@ -233,10 +233,10 @@ namespace Alex.Gui.Elements
             
             public void SetEntityRotation(float yaw, float pitch)
             {
-               // EntityPosition.Yaw   = yaw;
-                //EntityPosition.Pitch = pitch;
+                EntityPosition.Yaw   = yaw;
+                EntityPosition.Pitch = pitch;
                 //TODO: Check what is correct.
-                ViewMatrix = Matrix.CreateLookAt(Target + lookAtOffset, Target + (Vector3.Up * Player.EyeLevel), Vector3.Up);
+                //ViewMatrix = Matrix.CreateLookAt(Target + lookAtOffset, Target + (Vector3.Up * Player.EyeLevel), Vector3.Up);
             }
 
             public void SetEntityRotation(float yaw, float pitch, float headYaw)
