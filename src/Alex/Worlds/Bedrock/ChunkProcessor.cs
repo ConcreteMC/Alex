@@ -46,11 +46,11 @@ namespace Alex.Worlds.Bedrock
 	        //for(int i = 0; i < workerThreads; i++) DispatchWorker();
         }
 
-        public void HandleChunkData(byte[] chunkData, int cx, int cz, Action<ChunkColumn> callback)
+        public void HandleChunkData(bool cacheEnabled, uint subChunkCount, byte[] chunkData, int cx, int cz, Action<ChunkColumn> callback)
         {
 	        ThreadPool.QueueUserWorkItem(o =>
 	        {
-		        HandleChunk(chunkData, cx, cz,
+		        HandleChunk(cacheEnabled, subChunkCount, chunkData, cx, cz,
 			       callback);
 	        });
 	        //QueuedChunks.Add(new QueuedChunk(chunkData, cx, cz, callback));
@@ -86,7 +86,7 @@ namespace Alex.Worlds.Bedrock
 		        {
 			        while (QueuedChunks.TryTake(out var queuedChunk, 1000, CancellationToken))
 			        {
-				        HandleChunk(queuedChunk.ChunkData, queuedChunk.ChunkX, queuedChunk.ChunkZ,
+				        HandleChunk(queuedChunk.CacheEnabled, queuedChunk.SubChunkCount, queuedChunk.ChunkData, queuedChunk.ChunkX, queuedChunk.ChunkZ,
 					        queuedChunk.Callback);
 			        }
 		        }
@@ -101,7 +101,7 @@ namespace Alex.Worlds.Bedrock
 
         private static ConcurrentDictionary<uint, IBlockState> _convertedStates = new ConcurrentDictionary<uint, IBlockState>();
 
-        private void HandleChunk(byte[] chunkData, int cx, int cz, Action<ChunkColumn> callback)
+        private void HandleChunk(bool cacheEnabled, uint subChunkCount, byte[] chunkData, int cx, int cz, Action<ChunkColumn> callback)
         {
 	        MeasureProfiler.StartCollectingData();
 	        var profiler = MiniProfiler.StartNew("BEToJavaColumn");
@@ -112,8 +112,8 @@ namespace Alex.Worlds.Bedrock
 		        {
 			        NbtBinaryReader defStream = new NbtBinaryReader(stream, true);
 
-			        int count = defStream.ReadByte();
-			        if (count < 1)
+			        //int count = defStream.ReadByte();
+			        if (subChunkCount < 1)
 			        {
 				        Log.Warn("Nothing to read");
 				        return;
@@ -124,7 +124,7 @@ namespace Alex.Worlds.Bedrock
 			        chunkColumn.X = cx;
 			        chunkColumn.Z = cz;
 
-			        for (int s = 0; s < count; s++)
+			        for (int s = 0; s < subChunkCount; s++)
 			        {
 				        var section = chunkColumn.Sections[s] as ChunkSection;
 				        if (section == null) section = new ChunkSection(s, true);
@@ -363,10 +363,10 @@ namespace Alex.Worlds.Bedrock
 			        }
 
 
-			        byte[] ba = new byte[512];
+			       /* byte[] ba = new byte[512];
 			        if (defStream.Read(ba, 0, 256 * 2) != 256 * 2) Log.Error($"Out of data height");
 
-			        Buffer.BlockCopy(ba, 0, chunkColumn.Height, 0, 512);
+			        Buffer.BlockCopy(ba, 0, chunkColumn.Height, 0, 512);*/
 
 			        int[] biomeIds = new int[256];
 			        for (int i = 0; i < biomeIds.Length; i++)
@@ -728,6 +728,8 @@ namespace Alex.Worlds.Bedrock
 		
 		private class QueuedChunk
 		{
+			public bool CacheEnabled { get; set; }
+			public uint SubChunkCount { get; set; }
 			public byte[] ChunkData { get; }
 			public int ChunkX { get; }
 			public int ChunkZ { get; }

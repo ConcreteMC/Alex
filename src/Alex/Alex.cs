@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -16,6 +17,7 @@ using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Entities;
 using Alex.GameStates;
+using Alex.Gamestates.Debug;
 using Alex.GameStates.Gui.MainMenu;
 using Alex.GameStates.Playing;
 using Alex.Gui;
@@ -35,6 +37,7 @@ using Newtonsoft.Json;
 using NLog;
 using StackExchange.Profiling;
 using GuiDebugHelper = Alex.Gui.GuiDebugHelper;
+using Point = Microsoft.Xna.Framework.Point;
 using TextInputEventArgs = Microsoft.Xna.Framework.TextInputEventArgs;
 
 namespace Alex
@@ -239,7 +242,7 @@ namespace Alex
 			Services.AddService<IStorageSystem>(storage);
 			
 			var optionsProvider = new OptionsProvider(storage);
-			optionsProvider.Load();
+			//optionsProvider.Load();
 			
 			optionsProvider.AlexOptions.VideoOptions.UseVsync.Bind((value, newValue) => { SetVSync(newValue); });
 			if (optionsProvider.AlexOptions.VideoOptions.UseVsync.Value)
@@ -366,25 +369,23 @@ namespace Alex
 			GuiRenderer.LoadResourcePack(Resources.ResourcePack);
 			AnvilWorldProvider.LoadBlockConverter();
 
-			GameStateManager.AddState<TitleState>("title");
-
-			if (LaunchSettings.ConnectOnLaunch && ProfileService.CurrentProfile != null)
+			if (LaunchSettings.ModelDebugging)
 			{
-				ConnectToServer(LaunchSettings.Server, ProfileService.CurrentProfile, LaunchSettings.ConnectToBedrock);
+				GameStateManager.SetActiveState<ModelDebugState>();
 			}
 			else
 			{
 				GameStateManager.SetActiveState<TitleState>("title");
 				var player = new Player(GraphicsDevice, this, null, null, new Skin(),  null, PlayerIndex.One);
 				player.Inventory.IsPeInventory = true;
-				Random rnd = new Random();
+				/*Random rnd = new Random();
 				for (int i = 0; i < player.Inventory.SlotCount; i++)
 				{
 					player.Inventory[i] = new ItemBlock(BlockFactory.AllBlockstates.ElementAt(rnd.Next() % BlockFactory.AllBlockstates.Count).Value)
 					{
 						Count = rnd.Next(1, 64)
 					};
-				}
+				}*/
 				//GuiManager.ShowDialog(new GuiPlayerInventoryDialog(player, player.Inventory));
 			}
 
@@ -392,11 +393,11 @@ namespace Alex
 
 		}
 
-		private void OnResourcePackPreLoadCompleted(IFont font)
+		private void OnResourcePackPreLoadCompleted(Bitmap fontBitmap, List<char> bitmapCharacters)
 		{
-			Font = font;
+			Font = new BitmapFont(GraphicsDevice, fontBitmap, 16, bitmapCharacters);
 
-			GuiManager.ApplyFont(font);
+			GuiManager.ApplyFont(Font);
 		}
 
 		public void ConnectToServer(IPEndPoint serverEndPoint, PlayerProfile profile, bool bedrock = false)

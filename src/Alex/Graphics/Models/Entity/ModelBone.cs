@@ -67,6 +67,17 @@ namespace Alex.Graphics.Models.Entity
 
 					var rot = _rotation + part.Rotation;
 
+					/*Matrix rotMatrix = Matrix.CreateTranslation(-part.Pivot)
+									   * Matrix.CreateFromYawPitchRoll(
+																	   MathUtils.ToRadians(rot.Y),
+																	   MathUtils.ToRadians(rot.X),
+																	   MathUtils.ToRadians(rot.Z)
+																	  );
+					rotMatrix *= Matrix.CreateTranslation(part.Pivot);
+					
+					if (part.ApplyYaw)
+						rotMatrix *= Matrix.CreateRotationY(yaw);*/
+
 					Matrix rotMatrix = Matrix.CreateTranslation(-part.Pivot) 
 					                   * Matrix.CreateFromYawPitchRoll(
 						                   MathUtils.ToRadians(rot.Y), 
@@ -74,6 +85,7 @@ namespace Alex.Graphics.Models.Entity
 						                   MathUtils.ToRadians(rot.Z)
 						                   )  
 					                   * Matrix.CreateTranslation(part.Pivot);
+
 
 					var rotMatrix2 = Matrix.CreateTranslation(-part.Pivot) *
 						Matrix.CreateFromYawPitchRoll(headYaw, pitch, 0f) *

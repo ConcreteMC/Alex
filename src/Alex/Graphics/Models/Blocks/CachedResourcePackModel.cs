@@ -95,6 +95,8 @@ namespace Alex.Graphics.Models.Blocks
 
 		internal virtual bool ShouldRenderFace(IWorld world, BlockFace face, BlockCoordinates position, IBlock me)
 		{
+			if (world == null) return true;
+			
 			if (position.Y >= 256) return true;
 
 			var pos = position + face.GetBlockCoordinates();
@@ -424,7 +426,7 @@ namespace Alex.Graphics.Models.Blocks
 			var verts = new List<VertexPositionNormalTextureColor>(36);
 			var indexResult = new List<int>();
 
-			int biomeId = world.GetBiome((int) position.X, 0, (int) position.Z);
+			int biomeId = world == null ? 0 : world.GetBiome((int) position.X, 0, (int) position.Z);
 			var biome = BiomeUtils.GetBiomeById(biomeId);
 
 			for (var bsModelIndex = 0; bsModelIndex < models.Length; bsModelIndex++)
@@ -498,7 +500,7 @@ namespace Alex.Graphics.Models.Blocks
 						}
 						
 						faceColor = AdjustColor(faceColor, facing,
-							GetLight(world, position + cullFace.GetVector3(),
+							world == null ? 15 : GetLight(world, position + cullFace.GetVector3(),
 								false), element.Shade);
 
                         var initialIndex = verts.Count;

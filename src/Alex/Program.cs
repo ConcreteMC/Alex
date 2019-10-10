@@ -159,6 +159,11 @@ namespace Alex
 				{
 					nextIsWorkDir = true;
 				}
+
+				if (arg == "--debug")
+				{
+					launchSettings.ModelDebugging = true;
+				}
 			}
 
 			return launchSettings;
@@ -177,7 +182,8 @@ namespace Alex
 		public bool ShowConsole = false;
 		public string WorkDir;
 		public bool ConnectToBedrock = false;
-
+		public bool ModelDebugging = false;
+		
 		public LaunchSettings()
 		{
 			var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create);
@@ -211,13 +217,13 @@ namespace Alex
 
 		public void Run()
 		{
-			Stopwatch sw = Stopwatch.StartNew();
+			/*Stopwatch sw = Stopwatch.StartNew();
 			for (int i = 0; i < 100000; i++)
 			{
 				_chunkProcessor.HandleChunkData(data[i % data.Length], 0, 0, column => { });
 			}
 			sw.Stop();
-			Console.WriteLine($"Processing 100000 chunks took: {sw.ElapsedMilliseconds}ms");
+			Console.WriteLine($"Processing 100000 chunks took: {sw.ElapsedMilliseconds}ms");*/
 		}
 	}
 }

@@ -62,6 +62,7 @@ namespace Alex.API.Services
             }
             catch (Exception ex)
             {
+	            Log.Warn($"Failed to read: {ex.ToString()}");
                 value = default(T);
                 return false;
             }

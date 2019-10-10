@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Drawing;
 using System.Linq;
 using Alex.API.Utils;
 using Alex.Graphics.Models.Items;
@@ -158,8 +159,9 @@ namespace Alex
 			    var texture0 = item.Textures.FirstOrDefault();
 			    if (texture0.Value != null)
 			    {
-				    if (ResourcePack.TryGetTexture(texture0.Value, out texture))
+				    if (ResourcePack.TryGetBitmap(texture0.Value, out Bitmap bmp))
 				    {
+					    texture = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, bmp);
 					    return true;
                     }
 				    else
@@ -175,8 +177,9 @@ namespace Alex
 				    var texture0 = b.Textures.OrderBy(x => x.Value.Contains("side")).FirstOrDefault();
 				    if (texture0.Value != null)
 				    {
-					    if (ResourcePack.TryGetTexture(texture0.Value, out texture))
+					    if (ResourcePack.TryGetBitmap(texture0.Value, out Bitmap bmp))
 					    {
+						    texture = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, bmp);
 						    return true;
 					    }
 					    else

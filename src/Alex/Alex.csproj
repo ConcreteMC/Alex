@@ -25,7 +25,7 @@
 		<RuntimeIdentifier>win10-x64</RuntimeIdentifier>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(OS)' == 'Unix' ">
-		<RuntimeIdentifier>ubuntu.16.10-x64</RuntimeIdentifier>
+		<RuntimeIdentifier>ubuntu.19.04-x64</RuntimeIdentifier>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(OS)' == 'OSX' ">
 		<RuntimeIdentifier>osx.10.14-x64</RuntimeIdentifier>

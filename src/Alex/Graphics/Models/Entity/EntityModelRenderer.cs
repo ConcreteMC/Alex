@@ -166,7 +166,8 @@ namespace Alex.Graphics.Models.Entity
 		public void Render(IRenderArgs args, PlayerLocation position)
 		{
 			args.GraphicsDevice.SetVertexBuffer(VertexBuffer);
-			
+
+			if (Bones == null) return;
 			foreach (var bone in Bones)
 			{
 				bone.Value.Render(args, position, CharacterMatrix);
@@ -177,9 +178,12 @@ namespace Alex.Graphics.Models.Entity
 		private Matrix CharacterMatrix { get; set; } = Matrix.Identity;
 		public void Update(IUpdateArgs args, PlayerLocation position)
 		{
+			if (Bones == null) return;
+
 			CharacterMatrix = Matrix.CreateScale(1 / 16f) *
 			                         Matrix.CreateRotationY(MathUtils.ToRadians((180f - position.Yaw))) *
 			                         Matrix.CreateTranslation(position);
+
 			foreach (var bone in Bones)
 			{
 				bone.Value.Update(args, CharacterMatrix, DiffuseColor);

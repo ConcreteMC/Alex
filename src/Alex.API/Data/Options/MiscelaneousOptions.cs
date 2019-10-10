@@ -6,7 +6,7 @@ namespace Alex.API.Data.Options
     public class MiscelaneousOptions : OptionsBase
     {
         [DataMember]
-        public OptionsProperty<bool> ServerSideLighting { get; }
+        public OptionsProperty<bool> ServerSideLighting { get; set; }
         
         public MiscelaneousOptions()
         {

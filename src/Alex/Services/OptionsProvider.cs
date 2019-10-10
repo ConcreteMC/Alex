@@ -1,5 +1,7 @@
-﻿using Alex.API.Data.Options;
+﻿using System;
+using Alex.API.Data.Options;
 using Alex.API.Services;
+using Newtonsoft.Json;
 using NLog;
 
 namespace Alex.Services
@@ -27,6 +29,10 @@ namespace Alex.Services
             if (_storage.TryRead(StorageKey, out AlexOptions options))
             {
                 AlexOptions = options;
+            }
+            else
+            {
+                Log.Warn($"Could not read from storage.");
             }
         }
 

@@ -52,6 +52,7 @@ namespace Alex.Utils
 		    Bitmap[] lavaFrames = new Bitmap[0];
 		    Bitmap[] waterFlowFrames = new Bitmap[0];
 		    Bitmap[] lavaFlowFrames = new Bitmap[0];
+	        Bitmap[] fireFrames = new Bitmap[0];
 	        
 		    foreach (var other in others.ToArray())
 		    {
@@ -73,6 +74,11 @@ namespace Alex.Utils
 			    else if (other.Key.Contains("lava") && other.Key.Contains("flow"))
 			    {
 				    lavaFlowFrames = GetFrames(other.Value);
+				    others.Remove(other);
+			    }
+			    else if (other.Key.Contains("fire_0"))
+			    {
+				    fireFrames = GetFrames(other.Value);
 				    others.Remove(other);
 			    }
 		    }
@@ -113,17 +119,25 @@ namespace Alex.Utils
 		       // total++;
 		       // regular = regular.Append(new KeyValuePair<string, Bitmap>("block/lava_flow", lavaFlowFrames[0])).ToArray();
 	        }
+	        
+	        if (fireFrames.Length > 0)
+	        {
+		        animated.Add("block/fire_0", lavaFlowFrames[0]);
+		        // total++;
+		        // regular = regular.Append(new KeyValuePair<string, Bitmap>("block/lava_flow", lavaFlowFrames[0])).ToArray();
+	        }
 
 	        var animatedFrameInfo = new Dictionary<string, TextureInfo>();
 	        GenerateAtlasInternal(animated.ToArray(), new KeyValuePair<string, Bitmap>[0], progressReceiver,
 		        animatedFrameInfo, out Bitmap animatedFrame);
 
-	        TextureInfo waterLocation, waterFlowLocation, lavaLocation, lavaFlowLocation;
+	        TextureInfo waterLocation, waterFlowLocation, lavaLocation, lavaFlowLocation, fireLocation;
 
 	        animatedFrameInfo.TryGetValue("block/water_still", out waterLocation);
 	        animatedFrameInfo.TryGetValue("block/water_flow", out waterFlowLocation);
 	        animatedFrameInfo.TryGetValue("block/lava_still", out lavaLocation);
 	        animatedFrameInfo.TryGetValue("block/lava_flow", out lavaFlowLocation);
+	        animatedFrameInfo.TryGetValue("block/fire_0", out fireLocation);
 	        
 	        //var waterLocation = new Vector3();
 		    
@@ -149,6 +163,10 @@ namespace Alex.Utils
 			    destination = new System.Drawing.Rectangle((int) lavaFlowLocation.Position.X, (int) lavaFlowLocation.Position.Y, TextureWidth, TextureHeight);
 			    if (lavaFlowFrames.Length > 0)
 				    TextureUtils.CopyRegionIntoImage(lavaFlowFrames[i % lavaFlowFrames.Length], r, ref target, destination);
+			    
+			    destination = new System.Drawing.Rectangle((int) fireLocation.Position.X, (int) fireLocation.Position.Y, TextureWidth, TextureHeight);
+			    if (lavaFlowFrames.Length > 0)
+				    TextureUtils.CopyRegionIntoImage(fireFrames[i % fireFrames.Length], r, ref target, destination);
 				
 			    frames[i] = TextureUtils.BitmapToTexture2D(Graphics, target, out var s);
 			    totalSize += s;

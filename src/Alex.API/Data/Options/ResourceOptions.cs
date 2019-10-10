@@ -9,10 +9,10 @@ namespace Alex.API.Data.Options
     public class ResourceOptions : OptionsBase
     {
         [DataMember]
-        public OptionsProperty<string> PluginDirectory { get; }
+        public OptionsProperty<string> PluginDirectory { get; set; }
         
         [DataMember]
-        public OptionsProperty<string[]> LoadedResourcesPacks { get; }
+        public OptionsProperty<string[]> LoadedResourcesPacks { get; set; }
 
         public ResourceOptions()
         {

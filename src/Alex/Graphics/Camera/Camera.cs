@@ -19,12 +19,11 @@ namespace Alex.Graphics.Camera
 	    /// </summary>
 	    public float FarDistance { get; set; }
 
-	    public float FOV { get; set; } = 75;
+	    public float FOV { get; set; } = 75f;
 		public Camera(int renderDistance)
 	    {
 		    FarDistance = renderDistance * 16 * 16;
-
-
+			
 		    ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(
 			    MathHelper.ToRadians(FOV),
 			    1.333333F,
