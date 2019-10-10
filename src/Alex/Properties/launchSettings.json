@@ -2,8 +2,8 @@
   "profiles": {
     "Alex": {
       "commandName": "Project",
-      "workingDirectory": "bin/x64/Debug/netcoreapp2.2/",
-      "commandLineArgs": "--debug"
+      "workingDirectory": "",
+      "commandLineArgs": ""
     }
   }
 }
