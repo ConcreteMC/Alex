@@ -19,7 +19,7 @@ jobs:
         dotnet-version: 2.2.108
       
     - name: Build submodules
-      working-directory: ./lib/MiNET
+      working-directory: ./lib/MiNET/src/MiNET
       run: dotnet build --configuration Release
 
     - name: Build with dotnet
