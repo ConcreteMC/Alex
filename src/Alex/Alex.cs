@@ -13,12 +13,16 @@ using Alex.API.Gui;
 using Alex.API.Input;
 using Alex.API.Network;
 using Alex.API.Services;
+using Alex.API.Utils;
 using Alex.API.World;
+using Alex.Entities;
 using Alex.GameStates;
 using Alex.Gamestates.Debug;
 using Alex.GameStates.Gui.MainMenu;
 using Alex.GameStates.Playing;
 using Alex.Gui;
+using Alex.Gui.Dialogs.Containers;
+using Alex.Items;
 using Alex.Networking.Java.Packets;
 using Alex.Plugins;
 using Alex.Services;
@@ -371,17 +375,18 @@ namespace Alex
 			}
 			else
 			{
-				GameStateManager.AddState<TitleState>("title");
-
-				if (LaunchSettings.ConnectOnLaunch && ProfileService.CurrentProfile != null)
+				GameStateManager.SetActiveState<TitleState>("title");
+				var player = new Player(GraphicsDevice, this, null, null, new Skin(),  null, PlayerIndex.One);
+				player.Inventory.IsPeInventory = true;
+				/*Random rnd = new Random();
+				for (int i = 0; i < player.Inventory.SlotCount; i++)
 				{
-					ConnectToServer(LaunchSettings.Server, ProfileService.CurrentProfile,
-						LaunchSettings.ConnectToBedrock);
-				}
-				else
-				{
-					GameStateManager.SetActiveState<TitleState>("title");
-				}
+					player.Inventory[i] = new ItemBlock(BlockFactory.AllBlockstates.ElementAt(rnd.Next() % BlockFactory.AllBlockstates.Count).Value)
+					{
+						Count = rnd.Next(1, 64)
+					};
+				}*/
+				//GuiManager.ShowDialog(new GuiPlayerInventoryDialog(player, player.Inventory));
 			}
 
 			GameStateManager.RemoveState("splash");

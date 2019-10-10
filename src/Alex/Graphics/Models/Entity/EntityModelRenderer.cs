@@ -4,6 +4,7 @@ using System.Linq;
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.ResourcePackLib.Json.Models.Entities;
+using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using NLog;
@@ -68,13 +69,15 @@ namespace Alex.Graphics.Models.Entity
 			foreach (var bone in Model.Bones)
 			{
 				if (bone == null) continue;
-				if (bone.NeverRender) continue;
+			//	if (bone.NeverRender) continue;
 				bool partOfHead = headBones.Contains(bone);
 
+				//bone.Pivot = new Vector3(-bone.Pivot.X, bone.Pivot.Y, bone.Pivot.Z);
+				List<ModelBoneCube> c = new List<ModelBoneCube>();
+				ModelBone modelBone;
+				
 				if (bone.Cubes != null)
 				{
-					List<ModelBoneCube> c = new List<ModelBoneCube>();
-					ModelBone modelBone;
 					foreach (var cube in bone.Cubes)
 					{
 						if (cube == null)
@@ -123,13 +126,15 @@ namespace Alex.Graphics.Models.Entity
 
 						c.Add(part);
 					}
+				}
 
-					modelBone = new ModelBone(c.ToArray());
+				modelBone = new ModelBone(c.ToArray(), bone);
+				modelBone.UpdateRotationMatrix = !bone.NeverRender;
 					if (!modelBones.TryAdd(bone.Name, modelBone))
 					{
 						Log.Warn($"Failed to add bone! {Model.Name}:{bone.Name}");
 					}
-				}
+				
 			}
 
 			VertexBuffer = GpuResourceManager.GetBuffer(this, Alex.Instance.GraphicsDevice,
@@ -144,7 +149,7 @@ namespace Alex.Graphics.Models.Entity
 			foreach (var vertice in data.vertices)
 			{
 				var vertex = vertice;
-				vertex.Position += offset;
+				//vertex.Position += offset;
 				vertices.Add(vertex);
 			}
 			
@@ -165,23 +170,45 @@ namespace Alex.Graphics.Models.Entity
 			if (Bones == null) return;
 			foreach (var bone in Bones)
 			{
-				bone.Value.Render(args, position);
+				bone.Value.Render(args, position, CharacterMatrix);
 			}
 		}
 
 		public Vector3 DiffuseColor { get; set; } = Color.White.ToVector3();
-
+		private Matrix CharacterMatrix { get; set; } = Matrix.Identity;
 		public void Update(IUpdateArgs args, PlayerLocation position)
 		{
 			if (Bones == null) return;
+
+			CharacterMatrix = Matrix.CreateScale(1 / 16f) *
+			                         Matrix.CreateRotationY(MathUtils.ToRadians((180f - position.Yaw))) *
+			                         Matrix.CreateTranslation(position);
+
 			foreach (var bone in Bones)
 			{
-				bone.Value.Update(args, position, DiffuseColor);
+				bone.Value.Update(args, CharacterMatrix, DiffuseColor);
+			}
+
+			foreach (var bone in Bones.Where(x => !string.IsNullOrWhiteSpace(x.Value.Parent)))
+			{
+				var parent = Bones.FirstOrDefault(x =>
+					x.Key.Equals(bone.Value.Parent, StringComparison.InvariantCultureIgnoreCase));
+
+				if (parent.Value != null)
+				{
+					bone.Value.RotationMatrix = parent.Value.RotationMatrix;
+				}
 			}
 		}
 
 		public bool GetBone(string name, out ModelBone bone)
 		{
+			if (string.IsNullOrWhiteSpace(name) || Bones == null || Bones.Count == 0)
+			{
+				bone = null;
+				return false;
+			}
+
 			return Bones.TryGetValue(name, out bone);
 		}
 

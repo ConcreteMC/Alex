@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
 using System.Threading;
 using Alex.API.Blocks.State;
 using Alex.API.Data.Options;
@@ -15,6 +16,8 @@ using Alex.Entities;
 using Alex.GameStates;
 using Alex.Graphics.Camera;
 using Alex.Graphics.Models;
+using Alex.Graphics.Models.Items;
+using Alex.ResourcePackLib.Json.Models.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET.Utils;
@@ -40,7 +43,7 @@ namespace Alex.Worlds
 		public Player Player { get; set; }
 		private Alex Alex { get; }
 		private AlexOptions Options { get; }
-
+		
 		public World(Alex alex, GraphicsDevice graphics, AlexOptions options, Camera camera,
 			INetworkProvider networkProvider)
 		{
@@ -84,6 +87,17 @@ namespace Alex.Worlds
 			Camera.FOV = Options.FieldOfVision.Value;
 
 			PhysicsEngine.AddTickable(Player);
+			
+			Player.Inventory.IsPeInventory = true;
+			if (ItemFactory.TryGetItem("minecraft:diamond_sword", out var sword))
+			{
+				Player.Inventory[Player.Inventory.SelectedSlot] = sword;
+				Player.Inventory.MainHand = sword;
+			}
+			else
+			{
+				Log.Warn($"Could not get diamond sword!");
+			}
 		}
 
 		private void FieldOfVisionOnValueChanged(int oldvalue, int newvalue)
@@ -148,10 +162,18 @@ namespace Alex.Worlds
             ChunkManager.Draw(args);
 			EntityManager.Render(args);
 
+			//TestItemRender.Render(args.GraphicsDevice, (Camera.Position + (Camera.Direction * 2.5f)));
+			
 	        if (Camera is ThirdPersonCamera)
 	        {
-		        Player.Render(args);
+		        Player.RenderEntity = true;
 	        }
+	        else
+	        {
+		        Player.RenderEntity = false;
+	        }
+	        
+	        Player.Render(args);
         }
 
 		public void Render2D(IRenderArgs args)

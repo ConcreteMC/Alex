@@ -37,8 +37,8 @@ namespace Alex.Gui.Elements
             set { _entity = value; }
         }
 
-        private GuiEntityModelViewCamera Camera { get; }
-        private bool                     _canRender;
+        public GuiEntityModelViewCamera Camera { get; }
+        private bool _canRender;
 
         public GuiEntityModelView(Entity entity)
         {
@@ -230,12 +230,13 @@ namespace Alex.Gui.Elements
                 //Camera = new GuiEntityModelViewCamera(this);
                 Camera = new GuiEntityModelViewCamera(EntityPosition);
             }
-
-
+            
             public void SetEntityRotation(float yaw, float pitch)
             {
-                EntityPosition.Yaw   = yaw;
-                EntityPosition.Pitch = pitch;
+               // EntityPosition.Yaw   = yaw;
+                //EntityPosition.Pitch = pitch;
+                //TODO: Check what is correct.
+                ViewMatrix = Matrix.CreateLookAt(Target + lookAtOffset, Target + (Vector3.Up * Player.EyeLevel), Vector3.Up);
             }
 
             public void SetEntityRotation(float yaw, float pitch, float headYaw)

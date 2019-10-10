@@ -279,7 +279,20 @@ namespace Alex.GameStates
 			}
 			
 				var entity = new PlayerMob("", null, null, skin.Texture, skin.Slim);
+				entity.Inventory.IsPeInventory = true;
+				
+				//entity.Inventory[entity.Inventory.SelectedSlot] =
 
+			/*	if (ItemFactory.TryGetItem("minecraft:diamond_sword", out var sword))
+				{
+					entity.Inventory[entity.Inventory.SelectedSlot] = sword;
+					entity.Inventory.MainHand = sword;
+				}
+				else
+				{
+					Log.Warn($"Could not get diamond sword!");
+				}*/
+				
 				AddChild(_playerView = new GuiEntityModelView(entity/*new PlayerMob("", null, null, skin.Texture, skin.Slim)*/ ) /*"geometry.humanoid.customSlim"*/
 			{
 				BackgroundOverlay = new Color(Color.Black, 0.15f),

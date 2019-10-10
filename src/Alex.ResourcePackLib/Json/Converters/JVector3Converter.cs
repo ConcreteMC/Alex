@@ -125,5 +125,5 @@ namespace Alex.ResourcePackLib.Json.Converters
 		{
 			return typeof(Vector2).IsAssignableFrom(objectType);
 		}
-}
+	}
 }
