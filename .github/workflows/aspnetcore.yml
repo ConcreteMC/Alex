@@ -1,11 +1,11 @@
-name: ASP.NET Core CI
+name: .NET Core
 
 on: [push, pull_request, release]
 
 jobs:
   build:
 
-    runs-on: windows-latest
+    runs-on: ubuntu-18.04
     
     steps:      
     - uses: actions/checkout@master
@@ -16,7 +16,7 @@ jobs:
     - name: Setup .NET Core
       uses: actions/setup-dotnet@master
       with:
-        dotnet-version: 2.2.108
+        dotnet-version: 2.2.401
 
     - name: Build with dotnet
       run: dotnet build ./src --configuration Release
