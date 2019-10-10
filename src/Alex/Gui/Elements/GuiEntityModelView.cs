@@ -346,7 +346,7 @@ namespace Alex.Gui.Elements
             }
         }
 
-        class GuiEntityModelViewCamera : Camera
+            public class GuiEntityModelViewCamera : Camera
             {
 
                 public Viewport Viewport             { get; set; }
