@@ -523,6 +523,61 @@ namespace Alex.Worlds.Bedrock
 			UnhandledPackage(message);
 		}
 
+		public override void HandleMcpeLevelEventGeneric(McpeLevelEventGeneric message)
+		{
+			UnhandledPackage(message);
+		}
+
+		public override void HandleMcpeLecternUpdate(McpeLecternUpdate message)
+		{
+			UnhandledPackage(message);
+		}
+
+		public override void HandleMcpeVideoStreamConnect(McpeVideoStreamConnect message)
+		{
+			UnhandledPackage(message);
+		}
+
+		public override void HandleMcpeClientCacheStatus(McpeClientCacheStatus message)
+		{
+			UnhandledPackage(message);
+		}
+
+		public override void HandleMcpeOnScreenTextureAnimation(McpeOnScreenTextureAnimation message)
+		{
+			UnhandledPackage(message);
+		}
+
+		public override void HandleMcpeMapCreateLockedCopy(McpeMapCreateLockedCopy message)
+		{
+			UnhandledPackage(message);
+		}
+
+		public override void HandleMcpeStructureTemplateDataExportRequest(McpeStructureTemplateDataExportRequest message)
+		{
+			UnhandledPackage(message);
+		}
+
+		public override void HandleMcpeStructureTemplateDataExportResponse(McpeStructureTemplateDataExportResponse message)
+		{
+			UnhandledPackage(message);
+		}
+
+		public override void HandleMcpeUpdateBlockProperties(McpeUpdateBlockProperties message)
+		{
+			UnhandledPackage(message);
+		}
+
+		public override void HandleMcpeClientCacheBlobStatus(McpeClientCacheBlobStatus message)
+		{
+			UnhandledPackage(message);
+		}
+
+		public override void HandleMcpeClientCacheMissResponse(McpeClientCacheMissResponse message)
+		{
+			UnhandledPackage(message);
+		}
+
 		public override void HandleMcpeLevelEvent(McpeLevelEvent message)
 		{
 			UnhandledPackage(message);
@@ -709,6 +764,21 @@ namespace Alex.Worlds.Bedrock
 			UnhandledPackage(message);
 		}
 
+		public override void HandleMcpeLevelChunk(McpeLevelChunk msg)
+		{
+			var cacheEnabled = msg.cacheEnabled;
+			var subChunkCount = msg.subChunkCount;
+			var chunkData = msg.chunkData;
+			var cx = msg.chunkX;
+			var cz = msg.chunkZ;
+			msg.PutPool();
+			
+			if (chunkData[0] < 1) //Nothing to read.
+				return;
+			
+			ChunkProcessor.HandleChunkData(cacheEnabled, subChunkCount, chunkData, cx, cz, BaseClient.ChunkReceived);
+		}
+
 		private AutoResetEvent _changeDimensionResetEvent = new AutoResetEvent(false);
 		public override void HandleMcpeChangeDimension(McpeChangeDimension message)
 		{
@@ -757,19 +827,6 @@ namespace Alex.Worlds.Bedrock
 			}
 		}
 		
-		public override void HandleMcpeFullChunkData(McpeFullChunkData msg)
-		{
-			var chunkData = msg.chunkData;
-			var cx = msg.chunkX;
-			var cz = msg.chunkZ;
-			msg.PutPool();
-			
-			if (chunkData[0] < 1) //Nothing to read.
-				return;
-			
-			ChunkProcessor.HandleChunkData(chunkData, cx, cz, BaseClient.ChunkReceived);
-		}
-
 		public override void HandleMcpeSetCommandsEnabled(McpeSetCommandsEnabled message)
 		{
 			UnhandledPackage(message);

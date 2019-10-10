@@ -217,13 +217,13 @@ namespace Alex
 
 		public void Run()
 		{
-			Stopwatch sw = Stopwatch.StartNew();
+			/*Stopwatch sw = Stopwatch.StartNew();
 			for (int i = 0; i < 100000; i++)
 			{
 				_chunkProcessor.HandleChunkData(data[i % data.Length], 0, 0, column => { });
 			}
 			sw.Stop();
-			Console.WriteLine($"Processing 100000 chunks took: {sw.ElapsedMilliseconds}ms");
+			Console.WriteLine($"Processing 100000 chunks took: {sw.ElapsedMilliseconds}ms");*/
 		}
 	}
 }
