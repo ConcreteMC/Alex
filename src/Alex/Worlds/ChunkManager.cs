@@ -929,14 +929,16 @@ namespace Alex.Worlds
 
 			        if (((blockState == null || !blockState.Block.Renderable) ||
 			            (!section.New &&
-			             !neighborsScheduled && !isBorderBlock)) && !force)
+			             !neighborsScheduled)) && !force)
 			        {
 				        continue;
 			        }
+
+			        var shouldRebuildVertices = (force || isScheduled || neighborsScheduled);
 			        
 			        var model = blockState.Model;
 
-			        if (blockState != null && (force || isScheduled || neighborsScheduled) && blockState.Block.RequiresUpdate)
+			        if (blockState != null && shouldRebuildVertices && blockState.Block.RequiresUpdate)
 			        {
 				        blockState = blockState.Block.BlockPlaced(world, blockState, blockPosition);
 				        section.Set(x, y, z, blockState);
@@ -944,14 +946,52 @@ namespace Alex.Worlds
 				        model = blockState.Model;
 			        }
 		        
-			        if (blockState is BlockState state && state.IsMultiPart)
+			        if (blockState is BlockState state && state.IsMultiPart && shouldRebuildVertices)
 			        {
 				        model = new CachedResourcePackModel(Game.Resources,
 					        MultiPartModels.GetBlockStateModels(world, blockPosition, state, state.MultiPartHelper));
 				        // blockState.Block.Update(world, blockPosition);
 			        }
-			        
-			        if (force || isScheduled || neighborsScheduled ||  isBorderBlock)
+
+			        if (!shouldRebuildVertices && positionCache.TryGetValue(new Vector3(x, y, z), out var pos))
+			        {
+				        var indices = pos.Animated
+					        ? cached.AnimatedIndexes
+					        : (pos.Transparent ? cached.TransparentIndexes : cached.SolidIndexes);
+
+				        var indiceIndex = pos.Animated
+					        ? animatedIndexes.Count
+					        : (pos.Transparent ? transparentIndexes.Count : solidIndexes.Count);
+				        for (int index = 0; index < pos.Length; index++)
+				        {
+					        var indice = indices[pos.Index + index];
+					        if (!processedIndices.TryGetValue(indice, out var newIndex))
+					        {
+						        newIndex = solidVertices.Count;
+						        var vertice = cached.Vertices[indice];
+						        solidVertices.Add(vertice);
+
+						        processedIndices.Add(indice, newIndex);
+					        }
+
+					        if (pos.Animated)
+					        {
+						        animatedIndexes.Add(newIndex);
+					        }
+					        else if (pos.Transparent)
+					        {
+						        transparentIndexes.Add(newIndex);
+					        }
+					        else
+					        {
+						        solidIndexes.Add(newIndex);
+					        }
+				        }
+
+				        positions.TryAdd(new Vector3(x, y, z),
+					        new ChunkMesh.EntryPosition(pos.Transparent, pos.Animated, indiceIndex, pos.Length));
+			        } 
+			        else if (shouldRebuildVertices)
 			        {
 				        var data = model.GetVertices(world, blockPosition, blockState.Block);
 							
@@ -965,6 +1005,9 @@ namespace Alex.Worlds
 				            data.indexes.Length == 0)
 				        {
 					        //section.SetRendered(x, y, z, false);
+					        if (isScheduled)
+						        section.SetScheduled(x, y, z, false);
+					        
 					        continue;
 				        }
 
@@ -1004,48 +1047,8 @@ namespace Alex.Worlds
 						        new ChunkMesh.EntryPosition(transparent, animated, startIndex, data.indexes.Length));
 				        }
 			        }
-			        else
-			        {
-				        if (positionCache.TryGetValue(new Vector3(x, y, z), out var pos))
-				        {
-					        var indices = pos.Animated ? cached.AnimatedIndexes : (pos.Transparent ? cached.TransparentIndexes : cached.SolidIndexes);
 
-					        var indiceIndex =  pos.Animated ? animatedIndexes.Count : (pos.Transparent ? transparentIndexes.Count : solidIndexes.Count);
-					        for (int index = 0; index < pos.Length; index++)
-					        {
-						        var indice = indices[pos.Index + index];
-						        if (!processedIndices.TryGetValue(indice, out var newIndex))
-						        {
-							        newIndex = solidVertices.Count;
-							        var vertice = cached.Vertices[indice];
-							        solidVertices.Add(vertice);
-							        
-							        processedIndices.Add(indice, newIndex);
-						        }
-						        
-						        if (pos.Animated)
-						        {
-							        animatedIndexes.Add(newIndex);
-						        }
-						        else if (pos.Transparent)
-						        {
-							        transparentIndexes.Add(newIndex);
-						        }
-						        else
-						        {
-							        solidIndexes.Add(newIndex);
-						        }
-					        }
-					        
-					        positions.TryAdd(new Vector3(x, y, z),
-						        new ChunkMesh.EntryPosition(pos.Transparent, pos.Animated, indiceIndex, pos.Length));
-				        }
-			        }
-
-		        if (isScheduled)
-			        section.SetScheduled(x, y, z, false);
-
-		        //if (isLightingScheduled)
+			        //if (isLightingScheduled)
 			    //    section.SetLightingScheduled(x, y, z, false);
 	        }
 
