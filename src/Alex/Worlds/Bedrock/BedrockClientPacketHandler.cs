@@ -772,10 +772,14 @@ namespace Alex.Worlds.Bedrock
 			var cx = msg.chunkX;
 			var cz = msg.chunkZ;
 			msg.PutPool();
-			
-			if (chunkData[0] < 1) //Nothing to read.
+
+			//if (chunkData[0] < 1)
+			if (subChunkCount < 1)
+			{
+				//Nothing to read.
 				return;
-			
+			}
+
 			ChunkProcessor.HandleChunkData(cacheEnabled, subChunkCount, chunkData, cx, cz, BaseClient.ChunkReceived);
 		}
 

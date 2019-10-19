@@ -233,7 +233,11 @@ namespace Alex.Blocks.Storage
 				{
 					for (int z = 0; z < 16; z++)
 					{
-						IBlock block = this.Get(x, y, z).Block;
+						var bs = this.Get(x, y, z);
+						if (bs == null)
+							continue;
+						
+						IBlock block = bs.Block;
 						
 						var idx = GetCoordinateIndex(x, y, z);
 						

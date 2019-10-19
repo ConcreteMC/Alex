@@ -83,7 +83,11 @@ namespace Alex.Blocks.Storage
 
         private IBlockState Get(int index)
         {
-            return Pallette.Get(Storage[index]);
+            var result = Pallette.Get(Storage[index]);
+            if (result == null)
+                return Air;
+
+            return result;
         }
 
         private static int GetIndex(int x, int y, int z)

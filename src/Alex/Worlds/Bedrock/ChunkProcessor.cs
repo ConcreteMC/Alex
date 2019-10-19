@@ -103,6 +103,10 @@ namespace Alex.Worlds.Bedrock
 
         private void HandleChunk(bool cacheEnabled, uint subChunkCount, byte[] chunkData, int cx, int cz, Action<ChunkColumn> callback)
         {
+	        if (cacheEnabled)
+	        {
+		        Log.Warn($"Unsupported cache enabled!");
+	        }
 	        MeasureProfiler.StartCollectingData();
 	        var profiler = MiniProfiler.StartNew("BEToJavaColumn");
 
