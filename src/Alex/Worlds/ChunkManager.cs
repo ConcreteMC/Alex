@@ -13,6 +13,7 @@ using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
 using Alex.Blocks.Storage;
 using Alex.Graphics.Models.Blocks;
+using Alex.Services;
 using Alex.Utils;
 using Alex.Worlds.Lighting;
 using Microsoft.Xna.Framework;
@@ -50,13 +51,15 @@ namespace Alex.Worlds
         private ConcurrentDictionary<ChunkCoordinates, ChunkData> _chunkData = new ConcurrentDictionary<ChunkCoordinates, ChunkData>();
 
         private AlexOptions Options { get; }
+        private ProfilerService ProfilerService { get; }
         public ChunkManager(Alex alex, GraphicsDevice graphics, AlexOptions option, IWorld world)
         {
 	        Game = alex;
 	        Graphics = graphics;
 	        World = world;
 	        Options = option;
-
+	        ProfilerService = alex.Services.GetService<ProfilerService>();
+	        
 	        Chunks = new ConcurrentDictionary<ChunkCoordinates, IChunkColumn>();
 	        
 	        var fogStart = 0;
@@ -610,10 +613,11 @@ namespace Alex.Worlds
                 return false; //Another thread is already updating this chunk, return.
             }
 
-            var profiler = MiniProfiler.StartNew("Chunk update");
+            var scheduleType = chunk.Scheduled;
+            var profiler = MiniProfiler.StartNew("chunk.update");
             ChunkData data = null;
             bool force = !_chunkData.TryGetValue(coordinates, out data);
-
+			
             try
             {
                 //chunk.UpdateChunk(Graphics, World);
@@ -622,9 +626,9 @@ namespace Alex.Worlds
                 if (currentChunkY < 0) currentChunkY = 0;
 
                 List<ChunkMesh> meshes = new List<ChunkMesh>();
-                using (var step = profiler.Step("chunk.sections"))
+                using (profiler.Step("chunk.sections"))
                 {
-                    for (var i = chunk.Sections.Length - 1; i >= 0; i--)
+	                for (var i = chunk.Sections.Length - 1; i >= 0; i--)
                     {
                         if (i < 0) break;
                         var section = chunk.Sections[i] as ChunkSection;
@@ -635,7 +639,7 @@ namespace Alex.Worlds
 
                         if (i != currentChunkY && i != 0)
                         {
-                            using (var neighBorProfiler = profiler.Step("Neighbor checks"))
+                            using (profiler.Step("chunk.neighboring"))
                             {
                                 if (i > 0 && i < chunk.Sections.Length - 1)
                                 {
@@ -653,13 +657,13 @@ namespace Alex.Worlds
                             }
                         }
 
-                        if (i == 0) force = true;
+                        //if (i == 0) force = true;
 
-                        if (force || section.ScheduledUpdates.Any(x => x == true) || section.IsDirty)
+                        if (force || !section.ScheduledUpdates.IsZero || section.IsDirty)
                         {
-                            using (var meshProfiler = profiler.Step("chunk.meshing"))
+	                        using (profiler.Step("chunk.meshing"))
                             {
-                                var sectionMesh = GenerateSectionMesh(World, chunk.Scheduled,
+                                var sectionMesh = GenerateSectionMesh(World, scheduleType,
                                     new Vector3(chunk.X * 16f, 0, chunk.Z * 16f), ref section, i);
                                 
                                 meshes.Add(sectionMesh);
@@ -687,7 +691,9 @@ namespace Alex.Worlds
 
                 if (vertices.Count > 0)
                 {
-                    using (var bufferProfiler = profiler.Step("chunk.buffer"))
+	                ProfilerService.ReportCount("chunk.vertexCount", vertices.Count);
+	                
+                    using (profiler.Step("chunk.buffer"))
                     {
                         var vertexArray = vertices.ToArray();
                         var solidArray = solidIndexes.ToArray();
@@ -724,6 +730,7 @@ namespace Alex.Worlds
                         PooledIndexBuffer oldSolidIndexBuffer = data.SolidIndexBuffer;
                         PooledIndexBuffer oldTransparentIndexBuffer = data.TransparentIndexBuffer;
 
+                        using(profiler.Step("chunk.buffer.check"))
                         if (vertexArray.Length >= data.Buffer.VertexCount)
                         {
                             // var oldBuffer = data.Buffer;
@@ -735,12 +742,18 @@ namespace Alex.Worlds
                             newVertexBuffer = newBuffer;
                             //  data.Buffer = newBuffer;
                             //  oldBuffer?.Dispose();
+                            
+                            ProfilerService.ReportCount("chunk.bufferSize", data.Buffer.MemoryUsage);
+                            
+                            ProfilerService.TriggerCounter("chunk.bufferResize");
                         }
                         else
                         {
                             data.Buffer.SetData(vertexArray);
+                            ProfilerService.ReportCount("chunk.bufferSize", data.Buffer.MemoryUsage);
                         }
 
+                        using(profiler.Step("Chunk Solid indexbuffer check"))
                         if (solidArray.Length > data.SolidIndexBuffer.IndexCount)
                         {
                             //  var old = data.SolidIndexBuffer;
@@ -759,6 +772,7 @@ namespace Alex.Worlds
                             data.SolidIndexBuffer.SetData(solidArray);
                         }
 
+                        using(profiler.Step("Chunk Transparent indexbuffer check"))
                         if (transparentArray.Length > data.TransparentIndexBuffer.IndexCount)
                         {
                             //  var old = data.TransparentIndexBuffer;
@@ -775,6 +789,7 @@ namespace Alex.Worlds
                             data.TransparentIndexBuffer.SetData(transparentArray);
                         }
                         
+                        using(profiler.Step("Chunk Animated indexbuffer check"))
                         if (animatedArray.Length > data.AnimatedIndexBuffer.IndexCount)
                         {
 	                        //  var old = data.TransparentIndexBuffer;
@@ -791,28 +806,31 @@ namespace Alex.Worlds
 	                        data.AnimatedIndexBuffer.SetData(animatedArray);
                         }
 
-                        if (newVertexBuffer != null)
+                        using (profiler.Step("chunk.buffer.dispose"))
                         {
-                            data.Buffer = newVertexBuffer;
-                            oldBuffer?.MarkForDisposal();
-                        }
+	                        if (newVertexBuffer != null)
+	                        {
+		                        data.Buffer = newVertexBuffer;
+		                        oldBuffer?.MarkForDisposal();
+	                        }
 
-                        if (newTransparentIndexBuffer != null)
-                        {
-                            data.TransparentIndexBuffer = newTransparentIndexBuffer;
-                            oldTransparentIndexBuffer?.MarkForDisposal();
-                        }
-                        
-                        if (newAnimatedIndexBuffer != null)
-                        {
-	                        data.AnimatedIndexBuffer = newAnimatedIndexBuffer;
-	                        oldAnimatedIndexBuffer?.MarkForDisposal();
-                        }
+	                        if (newTransparentIndexBuffer != null)
+	                        {
+		                        data.TransparentIndexBuffer = newTransparentIndexBuffer;
+		                        oldTransparentIndexBuffer?.MarkForDisposal();
+	                        }
 
-                        if (newsolidIndexBuffer != null)
-                        {
-                            data.SolidIndexBuffer = newsolidIndexBuffer;
-                            oldSolidIndexBuffer?.MarkForDisposal();
+	                        if (newAnimatedIndexBuffer != null)
+	                        {
+		                        data.AnimatedIndexBuffer = newAnimatedIndexBuffer;
+		                        oldAnimatedIndexBuffer?.MarkForDisposal();
+	                        }
+
+	                        if (newsolidIndexBuffer != null)
+	                        {
+		                        data.SolidIndexBuffer = newsolidIndexBuffer;
+		                        oldSolidIndexBuffer?.MarkForDisposal();
+	                        }
                         }
                     }
                 }
@@ -848,6 +866,8 @@ namespace Alex.Worlds
                 Monitor.Exit(chunk.UpdateLock);
 
                 profiler.Stop();
+                
+              //   Log.Info(MiniProfiler.Current.RenderPlainText());
             }
 
             return false;
@@ -879,58 +899,59 @@ namespace Alex.Worlds
         private ChunkMesh GenerateSectionMesh(IWorld world, ScheduleType scheduled, Vector3 chunkPosition,
 	        ref ChunkSection section, int yIndex)
         {
-			Dictionary<Vector3, ChunkMesh.EntryPosition> positions = new Dictionary<Vector3, ChunkMesh.EntryPosition>();
+	        var force = section.New || section.MeshCache == null || section.MeshPositions == null;
+
+	        var cached = section.MeshCache;
+	        var positionCache = section.MeshPositions;
+
+	        Dictionary<Vector3, ChunkMesh.EntryPosition> positions = new Dictionary<Vector3, ChunkMesh.EntryPosition>();
 			
 	        List<VertexPositionNormalTextureColor> solidVertices = new List<VertexPositionNormalTextureColor>();
 
 	        List<int> animatedIndexes = new List<int>();
 	        List<int> transparentIndexes = new List<int>();
 	        List<int> solidIndexes = new List<int>();
-
-	        var force = section.New || section.MeshCache == null || section.MeshPositions == null;
-
-	        var cached = section.MeshCache;
-	        var positionCache = section.MeshPositions;
 	        
 	        Dictionary<int, int> processedIndices = new Dictionary<int, int>();
 	        for (var y = 0; y < 16; y++)
 	        for (var x = 0; x < ChunkColumn.ChunkWidth; x++)
 	        for (var z = 0; z < ChunkColumn.ChunkDepth; z++)
 	        {
-		        bool wasScheduled = section.IsScheduled(x, y, z);
-		        bool wasLightingScheduled = section.IsLightingScheduled(x, y, z);
-		        
 		        var blockPosition = new Vector3(x, y + (yIndex << 4), z) + chunkPosition;
-
-		        var isBorderBlock = (scheduled == ScheduleType.Border && (x == 0 || x == 15) || (z == 0 || z == 15));
 		        
+		        bool isScheduled = section.IsScheduled(x, y, z);
 		        var neighborsScheduled = HasScheduledNeighbors(world, blockPosition);
+		       // bool isLightingScheduled = section.IsLightingScheduled(x, y, z);
+
+		       var isBorderBlock = (scheduled == ScheduleType.Border && (x == 0 || x == 15) || (z == 0 || z == 15));
+		        
 			        var blockState = section.Get(x, y, z);
 
+			        if (((blockState == null || !blockState.Block.Renderable) ||
+			            (!section.New &&
+			             !neighborsScheduled && !isBorderBlock)) && !force)
+			        {
+				        continue;
+			        }
+			        
 			        var model = blockState.Model;
+
+			        if (blockState != null && (force || isScheduled || neighborsScheduled) && blockState.Block.RequiresUpdate)
+			        {
+				        blockState = blockState.Block.BlockPlaced(world, blockState, blockPosition);
+				        section.Set(x, y, z, blockState);
+				        
+				        model = blockState.Model;
+			        }
+		        
 			        if (blockState is BlockState state && state.IsMultiPart)
 			        {
 				        model = new CachedResourcePackModel(Game.Resources,
 					        MultiPartModels.GetBlockStateModels(world, blockPosition, state, state.MultiPartHelper));
-				       // blockState.Block.Update(world, blockPosition);
-			        }
-
-			        if (blockState != null && ((force && blockState.Block.RequiresUpdate) || (wasScheduled && blockState.Block.RequiresUpdate)))
-			        {
-				        blockState = blockState.Block.BlockPlaced(world, blockState, blockPosition);
-				        section.Set(x, y, z, blockState);
-
-				        model = blockState.Model;
+				        // blockState.Block.Update(world, blockPosition);
 			        }
 			        
-			        if ((blockState == null || !blockState.Block.Renderable) ||
-			            (!section.New && !section.IsRendered(x, y, z) &&
-			             !neighborsScheduled && !isBorderBlock))
-			        {
-				        continue;
-			        }
-
-			        if (force || wasScheduled || neighborsScheduled ||  isBorderBlock)
+			        if (force || isScheduled || neighborsScheduled ||  isBorderBlock)
 			        {
 				        var data = model.GetVertices(world, blockPosition, blockState.Block);
 							
@@ -1021,11 +1042,11 @@ namespace Alex.Worlds
 				        }
 			        }
 
-		        if (wasScheduled)
+		        if (isScheduled)
 			        section.SetScheduled(x, y, z, false);
 
-		        if (wasLightingScheduled)
-			        section.SetLightingScheduled(x, y, z, false);
+		        //if (isLightingScheduled)
+			    //    section.SetLightingScheduled(x, y, z, false);
 	        }
 
 	        section.New = false;

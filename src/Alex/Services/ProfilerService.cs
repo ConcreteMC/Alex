@@ -12,6 +12,8 @@ namespace Alex.Services
         private ConcurrentDictionary<Guid, MiniProfiler> _profilers = new ConcurrentDictionary<Guid, MiniProfiler>();
         public event EventHandler<ProfilerStartedEvent> OnProfilerStarted;
         public event EventHandler<ProfilerStoppedEvent> OnProfilerStopped;
+        public event EventHandler<GenericProfilingEvent> OnGenericProfilingEvent;
+        public event EventHandler<CounterProfilingEvent> OnCounter; 
         
         public ProfilerService()
         {
@@ -19,6 +21,16 @@ namespace Alex.Services
             MiniProfiler.DefaultOptions.ProfilerProvider = this;
         }
 
+        public void ReportCount(string profilerName, long value, string tag = null)
+        {
+            OnGenericProfilingEvent?.Invoke(this, new GenericProfilingEvent(profilerName, value, tag));
+        }
+
+        public void TriggerCounter(string counter)
+        {
+            OnCounter?.Invoke(this, new CounterProfilingEvent(counter));
+        }
+        
         public override MiniProfiler Start(string profilerName, MiniProfilerBaseOptions options)
         {
             var profiler = base.Start(profilerName, options);
@@ -100,6 +112,30 @@ namespace Alex.Services
     {
         public ProfilerStartedEvent(Guid id, MiniProfiler profiler) : base(id, profiler)
         {
+        }
+    }
+
+    public class GenericProfilingEvent
+    {
+        public string Id { get; set; }
+        public long Value { get; }
+        
+        public string Tag { get; }
+        public GenericProfilingEvent(string id, long value, string tag = "") : base()
+        {
+            Id = id;
+            Value = value;
+            Tag = tag;
+        }
+    }
+
+    public class CounterProfilingEvent
+    {
+        public string Id { get; set; }
+
+        public CounterProfilingEvent(string id)
+        {
+            Id = id;
         }
     }
 }
