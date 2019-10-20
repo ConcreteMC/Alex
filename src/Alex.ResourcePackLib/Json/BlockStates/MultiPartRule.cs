@@ -3,13 +3,24 @@ using Newtonsoft.Json;
 
 namespace Alex.ResourcePackLib.Json.BlockStates
 {
-    public sealed class MultiPartRule
+	public sealed class MultiPartRule
     {
-		public string North = "";
+	    [JsonConverter(typeof(StringBooleanConverter))]
+	    public string North = "";
+	    
+	    [JsonConverter(typeof(StringBooleanConverter))]
 	    public string South = "";
+	    
+	    [JsonConverter(typeof(StringBooleanConverter))]
 	    public string East = "";
+	    
+	    [JsonConverter(typeof(StringBooleanConverter))]
 	    public string West = "";
+	    
+	    [JsonConverter(typeof(StringBooleanConverter))]
 	    public string Up = "";
+	    
+	    [JsonConverter(typeof(StringBooleanConverter))]
 	    public string Down = "";
 
 	    [JsonConverter(typeof(SingleOrArrayConverter<MultiPartRule>))]

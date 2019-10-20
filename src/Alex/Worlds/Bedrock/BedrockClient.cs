@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO.Compression;
+using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
@@ -24,7 +25,9 @@ using MiNET.Plugins;
 using MiNET.Utils;
 using NLog;
 using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Crypto.Agreement;
 using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using NewtonsoftMapper = MiNET.NewtonsoftMapper;
@@ -144,17 +147,17 @@ namespace Alex.Worlds.Bedrock
             Dispose();
         }
 
-        public override void OnConnectionRequestAccepted()
+		public override void OnConnectionRequestAccepted()
 		{
 			ConnectionAcceptedWaitHandle.Set();
-			
-            SendNewIncomingConnection();
-            //_connectedPingTimer = new Timer(state => SendConnectedPing(), null, 1000, 1000);
 
-            SendAlexLogin(Username);
-        }
+			SendNewIncomingConnection();
+			//_connectedPingTimer = new Timer(state => SendConnectedPing(), null, 1000, 1000);
 
-        private void SendAlexLogin(string username)
+			SendAlexLogin(Username);
+		}
+
+		private void SendAlexLogin(string username)
         {
             JWT.JsonMapper = new NewtonsoftMapper();
 
@@ -176,7 +179,6 @@ namespace Alex.Worlds.Bedrock
                 xuid = element.ExtraData.Xuid;
                 
                 certChain = XblmsaService.MinecraftChain;
-                Log.Info($"Using signed certificate chain");
             }
             else
             {
@@ -225,6 +227,46 @@ namespace Alex.Worlds.Bedrock
 
         //    Session.CryptoContext.UseEncryption = true;
         }
+		
+		public new void InitiateEncryption(byte[] serverKey, byte[] randomKeyToken)
+		{
+			try
+			{
+				ECPublicKeyParameters remotePublicKey = (ECPublicKeyParameters)
+					PublicKeyFactory.CreateKey(serverKey);
+
+				ECDHBasicAgreement agreement = new ECDHBasicAgreement();
+				agreement.Init(Session.CryptoContext.ClientKey.Private);
+				byte[] secret;
+				using (var sha = SHA256.Create())
+				{
+					secret = sha.ComputeHash(randomKeyToken.Concat(agreement.CalculateAgreement(remotePublicKey).ToByteArrayUnsigned()).ToArray());
+				}
+		        
+				// Create a decrytor to perform the stream transform.
+				IBufferedCipher decryptor = CipherUtilities.GetCipher("AES/CFB8/NoPadding");
+				decryptor.Init(false, new ParametersWithIV(new KeyParameter(secret), secret.Take(16).ToArray()));
+
+				IBufferedCipher encryptor = CipherUtilities.GetCipher("AES/CFB8/NoPadding");
+				encryptor.Init(true, new ParametersWithIV(new KeyParameter(secret), secret.Take(16).ToArray()));
+
+				Session.CryptoContext = new CryptoContext
+				{
+					Decryptor = decryptor,
+					Encryptor = encryptor,
+					UseEncryption = true,
+					Key = secret
+				};
+
+				Thread.Sleep(1250);
+				McpeClientToServerHandshake magic = new McpeClientToServerHandshake();
+				SendPacket(magic);
+			}
+			catch (Exception e)
+			{
+				Log.Error("Initiate encryption", e);
+			}
+		}
 
         private static ECDsa ConvertToSingKeyFormat(AsymmetricCipherKeyPair key)
         {
@@ -253,9 +295,9 @@ namespace Alex.Worlds.Bedrock
                 JsonMapper = new JWTMapper()
             });
 
-            Log.Warn(JWT.Payload(val));
+           // Log.Warn(JWT.Payload(val));
 
-            Log.Warn(string.Join(";", JWT.Headers(val)));
+          //  Log.Warn(string.Join(";", JWT.Headers(val)));
 
             val = $@"{{ ""chain"": [""{val}""] }}";
 

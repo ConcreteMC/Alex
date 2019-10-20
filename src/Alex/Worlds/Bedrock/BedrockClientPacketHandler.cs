@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Numerics;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Blocks.State;
@@ -21,12 +22,15 @@ using Alex.Items;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
 using fNbt;
+using Jose;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET;
 using MiNET.Client;
 using MiNET.Net;
 using MiNET.Utils;
 using NLog;
+using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.Security;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using Inventory = Alex.Utils.Inventory;
 using NibbleArray = MiNET.Utils.NibbleArray;
@@ -64,10 +68,45 @@ namespace Alex.Worlds.Bedrock
 			Log.Warn($"Unhandled bedrock packet: {packet.GetType().Name} (0x{packet.Id:X2})");
 		}
 
-		public override void HandleMcpePlayStatus(McpePlayStatus message)
+        public override void HandleMcpeServerToClientHandshake(McpeServerToClientHandshake message)
+        {
+	        string token = message.token;
+
+	        IDictionary<string, dynamic> headers = JWT.Headers(token);
+	        string x5u = headers["x5u"];
+
+	        ECPublicKeyParameters remotePublicKey = (ECPublicKeyParameters) PublicKeyFactory.CreateKey(x5u.DecodeBase64());
+
+	        var signParam = new ECParameters
+	        {
+		        Curve = ECCurve.NamedCurves.nistP384,
+		        Q =
+		        {
+			        X = remotePublicKey.Q.AffineXCoord.GetEncoded(),
+			        Y = remotePublicKey.Q.AffineYCoord.GetEncoded()
+		        },
+	        };
+	        signParam.Validate();
+
+	        var signKey = ECDsa.Create(signParam);
+
+	        try
+	        {
+		        var data = JWT.Decode<HandshakeData>(token, signKey);
+
+		        BaseClient.InitiateEncryption(Base64Url.Decode(x5u), Base64Url.Decode(data.salt));
+	        }
+	        catch (Exception e)
+	        {
+		        Log.Error(token, e);
+		        throw;
+	        }
+        }
+
+        public override void HandleMcpePlayStatus(McpePlayStatus message)
 		{
 			Client.PlayerStatus = message.status;
-
+			
 			if (Client.PlayerStatus == 3)
 			{
 				Client.HasSpawned = true;
@@ -538,7 +577,7 @@ namespace Alex.Worlds.Bedrock
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeClientCacheStatus(McpeClientCacheStatus message)
+		public override void HandleMcpeClientCacheStatus(MiNET.Net.McpeClientCacheStatus message)
 		{
 			UnhandledPackage(message);
 		}
@@ -772,10 +811,14 @@ namespace Alex.Worlds.Bedrock
 			var cx = msg.chunkX;
 			var cz = msg.chunkZ;
 			msg.PutPool();
-			
-			if (chunkData[0] < 1) //Nothing to read.
+
+			//if (chunkData[0] < 1)
+			if (subChunkCount < 1)
+			{
+				//Nothing to read.
 				return;
-			
+			}
+
 			ChunkProcessor.HandleChunkData(cacheEnabled, subChunkCount, chunkData, cx, cz, BaseClient.ChunkReceived);
 		}
 
