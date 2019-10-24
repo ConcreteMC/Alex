@@ -929,12 +929,12 @@ namespace Alex.Worlds
 
 			        if (((blockState == null || !blockState.Block.Renderable) ||
 			            (!section.New &&
-			             !neighborsScheduled)) && !force)
+			             !neighborsScheduled)) && !force && !isBorderBlock)
 			        {
 				        continue;
 			        }
 
-			        var shouldRebuildVertices = (force || isScheduled || neighborsScheduled);
+			        var shouldRebuildVertices = (force || isScheduled || neighborsScheduled || isBorderBlock);
 			        
 			        var model = blockState.Model;
 

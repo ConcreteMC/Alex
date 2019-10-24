@@ -132,6 +132,9 @@ namespace Alex.Graphics.Models.Blocks
 			if (cZ < 0 || cZ > 16)
 				return false;
 			
+			if (!world.HasBlock(pos.X, pos.Y, pos.Z)) 
+				return false;
+			
 			world.GetBlockData(pos.X, pos.Y, pos.Z, out bool blockTransparent, out bool blockSolid);
 
 			if (me.Solid && me.Transparent)
