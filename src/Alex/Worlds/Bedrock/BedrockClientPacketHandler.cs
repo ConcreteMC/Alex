@@ -106,7 +106,7 @@ namespace Alex.Worlds.Bedrock
         public override void HandleMcpePlayStatus(McpePlayStatus message)
 		{
 			Client.PlayerStatus = message.status;
-
+			
 			if (Client.PlayerStatus == 3)
 			{
 				Client.HasSpawned = true;
@@ -577,7 +577,7 @@ namespace Alex.Worlds.Bedrock
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeClientCacheStatus(McpeClientCacheStatus message)
+		public override void HandleMcpeClientCacheStatus(MiNET.Net.McpeClientCacheStatus message)
 		{
 			UnhandledPackage(message);
 		}

@@ -33,7 +33,7 @@ namespace MetricsPlugin
         {
             Metrics = new MetricsBuilder().Report.ToInfluxDb(options =>
             {
-                options.InfluxDb.BaseUri = new Uri("http://127.0.0.1:8086");
+                options.InfluxDb.BaseUri = new Uri("http://s1.pikachu.local:8086");
                 options.InfluxDb.Database = "metrics";
             }).Build();
 

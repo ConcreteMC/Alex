@@ -25,7 +25,7 @@ namespace Alex.API.Graphics
         private ConcurrentDictionary<long, PooledTexture2D> Textures { get; }
         private ConcurrentDictionary<long, PooledVertexBuffer> Buffers { get; }
         private ConcurrentDictionary<long, PooledIndexBuffer> IndexBuffers { get; }
-        
+
         private long _bufferId = 0;
       //  private long _estMemoryUsage = 0;
         private long _textureId = 0;
@@ -52,7 +52,7 @@ namespace Alex.API.Graphics
 
         private object _resourceLock = new object();
         private List<IGpuResource> _resources = new List<IGpuResource>();
-        private Queue<(bool, IGpuResource)> _buffer = new Queue<(bool, IGpuResource)>();
+        private Queue<(bool add, IGpuResource resource)> _buffer = new Queue<(bool, IGpuResource)>();
         private ConcurrentQueue<IGpuResource> _disposalQueue = new ConcurrentQueue<IGpuResource>();
         
         public IEnumerable<IGpuResource> GetResources()
@@ -67,14 +67,14 @@ namespace Alex.API.Graphics
 
             while (_buffer.TryDequeue(out var resource))
             {
-                if (resource.Item1)
+                if (resource.add)
                 {
-                    _resources.Add(resource.Item2);
-                    yield return resource.Item2;
+                    _resources.Add(resource.resource);
+                    yield return resource.resource;
                 }
                 else
                 {
-                    _resources.Remove(resource.Item2);
+                    _resources.Remove(resource.resource);
                 }
             }
         }

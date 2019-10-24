@@ -40,7 +40,29 @@ namespace Alex.Graphics.Models.Blocks
 
 		public override BoundingBox GetBoundingBox(Vector3 position, IBlock requestingBlock)
 		{
-			return new BoundingBox(position + (Min), position + ((Max)));
+			const float minThickness = 0.1f;
+			Vector3 min = Min;
+			Vector3 max = Max;
+
+			var distanceX = max.X - min.X;
+			if (distanceX < minThickness)
+			{
+				max.X += minThickness - distanceX;
+			}
+
+			var distanceZ = max.Z - min.Z;
+			if (distanceZ < minThickness)
+			{
+				max.Z += minThickness - distanceZ;
+			}
+			
+			var distanceY = max.Y - min.Y;
+			if (distanceY < minThickness)
+			{
+				max.Y += minThickness - distanceY;
+			}
+
+			return new BoundingBox(position + (min), position + ((max)));
 		}
 
 		protected void GetCullFaceValues(string facename, BlockFace facing, out BlockFace cullFace)

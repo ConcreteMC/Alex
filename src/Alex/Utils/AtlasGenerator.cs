@@ -53,6 +53,7 @@ namespace Alex.Utils
 		    Bitmap[] waterFlowFrames = new Bitmap[0];
 		    Bitmap[] lavaFlowFrames = new Bitmap[0];
 	        Bitmap[] fireFrames = new Bitmap[0];
+	        Bitmap[] fireFrames2 = new Bitmap[0];
 	        
 		    foreach (var other in others.ToArray())
 		    {
@@ -81,6 +82,11 @@ namespace Alex.Utils
 				    fireFrames = GetFrames(other.Value);
 				    others.Remove(other);
 			    }
+			    else if (other.Key.Contains("fire_1"))
+			    {
+				    fireFrames2 = GetFrames(other.Value);
+				    others.Remove(other);
+			    }
 		    }
 		    
 		    Dictionary<string, TextureInfo> stillFrameInfo = new Dictionary<string, TextureInfo>();
@@ -93,56 +99,53 @@ namespace Alex.Utils
 		    Dictionary<string, Bitmap> animated = new Dictionary<string, Bitmap>();
 		    
 		    if (waterFrames.Length > 0)
-	        {
-		      //  total++;
-				animated.Add("block/water_still", waterFrames[0]);
-		      //  regular = regular.Append(new KeyValuePair<string, Bitmap>("block/water_still", waterFrames[0])).ToArray();
-	        }
+			    animated.Add("block/water_still", waterFrames[0]);
+	        
 
 	        if (waterFlowFrames.Length > 0)
-	        {
-		      //  total++;
-				animated.Add("block/water_flow", waterFlowFrames[0]);
-		      //  regular = regular.Append(new KeyValuePair<string, Bitmap>("block/water_flow", waterFlowFrames[0])).ToArray();
-	        }
+		        animated.Add("block/water_flow", waterFlowFrames[0]);
+	        
 	        
 	        if (lavaFrames.Length > 0)
-	        {
 		        animated.Add("block/lava_still", lavaFrames[0]);
-		      //  total++;
-		      //  regular = regular.Append(new KeyValuePair<string, Bitmap>("block/lava_still", lavaFrames[0])).ToArray();
-	        }
+	        
 	        
 	        if (lavaFlowFrames.Length > 0)
-	        {
 		        animated.Add("block/lava_flow", lavaFlowFrames[0]);
-		       // total++;
-		       // regular = regular.Append(new KeyValuePair<string, Bitmap>("block/lava_flow", lavaFlowFrames[0])).ToArray();
-	        }
-	        
+
 	        if (fireFrames.Length > 0)
-	        {
-		        animated.Add("block/fire_0", lavaFlowFrames[0]);
-		        // total++;
-		        // regular = regular.Append(new KeyValuePair<string, Bitmap>("block/lava_flow", lavaFlowFrames[0])).ToArray();
-	        }
+		        animated.Add("block/fire_0", fireFrames[0]);
+
+	        if (fireFrames2.Length > 0)
+		        animated.Add("block/fire_1", fireFrames2[0]);
 
 	        var animatedFrameInfo = new Dictionary<string, TextureInfo>();
 	        GenerateAtlasInternal(animated.ToArray(), new KeyValuePair<string, Bitmap>[0], progressReceiver,
 		        animatedFrameInfo, out Bitmap animatedFrame);
 
-	        TextureInfo waterLocation, waterFlowLocation, lavaLocation, lavaFlowLocation, fireLocation;
+	        TextureInfo waterLocation, waterFlowLocation, lavaLocation, lavaFlowLocation, fireLocation, fireLocation2;
 
 	        animatedFrameInfo.TryGetValue("block/water_still", out waterLocation);
 	        animatedFrameInfo.TryGetValue("block/water_flow", out waterFlowLocation);
 	        animatedFrameInfo.TryGetValue("block/lava_still", out lavaLocation);
 	        animatedFrameInfo.TryGetValue("block/lava_flow", out lavaFlowLocation);
 	        animatedFrameInfo.TryGetValue("block/fire_0", out fireLocation);
+	        animatedFrameInfo.TryGetValue("block/fire_1", out fireLocation2);
 	        
 	        //var waterLocation = new Vector3();
 		    
 		   // var baseBitmap = new Bitmap(stillAtlas.Width, stillAtlas.Height);
-		    var frames = new Texture2D[Math.Max(waterFrames.Length, waterFlowFrames.Length)];
+		   var frameCount = Math.Max(waterFrames.Length,
+			   Math.Max(waterFlowFrames.Length,
+				   Math.Max(lavaFrames.Length, Math.Max(lavaFlowFrames.Length, fireFrames.Length))));
+
+		   while (frameCount % 2 != 0)
+		   {
+			   frameCount++;
+		   }
+		   
+		   var frames = new Texture2D[frameCount];
+		   
 		    for (int i = 0; i < frames.Length; i++)
 		    {
 			    var target = new Bitmap(animatedFrame);
@@ -165,8 +168,12 @@ namespace Alex.Utils
 				    TextureUtils.CopyRegionIntoImage(lavaFlowFrames[i % lavaFlowFrames.Length], r, ref target, destination);
 			    
 			    destination = new System.Drawing.Rectangle((int) fireLocation.Position.X, (int) fireLocation.Position.Y, TextureWidth, TextureHeight);
-			    if (lavaFlowFrames.Length > 0)
+			    if (fireFrames.Length > 0)
 				    TextureUtils.CopyRegionIntoImage(fireFrames[i % fireFrames.Length], r, ref target, destination);
+			    
+			    destination = new System.Drawing.Rectangle((int) fireLocation2.Position.X, (int) fireLocation2.Position.Y, TextureWidth, TextureHeight);
+			    if (fireFrames2.Length > 0)
+				    TextureUtils.CopyRegionIntoImage(fireFrames2[i % fireFrames2.Length], r, ref target, destination);
 				
 			    frames[i] = TextureUtils.BitmapToTexture2D(Graphics, target, out var s);
 			    totalSize += s;
@@ -254,7 +261,7 @@ namespace Alex.Utils
 		    for(int y = 0; y < iy; y++)
 		    {
 			    Bitmap newBitmap = new Bitmap(TextureWidth, TextureHeight);
-			    TextureUtils.CopyRegionIntoImage(source, new System.Drawing.Rectangle(x,y, TextureWidth, TextureHeight), ref newBitmap, new System.Drawing.Rectangle(0, 0, TextureWidth, TextureHeight));
+			    TextureUtils.CopyRegionIntoImage(source, new System.Drawing.Rectangle(x * TextureWidth,y * TextureHeight, TextureWidth, TextureHeight), ref newBitmap, new System.Drawing.Rectangle(0, 0, TextureWidth, TextureHeight));
 			    
 			    result.Add(newBitmap);
 		    }

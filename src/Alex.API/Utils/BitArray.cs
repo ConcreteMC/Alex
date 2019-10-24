@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Alex.API.Utils
 {
@@ -7,7 +8,8 @@ namespace Alex.API.Utils
     {
         private byte[] Data { get; set; }
         public int Length => 8 * Data.Length;
-
+        public bool IsZero => Data.All(x => x == 0);
+        
         public BitArray(byte[] values)
         {
             Data = values;
