@@ -72,7 +72,7 @@ namespace Alex.Worlds.Lighting
 						    continue;
 					    coords.X = x; coords.Y = y - 1; coords.Z = z;
 					    
-					    var provider = chunk.GetBlockState(coords.X, coords.Y, coords.Z).Block;
+					    var provider = chunk.GetBlock(coords.X, coords.Y, coords.Z);
 
 						if (!provider.Renderable) continue;
 
@@ -105,7 +105,7 @@ namespace Alex.Worlds.Lighting
 			    if (y >= 255)
 				    continue;
 			    _.X = x; _.Y = y - 1; _.Z = z;
-			    var provider = chunk.GetBlockState(_.X, _.Y, _.Z).Block;
+			    var provider = chunk.GetBlock(_.X, _.Y, _.Z);
 
 			    if (!provider.Renderable) continue;
                 if (provider.LightOpacity != 0)
@@ -152,10 +152,10 @@ namespace Alex.Worlds.Lighting
 		    if (value == current)
 			    return;
 
-		    var provider = chunk.GetBlockState(adjustedCoords.X, adjustedCoords.Y, adjustedCoords.Z);
+		    var provider = chunk.GetBlock(adjustedCoords.X, adjustedCoords.Y, adjustedCoords.Z);
 		    if (op.Initial)
 		    {
-			    byte emissiveness = (byte)provider.Block.LightValue;
+			    byte emissiveness = (byte)provider.LightValue;
 			    if (chunk.GetHeight((byte)adjustedCoords.X, (byte)adjustedCoords.Z) <= y)
 				    emissiveness = 15;
 			    if (emissiveness >= current)
@@ -176,7 +176,7 @@ namespace Alex.Worlds.Lighting
             if (chunk == null) // Move on if this chunk is empty
                 return;
 
-            var provider = chunk.GetBlockState(adjustedCoords.X, adjustedCoords.Y, adjustedCoords.Z).Block;
+            var provider = chunk.GetBlock(adjustedCoords.X, adjustedCoords.Y, adjustedCoords.Z);
            // var provider = BlockRepository.GetBlockProvider(id);
 
             // The opacity of the block determines the amount of light it receives from

@@ -62,9 +62,10 @@ namespace Alex.Blocks.Minecraft
         private bool UpdateState(IWorld world, IBlockState state, BlockCoordinates position, BlockCoordinates updatedBlock, out IBlockState result)
         {
             result = state;
-            var blockState = world.GetBlockState(updatedBlock);
-            if (!(blockState?.Block is Stairs)) {return false;}
+            var block = world.GetBlock(updatedBlock);
+            if (!(block is Stairs)) {return false;}
 
+            var blockState = block.BlockState;
             if (GetHalf(state) != GetHalf(blockState))
                 return false;
             

@@ -471,7 +471,7 @@ namespace Alex.Gamestates.Debug
 
 		private void SetVertices()
 		{
-			var b = _blockStates[_index];
+		/*	var b = _blockStates[_index];
 
 			var vertices = b.Model
 							.GetVertices(World
@@ -504,7 +504,7 @@ namespace Alex.Gamestates.Debug
 				GraphicsDevice.SetVertexBuffer(_buffer);
 
 				_canRender = true;
-			}
+			}*/
 
 			// _vertices = vertices.vertices;
 			// _indices = vertices.indexes;
@@ -589,7 +589,7 @@ namespace Alex.Gamestates.Debug
 
 		public override void Update(UpdateArgs args)
 		{
-			var world = Matrix.CreateTranslation(-_rotationCenter) *
+			/*var world = Matrix.CreateTranslation(-_rotationCenter) *
 						(Matrix.CreateRotationX(MathHelper.ToRadians(_location.Pitch)) *
 						 Matrix.CreateRotationY(MathHelper.ToRadians(_location.Yaw)) *
 						 Matrix.CreateRotationZ(MathHelper.ToRadians(_location.Pitch))) *
@@ -630,7 +630,7 @@ namespace Alex.Gamestates.Debug
 				_previousIndex = _index;
 			}
 
-			_currentEffect = (block.Block.Transparent || block.Block.Animated) ? (Effect) _alphaEffect : _basicEffect;
+			_currentEffect = (block.Block.Transparent || block.Block.Animated) ? (Effect) _alphaEffect : _basicEffect;*/
 		}
 
 		public override string GetDebugInfo()

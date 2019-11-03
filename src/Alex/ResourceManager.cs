@@ -9,12 +9,17 @@ using System.Reflection;
 using System.Text;
 using Alex.API.Data.Options;
 using Alex.API.Json;
+using Alex.API.Resources;
 using Alex.API.Services;
+using Alex.Blocks;
+using Alex.Blocks.Minecraft;
+using Alex.Blocks.State;
 using Alex.Entities;
 using Alex.Networking.Java;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Generic;
 using Alex.Utils;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
 using NLog;
@@ -35,13 +40,15 @@ namespace Alex
 
 		private IStorageSystem Storage { get; }
 		private IOptionsProvider Options { get; }
-		public ResourceManager(GraphicsDevice graphics, IStorageSystem storageSystem, IOptionsProvider options)
+		private IRegistryManager RegistryManager { get; }
+		public ResourceManager(GraphicsDevice graphics, IServiceProvider serviceProvider)
 		{
-			Storage = storageSystem;
+			Storage = serviceProvider.GetService<IStorageSystem>();
 			Graphics = graphics;
 			Atlas = new AtlasGenerator(Graphics);
 
-			Options = options;
+			Options = serviceProvider.GetService<IOptionsProvider>();
+			RegistryManager = serviceProvider.GetService<IRegistryManager>();
 		}
 
 		private static readonly string VersionFile = Path.Combine("assets", "version.txt");
@@ -137,7 +144,7 @@ namespace Alex
 			Log.Info($"Loaded {resourcePack.BlockModels.Count} block models from resourcepack");
 			Log.Info($"Loaded {resourcePack.ItemModels.Count} item models from resourcepack");
 
-            ItemFactory.Init(this, resourcePack, progressReceiver);
+            ItemFactory.Init(RegistryManager, this, resourcePack, progressReceiver);
 
 			var language = resourcePack.Languages.Values.FirstOrDefault(x => x.Namespace.Equals("minecraft"));
 			if (language != null)
@@ -155,7 +162,7 @@ namespace Alex
             bool reportMissingModels)
         {
             Stopwatch sw = Stopwatch.StartNew();
-            int imported = BlockFactory.LoadResources(this, resourcePack, replaceModels, reportMissingModels, progressReceiver);
+            int imported = BlockFactory.LoadResources(RegistryManager, this, resourcePack, replaceModels, reportMissingModels, progressReceiver);
             sw.Stop();
 
             Log.Info($"Imported {imported} blockstate variants from resourcepack in {sw.ElapsedMilliseconds}ms!");
@@ -212,7 +219,7 @@ namespace Alex
 
 			return true;
 		}
-
+        
         public DirectoryInfo ResourcePackDirectory { get; private set; } = null;
         public bool CheckResources(GraphicsDevice device, IProgressReceiver progressReceiver, McResourcePack.McResourcePackPreloadCallback preloadCallback)
 		{
@@ -312,6 +319,8 @@ namespace Alex
 				}
 			}
 
+            LoadRegistries(progressReceiver);
+            
             bool isFirst = true;
             foreach (var resourcePack in ActiveResourcePacks)
             {
@@ -331,8 +340,17 @@ namespace Alex
 
             return true;
 		}
+        
+        private void LoadRegistries(IProgressReceiver progress)
+        {
+	        progress.UpdateProgress(0, "Loading blockstate registry...");
+	        RegistryManager.AddRegistry(new RegistryBase<BlockState>("blockstate"));
+	        
+	        progress.UpdateProgress(50, "Loading block registry...");
+	        RegistryManager.AddRegistry(new BlockRegistry());
+        }
 
-		public static string ReadStringResource(string resource)
+        public static string ReadStringResource(string resource)
 		{
 			return Encoding.UTF8.GetString(ReadResource(resource));
 		}

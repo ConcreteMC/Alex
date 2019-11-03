@@ -15,6 +15,8 @@ namespace Alex.Graphics.Models.Blocks
         }
 
 		public float Scale { get; set; } = 1f;
+		public bool Transparent { get; set; }
+		public bool Animated { get; set; }
 
 		public virtual (VertexPositionNormalTextureColor[] vertices, int[] indexes) GetVertices(IWorld world, Vector3 position, IBlock baseBlock)
         {

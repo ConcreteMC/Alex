@@ -4,11 +4,14 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Linq;
+using Alex.API.Resources;
 using Alex.API.Utils;
+using Alex.Blocks.Minecraft;
 using Alex.Graphics.Models.Items;
 using Alex.Items;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json.Models.Items;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
 using NLog;
@@ -25,8 +28,10 @@ namespace Alex
 		private static SecondItemEntry[] SecItemEntries { get; set; }
 		
 		private static ConcurrentDictionary<string, ItemModelRenderer> ItemRenderers { get; } = new ConcurrentDictionary<string, ItemModelRenderer>();
-	    public static void Init(ResourceManager resources, McResourcePack resourcePack, IProgressReceiver progressReceiver = null)
+	    public static void Init(IRegistryManager registryManager, ResourceManager resources, McResourcePack resourcePack, IProgressReceiver progressReceiver = null)
 	    {
+		  //  var blockRegistry = registryManager.GetRegistry<Block>();
+		    
 		    ResourceManager = resources;
 		    ResourcePack = resourcePack;
 
@@ -48,14 +53,12 @@ namespace Alex
 			    var entry = ii.ElementAt(i);
                 progressReceiver?.UpdateProgress(i * (100 / ii.Count), $"Processing items...", entry.Key);
                 
-			    var blockState = BlockFactory.GetBlockState(entry.Key);
-
 			    Item item;
-			    if (blockState != null)
-			    {
-				    item = new ItemBlock(blockState);
-                }
-			    else
+			  //  if (blockRegistry.TryGet(entry.Key, out var blockState))
+			  //  {
+				//    item = new ItemBlock(blockState.Value);
+              //  }
+			  //  else
 			    {
 				    item = new Item();
 			    }

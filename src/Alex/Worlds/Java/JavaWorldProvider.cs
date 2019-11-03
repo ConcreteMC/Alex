@@ -803,17 +803,19 @@ namespace Alex.Worlds.Java
 
 		private void HandleMultiBlockChange(MultiBlockChange packet)
 		{
+			throw new NotImplementedException();
 			int cx = packet.ChunkX * 16;
 			int cz = packet.ChunkZ * 16;
 			foreach (var blockUpdate in packet.Records)
 			{
-				WorldReceiver?.SetBlockState(new BlockCoordinates(blockUpdate.RelativeX + cx, blockUpdate.Y, blockUpdate.RelativeZ + cz), BlockFactory.GetBlockState(blockUpdate.BlockId));
+				//WorldReceiver?.SetBlock(new BlockCoordinates(blockUpdate.RelativeX + cx, blockUpdate.Y, blockUpdate.RelativeZ + cz), BlockFactory.GetBlockState(blockUpdate.BlockId));
 			}
 		}
 
 		private void HandleBlockChangePacket(BlockChangePacket packet)
 		{
-			WorldReceiver?.SetBlockState(packet.Location, BlockFactory.GetBlockState(packet.PalleteId));
+			throw new NotImplementedException();
+			//WorldReceiver?.SetBlockState(packet.Location, BlockFactory.GetBlockState(packet.PalleteId));
 		}
 
 		private void HandleHeldItemChangePacket(HeldItemChangePacket packet)

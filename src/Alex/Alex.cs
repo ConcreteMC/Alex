@@ -13,9 +13,12 @@ using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Input;
 using Alex.API.Network;
+using Alex.API.Resources;
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.API.World;
+using Alex.Blocks.Minecraft;
+using Alex.Blocks.State;
 using Alex.Entities;
 using Alex.GameStates;
 using Alex.Gamestates.Debug;
@@ -268,6 +271,8 @@ namespace Alex
 
             var profilingService = new ProfilerService();
             Services.AddService<ProfilerService>(profilingService);
+            
+            Services.AddService<IRegistryManager>(new RegistryManager());
 
             Storage = storage;
 		}
@@ -357,7 +362,7 @@ namespace Alex
             ProfileManager.LoadProfiles(progressReceiver);
 
 			//	Log.Info($"Loading resources...");
-			Resources = new ResourceManager(GraphicsDevice, Storage, options);
+			Resources = new ResourceManager(GraphicsDevice, Services);
 			if (!Resources.CheckResources(GraphicsDevice, progressReceiver,
 				OnResourcePackPreLoadCompleted))
 			{

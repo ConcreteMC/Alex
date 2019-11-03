@@ -36,7 +36,7 @@ namespace Alex.Worlds.Generators
 
 				    if (iblockstate != null)
 				    {
-					    chunk.SetBlockState(x, 70, z, iblockstate);
+					    chunk.SetBlock(x, 70, z, BlockFactory.GetBlock(iblockstate.ID));
 					    chunk.Height[((z << 4) + (x))] = 70;
 				    }
 

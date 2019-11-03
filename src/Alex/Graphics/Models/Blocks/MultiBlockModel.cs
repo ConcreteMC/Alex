@@ -7,7 +7,7 @@ namespace Alex.Graphics.Models.Blocks
 {
     public class MultiBlockModel : BlockModel
     {
-		private BlockModel[] Models { get; }
+		public BlockModel[] Models { get; }
 		public MultiBlockModel(params BlockModel[] models)
 		{
 			Models = models;

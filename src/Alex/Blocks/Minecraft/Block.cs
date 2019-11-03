@@ -1,6 +1,7 @@
 ﻿using Alex.API.Blocks;
 using Alex.API.Blocks.State;
 using Alex.API.Items;
+using Alex.API.Resources;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks.State;
@@ -16,7 +17,7 @@ using ItemType = Alex.API.Utils.ItemType;
 
 namespace Alex.Blocks.Minecraft
 {
-	public class Block : IBlock
+	public class Block : IBlock, IRegistryEntry<Block>
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Block));
 
@@ -34,7 +35,12 @@ namespace Alex.Blocks.Minecraft
 		public bool RequiresUpdate { get; set; } = false;
 
 		public float Drag { get; set; }
-		public string Name { get; set; }
+
+		public string Name
+		{
+			get { return Location.ToString(); }
+			set { Location = value; }
+		}
 
 		public double AmbientOcclusionLightValue { get; set; } = 1.0;
 	    public int LightValue { get; set; } = 0;
@@ -236,5 +242,15 @@ namespace Alex.Blocks.Minecraft
 
 			return r;
 		}
+
+		public ResourceLocation Location { get; private set; }
+		public IRegistryEntry<Block> WithLocation(ResourceLocation location)
+		{
+			Location = location;
+
+			return this;
+		}
+
+		public Block Value => this;
 	}
 }

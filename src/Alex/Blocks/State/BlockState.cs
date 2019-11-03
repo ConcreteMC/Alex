@@ -5,6 +5,7 @@ using System.Text;
 using Alex.API.Blocks.Properties;
 using Alex.API.Blocks.State;
 using Alex.API.Graphics;
+using Alex.API.Resources;
 using Alex.API.World;
 using Alex.Blocks.Minecraft;
 using Alex.ResourcePackLib.Json.BlockStates;
@@ -101,7 +102,7 @@ namespace Alex.Blocks.State
 		}
 	}
 
-	public class BlockState : IBlockState, IEquatable<BlockState>
+	public class BlockState : IBlockState, IEquatable<BlockState>, IRegistryEntry<BlockState>
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BlockState));
 
@@ -172,40 +173,6 @@ namespace Alex.Blocks.State
 			return cloned;
 			//return WithPropertyNoResolve(property, property.ValueFromString(value), clone);
 		}
-
-		/*public IBlockState WithPropertyNoResolve(IStateProperty property, object value, bool clone = true)
-		{
-			BlockState cloned;
-			if (clone)
-			{
-				cloned = (BlockState)Clone();
-			}
-			else
-			{
-				cloned = this;
-			}
-
-			if (!cloned.Values.TryAdd(property, value))
-			{
-				cloned.Values[property] = value;
-			}
-			return cloned;
-		}*/
-
-		/*public IBlockState WithProperty(IStateProperty property, object value)
-		{
-			if (VariantMapper.TryResolve(this, property, value, out IBlockState result))
-			{
-				return result;
-			}
-
-			return WithPropertyNoResolve(property, value);
-		}
-
-		public IBlockState WithProperty<T>(IStateProperty<T> property, T value)
-		{
-			return WithProperty((IStateProperty)property, value);
-		}*/
 
 		public IBlockState WithProperty(string property, string value, bool prioritize, params string[] requiredMatches)
 		{
@@ -352,30 +319,6 @@ namespace Alex.Blocks.State
 			return values;
 		}
 
-		internal static int GetVarIntSize(uint value)
-		{
-			int c = 0;
-			do
-			{
-				value >>= 7;
-				c++;
-			} while (value != 0);
-
-			return c;
-		}
-
-		internal static int GetVarIntSize(int value)
-		{
-			int c = 0;
-			do
-			{
-				value >>= 7;
-				c++;
-			} while (value != 0);
-
-			return c;
-		}
-
 		public IBlockState CloneSilent()
 		{
 			BlockState bs = new BlockState();
@@ -392,18 +335,15 @@ namespace Alex.Blocks.State
 		{
 			return CloneSilent();
 		}
-	}
 
-	internal class StateComparer : IEqualityComparer<IStateProperty>
-	{
-		public bool Equals(IStateProperty x, IStateProperty y)
+		public ResourceLocation Location { get; private set; }
+		public IRegistryEntry<BlockState> WithLocation(ResourceLocation location)
 		{
-			return x.Name.Equals(y.Name, StringComparison.InvariantCultureIgnoreCase);
+			Location = location;
+
+			return this;
 		}
 
-		public int GetHashCode(IStateProperty obj)
-		{
-			return obj.Name.GetHashCode();
-		}
+		public BlockState Value => this;
 	}
 }

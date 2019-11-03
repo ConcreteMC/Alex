@@ -9533,20 +9533,23 @@
       "minecraft:crafting_special_suspiciousstew": {
         "protocol_id": 13
       },
-      "minecraft:smelting": {
+      "minecraft:crafting_special_repairitem": {
         "protocol_id": 14
       },
-      "minecraft:blasting": {
+      "minecraft:smelting": {
         "protocol_id": 15
       },
-      "minecraft:smoking": {
+      "minecraft:blasting": {
         "protocol_id": 16
       },
-      "minecraft:campfire_cooking": {
+      "minecraft:smoking": {
         "protocol_id": 17
       },
-      "minecraft:stonecutting": {
+      "minecraft:campfire_cooking": {
         "protocol_id": 18
+      },
+      "minecraft:stonecutting": {
+        "protocol_id": 19
       }
     }
   },
@@ -9769,19 +9772,19 @@
       "minecraft:interactable_doors": {
         "protocol_id": 15
       },
-      "minecraft:nearest_bed": {
+      "minecraft:opened_doors": {
         "protocol_id": 16
       },
-      "minecraft:hurt_by": {
+      "minecraft:nearest_bed": {
         "protocol_id": 17
       },
-      "minecraft:hurt_by_entity": {
+      "minecraft:hurt_by": {
         "protocol_id": 18
       },
-      "minecraft:nearest_hostile": {
+      "minecraft:hurt_by_entity": {
         "protocol_id": 19
       },
-      "minecraft:golem_spawn_conditions": {
+      "minecraft:nearest_hostile": {
         "protocol_id": 20
       },
       "minecraft:hiding_place": {
@@ -9792,6 +9795,15 @@
       },
       "minecraft:cant_reach_walk_target_since": {
         "protocol_id": 23
+      },
+      "minecraft:golem_last_seen_time": {
+        "protocol_id": 24
+      },
+      "minecraft:last_slept": {
+        "protocol_id": 25
+      },
+      "minecraft:last_worked_at_poi": {
+        "protocol_id": 26
       }
     }
   },
@@ -9825,6 +9837,9 @@
       },
       "minecraft:secondary_pois": {
         "protocol_id": 8
+      },
+      "minecraft:golem_last_seen": {
+        "protocol_id": 9
       }
     }
   },
