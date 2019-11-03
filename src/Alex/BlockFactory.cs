@@ -13,6 +13,7 @@ using Alex.Graphics.Models.Blocks;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json.BlockStates;
 using Newtonsoft.Json;
+using StackExchange.Profiling;
 
 namespace Alex
 {
@@ -35,23 +36,9 @@ namespace Alex
 			Level = 8
 		};
 
-		public static readonly LiquidBlockModel FlowingWaterModel = new LiquidBlockModel()
-		{
-			IsFlowing = true,
-			IsLava = false,
-			Level = 8
-		};
-
 		public static readonly LiquidBlockModel StationairyLavaModel = new LiquidBlockModel()
 		{
 			IsFlowing = false,
-			IsLava = true,
-			Level = 8
-		};
-
-		public static readonly LiquidBlockModel FlowingLavaModel = new LiquidBlockModel()
-		{
-			IsFlowing = true,
 			IsLava = true,
 			Level = 8
 		};
@@ -96,32 +83,30 @@ namespace Alex
 		}
 
 		public static TableEntry[] RuntimeIdTable { get; private set; }
+
 		internal static int LoadResources(ResourceManager resources, McResourcePack resourcePack, bool replace,
 			bool reportMissing = false, IProgressReceiver progressReceiver = null)
-        {
-	        var raw = ResourceManager.ReadStringResource("Alex.Resources.runtimeidtable.json");
-	        var raw2 = ResourceManager.ReadStringResource("Alex.Resources.PEBlocks.json");
-	        //RuntimeIdTable = JsonConvert.DeserializeObject<Dictionary<string, TableEntry>>(raw2).Values.ToArray();
-	        RuntimeIdTable = TableEntry.FromJson(raw);
+		{
+			var raw = ResourceManager.ReadStringResource("Alex.Resources.runtimeidtable.json");
 
-            var blockEntries = resources.Registries.Blocks.Entries;
+			RuntimeIdTable = TableEntry.FromJson(raw);
 
-            progressReceiver?.UpdateProgress(0, "Loading block registry...");
-            for(int i = 0; i < blockEntries.Count; i++)
-            {
-	            var kv = blockEntries.ElementAt(i);
+			var blockEntries = resources.Registries.Blocks.Entries;
 
-                progressReceiver?.UpdateProgress(i * (100 / blockEntries.Count), "Loading block registry...", kv.Key);
+			progressReceiver?.UpdateProgress(0, "Loading block registry...");
+			for (int i = 0; i < blockEntries.Count; i++)
+			{
+				var kv = blockEntries.ElementAt(i);
 
-                
+				progressReceiver?.UpdateProgress(i * (100 / blockEntries.Count), "Loading block registry...",
+					kv.Key);
+
 				ProtocolIdToBlockName.TryAdd(kv.Value.ProtocolId, kv.Key);
+			}
 
-	            
-            }
+			progressReceiver?.UpdateProgress(0, "Loading block models...");
 
-            progressReceiver?.UpdateProgress(0, "Loading block models...");
-
-            if (resourcePack.TryGetBlockModel("cube_all", out ResourcePackLib.Json.Models.Blocks.BlockModel cube))
+			if (resourcePack.TryGetBlockModel("cube_all", out ResourcePackLib.Json.Models.Blocks.BlockModel cube))
 			{
 				cube.Textures["all"] = "no_texture";
 				CubeModel = cube;
@@ -144,13 +129,10 @@ namespace Alex
 		}
 
 		private static PropertyBool WaterLoggedProperty = new PropertyBool("waterlogged");
-		internal static bool GenerateClasses { get; set; } = false;
 		private static BlockModel UnknownBlockModel { get; set; }
 		private static int LoadModels(ResourceManager resources, McResourcePack resourcePack, bool replace,
 			bool reportMissing, IProgressReceiver progressReceiver)
 		{
-			StringBuilder factoryBuilder = new StringBuilder();
-
 			var data = BlockData.FromJson(ResourceManager.ReadStringResource("Alex.Resources.NewBlocks.json"));
 			int total = data.Count;
 			int done = 0;
@@ -283,9 +265,6 @@ namespace Alex
 						if (s.Default) //This is the default variant.
 						{
 							variantMap._default = variantState;
-							//variantState.Default = variantState;
-							//variantState.Variants.AddRange(state.Variants);
-							//state = variantState;
 						}
 						else
 						{
@@ -348,32 +327,7 @@ namespace Alex
 			Log.Info($"Got {multipartBased} multi-part blockstate variants!");
 			return importCounter;
 		}
-
-		public static string ToPascalCase(string original)
-		{
-			Regex invalidCharsRgx = new Regex("[^_a-zA-Z0-9]");
-			Regex whiteSpace = new Regex(@"(?<=\s)");
-			Regex startsWithLowerCaseChar = new Regex("^[a-z]");
-			Regex firstCharFollowedByUpperCasesOnly = new Regex("(?<=[A-Z])[A-Z0-9]+$");
-			Regex lowerCaseNextToNumber = new Regex("(?<=[0-9])[a-z]");
-			Regex upperCaseInside = new Regex("(?<=[A-Z])[A-Z]+?((?=[A-Z][a-z])|(?=[0-9]))");
-
-			// replace white spaces with undescore, then replace all invalid Characters with empty string
-			var pascalCase = invalidCharsRgx.Replace(whiteSpace.Replace(original, "_"), string.Empty)
-				// split by underscores
-				.Split(new char[] { '_' }, StringSplitOptions.RemoveEmptyEntries)
-				// set first letter to uppercase
-				.Select(w => startsWithLowerCaseChar.Replace(w, m => m.Value.ToUpper()))
-				// replace second and all following upper case letters to lower if there is no next lower (ABC -> Abc)
-				.Select(w => firstCharFollowedByUpperCasesOnly.Replace(w, m => m.Value.ToLower()))
-				// set upper case the first lower case following a number (Ab9cd -> Ab9Cd)
-				.Select(w => lowerCaseNextToNumber.Replace(w, m => m.Value.ToUpper()))
-				// lower second and next upper case letters except the last if it follows by any lower (ABcDEf -> AbcDef)
-				.Select(w => upperCaseInside.Replace(w, m => m.Value.ToLower()));
-
-			return string.Concat(pascalCase);
-		}
-
+		
 		private static BlockModel ResolveModel(ResourceManager resources, McResourcePack resourcePack,
 			IBlockState state)
 		{
@@ -387,15 +341,6 @@ namespace Alex
 
 			if (name.Contains("water"))
 			{
-			/*	if (state.TryGetValue("level", out string lvl))
-				{
-					if (int.TryParse(lvl, out int actualLevel))
-					{
-						if (actualLevel < 7)
-							return FlowingWaterModel;
-					}
-				}
-				Log.Info($"WATER? {state.ToString()}");*/
 				return StationairyWaterModel;
 			}
 

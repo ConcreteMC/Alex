@@ -152,7 +152,7 @@ namespace Alex.Gui
 
 		private void LoadLanguages(McResourcePack resourcePack)
 		{
-			Language.Load(resourcePack.Languages.FirstOrDefault().Value);
+			Language.Load(resourcePack.Languages.Values.FirstOrDefault(x => x.Namespace.Equals("minecraft")));
 		}
 
 

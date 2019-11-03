@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -38,6 +39,7 @@ namespace Alex.API.Graphics
      //   private long _textureMemoryUsage = 0;
       //  private long _indexMemoryUsage = 0;
         private Timer DisposalTimer { get; }
+        private bool ShuttingDown { get; set; } = false;
         public GpuResourceManager()
         {
             Textures = new ConcurrentDictionary<long, PooledTexture2D>();
@@ -48,6 +50,24 @@ namespace Alex.API.Graphics
             {
                HandleDisposeQueue();
             }, null, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(5));
+
+            AttachCtrlcSigtermShutdown();
+        }
+        
+        private void AttachCtrlcSigtermShutdown()
+        {
+            void Shutdown()
+            {
+                ShuttingDown = true;
+            };
+
+            AppDomain.CurrentDomain.ProcessExit += (sender, eventArgs) => Shutdown();
+            Console.CancelKeyPress += (sender, eventArgs) =>
+            {
+                Shutdown();
+                // Don't terminate the process immediately, wait for the Main thread to exit gracefully.
+                eventArgs.Cancel = true;
+            };
         }
 
         private object _resourceLock = new object();

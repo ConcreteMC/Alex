@@ -139,7 +139,7 @@ namespace Alex
 
             ItemFactory.Init(this, resourcePack, progressReceiver);
 
-			var language = resourcePack.Languages.Values.FirstOrDefault();
+			var language = resourcePack.Languages.Values.FirstOrDefault(x => x.Namespace.Equals("minecraft"));
 			if (language != null)
 			{
 				foreach (var translation in language)

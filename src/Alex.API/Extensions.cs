@@ -1,3 +1,6 @@
+using System;
+using Microsoft.Xna.Framework;
+
 namespace Alex.API
 {
     public static class Extensions

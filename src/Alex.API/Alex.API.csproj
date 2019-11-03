@@ -24,6 +24,7 @@
     <Folder Include="Gui\Events\" />
     <Folder Include="Gui\Abstractions\" />
     <Folder Include="Mojang\" />
+    <Folder Include="Resources" />
     <Folder Include="World\Storage\" />
   </ItemGroup>
   <ItemGroup>
