@@ -44,7 +44,7 @@ namespace Alex.GameStates.Playing
 				World.FreezeWorldTime = true;
 			}
 
-			var chat = new ChatComponent(World);
+			var chat = new ChatComponent();
 			var title = new TitleComponent();
 
 			WorldProvider = worldProvider;

@@ -10,6 +10,7 @@ using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Blocks.State;
+using Alex.API.Network.Bedrock;
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.API.World;
@@ -44,18 +45,22 @@ namespace Alex.Worlds.Bedrock
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BedrockClientPacketHandler));
 
-		private BedrockClient BaseClient { get; }
+		private IBedrockNetworkProvider BaseClient { get; }
 		private Alex AlexInstance { get; }
         private CancellationToken CancellationToken { get; }
         private ChunkProcessor ChunkProcessor { get; }
 
-        public BedrockClientPacketHandler(BedrockClient client, Alex alex, CancellationToken cancellationToken) :
+        private WorldProvider WorldProvider { get; }
+        private PlayerProfile PlayerProfile { get; }
+        public BedrockClientPacketHandler(BedrockClient client, WorldProvider worldProvider, PlayerProfile profile, Alex alex, CancellationToken cancellationToken) :
 	        base(client)
         {
 	        BaseClient = client;
 	        AlexInstance = alex;
 	        CancellationToken = cancellationToken;
-
+	        WorldProvider = worldProvider;
+	        PlayerProfile = profile;
+	        
 	        AnvilWorldProvider.LoadBlockConverter();
 
 	        ChunkProcessor = new ChunkProcessor(4,
@@ -116,7 +121,7 @@ namespace Alex.Worlds.Bedrock
 				Client.SendMcpeMovePlayer();
 				
 				var packet = McpeSetLocalPlayerAsInitializedPacket.CreateObject();
-				packet.runtimeEntityId = BaseClient.EntityId;
+				packet.runtimeEntityId = BaseClient.WorldReceiver.GetPlayerEntity().EntityId;
 				BaseClient.SendPacket(packet);
 			}
 		}
@@ -130,7 +135,7 @@ namespace Alex.Worlds.Bedrock
 
         public override void HandleMcpeText(McpeText message)
 		{
-			BaseClient.WorldProvider?.GetChatReceiver?.Receive(new ChatObject(message.message));
+			BaseClient?.ChatReceiver?.Receive(new ChatObject(message.message));
 		}
 
 		public override void HandleMcpeSetTime(McpeSetTime message)
@@ -239,12 +244,12 @@ namespace Alex.Worlds.Bedrock
 					if (r.Skin.TryGetBitmap(out Bitmap skinBitmap))
 					{
 						skinTexture =
-							TextureUtils.BitmapToTexture2D(BaseClient.WorldProvider.Alex.GraphicsDevice, skinBitmap);
+							TextureUtils.BitmapToTexture2D(AlexInstance.GraphicsDevice, skinBitmap);
 					}
 					else
 					{
-						BaseClient.WorldProvider.Alex.Resources.ResourcePack.TryGetBitmap("entity/alex", out Bitmap rawTexture);
-						skinTexture = TextureUtils.BitmapToTexture2D(BaseClient.WorldProvider.Alex.GraphicsDevice, rawTexture);
+						AlexInstance.Resources.ResourcePack.TryGetBitmap("entity/alex", out Bitmap rawTexture);
+						skinTexture = TextureUtils.BitmapToTexture2D(AlexInstance.GraphicsDevice, rawTexture);
 					}
 					
                     BaseClient.WorldReceiver?.AddPlayerListItem(new PlayerListItem(u, r.DisplayName, Gamemode.Survival, 0));
@@ -357,7 +362,7 @@ namespace Alex.Worlds.Bedrock
 			entity.UUID = new UUID(uuid.ToByteArray());
 
 
-			BaseClient.WorldProvider.SpawnEntity(entityId, entity);
+			WorldProvider.SpawnEntity(entityId, entity);
 		}
 
 
@@ -826,7 +831,7 @@ namespace Alex.Worlds.Bedrock
 		public override void HandleMcpeChangeDimension(McpeChangeDimension message)
 		{
 			base.HandleMcpeChangeDimension(message);
-			if (BaseClient.WorldProvider is BedrockWorldProvider provider)
+			if (WorldProvider is BedrockWorldProvider provider)
 			{
 				LoadingWorldState loadingWorldState = new LoadingWorldState();
 				AlexInstance.GameStateManager.SetActiveState(loadingWorldState, true);
@@ -948,8 +953,8 @@ namespace Alex.Worlds.Bedrock
 
 		public override void HandleMcpeAvailableCommands(McpeAvailableCommands message)
 		{
-			BaseClient.LoadCommands(message.CommandSet);
-			//UnhandledPackage(message);
+			//BaseClient.LoadCommands(message.CommandSet);
+			UnhandledPackage(message);
 		}
 
 		public override void HandleMcpeCommandOutput(McpeCommandOutput message)
@@ -970,14 +975,14 @@ namespace Alex.Worlds.Bedrock
 		public override void HandleMcpeTransfer(McpeTransfer message)
 		{
 			BaseClient.SendDisconnectionNotification();
-			BaseClient.StopClient();
+			BaseClient.Close();
 			
 			IPHostEntry hostEntry = Dns.GetHostEntry(message.serverAddress);
 
 			if (hostEntry.AddressList.Length > 0)
 			{
 				var ip = hostEntry.AddressList[0];
-				AlexInstance.ConnectToServer(new IPEndPoint(ip, message.port), BaseClient.PlayerProfile, true);
+				AlexInstance.ConnectToServer(new IPEndPoint(ip, message.port), PlayerProfile, true);
 			}
 		}
 
@@ -993,7 +998,7 @@ namespace Alex.Worlds.Bedrock
 
 		public override void HandleMcpeSetTitle(McpeSetTitle message)
 		{
-			var titleComponent = BaseClient.WorldProvider?.TitleComponent;
+			var titleComponent = WorldProvider?.TitleComponent;
 			if (titleComponent == null)
 				return;
 			

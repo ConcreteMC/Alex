@@ -23,11 +23,8 @@ namespace Alex.Gui.Elements
 			new SortedList<DateTime, ChatObject>(new DescendedDateComparer());
 
 		public IChatProvider ChatProvider;
-
-		private World _world;
-		public ChatComponent(World world)
+		public ChatComponent()
 		{
-			_world = world;
 			Anchor = Alignment.BottomLeft;
 
 			MaxHeight = Height;

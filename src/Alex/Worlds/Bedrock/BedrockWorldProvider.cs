@@ -188,7 +188,7 @@ namespace Alex.Worlds.Bedrock
 		}
 
 		private int _chunksReceived = 0;
-		public void ChunkReceived(ChunkColumn chunkColumn)
+		public void ChunkReceived(IChunkColumn chunkColumn)
 		{
 			_chunksReceived++;
 			var coords = new ChunkCoordinates(chunkColumn.X, chunkColumn.Z);

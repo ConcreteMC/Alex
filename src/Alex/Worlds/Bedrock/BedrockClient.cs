@@ -11,6 +11,7 @@ using Alex.API.Data;
 using Alex.API.Data.Options;
 using Alex.API.Entities;
 using Alex.API.Network;
+using Alex.API.Network.Bedrock;
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.API.World;
@@ -72,7 +73,7 @@ namespace Alex.Worlds.Bedrock
 			}
 		}
 	}
-	public class BedrockClient : MiNetClient, INetworkProvider, IChatProvider, IDisposable
+	public class BedrockClient : MiNetClient, IBedrockNetworkProvider, IChatProvider, IDisposable
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BedrockClient));
 		
@@ -98,7 +99,7 @@ namespace Alex.Worlds.Bedrock
             Alex = alex;
 			WorldProvider = wp;
 			ConnectionAcceptedWaitHandle = new ManualResetEventSlim(false);
-			MessageDispatcher = new McpeClientMessageDispatcher(new BedrockClientPacketHandler(this, alex, CancellationTokenSource.Token));
+			MessageDispatcher = new McpeClientMessageDispatcher(new BedrockClientPacketHandler(this, wp, playerProfile, alex, CancellationTokenSource.Token));
 			CurrentLocation = new MiNET.Utils.PlayerLocation(0,0,0);
 			OptionsProvider = alex.Services.GetService<IOptionsProvider>();
 			XblmsaService = alex.Services.GetService<XBLMSAService>();
@@ -367,6 +368,7 @@ namespace Alex.Worlds.Bedrock
 
         public bool IsConnected => base.HaveServer;
 		public IWorldReceiver WorldReceiver { get; set; }
+		public IChatReceiver ChatReceiver => WorldProvider.GetChatReceiver;
 
 		void INetworkProvider.EntityAction(int entityId, EntityAction action)
 		{
@@ -558,7 +560,7 @@ namespace Alex.Worlds.Bedrock
 			WorldProvider?.GetChatReceiver.ReceivedTabComplete(transactionId, 0, 0, matches.ToArray());
 		}
 
-		public void ChunkReceived(ChunkColumn chunkColumn)
+		public void ChunkReceived(IChunkColumn chunkColumn)
 		{
 			WorldProvider.ChunkReceived(chunkColumn);
 		}
