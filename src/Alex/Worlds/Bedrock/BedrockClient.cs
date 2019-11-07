@@ -368,6 +368,7 @@ namespace Alex.Worlds.Bedrock
 
         public bool IsConnected => base.HaveServer;
 		public IWorldReceiver WorldReceiver { get; set; }
+
 		public IChatReceiver ChatReceiver => WorldProvider.GetChatReceiver;
 
 		void INetworkProvider.EntityAction(int entityId, EntityAction action)

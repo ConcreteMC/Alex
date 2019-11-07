@@ -10,6 +10,8 @@ using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Blocks.State;
+using Alex.API.Events;
+using Alex.API.Events.World;
 using Alex.API.Network.Bedrock;
 using Alex.API.Services;
 using Alex.API.Utils;
@@ -135,7 +137,7 @@ namespace Alex.Worlds.Bedrock
 
         public override void HandleMcpeText(McpeText message)
 		{
-			BaseClient?.ChatReceiver?.Receive(new ChatObject(message.message));
+			EventDispatcher.Instance.DispatchEvent(new ChatMessageReceivedEvent(new ChatObject(message.message)));
 		}
 
 		public override void HandleMcpeSetTime(McpeSetTime message)

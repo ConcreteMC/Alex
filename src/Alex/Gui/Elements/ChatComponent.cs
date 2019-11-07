@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Data;
+using Alex.API.Events;
+using Alex.API.Events.World;
 using Alex.API.Graphics.Typography;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Graphics;
@@ -30,6 +32,8 @@ namespace Alex.Gui.Elements
 			MaxHeight = Height;
 			Height = 180;
 			Width = 320;
+
+			this.RegisterEventHandlers();
 		}
 
 		private IFont Font;
@@ -467,7 +471,13 @@ namespace Alex.Gui.Elements
 			Dismiss();
 		}
 
-		public void Receive(ChatObject message)
+		[EventHandler]
+		private void OnChatMessageReceived(ChatMessageReceivedEvent e)
+		{
+			Receive(e.ChatObject);
+		}
+
+		private void Receive(ChatObject message)
 		{
 			lock (_lock)
 			{

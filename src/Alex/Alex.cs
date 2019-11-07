@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Threading;
 using Alex.API;
 using Alex.API.Data.Servers;
+using Alex.API.Events;
 using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Input;
@@ -140,6 +141,9 @@ namespace Alex
 
             PluginManager = new PluginManager(this);
             FpsMonitor = new FpsMonitor();
+
+			foreach(var assembly in AppDomain.CurrentDomain.GetAssemblies())
+				EventDispatcher.Instance.LoadFrom(assembly);
 		}
 
 		public static EventHandler<TextInputEventArgs> OnCharacterInput;

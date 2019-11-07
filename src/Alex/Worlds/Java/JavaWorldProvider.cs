@@ -13,6 +13,8 @@ using System.Threading.Tasks;
 using Alex.API.Data;
 using Alex.API.Data.Options;
 using Alex.API.Entities;
+using Alex.API.Events;
+using Alex.API.Events.World;
 using Alex.API.Network;
 using Alex.API.Services;
 using Alex.API.Utils;
@@ -1113,7 +1115,7 @@ namespace Alex.Worlds.Java
 
 			if (ChatObject.TryParse(packet.Message, out ChatObject chat))
 			{
-				ChatReceiver?.Receive(chat);
+				EventDispatcher.Instance.DispatchEvent(new ChatMessageReceivedEvent(chat));
 			}
 			else
 			{

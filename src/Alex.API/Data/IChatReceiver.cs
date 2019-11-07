@@ -4,8 +4,7 @@ namespace Alex.API.Data
 {
     public interface IChatReceiver
     {
-	    void Receive(ChatObject message);
-	    void ReceivedTabComplete(int transactionId, int start, int length, TabCompleteMatch[] matches);
+		void ReceivedTabComplete(int transactionId, int start, int length, TabCompleteMatch[] matches);
     }
 
 	public interface IChatProvider
