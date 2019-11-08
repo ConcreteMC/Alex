@@ -35,7 +35,7 @@ namespace Alex.API.Events
 	        _lastCompleteTask = action;
 	    }*/
 
-	    internal void OnComplete()
+	    public void OnComplete()
 	    {
             if (!Executed.IsCompleted)
 	            Executed.Start();

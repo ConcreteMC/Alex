@@ -39,6 +39,7 @@ using MiNET.Utils;
 using Newtonsoft.Json;
 using NLog;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
+using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
 using LevelInfo = Alex.API.World.LevelInfo;
 using Packet = Alex.Networking.Java.Packets.Packet;
 using PlayerLocation = Alex.API.Utils.PlayerLocation;
@@ -53,7 +54,7 @@ namespace Alex.Worlds.Java
 		void HandleLogin(Packet packet);
 		void HandlePlay(Packet packet);
 	}
-	public class JavaWorldProvider : WorldProvider, IJavaProvider, IChatProvider
+	public class JavaWorldProvider : WorldProvider, IJavaProvider
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
@@ -85,6 +86,8 @@ namespace Alex.Worlds.Java
 			Client.OnConnectionClosed += OnConnectionClosed;
 
 			networkProvider = Client;
+			
+			this.RegisterEventHandlers();
 		}
 
 		private bool _disconnected = false;
@@ -241,10 +244,9 @@ namespace Alex.Worlds.Java
 			return _spawn;
 		}
 
-		protected override void Initiate(out LevelInfo info, out IChatProvider chatProvider)
+		protected override void Initiate(out LevelInfo info)
 		{
 			info = new LevelInfo();
-			chatProvider = this;
 
 			_initiated = true;
 
@@ -253,21 +255,25 @@ namespace Alex.Worlds.Java
 			_gameTickTimer = new System.Threading.Timer(GameTick, null, 50, 50);
 		}
 
-		void IChatProvider.Send(string message)
+		[EventHandler(EventPriority.Highest)]
+		private void OnPublishChatMessage(ChatMessagePublishEvent e)
 		{
-			Client.SendChatMessage(message);
+			if (e.IsCancelled)
+				return;
+			
+			Client.SendChatMessage(e.ChatObject.RawMessage);
 		}
 
 		private int _transactionIds = 0;
-		void IChatProvider.RequestTabComplete(string text, out int transactionId)
+		/*void IChatProvider.RequestTabComplete(string text, out int transactionId)
 		{
-			transactionId = Interlocked.Increment(ref _transactionIds);
+			/*transactionId = Interlocked.Increment(ref _transactionIds);
 			SendPacket(new TabCompleteServerBound()
 			{
 				Text = text,
 				TransactionId = transactionId
-			});
-		}
+			});*
+		}*/
 
 		private bool hasDoneInitialChunks = false;
 		private bool _initiated = false;
@@ -309,7 +315,7 @@ namespace Alex.Worlds.Java
 
 						if (_generatingHelper.TryTake(out IChunkColumn chunkColumn, 50))
 						{
-							base.LoadChunk(chunkColumn, chunkColumn.X, chunkColumn.Z, true);
+							//base.LoadChunk(chunkColumn, chunkColumn.X, chunkColumn.Z, true);
 							loaded++;
 						}
 
@@ -327,24 +333,7 @@ namespace Alex.Worlds.Java
 				hasDoneInitialChunks = true;
 			});
 		}
-
-		public void ChunkReceived(IChunkColumn chunkColumn, int x, int z, bool update)
-		{
-			if (!hasDoneInitialChunks)
-			{
-                _generatingHelper.Add(chunkColumn);
-                _chunksReceived++;
-				return;
-			}
-
-            base.LoadChunk(chunkColumn, x, z, update);
-		}
-
-		public void ChunkUnloaded(int x, int z)
-		{
-			base.UnloadChunk(x,z);
-		}
-
+		
 		private Queue<Entity> _entitySpawnQueue = new Queue<Entity>();
 
 		public void SpawnMob(int entityId, Guid uuid, EntityType type, PlayerLocation position, Vector3 velocity)
@@ -800,7 +789,9 @@ namespace Alex.Worlds.Java
 
 		private void HandleTabCompleteClientBound(TabCompleteClientBound tabComplete)
 		{
-			ChatReceiver?.ReceivedTabComplete(tabComplete.TransactionId, tabComplete.Start, tabComplete.Length, tabComplete.Matches);
+			//TODO: Re-implement tab complete
+			Log.Info($"!!! TODO: Re-implement tab complete.");
+			//ChatReceiver?.ReceivedTabComplete(tabComplete.TransactionId, tabComplete.Start, tabComplete.Length, tabComplete.Matches);
 		}
 
 		private void HandleMultiBlockChange(MultiBlockChange packet)
@@ -1125,7 +1116,7 @@ namespace Alex.Worlds.Java
 
 		private void HandleUnloadChunk(UnloadChunk packet)
 		{
-			ChunkUnloaded(packet.X, packet.Z);
+			EventDispatcher.Instance.DispatchEvent(new ChunkUnloadEvent(new ChunkCoordinates(packet.X, packet.Z)));
 		}
 
 		private int _entityId = -1;
@@ -1216,7 +1207,17 @@ namespace Alex.Worlds.Java
 			
 				result.Read(new MinecraftStream(new MemoryStream(chunk.Buffer)), chunk.PrimaryBitmask, chunk.GroundUp, _dimension == 0);
 
-				ChunkReceived(result, result.X, result.Z, true);
+				if (!hasDoneInitialChunks)
+				{
+					_generatingHelper.Add(result);
+					_chunksReceived++;
+					return;
+				}
+
+				EventDispatcher.Instance.DispatchEvent(new ChunkReceivedEvent(new ChunkCoordinates(result.X ,result.Z), result)
+				{
+					DoUpdates = true
+				});
 			});
 		}
 

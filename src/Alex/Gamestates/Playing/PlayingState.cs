@@ -43,17 +43,16 @@ namespace Alex.GameStates.Playing
 			{
 				World.FreezeWorldTime = true;
 			}
-
-			var chat = new ChatComponent();
+			
 			var title = new TitleComponent();
 
 			WorldProvider = worldProvider;
-			WorldProvider.Init(World, chat, out var info, out var chatProvider);
+			WorldProvider.Init(World, out var info);
 			World.WorldInfo = info;
-			chat.ChatProvider = chatProvider;
+			
 			WorldProvider.TitleComponent = title;
 
-			_playingHud = new PlayingHud(Alex, World.Player, chat, title);
+			_playingHud = new PlayingHud(Alex, World.Player, title);
 			_debugInfo = new GuiDebugInfo();
             InitDebugInfo();
 		}

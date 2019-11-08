@@ -24,7 +24,6 @@ namespace Alex.Gui.Elements
 		private SortedList<DateTime, ChatObject> _chatEntries =
 			new SortedList<DateTime, ChatObject>(new DescendedDateComparer());
 
-		public IChatProvider ChatProvider;
 		public ChatComponent()
 		{
 			Anchor = Alignment.BottomLeft;
@@ -269,7 +268,7 @@ namespace Alex.Gui.Elements
 		{
 			if (Focused)
 			{
-				if (key == Keys.Tab)
+				/*if (key == Keys.Tab)
 				{
 					if (_hasTabCompleteResults)
 					{
@@ -291,7 +290,7 @@ namespace Alex.Gui.Elements
 					ChatProvider?.RequestTabComplete(text, out _latestTransactionId);
 					return true;
 				}
-				else if (key == Keys.Enter)
+				else */if (key == Keys.Enter)
 				{
 					SubmitMessage();
 					ResetTabComplete();
@@ -450,6 +449,7 @@ namespace Alex.Gui.Elements
 		}
 
 		private LinkedList<string> _submittedMessages = new LinkedList<string>();
+
 		private void SubmitMessage()
 		{
 			//Submit message
@@ -457,7 +457,8 @@ namespace Alex.Gui.Elements
 			{
 				if (Alex.IsMultiplayer)
 				{
-					ChatProvider?.Send(TextBuilder.Text);
+					EventDispatcher.Instance.DispatchEvent(
+						new ChatMessagePublishEvent(new ChatObject(TextBuilder.Text)));
 				}
 				else
 				{

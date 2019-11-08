@@ -35,6 +35,7 @@ using NLog;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Security;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
+using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
 using Inventory = Alex.Utils.Inventory;
 using NibbleArray = MiNET.Utils.NibbleArray;
 using Player = Alex.Entities.Player;
@@ -826,7 +827,12 @@ namespace Alex.Worlds.Bedrock
 				return;
 			}
 
-			ChunkProcessor.HandleChunkData(cacheEnabled, subChunkCount, chunkData, cx, cz, BaseClient.ChunkReceived);
+			ChunkProcessor.HandleChunkData(cacheEnabled, subChunkCount, chunkData, cx, cz,
+				column =>
+				{
+					EventDispatcher.Instance.DispatchEvent(
+						new ChunkReceivedEvent(new ChunkCoordinates(column.X, column.Z), column));
+				});
 		}
 
 		private AutoResetEvent _changeDimensionResetEvent = new AutoResetEvent(false);

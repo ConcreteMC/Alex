@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using Alex.API.Data;
 using Alex.API.Data.Options;
 using Alex.API.Entities;
+using Alex.API.Events;
+using Alex.API.Events.World;
 using Alex.API.Network;
 using Alex.API.Services;
 using Alex.API.Utils;
@@ -114,7 +116,7 @@ namespace Alex.Worlds
 					{
 						var c = (ChunkColumn) chunk;
 
-						base.LoadChunk(chunk, c.X, c.Z, true);
+						EventDispatcher.Instance.DispatchEvent(new ChunkReceivedEvent(currentCoordinates, c));
 						LoadEntities(c);
 					}
 				}
@@ -171,8 +173,12 @@ namespace Alex.Worlds
 			{
 				if (!newChunkCoordinates.Contains((ChunkCoordinates)chunk))
 				{
-					UnloadChunk(chunk.X, chunk.Z);
-					_loadedChunks.Remove(chunk);
+					//UnloadChunk(chunk.X, chunk.Z);
+					ChunkUnloadEvent unloadEvent = new ChunkUnloadEvent(chunk);
+					EventDispatcher.Instance.DispatchEvent(unloadEvent);
+					
+					if (!unloadEvent.IsCancelled)
+						_loadedChunks.Remove(chunk);
 				}
 			}
 		}
@@ -195,10 +201,9 @@ namespace Alex.Worlds
 		}
 
 		private Thread UpdateThread { get; set; }
-		protected override void Initiate(out LevelInfo info, out IChatProvider chatProvider)
+		protected override void Initiate(out LevelInfo info)
 		{
 			info = _generator.GetInfo();
-			chatProvider = null;
 
 			/*lock (genLock)
 			{
@@ -263,7 +268,7 @@ namespace Alex.Worlds
 						var c = (ChunkColumn) chunk;
 						count++;
                     //generatedChunks.Add(c);
-                    base.LoadChunk(c, c.X, c.Z, true);
+                    EventDispatcher.Instance.DispatchEvent(new ChunkReceivedEvent(new ChunkCoordinates(chunk.X, chunk.Z), c));
 						//cached.ChunkManager.AddChunk(chunk, new ChunkCoordinates(c.X, c.Z), false);
 
 						progressReport(LoadingState.LoadingChunks, (int)Math.Floor((count / target) * 100));

@@ -66,7 +66,7 @@ namespace Alex.Blocks
 			this.Register(() => new BrownMushroomBlock().WithLocation("minecraft:brown_mushroom_block"));
 			this.Register(() => new RedMushroomBlock().WithLocation("minecraft:red_mushroom_block"));
 			this.Register(() => new IronBars().WithLocation("minecraft:iron_bars"));
-			this.Register(() => new GlassPane().WithLocation("minecraft:glass_pane"));
+			
 			this.Register(() => new Vine().WithLocation("minecraft:vine"));
 			this.Register(() => new Mycelium().WithLocation("minecraft:mycelium"));
 			this.Register(() => new NetherWart().WithLocation("minecraft:nether_wart"));
@@ -266,8 +266,45 @@ namespace Alex.Blocks
 			this.Register(() => new Stem().WithLocation("minecraft:melon_stem"));
 			this.Register(() => new MelonBlock().WithLocation("minecraft:melon_block"));
 			this.Register(() => new PumpkinStem().WithLocation("minecraft:pumpkin_stem"));
+			this.Register(() => new Sunflower().WithLocation("minecraft:sunflower"));
 			
             this.Register(() => new InvisibleBedrock(false).WithLocation("minecraft:barrier"));
+            
+            //Stained glass
+            this.Register(() => new Glass().WithLocation("minecraft:white_stained_glass"));
+            this.Register(() => new Glass().WithLocation("minecraft:orange_stained_glass"));
+            this.Register(() => new Glass().WithLocation("minecraft:magenta_stained_glass"));
+            this.Register(() => new Glass().WithLocation("minecraft:light_blue_stained_glass"));
+            this.Register(() => new Glass().WithLocation("minecraft:yellow_stained_glass"));
+            this.Register(() => new Glass().WithLocation("minecraft:lime_stained_glass"));
+            this.Register(() => new Glass().WithLocation("minecraft:pink_stained_glass"));
+            this.Register(() => new Glass().WithLocation("minecraft:gray_stained_glass"));
+            this.Register(() => new Glass().WithLocation("minecraft:light_gray_stained_glass"));
+            this.Register(() => new Glass().WithLocation("minecraft:purple_stained_glass"));
+            this.Register(() => new Glass().WithLocation("minecraft:blue_stained_glass"));
+            this.Register(() => new Glass().WithLocation("minecraft:brown_stained_glass"));
+            this.Register(() => new Glass().WithLocation("minecraft:green_stained_glass"));
+            this.Register(() => new Glass().WithLocation("minecraft:red_stained_glass"));
+            this.Register(() => new Glass().WithLocation("minecraft:black_stained_glass"));
+            this.Register(() => new Glass().WithLocation("minecraft:cyan_stained_glass"));
+            
+            this.Register(() => new GlassPane().WithLocation("minecraft:glass_pane"));
+            this.Register(() => new GlassPane().WithLocation("minecraft:white_stained_glass_pane"));
+            this.Register(() => new GlassPane().WithLocation("minecraft:orange_stained_glass_pane"));
+            this.Register(() => new GlassPane().WithLocation("minecraft:magenta_stained_glass_pane"));
+            this.Register(() => new GlassPane().WithLocation("minecraft:light_blue_stained_glass_pane"));
+            this.Register(() => new GlassPane().WithLocation("minecraft:yellow_stained_glass_pane"));
+            this.Register(() => new GlassPane().WithLocation("minecraft:lime_stained_glass_pane"));
+            this.Register(() => new GlassPane().WithLocation("minecraft:pink_stained_glass_pane"));
+            this.Register(() => new GlassPane().WithLocation("minecraft:gray_stained_glass_pane"));
+            this.Register(() => new GlassPane().WithLocation("minecraft:light_gray_stained_glass_pane"));
+            this.Register(() => new GlassPane().WithLocation("minecraft:purple_stained_glass_pane"));
+            this.Register(() => new GlassPane().WithLocation("minecraft:blue_stained_glass_pane"));
+            this.Register(() => new GlassPane().WithLocation("minecraft:brown_stained_glass_pane"));
+            this.Register(() => new GlassPane().WithLocation("minecraft:green_stained_glass_pane"));
+            this.Register(() => new GlassPane().WithLocation("minecraft:red_stained_glass_pane"));
+            this.Register(() => new GlassPane().WithLocation("minecraft:black_stained_glass_pane"));
+            this.Register(() => new GlassPane().WithLocation("minecraft:cyan_stained_glass_pane"));
         }
     }
 }

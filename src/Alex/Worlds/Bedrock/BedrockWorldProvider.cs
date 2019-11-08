@@ -5,6 +5,8 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Alex.API.Data;
+using Alex.API.Events;
+using Alex.API.Events.World;
 using Alex.API.Network;
 using Alex.API.Services;
 using Alex.API.Utils;
@@ -35,6 +37,8 @@ namespace Alex.Worlds.Bedrock
 
 			Client = new BedrockClient(alex, endPoint, profile, new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount, ThreadType.Background, "BedrockClientThread")), this);
 			networkProvider = Client;
+			
+			this.RegisterEventHandlers();
 		}
 
 		public override Vector3 GetSpawnPoint()
@@ -131,14 +135,13 @@ namespace Alex.Worlds.Bedrock
 		
 		public void UnloadChunk(ChunkCoordinates coordinates)
 		{
-			UnloadChunk(coordinates.X, coordinates.Z);
+			EventDispatcher.Instance.DispatchEvent(new ChunkUnloadEvent(coordinates));
 			_loadedChunks.Remove(coordinates);
 		}
 
-		protected override void Initiate(out LevelInfo info, out IChatProvider chatProvider)
+		protected override void Initiate(out LevelInfo info)
 		{
 			info = new LevelInfo();
-			chatProvider = Client;
 			_initiated = true;
 			Client.WorldReceiver = WorldReceiver;
 			WorldReceiver?.UpdatePlayerPosition(new API.Utils.PlayerLocation(
@@ -188,25 +191,14 @@ namespace Alex.Worlds.Bedrock
 			});
 		}
 
-		private int _chunksReceived = 0;
-		public void ChunkReceived(IChunkColumn chunkColumn)
-		{
-			_chunksReceived++;
-			var coords = new ChunkCoordinates(chunkColumn.X, chunkColumn.Z);
-			
-			//if (!_loadedChunks.Contains(coords))
-				_loadedChunks.TryAdd(coords);
-			
-			//sLog.Info($"Chunk received");
-			base.LoadChunk(chunkColumn, chunkColumn.X, chunkColumn.Z, true);
-		}
+		private int _chunksReceived;
 		
-		public void ReceivedTabComplete(int transactionId, int start, int length, TabCompleteMatch[] matches)
+		[EventHandler]
+		private void OnChunkReceived(ChunkReceivedEvent e)
 		{
-			
+			_loadedChunks.TryAdd(e.Coordinates);
+			_chunksReceived++;
 		}
-
-		public IChatReceiver GetChatReceiver => ChatReceiver;
 
 		public override void Dispose()
 		{

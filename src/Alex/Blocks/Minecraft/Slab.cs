@@ -6,6 +6,7 @@
 	    {
 		    Solid = true;
 		    Transparent = true;
+		    IsFullCube = false;
 		    LightOpacity = 15;
 	    }
     }

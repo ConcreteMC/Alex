@@ -291,6 +291,14 @@ namespace Alex.Worlds.Bedrock
 
 								        if (id > 0 && result == null)
 								        {
+									        var reverseMap = MiNET.Worlds.AnvilWorldProvider.Convert.FirstOrDefault(map =>
+										        map.Value.Item1 == id);
+
+									        if (reverseMap.Value != null)
+									        {
+										        id = (byte) reverseMap.Key;
+									        }
+									        
 									        var res = BlockFactory.GetBlockStateID(id, meta);
 
 									        if (AnvilWorldProvider.BlockStateMapper.TryGetValue(res,
@@ -313,12 +321,16 @@ namespace Alex.Worlds.Bedrock
 								        if (result == null)
 								        {
 									        var results = BlockFactory.RuntimeIdTable.Where(xx =>
-										        xx.Id == id && xx.Data == meta).ToArray();
+										        xx.Id == id).ToArray();
 
 									        if (results.Length > 0)
 									        {
+										        var first = results.FirstOrDefault(xx => xx.Data == meta);
+										        if (first == default)
+											        first = results[0];
+										        
 										        result = TranslateBlockState(
-											        BlockFactory.GetBlockState((uint) results[0].RuntimeId), id,
+											        BlockFactory.GetBlockState((uint) first.RuntimeId), id,
 											        meta);
 									        }
 								        }

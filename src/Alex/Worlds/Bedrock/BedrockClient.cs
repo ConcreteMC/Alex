@@ -10,6 +10,8 @@ using System.Threading.Tasks;
 using Alex.API.Data;
 using Alex.API.Data.Options;
 using Alex.API.Entities;
+using Alex.API.Events;
+using Alex.API.Events.World;
 using Alex.API.Network;
 using Alex.API.Network.Bedrock;
 using Alex.API.Services;
@@ -73,7 +75,7 @@ namespace Alex.Worlds.Bedrock
 			}
 		}
 	}
-	public class BedrockClient : MiNetClient, IBedrockNetworkProvider, IChatProvider, IDisposable
+	public class BedrockClient : MiNetClient, IBedrockNetworkProvider, IDisposable
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BedrockClient));
 		
@@ -109,8 +111,30 @@ namespace Alex.Worlds.Bedrock
 			Options.VideoOptions.RenderDistance.Bind(RenderDistanceChanged);
 
 			_threadPool = threadPool;
+			
+			this.RegisterEventHandlers();
         }
 
+		[EventHandler(EventPriority.Highest)]
+		private void OnSendChatMessage(ChatMessagePublishEvent e)
+		{
+			if (e.IsCancelled)
+				return;
+
+			var message = e.ChatObject.RawMessage;
+			if (message[0] == '/')
+			{
+				McpeCommandRequest commandRequest = McpeCommandRequest.CreateObject();
+				commandRequest.command = message;
+				commandRequest.unknownUuid = new MiNET.Net.UUID(Guid.NewGuid().ToString());
+				SendPacket(commandRequest);
+			}
+			else
+			{
+				SendChat(message);
+			}
+		}
+		
 		private void RenderDistanceChanged(int oldvalue, int newvalue)
 		{
 			base.ChunkRadius = newvalue;
@@ -369,8 +393,6 @@ namespace Alex.Worlds.Bedrock
         public bool IsConnected => base.HaveServer;
 		public IWorldReceiver WorldReceiver { get; set; }
 
-		public IChatReceiver ChatReceiver => WorldProvider.GetChatReceiver;
-
 		void INetworkProvider.EntityAction(int entityId, EntityAction action)
 		{
 			PlayerAction translated;
@@ -529,41 +551,6 @@ namespace Alex.Worlds.Bedrock
 			SendDisconnectionNotification();
 
 			Task.Delay(500).ContinueWith(task => { base.StopClient(); });
-		}
-
-		void IChatProvider.Send(string message)
-		{
-			if (message[0] == '/')
-			{
-				McpeCommandRequest commandRequest = McpeCommandRequest.CreateObject();
-				commandRequest.command = message;
-				commandRequest.unknownUuid = new MiNET.Net.UUID(Guid.NewGuid().ToString());
-				SendPacket(commandRequest);
-			}
-			else
-			{
-				SendChat(message);
-			}
-		}
-
-		void IChatProvider.RequestTabComplete(string text, out int transactionId)
-		{
-			transactionId = 0;
-			return;
-			List<TabCompleteMatch> matches = new List<TabCompleteMatch>();
-			foreach (var command in _availableCommandSet)
-			{
-				foreach (var a in command.Value.Versions)
-				{
-					//if (a.)
-				}
-			}
-			WorldProvider?.GetChatReceiver.ReceivedTabComplete(transactionId, 0, 0, matches.ToArray());
-		}
-
-		public void ChunkReceived(IChunkColumn chunkColumn)
-		{
-			WorldProvider.ChunkReceived(chunkColumn);
 		}
 
 		public void RequestChunkRadius(int radius)

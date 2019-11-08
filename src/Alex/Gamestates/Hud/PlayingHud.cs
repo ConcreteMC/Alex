@@ -23,7 +23,7 @@ namespace Alex.GameStates.Hud
 
 		private Alex Alex { get; }
 		private Player Player { get; }
-        public PlayingHud(Alex game, Player player, ChatComponent chat, TitleComponent titleComponent) : base()
+        public PlayingHud(Alex game, Player player, TitleComponent titleComponent) : base()
         {
 	        Title = titleComponent;
 
@@ -37,7 +37,7 @@ namespace Alex.GameStates.Hud
 	        _hotbar.Anchor = Alignment.BottomCenter;
 	        _hotbar.Padding = Thickness.Zero;
 
-			Chat = chat;
+			Chat = new ChatComponent();
 	        Chat.Enabled = false;
 	        Chat.Anchor = Alignment.BottomLeft;
         }

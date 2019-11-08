@@ -140,6 +140,13 @@ namespace Alex.Graphics.Models.Blocks
 			if (me.Solid && me.Transparent)
 			{
 				//	if (IsFullCube && Name.Equals(block.Name)) return false;
+				if (blockSolid && blockTransparent)
+				{
+					var block = world.GetBlock(pos.X, pos.Y, pos.Z);
+					if (!me.BlockMaterial.IsOpaque() && !block.BlockMaterial.IsOpaque()) return false;
+					
+					if (!me.IsFullBlock || !block.IsFullBlock) return true;
+				}
 				if (blockSolid && !blockTransparent) return false;
 			}
 			else if (me.Transparent)
@@ -445,7 +452,8 @@ namespace Alex.Graphics.Models.Blocks
 			return faceCaches;
 		}
 
-		protected (VertexPositionNormalTextureColor[] vertices, int[] indexes) GetVertices(IWorld world, Vector3 position, IBlock baseBlock,
+		protected (VertexPositionNormalTextureColor[] vertices, int[] indexes) GetVertices(IWorld world,
+			Vector3 position, IBlock baseBlock,
 			BlockStateModel[] models, IDictionary<string, FaceCache> faceCache)
 		{
 			var verts = new List<VertexPositionNormalTextureColor>(36);
@@ -475,11 +483,11 @@ namespace Alex.Graphics.Models.Blocks
 					foreach (var faceElement in element.Faces)
 					{
 						var facing = faceElement.Key;
-						
+
 						GetCullFaceValues(faceElement.Value.CullFace, facing, out var cullFace);
 
 						var originalCullFace = cullFace;
-						
+
 						if (bsModel.X > 0f)
 						{
 							var offset = (-bsModel.X) / 90;
@@ -498,8 +506,9 @@ namespace Alex.Graphics.Models.Blocks
 							continue;
 
 
-                        FaceData faceVertices;
-						if (!elementCache.TryGet(faceElement.Key, out faceVertices) || faceVertices.Vertices.Length == 0 || faceVertices.Indexes.Length ==0)
+						FaceData faceVertices;
+						if (!elementCache.TryGet(faceElement.Key, out faceVertices) ||
+						    faceVertices.Vertices.Length == 0 || faceVertices.Indexes.Length == 0)
 						{
 							//Log.Debug($"No vertices cached for face {faceElement.Key} in model {bsModel.ModelName}");
 							continue;
@@ -523,12 +532,14 @@ namespace Alex.Graphics.Models.Blocks
 								}
 							}
 						}
-						
-						faceColor = AdjustColor(faceColor, facing,
-							world == null ? 15 : GetLight(world, position + cullFace.GetVector3(),
-								false), element.Shade);
 
-                        var initialIndex = verts.Count;
+						faceColor = AdjustColor(faceColor, facing,
+							world == null
+								? 15
+								: (GetLight(world, position + cullFace.GetVector3(),
+									false)), element.Shade);
+
+						var initialIndex = verts.Count;
 						for (var index = 0; index < faceVertices.Vertices.Length; index++)
 						{
 							var vertex = faceVertices.Vertices[index];
@@ -537,7 +548,7 @@ namespace Alex.Graphics.Models.Blocks
 
 							verts.Add(vertex);
 						}
-						
+
 						for (var index = 0; index < faceVertices.Indexes.Length; index++)
 						{
 							var idx = faceVertices.Indexes[index];
@@ -547,7 +558,7 @@ namespace Alex.Graphics.Models.Blocks
 				}
 			}
 
-			
+
 			return (verts.ToArray(), indexResult.ToArray());
 		}
 

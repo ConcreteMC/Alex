@@ -6,6 +6,8 @@ using System.Threading;
 using Alex.API.Blocks.State;
 using Alex.API.Data.Options;
 using Alex.API.Entities;
+using Alex.API.Events;
+using Alex.API.Events.World;
 using Alex.API.Graphics;
 using Alex.API.Network;
 using Alex.API.Services;
@@ -98,6 +100,8 @@ namespace Alex.Worlds
 			{
 				Log.Warn($"Could not get diamond sword!");
 			}
+			
+			this.RegisterEventHandlers();
 		}
 
 		private void FieldOfVisionOnValueChanged(int oldvalue, int newvalue)
@@ -560,25 +564,20 @@ namespace Alex.Worlds
 			}
 		}
 
-		public void ChunkReceived(IChunkColumn chunkColumn, int x, int z, bool update)
+		[EventHandler(EventPriority.Highest)]
+		private void OnChunkReceived(ChunkReceivedEvent e)
 		{
-			var c = new ChunkCoordinates(x, z);
-
-			ChunkManager.AddChunk(chunkColumn, c, update);
-            //InitiateChunk(chunkColumn as ChunkColumn);
-        }
-
-		public void ChunkUnload(int x, int z)
-		{
-			var chunkCoordinates = new ChunkCoordinates(x, z);
-			ChunkManager.RemoveChunk(chunkCoordinates);
-
-			EntityManager.UnloadEntities(chunkCoordinates);
+			if (e.IsCancelled)
+				return;
+			
+			ChunkManager.AddChunk(e.Chunk, e.Coordinates, e.DoUpdates);
 		}
 
-		public void ChunkUpdate(IChunkColumn chunkColumn, ScheduleType type = ScheduleType.Lighting)
+		[EventHandler(EventPriority.Highest, true)]
+		private void OnChunkUnload(ChunkUnloadEvent e)
 		{
-			ChunkManager.ScheduleChunkUpdate(new ChunkCoordinates(chunkColumn.X, chunkColumn.Z), type);
+			ChunkManager.RemoveChunk(e.Coordinates);
+			EntityManager.UnloadEntities(e.Coordinates);
 		}
 
 		public void SpawnEntity(long entityId, IEntity entity)

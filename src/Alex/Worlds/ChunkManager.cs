@@ -69,7 +69,7 @@ namespace Alex.Worlds
 		        VertexColorEnabled = true,
 		        World = Matrix.Identity,
 		        AlphaFunction = CompareFunction.Greater,
-		        ReferenceAlpha = 127,
+		        ReferenceAlpha = 32,
 		        FogStart = fogStart,
 		        FogEnabled = false
 	        };
