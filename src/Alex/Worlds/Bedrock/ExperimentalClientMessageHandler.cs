@@ -101,10 +101,15 @@ namespace Alex.Worlds.Bedrock
             throw new System.NotImplementedException();
         }
 
-        public void HandleMcpeExplode(McpeExplode message)
+        public void HandleMcpeTickSync(McpeTickSync message)
         {
             throw new System.NotImplementedException();
         }
+
+        /*public void HandleMcpeExplode(McpeExplode message)
+        {
+            throw new System.NotImplementedException();
+        }*/
 
         public void HandleMcpeLevelSoundEventOld(McpeLevelSoundEventOld message)
         {
@@ -551,6 +556,11 @@ namespace Alex.Worlds.Bedrock
             throw new System.NotImplementedException();
         }
 
+        public void HandleMcpeClientCacheStatus(MiNET.Net.McpeClientCacheStatus message)
+        {
+            throw new System.NotImplementedException();
+        }
+
         public void HandleMcpeClientCacheStatus(McpeClientCacheStatus message)
         {
             throw new System.NotImplementedException();
@@ -587,6 +597,11 @@ namespace Alex.Worlds.Bedrock
         }
 
         public void HandleMcpeClientCacheMissResponse(McpeClientCacheMissResponse message)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public void HandleMcpeNetworkSettingsPacket(McpeNetworkSettingsPacket message)
         {
             throw new System.NotImplementedException();
         }

@@ -86,6 +86,8 @@ namespace log4net
 		public static void Initialize()
 		{
 			var repo = LogManager.GetRepository(Assembly.GetEntryAssembly());
+			(((log4net.Repository.Hierarchy.Hierarchy) repo)).Root.Level = Level.Warn;
+			(((log4net.Repository.Hierarchy.Hierarchy) repo)).RaiseConfigurationChanged(EventArgs.Empty);
 			BasicConfigurator.Configure(repo, new NLogAppender());
 		}
 	}

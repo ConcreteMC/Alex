@@ -31,10 +31,12 @@ using MiNET;
 using MiNET.Client;
 using MiNET.Net;
 using MiNET.Utils;
+using Newtonsoft.Json;
 using NLog;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Security;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
+using BlockState = MiNET.Utils.BlockState;
 using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
 using Inventory = Alex.Utils.Inventory;
 using NibbleArray = MiNET.Utils.NibbleArray;
@@ -147,28 +149,45 @@ namespace Alex.Worlds.Bedrock
 			_changeDimensionResetEvent.Set();
 		}
 
-		private IReadOnlyDictionary<uint, Blockstate> _blockStateMap;
+		private IReadOnlyDictionary<uint, BlockRecord> _blockStateMap;
 		public override void HandleMcpeStartGame(McpeStartGame message)
 		{
 			Client.EntityId = message.runtimeEntityId;
 			Client.NetworkEntityId = message.entityIdSelf;
 			Client.SpawnPoint = message.spawn;
-			Client.CurrentLocation = new MiNET.Utils.PlayerLocation(Client.SpawnPoint, message.unknown1.X, message.unknown1.X, message.unknown1.Y);
+			Client.CurrentLocation = new MiNET.Utils.PlayerLocation(Client.SpawnPoint, message.spawn.X, message.spawn.X, message.spawn.Y);
 
-			BaseClient.WorldReceiver?.UpdatePlayerPosition(new API.Utils.PlayerLocation(new Microsoft.Xna.Framework.Vector3(Client.SpawnPoint.X, Client.SpawnPoint.Y, Client.SpawnPoint.Z), message.unknown1.X, message.unknown1.X, message.unknown1.Y));
+			BaseClient.WorldReceiver?.UpdatePlayerPosition(new API.Utils.PlayerLocation(new Microsoft.Xna.Framework.Vector3(Client.SpawnPoint.X, Client.SpawnPoint.Y, Client.SpawnPoint.Z), message.spawn.X, message.spawn.X, message.spawn.Y));
 
-			Dictionary<uint, Blockstate> ourStates = new Dictionary<uint, Blockstate>();
-			foreach (var blockstate in message.blockstates)
+			File.WriteAllText("states.json", JsonConvert.SerializeObject(message.blockPallet));
+			
+			Dictionary<uint, BlockRecord> ourStates = new Dictionary<uint, BlockRecord>();
+			foreach (var bs in message.blockPallet)
 			{
-				var name = blockstate.Value.Name;
+				foreach (var blockstate in bs.States)
+				{
+					var name = blockstate.Name;
+					if (name != null)
+					{
+						if (name.Equals("minecraft:grass", StringComparison.InvariantCultureIgnoreCase))
+							name = "minecraft:grass_block";
 
-				if (name.Equals("minecraft:grass", StringComparison.InvariantCultureIgnoreCase))
-					name = "minecraft:grass_block";
+						blockstate.Name = name;
+					}
 
-				blockstate.Value.Name = name;
+					//var state = BlockFactory.GetBlockState(name);
+				}
 				
-				//var state = BlockFactory.GetBlockState(name);
-				ourStates.TryAdd((uint)blockstate.Key, blockstate.Value);
+				var name2 = bs.Name;
+				if (name2 != null)
+				{
+					if (name2.Equals("minecraft:grass", StringComparison.InvariantCultureIgnoreCase))
+						name2 = "minecraft:grass_block";
+
+					bs.Name = name2;
+				}
+				
+				ourStates.TryAdd((uint) bs.RuntimeId, bs);
 			}
 			
 			_blockStateMap = ourStates;
@@ -530,10 +549,15 @@ namespace Alex.Worlds.Bedrock
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeExplode(McpeExplode message)
+		public override void HandleMcpeTickSync(McpeTickSync message)
 		{
 			UnhandledPackage(message);
 		}
+
+		/*public override void HandleMcpeExplode(McpeExplode message)
+		{
+			UnhandledPackage(message);
+		}*/
 
 		public override void HandleMcpeLevelSoundEventOld(McpeLevelSoundEventOld message)
 		{
@@ -551,6 +575,11 @@ namespace Alex.Worlds.Bedrock
         }
 
 		public override void HandleMcpeLevelSoundEventV2(McpeLevelSoundEventV2 message)
+		{
+			UnhandledPackage(message);
+		}
+
+		public override void HandleMcpeNetworkSettingsPacket(McpeNetworkSettingsPacket message)
 		{
 			UnhandledPackage(message);
 		}

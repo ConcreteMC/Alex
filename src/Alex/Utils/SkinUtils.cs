@@ -77,7 +77,7 @@ namespace Alex.Utils
 		{
 			try
 			{
-				var bytes = skin.SkinData;
+				var bytes = skin.Data;
 
 				int width = 64;
 				var height = bytes.Length == 64 * 32 * 4 ? 32 : 64;

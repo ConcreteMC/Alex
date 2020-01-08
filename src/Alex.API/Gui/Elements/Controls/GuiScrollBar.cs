@@ -210,6 +210,7 @@ namespace Alex.API.Gui.Elements.Controls
 			var contentSize = containerSize + maxOffset;
 
 			var visibleSizeAsPercentage = (containerSize / (double) contentSize);
+			//var visibleSizeAsPercentage = 1d;
 			if (visibleSizeAsPercentage >= 1.0d)
 			{
 				if (Orientation == Orientation.Vertical)

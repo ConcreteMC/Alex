@@ -19,6 +19,7 @@ using Microsoft.Xna.Framework;
 using MiNET;
 using MiNET.Net;
 using MiNET.Utils;
+using MiNET.Utils.Skins;
 using MojangSharp.Endpoints;
 using NLog;
 using Org.BouncyCastle.Crypto;
@@ -284,15 +285,15 @@ namespace Alex.Worlds.Bedrock
             MiNET.Utils.Skins.Skin skin = new MiNET.Utils.Skins.Skin 
             {
                 Slim = false,
-                SkinData = Encoding.Default.GetBytes(new string('Z', 8192)),
+                Data = Encoding.Default.GetBytes(new string('Z', 8192)),
                 SkinId = "Standard_Custom",
-                CapeData = new byte[0],
-                SkinGeometryName = "geometry.humanoid.custom",
-                SkinGeometry = ""
+                Cape = new Cape(),
+                GeometryName = "geometry.humanoid.custom",
+                GeometryData = ""
             };
 
-            string skin64 = Convert.ToBase64String(skin.SkinData);
-            string cape64 = Convert.ToBase64String(skin.CapeData);
+            string skin64 = Convert.ToBase64String(skin.Data);
+            string cape64 = Convert.ToBase64String(skin.Cape.Data);
 
             string skinData = $@"
 {{
@@ -312,8 +313,8 @@ namespace Alex.Worlds.Bedrock
 	""ServerAddress"": ""{Endpoint.Address.ToString()}:{Endpoint.Port.ToString()}"",
 	""SkinData"": ""{skin64}"",
 	""SkinId"": ""{skin.SkinId}"",
-    ""SkinGeometryName"": ""{skin.SkinGeometryName}"",
-    ""SkinGeometry"": ""{skin.SkinGeometry}"",
+    ""SkinGeometryName"": ""{skin.GeometryName}"",
+    ""SkinGeometry"": ""{skin.GeometryData}"",
     ""CapeData"": ""{cape64}"",
 	""TenantId"": ""38dd6634-1031-4c50-a9b4-d16cd9d97d57"",
 	""ThirdPartyName"": ""{username}"",

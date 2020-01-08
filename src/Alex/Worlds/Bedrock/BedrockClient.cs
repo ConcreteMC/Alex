@@ -26,6 +26,7 @@ using MiNET.Client;
 using MiNET.Net;
 using MiNET.Plugins;
 using MiNET.Utils;
+using MiNET.Utils.Skins;
 using NLog;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Agreement;
@@ -111,7 +112,7 @@ namespace Alex.Worlds.Bedrock
 			Options.VideoOptions.RenderDistance.Bind(RenderDistanceChanged);
 
 			_threadPool = threadPool;
-			
+			//Log.IsDebugEnabled = false;
 			this.RegisterEventHandlers();
         }
 
@@ -334,15 +335,17 @@ namespace Alex.Worlds.Bedrock
             MiNET.Utils.Skins.Skin skin = new Skin
             {
                 Slim = false,
-                SkinData = Encoding.Default.GetBytes(new string('Z', 8192)),
+                Data = Encoding.Default.GetBytes(new string('Z', 8192)),
                 SkinId = "Standard_Custom",
-                CapeData = new byte[0],
-                SkinGeometryName = "geometry.humanoid.custom",
-                SkinGeometry = ""
+                GeometryName = "geometry.humanoid.custom",
+                GeometryData = "",
+                Cape = new Cape(),
+              //  SkinGeometryName = "geometry.humanoid.custom",
+               // SkinGeometry = ""
             };
 
-            string skin64 = Convert.ToBase64String(skin.SkinData);
-            string cape64 = Convert.ToBase64String(skin.CapeData);
+            string skin64 = Convert.ToBase64String(skin.Data);
+            string cape64 = Convert.ToBase64String(skin.Cape.Data);
 
             string skinData = $@"
 {{
@@ -362,8 +365,8 @@ namespace Alex.Worlds.Bedrock
 	""ServerAddress"": ""{base.ServerEndpoint.Address.ToString()}:{base.ServerEndpoint.Port.ToString()}"",
 	""SkinData"": ""{skin64}"",
 	""SkinId"": ""{skin.SkinId}"",
-    ""SkinGeometryName"": ""{skin.SkinGeometryName}"",
-    ""SkinGeometry"": ""{skin.SkinGeometry}"",
+    ""SkinGeometryName"": ""{skin.GeometryName}"",
+    ""SkinGeometry"": ""{skin.GeometryData}"",
     ""CapeData"": ""{cape64}"",
 	""TenantId"": ""38dd6634-1031-4c50-a9b4-d16cd9d97d57"",
 	""ThirdPartyName"": ""{username}"",
@@ -452,13 +455,14 @@ namespace Alex.Worlds.Bedrock
                 {
                     SendPlayerAction(PlayerAction.StopBreak, position, (int) face);
                     var packet = McpeInventoryTransaction.CreateObject();
-                    packet.transaction = new Transaction()
+                   /* packet.transaction = new Transaction()*/
+                   packet.transaction = new ItemUseTransaction()
                     {
-                        ActionType = (int) McpeInventoryTransaction.ItemUseAction.Destroy,
+                        ActionType = McpeInventoryTransaction.ItemUseAction.Destroy,
                         ClickPosition =
                             new System.Numerics.Vector3(cursorPosition.X, cursorPosition.Y, cursorPosition.Z),
-                        TransactionType = McpeInventoryTransaction.TransactionType.ItemUse,
-                        EntityId = NetworkEntityId,
+                       // TransactionType = McpeInventoryTransaction.TransactionType.ItemUse,
+                       // EntityId = NetworkEntityId,
                         Position = new MiNET.Utils.BlockCoordinates(position.X, position.Y, position.Z),
                         //Item = MiNET.Items.ItemFactory.GetItem()
                         
@@ -476,18 +480,15 @@ namespace Alex.Worlds.Bedrock
 	    public void BlockPlaced(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition)
 	    {
             var packet = McpeInventoryTransaction.CreateObject();
-            packet.transaction = new Transaction()
+            packet.transaction = new ItemUseTransaction()
             {
-                ActionType = (int)McpeInventoryTransaction.ItemUseAction.Place,
-                ClickPosition =
-                    new System.Numerics.Vector3(cursorPosition.X, cursorPosition.Y, cursorPosition.Z),
-                TransactionType = McpeInventoryTransaction.TransactionType.ItemUse,
-                EntityId = NetworkEntityId,
-                Position = new MiNET.Utils.BlockCoordinates(position.X, position.Y, position.Z),
-                Face = (int)face,
-                
-                //Item = MiNET.Items.ItemFactory.GetItem()
-
+	            ActionType = (int)McpeInventoryTransaction.ItemUseAction.Place,
+	            ClickPosition =
+		            new System.Numerics.Vector3(cursorPosition.X, cursorPosition.Y, cursorPosition.Z),
+	            //TransactionType = McpeInventoryTransaction.TransactionType.ItemUse,
+	            // = NetworkEntityId,
+	            Position = new MiNET.Utils.BlockCoordinates(position.X, position.Y, position.Z),
+	            Face = (int)face,
             };
 
             SendPacket(packet);
@@ -503,13 +504,19 @@ namespace Alex.Worlds.Bedrock
 			   // WorldProvider?.GetChatReceiver?.Receive(new ChatObject($"(CLIENT) Hit entity: {target.EntityId} | Action: {action.ToString()} | Item: {itemInHand.Id}:{itemInHand.Meta} ({itemInHand.Name})"));
 			    
 			    var packet = McpeInventoryTransaction.CreateObject();
-			    packet.transaction = new Transaction()
+			    packet.transaction = new ItemUseOnEntityTransaction()
+			    {
+				    ActionType = action,
+				    Item = MiNET.Items.ItemFactory.GetItem(itemInHand.Id, itemInHand.Meta, itemInHand.Count),
+				    EntityId = target.EntityId
+			    };
+				    /*  packet.transaction = new Transaction()
 			    {
 				    TransactionType = McpeInventoryTransaction.TransactionType.ItemUseOnEntity,
 				    ActionType = (int) action,
 				    Item = MiNET.Items.ItemFactory.GetItem(itemInHand.Id, itemInHand.Meta, itemInHand.Count),
 				    EntityId = target.EntityId
-			    };
+			    };*/
 			    
 			    SendPacket(packet);
 		    }
@@ -518,7 +525,17 @@ namespace Alex.Worlds.Bedrock
 	    public void WorldInteraction(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition)
 	    {
 		    var packet = McpeInventoryTransaction.CreateObject();
-		    packet.transaction = new Transaction()
+		    packet.transaction = new ItemUseTransaction()
+		    {
+			    ActionType = McpeInventoryTransaction.ItemUseAction.Use,
+			    ClickPosition =
+				    new System.Numerics.Vector3(cursorPosition.X, cursorPosition.Y, cursorPosition.Z),
+			  //  TransactionType = McpeInventoryTransaction.TransactionType.ItemUse,
+			   // EntityId = NetworkEntityId,
+			    Position = new MiNET.Utils.BlockCoordinates(position.X, position.Y, position.Z),
+			    Face = (int)face,
+		    };
+		  /*  packet.transaction = new Transaction()
 		    {
 			    ActionType = (int)McpeInventoryTransaction.ItemUseAction.Use,
 			    ClickPosition =
@@ -530,7 +547,7 @@ namespace Alex.Worlds.Bedrock
                 
 			    //Item = MiNET.Items.ItemFactory.GetItem()
 
-		    };
+		    };*/
 
 		    SendPacket(packet);
 	    }

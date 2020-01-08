@@ -14,6 +14,7 @@ using MiNET.Net;
 using MiNET.Utils;
 using NLog;
 using StackExchange.Profiling;
+using BlockState = Alex.Blocks.State.BlockState;
 
 namespace Alex.Worlds.Bedrock
 {
@@ -30,8 +31,8 @@ namespace Alex.Worlds.Bedrock
 	    private bool UseAlexChunks { get; }
 	    private BlockingCollection<QueuedChunk> QueuedChunks { get; }
 
-	    public IReadOnlyDictionary<uint, MiNET.Blockstate> _blockStateMap { get; set; } =
-		    new Dictionary<uint, MiNET.Blockstate>();
+	    public IReadOnlyDictionary<uint, MiNET.Utils.BlockRecord> _blockStateMap { get; set; } =
+		    new Dictionary<uint, MiNET.Utils.BlockRecord>();
 	    private Thread[] Threads { get; set; }
 	    private CancellationToken CancellationToken { get; }
 	    private int MaxThreads { get; }
