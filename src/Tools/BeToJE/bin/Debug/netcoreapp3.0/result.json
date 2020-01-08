@@ -1,0 +1,1640 @@
+{
+  "stone_type": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:stone"
+    ],
+    "Values": [
+      "stone",
+      "granite",
+      "granite_smooth",
+      "diorite",
+      "diorite_smooth",
+      "andesite",
+      "andesite_smooth"
+    ]
+  },
+  "dirt_type": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:dirt"
+    ],
+    "Values": [
+      "normal",
+      "coarse"
+    ]
+  },
+  "wood_type": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:planks",
+      "minecraft:fence",
+      "minecraft:double_wooden_slab",
+      "minecraft:wooden_slab",
+      "minecraft:wood"
+    ],
+    "Values": [
+      "oak",
+      "spruce",
+      "birch",
+      "jungle",
+      "acacia",
+      "dark_oak"
+    ]
+  },
+  "age_bit": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:sapling",
+      "minecraft:bamboo",
+      "minecraft:bamboo_sapling"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "sapling_type": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:sapling",
+      "minecraft:bamboo_sapling"
+    ],
+    "Values": [
+      "oak",
+      "spruce",
+      "birch",
+      "jungle",
+      "acacia",
+      "dark_oak"
+    ]
+  },
+  "infiniburn_bit": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:bedrock"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "liquid_depth": {
+    "Type": 3,
+    "FoundInBlocks": [
+      "minecraft:flowing_water",
+      "minecraft:water",
+      "minecraft:flowing_lava",
+      "minecraft:lava"
+    ],
+    "Values": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11",
+      "12",
+      "13",
+      "14",
+      "15"
+    ]
+  },
+  "sand_type": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:sand"
+    ],
+    "Values": [
+      "normal",
+      "red"
+    ]
+  },
+  "old_log_type": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:log"
+    ],
+    "Values": [
+      "oak",
+      "spruce",
+      "birch",
+      "jungle"
+    ]
+  },
+  "pillar_axis": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:log",
+      "minecraft:quartz_block",
+      "minecraft:log2",
+      "minecraft:hay_block",
+      "minecraft:purpur_block",
+      "minecraft:bone_block",
+      "minecraft:stripped_spruce_log",
+      "minecraft:stripped_birch_log",
+      "minecraft:stripped_jungle_log",
+      "minecraft:stripped_acacia_log",
+      "minecraft:stripped_dark_oak_log",
+      "minecraft:stripped_oak_log",
+      "minecraft:wood"
+    ],
+    "Values": [
+      "y",
+      "x",
+      "z"
+    ]
+  },
+  "old_leaf_type": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:leaves"
+    ],
+    "Values": [
+      "oak",
+      "spruce",
+      "birch",
+      "jungle"
+    ]
+  },
+  "persistent_bit": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:leaves",
+      "minecraft:leaves2"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "update_bit": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:leaves",
+      "minecraft:flower_pot",
+      "minecraft:leaves2"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "sponge_type": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:sponge"
+    ],
+    "Values": [
+      "dry",
+      "wet"
+    ]
+  },
+  "facing_direction": {
+    "Type": 3,
+    "FoundInBlocks": [
+      "minecraft:dispenser",
+      "minecraft:sticky_piston",
+      "minecraft:piston",
+      "minecraft:pistonArmCollision",
+      "minecraft:chest",
+      "minecraft:furnace",
+      "minecraft:lit_furnace",
+      "minecraft:ladder",
+      "minecraft:wall_sign",
+      "minecraft:stone_button",
+      "minecraft:dropper",
+      "minecraft:ender_chest",
+      "minecraft:command_block",
+      "minecraft:wooden_button",
+      "minecraft:skull",
+      "minecraft:trapped_chest",
+      "minecraft:hopper",
+      "minecraft:wall_banner",
+      "minecraft:repeating_command_block",
+      "minecraft:chain_command_block",
+      "minecraft:frame",
+      "minecraft:end_rod",
+      "minecraft:purple_glazed_terracotta",
+      "minecraft:white_glazed_terracotta",
+      "minecraft:orange_glazed_terracotta",
+      "minecraft:magenta_glazed_terracotta",
+      "minecraft:light_blue_glazed_terracotta",
+      "minecraft:yellow_glazed_terracotta",
+      "minecraft:lime_glazed_terracotta",
+      "minecraft:pink_glazed_terracotta",
+      "minecraft:gray_glazed_terracotta",
+      "minecraft:silver_glazed_terracotta",
+      "minecraft:cyan_glazed_terracotta",
+      "minecraft:blue_glazed_terracotta",
+      "minecraft:brown_glazed_terracotta",
+      "minecraft:green_glazed_terracotta",
+      "minecraft:red_glazed_terracotta",
+      "minecraft:black_glazed_terracotta",
+      "minecraft:observer",
+      "minecraft:acacia_button",
+      "minecraft:birch_button",
+      "minecraft:dark_oak_button",
+      "minecraft:jungle_button",
+      "minecraft:spruce_button",
+      "minecraft:spruce_wall_sign",
+      "minecraft:birch_wall_sign",
+      "minecraft:jungle_wall_sign",
+      "minecraft:acacia_wall_sign",
+      "minecraft:darkoak_wall_sign",
+      "minecraft:blast_furnace",
+      "minecraft:stonecutter_block",
+      "minecraft:smoker",
+      "minecraft:lit_smoker",
+      "minecraft:barrel",
+      "minecraft:jigsaw",
+      "minecraft:lit_blast_furnace",
+      "minecraft:stickyPistonArmCollision"
+    ],
+    "Values": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ]
+  },
+  "triggered_bit": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:dispenser",
+      "minecraft:dropper"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "sand_stone_type": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:sandstone",
+      "minecraft:red_sandstone"
+    ],
+    "Values": [
+      "default",
+      "heiroglyphs",
+      "cut",
+      "smooth"
+    ]
+  },
+  "direction": {
+    "Type": 3,
+    "FoundInBlocks": [
+      "minecraft:bed",
+      "minecraft:wooden_door",
+      "minecraft:iron_door",
+      "minecraft:pumpkin",
+      "minecraft:lit_pumpkin",
+      "minecraft:unpowered_repeater",
+      "minecraft:powered_repeater",
+      "minecraft:trapdoor",
+      "minecraft:fence_gate",
+      "minecraft:end_portal_frame",
+      "minecraft:cocoa",
+      "minecraft:tripwire_hook",
+      "minecraft:anvil",
+      "minecraft:unpowered_comparator",
+      "minecraft:powered_comparator",
+      "minecraft:iron_trapdoor",
+      "minecraft:spruce_fence_gate",
+      "minecraft:birch_fence_gate",
+      "minecraft:jungle_fence_gate",
+      "minecraft:dark_oak_fence_gate",
+      "minecraft:acacia_fence_gate",
+      "minecraft:spruce_door",
+      "minecraft:birch_door",
+      "minecraft:jungle_door",
+      "minecraft:acacia_door",
+      "minecraft:dark_oak_door",
+      "minecraft:chemistry_table",
+      "minecraft:acacia_trapdoor",
+      "minecraft:birch_trapdoor",
+      "minecraft:dark_oak_trapdoor",
+      "minecraft:jungle_trapdoor",
+      "minecraft:spruce_trapdoor",
+      "minecraft:carved_pumpkin",
+      "minecraft:lectern",
+      "minecraft:grindstone",
+      "minecraft:loom",
+      "minecraft:bell",
+      "minecraft:campfire"
+    ],
+    "Values": [
+      "0",
+      "1",
+      "2",
+      "3"
+    ]
+  },
+  "head_piece_bit": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:bed"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "occupied_bit": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:bed"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "rail_data_bit": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:golden_rail",
+      "minecraft:detector_rail",
+      "minecraft:activator_rail"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "rail_direction": {
+    "Type": 3,
+    "FoundInBlocks": [
+      "minecraft:golden_rail",
+      "minecraft:detector_rail",
+      "minecraft:rail",
+      "minecraft:activator_rail"
+    ],
+    "Values": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9"
+    ]
+  },
+  "tall_grass_type": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:tallgrass"
+    ],
+    "Values": [
+      "default",
+      "fern",
+      "tall",
+      "snow"
+    ]
+  },
+  "color": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:wool",
+      "minecraft:stained_hardened_clay",
+      "minecraft:stained_glass_pane",
+      "minecraft:carpet",
+      "minecraft:hard_stained_glass_pane",
+      "minecraft:shulker_box",
+      "minecraft:concrete",
+      "minecraft:concretePowder",
+      "minecraft:stained_glass",
+      "minecraft:hard_stained_glass"
+    ],
+    "Values": [
+      "white",
+      "orange",
+      "magenta",
+      "light_blue",
+      "yellow",
+      "lime",
+      "pink",
+      "gray",
+      "silver",
+      "cyan",
+      "purple",
+      "blue",
+      "brown",
+      "green",
+      "red",
+      "black"
+    ]
+  },
+  "flower_type": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:red_flower"
+    ],
+    "Values": [
+      "poppy",
+      "orchid",
+      "allium",
+      "houstonia",
+      "tulip_red",
+      "tulip_orange",
+      "tulip_white",
+      "tulip_pink",
+      "oxeye",
+      "cornflower",
+      "lily_of_the_valley"
+    ]
+  },
+  "stone_slab_type": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:double_stone_slab",
+      "minecraft:stone_slab"
+    ],
+    "Values": [
+      "smooth_stone",
+      "sandstone",
+      "wood",
+      "cobblestone",
+      "brick",
+      "stone_brick",
+      "quartz",
+      "nether_brick"
+    ]
+  },
+  "top_slot_bit": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:double_stone_slab",
+      "minecraft:stone_slab",
+      "minecraft:double_wooden_slab",
+      "minecraft:wooden_slab",
+      "minecraft:double_stone_slab2",
+      "minecraft:stone_slab2",
+      "minecraft:stone_slab3",
+      "minecraft:stone_slab4",
+      "minecraft:double_stone_slab3",
+      "minecraft:double_stone_slab4"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "allow_underwater_bit": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:tnt"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "explode_bit": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:tnt"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "torch_facing_direction": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:torch",
+      "minecraft:unlit_redstone_torch",
+      "minecraft:redstone_torch",
+      "minecraft:colored_torch_rg",
+      "minecraft:colored_torch_bp",
+      "minecraft:underwater_torch"
+    ],
+    "Values": [
+      "unknown",
+      "east",
+      "west",
+      "south",
+      "north",
+      "top"
+    ]
+  },
+  "age": {
+    "Type": 3,
+    "FoundInBlocks": [
+      "minecraft:fire",
+      "minecraft:cactus",
+      "minecraft:reeds",
+      "minecraft:nether_wart",
+      "minecraft:cocoa",
+      "minecraft:chorus_flower",
+      "minecraft:frosted_ice",
+      "minecraft:kelp"
+    ],
+    "Values": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11",
+      "12",
+      "13",
+      "14",
+      "15"
+    ]
+  },
+  "upside_down_bit": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:oak_stairs",
+      "minecraft:stone_stairs",
+      "minecraft:trapdoor",
+      "minecraft:brick_stairs",
+      "minecraft:stone_brick_stairs",
+      "minecraft:nether_brick_stairs",
+      "minecraft:sandstone_stairs",
+      "minecraft:spruce_stairs",
+      "minecraft:birch_stairs",
+      "minecraft:jungle_stairs",
+      "minecraft:quartz_stairs",
+      "minecraft:acacia_stairs",
+      "minecraft:dark_oak_stairs",
+      "minecraft:iron_trapdoor",
+      "minecraft:red_sandstone_stairs",
+      "minecraft:purpur_stairs",
+      "minecraft:prismarine_stairs",
+      "minecraft:dark_prismarine_stairs",
+      "minecraft:prismarine_bricks_stairs",
+      "minecraft:acacia_trapdoor",
+      "minecraft:birch_trapdoor",
+      "minecraft:dark_oak_trapdoor",
+      "minecraft:jungle_trapdoor",
+      "minecraft:spruce_trapdoor",
+      "minecraft:granite_stairs",
+      "minecraft:diorite_stairs",
+      "minecraft:andesite_stairs",
+      "minecraft:polished_granite_stairs",
+      "minecraft:polished_diorite_stairs",
+      "minecraft:polished_andesite_stairs",
+      "minecraft:mossy_stone_brick_stairs",
+      "minecraft:smooth_red_sandstone_stairs",
+      "minecraft:smooth_sandstone_stairs",
+      "minecraft:end_brick_stairs",
+      "minecraft:mossy_cobblestone_stairs",
+      "minecraft:normal_stone_stairs",
+      "minecraft:red_nether_brick_stairs",
+      "minecraft:smooth_quartz_stairs"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "weirdo_direction": {
+    "Type": 3,
+    "FoundInBlocks": [
+      "minecraft:oak_stairs",
+      "minecraft:stone_stairs",
+      "minecraft:brick_stairs",
+      "minecraft:stone_brick_stairs",
+      "minecraft:nether_brick_stairs",
+      "minecraft:sandstone_stairs",
+      "minecraft:spruce_stairs",
+      "minecraft:birch_stairs",
+      "minecraft:jungle_stairs",
+      "minecraft:quartz_stairs",
+      "minecraft:acacia_stairs",
+      "minecraft:dark_oak_stairs",
+      "minecraft:red_sandstone_stairs",
+      "minecraft:purpur_stairs",
+      "minecraft:prismarine_stairs",
+      "minecraft:dark_prismarine_stairs",
+      "minecraft:prismarine_bricks_stairs",
+      "minecraft:granite_stairs",
+      "minecraft:diorite_stairs",
+      "minecraft:andesite_stairs",
+      "minecraft:polished_granite_stairs",
+      "minecraft:polished_diorite_stairs",
+      "minecraft:polished_andesite_stairs",
+      "minecraft:mossy_stone_brick_stairs",
+      "minecraft:smooth_red_sandstone_stairs",
+      "minecraft:smooth_sandstone_stairs",
+      "minecraft:end_brick_stairs",
+      "minecraft:mossy_cobblestone_stairs",
+      "minecraft:normal_stone_stairs",
+      "minecraft:red_nether_brick_stairs",
+      "minecraft:smooth_quartz_stairs"
+    ],
+    "Values": [
+      "0",
+      "1",
+      "2",
+      "3"
+    ]
+  },
+  "redstone_signal": {
+    "Type": 3,
+    "FoundInBlocks": [
+      "minecraft:redstone_wire",
+      "minecraft:stone_pressure_plate",
+      "minecraft:wooden_pressure_plate",
+      "minecraft:light_weighted_pressure_plate",
+      "minecraft:heavy_weighted_pressure_plate",
+      "minecraft:daylight_detector",
+      "minecraft:daylight_detector_inverted",
+      "minecraft:acacia_pressure_plate",
+      "minecraft:birch_pressure_plate",
+      "minecraft:dark_oak_pressure_plate",
+      "minecraft:jungle_pressure_plate",
+      "minecraft:spruce_pressure_plate"
+    ],
+    "Values": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11",
+      "12",
+      "13",
+      "14",
+      "15"
+    ]
+  },
+  "growth": {
+    "Type": 3,
+    "FoundInBlocks": [
+      "minecraft:wheat",
+      "minecraft:pumpkin_stem",
+      "minecraft:melon_stem",
+      "minecraft:carrots",
+      "minecraft:potatoes",
+      "minecraft:beetroot",
+      "minecraft:sweet_berry_bush"
+    ],
+    "Values": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7"
+    ]
+  },
+  "moisturized_amount": {
+    "Type": 3,
+    "FoundInBlocks": [
+      "minecraft:farmland"
+    ],
+    "Values": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7"
+    ]
+  },
+  "ground_sign_direction": {
+    "Type": 3,
+    "FoundInBlocks": [
+      "minecraft:standing_sign",
+      "minecraft:standing_banner",
+      "minecraft:spruce_standing_sign",
+      "minecraft:birch_standing_sign",
+      "minecraft:jungle_standing_sign",
+      "minecraft:acacia_standing_sign",
+      "minecraft:darkoak_standing_sign"
+    ],
+    "Values": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11",
+      "12",
+      "13",
+      "14",
+      "15"
+    ]
+  },
+  "door_hinge_bit": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:wooden_door",
+      "minecraft:iron_door",
+      "minecraft:spruce_door",
+      "minecraft:birch_door",
+      "minecraft:jungle_door",
+      "minecraft:acacia_door",
+      "minecraft:dark_oak_door"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "open_bit": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:wooden_door",
+      "minecraft:lever",
+      "minecraft:iron_door",
+      "minecraft:trapdoor",
+      "minecraft:fence_gate",
+      "minecraft:iron_trapdoor",
+      "minecraft:spruce_fence_gate",
+      "minecraft:birch_fence_gate",
+      "minecraft:jungle_fence_gate",
+      "minecraft:dark_oak_fence_gate",
+      "minecraft:acacia_fence_gate",
+      "minecraft:spruce_door",
+      "minecraft:birch_door",
+      "minecraft:jungle_door",
+      "minecraft:acacia_door",
+      "minecraft:dark_oak_door",
+      "minecraft:acacia_trapdoor",
+      "minecraft:birch_trapdoor",
+      "minecraft:dark_oak_trapdoor",
+      "minecraft:jungle_trapdoor",
+      "minecraft:spruce_trapdoor",
+      "minecraft:barrel"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "upper_block_bit": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:wooden_door",
+      "minecraft:iron_door",
+      "minecraft:double_plant",
+      "minecraft:spruce_door",
+      "minecraft:birch_door",
+      "minecraft:jungle_door",
+      "minecraft:acacia_door",
+      "minecraft:dark_oak_door"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "lever_direction": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:lever"
+    ],
+    "Values": [
+      "down_east_west",
+      "east",
+      "west",
+      "south",
+      "north",
+      "up_north_south",
+      "up_east_west",
+      "down_north_south"
+    ]
+  },
+  "button_pressed_bit": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:stone_button",
+      "minecraft:wooden_button",
+      "minecraft:acacia_button",
+      "minecraft:birch_button",
+      "minecraft:dark_oak_button",
+      "minecraft:jungle_button",
+      "minecraft:spruce_button"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "covered_bit": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:snow_layer"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "height": {
+    "Type": 3,
+    "FoundInBlocks": [
+      "minecraft:snow_layer"
+    ],
+    "Values": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7"
+    ]
+  },
+  "portal_axis": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:portal"
+    ],
+    "Values": [
+      "unknown",
+      "x",
+      "z"
+    ]
+  },
+  "bite_counter": {
+    "Type": 3,
+    "FoundInBlocks": [
+      "minecraft:cake"
+    ],
+    "Values": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6"
+    ]
+  },
+  "repeater_delay": {
+    "Type": 3,
+    "FoundInBlocks": [
+      "minecraft:unpowered_repeater",
+      "minecraft:powered_repeater"
+    ],
+    "Values": [
+      "0",
+      "1",
+      "2",
+      "3"
+    ]
+  },
+  "monster_egg_stone_type": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:monster_egg"
+    ],
+    "Values": [
+      "stone",
+      "cobblestone",
+      "stone_brick",
+      "mossy_stone_brick",
+      "cracked_stone_brick",
+      "chiseled_stone_brick"
+    ]
+  },
+  "stone_brick_type": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:stonebrick"
+    ],
+    "Values": [
+      "default",
+      "mossy",
+      "cracked",
+      "chiseled",
+      "smooth"
+    ]
+  },
+  "huge_mushroom_bits": {
+    "Type": 3,
+    "FoundInBlocks": [
+      "minecraft:brown_mushroom_block",
+      "minecraft:red_mushroom_block"
+    ],
+    "Values": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11",
+      "12",
+      "13",
+      "14",
+      "15"
+    ]
+  },
+  "vine_direction_bits": {
+    "Type": 3,
+    "FoundInBlocks": [
+      "minecraft:vine"
+    ],
+    "Values": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11",
+      "12",
+      "13",
+      "14",
+      "15"
+    ]
+  },
+  "in_wall_bit": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:fence_gate",
+      "minecraft:spruce_fence_gate",
+      "minecraft:birch_fence_gate",
+      "minecraft:jungle_fence_gate",
+      "minecraft:dark_oak_fence_gate",
+      "minecraft:acacia_fence_gate"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "brewing_stand_slot_a_bit": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:brewing_stand"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "brewing_stand_slot_b_bit": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:brewing_stand"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "brewing_stand_slot_c_bit": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:brewing_stand"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "cauldron_liquid": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:cauldron",
+      "minecraft:lava_cauldron"
+    ],
+    "Values": [
+      "water",
+      "lava"
+    ]
+  },
+  "fill_level": {
+    "Type": 3,
+    "FoundInBlocks": [
+      "minecraft:cauldron",
+      "minecraft:lava_cauldron"
+    ],
+    "Values": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6"
+    ]
+  },
+  "end_portal_eye_bit": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:end_portal_frame"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "attached_bit": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:tripwire_hook",
+      "minecraft:tripWire"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "powered_bit": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:tripwire_hook",
+      "minecraft:tripWire",
+      "minecraft:observer",
+      "minecraft:lectern"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "disarmed_bit": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:tripWire"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "suspended_bit": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:tripWire"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "conditional_bit": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:command_block",
+      "minecraft:repeating_command_block",
+      "minecraft:chain_command_block"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "wall_block_type": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:cobblestone_wall"
+    ],
+    "Values": [
+      "cobblestone",
+      "mossy_cobblestone",
+      "granite",
+      "diorite",
+      "andesite",
+      "sandstone",
+      "brick",
+      "stone_brick",
+      "mossy_stone_brick",
+      "end_brick",
+      "nether_brick",
+      "prismarine",
+      "red_sandstone",
+      "red_nether_brick"
+    ]
+  },
+  "no_drop_bit": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:skull"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "damage": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:anvil"
+    ],
+    "Values": [
+      "undamaged",
+      "slightly_damaged",
+      "very_damaged",
+      "broken"
+    ]
+  },
+  "output_lit_bit": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:unpowered_comparator",
+      "minecraft:powered_comparator"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "output_subtract_bit": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:unpowered_comparator",
+      "minecraft:powered_comparator"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "toggle_bit": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:hopper",
+      "minecraft:bell"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "chisel_type": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:quartz_block",
+      "minecraft:purpur_block"
+    ],
+    "Values": [
+      "default",
+      "chiseled",
+      "lines",
+      "smooth"
+    ]
+  },
+  "new_leaf_type": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:leaves2"
+    ],
+    "Values": [
+      "acacia",
+      "dark_oak"
+    ]
+  },
+  "new_log_type": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:log2"
+    ],
+    "Values": [
+      "acacia",
+      "dark_oak"
+    ]
+  },
+  "prismarine_block_type": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:prismarine"
+    ],
+    "Values": [
+      "default",
+      "dark",
+      "bricks"
+    ]
+  },
+  "deprecated": {
+    "Type": 3,
+    "FoundInBlocks": [
+      "minecraft:hay_block",
+      "minecraft:bone_block"
+    ],
+    "Values": [
+      "0",
+      "1",
+      "2",
+      "3"
+    ]
+  },
+  "double_plant_type": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:double_plant"
+    ],
+    "Values": [
+      "sunflower",
+      "syringa",
+      "grass",
+      "fern",
+      "rose",
+      "paeonia"
+    ]
+  },
+  "stone_slab_type_2": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:double_stone_slab2",
+      "minecraft:stone_slab2"
+    ],
+    "Values": [
+      "red_sandstone",
+      "purpur",
+      "prismarine_rough",
+      "prismarine_dark",
+      "prismarine_brick",
+      "mossy_cobblestone",
+      "smooth_sandstone",
+      "red_nether_brick"
+    ]
+  },
+  "item_frame_map_bit": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:frame"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "color_bit": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:colored_torch_rg",
+      "minecraft:colored_torch_bp"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "structure_void_type": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:structure_void"
+    ],
+    "Values": [
+      "void",
+      "air"
+    ]
+  },
+  "chemistry_table_type": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:chemistry_table"
+    ],
+    "Values": [
+      "compound_creator",
+      "material_reducer",
+      "element_constructor",
+      "lab_table"
+    ]
+  },
+  "structure_block_type": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:structure_block"
+    ],
+    "Values": [
+      "invalid",
+      "data",
+      "save",
+      "load",
+      "corner",
+      "export"
+    ]
+  },
+  "sea_grass_type": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:seagrass"
+    ],
+    "Values": [
+      "default",
+      "double_top",
+      "double_bot"
+    ]
+  },
+  "coral_color": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:coral",
+      "minecraft:coral_block",
+      "minecraft:coral_fan",
+      "minecraft:coral_fan_dead"
+    ],
+    "Values": [
+      "blue",
+      "pink",
+      "purple",
+      "red",
+      "yellow"
+    ]
+  },
+  "dead_bit": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:coral",
+      "minecraft:coral_block",
+      "minecraft:coral_fan_hang",
+      "minecraft:coral_fan_hang2",
+      "minecraft:coral_fan_hang3",
+      "minecraft:sea_pickle"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "coral_fan_direction": {
+    "Type": 3,
+    "FoundInBlocks": [
+      "minecraft:coral_fan",
+      "minecraft:coral_fan_dead"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "coral_direction": {
+    "Type": 3,
+    "FoundInBlocks": [
+      "minecraft:coral_fan_hang",
+      "minecraft:coral_fan_hang2",
+      "minecraft:coral_fan_hang3"
+    ],
+    "Values": [
+      "0",
+      "1",
+      "2",
+      "3"
+    ]
+  },
+  "coral_hang_type_bit": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:coral_fan_hang",
+      "minecraft:coral_fan_hang2",
+      "minecraft:coral_fan_hang3"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "cluster_count": {
+    "Type": 3,
+    "FoundInBlocks": [
+      "minecraft:sea_pickle"
+    ],
+    "Values": [
+      "0",
+      "1",
+      "2",
+      "3"
+    ]
+  },
+  "cracked_state": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:turtle_egg"
+    ],
+    "Values": [
+      "no_cracks",
+      "cracked",
+      "max_cracked"
+    ]
+  },
+  "turtle_egg_count": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:turtle_egg"
+    ],
+    "Values": [
+      "one_egg",
+      "two_egg",
+      "three_egg",
+      "four_egg"
+    ]
+  },
+  "drag_down": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:bubble_column"
+    ],
+    "Values": [
+      "1",
+      "0"
+    ]
+  },
+  "stone_slab_type_3": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:stone_slab3",
+      "minecraft:double_stone_slab3"
+    ],
+    "Values": [
+      "end_stone_brick",
+      "smooth_red_sandstone",
+      "polished_andesite",
+      "andesite",
+      "diorite",
+      "polished_diorite",
+      "granite",
+      "polished_granite"
+    ]
+  },
+  "bamboo_leaf_size": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:bamboo"
+    ],
+    "Values": [
+      "no_leaves",
+      "small_leaves",
+      "large_leaves"
+    ]
+  },
+  "bamboo_stalk_thickness": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:bamboo"
+    ],
+    "Values": [
+      "thin",
+      "thick"
+    ]
+  },
+  "stability": {
+    "Type": 3,
+    "FoundInBlocks": [
+      "minecraft:scaffolding"
+    ],
+    "Values": [
+      "7",
+      "6",
+      "5",
+      "4",
+      "3",
+      "2",
+      "1",
+      "0"
+    ]
+  },
+  "stability_check": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:scaffolding"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "stone_slab_type_4": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:stone_slab4",
+      "minecraft:double_stone_slab4"
+    ],
+    "Values": [
+      "mossy_stone_brick",
+      "smooth_quartz",
+      "stone",
+      "cut_sandstone",
+      "cut_red_sandstone"
+    ]
+  },
+  "attachment": {
+    "Type": 8,
+    "FoundInBlocks": [
+      "minecraft:grindstone",
+      "minecraft:bell"
+    ],
+    "Values": [
+      "standing",
+      "hanging",
+      "side",
+      "multiple"
+    ]
+  },
+  "hanging": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:lantern"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "extinguished": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:campfire"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "stripped_bit": {
+    "Type": 1,
+    "FoundInBlocks": [
+      "minecraft:wood"
+    ],
+    "Values": [
+      "0",
+      "1"
+    ]
+  },
+  "composter_fill_level": {
+    "Type": 3,
+    "FoundInBlocks": [
+      "minecraft:composter"
+    ],
+    "Values": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8"
+    ]
+  },
+  "block_light_level": {
+    "Type": 3,
+    "FoundInBlocks": [
+      "minecraft:light_block"
+    ],
+    "Values": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11",
+      "12",
+      "13",
+      "14",
+      "15"
+    ]
+  }
+}

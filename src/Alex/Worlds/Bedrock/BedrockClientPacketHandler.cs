@@ -457,86 +457,10 @@ namespace Alex.Worlds.Bedrock
 			
 			if (_blockStateMap.TryGetValue(message.blockRuntimeId, out var bs))
 			{
-				IBlockState state = null;
-				
-				var result =
-					BlockFactory.RuntimeIdTable.FirstOrDefault(xx =>
-						xx.Name == bs.Name);
-
-				if (result != null && result.Id >= 0)
-				{
-					var reverseMap = MiNET.Worlds.AnvilWorldProvider.Convert.FirstOrDefault(map =>
-						map.Value.Item1 == result.Id);
-
-					var id = result.Id;
-					if (reverseMap.Value != null)
-					{
-						id = reverseMap.Key;
-					}
-													        
-					var res = BlockFactory.GetBlockStateID(
-						(int) id,
-						(byte) bs.Data);
-
-					if (AnvilWorldProvider.BlockStateMapper.TryGetValue(
-						res,
-						out var res2))
-					{
-														        
-						var t = BlockFactory.GetBlockState(res2);
-						t = ChunkProcessor.TranslateBlockState(t, id,
-							bs.Data);
-
-						state = t;
-					}
-					else
-					{
-						Log.Info(
-							$"Did not find anvil statemap: {result.Name}");
-						state = ChunkProcessor.TranslateBlockState(
-							BlockFactory.GetBlockState(result.Name),
-							id, bs.Data);
-					}
-				}
-
-				if (state == null)
-				{
-					state = ChunkProcessor.TranslateBlockState(
-						BlockFactory.GetBlockState(bs.Name),
-						-1, bs.Data);
-				}
-
-				if (state != null)
+				if (ChunkProcessor.TryConvertBlockState(bs, out var state))
 					BaseClient.WorldReceiver?.SetBlockState(
 						new BlockCoordinates(message.coordinates.X, message.coordinates.Y, message.coordinates.Z), 
 						state);
-				
-				/*
-				var result =
-					BlockFactory.RuntimeIdTable.FirstOrDefault(xx => xx.Name == bs.Name);
-				
-				uint res = 0;
-				bool ss = false;
-				if (result != null && result.Id >= 0)
-				{
-					res = BlockFactory.GetBlockStateID((int) result.Id, (byte) bs.Data);
-					ss = true;
-				}
-
-				if (ss && AnvilWorldProvider.BlockStateMapper.TryGetValue(res, out res))
-				{
-					var a = BlockFactory.GetBlockState(res);
-					BaseClient.WorldReceiver?.SetBlockState(
-						new BlockCoordinates(message.coordinates.X, message.coordinates.Y, message.coordinates.Z), 
-						a);
-				}
-				else
-				{
-
-					BaseClient.WorldReceiver?.SetBlockState(
-						new BlockCoordinates(message.coordinates.X, message.coordinates.Y, message.coordinates.Z),
-						BlockFactory.GetBlockState(bs.Name));
-				}*/
 			}
 			else
 			{

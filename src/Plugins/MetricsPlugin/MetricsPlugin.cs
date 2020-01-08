@@ -33,11 +33,14 @@ namespace MetricsPlugin
         {
             Metrics = new MetricsBuilder().Report.ToInfluxDb(options =>
             {
-                options.InfluxDb.BaseUri = new Uri("http://s1.pikachu.local:8086");
-                options.InfluxDb.Database = "metrics";
+                options.InfluxDb.BaseUri = new Uri("http://localhost:8086");
+                options.InfluxDb.Database = "alex";
             }).Build();
 
-            Health = AppMetricsHealth.CreateDefaultBuilder().Configuration.Configure(c => { }).Build();
+            Health = AppMetricsHealth.CreateDefaultBuilder().Configuration.Configure(c =>
+            {
+                
+            }).Build();
 
             MetricTasks = new List<IMetricTask>();
         }

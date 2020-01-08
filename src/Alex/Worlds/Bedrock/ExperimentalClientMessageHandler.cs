@@ -561,11 +561,6 @@ namespace Alex.Worlds.Bedrock
             throw new System.NotImplementedException();
         }
 
-        public void HandleMcpeClientCacheStatus(McpeClientCacheStatus message)
-        {
-            throw new System.NotImplementedException();
-        }
-
         public void HandleMcpeOnScreenTextureAnimation(McpeOnScreenTextureAnimation message)
         {
             throw new System.NotImplementedException();

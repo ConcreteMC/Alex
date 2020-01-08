@@ -203,7 +203,12 @@ namespace Alex.Worlds.Bedrock
 											        if (_blockStateMap.TryGetValue(pallete[state], out var bs))
 											        {
 
-												        var result =
+												        if (TryConvertBlockState(bs, out var convertedState))
+												        {
+													        return convertedState;
+												        }
+												        
+												       /* var result =
 													        BlockFactory.RuntimeIdTable.FirstOrDefault(xx =>
 														        xx.Name == bs.Name);
 
@@ -241,7 +246,7 @@ namespace Alex.Worlds.Bedrock
 															        BlockFactory.GetBlockState(result.Name),
 															        id, bs.Data);
 													        }
-												        }
+												        }*/
 
 												        return TranslateBlockState(
 													        BlockFactory.GetBlockState(bs.Name),
@@ -442,6 +447,183 @@ namespace Alex.Worlds.Bedrock
 		        MeasureProfiler.SaveData();
 	        }
         }
+
+        public bool TryConvertBlockState(BlockRecord record, out IBlockState result)
+        {
+	        if (_convertedStates.TryGetValue((uint) record.RuntimeId, out var alreadyConverted))
+	        {
+		        result = alreadyConverted;
+		        return true;
+	        }
+	        
+	        result = null;
+
+	        string searchName = record.Name;
+	        
+	        switch (record.Name)
+	        {
+		        case "minecraft:torch":
+			        if (record.States.Any(x => x.Name.Equals("torch_facing_direction") && x.Value != "top"))
+			        {
+				        searchName = "minecraft:wall_torch";
+			        }
+			        break;
+	        }
+	        
+	        string prefix = "";
+	        foreach (var state in record.States)
+	        {
+		        switch (state.Name)
+		        {
+			        case "stone_type":
+				        switch (state.Value)
+				        {
+					        case "granite":
+					        case "diorite":
+					        case "andesite":
+						        searchName = $"minecraft:{state.Value}";
+						        break;
+					        case "granite_smooth":
+					        case "diorite_smooth":
+							case "andesite_smooth":
+						        var split = state.Value.Split('_');
+						        searchName = $"minecraft:polished_{split[0]}";
+						        break;
+				        }
+				        break;
+			        case "wood_type":
+			        case "sapling_type":
+			        case "old_log_type":
+			        case "old_leaf_type":
+				        prefix = state.Value + "_";
+				        break;
+			        case "flower_type":
+				        searchName = $"minecraft:{state.Value}";
+				        break;
+		        }
+	        }
+	        
+	        IBlockState r;// = BlockFactory.GetBlockState(record.Name);
+
+	        r = BlockFactory.GetBlockState(prefix + searchName);
+
+	        if (r == null || r.Name == "Unknown")
+	        {
+		        r = BlockFactory.GetBlockState(searchName);
+	        }
+	        
+	        if (r == null || r.Name == "Unknown")
+	        {
+		        var mapResult =
+			        BlockFactory.RuntimeIdTable.FirstOrDefault(xx =>
+				        xx.Name == searchName);
+
+		        if (mapResult != null && mapResult.Id >= 0)
+		        {
+			        var reverseMap = MiNET.Worlds.AnvilWorldProvider.Convert.FirstOrDefault(map =>
+				        map.Value.Item1 == mapResult.Id);
+
+			        var id = mapResult.Id;
+			        if (reverseMap.Value != null)
+			        {
+				        id = reverseMap.Key;
+			        }
+													        
+			        var res = BlockFactory.GetBlockStateID(
+				        (int) id,
+				        (byte) record.Data);
+
+			        if (AnvilWorldProvider.BlockStateMapper.TryGetValue(
+				        res,
+				        out var res2))
+			        {
+														        
+				        r = BlockFactory.GetBlockState(res2);
+			        }
+			        else
+			        {
+				        Log.Info(
+					        $"Did not find anvil statemap: {result.Name}");
+				        r = BlockFactory.GetBlockState(mapResult.Name);
+			        }
+		        }
+	        }
+
+	        if (r == null || r.Name == "Unknown")
+		        return false;
+
+	        foreach (var state in record.States)
+	        {
+		        switch (state.Name)
+		        {
+			        case "direction":
+			        case "weirdo_direction":
+				        r = FixFacing(r, int.Parse(state.Value));
+				        break;
+			        case "upside_down_bit":
+				        r = ((BlockState)r).WithPropertyNoResolve("half", state.Value == "1" ? "top" : "bottom");
+				        break;
+			        case "door_hinge_bit":
+				        r = r.WithProperty("hinge", (state.Value == "0") ? "left" : "right");
+				        break;
+					case "open_bit":
+						r = r.WithProperty("open", (state.Value == "1") ? "true" : "false");
+						break;
+					case "upper_block_bit":
+						r = r.WithProperty("half", (state.Value == "1") ? "upper" : "lower");
+						break;
+					case "torch_facing_direction":
+						r = FixTorchFacing(r, state.Value);
+						break;
+					case "liquid_depth":
+						r = r.WithProperty("level", state.Value);
+						break;
+					case "height":
+						r = r.WithProperty("layers", state.Value);
+						break;
+					case "growth":
+						r = r.WithProperty("age", state.Value);
+						break;
+					case "button_pressed_bit":
+						r = r.WithProperty("powered", state.Value == "1" ? "true" : "false");
+						break;
+					case "facing_direction":
+						switch (int.Parse(state.Value))
+						{
+							case 0:
+							case 4:
+								r = r.WithProperty(facing, "west");
+								break;
+							case 1:
+							case 5:
+								r = r.WithProperty(facing, "east");
+								break;
+							case 6:
+							case 2:
+								r = r.WithProperty(facing, "north");
+								break;
+							case 7:
+							case 3:
+								r = r.WithProperty(facing, "south");
+								break;
+						}
+						break;
+					case "head_piece_bit":
+						r = r.WithProperty("part", state.Value == "1" ? "head" : "foot");
+						break;
+					case "pillar_axis":
+						r = r.WithProperty("axis", state.Value);
+						break;
+					case "top_slot_bit":
+						r = r.WithProperty("type", state.Value == "1" ? "top" : "bottom", true);
+						break;
+		        }
+	        }
+
+	        result = r;
+	        
+	        return true;
+        }
         
         private uint SwapBytes(uint x)
         {
@@ -451,6 +633,11 @@ namespace Alex.Worlds.Bedrock
 	        return ((x & 0xFF00FF00) >> 8) | ((x & 0x00FF00FF) << 8);
         }
 
+        private IBlockState FixTorchFacing(IBlockState state, string value)
+        {
+	        return state.WithProperty("facing", value);
+        }
+        
         const string facing = "facing";
 		private IBlockState FixFacing(IBlockState state, int meta)
 		{
