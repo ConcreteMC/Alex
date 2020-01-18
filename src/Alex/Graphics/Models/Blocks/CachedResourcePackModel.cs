@@ -11,7 +11,6 @@ using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using NLog;
-using WinApi.User32;
 using MathF = Alex.API.Utils.MathF;
 using Matrix = System.Drawing.Drawing2D.Matrix;
 

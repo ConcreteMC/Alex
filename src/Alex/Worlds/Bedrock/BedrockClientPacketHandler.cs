@@ -511,6 +511,7 @@ namespace Alex.Worlds.Bedrock
 		public override void HandleMcpeNetworkChunkPublisherUpdate(McpeNetworkChunkPublisherUpdate message)
 		{
 			UnhandledPackage(message);
+			//Log.Info($"Chunk publisher update: {message.coordinates} | {message.radius}");
         }
 
 		public override void HandleMcpeBiomeDefinitionList(McpeBiomeDefinitionList message)

@@ -131,7 +131,7 @@ namespace Alex.GameStates.Playing
 			{
 				if (_raytracedBlock.Y > 0 && _raytracedBlock.Y < 256)
 				{
-					var adj = _adjacentBlock.Floor() - _raytracedBlock.Floor();
+					var adj =  Vector3.Floor(_adjacentBlock) - Vector3.Floor(_raytracedBlock);
 					adj.Normalize();
 
 					var face = adj.GetBlockFace();
@@ -256,10 +256,10 @@ namespace Alex.GameStates.Playing
 
 		        if (block != null && block.HasHitbox && !block.IsWater)
 		        {
-		            var bbox = block.GetBoundingBox(targetPoint.Floor());
+		            var bbox = block.GetBoundingBox(Vector3.Floor(targetPoint));
 		            if (bbox.Contains(targetPoint) == ContainmentType.Contains)
 		            {
-		                _raytracedBlock = targetPoint.Floor();
+		                _raytracedBlock = Vector3.Floor(targetPoint);
                         SelBlock = block;
 		                RayTraceBoundingBox = bbox;
 
@@ -268,7 +268,7 @@ namespace Alex.GameStates.Playing
 
                         if (SetPlayerAdjacentSelectedBlock(world, x, camPos, lookVector, out Vector3 rawAdjacent))
                         {
-	                        _adjacentBlock = rawAdjacent.Floor();
+	                        _adjacentBlock = Vector3.Floor(rawAdjacent);
 
 				            world.Player.AdjacentRaytrace = rawAdjacent;
                             world.Player.HasAdjacentRaytrace = true;

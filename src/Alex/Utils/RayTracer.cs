@@ -33,8 +33,10 @@ namespace Alex.Utils
 			while (plotter.Next())
 			{
 				var v = plotter.Get();
+				
 				var b = (Block)world.GetBlock(v);
-				if (b != null && b.Renderable && b.HasHitbox && b.GetBoundingBox(v.Floor()).Intersects(new BoundingBox(v, v)))
+				v.Floor();
+				if (b != null && b.Renderable && b.HasHitbox && b.GetBoundingBox(v).Intersects(new BoundingBox(v, v)))
 				{
 					plotter.End();
 
@@ -76,7 +78,8 @@ namespace Alex.Utils
 				var v = plotter.Get();
 
 				var b = (Block)world.GetBlock(v);
-				if (b != null && b.Renderable && b.HasHitbox && b.GetBoundingBox(v.Floor()).Intersects(new BoundingBox(v, v)))
+				v.Floor();
+				if (b != null && b.Renderable && b.HasHitbox && b.GetBoundingBox(v).Intersects(new BoundingBox(v, v)))
 				{
 					plotter.End();
 

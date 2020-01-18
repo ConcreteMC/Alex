@@ -136,7 +136,7 @@ namespace Alex.Entities
 				}
 				else if (_destroyingBlock && Controller.InputManager.IsDown(InputCommand.LeftClick))
 				{
-					if (_destroyingTarget != new BlockCoordinates(Raytraced.Floor()))
+					if (_destroyingTarget != new BlockCoordinates(Vector3.Floor(Raytraced)))
 					{
 						StopBreakingBlock(true, true);
 
@@ -162,7 +162,7 @@ namespace Alex.Entities
 
 					if (!handledClick)
 					{
-						var flooredAdj = AdjacentRaytrace.Floor();
+						var flooredAdj = Vector3.Floor(AdjacentRaytrace);
 						var remainder = new Vector3(AdjacentRaytrace.X - flooredAdj.X, AdjacentRaytrace.Y - flooredAdj.Y, AdjacentRaytrace.Z - flooredAdj.Z);
 						Network?.BlockPlaced(Raytraced, GetTargetFace(), 0, remainder);
 
@@ -232,7 +232,7 @@ namespace Alex.Entities
 
 	    private void StartBreakingBlock()
 	    {
-			var floored = Raytraced.Floor();
+			var floored =  Vector3.Floor(Raytraced);
 
 		    var block = Level.GetBlock(floored);
 		    if (!block.HasHitbox)
@@ -250,7 +250,7 @@ namespace Alex.Entities
 
             Log.Debug($"Start break block ({_destroyingTarget}, {_destroyTimeNeeded} seconds.)");
 
-            var flooredAdj = AdjacentRaytrace.Floor();
+            var flooredAdj = Vector3.Floor(AdjacentRaytrace);
             var remainder = new Vector3(AdjacentRaytrace.X - flooredAdj.X, AdjacentRaytrace.Y - flooredAdj.Y, AdjacentRaytrace.Z - flooredAdj.Z);
 
             Network?.PlayerDigging(DiggingStatus.Started, _destroyingTarget, _destroyingFace, remainder);
@@ -266,7 +266,7 @@ namespace Alex.Entities
 
 		    var timeRan = (end - start).TotalSeconds;
 
-            var flooredAdj = AdjacentRaytrace.Floor();
+            var flooredAdj = Vector3.Floor(AdjacentRaytrace);
             var remainder = new Vector3(AdjacentRaytrace.X - flooredAdj.X, AdjacentRaytrace.Y - flooredAdj.Y, AdjacentRaytrace.Z - flooredAdj.Z);
 
             if (!sendToServer)
@@ -291,8 +291,8 @@ namespace Alex.Entities
 
 	    private BlockFace GetTargetFace()
 	    {
-		    var flooredAdj = AdjacentRaytrace.Floor();
-		    var raytraceFloored = Raytraced.Floor();
+		    var flooredAdj =  Vector3.Floor(AdjacentRaytrace);
+		    var raytraceFloored  = Vector3.Floor(Raytraced);
 
 		    var adj = flooredAdj - raytraceFloored;
 		    adj.Normalize();
@@ -315,8 +315,8 @@ namespace Alex.Entities
 
                 if (blockState != null && !(blockState.Block is Air) && HasRaytraceResult)
                 {
-                    var flooredAdj = AdjacentRaytrace.Floor();
-	                var raytraceFloored = Raytraced.Floor();
+                    var flooredAdj =  Vector3.Floor(AdjacentRaytrace);
+	                var raytraceFloored =  Vector3.Floor(Raytraced);
 
                     var adj = flooredAdj - raytraceFloored;
                     adj.Normalize();

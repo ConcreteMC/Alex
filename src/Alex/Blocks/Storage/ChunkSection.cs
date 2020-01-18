@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Alex.API.Blocks.State;
 using Alex.API.Graphics;
+using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks.Minecraft;
 using Alex.ResourcePackLib.Json;
@@ -34,7 +35,7 @@ namespace Alex.Blocks.Storage
 		public bool HasAirPockets { get; private set; } = true;
 
 		internal ChunkMesh MeshCache { get; set; } = null;
-		internal IReadOnlyDictionary<Vector3, ChunkMesh.EntryPosition> MeshPositions { get; set; } = null;
+		internal IReadOnlyDictionary<BlockCoordinates, ChunkMesh.EntryPosition> MeshPositions { get; set; } = null;
 		
         public ChunkSection(int y, bool storeSkylight)
         {

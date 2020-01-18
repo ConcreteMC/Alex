@@ -477,7 +477,7 @@ namespace Alex.Worlds
 			
                 foreach (var c in _renderedChunks.ToArray())
                 {
-	                if (c == null || c.Coordinates == default || !renderedChunks.Any(x => x.Key.Equals(c.Coordinates)))
+	                if (c == null || c.Coordinates == null || !renderedChunks.Any(x => x.Key.Equals(c.Coordinates)))
 	                {
 		                _renderedChunks.Remove(c);
 	                }
@@ -617,7 +617,7 @@ namespace Alex.Worlds
             var profiler = MiniProfiler.StartNew("chunk.update");
             ChunkData data = null;
             bool force = !_chunkData.TryGetValue(coordinates, out data);
-			
+
             try
             {
                 //chunk.UpdateChunk(Graphics, World);
@@ -664,7 +664,7 @@ namespace Alex.Worlds
 	                        using (profiler.Step("chunk.meshing"))
                             {
                                 var sectionMesh = GenerateSectionMesh(World, scheduleType,
-                                    new Vector3(chunk.X * 16f, 0, chunk.Z * 16f), ref section, i);
+                                    new Vector3(chunk.X << 4, 0, chunk.Z << 4), ref section, i);
                                 
                                 meshes.Add(sectionMesh);
                             }
@@ -904,7 +904,7 @@ namespace Alex.Worlds
 	        var cached = section.MeshCache;
 	        var positionCache = section.MeshPositions;
 
-	        Dictionary<Vector3, ChunkMesh.EntryPosition> positions = new Dictionary<Vector3, ChunkMesh.EntryPosition>();
+	        Dictionary<BlockCoordinates, ChunkMesh.EntryPosition> positions = new Dictionary<BlockCoordinates, ChunkMesh.EntryPosition>();
 			
 	        List<VertexPositionNormalTextureColor> solidVertices = new List<VertexPositionNormalTextureColor>();
 
@@ -917,27 +917,26 @@ namespace Alex.Worlds
 	        for (var x = 0; x < ChunkColumn.ChunkWidth; x++)
 	        for (var z = 0; z < ChunkColumn.ChunkDepth; z++)
 	        {
-		        var blockPosition = new Vector3(x, y + (yIndex << 4), z) + chunkPosition;
+		        var blockPosition = new BlockCoordinates((int) (chunkPosition.X + x), y + (yIndex << 4), (int) (chunkPosition.Z + z));
+		        var blockCoords = new BlockCoordinates(x, y, z);
 		        
 		        bool isScheduled = section.IsScheduled(x, y, z);
 		        var neighborsScheduled = HasScheduledNeighbors(world, blockPosition);
 		       // bool isLightingScheduled = section.IsLightingScheduled(x, y, z);
 
-		       var isBorderBlock = (scheduled == ScheduleType.Border && (x == 0 || x == 15) || (z == 0 || z == 15));
+		       var isBorderBlock = (scheduled == ScheduleType.Border && ((x == 0 || x == 15) || (z == 0 || z == 15)));
 		        
 			        var blockState = section.Get(x, y, z);
 
-			        if (((blockState == null || !blockState.Block.Renderable) ||
-			            (!section.New &&
-			             !neighborsScheduled)) && !force && !isBorderBlock)
+			        if (((blockState == null || !blockState.Block.Renderable) && !force && !isBorderBlock))
 			        {
 				        continue;
 			        }
 
-			        var shouldRebuildVertices = (force || isScheduled || neighborsScheduled || isBorderBlock);
-			        
 			        var model = blockState.Model;
-
+			        
+			        var shouldRebuildVertices = ((force || isScheduled || neighborsScheduled || isBorderBlock));
+			        
 			        if (blockState != null && shouldRebuildVertices && blockState.Block.RequiresUpdate)
 			        {
 				        blockState = blockState.Block.BlockPlaced(world, blockState, blockPosition);
@@ -953,32 +952,35 @@ namespace Alex.Worlds
 				        // blockState.Block.Update(world, blockPosition);
 			        }
 
-			        if (!shouldRebuildVertices && positionCache.TryGetValue(new Vector3(x, y, z), out var pos))
+			        if (!shouldRebuildVertices && positionCache.TryGetValue(blockCoords, out var cachedBlock))
 			        {
-				        var indices = pos.Animated
+				        section.SetRendered(x, y, z, true);
+				        
+				        var indices = cachedBlock.Animated
 					        ? cached.AnimatedIndexes
-					        : (pos.Transparent ? cached.TransparentIndexes : cached.SolidIndexes);
+					        : (cachedBlock.Transparent ? cached.TransparentIndexes : cached.SolidIndexes);
 
-				        var indiceIndex = pos.Animated
+				        var indiceIndex = cachedBlock.Animated
 					        ? animatedIndexes.Count
-					        : (pos.Transparent ? transparentIndexes.Count : solidIndexes.Count);
-				        for (int index = 0; index < pos.Length; index++)
+					        : (cachedBlock.Transparent ? transparentIndexes.Count : solidIndexes.Count);
+
+				        
+				        for (int index = cachedBlock.Index; index < cachedBlock.Index + cachedBlock.Length; index++)
 				        {
-					        var indice = indices[pos.Index + index];
-					        if (!processedIndices.TryGetValue(indice, out var newIndex))
+					        var vertexIndex = indices[index];
+					        if (!processedIndices.TryGetValue(vertexIndex, out var newIndex))
 					        {
-						        newIndex = solidVertices.Count;
-						        var vertice = cached.Vertices[indice];
+						        var vertice = cached.Vertices[vertexIndex];
 						        solidVertices.Add(vertice);
 
-						        processedIndices.Add(indice, newIndex);
+						        processedIndices.Add(vertexIndex, newIndex);
 					        }
 
-					        if (pos.Animated)
+					        if (cachedBlock.Animated)
 					        {
 						        animatedIndexes.Add(newIndex);
 					        }
-					        else if (pos.Transparent)
+					        else if (cachedBlock.Transparent)
 					        {
 						        transparentIndexes.Add(newIndex);
 					        }
@@ -988,8 +990,11 @@ namespace Alex.Worlds
 					        }
 				        }
 
-				        positions.TryAdd(new Vector3(x, y, z),
-					        new ChunkMesh.EntryPosition(pos.Transparent, pos.Animated, indiceIndex, pos.Length));
+				        if (!positions.TryAdd(blockCoords, 
+					        new ChunkMesh.EntryPosition(cachedBlock.Transparent, cachedBlock.Animated, indiceIndex, cachedBlock.Length)))
+				        {
+					        Log.Warn($"Could not add block to indice indexer");
+				        }
 			        } 
 			        else if (shouldRebuildVertices)
 			        {
@@ -1024,27 +1029,32 @@ namespace Alex.Worlds
 						        solidVertices.Add(vert);
 					        }
 
-					        int startIndex = animated ? animatedIndexes.Count : (transparent ? transparentIndexes.Count : solidIndexes.Count);
+					        int startIndex = (animated ? animatedIndexes.Count : (transparent ? transparentIndexes.Count : solidIndexes.Count));
 					        for (int i = 0; i < data.indexes.Length; i++)
 					        {
-						        var a = data.indexes[i];
+						        var originalIndex = data.indexes[i];
 
+						        var verticeIndex = startVerticeIndex + originalIndex;
+						        
 						        if (animated)
 						        {
-							        animatedIndexes.Add(startVerticeIndex + a);
+							        animatedIndexes.Add(verticeIndex);
 						        }
 						        else if (transparent)
 						        {
-							        transparentIndexes.Add(startVerticeIndex + a);
+							        transparentIndexes.Add(verticeIndex);
 						        }
 						        else
 						        {
-							        solidIndexes.Add(startVerticeIndex + a);
+							        solidIndexes.Add(verticeIndex);
 						        }
 					        }
 
-					        positions.TryAdd(new Vector3(x, y, z),
-						        new ChunkMesh.EntryPosition(transparent, animated, startIndex, data.indexes.Length));
+					        if (!positions.TryAdd(blockCoords, 
+						        new ChunkMesh.EntryPosition(transparent, animated, startIndex, data.indexes.Length)))
+					        {
+						        Log.Warn($"Could not add block to indice indexer");
+					        }
 				        }
 			        }
 
@@ -1054,11 +1064,16 @@ namespace Alex.Worlds
 
 	        section.New = false;
 
+	        var oldMesh = section.MeshCache;
+
 	        var mesh = new ChunkMesh(solidVertices.ToArray(), solidIndexes.ToArray(),
 		        transparentIndexes.ToArray(), animatedIndexes.ToArray());
 
 	        section.MeshCache = mesh;
 	        section.MeshPositions = positions;
+	        
+	        if (oldMesh != null)
+		        oldMesh.Dispose();
 	        
 	        return mesh;
         }

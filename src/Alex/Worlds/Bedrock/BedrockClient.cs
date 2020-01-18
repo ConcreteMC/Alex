@@ -337,18 +337,24 @@ namespace Alex.Worlds.Bedrock
                 Slim = false,
                 Data = Encoding.Default.GetBytes(new string('Z', 8192)),
                 SkinId = "Standard_Custom",
-                GeometryName = "geometry.humanoid.custom",
-                GeometryData = "",
-                Cape = new Cape(),
+              //  GeometryName = "geometry.humanoid.custom",
+              //  GeometryData = "",
+             //   Cape = new Cape()
+               // {
+	          //      Data = new byte[0]
+              //  },
               //  SkinGeometryName = "geometry.humanoid.custom",
                // SkinGeometry = ""
             };
 
             string skin64 = Convert.ToBase64String(skin.Data);
-            string cape64 = Convert.ToBase64String(skin.Cape.Data);
+           // string cape64 = Convert.ToBase64String(skin.Cape.Data);
 
             string skinData = $@"
 {{
+    ""SkinAnimationData"": null,
+    ""AnimatedImageData"": [],
+	""CapeData"": """",
 	""ADRole"": 0,
 	""ClientRandomId"": {new Random().Next()},
 	""CurrentInputMode"": 1,
@@ -364,10 +370,14 @@ namespace Alex.Worlds.Bedrock
 	""SelfSignedId"": ""{Guid.NewGuid().ToString()}"",
 	""ServerAddress"": ""{base.ServerEndpoint.Address.ToString()}:{base.ServerEndpoint.Port.ToString()}"",
 	""SkinData"": ""{skin64}"",
+	""SkinImageWidth"": 32,
+	""SkinImageHeight"": 64,
+	""PremiumSkin"": false,
+    ""PersonaSkin"": false,
+	""CapeImageHeight"": 0,
+	""CapeImageWidth"": 0,
+    ""CapeOnClassicSkin"": false,
 	""SkinId"": ""{skin.SkinId}"",
-    ""SkinGeometryName"": ""{skin.GeometryName}"",
-    ""SkinGeometry"": ""{skin.GeometryData}"",
-    ""CapeData"": ""{cape64}"",
 	""TenantId"": ""38dd6634-1031-4c50-a9b4-d16cd9d97d57"",
 	""ThirdPartyName"": ""{username}"",
 	""UIProfile"": 0,
