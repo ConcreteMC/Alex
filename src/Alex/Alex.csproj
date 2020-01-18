@@ -104,6 +104,7 @@
     <PackageReference Include="JKang.IpcServiceFramework.Server" Version="2.2.2" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.2.0" />
     <PackageReference Include="Microsoft.Identity.Client" Version="2.3.0-preview" />
+    <PackageReference Include="MiNET.fnbt" Version="1.0.22" />
     <PackageReference Include="MiniProfiler.EntityFrameworkCore" Version="4.0.180" />
     <PackageReference Include="Mono.Cecil" Version="0.11.1" />
     <PackageReference Include="MonoGame.Framework.DesktopGL.Core" Version="3.8.0.2" />

@@ -163,7 +163,11 @@ namespace Alex.Worlds.Bedrock
 				Client.HaveServer = true;
 
 				Client.SendOpenConnectionRequest1();
-				Client.ConnectionAcceptedWaitHandle.Wait();
+				if (!Client.ConnectionAcceptedWaitHandle.Wait(TimeSpan.FromSeconds(5)))
+				{
+					Client.ShowDisconnect("Could not connect to server!");
+					return;
+				}
 
 				progressReport(LoadingState.ConnectingToServer, 100);
 

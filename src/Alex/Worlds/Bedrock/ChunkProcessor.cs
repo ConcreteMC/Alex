@@ -207,46 +207,6 @@ namespace Alex.Worlds.Bedrock
 												        {
 													        return convertedState;
 												        }
-												        
-												       /* var result =
-													        BlockFactory.RuntimeIdTable.FirstOrDefault(xx =>
-														        xx.Name == bs.Name);
-
-												        if (result != null && result.Id >= 0)
-												        {
-													        var reverseMap = MiNET.Worlds.AnvilWorldProvider.Convert.FirstOrDefault(map =>
-														        map.Value.Item1 == result.Id);
-
-													        var id = result.Id;
-													        if (reverseMap.Value != null)
-													        {
-														        id = reverseMap.Key;
-													        }
-													        
-													        var res = BlockFactory.GetBlockStateID(
-														        (int) id,
-														        (byte) bs.Data);
-
-													        if (AnvilWorldProvider.BlockStateMapper.TryGetValue(
-														        res,
-														        out var res2))
-													        {
-														        
-														        var t = BlockFactory.GetBlockState(res2);
-														        t = TranslateBlockState(t, id,
-															        bs.Data);
-
-														        return t;
-													        }
-													        else
-													        {
-														        Log.Info(
-															        $"Did not find anvil statemap: {result.Name}");
-														        return TranslateBlockState(
-															        BlockFactory.GetBlockState(result.Name),
-															        id, bs.Data);
-													        }
-												        }*/
 
 												        return TranslateBlockState(
 													        BlockFactory.GetBlockState(bs.Name),
@@ -416,13 +376,84 @@ namespace Alex.Worlds.Bedrock
 			        {
 				        while (stream.Position < stream.Length)
 				        {
-					        NbtFile file = new NbtFile()
+					       /* if (stream.ReadByte() == 255)
 					        {
-						        BigEndian = false,
-						        UseVarInt = true
-					        };
+						        for (int ci = 0; ci < subChunkCount; ci++)
+						        {
+							        var section = (ChunkSection) chunkColumn.Sections[ci];
+							        
+							        var rawSky = new Utils.NibbleArray(4096);
+							        defStream.Read(rawSky.Data, 0, rawSky.Data.Length);
+					        
+							        var rawBlock = new Utils.NibbleArray(4096);
+							        defStream.Read(rawBlock.Data, 0, rawBlock.Data.Length);
 
-					        file.LoadFromStream(stream, NbtCompression.None);
+							        for (int x = 0; x < 16; x++)
+							        for (int y = 0; y < 16; y++)
+							        for (int z = 0; z < 16; z++)
+							        {
+								        var peIndex = (x * 256) + (z * 16) + y;
+								        var sky = rawSky[peIndex];
+								        var block = rawBlock[peIndex];
+
+								        var idx = y << 8 | z << 4 | x;
+						        
+								        section.SkyLight[idx] = sky;
+								        section.BlockLight[idx] = block;
+							        }
+						        }
+					        }
+					        else
+					        {
+						        stream.Position--;*/
+						        
+						        NbtFile file = new NbtFile()
+						        {
+							        BigEndian = false,
+							        UseVarInt = true
+						        };
+
+						        file.LoadFromStream(stream, NbtCompression.None);
+
+						        if (file.RootTag.Name == "alex")
+						        {
+							        NbtCompound alexCompound = (NbtCompound) file.RootTag;
+							        
+							        for (int ci = 0; ci < subChunkCount; ci++)
+							        {
+								        var section = (ChunkSection) chunkColumn.Sections[ci];
+							        
+								        var rawSky = new Utils.NibbleArray(4096);
+								        if (alexCompound.TryGet($"skylight-{ci}", out NbtByteArray skyData))
+								        {
+									        rawSky.Data = skyData.Value;
+								        }
+								        //defStream.Read(rawSky.Data, 0, rawSky.Data.Length);
+					        
+								        var rawBlock = new Utils.NibbleArray(4096);
+								        if (alexCompound.TryGet($"blocklight-{ci}", out NbtByteArray blockData))
+								        {
+									        rawBlock.Data = blockData.Value;
+								        }
+
+								        for (int x = 0; x < 16; x++)
+								        for (int y = 0; y < 16; y++)
+								        for (int z = 0; z < 16; z++)
+								        {
+									        var peIndex = (x * 256) + (z * 16) + y;
+									        var sky = rawSky[peIndex];
+									        var block = rawBlock[peIndex];
+
+									        var idx = y << 8 | z << 4 | x;
+						        
+									        section.SkyLight[idx] = sky;
+									        section.BlockLight[idx] = block;
+								        }
+								        
+								        chunkColumn.Sections[ci] = section;
+							        }
+						        }
+					       // }
 				        }
 			        }
 
@@ -491,11 +522,37 @@ namespace Alex.Worlds.Bedrock
 						        break;
 				        }
 				        break;
-			        case "wood_type":
-			        case "sapling_type":
 			        case "old_log_type":
+			        {
+				        searchName = $"minecraft:{state.Value}_log";
+			        }
+				        break;
 			        case "old_leaf_type":
-				        prefix = state.Value + "_";
+				        searchName = $"minecraft:{state.Value}_leaves";
+				        break;
+			        case "wood_type":
+				        switch (record.Name.ToLower())
+				        {
+					        case "minecraft:fence":
+						        searchName = $"minecraft:{state.Value}_fence";
+						        break;
+					        case "minecraft:planks":
+						        searchName = $"minecraft:{state.Value}_planks";
+						        break;
+					        case "minecraft:wooden_slab":
+						        searchName = $"minecraft:{state.Value}_slab";
+						        break;
+					        case "minecraft:wood":
+						        
+						        break;
+				        }
+
+				        break;
+			        case "sapling_type":
+			        //case "old_log_type":
+			       // case "old_leaf_type":
+			        searchName = $"minecraft:{state.Value}_sapling";
+				        //prefix = "_";
 				        break;
 			        case "flower_type":
 				        searchName = $"minecraft:{state.Value}";

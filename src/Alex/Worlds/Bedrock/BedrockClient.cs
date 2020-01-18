@@ -474,7 +474,10 @@ namespace Alex.Worlds.Bedrock
                        // TransactionType = McpeInventoryTransaction.TransactionType.ItemUse,
                        // EntityId = NetworkEntityId,
                         Position = new MiNET.Utils.BlockCoordinates(position.X, position.Y, position.Z),
-                        //Item = MiNET.Items.ItemFactory.GetItem()
+                        Face = (int) face,
+                        Slot = player.Inventory.SelectedSlot,
+                        //Item = item.
+                        Item = MiNET.Items.ItemFactory.GetItem(item.Id, item.Meta, item.Count)
                         
                     };
 
