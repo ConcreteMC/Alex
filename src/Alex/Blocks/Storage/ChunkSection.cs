@@ -39,7 +39,7 @@ namespace Alex.Blocks.Storage
 		internal ChunkMesh MeshCache { get; set; } = null;
 		internal IReadOnlyDictionary<BlockCoordinates, IList<ChunkMesh.EntryPosition>> MeshPositions { get; set; } = null;
 		
-        public ChunkSection(int y, bool storeSkylight, int sections = 1)
+        public ChunkSection(int y, bool storeSkylight, int sections = 2)
         {
 	        if (sections <= 0)
 		        sections = 1;
@@ -159,45 +159,52 @@ namespace Alex.Blocks.Storage
 
 			var coordsIndex = GetCoordinateIndex(x, y, z);
 
-            IBlockState iblockstate = this.Get(x, y, z);
-			if (iblockstate != null)
+			if (storage == 0)
 			{
-				IBlock block = iblockstate.Block;
-
-				if (!(block is Air))
+				IBlockState iblockstate = this.Get(x, y, z, storage);
+				if (iblockstate != null)
 				{
-					--this._blockRefCount;
+					IBlock block = iblockstate.Block;
 
-					if (block.RandomTicked)
+					if (!(block is Air))
 					{
-						--this._tickRefCount;
+						--this._blockRefCount;
+
+						if (block.RandomTicked)
+						{
+							--this._tickRefCount;
+						}
+
+
+						TransparentBlocks.Set(coordsIndex, true);
+						SolidBlocks.Set(coordsIndex, false);
 					}
-					
-				    TransparentBlocks.Set(coordsIndex, true);
-				    SolidBlocks.Set(coordsIndex, false);
-                }				
+				}
 			}
 
 			IBlock block1 = state.Block;
-			if (!(block1 is Air))
-			{
-				++this._blockRefCount;
+            if (storage == 0)
+            {
+	            if (!(block1 is Air))
+	            {
+		            ++this._blockRefCount;
 
-				if (block1.RandomTicked)
-				{
-					++this._tickRefCount;
-				}
-				
-			    TransparentBlocks.Set(coordsIndex, block1.Transparent);
-			    SolidBlocks.Set(coordsIndex, block1.Solid);
-			}
-			
-			_blockStorages[storage].Set(x, y, z, state);
+		            if (block1.RandomTicked)
+		            {
+			            ++this._tickRefCount;
+		            }
+
+		            TransparentBlocks.Set(coordsIndex, block1.Transparent);
+		            SolidBlocks.Set(coordsIndex, block1.Solid);
+	            }
+            }
+
+            _blockStorages[storage].Set(x, y, z, state);
 
             ScheduledUpdates.Set(coordsIndex, true);
             IsDirty = true;
 			
-			if (!block1.Solid)
+			if (storage == 0 && !block1.Solid)
 			{
 				HasAirPockets = true;
 			}
@@ -269,20 +276,23 @@ namespace Alex.Blocks.Storage
 				{
 					for (int z = 0; z < 16; z++)
 					{
-						IBlock block = this.Get(x, y, z).Block;
-						
 						var idx = GetCoordinateIndex(x, y, z);
 						
-                        TransparentBlocks.Set(idx, block.Transparent);
-                        SolidBlocks.Set(idx, block.Solid);
-
-                        if (!(block is Air))
+						//foreach (var state in this.GetAll(x, y, z))
 						{
-							++this._blockRefCount;
+							var block = this.Get(x,y,z, 0).Block;
 
-							if (block.RandomTicked)
+							TransparentBlocks.Set(idx, block.Transparent);
+							SolidBlocks.Set(idx, block.Solid);
+
+							if (!(block is Air))
 							{
-								++this._tickRefCount;
+								++this._blockRefCount;
+
+								if (block.RandomTicked)
+								{
+									++this._tickRefCount;
+								}
 							}
 						}
 					}

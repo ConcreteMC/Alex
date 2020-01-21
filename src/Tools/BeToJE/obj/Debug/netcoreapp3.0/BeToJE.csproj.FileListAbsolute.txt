@@ -1,0 +1,13 @@
+/home/kenny/github/Alex/src/Tools/BeToJE/bin/Debug/netcoreapp3.0/BeToJE
+/home/kenny/github/Alex/src/Tools/BeToJE/bin/Debug/netcoreapp3.0/BeToJE.deps.json
+/home/kenny/github/Alex/src/Tools/BeToJE/bin/Debug/netcoreapp3.0/BeToJE.runtimeconfig.json
+/home/kenny/github/Alex/src/Tools/BeToJE/bin/Debug/netcoreapp3.0/BeToJE.runtimeconfig.dev.json
+/home/kenny/github/Alex/src/Tools/BeToJE/bin/Debug/netcoreapp3.0/BeToJE.dll
+/home/kenny/github/Alex/src/Tools/BeToJE/bin/Debug/netcoreapp3.0/BeToJE.pdb
+/home/kenny/github/Alex/src/Tools/BeToJE/bin/Debug/netcoreapp3.0/Newtonsoft.Json.dll
+/home/kenny/github/Alex/src/Tools/BeToJE/obj/Debug/netcoreapp3.0/BeToJE.csprojAssemblyReference.cache
+/home/kenny/github/Alex/src/Tools/BeToJE/obj/Debug/netcoreapp3.0/BeToJE.AssemblyInfoInputs.cache
+/home/kenny/github/Alex/src/Tools/BeToJE/obj/Debug/netcoreapp3.0/BeToJE.AssemblyInfo.cs
+/home/kenny/github/Alex/src/Tools/BeToJE/obj/Debug/netcoreapp3.0/BeToJE.csproj.CopyComplete
+/home/kenny/github/Alex/src/Tools/BeToJE/obj/Debug/netcoreapp3.0/BeToJE.dll
+/home/kenny/github/Alex/src/Tools/BeToJE/obj/Debug/netcoreapp3.0/BeToJE.pdb

@@ -456,6 +456,7 @@ namespace Alex.Worlds
 
                 var renderedChunks = Chunks.ToArray().Where(x =>
                 {
+
 	                if (Math.Abs(x.Key.DistanceTo(cameraChunkPos)) > Options.VideoOptions.RenderDistance)
 		                return false;
 			    
@@ -472,6 +473,13 @@ namespace Alex.Worlds
 		                if (_renderedChunks.TryAdd(data))
 		                {
 			                
+		                }
+	                }
+	                else
+	                {
+		                if (c.Value.Scheduled == ScheduleType.Unscheduled)
+		                {
+			                ScheduleChunkUpdate(c.Key, ScheduleType.Full);
 		                }
 	                }
                 }
@@ -1024,6 +1032,8 @@ namespace Alex.Worlds
 					        cachedBlock.Length, currentBlockState.storage);
 
 				        posCache.Add(entryPosition);
+
+				        renderedBlocks++;
 				        // {
 				        //     Log.Warn($"Could not add block to indice indexer");
 				        // }
@@ -1089,6 +1099,9 @@ namespace Alex.Worlds
 						        Log.Warn($"Could not add block to indice indexer");
 					        }*/
 				        }
+				        
+				        if (isScheduled)
+					        section.SetScheduled(x, y, z, false);
 			        }
 		        }
 
@@ -1101,9 +1114,6 @@ namespace Alex.Worlds
 		        }
 
 		        section.SetRendered(x, y, z, renderedBlocks > 0);
-
-		        if (isScheduled)
-			        section.SetScheduled(x, y, z, false);
 
 		        //if (isLightingScheduled)
 		        //    section.SetLightingScheduled(x, y, z, false);
