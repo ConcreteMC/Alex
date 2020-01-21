@@ -12,6 +12,7 @@ using JetBrains.Profiler.Api;
 using MiNET;
 using MiNET.Net;
 using MiNET.Utils;
+using Newtonsoft.Json;
 using NLog;
 using StackExchange.Profiling;
 using BlockState = Alex.Blocks.State.BlockState;
@@ -45,6 +46,9 @@ namespace Alex.Worlds.Bedrock
 	        
 	        Threads = new Thread[workerThreads];
 	        //for(int i = 0; i < workerThreads; i++) DispatchWorker();
+
+	        if (!Directory.Exists("failed"))
+		        Directory.CreateDirectory("failed");
         }
 
         public void HandleChunkData(bool cacheEnabled, uint subChunkCount, byte[] chunkData, int cx, int cz, Action<ChunkColumn> callback)
@@ -101,6 +105,34 @@ namespace Alex.Worlds.Bedrock
         }
 
         private static ConcurrentDictionary<uint, IBlockState> _convertedStates = new ConcurrentDictionary<uint, IBlockState>();
+        
+        private List<string> Failed { get; set; } = new List<string>();
+        private IBlockState GetBlockState(uint palleteId)
+        {
+	        return _convertedStates.GetOrAdd(palleteId,
+		        u =>
+		        {
+			        if (_blockStateMap.TryGetValue(palleteId, out var bs))
+			        {
+				        if (TryConvertBlockState(bs, out var convertedState))
+				        {
+					        return convertedState;
+				        }
+
+				        var t = TranslateBlockState(
+					        BlockFactory.GetBlockState(bs.Name),
+					        -1, bs.Data);
+
+				        if (t.Name == "Unknown" && !Failed.Contains(bs.Name))
+				        {
+					        Failed.Add(bs.Name);
+					        File.WriteAllText(Path.Combine("failed", bs.Name + ".json"), JsonConvert.SerializeObject(bs, Formatting.Indented));
+				        }
+			        }
+
+			        return null;
+		        });
+        }
 
         private void HandleChunk(bool cacheEnabled, uint subChunkCount, byte[] chunkData, int cx, int cz, Action<ChunkColumn> callback)
         {
@@ -197,24 +229,7 @@ namespace Alex.Worlds.Bedrock
 										        continue;
 									        }
 
-									        IBlockState translated = _convertedStates.GetOrAdd(pallete[state],
-										        u =>
-										        {
-											        if (_blockStateMap.TryGetValue(pallete[state], out var bs))
-											        {
-
-												        if (TryConvertBlockState(bs, out var convertedState))
-												        {
-													        return convertedState;
-												        }
-
-												        return TranslateBlockState(
-													        BlockFactory.GetBlockState(bs.Name),
-													        -1, bs.Data);
-											        }
-
-											        return null;
-										        });
+									        IBlockState translated = GetBlockState(pallete[state]);
 
 									        if (translated != null)
 									        {
@@ -223,7 +238,7 @@ namespace Alex.Worlds.Bedrock
 								        }
 								        else
 								        {
-									        //TODO.
+									        //todo
 								        }
 
 								        position++;
@@ -376,17 +391,34 @@ namespace Alex.Worlds.Bedrock
 			        {
 				        while (stream.Position < stream.Length)
 				        {
-					       /* if (stream.ReadByte() == 255)
+					        NbtFile file = new NbtFile()
 					        {
+						        BigEndian = false,
+						        UseVarInt = true
+					        };
+
+					        file.LoadFromStream(stream, NbtCompression.None);
+
+					        if (file.RootTag.Name == "alex")
+					        {
+						        NbtCompound alexCompound = (NbtCompound) file.RootTag;
+
 						        for (int ci = 0; ci < subChunkCount; ci++)
 						        {
 							        var section = (ChunkSection) chunkColumn.Sections[ci];
-							        
+
 							        var rawSky = new Utils.NibbleArray(4096);
-							        defStream.Read(rawSky.Data, 0, rawSky.Data.Length);
-					        
+							        if (alexCompound.TryGet($"skylight-{ci}", out NbtByteArray skyData))
+							        {
+								        rawSky.Data = skyData.Value;
+							        }
+							        //defStream.Read(rawSky.Data, 0, rawSky.Data.Length);
+
 							        var rawBlock = new Utils.NibbleArray(4096);
-							        defStream.Read(rawBlock.Data, 0, rawBlock.Data.Length);
+							        if (alexCompound.TryGet($"blocklight-{ci}", out NbtByteArray blockData))
+							        {
+								        rawBlock.Data = blockData.Value;
+							        }
 
 							        for (int x = 0; x < 16; x++)
 							        for (int y = 0; y < 16; y++)
@@ -397,63 +429,14 @@ namespace Alex.Worlds.Bedrock
 								        var block = rawBlock[peIndex];
 
 								        var idx = y << 8 | z << 4 | x;
-						        
+
 								        section.SkyLight[idx] = sky;
 								        section.BlockLight[idx] = block;
 							        }
+
+							        chunkColumn.Sections[ci] = section;
 						        }
 					        }
-					        else
-					        {
-						        stream.Position--;*/
-						        
-						        NbtFile file = new NbtFile()
-						        {
-							        BigEndian = false,
-							        UseVarInt = true
-						        };
-
-						        file.LoadFromStream(stream, NbtCompression.None);
-
-						        if (file.RootTag.Name == "alex")
-						        {
-							        NbtCompound alexCompound = (NbtCompound) file.RootTag;
-							        
-							        for (int ci = 0; ci < subChunkCount; ci++)
-							        {
-								        var section = (ChunkSection) chunkColumn.Sections[ci];
-							        
-								        var rawSky = new Utils.NibbleArray(4096);
-								        if (alexCompound.TryGet($"skylight-{ci}", out NbtByteArray skyData))
-								        {
-									        rawSky.Data = skyData.Value;
-								        }
-								        //defStream.Read(rawSky.Data, 0, rawSky.Data.Length);
-					        
-								        var rawBlock = new Utils.NibbleArray(4096);
-								        if (alexCompound.TryGet($"blocklight-{ci}", out NbtByteArray blockData))
-								        {
-									        rawBlock.Data = blockData.Value;
-								        }
-
-								        for (int x = 0; x < 16; x++)
-								        for (int y = 0; y < 16; y++)
-								        for (int z = 0; z < 16; z++)
-								        {
-									        var peIndex = (x * 256) + (z * 16) + y;
-									        var sky = rawSky[peIndex];
-									        var block = rawBlock[peIndex];
-
-									        var idx = y << 8 | z << 4 | x;
-						        
-									        section.SkyLight[idx] = sky;
-									        section.BlockLight[idx] = block;
-								        }
-								        
-								        chunkColumn.Sections[ci] = section;
-							        }
-						        }
-					       // }
 				        }
 			        }
 
@@ -479,6 +462,37 @@ namespace Alex.Worlds.Bedrock
 	        }
         }
 
+        private string GetWoodBlock(BlockRecord record)
+        {
+	        string type = "oak";
+	        bool stripped = false;
+	        string axis = "y";
+	        
+	        foreach (var state in record.States)
+	        {
+		        switch (state.Name)
+		        {
+			        case "wood_type":
+				        type = state.Value;
+				        break;
+			        case "stripped_bit":
+				        stripped = state.Value == "1";
+				        break;
+			        case "pillar_axis":
+				        axis = state.Value;
+				        break;
+		        }
+	        }
+
+	        string result = $"{type}_log";
+	        if (stripped)
+	        {
+		        result = "stripped_" + result;
+	        }
+
+	        return $"minecraft:{result}";
+        }
+
         public bool TryConvertBlockState(BlockRecord record, out IBlockState result)
         {
 	        if (_convertedStates.TryGetValue((uint) record.RuntimeId, out var alreadyConverted))
@@ -498,6 +512,12 @@ namespace Alex.Worlds.Bedrock
 			        {
 				        searchName = "minecraft:wall_torch";
 			        }
+			        break;
+		        case "minecraft:flowing_water":
+			        searchName = "minecraft:water";
+			        break;
+		        case "minecraft:wood":
+			        searchName = GetWoodBlock(record);
 			        break;
 	        }
 	        
@@ -542,9 +562,9 @@ namespace Alex.Worlds.Bedrock
 					        case "minecraft:wooden_slab":
 						        searchName = $"minecraft:{state.Value}_slab";
 						        break;
-					        case "minecraft:wood":
-						        
-						        break;
+					      //  case "minecraft:wood":
+						  //      searchName = $"minecraft:{state.Value}_log";
+						 //       break;
 				        }
 
 				        break;
@@ -618,7 +638,7 @@ namespace Alex.Worlds.Bedrock
 				        r = FixFacing(r, int.Parse(state.Value));
 				        break;
 			        case "upside_down_bit":
-				        r = ((BlockState)r).WithPropertyNoResolve("half", state.Value == "1" ? "top" : "bottom");
+				        r = (r).WithProperty("half", state.Value == "1" ? "top" : "bottom");
 				        break;
 			        case "door_hinge_bit":
 				        r = r.WithProperty("hinge", (state.Value == "0") ? "left" : "right");

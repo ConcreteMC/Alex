@@ -178,7 +178,7 @@ namespace Alex.API.Events
 			}
 			catch (Exception ex)
 			{
-				Log.Error(ex, "Error while dispatching event!");
+				Log.Error(ex, $"Error while dispatching event: {ex.ToString()}");
 			}
 		}
 

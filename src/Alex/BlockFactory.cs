@@ -271,11 +271,18 @@ namespace Alex
 
 						variantState.Block = block;
 						
+						if (!variantMap.TryAdd(variantState))
+						{
+							Log.Warn(
+								$"Could not add variant to variantmapper! ({variantState.ID} - {variantState.Name})");
+							continue;
+						}
+						
 						if (s.Default) //This is the default variant.
 						{
 							variantMap._default = variantState;
 						}
-						else
+						/*else
 						{
 							if (!variantMap.TryAdd(variantState))
 							{
@@ -283,7 +290,7 @@ namespace Alex
 									$"Could not add variant to variantmapper! ({variantState.ID} - {variantState.Name})");
 								continue;
 							}
-						}
+					//}*/
 						
 						if (!BlockByBlockStateId.TryAdd(id, block))
 						{
