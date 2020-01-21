@@ -513,6 +513,13 @@ namespace Alex.Worlds.Bedrock
 				        searchName = "minecraft:wall_torch";
 			        }
 			        break;
+		        case "minecraft:unlit_redstone_torch":
+		        case "minecraft:redstone_torch":
+			        if (record.States.Any(x => x.Name.Equals("torch_facing_direction") && x.Value != "top"))
+			        {
+				        searchName = "minecraft:redstone_wall_torch";
+			        }
+			        break;
 		        case "minecraft:flowing_water":
 			        searchName = "minecraft:water";
 			        break;
@@ -650,7 +657,7 @@ namespace Alex.Worlds.Bedrock
 						r = r.WithProperty("half", (state.Value == "1") ? "upper" : "lower");
 						break;
 					case "torch_facing_direction":
-						r = FixTorchFacing(r, state.Value);
+						r = r.WithProperty("facing", state.Value);
 						break;
 					case "liquid_depth":
 						r = r.WithProperty("level", state.Value);
@@ -697,6 +704,11 @@ namespace Alex.Worlds.Bedrock
 		        }
 	        }
 
+	        if (record.Name.Equals("minecraft:unlit_redstone_torch"))
+	        {
+		        r = r.WithProperty("lit", "false");
+	        }
+
 	        result = r;
 	        
 	        return true;
@@ -708,11 +720,6 @@ namespace Alex.Worlds.Bedrock
 	        x = (x >> 16) | (x << 16);
 	        // swap adjacent 8-bit blocks
 	        return ((x & 0xFF00FF00) >> 8) | ((x & 0x00FF00FF) << 8);
-        }
-
-        private IBlockState FixTorchFacing(IBlockState state, string value)
-        {
-	        return state.WithProperty("facing", value);
         }
         
         const string facing = "facing";

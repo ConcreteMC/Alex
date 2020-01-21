@@ -185,11 +185,11 @@ namespace Alex.Graphics.Models.Blocks
 							break;
 						case 2:
 							offset = BlockCoordinates.East;
-							rotation = 90;
+							rotation = 270;
 							break;
 						case 3:
 							offset = BlockCoordinates.West;
-							rotation = 270;
+							rotation = 90;
 							break;
 
 						case 4:

@@ -111,7 +111,7 @@ namespace Alex.Worlds.Bedrock
 						_stopwatch.Stop();
 						_stopwatch.Reset();
 						_lastLocation = pos;
-						UnloadChunks(new ChunkCoordinates(pos), Client.ChunkRadius);
+						UnloadChunks(new ChunkCoordinates(pos), Client.ChunkRadius + 3);
 						_stopwatch.Restart();
 					}
 				}
@@ -121,8 +121,18 @@ namespace Alex.Worlds.Bedrock
 		private ThreadSafeList<ChunkCoordinates> _loadedChunks = new ThreadSafeList<ChunkCoordinates>();
 		private void UnloadChunks(ChunkCoordinates center, double maxViewDistance)
 		{
+			var chunkPublisher = Client.LastChunkPublish;
+			
+			//Client.ChunkRadius
 			Parallel.ForEach(_loadedChunks.ToArray(), (chunkColumn) =>
 			{
+				if (chunkPublisher != null)
+				{
+					if (chunkColumn.DistanceTo(new ChunkCoordinates(new Vector3(chunkPublisher.coordinates.X,
+						    chunkPublisher.coordinates.Y, chunkPublisher.coordinates.Z))) < chunkPublisher.radius)
+						return;
+				}
+				
 				if (chunkColumn.DistanceTo(center) > maxViewDistance)
 				{
 					//_chunkCache.TryRemove(chunkColumn.Key, out var waste);

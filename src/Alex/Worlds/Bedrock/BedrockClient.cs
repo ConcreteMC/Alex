@@ -93,6 +93,8 @@ namespace Alex.Worlds.Bedrock
         
         public PlayerProfile PlayerProfile { get; }
         private CancellationTokenSource CancellationTokenSource { get; }
+        
+        public McpeNetworkChunkPublisherUpdate LastChunkPublish { get; set; }
 		public BedrockClient(Alex alex, IPEndPoint endpoint, PlayerProfile playerProfile, DedicatedThreadPool threadPool, BedrockWorldProvider wp) : base(endpoint,
 			playerProfile.Username, threadPool)
 		{

@@ -134,11 +134,13 @@ namespace Alex
 
 		private static PropertyBool WaterLoggedProperty = new PropertyBool("waterlogged");
 		private static BlockModel UnknownBlockModel { get; set; }
-		private static int LoadModels(IRegistryManager registryManager, ResourceManager resources, McResourcePack resourcePack, bool replace,
+
+		private static int LoadModels(IRegistryManager registryManager, ResourceManager resources,
+			McResourcePack resourcePack, bool replace,
 			bool reportMissing, IProgressReceiver progressReceiver)
 		{
 			var blockRegistry = registryManager.GetRegistry<Block>();
-			
+
 			var data = BlockData.FromJson(ResourceManager.ReadStringResource("Alex.Resources.NewBlocks.json"));
 			int total = data.Count;
 			int done = 0;
@@ -151,29 +153,17 @@ namespace Alex
 				double percentage = 100D * ((double) done / (double) total);
 				progressReceiver.UpdateProgress((int) percentage, $"Importing block models...", entry.Key);
 
-				var variantMap = new BlockStateVariantMapper();
-				var state = new BlockState
+				var defaultState = new BlockState
 				{
 					Name = entry.Key
 				};
 
-				var def = entry.Value.States.FirstOrDefault(x => x.Default);
-				if (def != null && def.Properties != null)
+				if (entry.Value.Properties != null)
 				{
-					foreach (var property in def.Properties)
+					foreach (var property in entry.Value.Properties)
 					{
-						state = (BlockState) state.WithPropertyNoResolve(property.Key, property.Value, false);
-					}
-				}
-				else
-				{
-					if (entry.Value.Properties != null)
-					{
-						foreach (var property in entry.Value.Properties)
-						{
-							state = (BlockState) state.WithPropertyNoResolve(property.Key,
-								property.Value.FirstOrDefault(), false);
-						}
+						defaultState = (BlockState) defaultState.WithPropertyNoResolve(property.Key,
+							property.Value.FirstOrDefault(), false);
 					}
 				}
 
@@ -182,22 +172,17 @@ namespace Alex
 				{
 					var id = s.ID;
 
-					BlockState variantState = (BlockState) (state).CloneSilent();
+					BlockState variantState = (BlockState) (defaultState).CloneSilent();
 					variantState.ID = id;
-					variantState.VariantMapper = variantMap;
+					//variantState.VariantMapper = variantMap;
 
 					if (s.Properties != null)
 					{
 						foreach (var property in s.Properties)
 						{
-							//var prop = StateProperty.Parse(property.Key);
 							variantState =
 								(Blocks.State.BlockState) variantState.WithPropertyNoResolve(property.Key,
 									property.Value, false);
-							if (s.Default)
-							{
-								state = (BlockState) state.WithPropertyNoResolve(property.Key, property.Value, false);
-							}
 						}
 					}
 
@@ -223,13 +208,13 @@ namespace Alex
 
 						string displayName = entry.Key;
 						IRegistryEntry<Block> registryEntry;
-						
+
 						if (!blockRegistry.TryGet(entry.Key, out registryEntry))
 						{
 							registryEntry = new UnknownBlock(id);
 							displayName = $"(MISSING) {displayName}";
 
-							registryEntry = registryEntry.WithLocation(entry.Key);// = entry.Key;
+							registryEntry = registryEntry.WithLocation(entry.Key); // = entry.Key;
 						}
 						else
 						{
@@ -270,44 +255,40 @@ namespace Alex
 						}
 
 						variantState.Block = block;
-						
-						if (!variantMap.TryAdd(variantState))
-						{
-							Log.Warn(
-								$"Could not add variant to variantmapper! ({variantState.ID} - {variantState.Name})");
-							continue;
-						}
-						
 						if (s.Default) //This is the default variant.
 						{
-							variantMap._default = variantState;
+							defaultState = variantState;
 						}
-						/*else
+					}
+
+					variants.Add(variantState);
+				}
+
+				var variantMap = new BlockStateVariantMapper();
+				variantMap._default = defaultState;
+
+				foreach (var var in variants)
+				{
+					var.VariantMapper = variantMap;
+					if (variantMap.TryAdd(var))
+					{
+						if (!BlockByBlockStateId.TryAdd(var.ID, (Block) var.Block))
 						{
-							if (!variantMap.TryAdd(variantState))
-							{
-								Log.Warn(
-									$"Could not add variant to variantmapper! ({variantState.ID} - {variantState.Name})");
-								continue;
-							}
-					//}*/
-						
-						if (!BlockByBlockStateId.TryAdd(id, block))
-						{
-							Log.Warn($"Could not register block, duplicate blockstate id. ID={id} Block name={block.Name}");
+							Log.Warn(
+								$"Could not register block, duplicate blockstate id. ID={var.ID} Block name={var.Block.Name}");
 						}
-						
-						if (!RegisteredBlockStates.TryAdd(id, variantState))
+
+						if (!RegisteredBlockStates.TryAdd(var.ID, var))
 						{
 							if (replace)
 							{
-								RegisteredBlockStates[id] = variantState;
+								RegisteredBlockStates[var.ID] = var;
 								importCounter++;
 							}
 							else
 							{
 								Log.Warn(
-									$"Failed to add blockstate (variant), key already exists! ({variantState.ID} - {variantState.Name})");
+									$"Failed to add blockstate (variant), key already exists! ({var.ID} - {var.Name})");
 							}
 						}
 						else
@@ -315,30 +296,19 @@ namespace Alex
 							importCounter++;
 						}
 					}
-
-					variants.Add(variantState);
 				}
 
-				if (variantMap._default == null)
-				{
-					variantMap._default = state;
-				}
+				//	variantMap.
 
-				foreach (var var in variants)
-				{
-					var.VariantMapper = variantMap;
-				}
-
-
-				if (!BlockStateByName.TryAdd(state.Name, variantMap))
+				if (!BlockStateByName.TryAdd(defaultState.Name, variantMap))
 				{
 					if (replace)
 					{
-						BlockStateByName[state.Name] = variantMap;
+						BlockStateByName[defaultState.Name] = variantMap;
 					}
 					else
 					{
-						Log.Warn($"Failed to add blockstate, key already exists! ({state.Name})");
+						Log.Warn($"Failed to add blockstate, key already exists! ({defaultState.Name})");
 					}
 				}
 
