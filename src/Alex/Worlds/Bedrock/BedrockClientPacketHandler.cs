@@ -449,18 +449,18 @@ namespace Alex.Worlds.Bedrock
 
 		public override void HandleMcpeUpdateBlock(McpeUpdateBlock message)
 		{
-			if (message.storage != 0)
-			{
-				Log.Warn($"UPDATEBLOCK: Unsupported block storage! {message.storage}");
-				return;
-			}
+			//if (message.storage != 0)
+			//{
+			//	Log.Warn($"UPDATEBLOCK: Unsupported block storage! {message.storage}");
+			//	return;
+			//}
 			
 			if (_blockStateMap.TryGetValue(message.blockRuntimeId, out var bs))
 			{
 				if (ChunkProcessor.TryConvertBlockState(bs, out var state))
 					BaseClient.WorldReceiver?.SetBlockState(
 						new BlockCoordinates(message.coordinates.X, message.coordinates.Y, message.coordinates.Z), 
-						state);
+						state, (int) message.storage);
 			}
 			else
 			{

@@ -240,6 +240,7 @@ namespace Alex.Blocks
 			this.Register(() => new Water().WithLocation("minecraft:water"));
 			this.Register(() => new Lava().WithLocation("minecraft:lava"));
 			this.Register(() => new Kelp().WithLocation("minecraft:kelp"));
+			this.Register(() => new SeaGrass().WithLocation("minecraft:seagrass"));
 
 			//Ores
 			this.Register(() => new RedstoneOre().WithLocation("minecraft:redstone_ore"));
@@ -267,8 +268,8 @@ namespace Alex.Blocks
 			this.Register(() => new MelonBlock().WithLocation("minecraft:melon_block"));
 			this.Register(() => new PumpkinStem().WithLocation("minecraft:pumpkin_stem"));
 			this.Register(() => new Sunflower().WithLocation("minecraft:sunflower"));
-			
-            this.Register(() => new InvisibleBedrock(false).WithLocation("minecraft:barrier"));
+
+			this.Register(() => new InvisibleBedrock(false).WithLocation("minecraft:barrier"));
             
             //Stained glass
             this.Register(() => new Glass().WithLocation("minecraft:white_stained_glass"));

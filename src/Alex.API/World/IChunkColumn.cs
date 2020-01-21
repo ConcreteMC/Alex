@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Alex.API.Blocks.State;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -13,8 +14,13 @@ namespace Alex.API.World
 
         IChunkSection[] Sections { get; set; }
 
+        IEnumerable<(IBlockState state, int storage)> GetBlockStates(int x, int y, int z);
+        
         IBlockState GetBlockState(int x, int y, int z);
+        IBlockState GetBlockState(int x, int y, int z, int storage);
 		void SetBlockState(int x, int y, int z, IBlockState state);
+		void SetBlockState(int x, int y, int z, IBlockState state, int storage);
+		
 		IBlock GetBlock(int bx, int by, int bz);
 		void SetBlock(int bx, int by, int bz, IBlock block);
 		void SetHeight(int bx, int bz, short h);

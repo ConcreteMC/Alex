@@ -111,21 +111,26 @@ namespace Alex.Worlds
 
 		public void SetBlockState(int x, int y, int z, IBlockState blockState)
 		{
-			if ((x < 0 || x > ChunkWidth) || (y < 0 || y > ChunkHeight) || (z < 0 || z > ChunkDepth))
-				return;
-
-			GetSection(y).Set(x, y - ((y >> 4) << 4), z, blockState);
-			SetDirty();
-
-			RecalculateHeight(x, z);
-
-			_heightDirty = true;
+			SetBlockState(x, y, z, blockState, 0);
 
 			//var section = Sections[y >> 4];
 			//if (section == null) return;
 			//section.ScheduledUpdates[(y >> 4) << 8 | z << 4 | x] = true;
            // _scheduledUpdates[y << 8 | z << 4 | x] = true;
         }
+
+		public void SetBlockState(int x, int y, int z, IBlockState state, int storage)
+		{
+			if ((x < 0 || x > ChunkWidth) || (y < 0 || y > ChunkHeight) || (z < 0 || z > ChunkDepth))
+				return;
+
+			GetSection(y).Set(storage, x, y - ((y >> 4) << 4), z, state);
+			SetDirty();
+
+			RecalculateHeight(x, z);
+
+			_heightDirty = true;
+		}
 
 		private void RecalculateHeight(int x, int z)
 		{
@@ -142,7 +147,35 @@ namespace Alex.Worlds
 		}
 
 		private static IBlockState Air = BlockFactory.GetBlockState("minecraft:air");
+		public IEnumerable<(IBlockState state, int storage)> GetBlockStates(int bx, int by, int bz)
+		{
+			if ((bx < 0 || bx > ChunkWidth) || (by < 0 || by > ChunkHeight) || (bz < 0 || bz > ChunkDepth))
+			{
+				yield return (Air, 0);
+				yield break;
+			}
+
+			var chunk = Sections[by >> 4];
+			if (chunk == null)
+			{
+				yield return (Air, 0);
+				yield break;
+			}
+
+			by = by - ((@by >> 4) << 4);
+
+			foreach (var bs in chunk.GetAll(bx, by, bz))
+			{
+				yield return bs;
+			}
+		}
+
 		public IBlockState GetBlockState(int bx, int by, int bz)
+		{
+			return GetBlockState(bx, by, bz, 0);
+		}
+		
+		public IBlockState GetBlockState(int bx, int by, int bz, int storage)
 		{
 			if ((bx < 0 || bx > ChunkWidth) || (by < 0 || by > ChunkHeight) || (bz < 0 || bz > ChunkDepth))
 				return Air;
@@ -152,7 +185,7 @@ namespace Alex.Worlds
 
 			by = by - ((@by >> 4) << 4);
 			
-			return chunk.Get(bx, by, bz);
+			return chunk.Get(bx, by, bz, storage);
 		}
 
 		public IBlock GetBlock(int bx, int by, int bz)

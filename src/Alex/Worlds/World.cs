@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
@@ -369,6 +370,11 @@ namespace Alex.Worlds
 
 		public void SetBlockState(int x, int y, int z, IBlockState block)
 		{
+			SetBlockState(x, y, z, block, 0);
+		}
+		
+		public void SetBlockState(int x, int y, int z, IBlockState block, int storage)
+		{
 			var chunkCoords = new ChunkCoordinates(x >> 4, z >> 4);
 
 			IChunkColumn chunk;
@@ -378,13 +384,13 @@ namespace Alex.Worlds
 				var cy = y & 0xff;
 				var cz = z & 0xf;
 
-				chunk.SetBlockState(cx, cy, cz, block);
+				chunk.SetBlockState(cx, cy, cz, block, storage);
 
-                UpdateNeighbors(x,y,z);
+				UpdateNeighbors(x,y,z);
 				CheckForUpdate(chunkCoords, cx, cz);
 				
 				ChunkManager.ScheduleChunkUpdate(chunkCoords, ScheduleType.Scheduled | ScheduleType.Lighting, true);
-            }
+			}
 		}
 
 		private void CheckForUpdate(ChunkCoordinates chunkCoords, int cx, int cz)
@@ -431,15 +437,34 @@ namespace Alex.Worlds
 			}, 1);
 		}
 
-		public IBlockState GetBlockState(int x, int y, int z)
+		public IEnumerable<(IBlockState state, int storage)> GetBlockStates(int x, int y, int z)
 		{
 			IChunkColumn chunk;
 			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 			{
-				return chunk.GetBlockState(x & 0xf, y & 0xff, z & 0xf);
+				foreach (var bs in chunk.GetBlockStates(x & 0xf, y & 0xff, z & 0xf))
+				{
+					yield return bs;
+				}
+			}
+			
+			yield break;
+		}
+
+		public IBlockState GetBlockState(int x, int y, int z, int storage)
+		{
+			IChunkColumn chunk;
+			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
+			{
+				return chunk.GetBlockState(x & 0xf, y & 0xff, z & 0xf, storage);
 			}
 
 			return BlockFactory.GetBlockState(0);
+		}
+		
+		public IBlockState GetBlockState(int x, int y, int z)
+		{
+			return GetBlockState(x, y, z, 0);
 		}
 		
 		public IBlockState GetBlockState(BlockCoordinates coords)
@@ -673,6 +698,11 @@ namespace Alex.Worlds
 		public void SetBlockState(BlockCoordinates coordinates, IBlockState blockState)
 		{
 			SetBlockState(coordinates.X, coordinates.Y, coordinates.Z, blockState);
+		}
+
+		public void SetBlockState(BlockCoordinates coordinates, IBlockState blockState, int storage)
+		{
+			SetBlockState(coordinates.X, coordinates.Y, coordinates.Z, blockState, storage);
 		}
 
 		public void AddPlayerListItem(PlayerListItem item)

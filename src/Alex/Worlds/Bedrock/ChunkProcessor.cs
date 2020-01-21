@@ -164,13 +164,15 @@ namespace Alex.Worlds.Bedrock
 			        for (int s = 0; s < subChunkCount; s++)
 			        {
 				        var section = chunkColumn.Sections[s] as ChunkSection;
-				        if (section == null) section = new ChunkSection(s, true);
 
 				        int version = defStream.ReadByte();
 
 				        if (version == 1 || version == 8)
 				        {
 					        int storageSize = defStream.ReadByte();
+					        
+					        if (section == null) 
+						        section = new ChunkSection(s, true, storageSize);
 
 					        for (int storage = 0; storage < storageSize; storage++)
 					        {
@@ -222,23 +224,16 @@ namespace Alex.Worlds.Bedrock
 								        int y = position & 0xF;
 								        int z = (position >> 4) & 0xF;
 
-								        if (storage == 0)
+								        if (state >= pallete.Length)
 								        {
-									        if (state >= pallete.Length)
-									        {
-										        continue;
-									        }
-
-									        IBlockState translated = GetBlockState(pallete[state]);
-
-									        if (translated != null)
-									        {
-										        section.Set(x, y, z, translated);
-									        }
+									        continue;
 								        }
-								        else
+
+								        IBlockState translated = GetBlockState(pallete[state]);
+
+								        if (translated != null)
 								        {
-									        //todo
+									        section.Set(storage, x, y, z, translated);
 								        }
 
 								        position++;

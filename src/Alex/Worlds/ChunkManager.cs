@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -904,7 +905,7 @@ namespace Alex.Worlds
 	        var cached = section.MeshCache;
 	        var positionCache = section.MeshPositions;
 
-	        Dictionary<BlockCoordinates, ChunkMesh.EntryPosition> positions = new Dictionary<BlockCoordinates, ChunkMesh.EntryPosition>();
+	        Dictionary<BlockCoordinates, IList<ChunkMesh.EntryPosition>> positions = new Dictionary<BlockCoordinates, IList<ChunkMesh.EntryPosition>>();
 			
 	        List<VertexPositionNormalTextureColor> solidVertices = new List<VertexPositionNormalTextureColor>();
 
@@ -917,45 +918,69 @@ namespace Alex.Worlds
 	        for (var x = 0; x < ChunkColumn.ChunkWidth; x++)
 	        for (var z = 0; z < ChunkColumn.ChunkDepth; z++)
 	        {
-		        var blockPosition = new BlockCoordinates((int) (chunkPosition.X + x), y + (yIndex << 4), (int) (chunkPosition.Z + z));
+		        var blockPosition = new BlockCoordinates((int) (chunkPosition.X + x), y + (yIndex << 4),
+			        (int) (chunkPosition.Z + z));
 		        var blockCoords = new BlockCoordinates(x, y, z);
-		        
+
 		        bool isScheduled = section.IsScheduled(x, y, z);
 		        var neighborsScheduled = HasScheduledNeighbors(world, blockPosition);
-		       // bool isLightingScheduled = section.IsLightingScheduled(x, y, z);
+		        var isBorderBlock = (scheduled == ScheduleType.Border && ((x == 0 || x == 15) || (z == 0 || z == 15)));
 
-		       var isBorderBlock = (scheduled == ScheduleType.Border && ((x == 0 || x == 15) || (z == 0 || z == 15)));
-		        
-			        var blockState = section.Get(x, y, z);
+
+		        var isRebuild = ((force || isScheduled || neighborsScheduled || isBorderBlock));
+		        // bool isLightingScheduled = section.IsLightingScheduled(x, y, z);
+
+		        bool gotCachedPositions = false;
+
+		        IList<ChunkMesh.EntryPosition> positionCached = default;
+		        if (positionCache != null)
+		        {
+			        gotCachedPositions = positionCache.TryGetValue(blockCoords, out positionCached);
+		        }
+
+		        var posCache = new List<ChunkMesh.EntryPosition>();
+
+		        int renderedBlocks = 0;
+
+		        var blockStates = section.GetAll(x, y, z);
+		        foreach (var currentBlockState in blockStates)
+		        {
+			        var blockState = currentBlockState.state;
 
 			        if (((blockState == null || !blockState.Block.Renderable) && !force && !isBorderBlock))
 			        {
 				        continue;
 			        }
 
+			        var shouldRebuildVertices = isRebuild;
+
 			        var model = blockState.Model;
-			        
-			        var shouldRebuildVertices = ((force || isScheduled || neighborsScheduled || isBorderBlock));
-			        
+
 			        if (blockState != null && shouldRebuildVertices && blockState.Block.RequiresUpdate)
 			        {
 				        blockState = blockState.Block.BlockPlaced(world, blockState, blockPosition);
-				        section.Set(x, y, z, blockState);
-				        
+				        section.Set(currentBlockState.storage, x, y, z, blockState);
+
 				        model = blockState.Model;
 			        }
-		        
+
 			        if (blockState is BlockState state && state.IsMultiPart && shouldRebuildVertices)
 			        {
 				        model = new CachedResourcePackModel(Game.Resources,
-					        MultiPartModels.GetBlockStateModels(world, blockPosition, state, state.MultiPartHelper));
+					        MultiPartModels.GetBlockStateModels(world, blockPosition, state,
+						        state.MultiPartHelper));
 				        // blockState.Block.Update(world, blockPosition);
 			        }
 
-			        if (!shouldRebuildVertices && positionCache.TryGetValue(blockCoords, out var cachedBlock))
+			        ChunkMesh.EntryPosition cachedBlock = null;
+			        if (gotCachedPositions && !shouldRebuildVertices)
 			        {
-				        section.SetRendered(x, y, z, true);
-				        
+				        cachedBlock = positionCached.FirstOrDefault(ps => ps.Storage == currentBlockState.storage);
+			        }
+
+			        ChunkMesh.EntryPosition entryPosition;
+			        if (!shouldRebuildVertices && cachedBlock != null)
+			        {
 				        var indices = cachedBlock.Animated
 					        ? cached.AnimatedIndexes
 					        : (cachedBlock.Transparent ? cached.TransparentIndexes : cached.SolidIndexes);
@@ -964,8 +989,10 @@ namespace Alex.Worlds
 					        ? animatedIndexes.Count
 					        : (cachedBlock.Transparent ? transparentIndexes.Count : solidIndexes.Count);
 
-				        
-				        for (int index = cachedBlock.Index; index < cachedBlock.Index + cachedBlock.Length; index++)
+
+				        for (int index = cachedBlock.Index;
+					        index < cachedBlock.Index + cachedBlock.Length;
+					        index++)
 				        {
 					        var vertexIndex = indices[index];
 					        if (!processedIndices.TryGetValue(vertexIndex, out var newIndex))
@@ -973,6 +1000,8 @@ namespace Alex.Worlds
 						        var vertice = cached.Vertices[vertexIndex];
 						        solidVertices.Add(vertice);
 
+						        newIndex = solidVertices.Count - 1;
+						        
 						        processedIndices.Add(vertexIndex, newIndex);
 					        }
 
@@ -990,29 +1019,23 @@ namespace Alex.Worlds
 					        }
 				        }
 
-				        if (!positions.TryAdd(blockCoords, 
-					        new ChunkMesh.EntryPosition(cachedBlock.Transparent, cachedBlock.Animated, indiceIndex, cachedBlock.Length)))
-				        {
-					        Log.Warn($"Could not add block to indice indexer");
-				        }
-			        } 
-			        else if (shouldRebuildVertices)
+				        entryPosition = new ChunkMesh.EntryPosition(cachedBlock.Transparent,
+					        cachedBlock.Animated, indiceIndex,
+					        cachedBlock.Length, currentBlockState.storage);
+
+				        posCache.Add(entryPosition);
+				        // {
+				        //     Log.Warn($"Could not add block to indice indexer");
+				        // }
+			        }
+			        else if (shouldRebuildVertices || cachedBlock == null)
 			        {
 				        var data = model.GetVertices(world, blockPosition, blockState.Block);
-							
-				        if (data.vertices.Length == 0 ||
-				            data.indexes.Length == 0)
-				        {
-					        section.SetRendered(x, y, z, false);
-				        }
 
 				        if (data.vertices == null || data.indexes == null || data.vertices.Length == 0 ||
 				            data.indexes.Length == 0)
 				        {
 					        //section.SetRendered(x, y, z, false);
-					        if (isScheduled)
-						        section.SetScheduled(x, y, z, false);
-					        
 					        continue;
 				        }
 
@@ -1021,7 +1044,9 @@ namespace Alex.Worlds
 
 				        if (data.vertices.Length > 0 && data.indexes.Length > 0)
 				        {
-					        section.SetRendered(x, y, z, true);
+					        //if (currentBlockState.storage == 0)
+					        //	section.SetRendered(x, y, z, true);
+					        renderedBlocks++;
 
 					        int startVerticeIndex = solidVertices.Count;
 					        foreach (var vert in data.vertices)
@@ -1029,13 +1054,15 @@ namespace Alex.Worlds
 						        solidVertices.Add(vert);
 					        }
 
-					        int startIndex = (animated ? animatedIndexes.Count : (transparent ? transparentIndexes.Count : solidIndexes.Count));
+					        int startIndex = (animated
+						        ? animatedIndexes.Count
+						        : (transparent ? transparentIndexes.Count : solidIndexes.Count));
 					        for (int i = 0; i < data.indexes.Length; i++)
 					        {
 						        var originalIndex = data.indexes[i];
 
 						        var verticeIndex = startVerticeIndex + originalIndex;
-						        
+
 						        if (animated)
 						        {
 							        animatedIndexes.Add(verticeIndex);
@@ -1050,16 +1077,36 @@ namespace Alex.Worlds
 						        }
 					        }
 
-					        if (!positions.TryAdd(blockCoords, 
+					        entryPosition = new ChunkMesh.EntryPosition(transparent,
+						        animated, startIndex,
+						        data.indexes.Length, currentBlockState.storage);
+
+					        posCache.Add(entryPosition);
+
+					        /*if (!positions.TryAdd(blockCoords, 
 						        new ChunkMesh.EntryPosition(transparent, animated, startIndex, data.indexes.Length)))
 					        {
 						        Log.Warn($"Could not add block to indice indexer");
-					        }
+					        }*/
 				        }
 			        }
+		        }
 
-			        //if (isLightingScheduled)
-			    //    section.SetLightingScheduled(x, y, z, false);
+		        if (renderedBlocks > 0)
+		        {
+			        if (!positions.TryAdd(blockCoords, posCache))
+			        {
+				        Log.Warn($"Could not to indice indexer");
+			        }
+		        }
+
+		        section.SetRendered(x, y, z, renderedBlocks > 0);
+
+		        if (isScheduled)
+			        section.SetScheduled(x, y, z, false);
+
+		        //if (isLightingScheduled)
+		        //    section.SetLightingScheduled(x, y, z, false);
 	        }
 
 	        section.New = false;

@@ -67,7 +67,8 @@ namespace Alex.API.World
 		void SetRain(bool raining);
 
 		void SetBlockState(BlockCoordinates coordinates, IBlockState blockState);
-
+		void SetBlockState(BlockCoordinates coordinates, IBlockState blockState, int storage);
+		
 		void AddPlayerListItem(PlayerListItem item);
 		void RemovePlayerListItem(UUID item);
 	};

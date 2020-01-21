@@ -1,4 +1,5 @@
-﻿using Alex.API.Blocks.State;
+﻿using System.Collections.Generic;
+using Alex.API.Blocks.State;
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
@@ -30,7 +31,10 @@ namespace Alex.API.World
 		void SetBlock(float x, float y, float z, IBlock block);
 		void SetBlock(int x, int y, int z, IBlock block);
 		void SetBlockState(int x, int y, int z, IBlockState block);
+
+		IEnumerable<(IBlockState state, int storage)> GetBlockStates(int x, int y, int z);
 		IBlockState GetBlockState(int x, int y, int z);
+		IBlockState GetBlockState(int x, int y, int z, int storage);
 		IBlockState GetBlockState(BlockCoordinates coordinates);
 		int GetBiome(int x, int y, int z);
 		bool HasBlock(int x, int y, int z);

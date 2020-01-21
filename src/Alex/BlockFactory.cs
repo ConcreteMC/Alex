@@ -224,7 +224,7 @@ namespace Alex
 						var block = registryEntry.Value;
 
 
-						if (block.IsSourceBlock && !(cachedBlockModel is MultiBlockModel) &&
+						/*if (block.IsSourceBlock && !(cachedBlockModel is MultiBlockModel) &&
 						    !(cachedBlockModel is LiquidBlockModel))
 						{
 							if (block.IsWater)
@@ -237,12 +237,12 @@ namespace Alex
 							}
 
 							block.Transparent = true;
-						}
+						}*/
 
-						if (variantState.GetTypedValue(WaterLoggedProperty))
+						/*if (variantState.GetTypedValue(WaterLoggedProperty))
 						{
 							block.Transparent = true;
-						}
+						}*/
 
 						variantState.Name = entry.Key;
 						variantState.Model = cachedBlockModel;

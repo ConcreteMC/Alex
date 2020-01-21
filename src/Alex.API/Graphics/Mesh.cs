@@ -29,13 +29,15 @@ namespace Alex.API.Graphics
 			public int Length { get; }
 			public bool Transparent { get; }
 			public bool Animated { get; }
-			public EntryPosition(bool transparent, bool animated, int index, int length)
+			public int Storage { get; }
+			public EntryPosition(bool transparent, bool animated, int index, int length, int storage)
 			{
 				Transparent = transparent;
 				Animated = animated;
 				
 				Index = index;
 				Length = length;
+				Storage = storage;
 			}
 		}
 
