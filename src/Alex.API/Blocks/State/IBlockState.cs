@@ -10,6 +10,7 @@ namespace Alex.API.Blocks.State
 	{
 		string Name { get; set; }
 		uint ID { get; set; }
+		bool Default { get; set; }
 		IBlockModel Model { get; set; }
 		IBlock Block { get; set; }
 

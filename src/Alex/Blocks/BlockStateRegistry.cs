@@ -101,18 +101,12 @@ namespace Alex.Blocks
 					{
 						if (variantState.IsMultiPart) multipartBased++;
 
-						if (s.Default) //This is the default variant.
+						variantState.Default = s.Default;
+						if (!variantMap.TryAdd(variantState))
 						{
-							variantMap._default = variantState;
-						}
-						else
-						{
-							if (!variantMap.TryAdd(variantState))
-							{
-								Log.Warn(
-									$"Could not add variant to variantmapper! ({variantState.ID} - {variantState.Name})");
-								continue;
-							}
+							Log.Warn(
+								$"Could not add variant to variantmapper! ({variantState.ID} - {variantState.Name})");
+							continue;
 						}
 
 						if (!BlockStates.TryAdd(id, variantState))
@@ -135,11 +129,6 @@ namespace Alex.Blocks
 					}
 
 					variants.Add(variantState);
-				}
-
-				if (variantMap._default == null)
-				{
-					variantMap._default = state;
 				}
 
 				foreach (var var in variants)

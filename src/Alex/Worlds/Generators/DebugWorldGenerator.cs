@@ -12,7 +12,7 @@ namespace Alex.Worlds.Generators
     public class DebugWorldGenerator : IWorldGenerator
     {
 	    private static List<IBlockState> ALL_VALID_STATES = new List<IBlockState>();
-	    private static IBlockState AIR = BlockFactory.GetBlockState(0);
+	    private static IBlockState AIR = BlockFactory.GetBlockState("minecraft:air");
 
 		private static int GRID_WIDTH;
 	    private static int GRID_HEIGHT;
@@ -36,7 +36,7 @@ namespace Alex.Worlds.Generators
 
 				    if (iblockstate != null)
 				    {
-					    chunk.SetBlock(x, 70, z, BlockFactory.GetBlock(iblockstate.ID));
+					    chunk.SetBlockState(x, 70, z, iblockstate);
 					    chunk.Height[((z << 4) + (x))] = 70;
 				    }
 

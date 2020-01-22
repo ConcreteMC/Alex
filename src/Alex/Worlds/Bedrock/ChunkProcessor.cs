@@ -245,7 +245,7 @@ namespace Alex.Worlds.Bedrock
 				        }
 				        else
 				        {
-					        #region OldFormat 
+					      /*  #region OldFormat 
 
 					        byte[] blockIds = new byte[4096];
 					        defStream.Read(blockIds, 0, blockIds.Length);
@@ -319,7 +319,7 @@ namespace Alex.Worlds.Bedrock
 						        }
 					        }
 
-					        #endregion
+					        #endregion*/
 				        }
 
 				        if (UseAlexChunks)
@@ -521,10 +521,13 @@ namespace Alex.Worlds.Bedrock
 		        case "minecraft:wood":
 			        searchName = GetWoodBlock(record);
 			        break;
+		        case "minecraft:tallgrass":
+			        searchName = "minecraft:tall_grass";
+			        break;
 	        }
 	        
 	        string prefix = "";
-	        foreach (var state in record.States)
+	        foreach (var state in record.States.ToArray())
 	        {
 		        switch (state.Name)
 		        {
@@ -538,11 +541,12 @@ namespace Alex.Worlds.Bedrock
 						        break;
 					        case "granite_smooth":
 					        case "diorite_smooth":
-							case "andesite_smooth":
+					        case "andesite_smooth":
 						        var split = state.Value.Split('_');
 						        searchName = $"minecraft:polished_{split[0]}";
 						        break;
 				        }
+
 				        break;
 			        case "old_log_type":
 			        {
@@ -564,20 +568,64 @@ namespace Alex.Worlds.Bedrock
 					        case "minecraft:wooden_slab":
 						        searchName = $"minecraft:{state.Value}_slab";
 						        break;
-					      //  case "minecraft:wood":
-						  //      searchName = $"minecraft:{state.Value}_log";
-						 //       break;
+					        //  case "minecraft:wood":
+					        //      searchName = $"minecraft:{state.Value}_log";
+					        //       break;
 				        }
 
 				        break;
 			        case "sapling_type":
-			        //case "old_log_type":
-			       // case "old_leaf_type":
-			        searchName = $"minecraft:{state.Value}_sapling";
+				        //case "old_log_type":
+				        // case "old_leaf_type":
+				        searchName = $"minecraft:{state.Value}_sapling";
 				        //prefix = "_";
 				        break;
 			        case "flower_type":
 				        searchName = $"minecraft:{state.Value}";
+				        break;
+			        case "double_plant_type":
+
+				        switch (state.Value)
+				        {
+					        case "grass":
+						        searchName = "minecraft:tall_grass";
+						        break;
+					        case "sunflower":
+						        searchName = "minecraft:sunflower";
+						        break;
+					        case "fern":
+						        searchName = "minecraft:large_fern";
+						        break;
+					        case "rose":
+						        searchName = "minecraft:rose_bush";
+						        break;
+					        case "paeonia":
+						        searchName = "minecraft:peony";
+						        break;
+				        }
+
+				        break;
+			        case "color":
+				        switch (record.Name)
+				        {
+					        case "minecraft:carpet":
+						        searchName = $"minecraft:{state.Value}_carpet";
+						        break;
+					        case "minecraft:wool":
+						        searchName = $"minecraft:{state.Value}_wool";
+						        break;
+					        case "minecraft:stained_glass":
+						        searchName = $"minecraft:{state.Value}_stained_glass";
+						        break;
+					        case "minecraft:concrete":
+						        searchName = $"minecraft:{state.Value}_concrete";
+						        break;
+					        case "minecraft:stained_glass_pane":
+						        searchName = $"minecraft:{state.Value}_stained_glass_pane";
+						        break;
+				        }
+
+				        record.States.Remove(state);
 				        break;
 		        }
 	        }
@@ -616,7 +664,6 @@ namespace Alex.Worlds.Bedrock
 				        res,
 				        out var res2))
 			        {
-														        
 				        r = BlockFactory.GetBlockState(res2);
 			        }
 			        else
@@ -629,7 +676,10 @@ namespace Alex.Worlds.Bedrock
 	        }
 
 	        if (r == null || r.Name == "Unknown")
+	        {
+		        Log.Warn($"Could not translate block: {record.Name}");
 		        return false;
+	        }
 
 	        foreach (var state in record.States)
 	        {
@@ -695,6 +745,16 @@ namespace Alex.Worlds.Bedrock
 						break;
 					case "top_slot_bit":
 						r = r.WithProperty("type", state.Value == "1" ? "top" : "bottom", true);
+						break;
+					case "moisturized_amount":
+						r = r.WithProperty("moisture", state.Value);
+						break;
+					case "age":
+						r = r.WithProperty("age", state.Value);
+						break;
+			        default:
+				        Log.Info($"Unknown property for {record.Name}: {state.Name} - {state.Value}");
+					//	r = r.WithProperty(state.Name, state.Value);
 						break;
 		        }
 	        }

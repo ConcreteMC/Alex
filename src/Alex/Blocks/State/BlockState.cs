@@ -16,8 +16,6 @@ namespace Alex.Blocks.State
 	public sealed class BlockStateVariantMapper
 	{
 		private static NLog.Logger Log = NLog.LogManager.GetCurrentClassLogger(typeof(BlockStateVariantMapper));
-		
-		internal IBlockState _default;
 		private IList<IBlockState> Variants { get; } = new List<IBlockState>();
 
 		public BlockStateVariantMapper()
@@ -93,12 +91,12 @@ namespace Alex.Blocks.State
 
 		public IBlockState[] GetVariants()
 		{
-			return Variants.Concat(new []{ _default}).ToArray();
+			return Variants.ToArray();
 		}
 
 		public IBlockState GetDefaultState()
 		{
-			return _default;
+			return Variants.FirstOrDefault(x => x.Default);
 		}
 	}
 
@@ -118,6 +116,7 @@ namespace Alex.Blocks.State
 		public IBlockModel Model { get; set; }
 		public IBlock Block { get; set; } = new Air();
 		public bool IsMultiPart { get; set; } = false;
+		public bool Default { get; set; } = false;
 
 		//TODO: Remove
 		internal BlockStateResource MultiPartHelper { get; set; }

@@ -82,7 +82,7 @@ namespace Alex.Entities
 		private void OnInventorySlotChanged(object sender, SlotChangedEventArgs e)
 		{
 			var inHand = Inventory.MainHand;
-			Log.Info($"Inventory slot changed.");
+			//Log.Info($"Inventory slot changed.");
 			
 			if (inHand == null && ItemRenderer != null)
 			{

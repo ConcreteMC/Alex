@@ -317,7 +317,7 @@ namespace Alex.Worlds
 			//}
 		//	catch { }
 
-	        return BlockFactory.GetBlock(0);
+	        return BlockFactory.GetBlockState("minecraft:air").Block;
         }
 
 		public void SetBlock(Block block)
@@ -459,7 +459,7 @@ namespace Alex.Worlds
 				return chunk.GetBlockState(x & 0xf, y & 0xff, z & 0xf, storage);
 			}
 
-			return BlockFactory.GetBlockState(0);
+			return BlockFactory.GetBlockState("minecraft:air");
 		}
 		
 		public IBlockState GetBlockState(int x, int y, int z)

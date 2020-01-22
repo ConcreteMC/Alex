@@ -73,9 +73,11 @@ namespace Alex.Worlds.Bedrock
 		        cancellationToken);
         }
 
+        public bool ReportUnhandled { get; set; } = false;
         private void UnhandledPackage(Packet packet)
 		{
-			Log.Warn($"Unhandled bedrock packet: {packet.GetType().Name} (0x{packet.Id:X2})");
+			if (ReportUnhandled)
+				Log.Warn($"Unhandled bedrock packet: {packet.GetType().Name} (0x{packet.Id:X2})");
 		}
 
         public override void HandleMcpeServerToClientHandshake(McpeServerToClientHandshake message)
