@@ -199,6 +199,9 @@ namespace Alex.API.Gui
         {
             foreach (var screen in GuiManager.Screens.ToArray().Reverse())
             {
+                if (screen == null) 
+                    continue;
+                
                 if (screen.TryFindDeepestChild(e => e.RenderBounds.Contains(position) && predicate(e), out var matchedChild))
                 {
                     element = matchedChild;
@@ -214,6 +217,9 @@ namespace Alex.API.Gui
         {
             foreach (var screen in GuiManager.Screens.ToArray().Reverse())
             {
+                if (screen == null) 
+                    continue;
+                
                 if (screen.TryFindDeepestChild(predicate, out var matchedChild))
                 {
                     element = matchedChild;

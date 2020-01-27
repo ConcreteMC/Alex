@@ -85,10 +85,12 @@ namespace Alex.Worlds
 
         private IOptionsProvider OptionsProvider { get; }
         private AlexOptions Options => OptionsProvider.AlexOptions;
+        private IEventDispatcher EventDispatcher { get; }
 		public SPWorldProvider(Alex alex, IWorldGenerator worldGenerator)
 		{
 			Alex = alex;
 			OptionsProvider = alex.Services.GetRequiredService<IOptionsProvider>();
+			EventDispatcher = alex.Services.GetRequiredService<IEventDispatcher>();
 			
 			_generator = worldGenerator;
 		
@@ -117,7 +119,7 @@ namespace Alex.Worlds
 					{
 						var c = (ChunkColumn) chunk;
 
-						EventDispatcher.Instance.DispatchEvent(new ChunkReceivedEvent(currentCoordinates, c));
+						EventDispatcher.DispatchEvent(new ChunkReceivedEvent(currentCoordinates, c));
 						LoadEntities(c);
 					}
 				}
@@ -176,7 +178,7 @@ namespace Alex.Worlds
 				{
 					//UnloadChunk(chunk.X, chunk.Z);
 					ChunkUnloadEvent unloadEvent = new ChunkUnloadEvent(chunk);
-					EventDispatcher.Instance.DispatchEvent(unloadEvent);
+					EventDispatcher.DispatchEvent(unloadEvent);
 					
 					if (!unloadEvent.IsCancelled)
 						_loadedChunks.Remove(chunk);
@@ -269,7 +271,7 @@ namespace Alex.Worlds
 						var c = (ChunkColumn) chunk;
 						count++;
                     //generatedChunks.Add(c);
-                    EventDispatcher.Instance.DispatchEvent(new ChunkReceivedEvent(new ChunkCoordinates(chunk.X, chunk.Z), c));
+                    EventDispatcher.DispatchEvent(new ChunkReceivedEvent(new ChunkCoordinates(chunk.X, chunk.Z), c));
 						//cached.ChunkManager.AddChunk(chunk, new ChunkCoordinates(c.X, c.Z), false);
 
 						progressReport(LoadingState.LoadingChunks, (int)Math.Floor((count / target) * 100));

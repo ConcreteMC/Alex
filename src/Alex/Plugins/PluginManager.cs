@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.DependencyInjection;
 using Mono.Cecil;
 using NLog;
@@ -229,11 +230,11 @@ namespace Alex.Plugins
                 catch (BadImageFormatException ex)
                 {
                     if (Log.IsDebugEnabled)
-                        Log.Debug($"File is not a .NET Assembly ({file})", ex);
+                        Log.Debug(ex, $"File is not a .NET Assembly ({file})");
                 }
                 catch (Exception ex)
                 {
-                    Log.Error($"Failed loading \"{file}\"", ex);
+                    Log.Error(ex,$"Failed loading \"{file}\"");
                 }
             }
 
@@ -268,6 +269,8 @@ namespace Alex.Plugins
                     {
                         instance.Enabled();
                         enabled++;
+                        
+                        Log.Info($"Enabled \"{instance.Info.Name}\" version {instance.Info.Version} by {instance.Info.Author}");
                     }
                     catch (Exception ex)
                     {
@@ -552,7 +555,7 @@ namespace Alex.Plugins
             }
             catch (Exception ex)
             {
-                Log.Error("Could not load assembly", ex);
+                Log.Error(ex, "Could not load assembly");
             }
 
             loaded = new Plugin[0];
@@ -601,6 +604,8 @@ namespace Alex.Plugins
             lock (_pluginLock)
             {
                 plugin.Disabled();
+                
+                Log.Info($"Disabled {plugin.Info.Name} version {plugin.Info.Version} by {plugin.Info.Author}");
 
                 Assembly assembly = plugin.GetType().Assembly;
 
@@ -628,9 +633,11 @@ namespace Alex.Plugins
                 {
                     if (LoadedAssemblies.ContainsKey(pluginAssembly.Value))
                     {
-                        foreach (Plugin pluginInstance in LoadedAssemblies[pluginAssembly.Value].PluginInstances)
+                        foreach (Plugin instance in LoadedAssemblies[pluginAssembly.Value].PluginInstances)
                         {
-                            pluginInstance.Disabled();
+                            instance.Disabled();
+                            
+                            Log.Info($"Disabled {instance.Info.Name} version {instance.Info.Version} by {instance.Info.Author}");
                         }
                         LoadedAssemblies.Remove(pluginAssembly.Value);
                     }

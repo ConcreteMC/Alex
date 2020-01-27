@@ -36,11 +36,11 @@ namespace Alex.Entities
         public bool HasAdjacentRaytrace = false;
         public bool HasRaytraceResult = false;
 
-        public Player(GraphicsDevice graphics, Alex alex, string name, World world, Skin skin, INetworkProvider networkProvider, PlayerIndex playerIndex) : base(name, world, networkProvider, skin.Texture, true)
+        public Player(GraphicsDevice graphics, InputManager inputManager, string name, World world, Skin skin, INetworkProvider networkProvider, PlayerIndex playerIndex) : base(name, world, networkProvider, skin.Texture, true)
 		{
 		//	DoRotationCalculations = false;
 			PlayerIndex = playerIndex;
-		    Controller = new PlayerController(graphics, world, alex.InputManager, this, playerIndex); 
+		    Controller = new PlayerController(graphics, world, inputManager, this, playerIndex); 
 		    NoAi = false;
 
 			//Inventory = new Inventory(46);

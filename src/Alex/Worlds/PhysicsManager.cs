@@ -17,13 +17,10 @@ namespace Alex.Worlds
     public class PhysicsManager : IDisposable
     {
 	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(PhysicsManager));
+	    private IWorld World { get; }
 
-	    private Alex Alex { get; }
-		private IWorld World { get; }
-
-	    public PhysicsManager(Alex alex, IWorld world)
+	    public PhysicsManager(IWorld world)
 	    {
-		    Alex = alex;
 		    World = world;
 	    }
 

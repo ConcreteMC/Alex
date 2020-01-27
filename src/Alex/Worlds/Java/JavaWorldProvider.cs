@@ -72,6 +72,7 @@ namespace Alex.Worlds.Java
 
 		private System.Threading.Timer _gameTickTimer;
 		private DedicatedThreadPool ThreadPool;
+		private IEventDispatcher EventDispatcher { get; }
 		public JavaWorldProvider(Alex alex, IPEndPoint endPoint, PlayerProfile profile, out INetworkProvider networkProvider)
 		{
 			Alex = alex;
@@ -79,6 +80,7 @@ namespace Alex.Worlds.Java
 			Endpoint = endPoint;
 			
 			OptionsProvider = alex.Services.GetRequiredService<IOptionsProvider>();
+			EventDispatcher = alex.Services.GetRequiredService<IEventDispatcher>();
 			
 			ThreadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount));
 
@@ -88,7 +90,7 @@ namespace Alex.Worlds.Java
 
 			networkProvider = Client;
 			
-			this.RegisterEventHandlers();
+			EventDispatcher.RegisterEvents(this);
 		}
 
 		private bool _disconnected = false;
@@ -1107,7 +1109,7 @@ namespace Alex.Worlds.Java
 
 			if (ChatObject.TryParse(packet.Message, out ChatObject chat))
 			{
-				EventDispatcher.Instance.DispatchEvent(new ChatMessageReceivedEvent(chat));
+				EventDispatcher.DispatchEvent(new ChatMessageReceivedEvent(chat));
 			}
 			else
 			{
@@ -1117,7 +1119,7 @@ namespace Alex.Worlds.Java
 
 		private void HandleUnloadChunk(UnloadChunk packet)
 		{
-			EventDispatcher.Instance.DispatchEvent(new ChunkUnloadEvent(new ChunkCoordinates(packet.X, packet.Z)));
+			EventDispatcher.DispatchEvent(new ChunkUnloadEvent(new ChunkCoordinates(packet.X, packet.Z)));
 		}
 
 		private int _entityId = -1;
@@ -1215,7 +1217,7 @@ namespace Alex.Worlds.Java
 					return;
 				}
 
-				EventDispatcher.Instance.DispatchEvent(new ChunkReceivedEvent(new ChunkCoordinates(result.X ,result.Z), result)
+				EventDispatcher.DispatchEvent(new ChunkReceivedEvent(new ChunkCoordinates(result.X ,result.Z), result)
 				{
 					DoUpdates = true
 				});

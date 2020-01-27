@@ -6,6 +6,7 @@ using Alex.API.Graphics.Typography;
 using Alex.API.Gui.Dialogs;
 using Alex.API.Gui.Graphics;
 using Alex.API.Input;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -48,9 +49,11 @@ namespace Alex.API.Gui
 
         public GuiDialogBase ActiveDialog { get; private set; }
         
-        public GuiManager(Game game, InputManager inputManager, IGuiRenderer guiRenderer)
+        private IServiceProvider ServiceProvider { get; }
+        public GuiManager(Game game, IServiceProvider serviceProvider, InputManager inputManager, IGuiRenderer guiRenderer)
         {
             Game = game;
+            ServiceProvider = serviceProvider;
             InputManager = inputManager;
             ScaledResolution = new GuiScaledResolution(game);
             ScaledResolution.ScaleChanged += ScaledResolutionOnScaleChanged;
@@ -69,7 +72,7 @@ namespace Alex.API.Gui
 
         private void ScaledResolutionOnScaleChanged(object sender, UiScaleEventArgs args)
         {
-            Init(Game.GraphicsDevice);
+            Init(Game.GraphicsDevice, ServiceProvider);
             
             foreach (var screen in Screens.ToArray())
             {
@@ -77,11 +80,11 @@ namespace Alex.API.Gui
             }
         }
 
-        public void Init(GraphicsDevice graphicsDevice)
+        public void Init(GraphicsDevice graphicsDevice, IServiceProvider serviceProvider)
         {
             GraphicsDevice = graphicsDevice;
             SpriteBatch = new SpriteBatch(graphicsDevice);
-            GuiRenderer.Init(graphicsDevice);
+            GuiRenderer.Init(graphicsDevice, serviceProvider);
             
             GuiSpriteBatch?.Dispose();
             GuiSpriteBatch = new GuiSpriteBatch(GuiRenderer, graphicsDevice, SpriteBatch);

@@ -150,8 +150,7 @@ namespace Alex
             PluginManager = new PluginManager(Services);
             FpsMonitor = new FpsMonitor();
 
-			foreach(var assembly in AppDomain.CurrentDomain.GetAssemblies())
-				EventDispatcher.Instance.LoadFrom(assembly);
+            Resources = Services.GetRequiredService<ResourceManager>();
 		}
 
 		public static EventHandler<TextInputEventArgs> OnCharacterInput;
@@ -190,9 +189,13 @@ namespace Alex
 			
 			_spriteBatch = new SpriteBatch(GraphicsDevice);
 			InputManager = new InputManager(this);
-			GuiRenderer = new GuiRenderer(this);
-			GuiManager = new GuiManager(this, InputManager, GuiRenderer);
-
+			
+			GuiRenderer = new GuiRenderer();
+			//GuiRenderer.Init(GraphicsDevice);
+			
+			GuiManager = new GuiManager(this, Services, InputManager, GuiRenderer);
+			GuiManager.Init(GraphicsDevice, Services);
+			
 			GuiDebugHelper = new GuiDebugHelper(GuiManager);
 
 			OnCharacterInput += GuiManager.FocusManager.OnTextInput;
@@ -277,8 +280,10 @@ namespace Alex
             
             services.AddSingleton<IRegistryManager, RegistryManager>();
             services.AddSingleton<AlexIpcService>();
-            
-            //Storage = storage;
+
+            services.AddSingleton<IEventDispatcher, EventDispatcher>();
+            services.AddSingleton<ResourceManager>();
+;            //Storage = storage;
 		}
 
 		protected override void UnloadContent()
@@ -335,6 +340,10 @@ namespace Alex
 
 			//ConfigureServices();
 
+			var eventDispatcher = Services.GetRequiredService<IEventDispatcher>() as EventDispatcher;
+			foreach(var assembly in AppDomain.CurrentDomain.GetAssemblies())
+				eventDispatcher.LoadFrom(assembly);
+			
 			var options = Services.GetService<IOptionsProvider>();
 			options.Load();
 			
@@ -381,7 +390,6 @@ namespace Alex
             profileManager.LoadProfiles(progressReceiver);
 
 			//	Log.Info($"Loading resources...");
-			Resources = new ResourceManager(GraphicsDevice, Services);
 			if (!Resources.CheckResources(GraphicsDevice, progressReceiver,
 				OnResourcePackPreLoadCompleted))
 			{
@@ -390,7 +398,7 @@ namespace Alex
 				Exit();
 				return;
 			}
-
+			
 			GuiRenderer.LoadResourcePack(Resources.ResourcePack);
 			AnvilWorldProvider.LoadBlockConverter();
 
@@ -403,7 +411,7 @@ namespace Alex
 			else
 			{
 				GameStateManager.SetActiveState<TitleState>("title");
-				var player = new Player(GraphicsDevice, this, null, null, new Skin(),  null, PlayerIndex.One);
+				var player = new Player(GraphicsDevice, InputManager, null, null, new Skin(),  null, PlayerIndex.One);
 				player.Inventory.IsPeInventory = true;
 				/*Random rnd = new Random();
 				for (int i = 0; i < player.Inventory.SlotCount; i++)
@@ -429,21 +437,28 @@ namespace Alex
 
 		public void ConnectToServer(IPEndPoint serverEndPoint, PlayerProfile profile, bool bedrock = false)
 		{
-			WorldProvider provider;
-			INetworkProvider networkProvider;
-			IsMultiplayer = true;
-			if (bedrock)
+			try
 			{
-				provider = new BedrockWorldProvider(this, serverEndPoint,
-					profile, out networkProvider);
-			}
-			else
-			{
-				provider = new JavaWorldProvider(this, serverEndPoint, profile,
-					out networkProvider);
-			}
+				WorldProvider provider;
+				INetworkProvider networkProvider;
+				IsMultiplayer = true;
+				if (bedrock)
+				{
+					provider = new BedrockWorldProvider(this, serverEndPoint,
+						profile, out networkProvider);
+				}
+				else
+				{
+					provider = new JavaWorldProvider(this, serverEndPoint, profile,
+						out networkProvider);
+				}
 
-			LoadWorld(provider, networkProvider);
+				LoadWorld(provider, networkProvider);
+			}
+			catch (Exception ex)
+			{
+				Log.Error(ex, "FCL");
+			}
 		}
 
 		public void LoadWorld(WorldProvider worldProvider, INetworkProvider networkProvider)

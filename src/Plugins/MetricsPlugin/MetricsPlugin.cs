@@ -13,10 +13,13 @@ using App.Metrics.Health;
 using App.Metrics.Reporting.InfluxDB;
 using MetricsPlugin.Metrics;
 using MetricsPlugin.Tasks;
+using MiNET.Plugins.Attributes;
 using NLog;
 
 namespace MetricsPlugin
 {
+    [PluginInfo(Name = "Alex - InfluxDB Metrics", Author = "Kenny van Vulpen",
+        Description = "Reports game metrics to an influxdb instance", Version = "1.0")]
     public class MetricsPlugin : Plugin
     {
         private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
@@ -29,9 +32,10 @@ namespace MetricsPlugin
         private Timer _metricTimer { get; set; }
         private CancellationTokenSource _threadCancellationTokenSource;
         private CancellationToken _threadCancellationToken;
-        
+
         private ProfilerService Profiler { get; }
         private Alex.Alex GameInstance { get; }
+
         public MetricsPlugin(Alex.Alex alex, ProfilerService profilerService)
         {
             GameInstance = alex;
@@ -42,10 +46,7 @@ namespace MetricsPlugin
                 options.InfluxDb.Database = "alex";
             }).Build();
 
-            Health = AppMetricsHealth.CreateDefaultBuilder().Configuration.Configure(c =>
-            {
-                
-            }).Build();
+            Health = AppMetricsHealth.CreateDefaultBuilder().Configuration.Configure(c => { }).Build();
 
             MetricTasks = new List<IMetricTask>();
         }
@@ -65,8 +66,6 @@ namespace MetricsPlugin
             _threadCancellationTokenSource = new CancellationTokenSource();
 
             _metricTimer = new Timer(async state => await Run(), null, 0, 1000);
-
-            Log.Info($"Metrics plugin enabled!");
         }
 
 
@@ -88,26 +87,24 @@ namespace MetricsPlugin
             _threadCancellationTokenSource.Cancel();
 
             //_thread.Abort();
-           // _thread.Join();
-
-            Log.Info($"Metrics plugin disabled!");
+            // _thread.Join();
         }
 
         private async Task Run()
         {
-           // while (_isRunning)
-           // {
-                Parallel.ForEach(MetricTasks.ToArray(), task => { task.Run(); });
+            // while (_isRunning)
+            // {
+            Parallel.ForEach(MetricTasks.ToArray(), task => { task.Run(); });
 
-                var healthStatus = await Health.HealthCheckRunner.ReadAsync(_threadCancellationToken);
+            var healthStatus = await Health.HealthCheckRunner.ReadAsync(_threadCancellationToken);
 
-                using (var ms = new MemoryStream())
-                {
-                    await Health.DefaultOutputHealthFormatter.WriteAsync(ms, healthStatus);
-                }
+            using (var ms = new MemoryStream())
+            {
+                await Health.DefaultOutputHealthFormatter.WriteAsync(ms, healthStatus);
+            }
 
-                await Task.WhenAll(Metrics.ReportRunner.RunAllAsync(_threadCancellationToken));
-                // }
+            await Task.WhenAll(Metrics.ReportRunner.RunAllAsync(_threadCancellationToken));
+            // }
 
         }
     }

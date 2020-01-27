@@ -58,9 +58,11 @@ namespace Alex.Worlds.Bedrock
 
         private WorldProvider WorldProvider { get; }
         private PlayerProfile PlayerProfile { get; }
-        public BedrockClientPacketHandler(BedrockClient client, WorldProvider worldProvider, PlayerProfile profile, Alex alex, CancellationToken cancellationToken) :
+        private IEventDispatcher EventDispatcher { get; }
+        public BedrockClientPacketHandler(BedrockClient client, IEventDispatcher eventDispatcher, WorldProvider worldProvider, PlayerProfile profile, Alex alex, CancellationToken cancellationToken) :
 	        base(client)
         {
+	        EventDispatcher = eventDispatcher;
 	        BaseClient = client;
 	        AlexInstance = alex;
 	        CancellationToken = cancellationToken;
@@ -143,7 +145,7 @@ namespace Alex.Worlds.Bedrock
 
         public override void HandleMcpeText(McpeText message)
 		{
-			EventDispatcher.Instance.DispatchEvent(new ChatMessageReceivedEvent(new ChatObject(message.message)));
+			EventDispatcher.DispatchEvent(new ChatMessageReceivedEvent(new ChatObject(message.message)));
 		}
 
 		public override void HandleMcpeSetTime(McpeSetTime message)
@@ -788,7 +790,7 @@ namespace Alex.Worlds.Bedrock
 			ChunkProcessor.HandleChunkData(cacheEnabled, subChunkCount, chunkData, cx, cz,
 				column =>
 				{
-					EventDispatcher.Instance.DispatchEvent(
+					EventDispatcher.DispatchEvent(
 						new ChunkReceivedEvent(new ChunkCoordinates(column.X, column.Z), column));
 				});
 		}

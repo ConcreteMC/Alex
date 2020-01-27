@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Data.Options;
 using Alex.API.Graphics;
+using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks.Minecraft;
@@ -33,8 +34,8 @@ namespace Alex.Worlds
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ChunkManager));
 
 		private GraphicsDevice Graphics { get; }
+		private ResourceManager Resources { get; }
         private IWorld World { get; }
-	    private Alex Game { get; }
 
         private int _chunkUpdates = 0;
         public int ConcurrentChunkUpdates => (int) _threadsRunning;
@@ -54,20 +55,22 @@ namespace Alex.Worlds
 
         private AlexOptions Options { get; }
         private ProfilerService ProfilerService { get; }
-        public ChunkManager(Alex alex, GraphicsDevice graphics, AlexOptions option, IWorld world)
+        public ChunkManager(IServiceProvider serviceProvider, GraphicsDevice graphics, IWorld world)
         {
-	        Game = alex;
 	        Graphics = graphics;
 	        World = world;
-	        Options = option;
-	        ProfilerService = alex.Services.GetRequiredService<ProfilerService>();
+	        //Options = option;
+
+	        Options = serviceProvider.GetRequiredService<IOptionsProvider>().AlexOptions;
+	        ProfilerService = serviceProvider.GetRequiredService<ProfilerService>();
+	        Resources = serviceProvider.GetRequiredService<ResourceManager>();
 	        
 	        Chunks = new ConcurrentDictionary<ChunkCoordinates, IChunkColumn>();
 	        
 	        var fogStart = 0;
 	        TransparentEffect = new AlphaTestEffect(Graphics)
 	        {
-		        Texture = alex.Resources.Atlas.GetStillAtlas(),
+		        Texture = Resources.Atlas.GetStillAtlas(),
 		        VertexColorEnabled = true,
 		        World = Matrix.Identity,
 		        AlphaFunction = CompareFunction.Greater,
@@ -78,7 +81,7 @@ namespace Alex.Worlds
 	        
 	        AnimatedEffect = new AlphaTestEffect(Graphics)
 	        {
-		        Texture = alex.Resources.Atlas.GetAtlas(0),
+		        Texture = Resources.Atlas.GetAtlas(0),
 		        VertexColorEnabled = true,
 		        World = Matrix.Identity,
 		        AlphaFunction = CompareFunction.Greater,
@@ -90,7 +93,7 @@ namespace Alex.Worlds
 	        OpaqueEffect = new BasicEffect(Graphics)
 	        {
 		        TextureEnabled = true,
-		        Texture = alex.Resources.Atlas.GetStillAtlas(),
+		        Texture = Resources.Atlas.GetStillAtlas(),
 		        FogStart = fogStart,
 		        VertexColorEnabled = true,
 		        LightingEnabled = true,
@@ -99,7 +102,7 @@ namespace Alex.Worlds
 	        
 	        //if (alex.)
 
-	        FrameCount = alex.Resources.Atlas.GetFrameCount();
+	        FrameCount = Resources.Atlas.GetFrameCount();
 
 	        ChunkManagementThread = new Thread(ChunkUpdateThread)
 	        {
@@ -238,7 +241,7 @@ namespace Alex.Worlds
 			    _timer -= 1.0f / _framerate ;
 			    _currentFrame = (_currentFrame + 1) % FrameCount;
 
-			    _currentFrameTexture = Game.Resources.Atlas.GetAtlas(_currentFrame);
+			    _currentFrameTexture = Resources.Atlas.GetAtlas(_currentFrame);
 			    AnimatedEffect.Texture = _currentFrameTexture;
 			    // OpaqueEffect.Texture = frame;
 			    // TransparentEffect.Texture = frame;
@@ -955,7 +958,7 @@ namespace Alex.Worlds
 
 			        if (blockState is BlockState state && state.IsMultiPart && shouldRebuildVertices)
 			        {
-				        model = new CachedResourcePackModel(Game.Resources,
+				        model = new CachedResourcePackModel(Resources,
 					        MultiPartModels.GetBlockStateModels(world, blockPosition, state,
 						        state.MultiPartHelper));
 				        // blockState.Block.Update(world, blockPosition);

@@ -13,6 +13,7 @@ using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Entities;
 using Alex.Utils;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using MiNET.Net;
 using MiNET.Utils;
@@ -30,15 +31,18 @@ namespace Alex.Worlds.Bedrock
 		private BedrockClient Client { get; }
 
 		private System.Threading.Timer _gameTickTimer;
+		private IEventDispatcher EventDispatcher { get; }
 		public BedrockWorldProvider(Alex alex, IPEndPoint endPoint, PlayerProfile profile,
 			out INetworkProvider networkProvider)
 		{
 			Alex = alex;
-
-			Client = new BedrockClient(alex, endPoint, profile, new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount, ThreadType.Background, "BedrockClientThread")), this);
+			var eventDispatcher = alex.Services.GetRequiredService<IEventDispatcher>();
+			EventDispatcher = eventDispatcher;
+			
+			Client = new BedrockClient(alex, eventDispatcher, endPoint, profile, new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount, ThreadType.Background, "BedrockClientThread")), this);
 			networkProvider = Client;
 			
-			this.RegisterEventHandlers();
+			EventDispatcher.RegisterEvents(this);
 		}
 
 		public override Vector3 GetSpawnPoint()
@@ -145,7 +149,7 @@ namespace Alex.Worlds.Bedrock
 		
 		public void UnloadChunk(ChunkCoordinates coordinates)
 		{
-			EventDispatcher.Instance.DispatchEvent(new ChunkUnloadEvent(coordinates));
+			EventDispatcher.DispatchEvent(new ChunkUnloadEvent(coordinates));
 			_loadedChunks.Remove(coordinates);
 		}
 

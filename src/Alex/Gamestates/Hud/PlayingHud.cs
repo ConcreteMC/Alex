@@ -1,4 +1,5 @@
-﻿using Alex.API.Gui;
+﻿using Alex.API.Events;
+using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Graphics;
 using Alex.API.Input;
@@ -8,6 +9,7 @@ using Alex.GameStates.Gui.InGame;
 using Alex.GameStates.Playing;
 using Alex.Gui.Elements;
 using Alex.Gui.Elements.Inventory;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using RocketUI;
 
@@ -37,7 +39,7 @@ namespace Alex.GameStates.Hud
 	        _hotbar.Anchor = Alignment.BottomCenter;
 	        _hotbar.Padding = Thickness.Zero;
 
-			Chat = new ChatComponent();
+			Chat = new ChatComponent(game.Services.GetRequiredService<IEventDispatcher>());
 	        Chat.Enabled = false;
 	        Chat.Anchor = Alignment.BottomLeft;
         }
