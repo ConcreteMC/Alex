@@ -81,7 +81,7 @@ namespace Alex.Worlds.Bedrock
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BedrockClient));
 		
-		public ManualResetEventSlim ConnectionAcceptedWaitHandle { get; }
+		private ManualResetEventSlim ConnectionAcceptedWaitHandle { get; set; }
 		public BedrockWorldProvider WorldProvider { get; }
 		public EventHandler<BedrockMotd> OnMotdReceivedHandler;
 		public BedrockMotd KnownMotd = new BedrockMotd(string.Empty);
@@ -96,6 +96,7 @@ namespace Alex.Worlds.Bedrock
         private CancellationTokenSource CancellationTokenSource { get; }
         
         public McpeNetworkChunkPublisherUpdate LastChunkPublish { get; set; }
+        public AutoResetEvent PlayerStatusChanged { get; set; } = new AutoResetEvent(false);
 		public BedrockClient(Alex alex, IEventDispatcher eventDispatcher, IPEndPoint endpoint, PlayerProfile playerProfile, DedicatedThreadPool threadPool, BedrockWorldProvider wp) : base(endpoint,
 			playerProfile.Username, threadPool)
 		{
@@ -104,7 +105,7 @@ namespace Alex.Worlds.Bedrock
 			
             Alex = alex;
 			WorldProvider = wp;
-			ConnectionAcceptedWaitHandle = new ManualResetEventSlim(false);
+			//ConnectionAcceptedWaitHandle = new ManualResetEventSlim(false);
 			MessageDispatcher = new McpeClientMessageDispatcher(new BedrockClientPacketHandler(this, eventDispatcher, wp, playerProfile, alex, CancellationTokenSource.Token));
 			CurrentLocation = new MiNET.Utils.PlayerLocation(0,0,0);
 			OptionsProvider = alex.Services.GetRequiredService<IOptionsProvider>();
@@ -120,6 +121,17 @@ namespace Alex.Worlds.Bedrock
 			
 			eventDispatcher?.RegisterEvents(this);
         }
+
+		public void Start(ManualResetEventSlim resetEvent)
+		{
+			StartClient();
+			HaveServer = true;
+
+			ConnectionAcceptedWaitHandle = resetEvent;
+			
+			SendOpenConnectionRequest1();
+			
+		}
 
 		[EventHandler(EventPriority.Highest)]
 		private void OnSendChatMessage(ChatMessagePublishEvent e)

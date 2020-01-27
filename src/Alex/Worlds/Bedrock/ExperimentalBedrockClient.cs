@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using Alex.API.Data;
 using Alex.API.Entities;
+using Alex.API.Events;
 using Alex.API.Network.Bedrock;
 using Alex.API.Services;
 using Alex.API.Utils;
@@ -32,6 +33,7 @@ using SharpRakLib.Server;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using Compression = SharpRakLib.Core.Compression;
 using CompressionLevel = System.IO.Compression.CompressionLevel;
+using LevelInfo = MiNET.Worlds.LevelInfo;
 using NewtonsoftMapper = MiNET.NewtonsoftMapper;
 using PlayerLocation = MiNET.Utils.PlayerLocation;
 using VarInt = SharpRakLib.Core.VarInt;
@@ -60,7 +62,8 @@ namespace Alex.Worlds.Bedrock
             var profileService = serviceProvider.GetService<IPlayerProfileService>();
             Profile = profileService.CurrentProfile;
             
-            MessageDispatcher = new McpeClientMessageDispatcher(new ExperimentalClientMessageHandler(this));
+            MessageDispatcher = new McpeClientMessageDispatcher(new BedrockClientPacketHandler(this, serviceProvider.GetRequiredService<IEventDispatcher>(), worldProvider, Profile, alex, CancellationTokenSource.Token));
+           //MessageDispatcher = new McpeClientMessageDispatcher(new ExperimentalClientMessageHandler(this));
 
             XblmsaService = serviceProvider.GetService<XBLMSAService>();
 
@@ -70,9 +73,12 @@ namespace Alex.Worlds.Bedrock
         }
 
         private XBLMSAService XblmsaService { get; }
-        
-        public bool IsConnected { get; }
-        
+
+        public bool IsConnected
+        {
+            get { return ClientSession.IsConnected; }
+        }
+
         public void OnHook(SessionBase session, params object[] param)
         {
             if (session is ClientSession clientSession)
@@ -112,17 +118,22 @@ namespace Alex.Worlds.Bedrock
         
         private void HandleConnectionRequestAccepted(ConnectionRequestAccepted message)
         {
+            ConnectionAcceptedWaitHandle?.Set();
+            
             var packet = NewIncomingConnection.CreateObject();
-            packet.clientendpoint = new IPEndPoint(IPAddress.Loopback, 19132);
+            packet.clientendpoint = Endpoint;
             packet.systemAddresses = new IPEndPoint[20];
             for (int i = 0; i < 20; i++)
             {
                 packet.systemAddresses[i] = new IPEndPoint(IPAddress.Any, 0);
             }
                 
-            ClientSession._state = ClientSession.Connected;
-            SendPacket(packet, true);
+            
+            PlayerStatus = ClientSession.Connected;
+            SendPacket(packet, false);
 
+            Thread.Sleep(2500);
+            
             SendLogin();
         }
 
@@ -175,7 +186,7 @@ namespace Alex.Worlds.Bedrock
                         {
                             if (internalBuffer != null)
                                 Log.Error($"Batch error while reading:\n{Packet.HexDump(internalBuffer)}");
-                            Log.Error("Batch processing", e);
+                            Log.Error(e,"Batch processing");
                         }
                     } while (destination.Position < destination.Length);
                 }
@@ -287,16 +298,24 @@ namespace Alex.Worlds.Bedrock
                 Slim = false,
                 Data = Encoding.Default.GetBytes(new string('Z', 8192)),
                 SkinId = "Standard_Custom",
-                Cape = new Cape(),
-                GeometryName = "geometry.humanoid.custom",
-                GeometryData = ""
+                //  GeometryName = "geometry.humanoid.custom",
+                //  GeometryData = "",
+                //   Cape = new Cape()
+                // {
+                //      Data = new byte[0]
+                //  },
+                //  SkinGeometryName = "geometry.humanoid.custom",
+                // SkinGeometry = ""
             };
 
             string skin64 = Convert.ToBase64String(skin.Data);
-            string cape64 = Convert.ToBase64String(skin.Cape.Data);
+            // string cape64 = Convert.ToBase64String(skin.Cape.Data);
 
             string skinData = $@"
 {{
+    ""SkinAnimationData"": null,
+    ""AnimatedImageData"": [],
+	""CapeData"": """",
 	""ADRole"": 0,
 	""ClientRandomId"": {new Random().Next()},
 	""CurrentInputMode"": 1,
@@ -312,10 +331,14 @@ namespace Alex.Worlds.Bedrock
 	""SelfSignedId"": ""{Guid.NewGuid().ToString()}"",
 	""ServerAddress"": ""{Endpoint.Address.ToString()}:{Endpoint.Port.ToString()}"",
 	""SkinData"": ""{skin64}"",
+	""SkinImageWidth"": 32,
+	""SkinImageHeight"": 64,
+	""PremiumSkin"": false,
+    ""PersonaSkin"": false,
+	""CapeImageHeight"": 0,
+	""CapeImageWidth"": 0,
+    ""CapeOnClassicSkin"": false,
 	""SkinId"": ""{skin.SkinId}"",
-    ""SkinGeometryName"": ""{skin.GeometryName}"",
-    ""SkinGeometry"": ""{skin.GeometryData}"",
-    ""CapeData"": ""{cape64}"",
 	""TenantId"": ""38dd6634-1031-4c50-a9b4-d16cd9d97d57"",
 	""ThirdPartyName"": ""{username}"",
 	""UIProfile"": 0,
@@ -396,11 +419,36 @@ namespace Alex.Worlds.Bedrock
         }
 
         public IWorldReceiver WorldReceiver { get; set; }
+        public System.Numerics.Vector3 SpawnPoint { get; set; } = System.Numerics.Vector3.Zero;
+        public LevelInfo LevelInfo { get; } = new LevelInfo();
+        public PlayerLocation CurrentLocation { get; set; } = new PlayerLocation();
+        public int ChunkRadius { get; set; } = 6;
+        public long EntityId { get; set; }
+        public long NetworkEntityId { get; set; }
+
+        public int PlayerStatus
+        {
+            get
+            {
+                return ClientSession._state;
+            }
+            set
+            {
+                ClientSession._state = value;
+                if (value == 3)
+                {
+                    PlayerStatusChanged?.Set();
+                }
+            }
+        }
+
+        public bool HasSpawned { get; set; }
+        public AutoResetEvent PlayerStatusChanged { get; set; } = new AutoResetEvent(false);
         public IChatReceiver ChatReceiver { get; }
         
         public void SendPacket(Packet packet, bool immediate)
         {
-            if (ClientSession._state == ClientSession.Connected && !(packet is McpeWrapper))
+            if (PlayerStatus == ClientSession.Connected && !(packet is McpeWrapper))
             {
                 McpeWrapper wrapperPacket = new McpeWrapper();
                 wrapperPacket.payload = Compression.Compress(packet.Encode(), true);
@@ -412,17 +460,22 @@ namespace Alex.Worlds.Bedrock
                 
             ClientSession.AddPacketToQueue(encapsulatedPacket, immediate);
         }
-        
+
+        private ManualResetEventSlim ConnectionAcceptedWaitHandle { get; set; }
+        public void Start(ManualResetEventSlim resetEvent)
+        {
+            ConnectionAcceptedWaitHandle = resetEvent;
+            
+            Client.Start();
+
+            ClientSession = Client.WaitForSession();
+        }
+
         public void SendPacket(Packet packet)
         {
             this.SendPacket(packet, true);
         }
-
-        public void ChunkReceived(IChunkColumn chunkColumn)
-        {
-            throw new NotImplementedException();
-        }
-
+        
         public void RequestChunkRadius(int radius)
         {
             throw new NotImplementedException();
