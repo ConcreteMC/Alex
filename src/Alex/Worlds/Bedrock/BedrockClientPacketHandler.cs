@@ -26,6 +26,7 @@ using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
 using fNbt;
 using Jose;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET;
 using MiNET.Client;
@@ -69,7 +70,7 @@ namespace Alex.Worlds.Bedrock
 	        AnvilWorldProvider.LoadBlockConverter();
 
 	        ChunkProcessor = new ChunkProcessor(4,
-		        alex.Services.GetService<IOptionsProvider>().AlexOptions.MiscelaneousOptions.ServerSideLighting,
+		        alex.Services.GetRequiredService<IOptionsProvider>().AlexOptions.MiscelaneousOptions.ServerSideLighting,
 		        cancellationToken);
         }
 

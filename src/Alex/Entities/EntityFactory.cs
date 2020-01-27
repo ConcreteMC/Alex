@@ -205,13 +205,20 @@ namespace Alex.Entities
 					if (def.Value.Textures.Count == 0) continue;
 					if (def.Value.Geometry.Count == 0) continue;
 
+					var geometry = def.Value.Geometry;
+					string modelKey;
+					if (!geometry.TryGetValue("default", out modelKey))
+					{
+						modelKey = geometry.FirstOrDefault().Value;
+					}
+
 					EntityModel model;
-				    if (ModelFactory.TryGetModel(def.Value.Geometry["default"], out model) && model != null)
+				    if (ModelFactory.TryGetModel(modelKey, out model) && model != null)
 				    {
 				        Add(resourceManager, graphics, def.Value, model, def.Value.Filename);
 				        Add(resourceManager, graphics, def.Value, model, def.Key);
                     }
-				    else if (ModelFactory.TryGetModel(def.Value.Geometry["default"] + ".v1.8", out model) && model != null)
+				    else if (ModelFactory.TryGetModel(modelKey + ".v1.8", out model) && model != null)
 				    {
 				        Add(resourceManager, graphics, def.Value, model, def.Value.Filename);
 				        Add(resourceManager, graphics, def.Value, model, def.Key);

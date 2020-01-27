@@ -36,7 +36,7 @@ namespace Alex.GameStates.Playing
 			NetworkProvider = networkProvider;
 
 			World = new World(alex, graphics, Options, new FirstPersonCamera(Options.VideoOptions.RenderDistance, Vector3.Zero, Vector3.Zero), networkProvider);
-			SkyRenderer = new SkyBox(alex, graphics, World);
+			SkyRenderer = new SkyBox(alex.Services, graphics, World);
 
 			WorldProvider = worldProvider;
 			if (worldProvider is SPWorldProvider)

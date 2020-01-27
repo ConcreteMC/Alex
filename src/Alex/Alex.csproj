@@ -157,9 +157,6 @@
 			<ReferencePath Condition="'%(FileName)' == 'Splat'">
 				<Aliases>SuperSplat</Aliases>
 			</ReferencePath>
-			<ReferencePath Condition="'%(FileName)' == 'System.Drawing.Common'">
-				<Aliases>CoreCompaty</Aliases>
-			</ReferencePath>
 			<ReferencePath Condition="'%(FileName)' == 'Chromely.CefGlue.Winapi'">
 				<Aliases>CefGlueWIN</Aliases>
 			</ReferencePath>

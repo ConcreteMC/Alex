@@ -8,6 +8,7 @@ using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.Utils;
 using Alex.Worlds;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Color = Microsoft.Xna.Framework.Color;
@@ -40,14 +41,14 @@ namespace Alex.Graphics.Models
 		private World World { get; }
 
 	    private readonly VertexPositionTexture[] _moonPlaneVertices;
-		private Alex Game { get; }
-		private IOptionsProvider OptionsProvider { get; }
+	    private IOptionsProvider OptionsProvider { get; }
 		private AlexOptions Options => OptionsProvider.AlexOptions;
-		public SkyBox(Alex alex, GraphicsDevice device, World world)
+		public SkyBox(IServiceProvider serviceProvider, GraphicsDevice device, World world)
 		{
 			World = world;
-			Game = alex;
-			OptionsProvider = alex.Services.GetService<IOptionsProvider>();
+			//Game = alex;
+			var alex = serviceProvider.GetRequiredService<Alex>();
+			OptionsProvider = serviceProvider.GetRequiredService<IOptionsProvider>();
 
 		    if (alex.Resources.ResourcePack.TryGetBitmap("environment/sun", out var sun))
 		    {

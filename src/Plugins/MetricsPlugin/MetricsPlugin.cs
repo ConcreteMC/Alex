@@ -29,8 +29,13 @@ namespace MetricsPlugin
         private Timer _metricTimer { get; set; }
         private CancellationTokenSource _threadCancellationTokenSource;
         private CancellationToken _threadCancellationToken;
-        public MetricsPlugin()
+        
+        private ProfilerService Profiler { get; }
+        private Alex.Alex GameInstance { get; }
+        public MetricsPlugin(Alex.Alex alex, ProfilerService profilerService)
         {
+            GameInstance = alex;
+            Profiler = profilerService;
             Metrics = new MetricsBuilder().Report.ToInfluxDb(options =>
             {
                 options.InfluxDb.BaseUri = new Uri("http://localhost:8086");
@@ -45,12 +50,12 @@ namespace MetricsPlugin
             MetricTasks = new List<IMetricTask>();
         }
 
-        public override void Enabled(Alex.Alex alex)
+        public override void Enabled()
         {
             if (_isRunning) return;
             _isRunning = true;
 
-            ConfigureTasks(alex);
+            ConfigureTasks();
 
             foreach (var task in MetricTasks.ToArray())
             {
@@ -65,15 +70,15 @@ namespace MetricsPlugin
         }
 
 
-        private void ConfigureTasks(Alex.Alex alex)
+        private void ConfigureTasks()
         {
             MetricTasks.Add(new SystemPerformanceCountersTask());
-            MetricTasks.Add(new ProfilerMetrics(alex));
+            MetricTasks.Add(new ProfilerMetrics(GameInstance, Profiler));
             MetricTasks.Add(new GPUMetricsTask());
-            MetricTasks.Add(new WorldMetrics(alex));
+            MetricTasks.Add(new WorldMetrics(GameInstance));
         }
 
-        public override void Disabled(Alex.Alex alex)
+        public override void Disabled()
         {
             if (!_isRunning) return;
             _isRunning = !_isRunning;

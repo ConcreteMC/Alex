@@ -20,6 +20,7 @@ using Alex.API.World;
 using Alex.Gamestates;
 using Alex.Services;
 using Jose;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using MiNET;
 using MiNET.Client;
@@ -106,8 +107,8 @@ namespace Alex.Worlds.Bedrock
 			ConnectionAcceptedWaitHandle = new ManualResetEventSlim(false);
 			MessageDispatcher = new McpeClientMessageDispatcher(new BedrockClientPacketHandler(this, wp, playerProfile, alex, CancellationTokenSource.Token));
 			CurrentLocation = new MiNET.Utils.PlayerLocation(0,0,0);
-			OptionsProvider = alex.Services.GetService<IOptionsProvider>();
-			XblmsaService = alex.Services.GetService<XBLMSAService>();
+			OptionsProvider = alex.Services.GetRequiredService<IOptionsProvider>();
+			XblmsaService = alex.Services.GetRequiredService<XBLMSAService>();
 			
 			base.ChunkRadius = Options.VideoOptions.RenderDistance;
 			

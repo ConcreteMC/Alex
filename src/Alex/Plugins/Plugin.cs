@@ -18,8 +18,8 @@ namespace Alex.Plugins
             //    Log.Info(JsonConvert.SerializeObject(Info, Formatting.Indented));
         }
 
-        public abstract void Enabled(Alex alex);
-        public abstract void Disabled(Alex alex);
+        public abstract void Enabled();
+        public abstract void Disabled();
 
         #region Plugin Initialisation
 

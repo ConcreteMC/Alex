@@ -46,7 +46,7 @@ namespace Alex.Gamestates.Login
 
         private void Initialize()
         {
-	        _playerProfileService = Alex.Services.GetService<IPlayerProfileService>();
+	        _playerProfileService = GetService<IPlayerProfileService>();
 	        _playerProfileService.Authenticate += PlayerProfileServiceOnAuthenticate;
 
             base.HeaderTitle.Anchor = Alignment.MiddleCenter;
@@ -129,6 +129,7 @@ namespace Alex.Gamestates.Login
 	        
 	        LoginButton.Enabled = false;
 
+	        var profileManager = GetService<ProfileManager>();
 	        XBLMSAService.OpenBrowser(ConnectResponse.verification_uri);
 	    //   Log.Info($"Browser opened...");
 	        AuthenticationService.DoDeviceCodeLogin(ConnectResponse.device_code, CancellationToken.Token).ContinueWith(
@@ -153,7 +154,7 @@ namespace Alex.Gamestates.Login
 						        JsonConvert.SerializeObject(result.token),
 						        true);
 
-					        Alex.ProfileManager.CreateOrUpdateProfile(ProfileManager.ProfileType.Bedrock,profile, true);
+					        profileManager.CreateOrUpdateProfile(ProfileManager.ProfileType.Bedrock,profile, true);
 					        Ready?.Invoke(profile);
 
 					        //Log.Info($"Continuewith Success!");

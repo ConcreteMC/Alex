@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Services;
 using Alex.API.Utils;
+using Microsoft.Extensions.DependencyInjection;
 using NLog;
 
 namespace Alex
@@ -12,23 +14,28 @@ namespace Alex
 		private Dictionary<string, SavedProfile> Profiles { get; }
 		//public SavedProfile ActiveProfile { get; private set; } = null;
 		public SavedProfile LastUsedProfile { get; private set; } = null;
-		private Alex Alex { get; }
-		private IStorageSystem Storage { get; }
-		public ProfileManager(Alex alex, IStorageSystem storage)
+		//private Alex Alex { get; }
+		//private IStorageSystem Storage { get; }
+		//private IPlayerProfileService ProfileService { get; }
+		private IServiceProvider ServiceProvider { get; }
+		public ProfileManager(IServiceProvider serviceProvider/*Alex alex, IStorageSystem storage, IPlayerProfileService playerProfileService*/)
 		{
-			Alex = alex;
-			Storage = storage;
+			//Alex = alex;
+			//Storage = storage;
 			Profiles = new Dictionary<string, SavedProfile>();
+			ServiceProvider = serviceProvider;
+			//ProfileService = playerProfileService;
 		}
 
 		private const string StatusMessage = "Loading profiles...";
 		private const string ProfilesFile = "profiles";
 		public void LoadProfiles(IProgressReceiver progressReceiver)
 		{
-			IPlayerProfileService profileService = Alex.Services.GetService<IPlayerProfileService>();
+			IPlayerProfileService profileService = ServiceProvider.GetRequiredService<IPlayerProfileService>();
+			IStorageSystem storage = ServiceProvider.GetRequiredService<IStorageSystem>();
 			
 			progressReceiver.UpdateProgress(0, StatusMessage);
-			if (Storage.TryRead(ProfilesFile, out ProfilesFileFormat saveFile))
+			if (storage.TryRead(ProfilesFile, out ProfilesFileFormat saveFile))
 			//if (File.Exists(ProfilesFile))
 			{
 				progressReceiver.UpdateProgress(50, StatusMessage);
@@ -74,7 +81,7 @@ namespace Alex
 			}
 			else
 			{
-				Storage.TryWrite(ProfilesFile, new ProfilesFileFormat());
+				storage.TryWrite(ProfilesFile, new ProfilesFileFormat());
 			//	File.WriteAllText(ProfilesFile, JsonConvert.SerializeObject(new ProfilesFileFormat(), Formatting.Indented));
 			}
 
@@ -83,8 +90,11 @@ namespace Alex
 
 		public void SaveProfiles()
 		{
-			IPlayerProfileService profileService = Alex.Services.GetService<IPlayerProfileService>();
-			Storage.TryWrite(ProfilesFile, new ProfilesFileFormat()
+			IPlayerProfileService profileService = ServiceProvider.GetRequiredService<IPlayerProfileService>();
+			IStorageSystem storage = ServiceProvider.GetRequiredService<IStorageSystem>();
+			
+			//IPlayerProfileService profileService = Alex.Services.GetService<IPlayerProfileService>();
+			storage.TryWrite(ProfilesFile, new ProfilesFileFormat()
 			{
 				Profiles = Profiles.Values.ToArray(),
 				SelectedProfile = profileService?.CurrentProfile?.Uuid ?? string.Empty
@@ -93,11 +103,14 @@ namespace Alex
 
 		public void CreateOrUpdateProfile(ProfileType type, PlayerProfile profile, bool setActive = false)
 		{
+			IPlayerProfileService profileService = ServiceProvider.GetRequiredService<IPlayerProfileService>();
+			var alex = ServiceProvider.GetRequiredService<Alex>();
+			
 			if (profile.Skin.Texture == null)
 			{
-				if (Alex.Resources.ResourcePack.TryGetBitmap("entity/alex", out var rawTexture))
+				if (alex.Resources.ResourcePack.TryGetBitmap("entity/alex", out var rawTexture))
 				{
-					profile.Skin.Texture = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, rawTexture);
+					profile.Skin.Texture = TextureUtils.BitmapToTexture2D(alex.GraphicsDevice, rawTexture);
 					profile.Skin.Slim = true;
 				}
 				
@@ -119,11 +132,11 @@ namespace Alex
 			if (setActive)
 			{
 				//ActiveProfile = savedProfile;
-				Alex.Services.GetService<IPlayerProfileService>()?.Force(profile);
+				profileService?.Force(profile);
 				//_playerProfileService.Force(profile);
 			}
 
-			Alex.UIThreadQueue.Enqueue(SaveProfiles);
+			alex.UIThreadQueue.Enqueue(SaveProfiles);
 		}
 
 		public PlayerProfile[] GetBedrockProfiles()

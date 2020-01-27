@@ -10,6 +10,7 @@ using App.Metrics.Gauge;
 using App.Metrics.Meter;
 using App.Metrics.Timer;
 using MetricsPlugin.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using NLog;
 using StackExchange.Profiling;
 
@@ -39,11 +40,11 @@ namespace MetricsPlugin.Metrics
         private IGauge ChunkBlockCount { get; set; }
         
         private Alex.Alex Alex { get; }
-        public ProfilerMetrics(Alex.Alex alex)
+        public ProfilerMetrics(Alex.Alex alex, ProfilerService profilerService)
         {
             Alex = alex;
 
-            ProfilerService = alex.Services.GetService<ProfilerService>();
+            ProfilerService = profilerService;
             ProfilerService.OnProfilerStarted += ProfilerServiceOnOnProfilerStarted;
             ProfilerService.OnProfilerStopped += ProfilerServiceOnOnProfilerStopped;
             ProfilerService.OnCounter += ProfilerServiceOnOnCounter;

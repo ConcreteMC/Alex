@@ -21,6 +21,7 @@ using Alex.Graphics.Camera;
 using Alex.Graphics.Models;
 using Alex.Graphics.Models.Items;
 using Alex.ResourcePackLib.Json.Models.Items;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET.Utils;
@@ -62,7 +63,7 @@ namespace Alex.Worlds
 			PlayerList = new PlayerList();
 
 			ChunkManager.Start();
-			var profileService = alex.Services.GetService<IPlayerProfileService>();
+			var profileService = alex.Services.GetRequiredService<IPlayerProfileService>();
 			string username = string.Empty;
 			Skin skin = profileService?.CurrentProfile?.Skin;
 			if (skin == null)

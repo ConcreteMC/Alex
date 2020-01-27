@@ -118,7 +118,7 @@ namespace Alex.Services
 						pingTime = sw.ElapsedMilliseconds;
 					    ar.Set();
 
-						pingCallback.BeginInvoke(new ServerPingResponse(true, pingTime), pingCallback.EndInvoke, null);
+						pingCallback.Invoke(new ServerPingResponse(true, pingTime));
 				    };
 
 				    client.StartClient();

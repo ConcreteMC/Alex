@@ -33,6 +33,7 @@ using Alex.Networking.Java.Util;
 using Alex.Networking.Java.Util.Encryption;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET.Utils;
@@ -77,7 +78,7 @@ namespace Alex.Worlds.Java
 			Profile = profile;
 			Endpoint = endPoint;
 			
-			OptionsProvider = alex.Services.GetService<IOptionsProvider>();
+			OptionsProvider = alex.Services.GetRequiredService<IOptionsProvider>();
 			
 			ThreadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount));
 

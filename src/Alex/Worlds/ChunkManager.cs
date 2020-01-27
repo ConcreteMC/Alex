@@ -17,6 +17,7 @@ using Alex.Graphics.Models.Blocks;
 using Alex.Services;
 using Alex.Utils;
 using Alex.Worlds.Lighting;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using NLog;
@@ -59,7 +60,7 @@ namespace Alex.Worlds
 	        Graphics = graphics;
 	        World = world;
 	        Options = option;
-	        ProfilerService = alex.Services.GetService<ProfilerService>();
+	        ProfilerService = alex.Services.GetRequiredService<ProfilerService>();
 	        
 	        Chunks = new ConcurrentDictionary<ChunkCoordinates, IChunkColumn>();
 	        
@@ -410,27 +411,7 @@ namespace Alex.Worlds
 	    #endregion
 	    
 	    #region Chunk Updates
-	    
-	    private void InitiateChunk(IChunkColumn chunkColumn, ChunkCoordinates chunkCoordinates)
-	    {
-		    var chunkCoords = new BlockCoordinates(chunkCoordinates.X * 16, 0, chunkCoordinates.Z * 16);
 
-		    for (int x = 0; x < 16; x++)
-		    {
-			    for (int z = 0; z < 16; z++)
-			    {
-				    for (int y = 255; y > 0; y--)
-				    {
-					    var blockState = chunkColumn.GetBlockState(x, y, z);
-					    if (blockState.Block is Block b)
-					    {
-						    b.BlockPlaced(World, blockState, chunkCoords + new BlockCoordinates(x, y, z));
-					    }
-				    }
-			    }
-		    }
-	    }
-	    
 	    private void ChunkUpdateThread()
 		{
 			 //Environment.ProcessorCount / 2;

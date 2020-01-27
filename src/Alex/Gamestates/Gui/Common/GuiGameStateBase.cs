@@ -3,6 +3,7 @@ using Alex.API.Graphics;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Utils;
+using Microsoft.Extensions.DependencyInjection;
 using NLog;
 using RocketUI;
 
@@ -90,7 +91,7 @@ namespace Alex.GameStates.Gui.Common
 
         public TService GetService<TService>() where TService : class
         {
-            return Alex.Services.GetService<TService>();
+            return Alex.Services.GetRequiredService<TService>();
         }
 		
         protected virtual void OnShow() { }

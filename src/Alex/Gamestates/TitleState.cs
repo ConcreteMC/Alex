@@ -21,6 +21,7 @@ using Alex.Services;
 using Alex.Utils;
 using Alex.Worlds;
 using Alex.Worlds.Generators;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using MiNET.Net;
@@ -197,7 +198,7 @@ namespace Alex.GameStates
 
 		private void BedrockEditionButtonPressed()
 		{
-			var client = Alex.Services.GetService<XBLMSAService>();
+			var client = Alex.Services.GetRequiredService<XBLMSAService>();
 			var t = client.AsyncBrowserLogin();
 		}
 

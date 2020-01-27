@@ -35,6 +35,7 @@ using Alex.Utils;
 using Alex.Worlds;
 using Alex.Worlds.Bedrock;
 using Alex.Worlds.Java;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET.Utils;
@@ -75,17 +76,20 @@ namespace Alex
 
 		public GraphicsDeviceManager DeviceManager { get; }
 
-		public ProfileManager ProfileManager { get; private set; }
+		//public ProfileManager ProfileManager { get; private set; }
 		
 		internal ConcurrentQueue<Action> UIThreadQueue { get; }
 
-		internal StorageSystem Storage { get; private set; }
+		//internal StorageSystem Storage { get; private set; }
 
 		private LaunchSettings LaunchSettings { get; }
 		//public ChromiumWebBrowser CefWindow { get; private set; }
 		public PluginManager PluginManager { get; }
         public FpsMonitor FpsMonitor { get; }
-        private IPlayerProfileService ProfileService { get; set; }
+        //private IPlayerProfileService ProfileService { get; set; }
+        
+        public new IServiceProvider Services { get; set; }
+        
         public Alex(LaunchSettings launchSettings)
 		{
 			Instance = this;
@@ -98,7 +102,6 @@ namespace Alex
 				GraphicsProfile = GraphicsProfile.Reach,
 			};
 			
-
 			Content.RootDirectory = "assets";
 
 			IsFixedTimeStep = false;
@@ -136,10 +139,15 @@ namespace Alex
 				},
 				Formatting = Formatting.Indented
 			};
+			
+			IServiceCollection serviceCollection = new ServiceCollection();
+			ConfigureServices(serviceCollection);
 
+			Services = serviceCollection.BuildServiceProvider();
+			
 			UIThreadQueue = new ConcurrentQueue<Action>();
 
-            PluginManager = new PluginManager(this);
+            PluginManager = new PluginManager(Services);
             FpsMonitor = new FpsMonitor();
 
 			foreach(var assembly in AppDomain.CurrentDomain.GetAssemblies())
@@ -187,10 +195,6 @@ namespace Alex
 
 			GuiDebugHelper = new GuiDebugHelper(GuiManager);
 
-			AlexIpcService = new AlexIpcService();
-			Services.AddService<AlexIpcService>(AlexIpcService);
-			AlexIpcService.Start();
-
 			OnCharacterInput += GuiManager.FocusManager.OnTextInput;
 
 			GameStateManager = new GameStateManager(GraphicsDevice, _spriteBatch, GuiManager);
@@ -203,8 +207,6 @@ namespace Alex
 			//	Log.Info($"Initializing Alex...");
 			ThreadPool.QueueUserWorkItem((o) => { InitializeGame(splash); });
 		}
-
-		private AlexIpcService AlexIpcService;
 
 		private void SetVSync(bool enabled)
 		{
@@ -240,19 +242,18 @@ namespace Alex
 			});
 		}
 		
-		private void ConfigureServices()
+		private void ConfigureServices(IServiceCollection services)
 		{
-			XBLMSAService msa;
 			var storage = new StorageSystem(LaunchSettings.WorkDir);
-			ProfileManager = new ProfileManager(this, storage);
 
-
-			Services.AddService<IStorageSystem>(storage);
-			
-			var optionsProvider = new OptionsProvider(storage);
+			services.AddSingleton<Alex>(this);
+			services.AddSingleton<IStorageSystem>(storage);
+			services.AddSingleton<IOptionsProvider, OptionsProvider>();
+			services.AddSingleton<ProfileManager>();
+			//var optionsProvider = new OptionsProvider(storage);
 			//optionsProvider.Load();
 			
-			optionsProvider.AlexOptions.VideoOptions.UseVsync.Bind((value, newValue) => { SetVSync(newValue); });
+			/*optionsProvider.AlexOptions.VideoOptions.UseVsync.Bind((value, newValue) => { SetVSync(newValue); });
 			if (optionsProvider.AlexOptions.VideoOptions.UseVsync.Value)
 			{
 				SetVSync(true);
@@ -264,29 +265,29 @@ namespace Alex
 				SetFullscreen(true);
 			}
 			
-			Services.AddService<IOptionsProvider>(optionsProvider);
+			Services.AddService<IOptionsProvider>(optionsProvider);*/
 
-			Services.AddService<IListStorageProvider<SavedServerEntry>>(new SavedServerDataProvider(storage));
+			services.AddSingleton<IListStorageProvider<SavedServerEntry>, SavedServerDataProvider>();
 			
-			Services.AddService(msa = new XBLMSAService());
+			services.AddSingleton<XBLMSAService>();
 			
-			Services.AddService<IServerQueryProvider>(new ServerQueryProvider(this));
-			Services.AddService<IPlayerProfileService>(ProfileService = new PlayerProfileService(msa, ProfileManager));
-
-            var profilingService = new ProfilerService();
-            Services.AddService<ProfilerService>(profilingService);
+			services.AddSingleton<IServerQueryProvider>(new ServerQueryProvider(this));
+			services.AddSingleton<IPlayerProfileService, PlayerProfileService>();
+			services.AddSingleton<ProfilerService>();
             
-            Services.AddService<IRegistryManager>(new RegistryManager());
-
-            Storage = storage;
+            services.AddSingleton<IRegistryManager, RegistryManager>();
+            services.AddSingleton<AlexIpcService>();
+            
+            //Storage = storage;
 		}
 
 		protected override void UnloadContent()
 		{
-			ProfileManager.SaveProfiles();
+			//ProfileManager.SaveProfiles();
 			
 			Services.GetService<IOptionsProvider>().Save();
-			AlexIpcService.Stop();
+			Services.GetService<AlexIpcService>().Stop();
+
 			GuiDebugHelper.Dispose();
 
             PluginManager.UnloadAll();
@@ -332,10 +333,23 @@ namespace Alex
 			Extensions.Init(GraphicsDevice);
 			MCPacketFactory.Load();
 
-			ConfigureServices();
+			//ConfigureServices();
 
 			var options = Services.GetService<IOptionsProvider>();
-
+			options.Load();
+			
+			options.AlexOptions.VideoOptions.UseVsync.Bind((value, newValue) => { SetVSync(newValue); });
+			if (options.AlexOptions.VideoOptions.UseVsync.Value)
+			{
+				SetVSync(true);
+			}
+			
+			options.AlexOptions.VideoOptions.Fullscreen.Bind((value, newValue) => { SetFullscreen(newValue); });
+			if (options.AlexOptions.VideoOptions.Fullscreen.Value)
+			{
+				SetFullscreen(true);
+			}
+			
 			string pluginDirectoryPaths = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
 
             var pluginDir = options.AlexOptions.ResourceOptions.PluginDirectory;
@@ -363,7 +377,8 @@ namespace Alex
             }
 
 
-            ProfileManager.LoadProfiles(progressReceiver);
+            var profileManager = Services.GetService<ProfileManager>();
+            profileManager.LoadProfiles(progressReceiver);
 
 			//	Log.Info($"Loading resources...");
 			Resources = new ResourceManager(GraphicsDevice, Services);
@@ -379,6 +394,8 @@ namespace Alex
 			GuiRenderer.LoadResourcePack(Resources.ResourcePack);
 			AnvilWorldProvider.LoadBlockConverter();
 
+			PluginManager.EnablePlugins();
+			
 			if (LaunchSettings.ModelDebugging)
 			{
 				GameStateManager.SetActiveState<ModelDebugState>();

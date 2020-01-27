@@ -15,6 +15,7 @@ using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Entities;
 using Alex.Worlds.Generators;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using MiNET;
 using MiNET.Net;
@@ -87,7 +88,7 @@ namespace Alex.Worlds
 		public SPWorldProvider(Alex alex, IWorldGenerator worldGenerator)
 		{
 			Alex = alex;
-			OptionsProvider = alex.Services.GetService<IOptionsProvider>();
+			OptionsProvider = alex.Services.GetRequiredService<IOptionsProvider>();
 			
 			_generator = worldGenerator;
 		

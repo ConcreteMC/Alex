@@ -46,7 +46,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 		{
 			_skyBox = skyBox;
 
-			_listProvider = Alex.Services.GetService<IListStorageProvider<SavedServerEntry>>();
+			_listProvider = GetService<IListStorageProvider<SavedServerEntry>>();
 
 		    Title = "Multiplayer";
 
@@ -161,7 +161,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 
 				IPEndPoint target = new IPEndPoint(ip, entry.Port);
 
-				var authenticationService = Alex.Services.GetService<IPlayerProfileService>();
+				var authenticationService = GetService<IPlayerProfileService>();
 				var currentProfile = authenticationService.CurrentProfile;
 
 				if (entry.ServerType == ServerType.Java)
@@ -247,12 +247,13 @@ namespace Alex.GameStates.Gui.Multiplayer
 
 	    private void LoadH()
 	    {
+		    var queryProvider = GetService<IServerQueryProvider>();
 		    _listProvider.Load();
 
 		    ClearItems();
 		    foreach (var entry in _listProvider.Data.ToArray())
 		    {
-			    AddItem(new GuiServerListEntryElement(entry));
+			    AddItem(new GuiServerListEntryElement(queryProvider, entry));
 		    }
 
 		    PingAll(false);
@@ -278,6 +279,8 @@ namespace Alex.GameStates.Gui.Multiplayer
 
 	    private void AddEditServerCallbackAction(SavedServerEntry obj)
 	    {
+		    var queryProvider = GetService<IServerQueryProvider>();
+		    
 		    if (obj == null) return; //Cancelled.
 
 		    for (var index = 0; index < Items.Length; index++)
@@ -286,7 +289,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 
 			    if (entry.InternalIdentifier.Equals(obj.IntenalIdentifier))
 			    {
-					var newEntry = new GuiServerListEntryElement(obj);
+					var newEntry = new GuiServerListEntryElement(queryProvider, obj);
 
 				    Items[index] = newEntry;
 
@@ -346,13 +349,15 @@ namespace Alex.GameStates.Gui.Multiplayer
 
 	    internal SavedServerEntry SavedServerEntry;
 		internal Guid InternalIdentifier = Guid.NewGuid();
-	    public GuiServerListEntryElement(SavedServerEntry entry) : this(entry.ServerType == ServerType.Java ? $"§oJAVA§r - {entry.Name}" : $"§oPOCKET§r - {entry.Name}", entry.Host + ":" + entry.Port)
+	    public GuiServerListEntryElement(IServerQueryProvider queryProvider, SavedServerEntry entry) : this(queryProvider, entry.ServerType == ServerType.Java ? $"§oJAVA§r - {entry.Name}" : $"§oPOCKET§r - {entry.Name}", entry.Host + ":" + entry.Port)
 	    {
 		    SavedServerEntry = entry;
 	    }
 
-	    private GuiServerListEntryElement(string serverName, string serverAddress)
+	    private IServerQueryProvider QueryProvider { get; }
+	    private GuiServerListEntryElement(IServerQueryProvider queryProvider, string serverName, string serverAddress)
 	    {
+		    QueryProvider = queryProvider;
 		    SetFixedSize(355, 36);
 		    
             ServerName = serverName;
@@ -490,14 +495,14 @@ namespace Alex.GameStates.Gui.Multiplayer
 		    SetConnectingState(true);
 
 		  //  ServerQueryResponse result;
-		    var queryProvider = Alex.Instance.Services.GetService<IServerQueryProvider>();
+		   // var queryProvider = Alex.GetService<IServerQueryProvider>();
 		    if (SavedServerEntry.ServerType == ServerType.Bedrock)
 		    {
-			    await queryProvider.QueryBedrockServerAsync(address, port, PingCallback, QueryCompleted);//(ContinuationAction);
+			    await QueryProvider.QueryBedrockServerAsync(address, port, PingCallback, QueryCompleted);//(ContinuationAction);
 		    }
 		    else
 		    {
-			    await queryProvider.QueryServerAsync(address, port, PingCallback, QueryCompleted);
+			    await QueryProvider.QueryServerAsync(address, port, PingCallback, QueryCompleted);
 		    }
 
 		    //QueryCompleted(result);
