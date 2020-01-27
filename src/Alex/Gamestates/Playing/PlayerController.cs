@@ -92,6 +92,7 @@ namespace Alex.GameStates.Playing
 		}
 
 	    public float LastSpeedFactor = 0f;
+	    private Vector3 LastVelocity { get; set; } = Vector3.Zero;
 	    private void CheckMovementInput(GameTime gt)
 	    {
 		    if (!_allowMovementInput) return;
@@ -182,10 +183,12 @@ namespace Alex.GameStates.Playing
 					}
 					else
 					{
-						if (Player.KnownPosition.OnGround && Math.Abs(Math.Floor(Player.KnownPosition.Y) - Player.KnownPosition.Y) < 0.001f)
+						if (Player.KnownPosition.OnGround && Player.Velocity.Y <= 0.00001f &&
+						    Player.Velocity.Y >= -0.00001f && Math.Abs(LastVelocity.Y - Player.Velocity.Y) < 0.0001f
+						)
 						{
-						//	moveVector.Y += 42f;
-							Player.Velocity += new Vector3(0f, 2.25f, 0f);// //, 0);
+							//	moveVector.Y += 42f;
+							Player.Velocity += new Vector3(0f, 4.65f, 0f); // //, 0);
 						}
 					}
 				}
@@ -273,6 +276,8 @@ namespace Alex.GameStates.Playing
 					_previousMousePosition = e;
 				}
 			}
-		}
+
+			LastVelocity = Player.Velocity;
+	    }
     }
 }

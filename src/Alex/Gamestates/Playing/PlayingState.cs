@@ -117,6 +117,7 @@ namespace Alex.GameStates.Playing
 			{
 				return $"Biome: {_currentBiome.Name} ({_currentBiomeId})";
 			});
+			_debugInfo.AddDebugLeft(() => { return $"Always Day: {AlwaysDay}"; });
 
 			_debugInfo.AddDebugRight(() => Alex.DotnetRuntime);
 			//_debugInfo.AddDebugRight(() => MemoryUsageDisplay);
@@ -210,7 +211,13 @@ namespace Alex.GameStates.Playing
 					World.Player.Controller.CheckInput = false;
 				}
 
-				SkyRenderer.Update(args);
+				if (!AlwaysDay)
+					SkyRenderer.Update(args);
+				else
+				{
+					World.SetTime(1200);
+				}
+				
 				World.Update(args, SkyRenderer);
 
 				var now = DateTime.UtcNow;
@@ -312,6 +319,7 @@ namespace Alex.GameStates.Playing
 		private Microsoft.Xna.Framework.BoundingBox RayTraceBoundingBox { get; set; }
 		private bool RenderDebug { get; set; } = true;
 		private bool RenderBoundingBoxes { get; set; } = false;
+		private bool AlwaysDay { get; set; } = false;
 		
 		private KeyboardState _oldKeyboardState;
 		protected void CheckInput(GameTime gameTime) //TODO: Move this input out of the main update loop and use the new per-player based implementation by @TruDan
@@ -322,7 +330,15 @@ namespace Alex.GameStates.Playing
 				if (KeyBinds.EntityBoundingBoxes.All(x => currentKeyboardState.IsKeyDown(x)))
 				{
 					RenderBoundingBoxes = !RenderBoundingBoxes;
-				} 
+				}
+				else if (KeyBinds.AlwaysDay.All(x => currentKeyboardState.IsKeyDown(x)))
+				{
+					if (!AlwaysDay)
+					{
+						World.SetTime(1200);
+					}
+					AlwaysDay = !AlwaysDay;
+				}
 				else if (currentKeyboardState.IsKeyDown(KeyBinds.DebugInfo))
 				{
 					RenderDebug = !RenderDebug;

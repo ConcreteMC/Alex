@@ -50,7 +50,7 @@ namespace Alex.Entities
 		public double Width { get; set; } = 1;
 		public double Length { get; set; } = 1;
 		public double Drag { get; set; } = 0.4f;
-		public double Gravity { get; set; } = 1.6f;
+		public double Gravity { get; set; } = 9.81f; //1.6f;
 		public float TerminalVelocity { get; set; } = 78.4f;
 
 		public double MovementSpeed { get; set; } = 0.1F;
@@ -86,6 +86,11 @@ namespace Alex.Entities
 			
 			if (inHand == null && ItemRenderer != null)
 			{
+				if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
+				{
+					bone.Detach(ItemRenderer);
+				}
+				
 				ItemRenderer = null;
 				return;
 			}
@@ -112,7 +117,7 @@ namespace Alex.Entities
 					
 					if (this is Player)
 					{
-						if (itemModel.Display.TryGetValue("thirdperson_righthand", out var value))
+						if (itemModel.Display.TryGetValue("firstperson_righthand", out var value))
 						{
 							ItemRenderer.Rotation = value.Rotation;
 							ItemRenderer.Translation = value.Translation;
@@ -120,7 +125,7 @@ namespace Alex.Entities
 							
 							if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
 							{
-								Log.Info($"First Person item model rendering ready.");
+						//		Log.Info($"First Person item model rendering ready.");
 
 								bone.Attach(ItemRenderer);
 							}
@@ -144,7 +149,7 @@ namespace Alex.Entities
 							
 							if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
 							{
-								Log.Info($"Third Person item model rendering ready.");
+						//		Log.Info($"Third Person item model rendering ready.");
 
 								bone.Attach(ItemRenderer);
 							}
@@ -197,9 +202,9 @@ namespace Alex.Entities
 		public bool ShowItemInHand { get; set; } = false;
 		public void Render(IRenderArgs renderArgs)
 		{
-			if (RenderEntity)
+			if (RenderEntity || ShowItemInHand)
 			{
-				ModelRenderer.Render(renderArgs, KnownPosition);
+				ModelRenderer.Render(renderArgs, KnownPosition, !RenderEntity);
 			}
 			if (ShowItemInHand)
 			{
@@ -215,14 +220,14 @@ namespace Alex.Entities
 			if (RenderEntity || ShowItemInHand)
 			{
 				ModelRenderer.Update(args, KnownPosition);
+				
+				if (ShowItemInHand)
+				{
+					//ItemRenderer?.World = 
+					ItemRenderer?.Update(args.GraphicsDevice, args.Camera);
+				}
 			}
 			
-			if (ShowItemInHand)
-			{
-				//ItemRenderer?.World = 
-				ItemRenderer?.Update(args.GraphicsDevice, args.Camera);
-			}
-
 			if (now.Subtract(LastUpdatedTime).TotalMilliseconds >= 50)
 			{
 				LastUpdatedTime = now;
@@ -232,7 +237,7 @@ namespace Alex.Entities
 				}
 				catch(Exception e)
 				{
-					Log.Warn($"Exception while trying to tick entity!", e);
+					Log.Warn(e, $"Exception while trying to tick entity!");
 				}
 			}
 		}

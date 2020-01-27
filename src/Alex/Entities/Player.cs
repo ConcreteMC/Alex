@@ -52,7 +52,7 @@ namespace Alex.Entities
 			SnapHeadYawRotationOnMovement = false;
 
 			RenderEntity = true;
-			
+			ShowItemInHand = false;
 		}
 
 	    private void SelectedHotbarSlotChanged(object sender, SelectedSlotChangedEventArgs e)

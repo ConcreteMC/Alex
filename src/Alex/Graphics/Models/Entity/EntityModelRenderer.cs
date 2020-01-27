@@ -163,14 +163,14 @@ namespace Alex.Graphics.Models.Entity
 			return vertices;
 		}
 
-		public void Render(IRenderArgs args, PlayerLocation position)
+		public void Render(IRenderArgs args, PlayerLocation position, bool mock)
 		{
 			args.GraphicsDevice.SetVertexBuffer(VertexBuffer);
 
 			if (Bones == null) return;
 			foreach (var bone in Bones)
 			{
-				bone.Value.Render(args, position, CharacterMatrix);
+				bone.Value.Render(args, position, CharacterMatrix, mock);
 			}
 		}
 

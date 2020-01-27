@@ -56,7 +56,7 @@ namespace Alex.Entities
 
 			HideNameTag = false;
 			IsAlwaysShowName = true;
-			ShowItemInHand = false;
+			ShowItemInHand = true;
 			
 			IsInWater = false;
 			NoAi = true;

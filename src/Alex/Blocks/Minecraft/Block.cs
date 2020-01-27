@@ -105,7 +105,7 @@ namespace Alex.Blocks.Minecraft
 			HasHitbox = true;
 		}
 
-		public Microsoft.Xna.Framework.BoundingBox GetBoundingBox(Vector3 blockPosition)
+		public virtual Microsoft.Xna.Framework.BoundingBox GetBoundingBox(Vector3 blockPosition)
 	    {
 			if (BlockState == null)
 				return new Microsoft.Xna.Framework.BoundingBox(blockPosition, blockPosition + Vector3.One);
@@ -113,6 +113,14 @@ namespace Alex.Blocks.Minecraft
 		    return BlockState.Model.GetBoundingBox(blockPosition, this);
 		}
 
+		public virtual BoundingBox GetPartBoundingBox(Vector3 blockPosition, Vector3 entityPosition)
+		{
+			if (BlockState == null)
+				return new Microsoft.Xna.Framework.BoundingBox(blockPosition, blockPosition + Vector3.One);
+
+			return BlockState.Model.GetPartBoundingBox(blockPosition, entityPosition);
+		}
+		
 		public virtual IBlockState BlockPlaced(IWorld world, IBlockState state, BlockCoordinates position)
 		{
 			return state;

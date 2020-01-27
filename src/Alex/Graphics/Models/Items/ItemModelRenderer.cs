@@ -25,8 +25,9 @@ namespace Alex.Graphics.Models.Items
 		public Vector3 Rotation { get; set; } = Vector3.Zero;
 		public Vector3 Translation { get; set; }= Vector3.Zero;
 		public Vector3 Scale { get; set; }= Vector3.Zero;
-		
-		
+
+		private VertexBuffer Buffer { get; set; } = null;
+		private IndexBuffer IndexBuffer { get; set; } = null;
 		public ItemModelRenderer(ResourcePackItem model, McResourcePack resourcePack)
 		{
 			Model = model;
@@ -74,6 +75,17 @@ namespace Alex.Graphics.Models.Items
 				Matrix.CreateTranslation(new Vector3(Translation.X, Translation.Y + 8f, (Translation.Z - 8f)));
 			
 			Effect.World = pieceMatrix * ParentMatrix;
+
+			if (Buffer == null)
+			{
+				Buffer = GpuResourceManager.GetBuffer(this, device, VertexPositionColor.VertexDeclaration,
+					Vertices.Length, BufferUsage.WriteOnly);
+				IndexBuffer = GpuResourceManager.GetIndexBuffer(this, device, IndexElementSize.SixteenBits,
+					Indexes.Length, BufferUsage.WriteOnly);
+				
+				Buffer.SetData(Vertices);
+				IndexBuffer.SetData(Indexes);
+			}
 		}
 
 		private void DrawLine(GraphicsDevice device, Vector3 start, Vector3 end, Color color)
@@ -84,18 +96,21 @@ namespace Alex.Graphics.Models.Items
 		
 		public void Render(GraphicsDevice device)
 		{
-			if (Effect == null || Vertices == null || Vertices.Length == 0)
+			if (Effect == null || Buffer == null || Buffer.VertexCount == 0)
 				return;
-			
+
 			foreach (var a in Effect.CurrentTechnique.Passes)
 			{
 				a.Apply();
 
-				DrawLine(device, Vector3.Zero, Vector3.Up, Color.Green);
-				DrawLine(device, Vector3.Zero, Vector3.Forward, Color.Blue);
-				DrawLine(device, Vector3.Zero, Vector3.Right, Color.Red);
-				
-				device.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, Vertices, 0, Vertices.Length, Indexes, 0, Indexes.Length / 3);
+				//DrawLine(device, Vector3.Zero, Vector3.Up, Color.Green);
+				//	DrawLine(device, Vector3.Zero, Vector3.Forward, Color.Blue);
+				//	DrawLine(device, Vector3.Zero, Vector3.Right, Color.Red);
+
+				device.Indices = IndexBuffer;
+				device.SetVertexBuffer(Buffer);
+				device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, IndexBuffer.IndexCount / 3);
+				//device.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, Vertices, 0, Vertices.Length, Indexes, 0, Indexes.Length / 3);
 			}
 		}
 		
@@ -163,6 +178,8 @@ namespace Alex.Graphics.Models.Items
 		    }
 
 		    Indexes = indexes.ToArray();
+		  
+			//Buffer = GpuResourceManager.GetBuffer(this, )
 	    }
 	    
 	    private List<VertexPositionColor> ModifyCubeIndexes(List<VertexPositionColor> vertices,

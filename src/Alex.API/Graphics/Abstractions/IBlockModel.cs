@@ -7,5 +7,6 @@ namespace Alex.API.Graphics
 	{
 		(VertexPositionNormalTextureColor[] vertices, int[] indexes) GetVertices(IWorld world, Vector3 position, IBlock baseBlock);
 		BoundingBox GetBoundingBox(Vector3 position, IBlock requestingBlock);
+		BoundingBox GetPartBoundingBox(Vector3 position, Vector3 entityPosition);
 	}
 }

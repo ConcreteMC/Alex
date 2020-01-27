@@ -26,6 +26,8 @@ namespace Alex.Graphics.Models.Blocks
 		
 		protected Vector3 Min = new Vector3(float.MaxValue);
 		protected Vector3 Max = new Vector3(float.MinValue);
+		
+		private BoundingBox[] Boxes { get; set; } = new BoundingBox[0];
 		public CachedResourcePackModel(ResourceManager resources, BlockStateModel[] models)
 		{
 			Resources = resources;
@@ -35,6 +37,23 @@ namespace Alex.Graphics.Models.Blocks
 			{
 				_elementCache = CalculateModel(models);
 			}
+		}
+
+		public override BoundingBox GetPartBoundingBox(Vector3 position, Vector3 entityPosition)
+		{
+			var relativePosition = entityPosition - position;
+			//var relativeNoY = new Vector3(relativePosition.X, 0f, relativePosition.Z);
+			
+			foreach (var box in Boxes)
+			{
+				if (box.Min.X <= relativePosition.X && box.Max.X >= relativePosition.X
+				    && box.Min.Z <= relativePosition.Z && box.Max.Z >= relativePosition.Z)
+				{
+					return new BoundingBox(position + box.Min, position + box.Max);
+				}
+			}
+			
+			return base.GetPartBoundingBox(position, entityPosition);
 		}
 
 		public override BoundingBox GetBoundingBox(Vector3 position, IBlock requestingBlock)
@@ -207,6 +226,7 @@ namespace Alex.Graphics.Models.Blocks
 				
 			var model = raw.Model;
 
+			List<BoundingBox> boxes = new List<BoundingBox>();
 			for (var index = 0; index < model.Elements.Length; index++)
 			{
 				var element = model.Elements[index];
@@ -264,78 +284,9 @@ namespace Alex.Graphics.Models.Blocks
 					for (int i = 0; i < verts.Length; i++)
 					{
 						var v = verts[i];
-						
-						if (element.Rotation.Axis != Axis.Undefined)
-						{
-							var r = element.Rotation;
-							var angle = (float) (r.Angle * (Math.PI / 180f));
-							
-							//angle = r.Axis == Axis.Z ? angle : -angle;
-							//angle = r.Axis == Axis.Y ? -angle : angle;
-							
-							var origin = r.Origin;
-							
-							var c = MathF.Cos(angle);
-							var s = MathF.Sin(angle);
-							
-							switch (r.Axis)
-							{
-								case Axis.Y:
-								{
-									var x = v.Position.X - origin.X;
-									var z = v.Position.Z - origin.Z;
 
-									v.Position.X = origin.X + (x * c - z * s);
-									v.Position.Z = origin.Z + (z * c + x * s);
-								}
-									break;
+						v.Position = FixRotation(v.Position, raw, element);
 
-								case Axis.X:
-								{
-									var x = v.Position.Z - origin.Z;
-									var z = v.Position.Y - origin.Y;
-
-									v.Position.Z = origin.Z + (x * c - z * s);
-									v.Position.Y = origin.Y + (z * c + x * s);
-								}
-									break;
-
-								case Axis.Z:
-								{
-									var x = v.Position.X - origin.X;
-									var z = v.Position.Y - origin.Y;
-
-									v.Position.X = origin.X + (x * c - z * s);
-									v.Position.Y = origin.Y + (z * c + x * s);
-								}
-									break;
-							}
-						}
-
-						if (raw.X > 0)
-						{
-							var rotX = (float) (raw.X * (Math.PI / 180f));
-							var c = MathF.Cos(rotX);
-							var s = MathF.Sin(rotX);
-							var z = v.Position.Z - 8f;
-							var y = v.Position.Y - 8f;
-
-							v.Position.Z = 8f + (z * c - y * s);
-							v.Position.Y = 8f + (y * c + z * s);
-						}
-
-						if (raw.Y > 0)
-						{
-							var rotX = (float) (raw.Y * (Math.PI / 180f));
-							var c = MathF.Cos(rotX);
-							var s = MathF.Sin(rotX);
-							var z = v.Position.X - 8f;
-							var y = v.Position.Z - 8f;
-
-							v.Position.X = 8f + (z * c - y * s);
-							v.Position.Z = 8f + (y * c + z * s);
-						}
-						
 						v.Position /= 16f;
 						
 						if (v.Position.X < minX)
@@ -443,12 +394,95 @@ namespace Alex.Graphics.Models.Blocks
 					cache.Set(face.Key, new FaceData(verts, indexes, face.Value.Rotation, null));
 				}
 				faceCaches.Add(index.ToString(), cache);
+				
+				var from = FixRotation(element.From, raw, element);
+				var to = FixRotation(element.To, raw, element);
+
+				boxes.Add(new BoundingBox(from, to));
 			}
 
 			min = new Vector3(facesMinX, facesMinY, facesMinZ);
 			max = new Vector3(facesMaxX, facesMaxY, facesMaxZ);
 
+			Boxes = Boxes.Concat(boxes.ToArray()).ToArray();
+			
 			return faceCaches;
+		}
+
+		private Vector3 FixRotation(Vector3 v, BlockStateModel raw, BlockModelElement element)
+		{
+			if (element.Rotation.Axis != Axis.Undefined)
+			{
+				var r = element.Rotation;
+				var angle = (float) (r.Angle * (Math.PI / 180f));
+							
+				//angle = r.Axis == Axis.Z ? angle : -angle;
+				//angle = r.Axis == Axis.Y ? -angle : angle;
+							
+				var origin = r.Origin;
+							
+				var c = MathF.Cos(angle);
+				var s = MathF.Sin(angle);
+
+				switch (r.Axis)
+				{
+					case Axis.Y:
+					{
+						var x = v.X - origin.X;
+						var z = v.Z - origin.Z;
+
+						v.X = origin.X + (x * c - z * s);
+						v.Z = origin.Z + (z * c + x * s);
+					}
+						break;
+
+					case Axis.X:
+					{
+						var x = v.Z - origin.Z;
+						var z = v.Y - origin.Y;
+
+						v.Z = origin.Z + (x * c - z * s);
+						v.Y = origin.Y + (z * c + x * s);
+					}
+						break;
+
+					case Axis.Z:
+					{
+						var x = v.X - origin.X;
+						var z = v.Y - origin.Y;
+
+						v.X = origin.X + (x * c - z * s);
+						v.Y = origin.Y + (z * c + x * s);
+					}
+						break;
+				}
+			}
+			
+			if (raw.X > 0)
+			{
+				var rotX = (float) (raw.X * (Math.PI / 180f));
+				var c = MathF.Cos(rotX);
+				var s = MathF.Sin(rotX);
+				var z = v.Z - 8f;
+				var y = v.Y - 8f;
+
+				v.Z = 8f + (z * c - y * s);
+				v.Y = 8f + (y * c + z * s);
+			}
+
+			if (raw.Y > 0)
+			{
+				var rotX = (float) (raw.Y * (Math.PI / 180f));
+				var c = MathF.Cos(rotX);
+				var s = MathF.Sin(rotX);
+				var z = v.X - 8f;
+				var y = v.Z - 8f;
+
+				v.X = 8f + (z * c - y * s);
+				v.Z = 8f + (y * c + z * s);
+			}
+
+			return v;
 		}
 
 		protected (VertexPositionNormalTextureColor[] vertices, int[] indexes) GetVertices(IWorld world,
