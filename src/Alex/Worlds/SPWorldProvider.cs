@@ -115,7 +115,7 @@ namespace Alex.Worlds
 				{
 					PreviousChunkCoordinates = currentCoordinates;
 
-					foreach(var chunk in GenerateChunks(currentCoordinates, Options.VideoOptions.RenderDistance))
+					foreach(var chunk in GenerateChunks(currentCoordinates, 24))
 					{
 						var c = (ChunkColumn) chunk;
 

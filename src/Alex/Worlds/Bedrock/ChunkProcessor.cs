@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Alex.API.Blocks.State;
+using Alex.API.Graphics;
 using Alex.Blocks.State;
 using Alex.Blocks.Storage;
 using fNbt;
@@ -104,7 +105,7 @@ namespace Alex.Worlds.Bedrock
 	        Thread.Yield();
         }
 
-        private static ConcurrentDictionary<uint, IBlockState> _convertedStates = new ConcurrentDictionary<uint, IBlockState>();
+        private ConcurrentDictionary<uint, IBlockState> _convertedStates = new ConcurrentDictionary<uint, IBlockState>();
         
         private List<string> Failed { get; set; } = new List<string>();
         private IBlockState GetBlockState(uint palleteId)
@@ -126,7 +127,7 @@ namespace Alex.Worlds.Bedrock
 				        if (t.Name == "Unknown" && !Failed.Contains(bs.Name))
 				        {
 					        Failed.Add(bs.Name);
-					        File.WriteAllText(Path.Combine("failed", bs.Name + ".json"), JsonConvert.SerializeObject(bs, Formatting.Indented));
+					      //  File.WriteAllText(Path.Combine("failed", bs.Name + ".json"), JsonConvert.SerializeObject(bs, Formatting.Indented));
 				        }
 			        }
 
@@ -702,7 +703,23 @@ namespace Alex.Worlds.Bedrock
 						r = r.WithProperty("half", (state.Value == "1") ? "upper" : "lower");
 						break;
 					case "torch_facing_direction":
-						r = r.WithProperty("facing", state.Value);
+						string facingValue = state.Value;
+						switch (facingValue)
+						{
+							case "north":
+								facingValue = "south";
+								break;
+							case "east":
+								facingValue = "west";
+								break;
+							case "south":
+								facingValue = "north";
+								break;
+							case "west":
+								facingValue = "east";
+								break;
+						}
+						r = r.WithProperty("facing", facingValue);
 						break;
 					case "liquid_depth":
 						r = r.WithProperty("level", state.Value);
@@ -753,7 +770,7 @@ namespace Alex.Worlds.Bedrock
 						r = r.WithProperty("age", state.Value);
 						break;
 			        default:
-				        Log.Info($"Unknown property for {record.Name}: {state.Name} - {state.Value}");
+			//	        Log.Info($"Unknown property for {record.Name}: {state.Name} - {state.Value}");
 					//	r = r.WithProperty(state.Name, state.Value);
 						break;
 		        }

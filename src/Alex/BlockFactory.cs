@@ -139,6 +139,7 @@ namespace Alex
 			McResourcePack resourcePack, bool replace,
 			bool reportMissing, IProgressReceiver progressReceiver)
 		{
+			long idCounter = 0;
 			var blockRegistry = registryManager.GetRegistry<Block>();
 
 			var data = BlockData.FromJson(ResourceManager.ReadStringResource("Alex.Resources.NewBlocks.json"));
@@ -167,6 +168,8 @@ namespace Alex
 						defaultState = (BlockState) defaultState.WithPropertyNoResolve(property.Key,
 							property.Value.FirstOrDefault(), false);
 					}
+
+				//	defaultState = (BlockState)defaultState.WithPropertyNoResolve("test", "a", false);
 				}
 
 				foreach (var s in entry.Value.States)
@@ -175,6 +178,7 @@ namespace Alex
 
 					BlockState variantState = (BlockState) (defaultState).CloneSilent();
 					variantState.ID = id;
+					variantState.Name = entry.Key;
 					//variantState.VariantMapper = variantMap;
 
 					if (s.Properties != null)
@@ -223,8 +227,7 @@ namespace Alex
 					}
 
 					var block = registryEntry.Value;
-
-					variantState.Name = entry.Key;
+					
 					variantState.Model = cachedBlockModel;
 					variantState.Default = s.Default;
 
