@@ -162,6 +162,7 @@ namespace Alex.Blocks
 			this.Register(() => new RedGlazedTerracotta().WithLocation("minecraft:red_glazed_terracotta"));
 			this.Register(() => new BlackGlazedTerracotta().WithLocation("minecraft:black_glazed_terracotta"));
 			this.Register(() => new LightGrayGlazedTerracotta().WithLocation("minecraft:light_gray_glazed_terracotta"));
+			this.Register(() => new Terracotta().WithLocation("minecraft:white_terracotta"));
 
 			//Doors
 			this.Register(() => new OakDoor().WithLocation("minecraft:oak_door"));
@@ -172,6 +173,7 @@ namespace Alex.Blocks
 			this.Register(() => new DarkOakDoor().WithLocation("minecraft:dark_oak_door"));
 			this.Register(() => new IronDoor().WithLocation("minecraft:iron_door"));
 
+			//Trap doors
 			this.Register(() => new Trapdoor().WithLocation("minecraft:iron_trapdoor"));
 			this.Register(() => new Trapdoor().WithLocation("minecraft:spruce_trapdoor"));
 			this.Register(() => new Trapdoor().WithLocation("minecraft:oak_trapdoor"));
@@ -204,6 +206,13 @@ namespace Alex.Blocks
 			this.Register(() => new JungleLeaves().WithLocation("minecraft:jungle_leaves"));
 			this.Register(() => new AcaciaLeaves().WithLocation("minecraft:acacia_leaves"));
 			this.Register(() => new DarkOakLeaves().WithLocation("minecraft:dark_oak_leaves"));
+			
+			//Logs
+			this.Register(() => new Log().WithLocation("minecraft:oak_log"));
+			this.Register(() => new Log().WithLocation("minecraft:acacia_log"));
+			this.Register(() => new Log().WithLocation("minecraft:jungle_log"));
+			this.Register(() => new Log().WithLocation("minecraft:spruce_log"));
+			this.Register(() => new Log().WithLocation("minecraft:birch_log"));
 
 			//Fencing
 			this.Register(() => new NetherBrickFence().WithLocation("minecraft:nether_brick_fence"));

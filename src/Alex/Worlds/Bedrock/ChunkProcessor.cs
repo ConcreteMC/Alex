@@ -8,6 +8,7 @@ using Alex.API.Blocks.State;
 using Alex.API.Graphics;
 using Alex.Blocks.State;
 using Alex.Blocks.Storage;
+using Alex.Utils;
 using fNbt;
 using JetBrains.Profiler.Api;
 using MiNET;
@@ -17,6 +18,7 @@ using Newtonsoft.Json;
 using NLog;
 using StackExchange.Profiling;
 using BlockState = Alex.Blocks.State.BlockState;
+using IBlockState = Alex.API.Blocks.State.IBlockState;
 
 namespace Alex.Worlds.Bedrock
 {
@@ -33,8 +35,8 @@ namespace Alex.Worlds.Bedrock
 	    private bool UseAlexChunks { get; }
 	    private BlockingCollection<QueuedChunk> QueuedChunks { get; }
 
-	    public IReadOnlyDictionary<uint, MiNET.Utils.BlockRecord> _blockStateMap { get; set; } =
-		    new Dictionary<uint, MiNET.Utils.BlockRecord>();
+	    public IReadOnlyDictionary<uint, BlockStateContainer> _blockStateMap { get; set; } =
+		    new Dictionary<uint, BlockStateContainer>();
 	    private Thread[] Threads { get; set; }
 	    private CancellationToken CancellationToken { get; }
 	    private int MaxThreads { get; }
@@ -458,7 +460,7 @@ namespace Alex.Worlds.Bedrock
 	        }
         }
 
-        private string GetWoodBlock(BlockRecord record)
+        private string GetWoodBlock(BlockStateContainer record)
         {
 	        string type = "oak";
 	        bool stripped = false;
@@ -469,13 +471,13 @@ namespace Alex.Worlds.Bedrock
 		        switch (state.Name)
 		        {
 			        case "wood_type":
-				        type = state.Value;
+				        type = state.Value();
 				        break;
 			        case "stripped_bit":
-				        stripped = state.Value == "1";
+				        stripped = state.Value() == "1";
 				        break;
 			        case "pillar_axis":
-				        axis = state.Value;
+				        axis = state.Value();
 				        break;
 		        }
 	        }
@@ -489,7 +491,7 @@ namespace Alex.Worlds.Bedrock
 	        return $"minecraft:{result}";
         }
 
-        public bool TryConvertBlockState(BlockRecord record, out IBlockState result)
+        public bool TryConvertBlockState(BlockStateContainer record, out IBlockState result)
         {
 	        if (_convertedStates.TryGetValue((uint) record.RuntimeId, out var alreadyConverted))
 	        {
@@ -504,14 +506,14 @@ namespace Alex.Worlds.Bedrock
 	        switch (record.Name)
 	        {
 		        case "minecraft:torch":
-			        if (record.States.Any(x => x.Name.Equals("torch_facing_direction") && x.Value != "top"))
+			        if (record.States.Any(x => x.Name.Equals("torch_facing_direction") && x.Value() != "top"))
 			        {
 				        searchName = "minecraft:wall_torch";
 			        }
 			        break;
 		        case "minecraft:unlit_redstone_torch":
 		        case "minecraft:redstone_torch":
-			        if (record.States.Any(x => x.Name.Equals("torch_facing_direction") && x.Value != "top"))
+			        if (record.States.Any(x => x.Name.Equals("torch_facing_direction") && x.Value() != "top"))
 			        {
 				        searchName = "minecraft:redstone_wall_torch";
 			        }
@@ -533,17 +535,17 @@ namespace Alex.Worlds.Bedrock
 		        switch (state.Name)
 		        {
 			        case "stone_type":
-				        switch (state.Value)
+				        switch (state.Value())
 				        {
 					        case "granite":
 					        case "diorite":
 					        case "andesite":
-						        searchName = $"minecraft:{state.Value}";
+						        searchName = $"minecraft:{state.Value()}";
 						        break;
 					        case "granite_smooth":
 					        case "diorite_smooth":
 					        case "andesite_smooth":
-						        var split = state.Value.Split('_');
+						        var split = state.Value().Split('_');
 						        searchName = $"minecraft:polished_{split[0]}";
 						        break;
 				        }
@@ -551,23 +553,23 @@ namespace Alex.Worlds.Bedrock
 				        break;
 			        case "old_log_type":
 			        {
-				        searchName = $"minecraft:{state.Value}_log";
+				        searchName = $"minecraft:{state.Value()}_log";
 			        }
 				        break;
 			        case "old_leaf_type":
-				        searchName = $"minecraft:{state.Value}_leaves";
+				        searchName = $"minecraft:{state.Value()}_leaves";
 				        break;
 			        case "wood_type":
 				        switch (record.Name.ToLower())
 				        {
 					        case "minecraft:fence":
-						        searchName = $"minecraft:{state.Value}_fence";
+						        searchName = $"minecraft:{state.Value()}_fence";
 						        break;
 					        case "minecraft:planks":
-						        searchName = $"minecraft:{state.Value}_planks";
+						        searchName = $"minecraft:{state.Value()}_planks";
 						        break;
 					        case "minecraft:wooden_slab":
-						        searchName = $"minecraft:{state.Value}_slab";
+						        searchName = $"minecraft:{state.Value()}_slab";
 						        break;
 					        //  case "minecraft:wood":
 					        //      searchName = $"minecraft:{state.Value}_log";
@@ -578,15 +580,15 @@ namespace Alex.Worlds.Bedrock
 			        case "sapling_type":
 				        //case "old_log_type":
 				        // case "old_leaf_type":
-				        searchName = $"minecraft:{state.Value}_sapling";
+				        searchName = $"minecraft:{state.Value()}_sapling";
 				        //prefix = "_";
 				        break;
 			        case "flower_type":
-				        searchName = $"minecraft:{state.Value}";
+				        searchName = $"minecraft:{state.Value()}";
 				        break;
 			        case "double_plant_type":
 
-				        switch (state.Value)
+				        switch (state.Value())
 				        {
 					        case "grass":
 						        searchName = "minecraft:tall_grass";
@@ -610,19 +612,19 @@ namespace Alex.Worlds.Bedrock
 				        switch (record.Name)
 				        {
 					        case "minecraft:carpet":
-						        searchName = $"minecraft:{state.Value}_carpet";
+						        searchName = $"minecraft:{state.Value()}_carpet";
 						        break;
 					        case "minecraft:wool":
-						        searchName = $"minecraft:{state.Value}_wool";
+						        searchName = $"minecraft:{state.Value()}_wool";
 						        break;
 					        case "minecraft:stained_glass":
-						        searchName = $"minecraft:{state.Value}_stained_glass";
+						        searchName = $"minecraft:{state.Value()}_stained_glass";
 						        break;
 					        case "minecraft:concrete":
-						        searchName = $"minecraft:{state.Value}_concrete";
+						        searchName = $"minecraft:{state.Value()}_concrete";
 						        break;
 					        case "minecraft:stained_glass_pane":
-						        searchName = $"minecraft:{state.Value}_stained_glass_pane";
+						        searchName = $"minecraft:{state.Value()}_stained_glass_pane";
 						        break;
 				        }
 
@@ -688,22 +690,22 @@ namespace Alex.Worlds.Bedrock
 		        {
 			        case "direction":
 			        case "weirdo_direction":
-				        r = FixFacing(r, int.Parse(state.Value));
+				        r = FixFacing(r, int.Parse(state.Value()));
 				        break;
 			        case "upside_down_bit":
-				        r = (r).WithProperty("half", state.Value == "1" ? "top" : "bottom");
+				        r = (r).WithProperty("half", state.Value() == "1" ? "top" : "bottom");
 				        break;
 			        case "door_hinge_bit":
-				        r = r.WithProperty("hinge", (state.Value == "0") ? "left" : "right");
+				        r = r.WithProperty("hinge", (state.Value() == "0") ? "left" : "right");
 				        break;
 					case "open_bit":
-						r = r.WithProperty("open", (state.Value == "1") ? "true" : "false");
+						r = r.WithProperty("open", (state.Value() == "1") ? "true" : "false");
 						break;
 					case "upper_block_bit":
-						r = r.WithProperty("half", (state.Value == "1") ? "upper" : "lower");
+						r = r.WithProperty("half", (state.Value() == "1") ? "upper" : "lower");
 						break;
 					case "torch_facing_direction":
-						string facingValue = state.Value;
+						string facingValue = state.Value();
 						switch (facingValue)
 						{
 							case "north":
@@ -722,19 +724,19 @@ namespace Alex.Worlds.Bedrock
 						r = r.WithProperty("facing", facingValue);
 						break;
 					case "liquid_depth":
-						r = r.WithProperty("level", state.Value);
+						r = r.WithProperty("level", state.Value());
 						break;
 					case "height":
-						r = r.WithProperty("layers", state.Value);
+						r = r.WithProperty("layers", state.Value());
 						break;
 					case "growth":
-						r = r.WithProperty("age", state.Value);
+						r = r.WithProperty("age", state.Value());
 						break;
 					case "button_pressed_bit":
-						r = r.WithProperty("powered", state.Value == "1" ? "true" : "false");
+						r = r.WithProperty("powered", state.Value() == "1" ? "true" : "false");
 						break;
 					case "facing_direction":
-						switch (int.Parse(state.Value))
+						switch (int.Parse(state.Value()))
 						{
 							case 0:
 							case 4:
@@ -755,23 +757,23 @@ namespace Alex.Worlds.Bedrock
 						}
 						break;
 					case "head_piece_bit":
-						r = r.WithProperty("part", state.Value == "1" ? "head" : "foot");
+						r = r.WithProperty("part", state.Value() == "1" ? "head" : "foot");
 						break;
 					case "pillar_axis":
-						r = r.WithProperty("axis", state.Value);
+						r = r.WithProperty("axis", state.Value());
 						break;
 					case "top_slot_bit":
-						r = r.WithProperty("type", state.Value == "1" ? "top" : "bottom", true);
+						r = r.WithProperty("type", state.Value() == "1" ? "top" : "bottom", true);
 						break;
 					case "moisturized_amount":
-						r = r.WithProperty("moisture", state.Value);
+						r = r.WithProperty("moisture", state.Value());
 						break;
 					case "age":
-						r = r.WithProperty("age", state.Value);
+						r = r.WithProperty("age", state.Value());
 						break;
 			        default:
-			//	        Log.Info($"Unknown property for {record.Name}: {state.Name} - {state.Value}");
-					//	r = r.WithProperty(state.Name, state.Value);
+			//	        Log.Info($"Unknown property for {record.Name}: {state.Name} - {state.Value()}");
+					//	r = r.WithProperty(state.Name, state.Value());
 						break;
 		        }
 	        }

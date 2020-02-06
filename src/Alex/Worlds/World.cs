@@ -29,6 +29,7 @@ using NLog;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
 using Color = Microsoft.Xna.Framework.Color;
+using IBlockState = Alex.API.Blocks.State.IBlockState;
 using PlayerLocation = Alex.API.Utils.PlayerLocation;
 
 //using System.Reflection.Metadata.Ecma335;

@@ -410,7 +410,7 @@ namespace Alex.Worlds.Bedrock
         }
 
         public bool IgnoreUnConnectedPong = false;
-		protected override void OnUnconnectedPong(UnconnectedPong packet, IPEndPoint senderEndpoint)
+		public override void OnUnconnectedPong(UnconnectedPong packet, IPEndPoint senderEndpoint)
 		{
 			KnownMotd = new BedrockMotd(packet.serverName);
 			OnMotdReceivedHandler?.Invoke(this, KnownMotd);

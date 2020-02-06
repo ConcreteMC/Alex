@@ -37,7 +37,7 @@ using NLog;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Security;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
-using BlockState = MiNET.Utils.BlockState;
+using BlockState = MiNET.Utils.IBlockState;
 using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
 using Inventory = Alex.Utils.Inventory;
 using NibbleArray = MiNET.Utils.NibbleArray;
@@ -192,7 +192,7 @@ namespace Alex.Worlds.Bedrock
 			_changeDimensionResetEvent.Set();
 		}
 
-		private IReadOnlyDictionary<uint, BlockRecord> _blockStateMap;
+		private IReadOnlyDictionary<uint, BlockStateContainer> _blockStateMap;
 		public void HandleMcpeStartGame(McpeStartGame message)
 		{
 			Client.EntityId = message.runtimeEntityId;
@@ -202,10 +202,11 @@ namespace Alex.Worlds.Bedrock
 
 			Client.WorldReceiver?.UpdatePlayerPosition(new API.Utils.PlayerLocation(new Microsoft.Xna.Framework.Vector3(Client.SpawnPoint.X, Client.SpawnPoint.Y, Client.SpawnPoint.Z), message.spawn.X, message.spawn.X, message.spawn.Y));
 
-			File.WriteAllText("states.json", JsonConvert.SerializeObject(message.blockPallet));
+			//message.BlockPalette
+			//File.WriteAllText("states.json", JsonConvert.SerializeObject(message.blockPallet));
 			
-			Dictionary<uint, BlockRecord> ourStates = new Dictionary<uint, BlockRecord>();
-			foreach (var bs in message.blockPallet)
+			Dictionary<uint, BlockStateContainer> ourStates = new Dictionary<uint, BlockStateContainer>();
+			foreach (var bs in message.BlockPalette)
 			{
 				foreach (var blockstate in bs.States)
 				{
@@ -475,19 +476,69 @@ namespace Alex.Worlds.Bedrock
 			UnhandledPackage(message);
 		}
 
-        public void HandleMcpeMoveEntityDelta(McpeMoveEntityDelta message)
-        {
-            return;
-          /*  if (message.runtimeEntityId != Client.EntityId)
-            {
-                //TODO: Fix delta reading on packets.
-                 Client.WorldReceiver.UpdateEntityPosition(message.runtimeEntityId,
-                    new PlayerLocation(message.Delta), true, true, true);
-                return;
-            }*/
-        }
+		public void HandleMcpeMoveEntityDelta(McpeMoveEntityDelta message)
+		{
+			//message.GetCurrentPosition(new MiNET.Utils.PlayerLocation(Vector3.Zero));
+			if (message.runtimeEntityId != Client.EntityId)
+			{
+				//TODO: Fix delta reading on packets.
 
-        public void HandleMcpeRiderJump(McpeRiderJump message)
+				bool updatePitch = (message.flags & McpeMoveEntityDelta.HasRotX) != 0;
+				bool updateYaw = (message.flags & McpeMoveEntityDelta.HasY) != 0;
+				bool updateHeadYaw = (message.flags & McpeMoveEntityDelta.HasZ) != 0;
+				
+				bool updateLook = (updateHeadYaw || updateYaw || updatePitch);
+/*
+				if ((message.flags & McpeMoveEntityDelta.HasX) != 0)
+				{
+					startPosition.X = 256;
+				}
+			
+				if ((message.flags & McpeMoveEntityDelta.HasY) != 0)
+				{
+					startPosition.Y = 256;
+				}
+			
+				if ((message.flags & McpeMoveEntityDelta.HasZ) != 0)
+				{
+					startPosition.Z = 256;
+				}
+			*/
+
+				/*var relative = endPosition.ToVector3() - startPosition.ToVector3();
+				relative.X = float.IsNaN(relative.X) ? 0 : relative.X;
+				relative.Y = float.IsNaN(relative.Y) ? 0 : relative.Y;
+				relative.Z = float.IsNaN(relative.Z) ? 0 : relative.Z;*/
+
+				/*Client.WorldReceiver.UpdateEntityPosition(message.runtimeEntityId,
+					new PlayerLocation(relative.X, relative.Y, relative.Z, message.currentPosition.HeadYaw,
+						message.currentPosition.Yaw, message.currentPosition.Pitch)
+					{
+						OnGround = message.isOnGround
+					}, true, updateHeadYaw || updateYaw, updatePitch);*/
+				
+				//	Log.Info($"Rel: {relative}");
+				
+				if (Client.WorldReceiver.TryGetEntity(message.runtimeEntityId, out var entity))
+				{
+					var known = entity.KnownPosition;
+					
+					MiNET.Utils.PlayerLocation startPosition = new MiNET.Utils.PlayerLocation(known.X, known.Y, known.Z, known.HeadYaw, known.Yaw, known.Pitch);
+					
+					var endPosition = message.GetCurrentPosition(startPosition);
+					
+					endPosition.X = float.IsNaN(endPosition.X) ? known.X : endPosition.X;
+					endPosition.Y = float.IsNaN(endPosition.Y) ? known.Y : endPosition.Y;
+					endPosition.Z = float.IsNaN(endPosition.Z) ? known.Z : endPosition.Z;
+					
+					Log.Info($"Distance: {endPosition.DistanceTo(startPosition)} | Delta: {endPosition - startPosition.ToVector3()} | Start: {startPosition} End: {endPosition}");
+					
+					entity.KnownPosition = new PlayerLocation(endPosition);
+				}
+			}
+		}
+
+		public void HandleMcpeRiderJump(McpeRiderJump message)
 		{
 			UnhandledPackage(message);
 		}

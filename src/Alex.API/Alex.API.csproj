@@ -27,7 +27,7 @@
     <Folder Include="Gui\Abstractions\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\lib\MiNET\src\MiNET\MiNET\MiNET.csproj" />
+    <ProjectReference Include="..\..\lib\MiNET\src\MiNET\MiNET\MiNET.csproj"/>
     <ProjectReference Include="..\RocketUI\RocketUI.csproj" />
   </ItemGroup>
 </Project>
