@@ -28,7 +28,7 @@ namespace Alex.Gui.Elements.Inventory
 			set
 			{
 				_name = value;
-				NameChanged(value);
+				//NameChanged(value);
 			}
 		}
 
@@ -105,6 +105,11 @@ namespace Alex.Gui.Elements.Inventory
 
 		private void SlotChanged(Item newValue)
 		{
+			if (newValue != null)
+			{
+				NameChanged(newValue.Name);
+			}
+			
 			if (_counTextElement != null)
 			{
 				if (newValue != null && newValue.Count != 0)

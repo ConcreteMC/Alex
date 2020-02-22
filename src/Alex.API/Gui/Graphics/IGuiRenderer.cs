@@ -1,5 +1,7 @@
-﻿using Alex.API.Graphics.Textures;
+﻿using System;
+using Alex.API.Graphics.Textures;
 using Alex.API.Graphics.Typography;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -8,7 +10,7 @@ namespace Alex.API.Gui.Graphics
     public interface IGuiRenderer
     {
         GuiScaledResolution ScaledResolution { get; set; }
-        void Init(GraphicsDevice graphics);
+        void Init(GraphicsDevice graphics, IServiceProvider serviceProvider);
 
         IFont Font { get; set; }
         

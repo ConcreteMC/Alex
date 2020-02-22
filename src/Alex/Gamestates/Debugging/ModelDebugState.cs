@@ -419,7 +419,7 @@ namespace Alex.Gamestates.Debug
 			if (renderer == null)
 				return;
 
-			renderer?.Render(renderArgs, Location);
+			renderer?.Render(renderArgs, Location, false);
 		}
 
 		private int _previousIndex = -1;

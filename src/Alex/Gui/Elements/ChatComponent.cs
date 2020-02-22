@@ -24,15 +24,17 @@ namespace Alex.Gui.Elements
 		private SortedList<DateTime, ChatObject> _chatEntries =
 			new SortedList<DateTime, ChatObject>(new DescendedDateComparer());
 
-		public ChatComponent()
+		private IEventDispatcher EventDispatcher { get; }
+		public ChatComponent(IEventDispatcher eventDispatcher)
 		{
+			EventDispatcher = eventDispatcher;
 			Anchor = Alignment.BottomLeft;
 
 			MaxHeight = Height;
 			Height = 180;
 			Width = 320;
 
-			this.RegisterEventHandlers();
+			eventDispatcher.RegisterEvents(this);
 		}
 
 		private IFont Font;
@@ -457,7 +459,7 @@ namespace Alex.Gui.Elements
 			{
 				if (Alex.IsMultiplayer)
 				{
-					EventDispatcher.Instance.DispatchEvent(
+					EventDispatcher.DispatchEvent(
 						new ChatMessagePublishEvent(new ChatObject(TextBuilder.Text)));
 				}
 				else

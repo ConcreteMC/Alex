@@ -3,16 +3,19 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Data;
 using Alex.API.Events;
 using Alex.API.Events.World;
 using Alex.API.Network;
+using Alex.API.Network.Bedrock;
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Entities;
 using Alex.Utils;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using MiNET.Net;
 using MiNET.Utils;
@@ -27,18 +30,22 @@ namespace Alex.Worlds.Bedrock
 		private static Logger Log = LogManager.GetCurrentClassLogger();
 		
 		public Alex Alex { get; }
-		private BedrockClient Client { get; }
+		private IBedrockNetworkProvider Client { get; }
 
 		private System.Threading.Timer _gameTickTimer;
+		private IEventDispatcher EventDispatcher { get; }
 		public BedrockWorldProvider(Alex alex, IPEndPoint endPoint, PlayerProfile profile,
 			out INetworkProvider networkProvider)
 		{
 			Alex = alex;
-
-			Client = new BedrockClient(alex, endPoint, profile, new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount, ThreadType.Background, "BedrockClientThread")), this);
+			var eventDispatcher = alex.Services.GetRequiredService<IEventDispatcher>();
+			EventDispatcher = eventDispatcher;
+			
+			//Client = new ExperimentalBedrockClient(alex, alex.Services, this, endPoint);
+			Client = new BedrockClient(alex, eventDispatcher, endPoint, profile, new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount, ThreadType.Background, "BedrockClientThread")), this);
 			networkProvider = Client;
 			
-			this.RegisterEventHandlers();
+			EventDispatcher.RegisterEvents(this);
 		}
 
 		public override Vector3 GetSpawnPoint()
@@ -121,17 +128,17 @@ namespace Alex.Worlds.Bedrock
 		private ThreadSafeList<ChunkCoordinates> _loadedChunks = new ThreadSafeList<ChunkCoordinates>();
 		private void UnloadChunks(ChunkCoordinates center, double maxViewDistance)
 		{
-			var chunkPublisher = Client.LastChunkPublish;
+			//var chunkPublisher = Client.LastChunkPublish;
 			
 			//Client.ChunkRadius
 			Parallel.ForEach(_loadedChunks.ToArray(), (chunkColumn) =>
 			{
-				if (chunkPublisher != null)
+				/*if (chunkPublisher != null)
 				{
 					if (chunkColumn.DistanceTo(new ChunkCoordinates(new Vector3(chunkPublisher.coordinates.X,
 						    chunkPublisher.coordinates.Y, chunkPublisher.coordinates.Z))) < chunkPublisher.radius)
 						return;
-				}
+				}*/
 				
 				if (chunkColumn.DistanceTo(center) > maxViewDistance)
 				{
@@ -145,7 +152,7 @@ namespace Alex.Worlds.Bedrock
 		
 		public void UnloadChunk(ChunkCoordinates coordinates)
 		{
-			EventDispatcher.Instance.DispatchEvent(new ChunkUnloadEvent(coordinates));
+			EventDispatcher.DispatchEvent(new ChunkUnloadEvent(coordinates));
 			_loadedChunks.Remove(coordinates);
 		}
 
@@ -167,13 +174,15 @@ namespace Alex.Worlds.Bedrock
 			{
 				progressReport(LoadingState.ConnectingToServer, 25);
 
-				Client.StartClient();
+				var resetEvent = new ManualResetEventSlim(false);
+				
+				Client.Start(resetEvent);
 				progressReport(LoadingState.ConnectingToServer, 50);
 
-				Client.HaveServer = true;
+			//	Client.HaveServer = true;
 
-				Client.SendOpenConnectionRequest1();
-				if (!Client.ConnectionAcceptedWaitHandle.Wait(TimeSpan.FromSeconds(5)))
+				//Client.SendOpenConnectionRequest1();
+				if (!resetEvent.Wait(TimeSpan.FromSeconds(5)))
 				{
 					Client.ShowDisconnect("Could not connect to server!");
 					return;
@@ -192,10 +201,10 @@ namespace Alex.Worlds.Bedrock
 
 					if (!statusChanged)
 					{
-						if (Client.PlayerStatusChangedWaitHandle.WaitOne(50))
+						if (Client.PlayerStatusChanged.WaitOne(50))
 						{
 							statusChanged = true;
-							Client.IsEmulator = false;
+							//Client.IsEmulator = false;
 						}
 					}
 				}
@@ -218,6 +227,8 @@ namespace Alex.Worlds.Bedrock
 		{
 			base.Dispose();
 			Client.Dispose();
+			
+			EventDispatcher?.UnregisterEvents(this);
 		}
 	}
 }

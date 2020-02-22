@@ -9,6 +9,8 @@ namespace Alex.Gamestates.Login
 	public class JavaLoginState : BaseLoginState
 	{
 		private IPlayerProfileService _playerProfileService;
+		private ProfileManager _profileManager;
+		
 		private Action _loginSuccesAction;
 		public JavaLoginState(GuiPanoramaSkyBox skyBox, Action loginSuccesAction) : base("Minecraft Login", skyBox)
 		{
@@ -17,10 +19,12 @@ namespace Alex.Gamestates.Login
 
 		protected override void Initialized()
 		{
-			_playerProfileService = Alex.Services.GetService<IPlayerProfileService>();
+			_playerProfileService = GetService<IPlayerProfileService>();
 			_playerProfileService.Authenticate += PlayerProfileServiceOnAuthenticate;
 
-			var activeProfile = Alex.ProfileManager.LastUsedProfile;
+			_profileManager = GetService<ProfileManager>();
+			
+			var activeProfile = _profileManager.LastUsedProfile;
 			if (activeProfile != null && activeProfile.Type == ProfileManager.ProfileType.Java)
 			{
 				Requester.ClientToken = activeProfile.Profile.ClientToken;
@@ -32,7 +36,7 @@ namespace Alex.Gamestates.Login
 		{
 			if (e.IsSuccess)
 			{
-				Alex.ProfileManager.CreateOrUpdateProfile(ProfileManager.ProfileType.Java, e.Profile, true);
+				_profileManager.CreateOrUpdateProfile(ProfileManager.ProfileType.Java, e.Profile, true);
 				_loginSuccesAction?.Invoke();
 				//Alex.SaveJava(_nameInput.Value);
 				//Alex.GameStateManager.SetActiveState("serverlist");

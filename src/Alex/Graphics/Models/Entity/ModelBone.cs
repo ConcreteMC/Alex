@@ -47,7 +47,7 @@ namespace Alex.Graphics.Models.Entity
 			public Matrix RotationMatrix = Matrix.Identity;
 			public bool UpdateRotationMatrix = true;
 			private Matrix CharacterMatrix { get; set; }
-			public void Render(IRenderArgs args, PlayerLocation position, Matrix characterMatrix)
+			public void Render(IRenderArgs args, PlayerLocation position, Matrix characterMatrix, bool mock)
 			{
 				if (Buffer == null)
 					return;
@@ -100,12 +100,17 @@ namespace Alex.Graphics.Models.Entity
 					effect.View = args.Camera.ViewMatrix;
 					effect.Projection = args.Camera.ProjectionMatrix;
 
-					foreach (var pass in effect.CurrentTechnique.Passes)
+					if (!mock)
 					{
-						pass.Apply();
+						foreach (var pass in effect.CurrentTechnique.Passes)
+						{
+							pass.Apply();
+						}
+
+						args.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, idx,
+							part.Indexes.Length / 3);
 					}
-					
-					args.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, idx, part.Indexes.Length / 3);
+
 					idx += part.Indexes.Length;
 				}
 

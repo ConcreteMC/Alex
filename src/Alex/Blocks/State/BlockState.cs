@@ -31,7 +31,17 @@ namespace Alex.Blocks.State
 			int highestMatch = 0;
 			IBlockState highest = null;
 
-			foreach (var variant in GetVariants().Where(x => (x.TryGetValue(property, out string xVal) && xVal.Equals(value, StringComparison.InvariantCultureIgnoreCase))))
+			var matching = GetVariants().Where(x =>
+				(x.TryGetValue(property, out string xVal) &&
+				 xVal.Equals(value, StringComparison.InvariantCultureIgnoreCase))).ToArray();
+
+			if (matching.Length == 1)
+			{
+				result = matching.FirstOrDefault();
+				return true;
+			}
+
+			foreach (var variant in matching)
 			{
 				bool valid = true;
 				foreach (var requiredMatch in requiredMatches)
@@ -201,6 +211,8 @@ namespace Alex.Blocks.State
 
 		public bool TryGetValue(string property, out string value)
 		{
+			return Values.TryGetValue(property, out value);
+			
 			var r = Values.FirstOrDefault(x => x.Key.Equals(property, StringComparison.InvariantCultureIgnoreCase));
 			if (!r.Equals(default(KeyValuePair<string, string>)))
 			{

@@ -10,19 +10,17 @@ using Alex.Entities;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
 using NLog;
+using MathF = System.MathF;
 
 namespace Alex.Worlds
 {
     public class PhysicsManager : IDisposable
     {
 	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(PhysicsManager));
+	    private IWorld World { get; }
 
-	    private Alex Alex { get; }
-		private IWorld World { get; }
-
-	    public PhysicsManager(Alex alex, IWorld world)
+	    public PhysicsManager(IWorld world)
 	    {
-		    Alex = alex;
 		    World = world;
 	    }
 
@@ -45,7 +43,7 @@ namespace Alex.Worlds
 		Stopwatch sw = new Stopwatch();
 		public void Update(GameTime elapsed)
 		{
-			float dt = (float) elapsed.ElapsedGameTime.TotalSeconds;
+			float dt = ((float) elapsed.ElapsedGameTime.TotalSeconds);
 			//if (sw.ElapsedMilliseconds)
 			//	dt = (float) sw.ElapsedMilliseconds / 1000f;
 
@@ -65,7 +63,10 @@ namespace Alex.Worlds
 						{
 							velocity -= new Vector3(0, (float) (e.Gravity * dt), 0);
 						}
-						velocity *= (float)(1f - e.Drag * dt);
+
+						var rawDrag = (float) (1f - (e.Drag * dt));
+						
+						velocity *= new Vector3(rawDrag, 1f, rawDrag);
 						
 						var position = e.KnownPosition;
 
@@ -73,18 +74,23 @@ namespace Alex.Worlds
 
 						var boundingBox = e.GetBoundingBox(preview);
 
-						Bound bound = new Bound(World, boundingBox);
+						Bound bound = new Bound(World, boundingBox, preview);
 						
 						velocity = AdjustForY(e.GetBoundingBox(new Vector3(position.X, preview.Y, position.Z)), bound,
 							velocity, position);
 						
 						if (bound.GetIntersecting(boundingBox, out var blocks))
 						{
+							//var solid = blocks.Where(b => b.block.Solid && b.box.Max.Y > position.Y).ToArray();
 							var solid = blocks.Where(b => b.block.Solid && b.box.Max.Y > position.Y).ToArray();
 							Hit.AddRange(solid.Select(x => x.box));
 
 							if (solid.Length > 0)
 							{
+								var heighest = solid.Max(x => x.box.Max.Y);
+								if (heighest - position.Y <= 0.5f && e.KnownPosition.OnGround && !e.IsFlying)
+									e.KnownPosition.Y = heighest;
+									
 								for (float x = 1f; x > 0f; x -= 0.1f)
 								{
 									Vector3 c = (position - preview) * x + position;
@@ -103,7 +109,7 @@ namespace Alex.Worlds
 						
 						TruncateVelocity(e, dt);
 
-						if (velocity.Y == 0)
+						if (MathF.Abs(velocity.Y) < 0.000001f)
 						{
 							e.KnownPosition.OnGround = true;
 						}
@@ -202,7 +208,7 @@ namespace Alex.Worlds
 	    {
 		    private Dictionary<BlockCoordinates, (Block block, BoundingBox box)> Blocks = new Dictionary<BlockCoordinates, (Block block, BoundingBox box)>();
 		    
-		    public Bound(IWorld world, BoundingBox box)
+		    public Bound(IWorld world, BoundingBox box, Vector3 entityPos)
 		    {
 			    var min = box.Min;
 			    var max = box.Max;
@@ -226,14 +232,14 @@ namespace Alex.Worlds
 					    
 				    if (!Blocks.TryGetValue(coords, out _))
 				    {
-					    var block = GetBlock(world, coords);
+					    var block = GetBlock(world, coords, entityPos);
 					    if (block != default)
 					    Blocks.TryAdd(coords, block);
 				    }
 			    }
 		    }
 
-		    private (Block block, BoundingBox box) GetBlock(IWorld world, BlockCoordinates coordinates)
+		    private (Block block, BoundingBox box) GetBlock(IWorld world, BlockCoordinates coordinates, Vector3 entityPos)
 		    {
 			    var block = world.GetBlock(coordinates) as Block;
 			    if (block == null) return default;

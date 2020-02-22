@@ -35,6 +35,7 @@ using Alex.Utils;
 using Alex.Worlds;
 using Alex.Worlds.Bedrock;
 using Alex.Worlds.Java;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET.Utils;
@@ -75,17 +76,20 @@ namespace Alex
 
 		public GraphicsDeviceManager DeviceManager { get; }
 
-		public ProfileManager ProfileManager { get; private set; }
+		//public ProfileManager ProfileManager { get; private set; }
 		
 		internal ConcurrentQueue<Action> UIThreadQueue { get; }
 
-		internal StorageSystem Storage { get; private set; }
+		//internal StorageSystem Storage { get; private set; }
 
 		private LaunchSettings LaunchSettings { get; }
 		//public ChromiumWebBrowser CefWindow { get; private set; }
 		public PluginManager PluginManager { get; }
         public FpsMonitor FpsMonitor { get; }
-        private IPlayerProfileService ProfileService { get; set; }
+        //private IPlayerProfileService ProfileService { get; set; }
+        
+        public new IServiceProvider Services { get; set; }
+        
         public Alex(LaunchSettings launchSettings)
 		{
 			Instance = this;
@@ -98,7 +102,6 @@ namespace Alex
 				GraphicsProfile = GraphicsProfile.Reach,
 			};
 			
-
 			Content.RootDirectory = "assets";
 
 			IsFixedTimeStep = false;
@@ -136,14 +139,18 @@ namespace Alex
 				},
 				Formatting = Formatting.Indented
 			};
+			
+			IServiceCollection serviceCollection = new ServiceCollection();
+			ConfigureServices(serviceCollection);
 
+			Services = serviceCollection.BuildServiceProvider();
+			
 			UIThreadQueue = new ConcurrentQueue<Action>();
 
-            PluginManager = new PluginManager(this);
+            PluginManager = new PluginManager(Services);
             FpsMonitor = new FpsMonitor();
 
-			foreach(var assembly in AppDomain.CurrentDomain.GetAssemblies())
-				EventDispatcher.Instance.LoadFrom(assembly);
+            Resources = Services.GetRequiredService<ResourceManager>();
 		}
 
 		public static EventHandler<TextInputEventArgs> OnCharacterInput;
@@ -182,14 +189,14 @@ namespace Alex
 			
 			_spriteBatch = new SpriteBatch(GraphicsDevice);
 			InputManager = new InputManager(this);
-			GuiRenderer = new GuiRenderer(this);
-			GuiManager = new GuiManager(this, InputManager, GuiRenderer);
-
+			
+			GuiRenderer = new GuiRenderer();
+			//GuiRenderer.Init(GraphicsDevice);
+			
+			GuiManager = new GuiManager(this, Services, InputManager, GuiRenderer);
+			GuiManager.Init(GraphicsDevice, Services);
+			
 			GuiDebugHelper = new GuiDebugHelper(GuiManager);
-
-			AlexIpcService = new AlexIpcService();
-			Services.AddService<AlexIpcService>(AlexIpcService);
-			AlexIpcService.Start();
 
 			OnCharacterInput += GuiManager.FocusManager.OnTextInput;
 
@@ -203,8 +210,6 @@ namespace Alex
 			//	Log.Info($"Initializing Alex...");
 			ThreadPool.QueueUserWorkItem((o) => { InitializeGame(splash); });
 		}
-
-		private AlexIpcService AlexIpcService;
 
 		private void SetVSync(bool enabled)
 		{
@@ -240,19 +245,18 @@ namespace Alex
 			});
 		}
 		
-		private void ConfigureServices()
+		private void ConfigureServices(IServiceCollection services)
 		{
-			XBLMSAService msa;
 			var storage = new StorageSystem(LaunchSettings.WorkDir);
-			ProfileManager = new ProfileManager(this, storage);
 
-
-			Services.AddService<IStorageSystem>(storage);
-			
-			var optionsProvider = new OptionsProvider(storage);
+			services.AddSingleton<Alex>(this);
+			services.AddSingleton<IStorageSystem>(storage);
+			services.AddSingleton<IOptionsProvider, OptionsProvider>();
+			services.AddSingleton<ProfileManager>();
+			//var optionsProvider = new OptionsProvider(storage);
 			//optionsProvider.Load();
 			
-			optionsProvider.AlexOptions.VideoOptions.UseVsync.Bind((value, newValue) => { SetVSync(newValue); });
+			/*optionsProvider.AlexOptions.VideoOptions.UseVsync.Bind((value, newValue) => { SetVSync(newValue); });
 			if (optionsProvider.AlexOptions.VideoOptions.UseVsync.Value)
 			{
 				SetVSync(true);
@@ -264,29 +268,31 @@ namespace Alex
 				SetFullscreen(true);
 			}
 			
-			Services.AddService<IOptionsProvider>(optionsProvider);
+			Services.AddService<IOptionsProvider>(optionsProvider);*/
 
-			Services.AddService<IListStorageProvider<SavedServerEntry>>(new SavedServerDataProvider(storage));
+			services.AddSingleton<IListStorageProvider<SavedServerEntry>, SavedServerDataProvider>();
 			
-			Services.AddService(msa = new XBLMSAService());
+			services.AddSingleton<XBLMSAService>();
 			
-			Services.AddService<IServerQueryProvider>(new ServerQueryProvider(this));
-			Services.AddService<IPlayerProfileService>(ProfileService = new PlayerProfileService(msa, ProfileManager));
-
-            var profilingService = new ProfilerService();
-            Services.AddService<ProfilerService>(profilingService);
+			services.AddSingleton<IServerQueryProvider>(new ServerQueryProvider(this));
+			services.AddSingleton<IPlayerProfileService, PlayerProfileService>();
+			services.AddSingleton<ProfilerService>();
             
-            Services.AddService<IRegistryManager>(new RegistryManager());
+            services.AddSingleton<IRegistryManager, RegistryManager>();
+            services.AddSingleton<AlexIpcService>();
 
-            Storage = storage;
+            services.AddSingleton<IEventDispatcher, EventDispatcher>();
+            services.AddSingleton<ResourceManager>();
+;            //Storage = storage;
 		}
 
 		protected override void UnloadContent()
 		{
-			ProfileManager.SaveProfiles();
+			//ProfileManager.SaveProfiles();
 			
 			Services.GetService<IOptionsProvider>().Save();
-			AlexIpcService.Stop();
+			Services.GetService<AlexIpcService>().Stop();
+
 			GuiDebugHelper.Dispose();
 
             PluginManager.UnloadAll();
@@ -332,10 +338,27 @@ namespace Alex
 			Extensions.Init(GraphicsDevice);
 			MCPacketFactory.Load();
 
-			ConfigureServices();
+			//ConfigureServices();
 
+			var eventDispatcher = Services.GetRequiredService<IEventDispatcher>() as EventDispatcher;
+			foreach(var assembly in AppDomain.CurrentDomain.GetAssemblies())
+				eventDispatcher.LoadFrom(assembly);
+			
 			var options = Services.GetService<IOptionsProvider>();
-
+			options.Load();
+			
+			options.AlexOptions.VideoOptions.UseVsync.Bind((value, newValue) => { SetVSync(newValue); });
+			if (options.AlexOptions.VideoOptions.UseVsync.Value)
+			{
+				SetVSync(true);
+			}
+			
+			options.AlexOptions.VideoOptions.Fullscreen.Bind((value, newValue) => { SetFullscreen(newValue); });
+			if (options.AlexOptions.VideoOptions.Fullscreen.Value)
+			{
+				SetFullscreen(true);
+			}
+			
 			string pluginDirectoryPaths = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
 
             var pluginDir = options.AlexOptions.ResourceOptions.PluginDirectory;
@@ -363,10 +386,10 @@ namespace Alex
             }
 
 
-            ProfileManager.LoadProfiles(progressReceiver);
+            var profileManager = Services.GetService<ProfileManager>();
+            profileManager.LoadProfiles(progressReceiver);
 
 			//	Log.Info($"Loading resources...");
-			Resources = new ResourceManager(GraphicsDevice, Services);
 			if (!Resources.CheckResources(GraphicsDevice, progressReceiver,
 				OnResourcePackPreLoadCompleted))
 			{
@@ -375,10 +398,12 @@ namespace Alex
 				Exit();
 				return;
 			}
-
+			
 			GuiRenderer.LoadResourcePack(Resources.ResourcePack);
 			AnvilWorldProvider.LoadBlockConverter();
 
+			PluginManager.EnablePlugins();
+			
 			if (LaunchSettings.ModelDebugging)
 			{
 				GameStateManager.SetActiveState<ModelDebugState>();
@@ -386,7 +411,7 @@ namespace Alex
 			else
 			{
 				GameStateManager.SetActiveState<TitleState>("title");
-				var player = new Player(GraphicsDevice, this, null, null, new Skin(),  null, PlayerIndex.One);
+				var player = new Player(GraphicsDevice, InputManager, null, null, new Skin(),  null, PlayerIndex.One);
 				player.Inventory.IsPeInventory = true;
 				/*Random rnd = new Random();
 				for (int i = 0; i < player.Inventory.SlotCount; i++)
@@ -412,21 +437,28 @@ namespace Alex
 
 		public void ConnectToServer(IPEndPoint serverEndPoint, PlayerProfile profile, bool bedrock = false)
 		{
-			WorldProvider provider;
-			INetworkProvider networkProvider;
-			IsMultiplayer = true;
-			if (bedrock)
+			try
 			{
-				provider = new BedrockWorldProvider(this, serverEndPoint,
-					profile, out networkProvider);
-			}
-			else
-			{
-				provider = new JavaWorldProvider(this, serverEndPoint, profile,
-					out networkProvider);
-			}
+				WorldProvider provider;
+				INetworkProvider networkProvider;
+				IsMultiplayer = true;
+				if (bedrock)
+				{
+					provider = new BedrockWorldProvider(this, serverEndPoint,
+						profile, out networkProvider);
+				}
+				else
+				{
+					provider = new JavaWorldProvider(this, serverEndPoint, profile,
+						out networkProvider);
+				}
 
-			LoadWorld(provider, networkProvider);
+				LoadWorld(provider, networkProvider);
+			}
+			catch (Exception ex)
+			{
+				Log.Error(ex, "FCL");
+			}
 		}
 
 		public void LoadWorld(WorldProvider worldProvider, INetworkProvider networkProvider)

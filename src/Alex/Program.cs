@@ -5,6 +5,7 @@ using System.Net;
 using System.Threading;
 using Alex.Worlds.Bedrock;
 using log4net;
+using Microsoft.Extensions.DependencyInjection;
 using NLog;
 using LogManager = NLog.LogManager;
 

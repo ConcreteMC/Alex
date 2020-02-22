@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Alex.API.Graphics;
@@ -9,6 +10,7 @@ using Alex.API.Gui.Graphics;
 using Alex.API.Localization;
 using Alex.API.Utils;
 using Alex.ResourcePackLib;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using RocketUI;
@@ -17,8 +19,6 @@ namespace Alex.Gui
 {
 	public class GuiRenderer : IGuiRenderer
 	{
-		private Alex Alex { get; }
-
 		private IFont _font;
 
 		public IFont Font
@@ -107,22 +107,22 @@ namespace Alex.Gui
 		#endregion
 
 
-		public GuiRenderer(Alex alex)
+		public GuiRenderer()
 		{
-			Alex = alex;
-			Init(alex.GraphicsDevice);
+			
 		}
 
 
-		public void Init(GraphicsDevice graphics)
+		public void Init(GraphicsDevice graphics, IServiceProvider serviceProvider)
 		{
 			_graphicsDevice  = graphics;
-			_resourceManager = Alex.Resources;
+			_resourceManager = serviceProvider.GetRequiredService<ResourceManager>();
 			LoadEmbeddedTextures();
 
-			if (_resourceManager?.ResourcePack != null)
+			var resourcePack = _resourceManager?.ResourcePack;
+			if (resourcePack != null)
 			{
-				LoadResourcePack(_resourceManager.ResourcePack);
+				LoadResourcePack(resourcePack);
 			}
 		}
 

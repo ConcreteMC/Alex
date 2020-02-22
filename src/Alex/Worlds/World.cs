@@ -21,6 +21,7 @@ using Alex.Graphics.Camera;
 using Alex.Graphics.Models;
 using Alex.Graphics.Models.Items;
 using Alex.ResourcePackLib.Json.Models.Items;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET.Utils;
@@ -28,6 +29,7 @@ using NLog;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
 using Color = Microsoft.Xna.Framework.Color;
+using IBlockState = Alex.API.Blocks.State.IBlockState;
 using PlayerLocation = Alex.API.Utils.PlayerLocation;
 
 //using System.Reflection.Metadata.Ecma335;
@@ -44,30 +46,31 @@ namespace Alex.Worlds
 		public LevelInfo WorldInfo { get; set; }
 
 		public Player Player { get; set; }
-		private Alex Alex { get; }
 		private AlexOptions Options { get; }
 		
-		public World(Alex alex, GraphicsDevice graphics, AlexOptions options, Camera camera,
+		public World(IServiceProvider serviceProvider, GraphicsDevice graphics, AlexOptions options, Camera camera,
 			INetworkProvider networkProvider)
 		{
-			Alex = alex;
 			Graphics = graphics;
 			Camera = camera;
 			Options = options;
 
-			PhysicsEngine = new PhysicsManager(alex, this);
-			ChunkManager = new ChunkManager(alex, graphics, options, this);
+			PhysicsEngine = new PhysicsManager(this);
+			ChunkManager = new ChunkManager(serviceProvider, graphics, this);
 			EntityManager = new EntityManager(graphics, this, networkProvider);
 			Ticker = new TickManager(this);
 			PlayerList = new PlayerList();
 
 			ChunkManager.Start();
-			var profileService = alex.Services.GetService<IPlayerProfileService>();
+			var profileService = serviceProvider.GetRequiredService<IPlayerProfileService>();
+			var resources = serviceProvider.GetRequiredService<ResourceManager>();
+			var eventDispatcher = serviceProvider.GetRequiredService<IEventDispatcher>();
+			
 			string username = string.Empty;
 			Skin skin = profileService?.CurrentProfile?.Skin;
 			if (skin == null)
 			{
-				alex.Resources.ResourcePack.TryGetBitmap("entity/alex", out Bitmap rawTexture);
+				resources.ResourcePack.TryGetBitmap("entity/alex", out Bitmap rawTexture);
 				var t = TextureUtils.BitmapToTexture2D(graphics, rawTexture);
 				skin = new Skin()
 				{
@@ -81,7 +84,7 @@ namespace Alex.Worlds
 				username = profileService.CurrentProfile.Username;
 			}
 
-			Player = new Player(graphics, alex, username, this, skin, networkProvider, PlayerIndex.One);
+			Player = new Player(graphics, serviceProvider.GetRequiredService<Alex>().InputManager, username, this, skin, networkProvider, PlayerIndex.One);
 
 			Player.KnownPosition = new PlayerLocation(GetSpawnPoint());
 			Camera.MoveTo(Player.KnownPosition, Vector3.Zero);
@@ -102,7 +105,7 @@ namespace Alex.Worlds
 				Log.Warn($"Could not get diamond sword!");
 			}
 			
-			this.RegisterEventHandlers();
+			eventDispatcher.RegisterEvents(this);
 		}
 
 		private void FieldOfVisionOnValueChanged(int oldvalue, int newvalue)

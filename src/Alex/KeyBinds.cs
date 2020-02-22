@@ -24,6 +24,12 @@ namespace Alex
 		{
 			DebugInfo, Keys.B
 		};
+
+
+		public static Keys[] AlwaysDay = new Keys[]
+		{
+			DebugInfo, Keys.D
+		};
 		
         public static Keys Chat = Keys.T;
 

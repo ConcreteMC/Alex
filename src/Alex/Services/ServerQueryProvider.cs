@@ -103,7 +103,7 @@ namespace Alex.Services
 			    {
 					IPEndPoint serverEndpoint = new IPEndPoint(result.Result, (int) port);
 
-					client = new BedrockClient(Alex, serverEndpoint,
+					client = new BedrockClient(Alex, null, serverEndpoint,
 						new PlayerProfile(string.Empty, $"Pinger{serverEndpoint.ToString()}",
 							$"Pinger{serverEndpoint.ToString()}", null, null, null, true), threadPool, null)
 					{

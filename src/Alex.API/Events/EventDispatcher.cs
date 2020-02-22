@@ -9,36 +9,19 @@ using NLog;
 
 namespace Alex.API.Events
 {
-	public class EventDispatcher
+	public class EventDispatcher : IEventDispatcher
 	{
-		#region Singleton
-
-		private static EventDispatcher _instance;
-
-		public static EventDispatcher Instance
-		{
-			get
-			{
-				if (_instance == null)
-					_instance = new EventDispatcher();
-				return _instance;
-			}
-		}
-
-		#endregion
-
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
 		private static readonly ThreadSafeList<Type> EventTypes = new ThreadSafeList<Type>
 		{
-			AppDomain.CurrentDomain.GetAssemblies()
-					 .SelectMany(GetEventTypes)
-					 .Select(p =>
-					 {
-						 Log.Info($"Registered event type \"{p.Name}\"");
-						 return p;
-					 }).ToArray()
+			
 		};
+
+		static EventDispatcher()
+		{
+			
+		}
 
 		public void RegisterEventType<TEvent>() where TEvent : Event
 		{
@@ -51,6 +34,11 @@ namespace Alex.API.Events
 
 		public bool RegisterEventType(Type type)
 		{
+			if (type.IsAbstract)
+			{
+				return false;
+			}
+			
 			if (RegisteredEvents.ContainsKey(type) || !EventTypes.TryAdd(type))
 			{
 				return false;
@@ -58,7 +46,7 @@ namespace Alex.API.Events
 			else
 			{
 				RegisteredEvents.Add(type, new EventDispatcherValues());
-				Log.Info($"Registered event type \"{type.Name}\"");
+				Log.Info($"Registered event type \"{type.FullName}\"");
 
 				return true;
 			}
@@ -67,7 +55,8 @@ namespace Alex.API.Events
 		public void LoadFrom(Assembly assembly)
 		{
 			var count = GetEventTypes(assembly).Count(RegisterEventType);
-			Log.Info($"Registered {count} event types from assembly {assembly.ToString()}");
+			if (count > 0)
+				Log.Info($"Registered {count} event types from assembly {assembly.ToString()}");
 		}
 
 		public void Unload(Assembly assembly)
@@ -115,6 +104,8 @@ namespace Alex.API.Events
 
 			//Log.Info($"Registered {RegisteredEvents.Count} event types!");
 		}
+		
+		public EventDispatcher() : this(new EventDispatcher[]{}){}
 
 		public void RegisterEvents<T>(T obj) where T : class
 		{
@@ -377,7 +368,7 @@ namespace Alex.API.Events
 		}
 	}
 
-	public static class EventDispatcherExtensions
+	/*public static class EventDispatcherExtensions
 	{
 		public static void RegisterEventHandlers<T>(this T eventHandler) where T : class
 		{
@@ -388,5 +379,5 @@ namespace Alex.API.Events
 		{
 			dispatcher.RegisterEvents(eventHandler);
 		}
-	}
+	}*/
 }

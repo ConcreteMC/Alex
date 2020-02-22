@@ -20,6 +20,7 @@ using Alex.API.World;
 using Alex.Gamestates;
 using Alex.Services;
 using Jose;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using MiNET;
 using MiNET.Client;
@@ -80,7 +81,7 @@ namespace Alex.Worlds.Bedrock
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BedrockClient));
 		
-		public ManualResetEventSlim ConnectionAcceptedWaitHandle { get; }
+		private ManualResetEventSlim ConnectionAcceptedWaitHandle { get; set; }
 		public BedrockWorldProvider WorldProvider { get; }
 		public EventHandler<BedrockMotd> OnMotdReceivedHandler;
 		public BedrockMotd KnownMotd = new BedrockMotd(string.Empty);
@@ -95,7 +96,8 @@ namespace Alex.Worlds.Bedrock
         private CancellationTokenSource CancellationTokenSource { get; }
         
         public McpeNetworkChunkPublisherUpdate LastChunkPublish { get; set; }
-		public BedrockClient(Alex alex, IPEndPoint endpoint, PlayerProfile playerProfile, DedicatedThreadPool threadPool, BedrockWorldProvider wp) : base(endpoint,
+        public AutoResetEvent PlayerStatusChanged { get; set; } = new AutoResetEvent(false);
+		public BedrockClient(Alex alex, IEventDispatcher eventDispatcher, IPEndPoint endpoint, PlayerProfile playerProfile, DedicatedThreadPool threadPool, BedrockWorldProvider wp) : base(endpoint,
 			playerProfile.Username, threadPool)
 		{
 			PlayerProfile = playerProfile;
@@ -103,11 +105,11 @@ namespace Alex.Worlds.Bedrock
 			
             Alex = alex;
 			WorldProvider = wp;
-			ConnectionAcceptedWaitHandle = new ManualResetEventSlim(false);
-			MessageDispatcher = new McpeClientMessageDispatcher(new BedrockClientPacketHandler(this, wp, playerProfile, alex, CancellationTokenSource.Token));
+			//ConnectionAcceptedWaitHandle = new ManualResetEventSlim(false);
+			MessageDispatcher = new McpeClientMessageDispatcher(new BedrockClientPacketHandler(this, eventDispatcher, wp, playerProfile, alex, CancellationTokenSource.Token));
 			CurrentLocation = new MiNET.Utils.PlayerLocation(0,0,0);
-			OptionsProvider = alex.Services.GetService<IOptionsProvider>();
-			XblmsaService = alex.Services.GetService<XBLMSAService>();
+			OptionsProvider = alex.Services.GetRequiredService<IOptionsProvider>();
+			XblmsaService = alex.Services.GetRequiredService<XBLMSAService>();
 			
 			base.ChunkRadius = Options.VideoOptions.RenderDistance;
 			
@@ -115,8 +117,21 @@ namespace Alex.Worlds.Bedrock
 
 			_threadPool = threadPool;
 			//Log.IsDebugEnabled = false;
-			this.RegisterEventHandlers();
+			//this.RegisterEventHandlers();
+			
+			eventDispatcher?.RegisterEvents(this);
         }
+
+		public void Start(ManualResetEventSlim resetEvent)
+		{
+			StartClient();
+			HaveServer = true;
+
+			ConnectionAcceptedWaitHandle = resetEvent;
+			
+			SendOpenConnectionRequest1();
+			
+		}
 
 		[EventHandler(EventPriority.Highest)]
 		private void OnSendChatMessage(ChatMessagePublishEvent e)
@@ -395,7 +410,7 @@ namespace Alex.Worlds.Bedrock
         }
 
         public bool IgnoreUnConnectedPong = false;
-		protected override void OnUnconnectedPong(UnconnectedPong packet, IPEndPoint senderEndpoint)
+		public override void OnUnconnectedPong(UnconnectedPong packet, IPEndPoint senderEndpoint)
 		{
 			KnownMotd = new BedrockMotd(packet.serverName);
 			OnMotdReceivedHandler?.Invoke(this, KnownMotd);

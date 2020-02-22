@@ -3,6 +3,7 @@ using Alex.API.GameStates;
 using Alex.API.Graphics;
 using Alex.API.Gui;
 using Alex.API.Services;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -112,7 +113,7 @@ namespace Alex.GameStates
 
 		protected TService GetService<TService>() where TService : class
 		{
-			return Alex.Services.GetService<TService>();
+			return Alex.Services.GetRequiredService<TService>();
 		}
 		
 		protected virtual void OnShow() { }

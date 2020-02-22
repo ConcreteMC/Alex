@@ -31,21 +31,18 @@ namespace Alex
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ResourceManager));
 
 		private LinkedList<McResourcePack> ActiveResourcePacks { get; } = new LinkedList<McResourcePack>();
-		public McResourcePack ResourcePack => ActiveResourcePacks.First.Value;
+		public McResourcePack ResourcePack => ActiveResourcePacks.First?.Value;
 		public BedrockResourcePack BedrockResourcePack { get; private set; }
 		public Registries Registries { get; private set; }
         public AtlasGenerator Atlas { get; private set; }
-		
-		private GraphicsDevice Graphics { get; set; }
-
+        
 		private IStorageSystem Storage { get; }
 		private IOptionsProvider Options { get; }
 		private IRegistryManager RegistryManager { get; }
-		public ResourceManager(GraphicsDevice graphics, IServiceProvider serviceProvider)
+		public ResourceManager(IServiceProvider serviceProvider)
 		{
+			Atlas = new AtlasGenerator();
 			Storage = serviceProvider.GetService<IStorageSystem>();
-			Graphics = graphics;
-			Atlas = new AtlasGenerator(Graphics);
 
 			Options = serviceProvider.GetService<IOptionsProvider>();
 			RegistryManager = serviceProvider.GetService<IRegistryManager>();
@@ -173,12 +170,12 @@ namespace Alex
         {
             if (!isFirst)
             {
-                Atlas.LoadResourcePackOnTop(ActiveResourcePacks.First().TexturesAsBitmaps.Where(x => x.Key.StartsWith("block")).ToArray(), resourcePack.TexturesAsBitmaps.Where(x => x.Key.StartsWith("block")).ToArray(),
+                Atlas.LoadResourcePackOnTop(device, ActiveResourcePacks.First().TexturesAsBitmaps.Where(x => x.Key.StartsWith("block")).ToArray(), resourcePack.TexturesAsBitmaps.Where(x => x.Key.StartsWith("block")).ToArray(),
                     progressReceiver);
             }
             else
             {
-                Atlas.GenerateAtlas(resourcePack.TexturesAsBitmaps.Where(x => x.Key.StartsWith("block")).ToArray(),
+                Atlas.GenerateAtlas(device, resourcePack.TexturesAsBitmaps.Where(x => x.Key.StartsWith("block")).ToArray(),
                     progressReceiver);
 
 

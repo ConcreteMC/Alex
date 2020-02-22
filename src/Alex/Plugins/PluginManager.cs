@@ -5,6 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using Microsoft.EntityFrameworkCore.Internal;
+using Microsoft.Extensions.DependencyInjection;
 using Mono.Cecil;
 using NLog;
 
@@ -19,12 +21,14 @@ namespace Alex.Plugins
         private ConcurrentDictionary<Type, object> References { get; }
         private readonly object _pluginLock = new object();
 
-        private Alex Parent { get; }
+       // private Alex Parent { get; }
+        private IServiceProvider ServiceProvider { get; }
         private Assembly HostAssembly { get; }
 
-        public PluginManager(Alex parent)
+        public PluginManager(IServiceProvider serviceProvider)
         {
-            Parent = parent;
+            ServiceProvider = serviceProvider;
+           // Parent = parent;
             HostAssembly = Assembly.GetAssembly(typeof(PluginManager));
 
             AssemblyReferences = new ConcurrentDictionary<string, Assembly>();
@@ -209,7 +213,7 @@ namespace Alex.Plugins
                 try
                 {
                     path = Path.GetDirectoryName(file);
-
+                    
                     Assembly[] result;
                     ProcessFile(path, file, out result);
                     processed++;
@@ -226,11 +230,11 @@ namespace Alex.Plugins
                 catch (BadImageFormatException ex)
                 {
                     if (Log.IsDebugEnabled)
-                        Log.Debug($"File is not a .NET Assembly ({file})", ex);
+                        Log.Debug(ex, $"File is not a .NET Assembly ({file})");
                 }
                 catch (Exception ex)
                 {
-                    Log.Error($"Failed loading \"{file}\"", ex);
+                    Log.Error(ex,$"Failed loading \"{file}\"");
                 }
             }
 
@@ -242,7 +246,6 @@ namespace Alex.Plugins
                 if (assembly != null)
                     if (LoadAssembly(assembly, out Plugin[] pluginInstances, out Assembly[] requiredAssemblies))
                     {
-
                         LoadedAssemblies.Add(assembly, new LoadedAssembly(assembly, pluginInstances, requiredAssemblies, path));
 
                         if (pluginInstances.Length > 0)
@@ -253,24 +256,30 @@ namespace Alex.Plugins
             }
 
             Log.Info($"Found {plugins.Count} plugins");
+        }
 
+        public void EnablePlugins()
+        {
             int enabled = 0;
-            foreach (var plugin in plugins)
+            foreach (var assembly in LoadedAssemblies)
             {
-                try
+                foreach (var instance in assembly.Value.PluginInstances)
                 {
-                    plugin.Enabled(Parent);
-                    enabled++;
-                }
-                catch (Exception ex)
-                {
-                    Log.Error($"Error occured while enabling plugin!", ex);
+                    try
+                    {
+                        instance.Enabled();
+                        enabled++;
+                        
+                        Log.Info($"Enabled \"{instance.Info.Name}\" version {instance.Info.Version} by {instance.Info.Author}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, $"Error occured while enabling plugin! {ex.ToString()}");
+                    }
                 }
             }
-
+            
             Log.Info($"Enabled {enabled} plugins!");
-
-
         }
 
         private bool IsLoaded(AssemblyNameReference name, out Assembly outAssembly)
@@ -363,7 +372,7 @@ namespace Alex.Plugins
                 catch (Exception ex)
                 {
                     if (!(ex is BadImageFormatException))
-                        Log.Error($"Could not load assembly as OpenPlugin (File: {file})", ex);
+                        Log.Error(ex, $"Could not load assembly as OpenPlugin (File: {file})");
                 }
                 finally
                 {
@@ -390,7 +399,8 @@ namespace Alex.Plugins
 
                 try
                 {
-                    if (TryFindAssemblyPath(assemblyName, path, out string resultPath))
+                    string resultPath;
+                    if (TryFindAssemblyPath(assemblyName, path, out resultPath))
                     {
                         resolvedPaths.Add(assemblyName, resultPath);
                     }
@@ -419,7 +429,7 @@ namespace Alex.Plugins
                 }
                 catch (Exception ex)
                 {
-                    Log.Error($"Failed to load assembly {resolved.Key} even tho its path was found!", ex);
+                    Log.Error(ex,$"Failed to load assembly {resolved.Key} even tho its path was found!");
 
                     assemblies = default(Assembly[]);
                     return false;
@@ -452,7 +462,7 @@ namespace Alex.Plugins
                         catch (Exception ex)
                         {
                             plugin = null;
-                            Log.Error($"An error has occurred: {ex.ToString()}", ex);
+                            Log.Error(ex, $"An error has occurred: {ex.ToString()}");
                         }
 
                         if (plugin != null)
@@ -468,11 +478,11 @@ namespace Alex.Plugins
                             List<object> parameters = new List<object>();
                             foreach (ParameterInfo argument in constructor.GetParameters())
                             {
-                                if (argument.ParameterType == typeof(Alex))
+                                /*if (argument.ParameterType == typeof(Alex))
                                 {
                                     parameters.Add(Parent);
                                     continue;
-                                }
+                                }*/
 
                                 if (References.TryGetValue(argument.ParameterType, out object arg))
                                 {
@@ -483,6 +493,13 @@ namespace Alex.Plugins
                                     {
                                         assembliesReferenced.Add(argsAssembly);
                                     }
+                                    continue;
+                                }
+
+                                var serviceInstance = ServiceProvider.GetRequiredService(argument.ParameterType);
+                                if (serviceInstance != null)
+                                {
+                                    parameters.Add(serviceInstance);
                                     continue;
                                 }
 
@@ -538,7 +555,7 @@ namespace Alex.Plugins
             }
             catch (Exception ex)
             {
-                Log.Error("Could not load assembly", ex);
+                Log.Error(ex, "Could not load assembly");
             }
 
             loaded = new Plugin[0];
@@ -586,7 +603,9 @@ namespace Alex.Plugins
         {
             lock (_pluginLock)
             {
-                plugin.Disabled(Parent);
+                plugin.Disabled();
+                
+                Log.Info($"Disabled {plugin.Info.Name} version {plugin.Info.Version} by {plugin.Info.Author}");
 
                 Assembly assembly = plugin.GetType().Assembly;
 
@@ -614,9 +633,11 @@ namespace Alex.Plugins
                 {
                     if (LoadedAssemblies.ContainsKey(pluginAssembly.Value))
                     {
-                        foreach (Plugin pluginInstance in LoadedAssemblies[pluginAssembly.Value].PluginInstances)
+                        foreach (Plugin instance in LoadedAssemblies[pluginAssembly.Value].PluginInstances)
                         {
-                            pluginInstance.Disabled(Parent);
+                            instance.Disabled();
+                            
+                            Log.Info($"Disabled {instance.Info.Name} version {instance.Info.Version} by {instance.Info.Author}");
                         }
                         LoadedAssemblies.Remove(pluginAssembly.Value);
                     }
