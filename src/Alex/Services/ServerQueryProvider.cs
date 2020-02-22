@@ -96,7 +96,7 @@ namespace Alex.Services
 				return;
 			}
 
-			using(DedicatedThreadPool threadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(4, ThreadType.Background, "ServerPingThread")))
+			using(DedicatedThreadPool threadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(1, ThreadType.Background, "ServerPingThread")))
 		    {
 			    BedrockClient client = null;
 			    try
@@ -118,7 +118,7 @@ namespace Alex.Services
 						pingTime = sw.ElapsedMilliseconds;
 					    ar.Set();
 
-						pingCallback.BeginInvoke(new ServerPingResponse(true, pingTime), pingCallback.EndInvoke, null);
+						pingCallback.Invoke(new ServerPingResponse(true, pingTime));
 				    };
 
 				    client.StartClient();

@@ -40,6 +40,7 @@ namespace Alex.API.Graphics
       //  private long _indexMemoryUsage = 0;
         private Timer DisposalTimer { get; }
         private bool ShuttingDown { get; set; } = false;
+        private object _disposalLock = new object();
         public GpuResourceManager()
         {
             Textures = new ConcurrentDictionary<long, PooledTexture2D>();
@@ -73,7 +74,8 @@ namespace Alex.API.Graphics
         private object _resourceLock = new object();
         private List<IGpuResource> _resources = new List<IGpuResource>();
         private Queue<(bool add, IGpuResource resource)> _buffer = new Queue<(bool, IGpuResource)>();
-        private ConcurrentQueue<IGpuResource> _disposalQueue = new ConcurrentQueue<IGpuResource>();
+        private List<IGpuResource> _disposalQueue = new List<IGpuResource>();
+       // private SortedList<long, IGpuResource> _disposalQueue = new SortedList<long, IGpuResource>();
         
         public IEnumerable<IGpuResource> GetResources()
         {
@@ -101,15 +103,50 @@ namespace Alex.API.Graphics
 
         private void HandleDisposeQueue()
         {
-            while (_disposalQueue.TryDequeue(out IGpuResource resource))
+            lock (_disposalLock)
             {
-                resource.Dispose();
+                var disposed = _disposalQueue.ToArray();
+                _disposalQueue.Clear();
+                foreach (var dispose in disposed)
+                {
+                    dispose.Dispose();
+                }
+               // while (_disposalQueue.TryDequeue(out IGpuResource resource))
+               // {
+               //     resource.Dispose();
+               // }
             }
         }
 
         public PooledVertexBuffer CreateBuffer(object caller, GraphicsDevice device, VertexDeclaration vertexDeclaration,
             int vertexCount, BufferUsage bufferUsage)
         {
+            if (Monitor.TryEnter(_disposalLock))
+            {
+                try
+                {
+                    var items = _resources.Where(x => x is PooledVertexBuffer).Cast<PooledVertexBuffer>()
+                        .Where(x => x.VertexCount >= vertexCount && x.VertexDeclaration == vertexDeclaration).ToArray();
+
+                    var closest = items.OrderBy(x => Math.Abs(x.VertexCount - vertexCount)).FirstOrDefault();
+                    if (closest != default)
+                    {
+                        if (Buffers.TryAdd(closest.PoolId, closest))
+                        {
+                            closest.UnMark();
+                            _resources.Remove(closest);
+                            
+                      //      Interlocked.Add(ref _totalMemoryUsage, closest.MemoryUsage);
+                            return closest;
+                        }
+                    }
+                }
+                finally
+                {
+                    Monitor.Exit(_disposalLock);
+                }
+            }
+            
             long id = Interlocked.Increment(ref _bufferId);
             PooledVertexBuffer buffer = new PooledVertexBuffer(this, id, caller, device, vertexDeclaration, vertexCount, bufferUsage);
             buffer.Name = $"{caller.ToString()} - {id}";
@@ -169,6 +206,32 @@ namespace Alex.API.Graphics
         public PooledIndexBuffer CreateIndexBuffer(object caller, GraphicsDevice graphicsDevice, IndexElementSize indexElementSize,
             int indexCount, BufferUsage bufferUsage)
         {
+           /* if (Monitor.TryEnter(_disposalLock))
+            {
+                try
+                {
+                    var items = _disposalQueue.Where(x => x is PooledIndexBuffer).Cast<PooledIndexBuffer>()
+                        .Where(x => x.IndexCount >= indexCount && x.IndexElementSize == indexElementSize).ToArray();
+
+                    var closest = items.OrderBy(x => Math.Abs(x.IndexCount - indexCount)).FirstOrDefault();
+                    if (closest != default)
+                    {
+                        if (IndexBuffers.TryAdd(closest.PoolId, closest))
+                        {
+                            closest.UnMark();
+                            _disposalQueue.Remove(closest);
+                            
+                          //  Interlocked.Add(ref _totalMemoryUsage, closest.MemoryUsage);
+                            return closest;
+                        }
+                    }
+                }
+                finally
+                {
+                    Monitor.Exit(_disposalLock);
+                }
+            }*/
+            
             var id = Interlocked.Increment(ref _indexBufferId);
             var buffer = new PooledIndexBuffer(this, id, caller, graphicsDevice, indexElementSize, indexCount, bufferUsage);
             buffer.Name = $"{caller.ToString()} - {id}";
@@ -220,7 +283,13 @@ namespace Alex.API.Graphics
 
         internal void QueueForDisposal(IGpuResource resource)
         {
-            _disposalQueue.Enqueue(resource);
+            lock (_disposalLock)
+            {
+                if (!_disposalQueue.Contains(resource))
+                {
+                    _disposalQueue.Add(resource);
+                }
+            }
         }
         
         public static PooledVertexBuffer GetBuffer(object caller, GraphicsDevice device, VertexDeclaration vertexDeclaration,
@@ -292,6 +361,11 @@ namespace Alex.API.Graphics
                 MarkedForDisposal = true;
                 Parent?.QueueForDisposal(this);
             }
+        }
+
+        public void UnMark()
+        {
+            MarkedForDisposal = false;
         }
         
         protected override void Dispose(bool disposing)
@@ -392,6 +466,11 @@ namespace Alex.API.Graphics
             }
         }
 
+        public void UnMark()
+        {
+            MarkedForDisposal = false;
+        }
+        
         protected override void Dispose(bool disposing)
         {
             Parent?.Disposed(this);
@@ -429,6 +508,11 @@ namespace Alex.API.Graphics
             }
         }
         
+        public void UnMark()
+        {
+            MarkedForDisposal = false;
+        }
+        
         protected override void Dispose(bool disposing)
         {
             Parent?.Disposed(this);
@@ -449,5 +533,6 @@ namespace Alex.API.Graphics
 
         bool MarkedForDisposal { get; }
         void MarkForDisposal();
+        void UnMark();
     }
 }

@@ -116,8 +116,10 @@ namespace Alex.Graphics.Models.Blocks
 			bool isFlowing = isFlowing = Check(world, position);;
 			int rot = 0;
 			bool calculateDirection = false;
-			var bc = world.GetBlock(position + BlockCoordinates.Up);//.GetType();
-			if ((!IsLava && bc.IsWater) || (IsLava && bc.Name == "minecraft:lava")) //.Name == b1 || bc.Name == b2)
+
+			var check = position + BlockCoordinates.Up;
+			var bc = world.GetBlockStates(check.X, check.Y, check.Z).ToArray();//.GetType();
+			if ((!IsLava && bc.Any(x => x.state.Block.IsWater)) || (IsLava && bc.Any(x => x.state.Block.Name == "minecraft:lava"))) //.Name == b1 || bc.Name == b2)
 			{
 				tl = 8;
 				tr = 8;

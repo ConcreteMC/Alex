@@ -161,7 +161,7 @@ namespace Alex.Worlds.Bedrock
 
 			BaseClient.WorldReceiver?.UpdatePlayerPosition(new API.Utils.PlayerLocation(new Microsoft.Xna.Framework.Vector3(Client.SpawnPoint.X, Client.SpawnPoint.Y, Client.SpawnPoint.Z), message.spawn.X, message.spawn.X, message.spawn.Y));
 
-			File.WriteAllText("states.json", JsonConvert.SerializeObject(message.blockPallet));
+			//File.WriteAllText("states.json", JsonConvert.SerializeObject(message.blockPallet));
 			
 			Dictionary<uint, BlockRecord> ourStates = new Dictionary<uint, BlockRecord>();
 			foreach (var bs in message.blockPallet)
