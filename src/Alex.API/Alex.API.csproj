@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
     <UpgradeBackupLocation>
@@ -27,7 +27,7 @@
     <Folder Include="Gui\Abstractions\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\lib\MiNET\src\MiNET\MiNET\MiNET.csproj"/>
+    <ProjectReference Include="..\..\lib\MiNET\src\MiNET\MiNET\MiNET.csproj" />
     <ProjectReference Include="..\RocketUI\RocketUI.csproj" />
   </ItemGroup>
 </Project>

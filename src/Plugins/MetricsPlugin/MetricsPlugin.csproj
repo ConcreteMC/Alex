@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
 	  <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 	  <Configurations>Debug;Release;Appveyor</Configurations>
 	  <Platforms>AnyCPU;x64</Platforms>

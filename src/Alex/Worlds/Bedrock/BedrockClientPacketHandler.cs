@@ -206,7 +206,7 @@ namespace Alex.Worlds.Bedrock
 			//File.WriteAllText("states.json", JsonConvert.SerializeObject(message.blockPallet));
 			
 			Dictionary<uint, BlockStateContainer> ourStates = new Dictionary<uint, BlockStateContainer>();
-			foreach (var bs in message.BlockPalette)
+			foreach (var bs in message.blockPalette)
 			{
 				foreach (var blockstate in bs.States)
 				{
