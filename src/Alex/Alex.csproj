@@ -108,7 +108,7 @@
     <PackageReference Include="MiniProfiler.EntityFrameworkCore" Version="4.0.180" />
     <PackageReference Include="Mono.Cecil" Version="0.11.1" />
     <PackageReference Include="MonoGame.Framework.DesktopGL.Core" Version="3.8.0.2" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="NLog" Version="4.6.8" />
     <PackageReference Include="Portable.BouncyCastle" Version="1.8.5.2" />
     <PackageReference Include="SharpRakLib.Core" Version="1.0.0" />
