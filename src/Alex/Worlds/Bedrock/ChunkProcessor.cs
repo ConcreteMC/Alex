@@ -368,7 +368,7 @@ namespace Alex.Worlds.Bedrock
 			        {
 				        biomeIds[i] = defStream.ReadByte();
 			        }
-
+			        
 			        chunkColumn.BiomeId = biomeIds;
 
 			        if (stream.Position >= stream.Length - 1)
