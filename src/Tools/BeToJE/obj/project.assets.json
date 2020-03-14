@@ -2,7 +2,7 @@
   "version": 3,
   "targets": {
     ".NETCoreApp,Version=v3.1": {
-      "Newtonsoft.Json/12.0.2": {
+      "Newtonsoft.Json/12.0.3": {
         "type": "package",
         "compile": {
           "lib/netstandard2.0/Newtonsoft.Json.dll": {}
@@ -14,10 +14,10 @@
     }
   },
   "libraries": {
-    "Newtonsoft.Json/12.0.2": {
-      "sha512": "mtweBXPWhp1CMQATtBT7ZfMZrbZBTKfjGwz6Y75NwGjx/GztDaUnfw8GK9KZ2T4fDIqKJyDjc9Rxlw5+G2FcVA==",
+    "Newtonsoft.Json/12.0.3": {
+      "sha512": "6mgjfnRB4jKMlzHSl+VD+oUc1IebOZabkbyWj2RiTgWwYPPuaK1H97G1sHqGwPlS5npiF5Q0OrxN1wni2n5QWg==",
       "type": "package",
-      "path": "newtonsoft.json/12.0.2",
+      "path": "newtonsoft.json/12.0.3",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -40,14 +40,15 @@
         "lib/portable-net40+sl5+win8+wp8+wpa81/Newtonsoft.Json.xml",
         "lib/portable-net45+win8+wp8+wpa81/Newtonsoft.Json.dll",
         "lib/portable-net45+win8+wp8+wpa81/Newtonsoft.Json.xml",
-        "newtonsoft.json.12.0.2.nupkg.sha512",
-        "newtonsoft.json.nuspec"
+        "newtonsoft.json.12.0.3.nupkg.sha512",
+        "newtonsoft.json.nuspec",
+        "packageIcon.png"
       ]
     }
   },
   "projectFileDependencyGroups": {
     ".NETCoreApp,Version=v3.1": [
-      "Newtonsoft.Json >= 12.0.2"
+      "Newtonsoft.Json >= 12.0.3"
     ]
   },
   "packageFolders": {
@@ -57,17 +58,17 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/kenny/github/Alex/src/Tools/BeToJE/BeToJE.csproj",
+      "projectUniqueName": "/media/kenny/01D1B9F599EA99F0/Projects/Alex/src/Tools/BeToJE/BeToJE.csproj",
       "projectName": "BeToJE",
-      "projectPath": "/home/kenny/github/Alex/src/Tools/BeToJE/BeToJE.csproj",
+      "projectPath": "/media/kenny/01D1B9F599EA99F0/Projects/Alex/src/Tools/BeToJE/BeToJE.csproj",
       "packagesPath": "/home/kenny/.nuget/packages/",
-      "outputPath": "/home/kenny/github/Alex/src/Tools/BeToJE/obj/",
+      "outputPath": "/media/kenny/01D1B9F599EA99F0/Projects/Alex/src/Tools/BeToJE/obj/",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "/usr/share/dotnet/sdk/NuGetFallbackFolder"
       ],
       "configFilePaths": [
-        "/home/kenny/github/Alex/src/NuGet.Config",
+        "/media/kenny/01D1B9F599EA99F0/Projects/Alex/src/NuGet.Config",
         "/home/kenny/.config/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
@@ -94,7 +95,7 @@
         "dependencies": {
           "Newtonsoft.Json": {
             "target": "Package",
-            "version": "[12.0.2, )"
+            "version": "[12.0.3, )"
           }
         },
         "imports": [

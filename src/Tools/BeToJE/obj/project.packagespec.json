@@ -1,10 +1,10 @@
 ﻿{
   "version": "1.0.0",
   "restore": {
-    "projectUniqueName": "/home/kenny/github/Alex/src/Tools/BeToJE/BeToJE.csproj",
+    "projectUniqueName": "/media/kenny/01D1B9F599EA99F0/Projects/Alex/src/Tools/BeToJE/BeToJE.csproj",
     "projectName": "BeToJE",
-    "projectPath": "/home/kenny/github/Alex/src/Tools/BeToJE/BeToJE.csproj",
-    "outputPath": "/home/kenny/github/Alex/src/Tools/BeToJE/obj/",
+    "projectPath": "/media/kenny/01D1B9F599EA99F0/Projects/Alex/src/Tools/BeToJE/BeToJE.csproj",
+    "outputPath": "/media/kenny/01D1B9F599EA99F0/Projects/Alex/src/Tools/BeToJE/obj/",
     "projectStyle": "PackageReference",
     "fallbackFolders": [
       "/usr/share/dotnet/sdk/NuGetFallbackFolder"
@@ -33,7 +33,7 @@
       "dependencies": {
         "Newtonsoft.Json": {
           "target": "Package",
-          "version": "[12.0.2, )"
+          "version": "[12.0.3, )"
         }
       },
       "imports": [

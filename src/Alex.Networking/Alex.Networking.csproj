@@ -15,7 +15,7 @@
   <ItemGroup>
     <PackageReference Include="Iconic.Zlib.Netstandard" Version="1.0.0" />
     <PackageReference Include="MonoGame.Framework.DesktopGL.Core" Version="3.8.0.2" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="NLog" Version="4.5.0" />
   </ItemGroup>
   <ItemGroup>

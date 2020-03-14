@@ -96,7 +96,7 @@ namespace Alex.Services
 				return;
 			}
 
-			using(DedicatedThreadPool threadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(4, ThreadType.Background, "ServerPingThread")))
+			using(DedicatedThreadPool threadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(1, ThreadType.Background, "ServerPingThread")))
 		    {
 			    BedrockClient client = null;
 			    try

@@ -652,7 +652,7 @@ namespace Alex.Worlds
 
                         //if (i == 0) force = true;
 
-                        if (force || !section.ScheduledUpdates.IsZero || section.IsDirty)
+                        if (force || section.ScheduledUpdates.Cast<bool>().Contains(true) || section.IsDirty)
                         {
 	                        using (profiler.Step("chunk.meshing"))
                             {

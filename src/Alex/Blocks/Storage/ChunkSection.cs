@@ -26,11 +26,11 @@ namespace Alex.Blocks.Storage
 		public NibbleArray BlockLight;
 		public NibbleArray SkyLight;
 
-        public BitArray TransparentBlocks;
-        public BitArray SolidBlocks;
-        public BitArray ScheduledUpdates;
-        public BitArray ScheduledSkylightUpdates;
-        public BitArray RenderedBlocks;
+        public System.Collections.BitArray TransparentBlocks;
+        public System.Collections.BitArray SolidBlocks;
+        public System.Collections.BitArray ScheduledUpdates;
+        public System.Collections.BitArray ScheduledSkylightUpdates;
+        public System.Collections.BitArray RenderedBlocks;
 
         public bool SolidBorder { get; private set; } = false;
 		private bool[] FaceSolidity { get; set; } = new bool[6];
@@ -58,12 +58,13 @@ namespace Alex.Blocks.Storage
 			{
 				this.SkyLight = new NibbleArray(4096, 0xff);
 			}
+//System.Collections.BitArray a = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8]);
 
-		    TransparentBlocks = new BitArray(new byte[(16 * 16 * 16) / 8]);
-		    SolidBlocks = new BitArray(new byte[(16 * 16 * 16) / 8]);
-		    ScheduledUpdates = new BitArray(new byte[(16 * 16 * 16) / 8]);
-		    ScheduledSkylightUpdates = new BitArray(new byte[(16 * 16 * 16) / 8]);
-            RenderedBlocks = new BitArray(new byte[(16 * 16 * 16) / 8]);
+		    TransparentBlocks = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8]);
+		    SolidBlocks = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8]);
+		    ScheduledUpdates = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8]);
+		    ScheduledSkylightUpdates = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8]);
+            RenderedBlocks = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8]);
 
             for (int i = 0; i < TransparentBlocks.Length; i++)
 			{
