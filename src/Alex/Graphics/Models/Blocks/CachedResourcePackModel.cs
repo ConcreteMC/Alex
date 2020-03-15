@@ -210,7 +210,7 @@ namespace Alex.Graphics.Models.Blocks
 					if (min.Z < Min.Z)
 						Min.Z = min.Z;
 
-					result.Add($"{model.ModelName}:{index}:{r.Key}", r.Value);
+					result.Add($"{index}:{r.Key}", r.Value);
 				}
 			}
 
@@ -230,9 +230,10 @@ namespace Alex.Graphics.Models.Blocks
 			for (var index = 0; index < model.Elements.Length; index++)
 			{
 				var element = model.Elements[index];
-				element.To *= Scale;
-				element.From *= Scale;
-				
+				element.To *= (Scale);
+
+				element.From *= (Scale);
+
 				FaceCache cache = new FaceCache();
 
 				foreach (var face in element.Faces)
@@ -284,11 +285,12 @@ namespace Alex.Graphics.Models.Blocks
 					for (int i = 0; i < verts.Length; i++)
 					{
 						var v = verts[i];
-
+						//v.Position += (v.Normal * scale);
+						
 						v.Position = FixRotation(v.Position, raw, element);
 
 						v.Position /= 16f;
-						
+
 						if (v.Position.X < minX)
 						{
 							minX = v.Position.X;
@@ -505,11 +507,13 @@ namespace Alex.Graphics.Models.Blocks
 				for (var i = 0; i < modelElements.Length; i++)
 				{
 					FaceCache elementCache;
-					if (!faceCache.TryGetValue($"{bsModel.ModelName}:{bsModelIndex}:{i}", out elementCache))
+					if (!faceCache.TryGetValue($"{bsModelIndex}:{i}", out elementCache))
 					{
 						Log.Warn($"Element cache is null!");
 						continue;
 					}
+
+					var scale = (i * 0.001f);
 
 					var element = modelElements[i];
 
@@ -549,7 +553,7 @@ namespace Alex.Graphics.Models.Blocks
 
 						Color faceColor = faceVertices.Vertices[0].Color;
 
-						if (faceElement.Value.TintIndex >= 0)
+						if (faceElement.Value.TintIndex.HasValue)
 						{
 							if (biomeId != -1)
 							{
@@ -577,7 +581,7 @@ namespace Alex.Graphics.Models.Blocks
 						{
 							var vertex = faceVertices.Vertices[index];
 							vertex.Color = faceColor;
-							vertex.Position = position + vertex.Position;
+							vertex.Position = (position + vertex.Position) + (originalCullFace.GetVector3() * scale);;
 
 							verts.Add(vertex);
 						}

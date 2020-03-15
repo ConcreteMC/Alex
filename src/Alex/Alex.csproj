@@ -84,6 +84,9 @@
     <EmbeddedResource Include="Resources\items3.json" />
     <None Remove="Resources\resources.zip" />
     <EmbeddedResource Include="Resources\resources.zip" />
+    <None Update="skin.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>

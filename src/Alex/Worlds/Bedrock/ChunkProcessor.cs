@@ -19,6 +19,7 @@ using NLog;
 using StackExchange.Profiling;
 using BlockState = Alex.Blocks.State.BlockState;
 using IBlockState = Alex.API.Blocks.State.IBlockState;
+using NibbleArray = MiNET.Utils.NibbleArray;
 
 namespace Alex.Worlds.Bedrock
 {
@@ -248,7 +249,10 @@ namespace Alex.Worlds.Bedrock
 				        }
 				        else
 				        {
-					      /*  #region OldFormat 
+					        if (section == null) 
+						        section = new ChunkSection(s, true, 2);
+					        
+					        #region OldFormat 
 
 					        byte[] blockIds = new byte[4096];
 					        defStream.Read(blockIds, 0, blockIds.Length);
@@ -322,7 +326,7 @@ namespace Alex.Worlds.Bedrock
 						        }
 					        }
 
-					        #endregion*/
+					        #endregion
 				        }
 
 				        if (UseAlexChunks)

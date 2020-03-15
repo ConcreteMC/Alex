@@ -29,9 +29,7 @@ namespace Alex.Blocks
 			this.Register(() => new BrownMushroom().WithLocation("minecraft:brown_mushroom"));
 			this.Register(() => new RedMushroom().WithLocation("minecraft:red_mushroom"));
 			this.Register(() => new DeadBush().WithLocation("minecraft:dead_bush"));
-			this.Register(() => new Piston().WithLocation("minecraft:piston"));
-			this.Register(() => new PistonHead().WithLocation("minecraft:piston_head"));
-			this.Register(() => new StickyPiston().WithLocation("minecraft:sticky_piston"));
+
 			this.Register(() => new Tnt().WithLocation("minecraft:tnt"));
 			this.Register(() => new Bookshelf().WithLocation("minecraft:bookshelf"));
 			this.Register(() => new MossyCobblestone().WithLocation("minecraft:mossy_cobblestone"));
@@ -39,7 +37,7 @@ namespace Alex.Blocks
 			this.Register(() => new Fire().WithLocation("minecraft:fire"));
 			this.Register(() => new MobSpawner().WithLocation("minecraft:mob_spawner"));
 			this.Register(() => new Chest().WithLocation("minecraft:chest"));
-			this.Register(() => new RedstoneWire().WithLocation("minecraft:redstone_wire"));
+
 			this.Register(() => new CraftingTable().WithLocation("minecraft:crafting_table"));
 			this.Register(() => new Wheat().WithLocation("minecraft:wheat"));
 			this.Register(() => new Farmland().WithLocation("minecraft:farmland"));
@@ -47,12 +45,7 @@ namespace Alex.Blocks
 			this.Register(() => new Ladder().WithLocation("minecraft:ladder"));
 			this.Register(() => new Rail().WithLocation("minecraft:rail"));
 			this.Register(() => new WallSign().WithLocation("minecraft:wall_sign"));
-			this.Register(() => new Lever().WithLocation("minecraft:lever"));
-			this.Register(() => new StonePressurePlate().WithLocation("minecraft:stone_pressure_plate"));
-			this.Register(() => new StonePressurePlate().WithLocation("minecraft:oak_pressure_plate"));
-			this.Register(() => new Torch().WithLocation("minecraft:torch"));
-			this.Register(() => new Torch(true).WithLocation("minecraft:wall_torch"));
-			this.Register(() => new RedstoneTorch().WithLocation("minecraft:redstone_torch"));
+
 			this.Register(() => new Snow().WithLocation("minecraft:snow"));
 			this.Register(() => new Ice().WithLocation("minecraft:ice"));
 			this.Register(() => new Cactus().WithLocation("minecraft:cactus"));
@@ -89,11 +82,7 @@ namespace Alex.Blocks
 			this.Register(() => new Potatoes().WithLocation("minecraft:potatoes"));
 			this.Register(() => new Anvil().WithLocation("minecraft:anvil"));
 			this.Register(() => new TrappedChest().WithLocation("minecraft:trapped_chest"));
-			this.Register(() => new LightWeightedPressurePlate().WithLocation("minecraft:light_weighted_pressure_plate"));
-			this.Register(() => new HeavyWeightedPressurePlate().WithLocation("minecraft:heavy_weighted_pressure_plate"));
-			this.Register(() => new DaylightDetector().WithLocation("minecraft:daylight_detector"));
-			this.Register(() => new RedstoneBlock().WithLocation("minecraft:redstone_block"));
-			this.Register(() => new Hopper().WithLocation("minecraft:hopper"));
+			
 			this.Register(() => new QuartzBlock().WithLocation("minecraft:quartz_block"));
 			this.Register(() => new ActivatorRail().WithLocation("minecraft:activator_rail"));
 			this.Register(() => new Dropper().WithLocation("minecraft:dropper"));
@@ -136,6 +125,28 @@ namespace Alex.Blocks
 			this.Register(() => new BoneBlock().WithLocation("minecraft:bone_block"));
 			this.Register(() => new StructureBlock().WithLocation("minecraft:structure_block"));
 
+			//Redstone
+			this.Register(() => new Lever().WithLocation("minecraft:lever"));
+			this.Register(() => new RedstoneWire().WithLocation("minecraft:redstone_wire"));
+			this.Register(() => new Piston().WithLocation("minecraft:piston"));
+			this.Register(() => new PistonHead().WithLocation("minecraft:piston_head"));
+			this.Register(() => new StickyPiston().WithLocation("minecraft:sticky_piston"));
+			this.Register(() => new DaylightDetector().WithLocation("minecraft:daylight_detector"));
+			this.Register(() => new RedstoneBlock().WithLocation("minecraft:redstone_block"));
+			this.Register(() => new Hopper().WithLocation("minecraft:hopper"));
+			
+			//Pressure plates
+			this.Register(() => new LightWeightedPressurePlate().WithLocation("minecraft:light_weighted_pressure_plate"));
+			this.Register(() => new HeavyWeightedPressurePlate().WithLocation("minecraft:heavy_weighted_pressure_plate"));
+			this.Register(() => new StonePressurePlate().WithLocation("minecraft:stone_pressure_plate"));
+			this.Register(() => new StonePressurePlate().WithLocation("minecraft:oak_pressure_plate"));
+			
+			//Torches
+			this.Register(() => new Torch().WithLocation("minecraft:torch"));
+			this.Register(() => new Torch(true).WithLocation("minecraft:wall_torch"));
+			this.Register(() => new RedstoneTorch().WithLocation("minecraft:redstone_torch"));
+			this.Register(() => new RedstoneTorch(true).WithLocation("minecraft:redstone_wall_torch"));
+			
 			//Buttons
 			this.Register(() => new StoneButton().WithLocation("minecraft:stone_button"));
 			this.Register(() => new OakButton().WithLocation("minecraft:oak_button"));
@@ -244,6 +255,7 @@ namespace Alex.Blocks
 			this.Register(() => new StoneBrickStairs().WithLocation("minecraft:stone_brick_stairs"));
 			this.Register(() => new NetherBrickStairs().WithLocation("minecraft:nether_brick_stairs"));
 			this.Register(() => new OakStairs().WithLocation("minecraft:oak_stairs"));
+			this.Register(() => new StoneStairs().WithLocation("minecraft:stone_stairs"));
 
 			//Liquid
 			this.Register(() => new Water().WithLocation("minecraft:water"));

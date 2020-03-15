@@ -12,7 +12,7 @@ namespace Alex.Graphics.Camera
 	    /// <summary>
 	    /// The nearest distance the camera will use
 	    /// </summary>
-	    public const float NearDistance = 0.1f;
+	    public const float NearDistance = 0.15f;
 
 	    /// <summary>
 	    /// The furthest the camera can see
@@ -22,7 +22,7 @@ namespace Alex.Graphics.Camera
 	    public float FOV { get; set; } = 75f;
 		public Camera(int renderDistance)
 	    {
-		    FarDistance = renderDistance * 16 * 16;
+		    FarDistance = (renderDistance * 16f);
 			
 		    ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(
 			    MathHelper.ToRadians(FOV),

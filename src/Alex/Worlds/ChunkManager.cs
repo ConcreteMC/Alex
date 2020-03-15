@@ -97,7 +97,11 @@ namespace Alex.Worlds
 		        FogStart = fogStart,
 		        VertexColorEnabled = true,
 		        LightingEnabled = true,
-		        FogEnabled = false
+		        FogEnabled = false,
+		    //    AlphaFunction = CompareFunction.Greater,
+		    //    ReferenceAlpha = 127
+		        
+		        PreferPerPixelLighting = false
 	        };
 	        
 	        //if (alex.)
@@ -148,18 +152,45 @@ namespace Alex.Worlds
 	    int _framerate = 12;     // Animate at 12 frames per second
 	    float _timer = 0.0f;
 	    
+	    private static RasterizerState Copy(RasterizerState state)
+	    {
+		    return new RasterizerState()
+		    {
+			    CullMode = state.CullMode,
+			    DepthBias = state.DepthBias,
+			    FillMode = state.FillMode,
+			    MultiSampleAntiAlias = state.MultiSampleAntiAlias,
+			    Name = state.Name,
+			    ScissorTestEnable = state.ScissorTestEnable,
+			    SlopeScaleDepthBias = state.SlopeScaleDepthBias,
+			    Tag = state.Tag,
+		    };
+	    }
+	    
 	    public bool UseWireFrames { get; set; } = false;
 	    public void Draw(IRenderArgs args)
 	    {
 		    var device = args.GraphicsDevice;
 		    var camera = args.Camera;
+
+		    var originalSamplerState = device.SamplerStates[0];
+		    
+		    device.SamplerStates[0] = new SamplerState()
+		    {
+			    Filter = TextureFilter.Point,
+			    AddressU = TextureAddressMode.Wrap,
+			    AddressV = TextureAddressMode.Wrap,
+			    MipMapLevelOfDetailBias = -2f,
+			    MaxMipLevel = 0
+		    };
 		    
 		    RasterizerState originalState = null;
+		    
 		    bool usingWireFrames = UseWireFrames;
 		    if (usingWireFrames)
 		    {
 			    originalState = device.RasterizerState;
-			    RasterizerState rasterizerState = new RasterizerState();
+			    RasterizerState rasterizerState = Copy(originalState);
 			    rasterizerState.FillMode = FillMode.WireFrame;
 			    device.RasterizerState = rasterizerState;
 		    }
@@ -197,6 +228,8 @@ namespace Alex.Worlds
 		    Vertices = tempVertices;
 		    RenderedChunks = tempChunks;
 		    IndexBufferSize = indexBufferSize;
+
+		    device.SamplerStates[0] = originalSamplerState;
 	    }
 
 	    public Vector3 FogColor
@@ -228,6 +261,7 @@ namespace Alex.Worlds
 		    {
 			    TransparentEffect.DiffuseColor = value;
 			    OpaqueEffect.AmbientLightColor = value;
+			  // OpaqueEffect.DiffuseColor = value;
 			    AnimatedEffect.DiffuseColor = value;
 		    }
 	    }

@@ -44,6 +44,7 @@ using NLog;
 using StackExchange.Profiling;
 using GuiDebugHelper = Alex.Gui.GuiDebugHelper;
 using Point = Microsoft.Xna.Framework.Point;
+using Skin = Alex.API.Utils.Skin;
 using TextInputEventArgs = Microsoft.Xna.Framework.TextInputEventArgs;
 
 namespace Alex
@@ -101,6 +102,11 @@ namespace Alex
 				SynchronizeWithVerticalRetrace = false,
 				GraphicsProfile = GraphicsProfile.Reach,
 			};
+
+			DeviceManager.PreparingDeviceSettings += (sender, args) =>
+				{
+					args.GraphicsDeviceInformation.PresentationParameters.DepthStencilFormat = DepthFormat.Depth24;
+				};
 			
 			Content.RootDirectory = "assets";
 

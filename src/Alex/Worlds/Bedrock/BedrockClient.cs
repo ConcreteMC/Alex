@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
@@ -28,6 +29,8 @@ using MiNET.Net;
 using MiNET.Plugins;
 using MiNET.Utils;
 using MiNET.Utils.Skins;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using NLog;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Agreement;
@@ -349,59 +352,37 @@ namespace Alex.Worlds.Bedrock
 
         private byte[] EncodeSkinJwt(AsymmetricCipherKeyPair newKey, ECDsa signKey, string username, string x5u)
         {
-            MiNET.Utils.Skins.Skin skin = new Skin
+	        var skinText = File.ReadAllText("skin.json");
+	        dynamic payload = JObject.Parse(skinText);
+	        
+	        var skin = new Skin()
+	        {
+		        Cape = new Cape()
+		        {
+			        Data = Convert.FromBase64String((string) payload.Cape.Data ?? string.Empty),
+			        Id = payload.Cape.Id,
+			        ImageHeight = payload.Cape.ImageHeight,
+			        ImageWidth = payload.Cape.ImageWidth,
+			        OnClassicSkin = payload.Cape.OnClassicSkin,
+		        },
+		        SkinId = payload.SkinId,
+		        ResourcePatch = Convert.ToBase64String(Encoding.UTF8.GetBytes((string) payload.ResourcePatch ?? string.Empty)),
+		        Width = payload.Width,
+		        Height = payload.Height,
+		        Data = Convert.FromBase64String((string) payload.Data ?? string.Empty),
+		        GeometryData = Convert.ToBase64String(Encoding.UTF8.GetBytes((string) payload.SkinGeometryData ?? string.Empty)),
+		        AnimationData = payload.AnimationData,
+		        IsPremiumSkin = payload.IsPremiumSkin,
+		        IsPersonaSkin = payload.IsPersonaSkin,
+	        };
+
+	        string val = JWT.Encode(JsonConvert.SerializeObject(new BedrockSkinData(skin)
             {
-                Slim = false,
-                Data = Encoding.Default.GetBytes(new string('Z', 8192)),
-                SkinId = "Standard_Custom",
-              //  GeometryName = "geometry.humanoid.custom",
-              //  GeometryData = "",
-             //   Cape = new Cape()
-               // {
-	          //      Data = new byte[0]
-              //  },
-              //  SkinGeometryName = "geometry.humanoid.custom",
-               // SkinGeometry = ""
-            };
-
-            string skin64 = Convert.ToBase64String(skin.Data);
-           // string cape64 = Convert.ToBase64String(skin.Cape.Data);
-
-            string skinData = $@"
-{{
-    ""SkinAnimationData"": null,
-    ""AnimatedImageData"": [],
-	""CapeData"": """",
-	""ADRole"": 0,
-	""ClientRandomId"": {new Random().Next()},
-	""CurrentInputMode"": 1,
-	""DefaultInputMode"": 1,
-	""DeviceModel"": ""Alex"",
-	""DeviceOS"": 7,
-	""GameVersion"": ""{McpeProtocolInfo.GameVersion}"",
-	""IsEduMode"": {Config.GetProperty("EnableEdu", false).ToString().ToLower()},
-	""GuiScale"": 0,
-	""LanguageCode"": ""en_US"",
-	""PlatformOfflineId"": """",
-	""PlatformOnlineId"": """",
-	""SelfSignedId"": ""{Guid.NewGuid().ToString()}"",
-	""ServerAddress"": ""{base.ServerEndpoint.Address.ToString()}:{base.ServerEndpoint.Port.ToString()}"",
-	""SkinData"": ""{skin64}"",
-	""SkinImageWidth"": 32,
-	""SkinImageHeight"": 64,
-	""PremiumSkin"": false,
-    ""PersonaSkin"": false,
-	""CapeImageHeight"": 0,
-	""CapeImageWidth"": 0,
-    ""CapeOnClassicSkin"": false,
-	""SkinId"": ""{skin.SkinId}"",
-	""TenantId"": ""38dd6634-1031-4c50-a9b4-d16cd9d97d57"",
-	""ThirdPartyName"": ""{username}"",
-	""UIProfile"": 0,
-	""IsAlex"": 1
-}}";
-
-            string val = JWT.Encode(skinData, signKey, JwsAlgorithm.ES384, new Dictionary<string, object> { { "x5u", x5u } }, new JwtSettings()
+	            ClientRandomId = new Random().Next(),
+	            LanguageCode = "en_US",
+	            ServerAddress = $"{base.ServerEndpoint.Address.ToString()}:{base.ServerEndpoint.Port.ToString()}",
+	             
+            }), signKey, JwsAlgorithm.ES384, new Dictionary<string, object> { { "x5u", x5u } }, new JwtSettings()
             {
                 JsonMapper = new JWTMapper()
             });
