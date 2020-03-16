@@ -391,54 +391,64 @@ namespace Alex.Worlds.Bedrock
 
 			        if (stream.Position < stream.Length - 1)
 			        {
+				        int loop = 0;
 				        while (stream.Position < stream.Length)
 				        {
-					        NbtFile file = new NbtFile()
+					        try
 					        {
-						        BigEndian = false,
-						        UseVarInt = true
-					        };
-
-					        file.LoadFromStream(stream, NbtCompression.None);
-
-					        if (file.RootTag.Name == "alex")
-					        {
-						        NbtCompound alexCompound = (NbtCompound) file.RootTag;
-
-						        for (int ci = 0; ci < subChunkCount; ci++)
+						        NbtFile file = new NbtFile()
 						        {
-							        var section = (ChunkSection) chunkColumn.Sections[ci];
+							        BigEndian = false,
+							        UseVarInt = true
+						        };
 
-							        var rawSky = new Utils.NibbleArray(4096);
-							        if (alexCompound.TryGet($"skylight-{ci}", out NbtByteArray skyData))
+						        file.LoadFromStream(stream, NbtCompression.None);
+
+						        if (file.RootTag.Name == "alex")
+						        {
+							        NbtCompound alexCompound = (NbtCompound) file.RootTag;
+
+							        for (int ci = 0; ci < subChunkCount; ci++)
 							        {
-								        rawSky.Data = skyData.Value;
+								        var section = (ChunkSection) chunkColumn.Sections[ci];
+
+								        var rawSky = new Utils.NibbleArray(4096);
+								        if (alexCompound.TryGet($"skylight-{ci}", out NbtByteArray skyData))
+								        {
+									        rawSky.Data = skyData.Value;
+								        }
+								        //defStream.Read(rawSky.Data, 0, rawSky.Data.Length);
+
+								        var rawBlock = new Utils.NibbleArray(4096);
+								        if (alexCompound.TryGet($"blocklight-{ci}", out NbtByteArray blockData))
+								        {
+									        rawBlock.Data = blockData.Value;
+								        }
+
+								        for (int x = 0; x < 16; x++)
+								        for (int y = 0; y < 16; y++)
+								        for (int z = 0; z < 16; z++)
+								        {
+									        var peIndex = (x * 256) + (z * 16) + y;
+									        var sky = rawSky[peIndex];
+									        var block = rawBlock[peIndex];
+
+									        var idx = y << 8 | z << 4 | x;
+
+									        section.SkyLight[idx] = sky;
+									        section.BlockLight[idx] = block;
+								        }
+
+								        chunkColumn.Sections[ci] = section;
 							        }
-							        //defStream.Read(rawSky.Data, 0, rawSky.Data.Length);
-
-							        var rawBlock = new Utils.NibbleArray(4096);
-							        if (alexCompound.TryGet($"blocklight-{ci}", out NbtByteArray blockData))
-							        {
-								        rawBlock.Data = blockData.Value;
-							        }
-
-							        for (int x = 0; x < 16; x++)
-							        for (int y = 0; y < 16; y++)
-							        for (int z = 0; z < 16; z++)
-							        {
-								        var peIndex = (x * 256) + (z * 16) + y;
-								        var sky = rawSky[peIndex];
-								        var block = rawBlock[peIndex];
-
-								        var idx = y << 8 | z << 4 | x;
-
-								        section.SkyLight[idx] = sky;
-								        section.BlockLight[idx] = block;
-							        }
-
-							        chunkColumn.Sections[ci] = section;
 						        }
 					        }
+					        catch (Exception ex)
+					        {
+						        Log.Warn(ex, $"Reading chunk extra data (Loop={loop})");
+					        }
+
+					        loop++;
 				        }
 			        }
 

@@ -274,9 +274,9 @@ namespace Alex.Graphics.Models.Blocks
 						y1 = uv.Y1;
 						y2 = uv.Y2;
 					}
-					
+
 					var verts = GetFaceVertices(face.Key, element.From, element.To,
-						GetTextureUVMap(Resources, ResolveTexture(raw, face.Value.Texture), x1, x2, y1, y2, face.Value.Rotation),
+						GetTextureUVMap(Resources, ResolveTexture(raw, face.Value.Texture), x1, x2, y1, y2, face.Value.Rotation, Color.White),
 						out int[] indexes);
 
 					float minX = float.MaxValue, minY = float.MaxValue, minZ = float.MaxValue;
@@ -487,6 +487,11 @@ namespace Alex.Graphics.Models.Blocks
 			return v;
 		}
 
+		private bool AnyMatching(Vector3 a, Vector3 b)
+		{
+			return (a.X == b.X || a.Y == b.Y || a.Z == b.Z);
+		}
+		
 		protected (VertexPositionNormalTextureColor[] vertices, int[] indexes) GetVertices(IWorld world,
 			Vector3 position, IBlock baseBlock,
 			BlockStateModel[] models, IDictionary<string, FaceCache> faceCache)
@@ -517,6 +522,14 @@ namespace Alex.Graphics.Models.Blocks
 
 					var element = modelElements[i];
 
+					if (!modelElements.Any(e =>
+						{
+							return AnyMatching(e.From, element.From) || AnyMatching(e.To, element.To);
+						}))
+					{
+						scale = 0f;
+					}
+					
 					foreach (var faceElement in element.Faces)
 					{
 						var facing = faceElement.Key;
@@ -570,18 +583,22 @@ namespace Alex.Graphics.Models.Blocks
 							}
 						}
 
-						faceColor = AdjustColor(faceColor, facing,
-							world == null
-								? 15
-								: (GetLight(world, position + cullFace.GetVector3(),
-									false)), element.Shade);
+						if (element.Shade)
+						{
+							faceColor = AdjustColor(faceColor, facing,
+								world == null
+									? 15
+									: (GetLight(world, position + cullFace.GetVector3(),
+										false)), element.Shade);
+						}
 
+						var s = (originalCullFace.GetVector3() * scale);
 						var initialIndex = verts.Count;
 						for (var index = 0; index < faceVertices.Vertices.Length; index++)
 						{
 							var vertex = faceVertices.Vertices[index];
 							vertex.Color = faceColor;
-							vertex.Position = (position + vertex.Position) + (originalCullFace.GetVector3() * scale);;
+							vertex.Position = (position + vertex.Position) + s;
 
 							verts.Add(vertex);
 						}

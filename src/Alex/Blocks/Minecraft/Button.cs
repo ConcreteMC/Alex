@@ -5,7 +5,7 @@
 	    public Button(uint id) : base(id)
 	    {
 		    Transparent = true;
-		    Solid = true;
+		    Solid = false;
 		    IsFullCube = false;
 
 			/*

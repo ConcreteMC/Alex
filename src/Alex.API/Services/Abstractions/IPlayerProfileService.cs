@@ -19,6 +19,8 @@ namespace Alex.API.Services
 		[JsonIgnore]
 		public bool IsBedrock { get; set; }
 
+        [JsonIgnore] public bool Authenticated { get; set; } = false;
+
 	    public PlayerProfile(string uuid, string username, string playerName, Skin skin, string accessToken, string clientToken, bool isBedrock = false)
         {
             Uuid = uuid;

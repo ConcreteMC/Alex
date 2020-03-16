@@ -263,7 +263,7 @@ namespace Alex.Graphics.Models.Blocks
 			}
 
 			//float frameX 
-			UVMap map = GetTextureUVMap(Alex.Instance.Resources, texture, 0, 16, 0, 16, 0);
+			UVMap map = GetTextureUVMap(Alex.Instance.Resources, texture, 0, 16, 0, 16, 0, Color.White);
 
 			var originalMap = new UVMap(map.TopLeft, map.TopRight, map.BottomLeft, map.BottomRight, map.ColorLeft, map.ColorTop, map.ColorBottom);
 			//originalMap.Rotate(180);

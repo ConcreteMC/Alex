@@ -292,6 +292,25 @@ namespace Alex.Blocks
 
 			this.Register(() => new InvisibleBedrock(false).WithLocation("minecraft:barrier"));
             
+			//Carpet
+			this.RegisterRange(
+				() => new Carpet().WithLocation("minecraft:white_carpet"),
+				() => new Carpet().WithLocation("minecraft:orange_carpet"),
+				() => new Carpet().WithLocation("minecraft:magenta_carpet"),
+				() => new Carpet().WithLocation("minecraft:light_blue_carpet"),
+				() => new Carpet().WithLocation("minecraft:yellow_carpet"),
+				() => new Carpet().WithLocation("minecraft:lime_carpet"),
+				() => new Carpet().WithLocation("minecraft:pink_carpet"),
+				() => new Carpet().WithLocation("minecraft:gray_carpet"),
+				() => new Carpet().WithLocation("minecraft:light_gray_carpet"),
+				() => new Carpet().WithLocation("minecraft:cyan_carpet"),
+				() => new Carpet().WithLocation("minecraft:blue_carpet"),
+				() => new Carpet().WithLocation("minecraft:purple_carpet"),
+				() => new Carpet().WithLocation("minecraft:green_carpet"),
+				() => new Carpet().WithLocation("minecraft:brown_carpet"),
+				() => new Carpet().WithLocation("minecraft:red_carpet"),
+				() => new Carpet().WithLocation("minecraft:black_carpet"));
+			
             //Stained glass
             this.Register(() => new Glass().WithLocation("minecraft:white_stained_glass"));
             this.Register(() => new Glass().WithLocation("minecraft:orange_stained_glass"));

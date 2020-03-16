@@ -253,9 +253,9 @@ namespace Alex.Graphics.Models.Blocks
 		    return (byte)Math.Min(blockLight + skyLight, 15);
 	    }
 		
-	    protected UVMap GetTextureUVMap(ResourceManager resources, string texture, float x1, float x2, float y1, float y2, int rot)
+	    protected UVMap GetTextureUVMap(ResourceManager resources, string texture, float x1, float x2, float y1, float y2, int rot, Color color)
 	    {
-			if (resources == null)
+		    if (resources == null)
 		    {
 			    x1 = 0;
 			    x2 = 1 / 32f;
@@ -264,7 +264,7 @@ namespace Alex.Graphics.Models.Blocks
 
 			    return new UVMap(new Microsoft.Xna.Framework.Vector2(x1, y1),
 				    new Microsoft.Xna.Framework.Vector2(x2, y1), new Microsoft.Xna.Framework.Vector2(x1, y2),
-				    new Microsoft.Xna.Framework.Vector2(x2, y2), Color.White, Color.White, Color.White);
+				    new Microsoft.Xna.Framework.Vector2(x2, y2), color, color, color);
 		    }
 
 		    var textureInfo = resources.Atlas.GetAtlasLocation(texture);
@@ -287,10 +287,10 @@ namespace Alex.Graphics.Models.Blocks
             x2 = textureLocation.X + x2 * (((textureInfo.Width / 16f) / uvSize.X));
             y1 = textureLocation.Y + y1 * (((textureInfo.Height / 16f) / uvSize.Y));
             y2 = textureLocation.Y + y2 * (((textureInfo.Height / 16f) / uvSize.Y));*/
-
+           
             var map = new UVMap(new Microsoft.Xna.Framework.Vector2(x1, y1),
 			    new Microsoft.Xna.Framework.Vector2(x2, y1), new Microsoft.Xna.Framework.Vector2(x1, y2),
-			    new Microsoft.Xna.Framework.Vector2(x2, y2), Color.White, Color.White, Color.White);
+			    new Microsoft.Xna.Framework.Vector2(x2, y2), color, color, color);
 
 			if (rot > 0)
 			{

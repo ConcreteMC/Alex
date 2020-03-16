@@ -202,7 +202,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 						}
 					}
 
-					if (currentProfile == null || (!currentProfile.IsBedrock))
+					if ((currentProfile == null || (!currentProfile.IsBedrock)) || !currentProfile.Authenticated)
 					{
 						BEDeviceCodeLoginState loginState = new BEDeviceCodeLoginState(_skyBox,
 							(profile) => { Alex.ConnectToServer(target, profile, true); });

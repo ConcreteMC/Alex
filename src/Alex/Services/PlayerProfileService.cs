@@ -96,6 +96,8 @@ namespace Alex.Services
 							profile.Skin, profile.AccessToken,
 							profile.ClientToken,
 							true);
+
+						p.Authenticated = true;
 								
 						ProfileManager.CreateOrUpdateProfile(ProfileManager.ProfileType.Bedrock, p);
 
@@ -120,6 +122,8 @@ namespace Alex.Services
 									profile.Skin, r.token.AccessToken,
 									JsonConvert.SerializeObject(r.token),
 									true);
+
+								p.Authenticated = true;
 								
 								ProfileManager.CreateOrUpdateProfile(ProfileManager.ProfileType.Bedrock, p);
 
