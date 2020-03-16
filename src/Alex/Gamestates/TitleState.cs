@@ -217,7 +217,7 @@ namespace Alex.GameStates
 			if (e.Profile.Skin.Texture != null)
 			{
 				_playerView.Entity = new PlayerMob(e.Profile.Username, null, null, e.Profile.Skin.Texture,
-					e.Profile.Skin.Slim);
+					e.Profile.Skin.Slim ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom" );
 			}
 		}
 
@@ -258,7 +258,7 @@ namespace Alex.GameStates
 				};
 			}
 
-			var entity = new PlayerMob("", null, null, skin.Texture, skin.Slim);
+			var entity = new PlayerMob("", null, null, skin.Texture);
 			entity.Inventory.IsPeInventory = true;
 
 			AddChild(_playerView =

@@ -15,8 +15,8 @@ namespace Alex.Entities.Models
 			VisibleBoundsWidth = 1;
 			VisibleBoundsHeight = 2;
 			VisibleBoundsOffset = new Vector3(0f, 1f, 0f);
-			Texturewidth = 0;
-			Textureheight = 0;
+			Texturewidth = 64;
+			Textureheight = 64;
 			Bones = new EntityModelBone[15]
 			{
 				new EntityModelBone(){ 

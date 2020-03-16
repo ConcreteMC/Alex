@@ -37,7 +37,8 @@ namespace Alex.Entities
 		private EntityModelRenderer.ModelBone _head;
 
 		public string Name { get; }
-		public PlayerMob(string name, World level, INetworkProvider network, Texture2D skinTexture, bool skinSlim = true) : base(63, level, network)
+		private string GeometryName { get; }
+		public PlayerMob(string name, World level, INetworkProvider network, Texture2D skinTexture, string geometry = "geometry.humanoid.customSlim") : base(63, level, network)
 		{
 			//DoRotationCalculations = false;
 			Name = name;
@@ -64,7 +65,8 @@ namespace Alex.Entities
 			Velocity = Vector3.Zero;
 			PositionOffset = 1.62f;
 
-			UpdateSkin(skinTexture, skinSlim);
+			GeometryName = geometry;
+			UpdateSkin(skinTexture);
 			
 			//Inventory = new Inventory(46);
 		}
@@ -204,19 +206,19 @@ namespace Alex.Entities
 			
 		}
 
-		internal void UpdateSkin(Texture2D skinTexture, bool skinSlim)
+		internal void UpdateSkin(Texture2D skinTexture)
 		{
-			if (skinSlim)
+			//if (skinSlim)
 			{
-				if (ModelFactory.TryGetModel("geometry.humanoid.customSlim",
-					out EntityModel m))
+				if (ModelFactory.TryGetModel(GeometryName,
+					out EntityModel m) || ModelFactory.TryGetModel("geometry.humanoid.customSlim", out m))
 				{
 					_model = m;
 					ModelRenderer = new EntityModelRenderer(_model, skinTexture);
 					UpdateModelParts();
 				}
 			}
-			else
+			/*else
 			{
 				if (ModelFactory.TryGetModel("geometry.humanoid.custom",
 					out EntityModel m))
@@ -225,7 +227,7 @@ namespace Alex.Entities
 					ModelRenderer = new EntityModelRenderer(_model, skinTexture);
 					UpdateModelParts();
 				}
-			}
+			}*/
 		}
 	}
 }

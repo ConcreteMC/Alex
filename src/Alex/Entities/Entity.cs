@@ -31,7 +31,23 @@ namespace Alex.Entities
 		public PlayerLocation KnownPosition { get; set; }
 
 		public Vector3 Velocity { get; set; } = Vector3.Zero;
-		public float PositionOffset { get; set; }
+		private float _posOffset = 0;
+		private bool _posOffsetSet = false;
+
+		public float PositionOffset
+		{
+			get
+			{
+				if (!_posOffsetSet)
+					return (float) Height;
+				return _posOffset;
+			}
+			set
+			{
+				_posOffsetSet = true;
+				_posOffset = value;
+			}
+		}
 
 		//public HealthManager HealthManager { get; set; }
 

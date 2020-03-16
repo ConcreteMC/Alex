@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using MiNET.Net;
 using MiNET.Utils.Skins;
 using Newtonsoft.Json;
 
@@ -7,30 +8,44 @@ namespace Alex.Worlds.Bedrock
 {
     public class BedrockSkinData
     {
+        public bool ThirdPartyOnly { get; set; } = false;
+        public string ThirdPartyName { get; set; }
+        
+        
         public int ClientRandomId { get; set; }
         public string ServerAddress { get; set; }
         public string LanguageCode { get; set; }
 
-        public string SkinResourcePatch { get; set; }
+        public string DeviceId { get; set; } = Guid.NewGuid().ToString();
+        public string DeviceModel { get; set; } = "Alex";
+        public int DeviceOS { get; set; } = 7;
 
-        public string SkinId;
-        public string SkinData;
-        public int SkinImageHeight;
-        public int SkinImageWidth;
+        public int UIProfile { get; set; } = 0;
 
-        public string CapeId;
-        public int CapeImageHeight;
-        public int CapeImageWidth;
-        public string CapeData;
+        public int DefaultInputMode { get; set; } = 1;
+        public int CurrentInputMode { get; set; } = 1;
+        
+       // public string GameVersion { get; set; } = McpeProtocolInfo.GameVersion;
+        public string SkinResourcePatch { get; set; } = "";
 
-        public string SkinGeometryData;
+        public string SkinId { get; set; }
+        public string SkinData { get; set; }
+        public int SkinImageHeight { get; set; }
+        public int SkinImageWidth { get; set; }
 
-        public string SkinAnimationData;
-        public SkinAnimation[] AnimatedImageData;
+        public string CapeId { get; set; } = "";
+        public int CapeImageHeight { get; set; }
+        public int CapeImageWidth { get; set; }
+        public string CapeData { get; set; } = "";
 
-        public bool PremiumSkin;
-        public bool PersonaSkin;
-        public bool CapeOnClassicSkin;
+        public string SkinGeometryData { get; set; } = "";
+
+        public string SkinAnimationData { get; set; } = "";
+        public SkinAnimation[] AnimatedImageData { get; set; } = new SkinAnimation[0];
+
+        public bool PremiumSkin { get; set; }
+        public bool PersonaSkin { get; set; }
+        public bool CapeOnClassicSkin { get; set; }
 
         public class SkinAnimation
         {

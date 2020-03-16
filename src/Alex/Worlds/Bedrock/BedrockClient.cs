@@ -31,6 +31,7 @@ using MiNET.Utils;
 using MiNET.Utils.Skins;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 using NLog;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Agreement;
@@ -381,8 +382,14 @@ namespace Alex.Worlds.Bedrock
 	            ClientRandomId = new Random().Next(),
 	            LanguageCode = "en_US",
 	            ServerAddress = $"{base.ServerEndpoint.Address.ToString()}:{base.ServerEndpoint.Port.ToString()}",
-	             
-            }), signKey, JwsAlgorithm.ES384, new Dictionary<string, object> { { "x5u", x5u } }, new JwtSettings()
+	             ThirdPartyName = username
+            }, new JsonSerializerSettings()
+	        {
+		        ContractResolver = new DefaultContractResolver
+		        {
+			        NamingStrategy = new DefaultNamingStrategy(){}
+		        }
+	        }), signKey, JwsAlgorithm.ES384, new Dictionary<string, object> { { "x5u", x5u } }, new JwtSettings()
             {
                 JsonMapper = new JWTMapper()
             });

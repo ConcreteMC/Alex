@@ -29,5 +29,7 @@ namespace Alex.API.Entities
 		void UpdateHeadYaw(float headYaw);
 
 		void RenderNametag(IRenderArgs renderArgs);
+		
+		float PositionOffset { get; set; }
 	}
 }

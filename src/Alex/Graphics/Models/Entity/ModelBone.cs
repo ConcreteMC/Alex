@@ -34,12 +34,12 @@ namespace Alex.Graphics.Models.Entity
 			
 			private List<IAttachable> Attachables { get; } = new List<IAttachable>();
 
-			private EntityModelBone OriginalBone { get; }
-			public string Parent => OriginalBone.Parent;
-			public ModelBone(ModelBoneCube[] parts, EntityModelBone originalBone)
+			private string OriginalBone { get; }
+			public string Parent => OriginalBone;
+			public ModelBone(ModelBoneCube[] parts, string parent)
 			{
 				Parts = parts;
-				OriginalBone = originalBone;
+				OriginalBone = parent;
 			}
 
 			private bool _isDirty = true;

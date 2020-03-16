@@ -36,7 +36,7 @@ namespace Alex.Entities
         public bool HasAdjacentRaytrace = false;
         public bool HasRaytraceResult = false;
 
-        public Player(GraphicsDevice graphics, InputManager inputManager, string name, World world, Skin skin, INetworkProvider networkProvider, PlayerIndex playerIndex) : base(name, world, networkProvider, skin.Texture, true)
+        public Player(GraphicsDevice graphics, InputManager inputManager, string name, World world, Skin skin, INetworkProvider networkProvider, PlayerIndex playerIndex) : base(name, world, networkProvider, skin.Texture)
 		{
 		//	DoRotationCalculations = false;
 			PlayerIndex = playerIndex;

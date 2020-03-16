@@ -654,7 +654,7 @@ namespace Alex.Worlds
 				else
 				{
 					entity.KnownPosition.X += position.X;
-					entity.KnownPosition.Y += position.Y;
+					entity.KnownPosition.Y += (position.Y - (float)entity.PositionOffset);
 					entity.KnownPosition.Z += position.Z;	
 					//entity.KnownPosition.Move(position);
 				}

@@ -7,6 +7,8 @@ using System.Linq;
 using System.Net;
 using System.Numerics;
 using System.Security.Cryptography;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Blocks.State;
@@ -21,7 +23,9 @@ using Alex.Blocks.Storage;
 using Alex.Entities;
 using Alex.GameStates;
 using Alex.Graphics.Models.Entity;
+using Alex.Graphics.Models.Entity.Geometry;
 using Alex.Items;
+using Alex.ResourcePackLib.Json.Converters;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
 using fNbt;
@@ -301,6 +305,9 @@ namespace Alex.Worlds.Bedrock
 
 		public void HandleMcpePlayerList(McpePlayerList message)
 		{
+			if (!Directory.Exists("skins"))
+				Directory.CreateDirectory("skins");
+			
 			if (message.records is PlayerAddRecords addRecords)
 			{
 				foreach (var r in addRecords)
@@ -319,10 +326,63 @@ namespace Alex.Worlds.Bedrock
 						AlexInstance.Resources.ResourcePack.TryGetBitmap("entity/alex", out Bitmap rawTexture);
 						skinTexture = TextureUtils.BitmapToTexture2D(AlexInstance.GraphicsDevice, rawTexture);
 					}
-					
-					Client.WorldReceiver?.AddPlayerListItem(new PlayerListItem(u, r.DisplayName, Gamemode.Survival, 0));
-					PlayerMob m = new PlayerMob(r.DisplayName, Client.WorldReceiver as World, Client, skinTexture, true);
 
+					Client.WorldReceiver?.AddPlayerListItem(new PlayerListItem(u, r.DisplayName, Gamemode.Survival, 0));
+
+					EntityModelRenderer renderer = null;
+					
+					if (!string.IsNullOrWhiteSpace(r.Skin.GeometryData) && r.Skin.GeometryData != "null")
+					{
+						try
+						{
+							BedrockGeometry geo =
+								JsonConvert.DeserializeObject<BedrockGeometry>(r.Skin.GeometryData, new SingleOrArrayConverter<Vector3>(), new SingleOrArrayConverter<Vector2>(), new Vector3Converter(), new Vector2Converter());
+
+							if (geo != null && geo.MinecraftGeometry != null)
+							{
+								//var abc = geo.MinecraftGeometry.FirstOrDefault()
+								var modelRenderer =
+									new EntityModelRenderer(geo.MinecraftGeometry.FirstOrDefault(), skinTexture);
+
+								if (modelRenderer.Valid)
+								{
+									renderer = modelRenderer;
+								}
+								else
+								{
+									//modelRenderer.Dispose();
+									
+									var path = Path.Combine("skins", $"invalid-{r.Skin.SkinId}.json");
+									if (!File.Exists(path))
+									{
+										File.WriteAllText(path, JsonConvert.SerializeObject(r.Skin, Formatting.Indented));
+									}
+								}
+
+								//m.ModelRenderer =
+								//	new EntityModelRenderer(geo.MinecraftGeometry.FirstOrDefault(), skinTexture);
+							}
+							else if (geo == null)
+							{
+								//Log.Info($"Geometry was null:");
+
+								var path = Path.Combine("skins", $"{r.Skin.SkinId}.json");
+								if (!File.Exists(path))
+								{
+									File.WriteAllText(path, JsonConvert.SerializeObject(r.Skin, Formatting.Indented));
+								}
+							}
+						}
+						catch (Exception ex)
+						{
+							Log.Warn(ex, $"Could not create geometry: {ex.ToString()}");
+						}
+					}
+
+					PlayerMob m = new PlayerMob(r.DisplayName, Client.WorldReceiver as World, Client, skinTexture);
+					if (renderer != null)
+						m.ModelRenderer = renderer;
+					
 					if (!_players.TryAdd(u, m))
 					{
 						Log.Warn($"Duplicate player record! {r.ClientUuid}");
@@ -339,7 +399,7 @@ namespace Alex.Worlds.Bedrock
 			            Client.WorldReceiver?.RemovePlayerListItem(u);
 			            if (Client.WorldReceiver is World w)
 			            {
-				            w.DespawnEntity(player.EntityId);
+				           // w.DespawnEntity(player.EntityId);
 			            }
 		            }
 	            }
@@ -467,7 +527,7 @@ namespace Alex.Worlds.Bedrock
 			if (message.runtimeEntityId != Client.EntityId)
 			{
                  Client.WorldReceiver.UpdateEntityPosition(message.runtimeEntityId,
-					new PlayerLocation(message.position.X, message.position.Y - Player.EyeLevel, message.position.Z, 
+					new PlayerLocation(message.position.X, message.position.Y, message.position.Z, 
 						message.position.HeadYaw, message.position.Yaw, message.position.Pitch));
 				return;
 			}

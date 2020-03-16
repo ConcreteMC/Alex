@@ -917,7 +917,7 @@ namespace Alex.Worlds.Java
 							}
 						}
 
-						PlayerMob entity = new PlayerMob(entry.Name, (World) WorldReceiver, Client, t, skinSlim);
+						PlayerMob entity = new PlayerMob(entry.Name, (World) WorldReceiver, Client, t, skinSlim ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom");
 						entity.UpdateGamemode((Gamemode) entry.Gamemode);
 						entity.UUID = new UUID(entry.UUID.ToByteArray());
 
@@ -948,7 +948,7 @@ namespace Alex.Worlds.Java
 									t = skin;
 								}
 
-								entity.UpdateSkin(t, skinSlim);
+								entity.UpdateSkin(t);
 							});
 						}
 					}
