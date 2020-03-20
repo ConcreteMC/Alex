@@ -9,6 +9,14 @@ using NLog;
 
 namespace Alex.Blocks.Minecraft
 {
+    public class WoodStairs : Stairs
+    {
+        public WoodStairs() : base()
+        {
+            BlockMaterial = Material.Wood;
+        }
+    }
+
     public class Stairs : Block
     {
         private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Stairs));

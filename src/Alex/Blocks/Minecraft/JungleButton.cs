@@ -4,7 +4,7 @@ namespace Alex.Blocks.Minecraft
 	{
 		public JungleButton() : base(5294)
 		{
-			
+			BlockMaterial = Material.Wood;
 		}
 	}
 }

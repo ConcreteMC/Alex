@@ -4,7 +4,7 @@ namespace Alex.Blocks.Minecraft
 	{
 		public AcaciaButton() : base(5318)
 		{
-			
+			BlockMaterial = Material.Wood;
 		}
 	}
 }

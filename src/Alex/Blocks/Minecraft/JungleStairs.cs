@@ -1,8 +1,8 @@
 namespace Alex.Blocks.Minecraft
 {
-	public class JungleStairs : Stairs
+	public class JungleStairs : WoodStairs
 	{
-		public JungleStairs() : base(4965)
+		public JungleStairs() : base()
 		{
 			Solid = true;
 			Transparent = true;

@@ -189,17 +189,19 @@ namespace Alex.Blocks
 			this.Register(() => new Trapdoor().WithLocation("minecraft:spruce_trapdoor"));
 			this.Register(() => new Trapdoor().WithLocation("minecraft:oak_trapdoor"));
 			
-			//Slabs
-			this.Register(() => new StoneSlab().WithLocation("minecraft:stone_slab"));
-			this.Register(() => new PrismarineSlab().WithLocation("minecraft:prismarine_slab"));
-			this.Register(() => new PrismarineBricksSlab().WithLocation("minecraft:prismarine_bricks_slab"));
-			this.Register(() => new DarkPrismarineSlab().WithLocation("minecraft:dark_prismarine_slab"));
+			//Wooden Slabs
 			this.Register(() => new OakSlab().WithLocation("minecraft:oak_slab"));
 			this.Register(() => new SpruceSlab().WithLocation("minecraft:spruce_slab"));
 			this.Register(() => new BirchSlab().WithLocation("minecraft:birch_slab"));
 			this.Register(() => new JungleSlab().WithLocation("minecraft:jungle_slab"));
 			this.Register(() => new AcaciaSlab().WithLocation("minecraft:acacia_slab"));
 			this.Register(() => new DarkOakSlab().WithLocation("minecraft:dark_oak_slab"));
+			
+			//Stone slabs
+			this.Register(() => new StoneSlab().WithLocation("minecraft:stone_slab"));
+			this.Register(() => new PrismarineSlab().WithLocation("minecraft:prismarine_slab"));
+			this.Register(() => new PrismarineBricksSlab().WithLocation("minecraft:prismarine_bricks_slab"));
+			this.Register(() => new DarkPrismarineSlab().WithLocation("minecraft:dark_prismarine_slab"));
 			this.Register(() => new SandstoneSlab().WithLocation("minecraft:sandstone_slab"));
 			this.Register(() => new PetrifiedOakSlab().WithLocation("minecraft:petrified_oak_slab"));
 			this.Register(() => new CobblestoneSlab().WithLocation("minecraft:cobblestone_slab"));
@@ -241,21 +243,23 @@ namespace Alex.Blocks
 			this.Register(() => new Fence().WithLocation("minecraft:acacia_fence"));
 
 			//Stairs
+			this.Register(() => new StoneStairs().WithLocation("minecraft:stone_stairs"));
 			this.Register(() => new PurpurStairs().WithLocation("minecraft:purpur_stairs"));
 			this.Register(() => new CobblestoneStairs().WithLocation("minecraft:cobblestone_stairs"));
-			this.Register(() => new AcaciaStairs().WithLocation("minecraft:acacia_stairs"));
-			this.Register(() => new DarkOakStairs().WithLocation("minecraft:dark_oak_stairs"));
 			this.Register(() => new QuartzStairs().WithLocation("minecraft:quartz_stairs"));
 			this.Register(() => new RedSandstoneStairs().WithLocation("minecraft:red_sandstone_stairs"));
-			this.Register(() => new SpruceStairs().WithLocation("minecraft:spruce_stairs"));
-			this.Register(() => new BirchStairs().WithLocation("minecraft:birch_stairs"));
-			this.Register(() => new JungleStairs().WithLocation("minecraft:jungle_stairs"));
 			this.Register(() => new SandstoneStairs().WithLocation("minecraft:sandstone_stairs"));
 			this.Register(() => new BrickStairs().WithLocation("minecraft:brick_stairs"));
 			this.Register(() => new StoneBrickStairs().WithLocation("minecraft:stone_brick_stairs"));
 			this.Register(() => new NetherBrickStairs().WithLocation("minecraft:nether_brick_stairs"));
+			
+			//Wooden stairs
+			this.Register(() => new AcaciaStairs().WithLocation("minecraft:acacia_stairs"));
+			this.Register(() => new DarkOakStairs().WithLocation("minecraft:dark_oak_stairs"));
+			this.Register(() => new SpruceStairs().WithLocation("minecraft:spruce_stairs"));
+			this.Register(() => new BirchStairs().WithLocation("minecraft:birch_stairs"));
+			this.Register(() => new JungleStairs().WithLocation("minecraft:jungle_stairs"));
 			this.Register(() => new OakStairs().WithLocation("minecraft:oak_stairs"));
-			this.Register(() => new StoneStairs().WithLocation("minecraft:stone_stairs"));
 
 			//Liquid
 			this.Register(() => new Water().WithLocation("minecraft:water"));

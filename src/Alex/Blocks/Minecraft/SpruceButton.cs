@@ -4,7 +4,7 @@ namespace Alex.Blocks.Minecraft
 	{
 		public SpruceButton() : base(5246)
 		{
-			
+			BlockMaterial = Material.Wood;
 		}
 	}
 }

@@ -6,6 +6,8 @@
 	    {
 		    Transparent = true;
 		    Solid = false;
+		    
+		    BlockMaterial = Material.Plants;
 	    }
     }
 }

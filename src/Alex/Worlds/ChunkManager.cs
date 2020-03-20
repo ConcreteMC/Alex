@@ -44,7 +44,8 @@ namespace Alex.Worlds
         public int EnqueuedChunkUpdates => Enqueued.Count;//;LowPriority.Count;
 	    public int ChunkCount => Chunks.Count;
 
-	    public AlphaTestEffect AnimatedEffect { get; }
+	    public BasicEffect AnimatedEffect { get; }
+	    public AlphaTestEffect AnimatedTranslucentEffect { get; }
 	    public AlphaTestEffect TransparentEffect { get; }
 	    public AlphaTestEffect TranslucentEffect { get; }
 		public BasicEffect OpaqueEffect { get; }
@@ -81,7 +82,8 @@ namespace Alex.Worlds
 		        AlphaFunction = CompareFunction.Greater,
 		        ReferenceAlpha = 32,
 		        FogStart = fogStart,
-		        FogEnabled = false
+		        FogEnabled = false,
+		       // TextureEnabled = true
 	        };
 	        
 	        TranslucentEffect = new AlphaTestEffect(Graphics)
@@ -96,7 +98,19 @@ namespace Alex.Worlds
 		        Alpha = 0.5f
 	        };
 	        
-	        AnimatedEffect = new AlphaTestEffect(Graphics)
+	        AnimatedEffect = new BasicEffect(Graphics)
+	        {
+		        Texture = Resources.Atlas.GetAtlas(0),
+		        VertexColorEnabled = true,
+		        World = Matrix.Identity,
+		      //  AlphaFunction = CompareFunction.Greater,
+		      //  ReferenceAlpha = 127,
+		        FogStart = fogStart,
+		        FogEnabled = false,
+		        TextureEnabled = true
+	        };
+	        
+	        AnimatedTranslucentEffect = new AlphaTestEffect(Graphics)
 	        {
 		        Texture = Resources.Atlas.GetAtlas(0),
 		        VertexColorEnabled = true,
@@ -104,7 +118,8 @@ namespace Alex.Worlds
 		        AlphaFunction = CompareFunction.Greater,
 		        ReferenceAlpha = 127,
 		        FogStart = fogStart,
-		        FogEnabled = false
+		        FogEnabled = false,
+		        Alpha = 0.5f
 	        };
 
 	        OpaqueEffect = new BasicEffect(Graphics)
@@ -214,18 +229,24 @@ namespace Alex.Worlds
 
 		    device.DepthStencilState = DepthStencilState.Default;
 		    device.BlendState = BlendState.AlphaBlend;
-		    
-		    TransparentEffect.View = camera.ViewMatrix;
-		    TransparentEffect.Projection = camera.ProjectionMatrix;
-		    
-		    AnimatedEffect.View = camera.ViewMatrix;
-		    AnimatedEffect.Projection = camera.ProjectionMatrix;
 
-		    OpaqueEffect.View = camera.ViewMatrix;
-		    OpaqueEffect.Projection = camera.ProjectionMatrix;
+		    var view = camera.ViewMatrix;
+		    var projection = camera.ProjectionMatrix;
+		    
+		    TransparentEffect.View = view;
+		    TransparentEffect.Projection = projection;
+		    
+		    AnimatedEffect.View = view;
+		    AnimatedEffect.Projection = projection;
 
-		    TranslucentEffect.View = camera.ViewMatrix;
-		    TranslucentEffect.Projection = camera.ProjectionMatrix;
+		    OpaqueEffect.View = view;
+		    OpaqueEffect.Projection = projection;
+
+		    TranslucentEffect.View = view;
+		    TranslucentEffect.Projection = projection;
+
+		    AnimatedTranslucentEffect.View = view;
+		    AnimatedTranslucentEffect.Projection = projection;
 
 		    var tempVertices = 0;
 		    int tempChunks = 0;
@@ -252,6 +273,9 @@ namespace Alex.Worlds
 					    effect = TranslucentEffect;
 					    break;
 				    case RenderStage.Animated:
+					    effect = AnimatedEffect;
+					    break;
+				    case RenderStage.AnimatedTranslucent:
 					    effect = AnimatedEffect;
 					    break;
 				    default:
@@ -310,9 +334,12 @@ namespace Alex.Worlds
 		    set
 		    {
 			    TransparentEffect.DiffuseColor = value;
+			    TranslucentEffect.DiffuseColor = value;
+			    
 			    OpaqueEffect.AmbientLightColor = value;
-			  // OpaqueEffect.DiffuseColor = value;
-			    AnimatedEffect.DiffuseColor = value;
+			    // OpaqueEffect.DiffuseColor = value;
+			    AnimatedEffect.AmbientLightColor = value;
+			    AnimatedTranslucentEffect.DiffuseColor = value;
 		    }
 	    }
 
@@ -327,6 +354,7 @@ namespace Alex.Worlds
 
 			    _currentFrameTexture = Resources.Atlas.GetAtlas(_currentFrame);
 			    AnimatedEffect.Texture = _currentFrameTexture;
+			    AnimatedTranslucentEffect.Texture = _currentFrameTexture;
 			    // OpaqueEffect.Texture = frame;
 			    // TransparentEffect.Texture = frame;
 		    }
@@ -1113,7 +1141,14 @@ namespace Alex.Worlds
 				        RenderStage targetState = RenderStage.OpaqueFullCube;
 				        if (blockState.Block.Animated)
 				        {
-					        targetState = RenderStage.Animated;
+					        if (blockState.Block.BlockMaterial.IsOpaque())
+					        {
+						        targetState = RenderStage.Animated;
+					        }
+					        else
+					        {
+						        targetState = RenderStage.AnimatedTranslucent;
+					        }
 				        }
 				        else if (blockState.Block.Transparent)
 				        {

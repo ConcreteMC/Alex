@@ -8,7 +8,7 @@ namespace Alex.Blocks.Minecraft
 			Transparent = true;
 			IsReplacible = false;
 
-		//	BlockMaterial = Material.Ice;
+			BlockMaterial = Material.Ice;
 		}
 	}
 }

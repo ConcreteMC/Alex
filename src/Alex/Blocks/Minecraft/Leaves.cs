@@ -11,6 +11,8 @@
 		    IsFullCube = true;
 
 		    LightOpacity = 2;
+		    
+		    BlockMaterial = Material.Leaves;
 	    }
     }
 }

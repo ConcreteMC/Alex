@@ -12,9 +12,9 @@ namespace Alex.Blocks.Minecraft
 		public static IMaterial Rock = (new Material(MapColor.STONE)).SetRequiresTool();
 		public static IMaterial Iron = (new Material(MapColor.IRON)).SetRequiresTool();
 		public static IMaterial Anvil = (new Material(MapColor.IRON)).SetRequiresTool().SetImmovableMobility();
-		public static IMaterial Water = (new MaterialLiquid(MapColor.WATER)).SetNoPushMobility();
+		public static IMaterial Water = (new MaterialLiquid(MapColor.WATER)).SetTranslucent().SetNoPushMobility();
 		public static IMaterial Lava = (new MaterialLiquid(MapColor.TNT)).SetNoPushMobility();
-		public static IMaterial Leaves = (new Material(MapColor.FOLIAGE)).SetBurning().SetTranslucent().SetNoPushMobility();
+		public static IMaterial Leaves = (new Material(MapColor.FOLIAGE)).SetBurning().SetNoPushMobility();
 		public static IMaterial Plants = (new MaterialLogic(MapColor.FOLIAGE)).SetNoPushMobility();
 		public static IMaterial Vine = (new MaterialLogic(MapColor.FOLIAGE)).SetBurning().SetNoPushMobility().SetReplaceable();
 		public static IMaterial Sponge = new Material(MapColor.YELLOW);
@@ -25,17 +25,17 @@ namespace Alex.Blocks.Minecraft
 		public static IMaterial Carpet = (new MaterialLogic(MapColor.CLOTH)).SetBurning();
 		public static IMaterial Glass = (new Material(MapColor.AIR)).SetTranslucent().SetAdventureModeExempt();
 		public static IMaterial RedstoneLight = (new Material(MapColor.AIR)).SetAdventureModeExempt();
-		public static IMaterial Tnt = (new Material(MapColor.TNT)).SetBurning().SetTranslucent();
+		public static IMaterial Tnt = (new Material(MapColor.TNT)).SetBurning();
 		public static IMaterial Coral = (new Material(MapColor.FOLIAGE)).SetNoPushMobility();
 		public static IMaterial Ice = (new Material(MapColor.ICE)).SetTranslucent().SetAdventureModeExempt();
 		public static IMaterial PackedIce = (new Material(MapColor.ICE)).SetAdventureModeExempt();
-		public static IMaterial Snow = (new MaterialLogic(MapColor.SNOW)).SetReplaceable().SetTranslucent().SetRequiresTool().SetNoPushMobility();
+		public static IMaterial Snow = (new MaterialLogic(MapColor.SNOW)).SetReplaceable().SetRequiresTool().SetNoPushMobility();
 		public static IMaterial CraftedSnow = (new Material(MapColor.SNOW)).SetRequiresTool();
-		public static IMaterial Cactus = (new Material(MapColor.FOLIAGE)).SetTranslucent().SetNoPushMobility();
+		public static IMaterial Cactus = (new Material(MapColor.FOLIAGE)).SetNoPushMobility();
 		public static IMaterial Clay = new Material(MapColor.CLAY);
 		public static IMaterial Gourd = (new Material(MapColor.FOLIAGE)).SetNoPushMobility();
 		public static IMaterial DragonEgg = (new Material(MapColor.FOLIAGE)).SetNoPushMobility();
-		public static IMaterial Portal = (new MaterialPortal(MapColor.AIR)).SetImmovableMobility();
+		public static IMaterial Portal = (new MaterialPortal(MapColor.AIR)).SetTranslucent().SetImmovableMobility();
 		public static IMaterial Cake = (new Material(MapColor.AIR)).SetNoPushMobility();
 		public static IMaterial Web = (new Material(MapColor.CLOTH)).SetRequiresTool().SetNoPushMobility();
 
@@ -110,7 +110,7 @@ namespace Alex.Blocks.Minecraft
 
 		public virtual bool IsOpaque()
 		{
-			return this._isTranslucent ? false : this.BlocksMovement();
+			return !this._isTranslucent;
 		}
 
 		public virtual bool IsToolNotRequired()

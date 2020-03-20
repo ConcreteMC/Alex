@@ -6,6 +6,8 @@ namespace Alex.Blocks.Minecraft
         {
             Transparent = false;
             Solid = true;
+
+            BlockMaterial = Material.Wood;
         }
     }
 }
