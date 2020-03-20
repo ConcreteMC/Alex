@@ -60,6 +60,11 @@ namespace Alex.API.Utils
 							 Square(other.Z - Z));
 		}
 
+		public double Distance(PlayerLocation other)
+		{
+			return Square(other.X - X) + Square(other.Y - Y) + Square(other.Z - Z);
+		}
+
 		private double Square(double num)
 		{
 			return num * num;

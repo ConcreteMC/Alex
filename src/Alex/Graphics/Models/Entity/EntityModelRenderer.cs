@@ -24,6 +24,7 @@ namespace Alex.Graphics.Models.Entity
 		public bool Valid { get; private set; }
 		public EntityModelRenderer(EntityModel model, Texture2D texture)
 		{
+			
 		//	Model = model;
 			Texture = texture;
 
@@ -89,6 +90,7 @@ namespace Alex.Graphics.Models.Entity
 					var polys = bone.PolyMesh.Polys;
 					
 					int startIndex = vertices.Count;
+					
 					//var verts = new VertexPositionNormalTexture[positions.Length];
 				/*	short[] indexes = new short[positions.Length];
 					for (int i = 0; i < bone.PolyMesh.Positions.Length; i++)
@@ -109,7 +111,7 @@ namespace Alex.Graphics.Models.Entity
 						var uv = uvs[p[2]];
 						
 						vertices.Add(new VertexPositionNormalTexture(pos, normal, uv));
-						indices.Add((short) startIndex++);
+						indices.Add((short) (vertices.Count - 1));
 					}
 				}
 					

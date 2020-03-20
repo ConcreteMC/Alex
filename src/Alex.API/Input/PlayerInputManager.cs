@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Input.Listeners;
+using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 
 namespace Alex.API.Input
@@ -11,7 +12,7 @@ namespace Alex.API.Input
         public PlayerIndex PlayerIndex { get; }
         public InputType InputType { get; private set; }
 
-        private List<IInputListener> InputListeners { get; } = new List<IInputListener>();
+        private ThreadSafeList<IInputListener> InputListeners { get; } = new ThreadSafeList<IInputListener>();
 
         public List<InputActionBinding> Bindings { get; } = new List<InputActionBinding>();
 

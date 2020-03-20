@@ -11,6 +11,7 @@ using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using NLog;
+using MathF = System.MathF;
 
 namespace Alex.Entities
 {
@@ -426,32 +427,59 @@ namespace Alex.Entities
 
 		public void RenderNametag(IRenderArgs renderArgs)
 		{
+			var maxDistance = renderArgs.Camera.FarDistance;
+			
+			Vector3 posOffset = new Vector3(0, 0.25f, 0);
+
+			if (RenderEntity && ModelRenderer != null && !IsInvisible)
+			{
+				posOffset.Y += (float) Height;
+			}
+
+			var pos = KnownPosition + posOffset;
+			
+			var distance = MathF.Abs((float)pos.DistanceTo(new PlayerLocation(renderArgs.Camera.Position.X, pos.Y, renderArgs.Camera.Position.Z)));
+			if (distance >= (maxDistance / 16f) / 2f)
+			{
+				return;
+			}
+			
+		//	distance *= (1f / maxDistance);
+			
+			float s = 1f - (distance * (1f / maxDistance));
+			s = MathF.Round(s, 2, MidpointRounding.ToEven);
+			
+			
+			//if (distance < 16)
+			//	s = 1f;
+			
 			Vector2 textPosition;
+			//Matrix.CreateBillboard(pos, renderArgs.Camera.Position, Vector3.Up, pos - renderArgs.Camera.Position)
 
 			// calculate screenspace of text3d space position
-			var screenSpace = renderArgs.GraphicsDevice.Viewport.Project(Vector3.Zero,
+			var screenSpace = renderArgs.GraphicsDevice.Viewport.Project(Vector3.Zero, 
 				renderArgs.Camera.ProjectionMatrix,
 				renderArgs.Camera.ViewMatrix,
-				Matrix.CreateTranslation(KnownPosition + new Vector3(0, (float)Height, 0)));
+				 Matrix.CreateBillboard(pos, renderArgs.Camera.Position, Vector3.Up, pos - renderArgs.Camera.Position));
 
 
 			// get 2D position from screenspace vector
 			textPosition.X = screenSpace.X;
 			textPosition.Y = screenSpace.Y;
 
-			float s = 1f;
 			var scale = new Vector2(s, s);
 	
 			string clean = NameTag;
 
-			var stringCenter = Alex.Font.MeasureString(clean, s);
+			var stringCenter = Alex.Font.MeasureString(clean, scale);
 			var c = new Point((int)stringCenter.X, (int)stringCenter.Y);
 
-			textPosition.X = (int)(textPosition.X - c.X);
-			textPosition.Y = (int)(textPosition.Y - c.Y);
+			textPosition.X = (int)(textPosition.X - (c.X / 2d));
+			textPosition.Y = (int)(textPosition.Y - (c.Y / 2d));
 
 			renderArgs.SpriteBatch.FillRectangle(new Rectangle(textPosition.ToPoint(), c), new Color(Color.Black, 128));
-			renderArgs.SpriteBatch.DrawString(Alex.Font, clean, textPosition, TextColor.White, FontStyle.None, 0f, Vector2.Zero, scale);
+			Alex.Font.DrawString(renderArgs.SpriteBatch, clean, textPosition, TextColor.White, FontStyle.None, scale);
+		//	renderArgs.SpriteBatch.DrawString(Alex.Font, clean, textPosition, TextColor.White, FontStyle.None, 0f, Vector2.Zero, scale);
 		}
 
 		public virtual void TerrainCollision(Vector3 collisionPoint, Vector3 direction)

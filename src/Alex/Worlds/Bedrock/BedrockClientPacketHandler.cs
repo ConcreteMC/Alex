@@ -40,6 +40,7 @@ using Newtonsoft.Json;
 using NLog;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Security;
+using BitArray = System.Collections.BitArray;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using BlockState = MiNET.Utils.IBlockState;
 using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
@@ -282,15 +283,54 @@ namespace Alex.Worlds.Bedrock
 			}
 		}
 
-		private ConcurrentDictionary<UUID, PlayerMob> _players = new ConcurrentDictionary<UUID, PlayerMob>();
+		private ConcurrentDictionary<MiNET.Net.UUID, PlayerMob> _players = new ConcurrentDictionary<MiNET.Net.UUID, PlayerMob>();
         public void HandleMcpeAddPlayer(McpeAddPlayer message)
 		{
-			UUID u = new UUID(message.uuid.GetBytes());
-			if (_players.TryGetValue(u, out PlayerMob mob))
+		//	UUID u = new UUID(message.uuid.GetBytes());
+			if (_players.TryGetValue(message.uuid, out PlayerMob mob))
 			{
+				//MiNET.Player
 				mob.EntityId = message.runtimeEntityId;
 				mob.KnownPosition = new PlayerLocation(message.x, message.y, message.z, message.headYaw, message.yaw, message.pitch);
 
+				foreach (var meta in message.metadata.GetValues())
+				{
+					switch ((MiNET.Entities.Entity.MetadataFlags) meta.Identifier)
+					{
+						case MiNET.Entities.Entity.MetadataFlags.CollisionBoxHeight:
+						{
+							if (meta is MetadataFloat flt)
+							{
+								mob.Height = flt.Value;
+							}
+						} break;
+						case MiNET.Entities.Entity.MetadataFlags.CollisionBoxWidth:
+						{
+							if (meta is MetadataFloat fltw)
+							{
+								mob.Width = fltw.Value;
+							}
+						} break;
+						case MiNET.Entities.Entity.MetadataFlags.Scale:
+						{
+							if (meta is MetadataFloat flt)
+							{
+								mob.Scale = flt.Value;
+							}
+						} break;
+						case MiNET.Entities.Entity.MetadataFlags.EntityFlags:
+						{
+							if (meta is MetadataLong lng)
+							{
+								BitArray bits = new BitArray(BitConverter.GetBytes(lng.Value));
+								mob.IsInvisible = bits[(int) MiNET.Entities.Entity.DataFlags.Invisible];
+							}
+						}
+							break;
+					}
+				}
+				//mob.Height = message.metadata[(int) MiNET.Entities.Entity.MetadataFlags.CollisionBoxHeight]
+				
 				if (Client.WorldReceiver is World w)
 				{
 					mob.IsSpawned = true;
@@ -300,6 +340,10 @@ namespace Alex.Worlds.Bedrock
 				{
 					mob.IsSpawned = false;
 				}
+			}
+			else
+			{
+				Log.Warn($"Tried spawning invalid player: {message.uuid}");
 			}
 		}
 
@@ -313,7 +357,7 @@ namespace Alex.Worlds.Bedrock
 				foreach (var r in addRecords)
 				{
 					var u = new API.Utils.UUID(r.ClientUuid.GetBytes());
-					if (_players.ContainsKey(u)) continue;
+					if (_players.ContainsKey(r.ClientUuid)) continue;
 
 					Texture2D skinTexture;
 					if (r.Skin.TryGetBitmap(out Bitmap skinBitmap))
@@ -342,7 +386,7 @@ namespace Alex.Worlds.Bedrock
 							{
 								//var abc = geo.MinecraftGeometry.FirstOrDefault()
 								var modelRenderer =
-									new EntityModelRenderer(geo.MinecraftGeometry.FirstOrDefault(), skinTexture);
+									new EntityModelRenderer(geo.MinecraftGeometry.FirstOrDefault(x => x.Description.Identifier == r.Skin.SkinResourcePatch.Geometry.Default), skinTexture);
 
 								if (modelRenderer.Valid)
 								{
@@ -380,10 +424,12 @@ namespace Alex.Worlds.Bedrock
 					}
 
 					PlayerMob m = new PlayerMob(r.DisplayName, Client.WorldReceiver as World, Client, skinTexture);
+					m.UUID = u;
+					m.EntityId = r.EntityId;
 					if (renderer != null)
 						m.ModelRenderer = renderer;
 					
-					if (!_players.TryAdd(u, m))
+					if (!_players.TryAdd(r.ClientUuid, m))
 					{
 						Log.Warn($"Duplicate player record! {r.ClientUuid}");
 					}
@@ -393,13 +439,13 @@ namespace Alex.Worlds.Bedrock
             {
 	            foreach (var r in removeRecords)
 	            {
-		            var u = new UUID(r.ClientUuid.GetBytes());
-		            if (_players.TryRemove(u, out var player))
+		           // var u = new UUID(r.ClientUuid.GetBytes());
+		            if (_players.TryRemove(r.ClientUuid, out var player))
 		            {
-			            Client.WorldReceiver?.RemovePlayerListItem(u);
+			            Client.WorldReceiver?.RemovePlayerListItem(player.UUID);
 			            if (Client.WorldReceiver is World w)
 			            {
-				           // w.DespawnEntity(player.EntityId);
+				            //w.DespawnEntity(player.EntityId);
 			            }
 		            }
 	            }
@@ -509,7 +555,8 @@ namespace Alex.Worlds.Bedrock
 
 		public void HandleMcpeRemoveEntity(McpeRemoveEntity message)
 		{
-			 Client.WorldReceiver?.DespawnEntity(message.entityIdSelf);
+			WorldProvider.DespawnEntity(message.entityIdSelf);
+			// Client.WorldReceiver?.DespawnEntity(message.entityIdSelf);
 		}
 
 		public void HandleMcpeAddItemEntity(McpeAddItemEntity message)
@@ -528,7 +575,7 @@ namespace Alex.Worlds.Bedrock
 			{
                  Client.WorldReceiver.UpdateEntityPosition(message.runtimeEntityId,
 					new PlayerLocation(message.position.X, message.position.Y, message.position.Z, 
-						message.position.HeadYaw, message.position.Yaw, message.position.Pitch));
+						message.position.HeadYaw, message.position.Yaw, -message.position.Pitch));
 				return;
 			}
 
