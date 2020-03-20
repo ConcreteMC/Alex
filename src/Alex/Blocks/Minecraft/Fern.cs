@@ -1,4 +1,6 @@
-﻿namespace Alex.Blocks.Minecraft
+﻿using Alex.Utils;
+
+namespace Alex.Blocks.Minecraft
 {
     public class Fern : Block
     {
@@ -6,6 +8,9 @@
 	    {
 		    Solid = false;
 		    Transparent = true;
+
+		    IsBlockNormalCube = false;
+		    BlockMaterial = Material.Plants;
 	    }
     }
 }

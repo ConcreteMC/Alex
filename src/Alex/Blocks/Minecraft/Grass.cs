@@ -8,6 +8,8 @@ namespace Alex.Blocks.Minecraft
 			Transparent = true;
 			IsReplacible = false;
 
+			IsBlockNormalCube = false;
+			
 			BlockMaterial = Material.Grass;
 			LightOpacity = 0;
 		}

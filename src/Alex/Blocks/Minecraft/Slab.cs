@@ -5,7 +5,7 @@
 	    public Slab(uint blockStateId) : base(blockStateId)
 	    {
 		    Solid = true;
-		    Transparent = true;
+		    Transparent = false;
 		    IsFullCube = false;
 		    LightOpacity = 15;
 	    }

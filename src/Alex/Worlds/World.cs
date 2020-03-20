@@ -21,6 +21,7 @@ using Alex.Graphics.Camera;
 using Alex.Graphics.Models;
 using Alex.Graphics.Models.Items;
 using Alex.ResourcePackLib.Json.Models.Items;
+using Alex.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -184,13 +185,49 @@ namespace Alex.Worlds
 	        Player.Render(args);
         }
 
-		public void Render2D(IRenderArgs args)
-		{
-			args.Camera = Camera;
+        public void Render2D(IRenderArgs args)
+        {
+	        args.Camera = Camera;
 
-			EntityManager.Render2D(args);
+	        EntityManager.Render2D(args);
+        }
+
+        //Render light levels
+			/*var playerChunkLocation = new ChunkCoordinates(Player.KnownPosition);//.GetCoordinates3D();
+			
+			for (int x = -2; x < 4; x++)
+			{
+				for (int z = -2; z < 4; z++)
+				{
+					RenderLightLevels(args, playerChunkLocation + new ChunkCoordinates(x, z));
+				}
+			}
 		}
 
+		private void RenderLightLevels(IRenderArgs args, ChunkCoordinates chunkCoordinates)
+		{
+			if (!ChunkManager.TryGetChunk(chunkCoordinates, out var chunk))
+				return;
+
+			var worldPosition = new Vector3(chunkCoordinates.X >> 4, 0, chunkCoordinates.Z >> 4);
+			for (int x = 0; x < 16; x++)
+			{
+				for (int z = 0; z < 16; z++)
+				{
+					int heighest = chunk.GetHeight(x, z);
+					for (int y = 255; y > 0; y--)
+					{
+						var s = chunk.GetBlockState(x, y, z);
+						if (!s.Block.Renderable)
+							continue;
+
+						var light = chunk.GetSkylight(x, y, z);
+						args.RenderText(worldPosition + new Vector3(x,y + 1.2f,z), light.ToString());
+					}
+				}
+			}
+		}*/
+		
 		private float _fovModifier = -1;
 		private bool UpdatingPriorities = false;
 		private float BrightnessMod = 0f;

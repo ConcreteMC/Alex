@@ -153,33 +153,33 @@ namespace Alex.Graphics.Models.Blocks
 			if (!world.HasBlock(pos.X, pos.Y, pos.Z)) 
 				return false;
 			
-			world.GetBlockData(pos.X, pos.Y, pos.Z, out bool blockTransparent, out bool blockSolid);
+			var theBlock = world.GetBlock(pos.X, pos.Y, pos.Z);
 
 			if (me.Solid && me.Transparent)
 			{
 				//	if (IsFullCube && Name.Equals(block.Name)) return false;
-				if (blockSolid && blockTransparent)
+				if (theBlock.Solid && (theBlock.Transparent || !theBlock.IsFullCube))
 				{
-					var block = world.GetBlock(pos.X, pos.Y, pos.Z);
-					if (!me.BlockMaterial.IsOpaque() && !block.BlockMaterial.IsOpaque()) return false;
+					//var block = world.GetBlock(pos.X, pos.Y, pos.Z);
+					if (!me.BlockMaterial.IsOpaque() && !theBlock.BlockMaterial.IsOpaque()) return false;
 					
-					if (!me.IsFullBlock || !block.IsFullBlock) return true;
+					if (!me.IsFullBlock || !theBlock.IsFullBlock) return true;
 				}
-				if (blockSolid && !blockTransparent) return false;
+				if (theBlock.Solid && !(theBlock.Transparent || !theBlock.IsFullCube)) return false;
 			}
 			else if (me.Transparent)
 			{
-				if (blockSolid && !blockTransparent) return false;
+				if (theBlock.Solid && !(theBlock.Transparent || theBlock.IsFullCube)) return false;
 				//if (blockTransparent) return true;
 			}
 
 
-			if (me.Solid && blockTransparent) return true;
+			if (me.Solid && (theBlock.Transparent || !theBlock.IsFullCube)) return true;
 			//   if (me.Transparent && block.Transparent && !block.Solid) return false;
 			if (me.Transparent) return true;
-			if (!me.Transparent && blockTransparent) return true;
-			if (blockSolid && !blockTransparent) return false;
-			if (me.Solid && blockSolid) return false;
+			if (!me.Transparent && (theBlock.Transparent || !theBlock.IsFullCube)) return true;
+			if (theBlock.Solid && !(theBlock.Transparent || !theBlock.IsFullCube)) return false;
+			if (me.Solid && theBlock.Solid && theBlock.IsFullCube) return false;
 			
 			return true;
 		}

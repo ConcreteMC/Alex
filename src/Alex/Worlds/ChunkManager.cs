@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Alex.API;
 using Alex.API.Data.Options;
 using Alex.API.Graphics;
 using Alex.API.Services;
@@ -23,13 +24,14 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using NLog;
 using StackExchange.Profiling;
+using StackExchange.Profiling.Internal;
 using UniversalThreadManagement;
 
 //using OpenTK.Graphics;
 
 namespace Alex.Worlds
 {
-    public class ChunkManager : IDisposable
+	public class ChunkManager : IDisposable
     {
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ChunkManager));
 
@@ -44,6 +46,7 @@ namespace Alex.Worlds
 
 	    public AlphaTestEffect AnimatedEffect { get; }
 	    public AlphaTestEffect TransparentEffect { get; }
+	    public AlphaTestEffect TranslucentEffect { get; }
 		public BasicEffect OpaqueEffect { get; }
 
 	    public long Vertices { get; private set; }
@@ -66,17 +69,31 @@ namespace Alex.Worlds
 	        Resources = serviceProvider.GetRequiredService<ResourceManager>();
 	        
 	        Chunks = new ConcurrentDictionary<ChunkCoordinates, IChunkColumn>();
+
+	        var stillAtlas = Resources.Atlas.GetStillAtlas();
 	        
 	        var fogStart = 0;
 	        TransparentEffect = new AlphaTestEffect(Graphics)
 	        {
-		        Texture = Resources.Atlas.GetStillAtlas(),
+		        Texture = stillAtlas,
 		        VertexColorEnabled = true,
 		        World = Matrix.Identity,
 		        AlphaFunction = CompareFunction.Greater,
 		        ReferenceAlpha = 32,
 		        FogStart = fogStart,
 		        FogEnabled = false
+	        };
+	        
+	        TranslucentEffect = new AlphaTestEffect(Graphics)
+	        {
+		        Texture = stillAtlas,
+		        VertexColorEnabled = true,
+		        World = Matrix.Identity,
+		        AlphaFunction = CompareFunction.Greater,
+		        ReferenceAlpha = 32,
+		        FogStart = fogStart,
+		        FogEnabled = false,
+		        Alpha = 0.5f
 	        };
 	        
 	        AnimatedEffect = new AlphaTestEffect(Graphics)
@@ -93,7 +110,7 @@ namespace Alex.Worlds
 	        OpaqueEffect = new BasicEffect(Graphics)
 	        {
 		        TextureEnabled = true,
-		        Texture = Resources.Atlas.GetStillAtlas(),
+		        Texture = stillAtlas,
 		        FogStart = fogStart,
 		        VertexColorEnabled = true,
 		        LightingEnabled = true,
@@ -121,7 +138,7 @@ namespace Alex.Worlds
         private ThreadSafeList<ChunkCoordinates> Enqueued { get; } = new ThreadSafeList<ChunkCoordinates>();
         private ConcurrentDictionary<ChunkCoordinates, IChunkColumn> Chunks { get; }
 
-        private readonly ThreadSafeList<ChunkData> _renderedChunks = new ThreadSafeList<ChunkData>();
+        private ChunkData[] _renderedChunks = new ChunkData[0];
 
         private Thread ChunkManagementThread { get; }
         private CancellationTokenSource CancelationToken { get; set; } = new CancellationTokenSource();
@@ -207,23 +224,56 @@ namespace Alex.Worlds
 		    OpaqueEffect.View = camera.ViewMatrix;
 		    OpaqueEffect.Projection = camera.ProjectionMatrix;
 
+		    TranslucentEffect.View = camera.ViewMatrix;
+		    TranslucentEffect.Projection = camera.ProjectionMatrix;
+
 		    var tempVertices = 0;
 		    int tempChunks = 0;
 		    var indexBufferSize = 0;
 
-		    ChunkData[] chunks = _renderedChunks.ToArray();
+		    ChunkData[] chunks = _renderedChunks;
 
-		    tempVertices += DrawChunks(device, chunks, OpaqueEffect, false, false);
+		    RenderStage[] renderStages = (RenderStage[]) Enum.GetValues(typeof(RenderStage));
+		    foreach (var stage in renderStages)
+		    {
+			    Effect effect = null;
+			    switch (stage)
+			    {
+				    case RenderStage.OpaqueFullCube:
+					    effect = OpaqueEffect;
+					    break;
+				    case RenderStage.Opaque:
+					    effect = OpaqueEffect;
+					    break;
+				    case RenderStage.Transparent:
+					    effect = TransparentEffect;
+					    break;
+				    case RenderStage.Translucent:
+					    effect = TranslucentEffect;
+					    break;
+				    case RenderStage.Animated:
+					    effect = AnimatedEffect;
+					    break;
+				    default:
+					    throw new ArgumentOutOfRangeException();
+			    }
+
+			    tempVertices += DrawChunks(device, chunks, effect, stage);
+		    }
+
+		    tempChunks = chunks.Count(x => x != null && x.RenderStages != null && x.RenderStages.Count > 0);
+		    
+		   /* tempVertices += DrawChunks(device, chunks, OpaqueEffect, false, false);
 
 		    DrawChunks(device, chunks, AnimatedEffect, false, true);
 		    
-		    DrawChunks(device, chunks, TransparentEffect, true, false);
+		    DrawChunks(device, chunks, TransparentEffect, true, false);*/
 
 		    if (usingWireFrames)
 				device.RasterizerState = originalState;
 
-		    tempChunks = chunks.Count(x => x != null && (
-			    x.SolidIndexBuffer.IndexCount > 0 || x.TransparentIndexBuffer.IndexCount > 0));
+		    //tempChunks = chunks.Count(x => x != null && (
+			//    x.SolidIndexBuffer.IndexCount > 0 || x.TransparentIndexBuffer.IndexCount > 0));
 		    
 		    Vertices = tempVertices;
 		    RenderedChunks = tempChunks;
@@ -411,7 +461,7 @@ namespace Alex.Worlds
 	    #region Chunk Rendering
 	    
 	    
-	    private int DrawChunks(GraphicsDevice device, ChunkData[] chunks, Effect effect, bool transparent, bool animated)
+	    private int DrawChunks(GraphicsDevice device, ChunkData[] chunks, Effect effect, RenderStage stage)
 	    {
 		    int verticeCount = 0;
 		    for (var index = 0; index < chunks.Length; index++)
@@ -419,8 +469,14 @@ namespace Alex.Worlds
 			    var chunk = chunks[index];
 			    if (chunk == null) continue;
 
-			    var buffer = animated ? chunk.AnimatedIndexBuffer : (transparent ? chunk.TransparentIndexBuffer : chunk.SolidIndexBuffer);
-			    if (buffer.IsDisposed)
+			    if (chunk.RenderStages.TryGetValue(stage, out var renderStage))
+			    { 
+				    verticeCount += renderStage.Render(device, effect);
+			    }
+			    
+			   // var buffer = animated ? chunk.AnimatedIndexBuffer : (transparent ? chunk.TransparentIndexBuffer : chunk.SolidIndexBuffer);
+			  /* PooledIndexBuffer buffer;
+			   if (buffer.IsDisposed)
 			    {
 				    Log.Warn($"Tried to use a disposed buffer: {buffer.Name}");
 					continue;    
@@ -439,7 +495,7 @@ namespace Alex.Worlds
 			    }
 
 			    
-			    verticeCount += chunk.Buffer.VertexCount;
+			    verticeCount += chunk.Buffer.VertexCount;*/
 		    }
 
 		    return verticeCount;
@@ -472,23 +528,25 @@ namespace Alex.Worlds
                 //var cameraChunkPos = new ChunkCoordinates(new PlayerLocation(camera.Position.X, camera.Position.Y,
 	           //     camera.Position.Z));
 
-                var renderedChunks = Chunks.ToArray().Where(x =>
+                var renderedChunks = Chunks.ToArray().Select(x => (KeyValuePair: x, distance: Math.Abs(x.Key.DistanceTo(cameraChunkPos)))).Where(x =>
                 {
 
-	                if (Math.Abs(x.Key.DistanceTo(cameraChunkPos)) > Options.VideoOptions.RenderDistance)
+	                if (x.distance > Options.VideoOptions.RenderDistance)
 		                return false;
 			    
-	                var chunkPos = new Vector3(x.Key.X * ChunkColumn.ChunkWidth, 0, x.Key.Z * ChunkColumn.ChunkDepth);
+	                var chunkPos = new Vector3(x.KeyValuePair.Key.X * ChunkColumn.ChunkWidth, 0, x.KeyValuePair.Key.Z * ChunkColumn.ChunkDepth);
 	                return _cameraBoundingFrustum.Intersects(new Microsoft.Xna.Framework.BoundingBox(chunkPos,
 		                chunkPos + new Vector3(ChunkColumn.ChunkWidth, 256/*16 * ((x.Value.GetHeighest() >> 4) + 1)*/,
 			                ChunkColumn.ChunkDepth)));
-                }).ToArray();
+                }).OrderByDescending(x => x.distance).Select(x => x.KeyValuePair).ToArray();
 			
+                List<ChunkData> orderedList = new List<ChunkData>();
                 foreach (var c in renderedChunks)
                 {
 	                if (_chunkData.TryGetValue(c.Key, out var data))
 	                {
-		                if (_renderedChunks.TryAdd(data))
+		                orderedList.Add(data);
+		              //  if (_renderedChunks.TryAdd(data))
 		                {
 			                
 		                }
@@ -501,14 +559,16 @@ namespace Alex.Worlds
 		                }
 	                }
                 }
+
+                _renderedChunks = orderedList.ToArray();
 			
-                foreach (var c in _renderedChunks.ToArray())
+               /* foreach (var c in _renderedChunks.ToArray())
                 {
 	                if (c == null || c.Coordinates == null || !renderedChunks.Any(x => x.Key.Equals(c.Coordinates)))
 	                {
 		                _renderedChunks.Remove(c);
 	                }
-                }
+                }*/
 
                 if (Interlocked.Read(ref _threadsRunning) >= maxThreads) continue;
                 
@@ -655,7 +715,7 @@ namespace Alex.Worlds
                 List<ChunkMesh> meshes = new List<ChunkMesh>();
                 using (profiler.Step("chunk.sections"))
                 {
-	                for (var i = chunk.Sections.Length - 1; i >= 0; i--)
+	                for (var i = 0; i < chunk.Sections.Length - 1; i++)
                     {
                         if (i < 0) break;
                         var section = chunk.Sections[i] as ChunkSection;
@@ -699,21 +759,33 @@ namespace Alex.Worlds
                     }
                 }
 
+                Dictionary<RenderStage, List<int>> newStageIndexes = new Dictionary<RenderStage, List<int>>(); 
+	                
                 List<VertexPositionNormalTextureColor> vertices = new List<VertexPositionNormalTextureColor>();
-                List<int> transparentIndexes = new List<int>();
-                List<int> solidIndexes = new List<int>();
-                List<int> animatedIndexes = new List<int>();
+               // List<int> transparentIndexes = new List<int>();
+               // List<int> solidIndexes = new List<int>();
+               // List<int> animatedIndexes = new List<int>();
 
                 foreach (var mesh in meshes)
                 {
                     var startVerticeIndex = vertices.Count;
                     vertices.AddRange(mesh.Vertices);
 
-                    solidIndexes.AddRange(mesh.SolidIndexes.Select(a => startVerticeIndex + a));
-
-                    transparentIndexes.AddRange(mesh.TransparentIndexes.Select(a => startVerticeIndex + a));
+                    foreach (var stage in mesh.Indexes)
+                    {
+	                    if (!newStageIndexes.ContainsKey(stage.Key))
+	                    {
+		                    newStageIndexes.Add(stage.Key, new List<int>());
+	                    }
+	                    
+	                    newStageIndexes[stage.Key].AddRange(stage.Value.Select(a => startVerticeIndex + a));
+                    }
                     
-                    animatedIndexes.AddRange(mesh.AnimatedIndexes.Select(a => startVerticeIndex + a));
+                   // solidIndexes.AddRange(mesh.SolidIndexes.Select(a => startVerticeIndex + a));
+
+                    //transparentIndexes.AddRange(mesh.TransparentIndexes.Select(a => startVerticeIndex + a));
+                    
+                    //animatedIndexes.AddRange(mesh.AnimatedIndexes.Select(a => startVerticeIndex + a));
                 }
 
                 if (vertices.Count > 0)
@@ -723,10 +795,11 @@ namespace Alex.Worlds
                     using (profiler.Step("chunk.buffer"))
                     {
                         var vertexArray = vertices.ToArray();
-                        var solidArray = solidIndexes.ToArray();
-                        var transparentArray = transparentIndexes.ToArray();
-                        var animatedArray = animatedIndexes.ToArray();
-                        
+                       // var solidArray = solidIndexes.ToArray();
+                       // var transparentArray = transparentIndexes.ToArray();
+                       // var animatedArray = animatedIndexes.ToArray();
+
+                       Dictionary<RenderStage, ChunkRenderStage> oldStages = null;
                         if (data == null)
                         {
                             data = new ChunkData()
@@ -734,7 +807,8 @@ namespace Alex.Worlds
                                 Buffer = GpuResourceManager.GetBuffer(this, Graphics,
                                     VertexPositionNormalTextureColor.VertexDeclaration, vertexArray.Length,
                                     BufferUsage.WriteOnly),
-                                SolidIndexBuffer = GpuResourceManager.GetIndexBuffer(this, Graphics,
+                                RenderStages = new Dictionary<RenderStage, ChunkRenderStage>()
+                                /*SolidIndexBuffer = GpuResourceManager.GetIndexBuffer(this, Graphics,
                                     IndexElementSize.ThirtyTwoBits,
                                     solidArray.Length, BufferUsage.WriteOnly),
                                 TransparentIndexBuffer = GpuResourceManager.GetIndexBuffer(this, Graphics,
@@ -742,20 +816,20 @@ namespace Alex.Worlds
                                     transparentArray.Length, BufferUsage.WriteOnly),
                                 AnimatedIndexBuffer = GpuResourceManager.GetIndexBuffer(this, Graphics,
 	                                IndexElementSize.ThirtyTwoBits,
-	                                animatedArray.Length, BufferUsage.WriteOnly)
+	                                animatedArray.Length, BufferUsage.WriteOnly)*/
                             };
                         }
+                        else
+                        {
+	                        oldStages = data.RenderStages;
+                        }
 
+                      //  var oldStages = data.RenderStages;
+                        var newStages = new Dictionary<RenderStage, ChunkRenderStage>();
+                        
                         PooledVertexBuffer oldBuffer = data.Buffer;
 
                         PooledVertexBuffer newVertexBuffer = null;
-                        PooledIndexBuffer newsolidIndexBuffer = null;
-                        PooledIndexBuffer newTransparentIndexBuffer = null;
-                        PooledIndexBuffer newAnimatedIndexBuffer = null;
-                        
-                        PooledIndexBuffer oldAnimatedIndexBuffer = data.AnimatedIndexBuffer;
-                        PooledIndexBuffer oldSolidIndexBuffer = data.SolidIndexBuffer;
-                        PooledIndexBuffer oldTransparentIndexBuffer = data.TransparentIndexBuffer;
 
                         using(profiler.Step("chunk.buffer.check"))
                         if (vertexArray.Length >= data.Buffer.VertexCount)
@@ -779,61 +853,39 @@ namespace Alex.Worlds
                             data.Buffer.SetData(vertexArray);
                             ProfilerService.ReportCount("chunk.bufferSize", data.Buffer.MemoryUsage);
                         }
+                       
+                       foreach (var stage in newStageIndexes)
+                       {
+	                       ChunkRenderStage renderStage;
+	                      // PooledIndexBuffer oldIndexBuffer = null;
+	                       PooledIndexBuffer newIndexBuffer;
+	                       if (oldStages == null || !oldStages.TryGetValue(stage.Key, out renderStage))
+	                       {
+		                       renderStage = new ChunkRenderStage(data);
+	                       }
+	                       
+	                       if (renderStage.IndexBuffer == null || stage.Value.Count > renderStage.IndexBuffer.IndexCount)
+	                       {
+		                       newIndexBuffer = GpuResourceManager.GetIndexBuffer(this, Graphics,
+			                       IndexElementSize.ThirtyTwoBits, stage.Value.Count, BufferUsage.WriteOnly);
+			                       
+		                       //oldIndexBuffer = renderStage.IndexBuffer;
+	                       }
+	                       else
+	                       {
+		                       newIndexBuffer = renderStage.IndexBuffer;
+		                       // renderStage.IndexBuffer.SetData(stage.Value.ToArray());
+	                       }
+	                       
+	                       newIndexBuffer.SetData(stage.Value.ToArray());
 
-                        using(profiler.Step("Chunk Solid indexbuffer check"))
-                        if (solidArray.Length > data.SolidIndexBuffer.IndexCount)
-                        {
-                            //  var old = data.SolidIndexBuffer;
-                            var newSolidBuffer = GpuResourceManager.GetIndexBuffer(this, Graphics,
-                                IndexElementSize.ThirtyTwoBits,
-                                solidArray.Length,
-                                BufferUsage.WriteOnly);
+	                       renderStage.IndexBuffer = newIndexBuffer;
+	                       
+	                       newStages.Add(stage.Key, renderStage);
+                       }
 
-                            newSolidBuffer.SetData(solidArray);
-                            newsolidIndexBuffer = newSolidBuffer;
-                            //  data.SolidIndexBuffer = newSolidBuffer;
-                            //   old?.Dispose();
-                        }
-                        else
-                        {
-                            data.SolidIndexBuffer.SetData(solidArray);
-                        }
-
-                        using(profiler.Step("Chunk Transparent indexbuffer check"))
-                        if (transparentArray.Length > data.TransparentIndexBuffer.IndexCount)
-                        {
-                            //  var old = data.TransparentIndexBuffer;
-                            var newTransparentBuffer = GpuResourceManager.GetIndexBuffer(this, Graphics,
-                                IndexElementSize.ThirtyTwoBits,
-                                transparentArray.Length,
-                                BufferUsage.WriteOnly);
-
-                            newTransparentBuffer.SetData(transparentArray);
-                            newTransparentIndexBuffer = newTransparentBuffer;
-                        }
-                        else
-                        {
-                            data.TransparentIndexBuffer.SetData(transparentArray);
-                        }
-                        
-                        using(profiler.Step("Chunk Animated indexbuffer check"))
-                        if (animatedArray.Length > data.AnimatedIndexBuffer.IndexCount)
-                        {
-	                        //  var old = data.TransparentIndexBuffer;
-	                        var newTransparentBuffer = GpuResourceManager.GetIndexBuffer(this, Graphics,
-		                        IndexElementSize.ThirtyTwoBits,
-		                        animatedArray.Length,
-		                        BufferUsage.WriteOnly);
-
-	                        newTransparentBuffer.SetData(animatedArray);
-	                        newAnimatedIndexBuffer = newTransparentBuffer;
-                        }
-                        else
-                        {
-	                        data.AnimatedIndexBuffer.SetData(animatedArray);
-                        }
-
-                        using (profiler.Step("chunk.buffer.dispose"))
+                       data.RenderStages = newStages;
+                       using (profiler.Step("chunk.buffer.dispose"))
                         {
 	                        if (newVertexBuffer != null)
 	                        {
@@ -841,22 +893,18 @@ namespace Alex.Worlds
 		                        oldBuffer?.MarkForDisposal();
 	                        }
 
-	                        if (newTransparentIndexBuffer != null)
-	                        {
-		                        data.TransparentIndexBuffer = newTransparentIndexBuffer;
-		                        oldTransparentIndexBuffer?.MarkForDisposal();
-	                        }
+	                        RenderStage[] renderStages = (RenderStage[]) Enum.GetValues(typeof(RenderStage));
 
-	                        if (newAnimatedIndexBuffer != null)
+	                        foreach (var stage in renderStages)
 	                        {
-		                        data.AnimatedIndexBuffer = newAnimatedIndexBuffer;
-		                        oldAnimatedIndexBuffer?.MarkForDisposal();
-	                        }
-
-	                        if (newsolidIndexBuffer != null)
-	                        {
-		                        data.SolidIndexBuffer = newsolidIndexBuffer;
-		                        oldSolidIndexBuffer?.MarkForDisposal();
+		                        if (newStages.TryGetValue(stage, out var renderStage))
+		                        {
+			                        if (oldStages != null && oldStages.TryGetValue(stage, out var oldStage))
+			                        {
+				                        if (oldStage != renderStage)
+					                        oldStage.Dispose();
+			                        }
+		                        }
 	                        }
                         }
                     }
@@ -935,10 +983,17 @@ namespace Alex.Worlds
 			
 	        List<VertexPositionNormalTextureColor> solidVertices = new List<VertexPositionNormalTextureColor>();
 
-	        List<int> animatedIndexes = new List<int>();
-	        List<int> transparentIndexes = new List<int>();
-	        List<int> solidIndexes = new List<int>();
+	       // List<int> animatedIndexes = new List<int>();
+	      //  List<int> transparentIndexes = new List<int>();
+	      //  List<int> solidIndexes = new List<int>();
 	        
+			Dictionary<RenderStage, List<int>> stages = new Dictionary<RenderStage, List<int>>();
+			RenderStage[] stageEnumValues = (RenderStage[]) Enum.GetValues(typeof(RenderStage));
+			foreach (var stage in stageEnumValues)
+			{
+				stages.Add(stage, new List<int>());
+			}
+			
 	        Dictionary<int, int> processedIndices = new Dictionary<int, int>();
 	        for (var y = 0; y < 16; y++)
 	        for (var x = 0; x < ChunkColumn.ChunkWidth; x++)
@@ -1007,13 +1062,13 @@ namespace Alex.Worlds
 			        ChunkMesh.EntryPosition entryPosition;
 			        if (!shouldRebuildVertices && cachedBlock != null)
 			        {
-				        var indices = cachedBlock.Animated
-					        ? cached.AnimatedIndexes
-					        : (cachedBlock.Transparent ? cached.TransparentIndexes : cached.SolidIndexes);
+				        //var indices = cachedBlock.Animated
+					    //    ? cached.AnimatedIndexes
+					    //    : (cachedBlock.Transparent ? cached.TransparentIndexes : cached.SolidIndexes);
 
-				        var indiceIndex = cachedBlock.Animated
-					        ? animatedIndexes.Count
-					        : (cachedBlock.Transparent ? transparentIndexes.Count : solidIndexes.Count);
+					    int[] indices = cached.Indexes[cachedBlock.Stage];
+
+					    var indiceIndex = stages[cachedBlock.Stage].Count;
 
 
 				        for (int index = cachedBlock.Index;
@@ -1031,22 +1086,10 @@ namespace Alex.Worlds
 						        processedIndices.Add(vertexIndex, newIndex);
 					        }
 
-					        if (cachedBlock.Animated)
-					        {
-						        animatedIndexes.Add(newIndex);
-					        }
-					        else if (cachedBlock.Transparent)
-					        {
-						        transparentIndexes.Add(newIndex);
-					        }
-					        else
-					        {
-						        solidIndexes.Add(newIndex);
-					        }
+					        stages[cachedBlock.Stage].Add(newIndex);
 				        }
 
-				        entryPosition = new ChunkMesh.EntryPosition(cachedBlock.Transparent,
-					        cachedBlock.Animated, indiceIndex,
+				        entryPosition = new ChunkMesh.EntryPosition(cachedBlock.Stage, indiceIndex,
 					        cachedBlock.Length, currentBlockState.storage);
 
 				        posCache.Add(entryPosition);
@@ -1067,8 +1110,36 @@ namespace Alex.Worlds
 					        continue;
 				        }
 
-				        bool transparent = blockState.Block.Transparent;
-				        bool animated = blockState.Block.Animated;
+				        RenderStage targetState = RenderStage.OpaqueFullCube;
+				        if (blockState.Block.Animated)
+				        {
+					        targetState = RenderStage.Animated;
+				        }
+				        else if (blockState.Block.Transparent)
+				        {
+					        if (blockState.Block.BlockMaterial.IsOpaque())
+					        {
+						        targetState = RenderStage.Transparent;
+					        }
+					        else
+					        {
+						        targetState = RenderStage.Translucent;
+					        }
+					       // if (blockState.Block.BlockMaterial.IsOpaque())
+					       // {
+						       // targetState = RenderStage.Opaque;
+					       // }
+					        //else
+					       // {
+						     //   targetState = RenderStage.Transparent;
+					        //}
+				        }
+				        else if (!blockState.Block.IsFullCube)
+				        {
+					        targetState = RenderStage.Opaque;
+				        }
+				        //bool transparent = blockState.Block.Transparent;
+				        //bool animated = blockState.Block.Animated;
 
 				        if (data.vertices.Length > 0 && data.indexes.Length > 0)
 				        {
@@ -1082,31 +1153,18 @@ namespace Alex.Worlds
 						        solidVertices.Add(vert);
 					        }
 
-					        int startIndex = (animated
-						        ? animatedIndexes.Count
-						        : (transparent ? transparentIndexes.Count : solidIndexes.Count));
+					        int startIndex = stages[targetState].Count;
+					        
 					        for (int i = 0; i < data.indexes.Length; i++)
 					        {
 						        var originalIndex = data.indexes[i];
 
 						        var verticeIndex = startVerticeIndex + originalIndex;
 
-						        if (animated)
-						        {
-							        animatedIndexes.Add(verticeIndex);
-						        }
-						        else if (transparent)
-						        {
-							        transparentIndexes.Add(verticeIndex);
-						        }
-						        else
-						        {
-							        solidIndexes.Add(verticeIndex);
-						        }
+						        stages[targetState].Add(verticeIndex);
 					        }
 
-					        entryPosition = new ChunkMesh.EntryPosition(transparent,
-						        animated, startIndex,
+					        entryPosition = new ChunkMesh.EntryPosition(targetState, startIndex,
 						        data.indexes.Length, currentBlockState.storage);
 
 					        posCache.Add(entryPosition);
@@ -1141,9 +1199,16 @@ namespace Alex.Worlds
 
 	        var oldMesh = section.MeshCache;
 
-	        var mesh = new ChunkMesh(solidVertices.ToArray(), solidIndexes.ToArray(),
-		        transparentIndexes.ToArray(), animatedIndexes.ToArray());
+	        var mesh = new ChunkMesh(solidVertices.ToArray());
 
+	        foreach (var stage in stages)
+	        {
+		        if (stage.Value.Count > 0)
+		        {
+			        mesh.Indexes.Add(stage.Key, stage.Value.ToArray());
+		        }
+	        }
+	        
 	        section.MeshCache = mesh;
 	        section.MeshPositions = positions;
 	        
