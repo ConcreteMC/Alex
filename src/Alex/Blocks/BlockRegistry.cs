@@ -55,6 +55,7 @@ namespace Alex.Blocks
 			this.Register(() => new SoulSand().WithLocation("minecraft:soul_sand"));
 			this.Register(() => new Glowstone().WithLocation("minecraft:glowstone"));
 			this.Register(() => new Portal().WithLocation("minecraft:portal"));
+			this.Register(() => new Portal().WithLocation("minecraft:nether_portal"));
 			this.Register(() => new Cake().WithLocation("minecraft:cake"));
 			this.Register(() => new BrownMushroomBlock().WithLocation("minecraft:brown_mushroom_block"));
 			this.Register(() => new RedMushroomBlock().WithLocation("minecraft:red_mushroom_block"));

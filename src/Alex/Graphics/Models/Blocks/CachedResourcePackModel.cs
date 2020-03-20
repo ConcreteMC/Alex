@@ -26,8 +26,16 @@ namespace Alex.Graphics.Models.Blocks
 		
 		protected Vector3 Min = new Vector3(float.MaxValue);
 		protected Vector3 Max = new Vector3(float.MinValue);
-		
-		private BoundingBox[] Boxes { get; set; } = new BoundingBox[0];
+
+		public override BoundingBox BoundingBox
+		{
+			get
+			{
+				return new BoundingBox(Min, Max);
+			}
+		}
+
+		public BoundingBox[] Boxes { get; set; } = new BoundingBox[0];
 		public CachedResourcePackModel(ResourceManager resources, BlockStateModel[] models)
 		{
 			Resources = resources;
@@ -39,21 +47,48 @@ namespace Alex.Graphics.Models.Blocks
 			}
 		}
 
+		public override BoundingBox[] GetIntersecting(Vector3 position, BoundingBox box)
+		{
+			List<BoundingBox> intersecting = new List<BoundingBox>();
+			foreach (var b in Boxes.OrderByDescending(x => x.Max.Y))
+			{
+				if (new BoundingBox(position + b.Min, position + b.Max).Contains(box) == ContainmentType.Intersects)
+				{
+					intersecting.Add(b);
+				}
+			}
+
+			return intersecting.ToArray();
+		}
+		
 		public override BoundingBox GetPartBoundingBox(Vector3 position, Vector3 entityPosition)
 		{
-			var relativePosition = entityPosition - position;
-			//var relativeNoY = new Vector3(relativePosition.X, 0f, relativePosition.Z);
-			
-			foreach (var box in Boxes)
+		//	var relative = Vector3.
+		var relativePosition = entityPosition - position; //Vector3.Max(entityPosition, position) - Vector3.Min(entityPosition, position);
+			var relativeNoY = new Vector3(relativePosition.X, 0f, relativePosition.Z);
+
+		/*	var res = Boxes.Where(x => x.Contains(entityPosition) == ContainmentType.Intersects).OrderBy(x => x.Max.Y - relativePosition.Y).FirstOrDefault();
+
+			if (res != default)
 			{
-				if (box.Min.X <= relativePosition.X && box.Max.X >= relativePosition.X
-				    && box.Min.Z <= relativePosition.Z && box.Max.Z >= relativePosition.Z)
+				return new BoundingBox(position + res.Min, position + res.Max);
+			}*/
+			
+			//var first = Boxes.OrderBy(x => MathF.Abs(Vector3.Distance(relativePosition, (x.Min + x.Max) / 2f))).FirstOrDefault();
+			//return new BoundingBox(position + first.Min, position + first.Max);
+			
+			foreach (var box in Boxes.OrderByDescending(x => x.Max.Y))
+			{
+				//if (box.Min.X <= relativePosition.X && box.Max.X >= relativePosition.X
+				//    && box.Min.Z <= relativePosition.Z && box.Max.Z >= relativePosition.Z)
+				var result = box.Contains(relativePosition);
+				if (result == ContainmentType.Contains || result == ContainmentType.Intersects)
 				{
 					return new BoundingBox(position + box.Min, position + box.Max);
 				}
 			}
 			
-			return base.GetPartBoundingBox(position, entityPosition);
+			return GetBoundingBox(position, null);
 		}
 
 		public override BoundingBox GetBoundingBox(Vector3 position, IBlock requestingBlock)
@@ -400,7 +435,8 @@ namespace Alex.Graphics.Models.Blocks
 				var from = FixRotation(element.From, raw, element);
 				var to = FixRotation(element.To, raw, element);
 
-				boxes.Add(new BoundingBox(from, to));
+				
+				boxes.Add(new BoundingBox(Vector3.Min(from, to) / 16f, Vector3.Max(from, to) / 16f));
 			}
 
 			min = new Vector3(facesMinX, facesMinY, facesMinZ);

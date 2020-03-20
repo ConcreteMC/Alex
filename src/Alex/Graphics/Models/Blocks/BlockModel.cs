@@ -14,6 +14,8 @@ namespace Alex.Graphics.Models.Blocks
 
         }
 
+        public virtual BoundingBox BoundingBox { get; } = new BoundingBox(Vector3.Zero, Vector3.One);
+        
 		public float Scale { get; set; } = 1f;
 		public bool Transparent { get; set; }
 		public bool Animated { get; set; }
@@ -31,6 +33,11 @@ namespace Alex.Graphics.Models.Blocks
 	    public virtual BoundingBox GetPartBoundingBox(Vector3 position, Vector3 entityPosition)
 	    {
 		    return new BoundingBox(position, position + Vector3.One);
+	    }
+
+	    public virtual BoundingBox[] GetIntersecting(Vector3 position, BoundingBox box)
+	    {
+		    return new BoundingBox[0];
 	    }
 
 	    protected VertexPositionNormalTextureColor[] GetFaceVertices(BlockFace blockFace, Vector3 startPosition, Vector3 endPosition, UVMap uvmap, out int[] indexes)

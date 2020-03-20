@@ -105,6 +105,16 @@ namespace Alex.Blocks.Minecraft
 			HasHitbox = true;
 		}
 
+		public virtual double GetHeight(Vector3 relative)
+		{
+			return BlockState.Model.BoundingBox.Max.Y;
+		}
+		
+		public virtual bool CanClimb(BlockFace face)
+		{
+			return false;
+		}
+		
 		public virtual Microsoft.Xna.Framework.BoundingBox GetBoundingBox(Vector3 blockPosition)
 	    {
 			if (BlockState == null)

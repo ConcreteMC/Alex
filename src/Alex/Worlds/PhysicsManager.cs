@@ -7,6 +7,7 @@ using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks.Minecraft;
 using Alex.Entities;
+using Alex.Graphics.Models.Blocks;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
 using NLog;
@@ -61,7 +62,9 @@ namespace Alex.Worlds
 						
 						if (!e.IsFlying && !e.KnownPosition.OnGround)
 						{
-							velocity -= new Vector3(0, (float) (e.Gravity * dt), 0);
+							velocity -= new Vector3(0f, (float)(e.Gravity * dt), 0f);
+							//var modifier = new Vector3(1f, (float) (1f - (e.Gravity * dt)), 1f);
+							//velocity *= modifier;
 						}
 
 						var rawDrag = (float) (1f - (e.Drag * dt));
@@ -76,21 +79,32 @@ namespace Alex.Worlds
 
 						Bound bound = new Bound(World, boundingBox, preview);
 						
-						velocity = AdjustForY(e.GetBoundingBox(new Vector3(position.X, preview.Y, position.Z)), bound,
-							velocity, position);
-						
 						if (bound.GetIntersecting(boundingBox, out var blocks))
 						{
+							velocity = AdjustForY(e.GetBoundingBox(new Vector3(position.X, preview.Y, position.Z)), blocks,
+								velocity, position);
+							
 							//var solid = blocks.Where(b => b.block.Solid && b.box.Max.Y > position.Y).ToArray();
 							var solid = blocks.Where(b => b.block.Solid && b.box.Max.Y > position.Y).ToArray();
 							Hit.AddRange(solid.Select(x => x.box));
 
 							if (solid.Length > 0)
 							{
-								var heighest = solid.Max(x => x.box.Max.Y);
-								if (heighest - position.Y <= 0.5f && e.KnownPosition.OnGround && !e.IsFlying)
-									e.KnownPosition.Y = heighest;
-									
+								var heighest = solid.OrderByDescending(x => x.box.Max.Y).FirstOrDefault();
+								if (MathF.Abs(heighest.box.Max.Y - boundingBox.Min.Y) <= 0.5f &&
+								    e.KnownPosition.OnGround &&
+								    !e.IsFlying)
+								{
+									//if (!heighest.block.BlockState.Model
+									//	.GetIntersecting(heighest.coordinates, boundingBox)
+									//	.Any(x => x.Max.Y > heighest.box.Max.Y))
+									//if (!blocks.Any(x => x.))
+									{
+
+										e.KnownPosition.Y = (float) heighest.box.Max.Y;
+									}
+								}
+
 								for (float x = 1f; x > 0f; x -= 0.1f)
 								{
 									Vector3 c = (position - preview) * x + position;
@@ -129,7 +143,7 @@ namespace Alex.Worlds
 			sw.Restart();
 		}
 
-		private Vector3 AdjustForY(BoundingBox box, Bound bound, Vector3 velocity, PlayerLocation position)
+		private Vector3 AdjustForY(BoundingBox box, (BlockCoordinates coordinates, Block block, BoundingBox box)[] blocks, Vector3 velocity, PlayerLocation position)
 		{
 			if (velocity.Y == 0f)
 				return velocity;
@@ -138,7 +152,7 @@ namespace Alex.Worlds
 			bool negative = velocity.Y < 0f;
 			foreach (var corner in box.GetCorners())
 			{
-				foreach (var block in bound.GetPoints())
+				foreach (var block in blocks)
 				{
 					if (block.block.Solid && block.box.Contains(corner) == ContainmentType.Contains)
 					{
@@ -244,8 +258,12 @@ namespace Alex.Worlds
 			    var block = world.GetBlock(coordinates) as Block;
 			    if (block == null) return default;
 			    
+			    //var entityBlockPos = new BlockCoordinates(entityPos);
+
 			    var box = block.GetBoundingBox(coordinates);
 
+			    //var height = (float)block.GetHeight(entityPos - box.Min);
+			    //box.Max = new Vector3(box.Max.X, box.Min.Y + height, box.Max.Z);
 			    return (block, box);
 		    }
 
@@ -257,14 +275,38 @@ namespace Alex.Worlds
 			    }
 		    }
 
-		    public bool GetIntersecting(BoundingBox box, out (Block block, BoundingBox box)[] blocks)
+		    public bool GetIntersecting(BoundingBox box, out (BlockCoordinates coordinates, Block block, BoundingBox box)[] blocks)
 		    {
-			    List<(Block block, BoundingBox box)> b = new List<(Block block, BoundingBox box)>();
-			    foreach (var block in GetPoints())
+			    List<(BlockCoordinates coordinates,Block block, BoundingBox box)> b = new List<(BlockCoordinates coordinates,Block block, BoundingBox box)>();
+			    foreach (var block in Blocks)
 			    {
-				    if (block.box.Contains(box) == ContainmentType.Intersects)
+				    var vecPos = new Vector3(block.Key.X, block.Key.Y, block.Key.Z);
+
+				    if (block.Value.box.Intersects(box))
 				    {
-					    b.Add(block);
+					    /*foreach (var intersect in block.Value.block.BlockState.Model.GetIntersecting(block.Key, box).OrderBy(x => x.Max.Y))
+					    {
+						    b.Add((block.Value.block, intersect));
+						    break;
+					    }*/
+
+					    bool added = false;
+					    foreach (var point in box.GetCorners().OrderBy(x => x.Y))
+					    {
+						    var bb = block.Value.block.GetPartBoundingBox(block.Key, point);
+						    var bc = bb.Contains(point);
+						    if (bc == ContainmentType.Contains)
+						    {
+							    added = true;
+							    b.Add((block.Key, block.Value.block, bb));
+							   // break;
+						    }
+					    }
+
+					    if (!added)
+					    {
+						    b.Add((block.Key, block.Value.block, block.Value.box));
+					    }
 				    }
 			    }
 			    
