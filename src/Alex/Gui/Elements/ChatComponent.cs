@@ -11,6 +11,7 @@ using Alex.API.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using MiNET;
 using NLog;
 using RocketUI;
 
@@ -477,7 +478,10 @@ namespace Alex.Gui.Elements
 		[EventHandler]
 		private void OnChatMessageReceived(ChatMessageReceivedEvent e)
 		{
-			Receive(e.ChatObject);
+			if (e.IsChat())
+			{
+				Receive(e.ChatObject);
+			}
 		}
 
 		private void Receive(ChatObject message)

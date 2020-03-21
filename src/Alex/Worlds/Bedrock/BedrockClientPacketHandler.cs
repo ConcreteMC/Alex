@@ -194,7 +194,7 @@ namespace Alex.Worlds.Bedrock
 
         public void HandleMcpeText(McpeText message)
 		{
-			EventDispatcher.DispatchEvent(new ChatMessageReceivedEvent(new ChatObject(message.message)));
+			EventDispatcher.DispatchEvent(new ChatMessageReceivedEvent(new ChatObject(message.message), (MessageType)message.type));
 		}
 
 		public void HandleMcpeSetTime(McpeSetTime message)

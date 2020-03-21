@@ -25,6 +25,7 @@ namespace Alex.GameStates.Hud
         private readonly HungerComponent _hungerComponent;
         private readonly GuiContainer _healthContainer;
         private readonly GuiMultiStackContainer _bottomContainer;
+        private readonly TipPopupComponent _tipPopupComponent;
         
 	    public readonly ChatComponent Chat;
 	    public readonly TitleComponent Title;
@@ -68,12 +69,15 @@ namespace Alex.GameStates.Hud
 	        _hungerComponent = new HungerComponent(player);
 	        _hungerComponent.Anchor = Alignment.TopRight;
 
+	        _tipPopupComponent = new TipPopupComponent();
+	        _tipPopupComponent.Anchor = Alignment.BottomCenter;
 	        //_healthComponent.Anchor
 	        //  _hotbar.AddChild(_healthComponent = new HealthComponent(player));
         }
 
         protected override void OnInit(IGuiRenderer renderer)
         {
+	        Alex.Services.GetRequiredService<IEventDispatcher>().RegisterEvents(_tipPopupComponent);
 	        //_healthContainer.AddChild(_healthComponent);
 	       // _healthContainer.AddChild(_hungerComponent);
 	        
@@ -87,6 +91,8 @@ namespace Alex.GameStates.Hud
 
 		        t
 	        });*/
+	     
+	     _bottomContainer.AddChild(_tipPopupComponent);
 	     
 	     _healthContainer.AddChild(_healthComponent);
 	     _healthContainer.AddChild(_hungerComponent);
@@ -183,6 +189,8 @@ namespace Alex.GameStates.Hud
         public void Unload()
         {
 	        Chat.Unload();
+	        
+	        Alex.Services.GetRequiredService<IEventDispatcher>().UnregisterEvents(_tipPopupComponent);
         }
     }
 }
