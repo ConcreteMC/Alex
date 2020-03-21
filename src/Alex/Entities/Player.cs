@@ -39,7 +39,7 @@ namespace Alex.Entities
         public int Health { get; set; } = 20;
         public int MaxHealth { get; set; } = 20;
 
-        public int Hunger { get; set; } = 20;
+        public int Hunger { get; set; } = 19;
         public int MaxHunger { get; set; } = 20;
 
         public int Saturation { get; set; } = 0;

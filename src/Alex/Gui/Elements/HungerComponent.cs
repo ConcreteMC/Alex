@@ -51,13 +51,14 @@ namespace Alex.Gui.Elements
                 {
                     HeartValue value = HeartValue.Full;
                     
-                    if ((i + 1) < ceil)
+                    if ((i + 1) <= ceil)
                     {
                         value = HeartValue.Full;
-                    }
-                    else if (!isRounded && (i + 1) == (ceil ))
-                    {
-                        value = HeartValue.Half;
+                        
+                        if (!isRounded && (i + 1) == ceil)
+                        {
+                            value = HeartValue.Half;
+                        }
                     }
                     else
                     {
