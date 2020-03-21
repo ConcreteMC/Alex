@@ -139,12 +139,6 @@ namespace Alex.Worlds.Bedrock
 				}
 
 				Client.WorldReceiver.GetPlayerEntity().EntityId = Client.EntityId;
-
-				Client.SendMcpeMovePlayer();
-				
-				var packet = McpeSetLocalPlayerAsInitializedPacket.CreateObject();
-				packet.runtimeEntityId =  Client.WorldReceiver.GetPlayerEntity().EntityId;
-				 Client.SendPacket(packet);
 			}
 		}
 

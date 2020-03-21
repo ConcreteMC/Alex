@@ -192,20 +192,36 @@ namespace Alex.Worlds.Bedrock
 
 				progressReport(LoadingState.LoadingChunks, 0);
 
-				double radiusSquared = Math.Pow(Client.ChunkRadius, 2);var target = radiusSquared * 3;
-
+				var percentage = 0;
 				var statusChanged = false;
-				while (!statusChanged || !Client.HasSpawned)
+				var done = false;
+				while (true)
 				{
-					progressReport(LoadingState.LoadingChunks, ((int)(_chunksReceived / target) * 100));
+					double radiusSquared = Math.Pow(Client.ChunkRadius, 2);
+					var target = radiusSquared * 3;
+					
+					percentage = (int)(ChunksReceived / target) * 100;
+					progressReport(LoadingState.LoadingChunks, percentage);
 
 					if (!statusChanged)
 					{
 						if (Client.PlayerStatusChanged.WaitOne(50))
 						{
 							statusChanged = true;
+							
+							//Client.SendMcpeMovePlayer();
+				
+							var packet = McpeSetLocalPlayerAsInitializedPacket.CreateObject();
+							packet.runtimeEntityId =  Client.WorldReceiver.GetPlayerEntity().EntityId;
+							Client.SendPacket(packet);
 							//Client.IsEmulator = false;
 						}
+					}
+
+					if (percentage >= 90)
+					{
+						Client.SendMcpeMovePlayer();
+						break;
 					}
 				}
 
@@ -214,13 +230,13 @@ namespace Alex.Worlds.Bedrock
 			});
 		}
 
-		private int _chunksReceived;
+		private int ChunksReceived { get; set; }
 		
-		[EventHandler]
+		[EventHandler(EventPriority.Monitor)]
 		private void OnChunkReceived(ChunkReceivedEvent e)
 		{
+			ChunksReceived++;
 			_loadedChunks.TryAdd(e.Coordinates);
-			_chunksReceived++;
 		}
 
 		public override void Dispose()
