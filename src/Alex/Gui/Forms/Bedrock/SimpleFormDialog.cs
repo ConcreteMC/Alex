@@ -1,3 +1,4 @@
+using System;
 using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Gui.Dialogs;
@@ -14,14 +15,22 @@ using RocketUI;
 
 namespace Alex.Gui.Forms.Bedrock
 {
-    public class SimpleFormDialog : GuiDialogBase
+    public class FormBase : GuiDialogBase
     {
-        private BedrockFormManager Parent { get; }
-        private GuiStackMenu StackMenu { get; }
-        public SimpleFormDialog(uint formId, BedrockFormManager parent, GuiManager guiManager, SimpleForm form)
+        public uint FormId { get; set; }
+        protected BedrockFormManager Parent { get; }
+        public FormBase(uint formId, BedrockFormManager parent)
         {
+            FormId = formId;
             Parent = parent;
-
+        }    
+    }
+    
+    public class SimpleFormDialog : FormBase
+    {
+        private GuiStackMenu StackMenu { get; }
+        public SimpleFormDialog(uint formId, BedrockFormManager parent, SimpleForm form) : base(formId, parent)
+        {
             Background = new Color(Color.Black, 0.5f);
             
             GuiContainer container = new GuiContainer();
@@ -35,21 +44,37 @@ namespace Alex.Gui.Forms.Bedrock
                 StackMenu.AddMenuItem(form.Content, () => {}, false);
                 StackMenu.AddSpacer();
             }
-            
-            for (var index = 0; index < form.Buttons.Count; index++)
+
+            var btns = form.Buttons.ToArray();
+            for (var index = 0; index < btns.Length; index++)
             {
-                var button = form.Buttons[index];
+                var button = btns[index];
                 int idx = index;
-                
-                StackMenu.AddMenuItem(button.Text, () =>
+
+                Action submitAction = () =>
                 {
-                    parent.SendResponse(new McpeModalFormResponse()
+                    var packet = McpeModalFormResponse.CreateObject();
+                    packet.formId = formId;
+                    packet.data = idx.ToString();
+                    //JsonConvert.SerializeObject(idx)
+                    parent.SendResponse(packet);
+                    parent.Hide(formId);
+                };
+                
+                if (button.Image != null)
+                {
+                    switch (button.Image.Type)
                     {
-                        formId = formId,
-                        data = JsonConvert.SerializeObject((int?) idx)
-                    });
-                    guiManager.HideDialog(this);
-                });
+                        case "url":
+                            StackMenu.AddChild(new FormImageButton(button.Image.Url, button.Text, submitAction));
+                            continue;
+                            break;
+                        case "path":
+                            break;
+                    }
+                }
+                
+                StackMenu.AddMenuItem(button.Text, submitAction);
             }
             
             container.AddChild(StackMenu);

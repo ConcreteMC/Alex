@@ -1,4 +1,5 @@
 using Alex.API.Gui;
+using Alex.API.Gui.Dialogs;
 using Alex.API.Network;
 using Alex.Worlds.Bedrock;
 using GLib;
@@ -14,6 +15,8 @@ namespace Alex.Gui.Forms.Bedrock
         
         private GuiManager GuiManager { get; }
         private INetworkProvider NetworkProvider { get; }
+
+        private FormBase _activeForm = null;
         public BedrockFormManager(INetworkProvider networkProvider, GuiManager guiManager)
         {
             NetworkProvider = networkProvider;
@@ -24,11 +27,28 @@ namespace Alex.Gui.Forms.Bedrock
         {
             if (form is SimpleForm simpleForm)
             {
-                GuiManager.ShowDialog(new SimpleFormDialog(id, this, GuiManager, simpleForm));
+                if (_activeForm != null)
+                {
+                    GuiManager.HideDialog(_activeForm);
+                }
+                
+                GuiManager.ShowDialog(_activeForm = new SimpleFormDialog(id, this, simpleForm));
             }
             else
             {
                 Log.Warn($"Form type not supported: {form.GetType()}");
+            }
+        }
+
+        public void Hide(uint id)
+        {
+            if (_activeForm != null)
+            {
+                if (_activeForm.FormId == id)
+                {
+                    GuiManager.HideDialog(_activeForm);
+                    _activeForm = null;
+                }
             }
         }
 

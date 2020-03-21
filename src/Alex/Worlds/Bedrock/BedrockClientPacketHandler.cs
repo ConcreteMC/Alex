@@ -1329,7 +1329,7 @@ namespace Alex.Worlds.Bedrock
 			{
 				Form form = JsonConvert.DeserializeObject<Form>(message.data, new FormConverter());
 
-				world.FormManager.Show(message.Id, form);
+				world.FormManager.Show(message.formId, form);
 			}
 			
 			//UnhandledPackage(message);
