@@ -35,6 +35,7 @@ using Microsoft.Xna.Framework.Graphics;
 using MiNET;
 using MiNET.Client;
 using MiNET.Net;
+using MiNET.UI;
 using MiNET.Utils;
 using Newtonsoft.Json;
 using NLog;
@@ -588,12 +589,18 @@ namespace Alex.Worlds.Bedrock
 
 		public void HandleMcpeMoveEntity(McpeMoveEntity message)
 		{
+			var location = new PlayerLocation(message.position.X, message.position.Y, message.position.Z,
+				message.position.HeadYaw, message.position.Yaw, -message.position.Pitch);
+			
 			if (message.runtimeEntityId != Client.EntityId)
 			{
-                 Client.WorldReceiver.UpdateEntityPosition(message.runtimeEntityId,
-					new PlayerLocation(message.position.X, message.position.Y, message.position.Z, 
-						message.position.HeadYaw, message.position.Yaw, -message.position.Pitch));
+                 Client.WorldReceiver.UpdateEntityPosition(message.runtimeEntityId, location
+					);
 				return;
+			}
+			else
+			{
+				Client.WorldReceiver.UpdatePlayerPosition(location);
 			}
 
            //  Client.WorldReceiver.UpdateEntityPosition(message.runtimeEntityId, new PlayerLocation(message.position), true, true, true);
@@ -1318,7 +1325,14 @@ namespace Alex.Worlds.Bedrock
 
 		public void HandleMcpeModalFormRequest(McpeModalFormRequest message)
 		{
-			UnhandledPackage(message);
+			if (Client.WorldReceiver is World world)
+			{
+				Form form = JsonConvert.DeserializeObject<Form>(message.data, new FormConverter());
+
+				world.FormManager.Show(message.Id, form);
+			}
+			
+			//UnhandledPackage(message);
 		}
 
 		public void HandleMcpeServerSettingsResponse(McpeServerSettingsResponse message)

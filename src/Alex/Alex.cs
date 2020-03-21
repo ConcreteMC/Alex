@@ -294,6 +294,7 @@ namespace Alex
 
             services.AddSingleton<IEventDispatcher, EventDispatcher>();
             services.AddSingleton<ResourceManager>();
+            services.AddSingleton<GuiManager>((o) => this.GuiManager)
 ;            //Storage = storage;
 		}
 

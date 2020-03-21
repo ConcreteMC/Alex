@@ -10,6 +10,7 @@ using Alex.API.Entities;
 using Alex.API.Events;
 using Alex.API.Events.World;
 using Alex.API.Graphics;
+using Alex.API.Gui;
 using Alex.API.Network;
 using Alex.API.Services;
 using Alex.API.Utils;
@@ -20,6 +21,7 @@ using Alex.GameStates;
 using Alex.Graphics.Camera;
 using Alex.Graphics.Models;
 using Alex.Graphics.Models.Items;
+using Alex.Gui.Forms.Bedrock;
 using Alex.ResourcePackLib.Json.Models.Items;
 using Alex.Utils;
 using Microsoft.Extensions.DependencyInjection;
@@ -50,6 +52,7 @@ namespace Alex.Worlds
 		private AlexOptions Options { get; }
 		
 		private IEventDispatcher EventDispatcher { get; }
+		public BedrockFormManager FormManager { get; }
 		public World(IServiceProvider serviceProvider, GraphicsDevice graphics, AlexOptions options, Camera camera,
 			INetworkProvider networkProvider)
 		{
@@ -108,6 +111,8 @@ namespace Alex.Worlds
 			}
 			
 			EventDispatcher.RegisterEvents(this);
+			
+			FormManager = new BedrockFormManager(networkProvider, serviceProvider.GetRequiredService<GuiManager>());
 		}
 
 		private void FieldOfVisionOnValueChanged(int oldvalue, int newvalue)
@@ -426,7 +431,7 @@ namespace Alex.Worlds
 				var cz = z & 0xf;
 
 				chunk.SetBlockState(cx, cy, cz, block, storage);
-
+				
 				UpdateNeighbors(x,y,z);
 				CheckForUpdate(chunkCoords, cx, cz);
 				

@@ -204,7 +204,7 @@ namespace Alex.GameStates.Playing
 
 				if (!_playingHud.Chat.Focused)
 				{
-					World.Player.Controller.CheckInput = Alex.IsActive;
+					World.Player.Controller.CheckInput = Alex.IsActive && Alex.GuiManager.ActiveDialog == null;
 					CheckInput(gameTime);
 				}
 				else

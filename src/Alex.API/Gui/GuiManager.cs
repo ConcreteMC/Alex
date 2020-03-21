@@ -115,6 +115,8 @@ namespace Alex.API.Gui
             {
                 Game.IsMouseVisible = false;
                 RemoveScreen(ActiveDialog);
+                
+                ActiveDialog = null;
             }
         }
 
