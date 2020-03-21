@@ -445,6 +445,9 @@ namespace Alex
 		{
 			try
 			{
+				var eventDispatcher = Services.GetRequiredService<IEventDispatcher>() as EventDispatcher;
+				eventDispatcher?.Reset();
+				
 				WorldProvider provider;
 				INetworkProvider networkProvider;
 				IsMultiplayer = true;

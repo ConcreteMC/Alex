@@ -5,5 +5,7 @@ namespace Alex.API.Events
         void RegisterEvents<T>(T obj) where T : class;
         void UnregisterEvents<T>(T obj) where T : class;
         void DispatchEvent(Event e);
+
+        void Reset();
     }
 }

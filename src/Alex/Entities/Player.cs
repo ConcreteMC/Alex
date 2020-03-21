@@ -36,6 +36,9 @@ namespace Alex.Entities
         public bool HasAdjacentRaytrace = false;
         public bool HasRaytraceResult = false;
 
+        public int Health { get; set; } = 20;
+        public int MaxHealth { get; set; } = 20;
+
         public Player(GraphicsDevice graphics, InputManager inputManager, string name, World world, Skin skin, INetworkProvider networkProvider, PlayerIndex playerIndex) : base(name, world, networkProvider, skin.Texture)
 		{
 		//	DoRotationCalculations = false;

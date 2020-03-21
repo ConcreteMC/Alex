@@ -187,6 +187,15 @@ namespace Alex.API.Events
 			}
 		}
 
+		public void Reset()
+		{
+			var registered = RegisteredEvents.ToArray();
+			foreach (var reg in registered)
+			{
+				reg.Value.ClearAll();
+			}
+		}
+
 		/*public async Task<TEvent> DispatchEventAsync<TEvent>(TEvent e) where TEvent : Event
 		{
 			try
@@ -235,6 +244,14 @@ namespace Alex.API.Events
 					return true;
 				}
 				return false;*/
+			}
+
+			public void ClearAll()
+			{
+				foreach (var priorityList in Items.ToArray())
+				{
+					priorityList.Value.Clear();
+				}
 			}
 
 			public void Clear(object parent)

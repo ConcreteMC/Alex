@@ -49,6 +49,7 @@ namespace Alex.Worlds
 		public Player Player { get; set; }
 		private AlexOptions Options { get; }
 		
+		private IEventDispatcher EventDispatcher { get; }
 		public World(IServiceProvider serviceProvider, GraphicsDevice graphics, AlexOptions options, Camera camera,
 			INetworkProvider networkProvider)
 		{
@@ -65,7 +66,7 @@ namespace Alex.Worlds
 			ChunkManager.Start();
 			var profileService = serviceProvider.GetRequiredService<IPlayerProfileService>();
 			var resources = serviceProvider.GetRequiredService<ResourceManager>();
-			var eventDispatcher = serviceProvider.GetRequiredService<IEventDispatcher>();
+			EventDispatcher = serviceProvider.GetRequiredService<IEventDispatcher>();
 			
 			string username = string.Empty;
 			Skin skin = profileService?.CurrentProfile?.Skin;
@@ -106,7 +107,7 @@ namespace Alex.Worlds
 				Log.Warn($"Could not get diamond sword!");
 			}
 			
-			eventDispatcher.RegisterEvents(this);
+			EventDispatcher.RegisterEvents(this);
 		}
 
 		private void FieldOfVisionOnValueChanged(int oldvalue, int newvalue)
@@ -602,12 +603,14 @@ namespace Alex.Worlds
 			if (_destroyed) return;
 			_destroyed = true;
 
+			EventDispatcher.UnregisterEvents(this);
+			
 			PhysicsEngine.Stop();
 			EntityManager.Dispose();
 			ChunkManager.Dispose();
 
 			PhysicsEngine.Dispose();
-			
+			Player.Dispose();
 		}
 
 		#region IWorldReceiver (Handle WorldProvider callbacks)

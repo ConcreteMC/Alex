@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Text;
 using System.Threading;
+using Alex.API.Events;
 using Alex.API.Graphics;
 using Alex.API.Network;
 using Alex.API.Utils;
@@ -563,6 +564,10 @@ namespace Alex.GameStates.Playing
 			World.Destroy();
 			WorldProvider.Dispose();
 			NetworkProvider.Close();
+
+			_playingHud.Unload();
+			//GetService<IEventDispatcher>().UnregisterEvents(_playingHud.Chat);
+			//_playingHud.Chat = 
 		}
 	}
 }

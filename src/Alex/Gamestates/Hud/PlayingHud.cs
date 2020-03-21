@@ -1,9 +1,11 @@
 ﻿using Alex.API.Events;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
+using Alex.API.Gui.Elements.Layout;
 using Alex.API.Gui.Graphics;
 using Alex.API.Input;
 using Alex.API.Input.Listeners;
+using Alex.API.Utils;
 using Alex.Entities;
 using Alex.GameStates.Gui.InGame;
 using Alex.GameStates.Playing;
@@ -19,6 +21,9 @@ namespace Alex.GameStates.Hud
     {
         private readonly GuiItemHotbar _hotbar;
         private readonly PlayerController _playerController;
+        private readonly HealthComponent _healthComponent;
+        private readonly GuiMultiStackContainer BottomContainer;
+        
 	    public readonly ChatComponent Chat;
 	    public readonly TitleComponent Title;
         private PlayerInputManager InputManager => _playerController.InputManager;
@@ -35,6 +40,13 @@ namespace Alex.GameStates.Hud
             _playerController = player.Controller;
 			InputManager.AddListener(new MouseInputListener(InputManager.PlayerIndex));
 
+			BottomContainer = new GuiMultiStackContainer();
+			BottomContainer.ChildAnchor = Alignment.BottomLeft;
+			BottomContainer.Anchor = Alignment.BottomCenter;
+			BottomContainer.Orientation = Orientation.Vertical;
+			BottomContainer.Padding = new Thickness(0, 0, 0, 2);
+			//BottomContainer.
+			
 	        _hotbar = new GuiItemHotbar(player.Inventory);
 	        _hotbar.Anchor = Alignment.BottomCenter;
 	        _hotbar.Padding = Thickness.Zero;
@@ -42,11 +54,28 @@ namespace Alex.GameStates.Hud
 			Chat = new ChatComponent(game.Services.GetRequiredService<IEventDispatcher>());
 	        Chat.Enabled = false;
 	        Chat.Anchor = Alignment.BottomLeft;
+
+	        _healthComponent = new HealthComponent(player);
+			//_healthComponent.Anchor
+	        //  _hotbar.AddChild(_healthComponent = new HealthComponent(player));
         }
 
         protected override void OnInit(IGuiRenderer renderer)
         {
-            AddChild(_hotbar);
+	        AddChild(BottomContainer);
+	        BottomContainer.AddRow(container =>
+	        {
+		        container.Anchor = Alignment.BottomLeft;
+		        //container.Padding = new Thickness(0, 0, 0, 4);
+		        container.AddChild(_healthComponent);
+	        });
+	        BottomContainer.AddRow(container =>
+	        {
+		        container.Margin = new Thickness(2, 2);
+		        container.Anchor = Alignment.BottomCenter;
+		        container.AddChild(_hotbar);
+	        });
+	        //AddChild(_hotbar);
             AddChild(new GuiCrosshair());
 			AddChild(Chat);
 			AddChild(Title);
@@ -113,6 +142,10 @@ namespace Alex.GameStates.Hud
 		        }
 			}
 
+			_healthComponent.IsVisible = Player.Gamemode != Gamemode.Creative;
+			
+			//if (Player.Gamemode != Gamemode.Creative){}
+
 			base.OnUpdate(gameTime);
         }
 
@@ -120,5 +153,10 @@ namespace Alex.GameStates.Hud
 		{
 			base.OnUpdateLayout();
 		}
+
+        public void Unload()
+        {
+	        Chat.Unload();
+        }
     }
 }

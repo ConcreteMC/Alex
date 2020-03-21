@@ -334,6 +334,8 @@ namespace Alex.Worlds.Bedrock
 				if (Client.WorldReceiver is World w)
 				{
 					mob.IsSpawned = true;
+					
+					_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
 					w.SpawnEntity(mob.EntityId, mob);
 				}
 				else
@@ -546,6 +548,7 @@ namespace Alex.Worlds.Bedrock
             if (Enum.TryParse(typeof(EntityType), type, true, out object res))
             {
                 SpawnMob(message.runtimeEntityId, Guid.NewGuid(), (EntityType)res, new PlayerLocation(message.x, message.y, message.z, message.headYaw, message.yaw, message.pitch), new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ));
+                _entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
             }
             else
             {
@@ -553,9 +556,14 @@ namespace Alex.Worlds.Bedrock
             }
         }
 
+		private ConcurrentDictionary<long, long> _entityMapping = new ConcurrentDictionary<long, long>();
 		public void HandleMcpeRemoveEntity(McpeRemoveEntity message)
 		{
-			WorldProvider.DespawnEntity(message.entityIdSelf);
+			if (_entityMapping.TryRemove(message.entityIdSelf, out var entityId))
+			{
+				WorldProvider.DespawnEntity(entityId);
+			}
+			//WorldProvider.DespawnEntity(message.entityIdSelf);
 			// Client.WorldReceiver?.DespawnEntity(message.entityIdSelf);
 		}
 
@@ -850,7 +858,10 @@ namespace Alex.Worlds.Bedrock
 
 		public void HandleMcpeSetHealth(McpeSetHealth message)
 		{
-			UnhandledPackage(message);
+			if (Client.WorldReceiver?.GetPlayerEntity() is Player player)
+			{
+				player.Health = message.health;
+			}
 		}
 
 		public void HandleMcpeSetSpawnPosition(McpeSetSpawnPosition message)

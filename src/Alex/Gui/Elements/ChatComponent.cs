@@ -520,6 +520,11 @@ namespace Alex.Gui.Elements
 				return 0 - ascendingResult;
 			}
 		}
+
+		public void Unload()
+		{
+			EventDispatcher.UnregisterEvents(this);
+		}
 	}
 }
 

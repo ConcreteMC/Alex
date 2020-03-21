@@ -101,6 +101,7 @@ namespace Alex.Worlds.Bedrock
         
         public McpeNetworkChunkPublisherUpdate LastChunkPublish { get; set; }
         public AutoResetEvent PlayerStatusChanged { get; set; } = new AutoResetEvent(false);
+        private IEventDispatcher EventDispatcher { get; }
 		public BedrockClient(Alex alex, IEventDispatcher eventDispatcher, IPEndPoint endpoint, PlayerProfile playerProfile, DedicatedThreadPool threadPool, BedrockWorldProvider wp) : base(endpoint,
 			playerProfile.Username, threadPool)
 		{
@@ -124,7 +125,9 @@ namespace Alex.Worlds.Bedrock
 			//this.RegisterEventHandlers();
 			
 			eventDispatcher?.RegisterEvents(this);
-        }
+
+			EventDispatcher = eventDispatcher;
+		}
 
 		public void Start(ManualResetEventSlim resetEvent)
 		{
@@ -599,6 +602,8 @@ namespace Alex.Worlds.Bedrock
 		
 		public void Dispose()
 		{
+			EventDispatcher?.UnregisterEvents(this);
+			
 			Close();
 			_threadPool.Dispose();
 			//_threadPool.WaitForThreadsExit();

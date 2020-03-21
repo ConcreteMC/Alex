@@ -78,6 +78,10 @@ namespace Alex.Gui
 		private static readonly Rectangle IconServerPingPending4 = new Rectangle(10, 200, 10, 8);
 		private static readonly Rectangle IconServerPingPending5 = new Rectangle(10, 208, 10, 8);
 
+		private static readonly Rectangle IconHeartHolder = new Rectangle(16, 0, 9, 9);
+		private static readonly Rectangle IconHeart = new Rectangle(52, 0, 9, 9);
+		private static readonly Rectangle IconHalfHeart = new Rectangle(69, 0, 9, 9);
+		
 		#endregion
 
 		#region ScrollBar
@@ -240,6 +244,10 @@ namespace Alex.Gui
 			LoadTextureFromSpriteSheet(GuiTextures.ServerPingPending3, spriteSheet, IconServerPingPending3);
 			LoadTextureFromSpriteSheet(GuiTextures.ServerPingPending4, spriteSheet, IconServerPingPending4);
 			LoadTextureFromSpriteSheet(GuiTextures.ServerPingPending5, spriteSheet, IconServerPingPending5);
+			
+			LoadTextureFromSpriteSheet(GuiTextures.HealthPlaceholder, spriteSheet, IconHeartHolder);
+			LoadTextureFromSpriteSheet(GuiTextures.HealthHeart, spriteSheet, IconHeart);
+			LoadTextureFromSpriteSheet(GuiTextures.HealthHalfHeart, spriteSheet, IconHalfHeart);
 		}
 
 		private void LoadScrollBar(Texture2D spriteSheet)
