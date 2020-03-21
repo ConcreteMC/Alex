@@ -32,7 +32,7 @@ namespace Alex.Gui
 		public bool Enabled { get; set; } = false;
 		public bool BoundingBoxesEnabled { get; set; } = true;
 		public bool BoundingBoxesHoverEnabled { get; set; } = true;
-		public bool HoverInfoEnabled { get; set; } = false;
+		public bool HoverInfoEnabled { get; set; } = true;
 
 		public Keys ToggleDebugHotKey { get; set; } = Keys.Pause;
 
@@ -126,35 +126,35 @@ namespace Alex.Gui
 			    {
 				    DrawDebug(HighlightedElement);
 			    }
-                //if (BoundingBoxesEnabled)
-                //{
-                //	screen.ForEachChild(c => DrawElementRecursive(c));
-                //}
+                if (BoundingBoxesEnabled)
+                {
+                	screen.ForEachChild(c => DrawElementRecursive(c));
+                }
 
-                //if (BoundingBoxesHoverEnabled)
-                //{
-                //	DrawDebug(TopMostHighlighted);
-                //}
+                if (BoundingBoxesHoverEnabled)
+                {
+                	DrawDebug(TopMostHighlighted);
+                }
 
-                //// draw info at cursor
-                //if (HoverInfoEnabled)
-                //{
-                //	var e = TopMostFocused ?? TopMostHighlighted;
-                //	if (e != null)
-                //	{
-                //		var p = e.ParentElement as GuiElement;
+                // draw info at cursor
+                if (HoverInfoEnabled)
+                {
+                	var e = TopMostFocused ?? TopMostHighlighted;
+                	if (e != null)
+                	{
+                		var p = e.ParentElement as GuiElement;
 
-                //		var info = GetElementInfo(e);
+                		var info = GetElementInfo(e);
 
-                //		DrawDebugString(CursorPosition, info, Color.WhiteSmoke * 0.85f, Color.Black, 2, 1, 1);
+                		DrawDebugString(CursorPosition, info, Color.WhiteSmoke * 0.85f, Color.Black, 2, 1, 1);
 
-                //		if (p != null)
-                //		{
-                //			var infoParent = GetElementInfo(p);
-                //			DrawDebugString(CursorPosition, infoParent, Color.WhiteSmoke * 0.85f, Color.Black, 2, -1, 1);
-                //		}
-                //	}
-                //}   
+                		if (p != null)
+                		{
+                			var infoParent = GetElementInfo(p);
+                			DrawDebugString(CursorPosition, infoParent, Color.WhiteSmoke * 0.85f, Color.Black, 2, -1, 1);
+                		}
+                	}
+                }   
             }
         }
 

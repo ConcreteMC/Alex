@@ -91,6 +91,8 @@ namespace Alex
         
         public new IServiceProvider Services { get; set; }
         
+        public DedicatedThreadPool ThreadPool { get; set; }
+        
         public Alex(LaunchSettings launchSettings)
 		{
 			Instance = this;
@@ -157,6 +159,9 @@ namespace Alex
             FpsMonitor = new FpsMonitor();
 
             Resources = Services.GetRequiredService<ResourceManager>();
+
+            ThreadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount,
+	            ThreadType.Background, "Threadpool"));
 		}
 
 		public static EventHandler<TextInputEventArgs> OnCharacterInput;
@@ -214,7 +219,7 @@ namespace Alex
 
 			WindowSize = this.Window.ClientBounds.Size;
 			//	Log.Info($"Initializing Alex...");
-			ThreadPool.QueueUserWorkItem((o) => { InitializeGame(splash); });
+			ThreadPool.QueueUserWorkItem(() => { InitializeGame(splash); });
 		}
 
 		private void SetVSync(bool enabled)

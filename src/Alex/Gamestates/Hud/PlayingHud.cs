@@ -22,7 +22,9 @@ namespace Alex.GameStates.Hud
         private readonly GuiItemHotbar _hotbar;
         private readonly PlayerController _playerController;
         private readonly HealthComponent _healthComponent;
-        private readonly GuiMultiStackContainer BottomContainer;
+        private readonly HungerComponent _hungerComponent;
+        private readonly GuiContainer _healthContainer;
+        private readonly GuiMultiStackContainer _bottomContainer;
         
 	    public readonly ChatComponent Chat;
 	    public readonly TitleComponent Title;
@@ -40,11 +42,11 @@ namespace Alex.GameStates.Hud
             _playerController = player.Controller;
 			InputManager.AddListener(new MouseInputListener(InputManager.PlayerIndex));
 
-			BottomContainer = new GuiMultiStackContainer();
-			BottomContainer.ChildAnchor = Alignment.BottomLeft;
-			BottomContainer.Anchor = Alignment.BottomCenter;
-			BottomContainer.Orientation = Orientation.Vertical;
-			BottomContainer.Padding = new Thickness(0, 0, 0, 2);
+			_bottomContainer = new GuiMultiStackContainer();
+			_bottomContainer.ChildAnchor = Alignment.BottomFill;
+			_bottomContainer.Anchor = Alignment.BottomCenter;
+			_bottomContainer.Orientation = Orientation.Vertical;
+			_bottomContainer.Padding = new Thickness(0, 0, 0, 2);
 			//BottomContainer.
 			
 	        _hotbar = new GuiItemHotbar(player.Inventory);
@@ -55,26 +57,50 @@ namespace Alex.GameStates.Hud
 	        Chat.Enabled = false;
 	        Chat.Anchor = Alignment.BottomLeft;
 
-	        _healthComponent = new HealthComponent(player);
-			//_healthComponent.Anchor
+	        _healthContainer = new GuiContainer();
+	        _healthContainer.Anchor = Alignment.BottomCenter;
+	     //   _healthContainer.Orientation = Orientation.Horizontal;
+	      //  _healthContainer.ChildAnchor = Alignment.None;
+
+	      _healthComponent = new HealthComponent(player);
+	        _healthComponent.Anchor = Alignment.TopLeft;
+	        
+	        _hungerComponent = new HungerComponent(player);
+	        _hungerComponent.Anchor = Alignment.TopRight;
+
+	        //_healthComponent.Anchor
 	        //  _hotbar.AddChild(_healthComponent = new HealthComponent(player));
         }
 
         protected override void OnInit(IGuiRenderer renderer)
         {
-	        AddChild(BottomContainer);
-	        BottomContainer.AddRow(container =>
+	        //_healthContainer.AddChild(_healthComponent);
+	       // _healthContainer.AddChild(_hungerComponent);
+	        
+	      //  _bottomContainer.AddChild(_healthContainer);
+	     /*   _bottomContainer.AddRow(row =>
 	        {
-		        container.Anchor = Alignment.BottomLeft;
-		        //container.Padding = new Thickness(0, 0, 0, 4);
-		        container.AddChild(_healthComponent);
-	        });
-	        BottomContainer.AddRow(container =>
+		        row.Anchor = Alignment.Fill;
+		        row.ChildAnchor = Alignment.Fill;
+
+		        //row.AddChild(_healthContainer);
+
+		        t
+	        });*/
+	     
+	     _healthContainer.AddChild(_healthComponent);
+	     _healthContainer.AddChild(_hungerComponent);
+		        
+	     _bottomContainer. AddChild(_healthContainer);
+
+	        _bottomContainer.AddRow(container =>
 	        {
-		        container.Margin = new Thickness(2, 2);
+		        container.Margin = new Thickness(0, 2, 0, 0);
 		        container.Anchor = Alignment.BottomCenter;
 		        container.AddChild(_hotbar);
 	        });
+	        AddChild(_bottomContainer);
+	        
 	        //AddChild(_hotbar);
             AddChild(new GuiCrosshair());
 			AddChild(Chat);

@@ -76,7 +76,7 @@ namespace Alex.Worlds.Bedrock
 	        
 	        AnvilWorldProvider.LoadBlockConverter();
 
-	        ChunkProcessor = new ChunkProcessor(4,
+	        ChunkProcessor = new ChunkProcessor(alex.ThreadPool, 4,
 		        alex.Services.GetRequiredService<IOptionsProvider>().AlexOptions.MiscelaneousOptions.ServerSideLighting,
 		        cancellationToken);
         }
@@ -834,6 +834,24 @@ namespace Alex.Worlds.Bedrock
 				{
 				//	player.MovementSpeed = movement.Value;
 				}
+
+				if (message.attributes.TryGetValue("minecraft:player.hunger", out var hunger))
+				{
+					player.Hunger = (int) hunger.Value;
+					player.MaxHunger = (int) hunger.MaxValue;
+				}
+				
+				if (message.attributes.TryGetValue("minecraft:player.exhaustion", out var exhaustion))
+				{
+					player.Exhaustion = (int) exhaustion.Value;
+					player.MaxExhaustion = (int) exhaustion.MaxValue;
+				}
+				
+				if (message.attributes.TryGetValue("minecraft:player.saturation", out var saturation))
+				{
+					player.Saturation = (int) saturation.Value;
+					player.MaxSaturation = (int) saturation.MaxValue;
+				}
 			}
 		}
 
@@ -1046,7 +1064,7 @@ namespace Alex.Worlds.Bedrock
 					provider.UnloadChunk(loadedChunk);
 				}
 				
-				ThreadPool.QueueUserWorkItem(async o =>
+				AlexInstance.ThreadPool.QueueUserWorkItem(async () =>
 				{
 					double radiusSquared = Math.Pow(Client.ChunkRadius, 2);
 					var target = radiusSquared * 3;

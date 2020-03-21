@@ -39,6 +39,15 @@ namespace Alex.Entities
         public int Health { get; set; } = 20;
         public int MaxHealth { get; set; } = 20;
 
+        public int Hunger { get; set; } = 20;
+        public int MaxHunger { get; set; } = 20;
+
+        public int Saturation { get; set; } = 0;
+        public int MaxSaturation { get; set; }
+        
+        public int Exhaustion { get; set; } = 0;
+        public int MaxExhaustion { get; set; }
+        
         public Player(GraphicsDevice graphics, InputManager inputManager, string name, World world, Skin skin, INetworkProvider networkProvider, PlayerIndex playerIndex) : base(name, world, networkProvider, skin.Texture)
 		{
 		//	DoRotationCalculations = false;
@@ -198,7 +207,7 @@ namespace Alex.Entities
 
 	    public IEntity HitEntity { get; private set; } = null;
 	    public IEntity[] EntitiesInRange { get; private set; } = null;
-	    
+
 	    private void UpdateRayTracer()
 	    {
 		    var camPos = Level.Camera.Position;

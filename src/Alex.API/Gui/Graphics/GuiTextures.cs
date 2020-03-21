@@ -67,6 +67,10 @@
         
         HealthPlaceholder,
         HealthHeart,
-        HealthHalfHeart
+        HealthHalfHeart,
+        
+        HungerPlaceholder,
+        HungerFull,
+        HungerHalf
     }
 }

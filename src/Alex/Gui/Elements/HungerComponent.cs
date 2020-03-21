@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Elements.Layout;
@@ -10,51 +9,53 @@ using RocketUI;
 
 namespace Alex.Gui.Elements
 {
-    public enum HeartValue
-    {
-        Full,
-        Half,
-        None
-    }
-    
-    public class HealthComponent : GuiContainer
+    public class HungerComponent : GuiStackContainer
     {
         private Player Player { get; }
-        private HealthBarHeart[] Hearts { get; }
+        private HungerTexture[] Hungers { get; }
         
-        private int Health { get; set; }
-        public HealthComponent(Player player)
+        private int Hunger { get; set; }
+        public HungerComponent(Player player)
         {
-            Health = player.Health;
+           // Hunger = player.Hunger;
             Player = player;
 
+            ChildAnchor = Alignment.BottomLeft;
+            Orientation = Orientation.Horizontal;
+            
             Height = 10;
-
-            Hearts = new HealthBarHeart[10];
+            //Width = 10 * 8;
+            Hungers = new HungerTexture[10];
             for (int i = 0; i < 10; i++)
             {
-                AddChild(Hearts[i] = new HealthBarHeart()
+                AddChild(Hungers[i] = new HungerTexture()
                 {
-                    Margin = new Thickness((i * 8), 0, 0, 0),
-                    Anchor = Alignment.BottomLeft
+                   // Margin = new Thickness(0, 0, (i * 8), 0),
+                    Anchor = Alignment.BottomRight
                 });
             }
         }
 
         protected override void OnUpdate(GameTime gameTime)
         {
-            if (Player.Health != Health)
+            if (Player.Hunger != Hunger)
             {
-                var hearts = Player.Health * (10d / Player.MaxHealth);
-                var ceil = (int)Math.Ceiling(hearts);
-                for (int i = 0; i < Hearts.Length; i++)
+                Hunger = Player.Hunger;
+                
+                var hearts = Player.Hunger * (10d / Player.MaxHunger);
+                bool isRounded = (hearts % 1 == 0);
+                
+                var ceil = isRounded ? (int)hearts : (int)Math.Ceiling(hearts);
+                
+                for (int i = 0; i < Hungers.Length; i++)
                 {
                     HeartValue value = HeartValue.Full;
-                    if (i < ceil)
+                    
+                    if ((i + 1) < ceil)
                     {
                         value = HeartValue.Full;
                     }
-                    else if (i == ceil - 1)
+                    else if (!isRounded && (i + 1) == (ceil ))
                     {
                         value = HeartValue.Half;
                     }
@@ -63,26 +64,26 @@ namespace Alex.Gui.Elements
                         value = HeartValue.None;
                     }
                     
-                    Hearts[i].Set(value);
+                    Hungers[^(i + 1)].Set(value);
                 }
             }
             
             base.OnUpdate(gameTime);
         }
         
-        public class HealthBarHeart : GuiControl
+        public class HungerTexture : GuiControl
         {
             private GuiTextureElement Texture { get; set; }
 
             //private 
-            public HealthBarHeart()
+            public HungerTexture()
             {
                 Width = 9;
                 Height = 9;
             
                 AddChild(Texture = new GuiTextureElement()
                 {
-                    Anchor = Alignment.TopLeft,
+                    Anchor = Alignment.TopRight,
 
                     Height = 9,
                     Width = 9,
@@ -92,8 +93,8 @@ namespace Alex.Gui.Elements
         
             protected override void OnInit(IGuiRenderer renderer)
             {
-                Background = renderer.GetTexture(GuiTextures.HealthPlaceholder);
-                Texture.Texture = renderer.GetTexture(GuiTextures.HealthHeart);
+                Background = renderer.GetTexture(GuiTextures.HungerPlaceholder);
+                Texture.Texture = renderer.GetTexture(GuiTextures.HungerFull);
             }
 
             public void Set(HeartValue value)
@@ -103,10 +104,10 @@ namespace Alex.Gui.Elements
                 switch (value)
                 {
                     case HeartValue.Full:
-                        Texture.Texture = GuiRenderer.GetTexture(GuiTextures.HealthHeart);
+                        Texture.Texture = GuiRenderer.GetTexture(GuiTextures.HungerFull);
                         break;
                     case HeartValue.Half:
-                        Texture.Texture = GuiRenderer.GetTexture(GuiTextures.HealthHalfHeart);
+                        Texture.Texture = GuiRenderer.GetTexture(GuiTextures.HungerHalf);
                         break;
                     case HeartValue.None:
                         Texture.IsVisible = false;

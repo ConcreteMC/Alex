@@ -42,7 +42,7 @@ namespace Alex.Worlds.Bedrock
 			EventDispatcher = eventDispatcher;
 			
 			//Client = new ExperimentalBedrockClient(alex, alex.Services, this, endPoint);
-			Client = new BedrockClient(alex, eventDispatcher, endPoint, profile, new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount, ThreadType.Background, "BedrockClientThread")), this);
+			Client = new BedrockClient(alex, eventDispatcher, endPoint, profile, alex.ThreadPool, this);
 			networkProvider = Client;
 			
 			EventDispatcher.RegisterEvents(this);

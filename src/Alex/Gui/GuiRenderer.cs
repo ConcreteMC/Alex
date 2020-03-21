@@ -248,6 +248,10 @@ namespace Alex.Gui
 			LoadTextureFromSpriteSheet(GuiTextures.HealthPlaceholder, spriteSheet, IconHeartHolder);
 			LoadTextureFromSpriteSheet(GuiTextures.HealthHeart, spriteSheet, IconHeart);
 			LoadTextureFromSpriteSheet(GuiTextures.HealthHalfHeart, spriteSheet, IconHalfHeart);
+			
+			LoadTextureFromSpriteSheet(GuiTextures.HungerPlaceholder, spriteSheet, new Rectangle(16, 27, 9, 9));
+			LoadTextureFromSpriteSheet(GuiTextures.HungerFull, spriteSheet, new Rectangle(52, 27, 9, 9));
+			LoadTextureFromSpriteSheet(GuiTextures.HungerHalf, spriteSheet, new Rectangle(61, 27, 9, 9));
 		}
 
 		private void LoadScrollBar(Texture2D spriteSheet)

@@ -38,17 +38,19 @@ namespace Alex.Worlds.Bedrock
 
 	    public IReadOnlyDictionary<uint, BlockStateContainer> _blockStateMap { get; set; } =
 		    new Dictionary<uint, BlockStateContainer>();
-	    private Thread[] Threads { get; set; }
+	    //private Thread[] Threads { get; set; }
 	    private CancellationToken CancellationToken { get; }
 	    private int MaxThreads { get; }
-        public ChunkProcessor(int workerThreads, bool useAlexChunks, CancellationToken cancellationToken)
+	    private DedicatedThreadPool ThreadPool { get; }
+        public ChunkProcessor(DedicatedThreadPool threadPool, int workerThreads, bool useAlexChunks, CancellationToken cancellationToken)
         {
+	        ThreadPool = threadPool;
 	        MaxThreads = workerThreads;
 	        UseAlexChunks = useAlexChunks;
 	        QueuedChunks = new BlockingCollection<QueuedChunk>();
 	        CancellationToken = cancellationToken;
 	        
-	        Threads = new Thread[workerThreads];
+	       // Threads = new Thread[workerThreads];
 	        //for(int i = 0; i < workerThreads; i++) DispatchWorker();
 
 	        if (!Directory.Exists("failed"))
@@ -57,7 +59,7 @@ namespace Alex.Worlds.Bedrock
 
         public void HandleChunkData(bool cacheEnabled, uint subChunkCount, byte[] chunkData, int cx, int cz, Action<ChunkColumn> callback)
         {
-	        ThreadPool.QueueUserWorkItem(o =>
+	        ThreadPool.QueueUserWorkItem(() =>
 	        {
 		        HandleChunk(cacheEnabled, subChunkCount, chunkData, cx, cz,
 			       callback);
@@ -69,45 +71,7 @@ namespace Alex.Worlds.Bedrock
 
         private object _workerLock = new object();
         private long _workers = 0;
-
-        private void DispatchWorker()
-        {
-	        for (int i = 0; i < Threads.Length; i++)
-	        {
-		        if (Threads[i] == default || Threads[i].ThreadState == ThreadState.Unstarted ||
-		            Threads[i].ThreadState == ThreadState.Stopped)
-		        {
-			        Threads[i] = new Thread(Worker)
-			        {
-				        Name = $"ChunkProcessing-{i}"
-			        };
-			        Threads[i].Start();
-			        break;
-		        }
-	        }
-        }
-
-        private void Worker()
-        {
-	        try
-	        {
-		        // while (!CancellationToken.IsCancellationRequested)
-		        {
-			        while (QueuedChunks.TryTake(out var queuedChunk, 1000, CancellationToken))
-			        {
-				        HandleChunk(queuedChunk.CacheEnabled, queuedChunk.SubChunkCount, queuedChunk.ChunkData, queuedChunk.ChunkX, queuedChunk.ChunkZ,
-					        queuedChunk.Callback);
-			        }
-		        }
-	        }
-	        catch (OperationCanceledException)
-	        {
-		        
-	        }
-
-	        Thread.Yield();
-        }
-
+        
         private ConcurrentDictionary<uint, IBlockState> _convertedStates = new ConcurrentDictionary<uint, IBlockState>();
         
         private List<string> Failed { get; set; } = new List<string>();
