@@ -138,6 +138,8 @@ namespace Alex.Worlds.Bedrock
 					miNetClient.IsEmulator = false;
 				}
 
+				Client.WorldReceiver.GetPlayerEntity().EntityId = Client.EntityId;
+
 				Client.SendMcpeMovePlayer();
 				
 				var packet = McpeSetLocalPlayerAsInitializedPacket.CreateObject();
@@ -249,7 +251,10 @@ namespace Alex.Worlds.Bedrock
 
             if (Client.WorldReceiver?.GetPlayerEntity() is Player player)
             {
+	            player.EntityId = message.runtimeEntityId;
                 player.Inventory.IsPeInventory = true;
+
+                _entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
             }
         }
 
@@ -813,7 +818,19 @@ namespace Alex.Worlds.Bedrock
 
 		public void HandleMcpeUpdateAttributes(McpeUpdateAttributes message)
 		{
-			UnhandledPackage(message);
+			if (Client.WorldReceiver?.GetPlayerEntity() is Player player && player.EntityId == message.runtimeEntityId)
+			{
+				if (message.attributes.TryGetValue("minecraft:health", out var value))
+				{
+					player.MaxHealth = (int) value.MaxValue;
+					player.Health = (int) value.Value;
+				}
+
+				if (message.attributes.TryGetValue("minecraft:movement", out var movement))
+				{
+				//	player.MovementSpeed = movement.Value;
+				}
+			}
 		}
 
 		public void HandleMcpeInventoryTransaction(McpeInventoryTransaction message)
