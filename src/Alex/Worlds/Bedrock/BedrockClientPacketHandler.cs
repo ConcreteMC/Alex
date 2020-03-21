@@ -95,7 +95,7 @@ namespace Alex.Worlds.Bedrock
 	        IDictionary<string, dynamic> headers = JWT.Headers(token);
 	        string x5u = headers["x5u"];
 
-	        ECPublicKeyParameters remotePublicKey = (ECPublicKeyParameters) PublicKeyFactory.CreateKey(x5u.DecodeBase64());
+	        ECPublicKeyParameters remotePublicKey = (ECPublicKeyParameters) PublicKeyFactory.CreateKey(x5u.DecodeBase64Url());
 
 	        var signParam = new ECParameters
 	        {
@@ -113,11 +113,21 @@ namespace Alex.Worlds.Bedrock
 	        try
 	        {
 		        var data = JWT.Decode<HandshakeData>(token, signKey);
-
+				//var data = JWT.Payload<HandshakeData>(token);
 		        Client.InitiateEncryption(Base64Url.Decode(x5u), Base64Url.Decode(data.salt));
 	        }
 	        catch (Exception e)
 	        {
+		        //AlexInstance.GameStateManager.Back();
+		        string msg = $"Network error.";
+
+		        if (e is Jose.IntegrityException)
+		        {
+			        msg = $"Invalid server signature!";
+		        }
+		        
+		        Client.ShowDisconnect(msg);
+		        
 		        Log.Error(e, token);
 		        throw;
 	        }
