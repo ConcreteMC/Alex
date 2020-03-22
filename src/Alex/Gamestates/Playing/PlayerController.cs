@@ -186,7 +186,7 @@ namespace Alex.GameStates.Playing
 				{
 					if (Player.IsInWater)
 					{
-						moveVector.Y += 0.04f;
+						moveVector.Y += 1f;
 					}
 					else
 					{

@@ -297,6 +297,19 @@ namespace Alex.Worlds
 		    device.SamplerStates[0] = originalSamplerState;
 	    }
 
+	    public bool FogEnabled
+	    {
+		    get { return TransparentEffect.FogEnabled; }
+		    set
+		    {
+			    TransparentEffect.FogEnabled = value;
+			    TranslucentEffect.FogEnabled = value;
+			    AnimatedEffect.FogEnabled = value;
+			    AnimatedTranslucentEffect.FogEnabled = value;
+			    OpaqueEffect.FogEnabled = value;
+		    }
+	    }
+
 	    public Vector3 FogColor
 	    {
 		    get { return TransparentEffect.FogColor; }
@@ -305,6 +318,8 @@ namespace Alex.Worlds
 				TransparentEffect.FogColor = value;
 			    OpaqueEffect.FogColor = value;
 			    AnimatedEffect.FogColor = value;
+			    TranslucentEffect.FogColor = value;
+			    AnimatedTranslucentEffect.FogColor = value;
 		    }
 	    }
 
@@ -316,6 +331,8 @@ namespace Alex.Worlds
 			    TransparentEffect.FogEnd = value;
 			    OpaqueEffect.FogEnd = value;
 			    AnimatedEffect.FogEnd = value;
+			    TranslucentEffect.FogEnd = value;
+			    AnimatedTranslucentEffect.FogEnd = value;
 		    }
 	    }
 

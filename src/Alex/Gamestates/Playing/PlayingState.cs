@@ -369,8 +369,7 @@ namespace Alex.GameStates.Playing
 
 				if (currentKeyboardState.IsKeyDown(KeyBinds.Fog) && !_oldKeyboardState.IsKeyDown(KeyBinds.Fog))
 				{
-					World.ChunkManager.OpaqueEffect.FogEnabled = !World.ChunkManager.OpaqueEffect.FogEnabled;
-					World.ChunkManager.TransparentEffect.FogEnabled = !World.ChunkManager.TransparentEffect.FogEnabled;
+					World.ChunkManager.FogEnabled = !World.ChunkManager.FogEnabled;
 				}
 
 				if (currentKeyboardState.IsKeyDown(KeyBinds.ChangeCamera))

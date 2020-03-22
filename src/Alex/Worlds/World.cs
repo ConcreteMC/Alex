@@ -269,7 +269,7 @@ namespace Alex.Worlds
 			else
 			{
 				ChunkManager.FogColor = skyRenderer.WorldFogColor.ToVector3();
-				ChunkManager.FogDistance = (float) Math.Pow(Options.VideoOptions.RenderDistance, 2) * 0.8f;
+				ChunkManager.FogDistance = (float) Options.VideoOptions.RenderDistance * 16f * 0.8f;
 			}
 			
 			if (Ticker.Update(args))
