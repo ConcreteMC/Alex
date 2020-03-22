@@ -172,6 +172,7 @@ namespace Alex.Worlds.Bedrock
 		{
 			return Task.Run(() =>
 			{
+				Stopwatch timer = Stopwatch.StartNew();
 				progressReport(LoadingState.ConnectingToServer, 25);
 
 				var resetEvent = new ManualResetEventSlim(false);
@@ -216,7 +217,7 @@ namespace Alex.Worlds.Bedrock
 						}
 					}
 
-					if (percentage >= 90 && statusChanged)
+					if (percentage >= 90 && (statusChanged || timer.ElapsedMilliseconds > 15 * 1000))
 					{
 						var packet = McpeSetLocalPlayerAsInitializedPacket.CreateObject();
 						packet.runtimeEntityId =  Client.WorldReceiver.GetPlayerEntity().EntityId;
@@ -229,6 +230,7 @@ namespace Alex.Worlds.Bedrock
 
 				//Client.IsEmulator = false;
 				progressReport(LoadingState.Spawning, 99);
+				timer.Stop();
 			});
 		}
 

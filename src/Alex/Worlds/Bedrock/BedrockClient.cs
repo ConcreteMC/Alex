@@ -392,7 +392,8 @@ namespace Alex.Worlds.Bedrock
 		        ContractResolver = new DefaultContractResolver
 		        {
 			        NamingStrategy = new DefaultNamingStrategy(){}
-		        }
+		        },
+		        DefaultValueHandling = DefaultValueHandling.Include
 	        }), signKey, JwsAlgorithm.ES384, new Dictionary<string, object> { { "x5u", x5u } }, new JwtSettings()
             {
                 JsonMapper = new JWTMapper()

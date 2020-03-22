@@ -21,11 +21,12 @@ namespace Alex.Worlds.Bedrock
         public int DeviceOS { get; set; } = 7;
 
         public int UIProfile { get; set; } = 0;
+        public int GuiScale { get; set; } = 0;
 
         public int DefaultInputMode { get; set; } = 1;
         public int CurrentInputMode { get; set; } = 1;
         
-       // public string GameVersion { get; set; } = McpeProtocolInfo.GameVersion;
+        public string GameVersion { get; set; } = McpeProtocolInfo.GameVersion;
         public string SkinResourcePatch { get; set; } = "";
 
         public string SkinId { get; set; }

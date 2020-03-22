@@ -201,6 +201,7 @@ namespace Alex.Worlds.Bedrock
 		public void HandleMcpeSetTime(McpeSetTime message)
 		{
 			Client.WorldReceiver?.SetTime(message.time);
+			
 			_changeDimensionResetEvent.Set();
 		}
 
@@ -278,6 +279,8 @@ namespace Alex.Worlds.Bedrock
 			// Client.SendMcpeMovePlayer();
 			Client.CurrentLocation = new MiNET.Utils.PlayerLocation(message.x, message.y, message.z);
 			Client.SendMcpeMovePlayer();
+			
+			_changeDimensionResetEvent.Set();
 		}
 
 
@@ -912,7 +915,7 @@ namespace Alex.Worlds.Bedrock
 
 		public void HandleMcpeSetSpawnPosition(McpeSetSpawnPosition message)
 		{
-			Client.SpawnPoint = new Vector3(message.coordinates.X, (float) (message.coordinates.Y + Client.WorldReceiver.GetPlayerEntity().Height), message.coordinates.Z);
+			Client.SpawnPoint = new Vector3(message.coordinates.X, (float) (message.coordinates.Y), message.coordinates.Z);
 			Client.LevelInfo.SpawnX = (int)Client.SpawnPoint.X;
 			Client.LevelInfo.SpawnY = (int)Client.SpawnPoint.Y;
 			Client.LevelInfo.SpawnZ = (int)Client.SpawnPoint.Z;
@@ -928,7 +931,7 @@ namespace Alex.Worlds.Bedrock
 
 		public void HandleMcpeRespawn(McpeRespawn message)
 		{
-			Client.CurrentLocation = new MiNET.Utils.PlayerLocation(message.x, message.y + Client.WorldReceiver.GetPlayerEntity().Height, message.z);
+			Client.CurrentLocation = new MiNET.Utils.PlayerLocation(message.x, message.y, message.z);
 			Client.WorldReceiver.UpdatePlayerPosition(new PlayerLocation(Client.CurrentLocation));
 			
 			_changeDimensionResetEvent.Set();
@@ -1125,9 +1128,9 @@ namespace Alex.Worlds.Bedrock
 
 					if (Client.WorldReceiver is World world)
 					{
-						world.UpdatePlayerPosition(new PlayerLocation(message.position.X, message.position.Y + world.Player.Height, message.position.Z));
+						world.UpdatePlayerPosition(new PlayerLocation(message.position.X, message.position.Y, message.position.Z));
 						
-						Client.CurrentLocation = new MiNET.Utils.PlayerLocation(message.position.X, message.position.Y + world.Player.Height, message.position.Z);
+						Client.CurrentLocation = new MiNET.Utils.PlayerLocation(message.position.X, message.position.Y, message.position.Z);
 					}
 
 					Client.SendMcpeMovePlayer();
