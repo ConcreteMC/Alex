@@ -8,6 +8,7 @@ using Alex.API.Graphics.Typography;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
+using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
@@ -20,10 +21,8 @@ namespace Alex.Gui.Elements
 	public class ChatComponent : GuiTextInput, IChatReceiver
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ChatComponent));
-
-		private object _lock = new object();
-		private SortedList<DateTime, ChatObject> _chatEntries =
-			new SortedList<DateTime, ChatObject>(new DescendedDateComparer());
+		
+		private ConcurrentDeck<(string message, DateTime time)> _chatEntries = new ConcurrentDeck<(string message, DateTime time)>(10);
 
 		private IEventDispatcher EventDispatcher { get; }
 		public ChatComponent(IEventDispatcher eventDispatcher)
@@ -36,6 +35,8 @@ namespace Alex.Gui.Elements
 			Width = 320;
 
 			eventDispatcher.RegisterEvents(this);
+
+			Font = Alex.Instance.GuiRenderer.Font;
 		}
 
 		private IFont Font;
@@ -81,28 +82,7 @@ namespace Alex.Gui.Elements
 			Dismiss();
 		}
 
-		protected override void OnUpdate(GameTime gameTime)
-		{
-			/*if (Focused)
-			{
-				var msg = Value;
-				var preCursor = msg.Substring(0, _textBuilder.CursorPosition);
-				var cursorOffsetX = (int) Font.MeasureString(preCursor, Scale).X;
-				_cursorPositionX = cursorOffsetX;
-
-				var delta = (float) gameTime.TotalGameTime.TotalMilliseconds / 2;
-				_cursorAlpha = (float) MathHelpers.SinInterpolation(0.1f, 0.5f, delta) * 2;
-			}
-			*/
-			base.OnUpdate(gameTime);
-		}
-
-		//	private ChatObject[] Rendered
-
-		private int _scrollValue = 0;
 		private TimeSpan _renderTimeout = TimeSpan.FromSeconds(30);
-
-		//private int _renderedC
 		protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
 		{
 			base.OnDraw(graphics, gameTime);
@@ -113,23 +93,15 @@ namespace Alex.Gui.Elements
 				graphics.FillRectangle(new Rectangle(RenderBounds.X, (renderPos.Y) - 2, Width, 10), new Color(Color.Black, 0.5f));
 			}
 
-			KeyValuePair<DateTime, ChatObject>[] entries;
-			lock (_lock)
+			var messages = _chatEntries.ReadDeck();
+			if (messages.Length > 0)
 			{
-				entries = _chatEntries.ToArray();
-			}
-
-			if (entries.Length > 0)
-			{
-				int renderedCount = 0;
-				int skipped = 0;
 				DateTime now = DateTime.UtcNow;
 				Vector2 offset = new Vector2(0, -33);
 
-				TextColor lastColor = TextColor.White;
-				foreach (var msg in entries)
+				foreach (var msg in messages.Reverse())
 				{
-					var elapse = now - msg.Key;
+					var elapse = now - msg.time;
 					float alpha = 1f;
 					if (!Focused)
 					{
@@ -140,42 +112,8 @@ namespace Alex.Gui.Elements
 
 						alpha = (float) (1f - ((elapse.TotalMilliseconds / _renderTimeout.TotalMilliseconds) * 1f));
 					}
-					else
-					{
-						if (_scrollValue > 0)
-						{
-							if (skipped < _scrollValue)
-							{
-								skipped++;
-								continue;
-							}
-						}
-					}
 
-					string message = msg.Value.RawMessage;
-					
-					var lines = CalculateLines(message);
-					for (var index = 0; index < lines.Length; index++)
-					{
-						var line = lines[index];
-						if (lastColor != TextColor.White)
-						{
-							line = line + $"§{TextColor.Code}";
-						}
-
-						DrawChatLine(graphics, line, alpha, ref offset);
-
-						lastColor = FindLastColor(line);
-
-						renderedCount++;
-
-						if (renderedCount >= 10) break;
-					}
-
-					//	if (!Focused)
-					{
-						if (renderedCount >= 10) break;
-					}
+					DrawChatLine(graphics, msg.message, alpha, ref offset);
 				}
 			}
 		}
@@ -416,34 +354,10 @@ namespace Alex.Gui.Elements
 			}
 		}
 
-		public void ScrollDown()
-		{
-			if (!Focused) return;
-
-			if (_scrollValue > 0)
-			{
-				_scrollValue--;
-			}
-		}
-
-		public void ScrollUp()
-		{
-			if (!Focused) return;
-
-			lock (_lock)
-			{
-				if (_scrollValue < _chatEntries.Count && _chatEntries.Count > 10)
-				{
-					_scrollValue++;
-				}
-			}
-		}
-
 		public void Dismiss()
 		{
 			//Enabled = false;
 			//Focused = false;
-			_scrollValue = 0;
 
 			TextBuilder.Clear();
 			Value = string.Empty;
@@ -478,17 +392,29 @@ namespace Alex.Gui.Elements
 		[EventHandler]
 		private void OnChatMessageReceived(ChatMessageReceivedEvent e)
 		{
-			if (e.IsChat())
-			{
-				Receive(e.ChatObject);
-			}
+			if (!e.IsChat())
+				return;
+			
+			Receive(e.ChatObject);
 		}
 
 		private void Receive(ChatObject message)
 		{
-			lock (_lock)
+			string msg = message.RawMessage;
+
+			TextColor lastColor = TextColor.White;
+			var lines = CalculateLines(msg).Reverse().ToArray();
+			for (var index = 0; index < lines.Length; index++)
 			{
-				_chatEntries.Add(DateTime.UtcNow, message);
+				var line = lines[index];
+				if (lastColor != TextColor.White)
+				{
+					line = $"§{lastColor.Code}{line}";
+				}
+
+				lastColor = FindLastColor(line);
+
+				_chatEntries.Push((line, DateTime.UtcNow));
 			}
 		}
 
@@ -510,18 +436,6 @@ namespace Alex.Gui.Elements
 				
 				_hasTabCompleteResults = true;
 				DoTabComplete(true);
-			}
-		}
-
-		private class DescendedDateComparer : IComparer<DateTime>
-		{
-			public int Compare(DateTime x, DateTime y)
-			{
-				// use the default comparer to do the original comparison for datetimes
-				int ascendingResult = Comparer<DateTime>.Default.Compare(x, y);
-
-				// turn the result around
-				return 0 - ascendingResult;
 			}
 		}
 
