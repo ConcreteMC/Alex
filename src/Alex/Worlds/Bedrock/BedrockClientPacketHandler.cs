@@ -912,7 +912,7 @@ namespace Alex.Worlds.Bedrock
 
 		public void HandleMcpeSetSpawnPosition(McpeSetSpawnPosition message)
 		{
-			Client.SpawnPoint = new Vector3(message.coordinates.X, message.coordinates.Y, message.coordinates.Z);
+			Client.SpawnPoint = new Vector3(message.coordinates.X, (float) (message.coordinates.Y + Client.WorldReceiver.GetPlayerEntity().Height), message.coordinates.Z);
 			Client.LevelInfo.SpawnX = (int)Client.SpawnPoint.X;
 			Client.LevelInfo.SpawnY = (int)Client.SpawnPoint.Y;
 			Client.LevelInfo.SpawnZ = (int)Client.SpawnPoint.Z;
@@ -928,8 +928,9 @@ namespace Alex.Worlds.Bedrock
 
 		public void HandleMcpeRespawn(McpeRespawn message)
 		{
-			Client.CurrentLocation = new MiNET.Utils.PlayerLocation(message.x, message.y, message.z);
-
+			Client.CurrentLocation = new MiNET.Utils.PlayerLocation(message.x, message.y + Client.WorldReceiver.GetPlayerEntity().Height, message.z);
+			Client.WorldReceiver.UpdatePlayerPosition(new PlayerLocation(Client.CurrentLocation));
+			
 			_changeDimensionResetEvent.Set();
 		}
 
@@ -1074,19 +1075,19 @@ namespace Alex.Worlds.Bedrock
 				LoadingWorldState loadingWorldState = new LoadingWorldState();
 				AlexInstance.GameStateManager.SetActiveState(loadingWorldState, true);
 				loadingWorldState.UpdateProgress(LoadingState.LoadingChunks, 0);
-				
-				McpePlayerAction action = McpePlayerAction.CreateObject();
-				action.runtimeEntityId = Client.EntityId;
-				action.actionId = (int) PlayerAction.DimensionChangeAck;
-				Client.SendPacket(action);
-				
-				foreach (var loadedChunk in provider.LoadedChunks)
+
+				ThreadPool.QueueUserWorkItem(async (o) =>
 				{
-					provider.UnloadChunk(loadedChunk);
-				}
+					McpePlayerAction action = McpePlayerAction.CreateObject();
+					action.runtimeEntityId = Client.EntityId;
+					action.actionId = (int) PlayerAction.DimensionChangeAck;
+					Client.SendPacket(action);
 				
-				AlexInstance.ThreadPool.QueueUserWorkItem(async () =>
-				{
+					foreach (var loadedChunk in provider.LoadedChunks)
+					{
+						provider.UnloadChunk(loadedChunk);
+					}
+					
 					double radiusSquared = Math.Pow(Client.ChunkRadius, 2);
 					var target = radiusSquared * 2;
 
@@ -1102,20 +1103,32 @@ namespace Alex.Worlds.Bedrock
 
 						//if (!ready)
 						//{
-						if (_changeDimensionResetEvent.WaitOne(5) || percentage == 100)
+						if (!ready)
 						{
-							ready = true;
-							break;
+							if (_changeDimensionResetEvent.WaitOne(5))
+							{
+								ready = true;
+							}
 						}
 
+
+						if (percentage >= 100 && ready)
+							break;
 						//	}
-					//	else
-					//	{
+						//	else
+						//	{
 						//	await Task.Delay(50);
 						//}
-					} while (!ready || percentage < 99);
+					} while (true);
 
 					AlexInstance.GameStateManager.Back();
+
+					if (Client.WorldReceiver is World world)
+					{
+						world.UpdatePlayerPosition(new PlayerLocation(message.position.X, message.position.Y + world.Player.Height, message.position.Z));
+						
+						Client.CurrentLocation = new MiNET.Utils.PlayerLocation(message.position.X, message.position.Y + world.Player.Height, message.position.Z);
+					}
 
 					Client.SendMcpeMovePlayer();
 				});
