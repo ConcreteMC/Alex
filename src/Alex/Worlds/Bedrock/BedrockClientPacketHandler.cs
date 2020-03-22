@@ -296,7 +296,7 @@ namespace Alex.Worlds.Bedrock
 			}
 		}
 
-		private ConcurrentDictionary<MiNET.Net.UUID, PlayerMob> _players = new ConcurrentDictionary<MiNET.Net.UUID, PlayerMob>();
+		private ConcurrentDictionary<MiNET.Utils.UUID, PlayerMob> _players = new ConcurrentDictionary<MiNET.Utils.UUID, PlayerMob>();
         public void HandleMcpeAddPlayer(McpeAddPlayer message)
 		{
 		//	UUID u = new UUID(message.uuid.GetBytes());

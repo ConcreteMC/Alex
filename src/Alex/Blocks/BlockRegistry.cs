@@ -294,7 +294,13 @@ namespace Alex.Blocks
 			this.Register(() => new MelonBlock().WithLocation("minecraft:melon_block"));
 			this.Register(() => new PumpkinStem().WithLocation("minecraft:pumpkin_stem"));
 			this.Register(() => new Sunflower().WithLocation("minecraft:sunflower"));
-
+			this.Register(() => new Tulip().WithLocation("minecraft:red_tulip"));
+			this.Register(() => new Tulip().WithLocation("minecraft:pink_tulip"));
+			this.Register(() => new Tulip().WithLocation("minecraft:white_tulip"));
+			this.Register(() => new Tulip().WithLocation("minecraft:orange_tulip"));
+			
+			this.Register(() => new Peony().WithLocation("minecraft:peony"));
+			
 			this.Register(() => new InvisibleBedrock(false).WithLocation("minecraft:barrier"));
             
 			//Carpet

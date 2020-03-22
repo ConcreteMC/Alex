@@ -34,6 +34,7 @@ using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
 using Color = Microsoft.Xna.Framework.Color;
 using IBlockState = Alex.API.Blocks.State.IBlockState;
 using PlayerLocation = Alex.API.Utils.PlayerLocation;
+using UUID = Alex.API.Utils.UUID;
 
 //using System.Reflection.Metadata.Ecma335;
 
@@ -100,7 +101,7 @@ namespace Alex.Worlds
 			PhysicsEngine.AddTickable(Player);
 			
 			Player.Inventory.IsPeInventory = true;
-			if (ItemFactory.TryGetItem("minecraft:diamond_sword", out var sword))
+			/*if (ItemFactory.TryGetItem("minecraft:diamond_sword", out var sword))
 			{
 				Player.Inventory[Player.Inventory.SelectedSlot] = sword;
 				Player.Inventory.MainHand = sword;
@@ -108,7 +109,7 @@ namespace Alex.Worlds
 			else
 			{
 				Log.Warn($"Could not get diamond sword!");
-			}
+			}*/
 			
 			EventDispatcher.RegisterEvents(this);
 			

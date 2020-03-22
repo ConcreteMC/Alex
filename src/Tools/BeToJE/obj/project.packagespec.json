@@ -1,17 +1,21 @@
 ﻿{
   "version": "1.0.0",
   "restore": {
-    "projectUniqueName": "/home/kenny/Documents/github/Alex/src/Tools/BeToJE/BeToJE.csproj",
+    "projectUniqueName": "/home/kenny/Desktop/git/Alex/src/Tools/BeToJE/BeToJE.csproj",
     "projectName": "BeToJE",
-    "projectPath": "/home/kenny/Documents/github/Alex/src/Tools/BeToJE/BeToJE.csproj",
-    "outputPath": "/home/kenny/Documents/github/Alex/src/Tools/BeToJE/obj/",
+    "projectPath": "/home/kenny/Desktop/git/Alex/src/Tools/BeToJE/BeToJE.csproj",
+    "outputPath": "/home/kenny/Desktop/git/Alex/src/Tools/BeToJE/obj/",
     "projectStyle": "PackageReference",
+    "fallbackFolders": [
+      "/usr/share/dotnet/sdk/NuGetFallbackFolder"
+    ],
     "originalTargetFrameworks": [
       "netcoreapp3.1"
     ],
     "sources": {
       "https://api.nuget.org/v3/index.json": {},
-      "https://dotnet.myget.org/F/dotnet-core/api/v3/index.json": {}
+      "https://dotnet.myget.org/F/dotnet-core/api/v3/index.json": {},
+      "https://nuget.herobalancer.app/v3/index.json": {}
     },
     "frameworks": {
       "netcoreapp3.1": {

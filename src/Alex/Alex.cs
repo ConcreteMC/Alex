@@ -28,6 +28,7 @@ using Alex.GameStates.Playing;
 using Alex.Gui;
 using Alex.Gui.Dialogs.Containers;
 using Alex.Items;
+using Alex.Networking.Bedrock;
 using Alex.Networking.Java.Packets;
 using Alex.Plugins;
 using Alex.Services;
@@ -38,6 +39,7 @@ using Alex.Worlds.Java;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MiNET.Net;
 using MiNET.Utils;
 using Newtonsoft.Json;
 using NLog;
@@ -162,6 +164,8 @@ namespace Alex
 
             ThreadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount,
 	            ThreadType.Background, "Threadpool"));
+            
+            PacketFactory.CustomPacketFactory = new AlexPacketFactory();
 		}
 
 		public static EventHandler<TextInputEventArgs> OnCharacterInput;

@@ -142,8 +142,8 @@ namespace Alex.Worlds.Bedrock
             var messages = new List<Packet>();
 
             // Get bytes
-            byte[] payload = batch.payload;
-            MemoryStream stream = new MemoryStream(payload);
+            ReadOnlyMemory<byte> payload = batch.payload;
+            MemoryStream stream = new MemoryStream(payload.ToArray());
             if (stream.ReadByte() != 0x78)
             {
                 throw new InvalidDataException("Incorrect ZLib header. Expected 0x78 0x9C");

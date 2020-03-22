@@ -1,20 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "/home/kenny/Documents/github/Alex/src/Tools/BeToJE/BeToJE.csproj": {}
+    "/home/kenny/Desktop/git/Alex/src/Tools/BeToJE/BeToJE.csproj": {}
   },
   "projects": {
-    "/home/kenny/Documents/github/Alex/src/Tools/BeToJE/BeToJE.csproj": {
+    "/home/kenny/Desktop/git/Alex/src/Tools/BeToJE/BeToJE.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/kenny/Documents/github/Alex/src/Tools/BeToJE/BeToJE.csproj",
+        "projectUniqueName": "/home/kenny/Desktop/git/Alex/src/Tools/BeToJE/BeToJE.csproj",
         "projectName": "BeToJE",
-        "projectPath": "/home/kenny/Documents/github/Alex/src/Tools/BeToJE/BeToJE.csproj",
+        "projectPath": "/home/kenny/Desktop/git/Alex/src/Tools/BeToJE/BeToJE.csproj",
         "packagesPath": "/home/kenny/.nuget/packages/",
-        "outputPath": "/home/kenny/Documents/github/Alex/src/Tools/BeToJE/obj/",
+        "outputPath": "/home/kenny/Desktop/git/Alex/src/Tools/BeToJE/obj/",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "/usr/share/dotnet/sdk/NuGetFallbackFolder"
+        ],
         "configFilePaths": [
-          "/home/kenny/Documents/github/Alex/src/NuGet.Config",
+          "/home/kenny/Desktop/git/Alex/src/NuGet.Config",
           "/home/kenny/.config/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
@@ -22,7 +25,8 @@
         ],
         "sources": {
           "https://api.nuget.org/v3/index.json": {},
-          "https://dotnet.myget.org/F/dotnet-core/api/v3/index.json": {}
+          "https://dotnet.myget.org/F/dotnet-core/api/v3/index.json": {},
+          "https://nuget.herobalancer.app/v3/index.json": {}
         },
         "frameworks": {
           "netcoreapp3.1": {

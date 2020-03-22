@@ -152,7 +152,7 @@ namespace Alex.Worlds.Bedrock
 			{
 				McpeCommandRequest commandRequest = McpeCommandRequest.CreateObject();
 				commandRequest.command = message;
-				commandRequest.unknownUuid = new MiNET.Net.UUID(Guid.NewGuid().ToString());
+				commandRequest.unknownUuid = new MiNET.Utils.UUID(Guid.NewGuid().ToString());
 				SendPacket(commandRequest);
 			}
 			else

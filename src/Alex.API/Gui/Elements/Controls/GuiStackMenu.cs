@@ -4,7 +4,7 @@ using Alex.API.Gui.Elements.Layout;
 
 namespace Alex.API.Gui.Elements.Controls
 {
-    public class GuiStackMenu : GuiStackContainer
+    public class GuiStackMenu : GuiScrollableStackContainer
     {
 	    private bool _modern = true;
 
