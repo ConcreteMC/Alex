@@ -929,6 +929,8 @@ namespace Alex.Worlds.Bedrock
 		public void HandleMcpeRespawn(McpeRespawn message)
 		{
 			Client.CurrentLocation = new MiNET.Utils.PlayerLocation(message.x, message.y, message.z);
+
+			_changeDimensionResetEvent.Set();
 		}
 
 		public void HandleMcpeContainerOpen(McpeContainerOpen message)
@@ -1037,6 +1039,7 @@ namespace Alex.Worlds.Bedrock
 			UnhandledPackage(message);
 		}
 
+		private int _chunksReceived = 0;
 		public void HandleMcpeLevelChunk(McpeLevelChunk msg)
 		{
 			var cacheEnabled = msg.cacheEnabled;
@@ -1052,7 +1055,7 @@ namespace Alex.Worlds.Bedrock
 				//Nothing to read.
 				return;
 			}
-
+			
 			ChunkProcessor.HandleChunkData(cacheEnabled, subChunkCount, chunkData, cx, cz,
 				column =>
 				{
@@ -1064,6 +1067,7 @@ namespace Alex.Worlds.Bedrock
 		private AutoResetEvent _changeDimensionResetEvent = new AutoResetEvent(false);
 		public void HandleMcpeChangeDimension(McpeChangeDimension message)
 		{
+			_chunksReceived = 0;
 			//base.HandleMcpeChangeDimension(message);
 			if (WorldProvider is BedrockWorldProvider provider)
 			{
@@ -1071,6 +1075,10 @@ namespace Alex.Worlds.Bedrock
 				AlexInstance.GameStateManager.SetActiveState(loadingWorldState, true);
 				loadingWorldState.UpdateProgress(LoadingState.LoadingChunks, 0);
 				
+				McpePlayerAction action = McpePlayerAction.CreateObject();
+				action.runtimeEntityId = Client.EntityId;
+				action.actionId = (int) PlayerAction.DimensionChangeAck;
+				Client.SendPacket(action);
 				
 				foreach (var loadedChunk in provider.LoadedChunks)
 				{
@@ -1080,7 +1088,7 @@ namespace Alex.Worlds.Bedrock
 				AlexInstance.ThreadPool.QueueUserWorkItem(async () =>
 				{
 					double radiusSquared = Math.Pow(Client.ChunkRadius, 2);
-					var target = radiusSquared * 3;
+					var target = radiusSquared * 2;
 
 					int percentage = 0;
 					bool ready = false;
@@ -1092,27 +1100,24 @@ namespace Alex.Worlds.Bedrock
 						loadingWorldState.UpdateProgress(LoadingState.LoadingChunks,
 							percentage);
 
-						if (!ready)
+						//if (!ready)
+						//{
+						if (_changeDimensionResetEvent.WaitOne(5) || percentage == 100)
 						{
-							if (_changeDimensionResetEvent.WaitOne(0))
-								ready = true;
-						}
-						else
-						{
-							await Task.Delay(50);
+							ready = true;
+							break;
 						}
 
-						if (percentage > 50)
-						{
-							McpePlayerAction action = McpePlayerAction.CreateObject();
-							action.runtimeEntityId = Client.EntityId;
-							action.actionId = (int) PlayerAction.DimensionChangeAck;
-							Client.SendPacket(action);
-						}
-						
+						//	}
+					//	else
+					//	{
+						//	await Task.Delay(50);
+						//}
 					} while (!ready || percentage < 99);
-					
+
 					AlexInstance.GameStateManager.Back();
+
+					Client.SendMcpeMovePlayer();
 				});
 			}
 		}

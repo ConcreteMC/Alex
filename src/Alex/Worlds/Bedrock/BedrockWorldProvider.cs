@@ -198,7 +198,7 @@ namespace Alex.Worlds.Bedrock
 				while (true)
 				{
 					double radiusSquared = Math.Pow(Client.ChunkRadius, 2);
-					var target = radiusSquared * 3;
+					var target = radiusSquared * 2;
 					
 					percentage = (int)(ChunksReceived / target) * 100;
 					progressReport(LoadingState.LoadingChunks, percentage);
@@ -211,15 +211,17 @@ namespace Alex.Worlds.Bedrock
 							
 							//Client.SendMcpeMovePlayer();
 				
-							var packet = McpeSetLocalPlayerAsInitializedPacket.CreateObject();
-							packet.runtimeEntityId =  Client.WorldReceiver.GetPlayerEntity().EntityId;
-							Client.SendPacket(packet);
+							
 							//Client.IsEmulator = false;
 						}
 					}
 
-					if (percentage >= 90)
+					if (percentage >= 90 && statusChanged)
 					{
+						var packet = McpeSetLocalPlayerAsInitializedPacket.CreateObject();
+						packet.runtimeEntityId =  Client.WorldReceiver.GetPlayerEntity().EntityId;
+						Client.SendPacket(packet);
+						
 						Client.SendMcpeMovePlayer();
 						break;
 					}
