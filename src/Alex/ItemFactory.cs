@@ -65,7 +65,7 @@ namespace Alex
 			    if (!(bs.Block is Air))
 			    {
 				    item = new ItemBlock(bs);
-				    Log.Info($"Registered block item: {entry.Key}");
+				  //  Log.Info($"Registered block item: {entry.Key}");
 			    }
 			    else
 			    {

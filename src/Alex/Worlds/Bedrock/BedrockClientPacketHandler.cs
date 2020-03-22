@@ -967,7 +967,7 @@ namespace Alex.Worlds.Bedrock
                     
                     inventory[usedIndex] = item;
                     
-                    Log.Info($"Set inventory slot: {usedIndex} Id: {slot.Id}:{slot.Metadata} x {slot.Count} Name: {item.DisplayName} IsPeInv: {inventory.IsPeInventory}");
+                   // Log.Info($"Set inventory slot: {usedIndex} Id: {slot.Id}:{slot.Metadata} x {slot.Count} Name: {item.DisplayName} IsPeInv: {inventory.IsPeInventory}");
 				}
                 else
                 {
@@ -999,7 +999,7 @@ namespace Alex.Worlds.Bedrock
                 item.Nbt = message.item.ExtraData;
                 
 				inventory[index] = item;
-                Log.Info($"Set inventory slot: {message.slot} Id: {message.item.Id}:{message.item.Metadata} x {message.item.Count} Name: {item.DisplayName} IsPeInv: {inventory.IsPeInventory}");
+              //  Log.Info($"Set inventory slot: {message.slot} Id: {message.item.Id}:{message.item.Metadata} x {message.item.Count} Name: {item.DisplayName} IsPeInv: {inventory.IsPeInventory}");
             }
             else
             {
