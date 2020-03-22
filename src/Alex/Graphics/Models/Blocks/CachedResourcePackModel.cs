@@ -61,7 +61,7 @@ namespace Alex.Graphics.Models.Blocks
 			return intersecting.ToArray();
 		}
 		
-		public override BoundingBox GetPartBoundingBox(Vector3 position, Vector3 entityPosition)
+		public override BoundingBox? GetPartBoundingBox(Vector3 position, Vector3 entityPosition)
 		{
 		//	var relative = Vector3.
 		var relativePosition = entityPosition - position; //Vector3.Max(entityPosition, position) - Vector3.Min(entityPosition, position);
@@ -87,8 +87,8 @@ namespace Alex.Graphics.Models.Blocks
 					return new BoundingBox(position + box.Min, position + box.Max);
 				}
 			}
-			
-			return GetBoundingBox(position, null);
+
+			return null;GetBoundingBox(position, null);
 		}
 
 		public override BoundingBox GetBoundingBox(Vector3 position, IBlock requestingBlock)

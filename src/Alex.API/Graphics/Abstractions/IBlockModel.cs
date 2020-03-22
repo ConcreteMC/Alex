@@ -8,7 +8,7 @@ namespace Alex.API.Graphics
 		BoundingBox BoundingBox { get; }
 		(VertexPositionNormalTextureColor[] vertices, int[] indexes) GetVertices(IWorld world, Vector3 position, IBlock baseBlock);
 		BoundingBox GetBoundingBox(Vector3 position, IBlock requestingBlock);
-		BoundingBox GetPartBoundingBox(Vector3 position, Vector3 entityPosition);
+		BoundingBox? GetPartBoundingBox(Vector3 position, Vector3 entityPosition);
 		BoundingBox[] GetIntersecting(Vector3 position, BoundingBox box);
 	}
 }

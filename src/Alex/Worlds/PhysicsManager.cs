@@ -56,7 +56,7 @@ namespace Alex.Worlds
 					if (entity is Entity e)
 					{
 						if (e.NoAi) continue;
-						//TruncateVelocity(e, dt);
+						TruncateVelocity(e, dt);
 						
 						var velocity = e.Velocity;
 						
@@ -294,18 +294,21 @@ namespace Alex.Worlds
 					    foreach (var point in box.GetCorners().OrderBy(x => x.Y))
 					    {
 						    var bb = block.Value.block.GetPartBoundingBox(block.Key, point);
-						    var bc = bb.Contains(point);
+						    if (!bb.HasValue)
+							    continue;
+						    
+						    var bc = bb.Value.Contains(point);
 						    if (bc == ContainmentType.Contains)
 						    {
 							    added = true;
-							    b.Add((block.Key, block.Value.block, bb));
-							   // break;
+							    b.Add((block.Key, block.Value.block, bb.Value));
+							    // break;
 						    }
 					    }
 
 					    if (!added)
 					    {
-						    b.Add((block.Key, block.Value.block, block.Value.box));
+						    //   b.Add((block.Key, block.Value.block, block.Value.box));
 					    }
 				    }
 			    }

@@ -233,7 +233,7 @@ namespace Alex.Worlds
 			{
 				world.Player.CanFly = true;
 				world.Player.IsFlying = true;
-				world.Player.Controller.IsFreeCam = true;
+				//world.Player.Controller.IsFreeCam = true;
 			} 
 
 			WorldReceiver?.UpdatePlayerPosition(new PlayerLocation(GetSpawnPoint()));

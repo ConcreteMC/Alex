@@ -85,14 +85,8 @@ namespace Alex.Entities
 			bool sprint = IsSprinting;
 			bool sneak = IsSneaking;
 
-			if (Controller.IsFreeCam && !CanFly)
-			{
-				Controller.IsFreeCam = false;
-			}
-			else if (CanFly)
-			{
-				IsFlying = Controller.IsFreeCam;
-			}
+			if (!CanFly && IsFlying)
+				IsFlying = false;
 			
 			Controller.Update(args.GameTime);
 			//KnownPosition.HeadYaw = KnownPosition.Yaw;
@@ -124,6 +118,8 @@ namespace Alex.Entities
 
 			if (Controller.CheckInput && Controller.CheckMovementInput)
 			{
+				UpdateRayTracer();
+				
 				var hitEntity = HitEntity;
 				if (hitEntity != null && Controller.InputManager.IsPressed(InputCommand.LeftClick))
 				{
@@ -179,10 +175,8 @@ namespace Alex.Entities
 			{
 				StopBreakingBlock();
 			}
-			
-			UpdateRayTracer();
 
-            base.Update(args);
+			base.Update(args);
 
 		}
 

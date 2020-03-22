@@ -20,7 +20,7 @@ namespace Alex.GameStates.Playing
 		public PlayerInputManager InputManager { get; }
 		public MouseInputListener MouseInputListener { get; }
 
-        public bool IsFreeCam { get; set; }
+        //public bool IsFreeCam { get; set; }
 
         private GraphicsDevice Graphics { get; }
         private World World { get; }
@@ -35,7 +35,7 @@ namespace Alex.GameStates.Playing
             World = world;
             PlayerIndex = playerIndex;
 
-            IsFreeCam = true;
+          //  IsFreeCam = true;
 
 			GlobalInputManager = inputManager;
 			InputManager = inputManager.GetOrAddPlayerManager(playerIndex);
@@ -54,6 +54,9 @@ namespace Alex.GameStates.Playing
 	    private bool _allowMovementInput = true;
 	    private bool IgnoreNextUpdate { get; set; } = false;
 		private DateTime _lastForward = DateTime.UtcNow;
+		private DateTime _lastJump = DateTime.UtcNow;
+		private DateTime _lastUp = DateTime.UtcNow;
+		
 		private Vector2 _previousMousePosition = Vector2.Zero;
 
 		private GuiPlayerInventoryDialog _guiPlayerInventoryDialog = null;
@@ -107,9 +110,22 @@ namespace Alex.GameStates.Playing
 			var moveVector = Vector3.Zero;
 			var now = DateTime.UtcNow;
 
-		    if (InputManager.IsPressed(InputCommand.ToggleCameraFree))
-		    {
-			    IsFreeCam = !IsFreeCam;
+			if (Player.CanFly)
+			{
+			    if (InputManager.IsPressed(InputCommand.ToggleCameraFree))
+			    {
+				    Player.IsFlying = !Player.IsFlying;
+			    }
+			    else if (InputManager.IsDown(InputCommand.MoveUp))
+			    {
+				    if (InputManager.IsBeginPress(InputCommand.MoveUp) &&
+				        now.Subtract(_lastUp).TotalMilliseconds <= 100)
+				    {
+					    Player.IsFlying = !Player.IsFlying;
+				    }
+
+				    _lastUp = now;
+			    }
 		    }
 
 		    float modifier = 1f;
