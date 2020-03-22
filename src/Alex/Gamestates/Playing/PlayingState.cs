@@ -71,7 +71,9 @@ namespace Alex.GameStates.Playing
 
 			base.OnShow();
 			Alex.GuiManager.AddScreen(_playingHud);
-			Alex.GuiManager.AddScreen(_debugInfo);
+			
+			if (RenderDebug)
+				Alex.GuiManager.AddScreen(_debugInfo);
 		}
 
 		protected override void OnHide()
@@ -191,6 +193,8 @@ namespace Alex.GameStates.Playing
 				GameTime = gameTime
 			};
 
+			_playingHud.CheckInput = Alex.GuiManager.ActiveDialog == null;
+			
 		//	if (Alex.IsActive)
 			{
 				var newAspectRatio = Graphics.Viewport.AspectRatio;
@@ -204,8 +208,13 @@ namespace Alex.GameStates.Playing
 
 				if (!_playingHud.Chat.Focused)
 				{
-					World.Player.Controller.CheckInput = Alex.IsActive && Alex.GuiManager.ActiveDialog == null;
-					CheckInput(gameTime);
+					World.Player.Controller.CheckMovementInput = Alex.IsActive && Alex.GuiManager.ActiveDialog == null;
+					World.Player.Controller.CheckInput = Alex.IsActive;
+
+					if (Alex.GuiManager.ActiveDialog == null)
+					{
+						CheckInput(gameTime);
+					}
 				}
 				else
 				{
@@ -318,7 +327,7 @@ namespace Alex.GameStates.Playing
 
 	    private Block SelBlock { get; set; } = new Air();
 		private Microsoft.Xna.Framework.BoundingBox RayTraceBoundingBox { get; set; }
-		private bool RenderDebug { get; set; } = true;
+		private bool RenderDebug { get; set; } = false;
 		private bool RenderBoundingBoxes { get; set; } = false;
 		private bool AlwaysDay { get; set; } = false;
 		

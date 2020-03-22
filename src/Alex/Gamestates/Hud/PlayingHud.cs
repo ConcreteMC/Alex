@@ -113,65 +113,69 @@ namespace Alex.GameStates.Hud
 			AddChild(Title);
         }
 
+        public bool CheckInput { get; set; } = true;
         protected override void OnUpdate(GameTime gameTime)
 		{
-			if (_playerController.MouseInputListener.IsButtonDown(MouseButton.ScrollUp))
+			if (CheckInput)
 			{
-				if (Chat.Focused)
-					Chat.ScrollUp();
-				else
-					Player.Inventory.SelectedSlot--;
-			}
-
-			if (_playerController.MouseInputListener.IsButtonDown(MouseButton.ScrollDown))
-			{
-				if (Chat.Focused)
-					Chat.ScrollDown();
-				else
-					Player.Inventory.SelectedSlot++;
-			}
-
-			if (!Chat.Focused)
-			{
-				Chat.Enabled = false;
-		        if (InputManager.IsPressed(InputCommand.HotBarSelect1)) Player.Inventory.SelectedSlot = 0;
-		        if (InputManager.IsPressed(InputCommand.HotBarSelect2)) Player.Inventory.SelectedSlot = 1;
-		        if (InputManager.IsPressed(InputCommand.HotBarSelect3)) Player.Inventory.SelectedSlot = 2;
-		        if (InputManager.IsPressed(InputCommand.HotBarSelect4)) Player.Inventory.SelectedSlot = 3;
-		        if (InputManager.IsPressed(InputCommand.HotBarSelect5)) Player.Inventory.SelectedSlot = 4;
-		        if (InputManager.IsPressed(InputCommand.HotBarSelect6)) Player.Inventory.SelectedSlot = 5;
-		        if (InputManager.IsPressed(InputCommand.HotBarSelect7)) Player.Inventory.SelectedSlot = 6;
-		        if (InputManager.IsPressed(InputCommand.HotBarSelect8)) Player.Inventory.SelectedSlot = 7;
-		        if (InputManager.IsPressed(InputCommand.HotBarSelect9)) Player.Inventory.SelectedSlot = 8;
-
-		        if (InputManager.IsPressed(InputCommand.ToggleChat))
-		        {
-					Chat.Dismiss();
-			        Chat.Enabled = true;
-					Alex.GuiManager.FocusManager.FocusedElement = Chat;
-		        }
-
-		        if (InputManager.IsPressed(InputCommand.ToggleMenu))
-		        {
-			        Alex.GameStateManager.SetActiveState<InGameMenuState>("ingamemenu");
+				if (_playerController.MouseInputListener.IsButtonDown(MouseButton.ScrollUp))
+				{
+					if (Chat.Focused)
+						Chat.ScrollUp();
+					else
+						Player.Inventory.SelectedSlot--;
 				}
-			}
-	        else
-	        {
-		        if (InputManager.IsPressed(InputCommand.ToggleMenu))
-		        {
-			        Chat.Dismiss();
-			        Alex.GuiManager.FocusManager.FocusedElement = null;
-		        }
 
-		        if (InputManager.IsPressed(InputCommand.Left))
-		        {
-					Chat.MoveCursor(false);
-		        }
-				else if (InputManager.IsPressed(InputCommand.Right))
-		        {
-			        Chat.MoveCursor(true);
-		        }
+				if (_playerController.MouseInputListener.IsButtonDown(MouseButton.ScrollDown))
+				{
+					if (Chat.Focused)
+						Chat.ScrollDown();
+					else
+						Player.Inventory.SelectedSlot++;
+				}
+
+				if (!Chat.Focused)
+				{
+					Chat.Enabled = false;
+					if (InputManager.IsPressed(InputCommand.HotBarSelect1)) Player.Inventory.SelectedSlot = 0;
+					if (InputManager.IsPressed(InputCommand.HotBarSelect2)) Player.Inventory.SelectedSlot = 1;
+					if (InputManager.IsPressed(InputCommand.HotBarSelect3)) Player.Inventory.SelectedSlot = 2;
+					if (InputManager.IsPressed(InputCommand.HotBarSelect4)) Player.Inventory.SelectedSlot = 3;
+					if (InputManager.IsPressed(InputCommand.HotBarSelect5)) Player.Inventory.SelectedSlot = 4;
+					if (InputManager.IsPressed(InputCommand.HotBarSelect6)) Player.Inventory.SelectedSlot = 5;
+					if (InputManager.IsPressed(InputCommand.HotBarSelect7)) Player.Inventory.SelectedSlot = 6;
+					if (InputManager.IsPressed(InputCommand.HotBarSelect8)) Player.Inventory.SelectedSlot = 7;
+					if (InputManager.IsPressed(InputCommand.HotBarSelect9)) Player.Inventory.SelectedSlot = 8;
+
+					if (InputManager.IsPressed(InputCommand.ToggleChat))
+					{
+						Chat.Dismiss();
+						Chat.Enabled = true;
+						Alex.GuiManager.FocusManager.FocusedElement = Chat;
+					}
+
+					if (InputManager.IsPressed(InputCommand.ToggleMenu) && CheckInput)
+					{
+						Alex.GameStateManager.SetActiveState<InGameMenuState>("ingamemenu");
+					}
+				}
+				else if (CheckInput)
+				{
+					if (InputManager.IsPressed(InputCommand.ToggleMenu))
+					{
+						Chat.Dismiss();
+						Alex.GuiManager.FocusManager.FocusedElement = null;
+					}
+
+					if (InputManager.IsPressed(InputCommand.Left))
+					{
+						Chat.MoveCursor(false);
+					}
+					else if (InputManager.IsPressed(InputCommand.Right))
+					{
+						Chat.MoveCursor(true);
+					}
+				}
 			}
 
 			_healthComponent.IsVisible = Player.Gamemode != Gamemode.Creative;

@@ -22,13 +22,8 @@ namespace Alex.Gui.Forms.Bedrock
         public FormImage(string url)
         {
             Image = url;
-        }
-
-        protected override void OnInit(IGuiRenderer renderer)
-        {
-            base.OnInit(renderer);
-
-            Task.Run(() =>
+            
+            Alex.Instance.ThreadPool.QueueUserWorkItem(() =>
             {
                 try
                 {
@@ -40,19 +35,19 @@ namespace Alex.Gui.Forms.Bedrock
                             Bitmap bmp = new Bitmap(ms);
                             
                             Alex.Instance.UIThreadQueue.Enqueue(() =>
+                            {
+                                try
                                 {
-                                    try
-                                    {
-                                        Background =
-                                            (TextureSlice2D) TextureUtils.BitmapToTexture2D(
-                                                Alex.Instance.GraphicsDevice,
-                                                bmp);
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        Log.Error(ex, "Could not get form image.");
-                                    }
-                                });
+                                    Background =
+                                        (TextureSlice2D) TextureUtils.BitmapToTexture2D(
+                                            Alex.Instance.GraphicsDevice,
+                                            bmp);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Log.Error(ex, "Could not get form image.");
+                                }
+                            });
                         }
                     }
                 }
@@ -61,6 +56,11 @@ namespace Alex.Gui.Forms.Bedrock
                     Log.Error(ex,$"Could not convert image!");
                 }
             });
+        }
+
+        protected override void OnInit(IGuiRenderer renderer)
+        {
+            base.OnInit(renderer);
         }
     }
 }

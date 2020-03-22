@@ -1,5 +1,6 @@
 using Alex.API.Gui;
 using Alex.API.Gui.Dialogs;
+using Alex.API.Input;
 using Alex.API.Network;
 using Alex.Worlds.Bedrock;
 using GLib;
@@ -15,12 +16,14 @@ namespace Alex.Gui.Forms.Bedrock
         
         private GuiManager GuiManager { get; }
         private INetworkProvider NetworkProvider { get; }
-
+        private InputManager InputManager { get; }
+        
         private FormBase _activeForm = null;
-        public BedrockFormManager(INetworkProvider networkProvider, GuiManager guiManager)
+        public BedrockFormManager(INetworkProvider networkProvider, GuiManager guiManager, InputManager input)
         {
             NetworkProvider = networkProvider;
             GuiManager = guiManager;
+            InputManager = input;
         }
 
         public void Show(uint id, Form form)
@@ -32,7 +35,7 @@ namespace Alex.Gui.Forms.Bedrock
                     GuiManager.HideDialog(_activeForm);
                 }
                 
-                GuiManager.ShowDialog(_activeForm = new SimpleFormDialog(id, this, simpleForm));
+                GuiManager.ShowDialog(_activeForm = new SimpleFormDialog(id, this, simpleForm, InputManager));
             }
             else
             {

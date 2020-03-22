@@ -43,7 +43,14 @@ namespace Alex.GameStates.Playing
 		}
 
 		private bool _inActive = true;
-	    public bool CheckInput { get; set; } = false;
+
+		public bool CheckMovementInput
+		{
+			get { return _allowMovementInput; }
+			set { _allowMovementInput = value; }
+		}
+
+		public bool CheckInput { get; set; } = false;
 	    private bool _allowMovementInput = true;
 	    private bool IgnoreNextUpdate { get; set; } = false;
 		private DateTime _lastForward = DateTime.UtcNow;
@@ -61,7 +68,7 @@ namespace Alex.GameStates.Playing
 		    if (CheckInput)
 		    {
 				CheckGeneralInput(gt);
-				CheckMovementInput(gt);
+				UpdateMovementInput(gt);
 		    }
 		    else if (!_inActive)
 		    {
@@ -93,7 +100,7 @@ namespace Alex.GameStates.Playing
 
 	    public float LastSpeedFactor = 0f;
 	    private Vector3 LastVelocity { get; set; } = Vector3.Zero;
-	    private void CheckMovementInput(GameTime gt)
+	    private void UpdateMovementInput(GameTime gt)
 	    {
 		    if (!_allowMovementInput) return;
 

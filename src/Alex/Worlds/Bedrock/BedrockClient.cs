@@ -308,7 +308,7 @@ namespace Alex.Worlds.Bedrock
 					Key = secret
 				};
 
-				Thread.Sleep(1250);
+				//Thread.Sleep(1250);
 				McpeClientToServerHandshake magic = new McpeClientToServerHandshake();
 				SendPacket(magic);
 			}

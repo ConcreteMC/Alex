@@ -227,7 +227,7 @@ namespace Alex.Services
 
 		                    //DecodedChain = JsonConvert.DeserializeObject<ChainData>(rawResponse);
 		                    MinecraftChain = Encoding.UTF8.GetBytes(rawResponse);
-                            Log.Debug($"Chain: {rawResponse}");
+                         //   //Log.Debug($"Chain: {rawResponse}");
 	                    }
                     }
                     catch (Exception ex)
@@ -238,7 +238,7 @@ namespace Alex.Services
 				}
 			}
 			
-			Log.Debug($"Xbox login processed!");
+		//	//Log.Debug($"Xbox login processed!");
 			return true;
         }
 		
@@ -289,7 +289,7 @@ namespace Alex.Services
 							JsonConvert.DeserializeObject<AuthResponse<XuiDisplayClaims<XstsXui>>>(
 								rawResponse);
 
-						Log.Debug($"Xsts Auth: {rawResponse}");
+						//Log.Debug($"Xsts Auth: {rawResponse}");
 					}
 				}
 			}
@@ -345,7 +345,7 @@ namespace Alex.Services
 						JsonConvert.DeserializeObject<AuthResponse<TitleDisplayClaims>>(
 							await response.Content.ReadAsStringAsync());
 
-					Log.Debug($"Title Auth: {JsonConvert.SerializeObject(titleAuthResponse)}");
+					//Log.Debug($"Title Auth: {JsonConvert.SerializeObject(titleAuthResponse)}");
 				}
 			}
 
@@ -399,7 +399,7 @@ namespace Alex.Services
 							JsonConvert.DeserializeObject<AuthResponse<XuiDisplayClaims<Xui>>>(
 								await response.Content.ReadAsStringAsync());
 
-						Log.Debug($"User Auth Result: {JsonConvert.SerializeObject(authResponse)}");
+						//Log.Debug($"User Auth Result: {JsonConvert.SerializeObject(authResponse)}");
 					}
 				}
 			}

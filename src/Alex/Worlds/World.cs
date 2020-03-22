@@ -112,7 +112,7 @@ namespace Alex.Worlds
 			
 			EventDispatcher.RegisterEvents(this);
 			
-			FormManager = new BedrockFormManager(networkProvider, serviceProvider.GetRequiredService<GuiManager>());
+			FormManager = new BedrockFormManager(networkProvider, serviceProvider.GetRequiredService<GuiManager>(), serviceProvider.GetService<Alex>().InputManager);
 		}
 
 		private void FieldOfVisionOnValueChanged(int oldvalue, int newvalue)
