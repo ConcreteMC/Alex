@@ -120,17 +120,17 @@ namespace Alex.GameStates.Hud
 			{
 				if (_playerController.MouseInputListener.IsButtonDown(MouseButton.ScrollUp))
 				{
-					if (Chat.Focused)
-						Chat.ScrollUp();
-					else
+					//if (Chat.Focused)
+					//	Chat.ScrollUp();
+					//else
 						Player.Inventory.SelectedSlot--;
 				}
 
 				if (_playerController.MouseInputListener.IsButtonDown(MouseButton.ScrollDown))
 				{
-					if (Chat.Focused)
-						Chat.ScrollDown();
-					else
+					//if (Chat.Focused)
+					//	Chat.ScrollDown();
+					//else
 						Player.Inventory.SelectedSlot++;
 				}
 
