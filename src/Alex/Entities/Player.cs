@@ -6,6 +6,7 @@ using Alex.API.Graphics;
 using Alex.API.Input;
 using Alex.API.Network;
 using Alex.API.Utils;
+using Alex.API.World;
 using Alex.Blocks.Minecraft;
 using Alex.GameStates.Playing;
 using Alex.Items;
@@ -121,7 +122,7 @@ namespace Alex.Entities
 				}
 			}
 
-			if (Controller.CheckInput)
+			if (Controller.CheckInput && Controller.CheckMovementInput)
 			{
 				var hitEntity = HitEntity;
 				if (hitEntity != null && Controller.InputManager.IsPressed(InputCommand.LeftClick))
@@ -161,25 +162,17 @@ namespace Alex.Entities
 				else if (Controller.InputManager.IsPressed(InputCommand.RightClick))
 				{
 					bool handledClick = false;
+					var item = Inventory[Inventory.SelectedSlot];
 					// Log.Debug($"Right click!");
-					if (Inventory.MainHand != null && !(Inventory.MainHand is ItemAir))
+					if (item != null && !(item is ItemAir))
 					{
-						handledClick = HandleRightClick(Inventory.MainHand, 0);
+						handledClick = HandleRightClick(item, Inventory.SelectedSlot);
 					}
 
-					if (!handledClick && Inventory.OffHand != null && !(Inventory.OffHand is ItemAir))
+					/*if (!handledClick && Inventory.OffHand != null && !(Inventory.OffHand is ItemAir))
 					{
 						handledClick = HandleRightClick(Inventory.OffHand, 1);
-					}
-
-					if (!handledClick)
-					{
-						var flooredAdj = Vector3.Floor(AdjacentRaytrace);
-						var remainder = new Vector3(AdjacentRaytrace.X - flooredAdj.X, AdjacentRaytrace.Y - flooredAdj.Y, AdjacentRaytrace.Z - flooredAdj.Z);
-						Network?.BlockPlaced(Raytraced, GetTargetFace(), 0, remainder);
-
-						handledClick = true;
-					}
+					}*/
 				}
             }
 			else if (_destroyingBlock)
@@ -215,8 +208,12 @@ namespace Alex.Entities
 
 		    var entities = Level.EntityManager.GetEntities(camPos, 8);
 		    EntitiesInRange = entities.ToArray();
-		    
-		    if (EntitiesInRange.Length == 0) return;
+
+		    if (EntitiesInRange.Length == 0)
+		    {
+			    HitEntity = null;
+			    return;
+		    }
 		    
 		    IEntity hitEntity = null;
 		    for (float x = 0.5f; x < 8f; x += 0.1f)
@@ -233,8 +230,6 @@ namespace Alex.Entities
 		    }
 
 		    HitEntity = hitEntity;
-		    
-		    
 	    }
 
 	    private void BlockBreakTick()
@@ -257,8 +252,10 @@ namespace Alex.Entities
 		    _destroyingFace = GetTargetFace();
 		    _destroyingTick = DateTime.UtcNow;
 
-		    if (Inventory.MainHand == null) return;
-		    _destroyTimeNeeded = block.GetBreakTime(Inventory.MainHand);
+		    if (Inventory.MainHand != null)
+		    {
+			    _destroyTimeNeeded = block.GetBreakTime(Inventory.MainHand);
+		    }
 
             Log.Debug($"Start break block ({_destroyingTarget}, {_destroyTimeNeeded} seconds.)");
 
@@ -315,13 +312,15 @@ namespace Alex.Entities
 	    private bool HandleRightClick(Item slot, int hand)
 	    {
 		    //if (ItemFactory.ResolveItemName(slot.ItemID, out string itemName))
-            {
+		    {
+			    //IBlock block = null;
 	            IBlockState blockState = null;
 	         //   if (ItemFactory.TryGetItem(itemName, out Item i))
 	         //   {
 		            if (slot is ItemBlock ib)
 		            {
 			            blockState = ib.Block;
+			            // blockState = ib.Block;
 		            }
 	         //   }
 
@@ -338,8 +337,8 @@ namespace Alex.Entities
                     var remainder = new Vector3(AdjacentRaytrace.X - flooredAdj.X, AdjacentRaytrace.Y - flooredAdj.Y, AdjacentRaytrace.Z - flooredAdj.Z);
 
 	                var coordR = new BlockCoordinates(raytraceFloored);
-                    Network?.BlockPlaced(coordR, face, hand, remainder);
-
+                    Network?.BlockPlaced(coordR, face, hand, remainder, this);
+                    
                     var existingBlock = Level.GetBlock(coordR);
 	                if (existingBlock.IsReplacible || !existingBlock.Solid)
 	                {
@@ -351,7 +350,7 @@ namespace Alex.Entities
 	                }
 
 	                Log.Debug($"Placed block: {slot.DisplayName} on {raytraceFloored} face= {face} facepos={remainder} ({adj})");
-
+	                
 	                return true;
                 }
                 else if (blockState == null)

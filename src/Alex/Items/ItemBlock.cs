@@ -1,4 +1,5 @@
 ﻿using Alex.API.Blocks.State;
+using Alex.API.World;
 
 namespace Alex.Items
 {
@@ -8,8 +9,25 @@ namespace Alex.Items
 	    public ItemBlock(IBlockState block)
 	    {
 		    this.Block = block;
-		    Name = block.Block.Name;
+		    Name = block.Name;
 		    DisplayName = block.Block.DisplayName;
+	    }
+
+	    public override Item Clone()
+	    {
+		    return new ItemBlock(Block)
+		    {
+			    Count = Count,
+			    Id = Id,
+			    Material = Material,
+			    Meta = Meta,
+			    Name = Name,
+			    Nbt = Nbt,
+			    Renderer = Renderer,
+			    DisplayName = DisplayName,
+			    ItemType = ItemType,
+			    MaxStackSize = MaxStackSize
+		    };
 	    }
     }
 }

@@ -25,6 +25,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using MiNET;
 using MiNET.Client;
+using MiNET.Items;
 using MiNET.Net;
 using MiNET.Plugins;
 using MiNET.Utils;
@@ -498,24 +499,39 @@ namespace Alex.Worlds.Bedrock
             }
         }
 
-	    public void BlockPlaced(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition)
+	    public void BlockPlaced(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition, IEntity entity)
 	    {
-            var packet = McpeInventoryTransaction.CreateObject();
-            packet.transaction = new ItemUseTransaction()
-            {
-	            ActionType = (int)McpeInventoryTransaction.ItemUseAction.Place,
-	            ClickPosition =
-		            new System.Numerics.Vector3(cursorPosition.X, cursorPosition.Y, cursorPosition.Z),
-	            //TransactionType = McpeInventoryTransaction.TransactionType.ItemUse,
-	            // = NetworkEntityId,
-	            Position = new MiNET.Utils.BlockCoordinates(position.X, position.Y, position.Z),
-	            Face = (int)face,
-            };
+		    if (entity is Player p)
+		    {
+			    var itemInHand = p.Inventory[hand];
+			    var minetItem = MiNET.Items.ItemFactory.GetItem(itemInHand.Id, itemInHand.Meta, itemInHand.Count);
+			    minetItem.ExtraData = itemInHand.Nbt;
+			    
+			    var packet = McpeInventoryTransaction.CreateObject();
+			    packet.transaction = new ItemUseTransaction()
+			    {
+				    ActionType = (int) McpeInventoryTransaction.ItemUseAction.Place,
+				    ClickPosition =
+					    new System.Numerics.Vector3(cursorPosition.X, cursorPosition.Y, cursorPosition.Z),
+				    //TransactionType = McpeInventoryTransaction.TransactionType.ItemUse,
+				    // = NetworkEntityId,
+				    Position = new MiNET.Utils.BlockCoordinates(position.X, position.Y, position.Z),
+				    Face = (int) face,
+				    TransactionRecords = new List<TransactionRecord>()
+				    {
 
-            SendPacket(packet);
-        }
+				    },
+				    Item = minetItem,
+				    FromPosition = new System.Numerics.Vector3(p.KnownPosition.X, p.KnownPosition.Y, p.KnownPosition.Z),
+				    Slot = hand
+				    //BlockRuntimeId = 
+			    };
 
-	    public void EntityInteraction(IEntity player, IEntity target,
+			    SendPacket(packet);
+		    }
+	    }
+
+		    public void EntityInteraction(IEntity player, IEntity target,
 		    McpeInventoryTransaction.ItemUseOnEntityAction action)
 	    {
 		    if (player is Player p)

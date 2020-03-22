@@ -11,7 +11,7 @@ namespace Alex.API.Network
 	    bool IsConnected { get; }
 		void EntityAction(int entityId, EntityAction action);
 	    void SendChatMessage(string message);
-        void BlockPlaced(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition);
+        void BlockPlaced(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition, IEntity player);
 	    void PlayerDigging(DiggingStatus status, BlockCoordinates position, BlockFace face, Vector3 cursorPosition);
 
 	    void EntityInteraction(IEntity player, IEntity target,

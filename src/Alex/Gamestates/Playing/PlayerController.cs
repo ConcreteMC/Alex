@@ -50,7 +50,7 @@ namespace Alex.GameStates.Playing
 			set { _allowMovementInput = value; }
 		}
 
-		public bool CheckInput { get; set; } = false;
+		public bool CheckInput { get; set; } = true;
 	    private bool _allowMovementInput = true;
 	    private bool IgnoreNextUpdate { get; set; } = false;
 		private DateTime _lastForward = DateTime.UtcNow;

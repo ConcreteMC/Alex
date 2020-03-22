@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Linq;
 using Alex.API.Resources;
 using Alex.API.Utils;
+using Alex.Blocks;
 using Alex.Blocks.Minecraft;
 using Alex.Graphics.Models.Items;
 using Alex.Items;
@@ -24,13 +25,13 @@ namespace Alex
 
 		private static ResourceManager ResourceManager { get; set; }
 		private static McResourcePack ResourcePack { get; set; }
-		private static IReadOnlyDictionary<string, Item> Items { get; set; }
+		private static IReadOnlyDictionary<string, Func<Item>> Items { get; set; }
 		private static SecondItemEntry[] SecItemEntries { get; set; }
 		
 		private static ConcurrentDictionary<string, ItemModelRenderer> ItemRenderers { get; } = new ConcurrentDictionary<string, ItemModelRenderer>();
 	    public static void Init(IRegistryManager registryManager, ResourceManager resources, McResourcePack resourcePack, IProgressReceiver progressReceiver = null)
 	    {
-		  //  var blockRegistry = registryManager.GetRegistry<Block>();
+		      var blockRegistry = registryManager.GetRegistry<Block>();
 		    
 		    ResourceManager = resources;
 		    ResourcePack = resourcePack;
@@ -44,24 +45,104 @@ namespace Alex
 
 
 		    var ii = resources.Registries.Items.Entries;
-
+		    var blocks = resources.Registries.Blocks.Entries;
+		    
 		    LoadModels();
 		    
-            Dictionary<string, Item> items = new Dictionary<string, Item>();
+            Dictionary<string, Func<Item>> items = new Dictionary<string, Func<Item>>();
+            
+            for(int i = 0; i < blocks.Count; i++)
+		    {
+			    var entry = blocks.ElementAt(i);
+                progressReceiver?.UpdateProgress(i * (100 / blocks.Count), $"Processing block items...", entry.Key);
+                
+			    Item item;
+			    /*if (blockRegistry.TryGet(entry.Key, out var blockState))
+			   {
+				    item = new ItemBlock(blockState.Value);
+                }*/
+			    var bs = BlockFactory.GetBlockState(entry.Key);
+			    if (!(bs.Block is Air))
+			    {
+				    item = new ItemBlock(bs);
+				    Log.Info($"Registered block item: {entry.Key}");
+			    }
+			    else
+			    {
+				    continue;
+			    }
+
+			    var minetItem = MiNET.Items.ItemFactory.GetItem(entry.Key.Replace("minecraft:", ""));
+			    if (minetItem != null)
+			    {
+				    if (Enum.TryParse<ItemType>(minetItem.ItemType.ToString(), out ItemType t))
+				    {
+					    item.ItemType = t;
+				    }
+				    item.Material = minetItem.ItemMaterial;
+				    item.Meta = minetItem.Metadata;
+				    item.Id = minetItem.Id;
+			    }
+			    
+			    item.Name = entry.Key;
+                item.DisplayName = entry.Key;
+
+			    var data = itemData.FirstOrDefault(x =>
+				    x.name.Equals(entry.Key.Substring(10), StringComparison.InvariantCultureIgnoreCase));
+			    if (data != null)
+			    {
+				    item.MaxStackSize = data.stackSize;
+				    item.DisplayName = data.displayName;
+			    }
+
+			    
+			    foreach (var it in ResourcePack.ItemModels)
+			    {
+				    if (it.Key.Contains(entry.Key.Replace("minecraft:", ""),
+					    StringComparison.InvariantCultureIgnoreCase))
+				    {
+					    //Log.Info($"Model found: {entry.Key} = {it.Key}");
+					    ItemModelRenderer renderer;
+					    if (ItemRenderers.TryGetValue(it.Key, out renderer))
+					    {
+
+					    }
+					    else if (ItemRenderers.TryGetValue(entry.Key, out renderer))
+
+					    {
+
+					    }
+
+					    if (renderer != null)
+					    {
+						    Log.Debug($"Found renderer for {entry.Key}, textures: {it.Value.Textures.Count}");
+						    item.Renderer = renderer;
+						    break;
+					    }
+				    }
+			    }
+
+			    items.TryAdd(entry.Key, () => { return item.Clone(); });
+		    }
+            
 		    for(int i = 0; i < ii.Count; i++)
 		    {
 			    var entry = ii.ElementAt(i);
                 progressReceiver?.UpdateProgress(i * (100 / ii.Count), $"Processing items...", entry.Key);
                 
 			    Item item;
-			  //  if (blockRegistry.TryGet(entry.Key, out var blockState))
-			  //  {
-				//    item = new ItemBlock(blockState.Value);
-              //  }
-			  //  else
+			    /*if (blockRegistry.TryGet(entry.Key, out var blockState))
+			   {
+				    item = new ItemBlock(blockState.Value);
+                }*/
+			 /*   if (blocks.ContainsKey(entry.Key) && blockRegistry.TryGet(entry.Key, out var registryEntry))
 			    {
-				    item = new Item();
+				    item = new ItemBlock(registryEntry.Value);
 			    }
+			    else
+			    {*/
+				    item = new Item();
+			   // }
 
 			    var minetItem = MiNET.Items.ItemFactory.GetItem(entry.Key.Replace("minecraft:", ""));
 			    if (minetItem != null)
@@ -135,10 +216,10 @@ namespace Alex
 			    }*/
 
 			 //   Log.Info($"Loaded item: {entry.Key} (Renderer: {item.Renderer != null})");
-			    items.TryAdd(entry.Key, item);
+			    items.TryAdd(entry.Key, () => { return item.Clone(); });
 		    }
 
-			Items = new ReadOnlyDictionary<string, Item>(items);
+			Items = new ReadOnlyDictionary<string, Func<Item>>(items);
 	    }
 
 	    private static void LoadModels()
@@ -216,11 +297,33 @@ namespace Alex
 
 	    public static bool TryGetItem(string name, out Item item)
 	    {
-		    return Items.TryGetValue(name, out item);
+		    if (Items.TryGetValue(name, out var gen))
+		    {
+			    item = gen();
+			    return true;
+		    }
+
+		    item = default;
+		    return false;
 	    }
 
 	    public static bool TryGetItem(short id, short meta, out Item item)
 	    {
+		    /*var minetItem = MiNET.Items.ItemFactory.GetItem(id, meta);
+		    if (minetItem != null)
+		    {
+			    if (TryGetItem($"minecraft:{minetItem.}"))
+		    }*/
+
+		    var reverseResult = MiNET.Items.ItemFactory.NameToId.FirstOrDefault(x => x.Value == id);
+		    if (!string.IsNullOrWhiteSpace(reverseResult.Key))
+		    {
+			    if (TryGetItem($"minecraft:{reverseResult.Key}", out item))
+			    {
+				    return true;
+			    }
+		    }
+
 		    var entry = SecItemEntries.FirstOrDefault(x => x.Type == id);
 		    if (entry == null)
 		    {

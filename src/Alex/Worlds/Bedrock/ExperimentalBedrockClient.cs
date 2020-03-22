@@ -383,7 +383,7 @@ namespace Alex.Worlds.Bedrock
             throw new NotImplementedException();
         }
 
-        public void BlockPlaced(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition)
+        public void BlockPlaced(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition, IEntity p)
         {
             throw new NotImplementedException();
         }

@@ -141,8 +141,6 @@ namespace Alex
 			Log.Info($"Loaded {resourcePack.BlockModels.Count} block models from resourcepack");
 			Log.Info($"Loaded {resourcePack.ItemModels.Count} item models from resourcepack");
 
-            ItemFactory.Init(RegistryManager, this, resourcePack, progressReceiver);
-
 			var language = resourcePack.Languages.Values.FirstOrDefault(x => x.Namespace.Equals("minecraft"));
 			if (language != null)
 			{
@@ -334,6 +332,8 @@ namespace Alex
                 if (isFirst)
                     isFirst = false;
             }
+            
+            ItemFactory.Init(RegistryManager, this, ResourcePack, progressReceiver);
 
             return true;
 		}

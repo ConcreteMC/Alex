@@ -72,6 +72,7 @@ namespace Alex.Gui.Forms.Bedrock
                     packet.data = idx.ToString();
                     //JsonConvert.SerializeObject(idx)
                     parent.SendResponse(packet);
+                    
                     parent.Hide(formId);
                 };
                 
