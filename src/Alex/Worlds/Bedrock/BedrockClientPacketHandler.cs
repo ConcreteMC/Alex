@@ -584,7 +584,23 @@ namespace Alex.Worlds.Bedrock
 
 		public void HandleMcpeAddItemEntity(McpeAddItemEntity message)
 		{
-			UnhandledPackage(message);
+			var slot = message.item;
+			if (ItemFactory.TryGetItem(slot.Id, slot.Metadata, out Item item))
+			{
+				item.Count = slot.Count;
+				item.Nbt = slot.ExtraData;
+                    
+				
+				ItemEntity itemEntity = new ItemEntity(null, Client);
+				itemEntity.EntityId = message.runtimeEntityId;
+				itemEntity.SetItem(item);
+			
+				WorldProvider.SpawnEntity(message.runtimeEntityId, itemEntity);
+
+				_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
+                    
+				// Log.Info($"Set inventory slot: {usedIndex} Id: {slot.Id}:{slot.Metadata} x {slot.Count} Name: {item.DisplayName} IsPeInv: {inventory.IsPeInventory}");
+			}
 		}
 
 		public void HandleMcpeTakeItemEntity(McpeTakeItemEntity message)

@@ -101,28 +101,16 @@ namespace Alex
 				    if (it.Key.Contains(entry.Key.Replace("minecraft:", ""),
 					    StringComparison.InvariantCultureIgnoreCase))
 				    {
-					    //Log.Info($"Model found: {entry.Key} = {it.Key}");
-					    ItemModelRenderer renderer;
-					    if (ItemRenderers.TryGetValue(it.Key, out renderer))
-					    {
-
-					    }
-					    else if (ItemRenderers.TryGetValue(entry.Key, out renderer))
-
-					    {
-
-					    }
-
-					    if (renderer != null)
-					    {
-						    Log.Debug($"Found renderer for {entry.Key}, textures: {it.Value.Textures.Count}");
-						    item.Renderer = renderer;
-						    break;
-					    }
+					    item.Renderer = new ItemBlockModelRenderer(bs, it.Value, resourcePack, resources);
+					    item.Renderer.Cache(resourcePack);
+					    break;
 				    }
 			    }
 
-			    items.TryAdd(entry.Key, () => { return item.Clone(); });
+			    items.TryAdd(entry.Key, () =>
+			    {
+				    return item.Clone();
+			    });
 		    }
             
 		    for(int i = 0; i < ii.Count; i++)
@@ -230,8 +218,19 @@ namespace Alex
 				    continue;
 			    
 			    var renderer = ItemRenderers.AddOrUpdate(model.Key,
-				    (a) => { return new ItemModelRenderer(model.Value, ResourcePack); },
-				    (s, renderer) => { return new ItemModelRenderer(model.Value, ResourcePack); });
+				    (a) =>
+				    {
+					    var render = new ItemModelRenderer(model.Value, ResourcePack);
+					    render.Cache(ResourcePack);
+					    return render;
+				    },
+				    (s, renderer) =>
+				    {
+					    var render = new ItemModelRenderer(model.Value, ResourcePack);
+					    render.Cache(ResourcePack);
+					    
+					    return render;
+				    });
 			    
 		    }
 	    }

@@ -81,7 +81,7 @@ namespace Alex.Entities
 
 		public INetworkProvider Network { get; set; }
 		public Inventory Inventory { get; protected set; }
-		private ItemModelRenderer ItemRenderer { get; set; } = null;
+		private IItemRenderer ItemRenderer { get; set; } = null;
 		public Entity(int entityTypeId, World level, INetworkProvider network)
 		{
 			Network = network;
@@ -240,7 +240,7 @@ namespace Alex.Entities
 
 		public bool RenderEntity { get; set; } = true;
 		public bool ShowItemInHand { get; set; } = false;
-		public void Render(IRenderArgs renderArgs)
+		public virtual void Render(IRenderArgs renderArgs)
 		{
 			if (RenderEntity || ShowItemInHand)
 			{
@@ -248,7 +248,7 @@ namespace Alex.Entities
 			}
 			if (ShowItemInHand)
 			{
-				ItemRenderer?.Render(renderArgs.GraphicsDevice);
+				ItemRenderer?.Render(renderArgs);
 			}
 
 		}

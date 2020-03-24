@@ -42,7 +42,8 @@ namespace Alex.Worlds
 		    {
 			    if (entity is Entity e)
 			    {
-				    e.ModelRenderer.DiffuseColor = Color.White.ToVector3() * World.BrightnessModifier;
+				    if (e.ModelRenderer != null)
+						e.ModelRenderer.DiffuseColor = Color.White.ToVector3() * World.BrightnessModifier;
 			    }
 				entity.Update(args);
 		    }

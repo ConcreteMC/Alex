@@ -17,7 +17,7 @@ namespace Alex.Items
         public ItemMaterial Material { get; set; } = ItemMaterial.None;
 		public ItemType ItemType { get; set; }
 		public NbtCompound Nbt { get; set; }
-		public ItemModelRenderer Renderer { get; set; }
+		public IItemRenderer Renderer { get; set; }
 
 		public virtual Item Clone()
 		{
