@@ -93,7 +93,8 @@ namespace Alex
         
         public new IServiceProvider Services { get; set; }
         
-        public DedicatedThreadPool ThreadPool { get; set; }
+        public DedicatedThreadPool ThreadPool { get; private set; }
+        private DedicatedThreadPool NetworkThreadPool { get; set; } = null;
         
         public Alex(LaunchSettings launchSettings)
 		{
@@ -453,6 +454,10 @@ namespace Alex
 
 		public void ConnectToServer(IPEndPoint serverEndPoint, PlayerProfile profile, bool bedrock = false)
 		{
+			var oldNetworkPool = NetworkThreadPool;
+			
+			NetworkThreadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount));
+
 			try
 			{
 				var eventDispatcher = Services.GetRequiredService<IEventDispatcher>() as EventDispatcher;
@@ -464,7 +469,7 @@ namespace Alex
 				if (bedrock)
 				{
 					provider = new BedrockWorldProvider(this, serverEndPoint,
-						profile, out networkProvider);
+						profile, NetworkThreadPool, out networkProvider);
 				}
 				else
 				{
@@ -478,6 +483,8 @@ namespace Alex
 			{
 				Log.Error(ex, "FCL");
 			}
+			
+			oldNetworkPool?.Dispose();
 		}
 
 		public void LoadWorld(WorldProvider worldProvider, INetworkProvider networkProvider)

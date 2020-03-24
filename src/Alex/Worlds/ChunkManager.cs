@@ -44,7 +44,7 @@ namespace Alex.Worlds
         public int EnqueuedChunkUpdates => Enqueued.Count;//;LowPriority.Count;
 	    public int ChunkCount => Chunks.Count;
 
-	    public BasicEffect AnimatedEffect { get; }
+	    public AlphaTestEffect AnimatedEffect { get; }
 	    public AlphaTestEffect AnimatedTranslucentEffect { get; }
 	    public AlphaTestEffect TransparentEffect { get; }
 	    public AlphaTestEffect TranslucentEffect { get; }
@@ -98,16 +98,16 @@ namespace Alex.Worlds
 		        Alpha = 0.5f
 	        };
 	        
-	        AnimatedEffect = new BasicEffect(Graphics)
+	        AnimatedEffect = new AlphaTestEffect(Graphics)
 	        {
 		        Texture = Resources.Atlas.GetAtlas(0),
 		        VertexColorEnabled = true,
 		        World = Matrix.Identity,
-		      //  AlphaFunction = CompareFunction.Greater,
-		      //  ReferenceAlpha = 127,
+		        AlphaFunction = CompareFunction.Greater,
+		        ReferenceAlpha = 32,
 		        FogStart = fogStart,
 		        FogEnabled = false,
-		        TextureEnabled = true
+		       // TextureEnabled = true
 	        };
 	        
 	        AnimatedTranslucentEffect = new AlphaTestEffect(Graphics)
@@ -346,7 +346,7 @@ namespace Alex.Worlds
 			    
 			    OpaqueEffect.AmbientLightColor = value;
 			    // OpaqueEffect.DiffuseColor = value;
-			    AnimatedEffect.AmbientLightColor = value;
+			    AnimatedEffect.DiffuseColor = value;
 			    AnimatedTranslucentEffect.DiffuseColor = value;
 		    }
 	    }

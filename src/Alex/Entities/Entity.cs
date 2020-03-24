@@ -94,9 +94,10 @@ namespace Alex.Entities
 			//	HealthManager = new HealthManager(this);
 			
 			Inventory.SlotChanged += OnInventorySlotChanged;
+			Inventory.SelectedHotbarSlotChanged += InventoryOnSelectedHotbarSlotChanged;
 		}
 
-		private void OnInventorySlotChanged(object sender, SlotChangedEventArgs e)
+		private void CheckHeldItem()
 		{
 			var inHand = Inventory.MainHand;
 			//Log.Info($"Inventory slot changed.");
@@ -140,7 +141,7 @@ namespace Alex.Entities
 							ItemRenderer.Translation = value.Translation;
 							ItemRenderer.Scale = value.Scale;
 							
-							if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
+							/*if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
 							{
 						//		Log.Info($"First Person item model rendering ready.");
 
@@ -149,7 +150,7 @@ namespace Alex.Entities
 							else
 							{
 								Log.Warn($"Bone not found: rightItem");
-							}
+							}*/
 						}
 						else
 						{
@@ -178,6 +179,28 @@ namespace Alex.Entities
 					}
 				}
 			}
+			else
+			{
+				if (ItemRenderer != null)
+				{
+					if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
+					{
+						bone.Detach(ItemRenderer);
+					}
+
+					ItemRenderer = null;
+				}
+			}
+		}
+		
+		private void InventoryOnSelectedHotbarSlotChanged(object? sender, SelectedSlotChangedEventArgs e)
+		{
+			CheckHeldItem();
+		}
+
+		private void OnInventorySlotChanged(object sender, SlotChangedEventArgs e)
+		{
+			CheckHeldItem();
 		}
 
 		public bool IsSneaking { get; set; }
@@ -240,6 +263,7 @@ namespace Alex.Entities
 				
 				if (ShowItemInHand)
 				{
+					ItemRenderer?.Update(Matrix.CreateTranslation((KnownPosition )));
 					//ItemRenderer?.World = 
 					ItemRenderer?.Update(args.GraphicsDevice, args.Camera);
 				}

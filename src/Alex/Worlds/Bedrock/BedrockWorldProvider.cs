@@ -34,7 +34,7 @@ namespace Alex.Worlds.Bedrock
 
 		private System.Threading.Timer _gameTickTimer;
 		private IEventDispatcher EventDispatcher { get; }
-		public BedrockWorldProvider(Alex alex, IPEndPoint endPoint, PlayerProfile profile,
+		public BedrockWorldProvider(Alex alex, IPEndPoint endPoint, PlayerProfile profile, DedicatedThreadPool threadPool,
 			out INetworkProvider networkProvider)
 		{
 			Alex = alex;
@@ -42,7 +42,7 @@ namespace Alex.Worlds.Bedrock
 			EventDispatcher = eventDispatcher;
 			
 			//Client = new ExperimentalBedrockClient(alex, alex.Services, this, endPoint);
-			Client = new BedrockClient(alex, eventDispatcher, endPoint, profile, alex.ThreadPool, this);
+			Client = new BedrockClient(alex, eventDispatcher, endPoint, profile, threadPool, this);
 			networkProvider = Client;
 			
 			EventDispatcher.RegisterEvents(this);
