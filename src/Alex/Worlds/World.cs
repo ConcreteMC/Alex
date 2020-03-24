@@ -22,17 +22,17 @@ using Alex.Graphics.Camera;
 using Alex.Graphics.Models;
 using Alex.Graphics.Models.Items;
 using Alex.Gui.Forms.Bedrock;
-using Alex.ResourcePackLib.Json.Models.Items;
-using Alex.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MiNET;
 using MiNET.Utils;
 using NLog;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
 using Color = Microsoft.Xna.Framework.Color;
 using IBlockState = Alex.API.Blocks.State.IBlockState;
+using Player = Alex.Entities.Player;
 using PlayerLocation = Alex.API.Utils.PlayerLocation;
 using UUID = Alex.API.Utils.UUID;
 
@@ -764,6 +764,24 @@ namespace Alex.Worlds
 			PlayerList.Entries.Remove(item);
 		}
 
+		public void SetGameRule(MiNET.GameRule gameRule)
+		{
+			if (Enum.TryParse(gameRule.Name, out GameRulesEnum val))
+			{
+				var grb = gameRule as GameRule<bool>;
+				
+				switch (val)
+				{
+					case GameRulesEnum.DoDaylightcycle:
+						FreezeWorldTime = grb?.Value ?? false;
+						break;
+					default:
+						Log.Debug($"Missing gamerule: {val}");
+						break;
+				}
+			}
+		}
+		
 		#endregion
 	}
 }

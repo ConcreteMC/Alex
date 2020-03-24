@@ -12,6 +12,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Blocks.State;
+using Alex.API.Entities;
 using Alex.API.Events;
 using Alex.API.Events.World;
 using Alex.API.Graphics;
@@ -898,7 +899,22 @@ namespace Alex.Worlds.Bedrock
 
 		public void HandleMcpeSetEntityMotion(McpeSetEntityMotion message)
 		{
-			UnhandledPackage(message);
+			var v = message.velocity;
+			var velocity = new Microsoft.Xna.Framework.Vector3(v.X, v.Y, v.Z) * 20f;
+			
+			if (Client.WorldReceiver.TryGetEntity(message.runtimeEntityId, out IEntity entity))
+			{
+				var old = entity.Velocity;
+				entity.Velocity += new Microsoft.Xna.Framework.Vector3(velocity.X - old.X, velocity.Y - old.Y, velocity.Z - old.Z);
+			}
+			else if (Client.WorldReceiver.GetPlayerEntity() is Player player &&
+			         player.EntityId == message.runtimeEntityId)
+			{
+				var old = player.Velocity;
+				player.Velocity += new Microsoft.Xna.Framework.Vector3(velocity.X - old.X, velocity.Y - old.Y, velocity.Z - old.Z);
+			}
+
+			//UnhandledPackage(message);
 		}
 
 		public void HandleMcpeSetEntityLink(McpeSetEntityLink message)
@@ -1151,7 +1167,11 @@ namespace Alex.Worlds.Bedrock
 
 		public void HandleMcpeSetPlayerGameType(McpeSetPlayerGameType message)
 		{
-			UnhandledPackage(message);
+			if (Client.WorldReceiver.GetPlayerEntity() is Player player)
+			{
+				player.UpdateGamemode((Gamemode) message.gamemode);
+			}
+			//UnhandledPackage(message);
 		}
 
 		public void HandleMcpeSimpleEvent(McpeSimpleEvent message)
@@ -1197,7 +1217,15 @@ namespace Alex.Worlds.Bedrock
 
 		public void HandleMcpeGameRulesChanged(McpeGameRulesChanged message)
 		{
-			UnhandledPackage(message);
+			if (!(Client.WorldReceiver.GetPlayerEntity() is Player player))
+				return;
+
+			var lvl = player.Level;
+			
+			foreach (var gr in message.rules)
+			{
+				lvl.SetGameRule(gr);
+			}
 		}
 
 		public void HandleMcpeCamera(McpeCamera message)

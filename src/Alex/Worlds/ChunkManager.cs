@@ -18,7 +18,6 @@ using Alex.Blocks.Storage;
 using Alex.Graphics.Models.Blocks;
 using Alex.Services;
 using Alex.Utils;
-using Alex.Worlds.Lighting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
