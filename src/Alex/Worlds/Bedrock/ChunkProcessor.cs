@@ -356,7 +356,7 @@ namespace Alex.Worlds.Bedrock
 			        if (stream.Position < stream.Length - 1)
 			        {
 				        int loop = 0;
-				        while (stream.Position < stream.Length)
+				        while (stream.Position < stream.Length - 1)
 				        {
 					        try
 					        {
@@ -405,6 +405,11 @@ namespace Alex.Worlds.Bedrock
 
 								        chunkColumn.Sections[ci] = section;
 							        }
+						        }
+
+						        if (stream.Position < stream.Length - 1)
+						        {
+							     //   pre = stream.ReadByte();
 						        }
 					        }
 					        catch (Exception ex)

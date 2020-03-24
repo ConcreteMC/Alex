@@ -85,6 +85,7 @@ namespace log4net
 
 		public static void Initialize()
 		{
+			//foreach(var assemb in AppDomain.CurrentDomain.GetAssemblies())
 			var repo = LogManager.GetRepository(Assembly.GetEntryAssembly());
 			(((log4net.Repository.Hierarchy.Hierarchy) repo)).Root.Level = Level.Warn;
 			(((log4net.Repository.Hierarchy.Hierarchy) repo)).RaiseConfigurationChanged(EventArgs.Empty);

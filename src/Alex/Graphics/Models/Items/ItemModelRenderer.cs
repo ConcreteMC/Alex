@@ -56,25 +56,33 @@ namespace Alex.Graphics.Models.Items
 			Effect.Projection = camera.ProjectionMatrix;
 			Effect.View = camera.ViewMatrix;
 
-			var scale = Scale * 16f;
+			var scale = Scale;
 
 			var a = 1f / 16f;
-			var pivot = new Vector3(0.5f, 0.5f, 0.5f) * a;
-			
+			//var pivot = new Vector3(1f - Scale.X, 1f - scale.Y, 1f - Scale.Z);
+
 			/*var pieceMatrix =
-				Matrix.CreateTranslation(-pivot) *
-				Matrix.CreateScale(scale) *
-						Matrix.CreateFromYawPitchRoll(MathUtils.ToRadians(180f - Rotation.Y), MathUtils.ToRadians(180f - Rotation.X), MathUtils.ToRadians(-Rotation.Z)) * 
-				Matrix.CreateTranslation(new Vector3(Translation.X, Translation.Y, (Translation.Z)));*/
+				Matrix.CreateTranslation(Translation*scale) *
+				Matrix.CreateFromYawPitchRoll(MathUtils.ToRadians(Rotation.Y), MathUtils.ToRadians(Rotation.Z),
+					MathUtils.ToRadians(Rotation.X)) *
+				Matrix.CreateScale(scale);*/
+
+			var rot = Rotation * scale;
 			
 			var pieceMatrix =
-				/*Matrix.CreateTranslation(-pivot) */
-				Matrix.CreateScale(scale) *
-				/*Matrix.CreateFromYawPitchRoll(MathUtils.ToRadians(180f - Rotation.Y), MathUtils.ToRadians(180f - Rotation.X), MathUtils.ToRadians(-Rotation.Z)) * */
-				Matrix.CreateFromYawPitchRoll(MathUtils.ToRadians(- Rotation.Y),0f, MathUtils.ToRadians(-Rotation.Z)) *
-				Matrix.CreateTranslation(new Vector3(Translation.X, Translation.Y + 8f, (Translation.Z - 8f)));
+				Matrix.CreateTranslation(Translation * scale) *
+				Matrix.CreateRotationX(MathUtils.ToRadians(Rotation.X)) *
+				Matrix.CreateRotationY(MathUtils.ToRadians(Rotation.Y)) *
+				Matrix.CreateRotationZ(MathUtils.ToRadians(Rotation.Z));
 			
-			Effect.World = pieceMatrix * ParentMatrix;
+		/*	var pieceMatrix =
+				/*Matrix.CreateTranslation(-pivot) */
+			//	Matrix.CreateScale(scale) *
+				/*Matrix.CreateFromYawPitchRoll(MathUtils.ToRadians(180f - Rotation.Y), MathUtils.ToRadians(180f - Rotation.X), MathUtils.ToRadians(-Rotation.Z)) * */
+				/*Matrix.CreateFromYawPitchRoll(MathUtils.ToRadians(- Rotation.Y),0f, MathUtils.ToRadians(-Rotation.Z)) *
+				Matrix.CreateTranslation(new Vector3(Translation.X, Translation.Y + 8f, (Translation.Z - 8f)));*/
+
+				Effect.World = pieceMatrix * ParentMatrix;
 
 			if (Buffer == null)
 			{

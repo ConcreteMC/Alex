@@ -325,7 +325,7 @@ namespace Alex
 			GameStateManager.Update(gameTime);
 			GuiDebugHelper.Update(gameTime);
 
-			if (UIThreadQueue.TryDequeue(out Action a))
+			if (!UIThreadQueue.IsEmpty && UIThreadQueue.TryDequeue(out Action a))
 			{
 				try
 				{

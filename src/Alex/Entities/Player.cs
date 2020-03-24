@@ -65,7 +65,7 @@ namespace Alex.Entities
 			SnapHeadYawRotationOnMovement = false;
 
 			RenderEntity = true;
-			ShowItemInHand = false;
+			ShowItemInHand = true;
 		}
 
 	    private void SelectedHotbarSlotChanged(object sender, SelectedSlotChangedEventArgs e)

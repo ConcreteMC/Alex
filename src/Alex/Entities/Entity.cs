@@ -141,11 +141,11 @@ namespace Alex.Entities
 							ItemRenderer.Translation = value.Translation;
 							ItemRenderer.Scale = value.Scale;
 							
-							/*if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
+						/*	if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
 							{
 						//		Log.Info($"First Person item model rendering ready.");
 
-								bone.Attach(ItemRenderer);
+								//bone.Attach(ItemRenderer);
 							}
 							else
 							{
@@ -169,7 +169,7 @@ namespace Alex.Entities
 							{
 						//		Log.Info($"Third Person item model rendering ready.");
 
-								bone.Attach(ItemRenderer);
+								//bone.Attach(ItemRenderer);
 							}
 						}
 						else
@@ -263,7 +263,8 @@ namespace Alex.Entities
 				
 				if (ShowItemInHand)
 				{
-					ItemRenderer?.Update(Matrix.CreateTranslation((KnownPosition )));
+					//Matrix.CreateRotationY(MathUtils.ToRadians((-KnownPosition.HeadYaw)))
+					ItemRenderer?.Update(Matrix.CreateRotationY(MathUtils.ToRadians((-KnownPosition.HeadYaw))) * Matrix.CreateTranslation((KnownPosition)));
 					//ItemRenderer?.World = 
 					ItemRenderer?.Update(args.GraphicsDevice, args.Camera);
 				}
