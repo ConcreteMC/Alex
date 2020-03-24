@@ -18,6 +18,7 @@ namespace Alex.Entities
         {
             Width = 0.25;
             Height = 0.25;
+            Length = 0.25;
         }
 
         private IItemRenderer ItemRenderer { get; set; } = null;
@@ -41,6 +42,7 @@ namespace Alex.Entities
         {
             if (CanRender)
             {
+                var offset = new Vector3(0.5f, 0.5f, 0.5f);
                 ItemRenderer?.Update(Matrix.CreateRotationY(MathUtils.ToRadians(_rotation)) * Matrix.CreateTranslation((KnownPosition)));
                 
                 ItemRenderer?.Update(args.GraphicsDevice, args.Camera);

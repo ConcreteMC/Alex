@@ -10,6 +10,12 @@ namespace Alex.Worlds
     public class ItemRenderingWorld : IWorld
     {
         private static IBlockState Air { get; } = BlockFactory.GetBlockState("minecraft:air");
+
+        private IBlock Block { get; }
+        public ItemRenderingWorld(IBlock block)
+        {
+            Block = block;
+        }
         
         public TickManager Ticker { get; }
         public LevelInfo WorldInfo { get; }
@@ -143,12 +149,12 @@ namespace Alex.Worlds
 
         public bool IsTransparent(int posX, int posY, int posZ)
         {
-            return true;
+            return !Block.Transparent;
         }
 
         public bool IsSolid(int posX, int posY, int posZ)
         {
-            return false;
+            return !Block.Solid;
         }
 
         public bool IsScheduled(int posX, int posY, int posZ)
@@ -158,8 +164,8 @@ namespace Alex.Worlds
 
         public void GetBlockData(int posX, int posY, int posZ, out bool transparent, out bool solid)
         {
-            transparent = true;
-            solid = false;
+            transparent = !Block.Transparent;
+            solid = !Block.Solid;
         }
     }
 }

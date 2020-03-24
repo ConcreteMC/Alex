@@ -38,6 +38,8 @@ namespace Alex.Graphics.Models.Items
 		{
 			_block = block;
 			_resource = resourceManager;
+			
+			Scale = new Vector3(0.25f, 0.25f, 0.25f);
 		}
 
 		public override void Cache(McResourcePack pack)
@@ -45,7 +47,7 @@ namespace Alex.Graphics.Models.Items
 			if (Vertices != null)
 				return;
 			
-			var data = _block.Model.GetVertices(new ItemRenderingWorld(), Vector3.Zero, _block.Block);
+			var data = _block.Model.GetVertices(new ItemRenderingWorld(_block.Block), Vector3.Zero, _block.Block);
 			Vertices = data.vertices;
 			Indexes = data.indexes.Select(x => (short)x).ToArray();
 		}
@@ -68,7 +70,13 @@ namespace Alex.Graphics.Models.Items
 				}
 			}
 
+			Effect.Projection = camera.ProjectionMatrix;
+			Effect.View = camera.ViewMatrix;
 
+			var scale = Scale;
+
+			Effect.World = Matrix.CreateScale(scale) * ParentMatrix;
+			
 			base.Update(device, camera);
 		}
 	}
@@ -79,6 +87,31 @@ namespace Alex.Graphics.Models.Items
 		{
 			
 		}
+
+		public override void Update(GraphicsDevice device, ICamera camera)
+		{
+			if (Effect == null)
+			{
+				Effect = new BasicEffect(device);
+				Effect.VertexColorEnabled = true;
+			}
+
+			Effect.Projection = camera.ProjectionMatrix;
+			Effect.View = camera.ViewMatrix;
+
+			var scale = Scale;
+			
+			var pieceMatrix =
+				Matrix.CreateTranslation(Translation * scale) *
+				Matrix.CreateRotationX(MathUtils.ToRadians(Rotation.X)) *
+				Matrix.CreateRotationY(MathUtils.ToRadians(Rotation.Y)) *
+				Matrix.CreateRotationZ(MathUtils.ToRadians(Rotation.Z));
+			
+			Effect.World = pieceMatrix * ParentMatrix;
+			
+			base.Update(device, camera);
+		}
+		
 
 		public override void Cache(McResourcePack pack)
 		{
@@ -192,7 +225,7 @@ namespace Alex.Graphics.Models.Items
 			_declaration = declaration;
 		}
 
-		private Matrix ParentMatrix = Matrix.Identity;
+		protected Matrix ParentMatrix = Matrix.Identity;
 		public void Update(Matrix parentMatrix)
 		{
 			ParentMatrix = parentMatrix;
@@ -206,43 +239,6 @@ namespace Alex.Graphics.Models.Items
 		private bool _canInit = true;
 		public virtual void Update(GraphicsDevice device, ICamera camera)
 		{
-			if (Effect == null)
-			{
-				Effect = new BasicEffect(device);
-				Effect.VertexColorEnabled = true;
-			}
-
-			Effect.Projection = camera.ProjectionMatrix;
-			Effect.View = camera.ViewMatrix;
-
-			var scale = Scale;
-
-			var a = 1f / 16f;
-			//var pivot = new Vector3(1f - Scale.X, 1f - scale.Y, 1f - Scale.Z);
-
-			/*var pieceMatrix =
-				Matrix.CreateTranslation(Translation*scale) *
-				Matrix.CreateFromYawPitchRoll(MathUtils.ToRadians(Rotation.Y), MathUtils.ToRadians(Rotation.Z),
-					MathUtils.ToRadians(Rotation.X)) *
-				Matrix.CreateScale(scale);*/
-
-			var rot = Rotation * scale;
-			
-			var pieceMatrix =
-				Matrix.CreateTranslation(Translation * scale) *
-				Matrix.CreateRotationX(MathUtils.ToRadians(Rotation.X)) *
-				Matrix.CreateRotationY(MathUtils.ToRadians(Rotation.Y)) *
-				Matrix.CreateRotationZ(MathUtils.ToRadians(Rotation.Z));
-			
-		/*	var pieceMatrix =
-				/*Matrix.CreateTranslation(-pivot) */
-			//	Matrix.CreateScale(scale) *
-				/*Matrix.CreateFromYawPitchRoll(MathUtils.ToRadians(180f - Rotation.Y), MathUtils.ToRadians(180f - Rotation.X), MathUtils.ToRadians(-Rotation.Z)) * */
-				/*Matrix.CreateFromYawPitchRoll(MathUtils.ToRadians(- Rotation.Y),0f, MathUtils.ToRadians(-Rotation.Z)) *
-				Matrix.CreateTranslation(new Vector3(Translation.X, Translation.Y + 8f, (Translation.Z - 8f)));*/
-
-				Effect.World = pieceMatrix * ParentMatrix;
-
 			if (Buffer == null && Vertices != null && Indexes != null && _canInit)
 			{
 				var vertices = Vertices;
