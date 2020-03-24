@@ -15,6 +15,7 @@ using Alex.API.Data.Options;
 using Alex.API.Entities;
 using Alex.API.Events;
 using Alex.API.Events.World;
+using Alex.API.Graphics;
 using Alex.API.Network;
 using Alex.API.Services;
 using Alex.API.Utils;
@@ -394,7 +395,7 @@ namespace Alex.Worlds.Java
 						if (Alex.Resources.BedrockResourcePack.Textures.TryGetValue(texture,
 							out Bitmap bmp))
 						{
-							Texture2D t = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, bmp);
+							PooledTexture2D t = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, bmp);
 
 							renderer = new EntityModelRenderer(model, t);
 						}

@@ -17,7 +17,7 @@ using MathF = System.MathF;
 namespace Alex.Graphics.Models
 {
 	//Thanks https://github.com/SirCmpwn/TrueCraft
-	public class SkyBox
+	public class SkyBox : IDisposable
 	{
 		private float MoonX = 1f/4f;
 		private float MoonY = 1f/2f;
@@ -26,14 +26,14 @@ namespace Alex.Graphics.Models
 	    private BasicEffect CelestialPlaneEffect { get; set; }
 		private BasicEffect CloudsPlaneEffect { get; set; }
 
-	    private VertexBuffer CloudsPlane { get; set; }
-        private VertexBuffer SkyPlane { get; set; }
-	    private VertexBuffer CelestialPlane { get; set; }
-		private VertexBuffer MoonPlane { get; }
+	    private PooledVertexBuffer CloudsPlane { get; set; }
+        private PooledVertexBuffer SkyPlane { get; set; }
+	    private PooledVertexBuffer CelestialPlane { get; set; }
+		private PooledVertexBuffer MoonPlane { get; }
 
-		private Texture2D SunTexture { get; }
-		private Texture2D MoonTexture { get; }
-		private Texture2D CloudTexture { get; }
+		private PooledTexture2D SunTexture { get; }
+		private PooledTexture2D MoonTexture { get; }
+		private PooledTexture2D CloudTexture { get; }
 
 		private bool CanRender { get; set; } = true;
 		public bool EnableClouds { get; set; } = false;
@@ -410,6 +410,21 @@ namespace Alex.Graphics.Models
 				pass.Apply();
 			}
 			renderArgs.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, 2);
+		}
+
+		public void Dispose()
+		{
+			CloudsPlane?.MarkForDisposal();
+			SkyPlane?.MarkForDisposal();
+			CelestialPlane?.MarkForDisposal();
+			MoonPlane?.MarkForDisposal();
+			SunTexture?.MarkForDisposal();
+			MoonTexture?.MarkForDisposal();
+			CloudTexture?.MarkForDisposal();
+			
+			SkyPlaneEffect?.Dispose();
+			CelestialPlaneEffect?.Dispose();
+			CloudsPlaneEffect?.Dispose();
 		}
 	}
 }

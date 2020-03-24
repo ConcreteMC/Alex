@@ -38,7 +38,7 @@ namespace Alex.Entities
 
 		public string Name { get; }
 		private string GeometryName { get; }
-		public PlayerMob(string name, World level, INetworkProvider network, Texture2D skinTexture, string geometry = "geometry.humanoid.customSlim") : base(63, level, network)
+		public PlayerMob(string name, World level, INetworkProvider network, PooledTexture2D skinTexture, string geometry = "geometry.humanoid.customSlim") : base(63, level, network)
 		{
 			//DoRotationCalculations = false;
 			Name = name;
@@ -206,7 +206,7 @@ namespace Alex.Entities
 			
 		}
 
-		internal void UpdateSkin(Texture2D skinTexture)
+		internal void UpdateSkin(PooledTexture2D skinTexture)
 		{
 			//if (skinSlim)
 			{

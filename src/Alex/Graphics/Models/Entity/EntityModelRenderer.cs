@@ -19,10 +19,10 @@ namespace Alex.Graphics.Models.Entity
 
 		//private EntityModel Model { get; }
 		private IReadOnlyDictionary<string, ModelBone> Bones { get; }
-		public Texture2D Texture { get; set; }
-		private VertexBuffer VertexBuffer { get; set; }
+		public PooledTexture2D Texture { get; set; }
+		private PooledVertexBuffer VertexBuffer { get; set; }
 		public bool Valid { get; private set; }
-		public EntityModelRenderer(EntityModel model, Texture2D texture)
+		public EntityModelRenderer(EntityModel model, PooledTexture2D texture)
 		{
 			
 		//	Model = model;
@@ -45,7 +45,7 @@ namespace Alex.Graphics.Models.Entity
 			}
 		}
 
-		public EntityModelRenderer(MinecraftGeometry geometry, Texture2D texture)
+		public EntityModelRenderer(MinecraftGeometry geometry, PooledTexture2D texture)
 		{
 			Texture = texture;
 			
@@ -359,8 +359,8 @@ namespace Alex.Graphics.Models.Entity
 				}
 			}
 			
-			Texture?.Dispose();
-			VertexBuffer?.Dispose();
+			Texture?.MarkForDisposal();
+			VertexBuffer?.MarkForDisposal();
 		}
 	}
 }

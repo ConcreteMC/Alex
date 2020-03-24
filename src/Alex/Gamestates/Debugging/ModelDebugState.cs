@@ -347,7 +347,7 @@ namespace Alex.Gamestates.Debug
 					if (Alex.Resources.BedrockResourcePack.Textures.TryGetValue(texture,
 																				out Bitmap bmp))
 					{
-						Texture2D t = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, bmp);
+						PooledTexture2D t = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, bmp);
 
 						renderer = new EntityModelRenderer(model, t);
 					}

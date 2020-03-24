@@ -15,7 +15,7 @@ namespace Alex.Graphics.Models.Entity
 	{
 		public class ModelBone : IDisposable
 		{
-			private IndexBuffer Buffer { get; set; }
+			private PooledIndexBuffer Buffer { get; set; }
 			public ModelBoneCube[] Parts { get; }
 
 			private Vector3 _rotation = Vector3.Zero;
@@ -152,17 +152,17 @@ namespace Alex.Graphics.Models.Entity
 			{
 				var indices = Parts.SelectMany(x => x.Indexes).ToArray();
 
-				IndexBuffer currentBuffer = Buffer;
+				PooledIndexBuffer currentBuffer = Buffer;
 
 				if (indices.Length > 0 && (Buffer == null || currentBuffer.IndexCount != indices.Length))
 				{
-					IndexBuffer buffer = GpuResourceManager.GetIndexBuffer(this, device, IndexElementSize.SixteenBits,
+					PooledIndexBuffer buffer = GpuResourceManager.GetIndexBuffer(this, device, IndexElementSize.SixteenBits,
 						indices.Length, BufferUsage.None);
 
 					buffer.SetData(indices);
 					Buffer = buffer;
 					
-					currentBuffer?.Dispose();
+					currentBuffer?.MarkForDisposal();
 				}
 			}
 
@@ -180,7 +180,7 @@ namespace Alex.Graphics.Models.Entity
 			
 			public void Dispose()
 			{
-				Buffer?.Dispose();
+				Buffer?.MarkForDisposal();
 			}
 		}
 	}

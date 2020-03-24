@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using Alex.API.Blocks.State;
 using Alex.API.Events;
 using Alex.API.Events.World;
+using Alex.API.Graphics;
 using Alex.API.Network.Bedrock;
 using Alex.API.Services;
 using Alex.API.Utils;
@@ -374,7 +375,7 @@ namespace Alex.Worlds.Bedrock
 					var u = new API.Utils.UUID(r.ClientUuid.GetBytes());
 					if (_players.ContainsKey(r.ClientUuid)) continue;
 
-					Texture2D skinTexture;
+					PooledTexture2D skinTexture;
 					if (r.Skin.TryGetBitmap(out Bitmap skinBitmap))
 					{
 						skinTexture =
@@ -409,7 +410,7 @@ namespace Alex.Worlds.Bedrock
 								}
 								else
 								{
-									//modelRenderer.Dispose();
+									modelRenderer.Dispose();
 									
 									var path = Path.Combine("skins", $"invalid-{r.Skin.SkinId}.json");
 									if (!File.Exists(path))
@@ -523,7 +524,7 @@ namespace Alex.Worlds.Bedrock
 						if (AlexInstance.Resources.BedrockResourcePack.Textures.TryGetValue(texture,
 							out Bitmap bmp))
 						{
-							Texture2D t = TextureUtils.BitmapToTexture2D(AlexInstance.GraphicsDevice, bmp);
+							PooledTexture2D t = TextureUtils.BitmapToTexture2D(AlexInstance.GraphicsDevice, bmp);
 
 							renderer = new EntityModelRenderer(model, t);
 						}

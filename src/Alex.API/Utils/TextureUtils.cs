@@ -43,12 +43,12 @@ namespace Alex.API.Utils
 			return bmp;
 		}
 
-        public static Texture2D BitmapToTexture2D(GraphicsDevice device, Bitmap bmp)
+        public static PooledTexture2D BitmapToTexture2D(GraphicsDevice device, Bitmap bmp)
         {
             return BitmapToTexture2D(device, bmp, out _);
         }
 
-        public static Texture2D BitmapToTexture2D(GraphicsDevice device, Bitmap bmp, out long byteSize)
+        public static PooledTexture2D BitmapToTexture2D(GraphicsDevice device, Bitmap bmp, out long byteSize)
 		{
 			if (bmp == null)
             {
@@ -61,7 +61,7 @@ namespace Alex.API.Utils
 			var depth = System.Drawing.Bitmap.GetPixelFormatSize(bmp.PixelFormat);
 			
 			uint[] imgData = new uint[bmp.Width * bmp.Height];
-			Texture2D texture = GpuResourceManager.GetTexture2D("Alex.Api.Utils.TextureUtils", device, bmp.Width, bmp.Height);
+			PooledTexture2D texture = GpuResourceManager.GetTexture2D("Alex.Api.Utils.TextureUtils", device, bmp.Width, bmp.Height);
 
 			byte[] data = new byte[bmp.Width * bmp.Height * (depth / 8)];
 			LockBitmap locked = new LockBitmap(bmp);

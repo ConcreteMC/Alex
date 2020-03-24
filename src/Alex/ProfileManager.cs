@@ -106,8 +106,9 @@ namespace Alex
 			IPlayerProfileService profileService = ServiceProvider.GetRequiredService<IPlayerProfileService>();
 			var alex = ServiceProvider.GetRequiredService<Alex>();
 			
-			if (profile.Skin.Texture == null)
+			if (profile.Skin?.Texture == null)
 			{
+				profile.Skin = new Skin();
 				if (alex.Resources.ResourcePack.TryGetBitmap("entity/alex", out var rawTexture))
 				{
 					profile.Skin.Texture = TextureUtils.BitmapToTexture2D(alex.GraphicsDevice, rawTexture);
