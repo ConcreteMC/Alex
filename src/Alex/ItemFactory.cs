@@ -95,18 +95,29 @@ namespace Alex
 				    item.DisplayName = data.displayName;
 			    }
 
-			    
-			    foreach (var it in ResourcePack.ItemModels)
+
+			    ResourcePackItem rpItem = ResourcePack.ItemModels.FirstOrDefault(x =>
+				    x.Key.Equals(entry.Key, StringComparison.InvariantCultureIgnoreCase)).Value;
+
+			    if (rpItem == null)
 			    {
-				    if (it.Key.Contains(entry.Key.Replace("minecraft:", ""),
-					    StringComparison.InvariantCultureIgnoreCase))
+				    foreach (var it in ResourcePack.ItemModels)
 				    {
-					    item.Renderer = new ItemBlockModelRenderer(bs, it.Value, resourcePack, resources);
-					    item.Renderer.Cache(resourcePack);
-					    break;
+					    if (it.Key.Contains(entry.Key.Replace("minecraft:", ""),
+						    StringComparison.InvariantCultureIgnoreCase))
+					    {
+						    rpItem = it.Value;
+						    break;
+					    }
 				    }
 			    }
 
+			    if (rpItem != null)
+			    {
+				    item.Renderer = new ItemBlockModelRenderer(bs, rpItem, resourcePack, resources);
+				    item.Renderer.Cache(resourcePack);
+			    }
+			    
 			    items.TryAdd(entry.Key, () =>
 			    {
 				    return item.Clone();

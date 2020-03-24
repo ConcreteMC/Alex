@@ -106,12 +106,19 @@ namespace Alex.Graphics.Models.Entity
 					var poly = polys[i];
 					foreach (var p in poly)
 					{
-						var pos = positions[p[0]];
-						var normal = normals[p[1]];
-						var uv = uvs[p[2]];
-						
-						vertices.Add(new VertexPositionNormalTexture(pos, normal, uv));
-						indices.Add((short) (vertices.Count - 1));
+						if (p.Length == 3)
+						{
+							var pos = positions[p[0]];
+							var normal = normals[p[1]];
+							var uv = uvs[p[2]];
+
+							vertices.Add(new VertexPositionNormalTexture(pos, normal, uv));
+							indices.Add((short) (vertices.Count - 1));
+						}
+						else
+						{
+							
+						}
 					}
 				}
 					

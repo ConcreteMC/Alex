@@ -134,7 +134,7 @@ namespace Alex.Worlds
 
         public bool HasBlock(int x, int y, int z)
         {
-            return false;
+            return true;
         }
 
         public BlockCoordinates FindBlockPosition(BlockCoordinates coords, out IChunkColumn chunk)
