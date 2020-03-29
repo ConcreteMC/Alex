@@ -964,21 +964,21 @@ namespace Alex.Worlds.Bedrock
 			{
 				//state = FixFacing(state, meta);
 				
-				state = ((BlockState)state).WithPropertyNoResolve("half", (meta & 0x04) == 0x04 ? "top" : "bottom");
+				state = state.WithProperty("half", (meta & 0x04) == 0x04 ? "top" : "bottom");
 				
 				switch (meta & ~0x04)
 				{
 					case 0:
-						state = state.WithProperty(facing, "east", false, "waterlogged", "shape", "half");
+						state = state.WithProperty(facing, "east");
 						break;
 					case 1:
-						state = state.WithProperty(facing, "west", false, "waterlogged", "shape", "half");
+						state = state.WithProperty(facing, "west");
 						break;
 					case 2:
-						state = state.WithProperty(facing, "south", false, "waterlogged", "shape", "half");
+						state = state.WithProperty(facing, "south");
 						break;
 					case 3:
-						state = state.WithProperty(facing, "north", false, "waterlogged", "shape", "half");
+						state = state.WithProperty(facing, "north");
 						break;
 				}
 			}
