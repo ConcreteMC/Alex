@@ -964,8 +964,6 @@ namespace Alex.Worlds.Bedrock
 			{
 				//state = FixFacing(state, meta);
 				
-				state = state.WithProperty("half", (meta & 0x04) == 0x04 ? "top" : "bottom");
-				
 				switch (meta & ~0x04)
 				{
 					case 0:
@@ -981,6 +979,8 @@ namespace Alex.Worlds.Bedrock
 						state = state.WithProperty(facing, "north");
 						break;
 				}
+				
+				state = state.WithProperty("half", (meta & 0x04) == 0x04 ? "top" : "bottom");
 			}
 			else if (bid == 96 || bid == 167 || state.Name.Contains("trapdoor")) //Trapdoors
 			{
