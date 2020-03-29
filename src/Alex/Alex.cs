@@ -199,6 +199,9 @@ namespace Alex
 
 		protected override void LoadContent()
 		{
+			var options = Services.GetService<IOptionsProvider>();
+			options.Load();
+			
 			var fontStream = Assembly.GetEntryAssembly().GetManifestResourceStream("Alex.Resources.DebugFont.xnb");
 			
 			DebugFont = (WrappedSpriteFont) Content.Load<SpriteFont>(fontStream.ReadAllBytes());
@@ -209,9 +212,21 @@ namespace Alex
 			GuiRenderer = new GuiRenderer();
 			//GuiRenderer.Init(GraphicsDevice);
 			
-			GuiManager = new GuiManager(this, Services, InputManager, GuiRenderer);
+			GuiManager = new GuiManager(this, Services, InputManager, GuiRenderer, options);
 			GuiManager.Init(GraphicsDevice, Services);
+
+			options.AlexOptions.VideoOptions.UseVsync.Bind((value, newValue) => { SetVSync(newValue); });
+			if (options.AlexOptions.VideoOptions.UseVsync.Value)
+			{
+				SetVSync(true);
+			}
 			
+			options.AlexOptions.VideoOptions.Fullscreen.Bind((value, newValue) => { SetFullscreen(newValue); });
+			if (options.AlexOptions.VideoOptions.Fullscreen.Value)
+			{
+				SetFullscreen(true);
+			}
+
 			GuiDebugHelper = new GuiDebugHelper(GuiManager);
 
 			OnCharacterInput += GuiManager.FocusManager.OnTextInput;
@@ -362,25 +377,7 @@ namespace Alex
 				eventDispatcher.LoadFrom(assembly);
 			
 			var options = Services.GetService<IOptionsProvider>();
-			options.Load();
-			
-			options.AlexOptions.VideoOptions.UseVsync.Bind((value, newValue) => { SetVSync(newValue); });
-			if (options.AlexOptions.VideoOptions.UseVsync.Value)
-			{
-				SetVSync(true);
-			}
-			
-			options.AlexOptions.VideoOptions.Fullscreen.Bind((value, newValue) => { SetFullscreen(newValue); });
-			if (options.AlexOptions.VideoOptions.Fullscreen.Value)
-			{
-				SetFullscreen(true);
-			}
 
-			options.AlexOptions.VideoOptions.GuiScale.Bind((value, newValue) =>
-				{
-					GuiManager.ScaledResolution.GuiScale = value;
-				});
-			
 			string pluginDirectoryPaths = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
 
             var pluginDir = options.AlexOptions.ResourceOptions.PluginDirectory;

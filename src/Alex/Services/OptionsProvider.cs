@@ -16,16 +16,20 @@ namespace Alex.Services
 
         private readonly IStorageSystem _storage;
 
+        private bool _optionsLoaded = false;
         public OptionsProvider(IStorageSystem storage)
         {
             _storage = storage;
             AlexOptions = new AlexOptions();
 
-            Load();
+            //Load();
         }
 
         public void Load()
         {
+            if (_optionsLoaded)
+                return;
+            
             if (_storage.TryRead(StorageKey, out AlexOptions options))
             {
                 AlexOptions = options;
@@ -34,13 +38,18 @@ namespace Alex.Services
             {
                 Log.Warn($"Could not read from storage.");
             }
+            
+            _optionsLoaded = true;
         }
 
         public void Save()
         {
+            if (!_optionsLoaded)
+                return;
+            
             if (!_storage.TryWrite(StorageKey, AlexOptions))
             {
-                
+                Log.Warn($"Could not save settings.");
             }
         }
 

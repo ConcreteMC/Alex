@@ -7,25 +7,25 @@ namespace Alex.API.Data.Options
     public class VideoOptions : OptionsBase
     {
         [DataMember]
-        public OptionsProperty<int> RenderDistance { get; }
+        public OptionsProperty<int> RenderDistance { get; set; }
         
         [DataMember]
-        public OptionsProperty<bool> UseVsync { get; }
+        public OptionsProperty<bool> UseVsync { get; set; }
         
         [DataMember]
-        public OptionsProperty<bool> Fullscreen { get; }
+        public OptionsProperty<bool> Fullscreen { get; set; }
         
         [DataMember]
-        public OptionsProperty<int> GuiScale { get; }
+        public OptionsProperty<int> GuiScale { get; set; }
         
         [DataMember]
-        public OptionsProperty<int> ChunkThreads { get; }
+        public OptionsProperty<int> ChunkThreads { get; set; }
 
         [DataMember]
-        public OptionsProperty<int> MaxFramerate { get; }
+        public OptionsProperty<int> MaxFramerate { get; set; }
         
         [DataMember]
-        public OptionsProperty<int> Brightness { get; }
+        public OptionsProperty<int> Brightness { get; set; }
         
         public VideoOptions()
         {

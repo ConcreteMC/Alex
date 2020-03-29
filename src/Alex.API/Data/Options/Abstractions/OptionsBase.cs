@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Microsoft.Xna.Framework;
@@ -62,6 +63,11 @@ namespace Alex.API.Data.Options
         public void SetValue(object obj)
         {
             
+        }
+
+        public Type PropertyType
+        {
+            get { return null; }
         }
 
         #endregion

@@ -6,13 +6,13 @@ namespace Alex.API.Data.Options
     public class SoundOptions : OptionsBase
     {
         [DataMember]
-        public OptionsProperty<float> GlobalVolume { get; }
+        public OptionsProperty<float> GlobalVolume { get; set; }
 
         [DataMember]
-        public OptionsProperty<float> MusicVolume { get; }
+        public OptionsProperty<float> MusicVolume { get; set; }
 
         [DataMember]
-        public OptionsProperty<float> SoundEffectsVolume { get; }
+        public OptionsProperty<float> SoundEffectsVolume { get; set; }
 
 
         public SoundOptions()

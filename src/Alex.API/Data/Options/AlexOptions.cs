@@ -6,19 +6,19 @@ namespace Alex.API.Data.Options
     public class AlexOptions : OptionsBase
     {
         [DataMember]
-        public OptionsProperty<int> FieldOfVision { get; }
+        public OptionsProperty<int> FieldOfVision { get; set; }
         
         [DataMember]
-        public VideoOptions VideoOptions { get; }
+        public VideoOptions VideoOptions { get; set; }
 
         [DataMember]
-        public SoundOptions SoundOptions { get; }
+        public SoundOptions SoundOptions { get; set; }
         
         [DataMember]
-        public ResourceOptions ResourceOptions { get; }
+        public ResourceOptions ResourceOptions { get; set; }
         
         [DataMember]
-        public MiscelaneousOptions MiscelaneousOptions { get; }
+        public MiscelaneousOptions MiscelaneousOptions { get; set; }
 
         public AlexOptions()
         {
