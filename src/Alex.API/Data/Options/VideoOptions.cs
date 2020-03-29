@@ -13,6 +13,9 @@ namespace Alex.API.Data.Options
         public OptionsProperty<bool> UseVsync { get; set; }
         
         [DataMember]
+        public OptionsProperty<bool> LimitFramerate { get; set; }
+        
+        [DataMember]
         public OptionsProperty<bool> Fullscreen { get; set; }
         
         [DataMember]
@@ -36,6 +39,8 @@ namespace Alex.API.Data.Options
             ChunkThreads = DefineRangedProperty(Environment.ProcessorCount / 2, 1, Environment.ProcessorCount);
             MaxFramerate = DefineRangedProperty(60, 1, 999);
             Brightness = DefineRangedProperty(50, 0, 100);
+
+            LimitFramerate = DefineProperty(false);
         }
     }
 }

@@ -227,6 +227,21 @@ namespace Alex
 				SetFullscreen(true);
 			}
 
+			options.AlexOptions.VideoOptions.LimitFramerate.Bind((value, newValue) =>
+				{
+					SetFrameRateLimiter(newValue, options.AlexOptions.VideoOptions.MaxFramerate.Value);
+				});
+
+			options.AlexOptions.VideoOptions.MaxFramerate.Bind((value, newValue) =>
+				{
+					SetFrameRateLimiter(options.AlexOptions.VideoOptions.LimitFramerate.Value, newValue);
+				});
+
+			if (options.AlexOptions.VideoOptions.LimitFramerate.Value)
+			{
+				SetFrameRateLimiter(true, options.AlexOptions.VideoOptions.MaxFramerate.Value);
+			}
+			
 			GuiDebugHelper = new GuiDebugHelper(GuiManager);
 
 			OnCharacterInput += GuiManager.FocusManager.OnTextInput;
@@ -242,6 +257,15 @@ namespace Alex
 			ThreadPool.QueueUserWorkItem(() => { InitializeGame(splash); });
 		}
 
+		private void SetFrameRateLimiter(bool enabled, int frameRateLimit)
+		{
+			UIThreadQueue.Enqueue(() =>
+			{
+				base.IsFixedTimeStep = enabled;
+				base.TargetElapsedTime = TimeSpan.FromSeconds(1d /  frameRateLimit);
+			});
+		}
+		
 		private void SetVSync(bool enabled)
 		{
 			UIThreadQueue.Enqueue(() =>

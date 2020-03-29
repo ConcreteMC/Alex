@@ -73,9 +73,9 @@ namespace Alex.API.Gui
 
           //  DebugHelper = new GuiDebugHelper(this);
 
-          optionsProvider.AlexOptions.VideoOptions.GuiScale.Bind((value, oldValue) =>
+          optionsProvider.AlexOptions.VideoOptions.GuiScale.Bind((value, newValue) =>
               {
-                  ScaledResolution.GuiScale = value;
+                  ScaledResolution.GuiScale = newValue;
               });
         }
 
