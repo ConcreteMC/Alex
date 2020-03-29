@@ -74,10 +74,10 @@ namespace Alex.API.Graphics.Typography
         public Vector2 MeasureString(string text, Vector2 scale)
         {
             MeasureString(text, out var size);
-            return size * scale;
+            return (size * (scale));
         }
 
-        public void MeasureString(string text, out Vector2 size)
+        private void MeasureString(string text, out Vector2 size)
         {
             if (string.IsNullOrEmpty(text))
             {
@@ -158,8 +158,8 @@ namespace Alex.API.Graphics.Typography
                        // offset.X += CharacterSpacing;
 	                    firstGlyphOfLine = false;
 					}
-
-                    offset.X += glyph.Width + (styleBold ? 1 : 0) + CharacterSpacing;
+ 
+                    offset.X += (glyph.Width) + (styleBold ? 1 : 0) + CharacterSpacing;
 
                     finalLineHeight = Math.Max(finalLineHeight, glyph.Height);
                     width           = Math.Max(width, offset.X);
@@ -404,6 +404,8 @@ namespace Alex.API.Graphics.Typography
                 // Scan the grid cell by pixel column, to determine the
                 // width of the characters.
                 int width = 0;
+                int height = 0;
+                
                 bool columnIsEmpty = true;
                 for (int x = cellWidth-1; x >= 0; x--)
                 {
@@ -415,6 +417,8 @@ namespace Alex.API.Graphics.Typography
                         if (textureData[(textureWidth * (row * cellHeight + y)) + (col * cellWidth + x)].A != 0)
                         {
                             columnIsEmpty = false;
+                            if (y > height)
+	                            height = y;
                         }
                     }
 
@@ -428,8 +432,11 @@ namespace Alex.API.Graphics.Typography
                 
                 
                 var charWidth = (int) (0.5d + (width * (8.0f / cellWidth)) + 1);
-
+                var charHeight = (int) (0.5d + (height * (8.0f / cellHeight)) + 1);
+                
                 ++width;
+                ++height;
+                
                 var bounds = new Rectangle(col * cellWidth, row * cellHeight, width, cellHeight);
                 var textureSlice = Texture.Slice(bounds);
 
@@ -440,7 +447,7 @@ namespace Alex.API.Graphics.Typography
 		            charWidth = 4;
 	            }
 
-				var glyph = new Glyph(character, textureSlice, charWidth, cellHeight);
+				var glyph = new Glyph(character, textureSlice, charWidth, charHeight);
 
                 Debug.WriteLine($"BitmapFont Glyph Loaded: {glyph}");
                 Glyphs[character] = glyph;
@@ -448,7 +455,7 @@ namespace Alex.API.Graphics.Typography
             }
 
             //Glyphs = glyphs;
-            DefaultGlyph = Glyphs.FirstOrDefault().Value;//  new Glyph('\x0000',Texture.Slice(0, 0, 0, 0), 8, 0);
+            DefaultGlyph = new Glyph('\x0000',Texture.Slice(0, 0, 0, 0), 8, 0);
 
             _isInitialised = true;
         }

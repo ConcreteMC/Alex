@@ -88,6 +88,7 @@ namespace Alex.API.Utils
 					var g = data[i + 1];
 					var b = data[i + 2];
 					var a = data[i + 3];
+
 					imgData[idx++] = (uint) ((a << 24) | (r << 16) | (g << 8) | b);
 				}
 			}
