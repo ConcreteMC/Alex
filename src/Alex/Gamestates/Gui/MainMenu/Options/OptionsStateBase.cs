@@ -35,6 +35,8 @@ namespace Alex.GameStates.Gui.MainMenu.Options
                 Anchor = Alignment.TopFill,
 				Modern = false
             });
+
+            Body.ChildAnchor = Alignment.MiddleCenter;
             
             Background = new GuiTexture2D(_skyBox, TextureRepeatMode.Stretch);
         }
