@@ -28,7 +28,7 @@ namespace Alex.API.Gui.Elements.Controls
             }
         }
 
-        public string DisplayFormat { get; set; }
+        public ValueFormatter<TValue> DisplayFormat { get; set; }
 
         protected virtual bool OnValueChanged(TValue value)
         {

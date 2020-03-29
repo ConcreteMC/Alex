@@ -15,8 +15,8 @@ namespace Alex.GameStates.Gui.MainMenu.Options
             TitleTranslationKey = "options.videoTitle";
 
             AddGuiRow(CreateSlider("Render Distance: {0} chunks", o => Options.VideoOptions.RenderDistance, 2, 32, 1),
-                GuiScaleGlider = CreateSlider("GUI Scale: {0}", options => options.VideoOptions.GuiScale, 0, 3, 1));
-            
+                GuiScaleGlider = CreateSlider(v => $"GUI Scale: {((int)v == 0 ? "Auto" : v.ToString("0") )}", options => options.VideoOptions.GuiScale, 0, 3, 1));
+
             AddGuiRow(CreateSlider("Chunk Processing Threads: {0}", o => Options.VideoOptions.ChunkThreads, 1, Environment.ProcessorCount, 1), 
                 CreateSlider("Brightness: {0}%", o => Options.VideoOptions.Brightness, 0,
                     100, 1));

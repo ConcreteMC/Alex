@@ -126,7 +126,7 @@ namespace Alex.API.Gui
 
             IGuiControl newHighlightedElement = null;
 
-            if (TryGetElementAt(CursorPosition, e => e is IGuiControl c && c.Enabled, out var controlMatchingPosition))
+            if (TryGetElementAt(CursorPosition, e => e is IGuiControl c && c.IsVisible && c.Enabled, out var controlMatchingPosition))
             {
                 newHighlightedElement = controlMatchingPosition as IGuiControl;
             }
