@@ -301,13 +301,17 @@ namespace Alex.Worlds.Bedrock
 				IBufferedCipher encryptor = CipherUtilities.GetCipher("AES/CFB8/NoPadding");
 				encryptor.Init(true, new ParametersWithIV(new KeyParameter(secret), secret.Take(16).ToArray()));
 
-				Session.CryptoContext = new CryptoContext
+				/*Session.CryptoContext = new CryptoContext
 				{
 					Decryptor = decryptor,
 					Encryptor = encryptor,
 					UseEncryption = true,
 					Key = secret
-				};
+				};*/
+				Session.CryptoContext.Decryptor = decryptor;
+				Session.CryptoContext.Encryptor = encryptor;
+				Session.CryptoContext.Key = secret;
+				Session.CryptoContext.UseEncryption = true;
 
 				//Thread.Sleep(1250);
 				McpeClientToServerHandshake magic = new McpeClientToServerHandshake();

@@ -147,7 +147,8 @@ namespace Alex.API.Gui.Elements
 					size = Font.MeasureString(text, Scale);
 				}*/
 				
-	            graphics.FillRectangle(new Rectangle(RenderPosition.ToPoint(), GetSize(text, _scale).ToPoint()), Background);
+	           // graphics.FillRectangle(new Rectangle(RenderPosition.ToPoint(), GetSize(text, _scale).ToPoint()), Background);
+	            
 	            graphics.DrawString(RenderPosition, text, Font, TextColor, FontStyle, Scale, Rotation, RotationOrigin, TextOpacity);
 			}
         }

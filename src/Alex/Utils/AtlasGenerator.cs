@@ -28,6 +28,16 @@ namespace Alex.Utils
 		    
 	    }
 
+	    public void Reset()
+	    {
+		    _atlasLocations = new Dictionary<string, TextureInfo>();
+		    _animatedAtlasLocations = new Dictionary<string, TextureInfo>();
+
+		    AtlasSize = default;
+		    _frames = default;
+		    _stillFrame = default;
+	    }
+
 	    public void GenerateAtlas(GraphicsDevice device, KeyValuePair<string, Bitmap>[] bitmaps, IProgressReceiver progressReceiver)
 	    {
 		    Log.Info($"Generating texture atlas out of {bitmaps.Length} bitmaps...");

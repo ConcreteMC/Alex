@@ -13,7 +13,7 @@ namespace Alex.API.Graphics.Typography
 
         Vector2 MeasureString(string text, float scale = 1.0f);
         Vector2 MeasureString(string text, Vector2 scale);
-        void MeasureString(string text, out Vector2 size);
+        //void MeasureString(string text, out Vector2 size);
 
         void DrawString(SpriteBatch   sb, 
                         string text, 

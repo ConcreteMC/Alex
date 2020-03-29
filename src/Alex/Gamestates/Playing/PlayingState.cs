@@ -407,7 +407,7 @@ namespace Alex.GameStates.Playing
 		{
 			try
 			{
-				args.SpriteBatch.Begin(SpriteSortMode.Deferred, samplerState: SamplerState.PointClamp);
+				args.SpriteBatch.Begin(SpriteSortMode.Deferred, samplerState: SamplerState.PointClamp, blendState:BlendState.NonPremultiplied);
 
 				if (_raytracedBlock.Y > 0 && _raytracedBlock.Y < 256)
 				{

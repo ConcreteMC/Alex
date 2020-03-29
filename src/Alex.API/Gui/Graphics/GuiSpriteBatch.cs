@@ -34,13 +34,14 @@ namespace Alex.API.Gui.Graphics
 
         private bool _beginSpriteBatchAfterContext;
         private bool _hasBegun;
-
+        
         public GuiSpriteBatch(IGuiRenderer renderer, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
         {
             _renderer = renderer;
             _graphicsDevice = graphicsDevice;
             SpriteBatch = spriteBatch;
-            Context = GraphicsContext.CreateContext(_graphicsDevice, BlendState.AlphaBlend, DepthStencilState.None, RasterizerState, SamplerState.PointClamp);
+            
+            Context = GraphicsContext.CreateContext(_graphicsDevice, BlendState.NonPremultiplied, DepthStencilState.None, RasterizerState, SamplerState.PointClamp);
 
             Font = _renderer.Font;
             ScaledResolution = _renderer.ScaledResolution;
