@@ -375,6 +375,11 @@ namespace Alex
 			{
 				SetFullscreen(true);
 			}
+
+			options.AlexOptions.VideoOptions.GuiScale.Bind((value, newValue) =>
+				{
+					GuiManager.ScaledResolution.GuiScale = value;
+				});
 			
 			string pluginDirectoryPaths = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
 

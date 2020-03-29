@@ -58,7 +58,7 @@ namespace Alex.API.Gui
 			}
 		}
 
-		private int _guiScale = 1000;
+		private int _guiScale = 2;
 
 		public int GuiScale
 		{
@@ -95,7 +95,7 @@ namespace Alex.API.Gui
 			var viewportWidth  = Graphics.Viewport.Width;
 			var viewportHeight = Graphics.Viewport.Height;
 
-			CalculateScale(viewportWidth, viewportHeight, 0, TargetWidth, TargetHeight, out var scaleFactor, out var scaledWidthD, out var scaledHeightD);
+			CalculateScale(viewportWidth, viewportHeight, GuiScale, TargetWidth, TargetHeight, out var scaleFactor, out var scaledWidthD, out var scaledHeightD);
 
 			var scaledWidth  = MathHelpers.IntCeil(scaledWidthD);
 			var scaledHeight = MathHelpers.IntCeil(scaledHeightD);
