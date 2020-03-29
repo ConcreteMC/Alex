@@ -1,10 +1,10 @@
 ﻿{
   "version": "1.0.0",
   "restore": {
-    "projectUniqueName": "/home/kenny/Desktop/git/Alex/src/Tools/BeToJE/BeToJE.csproj",
+    "projectUniqueName": "/home/kenny/github/Alex/src/Tools/BeToJE/BeToJE.csproj",
     "projectName": "BeToJE",
-    "projectPath": "/home/kenny/Desktop/git/Alex/src/Tools/BeToJE/BeToJE.csproj",
-    "outputPath": "/home/kenny/Desktop/git/Alex/src/Tools/BeToJE/obj/",
+    "projectPath": "/home/kenny/github/Alex/src/Tools/BeToJE/BeToJE.csproj",
+    "outputPath": "/home/kenny/github/Alex/src/Tools/BeToJE/obj/",
     "projectStyle": "PackageReference",
     "fallbackFolders": [
       "/usr/share/dotnet/sdk/NuGetFallbackFolder"
