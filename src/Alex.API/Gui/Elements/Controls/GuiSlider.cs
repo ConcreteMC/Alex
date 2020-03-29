@@ -10,6 +10,8 @@ namespace Alex.API.Gui.Elements.Controls
 {
     public class GuiSlider : GuiControl, IValuedControl<double>
     {
+		public static readonly ValueFormatter<double> DefaultDisplayFormat = "{0:0.#}";
+        
         private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(GuiSlider));
         public event EventHandler<double> ValueChanged; 
 
@@ -48,11 +50,12 @@ namespace Alex.API.Gui.Elements.Controls
         }
 
         public GuiTextElement Label { get; private set; }
-        public string DisplayFormat { get; set; } = "{0:F2}";
+        public ValueFormatter<double> DisplayFormat { get; set; } = DefaultDisplayFormat;
 
         private double _thumbOffsetX;
         private int _thumbWidth = 10;
 
+        [Obsolete("Use DisplayFormat property instead.", true)]
         public Func<double, string> ValueFormatter { get; set; } = null;
         
         public GuiSlider()
@@ -77,16 +80,7 @@ namespace Alex.API.Gui.Elements.Controls
 
             // Background.RepeatMode = TextureRepeatMode.NoScaleCenterSlice;
 
-            AddChild(Label = new GuiAutoUpdatingTextElement(() =>
-            {
-                string val = Value.ToString();
-                if (ValueFormatter != null)
-                {
-                    val = ValueFormatter(Value);
-                }
-                
-                return string.Format(DisplayFormat, val);
-            })
+            AddChild(Label = new GuiAutoUpdatingTextElement(() => DisplayFormat?.FormatValue(Value) ?? string.Empty)
             {
                 Margin      =  Thickness.Zero,
                 Anchor      = Alignment.MiddleCenter,
@@ -127,10 +121,18 @@ namespace Alex.API.Gui.Elements.Controls
 
         private void SetValueFromCursor(Point relativePosition)
         {
-            var percentageClicked = relativePosition.X / (float)RenderBounds.Width;
+            var halfThumb = _thumbWidth / 2f;
+
+            float percentageClicked = 0f;
+            if (relativePosition.X <= halfThumb)
+                percentageClicked = 0f;
+            else if (relativePosition.X >= (RenderBounds.Width - halfThumb))
+                percentageClicked = 1f;
+            else 
+                percentageClicked = (relativePosition.X - halfThumb) / (float)(RenderBounds.Width - _thumbWidth);
 
             var diff = Math.Abs(MinValue - MaxValue);
-            Value = MinValue + diff * percentageClicked;
+            Value = MinValue + (diff * percentageClicked);
         }
 
         protected override void OnHighlightActivate()

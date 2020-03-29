@@ -11,17 +11,13 @@ namespace Alex.GameStates.Gui.MainMenu.Options
         {
             TitleTranslationKey = "options.sounds.title";
 
-            var masterSlider = CreateSlider("Master Volume: {0}", options => options.SoundOptions.GlobalVolume, 0, 1D,
+            var masterSlider = CreateSlider(v => $"Master Volume: {((int)(v * 100)).ToString(CultureInfo.InvariantCulture)}", options => options.SoundOptions.GlobalVolume, 0, 1D,
                 0.01D);
 
-            var musicSlider = CreateSlider("Music: {0}", options => options.SoundOptions.MusicVolume, 0, 1D, 0.01);
-            var effectSlider = CreateSlider("Effects: {0}", options => options.SoundOptions.SoundEffectsVolume, 0, 1D,
+            var musicSlider = CreateSlider(v => $"Music: {((int)(v * 100)).ToString(CultureInfo.InvariantCulture)}", options => options.SoundOptions.MusicVolume, 0, 1D, 0.01);
+            var effectSlider = CreateSlider(v => $"Effects: {((int)(v * 100)).ToString(CultureInfo.InvariantCulture)}", options => options.SoundOptions.SoundEffectsVolume, 0, 1D,
                 0.01);
             
-            masterSlider.ValueFormatter = Format;
-            musicSlider.ValueFormatter = Format;
-            effectSlider.ValueFormatter = Format;
-
             AddGuiRow(masterSlider);
             AddGuiRow(musicSlider, effectSlider);
         }

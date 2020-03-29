@@ -10,7 +10,7 @@ using RocketUI;
 
 namespace Alex.API.Gui.Elements.Layout
 {
-	public class GuiScrollableStackContainer : GuiStackContainer
+	public class GuiScrollableStackContainer : GuiStackContainer, IScrollable
 	{
 		private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
 		
@@ -205,14 +205,14 @@ namespace Alex.API.Gui.Elements.Layout
 
 			if (HorizontalScrollBar != null)
 			{
-				HorizontalScrollBar.Measure(new Size(widthOverride == 0 ? containerSize.Width : widthOverride,
-													 heightOverride == 0 ? containerSize.Height : heightOverride));
+				// HorizontalScrollBar.Measure(new Size(widthOverride == 0 ? containerSize.Width : widthOverride, heightOverride == 0 ? containerSize.Height : heightOverride));
+				HorizontalScrollBar.Measure(new Size(containerSize.Width, containerSize.Height));
 			}
 
 			if (VerticalScrollBar != null)
 			{
-				VerticalScrollBar.Measure(new Size(widthOverride == 0 ? containerSize.Width : widthOverride,
-												   heightOverride == 0 ? containerSize.Height : heightOverride));
+				// VerticalScrollBar.Measure(new Size(widthOverride == 0 ? containerSize.Width : widthOverride, heightOverride == 0 ? containerSize.Height : heightOverride));
+				VerticalScrollBar.Measure(new Size(containerSize.Width, containerSize.Height));
 			}
 
 			return baseVal;

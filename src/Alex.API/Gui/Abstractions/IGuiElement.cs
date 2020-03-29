@@ -56,6 +56,9 @@ namespace Alex.API.Gui
         #region Layout Engine
 
         #region Properties
+
+        [DebuggerVisible] bool IsVisible { get; set; }
+        
         [DebuggerVisible] int MinWidth  { get; set;}
         [DebuggerVisible] int MinHeight { get; set; }
         [DebuggerVisible] int MaxWidth  { get; set; }

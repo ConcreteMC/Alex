@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-
+using Alex.API.Gui.Elements.Layout;
 using Alex.API.Gui.Layout;
 using Microsoft.Xna.Framework;
 using RocketUI;
@@ -367,7 +367,10 @@ namespace Alex.API.Gui.Elements
 
             var childSize = MeasureChildren(size);
 
-            return Size.Max(size, childSize);
+            if(this is IScrollable)
+                return Size.Min(size, childSize);
+            else
+                return Size.Max(size, childSize);
         }
 
         protected Size MeasureChildren(Size availableSize)
