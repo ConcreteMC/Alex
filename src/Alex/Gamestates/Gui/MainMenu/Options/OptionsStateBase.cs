@@ -124,6 +124,7 @@ namespace Alex.GameStates.Gui.MainMenu.Options
 
             return slider;
         }
+        
         protected GuiSlider CreateSlider(string label, Func<AlexOptions, OptionsProperty<double>> optionsAccessor, double? minValue = null, double? maxValue = null, double? stepInterval = null)
         {
             var slider = CreateValuedControl<GuiSlider, double>(label, optionsAccessor);

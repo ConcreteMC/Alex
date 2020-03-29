@@ -53,13 +53,15 @@ namespace Alex.API.Gui.Elements.Controls
         private double _thumbOffsetX;
         private int _thumbWidth = 10;
 
+        public Func<double, string> ValueFormatter { get; set; } = null;
+        
         public GuiSlider()
         {
             Background = GuiTextures.ButtonDisabled;
             ThumbBackground = GuiTextures.ButtonDefault;
             ThumbHighlightBackground = GuiTextures.ButtonHover;
             
-            Background.RepeatMode = TextureRepeatMode.NoScaleCenterSlice;
+            Background.RepeatMode = TextureRepeatMode.Stretch;
             ThumbBackground.RepeatMode = TextureRepeatMode.NoScaleCenterSlice;
             ThumbHighlightBackground.RepeatMode = TextureRepeatMode.NoScaleCenterSlice;
 
@@ -68,14 +70,23 @@ namespace Alex.API.Gui.Elements.Controls
             MinHeight = 20;
 
             MaxHeight = 22;
-            MaxWidth  = 200;
+           // MaxWidth  = 200;
             //Padding = new Thickness(5, 5);
             Margin = new Thickness(2);
             Height = 20;
 
             // Background.RepeatMode = TextureRepeatMode.NoScaleCenterSlice;
 
-            AddChild(Label = new GuiAutoUpdatingTextElement(() => string.Format(DisplayFormat, Value))
+            AddChild(Label = new GuiAutoUpdatingTextElement(() =>
+            {
+                string val = Value.ToString();
+                if (ValueFormatter != null)
+                {
+                    val = ValueFormatter(Value);
+                }
+                
+                return string.Format(DisplayFormat, val);
+            })
             {
                 Margin      =  Thickness.Zero,
                 Anchor      = Alignment.MiddleCenter,
