@@ -34,6 +34,7 @@ namespace Alex.GameStates.Gui.MainMenu.Options
             TitleTranslationKey = "resourcePack.title";
             
             Body.BackgroundOverlay = new Color(Color.Black, 0.35f);
+            Body.ChildAnchor = Alignment.FillCenter;
             
             AddGuiElement(ListContainer = new GuiSelectionList()
             {
