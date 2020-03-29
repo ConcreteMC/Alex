@@ -15,15 +15,19 @@ using Alex.Blocks;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
 using Alex.Entities;
+using Alex.GameStates;
 using Alex.Gui;
 using Alex.Networking.Java;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Generic;
 using Alex.Utils;
+using GLib;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
 using NLog;
+using DateTime = System.DateTime;
+using Task = System.Threading.Tasks.Task;
 
 namespace Alex
 {
@@ -49,6 +53,20 @@ namespace Alex
 			Options = serviceProvider.GetService<IOptionsProvider>();
 			RegistryManager = serviceProvider.GetService<IRegistryManager>();
 			Alex = serviceProvider.GetService<Alex>();
+		}
+
+		private void ResourcePacksChanged(string[] oldvalue, string[] newvalue)
+		{
+			Log.Info($"Resource packs changed.");
+			
+			SplashScreen splashScreen = new SplashScreen();
+			Alex.GameStateManager.SetActiveState(splashScreen);
+
+			Task.Run(() =>
+			{
+				LoadResourcePacks(Alex.GraphicsDevice, splashScreen, newvalue);
+				Alex.GameStateManager.Back();
+			});
 		}
 
 		private static readonly string VersionFile = Path.Combine("assets", "version.txt");
@@ -311,21 +329,33 @@ namespace Alex
 
             LoadRegistries(progressReceiver);
 
-            LoadResourcePacks(device, progressReceiver);
+            LoadResourcePacks(device, progressReceiver, Options.AlexOptions.ResourceOptions.LoadedResourcesPacks.Value);
 
             ItemFactory.Init(RegistryManager, this, ResourcePack, progressReceiver);
 
+            Options.AlexOptions.ResourceOptions.LoadedResourcesPacks.Bind(ResourcePacksChanged);
+            _hasInit = true;
+            
             return true;
 		}
 
-        private void LoadResourcePacks(GraphicsDevice device, IProgressReceiver progress)
+        private bool _hasInit = false;
+        private void LoadResourcePacks(GraphicsDevice device, IProgressReceiver progress, string[] resourcePacks)
         {
-	        while (ActiveResourcePacks.Count > 1)
+	        var countBefore = ActiveResourcePacks.Count;
+	        
+	        var first = ActiveResourcePacks.First.Value;
+	        ActiveResourcePacks.Clear();
+
+	        ActiveResourcePacks.AddFirst(first);
+
+	        if (_hasInit)
 	        {
-		        ActiveResourcePacks.RemoveLast();
+		        PreloadCallback?.Invoke(first.FontBitmap, McResourcePack.BitmapFontCharacters.ToList());
+		        Atlas.Reset();
 	        }
 	        
-	        foreach (string file in Options.AlexOptions.ResourceOptions.LoadedResourcesPacks.Value)
+	        foreach (string file in resourcePacks)
 	        {
 		        try
 		        {
