@@ -885,26 +885,36 @@ namespace Alex.Worlds.Bedrock
 			} 
 			else if (bid == 77 || bid == 143) //Buttons
 			{
-				switch (meta & ~0x08)
-				{
-					case 0:
-					case 4:
-						state = state.WithProperty(facing, "west");
-						break;
-					case 1:
-					case 5:
-						state = state.WithProperty(facing, "east");
-						break;
-					case 6:
-					case 2:
-						state = state.WithProperty(facing, "north");
-						break;
-					case 7:
-					case 3:
-						state = state.WithProperty(facing, "south");
-						break;
-				}
+				var modifiedMeta = meta & ~0x07;
 				
+				if (modifiedMeta >= 1 && modifiedMeta <= 4)
+				{
+					state = state.WithProperty("face", "wall");
+					switch (modifiedMeta)
+					{
+						case 1:
+							state = state.WithProperty(facing, "east");
+							break;
+						case 2:
+							state = state.WithProperty(facing, "west");
+							break;
+						case 3:
+							state = state.WithProperty(facing, "south");
+							break;
+						case 4:
+							state = state.WithProperty(facing, "north");
+							break;
+					}
+				}
+				else if (modifiedMeta == 7 || modifiedMeta == 0)
+				{
+					state = state.WithProperty(facing, "north").WithProperty("face", "floor");
+				}
+				else if (modifiedMeta == 6 || modifiedMeta == 5)
+				{
+					state = state.WithProperty(facing, "north").WithProperty("face", "ceiling");
+				}
+
 				state = state.WithProperty("powered", (meta & 0x08) == 0x08 ? "true" : "false");
 			}
 			else if (bid == 69 || state.Name.Contains("lever")) //Lever
@@ -988,7 +998,7 @@ namespace Alex.Worlds.Bedrock
 				
 				if (isUpper)
 				{
-					//state = state.WithProperty("hinge", (meta & 0x01) == 0x01 ? "right" : "left");
+					state = state.WithProperty("hinge", (meta & 0x01) == 0x01 ? "right" : "left");
 					state = state.WithProperty("half", "upper");
 				}
 				else
@@ -996,14 +1006,30 @@ namespace Alex.Worlds.Bedrock
 					bool isOpen = (meta & 0x04) == 0x04;
 					state = state.WithProperty("half", "lower");
 					state = state.WithProperty("open", isOpen ? "true" : "false");
-					state = FixFacing(state, (meta & 0x3));
+					state = FixFacing(state, (meta & ~0x03));
 				}
 			}
 			else if (bid == 50) //Torch
 			{
 				if (meta >= 1 && meta <= 4)
 				{
+					state = BlockFactory.GetBlockState("minecraft:wall_torch");
 					
+					switch (meta)
+					{
+						case 1:
+							state = state.WithProperty(facing, "east");
+							break;
+						case 2:
+							state = state.WithProperty(facing, "west");
+							break;
+						case 3:
+							state = state.WithProperty(facing, "south");
+							break;
+						case 4:
+							state = state.WithProperty(facing, "north");
+							break;
+					}
 				}
 			}
 			return state;

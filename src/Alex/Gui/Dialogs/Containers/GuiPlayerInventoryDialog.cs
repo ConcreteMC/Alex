@@ -43,6 +43,8 @@ namespace Alex.Gui.Dialogs.Containers
             if(_guiHotBarInventoryItems.Length != 46) throw new ArgumentOutOfRangeException(nameof(inventory), inventory?.SlotCount ?? 0, "Expected player inventory containing 46 slots.");
 
             ContentContainer.Background = GuiTextures.InventoryPlayerBackground;
+            ContentContainer.BackgroundOverlay = null;
+            
             ContentContainer.Width = ContentContainer.MinWidth = ContentContainer.MaxWidth = 176;
             ContentContainer.Height = ContentContainer.MinHeight = ContentContainer.MaxHeight = 166;
             
@@ -50,7 +52,7 @@ namespace Alex.Gui.Dialogs.Containers
             
             ContentContainer.AutoSizeMode = AutoSizeMode.None;
 
-            AddChild(_debug = new GuiAutoUpdatingTextElement(() =>
+           /* AddChild(_debug = new GuiAutoUpdatingTextElement(() =>
             {
                 if (base.GuiRenderer == null) return "";
                 
@@ -62,7 +64,7 @@ namespace Alex.Gui.Dialogs.Containers
                 Background = new Color(Color.Black, 0.35f),
                 Anchor = Alignment.TopCenter,
                 Margin = new Thickness(0, 0, 0, 200)
-            });
+            });*/
 
             var texture = player.ModelRenderer.Texture;
             if (texture == null)

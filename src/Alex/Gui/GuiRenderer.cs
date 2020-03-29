@@ -45,6 +45,7 @@ namespace Alex.Gui
 		private Texture2D _widgets;
 		private Texture2D _icons;
 		private Texture2D _scrollbar;
+		private Texture2D _inventory;
 
 		#region SpriteSheet Definitions
 
@@ -207,11 +208,10 @@ namespace Alex.Gui
 			{
 				progressReceiver?.UpdateProgress(0, null, "gui/container/inventory");
 				
-				Texture2D containerSprite;
 				if (resourcePack.TryGetBitmap("gui/container/inventory", out var bmp))
 				{
-					containerSprite = TextureUtils.BitmapToTexture2D(_graphicsDevice, bmp);
-					LoadTextureFromSpriteSheet(GuiTextures.InventoryPlayerBackground, containerSprite, new Rectangle(0, 0, 176, 166), IconSize);
+					_inventory = TextureUtils.BitmapToTexture2D(_graphicsDevice, bmp);
+					LoadTextureFromSpriteSheet(GuiTextures.InventoryPlayerBackground, _inventory, new Rectangle(0, 0, 176, 166), IconSize);
 				}
 			}
 
