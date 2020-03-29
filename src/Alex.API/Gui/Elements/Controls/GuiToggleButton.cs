@@ -34,7 +34,9 @@ namespace Alex.API.Gui.Elements.Controls
 		            ValueChanged?.Invoke(this, _value);
 					OnCheckedChanged();
 				}
-			}
+
+	            Text = string.Format(DisplayFormat, value);
+            }
         }
 
 	    public string DisplayFormat { get; set; }
