@@ -307,7 +307,8 @@ namespace Alex.Worlds.Bedrock
 				//MiNET.Player
 				mob.EntityId = message.runtimeEntityId;
 				mob.KnownPosition = new PlayerLocation(message.x, message.y, message.z, message.headYaw, message.yaw, message.pitch);
-
+				mob.Velocity = new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ) * 20f;
+				
 				foreach (var meta in message.metadata.GetValues())
 				{
 					switch ((MiNET.Entities.Entity.MetadataFlags) meta.Identifier)
@@ -562,7 +563,7 @@ namespace Alex.Worlds.Bedrock
 			var type = message.entityType.Replace("minecraft:", "");
             if (Enum.TryParse(typeof(EntityType), type, true, out object res))
             {
-                SpawnMob(message.runtimeEntityId, Guid.NewGuid(), (EntityType)res, new PlayerLocation(message.x, message.y, message.z, message.headYaw, message.yaw, message.pitch), new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ));
+                SpawnMob(message.runtimeEntityId, Guid.NewGuid(), (EntityType)res, new PlayerLocation(message.x, message.y, message.z, message.headYaw, message.yaw, message.pitch), new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ) * 20f);
                 _entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
             }
             else
@@ -589,10 +590,11 @@ namespace Alex.Worlds.Bedrock
 			{
 				item.Count = slot.Count;
 				item.Nbt = slot.ExtraData;
-                    
-				
+
 				ItemEntity itemEntity = new ItemEntity(null, Client);
 				itemEntity.EntityId = message.runtimeEntityId;
+				itemEntity.Velocity = new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ) * 20f;
+				
 				itemEntity.SetItem(item);
 			
 				WorldProvider.SpawnEntity(message.runtimeEntityId, itemEntity);
@@ -606,6 +608,23 @@ namespace Alex.Worlds.Bedrock
 		public void HandleMcpeTakeItemEntity(McpeTakeItemEntity message)
 		{
 			UnhandledPackage(message);
+			return;
+			if (Client.WorldReceiver.TryGetEntity(message.runtimeEntityId, out IEntity itemEntity))
+			{
+				IEntity target = null;
+				if (!Client.WorldReceiver.TryGetEntity(message.target, out target))
+				{
+					var player = Client.WorldReceiver.GetPlayerEntity();
+					if (player.EntityId == message.target)
+						target = player;
+				}
+
+				if (target != null)
+				{
+					var distance = itemEntity.KnownPosition.ToVector3() - (target.KnownPosition.ToVector3() + new Microsoft.Xna.Framework.Vector3(0f, (float)target.Height, 0f));
+					itemEntity.Velocity = distance * 20f;
+				}
+			}
 		}
 
 		public void HandleMcpeMoveEntity(McpeMoveEntity message)
@@ -917,18 +936,22 @@ namespace Alex.Worlds.Bedrock
 		{
 			var v = message.velocity;
 			var velocity = new Microsoft.Xna.Framework.Vector3(v.X, v.Y, v.Z) * 20f;
+
+			IEntity entity = null;
+			if (!Client.WorldReceiver.TryGetEntity(message.runtimeEntityId, out entity))
+			{
+				if (Client.WorldReceiver.GetPlayerEntity() is Player player &&
+				    player.EntityId == message.runtimeEntityId)
+				{
+					entity = player;
+				}
+			}
+
+			if (entity == null)
+				return;
 			
-			if (Client.WorldReceiver.TryGetEntity(message.runtimeEntityId, out IEntity entity))
-			{
-				var old = entity.Velocity;
-				entity.Velocity += new Microsoft.Xna.Framework.Vector3(velocity.X - old.X, velocity.Y - old.Y, velocity.Z - old.Z);
-			}
-			else if (Client.WorldReceiver.GetPlayerEntity() is Player player &&
-			         player.EntityId == message.runtimeEntityId)
-			{
-				var old = player.Velocity;
-				player.Velocity += new Microsoft.Xna.Framework.Vector3(velocity.X - old.X, velocity.Y - old.Y, velocity.Z - old.Z);
-			}
+			var old = entity.Velocity;
+			entity.Velocity += new Microsoft.Xna.Framework.Vector3(velocity.X - old.X, velocity.Y - old.Y, velocity.Z - old.Z);
 
 			//UnhandledPackage(message);
 		}
