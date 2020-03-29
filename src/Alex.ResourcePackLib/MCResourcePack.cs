@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using Alex.API.Graphics;
 using Alex.API.Graphics.Typography;
 using Alex.API.Utils;
+using Alex.ResourcePackLib.Generic;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.BlockStates;
 using Alex.ResourcePackLib.Json.Models.Blocks;
@@ -19,7 +20,7 @@ using MathHelper = Microsoft.Xna.Framework.MathHelper;
 
 namespace Alex.ResourcePackLib
 {
-	public class McResourcePack : IDisposable
+	public class McResourcePack : ResourcePack, IDisposable
 	{
 		public delegate void McResourcePackPreloadCallback(Bitmap fontBitmap, List<char> bitmapFontCharacters);
 		
@@ -50,6 +51,7 @@ namespace Alex.ResourcePackLib
 		public IReadOnlyDictionary<string, LanguageResource>   Languages		 => _languageCache;
 		
 		public ResourcePackInfo Info { get; private set; }
+		public ResourcePackManifest Manifest { get; set; } = null;
 
 		//public IFont Font { get; private set; }
 		
@@ -106,7 +108,9 @@ namespace Alex.ResourcePackLib
 			}
 
 			if (IsLoaded) return;
-
+			
+			Manifest = GetManifest(archive, ResourcePackType.Java);
+			
 			Dictionary<string, BlockModel> models = new Dictionary<string, BlockModel>();
 			Dictionary<string, ResourcePackItem> items = new Dictionary<string, ResourcePackItem>();
 

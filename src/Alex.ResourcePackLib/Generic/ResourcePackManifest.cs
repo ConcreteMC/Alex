@@ -21,7 +21,7 @@ namespace Alex.ResourcePackLib.Generic
 		    }
 	    }
 
-	    public string Name { get; }
+	    public string Name { get; set; }
 		public string Description { get; }
 		public Bitmap Icon { get; }
 

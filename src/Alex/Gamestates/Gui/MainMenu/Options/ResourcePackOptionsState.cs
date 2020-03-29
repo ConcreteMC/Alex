@@ -93,6 +93,11 @@ namespace Alex.GameStates.Gui.MainMenu.Options
 
             if (!selected.IsLoaded)
             {
+                base.Options.ResourceOptions.LoadedResourcesPacks.SetValue(base.Options.ResourceOptions.LoadedResourcesPacks.Value.Concat(new string[]
+                {
+                    selected.Path
+                }).ToArray());
+                
                 selected.SetLoaded(true);
                 _loadBtn.Enabled = false;
             }

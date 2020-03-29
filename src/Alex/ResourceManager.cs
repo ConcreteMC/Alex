@@ -15,6 +15,7 @@ using Alex.Blocks;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
 using Alex.Entities;
+using Alex.Gui;
 using Alex.Networking.Java;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Generic;
@@ -39,6 +40,7 @@ namespace Alex
 		private IStorageSystem Storage { get; }
 		private IOptionsProvider Options { get; }
 		private IRegistryManager RegistryManager { get; }
+		private Alex Alex { get; }
 		public ResourceManager(IServiceProvider serviceProvider)
 		{
 			Atlas = new AtlasGenerator();
@@ -46,6 +48,7 @@ namespace Alex
 
 			Options = serviceProvider.GetService<IOptionsProvider>();
 			RegistryManager = serviceProvider.GetService<IRegistryManager>();
+			Alex = serviceProvider.GetService<Alex>();
 		}
 
 		private static readonly string VersionFile = Path.Combine("assets", "version.txt");
@@ -166,6 +169,8 @@ namespace Alex
         private void LoadTextures(GraphicsDevice device, IProgressReceiver progressReceiver,
             McResourcePack resourcePack, bool isFirst)
         {
+	        progressReceiver.UpdateProgress(0, $"Loading textures: {resourcePack.Manifest?.Name ?? "Unknown"}");
+	        
             if (!isFirst)
             {
                 Atlas.LoadResourcePackOnTop(device, ActiveResourcePacks.First().TexturesAsBitmaps.Where(x => x.Key.StartsWith("block")).ToArray(), resourcePack.TexturesAsBitmaps.Where(x => x.Key.StartsWith("block")).ToArray(),
@@ -178,6 +183,12 @@ namespace Alex
 
 
                 //Atlas.Atlas.Save("atlas.png", ImageFormat.Png);
+            }
+
+          //  if (!isFirst)
+            {
+	            progressReceiver.UpdateProgress(0, $"Loading UI textures: {resourcePack.Manifest?.Name ?? "Unknown"}");
+	            Alex.GuiRenderer.LoadResourcePackTextures(resourcePack, progressReceiver);
             }
         }
 
@@ -216,8 +227,10 @@ namespace Alex
 		}
         
         public DirectoryInfo ResourcePackDirectory { get; private set; } = null;
+        private  McResourcePack.McResourcePackPreloadCallback PreloadCallback { get; set; }
         public bool CheckResources(GraphicsDevice device, IProgressReceiver progressReceiver, McResourcePack.McResourcePackPreloadCallback preloadCallback)
-		{
+        {
+	        PreloadCallback = preloadCallback;
 			byte[] defaultResources;
 
 			if (!CheckRequiredPaths(out defaultResources))
@@ -233,7 +246,10 @@ namespace Alex
             Log.Info($"Loading vanilla resources...");
 			using (MemoryStream stream = new MemoryStream(defaultResources))
 			{
-				ActiveResourcePacks.AddFirst(LoadResourcePack(progressReceiver, stream, preloadCallback));
+				var vanilla = LoadResourcePack(progressReceiver, stream, preloadCallback);
+				vanilla.Manifest.Name = "Vanilla";
+				
+				ActiveResourcePacks.AddFirst(vanilla);
 			}
 
 			var bedrockPath = Path.Combine("assets", "bedrock");
@@ -292,51 +308,68 @@ namespace Alex
 
             Storage.TryGetDirectory(Path.Combine("assets", "resourcepacks"), out DirectoryInfo root);
             ResourcePackDirectory = root;
-            
-            foreach (string file in Options.AlexOptions.ResourceOptions.LoadedResourcesPacks.Value)
-			{
-				try
-				{
-					string resourcePackPath = Path.Combine(root.FullName, file);
-					if (File.Exists(resourcePackPath))
-					{
-						Log.Info($"Loading resourcepack {file}...");
-
-						using (FileStream stream = new FileStream(resourcePackPath, FileMode.Open))
-						{
-							ActiveResourcePacks.AddLast(LoadResourcePack(progressReceiver, stream, null));
-						}
-					}
-				}
-				catch (Exception e)
-				{
-					Log.Warn(e, $"Could not load resourcepack {file}: {e.ToString()}");
-				}
-			}
 
             LoadRegistries(progressReceiver);
-            
-            bool isFirst = true;
-            foreach (var resourcePack in ActiveResourcePacks)
-            {
-                LoadTextures(device, progressReceiver, resourcePack, isFirst);
 
-                if (isFirst)
-                    isFirst = false;
-            }
+            LoadResourcePacks(device, progressReceiver);
 
-            isFirst = true;
-            foreach (var resourcePack in ActiveResourcePacks)
-            {
-                LoadModels(progressReceiver, resourcePack, true, isFirst);
-                if (isFirst)
-                    isFirst = false;
-            }
-            
             ItemFactory.Init(RegistryManager, this, ResourcePack, progressReceiver);
 
             return true;
 		}
+
+        private void LoadResourcePacks(GraphicsDevice device, IProgressReceiver progress)
+        {
+	        while (ActiveResourcePacks.Count > 1)
+	        {
+		        ActiveResourcePacks.RemoveLast();
+	        }
+	        
+	        foreach (string file in Options.AlexOptions.ResourceOptions.LoadedResourcesPacks.Value)
+	        {
+		        try
+		        {
+			        string resourcePackPath = Path.Combine(ResourcePackDirectory.FullName, file);
+			        if (File.Exists(resourcePackPath))
+			        {
+				        Log.Info($"Loading resourcepack {file}...");
+
+				        using (FileStream stream = new FileStream(resourcePackPath, FileMode.Open))
+				        {
+					        var pack = LoadResourcePack(progress, stream, PreloadCallback);
+					        if (pack.Manifest != null && string.IsNullOrWhiteSpace(pack.Manifest.Name))
+					        {
+						        pack.Manifest.Name = Path.GetFileNameWithoutExtension(file);
+					        }
+					        ActiveResourcePacks.AddLast(pack);
+				        }
+			        }
+		        }
+		        catch (Exception e)
+		        {
+			        Log.Warn(e, $"Could not load resourcepack {file}: {e.ToString()}");
+		        }
+	        }
+	        
+	        bool isFirst = true;
+	        foreach (var resourcePack in ActiveResourcePacks)
+	        {
+		        Alex.GuiRenderer.LoadLanguages(resourcePack, progress);
+		        
+		        LoadTextures(device, progress, resourcePack, isFirst);
+
+		        if (isFirst)
+			        isFirst = false;
+	        }
+
+	        isFirst = true;
+	        foreach (var resourcePack in ActiveResourcePacks)
+	        {
+		        LoadModels(progress, resourcePack, true, isFirst);
+		        if (isFirst)
+			        isFirst = false;
+	        }
+        }
         
         private void LoadRegistries(IProgressReceiver progress)
         {

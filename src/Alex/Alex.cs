@@ -442,7 +442,7 @@ namespace Alex
 				return;
 			}
 			
-			GuiRenderer.LoadResourcePack(Resources.ResourcePack);
+			//GuiRenderer.LoadResourcePack(Resources.ResourcePack, null);
 			AnvilWorldProvider.LoadBlockConverter();
 
 			PluginManager.EnablePlugins();
@@ -473,6 +473,7 @@ namespace Alex
 
 		private void OnResourcePackPreLoadCompleted(Bitmap fontBitmap, List<char> bitmapCharacters)
 		{
+			var scalar = fontBitmap.Width / 128;
 			Font = new BitmapFont(GraphicsDevice, fontBitmap, 16, bitmapCharacters);
 
 			GuiManager.ApplyFont(Font);

@@ -227,7 +227,7 @@ namespace Alex.Utils
 			    count++;
 
 			    double percentage = 100D * ((double)processed / (double)total);
-			    progressReceiver.UpdateProgress((int)percentage, "Stitching textures...", key);
+			    progressReceiver.UpdateProgress((int)percentage, null, key);
 
                 var sourceRegion = new System.Drawing.Rectangle(0, 0, bm.Value.Width, bm.Value.Height);
 			    var targetRegion = new System.Drawing.Rectangle(xi, yi, bm.Value.Width, bm.Value.Height);
