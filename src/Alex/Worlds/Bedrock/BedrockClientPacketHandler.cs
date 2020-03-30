@@ -979,6 +979,11 @@ namespace Alex.Worlds.Bedrock
 
 			
 			//		Client.SpawnPoint = new Vector3(message.);
+
+			if (Client.WorldReceiver is World w)
+			{
+				w.SpawnPoint = new Microsoft.Xna.Framework.Vector3(Client.SpawnPoint.X, Client.SpawnPoint.Y, Client.SpawnPoint.Z);
+			}
 		}
 
 		public void HandleMcpeAnimate(McpeAnimate message)

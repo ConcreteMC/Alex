@@ -9,7 +9,7 @@ namespace Alex.Blocks.Minecraft
 			IsReplacible = false;
 			IsFullBlock = false;
 			IsFullCube = false;
-			LightOpacity = 16;
+			
 		}
 	}
 }

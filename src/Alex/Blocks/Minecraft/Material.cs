@@ -14,7 +14,7 @@ namespace Alex.Blocks.Minecraft
 		public static IMaterial Anvil = (new Material(MapColor.IRON)).SetRequiresTool().SetImmovableMobility();
 		public static IMaterial Water = (new MaterialLiquid(MapColor.WATER)).SetTranslucent().SetNoPushMobility();
 		public static IMaterial Lava = (new MaterialLiquid(MapColor.TNT)).SetNoPushMobility();
-		public static IMaterial Leaves = (new Material(MapColor.FOLIAGE)).SetBurning().SetNoPushMobility();
+		public static IMaterial Leaves = (new MaterialLeaves(MapColor.FOLIAGE)).SetBurning().SetNoPushMobility();
 		public static IMaterial Plants = (new MaterialLogic(MapColor.FOLIAGE)).SetNoPushMobility();
 		public static IMaterial Vine = (new MaterialLogic(MapColor.FOLIAGE)).SetBurning().SetNoPushMobility().SetReplaceable();
 		public static IMaterial Sponge = new Material(MapColor.YELLOW);
@@ -143,6 +143,19 @@ namespace Alex.Blocks.Minecraft
 		}
 	}
 
+    public class MaterialLeaves : Material
+    {
+	    public MaterialLeaves(MapColor color) : base(color)
+	    {
+		    
+	    }
+
+	    public override bool BlocksLight()
+	    {
+		    return false;
+	    }
+    }
+    
 	public class MaterialLogic : Material
 	{
 		public MaterialLogic(MapColor color) : base(color)

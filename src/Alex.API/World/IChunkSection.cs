@@ -8,7 +8,7 @@ namespace Alex.API.World
         bool SolidBorder { get; }
         bool HasAirPockets { get; }
         bool IsDirty { get; set; }
-        void ResetSkyLight();
+        void ResetSkyLight(byte initialValue = 0xff);
         bool IsScheduled(int x, int y, int z);
         void SetScheduled(int x, int y, int z, bool value);
         bool IsLightingScheduled(int x, int y, int z);

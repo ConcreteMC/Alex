@@ -239,5 +239,35 @@ namespace Alex.API.Utils
 		{
 			return $"X={X}, Y={Y}, Z={Z}";
 		}
+
+		public BlockCoordinates BlockUp()
+		{
+			return this + Up;
+		}
+
+		public BlockCoordinates BlockDown()
+		{
+			return this + Down;
+		}
+
+		public BlockCoordinates BlockWest()
+		{
+			return this + West;
+		}
+
+		public BlockCoordinates BlockEast()
+		{
+			return this + East;
+		}
+
+		public BlockCoordinates BlockNorth()
+		{
+			return this + North;
+		}
+
+		public BlockCoordinates BlockSouth()
+		{
+			return this + South;
+		}
 	}
 }

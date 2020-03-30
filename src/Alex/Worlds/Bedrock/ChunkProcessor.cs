@@ -111,6 +111,7 @@ namespace Alex.Worlds.Bedrock
 	        MeasureProfiler.StartCollectingData();
 	        var profiler = MiniProfiler.StartNew("BEToJavaColumn");
 
+	        bool gotLight = false;
 	        try
 	        {
 		        using (MemoryStream stream = new MemoryStream(chunkData))
@@ -316,6 +317,8 @@ namespace Alex.Worlds.Bedrock
 						        section.SkyLight[idx] = sky;
 						        section.BlockLight[idx] = block;
 					        }
+
+					        gotLight = true;
 				        }
 
 				        section.RemoveInvalidBlocks();
@@ -405,6 +408,8 @@ namespace Alex.Worlds.Bedrock
 
 								        chunkColumn.Sections[ci] = section;
 							        }
+
+							        gotLight = true;
 						        }
 
 						        if (stream.Position < stream.Length - 1)
@@ -427,6 +432,13 @@ namespace Alex.Worlds.Bedrock
 					        $"Still have data to read\n{Packet.HexDump(defStream.ReadBytes((int) (stream.Length - stream.Position)))}");
 			        }
 
+			        if (gotLight)
+			        {
+				        chunkColumn.SkyLightDirty = false;
+			        }
+			        
+			        chunkColumn.CalculateHeight();
+			        
 			        //Done processing this chunk, send to world
 			        callback?.Invoke(chunkColumn);
 		        }

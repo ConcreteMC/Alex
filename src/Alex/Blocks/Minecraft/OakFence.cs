@@ -10,7 +10,7 @@ namespace Alex.Blocks.Minecraft
 			Transparent = true;
 			Solid = true;
 			
-			LightOpacity = 15;
+			
 		}
 
 		public Fence(string name) : base(name)
@@ -18,7 +18,7 @@ namespace Alex.Blocks.Minecraft
 			Transparent = true;
 			Solid = true;
 			
-			LightOpacity = 15;
+			
 		}
 
 		public Fence()
@@ -26,7 +26,7 @@ namespace Alex.Blocks.Minecraft
 			Transparent = true;
 			Solid = true;
 			
-			LightOpacity = 15;
+			
 		}
 
 		public override void BlockUpdate(IWorld world, BlockCoordinates position, BlockCoordinates updatedBlock)

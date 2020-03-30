@@ -35,6 +35,7 @@ namespace Alex.Blocks.Storage
         public bool SolidBorder { get; private set; } = false;
 		private bool[] FaceSolidity { get; set; } = new bool[6];
 		public bool HasAirPockets { get; private set; } = true;
+		public bool IsAllAir => _blockRefCount == 0;
 
 		internal ChunkMesh MeshCache { get; set; } = null;
 		internal IReadOnlyDictionary<BlockCoordinates, IList<ChunkMesh.EntryPosition>> MeshPositions { get; set; } = null;
@@ -76,9 +77,9 @@ namespace Alex.Blocks.Storage
         public bool IsDirty { get; set; }
         public bool New { get; set; } = true;
 
-        public void ResetSkyLight()
+        public void ResetSkyLight(byte initialValue = 0xff)
 		{
-			this.SkyLight = new NibbleArray(4096, 0);
+			this.SkyLight = new NibbleArray(4096, initialValue);
 		}
 
 		private static int GetCoordinateIndex(int x, int y, int z)

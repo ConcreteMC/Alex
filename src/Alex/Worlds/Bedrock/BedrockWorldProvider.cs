@@ -228,6 +228,8 @@ namespace Alex.Worlds.Bedrock
 					}
 				}
 
+				//SkyLightCalculations.Calculate(WorldReceiver as World);
+				
 				//Client.IsEmulator = false;
 				progressReport(LoadingState.Spawning, 99);
 				timer.Stop();

@@ -392,7 +392,7 @@ namespace Alex.Worlds
 	            Log.Warn($"Replaced/Updated chunk at {position}");
                 return chunk;
             });
-
+            
             if (doUpdates)
 			{
 				ScheduleChunkUpdate(position, ScheduleType.Full);
@@ -450,10 +450,17 @@ namespace Alex.Worlds
         
         public void RebuildAll()
         {
-            foreach (var i in Chunks)
-            {
-                ScheduleChunkUpdate(i.Key, ScheduleType.Full | ScheduleType.Lighting);
-            }
+	        ThreadPool.QueueUserWorkItem(o =>
+	        {
+		        Log.Info($"Rebuilding");
+		        SkyLightCalculations.Calculate(World as World);
+
+		        foreach (var i in Chunks)
+		        {
+			        ScheduleChunkUpdate(i.Key, ScheduleType.Full | ScheduleType.Lighting);
+		        }
+
+	        });
         }
 
         public void ClearChunks()
@@ -711,198 +718,226 @@ namespace Alex.Worlds
 
             try
             {
-                //chunk.UpdateChunk(Graphics, World);
+	            //chunk.UpdateChunk(Graphics, World);
 
-                var currentChunkY = Math.Min(((int)Math.Round(_cameraPosition.Y)) >> 4, (chunk.GetHeighest() >> 4) - 2);
-                if (currentChunkY < 0) currentChunkY = 0;
+	            var currentChunkY = Math.Min(((int) Math.Round(_cameraPosition.Y)) >> 4,
+		            (chunk.GetHeighest() >> 4) - 2);
+	            if (currentChunkY < 0) currentChunkY = 0;
 
-                List<ChunkMesh> meshes = new List<ChunkMesh>();
-                using (profiler.Step("chunk.sections"))
-                {
-	                for (var i = 0; i < chunk.Sections.Length - 1; i++)
-                    {
-                        if (i < 0) break;
-                        var section = chunk.Sections[i] as ChunkSection;
-                        if (section == null || section.IsEmpty())
-                        {
-                            continue;
-                        }
+	            List<ChunkMesh> meshes = new List<ChunkMesh>();
+	            using (profiler.Step("chunk.sections"))
+	            {
+		            for (var i = 0; i < chunk.Sections.Length - 1; i++)
+		            {
+			            if (i < 0) break;
+			            var section = chunk.Sections[i] as ChunkSection;
+			            if (section == null || section.IsEmpty())
+			            {
+				            continue;
+			            }
 
-                        if (i != currentChunkY && i != 0)
-                        {
-                            using (profiler.Step("chunk.neighboring"))
-                            {
-                                if (i > 0 && i < chunk.Sections.Length - 1)
-                                {
-                                    var neighbors = chunk.CheckNeighbors(section, i, World).ToArray();
+			            if (i != currentChunkY && i != 0)
+			            {
+				            using (profiler.Step("chunk.neighboring"))
+				            {
+					            if (i > 0 && i < chunk.Sections.Length - 1)
+					            {
+						            var neighbors = chunk.CheckNeighbors(section, i, World).ToArray();
 
-                                    if (!section.HasAirPockets && neighbors.Length == 6) //All surrounded by solid.
-                                    {
-                                        // Log.Info($"Found section with solid neigbors, skipping.");
-                                        continue;
-                                    }
+						            if (!section.HasAirPockets && neighbors.Length == 6) //All surrounded by solid.
+						            {
+							            // Log.Info($"Found section with solid neigbors, skipping.");
+							            continue;
+						            }
 
-                                    if (i < currentChunkY && neighbors.Length >= 6) continue;
-                                }
-                                else if (i < currentChunkY) continue;
-                            }
-                        }
+						            if (i < currentChunkY && neighbors.Length >= 6) continue;
+					            }
+					            else if (i < currentChunkY) continue;
+				            }
+			            }
 
-                        //if (i == 0) force = true;
+			            //if (i == 0) force = true;
 
-                        if (force || section.ScheduledUpdates.Cast<bool>().Contains(true) || section.IsDirty)
-                        {
-	                        using (profiler.Step("chunk.meshing"))
-                            {
-                                var sectionMesh = GenerateSectionMesh(World, scheduleType,
-                                    new Vector3(chunk.X << 4, 0, chunk.Z << 4), ref section, i);
-                                
-                                meshes.Add(sectionMesh);
-                            }
-                        }
-                    }
-                }
+			            if (force || section.ScheduledUpdates.Cast<bool>().Contains(true) ||
+			                section.ScheduledSkylightUpdates.Cast<bool>().Contains(true) || section.IsDirty)
+			            {
+				            using (profiler.Step("chunk.meshing"))
+				            {
+					            var sectionMesh = GenerateSectionMesh(World, scheduleType,
+						            new Vector3(chunk.X << 4, 0, chunk.Z << 4), ref section, i);
 
-                Dictionary<RenderStage, List<int>> newStageIndexes = new Dictionary<RenderStage, List<int>>(); 
-	                
-                List<VertexPositionNormalTextureColor> vertices = new List<VertexPositionNormalTextureColor>();
+					            meshes.Add(sectionMesh);
+				            }
+			            }
+		            }
+	            }
 
-                foreach (var mesh in meshes)
-                {
-                    var startVerticeIndex = vertices.Count;
-                    vertices.AddRange(mesh.Vertices);
+	            Dictionary<RenderStage, List<int>> newStageIndexes = new Dictionary<RenderStage, List<int>>();
 
-                    foreach (var stage in mesh.Indexes)
-                    {
-	                    if (!newStageIndexes.ContainsKey(stage.Key))
-	                    {
-		                    newStageIndexes.Add(stage.Key, new List<int>());
-	                    }
-	                    
-	                    newStageIndexes[stage.Key].AddRange(stage.Value.Select(a => startVerticeIndex + a));
-                    }
-                }
+	            List<VertexPositionNormalTextureColor> vertices = new List<VertexPositionNormalTextureColor>();
 
-                if (vertices.Count > 0)
-                {
-	                ProfilerService.ReportCount("chunk.vertexCount", vertices.Count);
-	                
-                    using (profiler.Step("chunk.buffer"))
-                    {
-                        var vertexArray = vertices.ToArray();
-                        Dictionary<RenderStage, ChunkRenderStage> oldStages = null;
-                        if (data == null)
-                        {
-                            data = new ChunkData()
-                            {
-                                Buffer = GpuResourceManager.GetBuffer(this, Graphics,
-                                    VertexPositionNormalTextureColor.VertexDeclaration, vertexArray.Length,
-                                    BufferUsage.WriteOnly),
-                                RenderStages = new Dictionary<RenderStage, ChunkRenderStage>()
-                            };
-                        }
-                        else
-                        {
-	                        oldStages = data.RenderStages;
-                        }
-                        
-                        var newStages = new Dictionary<RenderStage, ChunkRenderStage>();
-                        
-                        PooledVertexBuffer oldBuffer = data.Buffer;
+	            foreach (var mesh in meshes)
+	            {
+		            var startVerticeIndex = vertices.Count;
+		            vertices.AddRange(mesh.Vertices);
 
-                        PooledVertexBuffer newVertexBuffer = null;
+		            foreach (var stage in mesh.Indexes)
+		            {
+			            if (!newStageIndexes.ContainsKey(stage.Key))
+			            {
+				            newStageIndexes.Add(stage.Key, new List<int>());
+			            }
 
-                        using(profiler.Step("chunk.buffer.check"))
-                        if (vertexArray.Length >= data.Buffer.VertexCount)
-                        {
-	                        PooledVertexBuffer newBuffer = GpuResourceManager.GetBuffer(this, Graphics,
-                                VertexPositionNormalTextureColor.VertexDeclaration, vertexArray.Length,
-                                BufferUsage.WriteOnly);
+			            newStageIndexes[stage.Key].AddRange(stage.Value.Select(a => startVerticeIndex + a));
+		            }
+	            }
 
-                            newBuffer.SetData(vertexArray);
-                            newVertexBuffer = newBuffer;
+	            if (vertices.Count > 0)
+	            {
+		            ProfilerService.ReportCount("chunk.vertexCount", vertices.Count);
 
-                            ProfilerService.ReportCount("chunk.bufferSize", data.Buffer.MemoryUsage);
-                            
-                            ProfilerService.TriggerCounter("chunk.bufferResize");
-                        }
-                        else
-                        {
-                            data.Buffer.SetData(vertexArray);
-                            ProfilerService.ReportCount("chunk.bufferSize", data.Buffer.MemoryUsage);
-                        }
-                       
-                       foreach (var stage in newStageIndexes)
-                       {
-	                       ChunkRenderStage renderStage;
-	                       PooledIndexBuffer newIndexBuffer;
-	                       if (oldStages == null || !oldStages.TryGetValue(stage.Key, out renderStage))
-	                       {
-		                       renderStage = new ChunkRenderStage(data);
-	                       }
-	                       
-	                       if (renderStage.IndexBuffer == null || stage.Value.Count > renderStage.IndexBuffer.IndexCount)
-	                       {
-		                       newIndexBuffer = GpuResourceManager.GetIndexBuffer(this, Graphics,
-			                       IndexElementSize.ThirtyTwoBits, stage.Value.Count, BufferUsage.WriteOnly);
-	                       }
-	                       else
-	                       {
-		                       newIndexBuffer = renderStage.IndexBuffer;
-	                       }
-	                       
-	                       newIndexBuffer.SetData(stage.Value.ToArray());
+		            using (profiler.Step("chunk.buffer"))
+		            {
+			            var vertexArray = vertices.ToArray();
+			            Dictionary<RenderStage, ChunkRenderStage> oldStages = null;
+			            if (data == null)
+			            {
+				            data = new ChunkData()
+				            {
+					            Buffer = GpuResourceManager.GetBuffer(this, Graphics,
+						            VertexPositionNormalTextureColor.VertexDeclaration, vertexArray.Length,
+						            BufferUsage.WriteOnly),
+					            RenderStages = new Dictionary<RenderStage, ChunkRenderStage>()
+				            };
+			            }
+			            else
+			            {
+				            oldStages = data.RenderStages;
+			            }
 
-	                       renderStage.IndexBuffer = newIndexBuffer;
-	                       
-	                       newStages.Add(stage.Key, renderStage);
-                       }
+			            var newStages = new Dictionary<RenderStage, ChunkRenderStage>();
 
-                       data.RenderStages = newStages;
-                       using (profiler.Step("chunk.buffer.dispose"))
-                        {
-	                        if (newVertexBuffer != null)
-	                        {
-		                        data.Buffer = newVertexBuffer;
-		                        oldBuffer?.MarkForDisposal();
-	                        }
+			            PooledVertexBuffer oldBuffer = data.Buffer;
 
-	                        RenderStage[] renderStages = (RenderStage[]) Enum.GetValues(typeof(RenderStage));
+			            PooledVertexBuffer newVertexBuffer = null;
 
-	                        foreach (var stage in renderStages)
-	                        {
-		                        if (newStages.TryGetValue(stage, out var renderStage))
-		                        {
-			                        if (oldStages != null && oldStages.TryGetValue(stage, out var oldStage))
-			                        {
-				                        if (oldStage != renderStage)
-					                        oldStage.Dispose();
-			                        }
-		                        }
-	                        }
-                        }
-                    }
-                }
-                else
-                {
-	                if (data != null)
-	                {
-		                data.Dispose();
-		                data = null;
-	                }
-                }
+			            using (profiler.Step("chunk.buffer.check"))
+				            if (vertexArray.Length >= data.Buffer.VertexCount)
+				            {
+					            PooledVertexBuffer newBuffer = GpuResourceManager.GetBuffer(this, Graphics,
+						            VertexPositionNormalTextureColor.VertexDeclaration, vertexArray.Length,
+						            BufferUsage.WriteOnly);
 
-                chunk.IsDirty = chunk.HasDirtySubChunks; //false;
-                chunk.Scheduled = ScheduleType.Unscheduled;
+					            newBuffer.SetData(vertexArray);
+					            newVertexBuffer = newBuffer;
 
-                if (data != null)
-                {
-	                data.Coordinates = coordinates;
-                }
+					            ProfilerService.ReportCount("chunk.bufferSize", data.Buffer.MemoryUsage);
 
-                _chunkData.AddOrUpdate(coordinates, data, (chunkCoordinates, chunkData) => data);
+					            ProfilerService.TriggerCounter("chunk.bufferResize");
+				            }
+				            else
+				            {
+					            data.Buffer.SetData(vertexArray);
+					            ProfilerService.ReportCount("chunk.bufferSize", data.Buffer.MemoryUsage);
+				            }
 
-                return true;
+			            foreach (var stage in newStageIndexes)
+			            {
+				            ChunkRenderStage renderStage;
+				            PooledIndexBuffer newIndexBuffer;
+				            if (oldStages == null || !oldStages.TryGetValue(stage.Key, out renderStage))
+				            {
+					            renderStage = new ChunkRenderStage(data);
+				            }
+
+				            if (renderStage.IndexBuffer == null ||
+				                stage.Value.Count > renderStage.IndexBuffer.IndexCount)
+				            {
+					            newIndexBuffer = GpuResourceManager.GetIndexBuffer(this, Graphics,
+						            IndexElementSize.ThirtyTwoBits, stage.Value.Count, BufferUsage.WriteOnly);
+				            }
+				            else
+				            {
+					            newIndexBuffer = renderStage.IndexBuffer;
+				            }
+
+				            newIndexBuffer.SetData(stage.Value.ToArray());
+
+				            renderStage.IndexBuffer = newIndexBuffer;
+
+				            newStages.Add(stage.Key, renderStage);
+			            }
+
+			            data.RenderStages = newStages;
+			            using (profiler.Step("chunk.buffer.dispose"))
+			            {
+				            if (newVertexBuffer != null)
+				            {
+					            data.Buffer = newVertexBuffer;
+					            oldBuffer?.MarkForDisposal();
+				            }
+
+				            RenderStage[] renderStages = (RenderStage[]) Enum.GetValues(typeof(RenderStage));
+
+				            foreach (var stage in renderStages)
+				            {
+					            if (newStages.TryGetValue(stage, out var renderStage))
+					            {
+						            if (oldStages != null && oldStages.TryGetValue(stage, out var oldStage))
+						            {
+							            if (oldStage != renderStage)
+								            oldStage.Dispose();
+						            }
+					            }
+				            }
+			            }
+		            }
+	            }
+	            else
+	            {
+		            if (data != null)
+		            {
+			            data.Dispose();
+			            data = null;
+		            }
+	            }
+
+	            chunk.IsDirty = chunk.HasDirtySubChunks; //false;
+	            chunk.Scheduled = ScheduleType.Unscheduled;
+
+	            if (data != null)
+	            {
+		            data.Coordinates = coordinates;
+	            }
+
+	            _chunkData.AddOrUpdate(coordinates, data, (chunkCoordinates, chunkData) => data);
+
+	            /*if (scheduleType.HasFlag(ScheduleType.Lighting))
+	            {
+		            try
+		            {
+			            if (chunk.SkyLightDirty)
+			            {
+				            //  chunk.CalculateHeight();
+
+				            //  chunk.X = coordinates.X;
+				            //   chunk.Z = coordinates.Z;
+
+				            SkyLightBlockAccess blockAccess = new SkyLightBlockAccess(this, chunk);
+				            new SkyLightCalculations().RecalcSkyLight(chunk, blockAccess);
+				            
+				            
+				            chunk.SkyLightDirty = false;
+				            ScheduleChunkUpdate(coordinates, ScheduleType.Scheduled);
+			            }
+		            }
+		            catch (Exception ex)
+		            {
+			            Log.Error(ex, $"Skylight error: {ex.ToString()}");
+		            }
+	            }*/
+
+	            return true;
             }
             catch (Exception ex)
             {
@@ -974,11 +1009,12 @@ namespace Alex.Worlds
 		        var blockCoords = new BlockCoordinates(x, y, z);
 
 		        bool isScheduled = section.IsScheduled(x, y, z);
+		        bool isLightScheduled = section.IsLightingScheduled(x, y, z);
 		        var neighborsScheduled = HasScheduledNeighbors(world, blockPosition);
 		        var isBorderBlock = (scheduled == ScheduleType.Border && ((x == 0 || x == 15) || (z == 0 || z == 15)));
 
 
-		        var isRebuild = ((force || isScheduled || neighborsScheduled || isBorderBlock));
+		        var isRebuild = ((force || isScheduled || neighborsScheduled || isBorderBlock || isLightScheduled));
 		        // bool isLightingScheduled = section.IsLightingScheduled(x, y, z);
 
 		        bool gotCachedPositions = false;
@@ -1132,6 +1168,9 @@ namespace Alex.Worlds
 				        
 				        if (isScheduled)
 					        section.SetScheduled(x, y, z, false);
+
+				        if (isLightScheduled)
+					        section.SetLightingScheduled(x, y, z, false);
 			        }
 		        }
 
@@ -1144,9 +1183,6 @@ namespace Alex.Worlds
 		        }
 
 		        section.SetRendered(x, y, z, renderedBlocks > 0);
-
-		        //if (isLightingScheduled)
-		        //    section.SetLightingScheduled(x, y, z, false);
 	        }
 
 	        section.New = false;

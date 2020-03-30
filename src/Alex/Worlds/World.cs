@@ -41,7 +41,7 @@ using UUID = Alex.API.Utils.UUID;
 
 namespace Alex.Worlds
 {
-	public class World : IWorld, IWorldReceiver
+	public class World : IWorld, IWorldReceiver, IBlockAccess
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(World));
 
@@ -55,6 +55,7 @@ namespace Alex.Worlds
 		
 		private IEventDispatcher EventDispatcher { get; }
 		public BedrockFormManager FormManager { get; }
+		//public SkyLightCalculations SkyLightCalculations { get; }
 		public World(IServiceProvider serviceProvider, GraphicsDevice graphics, AlexOptions options, Camera camera,
 			INetworkProvider networkProvider)
 		{
@@ -115,6 +116,8 @@ namespace Alex.Worlds
 			EventDispatcher.RegisterEvents(this);
 			
 			FormManager = new BedrockFormManager(networkProvider, serviceProvider.GetRequiredService<GuiManager>(), serviceProvider.GetService<Alex>().InputManager);
+			
+			//SkyLightCalculations = new SkyLightCalculations();
 		}
 
 		private void FieldOfVisionOnValueChanged(int oldvalue, int newvalue)
@@ -295,6 +298,40 @@ namespace Alex.Worlds
 	        return SpawnPoint;
         }
 
+        public ChunkColumn GetChunk(BlockCoordinates coordinates, bool cacheOnly = false)
+        {
+	        if (ChunkManager.TryGetChunk(new ChunkCoordinates(coordinates), out var c))
+	        {
+		        return (ChunkColumn) c;
+	        }
+
+	        return null;
+        }
+
+        public ChunkColumn GetChunk(ChunkCoordinates coordinates, bool cacheOnly = false)
+        {
+	        if (ChunkManager.TryGetChunk(coordinates, out var c))
+	        {
+		        return (ChunkColumn) c;
+	        }
+
+	        return null;
+        }
+
+        public void SetSkyLight(BlockCoordinates coordinates, byte p1)
+        {
+	        IChunkColumn chunk;
+	        if (ChunkManager.TryGetChunk(new ChunkCoordinates(coordinates), out chunk))
+	        {
+		        chunk.SetSkyLight(coordinates.X & 0xf, coordinates.Y & 0xff, coordinates.Z & 0xf, p1);
+	        }
+        }
+        
+        public byte GetSkyLight(BlockCoordinates position)
+        {
+	        return GetSkyLight(position.X, position.Y, position.Z);
+        }
+        
         public byte GetSkyLight(Vector3 position)
         {
             return GetSkyLight(position.X, position.Y, position.Z);
@@ -302,19 +339,20 @@ namespace Alex.Worlds
 
         public byte GetSkyLight(float x, float y, float z)
         {
-            return GetSkyLight((int)Math.Floor(x), (int)Math.Floor(y), (int)Math.Floor(z)); // Fix. xd
+            return GetSkyLight((int)x, (int)y, (int)z); // Fix. xd
         }
 
         public byte GetSkyLight(int x, int y, int z)
         {
-            if (y < 0 || y > ChunkColumn.ChunkHeight) return 16;
+            if (y < 0 || y > ChunkColumn.ChunkHeight) return 15;
 
 			IChunkColumn chunk;
 	        if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 	        {
 				return chunk.GetSkylight(x & 0xf, y & 0xff, z & 0xf);
             }
-            return 16;
+	        
+            return 15;
         }
 
         public byte GetBlockLight(Vector3 position)
@@ -465,7 +503,9 @@ namespace Alex.Worlds
 		private void UpdateNeighbors(int x, int y, int z)
 		{
 			var source = new BlockCoordinates(x, y, z);
-
+			//new SkyLightCalculations().Calculate(this, source);
+			
+			
 			ScheduleBlockUpdate(source, new BlockCoordinates(x + 1, y, z));
 			ScheduleBlockUpdate(source, new BlockCoordinates(x - 1, y, z));
 
@@ -518,6 +558,64 @@ namespace Alex.Worlds
 		public IBlockState GetBlockState(BlockCoordinates coords)
 		{
 			return GetBlockState(coords.X, coords.Y, coords.Z);
+		}
+
+		public int GetHeight(BlockCoordinates coords)
+		{
+			IChunkColumn chunk;
+			if (ChunkManager.TryGetChunk(new ChunkCoordinates(coords.X >> 4, coords.Z >> 4), out chunk))
+			{
+				//Worlds.ChunkColumn realColumn = (Worlds.ChunkColumn)chunk;
+				return chunk.GetHeight(coords.X & 0xf, coords.Z & 0xf);
+			}
+
+			return 255;
+		}
+
+		public Block GetBlock(BlockCoordinates blockCoordinates, ChunkColumn tryChunk = null)
+		{
+			ChunkColumn chunk = null;
+
+			var chunkCoordinates = new ChunkCoordinates(blockCoordinates.X >> 4, blockCoordinates.Z >> 4);
+			if (tryChunk != null && tryChunk.X == chunkCoordinates.X && tryChunk.Z == chunkCoordinates.Z)
+			{
+				chunk = tryChunk;
+			}
+			else
+			{
+				chunk = GetChunk(chunkCoordinates);
+			}
+			
+			if (chunk == null)
+				return new Air
+				{
+					Coordinates = blockCoordinates
+				};
+
+			var block = (Block)chunk.GetBlock(blockCoordinates.X & 0x0f, blockCoordinates.Y & 0xff, blockCoordinates.Z & 0x0f);
+			block.Coordinates = blockCoordinates;
+
+			return block;
+		}
+
+		public void SetBlock(Block block, bool broadcast = true, bool applyPhysics = true, bool calculateLight = true,
+			ChunkColumn possibleChunk = null)
+		{
+			ChunkColumn chunk;
+			var chunkCoordinates = new ChunkCoordinates(block.Coordinates.X >> 4, block.Coordinates.Z >> 4);
+			chunk = possibleChunk != null && possibleChunk.X == chunkCoordinates.X && possibleChunk.Z == chunkCoordinates.Z ? possibleChunk : GetChunk(chunkCoordinates);
+
+			chunk.SetBlockState(block.Coordinates.X & 0x0f, block.Coordinates.Y & 0xff, block.Coordinates.Z & 0x0f, block.BlockState);
+			
+			if (calculateLight && chunk.GetHeight(block.Coordinates.X & 0x0f, block.Coordinates.Z & 0x0f) <= block.Coordinates.Y + 1)
+			{
+				chunk.RecalculateHeight(block.Coordinates.X & 0x0f, block.Coordinates.Z & 0x0f);
+			}
+
+			if (calculateLight)
+			{
+				new SkyLightCalculations().Calculate(this, block.Coordinates);
+			}
 		}
 
 		public int GetBiome(int x, int y, int z)

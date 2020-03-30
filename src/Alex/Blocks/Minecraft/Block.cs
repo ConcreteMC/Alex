@@ -44,7 +44,7 @@ namespace Alex.Blocks.Minecraft
 
 		public double AmbientOcclusionLightValue { get; set; } = 1.0;
 	    public int LightValue { get; set; } = 0;
-	    public int LightOpacity { get; set; } = 255;
+	    public int LightOpacity { get; set; } = 1;
 
 		//public BlockModel BlockModel { get; set; }
 		public IBlockState BlockState { get; set; }
@@ -70,7 +70,7 @@ namespace Alex.Blocks.Minecraft
 		public BlockCoordinates Coordinates { get; set; }
 		protected Block(int blockId, byte metadata) : this(BlockFactory.GetBlockStateID(blockId, metadata))
 	    {
-		    
+		    LightOpacity = 1;
 	    }
 
 	    public Block(uint blockStateId)
@@ -82,6 +82,8 @@ namespace Alex.Blocks.Minecraft
 		    Transparent = false;
 		    Renderable = true;
 		    HasHitbox = true;
+		    
+		    LightOpacity = 1;
 		}
 
 		protected Block(string blockName)
@@ -93,6 +95,8 @@ namespace Alex.Blocks.Minecraft
 			Transparent = false;
 			Renderable = true;
 			HasHitbox = true;
+			
+			LightOpacity = 1;
 		}
 
 		protected Block()
@@ -103,6 +107,8 @@ namespace Alex.Blocks.Minecraft
 			Transparent = false;
 			Renderable = true;
 			HasHitbox = true;
+
+			LightOpacity = 1;
 		}
 
 		public virtual double GetHeight(Vector3 relative)

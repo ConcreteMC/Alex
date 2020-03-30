@@ -227,6 +227,11 @@ namespace Alex.Blocks
 			this.Register(() => new Log().WithLocation("minecraft:jungle_log"));
 			this.Register(() => new Log().WithLocation("minecraft:spruce_log"));
 			this.Register(() => new Log().WithLocation("minecraft:birch_log"));
+			
+			//Planks
+			this.Register(() => new Planks().WithLocation("minecraft:oak_planks"));
+			this.Register(() => new Planks().WithLocation("minecraft:spruce_planks"));
+			this.Register(() => new DarkOakPlanks().WithLocation("minecraft:dark_oak_planks"));
 
 			//Fencing
 			this.Register(() => new NetherBrickFence().WithLocation("minecraft:nether_brick_fence"));
