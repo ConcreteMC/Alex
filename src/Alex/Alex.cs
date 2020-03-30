@@ -254,7 +254,17 @@ namespace Alex
 
 			WindowSize = this.Window.ClientBounds.Size;
 			//	Log.Info($"Initializing Alex...");
-			ThreadPool.QueueUserWorkItem(() => { InitializeGame(splash); });
+			ThreadPool.QueueUserWorkItem(() =>
+			{
+				try
+				{
+					InitializeGame(splash);
+				}
+				catch (Exception ex)
+				{
+					Log.Error(ex, $"Could not initialize!");
+				}
+			});
 		}
 
 		private void SetFrameRateLimiter(bool enabled, int frameRateLimit)

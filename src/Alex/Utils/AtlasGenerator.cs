@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using Alex.API.Utils;
 using Alex.GameStates.Playing;
+using Alex.ResourcePackLib.Json.Textures;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -38,7 +39,7 @@ namespace Alex.Utils
 		    _stillFrame = default;
 	    }
 
-	    public void GenerateAtlas(GraphicsDevice device, KeyValuePair<string, Bitmap>[] bitmaps, IProgressReceiver progressReceiver)
+	    public void GenerateAtlas(GraphicsDevice device, KeyValuePair<string, Bitmap>[] bitmaps, IReadOnlyDictionary<string, TextureMeta> meta, IProgressReceiver progressReceiver)
 	    {
 		    Log.Info($"Generating texture atlas out of {bitmaps.Length} bitmaps...");
 		    
@@ -48,6 +49,19 @@ namespace Alex.Utils
 		    using (MemoryStream ms = new MemoryStream(ResourceManager.ReadResource("Alex.Resources.no.png")))
 		    {
 			    no = new Bitmap(ms);
+		    }
+
+		  //  Dictionary<string, Bitmap[]> animatedFrames = new Dictionary<string, Bitmap[]>();
+		    foreach (var bmp in bitmaps)
+		    {
+			    if (meta.TryGetValue(bmp.Key, out var textureMeta))
+			    {
+				    if (textureMeta.Animation == null || textureMeta.Animation == default)
+					    continue;
+
+				   // Bitmap[] bmpFrames = GetFrames(bmp.Value);
+				 //   animatedFrames.Add(bmp.Key, bmpFrames);
+			    }
 		    }
 		    
 		    var regular = new[]
@@ -298,7 +312,7 @@ namespace Alex.Utils
 	    public int TextureWidth { get; private set; } = 16;
 	    public int TextureHeight { get; private set; }= 16;
 
-        public void LoadResourcePackOnTop(GraphicsDevice device, KeyValuePair<string, Bitmap>[] vanilla, KeyValuePair<string, Bitmap>[] bitmapsRaw, IProgressReceiver progressReceiver)
+        public void LoadResourcePackOnTop(GraphicsDevice device, KeyValuePair<string, Bitmap>[] vanilla, KeyValuePair<string, Bitmap>[] bitmapsRaw, IReadOnlyDictionary<string, TextureMeta> meta, IProgressReceiver progressReceiver)
 		{
 
             int textureWidth = 16, textureHeight = 16;
@@ -334,7 +348,7 @@ namespace Alex.Utils
             TextureHeight = textureHeight;
             TextureWidth = textureWidth;
 
-            GenerateAtlas(device, bitmaps.ToArray(), progressReceiver);
+            GenerateAtlas(device, bitmaps.ToArray(), meta, progressReceiver);
         }
 
 

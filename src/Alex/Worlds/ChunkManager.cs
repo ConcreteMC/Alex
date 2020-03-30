@@ -58,8 +58,11 @@ namespace Alex.Worlds
 
         private AlexOptions Options { get; }
         private ProfilerService ProfilerService { get; }
+        private RenderTarget2D _depthMap;
         public ChunkManager(IServiceProvider serviceProvider, GraphicsDevice graphics, IWorld world)
         {
+	        _depthMap = new RenderTarget2D(graphics, graphics.Viewport.Width, graphics.Viewport.Height);
+	        
 	        Graphics = graphics;
 	        World = world;
 	        //Options = option;

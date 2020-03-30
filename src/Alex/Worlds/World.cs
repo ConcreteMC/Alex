@@ -32,6 +32,7 @@ using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
 using Color = Microsoft.Xna.Framework.Color;
 using IBlockState = Alex.API.Blocks.State.IBlockState;
+using MathF = System.MathF;
 using Player = Alex.Entities.Player;
 using PlayerLocation = Alex.API.Utils.PlayerLocation;
 using UUID = Alex.API.Utils.UUID;
@@ -695,7 +696,12 @@ namespace Alex.Worlds
 				entity.KnownPosition.OnGround = position.OnGround;
 				if (!relative)
 				{
+					var oldPosition = entity.KnownPosition;
 					entity.KnownPosition = position;
+					if (entity is PlayerMob p)
+					{
+						p.DistanceMoved += MathF.Abs(Vector3.Distance(oldPosition, position));
+					}
 				}
 				else
 				{

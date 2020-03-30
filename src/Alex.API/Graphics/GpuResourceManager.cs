@@ -383,6 +383,7 @@ namespace Alex.API.Graphics
         public long PoolId { get; }
         public object Owner { get; }
         public DateTime CreatedTime { get; }
+        public bool IsFullyTransparent { get; set; } = false;
         
         public long MemoryUsage
         {

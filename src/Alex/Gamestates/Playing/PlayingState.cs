@@ -443,13 +443,13 @@ namespace Alex.GameStates.Playing
 						}
 					}
 				}
-
-				World.Render2D(args);
 			}
 			finally
 			{
 				args.SpriteBatch.End();
 			}
+			
+			World.Render2D(args);
 		}
 
 		public static string GetCardinalDirection(PlayerLocation cam)

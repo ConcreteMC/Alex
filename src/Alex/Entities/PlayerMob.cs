@@ -111,10 +111,23 @@ namespace Alex.Entities
 		private Vector3 _prevUpdatePosition = Vector3.Zero;
 		private float _armRotation = 0f;
 		private float _legRotation = 0f;
-		private float DistanceMoved { get; set; } = 0;
+		internal float DistanceMoved { get; set; } = 0;
+
+		internal double _timeStoppedMoving = 0;
 		public override void Update(IUpdateArgs args)
 		{
 			base.Update(args);
+
+			var pos = KnownPosition.ToVector3();
+			float distSQ = Vector3.DistanceSquared(_prevUpdatePosition, pos);
+			
+			var distance = DistanceMoved;
+			distSQ = distance;
+			
+			if (!IsMoving)
+			{
+				//DistanceMoved = 0f;
+			}
 
 			var dt = (float)args.GameTime.ElapsedGameTime.TotalSeconds;
 
@@ -134,14 +147,9 @@ namespace Alex.Entities
 				_body.Rotation = new Vector3(0f);
 
 
-				var moveSpeed = MovementSpeed;
-				var tcos0 = (float) (Math.Cos(DistanceMoved * 38.17) * moveSpeed) * 57.3f;
+				var moveSpeed = MovementSpeed * 20f;
+				var tcos0 = (float) (Math.Cos(distance * 38.17) * moveSpeed) * 57.3f;
 				var tcos1 = -tcos0;
-
-				var pos = KnownPosition.ToVector3();
-				float deltaX = pos.X - _prevUpdatePosition.X;
-				float deltaZ = pos.Z - _prevUpdatePosition.Z;
-				float distSQ = deltaX * deltaX + deltaZ * deltaZ;
 
 				//_armRotation = _armRotation;
 
@@ -155,14 +163,14 @@ namespace Alex.Entities
 					if (distSQ > 0f)
 					{
 						_armRotation += (float) ((new Vector3(Velocity.X, 0, Velocity.Z).Length()) + distSQ) * dt;
-
-						rArmRot = new Vector3((0.5f + MathF.Cos(_armRotation)) * 24.5f, 0, 0);
+						rArmRot = new Vector3(tcos0, 0, 0);
+						//rArmRot = new Vector3((0.5f + MathF.Cos(_armRotation)) * 24.5f, 0, 0);
 					}
 					else
 					{
 						_armRotation += dt;
-						rArmRot = new Vector3((0.5f + MathF.Cos(_armRotation)) * -7.5f, 0f,
-							0.1f + (MathF.Sin(_armRotation) * -1.5f));
+						//rArmRot = new Vector3((0.5f + MathF.Cos(_armRotation)) * -7.5f, 0f,
+						//	0.1f + (MathF.Sin(_armRotation) * -1.5f));
 					}
 
 					_leftArmModel.Rotation = rArmRot;
@@ -179,16 +187,16 @@ namespace Alex.Entities
 
 					if (distSQ > 0f)
 					{
-						_legRotation += (float) ((new Vector3(Velocity.X, 0, Velocity.Z).Length()) + distSQ) * dt;
+						_legRotation += distSQ * dt;
 
 						lLegRot = new Vector3(MathF.Sin(_legRotation) * 34.5f, 0f, 0f);
 						rLegRot = new Vector3(-MathF.Sin(_legRotation) * 34.5f, 0f, 0f);
-
-						_prevUpdatePosition = pos;
+						//lLegRot = new Vector3(tcos0, 0f, 0f);
+						//rLegRot = new Vector3(tcos1, 0f, 0f);
 					}
 					else
 					{
-						_legRotation = 0f;
+						//_legRotation = 0f;
 					}
 
 					_leftLegModel.Rotation = lLegRot;
@@ -197,6 +205,10 @@ namespace Alex.Entities
 					_rightPantsModel.Rotation = rLegRot;
 				}
 			}
+			
+			
+			_prevUpdatePosition = pos;
+			DistanceMoved = 0f;
 		}
 
 		public override void OnTick()
@@ -206,13 +218,20 @@ namespace Alex.Entities
 			
 		}
 
+		private bool ValidModel { get; set; }
 		internal void UpdateSkin(PooledTexture2D skinTexture)
 		{
 			//if (skinSlim)
 			{
-				if (ModelFactory.TryGetModel(GeometryName,
-					out EntityModel m) || ModelFactory.TryGetModel("geometry.humanoid.customSlim", out m))
+				var gotModel = ModelFactory.TryGetModel(GeometryName,
+					out EntityModel m);
+				ValidModel = gotModel;
+				if (gotModel || ModelFactory.TryGetModel("geometry.humanoid.customSlim", out m))
 				{
+					if (!gotModel)
+					{
+						
+					}
 					_model = m;
 					ModelRenderer = new EntityModelRenderer(_model, skinTexture);
 					UpdateModelParts();
@@ -228,6 +247,12 @@ namespace Alex.Entities
 					UpdateModelParts();
 				}
 			}*/
+		}
+
+		public override string ToString()
+		{
+			return
+				$"Valid: {ModelRenderer.Valid} | {ModelRenderer.Texture.Height} x {ModelRenderer.Texture.Width} | Height: {Height} | Model: {GeometryName} -- {ValidModel}";
 		}
 	}
 }

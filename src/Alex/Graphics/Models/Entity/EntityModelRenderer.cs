@@ -22,6 +22,7 @@ namespace Alex.Graphics.Models.Entity
 		public PooledTexture2D Texture { get; set; }
 		private PooledVertexBuffer VertexBuffer { get; set; }
 		public bool Valid { get; private set; }
+		//public float Height { get; private set; } = 0f;
 		public EntityModelRenderer(EntityModel model, PooledTexture2D texture)
 		{
 			
@@ -67,7 +68,7 @@ namespace Alex.Graphics.Models.Entity
 		private void Cache(MinecraftGeometry model, Dictionary<string, ModelBone> modelBones)
 		{
 			List<VertexPositionNormalTexture> vertices = new List<VertexPositionNormalTexture>();
-
+			
 			foreach (var bone in model.Bones)
 			{
 				if (bone == null)

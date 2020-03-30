@@ -377,6 +377,7 @@ namespace Alex.Worlds.Bedrock
 					var u = new API.Utils.UUID(r.ClientUuid.GetBytes());
 					if (_players.ContainsKey(r.ClientUuid)) continue;
 
+					bool isTransparent = false;
 					PooledTexture2D skinTexture;
 					if (r.Skin.TryGetBitmap(out Bitmap skinBitmap))
 					{

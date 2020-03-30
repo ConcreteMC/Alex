@@ -14,6 +14,7 @@ using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.BlockStates;
 using Alex.ResourcePackLib.Json.Models.Blocks;
 using Alex.ResourcePackLib.Json.Models.Items;
+using Alex.ResourcePackLib.Json.Textures;
 using NLog;
 using Color = Microsoft.Xna.Framework.Color;
 using MathHelper = Microsoft.Xna.Framework.MathHelper;
@@ -30,6 +31,7 @@ namespace Alex.ResourcePackLib
 		private static readonly Regex IsLanguageResource = new Regex(@"^assets\/(?'namespace'.*)\/lang\/(?'filename'.*)\.(?'filetype'json|lang)$", RegexOpts);
 		private static readonly Regex IsFontTextureResource = new Regex(@"^assets\/(?'namespace'.*)\/textures\/font\/(?'filename'.*)\.png$", RegexOpts);
 		private static readonly Regex IsTextureResource     = new Regex(@"^assets\/(?'namespace'.*)\/textures\/(?'filename'.*)\.png$", RegexOpts);
+		private static readonly Regex IsTextureMetaResource     = new Regex(@"^assets\/(?'namespace'.*)\/textures\/(?'filename'.*)\.png.mcmeta$", RegexOpts);
 		private static readonly Regex IsModelRegex          = new Regex(@"^assets\/(?'namespace'.*)\/models\/(?'filename'.*)\.json$", RegexOpts);
 		private static readonly Regex IsBlockStateRegex     = new Regex(@"^assets\/(?'namespace'.*)\/blockstates\/(?'filename'.*)\.json$", RegexOpts);
 		private static readonly Regex IsGlyphSizes          = new Regex(@"^assets\/(?'namespace'.*)\/font\/glyph_sizes.bin$", RegexOpts);
@@ -39,6 +41,7 @@ namespace Alex.ResourcePackLib
 		private readonly Dictionary<string, ResourcePackItem>   _itemModels    = new Dictionary<string, ResourcePackItem>();
 		//private readonly Dictionary<string, Texture2D>          _textureCache  = new Dictionary<string, Texture2D>();
 		private readonly Dictionary<string, Bitmap>             _bitmapCache   = new Dictionary<string, Bitmap>();
+		private readonly Dictionary<string, TextureMeta>        _textureMetaCache   = new Dictionary<string, TextureMeta>();
 		private readonly Dictionary<string, LanguageResource>	_languageCache = new Dictionary<string, LanguageResource>();
 
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(McResourcePack));
@@ -47,6 +50,8 @@ namespace Alex.ResourcePackLib
 		public IReadOnlyDictionary<string, BlockModel>         BlockModels       => _blockModels;
 		public IReadOnlyDictionary<string, ResourcePackItem>   ItemModels        => _itemModels;
 		public IReadOnlyDictionary<string, Bitmap>             TexturesAsBitmaps => _bitmapCache;
+
+		public IReadOnlyDictionary<string, TextureMeta> TextureMetas => _textureMetaCache;
 		//public IReadOnlyDictionary<string, Texture2D>          Textures          => _textureCache;
 		public IReadOnlyDictionary<string, LanguageResource>   Languages		 => _languageCache;
 		
@@ -120,6 +125,13 @@ namespace Alex.ResourcePackLib
 				if (textureMatchs.Success)
 				{
 					LoadTexture(entry, textureMatchs);
+					continue;
+				}
+
+				var textureMetaMatch = IsTextureMetaResource.Match(entry.FullName);
+				if (textureMetaMatch.Success)
+				{
+					LoadTextureMeta(entry, textureMetaMatch);
 					continue;
 				}
 
@@ -209,6 +221,17 @@ namespace Alex.ResourcePackLib
 			Info = info;
 		}
 
+		private void LoadTextureMeta(ZipArchiveEntry entry, Match match)
+		{
+			var textureName = match.Groups["filename"].Value;
+			if (!TryGetTextureMeta(textureName, out var meta))
+			{
+				LoadBitmapMeta(entry, match);
+			}
+			
+			//	_textureCache[match.Groups["filename"].Value] = TextureUtils.ImageToTexture2D(Graphics, bmp);
+		}
+		
 		private void LoadTexture(ZipArchiveEntry entry, Match match)
 		{
 			var textureName = match.Groups["filename"].Value;
@@ -318,6 +341,31 @@ namespace Alex.ResourcePackLib
 				return true;
 			
 			bitmap = null;
+			return false;
+		}
+		
+		private TextureMeta LoadBitmapMeta(ZipArchiveEntry entry, Match match)
+		{
+			TextureMeta meta;
+			using (var stream = entry.Open())
+			{
+				using (StreamReader sr = new StreamReader(stream))
+				{
+					string content = sr.ReadToEnd();
+					meta = TextureMeta.FromJson(content);
+				}
+			}
+
+			_textureMetaCache[match.Groups["filename"].Value] = meta;
+			return meta;
+		}
+
+		public bool TryGetTextureMeta(string textureName, out TextureMeta meta)
+		{
+			if (_textureMetaCache.TryGetValue(textureName, out meta))
+				return true;
+			
+			meta = null;
 			return false;
 		}
 

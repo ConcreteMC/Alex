@@ -56,6 +56,7 @@ namespace Alex.API.Utils
 				return GpuResourceManager.GetTexture2D("Alex.Api.Utils.TextureUtils", device, 16, 16);
 			}
 
+			int nonAlpha = 0;
             byteSize = 0;
             
 			var depth = System.Drawing.Bitmap.GetPixelFormatSize(bmp.PixelFormat);
@@ -89,6 +90,11 @@ namespace Alex.API.Utils
 					var b = data[i + 2];
 					var a = data[i + 3];
 
+					if (a >= 32)
+					{
+						nonAlpha++;
+					}
+					
 					imgData[idx++] = (uint) ((a << 24) | (r << 16) | (g << 8) | b);
 				}
 			}
@@ -137,6 +143,7 @@ namespace Alex.API.Utils
 
                 byteSize = imgData.Length * 4;
 
+                texture.IsFullyTransparent = nonAlpha == 0;
             texture.SetData(imgData);
 
 			return texture;

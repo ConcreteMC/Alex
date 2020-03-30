@@ -191,12 +191,16 @@ namespace Alex
 	        
             if (!isFirst)
             {
-                Atlas.LoadResourcePackOnTop(device, ActiveResourcePacks.First().TexturesAsBitmaps.Where(x => x.Key.StartsWith("block")).ToArray(), resourcePack.TexturesAsBitmaps.Where(x => x.Key.StartsWith("block")).ToArray(),
-                    progressReceiver);
+	            Atlas.LoadResourcePackOnTop(device,
+		            ActiveResourcePacks.First().TexturesAsBitmaps.Where(x => x.Key.StartsWith("block")).ToArray(),
+		            resourcePack.TexturesAsBitmaps.Where(x => x.Key.StartsWith("block")).ToArray(),
+		            resourcePack.TextureMetas,
+		            progressReceiver);
             }
             else
             {
                 Atlas.GenerateAtlas(device, resourcePack.TexturesAsBitmaps.Where(x => x.Key.StartsWith("block")).ToArray(),
+	                resourcePack.TextureMetas,
                     progressReceiver);
 
 

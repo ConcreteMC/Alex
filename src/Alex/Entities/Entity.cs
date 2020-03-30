@@ -409,84 +409,37 @@ namespace Alex.Entities
 			return new BoundingBox(new Vector3((float)(pos.X - halfWidth), pos.Y, (float)(pos.Z - halfWidth)), new Vector3((float)(pos.X + halfWidth), (float)(pos.Y + Height), (float)(pos.Z + halfWidth)));
 		}
 
-		public byte GetDirection()
-		{
-			return DirectionByRotationFlat(KnownPosition.Yaw);
-		}
-
-		public static byte DirectionByRotationFlat(float yaw)
-		{
-			byte direction = (byte)((int)Math.Floor((yaw * 4F) / 360F + 0.5D) & 0x03);
-			switch (direction)
-			{
-				case 0:
-					return 1; // West
-				case 1:
-					return 2; // North
-				case 2:
-					return 3; // East
-				case 3:
-					return 0; // South 
-			}
-			return 0;
-		}
-
-		public virtual void Knockback(Vector3 velocity)
-		{
-			Velocity += velocity;
-		}
-
-
-		/*public virtual Item[] GetDrops()
-		{
-			return new Item[] { };
-		}*/
-
-		public virtual void DoInteraction(byte actionId, Player player)
-		{
-		}
-
-		public virtual void DoMouseOverInteraction(byte actionId, Player player)
-		{
-		}
-
 		public void RenderNametag(IRenderArgs renderArgs)
 		{
-			var maxDistance = renderArgs.Camera.FarDistance;
+			var maxDistance = (renderArgs.Camera.FarDistance / 16f) / 2f;
 			
 			Vector3 posOffset = new Vector3(0, 0.25f, 0);
 
-			if (RenderEntity && ModelRenderer != null && !IsInvisible)
+			if (RenderEntity && ModelRenderer != null && ModelRenderer.Valid && !IsInvisible && !ModelRenderer.Texture.IsFullyTransparent)
 			{
 				posOffset.Y += (float) Height;
 			}
 
+			var cameraPosition = new Vector3(renderArgs.Camera.Position.X, 0, renderArgs.Camera.Position.Z);
 			var pos = KnownPosition + posOffset;
+			//pos.Y = 0;
 			
-			var distance = MathF.Abs((float)pos.DistanceTo(new PlayerLocation(renderArgs.Camera.Position.X, pos.Y, renderArgs.Camera.Position.Z)));
-			if (distance >= (maxDistance / 16f) / 2f)
+			var distance = MathF.Abs(Vector3.Distance(pos, renderArgs.Camera.Position));
+			if (distance >= maxDistance)
 			{
 				return;
 			}
-			
-		//	distance *= (1f / maxDistance);
-			
+
 			float s = 1f - (distance * (1f / maxDistance));
 			s = MathF.Round(s, 2, MidpointRounding.ToEven);
-			
-			
-			//if (distance < 16)
-			//	s = 1f;
-			
+
 			Vector2 textPosition;
-			//Matrix.CreateBillboard(pos, renderArgs.Camera.Position, Vector3.Up, pos - renderArgs.Camera.Position)
 
 			// calculate screenspace of text3d space position
 			var screenSpace = renderArgs.GraphicsDevice.Viewport.Project(Vector3.Zero, 
 				renderArgs.Camera.ProjectionMatrix,
 				renderArgs.Camera.ViewMatrix,
 				 Matrix.CreateBillboard(pos, renderArgs.Camera.Position, Vector3.Up, pos - renderArgs.Camera.Position));
-
 
 			// get 2D position from screenspace vector
 			textPosition.X = screenSpace.X;
@@ -502,9 +455,8 @@ namespace Alex.Entities
 			textPosition.X = (int)(textPosition.X - (c.X / 2d));
 			textPosition.Y = (int)(textPosition.Y - (c.Y / 2d));
 
-			renderArgs.SpriteBatch.FillRectangle(new Rectangle(textPosition.ToPoint(), c), new Color(Color.Black, 128));
-			Alex.Font.DrawString(renderArgs.SpriteBatch, clean, textPosition, TextColor.White, FontStyle.None, scale);
-		//	renderArgs.SpriteBatch.DrawString(Alex.Font, clean, textPosition, TextColor.White, FontStyle.None, 0f, Vector2.Zero, scale);
+			renderArgs.SpriteBatch.FillRectangle(new Rectangle(textPosition.ToPoint(), c), new Color(Color.Black, 128), screenSpace.Z);
+			Alex.Font.DrawString(renderArgs.SpriteBatch, clean, textPosition, TextColor.White, FontStyle.None, scale, layerDepth: screenSpace.Z);
 		}
 
 		public virtual void TerrainCollision(Vector3 collisionPoint, Vector3 direction)

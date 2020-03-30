@@ -158,7 +158,13 @@ namespace Alex.Gui
 
 		public void LoadLanguages(McResourcePack resourcePack, IProgressReceiver progressReceiver)
 		{
-			Language.Load(resourcePack.Languages.Values.FirstOrDefault(x => x.Namespace.Equals("minecraft")));
+			if (resourcePack.Languages == null)
+				return;
+			
+			foreach (var lng in resourcePack.Languages)
+			{
+				Language.Load(lng.Value);
+			}
 		}
 
 

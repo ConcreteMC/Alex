@@ -76,6 +76,11 @@ namespace Alex
 		{
 			sb.Draw(WhiteTexture, rectangle, color);
 		}
+		
+		public static void FillRectangle(this SpriteBatch sb, Rectangle rectangle, Color color, float layerDepth)
+		{
+			sb.Draw(WhiteTexture, rectangle, null, color, 0f, Vector2.Zero, SpriteEffects.None, layerDepth);
+		}
 
 		public static void RenderBoundingBox(
 			this SpriteBatch sb,
