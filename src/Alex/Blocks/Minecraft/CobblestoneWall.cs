@@ -8,7 +8,6 @@ namespace Alex.Blocks.Minecraft
 			Transparent = true;
 			IsReplacible = false;
 
-
 			BlockMaterial = Material.Rock;
 		}
 	}

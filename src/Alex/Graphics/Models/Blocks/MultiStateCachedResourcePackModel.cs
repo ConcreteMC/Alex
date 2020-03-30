@@ -178,7 +178,9 @@ namespace Alex.Graphics.Models.Blocks
 			var block = blockState.Block;
 
 			var canAttach = block.Solid && (block.IsFullCube || (blockState.Name.Equals(baseblockState.Name, StringComparison.InvariantCultureIgnoreCase)));
-
+			if (direction == Vector3.Up && !(block is Air))
+				return true;
+			
 			if (value == "true")
 			{
 				return canAttach;
