@@ -271,7 +271,7 @@ namespace Alex.Worlds.Bedrock
 			if (message.runtimeEntityId != Client.EntityId)
 			{
 				Client.WorldReceiver.UpdateEntityPosition(message.runtimeEntityId, 
-					new PlayerLocation(message.x, message.y - Player.EyeLevel, message.z, message.headYaw, message.yaw, message.pitch));
+					new PlayerLocation(message.x, message.y - Player.EyeLevel, message.z, message.headYaw, message.yaw, -message.pitch));
 				return;
 			}
 			
@@ -630,7 +630,7 @@ namespace Alex.Worlds.Bedrock
 		public void HandleMcpeMoveEntity(McpeMoveEntity message)
 		{
 			var location = new PlayerLocation(message.position.X, message.position.Y, message.position.Z,
-				message.position.HeadYaw, message.position.Yaw, -message.position.Pitch);
+				message.position.HeadYaw, message.position.Yaw, message.position.Pitch);
 			
 			if (message.runtimeEntityId != Client.EntityId)
 			{

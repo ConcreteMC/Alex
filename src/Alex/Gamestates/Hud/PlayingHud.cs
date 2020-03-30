@@ -39,7 +39,10 @@ namespace Alex.GameStates.Hud
 
             Alex = game;
 	        Player = player;
-
+	        
+	        Anchor = Alignment.Fill;
+	        Padding = Thickness.One;
+	        
             _playerController = player.Controller;
 			InputManager.AddListener(new MouseInputListener(InputManager.PlayerIndex));
 
@@ -47,7 +50,7 @@ namespace Alex.GameStates.Hud
 			_bottomContainer.ChildAnchor = Alignment.BottomFill;
 			_bottomContainer.Anchor = Alignment.BottomCenter;
 			_bottomContainer.Orientation = Orientation.Vertical;
-			_bottomContainer.Padding = new Thickness(0, 0, 0, 2);
+
 			//BottomContainer.
 			
 	        _hotbar = new GuiItemHotbar(player.Inventory);
@@ -60,6 +63,7 @@ namespace Alex.GameStates.Hud
 
 	        _healthContainer = new GuiContainer();
 	        _healthContainer.Anchor = Alignment.BottomCenter;
+	        _healthContainer.Margin = new Thickness(0, 0, 0, 1);
 	     //   _healthContainer.Orientation = Orientation.Horizontal;
 	      //  _healthContainer.ChildAnchor = Alignment.None;
 
@@ -92,6 +96,8 @@ namespace Alex.GameStates.Hud
 		        t
 	        });*/
 	     
+	     AddChild(Chat);
+	     
 	     _bottomContainer.AddChild(_tipPopupComponent);
 	     
 	     _healthContainer.AddChild(_healthComponent);
@@ -101,7 +107,6 @@ namespace Alex.GameStates.Hud
 
 	        _bottomContainer.AddRow(container =>
 	        {
-		        container.Margin = new Thickness(0, 2, 0, 0);
 		        container.Anchor = Alignment.BottomCenter;
 		        container.AddChild(_hotbar);
 	        });
@@ -109,8 +114,7 @@ namespace Alex.GameStates.Hud
 	        
 	        //AddChild(_hotbar);
             AddChild(new GuiCrosshair());
-			AddChild(Chat);
-			AddChild(Title);
+            AddChild(Title);
         }
 
         public bool CheckInput { get; set; } = true;

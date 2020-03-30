@@ -38,7 +38,7 @@ namespace Alex.GameStates.Gui.Common
         }
 
         protected GuiStackContainer      Header { get; }
-        protected GuiMultiStackContainer Body { get; }
+        protected GuiScrollableMultiStackContainer Body { get; }
         protected GuiMultiStackContainer Footer { get; }
 
         protected readonly GuiTextElement  HeaderTitle;
@@ -74,7 +74,7 @@ namespace Alex.GameStates.Gui.Common
                 Anchor = Alignment.BottomCenter,
             });
 
-			AddChild(Body = new GuiMultiStackContainer(row =>
+			AddChild(Body = new GuiScrollableMultiStackContainer(row =>
 			{
 				row.ChildAnchor = Alignment.MiddleFill;
 				row.Margin = new Thickness(3);

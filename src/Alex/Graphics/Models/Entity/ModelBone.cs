@@ -78,12 +78,10 @@ namespace Alex.Graphics.Models.Entity
 					if (part.ApplyYaw)
 						rotMatrix *= Matrix.CreateRotationY(yaw);*/
 
-					Matrix rotMatrix = Matrix.CreateTranslation(-part.Pivot) 
-					                   * Matrix.CreateFromYawPitchRoll(
-						                   MathUtils.ToRadians(rot.Y), 
-						                   MathUtils.ToRadians(rot.X), 
-						                   MathUtils.ToRadians(rot.Z)
-						                   )  
+					Matrix rotMatrix = Matrix.CreateTranslation(-part.Pivot)
+					                   * Matrix.CreateRotationX(MathUtils.ToRadians(rot.X))
+					                   * Matrix.CreateRotationY(MathUtils.ToRadians(rot.Y))
+					                   * Matrix.CreateRotationZ(MathUtils.ToRadians(rot.Z))
 					                   * Matrix.CreateTranslation(part.Pivot);
 
 
