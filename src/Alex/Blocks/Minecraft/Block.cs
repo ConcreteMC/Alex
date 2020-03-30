@@ -123,12 +123,12 @@ namespace Alex.Blocks.Minecraft
 		    return BlockState.Model.GetBoundingBox(blockPosition, this);
 		}
 
-		public virtual BoundingBox? GetPartBoundingBox(Vector3 blockPosition, Vector3 entityPosition)
+		public virtual BoundingBox? GetPartBoundingBox(Vector3 blockPosition, BoundingBox entityBox)
 		{
 			if (BlockState == null)
 				return new Microsoft.Xna.Framework.BoundingBox(blockPosition, blockPosition + Vector3.One);
 
-			return BlockState.Model.GetPartBoundingBox(blockPosition, entityPosition);
+			return BlockState.Model.GetPartBoundingBox(blockPosition, entityBox);
 		}
 		
 		public virtual IBlockState BlockPlaced(IWorld world, IBlockState state, BlockCoordinates position)

@@ -6,6 +6,7 @@ using Alex.API.Entities;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks.Minecraft;
+using Alex.Blocks.State;
 using Alex.Entities;
 using Alex.Graphics.Models.Blocks;
 using Alex.Utils;
@@ -84,9 +85,10 @@ namespace Alex.Worlds
 							velocity = AdjustForY(e.GetBoundingBox(new Vector3(position.X, preview.Y, position.Z)), blocks,
 								velocity, position);
 							
+							Hit.AddRange(blocks.Select(x => x.box));
+							
 							//var solid = blocks.Where(b => b.block.Solid && b.box.Max.Y > position.Y).ToArray();
 							var solid = blocks.Where(b => b.block.Solid && b.box.Max.Y > position.Y).ToArray();
-							Hit.AddRange(solid.Select(x => x.box));
 
 							if (solid.Length > 0)
 							{
@@ -108,7 +110,12 @@ namespace Alex.Worlds
 								for (float x = 1f; x > 0f; x -= 0.1f)
 								{
 									Vector3 c = (position - preview) * x + position;
-									if (solid.All(s => s.box.Contains(c) != ContainmentType.Contains))
+									if (solid.All(s =>
+									{
+										var contains = s.box.Contains(c);
+										return contains != ContainmentType.Contains &&
+										       contains != ContainmentType.Intersects;
+									}))
 									{
 										velocity = new Vector3(c.X - position.X, velocity.Y, c.Z - position.Z);
 										break;
@@ -143,18 +150,22 @@ namespace Alex.Worlds
 			sw.Restart();
 		}
 
-		private Vector3 AdjustForY(BoundingBox box, (BlockCoordinates coordinates, Block block, BoundingBox box)[] blocks, Vector3 velocity, PlayerLocation position)
+		private Vector3 AdjustForY(BoundingBox box, (BlockCoordinates coordinates, Block block, BoundingBox box, bool isBlockPart)[] blocks, Vector3 velocity, PlayerLocation position)
 		{
 			if (velocity.Y == 0f)
 				return velocity;
 			
 			float? collisionPoint = null;
 			bool negative = velocity.Y < 0f;
-			foreach (var corner in box.GetCorners())
+			foreach (var corner in box.GetCorners().OrderBy(x => x.Y))
 			{
 				foreach (var block in blocks)
 				{
-					if (block.block.Solid && block.box.Contains(corner) == ContainmentType.Contains)
+					var blockBox = block.box;
+					
+					bool pass = block.block.Solid && blockBox.Contains(corner) == ContainmentType.Contains;
+
+					if (pass)
 					{
 						var heading = corner - position;
 						var distance = heading.LengthSquared();
@@ -162,14 +173,14 @@ namespace Alex.Worlds
 
 						if (negative)
 						{
-							if (collisionPoint == null || block.box.Max.Y > collisionPoint.Value)
+							if (collisionPoint == null || blockBox.Max.Y > collisionPoint.Value)
 							{
 								collisionPoint = block.box.Max.Y;
 							}
 						}
 						else
 						{
-							if (collisionPoint == null || block.box.Min.Y < collisionPoint.Value)
+							if (collisionPoint == null || blockBox.Min.Y < collisionPoint.Value)
 							{
 								collisionPoint = block.box.Min.Y;
 							}
@@ -275,9 +286,9 @@ namespace Alex.Worlds
 			    }
 		    }
 
-		    public bool GetIntersecting(BoundingBox box, out (BlockCoordinates coordinates, Block block, BoundingBox box)[] blocks)
+		    public bool GetIntersecting(BoundingBox box, out (BlockCoordinates coordinates, Block block, BoundingBox box, bool isBlockPart)[] blocks)
 		    {
-			    List<(BlockCoordinates coordinates,Block block, BoundingBox box)> b = new List<(BlockCoordinates coordinates,Block block, BoundingBox box)>();
+			    List<(BlockCoordinates coordinates,Block block, BoundingBox box, bool isBlockPart)> b = new List<(BlockCoordinates coordinates,Block block, BoundingBox box, bool isBlockPart)>();
 			    foreach (var block in Blocks)
 			    {
 				    var vecPos = new Vector3(block.Key.X, block.Key.Y, block.Key.Z);
@@ -291,23 +302,34 @@ namespace Alex.Worlds
 					    }*/
 
 					    bool added = false;
-					    foreach (var point in box.GetCorners().OrderBy(x => x.Y))
+					    var bb = block.Value.block.GetPartBoundingBox(block.Key, box);
+					    if (bb.HasValue)
 					    {
-						    var bb = block.Value.block.GetPartBoundingBox(block.Key, point);
-						    if (!bb.HasValue)
-							    continue;
-						    
-						    var bc = bb.Value.Contains(point);
-						    if (bc == ContainmentType.Contains)
-						    {
-							    added = true;
-							    b.Add((block.Key, block.Value.block, bb.Value));
-							    // break;
-						    }
+						    added = true;
+						    b.Add((block.Key, block.Value.block, bb.Value, true));
+						     /* foreach (var point in box.GetCorners().OrderBy(x => x.Y))
+						      {
+							    //  var bb = block.Value.block.GetPartBoundingBox(block.Key, point);
+							     // if (!bb.HasValue)
+								  //    continue;
+							      
+							      var bc = bb.Value.Contains(point);
+							      if (bc == ContainmentType.Contains)
+							      {
+								      added = true;
+								      b.Add((block.Key, block.Value.block, bb.Value, true));
+								      // break;
+							      }
+						      }*/
 					    }
 
 					    if (!added)
 					    {
+						    var containmentType = block.Value.box.Contains(box);
+						    if (containmentType == ContainmentType.Contains || containmentType == ContainmentType.Intersects)
+						    {
+							    //b.Add((block.Key, block.Value.block, block.Value.box, false));
+						    }
 						    //   b.Add((block.Key, block.Value.block, block.Value.box));
 					    }
 				    }

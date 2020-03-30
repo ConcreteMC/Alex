@@ -60,12 +60,19 @@ namespace Alex.Graphics.Models.Blocks
 
 			return intersecting.ToArray();
 		}
-		
-		public override BoundingBox? GetPartBoundingBox(Vector3 position, Vector3 entityPosition)
+
+		private BoundingBox[] GetBoxes(Vector3 position)
 		{
+			return Boxes.Select(x => new BoundingBox(position + x.Min, position + x.Max)).ToArray();
+		}
+		
+		public override BoundingBox? GetPartBoundingBox(Vector3 position, BoundingBox entityBox)
+		{
+			var boxes = GetBoxes(position);
+			//entityBox = new BoundingBox(entityBox.Min - position, entityBox.Max - position);
 		//	var relative = Vector3.
-		var relativePosition = entityPosition - position; //Vector3.Max(entityPosition, position) - Vector3.Min(entityPosition, position);
-			var relativeNoY = new Vector3(relativePosition.X, 0f, relativePosition.Z);
+		//var relativePosition = entityPosition - position; //Vector3.Max(entityPosition, position) - Vector3.Min(entityPosition, position);
+			//var relativeNoY = new Vector3(relativePosition.X, 0f, relativePosition.Z);
 
 		/*	var res = Boxes.Where(x => x.Contains(entityPosition) == ContainmentType.Intersects).OrderBy(x => x.Max.Y - relativePosition.Y).FirstOrDefault();
 
@@ -76,15 +83,28 @@ namespace Alex.Graphics.Models.Blocks
 			
 			//var first = Boxes.OrderBy(x => MathF.Abs(Vector3.Distance(relativePosition, (x.Min + x.Max) / 2f))).FirstOrDefault();
 			//return new BoundingBox(position + first.Min, position + first.Max);
+			foreach (var corner in entityBox.GetCorners().OrderBy(x => x.Y))
+			{
+				foreach (var box in boxes.OrderByDescending(x => x.Max.Y))
+				{
+					//if (box.Min.X <= relativePosition.X && box.Max.X >= relativePosition.X
+					//    && box.Min.Z <= relativePosition.Z && box.Max.Z >= relativePosition.Z)
+					var result = box.Contains(corner);
+					if (result == ContainmentType.Contains || result == ContainmentType.Intersects)
+					{
+						return box;
+					}
+				}
+			}
 			
-			foreach (var box in Boxes.OrderByDescending(x => x.Max.Y))
+			foreach (var box in boxes.OrderByDescending(x => x.Max.Y))
 			{
 				//if (box.Min.X <= relativePosition.X && box.Max.X >= relativePosition.X
 				//    && box.Min.Z <= relativePosition.Z && box.Max.Z >= relativePosition.Z)
-				var result = box.Contains(relativePosition);
-				if (result == ContainmentType.Contains || result == ContainmentType.Intersects)
+				var result = entityBox.Contains(box);
+				if (result == ContainmentType.Intersects || result == ContainmentType.Contains)
 				{
-					return new BoundingBox(position + box.Min, position + box.Max);
+					return box;
 				}
 			}
 

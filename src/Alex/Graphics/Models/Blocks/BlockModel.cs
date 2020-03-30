@@ -30,7 +30,7 @@ namespace Alex.Graphics.Models.Blocks
 			return new BoundingBox(position, position + Vector3.One);
 	    }
 
-	    public virtual BoundingBox? GetPartBoundingBox(Vector3 position, Vector3 entityPosition)
+	    public virtual BoundingBox? GetPartBoundingBox(Vector3 position, BoundingBox entityBox)
 	    {
 		    return new BoundingBox(position, position + Vector3.One);
 	    }
