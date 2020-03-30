@@ -96,7 +96,7 @@ namespace Alex.Worlds
 		//_scheduledUpdates.Add(y << 8 | z << 4 | x);
 		}
 
-		private ChunkSection GetSection(int y)
+		public ChunkSection GetSection(int y)
 		{
 			var section = Sections[y >> 4];
 			if (section == null)

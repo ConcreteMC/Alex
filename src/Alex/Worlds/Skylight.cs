@@ -282,7 +282,7 @@ namespace Alex.Worlds
 
 			var cc = new ChunkCoordinates(coordinates);
 			ChunkColumn chunk = (ChunkColumn) level.GetChunkColumn(cc.X, cc.Z);
-			//var height = chunk.GetRecalculatedHeight(coordinates.X & 0x0f, coordinates.Z & 0x0f);
+			var height = chunk.GetRecalculatedHeight(coordinates.X & 0x0f, coordinates.Z & 0x0f);
 
 			Queue<BlockCoordinates> sourceQueue = new Queue<BlockCoordinates>();
 			sourceQueue.Enqueue(coordinates);
@@ -332,7 +332,7 @@ namespace Alex.Worlds
 				sourceQueue.Enqueue(coordinates.BlockSouth());
 			}
 
-			//chunk.SetHeight(coordinates.X & 0x0f, coordinates.Z & 0x0f, (short) height);
+			chunk.SetHeight(coordinates.X & 0x0f, coordinates.Z & 0x0f, (short) height);
 
 			// Recalc
 			Queue<BlockCoordinates> lightBfQueue = new Queue<BlockCoordinates>(sourceQueue);
@@ -423,7 +423,7 @@ namespace Alex.Worlds
 			byte currentSkyLight = GetSkyLight(coordinates, chunk);
 
 			int sectionIdx = coordinates.Y >> 4;
-			ChunkSection subChunk = (ChunkSection) chunk.Sections[sectionIdx];
+			ChunkSection subChunk = (ChunkSection) chunk.GetSection(coordinates.Y);
 
 			byte maxSkyLight = currentSkyLight;
 			if (coordinates.Y < 255)
@@ -457,7 +457,7 @@ namespace Alex.Worlds
 				int diffuseLevel = GetDiffuseLevel(coordinates, subChunk);
 				maxSkyLight = (byte) Math.Max(currentSkyLight, maxSkyLight - diffuseLevel);
 
-				if (maxSkyLight > currentSkyLight + 1)
+				if (maxSkyLight > currentSkyLight)
 				{
 					level.SetSkyLight(coordinates, maxSkyLight);
 
@@ -478,7 +478,7 @@ namespace Alex.Worlds
 
 			var chunkCoords = (ChunkCoordinates) coordinates;
 			
-			if (!(up || down) && (chunk.X != chunkCoords.X || chunk.Z != chunkCoords.Z))
+			if (!(up || down) && (chunk.X != coordinates.X >> 4 || chunk.Z != coordinates.Z >> 4))
 			{
 				chunk = (ChunkColumn) level.GetChunk(chunkCoords);
 				subChunk = null;
@@ -493,7 +493,6 @@ namespace Alex.Worlds
 
 			if (chunk == null /* || chunk.chunks == null*/)
 			{
-				Log.Info($"Null chunk: {chunkCoords}");
 				return lightLevel;
 			}
 
@@ -568,7 +567,7 @@ namespace Alex.Worlds
 			if (chunk == null) return true;
 
 			var b = chunk.GetBlock(blockCoordinates.X & 0x0f, blockCoordinates.Y & 0xff, blockCoordinates.Z & 0x0f);
-			return !b.Renderable || (b.Transparent && !(b is Leaves));
+			return b is Air || (b.Transparent && !(b is Leaves));
 			//	int bid = chunk.GetBlockId(blockCoordinates.X & 0x0f, blockCoordinates.Y & 0xff, blockCoordinates.Z & 0x0f);
 			//	return bid == 0 || (BlockFactory.TransparentBlocks[bid] == 1 && bid != 18 && bid != 161 && bid != 30 && bid != 8 && bid != 9);
 		}
@@ -595,8 +594,8 @@ namespace Alex.Worlds
 			int by = blockCoordinates.Y & 0xff;
 			int bz = blockCoordinates.Z & 0x0f;
 
-			//var state = section.Get(bx, by - 16 * (by >> 4), bz);
-		//	return !state.Block.Renderable || state.Block.Transparent;
+			var state = section.Get(bx, by - 16 * (by >> 4), bz);
+			return state.Block is Air || state.Block.Transparent;
 			
 			return section.IsTransparent(bx, by - 16 * (by >> 4), bz);
 		//	return bid == 0 || BlockFactory.TransparentBlocks[bid] == 1;
@@ -624,7 +623,7 @@ namespace Alex.Worlds
 		{
 			if (chunk == null) return 256;
 
-			return chunk.GetHeight(blockCoordinates.X & 0x0f, blockCoordinates.Z & 0x0f) + 1;
+			return chunk.GetHeight(blockCoordinates.X & 0x0f, blockCoordinates.Z & 0x0f);
 		}
 
 		private void MakeVisit(BlockCoordinates inc)

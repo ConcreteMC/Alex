@@ -70,7 +70,7 @@ namespace Alex.Blocks.Minecraft
 		public BlockCoordinates Coordinates { get; set; }
 		protected Block(int blockId, byte metadata) : this(BlockFactory.GetBlockStateID(blockId, metadata))
 	    {
-		    LightOpacity = 1;
+		   // LightOpacity = 2;
 	    }
 
 	    public Block(uint blockStateId)
@@ -83,7 +83,7 @@ namespace Alex.Blocks.Minecraft
 		    Renderable = true;
 		    HasHitbox = true;
 		    
-		    LightOpacity = 1;
+		   // LightOpacity = 2;
 		}
 
 		protected Block(string blockName)
@@ -96,7 +96,7 @@ namespace Alex.Blocks.Minecraft
 			Renderable = true;
 			HasHitbox = true;
 			
-			LightOpacity = 1;
+		//	LightOpacity = 2;
 		}
 
 		protected Block()
@@ -108,7 +108,7 @@ namespace Alex.Blocks.Minecraft
 			Renderable = true;
 			HasHitbox = true;
 
-			LightOpacity = 1;
+		//	LightOpacity = 1;
 		}
 
 		public virtual double GetHeight(Vector3 relative)

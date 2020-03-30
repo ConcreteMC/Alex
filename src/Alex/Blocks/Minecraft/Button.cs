@@ -8,11 +8,12 @@
 		    Solid = false;
 		    IsFullCube = false;
 
-			/*
-			 * Solid = false;
-			Transparent = true;
-			IsReplacible = false;
-			 */
-		}
+		    BlockMaterial = Material.Circuits;
+		    /*
+		     * Solid = false;
+		    Transparent = true;
+		    IsReplacible = false;
+		     */
+	    }
 	}
 }

@@ -11,8 +11,8 @@ namespace Alex.Blocks.Minecraft
 			IsBlockNormalCube = false;
 			IsFullBlock = false;
 			
-			BlockMaterial = Material.Grass;
-			LightOpacity = 0;
+			BlockMaterial = Material.Plants;
+			LightOpacity = 1;
 		}
 	}
 }

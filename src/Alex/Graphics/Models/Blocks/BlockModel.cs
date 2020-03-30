@@ -317,6 +317,11 @@ namespace Alex.Graphics.Models.Blocks
 
 	    public static BlockFace[] FACE_ROTATION =
 		{
+			/*BlockFace.West,
+			BlockFace.North,
+			BlockFace.East,
+			BlockFace.South*/
+			
 			BlockFace.East,
 			BlockFace.South,
 			BlockFace.West,

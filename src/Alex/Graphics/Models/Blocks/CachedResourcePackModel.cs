@@ -639,14 +639,19 @@ namespace Alex.Graphics.Models.Blocks
 							}
 						}
 
-						if (element.Shade)
+						//if (element.Shade)
 						{
 							faceColor = AdjustColor(faceColor, facing,
 								world == null
 									? 15
-									: (GetLight(world, position + cullFace.GetVector3(),
+									: (GetLight(world, position + facing.GetVector3(),
 										false)), element.Shade);
 						}
+
+						//if (facing == BlockFace.North)
+						//{
+						//	faceColor = Color.Magenta;
+						//}
 
 						var s = (originalCullFace.GetVector3() * scale);
 						var initialIndex = verts.Count;

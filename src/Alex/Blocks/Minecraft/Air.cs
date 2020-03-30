@@ -11,7 +11,7 @@ namespace Alex.Blocks.Minecraft
 			HasHitbox = false;
 
 			BlockMaterial = Material.Air;
-			LightOpacity = 0;
+			LightOpacity = 1;
 		}
 	}
 }

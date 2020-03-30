@@ -654,6 +654,8 @@ namespace Alex.Worlds
 		    {
 			    if (Chunks.TryGetValue(coords, out var val))
 			    {
+				    new SkyLightCalculations().RecalcSkyLight((ChunkColumn) val, new SkyLightBlockAccess(this));
+				    
 				    UpdateChunk(coords, val);
 			    }
 
