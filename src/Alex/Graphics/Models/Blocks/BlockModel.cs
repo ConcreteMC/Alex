@@ -182,7 +182,7 @@ namespace Alex.Graphics.Models.Blocks
 		{
 			byte skyLight = world.GetSkyLight(position);
 			byte blockLight = world.GetBlockLight(position);
-			if (!smooth)
+			if (!smooth || blockLight + skyLight > 0)
 		    {
 			    return (byte)Math.Min(blockLight + skyLight, 15);
 			}

@@ -645,7 +645,7 @@ namespace Alex.Graphics.Models.Blocks
 								world == null
 									? 15
 									: (GetLight(world, position + facing.GetVector3(),
-										false)), element.Shade);
+										true)), element.Shade);
 						}
 
 						//if (facing == BlockFace.North)

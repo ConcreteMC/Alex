@@ -115,6 +115,11 @@ namespace Alex.Blocks.Minecraft
 		{
 			return BlockState.Model.BoundingBox.Max.Y;
 		}
+
+		public virtual bool IsSolid(BlockFace face)
+		{
+			return true;
+		}
 		
 		public virtual bool CanClimb(BlockFace face)
 		{
