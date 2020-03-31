@@ -29,7 +29,7 @@ jobs:
       working-directory: src/Alex
       
     - name: Build
-      run: dotnet build --configuration Release --no-restore -o "build-linux" --version-suffix ${{steps.vars.outputs.sha_short}}
+      run: dotnet publish --configuration Release --no-restore -o "build-linux" --version-suffix ${{steps.vars.outputs.sha_short}} --self-contained true -r linux-x64
       working-directory: src/Alex
 
     - name: Upload artifact
@@ -64,7 +64,7 @@ jobs:
       working-directory: src/Alex
       
     - name: Build
-      run: dotnet build --configuration Release --no-restore -o /build-win --version-suffix ${{steps.vars.outputs.sha_short}}
+      run: dotnet publish --configuration Release --no-restore -o /build-win --version-suffix ${{steps.vars.outputs.sha_short}} --self-contained true -r win-x64
       working-directory: src/Alex
 
     - name: Upload artifact
@@ -99,7 +99,7 @@ jobs:
       working-directory: src/Alex
       
     - name: Build
-      run: dotnet build --configuration Release --no-restore -o "build-osx" --version-suffix ${{steps.vars.outputs.sha_short}}
+      run: dotnet publish --configuration Release --no-restore -o "build-osx" --version-suffix ${{steps.vars.outputs.sha_short}} --self-contained true -r osx-x64
       working-directory: src/Alex
 
     - name: Upload artifact
