@@ -12,6 +12,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+      
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
@@ -36,3 +39,38 @@ jobs:
         name: linux-binaries
         # Directory containing files to upload
         path: /build
+
+  windows:
+    name: Build Windows
+
+    runs-on: [windows-latest]
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+      
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.101
+    
+    - name: Get short SHA
+      id: vars
+      run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+        
+    - name: Install dependencies
+      run: dotnet restore
+      working-directory: src/Alex
+      
+    - name: Build
+      run: dotnet build --configuration Release --no-restore -o /build-win --version-suffix ${{steps.vars.outputs.sha_short}}
+      working-directory: src/Alex
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v1.0.0
+      with:
+        # Artifact name
+        name: windows-binaries
+        # Directory containing files to upload
+        path: /build-win
