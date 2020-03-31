@@ -1,0 +1,3 @@
+<Project>
+	<PropertyGroup><RuntimeIdentifiers>win-x64;linux-x64;osx-x64</RuntimeIdentifiers></PropertyGroup>
+</Project>
