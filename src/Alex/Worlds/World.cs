@@ -35,6 +35,7 @@ using IBlockState = Alex.API.Blocks.State.IBlockState;
 using MathF = System.MathF;
 using Player = Alex.Entities.Player;
 using PlayerLocation = Alex.API.Utils.PlayerLocation;
+using Rectangle = Microsoft.Xna.Framework.Rectangle;
 using UUID = Alex.API.Utils.UUID;
 
 //using System.Reflection.Metadata.Ecma335;
@@ -55,6 +56,8 @@ namespace Alex.Worlds
 		
 		private IEventDispatcher EventDispatcher { get; }
 		public BedrockFormManager FormManager { get; }
+		private SkyBox SkyRenderer { get; }
+		private bool UseDepthMap { get; set; }
 		//public SkyLightCalculations SkyLightCalculations { get; }
 		public World(IServiceProvider serviceProvider, GraphicsDevice graphics, AlexOptions options, Camera camera,
 			INetworkProvider networkProvider)
@@ -70,6 +73,7 @@ namespace Alex.Worlds
 			PlayerList = new PlayerList();
 
 			ChunkManager.Start();
+			var settings = serviceProvider.GetRequiredService<IOptionsProvider>();
 			var profileService = serviceProvider.GetRequiredService<IPlayerProfileService>();
 			var resources = serviceProvider.GetRequiredService<ResourceManager>();
 			EventDispatcher = serviceProvider.GetRequiredService<IEventDispatcher>();
@@ -117,7 +121,11 @@ namespace Alex.Worlds
 			
 			FormManager = new BedrockFormManager(networkProvider, serviceProvider.GetRequiredService<GuiManager>(), serviceProvider.GetService<Alex>().InputManager);
 			
+			SkyRenderer = new SkyBox(serviceProvider, graphics, this);
 			//SkyLightCalculations = new SkyLightCalculations();
+
+			UseDepthMap = options.VideoOptions.Depthmap;
+			options.VideoOptions.Depthmap.Bind((old, newValue) => { UseDepthMap = newValue; });
 		}
 
 		private void FieldOfVisionOnValueChanged(int oldvalue, int newvalue)
@@ -178,8 +186,15 @@ namespace Alex.Worlds
         {
 			Graphics.DepthStencilState = DepthStencilState.Default;
             Graphics.SamplerStates[0] = SamplerState.PointWrap;
+
+            if (UseDepthMap)
+            {
+	            ChunkManager.Draw(args, true);
+            }
+
+            SkyRenderer.Draw(args);
+            ChunkManager.Draw(args, false);
             
-            ChunkManager.Draw(args);
 			EntityManager.Render(args);
 
 			//TestItemRender.Render(args.GraphicsDevice, (Camera.Position + (Camera.Direction * 2.5f)));
@@ -201,6 +216,17 @@ namespace Alex.Worlds
 	        args.Camera = Camera;
 
 	        EntityManager.Render2D(args);
+	        
+	        args.SpriteBatch.Begin();
+
+	        try
+	        {
+				args.SpriteBatch.Draw(ChunkManager.DepthMap, new Rectangle(0, 0, 256, 256), Color.White);
+	        }
+	        finally
+	        {
+		        args.SpriteBatch.End();
+	        }
         }
 
         //Render light levels
@@ -242,7 +268,7 @@ namespace Alex.Worlds
 		private float _fovModifier = -1;
 		private bool UpdatingPriorities = false;
 		private float BrightnessMod = 0f;
-        public void Update(UpdateArgs args, SkyBox skyRenderer)
+        public void Update(UpdateArgs args)
 		{
 			args.Camera = Camera;
 			if (Player.FOVModifier != _fovModifier)
@@ -255,9 +281,11 @@ namespace Alex.Worlds
 			}
 			Camera.Update(args, Player);
 
-			BrightnessMod = skyRenderer.BrightnessModifier;
+			BrightnessMod = SkyRenderer.BrightnessModifier;
+			
+			SkyRenderer.Update(args);
 			ChunkManager.Update(args);
-			EntityManager.Update(args, skyRenderer);
+			EntityManager.Update(args, SkyRenderer);
 			PhysicsEngine.Update(args.GameTime);
 			
 			var diffuseColor = Color.White.ToVector3() * BrightnessModifier;
@@ -273,7 +301,7 @@ namespace Alex.Worlds
 			}
 			else
 			{
-				ChunkManager.FogColor = skyRenderer.WorldFogColor.ToVector3();
+				ChunkManager.FogColor = SkyRenderer.WorldFogColor.ToVector3();
 				ChunkManager.FogDistance = (float) Options.VideoOptions.RenderDistance * 16f * 0.8f;
 			}
 			

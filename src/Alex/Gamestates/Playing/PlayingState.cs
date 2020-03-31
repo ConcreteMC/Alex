@@ -5,6 +5,7 @@ using System.Threading;
 using Alex.API.Events;
 using Alex.API.Graphics;
 using Alex.API.Network;
+using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks.Minecraft;
@@ -12,18 +13,19 @@ using Alex.Blocks.State;
 using Alex.GameStates.Hud;
 using Alex.Graphics.Camera;
 using Alex.Graphics.Models;
+using Alex.Gui;
 using Alex.Gui.Elements;
 using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using RocketUI;
 
 namespace Alex.GameStates.Playing
 {
 	public class PlayingState : GameState
 	{
-		private SkyBox SkyRenderer { get; }
 		public World World { get; }
 
         private WorldProvider WorldProvider { get; }
@@ -32,12 +34,13 @@ namespace Alex.GameStates.Playing
 		private readonly PlayingHud _playingHud;
 		private readonly GuiDebugInfo _debugInfo;
 		
+		private GuiMiniMap MiniMap { get; }
+		private bool RenderMinimap { get; set; } = false;
 		public PlayingState(Alex alex, GraphicsDevice graphics, WorldProvider worldProvider, INetworkProvider networkProvider) : base(alex)
 		{
 			NetworkProvider = networkProvider;
 
 			World = new World(alex.Services, graphics, Options, new FirstPersonCamera(Options.VideoOptions.RenderDistance, Vector3.Zero, Vector3.Zero), networkProvider);
-			SkyRenderer = new SkyBox(alex.Services, graphics, World);
 
 			WorldProvider = worldProvider;
 			if (worldProvider is SPWorldProvider)
@@ -56,6 +59,33 @@ namespace Alex.GameStates.Playing
 			_playingHud = new PlayingHud(Alex, World.Player, title);
 			_debugInfo = new GuiDebugInfo();
             InitDebugInfo();
+            
+            MiniMap = new GuiMiniMap(World.ChunkManager)
+            {
+	            Anchor = Alignment.TopRight
+            };
+
+            var settings = GetService<IOptionsProvider>();
+            settings.AlexOptions.VideoOptions.Minimap.Bind(OnMinimapSettingChange);
+            RenderMinimap = settings.AlexOptions.VideoOptions.Minimap.Value;
+            
+            if (RenderMinimap)
+            {
+	            _playingHud.AddChild(MiniMap);
+            }
+		}
+
+		private void OnMinimapSettingChange(bool oldvalue, bool newvalue)
+		{
+			RenderMinimap = newvalue;
+			if (!newvalue)
+			{
+				_playingHud.RemoveChild(MiniMap);
+			}
+			else
+			{
+				_playingHud.AddChild(MiniMap);
+			}
 		}
 
 		protected override void OnLoad(IRenderArgs args)
@@ -186,6 +216,8 @@ namespace Alex.GameStates.Playing
 		private DateTime _previousMemUpdate = DateTime.UtcNow;
 		protected override void OnUpdate(GameTime gameTime)
 		{
+			MiniMap.PlayerLocation = World.Player.KnownPosition;
+			
 			var args = new UpdateArgs()
 			{
 				Camera = World.Camera,
@@ -221,14 +253,11 @@ namespace Alex.GameStates.Playing
 					World.Player.Controller.CheckInput = false;
 				}
 
-				if (!AlwaysDay)
-					SkyRenderer.Update(args);
-				else
-				{
+				if (AlwaysDay){
 					World.SetTime(1200);
 				}
 				
-				World.Update(args, SkyRenderer);
+				World.Update(args);
 
 				var now = DateTime.UtcNow;
 				if (now - _previousMemUpdate > TimeSpan.FromSeconds(5))
@@ -558,7 +587,10 @@ namespace Alex.GameStates.Playing
 		{
 			args.Camera = World.Camera;
 
-            SkyRenderer.Draw(args);
+			if (RenderMinimap)
+			{
+				MiniMap.Draw(args);
+			}
 
 			World.Render(args);
 

@@ -30,6 +30,12 @@ namespace Alex.API.Data.Options
         [DataMember]
         public OptionsProperty<int> Brightness { get; set; }
         
+        [DataMember]
+        public OptionsProperty<bool> Minimap { get; set; }
+        
+        [DataMember]
+        public OptionsProperty<bool> Depthmap { get; set; }
+        
         public VideoOptions()
         {
             RenderDistance = DefineRangedProperty(6, 2, 32);
@@ -41,6 +47,8 @@ namespace Alex.API.Data.Options
             Brightness = DefineRangedProperty(50, 0, 100);
 
             LimitFramerate = DefineProperty(false);
+            Minimap = DefineProperty(false);
+            Depthmap = DefineProperty(false);
         }
     }
 }

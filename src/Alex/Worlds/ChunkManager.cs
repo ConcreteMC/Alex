@@ -48,6 +48,8 @@ namespace Alex.Worlds
 	    public AlphaTestEffect TransparentEffect { get; }
 	    public AlphaTestEffect TranslucentEffect { get; }
 		public BasicEffect OpaqueEffect { get; }
+		
+		private BasicEffect DepthEffect { get; }
 
 	    public long Vertices { get; private set; }
 	    public int RenderedChunks { get; private set; } = 0;
@@ -59,9 +61,10 @@ namespace Alex.Worlds
         private AlexOptions Options { get; }
         private ProfilerService ProfilerService { get; }
         private RenderTarget2D _depthMap;
+        public RenderTarget2D DepthMap => _depthMap;
         public ChunkManager(IServiceProvider serviceProvider, GraphicsDevice graphics, IWorld world)
         {
-	        _depthMap = new RenderTarget2D(graphics, graphics.Viewport.Width, graphics.Viewport.Height);
+	        _depthMap = new RenderTarget2D(graphics, 512, 512, false, SurfaceFormat.Color, DepthFormat.None);
 	        
 	        Graphics = graphics;
 	        World = world;
@@ -76,6 +79,14 @@ namespace Alex.Worlds
 	        var stillAtlas = Resources.Atlas.GetStillAtlas();
 	        
 	        var fogStart = 0;
+	        
+	        DepthEffect = new BasicEffect(graphics)
+	        {
+		        TextureEnabled = false,
+		        VertexColorEnabled = false,
+		        FogEnabled = false
+	        };
+	        
 	        TransparentEffect = new AlphaTestEffect(Graphics)
 	        {
 		        Texture = stillAtlas,
@@ -202,38 +213,27 @@ namespace Alex.Worlds
 	    }
 	    
 	    public bool UseWireFrames { get; set; } = false;
-	    public void Draw(IRenderArgs args)
+	    private readonly static RenderStage[] RenderStages = (RenderStage[]) Enum.GetValues(typeof(RenderStage));
+
+	    private readonly static RenderStage[] DepthRenderStages = new[]
 	    {
-		    var device = args.GraphicsDevice;
-		    var camera = args.Camera;
-
-		    var originalSamplerState = device.SamplerStates[0];
-		    
-		    device.SamplerStates[0] = new SamplerState()
-		    {
-			    Filter = TextureFilter.Point,
-			    AddressU = TextureAddressMode.Wrap,
-			    AddressV = TextureAddressMode.Wrap,
-			    MipMapLevelOfDetailBias = -2f,
-			    MaxMipLevel = 0
-		    };
-		    
-		    RasterizerState originalState = null;
-		    
-		    bool usingWireFrames = UseWireFrames;
-		    if (usingWireFrames)
-		    {
-			    originalState = device.RasterizerState;
-			    RasterizerState rasterizerState = Copy(originalState);
-			    rasterizerState.FillMode = FillMode.WireFrame;
-			    device.RasterizerState = rasterizerState;
-		    }
-
-		    device.DepthStencilState = DepthStencilState.Default;
-		    device.BlendState = BlendState.AlphaBlend;
-
-		    var view = camera.ViewMatrix;
-		    var projection = camera.ProjectionMatrix;
+		    RenderStage.OpaqueFullCube,
+		    RenderStage.Opaque
+	    };
+	    
+	    private static readonly SamplerState RenderSampler = new SamplerState()
+	    {
+		    Filter = TextureFilter.Point,
+		    AddressU = TextureAddressMode.Wrap,
+		    AddressV = TextureAddressMode.Wrap,
+		    MipMapLevelOfDetailBias = -2f,
+		    MaxMipLevel = 0
+	    };
+	    
+	    public void Draw(IRenderArgs args, bool depthMapOnly)
+	    {
+		    var view = args.Camera.ViewMatrix;
+		    var projection = args.Camera.ProjectionMatrix;
 		    
 		    TransparentEffect.View = view;
 		    TransparentEffect.Projection = projection;
@@ -250,53 +250,102 @@ namespace Alex.Worlds
 		    AnimatedTranslucentEffect.View = view;
 		    AnimatedTranslucentEffect.Projection = projection;
 
+		    DepthEffect.View = view;
+		    DepthEffect.Projection = projection;
+		    
+		    var device = args.GraphicsDevice;
+
+		    var originalSamplerState = device.SamplerStates[0];
+
+		    device.SamplerStates[0] = RenderSampler;
+		    
+		    RasterizerState originalState = null;
+		    
+		    bool usingWireFrames = UseWireFrames;
+		    if (usingWireFrames)
+		    {
+			    originalState = device.RasterizerState;
+			    RasterizerState rasterizerState = Copy(originalState);
+			    rasterizerState.FillMode = FillMode.WireFrame;
+			    device.RasterizerState = rasterizerState;
+		    }
+
+		    device.DepthStencilState = DepthStencilState.Default;
+
+		    if (depthMapOnly)
+		    {
+			    args.GraphicsDevice.SetRenderTarget(_depthMap);
+			    device.BlendState = BlendState.Opaque;
+			    
+			    args.GraphicsDevice.Clear(Color.Black);
+			    DrawStaged(args, out _, out _, DepthEffect, DepthRenderStages);
+
+			    args.GraphicsDevice.SetRenderTarget(null);
+		    }
+		    else
+		    {
+			    device.BlendState = BlendState.AlphaBlend;
+			    DrawStaged(args, out int chunksRendered, out int verticesRendered, null, RenderStages);
+
+			    Vertices = verticesRendered;
+			    RenderedChunks = chunksRendered;
+			    IndexBufferSize = 0;
+		    }
+
+		    if (usingWireFrames)
+			    device.RasterizerState = originalState;
+		    
+		    device.SamplerStates[0] = originalSamplerState;
+	    }
+	    
+	    private void DrawStaged(IRenderArgs args, out int chunksRendered, out int drawnVertices, Effect forceEffect = null, params RenderStage[] stages)
+	    {
+		    if (stages == null || stages.Length == 0)
+			    stages = RenderStages;
+
 		    var tempVertices = 0;
 		    int tempChunks = 0;
 		    var indexBufferSize = 0;
 
 		    ChunkData[] chunks = _renderedChunks;
-
-		    RenderStage[] renderStages = (RenderStage[]) Enum.GetValues(typeof(RenderStage));
-		    foreach (var stage in renderStages)
+		    
+		    foreach (var stage in stages)
 		    {
-			    Effect effect = null;
-			    switch (stage)
+			    Effect effect = forceEffect;
+			    if (forceEffect == null)
 			    {
-				    case RenderStage.OpaqueFullCube:
-					    effect = OpaqueEffect;
-					    break;
-				    case RenderStage.Opaque:
-					    effect = OpaqueEffect;
-					    break;
-				    case RenderStage.Transparent:
-					    effect = TransparentEffect;
-					    break;
-				    case RenderStage.Translucent:
-					    effect = TranslucentEffect;
-					    break;
-				    case RenderStage.Animated:
-					    effect = AnimatedEffect;
-					    break;
-				    case RenderStage.AnimatedTranslucent:
-					    effect = AnimatedEffect;
-					    break;
-				    default:
-					    throw new ArgumentOutOfRangeException();
+				    switch (stage)
+				    {
+					    case RenderStage.OpaqueFullCube:
+						    effect = OpaqueEffect;
+						    break;
+					    case RenderStage.Opaque:
+						    effect = OpaqueEffect;
+						    break;
+					    case RenderStage.Transparent:
+						    effect = TransparentEffect;
+						    break;
+					    case RenderStage.Translucent:
+						    effect = TranslucentEffect;
+						    break;
+					    case RenderStage.Animated:
+						    effect = AnimatedEffect;
+						    break;
+					    case RenderStage.AnimatedTranslucent:
+						    effect = AnimatedEffect;
+						    break;
+					    default:
+						    throw new ArgumentOutOfRangeException();
+				    }
 			    }
 
-			    tempVertices += DrawChunks(device, chunks, effect, stage);
+			    tempVertices += DrawChunks(args.GraphicsDevice, chunks, effect, stage);
 		    }
 
 		    tempChunks = chunks.Count(x => x != null && x.RenderStages != null && x.RenderStages.Count > 0);
 
-		    if (usingWireFrames)
-				device.RasterizerState = originalState;
-
-		    Vertices = tempVertices;
-		    RenderedChunks = tempChunks;
-		    IndexBufferSize = indexBufferSize;
-
-		    device.SamplerStates[0] = originalSamplerState;
+		    chunksRendered = tempChunks;
+		    drawnVertices = tempVertices;
 	    }
 
 	    public bool FogEnabled

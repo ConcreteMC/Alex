@@ -30,6 +30,9 @@ namespace Alex.GameStates.Gui.MainMenu.Options
 
             AddGuiRow(CreateToggle("Use VSync: {0}", o => { return Options.VideoOptions.UseVsync; }), 
                 CreateToggle("Fullscreen: {0}", o => { return Options.VideoOptions.Fullscreen; }));
+
+            AddGuiRow(CreateToggle("Use DepthMap: {0}", options => options.VideoOptions.Depthmap),
+                CreateToggle("Minimap: {0}", options => options.VideoOptions.Minimap));
         }
 
         protected override void OnShow()

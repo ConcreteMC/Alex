@@ -1,4 +1,5 @@
-﻿using Alex.API.Graphics.Textures;
+﻿using Alex.API.Graphics;
+using Alex.API.Graphics.Textures;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
@@ -14,7 +15,7 @@ namespace Alex.Gui
     public class GuiMiniMap : GuiElement
     {
         public Camera Camera { get; }
-        public PlayerLocation PlayerLocation { get; set; }
+        public PlayerLocation PlayerLocation { get; set; } = new PlayerLocation();
 
         private ChunkManager ChunkManager { get; }
 
@@ -47,7 +48,7 @@ namespace Alex.Gui
         {
             base.OnUpdate(gameTime);
 
-            Camera.Position = PlayerLocation;
+           // Camera.Position = PlayerLocation;
         }
 
         protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
@@ -55,15 +56,21 @@ namespace Alex.Gui
             base.OnDraw(graphics, gameTime);
 
             if (_mapTexture == null) return;
-
-            var device = graphics.Context.GraphicsDevice;
-            device.SetRenderTarget(_mapTexture);
-
-            RenderMiniMap(device, graphics.SpriteBatch, gameTime);
-
-            device.SetRenderTarget(null);
         }
 
+        public void Draw(IRenderArgs args)
+        {
+            if (_mapTexture == null) return;
+            Camera.Position = args.Camera.Position;
+            
+            var device = args.GraphicsDevice;
+            var prevRenderTarget = device.GetRenderTargets();
+            device.SetRenderTarget(_mapTexture);
+
+            RenderMiniMap(device, args.SpriteBatch, args.GameTime);
+
+            device.SetRenderTargets(prevRenderTarget);
+        }
         
         private void InitMiniMap(GraphicsDevice device)
         {
@@ -83,8 +90,10 @@ namespace Alex.Gui
                 SpriteBatch    = spriteBatch,
                 GraphicsDevice = device
             };
+            
+            device.Clear(Color.Transparent);
 
-            ChunkManager.Draw(renderArgs);
+            ChunkManager.Draw(renderArgs,false);
         }
     }
 }
