@@ -1,0 +1,111 @@
+name: .NET Core
+
+on:
+  push:
+    branches: [ BigRefactor ]
+
+jobs:
+  linux:
+    name: Build Linux
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+      
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.101
+    
+    - name: Get short SHA
+      id: vars
+      run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+        
+    - name: Install dependencies
+      run: dotnet restore
+      working-directory: src/Alex
+      
+    - name: Build
+      run: dotnet build --configuration Release --no-restore -o "build-linux" --version-suffix ${{steps.vars.outputs.sha_short}}
+      working-directory: src/Alex
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v1.0.0
+      with:
+        # Artifact name
+        name: linux-binaries
+        # Directory containing files to upload
+        path: "src/Alex/build-linux"
+
+  windows:
+    name: Build Windows
+
+    runs-on: [windows-latest]
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+      
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.101
+    
+    - name: Get short SHA
+      id: vars
+      run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+        
+    - name: Install dependencies
+      run: dotnet restore
+      working-directory: src/Alex
+      
+    - name: Build
+      run: dotnet build --configuration Release --no-restore -o /build-win --version-suffix ${{steps.vars.outputs.sha_short}}
+      working-directory: src/Alex
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v1.0.0
+      with:
+        # Artifact name
+        name: windows-binaries
+        # Directory containing files to upload
+        path: /build-win
+
+  osx:
+    name: Build MacOS
+
+    runs-on: [macos-latest]
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+      
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.101
+    
+    - name: Get short SHA
+      id: vars
+      run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+        
+    - name: Install dependencies
+      run: dotnet restore
+      working-directory: src/Alex
+      
+    - name: Build
+      run: dotnet build --configuration Release --no-restore -o "build-osx" --version-suffix ${{steps.vars.outputs.sha_short}}
+      working-directory: src/Alex
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v1.0.0
+      with:
+        # Artifact name
+        name: mac-binaries
+        # Directory containing files to upload
+        path: "src/Alex/build-osx"
