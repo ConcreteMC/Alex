@@ -8,28 +8,20 @@
     <StartupObject>Alex.Program</StartupObject>
     <Platforms>x64;AnyCPU</Platforms>
     <Configurations>Debug;Release;Appveyor</Configurations>
+    <PublishSingleFile>true</PublishSingleFile>
+    <PublishTrimmed>true</PublishTrimmed>
   </PropertyGroup>
 
   <PropertyGroup>
     <Authors>kennyvv, TruDan</Authors>
     <Version>1.0-DEV</Version>
+    <RuntimeIdentifiers>win-x64;linux-x64;osx-x64</RuntimeIdentifiers>
   </PropertyGroup>
 
   <PropertyGroup>
     <LangVersion>8</LangVersion>
 	  <MonoGamePlatform>DesktopGL</MonoGamePlatform>
   </PropertyGroup>
-
-
-	<PropertyGroup Condition="'$(OS)' == 'WINDOWS_NT' ">
-		<RuntimeIdentifier>win10-x64</RuntimeIdentifier>
-	</PropertyGroup>
-	<PropertyGroup Condition="'$(OS)' == 'Unix' ">
-	<!--	<RuntimeIdentifier>ubuntu.19.04-x64</RuntimeIdentifier>-->
-	</PropertyGroup>
-	<PropertyGroup Condition="'$(OS)' == 'OSX' ">
-		<RuntimeIdentifier>osx.10.14-x64</RuntimeIdentifier>
-	</PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
