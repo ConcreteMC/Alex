@@ -27,6 +27,10 @@ DesktopGL/x86
 [Ll]og/
 obj/
 bin/
+obj
+bin
+[Bb]in
+[Oo]bj
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/

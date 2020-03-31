@@ -8,8 +8,7 @@
     <StartupObject>Alex.Program</StartupObject>
     <Platforms>x64;AnyCPU</Platforms>
     <Configurations>Debug;Release;Appveyor</Configurations>
-    <PublishSingleFile>true</PublishSingleFile>
-    <PublishTrimmed>true</PublishTrimmed>
+    <PublishTrimmed>false</PublishTrimmed>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -39,6 +38,10 @@
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 	  <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
+  
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <PublishSingleFile>true</PublishSingleFile>
+  </PropertyGroup>
 
   <ItemGroup>
     <Compile Remove="Graphics\Items\**" />
