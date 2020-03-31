@@ -38,7 +38,7 @@ jobs:
         # Artifact name
         name: linux-binaries
         # Directory containing files to upload
-        path: "build-linux"
+        path: "src/Alex/build-linux"
 
   windows:
     name: Build Windows
