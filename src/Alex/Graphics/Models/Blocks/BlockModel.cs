@@ -274,10 +274,8 @@ namespace Alex.Graphics.Models.Blocks
 				    new Microsoft.Xna.Framework.Vector2(x2, y2), color, color, color);
 		    }
 
-		    var textureInfo = resources.Atlas.GetAtlasLocation(texture);
+		    var textureInfo = resources.Atlas.GetAtlasLocation(texture, out var uvSize);
 		    var textureLocation = textureInfo.Position;
-
-		    var uvSize = resources.Atlas.AtlasSize;
 
 		    var xw = (textureInfo.Width / 16f) / uvSize.X;
             var yh = (textureInfo.Height / 16f) / uvSize.Y;

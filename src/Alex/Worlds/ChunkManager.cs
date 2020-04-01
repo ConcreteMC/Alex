@@ -703,9 +703,12 @@ namespace Alex.Worlds
 		    {
 			    if (Chunks.TryGetValue(coords, out var val))
 			    {
-				    new SkyLightCalculations().RecalcSkyLight((ChunkColumn) val, new SkyLightBlockAccess(this));
-				    
-				    UpdateChunk(coords, val);
+				    if (val is ChunkColumn column && column.Sections.Any(x => !x.IsEmpty()))
+				    {
+					    new SkyLightCalculations().RecalcSkyLight((ChunkColumn) val, new SkyLightBlockAccess(this));
+
+					    UpdateChunk(coords, val);
+				    }
 			    }
 
 			    Interlocked.Decrement(ref _threadsRunning);
@@ -1031,6 +1034,7 @@ namespace Alex.Worlds
             return false;
         }
 
+        public static bool DoMultiPartCalculations { get; set; } = true;
         private ChunkMesh GenerateSectionMesh(IWorld world, ScheduleType scheduled, Vector3 chunkPosition,
 	        ref ChunkSection section, int yIndex)
         {
@@ -1102,7 +1106,7 @@ namespace Alex.Worlds
 				        model = blockState.Model;
 			        }
 
-			        if (blockState is BlockState state && state.IsMultiPart && shouldRebuildVertices)
+			        if (DoMultiPartCalculations && blockState is BlockState state && state.IsMultiPart && shouldRebuildVertices)
 			        {
 				        model = new CachedResourcePackModel(Resources,
 					        MultiPartModels.GetBlockStateModels(world, blockPosition, state,

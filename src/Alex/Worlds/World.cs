@@ -642,7 +642,7 @@ namespace Alex.Worlds
 
 			if (calculateLight)
 			{
-				new SkyLightCalculations().Calculate(this, block.Coordinates);
+				//new SkyLightCalculations().Calculate(this, block.Coordinates);
 			}
 		}
 

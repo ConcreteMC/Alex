@@ -23,10 +23,11 @@ namespace Alex.Utils
 	    private Texture2D[] _frames;
 	    private Texture2D _stillFrame;
         public Vector2 AtlasSize { get; private set; }
+        public Vector2 AnimatedAtlasSize { get; private set; }
         
-	    public AtlasGenerator()
+        public AtlasGenerator()
 	    {
-		    
+
 	    }
 
 	    public void Reset()
@@ -121,6 +122,9 @@ namespace Alex.Utils
 		    Dictionary<string, TextureInfo> stillFrameInfo = new Dictionary<string, TextureInfo>();
 		    GenerateAtlasInternal(regular, others.ToArray(), progressReceiver, stillFrameInfo, out Bitmap stillAtlas);
 		    _stillFrame = TextureUtils.BitmapToTexture2D(device, stillAtlas, out var size);
+		    
+		    //stillAtlas.Save(Path.Combine(DebugPath, "atlas.png"));
+		    
 		    totalSize += size;
 		    
 		    _atlasLocations = stillFrameInfo;
@@ -155,6 +159,8 @@ namespace Alex.Utils
 	        GenerateAtlasInternal(animated.ToArray(), new KeyValuePair<string, Bitmap>[0], progressReceiver,
 		        animatedFrameInfo, out Bitmap animatedFrame);
 
+	        AnimatedAtlasSize = new Vector2(animatedFrame.Width, animatedFrame.Height);
+	        
 	        TextureInfo waterLocation, waterFlowLocation, lavaLocation, lavaFlowLocation, fireLocation, fireLocation2, portalLocation;
 
 	        animatedFrameInfo.TryGetValue("block/water_still", out waterLocation);
@@ -214,6 +220,8 @@ namespace Alex.Utils
 				
 			    frames[i] = TextureUtils.BitmapToTexture2D(device, target, out var s);
 			    totalSize += s;
+			    
+			 //   target.Save(Path.Combine(DebugFramePath, $"frame{i}.png"));
 		    }
 
 		    _animatedAtlasLocations = animatedFrameInfo;
@@ -227,11 +235,18 @@ namespace Alex.Utils
 	    
 	    private void GenerateAtlasInternal(KeyValuePair<string, Bitmap>[] regular, KeyValuePair<string, Bitmap>[] others, IProgressReceiver progressReceiver, Dictionary<string, TextureInfo> atlasLocations, out Bitmap result)
         {
-	        var bitmap = new Bitmap(AtlasWidth, AtlasHeight);
-
 	        int total = regular.Length + others.Length;
+	        var a = (int)Math.Ceiling(regular.Length / 32D);
 
-			int xi = 0, yi = 0, offsetX = 0, yRemaining = 0;
+	        int height = a * TextureHeight;
+	        if (others.Length != 0)
+	        {
+		        height += others.Max(x => x.Value.Height);
+	        }
+	        
+	        var bitmap = new Bitmap(Math.Min(32, total) * TextureWidth, height);
+
+	        int xi = 0, yi = 0, offsetX = 0, yRemaining = 0;
 	        int processedFiles = Process(ref bitmap, regular, ref xi, ref yi, ref offsetX, ref yRemaining, total, 0, atlasLocations, progressReceiver);
 	        yi += TextureHeight;
 	        xi = 0;
@@ -270,7 +285,7 @@ namespace Alex.Utils
 			    }
 			    xi += bm.Value.Width;
 
-			    if (count == AtlasWidth / TextureWidth)
+			    if (count == bmp.Width / TextureWidth)
 			    {
 				    yi += TextureHeight;
 				    xi = 0;
@@ -367,7 +382,7 @@ namespace Alex.Utils
 			return _frames[frame % _frames.Length];
         }
 
-		public TextureInfo GetAtlasLocation(string file, IDictionary<string, TextureInfo> dictionary = null)
+		public TextureInfo GetAtlasLocation(string file, out Vector2 atlasSize, IDictionary<string, TextureInfo> dictionary = null)
         {
             if (dictionary == null)
                 dictionary = _atlasLocations;
@@ -377,6 +392,8 @@ namespace Alex.Utils
 		    if (file == "water_still" && !dictionary.ContainsKey(file))
 			    file = "water_flow";
 
+		    atlasSize = AtlasSize;
+		    
 		    if (dictionary.ContainsKey(file))
 		    {
 			    return dictionary[file];
@@ -385,6 +402,7 @@ namespace Alex.Utils
 		    {
 			    if (_animatedAtlasLocations.TryGetValue(file, out var textureInfo))
 			    {
+				    atlasSize = AnimatedAtlasSize;
 				    return textureInfo;
 			    }
 			    

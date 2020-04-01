@@ -118,7 +118,7 @@ namespace Alex.Graphics.Models.Blocks
 			return false;
 		}
 
-		private static bool PassesMultiPartRule(IWorld world, Vector3 position, MultiPartRule rule, IBlockState baseBlock)
+		public static bool PassesMultiPartRule(IWorld world, Vector3 position, MultiPartRule rule, IBlockState baseBlock)
 		{
 			if (rule.HasOrContition)
 			{
