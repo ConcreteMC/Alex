@@ -10,13 +10,11 @@ using Alex.Blocks.State;
 using Alex.Blocks.Storage;
 using Alex.Utils;
 using fNbt;
-using JetBrains.Profiler.Api;
 using MiNET;
 using MiNET.Net;
 using MiNET.Utils;
 using Newtonsoft.Json;
 using NLog;
-using StackExchange.Profiling;
 using BlockState = Alex.Blocks.State.BlockState;
 using IBlockState = Alex.API.Blocks.State.IBlockState;
 using NibbleArray = MiNET.Utils.NibbleArray;
@@ -108,8 +106,6 @@ namespace Alex.Worlds.Bedrock
 	        {
 		        Log.Warn($"Unsupported cache enabled!");
 	        }
-	        MeasureProfiler.StartCollectingData();
-	        var profiler = MiniProfiler.StartNew("BEToJavaColumn");
 
 	        bool gotLight = false;
 	        try
@@ -450,8 +446,7 @@ namespace Alex.Worlds.Bedrock
 	        }
 	        finally
 	        {
-		        profiler?.Stop();
-		        MeasureProfiler.SaveData();
+
 	        }
         }
 

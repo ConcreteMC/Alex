@@ -16,7 +16,6 @@ using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json.BlockStates;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
-using StackExchange.Profiling;
 
 namespace Alex
 {

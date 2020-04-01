@@ -43,7 +43,6 @@ using MiNET.Net;
 using MiNET.Utils;
 using Newtonsoft.Json;
 using NLog;
-using StackExchange.Profiling;
 using GuiDebugHelper = Alex.Gui.GuiDebugHelper;
 using Point = Microsoft.Xna.Framework.Point;
 using Skin = Alex.API.Utils.Skin;
@@ -325,9 +324,8 @@ namespace Alex
 			
 			services.AddSingleton<IServerQueryProvider>(new ServerQueryProvider(this));
 			services.AddSingleton<IPlayerProfileService, PlayerProfileService>();
-			services.AddSingleton<ProfilerService>();
-            
-            services.AddSingleton<IRegistryManager, RegistryManager>();
+
+			services.AddSingleton<IRegistryManager, RegistryManager>();
             services.AddSingleton<AlexIpcService>();
 
             services.AddSingleton<IEventDispatcher, EventDispatcher>();
