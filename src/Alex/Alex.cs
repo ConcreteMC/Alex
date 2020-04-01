@@ -383,7 +383,7 @@ namespace Alex
 		private void InitializeGame(IProgressReceiver progressReceiver)
 		{
 			progressReceiver.UpdateProgress(0, "Initializing...");
-			Extensions.Init(GraphicsDevice);
+			API.Extensions.Init(GraphicsDevice);
 			MCPacketFactory.Load();
 
 			//ConfigureServices();
