@@ -77,7 +77,6 @@ namespace Alex.ResourcePackLib
 		
 		public Bitmap FontBitmap { get; private set; }
 
-
 		public McResourcePack(byte[] resourcePackData) : this(new ZipArchive(new MemoryStream(resourcePackData), ZipArchiveMode.Read, false), null)
 		{
 
@@ -102,7 +101,10 @@ namespace Alex.ResourcePackLib
 
 			IsPreLoaded = true;
 
-			PreloadCallback?.Invoke(FontBitmap, BitmapFontCharacters.ToCharArray().ToList());
+			//if (FontBitmap != null)
+			//{
+			//	PreloadCallback?.Invoke(FontBitmap, BitmapFontCharacters.ToCharArray().ToList());
+			//}
 		}
 
 		private void Load(ZipArchive archive)
@@ -269,15 +271,23 @@ namespace Alex.ResourcePackLib
 			}
 		}
 
+		private bool DidPreload { get; set; } = false;
 		private void LoadBitmapFont(ZipArchiveEntry entry)
 		{
-			var match = IsTextureResource.Match(entry.FullName);
+			var match = IsFontTextureResource.Match(entry.FullName);
 			
 			var fontBitmap = LoadBitmap(entry, match);
 			LoadTexture(entry, match);
 
 			FontBitmap = fontBitmap;
-			
+
+			if (!DidPreload)
+			{
+				DidPreload = true;
+				
+				PreloadCallback?.Invoke(FontBitmap, BitmapFontCharacters.ToCharArray().ToList());
+			}
+
 			//Log.Info($"Font pixelformat: {fontBitmap.PixelFormat} | RawFormat: {fontBitmap.RawFormat}");
 			//Font = new BitmapFont(Graphics, fontBitmap, 16, BitmapFontCharacters.ToCharArray().ToList());
 		}
@@ -541,6 +551,7 @@ namespace Alex.ResourcePackLib
                     var blockModel = MCJsonConvert.DeserializeObject<BlockModel>(r.ReadToEnd());
                     blockModel.Name = name; // name.Replace("block/", "");
                     blockModel.Namespace = nameSpace;
+
                     if (blockModel.ParentName != null)
                     {
                         //blockModel.ParentName = blockModel.ParentName.Replace("block/", "");
@@ -605,6 +616,20 @@ namespace Alex.ResourcePackLib
 		
 		public bool TryGetBlockModel(string modelName, out BlockModel model)
 		{
+			/*if (modelName.Contains("/"))
+			{
+				var m = _blockModels.FirstOrDefault(x =>
+						x.Value.Path.Equals(modelName, StringComparison.InvariantCultureIgnoreCase))
+					.Value;
+
+				if (m != null)
+				{
+					model = m;
+					return true;
+				}
+			}
+			*/
+
 			string @namespace = DefaultNamespace;
 			var    split      = modelName.Split(':');
 			if (split.Length > 1)
@@ -631,7 +656,7 @@ namespace Alex.ResourcePackLib
 				model = m;
 				return true;
 			}
-
+			
 			model = null;
 			return false;
 		}

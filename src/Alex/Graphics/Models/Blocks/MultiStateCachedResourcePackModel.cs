@@ -90,6 +90,8 @@ namespace Alex.Graphics.Models.Blocks
 				return rule.And.All(o => PassesMultiPartRule(o, blockState));
 			}
 
+			return rule.All(x => CheckRequirements(blockState, x.Key, x.Value));
+			/*
 			if (CheckRequirements(blockState, "down", rule.Down)
 			    && CheckRequirements(blockState, "up", rule.Up)
 			    && CheckRequirements(blockState, "north", rule.North)
@@ -100,7 +102,7 @@ namespace Alex.Graphics.Models.Blocks
 				return true;
 			}
 
-			return false;
+			return false;*/
 		}
 
 		private static bool CheckRequirements(IBlockState baseblockState, string rule, string value)
@@ -130,6 +132,9 @@ namespace Alex.Graphics.Models.Blocks
 				return rule.And.All(o => PassesMultiPartRule(world, position, o, baseBlock));
 			}
 
+			//return rule.All(x => CheckRequirements(baseBlock, x.Key, x.Value));
+			return rule.All(x => Passes(world, position, baseBlock, x.Key, x.Value));
+			/*
 			if (Passes(world, position, baseBlock, "down", rule.Down)
 				&& Passes(world, position, baseBlock, "up", rule.Up)
 				&& Passes(world, position, baseBlock, "north", rule.North)
@@ -140,14 +145,16 @@ namespace Alex.Graphics.Models.Blocks
 				return true;
 			}
 
-			return false;
+			return false;*/
 		}
 
-		private static bool Passes(IWorld world, Vector3 position, IBlockState baseblockState, string rule, string value)
+		private static bool Passes(IWorld world, Vector3 position, IBlockState baseblockState, string rule,
+			string value)
 		{
 			if (string.IsNullOrWhiteSpace(value)) return true;
 
-			Vector3 direction;
+			bool checkDirections = true;
+			Vector3 direction = Vector3.Zero;
 			switch (rule)
 			{
 				case "north":
@@ -169,29 +176,43 @@ namespace Alex.Graphics.Models.Blocks
 					direction = Vector3.Down;
 					break;
 				default:
-					direction = Vector3.Zero;
+					checkDirections = false;
 					break;
 			}
 
-			var newPos = new BlockCoordinates(position + direction);
-			var blockState = world.GetBlockState(newPos);
-			var block = blockState.Block;
+			bool requiredValue;
+			if (value == "true" || value == "false" || value == "none")
+			{
+				var newPos = new BlockCoordinates(position + direction);
+				var blockState = world.GetBlockState(newPos);
+				var block = blockState.Block;
 
-			var canAttach = block.Solid && (block.IsFullCube || (blockState.Name.Equals(baseblockState.Name, StringComparison.InvariantCultureIgnoreCase)));
-			if (direction == Vector3.Up && !(block is Air))
-				return true;
-			
-			if (value == "true")
-			{
-				return canAttach;
+				var canAttach = block.Solid && (block.IsFullCube ||
+				                                (blockState.Name.Equals(baseblockState.Name,
+					                                StringComparison.InvariantCultureIgnoreCase)));
+				if (direction == Vector3.Up && !(block is Air))
+					return true;
+
+				if (value == "true")
+				{
+					return canAttach;
+				}
+				else if (value == "false")
+				{
+					return !canAttach;
+				}
+				else if (value == "none")
+				{
+					return block.BlockMaterial == Material.Air;
+				}
+
+				return false;
 			}
-			else if (value == "false")
+
+
+			if (baseblockState.TryGetValue(rule, out string val))
 			{
-				return !canAttach;
-			}
-			else if (value == "none")
-			{
-				return block.BlockMaterial == Material.Air;
+				return val.Equals(value, StringComparison.InvariantCultureIgnoreCase);
 			}
 
 			return false;

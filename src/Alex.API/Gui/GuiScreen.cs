@@ -1,4 +1,5 @@
-﻿using Alex.API.Gui.Elements;
+﻿using System.Threading;
+using Alex.API.Gui.Elements;
 using Microsoft.Xna.Framework;
 using RocketUI;
 
@@ -36,29 +37,33 @@ namespace Alex.API.Gui
             InvalidateLayout(true);
         }
         
+        private object _updateLock = new object();
         public void UpdateLayout()
         {
             if (!IsLayoutDirty || IsLayoutInProgress) return;
             IsLayoutInProgress = true;
-            
-            // Pass 1 - Update the Preferred size for all elements with
-            //          fixed sizes
-            DoLayoutSizing();
 
-            // Pass 2 - Update the actual sizes for all children based upon their
-            //          parent sizes.
-            BeginLayoutMeasure();
-            Measure(new Size(Width, Height));
+           // ThreadPool.QueueUserWorkItem(o =>
+            {
+                // Pass 1 - Update the Preferred size for all elements with
+                //          fixed sizes
+                DoLayoutSizing();
 
-            // Pass 3 - Arrange all child elements based on the LayoutManager for
-            //          the current element.
-            BeginLayoutArrange();
-            Arrange(new Rectangle(Point.Zero, new Size(Width, Height)));
-            
-            OnUpdateLayout();
+                // Pass 2 - Update the actual sizes for all children based upon their
+                //          parent sizes.
+                BeginLayoutMeasure();
+                Measure(new Size(Width, Height));
 
-            IsLayoutDirty      = false;
-            IsLayoutInProgress = false;
+                // Pass 3 - Arrange all child elements based on the LayoutManager for
+                //          the current element.
+                BeginLayoutArrange();
+                Arrange(new Rectangle(Point.Zero, new Size(Width, Height)));
+
+                OnUpdateLayout();
+
+                IsLayoutDirty = false;
+                IsLayoutInProgress = false;
+            }//);
         }
 
         protected override void OnUpdate(GameTime gameTime)

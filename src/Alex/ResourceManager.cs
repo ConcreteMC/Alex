@@ -20,6 +20,7 @@ using Alex.Gui;
 using Alex.Networking.Java;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Generic;
+using Alex.ResourcePackLib.Json.Models.Blocks;
 using Alex.Utils;
 using GLib;
 using Microsoft.Extensions.DependencyInjection;
@@ -150,13 +151,22 @@ namespace Alex
 			return true;
 		}
 
-		private McResourcePack LoadResourcePack(IProgressReceiver progressReceiver, Stream stream, McResourcePack.McResourcePackPreloadCallback preloadCallback = null)
+		private McResourcePack LoadResourcePack(IProgressReceiver progressReceiver, Stream stream, bool useModelResolver = false, McResourcePack.McResourcePackPreloadCallback preloadCallback = null)
 		{
 			McResourcePack resourcePack = null;
 
 			using (var archive = new ZipArchive(stream, ZipArchiveMode.Read, false))
 			{
-				resourcePack = new McResourcePack(archive, preloadCallback);
+				Func<string, BlockModel> resolver = null;
+				if (useModelResolver)
+				{
+					resolver = ModelResolver;
+				}
+				
+				resourcePack = new McResourcePack(archive, preloadCallback)
+				{
+					//ModelResolver = resolver
+				};
 			}
 
 			Log.Info($"Loaded {resourcePack.BlockModels.Count} block models from resourcepack");
@@ -174,7 +184,17 @@ namespace Alex
 			return resourcePack;
 		}
 
-        private void LoadModels(IProgressReceiver progressReceiver, McResourcePack resourcePack, bool replaceModels,
+		private BlockModel ModelResolver(string arg)
+		{
+			if (ResourcePack.TryGetBlockModel(arg, out var model))
+			{
+				return model;
+			}
+
+			return null;
+		}
+
+		private void LoadModels(IProgressReceiver progressReceiver, McResourcePack resourcePack, bool replaceModels,
             bool reportMissingModels)
         {
             Stopwatch sw = Stopwatch.StartNew();
@@ -268,7 +288,7 @@ namespace Alex
             Log.Info($"Loading vanilla resources...");
 			using (MemoryStream stream = new MemoryStream(defaultResources))
 			{
-				var vanilla = LoadResourcePack(progressReceiver, stream, preloadCallback);
+				var vanilla = LoadResourcePack(progressReceiver, stream, false, preloadCallback);
 				vanilla.Manifest.Name = "Vanilla";
 				
 				ActiveResourcePacks.AddFirst(vanilla);
@@ -370,7 +390,7 @@ namespace Alex
 
 				        using (FileStream stream = new FileStream(resourcePackPath, FileMode.Open))
 				        {
-					        var pack = LoadResourcePack(progress, stream, PreloadCallback);
+					        var pack = LoadResourcePack(progress, stream, true, null);
 					        if (pack.Manifest != null && string.IsNullOrWhiteSpace(pack.Manifest.Name))
 					        {
 						        pack.Manifest.Name = Path.GetFileNameWithoutExtension(file);
@@ -399,9 +419,18 @@ namespace Alex
 	        isFirst = true;
 	        foreach (var resourcePack in ActiveResourcePacks)
 	        {
-		        LoadModels(progress, resourcePack, true, isFirst);
+		        LoadModels(progress, resourcePack, !isFirst, isFirst);
 		        if (isFirst)
+		        { //Only load models for vanilla until above is fixed,
 			        isFirst = false;
+			        break;
+		        }
+	        }
+
+	        var f = ActiveResourcePacks.LastOrDefault(x => x.FontBitmap != null);
+	        if (f != null)
+	        {
+		        PreloadCallback?.Invoke(f.FontBitmap, McResourcePack.BitmapFontCharacters.ToList());
 	        }
         }
         

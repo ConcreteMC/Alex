@@ -49,17 +49,20 @@ namespace Alex
 
 		private static BlockModel GetOrCacheModel(ResourceManager resources, McResourcePack resourcePack, IBlockState state, uint id, bool rebuild)
 		{
-			if (ModelCache.TryGetValue(id, out var r))
+			BlockModel result = null;
+			if (ModelCache.TryGetValue(id, out result) && !rebuild)
 			{
-                return r;
+                return result;
 			}
 			else
 			{
-				var result = ResolveModel(resources, resourcePack, state);
-				if (result == null)
+				var r = ResolveModel(resources, resourcePack, state);
+				if (r == null)
 				{
-					return null;
+					return result;
 				}
+
+				result = r;
 
                 if (state.GetTypedValue(WaterLoggedProperty))
 				{
@@ -68,7 +71,14 @@ namespace Alex
 
 				if (!ModelCache.TryAdd(id, result))
 				{
-					Log.Warn($"Could not register model in cache! {state.Name} - {state.ID}");
+					if (rebuild)
+					{
+						ModelCache[id] = result;
+					}
+					else
+					{
+						Log.Warn($"Could not register model in cache! {state.Name} - {state.ID}");
+					}
 				}
 
 				return result;
@@ -311,7 +321,7 @@ namespace Alex
 
 			if (resourcePack.BlockStates.TryGetValue(name, out blockStateResource))
 			{
-				if (blockStateResource != null && blockStateResource.Parts != null && blockStateResource.Parts.Length > 0)
+				if (blockStateResource != null && blockStateResource.Parts != null && blockStateResource.Parts.Length > 0 && blockStateResource.Parts.All(x => x.Apply.All(b => b.Model != null)))
 				{
 					if (state is BlockState ss)
 					{
@@ -328,7 +338,19 @@ namespace Alex
 				if (blockStateResource.Variants.Count == 1)
 				{
 					var v = blockStateResource.Variants.FirstOrDefault();
-					return new CachedResourcePackModel(resources, new[] { v.Value.FirstOrDefault() });
+					if (v.Value == null)
+					{
+						return null;
+					}
+
+					var models = v.Value.Where(x => x.Model?.Elements != null).ToArray();
+
+					if (models.Length == 0)
+					{
+						return null;
+					}
+
+					return new CachedResourcePackModel(resources, models);
 				}
 
 				BlockStateVariant blockStateVariant = null;
@@ -369,8 +391,15 @@ namespace Alex
 					var a = blockStateResource.Variants.FirstOrDefault();
 					blockStateVariant = a.Value;
 				}
+
+				var asArray = blockStateVariant.ToArray();
 				
-				return new CachedResourcePackModel(resources, blockStateVariant.ToArray());
+				if (asArray.Length == 0 || asArray.Any(x => x.Model == null || x.Model.Elements == null))
+				{
+					return null;
+				}
+				
+				return new CachedResourcePackModel(resources, asArray);
 			}
 
 			return null;

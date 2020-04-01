@@ -73,7 +73,7 @@ namespace Alex.API.Graphics
 
         private object _resourceLock = new object();
         private List<IGpuResource> _resources = new List<IGpuResource>();
-        private Queue<(bool add, IGpuResource resource)> _buffer = new Queue<(bool, IGpuResource)>();
+        private ConcurrentQueue<(bool add, IGpuResource resource)> _buffer = new ConcurrentQueue<(bool add, IGpuResource resource)>();
         private List<IGpuResource> _disposalQueue = new List<IGpuResource>();
        // private SortedList<long, IGpuResource> _disposalQueue = new SortedList<long, IGpuResource>();
         

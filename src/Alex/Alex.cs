@@ -262,7 +262,7 @@ namespace Alex
 				}
 				catch (Exception ex)
 				{
-					Log.Error(ex, $"Could not initialize!");
+					Log.Error(ex, $"Could not initialize! {ex}");
 				}
 			});
 		}
@@ -318,22 +318,6 @@ namespace Alex
 			services.AddSingleton<IStorageSystem>(storage);
 			services.AddSingleton<IOptionsProvider, OptionsProvider>();
 			services.AddSingleton<ProfileManager>();
-			//var optionsProvider = new OptionsProvider(storage);
-			//optionsProvider.Load();
-			
-			/*optionsProvider.AlexOptions.VideoOptions.UseVsync.Bind((value, newValue) => { SetVSync(newValue); });
-			if (optionsProvider.AlexOptions.VideoOptions.UseVsync.Value)
-			{
-				SetVSync(true);
-			}
-			
-			optionsProvider.AlexOptions.VideoOptions.Fullscreen.Bind((value, newValue) => { SetFullscreen(newValue); });
-			if (optionsProvider.AlexOptions.VideoOptions.Fullscreen.Value)
-			{
-				SetFullscreen(true);
-			}
-			
-			Services.AddService<IOptionsProvider>(optionsProvider);*/
 
 			services.AddSingleton<IListStorageProvider<SavedServerEntry>, SavedServerDataProvider>();
 			

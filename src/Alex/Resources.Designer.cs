@@ -53,13 +53,6 @@ namespace Alex {
             }
         }
         
-        internal static byte[] Minecraftia {
-            get {
-                object obj = ResourceManager.GetObject("Minecraftia", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
         internal static byte[] logo {
             get {
                 object obj = ResourceManager.GetObject("logo", resourceCulture);
