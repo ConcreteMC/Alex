@@ -90,7 +90,7 @@ namespace Alex.Graphics.Models.Blocks
 				return rule.And.All(o => PassesMultiPartRule(o, blockState));
 			}
 
-			return rule.All(x => CheckRequirements(blockState, x.Key, x.Value));
+			return rule.KeyValues.All(x => CheckRequirements(blockState, x.Key, x.Value));
 			/*
 			if (CheckRequirements(blockState, "down", rule.Down)
 			    && CheckRequirements(blockState, "up", rule.Up)
@@ -133,7 +133,7 @@ namespace Alex.Graphics.Models.Blocks
 			}
 
 			//return rule.All(x => CheckRequirements(baseBlock, x.Key, x.Value));
-			return rule.All(x => Passes(world, position, baseBlock, x.Key, x.Value));
+			return rule.KeyValues.All(x => Passes(world, position, baseBlock, x.Key, x.Value));
 			/*
 			if (Passes(world, position, baseBlock, "down", rule.Down)
 				&& Passes(world, position, baseBlock, "up", rule.Up)

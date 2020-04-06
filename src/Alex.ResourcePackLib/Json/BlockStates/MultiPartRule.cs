@@ -7,8 +7,10 @@ using Newtonsoft.Json.Linq;
 
 namespace Alex.ResourcePackLib.Json.BlockStates
 {
-	public sealed class MultiPartRule : Dictionary<string, string>
+	public sealed class MultiPartRule
     {
+	    [JsonIgnore]
+	    public Dictionary<string, string> KeyValues = new Dictionary<string, string>();
 	    /* [JsonConverter(typeof(StringBooleanConverter))]
 	     public string North = "";
 	     

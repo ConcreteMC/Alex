@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -24,9 +25,9 @@ using Jose;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using MiNET;
-using MiNET.Client;
 using MiNET.Items;
 using MiNET.Net;
+using MiNET.Net.RakNet;
 using MiNET.Plugins;
 using MiNET.Utils;
 using MiNET.Utils.Skins;
@@ -40,8 +41,10 @@ using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
+using LevelInfo = MiNET.Worlds.LevelInfo;
 using NewtonsoftMapper = MiNET.NewtonsoftMapper;
 using Player = Alex.Entities.Player;
+using PlayerLocation = MiNET.Utils.PlayerLocation;
 using Skin = MiNET.Utils.Skins.Skin;
 
 namespace Alex.Worlds.Bedrock
@@ -54,6 +57,7 @@ namespace Alex.Worlds.Bedrock
 		public int Players;
 		public int ProtocolVersion;
 		public string ClientVersion;
+		public IPEndPoint ServerEndpoint;
 
 		public BedrockMotd(string raw)
 		{
@@ -82,14 +86,14 @@ namespace Alex.Worlds.Bedrock
 			}
 		}
 	}
-	public class BedrockClient : MiNetClient, IBedrockNetworkProvider, IDisposable
+	public class BedrockClient : IBedrockNetworkProvider, IDisposable
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BedrockClient));
 		
 		private ManualResetEventSlim ConnectionAcceptedWaitHandle { get; set; }
 		public BedrockWorldProvider WorldProvider { get; }
 		public EventHandler<BedrockMotd> OnMotdReceivedHandler;
-		public BedrockMotd KnownMotd = new BedrockMotd(string.Empty);
+		//public BedrockMotd KnownMotd = new BedrockMotd(string.Empty);
 
         private Alex Alex { get; }
         private IOptionsProvider OptionsProvider { get; }
@@ -101,23 +105,34 @@ namespace Alex.Worlds.Bedrock
         private CancellationTokenSource CancellationTokenSource { get; }
         
         public McpeNetworkChunkPublisherUpdate LastChunkPublish { get; set; }
+        public bool HasSpawned { get; set; }
         public AutoResetEvent PlayerStatusChanged { get; set; } = new AutoResetEvent(false);
         private IEventDispatcher EventDispatcher { get; }
-		public BedrockClient(Alex alex, IEventDispatcher eventDispatcher, IPEndPoint endpoint, PlayerProfile playerProfile, DedicatedThreadPool threadPool, BedrockWorldProvider wp) : base(endpoint,
-			playerProfile.Username, threadPool)
+        public RakConnection Connection { get; }
+        private BedrockClientMessageHandler MessageHandler { get; set; }
+        public RakSession Session => Connection.ConnectionInfo.RakSessions.Values.FirstOrDefault();
+        public bool IsConnected => Session?.State == ConnectionState.Connected;
+        private IPEndPoint ServerEndpoint { get; }
+        private long ClientGUID { get; }
+		public BedrockClient(Alex alex, IEventDispatcher eventDispatcher, IPEndPoint endpoint, PlayerProfile playerProfile, DedicatedThreadPool threadPool, BedrockWorldProvider wp)
 		{
+			ServerEndpoint = endpoint;
+			
+			Connection = new RakConnection(new GreyListManager(), new MotdProvider(), threadPool);
+
+			Connection.RemoteEndpoint = endpoint;
 			PlayerProfile = playerProfile;
 			CancellationTokenSource = new CancellationTokenSource();
 			
             Alex = alex;
 			WorldProvider = wp;
 			//ConnectionAcceptedWaitHandle = new ManualResetEventSlim(false);
-			MessageDispatcher = new McpeClientMessageDispatcher(new BedrockClientPacketHandler(this, eventDispatcher, wp, playerProfile, alex, CancellationTokenSource.Token));
-			CurrentLocation = new MiNET.Utils.PlayerLocation(0,0,0);
+			//MessageDispatcher = new McpeClientMessageDispatcher(new BedrockClientPacketHandler(this, eventDispatcher, wp, playerProfile, alex, CancellationTokenSource.Token));
+			//CurrentLocation = new MiNET.Utils.PlayerLocation(0,0,0);
 			OptionsProvider = alex.Services.GetRequiredService<IOptionsProvider>();
 			XblmsaService = alex.Services.GetRequiredService<XBLMSAService>();
 			
-			base.ChunkRadius = Options.VideoOptions.RenderDistance;
+		//	base.ChunkRadius = Options.VideoOptions.RenderDistance;
 			
 			Options.VideoOptions.RenderDistance.Bind(RenderDistanceChanged);
 
@@ -125,20 +140,141 @@ namespace Alex.Worlds.Bedrock
 			//Log.IsDebugEnabled = false;
 			//this.RegisterEventHandlers();
 			
+			MessageHandler = new BedrockClientMessageHandler(Session, new BedrockClientPacketHandler(this, eventDispatcher, wp, playerProfile, alex, CancellationTokenSource.Token));
+			MessageHandler.ConnectionAction = () =>
+			{
+				ConnectionAcceptedWaitHandle?.Set();
+				SendAlexLogin(playerProfile.Username);
+			};
+			Connection.CustomMessageHandlerFactory = session => MessageHandler;
+			
 			eventDispatcher?.RegisterEvents(this);
 
 			EventDispatcher = eventDispatcher;
+			
+			byte[] buffer = new byte[8];
+			new Random().NextBytes(buffer);
+			ClientGUID = BitConverter.ToInt64(buffer, 0);
 		}
 
 		public void Start(ManualResetEventSlim resetEvent)
 		{
-			StartClient();
-			HaveServer = true;
+			Connection.Start();
+			//StartClient();
+			//HaveServer = true;
+
+			if (Connection.AutoConnect)
+			{
+			//	Connection._rakOfflineHandler.HaveServer = true;
+			}
 
 			ConnectionAcceptedWaitHandle = resetEvent;
 			
-			SendOpenConnectionRequest1();
-			
+			//SendUnconnectedPing();
+
+		//	if (!Connection.AutoConnect)
+			//{
+				ThreadPool.QueueUserWorkItem(o =>
+				{
+					Stopwatch sw = Stopwatch.StartNew();
+					while (sw.ElapsedMilliseconds < 15000)
+					{
+						if (!Connection.AutoConnect)
+						{
+							SendUnconnectedPing();
+							Thread.Sleep(500);
+						}
+						
+						if (!Connection.AutoConnect && !string.IsNullOrWhiteSpace(Connection.RemoteServerName))
+						{
+							OnMotdReceivedHandler?.Invoke(this, new BedrockMotd(Connection.RemoteServerName)
+							{
+								ServerEndpoint = Connection.RemoteEndpoint
+							});
+							resetEvent.Set();
+							break;
+						}
+
+						if (Connection.AutoConnect && (IsConnected))
+						{
+							resetEvent.Set();
+							break;
+						}
+					}
+				});
+
+				if (Connection.AutoConnect)
+				{
+					SendOpenConnectionRequest1();
+				}
+				else
+				{
+					
+				}
+				//}
+
+		}
+		
+		private void SendData(byte[] data, IPEndPoint targetEndpoint)
+		{
+			if (Connection == null) return;
+
+			try
+			{
+				Connection.SendData(data, targetEndpoint);
+			}
+			catch (Exception e)
+			{
+				Log.Debug("Send exception", e);
+			}
+		}
+
+		public void SendUnconnectedPing()
+		{
+			var packet = new UnconnectedPing
+			{
+				pingId = Stopwatch.GetTimestamp() /*incoming.pingId*/,
+				guid = ClientGUID
+			};
+
+			var data = packet.Encode();
+
+			if (ServerEndpoint != null)
+			{
+				SendData(data, ServerEndpoint);
+			}
+			else
+			{
+				SendData(data, new IPEndPoint(IPAddress.Broadcast, 19132));
+			}
+		}
+
+		public void SendConnectedPing()
+		{
+			var packet = new ConnectedPing() {sendpingtime = DateTime.UtcNow.Ticks};
+
+			SendPacket(packet);
+		}
+
+		public void SendConnectedPong(long sendpingtime)
+		{
+			var packet = new ConnectedPong
+			{
+				sendpingtime = sendpingtime,
+				sendpongtime = sendpingtime + 200
+			};
+
+			SendPacket(packet);
+		}
+
+		public void SendOpenConnectionRequest1()
+		{
+			Connection._rakOfflineHandler.SendOpenConnectionRequest1(ServerEndpoint);
+		}
+		
+		public void SendPacket(Packet packet)
+		{
+			Session.SendPacket(packet);
 		}
 
 		[EventHandler(EventPriority.Highest)]
@@ -153,7 +289,7 @@ namespace Alex.Worlds.Bedrock
 				McpeCommandRequest commandRequest = McpeCommandRequest.CreateObject();
 				commandRequest.command = message;
 				commandRequest.unknownUuid = new MiNET.Utils.UUID(Guid.NewGuid().ToString());
-				SendPacket(commandRequest);
+				Session.SendPacket(commandRequest);
 			}
 			else
 			{
@@ -161,9 +297,15 @@ namespace Alex.Worlds.Bedrock
 			}
 		}
 		
+		public int ChunkRadius { get; set; }
+		public long EntityId { get; set; }
+		public long NetworkEntityId { get; set; }
+		public int PlayerStatus { get; set; }
+
 		private void RenderDistanceChanged(int oldvalue, int newvalue)
 		{
-			base.ChunkRadius = newvalue;
+			ChunkRadius = newvalue;
+			//base.ChunkRadius = newvalue;
 			RequestChunkRadius(newvalue);
 		}
 
@@ -198,7 +340,7 @@ namespace Alex.Worlds.Bedrock
             Dispose();
         }
 
-		public override void OnConnectionRequestAccepted()
+		/*public override void OnConnectionRequestAccepted()
 		{
 			ConnectionAcceptedWaitHandle.Set();
 
@@ -207,7 +349,7 @@ namespace Alex.Worlds.Bedrock
 
 			SendAlexLogin(Username);
 		}
-
+*/
 		private void SendAlexLogin(string username)
         {
             JWT.JsonMapper = new NewtonsoftMapper();
@@ -225,7 +367,7 @@ namespace Alex.Worlds.Bedrock
             {
 	            var element = XblmsaService.DecodedChain.Chain[1];
 
-                Username = username = element.ExtraData.DisplayName;
+                username = element.ExtraData.DisplayName;
                 identity = element.ExtraData.Identity;
                 xuid = element.ExtraData.Xuid;
                 
@@ -268,26 +410,47 @@ namespace Alex.Worlds.Bedrock
                 payload = data
             };
 
-            Session.CryptoContext = new CryptoContext()
+          /*  Session.CryptoContext = new CryptoContext()
             {
 	            ClientKey = clientKey,
 	            UseEncryption = false,
             };
-
-            SendPacket(loginPacket);
+*/
+            Session.SendPacket(loginPacket);
 
         //    Session.CryptoContext.UseEncryption = true;
         }
-		
+
+		public void SendMcpeMovePlayer()
+		{
+			if (CurrentLocation == null) return;
+
+			if (CurrentLocation.Y < 0)
+				CurrentLocation.Y = 64f;
+
+			var movePlayerPacket = McpeMovePlayer.CreateObject();
+			movePlayerPacket.runtimeEntityId = EntityId;
+			movePlayerPacket.x = CurrentLocation.X;
+			movePlayerPacket.y = CurrentLocation.Y;
+			movePlayerPacket.z = CurrentLocation.Z;
+			movePlayerPacket.yaw = CurrentLocation.Yaw;
+			movePlayerPacket.pitch = CurrentLocation.Pitch;
+			movePlayerPacket.headYaw = CurrentLocation.HeadYaw;
+			movePlayerPacket.mode = 1;
+			movePlayerPacket.onGround = false;
+
+			SendPacket(movePlayerPacket);
+		}
+
 		public new void InitiateEncryption(byte[] serverKey, byte[] randomKeyToken)
 		{
 			try
 			{
 				ECPublicKeyParameters remotePublicKey = (ECPublicKeyParameters)
 					PublicKeyFactory.CreateKey(serverKey);
-
+				
 				ECDHBasicAgreement agreement = new ECDHBasicAgreement();
-				agreement.Init(Session.CryptoContext.ClientKey.Private);
+				agreement.Init(MessageHandler.CryptoContext.ClientKey.Private);
 				byte[] secret;
 				using (var sha = SHA256.Create())
 				{
@@ -308,14 +471,14 @@ namespace Alex.Worlds.Bedrock
 					UseEncryption = true,
 					Key = secret
 				};*/
-				Session.CryptoContext.Decryptor = decryptor;
-				Session.CryptoContext.Encryptor = encryptor;
-				Session.CryptoContext.Key = secret;
-				Session.CryptoContext.UseEncryption = true;
+				MessageHandler.CryptoContext.Decryptor = decryptor;
+				MessageHandler.CryptoContext.Encryptor = encryptor;
+				MessageHandler.CryptoContext.Key = secret;
+				MessageHandler.CryptoContext.UseEncryption = true;
 
 				//Thread.Sleep(1250);
 				McpeClientToServerHandshake magic = new McpeClientToServerHandshake();
-				SendPacket(magic);
+				Session.SendPacket(magic);
 			}
 			catch (Exception e)
 			{
@@ -389,7 +552,7 @@ namespace Alex.Worlds.Bedrock
             {
 	            ClientRandomId = new Random().Next(),
 	            LanguageCode = "en_US",
-	            ServerAddress = $"{base.ServerEndpoint.Address.ToString()}:{base.ServerEndpoint.Port.ToString()}",
+	            ServerAddress = $"{ServerEndpoint.Address.ToString()}:{ServerEndpoint.Port.ToString()}",
 	             ThirdPartyName = username
             }, new JsonSerializerSettings()
 	        {
@@ -406,7 +569,7 @@ namespace Alex.Worlds.Bedrock
             return Encoding.UTF8.GetBytes(val);
         }
 
-        public bool IgnoreUnConnectedPong = false;
+        /*public bool IgnoreUnConnectedPong = false;
 		public override void OnUnconnectedPong(UnconnectedPong packet, IPEndPoint senderEndpoint)
 		{
 			KnownMotd = new BedrockMotd(packet.serverName);
@@ -414,11 +577,12 @@ namespace Alex.Worlds.Bedrock
 			if (IgnoreUnConnectedPong) return;
 
 			base.OnUnconnectedPong(packet, senderEndpoint);
-		}
-
-
-        public bool IsConnected => base.HaveServer;
-		public IWorldReceiver WorldReceiver { get; set; }
+		}*/
+		
+		public IWorldReceiver WorldReceiver { get; set; } 
+		public System.Numerics.Vector3 SpawnPoint { get; set; } = System.Numerics.Vector3.Zero;
+		public LevelInfo LevelInfo { get; } = new LevelInfo();
+		public PlayerLocation CurrentLocation { get; set; } = new PlayerLocation();
 
 		void INetworkProvider.EntityAction(int entityId, EntityAction action)
 		{
@@ -446,6 +610,13 @@ namespace Alex.Worlds.Bedrock
 			SendPlayerAction(translated, null, null);
 		}
 
+		private void SendChat(string message)
+		{
+			McpeText text = McpeText.CreateObject();
+			text.message = message;
+			Session.SendPacket(text);
+		}
+
 		void INetworkProvider.SendChatMessage(string message)
 		{
 			SendChat(message);
@@ -463,7 +634,7 @@ namespace Alex.Worlds.Bedrock
 			if (blockFace.HasValue)
 				packet.face = blockFace.Value;
 			
-			SendPacket(packet);
+			Session.SendPacket(packet);
 		}
 		
 	    public void PlayerDigging(DiggingStatus status, BlockCoordinates position, BlockFace face, Vector3 cursorPosition)
@@ -495,7 +666,7 @@ namespace Alex.Worlds.Bedrock
                         
                     };
 
-                    SendPacket(packet);
+                   Session.SendPacket(packet);
                 }
                 else if (status == DiggingStatus.Cancelled)
                 {
@@ -532,7 +703,7 @@ namespace Alex.Worlds.Bedrock
 				    //BlockRuntimeId = 
 			    };
 
-			    SendPacket(packet);
+			    Session.SendPacket(packet);
 		    }
 	    }
 
@@ -560,7 +731,7 @@ namespace Alex.Worlds.Bedrock
 				    EntityId = target.EntityId
 			    };*/
 			    
-			    SendPacket(packet);
+				    Session.SendPacket(packet);
 		    }
 	    }
 
@@ -591,7 +762,7 @@ namespace Alex.Worlds.Bedrock
 
 		    };*/
 
-		    SendPacket(packet);
+		  Session.SendPacket(packet);
 	    }
 
 	    public void UseItem(int hand)
@@ -609,7 +780,21 @@ namespace Alex.Worlds.Bedrock
 			CancellationTokenSource?.Cancel();
 			SendDisconnectionNotification();
 
-			Task.Delay(500).ContinueWith(task => { base.StopClient(); });
+			Task.Delay(500).ContinueWith(task =>
+			{
+
+
+				try
+				{
+					Connection.Stop();
+				}
+				catch (Exception ex)
+				{
+					Log.Error(ex, "Exception while closing connection.");
+				}
+			});
+
+			//Task.Delay(500).ContinueWith(task => { base.StopClient(); });
 		}
 
 		public void RequestChunkRadius(int radius)
@@ -617,10 +802,15 @@ namespace Alex.Worlds.Bedrock
 			var packet = McpeRequestChunkRadius.CreateObject();
 			packet.chunkRadius = radius;
 
-			base.SendPacket(packet);
+			Session.SendPacket(packet);
 		}
 
-		
+		public void SendDisconnectionNotification()
+		{
+			Session?.SendPacket(new DisconnectionNotification());
+		}
+
+
 		public void Dispose()
 		{
 			EventDispatcher?.UnregisterEvents(this);

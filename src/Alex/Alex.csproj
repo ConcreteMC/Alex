@@ -102,6 +102,7 @@
     <PackageReference Include="JKang.IpcServiceFramework.Server" Version="2.2.2" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.1" />
     <PackageReference Include="Microsoft.Identity.Client" Version="2.3.0-preview" />
+    <PackageReference Include="MiNET" Version="1.0.2085" />
     <PackageReference Include="MiNET.fnbt" Version="1.0.22" />
     <PackageReference Include="MiniProfiler.EntityFrameworkCore" Version="4.0.180" />
     <PackageReference Include="Mono.Cecil" Version="0.11.1" />
@@ -117,8 +118,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\lib\MiNET\src\MiNET\MiNET.Client\MiNET.Client.csproj" />
-    <ProjectReference Include="..\..\lib\MiNET\src\MiNET\MiNET\MiNET.csproj" />
     <ProjectReference Include="..\Alex.API\Alex.API.csproj" />
     <ProjectReference Include="..\Alex.GuiDebugger.Common\Alex.GuiDebugger.Common.csproj" />
     <ProjectReference Include="..\Alex.Networking\Alex.Networking.csproj" />

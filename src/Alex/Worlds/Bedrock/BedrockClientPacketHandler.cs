@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -35,7 +36,6 @@ using Jose;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET;
-using MiNET.Client;
 using MiNET.Net;
 using MiNET.UI;
 using MiNET.Utils;
@@ -67,9 +67,12 @@ namespace Alex.Worlds.Bedrock
         private WorldProvider WorldProvider { get; }
         private PlayerProfile PlayerProfile { get; }
         private IEventDispatcher EventDispatcher { get; }
+        private IStorageSystem Storage { get; }
         public BedrockClientPacketHandler(IBedrockNetworkProvider client, IEventDispatcher eventDispatcher, WorldProvider worldProvider, PlayerProfile profile, Alex alex, CancellationToken cancellationToken) //:
 	       // base(client)
         {
+	        Storage = alex.Services.GetRequiredService<IStorageSystem>();
+	        
 	        EventDispatcher = eventDispatcher;
 	        Client = client;
 	        AlexInstance = alex;
@@ -146,10 +149,10 @@ namespace Alex.Worlds.Bedrock
 
 				Client.PlayerStatusChanged.Set();
 
-				if (Client is MiNetClient miNetClient)
-				{
-					miNetClient.IsEmulator = false;
-				}
+				//if (Client is Bedrockcl miNetClient)
+				//{
+					//miNetClient.IsEmulator = false;
+				//}
 
 				Client.WorldReceiver.GetPlayerEntity().EntityId = Client.EntityId;
 			}
@@ -365,6 +368,7 @@ namespace Alex.Worlds.Bedrock
 			}
 		}
 
+        private static string CachePath { get; set; } = Path.Combine("cache", "geometry");
 		public void HandleMcpePlayerList(McpePlayerList message)
 		{
 			if (!Directory.Exists("skins"))
@@ -379,7 +383,8 @@ namespace Alex.Worlds.Bedrock
 
 					bool isTransparent = false;
 					PooledTexture2D skinTexture;
-					if (r.Skin.TryGetBitmap(out Bitmap skinBitmap))
+					Bitmap skinBitmap;
+					if (r.Skin.TryGetBitmap(out skinBitmap))
 					{
 						skinTexture =
 							TextureUtils.BitmapToTexture2D(AlexInstance.GraphicsDevice, skinBitmap);
@@ -403,6 +408,34 @@ namespace Alex.Worlds.Bedrock
 
 							if (geo != null && geo.MinecraftGeometry != null)
 							{
+								if (skinBitmap != null)
+								{
+									string skinPath = Path.Combine(CachePath,
+										$"{r.Skin.SkinResourcePatch.Geometry.Default}.json");
+									if (!Storage.TryGetDirectory(CachePath, out DirectoryInfo info))
+									{
+										Storage.TryCreateDirectory(CachePath);
+									}
+
+									if (!Storage.TryReadBytes(skinPath, out _))
+									{
+										if (Storage.TryWriteBytes(skinPath,
+											Encoding.UTF8.GetBytes(r.Skin.GeometryData)))
+										{
+											using (MemoryStream ms = new MemoryStream())
+											{
+												skinBitmap.Save(ms, ImageFormat.Png);
+												
+												Storage.TryWriteBytes(
+													Path.Combine(CachePath,
+														$"{r.Skin.SkinResourcePatch.Geometry.Default}.png"),
+													ms.ToArray());
+											}
+										}
+									}
+								}
+
+
 								//var abc = geo.MinecraftGeometry.FirstOrDefault()
 								var modelRenderer =
 									new EntityModelRenderer(geo.MinecraftGeometry.FirstOrDefault(x => x.Description.Identifier == r.Skin.SkinResourcePatch.Geometry.Default), skinTexture);

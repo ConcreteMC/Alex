@@ -107,10 +107,13 @@ namespace Alex.Services
 						new PlayerProfile(string.Empty, $"Pinger{serverEndpoint.ToString()}",
 							$"Pinger{serverEndpoint.ToString()}", null, null, null, true), threadPool, null)
 					{
-						IgnoreUnConnectedPong = true
+						
+						//IgnoreUnConnectedPong = true
 					};
+					client.Connection.AutoConnect = false;
+					
 
-				    BedrockMotd motd = client.KnownMotd;
+				    BedrockMotd motd = new BedrockMotd(string.Empty);
 
 					client.OnMotdReceivedHandler += (sender, m) =>
 				    {
@@ -121,20 +124,20 @@ namespace Alex.Services
 						pingCallback.Invoke(new ServerPingResponse(true, pingTime));
 				    };
 
-				    client.StartClient();
-				    client.SendUnconnectedPing();
+				    client.Start(ar);
+				    //client.SendUnconnectedPing();
 				    sw.Restart();
 
 					//ar.WaitAsync().Wait(TimeSpan.FromMilliseconds(10000));
 
 				    if (await WaitHandleHelpers.FromWaitHandle(ar.WaitHandle, TimeSpan.FromMilliseconds(10000)))
 				    {
-					    client.StopClient();
-					    var m = client.KnownMotd;
+					    client.Close();
+					  //  var m = new BedrockMotd(client.Connection.RemoteServerName);
 
 						statusCallBack?.Invoke(new ServerQueryResponse(true, new ServerQueryStatus()
 					    {
-						    EndPoint = serverEndpoint,
+						    EndPoint = motd.ServerEndpoint,
 						    Delay = pingTime,
 						    Success = true,
 
@@ -146,16 +149,16 @@ namespace Alex.Services
 							{
 								Players = new Players()
 								{
-									Max = m.MaxPlayers,
-									Online = m.Players
+									Max = motd.MaxPlayers,
+									Online = motd.Players
 								},
 								Version = new API.Services.Version()
 								{
-									Protocol = m.ProtocolVersion,
+									Protocol = motd.ProtocolVersion,
 								},
 								Description = new Description()
 								{
-									Text = m.MOTD
+									Text = motd.MOTD
 								},
 								Modinfo = null,
 								Favicon = null

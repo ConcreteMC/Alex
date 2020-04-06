@@ -5,7 +5,7 @@ using MiNET.Utils;
 
 namespace Alex.Networking.Bedrock
 {
-    public class AlexPacketFactory : ICustomPacketFactory
+    /*public class AlexPacketFactory : ICustomPacketFactory
     {
         public Packet Create(byte messageId, ReadOnlyMemory<byte> buffer, string ns)
         {
@@ -32,5 +32,5 @@ namespace Alex.Networking.Bedrock
         {
             return null;
         }
-    }
+    }*/
 }

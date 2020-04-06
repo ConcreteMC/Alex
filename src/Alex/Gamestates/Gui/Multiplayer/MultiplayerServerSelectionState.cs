@@ -181,6 +181,11 @@ namespace Alex.GameStates.Gui.Multiplayer
 				}
 				else if (entry.ServerType == ServerType.Bedrock)
 				{
+					if (SelectedItem.ConnectionEndpoint != null)
+					{
+						target = SelectedItem.ConnectionEndpoint;
+					}
+					
 					if (currentProfile == null || (!currentProfile.IsBedrock))
 					{
 						foreach (var profile in authenticationService.GetBedrockProfiles())
@@ -337,6 +342,8 @@ namespace Alex.GameStates.Gui.Multiplayer
 
         public string ServerName { get;set; }
         public string ServerAddress { get; set; }
+
+        public IPEndPoint ConnectionEndpoint { get; set; } = null;
 
         public Texture2D ServerIcon { get; private set; }
 		
@@ -532,6 +539,8 @@ namespace Alex.GameStates.Gui.Multiplayer
 				var q = s.Query;
 				_pingStatus.SetPlayerCount(q.Players.Online, q.Players.Max);
 
+				ConnectionEndpoint = s.EndPoint;
+				
 				if (!s.WaitingOnPing)
 				{
 					_pingStatus.SetPing(s.Delay);
