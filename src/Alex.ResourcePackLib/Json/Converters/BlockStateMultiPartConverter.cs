@@ -82,8 +82,6 @@ namespace Alex.ResourcePackLib.Json.Converters
 								prop.Value.ToObject<MultiPartRule>(serializer)
 							};
 						}
-						
-						Log.Info($"Got OR rule: {prop.Value.Type}");
 						break;
 					case "and":
 						if (prop.Value.Type == JTokenType.Array)
@@ -97,8 +95,6 @@ namespace Alex.ResourcePackLib.Json.Converters
 								prop.Value.ToObject<MultiPartRule>(serializer)
 							};
 						}
-						
-						Log.Info($"Got AND rule: {prop.Value.Type}");
 						break;
 					default:
 						if (prop.Value.Type == JTokenType.String || prop.Value.Type == JTokenType.Boolean)
