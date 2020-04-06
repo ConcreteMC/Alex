@@ -96,6 +96,8 @@ namespace Alex.Entities
 			
 			Inventory.SlotChanged += OnInventorySlotChanged;
 			Inventory.SelectedHotbarSlotChanged += InventoryOnSelectedHotbarSlotChanged;
+
+			HideNameTag = true;
 		}
 
 		private void CheckHeldItem()

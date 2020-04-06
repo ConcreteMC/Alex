@@ -118,7 +118,7 @@ namespace Alex.Worlds.Bedrock
 		{
 			ServerEndpoint = endpoint;
 			
-			Connection = new RakConnection(new GreyListManager(), new MotdProvider(), threadPool);
+			Connection = new RakConnection(new IPEndPoint(IPAddress.Any, 0), new GreyListManager(), new MotdProvider(), threadPool);
 
 			Connection.RemoteEndpoint = endpoint;
 			PlayerProfile = playerProfile;

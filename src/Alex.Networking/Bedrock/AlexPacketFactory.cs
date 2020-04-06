@@ -5,7 +5,7 @@ using MiNET.Utils;
 
 namespace Alex.Networking.Bedrock
 {
-    /*public class AlexPacketFactory : ICustomPacketFactory
+    public class AlexPacketFactory : ICustomPacketFactory
     {
         public Packet Create(byte messageId, ReadOnlyMemory<byte> buffer, string ns)
         {
@@ -30,7 +30,14 @@ namespace Alex.Networking.Bedrock
 
         private Packet CreatePe(byte messageId, ReadOnlyMemory<byte> buffer)
         {
+            if (messageId == 111)
+            {
+                var entityDelta = new EntityDelta();
+                entityDelta.Decode(buffer);
+                return entityDelta;
+            }
+
             return null;
         }
-    }*/
+    }
 }

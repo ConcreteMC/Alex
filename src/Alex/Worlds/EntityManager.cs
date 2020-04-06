@@ -92,7 +92,8 @@ namespace Alex.Worlds
 			    var entities = _rendered;
 			    foreach (var entity in entities)
 			    {
-				    entity.RenderNametag(args);
+				    if (!entity.HideNameTag)
+						entity.RenderNametag(args);
 			    }
 		    }
 		    finally
@@ -143,7 +144,7 @@ namespace Alex.Worlds
 		    {
 			    entity.IsAlwaysShowName = false;
 			   // entity.NameTag = $"Entity_{id}";
-			    entity.HideNameTag = false;
+			   //entity.HideNameTag = false;
 
 			    if (!Entities.TryAdd(id, entity))
 			    {

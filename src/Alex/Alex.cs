@@ -28,6 +28,7 @@ using Alex.GameStates.Playing;
 using Alex.Gui;
 using Alex.Gui.Dialogs.Containers;
 using Alex.Items;
+using Alex.Networking.Bedrock;
 using Alex.Networking.Java.Packets;
 using Alex.Plugins;
 using Alex.Services;
@@ -164,7 +165,7 @@ namespace Alex
             ThreadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount,
 	            ThreadType.Background, "Threadpool"));
             
-           // PacketFactory.CustomPacketFactory = new AlexPacketFactory();
+           PacketFactory.CustomPacketFactory = new AlexPacketFactory();
 		}
 
 		public static EventHandler<TextInputEventArgs> OnCharacterInput;

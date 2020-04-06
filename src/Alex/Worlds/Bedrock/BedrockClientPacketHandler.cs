@@ -28,6 +28,7 @@ using Alex.GameStates;
 using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Entity.Geometry;
 using Alex.Items;
+using Alex.Networking.Bedrock;
 using Alex.ResourcePackLib.Json.Converters;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
@@ -723,23 +724,52 @@ namespace Alex.Worlds.Bedrock
 					}, true, updateHeadYaw || updateYaw, updatePitch);*/
 				
 				//	Log.Info($"Rel: {relative}");
-				
-				if (Client.WorldReceiver.TryGetEntity(message.runtimeEntityId, out var entity))
+
+				if (message is EntityDelta ed)
 				{
-					var known = entity.KnownPosition;
-					known = new PlayerLocation(known.X, known.Y, known.Z, known.HeadYaw, known.Yaw, known.Pitch);
-					
-					MiNET.Utils.PlayerLocation startPosition = new MiNET.Utils.PlayerLocation(known.X, known.Y, known.Z, known.HeadYaw, known.Yaw, known.Pitch);
-					
-					var endPosition = message.GetCurrentPosition(startPosition);
-					
-					endPosition.X = float.IsNaN(endPosition.X) ? known.X : endPosition.X;
-					endPosition.Y = float.IsNaN(endPosition.Y) ? known.Y : endPosition.Y;
-					endPosition.Z = float.IsNaN(endPosition.Z) ? known.Z : endPosition.Z;
-					
-				//	Log.Info($"Distance: {endPosition.DistanceTo(startPosition)} | Delta: {endPosition - startPosition.ToVector3()} | Start: {startPosition} End: {endPosition}");
-					
-					entity.KnownPosition = new PlayerLocation(endPosition);
+
+					if (Client.WorldReceiver.TryGetEntity(message.runtimeEntityId, out var entity))
+					{
+						var known = entity.KnownPosition;
+						known = new PlayerLocation(known.X, known.Y, known.Z, known.HeadYaw, known.Yaw, known.Pitch);
+						
+						var endPosition = ed.GetCurrentPosition(known);
+
+						if (!ed.HasX)
+						{
+							endPosition.X = known.X;
+						}
+						else
+						{
+							endPosition.X = float.IsNaN(endPosition.X) ? known.X : endPosition.X;
+						}
+
+						if (!ed.HasY)
+						{
+							endPosition.Y = known.Y;
+						}
+						else
+						{
+							endPosition.Y = float.IsNaN(endPosition.Y) ? known.Y : endPosition.Y;
+						}
+
+						if (!ed.HasZ)
+						{
+							endPosition.Z = known.Z;
+						}
+						else
+						{
+							endPosition.Z = float.IsNaN(endPosition.Z) ? known.Z : endPosition.Z;
+						}
+
+						endPosition.Yaw = ed.HasYaw ? endPosition.Yaw : known.Yaw;
+						endPosition.HeadYaw = ed.HasHeadYaw ? endPosition.HeadYaw : known.HeadYaw;
+						endPosition.Pitch = ed.HasPitch ? -endPosition.Pitch : known.Pitch;
+
+						//	Log.Info($"Distance: {endPosition.DistanceTo(known)} | Delta: {(endPosition - known.ToVector3())} | Start: {known.ToVector3()} | End: {endPosition.ToVector3()}");
+
+						entity.KnownPosition = endPosition;
+					}
 				}
 			}
 		}
