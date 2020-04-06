@@ -90,7 +90,7 @@ namespace Alex.Graphics.Models
 			SkyPlaneEffect.FogEnabled = true;
 			SkyPlaneEffect.FogStart = 0;
 			SkyPlaneEffect.FogEnd = d * 0.8f;
-			SkyPlaneEffect.LightingEnabled = true;
+			SkyPlaneEffect.LightingEnabled = false;
 
 			var planeDistance = d * 3;
 			var plane = new[]

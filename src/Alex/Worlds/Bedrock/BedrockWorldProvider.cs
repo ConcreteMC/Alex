@@ -172,7 +172,7 @@ namespace Alex.Worlds.Bedrock
 		{
 			if (Client is BedrockClient c)
 			{
-				return c.UdpClient.Client != null;
+				return c.IsConnected;
 			}
 			
 			return true;
