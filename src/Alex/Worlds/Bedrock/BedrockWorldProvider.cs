@@ -105,12 +105,11 @@ namespace Alex.Worlds.Bedrock
 					}
 					
 					var pos = (PlayerLocation)player.KnownPosition.Clone();
-					Client.CurrentLocation = new MiNET.Utils.PlayerLocation(pos.X,
-						pos.Y + Player.EyeLevel, pos.Z, pos.HeadYaw,
-						pos.Yaw, -pos.Pitch);
-
-                    if (pos.DistanceTo(_lastSentLocation) > 0.0f) {
-                        Client.SendMcpeMovePlayer();
+					
+					if (pos.DistanceTo(_lastSentLocation) > 0.0f) {
+                        Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(pos.X,
+	                        pos.Y + Player.EyeLevel, pos.Z, pos.HeadYaw,
+	                        pos.Yaw, -pos.Pitch));
                     }
 
 					if (pos.DistanceTo(_lastLocation) > 16f && _stopwatch.ElapsedMilliseconds > 500)
@@ -161,19 +160,20 @@ namespace Alex.Worlds.Bedrock
 			info = new LevelInfo();
 			_initiated = true;
 			Client.WorldReceiver = WorldReceiver;
-			WorldReceiver?.UpdatePlayerPosition(new API.Utils.PlayerLocation(
-				new Vector3(Client.CurrentLocation.X, Client.CurrentLocation.Y, Client.CurrentLocation.Z),
-				Client.CurrentLocation.HeadYaw, Client.CurrentLocation.Yaw, Client.CurrentLocation.Pitch));
+			//if (WorldReceiver.GetPlayerEntity() is Player player)
+			//{
+			//	WorldReceiver?.UpdatePlayerPosition();
+			//}
 
 			_gameTickTimer = new System.Threading.Timer(GameTick, null, 50, 50);
 		}
 
 		private bool VerifyConnection()
 		{
-			if (Client is BedrockClient c)
+		/*	if (Client is BedrockClient c)
 			{
 				return c.IsConnected;
-			}
+			}*/
 			
 			return true;
 		}
@@ -209,7 +209,7 @@ namespace Alex.Worlds.Bedrock
 				while (true)
 				{
 					double radiusSquared = Math.Pow(Client.ChunkRadius, 2);
-					var target = radiusSquared * 2;
+					var target = radiusSquared;
 					
 					percentage = (int)(ChunksReceived / target) * 100;
 					progressReport(LoadingState.LoadingChunks, percentage);
@@ -227,13 +227,19 @@ namespace Alex.Worlds.Bedrock
 						}
 					}
 
-					if (percentage >= 90 && (statusChanged || timer.ElapsedMilliseconds > 15 * 1000))
+					if ((percentage >= 90 && (statusChanged || timer.ElapsedMilliseconds > 15 * 1000)) || (timer.ElapsedMilliseconds > 15 * 1000))
 					{
+						Log.Info($"Init!!!");
+						
 						var packet = McpeSetLocalPlayerAsInitializedPacket.CreateObject();
 						packet.runtimeEntityId =  Client.WorldReceiver.GetPlayerEntity().EntityId;
 						Client.SendPacket(packet);
-						
-						Client.SendMcpeMovePlayer();
+						if (WorldReceiver.GetPlayerEntity() is Player player)
+						{
+							var p = player.KnownPosition;
+							Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(p.X, p.Y, p.Z, p.HeadYaw, p.Yaw, p.Pitch));
+						}
+
 						break;
 					}
 

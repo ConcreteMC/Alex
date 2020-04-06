@@ -14,7 +14,6 @@ namespace Alex.API.Network.Bedrock
         IWorldReceiver WorldReceiver { get; set; }
         Vector3 SpawnPoint { get; set; }
         LevelInfo LevelInfo { get; }
-        PlayerLocation CurrentLocation { get; set; }
         int ChunkRadius { get; set; }
         long EntityId { get; set; }
         long NetworkEntityId { get; set; }
@@ -28,7 +27,7 @@ namespace Alex.API.Network.Bedrock
 
         void RequestChunkRadius(int radius);
         void SendDisconnectionNotification();
-        void SendMcpeMovePlayer();
+        void SendMcpeMovePlayer(MiNET.Utils.PlayerLocation location);
 
         void InitiateEncryption(byte[] x5u, byte[] salt);
 

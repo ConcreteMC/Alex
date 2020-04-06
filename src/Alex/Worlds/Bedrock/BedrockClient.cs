@@ -132,7 +132,7 @@ namespace Alex.Worlds.Bedrock
 			OptionsProvider = alex.Services.GetRequiredService<IOptionsProvider>();
 			XblmsaService = alex.Services.GetRequiredService<XBLMSAService>();
 			
-		//	base.ChunkRadius = Options.VideoOptions.RenderDistance;
+			ChunkRadius = Options.VideoOptions.RenderDistance;
 			
 			Options.VideoOptions.RenderDistance.Bind(RenderDistanceChanged);
 
@@ -160,6 +160,10 @@ namespace Alex.Worlds.Bedrock
 		public void Start(ManualResetEventSlim resetEvent)
 		{
 			Connection.Start();
+			if (!Connection.AutoConnect)
+			{
+				Connection.ConnectionInfo.ThroughPut.Change(Timeout.Infinite, Timeout.Infinite);
+			}
 			//StartClient();
 			//HaveServer = true;
 
@@ -182,9 +186,8 @@ namespace Alex.Worlds.Bedrock
 						if (!Connection.AutoConnect)
 						{
 							SendUnconnectedPing();
-							Thread.Sleep(500);
 						}
-						
+
 						if (!Connection.AutoConnect && !string.IsNullOrWhiteSpace(Connection.RemoteServerName))
 						{
 							OnMotdReceivedHandler?.Invoke(this, new BedrockMotd(Connection.RemoteServerName)
@@ -200,6 +203,9 @@ namespace Alex.Worlds.Bedrock
 							resetEvent.Set();
 							break;
 						}
+
+						if (!Connection.AutoConnect)
+							Thread.Sleep(500);
 					}
 				});
 
@@ -409,33 +415,29 @@ namespace Alex.Worlds.Bedrock
                 protocolVersion = McpeProtocolInfo.ProtocolVersion,
                 payload = data
             };
-
-          /*  Session.CryptoContext = new CryptoContext()
+            
+            var bedrockHandler = (BedrockClientMessageHandler) Session.CustomMessageHandler;
+            bedrockHandler.CryptoContext = new CryptoContext()
             {
 	            ClientKey = clientKey,
 	            UseEncryption = false,
             };
-*/
+
             Session.SendPacket(loginPacket);
 
         //    Session.CryptoContext.UseEncryption = true;
         }
 
-		public void SendMcpeMovePlayer()
+		public void SendMcpeMovePlayer(MiNET.Utils.PlayerLocation location)
 		{
-			if (CurrentLocation == null) return;
-
-			if (CurrentLocation.Y < 0)
-				CurrentLocation.Y = 64f;
-
 			var movePlayerPacket = McpeMovePlayer.CreateObject();
 			movePlayerPacket.runtimeEntityId = EntityId;
-			movePlayerPacket.x = CurrentLocation.X;
-			movePlayerPacket.y = CurrentLocation.Y;
-			movePlayerPacket.z = CurrentLocation.Z;
-			movePlayerPacket.yaw = CurrentLocation.Yaw;
-			movePlayerPacket.pitch = CurrentLocation.Pitch;
-			movePlayerPacket.headYaw = CurrentLocation.HeadYaw;
+			movePlayerPacket.x = location.X;
+			movePlayerPacket.y = location.Y;
+			movePlayerPacket.z = location.Z;
+			movePlayerPacket.yaw = location.Yaw;
+			movePlayerPacket.pitch = location.Pitch;
+			movePlayerPacket.headYaw = location.HeadYaw;
 			movePlayerPacket.mode = 1;
 			movePlayerPacket.onGround = false;
 
@@ -448,9 +450,11 @@ namespace Alex.Worlds.Bedrock
 			{
 				ECPublicKeyParameters remotePublicKey = (ECPublicKeyParameters)
 					PublicKeyFactory.CreateKey(serverKey);
+
+				var handler = (BedrockClientMessageHandler) Session.CustomMessageHandler;
 				
 				ECDHBasicAgreement agreement = new ECDHBasicAgreement();
-				agreement.Init(MessageHandler.CryptoContext.ClientKey.Private);
+				agreement.Init(handler.CryptoContext.ClientKey.Private);
 				byte[] secret;
 				using (var sha = SHA256.Create())
 				{
@@ -471,10 +475,10 @@ namespace Alex.Worlds.Bedrock
 					UseEncryption = true,
 					Key = secret
 				};*/
-				MessageHandler.CryptoContext.Decryptor = decryptor;
-				MessageHandler.CryptoContext.Encryptor = encryptor;
-				MessageHandler.CryptoContext.Key = secret;
-				MessageHandler.CryptoContext.UseEncryption = true;
+				handler.CryptoContext.Decryptor = decryptor;
+				handler.CryptoContext.Encryptor = encryptor;
+				handler.CryptoContext.Key = secret;
+				handler.CryptoContext.UseEncryption = true;
 
 				//Thread.Sleep(1250);
 				McpeClientToServerHandshake magic = new McpeClientToServerHandshake();
@@ -582,7 +586,6 @@ namespace Alex.Worlds.Bedrock
 		public IWorldReceiver WorldReceiver { get; set; } 
 		public System.Numerics.Vector3 SpawnPoint { get; set; } = System.Numerics.Vector3.Zero;
 		public LevelInfo LevelInfo { get; } = new LevelInfo();
-		public PlayerLocation CurrentLocation { get; set; } = new PlayerLocation();
 
 		void INetworkProvider.EntityAction(int entityId, EntityAction action)
 		{
@@ -614,6 +617,8 @@ namespace Alex.Worlds.Bedrock
 		{
 			McpeText text = McpeText.CreateObject();
 			text.message = message;
+			text.type = (byte) MessageType.Chat;
+			
 			Session.SendPacket(text);
 		}
 
