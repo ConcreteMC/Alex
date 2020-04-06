@@ -168,6 +168,16 @@ namespace Alex.Worlds.Bedrock
 			_gameTickTimer = new System.Threading.Timer(GameTick, null, 50, 50);
 		}
 
+		private bool VerifyConnection()
+		{
+			if (Client is BedrockClient c)
+			{
+				return c.UdpClient.Client != null;
+			}
+			
+			return true;
+		}
+
 		public override Task Load(ProgressReport progressReport)
 		{
 			return Task.Run(() =>
@@ -225,6 +235,14 @@ namespace Alex.Worlds.Bedrock
 						
 						Client.SendMcpeMovePlayer();
 						break;
+					}
+
+					if (!VerifyConnection())
+					{
+						Client.ShowDisconnect("Connection lost.");
+						
+						timer.Stop();
+						return;
 					}
 				}
 

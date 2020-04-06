@@ -307,7 +307,7 @@ namespace Alex.API.Graphics.Typography
 						styleStrikethrough = false;
 						styleUnderline = false;
 						styleItalic = false;
-						styleColor = TextColor.White;
+						styleColor = color;
 					}
 				}
 				else
@@ -327,6 +327,7 @@ namespace Alex.API.Graphics.Typography
 					//}
 
 					var p = offset;
+					var width = glyph.Width + (styleBold ? 1 : 0) + CharacterSpacing;
 
 					if (dropShadow)
 					{
@@ -350,11 +351,18 @@ namespace Alex.API.Graphics.Typography
 						sb.Draw(glyph.Texture, boldP, styleColor.ForegroundColor * opacity, rotation, originVal, scaleVal * Scale, effects, layerDepth);
 					}
 
+				/*	if (styleUnderline)
+					{
+						var lineStart = Vector2.Transform(p + new Vector2(0, 8), transformation);
+						
+						sb.DrawLine(2, lineStart, new Vector2(lineStart.X + width, lineStart.Y), styleColor.ForegroundColor * opacity, scaleVal * Scale, layerDepth);
+					}*/
+
 					p = Vector2.Transform(p, transformation);
 
 					sb.Draw(glyph.Texture, p, styleColor.ForegroundColor * opacity, rotation, originVal, scaleVal * Scale, effects, layerDepth);
 
-					offset.X += glyph.Width + (styleBold ? 1 : 0) + CharacterSpacing;
+					offset.X += width;
 				}
 			}
 

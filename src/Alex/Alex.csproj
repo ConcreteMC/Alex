@@ -98,23 +98,19 @@
     <PackageReference Include="EasyPipes" Version="1.1.0" />
     <PackageReference Include="GtkSharp" Version="3.22.24.37" />
     <PackageReference Include="Hawezo.MojangSharp" Version="0.5.1" />
-    <PackageReference Include="JetBrains.Profiler.Api" Version="1.0.19" />
     <PackageReference Include="JKang.IpcServiceFramework.Server" Version="2.2.2" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.1" />
     <PackageReference Include="Microsoft.Identity.Client" Version="2.3.0-preview" />
     <PackageReference Include="MiNET" Version="1.0.2085" />
     <PackageReference Include="MiNET.fnbt" Version="1.0.22" />
-    <PackageReference Include="MiniProfiler.EntityFrameworkCore" Version="4.0.180" />
     <PackageReference Include="Mono.Cecil" Version="0.11.1" />
     <PackageReference Include="MonoGame.Framework.DesktopGL.Core" Version="3.8.0.13" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-    <PackageReference Include="NLog" Version="4.6.8" />
+    <PackageReference Include="NLog" Version="4.7.0" />
     <PackageReference Include="Portable.BouncyCastle" Version="1.8.5.2" />
-    <PackageReference Include="SharpRakLib.Core" Version="1.0.0" />
     <PackageReference Include="System.Reactive.Core" Version="4.1.2" />
     <PackageReference Include="System.Reactive.Interfaces" Version="4.1.2" />
     <PackageReference Include="System.Reactive.Linq" Version="4.1.2" />
-    <PackageReference Include="UniversalThreadManagement" Version="0.1.0" />
   </ItemGroup>
 
   <ItemGroup>

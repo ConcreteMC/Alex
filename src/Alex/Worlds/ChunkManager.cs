@@ -22,9 +22,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using NLog;
-using StackExchange.Profiling;
-using StackExchange.Profiling.Internal;
-using UniversalThreadManagement;
 
 //using OpenTK.Graphics;
 
@@ -59,7 +56,6 @@ namespace Alex.Worlds
         private ConcurrentDictionary<ChunkCoordinates, ChunkData> _chunkData = new ConcurrentDictionary<ChunkCoordinates, ChunkData>();
 
         private AlexOptions Options { get; }
-        private ProfilerService ProfilerService { get; }
         private RenderTarget2D _depthMap;
         public RenderTarget2D DepthMap => _depthMap;
         public ChunkManager(IServiceProvider serviceProvider, GraphicsDevice graphics, IWorld world)
@@ -71,7 +67,6 @@ namespace Alex.Worlds
 	        //Options = option;
 
 	        Options = serviceProvider.GetRequiredService<IOptionsProvider>().AlexOptions;
-	        ProfilerService = serviceProvider.GetRequiredService<ProfilerService>();
 	        Resources = serviceProvider.GetRequiredService<ResourceManager>();
 	        
 	        Chunks = new ConcurrentDictionary<ChunkCoordinates, IChunkColumn>();
@@ -646,7 +641,7 @@ namespace Alex.Worlds
                         else
                         {
 	                        Enqueued.Remove(coords);
-	                        Schedule(coords, WorkItemPriority.Highest);
+	                        Schedule(coords, ChunkPriority.Highest);
                         }
 
                         //Enqueued.Remove(coords);
@@ -669,7 +664,7 @@ namespace Alex.Worlds
                         {
                             if (!_workItems.ContainsKey(coords))
                             {
-                                Schedule(coords, WorkItemPriority.AboveNormal);
+                                Schedule(coords, ChunkPriority.High);
                             }
                         }
                     }
@@ -686,7 +681,7 @@ namespace Alex.Worlds
 			//TaskScheduler.Dispose();
 		}
 
-	    private void Schedule(ChunkCoordinates coords, WorkItemPriority priority)
+	    private void Schedule(ChunkCoordinates coords, ChunkPriority priority)
 	    {
 		    CancellationTokenSource taskCancelationToken =
 			    CancellationTokenSource.CreateLinkedTokenSource(CancelationToken.Token);
@@ -716,7 +711,7 @@ namespace Alex.Worlds
 
 		    }, taskCancelationToken.Token, TaskCreationOptions.None, _priorityTaskScheduler);
 
-		    if (priority == WorkItemPriority.Highest)
+		    if (priority == ChunkPriority.Highest)
 		    {
 			    _priorityTaskScheduler.Prioritize(task);
 		    }
@@ -766,7 +761,7 @@ namespace Alex.Worlds
             }
 
             var scheduleType = chunk.Scheduled;
-            var profiler = MiniProfiler.StartNew("chunk.update");
+
             ChunkData data = null;
             bool force = !_chunkData.TryGetValue(coordinates, out data);
 
@@ -779,52 +774,49 @@ namespace Alex.Worlds
 	            if (currentChunkY < 0) currentChunkY = 0;
 
 	            List<ChunkMesh> meshes = new List<ChunkMesh>();
-	            using (profiler.Step("chunk.sections"))
+
+	            for (var i = 0; i < chunk.Sections.Length - 1; i++)
 	            {
-		            for (var i = 0; i < chunk.Sections.Length - 1; i++)
+		            if (i < 0) break;
+		            var section = chunk.Sections[i] as ChunkSection;
+		            if (section == null || section.IsEmpty())
 		            {
-			            if (i < 0) break;
-			            var section = chunk.Sections[i] as ChunkSection;
-			            if (section == null || section.IsEmpty())
-			            {
-				            continue;
-			            }
+			            continue;
+		            }
 
-			            if (i != currentChunkY && i != 0)
+		            if (i != currentChunkY && i != 0)
+		            {
+
+			            if (i > 0 && i < chunk.Sections.Length - 1)
 			            {
-				            using (profiler.Step("chunk.neighboring"))
+				            var neighbors = chunk.CheckNeighbors(section, i, World).ToArray();
+
+				            if (!section.HasAirPockets && neighbors.Length == 6) //All surrounded by solid.
 				            {
-					            if (i > 0 && i < chunk.Sections.Length - 1)
-					            {
-						            var neighbors = chunk.CheckNeighbors(section, i, World).ToArray();
-
-						            if (!section.HasAirPockets && neighbors.Length == 6) //All surrounded by solid.
-						            {
-							            // Log.Info($"Found section with solid neigbors, skipping.");
-							            continue;
-						            }
-
-						            if (i < currentChunkY && neighbors.Length >= 6) continue;
-					            }
-					            else if (i < currentChunkY) continue;
+					            // Log.Info($"Found section with solid neigbors, skipping.");
+					            continue;
 				            }
+
+				            if (i < currentChunkY && neighbors.Length >= 6) continue;
 			            }
+			            else if (i < currentChunkY) continue;
 
-			            //if (i == 0) force = true;
+		            }
 
-			            if (force || section.ScheduledUpdates.Cast<bool>().Contains(true) ||
-			                section.ScheduledSkylightUpdates.Cast<bool>().Contains(true) || section.IsDirty)
-			            {
-				            using (profiler.Step("chunk.meshing"))
-				            {
-					            var sectionMesh = GenerateSectionMesh(World, scheduleType,
-						            new Vector3(chunk.X << 4, 0, chunk.Z << 4), ref section, i);
+		            //if (i == 0) force = true;
 
-					            meshes.Add(sectionMesh);
-				            }
-			            }
+		            if (force || section.ScheduledUpdates.Cast<bool>().Contains(true) ||
+		                section.ScheduledSkylightUpdates.Cast<bool>().Contains(true) || section.IsDirty)
+		            {
+
+			            var sectionMesh = GenerateSectionMesh(World, scheduleType,
+				            new Vector3(chunk.X << 4, 0, chunk.Z << 4), ref section, i);
+
+			            meshes.Add(sectionMesh);
+
 		            }
 	            }
+
 
 	            Dictionary<RenderStage, List<int>> newStageIndexes = new Dictionary<RenderStage, List<int>>();
 
@@ -848,10 +840,7 @@ namespace Alex.Worlds
 
 	            if (vertices.Count > 0)
 	            {
-		            ProfilerService.ReportCount("chunk.vertexCount", vertices.Count);
-
-		            using (profiler.Step("chunk.buffer"))
-		            {
+		           
 			            var vertexArray = vertices.ToArray();
 			            Dictionary<RenderStage, ChunkRenderStage> oldStages = null;
 			            if (data == null)
@@ -874,8 +863,7 @@ namespace Alex.Worlds
 			            PooledVertexBuffer oldBuffer = data.Buffer;
 
 			            PooledVertexBuffer newVertexBuffer = null;
-
-			            using (profiler.Step("chunk.buffer.check"))
+			            
 				            if (vertexArray.Length >= data.Buffer.VertexCount)
 				            {
 					            PooledVertexBuffer newBuffer = GpuResourceManager.GetBuffer(this, Graphics,
@@ -884,15 +872,10 @@ namespace Alex.Worlds
 
 					            newBuffer.SetData(vertexArray);
 					            newVertexBuffer = newBuffer;
-
-					            ProfilerService.ReportCount("chunk.bufferSize", data.Buffer.MemoryUsage);
-
-					            ProfilerService.TriggerCounter("chunk.bufferResize");
 				            }
 				            else
 				            {
 					            data.Buffer.SetData(vertexArray);
-					            ProfilerService.ReportCount("chunk.bufferSize", data.Buffer.MemoryUsage);
 				            }
 
 			            foreach (var stage in newStageIndexes)
@@ -923,8 +906,7 @@ namespace Alex.Worlds
 			            }
 
 			            data.RenderStages = newStages;
-			            using (profiler.Step("chunk.buffer.dispose"))
-			            {
+			            
 				            if (newVertexBuffer != null)
 				            {
 					            data.Buffer = newVertexBuffer;
@@ -944,8 +926,8 @@ namespace Alex.Worlds
 						            }
 					            }
 				            }
-			            }
-		            }
+			            
+		            
 	            }
 	            else
 	            {
@@ -1003,9 +985,7 @@ namespace Alex.Worlds
                 Interlocked.Decrement(ref _chunkUpdates);
                 Monitor.Exit(chunk.UpdateLock);
 
-                profiler.Stop();
-                
-              //   Log.Info(MiniProfiler.Current.RenderPlainText());
+                //   Log.Info(MiniProfiler.Current.RenderPlainText());
             }
 
             return false;

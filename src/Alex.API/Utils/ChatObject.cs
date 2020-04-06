@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using Alex.API.Json;
 using Microsoft.Xna.Framework;
 using NLog;
@@ -25,6 +26,8 @@ namespace Alex.API.Utils
     {
         private static Logger Log = LogManager.GetCurrentClassLogger(typeof(TextColor));
 
+        public const char Prefix = '§';
+        
         // @formatter:off — disable formatter after this line
         public static readonly TextColor Black       = new TextColor('0',   0,   0,   0,   0,   0,   0, "black");
         public static readonly TextColor DarkBlue    = new TextColor('1',   0,   0, 170,   0,   0,  42, "dark_blue");
@@ -262,6 +265,40 @@ namespace Alex.API.Utils
             }
         }
 
+        private static readonly TextColor[] RainbowColors = new TextColor[]
+        {
+            DarkRed,
+            Red,
+            Gold,
+            Yellow,
+            BrightGreen,
+            DarkGreen,
+            Cyan,
+            Blue,
+            DarkBlue,
+            Purple,
+            Pink
+        };
+        
+        public static string Rainbow(string input)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            for (var index = 0; index < input.Length; index++)
+            {
+                char c = input[index];
+
+                sb.Append(Prefix);
+                sb.Append(RainbowColors[index % RainbowColors.Length].Code);
+                sb.Append(c);
+            }
+
+            sb.Append(Prefix);
+            sb.Append(Reset.Code);
+
+            return sb.ToString();
+        }
+        
         public static explicit operator Color(TextColor textColor)
         {
             return textColor.ForegroundColor;
