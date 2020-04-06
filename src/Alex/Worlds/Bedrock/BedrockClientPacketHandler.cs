@@ -727,6 +727,7 @@ namespace Alex.Worlds.Bedrock
 				if (Client.WorldReceiver.TryGetEntity(message.runtimeEntityId, out var entity))
 				{
 					var known = entity.KnownPosition;
+					known = new PlayerLocation(known.X, known.Y, known.Z, known.HeadYaw, known.Yaw, known.Pitch);
 					
 					MiNET.Utils.PlayerLocation startPosition = new MiNET.Utils.PlayerLocation(known.X, known.Y, known.Z, known.HeadYaw, known.Yaw, known.Pitch);
 					
@@ -736,7 +737,7 @@ namespace Alex.Worlds.Bedrock
 					endPosition.Y = float.IsNaN(endPosition.Y) ? known.Y : endPosition.Y;
 					endPosition.Z = float.IsNaN(endPosition.Z) ? known.Z : endPosition.Z;
 					
-					Log.Info($"Distance: {endPosition.DistanceTo(startPosition)} | Delta: {endPosition - startPosition.ToVector3()} | Start: {startPosition} End: {endPosition}");
+				//	Log.Info($"Distance: {endPosition.DistanceTo(startPosition)} | Delta: {endPosition - startPosition.ToVector3()} | Start: {startPosition} End: {endPosition}");
 					
 					entity.KnownPosition = new PlayerLocation(endPosition);
 				}

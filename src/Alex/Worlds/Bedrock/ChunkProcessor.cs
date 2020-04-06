@@ -415,7 +415,7 @@ namespace Alex.Worlds.Bedrock
 					        }
 					        catch (Exception ex)
 					        {
-						        Log.Warn(ex, $"Reading chunk extra data (Loop={loop})");
+						       // Log.Warn(ex, $"Reading chunk extra data (Loop={loop})");
 					        }
 
 					        loop++;

@@ -110,7 +110,9 @@ namespace Alex.Worlds.Bedrock
                         Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(pos.X,
 	                        pos.Y + Player.EyeLevel, pos.Z, pos.HeadYaw,
 	                        pos.Yaw, -pos.Pitch));
-                    }
+
+                        _lastSentLocation = pos;
+					}
 
 					if (pos.DistanceTo(_lastLocation) > 16f && _stopwatch.ElapsedMilliseconds > 500)
 					{
@@ -170,10 +172,10 @@ namespace Alex.Worlds.Bedrock
 
 		private bool VerifyConnection()
 		{
-		/*	if (Client is BedrockClient c)
+			if (Client is BedrockClient c)
 			{
 				return c.IsConnected;
-			}*/
+			}
 			
 			return true;
 		}
@@ -227,7 +229,7 @@ namespace Alex.Worlds.Bedrock
 						}
 					}
 
-					if ((percentage >= 90 && (statusChanged || timer.ElapsedMilliseconds > 15 * 1000)) || (timer.ElapsedMilliseconds > 15 * 1000))
+					if ((percentage >= 90 && (statusChanged || timer.ElapsedMilliseconds > 15 * 1000)))
 					{
 						Log.Info($"Init!!!");
 						
