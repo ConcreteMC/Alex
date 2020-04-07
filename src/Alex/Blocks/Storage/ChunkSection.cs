@@ -7,6 +7,7 @@ using Alex.API.World;
 using Alex.Blocks.Minecraft;
 using Alex.ResourcePackLib.Json;
 using Alex.Utils;
+using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using NLog;
 using BitArray = Alex.API.Utils.BitArray;
@@ -40,8 +41,10 @@ namespace Alex.Blocks.Storage
 		internal ChunkMesh MeshCache { get; set; } = null;
 		internal IReadOnlyDictionary<BlockCoordinates, IList<ChunkMesh.EntryPosition>> MeshPositions { get; set; } = null;
 		
-        public ChunkSection(int y, bool storeSkylight, int sections = 2)
+		private ChunkColumn Owner { get; }
+        public ChunkSection(ChunkColumn owner, int y, bool storeSkylight, int sections = 2)
         {
+	        Owner = owner;
 	        if (sections <= 0)
 		        sections = 1;
 	        
@@ -78,7 +81,8 @@ namespace Alex.Blocks.Storage
         public bool New { get; set; } = true;
 
         public void ResetSkyLight(byte initialValue = 0xff)
-		{
+        {
+	        Owner.SkyLightDirty = true;
 			this.SkyLight = new NibbleArray(4096, initialValue);
 		}
 
@@ -250,6 +254,8 @@ namespace Alex.Blocks.Storage
 
             this.SkyLight[idx] = (byte) value;
             ScheduledSkylightUpdates.Set(idx, true);
+            
+            Owner.SkyLightDirty = true;
 		}
 
 		public byte GetSkylight(int x, int y, int z)

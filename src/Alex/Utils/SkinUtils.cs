@@ -80,8 +80,10 @@ namespace Alex.Utils
 			{
 				var bytes = skin.Data;
 
-				int width = 64;
-				var height = bytes.Length == 64 * 32 * 4 ? 32 : 64;
+				/*int width = 64;
+				var height = bytes.Length == 64 * 32 * 4 ? 32 : 64;*/
+				int width = skin.Width;
+				int height = skin.Height;
 
 				Bitmap bitmap = new Bitmap(width, height);
 

@@ -137,7 +137,7 @@ namespace Alex.Worlds.Bedrock
 					        int storageSize = defStream.ReadByte();
 					        
 					        if (section == null) 
-						        section = new ChunkSection(s, true, 2);
+						        section = new ChunkSection(chunkColumn, s, true, 2);
 
 					        for (int storage = 0; storage < storageSize; storage++)
 					        {
@@ -211,7 +211,7 @@ namespace Alex.Worlds.Bedrock
 				        else
 				        {
 					        if (section == null) 
-						        section = new ChunkSection(s, true, 2);
+						        section = new ChunkSection(chunkColumn, s, true, 2);
 					        
 					        #region OldFormat 
 

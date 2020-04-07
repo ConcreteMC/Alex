@@ -28,8 +28,7 @@ namespace Alex.API.World
 		IBlock GetBlock(Vector3 position);
 		IBlock GetBlock(float x, float y, float z);
 		IBlock GetBlock(int x, int y, int z);
-		void SetBlock(float x, float y, float z, IBlock block);
-		void SetBlock(int x, int y, int z, IBlock block);
+
 		void SetBlockState(int x, int y, int z, IBlockState block);
 
 		IEnumerable<(IBlockState state, int storage)> GetBlockStates(int x, int y, int z);

@@ -199,14 +199,14 @@ namespace Alex.Graphics.Models
 
 		public float BrightnessModifier => MathHelper.Clamp(MathF.Cos(CelestialAngle * MathHelper.TwoPi) * 2 + 0.5f, 0.25f, 1f);
 
-		private Color WorldSkyColor
+		public Color WorldSkyColor
 	    {
 		    get
 		    {
 			    var position = World.Camera.Position;
 
-			    float f1 = MathF.Cos(CelestialAngle * ((float)Math.PI * 2F)) * 2.0F + 0.5F;
-			    f1 = MathHelper.Clamp(f1, 0.0F, 1.0F);
+			    //float f1 = MathF.Cos(CelestialAngle * ((float)Math.PI * 2F)) * 2.0F + 0.5F;
+			   // f1 = MathHelper.Clamp(f1, 0.0F, 1.0F);
 
 			    int x = (int)MathF.Floor(position.X);
 			    int y = (int)MathF.Floor(position.Y);
@@ -222,9 +222,9 @@ namespace Alex.Graphics.Models
 			    float r = (l >> 16 & 255) / 255.0F;
 			    float g = (l >> 8 & 255) / 255.0F;
 			    float b = (l & 255) / 255.0F;
-			    r = r * f1;
-			    g = g * f1;
-			    b = b * f1;
+			    r = r * BrightnessModifier;
+			    g = g * BrightnessModifier;
+			    b = b * BrightnessModifier;
 
 				return new Color(r,g,b);
 		    }

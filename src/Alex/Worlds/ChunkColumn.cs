@@ -101,7 +101,7 @@ namespace Alex.Worlds
 			var section = Sections[y >> 4];
 			if (section == null)
 			{
-				var storage = new ChunkSection(y, true, 2);
+				var storage = new ChunkSection(this, y, true, 2);
 				Sections[y >> 4] = storage;
 				return storage;
 			}
@@ -703,7 +703,7 @@ namespace Alex.Worlds
 					{
 						if (storage == null)
 						{
-							storage = new ChunkSection(sectionY, readSkylight);
+							storage = new ChunkSection(this, sectionY, readSkylight);
 						}
 
 					//	storage.Data.Read(ms);
@@ -747,7 +747,7 @@ namespace Alex.Worlds
 						if (groundUp && (storage == null || !storage.IsEmpty()))
 						{
 							if (storage == null)
-								storage = new ChunkSection(sectionY, readSkylight, 2);
+								storage = new ChunkSection(this, sectionY, readSkylight, 2);
 						}
 					}
 

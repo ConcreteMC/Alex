@@ -372,8 +372,8 @@ namespace Alex.Worlds.Bedrock
         private static string CachePath { get; set; } = Path.Combine("cache", "geometry");
 		public void HandleMcpePlayerList(McpePlayerList message)
 		{
-			if (!Directory.Exists("skins"))
-				Directory.CreateDirectory("skins");
+			//if (!Directory.Exists("skins"))
+			//	Directory.CreateDirectory("skins");
 			
 			if (message.records is PlayerAddRecords addRecords)
 			{
@@ -411,7 +411,7 @@ namespace Alex.Worlds.Bedrock
 							{
 								if (skinBitmap != null)
 								{
-									string skinPath = Path.Combine(CachePath,
+									/*string skinPath = Path.Combine(CachePath,
 										$"{r.Skin.SkinResourcePatch.Geometry.Default}.json");
 									if (!Storage.TryGetDirectory(CachePath, out DirectoryInfo info))
 									{
@@ -433,7 +433,7 @@ namespace Alex.Worlds.Bedrock
 													ms.ToArray());
 											}
 										}
-									}
+									}*/
 								}
 
 
@@ -449,11 +449,11 @@ namespace Alex.Worlds.Bedrock
 								{
 									modelRenderer.Dispose();
 									
-									var path = Path.Combine("skins", $"invalid-{r.Skin.SkinId}.json");
-									if (!File.Exists(path))
-									{
-										File.WriteAllText(path, JsonConvert.SerializeObject(r.Skin, Formatting.Indented));
-									}
+									//var path = Path.Combine("skins", $"invalid-{r.Skin.SkinId}.json");
+									//if (!File.Exists(path))
+									//{
+									//	File.WriteAllText(path, JsonConvert.SerializeObject(r.Skin, Formatting.Indented));
+									//}
 								}
 
 								//m.ModelRenderer =
@@ -1084,7 +1084,7 @@ namespace Alex.Worlds.Bedrock
 				}
 			}
 
-			if (inventory == null) return;
+			if (inventory == null || message.input == null) return;
 
 			for (var index = 0; index < message.input.Count; index++)
 			{
@@ -1121,7 +1121,7 @@ namespace Alex.Worlds.Bedrock
                 }
 			}
 
-			if (inventory == null) return;
+			if (inventory == null || message.item == null) return;
 			
 			var index = (int)message.slot;
 			

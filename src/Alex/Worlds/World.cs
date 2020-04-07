@@ -287,8 +287,8 @@ namespace Alex.Worlds
 			ChunkManager.Update(args);
 			EntityManager.Update(args, SkyRenderer);
 			PhysicsEngine.Update(args.GameTime);
-			
-			var diffuseColor = Color.White.ToVector3() * BrightnessModifier;
+
+			var diffuseColor = Color.White.ToVector3() * SkyRenderer.BrightnessModifier;
 			ChunkManager.AmbientLightColor = diffuseColor;
 
 			Player.ModelRenderer.DiffuseColor = diffuseColor;
@@ -433,55 +433,7 @@ namespace Alex.Worlds
 
 	        return BlockFactory.GetBlockState("minecraft:air").Block;
         }
-
-		public void SetBlock(Block block)
-		{
-			var x = block.Coordinates.X;
-			var y = block.Coordinates.Y;
-			var z = block.Coordinates.Z;
-
-			var chunkCoords = new ChunkCoordinates(x >> 4, z >> 4);
-
-            IChunkColumn chunk;
-			if (ChunkManager.TryGetChunk(chunkCoords, out chunk))
-			{
-				var cx = x & 0xf;
-				var cy = y & 0xff;
-				var cz = z & 0xf;
-
-                chunk.SetBlock(cx, cy, cz, block);
-                ChunkManager.ScheduleChunkUpdate(chunkCoords, ScheduleType.Scheduled | ScheduleType.Lighting, true);
-
-				UpdateNeighbors(x, y, z);
-				CheckForUpdate(chunkCoords, cx, cz);
-            }
-		}
-
-		public void SetBlock(float x, float y, float z, IBlock block)
-	    {
-		    SetBlock((int) Math.Floor(x), (int)Math.Floor(y), (int)Math.Floor(z), block);
-	    }
-
-	    public void SetBlock(int x, int y, int z, IBlock block)
-	    {
-		    var chunkCoords = new ChunkCoordinates(x >> 4, z >> 4);
-
-			IChunkColumn chunk;
-		    if (ChunkManager.TryGetChunk(chunkCoords, out chunk))
-		    {
-			    var cx = x & 0xf;
-			    var cy = y & 0xff;
-			    var cz = z & 0xf;
-
-                chunk.SetBlock(cx, cy, cz, block);
-
-                UpdateNeighbors(x, y, z);
-			    CheckForUpdate(chunkCoords, cx, cz);
-			    
-			    ChunkManager.ScheduleChunkUpdate(chunkCoords, ScheduleType.Scheduled | ScheduleType.Lighting, true);
-            } 
-	    }
-
+		
 		public void SetBlockState(int x, int y, int z, IBlockState block)
 		{
 			SetBlockState(x, y, z, block, 0);

@@ -21,7 +21,11 @@ using Alex.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MiNET.Utils;
 using NLog;
+using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
+using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
+using PlayerLocation = Alex.API.Utils.PlayerLocation;
 
 //using OpenTK.Graphics;
 
@@ -439,7 +443,7 @@ namespace Alex.Worlds
             
             if (doUpdates)
 			{
-				ScheduleChunkUpdate(position, ScheduleType.Full);
+				ScheduleChunkUpdate(position, ScheduleType.Full, true);
 
 				ScheduleChunkUpdate(new ChunkCoordinates(position.X + 1, position.Z), ScheduleType.Border);
 				ScheduleChunkUpdate(new ChunkCoordinates(position.X - 1, position.Z), ScheduleType.Border);
@@ -626,53 +630,12 @@ namespace Alex.Worlds
                 _renderedChunks = orderedList.ToArray();
 
                 if (Interlocked.Read(ref _threadsRunning) >= maxThreads) continue;
-                
 
                 bool nonInView = false;
-                try
+                if (TryDequeue(cameraChunkPos, out var coords, out var priority))
                 {
-	                if (HighestPriority.TryDequeue(out var coords))
-	                {
-                        if (Math.Abs(cameraChunkPos.DistanceTo(coords)) > Options.VideoOptions.RenderDistance)
-                        {
-                            if (!Enqueued.Contains(coords))
-                                Enqueued.Add(coords);
-                        }
-                        else
-                        {
-	                        Enqueued.Remove(coords);
-	                        Schedule(coords, ChunkPriority.Highest);
-                        }
-
-                        //Enqueued.Remove(coords);
-	                }
-	                else if (Enqueued.Count > 0)
-	                {
-		                //var cc = new ChunkCoordinates(CameraPosition);
-
-		                var where = Enqueued.Where(x => IsWithinView(x, _cameraBoundingFrustum)).ToArray();
-		                if (where.Length > 0)
-		                {
-			                coords = where.MinBy(x => Math.Abs(x.DistanceTo(new ChunkCoordinates(_cameraPosition))));
-		                }
-		                else
-		                {
-			                coords = Enqueued.MinBy(x => Math.Abs(x.DistanceTo(new ChunkCoordinates(_cameraPosition))));
-		                }
-
-                        if (Math.Abs(cameraChunkPos.DistanceTo(coords)) <= Options.VideoOptions.RenderDistance)
-                        {
-                            if (!_workItems.ContainsKey(coords))
-                            {
-                                Schedule(coords, ChunkPriority.High);
-                            }
-                        }
-                    }
+	                Schedule(coords, priority);
                 }
-				catch (OperationCanceledException)
-				{
-					break;
-				}
 			}
 
 			if (!CancelationToken.IsCancellationRequested)
@@ -680,6 +643,64 @@ namespace Alex.Worlds
 
 			//TaskScheduler.Dispose();
 		}
+
+	    private bool TryDequeue(ChunkCoordinates cameraChunkPos, out ChunkCoordinates coordinates, out ChunkPriority priority)
+	    {
+		    priority = ChunkPriority.Normal;
+		    
+		    try
+		    {
+			    if (HighestPriority.TryDequeue(out var coords))
+			    {
+				    if (Math.Abs(cameraChunkPos.DistanceTo(coords)) > Options.VideoOptions.RenderDistance)
+				    {
+					    if (!Enqueued.Contains(coords))
+						    Enqueued.Add(coords);
+				    }
+				    else
+				    {
+					    Enqueued.Remove(coords);
+					    priority = ChunkPriority.Highest;
+					   // Schedule(coords, ChunkPriority.Highest);
+					   coordinates = coords;
+					   return true;
+				    }
+
+				    //Enqueued.Remove(coords);
+			    }
+			    else if (Enqueued.Count > 0)
+			    {
+				    //var cc = new ChunkCoordinates(CameraPosition);
+
+				    var where = Enqueued.Where(x => IsWithinView(x, _cameraBoundingFrustum)).ToArray();
+				    if (where.Length > 0)
+				    {
+					    coords = where.MinBy(x => Math.Abs(x.DistanceTo(new ChunkCoordinates(_cameraPosition))));
+				    }
+				    else
+				    {
+					    coords = Enqueued.MinBy(x => Math.Abs(x.DistanceTo(new ChunkCoordinates(_cameraPosition))));
+				    }
+
+				    if (Math.Abs(cameraChunkPos.DistanceTo(coords)) <= Options.VideoOptions.RenderDistance)
+				    {
+					    if (!_workItems.ContainsKey(coords))
+					    {
+						    //Schedule(coords, ChunkPriority.High);
+						    coordinates = coords;
+						    return true;
+					    }
+				    }
+			    }
+		    }
+		    catch (OperationCanceledException)
+		    {
+			   // break;
+		    }
+
+		    coordinates = default;
+		    return false;
+	    }
 
 	    private void Schedule(ChunkCoordinates coords, ChunkPriority priority)
 	    {
@@ -689,25 +710,34 @@ namespace Alex.Worlds
 		    Interlocked.Increment(ref _threadsRunning);
 
 		    //_tasksQueue.
-		    if (_workItems.TryAdd(coords, taskCancelationToken))
-		    {
-			    Enqueued.Remove(coords);
-		    }
 
 		    var task = Task.Factory.StartNew(() =>
 		    {
-			    if (Chunks.TryGetValue(coords, out var val))
+			    do
 			    {
-				    if (val is ChunkColumn column && column.Sections.Any(x => !x.IsEmpty()))
+				    if (_workItems.TryAdd(coords, taskCancelationToken))
 				    {
-					    new SkyLightCalculations().RecalcSkyLight((ChunkColumn) val, new SkyLightBlockAccess(this));
-
-					    UpdateChunk(coords, val);
+					    Enqueued.Remove(coords);
 				    }
-			    }
+				    
+				    if (Chunks.TryGetValue(coords, out var val))
+				    {
+					    if (val is ChunkColumn column && column.Sections.Any(x => !x.IsEmpty()))
+					    {
+						   // if (column.SkyLightDirty || column.IsNew)
+						    {
+							    new SkyLightCalculations().RecalcSkyLight((ChunkColumn) val,
+								    new SkyLightBlockAccess(this));
+						    }
+
+						    UpdateChunk(coords, val);
+					    }
+				    }
+				    
+				    _workItems.TryRemove(coords, out _);
+			    } while (TryDequeue(new ChunkCoordinates(_cameraPosition), out coords, out priority));
 
 			    Interlocked.Decrement(ref _threadsRunning);
-			    _workItems.TryRemove(coords, out _);
 
 		    }, taskCancelationToken.Token, TaskCreationOptions.None, _priorityTaskScheduler);
 
@@ -751,7 +781,7 @@ namespace Alex.Worlds
 		    }
 	    }
 	    
-        internal bool UpdateChunk(ChunkCoordinates coordinates, IChunkColumn c)
+        private bool UpdateChunk(ChunkCoordinates coordinates, IChunkColumn c)
         {
 	        var chunk = c as ChunkColumn;
             if (!Monitor.TryEnter(chunk.UpdateLock))

@@ -179,15 +179,17 @@ namespace Alex.Worlds.Bedrock
 
 			if (Connection.AutoConnect)
 			{
-			//	Connection._rakOfflineHandler.HaveServer = true;
+				//	Connection._rakOfflineHandler.HaveServer = true;
 			}
 
 			ConnectionAcceptedWaitHandle = resetEvent;
-			
+
 			//SendUnconnectedPing();
 
-		//	if (!Connection.AutoConnect)
+			//	if (!Connection.AutoConnect)
 			//{
+			if (!Connection.AutoConnect)
+			{
 				ThreadPool.QueueUserWorkItem(o =>
 				{
 					Stopwatch sw = Stopwatch.StartNew();
@@ -218,19 +220,23 @@ namespace Alex.Worlds.Bedrock
 							Thread.Sleep(500);
 					}
 				});
+			}
 
-				if (Connection.AutoConnect)
+			if (Connection.AutoConnect)
+			{
+				if (Connection.TryConnect(ServerEndpoint))
 				{
-					SendOpenConnectionRequest1();
+					//resetEvent.Set();
 				}
-				else
-				{
-					
-				}
-				//}
+			}
+			else
+			{
+
+			}
+			//}
 
 		}
-		
+
 		private void SendData(byte[] data, IPEndPoint targetEndpoint)
 		{
 			if (Connection == null) return;
@@ -814,7 +820,7 @@ namespace Alex.Worlds.Bedrock
 			var packet = McpeRequestChunkRadius.CreateObject();
 			packet.chunkRadius = radius;
 
-			Session.SendPacket(packet);
+			Session?.SendPacket(packet);
 		}
 
 		public void SendDisconnectionNotification()
