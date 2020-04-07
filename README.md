@@ -1,7 +1,7 @@
 # Alex
 A Minecraft (Java & Bedrock Edition) client written in C# 
 
-[![Build status](https://img.shields.io/appveyor/ci/kennyvv/Alex/master.svg?label=build%20%7C%20master&logo=appveyor&style=flat-square)](https://ci.appveyor.com/project/kennyvv/alex/branch/master/artifacts)
+![Build status](https://github.com/kennyvv/Alex/workflows/.NET%20Core/badge.svg)
 
 ##### This client requires a paid Minecraft account.
 
