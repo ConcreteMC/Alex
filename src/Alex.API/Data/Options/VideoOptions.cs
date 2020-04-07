@@ -36,6 +36,9 @@ namespace Alex.API.Data.Options
         [DataMember]
         public OptionsProperty<bool> Depthmap { get; set; }
         
+        [DataMember]
+        public OptionsProperty<bool> Skybox { get; set; }
+        
         public VideoOptions()
         {
             RenderDistance = DefineRangedProperty(6, 2, 32);
@@ -49,6 +52,7 @@ namespace Alex.API.Data.Options
             LimitFramerate = DefineProperty(false);
             Minimap = DefineProperty(false);
             Depthmap = DefineProperty(false);
+            Skybox = DefineProperty(true);
         }
     }
 }

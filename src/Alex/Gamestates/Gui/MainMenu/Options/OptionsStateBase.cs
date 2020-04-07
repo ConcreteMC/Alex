@@ -24,12 +24,13 @@ namespace Alex.GameStates.Gui.MainMenu.Options
         private readonly IOptionsProvider _optionsProvider;
 
         private GuiPanoramaSkyBox _skyBox;
+        protected GuiBackButton BackButton { get; }
         public OptionsStateBase(GuiPanoramaSkyBox skyBox)
         {
             _skyBox = skyBox;
             _optionsProvider = GetService<IOptionsProvider>();
 
-            Footer.AddChild(new GuiBackButton()
+            Footer.AddRow(BackButton = new GuiBackButton()
             {
                 TranslationKey = "gui.done",
                 Anchor = Alignment.TopFill,
