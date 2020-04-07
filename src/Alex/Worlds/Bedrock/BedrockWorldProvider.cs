@@ -30,7 +30,7 @@ namespace Alex.Worlds.Bedrock
 		private static Logger Log = LogManager.GetCurrentClassLogger();
 		
 		public Alex Alex { get; }
-		private IBedrockNetworkProvider Client { get; }
+		protected IBedrockNetworkProvider Client { get; }
 
 		private System.Threading.Timer _gameTickTimer;
 		private IEventDispatcher EventDispatcher { get; }

@@ -112,15 +112,25 @@ namespace Alex.Worlds.Bedrock
         private BedrockClientMessageHandler MessageHandler { get; set; }
         public RakSession Session => Connection.ConnectionInfo.RakSessions.Values.FirstOrDefault();
         public bool IsConnected => Session?.State == ConnectionState.Connected;
-        private IPEndPoint ServerEndpoint { get; }
+        
+        private IPEndPoint _remoteEndpoint;
+
+        public IPEndPoint ServerEndpoint
+        {
+	        get { return _remoteEndpoint; }
+	        set
+	        {
+		        Connection.RemoteEndpoint = value;
+		        _remoteEndpoint = value;
+	        }
+        }
+
         private long ClientGUID { get; }
 		public BedrockClient(Alex alex, IEventDispatcher eventDispatcher, IPEndPoint endpoint, PlayerProfile playerProfile, DedicatedThreadPool threadPool, BedrockWorldProvider wp)
 		{
+			Connection = new RakConnection(new IPEndPoint(IPAddress.Any, 0), new GreyListManager(), new MotdProvider(), threadPool);
 			ServerEndpoint = endpoint;
 			
-			Connection = new RakConnection(new IPEndPoint(IPAddress.Any, 0), new GreyListManager(), new MotdProvider(), threadPool);
-
-			Connection.RemoteEndpoint = endpoint;
 			PlayerProfile = playerProfile;
 			CancellationTokenSource = new CancellationTokenSource();
 			

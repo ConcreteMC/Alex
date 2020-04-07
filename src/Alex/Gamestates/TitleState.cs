@@ -90,6 +90,7 @@ namespace Alex.GameStates
 			};
 
 			_debugMenu.AddMenuItem("Debug Blockstates", DebugWorldButtonActivated);
+			_debugMenu.AddMenuItem("Demo", DemoButtonActivated);
 			_debugMenu.AddMenuItem("Debug Flatland", DebugFlatland);
 			//_debugMenu.AddMenuItem("Debug Anvil", DebugAnvil);
 			_debugMenu.AddMenuItem("Debug Chunk", DebugChunkButtonActivated);
@@ -413,6 +414,11 @@ namespace Alex.GameStates
 		private void DebugChunkButtonActivated()
 		{
 			Debug(new ChunkDebugWorldGenerator());
+		}
+
+		private void DemoButtonActivated()
+		{
+			Debug(new DemoGenerator());
 		}
 	}
 }
