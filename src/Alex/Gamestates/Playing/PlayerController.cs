@@ -81,7 +81,7 @@ namespace Alex.GameStates.Playing
 
 	    private void CheckGeneralInput(GameTime gt)
 	    {
-		    if (InputManager.IsPressed(InputCommand.ToggleMenu))
+		    if (InputManager.IsPressed(InputCommand.Exit))
 		    {
 			    
 			}

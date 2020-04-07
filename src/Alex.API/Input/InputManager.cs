@@ -6,6 +6,32 @@ using Microsoft.Xna.Framework;
 
 namespace Alex.API.Input
 {
+    public class PlayerInputManagerEvent
+    {
+        public PlayerIndex PlayerIndex { get; }
+        public PlayerInputManager PlayerInputManager { get; }
+        
+        protected PlayerInputManagerEvent(PlayerIndex index, PlayerInputManager inputManager)
+        {
+            PlayerIndex = index;
+            PlayerInputManager = inputManager;
+        }
+    }
+
+    public sealed class PlayerInputManagerAdded : PlayerInputManagerEvent
+    {
+        public PlayerInputManagerAdded(PlayerIndex index, PlayerInputManager inputManager) : base(index, inputManager)
+        {
+        }
+    }
+    
+    public sealed class PlayerInputManagerRemoved : PlayerInputManagerEvent
+    {
+        public PlayerInputManagerRemoved(PlayerIndex index, PlayerInputManager inputManager) : base(index, inputManager)
+        {
+        }
+    }
+    
     public class InputManager
     {
         private Game Game;
@@ -15,6 +41,8 @@ namespace Alex.API.Input
         public ICursorInputListener CursorInputListener { get; }
 
         public int PlayerCount => PlayerInputManagers.Count;
+
+        public EventHandler<PlayerInputManagerAdded> InputManagerAdded;
 
         public InputManager(Game game)
         {
@@ -34,8 +62,9 @@ namespace Alex.API.Input
             if (!PlayerInputManagers.TryGetValue(playerIndex, out var playerInputManager))
             {
                 playerInputManager = new PlayerInputManager(playerIndex);
-
                 PlayerInputManagers.Add(playerIndex, playerInputManager);
+                
+                InputManagerAdded?.Invoke(this, new PlayerInputManagerAdded(playerIndex, playerInputManager));
             }
 
             return playerInputManager;

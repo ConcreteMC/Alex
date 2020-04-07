@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
+using System.Text.RegularExpressions;
 using Alex.API.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -17,6 +19,22 @@ namespace Alex
 		static Extensions()
 		{
 			
+		}
+
+		public static string SplitPascalCase(this string input)
+		{
+			var result = new StringBuilder();
+
+			foreach (var ch in input)
+			{
+				if (char.IsUpper(ch) && result.Length > 0)
+				{
+					result.Append(' ');
+				}
+				result.Append(ch);
+			}
+			
+			return result.ToString();
 		}
 
 		public static byte[] ReadAllBytes(this Stream reader)

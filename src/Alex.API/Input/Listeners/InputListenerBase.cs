@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 
 namespace Alex.API.Input.Listeners
 {
-    public abstract class InputListenerBase<TState, TButtons> : IInputListener
+    public abstract class InputListenerBase<TState, TButtons> : IInputListener, IEnumerable<KeyValuePair<InputCommand, TButtons>>
     {
         public PlayerIndex PlayerIndex { get; }
 
@@ -36,9 +37,22 @@ namespace Alex.API.Input.Listeners
 
         public void RegisterMap(InputCommand command, TButtons buttons)
         {
-            _buttonMap.Add(command, buttons);
+            if (_buttonMap.ContainsKey(command))
+            {
+                _buttonMap[command] = buttons;
+            }
+            else
+            {
+                _buttonMap.Add(command, buttons);
+            }
         }
 
+        public void RemoveMap(InputCommand command)
+        {
+            if (_buttonMap.ContainsKey(command))
+                _buttonMap.Remove(command);
+        }
+        
         public bool IsDown(InputCommand command)
         {
             return (TryGetButtons(command, out var buttons) && IsButtonDown(CurrentState, buttons));
@@ -62,6 +76,17 @@ namespace Alex.API.Input.Listeners
         private bool TryGetButtons(InputCommand command, out TButtons buttons)
         {
             return _buttonMap.TryGetValue(command, out buttons);
+        }
+
+        public IEnumerator<KeyValuePair<InputCommand, TButtons>> GetEnumerator()
+        {
+            foreach (var kv in _buttonMap)
+                yield return kv;
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 }

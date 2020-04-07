@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Input.Listeners;
 using Alex.API.Utils;
@@ -6,6 +7,16 @@ using Microsoft.Xna.Framework;
 
 namespace Alex.API.Input
 {
+    public class InputListenerAdded
+    {
+        public IInputListener InputListener { get; }
+
+        public InputListenerAdded(IInputListener inputListener)
+        {
+            InputListener = inputListener;
+        }
+    }
+    
     public class PlayerInputManager
     {
 
@@ -16,6 +27,8 @@ namespace Alex.API.Input
 
         public List<InputActionBinding> Bindings { get; } = new List<InputActionBinding>();
 
+        public EventHandler<InputListenerAdded> InputListenerAdded;
+        
         public PlayerInputManager(PlayerIndex playerIndex, InputType inputType = InputType.GamePad)
         {
             PlayerIndex = playerIndex;
@@ -27,6 +40,22 @@ namespace Alex.API.Input
         public void AddListener(IInputListener listener)
         {
             InputListeners.Add(listener);
+            
+            InputListenerAdded?.Invoke(this, new InputListenerAdded(listener));
+        }
+
+        public bool TryGetListener<TType>(out TType value) where TType : IInputListener
+        {
+            value = default;
+
+            var first = InputListeners.FirstOrDefault(x => typeof(TType) == x.GetType());
+            if (first != default)
+            {
+                value = (TType) first;
+                return true;
+            }
+
+            return false;
         }
 
         public void Update(GameTime gameTime)

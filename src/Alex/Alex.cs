@@ -13,6 +13,7 @@ using Alex.API.Events;
 using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Input;
+using Alex.API.Input.Listeners;
 using Alex.API.Network;
 using Alex.API.Resources;
 using Alex.API.Services;
@@ -39,6 +40,7 @@ using Alex.Worlds.Java;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using MiNET.Net;
 using MiNET.Utils;
 using Newtonsoft.Json;
@@ -94,6 +96,8 @@ namespace Alex
         
         public DedicatedThreadPool ThreadPool { get; private set; }
         private DedicatedThreadPool NetworkThreadPool { get; set; } = null;
+        
+        public StorageSystem Storage { get; private set; }
         
         public Alex(LaunchSettings launchSettings)
 		{
@@ -166,9 +170,26 @@ namespace Alex
 	            ThreadType.Background, "Threadpool"));
             
            PacketFactory.CustomPacketFactory = new AlexPacketFactory();
+           
+           KeyboardInputListener.InstanceCreated += KeyboardInputCreated;
 		}
 
-		public static EventHandler<TextInputEventArgs> OnCharacterInput;
+        private void KeyboardInputCreated(object sender, KeyboardInputListener e)
+        {
+	        var bindings = KeyBinds.DefaultBindings;
+
+	        if (Storage.TryRead($"controls", out Dictionary<InputCommand, Keys> loadedBindings))
+	        {
+		        bindings = loadedBindings;
+	        }
+
+	        foreach (var binding in bindings)
+	        {
+		        e.RegisterMap(binding.Key, binding.Value);
+	        }
+        }
+
+        public static EventHandler<TextInputEventArgs> OnCharacterInput;
 
 		private void Window_TextInput(object sender, TextInputEventArgs e)
 		{
@@ -207,7 +228,7 @@ namespace Alex
 			
 			_spriteBatch = new SpriteBatch(GraphicsDevice);
 			InputManager = new InputManager(this);
-			
+
 			GuiRenderer = new GuiRenderer();
 			//GuiRenderer.Init(GraphicsDevice);
 			
@@ -311,10 +332,10 @@ namespace Alex
 		
 		private void ConfigureServices(IServiceCollection services)
 		{
-			var storage = new StorageSystem(LaunchSettings.WorkDir);
+			Storage = new StorageSystem(LaunchSettings.WorkDir);
 
 			services.AddSingleton<Alex>(this);
-			services.AddSingleton<IStorageSystem>(storage);
+			services.AddSingleton<IStorageSystem>(Storage);
 			services.AddSingleton<IOptionsProvider, OptionsProvider>();
 			services.AddSingleton<ProfileManager>();
 

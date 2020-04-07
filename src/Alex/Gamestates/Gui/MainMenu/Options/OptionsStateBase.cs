@@ -30,12 +30,14 @@ namespace Alex.GameStates.Gui.MainMenu.Options
             _skyBox = skyBox;
             _optionsProvider = GetService<IOptionsProvider>();
 
-            Footer.AddRow(BackButton = new GuiBackButton()
+            var footerRow = Footer.AddRow(BackButton = new GuiBackButton()
             {
                 TranslationKey = "gui.done",
                 Anchor = Alignment.TopFill,
 				Modern = false
             });
+
+            Footer.ChildAnchor = Alignment.MiddleCenter;
 
             Body.ChildAnchor = Alignment.MiddleCenter;
             

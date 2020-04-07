@@ -32,7 +32,7 @@ namespace Alex.Gui.Forms.Bedrock
         {
             base.OnUpdate(gameTime);
 
-            if (InputManager.Any(x => x.IsPressed(InputCommand.ToggleMenu)))
+            if (InputManager.Any(x => x.IsPressed(InputCommand.Exit)))
             {
                 Parent.Hide(FormId);
             }
