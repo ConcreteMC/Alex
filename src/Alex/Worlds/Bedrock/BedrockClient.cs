@@ -478,17 +478,14 @@ namespace Alex.Worlds.Bedrock
 				IBufferedCipher encryptor = CipherUtilities.GetCipher("AES/CFB8/NoPadding");
 				encryptor.Init(true, new ParametersWithIV(new KeyParameter(secret), secret.Take(16).ToArray()));
 
-				/*Session.CryptoContext = new CryptoContext
+				handler.CryptoContext = new CryptoContext
 				{
 					Decryptor = decryptor,
 					Encryptor = encryptor,
 					UseEncryption = true,
-					Key = secret
-				};*/
-				handler.CryptoContext.Decryptor = decryptor;
-				handler.CryptoContext.Encryptor = encryptor;
-				handler.CryptoContext.Key = secret;
-				handler.CryptoContext.UseEncryption = true;
+					Key = secret,
+					ClientKey = handler.CryptoContext.ClientKey
+				};
 
 				//Thread.Sleep(1250);
 				McpeClientToServerHandshake magic = new McpeClientToServerHandshake();

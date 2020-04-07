@@ -25,6 +25,7 @@ namespace Alex.GameStates.Gui.MainMenu.Options
         private GuiToggleButton Depthmap { get; }
         private GuiToggleButton Minimap { get; }
         private GuiToggleButton Skybox { get; }
+        private GuiSlider Antialiasing { get; }
         
         private Dictionary<IGuiControl, string> Descriptions { get; } = new Dictionary<IGuiControl, string>();
         
@@ -38,6 +39,13 @@ namespace Alex.GameStates.Gui.MainMenu.Options
             AddGuiRow(ProcessingThreads = CreateSlider("Processing Threads: {0}", o => Options.VideoOptions.ChunkThreads, 1, Environment.ProcessorCount, 1), 
                 Brightness = CreateSlider("Brightness: {0}%", o => Options.VideoOptions.Brightness, 0,
                     100, 1));
+
+            AddGuiRow(Antialiasing = CreateSlider(v =>
+            {
+                string subText = $"x{v:0}";
+
+                return $"Antialiasing: {((int) v == 0 ? "Disabled" : subText)}";
+            }, options => options.VideoOptions.Antialiasing, 0, 16, 2));
 
             AddGuiRow(FrameRateLimiter = CreateToggle("Limit Framerate: {0}", options => options.VideoOptions.LimitFramerate), 
                 FpsSlider = CreateSlider("Max Framerate: {0} fps", o => Options.VideoOptions.MaxFramerate, 1, 120, 1));
@@ -65,6 +73,8 @@ namespace Alex.GameStates.Gui.MainMenu.Options
             Descriptions.Add(Minimap, $"{TextColor.Bold}Minimap:{TextColor.Reset}\nIf enabled, renders a minimap in the top right corner of the screen.\nMay impact performance heavily.");
             Descriptions.Add(Depthmap, $"{TextColor.Bold}Use DepthMap:{TextColor.Reset}\n{TextColor.Bold}{TextColor.Red}EXPERIMENTAL FEATURE{TextColor.Reset}\nHeavy performance impact");
             Descriptions.Add(Skybox, $"{TextColor.Bold}Render Skybox:{TextColor.Reset}\nEnabled: Renders skybox in game\nDisabled: May improve performance slightly");
+            
+            Descriptions.Add(Antialiasing, $"{TextColor.Bold}Antialiasing:{TextColor.Reset}\nImproves sharpness on textures\nMay significantly impact performance on lower-end hardware");
         }
 
         protected override void OnShow()

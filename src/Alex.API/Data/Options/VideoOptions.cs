@@ -39,6 +39,9 @@ namespace Alex.API.Data.Options
         [DataMember]
         public OptionsProperty<bool> Skybox { get; set; }
         
+        [DataMember]
+        public OptionsProperty<int> Antialiasing { get; set; }
+        
         public VideoOptions()
         {
             RenderDistance = DefineRangedProperty(6, 2, 32);
@@ -49,6 +52,8 @@ namespace Alex.API.Data.Options
             MaxFramerate = DefineRangedProperty(60, 1, 999);
             Brightness = DefineRangedProperty(50, 0, 100);
 
+            Antialiasing = DefineRangedProperty(8, 0, 16);
+            
             LimitFramerate = DefineProperty(false);
             Minimap = DefineProperty(false);
             Depthmap = DefineProperty(false);

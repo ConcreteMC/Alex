@@ -114,6 +114,7 @@ namespace Alex
 			DeviceManager.PreparingDeviceSettings += (sender, args) =>
 				{
 					args.GraphicsDeviceInformation.PresentationParameters.DepthStencilFormat = DepthFormat.Depth24;
+					DeviceManager.PreferMultiSampling = true;
 				};
 			
 			Content.RootDirectory = "assets";
@@ -212,6 +213,8 @@ namespace Alex
 				}
 			}
 			
+			GraphicsDevice.PresentationParameters.MultiSampleCount = 8;
+			
 			DeviceManager.ApplyChanges();
 			
 			base.Initialize();
@@ -261,6 +264,14 @@ namespace Alex
 			{
 				SetFrameRateLimiter(true, options.AlexOptions.VideoOptions.MaxFramerate.Value);
 			}
+
+			options.AlexOptions.VideoOptions.Antialiasing.Bind((value, newValue) =>
+			{
+				SetAntiAliasing(newValue > 0, newValue);
+			});
+
+			SetAntiAliasing(options.AlexOptions.VideoOptions.Antialiasing > 0,
+				options.AlexOptions.VideoOptions.Antialiasing.Value);
 			
 			GuiDebugHelper = new GuiDebugHelper(GuiManager);
 
@@ -284,6 +295,17 @@ namespace Alex
 				{
 					Log.Error(ex, $"Could not initialize! {ex}");
 				}
+			});
+		}
+
+		private void SetAntiAliasing(bool enabled, int count)
+		{
+			UIThreadQueue.Enqueue(() =>
+			{
+				DeviceManager.PreferMultiSampling = enabled;
+				GraphicsDevice.PresentationParameters.MultiSampleCount = count;
+				
+				DeviceManager.ApplyChanges();
 			});
 		}
 
