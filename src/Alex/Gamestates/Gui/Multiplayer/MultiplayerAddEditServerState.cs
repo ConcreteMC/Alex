@@ -214,7 +214,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 				var name    = _nameInput.Value;
 				var address = _hostnameInput.Value;
 
-				ushort port = (ushort) (_javaEditionButton.Enabled ? 19132 : 25565);
+				ushort port = (ushort) (_javaEditionButton.Checked ? 19132 : 25565);
 
 				var split    = address.Split(':', StringSplitOptions.RemoveEmptyEntries);
 				var hostname = split[0];

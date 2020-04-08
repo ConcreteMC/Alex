@@ -3,11 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using Alex.API.Blocks.State;
 using Alex.Utils;
 
 namespace Alex.Blocks.Storage
 {
-	public class IntIdentityHashBiMap<TK> : IEnumerable<TK> where TK : class
+	public class IntIdentityHashBiMap<TK> : IEnumerable<TK>, IPallete<TK> where TK : class
 	{
 		private static TK _empty = default(TK);
 		private TK[] _values;

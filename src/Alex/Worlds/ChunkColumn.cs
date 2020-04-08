@@ -706,7 +706,10 @@ namespace Alex.Worlds
 							storage = new ChunkSection(this, sectionY, readSkylight);
 						}
 
-					//	storage.Data.Read(ms);
+						storage.Read(ms);
+						//var blockCount = ms.ReadShort();
+						//byte bitsPerBlock = (byte) ms.ReadByte();
+						//storage.
 						/*
 						for (int y = 0; y < 16; y++)
 						{

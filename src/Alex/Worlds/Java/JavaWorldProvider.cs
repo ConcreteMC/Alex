@@ -303,23 +303,37 @@ namespace Alex.Worlds.Java
 				progressReport(LoadingState.LoadingChunks, 0);
 
 				int t = Options.VideoOptions.RenderDistance;
-				double radiusSquared = Math.Pow(t, 2);
+				//double radiusSquared = Math.Pow(t, 2);
 
-				var target = radiusSquared * 3;
-
+				var target = t * 3d;
+				bool allowSpawn = false;
+				
                 int loaded = 0;
 				SpinWait.SpinUntil(() =>
 				{
+					var playerChunkCoords = new ChunkCoordinates(WorldReceiver.GetPlayerEntity().KnownPosition);
 					if (_chunksReceived < target)
 					{
-						progressReport(LoadingState.LoadingChunks, (int)Math.Floor((_chunksReceived / target) * 100));
+						progressReport(LoadingState.LoadingChunks, (int)Math.Floor((_chunksReceived / target) * 100d));
                     }
 					else if (loaded < _chunksReceived)
 					{
-
 						if (_generatingHelper.TryTake(out IChunkColumn chunkColumn, 50))
 						{
+							if (!allowSpawn)
+							{
+								if (playerChunkCoords.X == chunkColumn.X && playerChunkCoords.Z == chunkColumn.Z)
+								{
+									allowSpawn = true;
+								}
+							}
+							
 							//base.LoadChunk(chunkColumn, chunkColumn.X, chunkColumn.Z, true);
+							EventDispatcher.DispatchEvent(new ChunkReceivedEvent(new ChunkCoordinates(chunkColumn.X ,chunkColumn.Z), chunkColumn)
+							{
+								DoUpdates = true
+							});
+							
 							loaded++;
 						}
 
@@ -330,7 +344,7 @@ namespace Alex.Worlds.Java
 						progressReport(LoadingState.Spawning, 99);
                     }
 
-                    return loaded >= target || _disconnected; // Spawned || _disconnected;
+                    return (loaded >= target && allowSpawn) || _disconnected; // Spawned || _disconnected;
 
 				});
 
@@ -800,19 +814,19 @@ namespace Alex.Worlds.Java
 
 		private void HandleMultiBlockChange(MultiBlockChange packet)
 		{
-			throw new NotImplementedException();
+			//throw new NotImplementedException();
 			int cx = packet.ChunkX * 16;
 			int cz = packet.ChunkZ * 16;
 			foreach (var blockUpdate in packet.Records)
 			{
-				//WorldReceiver?.SetBlock(new BlockCoordinates(blockUpdate.RelativeX + cx, blockUpdate.Y, blockUpdate.RelativeZ + cz), BlockFactory.GetBlockState(blockUpdate.BlockId));
+				//WorldReceiver?.SetBlockState(new BlockCoordinates(blockUpdate.RelativeX + cx, blockUpdate.Y, blockUpdate.RelativeZ + cz), BlockFactory.GetBlockState(blockUpdate.BlockId));
 			}
 		}
 
 		private void HandleBlockChangePacket(BlockChangePacket packet)
 		{
-			throw new NotImplementedException();
-			//WorldReceiver?.SetBlockState(packet.Location, BlockFactory.GetBlockState(packet.PalleteId));
+			//throw new NotImplementedException();
+			WorldReceiver?.SetBlockState(packet.Location, BlockFactory.GetBlockState((uint) packet.PalleteId));
 		}
 
 		private void HandleHeldItemChangePacket(HeldItemChangePacket packet)

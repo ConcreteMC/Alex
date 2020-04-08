@@ -14,9 +14,13 @@ About
 
 This is a hobby project i work on from time to time, the end goal being it able to connect to a MC:Bedrock & MC:Java server & be feature compatible with most features required for the typical minigame server.
 
-It can currently connect to any java 18w50a server, bedrock server support is coming as soon as the network implementation is done. I do not recommened trying the client out on a server you care about tho, seeing as any slightly decent anti-cheat will detect you as our movement physics do not currently match up with Vanilla. Some world interactions like building and destroying are implemented but only recommened to be used on private servers & in creative mode.
+As of now, it is able to connect to java 1.15.2 & bedrock 1.14.1 servers.
 
-Model rendering isn't yet quite perfect, but most models can be rendered.
+Screenshots
+-----------
+
+![Bedrock Lifeboat](https://raw.githubusercontent.com/kennyvv/Alex/BigRefactor/screenshots/lbsg3.png)
+
 
 Cloning the Repository
 ----------------------

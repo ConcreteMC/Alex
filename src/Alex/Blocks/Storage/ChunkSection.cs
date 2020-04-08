@@ -5,6 +5,7 @@ using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks.Minecraft;
+using Alex.Networking.Java.Util;
 using Alex.ResourcePackLib.Json;
 using Alex.Utils;
 using Alex.Worlds;
@@ -399,6 +400,11 @@ namespace Alex.Blocks.Storage
 
             if (face == BlockFace.None || intFace < 0 || intFace > 5) return false;
 	        return FaceSolidity[(int)intFace];
+	    }
+
+	    public void Read(MinecraftStream ms)
+	    {
+		    _blockStorages[0].Read(ms);
 	    }
     }
 }
