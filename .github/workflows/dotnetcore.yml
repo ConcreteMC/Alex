@@ -2,7 +2,7 @@ name: .NET Core
 
 on:
   push:
-    branches: [ BigRefactor ]
+    branches: master
 
 jobs:
   linux:
