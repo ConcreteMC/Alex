@@ -89,9 +89,7 @@ namespace Alex.Graphics.Models.Entity
 					var uvs = bone.PolyMesh.Uvs;
 					var normals = bone.PolyMesh.Normals;
 					var polys = bone.PolyMesh.Polys;
-					
-					int startIndex = vertices.Count;
-					
+
 					//var verts = new VertexPositionNormalTexture[positions.Length];
 				/*	short[] indexes = new short[positions.Length];
 					for (int i = 0; i < bone.PolyMesh.Positions.Length; i++)
@@ -104,23 +102,41 @@ namespace Alex.Graphics.Models.Entity
 				List<short> indices = new List<short>();
 				for (int i = 0; i < polys.Length; i++)
 				{
+					int startIndex = vertices.Count - 1;
+
+					int added = 0;
 					var poly = polys[i];
 					foreach (var p in poly)
 					{
-						if (p.Length == 3)
-						{
-							var pos = positions[p[0]];
-							var normal = normals[p[1]];
-							var uv = uvs[p[2]];
 
-							vertices.Add(new VertexPositionNormalTexture(pos, normal, uv));
-							indices.Add((short) (vertices.Count - 1));
-						}
-						else
-						{
-							
-						}
+						var pos = positions[p[0]];
+						var normal = normals[p[1]];
+						var uv = uvs[p[2]];
+
+						vertices.Add(new VertexPositionNormalTexture(pos, normal, uv));
+						added++;
+						//indices.Add((short) (vertices.Count - 1));
 					}
+
+					/*int target = added == 4 ? 6 : 8;
+					
+					for (int indiceCounter = 0; indiceCounter < added; indiceCounter++)
+					{
+						//if (indiceCounter < added)
+						//{
+							indices.Add((short) (startIndex + indiceCounter));
+						//}
+						//else
+						//{
+							
+						//}
+					}*/
+					indices.Add( (short) startIndex);
+					indices.Add( (short) (startIndex + 1));
+					indices.Add((short) (startIndex + 2));
+					indices.Add( (short) startIndex);
+					indices.Add((short) (startIndex + 3));
+					indices.Add((short) (startIndex + 2));
 				}
 					
 					//(VertexPositionNormalTexture[] vertices, short[] indexes) a = (verts, indexes);

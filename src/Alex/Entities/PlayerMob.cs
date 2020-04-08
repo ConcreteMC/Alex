@@ -114,6 +114,9 @@ namespace Alex.Entities
 		internal float DistanceMoved { get; set; } = 0;
 
 		internal double _timeStoppedMoving = 0;
+		private TimeSpan NextUpdate = TimeSpan.Zero;
+		private float _mvSpeed = 0f;
+		
 		public override void Update(IUpdateArgs args)
 		{
 			base.Update(args);
@@ -131,6 +134,16 @@ namespace Alex.Entities
 
 			var dt = (float)args.GameTime.ElapsedGameTime.TotalSeconds;
 
+			if (args.GameTime.TotalGameTime > NextUpdate)
+			{
+				var distanceMoved = DistanceMoved;
+				DistanceMoved = 0;
+
+				_mvSpeed = distanceMoved;
+				
+				NextUpdate = args.GameTime.TotalGameTime + TimeSpan.FromSeconds(1);
+			}
+			
 			if (IsSneaking)
 			{
 				_body.Rotation = new Vector3(-35f, _body.Rotation.Y, _body.Rotation.Z);
@@ -148,7 +161,7 @@ namespace Alex.Entities
 
 
 				var moveSpeed = MovementSpeed * 20f;
-				var tcos0 = (float) (Math.Cos(distance * 38.17) * moveSpeed) * 57.3f;
+				var tcos0 = (float) (Math.Cos(distance * (38.17 * 20f)) * moveSpeed) * (57.3f * 20f);
 				var tcos1 = -tcos0;
 
 				//_armRotation = _armRotation;
@@ -162,13 +175,13 @@ namespace Alex.Entities
 					var lArmRot = new Vector3(tcos0, 0, 0);
 					if (distSQ > 0f)
 					{
-						_armRotation += (float) ((new Vector3(Velocity.X, 0, Velocity.Z).Length()) + distSQ) * dt;
-						rArmRot = new Vector3(tcos0, 0, 0);
-						//rArmRot = new Vector3((0.5f + MathF.Cos(_armRotation)) * 24.5f, 0, 0);
+						_armRotation += (float) (_mvSpeed) * dt;
+						//rArmRot = new Vector3(tcos0, 0, 0);
+						rArmRot = new Vector3((0.5f + MathF.Cos(_armRotation)) * 24.5f, 0, 0);
 					}
 					else
 					{
-						_armRotation += dt;
+						_armRotation = 0f;
 						//rArmRot = new Vector3((0.5f + MathF.Cos(_armRotation)) * -7.5f, 0f,
 						//	0.1f + (MathF.Sin(_armRotation) * -1.5f));
 					}
@@ -187,7 +200,7 @@ namespace Alex.Entities
 
 					if (distSQ > 0f)
 					{
-						_legRotation += distSQ * dt;
+						_legRotation += (float) (_mvSpeed) * dt;;
 
 						lLegRot = new Vector3(MathF.Sin(_legRotation) * 34.5f, 0f, 0f);
 						rLegRot = new Vector3(-MathF.Sin(_legRotation) * 34.5f, 0f, 0f);
@@ -196,7 +209,7 @@ namespace Alex.Entities
 					}
 					else
 					{
-						//_legRotation = 0f;
+						_legRotation = 0f;
 					}
 
 					_leftLegModel.Rotation = lLegRot;
@@ -208,7 +221,7 @@ namespace Alex.Entities
 			
 			
 			_prevUpdatePosition = pos;
-			DistanceMoved = 0f;
+		//	DistanceMoved = 0f;
 		}
 
 		public override void OnTick()
