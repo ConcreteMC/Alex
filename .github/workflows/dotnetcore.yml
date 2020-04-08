@@ -32,6 +32,10 @@ jobs:
       run: dotnet publish --configuration Release --no-restore -o "build-linux" --version-suffix ${{steps.vars.outputs.sha_short}} --self-contained true -r linux-x64
       working-directory: src/Alex
 
+    - name: Set executable permissions
+      working-directory: src/Alex/build-linux
+      run: chmod +x Alex
+
     - name: Upload artifact
       uses: actions/upload-artifact@v1.0.0
       with:
@@ -101,6 +105,10 @@ jobs:
     - name: Build
       run: dotnet publish --configuration Release --no-restore -o "build-osx" --version-suffix ${{steps.vars.outputs.sha_short}} --self-contained true -r osx-x64
       working-directory: src/Alex
+
+    - name: Set executable permissions
+      working-directory: src/Alex/build-osx
+      run: chmod +x Alex
 
     - name: Upload artifact
       uses: actions/upload-artifact@v1.0.0
