@@ -74,6 +74,7 @@ namespace Alex.Worlds.Java
 		private System.Threading.Timer _gameTickTimer;
 		private DedicatedThreadPool ThreadPool;
 		private IEventDispatcher EventDispatcher { get; }
+		public string Hostname { get; set; }
 		public JavaWorldProvider(Alex alex, IPEndPoint endPoint, PlayerProfile profile, out INetworkProvider networkProvider)
 		{
 			Alex = alex;
@@ -713,6 +714,12 @@ namespace Alex.Worlds.Java
 
 		private void HandleEntityEquipmentPacket(EntityEquipmentPacket packet)
 		{
+			if (packet.Item == null)
+			{
+				Log.Warn($"Got null item in EntityEquipment.");
+				return;
+			}
+
 			if (WorldReceiver.TryGetEntity(packet.EntityId, out IEntity e))
 			{
 				if (e is Entity entity)
@@ -839,6 +846,12 @@ namespace Alex.Worlds.Java
 
 		private void HandleSetSlot(SetSlot packet)
 		{
+			if (packet.Slot == null)
+			{
+				Log.Warn($"Got null item in SetSlot.");
+				return;
+			}
+			
 			Inventory inventory = null;
 			if (packet.WindowId == 0 || packet.WindowId == -2)
 			{
@@ -945,6 +958,10 @@ namespace Alex.Worlds.Java
 							{
 								entity.NameTag = chat.RawMessage;
 							}
+							else
+							{
+								entity.NameTag = entry.DisplayName;
+							}
 						}
 						else
 						{
@@ -956,14 +973,19 @@ namespace Alex.Worlds.Java
 
 						if (_players.TryAdd(entity.UUID, entity) && skinJson != null)
 						{
-							ThreadPool.QueueUserWorkItem(() =>
+							Alex.UIThreadQueue.Enqueue(() =>
 							{
 								if (SkinUtils.TryGetSkin(skinJson, Alex.GraphicsDevice, out var skin, out skinSlim))
 								{
 									t = skin;
+									
+									entity.GeometryName =
+										skinSlim ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom";
+								
+									entity.UpdateSkin(t);
+									
+									Log.Info($"Skin update!");
 								}
-
-								entity.UpdateSkin(t);
 							});
 						}
 					}
@@ -981,6 +1003,10 @@ namespace Alex.Worlds.Java
 							if (ChatObject.TryParse(entry.DisplayName, out ChatObject chat))
 							{
 								entity.NameTag = chat.RawMessage;
+							}
+							else
+							{
+								entity.NameTag = entry.DisplayName;
 							}
 						}
 						else
@@ -1455,7 +1481,7 @@ namespace Alex.Worlds.Java
 
 				HandshakePacket handshake = new HandshakePacket();
 				handshake.NextState = ConnectionState.Login;
-				handshake.ServerAddress = Endpoint.Address.ToString();
+				handshake.ServerAddress = Hostname;
 				handshake.ServerPort = (ushort) Endpoint.Port;
 				handshake.ProtocolVersion = JavaProtocol.ProtocolVersion;
 				SendPacket(handshake);

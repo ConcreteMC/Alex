@@ -37,7 +37,7 @@ namespace Alex.Entities
 		private EntityModelRenderer.ModelBone _head;
 
 		public string Name { get; }
-		private string GeometryName { get; }
+		public string GeometryName { get; set; }
 		public PlayerMob(string name, World level, INetworkProvider network, PooledTexture2D skinTexture, string geometry = "geometry.humanoid.customSlim") : base(63, level, network)
 		{
 			//DoRotationCalculations = false;

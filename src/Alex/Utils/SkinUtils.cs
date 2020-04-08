@@ -3,14 +3,17 @@ using System.Drawing;
 using System.IO;
 using System.Net;
 using Alex.API.Graphics;
+using Alex.Blocks.Minecraft;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET.Utils.Skins;
 using Newtonsoft.Json;
+using NLog;
 
 namespace Alex.Utils
 {
 	public static class SkinUtils
 	{
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 		public static bool TryGetSkin(string json, GraphicsDevice graphics, out PooledTexture2D texture, out bool isSlim)
 		{
 			isSlim = false;
@@ -39,9 +42,9 @@ namespace Alex.Utils
 					}
 				}
 			}
-			catch
+			catch(Exception ex)
 			{
-				
+				Log.Warn(ex, $"Could not retrieve skin: {ex.ToString()}");
 			}
 
 			texture = null;
@@ -65,9 +68,9 @@ namespace Alex.Utils
 
 				return true;
 			}
-			catch
+			catch(Exception ex)
 			{
-
+				Log.Warn(ex, $"Could not retrieve skin: {ex.ToString()}");
 			}
 
 			texture = null;

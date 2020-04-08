@@ -140,13 +140,16 @@ namespace Alex.GameStates.Gui.Multiplayer
 	    private GuiServerListEntryElement _toDelete;
 	    private void DeleteServerCallbackAction(bool confirm)
 	    {
-		    if (confirm)
+		    Alex.UIThreadQueue.Enqueue(() =>
 		    {
-				RemoveItem(_toDelete);
+			    if (confirm)
+			    {
+				    RemoveItem(_toDelete);
 
-			    _listProvider.RemoveEntry(_toDelete.SavedServerEntry);
-			    //Load();
-		    }
+				    _listProvider.RemoveEntry(_toDelete.SavedServerEntry);
+				    //Load();
+			    }
+		    });
 	    }
 
 		private FastRandom Rnd = new FastRandom();
@@ -169,14 +172,14 @@ namespace Alex.GameStates.Gui.Multiplayer
 					if (currentProfile == null || (currentProfile.IsBedrock))
 					{
 						JavaLoginState loginState = new JavaLoginState(_skyBox,
-							() => { Alex.ConnectToServer(target, authenticationService.CurrentProfile, false); });
+							() => { Alex.ConnectToServer(target, authenticationService.CurrentProfile, false, SelectedItem.SavedServerEntry.Host); });
 
 
 						Alex.GameStateManager.SetActiveState(loginState, true);
 					}
 					else
 					{
-						Alex.ConnectToServer(target, currentProfile, false);
+						Alex.ConnectToServer(target, currentProfile, false, SelectedItem.SavedServerEntry.Host);
 					}
 				}
 				else if (entry.ServerType == ServerType.Bedrock)
@@ -252,17 +255,20 @@ namespace Alex.GameStates.Gui.Multiplayer
 
 	    private void LoadH()
 	    {
-		    var queryProvider = GetService<IServerQueryProvider>();
-		    _listProvider.Load();
-
-		    ClearItems();
-		    foreach (var entry in _listProvider.Data.ToArray())
+		    Alex.UIThreadQueue.Enqueue(() =>
 		    {
-			    AddItem(new GuiServerListEntryElement(queryProvider, entry));
-		    }
+			    var queryProvider = GetService<IServerQueryProvider>();
+			    _listProvider.Load();
 
-		    PingAll(false);
-		}
+			    ClearItems();
+			    foreach (var entry in _listProvider.Data.ToArray())
+			    {
+				    AddItem(new GuiServerListEntryElement(queryProvider, entry));
+			    }
+
+			    PingAll(false);
+		    });
+	    }
 
 	    public void PingAll(bool forcedPing)
 	    {
@@ -271,16 +277,19 @@ namespace Alex.GameStates.Gui.Multiplayer
 
 	    private void SaveAll()
 	    {
-		    foreach (var entry in _listProvider.Data.ToArray())
+		    Alex.UIThreadQueue.Enqueue(() =>
 		    {
-			    _listProvider.RemoveEntry(entry);
-			}
+			    foreach (var entry in _listProvider.Data.ToArray())
+			    {
+				    _listProvider.RemoveEntry(entry);
+			    }
 
-		    foreach (var item in Items)
-		    {
-			    _listProvider.AddEntry(item.SavedServerEntry);
-		    }
-		}
+			    foreach (var item in Items)
+			    {
+				    _listProvider.AddEntry(item.SavedServerEntry);
+			    }
+		    });
+	    }
 
 	    private void AddEditServerCallbackAction(SavedServerEntry obj)
 	    {

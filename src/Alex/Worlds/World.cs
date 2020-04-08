@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading;
 using Alex.API.Blocks.State;
 using Alex.API.Data.Options;
+using Alex.API.Data.Servers;
 using Alex.API.Entities;
 using Alex.API.Events;
 using Alex.API.Events.World;
@@ -22,6 +23,7 @@ using Alex.Graphics.Camera;
 using Alex.Graphics.Models;
 using Alex.Graphics.Models.Items;
 using Alex.Gui.Forms.Bedrock;
+using Alex.Worlds.Bedrock;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -36,6 +38,7 @@ using MathF = System.MathF;
 using Player = Alex.Entities.Player;
 using PlayerLocation = Alex.API.Utils.PlayerLocation;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
+using Skin = Alex.API.Utils.Skin;
 using UUID = Alex.API.Utils.UUID;
 
 //using System.Reflection.Metadata.Ecma335;
@@ -59,6 +62,7 @@ namespace Alex.Worlds
 		private SkyBox SkyRenderer { get; }
 		private bool UseDepthMap { get; set; }
 		//public SkyLightCalculations SkyLightCalculations { get; }
+		private ServerType ServerType { get; }
 		public World(IServiceProvider serviceProvider, GraphicsDevice graphics, AlexOptions options, Camera camera,
 			INetworkProvider networkProvider)
 		{
@@ -126,6 +130,8 @@ namespace Alex.Worlds
 
 			UseDepthMap = options.VideoOptions.Depthmap;
 			options.VideoOptions.Depthmap.Bind((old, newValue) => { UseDepthMap = newValue; });
+
+			ServerType = (networkProvider is BedrockClient) ? ServerType.Bedrock : ServerType.Java;
 		}
 
 		private void FieldOfVisionOnValueChanged(int oldvalue, int newvalue)
@@ -786,9 +792,21 @@ namespace Alex.Worlds
 				}
 				else
 				{
+					var oldPosition = entity.KnownPosition;
+					float offset = 0f;
+					if (this.ServerType == ServerType.Bedrock)
+					{
+						offset = (float) entity.PositionOffset;
+					}
+					
 					entity.KnownPosition.X += position.X;
-					entity.KnownPosition.Y += (position.Y - (float)entity.PositionOffset);
+					entity.KnownPosition.Y += (position.Y - offset);
 					entity.KnownPosition.Z += position.Z;	
+					
+					if (entity is PlayerMob p)
+					{
+						p.DistanceMoved += MathF.Abs(Vector3.Distance(oldPosition, entity.KnownPosition));
+					}
 					//entity.KnownPosition.Move(position);
 				}
 

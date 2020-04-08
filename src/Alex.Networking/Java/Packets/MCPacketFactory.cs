@@ -256,7 +256,7 @@ namespace Alex.Networking.Java.Packets
 			Register(Direction.ClientBound, ConnectionState.Play, 0x40, () => new HeldItemChangePacket());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x32, () => new PlayerAbilitiesPacket());
 			
-			Register(Direction.ClientBound, ConnectionState.Play, 0x53, () => new PlayerListItemPacket()); //< -----
+			Register(Direction.ClientBound, ConnectionState.Play, 0x34, () => new PlayerListItemPacket()); //< -----
 			
 			Register(Direction.ClientBound, ConnectionState.Play, 0x36, () => new PlayerPositionAndLookPacket());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x4F, () => new TimeUpdatePacket());

@@ -514,7 +514,7 @@ namespace Alex
 			GuiManager.ApplyFont(Font);
 		}
 
-		public void ConnectToServer(IPEndPoint serverEndPoint, PlayerProfile profile, bool bedrock = false)
+		public void ConnectToServer(IPEndPoint serverEndPoint, PlayerProfile profile, bool bedrock = false, string hostname = null)
 		{
 			var oldNetworkPool = NetworkThreadPool;
 			
@@ -536,7 +536,10 @@ namespace Alex
 				else
 				{
 					provider = new JavaWorldProvider(this, serverEndPoint, profile,
-						out networkProvider);
+						out networkProvider)
+					{
+						Hostname = hostname
+					};
 				}
 
 				LoadWorld(provider, networkProvider);
