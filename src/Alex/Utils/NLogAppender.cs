@@ -21,7 +21,7 @@ namespace log4net
 
 			var logEvent = ConvertToNLog(loggingEvent);
 			
-			logger.Log(typeof(log4net.Core.LogImpl), logEvent);
+			logger.Log(typeof(ILog), logEvent);
 		}
 
 		[MethodImpl(MethodImplOptions.NoInlining)]
@@ -39,7 +39,8 @@ namespace log4net
 				logger =  NLog.LogManager.GetLogger(loggingEvent.LoggerName);
 					
 					//	logger = NLog.LogManager.GetLogger(loggingEvent.LoggerName);
-				_cache = new Dictionary<string, Logger>(_cache) { { loggingEvent.LoggerName, logger } };
+				//_cache = new Dictionary<string, Logger>(_cache) { { loggingEvent.LoggerName, logger } };
+				_cache.TryAdd(loggingEvent.LoggerName, logger);
 			}
 			return logger;
 		}
@@ -85,7 +86,10 @@ namespace log4net
 
 		public static void Initialize()
 		{
+			//foreach(var assemb in AppDomain.CurrentDomain.GetAssemblies())
 			var repo = LogManager.GetRepository(Assembly.GetEntryAssembly());
+			(((log4net.Repository.Hierarchy.Hierarchy) repo)).Root.Level = Level.All;
+			(((log4net.Repository.Hierarchy.Hierarchy) repo)).RaiseConfigurationChanged(EventArgs.Empty);
 			BasicConfigurator.Configure(repo, new NLogAppender());
 		}
 	}

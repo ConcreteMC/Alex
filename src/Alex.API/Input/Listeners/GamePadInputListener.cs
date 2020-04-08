@@ -21,7 +21,7 @@ namespace Alex.API.Input.Listeners
             RegisterMap(InputCommand.MoveSpeedReset, Buttons.LeftStick);
 
             RegisterMap(InputCommand.ToggleFog, Buttons.X);
-            RegisterMap(InputCommand.ToggleMenu, Buttons.Start);
+            RegisterMap(InputCommand.Exit, Buttons.Start);
             RegisterMap(InputCommand.ToggleChat, Buttons.Back);
 
             RegisterMap(InputCommand.ToggleCamera, Buttons.Y);

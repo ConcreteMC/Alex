@@ -8,6 +8,10 @@ namespace Alex.Blocks.Minecraft
 			Transparent = true;
 			IsReplacible = false;
 			IsFullCube = false;
+
+			
+			
+			BlockMaterial = Material.Glass;
 		}
 	}
 }

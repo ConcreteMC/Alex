@@ -24,17 +24,22 @@ namespace Alex.GameStates.Gui.MainMenu.Options
         private readonly IOptionsProvider _optionsProvider;
 
         private GuiPanoramaSkyBox _skyBox;
+        protected GuiBackButton BackButton { get; }
         public OptionsStateBase(GuiPanoramaSkyBox skyBox)
         {
             _skyBox = skyBox;
             _optionsProvider = GetService<IOptionsProvider>();
 
-            Footer.AddChild(new GuiBackButton()
+            var footerRow = Footer.AddRow(BackButton = new GuiBackButton()
             {
                 TranslationKey = "gui.done",
                 Anchor = Alignment.TopFill,
 				Modern = false
             });
+
+            Footer.ChildAnchor = Alignment.MiddleCenter;
+
+            Body.ChildAnchor = Alignment.MiddleCenter;
             
             Background = new GuiTexture2D(_skyBox, TextureRepeatMode.Stretch);
         }
@@ -101,10 +106,18 @@ namespace Alex.GameStates.Gui.MainMenu.Options
             };
         }
 
-        protected GuiSlider CreateSlider(string label, Func<AlexOptions, OptionsProperty<int>> optionsAccessor, int? minValue = null, int? maxValue = null, int? stepInterval = null)
+        protected GuiSlider CreateSlider(Func<double, string> formatter, Func<AlexOptions, OptionsProperty<int>> optionsAccessor,
+            int? minValue = null, int? maxValue = null, int? stepInterval = null)
+            => CreateSlider(new ValueFormatter<double>(formatter), optionsAccessor, minValue, maxValue, stepInterval);
+
+        protected GuiSlider CreateSlider(string label, Func<AlexOptions, OptionsProperty<int>> optionsAccessor,
+            int? minValue = null, int? maxValue = null, int? stepInterval = null)
+            => CreateSlider(new ValueFormatter<double>(label), optionsAccessor, minValue, maxValue, stepInterval);
+        
+        protected GuiSlider CreateSlider(ValueFormatter<double> label, Func<AlexOptions, OptionsProperty<int>> optionsAccessor, int? minValue = null, int? maxValue = null, int? stepInterval = null)
         {
             var slider = CreateValuedControl<GuiSlider, double, int>(label, optionsAccessor);
-
+            
             if (minValue.HasValue)
             {
                 slider.MinValue = minValue.Value;
@@ -122,9 +135,19 @@ namespace Alex.GameStates.Gui.MainMenu.Options
 
             return slider;
         }
-        protected GuiSlider CreateSlider(string label, Func<AlexOptions, OptionsProperty<double>> optionsAccessor, double? minValue = null, double? maxValue = null, double? stepInterval = null)
+
+        protected GuiSlider CreateSlider(Func<double, string> formatter, Func<AlexOptions, OptionsProperty<double>> optionsAccessor,
+            double? minValue = null, double? maxValue = null, double? stepInterval = null)
+            => CreateSlider(new ValueFormatter<double>(formatter), optionsAccessor, minValue, maxValue, stepInterval);
+
+
+        protected GuiSlider CreateSlider(string label, Func<AlexOptions, OptionsProperty<double>> optionsAccessor,
+            double? minValue = null, double? maxValue = null, double? stepInterval = null)
+            => CreateSlider(new ValueFormatter<double>(label), optionsAccessor, minValue, maxValue, stepInterval);
+        
+        protected GuiSlider CreateSlider(ValueFormatter<double> valueFormatter, Func<AlexOptions, OptionsProperty<double>> optionsAccessor, double? minValue = null, double? maxValue = null, double? stepInterval = null)
         {
-            var slider = CreateValuedControl<GuiSlider, double>(label, optionsAccessor);
+            var slider = CreateValuedControl<GuiSlider, double>(valueFormatter, optionsAccessor);
             
             if (minValue.HasValue)
             {
@@ -160,7 +183,7 @@ namespace Alex.GameStates.Gui.MainMenu.Options
             return sw;
         }
         
-        protected TControl CreateValuedControl<TControl, TValue>(string label, Func<AlexOptions, OptionsProperty<TValue>> propertyAccessor)
+        protected TControl CreateValuedControl<TControl, TValue>(ValueFormatter<TValue> label, Func<AlexOptions, OptionsProperty<TValue>> propertyAccessor)
             where TControl : IGuiControl, IValuedControl<TValue>, new()
             where TValue : IConvertible
         {
@@ -175,7 +198,7 @@ namespace Alex.GameStates.Gui.MainMenu.Options
             return control;
         }
         
-        protected TControl CreateValuedControl<TControl, TValue, TPropertyValue>(string label, Func<AlexOptions, OptionsProperty<TPropertyValue>> propertyAccessor) 
+        protected TControl CreateValuedControl<TControl, TValue, TPropertyValue>(ValueFormatter<TValue> label, Func<AlexOptions, OptionsProperty<TPropertyValue>> propertyAccessor) 
             where TControl : IGuiControl, IValuedControl<TValue>, new() 
             where TValue : IConvertible 
             where TPropertyValue : IConvertible 

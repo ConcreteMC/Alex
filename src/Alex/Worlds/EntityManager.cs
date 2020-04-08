@@ -26,6 +26,8 @@ namespace Alex.Worlds
 		private World World { get; }
 		private INetworkProvider Network { get; }
 
+		private BasicEffect NameTagEffect { get; }
+		private IEntity[] _rendered;
 		public EntityManager(GraphicsDevice device, World world, INetworkProvider networkProvider)
 		{
 			Network = networkProvider;
@@ -33,6 +35,12 @@ namespace Alex.Worlds
 		    Device = device;
 			Entities = new ConcurrentDictionary<long, IEntity>();
 			EntityByUUID = new ConcurrentDictionary<UUID, IEntity>();
+			
+			NameTagEffect = new BasicEffect(device)
+			{
+				VertexColorEnabled = true,
+				TextureEnabled = true
+			};
 	    }
 
 	    public void Update(IUpdateArgs args, SkyBox skyRenderer)
@@ -42,7 +50,8 @@ namespace Alex.Worlds
 		    {
 			    if (entity is Entity e)
 			    {
-				    e.ModelRenderer.DiffuseColor = Color.White.ToVector3() * World.BrightnessModifier;
+				    if (e.ModelRenderer != null)
+						e.ModelRenderer.DiffuseColor = Color.White.ToVector3() * World.BrightnessModifier;
 			    }
 				entity.Update(args);
 		    }
@@ -52,6 +61,8 @@ namespace Alex.Worlds
 	    {
 		    int renderCount = 0;
 		    var entities = Entities.Values.ToArray();
+		    
+		    List<IEntity> rendered = new List<IEntity>();
 		    foreach (var entity in entities)
 		    {
 			    var entityBox = entity.GetBoundingBox();
@@ -59,29 +70,44 @@ namespace Alex.Worlds
 				if (args.Camera.BoundingFrustum.Contains(new Microsoft.Xna.Framework.BoundingBox(entityBox.Min, entityBox.Max)) != ContainmentType.Disjoint)
 			    {
 				    entity.Render(args);
+				    rendered.Add(entity);
 				    renderCount++;
 			    }
 		    }
 
+		    _rendered = rendered.ToArray();
+
 		    EntitiesRendered = renderCount;
 	    }
 
+	    private static RasterizerState RasterizerState = new RasterizerState()
+	    {
+		    DepthBias = -0.0015f,
+		    CullMode = CullMode.None,
+		    FillMode = FillMode.Solid,
+		    DepthClipEnable = true,
+		    ScissorTestEnable = true
+	    };
+	    
 	    public void Render2D(IRenderArgs args)
 	    {
-		    var entities = Entities.Values.ToArray();
-		    foreach (var entity in entities)
+		 //   NameTagEffect.Projection = args.Camera.ProjectionMatrix;
+		  //  NameTagEffect.View =  args.Camera.ViewMatrix;
+		  //  NameTagEffect.World = Matrix.CreateScale(1, -1, 1);
+		    
+		    args.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointWrap, DepthStencilState.DepthRead, RasterizerState, effect: null);
+		    try
 		    {
-			    if (entity is PlayerMob player)
+			    var entities = _rendered;
+			    foreach (var entity in entities)
 			    {
-				    var entityBox = player.GetBoundingBox();
-
-				    if (args.Camera.BoundingFrustum.Contains(
-					        new Microsoft.Xna.Framework.BoundingBox(entityBox.Min, entityBox.Max)) !=
-				        ContainmentType.Disjoint)
-				    {
-					    player.RenderNametag(args);
-				    }
-				}
+				    if (!entity.HideNameTag)
+						entity.RenderNametag(args);
+			    }
+		    }
+		    finally
+		    {
+			    args.SpriteBatch.End();
 		    }
 	    }
 
@@ -127,7 +153,7 @@ namespace Alex.Worlds
 		    {
 			    entity.IsAlwaysShowName = false;
 			   // entity.NameTag = $"Entity_{id}";
-			    entity.HideNameTag = false;
+			   //entity.HideNameTag = false;
 
 			    if (!Entities.TryAdd(id, entity))
 			    {

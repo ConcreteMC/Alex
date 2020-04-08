@@ -14,7 +14,11 @@ namespace Alex.Graphics.Models.Blocks
 
         }
 
+        public virtual BoundingBox BoundingBox { get; } = new BoundingBox(Vector3.Zero, Vector3.One);
+        
 		public float Scale { get; set; } = 1f;
+		public bool Transparent { get; set; }
+		public bool Animated { get; set; }
 
 		public virtual (VertexPositionNormalTextureColor[] vertices, int[] indexes) GetVertices(IWorld world, Vector3 position, IBlock baseBlock)
         {
@@ -24,6 +28,16 @@ namespace Alex.Graphics.Models.Blocks
 	    public virtual BoundingBox GetBoundingBox(Vector3 position, IBlock requestingBlock)
 	    {
 			return new BoundingBox(position, position + Vector3.One);
+	    }
+
+	    public virtual BoundingBox? GetPartBoundingBox(Vector3 position, BoundingBox entityBox)
+	    {
+		    return new BoundingBox(position, position + Vector3.One);
+	    }
+
+	    public virtual BoundingBox[] GetIntersecting(Vector3 position, BoundingBox box)
+	    {
+		    return new BoundingBox[0];
 	    }
 
 	    protected VertexPositionNormalTextureColor[] GetFaceVertices(BlockFace blockFace, Vector3 startPosition, Vector3 endPosition, UVMap uvmap, out int[] indexes)
@@ -168,7 +182,7 @@ namespace Alex.Graphics.Models.Blocks
 		{
 			byte skyLight = world.GetSkyLight(position);
 			byte blockLight = world.GetBlockLight(position);
-			if (!smooth)
+			if (!smooth || blockLight + skyLight > 0)
 		    {
 			    return (byte)Math.Min(blockLight + skyLight, 15);
 			}
@@ -246,9 +260,9 @@ namespace Alex.Graphics.Models.Blocks
 		    return (byte)Math.Min(blockLight + skyLight, 15);
 	    }
 		
-	    protected UVMap GetTextureUVMap(ResourceManager resources, string texture, float x1, float x2, float y1, float y2, int rot)
+	    protected UVMap GetTextureUVMap(ResourceManager resources, string texture, float x1, float x2, float y1, float y2, int rot, Color color)
 	    {
-			if (resources == null)
+		    if (resources == null)
 		    {
 			    x1 = 0;
 			    x2 = 1 / 32f;
@@ -257,13 +271,11 @@ namespace Alex.Graphics.Models.Blocks
 
 			    return new UVMap(new Microsoft.Xna.Framework.Vector2(x1, y1),
 				    new Microsoft.Xna.Framework.Vector2(x2, y1), new Microsoft.Xna.Framework.Vector2(x1, y2),
-				    new Microsoft.Xna.Framework.Vector2(x2, y2), Color.White, Color.White, Color.White);
+				    new Microsoft.Xna.Framework.Vector2(x2, y2), color, color, color);
 		    }
 
-		    var textureInfo = resources.Atlas.GetAtlasLocation(texture);
+		    var textureInfo = resources.Atlas.GetAtlasLocation(texture, out var uvSize);
 		    var textureLocation = textureInfo.Position;
-
-		    var uvSize = resources.Atlas.AtlasSize;
 
 		    var xw = (textureInfo.Width / 16f) / uvSize.X;
             var yh = (textureInfo.Height / 16f) / uvSize.Y;
@@ -280,10 +292,10 @@ namespace Alex.Graphics.Models.Blocks
             x2 = textureLocation.X + x2 * (((textureInfo.Width / 16f) / uvSize.X));
             y1 = textureLocation.Y + y1 * (((textureInfo.Height / 16f) / uvSize.Y));
             y2 = textureLocation.Y + y2 * (((textureInfo.Height / 16f) / uvSize.Y));*/
-
+           
             var map = new UVMap(new Microsoft.Xna.Framework.Vector2(x1, y1),
 			    new Microsoft.Xna.Framework.Vector2(x2, y1), new Microsoft.Xna.Framework.Vector2(x1, y2),
-			    new Microsoft.Xna.Framework.Vector2(x2, y2), Color.White, Color.White, Color.White);
+			    new Microsoft.Xna.Framework.Vector2(x2, y2), color, color, color);
 
 			if (rot > 0)
 			{
@@ -303,6 +315,11 @@ namespace Alex.Graphics.Models.Blocks
 
 	    public static BlockFace[] FACE_ROTATION =
 		{
+			/*BlockFace.West,
+			BlockFace.North,
+			BlockFace.East,
+			BlockFace.South*/
+			
 			BlockFace.East,
 			BlockFace.South,
 			BlockFace.West,

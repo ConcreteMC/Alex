@@ -29,18 +29,18 @@ namespace Alex.ResourcePackLib.Json.Converters
 			JToken token = JToken.Load(reader);
 			if (token.Type == JTokenType.Array)
 			{
-				return token.ToObject(objectType);
+				return token.ToObject(objectType, serializer);
 //				return token.ToObject<List<T>>();
 			}
 
-			var obj = token.ToObject<T>();
+			var obj = token.ToObject<T>(serializer);
 
 			if (objectType == typeof(T[]))
 			{
 				return new T[] {obj};
 			}
 
-			return new List<T> {token.ToObject<T>()};
+			return new List<T> {token.ToObject<T>(serializer)};
 		}
 
 		public override bool CanConvert(Type objectType)

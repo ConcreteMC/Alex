@@ -241,48 +241,50 @@ namespace Alex.Networking.Java.Packets
 			Register<ClientStatusPacket>(Direction.ServerBound, ConnectionState.Play, 0x02);
 			Register<ChatMessagePacket>(Direction.ServerBound, ConnectionState.Play, 0x01);
 
-			Register(Direction.ClientBound, ConnectionState.Play, 0x03, () => new SpawnMob());
+		//	Register(Direction.ClientBound, ConnectionState.Play, 0x03, () => new SpawnMob());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x05, () => new SpawnPlayerPacket());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x0d, () => new ServerDifficultyPacket());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x0E, () => new ChatMessagePacket()
+			Register(Direction.ClientBound, ConnectionState.Play, 0x0E, () => new ServerDifficultyPacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x0F, () => new ChatMessagePacket()
 			{
 				ServerBound = false
 			});
-			Register(Direction.ClientBound, ConnectionState.Play, 0x18, () => new PluginMessagePacket());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x1D, () => new UnloadChunk());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x20, () => new KeepAlivePacket());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x21, () => new ChunkDataPacket());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x25, () => new JoinGamePacket());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x3F, () => new HeldItemChangePacket());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x31, () => new PlayerAbilitiesPacket());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x53, () => new PlayerListItemPacket());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x35, () => new PlayerPositionAndLookPacket());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x4E, () => new TimeUpdatePacket());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x28, () => new EntityRelativeMove());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x29, () => new EntityLookAndRelativeMove());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x19, () => new PluginMessagePacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x1E, () => new UnloadChunk());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x21, () => new KeepAlivePacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x22, () => new ChunkDataPacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x26, () => new JoinGamePacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x40, () => new HeldItemChangePacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x32, () => new PlayerAbilitiesPacket());
+			
+			Register(Direction.ClientBound, ConnectionState.Play, 0x34, () => new PlayerListItemPacket()); //< -----
+			
+			Register(Direction.ClientBound, ConnectionState.Play, 0x36, () => new PlayerPositionAndLookPacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x4F, () => new TimeUpdatePacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x29, () => new EntityRelativeMove());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x2A, () => new EntityLookAndRelativeMove());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x2B, () => new EntityLook());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x3B, () => new EntityHeadLook());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x40, () => new EntityMetadataPacket());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x45, () => new EntityVelocity());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x58, () => new EntityPropertiesPacket());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x56, () => new EntityTeleport());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x36, () => new DestroyEntitiesPacket());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x15, () => new WindowItems());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x16, () => new SetSlot());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x1B, () => new EntityStatusPacket());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x0B, () => new BlockChangePacket());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x0F, () => new MultiBlockChange());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x24, () => new UpdateLightPacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x3C, () => new EntityHeadLook());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x41, () => new EntityMetadataPacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x46, () => new EntityVelocity());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x59, () => new EntityPropertiesPacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x57, () => new EntityTeleport());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x35, () => new DestroyEntitiesPacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x16, () => new WindowItems());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x17, () => new SetSlot());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x1C, () => new EntityStatusPacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x0C, () => new BlockChangePacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x10, () => new MultiBlockChange());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x25, () => new UpdateLightPacket());
 
-			Register(Direction.ClientBound, ConnectionState.Play, 0x10, () => new TabCompleteClientBound());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x2E, () => new ChangeGameStatePacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x11, () => new TabCompleteClientBound());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x1F, () => new ChangeGameStatePacket());
 
-			Register(Direction.ClientBound, ConnectionState.Play, 0x32, () => new CombatEventPacket());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x23, () => new ParticlePacket());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x46, () => new EntityEquipmentPacket());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x3A, () => new RespawnPacket());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x4F, () => new TitlePacket());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x1a, () => new DisconnectPacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x33, () => new CombatEventPacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x24, () => new ParticlePacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x47, () => new EntityEquipmentPacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x3B, () => new RespawnPacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x50, () => new TitlePacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x1B, () => new DisconnectPacket());
 			/*var deserial = JsonConvert.DeserializeObject<Dictionary<string, string>>(Resources.PlayPacketID);
 			foreach (var d in deserial)
 			{

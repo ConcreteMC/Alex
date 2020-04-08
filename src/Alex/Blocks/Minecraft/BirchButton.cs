@@ -4,7 +4,7 @@ namespace Alex.Blocks.Minecraft
 	{
 		public BirchButton() : base(5270)
 		{
-		
+			BlockMaterial = Material.Wood;
 		}
 	}
 }

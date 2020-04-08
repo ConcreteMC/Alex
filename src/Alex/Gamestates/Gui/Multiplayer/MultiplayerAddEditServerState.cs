@@ -2,6 +2,7 @@
 using Alex.API.Data.Servers;
 using Alex.API.Graphics;
 using Alex.API.Graphics.Typography;
+using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Graphics;
@@ -110,14 +111,16 @@ namespace Alex.GameStates.Gui.Multiplayer
 				Modern  = true,
 				Width   = 50,
 				Checked = true,
-				CheckedOutlineThickness = new Thickness(1)
+				CheckedOutlineThickness = new Thickness(1),
+				DisplayFormat = new ValueFormatter<bool>((val) => $"Java {(val ? "[Active]" : "")}")
 			});
 			_serverTypeGroup.AddChild(_bedrockEditionButton = new GuiToggleButton("Bedrock")
 			{
 				Margin  = new Thickness(5),
 				Modern  = true,
 				Width   = 50,
-				CheckedOutlineThickness = new Thickness(1)
+				CheckedOutlineThickness = new Thickness(1),
+				DisplayFormat = new ValueFormatter<bool>((val) => $"Bedrock {(val ? "[Active]" : "")}")
 			});
 
 			//	var portRow = AddGuiRow();
@@ -211,7 +214,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 				var name    = _nameInput.Value;
 				var address = _hostnameInput.Value;
 
-				ushort port = (ushort) (_javaEditionButton.Enabled ? 19132 : 25565);
+				ushort port = (ushort) (_javaEditionButton.Checked ? 19132 : 25565);
 
 				var split    = address.Split(':', StringSplitOptions.RemoveEmptyEntries);
 				var hostname = split[0];

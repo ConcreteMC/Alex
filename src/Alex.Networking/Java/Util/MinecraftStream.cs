@@ -557,7 +557,7 @@ namespace Alex.Networking.Java.Util
 
 			file.LoadFromStream(this, NbtCompression.None);
 
-			return file.RootTag;
+			return (NbtCompound) file.RootTag;
 		}
 
 		public void WriteNbtCompound(NbtCompound compound)

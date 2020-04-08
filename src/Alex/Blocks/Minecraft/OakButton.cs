@@ -4,7 +4,7 @@ namespace Alex.Blocks.Minecraft
 	{
 		public OakButton() : base(5222)
 		{
-			
+			BlockMaterial = Material.Wood;
 		}
 	}
 }

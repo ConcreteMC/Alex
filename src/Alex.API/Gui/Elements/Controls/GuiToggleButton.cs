@@ -8,6 +8,7 @@ namespace Alex.API.Gui.Elements.Controls
 {
     public class GuiToggleButton : GuiButton, IValuedControl<bool>
     {
+		public static readonly ValueFormatter<bool> DefaultDisplayFormat = "{0}";
 
 	    public event EventHandler<bool> ValueChanged;
 	    private bool _value;
@@ -34,12 +35,14 @@ namespace Alex.API.Gui.Elements.Controls
 		            ValueChanged?.Invoke(this, _value);
 					OnCheckedChanged();
 				}
-			}
+
+	            Text = DisplayFormat?.FormatValue(value) ?? string.Empty;
+            }
         }
 
-	    public string DisplayFormat { get; set; }
+		public ValueFormatter<bool> DisplayFormat { get; set; } = DefaultDisplayFormat;
 
-	    public GuiToggleButton() : base()
+		public GuiToggleButton() : base()
 	    {
 
 	    }

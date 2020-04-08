@@ -6,6 +6,8 @@ using Alex.API.Graphics.Typography;
 using Alex.API.Gui.Dialogs;
 using Alex.API.Gui.Graphics;
 using Alex.API.Input;
+using Alex.API.Services;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -48,11 +50,16 @@ namespace Alex.API.Gui
 
         public GuiDialogBase ActiveDialog { get; private set; }
         
-        public GuiManager(Game game, InputManager inputManager, IGuiRenderer guiRenderer)
+        private IServiceProvider ServiceProvider { get; }
+        public GuiManager(Game game, IServiceProvider serviceProvider, InputManager inputManager, IGuiRenderer guiRenderer, IOptionsProvider optionsProvider)
         {
             Game = game;
+            ServiceProvider = serviceProvider;
             InputManager = inputManager;
-            ScaledResolution = new GuiScaledResolution(game);
+            ScaledResolution = new GuiScaledResolution(game)
+            {
+                GuiScale = optionsProvider.AlexOptions.VideoOptions.GuiScale
+            };
             ScaledResolution.ScaleChanged += ScaledResolutionOnScaleChanged;
 
             FocusManager = new GuiFocusHelper(this, InputManager, game.GraphicsDevice);
@@ -65,11 +72,16 @@ namespace Alex.API.Gui
             GuiRenderArgs = new GuiRenderArgs(Game.GraphicsDevice, SpriteBatch, ScaledResolution, GuiRenderer, new GameTime());
 
           //  DebugHelper = new GuiDebugHelper(this);
+
+          optionsProvider.AlexOptions.VideoOptions.GuiScale.Bind((value, newValue) =>
+              {
+                  ScaledResolution.GuiScale = newValue;
+              });
         }
 
         private void ScaledResolutionOnScaleChanged(object sender, UiScaleEventArgs args)
         {
-            Init(Game.GraphicsDevice);
+            Init(Game.GraphicsDevice, ServiceProvider);
             
             foreach (var screen in Screens.ToArray())
             {
@@ -77,11 +89,11 @@ namespace Alex.API.Gui
             }
         }
 
-        public void Init(GraphicsDevice graphicsDevice)
+        public void Init(GraphicsDevice graphicsDevice, IServiceProvider serviceProvider)
         {
             GraphicsDevice = graphicsDevice;
             SpriteBatch = new SpriteBatch(graphicsDevice);
-            GuiRenderer.Init(graphicsDevice);
+            GuiRenderer.Init(graphicsDevice, serviceProvider);
             
             GuiSpriteBatch?.Dispose();
             GuiSpriteBatch = new GuiSpriteBatch(GuiRenderer, graphicsDevice, SpriteBatch);
@@ -112,6 +124,8 @@ namespace Alex.API.Gui
             {
                 Game.IsMouseVisible = false;
                 RemoveScreen(ActiveDialog);
+                
+                ActiveDialog = null;
             }
         }
 

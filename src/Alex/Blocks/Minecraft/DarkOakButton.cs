@@ -4,7 +4,7 @@ namespace Alex.Blocks.Minecraft
 	{
 		public DarkOakButton() : base(5342)
 		{
-			
+			BlockMaterial = Material.Wood;
 		}
 	}
 }

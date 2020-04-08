@@ -1,6 +1,7 @@
 ﻿using Alex.API.Blocks;
 using Alex.API.Blocks.State;
 using Alex.API.Items;
+using Alex.API.Resources;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks.State;
@@ -16,7 +17,7 @@ using ItemType = Alex.API.Utils.ItemType;
 
 namespace Alex.Blocks.Minecraft
 {
-	public class Block : IBlock
+	public class Block : IBlock, IRegistryEntry<Block>
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Block));
 
@@ -34,11 +35,16 @@ namespace Alex.Blocks.Minecraft
 		public bool RequiresUpdate { get; set; } = false;
 
 		public float Drag { get; set; }
-		public string Name { get; set; }
+
+		public string Name
+		{
+			get { return Location.ToString(); }
+			set { Location = value; }
+		}
 
 		public double AmbientOcclusionLightValue { get; set; } = 1.0;
 	    public int LightValue { get; set; } = 0;
-	    public int LightOpacity { get; set; } = 255;
+	    public int LightOpacity { get; set; } = 1;
 
 		//public BlockModel BlockModel { get; set; }
 		public IBlockState BlockState { get; set; }
@@ -64,7 +70,7 @@ namespace Alex.Blocks.Minecraft
 		public BlockCoordinates Coordinates { get; set; }
 		protected Block(int blockId, byte metadata) : this(BlockFactory.GetBlockStateID(blockId, metadata))
 	    {
-		    
+		   // LightOpacity = 2;
 	    }
 
 	    public Block(uint blockStateId)
@@ -76,6 +82,8 @@ namespace Alex.Blocks.Minecraft
 		    Transparent = false;
 		    Renderable = true;
 		    HasHitbox = true;
+		    
+		   // LightOpacity = 2;
 		}
 
 		protected Block(string blockName)
@@ -87,6 +95,8 @@ namespace Alex.Blocks.Minecraft
 			Transparent = false;
 			Renderable = true;
 			HasHitbox = true;
+			
+		//	LightOpacity = 2;
 		}
 
 		protected Block()
@@ -97,9 +107,26 @@ namespace Alex.Blocks.Minecraft
 			Transparent = false;
 			Renderable = true;
 			HasHitbox = true;
+
+		//	LightOpacity = 1;
 		}
 
-		public Microsoft.Xna.Framework.BoundingBox GetBoundingBox(Vector3 blockPosition)
+		public virtual double GetHeight(Vector3 relative)
+		{
+			return BlockState.Model.BoundingBox.Max.Y;
+		}
+
+		public virtual bool IsSolid(BlockFace face)
+		{
+			return true;
+		}
+		
+		public virtual bool CanClimb(BlockFace face)
+		{
+			return false;
+		}
+		
+		public virtual Microsoft.Xna.Framework.BoundingBox GetBoundingBox(Vector3 blockPosition)
 	    {
 			if (BlockState == null)
 				return new Microsoft.Xna.Framework.BoundingBox(blockPosition, blockPosition + Vector3.One);
@@ -107,6 +134,14 @@ namespace Alex.Blocks.Minecraft
 		    return BlockState.Model.GetBoundingBox(blockPosition, this);
 		}
 
+		public virtual BoundingBox? GetPartBoundingBox(Vector3 blockPosition, BoundingBox entityBox)
+		{
+			if (BlockState == null)
+				return new Microsoft.Xna.Framework.BoundingBox(blockPosition, blockPosition + Vector3.One);
+
+			return BlockState.Model.GetPartBoundingBox(blockPosition, entityBox);
+		}
+		
 		public virtual IBlockState BlockPlaced(IWorld world, IBlockState state, BlockCoordinates position)
 		{
 			return state;
@@ -236,5 +271,15 @@ namespace Alex.Blocks.Minecraft
 
 			return r;
 		}
+
+		public ResourceLocation Location { get; private set; }
+		public IRegistryEntry<Block> WithLocation(ResourceLocation location)
+		{
+			Location = location;
+
+			return this;
+		}
+
+		public Block Value => this;
 	}
 }

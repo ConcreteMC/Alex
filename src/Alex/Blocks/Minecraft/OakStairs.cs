@@ -1,8 +1,8 @@
 namespace Alex.Blocks.Minecraft
 {
-	public class OakStairs : Stairs
+	public class OakStairs : WoodStairs
 	{
-		public OakStairs() : base(1569)
+		public OakStairs() : base()
 		{
 			Solid = true;
 			Transparent = true;

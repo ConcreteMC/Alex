@@ -34,6 +34,7 @@ namespace Alex.GameStates.Gui.MainMenu.Options
             TitleTranslationKey = "resourcePack.title";
             
             Body.BackgroundOverlay = new Color(Color.Black, 0.35f);
+            Body.ChildAnchor = Alignment.FillCenter;
             
             AddGuiElement(ListContainer = new GuiSelectionList()
             {
@@ -57,7 +58,7 @@ namespace Alex.GameStates.Gui.MainMenu.Options
                     Enabled = false
                 });
                 
-                row.AddChild(new GuiBackButton()
+                row.AddChild(new GuiButton(BackButtonPressed)
                 {
                     TranslationKey = "gui.done",
                     Modern = false
@@ -76,6 +77,31 @@ namespace Alex.GameStates.Gui.MainMenu.Options
             Reload();
         }
 
+        private void BackButtonPressed()
+        {
+            Alex.GameStateManager.Back();
+            
+            var newItems = _newLoaded.ToArray();
+            bool changed = _originallyLoaded.Length != newItems.Length;
+
+            if (!changed)
+            {
+                for (int i = 0; i < _originallyLoaded.Length; i++)
+                {
+                    if (_originallyLoaded[i] != newItems[i])
+                    {
+                        changed = true;
+                        break;
+                    }
+                }
+            }
+
+            if (changed)
+            {
+                Options.ResourceOptions.LoadedResourcesPacks.Value = _newLoaded.ToArray();
+            }
+        }
+
         private void OpenResourcePackFolderClicked()
         {
             CrossPlatformUtils.OpenFolder(Alex.Resources.ResourcePackDirectory.ToString());
@@ -92,7 +118,19 @@ namespace Alex.GameStates.Gui.MainMenu.Options
 
             if (!selected.IsLoaded)
             {
+                if (!_newLoaded.Contains(selected.Path))
+                {
+                    _newLoaded.Add(selected.Path);
+                }
+
                 selected.SetLoaded(true);
+                _loadBtn.Enabled = false;
+            }
+            else
+            {
+                _newLoaded.Remove(selected.Path);
+                
+                selected.SetLoaded(false);
                 _loadBtn.Enabled = false;
             }
         }
@@ -109,6 +147,8 @@ namespace Alex.GameStates.Gui.MainMenu.Options
             }
         }
 
+        private string[] _originallyLoaded;
+        private List<string> _newLoaded;
         private void Reload()
         {
             ClearItems();
@@ -152,7 +192,13 @@ namespace Alex.GameStates.Gui.MainMenu.Options
 
         protected override void OnShow()
         {
+            _newLoaded = new List<string>();
+            
             base.OnShow();
+            
+            _originallyLoaded = Options.ResourceOptions.LoadedResourcesPacks.Value;
+            _newLoaded.AddRange(_originallyLoaded);
+            
             Reload();
         }
 

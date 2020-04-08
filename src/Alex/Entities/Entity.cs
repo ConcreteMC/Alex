@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using Alex.API;
 using Alex.API.Entities;
 using Alex.API.Graphics;
 using Alex.API.Graphics.Typography;
@@ -11,6 +12,7 @@ using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using NLog;
+using MathF = System.MathF;
 
 namespace Alex.Entities
 {
@@ -31,7 +33,23 @@ namespace Alex.Entities
 		public PlayerLocation KnownPosition { get; set; }
 
 		public Vector3 Velocity { get; set; } = Vector3.Zero;
-		public float PositionOffset { get; set; }
+		private float _posOffset = 0;
+		private bool _posOffsetSet = false;
+
+		public float PositionOffset
+		{
+			get
+			{
+				if (!_posOffsetSet)
+					return (float) Height;
+				return _posOffset;
+			}
+			set
+			{
+				_posOffsetSet = true;
+				_posOffset = value;
+			}
+		}
 
 		//public HealthManager HealthManager { get; set; }
 
@@ -50,7 +68,7 @@ namespace Alex.Entities
 		public double Width { get; set; } = 1;
 		public double Length { get; set; } = 1;
 		public double Drag { get; set; } = 0.4f;
-		public double Gravity { get; set; } = 1.6f;
+		public double Gravity { get; set; } = 16.8f; //9.81f; //1.6f;
 		public float TerminalVelocity { get; set; } = 78.4f;
 
 		public double MovementSpeed { get; set; } = 0.1F;
@@ -62,9 +80,11 @@ namespace Alex.Entities
 		public bool CanFly { get; set; } = false;
 		public bool IsFlying { get; set; } = false;
 
+		public bool IsCollidingWithWorld { get; set; } = false;
+
 		public INetworkProvider Network { get; set; }
 		public Inventory Inventory { get; protected set; }
-		private ItemModelRenderer ItemRenderer { get; set; } = null;
+		private IItemRenderer ItemRenderer { get; set; } = null;
 		public Entity(int entityTypeId, World level, INetworkProvider network)
 		{
 			Network = network;
@@ -77,15 +97,23 @@ namespace Alex.Entities
 			//	HealthManager = new HealthManager(this);
 			
 			Inventory.SlotChanged += OnInventorySlotChanged;
+			Inventory.SelectedHotbarSlotChanged += InventoryOnSelectedHotbarSlotChanged;
+
+			HideNameTag = true;
 		}
 
-		private void OnInventorySlotChanged(object sender, SlotChangedEventArgs e)
+		private void CheckHeldItem()
 		{
 			var inHand = Inventory.MainHand;
-			Log.Info($"Inventory slot changed.");
+			//Log.Info($"Inventory slot changed.");
 			
 			if (inHand == null && ItemRenderer != null)
 			{
+				if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
+				{
+					bone.Detach(ItemRenderer);
+				}
+				
 				ItemRenderer = null;
 				return;
 			}
@@ -112,22 +140,22 @@ namespace Alex.Entities
 					
 					if (this is Player)
 					{
-						if (itemModel.Display.TryGetValue("thirdperson_righthand", out var value))
+						if (itemModel.Display.TryGetValue("firstperson_righthand", out var value))
 						{
 							ItemRenderer.Rotation = value.Rotation;
 							ItemRenderer.Translation = value.Translation;
 							ItemRenderer.Scale = value.Scale;
 							
-							if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
+						/*	if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
 							{
-								Log.Info($"First Person item model rendering ready.");
+						//		Log.Info($"First Person item model rendering ready.");
 
-								bone.Attach(ItemRenderer);
+								//bone.Attach(ItemRenderer);
 							}
 							else
 							{
 								Log.Warn($"Bone not found: rightItem");
-							}
+							}*/
 						}
 						else
 						{
@@ -144,9 +172,9 @@ namespace Alex.Entities
 							
 							if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
 							{
-								Log.Info($"Third Person item model rendering ready.");
+						//		Log.Info($"Third Person item model rendering ready.");
 
-								bone.Attach(ItemRenderer);
+								//bone.Attach(ItemRenderer);
 							}
 						}
 						else
@@ -156,6 +184,28 @@ namespace Alex.Entities
 					}
 				}
 			}
+			else
+			{
+				if (ItemRenderer != null)
+				{
+					if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
+					{
+						bone.Detach(ItemRenderer);
+					}
+
+					ItemRenderer = null;
+				}
+			}
+		}
+		
+		private void InventoryOnSelectedHotbarSlotChanged(object? sender, SelectedSlotChangedEventArgs e)
+		{
+			CheckHeldItem();
+		}
+
+		private void OnInventorySlotChanged(object sender, SlotChangedEventArgs e)
+		{
+			CheckHeldItem();
 		}
 
 		public bool IsSneaking { get; set; }
@@ -195,15 +245,15 @@ namespace Alex.Entities
 
 		public bool RenderEntity { get; set; } = true;
 		public bool ShowItemInHand { get; set; } = false;
-		public void Render(IRenderArgs renderArgs)
+		public virtual void Render(IRenderArgs renderArgs)
 		{
-			if (RenderEntity)
+			if (RenderEntity || ShowItemInHand)
 			{
-				ModelRenderer.Render(renderArgs, KnownPosition);
+				ModelRenderer.Render(renderArgs, KnownPosition, !RenderEntity);
 			}
 			if (ShowItemInHand)
 			{
-				ItemRenderer?.Render(renderArgs.GraphicsDevice);
+				ItemRenderer?.Render(renderArgs);
 			}
 
 		}
@@ -215,14 +265,16 @@ namespace Alex.Entities
 			if (RenderEntity || ShowItemInHand)
 			{
 				ModelRenderer.Update(args, KnownPosition);
+				
+				if (ShowItemInHand)
+				{
+					//Matrix.CreateRotationY(MathUtils.ToRadians((-KnownPosition.HeadYaw)))
+					ItemRenderer?.Update(Matrix.CreateRotationY(MathUtils.ToRadians((-KnownPosition.HeadYaw))) * Matrix.CreateTranslation((KnownPosition)));
+					//ItemRenderer?.World = 
+					ItemRenderer?.Update(args.GraphicsDevice, args.Camera);
+				}
 			}
 			
-			if (ShowItemInHand)
-			{
-				//ItemRenderer?.World = 
-				ItemRenderer?.Update(args.GraphicsDevice, args.Camera);
-			}
-
 			if (now.Subtract(LastUpdatedTime).TotalMilliseconds >= 50)
 			{
 				LastUpdatedTime = now;
@@ -232,7 +284,7 @@ namespace Alex.Entities
 				}
 				catch(Exception e)
 				{
-					Log.Warn($"Exception while trying to tick entity!", e);
+					Log.Warn(e, $"Exception while trying to tick entity!");
 				}
 			}
 		}
@@ -362,75 +414,54 @@ namespace Alex.Entities
 			return new BoundingBox(new Vector3((float)(pos.X - halfWidth), pos.Y, (float)(pos.Z - halfWidth)), new Vector3((float)(pos.X + halfWidth), (float)(pos.Y + Height), (float)(pos.Z + halfWidth)));
 		}
 
-		public byte GetDirection()
-		{
-			return DirectionByRotationFlat(KnownPosition.Yaw);
-		}
-
-		public static byte DirectionByRotationFlat(float yaw)
-		{
-			byte direction = (byte)((int)Math.Floor((yaw * 4F) / 360F + 0.5D) & 0x03);
-			switch (direction)
-			{
-				case 0:
-					return 1; // West
-				case 1:
-					return 2; // North
-				case 2:
-					return 3; // East
-				case 3:
-					return 0; // South 
-			}
-			return 0;
-		}
-
-		public virtual void Knockback(Vector3 velocity)
-		{
-			Velocity += velocity;
-		}
-
-
-		/*public virtual Item[] GetDrops()
-		{
-			return new Item[] { };
-		}*/
-
-		public virtual void DoInteraction(byte actionId, Player player)
-		{
-		}
-
-		public virtual void DoMouseOverInteraction(byte actionId, Player player)
-		{
-		}
-
 		public void RenderNametag(IRenderArgs renderArgs)
 		{
+			var maxDistance = (renderArgs.Camera.FarDistance / 16f) / 2f;
+			
+			Vector3 posOffset = new Vector3(0, 0.25f, 0);
+
+			if (RenderEntity && ModelRenderer != null && ModelRenderer.Valid && !IsInvisible && !ModelRenderer.Texture.IsFullyTransparent)
+			{
+				posOffset.Y += (float) Height;
+			}
+
+			var cameraPosition = new Vector3(renderArgs.Camera.Position.X, 0, renderArgs.Camera.Position.Z);
+			var pos = KnownPosition + posOffset;
+			//pos.Y = 0;
+			
+			var distance = MathF.Abs(Vector3.Distance(pos, renderArgs.Camera.Position));
+			if (distance >= maxDistance)
+			{
+				return;
+			}
+
+			float s = 1f - (distance * (1f / maxDistance));
+			s = MathF.Round(s, 2, MidpointRounding.ToEven);
+
 			Vector2 textPosition;
 
 			// calculate screenspace of text3d space position
-			var screenSpace = renderArgs.GraphicsDevice.Viewport.Project(Vector3.Zero,
+			var screenSpace = renderArgs.GraphicsDevice.Viewport.Project(Vector3.Zero, 
 				renderArgs.Camera.ProjectionMatrix,
 				renderArgs.Camera.ViewMatrix,
-				Matrix.CreateTranslation(KnownPosition + new Vector3(0, (float)Height, 0)));
-
+				 Matrix.CreateBillboard(pos, renderArgs.Camera.Position, Vector3.Up, pos - renderArgs.Camera.Position));
 
 			// get 2D position from screenspace vector
 			textPosition.X = screenSpace.X;
 			textPosition.Y = screenSpace.Y;
 
-			float s = 1f;
 			var scale = new Vector2(s, s);
 	
 			string clean = NameTag;
 
-			var stringCenter = Alex.Font.MeasureString(clean, s);
+			var stringCenter = Alex.Font.MeasureString(clean, scale);
 			var c = new Point((int)stringCenter.X, (int)stringCenter.Y);
 
-			textPosition.X = (int)(textPosition.X - c.X);
-			textPosition.Y = (int)(textPosition.Y - c.Y);
+			textPosition.X = (int)(textPosition.X - (c.X / 2d));
+			textPosition.Y = (int)(textPosition.Y - (c.Y / 2d));
 
-			renderArgs.SpriteBatch.FillRectangle(new Rectangle(textPosition.ToPoint(), c), new Color(Color.Black, 128));
-			renderArgs.SpriteBatch.DrawString(Alex.Font, clean, textPosition, TextColor.White, FontStyle.None, 0f, Vector2.Zero, scale);
+			renderArgs.SpriteBatch.FillRectangle(new Rectangle(textPosition.ToPoint(), c), new Color(Color.Black, 128), screenSpace.Z);
+			Alex.Font.DrawString(renderArgs.SpriteBatch, clean, textPosition, TextColor.White, FontStyle.None, scale, layerDepth: screenSpace.Z);
 		}
 
 		public virtual void TerrainCollision(Vector3 collisionPoint, Vector3 direction)

@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
 using Alex.API.Blocks.State;
 using Alex.Blocks.State;
+using Alex.Networking.Java.Util;
+using NLog;
 
 namespace Alex.Blocks.Storage
 {
@@ -9,7 +12,7 @@ namespace Alex.Blocks.Storage
         private FlexibleStorage Storage { get; set; }
 
         private int _bits;
-        private IntIdentityHashBiMap<IBlockState> Pallette { get; set; }
+        private IPallete<IBlockState> Pallette { get; set; }
 
         private static IBlockState Air = BlockFactory.GetBlockState("minecraft:air");
         public BlockStorage()
@@ -93,6 +96,56 @@ namespace Alex.Blocks.Storage
         private static int GetIndex(int x, int y, int z)
         {
             return y << 8 | z << 4 | x;
+        }
+        
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger();
+
+        public void Read(MinecraftStream ms)
+        {
+            var blockCount = ms.ReadShort();
+            var bitsPerBlock = (byte) ms.ReadByte();
+
+            int palleteLength = 0;// = ms.ReadVarInt();
+
+            if (bitsPerBlock <= 4)
+                bitsPerBlock = 4;
+            
+            if (bitsPerBlock <= 8)
+            {
+                _bits = bitsPerBlock;
+                
+                palleteLength = ms.ReadVarInt();
+                
+                Pallette = new IntIdentityHashBiMap<IBlockState>(palleteLength);
+                Pallette.Add(Air);
+                
+                //else
+                //     palleteLength = 
+
+                for (int id = 0; id < palleteLength; id++)
+                {
+                    uint stateId = (uint) ms.ReadVarInt();
+                    IBlockState state = BlockFactory.GetBlockState(stateId);
+                    Pallette.Put(state, (uint) id);
+                    // idToState.Set(id, state);
+                    // stateToId.Set(state, id);
+                }
+            }
+            else
+            {
+                _bits = (int) Math.Ceiling(Math.Log2(BlockFactory.AllBlockstates.Count));
+                Pallette = new DirectPallete();
+            }
+
+            int length = ms.ReadVarInt();
+            long[] dataArray = new long[length];
+            for (int i = 0; i < dataArray.Length; i++)
+            {
+                dataArray[i] = ms.ReadLong();
+            }
+
+            Storage = new FlexibleStorage(_bits, dataArray);
+            //Storage._data = dataArray;
         }
     }
 }

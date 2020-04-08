@@ -11,7 +11,7 @@ namespace Alex.Worlds.Generators
 		public EmptyWorldGenerator()
 		{
 			_sharedChunk = new ChunkColumn();
-			_sharedChunk.IsAllAir = true;
+			//_sharedChunk.IsAllAir = true;
 			for (int x = 0; x < ChunkColumn.ChunkWidth; x++)
 			{
 				for (int z = 0; z < ChunkColumn.ChunkDepth; z++)

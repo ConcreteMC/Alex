@@ -2,8 +2,11 @@ namespace Alex.Blocks.Minecraft
 {
 	public class RedstoneTorch : Block
 	{
-		public RedstoneTorch() : base(3291)
+		public bool IsWallTorch { get; }
+		public RedstoneTorch(bool wallTorch = false) : base(3291)
 		{
+			IsWallTorch = wallTorch;
+			
 			Solid = false;
 			Transparent = true;
 			IsReplacible = false;

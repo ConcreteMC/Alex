@@ -16,7 +16,7 @@ namespace Alex.ResourcePackLib
 
 	    }
 
-	    private static ResourcePackManifest GetManifest(ZipArchive archive, ResourcePackType type)
+	    protected static ResourcePackManifest GetManifest(ZipArchive archive, ResourcePackType type)
 	    {
 		    if (type == ResourcePackType.Java)
 		    {

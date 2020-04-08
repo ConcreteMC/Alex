@@ -9,15 +9,26 @@ using System.Reflection;
 using System.Text;
 using Alex.API.Data.Options;
 using Alex.API.Json;
+using Alex.API.Resources;
 using Alex.API.Services;
+using Alex.Blocks;
+using Alex.Blocks.Minecraft;
+using Alex.Blocks.State;
 using Alex.Entities;
+using Alex.GameStates;
+using Alex.Gui;
 using Alex.Networking.Java;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Generic;
+using Alex.ResourcePackLib.Json.Models.Blocks;
 using Alex.Utils;
+using GLib;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
 using NLog;
+using DateTime = System.DateTime;
+using Task = System.Threading.Tasks.Task;
 
 namespace Alex
 {
@@ -26,22 +37,37 @@ namespace Alex
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ResourceManager));
 
 		private LinkedList<McResourcePack> ActiveResourcePacks { get; } = new LinkedList<McResourcePack>();
-		public McResourcePack ResourcePack => ActiveResourcePacks.First.Value;
+		public McResourcePack ResourcePack => ActiveResourcePacks.First?.Value;
 		public BedrockResourcePack BedrockResourcePack { get; private set; }
 		public Registries Registries { get; private set; }
         public AtlasGenerator Atlas { get; private set; }
-		
-		private GraphicsDevice Graphics { get; set; }
-
+        
 		private IStorageSystem Storage { get; }
 		private IOptionsProvider Options { get; }
-		public ResourceManager(GraphicsDevice graphics, IStorageSystem storageSystem, IOptionsProvider options)
+		private IRegistryManager RegistryManager { get; }
+		private Alex Alex { get; }
+		public ResourceManager(IServiceProvider serviceProvider)
 		{
-			Storage = storageSystem;
-			Graphics = graphics;
-			Atlas = new AtlasGenerator(Graphics);
+			Atlas = new AtlasGenerator();
+			Storage = serviceProvider.GetService<IStorageSystem>();
 
-			Options = options;
+			Options = serviceProvider.GetService<IOptionsProvider>();
+			RegistryManager = serviceProvider.GetService<IRegistryManager>();
+			Alex = serviceProvider.GetService<Alex>();
+		}
+
+		private void ResourcePacksChanged(string[] oldvalue, string[] newvalue)
+		{
+			Log.Info($"Resource packs changed.");
+			
+			SplashScreen splashScreen = new SplashScreen();
+			Alex.GameStateManager.SetActiveState(splashScreen);
+
+			Task.Run(() =>
+			{
+				LoadResourcePacks(Alex.GraphicsDevice, splashScreen, newvalue);
+				Alex.GameStateManager.Back();
+			});
 		}
 
 		private static readonly string VersionFile = Path.Combine("assets", "version.txt");
@@ -125,21 +151,28 @@ namespace Alex
 			return true;
 		}
 
-		private McResourcePack LoadResourcePack(IProgressReceiver progressReceiver, Stream stream, McResourcePack.McResourcePackPreloadCallback preloadCallback = null)
+		private McResourcePack LoadResourcePack(IProgressReceiver progressReceiver, Stream stream, bool useModelResolver = false, McResourcePack.McResourcePackPreloadCallback preloadCallback = null)
 		{
 			McResourcePack resourcePack = null;
 
 			using (var archive = new ZipArchive(stream, ZipArchiveMode.Read, false))
 			{
-				resourcePack = new McResourcePack(archive, preloadCallback);
+				Func<string, BlockModel> resolver = null;
+				if (useModelResolver)
+				{
+					resolver = ModelResolver;
+				}
+				
+				resourcePack = new McResourcePack(archive, preloadCallback)
+				{
+					//ModelResolver = resolver
+				};
 			}
 
 			Log.Info($"Loaded {resourcePack.BlockModels.Count} block models from resourcepack");
 			Log.Info($"Loaded {resourcePack.ItemModels.Count} item models from resourcepack");
 
-            ItemFactory.Init(this, resourcePack, progressReceiver);
-
-			var language = resourcePack.Languages.Values.FirstOrDefault();
+			var language = resourcePack.Languages.Values.FirstOrDefault(x => x.Namespace.Equals("minecraft"));
 			if (language != null)
 			{
 				foreach (var translation in language)
@@ -151,11 +184,21 @@ namespace Alex
 			return resourcePack;
 		}
 
-        private void LoadModels(IProgressReceiver progressReceiver, McResourcePack resourcePack, bool replaceModels,
+		private BlockModel ModelResolver(string arg)
+		{
+			if (ResourcePack.TryGetBlockModel(arg, out var model))
+			{
+				return model;
+			}
+
+			return null;
+		}
+
+		private void LoadModels(IProgressReceiver progressReceiver, McResourcePack resourcePack, bool replaceModels,
             bool reportMissingModels)
         {
             Stopwatch sw = Stopwatch.StartNew();
-            int imported = BlockFactory.LoadResources(this, resourcePack, replaceModels, reportMissingModels, progressReceiver);
+            int imported = BlockFactory.LoadResources(RegistryManager, this, resourcePack, replaceModels, reportMissingModels, progressReceiver);
             sw.Stop();
 
             Log.Info($"Imported {imported} blockstate variants from resourcepack in {sw.ElapsedMilliseconds}ms!");
@@ -164,18 +207,30 @@ namespace Alex
         private void LoadTextures(GraphicsDevice device, IProgressReceiver progressReceiver,
             McResourcePack resourcePack, bool isFirst)
         {
+	        progressReceiver.UpdateProgress(0, $"Loading textures: {resourcePack.Manifest?.Name ?? "Unknown"}");
+	        
             if (!isFirst)
             {
-                Atlas.LoadResourcePackOnTop(ActiveResourcePacks.First().TexturesAsBitmaps.Where(x => x.Key.StartsWith("block")).ToArray(), resourcePack.TexturesAsBitmaps.Where(x => x.Key.StartsWith("block")).ToArray(),
-                    progressReceiver);
+	            Atlas.LoadResourcePackOnTop(device,
+		            ActiveResourcePacks.First().TexturesAsBitmaps.Where(x => x.Key.StartsWith("block")).ToArray(),
+		            resourcePack.TexturesAsBitmaps.Where(x => x.Key.StartsWith("block")).ToArray(),
+		            resourcePack.TextureMetas,
+		            progressReceiver);
             }
             else
             {
-                Atlas.GenerateAtlas(resourcePack.TexturesAsBitmaps.Where(x => x.Key.StartsWith("block")).ToArray(),
+                Atlas.GenerateAtlas(device, resourcePack.TexturesAsBitmaps.Where(x => x.Key.StartsWith("block")).ToArray(),
+	                resourcePack.TextureMetas,
                     progressReceiver);
 
 
                 //Atlas.Atlas.Save("atlas.png", ImageFormat.Png);
+            }
+
+          //  if (!isFirst)
+            {
+	            progressReceiver.UpdateProgress(0, $"Loading UI textures: {resourcePack.Manifest?.Name ?? "Unknown"}");
+	            Alex.GuiRenderer.LoadResourcePackTextures(resourcePack, progressReceiver);
             }
         }
 
@@ -212,10 +267,12 @@ namespace Alex
 
 			return true;
 		}
-
+        
         public DirectoryInfo ResourcePackDirectory { get; private set; } = null;
+        private  McResourcePack.McResourcePackPreloadCallback PreloadCallback { get; set; }
         public bool CheckResources(GraphicsDevice device, IProgressReceiver progressReceiver, McResourcePack.McResourcePackPreloadCallback preloadCallback)
-		{
+        {
+	        PreloadCallback = preloadCallback;
 			byte[] defaultResources;
 
 			if (!CheckRequiredPaths(out defaultResources))
@@ -231,7 +288,10 @@ namespace Alex
             Log.Info($"Loading vanilla resources...");
 			using (MemoryStream stream = new MemoryStream(defaultResources))
 			{
-				ActiveResourcePacks.AddFirst(LoadResourcePack(progressReceiver, stream, preloadCallback));
+				var vanilla = LoadResourcePack(progressReceiver, stream, false, preloadCallback);
+				vanilla.Manifest.Name = "Vanilla";
+				
+				ActiveResourcePacks.AddFirst(vanilla);
 			}
 
 			var bedrockPath = Path.Combine("assets", "bedrock");
@@ -290,49 +350,100 @@ namespace Alex
 
             Storage.TryGetDirectory(Path.Combine("assets", "resourcepacks"), out DirectoryInfo root);
             ResourcePackDirectory = root;
+
+            LoadRegistries(progressReceiver);
+
+            LoadResourcePacks(device, progressReceiver, Options.AlexOptions.ResourceOptions.LoadedResourcesPacks.Value);
+
+            ItemFactory.Init(RegistryManager, this, ResourcePack, progressReceiver);
+
+            Options.AlexOptions.ResourceOptions.LoadedResourcesPacks.Bind(ResourcePacksChanged);
+            _hasInit = true;
             
-            foreach (string file in Options.AlexOptions.ResourceOptions.LoadedResourcesPacks.Value)
-			{
-				try
-				{
-					string resourcePackPath = Path.Combine(root.FullName, file);
-					if (File.Exists(resourcePackPath))
-					{
-						Log.Info($"Loading resourcepack {file}...");
-
-						using (FileStream stream = new FileStream(resourcePackPath, FileMode.Open))
-						{
-							ActiveResourcePacks.AddLast(LoadResourcePack(progressReceiver, stream, null));
-						}
-					}
-				}
-				catch (Exception e)
-				{
-					Log.Warn(e, $"Could not load resourcepack {file}: {e.ToString()}");
-				}
-			}
-
-            bool isFirst = true;
-            foreach (var resourcePack in ActiveResourcePacks)
-            {
-                LoadTextures(device, progressReceiver, resourcePack, isFirst);
-
-                if (isFirst)
-                    isFirst = false;
-            }
-
-            isFirst = true;
-            foreach (var resourcePack in ActiveResourcePacks)
-            {
-                LoadModels(progressReceiver, resourcePack, true, isFirst);
-                if (isFirst)
-                    isFirst = false;
-            }
-
             return true;
 		}
 
-		public static string ReadStringResource(string resource)
+        private bool _hasInit = false;
+        private void LoadResourcePacks(GraphicsDevice device, IProgressReceiver progress, string[] resourcePacks)
+        {
+	        var countBefore = ActiveResourcePacks.Count;
+	        
+	        var first = ActiveResourcePacks.First.Value;
+	        ActiveResourcePacks.Clear();
+
+	        ActiveResourcePacks.AddFirst(first);
+
+	        if (_hasInit)
+	        {
+		        PreloadCallback?.Invoke(first.FontBitmap, McResourcePack.BitmapFontCharacters.ToList());
+		        Atlas.Reset();
+	        }
+	        
+	        foreach (string file in resourcePacks)
+	        {
+		        try
+		        {
+			        string resourcePackPath = Path.Combine(ResourcePackDirectory.FullName, file);
+			        if (File.Exists(resourcePackPath))
+			        {
+				        Log.Info($"Loading resourcepack {file}...");
+
+				        using (FileStream stream = new FileStream(resourcePackPath, FileMode.Open))
+				        {
+					        var pack = LoadResourcePack(progress, stream, true, null);
+					        if (pack.Manifest != null && string.IsNullOrWhiteSpace(pack.Manifest.Name))
+					        {
+						        pack.Manifest.Name = Path.GetFileNameWithoutExtension(file);
+					        }
+					        ActiveResourcePacks.AddLast(pack);
+				        }
+			        }
+		        }
+		        catch (Exception e)
+		        {
+			        Log.Warn(e, $"Could not load resourcepack {file}: {e.ToString()}");
+		        }
+	        }
+	        
+	        bool isFirst = true;
+	        foreach (var resourcePack in ActiveResourcePacks)
+	        {
+		        Alex.GuiRenderer.LoadLanguages(resourcePack, progress);
+		        
+		        LoadTextures(device, progress, resourcePack, isFirst);
+
+		        if (isFirst)
+			        isFirst = false;
+	        }
+
+	        isFirst = true;
+	        foreach (var resourcePack in ActiveResourcePacks)
+	        {
+		        LoadModels(progress, resourcePack, !isFirst, isFirst);
+		        if (isFirst)
+		        { //Only load models for vanilla until above is fixed,
+			        isFirst = false;
+			        break;
+		        }
+	        }
+
+	        var f = ActiveResourcePacks.LastOrDefault(x => x.FontBitmap != null);
+	        if (f != null)
+	        {
+		        PreloadCallback?.Invoke(f.FontBitmap, McResourcePack.BitmapFontCharacters.ToList());
+	        }
+        }
+        
+        private void LoadRegistries(IProgressReceiver progress)
+        {
+	        progress.UpdateProgress(0, "Loading blockstate registry...");
+	        RegistryManager.AddRegistry(new RegistryBase<BlockState>("blockstate"));
+	        
+	        progress.UpdateProgress(50, "Loading block registry...");
+	        RegistryManager.AddRegistry(new BlockRegistry());
+        }
+
+        public static string ReadStringResource(string resource)
 		{
 			return Encoding.UTF8.GetString(ReadResource(resource));
 		}

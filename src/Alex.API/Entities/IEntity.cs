@@ -18,7 +18,8 @@ namespace Alex.API.Entities
 		bool Silent { get; set; }
 		bool IsInWater { get; set; }
 		bool IsOutOfWater { get; }
-
+		bool IsCollidingWithWorld { get; set; }
+		
 		long Age { get; set; }
 		double Scale { get; set; }
 
@@ -29,5 +30,7 @@ namespace Alex.API.Entities
 		void UpdateHeadYaw(float headYaw);
 
 		void RenderNametag(IRenderArgs renderArgs);
+		
+		float PositionOffset { get; set; }
 	}
 }

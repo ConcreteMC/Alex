@@ -26,7 +26,7 @@ namespace Alex.Worlds.Generators
                 Z = chunkCoordinates.Z
             };
             
-            for (int x = 0; x < ChunkColumn.ChunkWidth; x++)
+         /*   for (int x = 0; x < ChunkColumn.ChunkWidth; x++)
             {
                 for (int z = 0; z < ChunkColumn.ChunkDepth; z++)
                 {
@@ -55,7 +55,7 @@ namespace Alex.Worlds.Generators
                                     continue;
                             }
                             
-                            c.SetBlockState(x, y, z, block);
+                            c.SetBlock(x, y, z, block);
                         }
                         else
                         {
@@ -66,7 +66,7 @@ namespace Alex.Worlds.Generators
                     }
                     c.SetHeight(x,z, 0);
                 }
-            }
+            }*/
             return c;
         }
 

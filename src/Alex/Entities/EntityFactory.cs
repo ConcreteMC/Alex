@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
+using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.Graphics.Models.Entity;
 using Alex.ResourcePackLib;
@@ -22,8 +23,8 @@ namespace Alex.Entities
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(EntityFactory));
 
-		private static ConcurrentDictionary<string, Func<Texture2D, EntityModelRenderer>> _registeredRenderers =
-			new ConcurrentDictionary<string, Func<Texture2D, EntityModelRenderer>>();
+		private static ConcurrentDictionary<string, Func<PooledTexture2D, EntityModelRenderer>> _registeredRenderers =
+			new ConcurrentDictionary<string, Func<PooledTexture2D, EntityModelRenderer>>();
 
 		private static IReadOnlyDictionary<long, EntityData> _idToData;
         private static IReadOnlyDictionary<EntityType, long> _typeToId; 
@@ -151,7 +152,7 @@ namespace Alex.Entities
             return false;
         }
 
-		private static EntityModelRenderer TryGetRendererer(EntityData data, Texture2D texture)
+		private static EntityModelRenderer TryGetRendererer(EntityData data, PooledTexture2D texture)
 		{
 			if (_registeredRenderers.TryGetValue(data.Name, out var func))
 			{
@@ -169,7 +170,7 @@ namespace Alex.Entities
 			return null;
 		}
 
-		public static EntityModelRenderer GetEntityRenderer(string name, Texture2D texture)
+		public static EntityModelRenderer GetEntityRenderer(string name, PooledTexture2D texture)
 		{
 			if (_registeredRenderers.TryGetValue(name, out var func))
 			{
@@ -205,13 +206,20 @@ namespace Alex.Entities
 					if (def.Value.Textures.Count == 0) continue;
 					if (def.Value.Geometry.Count == 0) continue;
 
+					var geometry = def.Value.Geometry;
+					string modelKey;
+					if (!geometry.TryGetValue("default", out modelKey))
+					{
+						modelKey = geometry.FirstOrDefault().Value;
+					}
+
 					EntityModel model;
-				    if (ModelFactory.TryGetModel(def.Value.Geometry["default"], out model) && model != null)
+				    if (ModelFactory.TryGetModel(modelKey, out model) && model != null)
 				    {
 				        Add(resourceManager, graphics, def.Value, model, def.Value.Filename);
 				        Add(resourceManager, graphics, def.Value, model, def.Key);
                     }
-				    else if (ModelFactory.TryGetModel(def.Value.Geometry["default"] + ".v1.8", out model) && model != null)
+				    else if (ModelFactory.TryGetModel(modelKey + ".v1.8", out model) && model != null)
 				    {
 				        Add(resourceManager, graphics, def.Value, model, def.Value.Filename);
 				        Add(resourceManager, graphics, def.Value, model, def.Key);

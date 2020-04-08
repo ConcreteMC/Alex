@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Services;
+using Alex.API.Utils;
 using Alex.Networking.Java;
 using Alex.Networking.Java.Packets;
 using Alex.Networking.Java.Packets.Handshake;
@@ -95,21 +96,24 @@ namespace Alex.Services
 				return;
 			}
 
-			using(DedicatedThreadPool threadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(4, ThreadType.Background, "ServerPingThread")))
+			using(DedicatedThreadPool threadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(1, ThreadType.Background, "ServerPingThread")))
 		    {
 			    BedrockClient client = null;
 			    try
 			    {
 					IPEndPoint serverEndpoint = new IPEndPoint(result.Result, (int) port);
 
-					client = new BedrockClient(Alex, serverEndpoint,
+					client = new BedrockClient(Alex, null, serverEndpoint,
 						new PlayerProfile(string.Empty, $"Pinger{serverEndpoint.ToString()}",
 							$"Pinger{serverEndpoint.ToString()}", null, null, null, true), threadPool, null)
 					{
-						IgnoreUnConnectedPong = true
+						
+						//IgnoreUnConnectedPong = true
 					};
+					client.Connection.AutoConnect = false;
+					
 
-				    BedrockMotd motd = client.KnownMotd;
+				    BedrockMotd motd = new BedrockMotd(string.Empty);
 
 					client.OnMotdReceivedHandler += (sender, m) =>
 				    {
@@ -117,23 +121,23 @@ namespace Alex.Services
 						pingTime = sw.ElapsedMilliseconds;
 					    ar.Set();
 
-						pingCallback.BeginInvoke(new ServerPingResponse(true, pingTime), pingCallback.EndInvoke, null);
+						pingCallback.Invoke(new ServerPingResponse(true, pingTime));
 				    };
 
-				    client.StartClient();
-				    client.SendUnconnectedPing();
+				    client.Start(ar);
+				    //client.SendUnconnectedPing();
 				    sw.Restart();
 
 					//ar.WaitAsync().Wait(TimeSpan.FromMilliseconds(10000));
 
 				    if (await WaitHandleHelpers.FromWaitHandle(ar.WaitHandle, TimeSpan.FromMilliseconds(10000)))
 				    {
-					    client.StopClient();
-					    var m = client.KnownMotd;
+					    client.Close();
+					  //  var m = new BedrockMotd(client.Connection.RemoteServerName);
 
 						statusCallBack?.Invoke(new ServerQueryResponse(true, new ServerQueryStatus()
 					    {
-						    EndPoint = serverEndpoint,
+						    EndPoint = motd.ServerEndpoint,
 						    Delay = pingTime,
 						    Success = true,
 
@@ -145,16 +149,16 @@ namespace Alex.Services
 							{
 								Players = new Players()
 								{
-									Max = m.MaxPlayers,
-									Online = m.Players
+									Max = motd.MaxPlayers,
+									Online = motd.Players
 								},
 								Version = new API.Services.Version()
 								{
-									Protocol = m.ProtocolVersion,
+									Protocol = motd.ProtocolVersion,
 								},
 								Description = new Description()
 								{
-									Text = m.MOTD
+									Text = motd.MOTD
 								},
 								Modinfo = null,
 								Favicon = null

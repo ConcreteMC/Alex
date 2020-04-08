@@ -7,6 +7,8 @@ namespace Alex.Blocks.Minecraft
 			Solid = false;
 			Transparent = true;
 			IsReplacible = false;
+			Animated = true;
+			
 			LightValue = 11;
 
 			BlockMaterial = Material.Portal;

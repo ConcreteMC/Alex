@@ -1,4 +1,5 @@
-﻿using Alex.API.Blocks.State;
+﻿using System.Collections.Generic;
+using Alex.API.Blocks.State;
 
 namespace Alex.API.World
 {
@@ -7,12 +8,15 @@ namespace Alex.API.World
         bool SolidBorder { get; }
         bool HasAirPockets { get; }
         bool IsDirty { get; set; }
-        void ResetSkyLight();
+        void ResetSkyLight(byte initialValue = 0xff);
         bool IsScheduled(int x, int y, int z);
         void SetScheduled(int x, int y, int z, bool value);
         bool IsLightingScheduled(int x, int y, int z);
         bool SetLightingScheduled(int x, int y, int z, bool value);
         IBlockState Get(int x, int y, int z);
+        IBlockState Get(int x, int y, int z, int section);
+        IEnumerable<(IBlockState state, int storage)> GetAll(int x, int y, int z);
+        
         void Set(int x, int y, int z, IBlockState state);
         bool IsTransparent(int x, int y, int z);
         bool IsSolid(int x, int y, int z);

@@ -5,6 +5,7 @@ using System.Net;
 using System.Threading;
 using Alex.Worlds.Bedrock;
 using log4net;
+using Microsoft.Extensions.DependencyInjection;
 using NLog;
 using LogManager = NLog.LogManager;
 
@@ -199,7 +200,7 @@ namespace Alex
 
 		public Testing()
 		{
-			_chunkProcessor = new ChunkProcessor(4, false, CancellationToken.None);
+			_chunkProcessor = new ChunkProcessor(Alex.Instance.ThreadPool, 4, false, CancellationToken.None);
             
 			Random rnd = new Random();
 			var files = Directory.GetFiles("samplechunkdata");

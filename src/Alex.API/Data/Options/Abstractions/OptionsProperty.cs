@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Runtime.Serialization;
 using Newtonsoft.Json;
+using NLog;
 
 namespace Alex.API.Data.Options
 {
@@ -12,6 +13,8 @@ namespace Alex.API.Data.Options
     [JsonConverter(typeof(OptionsPropertyJsonConverter))]
     public class OptionsProperty<TProperty> : IOptionsProperty
     {
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(IOptionsProperty));
+        
         public event OptionsPropertyChangedDelegate<TProperty> ValueChanged;
 
         private readonly TProperty _defaultValue;
@@ -71,6 +74,15 @@ namespace Alex.API.Data.Options
             {
                 _value = (TProperty) obj;
             }
+            else
+            {
+                Log.Warn($"Value is not of correct type, got {obj.GetType()} expected {typeof(TProperty)}");
+            }
+        }
+
+        public Type PropertyType
+        {
+            get { return typeof(TProperty); }
         }
 
         [OnDeserialized]
@@ -107,6 +119,8 @@ namespace Alex.API.Data.Options
 
     public class OptionsPropertyJsonConverter : JsonConverter<IOptionsProperty>
     {
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(OptionsPropertyJsonConverter));
+        
         public override void WriteJson(JsonWriter writer, IOptionsProperty value, JsonSerializer serializer)
         {
             serializer.Serialize(writer, value.GetValue());
@@ -115,13 +129,16 @@ namespace Alex.API.Data.Options
         public override IOptionsProperty ReadJson(JsonReader reader, Type objectType, IOptionsProperty existingValue, bool hasExistingValue,
             JsonSerializer serializer)
         {
-            var value = serializer.Deserialize(reader);
-            
             if (hasExistingValue)
             {
-                existingValue.SetValue(value);
+                var type = existingValue.PropertyType;
+
+                existingValue.SetValue(serializer.Deserialize(reader, type));
                 return existingValue;
             }
+            
+            
+            var value = serializer.Deserialize(reader);
             var property = (IOptionsProperty) Activator.CreateInstance(objectType);
             property.SetValue(value);
 

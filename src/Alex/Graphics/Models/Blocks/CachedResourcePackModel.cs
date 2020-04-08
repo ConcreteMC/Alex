@@ -11,7 +11,6 @@ using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using NLog;
-using WinApi.User32;
 using MathF = Alex.API.Utils.MathF;
 using Matrix = System.Drawing.Drawing2D.Matrix;
 
@@ -27,6 +26,16 @@ namespace Alex.Graphics.Models.Blocks
 		
 		protected Vector3 Min = new Vector3(float.MaxValue);
 		protected Vector3 Max = new Vector3(float.MinValue);
+
+		public override BoundingBox BoundingBox
+		{
+			get
+			{
+				return new BoundingBox(Min, Max);
+			}
+		}
+
+		public BoundingBox[] Boxes { get; set; } = new BoundingBox[0];
 		public CachedResourcePackModel(ResourceManager resources, BlockStateModel[] models)
 		{
 			Resources = resources;
@@ -36,6 +45,70 @@ namespace Alex.Graphics.Models.Blocks
 			{
 				_elementCache = CalculateModel(models);
 			}
+		}
+
+		public override BoundingBox[] GetIntersecting(Vector3 position, BoundingBox box)
+		{
+			List<BoundingBox> intersecting = new List<BoundingBox>();
+			foreach (var b in Boxes.OrderByDescending(x => x.Max.Y))
+			{
+				if (new BoundingBox(position + b.Min, position + b.Max).Contains(box) == ContainmentType.Intersects)
+				{
+					intersecting.Add(b);
+				}
+			}
+
+			return intersecting.ToArray();
+		}
+
+		private BoundingBox[] GetBoxes(Vector3 position)
+		{
+			return Boxes.Select(x => new BoundingBox(position + x.Min, position + x.Max)).ToArray();
+		}
+		
+		public override BoundingBox? GetPartBoundingBox(Vector3 position, BoundingBox entityBox)
+		{
+			var boxes = GetBoxes(position);
+			//entityBox = new BoundingBox(entityBox.Min - position, entityBox.Max - position);
+		//	var relative = Vector3.
+		//var relativePosition = entityPosition - position; //Vector3.Max(entityPosition, position) - Vector3.Min(entityPosition, position);
+			//var relativeNoY = new Vector3(relativePosition.X, 0f, relativePosition.Z);
+
+		/*	var res = Boxes.Where(x => x.Contains(entityPosition) == ContainmentType.Intersects).OrderBy(x => x.Max.Y - relativePosition.Y).FirstOrDefault();
+
+			if (res != default)
+			{
+				return new BoundingBox(position + res.Min, position + res.Max);
+			}*/
+			
+			//var first = Boxes.OrderBy(x => MathF.Abs(Vector3.Distance(relativePosition, (x.Min + x.Max) / 2f))).FirstOrDefault();
+			//return new BoundingBox(position + first.Min, position + first.Max);
+			foreach (var corner in entityBox.GetCorners().OrderBy(x => x.Y))
+			{
+				foreach (var box in boxes.OrderByDescending(x => x.Max.Y))
+				{
+					//if (box.Min.X <= relativePosition.X && box.Max.X >= relativePosition.X
+					//    && box.Min.Z <= relativePosition.Z && box.Max.Z >= relativePosition.Z)
+					var result = box.Contains(corner);
+					if (result == ContainmentType.Contains || result == ContainmentType.Intersects)
+					{
+						return box;
+					}
+				}
+			}
+			
+			foreach (var box in boxes.OrderByDescending(x => x.Max.Y))
+			{
+				//if (box.Min.X <= relativePosition.X && box.Max.X >= relativePosition.X
+				//    && box.Min.Z <= relativePosition.Z && box.Max.Z >= relativePosition.Z)
+				var result = entityBox.Contains(box);
+				if (result == ContainmentType.Intersects || result == ContainmentType.Contains)
+				{
+					return box;
+				}
+			}
+
+			return null;GetBoundingBox(position, null);
 		}
 
 		public override BoundingBox GetBoundingBox(Vector3 position, IBlock requestingBlock)
@@ -135,26 +208,33 @@ namespace Alex.Graphics.Models.Blocks
 			if (!world.HasBlock(pos.X, pos.Y, pos.Z)) 
 				return false;
 			
-			world.GetBlockData(pos.X, pos.Y, pos.Z, out bool blockTransparent, out bool blockSolid);
+			var theBlock = world.GetBlock(pos.X, pos.Y, pos.Z);
 
 			if (me.Solid && me.Transparent)
 			{
 				//	if (IsFullCube && Name.Equals(block.Name)) return false;
-				if (blockSolid && !blockTransparent) return false;
+				if (theBlock.Solid && (theBlock.Transparent || !theBlock.IsFullCube))
+				{
+					//var block = world.GetBlock(pos.X, pos.Y, pos.Z);
+					if (!me.BlockMaterial.IsOpaque() && !theBlock.BlockMaterial.IsOpaque()) return false;
+					
+					if (!me.IsFullBlock || !theBlock.IsFullBlock) return true;
+				}
+				if (theBlock.Solid && !(theBlock.Transparent || !theBlock.IsFullCube)) return false;
 			}
 			else if (me.Transparent)
 			{
-				if (blockSolid && !blockTransparent) return false;
+				if (theBlock.Solid && !(theBlock.Transparent || theBlock.IsFullCube)) return false;
 				//if (blockTransparent) return true;
 			}
 
 
-			if (me.Solid && blockTransparent) return true;
+			if (me.Solid && (theBlock.Transparent || !theBlock.IsFullCube)) return true;
 			//   if (me.Transparent && block.Transparent && !block.Solid) return false;
 			if (me.Transparent) return true;
-			if (!me.Transparent && blockTransparent) return true;
-			if (blockSolid && !blockTransparent) return false;
-			if (me.Solid && blockSolid) return false;
+			if (!me.Transparent && (theBlock.Transparent || !theBlock.IsFullCube)) return true;
+			if (theBlock.Solid && !(theBlock.Transparent || !theBlock.IsFullCube)) return false;
+			if (me.Solid && theBlock.Solid && theBlock.IsFullCube) return false;
 			
 			return true;
 		}
@@ -185,7 +265,7 @@ namespace Alex.Graphics.Models.Blocks
 					if (min.Z < Min.Z)
 						Min.Z = min.Z;
 
-					result.Add($"{model.ModelName}:{index}:{r.Key}", r.Value);
+					result.Add($"{index}:{r.Key}", r.Value);
 				}
 			}
 
@@ -201,12 +281,14 @@ namespace Alex.Graphics.Models.Blocks
 				
 			var model = raw.Model;
 
+			List<BoundingBox> boxes = new List<BoundingBox>();
 			for (var index = 0; index < model.Elements.Length; index++)
 			{
 				var element = model.Elements[index];
-				element.To *= Scale;
-				element.From *= Scale;
-				
+				element.To *= (Scale);
+
+				element.From *= (Scale);
+
 				FaceCache cache = new FaceCache();
 
 				foreach (var face in element.Faces)
@@ -247,9 +329,9 @@ namespace Alex.Graphics.Models.Blocks
 						y1 = uv.Y1;
 						y2 = uv.Y2;
 					}
-					
+
 					var verts = GetFaceVertices(face.Key, element.From, element.To,
-						GetTextureUVMap(Resources, ResolveTexture(raw, face.Value.Texture), x1, x2, y1, y2, face.Value.Rotation),
+						GetTextureUVMap(Resources, ResolveTexture(raw, face.Value.Texture), x1, x2, y1, y2, face.Value.Rotation, Color.White),
 						out int[] indexes);
 
 					float minX = float.MaxValue, minY = float.MaxValue, minZ = float.MaxValue;
@@ -258,80 +340,12 @@ namespace Alex.Graphics.Models.Blocks
 					for (int i = 0; i < verts.Length; i++)
 					{
 						var v = verts[i];
+						//v.Position += (v.Normal * scale);
 						
-						if (element.Rotation.Axis != Axis.Undefined)
-						{
-							var r = element.Rotation;
-							var angle = (float) (r.Angle * (Math.PI / 180f));
-							
-							//angle = r.Axis == Axis.Z ? angle : -angle;
-							//angle = r.Axis == Axis.Y ? -angle : angle;
-							
-							var origin = r.Origin;
-							
-							var c = MathF.Cos(angle);
-							var s = MathF.Sin(angle);
-							
-							switch (r.Axis)
-							{
-								case Axis.Y:
-								{
-									var x = v.Position.X - origin.X;
-									var z = v.Position.Z - origin.Z;
+						v.Position = FixRotation(v.Position, raw, element);
 
-									v.Position.X = origin.X + (x * c - z * s);
-									v.Position.Z = origin.Z + (z * c + x * s);
-								}
-									break;
-
-								case Axis.X:
-								{
-									var x = v.Position.Z - origin.Z;
-									var z = v.Position.Y - origin.Y;
-
-									v.Position.Z = origin.Z + (x * c - z * s);
-									v.Position.Y = origin.Y + (z * c + x * s);
-								}
-									break;
-
-								case Axis.Z:
-								{
-									var x = v.Position.X - origin.X;
-									var z = v.Position.Y - origin.Y;
-
-									v.Position.X = origin.X + (x * c - z * s);
-									v.Position.Y = origin.Y + (z * c + x * s);
-								}
-									break;
-							}
-						}
-
-						if (raw.X > 0)
-						{
-							var rotX = (float) (raw.X * (Math.PI / 180f));
-							var c = MathF.Cos(rotX);
-							var s = MathF.Sin(rotX);
-							var z = v.Position.Z - 8f;
-							var y = v.Position.Y - 8f;
-
-							v.Position.Z = 8f + (z * c - y * s);
-							v.Position.Y = 8f + (y * c + z * s);
-						}
-
-						if (raw.Y > 0)
-						{
-							var rotX = (float) (raw.Y * (Math.PI / 180f));
-							var c = MathF.Cos(rotX);
-							var s = MathF.Sin(rotX);
-							var z = v.Position.X - 8f;
-							var y = v.Position.Z - 8f;
-
-							v.Position.X = 8f + (z * c - y * s);
-							v.Position.Z = 8f + (y * c + z * s);
-						}
-						
 						v.Position /= 16f;
-						
+
 						if (v.Position.X < minX)
 						{
 							minX = v.Position.X;
@@ -437,15 +451,105 @@ namespace Alex.Graphics.Models.Blocks
 					cache.Set(face.Key, new FaceData(verts, indexes, face.Value.Rotation, null));
 				}
 				faceCaches.Add(index.ToString(), cache);
+				
+				var from = FixRotation(element.From, raw, element);
+				var to = FixRotation(element.To, raw, element);
+
+				
+				boxes.Add(new BoundingBox(Vector3.Min(from, to) / 16f, Vector3.Max(from, to) / 16f));
 			}
 
 			min = new Vector3(facesMinX, facesMinY, facesMinZ);
 			max = new Vector3(facesMaxX, facesMaxY, facesMaxZ);
 
+			Boxes = Boxes.Concat(boxes.ToArray()).ToArray();
+			
 			return faceCaches;
 		}
 
-		protected (VertexPositionNormalTextureColor[] vertices, int[] indexes) GetVertices(IWorld world, Vector3 position, IBlock baseBlock,
+		private Vector3 FixRotation(Vector3 v, BlockStateModel raw, BlockModelElement element)
+		{
+			if (element.Rotation.Axis != Axis.Undefined)
+			{
+				var r = element.Rotation;
+				var angle = (float) (r.Angle * (Math.PI / 180f));
+							
+				//angle = r.Axis == Axis.Z ? angle : -angle;
+				//angle = r.Axis == Axis.Y ? -angle : angle;
+							
+				var origin = r.Origin;
+							
+				var c = MathF.Cos(angle);
+				var s = MathF.Sin(angle);
+
+				switch (r.Axis)
+				{
+					case Axis.Y:
+					{
+						var x = v.X - origin.X;
+						var z = v.Z - origin.Z;
+
+						v.X = origin.X + (x * c - z * s);
+						v.Z = origin.Z + (z * c + x * s);
+					}
+						break;
+
+					case Axis.X:
+					{
+						var x = v.Z - origin.Z;
+						var z = v.Y - origin.Y;
+
+						v.Z = origin.Z + (x * c - z * s);
+						v.Y = origin.Y + (z * c + x * s);
+					}
+						break;
+
+					case Axis.Z:
+					{
+						var x = v.X - origin.X;
+						var z = v.Y - origin.Y;
+
+						v.X = origin.X + (x * c - z * s);
+						v.Y = origin.Y + (z * c + x * s);
+					}
+						break;
+				}
+			}
+			
+			if (raw.X > 0)
+			{
+				var rotX = (float) (raw.X * (Math.PI / 180f));
+				var c = MathF.Cos(rotX);
+				var s = MathF.Sin(rotX);
+				var z = v.Z - 8f;
+				var y = v.Y - 8f;
+
+				v.Z = 8f + (z * c - y * s);
+				v.Y = 8f + (y * c + z * s);
+			}
+
+			if (raw.Y > 0)
+			{
+				var rotX = (float) (raw.Y * (Math.PI / 180f));
+				var c = MathF.Cos(rotX);
+				var s = MathF.Sin(rotX);
+				var z = v.X - 8f;
+				var y = v.Z - 8f;
+
+				v.X = 8f + (z * c - y * s);
+				v.Z = 8f + (y * c + z * s);
+			}
+
+			return v;
+		}
+
+		private bool AnyMatching(Vector3 a, Vector3 b)
+		{
+			return (a.X == b.X || a.Y == b.Y || a.Z == b.Z);
+		}
+		
+		protected (VertexPositionNormalTextureColor[] vertices, int[] indexes) GetVertices(IWorld world,
+			Vector3 position, IBlock baseBlock,
 			BlockStateModel[] models, IDictionary<string, FaceCache> faceCache)
 		{
 			var verts = new List<VertexPositionNormalTextureColor>(36);
@@ -464,22 +568,66 @@ namespace Alex.Graphics.Models.Blocks
 				for (var i = 0; i < modelElements.Length; i++)
 				{
 					FaceCache elementCache;
-					if (!faceCache.TryGetValue($"{bsModel.ModelName}:{bsModelIndex}:{i}", out elementCache))
+					if (!faceCache.TryGetValue($"{bsModelIndex}:{i}", out elementCache))
 					{
 						Log.Warn($"Element cache is null!");
 						continue;
 					}
 
+					var scale = 0f;
+
 					var element = modelElements[i];
+
+					var otherElements = modelElements.Where(e => e != element).ToArray();
+					
+					if (otherElements.Any(e =>
+					{
+						return AnyMatching(e.From, element.From) || AnyMatching(e.To, element.To);
+					}))
+					{
+						//scale = (i * 0.001f);
+					}
 
 					foreach (var faceElement in element.Faces)
 					{
 						var facing = faceElement.Key;
+
+						switch (facing)
+						{
+							case BlockFace.Down:
+								if (otherElements.Any(e => Math.Abs(e.From.Y - element.From.Y) < 0.001f))
+									scale = (i * 0.001f);
+								break;
+							case BlockFace.Up:
+								if (otherElements.Any(e => Math.Abs(e.To.Y - element.To.Y) < 0.001f))
+									scale = (i * 0.001f);
+								break;
+							case BlockFace.East:
+								if (otherElements.Any(e => Math.Abs(e.To.X - element.To.X) < 0.001f))
+									scale = (i * 0.001f);
+								break;
+							case BlockFace.West:
+								if (otherElements.Any(e => Math.Abs(e.From.X - element.From.X) < 0.001f))
+									scale = (i * 0.001f);
+								break;
+							case BlockFace.North:
+								if (otherElements.Any(e => Math.Abs(e.From.Z - element.From.Z) < 0.001f))
+									scale = (i * 0.001f);
+								break;
+							case BlockFace.South:
+								if (otherElements.Any(e => Math.Abs(e.To.Z - element.To.Z) < 0.001f))
+									scale = (i * 0.001f);
+								break;
+							case BlockFace.None:
+								break;
+							default:
+								throw new ArgumentOutOfRangeException();
+						}
 						
 						GetCullFaceValues(faceElement.Value.CullFace, facing, out var cullFace);
 
 						var originalCullFace = cullFace;
-						
+
 						if (bsModel.X > 0f)
 						{
 							var offset = (-bsModel.X) / 90;
@@ -498,8 +646,9 @@ namespace Alex.Graphics.Models.Blocks
 							continue;
 
 
-                        FaceData faceVertices;
-						if (!elementCache.TryGet(faceElement.Key, out faceVertices) || faceVertices.Vertices.Length == 0 || faceVertices.Indexes.Length ==0)
+						FaceData faceVertices;
+						if (!elementCache.TryGet(faceElement.Key, out faceVertices) ||
+						    faceVertices.Vertices.Length == 0 || faceVertices.Indexes.Length == 0)
 						{
 							//Log.Debug($"No vertices cached for face {faceElement.Key} in model {bsModel.ModelName}");
 							continue;
@@ -507,7 +656,7 @@ namespace Alex.Graphics.Models.Blocks
 
 						Color faceColor = faceVertices.Vertices[0].Color;
 
-						if (faceElement.Value.TintIndex >= 0)
+						if (faceElement.Value.TintIndex.HasValue)
 						{
 							if (biomeId != -1)
 							{
@@ -523,21 +672,32 @@ namespace Alex.Graphics.Models.Blocks
 								}
 							}
 						}
-						
-						faceColor = AdjustColor(faceColor, facing,
-							world == null ? 15 : GetLight(world, position + cullFace.GetVector3(),
-								false), element.Shade);
 
-                        var initialIndex = verts.Count;
+						//if (element.Shade)
+						{
+							faceColor = AdjustColor(faceColor, facing,
+								world == null
+									? 15
+									: (GetLight(world, position + facing.GetVector3(),
+										true)), element.Shade);
+						}
+
+						//if (facing == BlockFace.North)
+						//{
+						//	faceColor = Color.Magenta;
+						//}
+
+						var s = (facing.GetVector3() * scale);
+						var initialIndex = verts.Count;
 						for (var index = 0; index < faceVertices.Vertices.Length; index++)
 						{
 							var vertex = faceVertices.Vertices[index];
 							vertex.Color = faceColor;
-							vertex.Position = position + vertex.Position;
+							vertex.Position = (position + vertex.Position) + s;
 
 							verts.Add(vertex);
 						}
-						
+
 						for (var index = 0; index < faceVertices.Indexes.Length; index++)
 						{
 							var idx = faceVertices.Indexes[index];
@@ -547,7 +707,7 @@ namespace Alex.Graphics.Models.Blocks
 				}
 			}
 
-			
+
 			return (verts.ToArray(), indexResult.ToArray());
 		}
 

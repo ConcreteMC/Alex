@@ -1,8 +1,8 @@
 namespace Alex.Blocks.Minecraft
 {
-	public class DetectorRail : Block
+	public class DetectorRail : Rail
 	{
-		public DetectorRail() : base(932)
+		public DetectorRail() : base()
 		{
 			Solid = false;
 			Transparent = true;

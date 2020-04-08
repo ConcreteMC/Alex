@@ -2,14 +2,22 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Numerics;
 using System.Security.Cryptography;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Blocks.State;
+using Alex.API.Entities;
+using Alex.API.Events;
+using Alex.API.Events.World;
+using Alex.API.Graphics;
+using Alex.API.Network.Bedrock;
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.API.World;
@@ -18,20 +26,28 @@ using Alex.Blocks.Storage;
 using Alex.Entities;
 using Alex.GameStates;
 using Alex.Graphics.Models.Entity;
+using Alex.Graphics.Models.Entity.Geometry;
 using Alex.Items;
+using Alex.Networking.Bedrock;
+using Alex.ResourcePackLib.Json.Converters;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
 using fNbt;
 using Jose;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET;
-using MiNET.Client;
 using MiNET.Net;
+using MiNET.UI;
 using MiNET.Utils;
+using Newtonsoft.Json;
 using NLog;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Security;
+using BitArray = System.Collections.BitArray;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
+using BlockState = MiNET.Utils.IBlockState;
+using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
 using Inventory = Alex.Utils.Inventory;
 using NibbleArray = MiNET.Utils.NibbleArray;
 using Player = Alex.Entities.Player;
@@ -40,42 +56,53 @@ using UUID = Alex.API.Utils.UUID;
 
 namespace Alex.Worlds.Bedrock
 {
-	public class BedrockClientPacketHandler : McpeClientMessageHandlerBase
+	public class BedrockClientPacketHandler : IMcpeClientMessageHandler
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BedrockClientPacketHandler));
 
-		private BedrockClient BaseClient { get; }
+		private IBedrockNetworkProvider Client { get; }
 		private Alex AlexInstance { get; }
         private CancellationToken CancellationToken { get; }
         private ChunkProcessor ChunkProcessor { get; }
 
-        public BedrockClientPacketHandler(BedrockClient client, Alex alex, CancellationToken cancellationToken) :
-	        base(client)
+        private WorldProvider WorldProvider { get; }
+        private PlayerProfile PlayerProfile { get; }
+        private IEventDispatcher EventDispatcher { get; }
+        private IStorageSystem Storage { get; }
+        public BedrockClientPacketHandler(IBedrockNetworkProvider client, IEventDispatcher eventDispatcher, WorldProvider worldProvider, PlayerProfile profile, Alex alex, CancellationToken cancellationToken) //:
+	       // base(client)
         {
-	        BaseClient = client;
+	        Storage = alex.Services.GetRequiredService<IStorageSystem>();
+	        
+	        EventDispatcher = eventDispatcher;
+	        Client = client;
 	        AlexInstance = alex;
 	        CancellationToken = cancellationToken;
-
+	        WorldProvider = worldProvider;
+	        PlayerProfile = profile;
+	        
 	        AnvilWorldProvider.LoadBlockConverter();
 
-	        ChunkProcessor = new ChunkProcessor(4,
-		        alex.Services.GetService<IOptionsProvider>().AlexOptions.MiscelaneousOptions.ServerSideLighting,
+	        ChunkProcessor = new ChunkProcessor(alex.ThreadPool, 4,
+		        alex.Services.GetRequiredService<IOptionsProvider>().AlexOptions.MiscelaneousOptions.ServerSideLighting,
 		        cancellationToken);
         }
 
+        public bool ReportUnhandled { get; set; } = false;
         private void UnhandledPackage(Packet packet)
 		{
-			Log.Warn($"Unhandled bedrock packet: {packet.GetType().Name} (0x{packet.Id:X2})");
+			if (ReportUnhandled)
+				Log.Warn($"Unhandled bedrock packet: {packet.GetType().Name} (0x{packet.Id:X2})");
 		}
 
-        public override void HandleMcpeServerToClientHandshake(McpeServerToClientHandshake message)
+        public void HandleMcpeServerToClientHandshake(McpeServerToClientHandshake message)
         {
 	        string token = message.token;
 
 	        IDictionary<string, dynamic> headers = JWT.Headers(token);
 	        string x5u = headers["x5u"];
 
-	        ECPublicKeyParameters remotePublicKey = (ECPublicKeyParameters) PublicKeyFactory.CreateKey(x5u.DecodeBase64());
+	        ECPublicKeyParameters remotePublicKey = (ECPublicKeyParameters) PublicKeyFactory.CreateKey(x5u.DecodeBase64Url());
 
 	        var signParam = new ECParameters
 	        {
@@ -93,17 +120,27 @@ namespace Alex.Worlds.Bedrock
 	        try
 	        {
 		        var data = JWT.Decode<HandshakeData>(token, signKey);
-
-		        BaseClient.InitiateEncryption(Base64Url.Decode(x5u), Base64Url.Decode(data.salt));
+				//var data = JWT.Payload<HandshakeData>(token);
+		        Client.InitiateEncryption(Base64Url.Decode(x5u), Base64Url.Decode(data.salt));
 	        }
 	        catch (Exception e)
 	        {
-		        Log.Error(token, e);
+		        //AlexInstance.GameStateManager.Back();
+		        string msg = $"Network error.";
+
+		        if (e is Jose.IntegrityException)
+		        {
+			        msg = $"Invalid server signature!";
+		        }
+		        
+		        Client.ShowDisconnect(msg);
+		        
+		        Log.Error(e, token);
 		        throw;
 	        }
         }
 
-        public override void HandleMcpePlayStatus(McpePlayStatus message)
+        public void HandleMcpePlayStatus(McpePlayStatus message)
 		{
 			Client.PlayerStatus = message.status;
 			
@@ -111,56 +148,109 @@ namespace Alex.Worlds.Bedrock
 			{
 				Client.HasSpawned = true;
 
-				Client.PlayerStatusChangedWaitHandle.Set();
+				Client.PlayerStatusChanged.Set();
 
-				Client.SendMcpeMovePlayer();
-				
-				var packet = McpeSetLocalPlayerAsInitializedPacket.CreateObject();
-				packet.runtimeEntityId = BaseClient.EntityId;
-				BaseClient.SendPacket(packet);
+				//if (Client is Bedrockcl miNetClient)
+				//{
+					//miNetClient.IsEmulator = false;
+				//}
+
+				Client.WorldReceiver.GetPlayerEntity().EntityId = Client.EntityId;
 			}
 		}
 
-        public override void HandleMcpeDisconnect(McpeDisconnect message)
+        public void HandleMcpeDisconnect(McpeDisconnect message)
         {
             Log.Info($"Received disconnect: {message.message}");
-            BaseClient.ShowDisconnect(message.message, false);
-            base.HandleMcpeDisconnect(message);
+            Client.ShowDisconnect(message.message, false);
+            
+           // Client.
+           // base.HandleMcpeDisconnect(message);
         }
 
-        public override void HandleMcpeText(McpeText message)
+        public void HandleMcpeResourcePacksInfo(McpeResourcePacksInfo message)
+        {
+	        if (message.resourcepackinfos.Count != 0)
+	        {
+		        ResourcePackIds resourcePackIds = new ResourcePackIds();
+
+		        foreach (var packInfo in message.resourcepackinfos)
+		        {
+			        resourcePackIds.Add(packInfo.PackIdVersion.Id);
+		        }
+
+		        McpeResourcePackClientResponse response = new McpeResourcePackClientResponse();
+		        response.responseStatus = 2;
+		        response.resourcepackids = resourcePackIds;
+		        Client.SendPacket(response);
+	        }
+	        else
+	        {
+		        McpeResourcePackClientResponse response = new McpeResourcePackClientResponse();
+		        response.responseStatus = 3;
+		        Client.SendPacket(response);
+	        }
+        }
+
+        public void HandleMcpeResourcePackStack(McpeResourcePackStack message)
+        {
+	        McpeResourcePackClientResponse response = new McpeResourcePackClientResponse();
+	        response.responseStatus = 4;
+	        Client.SendPacket(response);
+        }
+
+        public void HandleMcpeText(McpeText message)
 		{
-			BaseClient.WorldProvider?.GetChatReceiver?.Receive(new ChatObject(message.message));
+			EventDispatcher.DispatchEvent(new ChatMessageReceivedEvent(new ChatObject(message.message), (MessageType)message.type));
 		}
 
-		public override void HandleMcpeSetTime(McpeSetTime message)
+		public void HandleMcpeSetTime(McpeSetTime message)
 		{
-			BaseClient.WorldReceiver?.SetTime(message.time);
+			Client.WorldReceiver?.SetTime(message.time);
+			
 			_changeDimensionResetEvent.Set();
 		}
 
-		private IReadOnlyDictionary<uint, Blockstate> _blockStateMap;
-		public override void HandleMcpeStartGame(McpeStartGame message)
+		private IReadOnlyDictionary<uint, BlockStateContainer> _blockStateMap;
+		public void HandleMcpeStartGame(McpeStartGame message)
 		{
 			Client.EntityId = message.runtimeEntityId;
 			Client.NetworkEntityId = message.entityIdSelf;
 			Client.SpawnPoint = message.spawn;
-			Client.CurrentLocation = new MiNET.Utils.PlayerLocation(Client.SpawnPoint, message.unknown1.X, message.unknown1.X, message.unknown1.Y);
+			//Client.CurrentLocation = new MiNET.Utils.PlayerLocation(Client.SpawnPoint, message.spawn.X, message.spawn.X, message.spawn.Y);
 
-			BaseClient.WorldReceiver?.UpdatePlayerPosition(new API.Utils.PlayerLocation(new Microsoft.Xna.Framework.Vector3(Client.SpawnPoint.X, Client.SpawnPoint.Y, Client.SpawnPoint.Z), message.unknown1.X, message.unknown1.X, message.unknown1.Y));
+			Client.WorldReceiver?.UpdatePlayerPosition(new API.Utils.PlayerLocation(new Microsoft.Xna.Framework.Vector3(Client.SpawnPoint.X, Client.SpawnPoint.Y, Client.SpawnPoint.Z), message.spawn.X, message.spawn.X, message.spawn.Y));
 
-			Dictionary<uint, Blockstate> ourStates = new Dictionary<uint, Blockstate>();
-			foreach (var blockstate in message.blockstates)
+			//message.BlockPalette
+			//File.WriteAllText("states.json", JsonConvert.SerializeObject(message.blockPallet));
+			
+			Dictionary<uint, BlockStateContainer> ourStates = new Dictionary<uint, BlockStateContainer>();
+			foreach (var bs in message.blockPalette)
 			{
-				var name = blockstate.Value.Name;
+				foreach (var blockstate in bs.States)
+				{
+					var name = blockstate.Name;
+					if (name != null)
+					{
+						if (name.Equals("minecraft:grass", StringComparison.InvariantCultureIgnoreCase))
+							name = "minecraft:grass_block";
 
-				if (name.Equals("minecraft:grass", StringComparison.InvariantCultureIgnoreCase))
-					name = "minecraft:grass_block";
+						blockstate.Name = name;
+					}
 
-				blockstate.Value.Name = name;
+					//var state = BlockFactory.GetBlockState(name);
+				}
 				
-				//var state = BlockFactory.GetBlockState(name);
-				ourStates.TryAdd((uint)blockstate.Key, blockstate.Value);
+				var name2 = bs.Name;
+				if (name2 != null)
+				{
+					if (name2.Equals("minecraft:grass", StringComparison.InvariantCultureIgnoreCase))
+						name2 = "minecraft:grass_block";
+
+					bs.Name = name2;
+				}
+				
+				ourStates.TryAdd((uint) bs.RuntimeId, bs);
 			}
 			
 			_blockStateMap = ourStates;
@@ -168,55 +258,104 @@ namespace Alex.Worlds.Bedrock
 			
 			//File.WriteAllText("blockies.json", JsonConvert.SerializeObject(message.blockstates, Formatting.Indented));
 			{
-				BaseClient.RequestChunkRadius(Client.ChunkRadius);
+				Client.RequestChunkRadius(Client.ChunkRadius);
 			}
 
-            if (BaseClient.WorldReceiver?.GetPlayerEntity() is Player player)
+            if (Client.WorldReceiver?.GetPlayerEntity() is Player player)
             {
+	            player.EntityId = message.runtimeEntityId;
                 player.Inventory.IsPeInventory = true;
+
+                _entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
             }
         }
 
-		public override void HandleMcpeMovePlayer(McpeMovePlayer message)
+		public void HandleMcpeMovePlayer(McpeMovePlayer message)
 		{
 			if (message.runtimeEntityId != Client.EntityId)
 			{
-				BaseClient.WorldReceiver.UpdateEntityPosition(message.runtimeEntityId, 
-					new PlayerLocation(message.x, message.y - Player.EyeLevel, message.z, message.headYaw, message.yaw, message.pitch));
+				Client.WorldReceiver.UpdateEntityPosition(message.runtimeEntityId, 
+					new PlayerLocation(message.x, message.y - Player.EyeLevel, message.z, message.headYaw, message.yaw, -message.pitch));
 				return;
 			}
 			
-			BaseClient.WorldReceiver.UpdatePlayerPosition(new 
+			Client.WorldReceiver.UpdatePlayerPosition(new 
 				PlayerLocation(message.x, message.y, message.z));
 
-			//BaseClient.SendMcpeMovePlayer();
-			Client.CurrentLocation = new MiNET.Utils.PlayerLocation(message.x, message.y, message.z);
-			BaseClient.SendMcpeMovePlayer();
+			// Client.SendMcpeMovePlayer();
+		//	Client.CurrentLocation = new MiNET.Utils.PlayerLocation(message.x, message.y, message.z);
+			Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(message.x, message.y, message.z), false);
+			
+			_changeDimensionResetEvent.Set();
 		}
 
 
-		public override void HandleMcpeAdventureSettings(McpeAdventureSettings message)
+		public void HandleMcpeAdventureSettings(McpeAdventureSettings message)
 		{
-			base.HandleMcpeAdventureSettings(message);
-			if (BaseClient.WorldReceiver.GetPlayerEntity() is Player player)
+			//Client.UserPermission = (CommandPermission) message.commandPermission;
+			
+			//base.HandleMcpeAdventureSettings(message);
+			if (Client.WorldReceiver.GetPlayerEntity() is Player player)
 			{
 				player.CanFly = ((message.flags & 0x40) == 0x40);
 				player.IsFlying = ((message.flags & 0x200) == 0x200);
 			}
 		}
 
-		private ConcurrentDictionary<UUID, PlayerMob> _players = new ConcurrentDictionary<UUID, PlayerMob>();
-        public override void HandleMcpeAddPlayer(McpeAddPlayer message)
+		private ConcurrentDictionary<MiNET.Utils.UUID, PlayerMob> _players = new ConcurrentDictionary<MiNET.Utils.UUID, PlayerMob>();
+        public void HandleMcpeAddPlayer(McpeAddPlayer message)
 		{
-			UUID u = new UUID(message.uuid.GetBytes());
-			if (_players.TryGetValue(u, out PlayerMob mob))
+		//	UUID u = new UUID(message.uuid.GetBytes());
+			if (_players.TryGetValue(message.uuid, out PlayerMob mob))
 			{
+				//MiNET.Player
 				mob.EntityId = message.runtimeEntityId;
 				mob.KnownPosition = new PlayerLocation(message.x, message.y, message.z, message.headYaw, message.yaw, message.pitch);
-
-				if (BaseClient.WorldReceiver is World w)
+				mob.Velocity = new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ) * 20f;
+				
+				foreach (var meta in message.metadata.GetValues())
+				{
+					switch ((MiNET.Entities.Entity.MetadataFlags) meta.Identifier)
+					{
+						case MiNET.Entities.Entity.MetadataFlags.CollisionBoxHeight:
+						{
+							if (meta is MetadataFloat flt)
+							{
+								mob.Height = flt.Value;
+							}
+						} break;
+						case MiNET.Entities.Entity.MetadataFlags.CollisionBoxWidth:
+						{
+							if (meta is MetadataFloat fltw)
+							{
+								mob.Width = fltw.Value;
+							}
+						} break;
+						case MiNET.Entities.Entity.MetadataFlags.Scale:
+						{
+							if (meta is MetadataFloat flt)
+							{
+								mob.Scale = flt.Value;
+							}
+						} break;
+						case MiNET.Entities.Entity.MetadataFlags.EntityFlags:
+						{
+							if (meta is MetadataLong lng)
+							{
+								BitArray bits = new BitArray(BitConverter.GetBytes(lng.Value));
+								mob.IsInvisible = bits[(int) MiNET.Entities.Entity.DataFlags.Invisible];
+							}
+						}
+							break;
+					}
+				}
+				//mob.Height = message.metadata[(int) MiNET.Entities.Entity.MetadataFlags.CollisionBoxHeight]
+				
+				if (Client.WorldReceiver is World w)
 				{
 					mob.IsSpawned = true;
+					
+					_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
 					w.SpawnEntity(mob.EntityId, mob);
 				}
 				else
@@ -224,33 +363,126 @@ namespace Alex.Worlds.Bedrock
 					mob.IsSpawned = false;
 				}
 			}
+			else
+			{
+				Log.Warn($"Tried spawning invalid player: {message.uuid}");
+			}
 		}
 
-		public override void HandleMcpePlayerList(McpePlayerList message)
+        private static string CachePath { get; set; } = Path.Combine("cache", "geometry");
+		public void HandleMcpePlayerList(McpePlayerList message)
 		{
+			//if (!Directory.Exists("skins"))
+			//	Directory.CreateDirectory("skins");
+			
 			if (message.records is PlayerAddRecords addRecords)
 			{
 				foreach (var r in addRecords)
 				{
 					var u = new API.Utils.UUID(r.ClientUuid.GetBytes());
-					if (_players.ContainsKey(u)) continue;
+					if (_players.ContainsKey(r.ClientUuid)) continue;
 
-					Texture2D skinTexture;
-					if (r.Skin.TryGetBitmap(out Bitmap skinBitmap))
+					bool isTransparent = false;
+					PooledTexture2D skinTexture;
+					Bitmap skinBitmap;
+					if (r.Skin.TryGetBitmap(out skinBitmap))
 					{
 						skinTexture =
-							TextureUtils.BitmapToTexture2D(BaseClient.WorldProvider.Alex.GraphicsDevice, skinBitmap);
+							TextureUtils.BitmapToTexture2D(AlexInstance.GraphicsDevice, skinBitmap);
 					}
 					else
 					{
-						BaseClient.WorldProvider.Alex.Resources.ResourcePack.TryGetBitmap("entity/alex", out Bitmap rawTexture);
-						skinTexture = TextureUtils.BitmapToTexture2D(BaseClient.WorldProvider.Alex.GraphicsDevice, rawTexture);
+						AlexInstance.Resources.ResourcePack.TryGetBitmap("entity/alex", out Bitmap rawTexture);
+						skinTexture = TextureUtils.BitmapToTexture2D(AlexInstance.GraphicsDevice, rawTexture);
 					}
-					
-                    BaseClient.WorldReceiver?.AddPlayerListItem(new PlayerListItem(u, r.DisplayName, Gamemode.Survival, 0));
-					PlayerMob m = new PlayerMob(r.DisplayName, BaseClient.WorldReceiver as World, BaseClient, skinTexture, true);
 
-					if (!_players.TryAdd(u, m))
+					Client.WorldReceiver?.AddPlayerListItem(new PlayerListItem(u, r.DisplayName, Gamemode.Survival, 0));
+
+					EntityModelRenderer renderer = null;
+					
+					if (!string.IsNullOrWhiteSpace(r.Skin.GeometryData) && r.Skin.GeometryData != "null")
+					{
+						try
+						{
+							BedrockGeometry geo =
+								JsonConvert.DeserializeObject<BedrockGeometry>(r.Skin.GeometryData, new SingleOrArrayConverter<Vector3>(), new SingleOrArrayConverter<Vector2>(), new Vector3Converter(), new Vector2Converter());
+
+							if (geo != null && geo.MinecraftGeometry != null)
+							{
+								if (skinBitmap != null)
+								{
+									/*string skinPath = Path.Combine(CachePath,
+										$"{r.Skin.SkinResourcePatch.Geometry.Default}.json");
+									if (!Storage.TryGetDirectory(CachePath, out DirectoryInfo info))
+									{
+										Storage.TryCreateDirectory(CachePath);
+									}
+
+									if (!Storage.TryReadBytes(skinPath, out _))
+									{
+										if (Storage.TryWriteBytes(skinPath,
+											Encoding.UTF8.GetBytes(r.Skin.GeometryData)))
+										{
+											using (MemoryStream ms = new MemoryStream())
+											{
+												skinBitmap.Save(ms, ImageFormat.Png);
+												
+												Storage.TryWriteBytes(
+													Path.Combine(CachePath,
+														$"{r.Skin.SkinResourcePatch.Geometry.Default}.png"),
+													ms.ToArray());
+											}
+										}
+									}*/
+								}
+
+
+								//var abc = geo.MinecraftGeometry.FirstOrDefault()
+								var modelRenderer =
+									new EntityModelRenderer(geo.MinecraftGeometry.FirstOrDefault(x => x.Description.Identifier == r.Skin.SkinResourcePatch.Geometry.Default), skinTexture);
+
+								if (modelRenderer.Valid)
+								{
+									renderer = modelRenderer;
+								}
+								else
+								{
+									modelRenderer.Dispose();
+									
+									//var path = Path.Combine("skins", $"invalid-{r.Skin.SkinId}.json");
+									//if (!File.Exists(path))
+									//{
+									//	File.WriteAllText(path, JsonConvert.SerializeObject(r.Skin, Formatting.Indented));
+									//}
+								}
+
+								//m.ModelRenderer =
+								//	new EntityModelRenderer(geo.MinecraftGeometry.FirstOrDefault(), skinTexture);
+							}
+							else if (geo == null)
+							{
+								//Log.Info($"Geometry was null:");
+
+								var path = Path.Combine("skins", $"{r.Skin.SkinId}.json");
+								if (!File.Exists(path))
+								{
+									File.WriteAllText(path, JsonConvert.SerializeObject(r.Skin, Formatting.Indented));
+								}
+							}
+						}
+						catch (Exception ex)
+						{
+							Log.Warn(ex, $"Could not create geometry: {ex.ToString()}");
+						}
+					}
+
+					PlayerMob m = new PlayerMob(r.DisplayName, Client.WorldReceiver as World, Client, skinTexture);
+					m.UUID = u;
+					m.EntityId = r.EntityId;
+					if (renderer != null)
+						m.ModelRenderer = renderer;
+					
+					if (!_players.TryAdd(r.ClientUuid, m))
 					{
 						Log.Warn($"Duplicate player record! {r.ClientUuid}");
 					}
@@ -260,13 +492,13 @@ namespace Alex.Worlds.Bedrock
             {
 	            foreach (var r in removeRecords)
 	            {
-		            var u = new UUID(r.ClientUuid.GetBytes());
-		            if (_players.TryRemove(u, out var player))
+		           // var u = new UUID(r.ClientUuid.GetBytes());
+		            if (_players.TryRemove(r.ClientUuid, out var player))
 		            {
-			            BaseClient.WorldReceiver?.RemovePlayerListItem(u);
-			            if (BaseClient.WorldReceiver is World w)
+			            Client.WorldReceiver?.RemovePlayerListItem(player.UUID);
+			            if (Client.WorldReceiver is World w)
 			            {
-				            w.DespawnEntity(player.EntityId);
+				            //w.DespawnEntity(player.EntityId);
 			            }
 		            }
 	            }
@@ -286,7 +518,7 @@ namespace Alex.Worlds.Bedrock
 
 				if (entity == null)
 				{
-					entity = new Entity((int) type, null, BaseClient);
+					entity = new Entity((int) type, null, Client);
 				}
 
 				//if (knownData.Height)
@@ -329,7 +561,7 @@ namespace Alex.Worlds.Bedrock
 						if (AlexInstance.Resources.BedrockResourcePack.Textures.TryGetValue(texture,
 							out Bitmap bmp))
 						{
-							Texture2D t = TextureUtils.BitmapToTexture2D(AlexInstance.GraphicsDevice, bmp);
+							PooledTexture2D t = TextureUtils.BitmapToTexture2D(AlexInstance.GraphicsDevice, bmp);
 
 							renderer = new EntityModelRenderer(model, t);
 						}
@@ -357,16 +589,17 @@ namespace Alex.Worlds.Bedrock
 			entity.UUID = new UUID(uuid.ToByteArray());
 
 
-			BaseClient.WorldProvider.SpawnEntity(entityId, entity);
+			WorldProvider.SpawnEntity(entityId, entity);
 		}
 
 
-		public override void HandleMcpeAddEntity(McpeAddEntity message)
+		public void HandleMcpeAddEntity(McpeAddEntity message)
 		{
 			var type = message.entityType.Replace("minecraft:", "");
             if (Enum.TryParse(typeof(EntityType), type, true, out object res))
             {
-                SpawnMob(message.runtimeEntityId, Guid.NewGuid(), (EntityType)res, new PlayerLocation(message.x, message.y, message.z, message.headYaw, message.yaw, message.pitch), new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ));
+                SpawnMob(message.runtimeEntityId, Guid.NewGuid(), (EntityType)res, new PlayerLocation(message.x, message.y, message.z, message.headYaw, message.yaw, message.pitch), new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ) * 20f);
+                _entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
             }
             else
             {
@@ -374,142 +607,192 @@ namespace Alex.Worlds.Bedrock
             }
         }
 
-		public override void HandleMcpeRemoveEntity(McpeRemoveEntity message)
+		private ConcurrentDictionary<long, long> _entityMapping = new ConcurrentDictionary<long, long>();
+		public void HandleMcpeRemoveEntity(McpeRemoveEntity message)
 		{
-			BaseClient.WorldReceiver?.DespawnEntity(message.entityIdSelf);
+			if (_entityMapping.TryRemove(message.entityIdSelf, out var entityId))
+			{
+				WorldProvider.DespawnEntity(entityId);
+			}
+			//WorldProvider.DespawnEntity(message.entityIdSelf);
+			// Client.WorldReceiver?.DespawnEntity(message.entityIdSelf);
 		}
 
-		public override void HandleMcpeAddItemEntity(McpeAddItemEntity message)
+		public void HandleMcpeAddItemEntity(McpeAddItemEntity message)
+		{
+			var slot = message.item;
+			if (ItemFactory.TryGetItem(slot.Id, slot.Metadata, out Item item))
+			{
+				item.Count = slot.Count;
+				item.Nbt = slot.ExtraData;
+
+				ItemEntity itemEntity = new ItemEntity(null, Client);
+				itemEntity.EntityId = message.runtimeEntityId;
+				itemEntity.Velocity = new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ) * 20f;
+				
+				itemEntity.SetItem(item);
+			
+				WorldProvider.SpawnEntity(message.runtimeEntityId, itemEntity);
+
+				_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
+                    
+				// Log.Info($"Set inventory slot: {usedIndex} Id: {slot.Id}:{slot.Metadata} x {slot.Count} Name: {item.DisplayName} IsPeInv: {inventory.IsPeInventory}");
+			}
+		}
+
+		public void HandleMcpeTakeItemEntity(McpeTakeItemEntity message)
 		{
 			UnhandledPackage(message);
+			return;
+			if (Client.WorldReceiver.TryGetEntity(message.runtimeEntityId, out IEntity itemEntity))
+			{
+				IEntity target = null;
+				if (!Client.WorldReceiver.TryGetEntity(message.target, out target))
+				{
+					var player = Client.WorldReceiver.GetPlayerEntity();
+					if (player.EntityId == message.target)
+						target = player;
+				}
+
+				if (target != null)
+				{
+					var distance = itemEntity.KnownPosition.ToVector3() - (target.KnownPosition.ToVector3() + new Microsoft.Xna.Framework.Vector3(0f, (float)target.Height, 0f));
+					itemEntity.Velocity = distance * 20f;
+				}
+			}
 		}
 
-		public override void HandleMcpeTakeItemEntity(McpeTakeItemEntity message)
+		public void HandleMcpeMoveEntity(McpeMoveEntity message)
 		{
-			UnhandledPackage(message);
-		}
-
-		public override void HandleMcpeMoveEntity(McpeMoveEntity message)
-		{
+			var location = new PlayerLocation(message.position.X, message.position.Y, message.position.Z,
+				message.position.HeadYaw, message.position.Yaw, message.position.Pitch);
+			
 			if (message.runtimeEntityId != Client.EntityId)
 			{
-                BaseClient.WorldReceiver.UpdateEntityPosition(message.runtimeEntityId,
-					new PlayerLocation(message.position.X, message.position.Y - Player.EyeLevel, message.position.Z, 
-						message.position.HeadYaw, message.position.Yaw, message.position.Pitch));
+                 Client.WorldReceiver.UpdateEntityPosition(message.runtimeEntityId, location
+					);
 				return;
 			}
-
-           // BaseClient.WorldReceiver.UpdateEntityPosition(message.runtimeEntityId, new PlayerLocation(message.position), true, true, true);
-			UnhandledPackage(message);
-		}
-
-        public override void HandleMcpeMoveEntityDelta(McpeMoveEntityDelta message)
-        {
-            return;
-          /*  if (message.runtimeEntityId != Client.EntityId)
-            {
-                //TODO: Fix delta reading on packets.
-                BaseClient.WorldReceiver.UpdateEntityPosition(message.runtimeEntityId,
-                    new PlayerLocation(message.Delta), true, true, true);
-                return;
-            }*/
-        }
-
-        public override void HandleMcpeRiderJump(McpeRiderJump message)
-		{
-			UnhandledPackage(message);
-		}
-
-		public override void HandleMcpeUpdateBlock(McpeUpdateBlock message)
-		{
-			if (message.storage != 0)
+			else
 			{
-				Log.Warn($"UPDATEBLOCK: Unsupported block storage! {message.storage}");
-				return;
+				Client.WorldReceiver.UpdatePlayerPosition(location);
 			}
+
+           //  Client.WorldReceiver.UpdateEntityPosition(message.runtimeEntityId, new PlayerLocation(message.position), true, true, true);
+			UnhandledPackage(message);
+		}
+
+		public void HandleMcpeMoveEntityDelta(McpeMoveEntityDelta message)
+		{
+			//message.GetCurrentPosition(new MiNET.Utils.PlayerLocation(Vector3.Zero));
+			if (message.runtimeEntityId != Client.EntityId)
+			{
+				//TODO: Fix delta reading on packets.
+
+				bool updatePitch = (message.flags & McpeMoveEntityDelta.HasRotX) != 0;
+				bool updateYaw = (message.flags & McpeMoveEntityDelta.HasY) != 0;
+				bool updateHeadYaw = (message.flags & McpeMoveEntityDelta.HasZ) != 0;
+				
+				bool updateLook = (updateHeadYaw || updateYaw || updatePitch);
+/*
+				if ((message.flags & McpeMoveEntityDelta.HasX) != 0)
+				{
+					startPosition.X = 256;
+				}
+			
+				if ((message.flags & McpeMoveEntityDelta.HasY) != 0)
+				{
+					startPosition.Y = 256;
+				}
+			
+				if ((message.flags & McpeMoveEntityDelta.HasZ) != 0)
+				{
+					startPosition.Z = 256;
+				}
+			*/
+
+				/*var relative = endPosition.ToVector3() - startPosition.ToVector3();
+				relative.X = float.IsNaN(relative.X) ? 0 : relative.X;
+				relative.Y = float.IsNaN(relative.Y) ? 0 : relative.Y;
+				relative.Z = float.IsNaN(relative.Z) ? 0 : relative.Z;*/
+
+				/*Client.WorldReceiver.UpdateEntityPosition(message.runtimeEntityId,
+					new PlayerLocation(relative.X, relative.Y, relative.Z, message.currentPosition.HeadYaw,
+						message.currentPosition.Yaw, message.currentPosition.Pitch)
+					{
+						OnGround = message.isOnGround
+					}, true, updateHeadYaw || updateYaw, updatePitch);*/
+				
+				//	Log.Info($"Rel: {relative}");
+
+				if (message is EntityDelta ed)
+				{
+
+					if (Client.WorldReceiver.TryGetEntity(message.runtimeEntityId, out var entity))
+					{
+						var known = entity.KnownPosition;
+						known = new PlayerLocation(known.X, known.Y, known.Z, known.HeadYaw, known.Yaw, known.Pitch);
+						
+						var endPosition = ed.GetCurrentPosition(known);
+
+						if (!ed.HasX)
+						{
+							endPosition.X = known.X;
+						}
+						else
+						{
+							endPosition.X = float.IsNaN(endPosition.X) ? known.X : endPosition.X;
+						}
+
+						if (!ed.HasY)
+						{
+							endPosition.Y = known.Y;
+						}
+						else
+						{
+							endPosition.Y = float.IsNaN(endPosition.Y) ? known.Y : endPosition.Y;
+						}
+
+						if (!ed.HasZ)
+						{
+							endPosition.Z = known.Z;
+						}
+						else
+						{
+							endPosition.Z = float.IsNaN(endPosition.Z) ? known.Z : endPosition.Z;
+						}
+
+						endPosition.Yaw = ed.HasYaw ? endPosition.Yaw : known.Yaw;
+						endPosition.HeadYaw = ed.HasHeadYaw ? endPosition.HeadYaw : known.HeadYaw;
+						endPosition.Pitch = ed.HasPitch ? -endPosition.Pitch : known.Pitch;
+
+						//	Log.Info($"Distance: {endPosition.DistanceTo(known)} | Delta: {(endPosition - known.ToVector3())} | Start: {known.ToVector3()} | End: {endPosition.ToVector3()}");
+
+						entity.KnownPosition = endPosition;
+					}
+				}
+			}
+		}
+
+		public void HandleMcpeRiderJump(McpeRiderJump message)
+		{
+			UnhandledPackage(message);
+		}
+
+		public void HandleMcpeUpdateBlock(McpeUpdateBlock message)
+		{
+			//if (message.storage != 0)
+			//{
+			//	Log.Warn($"UPDATEBLOCK: Unsupported block storage! {message.storage}");
+			//	return;
+			//}
 			
 			if (_blockStateMap.TryGetValue(message.blockRuntimeId, out var bs))
 			{
-				IBlockState state = null;
-				
-				var result =
-					BlockFactory.RuntimeIdTable.FirstOrDefault(xx =>
-						xx.Name == bs.Name);
-
-				if (result != null && result.Id >= 0)
-				{
-					var reverseMap = MiNET.Worlds.AnvilWorldProvider.Convert.FirstOrDefault(map =>
-						map.Value.Item1 == result.Id);
-
-					var id = result.Id;
-					if (reverseMap.Value != null)
-					{
-						id = reverseMap.Key;
-					}
-													        
-					var res = BlockFactory.GetBlockStateID(
-						(int) id,
-						(byte) bs.Data);
-
-					if (AnvilWorldProvider.BlockStateMapper.TryGetValue(
-						res,
-						out var res2))
-					{
-														        
-						var t = BlockFactory.GetBlockState(res2);
-						t = ChunkProcessor.TranslateBlockState(t, id,
-							bs.Data);
-
-						state = t;
-					}
-					else
-					{
-						Log.Info(
-							$"Did not find anvil statemap: {result.Name}");
-						state = ChunkProcessor.TranslateBlockState(
-							BlockFactory.GetBlockState(result.Name),
-							id, bs.Data);
-					}
-				}
-
-				if (state == null)
-				{
-					state = ChunkProcessor.TranslateBlockState(
-						BlockFactory.GetBlockState(bs.Name),
-						-1, bs.Data);
-				}
-
-				if (state != null)
-					BaseClient.WorldReceiver?.SetBlockState(
+				if (ChunkProcessor.TryConvertBlockState(bs, out var state))
+					 Client.WorldReceiver?.SetBlockState(
 						new BlockCoordinates(message.coordinates.X, message.coordinates.Y, message.coordinates.Z), 
-						state);
-				
-				/*
-				var result =
-					BlockFactory.RuntimeIdTable.FirstOrDefault(xx => xx.Name == bs.Name);
-				
-				uint res = 0;
-				bool ss = false;
-				if (result != null && result.Id >= 0)
-				{
-					res = BlockFactory.GetBlockStateID((int) result.Id, (byte) bs.Data);
-					ss = true;
-				}
-
-				if (ss && AnvilWorldProvider.BlockStateMapper.TryGetValue(res, out res))
-				{
-					var a = BlockFactory.GetBlockState(res);
-					BaseClient.WorldReceiver?.SetBlockState(
-						new BlockCoordinates(message.coordinates.X, message.coordinates.Y, message.coordinates.Z), 
-						a);
-				}
-				else
-				{
-
-					BaseClient.WorldReceiver?.SetBlockState(
-						new BlockCoordinates(message.coordinates.X, message.coordinates.Y, message.coordinates.Z),
-						BlockFactory.GetBlockState(bs.Name));
-				}*/
+						state, (int) message.storage);
 			}
 			else
 			{
@@ -517,214 +800,291 @@ namespace Alex.Worlds.Bedrock
 			}
 		}
 
-		public override void HandleMcpeAddPainting(McpeAddPainting message)
+		public void HandleMcpeAddPainting(McpeAddPainting message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeExplode(McpeExplode message)
+		public void HandleMcpeTickSync(McpeTickSync message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeLevelSoundEventOld(McpeLevelSoundEventOld message)
+		/*public void HandleMcpeExplode(McpeExplode message)
+		{
+			UnhandledPackage(message);
+		}*/
+
+		public void HandleMcpeLevelSoundEventOld(McpeLevelSoundEventOld message)
 		{
 			UnhandledPackage(message);
         }
 
-		public override void HandleMcpeSpawnParticleEffect(McpeSpawnParticleEffect message)
+		public void HandleMcpeSpawnParticleEffect(McpeSpawnParticleEffect message)
 		{
 			UnhandledPackage(message);
         }
 
-		public override void HandleMcpeAvailableEntityIdentifiers(McpeAvailableEntityIdentifiers message)
+		public void HandleMcpeAvailableEntityIdentifiers(McpeAvailableEntityIdentifiers message)
 		{
 			UnhandledPackage(message);
         }
 
-		public override void HandleMcpeLevelSoundEventV2(McpeLevelSoundEventV2 message)
+		public void HandleMcpeLevelSoundEventV2(McpeLevelSoundEventV2 message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeNetworkChunkPublisherUpdate(McpeNetworkChunkPublisherUpdate message)
+		public void HandleMcpeNetworkSettingsPacket(McpeNetworkSettingsPacket message)
+		{
+			UnhandledPackage(message);
+		}
+
+		public void HandleMcpeNetworkChunkPublisherUpdate(McpeNetworkChunkPublisherUpdate message)
+		{
+			((BedrockClient)Client).LastChunkPublish = message;
+			//UnhandledPackage(message);
+			//Log.Info($"Chunk publisher update: {message.coordinates} | {message.radius}");
+		}
+
+		public void HandleMcpeBiomeDefinitionList(McpeBiomeDefinitionList message)
 		{
 			UnhandledPackage(message);
         }
 
-		public override void HandleMcpeBiomeDefinitionList(McpeBiomeDefinitionList message)
-		{
-			UnhandledPackage(message);
-        }
-
-		public override void HandleMcpeLevelSoundEvent(McpeLevelSoundEvent message)
+		public void HandleMcpeLevelSoundEvent(McpeLevelSoundEvent message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeLevelEventGeneric(McpeLevelEventGeneric message)
+		public void HandleMcpeLevelEventGeneric(McpeLevelEventGeneric message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeLecternUpdate(McpeLecternUpdate message)
+		public void HandleMcpeLecternUpdate(McpeLecternUpdate message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeVideoStreamConnect(McpeVideoStreamConnect message)
+		public void HandleMcpeVideoStreamConnect(McpeVideoStreamConnect message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeClientCacheStatus(MiNET.Net.McpeClientCacheStatus message)
+		public void HandleMcpeClientCacheStatus(MiNET.Net.McpeClientCacheStatus message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeOnScreenTextureAnimation(McpeOnScreenTextureAnimation message)
+		public void HandleMcpeOnScreenTextureAnimation(McpeOnScreenTextureAnimation message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeMapCreateLockedCopy(McpeMapCreateLockedCopy message)
+		public void HandleMcpeMapCreateLockedCopy(McpeMapCreateLockedCopy message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeStructureTemplateDataExportRequest(McpeStructureTemplateDataExportRequest message)
+		public void HandleMcpeStructureTemplateDataExportRequest(McpeStructureTemplateDataExportRequest message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeStructureTemplateDataExportResponse(McpeStructureTemplateDataExportResponse message)
+		public void HandleMcpeStructureTemplateDataExportResponse(McpeStructureTemplateDataExportResponse message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeUpdateBlockProperties(McpeUpdateBlockProperties message)
+		public void HandleMcpeUpdateBlockProperties(McpeUpdateBlockProperties message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeClientCacheBlobStatus(McpeClientCacheBlobStatus message)
+		public void HandleMcpeClientCacheBlobStatus(McpeClientCacheBlobStatus message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeClientCacheMissResponse(McpeClientCacheMissResponse message)
+		public void HandleMcpeClientCacheMissResponse(McpeClientCacheMissResponse message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeLevelEvent(McpeLevelEvent message)
+		public void HandleMcpeLevelEvent(McpeLevelEvent message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeBlockEvent(McpeBlockEvent message)
+		public void HandleMcpeBlockEvent(McpeBlockEvent message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeEntityEvent(McpeEntityEvent message)
+		public void HandleMcpeEntityEvent(McpeEntityEvent message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeMobEffect(McpeMobEffect message)
+		public void HandleMcpeMobEffect(McpeMobEffect message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeUpdateAttributes(McpeUpdateAttributes message)
+		public void HandleMcpeUpdateAttributes(McpeUpdateAttributes message)
+		{
+			if (Client.WorldReceiver?.GetPlayerEntity() is Player player && player.EntityId == message.runtimeEntityId)
+			{
+				if (message.attributes.TryGetValue("minecraft:health", out var value))
+				{
+					player.MaxHealth = (int) value.MaxValue;
+					player.Health = (int) value.Value;
+				}
+
+				if (message.attributes.TryGetValue("minecraft:movement", out var movement))
+				{
+				//	player.MovementSpeed = movement.Value;
+				}
+
+				if (message.attributes.TryGetValue("minecraft:player.hunger", out var hunger))
+				{
+					player.Hunger = (int) hunger.Value;
+					player.MaxHunger = (int) hunger.MaxValue;
+				}
+				
+				if (message.attributes.TryGetValue("minecraft:player.exhaustion", out var exhaustion))
+				{
+					player.Exhaustion = (int) exhaustion.Value;
+					player.MaxExhaustion = (int) exhaustion.MaxValue;
+				}
+				
+				if (message.attributes.TryGetValue("minecraft:player.saturation", out var saturation))
+				{
+					player.Saturation = (int) saturation.Value;
+					player.MaxSaturation = (int) saturation.MaxValue;
+				}
+			}
+		}
+
+		public void HandleMcpeInventoryTransaction(McpeInventoryTransaction message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeInventoryTransaction(McpeInventoryTransaction message)
+		public void HandleMcpeMobEquipment(McpeMobEquipment message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeMobEquipment(McpeMobEquipment message)
+		public void HandleMcpeMobArmorEquipment(McpeMobArmorEquipment message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeMobArmorEquipment(McpeMobArmorEquipment message)
+		public void HandleMcpeInteract(McpeInteract message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeInteract(McpeInteract message)
+		public void HandleMcpeHurtArmor(McpeHurtArmor message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeHurtArmor(McpeHurtArmor message)
+		public void HandleMcpeSetEntityData(McpeSetEntityData message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeSetEntityData(McpeSetEntityData message)
+		public void HandleMcpeSetEntityMotion(McpeSetEntityMotion message)
+		{
+			var v = message.velocity;
+			var velocity = new Microsoft.Xna.Framework.Vector3(v.X, v.Y, v.Z) * 20f;
+
+			IEntity entity = null;
+			if (!Client.WorldReceiver.TryGetEntity(message.runtimeEntityId, out entity))
+			{
+				if (Client.WorldReceiver.GetPlayerEntity() is Player player &&
+				    player.EntityId == message.runtimeEntityId)
+				{
+					entity = player;
+				}
+			}
+
+			if (entity == null)
+				return;
+			
+			var old = entity.Velocity;
+			entity.Velocity += new Microsoft.Xna.Framework.Vector3(velocity.X - old.X, velocity.Y - old.Y, velocity.Z - old.Z);
+
+			//UnhandledPackage(message);
+		}
+
+		public void HandleMcpeSetEntityLink(McpeSetEntityLink message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeSetEntityMotion(McpeSetEntityMotion message)
+		public void HandleMcpeSetHealth(McpeSetHealth message)
 		{
-			UnhandledPackage(message);
+			if (Client.WorldReceiver?.GetPlayerEntity() is Player player)
+			{
+				player.Health = message.health;
+			}
 		}
 
-		public override void HandleMcpeSetEntityLink(McpeSetEntityLink message)
+		public void HandleMcpeSetSpawnPosition(McpeSetSpawnPosition message)
 		{
-			UnhandledPackage(message);
-		}
-
-		public override void HandleMcpeSetHealth(McpeSetHealth message)
-		{
-			UnhandledPackage(message);
-		}
-
-		public override void HandleMcpeSetSpawnPosition(McpeSetSpawnPosition message)
-		{
-			Client.SpawnPoint = new Vector3(message.coordinates.X, message.coordinates.Y, message.coordinates.Z);
+			Client.SpawnPoint = new Vector3(message.coordinates.X, (float) (message.coordinates.Y), message.coordinates.Z);
 			Client.LevelInfo.SpawnX = (int)Client.SpawnPoint.X;
 			Client.LevelInfo.SpawnY = (int)Client.SpawnPoint.Y;
 			Client.LevelInfo.SpawnZ = (int)Client.SpawnPoint.Z;
 
 			
 			//		Client.SpawnPoint = new Vector3(message.);
+
+			if (Client.WorldReceiver is World w)
+			{
+				w.SpawnPoint = new Microsoft.Xna.Framework.Vector3(Client.SpawnPoint.X, Client.SpawnPoint.Y, Client.SpawnPoint.Z);
+			}
 		}
 
-		public override void HandleMcpeAnimate(McpeAnimate message)
+		public void HandleMcpeAnimate(McpeAnimate message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeContainerOpen(McpeContainerOpen message)
+		public void HandleMcpeRespawn(McpeRespawn message)
+		{
+			Client.WorldReceiver.UpdatePlayerPosition(new PlayerLocation(message.x, message.y, message.z));
+			Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(message.x, message.y, message.z), false);
+			
+			_changeDimensionResetEvent.Set();
+		}
+
+		public void HandleMcpeContainerOpen(McpeContainerOpen message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeContainerClose(McpeContainerClose message)
+		public void HandleMcpeContainerClose(McpeContainerClose message)
 		{
 			UnhandledPackage(message);
 		}
 
-        public override void HandleMcpeInventoryContent(McpeInventoryContent message)
+        public void HandleMcpeInventoryContent(McpeInventoryContent message)
 		{
 			Inventory inventory = null;
 			if (message.inventoryId == 0x00)
 			{
-				if (BaseClient.WorldReceiver?.GetPlayerEntity() is Player player)
+				if ( Client.WorldReceiver?.GetPlayerEntity() is Player player)
 				{
 					inventory = player.Inventory;
 				}
 			}
 
-			if (inventory == null) return;
+			if (inventory == null || message.input == null) return;
 
 			for (var index = 0; index < message.input.Count; index++)
 			{
@@ -735,7 +1095,11 @@ namespace Alex.Worlds.Bedrock
                 if (ItemFactory.TryGetItem(slot.Id, slot.Metadata, out Item item))
 				{
                     item.Count = slot.Count;
+                    item.Nbt = slot.ExtraData;
+                    
                     inventory[usedIndex] = item;
+                    
+                   // Log.Info($"Set inventory slot: {usedIndex} Id: {slot.Id}:{slot.Metadata} x {slot.Count} Name: {item.DisplayName} IsPeInv: {inventory.IsPeInventory}");
 				}
                 else
                 {
@@ -744,12 +1108,12 @@ namespace Alex.Worlds.Bedrock
             }
 		}
 
-		public override void HandleMcpeInventorySlot(McpeInventorySlot message)
+		public void HandleMcpeInventorySlot(McpeInventorySlot message)
 		{
 			Inventory inventory = null;
 			if (message.inventoryId == 0x00)
 			{
-				if (BaseClient.WorldReceiver?.GetPlayerEntity() is Player player)
+				if ( Client.WorldReceiver?.GetPlayerEntity() is Player player)
 				{
 					inventory = player.Inventory;
                     if (!inventory.IsPeInventory)
@@ -757,13 +1121,15 @@ namespace Alex.Worlds.Bedrock
                 }
 			}
 
-			if (inventory == null) return;
+			if (inventory == null || message.item == null) return;
 			
 			var index = (int)message.slot;
-
+			
             if (ItemFactory.TryGetItem(message.item.Id, message.item.Metadata, out Item item))
             {
                 item.Count = message.item.Count;
+                item.Nbt = message.item.ExtraData;
+                
 				inventory[index] = item;
               //  Log.Info($"Set inventory slot: {message.slot} Id: {message.item.Id}:{message.item.Metadata} x {message.item.Count} Name: {item.DisplayName} IsPeInv: {inventory.IsPeInventory}");
             }
@@ -773,37 +1139,38 @@ namespace Alex.Worlds.Bedrock
             }
 		}
 
-        public override void HandleMcpePlayerHotbar(McpePlayerHotbar message)
+        public void HandleMcpePlayerHotbar(McpePlayerHotbar message)
         {
             UnhandledPackage(message);
         }
 
-        public override void HandleMcpeContainerSetData(McpeContainerSetData message)
+        public void HandleMcpeContainerSetData(McpeContainerSetData message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeCraftingData(McpeCraftingData message)
+		public void HandleMcpeCraftingData(McpeCraftingData message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeCraftingEvent(McpeCraftingEvent message)
+		public void HandleMcpeCraftingEvent(McpeCraftingEvent message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeGuiDataPickItem(McpeGuiDataPickItem message)
+		public void HandleMcpeGuiDataPickItem(McpeGuiDataPickItem message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeBlockEntityData(McpeBlockEntityData message)
+		public void HandleMcpeBlockEntityData(McpeBlockEntityData message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeLevelChunk(McpeLevelChunk msg)
+		private int _chunksReceived = 0;
+		public void HandleMcpeLevelChunk(McpeLevelChunk msg)
 		{
 			var cacheEnabled = msg.cacheEnabled;
 			var subChunkCount = msg.subChunkCount;
@@ -818,30 +1185,40 @@ namespace Alex.Worlds.Bedrock
 				//Nothing to read.
 				return;
 			}
-
-			ChunkProcessor.HandleChunkData(cacheEnabled, subChunkCount, chunkData, cx, cz, BaseClient.ChunkReceived);
+			
+			ChunkProcessor.HandleChunkData(cacheEnabled, subChunkCount, chunkData, cx, cz,
+				column =>
+				{
+					EventDispatcher.DispatchEvent(
+						new ChunkReceivedEvent(new ChunkCoordinates(column.X, column.Z), column));
+				});
 		}
 
 		private AutoResetEvent _changeDimensionResetEvent = new AutoResetEvent(false);
-		public override void HandleMcpeChangeDimension(McpeChangeDimension message)
+		public void HandleMcpeChangeDimension(McpeChangeDimension message)
 		{
-			base.HandleMcpeChangeDimension(message);
-			if (BaseClient.WorldProvider is BedrockWorldProvider provider)
+			_chunksReceived = 0;
+			//base.HandleMcpeChangeDimension(message);
+			if (WorldProvider is BedrockWorldProvider provider)
 			{
 				LoadingWorldState loadingWorldState = new LoadingWorldState();
 				AlexInstance.GameStateManager.SetActiveState(loadingWorldState, true);
 				loadingWorldState.UpdateProgress(LoadingState.LoadingChunks, 0);
-				
-				
-				foreach (var loadedChunk in provider.LoadedChunks)
+
+				ThreadPool.QueueUserWorkItem(async (o) =>
 				{
-					provider.UnloadChunk(loadedChunk);
-				}
+					McpePlayerAction action = McpePlayerAction.CreateObject();
+					action.runtimeEntityId = Client.EntityId;
+					action.actionId = (int) PlayerAction.DimensionChangeAck;
+					Client.SendPacket(action);
 				
-				ThreadPool.QueueUserWorkItem(async o =>
-				{
+					foreach (var loadedChunk in provider.LoadedChunks)
+					{
+						provider.UnloadChunk(loadedChunk);
+					}
+					
 					double radiusSquared = Math.Pow(Client.ChunkRadius, 2);
-					var target = radiusSquared * 3;
+					var target = radiusSquared * 2;
 
 					int percentage = 0;
 					bool ready = false;
@@ -853,147 +1230,186 @@ namespace Alex.Worlds.Bedrock
 						loadingWorldState.UpdateProgress(LoadingState.LoadingChunks,
 							percentage);
 
+						//if (!ready)
+						//{
 						if (!ready)
 						{
-							if (_changeDimensionResetEvent.WaitOne(0))
+							if (_changeDimensionResetEvent.WaitOne(5))
+							{
 								ready = true;
+							}
 						}
-						else
-						{
-							await Task.Delay(50);
-						}
-						
-					} while (!ready || percentage < 99);
-					
+
+
+						if (percentage >= 100 && ready)
+							break;
+						//	}
+						//	else
+						//	{
+						//	await Task.Delay(50);
+						//}
+					} while (true);
+
 					AlexInstance.GameStateManager.Back();
+
+					if (Client.WorldReceiver is World world)
+					{
+						world.UpdatePlayerPosition(new PlayerLocation(message.position.X, message.position.Y, message.position.Z));
+						Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(message.position.X, message.position.Y, message.position.Z), false);
+						//Client.CurrentLocation = new MiNET.Utils.PlayerLocation(message.position.X, message.position.Y, message.position.Z);
+					}
+
+					//Client.SendMcpeMovePlayer();
 				});
 			}
 		}
 		
-		public override void HandleMcpeSetCommandsEnabled(McpeSetCommandsEnabled message)
+		public void HandleMcpeSetCommandsEnabled(McpeSetCommandsEnabled message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeSetDifficulty(McpeSetDifficulty message)
+		public void HandleMcpeSetDifficulty(McpeSetDifficulty message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeSetPlayerGameType(McpeSetPlayerGameType message)
+		public void HandleMcpeSetPlayerGameType(McpeSetPlayerGameType message)
+		{
+			if (Client.WorldReceiver.GetPlayerEntity() is Player player)
+			{
+				player.UpdateGamemode((Gamemode) message.gamemode);
+			}
+			//UnhandledPackage(message);
+		}
+
+		public void HandleMcpeSimpleEvent(McpeSimpleEvent message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeSimpleEvent(McpeSimpleEvent message)
+		public void HandleMcpeTelemetryEvent(McpeTelemetryEvent message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeTelemetryEvent(McpeTelemetryEvent message)
+		public void HandleMcpeSpawnExperienceOrb(McpeSpawnExperienceOrb message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeSpawnExperienceOrb(McpeSpawnExperienceOrb message)
+		public void HandleMcpeClientboundMapItemData(McpeClientboundMapItemData message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeClientboundMapItemData(McpeClientboundMapItemData message)
+		public void HandleMcpeMapInfoRequest(McpeMapInfoRequest message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeMapInfoRequest(McpeMapInfoRequest message)
+		public void HandleMcpeRequestChunkRadius(McpeRequestChunkRadius message)
 		{
-			UnhandledPackage(message);
+			 Client.RequestChunkRadius(Client.ChunkRadius);
 		}
 
-		public override void HandleMcpeRequestChunkRadius(McpeRequestChunkRadius message)
-		{
-			BaseClient.RequestChunkRadius(Client.ChunkRadius);
-		}
-
-		public override void HandleMcpeChunkRadiusUpdate(McpeChunkRadiusUpdate message)
+		public void HandleMcpeChunkRadiusUpdate(McpeChunkRadiusUpdate message)
 		{
 			Client.ChunkRadius = message.chunkRadius;
 			//UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeItemFrameDropItem(McpeItemFrameDropItem message)
+		public void HandleMcpeItemFrameDropItem(McpeItemFrameDropItem message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeGameRulesChanged(McpeGameRulesChanged message)
+		public void HandleMcpeGameRulesChanged(McpeGameRulesChanged message)
+		{
+			if (!(Client.WorldReceiver.GetPlayerEntity() is Player player))
+				return;
+
+			var lvl = player.Level;
+			
+			foreach (var gr in message.rules)
+			{
+				lvl.SetGameRule(gr);
+			}
+		}
+
+		public void HandleMcpeCamera(McpeCamera message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeCamera(McpeCamera message)
+		public void HandleMcpeBossEvent(McpeBossEvent message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeBossEvent(McpeBossEvent message)
+		public void HandleMcpeShowCredits(McpeShowCredits message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeShowCredits(McpeShowCredits message)
+		public void HandleMcpeAvailableCommands(McpeAvailableCommands message)
+		{
+			// Client.LoadCommands(message.CommandSet);
+			UnhandledPackage(message);
+		}
+
+		public void HandleMcpeCommandOutput(McpeCommandOutput message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeAvailableCommands(McpeAvailableCommands message)
-		{
-			BaseClient.LoadCommands(message.CommandSet);
-			//UnhandledPackage(message);
-		}
-
-		public override void HandleMcpeCommandOutput(McpeCommandOutput message)
+		public void HandleMcpeUpdateTrade(McpeUpdateTrade message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeUpdateTrade(McpeUpdateTrade message)
+		public void HandleMcpeUpdateEquipment(McpeUpdateEquipment message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeUpdateEquipment(McpeUpdateEquipment message)
+		public void HandleMcpeResourcePackDataInfo(McpeResourcePackDataInfo message)
 		{
-			UnhandledPackage(message);
+			throw new NotImplementedException();
 		}
 
-		public override void HandleMcpeTransfer(McpeTransfer message)
+		public void HandleMcpeResourcePackChunkData(McpeResourcePackChunkData message)
 		{
-			BaseClient.SendDisconnectionNotification();
-			BaseClient.StopClient();
+			throw new NotImplementedException();
+		}
+
+		public void HandleMcpeTransfer(McpeTransfer message)
+		{
+			 Client.SendDisconnectionNotification();
+			 Client.Close();
 			
 			IPHostEntry hostEntry = Dns.GetHostEntry(message.serverAddress);
 
 			if (hostEntry.AddressList.Length > 0)
 			{
 				var ip = hostEntry.AddressList[0];
-				AlexInstance.ConnectToServer(new IPEndPoint(ip, message.port), BaseClient.PlayerProfile, true);
+				AlexInstance.ConnectToServer(new IPEndPoint(ip, message.port), PlayerProfile, true);
 			}
 		}
 
-		public override void HandleMcpePlaySound(McpePlaySound message)
+		public void HandleMcpePlaySound(McpePlaySound message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeStopSound(McpeStopSound message)
+		public void HandleMcpeStopSound(McpeStopSound message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeSetTitle(McpeSetTitle message)
+		public void HandleMcpeSetTitle(McpeSetTitle message)
 		{
-			var titleComponent = BaseClient.WorldProvider?.TitleComponent;
+			var titleComponent = WorldProvider?.TitleComponent;
 			if (titleComponent == null)
 				return;
 			
@@ -1026,118 +1442,125 @@ namespace Alex.Worlds.Bedrock
 			//UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeAddBehaviorTree(McpeAddBehaviorTree message)
+		public void HandleMcpeAddBehaviorTree(McpeAddBehaviorTree message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeStructureBlockUpdate(McpeStructureBlockUpdate message)
+		public void HandleMcpeStructureBlockUpdate(McpeStructureBlockUpdate message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeShowStoreOffer(McpeShowStoreOffer message)
+		public void HandleMcpeShowStoreOffer(McpeShowStoreOffer message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpePlayerSkin(McpePlayerSkin message)
+		public void HandleMcpePlayerSkin(McpePlayerSkin message)
 		{
 			//TODO: Load skin
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeSubClientLogin(McpeSubClientLogin message)
+		public void HandleMcpeSubClientLogin(McpeSubClientLogin message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeInitiateWebSocketConnection(McpeInitiateWebSocketConnection message)
+		public void HandleMcpeInitiateWebSocketConnection(McpeInitiateWebSocketConnection message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeSetLastHurtBy(McpeSetLastHurtBy message)
+		public void HandleMcpeSetLastHurtBy(McpeSetLastHurtBy message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeBookEdit(McpeBookEdit message)
+		public void HandleMcpeBookEdit(McpeBookEdit message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeNpcRequest(McpeNpcRequest message)
+		public void HandleMcpeNpcRequest(McpeNpcRequest message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeModalFormRequest(McpeModalFormRequest message)
+		public void HandleMcpeModalFormRequest(McpeModalFormRequest message)
+		{
+			if (Client.WorldReceiver is World world)
+			{
+				Form form = JsonConvert.DeserializeObject<Form>(message.data, new FormConverter(), new CustomElementConverter());
+
+				world.FormManager.Show(message.formId, form);
+			}
+			
+			//UnhandledPackage(message);
+		}
+
+		public void HandleMcpeServerSettingsResponse(McpeServerSettingsResponse message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeServerSettingsResponse(McpeServerSettingsResponse message)
+		public void HandleMcpeShowProfile(McpeShowProfile message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeShowProfile(McpeShowProfile message)
+		public void HandleMcpeSetDefaultGameType(McpeSetDefaultGameType message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeSetDefaultGameType(McpeSetDefaultGameType message)
+		public void HandleMcpeRemoveObjective(McpeRemoveObjective message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeRemoveObjective(McpeRemoveObjective message)
+		public void HandleMcpeSetDisplayObjective(McpeSetDisplayObjective message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeSetDisplayObjective(McpeSetDisplayObjective message)
+		public void HandleMcpeSetScore(McpeSetScore message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeSetScore(McpeSetScore message)
+		public void HandleMcpeLabTable(McpeLabTable message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeLabTable(McpeLabTable message)
+		public void HandleMcpeUpdateBlockSynced(McpeUpdateBlockSynced message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeUpdateBlockSynced(McpeUpdateBlockSynced message)
+        public void HandleMcpeSetScoreboardIdentityPacket(McpeSetScoreboardIdentityPacket message)
 		{
 			UnhandledPackage(message);
 		}
 
-        public override void HandleMcpeSetScoreboardIdentityPacket(McpeSetScoreboardIdentityPacket message)
+		public void HandleMcpeUpdateSoftEnumPacket(McpeUpdateSoftEnumPacket message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeUpdateSoftEnumPacket(McpeUpdateSoftEnumPacket message)
+		public void HandleMcpeNetworkStackLatencyPacket(McpeNetworkStackLatencyPacket message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeNetworkStackLatencyPacket(McpeNetworkStackLatencyPacket message)
+		public void HandleMcpeScriptCustomEventPacket(McpeScriptCustomEventPacket message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public override void HandleMcpeScriptCustomEventPacket(McpeScriptCustomEventPacket message)
-		{
-			UnhandledPackage(message);
-		}
-
-		public override void HandleFtlCreatePlayer(FtlCreatePlayer message)
+		public void HandleFtlCreatePlayer(FtlCreatePlayer message)
 		{
 			UnhandledPackage(message);
 		}

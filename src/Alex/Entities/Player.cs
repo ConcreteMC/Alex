@@ -6,6 +6,7 @@ using Alex.API.Graphics;
 using Alex.API.Input;
 using Alex.API.Network;
 using Alex.API.Utils;
+using Alex.API.World;
 using Alex.Blocks.Minecraft;
 using Alex.GameStates.Playing;
 using Alex.Items;
@@ -36,11 +37,23 @@ namespace Alex.Entities
         public bool HasAdjacentRaytrace = false;
         public bool HasRaytraceResult = false;
 
-        public Player(GraphicsDevice graphics, Alex alex, string name, World world, Skin skin, INetworkProvider networkProvider, PlayerIndex playerIndex) : base(name, world, networkProvider, skin.Texture, true)
+        public int Health { get; set; } = 20;
+        public int MaxHealth { get; set; } = 20;
+
+        public int Hunger { get; set; } = 19;
+        public int MaxHunger { get; set; } = 20;
+
+        public int Saturation { get; set; } = 0;
+        public int MaxSaturation { get; set; }
+        
+        public int Exhaustion { get; set; } = 0;
+        public int MaxExhaustion { get; set; }
+        
+        public Player(GraphicsDevice graphics, InputManager inputManager, string name, World world, Skin skin, INetworkProvider networkProvider, PlayerIndex playerIndex) : base(name, world, networkProvider, skin.Texture)
 		{
 		//	DoRotationCalculations = false;
 			PlayerIndex = playerIndex;
-		    Controller = new PlayerController(graphics, world, alex.InputManager, this, playerIndex); 
+		    Controller = new PlayerController(graphics, world, inputManager, this, playerIndex); 
 		    NoAi = false;
 
 			//Inventory = new Inventory(46);
@@ -52,7 +65,7 @@ namespace Alex.Entities
 			SnapHeadYawRotationOnMovement = false;
 
 			RenderEntity = true;
-			
+			ShowItemInHand = true;
 		}
 
 	    private void SelectedHotbarSlotChanged(object sender, SelectedSlotChangedEventArgs e)
@@ -72,14 +85,8 @@ namespace Alex.Entities
 			bool sprint = IsSprinting;
 			bool sneak = IsSneaking;
 
-			if (Controller.IsFreeCam && !CanFly)
-			{
-				Controller.IsFreeCam = false;
-			}
-			else if (CanFly)
-			{
-				IsFlying = Controller.IsFreeCam;
-			}
+			if (!CanFly && IsFlying)
+				IsFlying = false;
 			
 			Controller.Update(args.GameTime);
 			//KnownPosition.HeadYaw = KnownPosition.Yaw;
@@ -109,8 +116,10 @@ namespace Alex.Entities
 				}
 			}
 
-			if (Controller.CheckInput)
+			if (Controller.CheckInput && Controller.CheckMovementInput)
 			{
+				UpdateRayTracer();
+				
 				var hitEntity = HitEntity;
 				if (hitEntity != null && Controller.InputManager.IsPressed(InputCommand.LeftClick))
 				{
@@ -136,7 +145,7 @@ namespace Alex.Entities
 				}
 				else if (_destroyingBlock && Controller.InputManager.IsDown(InputCommand.LeftClick))
 				{
-					if (_destroyingTarget != new BlockCoordinates(Raytraced.Floor()))
+					if (_destroyingTarget != new BlockCoordinates(Vector3.Floor(Raytraced)))
 					{
 						StopBreakingBlock(true, true);
 
@@ -149,35 +158,25 @@ namespace Alex.Entities
 				else if (Controller.InputManager.IsPressed(InputCommand.RightClick))
 				{
 					bool handledClick = false;
+					var item = Inventory[Inventory.SelectedSlot];
 					// Log.Debug($"Right click!");
-					if (Inventory.MainHand != null && !(Inventory.MainHand is ItemAir))
+					if (item != null && !(item is ItemAir))
 					{
-						handledClick = HandleRightClick(Inventory.MainHand, 0);
+						handledClick = HandleRightClick(item, Inventory.SelectedSlot);
 					}
 
-					if (!handledClick && Inventory.OffHand != null && !(Inventory.OffHand is ItemAir))
+					/*if (!handledClick && Inventory.OffHand != null && !(Inventory.OffHand is ItemAir))
 					{
 						handledClick = HandleRightClick(Inventory.OffHand, 1);
-					}
-
-					if (!handledClick)
-					{
-						var flooredAdj = AdjacentRaytrace.Floor();
-						var remainder = new Vector3(AdjacentRaytrace.X - flooredAdj.X, AdjacentRaytrace.Y - flooredAdj.Y, AdjacentRaytrace.Z - flooredAdj.Z);
-						Network?.BlockPlaced(Raytraced, GetTargetFace(), 0, remainder);
-
-						handledClick = true;
-					}
+					}*/
 				}
             }
 			else if (_destroyingBlock)
 			{
 				StopBreakingBlock();
 			}
-			
-			UpdateRayTracer();
 
-            base.Update(args);
+			base.Update(args);
 
 		}
 
@@ -195,7 +194,7 @@ namespace Alex.Entities
 
 	    public IEntity HitEntity { get; private set; } = null;
 	    public IEntity[] EntitiesInRange { get; private set; } = null;
-	    
+
 	    private void UpdateRayTracer()
 	    {
 		    var camPos = Level.Camera.Position;
@@ -203,8 +202,12 @@ namespace Alex.Entities
 
 		    var entities = Level.EntityManager.GetEntities(camPos, 8);
 		    EntitiesInRange = entities.ToArray();
-		    
-		    if (EntitiesInRange.Length == 0) return;
+
+		    if (EntitiesInRange.Length == 0)
+		    {
+			    HitEntity = null;
+			    return;
+		    }
 		    
 		    IEntity hitEntity = null;
 		    for (float x = 0.5f; x < 8f; x += 0.1f)
@@ -221,8 +224,6 @@ namespace Alex.Entities
 		    }
 
 		    HitEntity = hitEntity;
-		    
-		    
 	    }
 
 	    private void BlockBreakTick()
@@ -232,7 +233,7 @@ namespace Alex.Entities
 
 	    private void StartBreakingBlock()
 	    {
-			var floored = Raytraced.Floor();
+			var floored =  Vector3.Floor(Raytraced);
 
 		    var block = Level.GetBlock(floored);
 		    if (!block.HasHitbox)
@@ -245,12 +246,14 @@ namespace Alex.Entities
 		    _destroyingFace = GetTargetFace();
 		    _destroyingTick = DateTime.UtcNow;
 
-		    if (Inventory.MainHand == null) return;
-		    _destroyTimeNeeded = block.GetBreakTime(Inventory.MainHand);
+		    if (Inventory.MainHand != null)
+		    {
+			    _destroyTimeNeeded = block.GetBreakTime(Inventory.MainHand);
+		    }
 
             Log.Debug($"Start break block ({_destroyingTarget}, {_destroyTimeNeeded} seconds.)");
 
-            var flooredAdj = AdjacentRaytrace.Floor();
+            var flooredAdj = Vector3.Floor(AdjacentRaytrace);
             var remainder = new Vector3(AdjacentRaytrace.X - flooredAdj.X, AdjacentRaytrace.Y - flooredAdj.Y, AdjacentRaytrace.Z - flooredAdj.Z);
 
             Network?.PlayerDigging(DiggingStatus.Started, _destroyingTarget, _destroyingFace, remainder);
@@ -266,7 +269,7 @@ namespace Alex.Entities
 
 		    var timeRan = (end - start).TotalSeconds;
 
-            var flooredAdj = AdjacentRaytrace.Floor();
+            var flooredAdj = Vector3.Floor(AdjacentRaytrace);
             var remainder = new Vector3(AdjacentRaytrace.X - flooredAdj.X, AdjacentRaytrace.Y - flooredAdj.Y, AdjacentRaytrace.Z - flooredAdj.Z);
 
             if (!sendToServer)
@@ -291,8 +294,8 @@ namespace Alex.Entities
 
 	    private BlockFace GetTargetFace()
 	    {
-		    var flooredAdj = AdjacentRaytrace.Floor();
-		    var raytraceFloored = Raytraced.Floor();
+		    var flooredAdj =  Vector3.Floor(AdjacentRaytrace);
+		    var raytraceFloored  = Vector3.Floor(Raytraced);
 
 		    var adj = flooredAdj - raytraceFloored;
 		    adj.Normalize();
@@ -303,20 +306,22 @@ namespace Alex.Entities
 	    private bool HandleRightClick(Item slot, int hand)
 	    {
 		    //if (ItemFactory.ResolveItemName(slot.ItemID, out string itemName))
-            {
+		    {
+			    //IBlock block = null;
 	            IBlockState blockState = null;
 	         //   if (ItemFactory.TryGetItem(itemName, out Item i))
 	         //   {
 		            if (slot is ItemBlock ib)
 		            {
 			            blockState = ib.Block;
+			            // blockState = ib.Block;
 		            }
 	         //   }
 
                 if (blockState != null && !(blockState.Block is Air) && HasRaytraceResult)
                 {
-                    var flooredAdj = AdjacentRaytrace.Floor();
-	                var raytraceFloored = Raytraced.Floor();
+                    var flooredAdj =  Vector3.Floor(AdjacentRaytrace);
+	                var raytraceFloored =  Vector3.Floor(Raytraced);
 
                     var adj = flooredAdj - raytraceFloored;
                     adj.Normalize();
@@ -326,8 +331,8 @@ namespace Alex.Entities
                     var remainder = new Vector3(AdjacentRaytrace.X - flooredAdj.X, AdjacentRaytrace.Y - flooredAdj.Y, AdjacentRaytrace.Z - flooredAdj.Z);
 
 	                var coordR = new BlockCoordinates(raytraceFloored);
-                    Network?.BlockPlaced(coordR, face, hand, remainder);
-
+                    Network?.BlockPlaced(coordR, face, hand, remainder, this);
+                    
                     var existingBlock = Level.GetBlock(coordR);
 	                if (existingBlock.IsReplacible || !existingBlock.Solid)
 	                {
@@ -339,7 +344,7 @@ namespace Alex.Entities
 	                }
 
 	                Log.Debug($"Placed block: {slot.DisplayName} on {raytraceFloored} face= {face} facepos={remainder} ({adj})");
-
+	                
 	                return true;
                 }
                 else if (blockState == null)

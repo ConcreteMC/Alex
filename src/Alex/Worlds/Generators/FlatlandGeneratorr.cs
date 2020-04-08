@@ -26,10 +26,10 @@ namespace Alex.Worlds.Generators
 		    {
 			    for (int z = 0; z < 16; z++)
 			    {
-					column.SetBlockState(x, 0, z, Bedrock);
+					/*column.SetBlockState(x, 0, z, Bedrock);
 				    column.SetBlockState(x, 1, z, Dirt);
 				    column.SetBlockState(x, 2, z, Dirt);
-				    column.SetBlockState(x, 3, z, Grass);
+				    column.SetBlockState(x, 3, z, Grass);*/
 
 				    column.SetSkyLight(x, 0, z, 15);
 				    column.SetSkyLight(x, 1, z, 15);

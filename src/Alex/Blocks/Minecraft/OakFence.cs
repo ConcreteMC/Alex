@@ -1,37 +1,57 @@
-﻿using Alex.API.Utils;
+﻿using Alex.API.Blocks.State;
+using Alex.API.Utils;
 using Alex.API.World;
+using Alex.Blocks.State;
 
 namespace Alex.Blocks.Minecraft
 {
-	public class Fence : Block
+	
+	public class MultiStateBlock : Block
 	{
-		public Fence(uint blockStateId) : base(blockStateId)
+		public MultiStateBlock()
 		{
-			Transparent = true;
-			Solid = true;
-			
-			LightOpacity = 15;
+			RequiresUpdate = true;
+		}
+		
+		public override void BlockUpdate(IWorld world, BlockCoordinates position, BlockCoordinates updatedBlock)
+		{
+			if (BlockState is BlockState state)
+			{
+				if (state.MultiPartHelper != null)
+				{
+					
+				}
+			}
+			base.BlockUpdate(world, position, updatedBlock);
 		}
 
-		public Fence(string name) : base(name)
+		public override IBlockState BlockPlaced(IWorld world, IBlockState state, BlockCoordinates position)
+		{
+			return base.BlockPlaced(world, state, position);
+		}
+	}
+	
+	public class Fence : Block
+	{
+		public Fence(uint blockStateId) : base()
 		{
 			Transparent = true;
 			Solid = true;
-			
-			LightOpacity = 15;
+
+		}
+
+		public Fence(string name) : base()
+		{
+			Transparent = true;
+			Solid = true;
+
 		}
 
 		public Fence()
 		{
 			Transparent = true;
 			Solid = true;
-			
-			LightOpacity = 15;
-		}
 
-		public override void BlockUpdate(IWorld world, BlockCoordinates position, BlockCoordinates updatedBlock)
-		{
-			base.BlockUpdate(world, position, updatedBlock);
 		}
 	}
 

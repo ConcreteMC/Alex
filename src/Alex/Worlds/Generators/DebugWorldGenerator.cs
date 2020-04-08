@@ -12,7 +12,7 @@ namespace Alex.Worlds.Generators
     public class DebugWorldGenerator : IWorldGenerator
     {
 	    private static List<IBlockState> ALL_VALID_STATES = new List<IBlockState>();
-	    private static IBlockState AIR = BlockFactory.GetBlockState(0);
+	    private static IBlockState AIR = BlockFactory.GetBlockState("minecraft:air");
 
 		private static int GRID_WIDTH;
 	    private static int GRID_HEIGHT;

@@ -15,7 +15,7 @@ namespace Alex.Graphics.Models.Entity
 	{
 		public class ModelBone : IDisposable
 		{
-			private IndexBuffer Buffer { get; set; }
+			private PooledIndexBuffer Buffer { get; set; }
 			public ModelBoneCube[] Parts { get; }
 
 			private Vector3 _rotation = Vector3.Zero;
@@ -34,12 +34,12 @@ namespace Alex.Graphics.Models.Entity
 			
 			private List<IAttachable> Attachables { get; } = new List<IAttachable>();
 
-			private EntityModelBone OriginalBone { get; }
-			public string Parent => OriginalBone.Parent;
-			public ModelBone(ModelBoneCube[] parts, EntityModelBone originalBone)
+			private string OriginalBone { get; }
+			public string Parent => OriginalBone;
+			public ModelBone(ModelBoneCube[] parts, string parent)
 			{
 				Parts = parts;
-				OriginalBone = originalBone;
+				OriginalBone = parent;
 			}
 
 			private bool _isDirty = true;
@@ -47,7 +47,7 @@ namespace Alex.Graphics.Models.Entity
 			public Matrix RotationMatrix = Matrix.Identity;
 			public bool UpdateRotationMatrix = true;
 			private Matrix CharacterMatrix { get; set; }
-			public void Render(IRenderArgs args, PlayerLocation position, Matrix characterMatrix)
+			public void Render(IRenderArgs args, PlayerLocation position, Matrix characterMatrix, bool mock)
 			{
 				if (Buffer == null)
 					return;
@@ -78,12 +78,10 @@ namespace Alex.Graphics.Models.Entity
 					if (part.ApplyYaw)
 						rotMatrix *= Matrix.CreateRotationY(yaw);*/
 
-					Matrix rotMatrix = Matrix.CreateTranslation(-part.Pivot) 
-					                   * Matrix.CreateFromYawPitchRoll(
-						                   MathUtils.ToRadians(rot.Y), 
-						                   MathUtils.ToRadians(rot.X), 
-						                   MathUtils.ToRadians(rot.Z)
-						                   )  
+					Matrix rotMatrix = Matrix.CreateTranslation(-part.Pivot)
+					                   * Matrix.CreateRotationX(MathUtils.ToRadians(rot.X))
+					                   * Matrix.CreateRotationY(MathUtils.ToRadians(rot.Y))
+					                   * Matrix.CreateRotationZ(MathUtils.ToRadians(rot.Z))
 					                   * Matrix.CreateTranslation(part.Pivot);
 
 
@@ -100,12 +98,17 @@ namespace Alex.Graphics.Models.Entity
 					effect.View = args.Camera.ViewMatrix;
 					effect.Projection = args.Camera.ProjectionMatrix;
 
-					foreach (var pass in effect.CurrentTechnique.Passes)
+					if (!mock)
 					{
-						pass.Apply();
+						foreach (var pass in effect.CurrentTechnique.Passes)
+						{
+							pass.Apply();
+						}
+
+						args.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, idx,
+							part.Indexes.Length / 3);
 					}
-					
-					args.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, idx, part.Indexes.Length / 3);
+
 					idx += part.Indexes.Length;
 				}
 
@@ -147,17 +150,17 @@ namespace Alex.Graphics.Models.Entity
 			{
 				var indices = Parts.SelectMany(x => x.Indexes).ToArray();
 
-				IndexBuffer currentBuffer = Buffer;
+				PooledIndexBuffer currentBuffer = Buffer;
 
 				if (indices.Length > 0 && (Buffer == null || currentBuffer.IndexCount != indices.Length))
 				{
-					IndexBuffer buffer = GpuResourceManager.GetIndexBuffer(this, device, IndexElementSize.SixteenBits,
+					PooledIndexBuffer buffer = GpuResourceManager.GetIndexBuffer(this, device, IndexElementSize.SixteenBits,
 						indices.Length, BufferUsage.None);
 
 					buffer.SetData(indices);
 					Buffer = buffer;
 					
-					currentBuffer?.Dispose();
+					currentBuffer?.MarkForDisposal();
 				}
 			}
 
@@ -175,7 +178,7 @@ namespace Alex.Graphics.Models.Entity
 			
 			public void Dispose()
 			{
-				Buffer?.Dispose();
+				Buffer?.MarkForDisposal();
 			}
 		}
 	}

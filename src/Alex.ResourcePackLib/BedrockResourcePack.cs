@@ -113,6 +113,12 @@ namespace Alex.ResourcePackLib
 							{
 								foreach (var texture in def.Value.Textures)
 								{
+									if (_bitmaps.ContainsKey(texture.Value))
+									{
+										Log.Warn($"Duplicate bitmap: {texture.Value}");
+										continue;
+									}
+									
 									string texturePath = Path.Combine(_workingDir.FullName, texture.Value + ".png");
 									if (File.Exists(texturePath))
 									{

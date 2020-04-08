@@ -1,4 +1,6 @@
-﻿namespace Alex.API.Data.Options
+﻿using System;
+
+namespace Alex.API.Data.Options
 {
     public interface IOptionsProperty
     {
@@ -6,5 +8,7 @@
 
         object GetValue();
         void SetValue(object obj);
+        
+        Type PropertyType { get; }
     }
 }

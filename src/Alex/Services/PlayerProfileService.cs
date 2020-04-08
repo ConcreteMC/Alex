@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Alex.API.Graphics;
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.Utils;
@@ -54,7 +55,7 @@ namespace Alex.Services
 				var profile = await new Profile(auth.SelectedProfile.Value).PerformRequestAsync();
 
 				bool skinSlim = false;
-				Texture2D texture = null;
+				PooledTexture2D texture = null;
 			
 				if (profile.Properties.SkinUri != null)
 				{
@@ -96,6 +97,8 @@ namespace Alex.Services
 							profile.Skin, profile.AccessToken,
 							profile.ClientToken,
 							true);
+
+						p.Authenticated = true;
 								
 						ProfileManager.CreateOrUpdateProfile(ProfileManager.ProfileType.Bedrock, p);
 
@@ -120,6 +123,8 @@ namespace Alex.Services
 									profile.Skin, r.token.AccessToken,
 									JsonConvert.SerializeObject(r.token),
 									true);
+
+								p.Authenticated = true;
 								
 								ProfileManager.CreateOrUpdateProfile(ProfileManager.ProfileType.Bedrock, p);
 

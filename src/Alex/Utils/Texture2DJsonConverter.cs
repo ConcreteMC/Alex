@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
+using Alex.API.Graphics;
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
 
@@ -15,12 +17,23 @@ namespace Alex.Utils
 
 		public override void WriteJson(JsonWriter writer, Texture2D value, JsonSerializer serializer)
 		{
-			byte[] data;
-			using (MemoryStream ms = new MemoryStream())
-			{
-				value.SaveAsPng(ms, value.Width, value.Height);
-				data = ms.ToArray();
-			}
+			//ManualResetEvent resetEvent = new ManualResetEvent(false);
+
+			byte[] data = null;
+
+			//Alex.Instance.UIThreadQueue.Enqueue(() =>
+			//{
+				using (MemoryStream ms = new MemoryStream())
+				{
+					value.SaveAsPng(ms, value.Width, value.Height);
+					data = ms.ToArray();
+				}
+
+			//	resetEvent.Set();
+			//});
+
+
+			//resetEvent.WaitOne();
 
 			string savedValue = Convert.ToBase64String(data);
 			writer.WriteValue(savedValue);
@@ -31,7 +44,9 @@ namespace Alex.Utils
 		{
 			try
 			{
-				Texture2D result;
+				//ManualResetEvent resetEvent = new ManualResetEvent(false);
+				
+				Texture2D result = null;
 				string base64Value = reader.Value.ToString();
 
 				if (string.IsNullOrWhiteSpace(base64Value))
@@ -40,10 +55,18 @@ namespace Alex.Utils
 				}
 
 				byte[] data = Convert.FromBase64String(base64Value);
-				using (MemoryStream stream = new MemoryStream(data))
-				{
-					result = Texture2D.FromStream(GraphicsDevice, stream);
-				}
+			//	Alex.Instance.UIThreadQueue.Enqueue(() =>
+			//	{
+					using (MemoryStream stream = new MemoryStream(data))
+					{
+						result = GpuResourceManager.GetTexture2D(this, GraphicsDevice,
+							stream); //Texture2D.FromStream(GraphicsDevice, stream);
+					}
+
+				//	resetEvent.Set();
+			//	});
+
+				//resetEvent.WaitOne();
 
 				return result;
 			}

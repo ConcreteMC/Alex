@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
 using Alex.API.Graphics.Textures;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
@@ -25,7 +26,8 @@ namespace Alex.API.Graphics.Typography
         public Texture2D Texture { get; }
 
         public Glyph DefaultGlyph { get; private set; }
-        public Glyph[] Glyphs { get; private set; }
+        //public Glyph[] Glyphs { get; private set; }
+        private Dictionary<char, Glyph> Glyphs { get; }
 
         private List<char> _characters;
 
@@ -39,6 +41,7 @@ namespace Alex.API.Graphics.Typography
         public BitmapFont(GraphicsDevice graphics, Bitmap bitmap, int gridWidth, int gridHeight, List<char> characters) :
             this(TextureUtils.BitmapToTexture2D(graphics, bitmap), gridWidth, gridHeight, characters)
         {
+	        Scale = new Vector2(128f / bitmap.Width, 128f / bitmap.Height);
             LoadGlyphs(bitmap, characters);
         }
 
@@ -60,7 +63,7 @@ namespace Alex.API.Graphics.Typography
             Characters = _characters.ToArray();
 
             DefaultGlyph = new Glyph('\x0000', null, 0, 8);
-            Glyphs       = new Glyph[characters.Count];
+            Glyphs = new Dictionary<char, Glyph>(characters.Count); //new Glyph[characters.Count];
         }
 
         public Vector2 MeasureString(string text, float scale = 1.0f)
@@ -71,10 +74,10 @@ namespace Alex.API.Graphics.Typography
         public Vector2 MeasureString(string text, Vector2 scale)
         {
             MeasureString(text, out var size);
-            return size * scale;
+            return (size * (scale));
         }
 
-        public void MeasureString(string text, out Vector2 size)
+        private void MeasureString(string text, out Vector2 size)
         {
             if (string.IsNullOrEmpty(text))
             {
@@ -155,8 +158,8 @@ namespace Alex.API.Graphics.Typography
                        // offset.X += CharacterSpacing;
 	                    firstGlyphOfLine = false;
 					}
-
-                    offset.X += glyph.Width + (styleBold ? 1 : 0) + CharacterSpacing;
+ 
+                    offset.X += (glyph.Width) + (styleBold ? 1 : 0) + CharacterSpacing;
 
                     finalLineHeight = Math.Max(finalLineHeight, glyph.Height);
                     width           = Math.Max(width, offset.X);
@@ -167,6 +170,7 @@ namespace Alex.API.Graphics.Typography
             size.Y = offset.Y + finalLineHeight;
         }
 
+        private Vector2 Scale { get; set; } = Vector2.One;
         public void DrawString(SpriteBatch   sb, string text, Vector2 position,
                                TextColor     color,
                                FontStyle     style      = FontStyle.None, Vector2? scale = null,
@@ -179,7 +183,8 @@ namespace Alex.API.Graphics.Typography
 
 			var originVal = origin ?? Vector2.Zero;
 			var scaleVal = scale ?? Vector2.One;
-
+			//scaleVal *= Scale;
+			
 			originVal *= scaleVal;
 
 			var flipAdjustment = Vector2.Zero;
@@ -241,7 +246,7 @@ namespace Alex.API.Graphics.Typography
 
 			var blendFactor = sb.GraphicsDevice.BlendFactor;
 			sb.GraphicsDevice.BlendFactor = Color.White * opacity;
-
+			
 			for (int i = 0; i < text.Length; i++)
 			{
 				char c = text[i];
@@ -302,7 +307,7 @@ namespace Alex.API.Graphics.Typography
 						styleStrikethrough = false;
 						styleUnderline = false;
 						styleItalic = false;
-						styleColor = TextColor.White;
+						styleColor = color;
 					}
 				}
 				else
@@ -322,6 +327,7 @@ namespace Alex.API.Graphics.Typography
 					//}
 
 					var p = offset;
+					var width = glyph.Width + (styleBold ? 1 : 0) + CharacterSpacing;
 
 					if (dropShadow)
 					{
@@ -331,25 +337,32 @@ namespace Alex.API.Graphics.Typography
 						{
 							var boldShadowP = Vector2.Transform(shadowP + Vector2.UnitX, transformation);
 
-							sb.Draw(glyph.Texture, boldShadowP, styleColor.BackgroundColor * opacity, rotation, originVal, scaleVal, effects, layerDepth);
+							sb.Draw(glyph.Texture, boldShadowP, styleColor.BackgroundColor * opacity, rotation, originVal, scaleVal * Scale, effects, layerDepth);
 						}
 						
 						shadowP = Vector2.Transform(shadowP, transformation);
 
-						sb.Draw(glyph.Texture, shadowP, styleColor.BackgroundColor * opacity, rotation, originVal, scaleVal, effects, layerDepth);
+						sb.Draw(glyph.Texture, shadowP, styleColor.BackgroundColor * opacity, rotation, originVal, scaleVal * Scale, effects, layerDepth);
 					}
 
 					if (styleBold)
 					{
 						var boldP = Vector2.Transform(p + Vector2.UnitX, transformation);
-						sb.Draw(glyph.Texture, boldP, styleColor.ForegroundColor * opacity, rotation, originVal, scaleVal, effects, layerDepth);
+						sb.Draw(glyph.Texture, boldP, styleColor.ForegroundColor * opacity, rotation, originVal, scaleVal * Scale, effects, layerDepth);
 					}
+
+				/*	if (styleUnderline)
+					{
+						var lineStart = Vector2.Transform(p + new Vector2(0, 8), transformation);
+						
+						sb.DrawLine(2, lineStart, new Vector2(lineStart.X + width, lineStart.Y), styleColor.ForegroundColor * opacity, scaleVal * Scale, layerDepth);
+					}*/
 
 					p = Vector2.Transform(p, transformation);
 
-					sb.Draw(glyph.Texture, p, styleColor.ForegroundColor * opacity, rotation, originVal, scaleVal, effects, layerDepth);
+					sb.Draw(glyph.Texture, p, styleColor.ForegroundColor * opacity, rotation, originVal, scaleVal * Scale, effects, layerDepth);
 
-					offset.X += glyph.Width + (styleBold ? 1 : 0) + CharacterSpacing;
+					offset.X += width;
 				}
 			}
 
@@ -358,12 +371,18 @@ namespace Alex.API.Graphics.Typography
 
         public IFontGlyph GetGlyphOrDefault(char character)
         {
+	        if (Glyphs.TryGetValue(character, out var glyph))
+	        {
+		        return glyph;
+	        }
+
+	        return DefaultGlyph;/*
             for (int i = 0; i < Glyphs.Length; i++)
             {
                 if(Glyphs[i].Character == character) return Glyphs[i];
             }
 
-            return DefaultGlyph;
+            return DefaultGlyph;*/
         }
         
         private void LoadGlyphs(Bitmap bitmap, List<char> characters)
@@ -383,7 +402,7 @@ namespace Alex.API.Graphics.Typography
 
             var charactersCount = characters.Count;
 
-            var glyphs = new Glyph[charactersCount];
+            //var glyphs = new Glyph[charactersCount];
 
             for (int i = 0; i < charactersCount; i++)
             {
@@ -393,6 +412,8 @@ namespace Alex.API.Graphics.Typography
                 // Scan the grid cell by pixel column, to determine the
                 // width of the characters.
                 int width = 0;
+                int height = 0;
+                
                 bool columnIsEmpty = true;
                 for (int x = cellWidth-1; x >= 0; x--)
                 {
@@ -404,6 +425,8 @@ namespace Alex.API.Graphics.Typography
                         if (textureData[(textureWidth * (row * cellHeight + y)) + (col * cellWidth + x)].A != 0)
                         {
                             columnIsEmpty = false;
+                            if (y > height)
+	                            height = y;
                         }
                     }
 
@@ -417,8 +440,11 @@ namespace Alex.API.Graphics.Typography
                 
                 
                 var charWidth = (int) (0.5d + (width * (8.0f / cellWidth)) + 1);
-
+                var charHeight = (int) (0.5d + (height * (8.0f / cellHeight)) + 1);
+                
                 ++width;
+                ++height;
+                
                 var bounds = new Rectangle(col * cellWidth, row * cellHeight, width, cellHeight);
                 var textureSlice = Texture.Slice(bounds);
 
@@ -429,13 +455,14 @@ namespace Alex.API.Graphics.Typography
 		            charWidth = 4;
 	            }
 
-				var glyph = new Glyph(character, textureSlice, charWidth, cellHeight);
+				var glyph = new Glyph(character, textureSlice, charWidth, charHeight);
 
                 Debug.WriteLine($"BitmapFont Glyph Loaded: {glyph}");
-                glyphs[i] = glyph;
+                Glyphs[character] = glyph;
+                //glyphs[i] = glyph;
             }
 
-            Glyphs = glyphs;
+            //Glyphs = glyphs;
             DefaultGlyph = new Glyph('\x0000',Texture.Slice(0, 0, 0, 0), 8, 0);
 
             _isInitialised = true;

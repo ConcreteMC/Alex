@@ -107,5 +107,11 @@ namespace Alex.GameStates.Gui.InGame
             Alex.GameStateManager.RemoveState("serverMenu");
             Alex.GameStateManager.RemoveState("play");
         }
+
+        protected override void OnHide()
+        {
+	        base.OnHide();
+	        Alex.GameStateManager.RemoveState("ingamemenu");
+        }
     }
 }

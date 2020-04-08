@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Alex.API;
 using Alex.API.Data.Options;
 using Alex.API.Graphics;
+using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks.Minecraft;
@@ -15,24 +18,26 @@ using Alex.Blocks.Storage;
 using Alex.Graphics.Models.Blocks;
 using Alex.Services;
 using Alex.Utils;
-using Alex.Worlds.Lighting;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MiNET.Utils;
 using NLog;
-using StackExchange.Profiling;
-using UniversalThreadManagement;
+using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
+using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
+using PlayerLocation = Alex.API.Utils.PlayerLocation;
 
 //using OpenTK.Graphics;
 
 namespace Alex.Worlds
 {
-    public class ChunkManager : IDisposable
+	public class ChunkManager : IDisposable
     {
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ChunkManager));
 
 		private GraphicsDevice Graphics { get; }
+		private ResourceManager Resources { get; }
         private IWorld World { get; }
-	    private Alex Game { get; }
 
         private int _chunkUpdates = 0;
         public int ConcurrentChunkUpdates => (int) _threadsRunning;
@@ -40,8 +45,12 @@ namespace Alex.Worlds
 	    public int ChunkCount => Chunks.Count;
 
 	    public AlphaTestEffect AnimatedEffect { get; }
+	    public AlphaTestEffect AnimatedTranslucentEffect { get; }
 	    public AlphaTestEffect TransparentEffect { get; }
-		public BasicEffect OpaqueEffect { get; }
+	    public AlphaTestEffect TranslucentEffect { get; }
+		public AlphaTestEffect OpaqueEffect { get; }
+		
+		private BasicEffect DepthEffect { get; }
 
 	    public long Vertices { get; private set; }
 	    public int RenderedChunks { get; private set; } = 0;
@@ -51,53 +60,98 @@ namespace Alex.Worlds
         private ConcurrentDictionary<ChunkCoordinates, ChunkData> _chunkData = new ConcurrentDictionary<ChunkCoordinates, ChunkData>();
 
         private AlexOptions Options { get; }
-        private ProfilerService ProfilerService { get; }
-        public ChunkManager(Alex alex, GraphicsDevice graphics, AlexOptions option, IWorld world)
+        private RenderTarget2D _depthMap;
+        public RenderTarget2D DepthMap => _depthMap;
+        public ChunkManager(IServiceProvider serviceProvider, GraphicsDevice graphics, IWorld world)
         {
-	        Game = alex;
+	        _depthMap = new RenderTarget2D(graphics, 512, 512, false, SurfaceFormat.Color, DepthFormat.None);
+	        
 	        Graphics = graphics;
 	        World = world;
-	        Options = option;
-	        ProfilerService = alex.Services.GetService<ProfilerService>();
+	        //Options = option;
+
+	        Options = serviceProvider.GetRequiredService<IOptionsProvider>().AlexOptions;
+	        Resources = serviceProvider.GetRequiredService<ResourceManager>();
 	        
 	        Chunks = new ConcurrentDictionary<ChunkCoordinates, IChunkColumn>();
+
+	        var stillAtlas = Resources.Atlas.GetStillAtlas();
 	        
 	        var fogStart = 0;
+	        
+	        DepthEffect = new BasicEffect(graphics)
+	        {
+		        TextureEnabled = false,
+		        VertexColorEnabled = false,
+		        FogEnabled = false
+	        };
+	        
 	        TransparentEffect = new AlphaTestEffect(Graphics)
 	        {
-		        Texture = alex.Resources.Atlas.GetStillAtlas(),
+		        Texture = stillAtlas,
 		        VertexColorEnabled = true,
 		        World = Matrix.Identity,
 		        AlphaFunction = CompareFunction.Greater,
-		        ReferenceAlpha = 127,
+		        ReferenceAlpha = 32,
 		        FogStart = fogStart,
-		        FogEnabled = false
+		        FogEnabled = false,
+		       // TextureEnabled = true
+	        };
+	        
+	        TranslucentEffect = new AlphaTestEffect(Graphics)
+	        {
+		        Texture = stillAtlas,
+		        VertexColorEnabled = true,
+		        World = Matrix.Identity,
+		        AlphaFunction = CompareFunction.Greater,
+		        ReferenceAlpha = 32,
+		        FogStart = fogStart,
+		        FogEnabled = false,
+		        Alpha = 0.5f
 	        };
 	        
 	        AnimatedEffect = new AlphaTestEffect(Graphics)
 	        {
-		        Texture = alex.Resources.Atlas.GetAtlas(0),
+		        Texture = Resources.Atlas.GetAtlas(0),
+		        VertexColorEnabled = true,
+		        World = Matrix.Identity,
+		        AlphaFunction = CompareFunction.Greater,
+		        ReferenceAlpha = 32,
+		        FogStart = fogStart,
+		        FogEnabled = false,
+		       // TextureEnabled = true
+	        };
+	        
+	        AnimatedTranslucentEffect = new AlphaTestEffect(Graphics)
+	        {
+		        Texture = Resources.Atlas.GetAtlas(0),
 		        VertexColorEnabled = true,
 		        World = Matrix.Identity,
 		        AlphaFunction = CompareFunction.Greater,
 		        ReferenceAlpha = 127,
 		        FogStart = fogStart,
-		        FogEnabled = false
+		        FogEnabled = false,
+		        Alpha = 0.5f
 	        };
 
-	        OpaqueEffect = new BasicEffect(Graphics)
+	        OpaqueEffect = new AlphaTestEffect(Graphics)
 	        {
-		        TextureEnabled = true,
-		        Texture = alex.Resources.Atlas.GetStillAtlas(),
+		      //  TextureEnabled = true,
+		        Texture = stillAtlas,
 		        FogStart = fogStart,
 		        VertexColorEnabled = true,
-		        LightingEnabled = true,
-		        FogEnabled = false
+		      //  LightingEnabled = true,
+		        FogEnabled = false,
+		        ReferenceAlpha = 249
+		    //    AlphaFunction = CompareFunction.Greater,
+		    //    ReferenceAlpha = 127
+		        
+		      //  PreferPerPixelLighting = false
 	        };
 	        
 	        //if (alex.)
 
-	        FrameCount = alex.Resources.Atlas.GetFrameCount();
+	        FrameCount = Resources.Atlas.GetFrameCount();
 
 	        ChunkManagementThread = new Thread(ChunkUpdateThread)
 	        {
@@ -112,7 +166,7 @@ namespace Alex.Worlds
         private ThreadSafeList<ChunkCoordinates> Enqueued { get; } = new ThreadSafeList<ChunkCoordinates>();
         private ConcurrentDictionary<ChunkCoordinates, IChunkColumn> Chunks { get; }
 
-        private readonly ThreadSafeList<ChunkData> _renderedChunks = new ThreadSafeList<ChunkData>();
+        private ChunkData[] _renderedChunks = new ChunkData[0];
 
         private Thread ChunkManagementThread { get; }
         private CancellationTokenSource CancelationToken { get; set; } = new CancellationTokenSource();
@@ -143,55 +197,203 @@ namespace Alex.Worlds
 	    int _framerate = 12;     // Animate at 12 frames per second
 	    float _timer = 0.0f;
 	    
-	    public bool UseWireFrames { get; set; } = false;
-	    public void Draw(IRenderArgs args)
+	    private static RasterizerState Copy(RasterizerState state)
 	    {
-		    var device = args.GraphicsDevice;
-		    var camera = args.Camera;
+		    return new RasterizerState()
+		    {
+			    CullMode = state.CullMode,
+			    DepthBias = state.DepthBias,
+			    FillMode = state.FillMode,
+			    MultiSampleAntiAlias = state.MultiSampleAntiAlias,
+			    Name = state.Name,
+			    ScissorTestEnable = state.ScissorTestEnable,
+			    SlopeScaleDepthBias = state.SlopeScaleDepthBias,
+			    Tag = state.Tag,
+		    };
+	    }
+	    
+	    public bool UseWireFrames { get; set; } = false;
+	    private readonly static RenderStage[] RenderStages = ((RenderStage[]) Enum.GetValues(typeof(RenderStage)));
+
+	    private readonly static RenderStage[] DepthRenderStages = new[]
+	    {
+		    RenderStage.OpaqueFullCube,
+		    RenderStage.Opaque
+	    };
+	    
+	    private static readonly SamplerState RenderSampler = new SamplerState()
+	    {
+		    Filter = TextureFilter.Point,
+		    AddressU = TextureAddressMode.Wrap,
+		    AddressV = TextureAddressMode.Wrap,
+		    MipMapLevelOfDetailBias = -2f,
+		    MaxMipLevel = 0,
+		    FilterMode = TextureFilterMode.Default
+	    };
+	    
+	    private static readonly BlendState LightMapBS = new BlendState()
+	    {
+		    ColorSourceBlend = Blend.One,
+		    ColorDestinationBlend = Blend.One,
+		    ColorBlendFunction = BlendFunction.Add,
+		    AlphaSourceBlend = Blend.One,
+		    AlphaDestinationBlend = Blend.One,
+		    AlphaBlendFunction = BlendFunction.Add
+	    };
+	    
+	    private static DepthStencilState DepthStencilState { get; } = new DepthStencilState()
+	    {
+		    DepthBufferEnable = true,
+		    DepthBufferFunction = CompareFunction.Less,
+		    DepthBufferWriteEnable = true
+	    };
+
+	    private static RasterizerState RasterizerState = new RasterizerState()
+	    {
+		    DepthBias = 0.0001f,
+		    CullMode = CullMode.CullClockwiseFace,
+		    FillMode = FillMode.Solid,
+		    //DepthClipEnable = true,
+		    //ScissorTestEnable = true
+	    };
+
+	    public void Draw(IRenderArgs args, bool depthMapOnly)
+	    {
+		    var view = args.Camera.ViewMatrix;
+		    var projection = args.Camera.ProjectionMatrix;
+
+		    TransparentEffect.View = view;
+		    TransparentEffect.Projection = projection;
 		    
-		    RasterizerState originalState = null;
+		    AnimatedEffect.View = view;
+		    AnimatedEffect.Projection = projection;
+
+		    OpaqueEffect.View = view;
+		    OpaqueEffect.Projection = projection;
+
+		    TranslucentEffect.View = view;
+		    TranslucentEffect.Projection = projection;
+
+		    AnimatedTranslucentEffect.View = view;
+		    AnimatedTranslucentEffect.Projection = projection;
+
+		    DepthEffect.View = view;
+		    DepthEffect.Projection = projection;
+		    
+		    var device = args.GraphicsDevice;
+
+		    var originalSamplerState = device.SamplerStates[0];
+
+		    device.SamplerStates[0] = RenderSampler;
+		    
+		    RasterizerState originalState = device.RasterizerState;
+		    args.GraphicsDevice.RasterizerState = RasterizerState;
+		   // device.RasterizerState.MultiSampleAntiAlias = true;
+		    //device.DepthStencilState.DepthBufferFunction = CompareFunction.Always;
+		   //  device.RasterizerState = RasterizerState;
+		  // device.DepthStencilState = DepthStencilState;
+		    
 		    bool usingWireFrames = UseWireFrames;
 		    if (usingWireFrames)
 		    {
 			    originalState = device.RasterizerState;
-			    RasterizerState rasterizerState = new RasterizerState();
+			    RasterizerState rasterizerState = Copy(originalState);
 			    rasterizerState.FillMode = FillMode.WireFrame;
 			    device.RasterizerState = rasterizerState;
 		    }
 
-		    device.DepthStencilState = DepthStencilState.Default;
-		    device.BlendState = BlendState.AlphaBlend;
-		    
-		    TransparentEffect.View = camera.ViewMatrix;
-		    TransparentEffect.Projection = camera.ProjectionMatrix;
-		    
-		    AnimatedEffect.View = camera.ViewMatrix;
-		    AnimatedEffect.Projection = camera.ProjectionMatrix;
+		    device.DepthStencilState = DepthStencilState;
 
-		    OpaqueEffect.View = camera.ViewMatrix;
-		    OpaqueEffect.Projection = camera.ProjectionMatrix;
+		    if (depthMapOnly)
+		    {
+			    args.GraphicsDevice.SetRenderTarget(_depthMap);
+			    device.BlendState = LightMapBS;
+			    
+			    args.GraphicsDevice.Clear(Color.Black);
+			    DrawStaged(args, out _, out _, DepthEffect, DepthRenderStages);
+
+			    args.GraphicsDevice.SetRenderTarget(null);
+		    }
+		    else
+		    {
+			   // device.DepthStencilState = DepthStencilState.DepthRead;
+			    device.BlendState = BlendState.AlphaBlend;
+			    DrawStaged(args, out int chunksRendered, out int verticesRendered, null, RenderStages);
+
+			    Vertices = verticesRendered;
+			    RenderedChunks = chunksRendered;
+			    IndexBufferSize = 0;
+		    }
+
+		    //if (usingWireFrames)
+			    device.RasterizerState = originalState;
+		    
+		    device.SamplerStates[0] = originalSamplerState;
+	    }
+	    
+	    private void DrawStaged(IRenderArgs args, out int chunksRendered, out int drawnVertices, Effect forceEffect = null, params RenderStage[] stages)
+	    {
+		    if (stages == null || stages.Length == 0)
+			    stages = RenderStages;
 
 		    var tempVertices = 0;
 		    int tempChunks = 0;
 		    var indexBufferSize = 0;
-
-		    ChunkData[] chunks = _renderedChunks.ToArray();
-
-		    tempVertices += DrawChunks(device, chunks, OpaqueEffect, false, false);
-
-		    DrawChunks(device, chunks, AnimatedEffect, false, true);
+			
+		    ChunkData[] chunks = _renderedChunks;
 		    
-		    DrawChunks(device, chunks, TransparentEffect, true, false);
+		    foreach (var stage in stages)
+		    {
+			    bool setDepth = false;
+			    Effect effect = forceEffect;
+			    if (forceEffect == null)
+			    {
+				    switch (stage)
+				    {
+					    case RenderStage.OpaqueFullCube:
+						    effect = TransparentEffect;
+						    break;
+					    case RenderStage.Opaque:
+						    effect = TransparentEffect;
+						    break;
+					    case RenderStage.Transparent:
+						    effect = TransparentEffect;
+						    break;
+					    case RenderStage.Translucent:
+						    effect = TranslucentEffect;
+						    break;
+					    case RenderStage.Animated:
+						    effect = AnimatedEffect;
+						    break;
+					    case RenderStage.AnimatedTranslucent:
+						    effect = AnimatedEffect;
+						    break;
+					    default:
+						    throw new ArgumentOutOfRangeException();
+				    }
+			    }
 
-		    if (usingWireFrames)
-				device.RasterizerState = originalState;
+			    
+			    tempVertices += DrawChunks(args.GraphicsDevice, chunks, effect, stage);
+		    }
 
-		    tempChunks = chunks.Count(x => x != null && (
-			    x.SolidIndexBuffer.IndexCount > 0 || x.TransparentIndexBuffer.IndexCount > 0));
-		    
-		    Vertices = tempVertices;
-		    RenderedChunks = tempChunks;
-		    IndexBufferSize = indexBufferSize;
+		    tempChunks = chunks.Count(x => x != null && x.RenderStages != null && x.RenderStages.Count > 0);
+
+		    chunksRendered = tempChunks;
+		    drawnVertices = tempVertices;
+	    }
+
+	    public bool FogEnabled
+	    {
+		    get { return TransparentEffect.FogEnabled; }
+		    set
+		    {
+			    TransparentEffect.FogEnabled = value;
+			    TranslucentEffect.FogEnabled = value;
+			    AnimatedEffect.FogEnabled = value;
+			    AnimatedTranslucentEffect.FogEnabled = value;
+			    OpaqueEffect.FogEnabled = value;
+		    }
 	    }
 
 	    public Vector3 FogColor
@@ -202,6 +404,8 @@ namespace Alex.Worlds
 				TransparentEffect.FogColor = value;
 			    OpaqueEffect.FogColor = value;
 			    AnimatedEffect.FogColor = value;
+			    TranslucentEffect.FogColor = value;
+			    AnimatedTranslucentEffect.FogColor = value;
 		    }
 	    }
 
@@ -213,6 +417,8 @@ namespace Alex.Worlds
 			    TransparentEffect.FogEnd = value;
 			    OpaqueEffect.FogEnd = value;
 			    AnimatedEffect.FogEnd = value;
+			    TranslucentEffect.FogEnd = value;
+			    AnimatedTranslucentEffect.FogEnd = value;
 		    }
 	    }
 
@@ -222,8 +428,12 @@ namespace Alex.Worlds
 		    set
 		    {
 			    TransparentEffect.DiffuseColor = value;
-			    OpaqueEffect.AmbientLightColor = value;
+			    TranslucentEffect.DiffuseColor = value;
+			    
+			    OpaqueEffect.DiffuseColor = value;
+			    // OpaqueEffect.DiffuseColor = value;
 			    AnimatedEffect.DiffuseColor = value;
+			    AnimatedTranslucentEffect.DiffuseColor = value;
 		    }
 	    }
 
@@ -236,8 +446,9 @@ namespace Alex.Worlds
 			    _timer -= 1.0f / _framerate ;
 			    _currentFrame = (_currentFrame + 1) % FrameCount;
 
-			    _currentFrameTexture = Game.Resources.Atlas.GetAtlas(_currentFrame);
+			    _currentFrameTexture = Resources.Atlas.GetAtlas(_currentFrame);
 			    AnimatedEffect.Texture = _currentFrameTexture;
+			    AnimatedTranslucentEffect.Texture = _currentFrameTexture;
 			    // OpaqueEffect.Texture = frame;
 			    // TransparentEffect.Texture = frame;
 		    }
@@ -265,10 +476,10 @@ namespace Alex.Worlds
 	            Log.Warn($"Replaced/Updated chunk at {position}");
                 return chunk;
             });
-
+            
             if (doUpdates)
 			{
-				ScheduleChunkUpdate(position, ScheduleType.Full);
+				ScheduleChunkUpdate(position, ScheduleType.Full, true);
 
 				ScheduleChunkUpdate(new ChunkCoordinates(position.X + 1, position.Z), ScheduleType.Border);
 				ScheduleChunkUpdate(new ChunkCoordinates(position.X - 1, position.Z), ScheduleType.Border);
@@ -323,10 +534,17 @@ namespace Alex.Worlds
         
         public void RebuildAll()
         {
-            foreach (var i in Chunks)
-            {
-                ScheduleChunkUpdate(i.Key, ScheduleType.Full | ScheduleType.Lighting);
-            }
+	        ThreadPool.QueueUserWorkItem(o =>
+	        {
+		        Log.Info($"Rebuilding");
+		        SkyLightCalculations.Calculate(World as World);
+
+		        foreach (var i in Chunks)
+		        {
+			        ScheduleChunkUpdate(i.Key, ScheduleType.Full | ScheduleType.Lighting);
+		        }
+
+	        });
         }
 
         public void ClearChunks()
@@ -372,7 +590,7 @@ namespace Alex.Worlds
 	    #region Chunk Rendering
 	    
 	    
-	    private int DrawChunks(GraphicsDevice device, ChunkData[] chunks, Effect effect, bool transparent, bool animated)
+	    private int DrawChunks(GraphicsDevice device, ChunkData[] chunks, Effect effect, RenderStage stage)
 	    {
 		    int verticeCount = 0;
 		    for (var index = 0; index < chunks.Length; index++)
@@ -380,27 +598,10 @@ namespace Alex.Worlds
 			    var chunk = chunks[index];
 			    if (chunk == null) continue;
 
-			    var buffer = animated ? chunk.AnimatedIndexBuffer : (transparent ? chunk.TransparentIndexBuffer : chunk.SolidIndexBuffer);
-			    if (buffer.IsDisposed)
-			    {
-				    Log.Warn($"Tried to use a disposed buffer: {buffer.Name}");
-					continue;    
+			    if (chunk.RenderStages.TryGetValue(stage, out var renderStage))
+			    { 
+				    verticeCount += renderStage.Render(device, effect);
 			    }
-			    
-			    if (buffer.IndexCount == 0)
-				    continue;
-
-			    device.SetVertexBuffer(chunk.Buffer);
-			    device.Indices = buffer;
-
-			    foreach (var pass in effect.CurrentTechnique.Passes)
-			    {
-				    pass.Apply();
-				    device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, buffer.IndexCount / 3);
-			    }
-
-			    
-			    verticeCount += chunk.Buffer.VertexCount;
 		    }
 
 		    return verticeCount;
@@ -409,27 +610,7 @@ namespace Alex.Worlds
 	    #endregion
 	    
 	    #region Chunk Updates
-	    
-	    private void InitiateChunk(IChunkColumn chunkColumn, ChunkCoordinates chunkCoordinates)
-	    {
-		    var chunkCoords = new BlockCoordinates(chunkCoordinates.X * 16, 0, chunkCoordinates.Z * 16);
 
-		    for (int x = 0; x < 16; x++)
-		    {
-			    for (int z = 0; z < 16; z++)
-			    {
-				    for (int y = 255; y > 0; y--)
-				    {
-					    var blockState = chunkColumn.GetBlockState(x, y, z);
-					    if (blockState.Block is Block b)
-					    {
-						    b.BlockPlaced(World, blockState, chunkCoords + new BlockCoordinates(x, y, z));
-					    }
-				    }
-			    }
-		    }
-	    }
-	    
 	    private void ChunkUpdateThread()
 		{
 			 //Environment.ProcessorCount / 2;
@@ -450,87 +631,47 @@ namespace Alex.Worlds
 	                _chunkData.TryRemove(data.Key, out _);
                 }
                 
-                //var cameraChunkPos = new ChunkCoordinates(new PlayerLocation(camera.Position.X, camera.Position.Y,
-	           //     camera.Position.Z));
-
-                var renderedChunks = Chunks.ToArray().Where(x =>
+                var renderedChunks = Chunks.ToArray().Select(x => (KeyValuePair: x, distance: Math.Abs(x.Key.DistanceTo(cameraChunkPos)))).Where(x =>
                 {
-	                if (Math.Abs(x.Key.DistanceTo(cameraChunkPos)) > Options.VideoOptions.RenderDistance)
+
+	                if (x.distance > Options.VideoOptions.RenderDistance)
 		                return false;
 			    
-	                var chunkPos = new Vector3(x.Key.X * ChunkColumn.ChunkWidth, 0, x.Key.Z * ChunkColumn.ChunkDepth);
+	                var chunkPos = new Vector3(x.KeyValuePair.Key.X * ChunkColumn.ChunkWidth, 0, x.KeyValuePair.Key.Z * ChunkColumn.ChunkDepth);
 	                return _cameraBoundingFrustum.Intersects(new Microsoft.Xna.Framework.BoundingBox(chunkPos,
 		                chunkPos + new Vector3(ChunkColumn.ChunkWidth, 256/*16 * ((x.Value.GetHeighest() >> 4) + 1)*/,
 			                ChunkColumn.ChunkDepth)));
-                }).ToArray();
+                }).OrderByDescending(x => x.distance).Select(x => x.KeyValuePair).ToArray();
 			
+                List<ChunkData> orderedList = new List<ChunkData>();
                 foreach (var c in renderedChunks)
                 {
 	                if (_chunkData.TryGetValue(c.Key, out var data))
 	                {
-		                if (_renderedChunks.TryAdd(data))
+		                orderedList.Add(data);
+		              //  if (_renderedChunks.TryAdd(data))
 		                {
 			                
 		                }
 	                }
-                }
-			
-                foreach (var c in _renderedChunks.ToArray())
-                {
-	                if (c == null || c.Coordinates == default || !renderedChunks.Any(x => x.Key.Equals(c.Coordinates)))
+	                else
 	                {
-		                _renderedChunks.Remove(c);
+		                if (c.Value.Scheduled == ScheduleType.Unscheduled)
+		                {
+			                ScheduleChunkUpdate(c.Key, ScheduleType.Full);
+		                }
 	                }
                 }
+
+                _renderedChunks = orderedList.ToArray();
 
                 if (Interlocked.Read(ref _threadsRunning) >= maxThreads) continue;
-                
 
                 bool nonInView = false;
-                try
+                if (TryDequeue(cameraChunkPos, out var coords, out var priority))
                 {
-	                if (HighestPriority.TryDequeue(out var coords))
-	                {
-                        if (Math.Abs(cameraChunkPos.DistanceTo(coords)) > Options.VideoOptions.RenderDistance)
-                        {
-                            if (!Enqueued.Contains(coords))
-                                Enqueued.Add(coords);
-                        }
-                        else
-                        {
-	                        Enqueued.Remove(coords);
-	                        Schedule(coords, WorkItemPriority.Highest);
-                        }
-
-                        //Enqueued.Remove(coords);
-	                }
-	                else if (Enqueued.Count > 0)
-	                {
-		                //var cc = new ChunkCoordinates(CameraPosition);
-
-		                var where = Enqueued.Where(x => IsWithinView(x, _cameraBoundingFrustum)).ToArray();
-		                if (where.Length > 0)
-		                {
-			                coords = where.MinBy(x => Math.Abs(x.DistanceTo(new ChunkCoordinates(_cameraPosition))));
-		                }
-		                else
-		                {
-			                coords = Enqueued.MinBy(x => Math.Abs(x.DistanceTo(new ChunkCoordinates(_cameraPosition))));
-		                }
-
-                        if (Math.Abs(cameraChunkPos.DistanceTo(coords)) <= Options.VideoOptions.RenderDistance)
-                        {
-                            if (!_workItems.ContainsKey(coords))
-                            {
-                                Schedule(coords, WorkItemPriority.AboveNormal);
-                            }
-                        }
-                    }
+	                Schedule(coords, priority);
                 }
-				catch (OperationCanceledException)
-				{
-					break;
-				}
 			}
 
 			if (!CancelationToken.IsCancellationRequested)
@@ -539,7 +680,65 @@ namespace Alex.Worlds
 			//TaskScheduler.Dispose();
 		}
 
-	    private void Schedule(ChunkCoordinates coords, WorkItemPriority priority)
+	    private bool TryDequeue(ChunkCoordinates cameraChunkPos, out ChunkCoordinates coordinates, out ChunkPriority priority)
+	    {
+		    priority = ChunkPriority.Normal;
+		    
+		    try
+		    {
+			    if (HighestPriority.TryDequeue(out var coords))
+			    {
+				    if (Math.Abs(cameraChunkPos.DistanceTo(coords)) > Options.VideoOptions.RenderDistance)
+				    {
+					    if (!Enqueued.Contains(coords))
+						    Enqueued.Add(coords);
+				    }
+				    else
+				    {
+					    Enqueued.Remove(coords);
+					    priority = ChunkPriority.Highest;
+					   // Schedule(coords, ChunkPriority.Highest);
+					   coordinates = coords;
+					   return true;
+				    }
+
+				    //Enqueued.Remove(coords);
+			    }
+			    else if (Enqueued.Count > 0)
+			    {
+				    //var cc = new ChunkCoordinates(CameraPosition);
+
+				    var where = Enqueued.Where(x => IsWithinView(x, _cameraBoundingFrustum)).ToArray();
+				    if (where.Length > 0)
+				    {
+					    coords = where.MinBy(x => Math.Abs(x.DistanceTo(new ChunkCoordinates(_cameraPosition))));
+				    }
+				    else
+				    {
+					    coords = Enqueued.MinBy(x => Math.Abs(x.DistanceTo(new ChunkCoordinates(_cameraPosition))));
+				    }
+
+				    if (Math.Abs(cameraChunkPos.DistanceTo(coords)) <= Options.VideoOptions.RenderDistance)
+				    {
+					    if (!_workItems.ContainsKey(coords))
+					    {
+						    //Schedule(coords, ChunkPriority.High);
+						    coordinates = coords;
+						    return true;
+					    }
+				    }
+			    }
+		    }
+		    catch (OperationCanceledException)
+		    {
+			   // break;
+		    }
+
+		    coordinates = default;
+		    return false;
+	    }
+
+	    private void Schedule(ChunkCoordinates coords, ChunkPriority priority)
 	    {
 		    CancellationTokenSource taskCancelationToken =
 			    CancellationTokenSource.CreateLinkedTokenSource(CancelationToken.Token);
@@ -547,24 +746,45 @@ namespace Alex.Worlds
 		    Interlocked.Increment(ref _threadsRunning);
 
 		    //_tasksQueue.
-		    if (_workItems.TryAdd(coords, taskCancelationToken))
-		    {
-			    Enqueued.Remove(coords);
-		    }
 
 		    var task = Task.Factory.StartNew(() =>
 		    {
-			    if (Chunks.TryGetValue(coords, out var val))
+			    try
 			    {
-				    UpdateChunk(coords, val);
+				    do
+				    {
+					    if (_workItems.TryAdd(coords, taskCancelationToken))
+					    {
+						    Enqueued.Remove(coords);
+					    }
+
+					    if (Chunks.TryGetValue(coords, out var val))
+					    {
+						    if (val is ChunkColumn column && column.Sections.Any(x => x != null && !x.IsEmpty()))
+						    {
+							    // if (column.SkyLightDirty || column.IsNew)
+							    {
+								    new SkyLightCalculations().RecalcSkyLight((ChunkColumn) val,
+									    new SkyLightBlockAccess(this));
+							    }
+
+							    UpdateChunk(coords, val);
+						    }
+					    }
+
+					    _workItems.TryRemove(coords, out _);
+				    } while (TryDequeue(new ChunkCoordinates(_cameraPosition), out coords, out priority));
+			    }
+			    catch (Exception ex)
+			    {
+				    Log.Warn(ex, $"Chunk processing error: {ex.ToString()}");
 			    }
 
 			    Interlocked.Decrement(ref _threadsRunning);
-			    _workItems.TryRemove(coords, out _);
 
 		    }, taskCancelationToken.Token, TaskCreationOptions.None, _priorityTaskScheduler);
 
-		    if (priority == WorkItemPriority.Highest)
+		    if (priority == ChunkPriority.Highest)
 		    {
 			    _priorityTaskScheduler.Prioritize(task);
 		    }
@@ -604,7 +824,7 @@ namespace Alex.Worlds
 		    }
 	    }
 	    
-        internal bool UpdateChunk(ChunkCoordinates coordinates, IChunkColumn c)
+        private bool UpdateChunk(ChunkCoordinates coordinates, IChunkColumn c)
         {
 	        var chunk = c as ChunkColumn;
             if (!Monitor.TryEnter(chunk.UpdateLock))
@@ -614,246 +834,219 @@ namespace Alex.Worlds
             }
 
             var scheduleType = chunk.Scheduled;
-            var profiler = MiniProfiler.StartNew("chunk.update");
+
             ChunkData data = null;
             bool force = !_chunkData.TryGetValue(coordinates, out data);
-			
+
             try
             {
-                //chunk.UpdateChunk(Graphics, World);
+	            //chunk.UpdateChunk(Graphics, World);
 
-                var currentChunkY = Math.Min(((int)Math.Round(_cameraPosition.Y)) >> 4, (chunk.GetHeighest() >> 4) - 2);
-                if (currentChunkY < 0) currentChunkY = 0;
+	            var currentChunkY = Math.Min(((int) Math.Round(_cameraPosition.Y)) >> 4,
+		            (chunk.GetHeighest() >> 4) - 2);
+	            if (currentChunkY < 0) currentChunkY = 0;
 
-                List<ChunkMesh> meshes = new List<ChunkMesh>();
-                using (profiler.Step("chunk.sections"))
-                {
-	                for (var i = chunk.Sections.Length - 1; i >= 0; i--)
-                    {
-                        if (i < 0) break;
-                        var section = chunk.Sections[i] as ChunkSection;
-                        if (section == null || section.IsEmpty())
-                        {
-                            continue;
-                        }
+	            List<ChunkMesh> meshes = new List<ChunkMesh>();
 
-                        if (i != currentChunkY && i != 0)
-                        {
-                            using (profiler.Step("chunk.neighboring"))
-                            {
-                                if (i > 0 && i < chunk.Sections.Length - 1)
-                                {
-                                    var neighbors = chunk.CheckNeighbors(section, i, World).ToArray();
+	            for (var i = 0; i < chunk.Sections.Length - 1; i++)
+	            {
+		            if (i < 0) break;
+		            var section = chunk.Sections[i] as ChunkSection;
+		            if (section == null || section.IsEmpty())
+		            {
+			            continue;
+		            }
 
-                                    if (!section.HasAirPockets && neighbors.Length == 6) //All surrounded by solid.
-                                    {
-                                        // Log.Info($"Found section with solid neigbors, skipping.");
-                                        continue;
-                                    }
+		            if (i != currentChunkY && i != 0)
+		            {
 
-                                    if (i < currentChunkY && neighbors.Length >= 6) continue;
-                                }
-                                else if (i < currentChunkY) continue;
-                            }
-                        }
+			            if (i > 0 && i < chunk.Sections.Length - 1)
+			            {
+				            var neighbors = chunk.CheckNeighbors(section, i, World).ToArray();
 
-                        //if (i == 0) force = true;
+				            if (!section.HasAirPockets && neighbors.Length == 6) //All surrounded by solid.
+				            {
+					            // Log.Info($"Found section with solid neigbors, skipping.");
+					            continue;
+				            }
 
-                        if (force || !section.ScheduledUpdates.IsZero || section.IsDirty)
-                        {
-	                        using (profiler.Step("chunk.meshing"))
-                            {
-                                var sectionMesh = GenerateSectionMesh(World, scheduleType,
-                                    new Vector3(chunk.X * 16f, 0, chunk.Z * 16f), ref section, i);
-                                
-                                meshes.Add(sectionMesh);
-                            }
-                        }
-                    }
-                }
+				            if (i < currentChunkY && neighbors.Length >= 6) continue;
+			            }
+			            else if (i < currentChunkY) continue;
 
-                List<VertexPositionNormalTextureColor> vertices = new List<VertexPositionNormalTextureColor>();
-                List<int> transparentIndexes = new List<int>();
-                List<int> solidIndexes = new List<int>();
-                List<int> animatedIndexes = new List<int>();
+		            }
 
-                foreach (var mesh in meshes)
-                {
-                    var startVerticeIndex = vertices.Count;
-                    vertices.AddRange(mesh.Vertices);
+		            //if (i == 0) force = true;
 
-                    solidIndexes.AddRange(mesh.SolidIndexes.Select(a => startVerticeIndex + a));
+		            if (force || section.ScheduledUpdates.Cast<bool>().Contains(true) ||
+		                section.ScheduledSkylightUpdates.Cast<bool>().Contains(true) || section.IsDirty)
+		            {
 
-                    transparentIndexes.AddRange(mesh.TransparentIndexes.Select(a => startVerticeIndex + a));
-                    
-                    animatedIndexes.AddRange(mesh.AnimatedIndexes.Select(a => startVerticeIndex + a));
-                }
+			            var sectionMesh = GenerateSectionMesh(World, scheduleType,
+				            new Vector3(chunk.X << 4, 0, chunk.Z << 4), ref section, i);
 
-                if (vertices.Count > 0)
-                {
-	                ProfilerService.ReportCount("chunk.vertexCount", vertices.Count);
-	                
-                    using (profiler.Step("chunk.buffer"))
-                    {
-                        var vertexArray = vertices.ToArray();
-                        var solidArray = solidIndexes.ToArray();
-                        var transparentArray = transparentIndexes.ToArray();
-                        var animatedArray = animatedIndexes.ToArray();
-                        
-                        if (data == null)
-                        {
-                            data = new ChunkData()
-                            {
-                                Buffer = GpuResourceManager.GetBuffer(this, Graphics,
-                                    VertexPositionNormalTextureColor.VertexDeclaration, vertexArray.Length,
-                                    BufferUsage.WriteOnly),
-                                SolidIndexBuffer = GpuResourceManager.GetIndexBuffer(this, Graphics,
-                                    IndexElementSize.ThirtyTwoBits,
-                                    solidArray.Length, BufferUsage.WriteOnly),
-                                TransparentIndexBuffer = GpuResourceManager.GetIndexBuffer(this, Graphics,
-                                    IndexElementSize.ThirtyTwoBits,
-                                    transparentArray.Length, BufferUsage.WriteOnly),
-                                AnimatedIndexBuffer = GpuResourceManager.GetIndexBuffer(this, Graphics,
-	                                IndexElementSize.ThirtyTwoBits,
-	                                animatedArray.Length, BufferUsage.WriteOnly)
-                            };
-                        }
+			            meshes.Add(sectionMesh);
 
-                        PooledVertexBuffer oldBuffer = data.Buffer;
+		            }
+	            }
 
-                        PooledVertexBuffer newVertexBuffer = null;
-                        PooledIndexBuffer newsolidIndexBuffer = null;
-                        PooledIndexBuffer newTransparentIndexBuffer = null;
-                        PooledIndexBuffer newAnimatedIndexBuffer = null;
-                        
-                        PooledIndexBuffer oldAnimatedIndexBuffer = data.AnimatedIndexBuffer;
-                        PooledIndexBuffer oldSolidIndexBuffer = data.SolidIndexBuffer;
-                        PooledIndexBuffer oldTransparentIndexBuffer = data.TransparentIndexBuffer;
 
-                        using(profiler.Step("chunk.buffer.check"))
-                        if (vertexArray.Length >= data.Buffer.VertexCount)
-                        {
-                            // var oldBuffer = data.Buffer;
-                            PooledVertexBuffer newBuffer = GpuResourceManager.GetBuffer(this, Graphics,
-                                VertexPositionNormalTextureColor.VertexDeclaration, vertexArray.Length,
-                                BufferUsage.WriteOnly);
+	            Dictionary<RenderStage, List<int>> newStageIndexes = new Dictionary<RenderStage, List<int>>();
 
-                            newBuffer.SetData(vertexArray);
-                            newVertexBuffer = newBuffer;
-                            //  data.Buffer = newBuffer;
-                            //  oldBuffer?.Dispose();
-                            
-                            ProfilerService.ReportCount("chunk.bufferSize", data.Buffer.MemoryUsage);
-                            
-                            ProfilerService.TriggerCounter("chunk.bufferResize");
-                        }
-                        else
-                        {
-                            data.Buffer.SetData(vertexArray);
-                            ProfilerService.ReportCount("chunk.bufferSize", data.Buffer.MemoryUsage);
-                        }
+	            List<VertexPositionNormalTextureColor> vertices = new List<VertexPositionNormalTextureColor>();
 
-                        using(profiler.Step("Chunk Solid indexbuffer check"))
-                        if (solidArray.Length > data.SolidIndexBuffer.IndexCount)
-                        {
-                            //  var old = data.SolidIndexBuffer;
-                            var newSolidBuffer = GpuResourceManager.GetIndexBuffer(this, Graphics,
-                                IndexElementSize.ThirtyTwoBits,
-                                solidArray.Length,
-                                BufferUsage.WriteOnly);
+	            foreach (var mesh in meshes)
+	            {
+		            var startVerticeIndex = vertices.Count;
+		            vertices.AddRange(mesh.Vertices);
 
-                            newSolidBuffer.SetData(solidArray);
-                            newsolidIndexBuffer = newSolidBuffer;
-                            //  data.SolidIndexBuffer = newSolidBuffer;
-                            //   old?.Dispose();
-                        }
-                        else
-                        {
-                            data.SolidIndexBuffer.SetData(solidArray);
-                        }
+		            foreach (var stage in mesh.Indexes)
+		            {
+			            if (!newStageIndexes.ContainsKey(stage.Key))
+			            {
+				            newStageIndexes.Add(stage.Key, new List<int>());
+			            }
 
-                        using(profiler.Step("Chunk Transparent indexbuffer check"))
-                        if (transparentArray.Length > data.TransparentIndexBuffer.IndexCount)
-                        {
-                            //  var old = data.TransparentIndexBuffer;
-                            var newTransparentBuffer = GpuResourceManager.GetIndexBuffer(this, Graphics,
-                                IndexElementSize.ThirtyTwoBits,
-                                transparentArray.Length,
-                                BufferUsage.WriteOnly);
+			            newStageIndexes[stage.Key].AddRange(stage.Value.Select(a => startVerticeIndex + a));
+		            }
+	            }
 
-                            newTransparentBuffer.SetData(transparentArray);
-                            newTransparentIndexBuffer = newTransparentBuffer;
-                        }
-                        else
-                        {
-                            data.TransparentIndexBuffer.SetData(transparentArray);
-                        }
-                        
-                        using(profiler.Step("Chunk Animated indexbuffer check"))
-                        if (animatedArray.Length > data.AnimatedIndexBuffer.IndexCount)
-                        {
-	                        //  var old = data.TransparentIndexBuffer;
-	                        var newTransparentBuffer = GpuResourceManager.GetIndexBuffer(this, Graphics,
-		                        IndexElementSize.ThirtyTwoBits,
-		                        animatedArray.Length,
-		                        BufferUsage.WriteOnly);
+	            if (vertices.Count > 0)
+	            {
+		           
+			            var vertexArray = vertices.ToArray();
+			            Dictionary<RenderStage, ChunkRenderStage> oldStages = null;
+			            if (data == null)
+			            {
+				            data = new ChunkData()
+				            {
+					            Buffer = GpuResourceManager.GetBuffer(this, Graphics,
+						            VertexPositionNormalTextureColor.VertexDeclaration, vertexArray.Length,
+						            BufferUsage.WriteOnly),
+					            RenderStages = new Dictionary<RenderStage, ChunkRenderStage>()
+				            };
+			            }
+			            else
+			            {
+				            oldStages = data.RenderStages;
+			            }
 
-	                        newTransparentBuffer.SetData(animatedArray);
-	                        newAnimatedIndexBuffer = newTransparentBuffer;
-                        }
-                        else
-                        {
-	                        data.AnimatedIndexBuffer.SetData(animatedArray);
-                        }
+			            var newStages = new Dictionary<RenderStage, ChunkRenderStage>();
 
-                        using (profiler.Step("chunk.buffer.dispose"))
-                        {
-	                        if (newVertexBuffer != null)
-	                        {
-		                        data.Buffer = newVertexBuffer;
-		                        oldBuffer?.MarkForDisposal();
-	                        }
+			            PooledVertexBuffer oldBuffer = data.Buffer;
 
-	                        if (newTransparentIndexBuffer != null)
-	                        {
-		                        data.TransparentIndexBuffer = newTransparentIndexBuffer;
-		                        oldTransparentIndexBuffer?.MarkForDisposal();
-	                        }
+			            PooledVertexBuffer newVertexBuffer = null;
+			            
+				            if (vertexArray.Length >= data.Buffer.VertexCount)
+				            {
+					            PooledVertexBuffer newBuffer = GpuResourceManager.GetBuffer(this, Graphics,
+						            VertexPositionNormalTextureColor.VertexDeclaration, vertexArray.Length,
+						            BufferUsage.WriteOnly);
 
-	                        if (newAnimatedIndexBuffer != null)
-	                        {
-		                        data.AnimatedIndexBuffer = newAnimatedIndexBuffer;
-		                        oldAnimatedIndexBuffer?.MarkForDisposal();
-	                        }
+					            newBuffer.SetData(vertexArray);
+					            newVertexBuffer = newBuffer;
+				            }
+				            else
+				            {
+					            data.Buffer.SetData(vertexArray);
+				            }
 
-	                        if (newsolidIndexBuffer != null)
-	                        {
-		                        data.SolidIndexBuffer = newsolidIndexBuffer;
-		                        oldSolidIndexBuffer?.MarkForDisposal();
-	                        }
-                        }
-                    }
-                }
-                else
-                {
-	                if (data != null)
-	                {
-		                data.Dispose();
-		                data = null;
-	                }
-                }
+			            foreach (var stage in newStageIndexes)
+			            {
+				            ChunkRenderStage renderStage;
+				            PooledIndexBuffer newIndexBuffer;
+				            if (oldStages == null || !oldStages.TryGetValue(stage.Key, out renderStage))
+				            {
+					            renderStage = new ChunkRenderStage(data);
+				            }
 
-                chunk.IsDirty = chunk.HasDirtySubChunks; //false;
-                chunk.Scheduled = ScheduleType.Unscheduled;
+				            if (renderStage.IndexBuffer == null ||
+				                stage.Value.Count > renderStage.IndexBuffer.IndexCount)
+				            {
+					            newIndexBuffer = GpuResourceManager.GetIndexBuffer(this, Graphics,
+						            IndexElementSize.ThirtyTwoBits, stage.Value.Count, BufferUsage.WriteOnly);
+				            }
+				            else
+				            {
+					            newIndexBuffer = renderStage.IndexBuffer;
+				            }
 
-                if (data != null)
-                {
-	                data.Coordinates = coordinates;
-                }
+				            newIndexBuffer.SetData(stage.Value.ToArray());
 
-                _chunkData.AddOrUpdate(coordinates, data, (chunkCoordinates, chunkData) => data);
+				            renderStage.IndexBuffer = newIndexBuffer;
 
-                return true;
+				            newStages.Add(stage.Key, renderStage);
+			            }
+
+			            data.RenderStages = newStages;
+			            
+				            if (newVertexBuffer != null)
+				            {
+					            data.Buffer = newVertexBuffer;
+					            oldBuffer?.MarkForDisposal();
+				            }
+
+				            RenderStage[] renderStages = (RenderStage[]) Enum.GetValues(typeof(RenderStage));
+
+				            foreach (var stage in renderStages)
+				            {
+					            if (newStages.TryGetValue(stage, out var renderStage))
+					            {
+						            if (oldStages != null && oldStages.TryGetValue(stage, out var oldStage))
+						            {
+							            if (oldStage != renderStage)
+								            oldStage.Dispose();
+						            }
+					            }
+				            }
+			            
+		            
+	            }
+	            else
+	            {
+		            if (data != null)
+		            {
+			            data.Dispose();
+			            data = null;
+		            }
+	            }
+
+	            chunk.IsDirty = chunk.HasDirtySubChunks; //false;
+	            chunk.Scheduled = ScheduleType.Unscheduled;
+
+	            if (data != null)
+	            {
+		            data.Coordinates = coordinates;
+	            }
+
+	            _chunkData.AddOrUpdate(coordinates, data, (chunkCoordinates, chunkData) => data);
+
+	            /*if (scheduleType.HasFlag(ScheduleType.Lighting))
+	            {
+		            try
+		            {
+			            if (chunk.SkyLightDirty)
+			            {
+				            //  chunk.CalculateHeight();
+
+				            //  chunk.X = coordinates.X;
+				            //   chunk.Z = coordinates.Z;
+
+				            SkyLightBlockAccess blockAccess = new SkyLightBlockAccess(this, chunk);
+				            new SkyLightCalculations().RecalcSkyLight(chunk, blockAccess);
+				            
+				            
+				            chunk.SkyLightDirty = false;
+				            ScheduleChunkUpdate(coordinates, ScheduleType.Scheduled);
+			            }
+		            }
+		            catch (Exception ex)
+		            {
+			            Log.Error(ex, $"Skylight error: {ex.ToString()}");
+		            }
+	            }*/
+
+	            return true;
             }
             catch (Exception ex)
             {
@@ -865,9 +1058,7 @@ namespace Alex.Worlds
                 Interlocked.Decrement(ref _chunkUpdates);
                 Monitor.Exit(chunk.UpdateLock);
 
-                profiler.Stop();
-                
-              //   Log.Info(MiniProfiler.Current.RenderPlainText());
+                //   Log.Info(MiniProfiler.Current.RenderPlainText());
             }
 
             return false;
@@ -896,6 +1087,7 @@ namespace Alex.Worlds
             return false;
         }
 
+        public static bool DoMultiPartCalculations { get; set; } = true;
         private ChunkMesh GenerateSectionMesh(IWorld world, ScheduleType scheduled, Vector3 chunkPosition,
 	        ref ChunkSection section, int yIndex)
         {
@@ -904,119 +1096,160 @@ namespace Alex.Worlds
 	        var cached = section.MeshCache;
 	        var positionCache = section.MeshPositions;
 
-	        Dictionary<Vector3, ChunkMesh.EntryPosition> positions = new Dictionary<Vector3, ChunkMesh.EntryPosition>();
+	        Dictionary<BlockCoordinates, IList<ChunkMesh.EntryPosition>> positions = new Dictionary<BlockCoordinates, IList<ChunkMesh.EntryPosition>>();
 			
 	        List<VertexPositionNormalTextureColor> solidVertices = new List<VertexPositionNormalTextureColor>();
 
-	        List<int> animatedIndexes = new List<int>();
-	        List<int> transparentIndexes = new List<int>();
-	        List<int> solidIndexes = new List<int>();
-	        
+	        Dictionary<RenderStage, List<int>> stages = new Dictionary<RenderStage, List<int>>();
+			RenderStage[] stageEnumValues = (RenderStage[]) Enum.GetValues(typeof(RenderStage));
+			foreach (var stage in stageEnumValues)
+			{
+				stages.Add(stage, new List<int>());
+			}
+			
 	        Dictionary<int, int> processedIndices = new Dictionary<int, int>();
 	        for (var y = 0; y < 16; y++)
 	        for (var x = 0; x < ChunkColumn.ChunkWidth; x++)
 	        for (var z = 0; z < ChunkColumn.ChunkDepth; z++)
 	        {
-		        var blockPosition = new Vector3(x, y + (yIndex << 4), z) + chunkPosition;
-		        
+		        var blockPosition = new BlockCoordinates((int) (chunkPosition.X + x), y + (yIndex << 4),
+			        (int) (chunkPosition.Z + z));
+		        var blockCoords = new BlockCoordinates(x, y, z);
+
 		        bool isScheduled = section.IsScheduled(x, y, z);
+		        bool isLightScheduled = section.IsLightingScheduled(x, y, z);
 		        var neighborsScheduled = HasScheduledNeighbors(world, blockPosition);
-		       // bool isLightingScheduled = section.IsLightingScheduled(x, y, z);
+		        var isBorderBlock = (scheduled == ScheduleType.Border && ((x == 0 || x == 15) || (z == 0 || z == 15)));
 
-		       var isBorderBlock = (scheduled == ScheduleType.Border && (x == 0 || x == 15) || (z == 0 || z == 15));
-		        
-			        var blockState = section.Get(x, y, z);
 
-			        if (((blockState == null || !blockState.Block.Renderable) ||
-			            (!section.New &&
-			             !neighborsScheduled)) && !force && !isBorderBlock)
+		        var isRebuild = ((force || isScheduled || neighborsScheduled || isBorderBlock || isLightScheduled));
+		        // bool isLightingScheduled = section.IsLightingScheduled(x, y, z);
+
+		        bool gotCachedPositions = false;
+
+		        IList<ChunkMesh.EntryPosition> positionCached = default;
+		        if (positionCache != null)
+		        {
+			        gotCachedPositions = positionCache.TryGetValue(blockCoords, out positionCached);
+		        }
+
+		        var posCache = new List<ChunkMesh.EntryPosition>();
+
+		        int renderedBlocks = 0;
+
+		        var blockStates = section.GetAll(x, y, z);
+		        foreach (var currentBlockState in blockStates)
+		        {
+			        var blockState = currentBlockState.state;
+
+			        if (((blockState == null || !blockState.Block.Renderable) && !force && !isBorderBlock))
 			        {
 				        continue;
 			        }
 
-			        var shouldRebuildVertices = (force || isScheduled || neighborsScheduled || isBorderBlock);
-			        
+			        var shouldRebuildVertices = isRebuild;
+
 			        var model = blockState.Model;
 
 			        if (blockState != null && shouldRebuildVertices && blockState.Block.RequiresUpdate)
 			        {
 				        blockState = blockState.Block.BlockPlaced(world, blockState, blockPosition);
-				        section.Set(x, y, z, blockState);
-				        
+				        section.Set(currentBlockState.storage, x, y, z, blockState);
+
 				        model = blockState.Model;
 			        }
-		        
-			        if (blockState is BlockState state && state.IsMultiPart && shouldRebuildVertices)
+
+			        if (DoMultiPartCalculations && blockState is BlockState state && state.IsMultiPart && shouldRebuildVertices)
 			        {
-				        model = new CachedResourcePackModel(Game.Resources,
-					        MultiPartModels.GetBlockStateModels(world, blockPosition, state, state.MultiPartHelper));
+				        model = new CachedResourcePackModel(Resources,
+					        MultiPartModels.GetBlockStateModels(world, blockPosition, state,
+						        state.MultiPartHelper));
 				        // blockState.Block.Update(world, blockPosition);
 			        }
 
-			        if (!shouldRebuildVertices && positionCache.TryGetValue(new Vector3(x, y, z), out var pos))
+			        ChunkMesh.EntryPosition cachedBlock = null;
+			        if (gotCachedPositions && !shouldRebuildVertices)
 			        {
-				        var indices = pos.Animated
-					        ? cached.AnimatedIndexes
-					        : (pos.Transparent ? cached.TransparentIndexes : cached.SolidIndexes);
+				        cachedBlock = positionCached.FirstOrDefault(ps => ps.Storage == currentBlockState.storage);
+			        }
 
-				        var indiceIndex = pos.Animated
-					        ? animatedIndexes.Count
-					        : (pos.Transparent ? transparentIndexes.Count : solidIndexes.Count);
-				        for (int index = 0; index < pos.Length; index++)
+			        ChunkMesh.EntryPosition entryPosition;
+			        if (!shouldRebuildVertices && cachedBlock != null)
+			        {
+				        int[] indices = cached.Indexes[cachedBlock.Stage];
+
+					    var indiceIndex = stages[cachedBlock.Stage].Count;
+
+
+				        for (int index = cachedBlock.Index;
+					        index < cachedBlock.Index + cachedBlock.Length;
+					        index++)
 				        {
-					        var indice = indices[pos.Index + index];
-					        if (!processedIndices.TryGetValue(indice, out var newIndex))
+					        var vertexIndex = indices[index];
+					        if (!processedIndices.TryGetValue(vertexIndex, out var newIndex))
 					        {
-						        newIndex = solidVertices.Count;
-						        var vertice = cached.Vertices[indice];
+						        var vertice = cached.Vertices[vertexIndex];
 						        solidVertices.Add(vertice);
 
-						        processedIndices.Add(indice, newIndex);
+						        newIndex = solidVertices.Count - 1;
+						        
+						        processedIndices.Add(vertexIndex, newIndex);
 					        }
 
-					        if (pos.Animated)
-					        {
-						        animatedIndexes.Add(newIndex);
-					        }
-					        else if (pos.Transparent)
-					        {
-						        transparentIndexes.Add(newIndex);
-					        }
-					        else
-					        {
-						        solidIndexes.Add(newIndex);
-					        }
+					        stages[cachedBlock.Stage].Add(newIndex);
 				        }
 
-				        positions.TryAdd(new Vector3(x, y, z),
-					        new ChunkMesh.EntryPosition(pos.Transparent, pos.Animated, indiceIndex, pos.Length));
-			        } 
-			        else if (shouldRebuildVertices)
+				        entryPosition = new ChunkMesh.EntryPosition(cachedBlock.Stage, indiceIndex,
+					        cachedBlock.Length, currentBlockState.storage);
+
+				        posCache.Add(entryPosition);
+
+				        renderedBlocks++;
+			        }
+			        else if (shouldRebuildVertices || cachedBlock == null)
 			        {
 				        var data = model.GetVertices(world, blockPosition, blockState.Block);
-							
-				        if (data.vertices.Length == 0 ||
-				            data.indexes.Length == 0)
-				        {
-					        section.SetRendered(x, y, z, false);
-				        }
 
 				        if (data.vertices == null || data.indexes == null || data.vertices.Length == 0 ||
 				            data.indexes.Length == 0)
 				        {
 					        //section.SetRendered(x, y, z, false);
-					        if (isScheduled)
-						        section.SetScheduled(x, y, z, false);
-					        
 					        continue;
 				        }
 
-				        bool transparent = blockState.Block.Transparent;
-				        bool animated = blockState.Block.Animated;
+				        RenderStage targetState = RenderStage.OpaqueFullCube;
+				        if (blockState.Block.Animated)
+				        {
+					        if (blockState.Block.BlockMaterial.IsOpaque())
+					        {
+						        targetState = RenderStage.Animated;
+					        }
+					        else
+					        {
+						        targetState = RenderStage.AnimatedTranslucent;
+					        }
+				        }
+				        else if (blockState.Block.Transparent)
+				        {
+					        if (blockState.Block.BlockMaterial.IsOpaque())
+					        {
+						        targetState = RenderStage.Transparent;
+					        }
+					        else
+					        {
+						        targetState = RenderStage.Translucent;
+					        }
+				        }
+				        else if (!blockState.Block.IsFullCube)
+				        {
+					        targetState = RenderStage.Opaque;
+				        }
 
 				        if (data.vertices.Length > 0 && data.indexes.Length > 0)
 				        {
-					        section.SetRendered(x, y, z, true);
+					        //if (currentBlockState.storage == 0)
+					        //	section.SetRendered(x, y, z, true);
+					        renderedBlocks++;
 
 					        int startVerticeIndex = solidVertices.Count;
 					        foreach (var vert in data.vertices)
@@ -1024,41 +1257,61 @@ namespace Alex.Worlds
 						        solidVertices.Add(vert);
 					        }
 
-					        int startIndex = animated ? animatedIndexes.Count : (transparent ? transparentIndexes.Count : solidIndexes.Count);
+					        int startIndex = stages[targetState].Count;
+					        
 					        for (int i = 0; i < data.indexes.Length; i++)
 					        {
-						        var a = data.indexes[i];
+						        var originalIndex = data.indexes[i];
 
-						        if (animated)
-						        {
-							        animatedIndexes.Add(startVerticeIndex + a);
-						        }
-						        else if (transparent)
-						        {
-							        transparentIndexes.Add(startVerticeIndex + a);
-						        }
-						        else
-						        {
-							        solidIndexes.Add(startVerticeIndex + a);
-						        }
+						        var verticeIndex = startVerticeIndex + originalIndex;
+
+						        stages[targetState].Add(verticeIndex);
 					        }
 
-					        positions.TryAdd(new Vector3(x, y, z),
-						        new ChunkMesh.EntryPosition(transparent, animated, startIndex, data.indexes.Length));
-				        }
-			        }
+					        entryPosition = new ChunkMesh.EntryPosition(targetState, startIndex,
+						        data.indexes.Length, currentBlockState.storage);
 
-			        //if (isLightingScheduled)
-			    //    section.SetLightingScheduled(x, y, z, false);
+					        posCache.Add(entryPosition);
+				        }
+				        
+				        if (isScheduled)
+					        section.SetScheduled(x, y, z, false);
+
+				        if (isLightScheduled)
+					        section.SetLightingScheduled(x, y, z, false);
+			        }
+		        }
+
+		        if (renderedBlocks > 0)
+		        {
+			        if (!positions.TryAdd(blockCoords, posCache))
+			        {
+				        Log.Warn($"Could not to indice indexer");
+			        }
+		        }
+
+		        section.SetRendered(x, y, z, renderedBlocks > 0);
 	        }
 
 	        section.New = false;
 
-	        var mesh = new ChunkMesh(solidVertices.ToArray(), solidIndexes.ToArray(),
-		        transparentIndexes.ToArray(), animatedIndexes.ToArray());
+	        var oldMesh = section.MeshCache;
 
+	        var mesh = new ChunkMesh(solidVertices.ToArray());
+
+	        foreach (var stage in stages)
+	        {
+		        if (stage.Value.Count > 0)
+		        {
+			        mesh.Indexes.Add(stage.Key, stage.Value.ToArray());
+		        }
+	        }
+	        
 	        section.MeshCache = mesh;
 	        section.MeshPositions = positions;
+	        
+	        if (oldMesh != null)
+		        oldMesh.Dispose();
 	        
 	        return mesh;
         }

@@ -14,23 +14,12 @@ namespace Alex.API.World
 		public delegate void ProgressReport(LoadingState state, int percentage);
 
 		protected IWorldReceiver WorldReceiver { get; set; }
-		protected IChatReceiver ChatReceiver { get; set; }
 		public ITitleComponent TitleComponent { get; set; }
         protected WorldProvider()
 		{
 			
 		}
-
-		protected void LoadChunk(IChunkColumn chunk, int x, int z, bool update)
-		{
-			WorldReceiver.ChunkReceived(chunk, x, z, update);
-		}
-
-		protected void UnloadChunk(int x, int z)
-		{
-			WorldReceiver.ChunkUnload(x, z);
-		}
-
+        
 		public void SpawnEntity(long entityId, IEntity entity)
 		{
 			WorldReceiver.SpawnEntity(entityId, entity);
@@ -43,14 +32,13 @@ namespace Alex.API.World
 
 		public abstract Vector3 GetSpawnPoint();
 
-		protected abstract void Initiate(out LevelInfo info, out IChatProvider chatProvider);
+		protected abstract void Initiate(out LevelInfo info);
 
-		public void Init(IWorldReceiver worldReceiver, IChatReceiver chat, out LevelInfo info, out IChatProvider chatProvider)
+		public void Init(IWorldReceiver worldReceiver, out LevelInfo info)
 		{
 			WorldReceiver = worldReceiver;
-			ChatReceiver = chat;
 
-			Initiate(out info, out chatProvider);
+			Initiate(out info);
 		}
 
 		public abstract Task Load(ProgressReport progressReport);
@@ -66,11 +54,8 @@ namespace Alex.API.World
 		IEntity GetPlayerEntity();
 
 		IChunkColumn GetChunkColumn(int x, int z);
-		void ChunkReceived(IChunkColumn chunkColumn, int x, int z, bool update);
-		void ChunkUnload(int x, int z);
-		void ChunkUpdate(IChunkColumn chunkColumn, ScheduleType type = ScheduleType.Lighting);
-
-        void SpawnEntity(long entityId, IEntity entity);
+		
+		void SpawnEntity(long entityId, IEntity entity);
 		void DespawnEntity(long entityId);
 
 		void UpdatePlayerPosition(PlayerLocation location);
@@ -82,7 +67,8 @@ namespace Alex.API.World
 		void SetRain(bool raining);
 
 		void SetBlockState(BlockCoordinates coordinates, IBlockState blockState);
-
+		void SetBlockState(BlockCoordinates coordinates, IBlockState blockState, int storage);
+		
 		void AddPlayerListItem(PlayerListItem item);
 		void RemovePlayerListItem(UUID item);
 	};

@@ -11,13 +11,16 @@ namespace Alex.API.Services
         public string Username { get; }
 		public string PlayerName { get; }
 
-        public Skin Skin { get; }
+        [JsonIgnore]
+        public Skin Skin { get; set; }
 
         public string AccessToken { get; }
         public string ClientToken { get; }
 
 		[JsonIgnore]
 		public bool IsBedrock { get; set; }
+
+        [JsonIgnore] public bool Authenticated { get; set; } = false;
 
 	    public PlayerProfile(string uuid, string username, string playerName, Skin skin, string accessToken, string clientToken, bool isBedrock = false)
         {

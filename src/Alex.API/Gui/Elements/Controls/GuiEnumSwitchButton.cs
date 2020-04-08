@@ -6,11 +6,13 @@ namespace Alex.API.Gui.Elements.Controls
 {
     public class GuiEnumSwitchButton<TEnum> : GuiButton, IValuedControl<TEnum> where TEnum : Enum
     {
+        public static readonly ValueFormatter<TEnum> DefaultDisplayFormat = "{0}";
+        
         public event EventHandler<TEnum> ValueChanged;
         
         private TEnum[] Values { get; set; }
         private int CurrentIndex { get; set; } = 0;
-        public string DisplayFormat { get; set; } = "{0}";
+        public ValueFormatter<TEnum> DisplayFormat { get; set; } = DefaultDisplayFormat;
 
         public TEnum Value
         {
@@ -22,7 +24,7 @@ namespace Alex.API.Gui.Elements.Controls
                     if (Values[i].Equals(value))
                     {
                         CurrentIndex = i;
-                        Text = string.Format(DisplayFormat, value.ToString());
+                        Text = DisplayFormat.FormatValue(value) ?? string.Empty;
             
                         ValueChanged?.Invoke(this, value);
                         return;
@@ -45,7 +47,7 @@ namespace Alex.API.Gui.Elements.Controls
 
             Values = v.ToArray();
 
-            Text = string.Format(DisplayFormat, Values[CurrentIndex].ToString());
+            Text = DisplayFormat?.FormatValue(Values[CurrentIndex]) ?? string.Empty;
         }
 
         protected override void OnCursorPressed(Point cursorPosition)
@@ -57,7 +59,7 @@ namespace Alex.API.Gui.Elements.Controls
             }
 
             var value = Values[CurrentIndex];
-            Text = string.Format(DisplayFormat, value.ToString());
+            Text = DisplayFormat.FormatValue(value) ?? string.Empty;
             
             ValueChanged?.Invoke(this, value);
         }

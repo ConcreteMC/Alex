@@ -126,7 +126,7 @@ namespace Alex.API.Gui
 
             IGuiControl newHighlightedElement = null;
 
-            if (TryGetElementAt(CursorPosition, e => e is IGuiControl c && c.Enabled, out var controlMatchingPosition))
+            if (TryGetElementAt(CursorPosition, e => e is IGuiControl c && c.IsVisible && c.Enabled, out var controlMatchingPosition))
             {
                 newHighlightedElement = controlMatchingPosition as IGuiControl;
             }
@@ -199,6 +199,9 @@ namespace Alex.API.Gui
         {
             foreach (var screen in GuiManager.Screens.ToArray().Reverse())
             {
+                if (screen == null) 
+                    continue;
+                
                 if (screen.TryFindDeepestChild(e => e.RenderBounds.Contains(position) && predicate(e), out var matchedChild))
                 {
                     element = matchedChild;
@@ -214,6 +217,9 @@ namespace Alex.API.Gui
         {
             foreach (var screen in GuiManager.Screens.ToArray().Reverse())
             {
+                if (screen == null) 
+                    continue;
+                
                 if (screen.TryFindDeepestChild(predicate, out var matchedChild))
                 {
                     element = matchedChild;

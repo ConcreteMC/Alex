@@ -26,7 +26,6 @@ using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
 using Alex.Worlds;
 using GLib;
-using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -347,7 +346,7 @@ namespace Alex.Gamestates.Debug
 					if (Alex.Resources.BedrockResourcePack.Textures.TryGetValue(texture,
 																				out Bitmap bmp))
 					{
-						Texture2D t = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, bmp);
+						PooledTexture2D t = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, bmp);
 
 						renderer = new EntityModelRenderer(model, t);
 					}
@@ -419,7 +418,7 @@ namespace Alex.Gamestates.Debug
 			if (renderer == null)
 				return;
 
-			renderer?.Render(renderArgs, Location);
+			renderer?.Render(renderArgs, Location, false);
 		}
 
 		private int _previousIndex = -1;
@@ -471,7 +470,7 @@ namespace Alex.Gamestates.Debug
 
 		private void SetVertices()
 		{
-			var b = _blockStates[_index];
+		/*	var b = _blockStates[_index];
 
 			var vertices = b.Model
 							.GetVertices(World
@@ -504,7 +503,7 @@ namespace Alex.Gamestates.Debug
 				GraphicsDevice.SetVertexBuffer(_buffer);
 
 				_canRender = true;
-			}
+			}*/
 
 			// _vertices = vertices.vertices;
 			// _indices = vertices.indexes;
@@ -589,7 +588,7 @@ namespace Alex.Gamestates.Debug
 
 		public override void Update(UpdateArgs args)
 		{
-			var world = Matrix.CreateTranslation(-_rotationCenter) *
+			/*var world = Matrix.CreateTranslation(-_rotationCenter) *
 						(Matrix.CreateRotationX(MathHelper.ToRadians(_location.Pitch)) *
 						 Matrix.CreateRotationY(MathHelper.ToRadians(_location.Yaw)) *
 						 Matrix.CreateRotationZ(MathHelper.ToRadians(_location.Pitch))) *
@@ -630,7 +629,7 @@ namespace Alex.Gamestates.Debug
 				_previousIndex = _index;
 			}
 
-			_currentEffect = (block.Block.Transparent || block.Block.Animated) ? (Effect) _alphaEffect : _basicEffect;
+			_currentEffect = (block.Block.Transparent || block.Block.Animated) ? (Effect) _alphaEffect : _basicEffect;*/
 		}
 
 		public override string GetDebugInfo()

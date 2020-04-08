@@ -8,6 +8,7 @@ using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.Utils;
 using Alex.Worlds;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Color = Microsoft.Xna.Framework.Color;
@@ -16,7 +17,7 @@ using MathF = System.MathF;
 namespace Alex.Graphics.Models
 {
 	//Thanks https://github.com/SirCmpwn/TrueCraft
-	public class SkyBox
+	public class SkyBox : IDisposable
 	{
 		private float MoonX = 1f/4f;
 		private float MoonY = 1f/2f;
@@ -25,14 +26,14 @@ namespace Alex.Graphics.Models
 	    private BasicEffect CelestialPlaneEffect { get; set; }
 		private BasicEffect CloudsPlaneEffect { get; set; }
 
-	    private VertexBuffer CloudsPlane { get; set; }
-        private VertexBuffer SkyPlane { get; set; }
-	    private VertexBuffer CelestialPlane { get; set; }
-		private VertexBuffer MoonPlane { get; }
+	    private PooledVertexBuffer CloudsPlane { get; set; }
+        private PooledVertexBuffer SkyPlane { get; set; }
+	    private PooledVertexBuffer CelestialPlane { get; set; }
+		private PooledVertexBuffer MoonPlane { get; }
 
-		private Texture2D SunTexture { get; }
-		private Texture2D MoonTexture { get; }
-		private Texture2D CloudTexture { get; }
+		private PooledTexture2D SunTexture { get; }
+		private PooledTexture2D MoonTexture { get; }
+		private PooledTexture2D CloudTexture { get; }
 
 		private bool CanRender { get; set; } = true;
 		public bool EnableClouds { get; set; } = false;
@@ -40,14 +41,14 @@ namespace Alex.Graphics.Models
 		private World World { get; }
 
 	    private readonly VertexPositionTexture[] _moonPlaneVertices;
-		private Alex Game { get; }
-		private IOptionsProvider OptionsProvider { get; }
+	    private IOptionsProvider OptionsProvider { get; }
 		private AlexOptions Options => OptionsProvider.AlexOptions;
-		public SkyBox(Alex alex, GraphicsDevice device, World world)
+		public SkyBox(IServiceProvider serviceProvider, GraphicsDevice device, World world)
 		{
 			World = world;
-			Game = alex;
-			OptionsProvider = alex.Services.GetService<IOptionsProvider>();
+			//Game = alex;
+			var alex = serviceProvider.GetRequiredService<Alex>();
+			OptionsProvider = serviceProvider.GetRequiredService<IOptionsProvider>();
 
 		    if (alex.Resources.ResourcePack.TryGetBitmap("environment/sun", out var sun))
 		    {
@@ -79,7 +80,7 @@ namespace Alex.Graphics.Models
 			    EnableClouds = false;
 		    }
 
-            var d = Options.VideoOptions.RenderDistance ^ 2;
+            //var d = 144;
 
 			CelestialPlaneEffect = new BasicEffect(device);
 			CelestialPlaneEffect.TextureEnabled = true;
@@ -88,10 +89,10 @@ namespace Alex.Graphics.Models
 			SkyPlaneEffect.VertexColorEnabled = false;
 			SkyPlaneEffect.FogEnabled = true;
 			SkyPlaneEffect.FogStart = 0;
-			SkyPlaneEffect.FogEnd = d * 0.8f;
+			SkyPlaneEffect.FogEnd = 64 * 0.8f;
 			SkyPlaneEffect.LightingEnabled = true;
 
-			var planeDistance = d * 3;
+			var planeDistance = 64;
 			var plane = new[]
 			{
 				new VertexPositionColor(new Vector3(-planeDistance, 0, -planeDistance), Color.White),
@@ -106,6 +107,7 @@ namespace Alex.Graphics.Models
 				plane.Length, BufferUsage.WriteOnly);
 			SkyPlane.SetData<VertexPositionColor>(plane);
 
+			planeDistance = 60;
 			var celestialPlane = new[]
 			{
 				new VertexPositionTexture(new Vector3(-planeDistance, 0, -planeDistance), new Vector2(0, 0)),
@@ -136,7 +138,17 @@ namespace Alex.Graphics.Models
 
 			if (EnableClouds)
 				SetupClouds(device, planeDistance);
+
+			RenderSkybox = Options.VideoOptions.Skybox.Value;
+			Options.VideoOptions.Skybox.Bind(SkyboxSettingUpdated);
 		}
+
+		private void SkyboxSettingUpdated(bool oldvalue, bool newvalue)
+		{
+			RenderSkybox = newvalue;
+		}
+
+		private bool RenderSkybox { get; set; } = true;
 
 		private void SetupClouds(GraphicsDevice device, int planeDistance)
 		{
@@ -187,14 +199,14 @@ namespace Alex.Graphics.Models
 
 		public float BrightnessModifier => MathHelper.Clamp(MathF.Cos(CelestialAngle * MathHelper.TwoPi) * 2 + 0.5f, 0.25f, 1f);
 
-	    private Color WorldSkyColor
+		public Color WorldSkyColor
 	    {
 		    get
 		    {
 			    var position = World.Camera.Position;
 
-			    float f1 = MathF.Cos(CelestialAngle * ((float)Math.PI * 2F)) * 2.0F + 0.5F;
-			    f1 = MathHelper.Clamp(f1, 0.0F, 1.0F);
+			    //float f1 = MathF.Cos(CelestialAngle * ((float)Math.PI * 2F)) * 2.0F + 0.5F;
+			   // f1 = MathHelper.Clamp(f1, 0.0F, 1.0F);
 
 			    int x = (int)MathF.Floor(position.X);
 			    int y = (int)MathF.Floor(position.Y);
@@ -210,9 +222,9 @@ namespace Alex.Graphics.Models
 			    float r = (l >> 16 & 255) / 255.0F;
 			    float g = (l >> 8 & 255) / 255.0F;
 			    float b = (l & 255) / 255.0F;
-			    r = r * f1;
-			    g = g * f1;
-			    b = b * f1;
+			    r = r * BrightnessModifier;
+			    g = g * BrightnessModifier;
+			    b = b * BrightnessModifier;
 
 				return new Color(r,g,b);
 		    }
@@ -230,25 +242,40 @@ namespace Alex.Graphics.Models
 		    }
 	    }
 
+	    private float Blend(float source, float destination, float blendFactor)
+	    {
+		    return destination + (source - destination) * blendFactor;
+	    }
+	    
 	    public Color AtmosphereColor
 		{
 			get
 			{
 				float blendFactor = ((Options.VideoOptions.RenderDistance ^2) / 100f) * 0.45f;
-
-				float Blend(float source, float destination) => destination + (source - destination) * blendFactor;
-
+				
 				var fog = WorldFogColor.ToVector3();
 				var sky = WorldSkyColor.ToVector3();
-				var color = new Vector3(Blend(sky.X, fog.X), Blend(sky.Y, fog.Y), Blend(sky.Z, fog.Z));
+				var color = new Vector3(Blend(sky.X, fog.X, blendFactor), Blend(sky.Y, fog.Y, blendFactor), Blend(sky.Z, fog.Z, blendFactor));
 				// TODO: more stuff
 				return new Color(color);
 			}
 		}
 
+	    public Color VoidColor
+	    {
+		    get
+		    {
+			    WorldSkyColor.Deconstruct(out float r, out float g, out float b);
+			    
+			    return new Color(r * 0.2f + 0.04f, g * 0.2f + 0.04f, b * 0.6f + 0.1f);
+		    }
+	    }
+	    
 	    private int CurrentMoonPhase = 0;
 	    public void Update(IUpdateArgs args)
 	    {
+		    if (!RenderSkybox) return;
+		    
 		    var moonPhase = (int)(World.WorldInfo.Time / 24000L % 8L + 8L) % 8;
 		    if (CurrentMoonPhase != moonPhase)
 		    {
@@ -277,54 +304,60 @@ namespace Alex.Graphics.Models
 			    var modified = _moonPlaneVertices.Select(x => x.TextureCoordinate).ToArray();
 			    MoonPlane.SetData(12, modified, 0, modified.Length, MoonPlane.VertexDeclaration.VertexStride);
 		    }
-	    }
-
-	    public void Draw(IRenderArgs renderArgs)
-	    {
-		    if (!CanRender) return;
-		    var camera = renderArgs.Camera;
-			
-			renderArgs.GraphicsDevice.Clear(AtmosphereColor);
-
-			SkyPlaneEffect.View = camera.ViewMatrix;
-			SkyPlaneEffect.Projection = camera.ProjectionMatrix;
+		    
+		    var camera = args.Camera;
+		    SkyPlaneEffect.View = camera.ViewMatrix;
+		    SkyPlaneEffect.Projection = camera.ProjectionMatrix;
 
 		    CelestialPlaneEffect.View = camera.ViewMatrix;
 		    CelestialPlaneEffect.Projection = camera.ProjectionMatrix;
 
+		    var position = camera.Position;
+		    
 		    if (EnableClouds)
 		    {
 			    CloudsPlaneEffect.View = camera.ViewMatrix;
 			    CloudsPlaneEffect.Projection = camera.ProjectionMatrix;
+			    
+			    CloudsPlaneEffect.World = Matrix.CreateTranslation(position.X, 127, position.Z);
 		    }
+	    }
 
-
+	    private static DepthStencilState DepthStencilState { get; } = new DepthStencilState() { DepthBufferEnable = false };
+	    private static RasterizerState RasterState { get; } = new RasterizerState() { CullMode = CullMode.None };
+	    
+	    public void Draw(IRenderArgs renderArgs)
+	    {
+		    renderArgs.GraphicsDevice.Clear(this.AtmosphereColor);
+		    
+		    if (!CanRender || !RenderSkybox) return;
+		    
 		    var depthState = renderArgs.GraphicsDevice.DepthStencilState;
 		    var raster = renderArgs.GraphicsDevice.RasterizerState;
 		    var bl = renderArgs.GraphicsDevice.BlendState;
 
-			renderArgs.GraphicsDevice.DepthStencilState = new DepthStencilState() { DepthBufferEnable = false };
-			renderArgs.GraphicsDevice.RasterizerState = new RasterizerState() { CullMode = CullMode.None };
+		    renderArgs.GraphicsDevice.DepthStencilState = DepthStencilState;
+		    renderArgs.GraphicsDevice.RasterizerState = RasterState;
 			renderArgs.GraphicsDevice.BlendState = BlendState.AlphaBlend;
 			
-			DrawSky(renderArgs, camera.Position);
+			DrawSky(renderArgs, renderArgs.Camera.Position);
 
 			var backup = renderArgs.GraphicsDevice.BlendState;
 		    renderArgs.GraphicsDevice.BlendState = BlendState.Additive;
 		    renderArgs.GraphicsDevice.DepthStencilState = DepthStencilState.DepthRead;
 
-		    DrawSun(renderArgs, camera.Position);
+		    DrawSun(renderArgs, renderArgs.Camera.Position);
 
-			DrawMoon(renderArgs, camera.Position);
+			DrawMoon(renderArgs, renderArgs.Camera.Position);
 
 			renderArgs.GraphicsDevice.BlendState = BlendState.AlphaBlend;
 
             if (EnableClouds)
-				DrawClouds(renderArgs, camera.Position);
+				DrawClouds(renderArgs, renderArgs.Camera.Position);
 
 			renderArgs.GraphicsDevice.BlendState = backup;
 
-			DrawVoid(renderArgs, camera.Position);
+			DrawVoid(renderArgs, renderArgs.Camera.Position);
 
 		    renderArgs.GraphicsDevice.DepthStencilState = depthState;
 		    renderArgs.GraphicsDevice.RasterizerState = raster;
@@ -333,41 +366,42 @@ namespace Alex.Graphics.Models
 
 		private void DrawSky(IRenderArgs renderArgs, Vector3 position)
 		{
-			// Sky
 			SkyPlaneEffect.FogColor = AtmosphereColor.ToVector3();
 			SkyPlaneEffect.World = Matrix.CreateRotationX(MathHelper.Pi)
 			                       * Matrix.CreateTranslation(0, 100, 0)
-			                       * Matrix.CreateRotationX(MathHelper.TwoPi * CelestialAngle) * Matrix.CreateTranslation(position);
+			                       * Matrix.CreateRotationX(MathHelper.TwoPi * CelestialAngle)* Matrix.CreateTranslation(position);
+			                    //   * Matrix.CreateTranslation(position);
+		    
 			SkyPlaneEffect.AmbientLightColor = WorldSkyColor.ToVector3();
-
+			
+			// Sky
 			renderArgs.GraphicsDevice.SetVertexBuffer(SkyPlane);
 			foreach (var pass in SkyPlaneEffect.CurrentTechnique.Passes)
 			{
 				pass.Apply();
+				renderArgs.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, 2);
 			}
-			renderArgs.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, 2);
 		}
 
 		private void DrawClouds(IRenderArgs renderArgs, Vector3 position)
 		{
 			// Clouds
-			CloudsPlaneEffect.Texture = CloudTexture;
-			CloudsPlaneEffect.World = Matrix.CreateTranslation(position.X, 127, position.Z);
-            //CloudsPlaneEffect.AmbientLightColor = WorldSkyColor.ToVector3();
+			//CloudsPlaneEffect.AmbientLightColor = WorldSkyColor.ToVector3();
 
             renderArgs.GraphicsDevice.SetVertexBuffer(CloudsPlane);
 			foreach (var pass in CloudsPlaneEffect.CurrentTechnique.Passes)
 			{
 				pass.Apply();
+				renderArgs.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, 2);
 			}
-			renderArgs.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, 2);
 		}
 
         private void DrawSun(IRenderArgs renderArgs, Vector3 position)
 		{
 			// Sun
 			CelestialPlaneEffect.Texture = SunTexture;
-			CelestialPlaneEffect.World = Matrix.CreateRotationX(MathHelper.Pi)
+			CelestialPlaneEffect.World =
+				Matrix.CreateRotationX(MathHelper.Pi)
 			                             * Matrix.CreateTranslation(0, 100, 0)
 			                             * Matrix.CreateRotationX(MathHelper.TwoPi * CelestialAngle) * Matrix.CreateTranslation(position);
 
@@ -385,7 +419,7 @@ namespace Alex.Graphics.Models
 			// Moon
 			CelestialPlaneEffect.Texture = MoonTexture;
 			CelestialPlaneEffect.World = Matrix.CreateTranslation(0, -100, 0)
-			                             * Matrix.CreateRotationX(MathHelper.TwoPi * CelestialAngle) * Matrix.CreateTranslation(position);
+			                                                                                     * Matrix.CreateRotationX(MathHelper.TwoPi * CelestialAngle) * Matrix.CreateTranslation(position);
 
 			renderArgs.GraphicsDevice.SetVertexBuffer(MoonPlane);
 			foreach (var pass in CelestialPlaneEffect.CurrentTechnique.Passes)
@@ -400,15 +434,73 @@ namespace Alex.Graphics.Models
 		{
 			// Void
 			renderArgs.GraphicsDevice.SetVertexBuffer(SkyPlane);
-			SkyPlaneEffect.World = Matrix.CreateTranslation(0, -4, 0) * Matrix.CreateTranslation(position);
-			SkyPlaneEffect.AmbientLightColor = WorldSkyColor.ToVector3()
-			                                   * new Vector3(0.2f, 0.2f, 0.6f)
-			                                   + new Vector3(0.04f, 0.04f, 0.1f);
+
+			SkyPlaneEffect.World = Matrix.CreateTranslation(0, -16, 0) * Matrix.CreateTranslation(position);
+			SkyPlaneEffect.AmbientLightColor = VoidColor.ToVector3();
+
 			foreach (var pass in SkyPlaneEffect.CurrentTechnique.Passes)
 			{
 				pass.Apply();
+				renderArgs.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, 2);
 			}
-			renderArgs.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, 2);
+		}
+
+		public void Dispose()
+		{
+			CloudsPlane?.MarkForDisposal();
+			SkyPlane?.MarkForDisposal();
+			CelestialPlane?.MarkForDisposal();
+			MoonPlane?.MarkForDisposal();
+			SunTexture?.MarkForDisposal();
+			MoonTexture?.MarkForDisposal();
+			CloudTexture?.MarkForDisposal();
+			
+			SkyPlaneEffect?.Dispose();
+			CelestialPlaneEffect?.Dispose();
+			CloudsPlaneEffect?.Dispose();
+		}
+		
+		private static Color HSL2RGB(float h, float sl, float l)
+		{
+			// Thanks http://www.java2s.com/Code/CSharp/2D-Graphics/HSLtoRGBconversion.htm
+			float v, r, g, b;
+			r = g = b = l;   // default to gray
+			v = (l <= 0.5f) ? (l * (1.0f + sl)) : (l + sl - l * sl);
+			if (v > 0)
+			{
+				int sextant;
+				float m, sv, fract, vsf, mid1, mid2;
+				m = l + l - v;
+				sv = (v - m) / v;
+				h *= 6.0f;
+				sextant = (int)h;
+				fract = h - sextant;
+				vsf = v * sv * fract;
+				mid1 = m + vsf;
+				mid2 = v - vsf;
+				switch (sextant)
+				{
+					case 0:
+						r = v; g = mid1; b = m;
+						break;
+					case 1:
+						r = mid2; g = v; b = m;
+						break;
+					case 2:
+						r = m; g = v; b = mid1;
+						break;
+					case 3:
+						r = m; g = mid2; b = v;
+						break;
+					case 4:
+						r = mid1; g = m; b = v;
+						break;
+					case 5:
+						r = v; g = m; b = mid2;
+						break;
+				}
+			}
+			return new Color(r, g, b);
 		}
 	}
 }

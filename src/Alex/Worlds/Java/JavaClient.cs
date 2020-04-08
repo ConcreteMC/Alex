@@ -71,7 +71,7 @@ namespace Alex.Worlds.Java
 			});
 		}
 
-	    public void BlockPlaced(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition)
+	    public void BlockPlaced(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition, IEntity p)
 	    {
 	        SendPacket(new PlayerBlockPlacementPacket()
 	        {
@@ -95,7 +95,31 @@ namespace Alex.Worlds.Java
 
 		public void EntityInteraction(IEntity player, IEntity target, McpeInventoryTransaction.ItemUseOnEntityAction action)
 		{
-			throw new NotImplementedException();
+			
+			switch (action)
+			{
+				case McpeInventoryTransaction.ItemUseOnEntityAction.Interact:
+				{
+					var packet = new InteractEntityPacket();
+					packet.EntityId = (int) target.EntityId;
+					packet.Type = 0;
+					packet.Hand = 0;
+					
+					SendPacket(packet);
+				}
+					break;
+				case McpeInventoryTransaction.ItemUseOnEntityAction.Attack:
+				{
+					var packet = new InteractEntityPacket();
+					packet.EntityId = (int) target.EntityId;
+					packet.Type = 1;
+
+					SendPacket(packet);
+				}
+					break;
+				case McpeInventoryTransaction.ItemUseOnEntityAction.ItemInteract:
+					break;
+			}
 		}
 
 		public void WorldInteraction(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition)

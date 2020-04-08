@@ -2,15 +2,19 @@
 using System.Drawing;
 using System.IO;
 using System.Net;
+using Alex.API.Graphics;
+using Alex.Blocks.Minecraft;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET.Utils.Skins;
 using Newtonsoft.Json;
+using NLog;
 
 namespace Alex.Utils
 {
 	public static class SkinUtils
 	{
-		public static bool TryGetSkin(string json, GraphicsDevice graphics, out Texture2D texture, out bool isSlim)
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger();
+		public static bool TryGetSkin(string json, GraphicsDevice graphics, out PooledTexture2D texture, out bool isSlim)
 		{
 			isSlim = false;
 			try
@@ -29,7 +33,7 @@ namespace Alex.Utils
 
 						using (MemoryStream ms = new MemoryStream(data))
 						{
-							texture = Texture2D.FromStream(graphics, ms);
+							texture = GpuResourceManager.GetTexture2D("SkinUtils", graphics, ms);// Texture2D.FromStream(graphics, ms);
 						}
 
 						isSlim = (r.textures.SKIN.metadata?.model == "slim");
@@ -38,16 +42,16 @@ namespace Alex.Utils
 					}
 				}
 			}
-			catch
+			catch(Exception ex)
 			{
-				
+				Log.Warn(ex, $"Could not retrieve skin: {ex.ToString()}");
 			}
 
 			texture = null;
 			return false;
 		}
 		
-		public static bool TryGetSkin(Uri skinUri, GraphicsDevice graphics, out Texture2D texture)
+		public static bool TryGetSkin(Uri skinUri, GraphicsDevice graphics, out PooledTexture2D texture)
 		{
 			try
 			{
@@ -59,14 +63,14 @@ namespace Alex.Utils
 
 				using (MemoryStream ms = new MemoryStream(data))
 				{
-					texture = Texture2D.FromStream(graphics, ms);
+					texture = GpuResourceManager.GetTexture2D("SkinUtils", graphics, ms);
 				}
 
 				return true;
 			}
-			catch
+			catch(Exception ex)
 			{
-
+				Log.Warn(ex, $"Could not retrieve skin: {ex.ToString()}");
 			}
 
 			texture = null;
@@ -77,10 +81,12 @@ namespace Alex.Utils
 		{
 			try
 			{
-				var bytes = skin.SkinData;
+				var bytes = skin.Data;
 
-				int width = 64;
-				var height = bytes.Length == 64 * 32 * 4 ? 32 : 64;
+				/*int width = 64;
+				var height = bytes.Length == 64 * 32 * 4 ? 32 : 64;*/
+				int width = skin.Width;
+				int height = skin.Height;
 
 				Bitmap bitmap = new Bitmap(width, height);
 

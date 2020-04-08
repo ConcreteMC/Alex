@@ -2,8 +2,11 @@
 using System.Linq;
 using System.Text;
 using System.Threading;
+using Alex.API;
+using Alex.API.Events;
 using Alex.API.Graphics;
 using Alex.API.Network;
+using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks.Minecraft;
@@ -11,18 +14,19 @@ using Alex.Blocks.State;
 using Alex.GameStates.Hud;
 using Alex.Graphics.Camera;
 using Alex.Graphics.Models;
+using Alex.Gui;
 using Alex.Gui.Elements;
 using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using RocketUI;
 
 namespace Alex.GameStates.Playing
 {
 	public class PlayingState : GameState
 	{
-		private SkyBox SkyRenderer { get; }
 		public World World { get; }
 
         private WorldProvider WorldProvider { get; }
@@ -31,31 +35,58 @@ namespace Alex.GameStates.Playing
 		private readonly PlayingHud _playingHud;
 		private readonly GuiDebugInfo _debugInfo;
 		
+		private GuiMiniMap MiniMap { get; }
+		private bool RenderMinimap { get; set; } = false;
 		public PlayingState(Alex alex, GraphicsDevice graphics, WorldProvider worldProvider, INetworkProvider networkProvider) : base(alex)
 		{
 			NetworkProvider = networkProvider;
 
-			World = new World(alex, graphics, Options, new FirstPersonCamera(Options.VideoOptions.RenderDistance, Vector3.Zero, Vector3.Zero), networkProvider);
-			SkyRenderer = new SkyBox(alex, graphics, World);
+			World = new World(alex.Services, graphics, Options, new FirstPersonCamera(Options.VideoOptions.RenderDistance, Vector3.Zero, Vector3.Zero), networkProvider);
 
 			WorldProvider = worldProvider;
 			if (worldProvider is SPWorldProvider)
 			{
 				World.FreezeWorldTime = true;
 			}
-
-			var chat = new ChatComponent(World);
+			
 			var title = new TitleComponent();
 
 			WorldProvider = worldProvider;
-			WorldProvider.Init(World, chat, out var info, out var chatProvider);
+			WorldProvider.Init(World, out var info);
 			World.WorldInfo = info;
-			chat.ChatProvider = chatProvider;
+			
 			WorldProvider.TitleComponent = title;
 
-			_playingHud = new PlayingHud(Alex, World.Player, chat, title);
+			_playingHud = new PlayingHud(Alex, World.Player, title);
 			_debugInfo = new GuiDebugInfo();
             InitDebugInfo();
+            
+            MiniMap = new GuiMiniMap(World.ChunkManager)
+            {
+	            Anchor = Alignment.TopRight
+            };
+
+            var settings = GetService<IOptionsProvider>();
+            settings.AlexOptions.VideoOptions.Minimap.Bind(OnMinimapSettingChange);
+            RenderMinimap = settings.AlexOptions.VideoOptions.Minimap.Value;
+            
+            if (RenderMinimap)
+            {
+	            _playingHud.AddChild(MiniMap);
+            }
+		}
+
+		private void OnMinimapSettingChange(bool oldvalue, bool newvalue)
+		{
+			RenderMinimap = newvalue;
+			if (!newvalue)
+			{
+				_playingHud.RemoveChild(MiniMap);
+			}
+			else
+			{
+				_playingHud.AddChild(MiniMap);
+			}
 		}
 
 		protected override void OnLoad(IRenderArgs args)
@@ -71,7 +102,9 @@ namespace Alex.GameStates.Playing
 
 			base.OnShow();
 			Alex.GuiManager.AddScreen(_playingHud);
-			Alex.GuiManager.AddScreen(_debugInfo);
+			
+			if (RenderDebug)
+				Alex.GuiManager.AddScreen(_debugInfo);
 		}
 
 		protected override void OnHide()
@@ -118,6 +151,7 @@ namespace Alex.GameStates.Playing
 			{
 				return $"Biome: {_currentBiome.Name} ({_currentBiomeId})";
 			});
+			_debugInfo.AddDebugLeft(() => { return $"Always Day: {AlwaysDay}"; });
 
 			_debugInfo.AddDebugRight(() => Alex.DotnetRuntime);
 			//_debugInfo.AddDebugRight(() => MemoryUsageDisplay);
@@ -132,7 +166,7 @@ namespace Alex.GameStates.Playing
 			{
 				if (_raytracedBlock.Y > 0 && _raytracedBlock.Y < 256)
 				{
-					var adj = _adjacentBlock.Floor() - _raytracedBlock.Floor();
+					var adj =  Vector3.Floor(_adjacentBlock) - Vector3.Floor(_raytracedBlock);
 					adj.Normalize();
 
 					var face = adj.GetBlockFace();
@@ -183,6 +217,8 @@ namespace Alex.GameStates.Playing
 		private DateTime _previousMemUpdate = DateTime.UtcNow;
 		protected override void OnUpdate(GameTime gameTime)
 		{
+			MiniMap.PlayerLocation = World.Player.KnownPosition;
+			
 			var args = new UpdateArgs()
 			{
 				Camera = World.Camera,
@@ -190,6 +226,8 @@ namespace Alex.GameStates.Playing
 				GameTime = gameTime
 			};
 
+			_playingHud.CheckInput = Alex.GuiManager.ActiveDialog == null;
+			
 		//	if (Alex.IsActive)
 			{
 				var newAspectRatio = Graphics.Viewport.AspectRatio;
@@ -203,16 +241,24 @@ namespace Alex.GameStates.Playing
 
 				if (!_playingHud.Chat.Focused)
 				{
+					World.Player.Controller.CheckMovementInput = Alex.IsActive && Alex.GuiManager.ActiveDialog == null;
 					World.Player.Controller.CheckInput = Alex.IsActive;
-					CheckInput(gameTime);
+
+					if (Alex.GuiManager.ActiveDialog == null)
+					{
+						CheckInput(gameTime);
+					}
 				}
 				else
 				{
 					World.Player.Controller.CheckInput = false;
 				}
 
-				SkyRenderer.Update(args);
-				World.Update(args, SkyRenderer);
+				if (AlwaysDay){
+					World.SetTime(1200);
+				}
+				
+				World.Update(args);
 
 				var now = DateTime.UtcNow;
 				if (now - _previousMemUpdate > TimeSpan.FromSeconds(5))
@@ -257,10 +303,10 @@ namespace Alex.GameStates.Playing
 
 		        if (block != null && block.HasHitbox && !block.IsWater)
 		        {
-		            var bbox = block.GetBoundingBox(targetPoint.Floor());
+		            var bbox = block.GetBoundingBox(Vector3.Floor(targetPoint));
 		            if (bbox.Contains(targetPoint) == ContainmentType.Contains)
 		            {
-		                _raytracedBlock = targetPoint.Floor();
+		                _raytracedBlock = Vector3.Floor(targetPoint);
                         SelBlock = block;
 		                RayTraceBoundingBox = bbox;
 
@@ -269,7 +315,7 @@ namespace Alex.GameStates.Playing
 
                         if (SetPlayerAdjacentSelectedBlock(world, x, camPos, lookVector, out Vector3 rawAdjacent))
                         {
-	                        _adjacentBlock = rawAdjacent.Floor();
+	                        _adjacentBlock = Vector3.Floor(rawAdjacent);
 
 				            world.Player.AdjacentRaytrace = rawAdjacent;
                             world.Player.HasAdjacentRaytrace = true;
@@ -311,8 +357,9 @@ namespace Alex.GameStates.Playing
 
 	    private Block SelBlock { get; set; } = new Air();
 		private Microsoft.Xna.Framework.BoundingBox RayTraceBoundingBox { get; set; }
-		private bool RenderDebug { get; set; } = true;
+		private bool RenderDebug { get; set; } = false;
 		private bool RenderBoundingBoxes { get; set; } = false;
+		private bool AlwaysDay { get; set; } = false;
 		
 		private KeyboardState _oldKeyboardState;
 		protected void CheckInput(GameTime gameTime) //TODO: Move this input out of the main update loop and use the new per-player based implementation by @TruDan
@@ -323,7 +370,15 @@ namespace Alex.GameStates.Playing
 				if (KeyBinds.EntityBoundingBoxes.All(x => currentKeyboardState.IsKeyDown(x)))
 				{
 					RenderBoundingBoxes = !RenderBoundingBoxes;
-				} 
+				}
+				else if (KeyBinds.AlwaysDay.All(x => currentKeyboardState.IsKeyDown(x)))
+				{
+					if (!AlwaysDay)
+					{
+						World.SetTime(1200);
+					}
+					AlwaysDay = !AlwaysDay;
+				}
 				else if (currentKeyboardState.IsKeyDown(KeyBinds.DebugInfo))
 				{
 					RenderDebug = !RenderDebug;
@@ -344,8 +399,7 @@ namespace Alex.GameStates.Playing
 
 				if (currentKeyboardState.IsKeyDown(KeyBinds.Fog) && !_oldKeyboardState.IsKeyDown(KeyBinds.Fog))
 				{
-					World.ChunkManager.OpaqueEffect.FogEnabled = !World.ChunkManager.OpaqueEffect.FogEnabled;
-					World.ChunkManager.TransparentEffect.FogEnabled = !World.ChunkManager.TransparentEffect.FogEnabled;
+					World.ChunkManager.FogEnabled = !World.ChunkManager.FogEnabled;
 				}
 
 				if (currentKeyboardState.IsKeyDown(KeyBinds.ChangeCamera))
@@ -383,7 +437,7 @@ namespace Alex.GameStates.Playing
 		{
 			try
 			{
-				args.SpriteBatch.Begin();
+				args.SpriteBatch.Begin(SpriteSortMode.Deferred, samplerState: SamplerState.PointClamp, blendState:BlendState.NonPremultiplied);
 
 				if (_raytracedBlock.Y > 0 && _raytracedBlock.Y < 256)
 				{
@@ -419,13 +473,13 @@ namespace Alex.GameStates.Playing
 						}
 					}
 				}
-
-				World.Render2D(args);
 			}
 			finally
 			{
 				args.SpriteBatch.End();
 			}
+			
+			World.Render2D(args);
 		}
 
 		public static string GetCardinalDirection(PlayerLocation cam)
@@ -534,7 +588,10 @@ namespace Alex.GameStates.Playing
 		{
 			args.Camera = World.Camera;
 
-            SkyRenderer.Draw(args);
+			if (RenderMinimap)
+			{
+				MiniMap.Draw(args);
+			}
 
 			World.Render(args);
 
@@ -548,6 +605,10 @@ namespace Alex.GameStates.Playing
 			World.Destroy();
 			WorldProvider.Dispose();
 			NetworkProvider.Close();
+
+			_playingHud.Unload();
+			//GetService<IEventDispatcher>().UnregisterEvents(_playingHud.Chat);
+			//_playingHud.Chat = 
 		}
 	}
 }

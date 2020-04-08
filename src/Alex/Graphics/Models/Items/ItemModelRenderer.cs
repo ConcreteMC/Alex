@@ -2,49 +2,93 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using Alex.API.Blocks.State;
 using Alex.API.Entities;
 using Alex.API.Graphics;
+using Alex.Blocks.Minecraft;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Models.Items;
 using Alex.Utils;
+using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Color = Microsoft.Xna.Framework.Color;
 
 namespace Alex.Graphics.Models.Items
 {
-    public class ItemModelRenderer : Model, IAttachable
-    {
-	    public ResourcePackItem Model { get; }
-	    public VertexPositionColor[] Vertices { get; set; } = null;
-		public short[] Indexes { get; set; } = null;
-
-		private BasicEffect Effect { get; set; } = null;
-
-		public Vector3 Rotation { get; set; } = Vector3.Zero;
-		public Vector3 Translation { get; set; }= Vector3.Zero;
-		public Vector3 Scale { get; set; }= Vector3.Zero;
+	public interface IItemRenderer : IAttachable
+	{
+		ResourcePackItem Model { get; }
 		
+		Vector3 Rotation { get; set; }
+		Vector3 Translation { get; set; }
+		Vector3 Scale { get; set; }
 		
-		public ItemModelRenderer(ResourcePackItem model, McResourcePack resourcePack)
+		void Update(GraphicsDevice device, ICamera camera);
+
+		void Cache(McResourcePack pack);
+	}
+	
+	public class ItemBlockModelRenderer : ItemModelRenderer<VertexPositionNormalTextureColor>
+	{
+		private IBlockState _block;
+		private ResourceManager _resource;
+		public ItemBlockModelRenderer(IBlockState block, ResourcePackItem model, McResourcePack resourcePack, ResourceManager resourceManager) : base(model, resourcePack, VertexPositionNormalTextureColor.VertexDeclaration)
 		{
-			Model = model;
-			Cache(resourcePack);
+			_block = block;
+			_resource = resourceManager;
+			
+			Scale = new Vector3(0.25f, 0.25f, 0.25f);
 		}
 
-		private Matrix ParentMatrix = Matrix.Identity;
-		public void Update(Matrix parentMatrix)
+		public override void Cache(McResourcePack pack)
 		{
-			ParentMatrix = parentMatrix;
+			if (Vertices != null)
+				return;
+			
+			var data = _block.Model.GetVertices(new ItemRenderingWorld(_block.Block), Vector3.Zero, _block.Block);
+			Vertices = data.vertices;
+			Indexes = data.indexes.Select(x => (short)x).ToArray();
 		}
 
-		public void Render(IRenderArgs args)
+		public override void Update(GraphicsDevice device, ICamera camera)
 		{
-			Render(args.GraphicsDevice);
+			if (Effect == null)
+			{
+				Effect = new BasicEffect(device);
+				Effect.VertexColorEnabled = true;
+				Effect.TextureEnabled = true;
+
+				if (_block.Block.Animated)
+				{
+					Effect.Texture = _resource.Atlas.GetAtlas(0);
+				}
+				else
+				{
+					Effect.Texture = _resource.Atlas.GetStillAtlas();
+				}
+			}
+
+			Effect.Projection = camera.ProjectionMatrix;
+			Effect.View = camera.ViewMatrix;
+
+			var scale = Scale;
+
+			Effect.World = Matrix.CreateScale(scale) * ParentMatrix;
+			
+			base.Update(device, camera);
+		}
+	}
+
+	public class ItemModelRenderer : ItemModelRenderer<VertexPositionColor>
+	{
+		public ItemModelRenderer(ResourcePackItem model, McResourcePack resourcePack) : base(model, resourcePack, VertexPositionColor.VertexDeclaration)
+		{
+			
 		}
 
-		public void Update(GraphicsDevice device, ICamera camera)
+		public override void Update(GraphicsDevice device, ICamera camera)
 		{
 			if (Effect == null)
 			{
@@ -55,55 +99,28 @@ namespace Alex.Graphics.Models.Items
 			Effect.Projection = camera.ProjectionMatrix;
 			Effect.View = camera.ViewMatrix;
 
-			var scale = Scale * 16f;
-
-			var a = 1f / 16f;
-			var pivot = new Vector3(0.5f, 0.5f, 0.5f) * a;
-			
-			/*var pieceMatrix =
-				Matrix.CreateTranslation(-pivot) *
-				Matrix.CreateScale(scale) *
-						Matrix.CreateFromYawPitchRoll(MathUtils.ToRadians(180f - Rotation.Y), MathUtils.ToRadians(180f - Rotation.X), MathUtils.ToRadians(-Rotation.Z)) * 
-				Matrix.CreateTranslation(new Vector3(Translation.X, Translation.Y, (Translation.Z)));*/
+			var scale = Scale;
 			
 			var pieceMatrix =
-				/*Matrix.CreateTranslation(-pivot) */
-				Matrix.CreateScale(scale) *
-				/*Matrix.CreateFromYawPitchRoll(MathUtils.ToRadians(180f - Rotation.Y), MathUtils.ToRadians(180f - Rotation.X), MathUtils.ToRadians(-Rotation.Z)) * */
-				Matrix.CreateFromYawPitchRoll(MathUtils.ToRadians(- Rotation.Y),0f, MathUtils.ToRadians(-Rotation.Z)) *
-				Matrix.CreateTranslation(new Vector3(Translation.X, Translation.Y + 8f, (Translation.Z - 8f)));
+				Matrix.CreateTranslation(Translation * scale) *
+				Matrix.CreateRotationX(MathUtils.ToRadians(Rotation.X)) *
+				Matrix.CreateRotationY(MathUtils.ToRadians(Rotation.Y)) *
+				Matrix.CreateRotationZ(MathUtils.ToRadians(Rotation.Z));
 			
 			Effect.World = pieceMatrix * ParentMatrix;
-		}
-
-		private void DrawLine(GraphicsDevice device, Vector3 start, Vector3 end, Color color)
-		{
-			var vertices = new[] { new VertexPositionColor(start, color),  new VertexPositionColor(end, color) };
-			device.DrawUserPrimitives(PrimitiveType.LineList, vertices, 0, 1);
-		}
-		
-		public void Render(GraphicsDevice device)
-		{
-			if (Effect == null || Vertices == null || Vertices.Length == 0)
-				return;
 			
-			foreach (var a in Effect.CurrentTechnique.Passes)
-			{
-				a.Apply();
-
-				DrawLine(device, Vector3.Zero, Vector3.Up, Color.Green);
-				DrawLine(device, Vector3.Zero, Vector3.Forward, Color.Blue);
-				DrawLine(device, Vector3.Zero, Vector3.Right, Color.Red);
-				
-				device.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, Vertices, 0, Vertices.Length, Indexes, 0, Indexes.Length / 3);
-			}
+			base.Update(device, camera);
 		}
 		
-	    private void Cache(McResourcePack pack)
-	    {
-		    var t = Model.Textures.FirstOrDefault(x => x.Value != null);
 
-		    if (t.Value == default) return;
+		public override void Cache(McResourcePack pack)
+		{
+			var t = Model.Textures.FirstOrDefault(x => x.Value != null);
+
+		    if (t.Value == default)
+		    {
+			    return;
+		    }
 		    
 		    List<VertexPositionColor> vertices = new List<VertexPositionColor>(); 
 		    List<short> indexes = new List<short>();
@@ -163,27 +180,121 @@ namespace Alex.Graphics.Models.Items
 		    }
 
 		    Indexes = indexes.ToArray();
-	    }
-	    
-	    private List<VertexPositionColor> ModifyCubeIndexes(List<VertexPositionColor> vertices,
-		    ref (VertexPositionColor[] vertices, short[] indexes) data, Vector3 offset)
-	    {
-		    var startIndex = (short)vertices.Count;
-		    foreach (var vertice in data.vertices)
-		    {
-			    var vertex = vertice;
-			    vertex.Position += offset;
-			    vertices.Add(vertex);
-		    }
+		}
+		
+		private List<VertexPositionColor> ModifyCubeIndexes(List<VertexPositionColor> vertices,
+			ref (VertexPositionColor[] vertices, short[] indexes) data, Vector3 offset)
+		{
+			var startIndex = (short)vertices.Count;
+			foreach (var vertice in data.vertices)
+			{
+				var vertex = vertice;
+				vertex.Position += offset;
+				vertices.Add(vertex);
+			}
 			
-		    //vertices.AddRange(data.vertices);
+			//vertices.AddRange(data.vertices);
 			
-		    for (int i = 0; i < data.indexes.Length; i++)
-		    {
-			    data.indexes[i] += startIndex;
-		    }
+			for (int i = 0; i < data.indexes.Length; i++)
+			{
+				data.indexes[i] += startIndex;
+			}
 
-		    return vertices;
+			return vertices;
+		}
+	}
+	
+    public class ItemModelRenderer<TVertice> : Model, IAttachable, IItemRenderer where TVertice : struct, IVertexType
+    {
+	    public ResourcePackItem Model { get; }
+	    public TVertice[] Vertices { get; set; } = null;
+		public short[] Indexes { get; set; } = null;
+
+		protected BasicEffect Effect { get; set; } = null;
+
+		public Vector3 Rotation { get; set; } = Vector3.Zero;
+		public Vector3 Translation { get; set; }= Vector3.Zero;
+		public Vector3 Scale { get; set; }= Vector3.Zero;
+
+		private VertexBuffer Buffer { get; set; } = null;
+		private IndexBuffer IndexBuffer { get; set; } = null;
+		private VertexDeclaration _declaration;
+		public ItemModelRenderer(ResourcePackItem model, McResourcePack resourcePack, VertexDeclaration declaration)
+		{
+			Model = model;
+			_declaration = declaration;
+		}
+
+		protected Matrix ParentMatrix = Matrix.Identity;
+		public void Update(Matrix parentMatrix)
+		{
+			ParentMatrix = parentMatrix;
+		}
+
+		public void Render(IRenderArgs args)
+		{
+			Render(args.GraphicsDevice);
+		}
+
+		private bool _canInit = true;
+		public virtual void Update(GraphicsDevice device, ICamera camera)
+		{
+			if (Buffer == null && Vertices != null && Indexes != null && _canInit)
+			{
+				var vertices = Vertices;
+				var indexes = Indexes;
+
+				if (vertices.Length == 0 || indexes.Length == 0)
+				{
+					_canInit = false;
+				}
+				else
+				{
+					var buffer = GpuResourceManager.GetBuffer(this, device, _declaration,
+						Vertices.Length, BufferUsage.WriteOnly);
+					var indexBuffer = GpuResourceManager.GetIndexBuffer(this, device, IndexElementSize.SixteenBits,
+						Indexes.Length, BufferUsage.WriteOnly);
+
+					buffer.SetData(vertices);
+					indexBuffer.SetData(indexes);
+
+					Buffer = buffer;
+					IndexBuffer = indexBuffer;
+				}
+			}
+		}
+
+		private void DrawLine(GraphicsDevice device, Vector3 start, Vector3 end, Color color)
+		{
+			var vertices = new[] { new VertexPositionColor(start, color),  new VertexPositionColor(end, color) };
+			device.DrawUserPrimitives(PrimitiveType.LineList, vertices, 0, 1);
+		}
+		
+		public void Render(GraphicsDevice device)
+		{
+			if (Effect == null || Buffer == null || Buffer.VertexCount == 0)
+				return;
+
+			foreach (var a in Effect.CurrentTechnique.Passes)
+			{
+				a.Apply();
+
+				//DrawLine(device, Vector3.Zero, Vector3.Up, Color.Green);
+				//	DrawLine(device, Vector3.Zero, Vector3.Forward, Color.Blue);
+				//	DrawLine(device, Vector3.Zero, Vector3.Right, Color.Red);
+
+				device.Indices = IndexBuffer;
+				device.SetVertexBuffer(Buffer);
+				device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, IndexBuffer.IndexCount / 3);
+				//device.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, Vertices, 0, Vertices.Length, Indexes, 0, Indexes.Length / 3);
+			}
+		}
+		
+	    public virtual void Cache(McResourcePack pack)
+	    {
+		    
+		  
+			//Buffer = GpuResourceManager.GetBuffer(this, )
 	    }
     }
 

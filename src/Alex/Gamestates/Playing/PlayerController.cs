@@ -20,7 +20,7 @@ namespace Alex.GameStates.Playing
 		public PlayerInputManager InputManager { get; }
 		public MouseInputListener MouseInputListener { get; }
 
-        public bool IsFreeCam { get; set; }
+        //public bool IsFreeCam { get; set; }
 
         private GraphicsDevice Graphics { get; }
         private World World { get; }
@@ -35,7 +35,7 @@ namespace Alex.GameStates.Playing
             World = world;
             PlayerIndex = playerIndex;
 
-            IsFreeCam = true;
+          //  IsFreeCam = true;
 
 			GlobalInputManager = inputManager;
 			InputManager = inputManager.GetOrAddPlayerManager(playerIndex);
@@ -43,17 +43,27 @@ namespace Alex.GameStates.Playing
 		}
 
 		private bool _inActive = true;
-	    public bool CheckInput { get; set; } = false;
+
+		public bool CheckMovementInput
+		{
+			get { return _allowMovementInput; }
+			set { _allowMovementInput = value; }
+		}
+
+		public bool CheckInput { get; set; } = true;
 	    private bool _allowMovementInput = true;
 	    private bool IgnoreNextUpdate { get; set; } = false;
 		private DateTime _lastForward = DateTime.UtcNow;
+		private DateTime _lastJump = DateTime.UtcNow;
+		private DateTime _lastUp = DateTime.UtcNow;
+		
 		private Vector2 _previousMousePosition = Vector2.Zero;
 
 		private GuiPlayerInventoryDialog _guiPlayerInventoryDialog = null;
 
 		public void Update(GameTime gameTime)
-	    {
-		   UpdatePlayerInput(gameTime);
+		{
+			UpdatePlayerInput(gameTime);
 	    }
 
 	    private void UpdatePlayerInput(GameTime gt)
@@ -61,7 +71,7 @@ namespace Alex.GameStates.Playing
 		    if (CheckInput)
 		    {
 				CheckGeneralInput(gt);
-				CheckMovementInput(gt);
+				UpdateMovementInput(gt);
 		    }
 		    else if (!_inActive)
 		    {
@@ -71,7 +81,10 @@ namespace Alex.GameStates.Playing
 
 	    private void CheckGeneralInput(GameTime gt)
 	    {
-		    if (InputManager.IsPressed(InputCommand.ToggleMenu))
+		    if (World.FormManager.IsShowingForm)
+			    return;
+		    
+		    if (InputManager.IsPressed(InputCommand.Exit))
 		    {
 			    
 			}
@@ -92,16 +105,30 @@ namespace Alex.GameStates.Playing
 		}
 
 	    public float LastSpeedFactor = 0f;
-	    private void CheckMovementInput(GameTime gt)
+	    private Vector3 LastVelocity { get; set; } = Vector3.Zero;
+	    private void UpdateMovementInput(GameTime gt)
 	    {
 		    if (!_allowMovementInput) return;
 
 			var moveVector = Vector3.Zero;
 			var now = DateTime.UtcNow;
 
-		    if (InputManager.IsPressed(InputCommand.ToggleCameraFree))
-		    {
-			    IsFreeCam = !IsFreeCam;
+			if (Player.CanFly)
+			{
+			    if (InputManager.IsPressed(InputCommand.ToggleCameraFree))
+			    {
+				    Player.IsFlying = !Player.IsFlying;
+			    }
+			    else if (InputManager.IsDown(InputCommand.MoveUp))
+			    {
+				    if (InputManager.IsBeginPress(InputCommand.MoveUp) &&
+				        now.Subtract(_lastUp).TotalMilliseconds <= 100)
+				    {
+					    Player.IsFlying = !Player.IsFlying;
+				    }
+
+				    _lastUp = now;
+			    }
 		    }
 
 		    float modifier = 1f;
@@ -178,14 +205,17 @@ namespace Alex.GameStates.Playing
 				{
 					if (Player.IsInWater)
 					{
-						moveVector.Y += 0.04f;
+						moveVector.Y += 1f;
 					}
 					else
 					{
-						if (Player.KnownPosition.OnGround && Math.Abs(Math.Floor(Player.KnownPosition.Y) - Player.KnownPosition.Y) < 0.001f)
+						if (Player.KnownPosition.OnGround && Player.Velocity.Y <= 0.00001f &&
+						    Player.Velocity.Y >= -0.00001f && Math.Abs(LastVelocity.Y - Player.Velocity.Y) < 0.0001f
+						)
 						{
-						//	moveVector.Y += 42f;
-							Player.Velocity += new Vector3(0f, 2.25f, 0f);// //, 0);
+							//	moveVector.Y += 42f;
+						//	Player.Velocity += new Vector3(0f, 4.65f, 0f); // //, 0);
+							Player.Velocity += new Vector3(0f, MathF.Sqrt(2f * (float)Player.Gravity * 1.2f), 0f);
 						}
 					}
 				}
@@ -206,6 +236,9 @@ namespace Alex.GameStates.Playing
 		//	if (moveVector != Vector3.Zero)
 			{
 				var velocity = moveVector * speedFactor;
+				velocity = Vector3.Transform(velocity,
+					Matrix.CreateRotationY(-MathHelper.ToRadians(Player.KnownPosition.HeadYaw)));
+				
 				if (Player.IsFlying)
 				{
 					if ((Player.Velocity * new Vector3(1, 1, 1)).Length() < velocity.Length())
@@ -273,6 +306,8 @@ namespace Alex.GameStates.Playing
 					_previousMousePosition = e;
 				}
 			}
-		}
+
+			LastVelocity = Player.Velocity;
+	    }
     }
 }

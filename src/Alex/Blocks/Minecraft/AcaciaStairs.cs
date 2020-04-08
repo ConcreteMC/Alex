@@ -1,8 +1,8 @@
 namespace Alex.Blocks.Minecraft
 {
-	public class AcaciaStairs : Stairs
+	public class AcaciaStairs : WoodStairs
 	{
-		public AcaciaStairs() : base(6253)
+		public AcaciaStairs() : base()
 		{
 			Solid = true;
 			Transparent = true;

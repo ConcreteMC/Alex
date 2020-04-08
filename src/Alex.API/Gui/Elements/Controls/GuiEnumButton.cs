@@ -16,13 +16,13 @@ namespace Alex.API.Gui.Elements.Controls
                 {
                     _value = value;
                     
-                    TextElement.Text = string.Format(DisplayFormat, _value);
+                    TextElement.Text = DisplayFormat?.FormatValue(_value) ?? string.Empty;
 
                     ValueChanged?.Invoke(this, _value);
                 }
             }
         }
 
-        public string DisplayFormat { get; set; } = "{0}";
+        public ValueFormatter<TEnum> DisplayFormat { get; set; } = "{0}";
     }
 }

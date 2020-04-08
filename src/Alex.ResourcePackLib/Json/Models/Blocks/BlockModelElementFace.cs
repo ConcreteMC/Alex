@@ -28,7 +28,7 @@ namespace Alex.ResourcePackLib.Json.Models.Blocks
 		/// <summary>
 		/// Determines whether to tint the texture using a hardcoded tint index. The default is not using the tint, and any number causes it to use tint. Note that only certain blocks have a tint index, all others will be unaffected.
 		/// </summary>
-		public int TintIndex { get; set; } = -1;
+		public int? TintIndex { get; set; } = null;
 
 	}
 }

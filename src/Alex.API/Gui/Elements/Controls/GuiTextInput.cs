@@ -55,6 +55,13 @@ namespace Alex.API.Gui.Elements.Controls
 			    UpdateDisplayText();
 		    }
 	    }
+
+	    
+	    /// <summary>
+	    /// 	Max characters in field.
+	    /// 	Set to -1 for infinite.
+	    /// </summary>
+	    public int MaxCharacters { get; set; } = -1;
 		
 		public bool IsPasswordInput { get; set; } = false;
         public GuiTextInput(string text = null)
@@ -209,7 +216,11 @@ namespace Alex.API.Gui.Elements.Controls
 				}
 				else if (!char.IsControl(character))
 				{
-					TextBuilder.AppendCharacter(character);
+					if (TextBuilder.Length < MaxCharacters || MaxCharacters == -1)
+					{
+						TextBuilder.AppendCharacter(character);
+					}
+
 					_lastKeyInputTime = _lastUpdate;
 				}
 			}

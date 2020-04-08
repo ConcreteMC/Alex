@@ -10,8 +10,10 @@ namespace Alex.Blocks.Minecraft
 			HasHitbox = false;
 
 			LightValue = 15;
-			LightOpacity = 255;
+			LightOpacity = 1;
 			Animated = true;
+			
+			BlockMaterial = Material.Lava;
 			//BlockModel = BlockFactory.StationairyLavaModel;
 
 			//	BlockMaterial = Material.Lava;

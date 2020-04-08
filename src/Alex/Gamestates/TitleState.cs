@@ -21,8 +21,10 @@ using Alex.Services;
 using Alex.Utils;
 using Alex.Worlds;
 using Alex.Worlds.Generators;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using MiNET.Net;
 using NLog;
 using RocketUI;
 using Color = Microsoft.Xna.Framework.Color;
@@ -37,19 +39,14 @@ namespace Alex.GameStates
 		private readonly GuiStackMenu _mainMenu;
 		private readonly GuiStackMenu _debugMenu;
 		private readonly GuiStackMenu _spMenu;
-
-		private GuiButton _loginButton;
 		
 		private readonly GuiTextElement _splashText;
 
 		private readonly GuiPanoramaSkyBox _backgroundSkyBox;
 		private GuiEntityModelView _playerView;
-
-		private readonly GuiImage _logo;
 		private IPlayerProfileService _playerProfileService;
 
 		private FpsMonitor FpsMonitor { get; }
-		private readonly ScoreboardView _scoreboard;
 		public TitleState()
 		{
 			FpsMonitor = new FpsMonitor();
@@ -93,6 +90,7 @@ namespace Alex.GameStates
 			};
 
 			_debugMenu.AddMenuItem("Debug Blockstates", DebugWorldButtonActivated);
+			_debugMenu.AddMenuItem("Demo", DemoButtonActivated);
 			_debugMenu.AddMenuItem("Debug Flatland", DebugFlatland);
 			//_debugMenu.AddMenuItem("Debug Anvil", DebugAnvil);
 			_debugMenu.AddMenuItem("Debug Chunk", DebugChunkButtonActivated);
@@ -125,7 +123,7 @@ namespace Alex.GameStates
 
 			AddChild(_mainMenu);
 
-			AddChild(_logo = new GuiImage(GuiTextures.AlexLogo)
+			AddChild(new GuiImage(GuiTextures.AlexLogo)
 			{
 				Margin = new Thickness(95, 25, 0, 0),
 				Anchor = Alignment.TopCenter
@@ -187,8 +185,8 @@ namespace Alex.GameStates
 				BackgroundOverlay = new Color(Color.Black, 0.35f),
 			};
 
-			_protocolMenu.AddMenuItem($"Java - Version {JavaProtocol.FriendlyName}", JavaEditionButtonPressed);
-			_protocolMenu.AddMenuItem($"Bedrock - In Dev", BedrockEditionButtonPressed, false);
+			_protocolMenu.AddMenuItem($"Java - {JavaProtocol.FriendlyName}", JavaEditionButtonPressed);
+			_protocolMenu.AddMenuItem($"Bedrock - {McpeProtocolInfo.GameVersion}", BedrockEditionButtonPressed, false);
 
 			_protocolMenu.AddMenuItem("Return to main menu", ProtocolBackPressed);
 		}
@@ -199,19 +197,9 @@ namespace Alex.GameStates
 			AddChild(_mainMenu);
 		}
 
-		private void SinglePlayerButtonPressed()
-		{
-			Alex.GameStateManager.SetActiveState<TitleState>();
-			/*Alex.GameStateManager.SetAndUpdateActiveState<TitleState>(state =>
-			{
-				state.EnableMultiplayer = false;
-				return state;
-			});*/
-		}
-
 		private void BedrockEditionButtonPressed()
 		{
-			var client = Alex.Services.GetService<XBLMSAService>();
+			var client = Alex.Services.GetRequiredService<XBLMSAService>();
 			var t = client.AsyncBrowserLogin();
 		}
 
@@ -230,7 +218,7 @@ namespace Alex.GameStates
 			if (e.Profile.Skin.Texture != null)
 			{
 				_playerView.Entity = new PlayerMob(e.Profile.Username, null, null, e.Profile.Skin.Texture,
-					e.Profile.Skin.Slim);
+					e.Profile.Skin.Slim ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom" );
 			}
 		}
 
@@ -258,13 +246,6 @@ namespace Alex.GameStates
 			AddChild(_debugMenu);
 		}
 
-		private void OnMultiplayerButtonPressed()
-		{
-			RemoveChild(_mainMenu);
-			AddChild(_protocolMenu);
-		//	Alex.GameStateManager.SetActiveState("selectGameVersion");
-		}
-
 		protected override void OnLoad(IRenderArgs args)
 		{
 			Skin skin = _playerProfileService?.CurrentProfile?.Skin;
@@ -277,35 +258,25 @@ namespace Alex.GameStates
 					Texture = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, rawTexture)
 				};
 			}
-			
-				var entity = new PlayerMob("", null, null, skin.Texture, skin.Slim);
-				entity.Inventory.IsPeInventory = true;
-				
-				//entity.Inventory[entity.Inventory.SelectedSlot] =
 
-			/*	if (ItemFactory.TryGetItem("minecraft:diamond_sword", out var sword))
-				{
-					entity.Inventory[entity.Inventory.SelectedSlot] = sword;
-					entity.Inventory.MainHand = sword;
-				}
-				else
-				{
-					Log.Warn($"Could not get diamond sword!");
-				}*/
-				
-				AddChild(_playerView = new GuiEntityModelView(entity/*new PlayerMob("", null, null, skin.Texture, skin.Slim)*/ ) /*"geometry.humanoid.customSlim"*/
-			{
-				BackgroundOverlay = new Color(Color.Black, 0.15f),
+			var entity = new PlayerMob("", null, null, skin.Texture);
+			entity.Inventory.IsPeInventory = true;
 
-				Margin = new Thickness(15, 15, 5, 40),
+			AddChild(_playerView =
+				new GuiEntityModelView(
+						entity /*new PlayerMob("", null, null, skin.Texture, skin.Slim)*/) /*"geometry.humanoid.customSlim"*/
+					{
+						BackgroundOverlay = new Color(Color.Black, 0.15f),
 
-				Width = 92,
-				Height = 128,
+						Margin = new Thickness(15, 15, 5, 40),
 
-				Anchor = Alignment.BottomRight,
-			});
+						Width = 92,
+						Height = 128,
 
-			AddChild(_loginButton = new GuiButton("Switch user", LoginBtnPressed)
+						Anchor = Alignment.BottomRight,
+					});
+
+			AddChild(new GuiButton("Switch user", LoginBtnPressed)
 			{
 				Anchor = Alignment.BottomRight,
 				Modern = false,
@@ -313,20 +284,21 @@ namespace Alex.GameStates
 				Margin = new Thickness(15, 15, 6, 15),
 				Width = 90
 			});
-			
+
 			AutoResetEvent reset = new AutoResetEvent(false);
 			Alex.UIThreadQueue.Enqueue(() =>
 			{
-				using (MemoryStream ms = new MemoryStream(ResourceManager.ReadResource("Alex.Resources.GradientBlur.png")))
+				using (MemoryStream ms =
+					new MemoryStream(ResourceManager.ReadResource("Alex.Resources.GradientBlur.png")))
 				{
-					BackgroundOverlay = (TextureSlice2D)GpuResourceManager.GetTexture2D(this, args.GraphicsDevice, ms);
+					BackgroundOverlay = (TextureSlice2D) GpuResourceManager.GetTexture2D(this, args.GraphicsDevice, ms);
 				}
 
 				reset.Set();
 			});
 			reset.WaitOne();
 			reset.Dispose();
-			
+
 			BackgroundOverlay.Mask = new Color(Color.White, 0.5f);
 
 			_splashText.Text = SplashTexts.GetSplashText();
@@ -339,7 +311,6 @@ namespace Alex.GameStates
 		private void LoginBtnPressed()
 		{
 			Alex.GameStateManager.SetActiveState(new ProfileSelectionState(_backgroundSkyBox, Alex), true);
-			//Alex.GameStateManager.SetActiveState(new VersionSelectionState());
 		}
 
 		private float _rotation;
@@ -411,8 +382,6 @@ namespace Alex.GameStates
 		{
 			base.OnShow();
 			Alex.GuiManager.AddScreen(_debugInfo);
-			//DebugWorldButtonActivated();
-
 		}
 
 		protected override void OnHide()
@@ -436,15 +405,7 @@ namespace Alex.GameStates
 		{
 			Debug(new FlatlandGenerator());
 		}
-
-		private void DebugAnvil()
-		{
-			Debug(new AnvilWorldProvider()
-			{
-				MissingChunkProvider = new EmptyWorldGenerator()
-			});
-		}
-
+		
 		private void DebugWorldButtonActivated()
 		{
 			Debug(new DebugWorldGenerator());
@@ -453,6 +414,11 @@ namespace Alex.GameStates
 		private void DebugChunkButtonActivated()
 		{
 			Debug(new ChunkDebugWorldGenerator());
+		}
+
+		private void DemoButtonActivated()
+		{
+			Debug(new DemoGenerator());
 		}
 	}
 }

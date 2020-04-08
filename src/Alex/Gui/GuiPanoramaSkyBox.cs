@@ -181,7 +181,7 @@ namespace Alex.Gui
 				AlphaSourceBlend = Blend.One,
 				AlphaDestinationBlend = Blend.Zero,
 
-				IndependentBlendEnable = true,
+				IndependentBlendEnable = false,
 			};
 
 			_samplerState = new SamplerState()

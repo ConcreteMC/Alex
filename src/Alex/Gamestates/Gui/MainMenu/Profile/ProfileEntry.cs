@@ -42,7 +42,7 @@ namespace Alex.Gamestates.Gui.MainMenu.Profile
            // AutoSizeMode = AutoSizeMode.GrowAndShrink;
            // BackgroundOverlay = new GuiTexture2D(GuiTextures.OptionsBackground);
 
-            ModelView = new GuiEntityModelView(new PlayerMob(profile.Username, null, null, profile.Skin?.Texture ?? defaultSelection.Texture, profile.Skin?.Slim ?? defaultSelection.Slim)) /*"geometry.humanoid.customSlim"*/
+            ModelView = new GuiEntityModelView(new PlayerMob(profile.Username, null, null, profile.Skin?.Texture ?? defaultSelection.Texture, (profile.Skin?.Slim ?? defaultSelection.Slim) ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom")) /*"geometry.humanoid.customSlim"*/
             {
                 BackgroundOverlay = new Color(Color.Black, 0.15f),
                 Background = null,

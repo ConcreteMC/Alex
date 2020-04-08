@@ -22,7 +22,7 @@ namespace Alex.Blocks.Minecraft
 		private static PropertyBool HALF = new PropertyBool("half", "top", "bottom");
 		private static PropertyFace FACING = new PropertyFace("facing");
 
-		public Trapdoor(string name) : base(name)
+		public Trapdoor() : base()
 		{
 			Solid = true;
 			IsFullCube = false;

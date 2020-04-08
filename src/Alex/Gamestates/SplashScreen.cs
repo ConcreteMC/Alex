@@ -100,7 +100,12 @@ namespace Alex.GameStates
 		{
 			_progressBar.Value = percentage;
 			_percentageDisplay.Text = $"{percentage}%";
-			Text = statusMessage;
+
+			if (statusMessage != null)
+			{
+				Text = statusMessage;
+			}
+
 			SubText = sub;
 		}
 	}

@@ -3,13 +3,19 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Data;
+using Alex.API.Events;
+using Alex.API.Events.World;
 using Alex.API.Network;
+using Alex.API.Network.Bedrock;
 using Alex.API.Services;
+using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Entities;
 using Alex.Utils;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using MiNET.Net;
 using MiNET.Utils;
@@ -24,16 +30,22 @@ namespace Alex.Worlds.Bedrock
 		private static Logger Log = LogManager.GetCurrentClassLogger();
 		
 		public Alex Alex { get; }
-		private BedrockClient Client { get; }
+		protected IBedrockNetworkProvider Client { get; }
 
 		private System.Threading.Timer _gameTickTimer;
-		public BedrockWorldProvider(Alex alex, IPEndPoint endPoint, PlayerProfile profile,
+		private IEventDispatcher EventDispatcher { get; }
+		public BedrockWorldProvider(Alex alex, IPEndPoint endPoint, PlayerProfile profile, DedicatedThreadPool threadPool,
 			out INetworkProvider networkProvider)
 		{
 			Alex = alex;
-
-			Client = new BedrockClient(alex, endPoint, profile, new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount, ThreadType.Background, "BedrockClientThread")), this);
+			var eventDispatcher = alex.Services.GetRequiredService<IEventDispatcher>();
+			EventDispatcher = eventDispatcher;
+			
+			//Client = new ExperimentalBedrockClient(alex, alex.Services, this, endPoint);
+			Client = new BedrockClient(alex, eventDispatcher, endPoint, profile, threadPool, this);
 			networkProvider = Client;
+			
+			EventDispatcher.RegisterEvents(this);
 		}
 
 		public override Vector3 GetSpawnPoint()
@@ -93,20 +105,21 @@ namespace Alex.Worlds.Bedrock
 					}
 					
 					var pos = (PlayerLocation)player.KnownPosition.Clone();
-					Client.CurrentLocation = new MiNET.Utils.PlayerLocation(pos.X,
-						pos.Y + Player.EyeLevel, pos.Z, pos.HeadYaw,
-						pos.Yaw, -pos.Pitch);
+					
+					if (pos.DistanceTo(_lastSentLocation) > 0.0f) {
+                        Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(pos.X,
+	                        pos.Y + Player.EyeLevel, pos.Z, pos.HeadYaw,
+	                        pos.Yaw, -pos.Pitch), player.KnownPosition.OnGround);
 
-                    if (pos.DistanceTo(_lastSentLocation) > 0.0f) {
-                        Client.SendMcpeMovePlayer();
-                    }
+                        _lastSentLocation = pos;
+					}
 
 					if (pos.DistanceTo(_lastLocation) > 16f && _stopwatch.ElapsedMilliseconds > 500)
 					{
 						_stopwatch.Stop();
 						_stopwatch.Reset();
 						_lastLocation = pos;
-						UnloadChunks(new ChunkCoordinates(pos), Client.ChunkRadius);
+						UnloadChunks(new ChunkCoordinates(pos), Client.ChunkRadius + 3);
 						_stopwatch.Restart();
 					}
 				}
@@ -116,8 +129,18 @@ namespace Alex.Worlds.Bedrock
 		private ThreadSafeList<ChunkCoordinates> _loadedChunks = new ThreadSafeList<ChunkCoordinates>();
 		private void UnloadChunks(ChunkCoordinates center, double maxViewDistance)
 		{
+			//var chunkPublisher = Client.LastChunkPublish;
+			
+			//Client.ChunkRadius
 			Parallel.ForEach(_loadedChunks.ToArray(), (chunkColumn) =>
 			{
+				/*if (chunkPublisher != null)
+				{
+					if (chunkColumn.DistanceTo(new ChunkCoordinates(new Vector3(chunkPublisher.coordinates.X,
+						    chunkPublisher.coordinates.Y, chunkPublisher.coordinates.Z))) < chunkPublisher.radius)
+						return;
+				}*/
+				
 				if (chunkColumn.DistanceTo(center) > maxViewDistance)
 				{
 					//_chunkCache.TryRemove(chunkColumn.Key, out var waste);
@@ -130,87 +153,130 @@ namespace Alex.Worlds.Bedrock
 		
 		public void UnloadChunk(ChunkCoordinates coordinates)
 		{
-			UnloadChunk(coordinates.X, coordinates.Z);
+			EventDispatcher.DispatchEvent(new ChunkUnloadEvent(coordinates));
 			_loadedChunks.Remove(coordinates);
 		}
 
-		protected override void Initiate(out LevelInfo info, out IChatProvider chatProvider)
+		protected override void Initiate(out LevelInfo info)
 		{
 			info = new LevelInfo();
-			chatProvider = Client;
 			_initiated = true;
 			Client.WorldReceiver = WorldReceiver;
-			WorldReceiver?.UpdatePlayerPosition(new API.Utils.PlayerLocation(
-				new Vector3(Client.CurrentLocation.X, Client.CurrentLocation.Y, Client.CurrentLocation.Z),
-				Client.CurrentLocation.HeadYaw, Client.CurrentLocation.Yaw, Client.CurrentLocation.Pitch));
+			//if (WorldReceiver.GetPlayerEntity() is Player player)
+			//{
+			//	WorldReceiver?.UpdatePlayerPosition();
+			//}
 
 			_gameTickTimer = new System.Threading.Timer(GameTick, null, 50, 50);
+		}
+
+		private bool VerifyConnection()
+		{
+			if (Client is BedrockClient c)
+			{
+				return c.IsConnected;
+			}
+			
+			return true;
 		}
 
 		public override Task Load(ProgressReport progressReport)
 		{
 			return Task.Run(() =>
 			{
+				Stopwatch timer = Stopwatch.StartNew();
 				progressReport(LoadingState.ConnectingToServer, 25);
 
-				Client.StartClient();
+				var resetEvent = new ManualResetEventSlim(false);
+				
+				Client.Start(resetEvent);
 				progressReport(LoadingState.ConnectingToServer, 50);
 
-				Client.HaveServer = true;
+			//	Client.HaveServer = true;
 
-				Client.SendOpenConnectionRequest1();
-				Client.ConnectionAcceptedWaitHandle.Wait();
+				//Client.SendOpenConnectionRequest1();
+				if (!resetEvent.Wait(TimeSpan.FromSeconds(5)))
+				{
+					Client.ShowDisconnect("Could not connect to server!");
+					return;
+				}
 
 				progressReport(LoadingState.ConnectingToServer, 100);
 
 				progressReport(LoadingState.LoadingChunks, 0);
 
-				double radiusSquared = Math.Pow(Client.ChunkRadius, 2);var target = radiusSquared * 3;
-
+				var percentage = 0;
 				var statusChanged = false;
-				while (!statusChanged || !Client.HasSpawned)
+				var done = false;
+				while (true)
 				{
-					progressReport(LoadingState.LoadingChunks, ((int)(_chunksReceived / target) * 100));
+					double radiusSquared = Math.Pow(Client.ChunkRadius, 2);
+					var target = radiusSquared;
+					
+					percentage = (int)(ChunksReceived / target) * 100;
+					progressReport(LoadingState.LoadingChunks, percentage);
 
 					if (!statusChanged)
 					{
-						if (Client.PlayerStatusChangedWaitHandle.WaitOne(50))
+						if (Client.PlayerStatusChanged.WaitOne(50))
 						{
 							statusChanged = true;
-							Client.IsEmulator = false;
+							
+							//Client.SendMcpeMovePlayer();
+				
+							
+							//Client.IsEmulator = false;
 						}
+					}
+
+					if ((percentage >= 90 && (statusChanged || timer.ElapsedMilliseconds > 15 * 1000)))
+					{
+						Log.Info($"Init!!!");
+						
+						var packet = McpeSetLocalPlayerAsInitializedPacket.CreateObject();
+						packet.runtimeEntityId =  Client.WorldReceiver.GetPlayerEntity().EntityId;
+						Client.SendPacket(packet);
+						if (WorldReceiver.GetPlayerEntity() is Player player)
+						{
+							var p = player.KnownPosition;
+							Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(p.X, p.Y, p.Z, p.HeadYaw, p.Yaw, p.Pitch),player.KnownPosition.OnGround);
+						}
+
+						break;
+					}
+
+					if (!VerifyConnection())
+					{
+						Client.ShowDisconnect("Connection lost.");
+						
+						timer.Stop();
+						return;
 					}
 				}
 
+				//SkyLightCalculations.Calculate(WorldReceiver as World);
+				
 				//Client.IsEmulator = false;
 				progressReport(LoadingState.Spawning, 99);
+				timer.Stop();
 			});
 		}
 
-		private int _chunksReceived = 0;
-		public void ChunkReceived(ChunkColumn chunkColumn)
-		{
-			_chunksReceived++;
-			var coords = new ChunkCoordinates(chunkColumn.X, chunkColumn.Z);
-			
-			//if (!_loadedChunks.Contains(coords))
-				_loadedChunks.TryAdd(coords);
-			
-			//sLog.Info($"Chunk received");
-			base.LoadChunk(chunkColumn, chunkColumn.X, chunkColumn.Z, true);
-		}
+		private int ChunksReceived { get; set; }
 		
-		public void ReceivedTabComplete(int transactionId, int start, int length, TabCompleteMatch[] matches)
+		[EventHandler(EventPriority.Monitor)]
+		private void OnChunkReceived(ChunkReceivedEvent e)
 		{
-			
+			ChunksReceived++;
+			_loadedChunks.TryAdd(e.Coordinates);
 		}
-
-		public IChatReceiver GetChatReceiver => ChatReceiver;
 
 		public override void Dispose()
 		{
 			base.Dispose();
 			Client.Dispose();
+			
+			EventDispatcher?.UnregisterEvents(this);
 		}
 	}
 }

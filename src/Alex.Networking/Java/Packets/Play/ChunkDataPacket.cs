@@ -31,6 +31,15 @@ namespace Alex.Networking.Java.Packets.Play
 
 			HeightMaps = stream.ReadNbtCompound();
 
+			if (GroundUp)
+			{
+				int[] biomeIds = new int[1024];
+				for (int idx = 0; idx < biomeIds.Length; idx++)
+				{
+					biomeIds[idx] = stream.ReadInt();
+				}
+			}
+
 			int i = stream.ReadVarInt();
 			Buffer = new byte[i];
 			stream.Read(Buffer, 0, Buffer.Length);

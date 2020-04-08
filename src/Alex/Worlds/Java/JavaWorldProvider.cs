@@ -13,6 +13,9 @@ using System.Threading.Tasks;
 using Alex.API.Data;
 using Alex.API.Data.Options;
 using Alex.API.Entities;
+using Alex.API.Events;
+using Alex.API.Events.World;
+using Alex.API.Graphics;
 using Alex.API.Network;
 using Alex.API.Services;
 using Alex.API.Utils;
@@ -31,12 +34,14 @@ using Alex.Networking.Java.Util;
 using Alex.Networking.Java.Util.Encryption;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET.Utils;
 using Newtonsoft.Json;
 using NLog;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
+using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
 using LevelInfo = Alex.API.World.LevelInfo;
 using Packet = Alex.Networking.Java.Packets.Packet;
 using PlayerLocation = Alex.API.Utils.PlayerLocation;
@@ -51,7 +56,7 @@ namespace Alex.Worlds.Java
 		void HandleLogin(Packet packet);
 		void HandlePlay(Packet packet);
 	}
-	public class JavaWorldProvider : WorldProvider, IJavaProvider, IChatProvider
+	public class JavaWorldProvider : WorldProvider, IJavaProvider
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
@@ -68,13 +73,16 @@ namespace Alex.Worlds.Java
 
 		private System.Threading.Timer _gameTickTimer;
 		private DedicatedThreadPool ThreadPool;
+		private IEventDispatcher EventDispatcher { get; }
+		public string Hostname { get; set; }
 		public JavaWorldProvider(Alex alex, IPEndPoint endPoint, PlayerProfile profile, out INetworkProvider networkProvider)
 		{
 			Alex = alex;
 			Profile = profile;
 			Endpoint = endPoint;
 			
-			OptionsProvider = alex.Services.GetService<IOptionsProvider>();
+			OptionsProvider = alex.Services.GetRequiredService<IOptionsProvider>();
+			EventDispatcher = alex.Services.GetRequiredService<IEventDispatcher>();
 			
 			ThreadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount));
 
@@ -83,6 +91,8 @@ namespace Alex.Worlds.Java
 			Client.OnConnectionClosed += OnConnectionClosed;
 
 			networkProvider = Client;
+			
+			EventDispatcher.RegisterEvents(this);
 		}
 
 		private bool _disconnected = false;
@@ -239,10 +249,9 @@ namespace Alex.Worlds.Java
 			return _spawn;
 		}
 
-		protected override void Initiate(out LevelInfo info, out IChatProvider chatProvider)
+		protected override void Initiate(out LevelInfo info)
 		{
 			info = new LevelInfo();
-			chatProvider = this;
 
 			_initiated = true;
 
@@ -251,21 +260,25 @@ namespace Alex.Worlds.Java
 			_gameTickTimer = new System.Threading.Timer(GameTick, null, 50, 50);
 		}
 
-		void IChatProvider.Send(string message)
+		[EventHandler(EventPriority.Highest)]
+		private void OnPublishChatMessage(ChatMessagePublishEvent e)
 		{
-			Client.SendChatMessage(message);
+			if (e.IsCancelled)
+				return;
+			
+			Client.SendChatMessage(e.ChatObject.RawMessage);
 		}
 
 		private int _transactionIds = 0;
-		void IChatProvider.RequestTabComplete(string text, out int transactionId)
+		/*void IChatProvider.RequestTabComplete(string text, out int transactionId)
 		{
-			transactionId = Interlocked.Increment(ref _transactionIds);
+			/*transactionId = Interlocked.Increment(ref _transactionIds);
 			SendPacket(new TabCompleteServerBound()
 			{
 				Text = text,
 				TransactionId = transactionId
-			});
-		}
+			});*
+		}*/
 
 		private bool hasDoneInitialChunks = false;
 		private bool _initiated = false;
@@ -291,23 +304,37 @@ namespace Alex.Worlds.Java
 				progressReport(LoadingState.LoadingChunks, 0);
 
 				int t = Options.VideoOptions.RenderDistance;
-				double radiusSquared = Math.Pow(t, 2);
+				//double radiusSquared = Math.Pow(t, 2);
 
-				var target = radiusSquared * 3;
-
+				var target = t * 3d;
+				bool allowSpawn = false;
+				
                 int loaded = 0;
 				SpinWait.SpinUntil(() =>
 				{
+					var playerChunkCoords = new ChunkCoordinates(WorldReceiver.GetPlayerEntity().KnownPosition);
 					if (_chunksReceived < target)
 					{
-						progressReport(LoadingState.LoadingChunks, (int)Math.Floor((_chunksReceived / target) * 100));
+						progressReport(LoadingState.LoadingChunks, (int)Math.Floor((_chunksReceived / target) * 100d));
                     }
 					else if (loaded < _chunksReceived)
 					{
-
 						if (_generatingHelper.TryTake(out IChunkColumn chunkColumn, 50))
 						{
-							base.LoadChunk(chunkColumn, chunkColumn.X, chunkColumn.Z, true);
+							if (!allowSpawn)
+							{
+								if (playerChunkCoords.X == chunkColumn.X && playerChunkCoords.Z == chunkColumn.Z)
+								{
+									allowSpawn = true;
+								}
+							}
+							
+							//base.LoadChunk(chunkColumn, chunkColumn.X, chunkColumn.Z, true);
+							EventDispatcher.DispatchEvent(new ChunkReceivedEvent(new ChunkCoordinates(chunkColumn.X ,chunkColumn.Z), chunkColumn)
+							{
+								DoUpdates = true
+							});
+							
 							loaded++;
 						}
 
@@ -318,31 +345,14 @@ namespace Alex.Worlds.Java
 						progressReport(LoadingState.Spawning, 99);
                     }
 
-                    return loaded >= target || _disconnected; // Spawned || _disconnected;
+                    return (loaded >= target && allowSpawn) || _disconnected; // Spawned || _disconnected;
 
 				});
 
 				hasDoneInitialChunks = true;
 			});
 		}
-
-		public void ChunkReceived(IChunkColumn chunkColumn, int x, int z, bool update)
-		{
-			if (!hasDoneInitialChunks)
-			{
-                _generatingHelper.Add(chunkColumn);
-                _chunksReceived++;
-				return;
-			}
-
-            base.LoadChunk(chunkColumn, x, z, update);
-		}
-
-		public void ChunkUnloaded(int x, int z)
-		{
-			base.UnloadChunk(x,z);
-		}
-
+		
 		private Queue<Entity> _entitySpawnQueue = new Queue<Entity>();
 
 		public void SpawnMob(int entityId, Guid uuid, EntityType type, PlayerLocation position, Vector3 velocity)
@@ -400,7 +410,7 @@ namespace Alex.Worlds.Java
 						if (Alex.Resources.BedrockResourcePack.Textures.TryGetValue(texture,
 							out Bitmap bmp))
 						{
-							Texture2D t = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, bmp);
+							PooledTexture2D t = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, bmp);
 
 							renderer = new EntityModelRenderer(model, t);
 						}
@@ -704,6 +714,12 @@ namespace Alex.Worlds.Java
 
 		private void HandleEntityEquipmentPacket(EntityEquipmentPacket packet)
 		{
+			if (packet.Item == null)
+			{
+				Log.Warn($"Got null item in EntityEquipment.");
+				return;
+			}
+
 			if (WorldReceiver.TryGetEntity(packet.EntityId, out IEntity e))
 			{
 				if (e is Entity entity)
@@ -798,22 +814,26 @@ namespace Alex.Worlds.Java
 
 		private void HandleTabCompleteClientBound(TabCompleteClientBound tabComplete)
 		{
-			ChatReceiver?.ReceivedTabComplete(tabComplete.TransactionId, tabComplete.Start, tabComplete.Length, tabComplete.Matches);
+			//TODO: Re-implement tab complete
+			Log.Info($"!!! TODO: Re-implement tab complete.");
+			//ChatReceiver?.ReceivedTabComplete(tabComplete.TransactionId, tabComplete.Start, tabComplete.Length, tabComplete.Matches);
 		}
 
 		private void HandleMultiBlockChange(MultiBlockChange packet)
 		{
+			//throw new NotImplementedException();
 			int cx = packet.ChunkX * 16;
 			int cz = packet.ChunkZ * 16;
 			foreach (var blockUpdate in packet.Records)
 			{
-				WorldReceiver?.SetBlockState(new BlockCoordinates(blockUpdate.RelativeX + cx, blockUpdate.Y, blockUpdate.RelativeZ + cz), BlockFactory.GetBlockState(blockUpdate.BlockId));
+				//WorldReceiver?.SetBlockState(new BlockCoordinates(blockUpdate.RelativeX + cx, blockUpdate.Y, blockUpdate.RelativeZ + cz), BlockFactory.GetBlockState(blockUpdate.BlockId));
 			}
 		}
 
 		private void HandleBlockChangePacket(BlockChangePacket packet)
 		{
-			WorldReceiver?.SetBlockState(packet.Location, BlockFactory.GetBlockState(packet.PalleteId));
+			//throw new NotImplementedException();
+			WorldReceiver?.SetBlockState(packet.Location, BlockFactory.GetBlockState((uint) packet.PalleteId));
 		}
 
 		private void HandleHeldItemChangePacket(HeldItemChangePacket packet)
@@ -826,6 +846,12 @@ namespace Alex.Worlds.Java
 
 		private void HandleSetSlot(SetSlot packet)
 		{
+			if (packet.Slot == null)
+			{
+				Log.Warn($"Got null item in SetSlot.");
+				return;
+			}
+			
 			Inventory inventory = null;
 			if (packet.WindowId == 0 || packet.WindowId == -2)
 			{
@@ -919,7 +945,7 @@ namespace Alex.Worlds.Java
 							}
 						}
 
-						PlayerMob entity = new PlayerMob(entry.Name, (World) WorldReceiver, Client, t, skinSlim);
+						PlayerMob entity = new PlayerMob(entry.Name, (World) WorldReceiver, Client, t, skinSlim ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom");
 						entity.UpdateGamemode((Gamemode) entry.Gamemode);
 						entity.UUID = new UUID(entry.UUID.ToByteArray());
 
@@ -932,6 +958,10 @@ namespace Alex.Worlds.Java
 							{
 								entity.NameTag = chat.RawMessage;
 							}
+							else
+							{
+								entity.NameTag = entry.DisplayName;
+							}
 						}
 						else
 						{
@@ -943,14 +973,19 @@ namespace Alex.Worlds.Java
 
 						if (_players.TryAdd(entity.UUID, entity) && skinJson != null)
 						{
-							ThreadPool.QueueUserWorkItem(() =>
+							Alex.UIThreadQueue.Enqueue(() =>
 							{
 								if (SkinUtils.TryGetSkin(skinJson, Alex.GraphicsDevice, out var skin, out skinSlim))
 								{
 									t = skin;
+									
+									entity.GeometryName =
+										skinSlim ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom";
+								
+									entity.UpdateSkin(t);
+									
+									Log.Info($"Skin update!");
 								}
-
-								entity.UpdateSkin(t, skinSlim);
 							});
 						}
 					}
@@ -968,6 +1003,10 @@ namespace Alex.Worlds.Java
 							if (ChatObject.TryParse(entry.DisplayName, out ChatObject chat))
 							{
 								entity.NameTag = chat.RawMessage;
+							}
+							else
+							{
+								entity.NameTag = entry.DisplayName;
 							}
 						}
 						else
@@ -1111,7 +1150,7 @@ namespace Alex.Worlds.Java
 
 			if (ChatObject.TryParse(packet.Message, out ChatObject chat))
 			{
-				ChatReceiver?.Receive(chat);
+				EventDispatcher.DispatchEvent(new ChatMessageReceivedEvent(chat));
 			}
 			else
 			{
@@ -1121,7 +1160,7 @@ namespace Alex.Worlds.Java
 
 		private void HandleUnloadChunk(UnloadChunk packet)
 		{
-			ChunkUnloaded(packet.X, packet.Z);
+			EventDispatcher.DispatchEvent(new ChunkUnloadEvent(new ChunkCoordinates(packet.X, packet.Z)));
 		}
 
 		private int _entityId = -1;
@@ -1212,7 +1251,17 @@ namespace Alex.Worlds.Java
 			
 				result.Read(new MinecraftStream(new MemoryStream(chunk.Buffer)), chunk.PrimaryBitmask, chunk.GroundUp, _dimension == 0);
 
-				ChunkReceived(result, result.X, result.Z, true);
+				if (!hasDoneInitialChunks)
+				{
+					_generatingHelper.Add(result);
+					_chunksReceived++;
+					return;
+				}
+
+				EventDispatcher.DispatchEvent(new ChunkReceivedEvent(new ChunkCoordinates(result.X ,result.Z), result)
+				{
+					DoUpdates = true
+				});
 			});
 		}
 
@@ -1432,7 +1481,7 @@ namespace Alex.Worlds.Java
 
 				HandshakePacket handshake = new HandshakePacket();
 				handshake.NextState = ConnectionState.Login;
-				handshake.ServerAddress = Endpoint.Address.ToString();
+				handshake.ServerAddress = Hostname;
 				handshake.ServerPort = (ushort) Endpoint.Port;
 				handshake.ProtocolVersion = JavaProtocol.ProtocolVersion;
 				SendPacket(handshake);

@@ -13,7 +13,7 @@ namespace Alex.API.Graphics
         /// <summary>
         ///     The normal for this vertex
         /// </summary>
-       // public Vector3 Normal;
+        public Vector3 Normal;
 
         /// <summary>
         ///     The UV co-ords for this vertex (the co-ords in the texture)
@@ -37,7 +37,10 @@ namespace Alex.API.Graphics
 	            // Normal = normal;
             TexCoords = texCoords;
             Color = Color.White;
+            Normal = normal;
         }
+
+        //public Vector3 Normal;
 
         /// <summary>
         ///     Creates a new VertexPositionNormalTextureColor
@@ -49,7 +52,7 @@ namespace Alex.API.Graphics
         public VertexPositionNormalTextureColor(Vector3 position, Vector3 normal, Vector2 texCoords, Color color)
         {
             Position = position;
-           // Normal = normal;
+            Normal = normal;
             TexCoords = texCoords;
             Color = color;
         }
@@ -57,7 +60,7 @@ namespace Alex.API.Graphics
         /// <summary>
         ///     The vertex declaration for this vertex type
         /// </summary>
-       /* public static VertexDeclaration VertexDeclaration { get; } = new VertexDeclaration
+        public static VertexDeclaration VertexDeclaration { get; } = new VertexDeclaration
         (
 	        new VertexElement(0, VertexElementFormat.Vector3,
 		        VertexElementUsage.Position, 0),
@@ -67,9 +70,9 @@ namespace Alex.API.Graphics
 		        VertexElementUsage.TextureCoordinate, 0),
 	        new VertexElement(8 * sizeof(float), VertexElementFormat.Color,
 		        VertexElementUsage.Color, 0)
-        );*/
+        );
         
-        public static VertexDeclaration VertexDeclaration { get; } = new VertexDeclaration
+        /*public static VertexDeclaration VertexDeclaration { get; } = new VertexDeclaration
         (
 	        new VertexElement(0, VertexElementFormat.Vector3,
 		        VertexElementUsage.Position, 0),
@@ -77,7 +80,7 @@ namespace Alex.API.Graphics
 		        VertexElementUsage.TextureCoordinate, 0),
 	        new VertexElement(5 * sizeof(float), VertexElementFormat.Color,
 		        VertexElementUsage.Color, 0)
-        );
+        );*/
 
 	    VertexDeclaration IVertexType.VertexDeclaration => VertexDeclaration;
     }

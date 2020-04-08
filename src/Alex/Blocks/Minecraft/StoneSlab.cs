@@ -1,6 +1,6 @@
 namespace Alex.Blocks.Minecraft
 {
-	public class StoneSlab : Block
+	public class StoneSlab : Slab
 	{
 		public StoneSlab() : base(7206)
 		{

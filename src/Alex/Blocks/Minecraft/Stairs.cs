@@ -4,10 +4,20 @@ using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Graphics.Models.Blocks;
 using Alex.ResourcePackLib.Json;
+using Microsoft.Xna.Framework;
 using NLog;
+using MathF = System.MathF;
 
 namespace Alex.Blocks.Minecraft
 {
+    public class WoodStairs : Stairs
+    {
+        public WoodStairs() : base()
+        {
+            BlockMaterial = Material.Wood;
+        }
+    }
+
     public class Stairs : Block
     {
         private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Stairs));
@@ -18,6 +28,8 @@ namespace Alex.Blocks.Minecraft
             Transparent = true;
             IsReplacible = false;
             RequiresUpdate = true;
+
+            BlockMaterial = Material.Rock;
         }
 
         public Stairs()
@@ -26,6 +38,60 @@ namespace Alex.Blocks.Minecraft
             Transparent = true;
             IsReplacible = false;
             RequiresUpdate = true;
+            
+            BlockMaterial = Material.Rock;
+        }
+
+        public override double GetHeight(Vector3 relative)
+        {
+            var half = GetHalf(BlockState);
+
+            if (half == "top")
+                return 1d;
+
+            //var shape = GetShape(BlockState);
+            var facing = GetFacing(BlockState);
+           // var a = facing.GetVector3() / 2f;
+
+           // relative += new Vector3(0.5f, 0.5f, 0.5f);
+
+           switch (facing)
+            {
+                case BlockFace.Down:
+                    break;
+                case BlockFace.Up:
+                    break;
+                case BlockFace.East:
+                    if (relative.X >= 0.5f)
+                        return 1f;
+                    return 0.5f;
+                    break;
+                case BlockFace.West:
+                    if (relative.X <= 0.5f)
+                        return 1f;
+                    return 0.5f;
+                    break;
+                case BlockFace.North:
+
+                    if (relative.Z <= 0.5f)
+                        return 1f;
+                    
+                    return 0.5f;
+                    break;
+                case BlockFace.South:
+                    if (relative.Z >= 0.5f)
+                        return 1f;
+                    return 0.5f;
+                    break;
+                case BlockFace.None:
+                    break;
+            }
+            //Vector3.Round(relative);
+           // if (MathF.Round(relative.X) )
+            
+            //if (relative.X > a.X)
+            
+            return base.GetHeight(relative);
         }
 
         protected static BlockFace GetFacing(IBlockState state)
@@ -62,9 +128,10 @@ namespace Alex.Blocks.Minecraft
         private bool UpdateState(IWorld world, IBlockState state, BlockCoordinates position, BlockCoordinates updatedBlock, out IBlockState result)
         {
             result = state;
-            var blockState = world.GetBlockState(updatedBlock);
-            if (!(blockState?.Block is Stairs)) {return false;}
+            var block = world.GetBlock(updatedBlock);
+            if (!(block is Stairs)) {return false;}
 
+            var blockState = block.BlockState;
             if (GetHalf(state) != GetHalf(blockState))
                 return false;
             

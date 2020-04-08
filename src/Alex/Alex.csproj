@@ -1,35 +1,26 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <DefineConstants>TRACE;DEBUG;WINDOWS;MONOGAME;NETCOREAPP2_0;DESKTOPGL;WINDOWS;LINUX</DefineConstants>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <ApplicationIcon>Icon.ico</ApplicationIcon>
     <StartupObject>Alex.Program</StartupObject>
     <Platforms>x64;AnyCPU</Platforms>
     <Configurations>Debug;Release;Appveyor</Configurations>
+    <PublishTrimmed>false</PublishTrimmed>
   </PropertyGroup>
 
   <PropertyGroup>
     <Authors>kennyvv, TruDan</Authors>
     <Version>1.0-DEV</Version>
+    <RuntimeIdentifiers>win-x64;linux-x64;osx-x64</RuntimeIdentifiers>
   </PropertyGroup>
 
   <PropertyGroup>
     <LangVersion>8</LangVersion>
 	  <MonoGamePlatform>DesktopGL</MonoGamePlatform>
   </PropertyGroup>
-
-
-	<PropertyGroup Condition="'$(OS)' == 'WINDOWS_NT' ">
-		<RuntimeIdentifier>win10-x64</RuntimeIdentifier>
-	</PropertyGroup>
-	<PropertyGroup Condition="'$(OS)' == 'Unix' ">
-		<RuntimeIdentifier>ubuntu.19.04-x64</RuntimeIdentifier>
-	</PropertyGroup>
-	<PropertyGroup Condition="'$(OS)' == 'OSX' ">
-		<RuntimeIdentifier>osx.10.14-x64</RuntimeIdentifier>
-	</PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -47,6 +38,10 @@
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 	  <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
+  
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <PublishSingleFile>true</PublishSingleFile>
+  </PropertyGroup>
 
   <ItemGroup>
     <Compile Remove="Graphics\Items\**" />
@@ -84,6 +79,9 @@
     <EmbeddedResource Include="Resources\items3.json" />
     <None Remove="Resources\resources.zip" />
     <EmbeddedResource Include="Resources\resources.zip" />
+    <None Update="skin.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
@@ -100,26 +98,22 @@
     <PackageReference Include="EasyPipes" Version="1.1.0" />
     <PackageReference Include="GtkSharp" Version="3.22.24.37" />
     <PackageReference Include="Hawezo.MojangSharp" Version="0.5.1" />
-    <PackageReference Include="JetBrains.Profiler.Api" Version="1.0.19" />
     <PackageReference Include="JKang.IpcServiceFramework.Server" Version="2.2.2" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.1" />
     <PackageReference Include="Microsoft.Identity.Client" Version="2.3.0-preview" />
-    <PackageReference Include="MiniProfiler.EntityFrameworkCore" Version="4.0.180" />
-    <PackageReference Include="Mono.Cecil" Version="0.10.4" />
-    <PackageReference Include="MonoGame.Framework.DesktopGL.Core" Version="3.7.0.7" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
-    <PackageReference Include="NLog" Version="4.5.10" />
-    <PackageReference Include="Portable.BouncyCastle" Version="1.8.5" />
+    <PackageReference Include="MiNET" Version="1.0.2091" />
+    <PackageReference Include="MiNET.fnbt" Version="1.0.22" />
+    <PackageReference Include="Mono.Cecil" Version="0.11.1" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL.Core" Version="3.8.0.13" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="NLog" Version="4.7.0" />
+    <PackageReference Include="Portable.BouncyCastle" Version="1.8.5.2" />
     <PackageReference Include="System.Reactive.Core" Version="4.1.2" />
     <PackageReference Include="System.Reactive.Interfaces" Version="4.1.2" />
     <PackageReference Include="System.Reactive.Linq" Version="4.1.2" />
-    <PackageReference Include="UniversalThreadManagement" Version="0.1.0" />
-    <PackageReference Include="WinApi" Version="4.0.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\lib\MiNET\src\MiNET\MiNET.Client\MiNET.Client.csproj" />
-    <ProjectReference Include="..\..\lib\MiNET\src\MiNET\MiNET\MiNET.csproj" />
     <ProjectReference Include="..\Alex.API\Alex.API.csproj" />
     <ProjectReference Include="..\Alex.GuiDebugger.Common\Alex.GuiDebugger.Common.csproj" />
     <ProjectReference Include="..\Alex.Networking\Alex.Networking.csproj" />
@@ -155,9 +149,6 @@
 		<ItemGroup>
 			<ReferencePath Condition="'%(FileName)' == 'Splat'">
 				<Aliases>SuperSplat</Aliases>
-			</ReferencePath>
-			<ReferencePath Condition="'%(FileName)' == 'System.Drawing.Common'">
-				<Aliases>CoreCompaty</Aliases>
 			</ReferencePath>
 			<ReferencePath Condition="'%(FileName)' == 'Chromely.CefGlue.Winapi'">
 				<Aliases>CefGlueWIN</Aliases>

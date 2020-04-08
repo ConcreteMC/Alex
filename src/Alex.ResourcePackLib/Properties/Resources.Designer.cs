@@ -46,9 +46,10 @@ namespace Alex.ResourcePackLib.Properties {
             }
         }
         
-        internal static string unknown_pack {
+        internal static byte[] unknown_pack {
             get {
-                return ResourceManager.GetString("unknown_pack", resourceCulture);
+                object obj = ResourceManager.GetObject("unknown_pack", resourceCulture);
+                return ((byte[])(obj));
             }
         }
     }

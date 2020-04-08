@@ -63,6 +63,14 @@
         InventoryPlayerBackground,
         
         GreenCheckMark,
-        GreyCheckMark
+        GreyCheckMark,
+        
+        HealthPlaceholder,
+        HealthHeart,
+        HealthHalfHeart,
+        
+        HungerPlaceholder,
+        HungerFull,
+        HungerHalf
     }
 }

@@ -174,8 +174,17 @@ namespace Alex.Graphics.Models
 				//front verts with position and texture stuff
 				_topLeftFront = new Vector3(0.0f, 1.0f, 0.0f) * Size;
 				_topLeftBack = new Vector3(0.0f, 1.0f, 1.0f) * Size;
+				
 				_topRightFront = new Vector3(1.0f, 1.0f, 0.0f) * Size;
 				_topRightBack = new Vector3(1.0f, 1.0f, 1.0f) * Size;
+				
+				/*
+				 * _topLeftFront = new Vector3(0.0f, 1.0f, 0.0f) * Size;
+				_topLeftBack = new Vector3(0.0f, 1.0f, 1.0f) * Size;
+				
+				_topRightFront = new Vector3(1.0f, 1.0f, 0.0f) * Size;
+				_topRightBack = new Vector3(1.0f, 1.0f, 1.0f) * Size;
+				 */
 
 				// Calculate the position of the vertices on the bottom face.
 				_btmLeftFront = new Vector3(0.0f, 0.0f, 0.0f) * Size;
@@ -219,15 +228,16 @@ namespace Alex.Graphics.Models
 			{
 				Vector3 normal = new Vector3(-1.0f, 0.0f, 0.0f) * Size;
 
-				var map = GetTextureMapping(uv + new Vector2(Size.Z + Size.X, Size.Z), Size.Z, Size.Y);
-
+				//var map = GetTextureMapping(uv + new Vector2(Size.Z + Size.X, Size.Z), Size.Z, Size.Y);
+				var map = GetTextureMapping(uv + new Vector2(0, Size.Z), Size.Z, Size.Y);
+				
 				// Add the vertices for the RIGHT face. 
 				return (new VertexPositionNormalTexture[]
 				{
-					new VertexPositionNormalTexture(_topLeftFront, normal, map.TopLeft),
-					new VertexPositionNormalTexture(_btmLeftFront , normal, map.BotLeft),
-					new VertexPositionNormalTexture(_btmLeftBack, normal, map.BotRight),
-					new VertexPositionNormalTexture(_topLeftBack , normal, map.TopRight),
+					new VertexPositionNormalTexture(_topLeftFront, normal, map.TopRight),
+					new VertexPositionNormalTexture(_btmLeftFront , normal, map.BotRight),
+					new VertexPositionNormalTexture(_btmLeftBack, normal, map.BotLeft),
+					new VertexPositionNormalTexture(_topLeftBack , normal, map.TopLeft),
 					//new VertexPositionNormalTexture(_topLeftFront , normal, map.TopLeft),
 					//new VertexPositionNormalTexture(_btmLeftBack, normal, map.BotRight),
 				}, new short[]
@@ -242,15 +252,16 @@ namespace Alex.Graphics.Models
 			{
 				Vector3 normal = new Vector3(1.0f, 0.0f, 0.0f) * Size;
 
-				var map = GetTextureMapping(uv + new Vector2(0, Size.Z), Size.Z, Size.Y);
+				var map = GetTextureMapping(uv + new Vector2(Size.Z + Size.X, Size.Z), Size.Z, Size.Y);
+				//var map = GetTextureMapping(uv + new Vector2(0, Size.Z), Size.Z, Size.Y);
 
 				// Add the vertices for the RIGHT face. 
 				return (new VertexPositionNormalTexture[]
 				{
-					new VertexPositionNormalTexture(_topRightFront, normal, map.TopRight),
-					new VertexPositionNormalTexture(_btmRightBack , normal, map.BotLeft),
-					new VertexPositionNormalTexture(_btmRightFront, normal, map.BotRight),
-					new VertexPositionNormalTexture(_topRightBack , normal, map.TopLeft),
+					new VertexPositionNormalTexture(_topRightFront, normal, map.TopLeft),
+					new VertexPositionNormalTexture(_btmRightBack , normal, map.BotRight),
+					new VertexPositionNormalTexture(_btmRightFront, normal, map.BotLeft),
+					new VertexPositionNormalTexture(_topRightBack , normal, map.TopRight),
 					//new VertexPositionNormalTexture(_btmRightBack , normal, map.BotLeft),
 					//new VertexPositionNormalTexture(_topRightFront, normal, map.TopRight),
 				}, new short[]

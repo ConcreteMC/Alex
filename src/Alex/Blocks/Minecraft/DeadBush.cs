@@ -8,7 +8,7 @@ namespace Alex.Blocks.Minecraft
 			Transparent = true;
 			IsReplacible = false;
 			
-			LightOpacity = 0;
+			BlockMaterial = Material.Plants;
 		}
 	}
 }

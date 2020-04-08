@@ -3,23 +3,17 @@
     public enum InputCommand
     {
         MoveForwards,
+        MoveLeft,
         MoveBackwards,
+        MoveRight,
         MoveUp,
         MoveDown,
-        MoveLeft,
-        MoveRight,
-
-        CameraUp,
-        CameraDown,
-        CameraLeft,
-        CameraRight,
-
+        
         MoveSpeedIncrease,
         MoveSpeedDecrease,
         MoveSpeedReset,
 
         ToggleFog,
-        ToggleMenu,
         ToggleDebugInfo,
         ToggleChat,
         ToggleCamera,

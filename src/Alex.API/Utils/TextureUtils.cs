@@ -43,12 +43,12 @@ namespace Alex.API.Utils
 			return bmp;
 		}
 
-        public static Texture2D BitmapToTexture2D(GraphicsDevice device, Bitmap bmp)
+        public static PooledTexture2D BitmapToTexture2D(GraphicsDevice device, Bitmap bmp)
         {
             return BitmapToTexture2D(device, bmp, out _);
         }
 
-        public static Texture2D BitmapToTexture2D(GraphicsDevice device, Bitmap bmp, out long byteSize)
+        public static PooledTexture2D BitmapToTexture2D(GraphicsDevice device, Bitmap bmp, out long byteSize)
 		{
 			if (bmp == null)
             {
@@ -56,12 +56,13 @@ namespace Alex.API.Utils
 				return GpuResourceManager.GetTexture2D("Alex.Api.Utils.TextureUtils", device, 16, 16);
 			}
 
+			int nonAlpha = 0;
             byteSize = 0;
             
 			var depth = System.Drawing.Bitmap.GetPixelFormatSize(bmp.PixelFormat);
 			
 			uint[] imgData = new uint[bmp.Width * bmp.Height];
-			Texture2D texture = GpuResourceManager.GetTexture2D("Alex.Api.Utils.TextureUtils", device, bmp.Width, bmp.Height);
+			PooledTexture2D texture = GpuResourceManager.GetTexture2D("Alex.Api.Utils.TextureUtils", device, bmp.Width, bmp.Height);
 
 			byte[] data = new byte[bmp.Width * bmp.Height * (depth / 8)];
 			LockBitmap locked = new LockBitmap(bmp);
@@ -88,6 +89,12 @@ namespace Alex.API.Utils
 					var g = data[i + 1];
 					var b = data[i + 2];
 					var a = data[i + 3];
+
+					if (a >= 32)
+					{
+						nonAlpha++;
+					}
+					
 					imgData[idx++] = (uint) ((a << 24) | (r << 16) | (g << 8) | b);
 				}
 			}
@@ -136,6 +143,7 @@ namespace Alex.API.Utils
 
                 byteSize = imgData.Length * 4;
 
+                texture.IsFullyTransparent = nonAlpha == 0;
             texture.SetData(imgData);
 
 			return texture;
