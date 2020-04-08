@@ -236,6 +236,9 @@ namespace Alex.GameStates.Playing
 		//	if (moveVector != Vector3.Zero)
 			{
 				var velocity = moveVector * speedFactor;
+				velocity = Vector3.Transform(velocity,
+					Matrix.CreateRotationY(-MathHelper.ToRadians(Player.KnownPosition.HeadYaw)));
+				
 				if (Player.IsFlying)
 				{
 					if ((Player.Velocity * new Vector3(1, 1, 1)).Length() < velocity.Length())

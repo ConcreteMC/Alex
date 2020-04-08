@@ -139,7 +139,7 @@ namespace Alex.API.Utils
 
 		public Vector3 PreviewMove(Vector3 moveVector)
 		{
-			return ToVector3() + Vector3.Transform(moveVector,
+			return ToVector3() + moveVector; Vector3.Transform(moveVector,
 				       Matrix.CreateRotationY(-MathHelper.ToRadians(HeadYaw)));
 		}
 

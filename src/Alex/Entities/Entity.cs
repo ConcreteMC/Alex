@@ -80,6 +80,8 @@ namespace Alex.Entities
 		public bool CanFly { get; set; } = false;
 		public bool IsFlying { get; set; } = false;
 
+		public bool IsCollidingWithWorld { get; set; } = false;
+
 		public INetworkProvider Network { get; set; }
 		public Inventory Inventory { get; protected set; }
 		private IItemRenderer ItemRenderer { get; set; } = null;

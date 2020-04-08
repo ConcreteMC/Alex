@@ -18,7 +18,8 @@ namespace Alex.API.Entities
 		bool Silent { get; set; }
 		bool IsInWater { get; set; }
 		bool IsOutOfWater { get; }
-
+		bool IsCollidingWithWorld { get; set; }
+		
 		long Age { get; set; }
 		double Scale { get; set; }
 
