@@ -48,7 +48,7 @@ namespace Alex.Worlds
 	    public AlphaTestEffect AnimatedTranslucentEffect { get; }
 	    public AlphaTestEffect TransparentEffect { get; }
 	    public AlphaTestEffect TranslucentEffect { get; }
-		public BasicEffect OpaqueEffect { get; }
+		public AlphaTestEffect OpaqueEffect { get; }
 		
 		private BasicEffect DepthEffect { get; }
 
@@ -134,18 +134,19 @@ namespace Alex.Worlds
 		        Alpha = 0.5f
 	        };
 
-	        OpaqueEffect = new BasicEffect(Graphics)
+	        OpaqueEffect = new AlphaTestEffect(Graphics)
 	        {
-		        TextureEnabled = true,
+		      //  TextureEnabled = true,
 		        Texture = stillAtlas,
 		        FogStart = fogStart,
 		        VertexColorEnabled = true,
-		        LightingEnabled = true,
+		      //  LightingEnabled = true,
 		        FogEnabled = false,
+		        ReferenceAlpha = 249
 		    //    AlphaFunction = CompareFunction.Greater,
 		    //    ReferenceAlpha = 127
 		        
-		        PreferPerPixelLighting = false
+		      //  PreferPerPixelLighting = false
 	        };
 	        
 	        //if (alex.)
@@ -212,7 +213,7 @@ namespace Alex.Worlds
 	    }
 	    
 	    public bool UseWireFrames { get; set; } = false;
-	    private readonly static RenderStage[] RenderStages = (RenderStage[]) Enum.GetValues(typeof(RenderStage));
+	    private readonly static RenderStage[] RenderStages = ((RenderStage[]) Enum.GetValues(typeof(RenderStage)));
 
 	    private readonly static RenderStage[] DepthRenderStages = new[]
 	    {
@@ -226,14 +227,41 @@ namespace Alex.Worlds
 		    AddressU = TextureAddressMode.Wrap,
 		    AddressV = TextureAddressMode.Wrap,
 		    MipMapLevelOfDetailBias = -2f,
-		    MaxMipLevel = 0
+		    MaxMipLevel = 0,
+		    FilterMode = TextureFilterMode.Default
 	    };
 	    
+	    private static readonly BlendState LightMapBS = new BlendState()
+	    {
+		    ColorSourceBlend = Blend.One,
+		    ColorDestinationBlend = Blend.One,
+		    ColorBlendFunction = BlendFunction.Add,
+		    AlphaSourceBlend = Blend.One,
+		    AlphaDestinationBlend = Blend.One,
+		    AlphaBlendFunction = BlendFunction.Add
+	    };
+	    
+	    private static DepthStencilState DepthStencilState { get; } = new DepthStencilState()
+	    {
+		    DepthBufferEnable = true,
+		    DepthBufferFunction = CompareFunction.Less,
+		    DepthBufferWriteEnable = true
+	    };
+
+	    private static RasterizerState RasterizerState = new RasterizerState()
+	    {
+		    DepthBias = 0.0001f,
+		    CullMode = CullMode.CullClockwiseFace,
+		    FillMode = FillMode.Solid,
+		    //DepthClipEnable = true,
+		    //ScissorTestEnable = true
+	    };
+
 	    public void Draw(IRenderArgs args, bool depthMapOnly)
 	    {
 		    var view = args.Camera.ViewMatrix;
 		    var projection = args.Camera.ProjectionMatrix;
-		    
+
 		    TransparentEffect.View = view;
 		    TransparentEffect.Projection = projection;
 		    
@@ -258,7 +286,12 @@ namespace Alex.Worlds
 
 		    device.SamplerStates[0] = RenderSampler;
 		    
-		    RasterizerState originalState = null;
+		    RasterizerState originalState = device.RasterizerState;
+		    args.GraphicsDevice.RasterizerState = RasterizerState;
+		   // device.RasterizerState.MultiSampleAntiAlias = true;
+		    //device.DepthStencilState.DepthBufferFunction = CompareFunction.Always;
+		   //  device.RasterizerState = RasterizerState;
+		  // device.DepthStencilState = DepthStencilState;
 		    
 		    bool usingWireFrames = UseWireFrames;
 		    if (usingWireFrames)
@@ -269,12 +302,12 @@ namespace Alex.Worlds
 			    device.RasterizerState = rasterizerState;
 		    }
 
-		    device.DepthStencilState = DepthStencilState.Default;
+		    device.DepthStencilState = DepthStencilState;
 
 		    if (depthMapOnly)
 		    {
 			    args.GraphicsDevice.SetRenderTarget(_depthMap);
-			    device.BlendState = BlendState.Opaque;
+			    device.BlendState = LightMapBS;
 			    
 			    args.GraphicsDevice.Clear(Color.Black);
 			    DrawStaged(args, out _, out _, DepthEffect, DepthRenderStages);
@@ -283,6 +316,7 @@ namespace Alex.Worlds
 		    }
 		    else
 		    {
+			   // device.DepthStencilState = DepthStencilState.DepthRead;
 			    device.BlendState = BlendState.AlphaBlend;
 			    DrawStaged(args, out int chunksRendered, out int verticesRendered, null, RenderStages);
 
@@ -291,7 +325,7 @@ namespace Alex.Worlds
 			    IndexBufferSize = 0;
 		    }
 
-		    if (usingWireFrames)
+		    //if (usingWireFrames)
 			    device.RasterizerState = originalState;
 		    
 		    device.SamplerStates[0] = originalSamplerState;
@@ -305,21 +339,22 @@ namespace Alex.Worlds
 		    var tempVertices = 0;
 		    int tempChunks = 0;
 		    var indexBufferSize = 0;
-
+			
 		    ChunkData[] chunks = _renderedChunks;
 		    
 		    foreach (var stage in stages)
 		    {
+			    bool setDepth = false;
 			    Effect effect = forceEffect;
 			    if (forceEffect == null)
 			    {
 				    switch (stage)
 				    {
 					    case RenderStage.OpaqueFullCube:
-						    effect = OpaqueEffect;
+						    effect = TransparentEffect;
 						    break;
 					    case RenderStage.Opaque:
-						    effect = OpaqueEffect;
+						    effect = TransparentEffect;
 						    break;
 					    case RenderStage.Transparent:
 						    effect = TransparentEffect;
@@ -338,6 +373,7 @@ namespace Alex.Worlds
 				    }
 			    }
 
+			    
 			    tempVertices += DrawChunks(args.GraphicsDevice, chunks, effect, stage);
 		    }
 
@@ -394,7 +430,7 @@ namespace Alex.Worlds
 			    TransparentEffect.DiffuseColor = value;
 			    TranslucentEffect.DiffuseColor = value;
 			    
-			    OpaqueEffect.AmbientLightColor = value;
+			    OpaqueEffect.DiffuseColor = value;
 			    // OpaqueEffect.DiffuseColor = value;
 			    AnimatedEffect.DiffuseColor = value;
 			    AnimatedTranslucentEffect.DiffuseColor = value;
@@ -713,29 +749,36 @@ namespace Alex.Worlds
 
 		    var task = Task.Factory.StartNew(() =>
 		    {
-			    do
+			    try
 			    {
-				    if (_workItems.TryAdd(coords, taskCancelationToken))
+				    do
 				    {
-					    Enqueued.Remove(coords);
-				    }
-				    
-				    if (Chunks.TryGetValue(coords, out var val))
-				    {
-					    if (val is ChunkColumn column && column.Sections.Any(x => !x.IsEmpty()))
+					    if (_workItems.TryAdd(coords, taskCancelationToken))
 					    {
-						   // if (column.SkyLightDirty || column.IsNew)
-						    {
-							    new SkyLightCalculations().RecalcSkyLight((ChunkColumn) val,
-								    new SkyLightBlockAccess(this));
-						    }
-
-						    UpdateChunk(coords, val);
+						    Enqueued.Remove(coords);
 					    }
-				    }
-				    
-				    _workItems.TryRemove(coords, out _);
-			    } while (TryDequeue(new ChunkCoordinates(_cameraPosition), out coords, out priority));
+
+					    if (Chunks.TryGetValue(coords, out var val))
+					    {
+						    if (val is ChunkColumn column && column.Sections.Any(x => x != null && !x.IsEmpty()))
+						    {
+							    // if (column.SkyLightDirty || column.IsNew)
+							    {
+								    new SkyLightCalculations().RecalcSkyLight((ChunkColumn) val,
+									    new SkyLightBlockAccess(this));
+							    }
+
+							    UpdateChunk(coords, val);
+						    }
+					    }
+
+					    _workItems.TryRemove(coords, out _);
+				    } while (TryDequeue(new ChunkCoordinates(_cameraPosition), out coords, out priority));
+			    }
+			    catch (Exception ex)
+			    {
+				    Log.Warn(ex, $"Chunk processing error: {ex.ToString()}");
+			    }
 
 			    Interlocked.Decrement(ref _threadsRunning);
 

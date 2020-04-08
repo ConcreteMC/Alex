@@ -113,7 +113,7 @@ namespace Alex
 
 			DeviceManager.PreparingDeviceSettings += (sender, args) =>
 				{
-					args.GraphicsDeviceInformation.PresentationParameters.DepthStencilFormat = DepthFormat.Depth24;
+					args.GraphicsDeviceInformation.PresentationParameters.DepthStencilFormat = DepthFormat.Depth24Stencil8;
 					DeviceManager.PreferMultiSampling = true;
 				};
 			

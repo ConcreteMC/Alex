@@ -109,7 +109,7 @@ namespace Alex.Worlds.Bedrock
 					if (pos.DistanceTo(_lastSentLocation) > 0.0f) {
                         Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(pos.X,
 	                        pos.Y + Player.EyeLevel, pos.Z, pos.HeadYaw,
-	                        pos.Yaw, -pos.Pitch));
+	                        pos.Yaw, -pos.Pitch), player.KnownPosition.OnGround);
 
                         _lastSentLocation = pos;
 					}
@@ -239,7 +239,7 @@ namespace Alex.Worlds.Bedrock
 						if (WorldReceiver.GetPlayerEntity() is Player player)
 						{
 							var p = player.KnownPosition;
-							Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(p.X, p.Y, p.Z, p.HeadYaw, p.Yaw, p.Pitch));
+							Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(p.X, p.Y, p.Z, p.HeadYaw, p.Yaw, p.Pitch),player.KnownPosition.OnGround);
 						}
 
 						break;

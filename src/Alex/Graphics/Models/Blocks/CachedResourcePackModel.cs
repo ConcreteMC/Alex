@@ -574,22 +574,56 @@ namespace Alex.Graphics.Models.Blocks
 						continue;
 					}
 
-					var scale = (i * 0.001f);
+					var scale = 0f;
 
 					var element = modelElements[i];
 
-					if (!modelElements.Any(e =>
-						{
-							return AnyMatching(e.From, element.From) || AnyMatching(e.To, element.To);
-						}))
-					{
-						scale = 0f;
-					}
+					var otherElements = modelElements.Where(e => e != element).ToArray();
 					
+					if (otherElements.Any(e =>
+					{
+						return AnyMatching(e.From, element.From) || AnyMatching(e.To, element.To);
+					}))
+					{
+						//scale = (i * 0.001f);
+					}
+
 					foreach (var faceElement in element.Faces)
 					{
 						var facing = faceElement.Key;
 
+						switch (facing)
+						{
+							case BlockFace.Down:
+								if (otherElements.Any(e => Math.Abs(e.From.Y - element.From.Y) < 0.001f))
+									scale = (i * 0.001f);
+								break;
+							case BlockFace.Up:
+								if (otherElements.Any(e => Math.Abs(e.To.Y - element.To.Y) < 0.001f))
+									scale = (i * 0.001f);
+								break;
+							case BlockFace.East:
+								if (otherElements.Any(e => Math.Abs(e.To.X - element.To.X) < 0.001f))
+									scale = (i * 0.001f);
+								break;
+							case BlockFace.West:
+								if (otherElements.Any(e => Math.Abs(e.From.X - element.From.X) < 0.001f))
+									scale = (i * 0.001f);
+								break;
+							case BlockFace.North:
+								if (otherElements.Any(e => Math.Abs(e.From.Z - element.From.Z) < 0.001f))
+									scale = (i * 0.001f);
+								break;
+							case BlockFace.South:
+								if (otherElements.Any(e => Math.Abs(e.To.Z - element.To.Z) < 0.001f))
+									scale = (i * 0.001f);
+								break;
+							case BlockFace.None:
+								break;
+							default:
+								throw new ArgumentOutOfRangeException();
+						}
+						
 						GetCullFaceValues(faceElement.Value.CullFace, facing, out var cullFace);
 
 						var originalCullFace = cullFace;
@@ -653,7 +687,7 @@ namespace Alex.Graphics.Models.Blocks
 						//	faceColor = Color.Magenta;
 						//}
 
-						var s = (originalCullFace.GetVector3() * scale);
+						var s = (facing.GetVector3() * scale);
 						var initialIndex = verts.Count;
 						for (var index = 0; index < faceVertices.Vertices.Length; index++)
 						{

@@ -181,7 +181,7 @@ namespace Alex.Worlds
         {
 	        ChunkManager.UseWireFrames = !ChunkManager.UseWireFrames;
         }
-
+        
         public void Render(IRenderArgs args)
         {
 			Graphics.DepthStencilState = DepthStencilState.Default;
@@ -216,16 +216,19 @@ namespace Alex.Worlds
 	        args.Camera = Camera;
 
 	        EntityManager.Render2D(args);
-	        
-	        args.SpriteBatch.Begin();
 
-	        try
+	        if (UseDepthMap)
 	        {
-				args.SpriteBatch.Draw(ChunkManager.DepthMap, new Rectangle(0, 0, 256, 256), Color.White);
-	        }
-	        finally
-	        {
-		        args.SpriteBatch.End();
+		        args.SpriteBatch.Begin();
+
+		        try
+		        {
+			        args.SpriteBatch.Draw(ChunkManager.DepthMap, new Rectangle(0, 0, 256, 256), Color.White);
+		        }
+		        finally
+		        {
+			        args.SpriteBatch.End();
+		        }
 	        }
         }
 

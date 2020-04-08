@@ -27,7 +27,7 @@ namespace Alex.API.Network.Bedrock
 
         void RequestChunkRadius(int radius);
         void SendDisconnectionNotification();
-        void SendMcpeMovePlayer(MiNET.Utils.PlayerLocation location);
+        void SendMcpeMovePlayer(MiNET.Utils.PlayerLocation location, bool onGround);
 
         void InitiateEncryption(byte[] x5u, byte[] salt);
 

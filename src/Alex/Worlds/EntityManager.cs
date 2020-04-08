@@ -80,13 +80,22 @@ namespace Alex.Worlds
 		    EntitiesRendered = renderCount;
 	    }
 
+	    private static RasterizerState RasterizerState = new RasterizerState()
+	    {
+		    DepthBias = -0.0015f,
+		    CullMode = CullMode.None,
+		    FillMode = FillMode.Solid,
+		    DepthClipEnable = true,
+		    ScissorTestEnable = true
+	    };
+	    
 	    public void Render2D(IRenderArgs args)
 	    {
 		 //   NameTagEffect.Projection = args.Camera.ProjectionMatrix;
 		  //  NameTagEffect.View =  args.Camera.ViewMatrix;
 		  //  NameTagEffect.World = Matrix.CreateScale(1, -1, 1);
 		    
-		    args.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointWrap, DepthStencilState.DepthRead, RasterizerState.CullNone, effect: null);
+		    args.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointWrap, DepthStencilState.DepthRead, RasterizerState, effect: null);
 		    try
 		    {
 			    var entities = _rendered;

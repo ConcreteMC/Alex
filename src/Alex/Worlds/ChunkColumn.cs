@@ -581,7 +581,7 @@ namespace Alex.Worlds
 			
 
 			private bool _heightDirty = true;
-		private int _heighest = -1;
+		private int _heighest = 256;
 		public int GetHeighest()
 		{
 			if (_heightDirty)

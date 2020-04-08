@@ -303,8 +303,19 @@ namespace Alex.Graphics.Models.Entity
 			return vertices;
 		}
 
+		private static RasterizerState RasterizerState = new RasterizerState()
+		{
+			DepthBias = 0.0001f,
+			CullMode = CullMode.CullClockwiseFace,
+			FillMode = FillMode.Solid,
+			//DepthClipEnable = true,
+			//ScissorTestEnable = true
+		};
+		
 		public virtual void Render(IRenderArgs args, PlayerLocation position, bool mock)
 		{
+			var originalRaster = args.GraphicsDevice.RasterizerState;
+			args.GraphicsDevice.RasterizerState = RasterizerState;
 			args.GraphicsDevice.SetVertexBuffer(VertexBuffer);
 
 			if (Bones == null) return;
@@ -312,6 +323,8 @@ namespace Alex.Graphics.Models.Entity
 			{
 				bone.Value.Render(args, position, CharacterMatrix, mock);
 			}
+
+			args.GraphicsDevice.RasterizerState = originalRaster;
 		}
 
 		public Vector3 DiffuseColor { get; set; } = Color.White.ToVector3();

@@ -1,7 +1,9 @@
-﻿using Alex.API.Entities;
+﻿using System;
+using Alex.API.Entities;
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
+using MathF = System.MathF;
 
 namespace Alex.Graphics.Camera
 {
@@ -21,8 +23,8 @@ namespace Alex.Graphics.Camera
 
 	    public float FOV { get; set; } = 75f;
 		public Camera(int renderDistance)
-	    {
-		    FarDistance = (renderDistance * 16f * 16f);
+		{
+			FarDistance = renderDistance * 16 * 16;// MathF.Pow(renderDistance, 2f);
 			
 		    ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(
 			    MathHelper.ToRadians(FOV),

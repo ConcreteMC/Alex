@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using Alex.API.Graphics;
 using Alex.API.Graphics.Typography;
@@ -16,6 +17,7 @@ using Microsoft.Xna.Framework.Input;
 using Newtonsoft.Json;
 using NLog;
 using RocketUI;
+using TextCopy;
 
 namespace Alex.Gamestates.Login
 {
@@ -30,6 +32,7 @@ namespace Alex.Gamestates.Login
 		private Action<PlayerProfile> Ready { get; }
 		private MsaDeviceAuthConnectResponse ConnectResponse { get; }
 		private CancellationTokenSource CancellationToken { get; } = new CancellationTokenSource();
+		private bool CanUseClipboard { get; }
         public BEDeviceCodeLoginState(GuiPanoramaSkyBox skyBox, Action<PlayerProfile> readyAction)
         {
             Title = "Bedrock Login";
@@ -39,6 +42,8 @@ namespace Alex.Gamestates.Login
             BackgroundOverlay = Color.Transparent;
             Ready = readyAction;
 
+            CanUseClipboard = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+            
             ConnectResponse = AuthenticationService.StartDeviceAuthConnect().Result;
 			
             Initialize();
@@ -78,7 +83,7 @@ namespace Alex.Gamestates.Login
 
             Body.BackgroundOverlay = new Color(Color.Black, 0.5f);
             Body.ChildAnchor = Alignment.MiddleCenter;
-
+            
 			Body.AddChild(new GuiTextElement()
 			{
 				TextColor = TextColor.Cyan,
@@ -87,7 +92,15 @@ namespace Alex.Gamestates.Login
 				Scale = 2f
 			});
 
-            var buttonRow = AddGuiRow(LoginButton = new GuiButton(OnLoginButtonPressed)
+			if (CanUseClipboard)
+			{
+				AddGuiElement(new GuiTextElement()
+				{
+					Text = $"If you click Sign-In, the above auth code will be copied to your clipboard!"
+				});
+			}
+
+			var buttonRow = AddGuiRow(LoginButton = new GuiButton(OnLoginButtonPressed)
             {
 	            AccessKey = Keys.Enter,
 
@@ -131,7 +144,20 @@ namespace Alex.Gamestates.Login
 
 	        var profileManager = GetService<ProfileManager>();
 	        XBLMSAService.OpenBrowser(ConnectResponse.verification_uri);
-	    //   Log.Info($"Browser opened...");
+
+	        if (CanUseClipboard)
+	        {
+		        try
+		        {
+			        Clipboard.SetText(ConnectResponse.user_code);
+		        }
+		        catch (Exception ex)
+		        {
+			        Log.Warn(ex, $"Could not set keyboard contents!");
+		        }
+	        }
+
+	        //   Log.Info($"Browser opened...");
 	        AuthenticationService.DoDeviceCodeLogin(ConnectResponse.device_code, CancellationToken.Token).ContinueWith(
 		        (task) =>
 		        {
@@ -166,7 +192,7 @@ namespace Alex.Gamestates.Login
 			        }
 			        catch (Exception ex)
 			        {
-				        Log.Info($"Authentication issue: {ex.ToString()}");
+				        Log.Warn($"Authentication issue: {ex.ToString()}");
 			        }
 		        });
         }

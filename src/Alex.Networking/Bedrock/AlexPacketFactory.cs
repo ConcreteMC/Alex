@@ -68,7 +68,7 @@ namespace Alex.Networking.Bedrock
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Processing error....");
+                Log.Error(ex, $"Processing error: {ex.ToString()}");
             }
 
             return packet;

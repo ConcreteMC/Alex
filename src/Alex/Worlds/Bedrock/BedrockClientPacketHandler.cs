@@ -284,7 +284,7 @@ namespace Alex.Worlds.Bedrock
 
 			// Client.SendMcpeMovePlayer();
 		//	Client.CurrentLocation = new MiNET.Utils.PlayerLocation(message.x, message.y, message.z);
-			Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(message.x, message.y, message.z));
+			Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(message.x, message.y, message.z), false);
 			
 			_changeDimensionResetEvent.Set();
 		}
@@ -1058,7 +1058,7 @@ namespace Alex.Worlds.Bedrock
 		public void HandleMcpeRespawn(McpeRespawn message)
 		{
 			Client.WorldReceiver.UpdatePlayerPosition(new PlayerLocation(message.x, message.y, message.z));
-			Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(message.x, message.y, message.z));
+			Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(message.x, message.y, message.z), false);
 			
 			_changeDimensionResetEvent.Set();
 		}
@@ -1255,7 +1255,7 @@ namespace Alex.Worlds.Bedrock
 					if (Client.WorldReceiver is World world)
 					{
 						world.UpdatePlayerPosition(new PlayerLocation(message.position.X, message.position.Y, message.position.Z));
-						Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(message.position.X, message.position.Y, message.position.Z));
+						Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(message.position.X, message.position.Y, message.position.Z), false);
 						//Client.CurrentLocation = new MiNET.Utils.PlayerLocation(message.position.X, message.position.Y, message.position.Z);
 					}
 
