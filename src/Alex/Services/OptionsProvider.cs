@@ -30,7 +30,7 @@ namespace Alex.Services
             if (_optionsLoaded)
                 return;
             
-            if (_storage.TryRead(StorageKey, out AlexOptions options))
+            if (_storage.TryReadJson(StorageKey, out AlexOptions options))
             {
                 AlexOptions = options;
             }
@@ -47,7 +47,7 @@ namespace Alex.Services
             if (!_optionsLoaded)
                 return;
             
-            if (!_storage.TryWrite(StorageKey, AlexOptions))
+            if (!_storage.TryWriteJson(StorageKey, AlexOptions))
             {
                 Log.Warn($"Could not save settings.");
             }

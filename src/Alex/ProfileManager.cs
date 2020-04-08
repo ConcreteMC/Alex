@@ -35,7 +35,7 @@ namespace Alex
 			IStorageSystem storage = ServiceProvider.GetRequiredService<IStorageSystem>();
 			
 			progressReceiver.UpdateProgress(0, StatusMessage);
-			if (storage.TryRead(ProfilesFile, out ProfilesFileFormat saveFile))
+			if (storage.TryReadJson(ProfilesFile, out ProfilesFileFormat saveFile))
 			//if (File.Exists(ProfilesFile))
 			{
 				progressReceiver.UpdateProgress(50, StatusMessage);
@@ -81,7 +81,7 @@ namespace Alex
 			}
 			else
 			{
-				storage.TryWrite(ProfilesFile, new ProfilesFileFormat());
+				storage.TryWriteJson(ProfilesFile, new ProfilesFileFormat());
 			//	File.WriteAllText(ProfilesFile, JsonConvert.SerializeObject(new ProfilesFileFormat(), Formatting.Indented));
 			}
 
@@ -94,7 +94,7 @@ namespace Alex
 			IStorageSystem storage = ServiceProvider.GetRequiredService<IStorageSystem>();
 			
 			//IPlayerProfileService profileService = Alex.Services.GetService<IPlayerProfileService>();
-			storage.TryWrite(ProfilesFile, new ProfilesFileFormat()
+			storage.TryWriteJson(ProfilesFile, new ProfilesFileFormat()
 			{
 				Profiles = Profiles.Values.ToArray(),
 				SelectedProfile = profileService?.CurrentProfile?.Uuid ?? string.Empty

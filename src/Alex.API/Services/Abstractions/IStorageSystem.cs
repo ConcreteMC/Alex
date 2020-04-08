@@ -4,13 +4,35 @@ namespace Alex.API.Services
 {
     public interface IStorageSystem
     {
-        bool TryWrite<T>(string key, T value);
-        bool TryRead<T>(string key, out T value);
+        #region Json
+        
+        bool TryWriteJson<T>(string key, T value);
+        bool TryReadJson<T>(string key, out T value);
 
+        #endregion
+
+        #region Bytes
+        
 	    bool TryWriteBytes(string key, byte[] value);
 	    bool TryReadBytes(string key, out byte[] value);
+        
+        #endregion
 
-	    bool TryGetDirectory(string key, out DirectoryInfo info);
+        #region String
+        
+        bool TryWriteString(string key, string value);
+        bool TryReadString(string key, out string value);
+        
+        #endregion
+
+        #region Directory
+
+        bool TryGetDirectory(string key, out DirectoryInfo info);
         bool TryCreateDirectory(string key);
+        
+        #endregion
+
+        bool Exists(string key);
+        bool Delete(string key);
     }
 }

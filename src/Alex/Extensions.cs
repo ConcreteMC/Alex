@@ -48,8 +48,8 @@ namespace Alex
 					ms.Write(buffer, 0, count);
 				return ms.ToArray();
 			}
-
 		}
+		
 
 		public static BoundingBox OffsetBy(this BoundingBox box, Vector3 offset)
 		{

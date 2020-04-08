@@ -3,6 +3,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Threading;
+using System.Threading.Tasks;
+using Alex.API.Services;
+using Alex.Utils;
 using Alex.Worlds.Bedrock;
 using log4net;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,6 +21,22 @@ namespace Alex
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Program));
 
+		// static async Task Main(string[] args)
+		// {
+		// 	Console.WriteLine("Hello World!");
+		//
+		// 	var path = Path.Combine(Path.GetTempPath(), "Alex");
+		// 	ConfigureNLog(path);
+		// 	Log.Info("Hello Console!");
+		// 	
+  //           
+		// 	var mcJavaAssets = new MCJavaAssetsUtil(new StorageSystem(path));
+		// 	await mcJavaAssets.EnsureLatestReleaseAsync();
+  //           
+		// 	Console.WriteLine("Done!");
+		// 	Console.ReadLine();
+		// }
+		
 		/// <summary>
 		/// The main entry point for the application.
 		/// </summary>

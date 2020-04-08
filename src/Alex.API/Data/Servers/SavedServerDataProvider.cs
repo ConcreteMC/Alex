@@ -23,7 +23,7 @@ namespace Alex.API.Data.Servers
 
         public void Load()
         {
-            if (_storage.TryRead(StorageKey, out SavedServerEntry[] newEntries))
+            if (_storage.TryReadJson(StorageKey, out SavedServerEntry[] newEntries))
             {
                 _data.Clear();
                 _data.AddRange(newEntries);
@@ -34,12 +34,12 @@ namespace Alex.API.Data.Servers
 
         public void Save()
         {
-            _storage.TryWrite(StorageKey, Data.ToArray());
+            _storage.TryWriteJson(StorageKey, Data.ToArray());
         }
 
         void IDataProvider<IReadOnlyCollection<SavedServerEntry>>.Save(IReadOnlyCollection<SavedServerEntry> entries)
         {
-            _storage.TryWrite(StorageKey, Data.ToArray());
+            _storage.TryWriteJson(StorageKey, Data.ToArray());
         }
 
         public void MoveEntry(int index, SavedServerEntry entry)
