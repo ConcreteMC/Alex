@@ -26,16 +26,22 @@ namespace Alex.Gui.Forms.Bedrock
             InputManager = input;
         }
 
+        public bool IsShowingForm => _activeForm != null;
+
         public void Show(uint id, Form form)
         {
+            if (_activeForm != null)
+            {
+                GuiManager.HideDialog(_activeForm);
+            }
+            
             if (form is SimpleForm simpleForm)
             {
-                if (_activeForm != null)
-                {
-                    GuiManager.HideDialog(_activeForm);
-                }
-                
                 GuiManager.ShowDialog(_activeForm = new SimpleFormDialog(id, this, simpleForm, InputManager));
+            }
+            else if (form is CustomForm customForm)
+            {
+                GuiManager.ShowDialog(_activeForm = new CustomFormDialog(id, this, customForm, InputManager));
             }
             else
             {

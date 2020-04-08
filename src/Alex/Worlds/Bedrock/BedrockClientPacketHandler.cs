@@ -1492,7 +1492,7 @@ namespace Alex.Worlds.Bedrock
 		{
 			if (Client.WorldReceiver is World world)
 			{
-				Form form = JsonConvert.DeserializeObject<Form>(message.data, new FormConverter());
+				Form form = JsonConvert.DeserializeObject<Form>(message.data, new FormConverter(), new CustomElementConverter());
 
 				world.FormManager.Show(message.formId, form);
 			}

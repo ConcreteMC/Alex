@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using Alex.Networking.Bedrock.Net.Raknet;
 using MiNET.Net;
 using MiNET.Net.RakNet;
 using MiNET.Utils;
@@ -9,7 +11,8 @@ namespace Alex.Networking.Bedrock
     public class AlexPacketFactory : ICustomPacketFactory
     {
         private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(AlexPacketFactory));
-
+        
+        private byte[] PrevBuffer { get; set; }
         public Packet Create(byte messageId, ReadOnlyMemory<byte> buffer, string ns)
         {
             if (ns == "raknet")
@@ -25,7 +28,27 @@ namespace Alex.Networking.Bedrock
             Packet packet = null;
             switch (messageId)
             {
-                
+                //Hack to spawn on the Hive
+                case 132:
+                    PrevBuffer = buffer.ToArray();
+                    break;
+                case 16:
+                    packet = new RequestAccepted();
+                    break;
+            }
+
+            try
+            {
+                packet?.Decode(buffer);
+            }
+            catch (System.ArgumentOutOfRangeException)
+            {
+                if (PrevBuffer != null)
+                {
+                    Memory<byte> newBuffer = new Memory<byte>(PrevBuffer.Concat(buffer.ToArray()).ToArray());
+
+                    packet?.Decode(newBuffer);
+                }
             }
             
             return packet;
@@ -42,7 +65,7 @@ namespace Alex.Networking.Bedrock
                     case 111: //Fixes entity delta
                         packet = new EntityDelta();
                         break;
-                    
+
                     //The following are only here so we can join.
                     case 49:
                         packet = new InventoryContent();
@@ -62,13 +85,22 @@ namespace Alex.Networking.Bedrock
                     case 50:
                         packet = new InventorySlot();
                         break;
+                    case 7:
+                        packet = new McpeResourcePackStack();
+                        break;
+                    case 39:
+                        packet = new McpeSetEntityData();
+                        break;
                 }
-                
+
                 packet?.Decode(buffer);
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"Processing error: {ex.ToString()}");
+                if (messageId != 39)
+                {
+                    Log.Error(ex, $"Processing error: {ex.ToString()}");
+                }
             }
 
             return packet;

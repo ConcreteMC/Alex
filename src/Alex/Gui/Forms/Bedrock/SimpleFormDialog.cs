@@ -1,57 +1,25 @@
 using System;
 using Alex.API.Graphics.Typography;
-using Alex.API.Gui;
-using Alex.API.Gui.Dialogs;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
-using Alex.API.Gui.Elements.Layout;
 using Alex.API.Gui.Graphics;
 using Alex.API.Input;
+using Alex.API.Json;
 using Alex.API.Utils;
-using Microsoft.Xna.Framework;
 using MiNET.Net;
 using MiNET.UI;
-using Newtonsoft.Json;
 using RocketUI;
 
 namespace Alex.Gui.Forms.Bedrock
 {
-    public class FormBase : GuiDialogBase
-    {
-        public uint FormId { get; set; }
-        protected BedrockFormManager Parent { get; }
-        protected InputManager InputManager { get; }
-        public FormBase(uint formId, BedrockFormManager parent, InputManager inputManager)
-        {
-            FormId = formId;
-            Parent = parent;
-            InputManager = inputManager;
-        }    
-        
-        protected override void OnUpdate(GameTime gameTime)
-        {
-            base.OnUpdate(gameTime);
-
-            if (InputManager.Any(x => x.IsPressed(InputCommand.Exit)))
-            {
-                Parent.Hide(FormId);
-            }
-        }
-    }
-    
     public class SimpleFormDialog : FormBase
     {
         private GuiStackMenu StackMenu { get; }
         public SimpleFormDialog(uint formId, BedrockFormManager parent, SimpleForm form, InputManager inputManager) : base(formId, parent, inputManager)
         {
-            Background = new Color(Color.Black, 0.5f);
-            
-            GuiContainer container = new GuiContainer();
-            container.Anchor = Alignment.FillCenter;
-            
             StackMenu = new GuiStackMenu();
-            StackMenu.Anchor = Alignment.FillCenter;
-            StackMenu.ChildAnchor = Alignment.CenterY | Alignment.FillX;
+            StackMenu.Anchor = Alignment.Fill;
+            StackMenu.ChildAnchor = Alignment.MiddleFill;
             
             if (!string.IsNullOrWhiteSpace(form.Content))
             {
@@ -92,9 +60,9 @@ namespace Alex.Gui.Forms.Bedrock
                 StackMenu.AddMenuItem(button.Text, submitAction);
             }
             
-            container.AddChild(StackMenu);
+            Container.AddChild(StackMenu);
             
-            container.AddChild(new GuiTextElement()
+            Container.AddChild(new GuiTextElement()
             {
                 Anchor = Alignment.TopCenter,
                 Text = form.Title,
@@ -103,7 +71,7 @@ namespace Alex.Gui.Forms.Bedrock
                 TextColor = TextColor.White
             });
             
-            AddChild(container);
+            AddChild(Container);
         }
     }
 }

@@ -62,8 +62,8 @@ namespace Alex.GameStates.Playing
 		private GuiPlayerInventoryDialog _guiPlayerInventoryDialog = null;
 
 		public void Update(GameTime gameTime)
-	    {
-		   UpdatePlayerInput(gameTime);
+		{
+			UpdatePlayerInput(gameTime);
 	    }
 
 	    private void UpdatePlayerInput(GameTime gt)
@@ -81,6 +81,9 @@ namespace Alex.GameStates.Playing
 
 	    private void CheckGeneralInput(GameTime gt)
 	    {
+		    if (World.FormManager.IsShowingForm)
+			    return;
+		    
 		    if (InputManager.IsPressed(InputCommand.Exit))
 		    {
 			    

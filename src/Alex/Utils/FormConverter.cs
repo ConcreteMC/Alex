@@ -34,6 +34,43 @@ namespace Alex.Utils
             return typeof(Form).IsAssignableFrom(objectType);
         }
     }
+    
+    public class CustomElementConverter : JsonCreationConverter<CustomElement>
+    {
+        protected override CustomElement Create(Type objectType, JObject jObject)
+        {
+            string type = jObject["type"].Value<string>();
+
+            switch (type)
+            {
+                case "label":
+                    return new Label();
+                case "input":
+                    return new Input();
+                case "toggle":
+                    return new Toggle();
+                case "slider":
+                    return new Slider();
+                case "step_slider":
+                    return new StepSlider();
+                case "dropdown":
+                    return new Dropdown();
+                default:
+                    throw new NotSupportedException($"The type {type} is not supported!");
+            }
+        }
+
+        public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override bool CanConvert(Type objectType)
+        {
+            return typeof(CustomElement).IsAssignableFrom(objectType);
+        }
+    }
+    
     public abstract class JsonCreationConverter<T> : JsonConverter
     {
         /// <summary>

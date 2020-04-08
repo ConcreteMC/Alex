@@ -12,7 +12,6 @@
   <ItemGroup>
     <Folder Include="Bedrock\" />
     <Folder Include="Bedrock\Net\Pe" />
-    <Folder Include="Bedrock\Net\Raknet" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Iconic.Zlib.Netstandard" Version="1.0.0" />
