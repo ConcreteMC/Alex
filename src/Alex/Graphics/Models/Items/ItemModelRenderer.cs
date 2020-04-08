@@ -6,6 +6,7 @@ using Alex.API.Blocks.State;
 using Alex.API.Entities;
 using Alex.API.Graphics;
 using Alex.Blocks.Minecraft;
+using Alex.Entities;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Models.Items;
@@ -24,6 +25,8 @@ namespace Alex.Graphics.Models.Items
 		Vector3 Rotation { get; set; }
 		Vector3 Translation { get; set; }
 		Vector3 Scale { get; set; }
+		
+		Vector3 Position { get; set; }
 		
 		void Update(GraphicsDevice device, ICamera camera);
 
@@ -100,18 +103,48 @@ namespace Alex.Graphics.Models.Items
 			Effect.View = camera.ViewMatrix;
 
 			var scale = Scale;
-			
-			var pieceMatrix =
-				Matrix.CreateTranslation(Translation * scale) *
-				Matrix.CreateRotationX(MathUtils.ToRadians(Rotation.X)) *
-				Matrix.CreateRotationY(MathUtils.ToRadians(Rotation.Y)) *
-				Matrix.CreateRotationZ(MathUtils.ToRadians(Rotation.Z));
-			
-			Effect.World = pieceMatrix * ParentMatrix;
-			
+			var trans = Translation;
+
+			// var rotationMatrix = Matrix.CreateFromAxisAngle(Vector3.Forward, MathUtils.ToRadians(360f - Rotation.Z));
+			// rotationMatrix *= Matrix.CreateFromAxisAngle(Vector3.Up, MathUtils.ToRadians(Rotation.Y));
+			// rotationMatrix *= Matrix.CreateFromAxisAngle(Vector3.Right, MathUtils.ToRadians(Rotation.X));
+
+			// var pieceMatrix =
+			// 	//	Matrix.CreateTranslation(-vec) *
+			// 	rotationMatrix *
+			// 	Matrix.CreateTranslation(new Vector3((trans.X - 0.5f) * scale.X, (trans.Y * scale.Y) - 0.5f, -(trans.Z * scale.Z)));// *
+			// 	//Matrix.CreateTranslation(vec);
+			//
+			// 	//Matrix.CreateTranslation(-vec);
+			//
+			// 	//Matrix.CreateTranslation(vector);
+
+			Effect.World = 
+				Matrix.CreateTranslation(new Vector3(-trans.X, -trans.Y, trans.Z)) *
+				Matrix.CreateScale(scale) * 
+			               Matrix.CreateFromAxisAngle(Vector3.Forward, MathUtils.ToRadians(360f - Rotation.Z)) *
+			               Matrix.CreateFromAxisAngle(Vector3.Up, MathUtils.ToRadians(Rotation.Y)) *
+			               Matrix.CreateFromAxisAngle(Vector3.Right, MathUtils.ToRadians(Rotation.X)) *
+			               Matrix.CreateTranslation(
+				               new Vector3(trans.X, trans.Y, -trans.Z)) *
+							Matrix.CreateTranslation(0f, 0.62f, 0f)
+			               * ParentMatrix;
+
+			// var origin = new Vector3(0.5f, 0.5f,0.5f);
+			//
+			//
+			// Effect.World = //Matrix.CreateTranslation(-origin) *
+			//                Matrix.CreateScale(scale) *
+			//                Matrix.CreateFromAxisAngle(Vector3.Forward, MathUtils.ToRadians(360f - Rotation.Z)) *
+			//                Matrix.CreateFromAxisAngle(Vector3.Up, MathUtils.ToRadians(Rotation.Y)) *
+			//                Matrix.CreateFromAxisAngle(Vector3.Right, MathUtils.ToRadians(Rotation.X)) *
+			//               // Matrix.CreateTranslation(origin) *
+			//                Matrix.CreateTranslation(trans) *
+			//                ParentMatrix;
+			//
 			base.Update(device, camera);
 		}
-		
+
 
 		public override void Cache(McResourcePack pack)
 		{
@@ -149,7 +182,7 @@ namespace Alex.Graphics.Models.Items
 					    ItemModelCube built = new ItemModelCube(new Vector3(1f / texture.Width));
 					    built.BuildCube(color);
 
-					    var origin = new Vector3(toolPosX + (1f / texture.Width) * x, toolPosY - (1f / texture.Height) * y, toolPosZ);
+					    var origin = new Vector3((toolPosX + (1f / texture.Width) * x), toolPosY - (1f / texture.Height) * y, toolPosZ);
 						
 					    vertices = ModifyCubeIndexes(vertices, ref built.Front, origin);
 					    vertices = ModifyCubeIndexes(vertices, ref built.Back, origin);
@@ -215,6 +248,7 @@ namespace Alex.Graphics.Models.Items
 		public Vector3 Rotation { get; set; } = Vector3.Zero;
 		public Vector3 Translation { get; set; }= Vector3.Zero;
 		public Vector3 Scale { get; set; }= Vector3.Zero;
+		public Vector3 Position { get; set; } = Vector3.Zero;
 
 		private VertexBuffer Buffer { get; set; } = null;
 		private IndexBuffer IndexBuffer { get; set; } = null;
@@ -298,7 +332,7 @@ namespace Alex.Graphics.Models.Items
 	    }
     }
 
-    public sealed class ItemModelCube
+    public sealed class ItemModelCube : Model
     {
 	    public Vector3 Size;
 	    
@@ -334,12 +368,12 @@ namespace Alex.Graphics.Models.Items
 
 	    public void BuildCube(Color uv)
 	    {
-		    Front = GetFrontVertex(uv);
-		    Back = GetBackVertex(uv);
-		    Left = GetLeftVertex(uv);
-		    Right = GetRightVertex(uv);
-		    Top = GetTopVertex(uv);
-		    Bottom = GetBottomVertex(uv);
+		    Front = GetFrontVertex(AdjustColor(uv, BlockFace.North, 15));
+		    Back = GetBackVertex(AdjustColor(uv, BlockFace.South, 15));
+		    Left = GetLeftVertex(AdjustColor(uv, BlockFace.West, 15));
+		    Right = GetRightVertex(AdjustColor(uv, BlockFace.East, 15));
+		    Top = GetTopVertex(AdjustColor(uv, BlockFace.Up, 15));
+		    Bottom = GetBottomVertex(AdjustColor(uv, BlockFace.Down, 15));
 	    }
 	    
 	    private (VertexPositionColor[] vertices, short[] indexes) GetLeftVertex(Color color)

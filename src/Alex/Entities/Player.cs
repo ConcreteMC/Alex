@@ -26,6 +26,7 @@ namespace Alex.Entities
 	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Player));
 
         public static readonly float EyeLevel = 1.625F;
+        public static readonly float Height = 1.8F;
 
 		public PlayerIndex PlayerIndex { get; }
 

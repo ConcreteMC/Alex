@@ -104,7 +104,7 @@ namespace Alex.Entities
 
 		private void CheckHeldItem()
 		{
-			var inHand = Inventory.MainHand;
+			var inHand = Inventory[Inventory.SelectedSlot];
 			//Log.Info($"Inventory slot changed.");
 			
 			if (inHand == null && ItemRenderer != null)
@@ -133,6 +133,9 @@ namespace Alex.Entities
 						Log.Warn($"No renderer for item: {inHand.Name}");
 						return;
 					}
+
+					if (renderer == ItemRenderer)
+						return;
 					
 					var itemModel = renderer.Model;
 
@@ -268,8 +271,14 @@ namespace Alex.Entities
 				
 				if (ShowItemInHand)
 				{
+					//CheckHeldItem();
+					
 					//Matrix.CreateRotationY(MathUtils.ToRadians((-KnownPosition.HeadYaw)))
-					ItemRenderer?.Update(Matrix.CreateRotationY(MathUtils.ToRadians((-KnownPosition.HeadYaw))) * Matrix.CreateTranslation((KnownPosition)));
+		//			ItemRenderer?.Update(Matrix.CreateRotationY(MathUtils.ToRadians(180f - KnownPosition.HeadYaw)) * Matrix.CreateTranslation(KnownPosition));
+		ItemRenderer?.Update(
+		                     Matrix.CreateRotationY(MathUtils.ToRadians((180f - KnownPosition.HeadYaw))) *
+		                     Matrix.CreateTranslation(KnownPosition));
+		
 					//ItemRenderer?.World = 
 					ItemRenderer?.Update(args.GraphicsDevice, args.Camera);
 				}

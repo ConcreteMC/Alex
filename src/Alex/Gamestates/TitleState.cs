@@ -219,6 +219,15 @@ namespace Alex.GameStates
 			{
 				_playerView.Entity = new PlayerMob(e.Profile.Username, null, null, e.Profile.Skin.Texture,
 					e.Profile.Skin.Slim ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom" );
+				
+				_playerView.Entity.Inventory.IsPeInventory = true;
+				_playerView.Entity.ShowItemInHand = true;
+
+				if (ItemFactory.TryGetItem("minecraft:diamond_sword", out var sword))
+				{
+					_playerView.Entity.Inventory.MainHand = sword;
+					_playerView.Entity.Inventory[_playerView.Entity.Inventory.SelectedSlot] = sword;
+				}
 			}
 		}
 
@@ -261,7 +270,14 @@ namespace Alex.GameStates
 
 			var entity = new PlayerMob("", null, null, skin.Texture);
 			entity.Inventory.IsPeInventory = true;
+			entity.ShowItemInHand = true;
 
+			if (ItemFactory.TryGetItem("minecraft:diamond_sword", out var sword))
+			{
+				entity.Inventory.MainHand = sword;
+				entity.Inventory[entity.Inventory.SelectedSlot] = sword;
+			}
+			
 			AddChild(_playerView =
 				new GuiEntityModelView(
 						entity /*new PlayerMob("", null, null, skin.Texture, skin.Slim)*/) /*"geometry.humanoid.customSlim"*/

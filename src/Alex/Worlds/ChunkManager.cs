@@ -745,19 +745,20 @@ namespace Alex.Worlds
 
 		    Interlocked.Increment(ref _threadsRunning);
 
+		    if (_workItems.TryAdd(coords, taskCancelationToken))
+		    {
+			    Enqueued.Remove(coords);
+		    }
+
+		    
 		    //_tasksQueue.
 
 		    var task = Task.Factory.StartNew(() =>
 		    {
 			    try
 			    {
-				    do
+				   // do
 				    {
-					    if (_workItems.TryAdd(coords, taskCancelationToken))
-					    {
-						    Enqueued.Remove(coords);
-					    }
-
 					    if (Chunks.TryGetValue(coords, out var val))
 					    {
 						    if (val is ChunkColumn column && column.Sections.Any(x => x != null && !x.IsEmpty()))
@@ -773,7 +774,7 @@ namespace Alex.Worlds
 					    }
 
 					    _workItems.TryRemove(coords, out _);
-				    } while (TryDequeue(new ChunkCoordinates(_cameraPosition), out coords, out priority));
+				    } //while (TryDequeue(new ChunkCoordinates(_cameraPosition), out coords, out priority));
 			    }
 			    catch (Exception ex)
 			    {
