@@ -19,7 +19,7 @@ As of now, it is able to connect to java 1.15.2 & bedrock 1.14.1 servers.
 Screenshots
 -----------
 
-![Bedrock Lifeboat](https://raw.githubusercontent.com/kennyvv/Alex/BigRefactor/screenshots/lbsg3.png)
+![Bedrock Lifeboat](https://raw.githubusercontent.com/kennyvv/Alex/master/screenshots/lbsg3.png)
 
 
 Cloning the Repository
