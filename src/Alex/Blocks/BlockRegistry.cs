@@ -293,6 +293,7 @@ namespace Alex.Blocks
 			this.Register(() => new RoseBush().WithLocation("minecraft:rose_bush"));
 			this.Register(() => new AzureBluet().WithLocation("minecraft:azure_bluet"));
 			this.Register(() => new CornFlower().WithLocation("minecraft:corn_flower"));
+			this.Register(() => new CornFlower().WithLocation("minecraft:cornflower"));
 			this.Register(() => new OxeyeDaisy().WithLocation("minecraft:oxeye_daisy"));
 			this.Register(() => new Stem().WithLocation("minecraft:attached_melon_stem"));
 			this.Register(() => new Stem().WithLocation("minecraft:melon_stem"));
@@ -303,6 +304,7 @@ namespace Alex.Blocks
 			this.Register(() => new Tulip().WithLocation("minecraft:pink_tulip"));
 			this.Register(() => new Tulip().WithLocation("minecraft:white_tulip"));
 			this.Register(() => new Tulip().WithLocation("minecraft:orange_tulip"));
+			this.Register(() => new Allium().WithLocation("minecraft:allium"));
 			
 			this.Register(() => new Peony().WithLocation("minecraft:peony"));
 			
