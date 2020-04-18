@@ -2,6 +2,8 @@
 using System.IO;
 using System.Threading.Tasks;
 using Alex.API.Services;
+using Alex.GameStates;
+using Alex.Networking.Java;
 using Alex.Utils;
 
 namespace MCJavaTest
@@ -10,19 +12,20 @@ namespace MCJavaTest
     {
         static async Task Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
-
-            var path = Path.Combine(Path.GetTempPath(), "Alex");
+	        var path = Path.Combine(Path.GetTempPath(), "Alex");
+	        Directory.CreateDirectory(path);
+	        Console.WriteLine($"Hello World: {path}");
             
+
             var mcJavaAssets = new MCJavaAssetsUtil(new StorageSystem(path));
-            await mcJavaAssets.EnsureLatestReleaseAsync();
+            await mcJavaAssets.EnsureTargetReleaseAsync(JavaProtocol.VersionId, new SplashScreen());
             
             Console.WriteLine("Done!");
             Console.ReadLine();
         }
         
         
-        static async Task Main(string[] args)
+       /* static async Task Main(string[] args)
         {
         	Console.WriteLine("Hello World!");
         
@@ -38,6 +41,6 @@ namespace MCJavaTest
                   
         	Console.WriteLine("Done!");
         	Console.ReadLine();
-        }
+        }*/
     }
 }
