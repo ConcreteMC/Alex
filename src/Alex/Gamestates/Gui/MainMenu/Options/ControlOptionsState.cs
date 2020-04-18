@@ -29,7 +29,7 @@ namespace Alex.GameStates.Gui.MainMenu.Options
         {
             base.OnHide();
 
-            Alex.Storage.TryWrite("controls", InputListener.ToDictionary(x => x.Key, x => x.Value));
+            Alex.Storage.TryWriteJson("controls", InputListener.ToDictionary(x => x.Key, x => x.Value));
         }
 
         protected override void OnShow()

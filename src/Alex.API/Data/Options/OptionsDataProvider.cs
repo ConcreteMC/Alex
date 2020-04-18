@@ -21,11 +21,11 @@ namespace Alex.API.Data.Options
 
         public void Load()
         {
-            if (!_storage.TryRead<AlexOptions>(StorageKey, out var options))
+            if (!_storage.TryReadJson<AlexOptions>(StorageKey, out var options))
             {
                 // no options file?
                 options = new AlexOptions();
-                if (!_storage.TryWrite<AlexOptions>(StorageKey, options))
+                if (!_storage.TryWriteJson<AlexOptions>(StorageKey, options))
                 {
                     // uhmmm...
                     throw new IOException("Unable to write default AlexOptions!");
@@ -37,7 +37,7 @@ namespace Alex.API.Data.Options
         {
             Data = data;
 
-            if (!_storage.TryWrite<AlexOptions>(StorageKey, data))
+            if (!_storage.TryWriteJson<AlexOptions>(StorageKey, data))
             {
                 // uhmmm...
                 throw new IOException("Unable to write AlexOptions!");

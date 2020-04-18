@@ -9,7 +9,7 @@ namespace Alex
 	public partial class LauncherMeta
 	{
 		[J("arguments")] public Arguments Arguments { get; set; }
-		[J("assetIndex")] public AssetIndex AssetIndex { get; set; }
+		[J("assetIndex")] public LauncherMetaAssetIndex LauncherMetaAssetIndex { get; set; }
 		[J("assets")] public string Assets { get; set; }
 		[J("downloads")] public LauncherMetaDownloads Downloads { get; set; }
 		[J("id")] public string Id { get; set; }
@@ -64,7 +64,7 @@ namespace Alex
 		[J("version")] public string Version { get; set; }
 	}
 
-	public partial class AssetIndex
+	public partial class LauncherMetaAssetIndex
 	{
 		[J("id")] public string Id { get; set; }
 		[J("sha1")] public string Sha1 { get; set; }
@@ -141,7 +141,7 @@ namespace Alex
 
 	public partial class LoggingClient
 	{
-		[J("file")] public AssetIndex File { get; set; }
+		[J("file")] public LauncherMetaAssetIndex File { get; set; }
 		[J("argument")] public string Argument { get; set; }
 		[J("type")] public string Type { get; set; }
 	}

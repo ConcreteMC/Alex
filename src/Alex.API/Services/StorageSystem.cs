@@ -9,22 +9,22 @@ namespace Alex.API.Services
 {
     public class StorageSystem : IStorageSystem
     {
-	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(StorageSystem));
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(StorageSystem));
         private static readonly Regex FileKeySanitizeRegex = new Regex(@"[\W]", RegexOptions.Compiled);
 
         private string DataDirectory { get; }
 
         public StorageSystem(string directory)
         {
-	        DataDirectory = directory;
+            DataDirectory = directory;
 
-			Directory.CreateDirectory(DataDirectory);
-	        Directory.CreateDirectory(Path.Combine(DataDirectory, "assets"));
-	        Directory.CreateDirectory(Path.Combine(DataDirectory, "assets", "bedrock"));
+            Directory.CreateDirectory(DataDirectory);
+            Directory.CreateDirectory(Path.Combine(DataDirectory, "assets"));
+            Directory.CreateDirectory(Path.Combine(DataDirectory, "assets", "bedrock"));
             Directory.CreateDirectory(Path.Combine(DataDirectory, "assets", "resourcepacks"));
         }
-        
-        public bool TryWrite<T>(string key, T value)
+
+        public bool TryWriteJson<T>(string key, T value)
         {
             var fileName = GetFileName(key) + ".json";
 
@@ -38,12 +38,12 @@ namespace Alex.API.Services
             }
             catch (Exception ex)
             {
-	            Log.Warn($"Could not write to storage! {ex.ToString()}");
+                Log.Warn($"Could not write to storage! {ex.ToString()}");
                 return false;
             }
         }
 
-        public bool TryRead<T>(string key, out T value)
+        public bool TryReadJson<T>(string key, out T value)
         {
             var fileName = GetFileName(key) + ".json";
 
@@ -62,61 +62,123 @@ namespace Alex.API.Services
             }
             catch (Exception ex)
             {
-	            Log.Warn($"Failed to read: {ex.ToString()}");
+                Log.Warn($"Failed to read: {ex.ToString()}");
                 value = default(T);
                 return false;
             }
         }
 
-	    public bool TryWriteBytes(string key, byte[] value)
-	    {
-			var fileName = Path.Combine(DataDirectory, key);
+        public bool TryWriteBytes(string key, byte[] value)
+        {
+            var fileName = Path.Combine(DataDirectory, key);
 
-			try
-		    {
-				File.WriteAllBytes(fileName, value);
-			    return true;
-		    }
-		    catch (Exception ex)
-		    {
-			    return false;
-		    }
-		}
+            try
+            {
+                File.WriteAllBytes(fileName, value);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
 
-	    public bool TryReadBytes(string key, out byte[] value)
-	    {
-		    var fileName = Path.Combine(DataDirectory, key);
+        public bool TryReadBytes(string key, out byte[] value)
+        {
+            var fileName = Path.Combine(DataDirectory, key);
 
-		    if (!File.Exists(fileName))
-		    {
-			    value = null;
-			    return false;
-		    }
+            if (!File.Exists(fileName))
+            {
+                value = null;
+                return false;
+            }
 
-		    try
-		    {
-			    value = File.ReadAllBytes(fileName);
-			    return true;
-		    }
-		    catch (Exception ex)
-		    {
-			    value = null;
-			    return false;
-		    }
-		}
+            try
+            {
+                value = File.ReadAllBytes(fileName);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                value = null;
+                return false;
+            }
+        }
 
-	    public bool TryGetDirectory(string key, out DirectoryInfo info)
-	    {
-		    var path = Path.Combine(DataDirectory, key);
-		    if (Directory.Exists(path))
-		    {
-				info = new DirectoryInfo(path);
-			    return true;
-		    }
+        public bool TryWriteString(string key, string value)
+        {
+            var fileName = Path.Combine(DataDirectory, key);
 
-		    info = default(DirectoryInfo);
-		    return false;
-	    }
+            if (!File.Exists(fileName))
+            {
+                value = null;
+                return false;
+            }
+
+            try
+            {
+                File.WriteAllText(fileName, value, Encoding.Unicode);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                value = null;
+                return false;
+            }
+        }
+
+        public bool TryReadString(string key, out string value)
+        {
+            var fileName = Path.Combine(DataDirectory, key);
+
+            if (!File.Exists(fileName))
+            {
+                value = null;
+                return false;
+            }
+
+            try
+            {
+                value = File.ReadAllText(fileName, Encoding.Unicode);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                value = null;
+                return false;
+            }
+        }
+
+        public bool Exists(string key)
+        {
+            return File.Exists(GetFileName(key));
+        }
+        
+        public bool Delete(string key)
+        {
+            try
+            {
+                File.Delete(GetFileName(key));
+                return true;
+            }
+            catch(Exception ex)
+            {
+                return false;
+            }
+        }
+
+        public bool TryGetDirectory(string key, out DirectoryInfo info)
+        {
+            var path = Path.Combine(DataDirectory, key);
+            if (Directory.Exists(path))
+            {
+                info = new DirectoryInfo(path);
+                return true;
+            }
+
+            info = default(DirectoryInfo);
+            return false;
+        }
 
         public bool TryCreateDirectory(string key)
         {

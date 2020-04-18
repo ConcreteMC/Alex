@@ -179,7 +179,7 @@ namespace Alex
         {
 	        var bindings = KeyBinds.DefaultBindings;
 
-	        if (Storage.TryRead($"controls", out Dictionary<InputCommand, Keys> loadedBindings))
+	        if (Storage.TryReadJson($"controls", out Dictionary<InputCommand, Keys> loadedBindings))
 	        {
 		        bindings = loadedBindings;
 	        }
