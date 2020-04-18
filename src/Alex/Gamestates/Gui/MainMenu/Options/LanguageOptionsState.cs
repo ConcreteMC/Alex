@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Globalization;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Graphics;
 using Alex.API.Localization;
@@ -14,10 +15,19 @@ namespace Alex.GameStates.Gui.MainMenu.Options
         {
             TitleTranslationKey = "options.language";
         }
+        
+        private static string GetTitleCaseNativeLanguage(CultureInfo culture)
+        {
+            string nativeName = culture.IsNeutralCulture
+                ? culture.NativeName
+                : culture.Parent.NativeName;
+
+            return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(nativeName);
+        }
 
         private string GetButtonText(CultureLanguage culture, bool active)
         {
-            string displayName = culture.CultureInfo.DisplayName;
+            string displayName = GetTitleCaseNativeLanguage(culture.CultureInfo);
             if (string.IsNullOrWhiteSpace(displayName))
             {
                 displayName = culture.CultureInfo.Name;

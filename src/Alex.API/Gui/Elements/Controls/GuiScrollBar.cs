@@ -73,10 +73,10 @@ namespace Alex.API.Gui.Elements.Controls
 
                 OnScrollOffsetValueChanged(prevValue, _scrollOffsetValue);
 
-                Log.Info(
+             /*   Log.Info(
                     $"ScrollOffsetValue.Change {{ScrollOffsetValue=({prevValue} => {_scrollOffsetValue}), ScrollButtonStep={ScrollButtonStep}, MaxScrollOffset={MaxScrollOffset}}}");
                 Debug.WriteLine(
-                    $"ScrollOffsetValue.Change {{ScrollOffsetValue=({prevValue} => {_scrollOffsetValue}), ScrollButtonStep={ScrollButtonStep}, MaxScrollOffset={MaxScrollOffset}}}");
+                    $"ScrollOffsetValue.Change {{ScrollOffsetValue=({prevValue} => {_scrollOffsetValue}), ScrollButtonStep={ScrollButtonStep}, MaxScrollOffset={MaxScrollOffset}}}");*/
             }
         }
 
