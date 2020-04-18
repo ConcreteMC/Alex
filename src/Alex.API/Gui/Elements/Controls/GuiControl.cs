@@ -85,7 +85,10 @@ namespace Alex.API.Gui.Elements.Controls
 
 		protected virtual void OnEnabledChanged() { }
 
+        public bool CanFocus { get; set; } = true;
         public bool Focused { get; private set; }
+        
+        public bool CanHighlight { get; set; } = true;
         public bool Highlighted { get; private set; }
 
         public Keys AccessKey { get; set; } = Keys.None;

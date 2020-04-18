@@ -120,6 +120,9 @@ namespace Alex.API.Gui.Elements.Controls
                 AutoSizeMode = AutoSizeMode.None,
                 Anchor = Alignment.Fill,
 
+                CanFocus = false,
+                CanHighlight = false,
+                
                 HighlightOutlineColor = Color.Yellow,
                 HighlightOutlineThickness = new Thickness(2),
 
@@ -197,6 +200,8 @@ namespace Alex.API.Gui.Elements.Controls
 
             var contentSize = containerSize + maxOffset;
 
+            if (containerSize == 0 || contentSize == 0) return;
+            
             var visibleSizeAsPercentage = (containerSize / (double) contentSize);
             //var visibleSizeAsPercentage = 1d;
             if (visibleSizeAsPercentage >= 1.0d)
@@ -218,10 +223,10 @@ namespace Alex.API.Gui.Elements.Controls
             {
                 var size = (int) Math.Floor(visibleSizeAsPercentage * trackSize);
                 var positionOffsetPct = (_scrollOffsetValue / (double) maxOffset);
-                var positionOffset = (int)((containerSize - trackSize) * positionOffsetPct);
+                var positionOffset = (int)((containerSize - size) * positionOffsetPct);
 
-                positionOffset = Math.Clamp(positionOffset, 0, (containerSize - trackSize));
-                
+                positionOffset = Math.Clamp(positionOffset, 0, containerSize - size);
+
                 if (Orientation == Orientation.Vertical)
                 {
                     Track.Height = size;

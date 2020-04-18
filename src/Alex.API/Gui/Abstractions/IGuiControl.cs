@@ -7,7 +7,9 @@ namespace Alex.API.Gui
     public interface IGuiControl : IGuiElement
     {
         [DebuggerVisible] bool Enabled { get; }
+        [DebuggerVisible] bool CanFocus { get; }
         [DebuggerVisible] bool Focused { get; }
+        [DebuggerVisible] bool CanHighlight { get; }
         [DebuggerVisible] bool Highlighted { get; }
 
         [DebuggerVisible] Keys AccessKey { get; set; }

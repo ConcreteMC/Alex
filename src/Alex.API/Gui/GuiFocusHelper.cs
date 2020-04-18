@@ -126,7 +126,7 @@ namespace Alex.API.Gui
 
             IGuiControl newHighlightedElement = null;
 
-            if (TryGetElementAt(CursorPosition, e => e is IGuiControl c && c.IsVisible && c.Enabled, out var controlMatchingPosition))
+            if (TryGetElementAt(CursorPosition, e => e is IGuiControl c && c.IsVisible && c.Enabled && c.CanHighlight, out var controlMatchingPosition))
             {
                 newHighlightedElement = controlMatchingPosition as IGuiControl;
             }
@@ -144,7 +144,7 @@ namespace Alex.API.Gui
         {
             if (HighlightedElement == null) return;
 
-            if (CursorInputListener.IsBeginPress(InputCommand.LeftClick))
+            if (CursorInputListener.IsBeginPress(InputCommand.LeftClick) && HighlightedElement.CanFocus)
             {
                 FocusedElement = HighlightedElement;
             }
@@ -152,22 +152,22 @@ namespace Alex.API.Gui
             var isDown = CursorInputListener.IsDown(InputCommand.LeftClick);
             if (CursorPosition != _previousCursorPosition)
             {
-                HighlightedElement?.InvokeCursorMove(CursorPosition, _previousCursorPosition, isDown);
+                FocusedElement?.InvokeCursorMove(CursorPosition, _previousCursorPosition, isDown);
             }
 
             if (isDown)
             {
-                HighlightedElement?.InvokeCursorDown(CursorPosition);
+                FocusedElement?.InvokeCursorDown(CursorPosition);
             }
 
             if (HighlightedElement == FocusedElement && CursorInputListener.IsPressed(InputCommand.LeftClick))
             {
-                HighlightedElement?.InvokeCursorPressed(CursorPosition);
+                FocusedElement?.InvokeCursorPressed(CursorPosition);
             }
 
             if (!isDown && _cursorDown)
             {
-                HighlightedElement?.InvokeCursorUp(CursorPosition);
+                FocusedElement?.InvokeCursorUp(CursorPosition);
             }
             
             _cursorDown = isDown;
