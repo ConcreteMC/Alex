@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Graphics;
 using Alex.API.Localization;
@@ -27,7 +28,7 @@ namespace Alex.GameStates.Gui.MainMenu.Options
 
         private string GetButtonText(CultureLanguage culture, bool active)
         {
-            string displayName = culture.CultureInfo.DisplayName;
+            string displayName = culture.DisplayName;
             if (string.IsNullOrWhiteSpace(displayName))
             {
                 displayName = culture.CultureInfo.Name;
@@ -56,7 +57,7 @@ namespace Alex.GameStates.Gui.MainMenu.Options
         protected override void OnInit(IGuiRenderer renderer)
         {
             var activeLang = Alex.GuiRenderer.Language;
-            foreach (var lng in Alex.GuiRenderer.Languages)
+            foreach (var lng in Alex.GuiRenderer.Languages.OrderBy(x => x.Key))
             {
                 bool active = lng.Value.CultureInfo.Equals(activeLang.CultureInfo);
                 

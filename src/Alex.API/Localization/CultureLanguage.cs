@@ -37,5 +37,20 @@ namespace Alex.API.Localization
 
             return $"[Translation={key}]";
         }
+
+        public string DisplayName
+        {
+            get
+            {
+                string name = GetString("language.name");
+                string region = GetString("language.region");
+                if (!string.IsNullOrWhiteSpace(region))
+                {
+                    return $"{name} ({region})";
+                }
+
+                return name;
+            }
+        }
     }
 }
