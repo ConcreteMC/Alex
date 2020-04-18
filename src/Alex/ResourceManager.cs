@@ -153,24 +153,22 @@ namespace Alex
 
 		private McResourcePack LoadResourcePack(IProgressReceiver progressReceiver, Stream stream, bool useModelResolver = false, McResourcePack.McResourcePackPreloadCallback preloadCallback = null)
 		{
+			Stopwatch sw = Stopwatch.StartNew();
+			
+			Log.Info($"Loading resource pack...");
+			
 			McResourcePack resourcePack = null;
 
 			using (var archive = new ZipArchive(stream, ZipArchiveMode.Read, false))
 			{
-				Func<string, BlockModel> resolver = null;
-				if (useModelResolver)
-				{
-					resolver = ModelResolver;
-				}
-				
-				resourcePack = new McResourcePack(archive, preloadCallback)
-				{
-					//ModelResolver = resolver
-				};
+				resourcePack = new McResourcePack(archive, preloadCallback);
 			}
 
+			sw.Stop();
+			
 			Log.Info($"Loaded {resourcePack.BlockModels.Count} block models from resourcepack");
 			Log.Info($"Loaded {resourcePack.ItemModels.Count} item models from resourcepack");
+			Log.Info($"Resource pack loading took: {sw.ElapsedMilliseconds}ms");
 
 			var language = resourcePack.Languages.Values.FirstOrDefault(x => x.Namespace.Equals("minecraft"));
 			if (language != null)

@@ -20,9 +20,9 @@ namespace Alex.Graphics.Models.Blocks
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(SPWorldProvider));
 
-		public BlockStateModel[] Models { get; set; }
+		private BlockStateModel[] Models { get; set; }
 		protected ResourceManager Resources { get; }
-		private readonly IDictionary<string, FaceCache> _elementCache;
+		private IDictionary<string, FaceCache> _elementCache = null;
 		
 		protected Vector3 Min = new Vector3(float.MaxValue);
 		protected Vector3 Max = new Vector3(float.MinValue);
@@ -40,11 +40,6 @@ namespace Alex.Graphics.Models.Blocks
 		{
 			Resources = resources;
 			Models = models;
-
-			if (models != null)
-			{
-				_elementCache = CalculateModel(models);
-			}
 		}
 
 		public override BoundingBox[] GetIntersecting(Vector3 position, BoundingBox box)
@@ -580,19 +575,11 @@ namespace Alex.Graphics.Models.Blocks
 
 					var otherElements = modelElements.Where(e => e != element).ToArray();
 					
-					if (otherElements.Any(e =>
-					{
-						return AnyMatching(e.From, element.From) || AnyMatching(e.To, element.To);
-					}))
-					{
-						//scale = (i * 0.001f);
-					}
-
 					foreach (var faceElement in element.Faces)
 					{
 						var facing = faceElement.Key;
 
-						switch (facing)
+						/*switch (facing)
 						{
 							case BlockFace.Down:
 								if (otherElements.Any(e => Math.Abs(e.From.Y - element.From.Y) < 0.001f))
@@ -622,7 +609,7 @@ namespace Alex.Graphics.Models.Blocks
 								break;
 							default:
 								throw new ArgumentOutOfRangeException();
-						}
+						}*/
 						
 						GetCullFaceValues(faceElement.Value.CullFace, facing, out var cullFace);
 
@@ -710,9 +697,14 @@ namespace Alex.Graphics.Models.Blocks
 
 			return (verts.ToArray(), indexResult.ToArray());
 		}
-
+		
 		public override (VertexPositionNormalTextureColor[] vertices, int[] indexes) GetVertices(IWorld world, Vector3 position, IBlock baseBlock)
 		{
+			if (_elementCache == null)
+			{
+				_elementCache = CalculateModel(Models);
+			}
+			
 			return GetVertices(world, position, baseBlock, Models, _elementCache);
 		}
 		

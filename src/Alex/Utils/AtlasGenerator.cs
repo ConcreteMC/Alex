@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -42,6 +43,8 @@ namespace Alex.Utils
 
 	    public void GenerateAtlas(GraphicsDevice device, KeyValuePair<string, Bitmap>[] bitmaps, IReadOnlyDictionary<string, TextureMeta> meta, IProgressReceiver progressReceiver)
 	    {
+		    Stopwatch sw = Stopwatch.StartNew();
+		    
 		    Log.Info($"Generating texture atlas out of {bitmaps.Length} bitmaps...");
 		    
 		    long totalSize = 0;
@@ -229,8 +232,9 @@ namespace Alex.Utils
 		    AtlasSize = new Vector2(stillAtlas.Width, stillAtlas.Height);
 		    _frames = frames;
 		    
-		    Log.Info($"TextureAtlas generated! ({PlayingState.GetBytesReadable(totalSize, 2)})");
-
+		    sw.Stop();
+		    
+		    Log.Info($"TextureAtlas generated in {sw.ElapsedMilliseconds}ms! ({PlayingState.GetBytesReadable(totalSize, 2)})");
 	    }
 	    
 	    private void GenerateAtlasInternal(KeyValuePair<string, Bitmap>[] regular, KeyValuePair<string, Bitmap>[] others, IProgressReceiver progressReceiver, Dictionary<string, TextureInfo> atlasLocations, out Bitmap result)

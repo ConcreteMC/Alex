@@ -186,7 +186,7 @@ namespace Alex
 
 					    if (renderer != null)
 					    {
-						    Log.Debug($"Found renderer for {entry.Key}, textures: {it.Value.Textures.Count}");
+						    //Log.Debug($"Found renderer for {entry.Key}, textures: {it.Value.Textures.Count}");
 						    item.Renderer = renderer;
 						    break;
 					    }

@@ -63,10 +63,10 @@ namespace Alex
 
 				result = r;
 
-                if (state.GetTypedValue(WaterLoggedProperty))
+                /*if (state.GetTypedValue(WaterLoggedProperty))
 				{
 					result = new MultiBlockModel(result, StationairyWaterModel);
-				}
+				}*/
 
 				if (!ModelCache.TryAdd(id, result))
 				{
@@ -361,7 +361,15 @@ namespace Alex
 				{
 					int matches = 0;
 					var variantBlockState = Blocks.State.BlockState.FromString(v.Key);
-				
+
+					bool isInvalid = false;
+
+					/*if (state.ExactMatch(variantBlockState))
+					{
+						closest = v;
+						break;
+					}*/
+					
 					foreach (var kv in data)
 					{
 						if (variantBlockState.TryGetValue(kv.Key, out string vValue))
@@ -370,8 +378,21 @@ namespace Alex
 							{
 								matches++;
 							}
+							else
+							{
+								isInvalid = true;
+								break;
+							}
+						}
+						else
+						{
+							isInvalid = true;
+							break;
 						}
 					}
+					
+					//if (isInvalid)
+					//	continue;
 
 					if (matches > closestMatch)
 					{
