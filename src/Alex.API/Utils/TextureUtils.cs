@@ -2,8 +2,17 @@
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 using Alex.API.Graphics;
 using Microsoft.Xna.Framework.Graphics;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Advanced;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
+using SixLabors.Primitives;
+using Image = SixLabors.ImageSharp.Image;
+using Point = SixLabors.Primitives.Point;
+using Rectangle = System.Drawing.Rectangle;
 
 namespace Alex.API.Utils
 {
@@ -48,6 +57,39 @@ namespace Alex.API.Utils
             return BitmapToTexture2D(device, bmp, out _);
         }
 
+        public static PooledTexture2D BitmapToTexture2D(GraphicsDevice device, Image<Rgba32> bmp)
+        {
+	        return BitmapToTexture2D(device, bmp, out _);
+        }
+        
+        public static PooledTexture2D BitmapToTexture2D(GraphicsDevice device, Image<Rgba32> image, out long byteSize)
+        {
+	        var bmp = image;//.CloneAs<Rgba32>();
+	        var pixels = bmp.GetPixelSpan();
+	        var colorData = pixels.ToArray().Select(x => x.Rgba).ToArray();
+
+	        PooledTexture2D texture = GpuResourceManager.GetTexture2D("Image converter", device, image.Width, image.Height);
+	        texture.SetData(colorData);
+
+	        byteSize = texture.MemoryUsage;
+	        return texture;
+	        /*for (int x = 0; x < bmp.Width; x++)
+	        {
+		        for (int y = 0; y < bmp.Height; y++)
+		        {
+			        
+		        }
+	        }
+	        using (MemoryStream ms = new MemoryStream())
+	        {
+		        bmp.SaveAsPng(ms);
+		        
+		        ms.Position = 0;
+		        byteSize = ms.Length;
+		        return GpuResourceManager.GetTexture2D("Alex.Api.Utils.TextureUtils.ImageToTexture2D", device, ms);
+	        }*/
+        }
+        
         public static PooledTexture2D BitmapToTexture2D(GraphicsDevice device, Bitmap bmp, out long byteSize)
 		{
 			if (bmp == null)
@@ -173,7 +215,7 @@ namespace Alex.API.Utils
 			cube.SetData(face, imgData);
 		}
 
-		public static Texture2D ImageToTexture2D(GraphicsDevice device, Image bmp)
+		public static Texture2D ImageToTexture2D(GraphicsDevice device, System.Drawing.Image bmp)
 		{
 			var image = new Bitmap(new Bitmap(bmp));
 			return BitmapToTexture2D(device, image);
@@ -193,13 +235,35 @@ namespace Alex.API.Utils
 			return ImageToTexture2D(graphics, bmp.Clone(region, PixelFormat.Format32bppPArgb));
 		}
 
-		public static void CopyRegionIntoImage(Bitmap srcBitmap, System.Drawing.Rectangle srcRegion, ref Bitmap destBitmap,
+		public static void CopyRegionIntoImage(Image<Rgba32> srcBitmap, System.Drawing.Rectangle srcRegion, ref Image<Rgba32> destBitmap,
 			System.Drawing.Rectangle destRegion)
 		{
-			using (System.Drawing.Graphics grD = System.Drawing.Graphics.FromImage(destBitmap))
+			//using (var cloned = srcBitmap.CloneAs<Rgba32>())
+			{
+				using (var newImage = new Image<Rgba32>(srcRegion.Width, srcRegion.Height))
+				{
+					for (int x = 0; x < srcRegion.Width; x++)
+					{
+						for (int y = 0; y < srcRegion.Height; y++)
+						{
+							newImage[x, y] = srcBitmap[srcRegion.X + x, srcRegion.Y + y];
+						}
+					}
+					
+					newImage.Mutate(x => x.Resize(destRegion.Width, destRegion.Height));
+
+					var nwImage = newImage;
+					destBitmap.Mutate(context =>
+					{
+						context.DrawImage(nwImage, new Point(destRegion.Location.X, destRegion.Location.Y), 1f);
+					});
+				}
+			}
+
+			/*using (System.Drawing.Graphics grD = System.Drawing.Graphics.FromImage(destBitmap))
 			{
 				grD.DrawImage(srcBitmap, destRegion, srcRegion, GraphicsUnit.Pixel);
-			}
+			}*/
 		}
 	}
 }

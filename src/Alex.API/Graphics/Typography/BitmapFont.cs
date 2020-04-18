@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
 using System.Linq;
 using Alex.API.Graphics.Textures;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using Color = Microsoft.Xna.Framework.Color;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
@@ -33,12 +34,12 @@ namespace Alex.API.Graphics.Typography
 
         private bool _isInitialised = false;
 
-        public BitmapFont(GraphicsDevice graphics, Bitmap bitmap, int gridSize, List<char> characters) :
+        public BitmapFont(GraphicsDevice graphics, Image<Rgba32> bitmap, int gridSize, List<char> characters) :
             this(graphics, bitmap, gridSize, gridSize, characters)
         {
 
         }
-        public BitmapFont(GraphicsDevice graphics, Bitmap bitmap, int gridWidth, int gridHeight, List<char> characters) :
+        public BitmapFont(GraphicsDevice graphics, Image<Rgba32> bitmap, int gridWidth, int gridHeight, List<char> characters) :
             this(TextureUtils.BitmapToTexture2D(graphics, bitmap), gridWidth, gridHeight, characters)
         {
 	        Scale = new Vector2(128f / bitmap.Width, 128f / bitmap.Height);
@@ -385,14 +386,16 @@ namespace Alex.API.Graphics.Typography
             return DefaultGlyph;*/
         }
         
-        private void LoadGlyphs(Bitmap bitmap, List<char> characters)
+        private void LoadGlyphs(Image<Rgba32> bitmap, List<char> characters)
         {
             if (_isInitialised) return;
 
-            var lockedBitmap = new LockBitmap(bitmap);
+           /* var lockedBitmap = new LockBitmap(bitmap);
             lockedBitmap.LockBits();
             Color[] textureData = lockedBitmap.GetColorArray();
-            lockedBitmap.UnlockBits();
+            lockedBitmap.UnlockBits();*/
+
+           var rgba = bitmap;
             
             var textureWidth = bitmap.Width;
             var textureHeight = bitmap.Height;
@@ -422,7 +425,8 @@ namespace Alex.API.Graphics.Typography
                     for (int y = cellHeight-1; y >= 0; y--)
                     {
                         // width * y + x
-                        if (textureData[(textureWidth * (row * cellHeight + y)) + (col * cellWidth + x)].A != 0)
+                        //if (textureData[(textureWidth * (row * cellHeight + y)) + (col * cellWidth + x)].A != 0)
+                        if (rgba[(col * cellWidth) + x, (row * cellHeight) + y].A != 0)
                         {
                             columnIsEmpty = false;
                             if (y > height)

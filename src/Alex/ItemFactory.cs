@@ -253,7 +253,7 @@ namespace Alex
 			    var texture0 = item.Textures.FirstOrDefault();
 			    if (texture0.Value != null)
 			    {
-				    if (ResourcePack.TryGetBitmap(texture0.Value, out Bitmap bmp))
+				    if (ResourcePack.TryGetBitmap(texture0.Value, out var bmp))
 				    {
 					    texture = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, bmp);
 					    return true;
@@ -271,7 +271,7 @@ namespace Alex
 				    var texture0 = b.Textures.OrderBy(x => x.Value.Contains("side")).FirstOrDefault();
 				    if (texture0.Value != null)
 				    {
-					    if (ResourcePack.TryGetBitmap(texture0.Value, out Bitmap bmp))
+					    if (ResourcePack.TryGetBitmap(texture0.Value, out var bmp))
 					    {
 						    texture = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, bmp);
 						    return true;

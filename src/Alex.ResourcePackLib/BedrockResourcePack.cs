@@ -5,6 +5,9 @@ using System.Drawing;
 using System.IO;
 using Newtonsoft.Json;
 using NLog;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using Image = SixLabors.ImageSharp.Image;
 
 namespace Alex.ResourcePackLib
 {
@@ -12,8 +15,8 @@ namespace Alex.ResourcePackLib
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BedrockResourcePack));
 
-		private ConcurrentDictionary<string, Bitmap> _bitmaps = new ConcurrentDictionary<string, Bitmap>();
-        public IReadOnlyDictionary<string, Bitmap> Textures => _bitmaps;
+		private ConcurrentDictionary<string, Image<Rgba32>> _bitmaps = new ConcurrentDictionary<string, Image<Rgba32>>();
+        public IReadOnlyDictionary<string, Image<Rgba32>> Textures => _bitmaps;
 		public IReadOnlyDictionary<string, EntityDefinition> EntityDefinitions { get; private set; } = new ConcurrentDictionary<string, EntityDefinition>();
 
 		private readonly DirectoryInfo _workingDir;
@@ -25,7 +28,7 @@ namespace Alex.ResourcePackLib
 			Load();
 		}
 
-		public bool TryGetTexture(string name, out Bitmap texture)
+		public bool TryGetTexture(string name, out Image<Rgba32> texture)
 		{
 			return Textures.TryGetValue(NormalisePath(name), out texture);
 		}
@@ -122,10 +125,11 @@ namespace Alex.ResourcePackLib
 									string texturePath = Path.Combine(_workingDir.FullName, texture.Value + ".png");
 									if (File.Exists(texturePath))
 									{
-										Bitmap bmp = null;
+										Image<Rgba32> bmp = null;
 										using (FileStream fs = new FileStream(texturePath, FileMode.Open))
 										{
-											bmp = new Bitmap(fs);
+											bmp = Image.Load<Rgba32>(fs);
+										//	bmp = new Image(fs);
 										}
 
 										if (bmp != null)

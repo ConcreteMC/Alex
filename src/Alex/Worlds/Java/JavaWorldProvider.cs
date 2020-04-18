@@ -408,7 +408,7 @@ namespace Alex.Worlds.Java
 						}
 
 						if (Alex.Resources.BedrockResourcePack.Textures.TryGetValue(texture,
-							out Bitmap bmp))
+							out var bmp))
 						{
 							PooledTexture2D t = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, bmp);
 
@@ -925,7 +925,7 @@ namespace Alex.Worlds.Java
 		private ConcurrentDictionary<UUID, PlayerMob> _players = new ConcurrentDictionary<UUID, PlayerMob>();
 		private void HandlePlayerListItemPacket(PlayerListItemPacket packet)
 		{
-			Alex.Resources.ResourcePack.TryGetBitmap("entity/alex", out Bitmap rawTexture);
+			Alex.Resources.ResourcePack.TryGetBitmap("entity/alex", out var rawTexture);
 	        var t = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, rawTexture);
 
 			if (packet.Action == PlayerListAction.AddPlayer)

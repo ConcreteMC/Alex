@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using Alex.API.Utils;
@@ -11,6 +10,8 @@ using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using NLog;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace Alex.Utils
 {
@@ -41,7 +42,7 @@ namespace Alex.Utils
 		    _stillFrame = default;
 	    }
 
-	    public void GenerateAtlas(GraphicsDevice device, KeyValuePair<string, Bitmap>[] bitmaps, IReadOnlyDictionary<string, TextureMeta> meta, IProgressReceiver progressReceiver)
+	    public void GenerateAtlas(GraphicsDevice device, KeyValuePair<string, Image<Rgba32>>[] bitmaps, IReadOnlyDictionary<string, TextureMeta> meta, IProgressReceiver progressReceiver)
 	    {
 		    Stopwatch sw = Stopwatch.StartNew();
 		    
@@ -49,10 +50,10 @@ namespace Alex.Utils
 		    
 		    long totalSize = 0;
 		    
-		    Bitmap no;
+		    Image<Rgba32> no;
 		    using (MemoryStream ms = new MemoryStream(ResourceManager.ReadResource("Alex.Resources.no.png")))
 		    {
-			    no = new Bitmap(ms);
+			    no = Image.Load<Rgba32>(ms);
 		    }
 
 		  //  Dictionary<string, Bitmap[]> animatedFrames = new Dictionary<string, Bitmap[]>();
@@ -70,18 +71,18 @@ namespace Alex.Utils
 		    
 		    var regular = new[]
 		    {
-			    new KeyValuePair<string, Bitmap>("no_texture", no),
+			    new KeyValuePair<string, Image<Rgba32>>("no_texture", no),
 		    }.Concat(bitmaps.Where(x => x.Value.Height == TextureHeight && x.Value.Width == TextureWidth)).ToArray();
 		       
 		    var others = bitmaps.Where(x => x.Value.Height != TextureHeight || x.Value.Width != TextureWidth).ToList();
 		    
-		    Bitmap[] waterFrames = new Bitmap[0];
-		    Bitmap[] lavaFrames = new Bitmap[0];
-		    Bitmap[] waterFlowFrames = new Bitmap[0];
-		    Bitmap[] lavaFlowFrames = new Bitmap[0];
-	        Bitmap[] fireFrames = new Bitmap[0];
-	        Bitmap[] fireFrames2 = new Bitmap[0];
-	        Bitmap[] portalFrames = new Bitmap[0];
+		    Image<Rgba32>[] waterFrames = new Image<Rgba32>[0];
+		    Image<Rgba32>[] lavaFrames = new Image<Rgba32>[0];
+		    Image<Rgba32>[] waterFlowFrames = new Image<Rgba32>[0];
+		    Image<Rgba32>[] lavaFlowFrames = new Image<Rgba32>[0];
+		    Image<Rgba32>[] fireFrames = new Image<Rgba32>[0];
+		    Image<Rgba32>[] fireFrames2 = new Image<Rgba32>[0];
+		    Image<Rgba32>[] portalFrames = new Image<Rgba32>[0];
 	        
 		    foreach (var other in others.ToArray())
 		    {
@@ -123,7 +124,7 @@ namespace Alex.Utils
 		    }
 		    
 		    Dictionary<string, TextureInfo> stillFrameInfo = new Dictionary<string, TextureInfo>();
-		    GenerateAtlasInternal(regular, others.ToArray(), progressReceiver, stillFrameInfo, out Bitmap stillAtlas);
+		    GenerateAtlasInternal(regular, others.ToArray(), progressReceiver, stillFrameInfo, out var stillAtlas);
 		    _stillFrame = TextureUtils.BitmapToTexture2D(device, stillAtlas, out var size);
 		    
 		    //stillAtlas.Save(Path.Combine(DebugPath, "atlas.png"));
@@ -132,7 +133,7 @@ namespace Alex.Utils
 		    
 		    _atlasLocations = stillFrameInfo;
 		    
-		    Dictionary<string, Bitmap> animated = new Dictionary<string, Bitmap>();
+		    Dictionary<string, Image<Rgba32>> animated = new Dictionary<string, Image<Rgba32>>();
 		    
 		    if (waterFrames.Length > 0)
 			    animated.Add("block/water_still", waterFrames[0]);
@@ -159,8 +160,8 @@ namespace Alex.Utils
 		        animated.Add("block/nether_portal", portalFrames[0]);
 	        
 	        var animatedFrameInfo = new Dictionary<string, TextureInfo>();
-	        GenerateAtlasInternal(animated.ToArray(), new KeyValuePair<string, Bitmap>[0], progressReceiver,
-		        animatedFrameInfo, out Bitmap animatedFrame);
+	        GenerateAtlasInternal(animated.ToArray(), new KeyValuePair<string, Image<Rgba32>>[0], progressReceiver,
+		        animatedFrameInfo, out Image<Rgba32> animatedFrame);
 
 	        AnimatedAtlasSize = new Vector2(animatedFrame.Width, animatedFrame.Height);
 	        
@@ -190,7 +191,7 @@ namespace Alex.Utils
 		   
 		    for (int i = 0; i < frames.Length; i++)
 		    {
-			    var target = new Bitmap(animatedFrame);
+			    var target = animatedFrame.CloneAs<Rgba32>(); //new Bitmap(animatedFrame);
 			    var r = new System.Drawing.Rectangle(0, 0, TextureWidth, TextureHeight);
 			    var destination = new System.Drawing.Rectangle((int) waterLocation.Position.X, (int) waterLocation.Position.Y, TextureWidth, TextureHeight);
 
@@ -237,7 +238,7 @@ namespace Alex.Utils
 		    Log.Info($"TextureAtlas generated in {sw.ElapsedMilliseconds}ms! ({PlayingState.GetBytesReadable(totalSize, 2)})");
 	    }
 	    
-	    private void GenerateAtlasInternal(KeyValuePair<string, Bitmap>[] regular, KeyValuePair<string, Bitmap>[] others, IProgressReceiver progressReceiver, Dictionary<string, TextureInfo> atlasLocations, out Bitmap result)
+	    private void GenerateAtlasInternal(KeyValuePair<string, Image<Rgba32>>[] regular, KeyValuePair<string, Image<Rgba32>>[] others, IProgressReceiver progressReceiver, Dictionary<string, TextureInfo> atlasLocations, out Image<Rgba32> result)
         {
 	        int total = regular.Length + others.Length;
 	        var a = (int)Math.Ceiling(regular.Length / 32D);
@@ -248,7 +249,7 @@ namespace Alex.Utils
 		        height += others.Max(x => x.Value.Height);
 	        }
 	        
-	        var bitmap = new Bitmap(Math.Min(32, total) * TextureWidth, height);
+	        var bitmap = new Image<Rgba32>(Math.Min(32, total) * TextureWidth, height);
 
 	        int xi = 0, yi = 0, offsetX = 0, yRemaining = 0;
 	        int processedFiles = Process(ref bitmap, regular, ref xi, ref yi, ref offsetX, ref yRemaining, total, 0, atlasLocations, progressReceiver);
@@ -259,7 +260,7 @@ namespace Alex.Utils
 			result = bitmap;
         }
 
-	    private int Process(ref Bitmap bmp, KeyValuePair<string, Bitmap>[] data, ref int xi, ref int yi, ref int xOffset, ref int yRemaining, int total, int processed, IDictionary<string, TextureInfo> locations, IProgressReceiver progressReceiver)
+	    private int Process(ref Image<Rgba32> bmp, KeyValuePair<string, Image<Rgba32>>[] data, ref int xi, ref int yi, ref int xOffset, ref int yRemaining, int total, int processed, IDictionary<string, TextureInfo> locations, IProgressReceiver progressReceiver)
 	    {
 		    int done = processed;
 			var count = 0;
@@ -306,17 +307,17 @@ namespace Alex.Utils
 		    return done;
 	    }
 
-	    private Bitmap[] GetFrames(Bitmap source)
+	    private Image<Rgba32>[] GetFrames(Image<Rgba32> source)
 	    {
 		    int ix = source.Width / TextureWidth;
 		    int iy = source.Height / TextureHeight;
 
-		    List<Bitmap> result = new List<Bitmap>();
+		    List<Image<Rgba32>> result = new List<Image<Rgba32>>();
 		    
 		    for (int x = 0; x < ix; x++)
 		    for(int y = 0; y < iy; y++)
 		    {
-			    Bitmap newBitmap = new Bitmap(TextureWidth, TextureHeight);
+			    var newBitmap = new Image<Rgba32>(TextureWidth, TextureHeight);
 			    TextureUtils.CopyRegionIntoImage(source, new System.Drawing.Rectangle(x * TextureWidth,y * TextureHeight, TextureWidth, TextureHeight), ref newBitmap, new System.Drawing.Rectangle(0, 0, TextureWidth, TextureHeight));
 			    
 			    result.Add(newBitmap);
@@ -331,11 +332,11 @@ namespace Alex.Utils
 	    public int TextureWidth { get; private set; } = 16;
 	    public int TextureHeight { get; private set; }= 16;
 
-        public void LoadResourcePackOnTop(GraphicsDevice device, KeyValuePair<string, Bitmap>[] vanilla, KeyValuePair<string, Bitmap>[] bitmapsRaw, IReadOnlyDictionary<string, TextureMeta> meta, IProgressReceiver progressReceiver)
+        public void LoadResourcePackOnTop(GraphicsDevice device, KeyValuePair<string, Image<Rgba32>>[] vanilla, KeyValuePair<string, Image<Rgba32>>[] bitmapsRaw, IReadOnlyDictionary<string, TextureMeta> meta, IProgressReceiver progressReceiver)
 		{
 
             int textureWidth = 16, textureHeight = 16;
-			Dictionary<string, Bitmap> bitmaps = new Dictionary<string, Bitmap>();
+			Dictionary<string, Image<Rgba32>> bitmaps = new Dictionary<string, Image<Rgba32>>();
             foreach (var bmp in vanilla)
             {
                 string name = bmp.Key;

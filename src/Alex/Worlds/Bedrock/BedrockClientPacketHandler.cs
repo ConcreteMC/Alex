@@ -392,7 +392,7 @@ namespace Alex.Worlds.Bedrock
 					}
 					else
 					{
-						AlexInstance.Resources.ResourcePack.TryGetBitmap("entity/alex", out Bitmap rawTexture);
+						AlexInstance.Resources.ResourcePack.TryGetBitmap("entity/alex", out var rawTexture);
 						skinTexture = TextureUtils.BitmapToTexture2D(AlexInstance.GraphicsDevice, rawTexture);
 					}
 
@@ -559,7 +559,7 @@ namespace Alex.Worlds.Bedrock
 						}
 
 						if (AlexInstance.Resources.BedrockResourcePack.Textures.TryGetValue(texture,
-							out Bitmap bmp))
+							out var bmp))
 						{
 							PooledTexture2D t = TextureUtils.BitmapToTexture2D(AlexInstance.GraphicsDevice, bmp);
 

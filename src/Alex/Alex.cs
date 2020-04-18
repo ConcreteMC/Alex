@@ -45,7 +45,10 @@ using MiNET.Net;
 using MiNET.Utils;
 using Newtonsoft.Json;
 using NLog;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using GuiDebugHelper = Alex.Gui.GuiDebugHelper;
+using Image = SixLabors.ImageSharp.Image;
 using Point = Microsoft.Xna.Framework.Point;
 using Skin = Alex.API.Utils.Skin;
 using TextInputEventArgs = Microsoft.Xna.Framework.TextInputEventArgs;
@@ -471,9 +474,8 @@ namespace Alex
 
 
             var profileManager = Services.GetService<ProfileManager>();
-            profileManager.LoadProfiles(progressReceiver);
 
-			//	Log.Info($"Loading resources...");
+            //	Log.Info($"Loading resources...");
 			if (!Resources.CheckResources(GraphicsDevice, progressReceiver,
 				OnResourcePackPreLoadCompleted))
 			{
@@ -482,6 +484,8 @@ namespace Alex
 				Exit();
 				return;
 			}
+			
+			profileManager.LoadProfiles(progressReceiver);
 			
 			//GuiRenderer.LoadResourcePack(Resources.ResourcePack, null);
 			AnvilWorldProvider.LoadBlockConverter();
@@ -512,12 +516,15 @@ namespace Alex
 
 		}
 
-		private void OnResourcePackPreLoadCompleted(Bitmap fontBitmap, List<char> bitmapCharacters)
+		private void OnResourcePackPreLoadCompleted(Image<Rgba32> fontBitmap, List<char> bitmapCharacters)
 		{
-			var scalar = fontBitmap.Width / 128;
-			Font = new BitmapFont(GraphicsDevice, fontBitmap, 16, bitmapCharacters);
+			UIThreadQueue.Enqueue(() =>
+			{
+				var scalar = fontBitmap.Width / 128;
+				Font = new BitmapFont(GraphicsDevice, fontBitmap, 16, bitmapCharacters);
 
-			GuiManager.ApplyFont(Font);
+				GuiManager.ApplyFont(Font);
+			});
 		}
 
 		public void ConnectToServer(IPEndPoint serverEndPoint, PlayerProfile profile, bool bedrock = false, string hostname = null)

@@ -16,14 +16,17 @@ using Alex.ResourcePackLib.Json.Models.Blocks;
 using Alex.ResourcePackLib.Json.Models.Items;
 using Alex.ResourcePackLib.Json.Textures;
 using NLog;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using Color = Microsoft.Xna.Framework.Color;
+using Image = SixLabors.ImageSharp.Image;
 using MathHelper = Microsoft.Xna.Framework.MathHelper;
 
 namespace Alex.ResourcePackLib
 {
 	public class McResourcePack : ResourcePack, IDisposable
 	{
-		public delegate void McResourcePackPreloadCallback(Bitmap fontBitmap, List<char> bitmapFontCharacters);
+		public delegate void McResourcePackPreloadCallback(Image<Rgba32> fontBitmap, List<char> bitmapFontCharacters);
 		
 		public const string BitmapFontCharacters = "\u00c0\u00c1\u00c2\u00c8\u00ca\u00cb\u00cd\u00d3\u00d4\u00d5\u00da\u00df\u00e3\u00f5\u011f\u0130\u0131\u0152\u0153\u015e\u015f\u0174\u0175\u017e\u0207\u0000\u0000\u0000\u0000\u0000\u0000\u0000 !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\u0000\u00c7\u00fc\u00e9\u00e2\u00e4\u00e0\u00e5\u00e7\u00ea\u00eb\u00e8\u00ef\u00ee\u00ec\u00c4\u00c5\u00c9\u00e6\u00c6\u00f4\u00f6\u00f2\u00fb\u00f9\u00ff\u00d6\u00dc\u00f8\u00a3\u00d8\u00d7\u0192\u00e1\u00ed\u00f3\u00fa\u00f1\u00d1\u00aa\u00ba\u00bf\u00ae\u00ac\u00bd\u00bc\u00a1\u00ab\u00bb\u2591\u2592\u2593\u2502\u2524\u2561\u2562\u2556\u2555\u2563\u2551\u2557\u255d\u255c\u255b\u2510\u2514\u2534\u252c\u251c\u2500\u253c\u255e\u255f\u255a\u2554\u2569\u2566\u2560\u2550\u256c\u2567\u2568\u2564\u2565\u2559\u2558\u2552\u2553\u256b\u256a\u2518\u250c\u2588\u2584\u258c\u2590\u2580\u03b1\u03b2\u0393\u03c0\u03a3\u03c3\u03bc\u03c4\u03a6\u0398\u03a9\u03b4\u221e\u2205\u2208\u2229\u2261\u00b1\u2265\u2264\u2320\u2321\u00f7\u2248\u00b0\u2219\u00b7\u221a\u207f\u00b2\u25a0\u0000";
 		private const RegexOptions RegexOpts = RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase;
@@ -40,7 +43,7 @@ namespace Alex.ResourcePackLib
 		private readonly Dictionary<string, BlockModel>         _blockModels   = new Dictionary<string, BlockModel>();
 		private readonly Dictionary<string, ResourcePackItem>   _itemModels    = new Dictionary<string, ResourcePackItem>();
 		//private readonly Dictionary<string, Texture2D>          _textureCache  = new Dictionary<string, Texture2D>();
-		private readonly Dictionary<string, Bitmap>             _bitmapCache   = new Dictionary<string, Bitmap>();
+		private readonly Dictionary<string, Image<Rgba32>>             _bitmapCache   = new Dictionary<string, Image<Rgba32>>();
 		private readonly Dictionary<string, TextureMeta>        _textureMetaCache   = new Dictionary<string, TextureMeta>();
 		private readonly Dictionary<string, LanguageResource>	_languageCache = new Dictionary<string, LanguageResource>();
 
@@ -49,7 +52,7 @@ namespace Alex.ResourcePackLib
 		public IReadOnlyDictionary<string, BlockStateResource> BlockStates       => _blockStates;
 		public IReadOnlyDictionary<string, BlockModel>         BlockModels       => _blockModels;
 		public IReadOnlyDictionary<string, ResourcePackItem>   ItemModels        => _itemModels;
-		public IReadOnlyDictionary<string, Bitmap>             TexturesAsBitmaps => _bitmapCache;
+		public IReadOnlyDictionary<string, Image<Rgba32>>             TexturesAsBitmaps => _bitmapCache;
 
 		public IReadOnlyDictionary<string, TextureMeta> TextureMetas => _textureMetaCache;
 		//public IReadOnlyDictionary<string, Texture2D>          Textures          => _textureCache;
@@ -75,7 +78,7 @@ namespace Alex.ResourcePackLib
 		private int _grassHeight = 256;
 		private int _grassWidth = 256;
 		
-		public Bitmap FontBitmap { get; private set; }
+		public Image<Rgba32> FontBitmap { get; private set; }
 
 		public McResourcePack(byte[] resourcePackData) : this(new ZipArchive(new MemoryStream(resourcePackData), ZipArchiveMode.Read, false), null)
 		{
@@ -310,42 +313,54 @@ namespace Alex.ResourcePackLib
 		
 		private void LoadColormap()
 		{
-			if (TryGetBitmap("colormap/foliage", out Bitmap foliage))
+			if (TryGetBitmap("colormap/foliage", out Image<Rgba32> foliage))
 			{
-				var foliageColors = new LockBitmap(foliage);
-				foliageColors.LockBits();
-				FoliageColors = foliageColors.GetColorArray();
-				foliageColors.UnlockBits();
+				FoliageColors = GetColorArray(foliage);
 
-				_foliageHeight = foliageColors.Height;
-				_foliageWidth  = foliageColors.Width;
+				_foliageHeight = foliage.Height;
+				_foliageWidth  = foliage.Width;
 			}
 
-			if (TryGetBitmap("colormap/grass", out Bitmap grass))
+			if (TryGetBitmap("colormap/grass", out Image<Rgba32> grass))
 			{
-				var grassColors = new LockBitmap(grass);
-				grassColors.LockBits();
-				GrassColors = grassColors.GetColorArray();
-				grassColors.UnlockBits();
+				GrassColors = GetColorArray(grass);
 
-				_grassWidth  = grassColors.Width;
-				_grassHeight = grassColors.Height;
+				_grassWidth  = grass.Width;
+				_grassHeight = grass.Height;
 			}
 		}
-
-		private Bitmap LoadBitmap(ZipArchiveEntry entry, Match match)
+		
+		private Color[] GetColorArray(Image image)
 		{
-			Bitmap img;
+			var cloned = image.CloneAs<Rgba32>();
+			
+			Color[] colors = new Color[cloned.Width * cloned.Height];
+			for (int x = 0; x < cloned.Width; x++)
+			{
+				for (int y = 0; y < cloned.Height; y++)
+				{
+					var indx = cloned.Width * y + x;
+					colors[indx] = new Color(cloned[x, y].Rgba);
+				}
+			}
+
+			return colors;
+		}
+
+		private Image<Rgba32> LoadBitmap(ZipArchiveEntry entry, Match match)
+		{
+			Image<Rgba32> img;
 			using (var s = entry.Open())
 			{
-				img = new Bitmap(s);
+				//img = new Bitmap(s);
+				img = Image.Load(s).CloneAs<Rgba32>();
 			}
 
 			_bitmapCache[match.Groups["filename"].Value.Replace("\\", "/")] = img;
 			return img;
 		}
 
-		public bool TryGetBitmap(string textureName, out Bitmap bitmap)
+		public bool TryGetBitmap(string textureName, out Image<Rgba32> bitmap)
 		{
 			if (_bitmapCache.TryGetValue(textureName, out bitmap))
 				return true;

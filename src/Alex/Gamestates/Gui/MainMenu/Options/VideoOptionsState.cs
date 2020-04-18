@@ -75,6 +75,10 @@ namespace Alex.GameStates.Gui.MainMenu.Options
             Descriptions.Add(Skybox, $"{TextColor.Bold}Render Skybox:{TextColor.Reset}\nEnabled: Renders skybox in game\nDisabled: May improve performance slightly");
             
             Descriptions.Add(Antialiasing, $"{TextColor.Bold}Antialiasing:{TextColor.Reset}\nImproves sharpness on textures\nMay significantly impact performance on lower-end hardware");
+            
+            Descriptions.Add(FrameRateLimiter, $"{TextColor.Bold}Limit Framerate:{TextColor.Reset}\nLimit the framerate to value set in Max Framerate slider\n");
+            Descriptions.Add(FpsSlider, $"{TextColor.Bold}Max Framerate:{TextColor.Reset}\nOnly applies if Limit Framerate is set to true\nLimit's the game's framerate to set value.");
+            Descriptions.Add(VSync, $"{TextColor.Bold}Use VSync:{TextColor.Reset}\nEnabled: Synchronizes the framerate with the monitor's refresh rate.\n");
         }
 
         protected override void OnShow()

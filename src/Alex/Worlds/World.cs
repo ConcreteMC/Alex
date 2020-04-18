@@ -86,7 +86,7 @@ namespace Alex.Worlds
 			Skin skin = profileService?.CurrentProfile?.Skin;
 			if (skin == null)
 			{
-				resources.ResourcePack.TryGetBitmap("entity/alex", out Bitmap rawTexture);
+				resources.ResourcePack.TryGetBitmap("entity/alex", out var rawTexture);
 				var t = TextureUtils.BitmapToTexture2D(graphics, rawTexture);
 				skin = new Skin()
 				{

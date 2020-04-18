@@ -60,7 +60,8 @@ namespace Alex.API.Gui.Elements.Controls
                 TextColor = TextColor.White,
 				TextOpacity = 0.875f,
 				FontStyle = FontStyle.DropShadow,
-				Enabled = false
+				Enabled = false,
+				CanFocus = false
             });
 			
 	        if (isTranslationKey)

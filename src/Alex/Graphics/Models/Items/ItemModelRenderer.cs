@@ -14,6 +14,7 @@ using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using SixLabors.ImageSharp.PixelFormats;
 using Color = Microsoft.Xna.Framework.Color;
 
 namespace Alex.Graphics.Models.Items
@@ -158,8 +159,10 @@ namespace Alex.Graphics.Models.Items
 		    List<VertexPositionColor> vertices = new List<VertexPositionColor>(); 
 		    List<short> indexes = new List<short>();
 		    
-		    if (pack.TryGetBitmap(t.Value, out Bitmap texture))
+		    if (pack.TryGetBitmap(t.Value, out var rawTexture))
 		    {
+			    var texture = rawTexture.CloneAs<Rgba32>();
+			    
 			    int i = 0;
 			    float toolPosX = 0.0f;
 			    float toolPosY = 0.0f;
@@ -171,7 +174,7 @@ namespace Alex.Graphics.Models.Items
 			    {
 				    for (int x = 0; x < texture.Width; x++)
 				    {
-					    var pixel = texture.GetPixel(x, y);
+					    var pixel = texture[x, y];
 					    if (pixel.A == 0)
 					    {
 						    continue;

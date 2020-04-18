@@ -109,12 +109,12 @@ namespace Alex
 			if (profile.Skin?.Texture == null)
 			{
 				profile.Skin = new Skin();
+
 				if (alex.Resources.ResourcePack.TryGetBitmap("entity/alex", out var rawTexture))
 				{
 					profile.Skin.Texture = TextureUtils.BitmapToTexture2D(alex.GraphicsDevice, rawTexture);
 					profile.Skin.Slim = true;
 				}
-				
 			}
 			SavedProfile savedProfile;
 			if (Profiles.TryGetValue(profile.Uuid, out savedProfile))

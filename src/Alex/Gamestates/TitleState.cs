@@ -260,7 +260,7 @@ namespace Alex.GameStates
 			Skin skin = _playerProfileService?.CurrentProfile?.Skin;
 			if (skin == null)
 			{
-				Alex.Resources.ResourcePack.TryGetBitmap("entity/alex", out Bitmap rawTexture);
+				Alex.Resources.ResourcePack.TryGetBitmap("entity/alex", out var rawTexture);
 				skin = new Skin()
 				{
 					Slim = true,
@@ -298,7 +298,8 @@ namespace Alex.GameStates
 				Modern = false,
 				TranslationKey = "",
 				Margin = new Thickness(15, 15, 6, 15),
-				Width = 90
+				Width = 90,
+				Enabled = false
 			});
 
 			AutoResetEvent reset = new AutoResetEvent(false);
@@ -310,6 +311,7 @@ namespace Alex.GameStates
 					BackgroundOverlay = (TextureSlice2D) GpuResourceManager.GetTexture2D(this, args.GraphicsDevice, ms);
 				}
 
+				BackgroundOverlay.RepeatMode = TextureRepeatMode.Stretch;
 				reset.Set();
 			});
 			reset.WaitOne();

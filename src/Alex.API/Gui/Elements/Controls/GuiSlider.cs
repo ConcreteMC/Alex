@@ -42,6 +42,7 @@ namespace Alex.API.Gui.Elements.Controls
 
         public GuiTexture2D ThumbBackground;
         public GuiTexture2D ThumbHighlightBackground;
+        public GuiTexture2D ThumbDisabledBackground;
 
         public int ThumbWidth
         {
@@ -58,16 +59,48 @@ namespace Alex.API.Gui.Elements.Controls
         [Obsolete("Use DisplayFormat property instead.", true)]
         public Func<double, string> ValueFormatter { get; set; } = null;
         
+        private TextColor _foregroundColor = TextColor.White;
+        private TextColor _originalForegroundColor = TextColor.White;
+        
+        public TextColor ForegroundColor
+        {
+            get
+            {
+                return _foregroundColor;
+            }
+            set
+            {
+                _originalForegroundColor = value;
+                FixForegroundColor(value);
+            }
+        }
+
+        void FixForegroundColor(TextColor color)
+        {
+            _foregroundColor = color;
+            var c = color.ForegroundColor;
+
+            if (!Enabled)
+            {
+                c = c.Darken(0.5f);
+            }
+            
+            _foregroundColor = new TextColor(color.Code, color.Name);
+            _foregroundColor.BackgroundColor = color.BackgroundColor;
+            _foregroundColor.ForegroundColor = c;
+        }
+
         public GuiSlider()
         {
             Background = GuiTextures.ButtonDisabled;
             ThumbBackground = GuiTextures.ButtonDefault;
             ThumbHighlightBackground = GuiTextures.ButtonHover;
+            ThumbDisabledBackground = GuiTextures.ButtonDisabled;
             
             Background.RepeatMode = TextureRepeatMode.Stretch;
             ThumbBackground.RepeatMode = TextureRepeatMode.NoScaleCenterSlice;
             ThumbHighlightBackground.RepeatMode = TextureRepeatMode.NoScaleCenterSlice;
-
+            ThumbDisabledBackground.RepeatMode = TextureRepeatMode.NoScaleCenterSlice;
 
             MinWidth = 20;
             MinHeight = 20;
@@ -84,17 +117,29 @@ namespace Alex.API.Gui.Elements.Controls
             {
                 Margin      =  Thickness.Zero,
                 Anchor      = Alignment.MiddleCenter,
-                TextColor   = TextColor.White,
+                TextColor   = _foregroundColor,
                 FontStyle   = FontStyle.DropShadow,
-                Enabled = false
+                Enabled = false,
+                CanFocus = false
             });
+        }
+
+        protected override void OnEnabledChanged()
+        {
+            base.OnEnabledChanged();
+
+            FixForegroundColor(_originalForegroundColor);
         }
 
         protected override void OnInit(IGuiRenderer renderer)
         {
             base.OnInit(renderer);
+            
+            FixForegroundColor(_originalForegroundColor);
+            
             ThumbBackground.TryResolveTexture(renderer);
             ThumbHighlightBackground.TryResolveTexture(renderer);
+            ThumbDisabledBackground.TryResolveTexture(renderer);
         }
 
         protected override void OnUpdate(GameTime gameTime)
@@ -116,7 +161,8 @@ namespace Alex.API.Gui.Elements.Controls
 
             var bounds = new Rectangle((int) (RenderPosition.X + _thumbOffsetX), (int) RenderPosition.Y, ThumbWidth,
                                        RenderSize.Height);
-            graphics.FillRectangle(bounds, Highlighted ? ThumbHighlightBackground : ThumbBackground);
+            
+            graphics.FillRectangle(bounds, Enabled ? (Highlighted ? ThumbHighlightBackground : ThumbBackground) : ThumbDisabledBackground);
         }
 
         private void SetValueFromCursor(Point relativePosition)
