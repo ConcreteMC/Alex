@@ -19,7 +19,8 @@ namespace Alex.Graphics.Models.Blocks
 	public class CachedResourcePackModel : BlockModel
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(SPWorldProvider));
-
+		private static FastRandom FastRandom { get; } = new FastRandom();
+		
 		private BlockStateModel[] Models { get; set; }
 		protected ResourceManager Resources { get; }
 		private IDictionary<string, FaceCache> _elementCache = null;
@@ -36,10 +37,12 @@ namespace Alex.Graphics.Models.Blocks
 		}
 
 		public BoundingBox[] Boxes { get; set; } = new BoundingBox[0];
-		public CachedResourcePackModel(ResourceManager resources, BlockStateModel[] models)
+		private bool UseRandomizer { get; set; }
+		public CachedResourcePackModel(ResourceManager resources, BlockStateModel[] models, bool useRandomizer = false)
 		{
 			Resources = resources;
 			Models = models;
+			UseRandomizer = useRandomizer;
 		}
 
 		public override BoundingBox[] GetIntersecting(Vector3 position, BoundingBox box)
@@ -542,23 +545,12 @@ namespace Alex.Graphics.Models.Blocks
 		{
 			return (a.X == b.X || a.Y == b.Y || a.Z == b.Z);
 		}
-		
-		protected (VertexPositionNormalTextureColor[] vertices, int[] indexes) GetVertices(IWorld world,
-			Vector3 position, IBlock baseBlock,
-			BlockStateModel[] models, IDictionary<string, FaceCache> faceCache)
+
+		private void CalculateModel(IWorld world,
+			Vector3 position, IBlock baseBlock, BlockStateModel bsModel, List<VertexPositionNormalTextureColor> verts,
+			List<int> indexResult, IDictionary<string, FaceCache> faceCache, int bsModelIndex, int biomeId, Biome biome)
 		{
-			var verts = new List<VertexPositionNormalTextureColor>(36);
-			var indexResult = new List<int>();
-
-			int biomeId = world == null ? 0 : world.GetBiome((int) position.X, 0, (int) position.Z);
-			var biome = BiomeUtils.GetBiomeById(biomeId);
-
-			for (var bsModelIndex = 0; bsModelIndex < models.Length; bsModelIndex++)
-			{
-				var bsModel = models[bsModelIndex];
-				if (bsModel.Model == null) continue;
-
-				var model = bsModel.Model;
+							var model = bsModel.Model;
 				var modelElements = model.Elements;
 				for (var i = 0; i < modelElements.Length; i++)
 				{
@@ -579,38 +571,6 @@ namespace Alex.Graphics.Models.Blocks
 					{
 						var facing = faceElement.Key;
 
-						/*switch (facing)
-						{
-							case BlockFace.Down:
-								if (otherElements.Any(e => Math.Abs(e.From.Y - element.From.Y) < 0.001f))
-									scale = (i * 0.001f);
-								break;
-							case BlockFace.Up:
-								if (otherElements.Any(e => Math.Abs(e.To.Y - element.To.Y) < 0.001f))
-									scale = (i * 0.001f);
-								break;
-							case BlockFace.East:
-								if (otherElements.Any(e => Math.Abs(e.To.X - element.To.X) < 0.001f))
-									scale = (i * 0.001f);
-								break;
-							case BlockFace.West:
-								if (otherElements.Any(e => Math.Abs(e.From.X - element.From.X) < 0.001f))
-									scale = (i * 0.001f);
-								break;
-							case BlockFace.North:
-								if (otherElements.Any(e => Math.Abs(e.From.Z - element.From.Z) < 0.001f))
-									scale = (i * 0.001f);
-								break;
-							case BlockFace.South:
-								if (otherElements.Any(e => Math.Abs(e.To.Z - element.To.Z) < 0.001f))
-									scale = (i * 0.001f);
-								break;
-							case BlockFace.None:
-								break;
-							default:
-								throw new ArgumentOutOfRangeException();
-						}*/
-						
 						GetCullFaceValues(faceElement.Value.CullFace, facing, out var cullFace);
 
 						var originalCullFace = cullFace;
@@ -692,8 +652,35 @@ namespace Alex.Graphics.Models.Blocks
 						}
 					}
 				}
-			}
+		}
+		
+		protected (VertexPositionNormalTextureColor[] vertices, int[] indexes) GetVertices(IWorld world,
+			Vector3 position, IBlock baseBlock,
+			BlockStateModel[] models,  IDictionary<string, FaceCache> faceCache)
+		{
+			var verts = new List<VertexPositionNormalTextureColor>(36);
+			var indexResult = new List<int>();
 
+			int biomeId = world == null ? 0 : world.GetBiome((int) position.X, 0, (int) position.Z);
+			var biome = BiomeUtils.GetBiomeById(biomeId);
+
+			if (UseRandomizer)
+			{
+				var rndIndex = FastRandom.Next() % Models.Length;
+				CalculateModel(world, position, baseBlock, models[rndIndex], verts, indexResult, faceCache, rndIndex,
+					biomeId, biome);
+			}
+			else
+			{
+				for (var bsModelIndex = 0; bsModelIndex < models.Length; bsModelIndex++)
+				{
+					var bsModel = models[bsModelIndex];
+					if (bsModel.Model == null) continue;
+
+					CalculateModel(world, position, baseBlock, bsModel, verts, indexResult, faceCache, bsModelIndex,
+						biomeId, biome);
+				}
+			}
 
 			return (verts.ToArray(), indexResult.ToArray());
 		}

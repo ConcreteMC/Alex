@@ -349,7 +349,7 @@ namespace Alex
 						return null;
 					}
 
-					return new CachedResourcePackModel(resources, models);
+					return new CachedResourcePackModel(resources, models, v.Value.ToArray().Length > 1);
 				}
 
 				BlockStateVariant blockStateVariant = null;
@@ -419,7 +419,7 @@ namespace Alex
 					return null;
 				}
 				
-				return new CachedResourcePackModel(resources, asArray);
+				return new CachedResourcePackModel(resources, asArray, asArray.Length > 1);
 			}
 
 			return null;
