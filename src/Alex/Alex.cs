@@ -270,6 +270,12 @@ namespace Alex
 				SetAntiAliasing(newValue > 0, newValue);
 			});
 
+			options.AlexOptions.MiscelaneousOptions.Language.Bind((value, newValue) =>
+			{
+				GuiRenderer.SetLanguage(newValue);
+			});
+			GuiRenderer.SetLanguage(options.AlexOptions.MiscelaneousOptions.Language);
+
 			SetAntiAliasing(options.AlexOptions.VideoOptions.Antialiasing > 0,
 				options.AlexOptions.VideoOptions.Antialiasing.Value);
 			

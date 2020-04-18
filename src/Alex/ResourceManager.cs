@@ -359,6 +359,8 @@ namespace Alex
 			        break;
 		        }
 	        }
+	        
+	        Alex.GuiRenderer.SetLanguage(Options.AlexOptions.MiscelaneousOptions.Language.Value);
 
 	        var f = ActiveResourcePacks.LastOrDefault(x => x.FontBitmap != null);
 	        if (f != null)
