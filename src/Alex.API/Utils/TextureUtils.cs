@@ -235,35 +235,23 @@ namespace Alex.API.Utils
 			return ImageToTexture2D(graphics, bmp.Clone(region, PixelFormat.Format32bppPArgb));
 		}
 
-		public static void CopyRegionIntoImage(Image<Rgba32> srcBitmap, System.Drawing.Rectangle srcRegion, ref Image<Rgba32> destBitmap,
+		public static void CopyRegionIntoImage(Image<Rgba32> srcBitmap, System.Drawing.Rectangle srcRegion,
+			ref Image<Rgba32> destBitmap,
 			System.Drawing.Rectangle destRegion)
 		{
-			//using (var cloned = srcBitmap.CloneAs<Rgba32>())
+			using (var newImage = srcBitmap.Clone(x =>
 			{
-				using (var newImage = new Image<Rgba32>(srcRegion.Width, srcRegion.Height))
+				x.Crop(new SixLabors.Primitives.Rectangle(srcRegion.X, srcRegion.Y, srcRegion.Width,
+					srcRegion.Height));
+			}))
+			{
+				var nwImage = newImage;
+				destBitmap.Mutate(context =>
 				{
-					for (int x = 0; x < srcRegion.Width; x++)
-					{
-						for (int y = 0; y < srcRegion.Height; y++)
-						{
-							newImage[x, y] = srcBitmap[srcRegion.X + x, srcRegion.Y + y];
-						}
-					}
-					
-					newImage.Mutate(x => x.Resize(destRegion.Width, destRegion.Height));
-
-					var nwImage = newImage;
-					destBitmap.Mutate(context =>
-					{
-						context.DrawImage(nwImage, new Point(destRegion.Location.X, destRegion.Location.Y), 1f);
-					});
-				}
+					context.DrawImage(nwImage, new Point(destRegion.Location.X, destRegion.Location.Y),
+						PixelColorBlendingMode.Normal, 1f);
+				});
 			}
-
-			/*using (System.Drawing.Graphics grD = System.Drawing.Graphics.FromImage(destBitmap))
-			{
-				grD.DrawImage(srcBitmap, destRegion, srcRegion, GraphicsUnit.Pixel);
-			}*/
 		}
 	}
 }

@@ -17,6 +17,8 @@ using Alex.ResourcePackLib.Json.Models.Items;
 using Alex.ResourcePackLib.Json.Textures;
 using NLog;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Advanced;
+using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 using Color = Microsoft.Xna.Framework.Color;
 using Image = SixLabors.ImageSharp.Image;
@@ -80,6 +82,7 @@ namespace Alex.ResourcePackLib
 		
 		public Image<Rgba32> FontBitmap { get; private set; }
 
+		private PngDecoder PngDecoder { get; }
 		public McResourcePack(byte[] resourcePackData) : this(new ZipArchive(new MemoryStream(resourcePackData), ZipArchiveMode.Read, false), null)
 		{
 
@@ -87,6 +90,10 @@ namespace Alex.ResourcePackLib
 
 		public McResourcePack(ZipArchive archive, McResourcePackPreloadCallback preloadCallback)
 		{
+			PngDecoder = new PngDecoder()
+			{
+				IgnoreMetadata = true
+			};
 			PreloadCallback = preloadCallback;
 			//_archive = archive;
 			Load(archive);
@@ -330,9 +337,10 @@ namespace Alex.ResourcePackLib
 			}
 		}
 		
-		private Color[] GetColorArray(Image image)
+		private Color[] GetColorArray(Image<Rgba32> image)
 		{
-			var cloned = image.CloneAs<Rgba32>();
+			var cloned = image;
+			return cloned.GetPixelSpan().ToArray().Select(x => new Color(x.Rgba)).ToArray();
 			
 			Color[] colors = new Color[cloned.Width * cloned.Height];
 			for (int x = 0; x < cloned.Width; x++)
@@ -353,7 +361,7 @@ namespace Alex.ResourcePackLib
 			using (var s = entry.Open())
 			{
 				//img = new Bitmap(s);
-				img = Image.Load(s).CloneAs<Rgba32>();
+				img = Image.Load<Rgba32>(s, PngDecoder);
 			}
 
 			_bitmapCache[match.Groups["filename"].Value.Replace("\\", "/")] = img;
