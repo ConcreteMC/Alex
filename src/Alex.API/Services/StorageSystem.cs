@@ -151,14 +151,14 @@ namespace Alex.API.Services
 
         public bool Exists(string key)
         {
-            return File.Exists(GetFileName(key));
+            return File.Exists(Path.Combine(DataDirectory, key));
         }
         
         public bool Delete(string key)
         {
             try
             {
-                File.Delete(GetFileName(key));
+                File.Delete(Path.Combine(DataDirectory, key));
                 return true;
             }
             catch(Exception ex)

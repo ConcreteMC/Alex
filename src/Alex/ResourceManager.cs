@@ -46,6 +46,7 @@ namespace Alex
 		private IOptionsProvider Options { get; }
 		private IRegistryManager RegistryManager { get; }
 		private Alex Alex { get; }
+		private MCJavaAssetsUtil AssetsUtil { get; }
 		public ResourceManager(IServiceProvider serviceProvider)
 		{
 			Atlas = new AtlasGenerator();
@@ -54,6 +55,8 @@ namespace Alex
 			Options = serviceProvider.GetService<IOptionsProvider>();
 			RegistryManager = serviceProvider.GetService<IRegistryManager>();
 			Alex = serviceProvider.GetService<Alex>();
+			
+			AssetsUtil = new MCJavaAssetsUtil(Storage);
 		}
 
 		private void ResourcePacksChanged(string[] oldvalue, string[] newvalue)
@@ -68,65 +71,6 @@ namespace Alex
 				LoadResourcePacks(Alex.GraphicsDevice, splashScreen, newvalue);
 				Alex.GameStateManager.Back();
 			});
-		}
-
-		private static readonly string VersionFile = Path.Combine("assets", "version.txt");
-		private byte[] GetLatestAssets()
-		{
-			try
-			{
-				using (WebClient wc = new WebClient())
-				{
-					var rawJson = wc.DownloadString("https://launchermeta.mojang.com/mc/game/version_manifest.json?_t=" +
-					                                (long) (DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds);
-
-					VersionManifest manifest = VersionManifest.FromJson(rawJson);
-					Version version =
-						manifest.Versions.FirstOrDefault(x => x.Id == JavaProtocol.VersionId);//.OrderByDescending(x => x.ReleaseTime.ToUnixTimeSeconds()).FirstOrDefault();
-
-					var latestVersion = manifest.Versions.OrderByDescending(x => x.ReleaseTime.ToUnixTimeSeconds())
-						.FirstOrDefault();
-					
-					Log.Info($"Using java assets version {version.Id} ({version.Type.ToString()})");
-
-					if (version.ReleaseTime < latestVersion.ReleaseTime)
-					{
-						Log.Info($"Java assets outdated, latest version is: {latestVersion.Id} ({latestVersion.Type.ToString()})");
-					}
-					
-					byte[] data;
-					string savedPath = Path.Combine("assets", $"java-{version.Id}.zip");
-					if (Storage.TryReadBytes(savedPath, out data))
-					{
-						return data;
-					}
-					else
-					{
-						Log.Info("Downloading Minecraft:Java edition assets...");
-						LauncherMeta meta = LauncherMeta.FromJson(wc.DownloadString(version.Url));
-						byte[] clientData = wc.DownloadData(meta.Downloads.Client.Url);
-						if (Storage.TryWriteBytes(savedPath, clientData))
-						{
-							Storage.TryWriteBytes(VersionFile, Encoding.Unicode.GetBytes(savedPath));
-						}
-						return clientData;
-					}
-				}
-			}
-			catch
-			{
-				Log.Warn($"Failed to check for latest assets!");
-				if (Storage.TryReadBytes(VersionFile, out byte[] value))
-				{
-					string content = Encoding.Unicode.GetString(value);
-					if (Storage.TryReadBytes(content, out value))
-					{
-						return value;
-					}
-				}
-			}
-
-			return null;
 		}
 
 		public bool TryLoadResourcePackInfo(string file, out ResourcePackManifest manifest)
@@ -232,21 +176,12 @@ namespace Alex
             }
         }
 
-        private bool CheckRequiredPaths(out byte[] javaResources)
+        private bool CheckRequiredPaths(IProgressReceiver progressReceiver, out byte[] javaResources)
 		{
-            /*	if (!Storage.TryReadBytes(BedrockResourcePackPath, out bedrockResources))
-                {
-                    Log.Error(
-                        $"Missing bedrock edition resources! Please put a copy of the bedrock resources in a zip archive with the path '{BedrockResourcePackPath}'");
-                    javaResources = null;
-                    bedrockResources = null;
-                    return false;
-                }*/
-
 			try
 			{
-				javaResources = GetLatestAssets();
-				if (javaResources == null)
+				string path = AssetsUtil.EnsureTargetReleaseAsync(JavaProtocol.VersionId, progressReceiver).Result;
+				if (!Storage.TryReadBytes(path, out javaResources))
 				{
 					Log.Error($"Could not load any assets! Are you connected to the internet?");
 
@@ -273,7 +208,7 @@ namespace Alex
 	        PreloadCallback = preloadCallback;
 			byte[] defaultResources;
 
-			if (!CheckRequiredPaths(out defaultResources))
+			if (!CheckRequiredPaths(progressReceiver, out defaultResources))
 			{
 				return false;
 			}

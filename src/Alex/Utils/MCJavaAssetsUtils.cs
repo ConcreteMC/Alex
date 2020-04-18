@@ -4,6 +4,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Services;
 using NLog;
@@ -50,18 +51,24 @@ namespace Alex.Utils
             }
             catch (Exception ex)
             {
-                Log.Error("Failed to fetch latest MCJava version manifest.", ex);
+                Log.Error(ex, "Failed to fetch latest MCJava version manifest.");
                 throw;
             }
         }
 
-        public async Task EnsureLatestReleaseAsync()
+        public async Task<string> EnsureTargetReleaseAsync(string targetRelease, IProgressReceiver progressReceiver)
         {
             var manifest = await GetManifestAsync();
-            var targetVersion = manifest.Latest.Release;
+            var targetVersion = targetRelease; //manifest.Latest.Release;
 
             string assetsZipSavePath = Path.Combine("assets", $"java-{targetVersion}.zip");
 
+            if (_storage.Exists(assetsZipSavePath))
+            {
+                Log.Info("Java assets already up to date!");
+                return assetsZipSavePath;
+            }
+            
             if (_storage.TryReadString(CurrentVersionStorageKey, out var currentVersion))
             {
                 if (currentVersion == targetVersion)
@@ -69,7 +76,7 @@ namespace Alex.Utils
                     if (_storage.Exists(assetsZipSavePath))
                     {
                         Log.Info("MCJava Assets Up to date!");
-                        return;
+                        return assetsZipSavePath;
                     }
                 }
             }
@@ -78,6 +85,8 @@ namespace Alex.Utils
             {
                 _storage.Delete(assetsZipSavePath);
             }
+            
+            progressReceiver?.UpdateProgress(0, "Downloading assets...");
 
             // not latest, update
             Log.Info($"Downloading MCJava {targetVersion} Assets.");
@@ -88,7 +97,7 @@ namespace Alex.Utils
             if (version == null)
             {
                 Log.Error("Version not found in versions? wut?");
-                return;
+                return assetsZipSavePath;
             }
 
             LauncherMeta launcherMeta;
@@ -100,7 +109,7 @@ namespace Alex.Utils
                 if (_storage.TryCreateDirectory(dirpath))
                 {
                     if (!_storage.TryGetDirectory(dirpath, out dir))
-                        return;
+                        return assetsZipSavePath;
                 }
             }
 
@@ -119,18 +128,19 @@ namespace Alex.Utils
                 {
                     foreach (var entry in clientJarZip.Entries)
                     {
-                        if (!entry.FullName.StartsWith("assets")) continue;
+                        if (!entry.FullName.StartsWith("assets") && entry.FullName != "pack.mcmeta") continue;
 
                         var localpath = Path.Combine(dir.FullName, entry.FullName);
 
-                        if (!_storage.TryGetDirectory(localpath, out _))
+                        if (!_storage.TryGetDirectory(Path.GetDirectoryName(localpath), out _))
                         {
-                            Directory.CreateDirectory(Path.GetDirectoryName(localpath));
+                            _storage.TryCreateDirectory(Path.GetDirectoryName(localpath));
+                           // Directory.CreateDirectory(Path.GetDirectoryName(localpath));
                         }
                         
                         entry.ExtractToFile(localpath, true);
 
-                        Log.Info($"Extracted Asset '{entry.Name}' (Size: {entry.Length})");
+                        Log.Debug($"Extracted Asset '{entry.Name}' (Size: {entry.Length})");
                     }
                 }
 
@@ -138,6 +148,9 @@ namespace Alex.Utils
                 var assetIndexJson = await httpClient.GetStringAsync(launcherMeta.LauncherMetaAssetIndex.Url);
                 assetIndex = AssetIndex.FromJson(assetIndexJson);
 
+                int target = assetIndex.Objects.Count;
+
+                int done = 0;
                 foreach (var assetIndexObject in assetIndex.Objects)
                 {
                     // Skip ogg files
@@ -148,6 +161,8 @@ namespace Alex.Utils
                         .Replace("{hash_sub2}", assetIndexObject.Value.Hash.Substring(0, 2))
                         .Replace("{hash}", assetIndexObject.Value.Hash);
 
+                    progressReceiver?.UpdateProgress(done * (target / 100), "Downloading assets...", assetIndexObject.Key);
+                    
                     try
                     {
                         var fileBytes = await httpClient.GetByteArrayAsync(assetUrl);
@@ -156,22 +171,25 @@ namespace Alex.Utils
 
                         var localpath = Path.Combine(dir.FullName, filename);
                         
-                        if (!_storage.TryGetDirectory(localpath, out _))
+                        if (!_storage.TryGetDirectory(Path.GetDirectoryName(localpath), out _))
                         {
-                            Directory.CreateDirectory(Path.GetDirectoryName(localpath));
+                            _storage.TryCreateDirectory(Path.GetDirectoryName(localpath));
+                           // Directory.CreateDirectory(Path.GetDirectoryName(localpath));
                         }
                         
-                        File.WriteAllBytes(localpath, fileBytes);
+                      //  File.WriteAllBytes(localpath, fileBytes);
 
-                        //_storage.TryWriteBytes(Path.Combine(assetBasePath, assetIndexObject.Key), fileBytes);
+                        _storage.TryWriteBytes(localpath, fileBytes);
 
-                        Log.Info($"Downloaded asset '{assetIndexObject.Key}' (Hash: {assetIndexObject.Value.Hash})");
+                        Log.Debug($"Downloaded asset '{assetIndexObject.Key}' (Hash: {assetIndexObject.Value.Hash})");
                     }
                     catch (Exception ex)
                     {
-                        Log.Error($"Failed to download asset '{assetIndexObject.Key}' (Hash: {assetIndexObject.Value.Hash})", ex);
+                        Log.Error(ex, $"Failed to download asset '{assetIndexObject.Key}' (Hash: {assetIndexObject.Value.Hash})");
                         continue;
                     }
+
+                    done++;
                 }
             }
 
@@ -195,6 +213,11 @@ namespace Alex.Utils
             }
 
             _storage.TryWriteString(CurrentVersionStorageKey, targetVersion);
+
+            Thread.Sleep(500);
+            dir.Delete(true);
+
+            return assetsZipSavePath;
         }
     }
 }
