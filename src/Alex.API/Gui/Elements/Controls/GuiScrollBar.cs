@@ -126,7 +126,7 @@ namespace Alex.API.Gui.Elements.Controls
                 HighlightOutlineColor = Color.Yellow,
                 HighlightOutlineThickness = new Thickness(2),
 
-                Background = ThumbBackground,
+                Background = Color.MediumVioletRed,
                 HighlightedBackground = ThumbHighlightBackground,
                 FocusedBackground = GuiTextures.ScrollBarTrackFocused,
                 DisabledBackground = GuiTextures.ScrollBarTrackDisabled
@@ -182,11 +182,11 @@ namespace Alex.API.Gui.Elements.Controls
         {
             if (Orientation == Orientation.Vertical)
             {
-                Track.Anchor = Alignment.FillX;
+                Track.Anchor = Alignment.FillX | Alignment.MinY;
             }
             else
             {
-                Track.Anchor = Alignment.FillY;
+                Track.Anchor = Alignment.FillY | Alignment.MinX;
             }
 
             UpdateTrack();
