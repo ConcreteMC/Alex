@@ -27,7 +27,7 @@ namespace Alex.GameStates.Gui.MainMenu.Options
 
         private string GetButtonText(CultureLanguage culture, bool active)
         {
-            string displayName = GetTitleCaseNativeLanguage(culture.CultureInfo);
+            string displayName = culture.CultureInfo.DisplayName;
             if (string.IsNullOrWhiteSpace(displayName))
             {
                 displayName = culture.CultureInfo.Name;

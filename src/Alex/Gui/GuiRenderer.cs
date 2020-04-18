@@ -145,33 +145,37 @@ namespace Alex.Gui
 		private CultureInfo Culture { get; set; } = CultureInfo.CreateSpecificCulture("en_us");
 		public void SetLanguage(string cultureCode)
 		{
-			Culture = CultureInfo.GetCultureInfo(cultureCode);
-			CultureInfo.CurrentCulture = Culture;
-			CultureInfo.CurrentUICulture = Culture;
-			CultureInfo.DefaultThreadCurrentUICulture = Culture;
-			CultureInfo.DefaultThreadCurrentUICulture = Culture;
-			
-			if (_languages.TryGetValue(cultureCode, out var lng))
+			try
 			{
-				Language = lng;
-				return;
-			}
-			
-			if (_resourceManager.ResourcePack == null)
-				return;
-			
-			var matchingResults = _resourceManager.ResourcePack.Languages.Where(x => x.Value.CultureCode == cultureCode)
-												  .Select(x => x.Value).ToArray();
+				Culture = CultureInfo.GetCultureInfo(cultureCode);
+				CultureInfo.CurrentCulture = Culture;
+				CultureInfo.CurrentUICulture = Culture;
+				CultureInfo.DefaultThreadCurrentUICulture = Culture;
+				CultureInfo.DefaultThreadCurrentUICulture = Culture;
 
-			if (matchingResults.Length <= 0) return;
-			CultureLanguage newLanguage = new CultureLanguage(Culture);
+				if (_languages.TryGetValue(cultureCode, out var lng))
+				{
+					Language = lng;
+					return;
+				}
 
-			foreach (var lang in matchingResults)
-			{
-				newLanguage.Load(lang);
-			}
+				if (_resourceManager.ResourcePack == null)
+					return;
 
-			Language = newLanguage;
+				var matchingResults = _resourceManager.ResourcePack.Languages
+					.Where(x => x.Value.CultureCode == cultureCode)
+					.Select(x => x.Value).ToArray();
+
+				if (matchingResults.Length <= 0) return;
+				CultureLanguage newLanguage = new CultureLanguage(Culture);
+
+				foreach (var lang in matchingResults)
+				{
+					newLanguage.Load(lang);
+				}
+
+				Language = newLanguage;
+			}catch(CultureNotFoundException){}
 		}
 
 		private Dictionary<string, CultureLanguage> _languages = new Dictionary<string, CultureLanguage>();
@@ -184,17 +188,21 @@ namespace Alex.Gui
 
 			foreach (var lng in resourcePack.Languages)
 			{
-				var key = lng.Key.Split(':')[1];
-				
-				CultureLanguage language;
-				if (!_languages.TryGetValue(key, out language))
+				try
 				{
-					language = new CultureLanguage(CultureInfo.GetCultureInfo(key));
-				}
-				//if (lng.Value.CultureCode == Culture.Name)
-				language.Load(lng.Value);
+					var key = lng.Key.Split(':')[1];
 
-				_languages[key] = language;
+					CultureLanguage language;
+					if (!_languages.TryGetValue(key, out language))
+					{
+						language = new CultureLanguage(CultureInfo.GetCultureInfo(key));
+					}
+
+					//if (lng.Value.CultureCode == Culture.Name)
+					language.Load(lng.Value);
+
+					_languages[key] = language;
+				}catch(CultureNotFoundException){}
 			}
 		}
 
