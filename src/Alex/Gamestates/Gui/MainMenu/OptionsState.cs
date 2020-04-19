@@ -1,4 +1,5 @@
-﻿using Alex.GameStates.Gui.MainMenu.Options;
+﻿using Alex.API.Gui.Graphics;
+using Alex.GameStates.Gui.MainMenu.Options;
 using Alex.Gui;
 
 namespace Alex.GameStates.Gui.MainMenu
@@ -8,14 +9,19 @@ namespace Alex.GameStates.Gui.MainMenu
         public OptionsState(GuiPanoramaSkyBox skyBox) : base(skyBox)
         {
             TitleTranslationKey = "options.title";
+        }
 
-            AddGuiRow(CreateSlider("FOV: {0}", o => o.FieldOfVision, 30, 120, 1),
+        protected override void OnInit(IGuiRenderer renderer)
+        {
+            AddGuiRow(CreateSlider($"{GuiRenderer.GetTranslation("options.fov")}: {{0}}", o => o.FieldOfVision, 30, 120, 1),
                 CreateLinkButton<VideoOptionsState>("options.video"));
 
             AddGuiRow(CreateLinkButton<ResourcePackOptionsState>("options.resourcepack"),
                 CreateLinkButton<SoundOptionsState>("options.sounds"));
             AddGuiRow(CreateLinkButton<LanguageOptionsState>("options.language"),
                 CreateLinkButton<ControlOptionsState>("options.controls"));
+            
+            base.OnInit(renderer);
         }
     }
 }

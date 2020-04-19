@@ -49,7 +49,8 @@ namespace Alex.GameStates.Gui.Multiplayer
 			_listProvider = GetService<IListStorageProvider<SavedServerEntry>>();
 
 		    Title = "Multiplayer";
-
+		    TitleTranslationKey = "multiplayer.title";
+		    
 			Footer.AddRow(row =>
 		    {
 

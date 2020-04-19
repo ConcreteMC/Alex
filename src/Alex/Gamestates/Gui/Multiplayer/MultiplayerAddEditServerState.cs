@@ -53,6 +53,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 			_skyBox              = skyBox;
 
 			Title = "Add Server";
+			TitleTranslationKey = "addServer.title";
 
 			base.HeaderTitle.Anchor    = Alignment.MiddleCenter;
 			base.HeaderTitle.FontStyle = FontStyle.Bold | FontStyle.DropShadow;
@@ -63,6 +64,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 			var usernameRow = AddGuiRow(new GuiTextElement()
 			{
 				Text   = "Server Name:",
+				TranslationKey = "addServer.enterName",
 				Margin = new Thickness(0, 0, 5, 0)
 			}, _nameInput = new GuiTextInput()
 			{
@@ -79,6 +81,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 			var hostnameRow = AddGuiRow(new GuiTextElement()
 			{
 				Text   = "Server Address:",
+				TranslationKey = "addServer.enterIp",
 				Margin = new Thickness(0, 0, 5, 0)
 			}, _hostnameInput = new GuiTextInput()
 			{
@@ -94,7 +97,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 
 			var typeLabelRow = AddGuiRow(_serverTypeLabel = new GuiTextElement()
 			{
-				Text   = "Server Type (Java):",
+				Text   = "Server Type:",
 				Margin = new Thickness(0, 0, 5, 0)
 			});
 			typeLabelRow.ChildAnchor = Alignment.MiddleCenter;

@@ -34,7 +34,6 @@ namespace Alex.GameStates
 	public class TitleState : GuiGameStateBase
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(TitleState));
-		private readonly GuiDebugInfo _debugInfo;
 
 		private readonly GuiStackMenu _mainMenu;
 		private readonly GuiStackMenu _debugMenu;
@@ -45,11 +44,9 @@ namespace Alex.GameStates
 		private readonly GuiPanoramaSkyBox _backgroundSkyBox;
 		private GuiEntityModelView _playerView;
 		private IPlayerProfileService _playerProfileService;
-
-		private FpsMonitor FpsMonitor { get; }
+		
 		public TitleState()
 		{
-			FpsMonitor = new FpsMonitor();
 			_backgroundSkyBox = new GuiPanoramaSkyBox(Alex);
 
 			Background.Texture = _backgroundSkyBox;
@@ -68,11 +65,11 @@ namespace Alex.GameStates
 				BackgroundOverlay = new Color(Color.Black, 0.35f)
 			};
 
-			_mainMenu.AddMenuItem("Multiplayer", JavaEditionButtonPressed, EnableMultiplayer);
-			_mainMenu.AddMenuItem("SinglePlayer", OnSinglePlayerPressed);
+			_mainMenu.AddMenuItem("menu.multiplayer", JavaEditionButtonPressed, EnableMultiplayer, true);
+			_mainMenu.AddMenuItem("menu.singleplayer", OnSinglePlayerPressed, true, true);
 
-			_mainMenu.AddMenuItem("Options", () => { Alex.GameStateManager.SetActiveState("options"); });
-			_mainMenu.AddMenuItem("Exit", () => { Alex.Exit(); });
+			_mainMenu.AddMenuItem("menu.options", () => { Alex.GameStateManager.SetActiveState("options"); }, true, true);
+			_mainMenu.AddMenuItem("menu.quit", () => { Alex.Exit(); }, true, true);
 			#endregion
 
 			#region Create DebugMenu
@@ -139,15 +136,9 @@ namespace Alex.GameStates
 
 				Text = "Who liek minecwaf?!",
 			});
-
-			_debugInfo = new GuiDebugInfo();
-			_debugInfo.AddDebugRight(() => $"GPU Memory: {API.Extensions.GetBytesReadable(GpuResourceManager.GetMemoryUsage)}");
-			_debugInfo.AddDebugLeft(() => $"FPS: {FpsMonitor.Value:F0}");
-
+			
 			_playerProfileService = Alex.Services.GetService<IPlayerProfileService>();
 			_playerProfileService.ProfileChanged += PlayerProfileServiceOnProfileChanged;
-			
-			Alex.GameStateManager.AddState("options", new OptionsState(_backgroundSkyBox));
 		}
 
 		private bool _mpEnabled = true;
@@ -367,19 +358,6 @@ namespace Alex.GameStates
 				_mainMenu.ModernStyle = !_mainMenu.ModernStyle;
 			}
 
-			if (_prevKeyboardState.IsKeyDown(Keys.End) && s.IsKeyUp(Keys.End))
-			{
-				if (Alex.GuiManager.HasScreen(_debugInfo))
-				{
-					
-					Alex.GuiManager.RemoveScreen(_debugInfo);
-				}
-				else
-				{
-					Alex.GuiManager.AddScreen(_debugInfo);
-				}
-			}
-
 			_prevKeyboardState = s;
 		}
 
@@ -393,18 +371,22 @@ namespace Alex.GameStates
 			_backgroundSkyBox.Draw(args);
 
 			base.OnDraw(args);
-			FpsMonitor.Update();
 		}
 
 		protected override void OnShow()
 		{
+			if (Alex.GameStateManager.TryGetState<OptionsState>("options", out _))
+			{
+				Alex.GameStateManager.RemoveState("options");
+			}
+			
+			Alex.GameStateManager.AddState("options", new OptionsState(_backgroundSkyBox));
+			
 			base.OnShow();
-			Alex.GuiManager.AddScreen(_debugInfo);
 		}
 
 		protected override void OnHide()
 		{
-			Alex.GuiManager.RemoveScreen(_debugInfo);
 			base.OnHide();
 		}
 
