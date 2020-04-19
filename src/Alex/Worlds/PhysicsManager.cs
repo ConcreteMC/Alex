@@ -33,7 +33,7 @@ namespace Alex.Worlds
 			if (Math.Abs(entity.Velocity.X) < 0.1 * dt)
 				entity.Velocity = new Vector3(0, entity.Velocity.Y, entity.Velocity.Z);
 			
-			if (Math.Abs(entity.Velocity.Y) < 0.1 * dt)
+			if (Math.Abs(entity.Velocity.Y) < 0.1f * dt)
 				entity.Velocity = new Vector3(entity.Velocity.X, 0, entity.Velocity.Z);
 			
 			if (Math.Abs(entity.Velocity.Z) < 0.1 * dt)
@@ -59,18 +59,18 @@ namespace Alex.Worlds
 						if (e.NoAi) continue;
 						bool wasColliding = e.IsCollidingWithWorld;
 						
-						TruncateVelocity(e, dt);
+						//TruncateVelocity(e, dt);
 						
 						var velocity = e.Velocity;
-						
+
 						if (!e.IsFlying && !e.KnownPosition.OnGround)
 						{
 							velocity -= new Vector3(0f, (float)(e.Gravity * dt), 0f);
 							//var modifier = new Vector3(1f, (float) (1f - (e.Gravity * dt)), 1f);
 							//velocity *= modifier;
 						}
-
-						var rawDrag = (float) (1f - (e.Drag * dt));
+						
+						var rawDrag = (float) (1f - ((e.Drag * 0.91f) * dt));
 						
 						velocity *= new Vector3(rawDrag, 1f, rawDrag);
 						
@@ -234,12 +234,18 @@ namespace Alex.Worlds
 						}
 						
 						e.Velocity = velocity;
+						
+						e.KnownPosition.Move(velocity * dt);
 
-						e.KnownPosition.Move(e.Velocity * dt);
+						//var rawDrag = (float) (1f - (e.Drag * dt));
+
+						//e.Velocity = velocity;// * new Vector3(1f, 0.98f, 1f);
+
+						//e.KnownPosition.Move(e.Velocity * dt);
 						
 						TruncateVelocity(e, dt);
 
-						if (MathF.Abs(velocity.Y) < 0.000001f)
+						if (MathF.Abs(e.Velocity.Y) < 0.000001f)
 						{
 							e.KnownPosition.OnGround = true;
 						}

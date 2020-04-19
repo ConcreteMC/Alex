@@ -107,7 +107,8 @@ namespace Alex.Worlds
 		        ReferenceAlpha = 32,
 		        FogStart = fogStart,
 		        FogEnabled = false,
-		        Alpha = 0.5f
+		        
+		        //Alpha = 0.5f
 	        };
 	        
 	        AnimatedEffect = new AlphaTestEffect(Graphics)
@@ -257,6 +258,17 @@ namespace Alex.Worlds
 		    //ScissorTestEnable = true
 	    };
 
+	    private static BlendState TranslucentBlendState { get; } = new BlendState()
+	    {
+		    AlphaSourceBlend = Microsoft.Xna.Framework.Graphics.Blend.SourceAlpha,
+		    AlphaDestinationBlend = Microsoft.Xna.Framework.Graphics.Blend.One,
+		    ColorDestinationBlend = Microsoft.Xna.Framework.Graphics.Blend.One,
+		    ColorSourceBlend = Microsoft.Xna.Framework.Graphics.Blend.SourceAlpha
+		    //  IndependentBlendEnable = true,
+		    //AlphaBlendFunction = BlendFunction.Add,
+		    // ColorBlendFunction = BlendFunction.Add
+	    };
+	    
 	    public void Draw(IRenderArgs args, bool depthMapOnly)
 	    {
 		    var view = args.Camera.ViewMatrix;
@@ -333,6 +345,8 @@ namespace Alex.Worlds
 	    
 	    private void DrawStaged(IRenderArgs args, out int chunksRendered, out int drawnVertices, Effect forceEffect = null, params RenderStage[] stages)
 	    {
+		    var originalBlendState = args.GraphicsDevice.BlendState;
+		    
 		    if (stages == null || stages.Length == 0)
 			    stages = RenderStages;
 
@@ -344,6 +358,8 @@ namespace Alex.Worlds
 		    
 		    foreach (var stage in stages)
 		    {
+			    args.GraphicsDevice.BlendState = originalBlendState;
+			    
 			    bool setDepth = false;
 			    Effect effect = forceEffect;
 			    if (forceEffect == null)
@@ -360,6 +376,7 @@ namespace Alex.Worlds
 						    effect = TransparentEffect;
 						    break;
 					    case RenderStage.Translucent:
+						    args.GraphicsDevice.BlendState = TranslucentBlendState;
 						    effect = TranslucentEffect;
 						    break;
 					    case RenderStage.Animated:
@@ -381,6 +398,8 @@ namespace Alex.Worlds
 
 		    chunksRendered = tempChunks;
 		    drawnVertices = tempVertices;
+
+		    args.GraphicsDevice.BlendState = originalBlendState;
 	    }
 
 	    public bool FogEnabled
@@ -1118,7 +1137,7 @@ namespace Alex.Worlds
 		        var blockCoords = new BlockCoordinates(x, y, z);
 
 		        bool isScheduled = section.IsScheduled(x, y, z);
-		        bool isLightScheduled = section.IsLightingScheduled(x, y, z);
+		        bool isLightScheduled = false; section.IsLightingScheduled(x, y, z);
 		        var neighborsScheduled = HasScheduledNeighbors(world, blockPosition);
 		        var isBorderBlock = (scheduled == ScheduleType.Border && ((x == 0 || x == 15) || (z == 0 || z == 15)));
 

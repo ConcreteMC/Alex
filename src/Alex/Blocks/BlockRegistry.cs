@@ -364,6 +364,9 @@ namespace Alex.Blocks
             this.Register(() => new GlassPane().WithLocation("minecraft:red_stained_glass_pane"));
             this.Register(() => new GlassPane().WithLocation("minecraft:black_stained_glass_pane"));
             this.Register(() => new GlassPane().WithLocation("minecraft:cyan_stained_glass_pane"));
+            
+            this.Register(() => new Grindstone().WithLocation("minecraft:grindstone"));
+            this.Register(() => new Bell().WithLocation("minecraft:bell"));
         }
     }
 }
