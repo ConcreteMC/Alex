@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Alex.API.Blocks;
 using Alex.API.Blocks.State;
 using Alex.API.Graphics;
 using Alex.API.World;

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Alex.API.Blocks;
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.API.World;
@@ -208,33 +209,7 @@ namespace Alex.Graphics.Models.Blocks
 			
 			var theBlock = world.GetBlock(pos.X, pos.Y, pos.Z);
 
-			if (me.Solid && me.Transparent)
-			{
-				//	if (IsFullCube && Name.Equals(block.Name)) return false;
-				if (theBlock.Solid && (theBlock.Transparent || !theBlock.IsFullCube))
-				{
-					//var block = world.GetBlock(pos.X, pos.Y, pos.Z);
-					if (!me.BlockMaterial.IsOpaque() && !theBlock.BlockMaterial.IsOpaque()) return false;
-					
-					if (!me.IsFullBlock || !theBlock.IsFullBlock) return true;
-				}
-				if (theBlock.Solid && !(theBlock.Transparent || !theBlock.IsFullCube)) return false;
-			}
-			else if (me.Transparent)
-			{
-				if (theBlock.Solid && !(theBlock.Transparent || theBlock.IsFullCube)) return false;
-				//if (blockTransparent) return true;
-			}
-
-
-			if (me.Solid && (theBlock.Transparent || !theBlock.IsFullCube)) return true;
-			//   if (me.Transparent && block.Transparent && !block.Solid) return false;
-			if (me.Transparent) return true;
-			if (!me.Transparent && (theBlock.Transparent || !theBlock.IsFullCube)) return true;
-			if (theBlock.Solid && !(theBlock.Transparent || !theBlock.IsFullCube)) return false;
-			if (me.Solid && theBlock.Solid && theBlock.IsFullCube) return false;
-			
-			return true;
+			return me.ShouldRenderFace(face, theBlock);
 		}
 		
 		protected IDictionary<string, FaceCache> CalculateModel(BlockStateModel[] models)

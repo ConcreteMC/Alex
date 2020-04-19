@@ -83,6 +83,7 @@ namespace Alex.Utils
 		    Image<Rgba32>[] fireFrames = new Image<Rgba32>[0];
 		    Image<Rgba32>[] fireFrames2 = new Image<Rgba32>[0];
 		    Image<Rgba32>[] portalFrames = new Image<Rgba32>[0];
+	        Image<Rgba32>[] seagrassFrames = new Image<Rgba32>[0];
 	        
 		    foreach (var other in others.ToArray())
 		    {
@@ -121,6 +122,12 @@ namespace Alex.Utils
 				    portalFrames = GetFrames(other.Value);
 				    others.Remove(other);
 			    }
+			    else if (other.Key.Contains("seagrass"))
+			    {
+				    seagrassFrames = GetFrames(other.Value);
+				    others.Remove(other);
+			    }
+			    //seagrass
 		    }
 		    
 		    Dictionary<string, TextureInfo> stillFrameInfo = new Dictionary<string, TextureInfo>();
@@ -159,13 +166,16 @@ namespace Alex.Utils
 	        if (portalFrames.Length > 0)
 		        animated.Add("block/nether_portal", portalFrames[0]);
 	        
+	        if (seagrassFrames.Length > 0)
+		        animated.Add("block/seagrass", seagrassFrames[0]);
+	        
 	        var animatedFrameInfo = new Dictionary<string, TextureInfo>();
 	        GenerateAtlasInternal(animated.ToArray(), new KeyValuePair<string, Image<Rgba32>>[0], progressReceiver,
 		        animatedFrameInfo, out Image<Rgba32> animatedFrame);
 
 	        AnimatedAtlasSize = new Vector2(animatedFrame.Width, animatedFrame.Height);
 	        
-	        TextureInfo waterLocation, waterFlowLocation, lavaLocation, lavaFlowLocation, fireLocation, fireLocation2, portalLocation;
+	        TextureInfo waterLocation, waterFlowLocation, lavaLocation, lavaFlowLocation, fireLocation, fireLocation2, portalLocation, seagrassLocation;
 
 	        animatedFrameInfo.TryGetValue("block/water_still", out waterLocation);
 	        animatedFrameInfo.TryGetValue("block/water_flow", out waterFlowLocation);
@@ -174,13 +184,14 @@ namespace Alex.Utils
 	        animatedFrameInfo.TryGetValue("block/fire_0", out fireLocation);
 	        animatedFrameInfo.TryGetValue("block/fire_1", out fireLocation2);
 	        animatedFrameInfo.TryGetValue("block/nether_portal", out portalLocation);
+	        animatedFrameInfo.TryGetValue("block/seagrass", out seagrassLocation);
 	        
 	        //var waterLocation = new Vector3();
 		    
 		   // var baseBitmap = new Bitmap(stillAtlas.Width, stillAtlas.Height);
-		   var frameCount = Math.Max(Math.Max(waterFrames.Length,
+		   var frameCount = Math.Max(Math.Max(Math.Max(waterFrames.Length,
 			   Math.Max(waterFlowFrames.Length,
-				   Math.Max(lavaFrames.Length, Math.Max(lavaFlowFrames.Length, fireFrames.Length)))), portalFrames.Length);
+				   Math.Max(lavaFrames.Length, Math.Max(lavaFlowFrames.Length, fireFrames.Length)))), portalFrames.Length), seagrassFrames.Length);
 
 		   while (frameCount % 2 != 0)
 		   {
@@ -221,6 +232,10 @@ namespace Alex.Utils
 			    destination = new System.Drawing.Rectangle((int) portalLocation.Position.X, (int) portalLocation.Position.Y, TextureWidth, TextureHeight);
 			    if (portalFrames.Length > 0)
 				    TextureUtils.CopyRegionIntoImage(portalFrames[i % portalFrames.Length], r, ref target, destination);
+			    
+			    destination = new System.Drawing.Rectangle((int) seagrassLocation.Position.X, (int) seagrassLocation.Position.Y, TextureWidth, TextureHeight);
+			    if (seagrassFrames.Length > 0)
+				    TextureUtils.CopyRegionIntoImage(seagrassFrames[i % seagrassFrames.Length], r, ref target, destination);
 				
 			    frames[i] = TextureUtils.BitmapToTexture2D(device, target, out var s);
 			    totalSize += s;

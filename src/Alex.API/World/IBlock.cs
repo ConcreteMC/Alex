@@ -3,6 +3,8 @@ using Alex.API.Blocks.State;
 using Alex.API.Items;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
+using MiNET;
+using BlockFace = Alex.API.Blocks.BlockFace;
 
 namespace Alex.API.World
 {
@@ -16,20 +18,17 @@ namespace Alex.API.World
 		float Drag { get; set; }
 		string Name { get; set; }
 		string DisplayName { get; set; }
-		bool IsBlockNormalCube { get; set; }
 		bool IsFullCube { get; set; }
 		bool IsFullBlock { get; set; }
 		bool RandomTicked { get; set; }
 		bool IsReplacible { get; set; }
 		bool RequiresUpdate { get; set; }
 		//IBlockState BlockState { get; set; }
-
-		double AmbientOcclusionLightValue { get; set; }
+		
 		int LightValue { get; set; } 
 		int LightOpacity { get; set; }
 		IBlockState BlockState { get; set; }
 		bool IsWater { get; set; }
-		bool IsSourceBlock { get; set; }
 		IMaterial BlockMaterial { get; set; }
 		float Hardness { get; set; }
 		
@@ -37,6 +36,8 @@ namespace Alex.API.World
 		void BlockUpdate(IWorld world, BlockCoordinates position, BlockCoordinates updatedBlock);
 		IBlockState BlockPlaced(IWorld world, IBlockState state, BlockCoordinates position);
 		double GetBreakTime(IItem miningTool);
+
+		bool ShouldRenderFace(BlockFace face, IBlock neighbor);
 
 	}
 }

@@ -1,3 +1,6 @@
+using Alex.API.Blocks;
+using Alex.API.World;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class Glass : Block
@@ -8,9 +11,7 @@ namespace Alex.Blocks.Minecraft
 			Transparent = true;
 			IsReplacible = false;
 			IsFullCube = true;
-			
-			
-			
+
 			BlockMaterial = Material.Glass;
 		}
 	}

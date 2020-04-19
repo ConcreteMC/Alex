@@ -249,6 +249,44 @@ namespace Alex.Blocks.Minecraft
 			return secondsForBreak;
 		}
 
+        public virtual bool ShouldRenderFace(BlockFace face, IBlock neighbor)
+        {
+	        if (Transparent)
+	        {
+		        if (Solid)
+		        {
+			        //	if (IsFullCube && Name.Equals(block.Name)) return false;
+			        if (neighbor.Solid && (neighbor.Transparent || !neighbor.IsFullCube))
+			        {
+				        //var block = world.GetBlock(pos.X, pos.Y, pos.Z);
+				        if (!BlockMaterial.IsOpaque() && !neighbor.BlockMaterial.IsOpaque())
+					        return false;
+
+				        if (!IsFullBlock || !neighbor.IsFullBlock) return true;
+			        }
+
+			        if (neighbor.Solid && !(neighbor.Transparent || !neighbor.IsFullCube)) return false;
+		        }
+		        else
+		        {
+			      //  if (neighbor.Solid && neighbor.Transparent && neighbor.IsFullCube)
+				   //     return true;
+			        
+			        if (neighbor.Solid && !(neighbor.Transparent || neighbor.IsFullCube)) return false;
+		        }
+	        }
+
+
+	        if (Solid && (neighbor.Transparent || !neighbor.IsFullCube)) return true;
+	        //   if (me.Transparent && block.Transparent && !block.Solid) return false;
+	        if (Transparent) return true;
+	        if (!Transparent && (neighbor.Transparent || !neighbor.IsFullCube)) return true;
+	        if (neighbor.Solid && !(neighbor.Transparent || !neighbor.IsFullCube)) return false;
+	        if (Solid && neighbor.Solid && neighbor.IsFullCube) return false;
+			
+	        return true;
+        }
+
         public string DisplayName { get; set; } = null;
 	    public override string ToString()
 	    {

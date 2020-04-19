@@ -177,19 +177,24 @@ namespace Alex.GameStates.Playing
 						$"Skylight: {World.GetSkyLight(_raytracedBlock)} Face Skylight: {World.GetSkyLight(_adjacentBlock)}");
 					sb.AppendLine(
 						$"Blocklight: {World.GetBlockLight(_raytracedBlock)} Face Blocklight: {World.GetBlockLight(_adjacentBlock)}");
-					sb.AppendLine($"{SelBlock}");
 
-					if (SelBlock.BlockState != null)
+					foreach (var bs in World
+						.GetBlockStates((int) _raytracedBlock.X, (int) _raytracedBlock.Y, (int) _raytracedBlock.Z))
 					{
-						if (SelBlock.BlockState is BlockState s && s.IsMultiPart)
+						var blockstate = bs.state;
+						if (blockstate != null && blockstate.Block.Renderable)
 						{
+							sb.AppendLine($"{blockstate.Name} (S: {bs.storage})");
+							if (blockstate is BlockState s && s.IsMultiPart)
+							{
 								sb.AppendLine($"MultiPart=true");
-						}
+							}
 
-						var dict = SelBlock.BlockState.ToDictionary();
-						foreach (var kv in dict)
-						{
-							sb.AppendLine($"{kv.Key}={kv.Value}");
+							var dict = blockstate.ToDictionary();
+							foreach (var kv in dict)
+							{
+								sb.AppendLine($"{kv.Key}={kv.Value}");
+							}
 						}
 					}
 

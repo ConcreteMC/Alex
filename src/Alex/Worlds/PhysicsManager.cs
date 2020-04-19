@@ -63,6 +63,15 @@ namespace Alex.Worlds
 						
 						var velocity = e.Velocity;
 
+						if (e.IsInWater)
+						{
+							velocity.Y *= 0.8f;
+						}
+						else if (e.IsInLava)
+						{
+							velocity.Y *= 0.5f;
+						}
+						
 						if (!e.IsFlying && !e.KnownPosition.OnGround)
 						{
 							velocity -= new Vector3(0f, (float)(e.Gravity * dt), 0f);

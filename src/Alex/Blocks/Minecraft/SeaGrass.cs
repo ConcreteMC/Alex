@@ -6,6 +6,11 @@ namespace Alex.Blocks.Minecraft
         {
             Transparent = true;
             Solid = false;
+
+            Animated = true;
+            IsFullCube = false;
+            
+            BlockMaterial = Material.Coral;
         }
     }
 }

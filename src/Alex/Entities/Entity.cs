@@ -6,6 +6,7 @@ using Alex.API.Graphics;
 using Alex.API.Graphics.Typography;
 using Alex.API.Network;
 using Alex.API.Utils;
+using Alex.Blocks.Minecraft;
 using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Items;
 using Alex.Utils;
@@ -59,6 +60,7 @@ namespace Alex.Entities
 		public bool HideNameTag { get; set; } = true;
 		public bool Silent { get; set; }
 		public bool IsInWater { get; set; } = false;
+		public bool IsInLava { get; set; } = false;
 		public bool IsOutOfWater => !IsInWater;
 		public bool Invulnerable { get; set; } = false;
 
@@ -318,8 +320,35 @@ namespace Alex.Entities
 		//	IsMoving = Velocity.LengthSquared() > 0f;
 
 			var feetBlock = Level?.GetBlock(new BlockCoordinates(KnownPosition));
+			var headBlock = Level?.GetBlock(KnownPosition.GetCoordinates3D() + new BlockCoordinates(0, 1, 0));
+
+			bool headInWater = false;
+			bool feetInWater = false;
+			
+			if (headBlock != null)
+			{
+				if (headBlock.BlockMaterial == Material.Water || headBlock.IsWater)
+				{
+					headInWater = true;
+				}
+			}
+			
 			if (feetBlock != null)
 			{
+				if (feetBlock.BlockMaterial == Material.Water || feetBlock.IsWater)
+				{
+					feetInWater = true;
+				}
+
+				if (feetBlock.BlockMaterial == Material.Lava)
+				{
+					IsInLava = true;
+				}
+				else
+				{
+					IsInLava = false;
+				}
+				
 				if (!feetBlock.Solid)
 				{
 					if (KnownPosition.OnGround)
@@ -336,7 +365,16 @@ namespace Alex.Entities
 				}
 			}
 
-			var headBlock = Level?.GetBlock(KnownPosition.GetCoordinates3D() + new BlockCoordinates(0, 1, 0));
+			if (headInWater || feetInWater)
+			{
+				IsInWater = true;
+			}
+			else
+			{
+				IsInWater = false;
+			}
+
+			/*
 			if (headBlock != null)
 			{
 				if (headBlock.IsWater)
@@ -347,7 +385,7 @@ namespace Alex.Entities
 				{
 					IsInWater = false;
 				}
-			}
+			}*/
 
 			//HealthManager.OnTick();
 		}

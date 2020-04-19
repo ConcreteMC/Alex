@@ -4,9 +4,10 @@ namespace Alex.API
     {
         OpaqueFullCube = 1,
         Opaque = 2,
-        Transparent = 3,
-        Translucent = 4,
-        Animated = 5,
-        AnimatedTranslucent = 6
+        Liquid = 3,
+        Transparent = 4,
+        Translucent = 5,
+        Animated = 6,
+        AnimatedTranslucent = 7
     }
 }

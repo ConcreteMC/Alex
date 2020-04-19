@@ -25,6 +25,7 @@ using MiNET.Utils;
 using NLog;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
+using MathF = System.MathF;
 using PlayerLocation = Alex.API.Utils.PlayerLocation;
 
 //using OpenTK.Graphics;
@@ -251,7 +252,7 @@ namespace Alex.Worlds
 
 	    private static RasterizerState RasterizerState = new RasterizerState()
 	    {
-		    DepthBias = 0.0001f,
+		    //DepthBias = 0.0001f,
 		    CullMode = CullMode.CullClockwiseFace,
 		    FillMode = FillMode.Solid,
 		    //DepthClipEnable = true,
@@ -261,10 +262,11 @@ namespace Alex.Worlds
 	    private static BlendState TranslucentBlendState { get; } = new BlendState()
 	    {
 		    AlphaSourceBlend = Microsoft.Xna.Framework.Graphics.Blend.SourceAlpha,
-		    AlphaDestinationBlend = Microsoft.Xna.Framework.Graphics.Blend.One,
-		    ColorDestinationBlend = Microsoft.Xna.Framework.Graphics.Blend.One,
-		    ColorSourceBlend = Microsoft.Xna.Framework.Graphics.Blend.SourceAlpha
-		    //  IndependentBlendEnable = true,
+		    AlphaDestinationBlend = Microsoft.Xna.Framework.Graphics.Blend.InverseSourceAlpha,
+		    ColorDestinationBlend = Microsoft.Xna.Framework.Graphics.Blend.InverseSourceAlpha,
+		    ColorSourceBlend = Microsoft.Xna.Framework.Graphics.Blend.SourceAlpha,
+		    //ColorBlendFunction = BlendFunction.Add,
+		      IndependentBlendEnable = true,
 		    //AlphaBlendFunction = BlendFunction.Add,
 		    // ColorBlendFunction = BlendFunction.Add
 	    };
@@ -382,6 +384,7 @@ namespace Alex.Worlds
 					    case RenderStage.Animated:
 						    effect = AnimatedEffect;
 						    break;
+					    case RenderStage.Liquid:
 					    case RenderStage.AnimatedTranslucent:
 						    effect = AnimatedEffect;
 						    break;
@@ -868,15 +871,12 @@ namespace Alex.Worlds
 
 	            List<ChunkMesh> meshes = new List<ChunkMesh>();
 
-	            for (var i = 0; i < chunk.Sections.Length - 1; i++)
+	            foreach (var s in chunk.Sections.Where(x => x != null && !x.IsEmpty()).OrderByDescending(sec => MathF.Abs(currentChunkY - sec.GetYLocation())))
 	            {
-		            if (i < 0) break;
-		            var section = chunk.Sections[i] as ChunkSection;
-		            if (section == null || section.IsEmpty())
-		            {
-			            continue;
-		            }
+		            ChunkSection section = (ChunkSection) s;
 
+		            var i = section.GetYLocation();
+		            
 		            if (i != currentChunkY && i != 0)
 		            {
 
@@ -908,6 +908,13 @@ namespace Alex.Worlds
 			            meshes.Add(sectionMesh);
 
 		            }
+	            }
+	            
+	            for (var i = 0; i < chunk.Sections.Length - 1; i++)
+	            {
+		            if (i < 0) break;
+		            var section = chunk.Sections[i] as ChunkSection;
+		           
 	            }
 
 
@@ -1238,7 +1245,11 @@ namespace Alex.Worlds
 				        }
 
 				        RenderStage targetState = RenderStage.OpaqueFullCube;
-				        if (blockState.Block.Animated)
+				        if (blockState.Block.BlockMaterial.IsLiquid())
+				        {
+					        targetState = RenderStage.Liquid;
+				        }
+				        else if (blockState.Block.Animated)
 				        {
 					        if (blockState.Block.BlockMaterial.IsOpaque())
 					        {

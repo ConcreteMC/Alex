@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Alex.API.Blocks;
 using Alex.API.Blocks.State;
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.API.World;
+using Alex.Blocks.Minecraft;
 using Alex.Blocks.Properties;
 using Alex.Blocks.State;
 using Alex.ResourcePackLib.Json;
@@ -119,7 +121,7 @@ namespace Alex.Graphics.Models.Blocks
 
 			var check = position + BlockCoordinates.Up;
 			var bc = world.GetBlockStates(check.X, check.Y, check.Z).ToArray();//.GetType();
-			if ((!IsLava && bc.Any(x => x.state.Block.IsWater)) || (IsLava && bc.Any(x => x.state.Block.Name == "minecraft:lava"))) //.Name == b1 || bc.Name == b2)
+			if ((!IsLava && bc.Any(x => x.state.Block.BlockMaterial == Material.Water)) || (IsLava && bc.Any(x => x.state.Block.BlockMaterial == Material.Lava))) //.Name == b1 || bc.Name == b2)
 			{
 				tl = 8;
 				tr = 8;
@@ -127,6 +129,7 @@ namespace Alex.Graphics.Models.Blocks
 				br = 8;
 
 				rot = 180;
+				isFlowing = true;
 			}
 			else
 			{
@@ -157,10 +160,20 @@ namespace Alex.Graphics.Models.Blocks
 				}
 				else
 				{
-					tl = 7;
-					tr = 7;
-					bl = 7;
-					br = 7;
+					if (bc.Any(x => x.state.Block.Solid && x.state.Block.Renderable))
+					{
+						tl = 8;
+						tr = 8;
+						bl = 8;
+						br = 8;
+					}
+					else
+					{
+						tl = 7;
+						tr = 7;
+						bl = 7;
+						br = 7;
+					}
 				}
 
 				//if (brv < lowestFound)
@@ -270,34 +283,49 @@ namespace Alex.Graphics.Models.Blocks
 			
 			map.Rotate(rot);
 			
-			foreach (var f in Enum.GetValues(typeof(BlockFace)).Cast<BlockFace>())
+			foreach (var face in Enum.GetValues(typeof(BlockFace)).Cast<BlockFace>())
 			{
-				BlockCoordinates d = BlockCoordinates.Zero;
-				d = f.GetBlockCoordinates();
-
 				float height = 0;
-				bool special = f == BlockFace.Up && (tl < 8 || tr < 8 || bl < 8 || br < 8);
+				bool shouldFaceBeRendered = face == BlockFace.Up && (tl < 8 || tr < 8 || bl < 8 || br < 8);
+				
+				if (!shouldFaceBeRendered)
+				{
+					var modPos = position + face.GetBlockCoordinates();
+					var blockStates = world.GetBlockStates(modPos.X, modPos.Y, modPos.Z).Select(x => x.state)
+						.Cast<BlockState>().ToArray();
 
-				var modPos = position + d;
-				var b = (BlockState)world.GetBlockState(modPos.X, modPos.Y, modPos.Z);
-				LiquidBlockModel m = b.Model as LiquidBlockModel;
-				var secondSpecial = m != null && (m.Level > Level);
+					foreach (var b in blockStates)
+					{
+						if (!b.Block.Renderable)
+							continue;
+
+						LiquidBlockModel m = b.Model as LiquidBlockModel;
+						var isSpecial = (m != null && ((m.Level > Level)));
+						isSpecial = isSpecial || (face == BlockFace.Up && b.Block.Solid && b.Block.Transparent);
+
+						if (isSpecial)
+						{
+							shouldFaceBeRendered = true;
+							break;
+						}
+					}
+				}
 
 				float s = 1f - Scale;
 				var start = Vector3.One * s;
 				var end = Vector3.One * Scale;
 
-				if (special || (secondSpecial) || (!string.IsNullOrWhiteSpace(b.Name) && (!b.Name.Equals(b1) && !b.Name.Equals(b2))))
+				if (shouldFaceBeRendered)
 				{
 					//if (b.BlockModel is LiquidBlockModel m && m.Level > Level && f != BlockFace.Up) continue;
 
 					var faceMap = map;
-					if (f != BlockFace.Up)
+					if (face != BlockFace.Up)
 					{
 						faceMap = originalMap;
 					}
 					
-					var vertices = GetFaceVertices(f, start, end, faceMap, out int[] indexes);
+					var vertices = GetFaceVertices(face, start, end, faceMap, out int[] indexes);
 					
 					var initialIndex = result.Count;
 					for (var index = 0; index < vertices.Length; index++)

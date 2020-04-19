@@ -135,7 +135,7 @@ namespace Alex.GameStates.Playing
 
 			if (Player.IsInWater)
 			{
-				modifier = 0.3f;
+				//modifier = 0.3f;
 			}
 			else if (Player.IsSprinting && !Player.IsSneaking)
 			{	
