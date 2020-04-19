@@ -21,6 +21,21 @@ namespace Alex
 			
 		}
 
+		public static RasterizerState Copy(this RasterizerState state)
+		{
+			return new RasterizerState()
+			{
+				CullMode = state.CullMode,
+				DepthBias = state.DepthBias,
+				FillMode = state.FillMode,
+				MultiSampleAntiAlias = state.MultiSampleAntiAlias,
+				Name = state.Name,
+				ScissorTestEnable = state.ScissorTestEnable,
+				SlopeScaleDepthBias = state.SlopeScaleDepthBias,
+				Tag = state.Tag,
+			};
+		}
+
 		public static string SplitPascalCase(this string input)
 		{
 			var result = new StringBuilder();

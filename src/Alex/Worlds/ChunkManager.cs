@@ -34,6 +34,15 @@ namespace Alex.Worlds
 {
 	public class ChunkManager : IDisposable
     {
+	    private readonly static RenderStage[] RenderStages = ((RenderStage[]) Enum.GetValues(typeof(RenderStage)));
+
+	    private readonly static RenderStage[] DepthRenderStages = new[]
+	    {
+		    RenderStage.OpaqueFullCube,
+		    RenderStage.Opaque
+	    };
+	    
+
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ChunkManager));
 
 		private GraphicsDevice Graphics { get; }
@@ -63,6 +72,10 @@ namespace Alex.Worlds
         private AlexOptions Options { get; }
         private RenderTarget2D _depthMap;
         public RenderTarget2D DepthMap => _depthMap;
+        private DedicatedThreadPool _threadPool;
+       // private PrioritizedActionQueue ActionQueue { get; set; }
+       private Utils.Queue.ConcurrentPriorityQueue<ChunkCoordinates, double> PriorityQueue { get; } =
+	       new Utils.Queue.ConcurrentPriorityQueue<ChunkCoordinates, double>();
         public ChunkManager(IServiceProvider serviceProvider, GraphicsDevice graphics, IWorld world)
         {
 	        _depthMap = new RenderTarget2D(graphics, 512, 512, false, SurfaceFormat.Color, DepthFormat.None);
@@ -73,6 +86,7 @@ namespace Alex.Worlds
 
 	        Options = serviceProvider.GetRequiredService<IOptionsProvider>().AlexOptions;
 	        Resources = serviceProvider.GetRequiredService<ResourceManager>();
+	        _threadPool = serviceProvider.GetService<Alex>().ThreadPool;
 	        
 	        Chunks = new ConcurrentDictionary<ChunkCoordinates, IChunkColumn>();
 
@@ -162,6 +176,8 @@ namespace Alex.Worlds
 	        };
 	        
 	        HighestPriority = new ConcurrentQueue<ChunkCoordinates>();
+	        
+	       // ActionQueue = new PrioritizedActionQueue(_threadPool, Options.VideoOptions.ChunkThreads);
         }
 
         private ConcurrentQueue<ChunkCoordinates> HighestPriority { get; set; }
@@ -179,7 +195,62 @@ namespace Alex.Worlds
         private ConcurrentDictionary<ChunkCoordinates, CancellationTokenSource> _workItems = new ConcurrentDictionary<ChunkCoordinates, CancellationTokenSource>();
         private long _threadsRunning = 0;
 
-        private ReprioritizableTaskScheduler _priorityTaskScheduler = new ReprioritizableTaskScheduler();
+        
+        public bool FogEnabled
+        {
+	        get { return TransparentEffect.FogEnabled; }
+	        set
+	        {
+		        TransparentEffect.FogEnabled = value;
+		        TranslucentEffect.FogEnabled = value;
+		        AnimatedEffect.FogEnabled = value;
+		        AnimatedTranslucentEffect.FogEnabled = value;
+		        OpaqueEffect.FogEnabled = value;
+	        }
+        }
+
+        public Vector3 FogColor
+        {
+	        get { return TransparentEffect.FogColor; }
+	        set
+	        {
+		        TransparentEffect.FogColor = value;
+		        OpaqueEffect.FogColor = value;
+		        AnimatedEffect.FogColor = value;
+		        TranslucentEffect.FogColor = value;
+		        AnimatedTranslucentEffect.FogColor = value;
+	        }
+        }
+
+        public float FogDistance
+        {
+	        get { return TransparentEffect.FogEnd; }
+	        set
+	        {
+		        TransparentEffect.FogEnd = value;
+		        OpaqueEffect.FogEnd = value;
+		        AnimatedEffect.FogEnd = value;
+		        TranslucentEffect.FogEnd = value;
+		        AnimatedTranslucentEffect.FogEnd = value;
+	        }
+        }
+
+        public Vector3 AmbientLightColor
+        {
+	        get { return TransparentEffect.DiffuseColor; }
+	        set
+	        {
+		        TransparentEffect.DiffuseColor = value;
+		        TranslucentEffect.DiffuseColor = value;
+			    
+		        OpaqueEffect.DiffuseColor = value;
+		        // OpaqueEffect.DiffuseColor = value;
+		        AnimatedEffect.DiffuseColor = value;
+		        AnimatedTranslucentEffect.DiffuseColor = value;
+	        }
+        }
+        
+       // private ReprioritizableTaskScheduler _priorityTaskScheduler = new ReprioritizableTaskScheduler();
 
         public void Start()
 	    {
@@ -198,30 +269,8 @@ namespace Alex.Worlds
         int _currentFrame = 0;
 	    int _framerate = 12;     // Animate at 12 frames per second
 	    float _timer = 0.0f;
-	    
-	    private static RasterizerState Copy(RasterizerState state)
-	    {
-		    return new RasterizerState()
-		    {
-			    CullMode = state.CullMode,
-			    DepthBias = state.DepthBias,
-			    FillMode = state.FillMode,
-			    MultiSampleAntiAlias = state.MultiSampleAntiAlias,
-			    Name = state.Name,
-			    ScissorTestEnable = state.ScissorTestEnable,
-			    SlopeScaleDepthBias = state.SlopeScaleDepthBias,
-			    Tag = state.Tag,
-		    };
-	    }
-	    
-	    public bool UseWireFrames { get; set; } = false;
-	    private readonly static RenderStage[] RenderStages = ((RenderStage[]) Enum.GetValues(typeof(RenderStage)));
 
-	    private readonly static RenderStage[] DepthRenderStages = new[]
-	    {
-		    RenderStage.OpaqueFullCube,
-		    RenderStage.Opaque
-	    };
+	    public bool UseWireFrames { get; set; } = false;
 	    
 	    private static readonly SamplerState RenderSampler = new SamplerState()
 	    {
@@ -270,7 +319,9 @@ namespace Alex.Worlds
 		    //AlphaBlendFunction = BlendFunction.Add,
 		    // ColorBlendFunction = BlendFunction.Add
 	    };
-	    
+
+	    #region  Drawing
+
 	    public void Draw(IRenderArgs args, bool depthMapOnly)
 	    {
 		    var view = args.Camera.ViewMatrix;
@@ -302,16 +353,12 @@ namespace Alex.Worlds
 		    
 		    RasterizerState originalState = device.RasterizerState;
 		    args.GraphicsDevice.RasterizerState = RasterizerState;
-		   // device.RasterizerState.MultiSampleAntiAlias = true;
-		    //device.DepthStencilState.DepthBufferFunction = CompareFunction.Always;
-		   //  device.RasterizerState = RasterizerState;
-		  // device.DepthStencilState = DepthStencilState;
-		    
+
 		    bool usingWireFrames = UseWireFrames;
 		    if (usingWireFrames)
 		    {
 			    originalState = device.RasterizerState;
-			    RasterizerState rasterizerState = Copy(originalState);
+			    RasterizerState rasterizerState = originalState.Copy();
 			    rasterizerState.FillMode = FillMode.WireFrame;
 			    device.RasterizerState = rasterizerState;
 		    }
@@ -344,24 +391,25 @@ namespace Alex.Worlds
 		    
 		    device.SamplerStates[0] = originalSamplerState;
 	    }
-	    
-	    private void DrawStaged(IRenderArgs args, out int chunksRendered, out int drawnVertices, Effect forceEffect = null, params RenderStage[] stages)
+
+	    private void DrawStaged(IRenderArgs args, out int chunksRendered, out int drawnVertices,
+		    Effect forceEffect = null, params RenderStage[] stages)
 	    {
 		    var originalBlendState = args.GraphicsDevice.BlendState;
-		    
+
 		    if (stages == null || stages.Length == 0)
 			    stages = RenderStages;
 
 		    var tempVertices = 0;
 		    int tempChunks = 0;
 		    var indexBufferSize = 0;
-			
+
 		    ChunkData[] chunks = _renderedChunks;
-		    
+
 		    foreach (var stage in stages)
 		    {
 			    args.GraphicsDevice.BlendState = originalBlendState;
-			    
+
 			    bool setDepth = false;
 			    Effect effect = forceEffect;
 			    if (forceEffect == null)
@@ -393,7 +441,7 @@ namespace Alex.Worlds
 				    }
 			    }
 
-			    
+
 			    tempVertices += DrawChunks(args.GraphicsDevice, chunks, effect, stage);
 		    }
 
@@ -404,60 +452,30 @@ namespace Alex.Worlds
 
 		    args.GraphicsDevice.BlendState = originalBlendState;
 	    }
-
-	    public bool FogEnabled
+	    
+	    #region Chunk Rendering
+	    
+	    
+	    private int DrawChunks(GraphicsDevice device, ChunkData[] chunks, Effect effect, RenderStage stage)
 	    {
-		    get { return TransparentEffect.FogEnabled; }
-		    set
+		    int verticeCount = 0;
+		    for (var index = 0; index < chunks.Length; index++)
 		    {
-			    TransparentEffect.FogEnabled = value;
-			    TranslucentEffect.FogEnabled = value;
-			    AnimatedEffect.FogEnabled = value;
-			    AnimatedTranslucentEffect.FogEnabled = value;
-			    OpaqueEffect.FogEnabled = value;
-		    }
-	    }
+			    var chunk = chunks[index];
+			    if (chunk == null) continue;
 
-	    public Vector3 FogColor
-	    {
-		    get { return TransparentEffect.FogColor; }
-		    set
-		    {
-				TransparentEffect.FogColor = value;
-			    OpaqueEffect.FogColor = value;
-			    AnimatedEffect.FogColor = value;
-			    TranslucentEffect.FogColor = value;
-			    AnimatedTranslucentEffect.FogColor = value;
+			    if (chunk.RenderStages.TryGetValue(stage, out var renderStage))
+			    { 
+				    verticeCount += renderStage.Render(device, effect);
+			    }
 		    }
-	    }
 
-	    public float FogDistance
-	    {
-		    get { return TransparentEffect.FogEnd; }
-		    set
-		    {
-			    TransparentEffect.FogEnd = value;
-			    OpaqueEffect.FogEnd = value;
-			    AnimatedEffect.FogEnd = value;
-			    TranslucentEffect.FogEnd = value;
-			    AnimatedTranslucentEffect.FogEnd = value;
-		    }
+		    return verticeCount;
 	    }
-
-	    public Vector3 AmbientLightColor
-		{
-		    get { return TransparentEffect.DiffuseColor; }
-		    set
-		    {
-			    TransparentEffect.DiffuseColor = value;
-			    TranslucentEffect.DiffuseColor = value;
-			    
-			    OpaqueEffect.DiffuseColor = value;
-			    // OpaqueEffect.DiffuseColor = value;
-			    AnimatedEffect.DiffuseColor = value;
-			    AnimatedTranslucentEffect.DiffuseColor = value;
-		    }
-	    }
+	    
+	    #endregion
+	    
+	    #endregion
 
 	    private Texture2D _currentFrameTexture = null;
 		public void Update(IUpdateArgs args)
@@ -608,29 +626,7 @@ namespace Alex.Worlds
 
 			_chunkData = null;
 	    }
-	    
-	    #region Chunk Rendering
-	    
-	    
-	    private int DrawChunks(GraphicsDevice device, ChunkData[] chunks, Effect effect, RenderStage stage)
-	    {
-		    int verticeCount = 0;
-		    for (var index = 0; index < chunks.Length; index++)
-		    {
-			    var chunk = chunks[index];
-			    if (chunk == null) continue;
 
-			    if (chunk.RenderStages.TryGetValue(stage, out var renderStage))
-			    { 
-				    verticeCount += renderStage.Render(device, effect);
-			    }
-		    }
-
-		    return verticeCount;
-	    }
-	    
-	    #endregion
-	    
 	    #region Chunk Updates
 
 	    private void ChunkUpdateThread()
@@ -638,6 +634,7 @@ namespace Alex.Worlds
 			 //Environment.ProcessorCount / 2;
 			Stopwatch sw = new Stopwatch();
 
+			SpinWait spinWait = new SpinWait();
             while (!CancelationToken.IsCancellationRequested)
             {
 	            int maxThreads = Options.VideoOptions.ChunkThreads;
@@ -687,13 +684,60 @@ namespace Alex.Worlds
 
                 _renderedChunks = orderedList.ToArray();
 
-                if (Interlocked.Read(ref _threadsRunning) >= maxThreads) continue;
+                var enqueued = Enqueued.ToArray();
 
-                bool nonInView = false;
-                if (TryDequeue(cameraChunkPos, out var coords, out var priority))
+                foreach (var cc in enqueued)
                 {
-	                Schedule(coords, priority);
+	                try
+	                {
+		                if (PriorityQueue.Contains(cc))
+		                {
+			                if (IsWithinView(cc, _cameraBoundingFrustum))
+			                {
+				                PriorityQueue.UpdatePriority(cc, Math.Abs(cameraChunkPos.DistanceTo(cc)));
+			                }
+			                else
+			                {
+				                PriorityQueue.UpdatePriority(cc, double.MaxValue);
+			                }
+		                }
+	                }
+	                catch (ArgumentException)
+	                {
+		                Log.Warn($"Tried updating non-queued chunk: {cc}");
+	                }
                 }
+
+                var threadsActive = Interlocked.Read(ref _threadsRunning);
+                if (threadsActive >= maxThreads)
+                {
+	                spinWait.SpinOnce();
+	                continue;
+                }
+
+                if (threadsActive < PriorityQueue.Count && threadsActive < maxThreads)
+                {
+	                ScheduleWorker();
+                }
+                
+                bool nonInView = false;
+              /*  if (TryDequeue(cameraChunkPos, out var coords, out var priority))
+                {
+	                double offset = 100d;
+	                if (Chunks.TryGetValue(coords, out var val))
+	                {
+		                if (val is ChunkColumn column)
+		                {
+			                if (column.IsNew)
+				                offset = 0;
+		                }
+	                }
+	                Schedule(coords, offset + Math.Abs(cameraChunkPos.DistanceTo(coords)));
+                }
+                else
+                {
+	                spinWait.SpinOnce();
+                }*/
 			}
 
 			if (!CancelationToken.IsCancellationRequested)
@@ -702,9 +746,9 @@ namespace Alex.Worlds
 			//TaskScheduler.Dispose();
 		}
 
-	    private bool TryDequeue(ChunkCoordinates cameraChunkPos, out ChunkCoordinates coordinates, out ChunkPriority priority)
+	    private bool TryDequeue(ChunkCoordinates cameraChunkPos, out ChunkCoordinates coordinates, out TaskPriority priority)
 	    {
-		    priority = ChunkPriority.Normal;
+		    priority = TaskPriority.Normal;
 		    
 		    try
 		    {
@@ -718,7 +762,7 @@ namespace Alex.Worlds
 				    else
 				    {
 					    Enqueued.Remove(coords);
-					    priority = ChunkPriority.Highest;
+					    priority = TaskPriority.Highest;
 					   // Schedule(coords, ChunkPriority.Highest);
 					   coordinates = coords;
 					   return true;
@@ -760,8 +804,49 @@ namespace Alex.Worlds
 		    return false;
 	    }
 
-	    private void Schedule(ChunkCoordinates coords, ChunkPriority priority)
+	    private void ScheduleWorker()
 	    {
+		    Interlocked.Increment(ref _threadsRunning);
+		    
+		    _threadPool.QueueUserWorkItem(() =>
+		    {
+			    try
+			    {
+					while(PriorityQueue.TryDequeue(out ChunkCoordinates coordinates))
+				    {
+					    CancellationTokenSource taskCancelationToken =
+						    CancellationTokenSource.CreateLinkedTokenSource(CancelationToken.Token);
+					    if (_workItems.TryAdd(coordinates, taskCancelationToken))
+					    {
+						    Enqueued.Remove(coordinates);
+					    }
+					    
+					    if (Chunks.TryGetValue(coordinates, out var val))
+					    {
+						    if (val is ChunkColumn column && column.Sections.Any(x => x != null && !x.IsEmpty()))
+						    {
+							    // if (column.SkyLightDirty || column.IsNew)
+							    {
+								    new SkyLightCalculations().RecalcSkyLight((ChunkColumn) val,
+									    new SkyLightBlockAccess(this));
+							    }
+
+							    UpdateChunk(coordinates, val);
+						    }
+					    }
+
+					    _workItems.TryRemove(coordinates, out _);
+				    } //while (TryDequeue(new ChunkCoordinates(_cameraPosition), out coords, out priority));
+			    }
+			    catch (Exception ex)
+			    {
+				    Log.Warn(ex, $"Chunk processing error: {ex.ToString()}");
+			    }
+
+			    Interlocked.Decrement(ref _threadsRunning);
+
+		    });
+		    /*
 		    CancellationTokenSource taskCancelationToken =
 			    CancellationTokenSource.CreateLinkedTokenSource(CancelationToken.Token);
 
@@ -775,62 +860,65 @@ namespace Alex.Worlds
 		    
 		    //_tasksQueue.
 
-		    var task = Task.Factory.StartNew(() =>
-		    {
-			    try
-			    {
+		   // var task = Task.Factory.StartNew(() =>
+		   _threadPool.QueueUserWorkItem(() =>
+		   {
+			   try
+			   {
 				   // do
-				    {
-					    if (Chunks.TryGetValue(coords, out var val))
-					    {
-						    if (val is ChunkColumn column && column.Sections.Any(x => x != null && !x.IsEmpty()))
-						    {
-							    // if (column.SkyLightDirty || column.IsNew)
-							    {
-								    new SkyLightCalculations().RecalcSkyLight((ChunkColumn) val,
-									    new SkyLightBlockAccess(this));
-							    }
+				   {
+					   if (Chunks.TryGetValue(coords, out var val))
+					   {
+						   if (val is ChunkColumn column && column.Sections.Any(x => x != null && !x.IsEmpty()))
+						   {
+							   // if (column.SkyLightDirty || column.IsNew)
+							   {
+								   new SkyLightCalculations().RecalcSkyLight((ChunkColumn) val,
+									   new SkyLightBlockAccess(this));
+							   }
 
-							    UpdateChunk(coords, val);
-						    }
-					    }
+							   UpdateChunk(coords, val);
+						   }
+					   }
 
-					    _workItems.TryRemove(coords, out _);
-				    } //while (TryDequeue(new ChunkCoordinates(_cameraPosition), out coords, out priority));
-			    }
-			    catch (Exception ex)
-			    {
-				    Log.Warn(ex, $"Chunk processing error: {ex.ToString()}");
-			    }
+					   _workItems.TryRemove(coords, out _);
+				   } //while (TryDequeue(new ChunkCoordinates(_cameraPosition), out coords, out priority));
+			   }
+			   catch (Exception ex)
+			   {
+				   Log.Warn(ex, $"Chunk processing error: {ex.ToString()}");
+			   }
 
-			    Interlocked.Decrement(ref _threadsRunning);
+			   Interlocked.Decrement(ref _threadsRunning);
 
-		    }, taskCancelationToken.Token, TaskCreationOptions.None, _priorityTaskScheduler);
+		   });*/
+		    //, taskCancelationToken.Token, TaskCreationOptions.None, _priorityTaskScheduler);
 
-		    if (priority == ChunkPriority.Highest)
+		    /*if (priority == ChunkPriority.Highest)
 		    {
 			    _priorityTaskScheduler.Prioritize(task);
-		    }
+		    }*/
 	    }
 
 	    public void ScheduleChunkUpdate(ChunkCoordinates position, ScheduleType type, bool prioritize = false)
 	    {
-
 		    if (Chunks.TryGetValue(position, out IChunkColumn chunk))
 		    {
 			    var currentSchedule = chunk.Scheduled;
-			    if (prioritize)
+			   /* if (prioritize)
 			    {
 				    chunk.Scheduled = type;
 
 				    if (!Enqueued.Contains(position) && Enqueued.TryAdd(position))
 				    {
-					    HighestPriority.Enqueue(position);
+					   // PriorityQueue.Enqueue(position, 1d);
+					   // HighestPriority.Enqueue(position);
+					  // Schedule(position, 0d);
 				    }
 
 				    return;
 			    }
-
+*/
 
 			    if (currentSchedule != ScheduleType.Unscheduled)
 			    {
@@ -841,7 +929,11 @@ namespace Alex.Worlds
 			        !Enqueued.Contains(position) && Enqueued.TryAdd(position))
 			    {
 				    chunk.Scheduled = type;
-
+				    
+				    PriorityQueue.Enqueue(position, Math.Abs(new ChunkCoordinates(_cameraPosition).DistanceTo(position)));
+				   // double distance = Math.Abs(new ChunkCoordinates(_cameraPosition).DistanceTo(position));
+				    
+				  //  Schedule(position, distance);
 				    Interlocked.Increment(ref _chunkUpdates);
 			    }
 		    }

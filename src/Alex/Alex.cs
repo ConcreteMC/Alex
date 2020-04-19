@@ -171,7 +171,7 @@ namespace Alex
             Resources = Services.GetRequiredService<ResourceManager>();
 
             ThreadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount,
-	            ThreadType.Background, "Threadpool"));
+	            ThreadType.Background, "Dedicated ThreadPool"));
             
            PacketFactory.CustomPacketFactory = new AlexPacketFactory();
            
@@ -531,7 +531,7 @@ namespace Alex
 		{
 			var oldNetworkPool = NetworkThreadPool;
 			
-			NetworkThreadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount));
+			NetworkThreadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount / 2, ThreadType.Background, "Network ThreadPool"));
 
 			try
 			{

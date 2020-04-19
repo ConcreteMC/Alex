@@ -1,6 +1,6 @@
 namespace Alex.Utils
 {
-    public enum ChunkPriority
+    public enum TaskPriority
     {
         Highest,
         High,

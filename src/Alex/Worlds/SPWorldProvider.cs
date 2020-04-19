@@ -99,11 +99,15 @@ namespace Alex.Worlds
 
 		private void RunThread()
 		{
+			SpinWait sw = new SpinWait();
 			while (!ThreadCancellationTokenSource.IsCancellationRequested)
 			{
 				if (!World.Player.IsSpawned)
+				{
+					sw.SpinOnce();
 					continue;
-				
+				}
+
 				/*var e = base.WorldReceiver?.GetPlayerEntity();
 				if (e != null)
 				{
@@ -126,6 +130,7 @@ namespace Alex.Worlds
 					}
 				}
 
+				//sw.SpinOnce();
 				Thread.Sleep(500);
 			}
 		}
