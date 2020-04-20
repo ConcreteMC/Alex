@@ -8,6 +8,8 @@ using Microsoft.Xna.Framework.Graphics;
 using MiNET.Utils.Skins;
 using Newtonsoft.Json;
 using NLog;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace Alex.Utils
 {
@@ -77,7 +79,7 @@ namespace Alex.Utils
 			return false;
 		}
 
-		public static bool TryGetBitmap(this Skin skin, out Bitmap result)
+		public static bool TryGetBitmap(this Skin skin, out Image<Rgba32> result)
 		{
 			try
 			{
@@ -88,7 +90,7 @@ namespace Alex.Utils
 				int width = skin.Width;
 				int height = skin.Height;
 
-				Bitmap bitmap = new Bitmap(width, height);
+				Image<Rgba32> bitmap = new Image<Rgba32>(width, height);
 
 				int i = 0;
 				for (int y = 0; y < bitmap.Height; y++)
@@ -100,9 +102,10 @@ namespace Alex.Utils
 						byte b = bytes[i++];
 						byte a = bytes[i++];
 
-						Color color = Color.FromArgb(a, r, g, b);
-						bitmap.SetPixel(x, y, color);
-					}
+                        bitmap[x, y] = new Rgba32(r, g, b, a);
+                        //Color color = Color.FromArgb(a, r, g, b);
+                        //bitmap.SetPixel(x, y, color);
+                    }
 				}
 
 				result = bitmap;

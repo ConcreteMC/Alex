@@ -81,7 +81,12 @@ namespace log4net
 			if (level == Level.Warn)
 				return LogLevel.Warn;
 
-			throw new NotSupportedException("Level " + level + " is currently not supported.");
+			//Verbose does not exist in NLog. Maybe i should switch back to Log4Net anyways,
+			//Its kinda inconvient having 2.
+			if (level == Level.Verbose)
+                return LogLevel.Trace;
+
+            throw new NotSupportedException("Level " + level + " is currently not supported.");
 		}
 
 		public static void Initialize()

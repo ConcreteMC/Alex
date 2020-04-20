@@ -1,5 +1,5 @@
+using System.Collections.Generic;
 using System;
-using System.Drawing;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
@@ -10,11 +10,15 @@ using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using NLog;
+using System.Collections.Concurrent;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace Alex.Gui.Forms.Bedrock
 {
     public class FormImage : GuiControl
     {
+        //TODO: Get rid of static cache instance.
+        private static ConcurrentDictionary<string, byte[]> _cache = new ConcurrentDictionary<string, byte[]>();
         private static ILogger Log = LogManager.GetCurrentClassLogger();
         
         public string Image { get; set; } = null;
@@ -27,40 +31,23 @@ namespace Alex.Gui.Forms.Bedrock
             {
                 try
                 {
-                    using (WebClient wc = new WebClient())
+                    byte[] imageData = _cache.GetOrAdd(Image, (path) =>
                     {
-                        byte[] imageData = wc.DownloadData(Image);
-                        using (MemoryStream ms = new MemoryStream(imageData))
+                        using (WebClient wc = new WebClient())
                         {
-                            Bitmap bmp = new Bitmap(ms);
-                            
-                            Alex.Instance.UIThreadQueue.Enqueue(() =>
-                            {
-                                try
-                                {
-                                    Background =
-                                        (TextureSlice2D) TextureUtils.BitmapToTexture2D(
-                                            Alex.Instance.GraphicsDevice,
-                                            bmp);
-                                }
-                                catch (Exception ex)
-                                {
-                                    Log.Error(ex, "Could not get form image.");
-                                }
-                            });
+                            var data = wc.DownloadData(path);
+
+                            return data;
                         }
-                    }
+                    });
+
+                    Background = (TextureSlice2D)TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, SixLabors.ImageSharp.Image.Load<Rgba32>(imageData));
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex,$"Could not convert image!");
+                    Log.Error(ex, $"Could not convert image!");
                 }
             });
-        }
-
-        protected override void OnInit(IGuiRenderer renderer)
-        {
-            base.OnInit(renderer);
         }
     }
 }

@@ -4,6 +4,9 @@ using System.IO;
 using System.IO.Compression;
 using Alex.ResourcePackLib.Generic;
 using Alex.ResourcePackLib.Json;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using Image = SixLabors.ImageSharp.Image;
 
 namespace Alex.ResourcePackLib
 {
@@ -33,8 +36,9 @@ namespace Alex.ResourcePackLib
 				    var imgEntry = archive.GetEntry("pack.png");
 				    if (imgEntry != null)
 				    {
-					    Bitmap bmp = new Bitmap(imgEntry.Open());
-					    return new ResourcePackManifest(bmp, "", info.Description);
+                        // Bitmap bmp = new Bitmap(imgEntry.Open());
+                        var bmp = Image.Load<Rgba32>(imgEntry.Open());
+                        return new ResourcePackManifest(bmp, "", info.Description);
 					}
 				    else
 				    {

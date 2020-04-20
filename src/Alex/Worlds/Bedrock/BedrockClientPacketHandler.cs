@@ -44,6 +44,8 @@ using Newtonsoft.Json;
 using NLog;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Security;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using BitArray = System.Collections.BitArray;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using BlockState = MiNET.Utils.IBlockState;
@@ -384,7 +386,7 @@ namespace Alex.Worlds.Bedrock
 
 					bool isTransparent = false;
 					PooledTexture2D skinTexture;
-					Bitmap skinBitmap;
+					Image<Rgba32> skinBitmap;
 					if (r.Skin.TryGetBitmap(out skinBitmap))
 					{
 						skinTexture =
