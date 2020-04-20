@@ -354,7 +354,7 @@ namespace Alex.Graphics.Models
 		  //  renderArgs.GraphicsDevice.DepthStencilState = DepthStencilState;
 		  renderArgs.GraphicsDevice.DepthStencilState = DepthStencilState.DepthRead;
 		    renderArgs.GraphicsDevice.RasterizerState = RasterState;
-			renderArgs.GraphicsDevice.BlendState = CelestialBlendState;
+			renderArgs.GraphicsDevice.BlendState = BlendState.AlphaBlend;
 			
 			DrawSky(renderArgs, renderArgs.Camera.Position);
 

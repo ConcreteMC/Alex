@@ -35,6 +35,31 @@ namespace Alex.Worlds.Bedrock
 		}
 	}
 
+	public class PersonaPiece
+	{
+		public bool Default { get; set; } = true; //indicates if it is a persona skin part which is the default for skins
+		public string PackId { get; set; } = ""; //which is a UUID of the pack the piece belongs to
+		public string PieceId { get; set; } = ""; //a UUID unique to the piece
+		public string PieceType { get; set; } = "persona_body"; // which is the type, for example persona_body
+		public string ProductId { get; set; } = ""; //a UUID identifying the piece for purchases  (empty for free pieces)
+	}
+
+	public class PieceTint
+	{
+		//holds a list of hex colours relevant to the piece
+		// Some pieces have only one colour, for which the rest will be filled with #0
+		//Some pieces like the eyes have different colours for the iris and the eyebrows for example
+		public string[] Colors { get; set; } = new string[4]
+		{
+			"#0",
+			"#0",
+			"#0",
+			"#0"
+		};
+		
+		public string PieceType { get; set; } //is the piece type that it refers to, which is present in the previous list
+	}
+	
 	public class Skin : ICloneable
 	{
 		public bool Slim { get; set; }
@@ -55,6 +80,12 @@ namespace Alex.Worlds.Bedrock
 		public string AnimationData { get; set; }
 		public List<Animation> Animations { get; set; }
 
+		public string SkinColor { get; set; } = "#0";
+		public string ArmSize { get; set; } = "slim";
+
+		public List<PersonaPiece> Pieces { get; set; } = new List<PersonaPiece>();
+		public List<PieceTint> Tints { get; set; } = new List<PieceTint>();
+		
 		public Skin()
 		{
 			Cape = new Cape();
