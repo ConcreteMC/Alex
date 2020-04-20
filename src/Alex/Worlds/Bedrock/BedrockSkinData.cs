@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using MiNET.Net;
 using MiNET.Utils.Skins;
@@ -8,7 +9,7 @@ namespace Alex.Worlds.Bedrock
 {
     public class BedrockSkinData
     {
-        public bool ThirdPartyOnly { get; set; } = false;
+        public bool ThirdPartyNameOnly { get; set; } = false;
         public string ThirdPartyName { get; set; }
         
         
@@ -48,6 +49,15 @@ namespace Alex.Worlds.Bedrock
         public bool PersonaSkin { get; set; }
         public bool CapeOnClassicSkin { get; set; }
 
+        public string SkinColor { get; set; } = "#0";
+        public string ArmSize   { get; set; } = "slim";
+
+        [JsonProperty("PersonaPieces")]
+        public List<PersonaPiece> PersonaPieces    { get; set; } = new List<PersonaPiece>();
+        
+        [JsonProperty("PieceTintColors")]
+        public List<PieceTint>    PieceTintColours { get; set; } = new List<PieceTint>();
+        
         public class SkinAnimation
         {
             public string Image { get; set; }
