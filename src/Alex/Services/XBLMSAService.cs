@@ -21,13 +21,22 @@ using MiNET.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
+using Org.BouncyCastle.Asn1;
+using Org.BouncyCastle.Asn1.Nist;
+using Org.BouncyCastle.Asn1.Ocsp;
+using Org.BouncyCastle.Asn1.Pkcs;
 using Org.BouncyCastle.Asn1.Sec;
+using Org.BouncyCastle.Asn1.X509;
+using Org.BouncyCastle.Asn1.X9;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Generators;
 using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.OpenSsl;
+using Org.BouncyCastle.Pkcs;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509;
 using Logger = NLog.Logger;
+using UUID = Alex.API.Utils.UUID;
 
 namespace Alex.Services
 {
@@ -51,23 +60,56 @@ namespace Alex.Services
 		private string RefreshUri = "https://login.live.com/oauth20_token.srf";  // Get tokens endpoint
 		
 		private static FastRandom RND = new FastRandom();
-
-		private ECDsa EcDsa { get; }
+		
 		public AsymmetricCipherKeyPair BouncyKeyPair { get; }
+		
+		public byte[] X { get; }
+		public byte[] Y { get; }
+		
+		public ECDsa EcDsa { get; }
+
+		private static ECDsa ConvertToSingKeyFormat(AsymmetricCipherKeyPair key)
+		{
+			ECPublicKeyParameters  pubAsyKey  = (ECPublicKeyParameters)key.Public;
+			ECPrivateKeyParameters privAsyKey = (ECPrivateKeyParameters)key.Private;
+
+			var signParam = new ECParameters
+			{
+				Curve = ECCurve.NamedCurves.nistP256,
+				Q =
+				{
+					X = pubAsyKey.Q.AffineXCoord.GetEncoded(),
+					Y = pubAsyKey.Q.AffineYCoord.GetEncoded()
+				}
+			};
+			signParam.D = CryptoUtils.FixDSize(privAsyKey.D.ToByteArrayUnsigned(), signParam.Q.X.Length);
+			signParam.Validate();
+
+			return ECDsa.Create(signParam);
+		}
+		
 		public XBLMSAService()
 		{
 			BouncyKeyPair = GenerateKeys();
 			EcDsa = ConvertToSingKeyFormat(BouncyKeyPair);
+
+			ECPublicKeyParameters pubAsyKey = (ECPublicKeyParameters)BouncyKeyPair.Public;
+			X = pubAsyKey.Q.AffineXCoord.GetEncoded();
+			Y = pubAsyKey.Q.AffineYCoord.GetEncoded();
 		}
 		
 		public AsymmetricCipherKeyPair GenerateKeys()
 		{
-			var gen = new ECKeyPairGenerator("ECDSA");
+			var  curve        = NistNamedCurves.GetByName("P-256");
+			var domainParams = new ECDomainParameters(curve.Curve, curve.G, curve.N, curve.H, curve.GetSeed());
 
-			var keyGenParam = new ECKeyGenerationParameters(SecObjectIdentifiers.SecP256r1, SecureRandom.GetInstance("SHA256PRNG"));
-			gen.Init(keyGenParam);
+			var secureRandom = new SecureRandom();
+			var keyParams    = new ECKeyGenerationParameters(domainParams, secureRandom);
 
-			return gen.GenerateKeyPair();
+			var generator = new ECKeyPairGenerator("ECDSA");
+			generator.Init(keyParams);
+			
+			return generator.GenerateKeyPair();
 		}
 
 		static readonly char[] padding = { '=' };
@@ -244,7 +286,7 @@ namespace Alex.Services
 		
 		private async Task<AuthResponse<XuiDisplayClaims<XstsXui>>> DoXsts(AuthResponse<DeviceDisplayClaims> deviceToken, AuthResponse<TitleDisplayClaims> titleToken, string userToken)
 		{
-			var key = EcDsa.ExportParameters(false);
+			//var key = EcDsa.ExportParameters(false);
 			var authRequest = new AuthRequest
 			{
 				RelyingParty = "https://multiplayer.minecraft.net/",
@@ -259,8 +301,8 @@ namespace Alex.Services
 						{"alg", "ES256"},
 						{"use", "sig"},
 						{"kty", "EC"},
-						{"x", UrlSafe(key.Q.X)},
-						{"y", UrlSafe(key.Q.Y)}
+						{"x", UrlSafe(X)},
+						{"y", UrlSafe(Y)}
 					}}
 				}
 			};
@@ -299,7 +341,6 @@ namespace Alex.Services
 		
 		private async Task<AuthResponse<TitleDisplayClaims>> DoTitleAuth(AuthResponse<DeviceDisplayClaims> deviceToken, string accessToken)
 		{
-			var key = EcDsa.ExportParameters(false);
 			var authRequest = new AuthRequest
 			{
 				RelyingParty = "http://auth.xboxlive.com",
@@ -316,8 +357,8 @@ namespace Alex.Services
 						{"alg", "ES256"},
 						{"use", "sig"},
 						{"kty", "EC"},
-						{"x", UrlSafe(key.Q.X)},
-						{"y", UrlSafe(key.Q.Y)}
+						{"x", UrlSafe(X)},
+						{"y", UrlSafe(Y)}
 					}}
 				}
 			};
@@ -354,7 +395,7 @@ namespace Alex.Services
 
 		private async Task<AuthResponse<XuiDisplayClaims<Xui>>> DoUserAuth(string accessToken)
 		{
-			var key = EcDsa.ExportParameters(false);
+			//var key = EcDsa.ExportParameters(false);
 			
 			var authRequest = new AuthRequest
 			{
@@ -371,8 +412,8 @@ namespace Alex.Services
 						{"alg", "ES256"},
 						{"use", "sig"},
 						{"kty", "EC"},
-						{"x", UrlSafe(key.Q.X)},
-						{"y", UrlSafe(key.Q.Y)}
+						{"x", UrlSafe(X)},
+						{"y", UrlSafe(Y)}
 					}}
 				}
 			};
@@ -411,8 +452,9 @@ namespace Alex.Services
 		{
 			var id = Guid.NewGuid().ToString();
 			var serial = Guid.NewGuid().ToString();
+			//UUID uuid = new UUID(Guid.NewGuid().ToByteArray());
 
-			var key = EcDsa.ExportParameters(false);
+		//	var key = EcDsa.ExportParameters(false);
 			var authRequest = new AuthRequest
 			{
 				RelyingParty = "http://auth.xboxlive.com",
@@ -422,7 +464,7 @@ namespace Alex.Services
 					//	{"RpsTicket", token},
 					//	{"SiteName", "user.auth.xboxlive.com"},
 					{"DeviceType", "Nintendo"},
-					{"Id", id},
+					{"Id",id},
 					{"SerialNumber", serial},
 					{"Version", "0.0.0.0"},
 					{"AuthMethod", "ProofOfPossession"},
@@ -433,8 +475,8 @@ namespace Alex.Services
 							{"alg", "ES256"},
 							{"use", "sig"},
 							{"kty", "EC"},
-							{"x", UrlSafe(key.Q.X)},
-							{"y", UrlSafe(key.Q.Y)}
+							{"x",UrlSafe(X)},
+							{"y", UrlSafe(Y)}
 						}
 					}
 				}
@@ -446,6 +488,8 @@ namespace Alex.Services
 			using (var r = new HttpRequestMessage(HttpMethod.Post,
 				DeviceAuth))
 			{
+				r.Headers.Clear();
+				
 				r.Headers.Add("x-xbl-contract-version", "1");
 
 				//var json = JsonConvert.SerializeObject(authRequest);
@@ -454,23 +498,17 @@ namespace Alex.Services
 
 				Sign(r, jsonData);
 
-				Console.WriteLine();
-
-				Console.WriteLine($"Request data: {r.Content.ReadAsStringAsync().Result}");
-
 				using (var response = await client
 					.SendAsync(r, HttpCompletionOption.ResponseContentRead)
 					.ConfigureAwait(false))
 				{
 					var resp = await response.Content.ReadAsStringAsync();
-					Console.WriteLine($"DEV AUTH: {resp}");
+
 					response.EnsureSuccessStatusCode();
 
 					deviceAuthResponse =
 						JsonConvert.DeserializeObject<AuthResponse<DeviceDisplayClaims>>(
 							resp);
-
-					Console.WriteLine($"Device Auth: {JsonConvert.SerializeObject(deviceAuthResponse)}");
 
 					Console.WriteLine();
 				}
@@ -478,37 +516,12 @@ namespace Alex.Services
 
 			return deviceAuthResponse;
 		}
-		
-		private static ECDsa ConvertToSingKeyFormat(AsymmetricCipherKeyPair key)
-		{
-			ECPublicKeyParameters pubAsyKey = (ECPublicKeyParameters)key.Public;
-			ECPrivateKeyParameters privAsyKey = (ECPrivateKeyParameters)key.Private;
 
-			var signParam = new ECParameters
-			{
-				Curve = ECCurve.NamedCurves.nistP256,
-				Q =
-				{
-					X = pubAsyKey.Q.AffineXCoord.GetEncoded(),
-					Y = pubAsyKey.Q.AffineYCoord.GetEncoded()
-				}
-			};
-			signParam.D = CryptoUtils.FixDSize(privAsyKey.D.ToByteArrayUnsigned(), signParam.Q.X.Length);
-			signParam.Validate();
-
-			return ECDsa.Create(signParam);
-		}
-		
 		private void Sign(HttpRequestMessage request, byte[] body)
 		{
-			var hash = SHA256.Create();
-			//EcdsaUsingSha a = new EcdsaUsingSha(256);
-			
-			//ISigner signer = SignerUtilities.GetSigner("SHA-256withECDSA");
-			//signer.Init(true, EcDsa.Private);
-			
-		//	byte[] buf = new byte[]{0,0,0,1,0};
-			var time = TimeStamp();
+				var hash = SHA256.Create();
+
+		var time = TimeStamp();
 			byte[] p = new byte[8];
 			p[0] = (byte)(time >> 56);
 			p[1] = (byte)(time >> 48);
@@ -535,35 +548,23 @@ namespace Alex.Services
 				
 				buffer.WriteByte(0);
 
-				using (BinaryWriter writer = new BinaryWriter(buffer, Encoding.UTF8))
+				//using (BinaryWriter writer = new BinaryWriter(buffer, Encoding.UTF8))
 				{
-					writer.Write("POST");
-					writer.Write((byte) 0);
+					buffer.Write(Encoding.UTF8.GetBytes("POST"));
+					buffer.WriteByte((byte) 0);
 					
-					writer.Write(request.RequestUri.PathAndQuery);
-					writer.Write((byte) 0);
-
-					//if (request.Headers.Authorization != null && request.Headers.Authorization.Parameter != null)
-					//{
-						//writer.Write((byte)0);
-					//}
-					//else
-					//{
-					//	writer.Write("");
-					//}
-
-					writer.Write((byte) 0);
+					buffer.Write(Encoding.UTF8.GetBytes(request.RequestUri.PathAndQuery));
+					buffer.WriteByte((byte) 0);
 					
-					writer.Write(body);
-					writer.Write((byte) 0);
+					buffer.WriteByte((byte) 0);
+					
+					buffer.Write(body);
+					buffer.WriteByte((byte) 0);
 				}
 
 				byte[] input = buffer.ToArray();
-				//input = hash.ComputeHash(input);
-				
-				//signer.BlockUpdate(input, 0, input.Length);
-				//signed = signer.GenerateSignature();
-				signed = EcDsa.SignHash(hash.ComputeHash(input));
+
+			signed = EcDsa.SignHash(hash.ComputeHash(input));
 			}
 
 			byte[] final;
@@ -589,10 +590,13 @@ namespace Alex.Services
 
 		private long TimeStamp()
 		{
-			return DateTime.UtcNow.ToFileTime();
+			//return DateTime.UtcNow.ToFileTime();
 			long unixTimestamp = (long)(DateTime.UtcNow.Subtract(new DateTime(1601, 1, 1))).TotalSeconds;
+			unixTimestamp += 11644473600;
+
+			unixTimestamp *= 10000000;
+			
 			return unixTimestamp;
-			//unixTimestamp += 11644473600;
 		}
 		
 		public static void SerializeJsonIntoStream(object value, Stream stream)
@@ -661,8 +665,10 @@ namespace Alex.Services
 				}
 
 				var userToken = await DoUserAuth(token.AccessToken);
-
-				var xsts = await DoXsts(null, null, userToken.Token);
+				var deviceAuth = await DoDeviceAuth(userToken.Token);
+				var titleAuth = await DoTitleAuth(deviceAuth, token.AccessToken);
+				
+				var xsts = await DoXsts(deviceAuth, titleAuth, userToken.Token);
 
 				return (await RequestMinecraftChain(xsts, MinecraftKeyPair), new BedrockTokenPair()
 				{
@@ -711,7 +717,7 @@ namespace Alex.Services
 			try
 			{
 				AccessTokens tokens = GetTokensUsingGET($"{this.RefreshUri}", new Dictionary<string, string> { 
-					{ "client_id", MSA_CLIENT_ID  },
+					{ "client_id", _clientId  },
 					{ "grant_type", "refresh_token" },
 					{ "scope", "service::user.auth.xboxlive.com::MBI_SSL" },
 					{ "redirect_uri", RedirectUri },
@@ -736,7 +742,7 @@ namespace Alex.Services
 		public async Task<MsaDeviceAuthConnectResponse> StartDeviceAuthConnect()
 		{
 			Request request = new Request("https://login.live.com/oauth20_connect.srf");
-			request.PostData["client_id"] = MSA_CLIENT_ID;
+			request.PostData["client_id"] = _clientId;
 			request.PostData["scope"] = "service::user.auth.xboxlive.com::MBI_SSL";
 			request.PostData["response_type"] = "device_code";
 
@@ -751,7 +757,7 @@ namespace Alex.Services
 		public async Task<MsaDeviceAuthPollState> DevicePollState(string deviceCode)
 		{
 			Request request = new Request("https://login.live.com/oauth20_token.srf");
-			request.PostData["client_id"] = MSA_CLIENT_ID;
+			request.PostData["client_id"] = _clientId;
 			request.PostData["device_code"] = deviceCode;
 			request.PostData["grant_type"] = "urn:ietf:params:oauth:grant-type:device_code";
 			//request.PostData["response_type"] = "device_code";
@@ -766,7 +772,7 @@ namespace Alex.Services
 		public async Task<MsaDeviceAuthConnectResponse> RequestToken(string scope)
 		{
 			Request request = new Request("https://login.live.com/oauth20_connect.srf");
-			request.PostData["client_id"] = MSA_CLIENT_ID;
+			request.PostData["client_id"] = _clientId;
 			request.PostData["scope"] = scope;
 			request.PostData["response_type"] = "token";
 
