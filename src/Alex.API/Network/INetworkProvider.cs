@@ -1,4 +1,5 @@
 ﻿using Alex.API.Entities;
+using Alex.API.Items;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using MiNET;
@@ -18,7 +19,7 @@ namespace Alex.API.Network
 		    McpeInventoryTransaction.ItemUseOnEntityAction action);
 
 	    void WorldInteraction(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition);
-	    void UseItem(int hand);
+	    void UseItem(IItem item, int hand);
 	    void HeldItemChanged(short slot);
 	    void Close();
     }

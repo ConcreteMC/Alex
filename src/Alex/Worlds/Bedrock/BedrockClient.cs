@@ -14,6 +14,7 @@ using Alex.API.Data.Options;
 using Alex.API.Entities;
 using Alex.API.Events;
 using Alex.API.Events.World;
+using Alex.API.Items;
 using Alex.API.Network;
 using Alex.API.Network.Bedrock;
 using Alex.API.Services;
@@ -41,6 +42,7 @@ using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
+using Item = Alex.Items.Item;
 using LevelInfo = MiNET.Worlds.LevelInfo;
 using NewtonsoftMapper = MiNET.NewtonsoftMapper;
 using Player = Alex.Entities.Player;
@@ -707,7 +709,7 @@ namespace Alex.Worlds.Bedrock
 		    var packet = McpeInventoryTransaction.CreateObject();
 		    packet.transaction = new ItemUseTransaction()
 		    {
-			    ActionType = McpeInventoryTransaction.ItemUseAction.Use,
+			    ActionType = McpeInventoryTransaction.ItemUseAction.Clickblock,
 			    ClickPosition =
 				    new System.Numerics.Vector3(cursorPosition.X, cursorPosition.Y, cursorPosition.Z),
 			  //  TransactionType = McpeInventoryTransaction.TransactionType.ItemUse,
@@ -732,14 +734,29 @@ namespace Alex.Worlds.Bedrock
 		  Session.SendPacket(packet);
 	    }
 
-	    public void UseItem(int hand)
-		{
-			Log.Warn("TODO: Implement UseItem");
+	    public void UseItem(IItem item, int hand)
+	    {
+		    if (!(item is Item itemInHand))
+			    return;
+		    
+		    var packet = McpeInventoryTransaction.CreateObject();
+		    packet.transaction = new ItemUseTransaction()
+		    {
+			    ActionType = McpeInventoryTransaction.ItemUseAction.Use
+		    };
+
+		    Session.SendPacket(packet);
+		    
+			//Log.Warn("TODO: Implement UseItem");
 		}
 
 		public void HeldItemChanged(short slot)
 		{
-			Log.Warn("TODO: Implement Held Item Changed");
+			McpeMobEquipment packet = McpeMobEquipment.CreateObject();
+			packet.selectedSlot = (byte) slot;
+			Session.SendPacket(packet);
+			
+			//Log.Warn("TODO: Implement Held Item Changed");
 		}
 
 		public void Close()

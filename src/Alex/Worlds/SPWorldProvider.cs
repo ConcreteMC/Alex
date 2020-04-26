@@ -9,6 +9,7 @@ using Alex.API.Data.Options;
 using Alex.API.Entities;
 using Alex.API.Events;
 using Alex.API.Events.World;
+using Alex.API.Items;
 using Alex.API.Network;
 using Alex.API.Services;
 using Alex.API.Utils;
@@ -56,7 +57,7 @@ namespace Alex.Worlds
 			
 		}
 
-		public void UseItem(int hand)
+		public void UseItem(IItem item, int hand)
 		{
 			
 		}

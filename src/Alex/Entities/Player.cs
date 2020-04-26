@@ -80,6 +80,7 @@ namespace Alex.Entities
 	    private double _destroyTimeNeeded = 0;
 	    private BlockFace _destroyingFace;
 
+	    private int PreviousSlot { get; set; } = 9;
 	    public override void Update(IUpdateArgs args)
 		{
 			ChunkCoordinates oldChunkCoordinates = new ChunkCoordinates(base.KnownPosition);
@@ -175,6 +176,12 @@ namespace Alex.Entities
 			else if (_destroyingBlock)
 			{
 				StopBreakingBlock();
+			}
+
+			if (PreviousSlot != Inventory.SelectedSlot)
+			{
+				Network?.HeldItemChanged((short) Inventory.SelectedSlot);
+				PreviousSlot = Inventory.SelectedSlot;
 			}
 
 			base.Update(args);
@@ -350,7 +357,7 @@ namespace Alex.Entities
                 }
                 else if (blockState == null)
                 {
-                    Network?.UseItem(hand);
+                    Network?.UseItem(slot, hand);
                     Log.Debug($"Used item!");
 
 	                return true;

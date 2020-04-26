@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net.Sockets;
 using Alex.API.Entities;
+using Alex.API.Items;
 using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.Networking.Java;
@@ -127,7 +128,7 @@ namespace Alex.Worlds.Java
 			throw new NotImplementedException();
 		}
 
-		public void UseItem(int hand)
+		public void UseItem(IItem item, int hand)
 		{
 			SendPacket(new UseItemPacket()
 			{
