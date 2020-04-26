@@ -7,6 +7,7 @@
 			Solid = false;
 			Transparent = true;
 
+			LightOpacity = 2;
 			//BlockModel = new LiquidBlockModel()
 			//{
 			//	IsFlowing = true,

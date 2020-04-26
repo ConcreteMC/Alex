@@ -8,5 +8,25 @@ namespace Alex.Blocks.Minecraft
 			Transparent = false;
 			IsReplacible = false;
 		}
+
+		public override int LightValue
+		{
+			get
+			{
+				if (BlockState.TryGetValue("lit", out string lit))
+				{
+					if (lit == "true")
+					{
+						return 15;
+					}
+				}
+
+				return 0;
+			}
+			set
+			{
+				
+			}
+		}
 	}
 }

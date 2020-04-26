@@ -179,31 +179,36 @@ namespace Alex.Graphics.Models.Blocks
 			return new VertexPositionNormalTextureColor[0];
 		}
 
-		protected byte GetLight(IWorld world, Vector3 position, bool smooth = false)
+		protected byte GetLight(IWorld world, Vector3 blockPosition, Vector3 facePosition, bool smooth = false)
 		{
-			byte skyLight = world.GetSkyLight(position);
-			byte blockLight = world.GetBlockLight(position);
-			if (!smooth || blockLight + skyLight > 0)
+			var faceBlock = world.GetBlock(facePosition);
+			
+			byte skyLight = world.GetSkyLight(facePosition);
+			byte blockLight = world.GetBlockLight(facePosition);
+
+			if (skyLight == 15 || blockLight == 15)
+				return 15;
+			
+			if (!smooth && !faceBlock.Transparent && !(skyLight > 0 || blockLight > 0))
 		    {
 			    return (byte)Math.Min(blockLight + skyLight, 15);
 			}
+
+
 			Vector3 lightOffset = Vector3.Zero;
 
-		    bool initial = true;
-
-		    byte highestBlocklight = 0;
-		    byte highestSkylight = 0;
+			byte highestBlocklight = blockLight;
+		    byte highestSkylight = skyLight;
 		    bool lightFound = false;
 		    for(int i = 0; i < 6; i++)
 		    {
 			    switch (i)
 			    {
 					case 0:
-						lightOffset = Vector3.Zero;
+						lightOffset = Vector3.Up;
 						break;
 					case 1:
-						initial = false;
-						lightOffset = Vector3.Up;
+						lightOffset = Vector3.Down;
 						break;
 					case 2:
 						lightOffset = Vector3.Forward;
@@ -217,20 +222,12 @@ namespace Alex.Graphics.Models.Blocks
 					case 5:
 						lightOffset = Vector3.Right;
 						break;
-					case 6:
-						lightOffset = Vector3.Down;
-						break;
 			    }
 
-			    skyLight = world.GetSkyLight(position + lightOffset);
-			    blockLight = world.GetBlockLight(position + lightOffset);
-			    if (initial && (blockLight > 0 || skyLight > 0))
-			    {
-				    lightFound = true;
-
-					break;
-			    }
-				else if (skyLight > 0 || blockLight > 0)
+			    skyLight = world.GetSkyLight(facePosition + lightOffset);
+			    blockLight = world.GetBlockLight(facePosition + lightOffset);
+			    
+				if (skyLight > 0 || blockLight > 0)
 			    {
 				    if (skyLight > 0)
 				    {
@@ -258,7 +255,7 @@ namespace Alex.Graphics.Models.Blocks
 			    }
 		    }
 
-		    return (byte)Math.Min(blockLight + skyLight, 15);
+		    return (byte)Math.Min(Math.Max(0, blockLight + skyLight), 15);
 	    }
 		
 	    protected UVMap GetTextureUVMap(ResourceManager resources, string texture, float x1, float x2, float y1, float y2, int rot, Color color)

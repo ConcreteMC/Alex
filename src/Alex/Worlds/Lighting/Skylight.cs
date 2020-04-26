@@ -567,7 +567,7 @@ namespace Alex.Worlds
 			if (chunk == null) return true;
 
 			var b = chunk.GetBlock(blockCoordinates.X & 0x0f, blockCoordinates.Y & 0xff, blockCoordinates.Z & 0x0f);
-			return b is Air || (b.Transparent && !(b is Leaves));
+			return b is Air || !b.BlockMaterial.BlocksLight();// (b.Transparent && !(b is Leaves));
 			//	int bid = chunk.GetBlockId(blockCoordinates.X & 0x0f, blockCoordinates.Y & 0xff, blockCoordinates.Z & 0x0f);
 			//	return bid == 0 || (BlockFactory.TransparentBlocks[bid] == 1 && bid != 18 && bid != 161 && bid != 30 && bid != 8 && bid != 9);
 		}

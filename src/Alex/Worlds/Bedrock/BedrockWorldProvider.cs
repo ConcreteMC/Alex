@@ -208,14 +208,22 @@ namespace Alex.Worlds.Bedrock
 				var percentage = 0;
 				var statusChanged = false;
 				var done = false;
+				int previousPercentage = 0;
 				while (true)
 				{
 					double radiusSquared = Math.Pow(Client.ChunkRadius, 2);
 					var target = radiusSquared;
 					
-					percentage = (int)(ChunksReceived / target) * 100;
-					progressReport(LoadingState.LoadingChunks, percentage);
-
+					percentage = (int)((100 / target) * ChunksReceived);
+					
+					if (percentage != previousPercentage)
+					{
+						progressReport(LoadingState.LoadingChunks, percentage);
+						previousPercentage = percentage;
+						
+						Log.Info($"Progress: {percentage} ({ChunksReceived} of {target})");
+					}
+					
 					if (!statusChanged)
 					{
 						if (Client.PlayerStatusChanged.WaitOne(50))
@@ -267,6 +275,8 @@ namespace Alex.Worlds.Bedrock
 		[EventHandler(EventPriority.Monitor)]
 		private void OnChunkReceived(ChunkReceivedEvent e)
 		{
+			e.SetCancelled(false);
+			
 			ChunksReceived++;
 			_loadedChunks.TryAdd(e.Coordinates);
 		}

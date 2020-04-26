@@ -1167,8 +1167,8 @@ namespace Alex.Worlds
 		        var blockCoords = new BlockCoordinates(x, y, z);
 
 		        bool isScheduled = section.IsScheduled(x, y, z);
-		        bool isLightScheduled = section.IsLightingScheduled(x, y, z);
-		        bool blockLightScheduled = section.IsBlockLightScheduled(x, y, z);
+		        bool isLightScheduled = false;//section.IsLightingScheduled(x, y, z);
+		     //   bool blockLightScheduled = section.IsBlockLightScheduled(x, y, z);
 		        var neighborsScheduled = HasScheduledNeighbors(world, blockPosition);
 		        var isBorderBlock = (scheduled == ScheduleType.Border && ((x == 0 || x == 15) || (z == 0 || z == 15)));
 

@@ -19,6 +19,8 @@ namespace Alex.Blocks.Minecraft
 			IsSourceBlock = true;
 			Animated = true;
 			BlockMaterial = Material.Water;
+
+			LightOpacity = 3;
 		}
 
 		/*public override void BlockPlaced(IWorld world, BlockCoordinates position)

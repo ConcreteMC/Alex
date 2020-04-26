@@ -43,7 +43,7 @@ namespace Alex.Blocks.Minecraft
 		}
 
 		public double AmbientOcclusionLightValue { get; set; } = 1.0;
-	    public int LightValue { get; set; } = 0;
+	    public virtual int LightValue { get; set; } = 0;
 	    public int LightOpacity { get; set; } = 1;
 
 		//public BlockModel BlockModel { get; set; }

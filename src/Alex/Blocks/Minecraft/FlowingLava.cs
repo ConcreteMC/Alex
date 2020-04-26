@@ -9,6 +9,7 @@
 			
 			BlockMaterial = Material.Lava;
 
+			LightValue = 15;
 			//BlockModel = new LiquidBlockModel()
 			//{
 			//	IsFlowing = true,

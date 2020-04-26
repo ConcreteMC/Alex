@@ -600,8 +600,8 @@ namespace Alex.Graphics.Models.Blocks
 							faceColor = AdjustColor(faceColor, facing,
 								world == null
 									? 15
-									: (GetLight(world, position + facing.GetVector3(),
-										true)), element.Shade);
+									: (GetLight(world, position, position + facing.GetVector3(),
+										baseBlock.Transparent || !baseBlock.Solid)), element.Shade);
 						}
 
 						//if (facing == BlockFace.North)

@@ -9,6 +9,8 @@ namespace Alex.Blocks.Minecraft
 			IsReplacible = false;
 			IsFullCube = true;
 			
+			LightOpacity = 4;
+			
 			BlockMaterial = Material.Ice;
 		}
 	}

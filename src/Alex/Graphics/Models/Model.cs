@@ -156,7 +156,8 @@ namespace Alex.Graphics.Models
 			    }
 		    }
 
-		    var light = LightColor.ToVector3() * CubeBrightness[lighting];
+		    var lightColor = LightColor;
+		    var light = lightColor.ToVector3() * CubeBrightness[lighting];
 		    return new Color(brightness * (color.ToVector3() * light));
 	    }
 

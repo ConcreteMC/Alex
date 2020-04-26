@@ -492,7 +492,7 @@ namespace Alex.Worlds
 		private void UpdateNeighbors(int x, int y, int z)
 		{
 			var source = new BlockCoordinates(x, y, z);
-			//new SkyLightCalculations().Calculate(this, source);
+			new SkyLightCalculations().Calculate(this, source);
 			
 			
 			ScheduleBlockUpdate(source, new BlockCoordinates(x + 1, y, z));
