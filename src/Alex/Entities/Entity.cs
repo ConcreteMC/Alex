@@ -12,8 +12,13 @@ using Alex.Graphics.Models.Items;
 using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
+using MiNET.Utils;
 using NLog;
+using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
+using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
 using MathF = System.MathF;
+using PlayerLocation = Alex.API.Utils.PlayerLocation;
+using UUID = Alex.API.Utils.UUID;
 
 namespace Alex.Entities
 {
@@ -65,7 +70,7 @@ namespace Alex.Entities
 		public bool Invulnerable { get; set; } = false;
 
 		public long Age { get; set; }
-		public double Scale { get; set; } = 1.0;
+		public float Scale { get; set; } = 1.0f;
 		public double Height { get; set; } = 1;
 		public double Width { get; set; } = 1;
 		public double Length { get; set; } = 1;
@@ -250,6 +255,59 @@ namespace Alex.Entities
 
 		public bool RenderEntity { get; set; } = true;
 		public bool ShowItemInHand { get; set; } = false;
+
+		public void HandleMetadata(MetadataDictionary metadata)
+		{
+			foreach (var meta in metadata._entries)
+			{
+				switch ((MiNET.Entities.Entity.MetadataFlags) meta.Key)
+				{
+					case MiNET.Entities.Entity.MetadataFlags.CollisionBoxHeight:
+					{
+						if (meta.Value is MetadataFloat flt)
+						{
+							Height = flt.Value;
+						}
+					} break;
+					case MiNET.Entities.Entity.MetadataFlags.CollisionBoxWidth:
+					{
+						if (meta.Value is MetadataFloat fltw)
+						{
+							Width = fltw.Value;
+						}
+					} break;
+					case MiNET.Entities.Entity.MetadataFlags.Scale:
+					{
+						if (meta.Value is MetadataFloat flt)
+						{
+							Scale = flt.Value;
+							Log.Info($"Received scale: {flt.Value}");
+						}
+					} break;
+					case MiNET.Entities.Entity.MetadataFlags.EntityFlags:
+					{
+						if (meta.Value is MetadataLong lng)
+						{
+							BitArray bits = new BitArray(BitConverter.GetBytes(lng.Value));
+							IsInvisible = bits[(int) MiNET.Entities.Entity.DataFlags.Invisible];
+						}
+					}
+						break;
+					case MiNET.Entities.Entity.MetadataFlags.NameTag:
+					{
+						if (meta.Value is MetadataString nametag)
+						{
+							NameTag = nametag.Value;
+						}
+					}
+						break;
+					default:
+						Log.Debug($"Unknown flag: {(MiNET.Entities.Entity.MetadataFlags) meta.Key}");
+						break;
+				}
+			}
+		}
+		
 		public virtual void Render(IRenderArgs renderArgs)
 		{
 			if (RenderEntity || ShowItemInHand)
@@ -269,6 +327,7 @@ namespace Alex.Entities
 
 			if (RenderEntity || ShowItemInHand)
 			{
+				ModelRenderer.Scale = Scale;
 				ModelRenderer.Update(args, KnownPosition);
 				
 				if (ShowItemInHand)
@@ -469,7 +528,7 @@ namespace Alex.Entities
 
 			if (RenderEntity && ModelRenderer != null && ModelRenderer.Valid && !IsInvisible && !ModelRenderer.Texture.IsFullyTransparent)
 			{
-				posOffset.Y += (float) Height;
+				posOffset.Y += (float) (Height * Scale);
 			}
 
 			var cameraPosition = new Vector3(renderArgs.Camera.Position.X, 0, renderArgs.Camera.Position.Z);

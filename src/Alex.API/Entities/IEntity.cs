@@ -1,7 +1,9 @@
 ﻿using System;
 using Alex.API.Graphics;
-using Alex.API.Utils;
-using Microsoft.Xna.Framework;
+using MiNET.Utils;
+using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
+using PlayerLocation = Alex.API.Utils.PlayerLocation;
+using UUID = Alex.API.Utils.UUID;
 
 namespace Alex.API.Entities
 {
@@ -21,7 +23,7 @@ namespace Alex.API.Entities
 		bool IsCollidingWithWorld { get; set; }
 		
 		long Age { get; set; }
-		double Scale { get; set; }
+		float Scale { get; set; }
 
 		BoundingBox GetBoundingBox();
 
@@ -32,5 +34,7 @@ namespace Alex.API.Entities
 		void RenderNametag(IRenderArgs renderArgs);
 		
 		float PositionOffset { get; set; }
+
+		void HandleMetadata(MetadataDictionary metadata);
 	}
 }

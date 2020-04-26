@@ -22,7 +22,22 @@ namespace Alex.Graphics.Models.Entity.Geometry
         private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
         
         [JsonProperty("bones")]
-        public Bone[] Bones { get; set; }
+        public List<Bone> Bones { get; set; }
+        
+        [JsonProperty("texturewidth", NullValueHandling = NullValueHandling.Ignore)]
+        public int? TextureWidth { get; set; } = null;
+        
+        [JsonProperty("textureheight", NullValueHandling = NullValueHandling.Ignore)]
+        public int? TextureHeight { get; set; } = null;
+        
+        [JsonProperty("visible_bounds_width", NullValueHandling = NullValueHandling.Ignore)]
+        public float? VisibleBoundsWidth { get; set; } = null;
+        
+        [JsonProperty("visible_bounds_height", NullValueHandling = NullValueHandling.Ignore)]
+        public float? VisibleBoundsHeight { get; set; } = null;
+
+        [JsonProperty("visible_bounds_offset", NullValueHandling = NullValueHandling.Ignore)]
+        public Vector3 VisibleBoundsOffset { get; set; } = Vector3.Zero;
 
         [JsonProperty("description")]
         public SkinDescription Description { get; set; }
@@ -36,6 +51,16 @@ namespace Alex.Graphics.Models.Entity.Geometry
             model.Name = Description.Identifier;
             model.Textureheight = Description.TextureHeight;
             model.Texturewidth = Description.TextureWidth;
+
+            var scale = Vector3.One;
+
+            if (VisibleBoundsHeight.HasValue && VisibleBoundsWidth.HasValue)
+            {
+              /*  scale.X = 0.0625F * VisibleBoundsWidth.Value;
+                scale.Z = 0.0625F * VisibleBoundsWidth.Value;
+                
+                scale.Y = 0.0625F * VisibleBoundsHeight.Value;*/
+            }
             
             Dictionary<string, EntityModelBone> bones = new Dictionary<string, EntityModelBone>();
             foreach (var bone in Bones)
@@ -57,7 +82,7 @@ namespace Alex.Graphics.Models.Entity.Geometry
                 newBone.Parent = bone.Parent;
                 newBone.Name = bone.Name;
                 newBone.Pivot = bone.Pivot;
-                newBone.Rotation = bone.Rotation;
+                newBone.Rotation = new Vector3(bone.Rotation.X, bone.Rotation.Y, bone.Rotation.Z);
 
                 if (bone.Cubes == null)
                 {
@@ -68,9 +93,10 @@ namespace Alex.Graphics.Models.Entity.Geometry
                     newBone.Cubes = bone.Cubes.Select(x => new EntityModelCube()
                     {
                         Mirror = x.Mirror,
-                        Origin = x.Origin,
-                        Size = x.Size,
-                        Uv = x.Uv
+                        Origin = x.Origin * scale,
+                        Size = x.Size * scale,
+                        Uv = x.Uv,
+                        Inflate = x.Inflate
                     }).ToArray();
                 }
 
@@ -88,6 +114,12 @@ namespace Alex.Graphics.Models.Entity.Geometry
         [JsonProperty("name")]
         public string Name { get; set; }
 
+        [JsonProperty("neverRender", NullValueHandling = NullValueHandling.Ignore)]
+        public bool NeverRender { get; set; } = false;
+        
+        [JsonProperty("reset", NullValueHandling = NullValueHandling.Ignore)]
+        public bool Reset { get; set; } = false;
+        
         [JsonProperty("parent", NullValueHandling = NullValueHandling.Ignore)]
         public string Parent { get; set; }
 
@@ -109,8 +141,7 @@ namespace Alex.Graphics.Models.Entity.Geometry
 
     public partial class Cube
     {
-        [JsonProperty("inflate")]
-        public double Inflate { get; set; }
+        [JsonProperty("inflate", NullValueHandling = NullValueHandling.Ignore)] public double Inflate { get; set; } = 1d;
 
         [JsonProperty("mirror")]
         public bool Mirror { get; set; }

@@ -19,5 +19,8 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 
 	    [J("mirror", NullValueHandling = N.Ignore)]
 	    public bool? Mirror { get; set; }
+
+	    [J("inflate", NullValueHandling = N.Ignore)]
+	    public double Inflate { get; set; } = 1;
     }
 }

@@ -76,7 +76,9 @@ namespace Alex.Graphics.Models.Entity
 					Log.Warn("Bone null");
 					continue;
 				}
-			//	if (bone.NeverRender) continue;
+				
+				if (bone.NeverRender) continue;
+				
 				bool partOfHead = false;
 
 				//bone.Pivot = new Vector3(-bone.Pivot.X, bone.Pivot.Y, bone.Pivot.Z);
@@ -194,7 +196,7 @@ namespace Alex.Graphics.Models.Entity
 				foreach (var bone in model.Bones)
 				{
 					if (bone == headBone) continue;
-					if (bone.Parent.Equals(headBone.Name))
+					if (bone.Parent != null && bone.Parent.Equals(headBone.Name))
 					{
 						headBones.Add(bone);
 					}
@@ -222,7 +224,7 @@ namespace Alex.Graphics.Models.Entity
 			
 			foreach (var bone in model.Bones)
 			{
-				if (bone == null) continue;
+				if (bone == null || bone.NeverRender) continue;
 			//	if (bone.NeverRender) continue;
 				bool partOfHead = headBones.Contains(bone);
 
@@ -246,7 +248,7 @@ namespace Alex.Graphics.Models.Entity
 						var rotation = bone.Rotation;
 
 						//VertexPositionNormalTexture[] vertices;
-						Cube built = new Cube(size, textureSize);
+						Cube built = new Cube(size * (float)cube.Inflate, textureSize);
 						built.Mirrored = bone.Mirror;
 						built.BuildCube(cube.Uv * uvScale);
 
@@ -345,11 +347,13 @@ namespace Alex.Graphics.Models.Entity
 
 		public Vector3 DiffuseColor { get; set; } = Color.White.ToVector3();
 		private Matrix CharacterMatrix { get; set; } = Matrix.Identity;
+		public float Scale { get; set; } = 1f;
+
 		public virtual void Update(IUpdateArgs args, PlayerLocation position)
 		{
 			if (Bones == null) return;
 
-			CharacterMatrix = Matrix.CreateScale(1 / 16f) *
+			CharacterMatrix = Matrix.CreateScale(Scale / 16f) *
 			                         Matrix.CreateRotationY(MathUtils.ToRadians((180f - position.Yaw))) *
 			                         Matrix.CreateTranslation(position);
 
