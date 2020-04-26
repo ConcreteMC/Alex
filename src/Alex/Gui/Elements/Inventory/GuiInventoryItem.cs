@@ -53,19 +53,20 @@ namespace Alex.Gui.Elements.Inventory
 			}
 		}
 
+		private GuiItemRenderer ItemRenderer { get; }
 		public GuiInventoryItem()
 		{
 			Height = 18;
 			Width = 18;
 
-			AddChild(Texture = new GuiTextureElement()
+			/*AddChild(Texture = new GuiTextureElement()
 			{
 				Anchor = Alignment.TopLeft,
 
 				Height = 16,
 				Width = 16,
 				Margin = new Thickness(4, 4)
-			});
+			});*/
 
 			AddChild(_counTextElement = new GuiTextElement()
 			{
@@ -74,6 +75,16 @@ namespace Alex.Gui.Elements.Inventory
 				Text = "",
 				Scale = 0.75f,
 				Margin = new Thickness(0, 0, 5, 3)
+			});
+			
+			AddChild(ItemRenderer = new GuiItemRenderer()
+			{
+				Anchor = Alignment.TopLeft,
+
+				Height = 16,
+				Width = 16,
+				Margin = new Thickness(4, 4),
+				Item = _item?.Clone()
 			});
 		}
 
@@ -90,7 +101,7 @@ namespace Alex.Gui.Elements.Inventory
 				if (ItemFactory.ResolveItemTexture(newName, out Texture2D texture))
 				{
 
-					Texture.Texture = texture;
+					//Texture.Texture = texture;
 				}
 				else
 				{
@@ -99,7 +110,7 @@ namespace Alex.Gui.Elements.Inventory
 			}
 			else
 			{
-				Texture.Texture = null;
+				//Texture.Texture = null;
 			}
 		}
 
@@ -108,6 +119,8 @@ namespace Alex.Gui.Elements.Inventory
 			if (newValue != null)
 			{
 				NameChanged(newValue.Name);
+
+				ItemRenderer.Item = newValue.Clone();
 			}
 			
 			if (_counTextElement != null)

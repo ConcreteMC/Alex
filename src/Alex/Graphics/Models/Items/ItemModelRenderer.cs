@@ -33,6 +33,8 @@ namespace Alex.Graphics.Models.Items
 		void Update(GraphicsDevice device, ICamera camera);
 
 		void Cache(McResourcePack pack);
+
+		IItemRenderer Clone();
 	}
 	
 	public class ItemBlockModelRenderer : ItemModelRenderer<VertexPositionNormalTextureColor>
@@ -83,6 +85,11 @@ namespace Alex.Graphics.Models.Items
 			Effect.World = Matrix.CreateScale(scale) * ParentMatrix;
 			
 			base.Update(device, camera);
+		}
+
+		public override IItemRenderer Clone()
+		{
+			return new ItemBlockModelRenderer(_block, Model, null, _resource);
 		}
 	}
 
@@ -239,6 +246,15 @@ namespace Alex.Graphics.Models.Items
 
 			return vertices;
 		}
+
+		public override IItemRenderer Clone()
+		{
+			return new ItemModelRenderer(Model, null)
+			{
+				Vertices = Vertices.ToArray(),
+				Indexes = Indexes.ToArray()
+			};
+		}
 	}
 	
     public class ItemModelRenderer<TVertice> : Model, IAttachable, IItemRenderer where TVertice : struct, IVertexType
@@ -333,6 +349,11 @@ namespace Alex.Graphics.Models.Items
 		    
 		  
 			//Buffer = GpuResourceManager.GetBuffer(this, )
+	    }
+
+	    public virtual IItemRenderer Clone()
+	    {
+		    return new ItemModelRenderer<TVertice>(Model, null, _declaration);
 	    }
     }
 
