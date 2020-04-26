@@ -524,15 +524,6 @@ namespace Alex.Worlds
 			{
 				ScheduleChunkUpdate(position, ScheduleType.Full, true);
 
-				if (chunk is ChunkColumn cc)
-				{
-					var chunkpos = new BlockCoordinates(cc.X * 16, 0, cc.Z * 16);
-					foreach (var ls in cc.GetLightSources())
-					{
-						BlockLightCalculations.Enqueue(chunkpos + ls);
-					}
-				}
-
 				ScheduleChunkUpdate(new ChunkCoordinates(position.X + 1, position.Z), ScheduleType.Border);
 				ScheduleChunkUpdate(new ChunkCoordinates(position.X - 1, position.Z), ScheduleType.Border);
 				ScheduleChunkUpdate(new ChunkCoordinates(position.X, position.Z + 1), ScheduleType.Border);
@@ -677,13 +668,13 @@ namespace Alex.Worlds
                 List<ChunkData> orderedList = new List<ChunkData>();
                 foreach (var c in renderedChunks)
                 {
-	              /*  if (BlockLightCalculations.HasEnqueued(c.Key) && !Enqueued.Contains(c.Key) && !_workItems.ContainsKey(c.Key))
+	                if (BlockLightCalculations.HasEnqueued(c.Key) && !Enqueued.Contains(c.Key) && !_workItems.ContainsKey(c.Key))
 	                {
 		                if (c.Value.Scheduled == ScheduleType.Unscheduled)
 		                {
 			                ScheduleChunkUpdate(c.Key, ScheduleType.Lighting);
 		                }
-	                }*/
+	                }
 	                
 	                if (_chunkData.TryGetValue(c.Key, out var data))
 	                {
@@ -857,6 +848,15 @@ namespace Alex.Worlds
 			    if (!_workItems.ContainsKey(position) &&
 			        !Enqueued.Contains(position) && Enqueued.TryAdd(position))
 			    {
+				    if (chunk is ChunkColumn cc)
+				    {
+					    var chunkpos = new BlockCoordinates(cc.X * 16, 0, cc.Z * 16);
+					    foreach (var ls in cc.GetLightSources())
+					    {
+						    BlockLightCalculations.Enqueue(chunkpos + ls);
+					    }
+				    }
+				    
 				    chunk.Scheduled = type;
 				    
 				    PriorityQueue.Enqueue(position, Math.Abs(new ChunkCoordinates(_cameraPosition).DistanceTo(position)));

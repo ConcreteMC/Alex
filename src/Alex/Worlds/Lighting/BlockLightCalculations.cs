@@ -182,6 +182,7 @@ namespace Alex.Worlds.Lighting
 						}
 
 						Enqueue(coord);
+						Enqueue(newCoord);
 
 						return true;
 					}
@@ -219,7 +220,11 @@ namespace Alex.Worlds.Lighting
 			{
 				currentBlockLight = (byte) (lightLevel - 1);
 				chunk.SetBlocklight(coordinates.X & 0x0f, coordinates.Y & 0xff, coordinates.Z & 0x0f, (byte) currentBlockLight);
-				lightBfsQueue.Enqueue(coordinates);
+
+				if (!lightBfsQueue.Contains(coordinates))
+				{
+					lightBfsQueue.Enqueue(coordinates);
+				}
 			}
 		}
 
