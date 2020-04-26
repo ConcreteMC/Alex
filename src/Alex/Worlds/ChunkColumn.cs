@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Alex.API.Blocks;
 using Alex.API.Blocks.State;
 using Alex.API.Graphics;
+using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.Storage;
@@ -53,7 +54,8 @@ namespace Alex.Worlds
 		public bool NeedSave = false;
 		public bool IsDirty { get; set; }
 		public bool SkyLightDirty { get; set; }
-
+		public bool BlockLightDirty { get; set; }
+		
         public IChunkSection[] Sections { get; set; } = new ChunkSection[16];
 		public int[] BiomeId = ArrayOf<int>.Create(256, 1);
 		public short[] Height = new short[256];
@@ -71,13 +73,32 @@ namespace Alex.Worlds
 		{
 			IsDirty = true;
 			SkyLightDirty = true;
-
+			BlockLightDirty = true;
+			
 			for (int i = 0; i < Sections.Length; i++)
 			{
 				//var b = new ExtendedBlockStorage(i, true);
 				Sections[i] = null;
 			}
 		}
+
+        public IEnumerable<BlockCoordinates> GetLightSources()
+        {
+	        for (int i = 0; i < Sections.Length; i++)
+	        {
+		        var section = Sections[i];
+		        if (section == null)
+			        continue;
+
+		        if (section is ChunkSection cs)
+		        {
+			        foreach (var ls in cs.LightSources)
+			        {
+				        yield return new BlockCoordinates(ls.X, (i * 16) + ls.Y, ls.Z);
+			        }
+		        }
+	        }
+        }
 
 		private void SetDirty()
 		{
@@ -309,6 +330,7 @@ namespace Alex.Worlds
 				return;
 
 			GetSection(by).SetBlocklight(bx, by - ((@by >> 4) << 4), bz, data);
+			BlockLightDirty = true;
 			
 			//_scheduledLightingUpdates[by << 8 | bz << 4 | bx] = true;
 			var section = (ChunkSection)Sections[by >> 4];

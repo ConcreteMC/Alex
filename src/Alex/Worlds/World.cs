@@ -403,14 +403,14 @@ namespace Alex.Worlds
 
         public byte GetBlockLight(int x, int y, int z)
         {
-            if (y < 0 || y > ChunkColumn.ChunkHeight) return 15;
+            if (y < 0 || y > ChunkColumn.ChunkHeight) return 0;
 
 			IChunkColumn chunk;
 	        if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 	        {
                 return chunk.GetBlocklight(x & 0xf, y & 0xff, z & 0xf);
             }
-            return 15;
+            return 0;
         }
 
 		public IBlock GetBlock(BlockCoordinates position)

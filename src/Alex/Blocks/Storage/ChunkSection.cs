@@ -10,6 +10,7 @@ using Alex.Networking.Java.Util;
 using Alex.ResourcePackLib.Json;
 using Alex.Utils;
 using Alex.Worlds;
+using Alex.Worlds.Lighting;
 using Microsoft.Xna.Framework;
 using NLog;
 using BitArray = Alex.API.Utils.BitArray;
@@ -33,7 +34,10 @@ namespace Alex.Blocks.Storage
         public System.Collections.BitArray SolidBlocks;
         public System.Collections.BitArray ScheduledUpdates;
         public System.Collections.BitArray ScheduledSkylightUpdates;
+        public System.Collections.BitArray ScheduledBlocklightUpdates;
         public System.Collections.BitArray RenderedBlocks;
+        
+        public List<BlockCoordinates> LightSources { get; } = new List<BlockCoordinates>();
 
         public bool SolidBorder { get; private set; } = false;
 		private bool[] FaceSolidity { get; set; } = new bool[6];
@@ -70,8 +74,9 @@ namespace Alex.Blocks.Storage
 		    SolidBlocks = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8]);
 		    ScheduledUpdates = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8]);
 		    ScheduledSkylightUpdates = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8]);
+		    ScheduledBlocklightUpdates = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8]);
             RenderedBlocks = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8]);
-
+		
             for (int i = 0; i < TransparentBlocks.Length; i++)
 			{
 				TransparentBlocks[i] = true;
@@ -113,17 +118,30 @@ namespace Alex.Blocks.Storage
             ScheduledUpdates.Set(GetCoordinateIndex(x,y,z), value);
 		}
 
+		public bool IsBlockLightScheduled(int x, int y, int z)
+		{
+			return ScheduledBlocklightUpdates.Get(GetCoordinateIndex(x, y, z));
+		}
+
+		public void SetBlockLightScheduled(int x, int y, int z, bool value)
+		{
+			ScheduledBlocklightUpdates.Set(GetCoordinateIndex(x, y, z), value);
+		}
+
 		public bool IsLightingScheduled(int x, int y, int z)
 		{
 		    return
 		        ScheduledSkylightUpdates.Get(GetCoordinateIndex(x, y,
-		            z));
+		            z)) || ScheduledBlocklightUpdates.Get(GetCoordinateIndex(x,y,z));
 		}
 
 		public bool SetLightingScheduled(int x, int y, int z, bool value)
 		{
 		    ScheduledSkylightUpdates.Set(GetCoordinateIndex(x, y, z),
 		        value);
+		    
+		    ScheduledBlocklightUpdates.Set(GetCoordinateIndex(x, y, z),
+			    value);
 
 		    return value;
 		}
@@ -159,6 +177,8 @@ namespace Alex.Blocks.Storage
 			if (storage > _blockStorages.Length)
 				throw new IndexOutOfRangeException($"The storage id {storage} does not exist!");
 			
+			var blockCoordinates = new BlockCoordinates(x, y, z);
+			
 			if (state == null)
 			{
 				Log.Warn($"State == null");
@@ -169,6 +189,21 @@ namespace Alex.Blocks.Storage
 
 			if (storage == 0)
 			{
+				if (state.Block.LightValue > 0)
+				{
+					if (!LightSources.Contains(blockCoordinates))
+					{
+						LightSources.Add(blockCoordinates);
+					}
+
+					SetBlocklight(x,y,z, (byte) state.Block.LightValue);
+				}
+				else
+				{
+					if (LightSources.Contains(blockCoordinates))
+						LightSources.Remove(blockCoordinates);
+				}
+				
 				IBlockState iblockstate = this.Get(x, y, z, storage);
 				if (iblockstate != null)
 				{
@@ -267,7 +302,16 @@ namespace Alex.Blocks.Storage
 		
 		public void SetBlocklight(int x, int y, int z, byte value)
 		{
-			this.BlockLight[GetCoordinateIndex(x,y,z)] = value;
+			var idx = GetCoordinateIndex(x, y, z);
+			
+			var oldBlocklight = this.BlockLight[idx];
+			if (oldBlocklight != value)
+			{
+				this.BlockLight[idx] = value;
+				ScheduledBlocklightUpdates.Set(idx, true);
+
+				Owner.BlockLightDirty = true;
+			}
 		}
 		
 		public int GetBlocklight(int x, int y, int z)

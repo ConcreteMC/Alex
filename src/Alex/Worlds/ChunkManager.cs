@@ -18,6 +18,7 @@ using Alex.Blocks.Storage;
 using Alex.Graphics.Models.Blocks;
 using Alex.Services;
 using Alex.Utils;
+using Alex.Worlds.Lighting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -76,6 +77,8 @@ namespace Alex.Worlds
        // private PrioritizedActionQueue ActionQueue { get; set; }
        private Utils.Queue.ConcurrentPriorityQueue<ChunkCoordinates, double> PriorityQueue { get; } =
 	       new Utils.Queue.ConcurrentPriorityQueue<ChunkCoordinates, double>();
+       
+		private BlockLightCalculations BlockLightCalculations { get; }
         public ChunkManager(IServiceProvider serviceProvider, GraphicsDevice graphics, IWorld world)
         {
 	        _depthMap = new RenderTarget2D(graphics, 512, 512, false, SurfaceFormat.Color, DepthFormat.None);
@@ -176,7 +179,7 @@ namespace Alex.Worlds
 	        };
 	        
 	        HighestPriority = new ConcurrentQueue<ChunkCoordinates>();
-	        
+	        BlockLightCalculations = new BlockLightCalculations((World) world);
 	       // ActionQueue = new PrioritizedActionQueue(_threadPool, Options.VideoOptions.ChunkThreads);
         }
 
@@ -521,6 +524,15 @@ namespace Alex.Worlds
 			{
 				ScheduleChunkUpdate(position, ScheduleType.Full, true);
 
+				if (chunk is ChunkColumn cc)
+				{
+					var chunkpos = new BlockCoordinates(cc.X * 16, 0, cc.Z * 16);
+					foreach (var ls in cc.GetLightSources())
+					{
+						BlockLightCalculations.Enqueue(chunkpos + ls);
+					}
+				}
+
 				ScheduleChunkUpdate(new ChunkCoordinates(position.X + 1, position.Z), ScheduleType.Border);
 				ScheduleChunkUpdate(new ChunkCoordinates(position.X - 1, position.Z), ScheduleType.Border);
 				ScheduleChunkUpdate(new ChunkCoordinates(position.X, position.Z + 1), ScheduleType.Border);
@@ -665,6 +677,14 @@ namespace Alex.Worlds
                 List<ChunkData> orderedList = new List<ChunkData>();
                 foreach (var c in renderedChunks)
                 {
+	              /*  if (BlockLightCalculations.HasEnqueued(c.Key) && !Enqueued.Contains(c.Key) && !_workItems.ContainsKey(c.Key))
+	                {
+		                if (c.Value.Scheduled == ScheduleType.Unscheduled)
+		                {
+			                ScheduleChunkUpdate(c.Key, ScheduleType.Lighting);
+		                }
+	                }*/
+	                
 	                if (_chunkData.TryGetValue(c.Key, out var data))
 	                {
 		                orderedList.Add(data);
@@ -692,6 +712,15 @@ namespace Alex.Worlds
 	                {
 		                if (PriorityQueue.Contains(cc))
 		                {
+			                if (Chunks.TryGetValue(cc, out var chunk))
+			                {
+				                if (chunk.Scheduled == ScheduleType.Lighting)
+				                {
+					                PriorityQueue.UpdatePriority(cc, double.MaxValue - Math.Abs(cameraChunkPos.DistanceTo(cc)));
+					                continue;
+				                }
+			                }
+			                
 			                if (IsWithinView(cc, _cameraBoundingFrustum))
 			                {
 				                PriorityQueue.UpdatePriority(cc, Math.Abs(cameraChunkPos.DistanceTo(cc)));
@@ -708,6 +737,16 @@ namespace Alex.Worlds
 	                }
                 }
 
+                if (BlockLightCalculations.TryProcess(blockCoordinates =>
+                {
+	                return Chunks.ContainsKey((ChunkCoordinates) blockCoordinates);
+                }, out BlockCoordinates coordinates))
+                {
+	                ChunkCoordinates cc = (ChunkCoordinates) coordinates;
+	                
+	                ScheduleChunkUpdate(cc, ScheduleType.Lighting);
+                }
+                
                 var threadsActive = Interlocked.Read(ref _threadsRunning);
                 if (threadsActive >= maxThreads)
                 {
@@ -745,64 +784,6 @@ namespace Alex.Worlds
 
 			//TaskScheduler.Dispose();
 		}
-
-	    private bool TryDequeue(ChunkCoordinates cameraChunkPos, out ChunkCoordinates coordinates, out TaskPriority priority)
-	    {
-		    priority = TaskPriority.Normal;
-		    
-		    try
-		    {
-			    if (HighestPriority.TryDequeue(out var coords))
-			    {
-				    if (Math.Abs(cameraChunkPos.DistanceTo(coords)) > Options.VideoOptions.RenderDistance)
-				    {
-					    if (!Enqueued.Contains(coords))
-						    Enqueued.Add(coords);
-				    }
-				    else
-				    {
-					    Enqueued.Remove(coords);
-					    priority = TaskPriority.Highest;
-					   // Schedule(coords, ChunkPriority.Highest);
-					   coordinates = coords;
-					   return true;
-				    }
-
-				    //Enqueued.Remove(coords);
-			    }
-			    else if (Enqueued.Count > 0)
-			    {
-				    //var cc = new ChunkCoordinates(CameraPosition);
-
-				    var where = Enqueued.Where(x => IsWithinView(x, _cameraBoundingFrustum)).ToArray();
-				    if (where.Length > 0)
-				    {
-					    coords = where.MinBy(x => Math.Abs(x.DistanceTo(new ChunkCoordinates(_cameraPosition))));
-				    }
-				    else
-				    {
-					    coords = Enqueued.MinBy(x => Math.Abs(x.DistanceTo(new ChunkCoordinates(_cameraPosition))));
-				    }
-
-				    if (Math.Abs(cameraChunkPos.DistanceTo(coords)) <= Options.VideoOptions.RenderDistance)
-				    {
-					    if (!_workItems.ContainsKey(coords))
-					    {
-						    //Schedule(coords, ChunkPriority.High);
-						    coordinates = coords;
-						    return true;
-					    }
-				    }
-			    }
-		    }
-		    catch (OperationCanceledException)
-		    {
-			   // break;
-		    }
-
-		    coordinates = default;
-		    return false;
-	    }
 
 	    private void ScheduleWorker()
 	    {
@@ -846,58 +827,6 @@ namespace Alex.Worlds
 			    Interlocked.Decrement(ref _threadsRunning);
 
 		    });
-		    /*
-		    CancellationTokenSource taskCancelationToken =
-			    CancellationTokenSource.CreateLinkedTokenSource(CancelationToken.Token);
-
-		    Interlocked.Increment(ref _threadsRunning);
-
-		    if (_workItems.TryAdd(coords, taskCancelationToken))
-		    {
-			    Enqueued.Remove(coords);
-		    }
-
-		    
-		    //_tasksQueue.
-
-		   // var task = Task.Factory.StartNew(() =>
-		   _threadPool.QueueUserWorkItem(() =>
-		   {
-			   try
-			   {
-				   // do
-				   {
-					   if (Chunks.TryGetValue(coords, out var val))
-					   {
-						   if (val is ChunkColumn column && column.Sections.Any(x => x != null && !x.IsEmpty()))
-						   {
-							   // if (column.SkyLightDirty || column.IsNew)
-							   {
-								   new SkyLightCalculations().RecalcSkyLight((ChunkColumn) val,
-									   new SkyLightBlockAccess(this));
-							   }
-
-							   UpdateChunk(coords, val);
-						   }
-					   }
-
-					   _workItems.TryRemove(coords, out _);
-				   } //while (TryDequeue(new ChunkCoordinates(_cameraPosition), out coords, out priority));
-			   }
-			   catch (Exception ex)
-			   {
-				   Log.Warn(ex, $"Chunk processing error: {ex.ToString()}");
-			   }
-
-			   Interlocked.Decrement(ref _threadsRunning);
-
-		   });*/
-		    //, taskCancelationToken.Token, TaskCreationOptions.None, _priorityTaskScheduler);
-
-		    /*if (priority == ChunkPriority.Highest)
-		    {
-			    _priorityTaskScheduler.Prioritize(task);
-		    }*/
 	    }
 
 	    public void ScheduleChunkUpdate(ChunkCoordinates position, ScheduleType type, bool prioritize = false)
@@ -948,6 +877,8 @@ namespace Alex.Worlds
                 return false; //Another thread is already updating this chunk, return.
             }
 
+            BlockLightCalculations.Process(coordinates);
+            
             var scheduleType = chunk.Scheduled;
 
             ChunkData data = null;
@@ -1236,7 +1167,8 @@ namespace Alex.Worlds
 		        var blockCoords = new BlockCoordinates(x, y, z);
 
 		        bool isScheduled = section.IsScheduled(x, y, z);
-		        bool isLightScheduled = false; section.IsLightingScheduled(x, y, z);
+		        bool isLightScheduled = section.IsLightingScheduled(x, y, z);
+		        bool blockLightScheduled = section.IsBlockLightScheduled(x, y, z);
 		        var neighborsScheduled = HasScheduledNeighbors(world, blockPosition);
 		        var isBorderBlock = (scheduled == ScheduleType.Border && ((x == 0 || x == 15) || (z == 0 || z == 15)));
 
@@ -1269,6 +1201,14 @@ namespace Alex.Worlds
 			        var shouldRebuildVertices = isRebuild;
 
 			        var model = blockState.Model;
+
+			        /*if (blockState != null && currentBlockState.storage == 0 && blockState.Block.LightValue > 0 && blockLightScheduled)
+			        {
+				        section.SetBlockLightScheduled(x, y, z, false);
+				        
+				        BlockLightCalculations.Enqueue(blockPosition);
+				      //  BlockLightCalculations.Calculate((World) world, blockPosition);
+			        } */
 
 			        if (blockState != null && shouldRebuildVertices && blockState.Block.RequiresUpdate)
 			        {
