@@ -109,7 +109,7 @@ namespace Alex.Entities
 			var inHand = Inventory[Inventory.SelectedSlot];
 			//Log.Info($"Inventory slot changed.");
 			
-			if (inHand == null && ItemRenderer != null)
+			if ((inHand == null || inHand.Count == 0 || inHand.Id <= 0) && ItemRenderer != null)
 			{
 				if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
 				{
