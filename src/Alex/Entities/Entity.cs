@@ -364,11 +364,29 @@ namespace Alex.Entities
 			KnownPosition.HeadYaw = rotation;
 		}
 
+		private long _hitAnimationEnd = 0;
+		private bool _isHit = false;
+		public void EntityHurt()
+		{
+			if (ModelRenderer == null)
+				return;
+
+			_isHit = true;
+			_hitAnimationEnd = Age + 5;
+			ModelRenderer.EntityColor = Color.Red.ToVector3();
+		}
+		
 		protected bool DoRotationCalculations = true;
 
 		public virtual void OnTick()
 		{
 			Age++;
+
+			if (_isHit && Age > _hitAnimationEnd)
+			{
+				_isHit = false;
+				ModelRenderer.EntityColor = Color.White.ToVector3();
+			}
 			
 			if (DoRotationCalculations)
 				UpdateRotations();
@@ -574,7 +592,7 @@ namespace Alex.Entities
 			renderArgs.SpriteBatch.FillRectangle(new Rectangle(textPosition.ToPoint(), c), new Color(Color.Black, 128), screenSpace.Z);
 			Alex.Font.DrawString(renderArgs.SpriteBatch, clean, textPosition, TextColor.White, FontStyle.None, scale, layerDepth: screenSpace.Z);
 		}
-		
+
 		public virtual void TerrainCollision(Vector3 collisionPoint, Vector3 direction)
 		{
 			if (direction.Y < 0) //Collided with the ground

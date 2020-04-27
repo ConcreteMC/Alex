@@ -976,7 +976,17 @@ namespace Alex.Worlds.Bedrock
 
 		public void HandleMcpeEntityEvent(McpeEntityEvent message)
 		{
-			UnhandledPackage(message);
+			if (Client.WorldReceiver.TryGetEntity(message.runtimeEntityId, out IEntity entity))
+			{
+				if (entity is Entity ent)
+				{
+					if (message.eventId == 2)
+					{
+						ent.EntityHurt();
+					}
+				}
+			}
+			//UnhandledPackage(message);
 		}
 
 		public void HandleMcpeMobEffect(McpeMobEffect message)

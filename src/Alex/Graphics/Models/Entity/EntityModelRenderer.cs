@@ -345,6 +345,7 @@ namespace Alex.Graphics.Models.Entity
 			args.GraphicsDevice.RasterizerState = originalRaster;
 		}
 
+		public Vector3 EntityColor { get; set; } = Color.White.ToVector3();
 		public Vector3 DiffuseColor { get; set; } = Color.White.ToVector3();
 		private Matrix CharacterMatrix { get; set; } = Matrix.Identity;
 		public float Scale { get; set; } = 1f;
@@ -359,7 +360,7 @@ namespace Alex.Graphics.Models.Entity
 
 			foreach (var bone in Bones)
 			{
-				bone.Value.Update(args, CharacterMatrix, DiffuseColor);
+				bone.Value.Update(args, CharacterMatrix, EntityColor * DiffuseColor);
 			}
 
 			foreach (var bone in Bones.Where(x => !string.IsNullOrWhiteSpace(x.Value.Parent)))
