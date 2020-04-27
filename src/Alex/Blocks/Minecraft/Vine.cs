@@ -9,6 +9,7 @@ namespace Alex.Blocks.Minecraft
 			IsReplacible = false;
 
 			BlockMaterial = Material.Vine;
+			Hardness = 0.2f;
 		}
 	}
 }

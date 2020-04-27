@@ -12,6 +12,8 @@ namespace Alex.Blocks.Minecraft
 			IsReplacible = false;
 
 			RequiresUpdate = true;
+
+			Hardness = 0.7f;
 		}
 
 		public override void BlockUpdate(IWorld world, BlockCoordinates position, BlockCoordinates updatedBlock)

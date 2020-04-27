@@ -4,7 +4,7 @@ namespace Alex.Blocks.Minecraft
 	{
 		public RedSandstoneSlab() : base(7254)
 		{
-		
+			BlockMaterial = Material.Stone;
 		}
 	}
 }

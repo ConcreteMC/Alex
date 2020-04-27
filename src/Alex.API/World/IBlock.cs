@@ -23,6 +23,7 @@ namespace Alex.API.World
 		bool RandomTicked { get; set; }
 		bool IsReplacible { get; set; }
 		bool RequiresUpdate { get; set; }
+		bool CanInteract { get; set; }
 		//IBlockState BlockState { get; set; }
 		
 		int LightValue { get; set; } 

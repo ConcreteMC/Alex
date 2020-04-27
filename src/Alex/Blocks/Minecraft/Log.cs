@@ -8,6 +8,7 @@ namespace Alex.Blocks.Minecraft
             Solid = true;
 
             BlockMaterial = Material.Wood;
+            Hardness = 2;
         }
     }
 }

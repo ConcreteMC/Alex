@@ -16,6 +16,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
 using NLog;
+using ItemMaterial = MiNET.Items.ItemMaterial;
 
 namespace Alex
 {
@@ -29,6 +30,32 @@ namespace Alex
 		private static SecondItemEntry[] SecItemEntries { get; set; }
 		
 		private static ConcurrentDictionary<string, ItemModelRenderer> ItemRenderers { get; } = new ConcurrentDictionary<string, ItemModelRenderer>();
+
+		private static void SetItemMaterial(Item item, ItemMaterial material)
+		{
+			switch (material)
+			{
+				case ItemMaterial.None:
+					item.Material = API.Utils.ItemMaterial.None;
+					break;
+				case ItemMaterial.Wood:
+					item.Material = API.Utils.ItemMaterial.Wood;
+					break;
+				case ItemMaterial.Stone:
+					item.Material = API.Utils.ItemMaterial.Stone;
+					break;
+				case ItemMaterial.Gold:
+					item.Material = API.Utils.ItemMaterial.Gold;
+					break;
+				case ItemMaterial.Iron:
+					item.Material = API.Utils.ItemMaterial.Iron;
+					break;
+				case ItemMaterial.Diamond:
+					item.Material = API.Utils.ItemMaterial.Diamond;
+					break;
+			}
+		}
+		
 	    public static void Init(IRegistryManager registryManager, ResourceManager resources, McResourcePack resourcePack, IProgressReceiver progressReceiver = null)
 	    {
 		      var blockRegistry = registryManager.GetRegistry<Block>();
@@ -79,7 +106,10 @@ namespace Alex
 				    {
 					    item.ItemType = t;
 				    }
-				    item.Material = minetItem.ItemMaterial;
+
+				    SetItemMaterial(item, minetItem.ItemMaterial);
+				   // item.Material = minetItem.ItemMaterial;
+				    
 				    item.Meta = minetItem.Metadata;
 				    item.Id = minetItem.Id;
 			    }
@@ -150,7 +180,10 @@ namespace Alex
 				    {
 					    item.ItemType = t;
 				    }
-				    item.Material = minetItem.ItemMaterial;
+				    
+				    SetItemMaterial(item, minetItem.ItemMaterial);
+				    
+				   // item.Material = minetItem.ItemMaterial;
 				    item.Meta = minetItem.Metadata;
 				    item.Id = minetItem.Id;
 			    }

@@ -7,6 +7,9 @@ namespace Alex.Blocks.Minecraft
 			Solid = true;
 			Transparent = true;
 			IsReplacible = false;
+
+			Hardness = 0.5f;
+			BlockMaterial = Material.Ice;
 		}
 	}
 }

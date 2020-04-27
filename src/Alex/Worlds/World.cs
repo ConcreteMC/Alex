@@ -63,6 +63,27 @@ namespace Alex.Worlds
 		private bool UseDepthMap { get; set; }
 		//public SkyLightCalculations SkyLightCalculations { get; }
 		private ServerType ServerType { get; }
+		
+		public bool DrowningDamage { get; set; } = true;
+		public bool CommandblockOutput { get; set; } = true;
+		public bool DoTiledrops { get; set; } = true;
+		public bool DoMobloot { get; set; } = true;
+		public bool KeepInventory { get; set; } = true;
+		public bool DoDaylightcycle { get; set; } = true;
+		public bool DoMobspawning { get; set; } = true;
+		public bool DoEntitydrops { get; set; } = true;
+		public bool DoFiretick { get; set; } = true;
+		public bool DoWeathercycle { get; set; } = true;
+		public bool Pvp { get; set; } = true;
+		public bool Falldamage { get; set; } = true;
+		public bool Firedamage { get; set; } = true;
+		public bool Mobgriefing { get; set; } = true;
+		public bool ShowCoordinates { get; set; } = true;
+		public bool NaturalRegeneration { get; set; } = true;
+		public bool TntExplodes { get; set; } = true;
+		public bool SendCommandfeedback { get; set; } = true;
+		public int RandomTickSpeed { get; set; } = 3;
+		
 		public World(IServiceProvider serviceProvider, GraphicsDevice graphics, AlexOptions options, Camera camera,
 			INetworkProvider networkProvider)
 		{
@@ -140,7 +161,6 @@ namespace Alex.Worlds
 		}
 
 		//public long WorldTime { get; private set; } = 6000;
-		public bool FreezeWorldTime { get; set; } = false;
 
 		public PlayerList PlayerList { get; }
 		public TickManager Ticker { get; }
@@ -237,43 +257,7 @@ namespace Alex.Worlds
 		        }
 	        }
         }
-
-        //Render light levels
-			/*var playerChunkLocation = new ChunkCoordinates(Player.KnownPosition);//.GetCoordinates3D();
-			
-			for (int x = -2; x < 4; x++)
-			{
-				for (int z = -2; z < 4; z++)
-				{
-					RenderLightLevels(args, playerChunkLocation + new ChunkCoordinates(x, z));
-				}
-			}
-		}
-
-		private void RenderLightLevels(IRenderArgs args, ChunkCoordinates chunkCoordinates)
-		{
-			if (!ChunkManager.TryGetChunk(chunkCoordinates, out var chunk))
-				return;
-
-			var worldPosition = new Vector3(chunkCoordinates.X >> 4, 0, chunkCoordinates.Z >> 4);
-			for (int x = 0; x < 16; x++)
-			{
-				for (int z = 0; z < 16; z++)
-				{
-					int heighest = chunk.GetHeight(x, z);
-					for (int y = 255; y > 0; y--)
-					{
-						var s = chunk.GetBlockState(x, y, z);
-						if (!s.Block.Renderable)
-							continue;
-
-						var light = chunk.GetSkylight(x, y, z);
-						args.RenderText(worldPosition + new Vector3(x,y + 1.2f,z), light.ToString());
-					}
-				}
-			}
-		}*/
-		
+        
 		private float _fovModifier = -1;
 		private bool UpdatingPriorities = false;
 		private float BrightnessMod = 0f;
@@ -316,7 +300,7 @@ namespace Alex.Worlds
 			
 			if (Ticker.Update(args))
 			{
-				if (!FreezeWorldTime)
+				if (DoDaylightcycle)
 				{
 					WorldInfo.Time++;
 				}
@@ -691,6 +675,138 @@ namespace Alex.Worlds
 			ChunkManager.TryGetChunk(new ChunkCoordinates(coords.X >> 4, coords.Z >> 4), out chunk);
 			return new BlockCoordinates(coords.X & 0xf, coords.Y & 0xff, coords.Z & 0xf);
 		}
+        
+        public void SetGameRule(MiNET.GameRule gameRule)
+        {
+	        if (Enum.TryParse(gameRule.Name, out GameRulesEnum val))
+	        {
+		        if (gameRule is GameRule<bool> grb)
+		        {
+			        SetGameRule(val, grb.Value);
+		        }
+		        else if (gameRule is GameRule<int> gri)
+		        {
+			        SetGameRule(val, gri.Value);
+		        }
+	        }
+        }
+        
+		public void SetGameRule(GameRulesEnum rule, bool value)
+		{
+			switch (rule)
+			{
+				case GameRulesEnum.DrowningDamage:
+					DrowningDamage = value;
+					break;
+				case GameRulesEnum.CommandblockOutput:
+					CommandblockOutput = value;
+					break;
+				case GameRulesEnum.DoTiledrops:
+					DoTiledrops = value;
+					break;
+				case GameRulesEnum.DoMobloot:
+					DoMobloot = value;
+					break;
+				case GameRulesEnum.KeepInventory:
+					KeepInventory = value;
+					break;
+				case GameRulesEnum.DoDaylightcycle:
+					DoDaylightcycle = value;
+					break;
+				case GameRulesEnum.DoMobspawning:
+					DoMobspawning = value;
+					break;
+				case GameRulesEnum.DoEntitydrops:
+					DoEntitydrops = value;
+					break;
+				case GameRulesEnum.DoFiretick:
+					DoFiretick = value;
+					break;
+				case GameRulesEnum.DoWeathercycle:
+					DoWeathercycle = value;
+					break;
+				case GameRulesEnum.Pvp:
+					Pvp = value;
+					break;
+				case GameRulesEnum.Falldamage:
+					Falldamage = value;
+					break;
+				case GameRulesEnum.Firedamage:
+					Firedamage = value;
+					break;
+				case GameRulesEnum.Mobgriefing:
+					Mobgriefing = value;
+					break;
+				case GameRulesEnum.ShowCoordinates:
+					ShowCoordinates = value;
+					break;
+				case GameRulesEnum.NaturalRegeneration:
+					NaturalRegeneration = value;
+					break;
+				case GameRulesEnum.TntExplodes:
+					TntExplodes = value;
+					break;
+				case GameRulesEnum.SendCommandfeedback:
+					SendCommandfeedback = value;
+					break;
+			}
+		}
+
+		public void SetGameRule(GameRulesEnum rule, int value)
+		{
+			switch (rule)
+			{
+				case GameRulesEnum.DrowningDamage:
+					RandomTickSpeed = value;
+					break;
+			}
+		}
+		
+		public bool GetGameRule(GameRulesEnum rule)
+		{
+			switch (rule)
+			{
+				case GameRulesEnum.DrowningDamage:
+					return DrowningDamage;
+				case GameRulesEnum.CommandblockOutput:
+					return CommandblockOutput;
+				case GameRulesEnum.DoTiledrops:
+					return DoTiledrops;
+				case GameRulesEnum.DoMobloot:
+					return DoMobloot;
+				case GameRulesEnum.KeepInventory:
+					return KeepInventory;
+				case GameRulesEnum.DoDaylightcycle:
+					return DoDaylightcycle;
+				case GameRulesEnum.DoMobspawning:
+					return DoMobspawning;
+				case GameRulesEnum.DoEntitydrops:
+					return DoEntitydrops;
+				case GameRulesEnum.DoFiretick:
+					return DoFiretick;
+				case GameRulesEnum.DoWeathercycle:
+					return DoWeathercycle;
+				case GameRulesEnum.Pvp:
+					return Pvp;
+				case GameRulesEnum.Falldamage:
+					return Falldamage;
+				case GameRulesEnum.Firedamage:
+					return Firedamage;
+				case GameRulesEnum.Mobgriefing:
+					return Mobgriefing;
+				case GameRulesEnum.ShowCoordinates:
+					return ShowCoordinates;
+				case GameRulesEnum.NaturalRegeneration:
+					return NaturalRegeneration;
+				case GameRulesEnum.TntExplodes:
+					return TntExplodes;
+				case GameRulesEnum.SendCommandfeedback:
+					return SendCommandfeedback;
+			}
+
+			return false;
+		}
+        
         private bool _destroyed = false;
 		public void Destroy()
 		{
@@ -869,24 +985,6 @@ namespace Alex.Worlds
 			PlayerList.Entries.Remove(item);
 		}
 
-		public void SetGameRule(MiNET.GameRule gameRule)
-		{
-			if (Enum.TryParse(gameRule.Name, out GameRulesEnum val))
-			{
-				var grb = gameRule as GameRule<bool>;
-				
-				switch (val)
-				{
-					case GameRulesEnum.DoDaylightcycle:
-						FreezeWorldTime = grb?.Value ?? false;
-						break;
-					default:
-						Log.Debug($"Missing gamerule: {val}");
-						break;
-				}
-			}
-		}
-		
 		#endregion
 	}
 }

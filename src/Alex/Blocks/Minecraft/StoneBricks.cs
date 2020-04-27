@@ -10,6 +10,8 @@ namespace Alex.Blocks.Minecraft
 			IsFullBlock = true;
 			IsFullCube = true;
 			
+			BlockMaterial = Material.Stone;
+			Hardness = 1.5f;
 		}
 	}
 }

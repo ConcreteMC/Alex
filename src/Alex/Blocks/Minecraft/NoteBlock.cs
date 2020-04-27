@@ -7,6 +7,12 @@ namespace Alex.Blocks.Minecraft
 			Solid = true;
 			Transparent = false;
 			IsReplacible = false;
+			IsFullBlock = true;
+			IsFullCube = true;
+			
+			CanInteract = true;
+
+			Hardness = 0.8f;
 		}
 	}
 }

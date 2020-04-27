@@ -8,6 +8,7 @@ namespace Alex.Blocks.Minecraft
 			Transparent = false;
 			IsReplacible = false;
 
+			Hardness = 0.6f;
 			BlockMaterial = Material.Clay;
 		}
 	}

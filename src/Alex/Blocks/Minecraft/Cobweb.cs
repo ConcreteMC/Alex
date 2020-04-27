@@ -10,7 +10,8 @@ namespace Alex.Blocks.Minecraft
 			IsFullBlock = false;
 			IsFullCube = false;
 			LightOpacity = 2;
-
+			
+			Hardness = 4;
 			BlockMaterial = Material.Web;
 		}
 	}

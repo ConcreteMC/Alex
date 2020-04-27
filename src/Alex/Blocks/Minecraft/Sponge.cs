@@ -9,6 +9,7 @@ namespace Alex.Blocks.Minecraft
 			IsReplacible = false;
 
 			BlockMaterial = Material.Sponge;
+			Hardness = 0.6f;
 		}
 	}
 }

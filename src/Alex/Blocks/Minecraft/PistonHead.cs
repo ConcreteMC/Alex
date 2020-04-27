@@ -7,6 +7,9 @@ namespace Alex.Blocks.Minecraft
 			Solid = true;
 			Transparent = true;
 			IsReplacible = false;
+			
+			BlockMaterial = Material.Piston;
+			Hardness = 0.5f;
 		}
 	}
 }

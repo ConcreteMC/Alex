@@ -20,6 +20,17 @@ namespace Alex.Worlds.Lighting
 	        World = level;
         }
 
+        public void Remove(ChunkCoordinates coordinates)
+        {
+	        ChunkQueues.TryRemove(coordinates, out _);
+        }
+
+        public void Clear()
+        {
+	        ChunkQueues.Clear();
+	        Queue.Clear();
+        }
+        
         public bool HasEnqueued(ChunkCoordinates coordinates)
         {
 	        if (ChunkQueues.TryGetValue(coordinates, out var queue))

@@ -9,6 +9,7 @@ namespace Alex.Blocks.Minecraft
 			IsReplacible = false;
 
 			BlockMaterial = Material.Sand;
+			Hardness = 0.5f;
 		}
 	}
 }

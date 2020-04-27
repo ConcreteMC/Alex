@@ -7,6 +7,8 @@ namespace Alex.Blocks.Minecraft
 			Solid = true;
 			Transparent = false;
 			IsReplacible = false;
+
+			BlockMaterial = Material.Ore;
 		}
 	}
 }

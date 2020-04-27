@@ -9,6 +9,8 @@ namespace Alex.Blocks.Minecraft
 			IsReplacible = false;
 			IsFullCube = false;
 			//BlockMaterial = Material.Snow;
+			
+			Hardness = 0.2f;
 		}
 	}
 }

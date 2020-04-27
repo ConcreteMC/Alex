@@ -46,7 +46,7 @@ namespace Alex.GameStates.Playing
 			WorldProvider = worldProvider;
 			if (worldProvider is SPWorldProvider)
 			{
-				World.FreezeWorldTime = true;
+				World.DoDaylightcycle = false;
 			}
 			
 			var title = new TitleComponent();
@@ -125,7 +125,7 @@ namespace Alex.GameStates.Playing
 				//FpsCounter.Update();
 				//World.ChunkManager.GetPendingLightingUpdates(out int lowLight, out int midLight, out int highLight);
 
-				return $"Alex {Alex.Version} ({Alex.FpsMonitor.Value:##} FPS, Chunk Updates: {World.EnqueuedChunkUpdates} queued, {World.ConcurrentChunkUpdates} active"/*, H: {highLight} M: {midLight} L: {lowLight} lighting updates)"*/;
+				return $"Alex {Alex.Version} ({Alex.FpsMonitor.Value:##} FPS, Chunk Updates: {World.EnqueuedChunkUpdates} queued, {World.ConcurrentChunkUpdates} active)"/*, H: {highLight} M: {midLight} L: {lowLight} lighting updates)"*/;
 			});
 			_debugInfo.AddDebugLeft(() =>
 			{
@@ -151,7 +151,7 @@ namespace Alex.GameStates.Playing
 			{
 				return $"Biome: {_currentBiome.Name} ({_currentBiomeId})";
 			});
-			_debugInfo.AddDebugLeft(() => { return $"Always Day: {AlwaysDay}"; });
+			_debugInfo.AddDebugLeft(() => { return $"Do DaylightCycle: {World.DoDaylightcycle}"; });
 
 			_debugInfo.AddDebugRight(() => Alex.DotnetRuntime);
 			//_debugInfo.AddDebugRight(() => MemoryUsageDisplay);
@@ -446,9 +446,31 @@ namespace Alex.GameStates.Playing
 
 				if (_raytracedBlock.Y > 0 && _raytracedBlock.Y < 256)
 				{
-					args.SpriteBatch.RenderBoundingBox(
-						RayTraceBoundingBox,
-						World.Camera.ViewMatrix, World.Camera.ProjectionMatrix, Color.LightGray);
+					if (SelBlock.CanInteract || !World.Player.IsWorldImmutable)
+					{
+						Color color = Color.LightGray;
+						if (World.Player.IsBreakingBlock)
+						{
+							var progress = World.Player.BlockBreakProgress;
+							
+							color = Color.Red * progress;
+							
+							var depth = args.GraphicsDevice.DepthStencilState;
+							args.GraphicsDevice.DepthStencilState = DepthStencilState.None;
+							
+							args.SpriteBatch.RenderBoundingBox(
+								RayTraceBoundingBox,
+								World.Camera.ViewMatrix, World.Camera.ProjectionMatrix, color, true);
+
+							args.GraphicsDevice.DepthStencilState = depth;
+						}
+						else
+						{
+							args.SpriteBatch.RenderBoundingBox(
+								RayTraceBoundingBox,
+								World.Camera.ViewMatrix, World.Camera.ProjectionMatrix, color);
+						}
+					}
 				}
 
 				if (RenderBoundingBoxes)

@@ -12,6 +12,8 @@ namespace Alex.Blocks.Minecraft
 			LightValue = 11;
 
 			BlockMaterial = Material.Portal;
+			
+			Hardness = 60000;
 		}
 	}
 }

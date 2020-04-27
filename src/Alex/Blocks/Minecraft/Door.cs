@@ -36,6 +36,7 @@ namespace Alex.Blocks.Minecraft
 		{
 			Transparent = true;
 			RequiresUpdate = true;
+			CanInteract = true;
 		}
 
 		private IBlockState Update(IWorld world, IBlockState blockState, BlockCoordinates coordinates, BlockCoordinates updated)

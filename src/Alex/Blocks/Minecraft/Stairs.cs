@@ -29,8 +29,9 @@ namespace Alex.Blocks.Minecraft
             Transparent = true;
             IsReplacible = false;
             RequiresUpdate = true;
-
-            BlockMaterial = Material.Rock;
+            Hardness = 2;
+            
+            BlockMaterial = Material.Stone;
         }
 
         public Stairs()
@@ -39,8 +40,9 @@ namespace Alex.Blocks.Minecraft
             Transparent = true;
             IsReplacible = false;
             RequiresUpdate = true;
+            Hardness = 2;
             
-            BlockMaterial = Material.Rock;
+            BlockMaterial = Material.Stone;
         }
 
         public override double GetHeight(Vector3 relative)

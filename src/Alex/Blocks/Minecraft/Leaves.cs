@@ -13,6 +13,7 @@
 		    LightOpacity = 2;
 		    
 		    BlockMaterial = Material.Leaves;
+		    Hardness = 0.2f;
 	    }
     }
 }

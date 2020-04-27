@@ -306,6 +306,9 @@ namespace Alex.Worlds.Bedrock
 			{
 				player.CanFly = ((message.flags & 0x40) == 0x40);
 				player.IsFlying = ((message.flags & 0x200) == 0x200);
+				player.IsWorldImmutable = ((message.flags & 0x01) == 0x01);
+				player.CanPvP = (message.flags & 0x02) != 0x02;
+				player.CanPvM = (message.flags & 0x04) != 0x04;
 			}
 		}
 
@@ -966,7 +969,20 @@ namespace Alex.Worlds.Bedrock
 
 		public void HandleMcpeLevelEvent(McpeLevelEvent message)
 		{
-			UnhandledPackage(message);
+			if (Client.WorldReceiver.GetPlayerEntity() is Player player)
+			{
+				if (!player.IsBreakingBlock)
+					return;
+				if ((BlockCoordinates) new Microsoft.Xna.Framework.Vector3(message.position.X, message.position.Y,
+					message.position.Z) == player.TargetBlock)
+				{
+					if (message.eventId == 3600)
+					{
+						var ticksRequired = (double) ushort.MaxValue / message.data;
+						player.BreakTimeNeeded = ticksRequired;
+					}
+				}
+			}
 		}
 
 		public void HandleMcpeBlockEvent(McpeBlockEvent message)

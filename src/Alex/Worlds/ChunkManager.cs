@@ -535,6 +535,8 @@ namespace Alex.Worlds
 
         public void RemoveChunk(ChunkCoordinates position, bool dispose = true)
         {
+	        BlockLightCalculations.Remove(position);
+	        
 	        if (_workItems.TryGetValue(position, out var r))
 	        {
 		        if (!r.IsCancellationRequested) 
@@ -592,6 +594,8 @@ namespace Alex.Worlds
 
         public void ClearChunks()
         {
+	        BlockLightCalculations.Clear();
+	        
 	        var chunks = Chunks.ToArray();
 	        Chunks.Clear();
 

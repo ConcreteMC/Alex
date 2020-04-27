@@ -17,6 +17,8 @@ namespace Alex.Blocks.Minecraft
 			IsFullCube = false;
 			
 			BlockMaterial = Material.Wood;
+			Hardness = 0.4f;
+
 		}
 
 		public override bool CanClimb(BlockFace face)

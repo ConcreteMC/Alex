@@ -8,6 +8,8 @@ namespace Alex.Blocks.Minecraft
 			Transparent = true;
 			IsReplacible = false;
 			LightValue = 15;
+			
+			Hardness = -1;
 		}
 	}
 }

@@ -11,7 +11,8 @@ namespace Alex.Blocks.Minecraft
 			//IsFullCube = true;
 			//
 
-
+			BlockMaterial = Material.Grass;
+			Hardness = 0.6f;
 		}
 	}
 }

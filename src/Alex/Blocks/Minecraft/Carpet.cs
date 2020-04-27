@@ -9,6 +9,8 @@ namespace Alex.Blocks.Minecraft
             
             BlockMaterial = Material.Carpet;
             IsFullCube = false;
+
+            Hardness = 0.1f;
         }
     }
 }

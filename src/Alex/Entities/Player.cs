@@ -50,6 +50,10 @@ namespace Alex.Entities
         public int Exhaustion { get; set; } = 0;
         public int MaxExhaustion { get; set; }
         
+        public bool IsWorldImmutable { get; set; } = false;
+        public bool CanPvP { get; set; } = true;
+        public bool CanPvM { get; set; } = true;
+        
         public Player(GraphicsDevice graphics, InputManager inputManager, string name, World world, Skin skin, INetworkProvider networkProvider, PlayerIndex playerIndex) : base(name, world, networkProvider, skin.Texture)
 		{
 		//	DoRotationCalculations = false;
@@ -74,7 +78,35 @@ namespace Alex.Entities
 		    Network?.HeldItemChanged(e.NewValue);
 	    }
 
-		private BlockCoordinates _destroyingTarget = BlockCoordinates.Zero;
+	    public bool IsBreakingBlock => _destroyingBlock;
+
+	    public float BlockBreakProgress
+	    {
+		    get
+		    {
+			    if (!IsBreakingBlock)
+				    return 0;
+			    
+			    var end = DateTime.UtcNow;
+			    var start = _destroyingTick;
+
+			    var timeRan = (end - start).TotalMilliseconds / 50d;
+
+			    return (float) ((1f / (float) _destroyTimeNeeded) * timeRan);
+		    }
+	    }
+
+	    public double BreakTimeNeeded
+	    {
+		    set
+		    {
+			    _destroyTimeNeeded = value;
+		    }
+	    }
+
+	    public BlockCoordinates TargetBlock => _destroyingTarget;
+
+	    private BlockCoordinates _destroyingTarget = BlockCoordinates.Zero;
 	    private bool _destroyingBlock = false;
         private DateTime _destroyingTick = DateTime.MaxValue;
 	    private double _destroyTimeNeeded = 0;
@@ -137,7 +169,7 @@ namespace Alex.Entities
 					
 					InteractWithEntity(hitEntity, false);
 				}
-				else if (hitEntity == null && !_destroyingBlock && Controller.InputManager.IsDown(InputCommand.LeftClick)) //Destroying block.
+				else if (hitEntity == null && !_destroyingBlock && Controller.InputManager.IsDown(InputCommand.LeftClick) && !IsWorldImmutable) //Destroying block.
 				{
 					StartBreakingBlock();
 				}
@@ -156,13 +188,21 @@ namespace Alex.Entities
 							StartBreakingBlock();
 						}
 					}
+					else
+					{
+						var timeRan = (DateTime.UtcNow - _destroyingTick).TotalMilliseconds / 50d;
+						if (timeRan >= _destroyTimeNeeded)
+						{
+							StopBreakingBlock(true);
+						}
+					}
 				}
 				else if (Controller.InputManager.IsPressed(InputCommand.RightClick))
 				{
 					bool handledClick = false;
 					var item = Inventory[Inventory.SelectedSlot];
 					// Log.Debug($"Right click!");
-					if (item != null && !(item is ItemAir))
+					if (item != null)
 					{
 						handledClick = HandleRightClick(item, Inventory.SelectedSlot);
 					}
@@ -190,7 +230,18 @@ namespace Alex.Entities
 
 	    private void InteractWithEntity(IEntity entity, bool attack)
 	    {
-		    if (attack)
+		    bool canAttack = true;
+
+		    if (entity is PlayerMob)
+		    {
+			    canAttack = CanPvP && Level.Pvp;
+		    }
+		    else
+		    {
+			    canAttack = CanPvM;
+		    }
+		    
+		    if (attack && canAttack)
 		    {
 			    Network?.EntityInteraction(this, entity, McpeInventoryTransaction.ItemUseOnEntityAction.Attack);
 		    }
@@ -254,12 +305,12 @@ namespace Alex.Entities
 		    _destroyingFace = GetTargetFace();
 		    _destroyingTick = DateTime.UtcNow;
 
-		    if (Inventory.MainHand != null)
+		    //if (Inventory.MainHand != null)
 		    {
-			    _destroyTimeNeeded = block.GetBreakTime(Inventory.MainHand);
+			    _destroyTimeNeeded = block.GetBreakTime(Inventory.MainHand ?? new ItemAir()) * 20f;
 		    }
 
-            Log.Debug($"Start break block ({_destroyingTarget}, {_destroyTimeNeeded} seconds.)");
+            Log.Debug($"Start break block ({_destroyingTarget}, {_destroyTimeNeeded} ticks.)");
 
             var flooredAdj = Vector3.Floor(AdjacentRaytrace);
             var remainder = new Vector3(AdjacentRaytrace.X - flooredAdj.X, AdjacentRaytrace.Y - flooredAdj.Y, AdjacentRaytrace.Z - flooredAdj.Z);
@@ -275,7 +326,7 @@ namespace Alex.Entities
 		    var start = _destroyingTick;
 			_destroyingTick = DateTime.MaxValue;
 
-		    var timeRan = (end - start).TotalSeconds;
+		    var timeRan = (end - start).TotalMilliseconds / 50d;
 
             var flooredAdj = Vector3.Floor(AdjacentRaytrace);
             var remainder = new Vector3(AdjacentRaytrace.X - flooredAdj.X, AdjacentRaytrace.Y - flooredAdj.Y, AdjacentRaytrace.Z - flooredAdj.Z);
@@ -289,14 +340,14 @@ namespace Alex.Entities
 		    if ((Gamemode == Gamemode.Creative  || timeRan >= _destroyTimeNeeded) && !forceCanceled)
 		    {
                 Network?.PlayerDigging(DiggingStatus.Finished, _destroyingTarget, _destroyingFace, remainder);
-			    Log.Debug($"Stopped breaking block. Time: {timeRan}");
+			    Log.Debug($"Stopped breaking block. Ticks passed: {timeRan}");
 
 				Level.SetBlockState(_destroyingTarget, new Air().GetDefaultState());
             }
 		    else
 		    {
 			    Network?.PlayerDigging(DiggingStatus.Cancelled, _destroyingTarget, _destroyingFace, remainder);
-			    Log.Debug($"Cancelled breaking block. Time: {timeRan}");
+			    Log.Debug($"Cancelled breaking block. Tick passed: {timeRan}");
             }
 	    }
 
@@ -315,47 +366,66 @@ namespace Alex.Entities
 	    {
 		    //if (ItemFactory.ResolveItemName(slot.ItemID, out string itemName))
 		    {
+			    var flooredAdj = Vector3.Floor(AdjacentRaytrace);
+			    var raytraceFloored = Vector3.Floor(Raytraced);
+
+			    var adj = flooredAdj - raytraceFloored;
+			    adj.Normalize();
+
+			    var face = adj.GetBlockFace();
+
+			    var remainder = new Vector3(AdjacentRaytrace.X - flooredAdj.X,
+				    AdjacentRaytrace.Y - flooredAdj.Y, AdjacentRaytrace.Z - flooredAdj.Z);
+
+			    var coordR = new BlockCoordinates(raytraceFloored);
+			    
 			    //IBlock block = null;
-	            IBlockState blockState = null;
-	         //   if (ItemFactory.TryGetItem(itemName, out Item i))
-	         //   {
-		            if (slot is ItemBlock ib)
-		            {
-			            blockState = ib.Block;
-			            // blockState = ib.Block;
-		            }
-	         //   }
+			    if (!IsWorldImmutable)
+			    {
+				    var existingBlock = Level.GetBlock(coordR);
+				    bool isBlockItem = slot is ItemBlock;
+				    
+				    if (existingBlock.CanInteract && (!isBlockItem || IsSneaking))
+				    {
+					    Network?.WorldInteraction(coordR, face, hand, remainder);
 
-                if (blockState != null && !(blockState.Block is Air) && HasRaytraceResult)
-                {
-                    var flooredAdj =  Vector3.Floor(AdjacentRaytrace);
-	                var raytraceFloored =  Vector3.Floor(Raytraced);
+					    return true;
+				    }
+				    
+				    if (slot is ItemBlock ib)
+				    {
+					    IBlockState blockState = ib.Block;
 
-                    var adj = flooredAdj - raytraceFloored;
-                    adj.Normalize();
+					    if (blockState != null && !(blockState.Block is Air) && HasRaytraceResult)
+					    {
+						    if (existingBlock.IsReplacible || !existingBlock.Solid)
+						    {
+							    if (CanPlaceBlock(coordR, (Block) blockState.Block))
+							    {
+								    Level.SetBlockState(coordR, blockState);
 
-	                var face = adj.GetBlockFace();
+								    Network?.BlockPlaced(coordR.BlockDown(), BlockFace.Up, hand, remainder, this);
 
-                    var remainder = new Vector3(AdjacentRaytrace.X - flooredAdj.X, AdjacentRaytrace.Y - flooredAdj.Y, AdjacentRaytrace.Z - flooredAdj.Z);
+								    return true;
+							    }
+						    }
+						    else
+						    {
+							    var target = new BlockCoordinates(raytraceFloored + adj);
+							    if (CanPlaceBlock(target, (Block) blockState.Block))
+							    {
+								    Level.SetBlockState(target, blockState);
 
-	                var coordR = new BlockCoordinates(raytraceFloored);
-                    Network?.BlockPlaced(coordR, face, hand, remainder, this);
-                    
-                    var existingBlock = Level.GetBlock(coordR);
-	                if (existingBlock.IsReplacible || !existingBlock.Solid)
-	                {
-		                Level.SetBlockState(coordR, blockState);
-                    }
-	                else
-	                {
-		                Level.SetBlockState(new BlockCoordinates(raytraceFloored + adj), blockState);
-	                }
+								    Network?.BlockPlaced(coordR, face, hand, remainder, this);
+								    
+								    return true;
+							    }
+						    }
+					    }
+				    }
+			    }
 
-	                Log.Debug($"Placed block: {slot.DisplayName} on {raytraceFloored} face= {face} facepos={remainder} ({adj})");
-	                
-	                return true;
-                }
-                else if (blockState == null)
+			    if (!(slot is ItemAir) && slot.Id > 0 && slot.Count > 0)
                 {
                     Network?.UseItem(slot, hand);
                     Log.Debug($"Used item!");
@@ -365,6 +435,19 @@ namespace Alex.Entities
             }
 
 		    return false;
+	    }
+
+	    private bool CanPlaceBlock(BlockCoordinates coordinates, Block block)
+	    {
+		    var bb = block.GetBoundingBox(coordinates);
+		    var playerBb = GetBoundingBox(KnownPosition);
+
+		    if (playerBb.Intersects(bb))
+		    {
+			    return false;
+		    }
+
+		    return true;
 	    }
 
 		public override void TerrainCollision(Vector3 collisionPoint, Vector3 direction)

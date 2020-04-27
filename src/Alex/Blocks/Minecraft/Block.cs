@@ -13,6 +13,7 @@ using MiNET.Blocks;
 using MiNET.Items;
 using NLog;
 using ItemBlock = Alex.Items.ItemBlock;
+using ItemMaterial = Alex.API.Utils.ItemMaterial;
 using ItemType = Alex.API.Utils.ItemType;
 
 namespace Alex.Blocks.Minecraft
@@ -33,7 +34,8 @@ namespace Alex.Blocks.Minecraft
 		public bool RandomTicked { get; set; } = false;
 		public bool IsReplacible { get; set; } = false;
 		public bool RequiresUpdate { get; set; } = false;
-
+		public bool CanInteract { get; set; } = false;
+		
 		public float Drag { get; set; }
 
 		public string Name
@@ -50,7 +52,23 @@ namespace Alex.Blocks.Minecraft
 		public IBlockState BlockState { get; set; }
 		public bool IsWater { get; set; } = false;
 		public bool IsSourceBlock { get; set; } = false;
-		public float Hardness { get; set; }
+		
+		private float _hardness = -1f;
+
+		public float Hardness
+		{
+			get
+			{
+				if (_hardness >= 0f)
+					return _hardness;
+
+				return BlockMaterial.Hardness;
+			}
+			set
+			{
+				_hardness = value;
+			}
+		}
 
         private IMaterial _material;
 
@@ -178,6 +196,11 @@ namespace Alex.Blocks.Minecraft
 
 		public virtual IItem[] GetDrops(IItem tool)
 		{
+			if (BlockMaterial.IsToolRequired() && !BlockMaterial.CanUseTool(tool.ItemType, tool.Material))
+			{
+				return new IItem[0];
+			}
+			
 			return new IItem[] { new ItemBlock(BlockState) { Count = 1 } };
 		}
 
@@ -185,6 +208,12 @@ namespace Alex.Blocks.Minecraft
 		{
 			double secondsForBreak = Hardness;
 			bool isHarvestable = GetDrops(miningTool)?.Length > 0;
+			
+			if (BlockMaterial.IsToolRequired())
+			{
+				isHarvestable = BlockMaterial.CanUseTool(miningTool.ItemType, miningTool.Material);
+			}
+			
 			if (isHarvestable)
 			{
 				secondsForBreak *= 1.5;
@@ -199,23 +228,26 @@ namespace Alex.Blocks.Minecraft
 			}
 
 			int tierMultiplier = 1;
-			switch (miningTool.Material)
+			if (BlockMaterial.CanUseTool(miningTool.ItemType, miningTool.Material))
 			{
-				case ItemMaterial.Wood:
-					tierMultiplier = 2;
-					break;
-				case ItemMaterial.Stone:
-					tierMultiplier = 4;
-					break;
-				case ItemMaterial.Gold:
-					tierMultiplier = 12;
-					break;
-				case ItemMaterial.Iron:
-					tierMultiplier = 6;
-					break;
-				case ItemMaterial.Diamond:
-					tierMultiplier = 8;
-					break;
+				switch (miningTool.Material)
+				{
+					case ItemMaterial.Wood:
+						tierMultiplier = 2;
+						break;
+					case ItemMaterial.Stone:
+						tierMultiplier = 4;
+						break;
+					case ItemMaterial.Gold:
+						tierMultiplier = 12;
+						break;
+					case ItemMaterial.Iron:
+						tierMultiplier = 6;
+						break;
+					case ItemMaterial.Diamond:
+						tierMultiplier = 8;
+						break;
+				}
 			}
 
 			if (isHarvestable)

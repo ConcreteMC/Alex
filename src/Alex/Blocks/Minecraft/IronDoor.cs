@@ -9,8 +9,10 @@ namespace Alex.Blocks.Minecraft
 			IsReplacible = false;
 
 			CanOpen = false;
+			CanInteract = false;
 
 			BlockMaterial = Material.Iron;
+			Hardness = 5;
 		}
 	}
 }

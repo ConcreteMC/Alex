@@ -7,6 +7,8 @@ namespace Alex.Blocks.Minecraft
 			Solid = false;
 			Transparent = true;
 			IsReplacible = false;
+			
+			Hardness = 0.5f;
 		}
 	}
 }

@@ -1,7 +1,12 @@
-﻿namespace Alex.API.Blocks
+﻿using Alex.API.Utils;
+
+namespace Alex.API.Blocks
 {
 	public interface IMaterial
 	{
+		float Hardness { get; }
+		IMaterial SetHardness(float hardness);
+		
 		bool BlocksLight();
 		bool BlocksMovement();
 		IMaterial SetTranslucent();
@@ -16,8 +21,13 @@
 		bool IsOpaque();
 		bool IsReplaceable();
 		bool IsSolid();
-		bool IsToolNotRequired();
+		bool IsToolRequired();
 		IMaterial SetReplaceable();
+
+		bool CanUseTool(ItemType type, ItemMaterial material);
+		IMaterial SetRequiredTool(ItemType type, ItemMaterial material);
+		
+		IMaterial Clone();
 	}
 
 	public interface IMapColor

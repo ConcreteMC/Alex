@@ -1,7 +1,7 @@
 ﻿using Alex.API.Items;
+using Alex.API.Utils;
 using Alex.Graphics.Models.Items;
 using fNbt;
-using MiNET.Items;
 using ItemType = Alex.API.Utils.ItemType;
 
 namespace Alex.Items

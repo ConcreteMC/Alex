@@ -7,6 +7,9 @@ namespace Alex.Blocks.Minecraft
 			Solid = false;
 			Transparent = true;
 			IsReplacible = false;
+			
+			Hardness = 1;
+			BlockMaterial = Material.Wood;
 		}
 	}
 }

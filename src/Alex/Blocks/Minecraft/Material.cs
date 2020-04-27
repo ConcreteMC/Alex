@@ -1,5 +1,7 @@
 ﻿using Alex.API.Blocks;
+using Alex.API.Utils;
 using Alex.Utils;
+using ItemType = Alex.API.Utils.ItemType;
 
 namespace Alex.Blocks.Minecraft
 {
@@ -7,23 +9,28 @@ namespace Alex.Blocks.Minecraft
 	{
 		public static IMaterial Air = new MaterialTransparent(MapColor.AIR);
 		public static IMaterial Grass = new Material(MapColor.GRASS);
-		public static IMaterial Ground = new Material(MapColor.DIRT);
-		public static IMaterial Wood = (new Material(MapColor.WOOD)).SetBurning();
-		public static IMaterial Rock = (new Material(MapColor.STONE)).SetRequiresTool();
-		public static IMaterial Iron = (new Material(MapColor.IRON)).SetRequiresTool();
+		public static IMaterial Ground = new Material(MapColor.DIRT).SetHardness(0.5f);
+		public static IMaterial Wood = (new Material(MapColor.WOOD)).SetBurning().SetHardness(2f);
+
+		public static IMaterial Stone = (new Material(MapColor.STONE)).SetRequiresTool()
+			.SetRequiredTool(ItemType.PickAxe, ItemMaterial.AnyMaterial).SetHardness(3f);
+		
+		public static IMaterial Ore = new Material(MapColor.STONE).SetRequiresTool().SetRequiredTool(ItemType.PickAxe, ItemMaterial.Any).SetHardness(3);
+		
+		public static IMaterial Iron = (new Material(MapColor.IRON)).SetRequiresTool().SetHardness(5f);
 		public static IMaterial Anvil = (new Material(MapColor.IRON)).SetRequiresTool().SetImmovableMobility();
 		public static IMaterial Water = (new MaterialLiquid(MapColor.WATER)).SetTranslucent().SetNoPushMobility();
 		public static IMaterial Lava = (new MaterialLiquid(MapColor.TNT)).SetNoPushMobility();
-		public static IMaterial Leaves = (new Material(MapColor.FOLIAGE)).SetBurning().SetNoPushMobility();
-		public static IMaterial Plants = (new MaterialLogic(MapColor.FOLIAGE)).SetNoPushMobility();
+		public static IMaterial Leaves = (new Material(MapColor.FOLIAGE)).SetBurning().SetNoPushMobility().SetHardness(0.2f);
+		public static IMaterial Plants = (new MaterialLogic(MapColor.FOLIAGE)).SetNoPushMobility().SetHardness(0.6f);
 		public static IMaterial Vine = (new MaterialLogic(MapColor.FOLIAGE)).SetBurning().SetNoPushMobility().SetReplaceable();
 		public static IMaterial Sponge = new Material(MapColor.YELLOW);
 		public static IMaterial Cloth = (new Material(MapColor.CLOTH)).SetBurning();
 		public static IMaterial Fire = (new MaterialTransparent(MapColor.AIR)).SetNoPushMobility();
 		public static IMaterial Sand = new Material(MapColor.SAND);
-		public static IMaterial Circuits = (new MaterialLogic(MapColor.AIR)).SetNoPushMobility();
+		public static IMaterial Circuits = (new MaterialLogic(MapColor.AIR)).SetNoPushMobility().SetHardness(0.2f);
 		public static IMaterial Carpet = (new MaterialLogic(MapColor.CLOTH)).SetBurning();
-		public static IMaterial Glass = (new Material(MapColor.AIR)).SetTranslucent().SetAdventureModeExempt();
+		public static IMaterial Glass = (new Material(MapColor.AIR)).SetTranslucent().SetAdventureModeExempt().SetHardness(0.3f);
 		public static IMaterial RedstoneLight = (new Material(MapColor.AIR)).SetAdventureModeExempt();
 		public static IMaterial Tnt = (new Material(MapColor.TNT)).SetBurning();
 		public static IMaterial Coral = (new Material(MapColor.FOLIAGE)).SetNoPushMobility();
@@ -49,9 +56,10 @@ namespace Alex.Blocks.Minecraft
 		private bool _requiresNoTool = true;
 		private bool _isAdventureModeExempt;
 
+		private MapColor MapColor { get; }
 		public Material(MapColor color)
 		{
-		//	this.materialMapColor = color;
+			this.MapColor = color;
 		}
 
 		public virtual bool IsLiquid()
@@ -62,6 +70,14 @@ namespace Alex.Blocks.Minecraft
 		public virtual bool IsSolid()
 		{
 			return true;
+		}
+
+		public float Hardness { get; private set; } = 2f;
+
+		public IMaterial SetHardness(float hardness)
+		{
+			Hardness = hardness;
+			return this;
 		}
 
 		public virtual bool BlocksLight()
@@ -103,6 +119,25 @@ namespace Alex.Blocks.Minecraft
 			return this;
 		}
 
+		private ItemType _requiredTool = ItemType.Any;
+		private ItemMaterial _requiredMaterial = ItemMaterial.Any;
+		public bool CanUseTool(ItemType type, ItemMaterial material)
+		{
+			bool hasRequiredType = _requiredTool == type || _requiredTool.HasFlag(type);
+			bool hasRequiredMaterial = _requiredMaterial == material || _requiredMaterial.HasFlag(material) ||
+			                           (material > _requiredMaterial);
+
+			return hasRequiredType && hasRequiredMaterial;
+		}
+
+		public IMaterial SetRequiredTool(ItemType type, ItemMaterial material = ItemMaterial.Any)
+		{
+			_requiredTool = type;
+			_requiredMaterial = material;
+			
+			return this;
+		}
+
 		public virtual bool IsReplaceable()
 		{
 			return this._replaceable;
@@ -113,7 +148,7 @@ namespace Alex.Blocks.Minecraft
 			return !this._isTranslucent;
 		}
 
-		public virtual bool IsToolNotRequired()
+		public virtual bool IsToolRequired()
 		{
 			return this._requiresNoTool;
 		}
@@ -140,6 +175,21 @@ namespace Alex.Blocks.Minecraft
 		{
 			return MapColor.AIR;
 		//	return this.materialMapColor;
+		}
+		
+		public IMaterial Clone()
+		{
+			return new Material(this.MapColor)
+			{
+				_replaceable = _replaceable,
+				_canBurn = _canBurn,
+				_isTranslucent = _isTranslucent,
+				_requiredMaterial = _requiredMaterial,
+				_requiredTool = _requiredTool,
+				Hardness = Hardness,
+				_requiresNoTool = _requiresNoTool,
+				_isAdventureModeExempt = _isAdventureModeExempt
+			};
 		}
 	}
 

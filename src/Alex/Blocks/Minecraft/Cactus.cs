@@ -8,6 +8,7 @@ namespace Alex.Blocks.Minecraft
 			Transparent = true;
 			IsReplacible = false;
 
+			Hardness = 0.4f;
 			BlockMaterial = Material.Cactus;
 		}
 	}
