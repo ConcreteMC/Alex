@@ -62,7 +62,7 @@ namespace Alex.Worlds
 			
 		}
 
-		public void HeldItemChanged(short slot)
+		public void HeldItemChanged(IItem item, short slot)
 		{
 			
 		}

@@ -73,12 +73,7 @@ namespace Alex.Entities
 			ShowItemInHand = true;
 		}
 
-	    private void SelectedHotbarSlotChanged(object sender, SelectedSlotChangedEventArgs e)
-	    {
-		    Network?.HeldItemChanged(e.NewValue);
-	    }
-
-	    public bool IsBreakingBlock => _destroyingBlock;
+        public bool IsBreakingBlock => _destroyingBlock;
 
 	    public float BlockBreakProgress
 	    {
@@ -104,6 +99,8 @@ namespace Alex.Entities
 		    }
 	    }
 
+	    public bool WaitingOnChunk { get; set; } = false;
+	    
 	    public BlockCoordinates TargetBlock => _destroyingTarget;
 
 	    private BlockCoordinates _destroyingTarget = BlockCoordinates.Zero;
@@ -111,10 +108,22 @@ namespace Alex.Entities
         private DateTime _destroyingTick = DateTime.MaxValue;
 	    private double _destroyTimeNeeded = 0;
 	    private BlockFace _destroyingFace;
-
+	    
 	    private int PreviousSlot { get; set; } = 9;
 	    public override void Update(IUpdateArgs args)
 		{
+			if (WaitingOnChunk && Age % 4 == 0)
+			{
+				NoAi = true;
+				
+				if (Level.GetChunk(KnownPosition.GetCoordinates3D(), true) != null)
+				{
+					Velocity = Vector3.Zero;
+					WaitingOnChunk = false;
+					NoAi = false;
+				}
+			}
+
 			ChunkCoordinates oldChunkCoordinates = new ChunkCoordinates(base.KnownPosition);
 			bool sprint = IsSprinting;
 			bool sneak = IsSneaking;
@@ -220,8 +229,9 @@ namespace Alex.Entities
 
 			if (PreviousSlot != Inventory.SelectedSlot)
 			{
-				Network?.HeldItemChanged((short) Inventory.SelectedSlot);
-				PreviousSlot = Inventory.SelectedSlot;
+				var slot = Inventory.SelectedSlot;
+				Network?.HeldItemChanged(Inventory[Inventory.SelectedSlot], (short) slot);
+				PreviousSlot = slot;
 			}
 
 			base.Update(args);

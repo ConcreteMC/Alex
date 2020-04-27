@@ -73,7 +73,7 @@ namespace Alex.Worlds.Bedrock
         private PlayerProfile PlayerProfile { get; }
         private IEventDispatcher EventDispatcher { get; }
         private IStorageSystem Storage { get; }
-        public BedrockClientPacketHandler(IBedrockNetworkProvider client, IEventDispatcher eventDispatcher, WorldProvider worldProvider, PlayerProfile profile, Alex alex, CancellationToken cancellationToken) //:
+        public BedrockClientPacketHandler(IBedrockNetworkProvider client, IEventDispatcher eventDispatcher, WorldProvider worldProvider, PlayerProfile profile, Alex alex, CancellationToken cancellationToken, ChunkProcessor chunkProcessor) //:
 	       // base(client)
         {
 	        Storage = alex.Services.GetRequiredService<IStorageSystem>();
@@ -87,9 +87,7 @@ namespace Alex.Worlds.Bedrock
 	        
 	        AnvilWorldProvider.LoadBlockConverter();
 
-	        ChunkProcessor = new ChunkProcessor(alex.ThreadPool, 4,
-		        alex.Services.GetRequiredService<IOptionsProvider>().AlexOptions.MiscelaneousOptions.ServerSideLighting,
-		        cancellationToken);
+	        ChunkProcessor = chunkProcessor;
 
 	        if (!Directory.Exists("skins"))
 		        Directory.CreateDirectory("skins");
@@ -1184,22 +1182,76 @@ namespace Alex.Worlds.Bedrock
 				
 				var usedIndex = index;
 
-                if (ItemFactory.TryGetItem(slot.Id, slot.Metadata, out Item item))
+				var result = ToAlexItem(slot);
+				if (result != null)
 				{
-                    item.Count = slot.Count;
-                    item.Nbt = slot.ExtraData;
-                    
-                    inventory[usedIndex] = item;
-                    
-                   // Log.Info($"Set inventory slot: {usedIndex} Id: {slot.Id}:{slot.Metadata} x {slot.Count} Name: {item.DisplayName} IsPeInv: {inventory.IsPeInventory}");
+					inventory[usedIndex] = result;
 				}
-                else
+				else
                 {
                     Log.Warn($"Failed to set slot: {index} Id: {slot.Id}:{slot.Metadata}");
                 }
             }
 		}
 
+        private Item ToAlexItem(MiNET.Items.Item item)
+        {
+	        Item result = null;
+			
+	        if (item.Id < 256) //Block
+	        {
+		        var id = item.Id;
+		        var meta = (byte)item.Metadata;
+		        var reverseMap = MiNET.Worlds.AnvilWorldProvider.Convert.FirstOrDefault(map =>
+			        map.Value.Item1 == id);
+
+		        if (reverseMap.Value != null)
+		        {
+			        id = (byte) reverseMap.Key;
+		        }
+									        
+		        var res = BlockFactory.GetBlockStateID(id, meta);
+
+		        if (AnvilWorldProvider.BlockStateMapper.TryGetValue(res,
+			        out var res2))
+		        {
+			        var t = BlockFactory.GetBlockState(res2);
+
+			        ItemFactory.TryGetItem(t.Name, out result);
+		        }
+		        else
+		        {
+			        var block = BlockFactory.RuntimeIdTable.FirstOrDefault(x => x.Id == item.Id);
+			        if (block != null)
+			        {
+				        ItemFactory.TryGetItem(block.Name, out result);
+			        }
+		        }
+
+		        if (result != null)
+		        {
+			        result.Id = item.Id;
+			        result.Meta = item.Metadata;
+		        }
+	        }
+			
+	        if (result == null)
+	        {
+		        ItemFactory.TryGetItem(item.Id, item.Metadata, out result);
+		        //  Log.Info($"Set inventory slot: {message.slot} Id: {message.item.Id}:{message.item.Metadata} x {message.item.Count} Name: {item.DisplayName} IsPeInv: {inventory.IsPeInventory}");
+	        }
+
+	        if (result != null)
+	        {
+		        result.Count = item.Count;
+		        result.Nbt = item.ExtraData;
+
+		        return result;
+	        }
+
+	        return null;
+        }
+        
 		public void HandleMcpeInventorySlot(McpeInventorySlot message)
 		{
 			Inventory inventory = null;
@@ -1216,14 +1268,11 @@ namespace Alex.Worlds.Bedrock
 			if (inventory == null || message.item == null) return;
 			
 			var index = (int)message.slot;
-			
-            if (ItemFactory.TryGetItem(message.item.Id, message.item.Metadata, out Item item))
+			var result = ToAlexItem(message.item);
+
+			if (result != null)
             {
-                item.Count = message.item.Count;
-                item.Nbt = message.item.ExtraData;
-                
-				inventory[index] = item;
-              //  Log.Info($"Set inventory slot: {message.slot} Id: {message.item.Id}:{message.item.Metadata} x {message.item.Count} Name: {item.DisplayName} IsPeInv: {inventory.IsPeInventory}");
+	            inventory[index] = result;
             }
             else
             {

@@ -889,7 +889,13 @@ namespace Alex.Worlds
 
 		public void UpdatePlayerPosition(PlayerLocation location)
 		{
+			if (!ChunkManager.TryGetChunk(new ChunkCoordinates(location), out _))
+			{
+				Player.WaitingOnChunk = true;
+			}
+
 			Player.KnownPosition = location;
+			
 		}
 
 		public void UpdateEntityPosition(long entityId, PlayerLocation position, bool relative = false, bool updateLook = false, bool updatePitch = false)

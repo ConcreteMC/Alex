@@ -20,7 +20,7 @@ namespace Alex.API.Network
 
 	    void WorldInteraction(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition);
 	    void UseItem(IItem item, int hand);
-	    void HeldItemChanged(short slot);
+	    void HeldItemChanged(IItem item, short slot);
 	    void Close();
     }
 }

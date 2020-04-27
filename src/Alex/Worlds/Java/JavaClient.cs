@@ -136,7 +136,7 @@ namespace Alex.Worlds.Java
 			});
 		}
 
-		public void HeldItemChanged(short slot)
+		public void HeldItemChanged(IItem item, short slot)
 		{
 			SendPacket(new HeldItemChangePacket()
 			{

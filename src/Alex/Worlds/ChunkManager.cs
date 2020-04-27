@@ -863,7 +863,7 @@ namespace Alex.Worlds
 				    
 				    chunk.Scheduled = type;
 				    
-				    PriorityQueue.Enqueue(position, Math.Abs(new ChunkCoordinates(_cameraPosition).DistanceTo(position)));
+				    PriorityQueue.Enqueue(position, prioritize ? 0 : Math.Abs(new ChunkCoordinates(_cameraPosition).DistanceTo(position)));
 				   // double distance = Math.Abs(new ChunkCoordinates(_cameraPosition).DistanceTo(position));
 				    
 				  //  Schedule(position, distance);

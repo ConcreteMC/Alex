@@ -128,6 +128,7 @@ namespace Alex.Worlds.Bedrock
         }
 
         private long ClientGUID { get; }
+        private ChunkProcessor ChunkProcessor { get; }
 		public BedrockClient(Alex alex, IEventDispatcher eventDispatcher, IPEndPoint endpoint, PlayerProfile playerProfile, DedicatedThreadPool threadPool, BedrockWorldProvider wp)
 		{
 			PlayerProfile = playerProfile;
@@ -155,6 +156,10 @@ namespace Alex.Worlds.Bedrock
 			//	ConnectionAcceptedWaitHandle?.Set();
 			//	SendAlexLogin(playerProfile.Username);
 			//};
+
+			ChunkProcessor = new ChunkProcessor(alex.ThreadPool, 4,
+				alex.Services.GetRequiredService<IOptionsProvider>().AlexOptions.MiscelaneousOptions.ServerSideLighting,
+				CancellationTokenSource.Token);
 			
 			Connection = new RakConnection(new IPEndPoint(IPAddress.Any, 0), new GreyListManager(), new MotdProvider(), threadPool);
 			ServerEndpoint = endpoint;
@@ -174,7 +179,7 @@ namespace Alex.Worlds.Bedrock
 
 				session.ConnectionInfo.RakSessions.Clear();
 				
-				var handler = new BedrockClientMessageHandler(session, new BedrockClientPacketHandler(this, eventDispatcher, wp, playerProfile, alex, CancellationTokenSource.Token));
+				var handler = new BedrockClientMessageHandler(session, new BedrockClientPacketHandler(this, eventDispatcher, wp, playerProfile, alex, CancellationTokenSource.Token, ChunkProcessor));
 				if (!hasSession)
 				{
 					handler.ConnectionAction = () =>
@@ -644,13 +649,38 @@ namespace Alex.Worlds.Bedrock
             }
         }
 
+	    private MiNET.Items.Item GetMiNETItem(IItem t)
+	    {
+		    if (t is Item item)
+		    {
+			    var minetItem = MiNET.Items.ItemFactory.GetItem(item.Id, item.Meta, item.Count);
+			    if (minetItem.Id == 0)
+			    {
+				    if (MiNET.Worlds.AnvilWorldProvider.Convert.TryGetValue(item.Id, out var val))
+				    {
+					    var id = val.Item1;
+					    var meta = val.Item2(id, (byte) item.Meta);
+					    
+					    minetItem = MiNET.Items.ItemFactory.GetItem((short) id, meta, item.Count);
+				    }
+			    }
+			    
+			    minetItem.ExtraData = item.Nbt;
+
+			    return minetItem;
+		    }
+
+		    return null;
+	    }
+	    
 	    public void BlockPlaced(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition, IEntity entity)
 	    {
 		    if (entity is Player p)
 		    {
 			    var itemInHand = p.Inventory[hand];
-			    var minetItem = MiNET.Items.ItemFactory.GetItem(itemInHand.Id, itemInHand.Meta, itemInHand.Count);
-			    minetItem.ExtraData = itemInHand.Nbt;
+			    var minetItem = GetMiNETItem(itemInHand);
+			    
+			    Log.Info($"Placing block, slot={hand} InHand={itemInHand.ToString()} face={face} pos={position}");
 			    
 			    var packet = McpeInventoryTransaction.CreateObject();
 			    packet.transaction = new ItemUseTransaction()
@@ -668,7 +698,8 @@ namespace Alex.Worlds.Bedrock
 				    },
 				    Item = minetItem,
 				    FromPosition = new System.Numerics.Vector3(p.KnownPosition.X, p.KnownPosition.Y, p.KnownPosition.Z),
-				    Slot = hand
+				    Slot = hand,
+				    BlockRuntimeId = ChunkProcessor._blockStateMap.FirstOrDefault(x => x.Value.Id == itemInHand.Id && x.Value.Data == itemInHand.Meta).Key
 				    //BlockRuntimeId = 
 			    };
 
@@ -750,13 +781,18 @@ namespace Alex.Worlds.Bedrock
 			//Log.Warn("TODO: Implement UseItem");
 		}
 
-		public void HeldItemChanged(short slot)
+		public void HeldItemChanged(IItem item, short slot)
 		{
+			var minetItem = GetMiNETItem(item);
+			
 			McpeMobEquipment packet = McpeMobEquipment.CreateObject();
 			packet.selectedSlot = (byte) slot;
+			packet.slot = (byte) slot;
+			packet.item = minetItem;
+			
 			Session.SendPacket(packet);
 			
-			//Log.Warn("TODO: Implement Held Item Changed");
+			Log.Warn($"Held item slot changed: {slot} | Inventor: ");
 		}
 
 		public void Close()
