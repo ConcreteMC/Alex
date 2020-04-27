@@ -9,6 +9,7 @@ namespace Alex.API.Graphics
 		BoundingFrustum BoundingFrustum { get; }
 		float FarDistance { get; set; }
 		float FOV { get; set; }
+		float AspectRatio { get;  }
 		Vector3 Position { get; set; }
 		Matrix ProjectionMatrix { get; set; }
 		Vector3 Rotation { get; set; }

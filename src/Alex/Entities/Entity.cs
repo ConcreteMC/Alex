@@ -522,12 +522,10 @@ namespace Alex.Entities
 
 		public void RenderNametag(IRenderArgs renderArgs)
 		{
-			var boundingBox = GetBoundingBox(Vector3.Zero);
 			var halfWidth = -((((float) Width) * Scale));
 			
-			var maxDistance = (renderArgs.Camera.FarDistance) / 2f;
-			//maxDistance = renderArgs.Camera.FarDistance;
-			
+			var maxDistance = (renderArgs.Camera.FarDistance) / (64f);
+
 			Vector3 posOffset = new Vector3(0, 0.25f, 0);
 
 			if (RenderEntity && ModelRenderer != null && ModelRenderer.Valid && !IsInvisible && !ModelRenderer.Texture.IsFullyTransparent)
@@ -544,28 +542,26 @@ namespace Alex.Entities
 			var pos = KnownPosition + posOffset + (rotation * halfWidth);
 			//pos.Y = 0;
 			
-			var distance = Vector3.DistanceSquared(pos, renderArgs.Camera.Position);
+			var distance = Vector3.Distance(pos, renderArgs.Camera.Position);
 			if (distance >= maxDistance)
 			{
 				return;
 			}
-			
-			//s = MathF.Round(s, 2, MidpointRounding.ToEven);
-			//float s = 1f;
-			Vector2 textPosition;
 
+			Vector2 textPosition;
+			
 			var screenSpace = renderArgs.GraphicsDevice.Viewport.Project(pos, 
 				renderArgs.Camera.ProjectionMatrix,
 				renderArgs.Camera.ViewMatrix,
 				Matrix.Identity);
 
-			float s = 1f - ((distance) * (1f / maxDistance));
-
 			textPosition.X = screenSpace.X;
 			textPosition.Y = screenSpace.Y;
 
-			var scale = new Vector2(s, s);
-			scale *= Alex.Instance.GuiRenderer.ScaledResolution.ElementScale;
+			var scaleRatio = Alex.Instance.GuiRenderer.ScaledResolution.ScaleFactor;
+			float scaler = 1f - ((distance) * (1f / maxDistance));
+			var scale = new Vector2(scaler * scaleRatio, scaler * scaleRatio);
+			//scale *= Alex.Instance.GuiRenderer.ScaledResolution.ElementScale;
 	
 			string clean = NameTag;
 
@@ -578,7 +574,7 @@ namespace Alex.Entities
 			renderArgs.SpriteBatch.FillRectangle(new Rectangle(textPosition.ToPoint(), c), new Color(Color.Black, 128), screenSpace.Z);
 			Alex.Font.DrawString(renderArgs.SpriteBatch, clean, textPosition, TextColor.White, FontStyle.None, scale, layerDepth: screenSpace.Z);
 		}
-
+		
 		public virtual void TerrainCollision(Vector3 collisionPoint, Vector3 direction)
 		{
 			if (direction.Y < 0) //Collided with the ground

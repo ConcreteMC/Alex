@@ -86,7 +86,7 @@ namespace Alex.Worlds
 		    CullMode = CullMode.None,
 		    FillMode = FillMode.Solid,
 		    DepthClipEnable = true,
-		    ScissorTestEnable = false
+		    ScissorTestEnable = true
 	    };
 	    
 	    public void Render2D(IRenderArgs args)
