@@ -82,11 +82,11 @@ namespace Alex.Worlds
 
 	    private static RasterizerState RasterizerState = new RasterizerState()
 	    {
-		    DepthBias = -0.0015f,
+		    //DepthBias = -0.0015f,
 		    CullMode = CullMode.None,
 		    FillMode = FillMode.Solid,
 		    DepthClipEnable = true,
-		    ScissorTestEnable = true
+		    ScissorTestEnable = false
 	    };
 	    
 	    public void Render2D(IRenderArgs args)

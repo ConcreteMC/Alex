@@ -23,6 +23,8 @@ namespace Alex.API.Gui
 	{
 		public event EventHandler<UiScaleEventArgs> ScaleChanged;
 
+		public Vector2 ElementScale { get; private set; } = Vector2.One;
+		
 		public double ScaledWidthD  { get; private set; }
 		public double ScaledHeightD { get; private set; }
 
@@ -113,6 +115,7 @@ namespace Alex.API.Gui
 				var scaleX = (float)(viewportWidth / ScaledWidthD);
 				var scaleY = (float)(viewportHeight / ScaledHeightD);
 
+				ElementScale = new Vector2(scaleX, scaleY);
 
 				TransformMatrix = Matrix.CreateScale(scaleX, scaleY, 1f);
 				InverseTransformMatrix = Matrix.Invert(TransformMatrix);

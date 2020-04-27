@@ -274,6 +274,7 @@ namespace Alex.Entities
 						if (meta.Value is MetadataFloat fltw)
 						{
 							Width = fltw.Value;
+							Length = fltw.Value;
 						}
 					} break;
 					case MiNET.Entities.Entity.MetadataFlags.Scale:
@@ -281,7 +282,6 @@ namespace Alex.Entities
 						if (meta.Value is MetadataFloat flt)
 						{
 							Scale = flt.Value;
-							Log.Info($"Received scale: {flt.Value}");
 						}
 					} break;
 					case MiNET.Entities.Entity.MetadataFlags.EntityFlags:
@@ -515,14 +515,18 @@ namespace Alex.Entities
 		
 		public BoundingBox GetBoundingBox(Vector3 pos)
 		{
-			double halfWidth = Width / 2D;
+			double halfWidth = (Width * Scale) / 2D;
 
-			return new BoundingBox(new Vector3((float)(pos.X - halfWidth), pos.Y, (float)(pos.Z - halfWidth)), new Vector3((float)(pos.X + halfWidth), (float)(pos.Y + Height), (float)(pos.Z + halfWidth)));
+			return new BoundingBox(new Vector3((float)(pos.X - halfWidth), pos.Y, (float)(pos.Z - halfWidth)), new Vector3((float)(pos.X + halfWidth), (float)(pos.Y + (Height * Scale)), (float)(pos.Z + halfWidth)));
 		}
 
 		public void RenderNametag(IRenderArgs renderArgs)
 		{
-			var maxDistance = (renderArgs.Camera.FarDistance / 16f) / 2f;
+			var boundingBox = GetBoundingBox(Vector3.Zero);
+			var halfWidth = -((((float) Width) * Scale));
+			
+			var maxDistance = (renderArgs.Camera.FarDistance) / 2f;
+			//maxDistance = renderArgs.Camera.FarDistance;
 			
 			Vector3 posOffset = new Vector3(0, 0.25f, 0);
 
@@ -532,31 +536,36 @@ namespace Alex.Entities
 			}
 
 			var cameraPosition = new Vector3(renderArgs.Camera.Position.X, 0, renderArgs.Camera.Position.Z);
-			var pos = KnownPosition + posOffset;
+			
+			var rotation = new Vector3(KnownPosition.X, 0, KnownPosition.Z) - cameraPosition;
+			rotation.Normalize();
+			
+			
+			var pos = KnownPosition + posOffset + (rotation * halfWidth);
 			//pos.Y = 0;
 			
-			var distance = MathF.Abs(Vector3.Distance(pos, renderArgs.Camera.Position));
+			var distance = Vector3.DistanceSquared(pos, renderArgs.Camera.Position);
 			if (distance >= maxDistance)
 			{
 				return;
 			}
-
-			float s = 1f - (distance * (1f / maxDistance));
-			s = MathF.Round(s, 2, MidpointRounding.ToEven);
-
+			
+			//s = MathF.Round(s, 2, MidpointRounding.ToEven);
+			//float s = 1f;
 			Vector2 textPosition;
 
-			// calculate screenspace of text3d space position
-			var screenSpace = renderArgs.GraphicsDevice.Viewport.Project(Vector3.Zero, 
+			var screenSpace = renderArgs.GraphicsDevice.Viewport.Project(pos, 
 				renderArgs.Camera.ProjectionMatrix,
 				renderArgs.Camera.ViewMatrix,
-				 Matrix.CreateBillboard(pos, renderArgs.Camera.Position, Vector3.Up, pos - renderArgs.Camera.Position));
+				Matrix.Identity);
 
-			// get 2D position from screenspace vector
+			float s = 1f - ((distance) * (1f / maxDistance));
+
 			textPosition.X = screenSpace.X;
 			textPosition.Y = screenSpace.Y;
 
 			var scale = new Vector2(s, s);
+			scale *= Alex.Instance.GuiRenderer.ScaledResolution.ElementScale;
 	
 			string clean = NameTag;
 
@@ -565,7 +574,7 @@ namespace Alex.Entities
 
 			textPosition.X = (int)(textPosition.X - (c.X / 2d));
 			textPosition.Y = (int)(textPosition.Y - (c.Y / 2d));
-
+			
 			renderArgs.SpriteBatch.FillRectangle(new Rectangle(textPosition.ToPoint(), c), new Color(Color.Black, 128), screenSpace.Z);
 			Alex.Font.DrawString(renderArgs.SpriteBatch, clean, textPosition, TextColor.White, FontStyle.None, scale, layerDepth: screenSpace.Z);
 		}
