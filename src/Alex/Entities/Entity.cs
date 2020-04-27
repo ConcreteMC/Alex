@@ -213,7 +213,7 @@ namespace Alex.Entities
 			CheckHeldItem();
 		}
 
-		private void OnInventorySlotChanged(object sender, SlotChangedEventArgs e)
+		protected virtual void OnInventorySlotChanged(object sender, SlotChangedEventArgs e)
 		{
 			CheckHeldItem();
 		}

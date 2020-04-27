@@ -19,6 +19,7 @@ namespace Alex.Gui.Elements.Inventory
         private Item _item;
         private GuiTextureElement TextureElement { get; }
 
+        public int InventoryIndex { get; set; } = 0;
         public InventoryContainerItem()
         {
             SetFixedSize(18, 18);
@@ -37,6 +38,12 @@ namespace Alex.Gui.Elements.Inventory
             {
                 _item = value;
 
+                if (_item == null || _item is ItemAir || _item.Count == 0)
+                {
+                    TextureElement.IsVisible = false;
+                    return;
+                }
+                
                 if (string.IsNullOrWhiteSpace(value?.Name))
                 {
                    // if (!ItemFactory.TryGetItem())
@@ -49,10 +56,12 @@ namespace Alex.Gui.Elements.Inventory
                 if (ItemFactory.ResolveItemTexture(_item.Name, out Texture2D texture))
                 {
                     TextureElement.Texture = texture;
+                    TextureElement.IsVisible = true;
                 }
                 else
                 {
                     Log.Warn($"Could not resolve item texture: {_item.Name}");
+                    TextureElement.IsVisible = false;
                 }
             }
         }
@@ -63,10 +72,18 @@ namespace Alex.Gui.Elements.Inventory
         }
 
         private bool _showTooltip = false;
+        private bool _cursorInContainer = false;
         protected override void OnCursorMove(Point cursorPosition, Point previousCursorPosition, bool isCursorDown)
         {
-            _showTooltip = true;
-           // TextOverlay.RenderPosition = RenderPosition;
+            if (_cursorInContainer)
+            {
+                _showTooltip = true;
+            }
+            else
+            {
+                _showTooltip = false;
+            }
+            // TextOverlay.RenderPosition = RenderPosition;
             
             base.OnCursorMove(cursorPosition, previousCursorPosition, isCursorDown);
         }
@@ -74,6 +91,7 @@ namespace Alex.Gui.Elements.Inventory
         protected override void OnCursorEnter(Point cursorPosition)
         {
             _showTooltip = true;
+            _cursorInContainer = true;
           //  AddChild(TextOverlay);
             
             base.OnCursorEnter(cursorPosition);
@@ -82,6 +100,7 @@ namespace Alex.Gui.Elements.Inventory
         protected override void OnCursorLeave(Point cursorPosition)
         {
             base.OnCursorLeave(cursorPosition);
+            _cursorInContainer = false;
             _showTooltip = false;
             
           //  RemoveChild(TextOverlay);

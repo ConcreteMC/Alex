@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-using Alex.API.Blocks.State;
 using Alex.API.Entities;
 using Alex.API.Graphics;
 using Alex.API.Input;
@@ -12,12 +12,19 @@ using Alex.GameStates.Playing;
 using Alex.Items;
 using Alex.Utils;
 using Alex.Worlds;
+using Alex.Worlds.Bedrock;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET;
 using MiNET.Net;
+using MiNET.Utils;
 using NLog;
+using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
+using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
+using ContainmentType = Microsoft.Xna.Framework.ContainmentType;
+using IBlockState = Alex.API.Blocks.State.IBlockState;
 using Inventory = Alex.Utils.Inventory;
+using Skin = Alex.API.Utils.Skin;
 
 namespace Alex.Entities
 {
@@ -74,6 +81,30 @@ namespace Alex.Entities
 			RenderEntity = true;
 			ShowItemInHand = true;
 		}
+
+        protected override void OnInventorySlotChanged(object sender, SlotChangedEventArgs e)
+        {
+	        //Crafting!
+	        if (e.Index >= 41 && e.Index <= 44)
+	        {
+		        McpeInventoryTransaction transaction = McpeInventoryTransaction.CreateObject();
+		        transaction.transaction = new NormalTransaction()
+		        {
+			        TransactionRecords = new List<TransactionRecord>()
+			        {
+				        new CraftTransactionRecord()
+				        {
+					        Action = McpeInventoryTransaction.CraftingAction.CraftAddIngredient,
+					        Slot = e.Index,
+					        NewItem = BedrockClient.GetMiNETItem(e.Value),
+					        OldItem = BedrockClient.GetMiNETItem(e.OldItem)
+				        }
+			        }
+		        };
+	        }
+	        
+	        base.OnInventorySlotChanged(sender, e);
+        }
 
         public bool IsBreakingBlock => _destroyingBlock;
 

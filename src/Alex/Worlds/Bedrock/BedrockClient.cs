@@ -659,7 +659,7 @@ namespace Alex.Worlds.Bedrock
             }
         }
 
-	    private MiNET.Items.Item GetMiNETItem(IItem t)
+	    public static MiNET.Items.Item GetMiNETItem(IItem t)
 	    {
 		    if (t is Item item)
 		    {

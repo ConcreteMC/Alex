@@ -112,12 +112,15 @@ namespace Alex.Utils
                         Count = 0
                     };
                 }
+
+                var oldValue = Slots[index];
+                
 			    Slots[index] = value;
 		        if ((index == 36 + _selectedSlot && !IsPeInventory) || (index == _selectedSlot && IsPeInventory))
 		        {
 		            MainHand = value;
 		        }
-			    SlotChanged?.Invoke(this, new SlotChangedEventArgs(index, value));
+			    SlotChanged?.Invoke(this, new SlotChangedEventArgs(index, value, oldValue));
 			}
 	    }
     }
@@ -127,10 +130,13 @@ namespace Alex.Utils
 		public int Index;
 		public Item Value;
 
-		public SlotChangedEventArgs(int index, Item value)
+		public Item OldItem;
+		
+		public SlotChangedEventArgs(int index, Item value, Item oldItem)
 		{
 			Index = index;
 			Value = value;
+			OldItem = oldItem;
 		}
 	}
 
