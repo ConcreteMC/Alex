@@ -111,7 +111,7 @@ namespace Alex.Worlds.Bedrock
         public AutoResetEvent PlayerStatusChanged { get; set; } = new AutoResetEvent(false);
         private IEventDispatcher EventDispatcher { get; }
         public RakConnection Connection { get; }
-        private BedrockClientMessageHandler MessageHandler { get; set; }
+        private MessageHandler MessageHandler { get; set; }
         public RakSession Session { get; set; }//=> Connection.ConnectionInfo.RakSessions.Values.FirstOrDefault();
         public bool IsConnected => Session?.State == ConnectionState.Connected;
         
@@ -163,7 +163,7 @@ namespace Alex.Worlds.Bedrock
 			
 			Connection = new RakConnection(new IPEndPoint(IPAddress.Any, 0), new GreyListManager(), new MotdProvider(), threadPool);
 			ServerEndpoint = endpoint;
-			
+
 			Connection.CustomMessageHandlerFactory = session =>
 			{
 				Log.Info($"Requesting sessions...  {Connection.ConnectionInfo.RakSessions.Count}");
@@ -176,10 +176,9 @@ namespace Alex.Worlds.Bedrock
 				}
 
 				session.Username = playerProfile.Username;
-
 				session.ConnectionInfo.RakSessions.Clear();
-				
-				var handler = new BedrockClientMessageHandler(session, new BedrockClientPacketHandler(this, eventDispatcher, wp, playerProfile, alex, CancellationTokenSource.Token, ChunkProcessor));
+
+				var handler = new MessageHandler(session, new BedrockClientPacketHandler(this, eventDispatcher, wp, playerProfile, alex, CancellationTokenSource.Token, ChunkProcessor));
 				if (!hasSession)
 				{
 					handler.ConnectionAction = () =>
@@ -187,14 +186,18 @@ namespace Alex.Worlds.Bedrock
 						ConnectionAcceptedWaitHandle?.Set();
 						SendAlexLogin(playerProfile.Username);
 					};
+
+					handler.DisconnectedAction = (reason, sendDisconnect) =>
+					{
+						Log.Warn($"Got disconnected from server: {reason}");
+						ShowDisconnect(reason);
+					};
 					
 					MessageHandler = handler;
 				}
 
 				return handler;
 			};
-			
-			eventDispatcher?.RegisterEvents(this);
 
 			EventDispatcher = eventDispatcher;
 			
@@ -210,6 +213,8 @@ namespace Alex.Worlds.Bedrock
 				return;
 
 			Starting = true;
+			
+			EventDispatcher?.RegisterEvents(this);
 			
 			ConnectionAcceptedWaitHandle = resetEvent;
 			
@@ -276,8 +281,13 @@ namespace Alex.Worlds.Bedrock
 			RequestChunkRadius(newvalue);
 		}
 
+		private bool _disconnectShown = false;
 		public void ShowDisconnect(string reason, bool useTranslation = false)
-        {
+		{
+			if (_disconnectShown)
+				return;
+			_disconnectShown = true;
+			
             if (Alex.GameStateManager.GetActiveState() is DisconnectedScreen s)
             {
                 if (useTranslation)
@@ -713,25 +723,30 @@ namespace Alex.Worlds.Bedrock
 		    if (player is Player p)
 		    {
 			    var itemInHand = p.Inventory[p.Inventory.SelectedSlot];
-			    
-			   // WorldProvider?.GetChatReceiver?.Receive(new ChatObject($"(CLIENT) Hit entity: {target.EntityId} | Action: {action.ToString()} | Item: {itemInHand.Id}:{itemInHand.Meta} ({itemInHand.Name})"));
+
+			    // WorldProvider?.GetChatReceiver?.Receive(new ChatObject($"(CLIENT) Hit entity: {target.EntityId} | Action: {action.ToString()} | Item: {itemInHand.Id}:{itemInHand.Meta} ({itemInHand.Name})"));
+
+			    var item = MiNET.Items.ItemFactory.GetItem(itemInHand.Id, itemInHand.Meta, itemInHand.Count);
+			    item.Metadata = itemInHand.Meta;
+			    item.ExtraData = itemInHand.Nbt;
+			    item.Count = (byte) itemInHand.Count;
 			    
 			    var packet = McpeInventoryTransaction.CreateObject();
 			    packet.transaction = new ItemUseOnEntityTransaction()
 			    {
 				    ActionType = action,
-				    Item = MiNET.Items.ItemFactory.GetItem(itemInHand.Id, itemInHand.Meta, itemInHand.Count),
+				    Item = item,
 				    EntityId = target.EntityId
 			    };
-				    /*  packet.transaction = new Transaction()
-			    {
-				    TransactionType = McpeInventoryTransaction.TransactionType.ItemUseOnEntity,
-				    ActionType = (int) action,
-				    Item = MiNET.Items.ItemFactory.GetItem(itemInHand.Id, itemInHand.Meta, itemInHand.Count),
-				    EntityId = target.EntityId
-			    };*/
-			    
-				    Session.SendPacket(packet);
+			    /*  packet.transaction = new Transaction()
+		    {
+			    TransactionType = McpeInventoryTransaction.TransactionType.ItemUseOnEntity,
+			    ActionType = (int) action,
+			    Item = MiNET.Items.ItemFactory.GetItem(itemInHand.Id, itemInHand.Meta, itemInHand.Count),
+			    EntityId = target.EntityId
+		    };*/
+
+			    Session.SendPacket(packet);
 		    }
 	    }
 

@@ -26,6 +26,7 @@ namespace Alex.GameStates.Hud
         private readonly GuiContainer _healthContainer;
         private readonly GuiMultiStackContainer _bottomContainer;
         private readonly TipPopupComponent _tipPopupComponent;
+        private readonly GuiStackContainer _healthAndHotbar;
         
 	    public readonly ChatComponent Chat;
 	    public readonly TitleComponent Title;
@@ -46,9 +47,16 @@ namespace Alex.GameStates.Hud
             _playerController = player.Controller;
 			InputManager.AddListener(new MouseInputListener(InputManager.PlayerIndex));
 
+			_healthAndHotbar = new GuiStackContainer()
+			{
+				Orientation = Orientation.Vertical,
+				ChildAnchor = Alignment.Fill
+			};
+			
 			_bottomContainer = new GuiMultiStackContainer();
 			_bottomContainer.ChildAnchor = Alignment.BottomFill;
 			_bottomContainer.Anchor = Alignment.BottomCenter;
+			_bottomContainer.AutoSizeMode = AutoSizeMode.GrowAndShrink;
 			_bottomContainer.Orientation = Orientation.Vertical;
 
 			//BottomContainer.
@@ -62,7 +70,9 @@ namespace Alex.GameStates.Hud
 	        Chat.Anchor = Alignment.BottomLeft;
 
 	        _healthContainer = new GuiContainer();
-	        _healthContainer.Anchor = Alignment.BottomCenter;
+	        _healthContainer.Anchor = Alignment.Fill;
+	       // _healthContainer.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+	        
 	        _healthContainer.Margin = new Thickness(0, 0, 0, 1);
 	     //   _healthContainer.Orientation = Orientation.Horizontal;
 	      //  _healthContainer.ChildAnchor = Alignment.None;
@@ -75,6 +85,7 @@ namespace Alex.GameStates.Hud
 
 	        _tipPopupComponent = new TipPopupComponent();
 	        _tipPopupComponent.Anchor = Alignment.BottomCenter;
+	        _tipPopupComponent.AutoSizeMode = AutoSizeMode.GrowAndShrink;
 	        //_healthComponent.Anchor
 	        //  _hotbar.AddChild(_healthComponent = new HealthComponent(player));
         }
@@ -95,22 +106,28 @@ namespace Alex.GameStates.Hud
 
 		        t
 	        });*/
-	     
-	     AddChild(Chat);
-	     
+
 	     _bottomContainer.AddChild(_tipPopupComponent);
 	     
 	     _healthContainer.AddChild(_healthComponent);
 	     _healthContainer.AddChild(_hungerComponent);
-		        
-	     _bottomContainer. AddChild(_healthContainer);
+	     
+	     _healthAndHotbar.AddChild(_healthContainer);
+	     
+	     _healthAndHotbar.AddChild(_hotbar);
 
-	        _bottomContainer.AddRow(container =>
+	     _bottomContainer.AddRow(container =>
 	        {
+		        //		        container.AutoSizeMode = AutoSizeMode.GrowAndShrink;
 		        container.Anchor = Alignment.BottomCenter;
-		        container.AddChild(_hotbar);
+		        container.ChildAnchor = Alignment.FillCenter;
+		       
+		        container.AddChild(_healthAndHotbar);
+		        //container.AddChild(_hotbar);
 	        });
 	        AddChild(_bottomContainer);
+	        
+	        AddChild(Chat);
 	        
 	        //AddChild(_hotbar);
             AddChild(new GuiCrosshair());

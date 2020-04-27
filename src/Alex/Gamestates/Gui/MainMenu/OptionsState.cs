@@ -1,4 +1,5 @@
-﻿using Alex.API.Gui.Graphics;
+﻿using Alex.API.Gui.Elements.Controls;
+using Alex.API.Gui.Graphics;
 using Alex.GameStates.Gui.MainMenu.Options;
 using Alex.Gui;
 
@@ -18,8 +19,11 @@ namespace Alex.GameStates.Gui.MainMenu
 
             AddGuiRow(CreateLinkButton<ResourcePackOptionsState>("options.resourcepack"),
                 CreateLinkButton<SoundOptionsState>("options.sounds"));
+            
             AddGuiRow(CreateLinkButton<LanguageOptionsState>("options.language"),
                 CreateLinkButton<ControlOptionsState>("options.controls"));
+
+            AddGuiRow(CreateLinkButton<NetworkOptionsState>("options.network"), new GuiControl());
             
             base.OnInit(renderer);
         }

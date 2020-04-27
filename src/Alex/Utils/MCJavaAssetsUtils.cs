@@ -58,7 +58,6 @@ namespace Alex.Utils
 
         public async Task<string> EnsureTargetReleaseAsync(string targetRelease, IProgressReceiver progressReceiver)
         {
-            var manifest = await GetManifestAsync();
             var targetVersion = targetRelease; //manifest.Latest.Release;
 
             string assetsZipSavePath = Path.Combine("assets", $"java-{targetVersion}.zip");
@@ -87,8 +86,11 @@ namespace Alex.Utils
             }
             
             progressReceiver?.UpdateProgress(0, "Downloading assets...");
+            
+                var manifest = await GetManifestAsync();
 
-            // not latest, update
+
+                // not latest, update
             Log.Info($"Downloading MCJava {targetVersion} Assets.");
 
             var version = manifest.Versions.FirstOrDefault(v =>

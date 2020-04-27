@@ -24,6 +24,9 @@ namespace Alex.Gui.Elements
 		
 		private ConcurrentDeck<(string message, DateTime time)> _chatEntries = new ConcurrentDeck<(string message, DateTime time)>(10);
 
+		public int UnfocusedHeight { get; set; } = 100;
+		public int FocusedHeight { get; set; } = 180;
+		
 		private IEventDispatcher EventDispatcher { get; }
 		public ChatComponent(IEventDispatcher eventDispatcher)
 		{
@@ -59,6 +62,7 @@ namespace Alex.Gui.Elements
 
 		protected override void OnFocusActivate()
 		{
+			Height = FocusedHeight;
 			Alex.Instance.IsMouseVisible = true;
 
 			TextBuilder.Clear();
@@ -72,6 +76,7 @@ namespace Alex.Gui.Elements
 
 		protected override void OnFocusDeactivate()
 		{
+			Height = UnfocusedHeight;
 			Alex.Instance.IsMouseVisible = false;
 
 			TextBuilder.Clear();
@@ -87,6 +92,8 @@ namespace Alex.Gui.Elements
 		{
 			base.OnDraw(graphics, gameTime);
 
+			var targetHeight = Focused ? FocusedHeight : UnfocusedHeight;
+			
 			if (Focused)
 			{
 				var renderPos = (TextElement.RenderBounds.BottomLeft() - new Vector2(0, 8)).ToPoint();
@@ -97,7 +104,7 @@ namespace Alex.Gui.Elements
 			if (messages.Length > 0)
 			{
 				DateTime now = DateTime.UtcNow;
-				Vector2 offset = new Vector2(0, -33);
+				Vector2 offset = new Vector2(0, 48);
 
 				foreach (var msg in messages.Reverse())
 				{
@@ -114,6 +121,9 @@ namespace Alex.Gui.Elements
 					}
 
 					DrawChatLine(graphics, msg.message, alpha, ref offset);
+
+					if (offset.Y - 48f >= targetHeight)
+						break;
 				}
 			}
 		}
@@ -178,13 +188,13 @@ namespace Alex.Gui.Elements
 		{
 			var size = Font.MeasureString(text);
 
-			var renderPos = Bounds.BottomLeft() + offset;
+			var renderPos = Bounds.BottomLeft() - offset;
 
 			graphics.FillRectangle(new Rectangle(renderPos.ToPoint(), new Point(Width, (int) Math.Ceiling(size.Y + 2))),
 				new Color(Color.Black, alpha * 0.5f));
 
 			Font.DrawString(graphics.SpriteBatch, text, renderPos + new Vector2(0, 2), TextColor.White, opacity: alpha);
-			offset.Y -= (size.Y + 2);
+			offset.Y += (size.Y + 2);
 		}
 
 		public static TextColor FindLastColor(string message)

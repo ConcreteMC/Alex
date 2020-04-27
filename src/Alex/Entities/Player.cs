@@ -51,11 +51,13 @@ namespace Alex.Entities
         public int MaxExhaustion { get; set; }
         
         public bool IsWorldImmutable { get; set; } = false;
-        public bool CanPvP { get; set; } = true;
-        public bool CanPvM { get; set; } = true;
+        public bool IsNoPvP { get; set; } = true;
+        public bool IsNoPvM { get; set; } = true;
         
+        private World World { get; }
         public Player(GraphicsDevice graphics, InputManager inputManager, string name, World world, Skin skin, INetworkProvider networkProvider, PlayerIndex playerIndex) : base(name, world, networkProvider, skin.Texture)
-		{
+        {
+	        World = world;
 		//	DoRotationCalculations = false;
 			PlayerIndex = playerIndex;
 		    Controller = new PlayerController(graphics, world, inputManager, this, playerIndex); 
@@ -110,6 +112,8 @@ namespace Alex.Entities
 	    private BlockFace _destroyingFace;
 	    
 	    private int PreviousSlot { get; set; } = 9;
+	    private DateTime _lastTimeWithoutInput = DateTime.MinValue;
+	    private bool _prevCheckedInput = false;
 	    public override void Update(IUpdateArgs args)
 		{
 			if (WaitingOnChunk && Age % 4 == 0)
@@ -159,8 +163,16 @@ namespace Alex.Entities
 				}
 			}
 
-			if (Controller.CheckInput && Controller.CheckMovementInput)
+			var previousCheckedInput = _prevCheckedInput;
+			
+			if ((Controller.CheckInput && Controller.CheckMovementInput))
 			{
+				_prevCheckedInput = true;
+				if (!previousCheckedInput || World.FormManager.IsShowingForm)
+				{
+					return;
+				}
+				
 				UpdateRayTracer();
 				
 				var hitEntity = HitEntity;
@@ -222,9 +234,15 @@ namespace Alex.Entities
 					}*/
 				}
             }
-			else if (_destroyingBlock)
+			else
 			{
-				StopBreakingBlock();
+				if (_destroyingBlock)
+				{
+					StopBreakingBlock();
+				}
+
+				_prevCheckedInput = false;
+				_lastTimeWithoutInput = DateTime.UtcNow;
 			}
 
 			if (PreviousSlot != Inventory.SelectedSlot)
@@ -244,15 +262,18 @@ namespace Alex.Entities
 
 		    if (entity is PlayerMob)
 		    {
-			    canAttack = CanPvP && Level.Pvp;
+			    canAttack = !IsNoPvP && Level.Pvp;
 		    }
 		    else
 		    {
-			    canAttack = CanPvM;
+			    canAttack = !IsNoPvM;
 		    }
+
+		  //  Log.Info($"Interacting with entity. Attack: {attack} - CanAttack: {canAttack} - PVM: {IsNoPvM} - PVP: {IsNoPvP}");
 		    
-		    if (attack && canAttack)
+		    if (attack)
 		    {
+			   // entity.EntityHurt();
 			    Network?.EntityInteraction(this, entity, McpeInventoryTransaction.ItemUseOnEntityAction.Attack);
 		    }
 		    else

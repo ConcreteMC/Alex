@@ -20,6 +20,9 @@ namespace Alex.API.Data.Options
         [DataMember]
         public MiscelaneousOptions MiscelaneousOptions { get; set; }
 
+        [DataMember]
+        public NetworkOptions NetworkOptions { get; set; }
+        
         public AlexOptions()
         {
             FieldOfVision = DefineRangedProperty(70, 30, 120);
@@ -28,6 +31,7 @@ namespace Alex.API.Data.Options
             SoundOptions = DefineBranch<SoundOptions>();
             ResourceOptions = DefineBranch<ResourceOptions>();
             MiscelaneousOptions = DefineBranch<MiscelaneousOptions>();
+            NetworkOptions = DefineBranch<NetworkOptions>();
         }
     }
 }

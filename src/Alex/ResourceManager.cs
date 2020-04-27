@@ -180,6 +180,7 @@ namespace Alex
 		{
 			try
 			{
+				Log.Info($"Verifiying assets...");
 				string path = AssetsUtil.EnsureTargetReleaseAsync(JavaProtocol.VersionId, progressReceiver).Result;
 				if (!Storage.TryReadBytes(path, out javaResources))
 				{

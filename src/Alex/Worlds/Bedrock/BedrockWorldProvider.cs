@@ -73,10 +73,7 @@ namespace Alex.Worlds.Bedrock
 
 			return flags;
 		}
-
-		private object _entityTicks = new object();
-		private bool _isSneaking = false;
-		private bool _isSprinting = false;
+		
 		private bool _initiated = false;
 		private bool _flying = false;
 		private PlayerLocation _lastLocation = new PlayerLocation();
@@ -209,6 +206,8 @@ namespace Alex.Worlds.Bedrock
 				var statusChanged = false;
 				var done = false;
 				int previousPercentage = 0;
+				bool hasSpawnChunk = false;
+				
 				while (true)
 				{
 					double radiusSquared = Math.Pow(Client.ChunkRadius, 2);
@@ -221,12 +220,12 @@ namespace Alex.Worlds.Bedrock
 						progressReport(LoadingState.LoadingChunks, percentage);
 						previousPercentage = percentage;
 						
-						Log.Info($"Progress: {percentage} ({ChunksReceived} of {target})");
+						//Log.Info($"Progress: {percentage} ({ChunksReceived} of {target})");
 					}
 					
 					if (!statusChanged)
 					{
-						if (Client.PlayerStatusChanged.WaitOne(50))
+						if (Client.PlayerStatus == 3 || Client.PlayerStatusChanged.WaitOne(50) || Client.HasSpawned)
 						{
 							statusChanged = true;
 							
@@ -236,21 +235,22 @@ namespace Alex.Worlds.Bedrock
 							//Client.IsEmulator = false;
 						}
 					}
-
-					if ((percentage >= 90 && (statusChanged || timer.ElapsedMilliseconds > 15 * 1000)))
+					
+					if (!hasSpawnChunk)
 					{
-						Log.Info($"Init!!!");
-						
-						var packet = McpeSetLocalPlayerAsInitializedPacket.CreateObject();
-						packet.runtimeEntityId =  Client.WorldReceiver.GetPlayerEntity().EntityId;
-						Client.SendPacket(packet);
-						if (WorldReceiver.GetPlayerEntity() is Player player)
+						if (_loadedChunks.Contains(
+							new ChunkCoordinates(new PlayerLocation(Client.SpawnPoint.X, Client.SpawnPoint.Y, Client.SpawnPoint.Z))))
 						{
-							var p = player.KnownPosition;
-							Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(p.X, p.Y, p.Z, p.HeadYaw, p.Yaw, p.Pitch),player.KnownPosition.OnGround);
+							hasSpawnChunk = true;
 						}
+					}
 
-						break;
+					if (((percentage >= 90 || hasSpawnChunk)))
+					{
+						if (statusChanged)
+						{
+							break;
+						}
 					}
 
 					if (!VerifyConnection())
@@ -260,6 +260,17 @@ namespace Alex.Worlds.Bedrock
 						timer.Stop();
 						return;
 					}
+				}
+				
+				if (WorldReceiver.GetPlayerEntity() is Player player)
+				{
+					var packet = McpeSetLocalPlayerAsInitializedPacket.CreateObject();
+					packet.runtimeEntityId = Client.EntityId;
+					
+					Client.SendPacket(packet);
+							
+					var p = player.KnownPosition;
+					Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(p.X, p.Y, p.Z, p.HeadYaw, p.Yaw, p.Pitch), player.KnownPosition.OnGround);
 				}
 
 				//SkyLightCalculations.Calculate(WorldReceiver as World);

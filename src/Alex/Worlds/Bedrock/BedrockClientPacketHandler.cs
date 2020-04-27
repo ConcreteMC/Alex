@@ -147,6 +147,7 @@ namespace Alex.Worlds.Bedrock
 
         public void HandleMcpePlayStatus(McpePlayStatus message)
 		{
+			Log.Info($"Client status: {message.status}");
 			Client.PlayerStatus = message.status;
 			
 			if (Client.PlayerStatus == 3)
@@ -173,6 +174,18 @@ namespace Alex.Worlds.Bedrock
            // base.HandleMcpeDisconnect(message);
         }
 
+        public void HandleMcpeResourcePackDataInfo(McpeResourcePackDataInfo message)
+        {
+	        McpeResourcePackClientResponse response = new McpeResourcePackClientResponse();
+	        response.responseStatus = 3;
+	        Client.SendPacket(response);
+        }
+
+        public void HandleMcpeResourcePackChunkData(McpeResourcePackChunkData message)
+        {
+	        throw new NotImplementedException();
+        }
+        
         public void HandleMcpeResourcePacksInfo(McpeResourcePacksInfo message)
         {
 	        if (message.resourcepackinfos.Count != 0)
@@ -215,7 +228,7 @@ namespace Alex.Worlds.Bedrock
 			
 			_changeDimensionResetEvent.Set();
 		}
-
+		
 		private IReadOnlyDictionary<uint, BlockStateContainer> _blockStateMap;
 		public void HandleMcpeStartGame(McpeStartGame message)
 		{
@@ -269,6 +282,15 @@ namespace Alex.Worlds.Bedrock
             if (Client.WorldReceiver?.GetPlayerEntity() is Player player)
             {
 	            player.EntityId = message.runtimeEntityId;
+	            player.UpdateGamemode((Gamemode) message.playerGamemode);
+	            if (Client.WorldReceiver is World w)
+	            {
+		            foreach (var gr in message.gamerules)
+		            {
+			            w.SetGameRule(gr);
+		            }
+	            }
+	            
                 player.Inventory.IsPeInventory = true;
 
                 _entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
@@ -305,8 +327,8 @@ namespace Alex.Worlds.Bedrock
 				player.CanFly = ((message.flags & 0x40) == 0x40);
 				player.IsFlying = ((message.flags & 0x200) == 0x200);
 				player.IsWorldImmutable = ((message.flags & 0x01) == 0x01);
-				player.CanPvP = (message.flags & 0x02) != 0x02;
-				player.CanPvM = (message.flags & 0x04) != 0x04;
+				player.IsNoPvP = (message.flags & 0x02) == 0x02;
+				player.IsNoPvM = (message.flags & 0x04) == 0x04;
 			}
 		}
 
@@ -1231,7 +1253,7 @@ namespace Alex.Worlds.Bedrock
 		        if (result != null)
 		        {
 			        result.Id = item.Id;
-			        result.Meta = item.Metadata;
+			        //result.Meta = item.Metadata;
 		        }
 	        }
 			
@@ -1243,6 +1265,7 @@ namespace Alex.Worlds.Bedrock
 
 	        if (result != null)
 	        {
+		        result.Meta = item.Metadata;
 		        result.Count = item.Count;
 		        result.Nbt = item.ExtraData;
 
@@ -1342,7 +1365,12 @@ namespace Alex.Worlds.Bedrock
 			//base.HandleMcpeChangeDimension(message);
 			if (WorldProvider is BedrockWorldProvider provider)
 			{
+				var chunkCoords =
+					new ChunkCoordinates(new PlayerLocation(message.position.X, message.position.Y,
+						message.position.Z));
+				
 				LoadingWorldState loadingWorldState = new LoadingWorldState();
+
 				AlexInstance.GameStateManager.SetActiveState(loadingWorldState, true);
 				loadingWorldState.UpdateProgress(LoadingState.LoadingChunks, 0);
 
@@ -1352,24 +1380,48 @@ namespace Alex.Worlds.Bedrock
 					action.runtimeEntityId = Client.EntityId;
 					action.actionId = (int) PlayerAction.DimensionChangeAck;
 					Client.SendPacket(action);
+
+					World world = null;
+					if (Client.WorldReceiver is World w)
+					{
+						world = w;
+						
+						world.ChunkManager.ClearChunks();
+						world.UpdatePlayerPosition(new PlayerLocation(message.position.X, message.position.Y, message.position.Z));
+					}
 				
 					foreach (var loadedChunk in provider.LoadedChunks)
 					{
 						provider.UnloadChunk(loadedChunk);
 					}
 					
-					double radiusSquared = Math.Pow(Client.ChunkRadius, 2);
-					var target = radiusSquared * 2;
-
 					int percentage = 0;
 					bool ready = false;
+					int previousPercentage = 0;
+					bool spawnChunkLoaded = false;
 					
 					do
 					{
-						percentage = (int) (provider.LoadedChunks.Count() / target) * 100;
-						
-						loadingWorldState.UpdateProgress(LoadingState.LoadingChunks,
-							percentage);
+						if (!spawnChunkLoaded && percentage >= 100)
+						{
+							loadingWorldState.UpdateProgress(LoadingState.Spawning, 99);
+						}
+						else
+						{
+							double radiusSquared = Math.Pow(Client.ChunkRadius, 2);
+							var target = radiusSquared;
+
+							percentage = (int) ((100 / target) * world.ChunkManager.ChunkCount);
+
+							if (percentage != previousPercentage)
+							{
+								loadingWorldState.UpdateProgress(LoadingState.LoadingChunks,
+									percentage);
+								previousPercentage = percentage;
+
+								//Log.Info($"Progress: {percentage} ({ChunksReceived} of {target})");
+							}
+						}
 
 						//if (!ready)
 						//{
@@ -1381,9 +1433,20 @@ namespace Alex.Worlds.Bedrock
 							}
 						}
 
+						if (!spawnChunkLoaded && ready)
+						{
+							if (provider.LoadedChunks.Contains(chunkCoords))
+							{
+								spawnChunkLoaded = true;
+							}
+						}
 
-						if (percentage >= 100 && ready)
+
+						if (percentage >= 100 && ready && spawnChunkLoaded)
+						{
 							break;
+						}
+
 						//	}
 						//	else
 						//	{
@@ -1393,12 +1456,10 @@ namespace Alex.Worlds.Bedrock
 
 					AlexInstance.GameStateManager.Back();
 
-					if (Client.WorldReceiver is World world)
-					{
-						world.UpdatePlayerPosition(new PlayerLocation(message.position.X, message.position.Y, message.position.Z));
-						Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(message.position.X, message.position.Y, message.position.Z), false);
+					
+					Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(message.position.X, message.position.Y, message.position.Z), false);
 						//Client.CurrentLocation = new MiNET.Utils.PlayerLocation(message.position.X, message.position.Y, message.position.Z);
-					}
+					
 
 					//Client.SendMcpeMovePlayer();
 				});
@@ -1513,29 +1574,23 @@ namespace Alex.Worlds.Bedrock
 		{
 			UnhandledPackage(message);
 		}
-
-		public void HandleMcpeResourcePackDataInfo(McpeResourcePackDataInfo message)
-		{
-			throw new NotImplementedException();
-		}
-
-		public void HandleMcpeResourcePackChunkData(McpeResourcePackChunkData message)
-		{
-			throw new NotImplementedException();
-		}
-
+		
 		public void HandleMcpeTransfer(McpeTransfer message)
 		{
 			 Client.SendDisconnectionNotification();
-			 Client.Close();
-			
-			IPHostEntry hostEntry = Dns.GetHostEntry(message.serverAddress);
+			 WorldProvider.Dispose();
+			 
+			 ThreadPool.QueueUserWorkItem(o =>
+			 {
 
-			if (hostEntry.AddressList.Length > 0)
-			{
-				var ip = hostEntry.AddressList[0];
-				AlexInstance.ConnectToServer(new IPEndPoint(ip, message.port), PlayerProfile, true);
-			}
+				 IPHostEntry hostEntry = Dns.GetHostEntry(message.serverAddress);
+
+				 if (hostEntry.AddressList.Length > 0)
+				 {
+					 var ip = hostEntry.AddressList[0];
+					 AlexInstance.ConnectToServer(new IPEndPoint(ip, message.port), PlayerProfile, true);
+				 }
+			 });
 		}
 
 		public void HandleMcpePlaySound(McpePlaySound message)

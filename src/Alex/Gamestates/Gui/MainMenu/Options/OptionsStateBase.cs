@@ -63,8 +63,8 @@ namespace Alex.GameStates.Gui.MainMenu.Options
             
             base.OnUnload();
         }
-
-        protected GuiButton CreateLinkButton<TGameState>(string translationKey) where TGameState : class, IGameState
+        
+        private TGameState Construct<TGameState>() where TGameState : class, IGameState
         {
             TGameState state = null;
             foreach (var constructor in (typeof(TGameState).GetConstructors()))
@@ -95,6 +95,13 @@ namespace Alex.GameStates.Gui.MainMenu.Options
                     break;
                 }
             }
+
+            return state;
+        }
+
+        protected GuiButton CreateLinkButton<TGameState>(string translationKey) where TGameState : class, IGameState
+        {
+            var state = Construct<TGameState>();
             
             if (state == null)
                 throw new Exception($"Can not create linkbutton with type {typeof(TGameState)}");

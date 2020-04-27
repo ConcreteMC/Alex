@@ -531,7 +531,9 @@ namespace Alex
 		{
 			var oldNetworkPool = NetworkThreadPool;
 			
-			NetworkThreadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount / 2, ThreadType.Background, "Network ThreadPool"));
+			var optionsProvider =  Services.GetService<IOptionsProvider>();
+			
+			NetworkThreadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(optionsProvider.AlexOptions.NetworkOptions.NetworkThreads.Value, ThreadType.Background, "Network ThreadPool"));
 
 			try
 			{
@@ -567,17 +569,17 @@ namespace Alex
 
 		public void LoadWorld(WorldProvider worldProvider, INetworkProvider networkProvider)
 		{
-			GameStateManager.RemoveState("play");
-
 			PlayingState playState = new PlayingState(this, GraphicsDevice, worldProvider, networkProvider);
-			GameStateManager.AddState("play", playState);
-
+			
 			LoadingWorldState loadingScreen = new LoadingWorldState();
 			GameStateManager.AddState("loading", loadingScreen);
 			GameStateManager.SetActiveState("loading");
 
 			worldProvider.Load(loadingScreen.UpdateProgress).ContinueWith(task =>
 			{
+				GameStateManager.RemoveState("play");
+				GameStateManager.AddState("play", playState);
+				
 				if (networkProvider.IsConnected)
 				{
 					GameStateManager.SetActiveState("play");

@@ -27,6 +27,8 @@ namespace Alex.API.Entities
 
 		BoundingBox GetBoundingBox();
 
+		void EntityHurt();
+		
 		void Render(IRenderArgs renderArgs);
 		void Update(IUpdateArgs args);
 		void UpdateHeadYaw(float headYaw);

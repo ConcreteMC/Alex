@@ -19,7 +19,7 @@ namespace Alex.Gui.Elements
         private DateTime PopupHideTime { get; set; } = DateTime.UtcNow;
 
         private bool DoUpdate { get; set; } = false;
-        
+
         public TipPopupComponent()
         {
             Tip = new GuiTextElement()

@@ -41,8 +41,9 @@ namespace Alex.Networking.Bedrock
             {
                 packet?.Decode(buffer);
             }
-            catch (System.ArgumentOutOfRangeException)
+            catch (System.ArgumentOutOfRangeException ex)
             {
+                Log.Warn(ex, $"RakNet processing: {ex.ToString()}");
                 if (PrevBuffer != null)
                 {
                     Memory<byte> newBuffer = new Memory<byte>(PrevBuffer.Concat(buffer.ToArray()).ToArray());
@@ -97,7 +98,7 @@ namespace Alex.Networking.Bedrock
             }
             catch (Exception ex)
             {
-                if (messageId != 39)
+               // if (messageId != 39)
                 {
                     Log.Error(ex, $"Processing error: {ex.ToString()}");
                 }

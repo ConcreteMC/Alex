@@ -185,7 +185,7 @@ namespace Alex.API.Gui.Elements
 		}
 
 		private static Regex LinkParser = new Regex(@"\b(?:https?://|www\.)\S+\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-		private void OnTextUpdated()
+		protected virtual void OnTextUpdated()
 	    {
 		    string text = _text;
 			//if (Font != null && !string.IsNullOrWhiteSpace(text))

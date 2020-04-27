@@ -28,6 +28,7 @@ namespace Alex
 		private static McResourcePack ResourcePack { get; set; }
 		private static IReadOnlyDictionary<string, Func<Item>> Items { get; set; }
 		private static SecondItemEntry[] SecItemEntries { get; set; }
+		private static ItemEntry[] ItemEntries { get; set; }
 		
 		private static ConcurrentDictionary<string, ItemModelRenderer> ItemRenderers { get; } = new ConcurrentDictionary<string, ItemModelRenderer>();
 
@@ -68,7 +69,7 @@ namespace Alex
 		    
 		    var raw = ResourceManager.ReadStringResource("Alex.Resources.items2.json");
 		    
-		    ItemEntry[] itemData = JsonConvert.DeserializeObject<ItemEntry[]>(raw);
+		    ItemEntries = JsonConvert.DeserializeObject<ItemEntry[]>(raw);
 
 
 		    var ii = resources.Registries.Items.Entries;
@@ -117,7 +118,7 @@ namespace Alex
 			    item.Name = entry.Key;
                 item.DisplayName = entry.Key;
 
-			    var data = itemData.FirstOrDefault(x =>
+			    var data = ItemEntries.FirstOrDefault(x =>
 				    x.name.Equals(entry.Key.Substring(10), StringComparison.InvariantCultureIgnoreCase));
 			    if (data != null)
 			    {
@@ -191,7 +192,7 @@ namespace Alex
 			    item.Name = entry.Key;
                 item.DisplayName = entry.Key;
 
-			    var data = itemData.FirstOrDefault(x =>
+			    var data = ItemEntries.FirstOrDefault(x =>
 				    x.name.Equals(entry.Key.Substring(10), StringComparison.InvariantCultureIgnoreCase));
 			    if (data != null)
 			    {

@@ -43,7 +43,7 @@ namespace Alex.Gui.Elements.Inventory
 
 		public Utils.Inventory Inventory { get; set; }
 
-	    private GuiTextElement _itemNameTextElement;
+	    private GuiFadingTextElement _itemNameTextElement;
         public GuiItemHotbar(Utils.Inventory inventory)
         {
 	        Inventory = inventory;
@@ -69,14 +69,17 @@ namespace Alex.Gui.Elements.Inventory
 		        });
 	        }
 
-	       _itemNameTextElement = new GuiTextElement()
+	       _itemNameTextElement = new GuiFadingTextElement()
 	        {
 		        Anchor = Alignment.TopCenter,
 		        TextColor = TextColor.White,
 		        Text = "",
 		        Margin = new Thickness(0, -5, 0, 5),
-				FontStyle = FontStyle.DropShadow
+				FontStyle = FontStyle.DropShadow,
+				IsVisible = false
 	        };
+	       
+	       AddChild(_itemNameTextElement);
         }
 
 	    private void SelectedHotbarSlotChanged(object sender, SelectedSlotChangedEventArgs e)
@@ -157,7 +160,7 @@ namespace Alex.Gui.Elements.Inventory
 	    {
 		    Vector2 textSize =
 			    graphics.Font.MeasureString(_itemNameTextElement.Text, _itemNameTextElement.Scale);
-			graphics.DrawString(Bounds.TopCenter() + new Vector2(-textSize.X / 2f, -10), _itemNameTextElement.Text, _itemNameTextElement.TextColor, _itemNameTextElement.FontStyle, _itemNameTextElement.Scale);
+			graphics.DrawString(Bounds.TopCenter() + new Vector2(-textSize.X / 2f, -10), _itemNameTextElement.Text, _itemNameTextElement.TextColor, _itemNameTextElement.FontStyle, _itemNameTextElement.Scale, opacity: _itemNameTextElement.TextOpacity);
 		    base.OnDraw(graphics, gameTime);
 	    }
 
