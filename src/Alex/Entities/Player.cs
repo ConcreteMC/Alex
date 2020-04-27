@@ -49,6 +49,9 @@ namespace Alex.Entities
         
         public int Exhaustion { get; set; } = 0;
         public int MaxExhaustion { get; set; }
+
+        public bool IsFirstPersonMode { get; set; } = false;
+        public bool IsLeftyHandy { get; set; } = false;
         
         public Player(GraphicsDevice graphics, InputManager inputManager, string name, World world, Skin skin, INetworkProvider networkProvider, PlayerIndex playerIndex) : base(name, world, networkProvider, skin.Texture)
 		{

@@ -6,6 +6,7 @@ using Alex.API.Graphics;
 using Alex.API.Graphics.Textures;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
+using Alex.API.Gui.Elements.Layout;
 using Alex.API.Gui.Graphics;
 using Alex.API.Services;
 using Alex.API.Utils;
@@ -15,7 +16,9 @@ using Alex.Gamestates.Gui.MainMenu;
 using Alex.GameStates.Gui.MainMenu;
 using Alex.GameStates.Gui.Multiplayer;
 using Alex.Gui;
+using Alex.Gui.Controls.Debug;
 using Alex.Gui.Elements;
+using Alex.Gui.Elements.Inventory;
 using Alex.Networking.Java;
 using Alex.Services;
 using Alex.Utils;
@@ -44,7 +47,8 @@ namespace Alex.GameStates
 		private readonly GuiPanoramaSkyBox _backgroundSkyBox;
 		private GuiEntityModelView _playerView;
 		private IPlayerProfileService _playerProfileService;
-		
+		private GuiItem _guiItem;
+		private GuiItem _guiItem2;
 		public TitleState()
 		{
 			_backgroundSkyBox = new GuiPanoramaSkyBox(Alex);
@@ -136,6 +140,65 @@ namespace Alex.GameStates
 
 				Text = "Who liek minecwaf?!",
 			});
+			
+			var guiItemStack = new GuiStackContainer()
+			{
+				Anchor = Alignment.CenterX | Alignment.CenterY,
+				Orientation = Orientation.Vertical
+			};
+			
+			AddChild(guiItemStack);
+			
+			var row = new GuiStackContainer() {
+				Orientation = Orientation.Horizontal,
+				Anchor = Alignment.TopFill,
+				ChildAnchor = Alignment.FillCenter,
+				Margin = Thickness.One
+			};
+			guiItemStack.AddChild(row);
+			
+			row.AddChild(_guiItem = new GuiItem()
+			{
+				Height = 24,
+				Width = 24,
+				Background = new Color(Color.Black, 0.2f)
+			});
+			row.AddChild(_guiItem2 = new GuiItem()
+			{
+				Height = 24,
+				Width = 24,
+				Background = new Color(Color.Black, 0.2f)
+			});
+			
+			guiItemStack.AddChild(new GuiVector3Control(() => _guiItem.Camera.Position, newValue =>
+			{
+				if (_guiItem.Camera != null)
+				{
+					_guiItem.Camera.Position = newValue;
+				}
+				if(_guiItem2.Camera != null)
+				{
+					_guiItem2.Camera.Position = newValue;
+				}
+			}, 0.25f)
+			{
+				Margin = new Thickness(2)
+			});
+			
+			// guiItemStack.AddChild(new GuiVector3Control(() => _guiItem.Camera.TargetPositionOffset, newValue =>
+			// {
+			// 	if (_guiItem.Camera != null)
+			// 	{
+			// 		_guiItem.Camera.Target = newValue;
+			// 	}
+			// 	if(_guiItem2.Camera != null)
+			// 	{
+			// 		_guiItem2.Camera.Target = newValue;
+			// 	}
+			// }, 0.25f)
+			// {
+			// 	Margin = new Thickness(2)
+			// });
 			
 			_playerProfileService = Alex.Services.GetService<IPlayerProfileService>();
 			_playerProfileService.ProfileChanged += PlayerProfileServiceOnProfileChanged;
@@ -359,6 +422,21 @@ namespace Alex.GameStates
 			}
 
 			_prevKeyboardState = s;
+
+			if (_guiItem.Item == null)
+			{
+				if (ItemFactory.TryGetItem("minecraft:grass_block", out var item))
+					_guiItem.Item = item;
+				else
+					_guiItem.Item = null;
+			}
+			if (_guiItem2.Item == null)
+			{
+				if (ItemFactory.TryGetItem("minecraft:diamond_hoe", out var item))
+					_guiItem2.Item = item;
+				else
+					_guiItem2.Item = null;
+			}
 		}
 
 		protected override void OnDraw(IRenderArgs args)

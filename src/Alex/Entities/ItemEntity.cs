@@ -3,6 +3,7 @@ using Alex.API.Graphics;
 using Alex.API.Network;
 using Alex.Graphics.Models.Items;
 using Alex.Items;
+using Alex.ResourcePackLib.Json.Models.Items;
 using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
@@ -35,6 +36,10 @@ namespace Alex.Entities
             }
             
             ItemRenderer = item.Renderer;
+            if (ItemRenderer != null)
+            {
+                ItemRenderer.DisplayPosition = DisplayPosition.Ground;
+            }
         }
 
         private float _rotation = 0;
@@ -43,7 +48,8 @@ namespace Alex.Entities
             if (CanRender)
             {
                 var offset = new Vector3(0.5f, 0.5f, 0.5f);
-                ItemRenderer?.Update(Matrix.CreateRotationY(MathUtils.ToRadians(_rotation)) * Matrix.CreateTranslation((KnownPosition)));
+                //ItemRenderer?.Update(Matrix.CreateRotationY(MathUtils.ToRadians(_rotation)) * Matrix.CreateTranslation((KnownPosition)));
+                ItemRenderer?.Update(KnownPosition);
                 
                 ItemRenderer?.Update(args.GraphicsDevice, args.Camera);
             }

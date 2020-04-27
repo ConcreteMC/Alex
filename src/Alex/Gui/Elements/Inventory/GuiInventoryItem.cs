@@ -53,7 +53,7 @@ namespace Alex.Gui.Elements.Inventory
 			}
 		}
 
-		private GuiItemRenderer ItemRenderer { get; }
+		private GuiItem ItemRenderer { get; }
 		public GuiInventoryItem()
 		{
 			Height = 18;
@@ -77,9 +77,9 @@ namespace Alex.Gui.Elements.Inventory
 				Margin = new Thickness(0, 0, 5, 3)
 			});
 			
-			AddChild(ItemRenderer = new GuiItemRenderer()
+			AddChild(ItemRenderer = new GuiItem()
 			{
-				Anchor = Alignment.TopLeft,
+				Anchor = Alignment.Fill,
 
 				Height = 16,
 				Width = 16,

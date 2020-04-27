@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Alex.ResourcePackLib.Json.Models.Blocks;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace Alex.ResourcePackLib.Json.Models.Items
 {
@@ -14,14 +15,62 @@ namespace Alex.ResourcePackLib.Json.Models.Items
 		[JsonProperty("parent")]
 	    public string ParentName;
 
-	    [JsonIgnore] public ResourcePackItem Parent = null;
+	    [JsonIgnore]
+	    private ResourcePackItem _parent = null;
+	    
+	    [JsonIgnore]
+	    public ResourcePackItem Parent
+	    {
+		    get => _parent;
+		    set
+		    {
+			    _parent = value;
+			    UpdateValuesFromParent();
+		    }
+	    }
 
+	    private void UpdateValuesFromParent()
+	    {
+		    if (_parent == null) return;
+		    
+		    if (!GuiLight.HasValue && Parent.GuiLight.HasValue)
+		    {
+			    GuiLight = Parent.GuiLight;
+		    }
+
+		    if (Elements.Length == 0 && _parent.Elements.Length > 0)
+		    {
+			    Elements = (BlockModelElement[]) _parent.Elements.Clone();
+		    }
+
+		    foreach (var kvp in _parent.Textures)
+		    {
+			    if (!Textures.ContainsKey(kvp.Key))
+			    {
+				    Textures.Add(kvp.Key, kvp.Value);
+			    }
+		    }
+
+		    foreach (var kvp in _parent.Display)
+		    {
+			    if (!Display.ContainsKey(kvp.Key))
+			    {
+				    Display.Add(kvp.Key, kvp.Value);
+			    }
+		    }
+	    }
+
+	    public Dictionary<string, DisplayElement> Display = new Dictionary<string, DisplayElement>();
+	    
 	    public Dictionary<string, string> Textures = new Dictionary<string, string>();
-		public Dictionary<string, DisplayElement> Display = new Dictionary<string, DisplayElement>();
-	    public Override[] Overrides = new Override[0];
+
+	    [JsonProperty("gui_light"), JsonConverter(typeof(StringEnumConverter))]
+	    public GuiLight? GuiLight = Alex.ResourcePackLib.Json.Models.Items.GuiLight.Front;
 	    public BlockModelElement[] Elements { get; set; } = new BlockModelElement[0];
 
-		[JsonIgnore]
+	    public Override[] Overrides = new Override[0];
+
+	    [JsonIgnore]
 	    public string Name { get; set; }
 
 		[JsonIgnore]

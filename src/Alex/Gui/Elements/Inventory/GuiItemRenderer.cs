@@ -31,12 +31,12 @@ namespace Alex.Gui.Elements.Inventory
         }
         
         public PlayerLocation EntityPosition { get; set; }
-        public GuiEntityModelView.GuiEntityModelViewCamera Camera { get; }
+        public GuiContext3DElement.GuiContext3DCamera Camera { get; }
         private RenderTarget2D RenderTarget { get; set; }
         public GuiItemRenderer()
         {
             EntityPosition = new PlayerLocation();
-            Camera = new GuiEntityModelView.GuiEntityModelViewCamera(EntityPosition);
+            Camera = new GuiEntityModelView.GuiContext3DCamera(EntityPosition);
         }
 
         private void ItemChanged(Item old, Item newItem)
@@ -106,8 +106,8 @@ namespace Alex.Gui.Elements.Inventory
             }, EntityPosition);
             Camera.UpdateProjectionMatrix();
             
+            item.Renderer.Update(new PlayerLocation(new Vector3(0,0,0)));
             item.Renderer.Update(Alex.Instance.GraphicsDevice, Camera);
-            item.Renderer.Update(Matrix.CreateTranslation(new Vector3(0,0,0)));
         }
 
         protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
