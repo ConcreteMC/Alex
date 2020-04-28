@@ -49,7 +49,7 @@ namespace Alex.Worlds
 		public int X { get; set; }
 		public int Z { get; set; }
 		
-		public bool IsNew = true;
+		public bool IsNew { get; set; } = true;
 		public bool IsLoaded = false;
 		public bool NeedSave = false;
 		public bool IsDirty { get; set; }

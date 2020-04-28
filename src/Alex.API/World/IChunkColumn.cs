@@ -11,7 +11,8 @@ namespace Alex.API.World
 		int Z { get; }
 
 		bool HighPriority { get; set; }
-
+		bool IsNew { get; set; }
+		
         IChunkSection[] Sections { get; set; }
 
         IEnumerable<(IBlockState state, int storage)> GetBlockStates(int x, int y, int z);

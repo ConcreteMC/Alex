@@ -125,7 +125,15 @@ namespace Alex.GameStates.Playing
 				//FpsCounter.Update();
 				//World.ChunkManager.GetPendingLightingUpdates(out int lowLight, out int midLight, out int highLight);
 
-				return $"Alex {Alex.Version} ({Alex.FpsMonitor.Value:##} FPS, Chunk Updates: {World.EnqueuedChunkUpdates} queued, {World.ConcurrentChunkUpdates} active)"/*, H: {highLight} M: {midLight} L: {lowLight} lighting updates)"*/;
+				double avg = 0;
+				if (World.ChunkManager.TotalChunkUpdates > 0)
+				{
+					avg = (World.ChunkManager.ChunkUpdateTime / World.ChunkManager.TotalChunkUpdates).TotalMilliseconds;
+				}
+
+				return
+					$"Alex {Alex.Version} ({Alex.FpsMonitor.Value:##} FPS, Chunk Updates: {World.EnqueuedChunkUpdates} queued, {World.ConcurrentChunkUpdates} active, Avg: {avg:F2}ms, Max: {World.ChunkManager.MaxUpdateTime.TotalMilliseconds:F2}ms, Min: {World.ChunkManager.MinUpdateTIme.TotalMilliseconds:F2})" /*, H: {highLight} M: {midLight} L: {lowLight} lighting updates)"*/
+					;
 			});
 			_debugInfo.AddDebugLeft(() =>
 			{

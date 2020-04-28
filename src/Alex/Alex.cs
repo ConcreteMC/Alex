@@ -561,7 +561,7 @@ namespace Alex
 			}
 			catch (Exception ex)
 			{
-				Log.Error(ex, "FCL");
+				Log.Error(ex, $"FCL: {ex.ToString()}");
 			}
 			
 			oldNetworkPool?.Dispose();

@@ -672,14 +672,12 @@ namespace Alex.Worlds
                 List<ChunkData> orderedList = new List<ChunkData>();
                 foreach (var c in renderedChunks)
                 {
-	                if (BlockLightCalculations.HasEnqueued(c.Key) && !Enqueued.Contains(c.Key) && !_workItems.ContainsKey(c.Key))
+	                if (c.Value.Scheduled == ScheduleType.Unscheduled && BlockLightCalculations.HasEnqueued(c.Key) &&
+	                    !Enqueued.Contains(c.Key) && !_workItems.ContainsKey(c.Key))
 	                {
-		                if (c.Value.Scheduled == ScheduleType.Unscheduled)
-		                {
-			                ScheduleChunkUpdate(c.Key, ScheduleType.Lighting);
-		                }
+		                ScheduleChunkUpdate(c.Key, ScheduleType.Lighting);
 	                }
-	                
+
 	                if (_chunkData.TryGetValue(c.Key, out var data))
 	                {
 		                orderedList.Add(data);
@@ -709,20 +707,15 @@ namespace Alex.Worlds
 		                {
 			                if (Chunks.TryGetValue(cc, out var chunk))
 			                {
-				                if (chunk.Scheduled == ScheduleType.Lighting)
+				                /*if (chunk.Scheduled == ScheduleType.Lighting)
 				                {
-					                PriorityQueue.UpdatePriority(cc, double.MaxValue - Math.Abs(cameraChunkPos.DistanceTo(cc)));
+					                PriorityQueue.UpdatePriority(cc,
+						                double.MaxValue - Math.Abs(cameraChunkPos.DistanceTo(cc)));
 					                continue;
-				                }
-			                }
-			                
-			                if (IsWithinView(cc, _cameraBoundingFrustum))
-			                {
-				                PriorityQueue.UpdatePriority(cc, Math.Abs(cameraChunkPos.DistanceTo(cc)));
-			                }
-			                else
-			                {
-				                PriorityQueue.UpdatePriority(cc, double.MaxValue);
+				                }*/
+
+
+				                PriorityQueue.UpdatePriority(cc, GetUpdatePriority(chunk, chunk.Scheduled));
 			                }
 		                }
 	                }
@@ -753,26 +746,7 @@ namespace Alex.Worlds
                 {
 	                ScheduleWorker();
                 }
-                
-                bool nonInView = false;
-              /*  if (TryDequeue(cameraChunkPos, out var coords, out var priority))
-                {
-	                double offset = 100d;
-	                if (Chunks.TryGetValue(coords, out var val))
-	                {
-		                if (val is ChunkColumn column)
-		                {
-			                if (column.IsNew)
-				                offset = 0;
-		                }
-	                }
-	                Schedule(coords, offset + Math.Abs(cameraChunkPos.DistanceTo(coords)));
-                }
-                else
-                {
-	                spinWait.SpinOnce();
-                }*/
-			}
+            }
 
 			if (!CancelationToken.IsCancellationRequested)
 				Log.Warn($"Chunk update loop has unexpectedly ended!");
@@ -801,12 +775,6 @@ namespace Alex.Worlds
 					    {
 						    if (val is ChunkColumn column && column.Sections.Any(x => x != null && !x.IsEmpty()))
 						    {
-							    // if (column.SkyLightDirty || column.IsNew)
-							    {
-								    new SkyLightCalculations().RecalcSkyLight((ChunkColumn) val,
-									    new SkyLightBlockAccess(this));
-							    }
-
 							    UpdateChunk(coordinates, val);
 						    }
 					    }
@@ -824,25 +792,37 @@ namespace Alex.Worlds
 		    });
 	    }
 
+	    private double GetUpdatePriority(IChunkColumn column, ScheduleType type)
+	    {
+		    var cc = new ChunkCoordinates(column.X, column.Z);
+		    bool isInView = IsWithinView(cc, _cameraBoundingFrustum);
+		    
+		    double priorityOffset = isInView ? 256 : 512;
+
+		    if (!column.IsNew)
+		    {
+			    if (type == ScheduleType.Lighting)
+			    {
+				    priorityOffset *= 2;
+			    }
+
+			    //else if (type == ScheduleType.Border)
+				//    priorityOffset = double.MaxValue / 4d;
+		    }
+
+		    if (column.HighPriority && isInView)
+		    {
+			    priorityOffset = 0;
+		    }
+
+		    return priorityOffset + Math.Abs(new ChunkCoordinates(_cameraPosition).DistanceTo(cc));
+	    }
+
 	    public void ScheduleChunkUpdate(ChunkCoordinates position, ScheduleType type, bool prioritize = false)
 	    {
 		    if (Chunks.TryGetValue(position, out IChunkColumn chunk))
 		    {
 			    var currentSchedule = chunk.Scheduled;
-			   /* if (prioritize)
-			    {
-				    chunk.Scheduled = type;
-
-				    if (!Enqueued.Contains(position) && Enqueued.TryAdd(position))
-				    {
-					   // PriorityQueue.Enqueue(position, 1d);
-					   // HighestPriority.Enqueue(position);
-					  // Schedule(position, 0d);
-				    }
-
-				    return;
-			    }
-*/
 
 			    if (currentSchedule != ScheduleType.Unscheduled)
 			    {
@@ -852,26 +832,32 @@ namespace Alex.Worlds
 			    if (!_workItems.ContainsKey(position) &&
 			        !Enqueued.Contains(position) && Enqueued.TryAdd(position))
 			    {
-				    if (chunk is ChunkColumn cc)
+				    if (chunk is ChunkColumn cc && (cc.BlockLightDirty || cc.IsNew))
 				    {
 					    var chunkpos = new BlockCoordinates(cc.X * 16, 0, cc.Z * 16);
 					    foreach (var ls in cc.GetLightSources())
 					    {
 						    BlockLightCalculations.Enqueue(chunkpos + ls);
 					    }
+
+					    cc.BlockLightDirty = false;
 				    }
 				    
 				    chunk.Scheduled = type;
+
+				    chunk.HighPriority = prioritize;
 				    
-				    PriorityQueue.Enqueue(position, prioritize ? 0 : Math.Abs(new ChunkCoordinates(_cameraPosition).DistanceTo(position)));
-				   // double distance = Math.Abs(new ChunkCoordinates(_cameraPosition).DistanceTo(position));
-				    
-				  //  Schedule(position, distance);
+				    PriorityQueue.Enqueue(position, GetUpdatePriority(chunk, type));
+
 				    Interlocked.Increment(ref _chunkUpdates);
 			    }
 		    }
 	    }
 	    
+	    public TimeSpan MaxUpdateTime { get; set; } = TimeSpan.Zero;
+	    public TimeSpan MinUpdateTIme { get; set; } = TimeSpan.MaxValue;
+	    public TimeSpan ChunkUpdateTime { get; set; } = TimeSpan.Zero;
+	    public long TotalChunkUpdates { get; set; } = 0;
         private bool UpdateChunk(ChunkCoordinates coordinates, IChunkColumn c)
         {
 	        var chunk = c as ChunkColumn;
@@ -880,9 +866,25 @@ namespace Alex.Worlds
                 Interlocked.Decrement(ref _chunkUpdates);
                 return false; //Another thread is already updating this chunk, return.
             }
-
-            BlockLightCalculations.Process(coordinates);
             
+            Stopwatch sw = Stopwatch.StartNew();
+
+           // if (chunk.Scheduled.HasFlag(ScheduleType.Lighting))
+            {
+	            if (chunk.SkyLightDirty || chunk.IsNew)
+	            {
+		            new SkyLightCalculations().RecalcSkyLight(chunk,
+			            new SkyLightBlockAccess(this));
+
+		            chunk.SkyLightDirty = false;
+	            }
+
+	            //if (chunk.BlockLightDirty || chunk.IsNew)
+	            {
+		            BlockLightCalculations.Process(coordinates);
+	            }
+            }
+
             var scheduleType = chunk.Scheduled;
 
             ChunkData data = null;
@@ -925,8 +927,8 @@ namespace Alex.Worlds
 
 		            //if (i == 0) force = true;
 
-		            if (force || section.ScheduledUpdates.Cast<bool>().Contains(true) ||
-		                section.ScheduledSkylightUpdates.Cast<bool>().Contains(true) || section.IsDirty)
+		            if (force || section.ScheduledUpdatesCount > 0 ||
+		                section.ScheduledSkyUpdatesCount > 0 || section.ScheduledBlockUpdatesCount > 0 || section.IsDirty)
 		            {
 
 			            var sectionMesh = GenerateSectionMesh(World, scheduleType,
@@ -936,14 +938,6 @@ namespace Alex.Worlds
 
 		            }
 	            }
-	            
-	            for (var i = 0; i < chunk.Sections.Length - 1; i++)
-	            {
-		            if (i < 0) break;
-		            var section = chunk.Sections[i] as ChunkSection;
-		           
-	            }
-
 
 	            Dictionary<RenderStage, List<int>> newStageIndexes = new Dictionary<RenderStage, List<int>>();
 
@@ -967,94 +961,91 @@ namespace Alex.Worlds
 
 	            if (vertices.Count > 0)
 	            {
-		           
-			            var vertexArray = vertices.ToArray();
-			            Dictionary<RenderStage, ChunkRenderStage> oldStages = null;
-			            if (data == null)
+		            var vertexArray = vertices.ToArray();
+		            Dictionary<RenderStage, ChunkRenderStage> oldStages = null;
+		            if (data == null)
+		            {
+			            data = new ChunkData()
 			            {
-				            data = new ChunkData()
-				            {
-					            Buffer = GpuResourceManager.GetBuffer(this, Graphics,
-						            VertexPositionNormalTextureColor.VertexDeclaration, vertexArray.Length,
-						            BufferUsage.WriteOnly),
-					            RenderStages = new Dictionary<RenderStage, ChunkRenderStage>()
-				            };
+				            Buffer = GpuResourceManager.GetBuffer(this, Graphics,
+					            VertexPositionNormalTextureColor.VertexDeclaration, vertexArray.Length,
+					            BufferUsage.WriteOnly),
+				            RenderStages = new Dictionary<RenderStage, ChunkRenderStage>()
+			            };
+		            }
+		            else
+		            {
+			            oldStages = data.RenderStages;
+		            }
+
+		            var newStages = new Dictionary<RenderStage, ChunkRenderStage>();
+
+		            PooledVertexBuffer oldBuffer = data.Buffer;
+
+		            PooledVertexBuffer newVertexBuffer = null;
+
+		            if (vertexArray.Length >= data.Buffer.VertexCount)
+		            {
+			            PooledVertexBuffer newBuffer = GpuResourceManager.GetBuffer(this, Graphics,
+				            VertexPositionNormalTextureColor.VertexDeclaration, vertexArray.Length,
+				            BufferUsage.WriteOnly);
+
+			            newBuffer.SetData(vertexArray);
+			            newVertexBuffer = newBuffer;
+		            }
+		            else
+		            {
+			            data.Buffer.SetData(vertexArray);
+		            }
+
+		            foreach (var stage in newStageIndexes)
+		            {
+			            ChunkRenderStage renderStage;
+			            PooledIndexBuffer newIndexBuffer;
+			            if (oldStages == null || !oldStages.TryGetValue(stage.Key, out renderStage))
+			            {
+				            renderStage = new ChunkRenderStage(data);
+			            }
+
+			            if (renderStage.IndexBuffer == null ||
+			                stage.Value.Count > renderStage.IndexBuffer.IndexCount)
+			            {
+				            newIndexBuffer = GpuResourceManager.GetIndexBuffer(this, Graphics,
+					            IndexElementSize.ThirtyTwoBits, stage.Value.Count, BufferUsage.WriteOnly);
 			            }
 			            else
 			            {
-				            oldStages = data.RenderStages;
+				            newIndexBuffer = renderStage.IndexBuffer;
 			            }
 
-			            var newStages = new Dictionary<RenderStage, ChunkRenderStage>();
+			            newIndexBuffer.SetData(stage.Value.ToArray());
 
-			            PooledVertexBuffer oldBuffer = data.Buffer;
+			            renderStage.IndexBuffer = newIndexBuffer;
 
-			            PooledVertexBuffer newVertexBuffer = null;
-			            
-				            if (vertexArray.Length >= data.Buffer.VertexCount)
-				            {
-					            PooledVertexBuffer newBuffer = GpuResourceManager.GetBuffer(this, Graphics,
-						            VertexPositionNormalTextureColor.VertexDeclaration, vertexArray.Length,
-						            BufferUsage.WriteOnly);
+			            newStages.Add(stage.Key, renderStage);
+		            }
 
-					            newBuffer.SetData(vertexArray);
-					            newVertexBuffer = newBuffer;
-				            }
-				            else
-				            {
-					            data.Buffer.SetData(vertexArray);
-				            }
+		            data.RenderStages = newStages;
 
-			            foreach (var stage in newStageIndexes)
+		            if (newVertexBuffer != null)
+		            {
+			            data.Buffer = newVertexBuffer;
+			            oldBuffer?.MarkForDisposal();
+		            }
+
+		            RenderStage[] renderStages = (RenderStage[]) Enum.GetValues(typeof(RenderStage));
+
+		            foreach (var stage in renderStages)
+		            {
+			            if (newStages.TryGetValue(stage, out var renderStage))
 			            {
-				            ChunkRenderStage renderStage;
-				            PooledIndexBuffer newIndexBuffer;
-				            if (oldStages == null || !oldStages.TryGetValue(stage.Key, out renderStage))
+				            if (oldStages != null && oldStages.TryGetValue(stage, out var oldStage))
 				            {
-					            renderStage = new ChunkRenderStage(data);
+					            if (oldStage != renderStage)
+						            oldStage.Dispose();
 				            }
-
-				            if (renderStage.IndexBuffer == null ||
-				                stage.Value.Count > renderStage.IndexBuffer.IndexCount)
-				            {
-					            newIndexBuffer = GpuResourceManager.GetIndexBuffer(this, Graphics,
-						            IndexElementSize.ThirtyTwoBits, stage.Value.Count, BufferUsage.WriteOnly);
-				            }
-				            else
-				            {
-					            newIndexBuffer = renderStage.IndexBuffer;
-				            }
-
-				            newIndexBuffer.SetData(stage.Value.ToArray());
-
-				            renderStage.IndexBuffer = newIndexBuffer;
-
-				            newStages.Add(stage.Key, renderStage);
 			            }
-
-			            data.RenderStages = newStages;
-			            
-				            if (newVertexBuffer != null)
-				            {
-					            data.Buffer = newVertexBuffer;
-					            oldBuffer?.MarkForDisposal();
-				            }
-
-				            RenderStage[] renderStages = (RenderStage[]) Enum.GetValues(typeof(RenderStage));
-
-				            foreach (var stage in renderStages)
-				            {
-					            if (newStages.TryGetValue(stage, out var renderStage))
-					            {
-						            if (oldStages != null && oldStages.TryGetValue(stage, out var oldStage))
-						            {
-							            if (oldStage != renderStage)
-								            oldStage.Dispose();
-						            }
-					            }
-				            }
-			            
-		            
+		            }
 	            }
 	            else
 	            {
@@ -1067,7 +1058,9 @@ namespace Alex.Worlds
 
 	            chunk.IsDirty = chunk.HasDirtySubChunks; //false;
 	            chunk.Scheduled = ScheduleType.Unscheduled;
-
+	            chunk.HighPriority = false;
+	            chunk.IsNew = false;
+	            
 	            if (data != null)
 	            {
 		            data.Coordinates = coordinates;
@@ -1111,7 +1104,19 @@ namespace Alex.Worlds
                 //Enqueued.Remove(new ChunkCoordinates(chunk.X, chunk.Z));
                 Interlocked.Decrement(ref _chunkUpdates);
                 Monitor.Exit(chunk.UpdateLock);
+                
+                sw.Stop();
+                ChunkUpdateTime += sw.Elapsed;
+                TotalChunkUpdates++;
 
+                if (sw.Elapsed > MaxUpdateTime)
+                {
+	                MaxUpdateTime = sw.Elapsed;
+                }
+                else if (sw.Elapsed < MinUpdateTIme)
+                {
+	                MinUpdateTIme = sw.Elapsed;
+                }
                 //   Log.Info(MiniProfiler.Current.RenderPlainText());
             }
 
