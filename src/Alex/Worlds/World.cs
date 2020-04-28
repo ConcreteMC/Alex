@@ -429,7 +429,7 @@ namespace Alex.Worlds
 			//}
 		//	catch { }
 
-	        return BlockFactory.GetBlockState("minecraft:air").Block;
+	        return Airstate.Block;
         }
 		
 		public void SetBlockState(int x, int y, int z, IBlockState block)
@@ -494,6 +494,21 @@ namespace Alex.Worlds
 			ScheduleBlockUpdate(source, new BlockCoordinates(x, y - 1, z));
 		}
 
+		public void ScheduleBlockUpdate(BlockCoordinates coordinates)
+		{
+			var chunkCoords = new ChunkCoordinates(coordinates.X >> 4, coordinates.Z >> 4);
+			
+			IChunkColumn chunk;
+			if (ChunkManager.TryGetChunk(chunkCoords, out chunk))
+			{
+				var cx = coordinates.X & 0xf;
+				var cy = coordinates.Y & 0xff;
+				var cz = coordinates.Z & 0xf;
+
+				chunk.ScheduleBlockUpdate(cx, cy, cz);
+			}
+		}
+		
 		private void ScheduleBlockUpdate(BlockCoordinates updatedBlock, BlockCoordinates block)
 		{
 			Ticker.ScheduleTick(() =>
@@ -517,6 +532,7 @@ namespace Alex.Worlds
 			yield break;
 		}
 
+		private static IBlockState Airstate = BlockFactory.GetBlockState("minecraft:air");
 		public IBlockState GetBlockState(int x, int y, int z, int storage)
 		{
 			IChunkColumn chunk;
@@ -525,7 +541,7 @@ namespace Alex.Worlds
 				return chunk.GetBlockState(x & 0xf, y & 0xff, z & 0xf, storage);
 			}
 
-			return BlockFactory.GetBlockState("minecraft:air");
+			return Airstate;
 		}
 		
 		public IBlockState GetBlockState(int x, int y, int z)
@@ -565,10 +581,7 @@ namespace Alex.Worlds
 			}
 			
 			if (chunk == null)
-				return new Air
-				{
-					Coordinates = blockCoordinates
-				};
+				return (Block) Airstate.Block;
 
 			var block = (Block)chunk.GetBlock(blockCoordinates.X & 0x0f, blockCoordinates.Y & 0xff, blockCoordinates.Z & 0x0f);
 			block.Coordinates = blockCoordinates;

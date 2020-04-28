@@ -329,7 +329,10 @@ namespace Alex.Worlds
 			if ((bx < 0 || bx > ChunkWidth) || (by < 0 || by > ChunkHeight) || (bz < 0 || bz > ChunkDepth))
 				return;
 
-			GetSection(by).SetBlocklight(bx, by - ((@by >> 4) << 4), bz, data);
+			var yMod = ((@by >> 4) << 4);
+			
+			GetSection(by).SetBlocklight(bx, by - yMod, bz, data);
+
 			BlockLightDirty = true;
 			
 			//_scheduledLightingUpdates[by << 8 | bz << 4 | bx] = true;
@@ -639,18 +642,18 @@ namespace Alex.Worlds
             return section.IsSolid(bx, @by & 0xf, bz);
 		}
 
-	    public bool IsScheduled(int bx, int @by, int bz)
-	    {
-	        if ((bx < 0 || bx > ChunkWidth) || (by < 0 || by > ChunkHeight) || (bz < 0 || bz > ChunkDepth))
-	            return false;
+		public bool IsScheduled(int bx, int @by, int bz)
+		{
+			if ((bx < 0 || bx > ChunkWidth) || (by < 0 || by > ChunkHeight) || (bz < 0 || bz > ChunkDepth))
+				return false;
 
-	        var section = Sections[@by >> 4];
-	        if (section == null) return false;
+			var section = Sections[@by >> 4];
+			if (section == null) return false;
 
-	        return section.IsScheduled(bx, @by & 0xf, bz);
-        }
+			return section.IsScheduled(bx, @by & 0xf, bz);
+		}
 
-	    public void GetBlockData(int bx, int by, int bz, out bool transparent, out bool solid)
+		public void GetBlockData(int bx, int by, int bz, out bool transparent, out bool solid)
 		{
 			transparent = false;
 			solid = false;

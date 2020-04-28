@@ -89,16 +89,17 @@ namespace Alex.Blocks.Storage
 			}
         }
 
+        private bool _isDirty = false;
         public bool IsDirty
         {
 	        get
 	        {
 		        return New || ScheduledUpdatesCount > 0 || ScheduledBlockUpdatesCount > 0 ||
-		               ScheduledSkyUpdatesCount > 0;
+		               ScheduledSkyUpdatesCount > 0 || _isDirty;
 	        }
 	        set
 	        {
-		        
+		        _isDirty = value;
 	        }
         }
 
@@ -249,6 +250,7 @@ namespace Alex.Blocks.Storage
 					}
 
 					SetBlocklight(x,y,z, (byte) state.Block.LightValue);
+					SetBlockLightScheduled(x,y,z, true);
 				}
 				else
 				{
@@ -339,15 +341,23 @@ namespace Alex.Blocks.Storage
 			return this._yBase;
 		}
 
-		public void SetSkylight(int x, int y, int z, int value)
+		public bool SetSkylight(int x, int y, int z, int value)
 		{
 			var idx = GetCoordinateIndex(x, y, z);
 
-            this.SkyLight[idx] = (byte) value;
-            SetLightingScheduled(x, y, z, true);
-            //ScheduledSkylightUpdates.Set(idx, true);
-            
-            Owner.SkyLightDirty = true;
+			var oldSkylight = this.SkyLight[idx];
+			if (value != oldSkylight)
+			{
+				this.SkyLight[idx] = (byte) value;
+				SetLightingScheduled(x, y, z, true);
+				//ScheduledSkylightUpdates.Set(idx, true);
+
+				Owner.SkyLightDirty = true;
+
+				return true;
+			}
+
+			return false;
 		}
 
 		public byte GetSkylight(int x, int y, int z)
@@ -355,7 +365,7 @@ namespace Alex.Blocks.Storage
 			return this.SkyLight[GetCoordinateIndex(x,y,z)]; //.get(x, y, z);
 		}
 		
-		public void SetBlocklight(int x, int y, int z, byte value)
+		public bool SetBlocklight(int x, int y, int z, byte value)
 		{
 			var idx = GetCoordinateIndex(x, y, z);
 			
@@ -367,7 +377,11 @@ namespace Alex.Blocks.Storage
 				//ScheduledBlocklightUpdates.Set(idx, true);
 
 				Owner.BlockLightDirty = true;
+
+				return true;
 			}
+
+			return false;
 		}
 		
 		public int GetBlocklight(int x, int y, int z)

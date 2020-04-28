@@ -731,7 +731,6 @@ namespace Alex.Worlds
                 }, out BlockCoordinates coordinates))
                 {
 	                ChunkCoordinates cc = (ChunkCoordinates) coordinates;
-	                
 	                ScheduleChunkUpdate(cc, ScheduleType.Lighting);
                 }
                 
@@ -928,14 +927,20 @@ namespace Alex.Worlds
 		            //if (i == 0) force = true;
 
 		            if (force || section.ScheduledUpdatesCount > 0 ||
-		                section.ScheduledSkyUpdatesCount > 0 || section.ScheduledBlockUpdatesCount > 0 || section.IsDirty)
+		                section.ScheduledSkyUpdatesCount > 0 || section.ScheduledBlockUpdatesCount > 0)
 		            {
-
 			            var sectionMesh = GenerateSectionMesh(World, scheduleType,
 				            new Vector3(chunk.X << 4, 0, chunk.Z << 4), ref section, i);
 
 			            meshes.Add(sectionMesh);
 
+			            section.IsDirty = false;
+		            }
+		            else
+		            {
+			            
+			            if (section.MeshCache != null)
+							meshes.Add(section.MeshCache);
 		            }
 	            }
 
@@ -1068,31 +1073,6 @@ namespace Alex.Worlds
 
 	            _chunkData.AddOrUpdate(coordinates, data, (chunkCoordinates, chunkData) => data);
 
-	            /*if (scheduleType.HasFlag(ScheduleType.Lighting))
-	            {
-		            try
-		            {
-			            if (chunk.SkyLightDirty)
-			            {
-				            //  chunk.CalculateHeight();
-
-				            //  chunk.X = coordinates.X;
-				            //   chunk.Z = coordinates.Z;
-
-				            SkyLightBlockAccess blockAccess = new SkyLightBlockAccess(this, chunk);
-				            new SkyLightCalculations().RecalcSkyLight(chunk, blockAccess);
-				            
-				            
-				            chunk.SkyLightDirty = false;
-				            ScheduleChunkUpdate(coordinates, ScheduleType.Scheduled);
-			            }
-		            }
-		            catch (Exception ex)
-		            {
-			            Log.Error(ex, $"Skylight error: {ex.ToString()}");
-		            }
-	            }*/
-
 	            return true;
             }
             catch (Exception ex)
@@ -1174,15 +1154,16 @@ namespace Alex.Worlds
 		        var blockPosition = new BlockCoordinates((int) (chunkPosition.X + x), y + (yIndex << 4),
 			        (int) (chunkPosition.Z + z));
 		        var blockCoords = new BlockCoordinates(x, y, z);
-
+		        
 		        bool isScheduled = section.IsScheduled(x, y, z);
-		        bool isLightScheduled = false;//section.IsLightingScheduled(x, y, z);
-		     //   bool blockLightScheduled = section.IsBlockLightScheduled(x, y, z);
+		        bool isLightScheduled = section.IsLightingScheduled(x, y, z);
+		        bool isBlockLightScheduled = section.IsBlockLightScheduled(x, y, z);
+				
 		        var neighborsScheduled = HasScheduledNeighbors(world, blockPosition);
 		        var isBorderBlock = (scheduled == ScheduleType.Border && ((x == 0 || x == 15) || (z == 0 || z == 15)));
 
-
-		        var isRebuild = ((force || isScheduled || neighborsScheduled || isBorderBlock || isLightScheduled));
+		        //var isBlockScheduled = isScheduled || isLightScheduled || isBlockLightScheduled;
+		        var isRebuild = ((force || isScheduled || neighborsScheduled || isBorderBlock || isLightScheduled || isBlockLightScheduled));
 		        // bool isLightingScheduled = section.IsLightingScheduled(x, y, z);
 
 		        bool gotCachedPositions = false;
@@ -1211,14 +1192,6 @@ namespace Alex.Worlds
 
 			        var model = blockState.Model;
 
-			        /*if (blockState != null && currentBlockState.storage == 0 && blockState.Block.LightValue > 0 && blockLightScheduled)
-			        {
-				        section.SetBlockLightScheduled(x, y, z, false);
-				        
-				        BlockLightCalculations.Enqueue(blockPosition);
-				      //  BlockLightCalculations.Calculate((World) world, blockPosition);
-			        } */
-
 			        if (blockState != null && shouldRebuildVertices && blockState.Block.RequiresUpdate)
 			        {
 				        blockState = blockState.Block.BlockPlaced(world, blockState, blockPosition);
@@ -1227,11 +1200,18 @@ namespace Alex.Worlds
 				        model = blockState.Model;
 			        }
 
-			        if (DoMultiPartCalculations && blockState is BlockState state && state.IsMultiPart && shouldRebuildVertices)
+			        if (DoMultiPartCalculations && blockState is BlockState state && state.IsMultiPart &&
+			            shouldRebuildVertices && (isScheduled || neighborsScheduled))
 			        {
-				        model = new CachedResourcePackModel(Resources,
-					        MultiPartModels.GetBlockStateModels(world, blockPosition, state,
-						        state.MultiPartHelper));
+				        /* var stateModels = MultiPartModels.GetBlockStateModels(world, blockPosition, state,
+					         state.MultiPartHelper);
+				         
+				         model = new CachedResourcePackModel(Resources, stateModels);*/
+
+				        blockState = MultiPartModels.GetBlockState(world, blockPosition, state, state.MultiPartHelper);
+				        section.Set(currentBlockState.storage, x, y, z, blockState);
+
+				        model = blockState.Model;
 				        // blockState.Block.Update(world, blockPosition);
 			        }
 
@@ -1246,7 +1226,7 @@ namespace Alex.Worlds
 			        {
 				        int[] indices = cached.Indexes[cachedBlock.Stage];
 
-					    var indiceIndex = stages[cachedBlock.Stage].Count;
+				        var indiceIndex = stages[cachedBlock.Stage].Count;
 
 
 				        for (int index = cachedBlock.Index;
@@ -1260,7 +1240,7 @@ namespace Alex.Worlds
 						        solidVertices.Add(vertice);
 
 						        newIndex = solidVertices.Count - 1;
-						        
+
 						        processedIndices.Add(vertexIndex, newIndex);
 					        }
 
@@ -1278,79 +1258,83 @@ namespace Alex.Worlds
 			        {
 				        var data = model.GetVertices(world, blockPosition, blockState.Block);
 
-				        if (data.vertices == null || data.indexes == null || data.vertices.Length == 0 ||
-				            data.indexes.Length == 0)
+				        if (!(data.vertices == null || data.indexes == null || data.vertices.Length == 0 ||
+				              data.indexes.Length == 0))
 				        {
-					        //section.SetRendered(x, y, z, false);
-					        continue;
-				        }
-
-				        RenderStage targetState = RenderStage.OpaqueFullCube;
-				        if (blockState.Block.BlockMaterial.IsLiquid())
-				        {
-					        targetState = RenderStage.Liquid;
-				        }
-				        else if (blockState.Block.Animated)
-				        {
-					        if (blockState.Block.BlockMaterial.IsOpaque())
+					        RenderStage targetState = RenderStage.OpaqueFullCube;
+					        if (blockState.Block.BlockMaterial.IsLiquid())
 					        {
-						        targetState = RenderStage.Animated;
+						        targetState = RenderStage.Liquid;
 					        }
-					        else
+					        else if (blockState.Block.Animated)
 					        {
-						        targetState = RenderStage.AnimatedTranslucent;
+						        if (blockState.Block.BlockMaterial.IsOpaque())
+						        {
+							        targetState = RenderStage.Animated;
+						        }
+						        else
+						        {
+							        targetState = RenderStage.AnimatedTranslucent;
+						        }
 					        }
-				        }
-				        else if (blockState.Block.Transparent)
-				        {
-					        if (blockState.Block.BlockMaterial.IsOpaque())
+					        else if (blockState.Block.Transparent)
 					        {
-						        targetState = RenderStage.Transparent;
+						        if (blockState.Block.BlockMaterial.IsOpaque())
+						        {
+							        targetState = RenderStage.Transparent;
+						        }
+						        else
+						        {
+							        targetState = RenderStage.Translucent;
+						        }
 					        }
-					        else
+					        else if (!blockState.Block.IsFullCube)
 					        {
-						        targetState = RenderStage.Translucent;
-					        }
-				        }
-				        else if (!blockState.Block.IsFullCube)
-				        {
-					        targetState = RenderStage.Opaque;
-				        }
-
-				        if (data.vertices.Length > 0 && data.indexes.Length > 0)
-				        {
-					        //if (currentBlockState.storage == 0)
-					        //	section.SetRendered(x, y, z, true);
-					        renderedBlocks++;
-
-					        int startVerticeIndex = solidVertices.Count;
-					        foreach (var vert in data.vertices)
-					        {
-						        solidVertices.Add(vert);
+						        targetState = RenderStage.Opaque;
 					        }
 
-					        int startIndex = stages[targetState].Count;
-					        
-					        for (int i = 0; i < data.indexes.Length; i++)
+					        if (data.vertices.Length > 0 && data.indexes.Length > 0)
 					        {
-						        var originalIndex = data.indexes[i];
+						        // if (currentBlockState.storage == 0)
+						        // 	section.SetRendered(x, y, z, true);
 
-						        var verticeIndex = startVerticeIndex + originalIndex;
+						        renderedBlocks++;
 
-						        stages[targetState].Add(verticeIndex);
+						        int startVerticeIndex = solidVertices.Count;
+						        foreach (var vert in data.vertices)
+						        {
+							        solidVertices.Add(vert);
+						        }
+
+						        int startIndex = stages[targetState].Count;
+
+						        for (int i = 0; i < data.indexes.Length; i++)
+						        {
+							        var originalIndex = data.indexes[i];
+
+							        var verticeIndex = startVerticeIndex + originalIndex;
+
+							        stages[targetState].Add(verticeIndex);
+						        }
+
+						        entryPosition = new ChunkMesh.EntryPosition(targetState, startIndex,
+							        data.indexes.Length, currentBlockState.storage);
+
+						        posCache.Add(entryPosition);
 					        }
-
-					        entryPosition = new ChunkMesh.EntryPosition(targetState, startIndex,
-						        data.indexes.Length, currentBlockState.storage);
-
-					        posCache.Add(entryPosition);
 				        }
-				        
-				        if (isScheduled)
-					        section.SetScheduled(x, y, z, false);
 
-				        if (isLightScheduled)
-					        section.SetLightingScheduled(x, y, z, false);
+				        if (currentBlockState.storage == 0)
+				        {
+					        if (isScheduled)
+						        section.SetScheduled(x, y, z, false);
+
+					        if (isLightScheduled)
+						        section.SetLightingScheduled(x, y, z, false);
+
+					        if (isBlockLightScheduled)
+						        section.SetBlockLightScheduled(x, y, z, false);
+				        }
 			        }
 		        }
 

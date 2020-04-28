@@ -11,6 +11,7 @@ namespace Alex.API.World
         void ResetSkyLight(byte initialValue = 0xff);
         bool IsScheduled(int x, int y, int z);
         void SetScheduled(int x, int y, int z, bool value);
+        bool IsBlockLightScheduled(int x, int y, int z);
         bool IsLightingScheduled(int x, int y, int z);
         bool SetLightingScheduled(int x, int y, int z, bool value);
         IBlockState Get(int x, int y, int z);
@@ -24,9 +25,9 @@ namespace Alex.API.World
         bool IsEmpty();
         bool NeedsRandomTick();
         int GetYLocation();
-        void SetSkylight(int x, int y, int z, int value);
+        bool SetSkylight(int x, int y, int z, int value);
         byte GetSkylight(int x, int y, int z);
-        void SetBlocklight(int x, int y, int z, byte value);
+        bool SetBlocklight(int x, int y, int z, byte value);
         int GetBlocklight(int x, int y, int z);
         void RemoveInvalidBlocks();
       //  bool IsFaceSolid(BlockFace face);

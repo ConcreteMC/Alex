@@ -46,6 +46,47 @@ namespace Alex.Graphics.Models.Blocks
 			return resultingModels.ToArray();
 		}
 
+
+		public static IBlockState GetBlockState(IWorld world, Vector3 position, IBlockState blockState,
+			BlockStateResource blockStateModel)
+		{
+			var blockStateCopy = blockState;
+			foreach (var s in blockStateModel.Parts)
+			{
+				if (s.When == null)
+				{
+					//resultingModels.AddRange(s.Apply);
+				}
+				else if (s.When.Length > 0)
+				{
+					bool passes = true;
+					foreach (var rule in s.When)
+					{
+						MultiPartRule result;
+						if (!PassesMultiPartRule(world, position, rule, blockState, out result))
+						{
+							passes = false;
+							break;
+						}
+						else
+						{
+							foreach (var kv in result.KeyValues)
+							{
+								blockStateCopy = blockStateCopy.WithProperty(kv.Key, kv.Value);
+							}
+						}
+					}
+
+					if (passes)
+					{
+						//resultingModels.AddRange(s.Apply);
+					}
+				}
+			}
+
+			return blockStateCopy;
+		}
+		
 		public static BlockStateModel[] GetBlockStateModels(IWorld world, Vector3 position, IBlockState blockState, BlockStateResource blockStateModel)
 		{
 			List<BlockStateModel> resultingModels = new List<BlockStateModel>(blockStateModel.Parts.Length);
@@ -61,7 +102,7 @@ namespace Alex.Graphics.Models.Blocks
 					bool passes = true;
 					foreach (var rule in s.When)
 					{
-						if (!PassesMultiPartRule(world, position, rule, blockState))
+						if (!PassesMultiPartRule(world, position, rule, blockState, out _))
 						{
 							passes = false;
 							break;
@@ -120,16 +161,51 @@ namespace Alex.Graphics.Models.Blocks
 			return false;
 		}
 
-		public static bool PassesMultiPartRule(IWorld world, Vector3 position, MultiPartRule rule, IBlockState baseBlock)
+		public static bool PassesMultiPartRule(IWorld world, Vector3 position, MultiPartRule rule, IBlockState baseBlock, out MultiPartRule passedRule)
 		{
+			MultiPartRule s = rule;
+			passedRule = rule;
+			
 			if (rule.HasOrContition)
 			{
-				return rule.Or.Any(o => PassesMultiPartRule(world, position, o, baseBlock));
+				if (rule.Or.Any(o =>
+				{
+					var pass = PassesMultiPartRule(world, position, o, baseBlock, out var p);
+					if (pass)
+					{
+						s = p;
+						return true;
+					}
+
+					return false;
+				}))
+				{
+					passedRule = s;
+					return true;
+				};
+
+				return false;
 			}
 
 			if (rule.HasAndContition)
 			{
-				return rule.And.All(o => PassesMultiPartRule(world, position, o, baseBlock));
+				if (rule.And.All(o =>
+				{
+					var pass = PassesMultiPartRule(world, position, o, baseBlock, out var p);
+					if (pass)
+					{
+						s = p;
+						return true;
+					}
+
+					return false;
+				}))
+				{
+					passedRule = s;
+					return true;
+				};
+
+				return false;
 			}
 
 			//return rule.All(x => CheckRequirements(baseBlock, x.Key, x.Value));
