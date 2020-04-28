@@ -5,10 +5,10 @@ namespace Alex.Utils
 {
     public class Inventory
     {
-		private Item[] Slots { get; }
+		protected Item[] Slots { get; }
 	    public int SlotCount => Slots.Length;
 
-	    private byte _selectedSlot = 0;
+	    protected byte _selectedSlot = 0;
 
 	    public int SelectedSlot
 	    {
@@ -27,19 +27,74 @@ namespace Alex.Utils
 
 				byte oldValue = _selectedSlot;
 			    _selectedSlot = (byte)value;
-		        MainHand = Slots[36 + value];
+		       // MainHand = Slots[36 + value];
 			    SelectedHotbarSlotChanged?.Invoke(this, new SelectedSlotChangedEventArgs(oldValue, (byte)value));
 			}
 	    }
 
         public bool IsPeInventory { get; set; } = false;
 
-        public Item MainHand;
-	    public Item OffHand;
-	    public Item Helmet;
-	    public Item Chestplate;
-	    public Item Leggings;
-	    public Item Boots;
+        public virtual Item MainHand
+        {
+	        get
+	        {
+		        return Slots[36 + _selectedSlot];
+	        }
+	        set
+	        {
+		        Slots[36 + _selectedSlot] = value;
+	        }
+        }
+
+        public virtual Item OffHand { get; set; }
+
+        public virtual Item Helmet
+        {
+	        get
+	        {
+		        return Slots[5];
+	        }
+	        set
+	        {
+		        Slots[5] = value;
+	        }
+        }
+
+        public virtual Item Chestplate
+        {
+	        get
+	        {
+		        return Slots[6];
+	        }
+	        set
+	        {
+		        Slots[6] = value;
+	        }
+        }
+
+        public virtual Item Leggings
+        {
+	        get
+	        {
+		        return Slots[7];
+	        }
+	        set
+	        {
+		        Slots[7] = value;
+	        }
+        }
+        
+	    public virtual Item Boots
+	    {
+		    get
+		    {
+			    return Slots[8];
+		    }
+		    set
+		    {
+			    Slots[8] = value;
+		    }
+	    }
 
 	    public event EventHandler<SlotChangedEventArgs> SlotChanged = null;
 	    public event EventHandler<SelectedSlotChangedEventArgs> SelectedHotbarSlotChanged = null;
@@ -116,10 +171,10 @@ namespace Alex.Utils
                 var oldValue = Slots[index];
                 
 			    Slots[index] = value;
-		        if ((index == 36 + _selectedSlot && !IsPeInventory) || (index == _selectedSlot && IsPeInventory))
+		        /*if ((index == 36 + _selectedSlot && !IsPeInventory) || (index == _selectedSlot && IsPeInventory))
 		        {
 		            MainHand = value;
-		        }
+		        }*/
 			    SlotChanged?.Invoke(this, new SlotChangedEventArgs(index, value, oldValue));
 			}
 	    }

@@ -109,6 +109,15 @@ namespace Alex.Entities
 			HideNameTag = true;
 		}
 
+		public void SetInventory(Inventory inventory)
+		{
+			Inventory = inventory;
+			//	HealthManager = new HealthManager(this);
+			
+			Inventory.SlotChanged += OnInventorySlotChanged;
+			Inventory.SelectedHotbarSlotChanged += InventoryOnSelectedHotbarSlotChanged;
+		}
+
 		private void CheckHeldItem()
 		{
 			var inHand = Inventory[Inventory.SelectedSlot];

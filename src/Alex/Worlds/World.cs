@@ -23,6 +23,7 @@ using Alex.Graphics.Camera;
 using Alex.Graphics.Models;
 using Alex.Graphics.Models.Items;
 using Alex.Gui.Forms.Bedrock;
+using Alex.Utils;
 using Alex.Worlds.Bedrock;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
@@ -130,8 +131,12 @@ namespace Alex.Worlds
 			Camera.FOV = Options.FieldOfVision.Value;
 
 			PhysicsEngine.AddTickable(Player);
-			
-			Player.Inventory.IsPeInventory = true;
+
+			if (networkProvider is BedrockClient)
+			{
+				Player.SetInventory(new BedrockInventory(46));
+			}
+		//	Player.Inventory.IsPeInventory = true;
 			/*if (ItemFactory.TryGetItem("minecraft:diamond_sword", out var sword))
 			{
 				Player.Inventory[Player.Inventory.SelectedSlot] = sword;

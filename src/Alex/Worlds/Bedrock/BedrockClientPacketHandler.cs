@@ -140,7 +140,7 @@ namespace Alex.Worlds.Bedrock
 		        
 		        Client.ShowDisconnect(msg);
 		        
-		        Log.Error(e, token);
+		        Log.Error(e, $"Could complete handshake: {e.ToString()}");
 		        throw;
 	        }
         }
@@ -290,7 +290,7 @@ namespace Alex.Worlds.Bedrock
 			            w.SetGameRule(gr);
 		            }
 	            }
-	            
+
                 player.Inventory.IsPeInventory = true;
 
                 _entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
@@ -1072,12 +1072,53 @@ namespace Alex.Worlds.Bedrock
 
 		public void HandleMcpeMobEquipment(McpeMobEquipment message)
 		{
-			UnhandledPackage(message);
+			if (Client.WorldReceiver?.GetPlayerEntity() is Player player && player.EntityId == message.runtimeEntityId)
+			{
+				player.Inventory.SelectedSlot = message.selectedSlot;
+				return;
+			}
+			
+			if (Client.WorldReceiver.TryGetEntity(message.runtimeEntityId, out var e) && e is Entity entity)
+			{
+				var item = ToAlexItem(message.item);
+
+				byte slot = message.slot;
+				switch (message.windowsId)
+				{
+					case 0:
+						
+						break;
+				}
+				
+				entity.Inventory[slot] = item;
+				entity.Inventory.SelectedSlot = message.selectedSlot;
+			}
+
+		//	UnhandledPackage(message);
 		}
 
 		public void HandleMcpeMobArmorEquipment(McpeMobArmorEquipment message)
 		{
-			UnhandledPackage(message);
+			IEntity ee;
+			if (!Client.WorldReceiver.TryGetEntity(message.runtimeEntityId, out ee))
+			{
+				if (Client.WorldReceiver?.GetPlayerEntity() is Player player &&
+				    player.EntityId == message.runtimeEntityId)
+				{
+					ee = player;
+				}
+				//entity.Inventory.Boots
+			}
+
+			if (ee is Entity entity)
+			{
+				entity.Inventory.Helmet = ToAlexItem(message.helmet);
+				entity.Inventory.Chestplate = ToAlexItem(message.chestplate);
+				entity.Inventory.Leggings = ToAlexItem(message.leggings);
+				entity.Inventory.Boots = ToAlexItem(message.boots);
+			}
+			
+			//UnhandledPackage(message);
 		}
 
 		public void HandleMcpeInteract(McpeInteract message)
@@ -1268,7 +1309,7 @@ namespace Alex.Worlds.Bedrock
 		        result.Meta = item.Metadata;
 		        result.Count = item.Count;
 		        result.Nbt = item.ExtraData;
-
+				
 		        return result;
 	        }
 
