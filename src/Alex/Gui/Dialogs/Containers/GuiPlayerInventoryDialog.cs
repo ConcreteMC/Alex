@@ -128,7 +128,11 @@ namespace Alex.Gui.Dialogs.Containers
                 
                 if (idx == 36)
                 {
-                    idx = 0;
+                    if (Inventory.IsPeInventory)
+                    {
+                        idx = 0;
+                    }
+
                     ly = 141;
                     color = Color.GreenYellow;
                 }
@@ -140,6 +144,7 @@ namespace Alex.Gui.Dialogs.Containers
 
             lx = 7;
             ly = 7;
+            
             for (int i = 0; i < 4; i++)
             {
                 var element = new InventoryContainerItem()
@@ -148,9 +153,29 @@ namespace Alex.Gui.Dialogs.Containers
                     Anchor = Alignment.TopLeft,
                     Margin =  new Thickness(ly, lx),
                     AutoSizeMode = AutoSizeMode.None,
-                    Item = Inventory[39 - i],
-                    InventoryIndex = 39 - i
+                    //Item = Inventory[39 - i],
+                   // InventoryIndex = 39 - i
                 };
+
+                switch (i)
+                {
+                    case 0:
+                        element.Item = Inventory.Helmet;
+                        element.InventoryIndex = Inventory.HelmetSlot;
+                        break;
+                    case 1:
+                        element.Item = Inventory.Chestplate;
+                        element.InventoryIndex = Inventory.ChestSlot;
+                        break;
+                    case 2:
+                        element.Item = Inventory.Leggings;
+                        element.InventoryIndex = Inventory.LeggingsSlot;
+                        break;
+                    case 3:
+                        element.Item = Inventory.Boots;
+                        element.InventoryIndex = Inventory.BootsSlot;
+                        break;
+                }
                 
                 ContentContainer.AddChild(element);
                 

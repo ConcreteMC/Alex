@@ -48,51 +48,55 @@ namespace Alex.Utils
 
         public virtual Item OffHand { get; set; }
 
+        public int HelmetSlot { get; protected set; } = 5;
         public virtual Item Helmet
         {
 	        get
 	        {
-		        return Slots[5];
+		        return Slots[HelmetSlot];
 	        }
 	        set
 	        {
-		        Slots[5] = value;
+		        Slots[HelmetSlot] = value;
 	        }
         }
 
+        public int ChestSlot { get; protected set; } = 6;
         public virtual Item Chestplate
         {
 	        get
 	        {
-		        return Slots[6];
+		        return Slots[ChestSlot];
 	        }
 	        set
 	        {
-		        Slots[6] = value;
+		        Slots[ChestSlot] = value;
 	        }
         }
 
+        public int LeggingsSlot { get; protected set; } = 7;
         public virtual Item Leggings
         {
 	        get
 	        {
-		        return Slots[7];
+		        return Slots[LeggingsSlot];
 	        }
 	        set
 	        {
-		        Slots[7] = value;
+		        Slots[LeggingsSlot] = value;
 	        }
         }
         
+        public int BootsSlot { get; protected set; } = 8;
 	    public virtual Item Boots
 	    {
 		    get
 		    {
-			    return Slots[8];
+			    return Slots[BootsSlot];
 		    }
 		    set
 		    {
-			    Slots[8] = value;
+			    Slots[BootsSlot] = value;
 		    }
 	    }
 
