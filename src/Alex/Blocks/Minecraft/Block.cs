@@ -281,6 +281,11 @@ namespace Alex.Blocks.Minecraft
 			return secondsForBreak;
 		}
 
+        public virtual bool CanCollide()
+        {
+	        return true;
+        }
+
         public virtual bool ShouldRenderFace(BlockFace face, IBlock neighbor)
         {
 	        if (Transparent)

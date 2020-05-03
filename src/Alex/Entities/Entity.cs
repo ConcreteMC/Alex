@@ -534,13 +534,13 @@ namespace Alex.Entities
 		}
 
 		public BoundingBox BoundingBox => GetBoundingBox();
-		public BoundingBox GetBoundingBox()
+		public virtual BoundingBox GetBoundingBox()
 		{
 			var pos = KnownPosition;
 			return GetBoundingBox(pos);
 		}
 		
-		public BoundingBox GetBoundingBox(Vector3 pos)
+		public virtual BoundingBox GetBoundingBox(Vector3 pos)
 		{
 			double halfWidth = (Width * Scale) / 2D;
 

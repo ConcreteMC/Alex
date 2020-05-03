@@ -87,161 +87,195 @@ namespace Alex.Worlds
 
 						var preview = position.PreviewMove(velocity * dt);
 
-						var boundingBox = e.GetBoundingBox(preview);
-						
-						Bound bound = new Bound(World, boundingBox, preview);
-						
-						if (bound.GetIntersecting(boundingBox, out var blocks))
+						if (e.IsSneaking && e.KnownPosition.OnGround)
 						{
-							velocity = AdjustForY(e.GetBoundingBox(new Vector3(position.X, preview.Y, position.Z)), blocks,
-								velocity, position);
-							
-							Hit.AddRange(blocks.Select(x => x.box));
-							
-							//var solid = blocks.Where(b => b.block.Solid && b.box.Max.Y > position.Y).ToArray();
-							var solid = blocks.Where(b => b.block.Solid && b.box.Max.Y > position.Y).ToArray();
+							var newFeetBlock = e.Level?.GetBlock(preview + Vector3.Down);
 
-							if (solid.Length > 0)
+							if (!newFeetBlock.Solid)
 							{
-								var heighest = solid.OrderByDescending(x => x.box.Max.Y).FirstOrDefault();
-								if (MathF.Abs(heighest.box.Max.Y - boundingBox.Min.Y) <= 0.65f &&
-								    e.KnownPosition.OnGround &&
-								    !e.IsFlying)
+								velocity = new Vector3(-velocity.X, velocity.Y, -velocity.Z);
+							}
+						}
+
+					//	if (velocity != Vector3.Zero)
+						{
+							var boundingBox = e.GetBoundingBox(preview);
+
+							Bound bound = new Bound(World, boundingBox, preview);
+
+							if (bound.GetIntersecting(boundingBox, out var blocks))
+							{
+								velocity = AdjustForY(
+									e.GetBoundingBox(new Vector3(position.X, preview.Y, position.Z)), blocks, velocity,
+									position);
+
+								Hit.AddRange(blocks.Select(x => x.box));
+
+								//var solid = blocks.Where(b => b.block.Solid && b.box.Max.Y > position.Y).ToArray();
+								var solid = blocks.Where(
+									b => b.block.Solid && b.box.Max.Y > position.Y && b.block.CanCollide()).ToArray();
+
+								if (solid.Length > 0)
 								{
-									//if (!heighest.block.BlockState.Model
-									//	.GetIntersecting(heighest.coordinates, boundingBox)
-									//	.Any(x => x.Max.Y > heighest.box.Max.Y))
-									//if (!blocks.Any(x => x.))
+									var heighest = solid.OrderByDescending(x => x.box.Max.Y).FirstOrDefault();
+
+									if (MathF.Abs(heighest.box.Max.Y - boundingBox.Min.Y) <= 0.65f
+									    && e.KnownPosition.OnGround && !e.IsFlying)
 									{
-
-										e.KnownPosition.Y = (float) heighest.box.Max.Y;
-									}
-								}
-
-								if (!wasColliding)
-								{
-									//var min = Vector3.Transform(boundingBox.Min,
-									//	Matrix.CreateRotationY(-MathHelper.ToRadians(position.HeadYaw)));
-						
-									//var max = Vector3.Transform(boundingBox.Max,
-									//	Matrix.CreateRotationY(-MathHelper.ToRadians(position.HeadYaw)));
-
-									var min = boundingBox.Min;
-									var max = boundingBox.Max;
-									
-									var minX = min.X;
-									var maxX = max.X;
-									
-									var previewMinX = new Vector3(minX, preview.Y, preview.Z);
-
-									bool checkX = false;
-									if (!solid.Any(x =>
-									{
-										var contains = x.box.Contains(previewMinX);
-										return contains != ContainmentType.Contains &&
-										       contains != ContainmentType.Intersects;
-									}))
-									{
-										previewMinX = new Vector3(maxX, preview.Y, preview.Z);
-
-										if (solid.Any(x =>
+										//if (!heighest.block.BlockState.Model
+										//	.GetIntersecting(heighest.coordinates, boundingBox)
+										//	.Any(x => x.Max.Y > heighest.box.Max.Y))
+										//if (!blocks.Any(x => x.))
 										{
-											var contains = x.box.Contains(previewMinX);
-											return contains != ContainmentType.Contains &&
-											       contains != ContainmentType.Intersects;
-										}))
+
+											e.KnownPosition.Y = (float) heighest.box.Max.Y;
+										}
+									}
+
+									if (!wasColliding)
+									{
+										//var min = Vector3.Transform(boundingBox.Min,
+										//	Matrix.CreateRotationY(-MathHelper.ToRadians(position.HeadYaw)));
+
+										//var max = Vector3.Transform(boundingBox.Max,
+										//	Matrix.CreateRotationY(-MathHelper.ToRadians(position.HeadYaw)));
+
+										var min = boundingBox.Min;
+										var max = boundingBox.Max;
+
+										var minX = min.X;
+										var maxX = max.X;
+
+										var previewMinX = new Vector3(minX, preview.Y, preview.Z);
+
+										bool checkX = false;
+
+										if (!solid.Any(
+											x =>
+											{
+												var contains = x.box.Contains(previewMinX);
+
+												return contains != ContainmentType.Contains
+												       && contains != ContainmentType.Intersects;
+											}))
+										{
+											previewMinX = new Vector3(maxX, preview.Y, preview.Z);
+
+											if (solid.Any(
+												x =>
+												{
+													var contains = x.box.Contains(previewMinX);
+
+													return contains != ContainmentType.Contains
+													       && contains != ContainmentType.Intersects;
+												}))
+											{
+												checkX = true;
+											}
+										}
+										else
 										{
 											checkX = true;
 										}
-									}
-									else
-									{
-										checkX = true;
-									}
 
-									if (checkX)
-									{
-										for (float x = 1f; x > 0f; x -= 0.1f)
+										if (checkX)
 										{
-											Vector3 c = (position - preview) * new Vector3(x, 1f, 1f) + position;
-											if (solid.All(s =>
+											for (float x = 1f; x > 0f; x -= 0.1f)
 											{
-												var contains = s.box.Contains(c);
-												return contains != ContainmentType.Contains &&
-												       contains != ContainmentType.Intersects;
-											}))
-											{
-												velocity = new Vector3(c.X - position.X, velocity.Y, velocity.Z);
-												break;
+												Vector3 c = (position - preview) * new Vector3(x, 1f, 1f) + position;
+
+												if (solid.All(
+													s =>
+													{
+														var contains = s.box.Contains(c);
+
+														return contains != ContainmentType.Contains
+														       && contains != ContainmentType.Intersects;
+													}))
+												{
+													velocity = new Vector3(c.X - position.X, velocity.Y, velocity.Z);
+
+													break;
+												}
 											}
 										}
-									}
-									
-									var minZ = min.Z;
-									var maxZ = max.Z;
-									
-									var previewMinZ = new Vector3(preview.X, preview.Y, minZ);
 
-									bool checkZ = false;
-									if (!solid.Any(x =>
-									{
-										var contains = x.box.Contains(previewMinZ);
-										return contains != ContainmentType.Contains &&
-										       contains != ContainmentType.Intersects;
-									}))
-									{
-										previewMinZ = new Vector3(preview.X, preview.Y, maxZ);
+										var minZ = min.Z;
+										var maxZ = max.Z;
 
-										if (solid.Any(x =>
+										var previewMinZ = new Vector3(preview.X, preview.Y, minZ);
+
+										bool checkZ = false;
+
+										if (!solid.Any(
+											x =>
+											{
+												var contains = x.box.Contains(previewMinZ);
+
+												return contains != ContainmentType.Contains
+												       && contains != ContainmentType.Intersects;
+											}))
 										{
-											var contains = x.box.Contains(previewMinZ);
-											return contains != ContainmentType.Contains &&
-											       contains != ContainmentType.Intersects;
-										}))
+											previewMinZ = new Vector3(preview.X, preview.Y, maxZ);
+
+											if (solid.Any(
+												x =>
+												{
+													var contains = x.box.Contains(previewMinZ);
+
+													return contains != ContainmentType.Contains
+													       && contains != ContainmentType.Intersects;
+												}))
+											{
+												checkZ = true;
+											}
+										}
+										else
 										{
 											checkZ = true;
 										}
-									}
-									else
-									{
-										checkZ = true;
-									}
 
-									if (checkZ)
-									{
-										for (float x = 1f; x > 0f; x -= 0.1f)
+										if (checkZ)
 										{
-											Vector3 c = (position - preview) * new Vector3(1f, 1f, x) + position;
-											if (solid.All(s =>
+											for (float x = 1f; x > 0f; x -= 0.1f)
 											{
-												var contains = s.box.Contains(c);
-												return contains != ContainmentType.Contains &&
-												       contains != ContainmentType.Intersects;
-											}))
-											{
-												velocity = new Vector3(velocity.X, velocity.Y, c.Z - position.Z);
-												break;
+												Vector3 c = (position - preview) * new Vector3(1f, 1f, x) + position;
+
+												if (solid.All(
+													s =>
+													{
+														var contains = s.box.Contains(c);
+
+														return contains != ContainmentType.Contains
+														       && contains != ContainmentType.Intersects;
+													}))
+												{
+													velocity = new Vector3(velocity.X, velocity.Y, c.Z - position.Z);
+
+													break;
+												}
 											}
 										}
 									}
+
+									// for (float x = 1f; x > 0f; x -= 0.1f)
+									// {
+									// 	Vector3 c = (position - preview) * x + position;
+									// 	if (solid.All(s =>
+									// 	{
+									// 		var contains = s.box.Contains(c);
+									// 		return contains != ContainmentType.Contains &&
+									// 		       contains != ContainmentType.Intersects;
+									// 	}))
+									// 	{
+									// 		velocity = new Vector3(c.X - position.X, velocity.Y, c.Z - position.Z);
+									// 		break;
+									// 	}
+									// }
 								}
-								// for (float x = 1f; x > 0f; x -= 0.1f)
-								// {
-								// 	Vector3 c = (position - preview) * x + position;
-								// 	if (solid.All(s =>
-								// 	{
-								// 		var contains = s.box.Contains(c);
-								// 		return contains != ContainmentType.Contains &&
-								// 		       contains != ContainmentType.Intersects;
-								// 	}))
-								// 	{
-								// 		velocity = new Vector3(c.X - position.X, velocity.Y, c.Z - position.Z);
-								// 		break;
-								// 	}
-								// }
 							}
 						}
-						
+
 						e.Velocity = velocity;
 						
 						e.KnownPosition.Move(velocity * dt);

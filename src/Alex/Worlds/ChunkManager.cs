@@ -793,10 +793,11 @@ namespace Alex.Worlds
 
 	    private double GetUpdatePriority(IChunkColumn column, ScheduleType type)
 	    {
+		    var cameraChunk = new ChunkCoordinates(_cameraPosition);
 		    var cc = new ChunkCoordinates(column.X, column.Z);
 		    bool isInView = IsWithinView(cc, _cameraBoundingFrustum);
 		    
-		    double priorityOffset = isInView ? 256 : 512;
+		    double priorityOffset = isInView ? 0 : 256;
 
 		    if (!column.IsNew)
 		    {
@@ -809,12 +810,12 @@ namespace Alex.Worlds
 				//    priorityOffset = double.MaxValue / 4d;
 		    }
 
-		    if (column.HighPriority && isInView)
+		    if ((column.HighPriority && isInView) || cameraChunk == cc)
 		    {
 			    priorityOffset = 0;
 		    }
 
-		    return priorityOffset + Math.Abs(new ChunkCoordinates(_cameraPosition).DistanceTo(cc));
+		    return priorityOffset + Math.Abs(cameraChunk.DistanceTo(cc));
 	    }
 
 	    public void ScheduleChunkUpdate(ChunkCoordinates position, ScheduleType type, bool prioritize = false)

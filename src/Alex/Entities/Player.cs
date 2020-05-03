@@ -20,6 +20,7 @@ using MiNET.Net;
 using MiNET.Utils;
 using NLog;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
+using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
 using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
 using ContainmentType = Microsoft.Xna.Framework.ContainmentType;
 using IBlockState = Alex.API.Blocks.State.IBlockState;
@@ -80,7 +81,9 @@ namespace Alex.Entities
 
 			RenderEntity = true;
 			ShowItemInHand = true;
-		}
+        }
+        
+        
 
         protected override void OnInventorySlotChanged(object sender, SlotChangedEventArgs e)
         {
@@ -516,6 +519,17 @@ namespace Alex.Entities
 		{
 		//	Log.Debug($"Terrain collision: {collisionPoint.ToString()} | {direction}");	
 			base.TerrainCollision(collisionPoint, direction);
+		}
+
+		public override BoundingBox GetBoundingBox(Vector3 pos)
+		{
+			double halfWidth = (0.6 * Scale) / 2D;
+			var height = IsSneaking ? 1.5 : Height;
+			
+			return new BoundingBox(
+				new Vector3((float) (pos.X - halfWidth), pos.Y, (float) (pos.Z - halfWidth)),
+				new Vector3(
+					(float) (pos.X + halfWidth), (float) (pos.Y + (height * Scale)), (float) (pos.Z + halfWidth)));
 		}
 
 		public override void OnTick()

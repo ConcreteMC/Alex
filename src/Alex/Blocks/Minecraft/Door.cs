@@ -100,5 +100,10 @@ namespace Alex.Blocks.Minecraft
 		{
 			return true;
 		}
+		
+		public override bool CanCollide()
+		{
+			return !BlockState.GetTypedValue(OPEN);
+		}
 	}
 }
