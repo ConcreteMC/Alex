@@ -50,7 +50,7 @@ namespace Alex.Blocks.Storage
 		public bool IsAllAir => _blockRefCount == 0;
 
 		internal ChunkMesh MeshCache { get; set; } = null;
-		internal Dictionary<BlockCoordinates, IList<ChunkMesh.EntryPosition>> MeshPositions { get; set; } = null;
+		//internal Dictionary<BlockCoordinates, IList<ChunkMesh.EntryPosition>> MeshPositions { get; set; } = null;
 		
 		private ChunkColumn Owner { get; }
         public ChunkSection(ChunkColumn owner, int y, bool storeSkylight, int sections = 2)

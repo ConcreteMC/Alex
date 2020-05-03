@@ -121,7 +121,7 @@ namespace Alex.API.Graphics
         public PooledVertexBuffer CreateBuffer(object caller, GraphicsDevice device, VertexDeclaration vertexDeclaration,
             int vertexCount, BufferUsage bufferUsage)
         {
-            if (Monitor.TryEnter(_disposalLock))
+          /*  if (Monitor.TryEnter(_disposalLock))
             {
                 try
                 {
@@ -145,7 +145,7 @@ namespace Alex.API.Graphics
                 {
                     Monitor.Exit(_disposalLock);
                 }
-            }
+            }*/
             
             long id = Interlocked.Increment(ref _bufferId);
             PooledVertexBuffer buffer = new PooledVertexBuffer(this, id, caller, device, vertexDeclaration, vertexCount, bufferUsage);

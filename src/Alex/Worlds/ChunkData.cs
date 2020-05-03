@@ -12,9 +12,6 @@ namespace Alex.Worlds
 {
     internal class ChunkData : IDisposable
     {
-       // public PooledIndexBuffer SolidIndexBuffer { get; set; }
-      //  public PooledIndexBuffer TransparentIndexBuffer { get; set; }
-       // public PooledIndexBuffer AnimatedIndexBuffer { get; set; }
         public PooledVertexBuffer Buffer { get; set; }
         public ChunkCoordinates Coordinates { get; set; }
 
@@ -22,9 +19,6 @@ namespace Alex.Worlds
         
         public void Dispose()
         {
-            //SolidIndexBuffer?.MarkForDisposal();
-           // TransparentIndexBuffer?.MarkForDisposal();
-           // AnimatedIndexBuffer?.MarkForDisposal();
             Buffer?.MarkForDisposal();
 
            foreach (var stage in RenderStages)
@@ -40,8 +34,7 @@ namespace Alex.Worlds
     {
         private ChunkData Parent { get; }
         public PooledIndexBuffer IndexBuffer { get; set; }
-        //public PooledVertexBuffer Buffer { get; set; }
-        
+
         public ChunkRenderStage(ChunkData parent)
         {
             Parent = parent;

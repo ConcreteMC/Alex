@@ -64,12 +64,7 @@ namespace Alex.Worlds
 		public object UpdateLock { get; set; } = new object();
 		public ScheduleType Scheduled { get; set; } = ScheduleType.Unscheduled;
 
-		//private bool[] _scheduledUpdates = new bool[ChunkWidth * ChunkDepth * ChunkHeight];
-		//private bool[] _scheduledLightingUpdates = new bool[ChunkWidth * ChunkDepth * ChunkHeight];
-		//private List<int> _scheduledUpdates = new List<int>();
-		//private List<int> _scheduledLightingUpdates = new List<int>();
-
-        public ChunkColumn()
+		public ChunkColumn()
 		{
 			IsDirty = true;
 			SkyLightDirty = true;

@@ -79,6 +79,7 @@ namespace Alex.Worlds
 	       new Utils.Queue.ConcurrentPriorityQueue<ChunkCoordinates, double>();
        
 		private BlockLightCalculations BlockLightCalculations { get; }
+		private long _highPriorityUpdates = 0;
         public ChunkManager(IServiceProvider serviceProvider, GraphicsDevice graphics, IWorld world)
         {
 	        _depthMap = new RenderTarget2D(graphics, 512, 512, false, SurfaceFormat.Color, DepthFormat.None);
@@ -712,6 +713,7 @@ namespace Alex.Worlds
 
                 var enqueued = Enqueued.ToArray();
 
+             //   int highPriority = 0;
                 foreach (var cc in enqueued)
                 {
 	                try
@@ -726,9 +728,13 @@ namespace Alex.Worlds
 						                double.MaxValue - Math.Abs(cameraChunkPos.DistanceTo(cc)));
 					                continue;
 				                }*/
-
-
+				                
 				                PriorityQueue.UpdatePriority(cc, GetUpdatePriority(chunk, chunk.Scheduled));
+
+				               // if (IsWithinView(cc, _cameraBoundingFrustum))
+				               // {
+					            //    highPriority++;
+				               // }
 			                }
 		                }
 	                }
@@ -749,14 +755,17 @@ namespace Alex.Worlds
 	                }
                 }
 
+               // _highPriorityUpdates = highPriority;
                 var threadsActive = Interlocked.Read(ref _threadsRunning);
-                if (threadsActive >= maxThreads)
+                var maxThreadsActive = maxThreads;
+                
+                if (threadsActive >= maxThreadsActive)
                 {
 	                spinWait.SpinOnce();
 	                continue;
                 }
 
-                if (threadsActive < PriorityQueue.Count && threadsActive < maxThreads)
+                if (threadsActive < PriorityQueue.Count && threadsActive < maxThreadsActive)
                 {
 	                ScheduleWorker();
                 }
@@ -771,39 +780,41 @@ namespace Alex.Worlds
 	    private void ScheduleWorker()
 	    {
 		    Interlocked.Increment(ref _threadsRunning);
-		    
-		    _threadPool.QueueUserWorkItem(() =>
-		    {
-			    try
+
+		    _threadPool.QueueUserWorkItem(
+			    () =>
 			    {
-					while(PriorityQueue.TryDequeue(out ChunkCoordinates coordinates))
+				    try
 				    {
-					    CancellationTokenSource taskCancelationToken =
-						    CancellationTokenSource.CreateLinkedTokenSource(CancelationToken.Token);
-					    if (_workItems.TryAdd(coordinates, taskCancelationToken))
+					    while (PriorityQueue.TryDequeue(out ChunkCoordinates coordinates))
 					    {
-						    Enqueued.Remove(coordinates);
-					    }
-					    
-					    if (Chunks.TryGetValue(coordinates, out var val))
-					    {
-						    if (val is ChunkColumn column && column.Sections.Any(x => x != null && !x.IsEmpty()))
+						    CancellationTokenSource taskCancelationToken =
+							    CancellationTokenSource.CreateLinkedTokenSource(CancelationToken.Token);
+
+						    if (_workItems.TryAdd(coordinates, taskCancelationToken))
 						    {
-							    UpdateChunk(coordinates, val);
+							    Enqueued.Remove(coordinates);
 						    }
-					    }
 
-					    _workItems.TryRemove(coordinates, out _);
-				    } //while (TryDequeue(new ChunkCoordinates(_cameraPosition), out coords, out priority));
-			    }
-			    catch (Exception ex)
-			    {
-				    Log.Warn(ex, $"Chunk processing error: {ex.ToString()}");
-			    }
+						    if (Chunks.TryGetValue(coordinates, out var val))
+						    {
+							    if (val is ChunkColumn column && column.Sections.Any(x => x != null && !x.IsEmpty()))
+							    {
+								    UpdateChunk(coordinates, val);
+							    }
+						    }
 
-			    Interlocked.Decrement(ref _threadsRunning);
+						    _workItems.TryRemove(coordinates, out _);
+					    } //while (TryDequeue(new ChunkCoordinates(_cameraPosition), out coords, out priority));
+				    }
+				    catch (Exception ex)
+				    {
+					    Log.Warn(ex, $"Chunk processing error: {ex.ToString()}");
+				    }
 
-		    });
+				    Interlocked.Decrement(ref _threadsRunning);
+
+			    });
 	    }
 
 	    private double GetUpdatePriority(IChunkColumn column, ScheduleType type)
@@ -812,10 +823,14 @@ namespace Alex.Worlds
 		    var cc = new ChunkCoordinates(column.X, column.Z);
 		    bool isInView = IsWithinView(cc, _cameraBoundingFrustum);
 		    
-		    double priorityOffset = isInView ? 0 : 256;
+		    double priorityOffset = isInView ? 1 : 256;
 
 		    if (!column.IsNew)
 		    {
+			    if (type == ScheduleType.Border)
+			    {
+				    priorityOffset *= 4;
+			    }
 			    if (type == ScheduleType.Lighting)
 			    {
 				    priorityOffset *= 2;
@@ -872,268 +887,287 @@ namespace Alex.Worlds
 			    }
 		    }
 	    }
-	    
+
 	    public TimeSpan MaxUpdateTime { get; set; } = TimeSpan.Zero;
 	    public TimeSpan MinUpdateTIme { get; set; } = TimeSpan.MaxValue;
 	    public TimeSpan ChunkUpdateTime { get; set; } = TimeSpan.Zero;
 	    public long TotalChunkUpdates { get; set; } = 0;
-        private void UpdateChunk(ChunkCoordinates coordinates, IChunkColumn c)
-        {
-	        var chunk = c as ChunkColumn;
-            if (!Monitor.TryEnter(chunk.UpdateLock))
-            {
-                Interlocked.Decrement(ref _chunkUpdates);
-                return; //Another thread is already updating this chunk, return.
-            }
-            
-            Stopwatch sw = Stopwatch.StartNew();
 
-          //  if ((chunk.Scheduled & ScheduleType.Lighting) == ScheduleType.Lighting)
-          if (Options.VideoOptions.ClientSideLighting)
-          {
-	          if (chunk.SkyLightDirty || chunk.IsNew)
-	          {
-		          new SkyLightCalculations().RecalcSkyLight(chunk, new SkyLightBlockAccess(this));
+	    private void UpdateChunk(ChunkCoordinates coordinates, IChunkColumn c)
+	    {
+		    var chunk = c as ChunkColumn;
 
-		          chunk.SkyLightDirty = false;
-	          }
+		    if (!Monitor.TryEnter(chunk.UpdateLock))
+		    {
+			    Interlocked.Decrement(ref _chunkUpdates);
 
-	          //if (chunk.BlockLightDirty || chunk.IsNew)
-	          {
-		          BlockLightCalculations.Process(coordinates);
-	          }
-          }
+			    return; //Another thread is already updating this chunk, return.
+		    }
 
-          var scheduleType = chunk.Scheduled;
+		    Stopwatch sw = Stopwatch.StartNew();
 
-            ChunkData data = null;
-            bool force = !_chunkData.TryGetValue(coordinates, out data);
+		    //  if ((chunk.Scheduled & ScheduleType.Lighting) == ScheduleType.Lighting)
+		    if (Options.VideoOptions.ClientSideLighting)
+		    {
+			    if (chunk.SkyLightDirty || chunk.IsNew)
+			    {
+				    new SkyLightCalculations().RecalcSkyLight(chunk, new SkyLightBlockAccess(this));
 
-            int meshed = 0;
-            try
-            {
-	            //chunk.UpdateChunk(Graphics, World);
+				    chunk.SkyLightDirty = false;
+			    }
 
-	            var currentChunkY = Math.Min(((int) Math.Round(_cameraPosition.Y)) >> 4,
-		            (chunk.GetHeighest() >> 4) - 2);
-	            if (currentChunkY < 0) currentChunkY = 0;
+			    //if (chunk.BlockLightDirty || chunk.IsNew)
+			    {
+				    BlockLightCalculations.Process(coordinates);
+			    }
+		    }
 
-	            List<ChunkMesh> meshes = new List<ChunkMesh>();
+		    var scheduleType = chunk.Scheduled;
 
-	            foreach (var s in chunk.Sections.Where(x => x != null && !x.IsEmpty()).OrderByDescending(sec => MathF.Abs(currentChunkY - sec.GetYLocation())))
-	            {
-		            ChunkSection section = (ChunkSection) s;
+		    ChunkData data  = null;
+		    bool      force = !_chunkData.TryGetValue(coordinates, out data);
 
-		            var i = section.GetYLocation();
-		            
-		            if (i != currentChunkY && i != 0)
-		            {
+		    int meshed = 0;
 
-			            if (i > 0 && i < chunk.Sections.Length - 1)
-			            {
-				            var neighbors = chunk.CheckNeighbors(section, i, World).ToArray();
+		    try
+		    {
+			    //chunk.UpdateChunk(Graphics, World);
 
-				            if (!section.HasAirPockets && neighbors.Length == 6) //All surrounded by solid.
-				            {
-					            // Log.Info($"Found section with solid neigbors, skipping.");
-					            continue;
-				            }
+			    var currentChunkY = Math.Min(
+				    ((int) Math.Round(_cameraPosition.Y)) >> 4, (chunk.GetHeighest() >> 4) - 2);
 
-				            if (i < currentChunkY && neighbors.Length >= 6) continue;
-			            }
-			            else if (i < currentChunkY) continue;
+			    if (currentChunkY < 0) currentChunkY = 0;
 
-		            }
+			    List<ChunkMesh> meshes = new List<ChunkMesh>();
 
-		            //if (i == 0) force = true;
+			    foreach (var s in chunk.Sections.Where(x => x != null && !x.IsEmpty())
+				   .OrderByDescending(sec => MathF.Abs(currentChunkY - sec.GetYLocation())))
+			    {
+				    ChunkSection section = (ChunkSection) s;
 
-		            bool shouldRebuildMesh = section.ScheduledUpdatesCount > 0 || section.ScheduledSkyUpdatesCount > 0
-		                                                                       || section.ScheduledBlockUpdatesCount
-		                                                                       > 0;
-		            
-		            if (force || shouldRebuildMesh || (scheduleType & ScheduleType.Border) == ScheduleType.Border)
-		            {
-			            var sectionMesh = GenerateSectionMesh(World, scheduleType,
-				            new Vector3(chunk.X << 4, 0, chunk.Z << 4), ref section, i);
+				    var i = section.GetYLocation();
 
-			            meshes.Add(sectionMesh);
+				    if (i != currentChunkY && i != 0)
+				    {
 
-			            section.MeshCache = sectionMesh;
-			            section.IsDirty = false;
+					    if (i > 0 && i < chunk.Sections.Length - 1)
+					    {
+						    var neighbors = chunk.CheckNeighbors(section, i, World).ToArray();
 
-			            meshed++;
-		            }
-		            else
-		            {
-			            
-			            if (section.MeshCache != null)
-							meshes.Add(section.MeshCache);
-		            }
-	            }
+						    if (!section.HasAirPockets && neighbors.Length == 6) //All surrounded by solid.
+						    {
+							    // Log.Info($"Found section with solid neigbors, skipping.");
+							    continue;
+						    }
 
-	            Dictionary<RenderStage, List<int>> newStageIndexes = new Dictionary<RenderStage, List<int>>();
+						    if (i < currentChunkY && neighbors.Length >= 6) continue;
+					    }
+					    else if (i < currentChunkY) continue;
 
-	            List<VertexPositionNormalTextureColor> vertices = new List<VertexPositionNormalTextureColor>();
+				    }
 
-	            foreach (var mesh in meshes)
-	            {
-		            var startVerticeIndex = vertices.Count;
-		            vertices.AddRange(mesh.Vertices);
+				    //if (i == 0) force = true;
 
-		            foreach (var stage in mesh.Indexes)
-		            {
-			            if (!newStageIndexes.ContainsKey(stage.Key))
-			            {
-				            newStageIndexes.Add(stage.Key, new List<int>());
-			            }
+				    bool shouldRebuildMesh = section.ScheduledUpdatesCount > 0 || section.ScheduledSkyUpdatesCount > 0
+				                                                               || section.ScheduledBlockUpdatesCount
+				                                                               > 0;
 
-			            newStageIndexes[stage.Key].AddRange(stage.Value.Select(a => startVerticeIndex + a));
-		            }
-	            }
+				    if (force || shouldRebuildMesh || (scheduleType & ScheduleType.Border) == ScheduleType.Border)
+				    {
+					    var oldMesh = section.MeshCache;
 
-	            if (vertices.Count > 0)
-	            {
-		            var vertexArray = vertices.ToArray();
-		            Dictionary<RenderStage, ChunkRenderStage> oldStages = null;
-		            if (data == null)
-		            {
-			            data = new ChunkData()
-			            {
-				            Buffer = GpuResourceManager.GetBuffer(this, Graphics,
-					            VertexPositionNormalTextureColor.VertexDeclaration, vertexArray.Length,
-					            BufferUsage.WriteOnly),
-				            RenderStages = new Dictionary<RenderStage, ChunkRenderStage>()
-			            };
-		            }
-		            else
-		            {
-			            oldStages = data.RenderStages;
-		            }
+					    var sectionMesh = GenerateSectionMesh(
+						    World, scheduleType, new Vector3(chunk.X << 4, 0, chunk.Z << 4), ref section, i);
 
-		            var newStages = new Dictionary<RenderStage, ChunkRenderStage>();
+					    meshes.Add(sectionMesh);
 
-		            PooledVertexBuffer oldBuffer = data.Buffer;
+					    section.MeshCache = sectionMesh;
+					    section.IsDirty = false;
 
-		            PooledVertexBuffer newVertexBuffer = null;
+					    meshed++;
 
-		            if (vertexArray.Length >= data.Buffer.VertexCount)
-		            {
-			            PooledVertexBuffer newBuffer = GpuResourceManager.GetBuffer(this, Graphics,
-				            VertexPositionNormalTextureColor.VertexDeclaration, vertexArray.Length,
-				            BufferUsage.WriteOnly);
+					    oldMesh?.Dispose();
+				    }
+				    else
+				    {
+					    if (section.MeshCache != null)
+						    meshes.Add(section.MeshCache);
+				    }
+			    }
 
-			            newBuffer.SetData(vertexArray);
-			            newVertexBuffer = newBuffer;
-		            }
-		            else
-		            {
-			            data.Buffer.SetData(vertexArray);
-		            }
+			    if (meshed > 0) //We did not re-mesh ANY chunks. Not worth re-building.
+			    {
 
-		            foreach (var stage in newStageIndexes)
-		            {
-			            ChunkRenderStage renderStage;
-			            PooledIndexBuffer newIndexBuffer;
-			            if (oldStages == null || !oldStages.TryGetValue(stage.Key, out renderStage))
-			            {
-				            renderStage = new ChunkRenderStage(data);
-			            }
+				    Dictionary<RenderStage, List<int>> newStageIndexes = new Dictionary<RenderStage, List<int>>();
 
-			            if (renderStage.IndexBuffer == null ||
-			                stage.Value.Count > renderStage.IndexBuffer.IndexCount)
-			            {
-				            newIndexBuffer = GpuResourceManager.GetIndexBuffer(this, Graphics,
-					            IndexElementSize.ThirtyTwoBits, stage.Value.Count, BufferUsage.WriteOnly);
-			            }
-			            else
-			            {
-				            newIndexBuffer = renderStage.IndexBuffer;
-			            }
+				    List<VertexPositionNormalTextureColor> vertices = new List<VertexPositionNormalTextureColor>();
 
-			            newIndexBuffer.SetData(stage.Value.ToArray());
+				    foreach (var mesh in meshes)
+				    {
+					    var startVerticeIndex = vertices.Count;
+					    vertices.AddRange(mesh.Vertices);
 
-			            renderStage.IndexBuffer = newIndexBuffer;
+					    foreach (var stage in mesh.Indexes)
+					    {
+						    if (!newStageIndexes.ContainsKey(stage.Key))
+						    {
+							    newStageIndexes.Add(stage.Key, new List<int>());
+						    }
 
-			            newStages.Add(stage.Key, renderStage);
-		            }
+						    newStageIndexes[stage.Key].AddRange(stage.Value.Select(a => startVerticeIndex + a));
+					    }
+				    }
 
-		            data.RenderStages = newStages;
+				    if (vertices.Count > 0)
+				    {
+					    var                                       vertexArray = vertices.ToArray();
+					    Dictionary<RenderStage, ChunkRenderStage> oldStages   = null;
 
-		            if (newVertexBuffer != null)
-		            {
-			            data.Buffer = newVertexBuffer;
-			            oldBuffer?.MarkForDisposal();
-		            }
+					    if (data == null)
+					    {
+						    data = new ChunkData()
+						    {
+							    Buffer = GpuResourceManager.GetBuffer(
+								    this, Graphics, VertexPositionNormalTextureColor.VertexDeclaration,
+								    vertexArray.Length, BufferUsage.WriteOnly),
+							    RenderStages = new Dictionary<RenderStage, ChunkRenderStage>()
+						    };
+					    }
+					    else
+					    {
+						    oldStages = data.RenderStages;
+					    }
 
-		            RenderStage[] renderStages = (RenderStage[]) Enum.GetValues(typeof(RenderStage));
+					    var newStages = new Dictionary<RenderStage, ChunkRenderStage>();
 
-		            foreach (var stage in renderStages)
-		            {
-			            if (newStages.TryGetValue(stage, out var renderStage))
-			            {
-				            if (oldStages != null && oldStages.TryGetValue(stage, out var oldStage))
-				            {
-					            if (oldStage != renderStage)
-						            oldStage.Dispose();
-				            }
-			            }
-		            }
-	            }
-	            else
-	            {
-		            if (data != null)
-		            {
-			            data.Dispose();
-			            data = null;
-		            }
-	            }
+					    PooledVertexBuffer oldBuffer = data.Buffer;
 
-	            chunk.IsDirty = chunk.HasDirtySubChunks; //false;
-	            chunk.Scheduled = ScheduleType.Unscheduled;
-	            chunk.HighPriority = false;
-	            chunk.IsNew = false;
-	            
-	            if (data != null)
-	            {
-		            data.Coordinates = coordinates;
-	            }
+					    PooledVertexBuffer newVertexBuffer = null;
 
-	            _chunkData.AddOrUpdate(coordinates, data, (chunkCoordinates, chunkData) => data);
+					    if (vertexArray.Length >= data.Buffer.VertexCount)
+					    {
+						    PooledVertexBuffer newBuffer = GpuResourceManager.GetBuffer(
+							    this, Graphics, VertexPositionNormalTextureColor.VertexDeclaration, vertexArray.Length,
+							    BufferUsage.WriteOnly);
 
-	            return;
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, $"Exception while updating chunk: {ex.ToString()}");
-            }
-            finally
-            {
-                //Enqueued.Remove(new ChunkCoordinates(chunk.X, chunk.Z));
-                Interlocked.Decrement(ref _chunkUpdates);
-                Monitor.Exit(chunk.UpdateLock);
-                
-                sw.Stop();
+						    newBuffer.SetData(vertexArray);
+						    newVertexBuffer = newBuffer;
+					    }
+					    else
+					    {
+						    data.Buffer.SetData(vertexArray);
+					    }
 
-                if (force) //Chunk was new.
-                {
-	                ChunkUpdateTime += sw.Elapsed;
-	                TotalChunkUpdates++;
+					    foreach (var stage in newStageIndexes)
+					    {
+						    ChunkRenderStage  renderStage;
+						    PooledIndexBuffer newIndexBuffer;
 
-	                if (sw.Elapsed > MaxUpdateTime)
-	                {
-		                MaxUpdateTime = sw.Elapsed;
-	                }
-	                else if (sw.Elapsed < MinUpdateTIme)
-	                {
-		                MinUpdateTIme = sw.Elapsed;
-	                }
-                }
+						    if (oldStages == null || !oldStages.TryGetValue(stage.Key, out renderStage))
+						    {
+							    renderStage = new ChunkRenderStage(data);
+						    }
 
-                //   Log.Info(MiniProfiler.Current.RenderPlainText());
-            }
-        }
+						    if (renderStage.IndexBuffer == null
+						        || stage.Value.Count > renderStage.IndexBuffer.IndexCount)
+						    {
+							    newIndexBuffer = GpuResourceManager.GetIndexBuffer(
+								    this, Graphics, IndexElementSize.ThirtyTwoBits, stage.Value.Count,
+								    BufferUsage.WriteOnly);
+						    }
+						    else
+						    {
+							    newIndexBuffer = renderStage.IndexBuffer;
+						    }
 
-        public static bool DoMultiPartCalculations { get; set; } = true;
+						    newIndexBuffer.SetData(stage.Value.ToArray());
+
+						    renderStage.IndexBuffer = newIndexBuffer;
+
+						    newStages.Add(stage.Key, renderStage);
+					    }
+
+					    data.RenderStages = newStages;
+
+					    if (newVertexBuffer != null)
+					    {
+						    data.Buffer = newVertexBuffer;
+						    oldBuffer?.MarkForDisposal();
+					    }
+
+					    RenderStage[] renderStages = RenderStages;
+
+					    foreach (var stage in renderStages)
+					    {
+						    if (newStages.TryGetValue(stage, out var renderStage))
+						    {
+							    if (oldStages != null && oldStages.TryGetValue(stage, out var oldStage))
+							    {
+								    if (oldStage != renderStage)
+									    oldStage.Dispose();
+							    }
+						    }
+					    }
+				    }
+				    else
+				    {
+					    if (data != null)
+					    {
+						    data.Dispose();
+						    data = null;
+					    }
+				    }
+			    }
+
+			    chunk.IsDirty = chunk.HasDirtySubChunks; //false;
+			    chunk.Scheduled = ScheduleType.Unscheduled;
+			    chunk.HighPriority = false;
+			    chunk.IsNew = false;
+
+			    if (meshed > 0)
+			    {
+				    if (data != null)
+				    {
+					    data.Coordinates = coordinates;
+				    }
+
+				    _chunkData.AddOrUpdate(coordinates, data, (chunkCoordinates, chunkData) => data);
+			    }
+
+			    return;
+		    }
+		    catch (Exception ex)
+		    {
+			    Log.Error(ex, $"Exception while updating chunk: {ex.ToString()}");
+		    }
+		    finally
+		    {
+			    //Enqueued.Remove(new ChunkCoordinates(chunk.X, chunk.Z));
+			    Interlocked.Decrement(ref _chunkUpdates);
+			    Monitor.Exit(chunk.UpdateLock);
+
+			    sw.Stop();
+
+			    if (force) //Chunk was new.
+			    {
+				    ChunkUpdateTime += sw.Elapsed;
+				    TotalChunkUpdates++;
+
+				    if (sw.Elapsed > MaxUpdateTime)
+				    {
+					    MaxUpdateTime = sw.Elapsed;
+				    }
+				    else if (sw.Elapsed < MinUpdateTIme)
+				    {
+					    MinUpdateTIme = sw.Elapsed;
+				    }
+			    }
+
+			    //   Log.Info(MiniProfiler.Current.RenderPlainText());
+		    }
+	    }
+
+	    public static bool DoMultiPartCalculations { get; set; } = true;
 
         private ChunkMesh GenerateSectionMesh(IWorld world,
 	        ScheduleType scheduled,
