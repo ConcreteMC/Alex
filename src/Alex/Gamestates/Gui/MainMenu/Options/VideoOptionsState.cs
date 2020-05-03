@@ -27,9 +27,9 @@ namespace Alex.GameStates.Gui.MainMenu.Options
         private GuiToggleButton Minimap { get; set; }
         private GuiToggleButton Skybox { get; set; }
         private GuiSlider Antialiasing { get; set; }
-
+        private GuiToggleButton CustomSkins { get; set; }
+        
         private Dictionary<IGuiControl, string> Descriptions { get; } = new Dictionary<IGuiControl, string>();
-
         public VideoOptionsState(GuiPanoramaSkyBox skyBox) : base(skyBox)
         {
             TitleTranslationKey = "options.videoTitle";
@@ -71,7 +71,7 @@ namespace Alex.GameStates.Gui.MainMenu.Options
                 Minimap = CreateToggle("Minimap: {0}", options => options.VideoOptions.Minimap));
 
             AddGuiRow(Skybox = CreateToggle("Render Skybox: {0}", options => options.VideoOptions.Skybox),
-                new GuiElement());
+                CustomSkins = CreateToggle("Custom entity models: {0}", options => options.VideoOptions.CustomSkins));
 
             Description = new GuiTextElement()
             {
@@ -104,6 +104,9 @@ namespace Alex.GameStates.Gui.MainMenu.Options
             Descriptions.Add(VSync,
                 $"{TextColor.Bold}Use VSync:{TextColor.Reset}\nEnabled: Synchronizes the framerate with the monitor's refresh rate.\n");
 
+            Descriptions.Add(CustomSkins, 
+                $"{TextColor.Bold}Custom entity models:{TextColor.Reset}\nEnabled: Shows custom entity models. May impact performance heavily!\nDisabled: Do not show custom models, may improve performance.");
+            
             base.OnInit(renderer);
         }
 

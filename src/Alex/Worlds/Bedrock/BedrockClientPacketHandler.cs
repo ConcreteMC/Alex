@@ -73,6 +73,7 @@ namespace Alex.Worlds.Bedrock
         private PlayerProfile PlayerProfile { get; }
         private IEventDispatcher EventDispatcher { get; }
         private IStorageSystem Storage { get; }
+        private bool UseCustomEntityModels { get; set; }
         public BedrockClientPacketHandler(IBedrockNetworkProvider client, IEventDispatcher eventDispatcher, WorldProvider worldProvider, PlayerProfile profile, Alex alex, CancellationToken cancellationToken, ChunkProcessor chunkProcessor) //:
 	       // base(client)
         {
@@ -89,8 +90,9 @@ namespace Alex.Worlds.Bedrock
 
 	        ChunkProcessor = chunkProcessor;
 
-	        if (!Directory.Exists("skins"))
-		        Directory.CreateDirectory("skins");
+	        var options = alex.Services.GetRequiredService<IOptionsProvider>().AlexOptions;
+	        options.VideoOptions.CustomSkins.Bind((value, newValue) => UseCustomEntityModels = newValue);
+	        UseCustomEntityModels = options.VideoOptions.CustomSkins.Value;
         }
 
         public bool ReportUnhandled { get; set; } = false;
@@ -394,163 +396,179 @@ namespace Alex.Worlds.Bedrock
 					Client.WorldReceiver?.AddPlayerListItem(new PlayerListItem(u, r.DisplayName, Gamemode.Survival, 0));
 
 					EntityModelRenderer renderer = null;
-					
-					if (!string.IsNullOrWhiteSpace(r.Skin.GeometryData) && r.Skin.GeometryData != "null")
+					if (UseCustomEntityModels)
 					{
-						try
+						if (!string.IsNullOrWhiteSpace(r.Skin.GeometryData) && r.Skin.GeometryData != "null")
 						{
-							MinecraftGeometry geometry = null;
-							var jObject = JObject.Parse(r.Skin.GeometryData);
-							
-							if (jObject.TryGetValue(r.Skin.SkinResourcePatch.Geometry.Default,
-								StringComparison.InvariantCultureIgnoreCase, out JToken value))
+							try
 							{
-								geometry = value.ToObject<MinecraftGeometry>(JsonSerializer.Create(new JsonSerializerSettings()
-								{
-									Converters = new List<JsonConverter>()
-									{
-										new SingleOrArrayConverter<Vector3>(),
-										new SingleOrArrayConverter<Vector2>(), new Vector3Converter(),
-										new Vector2Converter()
-									}
-								}));
-							}
-							else
-							{
-								foreach (var prop in jObject)
-								{
-									if (prop.Key.StartsWith(r.Skin.SkinResourcePatch.Geometry.Default))
-									{
-										var split = prop.Key.Split(':');
+								MinecraftGeometry geometry = null;
+								var               jObject  = JObject.Parse(r.Skin.GeometryData);
 
-										MinecraftGeometry parentGeometry = null;
-										if (split.Length > 1)
-										{
-											if (jObject.TryGetValue(split[1],
-												StringComparison.InvariantCultureIgnoreCase, out JToken parent))
+								if (jObject.TryGetValue(
+									r.Skin.SkinResourcePatch.Geometry.Default,
+									StringComparison.InvariantCultureIgnoreCase, out JToken value))
+								{
+									geometry = value.ToObject<MinecraftGeometry>(
+										JsonSerializer.Create(
+											new JsonSerializerSettings()
 											{
-												parentGeometry = parent.ToObject<MinecraftGeometry>(JsonSerializer.Create(new JsonSerializerSettings()
+												Converters = new List<JsonConverter>()
 												{
-													Converters = new List<JsonConverter>()
-													{
-														new SingleOrArrayConverter<Vector3>(),
-														new SingleOrArrayConverter<Vector2>(), new Vector3Converter(),
-														new Vector2Converter()
-													}
-												}));
-											}
-										}
-										
-										//TODO: Support inheritance
-										
-										geometry = prop.Value.ToObject<MinecraftGeometry>(JsonSerializer.Create(new JsonSerializerSettings()
-										{
-											Converters = new List<JsonConverter>()
-											{
-												new SingleOrArrayConverter<Vector3>(),
-												new SingleOrArrayConverter<Vector2>(), new Vector3Converter(),
-												new Vector2Converter()
-											}
-										}));
-
-										if (parentGeometry != null)
-										{
-											foreach (var bone in parentGeometry.Bones)
-											{
-												var childBone = geometry.Bones.FirstOrDefault(x => x.Name == bone.Name);
-												if (childBone == null)
-												{
-													geometry.Bones.Add(bone);
+													new SingleOrArrayConverter<Vector3>(),
+													new SingleOrArrayConverter<Vector2>(),
+													new Vector3Converter(),
+													new Vector2Converter()
 												}
-												else
-												{
-													if (childBone.NeverRender)
-														continue;
-
-												}
-											}
-										}
-
-										break;
-									}
-								}
-							}
-
-							if (geometry == null)
-							{
-								if (r.Skin.GeometryData.Contains("\"format_version\""))
-								{
-									BedrockGeometry geo = JsonConvert.DeserializeObject<BedrockGeometry>(
-										r.Skin.GeometryData, new SingleOrArrayConverter<Vector3>(),
-										new SingleOrArrayConverter<Vector2>(), new Vector3Converter(),
-										new Vector2Converter());
-
-									if (geo != null)
-									{
-										geometry = geo.MinecraftGeometry.FirstOrDefault();
-									}
+											}));
 								}
 								else
 								{
-									Dictionary<string, MinecraftGeometry> geo =
-										JsonConvert.DeserializeObject<Dictionary<string, MinecraftGeometry>>(
+									foreach (var prop in jObject)
+									{
+										if (prop.Key.StartsWith(r.Skin.SkinResourcePatch.Geometry.Default))
+										{
+											var split = prop.Key.Split(':');
+
+											MinecraftGeometry parentGeometry = null;
+
+											if (split.Length > 1)
+											{
+												if (jObject.TryGetValue(
+													split[1], StringComparison.InvariantCultureIgnoreCase,
+													out JToken parent))
+												{
+													parentGeometry = parent.ToObject<MinecraftGeometry>(
+														JsonSerializer.Create(
+															new JsonSerializerSettings()
+															{
+																Converters = new List<JsonConverter>()
+																{
+																	new SingleOrArrayConverter<Vector3>(),
+																	new SingleOrArrayConverter<Vector2>(),
+																	new Vector3Converter(),
+																	new Vector2Converter()
+																}
+															}));
+												}
+											}
+
+											//TODO: Support inheritance
+
+											geometry = prop.Value.ToObject<MinecraftGeometry>(
+												JsonSerializer.Create(
+													new JsonSerializerSettings()
+													{
+														Converters = new List<JsonConverter>()
+														{
+															new SingleOrArrayConverter<Vector3>(),
+															new SingleOrArrayConverter<Vector2>(),
+															new Vector3Converter(),
+															new Vector2Converter()
+														}
+													}));
+
+											if (parentGeometry != null)
+											{
+												foreach (var bone in parentGeometry.Bones)
+												{
+													var childBone =
+														geometry.Bones.FirstOrDefault(x => x.Name == bone.Name);
+
+													if (childBone == null)
+													{
+														geometry.Bones.Add(bone);
+													}
+													else
+													{
+														if (childBone.NeverRender)
+															continue;
+
+													}
+												}
+											}
+
+											break;
+										}
+									}
+								}
+
+								if (geometry == null)
+								{
+									if (r.Skin.GeometryData.Contains("\"format_version\""))
+									{
+										BedrockGeometry geo = JsonConvert.DeserializeObject<BedrockGeometry>(
 											r.Skin.GeometryData, new SingleOrArrayConverter<Vector3>(),
 											new SingleOrArrayConverter<Vector2>(), new Vector3Converter(),
 											new Vector2Converter());
 
-									if (geo.TryGetValue(r.Skin.SkinResourcePatch.Geometry.Default,
-										out MinecraftGeometry minecraftGeometry))
+										if (geo != null)
+										{
+											geometry = geo.MinecraftGeometry.FirstOrDefault();
+										}
+									}
+									else
 									{
-										geometry = minecraftGeometry;
+										Dictionary<string, MinecraftGeometry> geo =
+											JsonConvert.DeserializeObject<Dictionary<string, MinecraftGeometry>>(
+												r.Skin.GeometryData, new SingleOrArrayConverter<Vector3>(),
+												new SingleOrArrayConverter<Vector2>(), new Vector3Converter(),
+												new Vector2Converter());
+
+										if (geo.TryGetValue(
+											r.Skin.SkinResourcePatch.Geometry.Default,
+											out MinecraftGeometry minecraftGeometry))
+										{
+											geometry = minecraftGeometry;
+										}
 									}
 								}
-							}
-							if (geometry != null)
-							{
-								if (geometry.Description == null)
-								{
-									geometry.Description = new SkinDescription()
-									{
-										Identifier = r.Skin.SkinResourcePatch.Geometry.Default,
-										TextureHeight = r.Skin.Height,
-										TextureWidth = r.Skin.Width
-									};
-								}
-								
-								//var abc = geo.MinecraftGeometry.FirstOrDefault()
-								var modelRenderer =
-									new EntityModelRenderer(geometry,
-										skinTexture);
 
-								if (modelRenderer.Valid)
+								if (geometry != null)
 								{
-									renderer = modelRenderer;
+									if (geometry.Description == null)
+									{
+										geometry.Description = new SkinDescription()
+										{
+											Identifier = r.Skin.SkinResourcePatch.Geometry.Default,
+											TextureHeight = r.Skin.Height,
+											TextureWidth = r.Skin.Width
+										};
+									}
+
+									//var abc = geo.MinecraftGeometry.FirstOrDefault()
+									var modelRenderer = new EntityModelRenderer(geometry, skinTexture);
+
+									if (modelRenderer.Valid)
+									{
+										renderer = modelRenderer;
+									}
+									else
+									{
+										modelRenderer.Dispose();
+									}
+
+
+									//m.ModelRenderer =
+									//	new EntityModelRenderer(geo.MinecraftGeometry.FirstOrDefault(), skinTexture);
 								}
 								else
 								{
-									modelRenderer.Dispose();
+									Log.Warn($"INVALID SKIN: {r.Skin.SkinResourcePatch.Geometry.Default}");
 								}
-
-
-								//m.ModelRenderer =
-								//	new EntityModelRenderer(geo.MinecraftGeometry.FirstOrDefault(), skinTexture);
 							}
-							else
+							catch (Exception ex)
 							{
-								Log.Warn($"INVALID SKIN: {r.Skin.SkinResourcePatch.Geometry.Default}");
+								string name = "N/A";
+								/*if (r.Skin.SkinResourcePatch != null)
+								{
+									name = r.Skin.SkinResourcePatch.Geometry.Default;
+								}*/
+								Log.Warn(ex, $"Could not create geometry ({name}): {ex.ToString()}");
 							}
-						}
-						catch (Exception ex)
-						{
-							string name = "N/A";
-							/*if (r.Skin.SkinResourcePatch != null)
-							{
-								name = r.Skin.SkinResourcePatch.Geometry.Default;
-							}*/
-							Log.Warn(ex, $"Could not create geometry ({name}): {ex.ToString()}");
 						}
 					}
-					
+
 					PlayerMob m = new PlayerMob(r.DisplayName, Client.WorldReceiver as World, Client, skinTexture);
 					m.UUID = u;
 					m.EntityId = r.EntityId;
