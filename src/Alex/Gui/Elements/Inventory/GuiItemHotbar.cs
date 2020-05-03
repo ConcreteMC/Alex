@@ -82,6 +82,27 @@ namespace Alex.Gui.Elements.Inventory
 	       AddChild(_itemNameTextElement);
         }
 
+        private bool _showItemCount = true;
+
+        public bool ShowItemCount
+        {
+	        get
+	        {
+		        return _showItemCount;
+	        }
+	        set
+	        {
+		        _showItemCount = value;
+		        
+		        var items = Children.OfType<GuiInventoryItem>().ToArray();
+
+		        foreach (var item in items)
+		        {
+			        item.ShowCount = value;
+		        }
+	        }
+        }
+
 	    private void SelectedHotbarSlotChanged(object sender, SelectedSlotChangedEventArgs e)
 	    {
 		    if (e.NewValue - SelectedIndex != 0)

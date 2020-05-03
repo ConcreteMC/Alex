@@ -199,8 +199,7 @@ namespace Alex.GameStates.Hud
 				}
 			}
 
-			_healthComponent.IsVisible = Player.Gamemode != Gamemode.Creative;
-			
+			_hotbar.ShowItemCount = _hungerComponent.IsVisible = _healthComponent.IsVisible = Player.Gamemode != Gamemode.Creative;
 			//if (Player.Gamemode != Gamemode.Creative){}
 
 			base.OnUpdate(gameTime);

@@ -77,6 +77,18 @@ namespace Alex.Gui.Elements.Inventory
 			});
 		}
 
+		public bool ShowCount
+		{
+			get
+			{
+				return _counTextElement.IsVisible;
+			}
+			set
+			{
+				_counTextElement.IsVisible = value;
+			}
+		}
+
 		protected override void OnInit(IGuiRenderer renderer)
 		{
 			SelectedBackground = renderer.GetTexture(GuiTextures.Inventory_HotBar_SelectedItemOverlay);
