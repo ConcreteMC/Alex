@@ -22,6 +22,7 @@ using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Gamestates;
 using Alex.Services;
+using Alex.Utils;
 using Jose;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
@@ -221,6 +222,12 @@ namespace Alex.Worlds.Bedrock
 				return;
 
 			Starting = true;
+
+			if (WorldReceiver?.GetPlayerEntity() is Entities.Player player)
+			{
+				player.Inventory.CursorChanged += InventoryOnCursorChanged;
+				player.Inventory.SlotChanged += InventoryOnSlotChanged;
+			}
 			
 			EventDispatcher?.RegisterEvents(this);
 			
@@ -250,6 +257,58 @@ namespace Alex.Worlds.Bedrock
 				}
 			});
 
+		}
+
+		private void InventoryOnSlotChanged(object? sender, SlotChangedEventArgs e)
+		{
+			if (!e.IsClientTransaction)
+				return;
+			
+			int inventoryId = 0;
+			int slot = e.Index;
+			if (e.Index >= 36 && e.Index <= 39)
+			{
+				inventoryId = 120;
+				slot = 39 - e.Index;
+			}
+			
+			ContainerTransactionRecord transactionRecord = new ContainerTransactionRecord();
+			transactionRecord.InventoryId = inventoryId;
+			transactionRecord.Slot = slot;
+			transactionRecord.NewItem = GetMiNETItem(e.Value);
+			transactionRecord.OldItem = GetMiNETItem(e.OldItem);
+
+			var packet = McpeInventoryTransaction.CreateObject();
+			packet.transaction = new NormalTransaction()
+			{
+				TransactionRecords = new List<TransactionRecord>(){
+					transactionRecord
+				}
+			};
+			
+			SendPacket(packet);
+		}
+
+		private void InventoryOnCursorChanged(object? sender, SlotChangedEventArgs e)
+		{
+			if (!e.IsClientTransaction)
+				return;
+			
+			ContainerTransactionRecord transactionRecord = new ContainerTransactionRecord();
+			transactionRecord.InventoryId = 124;
+			transactionRecord.Slot = 0;
+			transactionRecord.NewItem = GetMiNETItem(e.Value);
+			transactionRecord.OldItem = GetMiNETItem(e.OldItem);
+
+			var packet = McpeInventoryTransaction.CreateObject();
+			packet.transaction = new NormalTransaction()
+			{
+				TransactionRecords = new List<TransactionRecord>(){
+					transactionRecord
+				}
+			};
+			
+			SendPacket(packet);
 		}
 
 		public void SendPacket(Packet packet)

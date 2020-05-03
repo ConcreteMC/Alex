@@ -100,6 +100,23 @@ namespace Alex.Utils
 		    }
 	    }
 
+	    private Item _cursor;
+
+	    public virtual Item Cursor
+	    {
+		    get
+		    {
+			    return _cursor;
+		    }
+		    private set
+		    {
+			   // var oldValue = _cursor;
+			    _cursor = value;
+			   // CursorChanged?.Invoke(this, new SlotChangedEventArgs(0, value, oldValue, true));
+		    }
+	    }
+
+	    public event EventHandler<SlotChangedEventArgs> CursorChanged = null; 
 	    public event EventHandler<SlotChangedEventArgs> SlotChanged = null;
 	    public event EventHandler<SelectedSlotChangedEventArgs> SelectedHotbarSlotChanged = null;
 
@@ -107,6 +124,14 @@ namespace Alex.Utils
 	    {
 			Slots = new Item[slots];
 			Empty();
+	    }
+
+	    public void SetCursor(Item item, bool clientTransaction)
+	    {
+		    var oldValue = _cursor;
+		    Cursor = item;
+		    
+		    CursorChanged?.Invoke(this, new SlotChangedEventArgs(0, item, oldValue, clientTransaction));
 	    }
 
 	    public void Empty()
@@ -153,6 +178,27 @@ namespace Alex.Utils
             return items;
         }
 
+        public void SetSlot(int index, Item value, bool isClientTransaction)
+        {
+	        if (index < 0 || index >= Slots.Length) throw new IndexOutOfRangeException();
+	        if (value.Count == 0)
+	        {
+		        value = new ItemAir()
+		        {
+			        Count = 0
+		        };
+	        }
+
+	        var oldValue = Slots[index];
+                
+	        Slots[index] = value;
+	        /*if ((index == 36 + _selectedSlot && !IsPeInventory) || (index == _selectedSlot && IsPeInventory))
+	        {
+	            MainHand = value;
+	        }*/
+	        SlotChanged?.Invoke(this, new SlotChangedEventArgs(index, value, oldValue, isClientTransaction));
+        }
+
 	    public Item this[int index]
 	    {
 		    get
@@ -163,24 +209,8 @@ namespace Alex.Utils
 			}
 		    set
 		    {
-			    if (index < 0 || index >= Slots.Length) throw new IndexOutOfRangeException();
-                if (value.Count == 0)
-                {
-                    value = new ItemAir()
-                    {
-                        Count = 0
-                    };
-                }
-
-                var oldValue = Slots[index];
-                
-			    Slots[index] = value;
-		        /*if ((index == 36 + _selectedSlot && !IsPeInventory) || (index == _selectedSlot && IsPeInventory))
-		        {
-		            MainHand = value;
-		        }*/
-			    SlotChanged?.Invoke(this, new SlotChangedEventArgs(index, value, oldValue));
-			}
+			    SetSlot(index, value, false);
+		    }
 	    }
     }
 
@@ -191,11 +221,14 @@ namespace Alex.Utils
 
 		public Item OldItem;
 		
-		public SlotChangedEventArgs(int index, Item value, Item oldItem)
+		public bool IsClientTransaction { get; set; }
+		
+		public SlotChangedEventArgs(int index, Item value, Item oldItem, bool isClientTransaction)
 		{
 			Index = index;
 			Value = value;
 			OldItem = oldItem;
+			IsClientTransaction = isClientTransaction;
 		}
 	}
 

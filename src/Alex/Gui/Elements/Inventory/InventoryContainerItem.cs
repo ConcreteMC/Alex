@@ -14,12 +14,15 @@ namespace Alex.Gui.Elements.Inventory
 {
     public class InventoryContainerItem : GuiControl
     {
+        public const int ItemWidth = 18;
+        
         private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(InventoryContainerItem));
         
         private Item _item;
         private GuiTextureElement TextureElement { get; }
 
         public int InventoryIndex { get; set; } = 0;
+        public int InventoryId { get; set; } = 0;
         public InventoryContainerItem()
         {
             SetFixedSize(18, 18);
