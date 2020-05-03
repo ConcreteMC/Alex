@@ -296,7 +296,7 @@ namespace Alex.Blocks.Minecraft
 
 				        if (!IsFullBlock || !neighbor.IsFullBlock) return true;
 			        }
-
+			        
 			        if (neighbor.Solid && !(neighbor.Transparent || !neighbor.IsFullCube)) return false;
 		        }
 		        else

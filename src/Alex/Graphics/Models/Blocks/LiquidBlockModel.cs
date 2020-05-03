@@ -34,67 +34,79 @@ namespace Alex.Graphics.Models.Blocks
 		{
 			return 7 - (state.GetTypedValue(LEVEL) & 0x7);
 		}
-		
+
 		private bool Check(IWorld world, BlockCoordinates position)
 		{
 			var forward = world.GetBlockState(position + BlockCoordinates.Forwards);
+
+			if (forward.Model is LiquidBlockModel)
+			{
+				if (GetLevel(forward) < 7)
+					return true;
+
+				if (GetAverageLiquidLevels(world, position + BlockCoordinates.Forwards, out var _, out var _) < 7)
+					return true;
+			}
+
 			var backward = world.GetBlockState(position + BlockCoordinates.Backwards);
+
+			if (backward.Model is LiquidBlockModel)
+			{
+				if (GetLevel(backward) < 7)
+					return true;
+
+				if (GetAverageLiquidLevels(world, position + BlockCoordinates.Backwards, out var _, out var _) < 7)
+					return true;
+			}
+
 			var left = world.GetBlockState(position + BlockCoordinates.Left);
+
+			if (left.Model is LiquidBlockModel)
+			{
+				if (GetLevel(left) < 7)
+					return true;
+
+				if (GetAverageLiquidLevels(world, position + BlockCoordinates.Left, out var _, out var _) < 7)
+					return true;
+			}
+
 			var right = world.GetBlockState(position + BlockCoordinates.Right);
 
-			//if ((forward.IsWater || backward.IsWater || left.IsWater || right.IsWater))
+			if (right.Model is LiquidBlockModel)
 			{
-				if (forward.Model is LiquidBlockModel)
-				{
-					if (GetLevel(forward) < 7)
-						return true;
+				if (GetLevel(right) < 7)
+					return true;
 
-					if (GetAverageLiquidLevels(world, position + BlockCoordinates.Forwards, out var _, out var _) < 7)
-						return true;
-				}
-
-				if (backward.Model is LiquidBlockModel)
-				{
-					if (GetLevel(backward) < 7)
-						return true;
-					
-					if (GetAverageLiquidLevels(world, position + BlockCoordinates.Backwards, out var _, out var _) < 7)
-						return true;
-				}
-				
-				if (left.Model is LiquidBlockModel)
-				{
-					if (GetLevel(left) < 7)
-						return true;
-					
-					if (GetAverageLiquidLevels(world, position + BlockCoordinates.Left, out var _, out var _) < 7)
-						return true;
-				}
-				
-				if (right.Model is LiquidBlockModel)
-				{
-					if (GetLevel(right) < 7)
-						return true;
-					
-					if (GetAverageLiquidLevels(world, position + BlockCoordinates.Right, out var _, out var _) < 7)
-						return true;
-				}
-
-				//if (GetAverageLiquidLevels(world, position - BlockCoordinates.Up, out var _, out var _) < 8)
-				//	return true;
+				if (GetAverageLiquidLevels(world, position + BlockCoordinates.Right, out var _, out var _) < 7)
+					return true;
 			}
-				//!Solid
 
-				//return (!(forward.Block.Solid && backward.Block.Solid && left.Block.Solid && right.Block.Solid) && (forward.Block.IsReplacible || backward.Block.IsReplacible || left.Block.IsReplacible || right.Block.IsReplacible));
-				
+			//if (GetAverageLiquidLevels(world, position - BlockCoordinates.Up, out var _, out var _) < 8)
+			//	return true;
+			//!Solid
+
+			//return (!(forward.Block.Solid && backward.Block.Solid && left.Block.Solid && right.Block.Solid) && (forward.Block.IsReplacible || backward.Block.IsReplacible || left.Block.IsReplacible || right.Block.IsReplacible));
+
 			return false;
 		}
-		
+
 		public override (VertexPositionNormalTextureColor[] vertices, int[] indexes) GetVertices(IWorld world, Vector3 vectorPos, IBlock baseBlock)
 		{
 			var position = new BlockCoordinates(vectorPos);
 			List< VertexPositionNormalTextureColor> result = new List<VertexPositionNormalTextureColor>(36);
 			var indexResult = new List<int>();
+
+			List<BlockFace> renderedFaces = new List<BlockFace>();
+			foreach (var face in Enum.GetValues(typeof(BlockFace)).Cast<BlockFace>())
+			{
+				if (baseBlock.ShouldRenderFace(face, world.GetBlock(position + face.GetBlockCoordinates())))
+				{
+					renderedFaces.Add(face);
+				}
+			}
+			
+			if (renderedFaces.Count == 0)
+				return (new VertexPositionNormalTextureColor[0], new int[0]);
 			
 			int tl = 0, tr = 0, bl = 0, br = 0;
 
@@ -133,8 +145,6 @@ namespace Alex.Graphics.Models.Blocks
 			}
 			else
 			{
-
-				
 				if (isFlowing)
 				{
 					calculateDirection = true;
@@ -206,29 +216,7 @@ namespace Alex.Graphics.Models.Blocks
 							offset = BlockCoordinates.West;
 							rotation = 90;
 							break;
-
-						case 4:
-							//NorthWest
-							offset = new BlockCoordinates(-1, 0, -1);
-							rotation = 0;
-							break;
-						case 5:
-							//SouthWest
-							offset = new BlockCoordinates(-1, 0, 1);
-							rotation = 180;
-							break;
-						case 6:
-							//SouthEast
-							offset = new BlockCoordinates(1, 0, 1);
-							rotation = 270;
-							break;
-						case 7: //NorthEast
-							offset = new BlockCoordinates(1, 0, -1);
-							rotation = 0;
-							break;
 					}
-
-					if (i == 8) rot = 0;
 
 					var distance = Math.Abs(
 						(position + offset).DistanceTo(lowestBlock));
@@ -239,22 +227,6 @@ namespace Alex.Graphics.Models.Blocks
 					}
 				}
 			}
-			/*if (difference == BlockCoordinates.North)
-			{
-				
-			}
-			else if (difference == BlockCoordinates.South)
-			{
-				rot = 180;
-			}
-			else if (difference == BlockCoordinates.East)
-			{
-				rot = 270;
-			}
-			else if (difference == BlockCoordinates.West)
-			{
-				rot = 90;
-			}*/
 
 			string texture = "";
 			if (IsLava)
@@ -283,11 +255,12 @@ namespace Alex.Graphics.Models.Blocks
 			
 			map.Rotate(rot);
 			
-			foreach (var face in Enum.GetValues(typeof(BlockFace)).Cast<BlockFace>())
+			foreach (var face in renderedFaces)
 			{
 				float height = 0;
-				bool shouldFaceBeRendered = face == BlockFace.Up && (tl < 8 || tr < 8 || bl < 8 || br < 8);
-				
+				//bool shouldFaceBeRendered = face == BlockFace.Up && (tl < 8 || tr < 8 || bl < 8 || br < 8);
+
+				/*
 				if (!shouldFaceBeRendered)
 				{
 					var modPos = position + face.GetBlockCoordinates();
@@ -309,13 +282,13 @@ namespace Alex.Graphics.Models.Blocks
 							break;
 						}
 					}
-				}
+				}*/
 
 				float s = 1f - Scale;
 				var start = Vector3.One * s;
 				var end = Vector3.One * Scale;
 
-				if (shouldFaceBeRendered)
+				//if (shouldFaceBeRendered)
 				{
 					//if (b.BlockModel is LiquidBlockModel m && m.Level > Level && f != BlockFace.Up) continue;
 
@@ -391,15 +364,13 @@ namespace Alex.Graphics.Models.Blocks
 			{
 				for (int zz = -1; zz <= 0; zz++)
 				{
-					if ((world.GetBlockState(position.X + xx, position.Y + 1, position.Z + zz).Model is LiquidBlockModel m && m.IsLava == IsLava))
-					{ 
-						return 8;
-					}
-
 					foreach (var bs in world.GetBlockStates(position.X + xx, position.Y, position.Z + zz))
 					{
 						if (!bs.state.Block.Renderable)
 							continue;
+
+						if (bs.state.Model is LiquidBlockModel m && m.IsLava != IsLava)
+							return 8;
 						
 						int waterLevel = -1;
 						
@@ -412,11 +383,11 @@ namespace Alex.Graphics.Models.Blocks
 						/*else if (b != null && !b.Block.Renderable)
 						{
 							level = 0;
-						}*/
+						}
 						else if (b != null && (b.GetTypedValue(WATERLOGGED))) //Block is 'waterlogged'
 						{
 							waterLevel = 7;
-						}
+						}*/
 
 						if (waterLevel != -1)
 						{
@@ -437,7 +408,5 @@ namespace Alex.Graphics.Models.Blocks
 
 			return level;
 		}
-
-
 	}
 }

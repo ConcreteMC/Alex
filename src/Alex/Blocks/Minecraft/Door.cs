@@ -37,6 +37,7 @@ namespace Alex.Blocks.Minecraft
 			Transparent = true;
 			RequiresUpdate = true;
 			CanInteract = true;
+			IsFullCube = true;
 		}
 
 		private IBlockState Update(IWorld world, IBlockState blockState, BlockCoordinates coordinates, BlockCoordinates updated)
@@ -77,47 +78,27 @@ namespace Alex.Blocks.Minecraft
 
 		public override IBlockState BlockPlaced(IWorld world, IBlockState state, BlockCoordinates position)
 		{
-			if (state.TryGetValue("half", out string half) && half.Equals("upper", StringComparison.InvariantCultureIgnoreCase))
+			if (state.TryGetValue("half", out string half) && half.Equals(
+				"upper", StringComparison.InvariantCultureIgnoreCase))
 			{
 				return Update(world, state, position, position + BlockCoordinates.Down);
 			}
-			else
-			{
-				return Update(world, state, position, position + BlockCoordinates.Up);
-			}
-			
-			return base.BlockPlaced(world, state, position);
-		}
 
-		public override void Interact(IWorld world, BlockCoordinates position, BlockFace face, Entity sourceEntity)
-		{
-			/*if (!IsUpper)
-			{
-				BlockState state = (BlockState)BlockState.WithProperty(OPEN, (!IsOpen).ToString());
-				world.SetBlockState(position.X, position.Y, position.Z, state);
-			}*/
+			return Update(world, state, position, position + BlockCoordinates.Up);
 		}
 
 		public override void BlockUpdate(IWorld world, BlockCoordinates position, BlockCoordinates updatedBlock)
 		{
-			//if (updatedBlock != position - new BlockCoordinates(0, 1, 0))
-			//	return;
-			
 			var newValue = Update(world, BlockState, position, updatedBlock);
 			if (newValue != BlockState)
 			{
 				world.SetBlockState(position.X, position.Y, position.Z, newValue);
 			}
-			/*if (IsUpper && updatedBlock.Y < position.Y)
-			{
-				var changedBlock = world.GetBlockState(updatedBlock.X, updatedBlock.Y, updatedBlock.Z);
-				if (!changedBlock.GetTypedValue(UPPER))
-				{
-					var myMeta = (BlockState) BlockState.WithProperty(OPEN, (changedBlock.GetTypedValue(OPEN)).ToString());
-					world.SetBlockState(position.X, position.Y, position.Z, myMeta);
-				}
-			}
-			Log.Info($"Door blockupdate called!");*/
+		}
+		
+		public override bool ShouldRenderFace(BlockFace face, IBlock neighbor)
+		{
+			return true;
 		}
 	}
 }

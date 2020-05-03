@@ -1,3 +1,4 @@
+using Alex.API.Blocks;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks.Properties;
@@ -21,6 +22,23 @@ namespace Alex.Blocks.Minecraft
 			BlockMaterial = Material.Water;
 
 			LightOpacity = 3;
+		}
+		
+		public override bool ShouldRenderFace(BlockFace face, IBlock neighbor)
+		{
+			if (neighbor.BlockMaterial == Material.Water)
+			{
+				var neighborLevel = neighbor.BlockState.GetTypedValue(LEVEL);
+
+				if (neighborLevel < BlockState.GetTypedValue(LEVEL))
+				{
+					return true;
+				}
+
+				return false;
+			}
+			//else if (neighbor.Transparent)
+			return base.ShouldRenderFace(face, neighbor);
 		}
 
 		/*public override void BlockPlaced(IWorld world, BlockCoordinates position)
