@@ -9,7 +9,7 @@ using LevelInfo = MiNET.Worlds.LevelInfo;
 
 namespace Alex.API.Network.Bedrock
 {
-    public interface IBedrockNetworkProvider : INetworkProvider, IDisposable
+    /*public interface IBedrockNetworkProvider : INetworkProvider, IDisposable
     {
         IWorldReceiver WorldReceiver { get; set; }
         Vector3 SpawnPoint { get; set; }
@@ -32,5 +32,5 @@ namespace Alex.API.Network.Bedrock
         void InitiateEncryption(byte[] x5u, byte[] salt);
 
         void ShowDisconnect(string reason, bool useTranslation = false);
-    }
+    }*/
 }

@@ -219,7 +219,7 @@ namespace Alex
 
 		public Testing()
 		{
-			_chunkProcessor = new ChunkProcessor(Alex.Instance.ThreadPool, 4, false, CancellationToken.None);
+			_chunkProcessor = new ChunkProcessor(null, false, CancellationToken.None);
             
 			Random rnd = new Random();
 			var files = Directory.GetFiles("samplechunkdata");

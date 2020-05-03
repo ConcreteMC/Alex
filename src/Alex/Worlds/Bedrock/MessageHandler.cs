@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using MiNET.Net;
 using MiNET.Net.RakNet;
 using NLog;
@@ -36,13 +37,24 @@ namespace Alex.Worlds.Bedrock
 
         public override void HandleCustomPacket(Packet message)
         {
+            Stopwatch sw = Stopwatch.StartNew();
+
             try
             {
                 _messageDispatcher.HandlePacket(message);
             }
             catch (Exception ex)
             {
-                Log.Warn(ex, $"Packet handling error!+");
+                Log.Warn(ex, $"Packet handling error: {message}");
+            }
+            finally
+            {
+                sw.Stop();
+
+                if (sw.ElapsedMilliseconds > 250)
+                {
+                    Log.Warn($"Packet handling took longer than expected! Time elapsed: {sw.ElapsedMilliseconds}ms (Packet={message})");
+                }
             }
         }
     }

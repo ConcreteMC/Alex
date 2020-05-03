@@ -183,7 +183,7 @@ namespace Alex.Worlds.Java
 
 			if (_initiated)
 			{
-				var p = WorldReceiver.GetPlayerEntity();
+				var p = WorldReceiver.Player;
 				if (p != null && p is Player player && Spawned && !Respawning)
 				{
 					player.IsSpawned = Spawned;
@@ -312,7 +312,7 @@ namespace Alex.Worlds.Java
                 int loaded = 0;
 				SpinWait.SpinUntil(() =>
 				{
-					var playerChunkCoords = new ChunkCoordinates(WorldReceiver.GetPlayerEntity().KnownPosition);
+					var playerChunkCoords = new ChunkCoordinates(WorldReceiver.Player.KnownPosition);
 					if (_chunksReceived < target)
 					{
 						progressReport(LoadingState.LoadingChunks, (int)Math.Floor((_chunksReceived / target) * 100d));
@@ -660,7 +660,7 @@ namespace Alex.Worlds.Java
 			{
 				Respawning = true;
 				_dimension = packet.Dimension;
-				if (WorldReceiver.GetPlayerEntity() is Player player)
+				if (WorldReceiver.Player is Player player)
 				{
 					player.UpdateGamemode(packet.Gamemode);
 					//player.
@@ -720,7 +720,7 @@ namespace Alex.Worlds.Java
 				return;
 			}
 
-			if (WorldReceiver.TryGetEntity(packet.EntityId, out IEntity e))
+			if (WorldReceiver.TryGetEntity(packet.EntityId, out Entity e))
 			{
 				if (e is Entity entity)
 				{
@@ -792,7 +792,7 @@ namespace Alex.Worlds.Java
 					WorldReceiver?.SetRain(true);
 					break;
 				case GameStateReason.ChangeGamemode:
-					if (WorldReceiver?.GetPlayerEntity() is Player player)
+					if (WorldReceiver?.Player is Player player)
 					{
 						player.UpdateGamemode((Gamemode) packet.Value);
 					}
@@ -838,7 +838,7 @@ namespace Alex.Worlds.Java
 
 		private void HandleHeldItemChangePacket(HeldItemChangePacket packet)
 		{
-			if (WorldReceiver?.GetPlayerEntity() is Player player)
+			if (WorldReceiver?.Player is Player player)
 			{
 				player.Inventory.SelectedSlot = packet.Slot;
 			}
@@ -855,7 +855,7 @@ namespace Alex.Worlds.Java
 			Inventory inventory = null;
 			if (packet.WindowId == 0 || packet.WindowId == -2)
 			{
-				if (WorldReceiver?.GetPlayerEntity() is Player player)
+				if (WorldReceiver?.Player is Player player)
 				{
 					inventory = player.Inventory;
 				}
@@ -874,7 +874,7 @@ namespace Alex.Worlds.Java
 			Inventory inventory = null;
 			if (packet.WindowId == 0)
 			{
-				if (WorldReceiver?.GetPlayerEntity() is Player player)
+				if (WorldReceiver?.Player is Player player)
 				{
 					inventory = player.Inventory;
 				}
@@ -1091,7 +1091,7 @@ namespace Alex.Worlds.Java
 		{
 			if (packet.EntityId == 0 || packet.EntityId == _entityId)
 			{
-				if (WorldReceiver.GetPlayerEntity() is Player player)
+				if (WorldReceiver.Player is Player player)
 				{
 					foreach (var prop in packet.Properties.Values)
 					{
@@ -1113,7 +1113,7 @@ namespace Alex.Worlds.Java
 		private void HandlePlayerAbilitiesPacket(PlayerAbilitiesPacket packet)
 		{
 			var flags = packet.Flags;
-			if (WorldReceiver?.GetPlayerEntity() is Player player)
+			if (WorldReceiver?.Player is Player player)
 			{
 				player.CanFly = flags.IsBitSet(0x03);
 				player.Invulnerable = flags.IsBitSet(0x00);
@@ -1179,7 +1179,7 @@ namespace Alex.Worlds.Java
 			SendPacket(settings);
 
 			_entityId = packet.EntityId;
-			if (WorldReceiver?.GetPlayerEntity() is Player player)
+			if (WorldReceiver?.Player is Player player)
 			{
 				player.EntityId = packet.EntityId;
 				player.UpdateGamemode((Gamemode)packet.Gamemode);

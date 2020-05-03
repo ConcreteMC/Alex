@@ -264,6 +264,10 @@ namespace Alex.Graphics.Models.Items
 		}
 
 		protected Matrix ParentMatrix = Matrix.Identity;
+
+		/// <inheritdoc />
+		public long VertexCount => Vertices.Length;
+
 		public void Update(Matrix parentMatrix)
 		{
 			ParentMatrix = parentMatrix;

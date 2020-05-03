@@ -98,9 +98,9 @@ namespace Alex.Networking.Bedrock
             }
             catch (Exception ex)
             {
-               // if (messageId != 39)
+                if (messageId != 39)
                 {
-                    Log.Error(ex, $"Processing error: {ex.ToString()}");
+                //    Log.Error(ex, $"Processing error: {ex.ToString()}");
                 }
             }
 

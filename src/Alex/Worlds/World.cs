@@ -46,7 +46,7 @@ using UUID = Alex.API.Utils.UUID;
 
 namespace Alex.Worlds
 {
-	public class World : IWorld, IWorldReceiver, IBlockAccess
+	public class World : IWorld, IBlockAccess
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(World));
 
@@ -175,7 +175,7 @@ namespace Alex.Worlds
 
 		public long Vertices
         {
-            get { return ChunkManager.Vertices; }
+            get { return ChunkManager.Vertices + EntityManager.VertexCount; }
         }
 
 		public int IndexBufferSize
@@ -846,11 +846,6 @@ namespace Alex.Worlds
 
 		#region IWorldReceiver (Handle WorldProvider callbacks)
 
-		public IEntity GetPlayerEntity()
-		{
-			return Player;
-		}
-
 		public IChunkColumn GetChunkColumn(int x, int z)
 		{
 			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x, z), out IChunkColumn val))
@@ -863,14 +858,14 @@ namespace Alex.Worlds
 			}
 		}
 
-		[EventHandler(EventPriority.Highest)]
+	/*	[EventHandler(EventPriority.Highest)]
 		private void OnChunkReceived(ChunkReceivedEvent e)
 		{
 			if (e.IsCancelled)
 				return;
 			
 			ChunkManager.AddChunk(e.Chunk, e.Coordinates, e.DoUpdates);
-		}
+		}*/
 
 		[EventHandler(EventPriority.Highest, true)]
 		private void OnChunkUnload(ChunkUnloadEvent e)
@@ -898,7 +893,7 @@ namespace Alex.Worlds
 
 		public void DespawnEntity(long entityId)
 		{
-			if (EntityManager.TryGet(entityId, out IEntity entity))
+			if (EntityManager.TryGet(entityId, out Entity entity))
 			{
 				PhysicsEngine.Remove(entity);
 				entity.Dispose();
@@ -916,12 +911,11 @@ namespace Alex.Worlds
 			}
 
 			Player.KnownPosition = location;
-			
 		}
 
 		public void UpdateEntityPosition(long entityId, PlayerLocation position, bool relative = false, bool updateLook = false, bool updatePitch = false)
 		{
-			if (EntityManager.TryGet(entityId, out IEntity entity))
+			if (EntityManager.TryGet(entityId, out Entity entity))
 			{
 				entity.KnownPosition.OnGround = position.OnGround;
 				if (!relative)
@@ -969,7 +963,7 @@ namespace Alex.Worlds
 
 		public void UpdateEntityLook(long entityId, float yaw, float pitch, bool onGround)
 		{
-			if (EntityManager.TryGet(entityId, out IEntity entity))
+			if (EntityManager.TryGet(entityId, out Entity entity))
 			{
 				entity.KnownPosition.OnGround = onGround;
 				entity.KnownPosition.Pitch = pitch;
@@ -977,7 +971,7 @@ namespace Alex.Worlds
 			}
 		}
 
-		public bool TryGetEntity(long entityId, out IEntity entity)
+		public bool TryGetEntity(long entityId, out Entity entity)
 		{
 			return EntityManager.TryGet(entityId, out entity);
 		}

@@ -316,18 +316,32 @@ namespace Alex.Entities
 				}
 			}
 		}
-		
+
+		/// <inheritdoc />
+		public long RenderedVertices { get; private set; }
+
 		public virtual void Render(IRenderArgs renderArgs)
 		{
+
+			long rendered = 0;
+
 			if (RenderEntity || ShowItemInHand)
 			{
 				ModelRenderer.Render(renderArgs, KnownPosition, !RenderEntity);
+
+				if (ModelRenderer.Valid)
+				{
+					rendered += ModelRenderer.Vertices;
+				}
 			}
-			if (ShowItemInHand)
+			if (ShowItemInHand && ItemRenderer != null)
 			{
-				ItemRenderer?.Render(renderArgs);
+				ItemRenderer.Render(renderArgs);
+				
+				rendered += ItemRenderer.VertexCount;
 			}
 
+			RenderedVertices = rendered;
 		}
 
 		public virtual void Update(IUpdateArgs args)

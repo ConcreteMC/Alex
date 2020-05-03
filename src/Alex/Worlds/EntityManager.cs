@@ -15,14 +15,15 @@ using ContainmentType = Microsoft.Xna.Framework.ContainmentType;
 
 namespace Alex.Worlds
 {
-    public class EntityManager : IEntityHolder, IDisposable
+    public class EntityManager : IDisposable
 	{
-		private ConcurrentDictionary<long, IEntity> Entities { get; }
-		private ConcurrentDictionary<UUID, IEntity> EntityByUUID { get; }
+		private ConcurrentDictionary<long, Entity> Entities { get; }
+		private ConcurrentDictionary<UUID, Entity> EntityByUUID { get; }
 		private GraphicsDevice Device { get; }
 
 	    public int EntityCount => Entities.Count;
 	    public int EntitiesRendered { get; private set; } = 0;
+	    public long VertexCount { get; private set; }
 		private World World { get; }
 		private INetworkProvider Network { get; }
 
@@ -33,8 +34,8 @@ namespace Alex.Worlds
 			Network = networkProvider;
 		    World = world;
 		    Device = device;
-			Entities = new ConcurrentDictionary<long, IEntity>();
-			EntityByUUID = new ConcurrentDictionary<UUID, IEntity>();
+			Entities = new ConcurrentDictionary<long, Entity>();
+			EntityByUUID = new ConcurrentDictionary<UUID, Entity>();
 			
 			NameTagEffect = new BasicEffect(device)
 			{
@@ -59,6 +60,7 @@ namespace Alex.Worlds
 
 	    public void Render(IRenderArgs args)
 	    {
+		    long vertexCount = 0;
 		    int renderCount = 0;
 		    var entities = Entities.Values.ToArray();
 		    
@@ -70,6 +72,7 @@ namespace Alex.Worlds
 				if (args.Camera.BoundingFrustum.Contains(new Microsoft.Xna.Framework.BoundingBox(entityBox.Min, entityBox.Max)) != ContainmentType.Disjoint)
 			    {
 				    entity.Render(args);
+				    vertexCount += entity.RenderedVertices;
 				    rendered.Add(entity);
 				    renderCount++;
 			    }
@@ -78,6 +81,7 @@ namespace Alex.Worlds
 		    _rendered = rendered.ToArray();
 
 		    EntitiesRendered = renderCount;
+		    VertexCount = vertexCount;
 	    }
 
 	    private static RasterizerState RasterizerState = new RasterizerState()
@@ -119,7 +123,7 @@ namespace Alex.Worlds
 
 			foreach (var entity in entities)
 		    {
-				entity.Deconstruct(out long _, out IEntity _);
+				entity.Deconstruct(out long _, out Entity _);
 		    }
 	    }
 
@@ -136,7 +140,7 @@ namespace Alex.Worlds
 
 	    private void Remove(UUID entity, bool removeId = true)
 	    {
-		    if (EntityByUUID.TryRemove(entity, out IEntity e))
+		    if (EntityByUUID.TryRemove(entity, out Entity e))
 		    {
 			    if (removeId)
 			    {
@@ -157,7 +161,7 @@ namespace Alex.Worlds
 
 			    if (!Entities.TryAdd(id, entity))
 			    {
-				    EntityByUUID.TryRemove(entity.UUID, out IEntity _);
+				    EntityByUUID.TryRemove(entity.UUID, out Entity _);
 				    return false;
 			    }
 
@@ -169,19 +173,19 @@ namespace Alex.Worlds
 
 	    public void Remove(long id)
 	    {
-		    if (Entities.TryRemove(id, out IEntity entity))
+		    if (Entities.TryRemove(id, out Entity entity))
 		    {
 				Remove(entity.UUID, false);
 		    }
 	    }
 
-	    public bool TryGet(long id, out IEntity entity)
+	    public bool TryGet(long id, out Entity entity)
 	    {
 		    return Entities.TryGetValue(id, out entity);
 	    }
 
 
-	    public IEnumerable<IEntity> GetEntities(Vector3 camPos, int radius)
+	    public IEnumerable<Entity> GetEntities(Vector3 camPos, int radius)
 	    {
 		    return Entities.Values.ToArray().Where(x => Math.Abs(x.KnownPosition.DistanceTo(new PlayerLocation(camPos))) < radius).ToArray();
 	    }

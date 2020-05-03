@@ -169,11 +169,11 @@ namespace Alex
             FpsMonitor = new FpsMonitor();
 
             Resources = Services.GetRequiredService<ResourceManager>();
-
+            
             ThreadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount,
 	            ThreadType.Background, "Dedicated ThreadPool"));
-            
-           PacketFactory.CustomPacketFactory = new AlexPacketFactory();
+
+            PacketFactory.CustomPacketFactory = new AlexPacketFactory();
            
            KeyboardInputListener.InstanceCreated += KeyboardInputCreated;
 		}

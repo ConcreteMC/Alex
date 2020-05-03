@@ -24,7 +24,7 @@ namespace Alex.Worlds.Bedrock
     public class ChunkProcessor : IDisposable
     {
 	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ChunkProcessor));
-
+		public static ChunkProcessor Instance { get; set; }
 	    //private static readonly IReadOnlyDictionary<int, int> PeToJava
 	    static ChunkProcessor()
 	    {
@@ -32,44 +32,39 @@ namespace Alex.Worlds.Bedrock
 	    }
 	    
 	    private bool UseAlexChunks { get; }
-	    private BlockingCollection<QueuedChunk> QueuedChunks { get; }
 
 	    public IReadOnlyDictionary<uint, BlockStateContainer> _blockStateMap { get; set; } =
 		    new Dictionary<uint, BlockStateContainer>();
+	    
+	    private ConcurrentDictionary<uint, IBlockState> _convertedStates = new ConcurrentDictionary<uint, IBlockState>();
+	    
 	    //private Thread[] Threads { get; set; }
 	    private CancellationToken CancellationToken { get; }
-	    private int MaxThreads { get; }
-	    private DedicatedThreadPool ThreadPool { get; }
+	    //private DedicatedThreadPool ThreadPool { get; }
 	    public bool ClientSideLighting { get; set; } = true;
-        public ChunkProcessor(DedicatedThreadPool threadPool, int workerThreads, bool useAlexChunks, CancellationToken cancellationToken)
+	    private DedicatedThreadPool ThreadPool { get; }
+        public ChunkProcessor(DedicatedThreadPool threadPool, bool useAlexChunks, CancellationToken cancellationToken)
         {
+	        Instance = this;
 	        ThreadPool = threadPool;
-	        MaxThreads = workerThreads;
 	        UseAlexChunks = useAlexChunks;
-	        QueuedChunks = new BlockingCollection<QueuedChunk>();
 	        CancellationToken = cancellationToken;
-	        
-	       // Threads = new Thread[workerThreads];
-	        //for(int i = 0; i < workerThreads; i++) DispatchWorker();
+	        Queue = new ConcurrentQueue<Action>();
         }
 
-        public void HandleChunkData(bool cacheEnabled, uint subChunkCount, byte[] chunkData, int cx, int cz, Action<ChunkColumn> callback)
+        private ConcurrentQueue<Action> Queue { get; }
+
+        public void HandleChunkData(bool cacheEnabled,
+	        uint subChunkCount,
+	        byte[] chunkData,
+	        int cx,
+	        int cz,
+	        Action<ChunkColumn> callback)
         {
-	        ThreadPool.QueueUserWorkItem(() =>
-	        {
-		        HandleChunk(cacheEnabled, subChunkCount, chunkData, cx, cz,
-			       callback);
-	        });
-	        //QueuedChunks.Add(new QueuedChunk(chunkData, cx, cz, callback));
-
-	        //DispatchWorker();
+	        ThreadPool.QueueUserWorkItem(
+		        () => { HandleChunk(cacheEnabled, subChunkCount, chunkData, cx, cz, callback); });
         }
 
-        private object _workerLock = new object();
-        private long _workers = 0;
-        
-        private ConcurrentDictionary<uint, IBlockState> _convertedStates = new ConcurrentDictionary<uint, IBlockState>();
-        
         private List<string> Failed { get; set; } = new List<string>();
         private IBlockState GetBlockState(uint palleteId)
         {
@@ -209,7 +204,7 @@ namespace Alex.Worlds.Bedrock
 				        else
 				        {
 					        if (section == null) 
-						        section = new ChunkSection(chunkColumn, s, true, 2);
+						        section = new ChunkSection(chunkColumn, s, true, 1);
 					        
 					        #region OldFormat 
 
@@ -225,55 +220,66 @@ namespace Alex.Worlds.Bedrock
 						        {
 							        for (int y = 0; y < 16; y++)
 							        {
-								        int idx = (x << 8) + (z << 4) + y;
-								        var id = blockIds[idx];
+								        int idx  = (x << 8) + (z << 4) + y;
+								        var id   = blockIds[idx];
 								        var meta = data[idx];
 
+								        var ruid = BlockFactory.GetBlockStateID(id, meta);
+								        
 								        IBlockState result = null;
 
-								        if (id > 0 && result == null)
+								        if (!_convertedStates.TryGetValue(
+									        ruid, out result))
 								        {
-									        var reverseMap = MiNET.Worlds.AnvilWorldProvider.Convert.FirstOrDefault(map =>
-										        map.Value.Item1 == id);
-
-									        if (reverseMap.Value != null)
+									        if (id > 0 && result == null)
 									        {
-										        id = (byte) reverseMap.Key;
+										        var reverseMap =
+											        MiNET.Worlds.AnvilWorldProvider.Convert.FirstOrDefault(
+												        map => map.Value.Item1 == id);
+
+										        if (reverseMap.Value != null)
+										        {
+											        id = (byte) reverseMap.Key;
+										        }
+
+										        var res = BlockFactory.GetBlockStateID(id, meta);
+
+										        if (AnvilWorldProvider.BlockStateMapper.TryGetValue(res, out var res2))
+										        {
+											        var t = BlockFactory.GetBlockState(res2);
+											        t = TranslateBlockState(t, id, meta);
+
+											        result = t;
+										        }
+										        else
+										        {
+											        Log.Info($"Did not find anvil statemap: {result.Name}");
+
+											        result = TranslateBlockState(
+												        BlockFactory.GetBlockState(res), id, meta);
+										        }
 									        }
-									        
-									        var res = BlockFactory.GetBlockStateID(id, meta);
 
-									        if (AnvilWorldProvider.BlockStateMapper.TryGetValue(res,
-										        out var res2))
+									        if (result == null)
 									        {
-										        var t = BlockFactory.GetBlockState(res2);
-										        t = TranslateBlockState(t, id,
-											        meta);
+										        var results = BlockFactory.RuntimeIdTable.Where(xx => xx.Id == id)
+											       .ToArray();
 
-										        result = t;
+										        if (results.Length > 0)
+										        {
+											        var first = results.FirstOrDefault(xx => xx.Data == meta);
+
+											        if (first == default)
+												        first = results[0];
+
+											        result = TranslateBlockState(
+												        BlockFactory.GetBlockState((uint) first.RuntimeId), id, meta);
+										        }
 									        }
-									        else
-									        {
-										        Log.Info($"Did not find anvil statemap: {result.Name}");
-										        result = TranslateBlockState(BlockFactory.GetBlockState(res),
-											        id, meta);
-									        }
-								        }
 
-								        if (result == null)
-								        {
-									        var results = BlockFactory.RuntimeIdTable.Where(xx =>
-										        xx.Id == id).ToArray();
-
-									        if (results.Length > 0)
+									        if (result != null)
 									        {
-										        var first = results.FirstOrDefault(xx => xx.Data == meta);
-										        if (first == default)
-											        first = results[0];
-										        
-										        result = TranslateBlockState(
-											        BlockFactory.GetBlockState((uint) first.RuntimeId), id,
-											        meta);
+										        _convertedStates.TryAdd(ruid, result);
 									        }
 								        }
 
@@ -281,6 +287,7 @@ namespace Alex.Worlds.Bedrock
 								        {
 									        section.Set(x, y, z, result);
 								        }
+
 							        }
 						        }
 					        }
@@ -1102,27 +1109,10 @@ namespace Alex.Worlds.Bedrock
 
 			return state;
 		}
-		
-		private class QueuedChunk
-		{
-			public bool CacheEnabled { get; set; }
-			public uint SubChunkCount { get; set; }
-			public byte[] ChunkData { get; }
-			public int ChunkX { get; }
-			public int ChunkZ { get; }
-			public Action<ChunkColumn> Callback { get; }
-			public QueuedChunk(byte[] data, int x, int z, Action<ChunkColumn> callback)
-			{
-				ChunkX = x;
-				ChunkZ = z;
-				ChunkData = data;
-				Callback = callback;
-			}
-		}
 
 		public void Dispose()
 		{
-			QueuedChunks?.Dispose();
+			
 		}
     }
 }

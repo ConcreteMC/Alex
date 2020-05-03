@@ -109,12 +109,12 @@ namespace Alex.Worlds
 					continue;
 				}
 
-				/*var e = base.WorldReceiver?.GetPlayerEntity();
+				/*var e = base.WorldReceiver?.Player;
 				if (e != null)
 				{
 					pp = e.KnownPosition;
 				}*/
-				//var pp = base.WorldReceiver.GetPlayerEntity();
+				//var pp = base.WorldReceiver.Player;
 				ChunkCoordinates currentCoordinates =
 					new ChunkCoordinates(World.Player.KnownPosition);
 

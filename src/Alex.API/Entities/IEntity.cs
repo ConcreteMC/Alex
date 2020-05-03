@@ -29,6 +29,7 @@ namespace Alex.API.Entities
 
 		void EntityHurt();
 		
+		long RenderedVertices { get; }
 		void Render(IRenderArgs renderArgs);
 		void Update(IUpdateArgs args);
 		void UpdateHeadYaw(float headYaw);

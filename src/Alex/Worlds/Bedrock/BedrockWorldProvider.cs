@@ -9,7 +9,6 @@ using Alex.API.Data;
 using Alex.API.Events;
 using Alex.API.Events.World;
 using Alex.API.Network;
-using Alex.API.Network.Bedrock;
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.API.World;
@@ -30,7 +29,7 @@ namespace Alex.Worlds.Bedrock
 		private static Logger Log = LogManager.GetCurrentClassLogger();
 		
 		public Alex Alex { get; }
-		protected IBedrockNetworkProvider Client { get; }
+		protected BedrockClient Client { get; }
 
 		private System.Threading.Timer _gameTickTimer;
 		private IEventDispatcher EventDispatcher { get; }
@@ -86,7 +85,7 @@ namespace Alex.Worlds.Bedrock
 			if (_initiated)
 			{
 				
-				var p = WorldReceiver.GetPlayerEntity();
+				var p = WorldReceiver.Player;
 				if (p != null && p is Player player && Client.HasSpawned)
 				{
 				//	player.IsSpawned = Spawned;
@@ -159,7 +158,7 @@ namespace Alex.Worlds.Bedrock
 			info = new LevelInfo();
 			_initiated = true;
 			Client.WorldReceiver = WorldReceiver;
-			//if (WorldReceiver.GetPlayerEntity() is Player player)
+			//if (WorldReceiver.Player is Player player)
 			//{
 			//	WorldReceiver?.UpdatePlayerPosition();
 			//}
@@ -262,7 +261,7 @@ namespace Alex.Worlds.Bedrock
 					}
 				}
 				
-				if (WorldReceiver.GetPlayerEntity() is Player player)
+				if (WorldReceiver.Player is Player player)
 				{
 					var packet = McpeSetLocalPlayerAsInitializedPacket.CreateObject();
 					packet.runtimeEntityId = Client.EntityId;

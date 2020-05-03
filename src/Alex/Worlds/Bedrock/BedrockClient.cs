@@ -16,10 +16,10 @@ using Alex.API.Events;
 using Alex.API.Events.World;
 using Alex.API.Items;
 using Alex.API.Network;
-using Alex.API.Network.Bedrock;
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.API.World;
+using Alex.Entities;
 using Alex.Gamestates;
 using Alex.Services;
 using Alex.Utils;
@@ -89,7 +89,7 @@ namespace Alex.Worlds.Bedrock
 			}
 		}
 	}
-	public class BedrockClient : IBedrockNetworkProvider, IDisposable
+	public class BedrockClient : INetworkProvider, IDisposable
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BedrockClient));
 		
@@ -127,8 +127,7 @@ namespace Alex.Worlds.Bedrock
 		        _remoteEndpoint = value;
 	        }
         }
-
-        private long ClientGUID { get; }
+        
         private ChunkProcessor ChunkProcessor { get; }
 		public BedrockClient(Alex alex, IEventDispatcher eventDispatcher, IPEndPoint endpoint, PlayerProfile playerProfile, DedicatedThreadPool threadPool, BedrockWorldProvider wp)
 		{
@@ -137,9 +136,6 @@ namespace Alex.Worlds.Bedrock
 			
             Alex = alex;
 			WorldProvider = wp;
-			//ConnectionAcceptedWaitHandle = new ManualResetEventSlim(false);
-			//MessageDispatcher = new McpeClientMessageDispatcher(new BedrockClientPacketHandler(this, eventDispatcher, wp, playerProfile, alex, CancellationTokenSource.Token));
-			//CurrentLocation = new MiNET.Utils.PlayerLocation(0,0,0);
 			OptionsProvider = alex.Services.GetRequiredService<IOptionsProvider>();
 			XblmsaService = alex.Services.GetRequiredService<XBLMSAService>();
 			
@@ -148,18 +144,8 @@ namespace Alex.Worlds.Bedrock
 			Options.VideoOptions.RenderDistance.Bind(RenderDistanceChanged);
 			Options.VideoOptions.ClientSideLighting.Bind(ClientSideLightingChanged);
 			_threadPool = threadPool;
-			//Log.IsDebugEnabled = false;
-			//this.RegisterEventHandlers();
-			
-			//MessageHandler = new SafeMessageHandler(Session, new BedrockClientPacketHandler(this, eventDispatcher, wp, playerProfile, alex, CancellationTokenSource.Token));
-			//MessageHandler.ConnectionAction = () =>
-			//{
-			//	ConnectionAcceptedWaitHandle?.Set();
-			//	SendAlexLogin(playerProfile.Username);
-			//};
 
-			
-			ChunkProcessor = new ChunkProcessor(alex.ThreadPool, 4,
+			ChunkProcessor = new ChunkProcessor(alex.ThreadPool,
 				alex.Services.GetRequiredService<IOptionsProvider>().AlexOptions.MiscelaneousOptions.ServerSideLighting,
 				CancellationTokenSource.Token);
 
@@ -204,10 +190,6 @@ namespace Alex.Worlds.Bedrock
 			};
 
 			EventDispatcher = eventDispatcher;
-			
-			byte[] buffer = new byte[8];
-			new Random().NextBytes(buffer);
-			ClientGUID = BitConverter.ToInt64(buffer, 0);
 		}
 
 		private void ClientSideLightingChanged(bool oldvalue, bool newvalue)
@@ -223,11 +205,11 @@ namespace Alex.Worlds.Bedrock
 
 			Starting = true;
 
-			if (WorldReceiver?.GetPlayerEntity() is Entities.Player player)
-			{
-				player.Inventory.CursorChanged += InventoryOnCursorChanged;
-				player.Inventory.SlotChanged += InventoryOnSlotChanged;
-			}
+		//	var player = WorldReceiver.Player;
+			
+			//player.Inventory.CursorChanged += InventoryOnCursorChanged;
+		//	player.Inventory.SlotChanged += InventoryOnSlotChanged;
+			
 			
 			EventDispatcher?.RegisterEvents(this);
 			
@@ -629,7 +611,7 @@ namespace Alex.Worlds.Bedrock
 			base.OnUnconnectedPong(packet, senderEndpoint);
 		}*/
 		
-		public IWorldReceiver WorldReceiver { get; set; } 
+		public World WorldReceiver { get; set; } 
 		public System.Numerics.Vector3 SpawnPoint { get; set; } = System.Numerics.Vector3.Zero;
 		public LevelInfo LevelInfo { get; } = new LevelInfo();
 
@@ -690,7 +672,7 @@ namespace Alex.Worlds.Bedrock
 		
 	    public void PlayerDigging(DiggingStatus status, BlockCoordinates position, BlockFace face, Vector3 cursorPosition)
 	    {
-            if (WorldReceiver?.GetPlayerEntity() is Entities.Player player)
+            if (WorldReceiver?.Player is Entities.Player player)
             {
                 var item = player.Inventory[player.Inventory.SelectedSlot];
                 if (status == DiggingStatus.Started)

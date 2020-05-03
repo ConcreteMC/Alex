@@ -22,6 +22,8 @@ namespace Alex.Graphics.Models.Entity
 		public PooledTexture2D Texture { get; set; }
 		private PooledVertexBuffer VertexBuffer { get; set; }
 		public bool Valid { get; private set; }
+
+		public long Vertices => VertexBuffer.VertexCount;
 		//public float Height { get; private set; } = 0f;
 		public EntityModelRenderer(EntityModel model, PooledTexture2D texture)
 		{
@@ -165,7 +167,7 @@ namespace Alex.Graphics.Models.Entity
 				modelBone.UpdateRotationMatrix = true;
 					if (!modelBones.TryAdd(bone.Name, modelBone))
 					{
-						Log.Warn($"Failed to add bone! {model.Description.Identifier}:{bone.Name}");
+						Log.Debug($"Failed to add bone! {model.Description.Identifier}:{bone.Name}");
 					}
 				
 			}
@@ -288,7 +290,7 @@ namespace Alex.Graphics.Models.Entity
 				modelBone.UpdateRotationMatrix = !bone.NeverRender;
 					if (!modelBones.TryAdd(bone.Name, modelBone))
 					{
-						Log.Warn($"Failed to add bone! {model.Name}:{bone.Name}");
+						Log.Debug($"Failed to add bone! {model.Name}:{bone.Name}");
 					}
 				
 			}
