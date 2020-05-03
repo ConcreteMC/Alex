@@ -40,7 +40,20 @@ namespace Alex.API.Gui.Elements.Controls
             }
         }
 
-		public ValueFormatter<bool> DisplayFormat { get; set; } = DefaultDisplayFormat;
+		private ValueFormatter<bool> _formatter = DefaultDisplayFormat;
+
+		public ValueFormatter<bool> DisplayFormat
+		{
+			get
+			{
+				return _formatter;
+			}
+			set
+			{
+				_formatter = value;
+				Text = _formatter?.FormatValue(_value) ?? string.Empty;
+			}
+		}
 
 		public GuiToggleButton() : base()
 	    {

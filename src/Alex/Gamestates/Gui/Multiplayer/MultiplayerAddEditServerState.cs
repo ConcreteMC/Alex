@@ -40,11 +40,11 @@ namespace Alex.GameStates.Gui.Multiplayer
 		private readonly GuiPanoramaSkyBox                      _skyBox;
 
 		public MultiplayerAddEditServerState(Action<SavedServerEntry> callbackAction, GuiPanoramaSkyBox skyBox) :
-			this(null, null, callbackAction, skyBox)
+			this(ServerType.Bedrock, null, null, callbackAction, skyBox)
 		{
 		}
 
-		public MultiplayerAddEditServerState(string                   name, string address,
+		public MultiplayerAddEditServerState(ServerType serverType, string                   name, string address,
 											 Action<SavedServerEntry> callbackAction,
 											 GuiPanoramaSkyBox        skyBox) :
 			base(callbackAction)
@@ -113,7 +113,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 				Margin  = new Thickness(5),
 				Modern  = true,
 				Width   = 50,
-				Checked = true,
+				Checked = serverType == ServerType.Java,
 				CheckedOutlineThickness = new Thickness(1),
 				DisplayFormat = new ValueFormatter<bool>((val) => $"Java {(val ? "[Active]" : "")}")
 			});
@@ -122,6 +122,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 				Margin  = new Thickness(5),
 				Modern  = true,
 				Width   = 50,
+				Checked = serverType == ServerType.Bedrock,
 				CheckedOutlineThickness = new Thickness(1),
 				DisplayFormat = new ValueFormatter<bool>((val) => $"Bedrock {(val ? "[Active]" : "")}")
 			});
@@ -172,36 +173,8 @@ namespace Alex.GameStates.Gui.Multiplayer
 			Background = new GuiTexture2D(_skyBox, TextureRepeatMode.Stretch);
 		}
 
-		private void EnableButtonsFor(ServerType type)
-		{
-			if (type == ServerType.Bedrock)
-			{
-				_serverTypeLabel.Text = "Server Type (Bedrock):";
-
-				//_bedrockEditionButton.Enabled = false;
-				//_javaEditionButton.Enabled    = true;
-			}
-			else
-			{
-				_serverTypeLabel.Text = "Server Type (Java):";
-
-				//_javaEditionButton.Enabled    = false;
-				//_bedrockEditionButton.Enabled = true;
-			}
-		}
-
-		private void BedrockButtonPressed()
-		{
-			EnableButtonsFor(ServerType.Bedrock);
-		}
-
-		private void JavaEditionButtonPressed()
-		{
-			EnableButtonsFor(ServerType.Java);
-		}
-
 		public MultiplayerAddEditServerState(SavedServerEntry  entry, Action<SavedServerEntry> callbackAction,
-											 GuiPanoramaSkyBox skyBox) : this(entry.Name, entry.Host + ":" + entry.Port,
+											 GuiPanoramaSkyBox skyBox) : this(entry.ServerType, entry.Name, entry.Host + ":" + entry.Port,
 																			  callbackAction, skyBox)
 		{
 			if (entry != null)
@@ -216,8 +189,8 @@ namespace Alex.GameStates.Gui.Multiplayer
 			{
 				var name    = _nameInput.Value;
 				var address = _hostnameInput.Value;
-
-				ushort port = (ushort) (_javaEditionButton.Checked ? 19132 : 25565);
+				
+				ushort port = (ushort) (_serverTypeGroup.CheckedControl == _bedrockEditionButton ? 19132 : 25565);
 
 				var split    = address.Split(':', StringSplitOptions.RemoveEmptyEntries);
 				var hostname = split[0];
@@ -261,7 +234,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 				Name       = name,
 				Host       = hostname,
 				Port       = port,
-				ServerType = _javaEditionButton.Checked ? ServerType.Java : ServerType.Bedrock,
+				ServerType = (_serverTypeGroup.CheckedControl == _bedrockEditionButton ? ServerType.Bedrock : ServerType.Java),
 				CachedIcon = _entry?.CachedIcon ?? null,
 				ListIndex  = _entry?.ListIndex ?? -1
 			};

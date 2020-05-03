@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -99,7 +100,21 @@ namespace Alex.GameStates.Gui.Multiplayer
 	    protected override void OnShow()
 	    {
 		    base.OnShow();
-		    Load(true);
+		    
+		    var queryProvider = GetService<IServerQueryProvider>();
+		    
+		    _listProvider.Load();
+		    
+		    ClearItems();
+
+		    List<Task> tasks = new List<Task>();
+		    foreach (var entry in _listProvider.Data.ToArray())
+		    {
+			    var element = new GuiServerListEntryElement(queryProvider, entry);
+			    AddItem(element);
+			    
+			    tasks.Add(element.PingAsync(false));
+		    }
 		}
 
 	    protected override void OnSelectedItemChanged(GuiServerListEntryElement newItem)
@@ -154,76 +169,82 @@ namespace Alex.GameStates.Gui.Multiplayer
 	    }
 
 		private FastRandom Rnd = new FastRandom();
-		private void OnJoinServerButtonPressed()
+
+		private async void OnJoinServerButtonPressed()
 		{
-			Task.Run(async () =>
+			var       entry = SelectedItem.SavedServerEntry;
+			var       ips   = Dns.GetHostAddresses(entry.Host).ToArray();
+			IPAddress ip    = ips[Rnd.Next(0, ips.Length - 1)];
+
+			if (ip == null) return;
+
+			IPEndPoint target = new IPEndPoint(ip, entry.Port);
+
+			var authenticationService = GetService<IPlayerProfileService>();
+			var currentProfile        = authenticationService.CurrentProfile;
+
+			if (entry.ServerType == ServerType.Java)
 			{
-				var entry = SelectedItem.SavedServerEntry;
-				var ips = Dns.GetHostAddresses(entry.Host).ToArray();
-				IPAddress ip = ips[Rnd.Next(0, ips.Length - 1)];
-				if (ip == null) return;
-
-				IPEndPoint target = new IPEndPoint(ip, entry.Port);
-
-				var authenticationService = GetService<IPlayerProfileService>();
-				var currentProfile = authenticationService.CurrentProfile;
-
-				if (entry.ServerType == ServerType.Java)
+				if (currentProfile == null || (currentProfile.IsBedrock))
 				{
-					if (currentProfile == null || (currentProfile.IsBedrock))
-					{
-						JavaLoginState loginState = new JavaLoginState(_skyBox,
-							() => { Alex.ConnectToServer(target, authenticationService.CurrentProfile, false, SelectedItem.SavedServerEntry.Host); });
-
-
-						Alex.GameStateManager.SetActiveState(loginState, true);
-					}
-					else
-					{
-						Alex.ConnectToServer(target, currentProfile, false, SelectedItem.SavedServerEntry.Host);
-					}
-				}
-				else if (entry.ServerType == ServerType.Bedrock)
-				{
-					if (SelectedItem.ConnectionEndpoint != null)
-					{
-						target = SelectedItem.ConnectionEndpoint;
-					}
-					
-					if (currentProfile == null || (!currentProfile.IsBedrock))
-					{
-						foreach (var profile in authenticationService.GetBedrockProfiles())
+					JavaLoginState loginState = new JavaLoginState(
+						_skyBox,
+						() =>
 						{
-							profile.IsBedrock = true;
-							Log.Debug($"BEDROCK PROFILE: {profile.Username}");
+							Alex.ConnectToServer(
+								target, authenticationService.CurrentProfile, false,
+								SelectedItem.SavedServerEntry.Host);
+						});
 
-							var task = await authenticationService.TryAuthenticateAsync(profile);
 
-							if (task)
-							{
-								currentProfile = profile;
-								break;
-							}
-							else
-							{
-								Log.Warn($"Profile auth failed.");
-							}
+					Alex.GameStateManager.SetActiveState(loginState, true);
+				}
+				else
+				{
+					Alex.ConnectToServer(target, currentProfile, false, SelectedItem.SavedServerEntry.Host);
+				}
+			}
+			else if (entry.ServerType == ServerType.Bedrock)
+			{
+				if (SelectedItem.ConnectionEndpoint != null)
+				{
+					target = SelectedItem.ConnectionEndpoint;
+				}
+
+				if (currentProfile == null || (!currentProfile.IsBedrock))
+				{
+					foreach (var profile in authenticationService.GetBedrockProfiles())
+					{
+						profile.IsBedrock = true;
+						Log.Debug($"BEDROCK PROFILE: {profile.Username}");
+
+						var task = await authenticationService.TryAuthenticateAsync(profile);
+
+						if (task)
+						{
+							currentProfile = profile;
+
+							break;
+						}
+						else
+						{
+							Log.Warn($"Profile auth failed.");
 						}
 					}
-
-					if ((currentProfile == null || (!currentProfile.IsBedrock)) || !currentProfile.Authenticated)
-					{
-						BEDeviceCodeLoginState loginState = new BEDeviceCodeLoginState(_skyBox,
-							(profile) => { Alex.ConnectToServer(target, profile, true); });
-
-						Alex.GameStateManager.SetActiveState(loginState, true);
-					}
-					else
-					{
-						Alex.ConnectToServer(target, currentProfile, true);
-					}
 				}
-			});
+
+				if ((currentProfile == null || (!currentProfile.IsBedrock)) || !currentProfile.Authenticated)
+				{
+					BEDeviceCodeLoginState loginState = new BEDeviceCodeLoginState(
+						_skyBox, (profile) => { Alex.ConnectToServer(target, profile, true); });
+
+					Alex.GameStateManager.SetActiveState(loginState, true);
+				}
+				else
+				{
+					Alex.ConnectToServer(target, currentProfile, true);
+				}
+			}
 		}
 
 		private void OnCancelButtonPressed()
@@ -234,62 +255,34 @@ namespace Alex.GameStates.Gui.Multiplayer
 
 	    private void OnRefreshButtonPressed()
 	    {
+		    foreach (var item in Items)
+		    {
+			    item.PingAsync(true);
+		    }
 		   /* Task.Run(() =>
 		    {
 			    SaveAll();
 			    Load(false);
 		    });*/
-			PingAll(true);
-	    }
-
-	    public void Load(bool useTask = false)
-	    {
-		    if (useTask)
-		    {
-			    Task.Run(() => { LoadH(); });
-		    }
-		    else
-		    {
-			    LoadH();
-		    }
-	    }
-
-	    private void LoadH()
-	    {
-		    Alex.UIThreadQueue.Enqueue(() =>
-		    {
-			    var queryProvider = GetService<IServerQueryProvider>();
-			    _listProvider.Load();
-
-			    ClearItems();
-			    foreach (var entry in _listProvider.Data.ToArray())
-			    {
-				    AddItem(new GuiServerListEntryElement(queryProvider, entry));
-			    }
-
-			    PingAll(false);
-		    });
-	    }
-
-	    public void PingAll(bool forcedPing)
-	    {
-		    Parallel.ForEach(Items, element => element.PingAsync(forcedPing));
+		//	PingAll(true);
 	    }
 
 	    private void SaveAll()
 	    {
-		    Alex.UIThreadQueue.Enqueue(() =>
+		    foreach (var entry in _listProvider.Data.ToArray())
 		    {
-			    foreach (var entry in _listProvider.Data.ToArray())
-			    {
-				    _listProvider.RemoveEntry(entry);
-			    }
+			    _listProvider.RemoveEntry(entry);
+		    }
 
-			    foreach (var item in Items)
-			    {
-				    _listProvider.AddEntry(item.SavedServerEntry);
-			    }
-		    });
+		    foreach (var item in Items)
+		    {
+			    _listProvider.AddEntry(item.SavedServerEntry);
+		    }
+		    
+		    /*Alex.UIThreadQueue.Enqueue(() =>
+		    {
+			    
+		    });*/
 	    }
 
 	    private void AddEditServerCallbackAction(SavedServerEntry obj)
@@ -444,6 +437,7 @@ namespace Alex.GameStates.Gui.Multiplayer
 		    base.OnDraw(graphics, gameTime);
 	    }
 
+        private bool _pingComplete = false;
 	    public async Task PingAsync(bool force)
 	    {
 		    if (PingCompleted && !force) return;
