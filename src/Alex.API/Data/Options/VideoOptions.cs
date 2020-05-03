@@ -45,6 +45,9 @@ namespace Alex.API.Data.Options
         [DataMember]
         public OptionsProperty<bool> CustomSkins { get; set; }
         
+        [DataMember]
+        public OptionsProperty<bool> ClientSideLighting { get; set; }
+        
         public VideoOptions()
         {
             RenderDistance = DefineRangedProperty(6, 2, 32);
@@ -63,6 +66,7 @@ namespace Alex.API.Data.Options
             Skybox = DefineProperty(true);
 
             CustomSkins = DefineProperty(true);
+            ClientSideLighting = DefineProperty(true);
         }
     }
 }

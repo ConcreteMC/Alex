@@ -40,6 +40,7 @@ namespace Alex.Worlds.Bedrock
 	    private CancellationToken CancellationToken { get; }
 	    private int MaxThreads { get; }
 	    private DedicatedThreadPool ThreadPool { get; }
+	    public bool ClientSideLighting { get; set; } = true;
         public ChunkProcessor(DedicatedThreadPool threadPool, int workerThreads, bool useAlexChunks, CancellationToken cancellationToken)
         {
 	        ThreadPool = threadPool;
@@ -50,9 +51,6 @@ namespace Alex.Worlds.Bedrock
 	        
 	       // Threads = new Thread[workerThreads];
 	        //for(int i = 0; i < workerThreads; i++) DispatchWorker();
-
-	        if (!Directory.Exists("failed"))
-		        Directory.CreateDirectory("failed");
         }
 
         public void HandleChunkData(bool cacheEnabled, uint subChunkCount, byte[] chunkData, int cx, int cz, Action<ChunkColumn> callback)
@@ -434,7 +432,7 @@ namespace Alex.Worlds.Bedrock
 				        chunkColumn.BlockLightDirty = false;
 			        }
 			        
-			        chunkColumn.CalculateHeight();
+			        chunkColumn.CalculateHeight(!gotLight && ClientSideLighting);
 			        
 			        //Done processing this chunk, send to world
 			        callback?.Invoke(chunkColumn);

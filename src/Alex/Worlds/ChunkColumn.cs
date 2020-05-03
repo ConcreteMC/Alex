@@ -154,9 +154,9 @@ namespace Alex.Worlds
 			_heightDirty = true;
 		}
 
-		public void RecalculateHeight(int x, int z)
+		public void RecalculateHeight(int x, int z, bool doLighting = true)
 		{
-			bool inLight = true;
+			bool inLight = doLighting;
 			//bool inAir = true;
 			
 			for (int y = 255; y > 0; y--)
@@ -180,7 +180,7 @@ namespace Alex.Worlds
 				}
 				else
 				{
-					SetSkyLight(x, y, z, 0);
+					SetSkyLight(x, y, z, (byte) (doLighting ? 0 : 15));
 				}
 			}
 		}
@@ -697,13 +697,13 @@ namespace Alex.Worlds
 			//}
 		}
 
-		public void CalculateHeight()
+		public void CalculateHeight(bool doLighting = true)
 		{
             for (int x = 0; x < 16; x++)
 			{
 				for (int z = 0; z < 16; z++)
 				{
-					RecalculateHeight(x, z);
+					RecalculateHeight(x, z, doLighting);
 				}
 			}
 
@@ -806,81 +806,6 @@ namespace Alex.Worlds
 			catch (Exception e)
 			{
 				Log.Warn($"Received supposedly corrupted chunk:" + e);
-			}
-		}
-
-		public void CalculateSkyLight(World world)
-		{
-			new SkyLightCalculations().RecalcSkyLight(this, world);
-			
-			return;
-			for (int x = 0; x < 16; x++)
-			{
-				for (int z = 0; z < 16; z++)
-				{
-					byte lightValue = 15;
-					bool diffusing = false;
-					for (int y = 255; y > 0; y--)
-					{
-						var block = GetBlock(x, y, z);
-
-						if (block.BlockMaterial.BlocksLight())
-						{
-							if (block.LightOpacity > 0)
-							{
-								lightValue = (byte) Math.Max(0, lightValue - block.LightOpacity);
-							}
-							else
-							{
-								diffusing = true;
-							}
-						}
-
-						SetSkyLight(x,y,z, (byte) (block.Transparent ? lightValue : 15));
-					}
-				}
-			}
-
-			var worldPos = Position;
-			for (int x = 15; x > 0; x--)
-			{
-				var wx = (X * 16) + x;
-				for (int z = 15; z > 0; z--)
-				{
-					var wz = (Z * 16) + z;
-
-					var prevSkyLight = 15;
-					for (int y = 255; y > 0; y--)
-					{
-						var skyLight = GetSkylight(x, y, z);
-						if (prevSkyLight > skyLight + 1)
-							skyLight++;
-						
-						if (skyLight < 15)
-						{
-							var x1 = world.GetSkyLight(wx + 1, y, wz);
-							var x2 = world.GetSkyLight(wx - 1, y, wz);
-
-							var maxX = Math.Max(x1, x2);
-							
-							var z1 = world.GetSkyLight(wx, y, wz + 1);
-							var z2 = world.GetSkyLight(wx, y, wz - 1);
-
-							var maxZ = Math.Max(z1, z2);
-
-							var heighest = Math.Max(maxX, maxZ);
-							
-							if (heighest > skyLight)
-							{
-								skyLight++;
-							}
-						}
-
-						SetSkyLight(x,y,z, skyLight);
-						
-						prevSkyLight = skyLight;
-					}
-				}
 			}
 		}
 	}

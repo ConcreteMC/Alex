@@ -481,9 +481,12 @@ namespace Alex.Worlds
 		private void UpdateNeighbors(int x, int y, int z)
 		{
 			var source = new BlockCoordinates(x, y, z);
-			new SkyLightCalculations().Calculate(this, source);
-			
-			
+
+			if (Options.VideoOptions.ClientSideLighting)
+			{
+				new SkyLightCalculations().Calculate(this, source);
+			}
+
 			ScheduleBlockUpdate(source, new BlockCoordinates(x + 1, y, z));
 			ScheduleBlockUpdate(source, new BlockCoordinates(x - 1, y, z));
 
@@ -600,7 +603,7 @@ namespace Alex.Worlds
 			
 			if (calculateLight && chunk.GetHeight(block.Coordinates.X & 0x0f, block.Coordinates.Z & 0x0f) <= block.Coordinates.Y + 1)
 			{
-				chunk.RecalculateHeight(block.Coordinates.X & 0x0f, block.Coordinates.Z & 0x0f);
+				chunk.RecalculateHeight(block.Coordinates.X & 0x0f, block.Coordinates.Z & 0x0f, Options.VideoOptions.ClientSideLighting);
 			}
 
 			if (calculateLight)

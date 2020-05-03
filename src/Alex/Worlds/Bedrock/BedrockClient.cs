@@ -145,7 +145,7 @@ namespace Alex.Worlds.Bedrock
 			ChunkRadius = Options.VideoOptions.RenderDistance;
 			
 			Options.VideoOptions.RenderDistance.Bind(RenderDistanceChanged);
-
+			Options.VideoOptions.ClientSideLighting.Bind(ClientSideLightingChanged);
 			_threadPool = threadPool;
 			//Log.IsDebugEnabled = false;
 			//this.RegisterEventHandlers();
@@ -157,9 +157,12 @@ namespace Alex.Worlds.Bedrock
 			//	SendAlexLogin(playerProfile.Username);
 			//};
 
+			
 			ChunkProcessor = new ChunkProcessor(alex.ThreadPool, 4,
 				alex.Services.GetRequiredService<IOptionsProvider>().AlexOptions.MiscelaneousOptions.ServerSideLighting,
 				CancellationTokenSource.Token);
+
+			ChunkProcessor.ClientSideLighting = Options.VideoOptions.ClientSideLighting;
 			
 			Connection = new RakConnection(new IPEndPoint(IPAddress.Any, 0), new GreyListManager(), new MotdProvider(), threadPool);
 			ServerEndpoint = endpoint;
@@ -204,6 +207,11 @@ namespace Alex.Worlds.Bedrock
 			byte[] buffer = new byte[8];
 			new Random().NextBytes(buffer);
 			ClientGUID = BitConverter.ToInt64(buffer, 0);
+		}
+
+		private void ClientSideLightingChanged(bool oldvalue, bool newvalue)
+		{
+			ChunkProcessor.ClientSideLighting = newvalue;
 		}
 
 		private bool Starting { get; set; } = false;

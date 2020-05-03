@@ -181,6 +181,13 @@ namespace Alex.Worlds
 	        HighestPriority = new ConcurrentQueue<ChunkCoordinates>();
 	        BlockLightCalculations = new BlockLightCalculations((World) world);
 	       // ActionQueue = new PrioritizedActionQueue(_threadPool, Options.VideoOptions.ChunkThreads);
+
+	       Options.VideoOptions.ClientSideLighting.Bind(ClientSideLightingChanged);
+        }
+
+        private void ClientSideLightingChanged(bool oldvalue, bool newvalue)
+        {
+	        RebuildAll();
         }
 
         private ConcurrentQueue<ChunkCoordinates> HighestPriority { get; set; }
@@ -581,8 +588,10 @@ namespace Alex.Worlds
         {
 	        ThreadPool.QueueUserWorkItem(o =>
 	        {
-		        Log.Info($"Rebuilding");
-		        SkyLightCalculations.Calculate(World as World);
+		        if (Options.VideoOptions.ClientSideLighting)
+		        {
+			        SkyLightCalculations.Calculate(World as World);
+		        }
 
 		        foreach (var i in Chunks)
 		        {
@@ -672,10 +681,14 @@ namespace Alex.Worlds
                 List<ChunkData> orderedList = new List<ChunkData>();
                 foreach (var c in renderedChunks)
                 {
-	                if (c.Value.Scheduled == ScheduleType.Unscheduled && BlockLightCalculations.HasEnqueued(c.Key) &&
-	                    !Enqueued.Contains(c.Key) && !_workItems.ContainsKey(c.Key))
+	                if (Options.VideoOptions.ClientSideLighting)
 	                {
-		                ScheduleChunkUpdate(c.Key, ScheduleType.Lighting);
+		                if (c.Value.Scheduled == ScheduleType.Unscheduled && BlockLightCalculations.HasEnqueued(c.Key)
+		                                                                  && !Enqueued.Contains(c.Key)
+		                                                                  && !_workItems.ContainsKey(c.Key))
+		                {
+			                ScheduleChunkUpdate(c.Key, ScheduleType.Lighting);
+		                }
 	                }
 
 	                if (_chunkData.TryGetValue(c.Key, out var data))
@@ -725,15 +738,17 @@ namespace Alex.Worlds
 	                }
                 }
 
-                if (BlockLightCalculations.TryProcess(blockCoordinates =>
+                if (Options.VideoOptions.ClientSideLighting)
                 {
-	                return Chunks.ContainsKey((ChunkCoordinates) blockCoordinates);
-                }, out BlockCoordinates coordinates))
-                {
-	                ChunkCoordinates cc = (ChunkCoordinates) coordinates;
-	                ScheduleChunkUpdate(cc, ScheduleType.Lighting);
+	                if (BlockLightCalculations.TryProcess(
+		                blockCoordinates => { return Chunks.ContainsKey((ChunkCoordinates) blockCoordinates); },
+		                out BlockCoordinates coordinates))
+	                {
+		                ChunkCoordinates cc = (ChunkCoordinates) coordinates;
+		                ScheduleChunkUpdate(cc, ScheduleType.Lighting);
+	                }
                 }
-                
+
                 var threadsActive = Interlocked.Read(ref _threadsRunning);
                 if (threadsActive >= maxThreads)
                 {
@@ -832,17 +847,21 @@ namespace Alex.Worlds
 			    if (!_workItems.ContainsKey(position) &&
 			        !Enqueued.Contains(position) && Enqueued.TryAdd(position))
 			    {
-				    if (chunk is ChunkColumn cc && (cc.BlockLightDirty || cc.IsNew))
+				    if (Options.VideoOptions.ClientSideLighting)
 				    {
-					    var chunkpos = new BlockCoordinates(cc.X * 16, 0, cc.Z * 16);
-					    foreach (var ls in cc.GetLightSources())
+					    if (chunk is ChunkColumn cc && (cc.BlockLightDirty || cc.IsNew))
 					    {
-						    BlockLightCalculations.Enqueue(chunkpos + ls);
-					    }
+						    var chunkpos = new BlockCoordinates(cc.X * 16, 0, cc.Z * 16);
 
-					    cc.BlockLightDirty = false;
+						    foreach (var ls in cc.GetLightSources())
+						    {
+							    BlockLightCalculations.Enqueue(chunkpos + ls);
+						    }
+
+						    cc.BlockLightDirty = false;
+					    }
 				    }
-				    
+
 				    chunk.Scheduled = type;
 
 				    chunk.HighPriority = prioritize;
@@ -870,22 +889,22 @@ namespace Alex.Worlds
             Stopwatch sw = Stopwatch.StartNew();
 
           //  if ((chunk.Scheduled & ScheduleType.Lighting) == ScheduleType.Lighting)
-            {
-	            if (chunk.SkyLightDirty || chunk.IsNew)
-	            {
-		            new SkyLightCalculations().RecalcSkyLight(chunk,
-			            new SkyLightBlockAccess(this));
+          if (Options.VideoOptions.ClientSideLighting)
+          {
+	          if (chunk.SkyLightDirty || chunk.IsNew)
+	          {
+		          new SkyLightCalculations().RecalcSkyLight(chunk, new SkyLightBlockAccess(this));
 
-		            chunk.SkyLightDirty = false;
-	            }
+		          chunk.SkyLightDirty = false;
+	          }
 
-	            //if (chunk.BlockLightDirty || chunk.IsNew)
-	            {
-		            BlockLightCalculations.Process(coordinates);
-	            }
-            }
+	          //if (chunk.BlockLightDirty || chunk.IsNew)
+	          {
+		          BlockLightCalculations.Process(coordinates);
+	          }
+          }
 
-            var scheduleType = chunk.Scheduled;
+          var scheduleType = chunk.Scheduled;
 
             ChunkData data = null;
             bool force = !_chunkData.TryGetValue(coordinates, out data);

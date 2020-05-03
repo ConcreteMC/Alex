@@ -28,6 +28,7 @@ namespace Alex.GameStates.Gui.MainMenu.Options
         private GuiToggleButton Skybox { get; set; }
         private GuiSlider Antialiasing { get; set; }
         private GuiToggleButton CustomSkins { get; set; }
+        private GuiToggleButton ClientSideLighting { get; set; }
         
         private Dictionary<IGuiControl, string> Descriptions { get; } = new Dictionary<IGuiControl, string>();
         public VideoOptionsState(GuiPanoramaSkyBox skyBox) : base(skyBox)
@@ -73,6 +74,10 @@ namespace Alex.GameStates.Gui.MainMenu.Options
             AddGuiRow(Skybox = CreateToggle("Render Skybox: {0}", options => options.VideoOptions.Skybox),
                 CustomSkins = CreateToggle("Custom entity models: {0}", options => options.VideoOptions.CustomSkins));
 
+            AddGuiRow(
+                ClientSideLighting = CreateToggle(
+                    "Client Side Lighting: {0}", options => options.VideoOptions.ClientSideLighting));
+            
             Description = new GuiTextElement()
             {
                 Anchor = Alignment.MiddleLeft,
@@ -106,6 +111,8 @@ namespace Alex.GameStates.Gui.MainMenu.Options
 
             Descriptions.Add(CustomSkins, 
                 $"{TextColor.Bold}Custom entity models:{TextColor.Reset}\nEnabled: Shows custom entity models. May impact performance heavily!\nDisabled: Do not show custom models, may improve performance.");
+            
+            Descriptions.Add(ClientSideLighting, $"{TextColor.Bold}Client Side Lighting:{TextColor.Reset}\nEnabled: Calculate lighting on the client.\nDisabled: May improve chunk loading performance");
             
             base.OnInit(renderer);
         }
