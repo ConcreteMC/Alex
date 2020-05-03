@@ -431,6 +431,7 @@ namespace Alex.Worlds.Bedrock
 			        if (gotLight)
 			        {
 				        chunkColumn.SkyLightDirty = false;
+				        chunkColumn.BlockLightDirty = false;
 			        }
 			        
 			        chunkColumn.CalculateHeight();
