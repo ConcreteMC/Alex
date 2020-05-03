@@ -9,5 +9,7 @@ namespace Alex.API.Items
 	    int MaxStackSize { get; set; }
 	    ItemMaterial Material { get; set; } 
 	    ItemType ItemType { get; set; }
+
+	    string GetDisplayName();
     }
 }

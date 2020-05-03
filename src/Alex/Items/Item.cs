@@ -35,5 +35,21 @@ namespace Alex.Items
 				MaxStackSize = MaxStackSize
 			};
 		}
+
+		public string GetDisplayName()
+		{
+			if (Nbt != null)
+			{
+				if (Nbt.TryGet("display", out NbtCompound display))
+				{
+					if (display.TryGet("Name", out NbtString name))
+					{
+						return name.Value;
+					}
+				}
+			}
+
+			return DisplayName;
+		}
     }
 }

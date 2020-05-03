@@ -110,7 +110,7 @@ namespace Alex.Gui.Elements.Inventory
 			    items[childIndex].Item = e.Value;
 			    if (e.Value != null)
 			    {
-				    items[childIndex].Name = e.Value.DisplayName;
+				    items[childIndex].Name = e.Value.GetDisplayName();
 				  /*  if (ItemFactory.TryGetItem(itemName, out Item item))
 				    {
 					    items[childIndex].Name = item.DisplayName;

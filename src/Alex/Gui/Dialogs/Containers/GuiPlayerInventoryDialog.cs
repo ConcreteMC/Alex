@@ -258,7 +258,7 @@ namespace Alex.Gui.Dialogs.Containers
         private string _overlayText = string.Empty;
         private void SetOverlayText(InventoryContainerItem item)
         {
-            _overlayText = item.Item?.DisplayName ?? item.Item?.Name;
+            _overlayText = item.Item?.GetDisplayName() ?? item.Item?.Name;
             _overlayStart = 0;
             _nextUpdate = TimeSpan.Zero;
         }
