@@ -330,10 +330,11 @@ namespace Alex.Worlds.Java
 							}
 							
 							//base.LoadChunk(chunkColumn, chunkColumn.X, chunkColumn.Z, true);
-							EventDispatcher.DispatchEvent(new ChunkReceivedEvent(new ChunkCoordinates(chunkColumn.X ,chunkColumn.Z), chunkColumn)
+							/*EventDispatcher.DispatchEvent(new ChunkReceivedEvent(new ChunkCoordinates(chunkColumn.X ,chunkColumn.Z), chunkColumn)
 							{
 								DoUpdates = true
-							});
+							})*/
+							WorldReceiver.ChunkManager.AddChunk(chunkColumn, new ChunkCoordinates(chunkColumn.X ,chunkColumn.Z), true);
 							
 							loaded++;
 						}
@@ -654,46 +655,43 @@ namespace Alex.Worlds.Java
 		}
 
 		public bool Respawning = false;
+
 		private void HandleRespawnPacket(RespawnPacket packet)
 		{
-			if (WorldReceiver is World w)
+
+			Respawning = true;
+			_dimension = packet.Dimension;
+			WorldReceiver.Player.UpdateGamemode(packet.Gamemode);
+			//player.
+
+
+			new Thread(() =>
 			{
-				Respawning = true;
-				_dimension = packet.Dimension;
-				if (WorldReceiver.Player is Player player)
+				LoadingWorldState state = new LoadingWorldState();
+				state.UpdateProgress(LoadingState.LoadingChunks, 0);
+				Alex.GameStateManager.SetActiveState(state, true);
+				WorldReceiver.ChunkManager.ClearChunks();
+
+				int t = Options.VideoOptions.RenderDistance;
+				double radiusSquared = Math.Pow(t, 2);
+
+				var target = radiusSquared * 3;
+
+				while (Respawning)
 				{
-					player.UpdateGamemode(packet.Gamemode);
-					//player.
+					int chunkProgress = (int) Math.Floor((WorldReceiver.ChunkManager.ChunkCount / target) * 100);
+					if (chunkProgress < 100)
+					{
+						state.UpdateProgress(LoadingState.LoadingChunks, chunkProgress);
+					}
+					else
+					{
+						state.UpdateProgress(LoadingState.Spawning, 99);
+					}
 				}
 
-				new Thread(() =>
-				{
-					LoadingWorldState state = new LoadingWorldState();
-					state.UpdateProgress(LoadingState.LoadingChunks, 0);
-					Alex.GameStateManager.SetActiveState(state, true);
-					w.ChunkManager.ClearChunks();
-
-					int t = Options.VideoOptions.RenderDistance;
-					double radiusSquared = Math.Pow(t, 2);
-
-					var target = radiusSquared * 3;
-
-					while (Respawning)
-					{
-						int chunkProgress = (int) Math.Floor((w.ChunkManager.ChunkCount / target) * 100);
-						if (chunkProgress < 100)
-						{
-							state.UpdateProgress(LoadingState.LoadingChunks, chunkProgress);
-						}
-						else
-						{
-							state.UpdateProgress(LoadingState.Spawning, 99);
-						}
-					}
-
-					Alex.GameStateManager.Back();
-				}).Start();
-			}
+				Alex.GameStateManager.Back();
+			}).Start();
 		}
 
 		private Item GetItemFromSlotData(SlotData data)
@@ -1258,10 +1256,7 @@ namespace Alex.Worlds.Java
 					return;
 				}
 
-				EventDispatcher.DispatchEvent(new ChunkReceivedEvent(new ChunkCoordinates(result.X ,result.Z), result)
-				{
-					DoUpdates = true
-				});
+				WorldReceiver.ChunkManager.AddChunk(result, new ChunkCoordinates(result.X ,result.Z), true);
 			});
 		}
 
