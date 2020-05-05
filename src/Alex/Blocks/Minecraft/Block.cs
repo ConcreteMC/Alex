@@ -1,4 +1,5 @@
-﻿using Alex.API.Blocks;
+﻿using System;
+using Alex.API.Blocks;
 using Alex.API.Blocks.State;
 using Alex.API.Items;
 using Alex.API.Resources;
@@ -327,6 +328,12 @@ namespace Alex.Blocks.Minecraft
 	        if (Solid && neighbor.Solid && neighbor.IsFullCube) return false;
 			
 	        return true;
+        }
+
+        public virtual bool CanAttach(BlockFace face, IBlock block)
+        {
+	        return block.Solid && (block.IsFullCube || (block.BlockState.Name.Equals(
+		        BlockState.Name, StringComparison.InvariantCultureIgnoreCase)));
         }
 
         public string DisplayName { get; set; } = null;

@@ -322,12 +322,16 @@ namespace Alex
 			{
 				if (blockStateResource != null && blockStateResource.Parts != null && blockStateResource.Parts.Length > 0 && blockStateResource.Parts.All(x => x.Apply.All(b => b.Model != null)))
 				{
+					var models = MultiPartModels.GetModels(state, blockStateResource);
+					
 					if (state is BlockState ss)
 					{
 						ss.MultiPartHelper = blockStateResource;
 						ss.IsMultiPart = true;
+						ss.AppliedModels = models.Select(x => x.ModelName).ToArray();
 					}
-					return new CachedResourcePackModel(resources, MultiPartModels.GetModels(state, blockStateResource));
+					
+					return new CachedResourcePackModel(resources, models);
 				}
 
 				if (blockStateResource?.Variants == null ||

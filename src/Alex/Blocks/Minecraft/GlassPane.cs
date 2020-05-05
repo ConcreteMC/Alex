@@ -1,3 +1,6 @@
+using Alex.API.Blocks;
+using Alex.API.World;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class GlassPane : Block
@@ -9,9 +12,15 @@ namespace Alex.Blocks.Minecraft
 			IsReplacible = false;
 			IsFullCube = false;
 
-			
-			
 			BlockMaterial = Material.Glass;
+		}
+		
+		public override bool CanAttach(BlockFace face, IBlock block)
+		{
+			if (block is GlassPane)
+				return true;
+			
+			return base.CanAttach(face, block);
 		}
 	}
 }

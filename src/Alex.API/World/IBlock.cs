@@ -38,6 +38,8 @@ namespace Alex.API.World
 		IBlockState BlockPlaced(IWorld world, IBlockState state, BlockCoordinates position);
 		double GetBreakTime(IItem miningTool);
 
+		bool CanAttach(BlockFace face, IBlock block);
+
 		bool ShouldRenderFace(BlockFace face, IBlock neighbor);
 
 	}

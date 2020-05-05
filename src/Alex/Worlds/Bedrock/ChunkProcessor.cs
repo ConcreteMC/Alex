@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading;
 using Alex.API.Blocks.State;
 using Alex.API.Graphics;
+using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
 using Alex.Blocks.Storage;
 using Alex.Utils;
@@ -686,7 +687,29 @@ namespace Alex.Worlds.Bedrock
 		        {
 			        case "direction":
 			        case "weirdo_direction":
-				        r = FixFacing(r, int.Parse(state.Value()));
+				        if (r.Block is FenceGate)
+				        {
+					        switch (state.Value())
+					        {
+						        case "0":
+							        r = r.WithProperty(facing, "north");
+							        break;
+						        case "1":
+							        r = r.WithProperty(facing, "west");
+							        break;
+						        case "2":
+							        r = r.WithProperty(facing, "south");
+							        break;
+						        case "3":
+							        r = r.WithProperty(facing, "east");
+							        break;
+					        }
+				        }
+				        else
+				        {
+					        r = FixFacing(r, int.Parse(state.Value()));
+				        }
+
 				        break;
 			        case "upside_down_bit":
 				        r = (r).WithProperty("half", state.Value() == "1" ? "top" : "bottom");

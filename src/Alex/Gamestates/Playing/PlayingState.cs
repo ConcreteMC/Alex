@@ -198,8 +198,19 @@ namespace Alex.GameStates.Playing
 							if (blockstate is BlockState s && s.IsMultiPart)
 							{
 								sb.AppendLine($"MultiPart=true");
+								sb.AppendLine();
+								
+								sb.AppendLine("Models:");
+
+								foreach (var model in s.AppliedModels)
+								{
+									sb.AppendLine(model);
+								}
 							}
 
+							sb.AppendLine();
+
+							sb.AppendLine("Blockstate:");
 							var dict = blockstate.ToDictionary();
 							foreach (var kv in dict)
 							{

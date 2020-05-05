@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Alex.API.Blocks;
 using Alex.API.Blocks.State;
 using Alex.API.Utils;
 using Alex.API.World;
@@ -60,21 +61,19 @@ namespace Alex.Graphics.Models.Blocks
 				else if (s.When.Length > 0)
 				{
 					bool passes = true;
+
 					foreach (var rule in s.When)
 					{
-						MultiPartRule result;
-						if (!PassesMultiPartRule(world, position, rule, blockState, out result))
-						{
-							passes = false;
-							break;
-						}
-						else
+						if (PassesMultiPartRule(world, position, rule, blockState, out var result))
 						{
 							foreach (var kv in result.KeyValues)
 							{
 								blockStateCopy = blockStateCopy.WithProperty(kv.Key, kv.Value);
 							}
 						}
+
+						passes = false;
+						break;
 					}
 
 					if (passes)
@@ -132,18 +131,6 @@ namespace Alex.Graphics.Models.Blocks
 			}
 
 			return rule.KeyValues.All(x => CheckRequirements(blockState, x.Key, x.Value));
-			/*
-			if (CheckRequirements(blockState, "down", rule.Down)
-			    && CheckRequirements(blockState, "up", rule.Up)
-			    && CheckRequirements(blockState, "north", rule.North)
-			    && CheckRequirements(blockState, "east", rule.East)
-			    && CheckRequirements(blockState, "south", rule.South)
-			    && CheckRequirements(blockState, "west", rule.West))
-			{
-				return true;
-			}
-
-			return false;*/
 		}
 
 		private static bool CheckRequirements(IBlockState baseblockState, string rule, string value)
@@ -209,7 +196,7 @@ namespace Alex.Graphics.Models.Blocks
 			}
 
 			//return rule.All(x => CheckRequirements(baseBlock, x.Key, x.Value));
-			return rule.KeyValues.All(x => Passes(world, position, baseBlock, x.Key, x.Value));
+			return rule.KeyValues.All(x => Passes(world, position, baseBlock, x.Key, x.Value.ToLower()));
 			/*
 			if (Passes(world, position, baseBlock, "down", rule.Down)
 				&& Passes(world, position, baseBlock, "up", rule.Up)
@@ -229,46 +216,44 @@ namespace Alex.Graphics.Models.Blocks
 		{
 			if (string.IsNullOrWhiteSpace(value)) return true;
 
-			bool checkDirections = true;
-			Vector3 direction = Vector3.Zero;
+			BlockFace face = BlockFace.None;
 			switch (rule)
 			{
 				case "north":
-					direction = Vector3.Forward;
+					face = BlockFace.South;
 					break;
 				case "east":
-					direction = Vector3.Right;
+					face = BlockFace.East;
 					break;
 				case "south":
-					direction = Vector3.Backward;
+					face = BlockFace.North;
 					break;
 				case "west":
-					direction = Vector3.Left;
+					face = BlockFace.West;
 					break;
 				case "up":
-					direction = Vector3.Up;
+					face = BlockFace.Up;
 					break;
 				case "down":
-					direction = Vector3.Down;
-					break;
-				default:
-					checkDirections = false;
+					face = BlockFace.Down;
 					break;
 			}
 
-			bool requiredValue;
+			var direction = face.GetVector3();
+
 			if (value == "true" || value == "false" || value == "none")
 			{
-				var newPos = new BlockCoordinates(position + direction);
-				var blockState = world.GetBlockState(newPos);
-				var block = blockState.Block;
-
-				var canAttach = block.Solid && (block.IsFullCube ||
-				                                (blockState.Name.Equals(baseblockState.Name,
-					                                StringComparison.InvariantCultureIgnoreCase)));
-				if (direction == Vector3.Up && !(block is Air))
+				if (face == BlockFace.Up)
 					return true;
+				//if (face == BlockFace.Up && !(block is Air))
+				//	return true;
+				
+				var newPos     = new BlockCoordinates(position + direction);
+				var blockState = world.GetBlockState(newPos);
+				var block      = blockState.Block;
 
+				var canAttach = baseblockState.Block.CanAttach(face, block);
+				
 				if (value == "true")
 				{
 					return canAttach;

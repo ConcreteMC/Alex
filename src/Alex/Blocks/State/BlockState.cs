@@ -128,6 +128,8 @@ namespace Alex.Blocks.State
 		public bool IsMultiPart { get; set; } = false;
 		public bool Default { get; set; } = false;
 
+		public string[] AppliedModels { get; set; } = new string[0];
+		
 		//TODO: Remove
 		internal BlockStateResource MultiPartHelper { get; set; }
 		
