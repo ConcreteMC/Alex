@@ -8,6 +8,7 @@ using Alex.Blocks.State;
 using Alex.Entities;
 using Alex.ResourcePackLib.Json;
 using Alex.Utils;
+using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using MiNET.Blocks;
 using MiNET.Items;
@@ -302,7 +303,8 @@ namespace Alex.Blocks.Minecraft
 				        if (!IsFullBlock || !neighbor.IsFullBlock) return true;
 			        }
 			        
-			        if (neighbor.Solid && !(neighbor.Transparent || !neighbor.IsFullCube)) return false;
+			        //If neighbor is solid & not transparent. Hmmm?
+			        if (neighbor.Solid && !(neighbor.Transparent || !neighbor.IsFullCube)) return true;
 		        }
 		        else
 		        {

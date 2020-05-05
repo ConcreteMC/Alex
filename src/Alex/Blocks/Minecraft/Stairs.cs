@@ -45,6 +45,17 @@ namespace Alex.Blocks.Minecraft
             BlockMaterial = Material.Stone;
         }
 
+        /// <inheritdoc />
+        public override bool ShouldRenderFace(BlockFace face, IBlock neighbor)
+        {
+            var facing = GetFacing(BlockState);
+
+            if (facing != face || face == BlockFace.None)
+                return true;
+            
+            return base.ShouldRenderFace(face, neighbor);
+        }
+
         public override double GetHeight(Vector3 relative)
         {
             var half = GetHalf(BlockState);

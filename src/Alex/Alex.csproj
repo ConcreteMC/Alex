@@ -18,6 +18,11 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <LangVersion>8</LangVersion>
 	  <MonoGamePlatform>DesktopGL</MonoGamePlatform>
   </PropertyGroup>
@@ -95,6 +100,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Collections.Pooled" Version="2.0.0-preview.27" />
     <PackageReference Include="EasyPipes" Version="1.1.0" />
     <PackageReference Include="GtkSharp" Version="3.22.24.37" />
     <PackageReference Include="Hawezo.MojangSharp" Version="0.5.1" />

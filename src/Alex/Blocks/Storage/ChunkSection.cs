@@ -24,6 +24,8 @@ namespace Alex.Blocks.Storage
 		private int _yBase;
 		private int _blockRefCount;
 		private int _tickRefCount;
+
+		public int Blocks => _blockRefCount;
 		
 		//private BlockStorage Data;
 		private BlockStorage[] _blockStorages;
@@ -352,7 +354,7 @@ namespace Alex.Blocks.Storage
 				SetLightingScheduled(x, y, z, true);
 				//ScheduledSkylightUpdates.Set(idx, true);
 
-				Owner.SkyLightDirty = true;
+				//Owner.SkyLightDirty = true;
 
 				return true;
 			}

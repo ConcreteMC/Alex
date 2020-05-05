@@ -248,7 +248,7 @@ namespace Alex.Worlds
 						continue;
 					}
 
-					int height = GetHigestSurrounding(x, z, chunk, level);
+					int height = GetHeighestSurrounding(x, z, chunk, level);
 					if (height == 0)
 					{
 						continue;
@@ -766,7 +766,7 @@ namespace Alex.Worlds
 			return !(x > 0 && x < 15 && z > 0 && z < 15);
 		}
 
-		private static int GetHigestSurrounding(int x, int z, ChunkColumn chunk, IBlockAccess level)
+		private static int GetHeighestSurrounding(int x, int z, ChunkColumn chunk, IBlockAccess level)
 		{
 			int h = chunk.GetHeight(x, z);
 			if (h == 255) return h;

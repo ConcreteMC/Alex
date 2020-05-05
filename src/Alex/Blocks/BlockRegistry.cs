@@ -305,6 +305,7 @@ namespace Alex.Blocks
 			this.Register(() => new Tulip().WithLocation("minecraft:white_tulip"));
 			this.Register(() => new Tulip().WithLocation("minecraft:orange_tulip"));
 			this.Register(() => new Allium().WithLocation("minecraft:allium"));
+			this.Register(() => new Lilac().WithLocation("minecraft:lily_of_the_valley"));
 			
 			this.Register(() => new Peony().WithLocation("minecraft:peony"));
 			

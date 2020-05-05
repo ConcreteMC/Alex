@@ -19,6 +19,7 @@ using Alex.Graphics.Models.Blocks;
 using Alex.Services;
 using Alex.Utils;
 using Alex.Worlds.Lighting;
+using Collections.Pooled;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -513,6 +514,11 @@ namespace Alex.Worlds
 		
         public void AddChunk(IChunkColumn chunk, ChunkCoordinates position, bool doUpdates = false)
         {
+	        if (chunk is ChunkColumn cc && Options.VideoOptions.ClientSideLighting)
+	        {
+		        cc.CalculateHeight();
+	        }
+	        
             var c = Chunks.AddOrUpdate(position, coordinates =>
             {
 	           
@@ -589,6 +595,14 @@ namespace Alex.Worlds
         {
 	        ThreadPool.QueueUserWorkItem(o =>
 	        {
+		        foreach (var chunk in Chunks)
+		        {
+			        if (chunk.Value is ChunkColumn column)
+			        {
+				        column.CalculateHeight(Options.VideoOptions.ClientSideLighting);
+			        }
+		        }
+		        
 		        if (Options.VideoOptions.ClientSideLighting)
 		        {
 			        SkyLightCalculations.Calculate(World as World);
@@ -904,12 +918,17 @@ namespace Alex.Worlds
 			    return; //Another thread is already updating this chunk, return.
 		    }
 
+		    var scheduleType = chunk.Scheduled;
+
+		    ChunkData data  = null;
+		    bool      force = !_chunkData.TryGetValue(coordinates, out data);
+		    
 		    Stopwatch sw = Stopwatch.StartNew();
 
 		    //  if ((chunk.Scheduled & ScheduleType.Lighting) == ScheduleType.Lighting)
 		    if (Options.VideoOptions.ClientSideLighting)
 		    {
-			    if (chunk.SkyLightDirty || chunk.IsNew)
+			    if (chunk.SkyLightDirty || chunk.IsNew || force)
 			    {
 				    new SkyLightCalculations().RecalcSkyLight(chunk, new SkyLightBlockAccess(this));
 
@@ -921,11 +940,6 @@ namespace Alex.Worlds
 				    BlockLightCalculations.Process(coordinates);
 			    }
 		    }
-
-		    var scheduleType = chunk.Scheduled;
-
-		    ChunkData data  = null;
-		    bool      force = !_chunkData.TryGetValue(coordinates, out data);
 
 		    int meshed = 0;
 
@@ -969,8 +983,7 @@ namespace Alex.Worlds
 				    //if (i == 0) force = true;
 
 				    bool shouldRebuildMesh = section.ScheduledUpdatesCount > 0 || section.ScheduledSkyUpdatesCount > 0
-				                                                               || section.ScheduledBlockUpdatesCount
-				                                                               > 0;
+				                                                               || section.ScheduledBlockUpdatesCount > 0;
 
 				    if (force || shouldRebuildMesh || (scheduleType & ScheduleType.Border) == ScheduleType.Border)
 				    {
@@ -998,123 +1011,131 @@ namespace Alex.Worlds
 			    if (meshed > 0) //We did not re-mesh ANY chunks. Not worth re-building.
 			    {
 
-				    Dictionary<RenderStage, List<int>> newStageIndexes = new Dictionary<RenderStage, List<int>>();
-
-				    List<VertexPositionNormalTextureColor> vertices = new List<VertexPositionNormalTextureColor>();
-
-				    foreach (var mesh in meshes)
+				    using (PooledDictionary<RenderStage, List<int>> newStageIndexes =
+					    new PooledDictionary<RenderStage, List<int>>(ClearMode.Auto))
 				    {
-					    var startVerticeIndex = vertices.Count;
-					    vertices.AddRange(mesh.Vertices);
-
-					    foreach (var stage in mesh.Indexes)
+					    using (PooledList<VertexPositionNormalTextureColor> vertices =
+						    new PooledList<VertexPositionNormalTextureColor>(ClearMode.Auto))
 					    {
-						    if (!newStageIndexes.ContainsKey(stage.Key))
+
+						    foreach (var mesh in meshes)
 						    {
-							    newStageIndexes.Add(stage.Key, new List<int>());
+							    var startVerticeIndex = vertices.Count;
+							    vertices.AddRange(mesh.Vertices);
+
+							    foreach (var stage in mesh.Indexes)
+							    {
+								    if (!newStageIndexes.ContainsKey(stage.Key))
+								    {
+									    newStageIndexes.Add(stage.Key, new List<int>());
+								    }
+
+								    newStageIndexes[stage.Key].AddRange(stage.Value.Select(a => startVerticeIndex + a));
+							    }
 						    }
 
-						    newStageIndexes[stage.Key].AddRange(stage.Value.Select(a => startVerticeIndex + a));
-					    }
-				    }
-
-				    if (vertices.Count > 0)
-				    {
-					    var                                       vertexArray = vertices.ToArray();
-					    Dictionary<RenderStage, ChunkRenderStage> oldStages   = null;
-
-					    if (data == null)
-					    {
-						    data = new ChunkData()
+						    if (vertices.Count > 0)
 						    {
-							    Buffer = GpuResourceManager.GetBuffer(
-								    this, Graphics, VertexPositionNormalTextureColor.VertexDeclaration,
-								    vertexArray.Length, BufferUsage.WriteOnly),
-							    RenderStages = new Dictionary<RenderStage, ChunkRenderStage>()
-						    };
-					    }
-					    else
-					    {
-						    oldStages = data.RenderStages;
-					    }
+							    var                                       vertexArray = vertices.ToArray();
+							    Dictionary<RenderStage, ChunkRenderStage> oldStages   = null;
 
-					    var newStages = new Dictionary<RenderStage, ChunkRenderStage>();
+							    if (data == null)
+							    {
+								    data = new ChunkData()
+								    {
+									    Buffer = GpuResourceManager.GetBuffer(
+										    this, Graphics, VertexPositionNormalTextureColor.VertexDeclaration,
+										    vertexArray.Length, BufferUsage.WriteOnly),
+									    RenderStages = new Dictionary<RenderStage, ChunkRenderStage>()
+								    };
+							    }
+							    else
+							    {
+								    oldStages = data.RenderStages;
+							    }
 
-					    PooledVertexBuffer oldBuffer = data.Buffer;
+							    var newStages = new Dictionary<RenderStage, ChunkRenderStage>();
 
-					    PooledVertexBuffer newVertexBuffer = null;
+							    PooledVertexBuffer oldBuffer = data.Buffer;
 
-					    if (vertexArray.Length >= data.Buffer.VertexCount)
-					    {
-						    PooledVertexBuffer newBuffer = GpuResourceManager.GetBuffer(
-							    this, Graphics, VertexPositionNormalTextureColor.VertexDeclaration, vertexArray.Length,
-							    BufferUsage.WriteOnly);
+							    PooledVertexBuffer newVertexBuffer = null;
 
-						    newBuffer.SetData(vertexArray);
-						    newVertexBuffer = newBuffer;
-					    }
-					    else
-					    {
-						    data.Buffer.SetData(vertexArray);
-					    }
+							    if (vertexArray.Length >= data.Buffer.VertexCount)
+							    {
+								    PooledVertexBuffer newBuffer = GpuResourceManager.GetBuffer(
+									    this, Graphics, VertexPositionNormalTextureColor.VertexDeclaration,
+									    vertexArray.Length, BufferUsage.WriteOnly);
 
-					    foreach (var stage in newStageIndexes)
-					    {
-						    ChunkRenderStage  renderStage;
-						    PooledIndexBuffer newIndexBuffer;
+								    newBuffer.SetData(vertexArray);
+								    newVertexBuffer = newBuffer;
+							    }
+							    else
+							    {
+								    data.Buffer.SetData(vertexArray);
+							    }
 
-						    if (oldStages == null || !oldStages.TryGetValue(stage.Key, out renderStage))
-						    {
-							    renderStage = new ChunkRenderStage(data);
-						    }
+							    foreach (var stage in newStageIndexes)
+							    {
+								    ChunkRenderStage  renderStage;
+								    PooledIndexBuffer newIndexBuffer;
 
-						    if (renderStage.IndexBuffer == null
-						        || stage.Value.Count > renderStage.IndexBuffer.IndexCount)
-						    {
-							    newIndexBuffer = GpuResourceManager.GetIndexBuffer(
-								    this, Graphics, IndexElementSize.ThirtyTwoBits, stage.Value.Count,
-								    BufferUsage.WriteOnly);
+								    if (oldStages == null || !oldStages.TryGetValue(stage.Key, out renderStage))
+								    {
+									    renderStage = new ChunkRenderStage(data);
+								    }
+
+								    if (renderStage.IndexBuffer == null
+								        || stage.Value.Count > renderStage.IndexBuffer.IndexCount)
+								    {
+									    newIndexBuffer = GpuResourceManager.GetIndexBuffer(
+										    this, Graphics, IndexElementSize.ThirtyTwoBits, stage.Value.Count,
+										    BufferUsage.WriteOnly);
+								    }
+								    else
+								    {
+									    newIndexBuffer = renderStage.IndexBuffer;
+								    }
+
+								    newIndexBuffer.SetData(stage.Value.ToArray());
+
+								    renderStage.IndexBuffer = newIndexBuffer;
+
+								    newStages.Add(stage.Key, renderStage);
+
+							    }
+
+							    data.RenderStages = newStages;
+
+							    if (newVertexBuffer != null)
+							    {
+								    data.Buffer = newVertexBuffer;
+								    oldBuffer?.MarkForDisposal();
+							    }
+
+
+							    RenderStage[] renderStages = RenderStages;
+
+							    foreach (var stage in renderStages)
+							    {
+								    if (newStages.TryGetValue(stage, out var renderStage))
+								    {
+									    if (oldStages != null && oldStages.TryGetValue(stage, out var oldStage))
+									    {
+										    if (oldStage != renderStage)
+											    oldStage.Dispose();
+									    }
+								    }
+							    }
+
 						    }
 						    else
 						    {
-							    newIndexBuffer = renderStage.IndexBuffer;
-						    }
-
-						    newIndexBuffer.SetData(stage.Value.ToArray());
-
-						    renderStage.IndexBuffer = newIndexBuffer;
-
-						    newStages.Add(stage.Key, renderStage);
-					    }
-
-					    data.RenderStages = newStages;
-
-					    if (newVertexBuffer != null)
-					    {
-						    data.Buffer = newVertexBuffer;
-						    oldBuffer?.MarkForDisposal();
-					    }
-
-					    RenderStage[] renderStages = RenderStages;
-
-					    foreach (var stage in renderStages)
-					    {
-						    if (newStages.TryGetValue(stage, out var renderStage))
-						    {
-							    if (oldStages != null && oldStages.TryGetValue(stage, out var oldStage))
+							    if (data != null)
 							    {
-								    if (oldStage != renderStage)
-									    oldStage.Dispose();
+								    data.Dispose();
+								    data = null;
 							    }
 						    }
-					    }
-				    }
-				    else
-				    {
-					    if (data != null)
-					    {
-						    data.Dispose();
-						    data = null;
 					    }
 				    }
 			    }
@@ -1175,167 +1196,174 @@ namespace Alex.Worlds
 	        ref ChunkSection section,
 	        int yIndex)
         {
-	        List<VertexPositionNormalTextureColor> vertices = new List<VertexPositionNormalTextureColor>();
-
-	        Dictionary<RenderStage, List<int>> stages          = new Dictionary<RenderStage, List<int>>();
-	        RenderStage[]                      stageEnumValues = (RenderStage[]) Enum.GetValues(typeof(RenderStage));
-
-	        foreach (var stage in stageEnumValues)
+	        using (PooledList<VertexPositionNormalTextureColor> vertices =
+		        new PooledList<VertexPositionNormalTextureColor>(ClearMode.Auto))
 	        {
-		        stages.Add(stage, new List<int>());
-	        }
-
-	        for (int x = 0; x < 16; x++)
-	        {
-		        for (int z = 0; z < 16; z++)
+		        using (PooledDictionary<RenderStage, List<int>> stages = new PooledDictionary<RenderStage, List<int>>(RenderStages.Length))
 		        {
-			        for (int y = 0; y < 16; y++)
+			        foreach (var stage in RenderStages)
 			        {
-				        var blockPosition = new BlockCoordinates(
-					        (int) (chunkPosition.X + x), y + (yIndex << 4), (int) (chunkPosition.Z + z));
+				        stages.Add(stage, new List<int>());
+			        }
 
-				        var blockStates = section.GetAll(x, y, z);
-
-				        bool isScheduled           = section.IsScheduled(x, y, z);
-				        bool isLightScheduled      = section.IsLightingScheduled(x, y, z);
-				        bool isBlockLightScheduled = section.IsBlockLightScheduled(x, y, z);
-				        
-				        foreach (var state in blockStates)
+			        for (int x = 0; x < 16; x++)
+			        {
+				        for (int z = 0; z < 16; z++)
 				        {
-					        var blockState = state.state;
-
-					        if (blockState == null || !blockState.Block.Renderable)
+					        for (int y = 0; y < 16; y++)
 					        {
-						        continue;
-					        }
+						        var blockPosition = new BlockCoordinates(
+							        (int) (chunkPosition.X + x), y + (yIndex << 4), (int) (chunkPosition.Z + z));
 
-					        var model = blockState.Model;
-					        
-					        if (blockState != null && blockState.Block.RequiresUpdate)
-					        {
-						        var newblockState = blockState.Block.BlockPlaced(world, blockState, blockPosition);
+						        var blockStates = section.GetAll(x, y, z);
 
-						        if (newblockState != blockState)
+						        bool isScheduled           = section.IsScheduled(x, y, z);
+						        bool isLightScheduled      = section.IsLightingScheduled(x, y, z);
+						        bool isBlockLightScheduled = section.IsBlockLightScheduled(x, y, z);
+
+						        foreach (var state in blockStates)
 						        {
-							        blockState = newblockState;
-							        
-							        section.Set(state.storage, x, y, z, blockState);
-							        model = blockState.Model;
-						        }
-					        }
-					        
-					        if (DoMultiPartCalculations && blockState is BlockState bs && bs.IsMultiPart)
-					        {
-						        var newBlockState = MultiPartModels.GetBlockState(world, blockPosition, blockState, bs.MultiPartHelper);
+							        var blockState = state.state;
 
-						        if (newBlockState != blockState)
-						        {
-							        blockState = newBlockState;
-							        
-							        section.Set(state.storage, x, y, z, blockState);
-							        model = blockState.Model;
-						        }
-
-						        // blockState.Block.Update(world, blockPosition);
-					        }
-
-					        var data = model.GetVertices(world, blockPosition, blockState.Block);
-
-					        if (!(data.vertices == null || data.indexes == null || data.vertices.Length == 0
-					              || data.indexes.Length == 0))
-					        {
-						        RenderStage targetState = RenderStage.OpaqueFullCube;
-
-						        if (blockState.Block.BlockMaterial.IsLiquid())
-						        {
-							        targetState = RenderStage.Liquid;
-						        }
-						        else if (blockState.Block.Animated)
-						        {
-							        if (blockState.Block.BlockMaterial.IsOpaque())
+							        if (blockState == null || !blockState.Block.Renderable)
 							        {
-								        targetState = RenderStage.Animated;
-							        }
-							        else
-							        {
-								        targetState = RenderStage.AnimatedTranslucent;
-							        }
-						        }
-						        else if (blockState.Block.Transparent)
-						        {
-							        if (blockState.Block.BlockMaterial.IsOpaque())
-							        {
-								        targetState = RenderStage.Transparent;
-							        }
-							        else
-							        {
-								        targetState = RenderStage.Translucent;
-							        }
-						        }
-						        else if (!blockState.Block.IsFullCube)
-						        {
-							        targetState = RenderStage.Opaque;
-						        }
-
-						        if (data.vertices.Length > 0 && data.indexes.Length > 0)
-						        {
-							        // if (currentBlockState.storage == 0)
-							        // 	section.SetRendered(x, y, z, true);
-
-							        int startVerticeIndex = vertices.Count;
-
-							        foreach (var vert in data.vertices)
-							        {
-								        vertices.Add(vert);
+								        continue;
 							        }
 
-							        // int startIndex = stages[targetState].Count;
+							        var model = blockState.Model;
 
-							        for (int i = 0; i < data.indexes.Length; i++)
+							        if (blockState != null && blockState.Block.RequiresUpdate)
 							        {
-								        var originalIndex = data.indexes[i];
+								        var newblockState = blockState.Block.BlockPlaced(
+									        world, blockState, blockPosition);
 
-								        var verticeIndex = startVerticeIndex + originalIndex;
+								        if (newblockState != blockState)
+								        {
+									        blockState = newblockState;
 
-								        stages[targetState].Add(verticeIndex);
+									        section.Set(state.storage, x, y, z, blockState);
+									        model = blockState.Model;
+								        }
 							        }
-							        
+
+							        if (DoMultiPartCalculations && blockState is BlockState bs && bs.IsMultiPart)
+							        {
+								        var newBlockState = MultiPartModels.GetBlockState(
+									        world, blockPosition, blockState, bs.MultiPartHelper);
+
+								        if (newBlockState != blockState)
+								        {
+									        blockState = newBlockState;
+
+									        section.Set(state.storage, x, y, z, blockState);
+									        model = blockState.Model;
+								        }
+
+								        // blockState.Block.Update(world, blockPosition);
+							        }
+
+							        var data = model.GetVertices(world, blockPosition, blockState.Block);
+
+							        if (!(data.vertices == null || data.indexes == null || data.vertices.Length == 0
+							              || data.indexes.Length == 0))
+							        {
+								        RenderStage targetState = RenderStage.OpaqueFullCube;
+
+								        if (blockState.Block.BlockMaterial.IsLiquid())
+								        {
+									        targetState = RenderStage.Liquid;
+								        }
+								        else if (blockState.Block.Animated)
+								        {
+									        if (blockState.Block.BlockMaterial.IsOpaque())
+									        {
+										        targetState = RenderStage.Animated;
+									        }
+									        else
+									        {
+										        targetState = RenderStage.AnimatedTranslucent;
+									        }
+								        }
+								        else if (blockState.Block.Transparent)
+								        {
+									        if (blockState.Block.BlockMaterial.IsOpaque())
+									        {
+										        targetState = RenderStage.Transparent;
+									        }
+									        else
+									        {
+										        targetState = RenderStage.Translucent;
+									        }
+								        }
+								        else if (!blockState.Block.IsFullCube)
+								        {
+									        targetState = RenderStage.Opaque;
+								        }
+
+								        if (data.vertices.Length > 0 && data.indexes.Length > 0)
+								        {
+									        // if (currentBlockState.storage == 0)
+									        // 	section.SetRendered(x, y, z, true);
+
+									        int startVerticeIndex = vertices.Count;
+
+									        foreach (var vert in data.vertices)
+									        {
+										        vertices.Add(vert);
+									        }
+
+									        // int startIndex = stages[targetState].Count;
+
+									        for (int i = 0; i < data.indexes.Length; i++)
+									        {
+										        var originalIndex = data.indexes[i];
+
+										        var verticeIndex = startVerticeIndex + originalIndex;
+
+										        stages[targetState].Add(verticeIndex);
+									        }
+
+									        if (state.storage == 0)
+										        section.SetRendered(x, y, z, true);
+								        }
+							        }
+							        else if (state.storage == 0)
+							        {
+								        section.SetRendered(x, y, z, false);
+							        }
+
 							        if (state.storage == 0)
-										section.SetRendered(x, y, z, true);
+							        {
+								        if (isScheduled)
+									        section.SetScheduled(x, y, z, false);
+
+								        if (isLightScheduled)
+									        section.SetLightingScheduled(x, y, z, false);
+
+								        if (isBlockLightScheduled)
+									        section.SetBlockLightScheduled(x, y, z, false);
+							        }
 						        }
-					        }
-					        else if (state.storage == 0)
-					        {
-						        section.SetRendered(x, y, z, false);
-					        }
-					        
-					        if (state.storage == 0)
-					        {
-						        if (isScheduled)
-							        section.SetScheduled(x, y, z, false);
-
-						        if (isLightScheduled)
-							        section.SetLightingScheduled(x, y, z, false);
-
-						        if (isBlockLightScheduled)
-							        section.SetBlockLightScheduled(x, y, z, false);
 					        }
 				        }
 			        }
+
+
+			        var mesh = new ChunkMesh(vertices.ToArray());
+
+			        foreach (var stage in stages)
+			        {
+				        if (stage.Value.Count > 0)
+				        {
+					        mesh.Indexes.Add(stage.Key, stage.Value.ToArray());
+				        }
+			        }
+
+			        return mesh;
 		        }
 	        }
 
-	        var mesh = new ChunkMesh(vertices.ToArray());
-	        foreach (var stage in stages)
-	        {
-		        if (stage.Value.Count > 0)
-		        {
-			        mesh.Indexes.Add(stage.Key, stage.Value.ToArray());
-		        }
-	        }
-
-	       // section.MeshCache = mesh;
-	        return mesh;
+	        // section.MeshCache = mesh
         }
 
         #region old

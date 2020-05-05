@@ -29,6 +29,6 @@ namespace Alex.ResourcePackLib.Json.Models.Blocks
 		/// <summary>
 		/// Holds all the faces of the cube. If a face is left out, it will not be rendered.
 		/// </summary>
-		public Dictionary<BlockFace, BlockModelElementFace> Faces { get; set; } = new Dictionary<BlockFace, BlockModelElementFace>();
+		public IReadOnlyDictionary<BlockFace, BlockModelElementFace> Faces { get; set; }// = new Dictionary<BlockFace, BlockModelElementFace>();
 	}
 }

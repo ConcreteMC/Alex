@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Alex.API.Blocks;
+using Newtonsoft.Json;
 
 namespace Alex.ResourcePackLib.Json.Models.Blocks
 {
@@ -18,7 +19,7 @@ namespace Alex.ResourcePackLib.Json.Models.Blocks
 		/// <summary>
 		/// Specifies whether a face does not need to be rendered when there is a block touching it in the specified position. The position can be: down, up, north, south, west, or east. It will also determine which side of the block to use the light level from for lighting the face, and if unset, defaults to the side.
 		/// </summary>
-		public string CullFace { get; set; } = "none";
+		public BlockFace? CullFace { get; set; }
 
 		/// <summary>
 		/// Rotates the texture by the specified number of degrees. Can be 0, 90, 180, or 270. Defaults to 0. Rotation does not affect which part of the texture is used. Instead, it amounts to permutation of the selected texture vertexes (selected implicitly, or explicitly though uv).

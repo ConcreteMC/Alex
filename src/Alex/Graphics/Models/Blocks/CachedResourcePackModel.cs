@@ -11,6 +11,7 @@ using Alex.ResourcePackLib.Json.BlockStates;
 using Alex.ResourcePackLib.Json.Models.Blocks;
 using Alex.Utils;
 using Alex.Worlds;
+using Collections.Pooled;
 using Microsoft.Xna.Framework;
 using NLog;
 using MathF = Alex.API.Utils.MathF;
@@ -25,7 +26,7 @@ namespace Alex.Graphics.Models.Blocks
 		
 		private BlockStateModel[] Models { get; set; }
 		protected ResourceManager Resources { get; }
-		private IDictionary<string, FaceCache> _elementCache = null;
+	//	private IDictionary<string, FaceCache> _elementCache = null;
 		
 		protected Vector3 Min = new Vector3(float.MaxValue);
 		protected Vector3 Max = new Vector3(float.MinValue);
@@ -46,7 +47,7 @@ namespace Alex.Graphics.Models.Blocks
 			Models = models;
 			UseRandomizer = useRandomizer;
 			
-			_elementCache = CalculateModel(Models);
+			CalculateBoundingBoxes(Models);
 		}
 
 		public override BoundingBox[] GetIntersecting(Vector3 position, BoundingBox box)
@@ -123,37 +124,6 @@ namespace Alex.Graphics.Models.Blocks
 			return new BoundingBox(position + (min), position + ((max)));
 		}
 
-		protected void GetCullFaceValues(string facename, BlockFace facing, out BlockFace cullFace)
-		{
-			switch (facename.ToLower())
-			{
-				case "up":
-					cullFace = BlockFace.Up;
-					break;
-				case "down":
-					cullFace = BlockFace.Down;
-					break;
-				case "north":
-					cullFace = BlockFace.North;
-					break;
-				case "south":
-					cullFace = BlockFace.South;
-					break;
-				case "west":
-					cullFace = BlockFace.West;
-					break;
-				case "east":
-					cullFace = BlockFace.East;
-					break;
-				case "none":
-					cullFace = BlockFace.None;
-					break;
-				default:
-					cullFace = facing;
-					break;
-			}
-		}
-
 		protected string ResolveTexture(BlockStateModel var, string texture)
 		{
 			string textureName = "no_texture";
@@ -179,6 +149,9 @@ namespace Alex.Graphics.Models.Blocks
 			
 			if (position.Y >= 256) return true;
 
+			if (face == BlockFace.None)
+				return true;
+				
 			var pos = position + face.GetBlockCoordinates();
 
 			var cX = (int)pos.X & 0xf;
@@ -201,46 +174,94 @@ namespace Alex.Graphics.Models.Blocks
 			return me.ShouldRenderFace(face, theBlock);
 		}
 		
-		protected IDictionary<string, FaceCache> CalculateModel(BlockStateModel[] models)
+		protected void CalculateBoundingBoxes(BlockStateModel[] models)
 		{
-			Dictionary<string, FaceCache> result = new Dictionary<string, FaceCache>();
 			for (var index = 0; index < models.Length; index++)
 			{
 				var model = models[index];
 				ProcessModel(model, out Vector3 min, out Vector3 max);
-			//	{
-					if (max.X > Max.X)
-						Max.X = max.X;
 
-					if (max.Y > Max.Y)
-						Max.Y = max.Y;
-					
-					if (max.Z > Max.Z)
-						Max.Z = max.Z;
-					
-					if (min.X < Min.X)
-						Min.X = min.X;
+				if (max.X > Max.X)
+					Max.X = max.X;
 
-					if (min.Y < Min.Y)
-						Min.Y = min.Y;
-					
-					if (min.Z < Min.Z)
-						Min.Z = min.Z;
+				if (max.Y > Max.Y)
+					Max.Y = max.Y;
 
-				//	result.Add($"{index}:{r.Key}", r.Value);
-			//	}
+				if (max.Z > Max.Z)
+					Max.Z = max.Z;
+
+				if (min.X < Min.X)
+					Min.X = min.X;
+
+				if (min.Y < Min.Y)
+					Min.Y = min.Y;
+
+				if (min.Z < Min.Z)
+					Min.Z = min.Z;
 			}
-
-			return result;
 		}
-		
+
+		private void FixElementScale(BlockModelElement element,
+			VertexPositionNormalTextureColor[] verts,
+			float minX, float maxX, float minY, float maxY, float minZ, float maxZ,
+			ref float facesMinX,
+			ref float facesMaxX,
+			ref float facesMinY,
+			ref float facesMaxY,
+			ref float facesMinZ,
+			ref float facesMaxZ)
+		{
+			if (element.Rotation.Axis != Axis.Undefined && element.Rotation.Rescale)
+			{
+				var diffX = maxX - minX;
+				var diffY = maxY - minY;
+				var diffZ = maxZ - minZ;
+
+				for (var i = 0; i < verts.Length; i++)
+				{
+					var v = verts[i];
+
+					v.Position.X = (v.Position.X - minX) / diffX;
+					v.Position.Y = (v.Position.Y - minY) / diffY;
+					v.Position.Z = (v.Position.Z - minZ) / diffZ;
+
+					verts[i] = v;
+
+					if (v.Position.X < facesMinX)
+					{
+						facesMinX = v.Position.X;
+					}
+					else if (v.Position.X > facesMaxX)
+					{
+						facesMaxX = v.Position.X;
+					}
+
+					if (v.Position.Y < facesMinY)
+					{
+						facesMinY = v.Position.Y;
+					}
+					else if (v.Position.Y > facesMaxY)
+					{
+						facesMaxY = v.Position.Y;
+					}
+
+					if (v.Position.Z < facesMinZ)
+					{
+						facesMinZ = v.Position.Z;
+					}
+					else if (v.Position.Z > facesMaxZ)
+					{
+						facesMaxZ = v.Position.Z;
+					}
+				}
+			}
+		}
+
 		private void ProcessModel(BlockStateModel raw, out Vector3 min, out Vector3 max)
 		{
 			float facesMinX = float.MaxValue, facesMinY = float.MaxValue, facesMinZ = float.MaxValue;
 			float facesMaxX = float.MinValue, facesMaxY = float.MinValue, facesMaxZ = float.MinValue;
-			
-		//	Dictionary<string, FaceCache> faceCaches = new Dictionary<string, FaceCache>();
-				
+
 			var model = raw.Model;
 
 			List<BoundingBox> boxes = new List<BoundingBox>();
@@ -251,50 +272,9 @@ namespace Alex.Graphics.Models.Blocks
 
 				element.From *= (Scale);
 
-				//FaceCache cache = new FaceCache();
-
 				foreach (var face in element.Faces)
 				{
-					var uv = face.Value.UV;
-					float x1 = 0, x2 = 0, y1 = 0, y2 = 0;
-					if (uv == null)
-					{
-						switch (face.Key)
-						{
-							case BlockFace.North:
-							case BlockFace.South:
-								x1 = element.From.X;
-								x2 = element.To.X;
-								y1 = 16f - element.To.Y;
-								y2 = 16f - element.From.Y;
-								break;
-							case BlockFace.West:
-							case BlockFace.East:
-								x1 = element.From.Z;
-								x2 = element.To.Z;
-								y1 = 16f - element.To.Y;
-								y2 = 16f - element.From.Y;
-								break;
-							case BlockFace.Down:
-							case BlockFace.Up:
-								x1 = element.From.X;
-								x2 = element.To.X;
-								y1 = 16f - element.To.Z;
-								y2 = 16f - element.From.Z;
-								break;
-						}
-					}
-					else
-					{
-						x1 = uv.X1;
-						x2 = uv.X2;
-						y1 = uv.Y1;
-						y2 = uv.Y2;
-					}
-
-					var verts = GetFaceVertices(face.Key, element.From, element.To,
-						GetTextureUVMap(Resources, ResolveTexture(raw, face.Value.Texture), x1, x2, y1, y2, face.Value.Rotation, Color.White),
-						out int[] indexes);
+					var verts = GetFaceVertices(face.Key, element.From, element.To, new UVMap(), out _);
 
 					float minX = float.MaxValue, minY = float.MaxValue, minZ = float.MaxValue;
 					float maxX = float.MinValue, maxY = float.MinValue, maxZ = float.MinValue;
@@ -337,52 +317,11 @@ namespace Alex.Graphics.Models.Blocks
 
 						verts[i] = v;
 					}
-					
-					if (element.Rotation.Axis != Axis.Undefined && element.Rotation.Rescale)
-					{
-						var diffX = maxX - minX;
-						var diffY = maxY - minY;
-						var diffZ = maxZ - minZ;
 
-						for (var i = 0; i < verts.Length; i++)
-						{
-							var v = verts[i];
-							
-							v.Position.X = (v.Position.X - minX) / diffX;
-							v.Position.Y = (v.Position.Y - minY) / diffY;
-							v.Position.Z = (v.Position.Z - minZ) / diffZ;
-							
-							verts[i] = v;
+					FixElementScale(
+						element, verts, minX, maxX, minY, maxY, minZ, maxZ, ref facesMinX, ref facesMaxX, ref facesMinY,
+						ref facesMaxY, ref facesMinZ, ref facesMaxZ);
 
-							if (v.Position.X < facesMinX)
-							{
-								facesMinX = v.Position.X;
-							}
-							else if (v.Position.X >facesMaxX)
-							{
-								facesMaxX = v.Position.X;
-							}
-
-							if (v.Position.Y < facesMinY)
-							{
-								facesMinY = v.Position.Y;
-							}
-							else if (v.Position.Y > facesMaxY)
-							{
-								facesMaxY = v.Position.Y;
-							}
-
-							if (v.Position.Z < facesMinZ)
-							{
-								facesMinZ = v.Position.Z;
-							}
-							else if (v.Position.Z > facesMaxZ)
-							{
-								facesMaxZ = v.Position.Z;
-							}
-						}
-					}
-					
 					if (minX < facesMinX)
 					{
 						facesMinX = minX;
@@ -409,15 +348,11 @@ namespace Alex.Graphics.Models.Blocks
 					{
 						facesMaxZ = maxZ;
 					}
-
-					//cache.Set(face.Key, new FaceData(verts, indexes, face.Value.Rotation, null));
 				}
-				//faceCaches.Add(index.ToString(), cache);
-				
+
 				var from = FixRotation(element.From, raw, element);
 				var to = FixRotation(element.To, raw, element);
 
-				
 				boxes.Add(new BoundingBox(Vector3.Min(from, to) / 16f, Vector3.Max(from, to) / 16f));
 			}
 
@@ -425,8 +360,6 @@ namespace Alex.Graphics.Models.Blocks
 			max = new Vector3(facesMaxX, facesMaxY, facesMaxZ);
 
 			Boxes = Boxes.Concat(boxes.ToArray()).ToArray();
-			
-			//return faceCaches;
 		}
 
 		private Vector3 FixRotation(Vector3 v, BlockStateModel raw, BlockModelElement element)
@@ -509,10 +442,8 @@ namespace Alex.Graphics.Models.Blocks
 			Vector3 position,
 			IBlock baseBlock,
 			BlockStateModel bsModel,
-			List<VertexPositionNormalTextureColor> verts,
+			IList<VertexPositionNormalTextureColor> verts,
 			List<int> indexResult,
-			IDictionary<string, FaceCache> faceCache,
-			int bsModelIndex,
 			int biomeId,
 			Biome biome)
 		{
@@ -521,7 +452,7 @@ namespace Alex.Graphics.Models.Blocks
 
 			if (biomeId != -1)
 			{
-				if (baseBlock.Name.Equals("grass_block", StringComparison.InvariantCultureIgnoreCase))
+				if (baseBlock is GrassBlock)
 				{
 					baseColor = Resources.ResourcePack.GetGrassColor(
 						biome.Temperature, biome.Downfall, (int) position.Y);
@@ -544,21 +475,27 @@ namespace Alex.Graphics.Models.Blocks
 				foreach (var face in element.Faces)
 				{
 					var facing = face.Key;
+
+					var cullFace = face.Value.CullFace;
+
+					if (cullFace == null)
+						cullFace = facing;
+	
 					if (bsModel.X > 0f)
 					{
 						var offset = -bsModel.X / 90;
-						//cullFace = RotateDirection(cullFace, offset, FACE_ROTATION_X, INVALID_FACE_ROTATION_X);
+						cullFace = RotateDirection(cullFace.Value, offset, FACE_ROTATION_X, INVALID_FACE_ROTATION_X);
 						facing = RotateDirection(facing, offset, FACE_ROTATION_X, INVALID_FACE_ROTATION_X);
 					}
 
 					if (bsModel.Y > 0f)
 					{
 						var offset = -bsModel.Y / 90;
-						//cullFace = RotateDirection(cullFace, offset, FACE_ROTATION, INVALID_FACE_ROTATION);
+						cullFace = RotateDirection(cullFace.Value, offset, FACE_ROTATION, INVALID_FACE_ROTATION);
 						facing = RotateDirection(facing, offset, FACE_ROTATION, INVALID_FACE_ROTATION);
 					}
 					
-					if (!ShouldRenderFace(world, facing, position, baseBlock))
+					if (!ShouldRenderFace(world, cullFace.Value, position, baseBlock))
 						continue;
 						
 					var uv = face.Value.UV;
@@ -601,7 +538,7 @@ namespace Alex.Graphics.Models.Blocks
 					var faceColor = face.Value.TintIndex.HasValue ? baseColor : Color.White;
 
 					int lighting = world == null ? 15 : GetLight(
-						world, position, position + facing.GetVector3(), baseBlock.Transparent || !baseBlock.Solid);
+						world, position, position + cullFace.Value.GetVector3(), baseBlock.Transparent || !baseBlock.Solid);
 					
 					var vertices = GetFaceVertices(face.Key, element.From, element.To,
 						GetTextureUVMap(Resources, ResolveTexture(bsModel, face.Value.Texture), x1, x2, y1, y2, face.Value.Rotation, AdjustColor(
@@ -650,7 +587,11 @@ namespace Alex.Graphics.Models.Blocks
 						vertices[i] = v;
 					}
 					
-					if (element.Rotation.Axis != Axis.Undefined && element.Rotation.Rescale)
+					FixElementScale(
+						element, vertices, minX, maxX, minY, maxY, minZ, maxZ, ref minX, ref maxX, ref minY, ref maxY, ref minZ,
+						ref maxZ);
+					
+					/*if (element.Rotation.Axis != Axis.Undefined && element.Rotation.Rescale)
 					{
 						var diffX = maxX - minX;
 						var diffY = maxY - minY;
@@ -666,10 +607,8 @@ namespace Alex.Graphics.Models.Blocks
 							
 							vertices[i] = v;
 						}
-					}
+					}*/
 
-					//cache.Set(face.Key, new FaceData(verts, indexes, face.Value.Rotation, null));
-					
 					var initialIndex = verts.Count;
 
 					for (var idx = 0; idx < vertices.Length; idx++)
@@ -686,192 +625,47 @@ namespace Alex.Graphics.Models.Blocks
 						indexResult.Add(initialIndex + idxx);
 					}
 				}
-				//faceCaches.Add(index.ToString(), cache);
-				
-				//var from = FixRotation(element.From, bsModel, element);
-				//var to = FixRotation(element.To, bsModel, element);
 			}
-			
-			/*var model         = bsModel.Model;
-			var modelElements = model.Elements;
-
-			for (var i = 0; i < modelElements.Length; i++)
-			{
-				FaceCache elementCache;
-
-				if (!faceCache.TryGetValue($"{bsModelIndex}:{i}", out elementCache))
-				{
-					Log.Warn($"Element cache is null!");
-
-					continue;
-				}
-
-				var scale = 0f;
-
-				var element = modelElements[i];
-
-				//var otherElements = modelElements.Where(e => e != element).ToArray();
-
-				foreach (var faceElement in element.Faces)
-				{
-					var facing = faceElement.Key;
-
-					GetCullFaceValues(faceElement.Value.CullFace, facing, out var cullFace);
-
-					var originalCullFace = cullFace;
-
-					if (bsModel.X > 0f)
-					{
-						var offset = -bsModel.X / 90;
-						//cullFace = RotateDirection(cullFace, offset, FACE_ROTATION_X, INVALID_FACE_ROTATION_X);
-						facing = RotateDirection(facing, offset, FACE_ROTATION_X, INVALID_FACE_ROTATION_X);
-					}
-
-					if (bsModel.Y > 0f)
-					{
-						var offset = -bsModel.Y / 90;
-						//cullFace = RotateDirection(cullFace, offset, FACE_ROTATION, INVALID_FACE_ROTATION);
-						facing = RotateDirection(facing, offset, FACE_ROTATION, INVALID_FACE_ROTATION);
-					}
-
-					if (originalCullFace != BlockFace.None && !ShouldRenderFace(world, facing, position, baseBlock))
-						continue;
-
-
-					FaceData faceVertices;
-
-					if (!elementCache.TryGet(faceElement.Key, out faceVertices) || faceVertices.Vertices.Length == 0
-					                                                            || faceVertices.Indexes.Length == 0)
-					{
-						//Log.Debug($"No vertices cached for face {faceElement.Key} in model {bsModel.ModelName}");
-						continue;
-					}
-
-					Color faceColor = faceVertices.Vertices[0].Color;
-
-					if (faceElement.Value.TintIndex.HasValue)
-					{
-						if (biomeId != -1)
-						{
-							if (baseBlock.Name.Equals("grass_block", StringComparison.InvariantCultureIgnoreCase))
-							{
-								faceColor = Resources.ResourcePack.GetGrassColor(
-									biome.Temperature, biome.Downfall, (int) position.Y);
-							}
-							else
-							{
-								faceColor = Resources.ResourcePack.GetFoliageColor(
-									biome.Temperature, biome.Downfall, (int) position.Y);
-							}
-						}
-					}
-
-
-					faceColor = AdjustColor(
-						faceColor, facing,
-						world == null ? 15 : (GetLight(
-							world, position, position + facing.GetVector3(),
-							baseBlock.Transparent || !baseBlock.Solid)), element.Shade);
-
-
-					var s            = (facing.GetVector3() * scale);
-					var initialIndex = verts.Count;
-
-					for (var index = 0; index < faceVertices.Vertices.Length; index++)
-					{
-						var vertex = faceVertices.Vertices[index];
-						vertex.Color = faceColor;
-						vertex.Position = position + vertex.Position + s;
-
-						verts.Add(vertex);
-					}
-
-					for (var index = 0; index < faceVertices.Indexes.Length; index++)
-					{
-						var idx = faceVertices.Indexes[index];
-						indexResult.Add(initialIndex + idx);
-					}
-				}
-			}*/
 		}
 
 		protected (VertexPositionNormalTextureColor[] vertices, int[] indexes) GetVertices(IWorld world,
 			Vector3 position, IBlock baseBlock,
-			BlockStateModel[] models,  IDictionary<string, FaceCache> faceCache)
+			BlockStateModel[] models)
 		{
-			var verts = new List<VertexPositionNormalTextureColor>(36);
-			var indexResult = new List<int>(24);
-
-			int biomeId = world == null ? 0 : world.GetBiome((int) position.X, 0, (int) position.Z);
-			var biome = BiomeUtils.GetBiomeById(biomeId);
-
-			if (UseRandomizer)
+			using (var verts = new PooledList<VertexPositionNormalTextureColor>(ClearMode.Auto))
 			{
-				//var rndIndex = FastRandom.Next() % Models.Length;
-				CalculateModel(world, position, baseBlock, models[0], verts, indexResult, faceCache, 0,
-					biomeId, biome);
-			}
-			else
-			{
-				for (var bsModelIndex = 0; bsModelIndex < models.Length; bsModelIndex++)
+				var indexResult = new List<int>(24 * models.Length);
+
+				int biomeId = world == null ? 0 : world.GetBiome((int) position.X, 0, (int) position.Z);
+				var biome   = BiomeUtils.GetBiomeById(biomeId);
+
+				if (UseRandomizer)
 				{
-					var bsModel = models[bsModelIndex];
-					if (bsModel.Model == null) continue;
-
-					CalculateModel(world, position, baseBlock, bsModel, verts, indexResult, faceCache, bsModelIndex,
-						biomeId, biome);
+					//var rndIndex = FastRandom.Next() % Models.Length;
+					CalculateModel(
+						world, position, baseBlock, models[0], verts, indexResult, biomeId, biome);
 				}
-			}
+				else
+				{
+					for (var bsModelIndex = 0; bsModelIndex < models.Length; bsModelIndex++)
+					{
+						var bsModel = models[bsModelIndex];
 
-			return (verts.ToArray(), indexResult.ToArray());
+						if (bsModel.Model == null) continue;
+
+						CalculateModel(
+							world, position, baseBlock, bsModel, verts, indexResult, biomeId,
+							biome);
+					}
+				}
+
+				return (verts.ToArray(), indexResult.ToArray());
+			}
 		}
 		
 		public override (VertexPositionNormalTextureColor[] vertices, int[] indexes) GetVertices(IWorld world, Vector3 position, IBlock baseBlock)
 		{
-			/*if (_elementCache == null)
-			{
-				_elementCache = CalculateModel(Models);
-			}*/
-			
-			return GetVertices(world, position, baseBlock, Models, _elementCache);
+			return GetVertices(world, position, baseBlock, Models);
 		}
-		
-		protected class FaceCache
-		{
-			private Dictionary<BlockFace, FaceData> _cache = new Dictionary<BlockFace, FaceData>();
-			public bool TryGet(BlockFace face, out FaceData vertices)
-			{
-				return _cache.TryGetValue(face, out vertices);
-			}
-
-			public void Set(BlockFace face, FaceData vertices)
-			{
-				_cache[face] = vertices;
-			}
-		}
-
-        protected class FaceData
-        {
-            public VertexPositionNormalTextureColor[] Vertices { get; set; }
-            public int[] Indexes { get; set; }
-            public int Rotation { get; set; }
-            public TexturePosition[] TexturePositions { get; set; }
-
-
-            public FaceData(VertexPositionNormalTextureColor[] vertices, int[] indices, int rotation, TexturePosition[] texturePositions)
-            {
-                Vertices = vertices;
-                Indexes = indices;
-                Rotation = rotation;
-            }
-
-            public enum TexturePosition
-            {
-                TopLeft,
-                BottomLeft,
-                TopRight,
-                BottomRight
-            }
-        }
 	}
 }
