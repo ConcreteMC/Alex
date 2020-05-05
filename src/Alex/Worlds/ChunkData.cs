@@ -16,7 +16,7 @@ namespace Alex.Worlds
         public ChunkCoordinates Coordinates { get; set; }
 
         public Dictionary<RenderStage, ChunkRenderStage> RenderStages { get; set; }
-        
+
         public void Dispose()
         {
             Buffer?.MarkForDisposal();
@@ -25,7 +25,7 @@ namespace Alex.Worlds
            {
                stage.Value.Dispose();
            }
-           
+
            RenderStages.Clear();
         }
     }

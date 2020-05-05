@@ -125,7 +125,7 @@ namespace Alex.Graphics.Models
 			    1.0f, 0.5f // MinY / MaxY
 		    };
 
-	    protected Color AdjustColor(Color color, BlockFace face, int lighting, bool shade = true)
+	    protected Color AdjustColor(Color color, BlockFace face, bool shade = true)
 	    {
 		    float brightness = 1f;
 		    if (shade)
@@ -156,9 +156,11 @@ namespace Alex.Graphics.Models
 			    }
 		    }
 
-		    var lightColor = LightColor;
-		    var light = lightColor.ToVector3() * CubeBrightness[lighting];
-		    return new Color(brightness * (color.ToVector3() * light));
+		   // var cubeBrightness = ((1f / 16f) * lighting);
+		    
+		    //var lightColor = LightColor;
+		 //   var light = lightColor.ToVector3() * cubeBrightness;//CubeBrightness[lighting];
+		    return new Color(brightness * color.ToVector3());
 	    }
 
 		public sealed class Cube

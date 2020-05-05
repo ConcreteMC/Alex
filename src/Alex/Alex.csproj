@@ -29,6 +29,7 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DefineConstants>TRACE;WINDOWS;MONOGAME2_0;DESKTOPGL;WINDOWS;LINUX;CHECK_EOF</DefineConstants>
     <!--<OutputPath>bin\Debug\</OutputPath>-->
   </PropertyGroup>
 
@@ -87,6 +88,9 @@
     <None Update="skin.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Remove="Resources\Blockshader.xnb" />
+    <None Remove="Resources\Lightmap.xnb" />
+    <EmbeddedResource Include="Resources\Lightmap.xnb" />
   </ItemGroup>
 
   <ItemGroup>
@@ -150,6 +154,10 @@
 
   <ItemGroup>
     <Folder Include="Graphics\Models\Entity\Geometry\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Blockshader.xnb" />
   </ItemGroup>
 
 	<Target Name="ChangeAliasesOfNugetRefs" BeforeTargets="FindReferenceAssembliesForReferences;ResolveReferences">

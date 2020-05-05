@@ -179,19 +179,19 @@ namespace Alex.Graphics.Models.Blocks
 			return new VertexPositionNormalTextureColor[0];
 		}
 
-		protected byte GetLight(IWorld world, Vector3 blockPosition, Vector3 facePosition, bool smooth = false)
+		protected void GetLight(IWorld world, Vector3 blockPosition, Vector3 facePosition, out byte blockLight, out byte skyLight, bool smooth = false)
 		{
 			var faceBlock = world.GetBlock(facePosition);
 			
-			byte skyLight = world.GetSkyLight(facePosition);
-			byte blockLight = world.GetBlockLight(facePosition);
+			skyLight = world.GetSkyLight(facePosition);
+			blockLight = world.GetBlockLight(facePosition);
 
-			if (skyLight == 15 || blockLight == 15)
-				return 15;
+			//if (skyLight == 15 || blockLight == 15)
+			//	return;
 			
 			if (!smooth && !faceBlock.Transparent && !(skyLight > 0 || blockLight > 0))
-		    {
-			    return (byte)Math.Min(blockLight + skyLight, 15);
+			{
+				return;// (byte)Math.Min(blockLight + skyLight, 15);
 			}
 
 
@@ -255,7 +255,7 @@ namespace Alex.Graphics.Models.Blocks
 			    }
 		    }
 
-		    return (byte)Math.Min(Math.Max(0, blockLight + skyLight), 15);
+		    //(byte)Math.Min(Math.Max(0, blockLight + skyLight), 15);
 	    }
 		
 	    protected UVMap GetTextureUVMap(ResourceManager resources, string texture, float x1, float x2, float y1, float y2, int rot, Color color)

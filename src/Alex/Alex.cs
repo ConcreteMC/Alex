@@ -26,6 +26,7 @@ using Alex.GameStates;
 using Alex.Gamestates.Debug;
 using Alex.GameStates.Gui.MainMenu;
 using Alex.GameStates.Playing;
+using Alex.Graphics.Effect;
 using Alex.Gui;
 using Alex.Gui.Dialogs.Containers;
 using Alex.Items;
@@ -39,6 +40,7 @@ using Alex.Worlds.Bedrock;
 using Alex.Worlds.Java;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MiNET.Net;
@@ -119,9 +121,10 @@ namespace Alex
 					args.GraphicsDeviceInformation.PresentationParameters.DepthStencilFormat = DepthFormat.Depth24Stencil8;
 					DeviceManager.PreferMultiSampling = true;
 				};
-			
-			Content.RootDirectory = "assets";
 
+			Content = new StreamingContentManager(base.Services, "assets");
+		//	Content.RootDirectory = "assets";
+			
 			IsFixedTimeStep = false;
            // graphics.ToggleFullScreen();
 			
@@ -230,7 +233,11 @@ namespace Alex
 			
 			var fontStream = Assembly.GetEntryAssembly().GetManifestResourceStream("Alex.Resources.DebugFont.xnb");
 			
-			DebugFont = (WrappedSpriteFont) Content.Load<SpriteFont>(fontStream.ReadAllBytes());
+			DebugFont = (WrappedSpriteFont) Content.Load<SpriteFont>("Alex.Resources.DebugFont.xnb");
+			
+			ResourceManager.BlockEffect = Content.Load<Effect>("Alex.Resources.Blockshader.xnb").Clone();
+			ResourceManager.LightingEffect = Content.Load<Effect>("Alex.Resources.Lightmap.xnb").Clone();
+			//	ResourceManager.BlockEffect.GraphicsDevice = GraphicsDevice;
 			
 			_spriteBatch = new SpriteBatch(GraphicsDevice);
 			InputManager = new InputManager(this);
@@ -366,6 +373,7 @@ namespace Alex
 			Storage = new StorageSystem(LaunchSettings.WorkDir);
 
 			services.AddSingleton<Alex>(this);
+			services.AddSingleton<ContentManager>(Content);
 			services.AddSingleton<IStorageSystem>(Storage);
 			services.AddSingleton<IOptionsProvider, OptionsProvider>();
 			services.AddSingleton<ProfileManager>();

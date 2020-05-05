@@ -376,12 +376,12 @@ namespace Alex.Graphics.Models.Items
 
 	    public void BuildCube(Color uv)
 	    {
-		    Front = GetFrontVertex(AdjustColor(uv, BlockFace.North, 15));
-		    Back = GetBackVertex(AdjustColor(uv, BlockFace.South, 15));
-		    Left = GetLeftVertex(AdjustColor(uv, BlockFace.West, 15));
-		    Right = GetRightVertex(AdjustColor(uv, BlockFace.East, 15));
-		    Top = GetTopVertex(AdjustColor(uv, BlockFace.Up, 15));
-		    Bottom = GetBottomVertex(AdjustColor(uv, BlockFace.Down, 15));
+		    Front = GetFrontVertex(AdjustColor(uv, BlockFace.North));
+		    Back = GetBackVertex(AdjustColor(uv, BlockFace.South));
+		    Left = GetLeftVertex(AdjustColor(uv, BlockFace.West));
+		    Right = GetRightVertex(AdjustColor(uv, BlockFace.East));
+		    Top = GetTopVertex(AdjustColor(uv, BlockFace.Up));
+		    Bottom = GetBottomVertex(AdjustColor(uv, BlockFace.Down));
 	    }
 	    
 	    private (VertexPositionColor[] vertices, short[] indexes) GetLeftVertex(Color color)

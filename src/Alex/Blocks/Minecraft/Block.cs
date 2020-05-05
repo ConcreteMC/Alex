@@ -4,6 +4,7 @@ using Alex.API.Items;
 using Alex.API.Resources;
 using Alex.API.Utils;
 using Alex.API.World;
+using Alex.Blocks.Properties;
 using Alex.Blocks.State;
 using Alex.Entities;
 using Alex.ResourcePackLib.Json;
@@ -23,6 +24,8 @@ namespace Alex.Blocks.Minecraft
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Block));
 
+		protected static PropertyBool Lit = new PropertyBool("lit", "true", "false");
+		
 		public bool Solid { get; set; }
 		public bool Transparent { get; set; }
 		public bool Animated { get; set; } = false;

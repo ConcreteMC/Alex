@@ -11,5 +11,17 @@ namespace Alex.Blocks.Minecraft
 			BlockMaterial = Material.Ore;
 			Hardness = 3;
 		}
+		
+		public override int LightValue {
+			get
+			{
+				if (BlockState.GetTypedValue(Lit))
+				{
+					return 9;
+				}
+
+				return 0;
+			} 
+		}
 	}
 }

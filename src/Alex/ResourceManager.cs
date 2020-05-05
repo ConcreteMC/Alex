@@ -16,6 +16,7 @@ using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
 using Alex.Entities;
 using Alex.GameStates;
+using Alex.Graphics.Effect;
 using Alex.Gui;
 using Alex.Networking.Java;
 using Alex.ResourcePackLib;
@@ -24,6 +25,7 @@ using Alex.ResourcePackLib.Json.Models.Blocks;
 using Alex.Utils;
 using GLib;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
 using NLog;
@@ -47,6 +49,11 @@ namespace Alex
 		private IRegistryManager RegistryManager { get; }
 		private Alex Alex { get; }
 		private MCJavaAssetsUtil AssetsUtil { get; }
+		private ContentManager ContentManager { get; }
+		
+		public static Effect BlockEffect { get; set; }
+		public static Effect LightingEffect { get; set; }
+		
 		public ResourceManager(IServiceProvider serviceProvider)
 		{
 			Atlas = new AtlasGenerator();
@@ -55,10 +62,84 @@ namespace Alex
 			Options = serviceProvider.GetService<IOptionsProvider>();
 			RegistryManager = serviceProvider.GetService<IRegistryManager>();
 			Alex = serviceProvider.GetService<Alex>();
+			ContentManager = serviceProvider.GetService<ContentManager>();
 			
-			AssetsUtil = new MCJavaAssetsUtil(Storage);
+			AssetsUtil = new MCJavaAssetsUtil(Storage); //ContentManager.Load<byte[]>();
 		}
 
+		private static readonly List<char> TargetPlatformIdentifiers = new List<char>()
+		{
+			'w',
+			'x',
+			'm',
+			'i',
+			'a',
+			'd',
+			'X',
+			'W',
+			'n',
+			'M',
+			'r',
+			'P',
+			'v',
+			'O',
+			'S',
+			'G',
+			'p',
+			'g',
+			'l'
+		};
+		
+		public byte[] ReadXNBResource(string resource)
+		{
+			using (MemoryStream ms = new MemoryStream(ReadResource(resource)))
+			{
+				using (BinaryReader xnbReader = new BinaryReader(ms))
+				{
+					int  num1 = (int) xnbReader.ReadByte();
+					byte num2 = xnbReader.ReadByte();
+					byte num3 = xnbReader.ReadByte();
+					byte num4 = xnbReader.ReadByte();
+
+					if (num1 != 88 || num2 != (byte) 78
+					               || (num3 != (byte) 66 || !TargetPlatformIdentifiers.Contains((char) num4)))
+						throw new ContentLoadException(
+							"Asset does not appear to be a valid XNB file. Did you process your content for Windows?");
+
+					byte num5  = xnbReader.ReadByte();
+					int  num6  = (int) xnbReader.ReadByte();
+					bool flag1 = (uint) (num6 & 128) > 0U;
+					bool flag2 = (uint) (num6 & 64) > 0U;
+
+					if (num5 != (byte) 5 && num5 != (byte) 4)
+						throw new ContentLoadException("Invalid XNB version");
+
+					int    num7    = xnbReader.ReadInt32();
+					Stream stream1 = (Stream) null;
+
+					if (flag1 | flag2)
+					{
+						int decompressedSize = xnbReader.ReadInt32();
+
+						if (flag1)
+						{
+							int compressedSize = num7 - 14;
+							stream1 = (Stream) new LzxDecoderStream(ms, decompressedSize, compressedSize);
+						}
+						else if (flag2)
+							stream1 = (Stream) new Lz4DecoderStream(ms, long.MaxValue);
+					}
+					else
+					{
+						stream1 = ms;
+					}
+
+					//return new ContentReader(this, stream1, originalAssetName, (int) num5, recordDisposableObject);
+					return stream1.ReadAllBytes();
+				}
+			}
+		}
+		
 		private void ResourcePacksChanged(string[] oldvalue, string[] newvalue)
 		{
 			Log.Info($"Resource packs changed.");

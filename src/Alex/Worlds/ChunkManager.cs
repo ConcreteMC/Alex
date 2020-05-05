@@ -56,11 +56,8 @@ namespace Alex.Worlds
         public int EnqueuedChunkUpdates => Enqueued.Count;//;LowPriority.Count;
 	    public int ChunkCount => Chunks.Count;
 
-	    public AlphaTestEffect AnimatedEffect { get; }
-	    public AlphaTestEffect AnimatedTranslucentEffect { get; }
-	    public AlphaTestEffect TransparentEffect { get; }
-	    public AlphaTestEffect TranslucentEffect { get; }
-		public AlphaTestEffect OpaqueEffect { get; }
+	    public RenderingShaders DefaultShaders { get; set; }
+	    public RenderingShaders LightShaders { get; set; }
 		
 		private BasicEffect DepthEffect { get; }
 
@@ -106,69 +103,9 @@ namespace Alex.Worlds
 		        FogEnabled = false
 	        };
 	        
-	        TransparentEffect = new AlphaTestEffect(Graphics)
-	        {
-		        Texture = stillAtlas,
-		        VertexColorEnabled = true,
-		        World = Matrix.Identity,
-		        AlphaFunction = CompareFunction.Greater,
-		        ReferenceAlpha = 32,
-		        FogStart = fogStart,
-		        FogEnabled = false,
-		       // TextureEnabled = true
-	        };
-	        
-	        TranslucentEffect = new AlphaTestEffect(Graphics)
-	        {
-		        Texture = stillAtlas,
-		        VertexColorEnabled = true,
-		        World = Matrix.Identity,
-		        AlphaFunction = CompareFunction.Greater,
-		        ReferenceAlpha = 32,
-		        FogStart = fogStart,
-		        FogEnabled = false,
-		        
-		        //Alpha = 0.5f
-	        };
-	        
-	        AnimatedEffect = new AlphaTestEffect(Graphics)
-	        {
-		        Texture = Resources.Atlas.GetAtlas(0),
-		        VertexColorEnabled = true,
-		        World = Matrix.Identity,
-		        AlphaFunction = CompareFunction.Greater,
-		        ReferenceAlpha = 32,
-		        FogStart = fogStart,
-		        FogEnabled = false,
-		       // TextureEnabled = true
-	        };
-	        
-	        AnimatedTranslucentEffect = new AlphaTestEffect(Graphics)
-	        {
-		        Texture = Resources.Atlas.GetAtlas(0),
-		        VertexColorEnabled = true,
-		        World = Matrix.Identity,
-		        AlphaFunction = CompareFunction.Greater,
-		        ReferenceAlpha = 127,
-		        FogStart = fogStart,
-		        FogEnabled = false,
-		        Alpha = 0.5f
-	        };
-
-	        OpaqueEffect = new AlphaTestEffect(Graphics)
-	        {
-		      //  TextureEnabled = true,
-		        Texture = stillAtlas,
-		        FogStart = fogStart,
-		        VertexColorEnabled = true,
-		      //  LightingEnabled = true,
-		        FogEnabled = false,
-		        ReferenceAlpha = 249
-		    //    AlphaFunction = CompareFunction.Greater,
-		    //    ReferenceAlpha = 127
-		        
-		      //  PreferPerPixelLighting = false
-	        };
+	        DefaultShaders = new RenderingShaders(Graphics);
+	        DefaultShaders.SetTextures(stillAtlas);
+	        DefaultShaders.SetAnimatedTextures(Resources.Atlas.GetAtlas(0));
 	        
 	        //if (alex.)
 
@@ -210,59 +147,55 @@ namespace Alex.Worlds
         
         public bool FogEnabled
         {
-	        get { return TransparentEffect.FogEnabled; }
+	        get { return DefaultShaders.FogEnabled; }
 	        set
 	        {
-		        TransparentEffect.FogEnabled = value;
-		        TranslucentEffect.FogEnabled = value;
-		        AnimatedEffect.FogEnabled = value;
-		        AnimatedTranslucentEffect.FogEnabled = value;
-		        OpaqueEffect.FogEnabled = value;
+		        DefaultShaders.FogEnabled = value;
 	        }
         }
 
         public Vector3 FogColor
         {
-	        get { return TransparentEffect.FogColor; }
+	        get { return DefaultShaders.FogColor; }
 	        set
 	        {
-		        TransparentEffect.FogColor = value;
-		        OpaqueEffect.FogColor = value;
-		        AnimatedEffect.FogColor = value;
-		        TranslucentEffect.FogColor = value;
-		        AnimatedTranslucentEffect.FogColor = value;
+		        DefaultShaders.FogColor = value;
+		      //  LightShaders.FogColor = value;
 	        }
         }
 
         public float FogDistance
         {
-	        get { return TransparentEffect.FogEnd; }
+	        get { return DefaultShaders.FogDistance; }
 	        set
 	        {
-		        TransparentEffect.FogEnd = value;
-		        OpaqueEffect.FogEnd = value;
-		        AnimatedEffect.FogEnd = value;
-		        TranslucentEffect.FogEnd = value;
-		        AnimatedTranslucentEffect.FogEnd = value;
+		        DefaultShaders.FogDistance = value;
+		      //  LightShaders.FogDistance = value;
 	        }
         }
 
         public Vector3 AmbientLightColor
         {
-	        get { return TransparentEffect.DiffuseColor; }
+	        get { return DefaultShaders.AmbientLightColor; }
 	        set
 	        {
-		        TransparentEffect.DiffuseColor = value;
-		        TranslucentEffect.DiffuseColor = value;
-			    
-		        OpaqueEffect.DiffuseColor = value;
-		        // OpaqueEffect.DiffuseColor = value;
-		        AnimatedEffect.DiffuseColor = value;
-		        AnimatedTranslucentEffect.DiffuseColor = value;
+		        DefaultShaders.AmbientLightColor = value;
 	        }
         }
-        
-       // private ReprioritizableTaskScheduler _priorityTaskScheduler = new ReprioritizableTaskScheduler();
+
+        public float BrightnessModifier
+        {
+	        get
+	        {
+		        return DefaultShaders.BrightnessModifier;
+	        }
+	        set
+	        {
+		        DefaultShaders.BrightnessModifier = value;
+	        }
+        }
+
+        // private ReprioritizableTaskScheduler _priorityTaskScheduler = new ReprioritizableTaskScheduler();
 
         public void Start()
 	    {
@@ -339,21 +272,9 @@ namespace Alex.Worlds
 		    var view = args.Camera.ViewMatrix;
 		    var projection = args.Camera.ProjectionMatrix;
 
-		    TransparentEffect.View = view;
-		    TransparentEffect.Projection = projection;
+		    DefaultShaders.UpdateMatrix(view, projection);
+		//	LightShaders.UpdateMatrix(view, projection);
 		    
-		    AnimatedEffect.View = view;
-		    AnimatedEffect.Projection = projection;
-
-		    OpaqueEffect.View = view;
-		    OpaqueEffect.Projection = projection;
-
-		    TranslucentEffect.View = view;
-		    TranslucentEffect.Projection = projection;
-
-		    AnimatedTranslucentEffect.View = view;
-		    AnimatedTranslucentEffect.Projection = projection;
-
 		    DepthEffect.View = view;
 		    DepthEffect.Projection = projection;
 		    
@@ -383,7 +304,7 @@ namespace Alex.Worlds
 			    device.BlendState = LightMapBS;
 			    
 			    args.GraphicsDevice.Clear(Color.Black);
-			    DrawStaged(args, out _, out _, DepthEffect, DepthRenderStages);
+			    DrawStaged(args, out _, out _, DefaultShaders.LightingEffect, RenderStages);
 
 			    args.GraphicsDevice.SetRenderTarget(null);
 		    }
@@ -391,6 +312,7 @@ namespace Alex.Worlds
 		    {
 			   // device.DepthStencilState = DepthStencilState.DepthRead;
 			    device.BlendState = BlendState.AlphaBlend;
+			    
 			    DrawStaged(args, out int chunksRendered, out int verticesRendered, null, RenderStages);
 
 			    Vertices = verticesRendered;
@@ -421,7 +343,9 @@ namespace Alex.Worlds
 		    foreach (var stage in stages)
 		    {
 			    args.GraphicsDevice.BlendState = originalBlendState;
-
+			    
+			    RenderingShaders shaders = DefaultShaders;
+			    
 			    bool setDepth = false;
 			    Effect effect = forceEffect;
 			    if (forceEffect == null)
@@ -429,24 +353,24 @@ namespace Alex.Worlds
 				    switch (stage)
 				    {
 					    case RenderStage.OpaqueFullCube:
-						    effect = TransparentEffect;
+						    effect = shaders.TransparentEffect;
 						    break;
 					    case RenderStage.Opaque:
-						    effect = TransparentEffect;
+						    effect = shaders.TransparentEffect;
 						    break;
 					    case RenderStage.Transparent:
-						    effect = TransparentEffect;
+						    effect = shaders.TransparentEffect;
 						    break;
 					    case RenderStage.Translucent:
 						    args.GraphicsDevice.BlendState = TranslucentBlendState;
-						    effect = TranslucentEffect;
+						    effect = shaders.TranslucentEffect;
 						    break;
 					    case RenderStage.Animated:
-						    effect = AnimatedEffect;
+						    effect = shaders.AnimatedEffect;
 						    break;
 					    case RenderStage.Liquid:
 					    case RenderStage.AnimatedTranslucent:
-						    effect = AnimatedEffect;
+						    effect = shaders.AnimatedEffect;
 						    break;
 					    default:
 						    throw new ArgumentOutOfRangeException();
@@ -475,7 +399,7 @@ namespace Alex.Worlds
 		    {
 			    var chunk = chunks[index];
 			    if (chunk == null) continue;
-
+			    
 			    if (chunk.RenderStages.TryGetValue(stage, out var renderStage))
 			    { 
 				    verticeCount += renderStage.Render(device, effect);
@@ -499,8 +423,10 @@ namespace Alex.Worlds
 			    _currentFrame = (_currentFrame + 1) % FrameCount;
 
 			    _currentFrameTexture = Resources.Atlas.GetAtlas(_currentFrame);
-			    AnimatedEffect.Texture = _currentFrameTexture;
-			    AnimatedTranslucentEffect.Texture = _currentFrameTexture;
+			    DefaultShaders.SetAnimatedTextures(_currentFrameTexture);
+			//    LightShaders.SetAnimatedTextures(_currentFrameTexture);
+			   // AnimatedEffect.Texture = _currentFrameTexture;
+			    //AnimatedTranslucentEffect.Texture = _currentFrameTexture;
 			    // OpaqueEffect.Texture = frame;
 			    // TransparentEffect.Texture = frame;
 		    }
@@ -1261,7 +1187,8 @@ namespace Alex.Worlds
 
 								        // blockState.Block.Update(world, blockPosition);
 							        }
-
+							        
+							    //    bool isLightSource = section.GetBlocklight(x,y,z) > 0;
 							        var data = model.GetVertices(world, blockPosition, blockState.Block);
 
 							        if (!(data.vertices == null || data.indexes == null || data.vertices.Length == 0

@@ -335,7 +335,14 @@ namespace Alex.Graphics.Models.Blocks
 						vert.Position.X += position.X;
 						vert.Position.Z += position.Z;
 
-                        if (IsWater) vert.Color = new Color(68, 175, 245);
+						if (IsWater)
+						{
+							vert.Color = new Color(68, 175, 245);
+						}
+						else
+						{
+							vert.BlockLight = baseBlock.LightValue;
+						}
                         //vert.Color = AdjustColor(new Color(68, 175, 245), f,
                         //	GetLight(world, position + d), false);
 

@@ -537,12 +537,14 @@ namespace Alex.Graphics.Models.Blocks
 
 					var faceColor = face.Value.TintIndex.HasValue ? baseColor : Color.White;
 
-					int lighting = world == null ? 15 : GetLight(
-						world, position, position + cullFace.Value.GetVector3(), baseBlock.Transparent || !baseBlock.Solid);
+					var blockLight = (byte) 0;
+					var skyLight = (byte) 15;
+					GetLight(
+						world, position, position + cullFace.Value.GetVector3(), out blockLight, out skyLight, baseBlock.Transparent || !baseBlock.Solid);
 					
 					var vertices = GetFaceVertices(face.Key, element.From, element.To,
 						GetTextureUVMap(Resources, ResolveTexture(bsModel, face.Value.Texture), x1, x2, y1, y2, face.Value.Rotation, AdjustColor(
-							faceColor, facing, lighting, element.Shade)),
+							faceColor, facing, element.Shade)),
 						out int[] indexes);
 
 					float minX = float.MaxValue, minY = float.MaxValue, minZ = float.MaxValue;
@@ -615,6 +617,12 @@ namespace Alex.Graphics.Models.Blocks
 					{
 						var vertex = vertices[idx];
 						vertex.Position = position + vertex.Position;
+
+						//if (blockLight > 0)
+						{
+							vertex.BlockLight = blockLight;
+							vertex.SkyLight = skyLight;
+						}
 
 						verts.Add(vertex);
 					}

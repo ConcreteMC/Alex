@@ -48,6 +48,7 @@ namespace Alex.Blocks
 
 			this.Register(() => new Snow().WithLocation("minecraft:snow"));
 			this.Register(() => new Ice().WithLocation("minecraft:ice"));
+			this.Register(() => new BlueIce().WithLocation("minecraft:blue_ice"));
 			this.Register(() => new Cactus().WithLocation("minecraft:cactus"));
 			this.Register(() => new Clay().WithLocation("minecraft:clay"));
 			this.Register(() => new Pumpkin().WithLocation("minecraft:pumpkin"));

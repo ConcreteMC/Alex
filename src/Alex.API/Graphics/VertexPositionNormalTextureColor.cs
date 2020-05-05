@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MiNET.Blocks;
 
 namespace Alex.API.Graphics
 {
@@ -13,7 +14,7 @@ namespace Alex.API.Graphics
         /// <summary>
         ///     The normal for this vertex
         /// </summary>
-        public Vector3 Normal;
+       // public Vector3 Normal;
 
         /// <summary>
         ///     The UV co-ords for this vertex (the co-ords in the texture)
@@ -25,6 +26,10 @@ namespace Alex.API.Graphics
         /// </summary>
         public Color Color;
 
+        public float BlockLight;
+
+        public float SkyLight;
+        
         /// <summary>
         ///     Creates a new VertexPositionNormalTextureColor
         /// </summary>
@@ -34,10 +39,10 @@ namespace Alex.API.Graphics
         public VertexPositionNormalTextureColor(Vector3 position, Vector3 normal, Vector2 texCoords)
         {
             Position = position;
-	            // Normal = normal;
             TexCoords = texCoords;
             Color = Color.White;
-            Normal = normal;
+            BlockLight = 0f;
+            SkyLight = 15f;
         }
 
         //public Vector3 Normal;
@@ -52,9 +57,11 @@ namespace Alex.API.Graphics
         public VertexPositionNormalTextureColor(Vector3 position, Vector3 normal, Vector2 texCoords, Color color)
         {
             Position = position;
-            Normal = normal;
+            //Normal = normal;
             TexCoords = texCoords;
             Color = color;
+            BlockLight = 0f;
+            SkyLight = 15f;
         }
 
         /// <summary>
@@ -64,12 +71,12 @@ namespace Alex.API.Graphics
         (
 	        new VertexElement(0, VertexElementFormat.Vector3,
 		        VertexElementUsage.Position, 0),
-	        new VertexElement(3 * sizeof(float), VertexElementFormat.Vector3,
-		        VertexElementUsage.Normal, 0),
-	        new VertexElement(6 * sizeof(float), VertexElementFormat.Vector2,
+	        new VertexElement(3 * sizeof(float), VertexElementFormat.Vector2,
 		        VertexElementUsage.TextureCoordinate, 0),
-	        new VertexElement(8 * sizeof(float), VertexElementFormat.Color,
-		        VertexElementUsage.Color, 0)
+	        new VertexElement(5 * sizeof(float), VertexElementFormat.Color,
+		        VertexElementUsage.Color, 0),
+	        new VertexElement((5 * sizeof(float)) + 4 * sizeof(byte), VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 1),
+	        new VertexElement((6 * sizeof(float)) + 4 * sizeof(byte), VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 2)
         );
         
         /*public static VertexDeclaration VertexDeclaration { get; } = new VertexDeclaration

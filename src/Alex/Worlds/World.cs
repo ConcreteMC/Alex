@@ -289,6 +289,11 @@ namespace Alex.Worlds
 			var diffuseColor = Color.White.ToVector3() * SkyRenderer.BrightnessModifier;
 			ChunkManager.AmbientLightColor = diffuseColor;
 
+			if (Math.Abs(ChunkManager.BrightnessModifier - SkyRenderer.BrightnessModifier) > 0f)
+			{
+				ChunkManager.BrightnessModifier = SkyRenderer.BrightnessModifier;
+			}
+
 			Player.ModelRenderer.DiffuseColor = diffuseColor;
 			Player.Update(args);
 
