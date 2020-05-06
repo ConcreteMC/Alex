@@ -81,6 +81,8 @@ namespace Alex.Entities
 
 			RenderEntity = true;
 			ShowItemInHand = true;
+
+			ServerEntity = false;
         }
 
         /// <inheritdoc />

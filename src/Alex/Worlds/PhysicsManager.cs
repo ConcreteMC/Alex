@@ -58,12 +58,7 @@ namespace Alex.Worlds
 					{
 						if (e.NoAi) continue;
 						bool wasColliding = e.IsCollidingWithWorld;
-						
-						var feetBlock = e.Level.GetBlockState(e.KnownPosition.GetCoordinates3D());
 
-						if (!feetBlock.Block.Solid)
-							e.KnownPosition.OnGround = false;
-						
 						//TruncateVelocity(e, dt);
 						
 						var velocity = e.Velocity;
@@ -103,6 +98,8 @@ namespace Alex.Worlds
 							}
 						}
 
+						bool onGround = e.KnownPosition.OnGround;
+						
 					//	if (velocity != Vector3.Zero)
 						{
 							var boundingBox = e.GetBoundingBox(preview);
@@ -113,8 +110,24 @@ namespace Alex.Worlds
 							{
 								velocity = AdjustForY(
 									e.GetBoundingBox(new Vector3(position.X, preview.Y, position.Z)), blocks, velocity,
-									position);
+									position, out float? yCollisionPoint);
 
+								if (yCollisionPoint.HasValue)
+								{
+									if (yCollisionPoint > position.Y)
+									{
+										//We hit our head.
+										onGround = false;
+									}
+									else
+									{
+										if (!onGround)
+										{
+											onGround = true;
+										}
+									}
+								}
+								
 								Hit.AddRange(blocks.Select(x => x.box));
 
 								//var solid = blocks.Where(b => b.block.Solid && b.box.Max.Y > position.Y).ToArray();
@@ -268,9 +281,14 @@ namespace Alex.Worlds
 						}
 
 						e.Velocity = velocity;
-						
+
+						var beforeMove = e.KnownPosition.ToVector3();
 						e.KnownPosition.Move(velocity * dt);
 
+					//	if (e is PlayerMob p)
+						{
+							e.DistanceMoved += MathF.Abs(Vector3.Distance(beforeMove, e.KnownPosition.ToVector3()));
+						}
 						//var rawDrag = (float) (1f - (e.Drag * dt));
 
 						//e.Velocity = velocity;// * new Vector3(1f, 0.98f, 1f);
@@ -279,7 +297,22 @@ namespace Alex.Worlds
 						
 						TruncateVelocity(e, dt);
 
-						e.KnownPosition.OnGround = MathF.Abs(e.Velocity.Y) < 0.000001f;
+						/*var feetBlock = e.Level.GetBlockState(e.KnownPosition.GetCoordinates3D());
+
+						if (!feetBlock.Block.Solid)
+						{
+							e.KnownPosition.OnGround = false;
+						}
+						else
+						{
+							
+						}*/
+						
+						//if (MathF.Abs(e.Velocity.Y) < 0.000001f)
+						{
+							e.KnownPosition.OnGround = MathF.Abs(e.Velocity.Y) < 0.000001f || onGround;
+						}
+
 						{
 							//e.KnownPosition.OnGround = true;
 						}
@@ -299,8 +332,10 @@ namespace Alex.Worlds
 			sw.Restart();
 		}
 
-		private Vector3 AdjustForY(BoundingBox box, (BlockCoordinates coordinates, Block block, BoundingBox box, bool isBlockPart)[] blocks, Vector3 velocity, PlayerLocation position)
+		private Vector3 AdjustForY(BoundingBox box, (BlockCoordinates coordinates, Block block, BoundingBox box, bool isBlockPart)[] blocks, Vector3 velocity, PlayerLocation position, out float? pointOfCollision)
 		{
+			pointOfCollision = null;
+			
 			if (velocity.Y == 0f)
 				return velocity;
 			
@@ -338,6 +373,7 @@ namespace Alex.Worlds
 				}
 			}
 
+			pointOfCollision = collisionPoint;
 			if (collisionPoint.HasValue)
 			{
 				float distance = 0f;

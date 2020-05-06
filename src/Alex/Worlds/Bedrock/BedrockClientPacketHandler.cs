@@ -52,6 +52,7 @@ using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using BlockState = MiNET.Utils.IBlockState;
 using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
 using Inventory = Alex.Utils.Inventory;
+using MathF = System.MathF;
 using NibbleArray = MiNET.Utils.NibbleArray;
 using Player = Alex.Entities.Player;
 using PlayerLocation = Alex.API.Utils.PlayerLocation;
@@ -759,6 +760,7 @@ namespace Alex.Worlds.Bedrock
 
 					if (Client.WorldReceiver.TryGetEntity(message.runtimeEntityId, out var entity))
 					{
+						var before = entity.KnownPosition;
 						var known = entity.KnownPosition;
 						known = new PlayerLocation(known.X, known.Y, known.Z, known.HeadYaw, known.Yaw, known.Pitch);
 						
@@ -798,6 +800,8 @@ namespace Alex.Worlds.Bedrock
 						//	Log.Info($"Distance: {endPosition.DistanceTo(known)} | Delta: {(endPosition - known.ToVector3())} | Start: {known.ToVector3()} | End: {endPosition.ToVector3()}");
 
 						entity.KnownPosition = endPosition;
+						
+						entity.DistanceMoved += MathF.Abs(Microsoft.Xna.Framework.Vector3.Distance(before.ToVector3(), endPosition.ToVector3()));
 					}
 				}
 			}

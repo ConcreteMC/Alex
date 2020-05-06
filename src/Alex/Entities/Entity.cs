@@ -27,7 +27,20 @@ namespace Alex.Entities
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Entity));
 
-		internal EntityModelRenderer ModelRenderer { get; set; }
+		private EntityModelRenderer _modelRenderer;
+
+		internal EntityModelRenderer ModelRenderer
+		{
+			get
+			{
+				return _modelRenderer;
+			}
+			set
+			{
+				_modelRenderer = value;
+				UpdateModelParts();
+			}
+		}
 
 		public World Level { get; set; }
 
@@ -97,6 +110,23 @@ namespace Alex.Entities
 		public INetworkProvider Network { get; set; }
 		public Inventory Inventory { get; protected set; }
 		private IItemRenderer ItemRenderer { get; set; } = null;
+		
+		private EntityModelRenderer.ModelBone _leftArmModel;
+		private EntityModelRenderer.ModelBone _rightArmModel;
+
+		private EntityModelRenderer.ModelBone _leftLegModel;
+		private EntityModelRenderer.ModelBone _rightLegModel;
+
+		private EntityModelRenderer.ModelBone _leftSleeveModel;
+		private EntityModelRenderer.ModelBone _rightSleeveModel;
+
+		private EntityModelRenderer.ModelBone _leftPantsModel;
+		private EntityModelRenderer.ModelBone _rightPantsModel;
+
+		private EntityModelRenderer.ModelBone _jacketModel;
+		private EntityModelRenderer.ModelBone _body;
+		private EntityModelRenderer.ModelBone _head;
+		
 		public Entity(int entityTypeId, World level, INetworkProvider network)
 		{
 			Network = network;
@@ -112,6 +142,7 @@ namespace Alex.Entities
 			Inventory.SelectedHotbarSlotChanged += InventoryOnSelectedHotbarSlotChanged;
 
 			HideNameTag = true;
+			ServerEntity = true;
 		}
 
 		public void SetInventory(Inventory inventory)
@@ -415,6 +446,8 @@ namespace Alex.Entities
 					Log.Warn(e, $"Exception while trying to tick entity!");
 				}
 			}
+			
+			CalculateLegMovement(args);
 		}
 
 		public void UpdateHeadYaw(float rotation)
@@ -436,6 +469,130 @@ namespace Alex.Entities
 		
 		protected bool DoRotationCalculations = true;
 
+		private  Vector3 _prevUpdatePosition = Vector3.Zero;
+		private  float   _armRotation        = 0f;
+		private  float   _legRotation        = 0f;
+		internal float   DistanceMoved { get; set; } = 0;
+
+		internal double   _timeStoppedMoving = 0;
+		private  float    _mvSpeed           = 0f;
+
+		protected bool ServerEntity { get; set; } = true;
+
+		private void CalculateLegMovement(IUpdateArgs args)
+		{
+			var pos = KnownPosition.ToVector3();
+			float distSQ = Vector3.DistanceSquared(_prevUpdatePosition, pos);
+			
+			var distance = DistanceMoved;
+			distSQ = distance;
+			
+			if (!IsMoving)
+			{
+				//DistanceMoved = 0f;
+			}
+
+			var dt = (float)args.GameTime.ElapsedGameTime.TotalSeconds;
+
+			if (!ServerEntity)
+			{
+				var distanceMoved = DistanceMoved;
+				DistanceMoved = 0;
+
+				_mvSpeed = (float) (distanceMoved * (TimeSpan.FromSeconds(1) / args.GameTime.ElapsedGameTime));
+			}
+
+			if (IsSneaking && _body != null)
+			{
+				_body.Rotation = new Vector3(-35f, _body.Rotation.Y, _body.Rotation.Z);
+				_body.Position = Vector3.Forward * 7.5f;
+				//_head.Position = new Vector3(_body.Position.X, 0.25f, 0f);
+				
+				_leftArmModel.Rotation = new Vector3(72f, 0f,0f);
+				_rightArmModel.Rotation = new Vector3(72f, 0f,0f);
+
+			}
+			else
+			{
+				if (_body != null)
+				{
+					_body.Position = Vector3.Zero;
+					_body.Rotation = new Vector3(0f);
+				}
+
+				var moveSpeed = MovementSpeed * 20f;
+				var tcos0 = (float) (Math.Cos(distance * (38.17 * 20f)) * moveSpeed) * (57.3f * 20f);
+				var tcos1 = -tcos0;
+
+				//_armRotation = _armRotation;
+
+				// Test arm rotations
+				if (_leftArmModel != null && _rightArmModel != null)
+				{
+					//var lArmRot = new Vector3((0.5f + MathF.Sin(_armRotation)) * 7.5f, 0f,
+					//	0.1f + (MathF.Cos(_armRotation) * 1.5f));
+					Vector3 rArmRot = Vector3.Zero;
+					var lArmRot = new Vector3(tcos0, 0, 0);
+					if (distSQ > 0f)
+					{
+						_armRotation += (float) (_mvSpeed) * dt;
+						//rArmRot = new Vector3(tcos0, 0, 0);
+						rArmRot = new Vector3((0.5f + MathF.Cos(_armRotation)) * 24.5f, 0, 0);
+					}
+					else
+					{
+						_armRotation = 0f;
+						//rArmRot = new Vector3((0.5f + MathF.Cos(_armRotation)) * -7.5f, 0f,
+						//	0.1f + (MathF.Sin(_armRotation) * -1.5f));
+					}
+
+					_leftArmModel.Rotation = rArmRot;
+					_rightArmModel.Rotation = -rArmRot;
+
+					if (_rightSleeveModel != null && _leftSleeveModel != null)
+					{
+						_rightSleeveModel.Rotation = -rArmRot;
+						_leftSleeveModel.Rotation = rArmRot;
+					}
+				}
+
+
+				if (_leftLegModel != null && _rightLegModel != null)
+				{
+					Vector3 lLegRot = Vector3.Zero;
+					Vector3 rLegRot = Vector3.Zero;
+
+					if (distSQ > 0f)
+					{
+						_legRotation += (float) (_mvSpeed) * dt;;
+
+						lLegRot = new Vector3(MathF.Sin(_legRotation) * 34.5f, 0f, 0f);
+						rLegRot = new Vector3(-MathF.Sin(_legRotation) * 34.5f, 0f, 0f);
+						//lLegRot = new Vector3(tcos0, 0f, 0f);
+						//rLegRot = new Vector3(tcos1, 0f, 0f);
+					}
+					else
+					{
+						_legRotation = 0f;
+					}
+
+					_leftLegModel.Rotation = lLegRot;
+					_rightLegModel.Rotation = rLegRot;
+
+					if (_leftPantsModel != null && _rightPantsModel != null)
+					{
+						_leftPantsModel.Rotation = lLegRot;
+						_rightPantsModel.Rotation = rLegRot;
+					}
+				}
+			}
+			
+			
+			_prevUpdatePosition = pos;
+		}
+		
+		private DateTime NextUpdate     = DateTime.MinValue;
+		private DateTime PreviousUpdate = DateTime.MinValue;
 		public virtual void OnTick()
 		{
 			SeenEntities.Clear();
@@ -454,13 +611,25 @@ namespace Alex.Entities
 
 			_previousPosition = KnownPosition;
 
+			if (ServerEntity && DateTime.UtcNow >= NextUpdate)
+			{
+				var distanceMoved = DistanceMoved;
+				DistanceMoved = 0;
+
+				//PreviousUpdate
+				_mvSpeed = (float) (distanceMoved * (TimeSpan.FromSeconds(1) / (DateTime.UtcNow - PreviousUpdate)));
+				
+				PreviousUpdate = DateTime.UtcNow;
+				NextUpdate = DateTime.UtcNow + TimeSpan.FromMilliseconds(500);
+			}
+			
 			if (IsNoAi) return;
 		//	IsMoving = Velocity.LengthSquared() > 0f;
 
 		var knownPos = new BlockCoordinates(new Vector3(KnownPosition.X, KnownPosition.Y, KnownPosition.Z));
 		var knownDown = KnownPosition.GetCoordinates3D().BlockDown();
 			var blockBelowFeet = Level?.GetBlockStates(knownDown.X, knownDown.Y, knownDown.Z);
-			var feetBlock = Level?.GetBlockStates(knownPos.X, knownPos.Y, knownPos.Z);
+			var feetBlock = Level?.GetBlockStates(knownPos.X, knownPos.Y, knownPos.Z).ToArray();
 			var headBlock = Level?.GetBlock(KnownPosition.GetCoordinates3D() + new BlockCoordinates(0, 1, 0));
 
 			if (headBlock != null)
@@ -510,6 +679,9 @@ namespace Alex.Entities
 				{
 					IsInLava = false;
 				}
+
+				if (!feetBlock.Any(x => x.storage == 0 && x.state.Block.Solid))
+					KnownPosition.OnGround = false;
 			}
 
 			IsInWater = FeetInWater || HeadInWater;
@@ -587,6 +759,38 @@ namespace Alex.Entities
 			}
 		}
 
+		protected void UpdateModelParts()
+		{
+			if (ModelRenderer == null)
+				return;
+			
+			ModelRenderer.GetBone("body", out _body);
+			ModelRenderer.GetBone("rightArm", out _rightArmModel);
+			ModelRenderer.GetBone("leftArm", out _leftArmModel);
+
+			ModelRenderer.GetBone("leftLeg", out _leftLegModel);
+			ModelRenderer.GetBone("rightLeg", out _rightLegModel);
+
+			ModelRenderer.GetBone("leftSleeve", out _leftSleeveModel);
+			ModelRenderer.GetBone("rightSleeve", out _rightSleeveModel);
+
+			ModelRenderer.GetBone("leftPants", out _leftPantsModel);
+			ModelRenderer.GetBone("rightPants", out _rightPantsModel);
+
+			ModelRenderer.GetBone("jacket", out _jacketModel);
+			ModelRenderer.GetBone("head", out _head);
+
+			if (ModelRenderer.GetBone("hat", out EntityModelRenderer.ModelBone hat))
+			{
+				foreach (var c in hat.Parts)
+				{
+					c.ApplyHeadYaw = true;
+					c.ApplyYaw = false;
+					c.ApplyPitch = true;
+				}
+			}
+		}
+		
 		public BoundingBox BoundingBox => GetBoundingBox();
 		public virtual BoundingBox GetBoundingBox()
 		{

@@ -927,9 +927,9 @@ namespace Alex.Worlds
 				{
 					var oldPosition = entity.KnownPosition;
 					entity.KnownPosition = position;
-					if (entity is PlayerMob p)
+					//if (entity is PlayerMob p)
 					{
-						p.DistanceMoved += MathF.Abs(Vector3.Distance(oldPosition, position));
+						entity.DistanceMoved += MathF.Abs(Vector3.Distance(oldPosition, position));
 					}
 				}
 				else
@@ -945,9 +945,9 @@ namespace Alex.Worlds
 					entity.KnownPosition.Y += (position.Y - offset);
 					entity.KnownPosition.Z += position.Z;	
 					
-					if (entity is PlayerMob p)
+					//if (entity is PlayerMob p)
 					{
-						p.DistanceMoved += MathF.Abs(Vector3.Distance(oldPosition, entity.KnownPosition));
+						entity.DistanceMoved += MathF.Abs(Vector3.Distance(oldPosition, entity.KnownPosition));
 					}
 					//entity.KnownPosition.Move(position);
 				}
