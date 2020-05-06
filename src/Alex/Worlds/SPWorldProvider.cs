@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Alex.API;
 using Alex.API.Data;
 using Alex.API.Data.Options;
 using Alex.API.Entities;
@@ -28,6 +29,12 @@ namespace Alex.Worlds
 	{
 		public bool IsConnected { get; } = true;
 		public void EntityAction(int entityId, EntityAction action)
+		{
+			
+		}
+
+		/// <inheritdoc />
+		public void PlayerAnimate(PlayerAnimations animation)
 		{
 			
 		}

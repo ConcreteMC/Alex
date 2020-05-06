@@ -154,6 +154,7 @@ namespace Alex.Entities
 	    private int PreviousSlot { get; set; } = 9;
 	    private DateTime _lastTimeWithoutInput = DateTime.MinValue;
 	    private bool _prevCheckedInput = false;
+	    private DateTime _lastAnimate = DateTime.MinValue;
 	    public override void Update(IUpdateArgs args)
 		{
 			if (WaitingOnChunk && Age % 4 == 0)
@@ -216,6 +217,11 @@ namespace Alex.Entities
 				}
 				
 				UpdateRayTracer();
+
+				//if (Controller.InputManager.IsDown(InputCommand.LeftClick) && DateTime.UtcNow - _lastAnimate >= TimeSpan.FromMilliseconds(500))
+				//{
+				//	SwingArm(true);
+				//}
 				
 				var hitEntity = HitEntity;
 				if (hitEntity != null && Controller.InputManager.IsPressed(InputCommand.LeftClick))
@@ -232,7 +238,13 @@ namespace Alex.Entities
 					
 					InteractWithEntity(hitEntity, false);
 				}
-				else if (hitEntity == null && !_destroyingBlock && Controller.InputManager.IsDown(InputCommand.LeftClick) && !IsWorldImmutable) //Destroying block.
+				else if (hitEntity == null && !_destroyingBlock
+				                           && Controller.InputManager.IsPressed(InputCommand.LeftClick)
+				                           && !HasRaytraceResult)
+				{
+					SwingArm(true);
+				}
+				else if (hitEntity == null && !_destroyingBlock && Controller.InputManager.IsDown(InputCommand.LeftClick) && !IsWorldImmutable && HasRaytraceResult) //Destroying block.
 				{
 					StartBreakingBlock();
 				}
@@ -253,6 +265,12 @@ namespace Alex.Entities
 					}
 					else
 					{
+						if ((DateTime.UtcNow - _lastAnimate).TotalMilliseconds > 500)
+						{
+							_lastAnimate = DateTime.UtcNow;
+							SwingArm(true);
+						}
+						
 						var timeRan = (DateTime.UtcNow - _destroyingTick).TotalMilliseconds / 50d;
 						if (timeRan >= _destroyTimeNeeded)
 						{

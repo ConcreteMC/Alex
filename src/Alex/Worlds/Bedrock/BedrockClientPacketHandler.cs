@@ -969,6 +969,10 @@ namespace Alex.Worlds.Bedrock
 				{
 					entity.EntityHurt();
 				}
+				else if (message.eventId == 4)
+				{
+					entity.SwingArm();
+				}
 			}
 			//UnhandledPackage(message);
 		}
@@ -1146,7 +1150,22 @@ namespace Alex.Worlds.Bedrock
 
 		public void HandleMcpeAnimate(McpeAnimate message)
 		{
-			UnhandledPackage(message);
+			if (Client.WorldReceiver.EntityManager.TryGet(message.runtimeEntityId, out Entity entity))
+			{
+				switch (message.actionId)
+				{
+					case 1:
+						entity.SwingArm();
+						break;
+					//case 4: //Critical hit!
+						//entity.EntityHurt();
+					//	break;
+					default:
+						UnhandledPackage(message);
+
+						break;
+				}
+			}
 		}
 
 		public void HandleMcpeRespawn(McpeRespawn message)

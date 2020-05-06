@@ -9,6 +9,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Alex.API;
 using Alex.API.Data;
 using Alex.API.Data.Options;
 using Alex.API.Entities;
@@ -639,6 +640,26 @@ namespace Alex.Worlds.Bedrock
 			}
 			
 			SendPlayerAction(translated, null, null);
+		}
+
+		/// <inheritdoc />
+		public void PlayerAnimate(PlayerAnimations animation)
+		{
+			McpeAnimate animate = McpeAnimate.CreateObject();
+			animate.runtimeEntityId = EntityId;
+			
+			switch (animation)
+			{
+				case PlayerAnimations.SwingRightArm:
+				case PlayerAnimations.SwingLeftArm:
+					animate.actionId = 1;
+					break;
+
+				default:
+					return;
+			}
+			
+			SendPacket(animate);
 		}
 
 		private void SendChat(string message)

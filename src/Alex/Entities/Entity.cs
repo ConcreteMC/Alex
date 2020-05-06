@@ -9,6 +9,7 @@ using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.Blocks.Minecraft;
 using Alex.Graphics.Models.Entity;
+using Alex.Graphics.Models.Entity.Animations;
 using Alex.Graphics.Models.Items;
 using Alex.Utils;
 using Alex.Worlds;
@@ -479,6 +480,19 @@ namespace Alex.Entities
 
 		protected bool ServerEntity { get; set; } = true;
 
+		public void SwingArm(bool broadcast = false)
+		{
+			if (_rightArmModel != null)
+			{
+				_rightArmModel.Animations.Enqueue(new SwingAnimation(_rightArmModel, TimeSpan.FromMilliseconds(300)));
+			}
+
+			if (broadcast)
+			{
+				Network.PlayerAnimate(PlayerAnimations.SwingRightArm);
+			}
+		}
+		
 		private void CalculateLegMovement(IUpdateArgs args)
 		{
 			var   pos    = KnownPosition.ToVector3();
@@ -514,7 +528,12 @@ namespace Alex.Entities
 					_leftArmModel.Rotation = new Vector3(-20f, 0f, 0f);
 					_leftArmModel.Position = posOffset;
 
-					_rightArmModel.Rotation = new Vector3(-20f, 0f, 0f);
+
+					if (!_rightArmModel.IsAnimating)
+					{
+						_rightArmModel.Rotation = new Vector3(-20f, 0f, 0f);
+					}
+
 					_rightArmModel.Position = posOffset;
 				}
 
@@ -555,19 +574,32 @@ namespace Alex.Entities
 
 				if (distSQ > 0f)
 				{
+					if (!IsMoving)
+					{
+						_armRotation = 0f;
+						IsMoving = true;
+					}
+
 					_armRotation += (float) (_mvSpeed) * dt;
 					//rArmRot = new Vector3(tcos0, 0, 0);
 					rArmRot = new Vector3((0.5f + MathF.Cos(_armRotation)) * 24.5f, 0, 0);
 				}
 				else
 				{
-					_armRotation = 0f;
-					//rArmRot = new Vector3((0.5f + MathF.Cos(_armRotation)) * -7.5f, 0f,
-					//	0.1f + (MathF.Sin(_armRotation) * -1.5f));
+					IsMoving = false;
+					_armRotation += dt;
+
+					rArmRot = new Vector3(
+						(0.5f + MathF.Cos(_armRotation)) * -7.5f, 0f, 0.1f + (MathF.Sin(_armRotation) * -1.5f));
 				}
 
+
 				_leftArmModel.Rotation = rArmRot;
-				_rightArmModel.Rotation = -rArmRot;
+
+				if (!_rightArmModel.IsAnimating)
+				{
+					_rightArmModel.Rotation = -rArmRot;
+				}
 
 				if (_rightSleeveModel != null && _leftSleeveModel != null)
 				{
@@ -785,8 +817,8 @@ namespace Alex.Entities
 				return;
 			
 			ModelRenderer.GetBone("body", out _body);
-			ModelRenderer.GetBone("rightArm", out _rightArmModel);
-			ModelRenderer.GetBone("leftArm", out _leftArmModel);
+			ModelRenderer.GetBone("leftArm", out _rightArmModel);
+			ModelRenderer.GetBone("rightArm", out _leftArmModel);
 
 			ModelRenderer.GetBone("leftLeg", out _leftLegModel);
 			ModelRenderer.GetBone("rightLeg", out _rightLegModel);

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.Sockets;
+using Alex.API;
 using Alex.API.Entities;
 using Alex.API.Items;
 using Alex.API.Network;
@@ -60,6 +61,12 @@ namespace Alex.Worlds.Java
 			packet.Action = action;
 			packet.JumpBoost = 0;
 			SendPacket(packet);
+		}
+
+		/// <inheritdoc />
+		public void PlayerAnimate(PlayerAnimations animation)
+		{
+			//
 		}
 
 		public void SendChatMessage(string message)

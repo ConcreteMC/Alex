@@ -36,10 +36,17 @@ namespace Alex.Graphics.Models.Entity
 
 			private string OriginalBone { get; }
 			public string Parent => OriginalBone;
+			
+			public Queue<ModelBoneAnimation> Animations { get; }
+			private ModelBoneAnimation CurrentAnim { get; set; } = null;
+			public bool IsAnimating => CurrentAnim != null;
+			
 			public ModelBone(ModelBoneCube[] parts, string parent)
 			{
 				Parts = parts;
 				OriginalBone = parent;
+
+				Animations = new Queue<ModelBoneAnimation>();
 			}
 
 			private bool _isDirty = true;
@@ -120,6 +127,23 @@ namespace Alex.Graphics.Models.Entity
 
 			public void Update(IUpdateArgs args, Matrix characterMatrix, Vector3 diffuseColor)
 			{
+				if (CurrentAnim == null && Animations.TryDequeue(out var animation))
+				{
+					animation.Setup();
+					CurrentAnim = animation;
+				}
+
+				if (CurrentAnim != null)
+				{
+					CurrentAnim.Update(args.GameTime);
+
+					if (CurrentAnim.IsFinished())
+					{
+						CurrentAnim.Reset();
+						CurrentAnim = null;
+					}
+				}
+
 				CharacterMatrix = characterMatrix;
 				foreach (var part in Parts)
 				{
