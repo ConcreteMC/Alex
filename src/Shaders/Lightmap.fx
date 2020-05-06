@@ -45,7 +45,7 @@ PixelToFrame PixelShaderFunction(VertexToPixel PSIn)  {
 
     float4 lighting = max(PSIn.BlockLight, modifiedSkyLight);
     
-    float4 colorValue = pow(lighting / 16.0f, 1.4f) + baseColor;
+    float4 colorValue = pow((1.0f / 16.0f) * lighting, 1.4f) + baseColor;
 
     Output.Color = float4(1,1,1,1);
 
