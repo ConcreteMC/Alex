@@ -507,7 +507,7 @@ namespace Alex
 			else
 			{
 				GameStateManager.SetActiveState<TitleState>("title");
-				var player = new Player(GraphicsDevice, InputManager, null, null, new Skin(),  null, PlayerIndex.One);
+				var player = new Player(GraphicsDevice, InputManager, null, null, new Skin(),  null, PlayerIndex.One, null);
 				player.Inventory.IsPeInventory = true;
 				/*Random rnd = new Random();
 				for (int i = 0; i < player.Inventory.SlotCount; i++)

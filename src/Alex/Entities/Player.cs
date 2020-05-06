@@ -9,6 +9,7 @@ using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks.Minecraft;
 using Alex.GameStates.Playing;
+using Alex.Graphics.Camera;
 using Alex.Items;
 using Alex.Utils;
 using Alex.Worlds;
@@ -63,12 +64,14 @@ namespace Alex.Entities
         public bool IsNoPvM { get; set; } = true;
         
         private World World { get; }
-        public Player(GraphicsDevice graphics, InputManager inputManager, string name, World world, Skin skin, INetworkProvider networkProvider, PlayerIndex playerIndex) : base(name, world, networkProvider, skin.Texture)
+        public Camera Camera { get; internal set; }
+        public Player(GraphicsDevice graphics, InputManager inputManager, string name, World world, Skin skin, INetworkProvider networkProvider, PlayerIndex playerIndex, Camera camera) : base(name, world, networkProvider, skin.Texture)
         {
 	        World = world;
 		//	DoRotationCalculations = false;
 			PlayerIndex = playerIndex;
-		    Controller = new PlayerController(graphics, world, inputManager, this, playerIndex); 
+		    Controller = new PlayerController(graphics, world, inputManager, this, playerIndex);
+		    Camera = camera;
 		    NoAi = false;
 
 			//Inventory = new Inventory(46);
@@ -192,11 +195,13 @@ namespace Alex.Entities
 			{
 				if (IsSneaking)
 				{
-					Network.EntityAction((int)EntityId, EntityAction.StartSneaking);		
+					Network.EntityAction((int)EntityId, EntityAction.StartSneaking);	
+					Camera.UpdateOffset(new Vector3(0f, -0.15f, 0.35f));
 				}
 				else
 				{
 					Network.EntityAction((int)EntityId, EntityAction.StopSneaking);
+					Camera.UpdateOffset(Vector3.Zero);
 				}
 			}
 

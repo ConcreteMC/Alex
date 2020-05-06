@@ -94,7 +94,7 @@ namespace Alex.Graphics.Models.Entity
 					
 					RotationMatrix = rotateMatrix * characterMatrix;
 						
-					effect.World = rotateMatrix * characterMatrix;
+					effect.World = rotateMatrix * Matrix.CreateTranslation(_position) * characterMatrix;
 					effect.View = args.Camera.ViewMatrix;
 					effect.Projection = args.Camera.ProjectionMatrix;
 

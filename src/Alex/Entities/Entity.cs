@@ -481,18 +481,18 @@ namespace Alex.Entities
 
 		private void CalculateLegMovement(IUpdateArgs args)
 		{
-			var pos = KnownPosition.ToVector3();
+			var   pos    = KnownPosition.ToVector3();
 			float distSQ = Vector3.DistanceSquared(_prevUpdatePosition, pos);
-			
+
 			var distance = DistanceMoved;
 			distSQ = distance;
-			
+
 			if (!IsMoving)
 			{
 				//DistanceMoved = 0f;
 			}
 
-			var dt = (float)args.GameTime.ElapsedGameTime.TotalSeconds;
+			var dt = (float) args.GameTime.ElapsedGameTime.TotalSeconds;
 
 			if (!ServerEntity)
 			{
@@ -504,93 +504,113 @@ namespace Alex.Entities
 
 			if (IsSneaking && _body != null)
 			{
-				_body.Rotation = new Vector3(-35f, _body.Rotation.Y, _body.Rotation.Z);
-				_body.Position = Vector3.Forward * 7.5f;
+				var posOffset = new Vector3(0f, -1.5f, -4.5f);
+				_body.Rotation = new Vector3(-25f, _body.Rotation.Y, _body.Rotation.Z);
+				_body.Position = posOffset;
+
 				//_head.Position = new Vector3(_body.Position.X, 0.25f, 0f);
-				
-				_leftArmModel.Rotation = new Vector3(72f, 0f,0f);
-				_rightArmModel.Rotation = new Vector3(72f, 0f,0f);
+				if (_rightArmModel != null && _leftArmModel != null)
+				{
+					_leftArmModel.Rotation = new Vector3(-20f, 0f, 0f);
+					_leftArmModel.Position = posOffset;
 
+					_rightArmModel.Rotation = new Vector3(-20f, 0f, 0f);
+					_rightArmModel.Position = posOffset;
+				}
+
+				if (_head != null)
+				{
+					_head.Position = posOffset;
+				}
 			}
-			else
+			else if (_body != null && !IsSneaking)
 			{
-				if (_body != null)
+				_body.Position = Vector3.Zero;
+				_body.Rotation = new Vector3(0f);
+
+				if (_rightArmModel != null && _leftArmModel != null)
 				{
-					_body.Position = Vector3.Zero;
-					_body.Rotation = new Vector3(0f);
+					_rightArmModel.Position = _leftArmModel.Position = Vector3.Zero;
 				}
 
-				var moveSpeed = MovementSpeed * 20f;
-				var tcos0 = (float) (Math.Cos(distance * (38.17 * 20f)) * moveSpeed) * (57.3f * 20f);
-				var tcos1 = -tcos0;
-
-				//_armRotation = _armRotation;
-
-				// Test arm rotations
-				if (_leftArmModel != null && _rightArmModel != null)
+				if (_head != null)
 				{
-					//var lArmRot = new Vector3((0.5f + MathF.Sin(_armRotation)) * 7.5f, 0f,
-					//	0.1f + (MathF.Cos(_armRotation) * 1.5f));
-					Vector3 rArmRot = Vector3.Zero;
-					var lArmRot = new Vector3(tcos0, 0, 0);
-					if (distSQ > 0f)
-					{
-						_armRotation += (float) (_mvSpeed) * dt;
-						//rArmRot = new Vector3(tcos0, 0, 0);
-						rArmRot = new Vector3((0.5f + MathF.Cos(_armRotation)) * 24.5f, 0, 0);
-					}
-					else
-					{
-						_armRotation = 0f;
-						//rArmRot = new Vector3((0.5f + MathF.Cos(_armRotation)) * -7.5f, 0f,
-						//	0.1f + (MathF.Sin(_armRotation) * -1.5f));
-					}
-
-					_leftArmModel.Rotation = rArmRot;
-					_rightArmModel.Rotation = -rArmRot;
-
-					if (_rightSleeveModel != null && _leftSleeveModel != null)
-					{
-						_rightSleeveModel.Rotation = -rArmRot;
-						_leftSleeveModel.Rotation = rArmRot;
-					}
-				}
-
-
-				if (_leftLegModel != null && _rightLegModel != null)
-				{
-					Vector3 lLegRot = Vector3.Zero;
-					Vector3 rLegRot = Vector3.Zero;
-
-					if (distSQ > 0f)
-					{
-						_legRotation += (float) (_mvSpeed) * dt;;
-
-						lLegRot = new Vector3(MathF.Sin(_legRotation) * 34.5f, 0f, 0f);
-						rLegRot = new Vector3(-MathF.Sin(_legRotation) * 34.5f, 0f, 0f);
-						//lLegRot = new Vector3(tcos0, 0f, 0f);
-						//rLegRot = new Vector3(tcos1, 0f, 0f);
-					}
-					else
-					{
-						_legRotation = 0f;
-					}
-
-					_leftLegModel.Rotation = lLegRot;
-					_rightLegModel.Rotation = rLegRot;
-
-					if (_leftPantsModel != null && _rightPantsModel != null)
-					{
-						_leftPantsModel.Rotation = lLegRot;
-						_rightPantsModel.Rotation = rLegRot;
-					}
+					_head.Position = Vector3.Zero;
 				}
 			}
-			
-			
+
+			var moveSpeed = MovementSpeed * 20f;
+			var tcos0     = (float) (Math.Cos(distance * (38.17 * 20f)) * moveSpeed) * (57.3f * 20f);
+			var tcos1     = -tcos0;
+
+			//_armRotation = _armRotation;
+
+			// Test arm rotations
+			if (!IsSneaking && _leftArmModel != null && _rightArmModel != null)
+			{
+				//var lArmRot = new Vector3((0.5f + MathF.Sin(_armRotation)) * 7.5f, 0f,
+				//	0.1f + (MathF.Cos(_armRotation) * 1.5f));
+				Vector3 rArmRot = Vector3.Zero;
+				var     lArmRot = new Vector3(tcos0, 0, 0);
+
+				if (distSQ > 0f)
+				{
+					_armRotation += (float) (_mvSpeed) * dt;
+					//rArmRot = new Vector3(tcos0, 0, 0);
+					rArmRot = new Vector3((0.5f + MathF.Cos(_armRotation)) * 24.5f, 0, 0);
+				}
+				else
+				{
+					_armRotation = 0f;
+					//rArmRot = new Vector3((0.5f + MathF.Cos(_armRotation)) * -7.5f, 0f,
+					//	0.1f + (MathF.Sin(_armRotation) * -1.5f));
+				}
+
+				_leftArmModel.Rotation = rArmRot;
+				_rightArmModel.Rotation = -rArmRot;
+
+				if (_rightSleeveModel != null && _leftSleeveModel != null)
+				{
+					_rightSleeveModel.Rotation = -rArmRot;
+					_leftSleeveModel.Rotation = rArmRot;
+				}
+			}
+
+
+			if (_leftLegModel != null && _rightLegModel != null)
+			{
+				Vector3 lLegRot = Vector3.Zero;
+				Vector3 rLegRot = Vector3.Zero;
+
+				if (distSQ > 0f)
+				{
+					_legRotation += (float) (_mvSpeed) * dt;
+					;
+
+					lLegRot = new Vector3(MathF.Sin(_legRotation) * 34.5f, 0f, 0f);
+					rLegRot = new Vector3(-MathF.Sin(_legRotation) * 34.5f, 0f, 0f);
+					//lLegRot = new Vector3(tcos0, 0f, 0f);
+					//rLegRot = new Vector3(tcos1, 0f, 0f);
+				}
+				else
+				{
+					_legRotation = 0f;
+				}
+
+				_leftLegModel.Rotation = lLegRot;
+				_rightLegModel.Rotation = rLegRot;
+
+				if (_leftPantsModel != null && _rightPantsModel != null)
+				{
+					_leftPantsModel.Rotation = lLegRot;
+					_rightPantsModel.Rotation = rLegRot;
+				}
+			}
+
+
 			_prevUpdatePosition = pos;
 		}
-		
+
 		private DateTime NextUpdate     = DateTime.MinValue;
 		private DateTime PreviousUpdate = DateTime.MinValue;
 		public virtual void OnTick()

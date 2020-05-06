@@ -122,7 +122,7 @@ namespace Alex.Worlds
 				username = profileService.CurrentProfile.Username;
 			}
 
-			Player = new Player(graphics, serviceProvider.GetRequiredService<Alex>().InputManager, username, this, skin, networkProvider, PlayerIndex.One);
+			Player = new Player(graphics, serviceProvider.GetRequiredService<Alex>().InputManager, username, this, skin, networkProvider, PlayerIndex.One, camera);
 
 			Player.KnownPosition = new PlayerLocation(GetSpawnPoint());
 			Camera.MoveTo(Player.KnownPosition, Vector3.Zero);
@@ -238,7 +238,8 @@ namespace Alex.Worlds
 	        {
 		        Player.RenderEntity = false;
 	        }
-	        
+
+	        Player.Camera = Camera;
 	        Player.Render(args);
         }
 

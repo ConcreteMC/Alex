@@ -32,6 +32,8 @@ namespace Alex.Graphics.Camera
 			    NearDistance,
 			    FarDistance);
 		}
+		
+		public Vector3 Offset { get; private set; } = Vector3.Zero;
 
         /// <summary>
         /// 
@@ -74,6 +76,12 @@ namespace Alex.Graphics.Camera
             }
         }
 
+        public void UpdateOffset(Vector3 offset)
+        {
+	        Offset = offset;
+	        UpdateViewMatrix();
+        }
+        
         public Vector3 Direction;
         /// <summary>
         /// Updates the camera's looking vector.
@@ -86,8 +94,10 @@ namespace Alex.Graphics.Camera
 	        Vector3 lookAtOffset = Vector3.Transform(Vector3.Backward, rotationMatrix);
 	        Direction = lookAtOffset;
 
-			Target = Position + lookAtOffset;
-	        ViewMatrix = Matrix.CreateLookAt(Position, Target, Vector3.Up);
+	        var pos = Position + Vector3.Transform(Offset, Matrix.CreateRotationY(-Rotation.Y));
+	        
+			Target = pos + lookAtOffset;
+	        ViewMatrix = Matrix.CreateLookAt(pos, Target, Vector3.Up);
 		}
 
 	    public virtual void UpdateAspectRatio(float aspectRatio)
