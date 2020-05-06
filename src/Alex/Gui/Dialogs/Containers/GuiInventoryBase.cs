@@ -43,11 +43,12 @@ namespace Alex.Gui.Dialogs.Containers
 
 			for (int col = 0; col < columns; col++)
 			{
+				int colOffset = col * 2;
 				for (int row = 0; row < itemsPerRow; row++)
 				{
 					slots.Add(
 						AddSlot(
-							x + (row * InventoryContainerItem.ItemWidth), y + (col * InventoryContainerItem.ItemWidth),
+							x + (row * (InventoryContainerItem.ItemWidth + 2)), y + (col * (InventoryContainerItem.ItemWidth + 2)),
 							firstSlotId++, inventoryId));
 				}
 
@@ -65,7 +66,8 @@ namespace Alex.Gui.Dialogs.Containers
 				InventoryIndex = slotId,
 				Anchor = Alignment.TopLeft,
 				AutoSizeMode = AutoSizeMode.None,
-				InventoryId = inventoryId
+				InventoryId = inventoryId,
+				HighlightedBackground = Color.White * 0.8f
 			};
 
 			containerItem.CursorEnter += ContainerItemOnCursorEnter;

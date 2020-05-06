@@ -20,7 +20,7 @@ namespace Alex.Gui
     {
 		private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
 		
-		private static readonly float DebugFontScale = 0.25f;
+		private static readonly float DebugFontScale = 0.5f;
 
 		private static readonly Color DebugTextBackground = Color.WhiteSmoke * 0.6f;
 		private static readonly Color DebugTextForeground = Color.Black * 0.95f;
@@ -324,7 +324,7 @@ namespace Alex.Gui
             if (Renderer.Font == null) return;
 
             var p = position;
-            var s = Renderer.Font.MeasureString(text) * DebugFontScale;
+            var s = Renderer.Font.MeasureString(text, DebugFontScale);
 
             var bounds = new Rectangle(p.ToPoint(), s.ToPoint());
             bounds.Inflate(padding, padding);

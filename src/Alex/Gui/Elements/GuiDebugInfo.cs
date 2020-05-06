@@ -35,21 +35,23 @@ namespace Alex.Gui.Elements
 
         public void AddDebugLeft(Func<string> getDebugString)
         {
-            _leftContainer.AddChild(new GuiAutoUpdatingTextElement(getDebugString, true)
+            _leftContainer.AddChild(new GuiAutoUpdatingTextElement(getDebugString, false)
             {
                 TextColor = TextColor.White,
                 FontStyle = FontStyle.DropShadow,
-                Scale = 1f
+                Scale = 1f,
+                BackgroundOverlay = Color.Black * 0.25f
             });
         }
 
         public void AddDebugRight(Func<string> getDebugString)
         {
-            _rightContainer.AddChild(new GuiAutoUpdatingTextElement(getDebugString, true)
+            _rightContainer.AddChild(new GuiAutoUpdatingTextElement(getDebugString, false)
             {
                 TextColor = TextColor.White,
                 FontStyle = FontStyle.DropShadow,
-                Scale = 1f
+                Scale = 1f,
+                BackgroundOverlay = Color.Black * 0.25f
 			});
         }
 

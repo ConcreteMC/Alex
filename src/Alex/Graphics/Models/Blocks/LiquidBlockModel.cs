@@ -99,10 +99,19 @@ namespace Alex.Graphics.Models.Blocks
 			List<BlockFace> renderedFaces = new List<BlockFace>();
 			foreach (var face in Enum.GetValues(typeof(BlockFace)).Cast<BlockFace>())
 			{
-				if (baseBlock.ShouldRenderFace(face, world.GetBlock(position + face.GetBlockCoordinates())))
+				var pos = position + face.GetBlockCoordinates();
+
+				bool shouldRenderFace = true;
+				foreach (var blockState in world.GetBlockStates(pos.X, pos.Y, pos.Z))
 				{
-					renderedFaces.Add(face);
+					if (blockState.storage != 0 && (blockState.state == null || (blockState.state.Block is Air)))
+						continue;
+					
+					shouldRenderFace = baseBlock.ShouldRenderFace(face, blockState.state.Block);
 				}
+				
+				if (shouldRenderFace)
+					renderedFaces.Add(face);
 			}
 			
 			if (renderedFaces.Count == 0)

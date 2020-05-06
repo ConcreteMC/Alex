@@ -59,26 +59,32 @@ namespace Alex.Worlds
 						if (e.NoAi) continue;
 						bool wasColliding = e.IsCollidingWithWorld;
 						
+						var feetBlock = e.Level.GetBlockState(e.KnownPosition.GetCoordinates3D());
+
+						if (!feetBlock.Block.Solid)
+							e.KnownPosition.OnGround = false;
+						
 						//TruncateVelocity(e, dt);
 						
 						var velocity = e.Velocity;
 
-						if (e.IsInWater)
+						if (e.IsInWater && velocity.Y < 0f)
 						{
 							velocity.Y *= 0.8f;
 						}
 						else if (e.IsInLava)
 						{
-							velocity.Y *= 0.5f;
+						//	velocity.Y *= 0.5f;
 						}
-						
+
 						if (!e.IsFlying && !e.KnownPosition.OnGround && e.IsAffectedByGravity)
 						{
-							velocity -= new Vector3(0f, (float)(e.Gravity * dt), 0f);
+							velocity -= new Vector3(0f, (float) (e.Gravity * dt), 0f);
+
 							//var modifier = new Vector3(1f, (float) (1f - (e.Gravity * dt)), 1f);
 							//velocity *= modifier;
 						}
-						
+
 						var rawDrag = (float) (1f - ((e.Drag * 0.91f) * dt));
 						
 						velocity *= new Vector3(rawDrag, 1f, rawDrag);
@@ -257,21 +263,6 @@ namespace Alex.Worlds
 											}
 										}
 									}
-
-									// for (float x = 1f; x > 0f; x -= 0.1f)
-									// {
-									// 	Vector3 c = (position - preview) * x + position;
-									// 	if (solid.All(s =>
-									// 	{
-									// 		var contains = s.box.Contains(c);
-									// 		return contains != ContainmentType.Contains &&
-									// 		       contains != ContainmentType.Intersects;
-									// 	}))
-									// 	{
-									// 		velocity = new Vector3(c.X - position.X, velocity.Y, c.Z - position.Z);
-									// 		break;
-									// 	}
-									// }
 								}
 							}
 						}
@@ -288,9 +279,9 @@ namespace Alex.Worlds
 						
 						TruncateVelocity(e, dt);
 
-						if (MathF.Abs(e.Velocity.Y) < 0.000001f)
+						e.KnownPosition.OnGround = MathF.Abs(e.Velocity.Y) < 0.000001f;
 						{
-							e.KnownPosition.OnGround = true;
+							//e.KnownPosition.OnGround = true;
 						}
 					}
 				}

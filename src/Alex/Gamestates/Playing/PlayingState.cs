@@ -161,12 +161,7 @@ namespace Alex.GameStates.Playing
 				return $"Biome: {_currentBiome.Name} ({_currentBiomeId})";
 			});
 			_debugInfo.AddDebugLeft(() => { return $"Do DaylightCycle: {World.DoDaylightcycle}"; });
-			_debugInfo.AddDebugLeft(
-				() =>
-				{
-					return $"Scalefactor: {Alex.Instance.GuiRenderer.ScaledResolution.ScaleFactor} | {Alex.Instance.GuiRenderer.ScaledResolution.ElementScale}\nNametags: {Entity.NametagScale}";
-				});
-			
+
 			_debugInfo.AddDebugRight(() => Alex.DotnetRuntime);
 			//_debugInfo.AddDebugRight(() => MemoryUsageDisplay);
 			_debugInfo.AddDebugRight(() => $"RAM: {GetBytesReadable(_ramUsage, 2)}");

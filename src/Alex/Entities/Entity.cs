@@ -65,6 +65,10 @@ namespace Alex.Entities
 		public virtual bool NoAi { get; set; } = true;
 		public bool HideNameTag { get; set; } = true;
 		public bool Silent { get; set; }
+
+		public bool AboveWater { get; set; } = false;
+		public bool HeadInWater { get; set; } = false;
+		public bool FeetInWater { get; set; } = false;
 		public bool IsInWater { get; set; } = false;
 		public bool IsInLava { get; set; } = false;
 		public bool IsOutOfWater => !IsInWater;
@@ -453,28 +457,52 @@ namespace Alex.Entities
 			if (IsNoAi) return;
 		//	IsMoving = Velocity.LengthSquared() > 0f;
 
-			var feetBlock = Level?.GetBlock(new BlockCoordinates(KnownPosition));
+		var knownPos = new BlockCoordinates(new Vector3(KnownPosition.X, KnownPosition.Y, KnownPosition.Z));
+		var knownDown = KnownPosition.GetCoordinates3D().BlockDown();
+			var blockBelowFeet = Level?.GetBlockStates(knownDown.X, knownDown.Y, knownDown.Z);
+			var feetBlock = Level?.GetBlockStates(knownPos.X, knownPos.Y, knownPos.Z);
 			var headBlock = Level?.GetBlock(KnownPosition.GetCoordinates3D() + new BlockCoordinates(0, 1, 0));
 
-			bool headInWater = false;
-			bool feetInWater = false;
-			
 			if (headBlock != null)
 			{
 				if (headBlock.BlockMaterial == Material.Water || headBlock.IsWater)
 				{
-					headInWater = true;
+					HeadInWater = true;
 				}
+				else
+				{
+					HeadInWater = false;
+				}
+			}
+
+			if (blockBelowFeet != null)
+			{
+				if (blockBelowFeet.Any(b => b.state.Block.BlockMaterial == Material.Water || b.state.Block.IsWater))
+				{
+					AboveWater = true;
+				}
+				else
+				{
+					AboveWater = false;
+				}
+			}
+			else
+			{
+				AboveWater = false;
 			}
 			
 			if (feetBlock != null)
 			{
-				if (feetBlock.BlockMaterial == Material.Water || feetBlock.IsWater)
+				if (feetBlock.Any(b => b.state.Block.BlockMaterial == Material.Water || b.state.Block.IsWater))
 				{
-					feetInWater = true;
+					FeetInWater = true;
+				}
+				else
+				{
+					FeetInWater = false;
 				}
 
-				if (feetBlock.BlockMaterial == Material.Lava)
+				if (feetBlock.Any(b => b.state.Block.BlockMaterial == Material.Lava))
 				{
 					IsInLava = true;
 				}
@@ -482,31 +510,9 @@ namespace Alex.Entities
 				{
 					IsInLava = false;
 				}
-				
-				if (!feetBlock.Solid)
-				{
-					if (KnownPosition.OnGround)
-					{
-						KnownPosition.OnGround = false;
-					}
-					else
-					{
-					}
-				}
-				else
-				{
-					//KnownPosition.OnGround = true;
-				}
 			}
 
-			if (headInWater || feetInWater)
-			{
-				IsInWater = true;
-			}
-			else
-			{
-				IsInWater = false;
-			}
+			IsInWater = FeetInWater || HeadInWater;
 
 			/*
 			if (headBlock != null)

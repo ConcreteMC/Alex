@@ -78,20 +78,20 @@ namespace Alex.Gui.Dialogs.Containers
             
             Color color = Color.Blue;
 
-            foreach (var slot in AddSlots(7, 83, 9, 27, 9, 0x00))
+            foreach (var slot in AddSlots(8, 84, 9, 27, 9, 0x00))
             {
-                slot.HighlightedBackground = new Microsoft.Xna.Framework.Color(color, 0.5f);
+             //   slot.HighlightedBackground = new Microsoft.Xna.Framework.Color(color, 0.5f);
                 slot.Item = Inventory[slot.InventoryIndex];
             }
 
             color = Color.Aqua;
-            foreach (var slot in AddSlots(7, 141, 9, 9, 0, 0))
+            foreach (var slot in AddSlots(8, 142, 9, 9, 0, 0))
             {
-                slot.HighlightedBackground = new Microsoft.Xna.Framework.Color(color, 0.5f);
+               // slot.HighlightedBackground = new Microsoft.Xna.Framework.Color(color, 0.5f);
                 slot.Item = Inventory[slot.InventoryIndex];
             }
 
-            foreach (var slot in AddSlots(7, 7, 1, 4, 0, 120))
+            foreach (var slot in AddSlots(8, 8, 1, 4, 0, 120))
             {
                 var  inventoryIndex = slot.InventoryIndex;
                 Item item = new ItemAir();
@@ -116,19 +116,19 @@ namespace Alex.Gui.Dialogs.Containers
                         break;
                 }
                 
-                slot.HighlightedBackground = new Microsoft.Xna.Framework.Color(Color.Red, 0.5f);
+              //  slot.HighlightedBackground = new Microsoft.Xna.Framework.Color(Color.Red, 0.5f);
                 slot.Item = item;
                 slot.InventoryIndex = inventoryIndex;
             }
 
-            foreach (var slot in AddSlots(97, 17, 2, 4, 41, 0))
+            foreach (var slot in AddSlots(98, 18, 2, 4, 41, 0))
             {
                 slot.Item = Inventory[slot.InventoryIndex];
-                slot.HighlightedBackground = new Microsoft.Xna.Framework.Color(Color.Purple, 0.5f);
+              //  slot.HighlightedBackground = new Microsoft.Xna.Framework.Color(Color.Purple, 0.5f);
             }
 
-            CraftingOutput = AddSlot(27, 153, 45, 0);
-            CraftingOutput.HighlightedBackground = new Microsoft.Xna.Framework.Color(Color.Purple, 0.5f);
+            CraftingOutput = AddSlot(154, 28, 45, 0);
+          //  CraftingOutput.HighlightedBackground = new Microsoft.Xna.Framework.Color(Color.Purple, 0.5f);
            
             /*var shieldSlot = new InventoryContainerItem()
             {

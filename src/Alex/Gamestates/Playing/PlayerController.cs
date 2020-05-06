@@ -84,28 +84,72 @@ namespace Alex.GameStates.Playing
 		    if (World.FormManager.IsShowingForm)
 			    return;
 		    
+		    if (MouseInputListener.IsButtonDown(MouseButton.ScrollUp))
+		    {
+			    Player.Inventory.SelectedSlot--;
+		    }
+
+		    if (MouseInputListener.IsButtonDown(MouseButton.ScrollDown))
+		    {
+			    Player.Inventory.SelectedSlot++;
+		    }
+		    
+		    if (InputManager.IsPressed(InputCommand.HotBarSelect1)) Player.Inventory.SelectedSlot = 0;
+		    if (InputManager.IsPressed(InputCommand.HotBarSelect2)) Player.Inventory.SelectedSlot = 1;
+		    if (InputManager.IsPressed(InputCommand.HotBarSelect3)) Player.Inventory.SelectedSlot = 2;
+		    if (InputManager.IsPressed(InputCommand.HotBarSelect4)) Player.Inventory.SelectedSlot = 3;
+		    if (InputManager.IsPressed(InputCommand.HotBarSelect5)) Player.Inventory.SelectedSlot = 4;
+		    if (InputManager.IsPressed(InputCommand.HotBarSelect6)) Player.Inventory.SelectedSlot = 5;
+		    if (InputManager.IsPressed(InputCommand.HotBarSelect7)) Player.Inventory.SelectedSlot = 6;
+		    if (InputManager.IsPressed(InputCommand.HotBarSelect8)) Player.Inventory.SelectedSlot = 7;
+		    if (InputManager.IsPressed(InputCommand.HotBarSelect9)) Player.Inventory.SelectedSlot = 8;
+		    
 		    if (InputManager.IsPressed(InputCommand.Exit))
 		    {
+			    var activeDialog = Alex.Instance.GuiManager.ActiveDialog;
+
+			    if (activeDialog != null)
+			    {
+				    CenterCursor();
+				    Alex.Instance.GuiManager.HideDialog(activeDialog);
+			    }
 			    
-			}
+			    if (activeDialog is GuiPlayerInventoryDialog)
+				    _guiPlayerInventoryDialog = null;
+		    }
 			else if (InputManager.IsPressed(InputCommand.ToggleInventory))
 			{
 				if (_guiPlayerInventoryDialog == null)
 				{
-					_allowMovementInput = false;
+					//_allowMovementInput = false;
 					Alex.Instance.GuiManager.ShowDialog(_guiPlayerInventoryDialog = new GuiPlayerInventoryDialog(Player, Player.Inventory));
 				}
 				else
 				{
-					_allowMovementInput = true;
+					CenterCursor();
+					//_allowMovementInput = true;
 					Alex.Instance.GuiManager.HideDialog(_guiPlayerInventoryDialog);
 					_guiPlayerInventoryDialog = null;
 				}
 			}
-		}
+
+		    _allowMovementInput = Alex.Instance.GuiManager.ActiveDialog == null;
+	    }
+
+	    private void CenterCursor()
+	    {
+		    var centerX = Graphics.Viewport.Width / 2;
+		    var centerY = Graphics.Viewport.Height / 2;
+		    
+		    Mouse.SetPosition(centerX, centerY);
+		    
+		    _previousMousePosition = new Vector2(centerX, centerY);
+		    IgnoreNextUpdate = true;
+	    }
 
 	    public float LastSpeedFactor = 0f;
 	    private Vector3 LastVelocity { get; set; } = Vector3.Zero;
+	    private bool WasInWater { get; set; } = false;
 	    private void UpdateMovementInput(GameTime gt)
 	    {
 		    if (!_allowMovementInput) return;
@@ -122,7 +166,7 @@ namespace Alex.GameStates.Playing
 			    else if (InputManager.IsDown(InputCommand.MoveUp))
 			    {
 				    if (InputManager.IsBeginPress(InputCommand.MoveUp) &&
-				        now.Subtract(_lastUp).TotalMilliseconds <= 100)
+				        now.Subtract(_lastUp).TotalMilliseconds <= 125)
 				    {
 					    Player.IsFlying = !Player.IsFlying;
 				    }
@@ -133,9 +177,9 @@ namespace Alex.GameStates.Playing
 
 		    float modifier = 1f;
 
-			if (Player.IsInWater)
+			if (Player.IsInWater || (WasInWater && Player.AboveWater))
 			{
-				//modifier = 0.3f;
+				modifier = 0.3f;
 			}
 			else if (Player.IsSprinting && !Player.IsSneaking)
 			{	
@@ -156,7 +200,7 @@ namespace Alex.GameStates.Playing
 				if (!Player.IsSprinting)
 				{
 					if (InputManager.IsBeginPress(InputCommand.MoveForwards) &&
-						now.Subtract(_lastForward).TotalMilliseconds <= 100)
+						now.Subtract(_lastForward).TotalMilliseconds <= 125)
 					{
 						Player.IsSprinting = true;
 					}
@@ -201,22 +245,18 @@ namespace Alex.GameStates.Playing
 			}
 			else
 			{
-				if (InputManager.IsDown(InputCommand.MoveUp))
+				if (Player.FeetInWater && InputManager.IsDown(InputCommand.MoveUp))
 				{
-					if (Player.IsInWater)
+					Player.Velocity = new Vector3(Player.Velocity.X, 1f * speedFactor, Player.Velocity.Z);
+				}
+				else if (!Player.IsInWater && Player.KnownPosition.OnGround && InputManager.IsDown(InputCommand.MoveUp))
+				{
+					if (Player.Velocity.Y <= 0.00001f && Player.Velocity.Y >= -0.00001f
+					    && Math.Abs(LastVelocity.Y - Player.Velocity.Y) < 0.0001f)
 					{
-						moveVector.Y += 1f;
-					}
-					else
-					{
-						if (Player.KnownPosition.OnGround && Player.Velocity.Y <= 0.00001f &&
-						    Player.Velocity.Y >= -0.00001f && Math.Abs(LastVelocity.Y - Player.Velocity.Y) < 0.0001f
-						)
-						{
-							//	moveVector.Y += 42f;
+						//	moveVector.Y += 42f;
 						//	Player.Velocity += new Vector3(0f, 4.65f, 0f); // //, 0);
-							Player.Velocity += new Vector3(0f, MathF.Sqrt(2f * (float)Player.Gravity * 1.2f), 0f);
-						}
+						Player.Velocity += new Vector3(0f, MathF.Sqrt(2f * (float) Player.Gravity * 1.2f), 0f);
 					}
 				}
 
@@ -233,6 +273,8 @@ namespace Alex.GameStates.Playing
 				}
 			}
 
+			WasInWater = Player.FeetInWater;
+			
 		//	if (moveVector != Vector3.Zero)
 			{
 				var velocity = moveVector * speedFactor;

@@ -10,6 +10,7 @@ using Alex.API.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 
 namespace Alex.API.Gui
 {
@@ -123,6 +124,8 @@ namespace Alex.API.Gui
             if (ActiveDialog == dialog)
             {
                 Game.IsMouseVisible = false;
+                Mouse.SetPosition(Game.Window.ClientBounds.Width / 2, Game.Window.ClientBounds.Height / 2);
+                
                 RemoveScreen(ActiveDialog);
                 
                 ActiveDialog = null;

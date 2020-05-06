@@ -37,6 +37,10 @@ namespace Alex.Blocks.Minecraft
 
 				return false;
 			}
+
+			if (neighbor.Solid && (!neighbor.Transparent || neighbor.BlockMaterial.IsOpaque()))
+				return false;
+			
 			//else if (neighbor.Transparent)
 			return base.ShouldRenderFace(face, neighbor);
 		}
