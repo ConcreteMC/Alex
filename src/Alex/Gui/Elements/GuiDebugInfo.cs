@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Linq;
 using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Layout;
 using Alex.API.Utils;
+using Microsoft.Xna.Framework;
 using RocketUI;
 
 namespace Alex.Gui.Elements
@@ -37,7 +39,7 @@ namespace Alex.Gui.Elements
             {
                 TextColor = TextColor.White,
                 FontStyle = FontStyle.DropShadow,
-                Scale = 0.5f,
+                Scale = 1f
             });
         }
 
@@ -47,8 +49,24 @@ namespace Alex.Gui.Elements
             {
                 TextColor = TextColor.White,
                 FontStyle = FontStyle.DropShadow,
-                Scale = 0.5f,
+                Scale = 1f
 			});
+        }
+
+        /// <inheritdoc />
+        protected override void OnUpdate(GameTime gameTime)
+        {
+            /*var scale = 2f / GuiRenderer.ScaledResolution.ScaleFactor;
+            foreach (var child in _rightContainer.ChildElements.Where(x => x is GuiAutoUpdatingTextElement).Cast<GuiAutoUpdatingTextElement>())
+            {
+                child.Scale = scale;
+            }
+            foreach (var child in _leftContainer.ChildElements.Where(x => x is GuiAutoUpdatingTextElement).Cast<GuiAutoUpdatingTextElement>())
+            {
+                child.Scale = scale;
+            }*/
+            
+            base.OnUpdate(gameTime);
         }
     }
 }

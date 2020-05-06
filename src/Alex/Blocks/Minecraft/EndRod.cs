@@ -10,6 +10,7 @@ namespace Alex.Blocks.Minecraft
 			LightValue = 14;
 
 			BlockMaterial = Material.Glass;
+			IsFullCube = false;
 		}
 	}
 }

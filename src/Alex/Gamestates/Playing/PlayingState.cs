@@ -11,6 +11,7 @@ using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
+using Alex.Entities;
 using Alex.GameStates.Hud;
 using Alex.Graphics.Camera;
 using Alex.Graphics.Models;
@@ -160,7 +161,12 @@ namespace Alex.GameStates.Playing
 				return $"Biome: {_currentBiome.Name} ({_currentBiomeId})";
 			});
 			_debugInfo.AddDebugLeft(() => { return $"Do DaylightCycle: {World.DoDaylightcycle}"; });
-
+			_debugInfo.AddDebugLeft(
+				() =>
+				{
+					return $"Scalefactor: {Alex.Instance.GuiRenderer.ScaledResolution.ScaleFactor} | {Alex.Instance.GuiRenderer.ScaledResolution.ElementScale}\nNametags: {Entity.NametagScale}";
+				});
+			
 			_debugInfo.AddDebugRight(() => Alex.DotnetRuntime);
 			//_debugInfo.AddDebugRight(() => MemoryUsageDisplay);
 			_debugInfo.AddDebugRight(() => $"RAM: {GetBytesReadable(_ramUsage, 2)}");
@@ -208,13 +214,17 @@ namespace Alex.GameStates.Playing
 								}
 							}
 
-							sb.AppendLine();
-
-							sb.AppendLine("Blockstate:");
 							var dict = blockstate.ToDictionary();
-							foreach (var kv in dict)
+
+							if (dict.Count > 0)
 							{
-								sb.AppendLine($"{kv.Key}={kv.Value}");
+								sb.AppendLine();
+								sb.AppendLine("Blockstate:");
+
+								foreach (var kv in dict)
+								{
+									sb.AppendLine($"{kv.Key}={kv.Value}");
+								}
 							}
 						}
 					}
@@ -393,6 +403,29 @@ namespace Alex.GameStates.Playing
 			KeyboardState currentKeyboardState = Keyboard.GetState();
 			if (currentKeyboardState != _oldKeyboardState)
 			{
+				/*if (currentKeyboardState.IsKeyUp(Keys.Add) && _oldKeyboardState.IsKeyDown(Keys.Add))
+				{
+					if (currentKeyboardState.IsKeyDown(Keys.LeftShift))
+					{
+						Entity.NametagScale += 0.1f;
+					}
+					else
+					{
+						Entity.NametagScale += 0.25f;
+					}
+				}
+				else if (currentKeyboardState.IsKeyUp(Keys.Subtract) && _oldKeyboardState.IsKeyDown(Keys.Subtract))
+				{
+					if (currentKeyboardState.IsKeyDown(Keys.LeftShift))
+					{
+						Entity.NametagScale -= 0.1f;
+					}
+					else
+					{
+						Entity.NametagScale -= 0.25f;
+					}
+				}*/
+				
 				if (KeyBinds.EntityBoundingBoxes.All(x => currentKeyboardState.IsKeyDown(x)))
 				{
 					RenderBoundingBoxes = !RenderBoundingBoxes;

@@ -71,6 +71,18 @@ namespace Alex.Entities
 			//Inventory = new Inventory(46);
 		}
 
+		/// <inheritdoc />
+		public override bool NoAi {
+			get
+			{
+				return true;
+			}
+			set
+			{
+				
+			} 
+		}
+
 		public void UpdateGamemode(Gamemode gamemode)
 		{
 			Gamemode = gamemode;

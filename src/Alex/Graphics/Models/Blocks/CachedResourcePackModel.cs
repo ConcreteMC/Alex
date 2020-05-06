@@ -475,12 +475,15 @@ namespace Alex.Graphics.Models.Blocks
 				foreach (var face in element.Faces)
 				{
 					var facing = face.Key;
-
+					//var originalFacing = facing;
+							
 					var cullFace = face.Value.CullFace;
 
 					if (cullFace == null)
 						cullFace = facing;
 	
+					//var originalCullFace = cullFace;
+					
 					if (bsModel.X > 0f)
 					{
 						var offset = -bsModel.X / 90;
@@ -497,6 +500,28 @@ namespace Alex.Graphics.Models.Blocks
 					
 					if (!ShouldRenderFace(world, cullFace.Value, position, baseBlock))
 						continue;
+
+					var textureRotation = face.Value.Rotation;
+					string texture = face.Value.Texture;
+					if (bsModel.Uvlock)
+					{
+						if (element.Faces.TryGetValue(facing, out var newRotation) && newRotation.Texture != texture)
+						{
+							texture = newRotation.Texture;
+						}
+						else
+						{
+							if (bsModel.X > 0)
+							{
+								//textureRotation = bsModel.X;
+							}
+
+							if ((face.Key == BlockFace.Up || face.Key == BlockFace.Down) && bsModel.Y > 0)
+							{
+								//textureRotation = bsModel.Y;
+							}
+						}
+					}
 						
 					var uv = face.Value.UV;
 					float x1 = 0, x2 = 0, y1 = 0, y2 = 0;
@@ -543,7 +568,7 @@ namespace Alex.Graphics.Models.Blocks
 						world, position, position + cullFace.Value.GetVector3(), out blockLight, out skyLight, baseBlock.Transparent || !baseBlock.Solid);
 					
 					var vertices = GetFaceVertices(face.Key, element.From, element.To,
-						GetTextureUVMap(Resources, ResolveTexture(bsModel, face.Value.Texture), x1, x2, y1, y2, face.Value.Rotation, AdjustColor(
+						GetTextureUVMap(Resources, ResolveTexture(bsModel, texture), x1, x2, y1, y2, textureRotation, AdjustColor(
 							faceColor, facing, element.Shade)),
 						out int[] indexes);
 
@@ -592,24 +617,6 @@ namespace Alex.Graphics.Models.Blocks
 					FixElementScale(
 						element, vertices, minX, maxX, minY, maxY, minZ, maxZ, ref minX, ref maxX, ref minY, ref maxY, ref minZ,
 						ref maxZ);
-					
-					/*if (element.Rotation.Axis != Axis.Undefined && element.Rotation.Rescale)
-					{
-						var diffX = maxX - minX;
-						var diffY = maxY - minY;
-						var diffZ = maxZ - minZ;
-
-						for (var i = 0; i < vertices.Length; i++)
-						{
-							var v = vertices[i];
-							
-							v.Position.X = (v.Position.X - minX) / diffX;
-							v.Position.Y = (v.Position.Y - minY) / diffY;
-							v.Position.Z = (v.Position.Z - minZ) / diffZ;
-							
-							vertices[i] = v;
-						}
-					}*/
 
 					var initialIndex = verts.Count;
 

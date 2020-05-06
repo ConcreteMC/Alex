@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Alex.API;
 using Alex.API.Entities;
@@ -61,7 +62,7 @@ namespace Alex.Entities
 
 		public string NameTag { get; set; }
 
-		public bool NoAi { get; set; } = true;
+		public virtual bool NoAi { get; set; } = true;
 		public bool HideNameTag { get; set; } = true;
 		public bool Silent { get; set; }
 		public bool IsInWater { get; set; } = false;
@@ -227,6 +228,7 @@ namespace Alex.Entities
 			CheckHeldItem();
 		}
 
+		public bool IsOnFire { get; set; } = false;
 		public bool IsSneaking { get; set; }
 		public bool IsRiding { get; set; }
 		public bool IsSprinting { get; set; }
@@ -235,9 +237,7 @@ namespace Alex.Entities
 		public bool IsTempted { get; set; }
 		public bool IsInLove { get; set; }
 		public bool IsSaddled { get; set; }
-		public bool
-			IsPowered
-		{ get; set; }
+		public bool IsPowered { get; set; }
 		public bool IsIgnited { get; set; }
 		public bool IsBaby { get; set; }
 		public bool IsConverting { get; set; }
@@ -261,7 +261,9 @@ namespace Alex.Entities
 		public bool IsBreathing => !IsInWater;
 		public bool IsChested { get; set; }
 		public bool IsStackable { get; set; }
-
+		public bool HasCollision { get; set; } = true;
+		public bool IsAffectedByGravity { get; set; } = true;
+		
 		public bool RenderEntity { get; set; } = true;
 		public bool ShowItemInHand { get; set; } = false;
 
@@ -298,7 +300,7 @@ namespace Alex.Entities
 						if (meta.Value is MetadataLong lng)
 						{
 							BitArray bits = new BitArray(BitConverter.GetBytes(lng.Value));
-							IsInvisible = bits[(int) MiNET.Entities.Entity.DataFlags.Invisible];
+							HandleEntityFlags(bits);
 						}
 					}
 						break;
@@ -317,6 +319,35 @@ namespace Alex.Entities
 			}
 		}
 
+		private void HandleEntityFlags(BitArray bits)
+		{
+			IsInvisible = bits[(int) MiNET.Entities.Entity.DataFlags.Invisible];
+			IsSneaking = bits[(int) MiNET.Entities.Entity.DataFlags.Sneaking];
+			IsOnFire = bits[(int) MiNET.Entities.Entity.DataFlags.OnFire];
+			IsSprinting = bits[(int) MiNET.Entities.Entity.DataFlags.Sprinting];
+			NoAi = bits[(int) MiNET.Entities.Entity.DataFlags.NoAi];
+			IsAlwaysShowName = bits[(int) MiNET.Entities.Entity.DataFlags.AlwaysShowName];
+			IsBaby = bits[(int) MiNET.Entities.Entity.DataFlags.Baby];
+			IsUsingItem = bits[(int) MiNET.Entities.Entity.DataFlags.UsingItem];
+			HideNameTag = !bits[(int) MiNET.Entities.Entity.DataFlags.ShowName];
+			IsAngry = bits[(int) MiNET.Entities.Entity.DataFlags.Angry];
+			IsInLove = bits[(int) MiNET.Entities.Entity.DataFlags.InLove];
+			IsRiding = bits[(int) MiNET.Entities.Entity.DataFlags.Riding];
+			IsTempted = bits[(int) MiNET.Entities.Entity.DataFlags.Tempted];
+			IsTamed = bits[(int) MiNET.Entities.Entity.DataFlags.Tamed];
+			IsLeashed = bits[(int) MiNET.Entities.Entity.DataFlags.Leashed];
+			IsSheared = bits[(int) MiNET.Entities.Entity.DataFlags.Sheared];
+			IsChested = bits[(int) MiNET.Entities.Entity.DataFlags.Chested];
+			HasCollision = bits[(int) MiNET.Entities.Entity.DataFlags.HasCollision];
+			IsAffectedByGravity = bits[(int) MiNET.Entities.Entity.DataFlags.AffectedByGravity];
+			IsFlagAllFlying = bits[(int) MiNET.Entities.Entity.DataFlags.FlagAllFlying];
+			IsSilent = bits[(int) MiNET.Entities.Entity.DataFlags.Silent];
+			IsSitting = bits[(int) MiNET.Entities.Entity.DataFlags.Sitting];
+			IsWallClimbing = bits[(int) MiNET.Entities.Entity.DataFlags.WallClimbing];
+			IsResting = bits[(int) MiNET.Entities.Entity.DataFlags.Resting];
+			//IsBreathing = bits[(int) MiNET.Entities.Entity.DataFlags.Breathing];
+		}
+		
 		/// <inheritdoc />
 		public long RenderedVertices { get; private set; }
 
@@ -403,6 +434,9 @@ namespace Alex.Entities
 
 		public virtual void OnTick()
 		{
+			SeenEntities.Clear();
+			UnseenEntities.Clear();
+			
 			Age++;
 
 			if (_isHit && Age > _hitAnimationEnd)
@@ -560,6 +594,82 @@ namespace Alex.Entities
 
 			return new BoundingBox(new Vector3((float)(pos.X - halfWidth), pos.Y, (float)(pos.Z - halfWidth)), new Vector3((float)(pos.X + halfWidth), (float)(pos.Y + (Height * Scale)), (float)(pos.Z + halfWidth)));
 		}
+		
+		public bool IsColliding(IEntity other)
+		{
+			return IsColliding(GetBoundingBox(), other);
+		}
+
+		public bool IsColliding(BoundingBox bbox, IEntity other)
+		{
+			//if (!Compare((int) KnownPosition.X, (int) other.KnownPosition.X, 5)) return false;
+			//if (!Compare((int) KnownPosition.Z, (int) other.KnownPosition.Z, 5)) return false;
+			if (!Compare((int) KnownPosition.X, (int) other.KnownPosition.X, 4)) return false;
+			if (!Compare((int) KnownPosition.Z, (int) other.KnownPosition.Z, 4)) return false;
+			if (!bbox.Intersects(other.GetBoundingBox())) return false;
+
+			return true;
+		}
+		
+		public double DistanceToHorizontal(IEntity entity)
+		{
+			if (entity == null) return -1;
+			return Vector2.Distance(KnownPosition, entity.KnownPosition);
+		}
+
+		public double DistanceTo(IEntity entity)
+		{
+			if (entity == null) return -1;
+			return Vector3.Distance(KnownPosition, entity.KnownPosition);
+		}
+		
+		private HashSet<IEntity> SeenEntities   { get; set; } = new HashSet<IEntity>();
+		private HashSet<IEntity> UnseenEntities { get; set; } = new HashSet<IEntity>();
+		public virtual bool CanSee(IEntity target)
+		{
+			if (SeenEntities.Contains(target)) return true;
+			if (UnseenEntities.Contains(target)) return false;
+
+			Vector3 entityPos = KnownPosition + new Vector3(0, (float) (this is Player ? 1.62f : Height), 0);
+			Vector3 targetPos = target.KnownPosition + new Vector3(0, (float) (target is Player ? 1.62f : target.Height), 0);
+			float distance = Vector3.Distance(entityPos, targetPos);
+
+			Vector3 rayPos    = entityPos;
+			var     direction = Vector3.Normalize(targetPos - entityPos);
+
+			if (distance < direction.Length())
+			{
+				UnseenEntities.Add(target);
+				return true;
+			}
+
+			do
+			{
+				if (Level.GetBlock(rayPos).Solid)
+				{
+					//Log.Debug($"{GetType()} can not see target");
+					//BroadcastEntityEvent();
+					UnseenEntities.Add(target);
+					return false;
+				}
+
+				//var particle = new DustParticle(Level, Color.AntiqueWhite);
+				//particle.Position = rayPos;
+				//particle.Spawn();
+
+				rayPos += direction;
+			} while (distance > Vector3.Distance(entityPos, rayPos));
+
+			SeenEntities.Add(target);
+			return true;
+		}
+		
+		private bool Compare(int a, int b, int m)
+		{
+			a = a >> m;
+			b = b >> m;
+			return a == b || a == b - 1 || a == b + 1;
+		}
 
 		public void RenderNametag(IRenderArgs renderArgs)
 		{
@@ -599,8 +709,13 @@ namespace Alex.Entities
 			textPosition.X = screenSpace.X;
 			textPosition.Y = screenSpace.Y;
 
-			var scaleRatio = Alex.Instance.GuiRenderer.ScaledResolution.ScaleFactor;
-			float scaler = 1f - ((distance) * (1f / maxDistance));
+			float depth = screenSpace.Z;
+
+			var scaleRatio = (1.0f / depth);
+			//var scaleRatio = Alex.Instance.GuiRenderer.ScaledResolution.ScaleFactor;
+			//scale = 0.5f;
+			float scaler = NametagScale - (distance * (NametagScale / maxDistance));
+			//float scaler = NametagScale;
 			var scale = new Vector2(scaler * scaleRatio, scaler * scaleRatio);
 			//scale *= Alex.Instance.GuiRenderer.ScaledResolution.ElementScale;
 	
@@ -615,6 +730,8 @@ namespace Alex.Entities
 			renderArgs.SpriteBatch.FillRectangle(new Rectangle(textPosition.ToPoint(), c), new Color(Color.Black, 128), screenSpace.Z);
 			Alex.Font.DrawString(renderArgs.SpriteBatch, clean, textPosition, TextColor.White, FontStyle.None, scale, layerDepth: screenSpace.Z);
 		}
+
+		public static float NametagScale { get; set; } = 2f;
 
 		public virtual void TerrainCollision(Vector3 collisionPoint, Vector3 direction)
 		{

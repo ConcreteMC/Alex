@@ -257,53 +257,55 @@ namespace Alex.Graphics.Models.Blocks
 
 		    //(byte)Math.Min(Math.Max(0, blockLight + skyLight), 15);
 	    }
-		
-	    protected UVMap GetTextureUVMap(ResourceManager resources, string texture, float x1, float x2, float y1, float y2, int rot, Color color)
-	    {
-		    if (resources == null)
-		    {
-			    x1 = 0;
-			    x2 = 1 / 32f;
-			    y1 = 0;
-			    y2 = 1 / 32f;
 
-			    return new UVMap(new Microsoft.Xna.Framework.Vector2(x1, y1),
-				    new Microsoft.Xna.Framework.Vector2(x2, y1), new Microsoft.Xna.Framework.Vector2(x1, y2),
-				    new Microsoft.Xna.Framework.Vector2(x2, y2), color, color, color);
-		    }
-
-		    var textureInfo = resources.Atlas.GetAtlasLocation(texture, out var uvSize);
-		    var textureLocation = textureInfo.Position;
-
-		    var xw = (textureInfo.Width / 16f) / uvSize.X;
-            var yh = (textureInfo.Height / 16f) / uvSize.Y;
-            
-            textureLocation.X /= uvSize.X;
-		    textureLocation.Y /= uvSize.Y;
-
-		    x1 = textureLocation.X + (x1 * xw);
-		   x2 = textureLocation.X + (x2 * xw) ;
-		   y1 = textureLocation.Y + (y1 * yh) ;
-		   y2 = textureLocation.Y + (y2 * yh) ;
-		   
-           /* x1 = textureLocation.X + x1 * (((textureInfo.Width / 16f) / uvSize.X));
-            x2 = textureLocation.X + x2 * (((textureInfo.Width / 16f) / uvSize.X));
-            y1 = textureLocation.Y + y1 * (((textureInfo.Height / 16f) / uvSize.Y));
-            y2 = textureLocation.Y + y2 * (((textureInfo.Height / 16f) / uvSize.Y));*/
-           
-            var map = new UVMap(new Microsoft.Xna.Framework.Vector2(x1, y1),
-			    new Microsoft.Xna.Framework.Vector2(x2, y1), new Microsoft.Xna.Framework.Vector2(x1, y2),
-			    new Microsoft.Xna.Framework.Vector2(x2, y2), color, color, color);
-
-			if (rot > 0)
+		protected UVMap GetTextureUVMap(ResourceManager resources,
+			string texture,
+			float x1,
+			float x2,
+			float y1,
+			float y2,
+			int rot,
+			Color color)
+		{
+			if (resources == null)
 			{
-				map.Rotate(rot);
+				x1 = 0;
+				x2 = 1 / 32f;
+				y1 = 0;
+				y2 = 1 / 32f;
+
+				return new UVMap(
+					new Microsoft.Xna.Framework.Vector2(x1, y1), new Microsoft.Xna.Framework.Vector2(x2, y1),
+					new Microsoft.Xna.Framework.Vector2(x1, y2), new Microsoft.Xna.Framework.Vector2(x2, y2), color,
+					color, color);
 			}
 
-			return map;
-	    }
+			var textureInfo     = resources.Atlas.GetAtlasLocation(texture, out var uvSize);
+			var textureLocation = textureInfo.Position;
 
-	    public static BlockFace[] INVALID_FACE_ROTATION = new BlockFace[]
+			var xw = (textureInfo.Width / 16f) / uvSize.X;
+			var yh = (textureInfo.Height / 16f) / uvSize.Y;
+
+			textureLocation.X /= uvSize.X;
+			textureLocation.Y /= uvSize.Y;
+
+			x1 = textureLocation.X + (x1 * xw);
+			x2 = textureLocation.X + (x2 * xw);
+			y1 = textureLocation.Y + (y1 * yh);
+			y2 = textureLocation.Y + (y2 * yh);
+
+			var map = new UVMap(
+				new Microsoft.Xna.Framework.Vector2(x1, y1), new Microsoft.Xna.Framework.Vector2(x2, y1),
+				new Microsoft.Xna.Framework.Vector2(x1, y2), new Microsoft.Xna.Framework.Vector2(x2, y2), color, color,
+				color);
+
+			 if (rot > 0)
+				 map.Rotate(rot);
+
+			return map;
+		}
+
+		public static BlockFace[] INVALID_FACE_ROTATION = new BlockFace[]
 	    {
 		    BlockFace.Up,
 		    BlockFace.Down,

@@ -82,8 +82,9 @@ namespace Alex.Entities
 			RenderEntity = true;
 			ShowItemInHand = true;
         }
-        
-        
+
+        /// <inheritdoc />
+        public override bool NoAi { get; set; }
 
         protected override void OnInventorySlotChanged(object sender, SlotChangedEventArgs e)
         {
@@ -266,6 +267,15 @@ namespace Alex.Entities
 					{
 						handledClick = HandleRightClick(Inventory.OffHand, 1);
 					}*/
+				}
+
+				if (hitEntity != null && HasCollision)
+				{
+					if (IsColliding(hitEntity))
+					{
+						//var distance = DistanceToHorizontal(hitEntity);
+						Velocity += (KnownPosition.ToVector3() - hitEntity.KnownPosition.ToVector3());
+					}
 				}
             }
 			else

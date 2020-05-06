@@ -39,5 +39,13 @@ namespace Alex.API.Entities
 		float PositionOffset { get; set; }
 
 		void HandleMetadata(MetadataDictionary metadata);
+		
+		bool IsColliding(IEntity other);
+
+		bool IsColliding(BoundingBox bbox, IEntity other);
+		double DistanceToHorizontal(IEntity entity);
+		double DistanceTo(IEntity entity);
+
+		bool CanSee(IEntity target);
 	}
 }

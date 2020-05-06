@@ -67,7 +67,7 @@ namespace Alex.Worlds.Bedrock
         }
 
         private List<string> Failed { get; set; } = new List<string>();
-        private IBlockState GetBlockState(uint palleteId)
+        public IBlockState GetBlockState(uint palleteId)
         {
 	        return _convertedStates.GetOrAdd(palleteId,
 		        u =>
@@ -86,7 +86,13 @@ namespace Alex.Worlds.Bedrock
 				        if (t.Name == "Unknown" && !Failed.Contains(bs.Name))
 				        {
 					        Failed.Add(bs.Name);
-					      //  File.WriteAllText(Path.Combine("failed", bs.Name + ".json"), JsonConvert.SerializeObject(bs, Formatting.Indented));
+
+					        return t;
+					        //  File.WriteAllText(Path.Combine("failed", bs.Name + ".json"), JsonConvert.SerializeObject(bs, Formatting.Indented));
+				        }
+				        else
+				        {
+					        return t;
 				        }
 			        }
 
@@ -232,7 +238,16 @@ namespace Alex.Worlds.Bedrock
 								        if (!_convertedStates.TryGetValue(
 									        ruid, out result))
 								        {
-									        if (id > 0 && result == null)
+									        if (id == 124 || id == 123)
+									        {
+										        result = BlockFactory.GetBlockState("minecraft:redstone_lamp");
+
+										        if (id == 124)
+										        {
+											        result = result.WithProperty("lit", "true");
+										        }
+									        }
+									        else if (id > 0 && result == null)
 									        {
 										        var reverseMap =
 											        MiNET.Worlds.AnvilWorldProvider.Convert.FirstOrDefault(
@@ -278,6 +293,19 @@ namespace Alex.Worlds.Bedrock
 										        }
 									        }
 
+									        if (result == null)
+									        {
+										        result = new BlockState()
+										        {
+											        Name = $"{id}:{meta.ToString()}",
+											        Model = BlockFactory.UnknownBlockModel,
+											        Block = new Block(0)
+											        {
+												        
+											        }
+										        };
+									        }
+									        
 									        if (result != null)
 									        {
 										        _convertedStates.TryAdd(ruid, result);

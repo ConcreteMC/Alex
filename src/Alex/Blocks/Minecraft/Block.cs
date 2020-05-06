@@ -32,7 +32,6 @@ namespace Alex.Blocks.Minecraft
 		public bool Animated { get; set; } = false;
 		public bool Renderable { get; set; }
 		public bool HasHitbox { get; set; }
-		public bool IsBlockNormalCube { get; set; } = false;
 		public bool IsFullCube { get; set; } = true;
 		public bool IsFullBlock { get; set; } = true;
 

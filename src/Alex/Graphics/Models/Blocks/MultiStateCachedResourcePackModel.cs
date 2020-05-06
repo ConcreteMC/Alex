@@ -216,6 +216,7 @@ namespace Alex.Graphics.Models.Blocks
 		{
 			if (string.IsNullOrWhiteSpace(value)) return true;
 
+			bool isDirection = true;
 			BlockFace face = BlockFace.None;
 			switch (rule)
 			{
@@ -237,20 +238,24 @@ namespace Alex.Graphics.Models.Blocks
 				case "down":
 					face = BlockFace.Down;
 					break;
+				default:
+					isDirection = false;
+
+					break;
 			}
 
 			var direction = face.GetVector3();
 
-			if (value == "true" || value == "false" || value == "none")
+			if (isDirection && (value == "true" || value == "false" || value == "none"))
 			{
-				if (face == BlockFace.Up)
-					return true;
-				//if (face == BlockFace.Up && !(block is Air))
-				//	return true;
-				
 				var newPos     = new BlockCoordinates(position + direction);
 				var blockState = world.GetBlockState(newPos);
 				var block      = blockState.Block;
+				
+				if (face == BlockFace.Up && !(block is Air))
+					return true;
+				//if (face == BlockFace.Up && !(block is Air))
+				//	return true;
 
 				var canAttach = baseblockState.Block.CanAttach(face, block);
 				

@@ -26,9 +26,8 @@ namespace Alex.Worlds
 	    public long VertexCount { get; private set; }
 		private World World { get; }
 		private INetworkProvider Network { get; }
-
-		private BasicEffect NameTagEffect { get; }
-		private IEntity[] _rendered;
+		
+		private Entity[] _rendered;
 		public EntityManager(GraphicsDevice device, World world, INetworkProvider networkProvider)
 		{
 			Network = networkProvider;
@@ -36,13 +35,7 @@ namespace Alex.Worlds
 		    Device = device;
 			Entities = new ConcurrentDictionary<long, Entity>();
 			EntityByUUID = new ConcurrentDictionary<UUID, Entity>();
-			
-			NameTagEffect = new BasicEffect(device)
-			{
-				VertexColorEnabled = true,
-				TextureEnabled = true
-			};
-	    }
+		}
 
 	    public void Update(IUpdateArgs args, SkyBox skyRenderer)
 	    {
@@ -64,7 +57,7 @@ namespace Alex.Worlds
 		    int renderCount = 0;
 		    var entities = Entities.Values.ToArray();
 		    
-		    List<IEntity> rendered = new List<IEntity>();
+		    List<Entity> rendered = new List<Entity>();
 		    foreach (var entity in entities)
 		    {
 			    var entityBox = entity.GetBoundingBox();
@@ -95,11 +88,7 @@ namespace Alex.Worlds
 	    
 	    public void Render2D(IRenderArgs args)
 	    {
-		 //   NameTagEffect.Projection = args.Camera.ProjectionMatrix;
-		  //  NameTagEffect.View =  args.Camera.ViewMatrix;
-		  //  NameTagEffect.World = Matrix.CreateScale(1, -1, 1);
-		    
-		    args.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointWrap, DepthStencilState.DepthRead, RasterizerState, effect: null);
+		    args.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointWrap, DepthStencilState.DepthRead, RasterizerState);
 		    try
 		    {
 			    var entities = _rendered;

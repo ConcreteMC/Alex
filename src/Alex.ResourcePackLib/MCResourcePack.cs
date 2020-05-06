@@ -527,6 +527,7 @@ namespace Alex.ResourcePackLib
 			{
 				string name      = match.Groups["filename"].Value;
 				string nameSpace = match.Groups["namespace"].Value;
+				string key = $"{nameSpace}:{name}";
 
 				using (var r = new StreamReader(entry.Open()))
 				{
@@ -537,7 +538,7 @@ namespace Alex.ResourcePackLib
 					blockState.Namespace = nameSpace;
 
 					
-					_blockStates[$"{nameSpace}:{name}"] = blockState;
+					_blockStates[key] = blockState;
 
 					//return blockState;
 				}

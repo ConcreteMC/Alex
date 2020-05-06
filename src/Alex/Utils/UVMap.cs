@@ -47,26 +47,31 @@ namespace Alex.Utils
             var bottomLeft = BottomLeft;
             var bottomRight = BottomRight;
 				
-            if (rot == 180)
+            if (rot == 90)
+            {
+                TopLeft = topRight;
+                TopRight = bottomRight;
+                BottomLeft = topLeft;
+                BottomRight = bottomLeft;
+            }
+            else if (rot == 180)
             {
                 TopLeft = bottomRight;
                 TopRight = bottomLeft;
                 BottomLeft = topRight;
                 BottomRight = topLeft;
             }
-            else if (rot == 90)
-            {
-                TopLeft = bottomLeft;
-                TopRight = topLeft;
-                BottomLeft = bottomRight;
-                BottomRight = topRight;
-            }
             else if (rot == 270)
             {
-                TopLeft = topRight;
-                TopRight = bottomRight;
-                BottomLeft = topLeft;
-                BottomRight = bottomLeft;
+                // Y2 = X1
+                // X1 = Y1;
+               // TopLeft = new Vector2(topLeft.Y, topLeft.X);
+              //  TopRight = new Vector2(topRight.X, topRight.X);
+               // BottomLeft = new Vector2(topLeft., topRight.X);
+                //TopLeft = bottomLeft;
+               // TopRight = topLeft;
+                //BottomLeft = bottomRight;
+                //BottomRight = topRight;
             }
         }
     }

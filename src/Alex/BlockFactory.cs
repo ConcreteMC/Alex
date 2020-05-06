@@ -14,8 +14,10 @@ using Alex.Blocks.State;
 using Alex.Graphics.Models.Blocks;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json.BlockStates;
+using Alex.ResourcePackLib.Json.Models.Blocks;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
+using BlockModel = Alex.Graphics.Models.Blocks.BlockModel;
 
 namespace Alex
 {
@@ -91,7 +93,7 @@ namespace Alex
 				return;
 
 			_builtin = true;
-
+			
 			//RegisteredBlockStates.Add(Block.GetBlockStateID(), StationairyWaterModel);
 		}
 
@@ -142,7 +144,7 @@ namespace Alex
 		}
 
 		private static PropertyBool WaterLoggedProperty = new PropertyBool("waterlogged");
-		private static BlockModel UnknownBlockModel { get; set; }
+		public static BlockModel UnknownBlockModel { get; set; }
 
 		private static int LoadModels(IRegistryManager registryManager, ResourceManager resources,
 			McResourcePack resourcePack, bool replace,

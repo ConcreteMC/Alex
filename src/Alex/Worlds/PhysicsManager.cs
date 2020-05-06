@@ -72,7 +72,7 @@ namespace Alex.Worlds
 							velocity.Y *= 0.5f;
 						}
 						
-						if (!e.IsFlying && !e.KnownPosition.OnGround)
+						if (!e.IsFlying && !e.KnownPosition.OnGround && e.IsAffectedByGravity)
 						{
 							velocity -= new Vector3(0f, (float)(e.Gravity * dt), 0f);
 							//var modifier = new Vector3(1f, (float) (1f - (e.Gravity * dt)), 1f);

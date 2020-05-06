@@ -145,8 +145,10 @@ namespace Alex.Blocks.Minecraft
             var block = world.GetBlock(updatedBlock);
             if (!(block is Stairs)) {return false;}
 
+            var myHalf = GetHalf(state);
+            
             var blockState = block.BlockState;
-            if (GetHalf(state) != GetHalf(blockState))
+            if (myHalf != GetHalf(blockState))
                 return false;
             
             var facing = GetFacing(state);
@@ -154,7 +156,15 @@ namespace Alex.Blocks.Minecraft
 
             var myShape = GetShape(state);
             var neighborShape = GetShape(blockState);
-            
+
+           // int offset = (myHalf == "top") ? -1 : 1;
+
+         //  var innerRight = ""
+           if (myHalf == "top")
+           {
+               
+           }
+           
             //if ()
             {
                // if (neighbor == BlockModel.RotateDirection(facing, 1, BlockModel.FACE_ROTATION,
@@ -162,7 +172,7 @@ namespace Alex.Blocks.Minecraft
                 //if (facing == BlockFace.East && updatedBlock == (position + facing.Opposite().GetBlockCoordinates()))
 
                 BlockCoordinates offset1 = facing.GetVector3();
-                
+
                 if (neighbor != facing && neighbor != facing.Opposite() && updatedBlock == position + offset1)
                 {
                     if (neighbor == BlockModel.RotateDirection(facing, 1, BlockModel.FACE_ROTATION,
