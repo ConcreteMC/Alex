@@ -1,4 +1,5 @@
 using System;
+using Alex.Utils;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Graphics.Models.Entity.Animations
@@ -21,14 +22,14 @@ namespace Alex.Graphics.Models.Entity.Animations
 			//_swingValue2 +=
 			_swingValue += delta;
 			_swingValue2 += delta * 10f;
-			var progress = (2f / SwingDuration) * _swingValue;
+			var progress = (1f / SwingDuration) * _swingValue;
 
 			var prog = progress;
 
 			if (prog > 1f)
 				prog = 2f - prog;
 			
-			Bone.Rotation = new Vector3(MathHelper.Lerp(Initial.Rotation.X, 120f, prog), 0f, (MathF.Sin(_swingValue2) * -3.5f));
+			Bone.Rotation = new Vector3(EasingFunction.EaseInCubic(Initial.Rotation.X, 120f, prog), 0f, (MathF.Sin(_swingValue2) * 17.5f));
 
 			if (progress >= 2f)
 				_finished = true;
