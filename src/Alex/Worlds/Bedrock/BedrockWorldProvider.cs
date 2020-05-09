@@ -248,7 +248,7 @@ namespace Alex.Worlds.Bedrock
 						}
 					}
 
-					if (((percentage >= 100 && hasSpawnChunk)))
+					if (((percentage >= 100 || hasSpawnChunk)))
 					{
 						if (statusChanged)
 						{

@@ -19,8 +19,8 @@ namespace Alex.Gui.Elements.Inventory
         private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(InventoryContainerItem));
         
         private Item _item;
-        protected GuiTextureElement TextureElement { get; }
-
+       // protected GuiTextureElement TextureElement { get; }
+        protected GuiItem GuiItem { get; }
         public int InventoryIndex { get; set; } = 0;
         public int InventoryId { get; set; } = 0;
         
@@ -30,10 +30,17 @@ namespace Alex.Gui.Elements.Inventory
             SetFixedSize(16, 16);
             Padding = new Thickness(0);
 
-            AddChild(TextureElement = new GuiTextureElement()
-            {
-                Anchor = Alignment.Fill
-            });
+           // AddChild(TextureElement = new GuiTextureElement()
+          //  {
+          //      Anchor = Alignment.Fill
+          //  });
+          
+          AddChild(GuiItem = new GuiItem()
+          {
+              Anchor = Alignment.Fill,
+              Height = 16,
+              Width = 16,
+          });
             
             AddChild(_counTextElement = new GuiTextElement()
             {
@@ -66,14 +73,17 @@ namespace Alex.Gui.Elements.Inventory
             set
             {
                 _item = value;
-
+                
+                GuiItem.Item = value.Clone();
+                
                 if (_item == null || _item is ItemAir || _item.Count == 0)
                 {
-                    TextureElement.IsVisible = false;
+                 //   TextureElement.IsVisible = false;
                     ShowCount = false;
                     return;
                 }
 
+                
                 if (string.IsNullOrWhiteSpace(value?.Name))
                 {
                     // if (!ItemFactory.TryGetItem())
@@ -84,16 +94,16 @@ namespace Alex.Gui.Elements.Inventory
 
                 // TextOverlay.Text = value?.DisplayName ?? value.Name;
 
-                if (ItemFactory.ResolveItemTexture(_item.Name, out Texture2D texture))
-                {
-                    TextureElement.Texture = texture;
-                    TextureElement.IsVisible = true;
-                }
-                else
-                {
-                    Log.Warn($"Could not resolve item texture: {_item.Name}");
-                    TextureElement.IsVisible = false;
-                }
+                //if (ItemFactory.ResolveItemTexture(_item.Name, out Texture2D texture))
+                //{ 
+                    //TextureElement.Texture = texture;
+                   // TextureElement.IsVisible = true;
+              //  }
+               // else
+               // {
+               //     Log.Warn($"Could not resolve item texture: {_item.Name}");
+                   // TextureElement.IsVisible = false;
+              //  }
 
                 if (_item != null && _item.Count > 0)
                 {

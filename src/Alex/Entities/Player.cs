@@ -303,7 +303,7 @@ namespace Alex.Entities
 					if (IsColliding(hitEntity))
 					{
 						//var distance = DistanceToHorizontal(hitEntity);
-						Velocity += (KnownPosition.ToVector3() - hitEntity.KnownPosition.ToVector3());
+					//	Velocity += (KnownPosition.ToVector3() - hitEntity.KnownPosition.ToVector3());
 					}
 				}
             }

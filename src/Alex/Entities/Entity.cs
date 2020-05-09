@@ -90,7 +90,22 @@ namespace Alex.Entities
 		public bool Invulnerable { get; set; } = false;
 
 		public long Age { get; set; }
-		public float Scale { get; set; } = 1.0f;
+
+		private float _scale = 1f;
+
+		public float Scale
+		{
+			get
+			{
+				return _scale;
+			}
+			set
+			{
+				_scale = value;
+
+				ScaleChanged();
+			}
+		}
 		public double Height { get; set; } = 1;
 		public double Width { get; set; } = 1;
 		public double Length { get; set; } = 1;
@@ -111,7 +126,7 @@ namespace Alex.Entities
 
 		public INetworkProvider Network { get; set; }
 		public Inventory Inventory { get; protected set; }
-		private IItemRenderer ItemRenderer { get; set; } = null;
+		public IItemRenderer ItemRenderer { get; private set; } = null;
 		
 		private EntityModelRenderer.ModelBone _leftArmModel;
 		private EntityModelRenderer.ModelBone _rightArmModel;
@@ -147,6 +162,17 @@ namespace Alex.Entities
 			ServerEntity = true;
 		}
 
+		private void ScaleChanged()
+		{
+			if (ModelRenderer != null)
+			{
+				ModelRenderer.Scale = _scale;
+			}
+
+			if (ItemRenderer != null)
+				ItemRenderer.Scale = new Vector3(_scale);
+		}
+		
 		public void SetInventory(Inventory inventory)
 		{
 			Inventory = inventory;
@@ -199,8 +225,10 @@ namespace Alex.Entities
                         renderer.DisplayPosition = oldRenderer.DisplayPosition;
                     }
                     
+                    renderer.Scale = new Vector3(_scale);
+                    
                     ItemRenderer = renderer;
-
+					
                     if (this is Player p)
                     {
                         var pos = renderer.DisplayPosition;
@@ -244,53 +272,11 @@ namespace Alex.Entities
                         }
                     }
                     else
-                        {
-                            renderer.DisplayPosition = DisplayPosition.ThirdPersonRightHand;
-                        }
-
-                        //                     if (itemModel.Display.TryGetValue("firstperson_righthand", out var value))
-                        //                     {
-                        //                         ItemRenderer.Rotation = value.Rotation;
-                        //                         ItemRenderer.Translation = value.Translation;
-                        //                         ItemRenderer.Scale = value.Scale;
-                        //
-                        //                         /*	if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
-                        //                             {
-                        //                         //		Log.Info($"First Person item model rendering ready.");
-                        //
-                        //                                 //bone.Attach(ItemRenderer);
-                        //                             }
-                        //                             else
-                        //                             {
-                        //                                 Log.Warn($"Bone not found: rightItem");
-                        //                             }*/
-                        //                     }
-                        //                     else
-                        //                     {
-                        //                         Log.Warn($"Failed to get item model display element!");
-                        //                     }
-                        //                 }
-                        // else
-                        // {
-                        //     if (itemModel.Display.TryGetValue("thirdperson_righthand", out var value))
-                        //     {
-                        //         ItemRenderer.Rotation = value.Rotation;
-                        //         ItemRenderer.Translation = value.Translation;
-                        //         ItemRenderer.Scale = value.Scale;
-                        //
-                        //         if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
-                        //         {
-                        //             //		Log.Info($"Third Person item model rendering ready.");
-                        //
-                        //             //bone.Attach(ItemRenderer);
-                        //         }
-                        //     }
-                        //     else
-                        //     {
-                        //         Log.Warn($"Failed to get item model display element!");
-                        //     }
-                        // }
+                    {
+	                    renderer.DisplayPosition = DisplayPosition.ThirdPersonRightHand;
+                    }
                     
+                   // _rightArmModel?.Attach(renderer);
                 }
             }
             else
@@ -472,6 +458,8 @@ namespace Alex.Entities
             {
                 ModelRenderer.Update(args, KnownPosition);
 
+                CalculateLegMovement(args);
+                
                 if (ShowItemInHand)
                 {
                     //CheckHeldItem();
@@ -688,6 +676,13 @@ namespace Alex.Entities
 			}
 
 
+			var itemRender = ItemRenderer;
+			var rightArm = _rightArmModel;
+			if (itemRender != null && rightArm != null)
+			{
+				
+			}
+			
 			_prevUpdatePosition = pos;
 		}
 
@@ -863,6 +858,8 @@ namespace Alex.Entities
 		{
 			if (ModelRenderer == null)
 				return;
+
+			ScaleChanged();
 			
 			ModelRenderer.GetBone("body", out _body);
 			ModelRenderer.GetBone("leftArm", out _rightArmModel);

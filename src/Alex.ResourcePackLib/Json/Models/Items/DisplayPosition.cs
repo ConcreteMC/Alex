@@ -13,9 +13,9 @@ namespace Alex.ResourcePackLib.Json.Models.Items
         Undefined = 0b0000,
 
         FirstPerson = 0b0001,
-        ThirdPerson = 0b0011,
+        ThirdPerson = 0b0010,
         LeftHand = 0b0100,
-        RightHand = 0b1100,
+        RightHand = 0b1000,
 
 
         [JsonEnumValue("thirdperson_righthand")]

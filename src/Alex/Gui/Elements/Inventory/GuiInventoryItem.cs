@@ -35,7 +35,7 @@ namespace Alex.Gui.Elements.Inventory
 		{
 			//Height = 18;
 			//Width = 18;
-			TextureElement.Margin = new Thickness(2,2);
+			//	TextureElement.Margin = new Thickness(2,2);
 			Item = _item;
 			/*AddChild(Texture = new GuiTextureElement()
 			{

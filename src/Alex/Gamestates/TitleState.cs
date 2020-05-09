@@ -16,7 +16,6 @@ using Alex.Gamestates.Gui.MainMenu;
 using Alex.GameStates.Gui.MainMenu;
 using Alex.GameStates.Gui.Multiplayer;
 using Alex.Gui;
-using Alex.Gui.Controls.Debug;
 using Alex.Gui.Elements;
 using Alex.Gui.Elements.Inventory;
 using Alex.Networking.Java;
@@ -47,8 +46,8 @@ namespace Alex.GameStates
 		private readonly GuiPanoramaSkyBox _backgroundSkyBox;
 		private GuiEntityModelView _playerView;
 		private IPlayerProfileService _playerProfileService;
-		private GuiItem _guiItem;
-		private GuiItem _guiItem2;
+		//private GuiItem _guiItem;
+		//private GuiItem _guiItem2;
 		public TitleState()
 		{
 			_backgroundSkyBox = new GuiPanoramaSkyBox(Alex);
@@ -157,7 +156,7 @@ namespace Alex.GameStates
 			};
 			guiItemStack.AddChild(row);
 			
-			row.AddChild(_guiItem = new GuiItem()
+			/*row.AddChild(_guiItem = new GuiItem()
 			{
 				Height = 24,
 				Width = 24,
@@ -169,8 +168,8 @@ namespace Alex.GameStates
 				Width = 24,
 				Background = new Color(Color.Black, 0.2f)
 			});
-			
-			guiItemStack.AddChild(new GuiVector3Control(() => _guiItem.Camera.Position, newValue =>
+			*/
+		/*	guiItemStack.AddChild(new GuiVector3Control(() => _guiItem.Camera.Position, newValue =>
 			{
 				if (_guiItem.Camera != null)
 				{
@@ -183,7 +182,7 @@ namespace Alex.GameStates
 			}, 0.25f)
 			{
 				Margin = new Thickness(2)
-			});
+			});*/
 			
 			// guiItemStack.AddChild(new GuiVector3Control(() => _guiItem.Camera.TargetPositionOffset, newValue =>
 			// {
@@ -423,7 +422,7 @@ namespace Alex.GameStates
 
 			_prevKeyboardState = s;
 
-			if (_guiItem.Item == null)
+		/*	if (_guiItem.Item == null)
 			{
 				if (ItemFactory.TryGetItem("minecraft:grass_block", out var item))
 					_guiItem.Item = item;
@@ -436,7 +435,7 @@ namespace Alex.GameStates
 					_guiItem2.Item = item;
 				else
 					_guiItem2.Item = null;
-			}
+			}*/
 		}
 
 		protected override void OnDraw(IRenderArgs args)

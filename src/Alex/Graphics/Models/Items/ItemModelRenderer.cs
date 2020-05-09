@@ -20,6 +20,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using SixLabors.ImageSharp.PixelFormats;
 using Color = Microsoft.Xna.Framework.Color;
+using MathF = System.MathF;
 
 namespace Alex.Graphics.Models.Items
 {
@@ -294,7 +295,7 @@ namespace Alex.Graphics.Models.Items
 
         protected Matrix ParentMatrix = Matrix.Identity;
 
-        public long VertexCount => Vertices.Length;
+        public long VertexCount => Vertices?.Length ?? 0;
         
         public void Update(PlayerLocation knownPosition)
         {
@@ -349,17 +350,24 @@ namespace Alex.Graphics.Models.Items
             {
                 world *= Matrix.CreateTranslation(-new Vector3(0.5f, 0.5f, 0.5f))
                          * Matrix.CreateFromYawPitchRoll(45f, 45f, 0f)
-                    * Matrix.CreateTranslation(new Vector3(0.5f, 0.5f, 0.5f));
+                         * Matrix.CreateTranslation(new Vector3(0.5f, 0.5f, 0.5f));
             }
 
             if (activeDisplayItem != null)
             {
-                var t = activeDisplayItem.Translation * new Vector3(1f, 1f, -1f) * (1/16f);
-                world *= Matrix.CreateScale(activeDisplayItem.Scale)
-                         * Matrix.CreateTranslation(t)
+             //   var t = activeDisplayItem.Translation * new Vector3(1f, 1f, -1f) * (1 / 16f);
+             world *= Matrix.CreateScale(activeDisplayItem.Scale)
+                      * Matrix.CreateTranslation(activeDisplayItem.Translation.X / 32f,
+                          activeDisplayItem.Translation.Y / 32f, activeDisplayItem.Translation.Z / 32f)
+                      * Matrix.CreateRotationX(MathUtils.ToRadians(activeDisplayItem.Rotation.X))
+                      * Matrix.CreateRotationZ(MathUtils.ToRadians(activeDisplayItem.Rotation.Z))
+                      * Matrix.CreateRotationY(MathF.PI - MathUtils.ToRadians(activeDisplayItem.Rotation.Y));
+                //* Matrix.CreateRotationY(MathF.PI)
+                      /*   * Matrix.CreateTranslation(t)
                          * Matrix.CreateFromAxisAngle(Vector3.Up, MathUtils.ToRadians(activeDisplayItem.Rotation.Y))
                          * Matrix.CreateFromAxisAngle(Vector3.Right, MathUtils.ToRadians(activeDisplayItem.Rotation.X))
-                         * Matrix.CreateFromAxisAngle(Vector3.Forward, MathHelper.TwoPi-MathUtils.ToRadians(activeDisplayItem.Rotation.Z))
+                         * Matrix.CreateFromAxisAngle(Vector3.Forward,
+                             MathHelper.TwoPi - MathUtils.ToRadians(activeDisplayItem.Rotation.Z))*/
                     ;
             }
             else
@@ -371,21 +379,26 @@ namespace Alex.Graphics.Models.Items
                          * Matrix.CreateFromAxisAngle(Vector3.Forward, MathHelper.TwoPi)
                     ;
             }
-            
+
             // if(!_displayPosition.HasFlag(ResourcePackLib.Json.Models.Items.DisplayPosition.Gui))
             //     world *= Matrix.CreateTranslation(0.5f, 0.5f, 0.5f);
 
             {
                 // HACKS
-                if (_displayPosition.HasFlag(DisplayPosition.ThirdPerson) ||
-                    _displayPosition.HasFlag(ResourcePackLib.Json.Models.Items.DisplayPosition.FirstPerson))
+                if (//_displayPosition.HasFlag(DisplayPosition.ThirdPerson) ||
+                    (_displayPosition & ResourcePackLib.Json.Models.Items.DisplayPosition.FirstPerson) != 0)
                 {
-                    world *= Matrix.CreateTranslation(0f, 1.85f, 0f);
+                    world *= Matrix.CreateTranslation(0f, 12f/16f, 4f/16f);
+                }else if ((_displayPosition & ResourcePackLib.Json.Models.Items.DisplayPosition.ThirdPerson) != 0)
+                {
+                    world *= Matrix.CreateRotationX(MathF.PI / 4f);
+                    world *= Matrix.CreateRotationX(MathF.PI / 4f);
+                    world *= Matrix.CreateTranslation(1/16f, 11f/16f, -4f/16f);
                 }
             }
 
             //world *= Matrix.CreateTranslation(trans);
-//                           * Matrix.CreateTranslation(-trans)
+            //                           * Matrix.CreateTranslation(-trans)
             // * Matrix.CreateFromAxisAngle(Vector3.Up, MathUtils.ToRadians(Rotation.Y) - (MathHelper.PiOver4*3))
             // * Matrix.CreateFromAxisAngle(Vector3.Right, MathUtils.ToRadians(Rotation.X) + MathHelper.PiOver4)
             // * Matrix.CreateFromAxisAngle(Vector3.Forward, MathHelper.TwoPi - MathUtils.ToRadians(Rotation.Z))
@@ -394,7 +407,10 @@ namespace Alex.Graphics.Models.Items
             // * Matrix.CreateRotationZ(MathHelper.TwoPi - Rotation.Z)
 
             ParentMatrix = Matrix.Identity *
-                           Matrix.CreateRotationY(MathHelper.ToRadians(rotation.Y-180f)) *
+                           Matrix.CreateScale(scale) *
+                           //  Matrix.CreateRotationX(MathHelper.ToRadians(rotation.Y - 180f)) *
+                         //  Matrix.CreateRotationZ(MathHelper.ToRadians(rotation.Y - 180f)) *
+                           Matrix.CreateRotationY(MathHelper.ToRadians(rotation.Y - 180f)) *
                            Matrix.CreateTranslation(trans);
             Effect.World = world * ParentMatrix;
 
@@ -422,6 +438,7 @@ namespace Alex.Graphics.Models.Items
                 }
             }
         }
+        
 
         private void DrawLine(GraphicsDevice device, Vector3 start, Vector3 end, Color color)
         {
@@ -457,162 +474,6 @@ namespace Alex.Graphics.Models.Items
         public virtual IItemRenderer Clone()
         {
             return new ItemModelRenderer<TVertice>(Model, null, _declaration);
-        }
-    }
-
-    public sealed class ItemModelCube : Model
-    {
-        public Vector3 Size;
-
-        public bool Mirrored { get; set; } = false;
-
-        public ItemModelCube(Vector3 size)
-        {
-            this.Size = size;
-
-            //front verts with position and texture stuff
-            _topLeftFront = new Vector3(0.0f, 1.0f, 0.0f) * Size;
-            _topLeftBack = new Vector3(0.0f, 1.0f, 1.0f) * Size;
-            _topRightFront = new Vector3(1.0f, 1.0f, 0.0f) * Size;
-            _topRightBack = new Vector3(1.0f, 1.0f, 1.0f) * Size;
-
-            // Calculate the position of the vertices on the bottom face.
-            _btmLeftFront = new Vector3(0.0f, 0.0f, 0.0f) * Size;
-            _btmLeftBack = new Vector3(0.0f, 0.0f, 1.0f) * Size;
-            _btmRightFront = new Vector3(1.0f, 0.0f, 0.0f) * Size;
-            _btmRightBack = new Vector3(1.0f, 0.0f, 1.0f) * Size;
-        }
-
-        public (VertexPositionColor[] vertices, short[] indexes) Front, Back, Left, Right, Top, Bottom;
-
-        private readonly Vector3 _topLeftFront;
-        private readonly Vector3 _topLeftBack;
-        private readonly Vector3 _topRightFront;
-        private readonly Vector3 _topRightBack;
-        private readonly Vector3 _btmLeftFront;
-        private readonly Vector3 _btmLeftBack;
-        private readonly Vector3 _btmRightFront;
-        private readonly Vector3 _btmRightBack;
-
-	    public void BuildCube(Color uv)
-	    {
-		    Front = GetFrontVertex(AdjustColor(uv, BlockFace.North));
-		    Back = GetBackVertex(AdjustColor(uv, BlockFace.South));
-		    Left = GetLeftVertex(AdjustColor(uv, BlockFace.West));
-		    Right = GetRightVertex(AdjustColor(uv, BlockFace.East));
-		    Top = GetTopVertex(AdjustColor(uv, BlockFace.Up));
-		    Bottom = GetBottomVertex(AdjustColor(uv, BlockFace.Down));
-	    }
-	    
-	    private (VertexPositionColor[] vertices, short[] indexes) GetLeftVertex(Color color)
-	    {
-		    // Add the vertices for the RIGHT face. 
-		    return (new VertexPositionColor[]
-		    {
-			    new VertexPositionColor(_topLeftFront, color),
-			    new VertexPositionColor(_btmLeftFront, color),
-			    new VertexPositionColor(_btmLeftBack, color),
-			    new VertexPositionColor(_topLeftBack, color),
-			    //new VertexPositionNormalTexture(_topLeftFront , normal, map.TopLeft),
-			    //new VertexPositionNormalTexture(_btmLeftBack, normal, map.BotRight),
-		    }, new short[]
-		    {
-			    0, 1, 2,
-			    3, 0, 2
-			    //0, 1, 2, 3, 0, 2
-		    });
-	    }
-
-        private (VertexPositionColor[] vertices, short[] indexes) GetRightVertex(Color color)
-        {
-            // Add the vertices for the RIGHT face. 
-            return (new VertexPositionColor[]
-            {
-                new VertexPositionColor(_topRightFront, color),
-                new VertexPositionColor(_btmRightBack, color),
-                new VertexPositionColor(_btmRightFront, color),
-                new VertexPositionColor(_topRightBack, color),
-                //new VertexPositionNormalTexture(_btmRightBack , normal, map.BotLeft),
-                //new VertexPositionNormalTexture(_topRightFront, normal, map.TopRight),
-            }, new short[]
-            {
-                0, 1, 2,
-                3, 1, 0
-            });
-        }
-
-        private (VertexPositionColor[] vertices, short[] indexes) GetFrontVertex(Color color)
-        {
-            // Add the vertices for the RIGHT face. 
-            return (new VertexPositionColor[]
-            {
-                new VertexPositionColor(_topLeftFront, color),
-                new VertexPositionColor(_topRightFront, color),
-                new VertexPositionColor(_btmLeftFront, color),
-                //new VertexPositionNormalTexture(_btmLeftFront , color),
-                //new VertexPositionNormalTexture(_topRightFront, color),
-                new VertexPositionColor(_btmRightFront, color),
-            }, new short[]
-            {
-                0, 1, 2,
-                2, 1, 3
-                //0, 2, 1, 2, 3, 1
-            });
-        }
-
-        private (VertexPositionColor[] vertices, short[] indexes) GetBackVertex(Color color)
-        {
-            // Add the vertices for the RIGHT face. 
-            return (new VertexPositionColor[]
-            {
-                new VertexPositionColor(_topLeftBack, color),
-                new VertexPositionColor(_btmLeftBack, color),
-                new VertexPositionColor(_topRightBack, color),
-                //new VertexPositionNormalTexture(_btmLeftBack , color),
-                new VertexPositionColor(_btmRightBack, color),
-                //new VertexPositionNormalTexture(_topRightBack, color),
-            }, new short[]
-            {
-                0, 1, 2,
-                1, 3, 2
-                //0, 1, 2, 1, 3, 2
-            });
-        }
-
-        private (VertexPositionColor[] vertices, short[] indexes) GetTopVertex(Color color)
-        {
-            // Add the vertices for the RIGHT face. 
-            return (new VertexPositionColor[]
-            {
-                new VertexPositionColor(_topLeftFront, color),
-                new VertexPositionColor(_topLeftBack, color),
-                new VertexPositionColor(_topRightBack, color),
-                //new VertexPositionNormalTexture(_topLeftFront , color),
-                //	new VertexPositionNormalTexture(_topRightBack , color),
-                new VertexPositionColor(_topRightFront, color),
-            }, new short[]
-            {
-                0, 1, 2,
-                0, 2, 3
-            });
-        }
-
-        private (VertexPositionColor[] vertices, short[] indexes) GetBottomVertex(Color color)
-        {
-            // Add the vertices for the RIGHT face. 
-            return (new VertexPositionColor[]
-            {
-                new VertexPositionColor(_btmLeftFront, color),
-                new VertexPositionColor(_btmRightBack, color),
-                new VertexPositionColor(_btmLeftBack, color),
-                //new VertexPositionNormalTexture(_btmLeftFront , color),
-                new VertexPositionColor(_btmRightFront, color),
-                //new VertexPositionNormalTexture(_btmRightBack , color),
-            }, new short[]
-            {
-                0, 1, 2,
-                0, 3, 1
-            });
         }
     }
 }
