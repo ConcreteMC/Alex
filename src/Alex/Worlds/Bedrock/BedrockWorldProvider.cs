@@ -80,12 +80,12 @@ namespace Alex.Worlds.Bedrock
         private Stopwatch _stopwatch = Stopwatch.StartNew();
 		private void GameTick(object state)
 		{
-			if (WorldReceiver == null) return;
+			if (World == null) return;
 
 			if (_initiated)
 			{
 				
-				var p = WorldReceiver.Player;
+				var p = World.Player;
 				if (p != null && p is Player player && Client.HasSpawned)
 				{
 				//	player.IsSpawned = Spawned;
@@ -112,7 +112,7 @@ namespace Alex.Worlds.Bedrock
 
 					if (pos.DistanceTo(_lastLocation) > 16f && _stopwatch.ElapsedMilliseconds > 500)
 					{
-						WorldReceiver.ChunkManager.FlagPrioritization();
+						World.ChunkManager.FlagPrioritization();
 						
 						_stopwatch.Stop();
 						_stopwatch.Reset();
@@ -124,14 +124,22 @@ namespace Alex.Worlds.Bedrock
 			}
 		}
 
-		private ThreadSafeList<ChunkCoordinates> _loadedChunks = new ThreadSafeList<ChunkCoordinates>();
+		//private ThreadSafeList<ChunkCoordinates> _loadedChunks = new ThreadSafeList<ChunkCoordinates>();
 		private void UnloadChunks(ChunkCoordinates center, double maxViewDistance)
 		{
 			//var chunkPublisher = Client.LastChunkPublish;
 			
 			//Client.ChunkRadius
-			Parallel.ForEach(_loadedChunks.ToArray(), (chunkColumn) =>
+			foreach (var chunk in World.ChunkManager.GetAllChunks())
 			{
+				if (chunk.Key.DistanceTo(center) > maxViewDistance)
+				{
+					//_chunkCache.TryRemove(chunkColumn.Key, out var waste);
+					UnloadChunk(chunk.Key);
+				}
+			}
+			//Parallel.ForEach(_loadedChunks.ToArray(), (chunkColumn) =>
+			//{
 				/*if (chunkPublisher != null)
 				{
 					if (chunkColumn.DistanceTo(new ChunkCoordinates(new Vector3(chunkPublisher.coordinates.X,
@@ -139,27 +147,20 @@ namespace Alex.Worlds.Bedrock
 						return;
 				}*/
 				
-				if (chunkColumn.DistanceTo(center) > maxViewDistance)
-				{
-					//_chunkCache.TryRemove(chunkColumn.Key, out var waste);
-					UnloadChunk(chunkColumn);
-				}
-			});
+				
+		//	});
 		}
 
-		public IEnumerable<ChunkCoordinates> LoadedChunks => _loadedChunks.ToArray();
-		
 		public void UnloadChunk(ChunkCoordinates coordinates)
 		{
-			EventDispatcher.DispatchEvent(new ChunkUnloadEvent(coordinates));
-			_loadedChunks.Remove(coordinates);
+			World.UnloadChunk(coordinates);
 		}
 
 		protected override void Initiate(out LevelInfo info)
 		{
 			info = new LevelInfo();
 			_initiated = true;
-			Client.WorldReceiver = WorldReceiver;
+			Client.World = World;
 			//if (WorldReceiver.Player is Player player)
 			//{
 			//	WorldReceiver?.UpdatePlayerPosition();
@@ -180,6 +181,8 @@ namespace Alex.Worlds.Bedrock
 
 		public override Task Load(ProgressReport progressReport)
 		{
+			Client.GameStarted = false;
+			
 			return Task.Run(() =>
 			{
 				Stopwatch timer = Stopwatch.StartNew();
@@ -199,9 +202,9 @@ namespace Alex.Worlds.Bedrock
 					return;
 				}
 
-				progressReport(LoadingState.ConnectingToServer, 100);
+				progressReport(LoadingState.ConnectingToServer, 98);
 
-				progressReport(LoadingState.LoadingChunks, 0);
+				//progressReport(LoadingState.LoadingChunks, 0);
 
 				var percentage = 0;
 				var statusChanged = false;
@@ -214,9 +217,9 @@ namespace Alex.Worlds.Bedrock
 					double radiusSquared = Math.Pow(Client.ChunkRadius, 2);
 					var target = radiusSquared;
 					
-					percentage = (int)((100 / target) * WorldReceiver.ChunkManager.ChunkCount);
+					percentage = (int)((100 / target) * World.ChunkManager.ChunkCount);
 					
-					if (percentage != previousPercentage)
+					if (Client.GameStarted && percentage != previousPercentage)
 					{
 						progressReport(LoadingState.LoadingChunks, percentage);
 						previousPercentage = percentage;
@@ -226,7 +229,7 @@ namespace Alex.Worlds.Bedrock
 					
 					if (!statusChanged)
 					{
-						if (Client.PlayerStatus == 3 || Client.PlayerStatusChanged.WaitOne(50) || Client.HasSpawned)
+						if (Client.PlayerStatus == 3 || Client.PlayerStatusChanged.WaitOne(50) || Client.HasSpawned || Client.ChangeDimensionResetEvent.WaitOne(5))
 						{
 							statusChanged = true;
 							
@@ -239,14 +242,13 @@ namespace Alex.Worlds.Bedrock
 					
 					if (!hasSpawnChunk)
 					{
-						if (_loadedChunks.Contains(
-							new ChunkCoordinates(new PlayerLocation(Client.SpawnPoint.X, Client.SpawnPoint.Y, Client.SpawnPoint.Z))))
+						if (World.ChunkManager.TryGetChunk(new ChunkCoordinates(new PlayerLocation(Client.SpawnPoint.X, Client.SpawnPoint.Y, Client.SpawnPoint.Z)), out _))
 						{
 							hasSpawnChunk = true;
 						}
 					}
 
-					if (((percentage >= 90 || hasSpawnChunk)))
+					if (((percentage >= 100 && hasSpawnChunk)))
 					{
 						if (statusChanged)
 						{
@@ -263,7 +265,7 @@ namespace Alex.Worlds.Bedrock
 					}
 				}
 				
-				if (WorldReceiver.Player is Player player)
+				if (World.Player is Player player)
 				{
 					var packet = McpeSetLocalPlayerAsInitializedPacket.CreateObject();
 					packet.runtimeEntityId = Client.EntityId;
@@ -279,20 +281,10 @@ namespace Alex.Worlds.Bedrock
 				//Client.IsEmulator = false;
 				progressReport(LoadingState.Spawning, 99);
 				timer.Stop();
+				
+				//TODO: Check if spawn position is safe.
 			});
 		}
-
-		private int ChunksReceived { get; set; }
-		
-	/*	[EventHandler(EventPriority.Monitor)]
-		private void OnChunkReceived(ChunkReceivedEvent e)
-		{
-			e.SetCancelled(false);
-			
-			ChunksReceived++;
-			_loadedChunks.TryAdd(e.Coordinates);
-		}*/
-
 		public override void Dispose()
 		{
 			base.Dispose();

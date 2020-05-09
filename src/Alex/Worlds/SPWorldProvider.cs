@@ -133,7 +133,7 @@ namespace Alex.Worlds
 					{
 						var c = (ChunkColumn) chunk;
 		
-						WorldReceiver.ChunkManager.AddChunk(c, currentCoordinates, false);
+						base.World.ChunkManager.AddChunk(c, currentCoordinates, false);
 						//EventDispatcher.DispatchEvent(new ChunkReceivedEvent(currentCoordinates, c));
 						LoadEntities(c);
 					}
@@ -232,7 +232,7 @@ namespace Alex.Worlds
 
 			UpdateThread.Start();
 
-			if (WorldReceiver is World world)
+			if (base.World is World world)
 			{
 				World = world;
 				
@@ -241,7 +241,7 @@ namespace Alex.Worlds
 				//world.Player.Controller.IsFreeCam = true;
 			} 
 
-			WorldReceiver?.UpdatePlayerPosition(new PlayerLocation(GetSpawnPoint()));
+			base.World?.UpdatePlayerPosition(new PlayerLocation(GetSpawnPoint()));
 
 			Log.Info($"World {info.LevelName} loaded!");
 		}
@@ -295,7 +295,7 @@ namespace Alex.Worlds
 						//{
 						//	DoUpdates = false
 						//});
-						WorldReceiver.ChunkManager.AddChunk(chunk, new ChunkCoordinates(chunk.X, chunk.Z), false);
+						base.World.ChunkManager.AddChunk(chunk, new ChunkCoordinates(chunk.X, chunk.Z), false);
 						progressReport(LoadingState.GeneratingVertices, (int)Math.Floor((count / target) * 100));
 					}
 					

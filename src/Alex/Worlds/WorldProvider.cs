@@ -11,7 +11,7 @@ namespace Alex.Worlds
 	{
 		public delegate void ProgressReport(LoadingState state, int percentage);
 
-		protected World  WorldReceiver  { get; set; }
+		protected World  World  { get; set; }
 		public    ITitleComponent TitleComponent { get; set; }
 		protected WorldProvider()
 		{
@@ -20,12 +20,12 @@ namespace Alex.Worlds
         
 		public void SpawnEntity(long entityId, IEntity entity)
 		{
-			WorldReceiver.SpawnEntity(entityId, entity);
+			World.SpawnEntity(entityId, entity);
 		}
 
 		public void DespawnEntity(long entityId)
 		{
-			WorldReceiver.DespawnEntity(entityId);
+			World.DespawnEntity(entityId);
 		}
 
 		public abstract Vector3 GetSpawnPoint();
@@ -34,7 +34,7 @@ namespace Alex.Worlds
 
 		public void Init(World worldReceiver, out LevelInfo info)
 		{
-			WorldReceiver = worldReceiver;
+			World = worldReceiver;
 
 			Initiate(out info);
 		}

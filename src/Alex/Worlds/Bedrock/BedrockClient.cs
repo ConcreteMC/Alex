@@ -111,6 +111,7 @@ namespace Alex.Worlds.Bedrock
         public McpeNetworkChunkPublisherUpdate LastChunkPublish { get; set; }
         public bool HasSpawned { get; set; }
         public AutoResetEvent PlayerStatusChanged { get; set; } = new AutoResetEvent(false);
+        public AutoResetEvent ChangeDimensionResetEvent = new AutoResetEvent(false);
         private IEventDispatcher EventDispatcher { get; }
         public RakConnection Connection { get; }
         private MessageHandler MessageHandler { get; set; }
@@ -128,7 +129,8 @@ namespace Alex.Worlds.Bedrock
 		        _remoteEndpoint = value;
 	        }
         }
-        
+
+        public bool GameStarted { get; set; } = false;
         private ChunkProcessor ChunkProcessor { get; }
 		public BedrockClient(Alex alex, IEventDispatcher eventDispatcher, IPEndPoint endpoint, PlayerProfile playerProfile, DedicatedThreadPool threadPool, BedrockWorldProvider wp)
 		{
@@ -612,7 +614,7 @@ namespace Alex.Worlds.Bedrock
 			base.OnUnconnectedPong(packet, senderEndpoint);
 		}*/
 		
-		public World WorldReceiver { get; set; } 
+		public World World { get; set; } 
 		public System.Numerics.Vector3 SpawnPoint { get; set; } = System.Numerics.Vector3.Zero;
 		public LevelInfo LevelInfo { get; } = new LevelInfo();
 
@@ -693,7 +695,7 @@ namespace Alex.Worlds.Bedrock
 		
 	    public void PlayerDigging(DiggingStatus status, BlockCoordinates position, BlockFace face, Vector3 cursorPosition)
 	    {
-            if (WorldReceiver?.Player is Entities.Player player)
+            if (World?.Player is Entities.Player player)
             {
                 var item = player.Inventory[player.Inventory.SelectedSlot];
                 if (status == DiggingStatus.Started)

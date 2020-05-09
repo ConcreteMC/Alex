@@ -889,11 +889,16 @@ namespace Alex.Worlds
 			ChunkManager.AddChunk(e.Chunk, e.Coordinates, e.DoUpdates);
 		}*/
 
-		[EventHandler(EventPriority.Highest, true)]
-		private void OnChunkUnload(ChunkUnloadEvent e)
+		public void ClearChunksAndEntities()
 		{
-			ChunkManager.RemoveChunk(e.Coordinates);
-			EntityManager.UnloadEntities(e.Coordinates);
+			EntityManager.ClearEntities();
+			ChunkManager.ClearChunks();
+		}
+	
+		public void UnloadChunk(ChunkCoordinates coordinates)
+		{
+			ChunkManager.RemoveChunk(coordinates);
+			EntityManager.UnloadEntities(coordinates);
 		}
 
 		public void SpawnEntity(long entityId, IEntity entity)
