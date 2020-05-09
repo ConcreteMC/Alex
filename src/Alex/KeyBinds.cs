@@ -14,7 +14,11 @@ namespace Alex
 			DebugInfo, Keys.B
 		};
 
-
+		public static Keys[] NetworkDebugging = new Keys[]
+		{
+			DebugInfo, Keys.N
+		};
+		
 		public static Keys[] AlwaysDay = new Keys[]
 		{
 			DebugInfo, Keys.D

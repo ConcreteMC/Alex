@@ -6,7 +6,7 @@ namespace Alex.API.Entities
 {
     public interface IAttachable
     {
-        void Update(PlayerLocation knownPosition);
+        void Update(Matrix matrix, PlayerLocation knownPosition);
         long VertexCount { get; }
         
         void Render(IRenderArgs args);

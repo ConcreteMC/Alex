@@ -189,9 +189,9 @@ namespace Alex.Entities
 
             if ((inHand == null || inHand.Count == 0 || inHand.Id <= 0) && ItemRenderer != null)
             {
-                if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
+              //  if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
                 {
-                    bone.Detach(ItemRenderer);
+               //     _rightArmModel?.Detach(ItemRenderer);
                 }
 
                 ItemRenderer = null;
@@ -200,93 +200,91 @@ namespace Alex.Entities
 
             if (inHand != null)
             {
-                if (!string.IsNullOrWhiteSpace(inHand.Name))
-                {
-                    /*var itemModel = Alex.Instance.Resources.ResourcePack.ItemModels.FirstOrDefault(x =>
-                        x.Key.Contains(inHand.Name, StringComparison.InvariantCultureIgnoreCase));
-                    
-                    ItemRenderer = new ItemModelRenderer(itemModel.Value, Alex.Instance.Resources.ResourcePack);*/
+	            if (!string.IsNullOrWhiteSpace(inHand.Name))
+	            {
+		            /*var itemModel = Alex.Instance.Resources.ResourcePack.ItemModels.FirstOrDefault(x =>
+		                x.Key.Contains(inHand.Name, StringComparison.InvariantCultureIgnoreCase));
+		            
+		            ItemRenderer = new ItemModelRenderer(itemModel.Value, Alex.Instance.Resources.ResourcePack);*/
 
-                    var renderer = inHand.Renderer.Clone();
-                    if (renderer == null)
-                    {
-                        Log.Warn($"No renderer for item: {inHand.Name}");
-                        return;
-                    }
+		            var renderer = inHand.Renderer.Clone();
+		            if (renderer == null)
+		            {
+			            Log.Warn($"No renderer for item: {inHand.Name}");
+			            return;
+		            }
 
-                    if (renderer == ItemRenderer)
-                        return;
+		            if (renderer == ItemRenderer)
+			            return;
 
-                    var itemModel = renderer.Model;
+		            var itemModel = renderer.Model;
 
-                    var oldRenderer = ItemRenderer;
-                    if (oldRenderer != default)
-                    {
-                        renderer.DisplayPosition = oldRenderer.DisplayPosition;
-                    }
-                    
-                    renderer.Scale = new Vector3(_scale);
-                    
-                    ItemRenderer = renderer;
-					
-                    if (this is Player p)
-                    {
-                        var pos = renderer.DisplayPosition;
-                        //if (pos.HasFlag(DisplayPosition.FirstPerson) || pos.HasFlag(DisplayPosition.ThirdPerson))
-                        {
-                            if (p.IsLeftyHandy)
-                            {
-                                if (!pos.HasFlag(DisplayPosition.LeftHand))
-                                {
-                                    pos = (pos & ~(DisplayPosition.LeftHand | DisplayPosition.RightHand));
-                                    pos |= DisplayPosition.LeftHand;
-                                }
-                            }
-                            else
-                            {
-                                if (!pos.HasFlag(DisplayPosition.RightHand))
-                                {
-                                    pos = (pos & ~(DisplayPosition.LeftHand | DisplayPosition.RightHand));
-                                    pos |= DisplayPosition.RightHand;
-                                }
-                            }
+		            var oldRenderer = ItemRenderer;
+		            if (oldRenderer != default)
+		            {
+			            renderer.DisplayPosition = oldRenderer.DisplayPosition;
+		            }
 
-                            if (p.IsFirstPersonMode)
-                            {
-                                if (!pos.HasFlag(DisplayPosition.FirstPerson))
-                                {
-                                    pos = (pos & ~(DisplayPosition.FirstPerson | DisplayPosition.ThirdPerson));
-                                    pos |= DisplayPosition.FirstPerson;
-                                }
-                            }
-                            else
-                            {
-                                if (!pos.HasFlag(DisplayPosition.ThirdPerson))
-                                {
-                                    pos = (pos & ~(DisplayPosition.FirstPerson | DisplayPosition.ThirdPerson));
-                                    pos |= DisplayPosition.ThirdPerson;
-                                }
-                            }
+		            renderer.Scale = new Vector3(_scale);
 
-                            renderer.DisplayPosition = pos;
-                        }
-                    }
-                    else
-                    {
-	                    renderer.DisplayPosition = DisplayPosition.ThirdPersonRightHand;
-                    }
-                    
-                   // _rightArmModel?.Attach(renderer);
-                }
+		            ItemRenderer = renderer;
+
+		            if (this is Player p)
+		            {
+			            var pos = renderer.DisplayPosition;
+			            //if (pos.HasFlag(DisplayPosition.FirstPerson) || pos.HasFlag(DisplayPosition.ThirdPerson))
+			            {
+				            if (p.IsLeftyHandy)
+				            {
+					            if (!pos.HasFlag(DisplayPosition.LeftHand))
+					            {
+						            pos = (pos & ~(DisplayPosition.LeftHand | DisplayPosition.RightHand));
+						            pos |= DisplayPosition.LeftHand;
+					            }
+				            }
+				            else
+				            {
+					            if (!pos.HasFlag(DisplayPosition.RightHand))
+					            {
+						            pos = (pos & ~(DisplayPosition.LeftHand | DisplayPosition.RightHand));
+						            pos |= DisplayPosition.RightHand;
+					            }
+				            }
+
+				            if (p.IsFirstPersonMode)
+				            {
+					            if (!pos.HasFlag(DisplayPosition.FirstPerson))
+					            {
+						            pos = (pos & ~(DisplayPosition.FirstPerson | DisplayPosition.ThirdPerson));
+						            pos |= DisplayPosition.FirstPerson;
+					            }
+				            }
+				            else
+				            {
+					            if (!pos.HasFlag(DisplayPosition.ThirdPerson))
+					            {
+						            pos = (pos & ~(DisplayPosition.FirstPerson | DisplayPosition.ThirdPerson));
+						            pos |= DisplayPosition.ThirdPerson;
+					            }
+				            }
+
+				            renderer.DisplayPosition = pos;
+			            }
+		            }
+		            else
+		            {
+			            renderer.DisplayPosition = DisplayPosition.ThirdPersonRightHand;
+		            }
+	            }
             }
             else
             {
                 if (ItemRenderer != null)
                 {
-                    if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
-                    {
-                        bone.Detach(ItemRenderer);
-                    }
+                    //if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
+                  //  {
+	               //     _rightArmModel?.Detach(ItemRenderer);
+               //     }
 
                     ItemRenderer = null;
                 }
@@ -466,8 +464,9 @@ namespace Alex.Entities
 
                     //Matrix.CreateRotationY(MathUtils.ToRadians((-KnownPosition.HeadYaw)))
                     //			ItemRenderer?.Update(Matrix.CreateRotationY(MathUtils.ToRadians(180f - KnownPosition.HeadYaw)) * Matrix.CreateTranslation(KnownPosition));
-                    ItemRenderer?.Update(new PlayerLocation(KnownPosition.X, KnownPosition.Y, KnownPosition.Z, 180f - KnownPosition.HeadYaw, 180f - KnownPosition.Yaw, KnownPosition.Pitch));
+                 //   ItemRenderer?.Update(null, new PlayerLocation(KnownPosition.X, KnownPosition.Y, KnownPosition.Z, 180f - KnownPosition.HeadYaw, 180f - KnownPosition.Yaw, KnownPosition.Pitch));
 
+                 ItemRenderer?.Update(Matrix.Identity, new PlayerLocation(KnownPosition.X, KnownPosition.Y, KnownPosition.Z, 180f - KnownPosition.HeadYaw, 180f - KnownPosition.Yaw, KnownPosition.Pitch));
                     //ItemRenderer?.World = 
                     ItemRenderer?.Update(args.GraphicsDevice, args.Camera);
                 }

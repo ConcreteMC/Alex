@@ -36,6 +36,7 @@ namespace Alex.GameStates.Playing
 
 		private readonly PlayingHud _playingHud;
 		private readonly GuiDebugInfo _debugInfo;
+		private readonly NetworkScreen _networkScreen;
 		
 		private GuiMiniMap MiniMap { get; }
 		private bool RenderMinimap { get; set; } = false;
@@ -50,6 +51,12 @@ namespace Alex.GameStates.Playing
 			if (worldProvider is SPWorldProvider)
 			{
 				World.DoDaylightcycle = false;
+				//World.Player.SetInventory(new BedrockInventory(46));
+				if (ItemFactory.TryGetItem("minecraft:diamond_sword", out var sword))
+				{
+					World.Player.Inventory.MainHand = sword;
+					World.Player.Inventory[World.Player.Inventory.SelectedSlot] = sword;
+				}
 			}
 			
 			var title = new TitleComponent();
@@ -77,6 +84,8 @@ namespace Alex.GameStates.Playing
             {
 	            _playingHud.AddChild(MiniMap);
             }
+            
+            _networkScreen = new NetworkScreen(NetworkProvider);
 		}
 
 		private void OnMinimapSettingChange(bool oldvalue, bool newvalue)
@@ -102,10 +111,13 @@ namespace Alex.GameStates.Playing
 		protected override void OnShow()
 		{
 			Alex.IsMouseVisible = false;
-
+			
+			if (RenderNetworking)
+				Alex.GuiManager.AddScreen(_networkScreen);
+			
 			base.OnShow();
 			Alex.GuiManager.AddScreen(_playingHud);
-			
+
 			if (RenderDebug)
 				Alex.GuiManager.AddScreen(_debugInfo);
 		}
@@ -114,6 +126,8 @@ namespace Alex.GameStates.Playing
 		{
 			Alex.GuiManager.RemoveScreen(_debugInfo);
 			Alex.GuiManager.RemoveScreen(_playingHud);
+			Alex.GuiManager.RemoveScreen(_networkScreen);
+			
 			base.OnHide();
 		}
 
@@ -121,6 +135,7 @@ namespace Alex.GameStates.Playing
 		private long _threadsUsed, _maxThreads, _complPortUsed, _maxComplPorts;
 		private Biome _currentBiome = BiomeUtils.GetBiomeById(0);
 		private int _currentBiomeId = 0;
+		private DateTime _lastNetworkInfo = DateTime.UtcNow;
 		private void InitDebugInfo()
 		{
 			_debugInfo.AddDebugLeft(() =>
@@ -390,6 +405,7 @@ namespace Alex.GameStates.Playing
 
 	    private Block SelBlock { get; set; } = new Air();
 		private Microsoft.Xna.Framework.BoundingBox RayTraceBoundingBox { get; set; }
+		private bool RenderNetworking { get; set; } = false;
 		private bool RenderDebug { get; set; } = false;
 		private bool RenderBoundingBoxes { get; set; } = false;
 		private bool AlwaysDay { get; set; } = false;
@@ -422,8 +438,20 @@ namespace Alex.GameStates.Playing
 						Entity.NametagScale -= 0.25f;
 					}
 				}*/
-				
-				if (KeyBinds.EntityBoundingBoxes.All(x => currentKeyboardState.IsKeyDown(x)))
+
+				if (KeyBinds.NetworkDebugging.All(x => currentKeyboardState.IsKeyDown(x)))
+				{
+					RenderNetworking = !RenderNetworking;
+					if (!RenderNetworking)
+					{
+						Alex.GuiManager.RemoveScreen(_networkScreen);
+					}
+					else
+					{
+						Alex.GuiManager.AddScreen(_networkScreen);
+					}
+				}
+				else if (KeyBinds.EntityBoundingBoxes.All(x => currentKeyboardState.IsKeyDown(x)))
 				{
 					RenderBoundingBoxes = !RenderBoundingBoxes;
 				}

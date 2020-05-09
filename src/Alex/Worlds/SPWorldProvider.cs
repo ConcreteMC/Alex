@@ -28,6 +28,11 @@ namespace Alex.Worlds
 	internal class DebugNetworkProvider : INetworkProvider
 	{
 		public bool IsConnected { get; } = true;
+		public ConnectionInfo GetConnectionInfo()
+		{
+			return new ConnectionInfo(DateTime.UtcNow, 0,0,0,0,0,0);
+		}
+
 		public void EntityAction(int entityId, EntityAction action)
 		{
 			

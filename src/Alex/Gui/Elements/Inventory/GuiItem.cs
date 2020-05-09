@@ -55,7 +55,7 @@ namespace Alex.Gui.Elements.Inventory
                        //* Matrix.CreateRotationX(-MathHelper.PiOver4)
                         ;
             
-            _itemRenderer.Update(new PlayerLocation(Vector3.Zero));
+            _itemRenderer.Update(Matrix.CreateTranslation(Vector3.Zero), new PlayerLocation(Vector3.Zero));
             //_itemRenderer.Update(Matrix.Identity);
             _itemRenderer.Update(args.GraphicsDevice, args.Camera);
         }

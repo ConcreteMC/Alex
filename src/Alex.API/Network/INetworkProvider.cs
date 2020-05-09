@@ -10,6 +10,7 @@ namespace Alex.API.Network
     public interface INetworkProvider
     {
 	    bool IsConnected { get; }
+	    ConnectionInfo GetConnectionInfo();
 		void EntityAction(int entityId, EntityAction action);
 
 		void PlayerAnimate(PlayerAnimations animation);

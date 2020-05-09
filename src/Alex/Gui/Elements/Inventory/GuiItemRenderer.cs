@@ -106,7 +106,7 @@ namespace Alex.Gui.Elements.Inventory
             }, EntityPosition);
             Camera.UpdateProjectionMatrix();
             
-            item.Renderer.Update(new PlayerLocation(new Vector3(0,0,0)));
+            item.Renderer.Update(Matrix.CreateTranslation(new Vector3(0,0,0)), new PlayerLocation(new Vector3(0,0,0)));
             item.Renderer.Update(Alex.Instance.GraphicsDevice, Camera);
         }
 

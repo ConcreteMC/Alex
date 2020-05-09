@@ -308,7 +308,7 @@ namespace Alex.Graphics.Models.Items
 
         public long VertexCount => Vertices?.Length ?? 0;
         
-        public void Update(PlayerLocation knownPosition)
+        public void Update(Matrix matrix, PlayerLocation knownPosition)
         {
             Translation = knownPosition.ToVector3();
             Rotation = knownPosition.ToRotationVector3();
@@ -344,17 +344,6 @@ namespace Alex.Graphics.Models.Items
             var rotation = Rotation;
             var trans = Translation;
 
-            // Effect.World = 
-            // 	Matrix.CreateTranslation(new Vector3(-trans.X, -trans.Y, trans.Z)) *
-            // 	Matrix.CreateScale(scale) * 
-            //                Matrix.CreateFromAxisAngle(Vector3.Forward, MathUtils.ToRadians(360f - Rotation.Z)) *
-            //                Matrix.CreateFromAxisAngle(Vector3.Up, MathUtils.ToRadians(Rotation.Y)) *
-            //                Matrix.CreateFromAxisAngle(Vector3.Right, MathUtils.ToRadians(Rotation.X)) *
-            //                Matrix.CreateTranslation(
-            // 	               new Vector3(trans.X, trans.Y, -trans.Z)) *
-            // 				Matrix.CreateTranslation(0f, 0.62f, 0f)
-            //                * ParentMatrix;
-
             var world = Matrix.Identity;
 
             if (Model.GuiLight.HasValue && Model.GuiLight == GuiLight.Side)
@@ -366,62 +355,44 @@ namespace Alex.Graphics.Models.Items
 
             if (activeDisplayItem != null)
             {
-             //   var t = activeDisplayItem.Translation * new Vector3(1f, 1f, -1f) * (1 / 16f);
-             world *= Matrix.CreateScale(activeDisplayItem.Scale)
-                      * Matrix.CreateTranslation(activeDisplayItem.Translation.X / 32f,
-                          activeDisplayItem.Translation.Y / 32f, activeDisplayItem.Translation.Z / 32f)
-                      * Matrix.CreateRotationX(MathUtils.ToRadians(activeDisplayItem.Rotation.X))
-                      * Matrix.CreateRotationZ(MathUtils.ToRadians(activeDisplayItem.Rotation.Z))
-                      * Matrix.CreateRotationY(MathF.PI - MathUtils.ToRadians(activeDisplayItem.Rotation.Y));
-                //* Matrix.CreateRotationY(MathF.PI)
-                      /*   * Matrix.CreateTranslation(t)
-                         * Matrix.CreateFromAxisAngle(Vector3.Up, MathUtils.ToRadians(activeDisplayItem.Rotation.Y))
-                         * Matrix.CreateFromAxisAngle(Vector3.Right, MathUtils.ToRadians(activeDisplayItem.Rotation.X))
-                         * Matrix.CreateFromAxisAngle(Vector3.Forward,
-                             MathHelper.TwoPi - MathUtils.ToRadians(activeDisplayItem.Rotation.Z))*/
-                    ;
+                var a = new Vector3(0.5f, 0.5f, 0.5f);
+                world *= Matrix.CreateTranslation(-a) * Matrix.CreateScale(activeDisplayItem.Scale)
+                                                      * Matrix.CreateTranslation(activeDisplayItem.Translation.X / 32f,
+                                                          activeDisplayItem.Translation.Y / 32f,
+                                                          activeDisplayItem.Translation.Z / 32f)
+                                                      * Matrix.CreateRotationX(
+                                                          MathUtils.ToRadians(activeDisplayItem.Rotation.X))
+                                                      * Matrix.CreateRotationZ(
+                                                          MathUtils.ToRadians(activeDisplayItem.Rotation.Z))
+                                                      * Matrix.CreateRotationY(
+                                                          MathUtils.ToRadians(activeDisplayItem.Rotation.Y)) *
+                                                      Matrix.CreateTranslation(a);
             }
             else
             {
                 world *= Matrix.CreateScale(1f)
-                         //* Matrix.CreateTranslation(t)
-                         // * Matrix.CreateFromAxisAngle(Vector3.Up, MathUtils.ToRadians(rotation.Y))
-                         //* Matrix.CreateFromAxisAngle(Vector3.Right, MathUtils.ToRadians(activeDisplayItem.Rotation.X))
-                         * Matrix.CreateFromAxisAngle(Vector3.Forward, MathHelper.TwoPi)
-                    ;
+                         * Matrix.CreateFromAxisAngle(Vector3.Forward, MathHelper.TwoPi);
             }
-
-            // if(!_displayPosition.HasFlag(ResourcePackLib.Json.Models.Items.DisplayPosition.Gui))
-            //     world *= Matrix.CreateTranslation(0.5f, 0.5f, 0.5f);
-
+            
             {
                 // HACKS
                 if (//_displayPosition.HasFlag(DisplayPosition.ThirdPerson) ||
                     (_displayPosition & ResourcePackLib.Json.Models.Items.DisplayPosition.FirstPerson) != 0)
                 {
-                    world *= Matrix.CreateTranslation(0f, 12f/16f, 4f/16f);
+                    world *= Matrix.CreateRotationX(-MathF.PI / 5f);
+                    world *= Matrix.CreateRotationZ(-1f / 16f);
+                    world *= Matrix.CreateTranslation(-2f/16f, 11.5f/16f,  -6f/16f);
                 }else if ((_displayPosition & ResourcePackLib.Json.Models.Items.DisplayPosition.ThirdPerson) != 0)
                 {
-                    world *= Matrix.CreateRotationX(MathF.PI / 4f);
-                    world *= Matrix.CreateRotationX(MathF.PI / 4f);
-                    world *= Matrix.CreateTranslation(1/16f, 11f/16f, -4f/16f);
+                    world *= Matrix.CreateRotationX(-MathF.PI / 4f);
+               //     world *= Matrix.CreateRotationX(MathF.PI / 4f);
+                    world *= Matrix.CreateTranslation(-2f/16f, 8f/16f, -3f/16f);
                 }
             }
 
-            //world *= Matrix.CreateTranslation(trans);
-            //                           * Matrix.CreateTranslation(-trans)
-            // * Matrix.CreateFromAxisAngle(Vector3.Up, MathUtils.ToRadians(Rotation.Y) - (MathHelper.PiOver4*3))
-            // * Matrix.CreateFromAxisAngle(Vector3.Right, MathUtils.ToRadians(Rotation.X) + MathHelper.PiOver4)
-            // * Matrix.CreateFromAxisAngle(Vector3.Forward, MathHelper.TwoPi - MathUtils.ToRadians(Rotation.Z))
-            // * Matrix.CreateRotationY(Rotation.Y - (MathHelper.PiOver4*3))
-            // * Matrix.CreateRotationX(Rotation.X + MathHelper.PiOver4)
-            // * Matrix.CreateRotationZ(MathHelper.TwoPi - Rotation.Z)
-
             ParentMatrix = Matrix.Identity *
                            Matrix.CreateScale(scale) *
-                           //  Matrix.CreateRotationX(MathHelper.ToRadians(rotation.Y - 180f)) *
-                         //  Matrix.CreateRotationZ(MathHelper.ToRadians(rotation.Y - 180f)) *
-                           Matrix.CreateRotationY(MathHelper.ToRadians(rotation.Y - 180f)) *
+                           Matrix.CreateRotationY(MathHelper.ToRadians(rotation.Y)) *
                            Matrix.CreateTranslation(trans);
             Effect.World = world * ParentMatrix;
 

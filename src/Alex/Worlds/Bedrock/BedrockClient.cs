@@ -44,6 +44,7 @@ using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
+using ConnectionInfo = Alex.API.Network.ConnectionInfo;
 using Item = Alex.Items.Item;
 using LevelInfo = MiNET.Worlds.LevelInfo;
 using NewtonsoftMapper = MiNET.NewtonsoftMapper;
@@ -201,6 +202,7 @@ namespace Alex.Worlds.Bedrock
 		}
 
 		private bool Starting { get; set; } = false;
+		private DateTime StartTime { get; set; }
 		public void Start(ManualResetEventSlim resetEvent)
 		{
 			if (Starting)
@@ -208,6 +210,7 @@ namespace Alex.Worlds.Bedrock
 
 			Starting = true;
 
+			StartTime = DateTime.UtcNow;
 		//	var player = WorldReceiver.Player;
 			
 			//player.Inventory.CursorChanged += InventoryOnCursorChanged;
@@ -244,6 +247,16 @@ namespace Alex.Worlds.Bedrock
 
 		}
 
+		public ConnectionInfo GetConnectionInfo()
+		{
+			var conn = Session?.ConnectionInfo ?? Connection.ConnectionInfo;
+
+			return new ConnectionInfo(StartTime, conn.Latency,
+				conn.NumberOfNakReceive, conn.NumberOfAckReceive,
+				conn.NumberOfAckSent, Session?.ErrorCount ?? 0,
+				Session?.ResendCount ?? 0);
+		}
+		
 		private void InventoryOnSlotChanged(object? sender, SlotChangedEventArgs e)
 		{
 			if (!e.IsClientTransaction)

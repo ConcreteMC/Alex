@@ -713,7 +713,7 @@ namespace Alex.Worlds.Bedrock
 				itemEntity.EntityId = message.runtimeEntityId;
 				itemEntity.Velocity = new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ) * 20f;
 				
-				itemEntity.SetItem(item);
+				itemEntity.SetItem(item.Clone());
 			
 				Client.World.SpawnEntity(message.runtimeEntityId, itemEntity);
 				_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
@@ -1035,7 +1035,7 @@ namespace Alex.Worlds.Bedrock
 			
 			if (Client.World.TryGetEntity(message.runtimeEntityId, out var entity))
 			{
-				var item = ToAlexItem(message.item);
+				var item = ToAlexItem(message.item).Clone();
 
 				byte slot = message.slot;
 				switch (message.windowsId)
@@ -1067,10 +1067,10 @@ namespace Alex.Worlds.Bedrock
 			}
 
 
-			entity.Inventory.Helmet = ToAlexItem(message.helmet);
-			entity.Inventory.Chestplate = ToAlexItem(message.chestplate);
-			entity.Inventory.Leggings = ToAlexItem(message.leggings);
-			entity.Inventory.Boots = ToAlexItem(message.boots);
+			entity.Inventory.Helmet = ToAlexItem(message.helmet).Clone();
+			entity.Inventory.Chestplate = ToAlexItem(message.chestplate).Clone();
+			entity.Inventory.Leggings = ToAlexItem(message.leggings).Clone();
+			entity.Inventory.Boots = ToAlexItem(message.boots).Clone();
 
 
 			//UnhandledPackage(message);
@@ -1210,7 +1210,7 @@ namespace Alex.Worlds.Bedrock
 				
 				var usedIndex = index;
 
-				var result = ToAlexItem(slot);
+				var result = ToAlexItem(slot).Clone();
 				if (result != null)
 				{
 					inventory[usedIndex] = result;
@@ -1293,7 +1293,7 @@ namespace Alex.Worlds.Bedrock
 			if (inventory == null || message.item == null) return;
 			
 			var index = (int)message.slot;
-			var result = ToAlexItem(message.item);
+			var result = ToAlexItem(message.item).Clone();
 
 			if (result != null)
             {

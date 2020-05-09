@@ -21,8 +21,8 @@ namespace Alex.Entities
             Height = 0.25;
             Length = 0.25;
         }
-
-        private IItemRenderer ItemRenderer { get; set; } = null;
+        
+        private new IItemRenderer ItemRenderer { get; set; } = null;
         private bool CanRender { get; set; } = false;
         public void SetItem(Item item)
         {
@@ -49,7 +49,10 @@ namespace Alex.Entities
             {
                 var offset = new Vector3(0.5f, 0.5f, 0.5f);
                 //ItemRenderer?.Update(Matrix.CreateRotationY(MathUtils.ToRadians(_rotation)) * Matrix.CreateTranslation((KnownPosition)));
-                ItemRenderer?.Update(KnownPosition);
+                ItemRenderer?.Update(Matrix.Identity *
+                                     Matrix.CreateScale(Scale) *
+                                     Matrix.CreateRotationY(MathHelper.ToRadians(KnownPosition.Yaw)) *
+                                     Matrix.CreateTranslation(KnownPosition.ToVector3()), KnownPosition);
                 
                 ItemRenderer?.Update(args.GraphicsDevice, args.Camera);
             }
