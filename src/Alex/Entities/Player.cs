@@ -182,13 +182,13 @@ namespace Alex.Entities
 
 			if (IsSprinting && !sprint)
 			{
-				FOVModifier += 10;
+				FOVModifier = 10;
 				
 				Network.EntityAction((int) EntityId, EntityAction.StartSprinting);
 			}
 			else if (!IsSprinting && sprint)
 			{
-				FOVModifier -= 10;
+				FOVModifier = 0;
 				
 				Network.EntityAction((int)EntityId, EntityAction.StopSprinting);
 			}
