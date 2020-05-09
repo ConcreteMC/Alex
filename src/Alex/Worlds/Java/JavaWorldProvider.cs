@@ -282,7 +282,7 @@ namespace Alex.Worlds.Java
 
 		private bool hasDoneInitialChunks = false;
 		private bool _initiated = false;
-		private BlockingCollection<IChunkColumn> _generatingHelper = new BlockingCollection<IChunkColumn>();
+		private BlockingCollection<ChunkColumn> _generatingHelper = new BlockingCollection<ChunkColumn>();
 		private int _chunksReceived = 0;
 		public override Task Load(ProgressReport progressReport)
 		{
@@ -319,7 +319,7 @@ namespace Alex.Worlds.Java
                     }
 					else if (loaded < _chunksReceived)
 					{
-						if (_generatingHelper.TryTake(out IChunkColumn chunkColumn, 50))
+						if (_generatingHelper.TryTake(out ChunkColumn chunkColumn, 50))
 						{
 							if (!allowSpawn)
 							{

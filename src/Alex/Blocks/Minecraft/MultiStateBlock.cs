@@ -2,6 +2,7 @@ using Alex.API.Blocks.State;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks.State;
+using Alex.Worlds;
 
 namespace Alex.Blocks.Minecraft
 {
@@ -12,7 +13,7 @@ namespace Alex.Blocks.Minecraft
 			RequiresUpdate = true;
 		}
 		
-		public override void BlockUpdate(IWorld world, BlockCoordinates position, BlockCoordinates updatedBlock)
+		public override void BlockUpdate(World world, BlockCoordinates position, BlockCoordinates updatedBlock)
 		{
 			if (BlockState is BlockState state)
 			{
@@ -24,7 +25,7 @@ namespace Alex.Blocks.Minecraft
 			base.BlockUpdate(world, position, updatedBlock);
 		}
 
-		public override IBlockState BlockPlaced(IWorld world, IBlockState state, BlockCoordinates position)
+		public override BlockState BlockPlaced(World world, BlockState state, BlockCoordinates position)
 		{
 			return base.BlockPlaced(world, state, position);
 		}

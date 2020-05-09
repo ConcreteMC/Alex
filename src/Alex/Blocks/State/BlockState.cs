@@ -8,6 +8,7 @@ using Alex.API.Graphics;
 using Alex.API.Resources;
 using Alex.API.World;
 using Alex.Blocks.Minecraft;
+using Alex.Graphics.Models.Blocks;
 using Alex.ResourcePackLib.Json.BlockStates;
 using NLog;
 
@@ -16,20 +17,20 @@ namespace Alex.Blocks.State
 	public sealed class BlockStateVariantMapper
 	{
 		private static NLog.Logger Log = NLog.LogManager.GetCurrentClassLogger(typeof(BlockStateVariantMapper));
-		private IList<IBlockState> Variants { get; } = new List<IBlockState>();
+		private IList<BlockState> Variants { get; } = new List<BlockState>();
 
 		public BlockStateVariantMapper()
 		{
 
 		}
 		
-		public bool TryResolve(BlockState source, string property, string value, bool prioritize, out IBlockState result, params string[] requiredMatches)
+		public bool TryResolve(BlockState source, string property, string value, bool prioritize, out BlockState result, params string[] requiredMatches)
 		{
 			var copiedProperties = source.ToDictionary();
 			copiedProperties[property] = value.ToString();
 
 			int highestMatch = 0;
-			IBlockState highest = null;
+			BlockState highest = null;
 
 			var matching = GetVariants().Where(x =>
 				(x.TryGetValue(property, out string xVal) &&
@@ -91,7 +92,7 @@ namespace Alex.Blocks.State
 			return false;
 		}
 
-		public bool TryAdd(IBlockState state)
+		public bool TryAdd(BlockState state)
 		{
 			//return Variants.TryAdd(state);
 			if (Variants.Contains(state)) return false;
@@ -99,18 +100,18 @@ namespace Alex.Blocks.State
 			return true;
 		}
 
-		public IBlockState[] GetVariants()
+		public BlockState[] GetVariants()
 		{
 			return Variants.ToArray();
 		}
 
-		public IBlockState GetDefaultState()
+		public BlockState GetDefaultState()
 		{
 			return Variants.FirstOrDefault(x => x.Default);
 		}
 	}
 
-	public class BlockState : IBlockState, IEquatable<BlockState>, IRegistryEntry<BlockState>
+	public class BlockState : IEquatable<BlockState>, IRegistryEntry<BlockState>
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BlockState));
 
@@ -123,8 +124,8 @@ namespace Alex.Blocks.State
 
 		public string Name { get; set; }
 		public uint ID { get; set; }
-		public IBlockModel Model { get; set; }
-		public IBlock Block { get; set; } = new Air();
+		public BlockModel Model { get; set; }
+		public Block Block { get; set; } = new Air();
 		public bool IsMultiPart { get; set; } = false;
 		public bool Default { get; set; } = false;
 
@@ -165,7 +166,7 @@ namespace Alex.Blocks.State
 			return null;
 		}
 
-		public IBlockState WithPropertyNoResolve(string property, string value, bool clone = true)
+		public BlockState WithPropertyNoResolve(string property, string value, bool clone = true)
 		{
 			BlockState cloned;
 			if (clone)
@@ -185,15 +186,20 @@ namespace Alex.Blocks.State
 			//return WithPropertyNoResolve(property, property.ValueFromString(value), clone);
 		}
 
-		public IBlockState WithProperty(string property, string value, bool prioritize, params string[] requiredMatches)
+		public BlockState WithProperty(string property, string value, bool prioritize, params string[] requiredMatches)
 		{
-			if (VariantMapper.TryResolve(this, property, value, prioritize, out IBlockState result, requiredMatches))
+			if (VariantMapper.TryResolve(this, property, value, prioritize, out BlockState result, requiredMatches))
 			{
 				return result;
 			}
 
 			return WithPropertyNoResolve(property, value);
 			//return WithProperty(property, property.ValueFromString(value));
+		}
+		
+		public BlockState WithProperty(string property, string value)
+		{
+			return WithProperty(property, value, true);
 		}
 
 		public IDictionary<string, string> ToDictionary()
@@ -226,7 +232,7 @@ namespace Alex.Blocks.State
 			return false;
 		}
 
-		public bool ExactMatch(IBlockState o)
+		public bool ExactMatch(BlockState o)
 		{
 			if (o is BlockState other)
 			{
@@ -271,10 +277,10 @@ namespace Alex.Blocks.State
 			return string.Equals(Name, other.Name, StringComparison.InvariantCultureIgnoreCase) && ID == other.ID;
 		}
 
-		public bool Equals(IBlockState other)
-		{
-			return Equals((BlockState)other);
-		}		
+		//public bool Equals(BlockState other)
+	//	{
+		//	return Equals((BlockState)other);
+		//}		
 
 		public override string ToString()
 		{
@@ -332,7 +338,7 @@ namespace Alex.Blocks.State
 			return values;
 		}
 
-		public IBlockState CloneSilent()
+		public BlockState CloneSilent()
 		{
 			BlockState bs = new BlockState();
 			bs.Name = Name;
@@ -344,7 +350,7 @@ namespace Alex.Blocks.State
 			return bs;
 		}
 
-		public IBlockState Clone()
+		public BlockState Clone()
 		{
 			return CloneSilent();
 		}

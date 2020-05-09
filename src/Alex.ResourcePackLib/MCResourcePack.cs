@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -633,7 +634,7 @@ namespace Alex.ResourcePackLib
 					}
 				}
 			}
-
+			
 			_blockModels.Add(key, model);
 			return model;
 		}

@@ -21,7 +21,7 @@ using ItemType = Alex.API.Utils.ItemType;
 
 namespace Alex.Blocks.Minecraft
 {
-	public class Block : IBlock, IRegistryEntry<Block>
+	public class Block : IRegistryEntry<Block>
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Block));
 
@@ -53,7 +53,7 @@ namespace Alex.Blocks.Minecraft
 	    public int LightOpacity { get; set; } = 1;
 
 		//public BlockModel BlockModel { get; set; }
-		public IBlockState BlockState { get; set; }
+		public BlockState BlockState { get; set; }
 		public bool IsWater { get; set; } = false;
 		public bool IsSourceBlock { get; set; } = false;
 		
@@ -164,7 +164,7 @@ namespace Alex.Blocks.Minecraft
 			return BlockState.Model.GetPartBoundingBox(blockPosition, entityBox);
 		}
 		
-		public virtual IBlockState BlockPlaced(IWorld world, IBlockState state, BlockCoordinates position)
+		public virtual BlockState BlockPlaced(World world, BlockState state, BlockCoordinates position)
 		{
 			return state;
 			/*if (BlockState is BlockState s)
@@ -183,17 +183,17 @@ namespace Alex.Blocks.Minecraft
 			}*/
 		}
 
-		public virtual bool Tick(IWorld world, Vector3 position)
+		public virtual bool Tick(World world, Vector3 position)
 		{
 			return false;
 		}
 
-		public virtual void Interact(IWorld world, BlockCoordinates position, BlockFace face, Entity sourceEntity)
+		public virtual void Interact(World world, BlockCoordinates position, BlockFace face, Entity sourceEntity)
 		{
 
 		}
 
-		public virtual void BlockUpdate(IWorld world, BlockCoordinates position, BlockCoordinates updatedBlock)
+		public virtual void BlockUpdate(World world, BlockCoordinates position, BlockCoordinates updatedBlock)
 		{
 			
 		}
@@ -290,7 +290,7 @@ namespace Alex.Blocks.Minecraft
 	        return true;
         }
 
-        public virtual bool ShouldRenderFace(BlockFace face, IBlock neighbor)
+        public virtual bool ShouldRenderFace(BlockFace face, Block neighbor)
         {
 	        if (Transparent)
 	        {
@@ -329,7 +329,7 @@ namespace Alex.Blocks.Minecraft
 	        return true;
         }
 
-        public virtual bool CanAttach(BlockFace face, IBlock block)
+        public virtual bool CanAttach(BlockFace face, Block block)
         {
 	        return block.Solid && (block.IsFullCube || (block.BlockState.Name.Equals(
 		        BlockState.Name, StringComparison.InvariantCultureIgnoreCase)));
@@ -341,9 +341,9 @@ namespace Alex.Blocks.Minecraft
 		    return DisplayName ?? GetType().Name;
 	    }
 
-		public virtual IBlockState GetDefaultState()
+		public virtual BlockState GetDefaultState()
 		{
-			IBlockState r = null;
+			BlockState r = null;
 			if (BlockState is BlockState s)
 			{
 				r = s.VariantMapper.GetDefaultState();

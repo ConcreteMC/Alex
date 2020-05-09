@@ -1,16 +1,21 @@
 ﻿using System;
+using System.Buffers;
 
 namespace Alex.Blocks.Storage
 {
-	public class FlexibleStorage
+	public class FlexibleStorage : IStorage
 	{
+		private static ArrayPool<long> _arrayPool = ArrayPool<long>.Shared;
+		
 		public long[] _data;
 		private int _bitsPerEntry;
 		private int _size;
 		private long _maxEntryValue;
 
-		public FlexibleStorage(int bitsPerEntry, int size) : this(bitsPerEntry, new long[RoundUp(size * bitsPerEntry, 64) / 64])
+		private bool _isPooled = false;
+		public FlexibleStorage(int bitsPerEntry, int size) : this(bitsPerEntry, _arrayPool.Rent(RoundUp(size * bitsPerEntry, 64) / 64))
 		{
+			_isPooled = true;
 		}
 
 		public FlexibleStorage(int bitsPerEntry, long[] data)
@@ -105,6 +110,12 @@ namespace Alex.Blocks.Storage
 				int remainder = value % roundTo;
 				return remainder == 0 ? value : value + roundTo - remainder;
 			}
+		}
+
+		public void Dispose()
+		{
+			if (_isPooled)
+				_arrayPool.Return(_data);
 		}
 	}
 }

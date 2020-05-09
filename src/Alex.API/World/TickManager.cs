@@ -9,14 +9,12 @@ namespace Alex.API.World
     public class TickManager
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(TickManager));
-
-		private IWorld World { get; }
+		
 		private ConcurrentDictionary<Action, long> _scheduledTicks { get; }
 		private long _tick = 0;
 		public long CurrentTick => _tick;
-	    public TickManager(IWorld world)
+	    public TickManager()
 	    {
-		    World = world;
 		    _scheduledTicks = new ConcurrentDictionary<Action, long>();
 		}
 

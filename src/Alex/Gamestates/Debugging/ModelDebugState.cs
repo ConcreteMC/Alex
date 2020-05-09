@@ -441,7 +441,7 @@ namespace Alex.Gamestates.Debug
 
 	public class BlockModelExplorer : ModelExplorer
 	{
-		private IBlockState[] _blockStates;
+		private BlockState[] _blockStates;
 		private int           _index = 0;
 
 		private GraphicsDevice GraphicsDevice { get; }

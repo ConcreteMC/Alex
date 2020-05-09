@@ -1354,8 +1354,8 @@ namespace Alex.Worlds.Bedrock
 				{ 
 					Client.WorldReceiver.ChunkManager.AddChunk(column, new ChunkCoordinates(column.X, column.Z), true);
 					
-					EventDispatcher.DispatchEvent(
-						new ChunkReceivedEvent(new ChunkCoordinates(column.X, column.Z), column));
+					//EventDispatcher.DispatchEvent(
+					//	new ChunkReceivedEvent(new ChunkCoordinates(column.X, column.Z), column));
 				});
 		}
 

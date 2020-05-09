@@ -27,7 +27,7 @@ namespace Alex.Worlds.Generators
 			}
 		}
 
-		public IChunkColumn GenerateChunkColumn(ChunkCoordinates chunkCoordinates)
+		public ChunkColumn GenerateChunkColumn(ChunkCoordinates chunkCoordinates)
 		{
 			return _sharedChunk;
 		}

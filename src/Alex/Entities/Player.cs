@@ -8,6 +8,7 @@ using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks.Minecraft;
+using Alex.Blocks.State;
 using Alex.GameStates.Playing;
 using Alex.Graphics.Camera;
 using Alex.Items;
@@ -494,7 +495,7 @@ namespace Alex.Entities
 				    
 				    if (slot is ItemBlock ib)
 				    {
-					    IBlockState blockState = ib.Block;
+					    BlockState blockState = ib.Block;
 
 					    if (blockState != null && !(blockState.Block is Air) && HasRaytraceResult)
 					    {

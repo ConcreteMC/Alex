@@ -49,7 +49,7 @@ namespace Alex.Worlds
 
 		private GraphicsDevice Graphics { get; }
 		private ResourceManager Resources { get; }
-        private IWorld World { get; }
+        private World World { get; }
 
         private int _chunkUpdates = 0;
         public int ConcurrentChunkUpdates => (int) _threadsRunning;
@@ -78,7 +78,7 @@ namespace Alex.Worlds
        
 		private BlockLightCalculations BlockLightCalculations { get; }
 		private long _highPriorityUpdates = 0;
-        public ChunkManager(IServiceProvider serviceProvider, GraphicsDevice graphics, IWorld world)
+        public ChunkManager(IServiceProvider serviceProvider, GraphicsDevice graphics, World world)
         {
 	        _depthMap = new RenderTarget2D(graphics, 512, 512, false, SurfaceFormat.Color, DepthFormat.None);
 	        
@@ -90,7 +90,7 @@ namespace Alex.Worlds
 	        Resources = serviceProvider.GetRequiredService<ResourceManager>();
 	        _threadPool = serviceProvider.GetService<Alex>().ThreadPool;
 	        
-	        Chunks = new ConcurrentDictionary<ChunkCoordinates, IChunkColumn>();
+	        Chunks = new ConcurrentDictionary<ChunkCoordinates, ChunkColumn>();
 
 	        var stillAtlas = Resources.Atlas.GetStillAtlas();
 	        
@@ -131,7 +131,7 @@ namespace Alex.Worlds
 
         private ConcurrentQueue<ChunkCoordinates> HighestPriority { get; set; }
         private ThreadSafeList<ChunkCoordinates> Enqueued { get; } = new ThreadSafeList<ChunkCoordinates>();
-        private ConcurrentDictionary<ChunkCoordinates, IChunkColumn> Chunks { get; }
+        private ConcurrentDictionary<ChunkCoordinates, ChunkColumn> Chunks { get; }
 
         private ChunkData[] _renderedChunks = new ChunkData[0];
 
@@ -438,7 +438,7 @@ namespace Alex.Worlds
 		
 		#region Add, Remove, Get
 		
-        public void AddChunk(IChunkColumn chunk, ChunkCoordinates position, bool doUpdates = false)
+        public void AddChunk(ChunkColumn chunk, ChunkCoordinates position, bool doUpdates = false)
         {
 	        if (chunk is ChunkColumn cc && Options.VideoOptions.ClientSideLighting)
 	        {
@@ -483,7 +483,7 @@ namespace Alex.Worlds
 			        r.Cancel();
 	        }
 
-            IChunkColumn chunk;
+            ChunkColumn chunk;
 	        if (Chunks.TryRemove(position, out chunk))
 	        {
 		        if (dispose)
@@ -506,19 +506,27 @@ namespace Alex.Worlds
 			r?.Dispose();
         }
         
-        public bool TryGetChunk(ChunkCoordinates coordinates, out IChunkColumn chunk)
+        public bool TryGetChunk(ChunkCoordinates coordinates, out ChunkColumn chunk)
         {
-	        return Chunks.TryGetValue(coordinates, out chunk);
+	        if (Chunks.TryGetValue(coordinates, out var c))
+	        {
+		        chunk = c;
+		        return true;
+	        }
+
+	        chunk = null;
+	        return false;
         }
         #endregion
 
-        public KeyValuePair<ChunkCoordinates, IChunkColumn>[]GetAllChunks()
+        public KeyValuePair<ChunkCoordinates, ChunkColumn>[]GetAllChunks()
         {
 	        return Chunks.ToArray();
         }
         
         public void RebuildAll()
         {
+	        return;
 	        ThreadPool.QueueUserWorkItem(o =>
 	        {
 		        foreach (var chunk in Chunks)
@@ -570,7 +578,7 @@ namespace Alex.Worlds
 			
 			foreach (var chunk in Chunks.ToArray())
 		    {
-			    Chunks.TryRemove(chunk.Key, out IChunkColumn _);
+			    Chunks.TryRemove(chunk.Key, out ChunkColumn _);
 			    Enqueued.Remove(chunk.Key);
                 chunk.Value.Dispose();
 		    }
@@ -586,6 +594,7 @@ namespace Alex.Worlds
 
 	    #region Chunk Updates
 
+	    private bool NeedPrioritization { get; set; } = false;
 	    private void ChunkUpdateThread()
 		{
 			 //Environment.ProcessorCount / 2;
@@ -651,36 +660,44 @@ namespace Alex.Worlds
 
                 _renderedChunks = orderedList.ToArray();
 
-                var enqueued = Enqueued.ToArray();
-
-             //   int highPriority = 0;
-                foreach (var cc in enqueued)
+                if (NeedPrioritization)
                 {
-	                try
-	                {
-		                if (PriorityQueue.Contains(cc))
-		                {
-			                if (Chunks.TryGetValue(cc, out var chunk))
-			                {
-				                /*if (chunk.Scheduled == ScheduleType.Lighting)
-				                {
-					                PriorityQueue.UpdatePriority(cc,
-						                double.MaxValue - Math.Abs(cameraChunkPos.DistanceTo(cc)));
-					                continue;
-				                }*/
-				                
-				                PriorityQueue.UpdatePriority(cc, GetUpdatePriority(chunk, chunk.Scheduled));
+	                NeedPrioritization = false;
+	                var enqueued = Enqueued.ToArray();
 
-				               // if (IsWithinView(cc, _cameraBoundingFrustum))
-				               // {
-					            //    highPriority++;
-				               // }
+	                //   int highPriority = 0;
+	                foreach (var cc in enqueued)
+	                {
+		                try
+		                {
+			                //  if (PriorityQueue.Contains(cc))
+			                {
+				                if (Chunks.TryGetValue(cc, out var chunk))
+				                {
+					                if (chunk.Scheduled != ScheduleType.Unscheduled)
+					                {
+						                var prio = GetUpdatePriority(chunk, chunk.Scheduled);
+
+						                /*if (chunk.Scheduled == ScheduleType.Lighting)
+						                {
+							                PriorityQueue.UpdatePriority(cc,
+								                double.MaxValue - Math.Abs(cameraChunkPos.DistanceTo(cc)));
+							                continue;
+						                }*/
+						                PriorityQueue.UpdatePriority(cc, prio);
+
+						                // if (IsWithinView(cc, _cameraBoundingFrustum))
+						                // {
+						                //    highPriority++;
+						                // }
+					                }
+				                }
 			                }
 		                }
-	                }
-	                catch (ArgumentException)
-	                {
-		                Log.Warn($"Tried updating non-queued chunk: {cc}");
+		                catch (ArgumentException)
+		                {
+			                Log.Warn($"Tried updating non-queued chunk: {cc}");
+		                }
 	                }
                 }
 
@@ -738,7 +755,7 @@ namespace Alex.Worlds
 
 						    if (Chunks.TryGetValue(coordinates, out var val))
 						    {
-							    if (val is ChunkColumn column && column.Sections.Any(x => x != null && !x.IsEmpty()))
+							    if (val.Sections.Any(x => x != null && !x.IsEmpty()))
 							    {
 								    UpdateChunk(coordinates, val);
 							    }
@@ -757,7 +774,7 @@ namespace Alex.Worlds
 			    });
 	    }
 
-	    private double GetUpdatePriority(IChunkColumn column, ScheduleType type)
+	    private double GetUpdatePriority(ChunkColumn column, ScheduleType type)
 	    {
 		    var cameraChunk = new ChunkCoordinates(_cameraPosition);
 		    var cc = new ChunkCoordinates(column.X, column.Z);
@@ -790,7 +807,7 @@ namespace Alex.Worlds
 
 	    public void ScheduleChunkUpdate(ChunkCoordinates position, ScheduleType type, bool prioritize = false)
 	    {
-		    if (Chunks.TryGetValue(position, out IChunkColumn chunk))
+		    if (Chunks.TryGetValue(position, out ChunkColumn chunk))
 		    {
 			    var currentSchedule = chunk.Scheduled;
 
@@ -820,20 +837,26 @@ namespace Alex.Worlds
 				    chunk.Scheduled = type;
 
 				    chunk.HighPriority = prioritize;
-				    
-				    PriorityQueue.Enqueue(position, GetUpdatePriority(chunk, type));
+
+				    var prio = GetUpdatePriority(chunk, type);
+				    PriorityQueue.Enqueue(position,prio);
 
 				    Interlocked.Increment(ref _chunkUpdates);
 			    }
 		    }
 	    }
 
+	    internal void FlagPrioritization()
+	    {
+		    NeedPrioritization = true;
+	    }
+	    
 	    public TimeSpan MaxUpdateTime { get; set; } = TimeSpan.Zero;
 	    public TimeSpan MinUpdateTIme { get; set; } = TimeSpan.MaxValue;
 	    public TimeSpan ChunkUpdateTime { get; set; } = TimeSpan.Zero;
 	    public long TotalChunkUpdates { get; set; } = 0;
 
-	    private void UpdateChunk(ChunkCoordinates coordinates, IChunkColumn c)
+	    private void UpdateChunk(ChunkCoordinates coordinates, ChunkColumn c)
 	    {
 		    var chunk = c as ChunkColumn;
 
@@ -886,27 +909,6 @@ namespace Alex.Worlds
 				    ChunkSection section = (ChunkSection) s;
 
 				    var i = section.GetYLocation();
-
-				    if (i != currentChunkY && i != 0)
-				    {
-
-					    if (i > 0 && i < chunk.Sections.Length - 1)
-					    {
-						    var neighbors = chunk.CheckNeighbors(section, i, World).ToArray();
-
-						    if (!section.HasAirPockets && neighbors.Length == 6) //All surrounded by solid.
-						    {
-							    // Log.Info($"Found section with solid neigbors, skipping.");
-							    continue;
-						    }
-
-						    if (i < currentChunkY && neighbors.Length >= 6) continue;
-					    }
-					    else if (i < currentChunkY) continue;
-
-				    }
-
-				    //if (i == 0) force = true;
 
 				    bool shouldRebuildMesh = section.ScheduledUpdatesCount > 0 || section.ScheduledSkyUpdatesCount > 0
 				                                                               || section.ScheduledBlockUpdatesCount > 0;
@@ -1116,7 +1118,7 @@ namespace Alex.Worlds
 
 	    public static bool DoMultiPartCalculations { get; set; } = true;
 
-        private ChunkMesh GenerateSectionMesh(IWorld world,
+        private ChunkMesh GenerateSectionMesh(World world,
 	        ScheduleType scheduled,
 	        Vector3 chunkPosition,
 	        ref ChunkSection section,

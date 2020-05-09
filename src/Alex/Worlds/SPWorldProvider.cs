@@ -133,7 +133,8 @@ namespace Alex.Worlds
 					{
 						var c = (ChunkColumn) chunk;
 		
-						EventDispatcher.DispatchEvent(new ChunkReceivedEvent(currentCoordinates, c));
+						WorldReceiver.ChunkManager.AddChunk(c, currentCoordinates, false);
+						//EventDispatcher.DispatchEvent(new ChunkReceivedEvent(currentCoordinates, c));
 						LoadEntities(c);
 					}
 				}
@@ -143,7 +144,7 @@ namespace Alex.Worlds
 			}
 		}
 
-		private IEnumerable<IChunkColumn> GenerateChunks(ChunkCoordinates center, int renderDistance)
+		private IEnumerable<ChunkColumn> GenerateChunks(ChunkCoordinates center, int renderDistance)
 		{
 			var oldChunks = _loadedChunks.ToArray();
 
@@ -162,7 +163,7 @@ namespace Alex.Worlds
 
 				if (!_loadedChunks.Contains(cc))
 				{
-					IChunkColumn chunk =
+					ChunkColumn chunk =
 						_generator.GenerateChunkColumn(cc);
 
 					if (chunk == null) continue;
@@ -290,11 +291,11 @@ namespace Alex.Worlds
 					
 					foreach (var chunk in chunks)
 					{
-						EventDispatcher.DispatchEvent(new ChunkReceivedEvent(new ChunkCoordinates(chunk.X, chunk.Z), chunk)
-						{
-							DoUpdates = false
-						});
-						
+						//EventDispatcher.DispatchEvent(new ChunkReceivedEvent(new ChunkCoordinates(chunk.X, chunk.Z), chunk)
+						//{
+						//	DoUpdates = false
+						//});
+						WorldReceiver.ChunkManager.AddChunk(chunk, new ChunkCoordinates(chunk.X, chunk.Z), false);
 						progressReport(LoadingState.GeneratingVertices, (int)Math.Floor((count / target) * 100));
 					}
 					

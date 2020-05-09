@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using Alex.API.Graphics;
 using Alex.API.World;
+using Alex.Blocks.Minecraft;
+using Alex.Worlds;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Graphics.Models.Blocks
@@ -13,7 +15,7 @@ namespace Alex.Graphics.Models.Blocks
 			Models = models;
 		}
 
-	    public override (VertexPositionNormalTextureColor[] vertices, int[] indexes) GetVertices(IWorld world, Vector3 position, IBlock baseBlock)
+	    public override (VertexPositionNormalTextureColor[] vertices, int[] indexes) GetVertices(IBlockAccess world, Vector3 position, Block baseBlock)
 	    {
 			List<VertexPositionNormalTextureColor> vertices = new List<VertexPositionNormalTextureColor>();
 			List<int> indexes = new List<int>();

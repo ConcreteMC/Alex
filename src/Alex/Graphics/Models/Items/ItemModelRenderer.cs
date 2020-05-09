@@ -7,6 +7,7 @@ using Alex.API.Blocks.State;
 using Alex.API.Entities;
 using Alex.API.Graphics;
 using Alex.Blocks.Minecraft;
+using Alex.Blocks.State;
 using Alex.Entities;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json;
@@ -37,9 +38,9 @@ namespace Alex.Graphics.Models.Items
 	
 	public class ItemBlockModelRenderer : ItemModelRenderer<VertexPositionNormalTextureColor>
 	{
-		private IBlockState _block;
+		private BlockState _block;
 		private ResourceManager _resource;
-		public ItemBlockModelRenderer(IBlockState block, ResourcePackItem model, McResourcePack resourcePack, ResourceManager resourceManager) : base(model, resourcePack, VertexPositionNormalTextureColor.VertexDeclaration)
+		public ItemBlockModelRenderer(BlockState block, ResourcePackItem model, McResourcePack resourcePack, ResourceManager resourceManager) : base(model, resourcePack, VertexPositionNormalTextureColor.VertexDeclaration)
 		{
 			_block = block;
 			_resource = resourceManager;
@@ -51,8 +52,9 @@ namespace Alex.Graphics.Models.Items
 		{
 			if (Vertices != null)
 				return;
-			
-			var data = _block.Model.GetVertices(new ItemRenderingWorld(_block.Block), Vector3.Zero, _block.Block);
+
+			var w = new ItemRenderingWorld(_block.Block);
+			var data = _block.Model.GetVertices(w, Vector3.Zero, _block.Block);
 			Vertices = data.vertices;
 			Indexes = data.indexes.Select(x => (short)x).ToArray();
 		}

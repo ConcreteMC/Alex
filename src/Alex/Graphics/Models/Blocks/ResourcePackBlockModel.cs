@@ -19,7 +19,7 @@ using Matrix = System.Drawing.Drawing2D.Matrix;
 
 namespace Alex.Graphics.Models.Blocks
 {
-	public class CachedResourcePackModel : BlockModel
+	public class ResourcePackBlockModel : BlockModel
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(SPWorldProvider));
 		private static FastRandom FastRandom { get; } = new FastRandom();
@@ -40,10 +40,46 @@ namespace Alex.Graphics.Models.Blocks
 
 		public BoundingBox[] Boxes { get; set; } = new BoundingBox[0];
 		private bool UseRandomizer { get; set; }
-		public CachedResourcePackModel(ResourceManager resources, BlockStateModel[] models, bool useRandomizer = false)
+		public ResourcePackBlockModel(ResourceManager resources, BlockStateModel[] models, bool useRandomizer = false)
 		{
 			Resources = resources;
-			Models = models;
+			Models = models.Select(x =>
+			{
+				return new BlockStateModel()
+				{
+					Uvlock = x.Uvlock,
+					Weight = x.Weight,
+					X = x.X,
+					Y = x.Y,
+					ModelName = x.ModelName,
+					Model = new ResourcePackLib.Json.Models.Blocks.BlockModel()
+					{
+						AmbientOcclusion = x.Model.AmbientOcclusion,
+						Display = null,
+						Elements = x.Model.Elements.Select(el =>
+						{
+							return new BlockModelElement()
+							{
+								From = el.From,
+								To = el.To,
+								Rotation = el.Rotation,
+								Shade = el.Shade,
+								Faces = el.Faces.Select(face =>
+								{
+									return new KeyValuePair<BlockFace, BlockModelElementFace>(face.Key, new BlockModelElementFace()
+									{
+										Rotation = face.Value.Rotation,
+										Texture = ResolveTexture(x.Model, face.Value.Texture),
+										CullFace = face.Value.CullFace,
+										TintIndex = face.Value.TintIndex,
+										UV = face.Value.UV
+									});
+								}).ToDictionary(ff => ff.Key, rr => rr.Value)
+							};
+						}).ToArray()
+					}
+				};
+			}).ToArray();
 			UseRandomizer = useRandomizer;
 			
 			CalculateBoundingBoxes(Models);
@@ -96,7 +132,7 @@ namespace Alex.Graphics.Models.Blocks
 			return null;
 		}
 
-		public override BoundingBox GetBoundingBox(Vector3 position, IBlock requestingBlock)
+		public override BoundingBox GetBoundingBox(Vector3 position, Block requestingBlock)
 		{
 			const float minThickness = 0.1f;
 			Vector3 min = Min;
@@ -123,26 +159,27 @@ namespace Alex.Graphics.Models.Blocks
 			return new BoundingBox(position + (min), position + ((max)));
 		}
 
-		protected string ResolveTexture(ResourcePackLib.Json.Models.Blocks.BlockModel var, string texture)
+		private string ResolveTexture(ResourcePackLib.Json.Models.Blocks.BlockModel var, string texture)
 		{
-			string textureName = "no_texture";
-			if (!var.Textures.TryGetValue(texture.Replace("#", ""), out textureName))
-			{
-				textureName = texture;
-			}
+			if (texture[0] != '#')
+				return texture;
 
-			if (textureName.StartsWith("#"))
+			var modified = texture.Substring(1);
+			if (var.Textures.TryGetValue(modified, out texture))
 			{
-				if (!var.Textures.TryGetValue(textureName.Replace("#", ""), out textureName))
+				if (texture[0] == '#')
 				{
-					textureName = "no_texture";
+					if (!var.Textures.TryGetValue(texture.Substring(1), out texture))
+					{
+						texture = "no_texture";
+					}
 				}
 			}
 
-			return textureName;
+			return texture;
 		}
 
-		internal virtual bool ShouldRenderFace(IWorld world, BlockFace face, BlockCoordinates position, IBlock me)
+		protected virtual bool ShouldRenderFace(IBlockAccess world, BlockFace face, BlockCoordinates position, Block me)
 		{
 			if (world == null) return true;
 			
@@ -165,7 +202,7 @@ namespace Alex.Graphics.Models.Blocks
 			//if (!world.HasBlock(pos.X, pos.Y, pos.Z)) 
 			//	return false;
 
-			var theBlock = world.GetBlock(pos.X, pos.Y, pos.Z);
+			var theBlock = world.GetBlock(pos);
 
 			if (!theBlock.Renderable)
 				return true;
@@ -178,7 +215,7 @@ namespace Alex.Graphics.Models.Blocks
 			for (var index = 0; index < models.Length; index++)
 			{
 				var model = models[index];
-				ProcessModel(model, out Vector3 min, out Vector3 max);
+				ProcessModel(model, model.Model, out Vector3 min, out Vector3 max);
 
 				if (max.X > Max.X)
 					Max.X = max.X;
@@ -256,13 +293,11 @@ namespace Alex.Graphics.Models.Blocks
 			}
 		}
 
-		private void ProcessModel(BlockStateModel raw, out Vector3 min, out Vector3 max)
+		private void ProcessModel(BlockStateModel stateModel, ResourcePackLib.Json.Models.Blocks.BlockModel model, out Vector3 min, out Vector3 max)
 		{
 			float facesMinX = float.MaxValue, facesMinY = float.MaxValue, facesMinZ = float.MaxValue;
 			float facesMaxX = float.MinValue, facesMaxY = float.MinValue, facesMaxZ = float.MinValue;
 
-			var model = raw.Model;
-			
 			List<BoundingBox> boxes = new List<BoundingBox>();
 			for (var index = 0; index < model.Elements.Length; index++)
 			{
@@ -283,7 +318,7 @@ namespace Alex.Graphics.Models.Blocks
 						var v = verts[i];
 						//v.Position += (v.Normal * scale);
 						
-						v.Position = FixRotation(v.Position, raw, element);
+						v.Position = FixRotation(v.Position, element, stateModel.X, stateModel.Y);
 
 						v.Position /= 16f;
 
@@ -349,8 +384,8 @@ namespace Alex.Graphics.Models.Blocks
 					}
 				}
 
-				var from = FixRotation(element.From, raw, element);
-				var to = FixRotation(element.To, raw, element);
+				var from = FixRotation(element.From, element, stateModel.X, stateModel.Y);
+				var to = FixRotation(element.To, element, stateModel.X, stateModel.Y);
 
 				boxes.Add(new BoundingBox(Vector3.Min(from, to) / 16f, Vector3.Max(from, to) / 16f));
 			}
@@ -361,16 +396,13 @@ namespace Alex.Graphics.Models.Blocks
 			Boxes = Boxes.Concat(boxes.ToArray()).ToArray();
 		}
 
-		private Vector3 FixRotation(Vector3 v, BlockStateModel raw, BlockModelElement element)
+		private Vector3 FixRotation(Vector3 v, BlockModelElement element, int xRot, int yRot)
 		{
 			if (element.Rotation.Axis != Axis.Undefined)
 			{
 				var r = element.Rotation;
 				var angle = (float) (r.Angle * (Math.PI / 180f));
-							
-				//angle = r.Axis == Axis.Z ? angle : -angle;
-				//angle = r.Axis == Axis.Y ? -angle : angle;
-							
+				
 				var origin = r.Origin;
 							
 				var c = MathF.Cos(angle);
@@ -410,9 +442,9 @@ namespace Alex.Graphics.Models.Blocks
 				}
 			}
 			
-			if (raw.X > 0)
+			if (xRot > 0)
 			{
-				var rotX = (float) (raw.X * (Math.PI / 180f));
+				var rotX = (float) (xRot * (Math.PI / 180f));
 				var c = MathF.Cos(rotX);
 				var s = MathF.Sin(rotX);
 				var z = v.Z - 8f;
@@ -422,9 +454,9 @@ namespace Alex.Graphics.Models.Blocks
 				v.Y = 8f + (y * c + z * s);
 			}
 
-			if (raw.Y > 0)
+			if (yRot > 0)
 			{
-				var rotX = (float) (raw.Y * (Math.PI / 180f));
+				var rotX = (float) (yRot * (Math.PI / 180f));
 				var c = MathF.Cos(rotX);
 				var s = MathF.Sin(rotX);
 				var z = v.X - 8f;
@@ -437,9 +469,9 @@ namespace Alex.Graphics.Models.Blocks
 			return v;
 		}
 
-		private void CalculateModel(IWorld world,
+		private void CalculateModel(IBlockAccess world,
 			Vector3 position,
-			IBlock baseBlock,
+			Block baseBlock,
 			BlockStateModel bsModel,
 			IList<VertexPositionNormalTextureColor> verts,
 			List<int> indexResult,
@@ -451,19 +483,19 @@ namespace Alex.Graphics.Models.Blocks
 
 			if (biomeId != -1)
 			{
-				if (baseBlock is GrassBlock)
+				var mapColor = baseBlock.BlockMaterial.GetMaterialMapColor();
+				if (mapColor == MapColor.GRASS)
 				{
 					baseColor = Resources.ResourcePack.GetGrassColor(
 						biome.Temperature, biome.Downfall, (int) position.Y);
 				}
-				else
+				else if (mapColor == MapColor.FOLIAGE)
 				{
 					baseColor = Resources.ResourcePack.GetFoliageColor(
 						biome.Temperature, biome.Downfall, (int) position.Y);
 				}
 			}
-
-
+			
 			for (var index = 0; index < model.Elements.Length; index++)
 			{
 				var element = model.Elements[index];
@@ -560,14 +592,15 @@ namespace Alex.Graphics.Models.Blocks
 					}
 
 					var faceColor = face.Value.TintIndex.HasValue ? baseColor : Color.White;
+					var facePosition = position + cullFace.Value.GetVector3();
 
 					var blockLight = (byte) 0;
 					var skyLight = (byte) 15;
 					GetLight(
-						world, position, position + cullFace.Value.GetVector3(), out blockLight, out skyLight, baseBlock.Transparent || !baseBlock.Solid);
+						world, facePosition, out blockLight, out skyLight, baseBlock.Transparent || !baseBlock.Solid);
 					
 					var vertices = GetFaceVertices(face.Key, element.From, element.To,
-						GetTextureUVMap(Resources, ResolveTexture(model, texture), x1, x2, y1, y2, textureRotation, AdjustColor(
+						GetTextureUVMap(Resources, texture, x1, x2, y1, y2, textureRotation, AdjustColor(
 							faceColor, facing, element.Shade)),
 						out int[] indexes);
 
@@ -579,7 +612,7 @@ namespace Alex.Graphics.Models.Blocks
 						var v = vertices[i];
 						//v.Position += (v.Normal * scale);
 						
-						v.Position = FixRotation(v.Position, bsModel, element);
+						v.Position = FixRotation(v.Position, element, bsModel.X, bsModel.Y);
 
 						v.Position /= 16f;
 
@@ -642,15 +675,15 @@ namespace Alex.Graphics.Models.Blocks
 			}
 		}
 
-		protected (VertexPositionNormalTextureColor[] vertices, int[] indexes) GetVertices(IWorld world,
-			Vector3 position, IBlock baseBlock,
+		protected (VertexPositionNormalTextureColor[] vertices, int[] indexes) GetVertices(IBlockAccess world,
+			Vector3 position, Block baseBlock,
 			BlockStateModel[] models)
 		{
 			using (var verts = new PooledList<VertexPositionNormalTextureColor>(ClearMode.Auto))
 			{
 				var indexResult = new List<int>(24 * models.Length);
 
-				int biomeId = world == null ? 0 : world.GetBiome((int) position.X, 0, (int) position.Z);
+				int biomeId = 0;//world == null ? 0 : world.GetBiome((int) position.X, 0, (int) position.Z);
 				var biome   = BiomeUtils.GetBiomeById(biomeId);
 
 				if (UseRandomizer)
@@ -677,9 +710,9 @@ namespace Alex.Graphics.Models.Blocks
 			}
 		}
 		
-		public override (VertexPositionNormalTextureColor[] vertices, int[] indexes) GetVertices(IWorld world, Vector3 position, IBlock baseBlock)
+		public override (VertexPositionNormalTextureColor[] vertices, int[] indexes) GetVertices(IBlockAccess blockAccess, Vector3 position, Block baseBlock)
 		{
-			return GetVertices(world, position, baseBlock, Models);
+			return GetVertices(blockAccess, position, baseBlock, Models);
 		}
 	}
 }

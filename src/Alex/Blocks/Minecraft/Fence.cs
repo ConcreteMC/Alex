@@ -27,7 +27,7 @@ namespace Alex.Blocks.Minecraft
 		}
 
 		/// <inheritdoc />
-		public override bool CanAttach(BlockFace face, IBlock block)
+		public override bool CanAttach(BlockFace face, Block block)
 		{
 			if (block is Fence || block is FenceGate)
 				return true;

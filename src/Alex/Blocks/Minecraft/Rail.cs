@@ -15,10 +15,5 @@ namespace Alex.Blocks.Minecraft
 
 			Hardness = 0.7f;
 		}
-
-		public override void BlockUpdate(IWorld world, BlockCoordinates position, BlockCoordinates updatedBlock)
-		{
-			base.BlockUpdate(world, position, updatedBlock);
-		}
 	}
 }

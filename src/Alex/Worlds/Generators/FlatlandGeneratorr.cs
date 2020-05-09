@@ -1,22 +1,23 @@
 ﻿using Alex.API.Blocks.State;
 using Alex.API.Utils;
 using Alex.API.World;
+using Alex.Blocks.State;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Worlds.Generators
 {
     public class FlatlandGenerator : IWorldGenerator
     {
-	    private IBlockState Bedrock = BlockFactory.GetBlockState("minecraft:bedrock");
-	    private IBlockState Dirt = BlockFactory.GetBlockState("minecraft:dirt");
-	    private IBlockState Grass = BlockFactory.GetBlockState("minecraft:grass_block");
+	    private BlockState Bedrock = BlockFactory.GetBlockState("minecraft:bedrock");
+	    private BlockState Dirt = BlockFactory.GetBlockState("minecraft:dirt");
+	    private BlockState Grass = BlockFactory.GetBlockState("minecraft:grass_block");
 
 		public FlatlandGenerator()
 	    {
 
 	    }
 
-	    public IChunkColumn GenerateChunkColumn(ChunkCoordinates chunkCoordinates)
+	    public ChunkColumn GenerateChunkColumn(ChunkCoordinates chunkCoordinates)
 	    {
 		    ChunkColumn column = new ChunkColumn();
 		    column.X = chunkCoordinates.X;

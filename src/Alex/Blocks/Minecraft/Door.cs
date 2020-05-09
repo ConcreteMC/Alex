@@ -4,8 +4,10 @@ using Alex.API.Blocks.State;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks.Properties;
+using Alex.Blocks.State;
 using Alex.Entities;
 using Alex.ResourcePackLib.Json;
+using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using NLog;
 
@@ -40,7 +42,7 @@ namespace Alex.Blocks.Minecraft
 			IsFullCube = true;
 		}
 
-		private IBlockState Update(IWorld world, IBlockState blockState, BlockCoordinates coordinates, BlockCoordinates updated)
+		private BlockState Update(World world, BlockState blockState, BlockCoordinates coordinates, BlockCoordinates updated)
 		{
 			var updatedBlock = world.GetBlockState(updated);
 			if (!(updatedBlock.Block is Door))
@@ -76,7 +78,7 @@ namespace Alex.Blocks.Minecraft
 			return blockState;
 		}
 
-		public override IBlockState BlockPlaced(IWorld world, IBlockState state, BlockCoordinates position)
+		public override BlockState BlockPlaced(World world, BlockState state, BlockCoordinates position)
 		{
 			if (state.TryGetValue("half", out string half) && half.Equals(
 				"upper", StringComparison.InvariantCultureIgnoreCase))
@@ -87,7 +89,7 @@ namespace Alex.Blocks.Minecraft
 			return Update(world, state, position, position + BlockCoordinates.Up);
 		}
 
-		public override void BlockUpdate(IWorld world, BlockCoordinates position, BlockCoordinates updatedBlock)
+		public override void BlockUpdate(World world, BlockCoordinates position, BlockCoordinates updatedBlock)
 		{
 			var newValue = Update(world, BlockState, position, updatedBlock);
 			if (newValue != BlockState)
@@ -96,7 +98,7 @@ namespace Alex.Blocks.Minecraft
 			}
 		}
 		
-		public override bool ShouldRenderFace(BlockFace face, IBlock neighbor)
+		public override bool ShouldRenderFace(BlockFace face, Block neighbor)
 		{
 			return true;
 		}

@@ -1,25 +1,26 @@
 using Alex.API.Blocks.State;
+using Alex.Blocks.State;
 
 namespace Alex.Blocks.Storage
 {
-    public class DirectPallete : IPallete<IBlockState>
+    public class DirectPallete : IPallete<BlockState>
     {
-        public uint GetId(IBlockState state)
+        public uint GetId(BlockState state)
         {
             return state.ID;
         }
 
-        public uint Add(IBlockState state)
+        public uint Add(BlockState state)
         {
             throw new System.NotImplementedException();
         }
 
-        public IBlockState Get(uint id)
+        public BlockState Get(uint id)
         {
             return BlockFactory.GetBlockState(id);
         }
 
-        public void Put(IBlockState objectIn, uint intKey)
+        public void Put(BlockState objectIn, uint intKey)
         {
             
         }

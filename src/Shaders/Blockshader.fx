@@ -8,7 +8,7 @@ float4 AlphaTest;
 float4 LightOffset;
 
 Texture Texture;
-
+//: register(s0);
 sampler2D textureSampler = sampler_state  {
     Texture = <Texture>;
     MipFilter = Point;

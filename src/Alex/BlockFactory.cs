@@ -26,10 +26,10 @@ namespace Alex
 	{
 		private static NLog.Logger Log = NLog.LogManager.GetCurrentClassLogger(typeof(BlockFactory));
 
-		public static IReadOnlyDictionary<uint, IBlockState> AllBlockstates => new ReadOnlyDictionary<uint, IBlockState>(RegisteredBlockStates);
+		public static IReadOnlyDictionary<uint, BlockState> AllBlockstates => new ReadOnlyDictionary<uint, BlockState>(RegisteredBlockStates);
 		public static IReadOnlyDictionary<string, BlockStateVariantMapper> AllBlockstatesByName => new ReadOnlyDictionary<string, BlockStateVariantMapper>(BlockStateByName);
 		
-		private static readonly Dictionary<uint, IBlockState> RegisteredBlockStates = new Dictionary<uint, IBlockState>();
+		private static readonly Dictionary<uint, BlockState> RegisteredBlockStates = new Dictionary<uint, BlockState>();
 		private static readonly Dictionary<string, BlockStateVariantMapper> BlockStateByName = new Dictionary<string, BlockStateVariantMapper>();
 		private static readonly Dictionary<uint, BlockModel> ModelCache = new Dictionary<uint, BlockModel>();
 		private static readonly Dictionary<long, string> ProtocolIdToBlockName = new Dictionary<long, string>();
@@ -48,7 +48,7 @@ namespace Alex
 			Level = 8
 		};
 
-		private static BlockModel GetOrCacheModel(ResourceManager resources, McResourcePack resourcePack, IBlockState state, uint id, bool rebuild)
+		private static BlockModel GetOrCacheModel(ResourceManager resources, McResourcePack resourcePack, BlockState state, uint id, bool rebuild)
 		{
 			BlockModel result = null;
 			if (ModelCache.TryGetValue(id, out result) && !rebuild)
@@ -121,7 +121,7 @@ namespace Alex
 				cube.Textures["all"] = "no_texture";
 				CubeModel = cube;
 
-				UnknownBlockModel = new CachedResourcePackModel(resources, new BlockStateModel[]
+				UnknownBlockModel = new ResourcePackBlockModel(resources, new BlockStateModel[]
 				{
 					new BlockStateModel()
 					{
@@ -200,7 +200,7 @@ namespace Alex
 						}
 					}
 
-					if (!replace && RegisteredBlockStates.TryGetValue(id, out IBlockState st))
+					if (!replace && RegisteredBlockStates.TryGetValue(id, out BlockState st))
 					{
 						Log.Warn(
 							$"Duplicate blockstate id (Existing: {st.Name}[{st.ToString()}] | New: {entry.Key}[{variantState.ToString()}]) ");
@@ -295,7 +295,7 @@ namespace Alex
 		}
 
 		private static BlockModel ResolveModel(ResourceManager resources, McResourcePack resourcePack,
-			IBlockState state)
+			BlockState state)
 		{
 			string name = state.Name;
 
@@ -330,7 +330,7 @@ namespace Alex
 						ss.AppliedModels = models.Select(x => x.ModelName).ToArray();
 					}
 					
-					return new CachedResourcePackModel(resources, models);
+					return new ResourcePackBlockModel(resources, models);
 				}
 
 				if (blockStateResource?.Variants == null ||
@@ -352,7 +352,7 @@ namespace Alex
 						return null;
 					}
 
-					return new CachedResourcePackModel(resources, models, v.Value.ToArray().Length > 1);
+					return new ResourcePackBlockModel(resources, models, v.Value.ToArray().Length > 1);
 				}
 
 				BlockStateVariant blockStateVariant = null;
@@ -411,15 +411,15 @@ namespace Alex
 					return null;
 				}
 				
-				return new CachedResourcePackModel(resources, asArray, asArray.Length > 1);
+				return new ResourcePackBlockModel(resources, asArray, asArray.Length > 1);
 			}
 
 			return null;
 		}
 
-		private static readonly IBlockState AirState = new BlockState(){Name = "Unknown"};
+		private static readonly BlockState AirState = new BlockState(){Name = "Unknown"};
 
-		public static IBlockState GetBlockState(string palleteId)
+		public static BlockState GetBlockState(string palleteId)
 		{
 			if (BlockStateByName.TryGetValue(palleteId, out var result))
 			{
@@ -429,7 +429,7 @@ namespace Alex
 			return AirState;
 		}
 
-		public static IBlockState GetBlockState(uint palleteId)
+		public static BlockState GetBlockState(uint palleteId)
 		{
 			if (RegisteredBlockStates.TryGetValue(palleteId, out var result))
 			{

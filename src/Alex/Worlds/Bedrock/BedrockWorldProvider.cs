@@ -112,6 +112,8 @@ namespace Alex.Worlds.Bedrock
 
 					if (pos.DistanceTo(_lastLocation) > 16f && _stopwatch.ElapsedMilliseconds > 500)
 					{
+						WorldReceiver.ChunkManager.FlagPrioritization();
+						
 						_stopwatch.Stop();
 						_stopwatch.Reset();
 						_lastLocation = pos;
@@ -212,7 +214,7 @@ namespace Alex.Worlds.Bedrock
 					double radiusSquared = Math.Pow(Client.ChunkRadius, 2);
 					var target = radiusSquared;
 					
-					percentage = (int)((100 / target) * ChunksReceived);
+					percentage = (int)((100 / target) * WorldReceiver.ChunkManager.ChunkCount);
 					
 					if (percentage != previousPercentage)
 					{
@@ -282,14 +284,14 @@ namespace Alex.Worlds.Bedrock
 
 		private int ChunksReceived { get; set; }
 		
-		[EventHandler(EventPriority.Monitor)]
+	/*	[EventHandler(EventPriority.Monitor)]
 		private void OnChunkReceived(ChunkReceivedEvent e)
 		{
 			e.SetCancelled(false);
 			
 			ChunksReceived++;
 			_loadedChunks.TryAdd(e.Coordinates);
-		}
+		}*/
 
 		public override void Dispose()
 		{

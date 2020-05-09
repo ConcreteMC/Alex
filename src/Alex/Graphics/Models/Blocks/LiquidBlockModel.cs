@@ -11,6 +11,7 @@ using Alex.Blocks.Properties;
 using Alex.Blocks.State;
 using Alex.ResourcePackLib.Json;
 using Alex.Utils;
+using Alex.Worlds;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Graphics.Models.Blocks
@@ -30,12 +31,12 @@ namespace Alex.Graphics.Models.Blocks
 
 		}
 
-		private int GetLevel(IBlockState state)
+		private int GetLevel(BlockState state)
 		{
 			return 7 - (state.GetTypedValue(LEVEL) & 0x7);
 		}
 
-		private bool Check(IWorld world, BlockCoordinates position)
+		private bool Check(IBlockAccess world, BlockCoordinates position)
 		{
 			var forward = world.GetBlockState(position + BlockCoordinates.Forwards);
 
@@ -90,7 +91,7 @@ namespace Alex.Graphics.Models.Blocks
 			return false;
 		}
 
-		public override (VertexPositionNormalTextureColor[] vertices, int[] indexes) GetVertices(IWorld world, Vector3 vectorPos, IBlock baseBlock)
+		public override (VertexPositionNormalTextureColor[] vertices, int[] indexes) GetVertices(IBlockAccess world, Vector3 vectorPos, Block baseBlock)
 		{
 			var position = new BlockCoordinates(vectorPos);
 			List< VertexPositionNormalTextureColor> result = new List<VertexPositionNormalTextureColor>(36);
@@ -370,7 +371,7 @@ namespace Alex.Graphics.Models.Blocks
 			return (result.ToArray(), indexResult.ToArray());
 		}
 
-		protected int GetAverageLiquidLevels(IWorld world, BlockCoordinates position, out BlockCoordinates lowest, out int lowestLevel)
+		protected int GetAverageLiquidLevels(IBlockAccess world, BlockCoordinates position, out BlockCoordinates lowest, out int lowestLevel)
 		{
 			lowest = BlockCoordinates.Up;
 			lowestLevel = 7;
