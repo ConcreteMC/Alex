@@ -57,9 +57,8 @@ namespace Alex.Worlds
 	    public int ChunkCount => Chunks.Count;
 
 	    public RenderingShaders DefaultShaders { get; set; }
-	    public RenderingShaders LightShaders { get; set; }
-		
-		private BasicEffect DepthEffect { get; }
+
+	    private BasicEffect DepthEffect { get; }
 
 	    public long Vertices { get; private set; }
 	    public int RenderedChunks { get; private set; } = 0;
@@ -106,6 +105,7 @@ namespace Alex.Worlds
 	        DefaultShaders = new RenderingShaders(Graphics);
 	        DefaultShaders.SetTextures(stillAtlas);
 	        DefaultShaders.SetAnimatedTextures(Resources.Atlas.GetAtlas(0));
+	      //  DefaultShaders.LightSource1Strength = 15;
 	        
 	        //if (alex.)
 
@@ -434,6 +434,8 @@ namespace Alex.Worlds
 			var camera = args.Camera;
 		    _cameraBoundingFrustum = camera.BoundingFrustum;
 		    _cameraPosition = camera.Position;
+
+			    //	    DefaultShaders.LightSource1Position = _cameraPosition;
 	    }
 		
 		#region Add, Remove, Get

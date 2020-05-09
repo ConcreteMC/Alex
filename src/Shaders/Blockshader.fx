@@ -2,33 +2,39 @@
 float4x4 Projection;
 float4x4 View;
 float4 DiffuseColor;
-float4 FogVector;
-float3 FogColor;
 float4 AlphaTest;
 float4 LightOffset;
 
+float3 LightSource1;
+float LightSource1Strength;
+
+float FogEnabled;
+float FogStart;
+float FogEnd;
+float3 FogColor;
+
 Texture Texture;
 //: register(s0);
-sampler2D textureSampler = sampler_state  {
+sampler2D textureSampler: register(s0) = sampler_state {
     Texture = <Texture>;
-    MipFilter = Point;
-    MagFilter = Point;
-    MinFilter = Point;
-    AddressU = Wrap;
-    AddressV = Wrap;
 };
 
 struct VertexToPixel  {
     float4 Position     : POSITION;
     float4 TexCoords    : TEXCOORD0;
-    float4 BlockLight   : TEXCOORD01;
-    float4 SkyLight     : TEXCOORD02;
+    float4 Lighting   : TEXCOORD01;
     float4 Color        : COLOR0;
+    float FogFactor    : COLOR1;
 };
 
 struct PixelToFrame  {
     float4 Color        : COLOR0;
 };
+
+float ComputeFogFactor(float d) 
+{
+    return saturate((d - FogStart) / (FogEnd - FogStart)) * FogEnabled;
+}
 
 VertexToPixel VertexShaderFunction(float4 inPosition : POSITION, float4 inTexCoords : TEXCOORD0, float4 inColor : COLOR0, float4 blockLight : TEXCOORD01, float4 skyLight : TEXCOORD02)  {
     VertexToPixel Output = (VertexToPixel)0;
@@ -36,11 +42,14 @@ VertexToPixel VertexShaderFunction(float4 inPosition : POSITION, float4 inTexCoo
     float4 worldPos = mul(inPosition, World);
     float4 viewPos = mul(worldPos, View);
 
+    float4 lighting = clamp(skyLight * LightOffset, 0, 15);
+
     Output.Position = mul(viewPos, Projection);
+
     Output.TexCoords = inTexCoords;
-    Output.BlockLight = blockLight;
-    Output.SkyLight = skyLight;
+    Output.Lighting = max(lighting, skyLight);
     Output.Color = inColor;
+    Output.FogFactor = ComputeFogFactor(distance(inPosition.xy, viewPos.xy)) * FogEnabled;
 
     return Output;
 }
@@ -50,17 +59,16 @@ PixelToFrame PixelShaderFunction(VertexToPixel PSIn)  {
 
     float4 baseColor = 0.086f;
     float4 textureColor = tex2D(textureSampler, PSIn.TexCoords);
-    float4 modifiedSkyLight = clamp(PSIn.SkyLight * LightOffset, 0, 15);
-
-    float4 lighting = max(PSIn.BlockLight, modifiedSkyLight);
     
-    float4 colorValue = pow((1.0f / 16.0f) * lighting, 1.4f) + baseColor;
+    float4 colorValue = pow((1.0f / 16.0f) * PSIn.Lighting, 1.2f) + baseColor;
 
     Output.Color = textureColor * PSIn.Color;
-
     Output.Color.r *= colorValue;
     Output.Color.g *= colorValue;
     Output.Color.b *= colorValue;
+    
+    Output.Color.rgb = lerp(Output.Color.rgb, FogColor, PSIn.FogFactor);
+    
 
     clip((Output.Color.a < AlphaTest.x) ? AlphaTest.z : AlphaTest.w);
 

@@ -555,7 +555,7 @@ namespace Alex.Worlds.Bedrock
 	        }
 	        
 	        string prefix = "";
-	        foreach (var state in record.States.AsReadOnly())
+	        foreach (var state in record.States.ToArray())
 	        {
 		        switch (state.Name)
 		        {

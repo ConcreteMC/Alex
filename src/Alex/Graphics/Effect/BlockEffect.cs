@@ -16,6 +16,7 @@ namespace Alex.Graphics.Effect
         AlphaTest     = 64, // 0x00000040
         ShaderIndex   = 128, // 0x00000080
         LightOffset   = 256,
+        LightSource1  = 512,
         All           = -1, // 0xFFFFFFFF
     }
 
@@ -27,6 +28,10 @@ namespace Alex.Graphics.Effect
        // EffectParameter diffuseColorParam;
         EffectParameter alphaTestParam;
         EffectParameter fogColorParam;
+        private EffectParameter fogStartParam;
+        private EffectParameter fogEndParam;
+        private EffectParameter fogEnabledParam;
+        
         EffectParameter fogVectorParam;
 
         private EffectParameter worldParam;
@@ -36,12 +41,19 @@ namespace Alex.Graphics.Effect
         private EffectParameter viewParam;
 
         private EffectParameter lightOffsetParam;
+
+        private EffectParameter lightSource1StrengthParam;
+
+        private EffectParameter lightSource1Param;
          //EffectParameter worldViewProjParam;
 
         #endregion
 
         #region Fields
 
+        private Vector3 lightSource1;
+        private float lightSource1Strength;
+        
         bool fogEnabled;
         bool vertexColorEnabled;
 
@@ -68,6 +80,28 @@ namespace Alex.Graphics.Effect
 
         #region Public Properties
 
+        public float LightSource1Strength
+        {
+            get => lightSource1Strength;
+            set
+            {
+                lightSource1Strength = value;
+                dirtyFlags |= EffectDirtyFlags.LightSource1;
+            }
+        }
+
+        public Vector3 LightSource1
+        {
+            get
+            {
+                return lightSource1;
+            }
+            set
+            {
+                lightSource1 = value;
+                dirtyFlags |= EffectDirtyFlags.LightSource1;
+            }
+        }
 
         /// <summary>
         /// Gets or sets the world matrix.
@@ -316,6 +350,9 @@ namespace Alex.Graphics.Effect
 
             alphaFunction = cloneSource.alphaFunction;
             referenceAlpha = cloneSource.referenceAlpha;
+
+            lightSource1 = cloneSource.lightSource1;
+            lightSource1Strength = cloneSource.lightSource1Strength;
         }
 
         /// <summary>
@@ -334,7 +371,10 @@ namespace Alex.Graphics.Effect
             textureParam = Parameters["Texture"];
            // diffuseColorParam = Parameters["DiffuseColor"];
             alphaTestParam = Parameters["AlphaTest"];
-          //  fogColorParam = Parameters["FogColor"];
+            fogColorParam = Parameters["FogColor"];
+            fogStartParam = Parameters["FogStart"];
+            fogEndParam = Parameters["FogEnd"];
+            fogEnabledParam = Parameters["FogEnabled"];
           //  fogVectorParam = Parameters["FogVector"];
         
             worldParam = Parameters["World"];
@@ -344,6 +384,9 @@ namespace Alex.Graphics.Effect
             viewParam = Parameters["View"];
 
             lightOffsetParam = Parameters["LightOffset"];
+
+            lightSource1Param = Parameters["LightSource1"];
+            lightSource1StrengthParam = Parameters["LightSource1Strength"];
             //  worldViewProjParam = Parameters["WorldViewProj"];
         }
         
@@ -382,7 +425,11 @@ namespace Alex.Graphics.Effect
             EffectParameter worldParam,
             EffectParameter viewParam,
             EffectParameter projectionParam,
-            EffectParameter fogVectorParam)
+            EffectParameter fogStartParam,
+            EffectParameter fogEndParam,
+            EffectParameter fogEnabledParam,
+            EffectParameter fogColorParam,
+            Vector3 fogColor)
         {
             if ((dirtyFlags & EffectDirtyFlags.WorldViewProj) != ~EffectDirtyFlags.All)
             {
@@ -400,11 +447,16 @@ namespace Alex.Graphics.Effect
                 if ((dirtyFlags & (EffectDirtyFlags.Fog | EffectDirtyFlags.FogEnable)) != ~EffectDirtyFlags.All)
                 {
                    // SetFogVector(ref worldView, fogStart, fogEnd, fogVectorParam);
+                   fogStartParam.SetValue(fogStart);
+                   fogEndParam.SetValue(fogEnd);
+                   fogEnabledParam.SetValue(1f);
+                   fogColorParam.SetValue(fogColor);
                     dirtyFlags &= ~(EffectDirtyFlags.Fog | EffectDirtyFlags.FogEnable);
                 }
             }
             else if ((dirtyFlags & EffectDirtyFlags.FogEnable) != ~EffectDirtyFlags.All)
             {
+                fogEnabledParam.SetValue(0f);
                 //fogVectorParam.SetValue(Vector4.Zero);
                 dirtyFlags &= ~EffectDirtyFlags.FogEnable;
             }
@@ -419,8 +471,16 @@ namespace Alex.Graphics.Effect
             // Recompute the world+view+projection matrix or fog vector?
             dirtyFlags = SetWorldViewProjAndFog(
                 dirtyFlags, ref world, ref view, ref projection, ref worldView, fogEnabled, fogStart, fogEnd,
-                worldParam, viewParam, projParam, fogVectorParam);
+                worldParam, viewParam, projParam, fogStartParam, fogEndParam, fogEnabledParam, fogColorParam, FogColor);
 
+            if ((dirtyFlags & EffectDirtyFlags.LightSource1) != 0)
+            {
+                //lightSource1Param.SetValue(lightSource1);
+              //  lightSource1StrengthParam.SetValue(lightSource1Strength);
+                
+                dirtyFlags &= ~EffectDirtyFlags.LightSource1;
+            }
+            
             if ((dirtyFlags & EffectDirtyFlags.LightOffset) != 0)
             {
                 lightOffsetParam.SetValue((float)_lightOffset);

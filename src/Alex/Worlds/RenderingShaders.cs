@@ -191,5 +191,43 @@ namespace Alex.Worlds
 				LightingEffect.LightOffset = value;
 			}
 		}
+
+		public float LightSource1Strength
+		{
+			get
+			{
+				return TransparentEffect.LightSource1Strength;
+			}
+			set
+			{
+				TransparentEffect.LightSource1Strength = value;
+				TranslucentEffect.LightSource1Strength = value;
+
+				OpaqueEffect.LightSource1Strength = value;
+				// OpaqueEffect.DiffuseColor = value;
+				AnimatedEffect.LightSource1Strength = value;
+				AnimatedTranslucentEffect.LightSource1Strength = value;
+				//LightingEffect.LightSource1Strength = value;
+			}
+		}
+		
+		public Vector3 LightSource1Position
+		{
+			get
+			{
+				return TransparentEffect.LightSource1;
+			}
+			set
+			{
+				TransparentEffect.LightSource1 = value;
+				TranslucentEffect.LightSource1 = value;
+
+				OpaqueEffect.LightSource1 = value;
+				// OpaqueEffect.DiffuseColor = value;
+				AnimatedEffect.LightSource1 = value;
+				AnimatedTranslucentEffect.LightSource1 = value;
+				//LightingEffect.LightSource1Strength = value;
+			}
+		}
 	}
 }
