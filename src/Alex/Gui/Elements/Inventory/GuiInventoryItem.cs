@@ -23,28 +23,10 @@ namespace Alex.Gui.Elements.Inventory
 
 		public TextureSlice2D SelectedBackground { get; private set; }
 
-		private Item _item = new ItemAir()
-		{
-			Count = 0,
-			//  ItemID = -1,
-			//   ItemDamage = 0,
-			Nbt = null
-		};
 
 		public GuiInventoryItem()
 		{
-			//Height = 18;
-			//Width = 18;
-			//	TextureElement.Margin = new Thickness(2,2);
-			Item = _item;
-			/*AddChild(Texture = new GuiTextureElement()
-			{
-				Anchor = Alignment.TopLeft,
-
-				Height = 16,
-				Width = 16,
-				Margin = new Thickness(4, 4)
-			});*/
+			
 		}
 
 		protected override void OnInit(IGuiRenderer renderer)

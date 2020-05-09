@@ -8,14 +8,12 @@ using Alex.API.Entities;
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.Blocks.Minecraft;
-using Alex.Blocks.State;
 using Alex.Entities;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Models;
 using Alex.ResourcePackLib.Json.Models.Items;
 using Alex.Utils;
-using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using SixLabors.ImageSharp.PixelFormats;
@@ -24,114 +22,6 @@ using MathF = System.MathF;
 
 namespace Alex.Graphics.Models.Items
 {
-    public interface IItemRenderer : IAttachable
-    {
-        ResourcePackModelBase Model { get; }
-
-        Vector3 Rotation { get; set; }
-        Vector3 Translation { get; set; }
-        Vector3 Scale { get; set; }
-        DisplayPosition DisplayPosition { get; set; }
-        DisplayElement ActiveDisplayItem { get; }
-
-        void Update(GraphicsDevice device, ICamera camera);
-
-        void Cache(McResourcePack pack);
-
-        IItemRenderer Clone();
-    }
-
-    public class ItemBlockModelRenderer : ItemModelRenderer<VertexPositionNormalTextureColor>
-    {
-        private BlockState _block;
-        private ResourceManager _resource;
-
-        public ItemBlockModelRenderer(BlockState block, ResourcePackModelBase model, McResourcePack resourcePack,
-            ResourceManager resourceManager) : base(model, resourcePack,
-            VertexPositionNormalTextureColor.VertexDeclaration)
-        {
-            _block = block;
-            _resource = resourceManager;
-
-          //  Translation = -Vector3.Forward * 8f;
-        }
-
-        public override void Cache(McResourcePack pack)
-        {
-            if (Vertices != null)
-                return;
-
-            var data = _block.Model.GetVertices(new ItemRenderingWorld(_block.Block), Vector3.Zero, _block.Block);
-            Vertices = data.vertices;
-            Indexes = data.indexes.Select(x => (short) x).ToArray();
-        }
-
-        protected override void InitEffect(BasicEffect effect)
-        {
-            base.InitEffect(effect);
-            effect.TextureEnabled = true;
-
-            if (_block.Block.Animated)
-            {
-                effect.Texture = _resource.Atlas.GetAtlas(0);
-            }
-            else
-            {
-                effect.Texture = _resource.Atlas.GetStillAtlas();
-            }
-        }
-
-        public override void Update(GraphicsDevice device, ICamera camera)
-        {
-            base.Update(device, camera);
-        }
-
-        //
-        // public override void Update(GraphicsDevice device, ICamera camera)
-        // {
-        //     if (Effect == null)
-        //     {
-        //         Effect = new BasicEffect(device);
-        //         Effect.VertexColorEnabled = true;
-        //         Effect.TextureEnabled = true;
-        //
-        //         if (_block.Block.Animated)
-        //         {
-        //             Effect.Texture = _resource.Atlas.GetAtlas(0);
-        //         }
-        //         else
-        //         {
-        //             Effect.Texture = _resource.Atlas.GetStillAtlas();
-        //         }
-        //     }
-        //
-        //     Effect.Projection = camera.ProjectionMatrix;
-        //     Effect.View = camera.ViewMatrix;
-        //
-        //     var scale = Scale;
-        //
-        //     Effect.World = Matrix.CreateScale(scale)
-        //                    * Matrix.CreateTranslation(Translation)
-        //                    * Matrix.CreateFromAxisAngle(Vector3.Up, MathUtils.ToRadians(Rotation.Y))
-        //                    * Matrix.CreateFromAxisAngle(Vector3.Right, MathUtils.ToRadians(Rotation.X))
-        //                    * Matrix.CreateFromAxisAngle(Vector3.Forward, MathHelper.TwoPi - MathUtils.ToRadians(Rotation.Z))
-        //                    // * Matrix.CreateRotationY(Rotation.Y - MathHelper.PiOver4)
-        //                    // * Matrix.CreateRotationX(Rotation.X + MathHelper.PiOver4)
-        //                    // * Matrix.CreateRotationZ(Rotation.Z)
-        //                    * ParentMatrix;
-        //
-        //     base.Update(device, camera);
-        // }
-
-        public override IItemRenderer Clone()
-        {
-            return new ItemBlockModelRenderer(_block, Model, null, _resource)
-            {
-                
-            };
-        }
-    }
-
     public class ItemModelRenderer : ItemModelRenderer<VertexPositionColor>
     {
         public ItemModelRenderer(ResourcePackModelBase model, McResourcePack resourcePack) : base(model, resourcePack,
@@ -298,6 +188,8 @@ namespace Alex.Graphics.Models.Items
         private IndexBuffer IndexBuffer { get; set; } = null;
         private VertexDeclaration _declaration;
 
+        protected Vector3 Offset { get; set; } = Vector3.Zero;
+        
         public ItemModelRenderer(ResourcePackModelBase model, McResourcePack resourcePack, VertexDeclaration declaration)
         {
             Model = model;
@@ -346,16 +238,16 @@ namespace Alex.Graphics.Models.Items
 
             var world = Matrix.Identity;
 
+            var a = new Vector3(0.5f, 0.5f, 0.5f);
             if (Model.GuiLight.HasValue && Model.GuiLight == GuiLight.Side)
             {
-                world *= Matrix.CreateTranslation(-new Vector3(0.5f, 0.5f, 0.5f))
-                         * Matrix.CreateFromYawPitchRoll(45f, 45f, 0f)
-                         * Matrix.CreateTranslation(new Vector3(0.5f, 0.5f, 0.5f));
+                world *= Matrix.CreateTranslation(-a)
+                         * Matrix.CreateFromYawPitchRoll(-45f, -45f, 0f)
+                         * Matrix.CreateTranslation(a);
             }
 
             if (activeDisplayItem != null)
             {
-                var a = new Vector3(0.5f, 0.5f, 0.5f);
                 world *= Matrix.CreateTranslation(-a) * Matrix.CreateScale(activeDisplayItem.Scale)
                                                       * Matrix.CreateTranslation(activeDisplayItem.Translation.X / 32f,
                                                           activeDisplayItem.Translation.Y / 32f,
@@ -373,22 +265,25 @@ namespace Alex.Graphics.Models.Items
                 world *= Matrix.CreateScale(1f)
                          * Matrix.CreateFromAxisAngle(Vector3.Forward, MathHelper.TwoPi);
             }
-            
+
+
+            if ((_displayPosition & DisplayPosition.Gui) != 0)
             {
-                // HACKS
-                if (//_displayPosition.HasFlag(DisplayPosition.ThirdPerson) ||
-                    (_displayPosition & ResourcePackLib.Json.Models.Items.DisplayPosition.FirstPerson) != 0)
-                {
-                    world *= Matrix.CreateRotationX(-MathF.PI / 5f);
-                    world *= Matrix.CreateRotationZ(-1f / 16f);
-                    world *= Matrix.CreateTranslation(-2f/16f, 11.5f/16f,  -6f/16f);
-                }else if ((_displayPosition & ResourcePackLib.Json.Models.Items.DisplayPosition.ThirdPerson) != 0)
-                {
-                    world *= Matrix.CreateRotationX(-MathF.PI / 4f);
-               //     world *= Matrix.CreateRotationX(MathF.PI / 4f);
-                    world *= Matrix.CreateTranslation(-2f/16f, 8f/16f, -3f/16f);
-                }
+
             }
+            else if ((_displayPosition & ResourcePackLib.Json.Models.Items.DisplayPosition.FirstPerson) != 0)
+            {
+                world *= Matrix.CreateRotationX(-MathF.PI / 5f);
+                world *= Matrix.CreateRotationZ(-1f / 16f);
+                world *= Matrix.CreateTranslation(-2f / 16f, 11.5f / 16f, -6f / 16f);
+            }
+            else if ((_displayPosition & ResourcePackLib.Json.Models.Items.DisplayPosition.ThirdPerson) != 0)
+            {
+                world *= Matrix.CreateRotationX(-MathF.PI / 4f);
+                //     world *= Matrix.CreateRotationX(MathF.PI / 4f);
+                world *= Matrix.CreateTranslation(-2f / 16f, 8f / 16f, -3f / 16f);
+            }
+
 
             ParentMatrix = Matrix.Identity *
                            Matrix.CreateScale(scale) *
@@ -420,7 +315,7 @@ namespace Alex.Graphics.Models.Items
                 }
             }
         }
-        
+
 
         private void DrawLine(GraphicsDevice device, Vector3 start, Vector3 end, Color color)
         {

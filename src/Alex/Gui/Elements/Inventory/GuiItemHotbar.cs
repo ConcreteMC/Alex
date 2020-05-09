@@ -17,7 +17,7 @@ namespace Alex.Gui.Elements.Inventory
 	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(GuiItemHotbar));
 
 		private const int ItemCount = 9;
-        private const int ItemWidth = 16;
+        private const int ItemWidth = 18;
         
         private int _selectedIndex = 0;
 
@@ -79,7 +79,8 @@ namespace Alex.Gui.Elements.Inventory
 					HighlightedBackground = GuiTextures.Inventory_HotBar_SelectedItemOverlay,
 			        IsSelected = i == SelectedIndex,
 			        Anchor = Alignment.TopLeft,
-			        Item = hotbarItems[i]
+			        Item = hotbarItems[i],
+			        AutoSizeMode = AutoSizeMode.None
 		        });
 	        }
 

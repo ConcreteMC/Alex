@@ -48,7 +48,7 @@ namespace Alex.Gui.Dialogs.Containers
 				{
 					slots.Add(
 						AddSlot(
-							x + (row * (InventoryContainerItem.ItemWidth + 2)), y + (col * (InventoryContainerItem.ItemWidth + 2)),
+							x + (row * (InventoryContainerItem.ItemWidth)), y + (col * (InventoryContainerItem.ItemWidth)),
 							firstSlotId++, inventoryId));
 				}
 
