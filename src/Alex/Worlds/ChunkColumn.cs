@@ -48,18 +48,18 @@ namespace Alex.Worlds
 
 		public int X { get; set; }
 		public int Z { get; set; }
-		
+
 		public bool IsNew { get; set; } = true;
 		public bool IsLoaded = false;
 		public bool NeedSave = false;
 		public bool IsDirty { get; set; }
 		public bool SkyLightDirty { get; set; }
 		public bool BlockLightDirty { get; set; }
-		
-        public IChunkSection[] Sections { get; set; } = new ChunkSection[16];
+
+		public IChunkSection[] Sections { get; set; } = new ChunkSection[16];
 		public int[] BiomeId = ArrayOf<int>.Create(256, 1);
 		public short[] Height = new short[256];
-		
+
 		public object VertexLock { get; set; } = new object();
 		public object UpdateLock { get; set; } = new object();
 		public ScheduleType Scheduled { get; set; } = ScheduleType.Unscheduled;
@@ -69,7 +69,7 @@ namespace Alex.Worlds
 			IsDirty = true;
 			SkyLightDirty = true;
 			BlockLightDirty = true;
-			
+
 			for (int i = 0; i < Sections.Length; i++)
 			{
 				//var b = new ExtendedBlockStorage(i, true);
@@ -77,23 +77,23 @@ namespace Alex.Worlds
 			}
 		}
 
-        public IEnumerable<BlockCoordinates> GetLightSources()
-        {
-	        for (int i = 0; i < Sections.Length; i++)
-	        {
-		        var section = Sections[i];
-		        if (section == null)
-			        continue;
+		public IEnumerable<BlockCoordinates> GetLightSources()
+		{
+			for (int i = 0; i < Sections.Length; i++)
+			{
+				var section = Sections[i];
+				if (section == null)
+					continue;
 
-		        if (section is ChunkSection cs)
-		        {
-			        foreach (var ls in cs.LightSources)
-			        {
-				        yield return new BlockCoordinates(ls.X, (i * 16) + ls.Y, ls.Z);
-			        }
-		        }
-	        }
-        }
+				if (section is ChunkSection cs)
+				{
+					foreach (var ls in cs.LightSources)
+					{
+						yield return new BlockCoordinates(ls.X, (i * 16) + ls.Y, ls.Z);
+					}
+				}
+			}
+		}
 
 		private void SetDirty()
 		{
@@ -109,8 +109,8 @@ namespace Alex.Worlds
 			var section = Sections[y >> 4];
 			if (section == null) return;
 			section.SetScheduled(x, y - ((y >> 4) << 4), z, true);
-		// _scheduledUpdates[y << 8 | z << 4 | x] = true;
-		//_scheduledUpdates.Add(y << 8 | z << 4 | x);
+			// _scheduledUpdates[y << 8 | z << 4 | x] = true;
+			//_scheduledUpdates.Add(y << 8 | z << 4 | x);
 		}
 
 		public ChunkSection GetSection(int y)
@@ -123,7 +123,7 @@ namespace Alex.Worlds
 				return storage;
 			}
 
-			return (ChunkSection)section;
+			return (ChunkSection) section;
 		}
 
 		public void SetBlockState(int x, int y, int z, IBlockState blockState)
@@ -133,8 +133,8 @@ namespace Alex.Worlds
 			//var section = Sections[y >> 4];
 			//if (section == null) return;
 			//section.ScheduledUpdates[(y >> 4) << 8 | z << 4 | x] = true;
-           // _scheduledUpdates[y << 8 | z << 4 | x] = true;
-        }
+			// _scheduledUpdates[y << 8 | z << 4 | x] = true;
+		}
 
 		public void SetBlockState(int x, int y, int z, IBlockState state, int storage)
 		{
@@ -153,7 +153,7 @@ namespace Alex.Worlds
 		{
 			bool inLight = doLighting;
 			//bool inAir = true;
-			
+
 			for (int y = 255; y > 0; y--)
 			{
 				if (inLight)
@@ -161,7 +161,7 @@ namespace Alex.Worlds
 					//var block = GetBlock(x, y, z);
 					var section = GetSection(y);
 					var block = section.Get(x, y - ((@y >> 4) << 4), z).Block;
-					
+
 					if (!block.Renderable || (!block.BlockMaterial.BlocksLight()))
 					{
 						SetSkyLight(x, y, z, 15);
@@ -179,7 +179,7 @@ namespace Alex.Worlds
 				}
 			}
 		}
-		
+
 		public int GetRecalculatedHeight(int x, int z)
 		{
 			bool isInAir = true;
@@ -198,7 +198,7 @@ namespace Alex.Worlds
 					isInAir = false;
 
 					var block = GetBlock(x, y, z);
-					
+
 					if (!block.Renderable || (block.Transparent && !block.BlockMaterial.BlocksLight()))
 						continue;
 
@@ -210,6 +210,7 @@ namespace Alex.Worlds
 		}
 
 		private static IBlockState Air = BlockFactory.GetBlockState("minecraft:air");
+
 		public IEnumerable<(IBlockState state, int storage)> GetBlockStates(int bx, int by, int bz)
 		{
 			if ((bx < 0 || bx > ChunkWidth) || (by < 0 || by > ChunkHeight) || (bz < 0 || bz > ChunkDepth))
@@ -237,7 +238,7 @@ namespace Alex.Worlds
 		{
 			return GetBlockState(bx, by, bz, 0);
 		}
-		
+
 		public IBlockState GetBlockState(int bx, int by, int bz, int storage)
 		{
 			if ((bx < 0 || bx > ChunkWidth) || (by < 0 || by > ChunkHeight) || (bz < 0 || bz > ChunkDepth))
@@ -247,7 +248,7 @@ namespace Alex.Worlds
 			if (chunk == null) return Air;
 
 			by = by - ((@by >> 4) << 4);
-			
+
 			return chunk.Get(bx, by, bz, storage);
 		}
 
@@ -270,8 +271,8 @@ namespace Alex.Worlds
 
 			//RecalculateHeight(bx, bz);
 
-            _heightDirty = true;
-           // _scheduledUpdates[by << 8 | bz << 4 | bx] = true;
+			_heightDirty = true;
+			// _scheduledUpdates[by << 8 | bz << 4 | bx] = true;
 		}
 
 		public void SetHeight(int bx, int bz, short h)
@@ -288,7 +289,7 @@ namespace Alex.Worlds
 			if ((bx < 0 || bx > ChunkWidth) || (bz < 0 || bz > ChunkDepth))
 				return 255;
 
-			return (byte)Height[((bz << 4) + (bx))];
+			return (byte) Height[((bz << 4) + (bx))];
 		}
 
 		public void SetBiome(int bx, int bz, int biome)
@@ -325,16 +326,16 @@ namespace Alex.Worlds
 				return;
 
 			var yMod = ((@by >> 4) << 4);
-			
+
 			GetSection(by).SetBlocklight(bx, by - yMod, bz, data);
 
 			BlockLightDirty = true;
-			
+
 			//_scheduledLightingUpdates[by << 8 | bz << 4 | bx] = true;
-			var section = (ChunkSection)Sections[by >> 4];
+			var section = (ChunkSection) Sections[by >> 4];
 			if (section == null) return;
 			//section.ScheduledSkylightUpdates[by << 8 | bz << 4 | bx] = true;
-        }
+		}
 
 		public byte GetSkylight(int bx, int by, int bz)
 		{
@@ -344,7 +345,7 @@ namespace Alex.Worlds
 			var section = Sections[by >> 4];
 			if (section == null) return 0xff;
 
-            return section.GetSkylight(bx, by - 16 * (by >> 4), bz);
+			return section.GetSkylight(bx, by - 16 * (by >> 4), bz);
 		}
 
 		public void SetSkyLight(int bx, int by, int bz, byte data)
@@ -355,254 +356,117 @@ namespace Alex.Worlds
 			GetSection(by).SetSkylight(bx, by - 16 * (by >> 4), bz, data);
 			SkyLightDirty = true;
 
-            //	_scheduledLightingUpdates[by << 8 | bz << 4 | bx] = true;
-           // var section = Sections[by >> 4];
-          //  if (section == null) return;
-           // section.ScheduledSkylightUpdates[(by - 16 * (by >> 4)) << 8 | bz << 4 | bx] = true;
-        }
+			//	_scheduledLightingUpdates[by << 8 | bz << 4 | bx] = true;
+			// var section = Sections[by >> 4];
+			//  if (section == null) return;
+			// section.ScheduledSkylightUpdates[(by - 16 * (by >> 4)) << 8 | bz << 4 | bx] = true;
+		}
 
-		private Vector3 Position => new Vector3(X * 16, 0, Z*16);
+		private Vector3 Position => new Vector3(X * 16, 0, Z * 16);
 
 		public NbtCompound[] Entities { get; internal set; }
 
-        #region New Chunk updates / Vertice building 
-
-		private DynamicVertexBuffer RenewVertexBuffer(GraphicsDevice graphicsDevice, VertexPositionNormalTextureColor[] vertices)
+		public bool HasDirtySubChunks
 		{
-            DynamicVertexBuffer buffer = GpuResourceManager.GetBuffer(this, graphicsDevice,
-				VertexPositionNormalTextureColor.VertexDeclaration,
-				vertices.Length,
-				BufferUsage.WriteOnly);
-
-			if (vertices.Length > 0)
-			{
-				buffer.SetData(vertices);
-			}
-
-			return buffer;
+			get { return Sections != null && Sections.Any(s => s != null && s.IsDirty); }
 		}
-	    
-		private IndexBuffer RenewIndexBuffer(GraphicsDevice graphicsDevice, int[] vertices)
+
+		public bool IsWallSectionSolid(int face, int y)
 		{
-			IndexBuffer buffer = GpuResourceManager.GetIndexBuffer(this, graphicsDevice, IndexElementSize.ThirtyTwoBits, vertices.Length, BufferUsage.WriteOnly);
-
-			if (vertices.Length > 0)
+			if (y >= 0 && y < Sections.Length)
 			{
-				buffer.SetData(vertices);
+				var section = Sections[y];
+				if (section == null) return false;
+
+				return ((ChunkSection) section).IsFaceSolid((BlockFace) face);
 			}
 
-			return buffer;
+			return false;
 		}
-		
-		#endregion
 
-			public async Task<ChunkMesh> GenerateMeshes(IWorld world)
+		internal IEnumerable<BlockFace> CheckNeighbors(ChunkSection section, int y, IWorld world)
+		{
+			List<BlockFace> faces = new List<BlockFace>();
+
+			var sectionUp = (ChunkSection) Sections[y + 1];
+			if (sectionUp != null && sectionUp.IsFaceSolid(BlockFace.Down))
+				faces.Add(BlockFace.Up);
+
+			var sectionDown = (ChunkSection) Sections[y - 1];
+			if (sectionDown != null && sectionDown.IsFaceSolid(BlockFace.Up))
+				faces.Add(BlockFace.Down);
+
+			var eastChunk = world.GetChunkColumn(X + 1, Z);
+			if (eastChunk != null && eastChunk.IsWallSectionSolid(3, y))
 			{
-				
-            return null;
+				faces.Add(BlockFace.East);
 			}
 
-			/*private class SectionEntry : IDisposable
+			var westChunk = world.GetChunkColumn(X - 1, Z);
+			if (westChunk != null && westChunk.IsWallSectionSolid(2, y))
 			{
-				public IndexBuffer SolidIndexBuffer { get; set; }
-				public IndexBuffer TransparentIndexBuffer { get; set; }
-
-				public DynamicVertexBuffer SolidBuffer { get; set; }
-				//public VertexBuffer TransparentBuffer { get; set; }
-
-				public object _lock = new object();
-
-				public void Dispose()
-				{
-					lock (_lock)
-					{
-						SolidIndexBuffer?.Dispose();
-						TransparentIndexBuffer?.Dispose();
-						SolidBuffer?.Dispose();
-						//TransparentBuffer?.Dispose();
-					}
-				}
+				faces.Add(BlockFace.West);
 			}
 
-			private SectionEntry[] SectionBuffers = ArrayOf<SectionEntry>.Create(16, null); */
-
-			public void DrawOpaque(GraphicsDevice device, BasicEffect effect, out int drawnIndices, out int indexSize)
+			var northChunk = world.GetChunkColumn(X, Z + 1);
+			if (northChunk != null && northChunk.IsWallSectionSolid(5, y))
 			{
-				indexSize = 0;
-				drawnIndices = 0;
-				/*for (var index = 0; index < SectionBuffers.Length; index++)
+				faces.Add(BlockFace.North);
+			}
+
+			var southChunk = world.GetChunkColumn(X, Z - 1);
+			if (southChunk != null && southChunk.IsWallSectionSolid(4, y))
+			{
+				faces.Add(BlockFace.South);
+			}
+
+			return faces;
+		}
+
+		private bool _isHighPriority = false;
+
+		public bool HighPriority
+		{
+			get { return _isHighPriority; }
+			set
+			{
+				_isHighPriority = value;
+				if (!value)
 				{
-					var section = SectionBuffers[index];
-
-					if (section == null /*|| !Monitor.TryEnter(section._lock)*)
-						continue;
-					try
+					if (_chunkMeshCache != null)
 					{
-						var c = section.SolidIndexBuffer;
-						var b = section.SolidBuffer;
-						if (c.IndexCount == 0) continue;
-						if (b.VertexCount == 0) continue;
-
-						device.SetVertexBuffer(b);
-						device.Indices = c;
-
-						foreach (var pass in effect.CurrentTechnique.Passes)
+						for (var index = 0; index < _chunkMeshCache.Length; index++)
 						{
-							pass.Apply();
-							//device.DrawPrimitives(PrimitiveType.TriangleList, 0, b.VertexCount /3);
+							//var cached = _chunkMeshCache[index];
+							//cached?.Mesh?.Dispose();
+							//_chunkMeshCache[index] = null;
 						}
 
-						device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, c.IndexCount / 3);
-						drawnIndices += (b.VertexCount / 3);
-						indexSize += c.IndexCount;
+						//_chunkMeshCache = null;
 					}
-					finally
-					{
-						//Monitor.Exit(section._lock);
-					}
-				}*/
-			}
-
-			public void DrawTransparent(GraphicsDevice device, AlphaTestEffect effect, out int drawnIndices, out int indexSize)
-            {
-                drawnIndices = 0;
-                indexSize = 0;
-                /*indexSize = 0;
-                drawnIndices = 0;
-                for (var index = 0; index < SectionBuffers.Length; index++)
-                {
-                    var section = SectionBuffers[index];
-
-                    if (section == null /*|| !Monitor.TryEnter(section._lock)*)
-                        continue;
-                    try
-                    {
-                        var c = section.TransparentIndexBuffer;
-                        var b = section.SolidBuffer;
-                        if (c.IndexCount == 0) continue;
-                        if (b.VertexCount == 0) continue;
-
-                        device.SetVertexBuffer(b);
-                        device.Indices = c;
-
-                        foreach (var pass in effect.CurrentTechnique.Passes)
-                        {
-                            pass.Apply();
-                            //device.DrawPrimitives(PrimitiveType.TriangleList, 0, b.VertexCount /3);
-                        }
-
-                        device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, c.IndexCount / 3);
-
-                        drawnIndices += (b.VertexCount / 3);
-                        indexSize += c.IndexCount;
-                    }
-                    finally
-                    {
-                        //Monitor.Exit(section._lock);
-                    }
-                }*/
-            }
-
-			public bool HasDirtySubChunks
-			{
-				get { return Sections != null && Sections.Any(s => s != null && s.IsDirty); }
-			}
-
-			public bool IsWallSectionSolid(int face, int y)
-			{
-				if (y >= 0 && y < Sections.Length)
-				{
-					var section = Sections[y];
-					if (section == null) return false;
-
-					return ((ChunkSection)section).IsFaceSolid((BlockFace) face);
 				}
-
-				return false;
-			}
-			
-			internal IEnumerable<BlockFace> CheckNeighbors(ChunkSection section, int y, IWorld world)
-			{
-				List<BlockFace> faces = new List<BlockFace>();
-
-				var sectionUp = (ChunkSection)Sections[y + 1];
-				if (sectionUp != null && sectionUp.IsFaceSolid(BlockFace.Down))
-					faces.Add(BlockFace.Up);
-
-				var sectionDown = (ChunkSection)Sections[y - 1];
-				if (sectionDown != null && sectionDown.IsFaceSolid(BlockFace.Up))
-					faces.Add(BlockFace.Down);
-
-				var eastChunk = world.GetChunkColumn(X + 1, Z);
-				if (eastChunk != null && eastChunk.IsWallSectionSolid(3, y))
+				else
 				{
-					faces.Add(BlockFace.East);
-				}
-
-				var westChunk = world.GetChunkColumn(X - 1, Z);
-				if (westChunk != null && westChunk.IsWallSectionSolid(2, y))
-				{
-					faces.Add(BlockFace.West);
-				}
-
-				var northChunk = world.GetChunkColumn(X, Z + 1);
-				if (northChunk != null && northChunk.IsWallSectionSolid(5, y))
-				{
-					faces.Add(BlockFace.North);
-				}
-
-				var southChunk = world.GetChunkColumn(X, Z - 1);
-				if (southChunk != null && southChunk.IsWallSectionSolid(4, y))
-				{
-					faces.Add(BlockFace.South);
-				}
-
-				return faces;
-			}
-
-			private bool _isHighPriority = false;
-
-			public bool HighPriority
-			{
-				get { return _isHighPriority; }
-				set
-				{
-					_isHighPriority = value;
-					if (!value)
-					{
-						if (_chunkMeshCache != null)
-						{
-							for (var index = 0; index < _chunkMeshCache.Length; index++)
-							{
-								//var cached = _chunkMeshCache[index];
-								//cached?.Mesh?.Dispose();
-								//_chunkMeshCache[index] = null;
-							}
-
-							//_chunkMeshCache = null;
-						}
-					}
-					else
-					{
-						if (_chunkMeshCache == null)
-							_chunkMeshCache = new ChunkMeshCache[16];
-                    }
+					if (_chunkMeshCache == null)
+						_chunkMeshCache = new ChunkMeshCache[16];
 				}
 			}
+		}
 
-			private class ChunkMeshCache
-			{
-				public ChunkMesh Mesh { get; set; }
-				public IDictionary<Vector3, ChunkMesh.EntryPosition> Positions { get; set; }
-			}
+		private class ChunkMeshCache
+		{
+			public ChunkMesh Mesh { get; set; }
+			public IDictionary<Vector3, ChunkMesh.EntryPosition> Positions { get; set; }
+		}
 
-			private ChunkMeshCache[] _chunkMeshCache = null;
+		private ChunkMeshCache[] _chunkMeshCache = null;
 
-        
-			
 
-			private bool _heightDirty = true;
+
+
+		private bool _heightDirty = true;
 		private int _heighest = 256;
+
 		public int GetHeighest()
 		{
 			if (_heightDirty)
@@ -623,8 +487,8 @@ namespace Alex.Worlds
 			if (section == null) return true;
 
 
-            return section.IsTransparent(bx, @by & 0xf, bz);
-        }
+			return section.IsTransparent(bx, @by & 0xf, bz);
+		}
 
 		public bool IsSolid(int bx, int by, int bz)
 		{
@@ -634,7 +498,7 @@ namespace Alex.Worlds
 			var section = Sections[@by >> 4];
 			if (section == null) return true;
 
-            return section.IsSolid(bx, @by & 0xf, bz);
+			return section.IsSolid(bx, @by & 0xf, bz);
 		}
 
 		public bool IsScheduled(int bx, int @by, int bz)
@@ -658,10 +522,10 @@ namespace Alex.Worlds
 			var section = Sections[@by >> 4];
 			if (section == null) return;
 
-            section.GetBlockData(bx, @by & 0xf, bz, out transparent, out solid);
-        }
+			section.GetBlockData(bx, @by & 0xf, bz, out transparent, out solid);
+		}
 
-        public void Dispose()
+		public void Dispose()
 		{
 			/*if (TransparentVertexBuffer != null)
 			{
@@ -672,10 +536,10 @@ namespace Alex.Worlds
 
 				TransparentVertexBuffer = null;
 			}*/
-			
-		//	foreach (var chunksSection in SectionBuffers)
+
+			//	foreach (var chunksSection in SectionBuffers)
 			{
-		//		chunksSection?.Dispose();
+				//		chunksSection?.Dispose();
 			}
 
 			if (_chunkMeshCache != null)
@@ -694,7 +558,7 @@ namespace Alex.Worlds
 
 		public void CalculateHeight(bool doLighting = true)
 		{
-            for (int x = 0; x < 16; x++)
+			for (int x = 0; x < 16; x++)
 			{
 				for (int z = 0; z < 16; z++)
 				{
@@ -704,11 +568,11 @@ namespace Alex.Worlds
 
 			GetHeighest();
 
-            foreach (var section in Sections)
-            {
-                section?.RemoveInvalidBlocks();
-            }
-        }
+			foreach (var section in Sections)
+			{
+				section?.RemoveInvalidBlocks();
+			}
+		}
 
 		public void Read(MinecraftStream ms, int availableSections, bool groundUp, bool readSkylight)
 		{
@@ -719,7 +583,7 @@ namespace Alex.Worlds
 
 				for (int sectionY = 0; sectionY < this.Sections.Length; sectionY++)
 				{
-					var storage = (ChunkSection)this.Sections[sectionY];
+					var storage = (ChunkSection) this.Sections[sectionY];
 					if ((availableSections & (1 << sectionY)) != 0)
 					{
 						if (storage == null)

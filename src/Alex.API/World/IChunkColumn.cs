@@ -47,9 +47,7 @@ namespace Alex.API.World
 
         void GetBlockData(int bx, int by, int bz, out bool transparent, out bool solid);
 		void ScheduleBlockUpdate(int x, int y, int z);
-		void DrawOpaque(GraphicsDevice device, BasicEffect effect, out int drawnIndices, out int indexSize);
-		void DrawTransparent(GraphicsDevice device, AlphaTestEffect effect, out int drawnIndices, out int indexSize);
-		
+
 		bool HasDirtySubChunks { get; }
 		bool IsWallSectionSolid(int face, int y);
 	}

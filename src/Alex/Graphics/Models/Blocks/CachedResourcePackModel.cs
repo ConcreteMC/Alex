@@ -26,8 +26,7 @@ namespace Alex.Graphics.Models.Blocks
 		
 		private BlockStateModel[] Models { get; set; }
 		protected ResourceManager Resources { get; }
-	//	private IDictionary<string, FaceCache> _elementCache = null;
-		
+
 		protected Vector3 Min = new Vector3(float.MaxValue);
 		protected Vector3 Max = new Vector3(float.MinValue);
 
@@ -124,17 +123,17 @@ namespace Alex.Graphics.Models.Blocks
 			return new BoundingBox(position + (min), position + ((max)));
 		}
 
-		protected string ResolveTexture(BlockStateModel var, string texture)
+		protected string ResolveTexture(ResourcePackLib.Json.Models.Blocks.BlockModel var, string texture)
 		{
 			string textureName = "no_texture";
-			if (!var.Model.Textures.TryGetValue(texture.Replace("#", ""), out textureName))
+			if (!var.Textures.TryGetValue(texture.Replace("#", ""), out textureName))
 			{
 				textureName = texture;
 			}
 
 			if (textureName.StartsWith("#"))
 			{
-				if (!var.Model.Textures.TryGetValue(textureName.Replace("#", ""), out textureName))
+				if (!var.Textures.TryGetValue(textureName.Replace("#", ""), out textureName))
 				{
 					textureName = "no_texture";
 				}
@@ -263,7 +262,7 @@ namespace Alex.Graphics.Models.Blocks
 			float facesMaxX = float.MinValue, facesMaxY = float.MinValue, facesMaxZ = float.MinValue;
 
 			var model = raw.Model;
-
+			
 			List<BoundingBox> boxes = new List<BoundingBox>();
 			for (var index = 0; index < model.Elements.Length; index++)
 			{
@@ -568,7 +567,7 @@ namespace Alex.Graphics.Models.Blocks
 						world, position, position + cullFace.Value.GetVector3(), out blockLight, out skyLight, baseBlock.Transparent || !baseBlock.Solid);
 					
 					var vertices = GetFaceVertices(face.Key, element.From, element.To,
-						GetTextureUVMap(Resources, ResolveTexture(bsModel, texture), x1, x2, y1, y2, textureRotation, AdjustColor(
+						GetTextureUVMap(Resources, ResolveTexture(model, texture), x1, x2, y1, y2, textureRotation, AdjustColor(
 							faceColor, facing, element.Shade)),
 						out int[] indexes);
 

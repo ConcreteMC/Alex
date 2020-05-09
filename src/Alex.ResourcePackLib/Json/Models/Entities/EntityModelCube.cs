@@ -10,6 +10,12 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
     {
 	    [J("origin")]
         public Vector3 Origin { get; set; }
+        
+        [J("pivot")]
+        public Vector3? Pivot { get; set; }
+        
+        [J("rotation")]
+        public Vector3? Rotation { get; set; }
 
 	    [J("size")]
         public Vector3 Size { get; set; }

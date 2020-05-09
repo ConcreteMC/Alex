@@ -10,6 +10,8 @@ namespace Alex.Blocks.Minecraft
 
 			BlockMaterial = Material.Anvil;
 			Hardness = 5;
+			
+			CanInteract = true;
 		}
 	}
 }

@@ -288,7 +288,7 @@ namespace Alex.Graphics.Effect
             CacheEffectParameters();
         }
         
-        public BlockEffect(GraphicsDevice device) : base(ResourceManager.BlockEffect)
+        public BlockEffect() : base(ResourceManager.BlockEffect)
         {
             CacheEffectParameters();
         }
@@ -533,19 +533,6 @@ namespace Alex.Graphics.Effect
             // Recompute the shader index?
             if ((dirtyFlags & EffectDirtyFlags.ShaderIndex) != 0)
             {
-                int shaderIndex = 0;
-
-                if (!fogEnabled)
-                    shaderIndex += 1;
-
-                if (vertexColorEnabled)
-                    shaderIndex += 2;
-
-                if (isEqNe)
-                    shaderIndex += 4;
-
-                dirtyFlags &= ~EffectDirtyFlags.ShaderIndex;
-
                 CurrentTechnique = Techniques[0];
             }
         }

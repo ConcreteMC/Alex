@@ -18,7 +18,7 @@ namespace Alex.Worlds
 		{
 			var fogStart = 0f;
 
-			TransparentEffect = new BlockEffect(device)
+			TransparentEffect = new BlockEffect()
 			{
 				//	Texture = stillAtlas,
 				VertexColorEnabled = true,
@@ -30,7 +30,7 @@ namespace Alex.Worlds
 				// TextureEnabled = true
 			};
 
-			TranslucentEffect = new BlockEffect(device)
+			TranslucentEffect = new BlockEffect()
 			{
 				//Texture = stillAtlas,
 				VertexColorEnabled = true,
@@ -43,7 +43,7 @@ namespace Alex.Worlds
 				//Alpha = 0.5f
 			};
 
-			AnimatedEffect = new BlockEffect(device)
+			AnimatedEffect = new BlockEffect()
 			{
 				//	Texture = Resources.Atlas.GetAtlas(0),
 				VertexColorEnabled = true,
@@ -55,7 +55,7 @@ namespace Alex.Worlds
 				// TextureEnabled = true
 			};
 
-			AnimatedTranslucentEffect = new BlockEffect(device)
+			AnimatedTranslucentEffect = new BlockEffect()
 			{
 				//Texture = Resources.Atlas.GetAtlas(0),
 				VertexColorEnabled = true,
@@ -67,7 +67,7 @@ namespace Alex.Worlds
 				Alpha = 0.5f
 			};
 
-			OpaqueEffect = new BlockEffect(device)
+			OpaqueEffect = new BlockEffect()
 			{
 				//  TextureEnabled = true,
 				//	Texture = stillAtlas,

@@ -18,8 +18,6 @@ namespace Alex.Graphics.Models.Blocks
         public virtual BoundingBox BoundingBox { get; } = new BoundingBox(Vector3.Zero, Vector3.One);
         
 		public float Scale { get; set; } = 1f;
-		public bool Transparent { get; set; }
-		public bool Animated { get; set; }
 
 		public virtual (VertexPositionNormalTextureColor[] vertices, int[] indexes) GetVertices(IWorld world, Vector3 position, IBlock baseBlock)
         {

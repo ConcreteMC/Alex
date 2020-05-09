@@ -9,6 +9,8 @@ namespace Alex.Blocks.Minecraft
 			IsReplacible = false;
 
 			Hardness = 2.5f;
+
+			CanInteract = true;
 		}
 	}
 }
