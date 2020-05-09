@@ -11,6 +11,7 @@ using Alex.Blocks.Minecraft;
 using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Entity.Animations;
 using Alex.Graphics.Models.Items;
+using Alex.ResourcePackLib.Json.Models.Items;
 using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
@@ -132,15 +133,15 @@ namespace Alex.Entities
 		{
 			Network = network;
 
-			EntityId = -1;
-			Level = level;
-			EntityTypeId = entityTypeId;
-			KnownPosition = new PlayerLocation();
-			Inventory = new Inventory(46);
-			//	HealthManager = new HealthManager(this);
-			
-			Inventory.SlotChanged += OnInventorySlotChanged;
-			Inventory.SelectedHotbarSlotChanged += InventoryOnSelectedHotbarSlotChanged;
+            EntityId = -1;
+            Level = level;
+            EntityTypeId = entityTypeId;
+            KnownPosition = new PlayerLocation();
+            Inventory = new Inventory(46);
+            //	HealthManager = new HealthManager(this);
+
+            Inventory.SlotChanged += OnInventorySlotChanged;
+            Inventory.SelectedHotbarSlotChanged += InventoryOnSelectedHotbarSlotChanged;
 
 			HideNameTag = true;
 			ServerEntity = true;
@@ -155,109 +156,161 @@ namespace Alex.Entities
 			Inventory.SelectedHotbarSlotChanged += InventoryOnSelectedHotbarSlotChanged;
 		}
 
-		private void CheckHeldItem()
-		{
-			var inHand = Inventory[Inventory.SelectedSlot];
-			//Log.Info($"Inventory slot changed.");
-			
-			if ((inHand == null || inHand.Count == 0 || inHand.Id <= 0) && ItemRenderer != null)
-			{
-				if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
-				{
-					bone.Detach(ItemRenderer);
-				}
-				
-				ItemRenderer = null;
-				return;
-			}
+        private void CheckHeldItem()
+        {
+            var inHand = Inventory[Inventory.SelectedSlot];
+            //Log.Info($"Inventory slot changed.");
 
-			if (inHand != null)
-			{
-				if (!string.IsNullOrWhiteSpace(inHand.Name))
-				{
-					/*var itemModel = Alex.Instance.Resources.ResourcePack.ItemModels.FirstOrDefault(x =>
-						x.Key.Contains(inHand.Name, StringComparison.InvariantCultureIgnoreCase));
-					
-					ItemRenderer = new ItemModelRenderer(itemModel.Value, Alex.Instance.Resources.ResourcePack);*/
+            if ((inHand == null || inHand.Count == 0 || inHand.Id <= 0) && ItemRenderer != null)
+            {
+                if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
+                {
+                    bone.Detach(ItemRenderer);
+                }
 
-					var renderer = inHand.Renderer;
-					if (renderer == null)
-					{
-						Log.Warn($"No renderer for item: {inHand.Name}");
-						return;
-					}
+                ItemRenderer = null;
+                return;
+            }
 
-					if (renderer == ItemRenderer)
-						return;
-					
-					var itemModel = renderer.Model;
+            if (inHand != null)
+            {
+                if (!string.IsNullOrWhiteSpace(inHand.Name))
+                {
+                    /*var itemModel = Alex.Instance.Resources.ResourcePack.ItemModels.FirstOrDefault(x =>
+                        x.Key.Contains(inHand.Name, StringComparison.InvariantCultureIgnoreCase));
+                    
+                    ItemRenderer = new ItemModelRenderer(itemModel.Value, Alex.Instance.Resources.ResourcePack);*/
 
-					ItemRenderer = renderer;
-					
-					if (this is Player)
-					{
-						if (itemModel.Display.TryGetValue("firstperson_righthand", out var value))
-						{
-							ItemRenderer.Rotation = value.Rotation;
-							ItemRenderer.Translation = value.Translation;
-							ItemRenderer.Scale = value.Scale;
-							
-						/*	if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
-							{
-						//		Log.Info($"First Person item model rendering ready.");
+                    var renderer = inHand.Renderer.Clone();
+                    if (renderer == null)
+                    {
+                        Log.Warn($"No renderer for item: {inHand.Name}");
+                        return;
+                    }
 
-								//bone.Attach(ItemRenderer);
-							}
-							else
-							{
-								Log.Warn($"Bone not found: rightItem");
-							}*/
-						}
-						else
-						{
-							Log.Warn($"Failed to get item model display element!");
-						}
-					}
-					else
-					{
-						if (itemModel.Display.TryGetValue("thirdperson_righthand", out var value))
-						{
-							ItemRenderer.Rotation = value.Rotation;
-							ItemRenderer.Translation = value.Translation;
-							ItemRenderer.Scale = value.Scale;
-							
-							if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
-							{
-						//		Log.Info($"Third Person item model rendering ready.");
+                    if (renderer == ItemRenderer)
+                        return;
 
-								//bone.Attach(ItemRenderer);
-							}
-						}
-						else
-						{
-							Log.Warn($"Failed to get item model display element!");
-						}
-					}
-				}
-			}
-			else
-			{
-				if (ItemRenderer != null)
-				{
-					if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
-					{
-						bone.Detach(ItemRenderer);
-					}
+                    var itemModel = renderer.Model;
 
-					ItemRenderer = null;
-				}
-			}
-		}
-		
-		private void InventoryOnSelectedHotbarSlotChanged(object? sender, SelectedSlotChangedEventArgs e)
-		{
-			CheckHeldItem();
-		}
+                    var oldRenderer = ItemRenderer;
+                    if (oldRenderer != default)
+                    {
+                        renderer.DisplayPosition = oldRenderer.DisplayPosition;
+                    }
+                    
+                    ItemRenderer = renderer;
+
+                    if (this is Player p)
+                    {
+                        var pos = renderer.DisplayPosition;
+                        //if (pos.HasFlag(DisplayPosition.FirstPerson) || pos.HasFlag(DisplayPosition.ThirdPerson))
+                        {
+                            if (p.IsLeftyHandy)
+                            {
+                                if (!pos.HasFlag(DisplayPosition.LeftHand))
+                                {
+                                    pos = (pos & ~(DisplayPosition.LeftHand | DisplayPosition.RightHand));
+                                    pos |= DisplayPosition.LeftHand;
+                                }
+                            }
+                            else
+                            {
+                                if (!pos.HasFlag(DisplayPosition.RightHand))
+                                {
+                                    pos = (pos & ~(DisplayPosition.LeftHand | DisplayPosition.RightHand));
+                                    pos |= DisplayPosition.RightHand;
+                                }
+                            }
+
+                            if (p.IsFirstPersonMode)
+                            {
+                                if (!pos.HasFlag(DisplayPosition.FirstPerson))
+                                {
+                                    pos = (pos & ~(DisplayPosition.FirstPerson | DisplayPosition.ThirdPerson));
+                                    pos |= DisplayPosition.FirstPerson;
+                                }
+                            }
+                            else
+                            {
+                                if (!pos.HasFlag(DisplayPosition.ThirdPerson))
+                                {
+                                    pos = (pos & ~(DisplayPosition.FirstPerson | DisplayPosition.ThirdPerson));
+                                    pos |= DisplayPosition.ThirdPerson;
+                                }
+                            }
+
+                            renderer.DisplayPosition = pos;
+                        }
+                    }
+                    else
+                        {
+                            renderer.DisplayPosition = DisplayPosition.ThirdPersonRightHand;
+                        }
+
+                        //                     if (itemModel.Display.TryGetValue("firstperson_righthand", out var value))
+                        //                     {
+                        //                         ItemRenderer.Rotation = value.Rotation;
+                        //                         ItemRenderer.Translation = value.Translation;
+                        //                         ItemRenderer.Scale = value.Scale;
+                        //
+                        //                         /*	if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
+                        //                             {
+                        //                         //		Log.Info($"First Person item model rendering ready.");
+                        //
+                        //                                 //bone.Attach(ItemRenderer);
+                        //                             }
+                        //                             else
+                        //                             {
+                        //                                 Log.Warn($"Bone not found: rightItem");
+                        //                             }*/
+                        //                     }
+                        //                     else
+                        //                     {
+                        //                         Log.Warn($"Failed to get item model display element!");
+                        //                     }
+                        //                 }
+                        // else
+                        // {
+                        //     if (itemModel.Display.TryGetValue("thirdperson_righthand", out var value))
+                        //     {
+                        //         ItemRenderer.Rotation = value.Rotation;
+                        //         ItemRenderer.Translation = value.Translation;
+                        //         ItemRenderer.Scale = value.Scale;
+                        //
+                        //         if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
+                        //         {
+                        //             //		Log.Info($"Third Person item model rendering ready.");
+                        //
+                        //             //bone.Attach(ItemRenderer);
+                        //         }
+                        //     }
+                        //     else
+                        //     {
+                        //         Log.Warn($"Failed to get item model display element!");
+                        //     }
+                        // }
+                    
+                }
+            }
+            else
+            {
+                if (ItemRenderer != null)
+                {
+                    if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
+                    {
+                        bone.Detach(ItemRenderer);
+                    }
+
+                    ItemRenderer = null;
+                }
+            }
+        }
+
+        private void InventoryOnSelectedHotbarSlotChanged(object? sender, SelectedSlotChangedEventArgs e)
+        {
+            CheckHeldItem();
+        }
 
 		protected virtual void OnInventorySlotChanged(object sender, SlotChangedEventArgs e)
 		{
@@ -415,46 +468,41 @@ namespace Alex.Entities
 		{
 			var now = DateTime.UtcNow;
 
-			if (RenderEntity || ShowItemInHand)
-			{
-				ModelRenderer.Scale = Scale;
-				ModelRenderer.Update(args, KnownPosition);
-				
-				if (ShowItemInHand)
-				{
-					//CheckHeldItem();
-					
-					//Matrix.CreateRotationY(MathUtils.ToRadians((-KnownPosition.HeadYaw)))
-		//			ItemRenderer?.Update(Matrix.CreateRotationY(MathUtils.ToRadians(180f - KnownPosition.HeadYaw)) * Matrix.CreateTranslation(KnownPosition));
-		ItemRenderer?.Update(
-		                     Matrix.CreateRotationY(MathUtils.ToRadians((180f - KnownPosition.HeadYaw))) *
-		                     Matrix.CreateTranslation(KnownPosition));
-		
-					//ItemRenderer?.World = 
-					ItemRenderer?.Update(args.GraphicsDevice, args.Camera);
-				}
-			}
-			
-			if (now.Subtract(LastUpdatedTime).TotalMilliseconds >= 50)
-			{
-				LastUpdatedTime = now;
-				try
-				{
-					OnTick();
-				}
-				catch(Exception e)
-				{
-					Log.Warn(e, $"Exception while trying to tick entity!");
-				}
-			}
-			
-			CalculateLegMovement(args);
-		}
+            if (RenderEntity || ShowItemInHand)
+            {
+                ModelRenderer.Update(args, KnownPosition);
 
-		public void UpdateHeadYaw(float rotation)
-		{
-			KnownPosition.HeadYaw = rotation;
-		}
+                if (ShowItemInHand)
+                {
+                    //CheckHeldItem();
+
+                    //Matrix.CreateRotationY(MathUtils.ToRadians((-KnownPosition.HeadYaw)))
+                    //			ItemRenderer?.Update(Matrix.CreateRotationY(MathUtils.ToRadians(180f - KnownPosition.HeadYaw)) * Matrix.CreateTranslation(KnownPosition));
+                    ItemRenderer?.Update(KnownPosition + new Vector3(0f, HeadRenderOffset, 0f));
+
+                    //ItemRenderer?.World = 
+                    ItemRenderer?.Update(args.GraphicsDevice, args.Camera);
+                }
+            }
+
+            if (now.Subtract(LastUpdatedTime).TotalMilliseconds >= 50)
+            {
+                LastUpdatedTime = now;
+                try
+                {
+                    OnTick();
+                }
+                catch (Exception e)
+                {
+                    Log.Warn(e, $"Exception while trying to tick entity!");
+                }
+            }
+        }
+
+        public void UpdateHeadYaw(float rotation)
+        {
+            KnownPosition.HeadYaw = rotation;
+        }
 
 		private long _hitAnimationEnd = 0;
 		private bool _isHit = false;

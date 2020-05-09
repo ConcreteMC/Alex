@@ -37,7 +37,7 @@ namespace Alex.GameStates.Gui.InGame
 				BackgroundOverlay = new Color(Color.Black, 0.35f)
 			};
 
-	        _playerList = new GuiStackContainer()
+	        _playerList = new GuiScrollableStackContainer()
 	        {
 		        Margin = new Thickness(15, 0, 15, 0),
 		        Padding = new Thickness(0, 0, 0, 0),

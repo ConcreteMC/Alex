@@ -59,6 +59,9 @@ namespace Alex.Entities
         
         public int Exhaustion { get; set; } = 0;
         public int MaxExhaustion { get; set; }
+
+        public bool IsFirstPersonMode { get; set; } = false;
+        public bool IsLeftyHandy { get; set; } = false;
         
         public bool IsWorldImmutable { get; set; } = false;
         public bool IsNoPvP { get; set; } = true;

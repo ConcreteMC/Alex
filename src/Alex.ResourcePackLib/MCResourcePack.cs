@@ -13,6 +13,7 @@ using Alex.API.Utils;
 using Alex.ResourcePackLib.Generic;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.BlockStates;
+using Alex.ResourcePackLib.Json.Models;
 using Alex.ResourcePackLib.Json.Models.Blocks;
 using Alex.ResourcePackLib.Json.Models.Items;
 using Alex.ResourcePackLib.Json.Textures;
@@ -408,7 +409,7 @@ namespace Alex.ResourcePackLib
 		#region Items
 		private ResourcePackItem LoadItemModel(ZipArchiveEntry entry, Match match)
 		{
-			string name = match.Groups["filename"].Value;
+			string name = match.Groups["filename"].Value.Replace("\\", "/");
 			string nameSpace = match.Groups["namespace"].Value;
 
 			using (var r = new StreamReader(entry.Open()))
@@ -447,29 +448,11 @@ namespace Alex.ResourcePackLib
 					if (parent != null)
 					{
 						model.Parent = parent;
-
-						if (model.Elements.Length == 0 && parent.Elements.Length > 0)
-						{
-							model.Elements = (BlockModelElement[]) parent.Elements.Clone();
-						}
-
-						foreach (var kvp in parent.Textures)
-						{
-							if (!model.Textures.ContainsKey(kvp.Key))
-							{
-								model.Textures.Add(kvp.Key, kvp.Value);
-							}
-						}
-
-						foreach (var kvp in parent.Display)
-						{
-							if (!model.Display.ContainsKey(kvp.Key))
-							{
-								model.Display.Add(kvp.Key, kvp.Value);
-							}
-						}
 					}
 				}
+				// else if (model.ParentName.Equals("builtin/generated", StringComparison.InvariantCultureIgnoreCase))
+				// {
+				// }
 			}
 
 			_itemModels.Add(key, model);

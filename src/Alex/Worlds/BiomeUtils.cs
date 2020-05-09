@@ -672,12 +672,32 @@ namespace Alex.Worlds
 
 		public Biome GetBiome(int biomeId)
 		{
-			return Biomes.FirstOrDefault(biome => biome.Id == biomeId) ?? new Biome { Id = biomeId };
+			Biome first = null;
+			foreach (var biome in Biomes)
+			{
+				if (biome.Id == biomeId)
+				{
+					first = biome;
+					break;
+				}
+			}
+
+			return first ?? new Biome { Id = biomeId };
 		}
 
 		public static Biome GetBiomeById(int biomeId)
 		{
-			return Biomes.FirstOrDefault(biome => biome.Id == biomeId) ?? new Biome { Id = biomeId };
+			Biome first = null;
+			foreach (var biome in Biomes)
+			{
+				if (biome.Id == biomeId)
+				{
+					first = biome;
+					break;
+				}
+			}
+
+			return first ?? new Biome { Id = biomeId };
 		}
 
 		public int BiomeSwampRiverColor(int color)

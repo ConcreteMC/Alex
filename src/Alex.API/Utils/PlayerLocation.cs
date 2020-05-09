@@ -74,6 +74,11 @@ namespace Alex.API.Utils
 		{
 			return new Vector3(X, Y, Z);
 		}
+		
+		public Vector3 ToRotationVector3(bool withPitch = false)
+		{
+			return new Vector3(withPitch ? Pitch : 0f, 180f-HeadYaw, 0f);
+		}
 
 		public Vector3 GetDirection()
 		{

@@ -109,6 +109,12 @@ namespace Alex.API.Gui.Elements
 		}
 
 		private List<ClickableElement> ClickableElements = new List<ClickableElement>();
+
+		public GuiTextElement(string text, bool hasBackground = false) : this(hasBackground)
+		{
+			Text = text;
+		}
+		
 	    public GuiTextElement(bool hasBackground = false)
 	    {
 		    if (hasBackground)

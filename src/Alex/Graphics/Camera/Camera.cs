@@ -106,7 +106,7 @@ namespace Alex.Graphics.Camera
 		    UpdateProjectionMatrix();
 	    }
 
-		public float AspectRatio { get; private set; }
+		protected float AspectRatio { get; private set; } = 0;
 		public virtual void UpdateProjectionMatrix()
 		{
 			ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(

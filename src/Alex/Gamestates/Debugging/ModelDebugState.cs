@@ -40,7 +40,7 @@ namespace Alex.Gamestates.Debug
 	public class ModelDebugState : GuiGameStateBase
 	{
 		private GuiStackContainer _wrap;
-		private GuiEntityModelView.GuiModelExplorerView _modelExplorerView;
+		private GuiModelExplorerView _modelExplorerView;
 		private readonly GuiStackMenu _mainMenu;
 
 		//  private FirstPersonCamera Camera { get; } = new FirstPersonCamera(16, Vector3.Zero, Vector3.Zero);
@@ -69,7 +69,7 @@ namespace Alex.Gamestates.Debug
 			//	ChildAnchor = Alignment.FillY
 			//});
 
-			AddChild(_modelExplorerView = new GuiEntityModelView.GuiModelExplorerView(ModelExplorer, new Vector3(0f, 1.85f, 6f), new Vector3(0.5f, 0.5f, 0.5f))
+			AddChild(_modelExplorerView = new GuiModelExplorerView(ModelExplorer, new Vector3(0f, 1.85f, 6f), new Vector3(0.5f, 0.5f, 0.5f))
 			{
 				Anchor = Alignment.Fill,
 				Background = Color.TransparentBlack,

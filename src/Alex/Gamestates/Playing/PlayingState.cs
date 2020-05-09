@@ -17,6 +17,7 @@ using Alex.Graphics.Camera;
 using Alex.Graphics.Models;
 using Alex.Gui;
 using Alex.Gui.Elements;
+using Alex.ResourcePackLib.Json.Models.Items;
 using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
@@ -43,7 +44,8 @@ namespace Alex.GameStates.Playing
 			NetworkProvider = networkProvider;
 
 			World = new World(alex.Services, graphics, Options, new FirstPersonCamera(Options.VideoOptions.RenderDistance, Vector3.Zero, Vector3.Zero), networkProvider);
-
+			World.Player.IsFirstPersonMode = true;
+			
 			WorldProvider = worldProvider;
 			if (worldProvider is SPWorldProvider)
 			{
@@ -466,6 +468,10 @@ namespace Alex.GameStates.Playing
 						};
 						
 						World.Camera.UpdateAspectRatio(Graphics.Viewport.AspectRatio);
+						World.Player.ItemRenderer.DisplayPosition = World.Player.IsLeftyHandy
+							? DisplayPosition.ThirdPersonLeftHand
+							: DisplayPosition.ThirdPersonRightHand;
+						World.Player.IsFirstPersonMode = false;
 					}
 					else
 					{
@@ -475,6 +481,10 @@ namespace Alex.GameStates.Playing
 						};
 						
 						World.Camera.UpdateAspectRatio(Graphics.Viewport.AspectRatio);
+						World.Player.ItemRenderer.DisplayPosition = World.Player.IsLeftyHandy
+							? DisplayPosition.FirstPersonLeftHand
+							: DisplayPosition.FirstPersonRightHand;
+						World.Player.IsFirstPersonMode = true;
 					}
 				}
 

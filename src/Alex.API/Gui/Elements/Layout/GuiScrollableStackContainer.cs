@@ -97,7 +97,6 @@ namespace Alex.API.Gui.Elements.Layout
 
 			//Log.Info($"{GetType().Name}.ScrollOffset.Changed {{ScrollOffset=({oldValue} => {newValue}), RenderTransform=({prevTransform} => {_childRenderTransform})}}");
 			//Debug.WriteLine($"{GetType().Name}.ScrollOffset.Changed {{ScrollOffset=({oldValue} => {newValue}), RenderTransform=({prevTransform} => {_childRenderTransform})}}");
-			Log.Info($"{GetType().Name}.ScrollOffset.Changed {{ScrollOffset=({oldValue} => {newValue})}}");
 			Debug.WriteLine($"{GetType().Name}.ScrollOffset.Changed {{ScrollOffset=({oldValue} => {newValue})}}");
 		}
 
