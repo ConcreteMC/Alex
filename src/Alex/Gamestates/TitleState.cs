@@ -325,7 +325,7 @@ namespace Alex.GameStates
 			entity.Inventory.IsPeInventory = true;
 			entity.ShowItemInHand = true;
 
-			if (ItemFactory.TryGetItem("minecraft:diamond_sword", out var sword))
+			if (ItemFactory.TryGetItem("minecraft:grass_block", out var sword))
 			{
 				entity.Inventory.MainHand = sword;
 				entity.Inventory[entity.Inventory.SelectedSlot] = sword;

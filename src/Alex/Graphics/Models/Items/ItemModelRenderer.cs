@@ -26,7 +26,7 @@ namespace Alex.Graphics.Models.Items
 {
     public interface IItemRenderer : IAttachable
     {
-        ResourcePackItem Model { get; }
+        ResourcePackModelBase Model { get; }
 
         Vector3 Rotation { get; set; }
         Vector3 Translation { get; set; }
@@ -46,12 +46,14 @@ namespace Alex.Graphics.Models.Items
         private BlockState _block;
         private ResourceManager _resource;
 
-        public ItemBlockModelRenderer(BlockState block, ResourcePackItem model, McResourcePack resourcePack,
+        public ItemBlockModelRenderer(BlockState block, ResourcePackModelBase model, McResourcePack resourcePack,
             ResourceManager resourceManager) : base(model, resourcePack,
             VertexPositionNormalTextureColor.VertexDeclaration)
         {
             _block = block;
             _resource = resourceManager;
+
+          //  Translation = -Vector3.Forward * 8f;
         }
 
         public override void Cache(McResourcePack pack)
@@ -78,6 +80,12 @@ namespace Alex.Graphics.Models.Items
                 effect.Texture = _resource.Atlas.GetStillAtlas();
             }
         }
+
+        public override void Update(GraphicsDevice device, ICamera camera)
+        {
+            base.Update(device, camera);
+        }
+
         //
         // public override void Update(GraphicsDevice device, ICamera camera)
         // {
@@ -117,13 +125,16 @@ namespace Alex.Graphics.Models.Items
 
         public override IItemRenderer Clone()
         {
-            return new ItemBlockModelRenderer(_block, Model, null, _resource);
+            return new ItemBlockModelRenderer(_block, Model, null, _resource)
+            {
+                
+            };
         }
     }
 
     public class ItemModelRenderer : ItemModelRenderer<VertexPositionColor>
     {
-        public ItemModelRenderer(ResourcePackItem model, McResourcePack resourcePack) : base(model, resourcePack,
+        public ItemModelRenderer(ResourcePackModelBase model, McResourcePack resourcePack) : base(model, resourcePack,
             VertexPositionColor.VertexDeclaration)
         {
         }
@@ -241,7 +252,7 @@ namespace Alex.Graphics.Models.Items
 
     public class ItemModelRenderer<TVertice> : Model, IAttachable, IItemRenderer where TVertice : struct, IVertexType
     {
-        public ResourcePackItem Model { get; }
+        public ResourcePackModelBase Model { get; }
 
         private DisplayPosition _displayPosition;
 
@@ -287,7 +298,7 @@ namespace Alex.Graphics.Models.Items
         private IndexBuffer IndexBuffer { get; set; } = null;
         private VertexDeclaration _declaration;
 
-        public ItemModelRenderer(ResourcePackItem model, McResourcePack resourcePack, VertexDeclaration declaration)
+        public ItemModelRenderer(ResourcePackModelBase model, McResourcePack resourcePack, VertexDeclaration declaration)
         {
             Model = model;
             _declaration = declaration;

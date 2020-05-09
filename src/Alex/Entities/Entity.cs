@@ -466,7 +466,7 @@ namespace Alex.Entities
 
                     //Matrix.CreateRotationY(MathUtils.ToRadians((-KnownPosition.HeadYaw)))
                     //			ItemRenderer?.Update(Matrix.CreateRotationY(MathUtils.ToRadians(180f - KnownPosition.HeadYaw)) * Matrix.CreateTranslation(KnownPosition));
-                    ItemRenderer?.Update(KnownPosition + new Vector3(0f, HeadRenderOffset, 0f));
+                    ItemRenderer?.Update(new PlayerLocation(KnownPosition.X, KnownPosition.Y, KnownPosition.Z, 180f - KnownPosition.HeadYaw, 180f - KnownPosition.Yaw, KnownPosition.Pitch));
 
                     //ItemRenderer?.World = 
                     ItemRenderer?.Update(args.GraphicsDevice, args.Camera);

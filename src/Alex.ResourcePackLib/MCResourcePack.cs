@@ -44,8 +44,8 @@ namespace Alex.ResourcePackLib
 		private static readonly Regex IsGlyphSizes          = new Regex(@"^assets[\\\/](?'namespace'.*)[\\\/]font[\\\/]glyph_sizes.bin$", RegexOpts);
 
 		private readonly Dictionary<string, BlockStateResource> _blockStates   = new Dictionary<string, BlockStateResource>();
-		private readonly Dictionary<string, BlockModel>         _blockModels   = new Dictionary<string, BlockModel>();
-		private readonly Dictionary<string, ResourcePackItem>   _itemModels    = new Dictionary<string, ResourcePackItem>();
+		//private readonly Dictionary<string, BlockModel>         _blockModels   = new Dictionary<string, BlockModel>();
+		private readonly Dictionary<string, ResourcePackModelBase>   _models    = new Dictionary<string, ResourcePackModelBase>();
 		//private readonly Dictionary<string, Texture2D>          _textureCache  = new Dictionary<string, Texture2D>();
 		private readonly Dictionary<string, Image<Rgba32>>             _bitmapCache   = new Dictionary<string, Image<Rgba32>>();
 		private readonly Dictionary<string, TextureMeta>        _textureMetaCache   = new Dictionary<string, TextureMeta>();
@@ -54,8 +54,11 @@ namespace Alex.ResourcePackLib
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(McResourcePack));
 
 		public IReadOnlyDictionary<string, BlockStateResource> BlockStates       => _blockStates;
-		public IReadOnlyDictionary<string, BlockModel>         BlockModels       => _blockModels;
-		public IReadOnlyDictionary<string, ResourcePackItem>   ItemModels        => _itemModels;
+
+		public IReadOnlyDictionary<string, BlockModel> BlockModels =>
+			_models.Where(x => x.Value is BlockModel).ToDictionary(x => x.Key, x => (BlockModel)x.Value);
+		
+		public IReadOnlyDictionary<string, ResourcePackModelBase>   ItemModels        => _models;
 		public IReadOnlyDictionary<string, Image<Rgba32>>             TexturesAsBitmaps => _bitmapCache;
 
 		public IReadOnlyDictionary<string, TextureMeta> TextureMetas => _textureMetaCache;
@@ -130,8 +133,8 @@ namespace Alex.ResourcePackLib
 			
 			Manifest = GetManifest(archive, ResourcePackType.Java);
 			
-			Dictionary<string, BlockModel> models = new Dictionary<string, BlockModel>();
-			Dictionary<string, ResourcePackItem> items = new Dictionary<string, ResourcePackItem>();
+			Dictionary<string, ResourcePackModelBase> models = new Dictionary<string, ResourcePackModelBase>();
+			//Dictionary<string, ResourcePackItem> items = new Dictionary<string, ResourcePackItem>();
 
 			foreach (var entry in archive.Entries)
 			{
@@ -170,7 +173,7 @@ namespace Alex.ResourcePackLib
 					{
 						var item = LoadItemModel(entry, modelMatch);
                         if (item != null)
-						    items.Add($"{item.Namespace}:{item.Name}", item);
+	                        models.Add($"{item.Namespace}:{item.Name}", item);
 					}
 
 					continue;
@@ -191,16 +194,12 @@ namespace Alex.ResourcePackLib
 				}
 			}
 
-			foreach (var blockModel in models)
+			foreach (var model in models)
 			{
-				if (!_blockModels.ContainsKey(blockModel.Key))
-					ProcessBlockModel(blockModel.Value, ref models);
-			}
-
-			foreach (var itemModel in items)
-			{
-				if (!_itemModels.ContainsKey(itemModel.Key))
-					ProcessItem(itemModel.Value, ref items);
+				if (!_models.ContainsKey(model.Key))
+				{
+					ProcessModel(model.Value, ref models);
+				}
 			}
 
 			foreach (var blockState in _blockStates.ToArray())
@@ -427,7 +426,7 @@ namespace Alex.ResourcePackLib
 
 		}
 
-		private ResourcePackItem ProcessItem(ResourcePackItem model, ref Dictionary<string, ResourcePackItem> models)
+	/*	private ResourcePackItem ProcessItem(ResourcePackItem model, ref Dictionary<string, ResourcePackItem> models)
 		{
 			string key = $"{model.Namespace}:{model.Name}";
 			if (!string.IsNullOrWhiteSpace(model.ParentName) && !model.ParentName.Equals(model.Name, StringComparison.InvariantCultureIgnoreCase))
@@ -437,6 +436,7 @@ namespace Alex.ResourcePackLib
 					string parentKey = $"{model.Namespace}:{model.ParentName}";
 
 					ResourcePackItem parent;
+
 					if (!_itemModels.TryGetValue(parentKey, out parent))
 					{
 						if (models.TryGetValue(parentKey, out parent))
@@ -458,7 +458,7 @@ namespace Alex.ResourcePackLib
 			_itemModels.Add(key, model);
 
 			return model;
-		}
+		}*/
 		
 
 		#endregion
@@ -578,19 +578,19 @@ namespace Alex.ResourcePackLib
             }
         }
 
-		private BlockModel ProcessBlockModel(BlockModel model, ref Dictionary<string, BlockModel> models)
+		private ResourcePackModelBase ProcessModel(ResourcePackModelBase model, ref Dictionary<string, ResourcePackModelBase> models)
 		{
 			string key = $"{model.Namespace}:{model.Name}";
 			if (!string.IsNullOrWhiteSpace(model.ParentName) && !model.ParentName.Equals(model.Name, StringComparison.InvariantCultureIgnoreCase))
 			{
 				string parentKey = $"{model.Namespace}:{model.ParentName}";
 
-				BlockModel parent;
-				if (!_blockModels.TryGetValue(parentKey, out parent))
+				ResourcePackModelBase parent;
+				if (!_models.TryGetValue(parentKey, out parent))
 				{
 					if (models.TryGetValue(parentKey, out parent))
 					{
-						parent = ProcessBlockModel(parent, ref models);
+						parent = ProcessModel(parent, ref models);
 					}
 				}
 
@@ -598,7 +598,7 @@ namespace Alex.ResourcePackLib
 				{
 					model.Parent = parent;
 
-					if (model.Elements.Length == 0 && parent.Elements.Length > 0)
+					/*if (model.Elements.Length == 0 && parent.Elements.Length > 0)
 					{
 						model.Elements = (BlockModelElement[])parent.Elements.Clone();
 					}
@@ -614,11 +614,11 @@ namespace Alex.ResourcePackLib
 					foreach (var (name, value) in parent.Display)
 					{
 						model.Display[name] = value;
-					}
+					}*/
 				}
 			}
 			
-			_blockModels.Add(key, model);
+			_models.Add(key, model);
 			return model;
 		}
 		
@@ -653,10 +653,10 @@ namespace Alex.ResourcePackLib
 		{
 			string fullName = $"{@namespace}:{modelName}";
 
-			if (_blockModels.TryGetValue(fullName, out model))
+			if (BlockModels.TryGetValue(fullName, out model))
 				return true;
 
-			var m = _blockModels.FirstOrDefault(x => x.Value.Name.EndsWith(modelName, StringComparison.InvariantCultureIgnoreCase))
+			var m = BlockModels.FirstOrDefault(x => x.Value.Name.EndsWith(modelName, StringComparison.InvariantCultureIgnoreCase))
 			                    .Value;
 
 			if (m != null)

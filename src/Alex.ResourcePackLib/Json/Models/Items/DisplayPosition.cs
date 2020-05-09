@@ -10,12 +10,12 @@ namespace Alex.ResourcePackLib.Json.Models.Items
     [Flags]
     public enum DisplayPosition
     {
-        Undefined = 0b0000,
+        Undefined = 0,
 
-        FirstPerson = 0b0001,
-        ThirdPerson = 0b0010,
-        LeftHand = 0b0100,
-        RightHand = 0b1000,
+        FirstPerson = 1,
+        ThirdPerson = 2,
+        LeftHand = 4,
+        RightHand = 8,
 
 
         [JsonEnumValue("thirdperson_righthand")]
@@ -30,10 +30,10 @@ namespace Alex.ResourcePackLib.Json.Models.Items
         [JsonEnumValue("firstperson_lefthand")]
         FirstPersonLeftHand = FirstPerson | LeftHand,
 
-        [JsonEnumValue("gui")] Gui = 0b00010000,
-        [JsonEnumValue("head")] Head = 0b00110000,
-        [JsonEnumValue("ground")] Ground = 0b01010000,
-        [JsonEnumValue("fixed")] Fixed = 0b10010000
+        [JsonEnumValue("gui")] Gui = 16,
+        [JsonEnumValue("head")] Head = 32,
+        [JsonEnumValue("ground")] Ground = 64,
+        [JsonEnumValue("fixed")] Fixed = 128
     }
 
     public class JsonEnumValueAttribute : Attribute
