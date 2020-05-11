@@ -232,42 +232,38 @@ namespace Alex.Blocks.State
 			return false;
 		}
 
-		public bool ExactMatch(BlockState o)
+		public bool ExactMatch(BlockState other)
 		{
-			if (o is BlockState other)
-			{
-				if (Values.Count != other.Values.Count)
-				{
-					return false;
-				}
-
-				bool equal = true;
-				foreach (var pair in ToDictionary())
-				{
-					// value;
-					if (other.TryGetValue(pair.Key, out string value))
-					{
-						// Require value be equal.
-						if (!value.Equals(pair.Value))
-						{
-							equal = false;
-							break;
-						}
-					}
-					else
-					{
-						// Require key be present.
-						equal = false;
-						break;
-					}
-				}
-
-				return equal;
-			}
-			else
+			if (Values.Count != other.Values.Count)
 			{
 				return false;
 			}
+
+			bool equal = true;
+
+			foreach (var pair in ToDictionary())
+			{
+				// value;
+				if (other.TryGetValue(pair.Key, out string value))
+				{
+					// Require value be equal.
+					if (!value.Equals(pair.Value))
+					{
+						equal = false;
+
+						break;
+					}
+				}
+				else
+				{
+					// Require key be present.
+					equal = false;
+
+					break;
+				}
+			}
+
+			return equal;
 		}
 
 		public bool Equals(BlockState other)

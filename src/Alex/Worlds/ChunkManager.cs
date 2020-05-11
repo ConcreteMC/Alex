@@ -1145,13 +1145,13 @@ namespace Alex.Worlds
 						        var blockPosition = new BlockCoordinates(
 							        (int) (chunkPosition.X + x), y + (yIndex << 4), (int) (chunkPosition.Z + z));
 
-						        var blockStates = section.GetAll(x, y, z);
+						        //var blockStates = section.GetAll(x, y, z);
 
 						        bool isScheduled           = section.IsScheduled(x, y, z);
 						        bool isLightScheduled      = section.IsLightingScheduled(x, y, z);
 						        bool isBlockLightScheduled = section.IsBlockLightScheduled(x, y, z);
 
-						        foreach (var state in blockStates)
+						        foreach (var state in section.GetAll(x, y, z))
 						        {
 							        var blockState = state.state;
 
@@ -1195,6 +1195,11 @@ namespace Alex.Worlds
 							    //    bool isLightSource = section.GetBlocklight(x,y,z) > 0;
 							        var data = model.GetVertices(world, blockPosition, blockState.Block);
 
+							        if (blockState.Block is Water)
+							        {
+								        Debugger.Break();
+							        }
+							        
 							        if (!(data.vertices == null || data.indexes == null || data.vertices.Length == 0
 							              || data.indexes.Length == 0))
 							        {

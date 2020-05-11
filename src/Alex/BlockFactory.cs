@@ -171,8 +171,8 @@ namespace Alex
 				{
 					foreach (var property in entry.Value.Properties)
 					{
-						if (property.Key.Equals("waterlogged"))
-							continue;
+						//if (property.Key.Equals("waterlogged"))
+						//	continue;
 						
 						defaultState = (BlockState) defaultState.WithPropertyNoResolve(property.Key,
 							property.Value.FirstOrDefault(), false);
@@ -307,7 +307,7 @@ namespace Alex
 
 			if (name.Contains("water"))
 			{
-				return StationairyWaterModel;
+				return new LiquidBlockModel() {IsFlowing = false, IsLava = false, Level = state.GetTypedValue(Water.LEVEL)}; //StationairyWaterModel;
 			}
 
 			if (name.Contains("lava"))
@@ -323,13 +323,10 @@ namespace Alex
 				{
 					var models = MultiPartModels.GetModels(state, blockStateResource);
 					
-					if (state is BlockState ss)
-					{
-						ss.MultiPartHelper = blockStateResource;
-						ss.IsMultiPart = true;
-						ss.AppliedModels = models.Select(x => x.ModelName).ToArray();
-					}
-					
+					state.MultiPartHelper = blockStateResource;
+					state.IsMultiPart = true;
+					state.AppliedModels = models.Select(x => x.ModelName).ToArray();
+
 					return new ResourcePackBlockModel(resources, models);
 				}
 

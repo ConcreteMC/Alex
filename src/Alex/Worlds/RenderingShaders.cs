@@ -150,6 +150,13 @@ namespace Alex.Worlds
 			get { return TransparentEffect.FogEnd; }
 			set
 			{
+				var fogStart = value - (value / 4);
+				TransparentEffect.FogStart = fogStart;
+				OpaqueEffect.FogStart = fogStart;
+				AnimatedEffect.FogStart = fogStart;
+				TranslucentEffect.FogStart = fogStart;
+				AnimatedTranslucentEffect.FogStart = fogStart;
+				
 				TransparentEffect.FogEnd = value;
 				OpaqueEffect.FogEnd = value;
 				AnimatedEffect.FogEnd = value;
