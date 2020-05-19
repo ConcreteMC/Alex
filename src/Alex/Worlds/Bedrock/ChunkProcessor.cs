@@ -775,7 +775,11 @@ namespace Alex.Worlds.Bedrock
 						r = r.WithProperty("facing", facingValue);
 						break;
 					case "liquid_depth":
-						r = r.WithProperty("level", state.Value());
+						if (int.TryParse(state.Value(), out var lvl))
+						{
+							r = r.WithProperty("level", lvl.ToString());
+						}
+
 						break;
 					case "height":
 						r = r.WithProperty("layers", state.Value());

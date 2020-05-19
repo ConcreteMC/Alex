@@ -14,103 +14,6 @@ using NLog;
 
 namespace Alex.Blocks.State
 {
-	public sealed class BlockStateVariantMapper
-	{
-		private static NLog.Logger Log = NLog.LogManager.GetCurrentClassLogger(typeof(BlockStateVariantMapper));
-		private IList<BlockState> Variants { get; } = new List<BlockState>();
-
-		public BlockStateVariantMapper()
-		{
-
-		}
-		
-		public bool TryResolve(BlockState source, string property, string value, bool prioritize, out BlockState result, params string[] requiredMatches)
-		{
-			var copiedProperties = source.ToDictionary();
-			copiedProperties[property] = value.ToString();
-
-			int highestMatch = 0;
-			BlockState highest = null;
-
-			var matching = GetVariants().Where(x =>
-				(x.TryGetValue(property, out string xVal) &&
-				 xVal.Equals(value, StringComparison.InvariantCultureIgnoreCase))).ToArray();
-
-			if (matching.Length == 1)
-			{
-				result = matching.FirstOrDefault();
-				return true;
-			}
-
-			foreach (var variant in matching)
-			{
-				bool valid = true;
-				foreach (var requiredMatch in requiredMatches)
-				{
-					if (!(copiedProperties.TryGetValue(requiredMatch, out string copyValue) && variant.TryGetValue(requiredMatch, out string variantValue) && copyValue == variantValue))
-					{
-						valid = false;
-						break;
-					}
-				}
-				
-				if (!valid)
-					continue;
-				
-				int matches = 0;
-				foreach (var copy in copiedProperties.Where(x => x.Key != property))
-				{
-					//Check if variant value matches copy value.
-					if (variant.TryGetValue(copy.Key, out string val) && copy.Value.Equals(val, StringComparison.InvariantCultureIgnoreCase))
-					{
-						matches++;
-					}
-				}
-
-				foreach (var variantProp in variant.ToDictionary())
-				{
-					if (!copiedProperties.ContainsKey(variantProp.Key))
-					{
-						matches--;
-					}
-				}
-
-				if (matches > highestMatch)
-				{
-					highestMatch = matches;
-					highest = variant;
-				}
-			}
-
-			if (highest != null)
-			{
-				result = highest;
-				return true;
-			}
-
-			result = null;
-			return false;
-		}
-
-		public bool TryAdd(BlockState state)
-		{
-			//return Variants.TryAdd(state);
-			if (Variants.Contains(state)) return false;
-			Variants.Add(state);
-			return true;
-		}
-
-		public BlockState[] GetVariants()
-		{
-			return Variants.ToArray();
-		}
-
-		public BlockState GetDefaultState()
-		{
-			return Variants.FirstOrDefault(x => x.Default);
-		}
-	}
-
 	public class BlockState : IEquatable<BlockState>, IRegistryEntry<BlockState>
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BlockState));
@@ -140,30 +43,10 @@ namespace Alex.Blocks.State
 		{
 			if (Values.TryGetValue(property.Name, out var value))
 			{
-				/*if (property.PropertyType.IsEquivalentTo(value.GetType()))
-				{
-					return (T)value;
-				}
-				else
-				{*/
-					return property.ParseValue(value);
-				//}
+				return property.ParseValue(value);
 			}
 
 			return property.GetDefaultValue();
-		}
-
-		public object GetValue(string property)
-		{
-			if (Values.TryGetValue(property, out var value))
-			{
-				//if (property.PropertyType.IsEquivalentTo(value.GetType()))
-				{
-					return value;
-				}
-			}
-
-			return null;
 		}
 
 		public BlockState WithPropertyNoResolve(string property, string value, bool clone = true)
@@ -171,7 +54,7 @@ namespace Alex.Blocks.State
 			BlockState cloned;
 			if (clone)
 			{
-				cloned = (BlockState)Clone();
+				cloned = Clone();
 			}
 			else
 			{
@@ -183,7 +66,6 @@ namespace Alex.Blocks.State
 				cloned.Values[property] = value;
 			}
 			return cloned;
-			//return WithPropertyNoResolve(property, property.ValueFromString(value), clone);
 		}
 
 		public BlockState WithProperty(string property, string value, bool prioritize, params string[] requiredMatches)
@@ -194,7 +76,6 @@ namespace Alex.Blocks.State
 			}
 
 			return WithPropertyNoResolve(property, value);
-			//return WithProperty(property, property.ValueFromString(value));
 		}
 		
 		public BlockState WithProperty(string property, string value)
@@ -211,76 +92,18 @@ namespace Alex.Blocks.State
 			}
 			return dictionary;
 		}
-
-		/*public bool TryGetValue(IStateProperty property, out object value)
-		{
-			return Values.TryGetValue(property, out value);
-		}*/
-
+		
 		public bool TryGetValue(string property, out string value)
 		{
 			return Values.TryGetValue(property, out value);
-			
-			var r = Values.FirstOrDefault(x => x.Key.Equals(property, StringComparison.InvariantCultureIgnoreCase));
-			if (!r.Equals(default(KeyValuePair<string, string>)))
-			{
-				value = r.Value.ToString().ToLowerInvariant();
-				return true;
-			}
-
-			value = default(string);
-			return false;
 		}
-
-		public bool ExactMatch(BlockState o)
-		{
-			if (o is BlockState other)
-			{
-				if (Values.Count != other.Values.Count)
-				{
-					return false;
-				}
-
-				bool equal = true;
-				foreach (var pair in ToDictionary())
-				{
-					// value;
-					if (other.TryGetValue(pair.Key, out string value))
-					{
-						// Require value be equal.
-						if (!value.Equals(pair.Value))
-						{
-							equal = false;
-							break;
-						}
-					}
-					else
-					{
-						// Require key be present.
-						equal = false;
-						break;
-					}
-				}
-
-				return equal;
-			}
-			else
-			{
-				return false;
-			}
-		}
-
+		
 		public bool Equals(BlockState other)
 		{
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;
 			return ID == other.ID;
 		}
-
-		//public bool Equals(BlockState other)
-	//	{
-		//	return Equals((BlockState)other);
-		//}		
 
 		public override string ToString()
 		{
@@ -308,8 +131,6 @@ namespace Alex.Blocks.State
 			var kvs = ParseData(data);
 			foreach (var kv in kvs)
 			{
-				//var parsed = StateProperty.Parse(kv.Key);
-				//state.Values.TryAdd(parsed, kv.Value);
 				state.Values.Add(kv.Key, kv.Value);
 			}
 
@@ -340,13 +161,20 @@ namespace Alex.Blocks.State
 
 		public BlockState CloneSilent()
 		{
-			BlockState bs = new BlockState();
-			bs.Name = Name;
-			bs.ID = ID;
-			bs.Values = new Dictionary<string, string>(Values/*, new StateComparer()*/);
-			bs.Block = Block;
-			bs.VariantMapper = VariantMapper;
-			bs.Model = Model;
+			BlockState bs = new BlockState
+			{
+				Name = Name,
+				ID = ID,
+				Values = new Dictionary<string, string>(Values /*, new StateComparer()*/),
+				Block = Block,
+				VariantMapper = VariantMapper,
+				Model = Model,
+				Default = Default,
+			//	Location = Location == null ? null : new ResourceLocation(Location.Namespace, Location.Path),
+				AppliedModels = AppliedModels,
+				IsMultiPart = IsMultiPart,
+				MultiPartHelper = MultiPartHelper
+			};
 			return bs;
 		}
 

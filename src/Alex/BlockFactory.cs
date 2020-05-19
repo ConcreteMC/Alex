@@ -36,16 +36,16 @@ namespace Alex
 		private static ResourcePackLib.Json.Models.Blocks.BlockModel CubeModel { get; set; }
 		public static readonly LiquidBlockModel StationairyWaterModel = new LiquidBlockModel()
 		{
-			IsFlowing = false,
+			//IsFlowing = false,
 			IsLava = false,
-			Level = 8
+		//	Level = 8
 		};
 
 		public static readonly LiquidBlockModel StationairyLavaModel = new LiquidBlockModel()
 		{
-			IsFlowing = false,
+			//IsFlowing = false,
 			IsLava = true,
-			Level = 8
+			//Level = 8
 		};
 
 		private static BlockModel GetOrCacheModel(ResourceManager resources, McResourcePack resourcePack, BlockState state, uint id, bool rebuild)
@@ -309,9 +309,9 @@ namespace Alex
 			{
 				return new LiquidBlockModel()
 				{
-					IsFlowing = false,
+				//	IsFlowing = false,
 					IsLava = false,
-					Level = state.GetTypedValue(Water.LEVEL)
+				//	Level = state.GetTypedValue(Water.LEVEL)
 				};
 			}
 
@@ -319,9 +319,9 @@ namespace Alex
 			{
 				return new LiquidBlockModel()
 				{
-					IsFlowing = false,
+				//	IsFlowing = false,
 					IsLava = true,
-					Level = state.GetTypedValue(Water.LEVEL)
+				//	Level = state.GetTypedValue(Water.LEVEL)
 				};;
 			}
 
@@ -329,22 +329,22 @@ namespace Alex
 
 			if (resourcePack.BlockStates.TryGetValue(name, out blockStateResource))
 			{
-				if (blockStateResource != null && blockStateResource.Parts != null && blockStateResource.Parts.Length > 0 && blockStateResource.Parts.All(x => x.Apply.All(b => b.Model != null)))
+				if (blockStateResource != null && blockStateResource.Parts != null &&
+				    blockStateResource.Parts.Length > 0 &&
+				    blockStateResource.Parts.All(x => x.Apply.All(b => b.Model != null)))
 				{
 					var models = MultiPartModels.GetModels(state, blockStateResource);
-					
-					if (state is BlockState ss)
-					{
-						ss.MultiPartHelper = blockStateResource;
-						ss.IsMultiPart = true;
-						ss.AppliedModels = models.Select(x => x.ModelName).ToArray();
-					}
-					
+
+
+					state.MultiPartHelper = blockStateResource;
+					state.IsMultiPart = true;
+					state.AppliedModels = models.Select(x => x.ModelName).ToArray();
+
 					return new ResourcePackBlockModel(resources, models);
 				}
 
 				if (blockStateResource?.Variants == null ||
-					blockStateResource.Variants.Count == 0)
+				    blockStateResource.Variants.Count == 0)
 					return null;
 
 				if (blockStateResource.Variants.Count == 1)

@@ -51,8 +51,6 @@ namespace Alex.Worlds
 		public int Z { get; set; }
 
 		public bool IsNew { get; set; } = true;
-		public bool IsLoaded = false;
-		public bool NeedSave = false;
 		public bool IsDirty { get; set; }
 		public bool SkyLightDirty { get; set; }
 		public bool BlockLightDirty { get; set; }
@@ -60,8 +58,7 @@ namespace Alex.Worlds
 		public ChunkSection[] Sections { get; set; } = new ChunkSection[16];
 		public int[] BiomeId = ArrayOf<int>.Create(256, 1);
 		public short[] Height = new short[256];
-
-		public object VertexLock { get; set; } = new object();
+		
 		public object UpdateLock { get; set; } = new object();
 		public ScheduleType Scheduled { get; set; } = ScheduleType.Unscheduled;
 
@@ -85,13 +82,10 @@ namespace Alex.Worlds
 				var section = Sections[i];
 				if (section == null)
 					continue;
-
-				if (section is ChunkSection cs)
+				
+				foreach (var ls in section.LightSources)
 				{
-					foreach (var ls in cs.LightSources)
-					{
-						yield return new BlockCoordinates(ls.X, (i * 16) + ls.Y, ls.Z);
-					}
+					yield return new BlockCoordinates(ls.X, (i * 16) + ls.Y, ls.Z);
 				}
 			}
 		}
@@ -99,7 +93,6 @@ namespace Alex.Worlds
 		private void SetDirty()
 		{
 			IsDirty = true;
-			NeedSave = true;
 		}
 
 		public void ScheduleBlockUpdate(int x, int y, int z)
@@ -198,7 +191,7 @@ namespace Alex.Worlds
 
 					isInAir = false;
 
-					var block = GetBlock(x, y, z);
+					var block = GetBlockState(x, y, z).Block;
 
 					if (!block.Renderable || (block.Transparent && !block.BlockMaterial.BlocksLight()))
 						continue;
@@ -251,15 +244,6 @@ namespace Alex.Worlds
 			by = by - ((@by >> 4) << 4);
 
 			return chunk.Get(bx, by, bz, storage);
-		}
-
-		public Block GetBlock(int bx, int by, int bz)
-		{
-			var bs = GetBlockState(bx, by, bz);
-
-			if (bs == null) return new Air();
-
-			return bs.Block;
 		}
 
 		public void SetHeight(int bx, int bz, short h)

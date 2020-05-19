@@ -436,7 +436,7 @@ namespace Alex.Worlds
 		        ChunkColumn chunk;
 		        if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 		        {
-			        return chunk.GetBlock(x & 0xf, y & 0xff, z & 0xf);
+			        return chunk.GetBlockState(x & 0xf, y & 0xff, z & 0xf).Block;
 		        }
 			//}
 		//	catch { }
@@ -609,7 +609,7 @@ namespace Alex.Worlds
 			if (chunk == null)
 				return (Block) Airstate.Block;
 
-			var block = (Block)chunk.GetBlock(blockCoordinates.X & 0x0f, blockCoordinates.Y & 0xff, blockCoordinates.Z & 0x0f);
+			var block = (Block)chunk.GetBlockState(blockCoordinates.X & 0x0f, blockCoordinates.Y & 0xff, blockCoordinates.Z & 0x0f).Block;
 			block.Coordinates = blockCoordinates;
 
 			return block;
