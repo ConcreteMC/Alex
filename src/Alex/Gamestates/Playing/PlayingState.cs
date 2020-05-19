@@ -209,18 +209,18 @@ namespace Alex.GameStates.Playing
 					foreach (var bs in World
 						.GetBlockStates((int) _raytracedBlock.X, (int) _raytracedBlock.Y, (int) _raytracedBlock.Z))
 					{
-						var blockstate = bs.state;
+						var blockstate = bs.State;
 						if (blockstate != null && blockstate.Block.Renderable)
 						{
-							sb.AppendLine($"{blockstate.Name} (S: {bs.storage})");
-							if (blockstate is BlockState s && s.IsMultiPart)
+							sb.AppendLine($"{blockstate.Name} (S: {bs.Storage})");
+							if (blockstate.IsMultiPart)
 							{
 								sb.AppendLine($"MultiPart=true");
 								sb.AppendLine();
 								
 								sb.AppendLine("Models:");
 
-								foreach (var model in s.AppliedModels)
+								foreach (var model in blockstate.AppliedModels)
 								{
 									sb.AppendLine(model);
 								}
@@ -349,7 +349,7 @@ namespace Alex.GameStates.Playing
 		        Vector3 targetPoint = camPos + (lookVector * x);
 		        var block = world.GetBlock(targetPoint) as Block;
 
-		        if (block != null && block.HasHitbox && !block.IsWater)
+		        if (block != null && block.HasHitbox)
 		        {
 		            var bbox = block.GetBoundingBox(Vector3.Floor(targetPoint));
 		            if (bbox.Contains(targetPoint) == ContainmentType.Contains)

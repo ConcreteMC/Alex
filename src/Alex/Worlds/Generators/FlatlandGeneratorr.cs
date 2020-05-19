@@ -11,7 +11,9 @@ namespace Alex.Worlds.Generators
 	    private BlockState Bedrock = BlockFactory.GetBlockState("minecraft:bedrock");
 	    private BlockState Dirt = BlockFactory.GetBlockState("minecraft:dirt");
 	    private BlockState Grass = BlockFactory.GetBlockState("minecraft:grass_block");
-
+	    private BlockState Water = BlockFactory.GetBlockState("minecraft:water");
+	    private BlockState Slab = BlockFactory.GetBlockState("minecraft:oak_slab");
+	    
 		public FlatlandGenerator()
 	    {
 
@@ -27,10 +29,30 @@ namespace Alex.Worlds.Generators
 		    {
 			    for (int z = 0; z < 16; z++)
 			    {
-					/*column.SetBlockState(x, 0, z, Bedrock);
-				    column.SetBlockState(x, 1, z, Dirt);
-				    column.SetBlockState(x, 2, z, Dirt);
-				    column.SetBlockState(x, 3, z, Grass);*/
+				    column.SetBlockState(x, 0, z, Bedrock);
+				    if (column.X == 1 && column.Z == 1)
+				    {
+					    for (int y = 1; y < 2; y++)
+					    {
+						    column.SetBlockState(x, y, z, Water.WithProperty("level", "8"));
+					    }
+					    column.SetBlockState(x, 3, z, Water.WithProperty("level", "3"));
+				    }
+				    else
+				    {
+					    column.SetBlockState(x, 1, z, Dirt);
+					    column.SetBlockState(x, 2, z, Dirt);
+					    column.SetBlockState(x, 3, z, Grass);
+
+					    if (x == 8 && z == 8)
+					    {
+						    column.SetBlockState(x, 5, z, Slab.WithProperty("type", "bottom"));
+					    }
+					    else if (x == 8 && z == 7)
+					    {
+						    column.SetBlockState(x, 5, z, Slab.WithProperty("type", "top"));
+					    }
+				    }
 
 				    column.SetSkyLight(x, 0, z, 15);
 				    column.SetSkyLight(x, 1, z, 15);

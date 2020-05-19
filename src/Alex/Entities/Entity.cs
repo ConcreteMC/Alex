@@ -740,7 +740,7 @@ namespace Alex.Entities
 
 			if (blockBelowFeet != null)
 			{
-				if (blockBelowFeet.Any(b => b.state.Block.BlockMaterial == Material.Water || b.state.Block.IsWater))
+				if (blockBelowFeet.Any(b => b.State.Block.BlockMaterial == Material.Water || b.State.Block.IsWater))
 				{
 					AboveWater = true;
 				}
@@ -756,7 +756,7 @@ namespace Alex.Entities
 			
 			if (feetBlock != null)
 			{
-				if (feetBlock.Any(b => b.state.Block.BlockMaterial == Material.Water || b.state.Block.IsWater))
+				if (feetBlock.Any(b => b.State.Block.BlockMaterial == Material.Water || b.State.Block.IsWater))
 				{
 					FeetInWater = true;
 				}
@@ -765,7 +765,7 @@ namespace Alex.Entities
 					FeetInWater = false;
 				}
 
-				if (feetBlock.Any(b => b.state.Block.BlockMaterial == Material.Lava))
+				if (feetBlock.Any(b => b.State.Block.BlockMaterial == Material.Lava))
 				{
 					IsInLava = true;
 				}
@@ -774,7 +774,7 @@ namespace Alex.Entities
 					IsInLava = false;
 				}
 
-				if (!feetBlock.Any(x => x.storage == 0 && x.state.Block.Solid))
+				if (!feetBlock.Any(x => x.Storage == 0 && x.State.Block.Solid))
 					KnownPosition.OnGround = false;
 			}
 

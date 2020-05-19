@@ -19,7 +19,7 @@ namespace Alex.Blocks.Storage
         {
             _bits = 8;
             
-            Storage = new QuickStorage(_bits, 4096);
+            Storage = new FlexibleStorage(_bits, 4096);
             Pallette = new IntIdentityHashBiMap<BlockState>((1 << _bits));
 
             Pallette.Add(Air);
@@ -64,7 +64,7 @@ namespace Alex.Blocks.Storage
             _bits = bits;
 
             Pallette = new IntIdentityHashBiMap<BlockState>(1 << bits);
-            Storage = new QuickStorage(bits, 4096);
+            Storage = new FlexibleStorage(bits, 4096);
             IdFor(Air);
 
             for (int i = 0; i < oldStorage.Length; i++)

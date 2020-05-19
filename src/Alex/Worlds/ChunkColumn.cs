@@ -212,18 +212,18 @@ namespace Alex.Worlds
 
 		private static BlockState Air = BlockFactory.GetBlockState("minecraft:air");
 
-		public IEnumerable<(BlockState state, int storage)> GetBlockStates(int bx, int by, int bz)
+		public IEnumerable<ChunkSection.BlockEntry> GetBlockStates(int bx, int by, int bz)
 		{
 			if ((bx < 0 || bx > ChunkWidth) || (by < 0 || by > ChunkHeight) || (bz < 0 || bz > ChunkDepth))
 			{
-				yield return (Air, 0);
+				yield return new ChunkSection.BlockEntry(Air, 0);
 				yield break;
 			}
 
 			var chunk = Sections[by >> 4];
 			if (chunk == null)
 			{
-				yield return (Air, 0);
+				yield return new ChunkSection.BlockEntry(Air, 0);
 				yield break;
 			}
 
@@ -260,20 +260,6 @@ namespace Alex.Worlds
 			if (bs == null) return new Air();
 
 			return bs.Block;
-		}
-
-		public void SetBlock(int bx, int by, int bz, Block block)
-		{
-			if ((bx < 0 || bx > ChunkWidth) || (by < 0 || by > ChunkHeight) || (bz < 0 || bz > ChunkDepth))
-				return;
-
-			GetSection(by).Set(bx, by - ((@by >> 4) << 4), bz, block.BlockState);
-			SetDirty();
-
-			//RecalculateHeight(bx, bz);
-
-			_heightDirty = true;
-			// _scheduledUpdates[by << 8 | bz << 4 | bx] = true;
 		}
 
 		public void SetHeight(int bx, int bz, short h)

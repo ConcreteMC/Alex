@@ -274,7 +274,7 @@ namespace Alex.Blocks.State
 		{
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;
-			return string.Equals(Name, other.Name, StringComparison.InvariantCultureIgnoreCase) && ID == other.ID;
+			return ID == other.ID;
 		}
 
 		//public bool Equals(BlockState other)

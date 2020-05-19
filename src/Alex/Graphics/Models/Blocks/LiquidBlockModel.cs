@@ -105,10 +105,10 @@ namespace Alex.Graphics.Models.Blocks
 				bool shouldRenderFace = true;
 				foreach (var blockState in world.GetBlockStates(pos.X, pos.Y, pos.Z))
 				{
-					if (blockState.storage != 0 && (blockState.state == null || (blockState.state.Block is Air)))
+					if (blockState.Storage != 0 && (blockState.State == null || (blockState.State.Block is Air)))
 						continue;
 					
-					shouldRenderFace = baseBlock.ShouldRenderFace(face, blockState.state.Block);
+					shouldRenderFace = baseBlock.ShouldRenderFace(face, blockState.State.Block);
 				}
 				
 				if (shouldRenderFace)
@@ -120,20 +120,8 @@ namespace Alex.Graphics.Models.Blocks
 			
 			int tl = 0, tr = 0, bl = 0, br = 0;
 
-			Level = baseBlock.BlockState.GetTypedValue(LEVEL);
-
-			string b1, b2;
-			if (IsLava)
-			{
-				b1 = "minecraft:lava";
-				b2 = "minecraft:lava";
-			}
-			else
-			{
-				b1 = "minecraft:water";
-				b2 = "minecraft:water";
-			}
-
+			//Level = baseBlock.BlockState.GetTypedValue(LEVEL);
+			
 			int lowestFound = 999;
 			BlockCoordinates lowestBlock = BlockCoordinates.Up;
 
@@ -143,7 +131,7 @@ namespace Alex.Graphics.Models.Blocks
 
 			var check = position + BlockCoordinates.Up;
 			var bc = world.GetBlockStates(check.X, check.Y, check.Z).ToArray();//.GetType();
-			if ((!IsLava && bc.Any(x => x.state.Block.BlockMaterial == Material.Water)) || (IsLava && bc.Any(x => x.state.Block.BlockMaterial == Material.Lava))) //.Name == b1 || bc.Name == b2)
+			if ((!IsLava && bc.Any(x => x.State.Block.BlockMaterial == Material.Water)) || (IsLava && bc.Any(x => x.State.Block.BlockMaterial == Material.Lava))) //.Name == b1 || bc.Name == b2)
 			{
 				tl = 8;
 				tr = 8;
@@ -177,10 +165,16 @@ namespace Alex.Graphics.Models.Blocks
 
 					br = GetAverageLiquidLevels(world, position + new BlockCoordinates(1, 0, 1), out var brl,
 						out var brv);
+					
+					if (br < lowestFound)
+					{
+						lowestBlock = brl;
+						lowestFound = brv;
+					}
 				}
 				else
 				{
-					if (bc.Any(x => x.state.Block.Solid && x.state.Block.Renderable))
+					if (bc.Any(x => x.State.Block.Solid && x.State.Block.Renderable))
 					{
 						tl = 8;
 						tr = 8;
@@ -383,15 +377,15 @@ namespace Alex.Graphics.Models.Blocks
 				{
 					foreach (var bs in world.GetBlockStates(position.X + xx, position.Y, position.Z + zz))
 					{
-						if (!bs.state.Block.Renderable)
+						if (!bs.State.Block.Renderable)
 							continue;
 
-						if (bs.state.Model is LiquidBlockModel m && m.IsLava != IsLava)
+						if (bs.State.Model is LiquidBlockModel m && m.IsLava != IsLava)
 							return 8;
 						
 						int waterLevel = -1;
 						
-						var b = bs.state;
+						var b = bs.State;
 						//b = (BlockState) world.GetBlockState(position.X + xx, position.Y, position.Z + zz);
 						if ((b.Model is LiquidBlockModel l && l.IsLava == IsLava))
 						{

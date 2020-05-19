@@ -171,8 +171,8 @@ namespace Alex
 				{
 					foreach (var property in entry.Value.Properties)
 					{
-						if (property.Key.Equals("waterlogged"))
-							continue;
+					//	if (property.Key.Equals("waterlogged"))
+					//		continue;
 						
 						defaultState = (BlockState) defaultState.WithPropertyNoResolve(property.Key,
 							property.Value.FirstOrDefault(), false);
@@ -191,8 +191,8 @@ namespace Alex
 					{
 						foreach (var property in s.Properties)
 						{
-							if (property.Key.Equals("waterlogged"))
-								continue;
+							//if (property.Key.Equals("waterlogged"))
+						//		continue;
 							
 							variantState =
 								(Blocks.State.BlockState) variantState.WithPropertyNoResolve(property.Key,
@@ -307,12 +307,22 @@ namespace Alex
 
 			if (name.Contains("water"))
 			{
-				return StationairyWaterModel;
+				return new LiquidBlockModel()
+				{
+					IsFlowing = false,
+					IsLava = false,
+					Level = state.GetTypedValue(Water.LEVEL)
+				};
 			}
 
 			if (name.Contains("lava"))
 			{
-				return StationairyLavaModel;
+				return new LiquidBlockModel()
+				{
+					IsFlowing = false,
+					IsLava = true,
+					Level = state.GetTypedValue(Water.LEVEL)
+				};;
 			}
 
 			BlockStateResource blockStateResource;

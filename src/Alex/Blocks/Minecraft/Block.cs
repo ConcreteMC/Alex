@@ -182,12 +182,7 @@ namespace Alex.Blocks.Minecraft
 				}
 			}*/
 		}
-
-		public virtual bool Tick(World world, Vector3 position)
-		{
-			return false;
-		}
-
+		
 		public virtual void Interact(World world, BlockCoordinates position, BlockFace face, Entity sourceEntity)
 		{
 

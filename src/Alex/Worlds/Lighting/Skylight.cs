@@ -109,7 +109,7 @@ namespace Alex.Worlds
 		{
 		}
 
-		public IEnumerable<(BlockState state, int storage)> GetBlockStates(int positionX, in int positionY, int positionZ)
+		public IEnumerable<ChunkSection.BlockEntry> GetBlockStates(int positionX, in int positionY, int positionZ)
 		{
 			throw new NotImplementedException();
 		}

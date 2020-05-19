@@ -920,7 +920,7 @@ namespace Alex.Worlds
 					    var oldMesh = section.MeshCache;
 
 					    var sectionMesh = GenerateSectionMesh(
-						    World, scheduleType, new Vector3(chunk.X << 4, 0, chunk.Z << 4), ref section, i);
+						    World, new Vector3(chunk.X << 4, 0, chunk.Z << 4), ref section, i);
 
 					    meshes.Add(sectionMesh);
 
@@ -1121,7 +1121,6 @@ namespace Alex.Worlds
 	    public static bool DoMultiPartCalculations { get; set; } = true;
 
         private ChunkMesh GenerateSectionMesh(World world,
-	        ScheduleType scheduled,
 	        Vector3 chunkPosition,
 	        ref ChunkSection section,
 	        int yIndex)
@@ -1153,7 +1152,7 @@ namespace Alex.Worlds
 
 						        foreach (var state in blockStates)
 						        {
-							        var blockState = state.state;
+							        var blockState = state.State;
 
 							        if (blockState == null || !blockState.Block.Renderable)
 							        {
@@ -1171,21 +1170,21 @@ namespace Alex.Worlds
 								        {
 									        blockState = newblockState;
 
-									        section.Set(state.storage, x, y, z, blockState);
+									        section.Set(state.Storage, x, y, z, blockState);
 									        model = blockState.Model;
 								        }
 							        }
 
-							        if (DoMultiPartCalculations && blockState is BlockState bs && bs.IsMultiPart)
+							        if (DoMultiPartCalculations && blockState.IsMultiPart)
 							        {
 								        var newBlockState = MultiPartModels.GetBlockState(
-									        world, blockPosition, blockState, bs.MultiPartHelper);
+									        world, blockPosition, blockState, blockState.MultiPartHelper);
 
 								        if (newBlockState != blockState)
 								        {
 									        blockState = newBlockState;
 
-									        section.Set(state.storage, x, y, z, blockState);
+									        section.Set(state.Storage, x, y, z, blockState);
 									        model = blockState.Model;
 								        }
 
@@ -1254,16 +1253,16 @@ namespace Alex.Worlds
 										        stages[targetState].Add(verticeIndex);
 									        }
 
-									        if (state.storage == 0)
+									        if (state.Storage == 0)
 										        section.SetRendered(x, y, z, true);
 								        }
 							        }
-							        else if (state.storage == 0)
+							        else if (state.Storage == 0)
 							        {
 								        section.SetRendered(x, y, z, false);
 							        }
 
-							        if (state.storage == 0)
+							        if (state.Storage == 0)
 							        {
 								        if (isScheduled)
 									        section.SetScheduled(x, y, z, false);

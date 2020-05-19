@@ -5,6 +5,7 @@ using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
+using Alex.Blocks.Storage;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Worlds
@@ -119,11 +120,11 @@ namespace Alex.Worlds
             return Air;
         }
 
-        public IEnumerable<(BlockState state, int storage)> GetBlockStates(int positionX, in int positionY, int positionZ)
+        public IEnumerable<ChunkSection.BlockEntry> GetBlockStates(int positionX, in int positionY, int positionZ)
         {
             return new[]
             {
-                (Air, 0)
+               new ChunkSection.BlockEntry(Air, 0)
             };
         }
 

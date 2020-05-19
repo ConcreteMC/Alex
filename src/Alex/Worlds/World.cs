@@ -18,6 +18,7 @@ using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
+using Alex.Blocks.Storage;
 using Alex.Entities;
 using Alex.GameStates;
 using Alex.Graphics.Camera;
@@ -532,7 +533,7 @@ namespace Alex.Worlds
 			}, 1);
 		}
 
-		public IEnumerable<(BlockState state, int storage)> GetBlockStates(int x, int y, int z)
+		public IEnumerable<ChunkSection.BlockEntry> GetBlockStates(int x, int y, int z)
 		{
 			ChunkColumn chunk;
 			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
@@ -563,7 +564,7 @@ namespace Alex.Worlds
 			return GetBlockState(x, y, z, 0);
 		}
 
-		public IEnumerable<(BlockState state, int storage)> GetBlockStates(int positionX, in int positionY, int positionZ)
+		public IEnumerable<ChunkSection.BlockEntry> GetBlockStates(int positionX, in int positionY, int positionZ)
 		{
 			ChunkColumn chunk;
 			if (ChunkManager.TryGetChunk(new ChunkCoordinates(positionX >> 4, positionZ >> 4), out chunk))
@@ -571,7 +572,7 @@ namespace Alex.Worlds
 				return chunk.GetBlockStates(positionX, positionY, positionZ);
 			}
 
-			return new (BlockState state, int storage)[0];
+			return new ChunkSection.BlockEntry[0];
 		}
 
 		public BlockState GetBlockState(BlockCoordinates coords)
