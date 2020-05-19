@@ -52,7 +52,7 @@ namespace Alex.Graphics.Models.Blocks
 
 			if (forward.Model is LiquidBlockModel)
 			{
-				if (GetLevel(forward) < myLevel)
+				if (GetLevel(forward) != myLevel)
 					return true;
 
 				if (GetAverageLiquidLevels(world, position + BlockCoordinates.Forwards, out var _, out var _) != myLevel)
@@ -384,14 +384,14 @@ namespace Alex.Graphics.Models.Blocks
 
 			var myLevel = GetLevel(bss);
 			
-			int level = myLevel;
+			int level = bss.Model is LiquidBlockModel ? myLevel : 0;
 			for (int xx = -1; xx <= 0; xx++)
 			{
 				for (int zz = -1; zz <= 0; zz++)
 				{
 					foreach (var bs in world.GetBlockStates(position.X + xx, position.Y, position.Z + zz))
 					{
-						if (!bs.State.Block.Renderable)
+						if (!bs.State.Block.Renderable || !(bs.State.Model is LiquidBlockModel))
 							continue;
 
 						//if (bs.State.Model is LiquidBlockModel m && m.IsLava != IsLava) 
