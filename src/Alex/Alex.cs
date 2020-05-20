@@ -61,6 +61,8 @@ namespace Alex
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Alex));
 
+		public static string Gpu { get; private set; } = "";
+		public static string OperatingSystem { get; private set; } = "";
 		public static string DotnetRuntime { get; } =
 			$"{System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription}";
 
@@ -108,7 +110,8 @@ namespace Alex
 		{
 			Instance = this;
 			LaunchSettings = launchSettings;
-
+			OperatingSystem = $"{System.Runtime.InteropServices.RuntimeInformation.OSDescription} ({System.Runtime.InteropServices.RuntimeInformation.OSArchitecture})";
+			
 			DeviceManager = new GraphicsDeviceManager(this)
 			{
 				PreferMultiSampling = false,
@@ -117,7 +120,8 @@ namespace Alex
 			};
 
 			DeviceManager.PreparingDeviceSettings += (sender, args) =>
-				{
+			{
+				Gpu = args.GraphicsDeviceInformation.Adapter.Description;
 					args.GraphicsDeviceInformation.PresentationParameters.DepthStencilFormat = DepthFormat.Depth24Stencil8;
 					DeviceManager.PreferMultiSampling = true;
 				};
@@ -230,8 +234,6 @@ namespace Alex
 		{
 			var options = Services.GetService<IOptionsProvider>();
 			options.Load();
-			
-			var fontStream = Assembly.GetEntryAssembly().GetManifestResourceStream("Alex.Resources.DebugFont.xnb");
 			
 			DebugFont = (WrappedSpriteFont) Content.Load<SpriteFont>("Alex.Resources.DebugFont.xnb");
 			

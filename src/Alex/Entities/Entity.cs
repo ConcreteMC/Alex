@@ -169,8 +169,8 @@ namespace Alex.Entities
 				ModelRenderer.Scale = _scale;
 			}
 
-			if (ItemRenderer != null)
-				ItemRenderer.Scale = new Vector3(_scale);
+			//if (ItemRenderer != null)
+			//	ItemRenderer.Scale = new Vector3(_scale);
 		}
 		
 		public void SetInventory(Inventory inventory)
@@ -225,7 +225,7 @@ namespace Alex.Entities
 			            renderer.DisplayPosition = oldRenderer.DisplayPosition;
 		            }
 
-		            renderer.Scale = new Vector3(_scale);
+		           // renderer.Scale = new Vector3(_scale);
 
 		            ItemRenderer = renderer;
 
@@ -466,7 +466,15 @@ namespace Alex.Entities
                     //			ItemRenderer?.Update(Matrix.CreateRotationY(MathUtils.ToRadians(180f - KnownPosition.HeadYaw)) * Matrix.CreateTranslation(KnownPosition));
                  //   ItemRenderer?.Update(null, new PlayerLocation(KnownPosition.X, KnownPosition.Y, KnownPosition.Z, 180f - KnownPosition.HeadYaw, 180f - KnownPosition.Yaw, KnownPosition.Pitch));
 
-                 ItemRenderer?.Update(Matrix.Identity, new PlayerLocation(KnownPosition.X, KnownPosition.Y, KnownPosition.Z, 180f - KnownPosition.HeadYaw, 180f - KnownPosition.Yaw, KnownPosition.Pitch));
+                 if (_rightArmModel != null && ItemRenderer != null)
+                 {
+	                 //ItemRenderer.Rotation = _rightArmModel.Rotation;
+                 }
+
+                 ItemRenderer?.Update(Matrix.Identity *
+                                      Matrix.CreateScale(Scale) *
+                                      Matrix.CreateRotationY(MathHelper.ToRadians(180f - KnownPosition.HeadYaw)) *
+                                      Matrix.CreateTranslation(KnownPosition.X, KnownPosition.Y, KnownPosition.Z), new PlayerLocation(KnownPosition.X, KnownPosition.Y, KnownPosition.Z, 180f - KnownPosition.HeadYaw, 180f - KnownPosition.Yaw, KnownPosition.Pitch));
                     //ItemRenderer?.World = 
                     ItemRenderer?.Update(args.GraphicsDevice, args.Camera);
                 }

@@ -19,6 +19,7 @@ namespace Alex.Graphics.Models.Entity
 			public ModelBoneCube[] Parts { get; }
 
 			private Vector3 _rotation = Vector3.Zero;
+
 			public Vector3 Rotation
 			{
 				get { return _rotation; }
@@ -100,7 +101,7 @@ namespace Alex.Graphics.Models.Entity
 					                  rotMatrix);
 					
 					RotationMatrix = rotateMatrix * characterMatrix;
-						
+
 					effect.World = rotateMatrix * Matrix.CreateTranslation(_position) * characterMatrix;
 					effect.View = args.Camera.ViewMatrix;
 					effect.Projection = args.Camera.ProjectionMatrix;
