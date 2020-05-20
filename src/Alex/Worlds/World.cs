@@ -569,7 +569,7 @@ namespace Alex.Worlds
 			ChunkColumn chunk;
 			if (ChunkManager.TryGetChunk(new ChunkCoordinates(positionX >> 4, positionZ >> 4), out chunk))
 			{
-				return chunk.GetBlockStates(positionX, positionY, positionZ);
+				return chunk.GetBlockStates(positionX  & 0xf, positionY & 0xff, positionZ  & 0xf);
 			}
 
 			return new ChunkSection.BlockEntry[0];
