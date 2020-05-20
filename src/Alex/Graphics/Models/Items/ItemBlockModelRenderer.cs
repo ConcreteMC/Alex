@@ -21,6 +21,7 @@ namespace Alex.Graphics.Models.Items
             _block = block;
             _resource = resourceManager;
 
+            Offset = new Vector3(0f, -0.5f, 0f);
             //  Translation = -Vector3.Forward * 8f;
         }
 
@@ -48,48 +49,6 @@ namespace Alex.Graphics.Models.Items
                 effect.Texture = _resource.Atlas.GetStillAtlas();
             }
         }
-
-        public override void Update(GraphicsDevice device, ICamera camera)
-        {
-            base.Update(device, camera);
-        }
-
-        //
-        // public override void Update(GraphicsDevice device, ICamera camera)
-        // {
-        //     if (Effect == null)
-        //     {
-        //         Effect = new BasicEffect(device);
-        //         Effect.VertexColorEnabled = true;
-        //         Effect.TextureEnabled = true;
-        //
-        //         if (_block.Block.Animated)
-        //         {
-        //             Effect.Texture = _resource.Atlas.GetAtlas(0);
-        //         }
-        //         else
-        //         {
-        //             Effect.Texture = _resource.Atlas.GetStillAtlas();
-        //         }
-        //     }
-        //
-        //     Effect.Projection = camera.ProjectionMatrix;
-        //     Effect.View = camera.ViewMatrix;
-        //
-        //     var scale = Scale;
-        //
-        //     Effect.World = Matrix.CreateScale(scale)
-        //                    * Matrix.CreateTranslation(Translation)
-        //                    * Matrix.CreateFromAxisAngle(Vector3.Up, MathUtils.ToRadians(Rotation.Y))
-        //                    * Matrix.CreateFromAxisAngle(Vector3.Right, MathUtils.ToRadians(Rotation.X))
-        //                    * Matrix.CreateFromAxisAngle(Vector3.Forward, MathHelper.TwoPi - MathUtils.ToRadians(Rotation.Z))
-        //                    // * Matrix.CreateRotationY(Rotation.Y - MathHelper.PiOver4)
-        //                    // * Matrix.CreateRotationX(Rotation.X + MathHelper.PiOver4)
-        //                    // * Matrix.CreateRotationZ(Rotation.Z)
-        //                    * ParentMatrix;
-        //
-        //     base.Update(device, camera);
-        // }
 
         public override IItemRenderer Clone()
         {

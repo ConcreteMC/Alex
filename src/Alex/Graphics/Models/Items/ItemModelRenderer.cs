@@ -27,6 +27,10 @@ namespace Alex.Graphics.Models.Items
         public ItemModelRenderer(ResourcePackModelBase model, McResourcePack resourcePack) : base(model, resourcePack,
             VertexPositionColor.VertexDeclaration)
         {
+            if (model.ParentName != "item/handheld")
+            {
+                Offset = new Vector3(0f, -0.5f, 0f);
+            }
         }
 
         public override void Cache(McResourcePack pack)
@@ -250,7 +254,7 @@ namespace Alex.Graphics.Models.Items
             {
                 world *= Matrix.CreateTranslation(-a) * Matrix.CreateScale(activeDisplayItem.Scale)
                                                       * Matrix.CreateTranslation(activeDisplayItem.Translation.X / 32f,
-                                                          activeDisplayItem.Translation.Y / 32f,
+                                                          activeDisplayItem.Translation.Y / 16f,
                                                           activeDisplayItem.Translation.Z / 32f)
                                                       * Matrix.CreateRotationX(
                                                           MathUtils.ToRadians(activeDisplayItem.Rotation.X))
@@ -266,22 +270,30 @@ namespace Alex.Graphics.Models.Items
                          * Matrix.CreateFromAxisAngle(Vector3.Forward, MathHelper.TwoPi);
             }
 
-
+            var offset = Offset;
             if ((_displayPosition & DisplayPosition.Gui) != 0)
             {
-
+                offset = Vector3.Zero;
             }
             else if ((_displayPosition & ResourcePackLib.Json.Models.Items.DisplayPosition.FirstPerson) != 0)
             {
+                offset = new Vector3(-2f / 16f, 11.5f / 16f, -6f / 16f);
+                
                 world *= Matrix.CreateRotationX(-MathF.PI / 5f);
                 world *= Matrix.CreateRotationZ(-1f / 16f);
-                world *= Matrix.CreateTranslation(-2f / 16f, 11.5f / 16f, -6f / 16f);
+               // world *= Matrix.CreateTranslation(-2f / 16f, 11.5f / 16f, -6f / 16f);
             }
             else if ((_displayPosition & ResourcePackLib.Json.Models.Items.DisplayPosition.ThirdPerson) != 0)
             {
+                offset += new Vector3(-2f / 16f, 8f / 16f, -3f / 16f);
                 world *= Matrix.CreateRotationX(-MathF.PI / 4f);
                 //     world *= Matrix.CreateRotationX(MathF.PI / 4f);
-                world *= Matrix.CreateTranslation(-2f / 16f, 8f / 16f, -3f / 16f);
+              //  world *= Matrix.CreateTranslation(-2f / 16f, 8f / 16f, -3f / 16f);
+            }
+
+            if (offset != Vector3.Zero)
+            {
+                world *= Matrix.CreateTranslation(offset);
             }
 
 

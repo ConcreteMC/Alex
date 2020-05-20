@@ -276,6 +276,12 @@ namespace Alex.GameStates
 				_playerView.Entity.Inventory.IsPeInventory = true;
 				_playerView.Entity.ShowItemInHand = true;
 
+				if (ItemFactory.TryGetItem("minecraft:grass_block", out var grass))
+				{
+					_playerView.Entity.Inventory.MainHand = grass;
+					_playerView.Entity.Inventory[_playerView.Entity.Inventory.SelectedSlot] = grass;
+				}
+				
 				if (ItemFactory.TryGetItem("minecraft:diamond_sword", out var sword))
 				{
 					_playerView.Entity.Inventory.MainHand = sword;
@@ -325,12 +331,6 @@ namespace Alex.GameStates
 			entity.Inventory.IsPeInventory = true;
 			entity.ShowItemInHand = true;
 
-			if (ItemFactory.TryGetItem("minecraft:grass_block", out var sword))
-			{
-				entity.Inventory.MainHand = sword;
-				entity.Inventory[entity.Inventory.SelectedSlot] = sword;
-			}
-			
 			AddChild(_playerView =
 				new GuiEntityModelView(
 						entity /*new PlayerMob("", null, null, skin.Texture, skin.Slim)*/) /*"geometry.humanoid.customSlim"*/
