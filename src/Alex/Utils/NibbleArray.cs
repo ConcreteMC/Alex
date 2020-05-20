@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 
 namespace Alex.Utils
 {
@@ -8,6 +9,11 @@ namespace Alex.Utils
 
 		public NibbleArray()
 		{
+		}
+
+		public NibbleArray(byte[] data)
+		{
+			Data = data;
 		}
 
 		public NibbleArray(int length, byte initialValue = 0)

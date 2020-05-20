@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Alex.API.Blocks.State;
 using Alex.API.Utils;
 using Alex.API.World;
+using Alex.Blocks.State;
 using Microsoft.Xna.Framework;
 using MathF = System.MathF;
 
@@ -11,13 +12,13 @@ namespace Alex.Worlds.Generators
 {
     public class DebugWorldGenerator : IWorldGenerator
     {
-	    private static List<IBlockState> ALL_VALID_STATES = new List<IBlockState>();
-	    private static IBlockState AIR = BlockFactory.GetBlockState("minecraft:air");
+	    private static List<BlockState> ALL_VALID_STATES = new List<BlockState>();
+	    private static BlockState AIR = BlockFactory.GetBlockState("minecraft:air");
 
 		private static int GRID_WIDTH;
 	    private static int GRID_HEIGHT;
 
-		public IChunkColumn GenerateChunkColumn(ChunkCoordinates chunkCoordinates)
+		public ChunkColumn GenerateChunkColumn(ChunkCoordinates chunkCoordinates)
 	    {
 		    int cc = 0;
 
@@ -32,7 +33,7 @@ namespace Alex.Worlds.Generators
 				    int rx = chunkCoordinates.X * 16 + x;
 				    int rz = chunkCoordinates.Z * 16 + z;
 
-				    IBlockState iblockstate = GetBlockStateFor(rx, rz);
+				    BlockState iblockstate = GetBlockStateFor(rx, rz);
 
 				    if (iblockstate != null)
 				    {
@@ -50,9 +51,9 @@ namespace Alex.Worlds.Generators
 		    return chunk;
 		}
 
-	    public static IBlockState GetBlockStateFor(int x, int z)
+	    public static BlockState GetBlockStateFor(int x, int z)
 	    {
-		    IBlockState iblockstate = AIR;
+		    BlockState iblockstate = AIR;
 
 		    if (x > 0 && z > 0 && x % 2 != 0 && z % 2 != 0)
 		    {

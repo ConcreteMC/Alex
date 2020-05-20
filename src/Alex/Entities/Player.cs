@@ -8,6 +8,7 @@ using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks.Minecraft;
+using Alex.Blocks.State;
 using Alex.GameStates.Playing;
 using Alex.Graphics.Camera;
 using Alex.Items;
@@ -58,6 +59,9 @@ namespace Alex.Entities
         
         public int Exhaustion { get; set; } = 0;
         public int MaxExhaustion { get; set; }
+
+        public bool IsFirstPersonMode { get; set; } = false;
+        public bool IsLeftyHandy { get; set; } = false;
         
         public bool IsWorldImmutable { get; set; } = false;
         public bool IsNoPvP { get; set; } = true;
@@ -181,13 +185,13 @@ namespace Alex.Entities
 
 			if (IsSprinting && !sprint)
 			{
-				FOVModifier += 10;
+				FOVModifier = 10;
 				
 				Network.EntityAction((int) EntityId, EntityAction.StartSprinting);
 			}
 			else if (!IsSprinting && sprint)
 			{
-				FOVModifier -= 10;
+				FOVModifier = 0;
 				
 				Network.EntityAction((int)EntityId, EntityAction.StopSprinting);
 			}
@@ -299,7 +303,7 @@ namespace Alex.Entities
 					if (IsColliding(hitEntity))
 					{
 						//var distance = DistanceToHorizontal(hitEntity);
-						Velocity += (KnownPosition.ToVector3() - hitEntity.KnownPosition.ToVector3());
+					//	Velocity += (KnownPosition.ToVector3() - hitEntity.KnownPosition.ToVector3());
 					}
 				}
             }
@@ -494,7 +498,7 @@ namespace Alex.Entities
 				    
 				    if (slot is ItemBlock ib)
 				    {
-					    IBlockState blockState = ib.Block;
+					    BlockState blockState = ib.Block;
 
 					    if (blockState != null && !(blockState.Block is Air) && HasRaytraceResult)
 					    {

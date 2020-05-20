@@ -54,6 +54,11 @@ namespace Alex.Worlds.Java
 		}
 
 
+		public ConnectionInfo GetConnectionInfo()
+		{
+			return new ConnectionInfo(DateTime.UtcNow, 0, 0, 0,0 ,0 ,0);
+		}
+
 		public void EntityAction(int entityId, EntityAction action)
 		{
 			EntityActionPacket packet = new EntityActionPacket();

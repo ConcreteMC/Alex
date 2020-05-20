@@ -15,7 +15,7 @@ namespace Alex.Blocks.Minecraft
 			BlockMaterial = Material.Glass;
 		}
 		
-		public override bool CanAttach(BlockFace face, IBlock block)
+		public override bool CanAttach(BlockFace face, Block block)
 		{
 			if (block is GlassPane)
 				return true;

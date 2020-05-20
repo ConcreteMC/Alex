@@ -18,7 +18,7 @@ namespace Alex.Worlds
 		{
 			var fogStart = 0f;
 
-			TransparentEffect = new BlockEffect(device)
+			TransparentEffect = new BlockEffect()
 			{
 				//	Texture = stillAtlas,
 				VertexColorEnabled = true,
@@ -30,7 +30,7 @@ namespace Alex.Worlds
 				// TextureEnabled = true
 			};
 
-			TranslucentEffect = new BlockEffect(device)
+			TranslucentEffect = new BlockEffect()
 			{
 				//Texture = stillAtlas,
 				VertexColorEnabled = true,
@@ -43,7 +43,7 @@ namespace Alex.Worlds
 				//Alpha = 0.5f
 			};
 
-			AnimatedEffect = new BlockEffect(device)
+			AnimatedEffect = new BlockEffect()
 			{
 				//	Texture = Resources.Atlas.GetAtlas(0),
 				VertexColorEnabled = true,
@@ -55,7 +55,7 @@ namespace Alex.Worlds
 				// TextureEnabled = true
 			};
 
-			AnimatedTranslucentEffect = new BlockEffect(device)
+			AnimatedTranslucentEffect = new BlockEffect()
 			{
 				//Texture = Resources.Atlas.GetAtlas(0),
 				VertexColorEnabled = true,
@@ -67,7 +67,7 @@ namespace Alex.Worlds
 				Alpha = 0.5f
 			};
 
-			OpaqueEffect = new BlockEffect(device)
+			OpaqueEffect = new BlockEffect()
 			{
 				//  TextureEnabled = true,
 				//	Texture = stillAtlas,
@@ -150,6 +150,13 @@ namespace Alex.Worlds
 			get { return TransparentEffect.FogEnd; }
 			set
 			{
+				var fogStart = value - (value / 4);
+				TransparentEffect.FogStart = fogStart;
+				OpaqueEffect.FogStart = fogStart;
+				AnimatedEffect.FogStart = fogStart;
+				TranslucentEffect.FogStart = fogStart;
+				AnimatedTranslucentEffect.FogStart = fogStart;
+				
 				TransparentEffect.FogEnd = value;
 				OpaqueEffect.FogEnd = value;
 				AnimatedEffect.FogEnd = value;
@@ -189,6 +196,44 @@ namespace Alex.Worlds
 				AnimatedEffect.LightOffset = value;
 				AnimatedTranslucentEffect.LightOffset = value;
 				LightingEffect.LightOffset = value;
+			}
+		}
+
+		public float LightSource1Strength
+		{
+			get
+			{
+				return TransparentEffect.LightSource1Strength;
+			}
+			set
+			{
+				TransparentEffect.LightSource1Strength = value;
+				TranslucentEffect.LightSource1Strength = value;
+
+				OpaqueEffect.LightSource1Strength = value;
+				// OpaqueEffect.DiffuseColor = value;
+				AnimatedEffect.LightSource1Strength = value;
+				AnimatedTranslucentEffect.LightSource1Strength = value;
+				//LightingEffect.LightSource1Strength = value;
+			}
+		}
+		
+		public Vector3 LightSource1Position
+		{
+			get
+			{
+				return TransparentEffect.LightSource1;
+			}
+			set
+			{
+				TransparentEffect.LightSource1 = value;
+				TranslucentEffect.LightSource1 = value;
+
+				OpaqueEffect.LightSource1 = value;
+				// OpaqueEffect.DiffuseColor = value;
+				AnimatedEffect.LightSource1 = value;
+				AnimatedTranslucentEffect.LightSource1 = value;
+				//LightingEffect.LightSource1Strength = value;
 			}
 		}
 	}

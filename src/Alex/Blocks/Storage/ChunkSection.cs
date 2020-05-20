@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using Alex.API.Blocks;
 using Alex.API.Blocks.State;
@@ -6,6 +7,7 @@ using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks.Minecraft;
+using Alex.Blocks.State;
 using Alex.Networking.Java.Util;
 using Alex.ResourcePackLib.Json;
 using Alex.Utils;
@@ -17,7 +19,7 @@ using BitArray = Alex.API.Utils.BitArray;
 
 namespace Alex.Blocks.Storage
 {
-    public class ChunkSection : IChunkSection
+    public class ChunkSection
     {
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ChunkSection));
 
@@ -45,12 +47,8 @@ namespace Alex.Blocks.Storage
         public int ScheduledBlockUpdatesCount { get; private set; } = 0;
         
         public List<BlockCoordinates> LightSources { get; } = new List<BlockCoordinates>();
-
-        public bool SolidBorder { get; private set; } = false;
-		private bool[] FaceSolidity { get; set; } = new bool[6];
-		public bool HasAirPockets { get; private set; } = true;
+        
 		public bool IsAllAir => _blockRefCount == 0;
-
 		internal ChunkMesh MeshCache { get; set; } = null;
 		//internal Dictionary<BlockCoordinates, IList<ChunkMesh.EntryPosition>> MeshPositions { get; set; } = null;
 		
@@ -69,20 +67,22 @@ namespace Alex.Blocks.Storage
 		        _blockStorages[i] = new BlockStorage();
 	        }
 	        
-	        this.BlockLight = new NibbleArray(4096, 0);
-
+	        this.BlockLight = new NibbleArray(ArrayPool<byte>.Shared.Rent(2048));
+	        MiNET.Worlds.ChunkColumn.Fill<byte>(BlockLight.Data, 0);
+	        
 			if (storeSkylight)
 			{
-				this.SkyLight = new NibbleArray(4096, 0xff);
+				this.SkyLight = new NibbleArray(ArrayPool<byte>.Shared.Rent(2048));	
+				MiNET.Worlds.ChunkColumn.Fill<byte>(SkyLight.Data, 0xff);
 			}
 //System.Collections.BitArray a = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8]);
 
-		    TransparentBlocks = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8]);
-		    SolidBlocks = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8]);
-		    ScheduledUpdates = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8]);
-		    ScheduledSkylightUpdates = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8]);
-		    ScheduledBlocklightUpdates = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8]);
-            RenderedBlocks = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8]);
+		    TransparentBlocks = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8 ]);
+		    SolidBlocks = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8 ]);
+		    ScheduledUpdates = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8 ]);
+		    ScheduledSkylightUpdates = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8 ]);
+		    ScheduledBlocklightUpdates = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8 ]);
+            RenderedBlocks = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8 ]);
 		
             for (int i = 0; i < TransparentBlocks.Length; i++)
 			{
@@ -110,7 +110,8 @@ namespace Alex.Blocks.Storage
         public void ResetSkyLight(byte initialValue = 0xff)
         {
 	        Owner.SkyLightDirty = true;
-			this.SkyLight = new NibbleArray(4096, initialValue);
+	        MiNET.Worlds.ChunkColumn.Fill<byte>(SkyLight.Data, initialValue);
+			//this.SkyLight = new NibbleArray(4096, initialValue);
 		}
 
 		private static int GetCoordinateIndex(int x, int y, int z)
@@ -201,20 +202,20 @@ namespace Alex.Blocks.Storage
 			return value;
 		}
 
-        public IBlockState Get(int x, int y, int z)
+        public BlockState Get(int x, int y, int z)
 		{
 			return this.Get(x, y, z, 0);
 		}
 
-        public IEnumerable<(IBlockState state, int storage)> GetAll(int x, int y, int z)
+        public IEnumerable<BlockEntry> GetAll(int x, int y, int z)
         {
 	        for (int i = 0; i < _blockStorages.Length; i++)
 	        {
-		        yield return (Get(x, y, z, i), i);
+		        yield return new BlockEntry(Get(x, y, z, i), i);
 	        }
         }
 
-        public IBlockState Get(int x, int y, int z, int section)
+        public BlockState Get(int x, int y, int z, int section)
         {
 	        if (section > _blockStorages.Length)
 		        throw new IndexOutOfRangeException($"The storage id {section} does not exist!");
@@ -222,12 +223,12 @@ namespace Alex.Blocks.Storage
 	        return _blockStorages[section].Get(x, y, z);
         }
 
-        public void Set(int x, int y, int z, IBlockState state)
+        public void Set(int x, int y, int z, BlockState state)
         {
 	        Set(0, x, y, z, state);
         }
 
-		public void Set(int storage, int x, int y, int z, IBlockState state)
+		public void Set(int storage, int x, int y, int z, BlockState state)
 		{
 			if (storage > _blockStorages.Length)
 				throw new IndexOutOfRangeException($"The storage id {storage} does not exist!");
@@ -241,7 +242,8 @@ namespace Alex.Blocks.Storage
 			}
 
 			var coordsIndex = GetCoordinateIndex(x, y, z);
-
+			var oldState = _blockStorages[storage].Get(x, y, z);
+			
 			if (storage == 0)
 			{
 				if (state.Block.LightValue > 0)
@@ -260,10 +262,10 @@ namespace Alex.Blocks.Storage
 						LightSources.Remove(blockCoordinates);
 				}
 				
-				IBlockState iblockstate = this.Get(x, y, z, storage);
+				BlockState iblockstate = this.Get(x, y, z, storage);
 				if (iblockstate != null)
 				{
-					IBlock block = iblockstate.Block;
+					Block block = iblockstate.Block;
 
 					if (!(block is Air))
 					{
@@ -281,7 +283,7 @@ namespace Alex.Blocks.Storage
 				}
 			}
 
-			IBlock block1 = state.Block;
+			Block block1 = state.Block;
             if (storage == 0)
             {
 	            if (!(block1 is Air))
@@ -300,15 +302,15 @@ namespace Alex.Blocks.Storage
 
             _blockStorages[storage].Set(x, y, z, state);
 
+            if (oldState.Block is Water && state.Block is Water)
+            {
+	            var a = "";
+            }
+            
             //ScheduledUpdates.Set(coordsIndex, true);
             SetScheduled(x,y,z, true);
             
             IsDirty = true;
-			
-			if (storage == 0 && !block1.Solid)
-			{
-				HasAirPockets = true;
-			}
 		}
 
 		public bool IsTransparent(int x, int y, int z)
@@ -425,103 +427,37 @@ namespace Alex.Blocks.Storage
 				}
 			}
 			
-			CheckForSolidBorder();
+			//CheckForSolidBorder();
 		}
-		
-		private void CheckForSolidBorder()
-	    {
-	        bool[] solidity = new bool[6]
-	        {
-	            true,
-	            true,
-	            true,
-	            true,
-	            true,
-	            true
-	        };
 
-	        for (int y = 0; y < 16; y++)
-	        {
-	            for (int x = 0; x < 16; x++)
-	            {
-	                if (!SolidBlocks[GetCoordinateIndex(x, y, 0)])
-	                {
-	                    solidity[2] = false;
-	                    SolidBorder = false;
-                    }
-
-	                if (!SolidBlocks[GetCoordinateIndex(0, y, x)])
-	                {
-	                    SolidBorder = false;
-	                    solidity[4] = false;
-                    }
-
-	                if (!SolidBlocks[GetCoordinateIndex(x, y, 15)])
-	                {
-	                    SolidBorder = false;
-	                    solidity[3] = false;
-                    }
-
-	                if (!SolidBlocks[GetCoordinateIndex(15, y, x)])
-	                {
-	                    SolidBorder = false;
-	                    solidity[5] = false;
-                    }
-
-	                for (int xx = 0; xx < 16; xx++)
-	                {
-	                    if (!SolidBlocks[GetCoordinateIndex(xx, 0, x)])
-	                    {
-	                        SolidBorder = false;
-	                        solidity[0] = false;
-	                    }
-
-                        if (!SolidBlocks[GetCoordinateIndex(xx, 15, x)])
-	                    {
-	                        SolidBorder = false;
-	                        solidity[1] = false;
-	                    }
-	                }
-	            }
-	        }
-
-	        bool airPockets = false;
-
-	        for (int x = 1; x < 15; x++)
-	        {
-	            for (int y = 1; y < 15; y++)
-	            {
-	                for (int z = 1; z < 15; z++)
-	                {
-	                    if (!SolidBlocks[GetCoordinateIndex(x, y, z)])
-	                    {
-	                        airPockets = true;
-	                        break;
-	                    }
-	                }
-                    if (airPockets)
-                        break;
-	            }
-
-	            if (airPockets)
-	                break;
-	        }
-
-	        FaceSolidity = solidity;
-	        HasAirPockets = airPockets;
-	    }
-
-	    public bool IsFaceSolid(BlockFace face)
-	    {
-	        var intFace = (int) face;
-
-            if (face == BlockFace.None || intFace < 0 || intFace > 5) return false;
-	        return FaceSolidity[(int)intFace];
-	    }
-
-	    public void Read(MinecraftStream ms)
+		public void Read(MinecraftStream ms)
 	    {
 		    _blockStorages[0].Read(ms);
+	    }
+
+	    public void Dispose()
+	    {
+		    for (int i = 0; i < _blockStorages.Length; i++)
+		    {
+			    _blockStorages[i]?.Dispose();
+		    }
+		    
+		    MeshCache?.Dispose();
+		    
+		    ArrayPool<byte>.Shared.Return(BlockLight.Data);
+		    ArrayPool<byte>.Shared.Return(SkyLight.Data);
+	    }
+
+	    public class BlockEntry
+	    {
+		    public BlockState State { get; set; }
+		    public int Storage { get; set; }
+
+		    public BlockEntry(BlockState state, int storage)
+		    {
+			    State = state;
+			    Storage = storage;
+		    }
 	    }
     }
 }

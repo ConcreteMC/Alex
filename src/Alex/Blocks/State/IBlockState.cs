@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using Alex.API.Blocks.Properties;
 using Alex.API.Graphics;
 using Alex.API.World;
+using Alex.Blocks.Minecraft;
+using Alex.Graphics.Models.Blocks;
 
 namespace Alex.API.Blocks.State
 {
@@ -11,8 +13,8 @@ namespace Alex.API.Blocks.State
 		string Name { get; set; }
 		uint ID { get; set; }
 		bool Default { get; set; }
-		IBlockModel Model { get; set; }
-		IBlock Block { get; set; }
+		BlockModel Model { get; set; }
+		Block Block { get; set; }
 
 		T GetTypedValue<T>(IStateProperty<T> property);
 

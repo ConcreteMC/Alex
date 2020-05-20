@@ -161,7 +161,8 @@ namespace Alex.Graphics.Models.Entity
 
 				foreach (var attachable in Attachables.ToArray())
 				{
-					attachable.Update(RotationMatrix);
+					//attachable.R
+					//attachable.Update(RotationMatrix);
 				}
 
 				if (_isDirty)

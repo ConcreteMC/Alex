@@ -17,6 +17,8 @@ using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks.Minecraft;
+using Alex.Blocks.State;
+using Alex.Blocks.Storage;
 using Alex.Entities;
 using Alex.GameStates;
 using Alex.Graphics.Camera;
@@ -34,7 +36,6 @@ using NLog;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
 using Color = Microsoft.Xna.Framework.Color;
-using IBlockState = Alex.API.Blocks.State.IBlockState;
 using MathF = System.MathF;
 using Player = Alex.Entities.Player;
 using PlayerLocation = Alex.API.Utils.PlayerLocation;
@@ -46,7 +47,7 @@ using UUID = Alex.API.Utils.UUID;
 
 namespace Alex.Worlds
 {
-	public class World : IWorld, IBlockAccess
+	public class World : IBlockAccess
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(World));
 
@@ -95,7 +96,7 @@ namespace Alex.Worlds
 			PhysicsEngine = new PhysicsManager(this);
 			ChunkManager = new ChunkManager(serviceProvider, graphics, this);
 			EntityManager = new EntityManager(graphics, this, networkProvider);
-			Ticker = new TickManager(this);
+			Ticker = new TickManager();
 			PlayerList = new PlayerList();
 
 			ChunkManager.Start();
@@ -352,7 +353,7 @@ namespace Alex.Worlds
 
         public void SetSkyLight(BlockCoordinates coordinates, byte p1)
         {
-	        IChunkColumn chunk;
+	        ChunkColumn chunk;
 	        if (ChunkManager.TryGetChunk(new ChunkCoordinates(coordinates), out chunk))
 	        {
 		        chunk.SetSkyLight(coordinates.X & 0xf, coordinates.Y & 0xff, coordinates.Z & 0xf, p1);
@@ -363,7 +364,12 @@ namespace Alex.Worlds
         {
 	        return GetSkyLight(position.X, position.Y, position.Z);
         }
-        
+
+        public byte GetBlockLight(BlockCoordinates coordinates)
+        {
+	        return GetBlockLight(coordinates.X, coordinates.Y, coordinates.Z);
+        }
+
         public byte GetSkyLight(Vector3 position)
         {
             return GetSkyLight(position.X, position.Y, position.Z);
@@ -377,8 +383,8 @@ namespace Alex.Worlds
         public byte GetSkyLight(int x, int y, int z)
         {
             if (y < 0 || y > ChunkColumn.ChunkHeight) return 15;
-
-			IChunkColumn chunk;
+            
+            ChunkColumn chunk;
 	        if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 	        {
 				return chunk.GetSkylight(x & 0xf, y & 0xff, z & 0xf);
@@ -400,7 +406,7 @@ namespace Alex.Worlds
         {
             if (y < 0 || y > ChunkColumn.ChunkHeight) return 0;
 
-			IChunkColumn chunk;
+			ChunkColumn chunk;
 	        if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 	        {
                 return chunk.GetBlocklight(x & 0xf, y & 0xff, z & 0xf);
@@ -408,29 +414,29 @@ namespace Alex.Worlds
             return 0;
         }
 
-		public IBlock GetBlock(BlockCoordinates position)
+		public Block GetBlock(BlockCoordinates position)
 		{
 			return GetBlock(position.X, position.Y, position.Z);
 		}
 
-		public IBlock GetBlock(Vector3 position)
+		public Block GetBlock(Vector3 position)
         {
             return GetBlock(position.X, position.Y, position.Z);
         }
 
-		public IBlock GetBlock(float x, float y, float z)
+		public Block GetBlock(float x, float y, float z)
 	    {
 		    return GetBlock((int) Math.Floor(x), (int) Math.Floor(y), (int) Math.Floor(z)); // Fix. xd
 	    }
 
-		public IBlock GetBlock(int x, int y, int z)
+		public Block GetBlock(int x, int y, int z)
         {
 	      //  try
 	      //  {
-		        IChunkColumn chunk;
+		        ChunkColumn chunk;
 		        if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 		        {
-			        return chunk.GetBlock(x & 0xf, y & 0xff, z & 0xf);
+			        return chunk.GetBlockState(x & 0xf, y & 0xff, z & 0xf).Block;
 		        }
 			//}
 		//	catch { }
@@ -438,16 +444,16 @@ namespace Alex.Worlds
 	        return Airstate.Block;
         }
 		
-		public void SetBlockState(int x, int y, int z, IBlockState block)
+		public void SetBlockState(int x, int y, int z, BlockState block)
 		{
 			SetBlockState(x, y, z, block, 0);
 		}
 		
-		public void SetBlockState(int x, int y, int z, IBlockState block, int storage)
+		public void SetBlockState(int x, int y, int z, BlockState block, int storage)
 		{
 			var chunkCoords = new ChunkCoordinates(x >> 4, z >> 4);
 
-			IChunkColumn chunk;
+			ChunkColumn chunk;
 			if (ChunkManager.TryGetChunk(chunkCoords, out chunk))
 			{
 				var cx = x & 0xf;
@@ -507,7 +513,7 @@ namespace Alex.Worlds
 		{
 			var chunkCoords = new ChunkCoordinates(coordinates.X >> 4, coordinates.Z >> 4);
 			
-			IChunkColumn chunk;
+			ChunkColumn chunk;
 			if (ChunkManager.TryGetChunk(chunkCoords, out chunk))
 			{
 				var cx = coordinates.X & 0xf;
@@ -527,9 +533,9 @@ namespace Alex.Worlds
 			}, 1);
 		}
 
-		public IEnumerable<(IBlockState state, int storage)> GetBlockStates(int x, int y, int z)
+		public IEnumerable<ChunkSection.BlockEntry> GetBlockStates(int x, int y, int z)
 		{
-			IChunkColumn chunk;
+			ChunkColumn chunk;
 			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 			{
 				foreach (var bs in chunk.GetBlockStates(x & 0xf, y & 0xff, z & 0xf))
@@ -541,10 +547,10 @@ namespace Alex.Worlds
 			yield break;
 		}
 
-		private static IBlockState Airstate = BlockFactory.GetBlockState("minecraft:air");
-		public IBlockState GetBlockState(int x, int y, int z, int storage)
+		private static BlockState Airstate = BlockFactory.GetBlockState("minecraft:air");
+		public BlockState GetBlockState(int x, int y, int z, int storage)
 		{
-			IChunkColumn chunk;
+			ChunkColumn chunk;
 			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 			{
 				return chunk.GetBlockState(x & 0xf, y & 0xff, z & 0xf, storage);
@@ -553,19 +559,30 @@ namespace Alex.Worlds
 			return Airstate;
 		}
 		
-		public IBlockState GetBlockState(int x, int y, int z)
+		public BlockState GetBlockState(int x, int y, int z)
 		{
 			return GetBlockState(x, y, z, 0);
 		}
-		
-		public IBlockState GetBlockState(BlockCoordinates coords)
+
+		public IEnumerable<ChunkSection.BlockEntry> GetBlockStates(int positionX, in int positionY, int positionZ)
+		{
+			ChunkColumn chunk;
+			if (ChunkManager.TryGetChunk(new ChunkCoordinates(positionX >> 4, positionZ >> 4), out chunk))
+			{
+				return chunk.GetBlockStates(positionX  & 0xf, positionY & 0xff, positionZ  & 0xf);
+			}
+
+			return new ChunkSection.BlockEntry[0];
+		}
+
+		public BlockState GetBlockState(BlockCoordinates coords)
 		{
 			return GetBlockState(coords.X, coords.Y, coords.Z);
 		}
 
 		public int GetHeight(BlockCoordinates coords)
 		{
-			IChunkColumn chunk;
+			ChunkColumn chunk;
 			if (ChunkManager.TryGetChunk(new ChunkCoordinates(coords.X >> 4, coords.Z >> 4), out chunk))
 			{
 				//Worlds.ChunkColumn realColumn = (Worlds.ChunkColumn)chunk;
@@ -592,7 +609,7 @@ namespace Alex.Worlds
 			if (chunk == null)
 				return (Block) Airstate.Block;
 
-			var block = (Block)chunk.GetBlock(blockCoordinates.X & 0x0f, blockCoordinates.Y & 0xff, blockCoordinates.Z & 0x0f);
+			var block = (Block)chunk.GetBlockState(blockCoordinates.X & 0x0f, blockCoordinates.Y & 0xff, blockCoordinates.Z & 0x0f).Block;
 			block.Coordinates = blockCoordinates;
 
 			return block;
@@ -620,7 +637,7 @@ namespace Alex.Worlds
 
 		public int GetBiome(int x, int y, int z)
 		{
-			IChunkColumn chunk;
+			ChunkColumn chunk;
 			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 			{
 				Worlds.ChunkColumn realColumn = (Worlds.ChunkColumn) chunk;
@@ -634,7 +651,7 @@ namespace Alex.Worlds
 		public bool HasBlock(int x, int y, int z)
 		{
 			
-			IChunkColumn chunk;
+			ChunkColumn chunk;
 			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 			{
 				//Worlds.ChunkColumn realColumn = (Worlds.ChunkColumn)chunk;
@@ -647,7 +664,7 @@ namespace Alex.Worlds
 
 		public bool IsTransparent(int x, int y, int z)
 		{
-			IChunkColumn chunk;
+			ChunkColumn chunk;
 			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 			{
 				return chunk.IsTransparent(x & 0xf, y & 0xff, z & 0xf);
@@ -659,7 +676,7 @@ namespace Alex.Worlds
 
 		public bool IsSolid(int x, int y, int z)
 		{
-			IChunkColumn chunk;
+			ChunkColumn chunk;
 			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 			{
 				return chunk.IsSolid(x & 0xf, y & 0xff, z & 0xf);
@@ -671,7 +688,7 @@ namespace Alex.Worlds
 
 	    public bool IsScheduled(int x, int y, int z)
 	    {
-	        IChunkColumn chunk;
+	        ChunkColumn chunk;
 	        if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 	        {
 	            return chunk.IsScheduled(x & 0xf, y & 0xff, z & 0xf);
@@ -683,7 +700,7 @@ namespace Alex.Worlds
 
 	    public void GetBlockData(int x, int y, int z, out bool transparent, out bool solid)
 		{
-			IChunkColumn chunk;
+			ChunkColumn chunk;
 			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 			{
 				chunk.GetBlockData(x & 0xf, y & 0xff, z & 0xf, out transparent, out solid);
@@ -697,7 +714,7 @@ namespace Alex.Worlds
 			//return false;
 		}
 
-        public BlockCoordinates FindBlockPosition(BlockCoordinates coords, out IChunkColumn chunk)
+        public BlockCoordinates FindBlockPosition(BlockCoordinates coords, out ChunkColumn chunk)
 		{
 			ChunkManager.TryGetChunk(new ChunkCoordinates(coords.X >> 4, coords.Z >> 4), out chunk);
 			return new BlockCoordinates(coords.X & 0xf, coords.Y & 0xff, coords.Z & 0xf);
@@ -852,9 +869,9 @@ namespace Alex.Worlds
 
 		#region IWorldReceiver (Handle WorldProvider callbacks)
 
-		public IChunkColumn GetChunkColumn(int x, int z)
+		public ChunkColumn GetChunkColumn(int x, int z)
 		{
-			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x, z), out IChunkColumn val))
+			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x, z), out ChunkColumn val))
 			{
 				return val;
 			}
@@ -873,11 +890,16 @@ namespace Alex.Worlds
 			ChunkManager.AddChunk(e.Chunk, e.Coordinates, e.DoUpdates);
 		}*/
 
-		[EventHandler(EventPriority.Highest, true)]
-		private void OnChunkUnload(ChunkUnloadEvent e)
+		public void ClearChunksAndEntities()
 		{
-			ChunkManager.RemoveChunk(e.Coordinates);
-			EntityManager.UnloadEntities(e.Coordinates);
+			EntityManager.ClearEntities();
+			ChunkManager.ClearChunks();
+		}
+	
+		public void UnloadChunk(ChunkCoordinates coordinates)
+		{
+			ChunkManager.RemoveChunk(coordinates);
+			EntityManager.UnloadEntities(coordinates);
 		}
 
 		public void SpawnEntity(long entityId, IEntity entity)
@@ -992,12 +1014,12 @@ namespace Alex.Worlds
 			WorldInfo.Raining = raining;
 		}
 
-		public void SetBlockState(BlockCoordinates coordinates, IBlockState blockState)
+		public void SetBlockState(BlockCoordinates coordinates, BlockState blockState)
 		{
 			SetBlockState(coordinates.X, coordinates.Y, coordinates.Z, blockState);
 		}
 
-		public void SetBlockState(BlockCoordinates coordinates, IBlockState blockState, int storage)
+		public void SetBlockState(BlockCoordinates coordinates, BlockState blockState, int storage)
 		{
 			SetBlockState(coordinates.X, coordinates.Y, coordinates.Z, blockState, storage);
 		}

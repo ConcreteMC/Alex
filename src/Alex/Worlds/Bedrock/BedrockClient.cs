@@ -44,6 +44,7 @@ using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
+using ConnectionInfo = Alex.API.Network.ConnectionInfo;
 using Item = Alex.Items.Item;
 using LevelInfo = MiNET.Worlds.LevelInfo;
 using NewtonsoftMapper = MiNET.NewtonsoftMapper;
@@ -111,6 +112,7 @@ namespace Alex.Worlds.Bedrock
         public McpeNetworkChunkPublisherUpdate LastChunkPublish { get; set; }
         public bool HasSpawned { get; set; }
         public AutoResetEvent PlayerStatusChanged { get; set; } = new AutoResetEvent(false);
+        public AutoResetEvent ChangeDimensionResetEvent = new AutoResetEvent(false);
         private IEventDispatcher EventDispatcher { get; }
         public RakConnection Connection { get; }
         private MessageHandler MessageHandler { get; set; }
@@ -128,7 +130,8 @@ namespace Alex.Worlds.Bedrock
 		        _remoteEndpoint = value;
 	        }
         }
-        
+
+        public bool GameStarted { get; set; } = false;
         private ChunkProcessor ChunkProcessor { get; }
 		public BedrockClient(Alex alex, IEventDispatcher eventDispatcher, IPEndPoint endpoint, PlayerProfile playerProfile, DedicatedThreadPool threadPool, BedrockWorldProvider wp)
 		{
@@ -199,6 +202,7 @@ namespace Alex.Worlds.Bedrock
 		}
 
 		private bool Starting { get; set; } = false;
+		private DateTime StartTime { get; set; }
 		public void Start(ManualResetEventSlim resetEvent)
 		{
 			if (Starting)
@@ -206,6 +210,7 @@ namespace Alex.Worlds.Bedrock
 
 			Starting = true;
 
+			StartTime = DateTime.UtcNow;
 		//	var player = WorldReceiver.Player;
 			
 			//player.Inventory.CursorChanged += InventoryOnCursorChanged;
@@ -242,6 +247,16 @@ namespace Alex.Worlds.Bedrock
 
 		}
 
+		public ConnectionInfo GetConnectionInfo()
+		{
+			var conn = Session?.ConnectionInfo ?? Connection.ConnectionInfo;
+
+			return new ConnectionInfo(StartTime, conn.Latency,
+				conn.NumberOfNakReceive, conn.NumberOfAckReceive,
+				conn.NumberOfAckSent, Session?.ErrorCount ?? 0,
+				Session?.ResendCount ?? 0);
+		}
+		
 		private void InventoryOnSlotChanged(object? sender, SlotChangedEventArgs e)
 		{
 			if (!e.IsClientTransaction)
@@ -612,7 +627,7 @@ namespace Alex.Worlds.Bedrock
 			base.OnUnconnectedPong(packet, senderEndpoint);
 		}*/
 		
-		public World WorldReceiver { get; set; } 
+		public World World { get; set; } 
 		public System.Numerics.Vector3 SpawnPoint { get; set; } = System.Numerics.Vector3.Zero;
 		public LevelInfo LevelInfo { get; } = new LevelInfo();
 
@@ -693,7 +708,7 @@ namespace Alex.Worlds.Bedrock
 		
 	    public void PlayerDigging(DiggingStatus status, BlockCoordinates position, BlockFace face, Vector3 cursorPosition)
 	    {
-            if (WorldReceiver?.Player is Entities.Player player)
+            if (World?.Player is Entities.Player player)
             {
                 var item = player.Inventory[player.Inventory.SelectedSlot];
                 if (status == DiggingStatus.Started)

@@ -16,7 +16,8 @@ namespace Alex.GameStates
 		private ConcurrentDictionary<string, IGameState> States { get; }
 
 		private LinkedList<IGameState> History { get; } = new LinkedList<IGameState>();
-
+		private object _historyLock { get; } = new object();
+		
         private IGameState ActiveState { get; set; }
 
         private GraphicsDevice Graphics { get; }
@@ -34,16 +35,19 @@ namespace Alex.GameStates
 
 	    public void Back()
 	    {
-		    var last = History.Last;
-			if (History.Last != null)
-			{
-				var prev = last.Value;
-				if (prev != ActiveState)
-				{
-					History.RemoveLast();
-					SetActiveState(prev, false);
-				}
-			}
+		    lock (_historyLock)
+		    {
+			    var last = History.Last;
+			    if (History.Last != null)
+			    {
+				    var prev = last.Value;
+				    if (prev != ActiveState)
+				    {
+					    History.RemoveLast();
+					    SetActiveState(prev, false);
+				    }
+			    }
+		    }
 	    }
 
 	    public void AddState<TStateType>(string name) where TStateType : class, IGameState, new()
@@ -162,9 +166,12 @@ namespace Alex.GameStates
 		    ActiveState = state;
 		    ActiveState?.Show();
 
-		    if (History.Last?.Previous?.Value != state && keepHistory)
+		    lock (_historyLock)
 		    {
-			    History.AddLast(current);
+			    if (History.Last?.Previous?.Value != state && keepHistory)
+			    {
+				    History.AddLast(current);
+			    }
 		    }
 
 		    _activeStateDoubleBuffer = state;
@@ -238,7 +245,10 @@ namespace Alex.GameStates
 
 	    public IGameState GetPreviousState()
 	    {
-		    return History.Last.Value;
+		    lock (_historyLock)
+		    {
+			    return History.Last.Value;
+		    }
 	    }
 	}
 }

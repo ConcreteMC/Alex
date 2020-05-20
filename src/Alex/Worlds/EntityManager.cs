@@ -178,5 +178,13 @@ namespace Alex.Worlds
 	    {
 		    return Entities.Values.ToArray().Where(x => Math.Abs(x.KnownPosition.DistanceTo(new PlayerLocation(camPos))) < radius).ToArray();
 	    }
+
+	    public void ClearEntities()
+	    {
+		    foreach(var entity in Entities.ToArray())
+		    {
+			    Remove(entity.Key);
+		    }
+	    }
 	}
 }

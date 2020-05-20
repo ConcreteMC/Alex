@@ -28,6 +28,11 @@ namespace Alex.Worlds
 	internal class DebugNetworkProvider : INetworkProvider
 	{
 		public bool IsConnected { get; } = true;
+		public ConnectionInfo GetConnectionInfo()
+		{
+			return new ConnectionInfo(DateTime.UtcNow, 0,0,0,0,0,0);
+		}
+
 		public void EntityAction(int entityId, EntityAction action)
 		{
 			
@@ -133,7 +138,8 @@ namespace Alex.Worlds
 					{
 						var c = (ChunkColumn) chunk;
 		
-						EventDispatcher.DispatchEvent(new ChunkReceivedEvent(currentCoordinates, c));
+						base.World.ChunkManager.AddChunk(c, currentCoordinates, false);
+						//EventDispatcher.DispatchEvent(new ChunkReceivedEvent(currentCoordinates, c));
 						LoadEntities(c);
 					}
 				}
@@ -143,7 +149,7 @@ namespace Alex.Worlds
 			}
 		}
 
-		private IEnumerable<IChunkColumn> GenerateChunks(ChunkCoordinates center, int renderDistance)
+		private IEnumerable<ChunkColumn> GenerateChunks(ChunkCoordinates center, int renderDistance)
 		{
 			var oldChunks = _loadedChunks.ToArray();
 
@@ -162,7 +168,7 @@ namespace Alex.Worlds
 
 				if (!_loadedChunks.Contains(cc))
 				{
-					IChunkColumn chunk =
+					ChunkColumn chunk =
 						_generator.GenerateChunkColumn(cc);
 
 					if (chunk == null) continue;
@@ -231,7 +237,7 @@ namespace Alex.Worlds
 
 			UpdateThread.Start();
 
-			if (WorldReceiver is World world)
+			if (base.World is World world)
 			{
 				World = world;
 				
@@ -240,7 +246,7 @@ namespace Alex.Worlds
 				//world.Player.Controller.IsFreeCam = true;
 			} 
 
-			WorldReceiver?.UpdatePlayerPosition(new PlayerLocation(GetSpawnPoint()));
+			base.World?.UpdatePlayerPosition(new PlayerLocation(GetSpawnPoint()));
 
 			Log.Info($"World {info.LevelName} loaded!");
 		}
@@ -290,11 +296,11 @@ namespace Alex.Worlds
 					
 					foreach (var chunk in chunks)
 					{
-						EventDispatcher.DispatchEvent(new ChunkReceivedEvent(new ChunkCoordinates(chunk.X, chunk.Z), chunk)
-						{
-							DoUpdates = false
-						});
-						
+						//EventDispatcher.DispatchEvent(new ChunkReceivedEvent(new ChunkCoordinates(chunk.X, chunk.Z), chunk)
+						//{
+						//	DoUpdates = false
+						//});
+						base.World.ChunkManager.AddChunk(chunk, new ChunkCoordinates(chunk.X, chunk.Z), false);
 						progressReport(LoadingState.GeneratingVertices, (int)Math.Floor((count / target) * 100));
 					}
 					

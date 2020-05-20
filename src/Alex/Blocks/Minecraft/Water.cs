@@ -13,7 +13,7 @@ namespace Alex.Blocks.Minecraft
 			Solid = false;
 			Transparent = true;
 			IsReplacible = true;
-			HasHitbox = false;
+			//HasHitbox = false;
 			//BlockModel = BlockFactory.StationairyWaterModel;
 
 			IsWater = true;
@@ -24,7 +24,7 @@ namespace Alex.Blocks.Minecraft
 			LightOpacity = 3;
 		}
 		
-		public override bool ShouldRenderFace(BlockFace face, IBlock neighbor)
+		public override bool ShouldRenderFace(BlockFace face, Block neighbor)
 		{
 			if (neighbor.BlockMaterial == Material.Water)
 			{

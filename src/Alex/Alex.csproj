@@ -154,6 +154,7 @@
 
   <ItemGroup>
     <Folder Include="Graphics\Models\Entity\Geometry\" />
+    <Folder Include="Utils\Net" />
   </ItemGroup>
 
   <ItemGroup>

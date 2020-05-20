@@ -3,25 +3,23 @@ using Alex.API.Blocks.State;
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.API.World;
+using Alex.Blocks.Minecraft;
+using Alex.Blocks.State;
+using Alex.Blocks.Storage;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Worlds
 {
-    public class ItemRenderingWorld : IWorld
+    public class ItemRenderingWorld : IBlockAccess
     {
-        private static IBlockState Air { get; } = BlockFactory.GetBlockState("minecraft:air");
+        private static BlockState Air { get; } = BlockFactory.GetBlockState("minecraft:air");
 
-        private IBlock Block { get; }
-        public ItemRenderingWorld(IBlock block)
+        private Block Block { get; }
+        public ItemRenderingWorld(Block block)
         {
             Block = block;
         }
         
-        public TickManager Ticker { get; }
-        public LevelInfo WorldInfo { get; }
-        public long Vertices { get; }
-        public int ChunkCount { get; }
-        public int ConcurrentChunkUpdates { get; }
         public void ResetChunks()
         {
             throw new System.NotImplementedException();
@@ -72,57 +70,65 @@ namespace Alex.Worlds
             return 0;
         }
 
-        public IBlock GetBlock(BlockCoordinates position)
+        public Block GetBlock(BlockCoordinates position)
         {
             return Air.Block;
         }
 
-        public IBlock GetBlock(Vector3 position)
+        public Block GetBlock(Vector3 position)
         {
             return Air.Block;
         }
 
-        public IBlock GetBlock(float x, float y, float z)
+        public Block GetBlock(float x, float y, float z)
         {
             return Air.Block;
         }
 
-        public IBlock GetBlock(int x, int y, int z)
+        public Block GetBlock(int x, int y, int z)
         {
             return Air.Block;
         }
 
-        public void SetBlock(float x, float y, float z, IBlock block)
+        public void SetBlock(float x, float y, float z, Block block)
         {
             throw new System.NotImplementedException();
         }
 
-        public void SetBlock(int x, int y, int z, IBlock block)
+        public void SetBlock(int x, int y, int z, Block block)
         {
             throw new System.NotImplementedException();
         }
 
-        public void SetBlockState(int x, int y, int z, IBlockState block)
+        public void SetBlockState(int x, int y, int z, BlockState block)
         {
             throw new System.NotImplementedException();
         }
 
-        public IEnumerable<(IBlockState state, int storage)> GetBlockStates(int x, int y, int z)
+        public IEnumerable<(BlockState state, int storage)> GetBlockStates(int x, int y, int z)
         {
             yield return (Air, 0);
         }
 
-        public IBlockState GetBlockState(int x, int y, int z)
+        public BlockState GetBlockState(int x, int y, int z)
         {
             return Air;
         }
 
-        public IBlockState GetBlockState(int x, int y, int z, int storage)
+        public BlockState GetBlockState(int x, int y, int z, int storage)
         {
             return Air;
         }
 
-        public IBlockState GetBlockState(BlockCoordinates coordinates)
+        public IEnumerable<ChunkSection.BlockEntry> GetBlockStates(int positionX, in int positionY, int positionZ)
+        {
+            return new[]
+            {
+               new ChunkSection.BlockEntry(Air, 0)
+            };
+        }
+
+        public BlockState GetBlockState(BlockCoordinates coordinates)
         {
             return Air;
         }
@@ -137,12 +143,12 @@ namespace Alex.Worlds
             return true;
         }
 
-        public BlockCoordinates FindBlockPosition(BlockCoordinates coords, out IChunkColumn chunk)
+        public BlockCoordinates FindBlockPosition(BlockCoordinates coords, out ChunkColumn chunk)
         {
             throw new System.NotImplementedException();
         }
 
-        public IChunkColumn GetChunkColumn(int x, int z)
+        public ChunkColumn GetChunkColumn(int x, int z)
         {
             throw new System.NotImplementedException();
         }
@@ -166,6 +172,47 @@ namespace Alex.Worlds
         {
             transparent = !Block.Transparent;
             solid = !Block.Solid;
+        }
+
+        public ChunkColumn GetChunk(BlockCoordinates coordinates, bool cacheOnly = false)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public ChunkColumn GetChunk(ChunkCoordinates coordinates, bool cacheOnly = false)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public void SetSkyLight(BlockCoordinates coordinates, byte skyLight)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public byte GetSkyLight(BlockCoordinates coordinates)
+        {
+            return 15;
+        }
+
+        public byte GetBlockLight(BlockCoordinates coordinates)
+        {
+            return 0;
+        }
+
+        public int GetHeight(BlockCoordinates coordinates)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public Block GetBlock(BlockCoordinates coord, ChunkColumn tryChunk = null)
+        {
+            return Air.Block;
+        }
+
+        public void SetBlock(Block block, bool broadcast = true, bool applyPhysics = true, bool calculateLight = true,
+            ChunkColumn possibleChunk = null)
+        {
+            throw new System.NotImplementedException();
         }
     }
 }

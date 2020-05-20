@@ -37,7 +37,7 @@ namespace Alex.Worlds.Bedrock
 	    public IReadOnlyDictionary<uint, BlockStateContainer> _blockStateMap { get; set; } =
 		    new Dictionary<uint, BlockStateContainer>();
 	    
-	    private ConcurrentDictionary<uint, IBlockState> _convertedStates = new ConcurrentDictionary<uint, IBlockState>();
+	    private ConcurrentDictionary<uint, BlockState> _convertedStates = new ConcurrentDictionary<uint, BlockState>();
 	    
 	    //private Thread[] Threads { get; set; }
 	    private CancellationToken CancellationToken { get; }
@@ -67,7 +67,7 @@ namespace Alex.Worlds.Bedrock
         }
 
         private List<string> Failed { get; set; } = new List<string>();
-        public IBlockState GetBlockState(uint palleteId)
+        public BlockState GetBlockState(uint palleteId)
         {
 	        return _convertedStates.GetOrAdd(palleteId,
 		        u =>
@@ -194,10 +194,14 @@ namespace Alex.Worlds.Bedrock
 									        continue;
 								        }
 
-								        IBlockState translated = GetBlockState(pallete[state]);
+								        BlockState translated = GetBlockState(pallete[state]);
 
 								        if (translated != null)
 								        {
+									        if (translated.Block is Water)
+									        {
+										        string a = "";
+									        }
 									        section.Set(storage, x, y, z, translated);
 								        }
 
@@ -233,7 +237,7 @@ namespace Alex.Worlds.Bedrock
 
 								        var ruid = BlockFactory.GetBlockStateID(id, meta);
 								        
-								        IBlockState result = null;
+								        BlockState result = null;
 
 								        if (!_convertedStates.TryGetValue(
 									        ruid, out result))
@@ -516,7 +520,7 @@ namespace Alex.Worlds.Bedrock
 	        return $"minecraft:{result}";
         }
 
-        public bool TryConvertBlockState(BlockStateContainer record, out IBlockState result)
+        public bool TryConvertBlockState(BlockStateContainer record, out BlockState result)
         {
 	        if (_convertedStates.TryGetValue((uint) record.RuntimeId, out var alreadyConverted))
 	        {
@@ -658,7 +662,7 @@ namespace Alex.Worlds.Bedrock
 		        }
 	        }
 	        
-	        IBlockState r;// = BlockFactory.GetBlockState(record.Name);
+	        BlockState r;// = BlockFactory.GetBlockState(record.Name);
 
 	        r = BlockFactory.GetBlockState(prefix + searchName);
 
@@ -844,7 +848,7 @@ namespace Alex.Worlds.Bedrock
         }
         
         const string facing = "facing";
-		private IBlockState FixFacing(IBlockState state, int meta)
+		private BlockState FixFacing(BlockState state, int meta)
 		{
 			switch (meta)
 			{
@@ -869,7 +873,7 @@ namespace Alex.Worlds.Bedrock
 			return state;
 		}
 		
-		private IBlockState FixFacingTrapdoor(IBlockState state, int meta)
+		private BlockState FixFacingTrapdoor(BlockState state, int meta)
 		{
 			switch (meta)
 			{
@@ -933,12 +937,18 @@ namespace Alex.Worlds.Bedrock
 			"minecraft:cut_red_sandstone_slab"
 		};
 
-		internal IBlockState TranslateBlockState(IBlockState state, long bid, int meta)
+		internal BlockState TranslateBlockState(BlockState state, long bid, int meta)
 		{
 			//var dict = state.ToDictionary();
 
 			if (bid >= 8 && bid <= 11) //water or lava
 			{
+				if (meta != 0)
+				{
+					string a = "";
+					meta = Math.Clamp(meta, 0, 8);
+				}
+				
 				state = state.WithProperty("level", meta.ToString());
 			}
 			else if (bid == 44 || bid == 182 || bid == 126 /*|| _slabs.Any(x => x.Equals(state.Name, StringComparison.InvariantCultureIgnoreCase))*/) //Slabs
@@ -1099,7 +1109,7 @@ namespace Alex.Worlds.Bedrock
 			return state;
 		}
 
-		private IBlockState FixVinesRotation(IBlockState state, int meta)
+		private BlockState FixVinesRotation(BlockState state, int meta)
 		{
 			const byte North = 0x04;
 			const byte East = 0x08;

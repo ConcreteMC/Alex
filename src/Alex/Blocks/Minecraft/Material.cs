@@ -55,7 +55,7 @@ namespace Alex.Blocks.Minecraft
 		private bool _isTranslucent;
 		private bool _requiresNoTool = true;
 		private bool _isAdventureModeExempt;
-
+		
 		private MapColor MapColor { get; }
 		public Material(MapColor color)
 		{
@@ -173,8 +173,8 @@ namespace Alex.Blocks.Minecraft
 
 		public virtual IMapColor GetMaterialMapColor()
 		{
-			return MapColor.AIR;
-		//	return this.materialMapColor;
+			//return MapColor.AIR;
+			return this.MapColor;
 		}
 		
 		public IMaterial Clone()

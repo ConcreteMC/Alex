@@ -38,7 +38,8 @@ namespace Alex.Gamestates
 
 	    protected override void OnShow()
 	    {
-			
+		    Alex.IsMouseVisible = true;
+		    
 		    base.OnShow();
 	    }
     }

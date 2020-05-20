@@ -127,14 +127,14 @@ namespace Alex
 			    }
 
 
-			    ResourcePackItem rpItem = ResourcePack.ItemModels.FirstOrDefault(x =>
-				    x.Key.Equals(entry.Key, StringComparison.InvariantCultureIgnoreCase)).Value;
+			    var rpItem = ResourcePack.ItemModels.FirstOrDefault(x =>
+				    x.Key.Equals(entry.Key.Replace("minecraft:", "minecraft:item/"), StringComparison.InvariantCultureIgnoreCase)).Value;
 
 			    if (rpItem == null)
 			    {
 				    foreach (var it in ResourcePack.ItemModels)
 				    {
-					    if (it.Key.Contains(entry.Key.Replace("minecraft:", ""),
+					    if (it.Key.Contains(entry.Key.Replace("minecraft:", "minecraft:item/"),
 						    StringComparison.InvariantCultureIgnoreCase))
 					    {
 						    rpItem = it.Value;
@@ -278,52 +278,6 @@ namespace Alex
 				    });
 			    
 		    }
-	    }
-
-	    public static bool ResolveItemTexture(string itemName, out Texture2D texture)
-	    {
-		    if (ResourcePack.ItemModels.TryGetValue(itemName, out ResourcePackItem item))
-		    {
-			    var texture0 = item.Textures.FirstOrDefault();
-			    if (texture0.Value != null)
-			    {
-				    if (ResourcePack.TryGetBitmap(texture0.Value, out var bmp))
-				    {
-					    texture = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, bmp);
-					    return true;
-                    }
-				    else
-				    {
-						Log.Debug($"Could not find texture for item: {itemName} (Search Term: {texture0.Value})");
-				    }
-			    }
-            }
-		    else
-		    {
-			    if (ResourcePack.TryGetBlockModel(itemName, out var b))
-			    {
-				    var texture0 = b.Textures.OrderBy(x => x.Value.Contains("side")).FirstOrDefault();
-				    if (texture0.Value != null)
-				    {
-					    if (ResourcePack.TryGetBitmap(texture0.Value, out var bmp))
-					    {
-						    texture = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, bmp);
-						    return true;
-					    }
-					    else
-					    {
-						    Log.Debug($"Could not find texture for item: {itemName} (Search Term: {texture0.Value})");
-					    }
-				    }
-                }
-			    else
-			    {
-				    Log.Debug($"Could not find model for item: {itemName}");
-                }
-            }
-
-		    texture = null;
-		    return false;
 	    }
 
 	    public static bool ResolveItemName(int protocolId, out string res)

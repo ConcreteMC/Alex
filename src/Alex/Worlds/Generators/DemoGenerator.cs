@@ -1,6 +1,7 @@
 using System;
 using Alex.API.Utils;
 using Alex.API.World;
+using Alex.Blocks.State;
 using Microsoft.Xna.Framework;
 using MiNET.Utils;
 using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
@@ -15,8 +16,8 @@ namespace Alex.Worlds.Generators
         private FastRandom Random { get; }
         private bool IsNether { get; }
         
-        private IBlockState MainBlock { get; }
-        private IBlockState LiquidBlock { get; }
+        private BlockState MainBlock { get; }
+        private BlockState LiquidBlock { get; }
         public DemoGenerator()
         {
             Random = new FastRandom();
@@ -37,7 +38,7 @@ namespace Alex.Worlds.Generators
         }
 
         private const int Height = 16;
-        public IChunkColumn GenerateChunkColumn(ChunkCoordinates chunkCoordinates)
+        public ChunkColumn GenerateChunkColumn(ChunkCoordinates chunkCoordinates)
         {
           //  IBlockState stone = BlockFactory.GetBlockState("minecraft:stone");
           //  IBlockState grass = BlockFactory.GetBlockState("minecraft:grass");

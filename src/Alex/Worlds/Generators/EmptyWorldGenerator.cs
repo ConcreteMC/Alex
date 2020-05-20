@@ -18,7 +18,7 @@ namespace Alex.Worlds.Generators
 				{
 					for (int y = 0; y < ChunkColumn.ChunkHeight; y++)
 					{
-						_sharedChunk.SetBlock(x, y, z, new Air());
+					//	_sharedChunk.SetBlockState(x, y, z, new Air());
 						_sharedChunk.SetSkyLight(x, y, z, 15);
 					}
 
@@ -27,7 +27,7 @@ namespace Alex.Worlds.Generators
 			}
 		}
 
-		public IChunkColumn GenerateChunkColumn(ChunkCoordinates chunkCoordinates)
+		public ChunkColumn GenerateChunkColumn(ChunkCoordinates chunkCoordinates)
 		{
 			return _sharedChunk;
 		}

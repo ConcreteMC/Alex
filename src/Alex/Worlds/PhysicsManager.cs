@@ -19,9 +19,9 @@ namespace Alex.Worlds
     public class PhysicsManager : IDisposable
     {
 	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(PhysicsManager));
-	    private IWorld World { get; }
+	    private World World { get; }
 
-	    public PhysicsManager(IWorld world)
+	    public PhysicsManager(World world)
 	    {
 		    World = world;
 	    }
@@ -418,7 +418,7 @@ namespace Alex.Worlds
 	    {
 		    private Dictionary<BlockCoordinates, (Block block, BoundingBox box)> Blocks = new Dictionary<BlockCoordinates, (Block block, BoundingBox box)>();
 		    
-		    public Bound(IWorld world, BoundingBox box, Vector3 entityPos)
+		    public Bound(World world, BoundingBox box, Vector3 entityPos)
 		    {
 			    var min = box.Min;
 			    var max = box.Max;
@@ -449,7 +449,7 @@ namespace Alex.Worlds
 			    }
 		    }
 
-		    private (Block block, BoundingBox box) GetBlock(IWorld world, BlockCoordinates coordinates, Vector3 entityPos)
+		    private (Block block, BoundingBox box) GetBlock(World world, BlockCoordinates coordinates, Vector3 entityPos)
 		    {
 			    var block = world.GetBlock(coordinates) as Block;
 			    if (block == null) return default;

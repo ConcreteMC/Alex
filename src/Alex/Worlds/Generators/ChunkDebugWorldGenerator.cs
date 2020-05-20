@@ -1,26 +1,27 @@
 using Alex.API.Blocks.State;
 using Alex.API.Utils;
 using Alex.API.World;
+using Alex.Blocks.State;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Worlds.Generators
 {
     public class ChunkDebugWorldGenerator: IWorldGenerator
     {
-        IBlockState _air = BlockFactory.GetBlockState("minecraft:air");
-        IBlockState _dirt = BlockFactory.GetBlockState("minecraft:dirt");
-        IBlockState _stone = BlockFactory.GetBlockState("minecraft:stone");
-        IBlockState _cobble = BlockFactory.GetBlockState("minecraft:cobblestone");
-        IBlockState _grass = BlockFactory.GetBlockState("minecraft:grass");
+        BlockState _air = BlockFactory.GetBlockState("minecraft:air");
+        BlockState _dirt = BlockFactory.GetBlockState("minecraft:dirt");
+        BlockState _stone = BlockFactory.GetBlockState("minecraft:stone");
+       BlockState _cobble = BlockFactory.GetBlockState("minecraft:cobblestone");
+        BlockState _grass = BlockFactory.GetBlockState("minecraft:grass");
         
         public ChunkDebugWorldGenerator()
         {
             
         }
         
-        public IChunkColumn GenerateChunkColumn(ChunkCoordinates chunkCoordinates)
+        public ChunkColumn GenerateChunkColumn(ChunkCoordinates chunkCoordinates)
         {
-            IChunkColumn c = new ChunkColumn()
+            ChunkColumn c = new ChunkColumn()
             {
                 X = chunkCoordinates.X,
                 Z = chunkCoordinates.Z

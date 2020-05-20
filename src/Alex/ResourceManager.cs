@@ -436,7 +436,7 @@ namespace Alex
 	        {
 		        LoadModels(progress, resourcePack, !isFirst, isFirst);
 		        if (isFirst)
-		        { //Only load models for vanilla until above is fixed,
+		        { //Only load models for vanilla until above we fix blockstate replacement issues.
 			        isFirst = false;
 			        break;
 		        }
@@ -453,6 +453,9 @@ namespace Alex
         
         private void LoadRegistries(IProgressReceiver progress)
         {
+	        progress.UpdateProgress(0, "Loading block model registry...");
+	        RegistryManager.AddRegistry<BlockModelEntry, Graphics.Models.Blocks.BlockModel>(new BlockModelRegistry());
+	        
 	        progress.UpdateProgress(0, "Loading blockstate registry...");
 	        RegistryManager.AddRegistry(new RegistryBase<BlockState>("blockstate"));
 	        

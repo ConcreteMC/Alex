@@ -95,14 +95,14 @@ namespace Alex.Worlds
 			return LevelInfo;
 		}
 
-		public IChunkColumn GenerateChunkColumn(ChunkCoordinates chunkCoordinates)
+		public ChunkColumn GenerateChunkColumn(ChunkCoordinates chunkCoordinates)
 		{
 			return GetChunk(chunkCoordinates, BasePath, MissingChunkProvider);
 		}
 
 	//	public Queue<Block> LightSources { get; set; } = new Queue<Block>();
 
-		public IChunkColumn GetChunk(ChunkCoordinates coordinates, string basePath, IWorldGenerator generator)
+		public ChunkColumn GetChunk(ChunkCoordinates coordinates, string basePath, IWorldGenerator generator)
 		{
 			try
 			{
@@ -416,7 +416,7 @@ namespace Alex.Worlds
 			if (!_spawnInitiated)
 			{
 				_spawnInitiated = true;
-				IChunkColumn chunk = GenerateChunkColumn(new ChunkCoordinates(spawnPoint));
+				ChunkColumn chunk = GenerateChunkColumn(new ChunkCoordinates(spawnPoint));
 				if (chunk != null)
 				{
 					int originalY = (int) spawnPoint.Y;
@@ -424,7 +424,7 @@ namespace Alex.Worlds
 					while (y + 1 < 256 && y >= 0)
 					{
 						y++;
-						if (!chunk.GetBlock((int)spawnPoint.X & 0xf, y & 0xff, (int)spawnPoint.Z & 0xf).Solid)
+						if (!chunk.GetBlockState((int)spawnPoint.X & 0xf, y & 0xff, (int)spawnPoint.Z & 0xf).Block.Solid)
 						{
 							break;
 						}

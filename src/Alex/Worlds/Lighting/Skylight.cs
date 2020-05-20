@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Alex.API.World;
 using Alex.Blocks.Minecraft;
+using Alex.Blocks.State;
 using Alex.Blocks.Storage;
 using Microsoft.Xna.Framework;
 using MiNET.Utils;
@@ -62,7 +63,7 @@ namespace Alex.Worlds
 												if (coordinates != _coord + ChunkCoordinates.Forward + ChunkCoordinates.Right)
 													return null;
 
-			if (_worldProvider.TryGetChunk(coordinates, out IChunkColumn column))
+			if (_worldProvider.TryGetChunk(coordinates, out ChunkColumn column))
 			{
 				return (ChunkColumn) column;
 			}
@@ -75,6 +76,16 @@ namespace Alex.Worlds
 		{
 			ChunkColumn chunk = GetChunk(coordinates, true);
 			chunk?.SetSkyLight(coordinates.X & 0x0f, coordinates.Y & 0xff, coordinates.Z & 0x0f, skyLight);
+		}
+
+		public byte GetSkyLight(BlockCoordinates coordinates)
+		{
+			return 15;
+		}
+
+		public byte GetBlockLight(BlockCoordinates coordinates)
+		{
+			return 0;
 		}
 
 		public int GetHeight(BlockCoordinates coordinates)
@@ -96,6 +107,17 @@ namespace Alex.Worlds
 
 		public void SetBlock(Block block, bool broadcast = true, bool applyPhysics = true, bool calculateLight = true, ChunkColumn possibleChunk = null)
 		{
+		}
+
+		public IEnumerable<ChunkSection.BlockEntry> GetBlockStates(int positionX, in int positionY, int positionZ)
+		{
+			throw new NotImplementedException();
+		}
+
+		public BlockState GetBlockState(BlockCoordinates position)
+		{
+			return null;
+			//return air
 		}
 	}
 	
@@ -566,7 +588,7 @@ namespace Alex.Worlds
 		{
 			if (chunk == null) return true;
 
-			var b = chunk.GetBlock(blockCoordinates.X & 0x0f, blockCoordinates.Y & 0xff, blockCoordinates.Z & 0x0f);
+			var b = chunk.GetBlockState(blockCoordinates.X & 0x0f, blockCoordinates.Y & 0xff, blockCoordinates.Z & 0x0f).Block;
 			return b is Air || !b.BlockMaterial.BlocksLight();// (b.Transparent && !(b is Leaves));
 			//	int bid = chunk.GetBlockId(blockCoordinates.X & 0x0f, blockCoordinates.Y & 0xff, blockCoordinates.Z & 0x0f);
 			//	return bid == 0 || (BlockFactory.TransparentBlocks[bid] == 1 && bid != 18 && bid != 161 && bid != 30 && bid != 8 && bid != 9);
@@ -661,7 +683,7 @@ namespace Alex.Worlds
 		private object _imageSync = new object();
 		private static int _chunkCount;
 
-		private int GetMidX(IChunkColumn[] chunks)
+		private int GetMidX(ChunkColumn[] chunks)
 		{
 			if (!TrackResults) return 0;
 

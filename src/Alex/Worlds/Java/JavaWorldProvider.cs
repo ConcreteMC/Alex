@@ -179,11 +179,11 @@ namespace Alex.Worlds.Java
 		private bool _isSprinting = false;
 		private void GameTick(object state)
 		{
-			if (WorldReceiver == null) return;
+			if (World == null) return;
 
 			if (_initiated)
 			{
-				var p = WorldReceiver.Player;
+				var p = World.Player;
 				if (p != null && p is Player player && Spawned && !Respawning)
 				{
 					player.IsSpawned = Spawned;
@@ -255,7 +255,7 @@ namespace Alex.Worlds.Java
 
 			_initiated = true;
 
-			WorldReceiver?.UpdatePlayerPosition(_lastReceivedLocation);
+			World?.UpdatePlayerPosition(_lastReceivedLocation);
 
 			_gameTickTimer = new System.Threading.Timer(GameTick, null, 50, 50);
 		}
@@ -282,7 +282,7 @@ namespace Alex.Worlds.Java
 
 		private bool hasDoneInitialChunks = false;
 		private bool _initiated = false;
-		private BlockingCollection<IChunkColumn> _generatingHelper = new BlockingCollection<IChunkColumn>();
+		private BlockingCollection<ChunkColumn> _generatingHelper = new BlockingCollection<ChunkColumn>();
 		private int _chunksReceived = 0;
 		public override Task Load(ProgressReport progressReport)
 		{
@@ -312,14 +312,14 @@ namespace Alex.Worlds.Java
                 int loaded = 0;
 				SpinWait.SpinUntil(() =>
 				{
-					var playerChunkCoords = new ChunkCoordinates(WorldReceiver.Player.KnownPosition);
+					var playerChunkCoords = new ChunkCoordinates(World.Player.KnownPosition);
 					if (_chunksReceived < target)
 					{
 						progressReport(LoadingState.LoadingChunks, (int)Math.Floor((_chunksReceived / target) * 100d));
                     }
 					else if (loaded < _chunksReceived)
 					{
-						if (_generatingHelper.TryTake(out IChunkColumn chunkColumn, 50))
+						if (_generatingHelper.TryTake(out ChunkColumn chunkColumn, 50))
 						{
 							if (!allowSpawn)
 							{
@@ -334,7 +334,7 @@ namespace Alex.Worlds.Java
 							{
 								DoUpdates = true
 							})*/
-							WorldReceiver.ChunkManager.AddChunk(chunkColumn, new ChunkCoordinates(chunkColumn.X ,chunkColumn.Z), true);
+							World.ChunkManager.AddChunk(chunkColumn, new ChunkCoordinates(chunkColumn.X ,chunkColumn.Z), true);
 							
 							loaded++;
 						}
@@ -458,17 +458,17 @@ namespace Alex.Worlds.Java
 				_spawn = location;
 			}
 			
-			WorldReceiver?.UpdatePlayerPosition(location);
+			World?.UpdatePlayerPosition(location);
 		}
 
 		public void UpdateEntityPosition(long entityId, PlayerLocation location, bool relative)
 		{
-			WorldReceiver?.UpdateEntityPosition(entityId, location,  relative);
+			World?.UpdateEntityPosition(entityId, location,  relative);
 		}
 
 		public void UpdateTime(long worldAge, long timeOfDay)
 		{ 
-			WorldReceiver?.SetTime(timeOfDay);
+			World?.SetTime(timeOfDay);
 		}
 
 		private void SendPacket(Packet packet)
@@ -661,7 +661,7 @@ namespace Alex.Worlds.Java
 
 			Respawning = true;
 			_dimension = packet.Dimension;
-			WorldReceiver.Player.UpdateGamemode(packet.Gamemode);
+			World.Player.UpdateGamemode(packet.Gamemode);
 			//player.
 
 
@@ -670,7 +670,7 @@ namespace Alex.Worlds.Java
 				LoadingWorldState state = new LoadingWorldState();
 				state.UpdateProgress(LoadingState.LoadingChunks, 0);
 				Alex.GameStateManager.SetActiveState(state, true);
-				WorldReceiver.ChunkManager.ClearChunks();
+				World.ChunkManager.ClearChunks();
 
 				int t = Options.VideoOptions.RenderDistance;
 				double radiusSquared = Math.Pow(t, 2);
@@ -679,7 +679,7 @@ namespace Alex.Worlds.Java
 
 				while (Respawning)
 				{
-					int chunkProgress = (int) Math.Floor((WorldReceiver.ChunkManager.ChunkCount / target) * 100);
+					int chunkProgress = (int) Math.Floor((World.ChunkManager.ChunkCount / target) * 100);
 					if (chunkProgress < 100)
 					{
 						state.UpdateProgress(LoadingState.LoadingChunks, chunkProgress);
@@ -718,7 +718,7 @@ namespace Alex.Worlds.Java
 				return;
 			}
 
-			if (WorldReceiver.TryGetEntity(packet.EntityId, out Entity e))
+			if (World.TryGetEntity(packet.EntityId, out Entity e))
 			{
 				if (e is Entity entity)
 				{
@@ -784,13 +784,13 @@ namespace Alex.Worlds.Java
 				case GameStateReason.InvalidBed:
 					break;
 				case GameStateReason.EndRain:
-					WorldReceiver?.SetRain(false);
+					World?.SetRain(false);
 					break;
 				case GameStateReason.StartRain:
-					WorldReceiver?.SetRain(true);
+					World?.SetRain(true);
 					break;
 				case GameStateReason.ChangeGamemode:
-					if (WorldReceiver?.Player is Player player)
+					if (World?.Player is Player player)
 					{
 						player.UpdateGamemode((Gamemode) packet.Value);
 					}
@@ -831,12 +831,12 @@ namespace Alex.Worlds.Java
 		private void HandleBlockChangePacket(BlockChangePacket packet)
 		{
 			//throw new NotImplementedException();
-			WorldReceiver?.SetBlockState(packet.Location, BlockFactory.GetBlockState((uint) packet.PalleteId));
+			World?.SetBlockState(packet.Location, BlockFactory.GetBlockState((uint) packet.PalleteId));
 		}
 
 		private void HandleHeldItemChangePacket(HeldItemChangePacket packet)
 		{
-			if (WorldReceiver?.Player is Player player)
+			if (World?.Player is Player player)
 			{
 				player.Inventory.SelectedSlot = packet.Slot;
 			}
@@ -853,7 +853,7 @@ namespace Alex.Worlds.Java
 			Inventory inventory = null;
 			if (packet.WindowId == 0 || packet.WindowId == -2)
 			{
-				if (WorldReceiver?.Player is Player player)
+				if (World?.Player is Player player)
 				{
 					inventory = player.Inventory;
 				}
@@ -872,7 +872,7 @@ namespace Alex.Worlds.Java
 			Inventory inventory = null;
 			if (packet.WindowId == 0)
 			{
-				if (WorldReceiver?.Player is Player player)
+				if (World?.Player is Player player)
 				{
 					inventory = player.Inventory;
 				}
@@ -943,11 +943,11 @@ namespace Alex.Worlds.Java
 							}
 						}
 
-						PlayerMob entity = new PlayerMob(entry.Name, (World) WorldReceiver, Client, t, skinSlim ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom");
+						PlayerMob entity = new PlayerMob(entry.Name, (World) World, Client, t, skinSlim ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom");
 						entity.UpdateGamemode((Gamemode) entry.Gamemode);
 						entity.UUID = new UUID(entry.UUID.ToByteArray());
 
-						WorldReceiver?.AddPlayerListItem(new PlayerListItem(entity.Uuid, entry.Name,
+						World?.AddPlayerListItem(new PlayerListItem(entity.Uuid, entry.Name,
 							(Gamemode) entry.Gamemode, entry.Ping));
 
 						if (entry.HasDisplayName)
@@ -1019,7 +1019,7 @@ namespace Alex.Worlds.Java
 			{
 				foreach (var remove in packet.RemovePlayerEntries)
 				{
-					WorldReceiver?.RemovePlayerListItem(new UUID(remove.UUID.ToByteArray()));
+					World?.RemovePlayerListItem(new UUID(remove.UUID.ToByteArray()));
 				//	API.Utils.UUID uuid = new UUID(remove.UUID.ToByteArray());
 					/*if (_players.TryRemove(uuid, out PlayerMob removed))
 					{
@@ -1035,7 +1035,7 @@ namespace Alex.Worlds.Java
 		private void HandleEntityLookAndRelativeMove(EntityLookAndRelativeMove packet)
 		{
 			var yaw = MathUtils.AngleToNotchianDegree(packet.Yaw);
-			WorldReceiver.UpdateEntityPosition(packet.EntityId, new PlayerLocation(MathUtils.FromFixedPoint(packet.DeltaX),
+			World.UpdateEntityPosition(packet.EntityId, new PlayerLocation(MathUtils.FromFixedPoint(packet.DeltaX),
 				MathUtils.FromFixedPoint(packet.DeltaY),
 				MathUtils.FromFixedPoint(packet.DeltaZ),
 				yaw, 
@@ -1048,7 +1048,7 @@ namespace Alex.Worlds.Java
 
 		private void HandleEntityRelativeMove(EntityRelativeMove packet)
 		{
-			WorldReceiver.UpdateEntityPosition(packet.EntityId, new PlayerLocation(MathUtils.FromFixedPoint(packet.DeltaX), MathUtils.FromFixedPoint(packet.DeltaY), MathUtils.FromFixedPoint(packet.DeltaZ))
+			World.UpdateEntityPosition(packet.EntityId, new PlayerLocation(MathUtils.FromFixedPoint(packet.DeltaX), MathUtils.FromFixedPoint(packet.DeltaY), MathUtils.FromFixedPoint(packet.DeltaZ))
 			{
 				OnGround = packet.OnGround
 			}, true);
@@ -1056,7 +1056,7 @@ namespace Alex.Worlds.Java
 
 		private void HandleEntityHeadLook(EntityHeadLook packet)
 		{
-			if (WorldReceiver.TryGetEntity(packet.EntityId, out var entity))
+			if (World.TryGetEntity(packet.EntityId, out var entity))
 			{
 				entity.KnownPosition.HeadYaw = MathUtils.AngleToNotchianDegree(packet.HeadYaw);
 				//entity.UpdateHeadYaw(MathUtils.AngleToNotchianDegree(packet.HeadYaw));
@@ -1065,13 +1065,13 @@ namespace Alex.Worlds.Java
 
 		private void HandleEntityLook(EntityLook packet)
 		{
-			WorldReceiver.UpdateEntityLook(packet.EntityId, MathUtils.AngleToNotchianDegree(packet.Yaw), MathUtils.AngleToNotchianDegree(packet.Pitch), packet.OnGround);
+			World.UpdateEntityLook(packet.EntityId, MathUtils.AngleToNotchianDegree(packet.Yaw), MathUtils.AngleToNotchianDegree(packet.Pitch), packet.OnGround);
 		}
 
 		private void HandleEntityTeleport(EntityTeleport packet)
 		{
 			float yaw = MathUtils.AngleToNotchianDegree(packet.Yaw);
-			WorldReceiver.UpdateEntityPosition(packet.EntityID, new PlayerLocation(packet.X, packet.Y, packet.Z, yaw, yaw, MathUtils.AngleToNotchianDegree(packet.Pitch))
+			World.UpdateEntityPosition(packet.EntityID, new PlayerLocation(packet.X, packet.Y, packet.Z, yaw, yaw, MathUtils.AngleToNotchianDegree(packet.Pitch))
 			{
 				OnGround = packet.OnGround
 			}, updateLook: true, updatePitch:true);
@@ -1079,7 +1079,7 @@ namespace Alex.Worlds.Java
 
 		private void HandleEntityVelocity(EntityVelocity packet)
 		{
-			if (WorldReceiver.TryGetEntity(packet.EntityId, out var entity))
+			if (World.TryGetEntity(packet.EntityId, out var entity))
 			{
 				entity.Velocity = new Vector3(packet.VelocityX / 8000f, packet.VelocityY / 8000f, packet.VelocityZ / 8000f);
 			}
@@ -1089,7 +1089,7 @@ namespace Alex.Worlds.Java
 		{
 			if (packet.EntityId == 0 || packet.EntityId == _entityId)
 			{
-				if (WorldReceiver.Player is Player player)
+				if (World.Player is Player player)
 				{
 					foreach (var prop in packet.Properties.Values)
 					{
@@ -1111,7 +1111,7 @@ namespace Alex.Worlds.Java
 		private void HandlePlayerAbilitiesPacket(PlayerAbilitiesPacket packet)
 		{
 			var flags = packet.Flags;
-			if (WorldReceiver?.Player is Player player)
+			if (World?.Player is Player player)
 			{
 				player.CanFly = flags.IsBitSet(0x03);
 				player.Invulnerable = flags.IsBitSet(0x00);
@@ -1177,7 +1177,7 @@ namespace Alex.Worlds.Java
 			SendPacket(settings);
 
 			_entityId = packet.EntityId;
-			if (WorldReceiver?.Player is Player player)
+			if (World?.Player is Player player)
 			{
 				player.EntityId = packet.EntityId;
 				player.UpdateGamemode((Gamemode)packet.Gamemode);
@@ -1233,7 +1233,7 @@ namespace Alex.Worlds.Java
 				}
 				else
 				{
-					if (WorldReceiver.GetChunkColumn(chunk.ChunkX, chunk.ChunkZ) is ChunkColumn c)
+					if (World.GetChunkColumn(chunk.ChunkX, chunk.ChunkZ) is ChunkColumn c)
 					{
 						result = c;
 					}
@@ -1256,7 +1256,7 @@ namespace Alex.Worlds.Java
 					return;
 				}
 
-				WorldReceiver.ChunkManager.AddChunk(result, new ChunkCoordinates(result.X ,result.Z), true);
+				World.ChunkManager.AddChunk(result, new ChunkCoordinates(result.X ,result.Z), true);
 			});
 		}
 

@@ -2,8 +2,10 @@
 using Alex.API.Blocks;
 using Alex.API.Graphics;
 using Alex.API.World;
+using Alex.Blocks.Minecraft;
 using Alex.ResourcePackLib.Json;
 using Alex.Utils;
+using Alex.Worlds;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Graphics.Models.Blocks
@@ -18,15 +20,13 @@ namespace Alex.Graphics.Models.Blocks
         public virtual BoundingBox BoundingBox { get; } = new BoundingBox(Vector3.Zero, Vector3.One);
         
 		public float Scale { get; set; } = 1f;
-		public bool Transparent { get; set; }
-		public bool Animated { get; set; }
 
-		public virtual (VertexPositionNormalTextureColor[] vertices, int[] indexes) GetVertices(IWorld world, Vector3 position, IBlock baseBlock)
+		public virtual (VertexPositionNormalTextureColor[] vertices, int[] indexes) GetVertices(IBlockAccess world, Vector3 position, Block baseBlock)
         {
             return (new VertexPositionNormalTextureColor[0], new int[0]);
         }
 
-	    public virtual BoundingBox GetBoundingBox(Vector3 position, IBlock requestingBlock)
+	    public virtual BoundingBox GetBoundingBox(Vector3 position, Block requestingBlock)
 	    {
 			return new BoundingBox(position, position + Vector3.One);
 	    }
@@ -43,8 +43,6 @@ namespace Alex.Graphics.Models.Blocks
 
 	    protected VertexPositionNormalTextureColor[] GetFaceVertices(BlockFace blockFace, Vector3 startPosition, Vector3 endPosition, UVMap uvmap, out int[] indexes)
 		{
-			var size = (endPosition - startPosition);
-
 			Color faceColor = Color.White;
 			Vector3 normal = Vector3.Zero;
 			Vector3 positionTopLeft = Vector3.Zero, positionBottomLeft = Vector3.Zero, positionBottomRight = Vector3.Zero, positionTopRight = Vector3.Zero;
@@ -179,7 +177,7 @@ namespace Alex.Graphics.Models.Blocks
 			return new VertexPositionNormalTextureColor[0];
 		}
 
-		protected void GetLight(IWorld world, Vector3 blockPosition, Vector3 facePosition, out byte blockLight, out byte skyLight, bool smooth = false)
+		protected void GetLight(IBlockAccess world, Vector3 facePosition, out byte blockLight, out byte skyLight, bool smooth = false)
 		{
 			var faceBlock = world.GetBlock(facePosition);
 			

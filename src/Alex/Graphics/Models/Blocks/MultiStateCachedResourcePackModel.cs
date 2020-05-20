@@ -6,7 +6,9 @@ using Alex.API.Blocks.State;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks.Minecraft;
+using Alex.Blocks.State;
 using Alex.ResourcePackLib.Json.BlockStates;
+using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using NLog;
 
@@ -15,7 +17,7 @@ namespace Alex.Graphics.Models.Blocks
 	public class MultiPartModels
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(MultiPartModels));
-		public static BlockStateModel[] GetModels(IBlockState blockState, BlockStateResource resource)
+		public static BlockStateModel[] GetModels(BlockState blockState, BlockStateResource resource)
 		{
 			List<BlockStateModel> resultingModels = new List<BlockStateModel>(resource.Parts.Length);
 
@@ -48,7 +50,7 @@ namespace Alex.Graphics.Models.Blocks
 		}
 
 
-		public static IBlockState GetBlockState(IWorld world, Vector3 position, IBlockState blockState,
+		public static BlockState GetBlockState(World world, Vector3 position, BlockState blockState,
 			BlockStateResource blockStateModel)
 		{
 			var blockStateCopy = blockState;
@@ -68,7 +70,7 @@ namespace Alex.Graphics.Models.Blocks
 						{
 							foreach (var kv in result.KeyValues)
 							{
-								blockStateCopy = blockStateCopy.WithProperty(kv.Key, kv.Value);
+								blockStateCopy = blockStateCopy.WithProperty(kv.Key, kv.Value, false);
 							}
 						}
 
@@ -86,7 +88,7 @@ namespace Alex.Graphics.Models.Blocks
 			return blockStateCopy;
 		}
 		
-		public static BlockStateModel[] GetBlockStateModels(IWorld world, Vector3 position, IBlockState blockState, BlockStateResource blockStateModel)
+		public static BlockStateModel[] GetBlockStateModels(World world, Vector3 position, BlockState blockState, BlockStateResource blockStateModel)
 		{
 			List<BlockStateModel> resultingModels = new List<BlockStateModel>(blockStateModel.Parts.Length);
 
@@ -118,7 +120,7 @@ namespace Alex.Graphics.Models.Blocks
 			return resultingModels.ToArray();
 		}
 
-		private static bool PassesMultiPartRule(MultiPartRule rule, IBlockState blockState)
+		private static bool PassesMultiPartRule(MultiPartRule rule, BlockState blockState)
 		{
 			if (rule.HasOrContition)
 			{
@@ -133,7 +135,7 @@ namespace Alex.Graphics.Models.Blocks
 			return rule.KeyValues.All(x => CheckRequirements(blockState, x.Key, x.Value));
 		}
 
-		private static bool CheckRequirements(IBlockState baseblockState, string rule, string value)
+		private static bool CheckRequirements(BlockState baseblockState, string rule, string value)
 		{
 			if (string.IsNullOrWhiteSpace(value)) return true;
 
@@ -148,7 +150,7 @@ namespace Alex.Graphics.Models.Blocks
 			return false;
 		}
 
-		public static bool PassesMultiPartRule(IWorld world, Vector3 position, MultiPartRule rule, IBlockState baseBlock, out MultiPartRule passedRule)
+		public static bool PassesMultiPartRule(World world, Vector3 position, MultiPartRule rule, BlockState baseBlock, out MultiPartRule passedRule)
 		{
 			MultiPartRule s = rule;
 			passedRule = rule;
@@ -211,7 +213,7 @@ namespace Alex.Graphics.Models.Blocks
 			return false;*/
 		}
 
-		private static bool Passes(IWorld world, Vector3 position, IBlockState baseblockState, string rule,
+		private static bool Passes(World world, Vector3 position, BlockState baseblockState, string rule,
 			string value)
 		{
 			if (string.IsNullOrWhiteSpace(value)) return true;

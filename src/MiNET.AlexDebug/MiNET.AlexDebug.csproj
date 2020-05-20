@@ -7,7 +7,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\lib\MiNET\src\MiNET\MiNET\MiNET.csproj" />
       <ProjectReference Include="..\Alex\Alex.csproj" />
     </ItemGroup>
 

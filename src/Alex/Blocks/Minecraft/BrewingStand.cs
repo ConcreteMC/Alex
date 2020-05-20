@@ -10,6 +10,8 @@ namespace Alex.Blocks.Minecraft
 			LightValue = 1;
 
 			Hardness = 0.5f;
+			
+			CanInteract = true;
 		}
 	}
 }

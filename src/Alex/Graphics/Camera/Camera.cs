@@ -106,8 +106,11 @@ namespace Alex.Graphics.Camera
 		    UpdateProjectionMatrix();
 	    }
 
-		public float AspectRatio { get; private set; }
-		public virtual void UpdateProjectionMatrix()
+	    private float AspectRatio { get; set; } = 0;
+
+	    float ICamera.AspectRatio => this.AspectRatio;
+
+	    public virtual void UpdateProjectionMatrix()
 		{
 			ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(
 				MathHelper.ToRadians(FOV),

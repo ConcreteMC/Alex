@@ -14,13 +14,13 @@ namespace Alex.Gui.Elements.Inventory
 {
     public class InventoryContainerItem : GuiControl
     {
-        public const int ItemWidth = 16;
+        public const int ItemWidth = 18;
         
         private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(InventoryContainerItem));
         
         private Item _item;
-        protected GuiTextureElement TextureElement { get; }
-
+       // protected GuiTextureElement TextureElement { get; }
+        protected GuiItem GuiItem { get; }
         public int InventoryIndex { get; set; } = 0;
         public int InventoryId { get; set; } = 0;
         
@@ -30,22 +30,40 @@ namespace Alex.Gui.Elements.Inventory
             SetFixedSize(16, 16);
             Padding = new Thickness(0);
 
-            AddChild(TextureElement = new GuiTextureElement()
-            {
-                Anchor = Alignment.Fill
-            });
+           // AddChild(TextureElement = new GuiTextureElement()
+          //  {
+          //      Anchor = Alignment.Fill
+          //  });
+          
+          AddChild(GuiItem = new GuiItem()
+          {
+              Anchor = Alignment.MiddleCenter,
+              Height = 18,
+              Width = 18,
+          });
             
-            AddChild(_counTextElement = new GuiTextElement()
+           /* AddChild(_counTextElement = new GuiTextElement()
             {
                 TextColor = TextColor.White,
                 Anchor = Alignment.BottomRight,
                 Text = "",
                 Scale = 0.75f,
-                Margin = new Thickness(0, 0, 5, 3),
+                Margin = new Thickness(0, 0, 1, 1),
                 FontStyle = FontStyle.DropShadow,
                 CanHighlight = false,
                 CanFocus = false
-            });
+            });*/
+           GuiItem.AddChild(_counTextElement = new GuiTextElement()
+           {
+               TextColor = TextColor.White,
+               Anchor = Alignment.BottomRight,
+               Text = "",
+               Scale = 0.75f,
+               Margin = new Thickness(0, 0, 1, 1),
+               FontStyle = FontStyle.DropShadow,
+               CanHighlight = false,
+               CanFocus = false
+           });
         }
         
         public bool ShowCount
@@ -66,33 +84,23 @@ namespace Alex.Gui.Elements.Inventory
             set
             {
                 _item = value;
-
+                
+                GuiItem.Item = value.Clone();
+                
                 if (_item == null || _item is ItemAir || _item.Count == 0)
                 {
-                    TextureElement.IsVisible = false;
+                 //   TextureElement.IsVisible = false;
                     ShowCount = false;
                     return;
                 }
 
+                
                 if (string.IsNullOrWhiteSpace(value?.Name))
                 {
                     // if (!ItemFactory.TryGetItem())
                     Log.Warn($"Item name is null or whitespace!");
 
                     return;
-                }
-
-                // TextOverlay.Text = value?.DisplayName ?? value.Name;
-
-                if (ItemFactory.ResolveItemTexture(_item.Name, out Texture2D texture))
-                {
-                    TextureElement.Texture = texture;
-                    TextureElement.IsVisible = true;
-                }
-                else
-                {
-                    Log.Warn($"Could not resolve item texture: {_item.Name}");
-                    TextureElement.IsVisible = false;
                 }
 
                 if (_item != null && _item.Count > 0)
@@ -105,11 +113,6 @@ namespace Alex.Gui.Elements.Inventory
                     _counTextElement.Text = "";
                 }
             }
-        }
-
-        protected override void OnCursorPressed(Point cursorPosition)
-        {
-            base.OnCursorPressed(cursorPosition);
         }
 
         private bool _showTooltip = false;

@@ -17,6 +17,7 @@ using Alex.Graphics.Camera;
 using Alex.Graphics.Models;
 using Alex.Gui;
 using Alex.Gui.Elements;
+using Alex.ResourcePackLib.Json.Models.Items;
 using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
@@ -35,6 +36,7 @@ namespace Alex.GameStates.Playing
 
 		private readonly PlayingHud _playingHud;
 		private readonly GuiDebugInfo _debugInfo;
+		private readonly NetworkScreen _networkScreen;
 		
 		private GuiMiniMap MiniMap { get; }
 		private bool RenderMinimap { get; set; } = false;
@@ -43,11 +45,18 @@ namespace Alex.GameStates.Playing
 			NetworkProvider = networkProvider;
 
 			World = new World(alex.Services, graphics, Options, new FirstPersonCamera(Options.VideoOptions.RenderDistance, Vector3.Zero, Vector3.Zero), networkProvider);
-
+			World.Player.IsFirstPersonMode = true;
+			
 			WorldProvider = worldProvider;
 			if (worldProvider is SPWorldProvider)
 			{
 				World.DoDaylightcycle = false;
+				//World.Player.SetInventory(new BedrockInventory(46));
+				if (ItemFactory.TryGetItem("minecraft:diamond_sword", out var sword))
+				{
+					World.Player.Inventory.MainHand = sword;
+					World.Player.Inventory[World.Player.Inventory.SelectedSlot] = sword;
+				}
 			}
 			
 			var title = new TitleComponent();
@@ -75,6 +84,8 @@ namespace Alex.GameStates.Playing
             {
 	            _playingHud.AddChild(MiniMap);
             }
+            
+            _networkScreen = new NetworkScreen(NetworkProvider);
 		}
 
 		private void OnMinimapSettingChange(bool oldvalue, bool newvalue)
@@ -100,10 +111,13 @@ namespace Alex.GameStates.Playing
 		protected override void OnShow()
 		{
 			Alex.IsMouseVisible = false;
-
+			
+			if (RenderNetworking)
+				Alex.GuiManager.AddScreen(_networkScreen);
+			
 			base.OnShow();
 			Alex.GuiManager.AddScreen(_playingHud);
-			
+
 			if (RenderDebug)
 				Alex.GuiManager.AddScreen(_debugInfo);
 		}
@@ -112,6 +126,8 @@ namespace Alex.GameStates.Playing
 		{
 			Alex.GuiManager.RemoveScreen(_debugInfo);
 			Alex.GuiManager.RemoveScreen(_playingHud);
+			Alex.GuiManager.RemoveScreen(_networkScreen);
+			
 			base.OnHide();
 		}
 
@@ -119,6 +135,7 @@ namespace Alex.GameStates.Playing
 		private long _threadsUsed, _maxThreads, _complPortUsed, _maxComplPorts;
 		private Biome _currentBiome = BiomeUtils.GetBiomeById(0);
 		private int _currentBiomeId = 0;
+		private DateTime _lastNetworkInfo = DateTime.UtcNow;
 		private void InitDebugInfo()
 		{
 			_debugInfo.AddDebugLeft(() =>
@@ -187,23 +204,23 @@ namespace Alex.GameStates.Playing
 					sb.AppendLine(
 						$"Blocklight: {World.GetBlockLight(_raytracedBlock)} Face Blocklight: {World.GetBlockLight(_adjacentBlock)}");
 
-					sb.AppendLine($"Skylight scheduled: {World.IsScheduled((int) _raytracedBlock.X, (int) _raytracedBlock.Y, (int) _raytracedBlock.Z)}");
+					//sb.AppendLine($"Skylight scheduled: {World.IsScheduled((int) _raytracedBlock.X, (int) _raytracedBlock.Y, (int) _raytracedBlock.Z)}");
 					
 					foreach (var bs in World
 						.GetBlockStates((int) _raytracedBlock.X, (int) _raytracedBlock.Y, (int) _raytracedBlock.Z))
 					{
-						var blockstate = bs.state;
+						var blockstate = bs.State;
 						if (blockstate != null && blockstate.Block.Renderable)
 						{
-							sb.AppendLine($"{blockstate.Name} (S: {bs.storage})");
-							if (blockstate is BlockState s && s.IsMultiPart)
+							sb.AppendLine($"{blockstate.Name} (S: {bs.Storage})");
+							if (blockstate.IsMultiPart)
 							{
 								sb.AppendLine($"MultiPart=true");
 								sb.AppendLine();
 								
 								sb.AppendLine("Models:");
 
-								foreach (var model in s.AppliedModels)
+								foreach (var model in blockstate.AppliedModels)
 								{
 									sb.AppendLine(model);
 								}
@@ -332,7 +349,7 @@ namespace Alex.GameStates.Playing
 		        Vector3 targetPoint = camPos + (lookVector * x);
 		        var block = world.GetBlock(targetPoint) as Block;
 
-		        if (block != null && block.HasHitbox && !block.IsWater)
+		        if (block != null && block.HasHitbox)
 		        {
 		            var bbox = block.GetBoundingBox(Vector3.Floor(targetPoint));
 		            if (bbox.Contains(targetPoint) == ContainmentType.Contains)
@@ -388,6 +405,7 @@ namespace Alex.GameStates.Playing
 
 	    private Block SelBlock { get; set; } = new Air();
 		private Microsoft.Xna.Framework.BoundingBox RayTraceBoundingBox { get; set; }
+		private bool RenderNetworking { get; set; } = false;
 		private bool RenderDebug { get; set; } = false;
 		private bool RenderBoundingBoxes { get; set; } = false;
 		private bool AlwaysDay { get; set; } = false;
@@ -420,8 +438,20 @@ namespace Alex.GameStates.Playing
 						Entity.NametagScale -= 0.25f;
 					}
 				}*/
-				
-				if (KeyBinds.EntityBoundingBoxes.All(x => currentKeyboardState.IsKeyDown(x)))
+
+				if (KeyBinds.NetworkDebugging.All(x => currentKeyboardState.IsKeyDown(x)))
+				{
+					RenderNetworking = !RenderNetworking;
+					if (!RenderNetworking)
+					{
+						Alex.GuiManager.RemoveScreen(_networkScreen);
+					}
+					else
+					{
+						Alex.GuiManager.AddScreen(_networkScreen);
+					}
+				}
+				else if (KeyBinds.EntityBoundingBoxes.All(x => currentKeyboardState.IsKeyDown(x)))
 				{
 					RenderBoundingBoxes = !RenderBoundingBoxes;
 				}
@@ -466,6 +496,10 @@ namespace Alex.GameStates.Playing
 						};
 						
 						World.Camera.UpdateAspectRatio(Graphics.Viewport.AspectRatio);
+						World.Player.ItemRenderer.DisplayPosition = World.Player.IsLeftyHandy
+							? DisplayPosition.ThirdPersonLeftHand
+							: DisplayPosition.ThirdPersonRightHand;
+						World.Player.IsFirstPersonMode = false;
 					}
 					else
 					{
@@ -475,6 +509,10 @@ namespace Alex.GameStates.Playing
 						};
 						
 						World.Camera.UpdateAspectRatio(Graphics.Viewport.AspectRatio);
+						World.Player.ItemRenderer.DisplayPosition = World.Player.IsLeftyHandy
+							? DisplayPosition.FirstPersonLeftHand
+							: DisplayPosition.FirstPersonRightHand;
+						World.Player.IsFirstPersonMode = true;
 					}
 				}
 

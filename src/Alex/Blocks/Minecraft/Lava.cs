@@ -7,7 +7,7 @@ namespace Alex.Blocks.Minecraft
 			Solid = false;
 			Transparent = true;
 			IsReplacible = true;
-			HasHitbox = false;
+		//	HasHitbox = false;
 
 			LightValue = 15;
 			LightOpacity = 1;
