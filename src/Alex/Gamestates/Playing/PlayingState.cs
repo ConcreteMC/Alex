@@ -179,14 +179,16 @@ namespace Alex.GameStates.Playing
 			});
 			_debugInfo.AddDebugLeft(() => { return $"Do DaylightCycle: {World.DoDaylightcycle}"; });
 
-			_debugInfo.AddDebugRight(() => Alex.DotnetRuntime);
+			_debugInfo.AddDebugRight(() => Alex.OperatingSystem);
+			_debugInfo.AddDebugRight(() => Alex.Gpu);
+			_debugInfo.AddDebugRight(() => $"{Alex.DotnetRuntime}\n");
 			//_debugInfo.AddDebugRight(() => MemoryUsageDisplay);
 			_debugInfo.AddDebugRight(() => $"RAM: {GetBytesReadable(_ramUsage, 2)}");
 			_debugInfo.AddDebugRight(() => $"GPU: {GetBytesReadable(GpuResourceManager.GetMemoryUsage, 2)}");
 			_debugInfo.AddDebugRight(() =>
 			{
 				return
-					$"Threads: {(_threadsUsed):00}/{_maxThreads}\nCompl.ports: {_complPortUsed:00}/{_maxComplPorts}";
+					$"Threads: {(_threadsUsed):00}/{_maxThreads}";
 			});
 			_debugInfo.AddDebugRight(() => 
 			{
