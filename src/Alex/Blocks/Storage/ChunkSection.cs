@@ -207,11 +207,11 @@ namespace Alex.Blocks.Storage
 			return this.Get(x, y, z, 0);
 		}
 
-        public IEnumerable<(BlockState state, int storage)> GetAll(int x, int y, int z)
+        public IEnumerable<BlockEntry> GetAll(int x, int y, int z)
         {
 	        for (int i = 0; i < _blockStorages.Length; i++)
 	        {
-		        yield return (Get(x, y, z, i), i);
+		        yield return new BlockEntry(Get(x, y, z, i), i);
 	        }
         }
 
@@ -242,7 +242,8 @@ namespace Alex.Blocks.Storage
 			}
 
 			var coordsIndex = GetCoordinateIndex(x, y, z);
-
+			var oldState = _blockStorages[storage].Get(x, y, z);
+			
 			if (storage == 0)
 			{
 				if (state.Block.LightValue > 0)
@@ -301,6 +302,11 @@ namespace Alex.Blocks.Storage
 
             _blockStorages[storage].Set(x, y, z, state);
 
+            if (oldState.Block is Water && state.Block is Water)
+            {
+	            var a = "";
+            }
+            
             //ScheduledUpdates.Set(coordsIndex, true);
             SetScheduled(x,y,z, true);
             
@@ -440,6 +446,18 @@ namespace Alex.Blocks.Storage
 		    
 		    ArrayPool<byte>.Shared.Return(BlockLight.Data);
 		    ArrayPool<byte>.Shared.Return(SkyLight.Data);
+	    }
+
+	    public class BlockEntry
+	    {
+		    public BlockState State { get; set; }
+		    public int Storage { get; set; }
+
+		    public BlockEntry(BlockState state, int storage)
+		    {
+			    State = state;
+			    Storage = storage;
+		    }
 	    }
     }
 }

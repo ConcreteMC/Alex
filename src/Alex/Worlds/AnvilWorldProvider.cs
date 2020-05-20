@@ -424,7 +424,7 @@ namespace Alex.Worlds
 					while (y + 1 < 256 && y >= 0)
 					{
 						y++;
-						if (!chunk.GetBlock((int)spawnPoint.X & 0xf, y & 0xff, (int)spawnPoint.Z & 0xf).Solid)
+						if (!chunk.GetBlockState((int)spawnPoint.X & 0xf, y & 0xff, (int)spawnPoint.Z & 0xf).Block.Solid)
 						{
 							break;
 						}

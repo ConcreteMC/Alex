@@ -198,6 +198,10 @@ namespace Alex.Worlds.Bedrock
 
 								        if (translated != null)
 								        {
+									        if (translated.Block is Water)
+									        {
+										        string a = "";
+									        }
 									        section.Set(storage, x, y, z, translated);
 								        }
 
@@ -771,7 +775,11 @@ namespace Alex.Worlds.Bedrock
 						r = r.WithProperty("facing", facingValue);
 						break;
 					case "liquid_depth":
-						r = r.WithProperty("level", state.Value());
+						if (int.TryParse(state.Value(), out var lvl))
+						{
+							r = r.WithProperty("level", lvl.ToString());
+						}
+
 						break;
 					case "height":
 						r = r.WithProperty("layers", state.Value());
@@ -939,6 +947,12 @@ namespace Alex.Worlds.Bedrock
 
 			if (bid >= 8 && bid <= 11) //water or lava
 			{
+				if (meta != 0)
+				{
+					string a = "";
+					meta = Math.Clamp(meta, 0, 8);
+				}
+				
 				state = state.WithProperty("level", meta.ToString());
 			}
 			else if (bid == 44 || bid == 182 || bid == 126 /*|| _slabs.Any(x => x.Equals(state.Name, StringComparison.InvariantCultureIgnoreCase))*/) //Slabs

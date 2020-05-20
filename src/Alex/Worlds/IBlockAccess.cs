@@ -4,6 +4,7 @@ using Alex.API.Blocks.State;
 using Alex.API.Utils;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
+using Alex.Blocks.Storage;
 
 namespace Alex.Worlds
 {
@@ -18,7 +19,7 @@ namespace Alex.Worlds
         int GetHeight(BlockCoordinates coordinates);
         Block GetBlock(BlockCoordinates coord, ChunkColumn tryChunk = null);
         void SetBlock(Block block, bool broadcast = true, bool applyPhysics = true, bool calculateLight = true, ChunkColumn possibleChunk = null);
-        IEnumerable<(BlockState state, int storage)> GetBlockStates(int positionX, in int positionY, int positionZ);
+        IEnumerable<ChunkSection.BlockEntry> GetBlockStates(int positionX, in int positionY, int positionZ);
         BlockState GetBlockState(BlockCoordinates position);
     }
 }

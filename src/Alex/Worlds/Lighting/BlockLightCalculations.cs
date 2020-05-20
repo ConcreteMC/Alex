@@ -190,7 +190,7 @@ namespace Alex.Worlds.Lighting
 		private void DoPass(World level, ChunkColumn chunk, BlockCoordinates newCoord,
 			ConcurrentQueue<BlockCoordinates> lightBfsQueue, int lightLevel)
 		{
-			var block = chunk.GetBlock(newCoord.X & 0x0f, newCoord.Y & 0xff, newCoord.Z & 0x0f);
+			var block = chunk.GetBlockState(newCoord.X & 0x0f, newCoord.Y & 0xff, newCoord.Z & 0x0f).Block;
 
 			if (block is Air) 
 			{

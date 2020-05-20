@@ -36,16 +36,16 @@ namespace Alex
 		private static ResourcePackLib.Json.Models.Blocks.BlockModel CubeModel { get; set; }
 		public static readonly LiquidBlockModel StationairyWaterModel = new LiquidBlockModel()
 		{
-			IsFlowing = false,
+			//IsFlowing = false,
 			IsLava = false,
-			Level = 8
+		//	Level = 8
 		};
 
 		public static readonly LiquidBlockModel StationairyLavaModel = new LiquidBlockModel()
 		{
-			IsFlowing = false,
+			//IsFlowing = false,
 			IsLava = true,
-			Level = 8
+			//Level = 8
 		};
 
 		private static BlockModel GetOrCacheModel(ResourceManager resources, McResourcePack resourcePack, BlockState state, uint id, bool rebuild)
@@ -171,8 +171,8 @@ namespace Alex
 				{
 					foreach (var property in entry.Value.Properties)
 					{
-						//if (property.Key.Equals("waterlogged"))
-						//	continue;
+					//	if (property.Key.Equals("waterlogged"))
+					//		continue;
 						
 						defaultState = (BlockState) defaultState.WithPropertyNoResolve(property.Key,
 							property.Value.FirstOrDefault(), false);
@@ -191,8 +191,8 @@ namespace Alex
 					{
 						foreach (var property in s.Properties)
 						{
-							if (property.Key.Equals("waterlogged"))
-								continue;
+							//if (property.Key.Equals("waterlogged"))
+						//		continue;
 							
 							variantState =
 								(Blocks.State.BlockState) variantState.WithPropertyNoResolve(property.Key,
@@ -307,22 +307,35 @@ namespace Alex
 
 			if (name.Contains("water"))
 			{
-				return new LiquidBlockModel() {IsFlowing = false, IsLava = false, Level = state.GetTypedValue(Water.LEVEL)}; //StationairyWaterModel;
+				return new LiquidBlockModel()
+				{
+				//	IsFlowing = false,
+					IsLava = false,
+				//	Level = state.GetTypedValue(Water.LEVEL)
+				};
 			}
 
 			if (name.Contains("lava"))
 			{
-				return StationairyLavaModel;
+				return new LiquidBlockModel()
+				{
+				//	IsFlowing = false,
+					IsLava = true,
+				//	Level = state.GetTypedValue(Water.LEVEL)
+				};;
 			}
 
 			BlockStateResource blockStateResource;
 
 			if (resourcePack.BlockStates.TryGetValue(name, out blockStateResource))
 			{
-				if (blockStateResource != null && blockStateResource.Parts != null && blockStateResource.Parts.Length > 0 && blockStateResource.Parts.All(x => x.Apply.All(b => b.Model != null)))
+				if (blockStateResource != null && blockStateResource.Parts != null &&
+				    blockStateResource.Parts.Length > 0 &&
+				    blockStateResource.Parts.All(x => x.Apply.All(b => b.Model != null)))
 				{
 					var models = MultiPartModels.GetModels(state, blockStateResource);
-					
+
+
 					state.MultiPartHelper = blockStateResource;
 					state.IsMultiPart = true;
 					state.AppliedModels = models.Select(x => x.ModelName).ToArray();
@@ -331,7 +344,7 @@ namespace Alex
 				}
 
 				if (blockStateResource?.Variants == null ||
-					blockStateResource.Variants.Count == 0)
+				    blockStateResource.Variants.Count == 0)
 					return null;
 
 				if (blockStateResource.Variants.Count == 1)

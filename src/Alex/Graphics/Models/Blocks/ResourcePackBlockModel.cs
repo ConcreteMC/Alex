@@ -80,6 +80,8 @@ namespace Alex.Graphics.Models.Blocks
 					}
 				};
 			}).ToArray();
+			
+			//Models = models;
 			UseRandomizer = useRandomizer;
 			
 			CalculateBoundingBoxes(Models);

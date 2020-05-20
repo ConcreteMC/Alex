@@ -31,16 +31,16 @@ namespace Alex.Blocks
         {
             Register("minecraft:water", new BlockModelEntry(new LiquidBlockModel()
             {
-                IsFlowing = false,
+                //IsFlowing = false,
                 IsLava = false,
-                Level = 8
+               // Level = 8
             }));
 
             Register("minecraft:lava", new BlockModelEntry(new LiquidBlockModel()
             {
-                IsFlowing = false,
+             //   IsFlowing = false,
                 IsLava = true,
-                Level = 8
+             //   Level = 8
             }));
         }
     }

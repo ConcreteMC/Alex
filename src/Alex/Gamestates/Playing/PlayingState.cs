@@ -192,8 +192,6 @@ namespace Alex.GameStates.Playing
 			{
 				if (_raytracedBlock.Y > 0 && _raytracedBlock.Y < 256)
 				{
-					var adjacentBlock = World.GetBlockState(_adjacentBlock);
-					
 					var adj =  Vector3.Floor(_adjacentBlock) - Vector3.Floor(_raytracedBlock);
 					adj.Normalize();
 
@@ -206,17 +204,15 @@ namespace Alex.GameStates.Playing
 					sb.AppendLine(
 						$"Blocklight: {World.GetBlockLight(_raytracedBlock)} Face Blocklight: {World.GetBlockLight(_adjacentBlock)}");
 
-					sb.AppendLine($"Face: {adjacentBlock.Block.Name} - {adjacentBlock.Name}");
-					
 					//sb.AppendLine($"Skylight scheduled: {World.IsScheduled((int) _raytracedBlock.X, (int) _raytracedBlock.Y, (int) _raytracedBlock.Z)}");
 					
 					foreach (var bs in World
 						.GetBlockStates((int) _raytracedBlock.X, (int) _raytracedBlock.Y, (int) _raytracedBlock.Z))
 					{
-						var blockstate = bs.state;
+						var blockstate = bs.State;
 						if (blockstate != null && blockstate.Block.Renderable)
 						{
-							sb.AppendLine($"{blockstate.Name} (S: {bs.storage})");
+							sb.AppendLine($"{blockstate.Name} (S: {bs.Storage})");
 							if (blockstate.IsMultiPart)
 							{
 								sb.AppendLine($"MultiPart=true");
