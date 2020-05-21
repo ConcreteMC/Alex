@@ -6,6 +6,7 @@ namespace Alex.Blocks.Storage
 	public class FlexibleStorage : IStorage
 	{
 		private static ArrayPool<long> _arrayPool = ArrayPool<long>.Shared;
+		public static bool UsePooling { get; set; } = true;
 		
 		public long[] _data;
 		private int _bitsPerEntry;
@@ -13,9 +14,13 @@ namespace Alex.Blocks.Storage
 		private long _maxEntryValue;
 
 		private bool _isPooled = false;
-		public FlexibleStorage(int bitsPerEntry, int size) : this(bitsPerEntry, _arrayPool.Rent(RoundUp(size * bitsPerEntry, 64) / 64))
+
+		public FlexibleStorage(int bitsPerEntry, int size) : this(
+			bitsPerEntry,
+			(UsePooling ? _arrayPool.Rent(RoundUp(size * bitsPerEntry, 64) / 64) :
+				new long[RoundUp(size * bitsPerEntry, 64) / 64]))
 		{
-			_isPooled = true;
+			_isPooled = UsePooling;
 		}
 
 		public FlexibleStorage(int bitsPerEntry, long[] data)
