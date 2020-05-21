@@ -10,7 +10,7 @@ namespace Alex.API.Graphics
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
-        public VertexPositionNormalTextureColor[] Vertices { get; set; }
+        public BlockShaderVertex[] Vertices { get; set; }
         
        // public int[] SolidIndexes { get; set; }
 		//public int[] TransparentIndexes { get; set; }
@@ -18,7 +18,7 @@ namespace Alex.API.Graphics
 		
 		public Dictionary<RenderStage, int[]> Indexes { get; set; } = new Dictionary<RenderStage, int[]>();
 		
-		public ChunkMesh(VertexPositionNormalTextureColor[] entries)
+		public ChunkMesh(BlockShaderVertex[] entries)
 		{
 			Vertices = entries;
 			//Indexes = indexes;

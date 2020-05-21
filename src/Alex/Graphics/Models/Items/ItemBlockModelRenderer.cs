@@ -9,14 +9,14 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.Graphics.Models.Items
 {
-    public class ItemBlockModelRenderer : ItemModelRenderer<VertexPositionNormalTextureColor>
+    public class ItemBlockModelRenderer : ItemModelRenderer<BlockShaderVertex>
     {
         private BlockState _block;
         private ResourceManager _resource;
 
         public ItemBlockModelRenderer(BlockState block, ResourcePackModelBase model, McResourcePack resourcePack,
             ResourceManager resourceManager) : base(model, resourcePack,
-            VertexPositionNormalTextureColor.VertexDeclaration)
+            BlockShaderVertex.VertexDeclaration)
         {
             _block = block;
             _resource = resourceManager;
@@ -54,7 +54,7 @@ namespace Alex.Graphics.Models.Items
         {
             return new ItemBlockModelRenderer(_block, Model, null, _resource)
             {
-                Vertices = (VertexPositionNormalTextureColor[]) Vertices.Clone(),
+                Vertices = (BlockShaderVertex[]) Vertices.Clone(),
                 Indexes = (short[]) Indexes.Clone()
             };
         }

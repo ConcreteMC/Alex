@@ -4,7 +4,7 @@ using MiNET.Blocks;
 
 namespace Alex.API.Graphics
 {
-    public struct VertexPositionNormalTextureColor : IVertexType
+    public struct BlockShaderVertex : IVertexType
     {
         /// <summary>
         ///     Stores the position of this vertex
@@ -36,7 +36,7 @@ namespace Alex.API.Graphics
         /// <param name="position">The position in space for this vertex</param>
         /// <param name="normal">The nomal for this vector</param>
         /// <param name="texCoords">The UV co-ords for this vertex</param>
-        public VertexPositionNormalTextureColor(Vector3 position, Vector3 normal, Vector2 texCoords)
+        public BlockShaderVertex(Vector3 position, Vector3 normal, Vector2 texCoords)
         {
             Position = position;
             TexCoords = texCoords;
@@ -54,7 +54,7 @@ namespace Alex.API.Graphics
         /// <param name="normal">The nomal for this vector</param>
         /// <param name="texCoords">The UV co-ords for this vertex</param>
         /// <param name="color">The color of this vertex</param>
-        public VertexPositionNormalTextureColor(Vector3 position, Vector3 normal, Vector2 texCoords, Color color)
+        public BlockShaderVertex(Vector3 position, Vector3 normal, Vector2 texCoords, Color color)
         {
             Position = position;
             //Normal = normal;
@@ -79,16 +79,6 @@ namespace Alex.API.Graphics
 	        new VertexElement((6 * sizeof(float)) + 4 * sizeof(byte), VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 2)
         );
         
-        /*public static VertexDeclaration VertexDeclaration { get; } = new VertexDeclaration
-        (
-	        new VertexElement(0, VertexElementFormat.Vector3,
-		        VertexElementUsage.Position, 0),
-	        new VertexElement(3 * sizeof(float), VertexElementFormat.Vector2,
-		        VertexElementUsage.TextureCoordinate, 0),
-	        new VertexElement(5 * sizeof(float), VertexElementFormat.Color,
-		        VertexElementUsage.Color, 0)
-        );*/
-
-	    VertexDeclaration IVertexType.VertexDeclaration => VertexDeclaration;
+        VertexDeclaration IVertexType.VertexDeclaration => VertexDeclaration;
     }
 }

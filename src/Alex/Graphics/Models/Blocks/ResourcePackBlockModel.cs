@@ -204,7 +204,7 @@ namespace Alex.Graphics.Models.Blocks
 			//if (!world.HasBlock(pos.X, pos.Y, pos.Z)) 
 			//	return false;
 
-			var theBlock = world.GetBlock(pos);
+			var theBlock = world.GetBlockState(pos).Block;
 
 			if (!theBlock.Renderable)
 				return true;
@@ -240,7 +240,7 @@ namespace Alex.Graphics.Models.Blocks
 		}
 
 		private void FixElementScale(BlockModelElement element,
-			VertexPositionNormalTextureColor[] verts,
+			BlockShaderVertex[] verts,
 			float minX, float maxX, float minY, float maxY, float minZ, float maxZ,
 			ref float facesMinX,
 			ref float facesMaxX,
@@ -475,7 +475,7 @@ namespace Alex.Graphics.Models.Blocks
 			Vector3 position,
 			Block baseBlock,
 			BlockStateModel bsModel,
-			IList<VertexPositionNormalTextureColor> verts,
+			IList<BlockShaderVertex> verts,
 			List<int> indexResult,
 			int biomeId,
 			Biome biome)
@@ -677,11 +677,11 @@ namespace Alex.Graphics.Models.Blocks
 			}
 		}
 
-		protected (VertexPositionNormalTextureColor[] vertices, int[] indexes) GetVertices(IBlockAccess world,
+		protected (BlockShaderVertex[] vertices, int[] indexes) GetVertices(IBlockAccess world,
 			Vector3 position, Block baseBlock,
 			BlockStateModel[] models)
 		{
-			using (var verts = new PooledList<VertexPositionNormalTextureColor>(ClearMode.Auto))
+			using (var verts = new PooledList<BlockShaderVertex>(ClearMode.Auto))
 			{
 				var indexResult = new List<int>(24 * models.Length);
 
@@ -712,7 +712,7 @@ namespace Alex.Graphics.Models.Blocks
 			}
 		}
 		
-		public override (VertexPositionNormalTextureColor[] vertices, int[] indexes) GetVertices(IBlockAccess blockAccess, Vector3 position, Block baseBlock)
+		public override (BlockShaderVertex[] vertices, int[] indexes) GetVertices(IBlockAccess blockAccess, Vector3 position, Block baseBlock)
 		{
 			return GetVertices(blockAccess, position, baseBlock, Models);
 		}

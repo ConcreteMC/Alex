@@ -50,7 +50,7 @@ namespace Alex.Graphics.Models.Blocks
 		}
 
 
-		public static BlockState GetBlockState(World world, Vector3 position, BlockState blockState,
+		public static BlockState GetBlockState(IBlockAccess world, Vector3 position, BlockState blockState,
 			BlockStateResource blockStateModel)
 		{
 			var blockStateCopy = blockState;
@@ -150,7 +150,7 @@ namespace Alex.Graphics.Models.Blocks
 			return false;
 		}
 
-		public static bool PassesMultiPartRule(World world, Vector3 position, MultiPartRule rule, BlockState baseBlock, out MultiPartRule passedRule)
+		public static bool PassesMultiPartRule(IBlockAccess world, Vector3 position, MultiPartRule rule, BlockState baseBlock, out MultiPartRule passedRule)
 		{
 			MultiPartRule s = rule;
 			passedRule = rule;
@@ -213,7 +213,7 @@ namespace Alex.Graphics.Models.Blocks
 			return false;*/
 		}
 
-		private static bool Passes(World world, Vector3 position, BlockState baseblockState, string rule,
+		private static bool Passes(IBlockAccess world, Vector3 position, BlockState baseblockState, string rule,
 			string value)
 		{
 			if (string.IsNullOrWhiteSpace(value)) return true;

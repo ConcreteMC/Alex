@@ -457,7 +457,7 @@ namespace Alex.Gamestates.Debug
 			_blockStates = BlockFactory.AllBlockstates.Values.ToArray();
 		}
 
-		private VertexPositionNormalTextureColor[] _vertices  = null;
+		private BlockShaderVertex[] _vertices  = null;
 		private int[]                              _indices   = null;
 		private bool                               _canRender = false;
 

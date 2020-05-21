@@ -104,12 +104,12 @@ namespace Alex.Graphics.Models.Blocks
 			return false;
 		}
 
-		public override (VertexPositionNormalTextureColor[] vertices, int[] indexes) GetVertices(IBlockAccess world, Vector3 vectorPos, Block baseBlock)
+		public override (BlockShaderVertex[] vertices, int[] indexes) GetVertices(IBlockAccess world, Vector3 vectorPos, Block baseBlock)
 		{
 			//Level = GetLevel(baseBlock.BlockState);
 			
 			var position = new BlockCoordinates(vectorPos);
-			List< VertexPositionNormalTextureColor> result = new List<VertexPositionNormalTextureColor>(36);
+			List< BlockShaderVertex> result = new List<BlockShaderVertex>(36);
 			var indexResult = new List<int>();
 
 			List<BlockFace> renderedFaces = new List<BlockFace>();
@@ -131,7 +131,7 @@ namespace Alex.Graphics.Models.Blocks
 			}
 			
 			if (renderedFaces.Count == 0)
-				return (new VertexPositionNormalTextureColor[0], new int[0]);
+				return (new BlockShaderVertex[0], new int[0]);
 			
 			int tl , tr, bl, br;
 

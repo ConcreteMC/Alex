@@ -29,6 +29,7 @@ namespace Alex.GameStates.Gui.MainMenu.Options
         private GuiSlider Antialiasing { get; set; }
         private GuiToggleButton CustomSkins { get; set; }
         private GuiToggleButton ClientSideLighting { get; set; }
+        private GuiToggleButton ChunkMeshInRam { get; set; }
         
         private Dictionary<IGuiControl, string> Descriptions { get; } = new Dictionary<IGuiControl, string>();
         public VideoOptionsState(GuiPanoramaSkyBox skyBox) : base(skyBox)
@@ -76,7 +77,7 @@ namespace Alex.GameStates.Gui.MainMenu.Options
 
             AddGuiRow(
                 ClientSideLighting = CreateToggle(
-                    "Client Side Lighting: {0}", options => options.VideoOptions.ClientSideLighting));
+                    "Client Side Lighting: {0}", options => options.VideoOptions.ClientSideLighting), ChunkMeshInRam = CreateToggle("Meshes in RAM: {0}", options => options.MiscelaneousOptions.MeshInRam));
             
             Description = new GuiTextElement()
             {
@@ -113,6 +114,8 @@ namespace Alex.GameStates.Gui.MainMenu.Options
                 $"{TextColor.Bold}Custom entity models:{TextColor.Reset}\nEnabled: Shows custom entity models. May impact performance heavily!\nDisabled: Do not show custom models, may improve performance.");
             
             Descriptions.Add(ClientSideLighting, $"{TextColor.Bold}Client Side Lighting:{TextColor.Reset}\nEnabled: Calculate lighting on the client.\nDisabled: May improve chunk loading performance");
+            
+            Descriptions.Add(ChunkMeshInRam, $"{TextColor.Bold}Meshes in RAM:{TextColor.Reset}\nEnabled: May significantly improve chunk processing performance (High memory usage)\nDisabled: Do not keep chunks meshes in memory (Lower memory usage)");
             
             base.OnInit(renderer);
         }

@@ -122,6 +122,9 @@ namespace Alex.Worlds
 	       // ActionQueue = new PrioritizedActionQueue(_threadPool, Options.VideoOptions.ChunkThreads);
 
 	       Options.VideoOptions.ClientSideLighting.Bind(ClientSideLightingChanged);
+	       
+	     
+	       //_blockAccessPool = new ObjectPool<ChunkBuilderBlockAccess>(36, () => new ChunkBuilderBlockAccess(World));
         }
 
         private void ClientSideLightingChanged(bool oldvalue, bool newvalue)
@@ -858,6 +861,7 @@ namespace Alex.Worlds
 	    public TimeSpan ChunkUpdateTime { get; set; } = TimeSpan.Zero;
 	    public long TotalChunkUpdates { get; set; } = 0;
 
+	    private ObjectPool<ChunkBuilderBlockAccess> _blockAccessPool;
 	    private void UpdateChunk(ChunkCoordinates coordinates, ChunkColumn c)
 	    {
 		    var chunk = c as ChunkColumn;
@@ -869,264 +873,292 @@ namespace Alex.Worlds
 			    return; //Another thread is already updating this chunk, return.
 		    }
 
-		    var scheduleType = chunk.Scheduled;
-
-		    ChunkData data  = null;
-		    bool      force = !_chunkData.TryGetValue(coordinates, out data);
-		    
-		    Stopwatch sw = Stopwatch.StartNew();
-
-		    //  if ((chunk.Scheduled & ScheduleType.Lighting) == ScheduleType.Lighting)
-		    if (Options.VideoOptions.ClientSideLighting)
+		   // using (ChunkBuilderBlockAccess blockAccess = new ChunkBuilderBlockAccess(World))
+		   var blockAccess = World;
 		    {
-			    if (chunk.SkyLightDirty || chunk.IsNew || force)
+			    var scheduleType = chunk.Scheduled;
+
+			    ChunkData data  = null;
+			    bool      force = !_chunkData.TryGetValue(coordinates, out data);
+
+			    Stopwatch sw = Stopwatch.StartNew();
+
+			    //  if ((chunk.Scheduled & ScheduleType.Lighting) == ScheduleType.Lighting)
+			    if (Options.VideoOptions.ClientSideLighting)
 			    {
-				    new SkyLightCalculations().RecalcSkyLight(chunk, new SkyLightBlockAccess(this));
-
-				    chunk.SkyLightDirty = false;
-			    }
-
-			    //if (chunk.BlockLightDirty || chunk.IsNew)
-			    {
-				    BlockLightCalculations.Process(coordinates);
-			    }
-		    }
-
-		    int meshed = 0;
-
-		    try
-		    {
-			    //chunk.UpdateChunk(Graphics, World);
-
-			    var currentChunkY = Math.Min(
-				    ((int) Math.Round(_cameraPosition.Y)) >> 4, (chunk.GetHeighest() >> 4) - 2);
-
-			    if (currentChunkY < 0) currentChunkY = 0;
-
-			    List<ChunkMesh> meshes = new List<ChunkMesh>();
-
-			    foreach (var s in chunk.Sections.Where(x => x != null && !x.IsEmpty())
-				   .OrderByDescending(sec => MathF.Abs(currentChunkY - sec.GetYLocation())))
-			    {
-				    ChunkSection section = (ChunkSection) s;
-
-				    var i = section.GetYLocation();
-
-				    bool shouldRebuildMesh = section.ScheduledUpdatesCount > 0 || section.ScheduledSkyUpdatesCount > 0
-				                                                               || section.ScheduledBlockUpdatesCount > 0;
-
-				    if (force || shouldRebuildMesh || (scheduleType & ScheduleType.Border) == ScheduleType.Border)
+				    if (chunk.SkyLightDirty || chunk.IsNew || force)
 				    {
-					    var oldMesh = section.MeshCache;
+					    new SkyLightCalculations().RecalcSkyLight(chunk, new SkyLightBlockAccess(this));
 
-					    var sectionMesh = GenerateSectionMesh(
-						    World, new Vector3(chunk.X << 4, 0, chunk.Z << 4), ref section, i);
-
-					    meshes.Add(sectionMesh);
-
-					    section.MeshCache = sectionMesh;
-					    section.IsDirty = false;
-
-					    meshed++;
-
-					    oldMesh?.Dispose();
+					    chunk.SkyLightDirty = false;
 				    }
-				    else
+
+				    //if (chunk.BlockLightDirty || chunk.IsNew)
 				    {
-					    if (section.MeshCache != null)
-						    meshes.Add(section.MeshCache);
+					    BlockLightCalculations.Process(coordinates);
 				    }
 			    }
 
-			    if (meshed > 0) //We did not re-mesh ANY chunks. Not worth re-building.
-			    {
+			    int meshed = 0;
 
-				    using (PooledDictionary<RenderStage, List<int>> newStageIndexes =
-					    new PooledDictionary<RenderStage, List<int>>(ClearMode.Auto))
+			    try
+			    {
+				    //chunk.UpdateChunk(Graphics, World);
+
+				    var currentChunkY = Math.Min(
+					    ((int) Math.Round(_cameraPosition.Y)) >> 4, (chunk.GetHeighest() >> 4) - 2);
+
+				    if (currentChunkY < 0) currentChunkY = 0;
+
+				    List<ChunkMesh> meshes = new List<ChunkMesh>();
+
+				    foreach (var s in chunk.Sections.Where(x => x != null && !x.IsEmpty())
+					   .OrderByDescending(sec => MathF.Abs(currentChunkY - sec.GetYLocation())))
 				    {
-					    using (PooledList<VertexPositionNormalTextureColor> vertices =
-						    new PooledList<VertexPositionNormalTextureColor>(ClearMode.Auto))
+					    ChunkSection section = (ChunkSection) s;
+
+					    var i = section.GetYLocation();
+
+					    bool shouldRebuildMesh = section.ScheduledUpdatesCount > 0
+					                             || section.ScheduledSkyUpdatesCount > 0
+					                             || section.ScheduledBlockUpdatesCount > 0;
+
+					    if (force || section.MeshCache == null || shouldRebuildMesh || (scheduleType & ScheduleType.Border) == ScheduleType.Border)
 					    {
+						    var oldMesh = section.MeshCache;
 
-						    foreach (var mesh in meshes)
+						    var sectionMesh = GenerateSectionMesh(
+							    blockAccess, new Vector3(chunk.X << 4, 0, chunk.Z << 4), ref section, i);
+
+						    meshes.Add(sectionMesh);
+
+						    if (Options.MiscelaneousOptions.MeshInRam)
 						    {
-							    var startVerticeIndex = vertices.Count;
-							    vertices.AddRange(mesh.Vertices);
-
-							    foreach (var stage in mesh.Indexes)
-							    {
-								    if (!newStageIndexes.ContainsKey(stage.Key))
-								    {
-									    newStageIndexes.Add(stage.Key, new List<int>());
-								    }
-
-								    newStageIndexes[stage.Key].AddRange(stage.Value.Select(a => startVerticeIndex + a));
-							    }
+							    section.MeshCache = sectionMesh;
 						    }
 
-						    if (vertices.Count > 0)
-						    {
-							    var                                       vertexArray = vertices.ToArray();
-							    Dictionary<RenderStage, ChunkRenderStage> oldStages   = null;
+						    section.IsDirty = false;
 
-							    if (data == null)
+						    meshed++;
+
+						    oldMesh?.Dispose();
+					    }
+					    else
+					    {
+						    if (section.MeshCache != null)
+							    meshes.Add(section.MeshCache);
+					    }
+				    }
+
+				    if (meshed > 0) //We did not re-mesh ANY chunks. Not worth re-building.
+				    {
+
+					    IDictionary<RenderStage, List<int>> newStageIndexes = Options.MiscelaneousOptions.ObjectPools ?
+						    (IDictionary<RenderStage, List<int>>) new PooledDictionary<RenderStage, List<int>>(
+							    ClearMode.Auto) : new Dictionary<RenderStage, List<int>>();
+
+					    IList<BlockShaderVertex> vertices = Options.MiscelaneousOptions.ObjectPools ?
+						    (IList<BlockShaderVertex>) new PooledList<BlockShaderVertex>(ClearMode.Auto) : new List<BlockShaderVertex>();
+					    
+					    try
+					    {
+						    foreach (var mesh in meshes)
 							    {
-								    data = new ChunkData()
+								    var startVerticeIndex = vertices.Count;
+
+								    foreach (var vertice in mesh.Vertices)
 								    {
-									    Buffer = GpuResourceManager.GetBuffer(
-										    this, Graphics, VertexPositionNormalTextureColor.VertexDeclaration,
-										    vertexArray.Length, BufferUsage.WriteOnly),
-									    RenderStages = new Dictionary<RenderStage, ChunkRenderStage>()
-								    };
-							    }
-							    else
-							    {
-								    oldStages = data.RenderStages;
-							    }
-
-							    var newStages = new Dictionary<RenderStage, ChunkRenderStage>();
-
-							    PooledVertexBuffer oldBuffer = data.Buffer;
-
-							    PooledVertexBuffer newVertexBuffer = null;
-
-							    if (vertexArray.Length >= data.Buffer.VertexCount)
-							    {
-								    PooledVertexBuffer newBuffer = GpuResourceManager.GetBuffer(
-									    this, Graphics, VertexPositionNormalTextureColor.VertexDeclaration,
-									    vertexArray.Length, BufferUsage.WriteOnly);
-
-								    newBuffer.SetData(vertexArray);
-								    newVertexBuffer = newBuffer;
-							    }
-							    else
-							    {
-								    data.Buffer.SetData(vertexArray);
-							    }
-
-							    foreach (var stage in newStageIndexes)
-							    {
-								    ChunkRenderStage  renderStage;
-								    PooledIndexBuffer newIndexBuffer;
-
-								    if (oldStages == null || !oldStages.TryGetValue(stage.Key, out renderStage))
-								    {
-									    renderStage = new ChunkRenderStage(data);
+									    vertices.Add(vertice);
 								    }
 
-								    if (renderStage.IndexBuffer == null
-								        || stage.Value.Count > renderStage.IndexBuffer.IndexCount)
+								    foreach (var stage in mesh.Indexes)
 								    {
-									    newIndexBuffer = GpuResourceManager.GetIndexBuffer(
-										    this, Graphics, IndexElementSize.ThirtyTwoBits, stage.Value.Count,
-										    BufferUsage.WriteOnly);
+									    if (!newStageIndexes.ContainsKey(stage.Key))
+									    {
+										    newStageIndexes.Add(stage.Key, new List<int>());
+									    }
+
+									    newStageIndexes[stage.Key]
+										   .AddRange(stage.Value.Select(a => startVerticeIndex + a));
+								    }
+							    }
+
+							    if (vertices.Count > 0)
+							    {
+								    var                                       vertexArray = vertices.ToArray();
+								    Dictionary<RenderStage, ChunkRenderStage> oldStages   = null;
+
+								    if (data == null)
+								    {
+									    data = new ChunkData()
+									    {
+										    Buffer = GpuResourceManager.GetBuffer(
+											    this, Graphics, BlockShaderVertex.VertexDeclaration,
+											    vertexArray.Length, BufferUsage.WriteOnly),
+										    RenderStages = new Dictionary<RenderStage, ChunkRenderStage>()
+									    };
 								    }
 								    else
 								    {
-									    newIndexBuffer = renderStage.IndexBuffer;
+									    oldStages = data.RenderStages;
 								    }
 
-								    newIndexBuffer.SetData(stage.Value.ToArray());
+								    var newStages = new Dictionary<RenderStage, ChunkRenderStage>();
 
-								    renderStage.IndexBuffer = newIndexBuffer;
+								    PooledVertexBuffer oldBuffer = data.Buffer;
 
-								    newStages.Add(stage.Key, renderStage);
+								    PooledVertexBuffer newVertexBuffer = null;
 
-							    }
-
-							    data.RenderStages = newStages;
-
-							    if (newVertexBuffer != null)
-							    {
-								    data.Buffer = newVertexBuffer;
-								    oldBuffer?.MarkForDisposal();
-							    }
-
-
-							    RenderStage[] renderStages = RenderStages;
-
-							    foreach (var stage in renderStages)
-							    {
-								    if (newStages.TryGetValue(stage, out var renderStage))
+								    if (vertexArray.Length >= data.Buffer.VertexCount)
 								    {
-									    if (oldStages != null && oldStages.TryGetValue(stage, out var oldStage))
+									    PooledVertexBuffer newBuffer = GpuResourceManager.GetBuffer(
+										    this, Graphics, BlockShaderVertex.VertexDeclaration, vertexArray.Length,
+										    BufferUsage.WriteOnly);
+
+									    newBuffer.SetData(vertexArray);
+									    newVertexBuffer = newBuffer;
+								    }
+								    else
+								    {
+									    data.Buffer.SetData(vertexArray);
+								    }
+
+								    foreach (var stage in newStageIndexes)
+								    {
+									    ChunkRenderStage  renderStage;
+									    PooledIndexBuffer newIndexBuffer;
+
+									    if (oldStages == null || !oldStages.TryGetValue(stage.Key, out renderStage))
 									    {
-										    if (oldStage != renderStage)
-											    oldStage.Dispose();
+										    renderStage = new ChunkRenderStage(data);
+									    }
+
+									    if (renderStage.IndexBuffer == null
+									        || stage.Value.Count > renderStage.IndexBuffer.IndexCount)
+									    {
+										    newIndexBuffer = GpuResourceManager.GetIndexBuffer(
+											    this, Graphics, IndexElementSize.ThirtyTwoBits, stage.Value.Count,
+											    BufferUsage.WriteOnly);
+									    }
+									    else
+									    {
+										    newIndexBuffer = renderStage.IndexBuffer;
+									    }
+
+									    newIndexBuffer.SetData(stage.Value.ToArray());
+
+									    renderStage.IndexBuffer = newIndexBuffer;
+
+									    newStages.Add(stage.Key, renderStage);
+
+								    }
+
+								    data.RenderStages = newStages;
+
+								    if (newVertexBuffer != null)
+								    {
+									    data.Buffer = newVertexBuffer;
+									    oldBuffer?.MarkForDisposal();
+								    }
+
+
+								    RenderStage[] renderStages = RenderStages;
+
+								    foreach (var stage in renderStages)
+								    {
+									    if (newStages.TryGetValue(stage, out var renderStage))
+									    {
+										    if (oldStages != null && oldStages.TryGetValue(stage, out var oldStage))
+										    {
+											    if (oldStage != renderStage)
+												    oldStage.Dispose();
+										    }
 									    }
 								    }
-							    }
 
-						    }
-						    else
-						    {
-							    if (data != null)
-							    {
-								    data.Dispose();
-								    data = null;
 							    }
+							    else
+							    {
+								    if (data != null)
+								    {
+									    data.Dispose();
+									    data = null;
+								    }
+							    }
+						    
+					    }
+					    finally
+					    {
+						    if (newStageIndexes is IDisposable disposable)
+						    {
+							    disposable.Dispose();
+						    }
+
+						    if (vertices is IDisposable disposableV)
+						    {
+							    disposableV.Dispose();
 						    }
 					    }
 				    }
+
+				    chunk.IsDirty = chunk.HasDirtySubChunks; //false;
+				    chunk.Scheduled = ScheduleType.Unscheduled;
+				    chunk.HighPriority = false;
+				    chunk.IsNew = false;
+
+				    if (meshed > 0)
+				    {
+					    if (data != null)
+					    {
+						    data.Coordinates = coordinates;
+					    }
+
+					    _chunkData.AddOrUpdate(coordinates, data, (chunkCoordinates, chunkData) => data);
+				    }
+
+				    return;
 			    }
-
-			    chunk.IsDirty = chunk.HasDirtySubChunks; //false;
-			    chunk.Scheduled = ScheduleType.Unscheduled;
-			    chunk.HighPriority = false;
-			    chunk.IsNew = false;
-
-			    if (meshed > 0)
+			    catch (Exception ex)
 			    {
-				    if (data != null)
-				    {
-					    data.Coordinates = coordinates;
-				    }
-
-				    _chunkData.AddOrUpdate(coordinates, data, (chunkCoordinates, chunkData) => data);
+				    Log.Error(ex, $"Exception while updating chunk: {ex.ToString()}");
 			    }
-
-			    return;
-		    }
-		    catch (Exception ex)
-		    {
-			    Log.Error(ex, $"Exception while updating chunk: {ex.ToString()}");
-		    }
-		    finally
-		    {
-			    //Enqueued.Remove(new ChunkCoordinates(chunk.X, chunk.Z));
-			    Interlocked.Decrement(ref _chunkUpdates);
-			    Monitor.Exit(chunk.UpdateLock);
-
-			    sw.Stop();
-
-			    if (force) //Chunk was new.
+			    finally
 			    {
-				    ChunkUpdateTime += sw.Elapsed;
-				    TotalChunkUpdates++;
+				    //Enqueued.Remove(new ChunkCoordinates(chunk.X, chunk.Z));
+				    Interlocked.Decrement(ref _chunkUpdates);
+				    Monitor.Exit(chunk.UpdateLock);
 
-				    if (sw.Elapsed > MaxUpdateTime)
+				    sw.Stop();
+
+				    if (force) //Chunk was new.
 				    {
-					    MaxUpdateTime = sw.Elapsed;
+					    ChunkUpdateTime += sw.Elapsed;
+					    TotalChunkUpdates++;
+
+					    if (sw.Elapsed > MaxUpdateTime)
+					    {
+						    MaxUpdateTime = sw.Elapsed;
+					    }
+					    else if (sw.Elapsed < MinUpdateTIme)
+					    {
+						    MinUpdateTIme = sw.Elapsed;
+					    }
 				    }
-				    else if (sw.Elapsed < MinUpdateTIme)
-				    {
-					    MinUpdateTIme = sw.Elapsed;
-				    }
+
+				    //   Log.Info(MiniProfiler.Current.RenderPlainText());
 			    }
-
-			    //   Log.Info(MiniProfiler.Current.RenderPlainText());
 		    }
 	    }
 
 	    public static bool DoMultiPartCalculations { get; set; } = true;
 
-        private ChunkMesh GenerateSectionMesh(World world,
+        private ChunkMesh GenerateSectionMesh(IBlockAccess world,
 	        Vector3 chunkPosition,
 	        ref ChunkSection section,
 	        int yIndex)
         {
-	        using (PooledList<VertexPositionNormalTextureColor> vertices =
-		        new PooledList<VertexPositionNormalTextureColor>(ClearMode.Auto))
+	        using (PooledList<BlockShaderVertex> vertices =
+		        new PooledList<BlockShaderVertex>(ClearMode.Auto))
 	        {
 		        using (PooledDictionary<RenderStage, List<int>> stages = new PooledDictionary<RenderStage, List<int>>(RenderStages.Length))
 		        {
@@ -1194,11 +1226,6 @@ namespace Alex.Worlds
 							    //    bool isLightSource = section.GetBlocklight(x,y,z) > 0;
 							        var data = model.GetVertices(world, blockPosition, blockState.Block);
 
-							        if (blockState.Block is Water)
-							        {
-								        Debugger.Break();
-							        }
-							        
 							        if (!(data.vertices == null || data.indexes == null || data.vertices.Length == 0
 							              || data.indexes.Length == 0))
 							        {

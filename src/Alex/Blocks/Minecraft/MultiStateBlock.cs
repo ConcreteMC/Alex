@@ -24,10 +24,5 @@ namespace Alex.Blocks.Minecraft
 			}
 			base.BlockUpdate(world, position, updatedBlock);
 		}
-
-		public override BlockState BlockPlaced(World world, BlockState state, BlockCoordinates position)
-		{
-			return base.BlockPlaced(world, state, position);
-		}
 	}
 }

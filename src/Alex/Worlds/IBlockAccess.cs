@@ -17,8 +17,8 @@ namespace Alex.Worlds
         byte GetBlockLight(BlockCoordinates coordinates);
         
         int GetHeight(BlockCoordinates coordinates);
-        Block GetBlock(BlockCoordinates coord, ChunkColumn tryChunk = null);
-        void SetBlock(Block block, bool broadcast = true, bool applyPhysics = true, bool calculateLight = true, ChunkColumn possibleChunk = null);
+        //Block GetBlock(BlockCoordinates coord, ChunkColumn tryChunk = null);
+       // void SetBlock(Block block, bool broadcast = true, bool applyPhysics = true, bool calculateLight = true, ChunkColumn possibleChunk = null);
         IEnumerable<ChunkSection.BlockEntry> GetBlockStates(int positionX, in int positionY, int positionZ);
         BlockState GetBlockState(BlockCoordinates position);
     }

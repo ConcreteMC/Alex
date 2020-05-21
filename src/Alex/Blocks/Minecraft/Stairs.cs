@@ -141,10 +141,10 @@ namespace Alex.Blocks.Minecraft
             return string.Empty;
         }
         
-        private bool UpdateState(World world, BlockState state, BlockCoordinates position, BlockCoordinates updatedBlock, out BlockState result)
+        private bool UpdateState(IBlockAccess world, BlockState state, BlockCoordinates position, BlockCoordinates updatedBlock, out BlockState result)
         {
             result = state;
-            var block = world.GetBlock(updatedBlock);
+            var block = world.GetBlockState(updatedBlock).Block;
             if (!(block is Stairs)) {return false;}
 
             var myHalf = GetHalf(state);
@@ -249,7 +249,7 @@ namespace Alex.Blocks.Minecraft
             }
         }
 
-        public override BlockState BlockPlaced(World world, BlockState state, BlockCoordinates position)
+        public override BlockState BlockPlaced(IBlockAccess world, BlockState state, BlockCoordinates position)
         {
             if (UpdateState(world, state, position, position + BlockCoordinates.Forwards, out state)
                 || UpdateState(world, state, position, position + BlockCoordinates.Backwards, out state)

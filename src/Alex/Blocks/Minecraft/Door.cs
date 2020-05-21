@@ -42,7 +42,7 @@ namespace Alex.Blocks.Minecraft
 			IsFullCube = true;
 		}
 
-		private BlockState Update(World world, BlockState blockState, BlockCoordinates coordinates, BlockCoordinates updated)
+		private BlockState Update(IBlockAccess world, BlockState blockState, BlockCoordinates coordinates, BlockCoordinates updated)
 		{
 			var updatedBlock = world.GetBlockState(updated);
 			if (!(updatedBlock.Block is Door))
@@ -78,7 +78,7 @@ namespace Alex.Blocks.Minecraft
 			return blockState;
 		}
 
-		public override BlockState BlockPlaced(World world, BlockState state, BlockCoordinates position)
+		public override BlockState BlockPlaced(IBlockAccess world, BlockState state, BlockCoordinates position)
 		{
 			if (state.TryGetValue("half", out string half) && half.Equals(
 				"upper", StringComparison.InvariantCultureIgnoreCase))

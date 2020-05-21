@@ -164,7 +164,7 @@ namespace Alex.Blocks.Minecraft
 			return BlockState.Model.GetPartBoundingBox(blockPosition, entityBox);
 		}
 		
-		public virtual BlockState BlockPlaced(World world, BlockState state, BlockCoordinates position)
+		public virtual BlockState BlockPlaced(IBlockAccess world, BlockState state, BlockCoordinates position)
 		{
 			return state;
 			/*if (BlockState is BlockState s)
