@@ -112,6 +112,8 @@ namespace Alex.API.Gui
 
         public void ShowDialog(GuiDialogBase dialog)
         {
+            ActiveDialog?.OnClose();
+            
             if(ActiveDialog != null) RemoveScreen(ActiveDialog);
             ActiveDialog = dialog;
             AddScreen(ActiveDialog);
@@ -123,6 +125,8 @@ namespace Alex.API.Gui
         {
             if (ActiveDialog == dialog)
             {
+                dialog?.OnClose();
+                
                 Game.IsMouseVisible = false;
                 Mouse.SetPosition(Game.Window.ClientBounds.Width / 2, Game.Window.ClientBounds.Height / 2);
                 
@@ -138,6 +142,7 @@ namespace Alex.API.Gui
             {
                 if (screen is TGuiDialog dialog)
                 {
+                    dialog?.OnClose();
                     Screens.Remove(dialog);
                     if(ActiveDialog == dialog) ActiveDialog = Screens.ToArray().LastOrDefault(e => e is TGuiDialog) as GuiDialogBase;
                 }

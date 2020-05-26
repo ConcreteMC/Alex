@@ -36,6 +36,7 @@ using Alex.Networking.Java.Packets;
 using Alex.Plugins;
 using Alex.Services;
 using Alex.Utils;
+using Alex.Utils.Inventories;
 using Alex.Worlds;
 using Alex.Worlds.Bedrock;
 using Alex.Worlds.Java;
@@ -535,7 +536,7 @@ namespace Alex
 					//	Count = rnd.Next(1, 64)
 					//};
 				}
-				GuiManager.ShowDialog(new GuiPlayerInventoryDialog(null, inventory));
+			//	GuiManager.ShowDialog(new GuiChestDialog(new InventoryBase(90)));
 			}
 
 			GameStateManager.RemoveState("splash");

@@ -17,6 +17,7 @@ using Alex.API.Entities;
 using Alex.API.Events;
 using Alex.API.Events.World;
 using Alex.API.Graphics;
+using Alex.API.Gui.Dialogs;
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.API.World;
@@ -26,11 +27,13 @@ using Alex.Entities;
 using Alex.GameStates;
 using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Entity.Geometry;
+using Alex.Gui.Dialogs.Containers;
 using Alex.Items;
 using Alex.Networking.Bedrock;
 using Alex.ResourcePackLib.Json.Converters;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
+using Alex.Utils.Inventories;
 using fNbt;
 using Jose;
 using Microsoft.Extensions.DependencyInjection;
@@ -1184,25 +1187,47 @@ namespace Alex.Worlds.Bedrock
 			Client.ChangeDimensionResetEvent.Set();
 		}
 
+		private GuiDialogBase _activeDialog;
 		public void HandleMcpeContainerOpen(McpeContainerOpen message)
 		{
-			UnhandledPackage(message);
+			try
+			{
+				var windowId = message.windowId;
+				var dialog = Client.World.ContainerManager.Show(Client.World.Player.Inventory, message.windowId, (ContainerType) message.type);
+				dialog.OnContainerClose += (sender, args) =>
+				{
+					var packet = McpeContainerClose.CreateObject();
+					packet.windowId = windowId;
+					Client.SendPacket(packet);
+				};
+			}
+			catch (Exception)
+			{
+				Log.Warn($"Got unsupported container type: {message.type}");
+			}
 		}
 
 		public void HandleMcpeContainerClose(McpeContainerClose message)
 		{
-			UnhandledPackage(message);
+			if (_activeDialog != null)
+			{
+				AlexInstance.GuiManager.HideDialog(_activeDialog);
+			}
 		}
 
         public void HandleMcpeInventoryContent(McpeInventoryContent message)
 		{
-			Inventory inventory = null;
+			InventoryBase inventory = null;
 			if (message.inventoryId == 0x00)
 			{
 				inventory = Client.World.Player.Inventory;
 			}
 
-			if (inventory == null || message.input == null) return;
+			if (inventory == null || message.input == null)
+			{
+				Log.Warn($"Unknown inventory ID: {message.inventoryId}");
+				return;
+			}
 
 			for (var index = 0; index < message.input.Count; index++)
 			{
@@ -1283,14 +1308,18 @@ namespace Alex.Worlds.Bedrock
         
 		public void HandleMcpeInventorySlot(McpeInventorySlot message)
 		{
-			Inventory inventory = null;
+			InventoryBase inventory = null;
 
 			if (message.inventoryId == 0x00)
 			{
 				inventory = Client.World.Player.Inventory;
 			}
 
-			if (inventory == null || message.item == null) return;
+			if (inventory == null || message.item == null)
+			{
+				Log.Warn($"Unknown inventory ID: {message.inventoryId}");
+				return;
+			}
 			
 			var index = (int)message.slot;
 			var result = ToAlexItem(message.item).Clone();

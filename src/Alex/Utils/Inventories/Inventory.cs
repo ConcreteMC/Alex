@@ -127,7 +127,7 @@ namespace Alex.Utils
 		    var oldValue = _cursor;
 		    Cursor = item;
 		    
-		    CursorChanged?.Invoke(this, new SlotChangedEventArgs(0, item, oldValue, isServerTransaction));
+		    CursorChanged?.Invoke(this, new SlotChangedEventArgs(InventoryId, 0, item, oldValue, isServerTransaction));
 	    }
 
 	    public int[] PocketHotbar = new int[9]
@@ -166,6 +166,7 @@ namespace Alex.Utils
 
 	public class SlotChangedEventArgs : EventArgs
 	{
+		public int InventoryId;
 		public int Index;
 		public Item Value;
 
@@ -173,8 +174,9 @@ namespace Alex.Utils
 		
 		public bool IsServerTransaction { get; set; }
 		
-		public SlotChangedEventArgs(int index, Item value, Item oldItem, bool isServerTransaction)
+		public SlotChangedEventArgs(int inventoryId, int index, Item value, Item oldItem, bool isServerTransaction)
 		{
+			InventoryId = inventoryId;
 			Index = index;
 			Value = value;
 			OldItem = oldItem;

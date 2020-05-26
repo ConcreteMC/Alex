@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Alex.API.Graphics.Typography;
 using Alex.API.Gui.Dialogs;
 using Alex.API.Gui.Elements;
 using Alex.API.Utils;
 using Alex.Gui.Elements.Inventory;
 using Alex.Items;
+using Alex.Utils;
+using Alex.Utils.Inventories;
 using Microsoft.Xna.Framework;
 using RocketUI;
 using GuiCursorEventArgs = Alex.API.Gui.Events.GuiCursorEventArgs;
@@ -14,11 +17,16 @@ namespace Alex.Gui.Dialogs.Containers
 {
 	public class GuiInventoryBase : GuiDialogBase
 	{
+		public EventHandler OnContainerClose;
+		
 		private GuiTextElement TextOverlay { get; }
 
 		private GuiItem CursorItemRenderer { get; }
-		public GuiInventoryBase()
+		public InventoryBase Inventory { get; }
+		public GuiInventoryBase(InventoryBase inventory)
 		{
+			Inventory = inventory;
+			
 			AddChild(
 				TextOverlay = new GuiTextElement(true)
 				{
@@ -41,6 +49,20 @@ namespace Alex.Gui.Dialogs.Containers
 				Width = 18,
 				Anchor = Alignment.TopLeft
 			});
+			
+			Inventory.SlotChanged += InventoryOnSlotChanged;
+		}
+
+		public void UpdateSlot(int inventoryId, int slotId, Item item)
+		{
+			var containerItem = ContentContainer.ChildElements
+			   .Where(x => x is InventoryContainerItem).Cast<InventoryContainerItem>()
+			   .FirstOrDefault(x => x.InventoryId == inventoryId && x.InventoryIndex == slotId);
+
+			if (containerItem != null)
+			{
+				containerItem.Item = item;
+			}
 		}
 
 		public InventoryContainerItem[] AddSlots(int x,
@@ -287,6 +309,20 @@ namespace Alex.Gui.Dialogs.Containers
 			
 			
 			base.OnUpdate(gameTime);
+		}
+
+		private void InventoryOnSlotChanged(object sender, SlotChangedEventArgs e)
+		{
+			UpdateSlot(e.InventoryId, e.Index, e.Value);
+		}
+
+		/// <inheritdoc />
+		public override void OnClose()
+		{
+			OnContainerClose?.Invoke(this, EventArgs.Empty);
+			Inventory.SlotChanged -= InventoryOnSlotChanged;
+			
+			base.OnClose();
 		}
 
 		//protected virtual void OnItemSelected(InventoryContainerItem slot, Item item) { }

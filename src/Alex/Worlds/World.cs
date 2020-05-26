@@ -61,6 +61,7 @@ namespace Alex.Worlds
 		
 		private IEventDispatcher EventDispatcher { get; }
 		public BedrockFormManager FormManager { get; }
+		public ContainerManager ContainerManager { get; }
 		private SkyBox SkyRenderer { get; }
 		private bool UseDepthMap { get; set; }
 		//public SkyLightCalculations SkyLightCalculations { get; }
@@ -100,6 +101,7 @@ namespace Alex.Worlds
 			PlayerList = new PlayerList();
 
 			ChunkManager.Start();
+		//	var alex = serviceProvider.GetRequiredService<Alex>();
 			var settings = serviceProvider.GetRequiredService<IOptionsProvider>();
 			var profileService = serviceProvider.GetRequiredService<IPlayerProfileService>();
 			var resources = serviceProvider.GetRequiredService<ResourceManager>();
@@ -149,9 +151,11 @@ namespace Alex.Worlds
 			}*/
 			
 			EventDispatcher.RegisterEvents(this);
-			
-			FormManager = new BedrockFormManager(networkProvider, serviceProvider.GetRequiredService<GuiManager>(), serviceProvider.GetService<Alex>().InputManager);
-			
+
+			var guiManager = serviceProvider.GetRequiredService<GuiManager>();
+			FormManager = new BedrockFormManager(networkProvider, guiManager, serviceProvider.GetService<Alex>().InputManager);
+			ContainerManager = new ContainerManager(guiManager);
+				
 			SkyRenderer = new SkyBox(serviceProvider, graphics, this);
 			//SkyLightCalculations = new SkyLightCalculations();
 

@@ -10,6 +10,7 @@ using Alex.API.Gui.Graphics;
 using Alex.API.Localization;
 using Alex.API.Utils;
 using Alex.ResourcePackLib;
+using Gtk;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -46,6 +47,7 @@ namespace Alex.Gui
 		private Texture2D _icons;
 		private Texture2D _scrollbar;
 		private Texture2D _inventory;
+		private Texture2D _chestInventory;
 
 		#region SpriteSheet Definitions
 
@@ -258,6 +260,13 @@ namespace Alex.Gui
 					_inventory = TextureUtils.BitmapToTexture2D(_graphicsDevice, bmp);
 					LoadTextureFromSpriteSheet(GuiTextures.InventoryPlayerBackground, _inventory, new Rectangle(0, 0, 176, 166), IconSize);
 				}
+
+				if (resourcePack.TryGetBitmap("gui/container/generic_54", out var genericInvBmp))
+				{
+					_chestInventory = TextureUtils.BitmapToTexture2D(_graphicsDevice, genericInvBmp);
+					LoadTextureFromSpriteSheet(GuiTextures.InventoryChestBackground, _chestInventory, new Rectangle(0, 0, 175, 221), IconSize);
+				}
+				//LoadTextureFromSpriteSheet(GuiTextures.InventoryChestBackground, _inventory, new Rectangle(0, 0, 175, 221), IconSize);
 			}
 
 			progressReceiver?.UpdateProgress(75, null, "gui/title/background");

@@ -18,8 +18,9 @@ namespace Alex.API.Gui.Dialogs
                 Anchor = Alignment.MiddleCenter
             });
         }
-
-
-
+        public virtual void OnClose()
+        {
+            
+        }
     }
 }

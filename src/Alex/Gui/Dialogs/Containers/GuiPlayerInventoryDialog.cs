@@ -25,10 +25,8 @@ namespace Alex.Gui.Dialogs.Containers
         private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
         
         protected Player Player { get; }
-        protected Inventory Inventory { get; }
 
 
-        private InventoryContainerItem[] _guiHotBarInventoryItems;
         private GuiEntityModelView _playerEntityModelView;
 
         private GuiAutoUpdatingTextElement _debug;
@@ -36,16 +34,11 @@ namespace Alex.Gui.Dialogs.Containers
         private const int ItemSize = 16;
         
         private InventoryContainerItem CraftingOutput { get; }
-        public GuiPlayerInventoryDialog(Player player, Inventory inventory)
+        public GuiPlayerInventoryDialog(Player player, Inventory inventory) : base(inventory)
         {
             Player = player;
-            Inventory = inventory;
 
             // Subscribe to events
-
-            _guiHotBarInventoryItems = new InventoryContainerItem[inventory?.SlotCount ?? 0];
-
-            if(_guiHotBarInventoryItems.Length != 46) throw new ArgumentOutOfRangeException(nameof(inventory), inventory?.SlotCount ?? 0, "Expected player inventory containing 46 slots.");
 
             ContentContainer.Background = GuiTextures.InventoryPlayerBackground;
             ContentContainer.BackgroundOverlay = null;
@@ -102,20 +95,20 @@ namespace Alex.Gui.Dialogs.Containers
                 switch (slot.InventoryIndex)
                 {
                     case 0:
-                        item = Inventory.Helmet;
-                        inventoryIndex = Inventory.HelmetSlot;
+                        item = inventory.Helmet;
+                        inventoryIndex = inventory.HelmetSlot;
                         break;
                     case 1:
-                        item = Inventory.Chestplate;
-                        inventoryIndex = Inventory.ChestSlot;
+                        item = inventory.Chestplate;
+                        inventoryIndex = inventory.ChestSlot;
                         break;
                     case 2:
-                        item = Inventory.Leggings;
-                        inventoryIndex = Inventory.LeggingsSlot;
+                        item = inventory.Leggings;
+                        inventoryIndex = inventory.LeggingsSlot;
                         break;
                     case 3:
-                        item = Inventory.Boots;
-                        inventoryIndex = Inventory.BootsSlot;
+                        item = inventory.Boots;
+                        inventoryIndex = inventory.BootsSlot;
                         break;
                 }
                 
@@ -168,13 +161,13 @@ namespace Alex.Gui.Dialogs.Containers
 
                 _playerEntityModelView.SetEntityRotation(-yaw, pitch, -headYaw);
 
-                if (Inventory != null)
+                if (Inventory != null && Inventory is Inventory inv)
                 {
                     _playerEntityModelView.Entity.ShowItemInHand = true;
 
-                    _playerEntityModelView.Entity.Inventory[Inventory.SelectedSlot] = Inventory[Inventory.SelectedSlot];
-                    _playerEntityModelView.Entity.Inventory.MainHand = Inventory.MainHand;
-                    _playerEntityModelView.Entity.Inventory.SelectedSlot = Inventory.SelectedSlot;
+                    _playerEntityModelView.Entity.Inventory[inv.SelectedSlot] = Inventory[inv.SelectedSlot];
+                    _playerEntityModelView.Entity.Inventory.MainHand = inv.MainHand;
+                    _playerEntityModelView.Entity.Inventory.SelectedSlot = inv.SelectedSlot;
                 }
             }
         }
@@ -187,8 +180,12 @@ namespace Alex.Gui.Dialogs.Containers
         
         protected override void OnCursorItemChanged(InventoryContainerItem slot, Item item)
         {
-            Inventory.SetCursor(item, false);
-           // Inventory.Cursor = item;
+            if (Inventory is Inventory inv)
+            {
+                inv.SetCursor(item, false);
+            }
+
+            // Inventory.Cursor = item;
         }
 
         protected override void OnInit(IGuiRenderer renderer)

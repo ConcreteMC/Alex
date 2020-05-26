@@ -5,6 +5,8 @@ namespace Alex.Utils.Inventories
 {
 	public class InventoryBase
 	{
+		public int InventoryId { get; set; } = 0;
+		
 		protected Item[] Slots     { get; }
 		public    int    SlotCount => Slots.Length;
 
@@ -45,7 +47,7 @@ namespace Alex.Utils.Inventories
 			{
 			    MainHand = value;
 			}*/
-			SlotChanged?.Invoke(this, new SlotChangedEventArgs(index, value, oldValue, isServerTransaction));
+			SlotChanged?.Invoke(this, new SlotChangedEventArgs(InventoryId, index, value, oldValue, isServerTransaction));
 		}
 		
 		public Item this[int index]

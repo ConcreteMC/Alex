@@ -61,6 +61,7 @@
         DefaultServerIcon,
 
         InventoryPlayerBackground,
+        InventoryChestBackground,
         
         GreenCheckMark,
         GreyCheckMark,
