@@ -5,6 +5,7 @@ using Alex.API.Utils;
 using Alex.Graphics.Models.Items;
 using Alex.Items;
 using Alex.ResourcePackLib.Json.Models.Items;
+using Alex.Utils;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Gui.Elements.Inventory
@@ -34,7 +35,6 @@ namespace Alex.Gui.Elements.Inventory
             TargetPosition = new PlayerLocation(Vector3.Zero);
         }
 
-
         public void UpdateContext3D(IUpdateArgs args, IGuiRenderer guiRenderer)
         {
             // if (args.Camera is ItemViewCamera itemViewCamera)
@@ -45,17 +45,9 @@ namespace Alex.Gui.Elements.Inventory
             var minSize = Math.Min(InnerBounds.Width, InnerBounds.Height);
 
             Camera.MoveTo(new Vector3(0f, 0f, 2f), new Vector3(0f, 0f, 0f));
-            
-            var world = Matrix.Identity 
-                       // * Matrix.CreateWorld(Vector3.Zero, Vector3.Forward, Vector3.Up)
-                       //* Matrix.CreateTranslation(Vector3.One * -0.5f)
-                        * Matrix.CreateScale(1f)
-                       //* Matrix.CreateFromYawPitchRoll(MathHelper.ToRadians(45f), MathHelper.ToRadians(45f), MathHelper.ToRadians(0f))
-                       //* Matrix.CreateRotationY(-MathHelper.PiOver4)
-                       //* Matrix.CreateRotationX(-MathHelper.PiOver4)
-                        ;
-            
-            _itemRenderer.Update(Matrix.CreateTranslation(Vector3.Zero), new PlayerLocation(Vector3.Zero));
+
+            _itemRenderer.Update(Matrix.Identity, 
+                new PlayerLocation(Vector3.Zero));
             //_itemRenderer.Update(Matrix.Identity);
             _itemRenderer.Update(args.GraphicsDevice, args.Camera);
         }
@@ -78,7 +70,7 @@ namespace Alex.Gui.Elements.Inventory
             protected override void UpdateViewMatrix()
             {
                 Target = Vector3.Zero;
-                Direction = Vector3.Backward;
+                Direction = Vector3.Forward;
                 
                 ViewMatrix = Matrix.CreateLookAt(Position, Target, Vector3.Up);
                 //ViewMatrix = Matrix.CreateLookAt(Position + CameraPositionOffset, Target, Vector3.Up);

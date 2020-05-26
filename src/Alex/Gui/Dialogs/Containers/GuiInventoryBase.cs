@@ -16,6 +16,7 @@ namespace Alex.Gui.Dialogs.Containers
 	{
 		private GuiTextElement TextOverlay { get; }
 
+		private GuiItem CursorItemRenderer { get; }
 		public GuiInventoryBase()
 		{
 			AddChild(
@@ -27,8 +28,19 @@ namespace Alex.Gui.Dialogs.Containers
 					FontStyle = FontStyle.DropShadow,
 					TextColor = TextColor.Yellow,
 					ClipToBounds = false,
+					Anchor = Alignment.TopLeft
 					//BackgroundOverlay = new Color(Color.Black, 0.35f),
 				});
+			
+			AddChild(CursorItemRenderer = new GuiItem()
+			{
+				IsVisible = false,
+				ClipToBounds = false,
+				AutoSizeMode = AutoSizeMode.None,
+				Height = 18,
+				Width = 18,
+				Anchor = Alignment.TopLeft
+			});
 		}
 
 		public InventoryContainerItem[] AddSlots(int x,
@@ -84,6 +96,9 @@ namespace Alex.Gui.Dialogs.Containers
 		{
 			if (slot.Item != null && slot.Item.Count > 0 && !(slot.Item is ItemAir))
 			{
+				CursorItemRenderer.IsVisible = true;
+				CursorItemRenderer.Item = slot.Item;
+				
 				HoverItem = slot;
 				SelectedItem = slot.Item;
 				OnCursorItemChanged(slot, slot.Item);
@@ -97,6 +112,10 @@ namespace Alex.Gui.Dialogs.Containers
 
 				OnSlotChanged(slot, slot.Item);
 				//OnItemSelected(slot, slot.Item);
+			}
+			else
+			{
+				CursorItemRenderer.IsVisible = false;
 			}
 		}
 
@@ -122,6 +141,8 @@ namespace Alex.Gui.Dialogs.Containers
 					SelectedItem = null;
 
 					TextOverlay.IsVisible = false;
+					CursorItemRenderer.IsVisible = false;
+					
 					OnSlotChanged(originalHighlight, originalSelectedItem);
 					//OnItemDeSelected(originalHighlight, originalSelectedItem);
 
@@ -155,6 +176,15 @@ namespace Alex.Gui.Dialogs.Containers
 			if (sender is InventoryContainerItem containerItem && containerItem == HighlightedSlot)
 			{
 				HighlightedSlot = null;
+
+				if (SelectedItem != null)
+				{
+					SetOverlayText(SelectedItem);
+				}
+				else
+				{
+					SetOverlayText(null);
+				}
 			}
 		}
 
@@ -163,6 +193,7 @@ namespace Alex.Gui.Dialogs.Containers
 			if (sender is InventoryContainerItem containerItem)
 			{
 				HighlightedSlot = containerItem;
+				SetOverlayText(containerItem.Item);
 			}
 		}
 
@@ -246,7 +277,11 @@ namespace Alex.Gui.Dialogs.Containers
 
 			mousePos = Vector2.Transform(mousePos, Alex.Instance.GuiManager.ScaledResolution.InverseTransformMatrix);
 
-			TextOverlay.RenderPosition = mousePos;
+			//TextOverlay.RenderPosition = mousePos;
+
+			var point = mousePos.ToPoint();
+			CursorItemRenderer.Margin = new Thickness(point.Y, point.X);
+			TextOverlay.Margin = new Thickness(point.Y, point.X);
 			
 			Marqueue(gameTime);
 			

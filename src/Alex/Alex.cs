@@ -518,17 +518,24 @@ namespace Alex
 			else
 			{
 				GameStateManager.SetActiveState<TitleState>("title");
-			//	var player = new Player(GraphicsDevice, InputManager, null, null, new Skin(),  null, PlayerIndex.One, null);
-			//	player.Inventory.IsPeInventory = true;
-				/*Random rnd = new Random();
-				for (int i = 0; i < player.Inventory.SlotCount; i++)
+
+				var inventory = new BedrockInventory(46);
+				Random rnd = new Random();
+				for (int i = 0; i < inventory.SlotCount; i++)
 				{
-					player.Inventory[i] = new ItemBlock(BlockFactory.AllBlockstates.ElementAt(rnd.Next() % BlockFactory.AllBlockstates.Count).Value)
+					var state = BlockFactory.AllBlockstates.ElementAt(rnd.Next() % BlockFactory.AllBlockstates.Count);
+
+					if (ItemFactory.TryGetItem(state.Value.Name, out var item))
 					{
-						Count = rnd.Next(1, 64)
-					};
-				}*/
-				//GuiManager.ShowDialog(new GuiPlayerInventoryDialog(player, player.Inventory));
+						inventory[i] = item;
+						inventory[i].Count = rnd.Next(1, 64);
+					}
+
+					//{
+					//	Count = rnd.Next(1, 64)
+					//};
+				}
+				GuiManager.ShowDialog(new GuiPlayerInventoryDialog(null, inventory));
 			}
 
 			GameStateManager.RemoveState("splash");

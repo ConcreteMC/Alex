@@ -1,13 +1,11 @@
 ﻿using System;
 using Alex.Items;
+using Alex.Utils.Inventories;
 
 namespace Alex.Utils
 {
-    public class Inventory
+    public class Inventory : InventoryBase
     {
-		protected Item[] Slots { get; }
-	    public int SlotCount => Slots.Length;
-
 	    protected byte _selectedSlot = 0;
 
 	    public int SelectedSlot
@@ -116,36 +114,23 @@ namespace Alex.Utils
 		    }
 	    }
 
-	    public event EventHandler<SlotChangedEventArgs> CursorChanged = null; 
-	    public event EventHandler<SlotChangedEventArgs> SlotChanged = null;
+	    public event EventHandler<SlotChangedEventArgs> CursorChanged = null;
 	    public event EventHandler<SelectedSlotChangedEventArgs> SelectedHotbarSlotChanged = null;
 
-	    public Inventory(int slots)
+	    public Inventory(int slots) : base(slots)
 	    {
-			Slots = new Item[slots];
-			Empty();
+		    
 	    }
 
-	    public void SetCursor(Item item, bool clientTransaction)
+	    public void SetCursor(Item item, bool isServerTransaction)
 	    {
 		    var oldValue = _cursor;
 		    Cursor = item;
 		    
-		    CursorChanged?.Invoke(this, new SlotChangedEventArgs(0, item, oldValue, clientTransaction));
+		    CursorChanged?.Invoke(this, new SlotChangedEventArgs(0, item, oldValue, isServerTransaction));
 	    }
 
-	    public void Empty()
-	    {
-		    for (int i = 0; i < Slots.Length; i++)
-		    {
-			    Slots[i] = new ItemAir()
-			    {
-					Count = 0
-			    };
-		    }
-		}
-
-        public int[] PocketHotbar = new int[9]
+	    public int[] PocketHotbar = new int[9]
         {
             0,
             1,
@@ -177,41 +162,6 @@ namespace Alex.Utils
 
             return items;
         }
-
-        public void SetSlot(int index, Item value, bool isClientTransaction)
-        {
-	        if (index < 0 || index >= Slots.Length) throw new IndexOutOfRangeException();
-	        if (value.Count == 0)
-	        {
-		        value = new ItemAir()
-		        {
-			        Count = 0
-		        };
-	        }
-
-	        var oldValue = Slots[index];
-                
-	        Slots[index] = value;
-	        /*if ((index == 36 + _selectedSlot && !IsPeInventory) || (index == _selectedSlot && IsPeInventory))
-	        {
-	            MainHand = value;
-	        }*/
-	        SlotChanged?.Invoke(this, new SlotChangedEventArgs(index, value, oldValue, isClientTransaction));
-        }
-
-	    public Item this[int index]
-	    {
-		    get
-		    {
-				if (index < 0 || index >= Slots.Length) throw new IndexOutOfRangeException();
-
-			    return Slots[index];
-			}
-		    set
-		    {
-			    SetSlot(index, value, false);
-		    }
-	    }
     }
 
 	public class SlotChangedEventArgs : EventArgs
@@ -221,14 +171,14 @@ namespace Alex.Utils
 
 		public Item OldItem;
 		
-		public bool IsClientTransaction { get; set; }
+		public bool IsServerTransaction { get; set; }
 		
-		public SlotChangedEventArgs(int index, Item value, Item oldItem, bool isClientTransaction)
+		public SlotChangedEventArgs(int index, Item value, Item oldItem, bool isServerTransaction)
 		{
 			Index = index;
 			Value = value;
 			OldItem = oldItem;
-			IsClientTransaction = isClientTransaction;
+			IsServerTransaction = isServerTransaction;
 		}
 	}
 

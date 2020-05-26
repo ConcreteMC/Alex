@@ -23,7 +23,7 @@ namespace Alex.ResourcePackLib.Json.Models
         public string ParentName;
         
         [JsonProperty("gui_light"), JsonConverter(typeof(StringEnumConverter))]
-        public GuiLight? GuiLight = Alex.ResourcePackLib.Json.Models.Items.GuiLight.Front;
+        public GuiLight? GuiLight;
         
         [JsonIgnore]
         private ResourcePackModelBase _parent = null;

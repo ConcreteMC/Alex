@@ -247,9 +247,9 @@ namespace Alex.Graphics.Models.Items
             var a = new Vector3(0.5f, 0.5f, 0.5f);
             if (Model.GuiLight.HasValue && Model.GuiLight == GuiLight.Side)
             {
-                world *= Matrix.CreateTranslation(-a)
-                         * Matrix.CreateFromYawPitchRoll(45f, -45f, 0f)
-                         * Matrix.CreateTranslation(a);
+              //  world *= Matrix.CreateTranslation(-a)
+           //              * Matrix.CreateFromYawPitchRoll(45f, -45f, 0f)
+             //            * Matrix.CreateTranslation(a);
             }
 
            /* world *= //Matrix.CreateTranslation(-a)
@@ -332,6 +332,17 @@ namespace Alex.Graphics.Models.Items
                            Matrix.CreateRotationY(MathHelper.ToRadians(rotation.Y)) *
                            Matrix.CreateTranslation(trans);*/
 
+
+            if (Model.GuiLight.HasValue && Model.GuiLight == GuiLight.Side)
+            {
+                var o = new Vector3(0.5f, 0.5f, 0.5f);
+
+                world *= Matrix.CreateTranslation(-o)
+                            * Matrix.CreateFromAxisAngle(Vector3.Right, MathUtils.ToRadians(25f))
+                            * Matrix.CreateFromAxisAngle(Vector3.Up, MathUtils.ToRadians(270f))
+                            * Matrix.CreateTranslation(o);
+            }
+            
             Effect.World = world * ParentMatrix;
 
             if (Buffer == null && Vertices != null && Indexes != null && _canInit)

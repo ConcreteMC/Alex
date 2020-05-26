@@ -259,7 +259,7 @@ namespace Alex.Worlds.Bedrock
 		
 		private void InventoryOnSlotChanged(object? sender, SlotChangedEventArgs e)
 		{
-			if (!e.IsClientTransaction)
+			if (e.IsServerTransaction)
 				return;
 			
 			int inventoryId = 0;
@@ -289,7 +289,7 @@ namespace Alex.Worlds.Bedrock
 
 		private void InventoryOnCursorChanged(object? sender, SlotChangedEventArgs e)
 		{
-			if (!e.IsClientTransaction)
+			if (e.IsServerTransaction)
 				return;
 			
 			ContainerTransactionRecord transactionRecord = new ContainerTransactionRecord();

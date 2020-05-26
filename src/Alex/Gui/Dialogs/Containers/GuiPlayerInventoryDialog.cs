@@ -57,25 +57,28 @@ namespace Alex.Gui.Dialogs.Containers
             
             ContentContainer.AutoSizeMode = AutoSizeMode.None;
 
-            var modelRenderer = player.ModelRenderer;
-            var mob = new PlayerMob(player.Name, player.Level, player.Network,
-                player.ModelRenderer.Texture)
+            if (player != null)
             {
-                ModelRenderer = modelRenderer,
-            };
+                var modelRenderer = player.ModelRenderer;
 
-            ContentContainer.AddChild(_playerEntityModelView =
-                new GuiEntityModelView(mob)
+                var mob = new PlayerMob(player.Name, player.Level, player.Network, player.ModelRenderer.Texture)
                 {
-                    Margin = new Thickness(7, 25),
-                    Width = 49,
-                    Height = 70,
-                    Anchor = Alignment.TopLeft,
-                    AutoSizeMode = AutoSizeMode.None,
-                    Background = null,
-                    BackgroundOverlay =  null
-                });
-            
+                    ModelRenderer = modelRenderer,
+                };
+
+                ContentContainer.AddChild(
+                    _playerEntityModelView = new GuiEntityModelView(mob)
+                    {
+                        Margin = new Thickness(7, 25),
+                        Width = 49,
+                        Height = 70,
+                        Anchor = Alignment.TopLeft,
+                        AutoSizeMode = AutoSizeMode.None,
+                        Background = null,
+                        BackgroundOverlay = null
+                    });
+            }
+
             Color color = Color.Blue;
 
             foreach (var slot in AddSlots(8, 84, 9, 27, 9, 0x00))
@@ -149,37 +152,42 @@ namespace Alex.Gui.Dialogs.Containers
         {
             base.OnUpdate(gameTime);
 
-            var mousePos = Alex.Instance.InputManager.CursorInputListener.GetCursorPosition();
-            var playerPos = _playerEntityModelView.RenderBounds.Center.ToVector2();
-
-            var mouseDelta = (new Vector3(playerPos.X, playerPos.Y, _playerViewDepth) - new Vector3(mousePos.X, mousePos.Y, 0.0f));
-            mouseDelta.Normalize();
-
-            var headYaw = (float)mouseDelta.GetYaw();
-            var pitch = (float)mouseDelta.GetPitch();
-            var yaw = (float)headYaw;
-
-            _playerEntityModelView.SetEntityRotation(-yaw, pitch, -headYaw);
-
-            if (Inventory != null)
+            if (_playerEntityModelView?.Entity != null)
             {
-                _playerEntityModelView.Entity.ShowItemInHand = true;
-                
-                _playerEntityModelView.Entity.Inventory[Inventory.SelectedSlot] = Inventory[Inventory.SelectedSlot];
-                _playerEntityModelView.Entity.Inventory.MainHand = Inventory.MainHand;
-                _playerEntityModelView.Entity.Inventory.SelectedSlot = Inventory.SelectedSlot;
+                var mousePos  = Alex.Instance.InputManager.CursorInputListener.GetCursorPosition();
+                var playerPos = _playerEntityModelView.RenderBounds.Center.ToVector2();
+
+                var mouseDelta = (new Vector3(playerPos.X, playerPos.Y, _playerViewDepth)
+                                  - new Vector3(mousePos.X, mousePos.Y, 0.0f));
+
+                mouseDelta.Normalize();
+
+                var headYaw = (float) mouseDelta.GetYaw();
+                var pitch   = (float) mouseDelta.GetPitch();
+                var yaw     = (float) headYaw;
+
+                _playerEntityModelView.SetEntityRotation(-yaw, pitch, -headYaw);
+
+                if (Inventory != null)
+                {
+                    _playerEntityModelView.Entity.ShowItemInHand = true;
+
+                    _playerEntityModelView.Entity.Inventory[Inventory.SelectedSlot] = Inventory[Inventory.SelectedSlot];
+                    _playerEntityModelView.Entity.Inventory.MainHand = Inventory.MainHand;
+                    _playerEntityModelView.Entity.Inventory.SelectedSlot = Inventory.SelectedSlot;
+                }
             }
         }
         
         protected override void OnSlotChanged(InventoryContainerItem slot, Item item)
         {
-            Inventory.SetSlot(slot.InventoryIndex, item, true);
+            Inventory.SetSlot(slot.InventoryIndex, item, false);
             // Inventory[slot.InventoryIndex] = item;
         }
         
         protected override void OnCursorItemChanged(InventoryContainerItem slot, Item item)
         {
-            Inventory.SetCursor(item, true);
+            Inventory.SetCursor(item, false);
            // Inventory.Cursor = item;
         }
 
