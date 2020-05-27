@@ -4,6 +4,7 @@ using System.Linq;
 using Alex.API.Graphics.Typography;
 using Alex.API.Gui.Dialogs;
 using Alex.API.Gui.Elements;
+using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Alex.Gui.Elements.Inventory;
 using Alex.Items;
@@ -23,9 +24,19 @@ namespace Alex.Gui.Dialogs.Containers
 
 		private GuiItem CursorItemRenderer { get; }
 		public InventoryBase Inventory { get; }
-		public GuiInventoryBase(InventoryBase inventory)
+		public GuiInventoryBase(InventoryBase inventory, GuiTextures background, int width, int height)
 		{
 			Inventory = inventory;
+			
+			ContentContainer.Background = background;
+			ContentContainer.BackgroundOverlay = null;
+            
+			ContentContainer.Width = ContentContainer.MinWidth = ContentContainer.MaxWidth = width;
+			ContentContainer.Height = ContentContainer.MinHeight = ContentContainer.MaxHeight = height;
+            
+			SetFixedSize(width, height);
+            
+			ContentContainer.AutoSizeMode = AutoSizeMode.None;
 			
 			AddChild(
 				TextOverlay = new GuiTextElement(true)

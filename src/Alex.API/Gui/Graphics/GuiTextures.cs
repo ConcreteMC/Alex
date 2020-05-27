@@ -62,6 +62,7 @@
 
         InventoryPlayerBackground,
         InventoryChestBackground,
+        InventoryCraftingTable,
         
         GreenCheckMark,
         GreyCheckMark,

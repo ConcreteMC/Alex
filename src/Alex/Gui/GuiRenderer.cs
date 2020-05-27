@@ -48,7 +48,8 @@ namespace Alex.Gui
 		private Texture2D _scrollbar;
 		private Texture2D _inventory;
 		private Texture2D _chestInventory;
-
+		private Texture2D _craftingTable;
+		
 		#region SpriteSheet Definitions
 
 		#region Widgets
@@ -265,6 +266,12 @@ namespace Alex.Gui
 				{
 					_chestInventory = TextureUtils.BitmapToTexture2D(_graphicsDevice, genericInvBmp);
 					LoadTextureFromSpriteSheet(GuiTextures.InventoryChestBackground, _chestInventory, new Rectangle(0, 0, 175, 221), IconSize);
+				}
+
+				if (resourcePack.TryGetBitmap("gui/container/crafting_table", out var craftingTable))
+				{
+					_craftingTable = TextureUtils.BitmapToTexture2D(_graphicsDevice, craftingTable);
+					LoadTextureFromSpriteSheet(GuiTextures.InventoryCraftingTable, _craftingTable, new Rectangle(0, 0, 175, 165), IconSize);
 				}
 				//LoadTextureFromSpriteSheet(GuiTextures.InventoryChestBackground, _inventory, new Rectangle(0, 0, 175, 221), IconSize);
 			}

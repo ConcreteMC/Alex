@@ -7,18 +7,8 @@ namespace Alex.Gui.Dialogs.Containers
 {
 	public class GuiChestDialog : GuiInventoryBase
 	{
-		public GuiChestDialog(InventoryBase inventory, Inventory playerInventory) : base(inventory)
+		public GuiChestDialog(InventoryBase inventory, Inventory playerInventory) : base(inventory, GuiTextures.InventoryChestBackground, 175, 221)
 		{
-			ContentContainer.Background = GuiTextures.InventoryChestBackground;
-			ContentContainer.BackgroundOverlay = null;
-			
-			ContentContainer.Width = ContentContainer.MinWidth = ContentContainer.MaxWidth = 175;
-			ContentContainer.Height = ContentContainer.MinHeight = ContentContainer.MaxHeight = 221;
-            
-			SetFixedSize(175, 221);
-
-			ContentContainer.AutoSizeMode = AutoSizeMode.None;
-			
 			//7, 17
 			
 			//Add chest slots

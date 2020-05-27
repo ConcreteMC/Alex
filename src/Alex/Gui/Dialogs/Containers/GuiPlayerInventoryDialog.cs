@@ -34,21 +34,11 @@ namespace Alex.Gui.Dialogs.Containers
         private const int ItemSize = 16;
         
         private InventoryContainerItem CraftingOutput { get; }
-        public GuiPlayerInventoryDialog(Player player, Inventory inventory) : base(inventory)
+        public GuiPlayerInventoryDialog(Player player, Inventory inventory) : base(inventory, GuiTextures.InventoryPlayerBackground, 176, 166)
         {
             Player = player;
 
             // Subscribe to events
-
-            ContentContainer.Background = GuiTextures.InventoryPlayerBackground;
-            ContentContainer.BackgroundOverlay = null;
-            
-            ContentContainer.Width = ContentContainer.MinWidth = ContentContainer.MaxWidth = 176;
-            ContentContainer.Height = ContentContainer.MinHeight = ContentContainer.MaxHeight = 166;
-            
-            SetFixedSize(176, 166);
-            
-            ContentContainer.AutoSizeMode = AutoSizeMode.None;
 
             if (player != null)
             {
