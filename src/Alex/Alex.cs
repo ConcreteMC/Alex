@@ -536,7 +536,7 @@ namespace Alex
 					//	Count = rnd.Next(1, 64)
 					//};
 				}
-				//GuiManager.ShowDialog(new CraftingTableDialog(new InventoryBase(10), inventory));
+				//GuiManager.ShowDialog(new GuiFurnaceDialog(inventory, new InventoryBase(3)));
 			}
 
 			GameStateManager.RemoveState("splash");

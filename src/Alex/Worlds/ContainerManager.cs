@@ -34,6 +34,9 @@ namespace Alex.Worlds
 							inv = new GuiChestDialog(new InventoryBase(90), playerInventory);
 
 							break;
+						case ContainerType.Furnace:
+							inv = new GuiFurnaceDialog(playerInventory, new InventoryBase(3));
+							break;
 						default:
 							throw new NotImplementedException();
 					}
@@ -63,7 +66,7 @@ namespace Alex.Worlds
 	public enum ContainerType : byte
 	{
 		Chest = 0,
-		
-		Furnace
+		Furnace = 2,
+		EnchantingTable = 3,
 	}
 }
