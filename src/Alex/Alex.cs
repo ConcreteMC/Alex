@@ -35,6 +35,7 @@ using Alex.Networking.Bedrock;
 using Alex.Networking.Java.Packets;
 using Alex.Plugins;
 using Alex.Services;
+using Alex.Services.Discord;
 using Alex.Utils;
 using Alex.Utils.Inventories;
 using Alex.Worlds;
@@ -230,6 +231,8 @@ namespace Alex
 			DeviceManager.ApplyChanges();
 			
 			base.Initialize();
+			
+			RichPresenceProvider.Initialize();
 		}
 
 		protected override void LoadContent()
@@ -427,6 +430,8 @@ namespace Alex
 			GuiManager.Update(gameTime);
 			GameStateManager.Update(gameTime);
 			GuiDebugHelper.Update(gameTime);
+			
+			RichPresenceProvider.Update();
 
 			if (!UIThreadQueue.IsEmpty && UIThreadQueue.TryDequeue(out Action a))
 			{
