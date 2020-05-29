@@ -25,6 +25,7 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 	    [J("textureheight", NullValueHandling = N.Ignore)]
 	    public long Textureheight { get; set; }
 
+	    [J("bones")]
         public EntityModelBone[] Bones { get; set; }
 	}
 }

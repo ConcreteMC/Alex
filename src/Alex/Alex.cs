@@ -34,6 +34,7 @@ using Alex.Items;
 using Alex.Networking.Bedrock;
 using Alex.Networking.Java.Packets;
 using Alex.Plugins;
+using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Services;
 using Alex.Utils;
 using Alex.Utils.Inventories;
@@ -61,6 +62,9 @@ namespace Alex
 {
 	public partial class Alex : Microsoft.Xna.Framework.Game
 	{
+		public static EntityModel PlayerModel { get; set; }
+		public static Image<Rgba32> PlayerTexture { get; set; }
+		
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Alex));
 
 		public static string Gpu { get; private set; } = "";
@@ -511,6 +515,19 @@ namespace Alex
 			AnvilWorldProvider.LoadBlockConverter();
 
 			PluginManager.EnablePlugins();
+
+			var storage = Services.GetRequiredService<IStorageSystem>();
+
+			if (storage.TryReadJson("skin.json", out EntityModel model))
+			{
+				PlayerModel = model;
+			}
+
+			if (storage.TryReadBytes("skin.png", out byte[] skinBytes))
+			{
+				var skinImage = Image.Load<Rgba32>(skinBytes);
+				PlayerTexture = skinImage;
+			}
 			
 			if (LaunchSettings.ModelDebugging)
 			{
