@@ -1,4 +1,5 @@
-﻿using System.IO.Compression;
+﻿using System.IO;
+using System.IO.Compression;
 
 namespace Alex.ResourcePackLib
 {
@@ -12,6 +13,14 @@ namespace Alex.ResourcePackLib
 	    public static bool IsDirectory(this ZipArchiveEntry entry)
 	    {
 		    return entry.FullName.EndsWith("/");
+	    }
+
+	    public static string ReadAsString(this ZipArchiveEntry entry)
+	    {
+		    using (TextReader reader = new StreamReader(entry.Open()))
+		    {
+			    return reader.ReadToEnd();
+		    }
 	    }
     }
 }

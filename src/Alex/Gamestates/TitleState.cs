@@ -15,6 +15,7 @@ using Alex.GameStates.Gui.Common;
 using Alex.Gamestates.Gui.MainMenu;
 using Alex.GameStates.Gui.MainMenu;
 using Alex.GameStates.Gui.Multiplayer;
+using Alex.Graphics.Models.Entity;
 using Alex.Gui;
 using Alex.Gui.Elements;
 using Alex.Gui.Elements.Inventory;
@@ -345,14 +346,14 @@ namespace Alex.GameStates
 						Anchor = Alignment.BottomRight,
 					});
 
-			AddChild(new GuiButton("Switch user", LoginBtnPressed)
+			AddChild(new GuiButton("Change Skin", ChangeSKinBtnPressed)
 			{
 				Anchor = Alignment.BottomRight,
 				Modern = false,
 				TranslationKey = "",
 				Margin = new Thickness(15, 15, 6, 15),
 				Width = 90,
-				Enabled = false
+				//Enabled = false
 			});
 
 			AutoResetEvent reset = new AutoResetEvent(false);
@@ -379,9 +380,10 @@ namespace Alex.GameStates
 			//Alex.GameStateManager.AddState("profileSelection", new ProfileSelectionState(_backgroundSkyBox));
 		}
 
-		private void LoginBtnPressed()
+		private void ChangeSKinBtnPressed()
 		{
-			Alex.GameStateManager.SetActiveState(new ProfileSelectionState(_backgroundSkyBox, Alex), true);
+			Alex.GameStateManager.SetActiveState(new SkinSelectionState(_backgroundSkyBox, Alex), true);
+			//Alex.GameStateManager.SetActiveState(new ProfileSelectionState(_backgroundSkyBox, Alex), true);
 		}
 
 		private float _rotation;
@@ -452,6 +454,16 @@ namespace Alex.GameStates
 
 		protected override void OnShow()
 		{
+			if (Alex.PlayerModel != null && Alex.PlayerTexture != null)
+			{
+				Alex.UIThreadQueue.Enqueue(
+					() =>
+					{
+						var texture = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, Alex.PlayerTexture);
+						_playerView.Entity.ModelRenderer = new EntityModelRenderer(Alex.PlayerModel, texture);
+					});
+			}
+			
 			if (Alex.GameStateManager.TryGetState<OptionsState>("options", out _))
 			{
 				Alex.GameStateManager.RemoveState("options");
