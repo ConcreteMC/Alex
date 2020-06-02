@@ -115,8 +115,10 @@ namespace Alex.API.Gui.Elements
 			Text = text;
 		}
 		
+		private bool HasBackground { get; }
 	    public GuiTextElement(bool hasBackground = false)
 	    {
+		    HasBackground = hasBackground;
 		    if (hasBackground)
 		    {
 			    BackgroundOverlay = DefaultTextBackgroundColor;
@@ -154,8 +156,12 @@ namespace Alex.API.Gui.Elements
 				}*/
 				
 	           // graphics.FillRectangle(new Rectangle(RenderPosition.ToPoint(), Size.ToPoint()), BackgroundOverlay);
-	           //graphics.SpriteBatch.FillRectangle(new Rectangle(RenderPosition.ToPoint(), GetSize(text, _scale).ToPoint()), Background.);
-	            Font.DrawString(graphics.SpriteBatch, text, RenderPosition, TextColor, FontStyle, _scale, TextOpacity, Rotation, RotationOrigin);
+	           if (HasBackground && BackgroundOverlay.HasValue && BackgroundOverlay.Color.HasValue)
+	           {
+		           graphics.SpriteBatch.FillRectangle(new Rectangle(RenderPosition.ToPoint(), GetSize(text, _scale).ToPoint()), BackgroundOverlay.Color.Value);
+	           }
+
+	           Font.DrawString(graphics.SpriteBatch, text, RenderPosition, TextColor, FontStyle, _scale, TextOpacity, Rotation, RotationOrigin);
 	          //  graphics.DrawString(RenderPosition, text, Font, TextColor, FontStyle, Scale, Rotation, RotationOrigin, TextOpacity);
 			}
         }

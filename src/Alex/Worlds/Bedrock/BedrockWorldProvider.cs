@@ -20,6 +20,7 @@ using MiNET.Net;
 using MiNET.Utils;
 using NLog;
 using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
+using MathF = System.MathF;
 using PlayerLocation = Alex.API.Utils.PlayerLocation;
 
 namespace Alex.Worlds.Bedrock
@@ -78,6 +79,7 @@ namespace Alex.Worlds.Bedrock
 		private PlayerLocation _lastLocation = new PlayerLocation();
         private PlayerLocation _lastSentLocation = new PlayerLocation();
         private Stopwatch _stopwatch = Stopwatch.StartNew();
+        private DateTime _lastPingTime = DateTime.UtcNow;
 		private void GameTick(object state)
 		{
 			if (World == null) return;
@@ -110,7 +112,7 @@ namespace Alex.Worlds.Bedrock
                         _lastSentLocation = pos;
 					}
 
-					if (pos.DistanceTo(_lastLocation) > 16f && _stopwatch.ElapsedMilliseconds > 500)
+					if ((pos.DistanceTo(_lastLocation) > 16f || MathF.Abs(pos.HeadYaw - _lastLocation.HeadYaw) >= 10f) && _stopwatch.ElapsedMilliseconds > 500)
 					{
 						World.ChunkManager.FlagPrioritization();
 						
@@ -120,6 +122,12 @@ namespace Alex.Worlds.Bedrock
 						UnloadChunks(new ChunkCoordinates(pos), Client.ChunkRadius + 3);
 						_stopwatch.Restart();
 					}
+				}
+
+				if (DateTime.UtcNow - _lastPingTime > TimeSpan.FromSeconds(1))
+				{
+					Client.SendPing();
+					_lastPingTime = DateTime.UtcNow;
 				}
 			}
 		}

@@ -28,6 +28,10 @@ namespace Alex.Networking.Bedrock
             Packet packet = null;
             switch (messageId)
             {
+                case 0x03:
+                    packet = new CustomConnectedPong();
+                    break;
+                
                 //Hack to spawn on the Hive
                 case 132:
                     PrevBuffer = buffer.ToArray();

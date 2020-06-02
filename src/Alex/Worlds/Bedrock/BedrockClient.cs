@@ -22,6 +22,7 @@ using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Entities;
 using Alex.Gamestates;
+using Alex.Networking.Bedrock.Net.Raknet;
 using Alex.Services;
 using Alex.Utils;
 using Jose;
@@ -240,8 +241,43 @@ namespace Alex.Worlds.Bedrock
 				}
 				else
 				{
+					Connection.ConnectionInfo.ThroughPut = new Timer(
+						state =>
+						{
+							Connection.ConnectionInfo.NumberOfPlayers = Connection.ConnectionInfo.RakSessions.Count;
+							Interlocked.Exchange(ref Connection.ConnectionInfo.NumberOfDeniedConnectionRequestsPerSecond, 0);
+							long   packetSizeOut = Interlocked.Exchange(ref Connection.ConnectionInfo.TotalPacketSizeOutPerSecond, 0L);
+							long   packetSizeIn = Interlocked.Exchange(ref Connection.ConnectionInfo.TotalPacketSizeInPerSecond, 0L);
+							double throughtPutOut = (double) (packetSizeOut * 8L) / 1000000.0;
+							double throughPutIn = (double) (packetSizeIn * 8L) / 1000000.0;
+							long   packetCountOut = Interlocked.Exchange(ref Connection.ConnectionInfo.NumberOfPacketsOutPerSecond, 0L);
+							long   packetCountIn = Interlocked.Exchange(ref Connection.ConnectionInfo.NumberOfPacketsInPerSecond, 0L);
+							
+							long ackReceived  = Interlocked.Exchange(ref Connection.ConnectionInfo.NumberOfAckReceive, 0L);
+							long ackSent  = Interlocked.Exchange(ref Connection.ConnectionInfo.NumberOfAckSent, 0L);
+							long nakReceive  = Interlocked.Exchange(ref Connection.ConnectionInfo.NumberOfNakReceive, 0L);
+							long resends = Interlocked.Exchange(ref Connection.ConnectionInfo.NumberOfResends, 0L);
+							long fails = Interlocked.Exchange(ref Connection.ConnectionInfo.NumberOfFails, 0L);
+
+							string str = string.Format("Pkt in/out(#/s) {0}/{1}, ", (object) packetCountIn, (object) packetCountOut)
+							             + string.Format(
+								             "ACK(in-out)/NAK/RSND/FTO(#/s) ({0}-{1})/{2}/{3}/{4}, ", (object) ackReceived,
+								             (object) ackSent, (object) nakReceive, (object) resends, (object) fails)
+							             + string.Format("THR in/out(Mbps) {0:F}/{1:F}, ", (object) throughPutIn, (object) throughtPutOut)
+							             + string.Format(
+								             "PktSz Total in/out(B/s){0}/{1}, ", (object) packetSizeIn, (object) packetSizeOut);
+
+							if (Config.GetProperty("ServerInfoInTitle", false))
+								Console.Title = str;
+							else
+								Log.Info(str);
+								
+							_connectionInfo = new ConnectionInfo(StartTime, CustomConnectedPong.Latency, nakReceive, ackReceived, ackSent, fails, resends, packetSizeIn, packetSizeOut);
+						}, null, 1000, 1000);
+					
 					if (Connection.TryConnect(ServerEndpoint, 1))
 					{
+						
 						//resetEvent.Set();
 					}
 				}
@@ -293,14 +329,16 @@ namespace Alex.Worlds.Bedrock
 				this.Connection.SendData(data, new IPEndPoint(IPAddress.Broadcast, 19132));
 		}
 
+		private ConnectionInfo _connectionInfo = new ConnectionInfo(DateTime.UtcNow, 0, 0,0,0,0,0,0,0);
 		public ConnectionInfo GetConnectionInfo()
 		{
+			return _connectionInfo;
 			var conn = Session?.ConnectionInfo ?? Connection.ConnectionInfo;
 
 			return new ConnectionInfo(StartTime, conn.Latency,
 				conn.NumberOfNakReceive, conn.NumberOfAckReceive,
 				conn.NumberOfAckSent, Session?.ErrorCount ?? 0,
-				Session?.ResendCount ?? 0);
+				Session?.ResendCount ?? 0, conn?.TotalPacketSizeInPerSecond ?? 0, conn?.TotalPacketSizeOutPerSecond ?? 0);
 		}
 		
 		private void InventoryOnSlotChanged(object? sender, SlotChangedEventArgs e)
@@ -1034,6 +1072,16 @@ namespace Alex.Worlds.Bedrock
 		public void SendDisconnectionNotification()
 		{
 			Session?.SendPacket(new DisconnectionNotification());
+		}
+
+		public void SendPing()
+		{
+			ConnectedPing cp = ConnectedPing.CreateObject();
+			cp.sendpingtime = DateTimeOffset.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
+
+			CustomConnectedPong.LastSentPing = DateTimeOffset.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
+			
+			Session?.SendPacket(cp);
 		}
 
 
