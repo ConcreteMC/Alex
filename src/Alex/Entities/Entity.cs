@@ -715,9 +715,15 @@ namespace Alex.Entities
 				_isHit = false;
 				ModelRenderer.EntityColor = Color.White.ToVector3();
 			}
-			
+
 			if (DoRotationCalculations)
+			{
 				UpdateRotations();
+			}
+			else
+			{
+				KnownPosition.Yaw = KnownPosition.HeadYaw;
+			}
 
 			_previousPosition = KnownPosition;
 
@@ -818,6 +824,8 @@ namespace Alex.Entities
 		private float lastRotationYawHead = 0f;
 		private Vector3 _previousPosition = Vector3.Zero;
 		protected bool SnapHeadYawRotationOnMovement { get; set; } = true;
+		protected bool SnapYawRotationOnMovement { get; set; } = false;
+		
 		private void UpdateRotations()
 		{
 			double deltaX = KnownPosition.X - _previousPosition.X;
@@ -840,6 +848,11 @@ namespace Alex.Entities
 				if (SnapHeadYawRotationOnMovement)
 				{
 					KnownPosition.HeadYaw = newRotationYawHead;
+				}
+				
+				if (SnapYawRotationOnMovement)
+				{
+					KnownPosition.Yaw = KnownPosition.HeadYaw;
 				}
 
 				lastRotationYawHead = newRotationYawHead;

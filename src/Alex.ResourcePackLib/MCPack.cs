@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using Alex.ResourcePackLib.Exceptions;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Bedrock;
@@ -24,7 +25,7 @@ namespace Alex.ResourcePackLib
 		private void Load(ZipArchive archive)
 		{
 			var manifestEntry = archive.GetEntry("manifest.json");
-			var contentEntry = archive.GetEntry("content.zipe");
+			var contentEntry  = archive.GetEntry("content.zipe");
 			
 			if (manifestEntry == null)
 			{
@@ -67,7 +68,7 @@ namespace Alex.ResourcePackLib
 				}
 				catch (Exception ex)
 				{
-					Log.Error(ex,$"Failed to load MCPack module: {module.Name} from {Manifest.Header.Name}");
+					Log.Error(ex,$"Failed to load MCPack module: {module.Name} from {Manifest.Header.Name}: {ex}");
 					toRemove.Add(module);
 				}
 			}

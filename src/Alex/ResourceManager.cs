@@ -418,7 +418,7 @@ namespace Alex
 		        }
 		        catch (Exception ex)
 		        {
-			        Log.Warn(ex, $"Failed to load bedrock .MCPack file: {file.Name}");
+			        Log.Warn(ex, $"Failed to load bedrock .MCPack file: {file.Name}: {ex}");
 		        }
 	        }
         }

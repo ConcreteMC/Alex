@@ -498,10 +498,17 @@ namespace Alex.GameStates.Playing
 						};
 						
 						World.Camera.UpdateAspectRatio(Graphics.Viewport.AspectRatio);
-						World.Player.ItemRenderer.DisplayPosition = World.Player.IsLeftyHandy
-							? DisplayPosition.ThirdPersonLeftHand
-							: DisplayPosition.ThirdPersonRightHand;
-						World.Player.IsFirstPersonMode = false;
+
+						if (World?.Player?.ItemRenderer != null)
+						{
+							World.Player.ItemRenderer.DisplayPosition = World.Player.IsLeftyHandy ?
+								DisplayPosition.ThirdPersonLeftHand : DisplayPosition.ThirdPersonRightHand;
+						}
+
+						if (World?.Player != null)
+						{
+							World.Player.IsFirstPersonMode = false;
+						}
 					}
 					else
 					{
@@ -511,10 +518,17 @@ namespace Alex.GameStates.Playing
 						};
 						
 						World.Camera.UpdateAspectRatio(Graphics.Viewport.AspectRatio);
-						World.Player.ItemRenderer.DisplayPosition = World.Player.IsLeftyHandy
-							? DisplayPosition.FirstPersonLeftHand
-							: DisplayPosition.FirstPersonRightHand;
-						World.Player.IsFirstPersonMode = true;
+
+						if (World?.Player != null)
+						{
+							World.Player.IsFirstPersonMode = true;
+
+							if (World.Player.ItemRenderer != null)
+							{
+								World.Player.ItemRenderer.DisplayPosition = World.Player.IsLeftyHandy ?
+									DisplayPosition.FirstPersonLeftHand : DisplayPosition.FirstPersonRightHand;
+							}
+						}
 					}
 				}
 

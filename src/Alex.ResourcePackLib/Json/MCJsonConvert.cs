@@ -28,6 +28,7 @@ namespace Alex.ResourcePackLib.Json
 			DefaultSettings.Converters.Add(new Vector2Converter());
 			//DefaultSettings.Converters.Add(new SingleOrArrayConverter<MultiPartRule>());
 			DefaultSettings.Converters.Add(new BlockStateMultipartRuleConverter());
+			DefaultSettings.Converters.Add(new GuidConverter());
 			//DefaultSettings.Converters.Add(new MCElementsDictionaryConverter());
 		}
 

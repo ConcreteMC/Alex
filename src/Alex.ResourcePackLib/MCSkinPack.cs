@@ -42,7 +42,7 @@ namespace Alex.ResourcePackLib
 		public override string Name {
 			get
 			{
-				return Info.LocalizationName;
+				return Info?.LocalizationName ?? "Unknown";
 			}
 		} 
 			

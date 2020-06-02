@@ -85,7 +85,9 @@ namespace Alex.Entities
 			FlyingSpeed = 10.89f;
 
 			SnapHeadYawRotationOnMovement = false;
-
+			SnapYawRotationOnMovement = true;
+			DoRotationCalculations = false;
+			
 			RenderEntity = true;
 			ShowItemInHand = true;
 
