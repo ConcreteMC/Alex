@@ -309,6 +309,7 @@ namespace Alex.Blocks
 			this.Register(() => new Lilac().WithLocation("minecraft:lily_of_the_valley"));
 			this.Register(() => new BlueOrchid().WithLocation("minecraft:blue_orchid"));
 			this.Register(() => new Peony().WithLocation("minecraft:peony"));
+			this.Register(() => new SweetBerryBush().WithLocation("minecraft:sweet_berry_bush"));
 			
 			this.Register(() => new InvisibleBedrock(false).WithLocation("minecraft:barrier"));
             

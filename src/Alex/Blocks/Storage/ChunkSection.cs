@@ -49,7 +49,22 @@ namespace Alex.Blocks.Storage
         public List<BlockCoordinates> LightSources { get; } = new List<BlockCoordinates>();
         
 		public bool IsAllAir => _blockRefCount == 0;
-		internal ChunkMesh MeshCache { get; set; } = null;
+
+		private ChunkMesh _meshCache = null;
+
+		internal ChunkMesh MeshCache
+		{
+			get
+			{
+				return _meshCache;
+			}
+			set
+			{
+				var oldValue = _meshCache;
+				_meshCache = value;
+				oldValue?.Dispose();
+			}
+		}
 		//internal Dictionary<BlockCoordinates, IList<ChunkMesh.EntryPosition>> MeshPositions { get; set; } = null;
 		
 		private ChunkColumn Owner { get; }

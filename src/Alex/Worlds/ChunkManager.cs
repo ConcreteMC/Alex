@@ -953,12 +953,9 @@ namespace Alex.Worlds
 				    if (meshed > 0) //We did not re-mesh ANY chunks. Not worth re-building.
 				    {
 
-					    IDictionary<RenderStage, List<int>> newStageIndexes = Options.MiscelaneousOptions.ObjectPools ?
-						    (IDictionary<RenderStage, List<int>>) new PooledDictionary<RenderStage, List<int>>(
-							    ClearMode.Auto) : new Dictionary<RenderStage, List<int>>();
+					    IDictionary<RenderStage, List<int>> newStageIndexes = new Dictionary<RenderStage, List<int>>();
 
-					    IList<BlockShaderVertex> vertices = Options.MiscelaneousOptions.ObjectPools ?
-						    (IList<BlockShaderVertex>) new PooledList<BlockShaderVertex>(ClearMode.Auto) : new List<BlockShaderVertex>();
+					    IList<BlockShaderVertex> vertices = new List<BlockShaderVertex>();
 					    
 					    try
 					    {
@@ -1159,8 +1156,11 @@ namespace Alex.Worlds
         {
 	        using (PooledList<BlockShaderVertex> vertices =
 		        new PooledList<BlockShaderVertex>(ClearMode.Auto))
-	        {
-		        using (PooledDictionary<RenderStage, List<int>> stages = new PooledDictionary<RenderStage, List<int>>(RenderStages.Length))
+		  //  List<BlockShaderVertex> vertices = new List<BlockShaderVertex>();
+
+		    {
+			    Dictionary<RenderStage, List<int>> stages =
+				    new Dictionary<RenderStage, List<int>>(RenderStages.Length);
 		        {
 			        foreach (var stage in RenderStages)
 			        {

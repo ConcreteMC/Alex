@@ -554,13 +554,7 @@ namespace Alex.Entities
 		    return true;
 	    }
 
-		public override void TerrainCollision(Vector3 collisionPoint, Vector3 direction)
-		{
-		//	Log.Debug($"Terrain collision: {collisionPoint.ToString()} | {direction}");	
-			base.TerrainCollision(collisionPoint, direction);
-		}
-
-		public override BoundingBox GetBoundingBox(Vector3 pos)
+	    public override BoundingBox GetBoundingBox(Vector3 pos)
 		{
 			double halfWidth = (0.6 * Scale) / 2D;
 			var height = IsSneaking ? 1.5 : Height;

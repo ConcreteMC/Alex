@@ -681,7 +681,7 @@ namespace Alex.Graphics.Models.Blocks
 			Vector3 position, Block baseBlock,
 			BlockStateModel[] models)
 		{
-			using (var verts = new PooledList<BlockShaderVertex>(ClearMode.Auto))
+			var verts = new List<BlockShaderVertex>();
 			{
 				var indexResult = new List<int>(24 * models.Length);
 

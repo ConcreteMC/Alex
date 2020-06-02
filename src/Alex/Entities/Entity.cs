@@ -74,7 +74,6 @@ namespace Alex.Entities
 		}
 
 		//public HealthManager HealthManager { get; set; }
-
 		public string NameTag { get; set; }
 
 		public virtual bool NoAi { get; set; } = true;
@@ -993,7 +992,7 @@ namespace Alex.Entities
 			b = b >> m;
 			return a == b || a == b - 1 || a == b + 1;
 		}
-
+		
 		public void RenderNametag(IRenderArgs renderArgs)
 		{
 			var halfWidth = -((((float) Width) * Scale));
@@ -1067,15 +1066,6 @@ namespace Alex.Entities
 		}
 
 		public static float NametagScale { get; set; } = 2f;
-
-		public virtual void TerrainCollision(Vector3 collisionPoint, Vector3 direction)
-		{
-			if (direction.Y < 0) //Collided with the ground
-			{
-				KnownPosition.OnGround = true;
-			}
-		}
-
 		public void Dispose()
 		{
 			ModelRenderer?.Dispose();

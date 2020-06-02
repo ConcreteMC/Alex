@@ -308,6 +308,8 @@ namespace Alex.Worlds.Bedrock
 												        
 											        }
 										        };
+										        
+										        Log.Info($"Unknown block: {id}:{meta}");
 									        }
 									        
 									        if (result != null)
@@ -319,6 +321,10 @@ namespace Alex.Worlds.Bedrock
 								        if (result != null)
 								        {
 									        section.Set(x, y, z, result);
+								        }
+								        else
+								        {
+									        Log.Info($"Unknown block: {id}:{meta}");
 								        }
 
 							        }
