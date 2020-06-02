@@ -1042,16 +1042,28 @@ namespace Alex.Entities
 			var scale = new Vector2(scaler * scaleRatio, scaler * scaleRatio);
 			//scale *= Alex.Instance.GuiRenderer.ScaledResolution.ElementScale;
 	
+			
 			string clean = NameTag;
 
-			var stringCenter = Alex.Font.MeasureString(clean, scale);
-			var c = new Point((int)stringCenter.X, (int)stringCenter.Y);
+			Vector2 renderPosition = textPosition;
+			int yOffset = 0;
+			foreach (var str in clean.Split('\n'))
+			{
+				var stringCenter = Alex.Font.MeasureString(str, scale);
+				var c            = new Point((int) stringCenter.X, (int) stringCenter.Y);
 
-			textPosition.X = (int)(textPosition.X - (c.X / 2d));
-			textPosition.Y = (int)(textPosition.Y - (c.Y / 2d));
-			
-			renderArgs.SpriteBatch.FillRectangle(new Rectangle(textPosition.ToPoint(), c), new Color(Color.Black, 128), screenSpace.Z);
-			Alex.Font.DrawString(renderArgs.SpriteBatch, clean, textPosition, TextColor.White, FontStyle.None, scale, layerDepth: screenSpace.Z);
+				renderPosition.X = (int) (textPosition.X - (c.X / 2d));
+				renderPosition.Y = (int) (textPosition.Y - (c.Y / 2d)) + yOffset;
+
+				renderArgs.SpriteBatch.FillRectangle(
+					new Rectangle(renderPosition.ToPoint(), c), new Color(Color.Black, 128), screenSpace.Z);
+
+				Alex.Font.DrawString(
+					renderArgs.SpriteBatch, str, renderPosition, TextColor.White, FontStyle.None, scale,
+					layerDepth: screenSpace.Z);
+
+				yOffset += c.Y;
+			}
 		}
 
 		public static float NametagScale { get; set; } = 2f;
