@@ -129,8 +129,8 @@ namespace Alex.Worlds.Bedrock
 
 	        try
 	        {
-		        var data = JWT.Decode<HandshakeData>(token, signKey);
-				//var data = JWT.Payload<HandshakeData>(token);
+		       // var data = JWT.Decode<HandshakeData>(token, signKey);
+				var data = JWT.Payload<HandshakeData>(token);
 		        Client.InitiateEncryption(Base64Url.Decode(x5u), Base64Url.Decode(data.salt));
 	        }
 	        catch (Exception e)

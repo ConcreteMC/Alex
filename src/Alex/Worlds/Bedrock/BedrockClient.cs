@@ -413,15 +413,50 @@ namespace Alex.Worlds.Bedrock
             string identity, xuid = "";
 			byte[] certChain = null;
 
+			//MinecraftChain = What i get back from the XBOXLive auth
             if (XblmsaService.MinecraftChain != null)
             {
+	            string raw = Encoding.UTF8.GetString(XblmsaService.MinecraftChain);
+	            dynamic a     = JObject.Parse(raw);
+	            var     chain = ((JArray)a.chain).Values<string>().ToArray();
+	            IDictionary<string, dynamic> chainHeader = JWT.Headers(chain[0]);
+	            string x5u = chainHeader["x5u"];
+
 	            var element = XblmsaService.DecodedChain.Chain[1];
 
                 username = element.ExtraData.DisplayName;
                 identity = element.ExtraData.Identity;
                 xuid = element.ExtraData.Xuid;
+
+                long iat = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                long exp = DateTimeOffset.UtcNow.AddDays(1).ToUnixTimeSeconds();
+
+                string val = JWT.Encode(new
+                {
+	                certificateAuthority=true,
+	                exp= exp,
+	                identityPublicKey= x5u,
+	                nbf= iat
+                }, signKey, JwsAlgorithm.ES384, new Dictionary<string, object> { { "x5u", b64Key } }, new JwtSettings()
+                {
+	                JsonMapper = new JWTMapper()
+                });
                 
-                certChain = XblmsaService.MinecraftChain;
+                chain = new string[]
+                {
+	                val,
+	                chain[0],
+	                chain[1]
+                };
+
+                var hack = new
+                {
+	                chain= chain
+                };
+
+                var jsonChain = JsonConvert.SerializeObject(hack);
+
+                certChain = Encoding.UTF8.GetBytes(jsonChain); // XblmsaService.MinecraftChain;
             }
             else
             {
@@ -447,7 +482,7 @@ namespace Alex.Worlds.Bedrock
                     RandomNonce = new Random().Next(),
                 };
 
-                certChain = EncodeJwt(certificateData, b64Key, signKey);
+                certChain = EncodeJwt(certificateData, b64Key, signKey, true);
             }
 
             var skinData = EncodeSkinJwt(clientKey, signKey, username, b64Key);
@@ -550,7 +585,7 @@ namespace Alex.Worlds.Bedrock
             return ECDsa.Create(signParam);
         }
 
-        private byte[] EncodeJwt(CertificateData certificateData, string b64Key, ECDsa signKey)
+        private byte[] EncodeJwt(CertificateData certificateData, string b64Key, ECDsa signKey, bool doChain)
         {
 	        string val = JWT.Encode(certificateData, signKey, JwsAlgorithm.ES384, new Dictionary<string, object> { { "x5u", b64Key } }, new JwtSettings()
             {
@@ -560,10 +595,12 @@ namespace Alex.Worlds.Bedrock
            // Log.Warn(JWT.Payload(val));
 
           //  Log.Warn(string.Join(";", JWT.Headers(val)));
+          if (doChain)
+          {
+	          val = $@"{{ ""chain"": [""{val}""] }}";
+          }
 
-            val = $@"{{ ""chain"": [""{val}""] }}";
-
-            return Encoding.UTF8.GetBytes(val);
+          return Encoding.UTF8.GetBytes(val);
         }
 
         private byte[] EncodeSkinJwt(AsymmetricCipherKeyPair newKey, ECDsa signKey, string username, string x5u)
