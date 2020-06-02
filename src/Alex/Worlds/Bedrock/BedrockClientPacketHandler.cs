@@ -365,6 +365,18 @@ namespace Alex.Worlds.Bedrock
 				Log.Warn($"Tried spawning invalid player: {message.uuid}");
 			}
 		}
+
+        private static JsonSerializerSettings GeometrySerializationSettings = new JsonSerializerSettings()
+        {
+	        Converters = new List<JsonConverter>()
+	        {
+		        new SingleOrArrayConverter<Vector3>(),
+		        new SingleOrArrayConverter<Vector2>(),
+		        new Vector3Converter(),
+		        new Vector2Converter()
+	        },
+	        MissingMemberHandling = MissingMemberHandling.Ignore
+        };
         
 		public void HandleMcpePlayerList(McpePlayerList message)
 		{
@@ -401,28 +413,20 @@ namespace Alex.Worlds.Bedrock
 								MinecraftGeometry geometry = null;
 								var               jObject  = JObject.Parse(r.Skin.GeometryData);
 
+								var resourcePatch = JsonConvert.DeserializeObject<SkinResourcePatch>(r.Skin.ResourcePatch, GeometrySerializationSettings);
 								if (jObject.TryGetValue(
-									r.Skin.SkinResourcePatch.Geometry.Default,
+									resourcePatch.Geometry.Default,
 									StringComparison.InvariantCultureIgnoreCase, out JToken value))
 								{
 									geometry = value.ToObject<MinecraftGeometry>(
 										JsonSerializer.Create(
-											new JsonSerializerSettings()
-											{
-												Converters = new List<JsonConverter>()
-												{
-													new SingleOrArrayConverter<Vector3>(),
-													new SingleOrArrayConverter<Vector2>(),
-													new Vector3Converter(),
-													new Vector2Converter()
-												}
-											}));
+											GeometrySerializationSettings));
 								}
 								else
 								{
 									foreach (var prop in jObject)
 									{
-										if (prop.Key.StartsWith(r.Skin.SkinResourcePatch.Geometry.Default))
+										if (prop.Key.StartsWith(resourcePatch.Geometry.Default))
 										{
 											var split = prop.Key.Split(':');
 
@@ -436,33 +440,14 @@ namespace Alex.Worlds.Bedrock
 												{
 													parentGeometry = parent.ToObject<MinecraftGeometry>(
 														JsonSerializer.Create(
-															new JsonSerializerSettings()
-															{
-																Converters = new List<JsonConverter>()
-																{
-																	new SingleOrArrayConverter<Vector3>(),
-																	new SingleOrArrayConverter<Vector2>(),
-																	new Vector3Converter(),
-																	new Vector2Converter()
-																}
-															}));
+															GeometrySerializationSettings));
 												}
 											}
 
 											//TODO: Support inheritance
 
 											geometry = prop.Value.ToObject<MinecraftGeometry>(
-												JsonSerializer.Create(
-													new JsonSerializerSettings()
-													{
-														Converters = new List<JsonConverter>()
-														{
-															new SingleOrArrayConverter<Vector3>(),
-															new SingleOrArrayConverter<Vector2>(),
-															new Vector3Converter(),
-															new Vector2Converter()
-														}
-													}));
+												JsonSerializer.Create(GeometrySerializationSettings));
 
 											if (parentGeometry != null)
 											{
@@ -512,7 +497,7 @@ namespace Alex.Worlds.Bedrock
 												new Vector2Converter());
 
 										if (geo.TryGetValue(
-											r.Skin.SkinResourcePatch.Geometry.Default,
+											resourcePatch.Geometry.Default,
 											out MinecraftGeometry minecraftGeometry))
 										{
 											geometry = minecraftGeometry;
@@ -594,83 +579,100 @@ namespace Alex.Worlds.Bedrock
             }
 		}
 
-		public void SpawnMob(long entityId, Guid uuid, EntityType type, PlayerLocation position, Microsoft.Xna.Framework.Vector3 velocity)
+		public void SpawnMob(long entityId,
+			Guid uuid,
+			EntityType type,
+			PlayerLocation position,
+			Microsoft.Xna.Framework.Vector3 velocity, EntityAttributes attributes)
 		{
 			Entity entity = null;
-			if (EntityFactory.ModelByType(type, out var renderer, out EntityData knownData))
+
+			if (type == EntityType.FallingBlock)
 			{
-				//if (Enum.TryParse(knownData.Name, out type))
-				//{
-				//	entity = type.Create(null);
-				//}
-                entity = type.Create(null);
+				entity = new EntityFallingBlock(null, null);
+			}
+			else
+			{
+
+				if (EntityFactory.ModelByType(type, out var renderer, out EntityData knownData))
+				{
+					//if (Enum.TryParse(knownData.Name, out type))
+					//{
+					//	entity = type.Create(null);
+					//}
+					entity = type.Create(null);
+
+					if (entity == null)
+					{
+						entity = new Entity((int) type, null, Client);
+					}
+
+					//if (knownData.Height)
+					{
+						entity.Height = knownData.Height;
+					}
+
+					//if (knownData.Width.HasValue)
+					entity.Width = knownData.Width;
+
+					if (string.IsNullOrWhiteSpace(entity.NameTag) && !string.IsNullOrWhiteSpace(knownData.Name))
+					{
+						entity.NameTag = knownData.Name;
+					}
+				}
 
 				if (entity == null)
 				{
-					entity = new Entity((int) type, null, Client);
+					Log.Warn($"Could not create entity of type: {(int) type}:{type.ToString()}");
+
+					return;
 				}
 
-				//if (knownData.Height)
+				if (renderer == null)
 				{
-					entity.Height = knownData.Height;
-				}
+					var def = AlexInstance.Resources.BedrockResourcePack.EntityDefinitions.FirstOrDefault(
+						x => x.Value.Filename.Replace("_", "").Equals(type.ToString().ToLowerInvariant()));
 
-				//if (knownData.Width.HasValue)
-				entity.Width = knownData.Width;
-
-				if (string.IsNullOrWhiteSpace(entity.NameTag) && !string.IsNullOrWhiteSpace(knownData.Name))
-				{
-					entity.NameTag = knownData.Name;
-				}
-			}
-
-			if (entity == null)
-			{
-				Log.Warn($"Could not create entity of type: {(int) type}:{type.ToString()}");
-				return;
-			}
-
-			if (renderer == null)
-			{
-				var def = AlexInstance.Resources.BedrockResourcePack.EntityDefinitions.FirstOrDefault(x =>
-					x.Value.Filename.Replace("_", "").Equals(type.ToString().ToLowerInvariant()));
-				if (!string.IsNullOrWhiteSpace(def.Key))
-				{
-					EntityModel model;
-					if (ModelFactory.TryGetModel(def.Value.Geometry["default"],
-						    out model) && model != null)
+					if (!string.IsNullOrWhiteSpace(def.Key))
 					{
-						var textures = def.Value.Textures;
-						string texture;
-						if (!textures.TryGetValue("default", out texture))
-						{
-							texture = textures.FirstOrDefault().Value;
-						}
+						EntityModel model;
 
-						if (AlexInstance.Resources.BedrockResourcePack.Textures.TryGetValue(texture,
-							out var bmp))
+						if (ModelFactory.TryGetModel(def.Value.Geometry["default"], out model) && model != null)
 						{
-							PooledTexture2D t = TextureUtils.BitmapToTexture2D(AlexInstance.GraphicsDevice, bmp);
+							var    textures = def.Value.Textures;
+							string texture;
 
-							renderer = new EntityModelRenderer(model, t);
+							if (!textures.TryGetValue("default", out texture))
+							{
+								texture = textures.FirstOrDefault().Value;
+							}
+
+							if (AlexInstance.Resources.BedrockResourcePack.Textures.TryGetValue(texture, out var bmp))
+							{
+								PooledTexture2D t = TextureUtils.BitmapToTexture2D(AlexInstance.GraphicsDevice, bmp);
+
+								renderer = new EntityModelRenderer(model, t);
+							}
 						}
 					}
 				}
-			}
 
-			if (renderer == null)
-			{
-				Log.Debug($"Missing renderer for entity: {type.ToString()} ({(int) type})");
-				return;
-			}
+				if (renderer == null)
+				{
+					Log.Debug($"Missing renderer for entity: {type.ToString()} ({(int) type})");
 
-			if (renderer.Texture == null)
-			{
-				Log.Debug($"Missing texture for entity: {type.ToString()} ({(int) type})");
-				return;
-			}
+					return;
+				}
 
-			entity.ModelRenderer = renderer;
+				if (renderer.Texture == null)
+				{
+					Log.Debug($"Missing texture for entity: {type.ToString()} ({(int) type})");
+
+					return;
+				}
+
+				entity.ModelRenderer = renderer;
+			}
 
 			entity.KnownPosition = position;
 			entity.Velocity = velocity;
@@ -683,10 +685,10 @@ namespace Alex.Worlds.Bedrock
 
 		public void HandleMcpeAddEntity(McpeAddEntity message)
 		{
-			var type = message.entityType.Replace("minecraft:", "");
+			var type = message.entityType.Replace("minecraft:", "").Replace("_", "");
             if (Enum.TryParse(typeof(EntityType), type, true, out object res))
             {
-                SpawnMob(message.runtimeEntityId, Guid.NewGuid(), (EntityType)res, new PlayerLocation(message.x, message.y, message.z, message.headYaw, message.yaw, message.pitch), new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ) * 20f);
+                SpawnMob(message.runtimeEntityId, Guid.NewGuid(), (EntityType)res, new PlayerLocation(message.x, message.y, message.z, message.headYaw, message.yaw, message.pitch), new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ) * 20f, message.attributes);
                 _entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
             }
             else
@@ -1102,7 +1104,35 @@ namespace Alex.Worlds.Bedrock
 
 			if (entity == null)
 				return;
-			
+
+			if (entity is EntityFallingBlock fallingBlock)
+			{
+				foreach (var meta in message.metadata._entries.ToArray())
+				{
+					switch ((MiNET.Entities.Entity.MetadataFlags) meta.Key)
+					{
+						case MiNET.Entities.Entity.MetadataFlags.Variant:
+							message.metadata._entries.Remove(meta.Key);
+
+							if (meta.Value is MetadataInt metaInt)
+							{
+								var blockState = ChunkProcessor.GetBlockState((uint) metaInt.Value);
+
+								if (ItemFactory.TryGetItem(blockState.Name, out var item))
+								{
+									fallingBlock.SetItem(item);
+								}
+								else
+								{
+									Log.Info($"Could not get item: {blockState.Name}");
+								}
+							}
+
+							break;
+					}
+				}
+			}
+
 			entity.HandleMetadata(message.metadata);
 			//UnhandledPackage(message);
 		}

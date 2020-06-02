@@ -138,6 +138,9 @@ namespace Alex.Utils
 				case EntityType.Vex:
 					entity = new Vex(world);
 					break;
+				case EntityType.FallingBlock:
+					entity = new EntityFallingBlock(world, null);
+					break;
 				//case EntityType.Human:
 					//entity = new PlayerMob("test", world, );
 				//	break;

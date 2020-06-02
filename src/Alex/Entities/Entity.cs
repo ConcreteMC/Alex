@@ -52,7 +52,7 @@ namespace Alex.Entities
 		public bool IsSpawned { get; set; }
 
 		public DateTime LastUpdatedTime { get; set; }
-		public PlayerLocation KnownPosition { get; set; }
+		public virtual PlayerLocation KnownPosition { get; set; }
 
 		public Vector3 Velocity { get; set; } = Vector3.Zero;
 		private float _posOffset = 0;
@@ -386,10 +386,19 @@ namespace Alex.Entities
 					}
 						break;
 					default:
-						Log.Debug($"Unknown flag: {(MiNET.Entities.Entity.MetadataFlags) meta.Key}");
+						if (!HandleMetadata((MiNET.Entities.Entity.MetadataFlags) meta.Key, meta.Value))
+						{
+							Log.Debug($"Unknown flag: {(MiNET.Entities.Entity.MetadataFlags) meta.Key}");
+						}
+
 						break;
 				}
 			}
+		}
+
+		protected virtual bool HandleMetadata(MiNET.Entities.Entity.MetadataFlags flag, MetadataEntry entry)
+		{
+			return false;
 		}
 
 		private void HandleEntityFlags(BitArray bits)
