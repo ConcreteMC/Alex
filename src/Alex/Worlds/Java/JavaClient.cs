@@ -140,7 +140,7 @@ namespace Alex.Worlds.Java
 			throw new NotImplementedException();
 		}
 
-		public void UseItem(IItem item, int hand)
+		public void UseItem(IItem item, int hand, ItemUseAction action)
 		{
 			SendPacket(new UseItemPacket()
 			{

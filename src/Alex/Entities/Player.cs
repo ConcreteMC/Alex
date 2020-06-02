@@ -484,7 +484,7 @@ namespace Alex.Entities
 			    var coordR = new BlockCoordinates(raytraceFloored);
 			    
 			    //IBlock block = null;
-			    if (!IsWorldImmutable)
+			    if (!IsWorldImmutable && HasRaytraceResult)
 			    {
 				    var existingBlock = Level.GetBlock(coordR);
 				    bool isBlockItem = slot is ItemBlock;
@@ -531,7 +531,7 @@ namespace Alex.Entities
 
 			    if (!(slot is ItemAir) && slot.Id > 0 && slot.Count > 0)
                 {
-                    Network?.UseItem(slot, hand);
+                    Network?.UseItem(slot, hand, HasRaytraceResult ? ItemUseAction.RightClickBlock : ItemUseAction.RightClickAir);
                     Log.Debug($"Used item!");
 
 	                return true;

@@ -69,7 +69,7 @@ namespace Alex.Worlds
 			
 		}
 
-		public void UseItem(IItem item, int hand)
+		public void UseItem(IItem item, int hand, ItemUseAction useAction)
 		{
 			
 		}

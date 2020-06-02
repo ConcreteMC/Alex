@@ -948,15 +948,34 @@ namespace Alex.Worlds.Bedrock
 		  Session.SendPacket(packet);
 	    }
 
-	    public void UseItem(IItem item, int hand)
+	    public void UseItem(IItem item, int hand, ItemUseAction action)
 	    {
 		    if (!(item is Item itemInHand))
 			    return;
+
+		    var minetItem = GetMiNETItem(item);
+		    McpeInventoryTransaction.ItemUseAction useAction = McpeInventoryTransaction.ItemUseAction.Use;
+		    switch (action)
+		    {
+			    case ItemUseAction.Use:
+				    break;
+			    
+			    case ItemUseAction.ClickBlock:
+			    case ItemUseAction.RightClickBlock:
+				    useAction = McpeInventoryTransaction.ItemUseAction.Clickblock;
+				    break;
+			    
+			    case ItemUseAction.ClickAir:
+			    case ItemUseAction.RightClickAir:
+				    useAction = McpeInventoryTransaction.ItemUseAction.Clickair;
+				    break;
+		    }
 		    
 		    var packet = McpeInventoryTransaction.CreateObject();
 		    packet.transaction = new ItemUseTransaction()
 		    {
-			    ActionType = McpeInventoryTransaction.ItemUseAction.Use
+			    ActionType = useAction,
+			    Item = minetItem
 		    };
 
 		    Session.SendPacket(packet);

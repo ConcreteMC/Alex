@@ -22,7 +22,7 @@ namespace Alex.API.Network
 		    McpeInventoryTransaction.ItemUseOnEntityAction action);
 
 	    void WorldInteraction(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition);
-	    void UseItem(IItem item, int hand);
+	    void UseItem(IItem item, int hand, ItemUseAction action);
 	    void HeldItemChanged(IItem item, short slot);
 	    void Close();
     }
