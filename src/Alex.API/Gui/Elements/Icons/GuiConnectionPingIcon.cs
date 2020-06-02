@@ -1,11 +1,15 @@
-﻿using Alex.API.Graphics.Textures;
+﻿using System;
+using Alex.API.Graphics.Textures;
+using Alex.API.Graphics.Typography;
 using Alex.API.Gui.Graphics;
+using Alex.API.Utils;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 using RocketUI;
 
 namespace Alex.API.Gui.Elements.Icons
 {
-    public class GuiConnectionPingIcon : GuiImage
+    public class GuiConnectionPingIcon : GuiElement
     {
         private GuiTextures _offlineState = GuiTextures.ServerPing0;
 
@@ -45,10 +49,13 @@ namespace Alex.API.Gui.Elements.Icons
         private int _animationFrame;
 	    private bool _isPendingUpdate;
 	    private bool _isOutdated = false;
-        public GuiConnectionPingIcon() : base(GuiTextures.ServerPing0)
-        {
+	    private long _ping = 0;
+	    private bool _renderLatency = false;
+	    public GuiConnectionPingIcon() : base()
+	    {
+		    Background = GuiTextures.ServerPing0;
             SetFixedSize(10, 8);
-        }
+	    }
 
         protected override void OnInit(IGuiRenderer renderer)
         {
@@ -70,7 +77,8 @@ namespace Alex.API.Gui.Elements.Icons
 				Font = renderer.Font,
 				Text = string.Empty,
                 Anchor = Alignment.TopRight,
-				Margin = new Thickness(5, 0, Background.Width + 15, 0)
+				Margin = new Thickness(5, 0, Background.Width + 15, 0),
+				Enabled = false
 			});
         }
 
@@ -82,6 +90,7 @@ namespace Alex.API.Gui.Elements.Icons
 
         public void SetPing(long ms)
         {
+	        _ping = ms;
             _isPending = false;
 
 	        if (!_isOutdated)
@@ -124,15 +133,30 @@ namespace Alex.API.Gui.Elements.Icons
             Background = _offlineTexture;
         }
 
+        private Point _cursorPosition = Point.Zero;
         protected override void OnUpdate(GameTime gameTime)
         {
-            base.OnUpdate(gameTime);
+	        base.OnUpdate(gameTime);
 
             if (_isPending)
             {
                 var dt = gameTime.TotalGameTime.TotalSeconds;
 
                 _animationFrame = (int)((dt * 5) % _connectingStates.Length);
+            }
+            else
+            {
+	            var mouseState = Mouse.GetState();
+
+	            _cursorPosition = GuiRenderer.Unproject(new Vector2(mouseState.X, mouseState.Y)).ToPoint();
+	            if (RenderBounds.Contains(_cursorPosition))
+	            {
+		            _renderLatency = true;
+	            }
+	            else
+	            {
+		            _renderLatency = false;
+	            }
             }
         }
 
@@ -144,7 +168,18 @@ namespace Alex.API.Gui.Elements.Icons
             }
             else
             {
-                base.OnDraw(graphics, gameTime);
+	            base.OnDraw(graphics, gameTime);
+	            
+	            if (_renderLatency)
+	            {
+		            string text = $"{_ping}ms";
+
+		            var size = graphics.Font.MeasureString(text);
+		            var position = _cursorPosition + new Point(5, 5);
+		            
+		            graphics.SpriteBatch.FillRectangle(new Rectangle(position, size.ToPoint()), Color.Black * 0.5f);
+		            graphics.DrawString(position.ToVector2(), text, TextColor.White, FontStyle.None, 1f);
+	            }
             }
         }
     }

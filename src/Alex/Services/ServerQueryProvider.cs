@@ -118,7 +118,7 @@ namespace Alex.Services
 					client.OnMotdReceivedHandler += (sender, m) =>
 				    {
 						motd = m;
-						pingTime = sw.ElapsedMilliseconds;
+						pingTime = m.Latency;
 					    ar.Set();
 
 						pingCallback.Invoke(new ServerPingResponse(true, pingTime));

@@ -63,6 +63,7 @@ namespace Alex.Worlds.Bedrock
 		public int ProtocolVersion;
 		public string ClientVersion;
 		public IPEndPoint ServerEndpoint;
+		public long Latency;
 
 		public BedrockMotd(string raw)
 		{
@@ -227,11 +228,12 @@ namespace Alex.Worlds.Bedrock
 				{
 					Connection.ConnectionInfo.ThroughPut.Change(Timeout.Infinite, Timeout.Infinite);
 
-					if (Connection.TryLocate(ServerEndpoint, out var serverInfo))
+					if (TryLocate(ServerEndpoint, out var serverInfo))
 					{
 						OnMotdReceivedHandler?.Invoke(this, new BedrockMotd(serverInfo.serverName)
 						{
-							ServerEndpoint = serverInfo.serverEndPoint
+							ServerEndpoint = serverInfo.serverEndPoint,
+							Latency = serverInfo.ping
 						});
 						resetEvent.Set();
 					}
@@ -245,6 +247,50 @@ namespace Alex.Worlds.Bedrock
 				}
 			});
 
+		}
+		
+		public bool TryLocate(
+			IPEndPoint targetEndPoint,
+			out (IPEndPoint serverEndPoint, string serverName, long ping) serverInfo,
+			int numberOfAttempts = 2147483647)
+		{
+			Stopwatch sw = new Stopwatch();
+			this.Connection.Start();
+			bool autoConnect = this.Connection.AutoConnect;
+			this.Connection.AutoConnect = false;
+			while (!this.Connection.FoundServer)
+			{
+				if ((!sw.IsRunning || sw.ElapsedMilliseconds > 100) && numberOfAttempts-- > 0)
+				{
+					sw.Restart();
+					this.SendUnconnectedPingInternal(targetEndPoint);
+				}
+
+				if (numberOfAttempts <= 0)
+					break;
+
+				//Task.Delay(100).Wait();
+			}
+
+			sw.Stop();
+			
+			serverInfo = (this.Connection.RemoteEndpoint, this.Connection.RemoteServerName, sw.ElapsedMilliseconds);
+			this.Connection.AutoConnect = autoConnect;
+			return this.Connection.FoundServer;
+		}
+		
+		private void SendUnconnectedPingInternal(IPEndPoint targetEndPoint)
+		{
+			byte[] data = new UnconnectedPing()
+			{
+				pingId = Stopwatch.GetTimestamp(),
+				guid = this.Connection._rakOfflineHandler.ClientGuid
+			}.Encode();
+			
+			if (targetEndPoint != null)
+				this.Connection.SendData(data, targetEndPoint);
+			else
+				this.Connection.SendData(data, new IPEndPoint(IPAddress.Broadcast, 19132));
 		}
 
 		public ConnectionInfo GetConnectionInfo()
