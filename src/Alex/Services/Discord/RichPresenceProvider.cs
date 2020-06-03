@@ -21,7 +21,7 @@ namespace Alex.Services.Discord
         /// NOTE: PLEASE DON'T CALL THIS METHOD AS A PLUGIN. YOU'RE NOT SUPPOSED TO!
         /// THIS METHOD IS ONLY MEANT TO BE CALLED BY THE CORE, NOT BY PLUGINS!
         /// </summary>
-        public static void Initialize()
+        internal static void Initialize()
         {
             client = new DiscordRpcClient(clientId);
             client.Initialize();
@@ -62,6 +62,7 @@ namespace Alex.Services.Discord
         public static void ClearPresence()
         {
             client?.ClearPresence();
+            SetPresence(GenerateDefaultPresence());
         }
 
         /// <summary>
@@ -86,7 +87,7 @@ namespace Alex.Services.Discord
             };
         }
 
-        private static Assets GetDefaultAssets()
+        internal static Assets GetDefaultAssets()
         {
             return new Assets
             {

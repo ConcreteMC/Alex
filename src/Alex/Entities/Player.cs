@@ -14,7 +14,7 @@ using Alex.Items;
 using Alex.Net;
 using Alex.Utils;
 using Alex.Worlds;
-using Alex.Worlds.Bedrock;
+using Alex.Worlds.Multiplayer.Bedrock;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET;

@@ -2,7 +2,7 @@ using Alex.API.Gui;
 using Alex.API.Input;
 using Alex.API.Network;
 using Alex.Net;
-using Alex.Worlds.Bedrock;
+using Alex.Worlds.Multiplayer.Bedrock;
 using GLib;
 using MiNET.Net;
 using MiNET.UI;

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Utils;
 using Alex.Blocks.Minecraft;
+using Alex.Worlds.Chunks;
 using NLog;
 
 namespace Alex.Worlds.Lighting

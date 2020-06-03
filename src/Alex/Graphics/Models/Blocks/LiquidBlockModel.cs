@@ -12,6 +12,7 @@ using Alex.Blocks.State;
 using Alex.ResourcePackLib.Json;
 using Alex.Utils;
 using Alex.Worlds;
+using Alex.Worlds.Abstraction;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Graphics.Models.Blocks

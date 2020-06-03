@@ -15,7 +15,11 @@ using Alex.Gui.Elements;
 using Alex.Items;
 using Alex.Net;
 using Alex.ResourcePackLib.Json.Models.Items;
+using Alex.Services.Discord;
 using Alex.Worlds;
+using Alex.Worlds.Abstraction;
+using Alex.Worlds.Singleplayer;
+using DiscordRPC;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -103,6 +107,15 @@ namespace Alex.Gamestates.InGame
 			
 			World.SpawnPoint = WorldProvider.GetSpawnPoint();
 			World.Camera.MoveTo(World.GetSpawnPoint(), Vector3.Zero);
+
+			RichPresenceProvider.SetPresence(new RichPresence()
+			{
+				State = "Multiplayer",
+				Timestamps = Timestamps.Now,
+				Details = $"Playing on a {Alex.ServerType} server.",
+				Assets = RichPresenceProvider.GetDefaultAssets()
+			});
+			
 			base.OnLoad(args);
 		}
 
@@ -737,6 +750,8 @@ namespace Alex.Gamestates.InGame
 			NetworkProvider.Close();
 
 			_playingHud.Unload();
+			
+			RichPresenceProvider.ClearPresence();
 			//GetService<IEventDispatcher>().UnregisterEvents(_playingHud.Chat);
 			//_playingHud.Chat = 
 		}

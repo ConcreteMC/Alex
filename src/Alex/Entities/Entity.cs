@@ -16,7 +16,7 @@ using Alex.Net;
 using Alex.ResourcePackLib.Json.Models.Items;
 using Alex.Utils;
 using Alex.Worlds;
-using Alex.Worlds.Java;
+using Alex.Worlds.Multiplayer.Java;
 using Microsoft.Xna.Framework;
 using MiNET.Utils;
 using NLog;

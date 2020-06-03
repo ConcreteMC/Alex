@@ -28,7 +28,10 @@ using Alex.Graphics.Models.Items;
 using Alex.Gui.Forms.Bedrock;
 using Alex.Net;
 using Alex.Utils;
-using Alex.Worlds.Bedrock;
+using Alex.Worlds.Abstraction;
+using Alex.Worlds.Chunks;
+using Alex.Worlds.Lighting;
+using Alex.Worlds.Multiplayer.Bedrock;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -64,7 +67,7 @@ namespace Alex.Worlds
 		
 		private IEventDispatcher EventDispatcher { get; }
 		public BedrockFormManager FormManager { get; }
-		public ContainerManager ContainerManager { get; }
+		public InventoryManager InventoryManager { get; }
 		private SkyBox SkyRenderer { get; }
 		private bool UseDepthMap { get; set; }
 		//public SkyLightCalculations SkyLightCalculations { get; }
@@ -161,7 +164,7 @@ namespace Alex.Worlds
 
 			var guiManager = serviceProvider.GetRequiredService<GuiManager>();
 			FormManager = new BedrockFormManager(networkProvider, guiManager, serviceProvider.GetService<Alex>().InputManager);
-			ContainerManager = new ContainerManager(guiManager);
+			InventoryManager = new InventoryManager(guiManager);
 				
 			SkyRenderer = new SkyBox(serviceProvider, graphics, this);
 			//SkyLightCalculations = new SkyLightCalculations();
@@ -651,7 +654,7 @@ namespace Alex.Worlds
 			ChunkColumn chunk;
 			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 			{
-				Worlds.ChunkColumn realColumn = (Worlds.ChunkColumn) chunk;
+				ChunkColumn realColumn = (ChunkColumn) chunk;
 				return	realColumn.GetBiome(x & 0xf, z & 0xf);
 			}
 

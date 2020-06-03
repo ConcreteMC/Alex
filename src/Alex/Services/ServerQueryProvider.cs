@@ -12,7 +12,7 @@ using Alex.Networking.Java.Packets;
 using Alex.Networking.Java.Packets.Handshake;
 using Alex.Networking.Java.Packets.Status;
 using Alex.Utils;
-using Alex.Worlds.Bedrock;
+using Alex.Worlds.Multiplayer.Bedrock;
 using MiNET.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;

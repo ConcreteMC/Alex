@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Services;
 using Alex.Utils;
-using Alex.Worlds.Bedrock;
 using log4net;
 using Microsoft.Extensions.DependencyInjection;
 using NLog;
