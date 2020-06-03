@@ -18,7 +18,7 @@ using RocketUI;
 
 namespace Alex.Gui.Elements
 {
-	public class ChatComponent : GuiTextInput, IChatReceiver
+	public class ChatComponent : GuiTextInput
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ChatComponent));
 		

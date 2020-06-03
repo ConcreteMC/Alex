@@ -5,9 +5,6 @@ namespace Alex.API.GameStates
 {
     public interface IGameState
     {
-        bool IsLoaded { get; }
-        bool IsShown { get; }
-
         IGameState ParentState { get; set; }
 
         void Load(IRenderArgs args);

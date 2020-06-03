@@ -848,11 +848,6 @@ namespace Alex.Worlds.Bedrock
 			Session.SendPacket(text);
 		}
 
-		void INetworkProvider.SendChatMessage(string message)
-		{
-			SendChat(message);
-		}
-
 		public void SendPlayerAction(PlayerAction action, BlockCoordinates? coordinates, int? blockFace )
 		{
 			McpePlayerAction packet = McpePlayerAction.CreateObject();

@@ -1,6 +1,7 @@
 using System;
 using Alex.API.Utils;
 using Alex.API.World;
+using Alex.Blocks;
 using Alex.Blocks.State;
 using Microsoft.Xna.Framework;
 using MiNET.Utils;

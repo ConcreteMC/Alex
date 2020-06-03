@@ -17,7 +17,7 @@ using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 
 namespace Alex.Networking.Java.Util
 {
-	public class MinecraftStream : Stream, IMinecraftStream
+	public class MinecraftStream : Stream
 	{
 		private BufferedBlockCipher EncryptCipher { get; set; }
 		private BufferedBlockCipher DecryptCipher { get; set; }

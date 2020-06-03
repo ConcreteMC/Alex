@@ -8,7 +8,6 @@ namespace Alex.Blocks.Properties
 		public PropertyInt(string name, int defaultValue = 0) : base(name)
 		{
 			_defaultValue = defaultValue;
-			DefaultValue = defaultValue;
 		}
 
 		public override int ParseValue(string value)
@@ -19,16 +18,6 @@ namespace Alex.Blocks.Properties
 			}
 
 			return _defaultValue;
-		}
-
-		public override string ToString(int v)
-		{
-			return v.ToString().ToLowerInvariant();
-		}
-
-		public override object[] GetValidValues()
-		{
-			throw new System.NotImplementedException();
 		}
 	}
 }

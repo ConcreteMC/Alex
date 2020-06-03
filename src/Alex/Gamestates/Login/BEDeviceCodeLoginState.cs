@@ -9,7 +9,7 @@ using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Graphics;
 using Alex.API.Services;
 using Alex.API.Utils;
-using Alex.GameStates.Gui.Common;
+using Alex.Gamestates.Common;
 using Alex.Gui;
 using Alex.Services;
 using Microsoft.Xna.Framework;

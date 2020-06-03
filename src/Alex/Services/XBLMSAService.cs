@@ -147,61 +147,7 @@ namespace Alex.Services
 				}
 			}
 		}
-
-        public async Task DoXboxAuth()
-		{
-			bool linux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
-			if (!linux)
-			{
-				var result = await StartDeviceAuthConnect();
-				OpenBrowser(result.verification_uri);
-
-				string r = "authorization_pending";
-				MsaDeviceAuthPollState token = null;
-				while (r == "authorization_pending")
-				{
-					var poll = await DevicePollState(result.device_code);
-					r = poll.Error;
-					token = poll;
-				}
-
-				var userToken = await DoUserAuth(token.AccessToken);
-
-				var xsts = await DoXsts(null, null, userToken.Token);
-
-				await RequestMinecraftChain(xsts, MinecraftKeyPair);
-            }
-			else
-			{
-			/*	await Task.Run(() =>
-				{
-					EtoApplication.AsyncInvoke(async () =>
-					{
-						XboxAuthForm authForm = new XboxAuthForm(this, false);
-						//authForm.MainWebView.Url = new Uri(result.verification_uri);
-
-						authForm.Closed += async (sender, args) =>
-						{
-							Console.WriteLine();
-
-							//var userToken = await DoUserAuth(token.access_token);
-							var userToken = await DoUserAuth(authForm.AccessToken);
-
-							//var deviceToken = await DoDeviceAuth(authForm.AccessToken);
-
-							//var titleToken = await DoTitleAuth(deviceToken, authForm.AccessToken);
-
-							var xsts = await DoXsts(null, null, userToken.Token);
-
-							await RequestMinecraftChain(xsts, MinecraftKeyPair);
-						};
-
-						authForm.Show();
-					});
-				});*/
-			}
-		}
-
+		
 		private class MCChainPostData
 		{
 			[JsonProperty("identityPublicKey")]

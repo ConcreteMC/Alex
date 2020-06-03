@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Graphics.Typography;
-using Alex.API.Gui.Dialogs;
+using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;

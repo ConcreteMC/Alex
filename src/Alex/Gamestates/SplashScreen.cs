@@ -2,11 +2,11 @@
 using Alex.API.Gui.Elements.Layout;
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
-using Alex.GameStates.Gui.Common;
+using Alex.Gamestates.Common;
 using Microsoft.Xna.Framework;
 using RocketUI;
 
-namespace Alex.GameStates
+namespace Alex.Gamestates
 {
 	public class SplashScreen : GuiGameStateBase, IProgressReceiver
 	{

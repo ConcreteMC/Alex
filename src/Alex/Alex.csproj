@@ -4,11 +4,15 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <DefineConstants>TRACE;DEBUG;WINDOWS;MONOGAME;NETCOREAPP2_0;DESKTOPGL;WINDOWS;LINUX</DefineConstants>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-    <ApplicationIcon>Icon.ico</ApplicationIcon>
+    <ApplicationIcon>.\Resources\Icon.ico</ApplicationIcon>
     <StartupObject>Alex.Program</StartupObject>
     <Platforms>x64;AnyCPU</Platforms>
     <Configurations>Debug;Release;Appveyor</Configurations>
     <PublishTrimmed>false</PublishTrimmed>
+    <Description>A Minecraft client written in C#</Description>
+    <PackageProjectUrl>https://github.com/kennyvv/Alex</PackageProjectUrl>
+    <PackageLicenseUrl>https://github.com/kennyvv/Alex/blob/master/LICENSE</PackageLicenseUrl>
+    <RepositoryUrl>https://github.com/kennyvv/Alex</RepositoryUrl>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -57,6 +61,7 @@
     <None Remove="Resources\ScrollBar.png" />
     <EmbeddedResource Include="Resources\DebugFont.xnb" />
     <None Remove="Resources\logo2.png" />
+    <EmbeddedResource Include="Resources\Icon.bmp" />
     <EmbeddedResource Include="Resources\logo2.png" />
     <None Remove="Resources\Splash.png" />
     <EmbeddedResource Include="Resources\ScrollBar.png" />
@@ -91,16 +96,6 @@
     <None Remove="Resources\Blockshader.xnb" />
     <None Remove="Resources\Lightmap.xnb" />
     <EmbeddedResource Include="Resources\Lightmap.xnb" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Remove="Icon.bmp" />
-    <None Remove="Icon.ico" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="Icon.bmp" />
-    <EmbeddedResource Include="Icon.ico" />
   </ItemGroup>
 
   <ItemGroup>
@@ -155,11 +150,14 @@
 
   <ItemGroup>
     <Folder Include="Graphics\Models\Entity\Geometry\" />
-    <Folder Include="Utils\Net" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="Resources\Blockshader.xnb" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Icon.ico" />
   </ItemGroup>
 
 	<Target Name="ChangeAliasesOfNugetRefs" BeforeTargets="FindReferenceAssembliesForReferences;ResolveReferences">

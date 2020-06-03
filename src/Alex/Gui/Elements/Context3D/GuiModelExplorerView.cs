@@ -1,8 +1,8 @@
 ﻿using Alex.API.Gui.Elements;
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
-using Alex.GameStates;
-using Alex.Gamestates.Debug;
+using Alex.Gamestates;
+using Alex.Gamestates.Debugging;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 

@@ -3,6 +3,7 @@ using Alex.API.Blocks.State;
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.API.World;
+using Alex.Blocks;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
 using Alex.Blocks.Storage;

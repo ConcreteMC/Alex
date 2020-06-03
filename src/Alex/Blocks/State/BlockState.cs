@@ -46,7 +46,7 @@ namespace Alex.Blocks.State
 				return property.ParseValue(value);
 			}
 
-			return property.GetDefaultValue();
+			return default(T);
 		}
 
 		public BlockState WithPropertyNoResolve(string property, string value, bool clone = true)

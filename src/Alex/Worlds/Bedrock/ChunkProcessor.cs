@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading;
 using Alex.API.Blocks.State;
 using Alex.API.Graphics;
+using Alex.Blocks;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
 using Alex.Blocks.Storage;
@@ -338,10 +339,10 @@ namespace Alex.Worlds.Bedrock
 				        {
 					        //  Log.Info($"Alex chunk!");
 					        
-					        var rawSky = new Utils.NibbleArray(4096);
+					        var rawSky = new API.Utils.NibbleArray(4096);
 					        defStream.Read(rawSky.Data, 0, rawSky.Data.Length);
 					        
-					        var rawBlock = new Utils.NibbleArray(4096);
+					        var rawBlock = new API.Utils.NibbleArray(4096);
 					        defStream.Read(rawBlock.Data, 0, rawBlock.Data.Length);
 
 					        for (int x = 0; x < 16; x++)
@@ -419,14 +420,14 @@ namespace Alex.Worlds.Bedrock
 							        {
 								        var section = (ChunkSection) chunkColumn.Sections[ci];
 
-								        var rawSky = new Utils.NibbleArray(4096);
+								        var rawSky = new API.Utils.NibbleArray(4096);
 								        if (alexCompound.TryGet($"skylight-{ci}", out NbtByteArray skyData))
 								        {
 									        rawSky.Data = skyData.Value;
 								        }
 								        //defStream.Read(rawSky.Data, 0, rawSky.Data.Length);
 
-								        var rawBlock = new Utils.NibbleArray(4096);
+								        var rawBlock = new API.Utils.NibbleArray(4096);
 								        if (alexCompound.TryGet($"blocklight-{ci}", out NbtByteArray blockData))
 								        {
 									        rawBlock.Data = blockData.Value;

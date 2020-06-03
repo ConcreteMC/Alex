@@ -6,7 +6,7 @@ using Alex.API.Resources;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.Properties;
 using Alex.Blocks.State;
-using Alex.GameStates;
+using Alex.Gamestates;
 using Alex.Graphics.Models.Blocks;
 
 namespace Alex.Blocks

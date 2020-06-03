@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Drawing;
 using System.IO;
 using System.Threading;
 using Alex.API.Graphics;
@@ -11,17 +10,15 @@ using Alex.API.Gui.Graphics;
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.Entities;
-using Alex.GameStates.Gui.Common;
-using Alex.Gamestates.Gui.MainMenu;
-using Alex.GameStates.Gui.MainMenu;
-using Alex.GameStates.Gui.Multiplayer;
+using Alex.Gamestates.Common;
+using Alex.Gamestates.MainMenu;
+using Alex.Gamestates.Multiplayer;
 using Alex.Graphics.Models.Entity;
 using Alex.Gui;
 using Alex.Gui.Elements;
-using Alex.Gui.Elements.Inventory;
+using Alex.Items;
 using Alex.Networking.Java;
 using Alex.Services;
-using Alex.Utils;
 using Alex.Worlds;
 using Alex.Worlds.Generators;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,7 +29,7 @@ using NLog;
 using RocketUI;
 using Color = Microsoft.Xna.Framework.Color;
 
-namespace Alex.GameStates
+namespace Alex.Gamestates
 {
 	public class TitleState : GuiGameStateBase
 	{

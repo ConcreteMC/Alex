@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using Newtonsoft.Json;
 
-namespace Alex.Utils
+namespace Alex.API.Utils
 {
 	public class TolerantEnumConverter : JsonConverter
     {

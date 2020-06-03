@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Alex.GameStates
+namespace Alex.Gamestates
 {
 	public class GameState : IGameState
 	{
@@ -17,8 +17,8 @@ namespace Alex.GameStates
 
 		protected Alex Alex { get; }
 
-		public bool IsLoaded { get; private set; }
-		public bool IsShown { get; private set; }
+		private bool IsLoaded { get; set; }
+		private bool IsShown { get; set; }
 
 		public IGameState ParentState { get; set; } = null;
 		

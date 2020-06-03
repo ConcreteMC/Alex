@@ -32,31 +32,5 @@ namespace Alex.Blocks.Properties
 
 			return false;
 		}
-
-		public override string ToString(bool v)
-		{
-			if (!string.IsNullOrWhiteSpace(TrueString) && v)
-			{
-				return TrueString.ToLowerInvariant();
-			}
-
-			if (!string.IsNullOrWhiteSpace(FalseString) && !v)
-			{
-				return FalseString.ToLowerInvariant();
-			}
-
-			return v.ToString().ToLowerInvariant();
-		}
-
-		public override object[] GetValidValues()
-		{
-			return new object[]
-			{
-				true,
-				false,
-				TrueString,
-				FalseString
-			};
-		}
 	}
 }

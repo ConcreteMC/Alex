@@ -1,4 +1,0 @@
-namespace Alex.API.World
-{
-    
-}

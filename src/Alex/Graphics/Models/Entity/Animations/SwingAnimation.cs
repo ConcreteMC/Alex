@@ -1,6 +1,8 @@
 using System;
+using Alex.API.Utils;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
+using MathF = System.MathF;
 
 namespace Alex.Graphics.Models.Entity.Animations
 {

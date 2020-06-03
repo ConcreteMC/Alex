@@ -2,10 +2,10 @@
 using Alex.API.Gui.Elements.Layout;
 using Alex.API.Utils;
 using Alex.API.World;
-using Alex.GameStates.Gui.Common;
+using Alex.Gamestates.Common;
 using RocketUI;
 
-namespace Alex.GameStates
+namespace Alex.Gamestates
 {
     public class LoadingWorldState : GuiMenuStateBase
     {

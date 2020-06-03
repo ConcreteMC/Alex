@@ -21,22 +21,6 @@ namespace Alex
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Program));
 
-		// static async Task Main(string[] args)
-		// {
-		// 	Console.WriteLine("Hello World!");
-		//
-		// 	var path = Path.Combine(Path.GetTempPath(), "Alex");
-		// 	ConfigureNLog(path);
-		// 	Log.Info("Hello Console!");
-		// 	
-  //           
-		// 	var mcJavaAssets = new MCJavaAssetsUtil(new StorageSystem(path));
-		// 	await mcJavaAssets.EnsureLatestReleaseAsync();
-  //           
-		// 	Console.WriteLine("Done!");
-		// 	Console.ReadLine();
-		// }
-		
 		/// <summary>
 		/// The main entry point for the application.
 		/// </summary>
@@ -209,41 +193,5 @@ namespace Alex
 			var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create);
 			WorkDir = Path.Combine(appData, "Alex");
         }
-	}
-	
-	public class Testing
-	{
-		private ChunkProcessor _chunkProcessor { get; set; }
-		// private Queue<byte[]> _
-		private byte[][] data;
-
-		public Testing()
-		{
-			_chunkProcessor = new ChunkProcessor(null, false, CancellationToken.None);
-            
-			Random rnd = new Random();
-			var files = Directory.GetFiles("samplechunkdata");
-			data = new byte[files.Length][];
-			for (var index = 0; index < files.Length; index++)
-			{
-				var file = files[index];
-				data[index] = File.ReadAllBytes(file);
-			}
-			//var file = files[rnd.Next() % files.Length - 1];
-
-			//data = File.ReadAllBytes(file);
-		}
-
-
-		public void Run()
-		{
-			/*Stopwatch sw = Stopwatch.StartNew();
-			for (int i = 0; i < 100000; i++)
-			{
-				_chunkProcessor.HandleChunkData(data[i % data.Length], 0, 0, column => { });
-			}
-			sw.Stop();
-			Console.WriteLine($"Processing 100000 chunks took: {sw.ElapsedMilliseconds}ms");*/
-		}
 	}
 }

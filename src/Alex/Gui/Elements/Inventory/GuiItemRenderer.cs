@@ -1,7 +1,7 @@
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
-using Alex.GameStates;
+using Alex.Gamestates;
 using Alex.Items;
 using GLib;
 using Microsoft.Xna.Framework;

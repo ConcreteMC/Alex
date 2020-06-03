@@ -4,18 +4,8 @@ namespace Alex.Blocks.Properties
 {
 	public class UnknownProperty : StateProperty
 	{
-		public UnknownProperty(string name) : base(name, typeof(string))
+		public UnknownProperty(string name) : base(name)
 		{
-		}
-
-		public override object ValueFromString(string value)
-		{
-			return value;
-		}
-
-		public override object[] GetValidValues()
-		{
-			return new object[0];
 		}
 	}
 }

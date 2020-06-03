@@ -21,15 +21,5 @@ namespace Alex.Blocks.Properties
 
 			return BlockFace.None;
 		}
-
-		public override string ToString(BlockFace v)
-		{
-			return v.ToString().ToLowerInvariant();
-		}
-
-		public override object[] GetValidValues()
-		{
-			return (object[]) Enum.GetValues(typeof(BlockFace));
-		}
 	}
 }

@@ -1,41 +1,31 @@
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using Alex.API.Blocks.State;
 using Alex.API.Graphics;
-using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Elements.Layout;
-using Alex.API.Gui.Graphics;
-using Alex.API.Services;
 using Alex.API.Utils;
+using Alex.Blocks;
 using Alex.Blocks.State;
 using Alex.Entities;
-using Alex.GameStates;
-using Alex.Gamestates.Debugging;
-using Alex.GameStates.Gui.Common;
-using Alex.GameStates.Playing;
-using Alex.Graphics.Camera;
+using Alex.Gamestates.Common;
+using Alex.Gamestates.InGame;
 using Alex.Graphics.Models.Entity;
 using Alex.Gui.Elements;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json.Models.Entities;
-using Alex.Utils;
 using Alex.Worlds;
-using GLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using RocketUI;
 using Color = Microsoft.Xna.Framework.Color;
 using DateTime = System.DateTime;
-using Rectangle = Microsoft.Xna.Framework.Rectangle;
 using Task = System.Threading.Tasks.Task;
 
-namespace Alex.Gamestates.Debug
+namespace Alex.Gamestates.Debugging
 {
 	public class ModelDebugState : GuiGameStateBase
 	{

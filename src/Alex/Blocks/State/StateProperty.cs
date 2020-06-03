@@ -9,19 +9,13 @@ namespace Alex.Blocks.State
 	{
 		public static Dictionary<string, StateProperty> _registeredTypes = new Dictionary<string, StateProperty>(StringComparer.InvariantCultureIgnoreCase);
 		public string Name { get; }
-		public Type PropertyType { get; }
-		public object DefaultValue { get; set; }
 
-		protected StateProperty(string name, Type propertyType)
+		protected StateProperty(string name)
 		{
 			Name = name;
-			PropertyType = propertyType;
 
 			//_registeredTypes.TryAdd(name, this);
 		}
-
-		public abstract object ValueFromString(string value);
-		public abstract object[] GetValidValues();
 
 		public static StateProperty Parse(string name)
 		{
@@ -58,26 +52,11 @@ namespace Alex.Blocks.State
 
 	public abstract class StateProperty<TType> : StateProperty, IStateProperty<TType>
 	{
-		protected StateProperty(string name) : base(name, typeof(TType))
+		protected StateProperty(string name) : base(name)
 		{
 
 		}
 
 		public abstract TType ParseValue(string value);
-		public abstract string ToString(TType v);
-		public TType GetDefaultValue()
-		{
-			if (DefaultValue is TType typedDefault)
-			{
-				return typedDefault;
-			}
-
-			return default(TType);
-		}
-
-		public override object ValueFromString(string value)
-		{
-			return ParseValue(value);
-		}
 	}
 }

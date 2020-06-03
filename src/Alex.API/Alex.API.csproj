@@ -23,9 +23,6 @@
     <PackageReference Include="TextCopy" Version="3.0.1" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Blocks\State" />
-    <Folder Include="Data\Options\JsonConverters\" />
-    <Folder Include="Data\Tags\" />
     <Folder Include="Gui\Events\" />
     <Folder Include="Gui\Abstractions\" />
   </ItemGroup>
