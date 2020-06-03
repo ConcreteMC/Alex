@@ -82,20 +82,27 @@ namespace Alex.Worlds.Bedrock
         
         private long _tickTime = 0;
         private long _lastPrioritization = 0;
+        private bool _isRealTick = false;
 		private void GameTick(object state)
 		{
+			var isRealTick = _isRealTick;
+			_isRealTick = !isRealTick;
+			
 			if (World == null) return;
 
 			if (_initiated)
 			{
-				_tickTime++;
-				
+				if (_isRealTick)
+				{
+					_tickTime++;
+				}
+
 				var p = World.Player;
 				if (p != null && p is Player player && Client.HasSpawned)
 				{
 				//	player.IsSpawned = Spawned;
 
-					if (player.IsFlying != _flying)
+					if (player.IsFlying != _flying && _isRealTick)
 					{
 						_flying = player.IsFlying;
 
@@ -115,7 +122,7 @@ namespace Alex.Worlds.Bedrock
                         _lastSentLocation = pos;
 					}
 
-					if ((pos.DistanceTo(_lastLocation) > 16f || MathF.Abs(pos.HeadYaw - _lastLocation.HeadYaw) >= 10f) && _tickTime - _lastPrioritization >= 10)
+					if ((pos.DistanceTo(_lastLocation) > 16f || MathF.Abs(pos.HeadYaw - _lastLocation.HeadYaw) >= 10f) && (_tickTime - _lastPrioritization >= 10 && _isRealTick))
 					{
 						World.ChunkManager.FlagPrioritization();
 						
@@ -126,13 +133,17 @@ namespace Alex.Worlds.Bedrock
 					}
 				}
 
-				if (_tickTime % 20 == 0 && CustomConnectedPong.CanPing)
+				if (_isRealTick && _tickTime % 20 == 0 && CustomConnectedPong.CanPing)
 				{
 					Client.SendPing();
 				}
-				
-				World.Player.OnTick();
-				World.EntityManager.Tick();
+
+
+				if (_isRealTick)
+				{
+					World.Player.OnTick();
+					World.EntityManager.Tick();
+				}
 			}
 		}
 
@@ -179,7 +190,7 @@ namespace Alex.Worlds.Bedrock
 			//}
 
 			CustomConnectedPong.CanPing = true;
-			_gameTickTimer = new System.Threading.Timer(GameTick, null, 50, 50);
+			_gameTickTimer = new System.Threading.Timer(GameTick, null, 50, 25);
 		}
 
 		private bool VerifyConnection()

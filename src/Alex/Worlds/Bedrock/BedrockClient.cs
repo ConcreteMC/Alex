@@ -433,11 +433,7 @@ namespace Alex.Worlds.Bedrock
 		private bool _disconnectShown = false;
 		public void ShowDisconnect(string reason, bool useTranslation = false)
 		{
-			if (_disconnectShown)
-				return;
-			_disconnectShown = true;
-			
-            if (Alex.GameStateManager.GetActiveState() is DisconnectedScreen s)
+			if (Alex.GameStateManager.GetActiveState() is DisconnectedScreen s)
             {
                 if (useTranslation)
                 {
@@ -451,7 +447,12 @@ namespace Alex.Worlds.Bedrock
                 return;
             }
 
-            s = new DisconnectedScreen();
+			if (_disconnectShown)
+				return;
+			
+			_disconnectShown = true;
+
+			s = new DisconnectedScreen();
             if (useTranslation)
             {
                 s.DisconnectedTextElement.TranslationKey = reason;
