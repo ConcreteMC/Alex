@@ -80,7 +80,7 @@ namespace Alex.Worlds
 							//velocity *= modifier;
 						}
 
-						var rawDrag = (float) (1f - ((e.Drag * 0.91f) * dt));
+						var rawDrag = (float) (1f - ((e.Drag * dt)));
 						
 						velocity *= new Vector3(rawDrag, 1f, rawDrag);
 						

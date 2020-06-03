@@ -295,14 +295,16 @@ namespace Alex.GameStates.Playing
 				}
 				else
 				{
-					if ((Player.Velocity * new Vector3(1, 0, 1)).Length() < velocity.Length())
+					var old = Player.Velocity;
+					var oldLength = (Player.Velocity * new Vector3(1, 0, 1)).Length();
+					if (oldLength < velocity.Length())
 					{
-						var old = Player.Velocity;
 						Player.Velocity += new Vector3(velocity.X - old.X, 0, velocity.Z - old.Z);
 					}
 					else
 					{
-						Player.Velocity = new Vector3(velocity.X, Player.Velocity.Y, velocity.Z);
+						
+						Player.Velocity = new Vector3(MathF.Abs(old.X) < 0.0001f ? velocity.X : old.X, Player.Velocity.Y, MathF.Abs(old.Z) < 0.0001f ? velocity.Z : old.Z);
 					}
 				}
 
