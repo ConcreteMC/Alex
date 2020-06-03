@@ -57,7 +57,7 @@ namespace Alex.Gui
 		private void CreateSkybox(GraphicsDevice device)
 	    {
 		    InitGraphics();
-	        _renderTarget     = new RenderTarget2D(device, Width, Height, false, SurfaceFormat.Color, DepthFormat.None);
+	        _renderTarget     = new RenderTarget2D(device, device.Viewport.Width, device.Viewport.Height, false, SurfaceFormat.Color, DepthFormat.None);
 
 		    _skyBoxEffect = new AlphaTestEffect(device)
 		    {
