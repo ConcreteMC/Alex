@@ -9,6 +9,9 @@ namespace Alex.API.Data.Options
         public OptionsProperty<int> FieldOfVision { get; set; }
         
         [DataMember]
+        public OptionsProperty<int> MouseSensitivity { get; set; } 
+        
+        [DataMember]
         public VideoOptions VideoOptions { get; set; }
 
         [DataMember]
@@ -26,7 +29,8 @@ namespace Alex.API.Data.Options
         public AlexOptions()
         {
             FieldOfVision = DefineRangedProperty(70, 30, 120);
-
+            MouseSensitivity = DefineRangedProperty(30, 0, 60);
+            
             VideoOptions = DefineBranch<VideoOptions>();
             SoundOptions = DefineBranch<SoundOptions>();
             ResourceOptions = DefineBranch<ResourceOptions>();

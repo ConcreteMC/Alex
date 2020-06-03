@@ -1,10 +1,12 @@
 ﻿using System;
 using Alex.API.Input;
 using Alex.API.Input.Listeners;
+using Alex.API.Services;
 using Alex.Entities;
 using Alex.Gui.Dialogs.Containers;
 using Alex.Utils;
 using Alex.Worlds;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -40,6 +42,15 @@ namespace Alex.GameStates.Playing
 			GlobalInputManager = inputManager;
 			InputManager = inputManager.GetOrAddPlayerManager(playerIndex);
 			InputManager.AddListener(MouseInputListener = new MouseInputListener(playerIndex));
+
+			var optionsProvider = Alex.Instance.Services.GetService<IOptionsProvider>();
+			CursorSensitivity = optionsProvider.AlexOptions.MouseSensitivity.Value;
+
+			optionsProvider.AlexOptions.MouseSensitivity.Bind(
+				(value, newValue) =>
+				{
+					CursorSensitivity = newValue;
+				});
 		}
 
 		private bool _inActive = true;
@@ -150,6 +161,7 @@ namespace Alex.GameStates.Playing
 	    public float LastSpeedFactor = 0f;
 	    private Vector3 LastVelocity { get; set; } = Vector3.Zero;
 	    private bool WasInWater { get; set; } = false;
+	    private double CursorSensitivity { get; set; } = 30;
 	    private void UpdateMovementInput(GameTime gt)
 	    {
 		    if (!_allowMovementInput) return;
@@ -336,7 +348,7 @@ namespace Alex.GameStates.Playing
 				{
 					var mouseDelta = _previousMousePosition - e; //this.GlobalInputManager.CursorInputListener.GetCursorPositionDelta();
 					var look = new Vector2((-mouseDelta.X), (mouseDelta.Y))
-							   * (float)(gt.ElapsedGameTime.TotalSeconds * 30);
+							   * (float)(gt.ElapsedGameTime.TotalSeconds * CursorSensitivity);
 					look = -look;
 
 					Player.KnownPosition.HeadYaw -= look.X;

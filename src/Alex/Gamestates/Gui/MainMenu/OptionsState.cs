@@ -15,15 +15,16 @@ namespace Alex.GameStates.Gui.MainMenu
         protected override void OnInit(IGuiRenderer renderer)
         {
             AddGuiRow(CreateSlider($"{GuiRenderer.GetTranslation("options.fov")}: {{0}}", o => o.FieldOfVision, 30, 120, 1),
-                CreateLinkButton<VideoOptionsState>("options.video"));
+               CreateSlider(
+                   f => $"Mouse Sensitivity: {(f)}%", o => o.MouseSensitivity, 0, 60, 1));
 
-            AddGuiRow(CreateLinkButton<ResourcePackOptionsState>("options.resourcepack"),
-                CreateLinkButton<SoundOptionsState>("options.sounds"));
+            AddGuiRow(
+                CreateLinkButton<SoundOptionsState>("options.sounds"), CreateLinkButton<VideoOptionsState>("options.video"));
             
             AddGuiRow(CreateLinkButton<LanguageOptionsState>("options.language"),
                 CreateLinkButton<ControlOptionsState>("options.controls"));
 
-            AddGuiRow(CreateLinkButton<NetworkOptionsState>("options.network"), new GuiControl());
+            AddGuiRow(CreateLinkButton<ResourcePackOptionsState>("options.resourcepack"), CreateLinkButton<NetworkOptionsState>("options.network"));
             
             base.OnInit(renderer);
         }

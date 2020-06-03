@@ -16,7 +16,7 @@ namespace Alex.API.Data.Options
         
         [DataMember]
         public OptionsProperty<bool> ObjectPools { get; set; }
-        
+
         public MiscelaneousOptions()
         {
             ServerSideLighting = new OptionsProperty<bool>(false);
