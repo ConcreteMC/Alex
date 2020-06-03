@@ -54,7 +54,11 @@ namespace Alex.Blocks.Storage
 			{
 				var oldValue = _meshCache;
 				_meshCache = value;
-				oldValue?.Dispose();
+
+				if (!ReferenceEquals(oldValue, value))
+				{
+					oldValue?.Dispose();
+				}
 			}
 		}
 		//internal Dictionary<BlockCoordinates, IList<ChunkMesh.EntryPosition>> MeshPositions { get; set; } = null;
@@ -249,8 +253,7 @@ namespace Alex.Blocks.Storage
 			}
 
 			var coordsIndex = GetCoordinateIndex(x, y, z);
-			var oldState = _blockStorages[storage].Get(x, y, z);
-			
+
 			if (storage == 0)
 			{
 				if (state.Block.LightValue > 0)
@@ -309,11 +312,6 @@ namespace Alex.Blocks.Storage
 
             _blockStorages[storage].Set(x, y, z, state);
 
-            if (oldState.Block is Water && state.Block is Water)
-            {
-	            var a = "";
-            }
-            
             //ScheduledUpdates.Set(coordsIndex, true);
             SetScheduled(x,y,z, true);
             
