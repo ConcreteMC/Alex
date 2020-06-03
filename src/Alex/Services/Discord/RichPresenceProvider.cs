@@ -8,11 +8,19 @@ namespace Alex.Services.Discord
     {
 
         // ReSharper disable once MemberCanBePrivate.Global
-        public const string DEFAULT_CLIENT_ID = "715598336014417982";
+        public const string DEFAULT_CLIENT_ID = "717714385333911615";
 
         private static string clientId = DEFAULT_CLIENT_ID;
         private static DiscordRpcClient client;
 
+        /// <summary>
+        /// Initialize the Rich Presence Provider.
+        ///
+        /// This also sets to default presence.
+        ///
+        /// NOTE: PLEASE DON'T CALL THIS METHOD AS A PLUGIN. YOU'RE NOT SUPPOSED TO!
+        /// THIS METHOD IS ONLY MEANT TO BE CALLED BY THE CORE, NOT BY PLUGINS!
+        /// </summary>
         public static void Initialize()
         {
             client = new DiscordRpcClient(clientId);
@@ -59,7 +67,7 @@ namespace Alex.Services.Discord
         /// <summary>
         /// Update the provider.
         ///
-        /// PLEASE DON'T CALL THIS METHOD AS A PLUGIN. YOU'RE NOT SUPPOSED TO!
+        /// NOTE: PLEASE DON'T CALL THIS METHOD AS A PLUGIN. YOU'RE NOT SUPPOSED TO!
         /// THIS METHOD IS ONLY MEANT TO BE CALLED BY THE CORE, NOT BY PLUGINS!
         /// </summary>
         public static void Update()
@@ -73,7 +81,17 @@ namespace Alex.Services.Discord
             {
                 Details = "Running version " + Alex.Version,
                 State = "Hanging out",
+                Assets = GetDefaultAssets(),
                 Timestamps = Timestamps.Now
+            };
+        }
+
+        private static Assets GetDefaultAssets()
+        {
+            return new Assets
+            {
+                LargeImageKey = "logo_1024",
+                LargeImageText = "Hanging out"
             };
         }
 
