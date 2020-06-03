@@ -471,6 +471,22 @@ namespace Alex.Graphics.Models.Blocks
 			return v;
 		}
 
+		/*private BlockCoordinates[] GetCornerOffsetsForFace(BlockFace face)
+		{
+			//0 = TopLeft, 1 = TopRight
+			//2 = BottomLeft, 3 = BottomRight
+			BlockCoordinates[] corners = new BlockCoordinates[4];
+
+			switch (face)
+			{
+				case BlockFace.Down:
+				case BlockFace.Up:
+					corners[0] = new BlockCoordinates(-1, 0, 1);
+					corners[1] = new BlockCoordinates(1, 0, 1);
+					break;
+			}
+		}
+		*/
 		private void CalculateModel(IBlockAccess world,
 			Vector3 position,
 			Block baseBlock,
@@ -598,8 +614,8 @@ namespace Alex.Graphics.Models.Blocks
 
 					var blockLight = (byte) 0;
 					var skyLight = (byte) 15;
-					GetLight(
-						world, facePosition, out blockLight, out skyLight, baseBlock.Transparent || !baseBlock.Solid);
+					//GetLight(
+					//	world, facePosition, out blockLight, out skyLight, baseBlock.Transparent || !baseBlock.Solid);
 					
 					var vertices = GetFaceVertices(face.Key, element.From, element.To,
 						GetTextureUVMap(Resources, texture, x1, x2, y1, y2, textureRotation, AdjustColor(
@@ -658,11 +674,15 @@ namespace Alex.Graphics.Models.Blocks
 					{
 						var vertex = vertices[idx];
 						vertex.Position = position + vertex.Position;
-
+						
+						//var vertexSkyLight = world.GetSkyLight(blockPos);
+						//var vertexBlockLight = world.GetBlockLight(blockPos);
+						GetLight(world, vertex.Position, out var vertexBlockLight, out var vertexSkyLight, true);
+						
 						//if (blockLight > 0)
 						{
-							vertex.BlockLight = blockLight;
-							vertex.SkyLight = skyLight;
+							vertex.BlockLight = vertexBlockLight;
+							vertex.SkyLight = vertexSkyLight;
 						}
 
 						verts.Add(vertex);
