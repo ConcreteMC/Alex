@@ -6,7 +6,7 @@ using ItemType = Alex.API.Utils.ItemType;
 
 namespace Alex.Items
 {
-    public class Item : IItem
+    public class Item
     {
 	    public short Id { get; set; }
 	    public short Meta { get; set; } = 0;

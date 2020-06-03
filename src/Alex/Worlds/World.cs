@@ -26,6 +26,7 @@ using Alex.Graphics.Camera;
 using Alex.Graphics.Models;
 using Alex.Graphics.Models.Items;
 using Alex.Gui.Forms.Bedrock;
+using Alex.Net;
 using Alex.Utils;
 using Alex.Worlds.Bedrock;
 using Microsoft.Extensions.DependencyInjection;
@@ -89,7 +90,7 @@ namespace Alex.Worlds
 		public int RandomTickSpeed { get; set; } = 3;
 		
 		public World(IServiceProvider serviceProvider, GraphicsDevice graphics, AlexOptions options, Camera camera,
-			INetworkProvider networkProvider)
+			NetworkProvider networkProvider)
 		{
 			Graphics = graphics;
 			Camera = camera;

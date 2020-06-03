@@ -16,6 +16,8 @@ using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Entities;
+using Alex.Items;
+using Alex.Net;
 using Alex.Worlds.Generators;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
@@ -25,61 +27,56 @@ using NLog;
 
 namespace Alex.Worlds
 {
-	internal class DebugNetworkProvider : INetworkProvider
+	internal class DebugNetworkProvider : NetworkProvider
 	{
-		public bool IsConnected { get; } = true;
-		public ConnectionInfo GetConnectionInfo()
+		public override bool IsConnected { get; } = true;
+		public override ConnectionInfo GetConnectionInfo()
 		{
 			return new ConnectionInfo(DateTime.UtcNow, 0,0,0,0,0,0,0,0);
 		}
 
-		public void EntityAction(int entityId, EntityAction action)
+		public override void EntityAction(int entityId, EntityAction action)
 		{
 			
 		}
 
 		/// <inheritdoc />
-		public void PlayerAnimate(PlayerAnimations animation)
+		public override void PlayerAnimate(PlayerAnimations animation)
 		{
 			
 		}
 
-		public void SendChatMessage(string message)
+		public override void BlockPlaced(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition, Entity p)
 		{
 			
 		}
 
-		public void BlockPlaced(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition, IEntity p)
+		public override void PlayerDigging(DiggingStatus status, BlockCoordinates position, BlockFace face, Vector3 cursorPosition)
 		{
 			
 		}
 
-		public void PlayerDigging(DiggingStatus status, BlockCoordinates position, BlockFace face, Vector3 cursorPosition)
+		public override void EntityInteraction(Entity player, Entity target, McpeInventoryTransaction.ItemUseOnEntityAction action)
 		{
 			
 		}
 
-		public void EntityInteraction(IEntity player, IEntity target, McpeInventoryTransaction.ItemUseOnEntityAction action)
+		public override void WorldInteraction(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition)
 		{
 			
 		}
 
-		public void WorldInteraction(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition)
+		public override void UseItem(Item item, int hand, ItemUseAction useAction)
 		{
 			
 		}
 
-		public void UseItem(IItem item, int hand, ItemUseAction useAction)
+		public override void HeldItemChanged(Item item, short slot)
 		{
 			
 		}
 
-		public void HeldItemChanged(IItem item, short slot)
-		{
-			
-		}
-
-		public void Close()
+		public override void Close()
 		{
 			
 		}
@@ -92,7 +89,7 @@ namespace Alex.Worlds
 		private readonly List<ChunkCoordinates> _loadedChunks = new List<ChunkCoordinates>();
 		private ChunkCoordinates PreviousChunkCoordinates { get; set; } = new ChunkCoordinates(int.MaxValue, int.MaxValue);
 		private Alex Alex { get; }
-		public INetworkProvider Network { get; } = new DebugNetworkProvider();
+		public NetworkProvider Network { get; } = new DebugNetworkProvider();
 
         private CancellationTokenSource ThreadCancellationTokenSource;
 

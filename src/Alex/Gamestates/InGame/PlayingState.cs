@@ -13,6 +13,7 @@ using Alex.Graphics.Camera;
 using Alex.Gui;
 using Alex.Gui.Elements;
 using Alex.Items;
+using Alex.Net;
 using Alex.ResourcePackLib.Json.Models.Items;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
@@ -27,7 +28,7 @@ namespace Alex.Gamestates.InGame
 		public World World { get; }
 
         private WorldProvider WorldProvider { get; }
-		public INetworkProvider NetworkProvider { get; }
+		public NetworkProvider NetworkProvider { get; }
 
 		private readonly PlayingHud _playingHud;
 		private readonly GuiDebugInfo _debugInfo;
@@ -35,7 +36,7 @@ namespace Alex.Gamestates.InGame
 		
 		private GuiMiniMap MiniMap { get; }
 		private bool RenderMinimap { get; set; } = false;
-		public PlayingState(Alex alex, GraphicsDevice graphics, WorldProvider worldProvider, INetworkProvider networkProvider) : base(alex)
+		public PlayingState(Alex alex, GraphicsDevice graphics, WorldProvider worldProvider, NetworkProvider networkProvider) : base(alex)
 		{
 			NetworkProvider = networkProvider;
 

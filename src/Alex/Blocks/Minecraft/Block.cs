@@ -8,12 +8,12 @@ using Alex.API.World;
 using Alex.Blocks.Properties;
 using Alex.Blocks.State;
 using Alex.Entities;
+using Alex.Items;
 using Alex.ResourcePackLib.Json;
 using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using MiNET.Blocks;
-using MiNET.Items;
 using NLog;
 using ItemBlock = Alex.Items.ItemBlock;
 using ItemMaterial = Alex.API.Utils.ItemMaterial;
@@ -193,17 +193,17 @@ namespace Alex.Blocks.Minecraft
 			
 		}
 
-		public virtual IItem[] GetDrops(IItem tool)
+		public virtual Item[] GetDrops(Item tool)
 		{
 			if (BlockMaterial.IsToolRequired() && !BlockMaterial.CanUseTool(tool.ItemType, tool.Material))
 			{
-				return new IItem[0];
+				return new Item[0];
 			}
 			
-			return new IItem[] { new ItemBlock(BlockState) { Count = 1 } };
+			return new Item[] { new ItemBlock(BlockState) { Count = 1 } };
 		}
 
-        public double GetBreakTime(IItem miningTool)
+        public double GetBreakTime(Item miningTool)
 		{
 			double secondsForBreak = Hardness;
 			bool isHarvestable = GetDrops(miningTool)?.Length > 0;

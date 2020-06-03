@@ -3,6 +3,7 @@ using Alex.API.Graphics;
 using Alex.API.Network;
 using Alex.Graphics.Models.Items;
 using Alex.Items;
+using Alex.Net;
 using Alex.ResourcePackLib.Json.Models.Items;
 using Alex.Utils;
 using Alex.Worlds;
@@ -15,7 +16,7 @@ namespace Alex.Entities
     {
         private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
         
-        public ItemEntity(World level, INetworkProvider network) : base((int) EntityType.Item, level, network)
+        public ItemEntity(World level, NetworkProvider network) : base((int) EntityType.Item, level, network)
         {
             Width = 0.25;
             Height = 0.25;

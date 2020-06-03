@@ -3,6 +3,7 @@ using Alex.API.Graphics;
 using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.Graphics.Models.Entity;
+using Alex.Net;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
 using Alex.Worlds;
@@ -22,7 +23,7 @@ namespace Alex.Entities
 
 		public string Name { get; }
 		public string GeometryName { get; set; }
-		public PlayerMob(string name, World level, INetworkProvider network, PooledTexture2D skinTexture, string geometry = "geometry.humanoid.customSlim") : base(63, level, network)
+		public PlayerMob(string name, World level, NetworkProvider network, PooledTexture2D skinTexture, string geometry = "geometry.humanoid.customSlim") : base(63, level, network)
 		{
 			//DoRotationCalculations = false;
 			Name = name;

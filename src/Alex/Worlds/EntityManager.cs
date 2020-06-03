@@ -9,6 +9,7 @@ using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Entities;
 using Alex.Graphics.Models;
+using Alex.Net;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ContainmentType = Microsoft.Xna.Framework.ContainmentType;
@@ -25,10 +26,10 @@ namespace Alex.Worlds
 	    public int EntitiesRendered { get; private set; } = 0;
 	    public long VertexCount { get; private set; }
 		private World World { get; }
-		private INetworkProvider Network { get; }
+		private NetworkProvider Network { get; }
 		
 		private Entity[] _rendered;
-		public EntityManager(GraphicsDevice device, World world, INetworkProvider networkProvider)
+		public EntityManager(GraphicsDevice device, World world, NetworkProvider networkProvider)
 		{
 			Network = networkProvider;
 		    World = world;

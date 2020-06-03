@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Alex.API.Utils;
 
-namespace Alex.API.Json
+namespace Alex.API.Utils
 {
 	public static class ChatParser
 	{
@@ -15,7 +14,7 @@ namespace Alex.API.Json
 		/// <returns>Returns the translated text</returns>
 		public static string ParseText(string json, List<string> links = null)
 		{
-			return JSONData2String(Json.ParseJson(json), "", links);
+			return JSONData2String(Utils.Json.ParseJson(json), "", links);
 		}
 
 		/// <summary>
@@ -110,19 +109,19 @@ namespace Alex.API.Json
 		/// <param name="colorcode">Allow parent color code to affect child elements (set to "" for function init)</param>
 		/// <param name="links">Container for links from JSON serialized text</param>
 		/// <returns>returns the Minecraft-formatted string</returns>
-		private static string JSONData2String(Json.JSONData data, string colorcode, List<string> links)
+		private static string JSONData2String(Utils.Json.JSONData data, string colorcode, List<string> links)
 		{
 			string extra_result = "";
 			switch (data.Type)
 			{
-				case Json.JSONData.DataType.Object:
+				case Utils.Json.JSONData.DataType.Object:
 					if (data.Properties.ContainsKey("color"))
 					{
 						colorcode = TextColor.Color2tag(JSONData2String(data.Properties["color"], "", links));
 					}
 					if (data.Properties.ContainsKey("clickEvent") && links != null)
 					{
-						Json.JSONData clickEvent = data.Properties["clickEvent"];
+						Utils.Json.JSONData clickEvent = data.Properties["clickEvent"];
 						if (clickEvent.Properties.ContainsKey("action")
 							&& clickEvent.Properties.ContainsKey("value")
 							&& clickEvent.Properties["action"].StringValue == "open_url"
@@ -133,8 +132,8 @@ namespace Alex.API.Json
 					}
 					if (data.Properties.ContainsKey("extra"))
 					{
-						Json.JSONData[] extras = data.Properties["extra"].DataArray.ToArray();
-						foreach (Json.JSONData item in extras)
+						Utils.Json.JSONData[] extras = data.Properties["extra"].DataArray.ToArray();
+						foreach (Utils.Json.JSONData item in extras)
 							extra_result = extra_result + JSONData2String(item, colorcode, links) + "§r";
 					}
 					if (data.Properties.ContainsKey("text"))
@@ -148,7 +147,7 @@ namespace Alex.API.Json
 							data.Properties["with"] = data.Properties["using"];
 						if (data.Properties.ContainsKey("with"))
 						{
-							Json.JSONData[] array = data.Properties["with"].DataArray.ToArray();
+							Utils.Json.JSONData[] array = data.Properties["with"].DataArray.ToArray();
 							for (int i = 0; i < array.Length; i++)
 							{
 								using_data.Add(JSONData2String(array[i], colorcode, links));
@@ -158,15 +157,15 @@ namespace Alex.API.Json
 					}
 					else return extra_result;
 
-				case Json.JSONData.DataType.Array:
+				case Utils.Json.JSONData.DataType.Array:
 					string result = "";
-					foreach (Json.JSONData item in data.DataArray)
+					foreach (Utils.Json.JSONData item in data.DataArray)
 					{
 						result += JSONData2String(item, colorcode, links);
 					}
 					return result;
 
-				case Json.JSONData.DataType.String:
+				case Utils.Json.JSONData.DataType.String:
 					return colorcode + data.StringValue;
 			}
 

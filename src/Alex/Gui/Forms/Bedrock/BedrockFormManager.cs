@@ -1,6 +1,7 @@
 using Alex.API.Gui;
 using Alex.API.Input;
 using Alex.API.Network;
+using Alex.Net;
 using Alex.Worlds.Bedrock;
 using GLib;
 using MiNET.Net;
@@ -14,11 +15,11 @@ namespace Alex.Gui.Forms.Bedrock
         private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
         
         private GuiManager GuiManager { get; }
-        private INetworkProvider NetworkProvider { get; }
+        private NetworkProvider NetworkProvider { get; }
         private InputManager InputManager { get; }
         
         private FormBase _activeForm = null;
-        public BedrockFormManager(INetworkProvider networkProvider, GuiManager guiManager, InputManager input)
+        public BedrockFormManager(NetworkProvider networkProvider, GuiManager guiManager, InputManager input)
         {
             NetworkProvider = networkProvider;
             GuiManager = guiManager;

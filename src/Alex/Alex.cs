@@ -31,6 +31,7 @@ using Alex.Graphics.Effect;
 using Alex.Gui;
 using Alex.Gui.Dialogs.Containers;
 using Alex.Items;
+using Alex.Net;
 using Alex.Networking.Bedrock;
 using Alex.Networking.Java.Packets;
 using Alex.Plugins;
@@ -587,7 +588,7 @@ namespace Alex
 				eventDispatcher?.Reset();
 				
 				WorldProvider provider;
-				INetworkProvider networkProvider;
+				NetworkProvider networkProvider;
 				IsMultiplayer = true;
 				if (bedrock)
 				{
@@ -613,7 +614,7 @@ namespace Alex
 			oldNetworkPool?.Dispose();
 		}
 
-		public void LoadWorld(WorldProvider worldProvider, INetworkProvider networkProvider)
+		public void LoadWorld(WorldProvider worldProvider, NetworkProvider networkProvider)
 		{
 			PlayingState playState = new PlayingState(this, GraphicsDevice, worldProvider, networkProvider);
 			

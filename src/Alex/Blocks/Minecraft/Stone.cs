@@ -16,12 +16,12 @@ namespace Alex.Blocks.Minecraft
 			Hardness = 1.5f;
 		}
 
-		public override IItem[] GetDrops(IItem tool)
+		public override Item[] GetDrops(Item tool)
 		{
 			if (tool.ItemType != ItemType.PickAxe)
-				return new IItem[0];
+				return new Item[0];
 			
-			return new IItem[]
+			return new Item[]
 			{
 				new ItemBlock(BlockFactory.GetBlockState("minecraft:cobblestone"))
 				{

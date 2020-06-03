@@ -25,6 +25,7 @@ using Alex.Entities;
 using Alex.Gamestates;
 using Alex.Graphics.Models.Entity;
 using Alex.Items;
+using Alex.Net;
 using Alex.Networking.Java;
 using Alex.Networking.Java.Events;
 using Alex.Networking.Java.Packets.Handshake;
@@ -75,7 +76,9 @@ namespace Alex.Worlds.Java
 		private DedicatedThreadPool ThreadPool;
 		private IEventDispatcher EventDispatcher { get; }
 		public string Hostname { get; set; }
-		public JavaWorldProvider(Alex alex, IPEndPoint endPoint, PlayerProfile profile, out INetworkProvider networkProvider)
+		
+		private JavaNetworkProvider NetworkProvider { get; }
+		public JavaWorldProvider(Alex alex, IPEndPoint endPoint, PlayerProfile profile, out NetworkProvider networkProvider)
 		{
 			Alex = alex;
 			Profile = profile;
@@ -89,8 +92,9 @@ namespace Alex.Worlds.Java
 			TcpClient = new TcpClient();
 			Client = new JavaClient(this, TcpClient.Client);
 			Client.OnConnectionClosed += OnConnectionClosed;
-
-			networkProvider = Client;
+			
+			NetworkProvider = new JavaNetworkProvider(Client);;
+			networkProvider = NetworkProvider;
 			
 			EventDispatcher.RegisterEvents(this);
 		}
@@ -266,7 +270,7 @@ namespace Alex.Worlds.Java
 			if (e.IsCancelled)
 				return;
 			
-			Client.SendChatMessage(e.ChatObject.RawMessage);
+			NetworkProvider.SendChatMessage(e.ChatObject.RawMessage);
 		}
 
 		private int _transactionIds = 0;
@@ -368,7 +372,7 @@ namespace Alex.Worlds.Java
 
 				if (entity == null)
 				{
-					entity = new Entity((int) type, null, Client);
+					entity = new Entity((int) type, null, NetworkProvider);
 				}
 
 				//if (knownData.Height)
@@ -943,7 +947,7 @@ namespace Alex.Worlds.Java
 							}
 						}
 
-						PlayerMob entity = new PlayerMob(entry.Name, (World) World, Client, t, skinSlim ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom");
+						PlayerMob entity = new PlayerMob(entry.Name, (World) World, NetworkProvider, t, skinSlim ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom");
 						entity.UpdateGamemode((Gamemode) entry.Gamemode);
 						entity.UUID = new UUID(entry.UUID.ToByteArray());
 

@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Alex.API.Network;
 using Alex.API.Services;
 using Alex.API.Utils;
+using Alex.Net;
 using MiNET;
 using MiNET.Utils;
 using MiNET.Worlds;
@@ -20,7 +21,7 @@ namespace Alex.Worlds.Bedrock
         public IPEndPoint ConnectionEndpoint { get; set; }
         
         private OpenLevel MiNETLevel { get; }
-        public SingleplayerServer(string world, Gamemode gamemode, Difficulty difficulty, Alex alex, IPEndPoint endPoint, PlayerProfile profile, DedicatedThreadPool threadPool, out INetworkProvider networkProvider) : base(alex, endPoint, profile, threadPool, out networkProvider)
+        public SingleplayerServer(string world, Gamemode gamemode, Difficulty difficulty, Alex alex, IPEndPoint endPoint, PlayerProfile profile, DedicatedThreadPool threadPool, out NetworkProvider networkProvider) : base(alex, endPoint, profile, threadPool, out networkProvider)
         {
             Server = new OpenServer();
             ReflectionHelper.SetPrivatePropertyValue(

@@ -22,6 +22,7 @@ using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Entities;
 using Alex.Gamestates;
+using Alex.Net;
 using Alex.Networking.Bedrock.Net.Raknet;
 using Alex.Services;
 using Alex.Utils;
@@ -93,7 +94,7 @@ namespace Alex.Worlds.Bedrock
 			}
 		}
 	}
-	public class BedrockClient : INetworkProvider, IDisposable
+	public class BedrockClient : NetworkProvider, IDisposable
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BedrockClient));
 		
@@ -119,7 +120,7 @@ namespace Alex.Worlds.Bedrock
         public RakConnection Connection { get; }
         private MessageHandler MessageHandler { get; set; }
         public RakSession Session { get; set; }//=> Connection.ConnectionInfo.RakSessions.Values.FirstOrDefault();
-        public bool IsConnected => Session?.State == ConnectionState.Connected;
+        public override bool IsConnected => Session?.State == ConnectionState.Connected;
         
         private IPEndPoint _remoteEndpoint;
 
@@ -330,7 +331,7 @@ namespace Alex.Worlds.Bedrock
 		}
 
 		private ConnectionInfo _connectionInfo = new ConnectionInfo(DateTime.UtcNow, 0, 0,0,0,0,0,0,0);
-		public ConnectionInfo GetConnectionInfo()
+		public override ConnectionInfo GetConnectionInfo()
 		{
 			return _connectionInfo;
 			var conn = Session?.ConnectionInfo ?? Connection.ConnectionInfo;
@@ -784,7 +785,7 @@ namespace Alex.Worlds.Bedrock
 		public System.Numerics.Vector3 SpawnPoint { get; set; } = System.Numerics.Vector3.Zero;
 		public LevelInfo LevelInfo { get; } = new LevelInfo();
 
-		void INetworkProvider.EntityAction(int entityId, EntityAction action)
+		public override void EntityAction(int entityId, EntityAction action)
 		{
 			BlockCoordinates? coordinates = null;
 			if (entityId == World.Player.EntityId)
@@ -795,21 +796,21 @@ namespace Alex.Worlds.Bedrock
 			PlayerAction translated;
 			switch (action)
 			{
-				case EntityAction.StartSneaking:
+				case API.Utils.EntityAction.StartSneaking:
 					translated = PlayerAction.StartSneak;
 					break;
-				case EntityAction.StopSneaking:
+				case API.Utils.EntityAction.StopSneaking:
 					translated = PlayerAction.StopSneak;
 					break;
 
-				case EntityAction.StartSprinting:
+				case API.Utils.EntityAction.StartSprinting:
 					translated = PlayerAction.StartSprint;
 					break;
-				case EntityAction.StopSprinting:
+				case API.Utils.EntityAction.StopSprinting:
 					translated = PlayerAction.StopSprint;
 					break;
 				
-				case EntityAction.Jump:
+				case API.Utils.EntityAction.Jump:
 					translated = PlayerAction.Jump;
 					break;
 
@@ -821,7 +822,7 @@ namespace Alex.Worlds.Bedrock
 		}
 
 		/// <inheritdoc />
-		public void PlayerAnimate(PlayerAnimations animation)
+		public override void PlayerAnimate(PlayerAnimations animation)
 		{
 			McpeAnimate animate = McpeAnimate.CreateObject();
 			animate.runtimeEntityId = EntityId;
@@ -864,7 +865,7 @@ namespace Alex.Worlds.Bedrock
 			Session.SendPacket(packet);
 		}
 		
-	    public void PlayerDigging(DiggingStatus status, BlockCoordinates position, BlockFace face, Vector3 cursorPosition)
+	    public override void PlayerDigging(DiggingStatus status, BlockCoordinates position, BlockFace face, Vector3 cursorPosition)
 	    {
             if (World?.Player is Entities.Player player)
             {
@@ -902,31 +903,27 @@ namespace Alex.Worlds.Bedrock
             }
         }
 
-	    public static MiNET.Items.Item GetMiNETItem(IItem t)
+	    public static MiNET.Items.Item GetMiNETItem(Item item)
 	    {
-		    if (t is Item item)
-		    {
-			    var minetItem = MiNET.Items.ItemFactory.GetItem(item.Id, item.Meta, item.Count);
-			    if (minetItem.Id == 0)
-			    {
-				    if (MiNET.Worlds.AnvilWorldProvider.Convert.TryGetValue(item.Id, out var val))
-				    {
-					    var id = val.Item1;
-					    var meta = val.Item2(id, (byte) item.Meta);
-					    
-					    minetItem = MiNET.Items.ItemFactory.GetItem((short) id, meta, item.Count);
-				    }
-			    }
-			    
-			    minetItem.ExtraData = item.Nbt;
+		    var minetItem = MiNET.Items.ItemFactory.GetItem(item.Id, item.Meta, item.Count);
 
-			    return minetItem;
+		    if (minetItem.Id == 0)
+		    {
+			    if (MiNET.Worlds.AnvilWorldProvider.Convert.TryGetValue(item.Id, out var val))
+			    {
+				    var id   = val.Item1;
+				    var meta = val.Item2(id, (byte) item.Meta);
+
+				    minetItem = MiNET.Items.ItemFactory.GetItem((short) id, meta, item.Count);
+			    }
 		    }
 
-		    return null;
+		    minetItem.ExtraData = item.Nbt;
+
+		    return minetItem;
 	    }
-	    
-	    public void BlockPlaced(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition, IEntity entity)
+
+	    public override void BlockPlaced(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition, Entity entity)
 	    {
 		    if (entity is Player p)
 		    {
@@ -960,7 +957,7 @@ namespace Alex.Worlds.Bedrock
 		    }
 	    }
 
-		    public void EntityInteraction(IEntity player, IEntity target,
+		    public override void EntityInteraction(Entity player, Entity target,
 		    McpeInventoryTransaction.ItemUseOnEntityAction action)
 	    {
 		    if (player is Player p)
@@ -993,7 +990,7 @@ namespace Alex.Worlds.Bedrock
 		    }
 	    }
 
-	    public void WorldInteraction(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition)
+	    public override void WorldInteraction(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition)
 	    {
 		    var packet = McpeInventoryTransaction.CreateObject();
 		    packet.transaction = new ItemUseTransaction()
@@ -1023,11 +1020,8 @@ namespace Alex.Worlds.Bedrock
 		  Session.SendPacket(packet);
 	    }
 
-	    public void UseItem(IItem item, int hand, ItemUseAction action)
+	    public override void UseItem(Item item, int hand, ItemUseAction action)
 	    {
-		    if (!(item is Item itemInHand))
-			    return;
-
 		    var minetItem = GetMiNETItem(item);
 		    McpeInventoryTransaction.ItemUseAction useAction = McpeInventoryTransaction.ItemUseAction.Use;
 		    switch (action)
@@ -1058,7 +1052,7 @@ namespace Alex.Worlds.Bedrock
 			//Log.Warn("TODO: Implement UseItem");
 		}
 
-		public void HeldItemChanged(IItem item, short slot)
+		public override void HeldItemChanged(Item item, short slot)
 		{
 			var minetItem = GetMiNETItem(item);
 			
@@ -1072,7 +1066,7 @@ namespace Alex.Worlds.Bedrock
 			Log.Warn($"Held item slot changed: {slot} | Inventor: ");
 		}
 
-		public void Close()
+		public override void Close()
 		{
 			CancellationTokenSource?.Cancel();
 			SendDisconnectionNotification();

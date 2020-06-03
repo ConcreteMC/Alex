@@ -13,6 +13,7 @@ using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Entities;
+using Alex.Net;
 using Alex.Networking.Bedrock.Net.Raknet;
 using Alex.Utils;
 using Microsoft.Extensions.DependencyInjection;
@@ -36,7 +37,7 @@ namespace Alex.Worlds.Bedrock
 		private System.Threading.Timer _gameTickTimer;
 		private IEventDispatcher EventDispatcher { get; }
 		public BedrockWorldProvider(Alex alex, IPEndPoint endPoint, PlayerProfile profile, DedicatedThreadPool threadPool,
-			out INetworkProvider networkProvider)
+			out NetworkProvider networkProvider)
 		{
 			Alex = alex;
 			var eventDispatcher = alex.Services.GetRequiredService<IEventDispatcher>();

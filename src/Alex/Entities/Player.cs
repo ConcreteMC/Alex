@@ -11,6 +11,7 @@ using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
 using Alex.Graphics.Camera;
 using Alex.Items;
+using Alex.Net;
 using Alex.Utils;
 using Alex.Worlds;
 using Alex.Worlds.Bedrock;
@@ -58,7 +59,7 @@ namespace Alex.Entities
         
         private World World { get; }
         public Camera Camera { get; internal set; }
-        public Player(GraphicsDevice graphics, InputManager inputManager, string name, World world, Skin skin, INetworkProvider networkProvider, PlayerIndex playerIndex, Camera camera) : base(name, world, networkProvider, skin.Texture)
+        public Player(GraphicsDevice graphics, InputManager inputManager, string name, World world, Skin skin, NetworkProvider networkProvider, PlayerIndex playerIndex, Camera camera) : base(name, world, networkProvider, skin.Texture)
         {
 	        World = world;
 		//	DoRotationCalculations = false;
@@ -339,7 +340,7 @@ namespace Alex.Entities
 		    Network?.EntityAction((int) EntityId, EntityAction.Jump);
 	    }
 
-	    private void InteractWithEntity(IEntity entity, bool attack)
+	    private void InteractWithEntity(Entity entity, bool attack)
 	    {
 		    SwingArm(true);
 		    
@@ -367,8 +368,8 @@ namespace Alex.Entities
 		    }
 	    }
 
-	    public IEntity HitEntity { get; private set; } = null;
-	    public IEntity[] EntitiesInRange { get; private set; } = null;
+	    public Entity HitEntity { get; private set; } = null;
+	    public Entity[] EntitiesInRange { get; private set; } = null;
 
 	    private void UpdateRayTracer()
 	    {
@@ -384,7 +385,7 @@ namespace Alex.Entities
 			    return;
 		    }
 		    
-		    IEntity hitEntity = null;
+		    Entity hitEntity = null;
 		    for (float x = 0.5f; x < 8f; x += 0.1f)
 		    {
 			    Vector3 targetPoint = camPos + (lookVector * x);

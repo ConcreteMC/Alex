@@ -4,6 +4,7 @@ using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Network;
 using Alex.API.Utils;
+using Alex.Net;
 using Alex.Networking.Bedrock.Net.Raknet;
 using Microsoft.Xna.Framework;
 using RocketUI;
@@ -12,9 +13,9 @@ namespace Alex.Gamestates.InGame.Hud
 {
     public class NetworkDebugHud : GuiScreen
     {
-        private INetworkProvider NetworkProvider { get; }
+        private NetworkProvider NetworkProvider { get; }
         private GuiAutoUpdatingTextElement NetworkInfoElement { get; }
-        public NetworkDebugHud(INetworkProvider networkProvider)
+        public NetworkDebugHud(NetworkProvider networkProvider)
         {
             NetworkProvider = networkProvider;
             Anchor = Alignment.Fill;

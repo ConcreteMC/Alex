@@ -12,6 +12,7 @@ using Alex.Blocks.Minecraft;
 using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Entity.Animations;
 using Alex.Graphics.Models.Items;
+using Alex.Net;
 using Alex.ResourcePackLib.Json.Models.Items;
 using Alex.Utils;
 using Alex.Worlds;
@@ -128,7 +129,7 @@ namespace Alex.Entities
 
 		public bool IsCollidingWithWorld { get; set; } = false;
 
-		public INetworkProvider Network { get; set; }
+		public NetworkProvider Network { get; set; }
 		public Inventory Inventory { get; protected set; }
 		public IItemRenderer ItemRenderer { get; private set; } = null;
 		
@@ -149,7 +150,7 @@ namespace Alex.Entities
 		private EntityModelRenderer.ModelBone _head;
 		
 		public HealthManager HealthManager { get; }
-		public Entity(int entityTypeId, World level, INetworkProvider network)
+		public Entity(int entityTypeId, World level, NetworkProvider network)
 		{
 			Network = network;
 
