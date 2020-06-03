@@ -195,7 +195,7 @@ namespace Alex.Entities
 
         private void CheckHeldItem()
         {
-            var inHand = Inventory[Inventory.SelectedSlot];
+            var inHand = Inventory.MainHand;
             //Log.Info($"Inventory slot changed.");
 
             if ((inHand == null || inHand.Count == 0 || inHand.Id <= 0) && ItemRenderer != null)

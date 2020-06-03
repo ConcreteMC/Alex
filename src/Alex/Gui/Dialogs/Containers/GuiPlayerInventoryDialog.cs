@@ -63,14 +63,14 @@ namespace Alex.Gui.Dialogs.Containers
 
             Color color = Color.Blue;
 
-            foreach (var slot in AddSlots(8, 84, 9, 27, 9, 0x00))
+            foreach (var slot in AddSlots(8, 84, 9, 27, inventory.InventoryOffset, 0x00))
             {
              //   slot.HighlightedBackground = new Microsoft.Xna.Framework.Color(color, 0.5f);
                 slot.Item = Inventory[slot.InventoryIndex];
             }
 
             color = Color.Aqua;
-            foreach (var slot in AddSlots(8, 142, 9, 9, 0, 0))
+            foreach (var slot in AddSlots(8, 142, 9, 9, inventory.HotbarOffset, 0))
             {
                // slot.HighlightedBackground = new Microsoft.Xna.Framework.Color(color, 0.5f);
                 slot.Item = Inventory[slot.InventoryIndex];

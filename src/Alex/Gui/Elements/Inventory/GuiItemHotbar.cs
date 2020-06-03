@@ -130,10 +130,11 @@ namespace Alex.Gui.Elements.Inventory
 		{
 			var items = _hotbarItems;
 
-			if ((Inventory.IsPeInventory && e.Index >= 0 && e.Index <= 8) || (!Inventory.IsPeInventory && e.Index >= 36 && e.Index <= 44)) //Hotbar
+			bool isBedrock = Inventory is BedrockInventory;
+			if ((isBedrock && e.Index >= 0 && e.Index <= 8) || (!isBedrock && e.Index >= 36 && e.Index <= 44)) //Hotbar
 		    {
 			    int childIndex = 8 - (44 - e.Index);
-                if (Inventory.IsPeInventory)
+                if (isBedrock)
                 {
                     childIndex = e.Index;
                 }

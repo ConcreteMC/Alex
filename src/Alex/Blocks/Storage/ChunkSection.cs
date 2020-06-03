@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Buffers;
 using System.Collections.Generic;
+using Alex.API.Data.Servers;
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.Blocks.Minecraft;
@@ -428,19 +429,22 @@ namespace Alex.Blocks.Storage
 								}
 							}
 
-							if (block.LightValue > 0)
+							if (Alex.ServerType == ServerType.Java)
 							{
-								var coords = new BlockCoordinates(x,y,z);
-
-								if (!LightSources.Contains(coords))
+								if (block.LightValue > 0)
 								{
-									LightSources.Add(coords);
-								}
+									var coords = new BlockCoordinates(x, y, z);
 
-								if (GetBlocklight(x, y, z) != block.LightValue)
-								{
-									SetBlocklight(x,y,z, (byte) block.LightValue);
-									SetBlockLightScheduled(x,y,z, true);
+									if (!LightSources.Contains(coords))
+									{
+										LightSources.Add(coords);
+									}
+
+									if (GetBlocklight(x, y, z) != block.LightValue)
+									{
+										SetBlocklight(x, y, z, (byte) block.LightValue);
+										SetBlockLightScheduled(x, y, z, true);
+									}
 								}
 							}
 						}

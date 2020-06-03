@@ -40,7 +40,19 @@ namespace Alex.Worlds.Java
 		/// <inheritdoc />
 		public override void PlayerAnimate(PlayerAnimations animation)
 		{
-			//
+			AnimationPacket packet = new AnimationPacket();
+			switch (animation)
+			{
+				case PlayerAnimations.SwingLeftArm:
+					packet.Hand = 1;
+					break;
+
+				case PlayerAnimations.SwingRightArm:
+					packet.Hand = 0;
+					break;
+			}
+			
+			Client.SendPacket(packet);
 		}
 
 		public void SendChatMessage(string message)
@@ -106,7 +118,14 @@ namespace Alex.Worlds.Java
 
 		public override void WorldInteraction(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition)
 		{
-			throw new NotImplementedException();
+			Client.SendPacket(new PlayerBlockPlacementPacket()
+			{
+				Location = position,
+				Face = face,
+				Hand = hand,
+				CursorPosition = cursorPosition,
+				InsideBlock = false
+			});
 		}
 
 		public override void UseItem(Item item, int hand, ItemUseAction action)

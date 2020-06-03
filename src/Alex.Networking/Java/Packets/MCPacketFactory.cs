@@ -243,6 +243,7 @@ namespace Alex.Networking.Java.Packets
 
 		//	Register(Direction.ClientBound, ConnectionState.Play, 0x03, () => new SpawnMob());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x05, () => new SpawnPlayerPacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x06, () => new EntityAnimationPacket());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x0E, () => new ServerDifficultyPacket());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x0F, () => new ChatMessagePacket()
 			{

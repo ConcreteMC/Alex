@@ -271,7 +271,6 @@ namespace Alex.Gamestates
 				_playerView.Entity = new PlayerMob(e.Profile.Username, null, null, e.Profile.Skin.Texture,
 					e.Profile.Skin.Slim ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom" );
 				
-				_playerView.Entity.Inventory.IsPeInventory = true;
 				_playerView.Entity.ShowItemInHand = true;
 
 				if (ItemFactory.TryGetItem("minecraft:grass_block", out var grass))
@@ -326,7 +325,6 @@ namespace Alex.Gamestates
 			}
 
 			var entity = new PlayerMob("", null, null, skin.Texture);
-			entity.Inventory.IsPeInventory = true;
 			entity.ShowItemInHand = true;
 
 			AddChild(_playerView =

@@ -38,6 +38,7 @@ using NLog;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
 using Color = Microsoft.Xna.Framework.Color;
+using Inventory = MiNET.Inventory;
 using MathF = System.MathF;
 using Player = Alex.Entities.Player;
 using PlayerLocation = Alex.API.Utils.PlayerLocation;
@@ -140,6 +141,10 @@ namespace Alex.Worlds
 			if (networkProvider is BedrockClient)
 			{
 				Player.SetInventory(new BedrockInventory(46));
+			}
+			else
+			{
+				Player.SetInventory(new Utils.Inventory(46));
 			}
 		//	Player.Inventory.IsPeInventory = true;
 			/*if (ItemFactory.TryGetItem("minecraft:diamond_sword", out var sword))

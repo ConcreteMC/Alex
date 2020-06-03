@@ -295,7 +295,7 @@ namespace Alex.Worlds.Bedrock
 				Client.World.SetGameRule(gr);
 			}
 
-			Client.World.Player.Inventory.IsPeInventory = true;
+			//Client.World.Player.Inventory.IsPeInventory = true;
 
 			_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
 		}

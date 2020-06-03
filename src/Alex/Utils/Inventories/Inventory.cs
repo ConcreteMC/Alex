@@ -8,7 +8,7 @@ namespace Alex.Utils
     {
 	    protected byte _selectedSlot = 0;
 
-	    public int SelectedSlot
+	    public virtual int SelectedSlot
 	    {
 		    get { return _selectedSlot; }
 		    set
@@ -26,13 +26,18 @@ namespace Alex.Utils
 				byte oldValue = _selectedSlot;
 			    _selectedSlot = (byte)value;
 		       // MainHand = Slots[36 + value];
-			    SelectedHotbarSlotChanged?.Invoke(this, new SelectedSlotChangedEventArgs(oldValue, (byte)value));
+		       InvokeSelectedHotbarSlotChange(new SelectedSlotChangedEventArgs(oldValue, (byte)value));
 			}
 	    }
 
-        public bool IsPeInventory { get; set; } = false;
+	    protected void InvokeSelectedHotbarSlotChange(SelectedSlotChangedEventArgs eventArgs)
+	    {
+		    SelectedHotbarSlotChanged?.Invoke(this, eventArgs);
+	    }
 
-        public virtual Item MainHand
+	    public int InventoryOffset { get; set; } = 0;
+	    public int HotbarOffset { get; set; } = 36;
+	    public virtual Item MainHand
         {
 	        get
 	        {
@@ -40,7 +45,8 @@ namespace Alex.Utils
 	        }
 	        set
 	        {
-		        Slots[36 + _selectedSlot] = value;
+		        //Slots[36 + _selectedSlot] = value;
+		        SetSlot(36 + _selectedSlot, value, true);
 	        }
         }
 
@@ -55,7 +61,8 @@ namespace Alex.Utils
 	        }
 	        set
 	        {
-		        Slots[HelmetSlot] = value;
+		        SetSlot(HelmetSlot, value, true);
+		      //  Slots[HelmetSlot] = value;
 	        }
         }
 
@@ -68,7 +75,7 @@ namespace Alex.Utils
 	        }
 	        set
 	        {
-		        Slots[ChestSlot] = value;
+		        SetSlot(ChestSlot, value, true);
 	        }
         }
 
@@ -81,7 +88,7 @@ namespace Alex.Utils
 	        }
 	        set
 	        {
-		        Slots[LeggingsSlot] = value;
+		        SetSlot(LeggingsSlot, value, true);
 	        }
         }
         
@@ -94,7 +101,7 @@ namespace Alex.Utils
 		    }
 		    set
 		    {
-			    Slots[BootsSlot] = value;
+			    SetSlot(BootsSlot, value, true);
 		    }
 	    }
 
@@ -130,38 +137,17 @@ namespace Alex.Utils
 		    CursorChanged?.Invoke(this, new SlotChangedEventArgs(InventoryId, 0, item, oldValue, isServerTransaction));
 	    }
 
-	    public int[] PocketHotbar = new int[9]
-        {
-            0,
-            1,
-            2,
-            3,
-            4,
-            5,
-            6,
-            7,
-            8
-        };
-        public Item[] GetHotbar()
-        {
-            Item[] items = new Item[9];
-            if (!IsPeInventory)
-            {
-                for (int i = 0; i < 9; i++)
-                {
-                   items[i] = this[36 + i];
-                }
-            }
-            else
-            {
-                for (int i = 0; i < 9; i++)
-                {
-                    items[i] = this[PocketHotbar[i]];
-                }
-            }
+	    public virtual Item[] GetHotbar()
+	    {
+		    Item[] items = new Item[9];
 
-            return items;
-        }
+		    for (int i = 0; i < 9; i++)
+		    {
+			    items[i] = this[36 + i];
+		    }
+
+		    return items;
+	    }
     }
 
 	public class SlotChangedEventArgs : EventArgs

@@ -629,11 +629,44 @@ namespace Alex.Worlds.Java
 			{
 				HandleDisconnectPacket(disconnectPacket);
 			}
+			else if (packet is EntityAnimationPacket animationPacket)
+			{
+				HandleAnimationPacket(animationPacket);
+			}
 			else
 			{
 				if (UnhandledPackets.TryAdd(packet.PacketId, packet.GetType()))
 				{
 					Log.Warn($"Unhandled packet: 0x{packet.PacketId:x2} - {packet.ToString()}");
+				}
+			}
+		}
+
+		private void HandleAnimationPacket(EntityAnimationPacket packet)
+		{
+			if (World.TryGetEntity(packet.EntityId, out Entity entity))
+			{
+				switch (packet.Animation)
+				{
+					case EntityAnimationPacket.Animations.SwingMainArm:
+						entity.SwingArm(false);
+						break;
+
+					case EntityAnimationPacket.Animations.TakeDamage:
+						entity.EntityHurt();
+						break;
+
+					case EntityAnimationPacket.Animations.LeaveBed:
+						break;
+
+					case EntityAnimationPacket.Animations.SwingOffhand:
+						break;
+
+					case EntityAnimationPacket.Animations.CriticalEffect:
+						break;
+
+					case EntityAnimationPacket.Animations.MagicCriticalEffect:
+						break;
 				}
 			}
 		}
@@ -746,7 +779,7 @@ namespace Alex.Worlds.Java
 			{
 				if (e is Entity entity)
 				{
-					Item item = GetItemFromSlotData(packet.Item);;
+					Item item = GetItemFromSlotData(packet.Item).Clone();;
 
 					switch (packet.Slot)
 					{
@@ -874,7 +907,8 @@ namespace Alex.Worlds.Java
 
 			if (packet.SlotId < inventory.SlotCount)
 			{
-				inventory[packet.SlotId] = GetItemFromSlotData(packet.Slot);
+				inventory.SetSlot(packet.SlotId, GetItemFromSlotData(packet.Slot), true);
+				//inventory[packet.SlotId] = GetItemFromSlotData(packet.Slot);
 			}
 		}
 
@@ -900,7 +934,9 @@ namespace Alex.Worlds.Java
 						Log.Warn($"Slot index {i} is out of bounds (Max: {inventory.SlotCount})");
 						continue;
 					}
-					inventory[i] = GetItemFromSlotData(packet.Slots[i]);
+					
+					inventory.SetSlot(i, GetItemFromSlotData(packet.Slots[i]), true);
+					//inventory[i] = GetItemFromSlotData(packet.Slots[i]);
 				}
 			}
 		}
@@ -1220,10 +1256,10 @@ namespace Alex.Worlds.Java
 		{
 			if (World.GetChunkColumn(packet.ChunkX, packet.ChunkZ) is ChunkColumn c)
 			{
-				for (int i = 1; i < packet.SkyLightArrays.Length - 1; i++)
+				for (int i = 0; i < packet.SkyLightArrays.Length; i++)
 				{
 					byte[] data = packet.SkyLightArrays[i];
-					if (data == null) continue;
+					if (data == null || c.Sections[i] == null) continue;
 
 					NibbleArray n = new NibbleArray();
 					n.Data = data;
@@ -1231,10 +1267,10 @@ namespace Alex.Worlds.Java
 					c.Sections[i].SkyLight = n;
 				}
 
-				for (int i = 1; i < packet.BlockLightArrays.Length - 1; i++)
+				for (int i = 0; i < packet.BlockLightArrays.Length; i++)
 				{
 					byte[] data = packet.BlockLightArrays[i];
-					if (data == null) continue;
+					if (data == null || c.Sections[i] == null) continue;
 
 					NibbleArray n = new NibbleArray();
 					n.Data = data;
