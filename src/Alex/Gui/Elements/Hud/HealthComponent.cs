@@ -25,7 +25,7 @@ namespace Alex.Gui.Elements
         private int Health { get; set; }
         public HealthComponent(Player player)
         {
-            Health = player.Health;
+            Health = player.HealthManager.Health;
             Player = player;
 
             Height = 10;
@@ -43,9 +43,9 @@ namespace Alex.Gui.Elements
 
         protected override void OnUpdate(GameTime gameTime)
         {
-            if (Player.Health != Health)
+            if (Player.HealthManager.Health != Health)
             {
-                var hearts = Player.Health * (10d / Player.MaxHealth);
+                var hearts = Player.HealthManager.Health * (10d / Player.HealthManager.MaxHealth);
                 var ceil = (int)Math.Ceiling(hearts);
                 for (int i = 0; i < Hearts.Length; i++)
                 {

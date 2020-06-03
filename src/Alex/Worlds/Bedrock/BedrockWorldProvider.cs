@@ -78,14 +78,16 @@ namespace Alex.Worlds.Bedrock
 		private bool _flying = false;
 		private PlayerLocation _lastLocation = new PlayerLocation();
         private PlayerLocation _lastSentLocation = new PlayerLocation();
-        private Stopwatch _stopwatch = Stopwatch.StartNew();
-        private DateTime _lastPingTime = DateTime.UtcNow;
+        
+        private long _tickTime = 0;
+        private long _lastPrioritization = 0;
 		private void GameTick(object state)
 		{
 			if (World == null) return;
 
 			if (_initiated)
 			{
+				_tickTime++;
 				
 				var p = World.Player;
 				if (p != null && p is Player player && Client.HasSpawned)
@@ -112,23 +114,24 @@ namespace Alex.Worlds.Bedrock
                         _lastSentLocation = pos;
 					}
 
-					if ((pos.DistanceTo(_lastLocation) > 16f || MathF.Abs(pos.HeadYaw - _lastLocation.HeadYaw) >= 10f) && _stopwatch.ElapsedMilliseconds > 500)
+					if ((pos.DistanceTo(_lastLocation) > 16f || MathF.Abs(pos.HeadYaw - _lastLocation.HeadYaw) >= 10f) && _tickTime - _lastPrioritization >= 10)
 					{
 						World.ChunkManager.FlagPrioritization();
 						
-						_stopwatch.Stop();
-						_stopwatch.Reset();
 						_lastLocation = pos;
 						UnloadChunks(new ChunkCoordinates(pos), Client.ChunkRadius + 3);
-						_stopwatch.Restart();
+
+						_lastPrioritization = _tickTime;
 					}
 				}
 
-				if (DateTime.UtcNow - _lastPingTime > TimeSpan.FromSeconds(1))
+				if (_tickTime % 20 == 0)
 				{
 					Client.SendPing();
-					_lastPingTime = DateTime.UtcNow;
 				}
+				
+				World.Player.OnTick();
+				World.EntityManager.Tick();
 			}
 		}
 

@@ -175,7 +175,7 @@ namespace Alex.GameStates.Playing
 			    }
 		    }
 
-		    float modifier = 1f;
+		    float modifier = Player.MovementSpeedModifier;
 
 			if (Player.IsInWater || (WasInWater && Player.AboveWater))
 			{
@@ -197,7 +197,7 @@ namespace Alex.GameStates.Playing
 			if (InputManager.IsDown(InputCommand.MoveForwards))
 			{
 				moveVector.Z += 1;
-				if (!Player.IsSprinting)
+				if (!Player.IsSprinting && Player.CanSprint)
 				{
 					if (InputManager.IsBeginPress(InputCommand.MoveForwards) &&
 						now.Subtract(_lastForward).TotalMilliseconds <= 125)
@@ -256,7 +256,7 @@ namespace Alex.GameStates.Playing
 					{
 						//	moveVector.Y += 42f;
 						//	Player.Velocity += new Vector3(0f, 4.65f, 0f); // //, 0);
-						Player.Velocity += new Vector3(0f, MathF.Sqrt(2f * (float) Player.Gravity * 1.2f), 0f);
+						Player.Jump();
 					}
 				}
 

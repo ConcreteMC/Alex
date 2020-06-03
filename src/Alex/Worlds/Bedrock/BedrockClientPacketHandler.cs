@@ -996,31 +996,31 @@ namespace Alex.Worlds.Bedrock
 			{
 				if (message.attributes.TryGetValue("minecraft:health", out var value))
 				{
-					player.MaxHealth = (int) value.MaxValue;
-					player.Health = (int) value.Value;
+					player.HealthManager.MaxHealth = (int) value.MaxValue;
+					player.HealthManager.Health = (int) value.Value;
 				}
 
 				if (message.attributes.TryGetValue("minecraft:movement", out var movement))
 				{
-				//	player.MovementSpeed = movement.Value;
+					player.MovementSpeedModifier = movement.Value * 10f;
 				}
 
 				if (message.attributes.TryGetValue("minecraft:player.hunger", out var hunger))
 				{
-					player.Hunger = (int) hunger.Value;
-					player.MaxHunger = (int) hunger.MaxValue;
+					player.HealthManager.Hunger = (int) hunger.Value;
+					player.HealthManager.MaxHunger = (int) hunger.MaxValue;
 				}
 				
 				if (message.attributes.TryGetValue("minecraft:player.exhaustion", out var exhaustion))
 				{
-					player.Exhaustion = (int) exhaustion.Value;
-					player.MaxExhaustion = (int) exhaustion.MaxValue;
+					player.HealthManager.Exhaustion = (int) exhaustion.Value;
+					player.HealthManager.MaxExhaustion = (int) exhaustion.MaxValue;
 				}
 				
 				if (message.attributes.TryGetValue("minecraft:player.saturation", out var saturation))
 				{
-					player.Saturation = (int) saturation.Value;
-					player.MaxSaturation = (int) saturation.MaxValue;
+					player.HealthManager.Saturation = (int) saturation.Value;
+					player.HealthManager.MaxSaturation = (int) saturation.MaxValue;
 				}
 			}
 		}
@@ -1167,7 +1167,7 @@ namespace Alex.Worlds.Bedrock
 
 		public void HandleMcpeSetHealth(McpeSetHealth message)
 		{
-			Client.World.Player.Health = message.health;
+			Client.World.Player.HealthManager.Health = message.health;
 		}
 
 		public void HandleMcpeSetSpawnPosition(McpeSetSpawnPosition message)

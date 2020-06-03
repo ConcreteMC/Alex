@@ -34,6 +34,7 @@ namespace Alex.Gamestates
 		private void MenuButtonClicked()
 		{
 			Alex.GameStateManager.SetActiveState<TitleState>("title");
+			Alex.IsMouseVisible = true;
 		}
 
 	    protected override void OnShow()

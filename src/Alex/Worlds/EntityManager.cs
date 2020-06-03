@@ -37,6 +37,16 @@ namespace Alex.Worlds
 			EntityByUUID = new ConcurrentDictionary<UUID, Entity>();
 		}
 
+		public void Tick()
+		{
+			var entities = Entities.Values.ToArray();
+
+			foreach (var entity in entities)
+			{
+				entity.OnTick();
+			}
+		}
+		
 	    public void Update(IUpdateArgs args, SkyBox skyRenderer)
 	    {
 		    var entities = Entities.Values.ToArray();

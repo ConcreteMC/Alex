@@ -10,6 +10,7 @@
 		StartHorseJump,
 		StopHorseJump,
 		OpenHorseInventory,
-		StartElytraFlying = 8
+		StartElytraFlying = 8,
+		Jump
 	}
 }

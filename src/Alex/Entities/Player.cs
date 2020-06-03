@@ -27,6 +27,8 @@ using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
 using ContainmentType = Microsoft.Xna.Framework.ContainmentType;
 using IBlockState = Alex.API.Blocks.State.IBlockState;
 using Inventory = Alex.Utils.Inventory;
+using MathF = System.MathF;
+using PlayerLocation = Alex.API.Utils.PlayerLocation;
 using Skin = Alex.API.Utils.Skin;
 
 namespace Alex.Entities
@@ -47,18 +49,6 @@ namespace Alex.Entities
         public Vector3 AdjacentRaytrace = Vector3.Zero;
         public bool HasAdjacentRaytrace = false;
         public bool HasRaytraceResult = false;
-
-        public int Health { get; set; } = 20;
-        public int MaxHealth { get; set; } = 20;
-
-        public int Hunger { get; set; } = 19;
-        public int MaxHunger { get; set; } = 20;
-
-        public int Saturation { get; set; } = 0;
-        public int MaxSaturation { get; set; }
-        
-        public int Exhaustion { get; set; } = 0;
-        public int MaxExhaustion { get; set; }
 
         public bool IsFirstPersonMode { get; set; } = false;
         public bool IsLeftyHandy { get; set; } = false;
@@ -81,7 +71,8 @@ namespace Alex.Entities
 			//Inventory = new Inventory(46);
 			//Inventory.SelectedHotbarSlotChanged += SelectedHotbarSlotChanged;
 			//base.Inventory.IsPeInventory = true;
-			MovementSpeed = 4.317f;
+			MovementSpeed = 4.306f;
+			BaseMovementSpeed = 4.317;
 			FlyingSpeed = 10.89f;
 
 			SnapHeadYawRotationOnMovement = false;
@@ -161,7 +152,10 @@ namespace Alex.Entities
 	    private DateTime _lastTimeWithoutInput = DateTime.MinValue;
 	    private bool _prevCheckedInput = false;
 	    private DateTime _lastAnimate = DateTime.MinValue;
-	    public override void Update(IUpdateArgs args)
+
+	    public bool CanSprint => HealthManager.Hunger > 6;
+
+		public override void Update(IUpdateArgs args)
 		{
 			if (WaitingOnChunk && Age % 4 == 0)
 			{
@@ -181,6 +175,11 @@ namespace Alex.Entities
 
 			if (!CanFly && IsFlying)
 				IsFlying = false;
+
+			if (IsSprinting && !CanSprint)
+			{
+				IsSprinting = false;
+			}
 			
 			Controller.Update(args.GameTime);
 			//KnownPosition.HeadYaw = KnownPosition.Yaw;
@@ -211,6 +210,8 @@ namespace Alex.Entities
 					Camera.UpdateOffset(Vector3.Zero);
 				}
 			}
+			
+		//	DoHealthAndExhaustion();
 
 			var previousCheckedInput = _prevCheckedInput;
 			
@@ -330,6 +331,14 @@ namespace Alex.Entities
 			base.Update(args);
 
 		}
+
+	    public void Jump()
+	    {
+		    HealthManager.Exhaust(IsSprinting ? 0.2f : 0.05f);
+		    
+		    Velocity += new Vector3(0f, MathF.Sqrt(2f * (float) Gravity * 1.2f), 0f);
+		    Network?.EntityAction((int) EntityId, EntityAction.Jump);
+	    }
 
 	    private void InteractWithEntity(IEntity entity, bool attack)
 	    {

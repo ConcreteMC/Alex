@@ -785,6 +785,12 @@ namespace Alex.Worlds.Bedrock
 
 		void INetworkProvider.EntityAction(int entityId, EntityAction action)
 		{
+			BlockCoordinates? coordinates = null;
+			if (entityId == World.Player.EntityId)
+			{
+				coordinates = World.Player.KnownPosition.GetCoordinates3D();
+			}
+
 			PlayerAction translated;
 			switch (action)
 			{
@@ -801,12 +807,16 @@ namespace Alex.Worlds.Bedrock
 				case EntityAction.StopSprinting:
 					translated = PlayerAction.StopSprint;
 					break;
+				
+				case EntityAction.Jump:
+					translated = PlayerAction.Jump;
+					break;
 
 				default:
 					return;
 			}
 			
-			SendPlayerAction(translated, null, null);
+			SendPlayerAction(translated, coordinates, null);
 		}
 
 		/// <inheritdoc />

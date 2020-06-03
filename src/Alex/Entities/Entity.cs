@@ -112,6 +112,8 @@ namespace Alex.Entities
 		public double Gravity { get; set; } = 16.8f; //9.81f; //1.6f;
 		public float TerminalVelocity { get; set; } = 78.4f;
 
+		public float MovementSpeedModifier { get; set; } = 0.1f;
+		public double BaseMovementSpeed { get; set; } = 3;
 		public double MovementSpeed { get; set; } = 0.1F;
 		public double FlyingSpeed { get; set; } = 0.4F;
 		
@@ -143,6 +145,7 @@ namespace Alex.Entities
 		private EntityModelRenderer.ModelBone _body;
 		private EntityModelRenderer.ModelBone _head;
 		
+		public HealthManager HealthManager { get; }
 		public Entity(int entityTypeId, World level, INetworkProvider network)
 		{
 			Network = network;
@@ -159,6 +162,8 @@ namespace Alex.Entities
 
 			HideNameTag = true;
 			ServerEntity = true;
+			
+			HealthManager = new HealthManager(this);
 		}
 
 		private void ScaleChanged()
@@ -488,7 +493,7 @@ namespace Alex.Entities
                 }
             }
 
-            if (now.Subtract(LastUpdatedTime).TotalMilliseconds >= 50)
+      /*      if (now.Subtract(LastUpdatedTime).TotalMilliseconds >= 50)
             {
                 LastUpdatedTime = now;
                 try
@@ -499,7 +504,7 @@ namespace Alex.Entities
                 {
                     Log.Warn(e, $"Exception while trying to tick entity!");
                 }
-            }
+            }*/
         }
 
         public void UpdateHeadYaw(float rotation)
@@ -710,6 +715,8 @@ namespace Alex.Entities
 			
 			Age++;
 
+			HealthManager.OnTick();
+			
 			if (_isHit && Age > _hitAnimationEnd)
 			{
 				_isHit = false;
