@@ -29,6 +29,12 @@ namespace Alex.API.Resources
                 throw new DuplicateNameException("An item with this location has already been registered!");
         }
 
+        public void Register(ResourceLocation location, Func<IRegistryEntry<TEntry>> entry)
+        {
+            if (!Entries.TryAdd(location, entry))
+                throw new DuplicateNameException("An item with this location has already been registered!");
+        }
+
         public void Register(ResourceLocation location, IRegistryEntry<TEntry> entry)
         {
             if (!Entries.TryAdd(location, () => entry))

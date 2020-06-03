@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Alex.API.Services;
 using Alex.GameStates;
@@ -12,14 +13,23 @@ namespace MCJavaTest
     {
         static async Task Main(string[] args)
         {
-	        var path = Path.Combine(Path.GetTempPath(), "Alex");
+	        Regex regex = new Regex(@"(?<start>.*)(?<lambda>\(\)\s\=\>.*)\.WithLocation\((?<location>.+?(?=\)))\)\);", RegexOptions.Multiline);
+	        string file = "../../../../../Alex/Blocks/BlockRegistry.cs";
+	        string fileContents = File.ReadAllText(file);
+
+	        foreach (Match match in regex.Matches(fileContents))
+	        {
+		        Console.WriteLine($"this.Register({match.Groups["location"].Value}, {match.Groups["lambda"]});");
+	        }
+	        
+	        /*var path = Path.Combine(Path.GetTempPath(), "Alex");
 	        Directory.CreateDirectory(path);
 	        Console.WriteLine($"Hello World: {path}");
             
 
             var mcJavaAssets = new MCJavaAssetsUtil(new StorageSystem(path));
             await mcJavaAssets.EnsureTargetReleaseAsync(JavaProtocol.VersionId, new SplashScreen());
-            
+            */
             Console.WriteLine("Done!");
             Console.ReadLine();
         }
