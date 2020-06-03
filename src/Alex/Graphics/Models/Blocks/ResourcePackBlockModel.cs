@@ -683,6 +683,8 @@ namespace Alex.Graphics.Models.Blocks
 							baseBlock.Transparent || !baseBlock.Solid);
 					}
 					
+					Vector3 lightOffset =  cullFace.Value.GetVector3();
+					
 					for (var idx = 0; idx < vertices.Length; idx++)
 					{
 						var vertex = vertices[idx];
@@ -692,7 +694,7 @@ namespace Alex.Graphics.Models.Blocks
 						//var vertexBlockLight = world.GetBlockLight(blockPos);
 						if (SmoothLighting)
 						{
-							GetLight(world, vertex.Position, out vertexBlockLight, out vertexSkyLight, true);
+							GetLight(world, vertex.Position + lightOffset, out vertexBlockLight, out vertexSkyLight, true);
 						}
 
 						//if (blockLight > 0)
