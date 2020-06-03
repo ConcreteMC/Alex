@@ -596,6 +596,12 @@ namespace Alex.Entities
 					}
 
 					_rightArmModel.Position = posOffset;
+					
+					if (_rightSleeveModel != null && _leftSleeveModel != null)
+					{
+						_rightSleeveModel.Rotation = _rightArmModel.Rotation;
+						_leftSleeveModel.Rotation = _leftArmModel.Rotation;
+					}
 				}
 
 				if (_head != null)
@@ -611,6 +617,12 @@ namespace Alex.Entities
 				if (_rightArmModel != null && _leftArmModel != null)
 				{
 					_rightArmModel.Position = _leftArmModel.Position = Vector3.Zero;
+					
+					if (_rightSleeveModel != null && _leftSleeveModel != null)
+					{
+						_rightSleeveModel.Rotation = _rightArmModel.Rotation;
+						_leftSleeveModel.Rotation = _leftArmModel.Rotation;
+					}
 				}
 
 				if (_head != null)

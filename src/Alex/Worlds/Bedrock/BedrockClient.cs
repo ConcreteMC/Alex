@@ -119,7 +119,7 @@ namespace Alex.Worlds.Bedrock
         private IEventDispatcher EventDispatcher { get; }
         public RakConnection Connection { get; }
         private MessageHandler MessageHandler { get; set; }
-        public RakSession Session { get; set; }//=> Connection.ConnectionInfo.RakSessions.Values.FirstOrDefault();
+        private RakSession Session { get; set; }//=> Connection.ConnectionInfo.RakSessions.Values.FirstOrDefault();
         public override bool IsConnected => Session?.State == ConnectionState.Connected;
         
         private IPEndPoint _remoteEndpoint;
