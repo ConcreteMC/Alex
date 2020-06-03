@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace ResourceConverterCore.Converter
 {
-    static class ModelFactoryContext
+    public static class ModelFactoryContext
     {
         public static IReadOnlyDictionary<string, string> Models;
     }

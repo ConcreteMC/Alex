@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 using Alex.ResourcePackLib.Json.Models.Entities;
 
-namespace ResourceConverter
+namespace ResourceConverterCore.Converter
 {
     public static class ResourceConverterContext
     {

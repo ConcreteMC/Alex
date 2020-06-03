@@ -12,7 +12,6 @@ using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Converters;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.ResourcePackLib.Json.Textures;
-using ICSharpCode.SharpZipLib.Zip;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
@@ -22,7 +21,7 @@ using static Alex.Graphics.Models.Entity.EntityModelRenderer;
 using ModelBone = Alex.Graphics.Models.Entity.EntityModelRenderer.ModelBone;
 using Path = System.IO.Path;
 
-namespace ResourceConverter
+namespace ResourceConverterCore
 {
 	static class Log
 	{
@@ -71,7 +70,7 @@ namespace ResourceConverter
 				return;
 			}
 
-			Converter c = new Converter(dirInfo);
+			RealConverter c = new RealConverter(dirInfo);
 
 			Stopwatch sw = Stopwatch.StartNew();
 
@@ -90,7 +89,7 @@ namespace ResourceConverter
 		}
 	}
 
-	internal class Converter
+	internal class RealConverter
 	{
 		private Dictionary<string, EntityModel> _processedModels = new Dictionary<string, EntityModel>();
 		public IReadOnlyDictionary<string, EntityModel> EntityModels => _processedModels;
@@ -101,7 +100,7 @@ namespace ResourceConverter
 
 		private readonly DirectoryInfo WorkingDir;
 
-		public Converter(DirectoryInfo workingDirectorg)
+		public RealConverter(DirectoryInfo workingDirectorg)
 		{
 			WorkingDir = workingDirectorg;
 		}

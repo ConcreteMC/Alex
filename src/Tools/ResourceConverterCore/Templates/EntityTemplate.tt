@@ -1,16 +1,19 @@
 ﻿<#@ template language="C#" #>
 <#@ output extension=".cs" #>
 <#@ assembly name="System.Core" #>
-<#@ assembly name="Alex" #>
-<#@ assembly name="Alex.API" #>
-<#@ assembly name="Alex.Graphics" #>
-<#@ assembly name="Alex.ResourcePackLib" #>
+
+<#@ assembly name="$(ProjectDir)$(OutDir)$(TargetFileName)" #>
+<#@ assembly name="$(ProjectDir)$(OutDir)/Alex" #>
+<#@ assembly name="$(ProjectDir)$(OutDir)/Alex.API.dll" #>
+<#@ assembly name="$(ProjectDir)$(OutDir)/Alex.ResourcePackLib.dll" #>
+<#@ assembly name="$(ProjectDir)$(OutDir)/MonoGame.Framework.dll" #>
 
 <#@ import namespace="System.Linq" #>
 <#@ import namespace="System.Text" #>
 <#@ import namespace="System.Collections.Generic" #>
 <#@ import namespace="Alex.ResourcePackLib.Json.Models.Entities" #>
-<#@ import namespace="ResourceConverter" #>
+<#@ import namespace="ResourceConverterCore" #>
+<#@ import namespace="ResourceConverterCore.Converter" #>
 
 <#
 

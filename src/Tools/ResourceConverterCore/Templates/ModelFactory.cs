@@ -12,7 +12,7 @@ namespace Templates {
     using System.Linq;
     using System.Text;
     using System.Collections.Generic;
-    using ResourceConverter;
+    using ResourceConverterCore;
     using System;
     
     

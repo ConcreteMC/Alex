@@ -3,19 +3,33 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <StartupObject>ResourceConverter.Program</StartupObject>
+    <StartupObject>ResourceConverterCore.Program</StartupObject>
     <Configurations>Release;Debug;Appveyor</Configurations>
     <Platforms>x64;AnyCPU</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
-    <DotNetCliToolReference Include="T5.TextTransform.Tool" Version="1.1.0" />
+    <DotNetCliToolReference Include="dotnet-t4-project-tool" Version="2.0.5" />
     <TextTemplate Include="\Templates\EntityTemplate.tt" />
     <Generated Include="\Templates\EntityTemplate.cs" />
+    <Generated Update="\Templates\EntityTemplate.cs">
+      <DependentUpon>EntityTemplate.tt</DependentUpon>
+    </Generated>
+    <None Remove="Templates\EntityTemplate.tt" />
+    <TextTemplate Include="Templates\EntityTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>EntityTemplate.cs</LastGenOutput>
+    </TextTemplate>
+    <Generated Update="..\..\..\..\..\..\..\..\Templates\EntityTemplate.cs">
+      <DependentUpon>EntityTemplate.tt</DependentUpon>
+    </Generated>
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.CodeDom" Version="4.5.0" />
+    <PackageReference Include="dotnet-t4-project-tool" Version="2.0.5" />
+    <PackageReference Include="Mono.TextTemplating" Version="2.0.5" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL.Core" Version="3.8.0.13" />
+    <PackageReference Include="System.CodeDom" Version="4.7.0" />
   </ItemGroup>
 
 	<ItemGroup>
@@ -38,10 +52,6 @@
 
   <ItemGroup>
     <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="TestOutput\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -69,7 +79,7 @@
 
   <ItemGroup>
     <None Update="Templates\ModelFactory.tt">
-      <Generator></Generator>
+      <Generator>TextTemplatingFileGenerator</Generator>
     </None>
   </ItemGroup>
 

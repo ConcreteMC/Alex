@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using Mono.TextTemplating;
 using NLog;
-using ResourceConverterCore.Converter;
 using Templates;
 
-namespace ResourceConverter
+namespace ResourceConverterCore.Converter
 {
     public static class ResourceConverter
     {
@@ -71,9 +71,11 @@ namespace ResourceConverter
 		        Directory.CreateDirectory(outDir);
 		        
 	        geometryToClass = new Dictionary<string, string>();
-
-               var template = new EntityTemplate();
-	        template.Initialize();
+			Mono.TextTemplating.TemplatingEngine engine = new TemplatingEngine();
+			var template =engine.CompileTemplate(File.ReadAllText("../../../Templates/EntityTemplate.tt"), new TemplateGenerator());
+			//
+             //  var template = new EntityTemplate();
+	        //template.Initialize();
 
 	        //            template.Session["EntityModels"] = loader.EntityModels;
 	        ResourceConverterContext.EntityModels = loader.EntityModels;
@@ -91,7 +93,7 @@ namespace ResourceConverter
 		        ResourceConverterContext.CurrentModelName = CodeTypeName(model.Value.Name);
 		        ResourceConverterContext.CurrentModel = model.Value;
 
-		        var output = template.TransformText();
+		        var output = template.Process();
 		        var outputPath = Path.Combine(outDir, CodeTypeName(model.Value.Name) + "Model.cs");
 		        if (File.Exists(outputPath))
 		        {

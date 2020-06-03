@@ -3,10 +3,11 @@ using System.IO;
 using System.Reflection;
 using log4net;
 using NLog;
+using ResourceConverterCore.Converter;
 using ResourceConverterCore.Properties;
 using LogManager = NLog.LogManager;
 
-namespace ResourceConverter
+namespace ResourceConverterCore
 {
     public class Program
     {
