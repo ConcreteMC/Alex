@@ -600,7 +600,10 @@ namespace Alex.Entities
 					if (_rightSleeveModel != null && _leftSleeveModel != null)
 					{
 						_rightSleeveModel.Rotation = _rightArmModel.Rotation;
+						_rightSleeveModel.Position = posOffset;
+						
 						_leftSleeveModel.Rotation = _leftArmModel.Rotation;
+						_leftSleeveModel.Position = posOffset;
 					}
 				}
 
@@ -621,7 +624,10 @@ namespace Alex.Entities
 					if (_rightSleeveModel != null && _leftSleeveModel != null)
 					{
 						_rightSleeveModel.Rotation = _rightArmModel.Rotation;
+						_rightSleeveModel.Position = Vector3.Zero;
+						
 						_leftSleeveModel.Rotation = _leftArmModel.Rotation;
+						_leftSleeveModel.Position = Vector3.Zero;
 					}
 				}
 
@@ -917,14 +923,14 @@ namespace Alex.Entities
 			ModelRenderer.GetBone("leftArm", out _rightArmModel);
 			ModelRenderer.GetBone("rightArm", out _leftArmModel);
 
-			ModelRenderer.GetBone("leftLeg", out _leftLegModel);
-			ModelRenderer.GetBone("rightLeg", out _rightLegModel);
+			ModelRenderer.GetBone("rightLeg", out _leftLegModel);
+			ModelRenderer.GetBone("leftLeg", out _rightLegModel);
 
-			ModelRenderer.GetBone("leftSleeve", out _leftSleeveModel);
-			ModelRenderer.GetBone("rightSleeve", out _rightSleeveModel);
+			ModelRenderer.GetBone("rightSleeve", out _leftSleeveModel);
+			ModelRenderer.GetBone("leftSleeve", out _rightSleeveModel);
 
-			ModelRenderer.GetBone("leftPants", out _leftPantsModel);
-			ModelRenderer.GetBone("rightPants", out _rightPantsModel);
+			ModelRenderer.GetBone("rightPants", out _leftPantsModel);
+			ModelRenderer.GetBone("leftPants", out _rightPantsModel);
 
 			ModelRenderer.GetBone("jacket", out _jacketModel);
 			ModelRenderer.GetBone("head", out _head);
