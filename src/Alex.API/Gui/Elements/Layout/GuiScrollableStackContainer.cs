@@ -97,12 +97,14 @@ namespace Alex.API.Gui.Elements.Layout
 
 			//Log.Info($"{GetType().Name}.ScrollOffset.Changed {{ScrollOffset=({oldValue} => {newValue}), RenderTransform=({prevTransform} => {_childRenderTransform})}}");
 			//Debug.WriteLine($"{GetType().Name}.ScrollOffset.Changed {{ScrollOffset=({oldValue} => {newValue}), RenderTransform=({prevTransform} => {_childRenderTransform})}}");
-			Debug.WriteLine($"{GetType().Name}.ScrollOffset.Changed {{ScrollOffset=({oldValue} => {newValue})}}");
+		//	Debug.WriteLine($"{GetType().Name}.ScrollOffset.Changed {{ScrollOffset=({oldValue} => {newValue})}}");
 		}
 
+		private Point _previousSize = Point.Zero;
 		protected override void OnAfterMeasure()
 		{
 			base.OnAfterMeasure();
+
 			var sizeDiff = ContentSize - RenderBounds.Size;
 
 			VerticalScrollBar.MaxScrollOffset   = Math.Max(0, sizeDiff.Height);
@@ -112,6 +114,17 @@ namespace Alex.API.Gui.Elements.Layout
 
 		protected override void OnUpdate(GameTime gameTime)
 		{
+			if (_previousSize != RenderBounds.Size)
+			{
+				int yDifference = RenderBounds.Size.Y - _previousSize.Y;
+				int xDifference = RenderBounds.Size.X - _previousSize.X;
+				
+				ScrollOffset = new Vector2(Math.Max(ScrollOffset.X, ScrollOffset.X - xDifference),Math.Max(ScrollOffset.Y, ScrollOffset.Y - yDifference));
+				
+				InvalidateLayout();
+				_previousSize = RenderBounds.Size;
+			}
+			
 			UpdateScroll();
 
 			base.OnUpdate(gameTime);
