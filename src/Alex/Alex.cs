@@ -64,6 +64,7 @@ namespace Alex
 	public partial class Alex : Microsoft.Xna.Framework.Game
 	{
 		public static bool InGame { get; set; } = false;
+		public static ServerType ServerType { get; set; } = ServerType.Bedrock;
 		
 		public static EntityModel PlayerModel { get; set; }
 		public static Image<Rgba32> PlayerTexture { get; set; }
@@ -592,11 +593,13 @@ namespace Alex
 				IsMultiplayer = true;
 				if (bedrock)
 				{
+					ServerType = ServerType.Bedrock;
 					provider = new BedrockWorldProvider(this, serverEndPoint,
 						profile, NetworkThreadPool, out networkProvider);
 				}
 				else
 				{
+					ServerType = ServerType.Java;
 					provider = new JavaWorldProvider(this, serverEndPoint, profile,
 						out networkProvider)
 					{

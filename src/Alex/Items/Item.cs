@@ -1,4 +1,5 @@
-﻿using Alex.API.Items;
+﻿using Alex.API.Data.Servers;
+using Alex.API.Items;
 using Alex.API.Utils;
 using Alex.Graphics.Models.Items;
 using fNbt;
@@ -44,6 +45,10 @@ namespace Alex.Items
 				{
 					if (display.TryGet("Name", out NbtString name))
 					{
+						if (Alex.ServerType == ServerType.Java)
+						{
+							return ChatParser.ParseText(name.Value);
+						}
 						return name.Value;
 					}
 				}

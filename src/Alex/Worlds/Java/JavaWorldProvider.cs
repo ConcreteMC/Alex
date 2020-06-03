@@ -1030,9 +1030,10 @@ namespace Alex.Worlds.Java
 			{
 				foreach (var remove in packet.RemovePlayerEntries)
 				{
-					World?.RemovePlayerListItem(new UUID(remove.UUID.ToByteArray()));
+					var uuid = new UUID(remove.UUID.ToByteArray());
+					World?.RemovePlayerListItem(uuid);
 				//	API.Utils.UUID uuid = new UUID(remove.UUID.ToByteArray());
-					/*if (_players.TryRemove(uuid, out PlayerMob removed))
+				/*	if (_players.TryRemove(uuid, out PlayerMob removed))
 					{
 						if (removed.IsSpawned)
 						{
