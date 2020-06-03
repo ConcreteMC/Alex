@@ -13,6 +13,7 @@ using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Entities;
+using Alex.Networking.Bedrock.Net.Raknet;
 using Alex.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
@@ -125,7 +126,7 @@ namespace Alex.Worlds.Bedrock
 					}
 				}
 
-				if (_tickTime % 20 == 0)
+				if (_tickTime % 20 == 0 && CustomConnectedPong.CanPing)
 				{
 					Client.SendPing();
 				}
@@ -177,6 +178,7 @@ namespace Alex.Worlds.Bedrock
 			//	WorldReceiver?.UpdatePlayerPosition();
 			//}
 
+			CustomConnectedPong.CanPing = true;
 			_gameTickTimer = new System.Threading.Timer(GameTick, null, 50, 50);
 		}
 
