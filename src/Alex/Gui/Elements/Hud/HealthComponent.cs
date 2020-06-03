@@ -22,7 +22,7 @@ namespace Alex.Gui.Elements
         private Player Player { get; }
         private HealthBarHeart[] Hearts { get; }
         
-        private int Health { get; set; }
+        private float Health { get; set; }
         public HealthComponent(Player player)
         {
             Health = player.HealthManager.Health;

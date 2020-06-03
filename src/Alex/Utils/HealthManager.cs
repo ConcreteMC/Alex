@@ -10,9 +10,9 @@ namespace Alex.Utils
 	{
 		private Entity Entity { get; }
 
-		private int _health = 20;
+		private float _health = 20;
 
-		public int Health
+		public float Health
 		{
 			get
 			{
@@ -20,11 +20,11 @@ namespace Alex.Utils
 			}
 			set
 			{
-				_health = Math.Min(MaxHealth, value);
+				_health = MathF.Min(MaxHealth, value);
 			}
 		}
 
-		public int MaxHealth { get; set; } = 20;
+		public float MaxHealth { get; set; } = 20f;
 
 		public int Hearts
 		{

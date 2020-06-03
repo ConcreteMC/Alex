@@ -621,7 +621,10 @@ namespace Alex.Worlds.Java
 			{
 				HandleTitlePacket(titlePacket);
 			}
-
+			else if (packet is UpdateHealthPacket healthPacket)
+			{
+				HandleUpdateHealthPacket(healthPacket);
+			}
 			else if (packet is DisconnectPacket disconnectPacket)
 			{
 				HandleDisconnectPacket(disconnectPacket);
@@ -633,6 +636,13 @@ namespace Alex.Worlds.Java
 					Log.Warn($"Unhandled packet: 0x{packet.PacketId:x2} - {packet.ToString()}");
 				}
 			}
+		}
+
+		private void HandleUpdateHealthPacket(UpdateHealthPacket packet)
+		{
+			World.Player.HealthManager.Health = packet.Health;
+			World.Player.HealthManager.Hunger = packet.Food;
+			World.Player.HealthManager.Saturation = packet.Saturation;
 		}
 
 		private Dictionary<int, Type> UnhandledPackets = new Dictionary<int, Type>();
@@ -707,6 +717,9 @@ namespace Alex.Worlds.Java
 
 		private Item GetItemFromSlotData(SlotData data)
 		{
+			if (data == null)
+				return new ItemAir();
+			
 			if (ItemFactory.ResolveItemName(data.ItemID, out string name))
 			{
 				if (ItemFactory.TryGetItem(name, out Item item))
@@ -723,45 +736,38 @@ namespace Alex.Worlds.Java
 
 		private void HandleEntityEquipmentPacket(EntityEquipmentPacket packet)
 		{
-			if (packet.Item == null)
+			/*if (packet.Item == null)
 			{
 				Log.Warn($"Got null item in EntityEquipment.");
 				return;
-			}
+			}*/
 
 			if (World.TryGetEntity(packet.EntityId, out Entity e))
 			{
 				if (e is Entity entity)
 				{
-					if (ItemFactory.ResolveItemName(packet.Item.ItemID, out string name))
-					{
-						if (ItemFactory.TryGetItem(name, out Item item))
-						{
-							item.Count = packet.Item.Count;
-							item.Nbt = packet.Item.Nbt;
+					Item item = GetItemFromSlotData(packet.Item);;
 
-							switch (packet.Slot)
-							{
-								case EntityEquipmentPacket.SlotEnum.MainHand:
-									entity.Inventory.MainHand = item;
-									break;
-								case EntityEquipmentPacket.SlotEnum.OffHand:
-									entity.Inventory.OffHand = item;
-									break;
-								case EntityEquipmentPacket.SlotEnum.Boots:
-									entity.Inventory.Boots = item;
-									break;
-								case EntityEquipmentPacket.SlotEnum.Leggings:
-									entity.Inventory.Leggings = item;
-									break;
-								case EntityEquipmentPacket.SlotEnum.Chestplate:
-									entity.Inventory.Chestplate = item;
-									break;
-								case EntityEquipmentPacket.SlotEnum.Helmet:
-									entity.Inventory.Helmet = item;
-									break;
-							}
-                        }
+					switch (packet.Slot)
+					{
+						case EntityEquipmentPacket.SlotEnum.MainHand:
+							entity.Inventory.MainHand = item;
+							break;
+						case EntityEquipmentPacket.SlotEnum.OffHand:
+							entity.Inventory.OffHand = item;
+							break;
+						case EntityEquipmentPacket.SlotEnum.Boots:
+							entity.Inventory.Boots = item;
+							break;
+						case EntityEquipmentPacket.SlotEnum.Leggings:
+							entity.Inventory.Leggings = item;
+							break;
+						case EntityEquipmentPacket.SlotEnum.Chestplate:
+							entity.Inventory.Chestplate = item;
+							break;
+						case EntityEquipmentPacket.SlotEnum.Helmet:
+							entity.Inventory.Helmet = item;
+							break;
 					}
 				}
 			}
@@ -855,12 +861,6 @@ namespace Alex.Worlds.Java
 
 		private void HandleSetSlot(SetSlot packet)
 		{
-			if (packet.Slot == null)
-			{
-				Log.Warn($"Got null item in SetSlot.");
-				return;
-			}
-			
 			Inventory inventory = null;
 			if (packet.WindowId == 0 || packet.WindowId == -2)
 			{
@@ -914,6 +914,7 @@ namespace Alex.Worlds.Java
 				{
 					_players.TryRemove(p.Key, out _);
 				}
+
 				base.DespawnEntity(id);
 			}
 		}
@@ -993,7 +994,7 @@ namespace Alex.Worlds.Java
 								
 									entity.UpdateSkin(t);
 									
-									Log.Info($"Skin update!");
+								//	Log.Info($"Skin update!");
 								}
 							});
 						}
@@ -1091,9 +1092,24 @@ namespace Alex.Worlds.Java
 
 		private void HandleEntityVelocity(EntityVelocity packet)
 		{
-			if (World.TryGetEntity(packet.EntityId, out var entity))
+			Entity entity;
+			if (!World.TryGetEntity(packet.EntityId, out entity))
 			{
-				entity.Velocity = new Vector3(packet.VelocityX / 8000f, packet.VelocityY / 8000f, packet.VelocityZ / 8000f);
+				if (packet.EntityId == World.Player.EntityId)
+				{
+					entity = World.Player;
+				}
+			}
+
+			if (entity != null)
+			{
+				var velocity = new Vector3(
+					packet.VelocityX / 8000f, packet.VelocityY / 8000f, packet.VelocityZ / 8000f) * 20f;
+
+				var old = entity.Velocity;
+
+				entity.Velocity += new Microsoft.Xna.Framework.Vector3(
+					velocity.X - old.X, velocity.Y - old.Y, velocity.Z - old.Z);
 			}
 		}
 
