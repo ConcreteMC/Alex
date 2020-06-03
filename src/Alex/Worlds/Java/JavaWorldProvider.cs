@@ -44,6 +44,7 @@ using NLog;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
 using LevelInfo = Alex.API.World.LevelInfo;
+using NibbleArray = Alex.API.Utils.NibbleArray;
 using Packet = Alex.Networking.Java.Packets.Packet;
 using PlayerLocation = Alex.API.Utils.PlayerLocation;
 using UUID = Alex.API.Utils.UUID;
@@ -214,6 +215,8 @@ namespace Alex.Worlds.Java
 						_lastSentLocation = pos;
 
 						_tickSinceLastPositionUpdate = 0;
+						
+						World.ChunkManager.FlagPrioritization();
 					}
 					else if (Math.Abs(pos.Pitch - _lastSentLocation.Pitch) > 0f || Math.Abs(pos.HeadYaw - _lastSentLocation.Yaw) > 0f)
 					{
@@ -225,6 +228,8 @@ namespace Alex.Worlds.Java
 						SendPacket(playerLook);
 
 						_tickSinceLastPositionUpdate = 0;
+						
+						World.ChunkManager.FlagPrioritization();
 					}
 					else if (_tickSinceLastPositionUpdate >= 20)
 					{
@@ -244,6 +249,8 @@ namespace Alex.Worlds.Java
 						_tickSinceLastPositionUpdate++;
 					}
 				}
+				
+				p?.OnTick();
 			}
 		}
 
@@ -350,7 +357,7 @@ namespace Alex.Worlds.Java
 						progressReport(LoadingState.Spawning, 99);
                     }
 
-                    return (loaded >= target && allowSpawn) || _disconnected; // Spawned || _disconnected;
+                    return (loaded >= target && allowSpawn && _generatingHelper.Count == 0) || _disconnected; // Spawned || _disconnected;
 
 				});
 
@@ -1194,8 +1201,7 @@ namespace Alex.Worlds.Java
 
 		private void HandleUpdateLightPacket(UpdateLightPacket packet)
 		{
-			return;
-			/*if (WorldReceiver.GetChunkColumn(packet.ChunkX, packet.ChunkZ) is ChunkColumn c)
+			if (World.GetChunkColumn(packet.ChunkX, packet.ChunkZ) is ChunkColumn c)
 			{
 				for (int i = 1; i < packet.SkyLightArrays.Length - 1; i++)
 				{
@@ -1219,8 +1225,8 @@ namespace Alex.Worlds.Java
 					c.Sections[i].BlockLight = n;
 				}
 
-				WorldReceiver.ChunkUpdate(c, ScheduleType.Full);
-            }*/
+				World.ChunkManager.ScheduleChunkUpdate(new ChunkCoordinates(packet.ChunkX, packet.ChunkZ), ScheduleType.Full, false);//.ChunkUpdate(c, ScheduleType.Full);
+            }
         }
 
         //private BlockingCollection<ChunkDataPacket> _chunkQueue = new BlockingCollection<ChunkDataPacket>();
@@ -1250,9 +1256,11 @@ namespace Alex.Worlds.Java
 				result.X = chunk.ChunkX;
 				result.Z = chunk.ChunkZ;
 				result.IsDirty = true;
-			
+				
 				result.Read(new MinecraftStream(new MemoryStream(chunk.Buffer)), chunk.PrimaryBitmask, chunk.GroundUp, _dimension == 0);
-
+				result.SkyLightDirty = true;
+				result.BlockLightDirty = true;
+				
 				if (!hasDoneInitialChunks)
 				{
 					_generatingHelper.Add(result);

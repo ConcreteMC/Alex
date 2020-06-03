@@ -427,6 +427,22 @@ namespace Alex.Blocks.Storage
 									++this._tickRefCount;
 								}
 							}
+
+							if (block.LightValue > 0)
+							{
+								var coords = new BlockCoordinates(x,y,z);
+
+								if (!LightSources.Contains(coords))
+								{
+									LightSources.Add(coords);
+								}
+
+								if (GetBlocklight(x, y, z) != block.LightValue)
+								{
+									SetBlocklight(x,y,z, (byte) block.LightValue);
+									SetBlockLightScheduled(x,y,z, true);
+								}
+							}
 						}
 					}
 				}

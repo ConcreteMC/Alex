@@ -529,6 +529,7 @@ namespace Alex.Worlds
 					}
 
 					storage.IsDirty = true;
+					
 					this.Sections[sectionY] = storage;
 				}
 

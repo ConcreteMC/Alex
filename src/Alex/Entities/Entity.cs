@@ -16,6 +16,7 @@ using Alex.Net;
 using Alex.ResourcePackLib.Json.Models.Items;
 using Alex.Utils;
 using Alex.Worlds;
+using Alex.Worlds.Java;
 using Microsoft.Xna.Framework;
 using MiNET.Utils;
 using NLog;
@@ -166,6 +167,7 @@ namespace Alex.Entities
 
 			HideNameTag = true;
 			ServerEntity = true;
+			IsAffectedByGravity = true;
 			
 			HealthManager = new HealthManager(this);
 			UUID = new UUID(Guid.NewGuid().ToByteArray());
@@ -773,7 +775,13 @@ namespace Alex.Entities
 		//	IsMoving = Velocity.LengthSquared() > 0f;
 
 		var knownPos = new BlockCoordinates(new Vector3(KnownPosition.X, KnownPosition.Y, KnownPosition.Z));
-		var knownDown = KnownPosition.GetCoordinates3D().BlockDown();
+		var knownDown = KnownPosition.GetCoordinates3D();
+
+		if (!(Network is JavaNetworkProvider))
+		{
+			knownDown = knownDown.BlockDown();
+		}
+		
 			var blockBelowFeet = Level?.GetBlockStates(knownDown.X, knownDown.Y, knownDown.Z);
 			var feetBlock = Level?.GetBlockStates(knownPos.X, knownPos.Y, knownPos.Z).ToArray();
 			var headBlock = Level?.GetBlock(KnownPosition.GetCoordinates3D() + new BlockCoordinates(0, 1, 0));
@@ -827,7 +835,9 @@ namespace Alex.Entities
 				}
 
 				if (!feetBlock.Any(x => x.Storage == 0 && x.State.Block.Solid))
+				{
 					KnownPosition.OnGround = false;
+				}
 			}
 
 			IsInWater = FeetInWater || HeadInWater;

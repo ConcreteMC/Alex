@@ -828,14 +828,7 @@ namespace Alex.Worlds
 				    {
 					    if ((chunk.BlockLightDirty || chunk.IsNew))
 					    {
-						    var chunkpos = new BlockCoordinates(chunk.X * 16, 0, chunk.Z * 16);
-
-						    foreach (var ls in chunk.GetLightSources())
-						    {
-							    BlockLightCalculations.Enqueue(chunkpos + ls);
-						    }
-
-						    chunk.BlockLightDirty = false;
+						    ScheduleLightUpdate(position);
 					    }
 				    }
 
@@ -848,6 +841,21 @@ namespace Alex.Worlds
 
 				    Interlocked.Increment(ref _chunkUpdates);
 			    }
+		    }
+	    }
+
+	    public void ScheduleLightUpdate(ChunkCoordinates coordinates)
+	    {
+		    if (Chunks.TryGetValue(coordinates, out ChunkColumn chunk))
+		    {
+			    var chunkpos = new BlockCoordinates(chunk.X * 16, 0, chunk.Z * 16);
+
+			    foreach (var ls in chunk.GetLightSources())
+			    {
+				    BlockLightCalculations.Enqueue(chunkpos + ls);
+			    }
+
+			    chunk.BlockLightDirty = false;
 		    }
 	    }
 
