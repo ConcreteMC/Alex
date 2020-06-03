@@ -19,13 +19,15 @@ namespace Alex
 	public static class Program
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Program));
-
+		private static Thread _startupThread = null;
+		
 		/// <summary>
 		/// The main entry point for the application.
 		/// </summary>
 		[STAThread]
 		static void Main(string[] args)
 		{
+			_startupThread = Thread.CurrentThread;
 			LaunchSettings launchSettings = ParseArguments(args);
 
 			if (!Directory.Exists(launchSettings.WorkDir))
@@ -49,6 +51,11 @@ namespace Alex
 			{
 				game.Run();
 			}
+		}
+		
+		public static bool IsRunningOnStartupThread()
+		{
+			return Thread.CurrentThread == _startupThread;
 		}
 
 		private static void ConfigureNLog(string baseDir)

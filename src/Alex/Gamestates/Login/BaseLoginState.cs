@@ -105,7 +105,8 @@ namespace Alex.Gamestates.Login
 				Text = "Login",
 				Margin = new Thickness(5),
 				Modern = false,
-				Width = 100
+				Width = 100,
+				TabIndex = 3
 			}, new GuiButton(OnCancelButtonPressed)
 			{
 				AccessKey = Keys.Escape,
@@ -113,7 +114,8 @@ namespace Alex.Gamestates.Login
 				TranslationKey = "gui.cancel",
 				Margin = new Thickness(5),
 				Modern = false,
-				Width = 100
+				Width = 100,
+				TabIndex = 4
 			});
 			buttonRow.ChildAnchor = Alignment.MiddleCenter;
 

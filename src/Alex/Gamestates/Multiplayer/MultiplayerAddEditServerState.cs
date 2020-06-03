@@ -85,7 +85,7 @@ namespace Alex.Gamestates.Multiplayer
 				Margin = new Thickness(0, 0, 5, 0)
 			}, _hostnameInput = new GuiTextInput()
 			{
-				TabIndex = 1,
+				TabIndex = 2,
 
 				Width = 200,
 
@@ -115,7 +115,8 @@ namespace Alex.Gamestates.Multiplayer
 				Width   = 50,
 				Checked = serverType == ServerType.Java,
 				CheckedOutlineThickness = new Thickness(1),
-				DisplayFormat = new ValueFormatter<bool>((val) => $"Java {(val ? "[Active]" : "")}")
+				DisplayFormat = new ValueFormatter<bool>((val) => $"Java {(val ? "[Active]" : "")}"),
+				TabIndex = 3
 			});
 			_serverTypeGroup.AddChild(_bedrockEditionButton = new GuiToggleButton("Bedrock")
 			{
@@ -124,7 +125,8 @@ namespace Alex.Gamestates.Multiplayer
 				Width   = 50,
 				Checked = serverType == ServerType.Bedrock,
 				CheckedOutlineThickness = new Thickness(1),
-				DisplayFormat = new ValueFormatter<bool>((val) => $"Bedrock {(val ? "[Active]" : "")}")
+				DisplayFormat = new ValueFormatter<bool>((val) => $"Bedrock {(val ? "[Active]" : "")}"),
+				TabIndex = 4
 			});
 
 			//	var portRow = AddGuiRow();
@@ -137,7 +139,8 @@ namespace Alex.Gamestates.Multiplayer
 				TranslationKey = "addServer.add",
 				Margin         = new Thickness(5),
 				Modern         = false,
-				Width          = 100
+				Width          = 100,
+				TabIndex = 5
 			}, new GuiButton(OnCancelButtonPressed)
 			{
 				AccessKey = Keys.Escape,
@@ -145,7 +148,8 @@ namespace Alex.Gamestates.Multiplayer
 				TranslationKey = "gui.cancel",
 				Margin         = new Thickness(5),
 				Modern         = false,
-				Width          = 100
+				Width          = 100,
+				TabIndex = 6
 			});
 			buttonRow.ChildAnchor = Alignment.MiddleCenter;
 
