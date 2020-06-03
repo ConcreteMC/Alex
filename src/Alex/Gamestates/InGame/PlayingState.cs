@@ -98,6 +98,8 @@ namespace Alex.Gamestates.InGame
 
 		protected override void OnLoad(IRenderArgs args)
 		{
+			Alex.InGame = true;
+			
 			World.SpawnPoint = WorldProvider.GetSpawnPoint();
 			World.Camera.MoveTo(World.GetSpawnPoint(), Vector3.Zero);
 			base.OnLoad(args);
@@ -727,6 +729,8 @@ namespace Alex.Gamestates.InGame
 
 		protected override void OnUnload()
 		{
+			Alex.InGame = false;
+			
 			World.Destroy();
 			WorldProvider.Dispose();
 			NetworkProvider.Close();

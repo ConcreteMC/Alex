@@ -62,6 +62,8 @@ namespace Alex
 {
 	public partial class Alex : Microsoft.Xna.Framework.Game
 	{
+		public static bool InGame { get; set; } = false;
+		
 		public static EntityModel PlayerModel { get; set; }
 		public static Image<Rgba32> PlayerTexture { get; set; }
 		

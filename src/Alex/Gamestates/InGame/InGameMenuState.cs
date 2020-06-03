@@ -4,6 +4,7 @@ using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Elements.Layout;
 using Alex.API.Utils;
 using Alex.Gamestates.Common;
+using Alex.Gamestates.MainMenu;
 using Microsoft.Xna.Framework;
 using NLog;
 using RocketUI;
@@ -62,23 +63,32 @@ namespace Alex.Gamestates.InGame
 			AddChild(_playerList);
         }
 
+		private bool _didInitialization = false;
 		protected override void OnShow()
 		{
-			//var previousState = Alex.GameStateManager.GetPreviousState();
-			if (Alex.GameStateManager.TryGetState("play", out PlayingState s))
-			//if (previousState is PlayingState s)
+			if (!_didInitialization)
 			{
-				PlayerListItem[] players = s.World.PlayerList.Entries.Values.ToArray();
-				for (var index = 0; index < players.Length; index++)
+				_didInitialization = true;
+				//var previousState = Alex.GameStateManager.GetPreviousState();
+				if (Alex.GameStateManager.TryGetState("play", out PlayingState s))
+					//if (previousState is PlayingState s)
 				{
-					var p = players[index];
-					_playerList.AddChild(new PlayerListItemElement(p.Username)
+					PlayerListItem[] players = s.World.PlayerList.Entries.Values.ToArray();
+
+					for (var index = 0; index < players.Length; index++)
 					{
-						BackgroundOverlay = (index % 2 == 0) ? new Color(Color.Black, 0.35f) : Color.Transparent
-					});
+						var p = players[index];
+
+						_playerList.AddChild(
+							new PlayerListItemElement(p.Username)
+							{
+								BackgroundOverlay = (index % 2 == 0) ? new Color(Color.Black, 0.35f) :
+									Color.Transparent
+							});
+					}
 				}
 			}
-			
+
 			base.OnShow();
 		}
 
@@ -91,7 +101,11 @@ namespace Alex.Gamestates.InGame
 
         private void OnOptionsButtonPressed()
         {
-            Alex.GameStateManager.SetActiveState("options");
+	        if (Alex.GameStateManager.TryGetState("options", out OptionsState state))
+	        {
+		        Alex.GameStateManager.SetActiveState("options");
+		        state.ParentState = ParentState;
+	        }
         }
 
         private void OnQuitButtonPressed()

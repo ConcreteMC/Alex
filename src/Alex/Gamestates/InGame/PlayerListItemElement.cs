@@ -12,7 +12,7 @@ namespace Alex.Gamestates.InGame
             {
                 Text = username,
                 Margin = new Thickness(2),
-                Anchor = Alignment.TopCenter,
+                Anchor = Alignment.TopLeft,
                 Enabled = false,
                 Padding = new Thickness(5,5)
             });

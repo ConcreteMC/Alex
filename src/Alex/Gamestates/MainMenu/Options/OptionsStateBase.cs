@@ -46,6 +46,17 @@ namespace Alex.Gamestates.MainMenu.Options
 
         protected override void OnShow()
         {
+            if (Alex.InGame)
+            {
+                Background = null;
+                BackgroundOverlay = new Color(Color.Black, 0.65f);
+            }
+            else
+            {
+                Background = new GuiTexture2D(_skyBox, TextureRepeatMode.Stretch);
+                //BackgroundOverlay = null;
+            }
+            
             _optionsProvider.Load();
             base.OnShow();
         }
@@ -106,7 +117,11 @@ namespace Alex.Gamestates.MainMenu.Options
             if (state == null)
                 throw new Exception($"Can not create linkbutton with type {typeof(TGameState)}");
             
-            return new GuiButton(() => Alex.GameStateManager.SetActiveState(state))
+            return new GuiButton(() =>
+            {
+                Alex.GameStateManager.SetActiveState(state);
+                state.ParentState = ParentState;
+            })
             {
                 TranslationKey = translationKey,
 	            Modern = false
@@ -229,13 +244,21 @@ namespace Alex.Gamestates.MainMenu.Options
 
         protected override void OnDraw(IRenderArgs args)
         {
-            if (!_skyBox.Loaded)
+            if (_skyBox != null)
             {
-                _skyBox.Load(Alex.GuiRenderer);
+                if (!_skyBox.Loaded)
+                {
+                    _skyBox.Load(Alex.GuiRenderer);
+                }
+                
+                _skyBox.Draw(args);
             }
 
-            _skyBox.Draw(args);
-            
+            if (Alex.InGame)
+            {
+                ParentState.Draw(args);
+            }
+
             base.OnDraw(args);
         }
     }
