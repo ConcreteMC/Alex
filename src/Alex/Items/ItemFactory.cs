@@ -27,6 +27,21 @@ namespace Alex.Items
 		
 		private static ConcurrentDictionary<string, ItemModelRenderer> ItemRenderers { get; } = new ConcurrentDictionary<string, ItemModelRenderer>();
 
+		public static Item[] AllItems
+		{
+			get
+			{
+				List<Item> items = new List<Item>();
+
+				foreach (var item in Items.Values.ToArray())
+				{
+					items.Add(item());
+				}
+				
+				return items.ToArray();
+			}
+		}
+
 		private static void SetItemMaterial(Item item, ItemMaterial material)
 		{
 			switch (material)

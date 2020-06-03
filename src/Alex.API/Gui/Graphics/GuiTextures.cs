@@ -64,6 +64,7 @@
         InventoryChestBackground,
         InventoryCraftingTable,
         InventoryFurnace,
+        InventoryCreativeItemSearch,
         
         GreenCheckMark,
         GreyCheckMark,
