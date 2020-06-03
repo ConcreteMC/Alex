@@ -16,6 +16,7 @@ using Alex.ResourcePackLib.Json.Models.Items;
 using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Newtonsoft.Json;
 using SixLabors.ImageSharp.PixelFormats;
 using Color = Microsoft.Xna.Framework.Color;
 using MathF = System.MathF;
@@ -334,13 +335,13 @@ namespace Alex.Graphics.Models.Items
 
 
             if (Model.GuiLight.HasValue && Model.GuiLight == GuiLight.Side)
-            {
-                var o = new Vector3(0.5f, 0.5f, 0.5f);
+            { 
+                //var o = new Vector3(0.5f, 0.5f, 0.5f);
 
-                world *= Matrix.CreateTranslation(-o)
+             /*   world *= Matrix.CreateTranslation(-o)
                             * Matrix.CreateFromAxisAngle(Vector3.Right, MathUtils.ToRadians(25f))
                             * Matrix.CreateFromAxisAngle(Vector3.Up, MathUtils.ToRadians(270f))
-                            * Matrix.CreateTranslation(o);
+                            * Matrix.CreateTranslation(o);*/
             }
             
             Effect.World = world * ParentMatrix;

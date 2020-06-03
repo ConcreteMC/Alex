@@ -237,7 +237,7 @@ namespace Alex.Entities
 		           // renderer.Scale = new Vector3(_scale);
 
 		            ItemRenderer = renderer;
-
+					
 		            if (this is Player p)
 		            {
 			            var pos = renderer.DisplayPosition;

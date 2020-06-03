@@ -31,15 +31,11 @@ namespace Alex.Entities
             {
                 CanRender = true;
                 ItemRenderer = item.Renderer.Clone();
+                ItemRenderer.DisplayPosition = DisplayPosition.Ground;
             }
             else
             {
                 CanRender = false;
-            }
-            
-            if (ItemRenderer != null)
-            {
-                ItemRenderer.DisplayPosition = DisplayPosition.Ground;
             }
         }
 
@@ -49,20 +45,23 @@ namespace Alex.Entities
         {
             if (CanRender)
             {
-                var offset = new Vector3(0.5f, 0.5f, 0.5f); 
-                ItemRenderer?.Update(Matrix.Identity * 
-                                     Matrix.CreateScale(Scale) * 
-                                     Matrix.CreateTranslation(-offset) *
-                                     Matrix.CreateRotationY(MathHelper.ToRadians(_rotation)) * 
-                                     Matrix.CreateTranslation(offset) *
-                                     Matrix.CreateTranslation((KnownPosition.ToVector3())), 
-                    KnownPosition);
-                
-               // ItemRenderer?.Update(Matrix.Identity *
-               //                      Matrix.CreateScale(Scale) *
-               //                      Matrix.CreateRotationY(MathHelper.ToRadians(KnownPosition.Yaw)) *
-               //                      Matrix.CreateTranslation(KnownPosition.ToVector3()), KnownPosition);
-                
+                var offset = new Vector3(0.5f, 0.5f, 0.5f);
+
+                if (DoRotation)
+                {
+                    ItemRenderer?.Update(
+                        Matrix.Identity * Matrix.CreateScale(Scale) * Matrix.CreateTranslation(-offset)
+                        * Matrix.CreateRotationY(MathHelper.ToRadians(_rotation)) * Matrix.CreateTranslation(offset)
+                        * Matrix.CreateTranslation((KnownPosition.ToVector3())), KnownPosition);
+                }
+                else
+                {
+                    ItemRenderer?.Update(
+                        Matrix.Identity * Matrix.CreateScale(Scale)
+                                        * Matrix.CreateRotationY(MathHelper.ToRadians(KnownPosition.Yaw))
+                                        * Matrix.CreateTranslation(KnownPosition.ToVector3()), KnownPosition);
+                }
+
                 ItemRenderer?.Update(args.GraphicsDevice, args.Camera);
             }
 

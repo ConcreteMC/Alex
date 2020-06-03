@@ -282,8 +282,8 @@ namespace Alex.Gamestates
 				
 				if (ItemFactory.TryGetItem("minecraft:diamond_sword", out var sword))
 				{
-					_playerView.Entity.Inventory.MainHand = sword;
-					_playerView.Entity.Inventory[_playerView.Entity.Inventory.SelectedSlot] = sword;
+					//_playerView.Entity.Inventory.MainHand = sword;
+					//_playerView.Entity.Inventory[_playerView.Entity.Inventory.SelectedSlot] = sword;
 				}
 			}
 		}
