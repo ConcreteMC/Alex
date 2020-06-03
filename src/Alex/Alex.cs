@@ -28,6 +28,7 @@ using Alex.Gamestates;
 using Alex.Gamestates.Debugging;
 using Alex.Gamestates.InGame;
 using Alex.Graphics.Effect;
+using Alex.Graphics.Models.Blocks;
 using Alex.Gui;
 using Alex.Gui.Dialogs.Containers;
 using Alex.Items;
@@ -297,6 +298,14 @@ namespace Alex
 				GuiRenderer.SetLanguage(newValue);
 			});
 			GuiRenderer.SetLanguage(options.AlexOptions.MiscelaneousOptions.Language);
+
+			options.AlexOptions.VideoOptions.SmoothLighting.Bind(
+				(value, newValue) =>
+				{
+					ResourcePackBlockModel.SmoothLighting = newValue;
+				});
+
+			ResourcePackBlockModel.SmoothLighting = options.AlexOptions.VideoOptions.SmoothLighting.Value;
 
 			SetAntiAliasing(options.AlexOptions.VideoOptions.Antialiasing > 0,
 				options.AlexOptions.VideoOptions.Antialiasing.Value);

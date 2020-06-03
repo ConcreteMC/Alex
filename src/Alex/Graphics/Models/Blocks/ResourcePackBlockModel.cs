@@ -23,6 +23,8 @@ namespace Alex.Graphics.Models.Blocks
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(SPWorldProvider));
 		private static FastRandom FastRandom { get; } = new FastRandom();
+
+		public static bool SmoothLighting { get; set; } = true;
 		
 		private BlockStateModel[] Models { get; set; }
 		protected ResourceManager Resources { get; }
@@ -670,6 +672,15 @@ namespace Alex.Graphics.Models.Blocks
 
 					var initialIndex = verts.Count;
 
+					byte vertexBlockLight = 0, vertexSkyLight = 0;
+
+					if (!SmoothLighting)
+					{
+						GetLight(
+							world, facePosition, out vertexBlockLight, out vertexSkyLight,
+							baseBlock.Transparent || !baseBlock.Solid);
+					}
+					
 					for (var idx = 0; idx < vertices.Length; idx++)
 					{
 						var vertex = vertices[idx];
@@ -677,8 +688,11 @@ namespace Alex.Graphics.Models.Blocks
 						
 						//var vertexSkyLight = world.GetSkyLight(blockPos);
 						//var vertexBlockLight = world.GetBlockLight(blockPos);
-						GetLight(world, vertex.Position, out var vertexBlockLight, out var vertexSkyLight, true);
-						
+						if (SmoothLighting)
+						{
+							GetLight(world, vertex.Position, out vertexBlockLight, out vertexSkyLight, true);
+						}
+
 						//if (blockLight > 0)
 						{
 							vertex.BlockLight = vertexBlockLight;

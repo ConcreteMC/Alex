@@ -29,6 +29,7 @@ namespace Alex.Gamestates.MainMenu.Options
         private GuiToggleButton CustomSkins { get; set; }
         private GuiToggleButton ClientSideLighting { get; set; }
         private GuiToggleButton ChunkMeshInRam { get; set; }
+        private GuiToggleButton SmoothLighting { get; set; }
         
         private Dictionary<IGuiControl, string> Descriptions { get; } = new Dictionary<IGuiControl, string>();
         public VideoOptionsState(GuiPanoramaSkyBox skyBox) : base(skyBox)
@@ -76,7 +77,12 @@ namespace Alex.Gamestates.MainMenu.Options
 
             AddGuiRow(
                 ClientSideLighting = CreateToggle(
-                    "Client Side Lighting: {0}", options => options.VideoOptions.ClientSideLighting), ChunkMeshInRam = CreateToggle("Meshes in RAM: {0}", options => options.MiscelaneousOptions.MeshInRam));
+                    "Client Side Lighting: {0}", options => options.VideoOptions.ClientSideLighting), 
+                SmoothLighting = CreateToggle("Smooth Lighting: {0}", o => o.VideoOptions.SmoothLighting));
+
+            AddGuiRow(
+                ChunkMeshInRam = CreateToggle("Meshes in RAM: {0}", options => options.MiscelaneousOptions.MeshInRam),
+                new GuiElement());
             
             Description = new GuiTextElement()
             {
@@ -115,6 +121,8 @@ namespace Alex.Gamestates.MainMenu.Options
             Descriptions.Add(ClientSideLighting, $"{TextColor.Bold}Client Side Lighting:{TextColor.Reset}\nEnabled: Calculate lighting on the client.\nDisabled: May improve chunk loading performance");
             
             Descriptions.Add(ChunkMeshInRam, $"{TextColor.Bold}Meshes in RAM:{TextColor.Reset}\nEnabled: May significantly improve chunk processing performance (High memory usage)\nDisabled: Do not keep chunks meshes in memory (Lower memory usage)");
+            
+            Descriptions.Add(SmoothLighting, $"{TextColor.Bold}Smooth Lighting:{TextColor.Reset}\nEnabled: Smoother transition in lighting.\nDisabled: May improve chunk loading performance");
             
             base.OnInit(renderer);
         }
