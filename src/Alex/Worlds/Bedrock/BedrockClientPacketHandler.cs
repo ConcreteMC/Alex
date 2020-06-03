@@ -712,18 +712,26 @@ namespace Alex.Worlds.Bedrock
 			var slot = message.item;
 			if (ItemFactory.TryGetItem(slot.Id, slot.Metadata, out Item item))
 			{
-				item.Count = slot.Count;
-				item.Nbt = slot.ExtraData;
+				var itemClone = item.Clone();
+				
+				itemClone.Count = slot.Count;
+				itemClone.Nbt = slot.ExtraData;
 
 				ItemEntity itemEntity = new ItemEntity(null, Client);
 				itemEntity.EntityId = message.runtimeEntityId;
 				itemEntity.Velocity = new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ) * 20f;
 				
-				itemEntity.SetItem(item.Clone());
-			
-				Client.World.SpawnEntity(message.runtimeEntityId, itemEntity);
-				_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
-                    
+				itemEntity.SetItem(itemClone);
+
+				if (Client.World.SpawnEntity(message.runtimeEntityId, itemEntity))
+				{
+					_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
+				}
+				else
+				{
+					Log.Warn($"Could not spawn in item entity, an entity with this runtimeEntityId already exists! (Runtime: {message.runtimeEntityId} Self: {message.entityIdSelf})");
+				}
+
 				// Log.Info($"Set inventory slot: {usedIndex} Id: {slot.Id}:{slot.Metadata} x {slot.Count} Name: {item.DisplayName} IsPeInv: {inventory.IsPeInventory}");
 			}
 		}

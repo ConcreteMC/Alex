@@ -230,14 +230,14 @@ namespace Alex.Entities
 				//}
 				
 				var hitEntity = HitEntity;
-				if (hitEntity != null && Controller.InputManager.IsPressed(InputCommand.LeftClick))
+				if (hitEntity != null && Controller.InputManager.IsPressed(InputCommand.LeftClick) && hitEntity is LivingEntity)
 				{
 					if (_destroyingBlock)
 						StopBreakingBlock(forceCanceled:true);
 					
 					InteractWithEntity(hitEntity, true);
 				}
-				else if (hitEntity != null && Controller.InputManager.IsPressed(InputCommand.RightClick))
+				else if (hitEntity != null && Controller.InputManager.IsPressed(InputCommand.RightClick) && hitEntity is LivingEntity)
 				{
 					if (_destroyingBlock)
 						StopBreakingBlock(forceCanceled:true);
@@ -248,7 +248,7 @@ namespace Alex.Entities
 				                           && Controller.InputManager.IsPressed(InputCommand.LeftClick)
 				                           && !HasRaytraceResult)
 				{
-					SwingArm(true);
+					HandleLeftClick(Inventory[Inventory.SelectedSlot], Inventory.SelectedSlot);
 				}
 				else if (hitEntity == null && !_destroyingBlock && Controller.InputManager.IsDown(InputCommand.LeftClick) && !IsWorldImmutable && HasRaytraceResult) //Destroying block.
 				{
@@ -291,7 +291,7 @@ namespace Alex.Entities
 					// Log.Debug($"Right click!");
 					if (item != null)
 					{
-						handledClick = HandleRightClick(item, Inventory.SelectedSlot);
+						handledClick = HandleClick(item, Inventory.SelectedSlot);
 					}
 
 					/*if (!handledClick && Inventory.OffHand != null && !(Inventory.OffHand is ItemAir))
@@ -341,6 +341,8 @@ namespace Alex.Entities
 
 	    private void InteractWithEntity(IEntity entity, bool attack)
 	    {
+		    SwingArm(true);
+		    
 		    bool canAttack = true;
 
 		    if (entity is PlayerMob)
@@ -406,6 +408,8 @@ namespace Alex.Entities
 
 	    private void StartBreakingBlock()
 	    {
+		    SwingArm(true);
+		    
 			var floored =  Vector3.Floor(Raytraced);
 
 		    var block = Level.GetBlock(floored);
@@ -476,8 +480,14 @@ namespace Alex.Entities
 		    return adj.GetBlockFace();
         }
 
-	    private bool HandleRightClick(Item slot, int hand)
+	    private void HandleLeftClick(Item slot, int hand)
 	    {
+		    HandleClick(slot, hand, false, true);
+	    }
+
+	    private bool HandleClick(Item slot, int hand, bool canModifyWorld = true, bool isLeftClick = false)
+	    {
+		    SwingArm(true);
 		    //if (ItemFactory.ResolveItemName(slot.ItemID, out string itemName))
 		    {
 			    var flooredAdj = Vector3.Floor(AdjacentRaytrace);
@@ -506,7 +516,7 @@ namespace Alex.Entities
 					    return true;
 				    }
 				    
-				    if (slot is ItemBlock ib)
+				    if (slot is ItemBlock ib && canModifyWorld)
 				    {
 					    BlockState blockState = ib.Block;
 
@@ -540,11 +550,19 @@ namespace Alex.Entities
 			    }
 
 			    if (!(slot is ItemAir) && slot.Id > 0 && slot.Count > 0)
-                {
-                    Network?.UseItem(slot, hand, HasRaytraceResult ? ItemUseAction.RightClickBlock : ItemUseAction.RightClickAir);
-                    Log.Debug($"Used item!");
-
-	                return true;
+			    {
+				    ItemUseAction action;
+	                if (isLeftClick)
+	                {
+		                action = HasRaytraceResult ? ItemUseAction.ClickBlock : ItemUseAction.ClickAir;
+	                }
+	                else
+	                {
+		                action = HasRaytraceResult ? ItemUseAction.RightClickBlock : ItemUseAction.RightClickAir;
+	                }
+	                
+                    Network?.UseItem(slot, hand, action);
+                    return true;
                 }
             }
 

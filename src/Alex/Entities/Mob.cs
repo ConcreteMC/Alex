@@ -3,7 +3,7 @@ using Alex.Worlds;
 
 namespace Alex.Entities
 {
-	public class Mob : Entity
+	public class Mob : LivingEntity
 	{
 		public Mob(int entityTypeId, World level, INetworkProvider network) : base(entityTypeId, level, network)
 		{

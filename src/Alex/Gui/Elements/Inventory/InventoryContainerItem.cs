@@ -83,9 +83,9 @@ namespace Alex.Gui.Elements.Inventory
             get => _item;
             set
             {
-                _item = value;
+                _item = value.Clone();
                 
-                GuiItem.Item = value.Clone();
+                GuiItem.Item = _item;
                 
                 if (_item == null || _item is ItemAir || _item.Count == 0)
                 {

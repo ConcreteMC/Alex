@@ -915,12 +915,16 @@ namespace Alex.Worlds
 			}
 		}
 
-		public void SpawnEntity(long entityId, Entity entity)
+		public bool SpawnEntity(long entityId, Entity entity)
 		{
 			if (EntityManager.AddEntity(entityId, entity))
 			{
 				PhysicsEngine.AddTickable(entity);
+
+				return true;
 			}
+
+			return false;
 			//Log.Info($"Spawned entity {entityId} : {entity} at {entity.KnownPosition} with renderer {entity.GetModelRenderer()}");
 		}
 

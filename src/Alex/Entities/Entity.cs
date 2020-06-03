@@ -167,6 +167,7 @@ namespace Alex.Entities
 			ServerEntity = true;
 			
 			HealthManager = new HealthManager(this);
+			UUID = new UUID(Guid.NewGuid().ToByteArray());
 		}
 
 		private void ScaleChanged()

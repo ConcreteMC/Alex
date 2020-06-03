@@ -22,9 +22,11 @@ namespace Alex.Gui.Elements.Inventory
             set
             {
                 _item = value?.Clone();
-                _itemRenderer = _item?.Renderer;
+                _itemRenderer = _item?.Renderer?.Clone();
+                
                 if(_itemRenderer != null)
                     _itemRenderer.DisplayPosition = DisplayPosition.Gui;
+                
                 Drawable = _itemRenderer == null ? null : this;
             }
         }
