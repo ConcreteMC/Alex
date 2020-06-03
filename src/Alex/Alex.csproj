@@ -113,10 +113,11 @@
     <PackageReference Include="Microsoft.Identity.Client" Version="2.3.0-preview" />
     <PackageReference Include="MiNET" Version="1.0.2099" />
     <PackageReference Include="MiNET.fnbt" Version="1.0.22" />
-    <PackageReference Include="Mono.Cecil" Version="0.11.1" />
+    <PackageReference Include="Mono.Cecil" Version="0.11.2" />
     <PackageReference Include="MonoGame.Framework.DesktopGL.Core" Version="3.8.0.13" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="NLog" Version="4.7.0" />
+    <PackageReference Include="OpenMiNET.OpenAPI" Version="1.0.82" />
     <PackageReference Include="Portable.BouncyCastle" Version="1.8.6.7" />
     <PackageReference Include="System.Globalization" Version="4.3.0" />
     <PackageReference Include="System.Reactive.Core" Version="4.1.2" />

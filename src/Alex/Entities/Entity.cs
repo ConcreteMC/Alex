@@ -1017,6 +1017,11 @@ namespace Alex.Entities
 		
 		public void RenderNametag(IRenderArgs renderArgs)
 		{
+			string clean = NameTag;
+
+			if (string.IsNullOrWhiteSpace(clean))
+				return;
+			
 			var halfWidth = -((((float) Width) * Scale));
 			
 			var maxDistance = (renderArgs.Camera.FarDistance) / (64f);
@@ -1062,9 +1067,6 @@ namespace Alex.Entities
 			//float scaler = NametagScale;
 			var scale = new Vector2(scaler * scaleRatio, scaler * scaleRatio);
 			//scale *= Alex.Instance.GuiRenderer.ScaledResolution.ElementScale;
-	
-			
-			string clean = NameTag;
 
 			Vector2 renderPosition = textPosition;
 			int yOffset = 0;

@@ -2,26 +2,40 @@ using System.Net;
 using System.Threading.Tasks;
 using Alex.API.Network;
 using Alex.API.Services;
+using Alex.API.Utils;
 using MiNET;
 using MiNET.Utils;
 using MiNET.Worlds;
+using OpenAPI;
+using OpenAPI.Utils;
+using OpenAPI.World;
 using LevelInfo = Alex.API.World.LevelInfo;
 
 namespace Alex.Worlds.Bedrock
 {
     public class SingleplayerServer : BedrockWorldProvider
     {
-        private MiNetServer Server { get; set; }
+        private OpenServer Server { get; set; }
+        private OpenAPI.OpenApi Api { get; set; }
         public IPEndPoint ConnectionEndpoint { get; set; }
         
-        private Level MiNETLevel { get; }
-        public SingleplayerServer(string world, Alex alex, IPEndPoint endPoint, PlayerProfile profile, DedicatedThreadPool threadPool, out INetworkProvider networkProvider) : base(alex, endPoint, profile, threadPool, out networkProvider)
+        private OpenLevel MiNETLevel { get; }
+        public SingleplayerServer(string world, Gamemode gamemode, Difficulty difficulty, Alex alex, IPEndPoint endPoint, PlayerProfile profile, DedicatedThreadPool threadPool, out INetworkProvider networkProvider) : base(alex, endPoint, profile, threadPool, out networkProvider)
         {
-            Server = new MiNetServer(new IPEndPoint(IPAddress.Loopback, 0));
-            ConnectionEndpoint = Server.Endpoint;
+            Server = new OpenServer();
+            ReflectionHelper.SetPrivatePropertyValue(
+                typeof(OpenServer), Server, "Endpoint", new IPEndPoint(IPAddress.Loopback, 0));
             
-            Server.LevelManager = new LevelManager();
-            MiNETLevel = Server.LevelManager.GetLevel(null, world);
+            ConnectionEndpoint = Server.Endpoint;
+            Api = ReflectionHelper.GetPrivatePropertyValue<OpenApi>(typeof(OpenServer), Server, "OpenApi");
+
+            MiNET.Worlds.AnvilWorldProvider provider = new MiNET.Worlds.AnvilWorldProvider(world);
+
+            MiNETLevel = new OpenLevel(
+                Api, Api.LevelManager, "default", provider, Api.LevelManager.EntityManager, (GameMode) gamemode,
+                difficulty);
+            
+            Api.LevelManager.SetDefaultLevel(MiNETLevel);
         }
 
         protected override void Initiate(out LevelInfo info)
@@ -47,12 +61,13 @@ namespace Alex.Worlds.Bedrock
 
         public override Task Load(ProgressReport progressReport)
         {
-            if (base.Client is BedrockClient client)
-            {
-                client.ServerEndpoint = ConnectionEndpoint;
-            }
-
-            return Task.Run(() => { Server.StartServer(); }).ContinueWith((t) => base.Load(progressReport));
+            
+            return Task.Run(
+                () =>
+                {
+                    Server.StartServer();
+                    Client.ServerEndpoint = Server.Endpoint;
+                }).ContinueWith((t) => base.Load(progressReport));
         }
 
         public override void Dispose()
