@@ -48,15 +48,15 @@ namespace Alex.Gui.Elements
 	    {
 		    _hidden = false;
 		    _hideTime = DateTime.UtcNow + TimeSpan.FromMilliseconds((_fadeIn + _fadeOut + _stay) * 50);
+		    
+		    AddChild(_title);
+		    AddChild(_subTitle);
 	    }
 	    
 	    public void SetTitle(ChatObject value)
 	    {
 		    _title.Text = value.RawMessage;
-
-		    AddChild(_title);
-		    AddChild(_subTitle);
-        }
+	    }
 
 	    public void SetSubtitle(ChatObject value)
 	    {
@@ -73,6 +73,8 @@ namespace Alex.Gui.Elements
 		    _fadeOut = fadeOut;
 		    _stay = stay;
 			
+		    Show();
+		    
 		    TitleResetEvent.Reset();
 	    }
 
