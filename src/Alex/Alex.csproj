@@ -101,7 +101,6 @@
     <PackageReference Include="Collections.Pooled" Version="2.0.0-preview.27" />
     <PackageReference Include="DiscordRichPresence" Version="1.0.150" />
     <PackageReference Include="EasyPipes" Version="1.1.0" />
-    <PackageReference Include="GtkSharp" Version="3.22.24.37" />
     <PackageReference Include="Hawezo.MojangSharp" Version="0.5.1" />
     <PackageReference Include="JKang.IpcServiceFramework.Server" Version="2.2.2" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.1" />

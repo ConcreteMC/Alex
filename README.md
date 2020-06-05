@@ -29,16 +29,14 @@ As we use submodules to add support for MC:Bedrock, you need to pull the submodu
 
 The easiest method of doing this is to clone the repository using ```git clone --recursive https://github.com/kennyvv/Alex.git```
 
-Building on Windows
+Requirements
 -------------------
 
-To build on windows, you must install Gtk. See [GTK Project](https://www.gtk.org/download/windows.php) for info. Or else use these commands in CMD.
-```
-git clone https://github.com/Microsoft/vcpkg
-cd vcpkg
-.\bootstrap-vcpkg.bat
-vcpkg install gtk:x64-windows
-```
+Alex requires SDL2 to create it's Window, this is a free library. See [SDL2](https://wiki.libsdl.org/Installation) for instructions on how to install it on windows.
+
+On Ubuntu you may run ```apt install libsdl2-dev``` for easy installation.
+
+On MacOS you can run the following command if you have [Brew](https://brew.sh) installed: ```brew install sdl2```
 
 Contributing
 ------------

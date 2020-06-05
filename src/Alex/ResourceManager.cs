@@ -24,7 +24,6 @@ using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Generic;
 using Alex.ResourcePackLib.Json.Models.Blocks;
 using Alex.Utils;
-using GLib;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;

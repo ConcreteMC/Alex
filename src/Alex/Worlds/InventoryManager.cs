@@ -4,7 +4,6 @@ using Alex.API.Gui;
 using Alex.Gui.Dialogs.Containers;
 using Alex.Utils;
 using Alex.Utils.Inventories;
-using GLib;
 
 namespace Alex.Worlds
 {
