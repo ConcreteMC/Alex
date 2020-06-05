@@ -160,8 +160,12 @@
   <ItemGroup>
     <None Remove="Resources\Icon.bmp" />
     <None Remove="Resources\Icon.ico" />
-    <EmbeddedResource Include="Resources\Icon.bmp" />
-    <EmbeddedResource Include="Resources\Icon.ico" />
+    <EmbeddedResource Include="Resources\Icon.bmp">
+      <LogicalName>Icon.bmp</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Icon.ico">
+      <LogicalName>Icon.ico</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 
 	<Target Name="ChangeAliasesOfNugetRefs" BeforeTargets="FindReferenceAssembliesForReferences;ResolveReferences">
