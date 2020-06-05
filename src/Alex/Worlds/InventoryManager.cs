@@ -10,15 +10,17 @@ namespace Alex.Worlds
 {
 	public class InventoryManager
 	{
-		private ConcurrentDictionary<byte, GuiInventoryBase> Containers { get; }
+		private ConcurrentDictionary<int, GuiInventoryBase> Containers { get; }
 		private GuiManager GuiManager { get; }
+		public GuiInventoryBase ActiveWindow { get; private set; }
+
 		public InventoryManager(GuiManager guiManager)
 		{
 			GuiManager = guiManager;
-			Containers = new ConcurrentDictionary<byte, GuiInventoryBase>();
+			Containers = new ConcurrentDictionary<int, GuiInventoryBase>();
 		}
 
-		public GuiInventoryBase Show(Inventory playerInventory, byte containerId, ContainerType type)
+		public GuiInventoryBase Show(Inventory playerInventory, int containerId, ContainerType type)
 		{
 			var dialog = Containers.GetOrAdd(
 				containerId, b =>
@@ -31,11 +33,17 @@ namespace Alex.Worlds
 //
 					//		break;
 						case ContainerType.Chest:
-							inv = new GuiChestDialog(new InventoryBase(90), playerInventory);
+							inv = new GuiChestDialog(new InventoryBase(90)
+							{
+								InventoryId = containerId
+							}, playerInventory);
 
 							break;
 						case ContainerType.Furnace:
-							inv = new GuiFurnaceDialog(playerInventory, new InventoryBase(3));
+							inv = new GuiFurnaceDialog(playerInventory, new InventoryBase(3)
+							{
+								InventoryId = containerId
+							});
 							break;
 						default:
 							throw new NotImplementedException();
@@ -46,18 +54,22 @@ namespace Alex.Worlds
 					inv.OnContainerClose += (sender, args) =>
 					{
 						Containers.TryRemove(b, out _);
+						
+						if (ActiveWindow == sender)
+							ActiveWindow = null;
 					};
 					
 					return inv;
 				});
 
 			GuiManager.ShowDialog(dialog);
+			ActiveWindow = dialog;
 			
 			return dialog;
 		}
 
 
-		public bool TryGet(byte containerId, out GuiInventoryBase container)
+		public bool TryGet(int containerId, out GuiInventoryBase container)
 		{
 			return Containers.TryGetValue(containerId, out container);
 		}

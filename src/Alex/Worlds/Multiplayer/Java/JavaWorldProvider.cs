@@ -21,6 +21,7 @@ using Alex.Blocks;
 using Alex.Entities;
 using Alex.Gamestates;
 using Alex.Graphics.Models.Entity;
+using Alex.Gui.Dialogs.Containers;
 using Alex.Items;
 using Alex.Net;
 using Alex.Networking.Java;
@@ -32,6 +33,7 @@ using Alex.Networking.Java.Util;
 using Alex.Networking.Java.Util.Encryption;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
+using Alex.Utils.Inventories;
 using Alex.Worlds.Abstraction;
 using Alex.Worlds.Chunks;
 using Microsoft.Extensions.DependencyInjection;
@@ -353,15 +355,20 @@ namespace Alex.Worlds.Multiplayer.Java
 					{
 						progressReport(LoadingState.Spawning, 99);
                     }
-
+					
                     return (loaded >= target && allowSpawn && _generatingHelper.Count == 0) || _disconnected; // Spawned || _disconnected;
 
 				});
 
+				World.Player.Inventory.CursorChanged +=	InventoryOnCursorChanged;
+				World.Player.Inventory.Closed += (sender, args) =>
+				{
+					ClosedContainer(0);
+				};
 				hasDoneInitialChunks = true;
 			});
 		}
-		
+
 		private Queue<Entity> _entitySpawnQueue = new Queue<Entity>();
 
 		public void SpawnMob(int entityId, Guid uuid, EntityType type, PlayerLocation position, Vector3 velocity)
@@ -630,6 +637,14 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 				HandleAnimationPacket(animationPacket);
 			}
+			else if (packet is OpenWindowPacket openWindowPacket)
+			{
+				HandleOpenWindowPacket(openWindowPacket);
+			}
+			else if (packet is WindowConfirmationPacket confirmationPacket)
+			{
+				HandleWindowConfirmationPacket(confirmationPacket);
+			}
 			else
 			{
 				if (UnhandledPackets.TryAdd(packet.PacketId, packet.GetType()))
@@ -638,7 +653,141 @@ namespace Alex.Worlds.Multiplayer.Java
 				}
 			}
 		}
+		
+		private void InventoryOnCursorChanged(object sender, SlotChangedEventArgs e)
+		{
+			if (e.IsServerTransaction)
+				return;
+			
+			if (sender is InventoryBase inv)
+			{
+				ClickWindowPacket.TransactionMode mode = ClickWindowPacket.TransactionMode.Click;
+				byte button = 0;
+				/*if (e.Value.Id <= 0 || e.Value is ItemAir)
+				{
+					e.Value.Id = -1;
+					mode = ClickWindowPacket.TransactionMode.Drop;
+				}*/
 
+				short actionNumber = (short) inv.ActionNumber++;
+
+				ClickWindowPacket packet = new ClickWindowPacket();
+				packet.Mode = mode;
+				packet.Button = button;
+				packet.Action = actionNumber;
+				packet.WindowId = (byte) inv.InventoryId;
+				packet.Slot = (short) e.Index;
+				packet.ClickedItem = new SlotData()
+				{
+					Count = (byte) e.Value.Count,
+					Nbt = e.Value.Nbt,
+					ItemID = e.Value.Id
+				};
+				
+				inv.UnconfirmedWindowTransactions.TryAdd(actionNumber, (packet, e, true));
+				Client.SendPacket(packet);
+				
+				Log.Info($"Sent transaction with id: {actionNumber} Item: {e.Value.Id} Mode: {mode}");
+			}
+		}
+
+		private void InventoryOnSlotChanged(object sender, SlotChangedEventArgs e)
+		{
+			if (e.IsServerTransaction)
+				return;
+			
+			
+		}
+
+		private void HandleWindowConfirmationPacket(WindowConfirmationPacket packet)
+		{
+			InventoryBase inventory = null;
+			if (packet.WindowId == 0)
+			{
+				inventory = World.Player.Inventory;
+			}
+			else
+			{
+				if (World.InventoryManager.TryGet(packet.WindowId, out var gui))
+				{
+					inventory = gui.Inventory;
+				}
+			}
+
+			if (!packet.Accepted)
+			{
+				Log.Warn($"Inventory / window transaction has been denied! (Action: {packet.ActionNumber})");
+				
+				WindowConfirmationPacket response = new WindowConfirmationPacket();
+				response.Accepted = false;
+				response.ActionNumber = packet.ActionNumber;
+				response.WindowId = packet.WindowId;
+				
+				Client.SendPacket(response);
+			}
+			else
+			{
+				Log.Info($"Transaction got accepted! (Action: {packet.ActionNumber})");
+			}
+
+			if (inventory == null)
+				return;
+
+			if (inventory.UnconfirmedWindowTransactions.TryGetValue(packet.ActionNumber, out var transaction))
+			{
+				inventory.UnconfirmedWindowTransactions.Remove(packet.ActionNumber);
+
+				if (!packet.Accepted)
+				{
+					//if (transaction.isCursorTransaction)
+					{
+						
+					}
+					//else
+					{
+						inventory.SetSlot(transaction.packet.Slot,
+							GetItemFromSlotData(transaction.packet.ClickedItem), true);
+					}
+				}
+			}
+		}
+
+		private void HandleOpenWindowPacket(OpenWindowPacket packet)
+		{
+			GuiInventoryBase inventoryBase = null;
+			switch (packet.WindowType)
+			{
+				//Chest
+				case 2:
+					inventoryBase = World.InventoryManager.Show(World.Player.Inventory, packet.WindowId, ContainerType.Chest);
+					break;
+				
+				//Large Chest:
+				case 5:
+					inventoryBase = World.InventoryManager.Show(World.Player.Inventory, packet.WindowId, ContainerType.Chest);
+					break;
+			}
+
+			if (inventoryBase == null)
+				return;
+
+			inventoryBase.Inventory.CursorChanged += InventoryOnCursorChanged;
+			inventoryBase.Inventory.SlotChanged += InventoryOnSlotChanged;
+			inventoryBase.OnContainerClose += (sender, args) =>
+			{
+				inventoryBase.Inventory.CursorChanged -= InventoryOnCursorChanged;
+				inventoryBase.Inventory.SlotChanged -= InventoryOnSlotChanged;
+				ClosedContainer((byte) inventoryBase.Inventory.InventoryId);
+			};
+		}
+
+		private void ClosedContainer(byte containerId)
+		{
+			CloseWindowPacket packet = new CloseWindowPacket();
+			packet.WindowId = containerId;
+			Client.SendPacket(packet);
+		}
+		
 		private void HandleAnimationPacket(EntityAnimationPacket packet)
 		{
 			if (World.TryGetEntity(packet.EntityId, out Entity entity))
@@ -754,6 +903,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 				if (ItemFactory.TryGetItem(name, out Item item))
 				{
+					item.Id = (short) data.ItemID;
 					item.Count = data.Count;
 					item.Nbt = data.Nbt;
 
@@ -891,18 +1041,34 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void HandleSetSlot(SetSlot packet)
 		{
-			Inventory inventory = null;
+			InventoryBase inventory = null;
 			if (packet.WindowId == 0 || packet.WindowId == -2)
 			{
-				if (World?.Player is Player player)
+				inventory = World.Player.Inventory;
+			}
+			else if (packet.WindowId == -1)
+			{
+				var active = World.InventoryManager.ActiveWindow;
+				if (active != null)
 				{
-					inventory = player.Inventory;
+					inventory = active.Inventory;
+				}
+			}
+			else
+			{
+				if (World.InventoryManager.TryGet(packet.WindowId, out GuiInventoryBase gui))
+				{
+					inventory = gui.Inventory;
 				}
 			}
 
 			if (inventory == null) return;
 
-			if (packet.SlotId < inventory.SlotCount)
+			if (packet.WindowId == -1 && packet.SlotId == -1) //Set cursor
+			{
+				inventory.SetCursor(GetItemFromSlotData(packet.Slot), true);
+			} 
+			else if (packet.SlotId < inventory.SlotCount)
 			{
 				inventory.SetSlot(packet.SlotId, GetItemFromSlotData(packet.Slot), true);
 				//inventory[packet.SlotId] = GetItemFromSlotData(packet.Slot);
@@ -911,12 +1077,19 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void HandleWindowItems(WindowItems packet)
 		{
-			Inventory inventory = null;
+			InventoryBase inventory = null;
 			if (packet.WindowId == 0)
 			{
 				if (World?.Player is Player player)
 				{
 					inventory = player.Inventory;
+				}
+			}
+			else
+			{
+				if (World.InventoryManager.TryGet(packet.WindowId, out GuiInventoryBase gui))
+				{
+					inventory = gui.Inventory;
 				}
 			}
 

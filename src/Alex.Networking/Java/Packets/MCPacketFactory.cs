@@ -288,6 +288,9 @@ namespace Alex.Networking.Java.Packets
 			Register(Direction.ClientBound, ConnectionState.Play, 0x1B, () => new DisconnectPacket());
 			
 			Register(Direction.ClientBound, ConnectionState.Play, 0x49, () => new UpdateHealthPacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x2F, () => new OpenWindowPacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x13, () => new WindowConfirmationPacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x14, () => new CloseWindowPacket());
 			/*var deserial = JsonConvert.DeserializeObject<Dictionary<string, string>>(Resources.PlayPacketID);
 			foreach (var d in deserial)
 			{

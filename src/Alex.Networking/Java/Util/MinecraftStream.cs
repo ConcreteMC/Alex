@@ -321,6 +321,17 @@ namespace Alex.Networking.Java.Util
 			return slot;
 		}
 
+		public void WriteSlot(SlotData slot)
+		{
+			WriteBool(slot != null && slot.ItemID != -1);
+			if (slot == null)
+				return;
+			
+			WriteVarInt(slot.ItemID);
+			WriteByte(slot.Count);
+			WriteNbtCompound(slot.Nbt);
+		}
+
 		private double NetworkToHostOrder(byte[] data)
 		{
 			if (BitConverter.IsLittleEndian)
@@ -562,9 +573,14 @@ namespace Alex.Networking.Java.Util
 
 		public void WriteNbtCompound(NbtCompound compound)
 		{
-			NbtFile f = new NbtFile(compound) { BigEndian = true, UseVarInt = false};
+			if (compound == null)
+			{
+				WriteByte(0);
+				return;
+			}
+
+			NbtFile f = new NbtFile(compound) {BigEndian = true, UseVarInt = false};
 			f.SaveToStream(this, NbtCompression.None);
-			
 			//WriteByte(0);
 		}
 

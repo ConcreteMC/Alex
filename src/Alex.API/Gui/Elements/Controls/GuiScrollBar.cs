@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using Alex.API.Gui.Graphics;
+using Alex.API.Input;
 using Microsoft.Xna.Framework;
 using NLog;
 using RocketUI;
@@ -148,9 +149,9 @@ namespace Alex.API.Gui.Elements.Controls
                 SetValueFromCursor(cursorPosition);
         }
 
-        protected override void OnCursorPressed(Point cursorPosition)
+        protected override void OnCursorPressed(Point cursorPosition, MouseButton button)
         {
-            base.OnCursorPressed(cursorPosition);
+            base.OnCursorPressed(cursorPosition, button);
             
             SetValueFromCursor(cursorPosition);
         }

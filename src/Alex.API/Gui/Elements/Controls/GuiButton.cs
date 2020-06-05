@@ -1,6 +1,7 @@
 ﻿using System;
 using Alex.API.Graphics.Typography;
 using Alex.API.Gui.Graphics;
+using Alex.API.Input;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using RocketUI;
@@ -140,7 +141,7 @@ namespace Alex.API.Gui.Elements.Controls
 			base.OnCursorMove(cursorPosition, previousCursorPosition, isCursorDown);
 		}
 
-		protected override void OnCursorPressed(Point cursorPosition)
+		protected override void OnCursorPressed(Point cursorPosition, MouseButton button)
 		{
 			//Focus();
 			Action?.Invoke();

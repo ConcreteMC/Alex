@@ -5,6 +5,7 @@ using Alex.API.Graphics.Typography;
 
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Graphics;
+using Alex.API.Input;
 using Alex.API.Utils;
 
 using Microsoft.Xna.Framework;
@@ -241,9 +242,9 @@ namespace Alex.API.Gui.Elements
 			}
 		}
 
-		protected override void OnCursorPressed(Point cursorPosition)
+		protected override void OnCursorPressed(Point cursorPosition, MouseButton button)
 		{
-			base.OnCursorPressed(cursorPosition);
+			base.OnCursorPressed(cursorPosition, button);
 			foreach (var c in ClickableElements.ToArray())
 			{
 				if (c.Area.Contains(cursorPosition))

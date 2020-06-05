@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Alex.API.Input;
+using Microsoft.Xna.Framework;
 
 namespace Alex.API.Gui.Events
 {
@@ -8,7 +9,7 @@ namespace Alex.API.Gui.Events
 
 		public bool IsCursorDown { get; }
 
-		internal GuiCursorMoveEventArgs(Point cursorPosition, Point previousCursorPosition, bool isCursorDown) : base(cursorPosition)
+		internal GuiCursorMoveEventArgs(Point cursorPosition, Point previousCursorPosition, bool isCursorDown, MouseButton button) : base(cursorPosition, button)
 		{
 			PreviousCursorPosition = previousCursorPosition;
 			IsCursorDown = isCursorDown;

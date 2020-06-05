@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Alex.API.Input;
 using Microsoft.Xna.Framework;
 
 namespace Alex.API.Gui.Elements.Controls
@@ -50,7 +51,7 @@ namespace Alex.API.Gui.Elements.Controls
             Text = DisplayFormat?.FormatValue(Values[CurrentIndex]) ?? string.Empty;
         }
 
-        protected override void OnCursorPressed(Point cursorPosition)
+        protected override void OnCursorPressed(Point cursorPosition, MouseButton button)
         {
             CurrentIndex++;
             if (CurrentIndex >= Values.Length)

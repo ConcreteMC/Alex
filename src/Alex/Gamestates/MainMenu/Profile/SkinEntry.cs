@@ -3,6 +3,7 @@ using System.Diagnostics;
 using Alex.API.Graphics;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
+using Alex.API.Input;
 using Alex.API.Utils;
 using Alex.Entities;
 using Alex.Graphics.Models.Entity;
@@ -81,9 +82,9 @@ namespace Alex.Gamestates.MainMenu.Profile
 
         private Stopwatch _previousClick = null;
         private bool FirstClick = true;
-        protected override void OnCursorPressed(Point cursorPosition)
+        protected override void OnCursorPressed(Point cursorPosition, MouseButton button)
         {
-            base.OnCursorPressed(cursorPosition);
+            base.OnCursorPressed(cursorPosition, button);
 
             if (_previousClick == null)
             {

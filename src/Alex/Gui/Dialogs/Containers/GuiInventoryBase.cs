@@ -13,6 +13,7 @@ using Alex.Utils.Inventories;
 using Microsoft.Xna.Framework;
 using RocketUI;
 using GuiCursorEventArgs = Alex.API.Gui.Events.GuiCursorEventArgs;
+using GuiCursorMoveEventArgs = Alex.API.Gui.Events.GuiCursorMoveEventArgs;
 
 namespace Alex.Gui.Dialogs.Containers
 {
@@ -62,6 +63,7 @@ namespace Alex.Gui.Dialogs.Containers
 			});
 			
 			Inventory.SlotChanged += InventoryOnSlotChanged;
+			Inventory.CursorChanged += InventoryOnCursorChanged;
 		}
 
 		public void UpdateSlot(int inventoryId, int slotId, Item item)
@@ -127,11 +129,14 @@ namespace Alex.Gui.Dialogs.Containers
 			containerItem.CursorLeave += ContainerItemOnCursorLeave;
 
 			containerItem.CursorPressed += ContainerItemOnCursorPressed;
+			containerItem.CursorDown += ContainerItemOnCursorDown;
+			containerItem.CursorUp += ContainerItemOnCursorUp;
+			containerItem.CursorMove += ContainerItemOnCursorMove;
 
 			return containerItem;
 		}
 
-		private void SetCursorItem(InventoryContainerItem slot)
+		private void SetCursorItem(InventoryContainerItem slot, bool isServerTransaction)
 		{
 			if (slot.Item != null && slot.Item.Count > 0 && !(slot.Item is ItemAir))
 			{
@@ -140,7 +145,7 @@ namespace Alex.Gui.Dialogs.Containers
 				
 				HoverItem = slot;
 				SelectedItem = slot.Item;
-				OnCursorItemChanged(slot, slot.Item);
+				OnCursorItemChanged(slot, slot.Item, isServerTransaction);
 				
 				SetOverlayText(slot.Item);
 					
@@ -149,15 +154,108 @@ namespace Alex.Gui.Dialogs.Containers
 					Count = 0
 				};
 
-				OnSlotChanged(slot, slot.Item);
+				OnSlotChanged(slot, slot.Item, isServerTransaction);
 				//OnItemSelected(slot, slot.Item);
 			}
 			else
 			{
 				CursorItemRenderer.IsVisible = false;
+				SelectedItem = null;
+				
+				OnCursorItemChanged(slot, slot.Item, isServerTransaction);
 			}
 		}
 
+		private Dictionary<InventoryContainerItem, Item> _draggedContainers = new Dictionary<InventoryContainerItem, Item>();
+		private InventoryContainerItem _dragStartItem = null;
+		private bool _dragging = false;
+		public static bool AllowDragging { get; set; } = false;
+		
+		private InventoryContainerItem _previousItem;
+
+		private bool CanDrag()
+		{
+			return HoverItem.Item.Count > 0;
+		}
+
+		private void FinishDragging()
+		{
+			var dragStartItem = _dragStartItem;
+			_dragStartItem = null;
+			_dragging = false;
+		}
+
+		private void ContainerItemOnCursorMove(object sender, GuiCursorMoveEventArgs e)
+		{
+			if (!AllowDragging)
+				return;
+			
+			if (sender is InventoryContainerItem containerItem)
+			{
+				if (!_dragging || containerItem == _previousItem || !CanDrag())
+					return;
+
+				_previousItem = containerItem;
+				
+				if (!_draggedContainers.ContainsKey(containerItem))
+					_draggedContainers.Add(containerItem, containerItem.Item.Clone());
+				
+				if (containerItem.Item == null || containerItem.Item.Id == HoverItem.Item.Id &&
+					containerItem.Item.Id < containerItem.Item.MaxStackSize)
+				{
+					if (containerItem.Item == null)
+					{
+						containerItem.Item = HoverItem.Item.Clone();
+						containerItem.Item.Count = 1;
+						HoverItem.Item.Count--;
+					}
+					else
+					{
+						containerItem.Item.Count += 1;
+						HoverItem.Item.Count--;
+					}
+				}
+
+				if (!CanDrag())
+				{
+					
+				}
+			}
+		}
+		
+		private void ContainerItemOnCursorUp(object sender, GuiCursorEventArgs e)
+		{
+			if (!AllowDragging)
+				return;
+			
+			if (sender is InventoryContainerItem containerItem)
+			{
+				if (_dragStartItem == null)
+					return;
+
+				if (_dragStartItem == containerItem)
+					return;
+
+				FinishDragging();
+			}
+		}
+
+		private void ContainerItemOnCursorDown(object sender, GuiCursorEventArgs e)
+		{
+			if (!AllowDragging)
+				return;
+			
+			if (sender is InventoryContainerItem containerItem)
+			{
+				if (_dragStartItem == null && (containerItem.Item == null || containerItem.Item is ItemAir || containerItem.Item.Id <= 0) && HoverItem != null)
+				{
+					_draggedContainers.Clear();
+					_dragStartItem = containerItem;
+					_dragging = true;
+				}
+			}
+		}
+		
 		private void ContainerItemOnCursorPressed(object sender, GuiCursorEventArgs e)
 		{
 			if (sender is InventoryContainerItem containerItem)
@@ -165,9 +263,9 @@ namespace Alex.Gui.Dialogs.Containers
 				//We have not yet selected an item to move.
 				if (HoverItem == null)
 				{
-					if (HighlightedSlot != null)
+					if (HighlightedSlot != null && HighlightedSlot == containerItem)
 					{
-						SetCursorItem(HighlightedSlot);
+						SetCursorItem(HighlightedSlot, false);
 					}
 				}
 				else //We have already selected an item, drop item.
@@ -182,21 +280,25 @@ namespace Alex.Gui.Dialogs.Containers
 					TextOverlay.IsVisible = false;
 					CursorItemRenderer.IsVisible = false;
 					
-					OnSlotChanged(originalHighlight, originalSelectedItem);
+					OnSlotChanged(originalHighlight, originalSelectedItem, false);
 					//OnItemDeSelected(originalHighlight, originalSelectedItem);
 
 					if (HoverItem == HighlightedSlot) //We dropped the item in it's original slot.
 					{
+						SetCursorItem(originalHoverItem, false);
+						
 						originalHoverItem.Item = originalSelectedItem;
 					}
 					else if (containerItem.Item == null || containerItem.Item.Count == 0
 					                                    || containerItem.Item is ItemAir) //Item dropped in empty slot.
 					{
+						SetCursorItem(containerItem, false);
+						
 						containerItem.Item = originalSelectedItem;
 					}
 					else //Item was dropped on a slot that already has an item.
 					{
-						SetCursorItem(containerItem);
+						SetCursorItem(containerItem, false);
 
 						containerItem.Item = originalSelectedItem;
 					}
@@ -330,7 +432,19 @@ namespace Alex.Gui.Dialogs.Containers
 
 		private void InventoryOnSlotChanged(object sender, SlotChangedEventArgs e)
 		{
+			if (!e.IsServerTransaction)
+				return;
+			
 			UpdateSlot(e.InventoryId, e.Index, e.Value);
+		}
+		
+		private void InventoryOnCursorChanged(object sender, SlotChangedEventArgs e)
+		{
+			if (!e.IsServerTransaction)
+				return;
+
+			SelectedItem = null;
+			CursorItemRenderer.IsVisible = false;
 		}
 
 		/// <inheritdoc />
@@ -338,14 +452,21 @@ namespace Alex.Gui.Dialogs.Containers
 		{
 			OnContainerClose?.Invoke(this, EventArgs.Empty);
 			Inventory.SlotChanged -= InventoryOnSlotChanged;
+			Inventory.CursorChanged -= InventoryOnCursorChanged;
 			
 			base.OnClose();
 		}
 
 		//protected virtual void OnItemSelected(InventoryContainerItem slot, Item item) { }
 
-		protected virtual void OnSlotChanged(InventoryContainerItem slot, Item item) { }
-		
-		protected virtual void OnCursorItemChanged(InventoryContainerItem slot, Item item){}
+		protected virtual void OnSlotChanged(InventoryContainerItem slot, Item item, bool isServerTransaction) { }
+
+		protected virtual void OnCursorItemChanged(InventoryContainerItem slot, Item item, bool isServerTransaction)
+		{
+			if (isServerTransaction)
+				return;
+			
+			Inventory.SetCursor(item, false, slot.InventoryIndex);
+		}
 	}
 }

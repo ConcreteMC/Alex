@@ -1,5 +1,6 @@
 ﻿using System;
 using Alex.API.Gui.Graphics;
+using Alex.API.Input;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using RocketUI;
@@ -110,7 +111,7 @@ namespace Alex.API.Gui.Elements.Controls
 			}
 		}
 
-		protected override void OnCursorPressed(Point cursorPosition)
+		protected override void OnCursorPressed(Point cursorPosition, MouseButton button)
 	    {
 		    Value = !_value;
 	    }
