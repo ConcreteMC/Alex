@@ -4,7 +4,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <DefineConstants>TRACE;DEBUG;WINDOWS;MONOGAME;NETCOREAPP2_0;DESKTOPGL;WINDOWS;LINUX</DefineConstants>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-    <ApplicationIcon>.\Resources\Icon.ico</ApplicationIcon>
+    <ApplicationIcon>Resources\Icon.ico</ApplicationIcon>
     <StartupObject>Alex.Program</StartupObject>
     <Platforms>x64;AnyCPU</Platforms>
     <Configurations>Debug;Release;Appveyor</Configurations>
@@ -61,7 +61,6 @@
     <None Remove="Resources\ScrollBar.png" />
     <EmbeddedResource Include="Resources\DebugFont.xnb" />
     <None Remove="Resources\logo2.png" />
-    <EmbeddedResource Include="Resources\Icon.bmp" />
     <EmbeddedResource Include="Resources\logo2.png" />
     <None Remove="Resources\Splash.png" />
     <EmbeddedResource Include="Resources\ScrollBar.png" />
@@ -159,6 +158,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="Resources\Icon.bmp" />
+    <None Remove="Resources\Icon.ico" />
+    <EmbeddedResource Include="Resources\Icon.bmp" />
     <EmbeddedResource Include="Resources\Icon.ico" />
   </ItemGroup>
 
