@@ -14,6 +14,7 @@ using Alex.API.Data.Options;
 using Alex.API.Events;
 using Alex.API.Events.World;
 using Alex.API.Graphics;
+using Alex.API.Input;
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.API.World;
@@ -654,7 +655,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			}
 		}
 		
-		private void InventoryOnCursorChanged(object sender, SlotChangedEventArgs e)
+		private void InventoryOnCursorChanged(object sender, CursorChangedEventArgs e)
 		{
 			if (e.IsServerTransaction)
 				return;
@@ -663,6 +664,16 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 				ClickWindowPacket.TransactionMode mode = ClickWindowPacket.TransactionMode.Click;
 				byte button = 0;
+				switch (e.Button)
+				{
+					case MouseButton.Left:
+						button = 0;
+						break;
+					case MouseButton.Right:
+						button = 1;
+						break;
+				}
+				
 				/*if (e.Value.Id <= 0 || e.Value is ItemAir)
 				{
 					e.Value.Id = -1;

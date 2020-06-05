@@ -1,4 +1,5 @@
 ﻿using System;
+using Alex.API.Input;
 using Alex.Items;
 using Alex.Utils.Inventories;
 
@@ -149,6 +150,15 @@ namespace Alex.Utils
 			Value = value;
 			OldItem = oldItem;
 			IsServerTransaction = isServerTransaction;
+		}
+	}
+
+	public class CursorChangedEventArgs : SlotChangedEventArgs
+	{
+		public MouseButton Button { get; }
+		public CursorChangedEventArgs(int inventoryId, int index, Item value, Item oldItem, bool isServerTransaction, MouseButton button) : base(inventoryId, index, value, oldItem, isServerTransaction)
+		{
+			Button = button;
 		}
 	}
 

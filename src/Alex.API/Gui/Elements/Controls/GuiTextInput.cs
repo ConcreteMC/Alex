@@ -5,7 +5,6 @@ using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using RocketUI;
-using TextCopy;
 
 namespace Alex.API.Gui.Elements.Controls
 {

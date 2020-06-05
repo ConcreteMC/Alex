@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Alex.API.Input;
 using Alex.Items;
 using Alex.Networking.Java.Packets.Play;
 
@@ -71,18 +72,13 @@ namespace Alex.Utils.Inventories
 			new Dictionary<short, (ClickWindowPacket packet, SlotChangedEventArgs slot, bool isCursorTransaction)>();
 		
 		public int ActionNumber { get; set; } = 1;
-		public event EventHandler<SlotChangedEventArgs> CursorChanged = null;
-		public void SetCursor(Item item, bool isServerTransaction, int index = -2)
+		public event EventHandler<CursorChangedEventArgs> CursorChanged = null;
+		public void SetCursor(Item item, bool isServerTransaction, int index = -2, MouseButton button = MouseButton.Left)
 		{
 			var oldValue = _cursor;
 			Cursor = item;
 
-			if (ActionNumber >= 3)
-			{
-				string a = "";
-			}
-			
-			CursorChanged?.Invoke(this, new SlotChangedEventArgs(InventoryId, index, item, oldValue, isServerTransaction));
+			CursorChanged?.Invoke(this, new CursorChangedEventArgs(InventoryId, index, item, oldValue, isServerTransaction, button));
 		}
 		
 		

@@ -5,6 +5,7 @@ using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Graphics;
+using Alex.API.Input;
 using Alex.API.Utils;
 using Alex.Gui.Elements.Inventory;
 using Alex.Items;
@@ -136,7 +137,7 @@ namespace Alex.Gui.Dialogs.Containers
 			return containerItem;
 		}
 
-		private void SetCursorItem(InventoryContainerItem slot, bool isServerTransaction)
+		private void SetCursorItem(InventoryContainerItem slot, bool isServerTransaction, MouseButton button)
 		{
 			if (slot.Item != null && slot.Item.Count > 0 && !(slot.Item is ItemAir))
 			{
@@ -145,7 +146,7 @@ namespace Alex.Gui.Dialogs.Containers
 				
 				HoverItem = slot;
 				SelectedItem = slot.Item;
-				OnCursorItemChanged(slot, slot.Item, isServerTransaction);
+				OnCursorItemChanged(slot, slot.Item, isServerTransaction, button);
 				
 				SetOverlayText(slot.Item);
 					
@@ -162,7 +163,7 @@ namespace Alex.Gui.Dialogs.Containers
 				CursorItemRenderer.IsVisible = false;
 				SelectedItem = null;
 				
-				OnCursorItemChanged(slot, slot.Item, isServerTransaction);
+				OnCursorItemChanged(slot, slot.Item, isServerTransaction, button);
 			}
 		}
 
@@ -265,7 +266,7 @@ namespace Alex.Gui.Dialogs.Containers
 				{
 					if (HighlightedSlot != null && HighlightedSlot == containerItem)
 					{
-						SetCursorItem(HighlightedSlot, false);
+						SetCursorItem(HighlightedSlot, false, e.Button);
 					}
 				}
 				else //We have already selected an item, drop item.
@@ -285,20 +286,20 @@ namespace Alex.Gui.Dialogs.Containers
 
 					if (HoverItem == HighlightedSlot) //We dropped the item in it's original slot.
 					{
-						SetCursorItem(originalHoverItem, false);
+						SetCursorItem(originalHoverItem, false, e.Button);
 						
 						originalHoverItem.Item = originalSelectedItem;
 					}
 					else if (containerItem.Item == null || containerItem.Item.Count == 0
 					                                    || containerItem.Item is ItemAir) //Item dropped in empty slot.
 					{
-						SetCursorItem(containerItem, false);
+						SetCursorItem(containerItem, false, e.Button);
 						
 						containerItem.Item = originalSelectedItem;
 					}
 					else //Item was dropped on a slot that already has an item.
 					{
-						SetCursorItem(containerItem, false);
+						SetCursorItem(containerItem, false, e.Button);
 
 						containerItem.Item = originalSelectedItem;
 					}
@@ -461,12 +462,12 @@ namespace Alex.Gui.Dialogs.Containers
 
 		protected virtual void OnSlotChanged(InventoryContainerItem slot, Item item, bool isServerTransaction) { }
 
-		protected virtual void OnCursorItemChanged(InventoryContainerItem slot, Item item, bool isServerTransaction)
+		protected virtual void OnCursorItemChanged(InventoryContainerItem slot, Item item, bool isServerTransaction, MouseButton button)
 		{
 			if (isServerTransaction)
 				return;
 			
-			Inventory.SetCursor(item, false, slot.InventoryIndex);
+			Inventory.SetCursor(item, false, slot.InventoryIndex, button);
 		}
 	}
 }
