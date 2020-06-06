@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Mono.TextTemplating;
@@ -69,10 +70,17 @@ namespace ResourceConverterCore.Converter
 	        var outDir = Path.Combine(outputDirectory.FullName, "Models");
 	        if (!Directory.Exists(outDir))
 		        Directory.CreateDirectory(outDir);
-		        
+
 	        geometryToClass = new Dictionary<string, string>();
 			Mono.TextTemplating.TemplatingEngine engine = new TemplatingEngine();
-			var template =engine.CompileTemplate(File.ReadAllText("../../../Templates/EntityTemplate.tt"), new TemplateGenerator());
+			var template =engine.CompileTemplate(File.ReadAllText("../../../../Templates/EntityTemplate.tt"), new TemplateGenerator()
+			{
+				IncludePaths =
+				{
+					Environment.CurrentDirectory 
+				},
+				
+			});
 			//
              //  var template = new EntityTemplate();
 	        //template.Initialize();

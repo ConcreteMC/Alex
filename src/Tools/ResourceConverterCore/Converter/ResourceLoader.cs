@@ -178,12 +178,15 @@ namespace ResourceConverterCore.Converter
 
         private void ProcessEntityDefinitions()
         {
-            foreach (var file in _definitionDirectory.EnumerateFiles())
+            if (_definitionDirectory != null)
             {
-                LoadEntityDefinition(file);
+                foreach (var file in _definitionDirectory.EnumerateFiles())
+                {
+                    LoadEntityDefinition(file);
+                }
             }
 
-            
+
             var res = new Dictionary<string, EntityModel>();
             GetEntries(_mobsFile, res);
 
@@ -261,7 +264,7 @@ namespace ResourceConverterCore.Converter
 
                 foreach (var e in obj)
                 {
-                    if (e.Key == "format_version") continue;
+                    if (e.Key == "format_version" || e.Value.Type == JTokenType.Array) continue;
                     //if (e.Key == "minecraft:client_entity") continue;
                     //if (e.Key.Contains("zombie")) Console.WriteLine(e.Key);
                     entries.TryAdd(e.Key, e.Value.ToObject<EntityModel>(new JsonSerializer()

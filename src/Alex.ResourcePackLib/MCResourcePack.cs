@@ -348,7 +348,12 @@ namespace Alex.ResourcePackLib
 		private Color[] GetColorArray(Image<Rgba32> image)
 		{
 			var cloned = image;
-			return cloned.GetPixelSpan().ToArray().Select(x => new Color(x.Rgba)).ToArray();
+			if (cloned.TryGetSinglePixelSpan(out var pixelSpan))
+			{
+				return pixelSpan.ToArray().Select(x => new Color(x.Rgba)).ToArray();
+			}
+
+			return null;
 			
 			Color[] colors = new Color[cloned.Width * cloned.Height];
 			for (int x = 0; x < cloned.Width; x++)
