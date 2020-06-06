@@ -632,11 +632,21 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 								texture = textures.FirstOrDefault().Value;
 							}
 
+							PooledTexture2D texture2D = null;
 							if (AlexInstance.Resources.BedrockResourcePack.Textures.TryGetValue(texture, out var bmp))
 							{
 								PooledTexture2D t = TextureUtils.BitmapToTexture2D(AlexInstance.GraphicsDevice, bmp);
 
-								renderer = new EntityModelRenderer(model, t);
+								texture2D = t;
+							}
+							else if (AlexInstance.Resources.ResourcePack.TryGetBitmap(texture, out var bmp2))
+							{
+								texture2D = TextureUtils.BitmapToTexture2D(AlexInstance.GraphicsDevice, bmp2);
+							}
+
+							if (texture2D != null)
+							{
+								renderer = new EntityModelRenderer(model, texture2D);
 							}
 						}
 					}

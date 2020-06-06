@@ -455,33 +455,44 @@ namespace Alex.Worlds.Multiplayer.Java
 
 			if (entity == null)
 			{
-				Log.Warn($"Could not create entity of type: {(int) type}:{type.ToString()}");
+				Log.Warn($"Could not create entity of type: {(int) type}:{(knownData != null ? knownData.Name : type.ToString())}");
 				return null;
 			}
 
 			if (renderer == null)
 			{
-				var def = Alex.Resources.BedrockResourcePack.EntityDefinitions.FirstOrDefault(x =>
-					x.Value.Filename.Replace("_", "").Equals(type.ToString().ToLowerInvariant()));
+				var def = Alex.Resources.BedrockResourcePack.EntityDefinitions.FirstOrDefault(
+					x => x.Value.Filename.Replace("_", "").Equals(type.ToString().ToLowerInvariant()));
+
 				if (!string.IsNullOrWhiteSpace(def.Key))
 				{
 					EntityModel model;
-					if (ModelFactory.TryGetModel(def.Value.Geometry["default"],
-						    out model) && model != null)
+
+					if (ModelFactory.TryGetModel(def.Value.Geometry["default"], out model) && model != null)
 					{
-						var textures = def.Value.Textures;
+						var    textures = def.Value.Textures;
 						string texture;
+
 						if (!textures.TryGetValue("default", out texture))
 						{
 							texture = textures.FirstOrDefault().Value;
 						}
 
-						if (Alex.Resources.BedrockResourcePack.Textures.TryGetValue(texture,
-							out var bmp))
+						PooledTexture2D texture2D = null;
+						if (Alex.Resources.BedrockResourcePack.Textures.TryGetValue(texture, out var bmp))
 						{
 							PooledTexture2D t = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, bmp);
 
-							renderer = new EntityModelRenderer(model, t);
+							texture2D = t;
+						}
+						else if (Alex.Resources.ResourcePack.TryGetBitmap(texture, out var bmp2))
+						{
+							texture2D = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, bmp2);
+						}
+
+						if (texture2D != null)
+						{
+							renderer = new EntityModelRenderer(model, texture2D);
 						}
 					}
 				}
@@ -490,12 +501,14 @@ namespace Alex.Worlds.Multiplayer.Java
 			if (renderer == null)
 			{
 				Log.Debug($"Missing renderer for entity: {type.ToString()} ({(int) type})");
+
 				return null;
 			}
 
 			if (renderer.Texture == null)
 			{
 				Log.Debug($"Missing texture for entity: {type.ToString()} ({(int) type})");
+
 				return null;
 			}
 
@@ -517,17 +530,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 			return entity;
 		}
-
-		public void UpdateEntityPosition(long entityId, PlayerLocation location, bool relative)
-		{
-			World?.UpdateEntityPosition(entityId, location,  relative);
-		}
-
-		public void UpdateTime(long worldAge, long timeOfDay)
-		{ 
-			World?.SetTime(timeOfDay);
-		}
-
+		
 		private void SendPacket(Packet packet)
 		{
 			Client.SendPacket(packet);
@@ -1498,7 +1501,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void HandleTimeUpdatePacket(TimeUpdatePacket packet)
 		{
-			UpdateTime(packet.WorldAge, packet.TimeOfDay);
+			World.SetTime(packet.TimeOfDay);
 		}
 
 		private void HandleChatMessagePacket(ChatMessagePacket packet)
