@@ -5,22 +5,15 @@ namespace Alex.Blocks.Storage
 {
 	public class FlexibleStorage : IStorage
 	{
-		private static ArrayPool<long> _arrayPool = ArrayPool<long>.Shared;
-		public static bool UsePooling { get; set; } = true;
-		
 		public long[] _data;
 		private int _bitsPerEntry;
 		private int _size;
 		private long _maxEntryValue;
 
-		private bool _isPooled = false;
-
 		public FlexibleStorage(int bitsPerEntry, int size) : this(
-			bitsPerEntry,
-			(UsePooling ? _arrayPool.Rent(RoundUp(size * bitsPerEntry, 64) / 64) :
-				new long[RoundUp(size * bitsPerEntry, 64) / 64]))
+			bitsPerEntry, new long[RoundUp(size * bitsPerEntry, 64) / 64])
 		{
-			_isPooled = UsePooling;
+			
 		}
 
 		public FlexibleStorage(int bitsPerEntry, long[] data)
@@ -64,7 +57,7 @@ namespace Alex.Blocks.Storage
 			{
 				if (index < 0 || index > this._size - 1)
 				{
-					throw new IndexOutOfRangeException();
+					throw new IndexOutOfRangeException($"{index} falls outside of our current range (0 - {this._size - 1})");
 				}
 
 				if (value > this._maxEntryValue)
@@ -86,7 +79,7 @@ namespace Alex.Blocks.Storage
 			}
 		}
 
-		public int Length => _size;
+		public int Length => _size - 1;
 		private static int RoundUp(int value, int roundTo)
 		{
 			if (roundTo == 0)
@@ -107,12 +100,6 @@ namespace Alex.Blocks.Storage
 				int remainder = value % roundTo;
 				return remainder == 0 ? value : value + roundTo - remainder;
 			}
-		}
-
-		public void Dispose()
-		{
-			if (_isPooled)
-				_arrayPool.Return(_data);
 		}
 	}
 }

@@ -65,32 +65,14 @@ namespace Alex.Networking.Java
 		public bool IsConnected { get; private set; }
 
 		private BlockingCollection<EnqueuedPacket> PacketWriteQueue { get; }
-		//private BlockingCollection<TemporaryPacketData> HandlePacketQueue { get; }
-	    public bool LogExceptions { get; set; } = true;
+		public bool LogExceptions { get; set; } = true;
 
-	    private struct TemporaryPacketData
-	    {
-		    public Packet Packet;
-		    public byte[] Buffer;
-
-		    public TemporaryPacketData(Packet packet, byte[] buffer)
-		    {
-			    Packet = packet;
-			    Buffer = buffer;
-		    }
-	    }
-
-		private Thread NetworkProcessing { get; set; }
+	    private Thread NetworkProcessing { get; set; }
 		private Thread NetworkWriting { get; set; }
-	//	private Thread PacketHandling { get; set; }
-        public void Initialize()
+		public void Initialize()
         {
 	        Socket.Blocking = true;
 
-	     /*   ThreadPool.QueueUserWorkItem(ProcessNetwork);
-	        ThreadPool.QueueUserWorkItem(SendQueue);
-	        ThreadPool.QueueUserWorkItem(HandleQueuedPackets);
-			*/
 		   	NetworkProcessing = new Thread(ProcessNetwork)
             {
 				IsBackground = true
@@ -102,58 +84,9 @@ namespace Alex.Networking.Java
 				IsBackground = true
 			};
 			NetworkWriting.Start();
-
-	       // PacketHandling = new Thread(HandleQueuedPackets)
-	       // {
-			//	IsBackground = true
-	        //};
-			//PacketHandling.Start();
         }
 
-	  /*  private void HandleQueuedPackets()
-	    {
-		    try
-		    {
-			   // using (MemoryStream ms = new MemoryStream())
-			    {
-				 //   using (MinecraftStream stream = new MinecraftStream(ms))
-				    {
-					    while (!CancellationToken.IsCancellationRequested)
-					    {
-						    var temp = HandlePacketQueue.Take(CancellationToken.Token);
-						    if (CancellationToken.IsCancellationRequested) return;
-						    
-							
-						   // var startPosition = Math.Max(stream.Length - temp.Buffer.Length, 0);
-						    try
-						    {
-							    ProcessPacket(temp.Packet, temp.Buffer);
-							   /* stream.Position = startPosition;
-							    
-							    stream.Write(temp.Buffer);
-							    
-							    stream.Position = startPosition;
-									
-							    temp.Packet.Decode(stream);
-
-							    var packet = temp.Packet;
-							    ThreadPool.QueueUserWorkItem(() => HandlePacket(packet));*
-						    }
-						    catch (Exception e)
-						    {
-							    Log.Warn($"Exception when handling packet: " + e, e);
-						    }
-					    }
-				    }
-			    }
-		    }
-		    catch (OperationCanceledException)
-		    {
-
-		    }
-	    }*/
-
-	    public void Stop()
+        public void Stop()
         {
             if (CancellationToken.IsCancellationRequested) return;
             CancellationToken.Cancel();

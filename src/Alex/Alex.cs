@@ -315,14 +315,6 @@ namespace Alex
 			SetAntiAliasing(options.AlexOptions.VideoOptions.Antialiasing > 0,
 				options.AlexOptions.VideoOptions.Antialiasing.Value);
 
-			options.AlexOptions.MiscelaneousOptions.ObjectPools.Bind(
-				(value, newValue) =>
-				{
-					FlexibleStorage.UsePooling = newValue;
-				});
-
-			FlexibleStorage.UsePooling = options.AlexOptions.MiscelaneousOptions.ObjectPools.Value;
-
 			GuiDebugHelper = new GuiDebugHelper(GuiManager);
 
 			OnCharacterInput += GuiManager.FocusManager.OnTextInput;

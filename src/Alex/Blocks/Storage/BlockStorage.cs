@@ -46,7 +46,7 @@ namespace Alex.Blocks.Storage
             {
                 i = Pallette.Add(state);
 
-                if (i >= 1 << this._bits)
+                if (i >= (1 << this._bits))
                 {
                     return Resize(_bits + 1, state);
                 }
@@ -75,8 +75,6 @@ namespace Alex.Blocks.Storage
                     Set(i, oldEntry);
                 }
             }
-            
-            oldStorage.Dispose();
 
             return IdFor(state);
         }
@@ -152,7 +150,7 @@ namespace Alex.Blocks.Storage
 
         public void Dispose()
         {
-            Storage?.Dispose();
+            
         }
     }
 }

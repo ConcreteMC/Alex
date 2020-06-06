@@ -45,18 +45,5 @@ namespace Alex.Worlds.Multiplayer.Java
 					throw new ArgumentOutOfRangeException();
 			}
 		}
-
-		protected override bool ShouldAddToProcessing(Packet packet)
-		{
-			if (JavaWorld.Spawned)
-				return true;
-
-			return (!(packet is UpdateLightPacket));
-			
-			if (packet.Category == PacketCategory.EntityMovement)
-				return false;
-			
-			return base.ShouldAddToProcessing(packet);
-		}
 	}
 }

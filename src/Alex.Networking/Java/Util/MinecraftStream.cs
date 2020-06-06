@@ -95,6 +95,12 @@ namespace Alex.Networking.Java.Util
 
 		public byte[] Read(int length)
 		{
+			if (BaseStream is MemoryStream)
+			{
+				var dat = new byte[length];
+				Read(dat, 0, length);
+				return dat;
+			}
 			//byte[] d = new byte[length];
 			//Read(d, 0, d.Length);
 			//return d;
@@ -128,7 +134,8 @@ namespace Alex.Networking.Java.Util
 
 		public int ReadInt()
 		{
-			var dat = Read(4);
+			var dat = new byte[4];
+			Read(dat, 0, 4);
 			var value = BitConverter.ToInt32(dat, 0);
 			return IPAddress.NetworkToHostOrder(value);
 		}
