@@ -47,7 +47,7 @@ VertexToPixel VertexShaderFunction(float4 inPosition : POSITION, float4 inTexCoo
     Output.Position = mul(viewPos, Projection);
 
     Output.TexCoords = inTexCoords;
-    Output.Lighting = max(lighting, skyLight);
+    Output.Lighting = max(lighting, blockLight);
     Output.Color = inColor;
     Output.FogFactor = ComputeFogFactor(distance(inPosition.xy, viewPos.xy)) * FogEnabled;
 
@@ -62,10 +62,8 @@ PixelToFrame PixelShaderFunction(VertexToPixel PSIn)  {
     
     float4 colorValue = pow((1.0f / 16.0f) * PSIn.Lighting, 1.2f) + baseColor;
 
-    Output.Color = textureColor * PSIn.Color;
-    Output.Color.r *= colorValue;
-    Output.Color.g *= colorValue;
-    Output.Color.b *= colorValue;
+    Output.Color = textureColor * PSIn.Color.rgba;
+    Output.Color.rgb *= colorValue;
     
     Output.Color.rgb = lerp(Output.Color.rgb, FogColor, PSIn.FogFactor);
     

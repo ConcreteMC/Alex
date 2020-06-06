@@ -48,24 +48,17 @@ namespace Alex.Blocks.Storage
 
 
 				int bitIndex = index * this._bitsPerEntry;
-				int startIndex = bitIndex / 64;
-				int endIndex = ((index + 1) * this._bitsPerEntry - 1) / 64;
-				int startBitSubIndex = bitIndex % 64;
+				int startIndex = bitIndex >> 6;
+				int i1 = bitIndex & 0x3f;
 
-				if ((startIndex < 0 || startIndex > this._size - 1) || (endIndex < 0 || endIndex > this._size - 1))
-				{
-					return 0;
+				long value = (long)((ulong)_data[startIndex] >> i1);
+				int i2 = i1 + _bitsPerEntry;
+				// The value is divided over two long values
+				if (i2 > 64) {
+					value |= _data[++startIndex] << 64 - i1;
 				}
 
-				if (startIndex == endIndex)
-				{
-					return (uint)(this._data[startIndex] >> startBitSubIndex & this._maxEntryValue);
-				}
-				else
-				{
-					int endBitSubIndex = 64 - startBitSubIndex;
-					return (uint)((this._data[startIndex] >> startBitSubIndex | this._data[endIndex] << endBitSubIndex) & this._maxEntryValue);
-				}
+				return (uint) (value & _maxEntryValue);
 			}
 			set
 			{
@@ -80,16 +73,15 @@ namespace Alex.Blocks.Storage
 				}
 
 				int bitIndex = index * this._bitsPerEntry;
-				int startIndex = bitIndex / 64;
-				int endIndex = ((index + 1) * this._bitsPerEntry - 1) / 64;
-				int startBitSubIndex = bitIndex % 64;
-				//_data[startIndex] |= (((long) value) << startBitSubIndex);
-				this._data[startIndex] = this._data[startIndex] & ~(this._maxEntryValue << startBitSubIndex) | ((long)value & this._maxEntryValue) << startBitSubIndex;
-				if (startIndex != endIndex)
-				{
-					int endBitSubIndex = 64 - startBitSubIndex;
-					//_data[endIndex] = (((long) value >> (endBitSubIndex)));
-					this._data[endIndex] = this._data[endIndex] >> endBitSubIndex << endBitSubIndex | ((long)value & this._maxEntryValue) >> endBitSubIndex;
+				int i0 = bitIndex >> 6;
+				int i1 = bitIndex & 0x3f;
+
+				_data[i0] = this._data[i0] & ~(this._maxEntryValue << i1) | (value & _maxEntryValue) << i1;
+				int i2 = i1 + _bitsPerEntry;
+				// The value is divided over two long values
+				if (i2 > 64) {
+					i0++;
+					_data[i0] = _data[i0] & ~((1L << i2 - 64) - 1L) | value >> 64 - i1;
 				}
 			}
 		}

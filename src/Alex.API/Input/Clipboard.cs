@@ -141,7 +141,7 @@ namespace Alex.API.Input
 
     public class XClipClipboard : IClipboardImplementation
     {
-        private static string Run(string commandLine)
+        private static string Run(string commandLine, bool waitForExit = true)
         {
             var errorBuilder = new StringBuilder();
             var outputBuilder = new StringBuilder();
@@ -164,12 +164,19 @@ namespace Alex.API.Input
                 process.BeginOutputReadLine();
                 process.ErrorDataReceived += (sender, args) => { errorBuilder.AppendLine(args.Data); };
                 process.BeginErrorReadLine();
-                if (!DoubleWaitForExit(process))
+                if (waitForExit)
                 {
-                    var timeoutError = $@"Process timed out. Command line: bash {arguments}.
+                    if (!DoubleWaitForExit(process))
+                    {
+                        var timeoutError = $@"Process timed out. Command line: bash {arguments}.
 Output: {outputBuilder}
 Error: {errorBuilder}";
-                    throw new Exception(timeoutError);
+                        throw new Exception(timeoutError);
+                    }
+                }
+                else
+                {
+                    process.WaitForExit(500);
                 }
 
                 if (process.ExitCode == 0)
@@ -199,6 +206,7 @@ Error: {errorBuilder}";
         {
             try
             {
+                new XClipClipboard().SetText("Alex was here, sorry for replacing your keyboard contents!");
                 string content = Run("xclip -o");
 
                 return !string.IsNullOrWhiteSpace(content) && !content.Contains("but can be installed with");
@@ -215,7 +223,7 @@ Error: {errorBuilder}";
             File.WriteAllText(tempFileName, value);
             try
             {
-                Run($"cat {tempFileName} | xclip -i -selection clipboard");
+                Run($"cat {tempFileName} | xclip -i -selection clipboard", false);
             }
             finally
             {
