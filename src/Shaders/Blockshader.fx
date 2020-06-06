@@ -62,8 +62,10 @@ PixelToFrame PixelShaderFunction(VertexToPixel PSIn)  {
     
     float4 colorValue = pow((1.0f / 16.0f) * PSIn.Lighting, 1.2f) + baseColor;
 
-    Output.Color = textureColor * PSIn.Color.rgba;
-    Output.Color.rgb *= colorValue;
+    Output.Color = textureColor * PSIn.Color;
+    Output.Color.r *= colorValue;
+    Output.Color.g *= colorValue;
+    Output.Color.b *= colorValue;
     
     Output.Color.rgb = lerp(Output.Color.rgb, FogColor, PSIn.FogFactor);
     
