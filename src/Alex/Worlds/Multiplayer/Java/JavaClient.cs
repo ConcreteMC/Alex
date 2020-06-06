@@ -2,6 +2,7 @@
 using System.Net.Sockets;
 using Alex.Networking.Java;
 using Alex.Networking.Java.Packets;
+using Alex.Networking.Java.Packets.Play;
 using MiNET.Utils;
 using NLog;
 using ConnectionState = Alex.Networking.Java.ConnectionState;
@@ -47,10 +48,11 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		protected override bool ShouldAddToProcessing(Packet packet)
 		{
-			return true;
 			if (JavaWorld.Spawned)
 				return true;
 
+			return (!(packet is UpdateLightPacket));
+			
 			if (packet.Category == PacketCategory.EntityMovement)
 				return false;
 			

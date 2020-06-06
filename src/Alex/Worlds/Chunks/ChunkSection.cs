@@ -79,12 +79,12 @@ namespace Alex.Worlds.Chunks
 		        _blockStorages[i] = new BlockStorage();
 	        }
 	        
-	        this.BlockLight = new NibbleArray(ArrayPool<byte>.Shared.Rent(2048));
+	        this.BlockLight = new NibbleArray(new byte[2048]);
 	        MiNET.Worlds.ChunkColumn.Fill<byte>(BlockLight.Data, 0);
 	        
 			if (storeSkylight)
 			{
-				this.SkyLight = new NibbleArray(ArrayPool<byte>.Shared.Rent(2048));	
+				this.SkyLight = new NibbleArray(new byte[2048]);	
 				MiNET.Worlds.ChunkColumn.Fill<byte>(SkyLight.Data, 0xff);
 			}
 //System.Collections.BitArray a = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8]);
@@ -469,8 +469,8 @@ namespace Alex.Worlds.Chunks
 		    
 		    MeshCache?.Dispose();
 		    
-		    ArrayPool<byte>.Shared.Return(BlockLight.Data);
-		    ArrayPool<byte>.Shared.Return(SkyLight.Data);
+		  //  ArrayPool<byte>.Shared.Return(BlockLight.Data);
+		  //  ArrayPool<byte>.Shared.Return(SkyLight.Data);
 	    }
 
 	    public class BlockEntry

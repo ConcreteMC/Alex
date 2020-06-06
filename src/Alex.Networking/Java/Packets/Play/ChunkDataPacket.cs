@@ -44,9 +44,8 @@ namespace Alex.Networking.Java.Packets.Play
 			int i = stream.ReadVarInt();
 			Buffer = new byte[i];
 			stream.Read(Buffer, 0, Buffer.Length);
-
+			
 			int tileEntities = stream.ReadVarInt();
-			return;
 			for (int k = 0; k < tileEntities; k++)
 			{
 				TileEntities.Add(stream.ReadNbtCompound());
