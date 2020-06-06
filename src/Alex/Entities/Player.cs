@@ -71,7 +71,7 @@ namespace Alex.Entities
 			//Inventory = new Inventory(46);
 			//Inventory.SelectedHotbarSlotChanged += SelectedHotbarSlotChanged;
 			//base.Inventory.IsPeInventory = true;
-			MovementSpeedModifier = 1f;
+			MovementSpeedModifier = 0.1f;
 			MovementSpeed = 4.306f;
 			BaseMovementSpeed = 4.317;
 			FlyingSpeed = 10.89f;

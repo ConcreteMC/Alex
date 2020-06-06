@@ -996,7 +996,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				if (message.attributes.TryGetValue("minecraft:movement", out var movement))
 				{
-					player.MovementSpeedModifier = movement.Value * 10f;
+					player.MovementSpeedModifier = movement.Value;
 				}
 
 				if (message.attributes.TryGetValue("minecraft:player.hunger", out var hunger))

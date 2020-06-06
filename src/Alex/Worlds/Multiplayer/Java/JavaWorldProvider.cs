@@ -188,7 +188,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 			abilitiesPacket.Flags = (byte) flags;
 			abilitiesPacket.FlyingSpeed = (float) player.FlyingSpeed;
-			abilitiesPacket.WalkingSpeed = (float)player.MovementSpeed;
+			abilitiesPacket.WalkingSpeed = (float)player.MovementSpeedModifier;
 
 			SendPacket(abilitiesPacket);
 		}
@@ -1436,23 +1436,20 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void HandleEntityPropertiesPacket(EntityPropertiesPacket packet)
 		{
-			if (packet.EntityId == 0 || packet.EntityId == _entityId)
+			if (packet.EntityId == 0 || packet.EntityId == World.Player.EntityId)
 			{
-				if (World.Player is Player player)
+				foreach (var prop in packet.Properties.Values)
 				{
-					foreach (var prop in packet.Properties.Values)
+					if (prop.Key.Equals("generic.movementSpeed", StringComparison.InvariantCultureIgnoreCase))
 					{
-						if (prop.Key.Equals("generic.movementSpeed", StringComparison.InvariantCultureIgnoreCase))
-						{
-						//	player.MovementSpeed = prop.Value;
-						}
-						else if (prop.Key.Equals("generic.flyingSpeed", StringComparison.InvariantCultureIgnoreCase))
-						{
-						//	player.FlyingSpeed = prop.Value;
-						}
-
-						//TODO: Modifier data
+						World.Player.MovementSpeedModifier = (float) prop.Value;
 					}
+					else if (prop.Key.Equals("generic.flyingSpeed", StringComparison.InvariantCultureIgnoreCase))
+					{
+						World.Player.FlyingSpeed = prop.Value;
+					}
+
+					//TODO: Modifier data
 				}
 			}
 		}
@@ -1522,9 +1519,9 @@ namespace Alex.Worlds.Multiplayer.Java
 		{
 			World.UnloadChunk(new ChunkCoordinates(packet.X, packet.Z));
 		}
-
-		private int _entityId = -1;
+		
 		private int _dimension = 0;
+
 		private void HandleJoinGamePacket(JoinGamePacket packet)
 		{
 			_dimension = packet.Dimension;
@@ -1532,22 +1529,14 @@ namespace Alex.Worlds.Multiplayer.Java
 			ClientSettingsPacket settings = new ClientSettingsPacket();
 			settings.ChatColors = true;
 			settings.ChatMode = 0;
-			settings.ViewDistance = (byte)ViewDistance;
+			settings.ViewDistance = (byte) ViewDistance;
 			settings.SkinParts = 255;
 			settings.MainHand = 1;
 			settings.Locale = "en_US";
 			SendPacket(settings);
 
-			_entityId = packet.EntityId;
-			if (World?.Player is Player player)
-			{
-				player.EntityId = packet.EntityId;
-				player.UpdateGamemode((Gamemode)packet.Gamemode);
-			}
-			else
-			{
-				Log.Warn($"Could not get player entity!");
-			}
+			World.Player.EntityId = packet.EntityId;
+			World.Player.UpdateGamemode((Gamemode) packet.Gamemode);
 		}
 
 		private void HandleUpdateLightPacket(UpdateLightPacket packet)
