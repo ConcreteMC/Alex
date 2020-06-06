@@ -197,6 +197,13 @@
 		Parrot = 105,
 		Villager = 120,
 
-		EnderCrystal = 200
+		EnderCrystal = 200,
+		
+		
+		
+		ZombieVillagerV2 =500,
+		VillagerV2,
+		WanderingTrader,
+		ChestMinecart
 	}
 }

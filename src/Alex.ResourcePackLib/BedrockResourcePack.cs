@@ -3,9 +3,13 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using Alex.ResourcePackLib.Json;
+using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using NLog;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Tga;
 using SixLabors.ImageSharp.PixelFormats;
 using Image = SixLabors.ImageSharp.Image;
 
@@ -17,7 +21,7 @@ namespace Alex.ResourcePackLib
 
 		private ConcurrentDictionary<string, Image<Rgba32>> _bitmaps = new ConcurrentDictionary<string, Image<Rgba32>>();
         public IReadOnlyDictionary<string, Image<Rgba32>> Textures => _bitmaps;
-		public IReadOnlyDictionary<string, EntityDefinition> EntityDefinitions { get; private set; } = new ConcurrentDictionary<string, EntityDefinition>();
+		public IReadOnlyDictionary<string, EntityDescription> EntityDefinitions { get; private set; } = new ConcurrentDictionary<string, EntityDescription>();
 
 		private readonly DirectoryInfo _workingDir;
 
@@ -45,15 +49,15 @@ namespace Alex.ResourcePackLib
             Dictionary<string, FileInfo> entityGeometry = new Dictionary<string, FileInfo>();
             foreach (var dir in _workingDir.EnumerateDirectories())
             {
-                if (entityDefinitionsDir == null && dir.Name.Equals("definitions"))
-                {
-                    foreach (var d in dir.EnumerateDirectories())
-                    {
-                        if (d.Name.Equals("entity"))
+               // if (entityDefinitionsDir == null && dir.Name.Equals("definitions"))
+               // {
+                  //  foreach (var d in dir.EnumerateDirectories())
+                   // {
+                        if (dir.Name.Equals("entity"))
                         {
-                            entityDefinitionsDir = d;
+                            entityDefinitionsDir = dir;
 
-                            foreach (var file in d.EnumerateFiles())
+                            foreach (var file in dir.EnumerateFiles())
                             {
                                 if (!entityGeometry.TryAdd(file.Name, file))
                                 {
@@ -71,8 +75,8 @@ namespace Alex.ResourcePackLib
 
                             break;
                         }
-                    }
-                }
+                    //}
+                //}
 
                 if (entityDefinitionsDir != null)
                     break;
@@ -85,7 +89,7 @@ namespace Alex.ResourcePackLib
                 return;
             }
 
-            Dictionary<string, EntityDefinition> entityDefinitions = new Dictionary<string, EntityDefinition>();
+            Dictionary<string, EntityDescription> entityDefinitions = new Dictionary<string, EntityDescription>();
             foreach (var def in entityDefinitionsDir.EnumerateFiles())
             {
                 LoadEntityDefinition(def, entityDefinitions);
@@ -95,7 +99,7 @@ namespace Alex.ResourcePackLib
             Log.Info($"Processed {EntityDefinitions.Count} entity definitions");
         }
 
-		private void LoadEntityDefinition(FileInfo entry, Dictionary<string, EntityDefinition> entityDefinitions)
+		private void LoadEntityDefinition(FileInfo entry, Dictionary<string, EntityDescription> entityDefinitions)
 		{
 			using (var open = entry.OpenText())
 			{
@@ -103,10 +107,48 @@ namespace Alex.ResourcePackLib
 
 				string fileName = Path.GetFileNameWithoutExtension(entry.Name);
 
-				Dictionary<string, EntityDefinition> definitions = JsonConvert.DeserializeObject<Dictionary<string, EntityDefinition>>(json);
+				Dictionary<string, EntityDescription> definitions = new Dictionary<string, EntityDescription>();
+				
+				JObject obj  = JObject.Parse(json, new JsonLoadSettings());
+				foreach (var e in obj)
+				{
+					if (e.Key == "format_version") continue;
+
+					if (e.Key == "minecraft:client_entity")
+					{
+						var model = e.Value.ToObject<EntityDescriptionWrapper>(JsonSerializer.Create(new JsonSerializerSettings()
+						{
+							Converters = MCJsonConvert.DefaultSettings.Converters,
+							MissingMemberHandling = MissingMemberHandling.Ignore,
+							NullValueHandling = NullValueHandling.Ignore,
+						}));
+						if (model != null)
+						{
+							if (!definitions.TryAdd(model.Description.Identifier, model.Description))
+							{
+								Log.Warn($"Duplicate definition: {model.Description.Identifier}");
+							}
+						}
+						else
+						{
+							/*if (e.Value.Type == JTokenType.Array)
+							{
+								var models = e.Value.ToObject<EntityDescriptionWrapper[]>(JsonSerializer.Create(MCJsonConvert.DefaultSettings));
+								if (models != null)
+								{
+									foreach (var model in models)
+									{
+										
+									}
+								}
+							}*/
+						}
+					}
+				}
+
 				foreach (var def in definitions)
 				{
-					def.Value.Filename = fileName;
+					//def.Value.Filename = fileName;
 					if (!entityDefinitions.ContainsKey(def.Key))
 					{
 						entityDefinitions.Add(def.Key, def.Value);
@@ -162,7 +204,15 @@ namespace Alex.ResourcePackLib
 				Image<Rgba32> bmp = null;
 				using (FileStream fs = new FileStream(file, FileMode.Open))
 				{
-					bmp = Image.Load<Rgba32>(fs);
+					if (file.EndsWith(".tga"))
+					{
+						bmp = Image.Load(fs, new TgaDecoder()).CloneAs<Rgba32>();
+					}
+					else
+					{
+						bmp = Image.Load<Rgba32>(fs);
+					}
+
 					//	bmp = new Image(fs);
 				}
 

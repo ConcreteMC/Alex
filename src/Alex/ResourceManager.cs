@@ -42,13 +42,15 @@ namespace Alex
 		public McResourcePack ResourcePack => ActiveResourcePacks.First?.Value;
 		public BedrockResourcePack BedrockResourcePack { get; private set; }
 		public Registries Registries { get; private set; }
-        public AtlasGenerator Atlas { get; private set; }
-        
+		public AtlasGenerator Atlas { get; private set; }
+
 		private IStorageSystem Storage { get; }
 		private IOptionsProvider Options { get; }
 		private IRegistryManager RegistryManager { get; }
 		private Alex Alex { get; }
 		private MCJavaAssetsUtil AssetsUtil { get; }
+		private MCBedrockAssetUtils BedrockAssetUtil { get; }
+
 		private ContentManager ContentManager { get; }
 		
 		public static Effect BlockEffect { get; set; }
@@ -67,6 +69,7 @@ namespace Alex
 			ContentManager = serviceProvider.GetService<ContentManager>();
 			
 			AssetsUtil = new MCJavaAssetsUtil(Storage); //ContentManager.Load<byte[]>();
+			BedrockAssetUtil = new MCBedrockAssetUtils(Storage);
 		}
 
 		private static readonly List<char> TargetPlatformIdentifiers = new List<char>()
@@ -259,8 +262,10 @@ namespace Alex
             }
         }
 
-        private bool CheckRequiredPaths(IProgressReceiver progressReceiver, out byte[] javaResources)
-		{
+        private bool CheckRequiredPaths(IProgressReceiver progressReceiver, out byte[] javaResources, out byte[] bedrockResources)
+        {
+	        bedrockResources = null;
+	        
 			try
 			{
 				Log.Info($"Verifiying assets...");
@@ -271,6 +276,13 @@ namespace Alex
 
 					javaResources = null;
 					//bedrockResources = null;
+					return false;
+				}
+
+				string bedrockPath = BedrockAssetUtil.CheckAndDownloadResources(progressReceiver).Result;
+				if (!Storage.TryReadBytes(bedrockPath, out bedrockResources))
+				{
+					Log.Error("Could not load any of the required Bedrock assets! Are you connected to the internet?");
 					return false;
 				}
 			}
@@ -292,8 +304,9 @@ namespace Alex
         {
 	        PreloadCallback = preloadCallback;
 			byte[] defaultResources;
+			byte[] defaultBedrock;
 
-			if (!CheckRequiredPaths(progressReceiver, out defaultResources))
+			if (!CheckRequiredPaths(progressReceiver, out defaultResources, out defaultBedrock))
 			{
 				return false;
 			}
@@ -335,8 +348,8 @@ namespace Alex
             {
 	            Log.Info($"Extracting required resources...");
 	            progressReceiver?.UpdateProgress(50, "Extracting resources...");
-	            
-	            byte[] zipped = ReadResource("Alex.Resources.resources.zip");
+
+	            byte[] zipped = defaultBedrock;//ReadResource("Alex.Resources.resources.zip");
 	            using (MemoryStream ms = new MemoryStream(zipped))
 	            {
 		            using (ZipArchive archive = new ZipArchive(ms, ZipArchiveMode.Read))
@@ -348,13 +361,13 @@ namespace Alex
             
             var directories = directory.GetDirectories();
 
-            if (!directories.Any(x => x.Name.Equals("definitions")))
+          /*  if (!directories.Any(x => x.Name.Equals("definitions")))
             {
 				Log.Warn($"The required definition files are not found. Any questions can be asked on Discord.");
                 Console.ReadLine();
 				Environment.Exit(1);
                 return false;
-            }
+            }*/
 			//report(ResourcePack.AsciiFont);
 
 			Log.Info($"Loading bedrock resources...");

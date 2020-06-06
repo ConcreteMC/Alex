@@ -462,7 +462,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			if (renderer == null)
 			{
 				var def = Alex.Resources.BedrockResourcePack.EntityDefinitions.FirstOrDefault(
-					x => x.Value.Filename.Replace("_", "").Equals(type.ToString().ToLowerInvariant()));
+					x => x.Value.Identifier.Replace("_", "").ToLowerInvariant().Equals($"minecraft:{type}".ToLowerInvariant()));
 
 				if (!string.IsNullOrWhiteSpace(def.Key))
 				{

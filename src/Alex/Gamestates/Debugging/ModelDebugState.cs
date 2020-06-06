@@ -15,6 +15,7 @@ using Alex.Gamestates.InGame;
 using Alex.Graphics.Models.Entity;
 using Alex.Gui.Elements;
 using Alex.ResourcePackLib;
+using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
@@ -290,7 +291,7 @@ namespace Alex.Gamestates.Debugging
 
 	public class EntityModelExplorer : ModelExplorer
 	{
-		private KeyValuePair<string, BedrockResourcePack.EntityDefinition>[] _entityDefinitions;
+		private KeyValuePair<string, EntityDescription>[] _entityDefinitions;
 		private int                                                          _index = 0;
 
 		private GraphicsDevice GraphicsDevice { get; }

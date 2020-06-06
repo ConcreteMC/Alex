@@ -287,6 +287,8 @@ namespace Alex.Graphics.Models.Entity
 				}
 
 				modelBone = new ModelBone(c.ToArray(), bone.Parent);
+				modelBone.Rotation = bone.BindPoseRotation;
+				
 				modelBone.UpdateRotationMatrix = !bone.NeverRender;
 					if (!modelBones.TryAdd(bone.Name, modelBone))
 					{
