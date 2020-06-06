@@ -250,7 +250,14 @@ namespace Alex.ResourcePackLib
 			var textureName = match.Groups["filename"].Value;
 			if (!TryGetBitmap(textureName, out var bmp))
 			{
-				bmp = LoadBitmap(entry, match);
+				try
+				{
+					bmp = LoadBitmap(entry, match);
+				}
+				catch (Exception ex)
+				{
+					Log.Warn(ex, $"Could not load texture from resourcepack: {entry.FullName}");
+				}
 			}
 			
 			//	_textureCache[match.Groups["filename"].Value] = TextureUtils.ImageToTexture2D(Graphics, bmp);

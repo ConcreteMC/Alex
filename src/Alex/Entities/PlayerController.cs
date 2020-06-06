@@ -187,7 +187,7 @@ namespace Alex.Entities
 			    }
 		    }
 
-		    float modifier = Player.MovementSpeedModifier * 10f;
+		    float modifier = (Player.IsFlying ? (float)Player.FlyingSpeed : (float) Player.MovementSpeed) * 10f;
 
 			if (Player.IsInWater || (WasInWater && Player.AboveWater))
 			{
@@ -204,7 +204,7 @@ namespace Alex.Entities
 		    }
 
 		//	float speedFactor = (((float) Player.MovementSpeed) * modifier);
-		    float speedFactor = (Player.IsFlying ? (float)Player.FlyingSpeed : (float) Player.MovementSpeed) * modifier;
+		    float speedFactor = (float) (Player.BaseMovementSpeed * modifier);
 
 			if (InputManager.IsDown(InputCommand.MoveForwards))
 			{

@@ -189,6 +189,7 @@ namespace Alex.Blocks
 		    this.Register("minecraft:acacia_slab", () => new AcaciaSlab());
 		    this.Register("minecraft:dark_oak_slab", () => new DarkOakSlab());
 		    this.Register("minecraft:stone_slab", () => new StoneSlab());
+		    this.Register("minecraft:smooth_stone_slab", () => new StoneSlab());
 		    this.Register("minecraft:prismarine_slab", () => new PrismarineSlab());
 		    this.Register("minecraft:prismarine_bricks_slab", () => new PrismarineBricksSlab());
 		    this.Register("minecraft:dark_prismarine_slab", () => new DarkPrismarineSlab());

@@ -71,11 +71,10 @@ namespace Alex.Entities
 			//Inventory = new Inventory(46);
 			//Inventory.SelectedHotbarSlotChanged += SelectedHotbarSlotChanged;
 			//base.Inventory.IsPeInventory = true;
-			MovementSpeedModifier = 0.1f;
-			MovementSpeed = 4.306f;
+			MovementSpeed = 0.1f;
 			BaseMovementSpeed = 4.317;
-			FlyingSpeed = 10.89f;
-
+			FlyingSpeed = 0.5f; //10.89f;
+			
 			SnapHeadYawRotationOnMovement = false;
 			SnapYawRotationOnMovement = true;
 			DoRotationCalculations = false;

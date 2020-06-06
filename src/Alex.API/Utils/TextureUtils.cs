@@ -103,18 +103,25 @@ namespace Alex.API.Utils
 			ref Image<Rgba32> destBitmap,
 			System.Drawing.Rectangle destRegion)
 		{
-			using (var newImage = srcBitmap.Clone(x =>
+			try
 			{
-				x.Crop(new SixLabors.Primitives.Rectangle(srcRegion.X, srcRegion.Y, srcRegion.Width,
-					srcRegion.Height));
-			}))
-			{
-				var nwImage = newImage;
-				destBitmap.Mutate(context =>
+				using (var newImage = srcBitmap.Clone(x =>
 				{
-					context.DrawImage(nwImage, new Point(destRegion.Location.X, destRegion.Location.Y),
-						PixelColorBlendingMode.Normal, 1f);
-				});
+					x.Crop(new SixLabors.Primitives.Rectangle(srcRegion.X, srcRegion.Y, srcRegion.Width,
+						srcRegion.Height));
+				}))
+				{
+					var nwImage = newImage;
+					destBitmap.Mutate(context =>
+					{
+						context.DrawImage(nwImage, new Point(destRegion.Location.X, destRegion.Location.Y),
+							PixelColorBlendingMode.Normal, 1f);
+					});
+				}
+			}
+			catch (Exception ex)
+			{
+				
 			}
 		}
 	}

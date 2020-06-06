@@ -116,8 +116,7 @@ namespace Alex.Entities
 		//Drag & gravity etc is Vanilla * 400
 		
 		public float TerminalVelocity { get; set; } = 78.4f;
-
-		public float MovementSpeedModifier { get; set; } = 0.1f;
+		
 		public double BaseMovementSpeed { get; set; } = 3;
 		public double MovementSpeed { get; set; } = 0.1F;
 		public double FlyingSpeed { get; set; } = 0.4F;

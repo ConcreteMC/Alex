@@ -188,7 +188,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 			abilitiesPacket.Flags = (byte) flags;
 			abilitiesPacket.FlyingSpeed = (float) player.FlyingSpeed;
-			abilitiesPacket.WalkingSpeed = (float)player.MovementSpeedModifier;
+			abilitiesPacket.WalkingSpeed = (float)player.MovementSpeed;
 
 			SendPacket(abilitiesPacket);
 		}
@@ -224,19 +224,7 @@ namespace Alex.Worlds.Multiplayer.Java
 					var pos = (PlayerLocation)player.KnownPosition.Clone();
 					if (pos.DistanceTo(_lastSentLocation) > 0.0f)
 					{
-						PlayerPositionAndLookPacketServerBound packet = new PlayerPositionAndLookPacketServerBound();
-						packet.Yaw = pos.HeadYaw;
-						packet.Pitch = -pos.Pitch;
-						packet.X = pos.X;
-						packet.Y = pos.Y;
-						packet.Z = pos.Z;
-						packet.OnGround = pos.OnGround;
-
-						SendPacket(packet);
-						_lastSentLocation = pos;
-
-						_tickSinceLastPositionUpdate = 0;
-						
+						SendPlayerPostionAndLook(pos);
 						World.ChunkManager.FlagPrioritization();
 					}
 					else if (Math.Abs(pos.Pitch - _lastSentLocation.Pitch) > 0f || Math.Abs(pos.HeadYaw - _lastSentLocation.Yaw) > 0f)
@@ -277,6 +265,22 @@ namespace Alex.Worlds.Multiplayer.Java
 					World?.EntityManager?.Tick();
 				}
 			}
+		}
+
+		private void SendPlayerPostionAndLook(PlayerLocation pos)
+		{
+			PlayerPositionAndLookPacketServerBound packet = new PlayerPositionAndLookPacketServerBound();
+			packet.Yaw = pos.HeadYaw;
+			packet.Pitch = -pos.Pitch;
+			packet.X = pos.X;
+			packet.Y = pos.Y;
+			packet.Z = pos.Z;
+			packet.OnGround = pos.OnGround;
+
+			SendPacket(packet);
+			_lastSentLocation = pos;
+
+			_tickSinceLastPositionUpdate = 0;
 		}
 
 		private Vector3 _spawn = Vector3.Zero;
@@ -923,15 +927,17 @@ namespace Alex.Worlds.Multiplayer.Java
 			Respawning = true;
 			_dimension = packet.Dimension;
 			World.Player.UpdateGamemode(packet.Gamemode);
+			World.ChunkManager.ClearChunks();
+			SendPlayerPostionAndLook(World.Player.KnownPosition);
+			
 			//player.
 
 
-			new Thread(() =>
+			/*new Thread(() =>
 			{
 				LoadingWorldState state = new LoadingWorldState();
 				state.UpdateProgress(LoadingState.LoadingChunks, 0);
 				Alex.GameStateManager.SetActiveState(state, true);
-				World.ChunkManager.ClearChunks();
 
 				int t = Options.VideoOptions.RenderDistance;
 				double radiusSquared = Math.Pow(t, 2);
@@ -940,7 +946,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 				while (Respawning)
 				{
-					int chunkProgress = (int) Math.Floor((World.ChunkManager.ChunkCount / target) * 100);
+					int chunkProgress = (int) Math.Floor((target / 100) * World.ChunkManager.ChunkCount);
 					if (chunkProgress < 100)
 					{
 						state.UpdateProgress(LoadingState.LoadingChunks, chunkProgress);
@@ -952,7 +958,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				}
 
 				Alex.GameStateManager.Back();
-			}).Start();
+			}).Start();*/
 		}
 
 		private Item GetItemFromSlotData(SlotData data)
@@ -1436,43 +1442,58 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void HandleEntityPropertiesPacket(EntityPropertiesPacket packet)
 		{
-			if (packet.EntityId == 0 || packet.EntityId == World.Player.EntityId)
+			Entity target;
+			if (packet.EntityId == World.Player.EntityId)
 			{
-				foreach (var prop in packet.Properties.Values)
-				{
-					if (prop.Key.Equals("generic.movementSpeed", StringComparison.InvariantCultureIgnoreCase))
-					{
-						World.Player.MovementSpeedModifier = (float) prop.Value;
-					}
-					else if (prop.Key.Equals("generic.flyingSpeed", StringComparison.InvariantCultureIgnoreCase))
-					{
-						World.Player.FlyingSpeed = prop.Value;
-					}
+				target = World.Player;
+			}
+			else if (!World.EntityManager.TryGet(packet.EntityId, out target))
+			{
+				return;
+			}
 
-					//TODO: Modifier data
+			foreach (var prop in packet.Properties.Values)
+			{
+				switch (prop.Key)
+				{
+					case "generic.movementSpeed":
+						target.MovementSpeed = (float) prop.Value;
+						break;
+					case "generic.flyingSpeed":
+						target.FlyingSpeed = (float) prop.Value;
+						break;
+					case "generic.maxHealth":
+						target.HealthManager.MaxHealth = (float) prop.Value;
+						break;
 				}
+
+				//TODO: Modifier data
 			}
 		}
 
 		private void HandlePlayerAbilitiesPacket(PlayerAbilitiesPacket packet)
 		{
 			var flags = packet.Flags;
-			if (World?.Player is Player player)
-			{
-				player.CanFly = flags.IsBitSet(0x03);
-				player.Invulnerable = flags.IsBitSet(0x00);
+			var player = World.Player;
+			
+			player.FlyingSpeed = packet.FlyingSpeed;
+			player.FOVModifier = packet.FiedOfViewModifier;
+			//player.MovementSpeed = packet.WalkingSpeed;
 
-				if (flags.IsBitSet(0x01))
-				{
-					player.IsFlying = true;
-					_flying = true;
-				}
-				else
-				{
-					player.IsFlying = false;
-					_flying = false;
-				}
+			player.CanFly = flags.IsBitSet(0x04);
+			player.Invulnerable = flags.IsBitSet(0x01);
+
+			if (flags.IsBitSet(0x02))
+			{
+				player.IsFlying = true;
+				_flying = true;
 			}
+			else
+			{
+				player.IsFlying = false;
+				_flying = false;
+			}
+
 		}
 
 		private void HandleTimeUpdatePacket(TimeUpdatePacket packet)
@@ -1482,16 +1503,6 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void HandleChatMessagePacket(ChatMessagePacket packet)
 		{
-			/*try
-			{
-				var decodedChatComponent =
-					JsonConvert.DeserializeObject<BaseComponent>(packet.Message, new BaseComponentSerializer());
-			}
-			catch (Exception ex)
-			{
-				Log.Warn($"Failed to decode: " + ex);
-			}*/
-
 			if (ChatObject.TryParse(packet.Message, out ChatObject chat))
 			{
 				MessageType msgType = MessageType.Chat;
@@ -1626,19 +1637,6 @@ namespace Alex.Worlds.Multiplayer.Java
 		private void HandlePlayerPositionAndLookPacket(PlayerPositionAndLookPacket packet)
 		{
 			Respawning = false;
-
-			//_spawned = true;
-
-			/*	PlayerPositionAndLookPacketServerBound response = new PlayerPositionAndLookPacketServerBound();
-				response.OnGround = false;
-				response.Pitch = packet.Pitch;
-				response.Yaw = packet.Yaw;
-				response.X = packet.X;
-				response.Y = packet.Y;
-				response.Z = packet.Z;
-	
-				SendPacket(response);*/
-
 			var x = (float)packet.X;
 			var y = (float)packet.Y;
 			var z = (float)packet.Z;

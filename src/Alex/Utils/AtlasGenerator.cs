@@ -205,39 +205,80 @@ namespace Alex.Utils
 		    {
 			    var target = animatedFrame.CloneAs<Rgba32>(); //new Bitmap(animatedFrame);
 			    var r = new System.Drawing.Rectangle(0, 0, TextureWidth, TextureHeight);
-			    var destination = new System.Drawing.Rectangle((int) waterLocation.Position.X, (int) waterLocation.Position.Y, TextureWidth, TextureHeight);
 
-			    if (waterFrames.Length > 0)
-				    TextureUtils.CopyRegionIntoImage(waterFrames[((i % 3 == 0 ? i -1 : i) / 6) % waterFrames.Length], r, ref target, destination);
-				
-			    destination = new System.Drawing.Rectangle((int) waterFlowLocation.Position.X, (int) waterFlowLocation.Position.Y, TextureWidth, TextureHeight);
-			    if (waterFlowFrames.Length > 0)
-				    TextureUtils.CopyRegionIntoImage(waterFlowFrames[i % waterFlowFrames.Length], r, ref target, destination);
-				
-			    destination = new System.Drawing.Rectangle((int) lavaLocation.Position.X, (int) lavaLocation.Position.Y, TextureWidth, TextureHeight);
-			    if (lavaFrames.Length > 0)
-				    TextureUtils.CopyRegionIntoImage(lavaFrames[i % lavaFrames.Length], r, ref target, destination);
-				
-			    destination = new System.Drawing.Rectangle((int) lavaFlowLocation.Position.X, (int) lavaFlowLocation.Position.Y, TextureWidth, TextureHeight);
-			    if (lavaFlowFrames.Length > 0)
-				    TextureUtils.CopyRegionIntoImage(lavaFlowFrames[i % lavaFlowFrames.Length], r, ref target, destination);
-			    
-			    destination = new System.Drawing.Rectangle((int) fireLocation.Position.X, (int) fireLocation.Position.Y, TextureWidth, TextureHeight);
-			    if (fireFrames.Length > 0)
-				    TextureUtils.CopyRegionIntoImage(fireFrames[i % fireFrames.Length], r, ref target, destination);
-			    
-			    destination = new System.Drawing.Rectangle((int) fireLocation2.Position.X, (int) fireLocation2.Position.Y, TextureWidth, TextureHeight);
-			    if (fireFrames2.Length > 0)
-				    TextureUtils.CopyRegionIntoImage(fireFrames2[i % fireFrames2.Length], r, ref target, destination);
-			    
-			    destination = new System.Drawing.Rectangle((int) portalLocation.Position.X, (int) portalLocation.Position.Y, TextureWidth, TextureHeight);
-			    if (portalFrames.Length > 0)
-				    TextureUtils.CopyRegionIntoImage(portalFrames[i % portalFrames.Length], r, ref target, destination);
-			    
-			    destination = new System.Drawing.Rectangle((int) seagrassLocation.Position.X, (int) seagrassLocation.Position.Y, TextureWidth, TextureHeight);
-			    if (seagrassFrames.Length > 0)
-				    TextureUtils.CopyRegionIntoImage(seagrassFrames[i % seagrassFrames.Length], r, ref target, destination);
-				
+			    System.Drawing.Rectangle destination;
+			    if (waterLocation != null)
+			    {
+				    destination = new System.Drawing.Rectangle((int) waterLocation.Position.X,
+					    (int) waterLocation.Position.Y, TextureWidth, TextureHeight);
+
+				    if (waterFrames.Length > 0)
+					    TextureUtils.CopyRegionIntoImage(
+						    waterFrames[((i % 3 == 0 ? i - 1 : i) / 6) % waterFrames.Length], r, ref target,
+						    destination);
+			    }
+
+			    if (waterFlowLocation != null)
+			    {
+				    destination = new System.Drawing.Rectangle((int) waterFlowLocation.Position.X,
+					    (int) waterFlowLocation.Position.Y, TextureWidth, TextureHeight);
+				    if (waterFlowFrames.Length > 0)
+					    TextureUtils.CopyRegionIntoImage(waterFlowFrames[i % waterFlowFrames.Length], r, ref target,
+						    destination);
+			    }
+
+			    if (lavaLocation != null)
+			    {
+				    destination = new System.Drawing.Rectangle((int) lavaLocation.Position.X,
+					    (int) lavaLocation.Position.Y, TextureWidth, TextureHeight);
+				    if (lavaFrames.Length > 0)
+					    TextureUtils.CopyRegionIntoImage(lavaFrames[i % lavaFrames.Length], r, ref target, destination);
+			    }
+
+			    if (lavaFlowLocation != null)
+			    {
+				    destination = new System.Drawing.Rectangle((int) lavaFlowLocation.Position.X,
+					    (int) lavaFlowLocation.Position.Y, TextureWidth, TextureHeight);
+				    if (lavaFlowFrames.Length > 0)
+					    TextureUtils.CopyRegionIntoImage(lavaFlowFrames[i % lavaFlowFrames.Length], r, ref target,
+						    destination);
+			    }
+
+			    if (fireLocation != null)
+			    {
+				    destination = new System.Drawing.Rectangle((int) fireLocation.Position.X,
+					    (int) fireLocation.Position.Y, TextureWidth, TextureHeight);
+				    if (fireFrames.Length > 0)
+					    TextureUtils.CopyRegionIntoImage(fireFrames[i % fireFrames.Length], r, ref target, destination);
+			    }
+
+			    if (fireLocation2 != null)
+			    {
+				    destination = new System.Drawing.Rectangle((int) fireLocation2.Position.X,
+					    (int) fireLocation2.Position.Y, TextureWidth, TextureHeight);
+				    if (fireFrames2.Length > 0)
+					    TextureUtils.CopyRegionIntoImage(fireFrames2[i % fireFrames2.Length], r, ref target,
+						    destination);
+			    }
+
+			    if (portalLocation != null)
+			    {
+				    destination = new System.Drawing.Rectangle((int) portalLocation.Position.X,
+					    (int) portalLocation.Position.Y, TextureWidth, TextureHeight);
+				    if (portalFrames.Length > 0)
+					    TextureUtils.CopyRegionIntoImage(portalFrames[i % portalFrames.Length], r, ref target,
+						    destination);
+			    }
+
+			    if (seagrassLocation != null)
+			    {
+				    destination = new System.Drawing.Rectangle((int) seagrassLocation.Position.X,
+					    (int) seagrassLocation.Position.Y, TextureWidth, TextureHeight);
+				    if (seagrassFrames.Length > 0)
+					    TextureUtils.CopyRegionIntoImage(seagrassFrames[i % seagrassFrames.Length], r, ref target,
+						    destination);
+			    }
+
 			    frames[i] = TextureUtils.BitmapToTexture2D(device, target, out var s);
 			    totalSize += s;
 			    

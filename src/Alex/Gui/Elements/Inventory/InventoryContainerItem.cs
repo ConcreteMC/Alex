@@ -87,19 +87,10 @@ namespace Alex.Gui.Elements.Inventory
                 
                 GuiItem.Item = _item;
                 
-                if (_item == null || _item is ItemAir || _item.Count == 0)
+                if (_item == null || _item is ItemAir || _item.Count == 0 || _item.Id <= 0)
                 {
                  //   TextureElement.IsVisible = false;
                     ShowCount = false;
-                    return;
-                }
-
-                
-                if (string.IsNullOrWhiteSpace(value?.Name))
-                {
-                    // if (!ItemFactory.TryGetItem())
-                    Log.Warn($"Item name is null or whitespace!");
-
                     return;
                 }
 
