@@ -34,7 +34,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			packet.EntityId = entityId;
 			packet.Action = action;
 			packet.JumpBoost = 0;
-			Client.SendPacket(packet);
+			//Client.SendPacket(packet);
 		}
 
 		/// <inheritdoc />

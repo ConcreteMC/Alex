@@ -8,6 +8,8 @@ namespace Alex.Networking.Java.Packets.Play
 	    public EntityActionPacket()
 	    {
 		    PacketId = 0x1B;
+		    
+		    Category = PacketCategory.EntityMovement;
 	    }
 
 	    public int EntityId;

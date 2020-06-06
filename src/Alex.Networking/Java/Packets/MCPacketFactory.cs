@@ -265,12 +265,12 @@ namespace Alex.Networking.Java.Packets
 			Register(Direction.ClientBound, ConnectionState.Play, 0x2A, () => new EntityLookAndRelativeMove());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x2B, () => new EntityLook());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x3C, () => new EntityHeadLook());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x41, () => new EntityMetadataPacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x44, () => new EntityMetadataPacket());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x46, () => new EntityVelocity());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x59, () => new EntityPropertiesPacket());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x57, () => new EntityTeleport());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x35, () => new DestroyEntitiesPacket());
-			Register(Direction.ClientBound, ConnectionState.Play, 0x16, () => new WindowItems());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x38, () => new DestroyEntitiesPacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x15, () => new WindowItems());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x17, () => new SetSlot());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x1C, () => new EntityStatusPacket());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x0C, () => new BlockChangePacket());
@@ -291,6 +291,9 @@ namespace Alex.Networking.Java.Packets
 			Register(Direction.ClientBound, ConnectionState.Play, 0x2F, () => new OpenWindowPacket());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x13, () => new WindowConfirmationPacket());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x14, () => new CloseWindowPacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x03, () => new SpawnLivingEntity());
+			Register(Direction.ClientBound,ConnectionState.Play, 0x00, () => new SpawnEntity());
+			
 			/*var deserial = JsonConvert.DeserializeObject<Dictionary<string, string>>(Resources.PlayPacketID);
 			foreach (var d in deserial)
 			{

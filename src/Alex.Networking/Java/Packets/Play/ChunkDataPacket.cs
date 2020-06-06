@@ -18,6 +18,7 @@ namespace Alex.Networking.Java.Packets.Play
 		{
 			PacketId = 0x22;
 			TileEntities = new List<NbtCompound>();
+			Log = true;
 			//HeightMaps = new NbtCompound();
 		}
 
@@ -45,6 +46,7 @@ namespace Alex.Networking.Java.Packets.Play
 			stream.Read(Buffer, 0, Buffer.Length);
 
 			int tileEntities = stream.ReadVarInt();
+			return;
 			for (int k = 0; k < tileEntities; k++)
 			{
 				TileEntities.Add(stream.ReadNbtCompound());

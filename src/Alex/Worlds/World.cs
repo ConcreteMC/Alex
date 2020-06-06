@@ -916,14 +916,6 @@ namespace Alex.Worlds
 			EntityManager.UnloadEntities(coordinates);
 		}
 
-		public void SpawnEntity(long entityId, IEntity entity)
-		{
-			if (EntityManager.AddEntity(entityId, (Entity) entity))
-			{
-				PhysicsEngine.AddTickable((Entity) entity);
-			}
-		}
-
 		public bool SpawnEntity(long entityId, Entity entity)
 		{
 			if (EntityManager.AddEntity(entityId, entity))

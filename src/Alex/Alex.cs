@@ -616,7 +616,7 @@ namespace Alex
 				else
 				{
 					ServerType = ServerType.Java;
-					provider = new JavaWorldProvider(this, serverEndPoint, profile,
+					provider = new JavaWorldProvider(this, serverEndPoint, profile, NetworkThreadPool,
 						out networkProvider)
 					{
 						Hostname = hostname

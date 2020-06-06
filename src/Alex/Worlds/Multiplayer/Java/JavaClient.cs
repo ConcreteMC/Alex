@@ -2,6 +2,7 @@
 using System.Net.Sockets;
 using Alex.Networking.Java;
 using Alex.Networking.Java.Packets;
+using MiNET.Utils;
 using NLog;
 using ConnectionState = Alex.Networking.Java.ConnectionState;
 using Packet = Alex.Networking.Java.Packets.Packet;
@@ -13,10 +14,11 @@ namespace Alex.Worlds.Multiplayer.Java
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(JavaClient));
 
 		private IJavaProvider WorldReceiver { get; }
-		public JavaClient(JavaWorldProvider javaWorldProvider, Socket socket) : base(Direction.ClientBound, socket, null, null)
+		private JavaWorldProvider JavaWorld { get; }
+		public JavaClient(JavaWorldProvider javaWorldProvider, Socket socket, DedicatedThreadPool networkPool) : base(Direction.ClientBound, socket, null, networkPool)
 		{
 			MCPacketFactory.Load();
-
+			JavaWorld = javaWorldProvider;
 			WorldReceiver = javaWorldProvider;
 		}
 
@@ -41,6 +43,18 @@ namespace Alex.Worlds.Multiplayer.Java
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
+		}
+
+		protected override bool ShouldAddToProcessing(Packet packet)
+		{
+			return true;
+			if (JavaWorld.Spawned)
+				return true;
+
+			if (packet.Category == PacketCategory.EntityMovement)
+				return false;
+			
+			return base.ShouldAddToProcessing(packet);
 		}
 	}
 }

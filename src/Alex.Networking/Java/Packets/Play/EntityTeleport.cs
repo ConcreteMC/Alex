@@ -4,6 +4,11 @@ namespace Alex.Networking.Java.Packets.Play
 {
     public class EntityTeleport : Packet<EntityTeleport>
     {
+	    public EntityTeleport()
+	    {
+		    //Category = PacketCategory.EntityMovement;
+	    }
+	    
 	    public int EntityID;
 	    public double X, Y, Z;
 	    public sbyte Yaw, Pitch;

@@ -30,17 +30,25 @@ namespace Alex.Networking.Java.Packets.Play
 		    EmptyBlockLightMask = stream.ReadVarInt();
 
 		  //  List<byte[]> skyLightList = new List<byte[]>();
-			SkyLightArrays = new byte[18][];
-		    for(int i = 0; i < 18; i++)
+			SkyLightArrays = new byte[16][];
+		    for(int i = 0; i < SkyLightArrays.Length + 1; i++)
 		    {
-			    if (((SkyLightMask & 1) == 1) /*&& ((EmptySkyLightMask & 1) == 0)*/)
+			    if (((SkyLightMask & 1) != 0) /*&& ((EmptySkyLightMask & 1) == 0)*/)
 			    {
+				    stream.ReadVarInt();
 					byte[] data = stream.Read(2048);
-				    SkyLightArrays[i] = data;
+
+					if (i != 0)
+					{
+						SkyLightArrays[i - 1] = data;
+					}
 			    }
 			    else
 			    {
-				    SkyLightArrays[i] = null;
+				    if (i != 0)
+				    {
+					    SkyLightArrays[i - 1] = null;
+				    }
 			    }
 
 			    SkyLightMask = SkyLightMask >> 1;
@@ -49,17 +57,25 @@ namespace Alex.Networking.Java.Packets.Play
             //SkyLightArrays = skyLightList.ToArray();
 
             // List<byte[]> blockLightList = new List<byte[]>();
-		    BlockLightArrays = new byte[18][];
-            for (int i = 0; i < 18; i++)
+		    BlockLightArrays = new byte[16][];
+            for (int i = 0; i < BlockLightArrays.Length + 1; i++)
 		    {
-			    if (((BlockLightMask & 1) == 1) /*&& ((EmptyBlockLightMask & 1) == 0)*/)
+			    if (((BlockLightMask & 1) != 0) /*&& ((EmptyBlockLightMask & 1) == 0)*/)
 			    {
+				    stream.ReadVarInt();
 				    byte[] data = stream.Read(2048);
-				    BlockLightArrays[i] = data;
+
+				    if (i != 0)
+				    {
+					    BlockLightArrays[i - 1] = data;
+				    }
 			    }
 			    else
 			    {
-				    BlockLightArrays[i] = null;
+				    if (i != 0)
+				    {
+					    BlockLightArrays[i - 1] = null;
+				    }
 			    }
 
                 BlockLightMask = BlockLightMask >> 1;

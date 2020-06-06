@@ -72,6 +72,14 @@ namespace Alex.Worlds
 		{
 			return Containers.TryGetValue(containerId, out container);
 		}
+
+		public void Close(int containerId)
+		{
+			if (Containers.TryRemove(containerId, out var container))
+			{
+				GuiManager.HideDialog(container);
+			}
+		}
 	}
 
 	public enum ContainerType : byte

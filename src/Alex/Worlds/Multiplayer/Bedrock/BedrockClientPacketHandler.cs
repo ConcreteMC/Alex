@@ -704,6 +704,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				ItemEntity itemEntity = new ItemEntity(null, Client);
 				itemEntity.EntityId = message.runtimeEntityId;
 				itemEntity.Velocity = new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ) * 20f;
+				itemEntity.KnownPosition = new PlayerLocation(message.x, message.y, message.z);
 				
 				itemEntity.SetItem(itemClone);
 

@@ -22,8 +22,8 @@ namespace Alex.Networking.Java.Packets.Play
 				byte horizontalPos = (byte)stream.ReadByte();
 
 				BlockUpdate update = new BlockUpdate();
-				update.RelativeX = (byte)(horizontalPos >> 4 & 15);
-				update.RelativeZ = (byte)(horizontalPos & 15);
+				update.X = (horizontalPos >> 4 & 15) + (ChunkX * 16);
+				update.Z = (horizontalPos & 15) + (ChunkZ * 16);
 				update.Y = (byte)stream.ReadByte();
 				update.BlockId = stream.ReadVarInt();
 
@@ -38,9 +38,9 @@ namespace Alex.Networking.Java.Packets.Play
 
 	    public class BlockUpdate
 	    {
-		    public byte RelativeX;
-		    public byte RelativeZ;
-		    public byte Y;
+		    public int X;
+		    public int Y;
+		    public int Z;
 
 			public int BlockId;
 	    }

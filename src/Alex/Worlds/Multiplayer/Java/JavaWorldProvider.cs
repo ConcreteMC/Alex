@@ -39,13 +39,19 @@ using Alex.Worlds.Abstraction;
 using Alex.Worlds.Chunks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
+using MiNET;
 using MiNET.Utils;
 using Newtonsoft.Json;
 using NLog;
+using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
+using ConnectionState = Alex.Networking.Java.ConnectionState;
 using LevelInfo = Alex.API.World.LevelInfo;
+using MetadataByte = Alex.Networking.Java.Packets.Play.MetadataByte;
+using MetadataSlot = Alex.Networking.Java.Packets.Play.MetadataSlot;
 using NibbleArray = Alex.API.Utils.NibbleArray;
 using Packet = Alex.Networking.Java.Packets.Packet;
+using Player = Alex.Entities.Player;
 using PlayerLocation = Alex.API.Utils.PlayerLocation;
 using UUID = Alex.API.Utils.UUID;
 
@@ -74,12 +80,12 @@ namespace Alex.Worlds.Multiplayer.Java
 		private TcpClient TcpClient;
 
 		private System.Threading.Timer _gameTickTimer;
-		private DedicatedThreadPool ThreadPool;
+		//private DedicatedThreadPool ThreadPool;
 		private IEventDispatcher EventDispatcher { get; }
 		public string Hostname { get; set; }
 		
 		private JavaNetworkProvider NetworkProvider { get; }
-		public JavaWorldProvider(Alex alex, IPEndPoint endPoint, PlayerProfile profile, out NetworkProvider networkProvider)
+		public JavaWorldProvider(Alex alex, IPEndPoint endPoint, PlayerProfile profile, DedicatedThreadPool networkPool, out NetworkProvider networkProvider)
 		{
 			Alex = alex;
 			Profile = profile;
@@ -88,16 +94,18 @@ namespace Alex.Worlds.Multiplayer.Java
 			OptionsProvider = alex.Services.GetRequiredService<IOptionsProvider>();
 			EventDispatcher = alex.Services.GetRequiredService<IEventDispatcher>();
 			
-			ThreadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount));
+		//	ThreadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount));
 
 			TcpClient = new TcpClient();
-			Client = new JavaClient(this, TcpClient.Client);
+			Client = new JavaClient(this, TcpClient.Client, networkPool);
 			Client.OnConnectionClosed += OnConnectionClosed;
 			
 			NetworkProvider = new JavaNetworkProvider(Client);;
 			networkProvider = NetworkProvider;
 			
 			EventDispatcher.RegisterEvents(this);
+
+			ViewDistance = OptionsProvider.AlexOptions.VideoOptions.RenderDistance.Value;
 		}
 
 		private bool _disconnected = false;
@@ -120,6 +128,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			_loginCompleteEvent.Set();
 		}
 
+		private bool _disconnectShown = false;
 		public void ShowDisconnect(string reason, bool useTranslation = false)
 		{
 			if (Alex.GameStateManager.GetActiveState() is DisconnectedScreen s)
@@ -135,6 +144,11 @@ namespace Alex.Worlds.Multiplayer.Java
 
 				return;
 			}
+
+			if (_disconnectShown)
+				return;
+			
+			_disconnectShown = true;
 
 			s = new DisconnectedScreen();
 			if (useTranslation)
@@ -182,22 +196,29 @@ namespace Alex.Worlds.Multiplayer.Java
 		private object _entityTicks = new object();
 		private bool _isSneaking = false;
 		private bool _isSprinting = false;
+		private bool _isRealTick = false;
 		private void GameTick(object state)
 		{
 			if (World == null) return;
 
+			var isTick = _isRealTick;
+			_isRealTick = !isTick;
+			
 			if (_initiated)
 			{
-				var p = World.Player;
-				if (p != null && p is Player player && Spawned && !Respawning)
+				var player = World.Player;
+				if (player != null && Spawned && !Respawning)
 				{
 					player.IsSpawned = Spawned;
 
-					if (player.IsFlying != _flying)
+					if (isTick)
 					{
-						_flying = player.IsFlying;
+						if (player.IsFlying != _flying)
+						{
+							_flying = player.IsFlying;
 
-						SendPlayerAbilities(player);
+							SendPlayerAbilities(player);
+						}
 					}
 
 					var pos = (PlayerLocation)player.KnownPosition.Clone();
@@ -249,8 +270,12 @@ namespace Alex.Worlds.Multiplayer.Java
 						_tickSinceLastPositionUpdate++;
 					}
 				}
-				
-				p?.OnTick();
+
+				if (isTick)
+				{
+					player?.OnTick();
+					World?.EntityManager?.Tick();
+				}
 			}
 		}
 
@@ -266,9 +291,9 @@ namespace Alex.Worlds.Multiplayer.Java
 
 			_initiated = true;
 
-			World?.UpdatePlayerPosition(_lastReceivedLocation);
+		//	World?.UpdatePlayerPosition(_lastReceivedLocation);
 
-			_gameTickTimer = new System.Threading.Timer(GameTick, null, 50, 50);
+			_gameTickTimer = new System.Threading.Timer(GameTick, null, 50, 25);
 		}
 
 		[EventHandler(EventPriority.Highest)]
@@ -295,6 +320,7 @@ namespace Alex.Worlds.Multiplayer.Java
 		private bool _initiated = false;
 		private BlockingCollection<ChunkColumn> _generatingHelper = new BlockingCollection<ChunkColumn>();
 		private int _chunksReceived = 0;
+		private int ViewDistance { get; set; } = 6;
 		public override Task Load(ProgressReport progressReport)
 		{
 			return Task.Run(() =>
@@ -314,10 +340,11 @@ namespace Alex.Worlds.Multiplayer.Java
 
 				progressReport(LoadingState.LoadingChunks, 0);
 
-				int t = Options.VideoOptions.RenderDistance;
+				int t = ViewDistance;
 				//double radiusSquared = Math.Pow(t, 2);
 
-				var target = t * 3d;
+				double radiusSquared = Math.Pow(t, 2);
+				var target = radiusSquared;
 				bool allowSpawn = false;
 				
                 int loaded = 0;
@@ -326,9 +353,9 @@ namespace Alex.Worlds.Multiplayer.Java
 					var playerChunkCoords = new ChunkCoordinates(World.Player.KnownPosition);
 					if (_chunksReceived < target)
 					{
-						progressReport(LoadingState.LoadingChunks, (int)Math.Floor((_chunksReceived / target) * 100d));
+						progressReport(LoadingState.LoadingChunks, (int)Math.Floor((100 / target) * _chunksReceived));
                     }
-					else if (loaded < _chunksReceived)
+					else if (loaded < target || !allowSpawn)
 					{
 						if (_generatingHelper.TryTake(out ChunkColumn chunkColumn, 50))
 						{
@@ -350,14 +377,15 @@ namespace Alex.Worlds.Multiplayer.Java
 							loaded++;
 						}
 
-						progressReport(LoadingState.GeneratingVertices, (loaded / _chunksReceived) * 100);
+						progressReport(LoadingState.GeneratingVertices, (int)Math.Floor((100 / target) * loaded));
                     }
                     else
 					{
+						hasDoneInitialChunks = true;
 						progressReport(LoadingState.Spawning, 99);
                     }
 					
-                    return (loaded >= target && allowSpawn && _generatingHelper.Count == 0) || _disconnected; // Spawned || _disconnected;
+                    return (loaded >= target && allowSpawn && hasDoneInitialChunks) || _disconnected; // Spawned || _disconnected;
 
 				});
 
@@ -366,14 +394,34 @@ namespace Alex.Worlds.Multiplayer.Java
 				{
 					ClosedContainer(0);
 				};
-				hasDoneInitialChunks = true;
 			});
 		}
 
 		private Queue<Entity> _entitySpawnQueue = new Queue<Entity>();
 
-		public void SpawnMob(int entityId, Guid uuid, EntityType type, PlayerLocation position, Vector3 velocity)
+		public Entity SpawnMob(int entityId, Guid uuid, EntityType type, PlayerLocation position, Vector3 velocity)
 		{
+			if ((int) type == 35) //Item
+			{
+				ItemEntity itemEntity = new ItemEntity(null, NetworkProvider);
+				itemEntity.EntityId = entityId;
+				itemEntity.Velocity = velocity;
+				itemEntity.KnownPosition = position;
+				
+				//itemEntity.SetItem(itemClone);
+
+				if (World.SpawnEntity(entityId, itemEntity))
+				{
+					return itemEntity;
+				}
+				else
+				{
+					Log.Warn($"Could not spawn in item entity, an entity with this entity id already exists! (Runtime: {entityId})");
+				}
+				
+				return null;
+			}
+			
 			Entity entity = null;
 			if (EntityFactory.ModelByNetworkId((long) type, out var renderer, out EntityData knownData))
 			{
@@ -404,7 +452,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			if (entity == null)
 			{
 				Log.Warn($"Could not create entity of type: {(int) type}:{type.ToString()}");
-				return;
+				return null;
 			}
 
 			if (renderer == null)
@@ -438,13 +486,13 @@ namespace Alex.Worlds.Multiplayer.Java
 			if (renderer == null)
 			{
 				Log.Debug($"Missing renderer for entity: {type.ToString()} ({(int) type})");
-				return;
+				return null;
 			}
 
 			if (renderer.Texture == null)
 			{
 				Log.Debug($"Missing texture for entity: {type.ToString()} ({(int) type})");
-				return;
+				return null;
 			}
 
 			entity.ModelRenderer = renderer;
@@ -460,21 +508,10 @@ namespace Alex.Worlds.Multiplayer.Java
 			}
 			else
 			{
-				base.SpawnEntity(entityId, entity);
+				World.SpawnEntity(entityId, entity);
 			}
-		}
 
-		private PlayerLocation _lastReceivedLocation = new PlayerLocation();
-		public void UpdatePlayerPosition(PlayerLocation location)
-		{
-			_lastReceivedLocation = location;
-
-			if (_spawn == Vector3.Zero)
-			{
-				_spawn = location;
-			}
-			
-			World?.UpdatePlayerPosition(location);
+			return entity;
 		}
 
 		public void UpdateEntityPosition(long entityId, PlayerLocation location, bool relative)
@@ -538,9 +575,13 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 				HandleEntityTeleport(teleport);
 			}
-			else if (packet is SpawnMob spawnMob)
+			else if (packet is SpawnLivingEntity spawnMob)
 			{
 				HandleSpawnMob(spawnMob);
+			}
+			else if (packet is SpawnEntity spawnEntity)
+			{
+				HandleSpawnEntity(spawnEntity);
 			}
 			else if (packet is EntityLook look)
 			{
@@ -641,6 +682,10 @@ namespace Alex.Worlds.Multiplayer.Java
 			else if (packet is OpenWindowPacket openWindowPacket)
 			{
 				HandleOpenWindowPacket(openWindowPacket);
+			}
+			else if (packet is CloseWindowPacket closeWindowPacket)
+			{
+				HandleCloseWindowPacket(closeWindowPacket);
 			}
 			else if (packet is WindowConfirmationPacket confirmationPacket)
 			{
@@ -763,6 +808,11 @@ namespace Alex.Worlds.Multiplayer.Java
 			}
 		}
 
+		private void HandleCloseWindowPacket(CloseWindowPacket packet)
+		{
+			World.InventoryManager.Close(packet.WindowId);
+		}
+		
 		private void HandleOpenWindowPacket(OpenWindowPacket packet)
 		{
 			GuiInventoryBase inventoryBase = null;
@@ -914,6 +964,8 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 				if (ItemFactory.TryGetItem(name, out Item item))
 				{
+					item = item.Clone();
+					
 					item.Id = (short) data.ItemID;
 					item.Count = data.Count;
 					item.Nbt = data.Nbt;
@@ -967,6 +1019,46 @@ namespace Alex.Worlds.Multiplayer.Java
 		private void HandleEntityMetadataPacket(EntityMetadataPacket packet)
 		{
 			//TODO: Handle entity metadata
+			if (World.TryGetEntity(packet.EntityId, out var entity))
+			{
+				packet.FinishReading();
+				foreach (var entry in packet.Entries)
+				{
+					if (entry.Index == 0 && entry is MetadataByte flags)
+					{
+						entity.IsSneaking = flags.Value.IsBitSet(0x02);
+						entity.IsInvisible = flags.Value.IsBitSet(0x20);
+					}
+					else if (entry.Index == 2 && entry is MetadataOptChat customName)
+					{
+						if (customName.HasValue)
+						{
+							entity.NameTag = customName.Value.RawMessage;
+						}
+					}
+					else if (entry.Index == 3 && entry is MetadataBool showNametag)
+					{
+						if (!(entity is PlayerMob))
+						{
+							entity.HideNameTag = !showNametag.Value;
+						}
+					}
+					else if (entry.Index == 5 && entry is MetadataBool noGravity)
+					{
+						entity.IsAffectedByGravity = !noGravity.Value;
+					}
+					else if (entry.Index == 7 && entity is ItemEntity itemEntity && entry is MetadataSlot slot)
+					{
+						var item = GetItemFromSlotData(slot.Value);
+						if (item != null)
+						{
+							itemEntity.SetItem(item);
+						}
+					}
+				}
+
+				//entity.IsSneaking = ((packet. & 0x200) == 0x200);
+			}
 		}
 
 		private void HandleEntityStatusPacket(EntityStatusPacket packet)
@@ -1027,12 +1119,9 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void HandleMultiBlockChange(MultiBlockChange packet)
 		{
-			//throw new NotImplementedException();
-			int cx = packet.ChunkX * 16;
-			int cz = packet.ChunkZ * 16;
 			foreach (var blockUpdate in packet.Records)
 			{
-				//WorldReceiver?.SetBlockState(new BlockCoordinates(blockUpdate.RelativeX + cx, blockUpdate.Y, blockUpdate.RelativeZ + cz), BlockFactory.GetBlockState(blockUpdate.BlockId));
+				World?.SetBlockState(new BlockCoordinates(blockUpdate.X, blockUpdate.Y, blockUpdate.Z), BlockFactory.GetBlockState((uint) blockUpdate.BlockId));
 			}
 		}
 
@@ -1124,7 +1213,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void HandleDestroyEntitiesPacket(DestroyEntitiesPacket packet)
 		{
-			foreach(var id in packet.Entitys)
+			foreach(var id in packet.EntityIds)
 			{
 				var p = _players.ToArray().FirstOrDefault(x => x.Value.EntityId == id);
 				if (p.Key != null)
@@ -1132,7 +1221,7 @@ namespace Alex.Worlds.Multiplayer.Java
 					_players.TryRemove(p.Key, out _);
 				}
 
-				base.DespawnEntity(id);
+				World.DespawnEntity(id);
 			}
 		}
 
@@ -1145,7 +1234,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				mob.EntityId = packet.EntityId;
 				mob.IsSpawned = true;
 
-				base.SpawnEntity(packet.EntityId, mob);
+				World.SpawnEntity(packet.EntityId, mob);
 			}
 		}
 
@@ -1264,6 +1353,9 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void HandleEntityLookAndRelativeMove(EntityLookAndRelativeMove packet)
 		{
+			if (packet.EntityId == World.Player.EntityId)
+				return;
+			
 			var yaw = MathUtils.AngleToNotchianDegree(packet.Yaw);
 			World.UpdateEntityPosition(packet.EntityId, new PlayerLocation(MathUtils.FromFixedPoint(packet.DeltaX),
 				MathUtils.FromFixedPoint(packet.DeltaY),
@@ -1278,6 +1370,9 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void HandleEntityRelativeMove(EntityRelativeMove packet)
 		{
+			if (packet.EntityId == World.Player.EntityId)
+				return;
+			
 			World.UpdateEntityPosition(packet.EntityId, new PlayerLocation(MathUtils.FromFixedPoint(packet.DeltaX), MathUtils.FromFixedPoint(packet.DeltaY), MathUtils.FromFixedPoint(packet.DeltaZ))
 			{
 				OnGround = packet.OnGround
@@ -1286,6 +1381,9 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void HandleEntityHeadLook(EntityHeadLook packet)
 		{
+			if (packet.EntityId == World.Player.EntityId)
+				return;
+			
 			if (World.TryGetEntity(packet.EntityId, out var entity))
 			{
 				entity.KnownPosition.HeadYaw = MathUtils.AngleToNotchianDegree(packet.HeadYaw);
@@ -1295,11 +1393,17 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void HandleEntityLook(EntityLook packet)
 		{
+			if (packet.EntityId == World.Player.EntityId)
+				return;
+			
 			World.UpdateEntityLook(packet.EntityId, MathUtils.AngleToNotchianDegree(packet.Yaw), MathUtils.AngleToNotchianDegree(packet.Pitch), packet.OnGround);
 		}
 
 		private void HandleEntityTeleport(EntityTeleport packet)
 		{
+			if (packet.EntityID == World.Player.EntityId)
+				return;
+			
 			float yaw = MathUtils.AngleToNotchianDegree(packet.Yaw);
 			World.UpdateEntityPosition(packet.EntityID, new PlayerLocation(packet.X, packet.Y, packet.Z, yaw, yaw, MathUtils.AngleToNotchianDegree(packet.Pitch))
 			{
@@ -1393,7 +1497,20 @@ namespace Alex.Worlds.Multiplayer.Java
 
 			if (ChatObject.TryParse(packet.Message, out ChatObject chat))
 			{
-				EventDispatcher.DispatchEvent(new ChatMessageReceivedEvent(chat));
+				MessageType msgType = MessageType.Chat;
+				switch (packet.Position)
+				{
+					case 0:
+						msgType = MessageType.Chat;
+						break;
+					case 1:
+						msgType = MessageType.System;
+						break;
+					case 2:
+						msgType = MessageType.Popup;
+						break;
+				}
+				EventDispatcher.DispatchEvent(new ChatMessageReceivedEvent(chat, msgType));
 			}
 			else
 			{
@@ -1403,7 +1520,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void HandleUnloadChunk(UnloadChunk packet)
 		{
-			EventDispatcher.DispatchEvent(new ChunkUnloadEvent(new ChunkCoordinates(packet.X, packet.Z)));
+			World.UnloadChunk(new ChunkCoordinates(packet.X, packet.Z));
 		}
 
 		private int _entityId = -1;
@@ -1415,7 +1532,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			ClientSettingsPacket settings = new ClientSettingsPacket();
 			settings.ChatColors = true;
 			settings.ChatMode = 0;
-			settings.ViewDistance = (byte)Options.VideoOptions.RenderDistance;
+			settings.ViewDistance = (byte)ViewDistance;
 			settings.SkinParts = 255;
 			settings.MainHand = 1;
 			settings.Locale = "en_US";
@@ -1468,7 +1585,9 @@ namespace Alex.Worlds.Multiplayer.Java
 		{
 			_loginCompleteEvent?.Set();
 			//_chunkQueue.Add(chunk);
-			ThreadPool.QueueUserWorkItem(() =>
+		//	ThreadPool.QueueUserWorkItem(() =>
+		using (var memoryStream = NetConnection.StreamManager.GetStream("Chunk Stream {0}", chunk.Buffer, 0, chunk.Buffer.Length))
+			using (var stream = new MinecraftStream(memoryStream))
 			{
 				ChunkColumn result = null;// = new ChunkColumn();
 				if (chunk.GroundUp)
@@ -1491,7 +1610,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				result.Z = chunk.ChunkZ;
 				result.IsDirty = true;
 				
-				result.Read(new MinecraftStream(new MemoryStream(chunk.Buffer)), chunk.PrimaryBitmask, chunk.GroundUp, _dimension == 0);
+				result.Read(stream, chunk.PrimaryBitmask, chunk.GroundUp, _dimension == 0);
 				result.SkyLightDirty = true;
 				result.BlockLightDirty = true;
 				
@@ -1503,7 +1622,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				}
 
 				World.ChunkManager.AddChunk(result, new ChunkCoordinates(result.X ,result.Z), true);
-			});
+			}//);
 		}
 
 		private void HandleKeepAlivePacket(KeepAlivePacket packet)
@@ -1520,22 +1639,56 @@ namespace Alex.Worlds.Multiplayer.Java
 			Respawning = false;
 
 			//_spawned = true;
+
+			/*	PlayerPositionAndLookPacketServerBound response = new PlayerPositionAndLookPacketServerBound();
+				response.OnGround = false;
+				response.Pitch = packet.Pitch;
+				response.Yaw = packet.Yaw;
+				response.X = packet.X;
+				response.Y = packet.Y;
+				response.Z = packet.Z;
+	
+				SendPacket(response);*/
+
+			var x = (float)packet.X;
+			var y = (float)packet.Y;
+			var z = (float)packet.Z;
+
+			var yaw = packet.Yaw;
+			var pitch = packet.Pitch;
+			
+			var flags = packet.Flags;
+			if (flags.IsBitSet(0x01))
+			{
+				x = World.Player.KnownPosition.X + x;
+			}
+			
+			if (flags.IsBitSet(0x02))
+			{
+				y = World.Player.KnownPosition.Y + y;
+			}
+			
+			if (flags.IsBitSet(0x03))
+			{
+				z = World.Player.KnownPosition.Z + z;
+			}
+
+			World.UpdatePlayerPosition(new PlayerLocation()
+			{
+				X = x,
+				Y = y,
+				Z = z,
+				Yaw = yaw,
+				HeadYaw = yaw,
+				Pitch = -pitch
+			});
+			
 			TeleportConfirm confirmation = new TeleportConfirm();
 			confirmation.TeleportId = packet.TeleportId;
 			SendPacket(confirmation);
-
-			PlayerPositionAndLookPacketServerBound response = new PlayerPositionAndLookPacketServerBound();
-			response.OnGround = false;
-			response.Pitch = packet.Pitch;
-			response.Yaw = packet.Yaw;
-			response.X = packet.X;
-			response.Y = packet.Y;
-			response.Z = packet.Z;
-
-			SendPacket(response);
-
-			UpdatePlayerPosition(
-				new PlayerLocation(packet.X, packet.Y, packet.Z, packet.Yaw, packet.Yaw, pitch: packet.Pitch));
+			
+			//UpdatePlayerPosition(
+			//	new PlayerLocation(packet.X, packet.Y, packet.Z, packet.Yaw, packet.Yaw, pitch: packet.Pitch));
 
 			if (!Spawned)
 			{
@@ -1577,12 +1730,24 @@ namespace Alex.Worlds.Multiplayer.Java
 			}
 		}
 
-		private void HandleSpawnMob(SpawnMob packet)
+		private void HandleSpawnEntity(SpawnEntity packet)
 		{
 			SpawnMob(packet.EntityId, packet.Uuid, (EntityType)packet.Type, new PlayerLocation(packet.X, packet.Y, packet.Z, packet.Yaw, packet.Yaw, packet.Pitch)
 			{
-			//	OnGround = packet.
-			}, new Vector3(packet.VelocityX, packet.VelocityY, packet.VelocityZ));
+				//	OnGround = packet.SpawnMob
+			}, new Vector3(
+				packet.VelocityX / 8000f, packet.VelocityY / 8000f, packet.VelocityZ / 8000f) * 20f);
+			
+			
+		}
+
+		private void HandleSpawnMob(SpawnLivingEntity packet)
+		{
+			SpawnMob(packet.EntityId, packet.Uuid, (EntityType)packet.Type, new PlayerLocation(packet.X, packet.Y, packet.Z, packet.Yaw, packet.Yaw, packet.Pitch)
+			{
+			//	OnGround = packet.SpawnMob
+			}, new Vector3(
+				packet.VelocityX / 8000f, packet.VelocityY / 8000f, packet.VelocityZ / 8000f) * 20f);
 		}
 
 		private void HandleDisconnectPacket(DisconnectPacket packet)

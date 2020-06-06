@@ -198,7 +198,7 @@ namespace Alex.Worlds.Singleplayer
 					var eId = Interlocked.Increment(ref _spEntityIdCounter);
 					if (EntityFactory.TryLoadEntity(nbt, eId, out Entity entity))
 					{
-						base.SpawnEntity(eId, entity);
+						World.SpawnEntity(eId, entity);
 					}
 				}
 			}
