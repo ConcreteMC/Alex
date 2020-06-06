@@ -257,6 +257,11 @@ namespace ResourceConverterCore.Converter
         
         private void GetEntries(FileInfo file, Dictionary<string, EntityModel> entries)
         {
+            var serializer = new JsonSerializer()
+            {
+                Converters = {new Vector3Converter(), new Vector2Converter()}
+            };
+            
             using (var open = file.OpenText())
             {
                 var     json = open.ReadToEnd();
@@ -264,13 +269,47 @@ namespace ResourceConverterCore.Converter
 
                 foreach (var e in obj)
                 {
-                    if (e.Key == "format_version" || e.Value.Type == JTokenType.Array) continue;
+                    if (e.Key == "minecraft:geometry" && e.Value.Type == JTokenType.Array)
+                    {
+                        var models = e.Value.ToObject<NewEntityModel[]>(serializer);
+                        if (models != null)
+                        {
+                            foreach (var model in models)
+                            {
+                                model.Name = model.Description.Identifier;
+                                model.Textureheight = model.Description.TextureHeight;
+                                model.Texturewidth = model.Description.TextureWidth;
+                                model.VisibleBoundsHeight = model.Description.VisibleBoundsHeight;
+                                model.VisibleBoundsWidth = model.Description.VisibleBoundsWidth;
+                                model.VisibleBoundsOffset = model.Description.VisibleBoundsOffset;
+                                
+                                if (!entries.TryAdd(model.Description.Identifier, model))
+                                {
+                                    Log.Warn($"The name {model.Description.Identifier} was already in use!");
+                                }
+                            }
+                            
+                            continue;
+                        }
+                    } 
+                    
+                    if ( /*e.Key == "format_version" || e.Value.Type == JTokenType.Array*/
+                        !e.Key.StartsWith("geometry."))
+                    {
+                        if (e.Value.Type == JTokenType.Array)
+                        {
+                            continue;
+                            foreach (var type in e.Value.ToObject<EntityModel[]>(serializer))
+                            {
+                                entries.TryAdd(e.Key, type);
+                            }
+                        }
+                        continue;
+                    }
+
                     //if (e.Key == "minecraft:client_entity") continue;
                     //if (e.Key.Contains("zombie")) Console.WriteLine(e.Key);
-                    entries.TryAdd(e.Key, e.Value.ToObject<EntityModel>(new JsonSerializer()
-                    {
-                        Converters = { new Vector3Converter(), new Vector2Converter() }
-                    }));
+                    entries.TryAdd(e.Key, e.Value.ToObject<EntityModel>(serializer));
                 }
             }
         }

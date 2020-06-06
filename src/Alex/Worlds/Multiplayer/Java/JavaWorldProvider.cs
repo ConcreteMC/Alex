@@ -1483,10 +1483,10 @@ namespace Alex.Worlds.Multiplayer.Java
 			player.FOVModifier = packet.FiedOfViewModifier;
 			//player.MovementSpeed = packet.WalkingSpeed;
 
-			player.CanFly = flags.IsBitSet(0x04);
-			player.Invulnerable = flags.IsBitSet(0x01);
+			player.CanFly = flags.IsBitSet(0x03);
+			player.Invulnerable = flags.IsBitSet(0x00);
 
-			if (flags.IsBitSet(0x02))
+			if (flags.IsBitSet(0x01))
 			{
 				player.IsFlying = true;
 				_flying = true;

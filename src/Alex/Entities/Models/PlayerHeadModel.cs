@@ -1,6 +1,7 @@
 
 
 
+
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Microsoft.Xna.Framework;
 
@@ -14,7 +15,7 @@ namespace Alex.Entities.Models
 			Name = "geometry.player_head";
 			VisibleBoundsWidth = 1;
 			VisibleBoundsHeight = 1;
-			VisibleBoundsOffset = new Vector3(0f, 0f, 0f);
+			VisibleBoundsOffset = new Vector3(0f, 0.5f, 0f);
 			Texturewidth = 64;
 			Textureheight = 64;
 			Bones = new EntityModelBone[1]
@@ -24,6 +25,7 @@ namespace Alex.Entities.Models
 					Parent = "",
 					Pivot = new Vector3(0f,24f,0f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,

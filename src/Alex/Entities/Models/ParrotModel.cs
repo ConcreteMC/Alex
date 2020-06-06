@@ -1,6 +1,7 @@
 
 
 
+
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Microsoft.Xna.Framework;
 
@@ -14,7 +15,7 @@ namespace Alex.Entities.Models
 			Name = "geometry.parrot";
 			VisibleBoundsWidth = 1;
 			VisibleBoundsHeight = 1;
-			VisibleBoundsOffset = new Vector3(0f, 0f, 0f);
+			VisibleBoundsOffset = new Vector3(0f, 0.5f, 0f);
 			Texturewidth = 32;
 			Textureheight = 32;
 			Bones = new EntityModelBone[11]
@@ -24,6 +25,7 @@ namespace Alex.Entities.Models
 					Parent = "body",
 					Pivot = new Vector3(0f,8.3f,-2.8f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -41,6 +43,7 @@ namespace Alex.Entities.Models
 					Parent = "head",
 					Pivot = new Vector3(0f,26f,-1f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -58,6 +61,7 @@ namespace Alex.Entities.Models
 					Parent = "head",
 					Pivot = new Vector3(0f,24.5f,-1.5f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -75,6 +79,7 @@ namespace Alex.Entities.Models
 					Parent = "head",
 					Pivot = new Vector3(0f,25.8f,-2.5f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -92,6 +97,7 @@ namespace Alex.Entities.Models
 					Parent = "",
 					Pivot = new Vector3(0f,7.5f,-3f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(28.287f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -109,6 +115,7 @@ namespace Alex.Entities.Models
 					Parent = "body",
 					Pivot = new Vector3(0f,2.9f,1.2f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -126,6 +133,7 @@ namespace Alex.Entities.Models
 					Parent = "body",
 					Pivot = new Vector3(1.5f,7.1f,-2.8f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -143,6 +151,7 @@ namespace Alex.Entities.Models
 					Parent = "body",
 					Pivot = new Vector3(-1.5f,7.1f,-2.8f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -160,6 +169,7 @@ namespace Alex.Entities.Models
 					Parent = "head",
 					Pivot = new Vector3(0f,10.1f,0.2f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(-12.685f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -175,15 +185,16 @@ namespace Alex.Entities.Models
 				new EntityModelBone(){ 
 					Name = "leg0",
 					Parent = "body",
-					Pivot = new Vector3(-1f,1f,-1f),
+					Pivot = new Vector3(1.5f,1f,-0.5f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
 					Cubes = new EntityModelCube[1]{
 						new EntityModelCube()
 						{
-							Origin = new Vector3(0.5f,0f,-0.5f),
+							Origin = new Vector3(0.5f,-0.5f,-1.5f),
 							Size = new Vector3(1f, 2f, 1f),
 							Uv = new Vector2(14f, 18f)
 						},
@@ -192,15 +203,16 @@ namespace Alex.Entities.Models
 				new EntityModelBone(){ 
 					Name = "leg1",
 					Parent = "body",
-					Pivot = new Vector3(-1f,1f,-1f),
+					Pivot = new Vector3(-0.5f,1f,-0.5f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
 					Cubes = new EntityModelCube[1]{
 						new EntityModelCube()
 						{
-							Origin = new Vector3(-1.5f,0f,-0.5f),
+							Origin = new Vector3(-1.5f,-0.5f,-1.5f),
 							Size = new Vector3(1f, 2f, 1f),
 							Uv = new Vector2(14f, 18f)
 						},

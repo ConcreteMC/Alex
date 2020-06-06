@@ -1,6 +1,7 @@
 
 
 
+
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Microsoft.Xna.Framework;
 
@@ -14,7 +15,7 @@ namespace Alex.Entities.Models
 			Name = "geometry.guardian";
 			VisibleBoundsWidth = 4;
 			VisibleBoundsHeight = 2;
-			VisibleBoundsOffset = new Vector3(0f, 0f, 0f);
+			VisibleBoundsOffset = new Vector3(0f, 0.5f, 0f);
 			Texturewidth = 64;
 			Textureheight = 64;
 			Bones = new EntityModelBone[17]
@@ -24,6 +25,7 @@ namespace Alex.Entities.Models
 					Parent = "",
 					Pivot = new Vector3(0f,24f,0f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = true,
 					Reset = false,
@@ -62,9 +64,10 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "eye",
-					Parent = "",
+					Parent = "head",
 					Pivot = new Vector3(0f,24f,0f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -79,9 +82,10 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "tailpart0",
-					Parent = "",
+					Parent = "head",
 					Pivot = new Vector3(0f,24f,0f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -96,9 +100,10 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "tailpart1",
-					Parent = "",
+					Parent = "tailpart0",
 					Pivot = new Vector3(0f,24f,0f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -113,9 +118,10 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "tailpart2",
-					Parent = "",
+					Parent = "tailpart1",
 					Pivot = new Vector3(0f,24f,0f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -136,9 +142,10 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "spikepart0",
-					Parent = "",
+					Parent = "head",
 					Pivot = new Vector3(0f,24f,0f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -153,9 +160,10 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "spikepart1",
-					Parent = "",
+					Parent = "head",
 					Pivot = new Vector3(0f,24f,0f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -170,9 +178,10 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "spikepart2",
-					Parent = "",
+					Parent = "head",
 					Pivot = new Vector3(0f,24f,0f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -187,9 +196,10 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "spikepart3",
-					Parent = "",
+					Parent = "head",
 					Pivot = new Vector3(0f,24f,0f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -204,9 +214,10 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "spikepart4",
-					Parent = "",
+					Parent = "head",
 					Pivot = new Vector3(0f,24f,0f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -221,9 +232,10 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "spikepart5",
-					Parent = "",
+					Parent = "head",
 					Pivot = new Vector3(0f,24f,0f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -238,9 +250,10 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "spikepart6",
-					Parent = "",
+					Parent = "head",
 					Pivot = new Vector3(0f,24f,0f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -255,9 +268,10 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "spikepart7",
-					Parent = "",
+					Parent = "head",
 					Pivot = new Vector3(0f,24f,0f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -272,9 +286,10 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "spikepart8",
-					Parent = "",
+					Parent = "head",
 					Pivot = new Vector3(0f,24f,0f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -289,9 +304,10 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "spikepart9",
-					Parent = "",
+					Parent = "head",
 					Pivot = new Vector3(0f,24f,0f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -306,9 +322,10 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "spikepart10",
-					Parent = "",
+					Parent = "head",
 					Pivot = new Vector3(0f,24f,0f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -323,9 +340,10 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "spikepart11",
-					Parent = "",
+					Parent = "head",
 					Pivot = new Vector3(0f,24f,0f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,

@@ -1,6 +1,7 @@
 
 
 
+
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Microsoft.Xna.Framework;
 
@@ -14,7 +15,7 @@ namespace Alex.Entities.Models
 			Name = "geometry.irongolem";
 			VisibleBoundsWidth = 3;
 			VisibleBoundsHeight = 3;
-			VisibleBoundsOffset = new Vector3(0f, 0f, 0f);
+			VisibleBoundsOffset = new Vector3(0f, 1.5f, 0f);
 			Texturewidth = 128;
 			Textureheight = 128;
 			Bones = new EntityModelBone[6]
@@ -24,6 +25,7 @@ namespace Alex.Entities.Models
 					Parent = "",
 					Pivot = new Vector3(0f,31f,0f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -44,9 +46,10 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "head",
-					Parent = "",
+					Parent = "body",
 					Pivot = new Vector3(0f,31f,-2f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -67,9 +70,10 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "arm0",
-					Parent = "",
+					Parent = "body",
 					Pivot = new Vector3(0f,31f,0f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -84,9 +88,10 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "arm1",
-					Parent = "",
+					Parent = "body",
 					Pivot = new Vector3(0f,31f,0f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -101,9 +106,10 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "leg0",
-					Parent = "",
+					Parent = "body",
 					Pivot = new Vector3(-4f,13f,0f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -118,9 +124,10 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "leg1",
-					Parent = "",
+					Parent = "body",
 					Pivot = new Vector3(5f,13f,0f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = true,
 					Reset = false,

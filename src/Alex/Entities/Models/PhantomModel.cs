@@ -1,6 +1,7 @@
 
 
 
+
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Microsoft.Xna.Framework;
 
@@ -24,6 +25,7 @@ namespace Alex.Entities.Models
 					Parent = "",
 					Pivot = new Vector3(0f,24f,0f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -41,6 +43,7 @@ namespace Alex.Entities.Models
 					Parent = "body",
 					Pivot = new Vector3(2f,26f,-8f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,5.7f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -58,6 +61,7 @@ namespace Alex.Entities.Models
 					Parent = "wing0",
 					Pivot = new Vector3(8f,26f,-8f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,5.7f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -75,6 +79,7 @@ namespace Alex.Entities.Models
 					Parent = "body",
 					Pivot = new Vector3(-3f,26f,-8f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,-5.7f),
 					NeverRender = false,
 					Mirror = true,
 					Reset = false,
@@ -92,6 +97,7 @@ namespace Alex.Entities.Models
 					Parent = "wing1",
 					Pivot = new Vector3(-9f,24f,-8f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,-5.7f),
 					NeverRender = false,
 					Mirror = true,
 					Reset = false,
@@ -109,6 +115,7 @@ namespace Alex.Entities.Models
 					Parent = "body",
 					Pivot = new Vector3(0f,23f,-7f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(11.5f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -126,6 +133,7 @@ namespace Alex.Entities.Models
 					Parent = "body",
 					Pivot = new Vector3(0f,26f,1f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -143,6 +151,7 @@ namespace Alex.Entities.Models
 					Parent = "tail",
 					Pivot = new Vector3(0f,25.5f,7f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,

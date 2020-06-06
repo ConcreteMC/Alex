@@ -1,6 +1,7 @@
 
 
 
+
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Microsoft.Xna.Framework;
 
@@ -14,7 +15,7 @@ namespace Alex.Entities.Models
 			Name = "geometry.spider.v1.8";
 			VisibleBoundsWidth = 2;
 			VisibleBoundsHeight = 1;
-			VisibleBoundsOffset = new Vector3(0f, 0f, 0f);
+			VisibleBoundsOffset = new Vector3(0f, 0.5f, 0f);
 			Texturewidth = 64;
 			Textureheight = 32;
 			Bones = new EntityModelBone[11]
@@ -24,6 +25,7 @@ namespace Alex.Entities.Models
 					Parent = "body0",
 					Pivot = new Vector3(0f,9f,-3f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -41,6 +43,7 @@ namespace Alex.Entities.Models
 					Parent = "",
 					Pivot = new Vector3(0f,9f,0f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -58,6 +61,7 @@ namespace Alex.Entities.Models
 					Parent = "body0",
 					Pivot = new Vector3(0f,9f,9f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -75,6 +79,7 @@ namespace Alex.Entities.Models
 					Parent = "body0",
 					Pivot = new Vector3(-4f,9f,2f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -92,6 +97,7 @@ namespace Alex.Entities.Models
 					Parent = "body0",
 					Pivot = new Vector3(4f,9f,2f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -109,6 +115,7 @@ namespace Alex.Entities.Models
 					Parent = "body0",
 					Pivot = new Vector3(-4f,9f,1f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -126,6 +133,7 @@ namespace Alex.Entities.Models
 					Parent = "body0",
 					Pivot = new Vector3(4f,9f,1f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -143,6 +151,7 @@ namespace Alex.Entities.Models
 					Parent = "body0",
 					Pivot = new Vector3(-4f,9f,0f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -160,6 +169,7 @@ namespace Alex.Entities.Models
 					Parent = "body0",
 					Pivot = new Vector3(4f,9f,0f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -177,6 +187,7 @@ namespace Alex.Entities.Models
 					Parent = "body0",
 					Pivot = new Vector3(-4f,9f,-1f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -194,6 +205,7 @@ namespace Alex.Entities.Models
 					Parent = "body0",
 					Pivot = new Vector3(4f,9f,-1f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,

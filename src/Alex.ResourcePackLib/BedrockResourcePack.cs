@@ -121,8 +121,16 @@ namespace Alex.ResourcePackLib
 										Log.Warn($"Duplicate bitmap: {texture.Value}");
 										continue;
 									}
+
+									var bmp = TryLoad(Path.Combine(_workingDir.FullName, texture.Value + ".png"));
+
+									if (bmp == null)
+										bmp = TryLoad(Path.Combine(_workingDir.FullName, texture.Value + ".tga"));
 									
-									string texturePath = Path.Combine(_workingDir.FullName, texture.Value + ".png");
+									if (bmp != null)
+										_bitmaps.TryAdd(texture.Value, bmp);
+									
+									/*string texturePath = Path.Combine(_workingDir.FullName, texture.Value + ".png");
 									if (File.Exists(texturePath))
 									{
 										Image<Rgba32> bmp = null;
@@ -134,7 +142,7 @@ namespace Alex.ResourcePackLib
 
 										if (bmp != null)
 											_bitmaps.TryAdd(texture.Value, bmp);
-									}
+									}*/
 								}
 							}
 						}
@@ -145,6 +153,23 @@ namespace Alex.ResourcePackLib
 					}
 				}
 			}
+		}
+		
+		private Image<Rgba32> TryLoad(string file)
+		{
+			if (File.Exists(file))
+			{
+				Image<Rgba32> bmp = null;
+				using (FileStream fs = new FileStream(file, FileMode.Open))
+				{
+					bmp = Image.Load<Rgba32>(fs);
+					//	bmp = new Image(fs);
+				}
+
+				return bmp;
+			}
+
+			return null;
 		}
 
 		public class EntityDefinition
