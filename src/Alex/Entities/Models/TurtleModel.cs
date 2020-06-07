@@ -1,6 +1,7 @@
 
 
 
+
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Microsoft.Xna.Framework;
 
@@ -24,6 +25,7 @@ namespace Alex.Entities.Models
 					Parent = "body",
 					Pivot = new Vector3(0f,5f,-10f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -32,7 +34,7 @@ namespace Alex.Entities.Models
 						{
 							Origin = new Vector3(-3f,1f,-13f),
 							Size = new Vector3(6f, 5f, 6f),
-							Uv = new Vector2(0f, 0f)
+							Uv = new Vector2(2f, 0f)
 						},
 					}
 				},
@@ -41,6 +43,7 @@ namespace Alex.Entities.Models
 					Parent = "body",
 					Pivot = new Vector3(0f,13f,-10f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(90f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -58,6 +61,7 @@ namespace Alex.Entities.Models
 					Parent = "",
 					Pivot = new Vector3(0f,13f,-10f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(90f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -81,6 +85,7 @@ namespace Alex.Entities.Models
 					Parent = "body",
 					Pivot = new Vector3(-3.5f,2f,11f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -98,6 +103,7 @@ namespace Alex.Entities.Models
 					Parent = "body",
 					Pivot = new Vector3(3.5f,2f,11f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -115,6 +121,7 @@ namespace Alex.Entities.Models
 					Parent = "body",
 					Pivot = new Vector3(-5f,3f,-4f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -132,6 +139,7 @@ namespace Alex.Entities.Models
 					Parent = "body",
 					Pivot = new Vector3(5f,3f,-4f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,

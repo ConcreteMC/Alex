@@ -63,14 +63,14 @@ namespace Alex.Gui.Dialogs.Containers
 
             Color color = Color.Blue;
 
-            foreach (var slot in AddSlots(8, 84, 9, 27, inventory.InventoryOffset, 0x00))
+            foreach (var slot in AddSlots(8, 84, 9, 27, inventory.InventoryOffset, inventory.InventoryId))
             {
              //   slot.HighlightedBackground = new Microsoft.Xna.Framework.Color(color, 0.5f);
                 slot.Item = Inventory[slot.InventoryIndex];
             }
 
             color = Color.Aqua;
-            foreach (var slot in AddSlots(8, 142, 9, 9, inventory.HotbarOffset, 0))
+            foreach (var slot in AddSlots(8, 142, 9, 9, inventory.HotbarOffset, inventory.InventoryId))
             {
                // slot.HighlightedBackground = new Microsoft.Xna.Framework.Color(color, 0.5f);
                 slot.Item = Inventory[slot.InventoryIndex];
@@ -161,20 +161,20 @@ namespace Alex.Gui.Dialogs.Containers
             }
         }
         
-        protected override void OnSlotChanged(InventoryContainerItem slot, Item item)
+        protected override void OnSlotChanged(InventoryContainerItem slot, Item item, bool isServerTransaction)
         {
-            Inventory.SetSlot(slot.InventoryIndex, item, false);
+            Inventory.SetSlot(slot.InventoryIndex, item, isServerTransaction);
             // Inventory[slot.InventoryIndex] = item;
         }
-        
-        protected override void OnCursorItemChanged(InventoryContainerItem slot, Item item)
+
+        public override void OnClose()
         {
+            base.OnClose();
+
             if (Inventory is Inventory inv)
             {
-                inv.SetCursor(item, false);
+                inv.TriggerClosedEvent();
             }
-
-            // Inventory.Cursor = item;
         }
 
         protected override void OnInit(IGuiRenderer renderer)

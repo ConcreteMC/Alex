@@ -83,7 +83,7 @@ namespace Alex.Gui.Elements
 
                     graphics.Begin();
 
-                    Drawable.DrawContext3D(renderArgs, GuiRenderer);
+                    Drawable?.DrawContext3D(renderArgs, GuiRenderer);
                     //  EntityModelRenderer?.Render(renderArgs, EntityPosition);
 
                     graphics.End();

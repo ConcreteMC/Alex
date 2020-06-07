@@ -4,6 +4,11 @@ namespace Alex.Networking.Java.Packets.Play
 {
 	public class EntityAnimationPacket : Packet
 	{
+		public EntityAnimationPacket()
+		{
+			Category = PacketCategory.EntityMovement;
+		}
+		
 		public int EntityId { get; set; }
 		public Animations Animation { get; set; }
 		

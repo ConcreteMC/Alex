@@ -30,22 +30,24 @@ namespace Alex.Worlds
 
 		private void TruncateVelocity(IPhysicsEntity entity, float dt)
 		{
-			if (Math.Abs(entity.Velocity.X) < 0.1 * dt)
+			if (Math.Abs(entity.Velocity.X) < 0.005f)
 				entity.Velocity = new Vector3(0, entity.Velocity.Y, entity.Velocity.Z);
 			
-			if (Math.Abs(entity.Velocity.Y) < 0.1f * dt)
+			if (Math.Abs(entity.Velocity.Y) < 0.005f)
 				entity.Velocity = new Vector3(entity.Velocity.X, 0, entity.Velocity.Z);
 			
-			if (Math.Abs(entity.Velocity.Z) < 0.1 * dt)
+			if (Math.Abs(entity.Velocity.Z) < 0.005f)
 				entity.Velocity = new Vector3(entity.Velocity.X, entity.Velocity.Y, 0);
 			
 			//entity.Velocity.Clamp();
 		}
 
 		Stopwatch sw = new Stopwatch();
+		private Stopwatch _sw = Stopwatch.StartNew();
 		public void Update(GameTime elapsed)
 		{
-			float dt = ((float) elapsed.ElapsedGameTime.TotalSeconds);
+			float dt = ((float) elapsed.ElapsedGameTime.TotalMilliseconds) /  50f;
+			var tickDt = _timeSinceTick.Elapsed.TotalSeconds;
 			//if (sw.ElapsedMilliseconds)
 			//	dt = (float) sw.ElapsedMilliseconds / 1000f;
 
@@ -60,7 +62,7 @@ namespace Alex.Worlds
 						bool wasColliding = e.IsCollidingWithWorld;
 
 						//TruncateVelocity(e, dt);
-						
+
 						var velocity = e.Velocity;
 
 						if (e.IsInWater && velocity.Y < 0f)
@@ -69,21 +71,9 @@ namespace Alex.Worlds
 						}
 						else if (e.IsInLava)
 						{
-						//	velocity.Y *= 0.5f;
+							//	velocity.Y *= 0.5f;
 						}
 
-						if (!e.IsFlying && !e.KnownPosition.OnGround && e.IsAffectedByGravity)
-						{
-							velocity -= new Vector3(0f, (float) (e.Gravity * dt), 0f);
-
-							//var modifier = new Vector3(1f, (float) (1f - (e.Gravity * dt)), 1f);
-							//velocity *= modifier;
-						}
-
-						var rawDrag = (float) (1f - ((e.Drag * dt)));
-						
-						velocity *= new Vector3(rawDrag, 1f, rawDrag);
-						
 						var position = e.KnownPosition;
 
 						var preview = position.PreviewMove(velocity * dt);
@@ -310,7 +300,7 @@ namespace Alex.Worlds
 						
 						//if (MathF.Abs(e.Velocity.Y) < 0.000001f)
 						{
-							e.KnownPosition.OnGround = MathF.Abs(e.Velocity.Y) < 0.000001f || onGround;
+							e.KnownPosition.OnGround = MathF.Abs(e.Velocity.Y) < 0.005f || onGround;
 						}
 
 						{
@@ -330,6 +320,54 @@ namespace Alex.Worlds
 			}
 			
 			sw.Restart();
+		}
+
+		private Stopwatch _timeSinceTick { get; set; } = new Stopwatch();
+		public void Tick()
+		{
+			foreach (var entity in PhysicsEntities.ToArray())
+			{
+				if (entity is Entity e)
+				{
+					if (MathF.Abs(e.Velocity.Y) < 0.005f)
+					{
+						/*if (e.Velocity.X >= e.Friction)
+						{
+							e.Velocity -= new Vector3((float) e.Friction, 0, 0);
+						}
+						else if (e.Velocity.X <= -e.Friction)
+						{
+							e.Velocity += new Vector3((float) e.Friction, 0, 0);
+						}
+						
+						if (e.Velocity.Z >= e.Friction)
+						{
+							e.Velocity -= new Vector3(0, 0, (float) e.Friction);
+						}
+						else if (e.Velocity.Z <= -e.Friction)
+						{
+							e.Velocity += new Vector3(0, 0, (float) e.Friction);
+						}*/
+						
+						//var friction = (float) (1f - e.Friction);
+						entity.Velocity *= new Vector3(0.6f, 1f, 0.6f);
+					}
+					
+					if (!e.IsFlying && !e.KnownPosition.OnGround && e.IsAffectedByGravity)
+					{
+						entity.Velocity -= new Vector3(0f, (float) (e.Gravity), 0f);
+
+						//var modifier = new Vector3(1f, (float) (1f - (e.Gravity * dt)), 1f);
+						//velocity *= modifier;
+					}
+
+					var rawDrag = (float) (1f - e.Drag);
+
+					entity.Velocity *= new Vector3(rawDrag, 1f, rawDrag);
+				}
+			}
+			
+			_timeSinceTick.Restart();
 		}
 
 		private Vector3 AdjustForY(BoundingBox box, (BlockCoordinates coordinates, Block block, BoundingBox box, bool isBlockPart)[] blocks, Vector3 velocity, PlayerLocation position, out float? pointOfCollision)

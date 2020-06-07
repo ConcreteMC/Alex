@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Alex.API.Input;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using RocketUI;
 
@@ -27,7 +28,7 @@ namespace Alex.API.Gui
 
         void InvokeCursorDown(Vector2 cursorPosition);
         void InvokeCursorUp(Vector2 cursorPosition);
-        void InvokeCursorPressed(Vector2 cursorPosition);
+        void InvokeCursorPressed(Vector2 cursorPosition, MouseButton button);
         void InvokeCursorMove(Vector2 cursorPosition, Vector2 previousCursorPosition, bool isCursorDown);
 
         void InvokeCursorEnter(Vector2 cursorPosition);

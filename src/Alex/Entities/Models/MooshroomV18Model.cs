@@ -1,6 +1,7 @@
 
 
 
+
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Microsoft.Xna.Framework;
 
@@ -23,7 +24,8 @@ namespace Alex.Entities.Models
 					Name = "body",
 					Parent = "",
 					Pivot = new Vector3(0f,19f,2f),
-					Rotation = new Vector3(-90f,0f,0f),
+					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(90f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -47,6 +49,7 @@ namespace Alex.Entities.Models
 					Parent = "",
 					Pivot = new Vector3(0f,20f,-8f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -76,6 +79,7 @@ namespace Alex.Entities.Models
 					Parent = "body",
 					Pivot = new Vector3(-4f,12f,7f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -93,6 +97,7 @@ namespace Alex.Entities.Models
 					Parent = "body",
 					Pivot = new Vector3(4f,12f,7f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = true,
 					Reset = false,
@@ -110,6 +115,7 @@ namespace Alex.Entities.Models
 					Parent = "body",
 					Pivot = new Vector3(-4f,12f,-6f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -127,6 +133,7 @@ namespace Alex.Entities.Models
 					Parent = "body",
 					Pivot = new Vector3(4f,12f,-6f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = true,
 					Reset = false,

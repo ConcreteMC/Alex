@@ -47,7 +47,7 @@ VertexToPixel VertexShaderFunction(float4 inPosition : POSITION, float4 inTexCoo
     Output.Position = mul(viewPos, Projection);
 
     Output.TexCoords = inTexCoords;
-    Output.Lighting = max(lighting, skyLight);
+    Output.Lighting = max(lighting, blockLight);
     Output.Color = inColor;
     Output.FogFactor = ComputeFogFactor(distance(inPosition.xy, viewPos.xy)) * FogEnabled;
 

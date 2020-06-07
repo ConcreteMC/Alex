@@ -8,6 +8,7 @@ using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.Graphics.Models.Entity;
 using Alex.ResourcePackLib;
+using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
 using fNbt;
@@ -132,7 +133,7 @@ namespace Alex.Entities
                 }
 				else
 				{
-					Log.Warn($"No renderer found for {data.Name}");
+					//Log.Warn($"No renderer found for {data.Name}");
 				}
 			}
 
@@ -216,12 +217,12 @@ namespace Alex.Entities
 					EntityModel model;
 				    if (ModelFactory.TryGetModel(modelKey, out model) && model != null)
 				    {
-				        Add(resourceManager, graphics, def.Value, model, def.Value.Filename);
+				        Add(resourceManager, graphics, def.Value, model, def.Value.Identifier);
 				        Add(resourceManager, graphics, def.Value, model, def.Key);
                     }
 				    else if (ModelFactory.TryGetModel(modelKey + ".v1.8", out model) && model != null)
 				    {
-				        Add(resourceManager, graphics, def.Value, model, def.Value.Filename);
+				        Add(resourceManager, graphics, def.Value, model, def.Value.Identifier);
 				        Add(resourceManager, graphics, def.Value, model, def.Key);
 				    }
                     /*if ((resourceManager.BedrockResourcePack.EntityModels.TryGetValue(def.Value.Geometry["default"],
@@ -251,7 +252,7 @@ namespace Alex.Entities
 		    Log.Info($"Registered {_registeredRenderers.Count} entity model renderers");
         }
 
-		private static void Add(ResourceManager resourceManager, GraphicsDevice graphics, BedrockResourcePack.EntityDefinition def, EntityModel model, string name)
+		private static void Add(ResourceManager resourceManager, GraphicsDevice graphics, EntityDescription def, EntityModel model, string name)
 		{
 			_registeredRenderers.AddOrUpdate(name,
 				(t) =>

@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using Alex.API.Input;
 using Alex.API.Services;
 using Alex.Utils;
 using log4net;
@@ -42,6 +43,11 @@ namespace Alex
 				launchSettings.ConnectOnLaunch = false;
 				Log.Warn($"No server specified, ignoring connect argument.");
 			}
+
+            if (!Clipboard.IsClipboardAvailable())
+            {
+	            Log.Warn($"No suitable Clipboard implementation, clipboard will not be available! If you are on linux, install 'XClip' using 'apt install XClip'");
+            }
 
 			//Cef.Initialize(new Settings());
 

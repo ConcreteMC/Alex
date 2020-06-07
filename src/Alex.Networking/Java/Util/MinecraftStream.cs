@@ -95,6 +95,12 @@ namespace Alex.Networking.Java.Util
 
 		public byte[] Read(int length)
 		{
+			if (BaseStream is MemoryStream)
+			{
+				var dat = new byte[length];
+				Read(dat, 0, length);
+				return dat;
+			}
 			//byte[] d = new byte[length];
 			//Read(d, 0, d.Length);
 			//return d;
@@ -128,7 +134,8 @@ namespace Alex.Networking.Java.Util
 
 		public int ReadInt()
 		{
-			var dat = Read(4);
+			var dat = new byte[4];
+			Read(dat, 0, 4);
 			var value = BitConverter.ToInt32(dat, 0);
 			return IPAddress.NetworkToHostOrder(value);
 		}
@@ -319,6 +326,17 @@ namespace Alex.Networking.Java.Util
 			slot.ItemDamage = damage;
 
 			return slot;
+		}
+
+		public void WriteSlot(SlotData slot)
+		{
+			WriteBool(slot != null && slot.ItemID != -1);
+			if (slot == null)
+				return;
+			
+			WriteVarInt(slot.ItemID);
+			WriteByte(slot.Count);
+			WriteNbtCompound(slot.Nbt);
 		}
 
 		private double NetworkToHostOrder(byte[] data)
@@ -562,9 +580,14 @@ namespace Alex.Networking.Java.Util
 
 		public void WriteNbtCompound(NbtCompound compound)
 		{
-			NbtFile f = new NbtFile(compound) { BigEndian = true, UseVarInt = false};
+			if (compound == null)
+			{
+				WriteByte(0);
+				return;
+			}
+
+			NbtFile f = new NbtFile(compound) {BigEndian = true, UseVarInt = false};
 			f.SaveToStream(this, NbtCompression.None);
-			
 			//WriteByte(0);
 		}
 

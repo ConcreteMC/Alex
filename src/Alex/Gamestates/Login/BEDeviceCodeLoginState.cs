@@ -7,6 +7,7 @@ using Alex.API.Graphics.Typography;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Graphics;
+using Alex.API.Input;
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.Gamestates.Common;
@@ -17,7 +18,6 @@ using Microsoft.Xna.Framework.Input;
 using Newtonsoft.Json;
 using NLog;
 using RocketUI;
-using TextCopy;
 
 namespace Alex.Gamestates.Login
 {
@@ -145,7 +145,7 @@ namespace Alex.Gamestates.Login
 	        var profileManager = GetService<ProfileManager>();
 	        XBLMSAService.OpenBrowser(ConnectResponse.verification_uri);
 
-	        if (CanUseClipboard)
+	        if (Clipboard.IsClipboardAvailable())
 	        {
 		        try
 		        {

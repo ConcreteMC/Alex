@@ -10,7 +10,6 @@ using Alex.API.Gui.Graphics;
 using Alex.API.Localization;
 using Alex.API.Utils;
 using Alex.ResourcePackLib;
-using Gtk;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

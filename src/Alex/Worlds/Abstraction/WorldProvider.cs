@@ -17,16 +17,6 @@ namespace Alex.Worlds.Abstraction
 		{
 			
 		}
-        
-		public void SpawnEntity(long entityId, IEntity entity)
-		{
-			World.SpawnEntity(entityId, entity);
-		}
-
-		public void DespawnEntity(long entityId)
-		{
-			World.DespawnEntity(entityId);
-		}
 
 		public abstract Vector3 GetSpawnPoint();
 

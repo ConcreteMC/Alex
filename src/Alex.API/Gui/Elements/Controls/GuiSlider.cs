@@ -1,6 +1,7 @@
 ﻿using System;
 using Alex.API.Graphics.Typography;
 using Alex.API.Gui.Graphics;
+using Alex.API.Input;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using NLog;
@@ -195,7 +196,7 @@ namespace Alex.API.Gui.Elements.Controls
             Label.TextColor = TextColor.White;
         }
         
-        protected override void OnCursorPressed(Point cursorPosition)
+        protected override void OnCursorPressed(Point cursorPosition, MouseButton button)
         {
             SetValueFromCursor(cursorPosition);
         }

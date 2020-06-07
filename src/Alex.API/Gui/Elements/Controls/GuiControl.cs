@@ -1,6 +1,7 @@
 ﻿using System;
 using Alex.API.Gui.Elements.Layout;
 using Alex.API.Gui.Graphics;
+using Alex.API.Input;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
@@ -152,7 +153,7 @@ namespace Alex.API.Gui.Elements.Controls
         public void InvokeCursorDown(Vector2 cursorPosition)
         {
             var pos = (cursorPosition - RenderPosition).ToPoint();
-            CursorDown?.Invoke(this, new GuiCursorEventArgs(pos));
+            CursorDown?.Invoke(this, new GuiCursorEventArgs(pos, MouseButton.Left));
 
             OnCursorDown(pos);
         }
@@ -161,27 +162,27 @@ namespace Alex.API.Gui.Elements.Controls
         public void InvokeCursorUp(Vector2 cursorPosition)
         {
             var pos = (cursorPosition - RenderPosition).ToPoint();
-            CursorUp?.Invoke(this, new GuiCursorEventArgs(pos));
+            CursorUp?.Invoke(this, new GuiCursorEventArgs(pos, MouseButton.Left));
 
             OnCursorUp(pos);
         }
         protected virtual void OnCursorUp(Point cursorPosition) { }
 
-        public void InvokeCursorPressed(Vector2 cursorPosition)
+        public void InvokeCursorPressed(Vector2 cursorPosition, MouseButton button)
         {
             var pos = (cursorPosition - RenderPosition).ToPoint();
-            CursorPressed?.Invoke(this, new GuiCursorEventArgs(pos));
+            CursorPressed?.Invoke(this, new GuiCursorEventArgs(pos, button));
 
-            OnCursorPressed(pos);
+            OnCursorPressed(pos, button);
         }
-        protected virtual void OnCursorPressed(Point cursorPosition) { }
+        protected virtual void OnCursorPressed(Point cursorPosition, MouseButton button) { }
 
         public void InvokeCursorMove(Vector2 cursorPosition, Vector2 previousCursorPosition, bool isCursorDown)
         {
             var relativeNew = (cursorPosition - RenderPosition).ToPoint();
             var relativeOld = (previousCursorPosition - RenderPosition).ToPoint();
 
-            CursorMove?.Invoke(this, new GuiCursorMoveEventArgs(relativeNew, relativeOld, isCursorDown));
+            CursorMove?.Invoke(this, new GuiCursorMoveEventArgs(relativeNew, relativeOld, isCursorDown, MouseButton.Left));
 
             OnCursorMove(relativeNew, relativeOld, isCursorDown);
         }
@@ -191,7 +192,7 @@ namespace Alex.API.Gui.Elements.Controls
         public void InvokeCursorEnter(Vector2 cursorPosition)
         {
             var pos = (cursorPosition - RenderPosition).ToPoint();
-            CursorEnter?.Invoke(this, new GuiCursorEventArgs(pos));
+            CursorEnter?.Invoke(this, new GuiCursorEventArgs(pos, MouseButton.Left));
             
             OnCursorEnter(pos);
         }
@@ -200,7 +201,7 @@ namespace Alex.API.Gui.Elements.Controls
         public void InvokeCursorLeave(Vector2 cursorPosition)
         {
             var pos = (cursorPosition - RenderPosition).ToPoint();
-            CursorLeave?.Invoke(this, new GuiCursorEventArgs(pos));
+            CursorLeave?.Invoke(this, new GuiCursorEventArgs(pos, MouseButton.Left));
             
             OnCursorLeave(pos);
         }

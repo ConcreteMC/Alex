@@ -109,12 +109,6 @@ namespace Alex.API.Services
         {
             var fileName = Path.Combine(DataDirectory, key);
 
-            if (!File.Exists(fileName))
-            {
-                value = null;
-                return false;
-            }
-
             try
             {
                 File.WriteAllText(fileName, value, Encoding.Unicode);

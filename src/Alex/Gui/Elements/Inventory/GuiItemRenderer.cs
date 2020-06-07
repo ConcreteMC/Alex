@@ -3,7 +3,6 @@ using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Alex.Gamestates;
 using Alex.Items;
-using GLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using NLog;

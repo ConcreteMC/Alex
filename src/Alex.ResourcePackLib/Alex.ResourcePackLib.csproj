@@ -11,9 +11,9 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-    <PackageReference Include="NLog" Version="4.5.0" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-beta0007" />
-    <PackageReference Include="System.Resources.Extensions" Version="4.7.0" />
+    <PackageReference Include="NLog" Version="4.7.2" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-rc0001" />
+    <PackageReference Include="System.Resources.Extensions" Version="4.7.1" />
   </ItemGroup>
   <ItemGroup>
     <Compile Update="Properties\Resources.Designer.cs">

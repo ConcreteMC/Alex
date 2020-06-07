@@ -1,4 +1,6 @@
 using Alex.API.Gui.Graphics;
+using Alex.Gui.Elements.Inventory;
+using Alex.Items;
 using Alex.Utils;
 using Alex.Utils.Inventories;
 using RocketUI;

@@ -473,54 +473,18 @@ namespace Alex.Worlds.Chunks
 						}
 
 						storage.Read(ms);
-						//var blockCount = ms.ReadShort();
-						//byte bitsPerBlock = (byte) ms.ReadByte();
-						//storage.
-						/*
-						for (int y = 0; y < 16; y++)
-						{
-							for (int z = 0; z < 16; z++)
-							{
-								for (int x = 0; x < 16; x += 2)
-								{
-									// Note: x += 2 above; we read 2 values along x each time
-									byte value = (byte)ms.ReadByte();
-
-									storage.SetExtBlocklightValue(x, y, z, (byte)(value & 0xF));
-									storage.SetExtBlocklightValue(x + 1, y, z, (byte)((value >> 4) & 0xF));
-								}
-							}
-						}
-
-						//if (currentDimension.HasSkylight())
-						if (readSkylight)
-						{
-							for (int y = 0; y < 16; y++)
-							{
-								for (int z = 0; z < 16; z++)
-								{
-									for (int x = 0; x < 16; x += 2)
-									{
-										// Note: x += 2 above; we read 2 values along x each time
-										byte value = (byte)ms.ReadByte();
-
-										storage.SetExtSkylightValue(x, y, z, value & 0xF);
-										storage.SetExtSkylightValue(x + 1, y, z, (value >> 4) & 0xF);
-									}
-								}
-							}
-						}*/
 					}
 					else
 					{
-						if (groundUp && (storage == null || !storage.IsEmpty()))
+						if (groundUp && (storage == null || storage.Blocks > 0))
 						{
-							if (storage == null)
-								storage = new ChunkSection(this, sectionY, readSkylight, 2);
+							//if (storage == null)
+							//	storage = new ChunkSection(this, sectionY, readSkylight, 2);
 						}
 					}
 
-					storage.IsDirty = true;
+					if (storage != null)
+						storage.IsDirty = true;
 					
 					this.Sections[sectionY] = storage;
 				}

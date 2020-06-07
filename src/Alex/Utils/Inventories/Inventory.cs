@@ -1,4 +1,5 @@
 ﻿using System;
+using Alex.API.Input;
 using Alex.Items;
 using Alex.Utils.Inventories;
 
@@ -104,37 +105,12 @@ namespace Alex.Utils
 			    SetSlot(BootsSlot, value, true);
 		    }
 	    }
-
-	    private Item _cursor;
-
-	    public virtual Item Cursor
-	    {
-		    get
-		    {
-			    return _cursor;
-		    }
-		    private set
-		    {
-			   // var oldValue = _cursor;
-			    _cursor = value;
-			   // CursorChanged?.Invoke(this, new SlotChangedEventArgs(0, value, oldValue, true));
-		    }
-	    }
-
-	    public event EventHandler<SlotChangedEventArgs> CursorChanged = null;
+	    
 	    public event EventHandler<SelectedSlotChangedEventArgs> SelectedHotbarSlotChanged = null;
 
 	    public Inventory(int slots) : base(slots)
 	    {
 		    
-	    }
-
-	    public void SetCursor(Item item, bool isServerTransaction)
-	    {
-		    var oldValue = _cursor;
-		    Cursor = item;
-		    
-		    CursorChanged?.Invoke(this, new SlotChangedEventArgs(InventoryId, 0, item, oldValue, isServerTransaction));
 	    }
 
 	    public virtual Item[] GetHotbar()
@@ -148,6 +124,13 @@ namespace Alex.Utils
 
 		    return items;
 	    }
+
+	    internal void TriggerClosedEvent()
+	    {
+		    Closed?.Invoke(this, EventArgs.Empty);
+	    }
+
+	    public EventHandler Closed;
     }
 
 	public class SlotChangedEventArgs : EventArgs
@@ -167,6 +150,15 @@ namespace Alex.Utils
 			Value = value;
 			OldItem = oldItem;
 			IsServerTransaction = isServerTransaction;
+		}
+	}
+
+	public class CursorChangedEventArgs : SlotChangedEventArgs
+	{
+		public MouseButton Button { get; }
+		public CursorChangedEventArgs(int inventoryId, int index, Item value, Item oldItem, bool isServerTransaction, MouseButton button) : base(inventoryId, index, value, oldItem, isServerTransaction)
+		{
+			Button = button;
 		}
 	}
 

@@ -34,6 +34,7 @@ namespace Alex.Worlds.Lighting
 
 		public long visits = 0;
 
+		public bool DoLogging { get; set; } = false;
 		public SkyLightCalculations(bool trackResults = false)
 		{
 			TrackResults = trackResults;
@@ -306,14 +307,16 @@ namespace Alex.Worlds.Lighting
 					lightBfSet.Remove(coordinates);
 					if (coordinates.Y < 0 || coordinates.Y > 255)
 					{
-						Log.Warn($"Y coord out of bounce {coordinates.Y}");
+						if (DoLogging)
+							Log.Warn($"Y coord out of bounce {coordinates.Y}");
 						continue;
 					}
 					
 					ChunkColumn chunk = level.GetChunk(coordinates);
 					if (chunk == null)
 					{
-						Log.Warn($"Chunk was null");
+						if (DoLogging)
+							Log.Warn($"Chunk was null");
 						continue;
 					}
 
@@ -323,7 +326,8 @@ namespace Alex.Worlds.Lighting
 						chunk = (ChunkColumn) level.GetChunk(newChunkCoord);
 						if (chunk == null)
 						{
-							Log.Warn($"Chunk with new coords was null");
+							if (DoLogging)
+								Log.Warn($"Chunk with new coords was null");
 							continue;
 						}
 					}

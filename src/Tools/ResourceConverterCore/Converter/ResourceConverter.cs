@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using Mono.TextTemplating;
 using NLog;
+using ResourceConverterCore.Templates;
 using Templates;
 
 namespace ResourceConverterCore.Converter
@@ -69,15 +70,9 @@ namespace ResourceConverterCore.Converter
 	        var outDir = Path.Combine(outputDirectory.FullName, "Models");
 	        if (!Directory.Exists(outDir))
 		        Directory.CreateDirectory(outDir);
-		        
-	        geometryToClass = new Dictionary<string, string>();
-			Mono.TextTemplating.TemplatingEngine engine = new TemplatingEngine();
-			var template =engine.CompileTemplate(File.ReadAllText("../../../Templates/EntityTemplate.tt"), new TemplateGenerator());
-			//
-             //  var template = new EntityTemplate();
-	        //template.Initialize();
 
-	        //            template.Session["EntityModels"] = loader.EntityModels;
+	        geometryToClass = new Dictionary<string, string>();
+	        
 	        ResourceConverterContext.EntityModels = loader.EntityModels;
 			
 	        int count = 0;
@@ -87,13 +82,18 @@ namespace ResourceConverterCore.Converter
 		        var pct = 100D * ((double)count / (double)totalCount);
 
 		        Log.Info($"Starting Template Processing for '{model.Key}'");
+		        var template = new EntityTemplate();
+		        template.Session = new Dictionary<string, object>();
+		        //template.Initialize();
 
-		        //template.Session["CurrentModelName"] = model.Key;
-		        //template.Session["CurrentModel"] = model.Value;
+		        template.Session["EntityModels"] = loader.EntityModels;
+				
+		        template.Session["CurrentModelName"] = model.Key;
+		        template.Session["CurrentModel"] = model.Value;
 		        ResourceConverterContext.CurrentModelName = CodeTypeName(model.Value.Name);
 		        ResourceConverterContext.CurrentModel = model.Value;
 
-		        var output = template.Process();
+		        var output = template.TransformText();
 		        var outputPath = Path.Combine(outDir, CodeTypeName(model.Value.Name) + "Model.cs");
 		        if (File.Exists(outputPath))
 		        {

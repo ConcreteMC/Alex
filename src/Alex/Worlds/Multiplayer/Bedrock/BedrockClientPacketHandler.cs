@@ -564,7 +564,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
             }
 		}
 
-		public void SpawnMob(long entityId,
+		public bool SpawnMob(long entityId,
 			Guid uuid,
 			EntityType type,
 			PlayerLocation position,
@@ -610,21 +610,35 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				{
 					Log.Warn($"Could not create entity of type: {(int) type}:{type.ToString()}");
 
-					return;
+					return false;
 				}
 
 				if (renderer == null)
 				{
 					var def = AlexInstance.Resources.BedrockResourcePack.EntityDefinitions.FirstOrDefault(
-						x => x.Value.Filename.Replace("_", "").Equals(type.ToString().ToLowerInvariant()));
+						x => x.Value.Identifier.Replace("_", "").ToLowerInvariant().Equals($"minecraft:{type}".ToLowerInvariant()));
+
+					Dictionary<string, string> textures = new Dictionary<string, string>();
+					string geometry = string.Empty;
 
 					if (!string.IsNullOrWhiteSpace(def.Key))
 					{
+						geometry = def.Value.Geometry["default"];
+						textures = def.Value.Textures;
+					}
+					else
+					{
+						geometry = $"geometry.{type.ToString()}";
+						textures.Add("default", $"textures/entity/{type.ToString()}");
+					}
+					
+					if (!string.IsNullOrWhiteSpace(geometry))
+					{
 						EntityModel model;
 
-						if (ModelFactory.TryGetModel(def.Value.Geometry["default"], out model) && model != null)
+						if (ModelFactory.TryGetModel(geometry, out model) && model != null)
 						{
-							var    textures = def.Value.Textures;
+							//var    textures = def.Value.Textures;
 							string texture;
 
 							if (!textures.TryGetValue("default", out texture))
@@ -632,11 +646,21 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 								texture = textures.FirstOrDefault().Value;
 							}
 
+							PooledTexture2D texture2D = null;
 							if (AlexInstance.Resources.BedrockResourcePack.Textures.TryGetValue(texture, out var bmp))
 							{
 								PooledTexture2D t = TextureUtils.BitmapToTexture2D(AlexInstance.GraphicsDevice, bmp);
 
-								renderer = new EntityModelRenderer(model, t);
+								texture2D = t;
+							}
+							else if (AlexInstance.Resources.ResourcePack.TryGetBitmap(texture, out var bmp2))
+							{
+								texture2D = TextureUtils.BitmapToTexture2D(AlexInstance.GraphicsDevice, bmp2);
+							}
+
+							if (texture2D != null)
+							{
+								renderer = new EntityModelRenderer(model, texture2D);
 							}
 						}
 					}
@@ -646,14 +670,14 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				{
 					Log.Debug($"Missing renderer for entity: {type.ToString()} ({(int) type})");
 
-					return;
+					return false;
 				}
 
 				if (renderer.Texture == null)
 				{
 					Log.Debug($"Missing texture for entity: {type.ToString()} ({(int) type})");
 
-					return;
+					return false;
 				}
 
 				entity.ModelRenderer = renderer;
@@ -665,20 +689,32 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			entity.UUID = new UUID(uuid.ToByteArray());
 
 			Client.World.SpawnEntity(entityId, entity);
+
+			return true;
 		}
 
 
 		public void HandleMcpeAddEntity(McpeAddEntity message)
 		{
 			var type = message.entityType.Replace("minecraft:", "").Replace("_", "");
-            if (Enum.TryParse(typeof(EntityType), type, true, out object res))
+			if (Enum.TryParse(typeof(EntityType), type, true, out object res))
+			{
+				SpawnMob(message.runtimeEntityId, Guid.NewGuid(), (EntityType) res,
+					new PlayerLocation(message.x, message.y, message.z, message.headYaw, message.yaw, message.pitch),
+					new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ) * 20f,
+					message.attributes);
+				_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
+			}
+			else
             {
-                SpawnMob(message.runtimeEntityId, Guid.NewGuid(), (EntityType)res, new PlayerLocation(message.x, message.y, message.z, message.headYaw, message.yaw, message.pitch), new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ) * 20f, message.attributes);
-                _entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
-            }
-            else
-            {
-                Log.Warn($"Unknown mob: {type}");
+	           /* if (SpawnMob(message.runtimeEntityId, Guid.NewGuid(), ,
+		            new PlayerLocation(message.x, message.y, message.z, message.headYaw, message.yaw, message.pitch),
+		            new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ) * 20f,
+		            message.attributes))
+	            {
+		            
+	            }*/
+	            Log.Warn($"Unknown mob: {type}");
             }
         }
 
@@ -704,6 +740,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				ItemEntity itemEntity = new ItemEntity(null, Client);
 				itemEntity.EntityId = message.runtimeEntityId;
 				itemEntity.Velocity = new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ) * 20f;
+				itemEntity.KnownPosition = new PlayerLocation(message.x, message.y, message.z);
 				
 				itemEntity.SetItem(itemClone);
 
@@ -995,7 +1032,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				if (message.attributes.TryGetValue("minecraft:movement", out var movement))
 				{
-					player.MovementSpeedModifier = movement.Value * 10f;
+					player.MovementSpeed = movement.Value;
 				}
 
 				if (message.attributes.TryGetValue("minecraft:player.hunger", out var hunger))

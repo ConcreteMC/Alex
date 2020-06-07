@@ -241,6 +241,7 @@ namespace Alex.Services
 				        })
 				        {
 					        long pingId = Rnd.NextUInt();
+					        long pingResult = 0;
 
 							EventWaitHandle ar = new EventWaitHandle(false, EventResetMode.AutoReset);
 
@@ -249,10 +250,22 @@ namespace Alex.Services
 						        if (args.Packet is ResponsePacket responsePacket)
 						        {
 							        jsonResponse = responsePacket.ResponseMsg;
+							        
+							        if (pingCallback != null)
+							        {
+								        conn.SendPacket(new PingPacket()
+								        {
+									        Payload = pingId,
+								        });
+
+								        sw.Restart();
+							        }
+							        
 							        ar.Set();
 						        }
 						        else if (args.Packet is PingPacket pong)
 						        {
+							        pingResult = sw.ElapsedMilliseconds;
 							        if (pong.Payload == pingId)
 							        {
 								        waitingOnPing = false;
@@ -263,6 +276,8 @@ namespace Alex.Services
 								        waitingOnPing = false;
                                         pingCallback?.Invoke(new ServerPingResponse(true, sw.ElapsedMilliseconds));
 									}
+
+							        ar.Set();
 						        }
 					        };
 
@@ -295,21 +310,11 @@ namespace Alex.Services
 						      //  Log.Debug($"Server json: " + jsonResponse);
 								var query = ServerQuery.FromJson(jsonResponse);
 
-						        if (pingCallback != null)
-						        {
-									conn.SendPacket(new PingPacket()
-							        {
-								        Payload = pingId,
-							        });
-
-							        sw.Restart();
-								}
-
-						        var r = new ServerQueryStatus()
+								var r = new ServerQueryStatus()
 						        {
 							        Delay = timeElapsed,
 							        Success = true,
-							        WaitingOnPing = pingCallback != null && !waitingOnPing,
+							        WaitingOnPing = pingCallback != null && waitingOnPing,
 
 							        EndPoint = endPoint,
 							        Address = hostname,
@@ -319,6 +324,9 @@ namespace Alex.Services
 						        };
 
 								statusCallBack?.Invoke(new ServerQueryResponse(true, r));
+
+								if (waitingOnPing && pingCallback != null)
+									await WaitHandleHelpers.FromWaitHandle(ar, TimeSpan.FromSeconds(1000));
 					        }
 					        else
 					        {

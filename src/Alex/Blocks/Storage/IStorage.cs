@@ -2,7 +2,7 @@ using System;
 
 namespace Alex.Blocks.Storage
 {
-    public interface IStorage : IDisposable
+    public interface IStorage
     {
         uint this[int index] { get; set; }
 

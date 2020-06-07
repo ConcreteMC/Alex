@@ -1,6 +1,7 @@
 
 
 
+
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Microsoft.Xna.Framework;
 
@@ -14,7 +15,7 @@ namespace Alex.Entities.Models
 			Name = "geometry.polarbear";
 			VisibleBoundsWidth = 3;
 			VisibleBoundsHeight = 2;
-			VisibleBoundsOffset = new Vector3(0f, 0f, 0f);
+			VisibleBoundsOffset = new Vector3(0f, 0.5f, 0f);
 			Texturewidth = 128;
 			Textureheight = 64;
 			Bones = new EntityModelBone[6]
@@ -24,6 +25,7 @@ namespace Alex.Entities.Models
 					Parent = "body",
 					Pivot = new Vector3(0f,14f,-16f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = true,
 					Reset = false,
@@ -59,6 +61,7 @@ namespace Alex.Entities.Models
 					Parent = "",
 					Pivot = new Vector3(-2f,15f,12f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(90f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -82,6 +85,7 @@ namespace Alex.Entities.Models
 					Parent = "body",
 					Pivot = new Vector3(-4.5f,10f,6f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -99,6 +103,7 @@ namespace Alex.Entities.Models
 					Parent = "body",
 					Pivot = new Vector3(4.5f,10f,6f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -116,6 +121,7 @@ namespace Alex.Entities.Models
 					Parent = "body",
 					Pivot = new Vector3(-3.5f,10f,-8f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,
@@ -133,6 +139,7 @@ namespace Alex.Entities.Models
 					Parent = "body",
 					Pivot = new Vector3(3.5f,10f,-8f),
 					Rotation = new Vector3(0f,0f,0f),
+					BindPoseRotation = new Vector3(0f,0f,0f),
 					NeverRender = false,
 					Mirror = false,
 					Reset = false,

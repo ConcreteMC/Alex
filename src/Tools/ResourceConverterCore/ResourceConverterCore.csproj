@@ -10,25 +10,21 @@
 
   <ItemGroup>
     <DotNetCliToolReference Include="dotnet-t4-project-tool" Version="2.0.5" />
-    <TextTemplate Include="\Templates\EntityTemplate.tt" />
-    <Generated Include="\Templates\EntityTemplate.cs" />
-    <Generated Update="\Templates\EntityTemplate.cs">
-      <DependentUpon>EntityTemplate.tt</DependentUpon>
-    </Generated>
-    <None Remove="Templates\EntityTemplate.tt" />
-    <TextTemplate Include="Templates\EntityTemplate.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>EntityTemplate.cs</LastGenOutput>
-    </TextTemplate>
-    <Generated Update="..\..\..\..\..\..\..\..\Templates\EntityTemplate.cs">
-      <DependentUpon>EntityTemplate.tt</DependentUpon>
-    </Generated>
+    <TextTemplate Include="**\*.tt" />
   </ItemGroup>
 
+  <Target Name="TextTemplateTransform" BeforeTargets="BeforeBuild">
+    <ItemGroup>
+      <Compile Remove="**\*.cs" />
+    </ItemGroup>
+   
+    <ItemGroup>
+      <Compile Include="**\*.cs" />
+    </ItemGroup>
+  </Target>
+
   <ItemGroup>
-    <PackageReference Include="dotnet-t4-project-tool" Version="2.0.5" />
     <PackageReference Include="Mono.TextTemplating" Version="2.0.5" />
-    <PackageReference Include="MonoGame.Framework.DesktopGL.Core" Version="3.8.0.13" />
     <PackageReference Include="System.CodeDom" Version="4.7.0" />
   </ItemGroup>
 
@@ -47,6 +43,9 @@
     </Reference>
     <Reference Include="System.Core">
       <HintPath>System.Core</HintPath>
+    </Reference>
+    <Reference Include="Alex.API">
+      <HintPath>Alex.API</HintPath>
     </Reference>
   </ItemGroup>
 
@@ -68,6 +67,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="Templates\EntityTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>EntityTemplate.tt</DependentUpon>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>
@@ -76,11 +80,16 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
-
+  
+  <PropertyGroup>
+    <MyPath>$(ProjectDir)$(OutDir)</MyPath>
+  </PropertyGroup>
+  
   <ItemGroup>
-    <None Update="Templates\ModelFactory.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-    </None>
+    <T4ParameterValues Include="MyPath" Value="$(MyPath)" Visible="false" />
+    <T4ParameterValues Include="ProjectDir" Value="$(ProjectDir)" Visible="false" />
+    <T4ParameterValues Include="OutDir" Value="$(OutDir)" Visible="false" />
+    <T4ParameterValues Include="TargetFileName" Value="$(TargetFileName)" Visible="false" />
   </ItemGroup>
 
 </Project>

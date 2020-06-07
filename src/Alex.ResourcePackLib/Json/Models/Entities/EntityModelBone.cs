@@ -13,18 +13,26 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 
 		[J("parent", NullValueHandling = N.Ignore)]
 		public string Parent { get; set; } = string.Empty;
-		public EntityModelCube[] Cubes { get; set; }
-        public Vector3 Pivot { get; set; }
 
 		[J("locators", NullValueHandling = N.Ignore)]
         public EntityModelLocators Locators { get; set; }
 
         public double Inflate { get; set; } = 0.0;
+        
+        [J("rotation", NullValueHandling = N.Ignore)]
         public Vector3 Rotation { get; set; } = Vector3.Zero;
-
+        
+        [J("pivot", NullValueHandling = N.Ignore)]
+        public Vector3 Pivot { get; set; }
+		
+        [J("bind_pose_rotation", NullValueHandling = N.Ignore)]
+        public Vector3 BindPoseRotation { get; set; } = Vector3.Zero;
+        
 		public bool NeverRender { get; set; } = false;
 		public bool Mirror { get; set; } = false;
 		public bool Reset { get; set; } = false;
+		
+		public EntityModelCube[] Cubes { get; set; }
     }
 
 	public sealed class EntityModelLocators

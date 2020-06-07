@@ -71,11 +71,10 @@ namespace Alex.Entities
 			//Inventory = new Inventory(46);
 			//Inventory.SelectedHotbarSlotChanged += SelectedHotbarSlotChanged;
 			//base.Inventory.IsPeInventory = true;
-			MovementSpeedModifier = 1f;
-			MovementSpeed = 4.306f;
-			BaseMovementSpeed = 4.317;
-			FlyingSpeed = 10.89f;
-
+			MovementSpeed = 0.1f;
+			BaseMovementSpeed = 0.21585;//4.317;
+			FlyingSpeed = 0.5f; //10.89f;
+			
 			SnapHeadYawRotationOnMovement = false;
 			SnapYawRotationOnMovement = true;
 			DoRotationCalculations = false;
@@ -336,8 +335,8 @@ namespace Alex.Entities
 	    public void Jump()
 	    {
 		    HealthManager.Exhaust(IsSprinting ? 0.2f : 0.05f);
-		    
-		    Velocity += new Vector3(0f, MathF.Sqrt(2f * (float) Gravity * 1.2f), 0f);
+		    Velocity += new Vector3(0f, 0.42f, 0f);
+		    //Velocity += new Vector3(0f, MathF.Sqrt(2f * (float) (Gravity * 20f) * 1.2f), 0f);
 		    Network?.EntityAction((int) EntityId, EntityAction.Jump);
 	    }
 
