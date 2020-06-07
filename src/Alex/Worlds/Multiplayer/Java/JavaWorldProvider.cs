@@ -259,7 +259,7 @@ namespace Alex.Worlds.Multiplayer.Java
 					}
 				}
 
-				if (isTick)
+				//if (isTick)
 				{
 					player?.OnTick();
 					World?.EntityManager?.Tick();
@@ -297,7 +297,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		//	World?.UpdatePlayerPosition(_lastReceivedLocation);
 
-			_gameTickTimer = new System.Threading.Timer(GameTick, null, 50, 25);
+			_gameTickTimer = new System.Threading.Timer(GameTick, null, 50, 50);
 		}
 
 		[EventHandler(EventPriority.Highest)]

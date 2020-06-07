@@ -138,6 +138,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				{
 					World.Player.OnTick();
 					World.EntityManager.Tick();
+					World.PhysicsEngine.Tick();
 				}
 			}
 		}

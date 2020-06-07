@@ -111,13 +111,15 @@ namespace Alex.Entities
 		public double Height { get; set; } = 1;
 		public double Width { get; set; } = 1;
 		public double Length { get; set; } = 1;
-		public double Drag { get; set; } = 8f;
-		public double Gravity { get; set; } = 16.8f; //9.81f; //1.6f;
+		public double Drag { get; set; } = 0.02f;// 8f;
+		public double Friction { get; set; } = 0.1f;
+
+		public double Gravity { get; set; } = 0.08f; //16.8f; //9.81f; //1.6f;
 		//Drag & gravity etc is Vanilla * 400
 		
 		public float TerminalVelocity { get; set; } = 78.4f;
 		
-		public double BaseMovementSpeed { get; set; } = 3;
+		public double BaseMovementSpeed { get; set; } = 0.43f;//3;
 		public double MovementSpeed { get; set; } = 0.1F;
 		public double FlyingSpeed { get; set; } = 0.4F;
 		
@@ -836,6 +838,10 @@ namespace Alex.Entities
 				if (!feetBlock.Any(x => x.Storage == 0 && x.State.Block.Solid))
 				{
 					KnownPosition.OnGround = false;
+				}
+				else
+				{
+					KnownPosition.OnGround = true;
 				}
 			}
 
