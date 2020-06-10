@@ -328,7 +328,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				//MiNET.Player
 				mob.EntityId = message.runtimeEntityId;
 				mob.KnownPosition = new PlayerLocation(message.x, message.y, message.z, message.headYaw, message.yaw, message.pitch);
-				mob.Velocity = new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ) * 20f;
+				mob.Velocity = new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ);
 				
 				mob.HandleMetadata(message.metadata);
 				//mob.Height = message.metadata[(int) MiNET.Entities.Entity.MetadataFlags.CollisionBoxHeight]
@@ -701,7 +701,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			{
 				SpawnMob(message.runtimeEntityId, Guid.NewGuid(), (EntityType) res,
 					new PlayerLocation(message.x, message.y, message.z, message.headYaw, message.yaw, message.pitch),
-					new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ) * 20f,
+					new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ),
 					message.attributes);
 				_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
 			}
@@ -739,7 +739,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				ItemEntity itemEntity = new ItemEntity(null, Client);
 				itemEntity.EntityId = message.runtimeEntityId;
-				itemEntity.Velocity = new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ) * 20f;
+				itemEntity.Velocity = new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ);
 				itemEntity.KnownPosition = new PlayerLocation(message.x, message.y, message.z);
 				
 				itemEntity.SetItem(itemClone);
@@ -1170,7 +1170,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		public void HandleMcpeSetEntityMotion(McpeSetEntityMotion message)
 		{
 			var v = message.velocity;
-			var velocity = new Microsoft.Xna.Framework.Vector3(v.X, v.Y, v.Z) * 20f;
+			var velocity = new Microsoft.Xna.Framework.Vector3(v.X, v.Y, v.Z);
 
 			Entity entity = null;
 			if (!Client.World.TryGetEntity(message.runtimeEntityId, out entity))

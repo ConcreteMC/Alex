@@ -263,6 +263,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				{
 					player?.OnTick();
 					World?.EntityManager?.Tick();
+					World?.PhysicsEngine.Tick();
 				}
 			}
 		}
@@ -1434,7 +1435,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			if (entity != null)
 			{
 				var velocity = new Vector3(
-					packet.VelocityX / 8000f, packet.VelocityY / 8000f, packet.VelocityZ / 8000f) * 20f;
+					packet.VelocityX / 8000f, packet.VelocityY / 8000f, packet.VelocityZ / 8000f);
 
 				var old = entity.Velocity;
 
@@ -1726,7 +1727,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 				//	OnGround = packet.SpawnMob
 			}, new Vector3(
-				packet.VelocityX / 8000f, packet.VelocityY / 8000f, packet.VelocityZ / 8000f) * 20f);
+				packet.VelocityX / 8000f, packet.VelocityY / 8000f, packet.VelocityZ / 8000f));
 			
 			
 		}
@@ -1737,7 +1738,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 			//	OnGround = packet.SpawnMob
 			}, new Vector3(
-				packet.VelocityX / 8000f, packet.VelocityY / 8000f, packet.VelocityZ / 8000f) * 20f);
+				packet.VelocityX / 8000f, packet.VelocityY / 8000f, packet.VelocityZ / 8000f));
 		}
 
 		private void HandleDisconnectPacket(DisconnectPacket packet)

@@ -202,7 +202,7 @@ namespace Alex.Worlds
 														       && contains != ContainmentType.Intersects;
 													}))
 												{
-													velocity = new Vector3(c.X - position.X, velocity.Y, velocity.Z);
+													velocity = new Vector3((c.X - position.X) / 20f, velocity.Y, velocity.Z);
 
 													break;
 												}
@@ -259,7 +259,7 @@ namespace Alex.Worlds
 														       && contains != ContainmentType.Intersects;
 													}))
 												{
-													velocity = new Vector3(velocity.X, velocity.Y, c.Z - position.Z);
+													velocity = new Vector3(velocity.X, velocity.Y, (c.Z - position.Z) / 20f);
 
 													break;
 												}
@@ -424,7 +424,7 @@ namespace Alex.Worlds
 					distance = collisionPoint.Value - box.Max.Y;
 				}*/
 				
-				velocity = new Vector3(velocity.X, distance, velocity.Z);
+				velocity = new Vector3(velocity.X, distance / 20f, velocity.Z);
 			}
 
 			return velocity;
