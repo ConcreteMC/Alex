@@ -40,16 +40,13 @@ namespace Alex.Blocks.Minecraft
 		public bool IsReplacible { get; set; } = false;
 		public bool RequiresUpdate { get; set; } = false;
 		public bool CanInteract { get; set; } = false;
-		
-		public float Drag { get; set; }
 
 		public string Name
 		{
 			get { return Location.ToString(); }
 			set { Location = value; }
 		}
-
-		public double AmbientOcclusionLightValue { get; set; } = 1.0;
+		
 	    public virtual int LightValue { get; set; } = 0;
 	    public int LightOpacity { get; set; } = 1;
 

@@ -4,6 +4,10 @@ namespace Alex.API.Blocks
 {
 	public interface IMaterial
 	{
+		double Slipperiness { get; }
+
+		IMaterial SetSlipperines(double value);
+		
 		float Hardness { get; }
 		IMaterial SetHardness(float hardness);
 		

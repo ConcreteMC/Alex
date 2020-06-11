@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Alex.API.Data.Servers;
 using Alex.API.Entities;
 using Alex.API.Utils;
 using Alex.API.World;
@@ -46,12 +47,8 @@ namespace Alex.Worlds
 		private Stopwatch _sw = Stopwatch.StartNew();
 		public void Update(GameTime elapsed)
 		{
-			float dt = ((float) elapsed.ElapsedGameTime.TotalMilliseconds) /  50f;
-			var tickDt = _timeSinceTick.Elapsed.TotalSeconds;
-			//if (sw.ElapsedMilliseconds)
-			//	dt = (float) sw.ElapsedMilliseconds / 1000f;
+			float dt = (float) elapsed.ElapsedGameTime.TotalMilliseconds / 50f;
 
-			Hit.Clear();
 			foreach (var entity in PhysicsEntities.ToArray())
 			{
 				try
@@ -59,253 +56,33 @@ namespace Alex.Worlds
 					if (entity is Entity e)
 					{
 						if (e.NoAi) continue;
-						bool wasColliding = e.IsCollidingWithWorld;
-
-						//TruncateVelocity(e, dt);
-
-						var velocity = e.Velocity;
-
-						if (e.IsInWater && velocity.Y < 0f)
-						{
-							velocity.Y *= 0.8f;
-						}
-						else if (e.IsInLava)
-						{
-							//	velocity.Y *= 0.5f;
-						}
-
-						var position = e.KnownPosition;
-
-						var preview = position.PreviewMove(velocity * dt);
-
-						if (e.IsSneaking && e.KnownPosition.OnGround)
-						{
-							var newFeetBlock = e.Level?.GetBlock(preview + Vector3.Down);
-
-							if (!newFeetBlock.Solid)
-							{
-								velocity = new Vector3(-velocity.X, velocity.Y, -velocity.Z);
-							}
-						}
-
-						bool onGround = e.KnownPosition.OnGround;
 						
-					//	if (velocity != Vector3.Zero)
-						{
-							var boundingBox = e.GetBoundingBox(preview);
-
-							Bound bound = new Bound(World, boundingBox, preview);
-
-							if (bound.GetIntersecting(boundingBox, out var blocks))
-							{
-								velocity = AdjustForY(
-									e.GetBoundingBox(new Vector3(position.X, preview.Y, position.Z)), blocks, velocity,
-									position, out float? yCollisionPoint);
-
-								if (yCollisionPoint.HasValue)
-								{
-									if (yCollisionPoint > position.Y)
-									{
-										//We hit our head.
-										onGround = false;
-									}
-									else
-									{
-										if (!onGround)
-										{
-											onGround = true;
-										}
-									}
-								}
-								
-								Hit.AddRange(blocks.Select(x => x.box));
-
-								//var solid = blocks.Where(b => b.block.Solid && b.box.Max.Y > position.Y).ToArray();
-								var solid = blocks.Where(
-									b => b.block.Solid && b.box.Max.Y > position.Y && b.block.CanCollide()).ToArray();
-
-								if (solid.Length > 0)
-								{
-									var heighest = solid.OrderByDescending(x => x.box.Max.Y).FirstOrDefault();
-
-									if (MathF.Abs(heighest.box.Max.Y - boundingBox.Min.Y) <= 0.65f
-									    && e.KnownPosition.OnGround && !e.IsFlying)
-									{
-										//if (!heighest.block.BlockState.Model
-										//	.GetIntersecting(heighest.coordinates, boundingBox)
-										//	.Any(x => x.Max.Y > heighest.box.Max.Y))
-										//if (!blocks.Any(x => x.))
-										{
-
-											e.KnownPosition.Y = (float) heighest.box.Max.Y;
-										}
-									}
-
-									if (!wasColliding)
-									{
-										//var min = Vector3.Transform(boundingBox.Min,
-										//	Matrix.CreateRotationY(-MathHelper.ToRadians(position.HeadYaw)));
-
-										//var max = Vector3.Transform(boundingBox.Max,
-										//	Matrix.CreateRotationY(-MathHelper.ToRadians(position.HeadYaw)));
-
-										var min = boundingBox.Min;
-										var max = boundingBox.Max;
-
-										var minX = min.X;
-										var maxX = max.X;
-
-										var previewMinX = new Vector3(minX, preview.Y, preview.Z);
-
-										bool checkX = false;
-
-										if (!solid.Any(
-											x =>
-											{
-												var contains = x.box.Contains(previewMinX);
-
-												return contains != ContainmentType.Contains
-												       && contains != ContainmentType.Intersects;
-											}))
-										{
-											previewMinX = new Vector3(maxX, preview.Y, preview.Z);
-
-											if (solid.Any(
-												x =>
-												{
-													var contains = x.box.Contains(previewMinX);
-
-													return contains != ContainmentType.Contains
-													       && contains != ContainmentType.Intersects;
-												}))
-											{
-												checkX = true;
-											}
-										}
-										else
-										{
-											checkX = true;
-										}
-
-										if (checkX)
-										{
-											for (float x = 1f; x > 0f; x -= 0.1f)
-											{
-												Vector3 c = (position - preview) * new Vector3(x, 1f, 1f) + position;
-
-												if (solid.All(
-													s =>
-													{
-														var contains = s.box.Contains(c);
-
-														return contains != ContainmentType.Contains
-														       && contains != ContainmentType.Intersects;
-													}))
-												{
-													velocity = new Vector3((c.X - position.X) / 20f, velocity.Y, velocity.Z);
-
-													break;
-												}
-											}
-										}
-
-										var minZ = min.Z;
-										var maxZ = max.Z;
-
-										var previewMinZ = new Vector3(preview.X, preview.Y, minZ);
-
-										bool checkZ = false;
-
-										if (!solid.Any(
-											x =>
-											{
-												var contains = x.box.Contains(previewMinZ);
-
-												return contains != ContainmentType.Contains
-												       && contains != ContainmentType.Intersects;
-											}))
-										{
-											previewMinZ = new Vector3(preview.X, preview.Y, maxZ);
-
-											if (solid.Any(
-												x =>
-												{
-													var contains = x.box.Contains(previewMinZ);
-
-													return contains != ContainmentType.Contains
-													       && contains != ContainmentType.Intersects;
-												}))
-											{
-												checkZ = true;
-											}
-										}
-										else
-										{
-											checkZ = true;
-										}
-
-										if (checkZ)
-										{
-											for (float x = 1f; x > 0f; x -= 0.1f)
-											{
-												Vector3 c = (position - preview) * new Vector3(1f, 1f, x) + position;
-
-												if (solid.All(
-													s =>
-													{
-														var contains = s.box.Contains(c);
-
-														return contains != ContainmentType.Contains
-														       && contains != ContainmentType.Intersects;
-													}))
-												{
-													velocity = new Vector3(velocity.X, velocity.Y, (c.Z - position.Z) / 20f);
-
-													break;
-												}
-											}
-										}
-									}
-								}
-							}
-						}
-
-						e.Velocity = velocity;
-
-						var beforeMove = e.KnownPosition.ToVector3();
-						e.KnownPosition.Move(velocity * dt);
-
-					//	if (e is PlayerMob p)
-						{
-							e.DistanceMoved += MathF.Abs(Vector3.Distance(beforeMove, e.KnownPosition.ToVector3()));
-						}
-						//var rawDrag = (float) (1f - (e.Drag * dt));
-
-						//e.Velocity = velocity;// * new Vector3(1f, 0.98f, 1f);
-
-						//e.KnownPosition.Move(e.Velocity * dt);
+						UpdateEntity(e, dt);
 						
 						TruncateVelocity(e, dt);
 
-						/*var feetBlock = e.Level.GetBlockState(e.KnownPosition.GetCoordinates3D());
+						var boundingBox = e.GetBoundingBox(e.KnownPosition);
 
-						if (!feetBlock.Block.Solid)
+						bool anySolid = false;
+						foreach (var corner in boundingBox.GetCorners().Where(x => x.Y == boundingBox.Min.Y))
 						{
-							e.KnownPosition.OnGround = false;
-						}
-						else
-						{
-							
-						}*/
-						
-						//if (MathF.Abs(e.Velocity.Y) < 0.000001f)
-						{
-							e.KnownPosition.OnGround = MathF.Abs(e.Velocity.Y) < 0.005f || onGround;
+							var blockcoords = new BlockCoordinates(
+								new PlayerLocation(
+									corner.X, Math.Floor(corner.Y - 0.01f), corner.Z));
+
+							var block            = World.GetBlock(blockcoords.X, blockcoords.Y, blockcoords.Z);
+							var blockBoundingBox = block.GetBoundingBox(blockcoords);
+
+							//..onGround = onGround || block.Solid;
+
+							if (block.Solid && MathF.Abs(boundingBox.Min.Y - blockBoundingBox.Max.Y) <= 0.05f)
+							{
+								anySolid = true;
+								break;
+							}
 						}
 
-						{
-							//e.KnownPosition.OnGround = true;
-						}
+						e.KnownPosition.OnGround = anySolid;
 					}
 				}
 				catch (Exception ex)
@@ -314,11 +91,6 @@ namespace Alex.Worlds
 				}
 			}
 
-			if (Hit.Count > 0)
-			{
-				LastKnownHit = Hit.ToArray();
-			}
-			
 			sw.Restart();
 		}
 
@@ -329,105 +101,309 @@ namespace Alex.Worlds
 			{
 				if (entity is Entity e)
 				{
-					if (MathF.Abs(e.Velocity.Y) < 0.005f)
-					{
-						/*if (e.Velocity.X >= e.Friction)
-						{
-							e.Velocity -= new Vector3((float) e.Friction, 0, 0);
-						}
-						else if (e.Velocity.X <= -e.Friction)
-						{
-							e.Velocity += new Vector3((float) e.Friction, 0, 0);
-						}
-						
-						if (e.Velocity.Z >= e.Friction)
-						{
-							e.Velocity -= new Vector3(0, 0, (float) e.Friction);
-						}
-						else if (e.Velocity.Z <= -e.Friction)
-						{
-							e.Velocity += new Vector3(0, 0, (float) e.Friction);
-						}*/
-						
-						//var friction = (float) (1f - e.Friction);
-						entity.Velocity *= new Vector3(0.6f, 1f, 0.6f);
-					}
+					if (e.NoAi)
+						continue;
 					
-					if (!e.IsFlying && !e.KnownPosition.OnGround && e.IsAffectedByGravity)
+					var blockcoords = e.KnownPosition.GetCoordinates3D().BlockDown();
+
+					var block = World.GetBlock(blockcoords.X, blockcoords.Y, blockcoords.Z);
+					float drag = (float) (1f - e.Drag);
+					
+					if (e.KnownPosition.OnGround)
 					{
+						var slipperiness = (float)block.BlockMaterial.Slipperiness;
+						slipperiness *= 0.91f;
+						var multiplier = (float)(0.1 * (0.1627714 / (slipperiness * slipperiness * slipperiness)));
+						
+						entity.Velocity *= new Vector3(slipperiness, 1f, slipperiness);
+					}
+					else if (!e.IsFlying && !e.KnownPosition.OnGround && e.IsAffectedByGravity)
+					{
+						drag = 0.91f;
 						entity.Velocity -= new Vector3(0f, (float) (e.Gravity), 0f);
 
 						//var modifier = new Vector3(1f, (float) (1f - (e.Gravity * dt)), 1f);
 						//velocity *= modifier;
 					}
 
-					var rawDrag = (float) (1f - e.Drag);
+					entity.Velocity *= new Vector3(drag, 0.98f, drag);
 
-					entity.Velocity *= new Vector3(rawDrag, 1f, rawDrag);
+					//TruncateVelocity(e, 0f);
+					
+					//CheckCollision(e);
 				}
 			}
 			
 			_timeSinceTick.Restart();
 		}
 
-		private Vector3 AdjustForY(BoundingBox box, (BlockCoordinates coordinates, Block block, BoundingBox box, bool isBlockPart)[] blocks, Vector3 velocity, PlayerLocation position, out float? pointOfCollision)
+		private void UpdateEntity(Entity e, float deltaTime)
 		{
-			pointOfCollision = null;
+			var originalPosition = e.KnownPosition;
 			
-			if (velocity.Y == 0f)
-				return velocity;
+			Hit.Clear();
 			
-			float? collisionPoint = null;
-			bool negative = velocity.Y < 0f;
-			foreach (var corner in box.GetCorners().OrderBy(x => x.Y))
+			var position = e.KnownPosition;
+
+			var originalEntityBoundingBox = e.GetBoundingBox(position);
+			
+			var before = e.Velocity;
+			var velocity = e.Velocity;
+			var preview = position.PreviewMove(velocity * deltaTime);
+			var boundingBox = e.GetBoundingBox(preview);
+			
+			Bound bound = new Bound(World, boundingBox, preview);
+
+			if (bound.GetIntersecting(boundingBox, out var blocks))
+			{
+				if (AdjustForY(
+					originalEntityBoundingBox, e.GetBoundingBox(new Vector3(position.X, preview.Y, position.Z)), blocks,
+					ref velocity, out var yCollisionPoint))
+				{
+					e.CollidedWithWorld(before.Y < 0 ? Vector3.Down : Vector3.Up, yCollisionPoint);
+					//onGround = e.KnownPosition.OnGround;
+				}
+
+				var solidBlocks = blocks.Where(x => x.block.Solid).ToArray();
+
+				if (solidBlocks.Length > 0)
+				{
+					if (!e.IsFlying && velocity.Y >= 0f)
+					{
+						var matchingBlocks = solidBlocks
+						   .Where(x => x.block.Solid && x.box.Max.Y > preview.Y && x.block.CanCollide()).ToArray();
+
+						if (matchingBlocks.Length > 0)
+						{
+							var closest = matchingBlocks.Min(x => x.box.Max.Y);
+
+							if (MathF.Abs(preview.Y - closest) <= 0.55f)
+							{
+								e.KnownPosition.Y = closest + 0.005f;
+								position.Y = closest + 0.005f;
+							}
+						}
+					}
+
+					if (AdjustForX(
+						originalEntityBoundingBox, e.GetBoundingBox(new Vector3(preview.X, position.Y, position.Z)),
+						blocks, ref velocity, out var xCollisionPoint))
+					{
+						e.CollidedWithWorld(before.X < 0 ? Vector3.Left : Vector3.Right, xCollisionPoint);
+					}
+
+					if (AdjustForZ(
+						originalEntityBoundingBox, e.GetBoundingBox(new Vector3(position.X, position.Y, preview.Z)),
+						blocks, ref velocity, out var zCollisionPoint))
+					{
+						e.CollidedWithWorld(before.Z < 0 ? Vector3.Backward : Vector3.Forward, zCollisionPoint);
+					}
+
+					Hit.AddRange(blocks.Select(x => x.box));
+				}
+			}
+
+			if (Hit.Count > 0)
+			{
+				LastKnownHit = Hit.ToArray();
+			}
+
+			e.Velocity = velocity;
+			
+			e.KnownPosition.Move(e.Velocity * deltaTime);
+			//e.KnownPosition.OnGround = onGround;
+
+			e.DistanceMoved += MathF.Abs(Vector3.Distance(originalPosition, e.KnownPosition.ToVector3()));
+		}
+
+		private bool AdjustForZ(BoundingBox originalEntityBoundingBox, BoundingBox box, (BlockCoordinates coordinates, Block block, BoundingBox box, bool isBlockPart)[] blocks, ref Vector3 velocity, out Vector3 collisionPoint)
+		{
+			collisionPoint = Vector3.Zero;
+			
+			float? collision = null;
+			bool   negative  = velocity.Z < 0f;
+			foreach (var corner in box.GetCorners().OrderBy(x => x.Y).Where(
+				x =>
+				{
+					if (negative)
+						return x.Z <= originalEntityBoundingBox.Min.Z;
+
+					return x.Z >= originalEntityBoundingBox.Max.Z;
+				}))
 			{
 				foreach (var block in blocks)
 				{
 					var blockBox = block.box;
 					
-					bool pass = block.block.Solid && blockBox.Contains(corner) == ContainmentType.Contains;
+					bool pass = block.block.Solid && blockBox.Contains(corner) != ContainmentType.Disjoint;
 
 					if (pass)
 					{
-						var heading = corner - position;
-						var distance = heading.LengthSquared();
-						var direction = heading / distance;
-
 						if (negative)
 						{
-							if (collisionPoint == null || blockBox.Max.Y > collisionPoint.Value)
+							if (collision == null || collision.Value < blockBox.Max.Z)
 							{
-								collisionPoint = block.box.Max.Y;
+								collision = blockBox.Max.Z;
+								collisionPoint = corner;
 							}
 						}
 						else
 						{
-							if (collisionPoint == null || blockBox.Min.Y < collisionPoint.Value)
+							if (collision == null || collision.Value > blockBox.Min.Z)
 							{
-								collisionPoint = block.box.Min.Y;
+								collision = blockBox.Min.Z;
+								collisionPoint = corner;
 							}
 						}
 					}
 				}
 			}
-
-			pointOfCollision = collisionPoint;
-			if (collisionPoint.HasValue)
+		
+			if (collision.HasValue)
 			{
 				float distance = 0f;
-				/*if (negative)
+				if (negative)
 				{
-					distance = -(box.Min.Y - collisionPoint.Value);
+					distance = -(originalEntityBoundingBox.Min.Z - collision.Value);
 				}
 				else
 				{
-					distance = collisionPoint.Value - box.Max.Y;
-				}*/
+					distance = collision.Value - originalEntityBoundingBox.Max.Z;
+				}
 				
-				velocity = new Vector3(velocity.X, distance / 20f, velocity.Z);
+				velocity = new Vector3(velocity.X, velocity.Y, distance);
+
+				return true;
 			}
 
-			return velocity;
+			return false;
+		}
+		
+		private bool AdjustForX(BoundingBox originalEntityBoundingBox, BoundingBox box, (BlockCoordinates coordinates, Block block, BoundingBox box, bool isBlockPart)[] blocks, ref Vector3 velocity, out Vector3 collisionPoint)
+		{
+			collisionPoint = Vector3.Zero;
+			
+			float? collision = null;
+			bool   negative       = velocity.X < 0f;
+			foreach (var corner in box.GetCorners().OrderBy(x => x.Y).Where(
+				x =>
+				{
+					if (negative)
+						return x.X <= originalEntityBoundingBox.Min.X;
+
+					return x.X >= originalEntityBoundingBox.Max.X;
+				}))
+			{
+				foreach (var block in blocks)
+				{
+					var blockBox = block.box;
+					
+					bool pass = block.block.Solid && blockBox.Contains(corner) != ContainmentType.Disjoint;
+
+					if (pass)
+					{
+						if (negative)
+						{
+							if (collision == null || collision.Value < blockBox.Max.X)
+							{
+								collision = blockBox.Max.X;
+								collisionPoint = corner;
+							}
+						}
+						else
+						{
+							if (collision == null || collision.Value > blockBox.Min.X)
+							{
+								collision = blockBox.Min.X;
+								collisionPoint = corner;
+							}
+						}
+					}
+				}
+			}
+		
+			if (collision.HasValue)
+			{
+				float distance = 0f;
+				if (negative)
+				{
+					distance = -(originalEntityBoundingBox.Min.X - collision.Value);
+				}
+				else
+				{
+					distance = collision.Value - originalEntityBoundingBox.Max.X;
+				}
+				
+				velocity = new Vector3(distance, velocity.Y, velocity.Z);
+
+				return true;
+			}
+
+			return false;
+		}
+		
+		private bool AdjustForY(BoundingBox originalEntityBoundingBox, BoundingBox box, (BlockCoordinates coordinates, Block block, BoundingBox box, bool isBlockPart)[] blocks, ref Vector3 velocity, out Vector3 collisionPoint)
+		{
+			collisionPoint = Vector3.Zero;
+			float? pointOfCollision = null;
+			bool negative = velocity.Y < 0f;
+
+			foreach (var corner in box.GetCorners().OrderBy(x => x.Y).Where(
+				x =>
+				{
+					if (negative)
+						return x.Y <= originalEntityBoundingBox.Min.Y;
+
+					return x.Y >= originalEntityBoundingBox.Max.Y;
+				}))
+			{
+				foreach (var block in blocks)
+				{
+					var blockBox = block.box;
+					
+					bool pass = block.block.Solid && blockBox.Contains(corner) != ContainmentType.Disjoint;
+
+					if (pass)
+					{
+						if (negative)
+						{
+							if (pointOfCollision == null || pointOfCollision.Value < blockBox.Max.Y)
+							{
+								pointOfCollision = blockBox.Max.Y;
+								collisionPoint = corner;
+							}
+						}
+						else
+						{
+							if (pointOfCollision == null || pointOfCollision.Value > blockBox.Min.Y)
+							{
+								pointOfCollision = blockBox.Min.Y;
+								collisionPoint = corner;
+							}
+						}
+					}
+				}
+			}
+			
+			if (pointOfCollision.HasValue)
+			{
+				float distance = 0f;
+				if (negative)
+				{
+					distance = -(originalEntityBoundingBox.Min.Y - pointOfCollision.Value);
+				}
+				else
+				{
+					distance = pointOfCollision.Value - originalEntityBoundingBox.Max.Y;
+				}
+				
+				velocity = new Vector3(velocity.X, distance, velocity.Z);
+
+				return true;
+				//entity.CollidedWithWorld(new Vector3(0f,distance, 0f));
+			}
+
+			return false;
 		}
 		
 		public List<BoundingBox> Hit { get; set; } = new List<BoundingBox>();

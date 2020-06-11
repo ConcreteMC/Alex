@@ -9,6 +9,8 @@ namespace Alex.Blocks.Minecraft
 			IsReplacible = false;
 			IsFullBlock = false;
 			IsFullCube = true;
+
+			BlockMaterial = Material.Slime;
 		}
 	}
 }

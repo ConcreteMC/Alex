@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Alex.API;
+using Alex.API.Data.Servers;
 using Alex.API.Entities;
 using Alex.API.Graphics;
 using Alex.API.Graphics.Typography;
@@ -778,7 +779,7 @@ namespace Alex.Entities
 		var knownPos = new BlockCoordinates(new Vector3(KnownPosition.X, KnownPosition.Y, KnownPosition.Z));
 		var knownDown = KnownPosition.GetCoordinates3D();
 
-		if (!(Network is JavaNetworkProvider))
+		if (Alex.ServerType == ServerType.Bedrock)
 		{
 			knownDown = knownDown.BlockDown();
 		}
@@ -835,14 +836,14 @@ namespace Alex.Entities
 					IsInLava = false;
 				}
 
-				if (!feetBlock.Any(x => x.Storage == 0 && x.State.Block.Solid))
+				/*if (!feetBlock.Any(x => x.Storage == 0 && x.State.Block.Solid))
 				{
 					KnownPosition.OnGround = false;
 				}
 				else
 				{
 					KnownPosition.OnGround = true;
-				}
+				}*/
 			}
 
 			IsInWater = FeetInWater || HeadInWater;
@@ -1122,6 +1123,15 @@ namespace Alex.Entities
 					layerDepth: screenSpace.Z);
 
 				yOffset += c.Y;
+			}
+		}
+
+		public virtual void CollidedWithWorld(Vector3 direction, Vector3 position)
+		{
+			if (direction == Vector3.Down)
+			{
+				//Velocity = new Vector3(Velocity.X, 0f, Velocity.Z);
+				KnownPosition.OnGround = true;
 			}
 		}
 

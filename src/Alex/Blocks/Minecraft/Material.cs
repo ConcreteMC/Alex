@@ -34,8 +34,8 @@ namespace Alex.Blocks.Minecraft
 		public static IMaterial RedstoneLight = (new Material(MapColor.AIR)).SetAdventureModeExempt();
 		public static IMaterial Tnt = (new Material(MapColor.TNT)).SetBurning();
 		public static IMaterial Coral = (new Material(MapColor.FOLIAGE)).SetNoPushMobility();
-		public static IMaterial Ice = (new Material(MapColor.ICE)).SetTranslucent().SetAdventureModeExempt();
-		public static IMaterial PackedIce = (new Material(MapColor.ICE)).SetAdventureModeExempt();
+		public static IMaterial Ice = (new Material(MapColor.ICE)).SetTranslucent().SetAdventureModeExempt().SetSlipperines(0.98d);
+		public static IMaterial PackedIce = (new Material(MapColor.ICE)).SetAdventureModeExempt().SetSlipperines(0.989d);
 		public static IMaterial Snow = (new MaterialLogic(MapColor.SNOW)).SetReplaceable().SetRequiresTool().SetNoPushMobility();
 		public static IMaterial CraftedSnow = (new Material(MapColor.SNOW)).SetRequiresTool();
 		public static IMaterial Cactus = (new Material(MapColor.FOLIAGE)).SetNoPushMobility();
@@ -50,6 +50,8 @@ namespace Alex.Blocks.Minecraft
 		public static IMaterial Barrier = (new Material(MapColor.AIR)).SetRequiresTool().SetImmovableMobility();
 		public static IMaterial StructureVoid = new MaterialTransparent(MapColor.AIR);
 
+		public static IMaterial Slime = new Material(MapColor.GREEN).SetTranslucent().SetSlipperines(0.8d);
+		
 		private bool _canBurn;
 		private bool _replaceable;
 		private bool _isTranslucent;
@@ -177,6 +179,15 @@ namespace Alex.Blocks.Minecraft
 			return this.MapColor;
 		}
 		
+		public double Slipperiness { get; private set; } = 0.6;
+
+		public IMaterial SetSlipperines(double value)
+		{
+			Slipperiness = value;
+
+			return this;
+		}
+		
 		public IMaterial Clone()
 		{
 			return new Material(this.MapColor)
@@ -188,7 +199,8 @@ namespace Alex.Blocks.Minecraft
 				_requiredTool = _requiredTool,
 				Hardness = Hardness,
 				_requiresNoTool = _requiresNoTool,
-				_isAdventureModeExempt = _isAdventureModeExempt
+				_isAdventureModeExempt = _isAdventureModeExempt,
+				Slipperiness = Slipperiness
 			};
 		}
 	}
