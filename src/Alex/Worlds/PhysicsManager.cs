@@ -175,10 +175,21 @@ namespace Alex.Worlds
 
 						if (matchingBlocks.Length > 0)
 						{
-							var closest = matchingBlocks.Min(x => x.box.Max.Y);
+							var grouped = matchingBlocks.GroupBy(x => x.coordinates);//.Max(x => x.Key.Y).Min(x => x..box.Max.Y);
 
-							if (MathF.Abs(preview.Y - closest) <= 0.55f)
+							float closest = 10000f;
+							foreach (var group in grouped)
 							{
+								var heighest = group.MinBy(x => x.box.Max.Y);
+								if (heighest.box.Max.Y < closest && MathF.Abs(preview.Y - heighest.box.Max.Y) <= 0.6D)
+								{
+									closest = heighest.box.Max.Y;
+								}
+							}
+							
+							if (MathF.Abs(preview.Y - closest) <= 0.55D)
+							{
+								//TODO: Can we fit?
 								e.KnownPosition.Y = closest + 0.005f;
 								position.Y = closest + 0.005f;
 							}
@@ -222,7 +233,7 @@ namespace Alex.Worlds
 			
 			float? collision = null;
 			bool   negative  = velocity.Z < 0f;
-			foreach (var corner in box.GetCorners().OrderBy(x => x.Y).Where(
+		/*	foreach (var corner in box.GetCorners().OrderBy(x => x.Y).Where(
 				x =>
 				{
 					if (negative)
@@ -230,12 +241,12 @@ namespace Alex.Worlds
 
 					return x.Z >= originalEntityBoundingBox.Max.Z;
 				}))
-			{
+			{*/
 				foreach (var block in blocks)
 				{
 					var blockBox = block.box;
 					
-					bool pass = block.block.Solid && blockBox.Contains(corner) != ContainmentType.Disjoint;
+					bool pass = block.block.Solid && blockBox.Contains(box) != ContainmentType.Disjoint;
 
 					if (pass)
 					{
@@ -244,7 +255,7 @@ namespace Alex.Worlds
 							if (collision == null || collision.Value < blockBox.Max.Z)
 							{
 								collision = blockBox.Max.Z;
-								collisionPoint = corner;
+								collisionPoint = blockBox.Max;
 							}
 						}
 						else
@@ -252,12 +263,12 @@ namespace Alex.Worlds
 							if (collision == null || collision.Value > blockBox.Min.Z)
 							{
 								collision = blockBox.Min.Z;
-								collisionPoint = corner;
+								collisionPoint = blockBox.Min;
 							}
 						}
 					}
 				}
-			}
+				//}
 		
 			if (collision.HasValue)
 			{
@@ -285,7 +296,7 @@ namespace Alex.Worlds
 			
 			float? collision = null;
 			bool   negative       = velocity.X < 0f;
-			foreach (var corner in box.GetCorners().OrderBy(x => x.Y).Where(
+		/*	foreach (var corner in box.GetCorners().OrderBy(x => x.Y).Where(
 				x =>
 				{
 					if (negative)
@@ -293,12 +304,12 @@ namespace Alex.Worlds
 
 					return x.X >= originalEntityBoundingBox.Max.X;
 				}))
-			{
+			{*/
 				foreach (var block in blocks)
 				{
 					var blockBox = block.box;
 					
-					bool pass = block.block.Solid && blockBox.Contains(corner) != ContainmentType.Disjoint;
+					bool pass = block.block.Solid && blockBox.Contains(box) != ContainmentType.Disjoint;
 
 					if (pass)
 					{
@@ -307,7 +318,7 @@ namespace Alex.Worlds
 							if (collision == null || collision.Value < blockBox.Max.X)
 							{
 								collision = blockBox.Max.X;
-								collisionPoint = corner;
+								collisionPoint = blockBox.Max;
 							}
 						}
 						else
@@ -315,12 +326,12 @@ namespace Alex.Worlds
 							if (collision == null || collision.Value > blockBox.Min.X)
 							{
 								collision = blockBox.Min.X;
-								collisionPoint = corner;
+								collisionPoint = blockBox.Min;
 							}
 						}
 					}
 				}
-			}
+				//}
 		
 			if (collision.HasValue)
 			{
@@ -348,7 +359,7 @@ namespace Alex.Worlds
 			float? pointOfCollision = null;
 			bool negative = velocity.Y < 0f;
 
-			foreach (var corner in box.GetCorners().OrderBy(x => x.Y).Where(
+		/*	foreach (var corner in box.GetCorners().OrderBy(x => x.Y).Where(
 				x =>
 				{
 					if (negative)
@@ -356,12 +367,12 @@ namespace Alex.Worlds
 
 					return x.Y >= originalEntityBoundingBox.Max.Y;
 				}))
-			{
+			{*/
 				foreach (var block in blocks)
 				{
 					var blockBox = block.box;
 					
-					bool pass = block.block.Solid && blockBox.Contains(corner) != ContainmentType.Disjoint;
+					bool pass = block.block.Solid && blockBox.Contains(box) != ContainmentType.Disjoint;
 
 					if (pass)
 					{
@@ -370,7 +381,7 @@ namespace Alex.Worlds
 							if (pointOfCollision == null || pointOfCollision.Value < blockBox.Max.Y)
 							{
 								pointOfCollision = blockBox.Max.Y;
-								collisionPoint = corner;
+								collisionPoint = blockBox.Max;
 							}
 						}
 						else
@@ -378,12 +389,12 @@ namespace Alex.Worlds
 							if (pointOfCollision == null || pointOfCollision.Value > blockBox.Min.Y)
 							{
 								pointOfCollision = blockBox.Min.Y;
-								collisionPoint = corner;
+								collisionPoint = blockBox.Min;
 							}
 						}
 					}
 				}
-			}
+			//}
 			
 			if (pointOfCollision.HasValue)
 			{
