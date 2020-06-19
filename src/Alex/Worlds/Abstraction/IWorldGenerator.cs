@@ -11,6 +11,5 @@ namespace Alex.Worlds.Abstraction
 		Vector3 GetSpawnPoint();
 
 		void Initialize();
-		LevelInfo GetInfo();
 	}
 }

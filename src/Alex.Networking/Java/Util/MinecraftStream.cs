@@ -71,6 +71,13 @@ namespace Alex.Networking.Java.Util
 			BaseStream.SetLength(value);
 		}
 
+		public void Read(Span<byte> memory, int count)
+		{
+			var data = BaseStream.ReadToSpan(count);
+			data.CopyTo(memory);
+			//BaseStream.ReadToSpan()
+		}
+
 		public override int Read(byte[] buffer, int offset, int count)
 		{
 			return BaseStream.Read(buffer, offset, count);
@@ -79,6 +86,11 @@ namespace Alex.Networking.Java.Util
 		public override void Write(byte[] buffer, int offset, int count)
 		{
 			BaseStream.Write(buffer, offset, count);
+		}
+		
+		public void Write(in Memory<byte> buffer, int offset, in int bufferLength)
+		{
+			BaseStream.Write(buffer.Slice(offset, bufferLength).Span);
 		}
 
 		public override void Flush()

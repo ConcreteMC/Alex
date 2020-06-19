@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Alex.Networking.Java.Util;
 using fNbt;
 
@@ -9,7 +10,7 @@ namespace Alex.Networking.Java.Packets.Play
 		public int ChunkX;
 		public int ChunkZ;
 		public int PrimaryBitmask;
-		public byte[] Buffer;
+		public Memory<byte> Buffer;
 		public List<NbtCompound> TileEntities;
 		public NbtCompound HeightMaps;
 		public bool GroundUp;
@@ -42,8 +43,8 @@ namespace Alex.Networking.Java.Packets.Play
 			}
 
 			int i = stream.ReadVarInt();
-			Buffer = new byte[i];
-			stream.Read(Buffer, 0, Buffer.Length);
+			Buffer = new Memory<byte>(new byte[i]);
+			stream.Read(Buffer.Span, Buffer.Length);
 			
 			int tileEntities = stream.ReadVarInt();
 			for (int k = 0; k < tileEntities; k++)

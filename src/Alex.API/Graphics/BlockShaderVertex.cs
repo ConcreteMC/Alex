@@ -1,6 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MiNET.Blocks;
 
 namespace Alex.API.Graphics
 {
@@ -10,11 +9,6 @@ namespace Alex.API.Graphics
         ///     Stores the position of this vertex
         /// </summary>
         public Vector3 Position;
-
-        /// <summary>
-        ///     The normal for this vertex
-        /// </summary>
-       // public Vector3 Normal;
 
         /// <summary>
         ///     The UV co-ords for this vertex (the co-ords in the texture)

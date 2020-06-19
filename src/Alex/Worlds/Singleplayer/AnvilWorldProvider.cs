@@ -32,7 +32,6 @@ namespace Alex.Worlds.Singleplayer
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(AnvilWorldProvider));
 
 		public IWorldGenerator MissingChunkProvider { get; set; }
-		public LevelInfo LevelInfo { get; private set; }
 
 		public string BasePath { get; private set; }
 
@@ -78,7 +77,7 @@ namespace Alex.Worlds.Singleplayer
 				{
 					file.LoadFromFile(levelFileName);
 					NbtTag dataTag = file.RootTag["Data"];
-					LevelInfo = new LevelInfo(dataTag);
+				//	LevelInfo = new LevelInfo(dataTag);
 				}
 				else
 				{
@@ -88,11 +87,6 @@ namespace Alex.Worlds.Singleplayer
 
 				_isInitialized = true;
 			}
-		}
-
-		public LevelInfo GetInfo()
-		{
-			return LevelInfo;
 		}
 
 		public ChunkColumn GenerateChunkColumn(ChunkCoordinates chunkCoordinates)
@@ -410,8 +404,8 @@ namespace Alex.Worlds.Singleplayer
 		private bool _spawnInitiated = false;
 		public Vector3 GetSpawnPoint()
 		{
-			var spawnPoint = new Vector3(LevelInfo.SpawnX, LevelInfo.SpawnY + 2 /* + WaterOffsetY*/, LevelInfo.SpawnZ);
-
+			//var spawnPoint = new Vector3(LevelInfo.SpawnX, LevelInfo.SpawnY + 2 /* + WaterOffsetY*/, LevelInfo.SpawnZ);
+			var spawnPoint = new Vector3(0, 255, 0);
 			if (spawnPoint.Y > 256) spawnPoint.Y = 255;
 			if (!_spawnInitiated)
 			{
@@ -436,16 +430,6 @@ namespace Alex.Worlds.Singleplayer
 				}
 			}
 			return spawnPoint;
-		}
-
-		public long GetTime()
-		{
-			return LevelInfo.Time;
-		}
-
-		public string GetName()
-		{
-			return LevelInfo.LevelName;
 		}
 
 		public bool HaveNether()

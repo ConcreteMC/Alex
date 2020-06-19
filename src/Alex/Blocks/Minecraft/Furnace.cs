@@ -14,7 +14,7 @@ namespace Alex.Blocks.Minecraft
 		}
 		
 		/// <inheritdoc />
-		public override int LightValue {
+		public override byte LightValue {
 			get
 			{
 				if (BlockState.GetTypedValue(Lit))

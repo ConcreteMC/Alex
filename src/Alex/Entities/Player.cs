@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Alex.API.Blocks;
 using Alex.API.Entities;
 using Alex.API.Graphics;
 using Alex.API.Input;
@@ -16,9 +17,6 @@ using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MiNET;
-using MiNET.Net;
-using MiNET.Utils;
 using NLog;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
@@ -145,7 +143,7 @@ namespace Alex.Entities
 	    private bool _destroyingBlock = false;
         private DateTime _destroyingTick = DateTime.MaxValue;
 	    private double _destroyTimeNeeded = 0;
-	    private BlockFace _destroyingFace;
+	    private API.Blocks.BlockFace _destroyingFace;
 	    
 	    private int PreviousSlot { get; set; } = 9;
 	    private DateTime _lastTimeWithoutInput = DateTime.MinValue;
@@ -359,11 +357,11 @@ namespace Alex.Entities
 		    if (attack)
 		    {
 			   // entity.EntityHurt();
-			    Network?.EntityInteraction(this, entity, McpeInventoryTransaction.ItemUseOnEntityAction.Attack);
+			    Network?.EntityInteraction(this, entity, ItemUseOnEntityAction.Attack);
 		    }
 		    else
 		    {
-			    Network?.EntityInteraction(this, entity, McpeInventoryTransaction.ItemUseOnEntityAction.Interact);
+			    Network?.EntityInteraction(this, entity, ItemUseOnEntityAction.Interact);
 		    }
 	    }
 

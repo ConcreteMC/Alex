@@ -4,6 +4,7 @@
         <TargetFramework>netcoreapp3.1</TargetFramework>
         <Configurations>Debug;Release</Configurations>
         <Platforms>AnyCPU;X64</Platforms>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     </PropertyGroup>
 
     <ItemGroup>
@@ -11,7 +12,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="MiNET" Version="1.0.2099" />
+      <PackageReference Include="MiNET" Version="1.0.2100" />
+      <PackageReference Include="Portable.BouncyCastle" Version="1.8.5" />
     </ItemGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

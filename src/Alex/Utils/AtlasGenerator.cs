@@ -203,12 +203,17 @@ namespace Alex.Utils
 		   
 		    for (int i = 0; i < frames.Length; i++)
 		    {
+			    double percentage = 100D * ((double)i / (double)frames.Length);
+			    progressReceiver.UpdateProgress((int)percentage, "Animating blocks...");
+			    
 			    var target = animatedFrame.CloneAs<Rgba32>(); //new Bitmap(animatedFrame);
 			    var r = new System.Drawing.Rectangle(0, 0, TextureWidth, TextureHeight);
 
 			    System.Drawing.Rectangle destination;
 			    if (waterLocation != null)
 			    {
+				    progressReceiver.UpdateProgress((int)percentage, null, "block/water_still");
+				    
 				    destination = new System.Drawing.Rectangle((int) waterLocation.Position.X,
 					    (int) waterLocation.Position.Y, TextureWidth, TextureHeight);
 
@@ -220,6 +225,8 @@ namespace Alex.Utils
 
 			    if (waterFlowLocation != null)
 			    {
+				    progressReceiver.UpdateProgress((int)percentage, null, "block/water_flow");
+				    
 				    destination = new System.Drawing.Rectangle((int) waterFlowLocation.Position.X,
 					    (int) waterFlowLocation.Position.Y, TextureWidth, TextureHeight);
 				    if (waterFlowFrames.Length > 0)
@@ -229,6 +236,8 @@ namespace Alex.Utils
 
 			    if (lavaLocation != null)
 			    {
+				    progressReceiver.UpdateProgress((int)percentage, null, "block/lava_still");
+				    
 				    destination = new System.Drawing.Rectangle((int) lavaLocation.Position.X,
 					    (int) lavaLocation.Position.Y, TextureWidth, TextureHeight);
 				    if (lavaFrames.Length > 0)
@@ -237,6 +246,8 @@ namespace Alex.Utils
 
 			    if (lavaFlowLocation != null)
 			    {
+				    progressReceiver.UpdateProgress((int)percentage, null, "block/lava_flow");
+				    
 				    destination = new System.Drawing.Rectangle((int) lavaFlowLocation.Position.X,
 					    (int) lavaFlowLocation.Position.Y, TextureWidth, TextureHeight);
 				    if (lavaFlowFrames.Length > 0)
@@ -246,6 +257,8 @@ namespace Alex.Utils
 
 			    if (fireLocation != null)
 			    {
+				    progressReceiver.UpdateProgress((int)percentage, null, "block/fire_0");
+				    
 				    destination = new System.Drawing.Rectangle((int) fireLocation.Position.X,
 					    (int) fireLocation.Position.Y, TextureWidth, TextureHeight);
 				    if (fireFrames.Length > 0)
@@ -254,6 +267,8 @@ namespace Alex.Utils
 
 			    if (fireLocation2 != null)
 			    {
+				    progressReceiver.UpdateProgress((int)percentage, null, "block/fire_1");
+				    
 				    destination = new System.Drawing.Rectangle((int) fireLocation2.Position.X,
 					    (int) fireLocation2.Position.Y, TextureWidth, TextureHeight);
 				    if (fireFrames2.Length > 0)
@@ -263,6 +278,8 @@ namespace Alex.Utils
 
 			    if (portalLocation != null)
 			    {
+				    progressReceiver.UpdateProgress((int)percentage, null, "block/nether_portal");
+				    
 				    destination = new System.Drawing.Rectangle((int) portalLocation.Position.X,
 					    (int) portalLocation.Position.Y, TextureWidth, TextureHeight);
 				    if (portalFrames.Length > 0)
@@ -272,6 +289,8 @@ namespace Alex.Utils
 
 			    if (seagrassLocation != null)
 			    {
+				    progressReceiver.UpdateProgress((int)percentage, null, "block/seagrass");
+				    
 				    destination = new System.Drawing.Rectangle((int) seagrassLocation.Position.X,
 					    (int) seagrassLocation.Position.Y, TextureWidth, TextureHeight);
 				    if (seagrassFrames.Length > 0)

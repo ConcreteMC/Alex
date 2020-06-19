@@ -11,7 +11,7 @@ namespace Alex.Blocks.Minecraft
 			Hardness = 0.3f;
 		}
 
-		public override int LightValue
+		public override byte LightValue
 		{
 			get
 			{

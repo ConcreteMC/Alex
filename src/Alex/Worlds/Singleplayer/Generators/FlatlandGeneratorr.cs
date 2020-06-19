@@ -76,10 +76,5 @@ namespace Alex.Worlds.Singleplayer.Generators
 	    {
 		    
 	    }
-
-	    public LevelInfo GetInfo()
-	    {
-		    return new LevelInfo();
-	    }
     }
 }

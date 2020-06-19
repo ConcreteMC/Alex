@@ -11,11 +11,13 @@ using Alex.Worlds.Chunks;
 using Alex.Worlds.Singleplayer;
 using fNbt;
 using MiNET;
+using MiNET.LevelDB.Utils;
 using MiNET.Net;
 using MiNET.Utils;
 using NLog;
 using BlockState = Alex.Blocks.State.BlockState;
 using NibbleArray = MiNET.Utils.NibbleArray;
+using SpanReader = Alex.API.Utils.SpanReader;
 
 namespace Alex.Bedrock.Worlds
 {
@@ -40,8 +42,8 @@ namespace Alex.Bedrock.Worlds
 	    private CancellationToken CancellationToken { get; }
 	    //private DedicatedThreadPool ThreadPool { get; }
 	    public bool ClientSideLighting { get; set; } = true;
-	    private DedicatedThreadPool ThreadPool { get; }
-        public ChunkProcessor(DedicatedThreadPool threadPool, bool useAlexChunks, CancellationToken cancellationToken)
+	    private API.Utils.DedicatedThreadPool ThreadPool { get; }
+        public ChunkProcessor(API.Utils.DedicatedThreadPool threadPool, bool useAlexChunks, CancellationToken cancellationToken)
         {
 	        Instance = this;
 	        ThreadPool = threadPool;
@@ -147,27 +149,27 @@ namespace Alex.Bedrock.Worlds
 						        uint[] words = new uint[wordCount];
 						        for (int w = 0; w < wordCount; w++)
 						        {
-							        int word = defStream.ReadInt32();
-							        words[w] = SwapBytes((uint) word);
+							        uint word = defStream.ReadUInt32();
+							        words[w] = word;
 						        }
 
-						        uint[] pallete = new uint[0];
+						        int[] pallete = new int[0];
 
 						        if (isRuntime)
 						        {
 							        int palleteSize = VarInt.ReadSInt32(stream);
-							        pallete = new uint[palleteSize];
+							        if (palleteSize <= 0)
+							        {
+								        Log.Warn($"Pallete size is <= 0 ({palleteSize})");
+								        continue;
+							        }
+							        
+							        pallete = new int[palleteSize];
 
 							        for (int pi = 0; pi < pallete.Length; pi++)
 							        {
-								        var ui = (uint) VarInt.ReadSInt32(stream);
+								        var ui = VarInt.ReadSInt32(stream);
 								        pallete[pi] = ui;
-							        }
-
-							        if (palleteSize == 0)
-							        {
-								        Log.Warn($"Pallete size is 0");
-								        continue;
 							        }
 						        }
 
@@ -191,7 +193,7 @@ namespace Alex.Bedrock.Worlds
 									        continue;
 								        }
 
-								        BlockState translated = GetBlockState(pallete[state]);
+								        BlockState translated = GetBlockState((uint)pallete[state]);
 
 								        if (translated != null)
 								        {

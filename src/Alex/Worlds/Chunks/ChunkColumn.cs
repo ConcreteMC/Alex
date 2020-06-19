@@ -100,12 +100,17 @@ namespace Alex.Worlds.Chunks
 			//_scheduledUpdates.Add(y << 8 | z << 4 | x);
 		}
 
+		protected virtual ChunkSection CreateSection(int y, bool storeSkylight, int sections)
+		{
+			return new ChunkSection(this, y, storeSkylight, sections);
+		}
+
 		public ChunkSection GetSection(int y)
 		{
 			var section = Sections[y >> 4];
 			if (section == null)
 			{
-				var storage = new ChunkSection(this, y, true, 2);
+				var storage = CreateSection(y, true, 2);
 				Sections[y >> 4] = storage;
 				return storage;
 			}
@@ -452,65 +457,6 @@ namespace Alex.Worlds.Chunks
 			foreach (var section in Sections)
 			{
 				section?.RemoveInvalidBlocks();
-			}
-		}
-
-		public void Read(MinecraftStream ms, int availableSections, bool groundUp, bool readSkylight)
-		{
-			try
-			{
-				//	Stopwatch s = Stopwatch.StartNew();
-				//	Log.Debug($"Reading chunk data...");
-
-				for (int sectionY = 0; sectionY < this.Sections.Length; sectionY++)
-				{
-					var storage = (ChunkSection) this.Sections[sectionY];
-					if ((availableSections & (1 << sectionY)) != 0)
-					{
-						if (storage == null)
-						{
-							storage = new ChunkSection(this, sectionY, readSkylight);
-						}
-
-						storage.Read(ms);
-					}
-					else
-					{
-						if (groundUp && (storage == null || storage.Blocks > 0))
-						{
-							//if (storage == null)
-							//	storage = new ChunkSection(this, sectionY, readSkylight, 2);
-						}
-					}
-
-					if (storage != null)
-						storage.IsDirty = true;
-					
-					this.Sections[sectionY] = storage;
-				}
-
-				if (groundUp)
-				{
-					for (int x = 0; x < 16; x++)
-					{
-						for (int z = 0; z < 16; z++)
-						{
-							var biomeId = ms.ReadInt();
-							SetBiome(x, z, biomeId);
-						}
-					}
-				}
-
-				for (int i = 0; i < Sections.Length; i++)
-				{
-					Sections[i]?.RemoveInvalidBlocks();
-				}
-
-				CalculateHeight();
-			}
-			catch (Exception e)
-			{
-				Log.Warn($"Received supposedly corrupted chunk:" + e);
 			}
 		}
 	}

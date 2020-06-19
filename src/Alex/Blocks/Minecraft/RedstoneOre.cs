@@ -12,7 +12,7 @@ namespace Alex.Blocks.Minecraft
 			Hardness = 3;
 		}
 		
-		public override int LightValue {
+		public override byte LightValue {
 			get
 			{
 				if (BlockState.GetTypedValue(Lit))

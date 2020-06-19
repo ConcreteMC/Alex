@@ -4,10 +4,10 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Services;
+using Alex.API.Utils;
 using Alex.Bedrock.Worlds;
 using Alex.Services;
 using Alex.Utils;
-using MiNET.Utils;
 using NLog;
 
 namespace Alex.Bedrock
@@ -46,7 +46,7 @@ namespace Alex.Bedrock
 				return;
 			}*/
 
-			using(DedicatedThreadPool threadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(1, ThreadType.Background, "ServerPingThread")))
+			using(MiNET.Utils.DedicatedThreadPool threadPool = new MiNET.Utils.DedicatedThreadPool(new MiNET.Utils.DedicatedThreadPoolSettings(1, MiNET.Utils.ThreadType.Background, "ServerPingThread")))
 		    {
 			    BedrockClient client = null;
 			    try

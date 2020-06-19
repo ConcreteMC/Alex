@@ -25,7 +25,6 @@ using Collections.Pooled;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MiNET.Utils;
 using NLog;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;

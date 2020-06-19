@@ -42,7 +42,7 @@ namespace Alex.Plugins
                 }
             }
 
-            //AppDomain.CurrentDomain.AssemblyResolve += PluginManagerOnAssemblyResolve;
+            AppDomain.CurrentDomain.AssemblyResolve += PluginManagerOnAssemblyResolve;
         }
 
         private Assembly PluginManagerOnAssemblyResolve(object sender, ResolveEventArgs args)
@@ -554,7 +554,7 @@ namespace Alex.Plugins
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Could not load assembly");
+                Log.Error(ex, "Could not load assembly: " + ex);
             }
 
             loaded = new Plugin[0];

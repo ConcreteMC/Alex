@@ -3,6 +3,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Text;
+using Alex.API.Utils;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
 using Newtonsoft.Json;
@@ -101,9 +103,9 @@ namespace Alex.ResourcePackLib
 
 		private void LoadEntityDefinition(FileInfo entry, Dictionary<string, EntityDescription> entityDefinitions)
 		{
-			using (var open = entry.OpenText())
+			using (var stream = entry.Open(FileMode.Open))
 			{
-				var json = open.ReadToEnd();
+				var json = Encoding.UTF8.GetString(stream.ReadToSpan(entry.Length));
 
 				string fileName = Path.GetFileNameWithoutExtension(entry.Name);
 

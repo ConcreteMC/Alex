@@ -44,6 +44,7 @@ using SixLabors.ImageSharp.PixelFormats;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
 using MathF = System.MathF;
+using MessageType = Alex.API.Data.MessageType;
 using Player = Alex.Entities.Player;
 using PlayerLocation = Alex.API.Utils.PlayerLocation;
 using UUID = Alex.API.Utils.UUID;
@@ -213,7 +214,7 @@ namespace Alex.Bedrock.Worlds
 
         public void HandleMcpeText(McpeText message)
 		{
-			EventDispatcher.DispatchEvent(new ChatMessageReceivedEvent(new ChatObject(message.message), (MessageType)message.type));
+			EventDispatcher.DispatchEvent(new ChatMessageReceivedEvent(new ChatObject(message.message), (MessageType) message.type));
 		}
 
 		public void HandleMcpeSetTime(McpeSetTime message)

@@ -180,7 +180,7 @@ namespace Alex.Graphics.Models
 		{
 			get
 			{
-				int i = (int)(World.WorldInfo.Time % 24000L);
+				int i = (int)(World.Time % 24000L);
 				float f = ((float)i + 1f) / 24000.0F - 0.25F;
 
 				if (f < 0.0F)
@@ -280,7 +280,7 @@ namespace Alex.Graphics.Models
 	    {
 		    if (!RenderSkybox) return;
 		    
-		    var moonPhase = (int)(World.WorldInfo.Time / 24000L % 8L + 8L) % 8;
+		    var moonPhase = (int)(World.Time / 24000L % 8L + 8L) % 8;
 		    if (CurrentMoonPhase != moonPhase)
 		    {
 			    CurrentMoonPhase = moonPhase;

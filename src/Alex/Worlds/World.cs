@@ -58,8 +58,6 @@ namespace Alex.Worlds
 		private GraphicsDevice Graphics { get; }
 		public Camera Camera { get; set; }
 
-		public LevelInfo WorldInfo { get; set; }
-
 		public Player Player { get; set; }
 		private AlexOptions Options { get; }
 		
@@ -69,6 +67,10 @@ namespace Alex.Worlds
 		private bool UseDepthMap { get; set; }
 		//public SkyLightCalculations SkyLightCalculations { get; }
 		//private ServerType ServerType { get; }
+
+		public long WorldTick { get; set; } = 0;
+		public long Time { get; set; } = 0;
+		public bool Raining { get; set; } = false;
 		
 		public bool DrowningDamage { get; set; } = true;
 		public bool CommandblockOutput { get; set; } = true;
@@ -278,7 +280,7 @@ namespace Alex.Worlds
 		private float _fovModifier = -1;
 		private bool UpdatingPriorities = false;
 		private float BrightnessMod = 0f;
-        public void Update(UpdateArgs args)
+		public void Update(UpdateArgs args)
 		{
 			args.Camera = Camera;
 			if (Player.FOVModifier != _fovModifier)
@@ -324,7 +326,7 @@ namespace Alex.Worlds
 			{
 				if (DoDaylightcycle)
 				{
-					WorldInfo.Time++;
+					Time++;
 				}
 			}
 		}
@@ -1014,12 +1016,12 @@ namespace Alex.Worlds
 
 		public void SetTime(long worldTime)
 		{
-			WorldInfo.Time = worldTime;
+			Time = worldTime;
 		}
 
 		public void SetRain(bool raining)
 		{
-			WorldInfo.Raining = raining;
+			Raining = raining;
 		}
 
 		public void SetBlockState(BlockCoordinates coordinates, BlockState blockState)

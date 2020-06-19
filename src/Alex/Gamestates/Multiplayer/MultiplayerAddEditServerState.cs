@@ -118,9 +118,10 @@ namespace Alex.Gamestates.Multiplayer
 			{
 				if (_selectedImplementation == null)
 					_selectedImplementation = type;
-				
+
+				GuiToggleButton element;
 				_serverTypeGroup.AddChild(
-					new GuiToggleButton(type.DisplayName)
+					element = new GuiToggleButton(type.DisplayName)
 					{
 						Margin = new Thickness(5),
 						Modern = true,
@@ -128,12 +129,16 @@ namespace Alex.Gamestates.Multiplayer
 						Checked = serverType == type.Id,
 						CheckedOutlineThickness = new Thickness(1),
 						DisplayFormat = new ValueFormatter<bool>((val) => $"{type.DisplayName} {(val ? "[Active]" : "")}"),
-						TabIndex = tabIndex++,
-						Action = () =>
-						{
-							_selectedImplementation = type;
-						}
+						TabIndex = tabIndex++
 					});
+
+				element.ValueChanged += (sender, value) =>
+				{
+					if (value)
+					{
+						_selectedImplementation = type;
+					}
+				};
 			}
 
 		/*	_serverTypeGroup.AddChild(_bedrockEditionButton = new GuiToggleButton("Bedrock")

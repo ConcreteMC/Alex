@@ -195,7 +195,7 @@ namespace Alex.Gamestates
 
 		private void PlayerProfileServiceOnProfileChanged(object sender, PlayerProfileChangedEventArgs e)
 		{
-			if (e.Profile.Skin.Texture != null)
+			if (e.Profile?.Skin?.Texture != null)
 			{
 				_playerView.Entity = new PlayerMob(e.Profile.Username, null, null, e.Profile.Skin.Texture,
 					e.Profile.Skin.Slim ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom" );

@@ -17,13 +17,13 @@ namespace Alex.Worlds.Chunks
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ChunkSection));
 
 		private int _yBase;
-		private int _blockRefCount;
-		private int _tickRefCount;
+		protected int _blockRefCount;
+		protected int _tickRefCount;
 
 		public int Blocks => _blockRefCount;
 		
 		//private BlockStorage Data;
-		private BlockStorage[] _blockStorages;
+		protected BlockStorage[] _blockStorages;
 		public NibbleArray BlockLight;
 		public NibbleArray SkyLight;
 
@@ -126,7 +126,7 @@ namespace Alex.Worlds.Chunks
 			//this.SkyLight = new NibbleArray(4096, initialValue);
 		}
 
-		private static int GetCoordinateIndex(int x, int y, int z)
+        protected static int GetCoordinateIndex(int x, int y, int z)
 		{
 			return (y << 8 | z << 4 | x);
 		}
@@ -399,7 +399,7 @@ namespace Alex.Worlds.Chunks
 			return this.BlockLight[GetCoordinateIndex(x,y,z)];
 		}
 
-		public void RemoveInvalidBlocks()
+		public virtual void RemoveInvalidBlocks()
 		{
 			this._blockRefCount = 0;
 			this._tickRefCount = 0;
@@ -428,25 +428,6 @@ namespace Alex.Worlds.Chunks
 									++this._tickRefCount;
 								}
 							}
-
-							/*if (Alex.ServerType == ServerType.Java)
-							{
-								if (block.LightValue > 0)
-								{
-									var coords = new BlockCoordinates(x, y, z);
-
-									if (!LightSources.Contains(coords))
-									{
-										LightSources.Add(coords);
-									}
-
-									if (GetBlocklight(x, y, z) != block.LightValue)
-									{
-										SetBlocklight(x, y, z, (byte) block.LightValue);
-										SetBlockLightScheduled(x, y, z, true);
-									}
-								}
-							}*/
 						}
 					}
 				}
@@ -455,12 +436,7 @@ namespace Alex.Worlds.Chunks
 			//CheckForSolidBorder();
 		}
 
-		public void Read(MinecraftStream ms)
-	    {
-		    _blockStorages[0].Read(ms);
-	    }
-
-	    public void Dispose()
+		public void Dispose()
 	    {
 		    for (int i = 0; i < _blockStorages.Length; i++)
 		    {

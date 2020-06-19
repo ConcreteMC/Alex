@@ -65,7 +65,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			});
 		}
 
-	    public override void BlockPlaced(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition, Entity p)
+	    public override void BlockPlaced(BlockCoordinates position, API.Blocks.BlockFace face, int hand, Vector3 cursorPosition, Entity p)
 	    {
 		    Client.SendPacket(new PlayerBlockPlacementPacket()
 	        {
@@ -77,7 +77,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
         }
 
-		public override void PlayerDigging(DiggingStatus status, BlockCoordinates position, BlockFace face, Vector3 cursorPosition)
+		public override void PlayerDigging(DiggingStatus status, BlockCoordinates position, API.Blocks.BlockFace face, Vector3 cursorPosition)
 		{
 			Client.SendPacket(new PlayerDiggingPacket()
 			{
@@ -87,12 +87,12 @@ namespace Alex.Worlds.Multiplayer.Java
 			});
 		}
 
-		public override void EntityInteraction(Entity player, Entity target, McpeInventoryTransaction.ItemUseOnEntityAction action)
+		public override void EntityInteraction(Entity player, Entity target, ItemUseOnEntityAction action)
 		{
 			
 			switch (action)
 			{
-				case McpeInventoryTransaction.ItemUseOnEntityAction.Interact:
+				case ItemUseOnEntityAction.Interact:
 				{
 					var packet = new InteractEntityPacket();
 					packet.EntityId = (int) target.EntityId;
@@ -102,7 +102,7 @@ namespace Alex.Worlds.Multiplayer.Java
 					Client.SendPacket(packet);
 				}
 					break;
-				case McpeInventoryTransaction.ItemUseOnEntityAction.Attack:
+				case ItemUseOnEntityAction.Attack:
 				{
 					var packet = new InteractEntityPacket();
 					packet.EntityId = (int) target.EntityId;
@@ -111,12 +111,12 @@ namespace Alex.Worlds.Multiplayer.Java
 					Client.SendPacket(packet);
 				}
 					break;
-				case McpeInventoryTransaction.ItemUseOnEntityAction.ItemInteract:
+				case ItemUseOnEntityAction.ItemInteract:
 					break;
 			}
 		}
 
-		public override void WorldInteraction(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition)
+		public override void WorldInteraction(BlockCoordinates position, API.Blocks.BlockFace face, int hand, Vector3 cursorPosition)
 		{
 			Client.SendPacket(new PlayerBlockPlacementPacket()
 			{

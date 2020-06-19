@@ -1,5 +1,7 @@
 ﻿using System.Drawing;
 using Newtonsoft.Json;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace Alex.ResourcePackLib.Json
 {
@@ -11,7 +13,7 @@ namespace Alex.ResourcePackLib.Json
 	public class ResourcePackInfo
 	{
 		[JsonIgnore]
-		public Bitmap Logo;
+		public Image<Rgba32> Logo;
 
 		[JsonProperty("pack_format")]
 		public int Format;

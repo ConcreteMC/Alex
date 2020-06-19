@@ -55,11 +55,14 @@ using Newtonsoft.Json;
 using NLog;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using DedicatedThreadPool = Alex.API.Utils.DedicatedThreadPool;
+using DedicatedThreadPoolSettings = Alex.API.Utils.DedicatedThreadPoolSettings;
 using GuiDebugHelper = Alex.Gui.GuiDebugHelper;
 using Image = SixLabors.ImageSharp.Image;
 using Point = Microsoft.Xna.Framework.Point;
 using Skin = Alex.API.Utils.Skin;
 using TextInputEventArgs = Microsoft.Xna.Framework.TextInputEventArgs;
+using ThreadType = Alex.API.Utils.ThreadType;
 
 namespace Alex
 {

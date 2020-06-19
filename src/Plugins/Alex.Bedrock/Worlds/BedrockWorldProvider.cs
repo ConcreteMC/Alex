@@ -181,9 +181,8 @@ namespace Alex.Bedrock.Worlds
 			World.UnloadChunk(coordinates);
 		}
 
-		protected override void Initiate(out LevelInfo info)
+		protected override void Initiate()
 		{
-			info = new LevelInfo();
 			_initiated = true;
 			Client.World = World;
 			//if (WorldReceiver.Player is Player player)

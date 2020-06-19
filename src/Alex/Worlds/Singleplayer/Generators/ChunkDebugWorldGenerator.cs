@@ -77,11 +77,7 @@ namespace Alex.Worlds.Singleplayer.Generators
         {
             return new Vector3(0, 4 * 16, 0);
         }
-
-        public LevelInfo GetInfo()
-        {
-            return new LevelInfo();
-        }
+        
         public void Initialize()
         {
 			

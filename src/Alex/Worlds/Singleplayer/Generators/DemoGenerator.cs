@@ -98,18 +98,5 @@ namespace Alex.Worlds.Singleplayer.Generators
         {
             
         }
-
-        public LevelInfo GetInfo()
-        {
-            return new LevelInfo()
-            {
-                Time = 12000,
-                Initialized = true,
-                LevelName = "Demo",
-                SpawnX = 0,
-                SpawnY = GetHeight(0, 0) + 2,
-                SpawnZ = 0
-            };
-        }
     }
 }

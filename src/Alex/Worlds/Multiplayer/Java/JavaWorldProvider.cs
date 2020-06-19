@@ -46,7 +46,8 @@ using NLog;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using ChunkCoordinates = Alex.API.Utils.ChunkCoordinates;
 using ConnectionState = Alex.Networking.Java.ConnectionState;
-using LevelInfo = Alex.API.World.LevelInfo;
+using DedicatedThreadPool = Alex.API.Utils.DedicatedThreadPool;
+using MessageType = Alex.API.Data.MessageType;
 using MetadataByte = Alex.Networking.Java.Packets.Play.MetadataByte;
 using MetadataSlot = Alex.Networking.Java.Packets.Play.MetadataSlot;
 using NibbleArray = Alex.API.Utils.NibbleArray;
@@ -290,10 +291,8 @@ namespace Alex.Worlds.Multiplayer.Java
 			return _spawn;
 		}
 
-		protected override void Initiate(out LevelInfo info)
+		protected override void Initiate()
 		{
-			info = new LevelInfo();
-
 			_initiated = true;
 
 		//	World?.UpdatePlayerPosition(_lastReceivedLocation);
@@ -1585,28 +1584,28 @@ namespace Alex.Worlds.Multiplayer.Java
         }
 
         //private BlockingCollection<ChunkDataPacket> _chunkQueue = new BlockingCollection<ChunkDataPacket>();
-        private void HandleChunkData(ChunkDataPacket chunk)
+        private unsafe void HandleChunkData(ChunkDataPacket chunk)
 		{
 			_loginCompleteEvent?.Set();
 			//_chunkQueue.Add(chunk);
 		//	ThreadPool.QueueUserWorkItem(() =>
-		using (var memoryStream = NetConnection.StreamManager.GetStream("Chunk Stream {0}", chunk.Buffer, 0, chunk.Buffer.Length))
+		using (var memoryStream = new UnmanagedMemoryStream((byte*) chunk.Buffer.Pin().Pointer, chunk.Buffer.Length))
 			using (var stream = new MinecraftStream(memoryStream))
 			{
-				ChunkColumn result = null;// = new ChunkColumn();
+				JavaChunkColumn result = null;// = new ChunkColumn();
 				if (chunk.GroundUp)
 				{
-					result = new ChunkColumn();
+					result = new JavaChunkColumn();
 				}
 				else
 				{
-					if (World.GetChunkColumn(chunk.ChunkX, chunk.ChunkZ) is ChunkColumn c)
+					if (World.GetChunkColumn(chunk.ChunkX, chunk.ChunkZ) is JavaChunkColumn c)
 					{
 						result = c;
 					}
 					else
 					{
-						result = new ChunkColumn();
+						result = new JavaChunkColumn();
 					}
 				}
 
@@ -1617,7 +1616,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				result.Read(stream, chunk.PrimaryBitmask, chunk.GroundUp, _dimension == 0);
 				result.SkyLightDirty = true;
 				result.BlockLightDirty = true;
-				
+
 				if (!hasDoneInitialChunks)
 				{
 					_generatingHelper.Add(result);

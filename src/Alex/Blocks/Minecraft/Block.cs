@@ -47,7 +47,7 @@ namespace Alex.Blocks.Minecraft
 			set { Location = value; }
 		}
 		
-	    public virtual int LightValue { get; set; } = 0;
+	    public virtual byte LightValue { get; set; } = 0;
 	    public int LightOpacity { get; set; } = 1;
 
 		//public BlockModel BlockModel { get; set; }

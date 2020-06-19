@@ -12,6 +12,8 @@ using Microsoft.Extensions.DependencyInjection;
 using MiNET.Utils;
 using MojangSharp.Api;
 using MojangSharp.Endpoints;
+using DedicatedThreadPool = Alex.API.Utils.DedicatedThreadPool;
+using DedicatedThreadPoolSettings = Alex.API.Utils.DedicatedThreadPoolSettings;
 
 namespace Alex.Worlds.Multiplayer.Java
 {

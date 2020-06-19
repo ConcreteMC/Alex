@@ -14,12 +14,13 @@
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="2020.1.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.4" />
-    <PackageReference Include="MiNET" Version="1.0.2099" />
+    <PackageReference Include="MiNET.fnbt" Version="1.0.22" />
     <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.0.1375-develop" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="NLog" Version="4.7.2" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-rc0001" />
-    <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta0008" />
+    <PackageReference Include="Portable.BouncyCastle" Version="1.8.5" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-rc0003" />
+    <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta0009" />
     <PackageReference Include="Tmds.DBus" Version="0.8.0" />
   </ItemGroup>
   <ItemGroup>

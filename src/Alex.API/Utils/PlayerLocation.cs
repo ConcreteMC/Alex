@@ -36,7 +36,7 @@ namespace Alex.API.Utils
 		{
 		}
 
-		public PlayerLocation(MiNET.Utils.PlayerLocation p)
+		/*public PlayerLocation(MiNET.Utils.PlayerLocation p)
 		{
 			if (p == null) return;
 			X = p.X;
@@ -46,7 +46,7 @@ namespace Alex.API.Utils
 			Yaw = p.Yaw;
 			HeadYaw = p.HeadYaw;
 			Pitch = p.Pitch;
-		}
+		}*/
 
 		public BlockCoordinates GetCoordinates3D()
 		{

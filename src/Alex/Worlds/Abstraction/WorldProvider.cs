@@ -20,13 +20,13 @@ namespace Alex.Worlds.Abstraction
 
 		public abstract Vector3 GetSpawnPoint();
 
-		protected abstract void Initiate(out LevelInfo info);
+		protected abstract void Initiate();
 
-		public void Init(World worldReceiver, out LevelInfo info)
+		public void Init(World worldReceiver)
 		{
 			World = worldReceiver;
 
-			Initiate(out info);
+			Initiate();
 		}
 
 		public abstract Task Load(ProgressReport progressReport);

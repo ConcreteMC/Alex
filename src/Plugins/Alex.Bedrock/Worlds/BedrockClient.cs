@@ -41,6 +41,7 @@ using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using ConnectionInfo = Alex.API.Network.ConnectionInfo;
+using DedicatedThreadPool = MiNET.Utils.DedicatedThreadPool;
 using Item = Alex.Items.Item;
 using LevelInfo = MiNET.Worlds.LevelInfo;
 using NewtonsoftMapper = MiNET.NewtonsoftMapper;
@@ -857,7 +858,7 @@ namespace Alex.Bedrock.Worlds
 			Session.SendPacket(packet);
 		}
 		
-	    public override void PlayerDigging(DiggingStatus status, BlockCoordinates position, BlockFace face, Vector3 cursorPosition)
+	    public override void PlayerDigging(DiggingStatus status, BlockCoordinates position, API.Blocks.BlockFace face, Vector3 cursorPosition)
 	    {
             if (World?.Player is Entities.Player player)
             {
@@ -915,7 +916,7 @@ namespace Alex.Bedrock.Worlds
 		    return minetItem;
 	    }
 
-	    public override void BlockPlaced(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition, Entity entity)
+	    public override void BlockPlaced(BlockCoordinates position, API.Blocks.BlockFace face, int hand, Vector3 cursorPosition, Entity entity)
 	    {
 		    if (entity is Player p)
 		    {
@@ -950,7 +951,7 @@ namespace Alex.Bedrock.Worlds
 	    }
 
 		    public override void EntityInteraction(Entity player, Entity target,
-		    McpeInventoryTransaction.ItemUseOnEntityAction action)
+		    ItemUseOnEntityAction action)
 	    {
 		    if (player is Player p)
 		    {
@@ -966,7 +967,7 @@ namespace Alex.Bedrock.Worlds
 			    var packet = McpeInventoryTransaction.CreateObject();
 			    packet.transaction = new ItemUseOnEntityTransaction()
 			    {
-				    ActionType = action,
+				    ActionType = (McpeInventoryTransaction.ItemUseOnEntityAction) action,
 				    Item = item,
 				    EntityId = target.EntityId
 			    };
@@ -982,7 +983,7 @@ namespace Alex.Bedrock.Worlds
 		    }
 	    }
 
-	    public override void WorldInteraction(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition)
+	    public override void WorldInteraction(BlockCoordinates position, API.Blocks.BlockFace face, int hand, Vector3 cursorPosition)
 	    {
 		    var packet = McpeInventoryTransaction.CreateObject();
 		    packet.transaction = new ItemUseTransaction()

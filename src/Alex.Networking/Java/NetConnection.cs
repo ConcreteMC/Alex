@@ -8,13 +8,12 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using Alex.API.Utils;
 using Alex.Networking.Java.Events;
 using Alex.Networking.Java.Packets;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Networking.Java.Util;
-using Ionic.Zlib;
-using Microsoft.IO;
-using MiNET.Utils;
+using MonoGame.Utilities.Deflate;
 using NLog;
 
 #endregion
@@ -133,7 +132,7 @@ namespace Alex.Networking.Java
 		    EncryptionInitiated = true;
 	    }
 
-	    public static RecyclableMemoryStreamManager StreamManager { get; }= new RecyclableMemoryStreamManager();
+	    //public static RecyclableMemoryStreamManager StreamManager { get; }= new RecyclableMemoryStreamManager();
 	    private MinecraftStream _readerStream;
 
 	    private void ProcessNetwork()
@@ -271,7 +270,7 @@ namespace Alex.Networking.Java
 			//	if (packet.Log)
 				packet.Stopwatch.Start();
 			
-			using (var memoryStream = StreamManager.GetStream("Packet Stream {0}", data, 0, data.Length))
+			using (var memoryStream = new MemoryStream(data))
 			{
 				using (MinecraftStream minecraftStream = new MinecraftStream(memoryStream))
 				{

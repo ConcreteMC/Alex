@@ -43,22 +43,22 @@ namespace Alex.Worlds.Singleplayer
 			
 		}
 
-		public override void BlockPlaced(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition, Entity p)
+		public override void BlockPlaced(BlockCoordinates position, API.Blocks.BlockFace face, int hand, Vector3 cursorPosition, Entity p)
 		{
 			
 		}
 
-		public override void PlayerDigging(DiggingStatus status, BlockCoordinates position, BlockFace face, Vector3 cursorPosition)
+		public override void PlayerDigging(DiggingStatus status, BlockCoordinates position, API.Blocks.BlockFace face, Vector3 cursorPosition)
 		{
 			
 		}
 
-		public override void EntityInteraction(Entity player, Entity target, McpeInventoryTransaction.ItemUseOnEntityAction action)
+		public override void EntityInteraction(Entity player, Entity target, ItemUseOnEntityAction action)
 		{
 			
 		}
 
-		public override void WorldInteraction(BlockCoordinates position, BlockFace face, int hand, Vector3 cursorPosition)
+		public override void WorldInteraction(BlockCoordinates position, API.Blocks.BlockFace face, int hand, Vector3 cursorPosition)
 		{
 			
 		}
@@ -206,10 +206,8 @@ namespace Alex.Worlds.Singleplayer
 
 		private Thread UpdateThread { get; set; }
 		private World World { get; set; }
-		protected override void Initiate(out LevelInfo info)
+		protected override void Initiate()
 		{
-			info = _generator.GetInfo();
-
 			/*lock (genLock)
 			{
 				while (_preGeneratedChunks.TryDequeue(out ChunkColumn chunk))
@@ -241,8 +239,6 @@ namespace Alex.Worlds.Singleplayer
 			} 
 
 			base.World?.UpdatePlayerPosition(new PlayerLocation(GetSpawnPoint()));
-
-			Log.Info($"World {info.LevelName} loaded!");
 		}
 
 		public override Vector3 GetSpawnPoint()

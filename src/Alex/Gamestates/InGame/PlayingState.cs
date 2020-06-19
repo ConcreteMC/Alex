@@ -62,9 +62,8 @@ namespace Alex.Gamestates.InGame
 			var title = new TitleComponent();
 
 			WorldProvider = worldProvider;
-			WorldProvider.Init(World, out var info);
-			World.WorldInfo = info;
-			
+			WorldProvider.Init(World);
+
 			WorldProvider.TitleComponent = title;
 
 			_playingHud = new PlayingHud(Alex, World.Player, title);

@@ -6,6 +6,7 @@ using System.Drawing;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using Alex.API.Graphics;
 using Alex.API.Graphics.Typography;
@@ -224,9 +225,11 @@ namespace Alex.ResourcePackLib
 			}
 			else
 			{
-				using (TextReader reader = new StreamReader(entry.Open()))
+				using (var stream = entry.Open())
 				{
-					ResourcePackInfoWrapper wrap = MCJsonConvert.DeserializeObject<ResourcePackInfoWrapper>(reader.ReadToEnd());
+					ResourcePackInfoWrapper wrap =
+						MCJsonConvert.DeserializeObject<ResourcePackInfoWrapper>(
+							Encoding.UTF8.GetString(stream.ReadToSpan(entry.Length)));
 					info = wrap.pack;
 				}
 			}
@@ -312,11 +315,12 @@ namespace Alex.ResourcePackLib
 		
 		private void LoadGlyphSizes(ZipArchiveEntry entry)
 		{
-			byte[] glyphWidth = new byte[65536];
+			byte[] glyphWidth;// = new byte[65536];
 			using (Stream stream = entry.Open())
 			{
-				int length = stream.Read(glyphWidth, 0, glyphWidth.Length);
-				Array.Resize(ref glyphWidth, length);
+				glyphWidth = stream.ReadToSpan(entry.Length).ToArray();
+				//int length = stream.Read(glyphWidth, 0, glyphWidth.Length);
+				//Array.Resize(ref glyphWidth, length);
 			}
 
 			GlyphWidth = glyphWidth;
@@ -374,7 +378,8 @@ namespace Alex.ResourcePackLib
 			using (var s = entry.Open())
 			{
 				//img = new Bitmap(s);
-				img = Image.Load<Rgba32>(s, PngDecoder);
+				var data = s.ReadToSpan(entry.Length);
+				img = Image.Load<Rgba32>(data, PngDecoder);
 			}
 
 			_bitmapCache[match.Groups["filename"].Value.Replace("\\", "/")] = img;
@@ -395,10 +400,10 @@ namespace Alex.ResourcePackLib
 			TextureMeta meta;
 			using (var stream = entry.Open())
 			{
-				using (StreamReader sr = new StreamReader(stream))
+				//using (StreamReader sr = new StreamReader(stream))
 				{
-					string content = sr.ReadToEnd();
-					meta = TextureMeta.FromJson(content);
+					//string content = sr.ReadToEnd();
+					meta = TextureMeta.FromJson(Encoding.UTF8.GetString(stream.ReadToSpan(entry.Length)));
 				}
 			}
 
@@ -423,9 +428,9 @@ namespace Alex.ResourcePackLib
 			string name = match.Groups["filename"].Value.Replace("\\", "/");
 			string nameSpace = match.Groups["namespace"].Value;
 
-			using (var r = new StreamReader(entry.Open()))
+			using (var stream = entry.Open())
 			{
-				var blockModel = MCJsonConvert.DeserializeObject<ResourcePackItem>(r.ReadToEnd());
+				var blockModel = MCJsonConvert.DeserializeObject<ResourcePackItem>(Encoding.UTF8.GetString(stream.ReadToSpan(entry.Length)));
 				blockModel.Name = name;//name.Replace("item/", "");
 				blockModel.Namespace = nameSpace;
 				if (blockModel.ParentName != null)
@@ -525,9 +530,9 @@ namespace Alex.ResourcePackLib
 				string nameSpace = match.Groups["namespace"].Value;
 				string key = $"{nameSpace}:{name}";
 
-				using (var r = new StreamReader(entry.Open()))
+				using (var stream = entry.Open())
 				{
-					var json = r.ReadToEnd();
+					var json = Encoding.UTF8.GetString(stream.ReadToSpan(entry.Length));
 
 					var blockState = MCJsonConvert.DeserializeObject<BlockStateResource>(json);
 					blockState.Name      = name;
@@ -566,9 +571,9 @@ namespace Alex.ResourcePackLib
                 string name = match.Groups["filename"].Value.Replace("\\", "/");
                 string nameSpace = match.Groups["namespace"].Value;
 
-                using (var r = new StreamReader(entry.Open()))
+                using (var stream = entry.Open())
                 {
-                    var blockModel = MCJsonConvert.DeserializeObject<BlockModel>(r.ReadToEnd());
+                    var blockModel = MCJsonConvert.DeserializeObject<BlockModel>(Encoding.UTF8.GetString(stream.ReadToSpan(entry.Length)));
                     blockModel.Name = name; // name.Replace("block/", "");
                     blockModel.Namespace = nameSpace;
 
@@ -692,9 +697,9 @@ namespace Alex.ResourcePackLib
 
 			bool isJson = match.Groups["filetype"].Value.Equals("json", StringComparison.InvariantCultureIgnoreCase);
 
-			using (var r = new StreamReader(entry.Open()))
+			using (var stream = entry.Open())
 			{
-				var text = r.ReadToEnd();
+				var text = Encoding.UTF8.GetString(stream.ReadToSpan(entry.Length));
 				LanguageResource lang;
 
 				if (isJson)

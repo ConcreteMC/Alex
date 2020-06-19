@@ -2,8 +2,11 @@
 using System.Drawing;
 using System.IO;
 using System.IO.Compression;
+using Alex.API.Utils;
 using Alex.ResourcePackLib.Generic;
 using Alex.ResourcePackLib.Json;
+using NLog;
+using NLog.Fluent;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using Image = SixLabors.ImageSharp.Image;
@@ -12,6 +15,8 @@ namespace Alex.ResourcePackLib
 {
     public class ResourcePack
     {
+	    private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
+	    
 		public ResourcePackType Type { get; private set; }
 		public ResourcePackManifest Info { get; private set; }
 		protected ResourcePack()
@@ -33,18 +38,26 @@ namespace Alex.ResourcePackLib
 					    info = wrap.pack;
 				    }
 
-				    var imgEntry = archive.GetEntry("pack.png");
-				    if (imgEntry != null)
+				    try
 				    {
-                        // Bitmap bmp = new Bitmap(imgEntry.Open());
-                        var bmp = Image.Load<Rgba32>(imgEntry.Open());
-                        return new ResourcePackManifest(bmp, "", info.Description);
-					}
-				    else
+					    var imgEntry = archive.GetEntry("pack.png");
+					    if (imgEntry != null)
+					    {
+						    // Bitmap bmp = new Bitmap(imgEntry.Open());
+						    using (var stream = imgEntry.Open())
+						    {
+							    var bmp = Image.Load<Rgba32>(stream.ReadToSpan(entry.Length));
+							    return new ResourcePackManifest(bmp, "", info.Description);
+						    }
+					    }
+				    }
+				    catch (Exception ex)
 				    {
-					    return new ResourcePackManifest("", info.Description);
-					}
-				}
+					    Log.Warn(ex, $"Could not read resourcepack logo: {archive.ToString()}");
+				    }
+
+				    return new ResourcePackManifest("", info.Description);
+			    }
 			    else
 			    {
 					throw new InvalidResourcePackException();
