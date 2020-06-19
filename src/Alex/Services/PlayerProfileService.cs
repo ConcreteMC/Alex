@@ -1,13 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Alex.API.Graphics;
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.Utils;
-using Microsoft.Xna.Framework.Graphics;
 using MojangSharp.Api;
 using MojangSharp.Endpoints;
-using Newtonsoft.Json;
 using NLog;
 
 namespace Alex.Services
@@ -16,12 +15,10 @@ namespace Alex.Services
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(PlayerProfileService));
 		private PlayerProfile _currentProfile;
-
-		private XBLMSAService XblService { get; }
+		
 		private ProfileManager ProfileManager { get; }
-		public PlayerProfileService(XBLMSAService xblmsaService, ProfileManager profileManager)
+		public PlayerProfileService(ProfileManager profileManager)
 		{
-			XblService = xblmsaService;
 			ProfileManager = profileManager;
 		}
 		
@@ -68,8 +65,11 @@ namespace Alex.Services
 				//	SkinUtils.TryGetSkin(profile.Properties.SkinUri, Alex.Instance.GraphicsDevice, out texture);
 				//	}
 
-				var playerProfile = new PlayerProfile(auth.SelectedProfile.Value, username, auth.SelectedProfile.PlayerName, new Skin(){Slim = skinSlim, Texture = texture},
-												auth.AccessToken, auth.ClientToken);
+				var playerProfile = new PlayerProfile(auth.SelectedProfile.Value, username, auth.SelectedProfile.PlayerName, new Skin()
+					{
+						Slim = skinSlim, Texture = texture
+					},
+					auth.AccessToken, auth.ClientToken);
 
 			//	Authenticate?.Invoke(this, new PlayerProfileAuthenticateEventArgs(playerProfile));
 				CurrentProfile = playerProfile;
@@ -84,74 +84,7 @@ namespace Alex.Services
 
 		public async Task<bool> TryAuthenticateAsync(PlayerProfile profile)
 		{
-			if (profile.IsBedrock)
-			{
-				try
-				{
-					//Validate Bedrock account.
-					//BedrockTokenPair tokenPair = JsonConvert.DeserializeObject<BedrockTokenPair>(profile.ClientToken);
-					BedrockTokenPair tokenPair = JsonConvert.DeserializeObject<BedrockTokenPair>(profile.ClientToken);
-					if (tokenPair.ExpiryTime < DateTime.UtcNow && await XblService.TryAuthenticate(profile.AccessToken))
-					{
-						var p = new PlayerProfile(profile.Uuid, profile.Username, profile.PlayerName,
-							profile.Skin, profile.AccessToken,
-							profile.ClientToken,
-							true);
-
-						p.Authenticated = true;
-								
-						ProfileManager.CreateOrUpdateProfile(ProfileManager.ProfileType.Bedrock, p);
-
-						CurrentProfile = p;
-								
-						Authenticate?.Invoke(this, new PlayerProfileAuthenticateEventArgs(CurrentProfile));
-						return true;
-					}
-					
-					return await XblService.RefreshTokenAsync(tokenPair.RefreshToken).ContinueWith(task =>
-						{
-							if (task.IsFaulted)
-							{
-								Authenticate?.Invoke(this, new PlayerProfileAuthenticateEventArgs("Validation faulted!"));
-								return false;
-							}
-
-							var r = task.Result;
-							if (r.success)
-							{
-								var p = new PlayerProfile(profile.Uuid, profile.Username, profile.PlayerName,
-									profile.Skin, r.token.AccessToken,
-									JsonConvert.SerializeObject(r.token),
-									true);
-
-								p.Authenticated = true;
-								
-								ProfileManager.CreateOrUpdateProfile(ProfileManager.ProfileType.Bedrock, p);
-
-								CurrentProfile = p;
-								
-								Authenticate?.Invoke(this, new PlayerProfileAuthenticateEventArgs(CurrentProfile));
-								return true;
-							}
-							else
-							{
-								Log.Warn($"Authentication unknown error.");
-								
-								Authenticate?.Invoke(this, new PlayerProfileAuthenticateEventArgs("Unknown error!"));
-								return false;
-							}
-							
-							return false;
-						});
-				}
-				catch (Exception ex)
-				{
-					Log.Warn($"Failed to refresh bedrock access token: {ex.ToString()}");
-				}
-
-				return false;
-			}
-
+			return false;
 			Requester.ClientToken = profile.ClientToken;
 			if (await Validate(profile.AccessToken))
 			{
@@ -199,9 +132,9 @@ namespace Alex.Services
 			return ProfileManager.GetJavaProfiles();
 		}
 
-		public PlayerProfile[] GetBedrockProfiles()
+		public PlayerProfile[] GetProfiles(string type)
 		{
-			return ProfileManager.GetBedrockProfiles();
+			return ProfileManager.GetProfiles(type);
 		}
 	}
 }

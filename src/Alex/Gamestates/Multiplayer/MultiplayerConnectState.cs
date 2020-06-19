@@ -79,7 +79,7 @@ namespace Alex.Gamestates.Multiplayer
             SetConnectingState(true);
 
             var queryProvider = GetService<IServerQueryProvider>();
-	        queryProvider.QueryServerAsync(address, port);
+	      //  queryProvider.QueryServerAsync(address, port);
         }
 
         private void SetConnectingState(bool connecting)

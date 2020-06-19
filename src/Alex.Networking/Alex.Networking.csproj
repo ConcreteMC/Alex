@@ -10,10 +10,6 @@
     <Platforms>x64;AnyCPU</Platforms>
   </PropertyGroup>
   <ItemGroup>
-    <Folder Include="Bedrock\" />
-    <Folder Include="Bedrock\Net\Pe" />
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="Iconic.Zlib.Netstandard" Version="1.0.0" />
     <PackageReference Include="MiNET" Version="1.0.2099" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />

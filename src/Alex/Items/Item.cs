@@ -1,8 +1,11 @@
-﻿using Alex.API.Data.Servers;
+﻿using System.Diagnostics;
+using Alex.API.Data.Servers;
 using Alex.API.Items;
 using Alex.API.Utils;
 using Alex.Graphics.Models.Items;
 using fNbt;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using ItemType = Alex.API.Utils.ItemType;
 
 namespace Alex.Items
@@ -45,7 +48,7 @@ namespace Alex.Items
 				{
 					if (display.TryGet("Name", out NbtString name))
 					{
-						if (Alex.ServerType == ServerType.Java)
+						if (ValidateJSON(name.Value))
 						{
 							return ChatParser.ParseText(name.Value);
 						}
@@ -55,6 +58,20 @@ namespace Alex.Items
 			}
 
 			return DisplayName;
+		}
+		
+		private bool ValidateJSON(string s)
+		{
+			try
+			{
+				JToken.Parse(s);
+				return true;
+			}
+			catch (JsonReaderException ex)
+			{
+				Trace.WriteLine(ex);
+				return false;
+			}
 		}
     }
 }

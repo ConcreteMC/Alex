@@ -7,7 +7,7 @@ namespace Alex.API.Data.Servers
     {
         public int ListIndex { get; set; }
 
-        public ServerType ServerType { get; set; }
+        public string ServerType { get; set; } = "Java";
 
         public string Name { get; set; }
 

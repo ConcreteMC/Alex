@@ -204,6 +204,16 @@ namespace Alex.API.Gui.Elements
 			InvalidateLayout();
 		}
 
+		public void ClearChildren()
+		{
+			var children = Children.ToArray();
+
+			foreach (var child in children)
+			{
+				RemoveChild(child);
+			}
+		}
+
 		#endregion
 
 

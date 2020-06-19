@@ -56,12 +56,12 @@ namespace Alex
 
 						foreach (var profile in profiles)
 						{
-							profile.Profile.IsBedrock = profile.Type == ProfileType.Bedrock;
+							profile.Profile.Type = profile.Type;// == ProfileType.Bedrock;
 							if (profile.Profile.Uuid.Equals(saveFile.SelectedProfile))
 							{
 								progressReceiver.UpdateProgress(90, StatusMessage);
 								LastUsedProfile = profile;
-								profileService.TryAuthenticateAsync(profile.Profile);
+								//profileService.TryAuthenticateAsync(profile.Profile);
 								//profileService.CurrentProfile = profile;
 								break;
 							}
@@ -101,7 +101,7 @@ namespace Alex
 			});
 		}
 
-		public void CreateOrUpdateProfile(ProfileType type, PlayerProfile profile, bool setActive = false)
+		public void CreateOrUpdateProfile(string type, PlayerProfile profile, bool setActive = false)
 		{
 			IPlayerProfileService profileService = ServiceProvider.GetRequiredService<IPlayerProfileService>();
 			var alex = ServiceProvider.GetRequiredService<Alex>();
@@ -140,14 +140,14 @@ namespace Alex
 			alex.UIThreadQueue.Enqueue(SaveProfiles);
 		}
 
-		public PlayerProfile[] GetBedrockProfiles()
+		public PlayerProfile[] GetProfiles(string type)
 		{
-			return Profiles.Values.Where(x => x.Type == ProfileType.Bedrock).Select(selector => selector.Profile).ToArray();
+			return Profiles.Values.Where(x => x.Type == type).Select(selector => selector.Profile).ToArray();
 		}
 
 		public PlayerProfile[] GetJavaProfiles()
 		{
-			return Profiles.Values.Where(x => x.Type == ProfileType.Java).Select(selector => selector.Profile).ToArray();
+			return Profiles.Values.Where(x => x.Type == "java").Select(selector => selector.Profile).ToArray();
 		}
 
 		private class ProfilesFileFormat
@@ -159,14 +159,8 @@ namespace Alex
 
 		public class SavedProfile
 		{
-			public ProfileType Type;
+			public string Type;
 			public PlayerProfile Profile;
-		}
-
-		public enum ProfileType
-		{
-			Java = 0,
-			Bedrock = 1
 		}
 	}
 }

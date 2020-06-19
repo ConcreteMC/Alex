@@ -108,14 +108,14 @@ namespace Alex.Gamestates.InGame
 			World.SpawnPoint = WorldProvider.GetSpawnPoint();
 			World.Camera.MoveTo(World.GetSpawnPoint(), Vector3.Zero);
 
-			RichPresenceProvider.SetPresence(new RichPresence()
+			/*RichPresenceProvider.SetPresence(new RichPresence()
 			{
 				State = "Multiplayer",
 				Timestamps = Timestamps.Now,
-				Details = $"Playing on a {Alex.ServerType} server.",
+				Details = $"Playing on a {WorldProvider} server.",
 				Assets = RichPresenceProvider.GetDefaultAssets()
 			});
-			
+			*/
 			base.OnLoad(args);
 		}
 

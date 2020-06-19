@@ -5,7 +5,6 @@ using Alex.API.Gui.Elements;
 using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.Net;
-using Alex.Networking.Bedrock.Net.Raknet;
 using Microsoft.Xna.Framework;
 using RocketUI;
 
@@ -42,7 +41,7 @@ namespace Alex.Gamestates.InGame.Hud
                 double dataIn = (double) (info.BytesIn * 8L) / 1000000.0;
                 
                 StringBuilder sb = new StringBuilder();
-                sb.Append($"Latency: {CustomConnectedPong.Latency}ms");
+                sb.Append($"Latency: {info.Latency}ms");
                 sb.Append($" | Ack in/out(#/s): {info.Ack}/{info.AckSent}");
                /* sb.Append($" | NACK's: {info.Nack}");
                 sb.Append($" | Resends: {info.Resends}");

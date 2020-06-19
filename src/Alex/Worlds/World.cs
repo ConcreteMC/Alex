@@ -25,13 +25,11 @@ using Alex.Gamestates;
 using Alex.Graphics.Camera;
 using Alex.Graphics.Models;
 using Alex.Graphics.Models.Items;
-using Alex.Gui.Forms.Bedrock;
 using Alex.Net;
 using Alex.Utils;
 using Alex.Worlds.Abstraction;
 using Alex.Worlds.Chunks;
 using Alex.Worlds.Lighting;
-using Alex.Worlds.Multiplayer.Bedrock;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -66,12 +64,11 @@ namespace Alex.Worlds
 		private AlexOptions Options { get; }
 		
 		private IEventDispatcher EventDispatcher { get; }
-		public BedrockFormManager FormManager { get; }
 		public InventoryManager InventoryManager { get; }
 		private SkyBox SkyRenderer { get; }
 		private bool UseDepthMap { get; set; }
 		//public SkyLightCalculations SkyLightCalculations { get; }
-		private ServerType ServerType { get; }
+		//private ServerType ServerType { get; }
 		
 		public bool DrowningDamage { get; set; } = true;
 		public bool CommandblockOutput { get; set; } = true;
@@ -141,14 +138,14 @@ namespace Alex.Worlds
 
 			PhysicsEngine.AddTickable(Player);
 
-			if (networkProvider is BedrockClient)
+			/*if (networkProvider is BedrockClient)
 			{
 				Player.SetInventory(new BedrockInventory(46));
 			}
 			else
 			{
 				Player.SetInventory(new Utils.Inventory(46));
-			}
+			}*/
 		//	Player.Inventory.IsPeInventory = true;
 			/*if (ItemFactory.TryGetItem("minecraft:diamond_sword", out var sword))
 			{
@@ -163,7 +160,6 @@ namespace Alex.Worlds
 			EventDispatcher.RegisterEvents(this);
 
 			var guiManager = serviceProvider.GetRequiredService<GuiManager>();
-			FormManager = new BedrockFormManager(networkProvider, guiManager, serviceProvider.GetService<Alex>().InputManager);
 			InventoryManager = new InventoryManager(guiManager);
 				
 			SkyRenderer = new SkyBox(serviceProvider, graphics, this);
@@ -172,7 +168,7 @@ namespace Alex.Worlds
 			UseDepthMap = options.VideoOptions.Depthmap;
 			options.VideoOptions.Depthmap.Bind((old, newValue) => { UseDepthMap = newValue; });
 
-			ServerType = (networkProvider is BedrockClient) ? ServerType.Bedrock : ServerType.Java;
+			//ServerType = (networkProvider is BedrockClient) ? ServerType.Bedrock : ServerType.Java;
 		}
 
 		private void FieldOfVisionOnValueChanged(int oldvalue, int newvalue)
@@ -969,10 +965,12 @@ namespace Alex.Worlds
 				{
 					var oldPosition = entity.KnownPosition;
 					float offset = 0f;
-					if (this.ServerType == ServerType.Bedrock)
+				/*	if (this.ServerType == ServerType.Bedrock)
 					{
 						offset = (float) entity.PositionOffset;
-					}
+					}*/
+				
+				//TODO: Fix position offset
 					
 					entity.KnownPosition.X += position.X;
 					entity.KnownPosition.Y += (position.Y - offset);

@@ -34,19 +34,23 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DefineConstants>TRACE;WINDOWS;MONOGAME2_0;DESKTOPGL;WINDOWS;LINUX;CHECK_EOF</DefineConstants>
+    <OutputPath>../../Output/x64/Debug/</OutputPath>
     <!--<OutputPath>bin\Debug\</OutputPath>-->
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <OutputPath>../../Output/AnyCPU/Debug/</OutputPath>
   </PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <OutputPath>../../Output/x64/Release/</OutputPath>
   </PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 	  <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	  <OutputPath>../../Output/AnyCPU/Release/</OutputPath>
 	</PropertyGroup>
   
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
@@ -149,6 +153,7 @@
   <ItemGroup>
     <Folder Include="Graphics\Models\Entity\Geometry\" />
     <Folder Include="Worlds\Multiplayer" />
+    <Folder Include="Worlds\Multiplayer\Bedrock" />
   </ItemGroup>
 
   <ItemGroup>

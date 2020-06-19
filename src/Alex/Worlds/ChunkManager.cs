@@ -861,7 +861,7 @@ namespace Alex.Worlds
 		    }
 	    }
 
-	    internal void FlagPrioritization()
+	    public void FlagPrioritization()
 	    {
 		    NeedPrioritization = true;
 	    }

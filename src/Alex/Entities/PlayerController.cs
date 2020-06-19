@@ -92,8 +92,8 @@ namespace Alex.Entities
 
 	    private void CheckGeneralInput(GameTime gt)
 	    {
-		    if (World.FormManager.IsShowingForm)
-			    return;
+		   // if (World.FormManager.IsShowingForm)
+			//    return;
 		    
 		    if (MouseInputListener.IsButtonDown(MouseButton.ScrollUp))
 		    {

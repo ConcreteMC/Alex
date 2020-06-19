@@ -35,7 +35,7 @@ namespace Alex.Entities
 
 		private EntityModelRenderer _modelRenderer;
 
-		internal EntityModelRenderer ModelRenderer
+		public EntityModelRenderer ModelRenderer
 		{
 			get
 			{
@@ -538,7 +538,7 @@ namespace Alex.Entities
 		private  Vector3 _prevUpdatePosition = Vector3.Zero;
 		private  float   _armRotation        = 0f;
 		private  float   _legRotation        = 0f;
-		internal float   DistanceMoved { get; set; } = 0;
+		public float   DistanceMoved { get; set; } = 0;
 
 		internal double   _timeStoppedMoving = 0;
 		private  float    _mvSpeed           = 0f;
@@ -779,7 +779,7 @@ namespace Alex.Entities
 		var knownPos = new BlockCoordinates(new Vector3(KnownPosition.X, KnownPosition.Y, KnownPosition.Z));
 		var knownDown = KnownPosition.GetCoordinates3D();
 
-		if (Alex.ServerType == ServerType.Bedrock)
+	//	if (Alex.ServerType == ServerType.Bedrock)
 		{
 			knownDown = knownDown.BlockDown();
 		}

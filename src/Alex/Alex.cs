@@ -33,7 +33,6 @@ using Alex.Gui;
 using Alex.Gui.Dialogs.Containers;
 using Alex.Items;
 using Alex.Net;
-using Alex.Networking.Bedrock;
 using Alex.Networking.Java.Packets;
 using Alex.Plugins;
 using Alex.ResourcePackLib.Json.Models.Entities;
@@ -43,7 +42,6 @@ using Alex.Utils;
 using Alex.Utils.Inventories;
 using Alex.Worlds;
 using Alex.Worlds.Abstraction;
-using Alex.Worlds.Multiplayer.Bedrock;
 using Alex.Worlds.Multiplayer.Java;
 using Alex.Worlds.Singleplayer;
 using Microsoft.Extensions.DependencyInjection;
@@ -68,8 +66,7 @@ namespace Alex
 	public partial class Alex : Microsoft.Xna.Framework.Game
 	{
 		public static bool InGame { get; set; } = false;
-		public static ServerType ServerType { get; set; } = ServerType.Bedrock;
-		
+
 		public static EntityModel PlayerModel { get; set; }
 		public static Image<Rgba32> PlayerTexture { get; set; }
 		
@@ -85,7 +82,6 @@ namespace Alex
 		public static bool IsMultiplayer { get; set; } = false;
 
 		public static IFont Font;
-		public static IFont DebugFont;
 
 		private SpriteBatch _spriteBatch;
 
@@ -101,24 +97,18 @@ namespace Alex
 
 		public GraphicsDeviceManager DeviceManager { get; }
 
-		//public ProfileManager ProfileManager { get; private set; }
-		
 		internal ConcurrentQueue<Action> UIThreadQueue { get; }
-
-		//internal StorageSystem Storage { get; private set; }
-
 		private LaunchSettings LaunchSettings { get; }
-		//public ChromiumWebBrowser CefWindow { get; private set; }
 		public PluginManager PluginManager { get; }
         public FpsMonitor FpsMonitor { get; }
-        //private IPlayerProfileService ProfileService { get; set; }
-        
+
         public new IServiceProvider Services { get; set; }
         
         public DedicatedThreadPool ThreadPool { get; private set; }
         private DedicatedThreadPool NetworkThreadPool { get; set; } = null;
         
         public StorageSystem Storage { get; private set; }
+        public ServerTypeManager ServerTypeManager { get; private set; }
         
         public Alex(LaunchSettings launchSettings)
 		{
@@ -179,6 +169,9 @@ namespace Alex
 				Formatting = Formatting.Indented
 			};
 			
+			ServerTypeManager = new ServerTypeManager();
+			ServerTypeManager.TryRegister("java", new JavaServerType(this));
+			
 			IServiceCollection serviceCollection = new ServiceCollection();
 			ConfigureServices(serviceCollection);
 
@@ -194,9 +187,7 @@ namespace Alex
             ThreadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount,
 	            ThreadType.Background, "Dedicated ThreadPool"));
 
-            PacketFactory.CustomPacketFactory = new AlexPacketFactory();
-           
-           KeyboardInputListener.InstanceCreated += KeyboardInputCreated;
+            KeyboardInputListener.InstanceCreated += KeyboardInputCreated;
 		}
 
         private void KeyboardInputCreated(object sender, KeyboardInputListener e)
@@ -251,7 +242,7 @@ namespace Alex
 			var options = Services.GetService<IOptionsProvider>();
 			options.Load();
 			
-			DebugFont = (WrappedSpriteFont) Content.Load<SpriteFont>("Alex.Resources.DebugFont.xnb");
+		//	DebugFont = (WrappedSpriteFont) Content.Load<SpriteFont>("Alex.Resources.DebugFont.xnb");
 			
 			ResourceManager.BlockEffect = Content.Load<Effect>("Alex.Resources.Blockshader.xnb").Clone();
 			ResourceManager.LightingEffect = Content.Load<Effect>("Alex.Resources.Lightmap.xnb").Clone();
@@ -406,9 +397,9 @@ namespace Alex
 
 			services.AddSingleton<IListStorageProvider<SavedServerEntry>, SavedServerDataProvider>();
 			
-			services.AddSingleton<XBLMSAService>();
+			//services.AddSingleton<XBLMSAService>();
 			
-			services.AddSingleton<IServerQueryProvider>(new ServerQueryProvider(this));
+			services.AddSingleton<IServerQueryProvider>(new JavaServerQueryProvider(this));
 			services.AddSingleton<IPlayerProfileService, PlayerProfileService>();
 
 			services.AddSingleton<IRegistryManager, RegistryManager>();
@@ -416,7 +407,8 @@ namespace Alex
 
             services.AddSingleton<IEventDispatcher, EventDispatcher>();
             services.AddSingleton<ResourceManager>();
-            services.AddSingleton<GuiManager>((o) => this.GuiManager)
+            services.AddSingleton<GuiManager>((o) => this.GuiManager);
+            services.AddSingleton<ServerTypeManager>(ServerTypeManager);
 ;            //Storage = storage;
 		}
 
@@ -583,7 +575,7 @@ namespace Alex
 			});
 		}
 
-		public void ConnectToServer(IPEndPoint serverEndPoint, PlayerProfile profile, bool bedrock = false, string hostname = null)
+		public void ConnectToServer(ServerTypeImplementation serverType, ServerConnectionDetails connectionDetails, PlayerProfile profile)
 		{
 			var oldNetworkPool = NetworkThreadPool;
 			
@@ -599,23 +591,11 @@ namespace Alex
 				WorldProvider provider;
 				NetworkProvider networkProvider;
 				IsMultiplayer = true;
-				if (bedrock)
-				{
-					ServerType = ServerType.Bedrock;
-					provider = new BedrockWorldProvider(this, serverEndPoint,
-						profile, NetworkThreadPool, out networkProvider);
-				}
-				else
-				{
-					ServerType = ServerType.Java;
-					provider = new JavaWorldProvider(this, serverEndPoint, profile, NetworkThreadPool,
-						out networkProvider)
-					{
-						Hostname = hostname
-					};
-				}
 
-				LoadWorld(provider, networkProvider);
+				if (serverType.TryGetWorldProvider(connectionDetails, profile, out provider, out networkProvider))
+				{
+					LoadWorld(provider, networkProvider);
+				}
 			}
 			catch (Exception ex)
 			{

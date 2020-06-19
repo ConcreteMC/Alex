@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using Alex.API.Graphics;
@@ -17,43 +18,107 @@ using Alex.Graphics.Models.Entity;
 using Alex.Gui;
 using Alex.Gui.Elements;
 using Alex.Items;
-using Alex.Networking.Java;
-using Alex.Services;
-using Alex.Worlds;
 using Alex.Worlds.Abstraction;
 using Alex.Worlds.Singleplayer;
 using Alex.Worlds.Singleplayer.Generators;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
-using MiNET.Net;
 using NLog;
 using RocketUI;
 using Color = Microsoft.Xna.Framework.Color;
 
 namespace Alex.Gamestates
 {
-	public class TitleState : GuiGameStateBase
+	public class TitleState : GuiGameStateBase, IMenuHolder
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(TitleState));
 
 		private readonly GuiStackMenu _mainMenu;
-		private readonly GuiStackMenu _debugMenu;
-		private readonly GuiStackMenu _spMenu;
-		
+
 		private readonly GuiTextElement _splashText;
 
 		private readonly GuiPanoramaSkyBox _backgroundSkyBox;
 		private GuiEntityModelView _playerView;
 		private IPlayerProfileService _playerProfileService;
-		//private GuiItem _guiItem;
-		//private GuiItem _guiItem2;
+
 		public TitleState()
 		{
 			_backgroundSkyBox = new GuiPanoramaSkyBox(Alex);
 
 			Background.Texture = _backgroundSkyBox;
 			Background.RepeatMode = TextureRepeatMode.Stretch;
+
+			MenuItem baseMenu = new MenuItem(MenuType.Menu)
+			{
+				Children =
+				{
+					new MenuItem()
+					{
+						Title = "menu.multiplayer",
+						OnClick = MultiplayerButtonPressed,
+						IsTranslatable = true
+					},
+					new MenuItem(MenuType.SubMenu)
+					{
+						Title = "Debugging",
+						IsTranslatable = false,
+						Children =
+						{
+							new MenuItem()
+							{
+								Title = "Blockstates",
+								OnClick = (sender, args) =>
+								{
+									Debug(new DebugWorldGenerator());
+								}
+							},
+							new MenuItem()
+							{
+								Title = "Demo",
+								OnClick = (sender, args) =>
+								{
+									Debug(new DemoGenerator());
+								}
+							},
+							new MenuItem()
+							{
+								Title = "Flatland",
+								OnClick = (sender, args) =>
+								{
+									Debug(new FlatlandGenerator());
+								}
+							},
+							new MenuItem()
+							{
+								Title = "Chunk Debug",
+								OnClick = (sender, args) =>
+								{
+									Debug(new ChunkDebugWorldGenerator());
+								}
+							}
+						}
+					},
+					new MenuItem()
+					{
+						Title = "menu.options",
+						OnClick = (sender, args) =>
+						{
+							Alex.GameStateManager.SetActiveState("options");
+						},
+						IsTranslatable = true
+					},
+					new MenuItem()
+					{
+						Title = "menu.quit",
+						OnClick = (sender, args) =>
+						{
+							Alex.Exit();
+						},
+						IsTranslatable = true
+					},
+				}
+			};
 
 			#region Create MainMenu
 
@@ -68,60 +133,11 @@ namespace Alex.Gamestates
 				BackgroundOverlay = new Color(Color.Black, 0.35f)
 			};
 
-			_mainMenu.AddMenuItem("menu.multiplayer", JavaEditionButtonPressed, EnableMultiplayer, true);
-			_mainMenu.AddMenuItem("menu.singleplayer", OnSinglePlayerPressed, true, true);
-
-			_mainMenu.AddMenuItem("menu.options", () => { Alex.GameStateManager.SetActiveState("options"); }, true, true);
-			_mainMenu.AddMenuItem("menu.quit", () => { Alex.Exit(); }, true, true);
-			#endregion
-
-			#region Create DebugMenu
-
-			_debugMenu = new GuiStackMenu()
-			{
-				Margin = new Thickness(15, 0, 15, 0),
-				Padding = new Thickness(0, 50, 0, 0),
-				Width = 125,
-				Anchor = Alignment.FillY | Alignment.MinX,
-
-				ChildAnchor = Alignment.CenterY | Alignment.FillX,
-				BackgroundOverlay = new Color(Color.Black, 0.35f),
-
-			};
-
-			_debugMenu.AddMenuItem("Debug Blockstates", DebugWorldButtonActivated);
-			_debugMenu.AddMenuItem("Demo", DemoButtonActivated);
-			_debugMenu.AddMenuItem("Debug Flatland", DebugFlatland);
-			//_debugMenu.AddMenuItem("Debug Anvil", DebugAnvil);
-			_debugMenu.AddMenuItem("Debug Chunk", DebugChunkButtonActivated);
-		//	_debugMenu.AddMenuItem("Debug XBL Login", BedrockEditionButtonPressed);
-            _debugMenu.AddMenuItem("Go Back", DebugGoBackPressed);
-
-			#endregion
-
-			#region Create SPMenu
-
-			_spMenu = new GuiStackMenu()
-			{
-				Margin = new Thickness(15, 0, 15, 0),
-				Padding = new Thickness(0, 50, 0, 0),
-				Width = 125,
-				Anchor = Alignment.FillY | Alignment.MinX,
-
-				ChildAnchor = Alignment.CenterY | Alignment.FillX,
-				BackgroundOverlay = new Color(Color.Black, 0.35f),
-			};
-
-			_spMenu.AddMenuItem("SinglePlayer", () => {}, false);
-			_spMenu.AddMenuItem("Debug Worlds", OnDebugPressed);
-
-			_spMenu.AddMenuItem("Return to main menu", SpBackPressed);
-
-			#endregion
-
-			CreateProtocolMenu();
-
+			ShowMenu(baseMenu);
+			
 			AddChild(_mainMenu);
+			
+			#endregion
 
 			AddChild(new GuiImage(GuiTextures.AlexLogo)
 			{
@@ -155,108 +171,19 @@ namespace Alex.Gamestates
 				Margin = Thickness.One
 			};
 			guiItemStack.AddChild(row);
-			
-			/*row.AddChild(_guiItem = new GuiItem()
-			{
-				Height = 24,
-				Width = 24,
-				Background = new Color(Color.Black, 0.2f)
-			});
-			row.AddChild(_guiItem2 = new GuiItem()
-			{
-				Height = 24,
-				Width = 24,
-				Background = new Color(Color.Black, 0.2f)
-			});
-			*/
-		/*	guiItemStack.AddChild(new GuiVector3Control(() => _guiItem.Camera.Position, newValue =>
-			{
-				if (_guiItem.Camera != null)
-				{
-					_guiItem.Camera.Position = newValue;
-				}
-				if(_guiItem2.Camera != null)
-				{
-					_guiItem2.Camera.Position = newValue;
-				}
-			}, 0.25f)
-			{
-				Margin = new Thickness(2)
-			});*/
-			
-			// guiItemStack.AddChild(new GuiVector3Control(() => _guiItem.Camera.TargetPositionOffset, newValue =>
-			// {
-			// 	if (_guiItem.Camera != null)
-			// 	{
-			// 		_guiItem.Camera.Target = newValue;
-			// 	}
-			// 	if(_guiItem2.Camera != null)
-			// 	{
-			// 		_guiItem2.Camera.Target = newValue;
-			// 	}
-			// }, 0.25f)
-			// {
-			// 	Margin = new Thickness(2)
-			// });
-			
+
 			_playerProfileService = Alex.Services.GetService<IPlayerProfileService>();
 			_playerProfileService.ProfileChanged += PlayerProfileServiceOnProfileChanged;
 		}
 
-		private bool _mpEnabled = true;
-		public bool EnableMultiplayer
+		private void MultiplayerButtonPressed(object sender, MenuItemClickedEventArgs e)
 		{
-			get { return _mpEnabled; }
-			set
-			{
-				_mpEnabled = value;
-				if (!value)
-				{
-					RemoveChild(_mainMenu);
-					AddChild(_spMenu);
-				}
-				else
-				{
-					DebugGoBackPressed();
-				}
-			}
+			MultiplayerButtonPressed();
 		}
 
 		#region ProtocolMenu
-
-		private GuiStackMenu _protocolMenu;
-		private void CreateProtocolMenu()
-		{
-			_protocolMenu = new GuiStackMenu()
-			{
-				Margin = new Thickness(15, 0, 15, 0),
-				Padding = new Thickness(0, 50, 0, 0),
-				Width = 125,
-				Anchor = Alignment.FillY | Alignment.MinX,
-
-				ChildAnchor = Alignment.CenterY | Alignment.FillX,
-				BackgroundOverlay = new Color(Color.Black, 0.35f),
-			};
-
-			_protocolMenu.AddMenuItem($"Java - {JavaProtocol.FriendlyName}", JavaEditionButtonPressed);
-			_protocolMenu.AddMenuItem($"Bedrock - {McpeProtocolInfo.GameVersion}", BedrockEditionButtonPressed, false);
-
-			_protocolMenu.AddMenuItem("Return to main menu", ProtocolBackPressed);
-		}
-
-		private void ProtocolBackPressed()
-		{
-			RemoveChild(_protocolMenu);
-			AddChild(_mainMenu);
-		}
-
-		private void BedrockEditionButtonPressed()
-		{
-			var client = Alex.Services.GetRequiredService<XBLMSAService>();
-			var t = client.AsyncBrowserLogin();
-		}
-
-		private void JavaEditionButtonPressed()
+		
+		private void MultiplayerButtonPressed()
 		{
 			Alex.GameStateManager.SetActiveState(new MultiplayerServerSelectionState(_backgroundSkyBox)
 			{
@@ -287,30 +214,6 @@ namespace Alex.Gamestates
 					//_playerView.Entity.Inventory[_playerView.Entity.Inventory.SelectedSlot] = sword;
 				}
 			}
-		}
-
-		private void OnSinglePlayerPressed()
-		{
-			RemoveChild(_mainMenu);
-			AddChild(_spMenu);
-		}
-
-		private void SpBackPressed()
-		{
-			RemoveChild(_spMenu);
-			AddChild(_mainMenu);
-		}
-
-		private void DebugGoBackPressed()
-		{
-			RemoveChild(_debugMenu);
-			AddChild(_spMenu);
-		}
-
-		private void OnDebugPressed()
-		{
-			RemoveChild(_spMenu);
-			AddChild(_debugMenu);
 		}
 
 		protected override void OnLoad(IRenderArgs args)
@@ -415,26 +318,10 @@ namespace Alex.Gamestates
 			KeyboardState s = Keyboard.GetState();
 			if (_prevKeyboardState.IsKeyDown(Keys.M) && s.IsKeyUp(Keys.M))
 			{
-				_debugMenu.ModernStyle = !_debugMenu.ModernStyle;
 				_mainMenu.ModernStyle = !_mainMenu.ModernStyle;
 			}
 
 			_prevKeyboardState = s;
-
-		/*	if (_guiItem.Item == null)
-			{
-				if (ItemFactory.TryGetItem("minecraft:grass_block", out var item))
-					_guiItem.Item = item;
-				else
-					_guiItem.Item = null;
-			}
-			if (_guiItem2.Item == null)
-			{
-				if (ItemFactory.TryGetItem("minecraft:diamond_hoe", out var item))
-					_guiItem2.Item = item;
-				else
-					_guiItem2.Item = null;
-			}*/
 		}
 
 		protected override void OnDraw(IRenderArgs args)
@@ -487,24 +374,45 @@ namespace Alex.Gamestates
 			Alex.LoadWorld(debugProvider, debugProvider.Network);
 		}
 
-		private void DebugFlatland()
+		private LinkedList<MenuItem> _menu = new LinkedList<MenuItem>();
+		/// <inheritdoc />
+		public void ShowMenu(MenuItem menu)
 		{
-			Debug(new FlatlandGenerator());
-		}
-		
-		private void DebugWorldButtonActivated()
-		{
-			Debug(new DebugWorldGenerator());
+			bool isFirst = (_menu.Count == 0 || _menu.First.Value == menu);
+			
+			if (!_menu.Contains(menu))
+			{
+				_menu.AddLast(menu);
+			}
+
+			_mainMenu.ClearChildren();
+
+			foreach (var menuItem in menu.BuildMenu(this, BuildMode.Children))
+			{
+				_mainMenu.AddChild(menuItem);
+			}
+
+			if (!isFirst)
+			{
+				_mainMenu.AddMenuItem("Back", () =>
+				{
+					GoBack();
+				});
+			}
 		}
 
-		private void DebugChunkButtonActivated()
+		/// <inheritdoc />
+		public bool GoBack()
 		{
-			Debug(new ChunkDebugWorldGenerator());
-		}
+			if (_menu.Count > 1)
+			{
+				_menu.RemoveLast();
+				ShowMenu(_menu.Last.Value);
 
-		private void DemoButtonActivated()
-		{
-			Debug(new DemoGenerator());
+				return true;
+			}
+
+			return false;
 		}
 	}
 }

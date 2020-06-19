@@ -10,6 +10,7 @@ using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.Gamestates.Common;
 using Alex.Gui;
+using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using NLog;
@@ -28,27 +29,30 @@ namespace Alex.Gamestates.Multiplayer
 		private readonly GuiTextInput    _portInput;
 		private readonly GuiTextElement  _errorMessage;
 		private readonly GuiButton       _saveButton;
-		private readonly GuiToggleButton _javaEditionButton;
-		private readonly GuiToggleButton _bedrockEditionButton;
+	//	private readonly GuiToggleButton _javaEditionButton;
+		//private readonly GuiToggleButton _bedrockEditionButton;
 		private readonly GuiTextElement  _serverTypeLabel;
 		private readonly GuiButtonGroup  _serverTypeGroup;
-
+		
 		#endregion
 
 		private readonly SavedServerEntry                       _entry;
 		private readonly IListStorageProvider<SavedServerEntry> _savedServersStorage;
 		private readonly GuiPanoramaSkyBox                      _skyBox;
-
+		private readonly ServerTypeManager _serverTypeManager;
+		
 		public MultiplayerAddEditServerState(Action<SavedServerEntry> callbackAction, GuiPanoramaSkyBox skyBox) :
-			this(ServerType.Bedrock, null, null, callbackAction, skyBox)
+			this("java", null, null, callbackAction, skyBox)
 		{
 		}
 
-		public MultiplayerAddEditServerState(ServerType serverType, string                   name, string address,
+		private ServerTypeImplementation _selectedImplementation = null;
+		public MultiplayerAddEditServerState(string serverType, string name, string address,
 											 Action<SavedServerEntry> callbackAction,
 											 GuiPanoramaSkyBox        skyBox) :
 			base(callbackAction)
 		{
+			_serverTypeManager = GetService<ServerTypeManager>();
 			_savedServersStorage = GetService<IListStorageProvider<SavedServerEntry>>();
 			_skyBox              = skyBox;
 
@@ -108,17 +112,31 @@ namespace Alex.Gamestates.Multiplayer
 				Orientation = Orientation.Horizontal,
 				ChildAnchor = Alignment.MiddleCenter
 			});
-			_serverTypeGroup.AddChild(_javaEditionButton = new GuiToggleButton("Java")
+
+			int tabIndex = 3;
+			foreach (var type in _serverTypeManager.GetAll())
 			{
-				Margin  = new Thickness(5),
-				Modern  = true,
-				Width   = 50,
-				Checked = serverType == ServerType.Java,
-				CheckedOutlineThickness = new Thickness(1),
-				DisplayFormat = new ValueFormatter<bool>((val) => $"Java {(val ? "[Active]" : "")}"),
-				TabIndex = 3
-			});
-			_serverTypeGroup.AddChild(_bedrockEditionButton = new GuiToggleButton("Bedrock")
+				if (_selectedImplementation == null)
+					_selectedImplementation = type;
+				
+				_serverTypeGroup.AddChild(
+					new GuiToggleButton(type.DisplayName)
+					{
+						Margin = new Thickness(5),
+						Modern = true,
+						Width = 50,
+						Checked = serverType == type.Id,
+						CheckedOutlineThickness = new Thickness(1),
+						DisplayFormat = new ValueFormatter<bool>((val) => $"{type.DisplayName} {(val ? "[Active]" : "")}"),
+						TabIndex = tabIndex++,
+						Action = () =>
+						{
+							_selectedImplementation = type;
+						}
+					});
+			}
+
+		/*	_serverTypeGroup.AddChild(_bedrockEditionButton = new GuiToggleButton("Bedrock")
 			{
 				Margin  = new Thickness(5),
 				Modern  = true,
@@ -127,7 +145,7 @@ namespace Alex.Gamestates.Multiplayer
 				CheckedOutlineThickness = new Thickness(1),
 				DisplayFormat = new ValueFormatter<bool>((val) => $"Bedrock {(val ? "[Active]" : "")}"),
 				TabIndex = 4
-			});
+			});*/
 
 			//	var portRow = AddGuiRow();
 			//  portRow.ChildAnchor = Alignment.MiddleCenter;
@@ -193,8 +211,8 @@ namespace Alex.Gamestates.Multiplayer
 			{
 				var name    = _nameInput.Value;
 				var address = _hostnameInput.Value;
-				
-				ushort port = (ushort) (_serverTypeGroup.CheckedControl == _bedrockEditionButton ? 19132 : 25565);
+
+				ushort port = (ushort) (_selectedImplementation.DefaultPort);
 
 				var split    = address.Split(':', StringSplitOptions.RemoveEmptyEntries);
 				var hostname = split[0];
@@ -238,7 +256,7 @@ namespace Alex.Gamestates.Multiplayer
 				Name       = name,
 				Host       = hostname,
 				Port       = port,
-				ServerType = (_serverTypeGroup.CheckedControl == _bedrockEditionButton ? ServerType.Bedrock : ServerType.Java),
+				ServerType = _selectedImplementation.Id,
 				CachedIcon = _entry?.CachedIcon ?? null,
 				ListIndex  = _entry?.ListIndex ?? -1
 			};

@@ -60,7 +60,7 @@ namespace Alex.Gamestates.MainMenu.Profile
 
             AddChild(new GuiTextElement()
             {
-                Text = profile.IsBedrock ? "Bedrock" : "Java",
+                Text = profile.Type,
                 Margin = Thickness.Zero,
                 Anchor = Alignment.BottomCenter,
                 Enabled = false,

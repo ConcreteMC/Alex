@@ -25,7 +25,7 @@ namespace Alex.Gamestates.Login
 			_profileManager = GetService<ProfileManager>();
 			
 			var activeProfile = _profileManager.LastUsedProfile;
-			if (activeProfile != null && activeProfile.Type == ProfileManager.ProfileType.Java)
+			if (activeProfile != null && activeProfile.Type == "java")
 			{
 				Requester.ClientToken = activeProfile.Profile.ClientToken;
 				NameInput.Value = activeProfile.Profile.Username;
@@ -36,7 +36,7 @@ namespace Alex.Gamestates.Login
 		{
 			if (e.IsSuccess)
 			{
-				_profileManager.CreateOrUpdateProfile(ProfileManager.ProfileType.Java, e.Profile, true);
+				_profileManager.CreateOrUpdateProfile("java", e.Profile, true);
 				_loginSuccesAction?.Invoke();
 				//Alex.SaveJava(_nameInput.Value);
 				//Alex.GameStateManager.SetActiveState("serverlist");

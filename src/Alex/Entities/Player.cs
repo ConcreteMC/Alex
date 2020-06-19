@@ -14,7 +14,6 @@ using Alex.Items;
 using Alex.Net;
 using Alex.Utils;
 using Alex.Worlds;
-using Alex.Worlds.Multiplayer.Bedrock;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET;
@@ -91,7 +90,7 @@ namespace Alex.Entities
         protected override void OnInventorySlotChanged(object sender, SlotChangedEventArgs e)
         {
 	        //Crafting!
-	        if (e.Index >= 41 && e.Index <= 44)
+	    /*    if (e.Index >= 41 && e.Index <= 44)
 	        {
 		        McpeInventoryTransaction transaction = McpeInventoryTransaction.CreateObject();
 		        transaction.transaction = new NormalTransaction()
@@ -107,7 +106,7 @@ namespace Alex.Entities
 				        }
 			        }
 		        };
-	        }
+	        }*/
 	        
 	        base.OnInventorySlotChanged(sender, e);
         }
@@ -218,7 +217,7 @@ namespace Alex.Entities
 			if ((Controller.CheckInput && Controller.CheckMovementInput))
 			{
 				_prevCheckedInput = true;
-				if (!previousCheckedInput || World.FormManager.IsShowingForm)
+				if (!previousCheckedInput || Alex.Instance.GuiManager.ActiveDialog != null)
 				{
 					return;
 				}

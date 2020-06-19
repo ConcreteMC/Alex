@@ -288,7 +288,7 @@ namespace Alex
 			}
 			catch (Exception ex)
 			{
-				Log.Error(ex, $"Could not check for latests assets! Do you have a internet connection up?");
+				Log.Error(ex, $"Could not check for latests assets! Are you connected to the internet?");
 				javaResources = null;
 				//bedrockResources = null;
 				return false;

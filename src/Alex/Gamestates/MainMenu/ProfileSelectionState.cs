@@ -106,7 +106,7 @@ namespace Alex.Gamestates.MainMenu
             ClearItems();
             
             var activeProfile = ProfileService.CurrentProfile;
-            foreach (var profile in ProfileService.GetJavaProfiles().Concat(ProfileService.GetBedrockProfiles()))
+            /*foreach (var profile in ProfileService.GetJavaProfiles().Concat(ProfileService.GetBedrockProfiles()))
             {
                 ProfileEntry entry = new ProfileEntry(profile, _defaultSkin, OnDoubleClick);
                 AddItem(entry);
@@ -117,7 +117,7 @@ namespace Alex.Gamestates.MainMenu
                     Focus(entry);
                     _previous = entry;
                 }
-            }
+            }*/
         }
 
         private void OnDoubleClick(ProfileEntry profile)
@@ -153,7 +153,7 @@ namespace Alex.Gamestates.MainMenu
 
         private void AddClicked()
         {
-            Alex.GameStateManager.SetActiveState(new VersionSelectionState(_skyBox, OnJavaConfirmed, OnBedrockConfirmed), true);
+           // Alex.GameStateManager.SetActiveState(new VersionSelectionState(_skyBox, OnJavaConfirmed, OnBedrockConfirmed), true);
         }
 
         private void OnCancelButtonPressed()

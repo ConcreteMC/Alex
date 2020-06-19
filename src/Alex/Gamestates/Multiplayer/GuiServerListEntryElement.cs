@@ -15,6 +15,8 @@ using Alex.API.Gui.Graphics;
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.Networking.Java;
+using Alex.Services;
+using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET.Net;
@@ -44,11 +46,13 @@ namespace Alex.Gamestates.Multiplayer
 		internal SavedServerEntry SavedServerEntry;
 		internal Guid             InternalIdentifier = Guid.NewGuid();
 
-		public GuiServerListEntryElement(IServerQueryProvider queryProvider, SavedServerEntry entry) : this(
-			queryProvider,
-			entry.ServerType == ServerType.Java ? $"§o[JAVA]§r - {entry.Name}" : $"{entry.Name}",
+		public ServerTypeImplementation ServerTypeImplementation { get; }
+		public GuiServerListEntryElement(ServerTypeImplementation serverTypeImplementation, SavedServerEntry entry) : this(
+			serverTypeImplementation.QueryProvider,
+			$"§o[{entry.ServerType}]§r - {entry.Name}",
 			entry.Host + ":" + entry.Port)
 		{
+			ServerTypeImplementation = serverTypeImplementation;
 			SavedServerEntry = entry;
 		}
 
@@ -133,7 +137,7 @@ namespace Alex.Gamestates.Multiplayer
 
 			var hostname = ServerAddress;
 
-			ushort port = (ushort) (SavedServerEntry.ServerType == ServerType.Java ? 25565 : 19132);// 25565;
+			ushort port = (ushort) SavedServerEntry.Port;// 25565;
 
 			var split = hostname.Split(':');
 			if (split.Length == 2)
@@ -195,14 +199,29 @@ namespace Alex.Gamestates.Multiplayer
 
 			//  ServerQueryResponse result;
 			// var queryProvider = Alex.GetService<IServerQueryProvider>();
-			if (SavedServerEntry.ServerType == ServerType.Bedrock)
+			/*if (SavedServerEntry.ServerType == ServerType.Bedrock)
 			{
-				await QueryProvider.QueryBedrockServerAsync(address, port, PingCallback, QueryCompleted);//(ContinuationAction);
+				await QueryProvider.Q(address, port, PingCallback, QueryCompleted);//(ContinuationAction);
 			}
 			else
+			{*/
+			var resolved = await JavaServerQueryProvider.ResolveHostnameAsync(address);
+
+			if (!resolved.Success)
 			{
-				await QueryProvider.QueryServerAsync(address, port, PingCallback, QueryCompleted);
+				QueryCompleted(new ServerQueryResponse(false, "multiplayer.status.cannot_resolve", new ServerQueryStatus()
+				{
+					Delay = 0,
+					Success = false,
+
+					EndPoint = null,
+					Address = address,
+					Port = port
+				}));
 			}
+			
+			await QueryProvider.QueryServerAsync(new ServerConnectionDetails(new IPEndPoint(resolved.Result, port), address), PingCallback, QueryCompleted);
+			//}
 
 			//QueryCompleted(result);
 		}
@@ -238,14 +257,14 @@ namespace Alex.Gamestates.Multiplayer
 					_pingStatus.SetPing(s.Delay);
 				}
 
-				if (q.Version.Protocol < (SavedServerEntry.ServerType == ServerType.Java ? JavaProtocol.ProtocolVersion : McpeProtocolInfo.ProtocolVersion))
+				if (q.Version.Protocol < ServerTypeImplementation.ProtocolVersion)
 				{
-					if (SavedServerEntry.ServerType == ServerType.Java)
+				//	if (SavedServerEntry.ServerType == ServerType.Java)
 					{
 						_pingStatus.SetOutdated(q.Version.Name);
 					}
 				}
-				else if (q.Version.Protocol > (SavedServerEntry.ServerType == ServerType.Java ? JavaProtocol.ProtocolVersion : McpeProtocolInfo.ProtocolVersion))
+				else if (q.Version.Protocol > ServerTypeImplementation.ProtocolVersion)
 				{
 					_pingStatus.SetOutdated($"multiplayer.status.client_out_of_date", true);
 				}

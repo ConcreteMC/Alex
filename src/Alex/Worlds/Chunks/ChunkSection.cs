@@ -429,7 +429,7 @@ namespace Alex.Worlds.Chunks
 								}
 							}
 
-							if (Alex.ServerType == ServerType.Java)
+							/*if (Alex.ServerType == ServerType.Java)
 							{
 								if (block.LightValue > 0)
 								{
@@ -446,7 +446,7 @@ namespace Alex.Worlds.Chunks
 										SetBlockLightScheduled(x, y, z, true);
 									}
 								}
-							}
+							}*/
 						}
 					}
 				}

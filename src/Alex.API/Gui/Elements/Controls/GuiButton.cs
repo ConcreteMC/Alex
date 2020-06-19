@@ -23,7 +23,7 @@ namespace Alex.API.Gui.Elements.Controls
 	    }
 
         protected GuiTextElement TextElement { get; }
-        protected Action Action { get; }
+        public Action Action { get; set; }
 
 		public TextColor DisabledTextColor = TextColor.DarkGray;
 		public TextColor EnabledTextColor = TextColor.White;

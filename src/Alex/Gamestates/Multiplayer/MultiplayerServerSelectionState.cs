@@ -51,7 +51,8 @@ namespace Alex.Gamestates.Multiplayer
 			    row.AddChild(DirectConnectButton = new GuiButton("Direct Connect",
 				    () => Alex.GameStateManager.SetActiveState<MultiplayerConnectState>())
 			    {
-				    TranslationKey = "selectServer.direct"
+				    TranslationKey = "selectServer.direct",
+				    Enabled = false
 			    });
 			    row.AddChild(AddServerButton = new GuiButton("Add Server",
 				    OnAddItemButtonPressed)
@@ -88,7 +89,7 @@ namespace Alex.Gamestates.Multiplayer
 	    {
 		    base.OnShow();
 		    
-		    var queryProvider = GetService<IServerQueryProvider>();
+		  //  var queryProvider = GetService<IServerQueryProvider>();
 		    
 		    _listProvider.Load();
 		    
@@ -97,10 +98,13 @@ namespace Alex.Gamestates.Multiplayer
 		    List<Task> tasks = new List<Task>();
 		    foreach (var entry in _listProvider.Data.ToArray())
 		    {
-			    var element = new GuiServerListEntryElement(queryProvider, entry);
-			    AddItem(element);
-			    
-			    tasks.Add(element.PingAsync(false));
+			    if (Alex.ServerTypeManager.TryGet(entry.ServerType, out var typeImplementation))
+			    {
+				    var element = new GuiServerListEntryElement(typeImplementation, entry);
+				    AddItem(element);
+
+				    tasks.Add(element.PingAsync(false));
+			    }
 		    }
 		}
 
@@ -170,7 +174,23 @@ namespace Alex.Gamestates.Multiplayer
 			var authenticationService = GetService<IPlayerProfileService>();
 			var currentProfile        = authenticationService.CurrentProfile;
 
-			if (entry.ServerType == ServerType.Java)
+			if (Alex.ServerTypeManager.TryGet(entry.ServerType, out var typeImplementation))
+			{
+				if (!await typeImplementation.VerifyAuthentication(currentProfile))
+				{
+					await typeImplementation.Authenticate(_skyBox, result =>
+					{
+						if (result)
+							Alex.ConnectToServer(typeImplementation, new ServerConnectionDetails(target, entry.Host), authenticationService.CurrentProfile);
+					});
+				}
+				else
+				{
+					Alex.ConnectToServer(typeImplementation, new ServerConnectionDetails(target, entry.Host), authenticationService.CurrentProfile);
+				}
+			}
+			
+			/*if (entry.ServerType == ServerType.Java)
 			{
 				if (currentProfile == null || (currentProfile.IsBedrock))
 				{
@@ -231,7 +251,7 @@ namespace Alex.Gamestates.Multiplayer
 				{
 					Alex.ConnectToServer(target, currentProfile, true);
 				}
-			}
+			}*/
 		}
 
 		private void OnCancelButtonPressed()
@@ -274,7 +294,7 @@ namespace Alex.Gamestates.Multiplayer
 
 	    private void AddEditServerCallbackAction(SavedServerEntry obj)
 	    {
-		    var queryProvider = GetService<IServerQueryProvider>();
+		    //var queryProvider = GetService<IServerQueryProvider>();
 		    
 		    if (obj == null) return; //Cancelled.
 
@@ -284,7 +304,7 @@ namespace Alex.Gamestates.Multiplayer
 
 			    if (entry.InternalIdentifier.Equals(obj.IntenalIdentifier))
 			    {
-					var newEntry = new GuiServerListEntryElement(queryProvider, obj);
+					var newEntry = new GuiServerListEntryElement(entry.ServerTypeImplementation, obj);
 
 				    Items[index] = newEntry;
 

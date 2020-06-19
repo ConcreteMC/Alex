@@ -1,4 +1,4 @@
-using System.Net;
+/*using System.Net;
 using System.Threading.Tasks;
 using Alex.API.Services;
 using Alex.API.Utils;
@@ -76,4 +76,4 @@ namespace Alex.Worlds.Singleplayer
             Server.StopServer();
         }
     }
-}
+}*/
