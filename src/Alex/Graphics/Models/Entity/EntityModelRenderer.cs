@@ -281,7 +281,8 @@ namespace Alex.Graphics.Models.Entity
 					var origin   = cube.Origin;
 					var pivot    = cube.Pivot;
 					var rotation = cube.Rotation;
-					//rotation = new Vector3(rotation.X, 180f - rotation.Y, rotation.Z);
+
+					origin = new Vector3(-(origin.X + size.X), origin.Y, origin.Z);
 					
 					//VertexPositionNormalTexture[] vertices;
 					Cube built = new Cube(size * (float)cube.Inflate, textureSize);
