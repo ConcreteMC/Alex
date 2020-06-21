@@ -82,7 +82,7 @@ namespace Alex.Entities
 		public string NameTag { get; set; }
 
 		public virtual bool NoAi { get; set; } = true;
-		public bool HideNameTag { get; set; } = true;
+		public bool HideNameTag { get; set; } = false;
 		public bool Silent { get; set; }
 
 		public bool AboveWater { get; set; } = false;
@@ -416,15 +416,20 @@ namespace Alex.Entities
 
 		private void HandleEntityFlags(BitArray bits)
 		{
+			if ((this is Player))
+				return;
+			
 			IsInvisible = bits[(int) MiNET.Entities.Entity.DataFlags.Invisible];
 			IsSneaking = bits[(int) MiNET.Entities.Entity.DataFlags.Sneaking];
 			IsOnFire = bits[(int) MiNET.Entities.Entity.DataFlags.OnFire];
 			IsSprinting = bits[(int) MiNET.Entities.Entity.DataFlags.Sprinting];
+			
 			NoAi = bits[(int) MiNET.Entities.Entity.DataFlags.NoAi];
+
 			IsAlwaysShowName = bits[(int) MiNET.Entities.Entity.DataFlags.AlwaysShowName];
 			IsBaby = bits[(int) MiNET.Entities.Entity.DataFlags.Baby];
 			IsUsingItem = bits[(int) MiNET.Entities.Entity.DataFlags.UsingItem];
-			HideNameTag = !bits[(int) MiNET.Entities.Entity.DataFlags.ShowName];
+			//HideNameTag = !bits[(int) MiNET.Entities.Entity.DataFlags.ShowName];
 			IsAngry = bits[(int) MiNET.Entities.Entity.DataFlags.Angry];
 			IsInLove = bits[(int) MiNET.Entities.Entity.DataFlags.InLove];
 			IsRiding = bits[(int) MiNET.Entities.Entity.DataFlags.Riding];

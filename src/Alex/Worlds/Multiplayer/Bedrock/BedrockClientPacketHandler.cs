@@ -309,16 +309,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		public void HandleMcpeAdventureSettings(McpeAdventureSettings message)
 		{
 			//Client.UserPermission = (CommandPermission) message.commandPermission;
-			
-			//base.HandleMcpeAdventureSettings(message);
-			if (Client.World.Player is Player player)
-			{
-				player.CanFly = ((message.flags & 0x40) == 0x40);
-				player.IsFlying = ((message.flags & 0x200) == 0x200);
-				player.IsWorldImmutable = ((message.flags & 0x01) == 0x01);
-				player.IsNoPvP = (message.flags & 0x02) == 0x02;
-				player.IsNoPvM = (message.flags & 0x04) == 0x04;
-			}
+			Client.World.Player.CanFly = ((message.flags & 0x40) == 0x40);
+			Client.World.Player.IsFlying = ((message.flags & 0x200) == 0x200);
+			Client.World.Player.IsWorldImmutable = ((message.flags & 0x01) == 0x01);
+			Client.World.Player.IsNoPvP = (message.flags & 0x02) == 0x02;
+			Client.World.Player.IsNoPvM = (message.flags & 0x04) == 0x04;
 		}
 
 		private ConcurrentDictionary<MiNET.Utils.UUID, PlayerMob> _players = new ConcurrentDictionary<MiNET.Utils.UUID, PlayerMob>();
@@ -331,25 +326,34 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				mob.EntityId = message.runtimeEntityId;
 				mob.KnownPosition = new PlayerLocation(message.x, message.y, message.z, message.headYaw, message.yaw, message.pitch);
 				mob.Velocity = new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ);
-				
+
+				if (string.IsNullOrWhiteSpace(mob.NameTag) && !string.IsNullOrWhiteSpace(message.username))
+				{
+					//mob.NameTag = message.username;
+					//mob.HideNameTag = false;
+				}
+
 				if (message.item != null)
 				{
 					mob.Inventory.MainHand = ToAlexItem(message.item);
 				}
 
-				mob.HandleMetadata(message.metadata);
+				if (message.metadata != null)
+				{
+					mob.HandleMetadata(message.metadata);
+				}
 				//mob.Height = message.metadata[(int) MiNET.Entities.Entity.MetadataFlags.CollisionBoxHeight]
 				
-				if (Client.World is World w)
+				//if (Client.World is World w)
 				{
 					mob.IsSpawned = true;
 					
 					_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
-					w.SpawnEntity(mob.EntityId, mob);
+					Client.World.SpawnEntity(mob.EntityId, mob);
 				}
-				else
+				//else
 				{
-					mob.IsSpawned = false;
+				//	mob.IsSpawned = false;
 				}
 			}
 			else
@@ -459,9 +463,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			{
 				foreach (var r in addRecords)
 				{
-					var u = new API.Utils.UUID(r.ClientUuid.GetBytes());
 					if (_players.ContainsKey(r.ClientUuid)) continue;
-
+					
+					var u = new API.Utils.UUID(r.ClientUuid.GetBytes());
+					
 					bool isTransparent = false;
 					PooledTexture2D skinTexture;
 					Image<Rgba32> skinBitmap;
@@ -546,6 +551,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					m.UUID = u;
 					m.EntityId = r.EntityId;
 					m.SetInventory(new BedrockInventory(46));
+					
 					if (renderer != null)
 						m.ModelRenderer = renderer;
 					
@@ -874,7 +880,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			((BedrockClient)Client).LastChunkPublish = message;
 			//UnhandledPackage(message);
-			Log.Info($"Chunk publisher update: {message.coordinates} | {message.radius}");
+			//Log.Info($"Chunk publisher update: {message.coordinates} | {message.radius}");
 		}
 
 		public void HandleMcpeBiomeDefinitionList(McpeBiomeDefinitionList message)
@@ -1054,7 +1060,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeMobArmorEquipment(McpeMobArmorEquipment message)
 		{
-			Entity entity;
+			Entity entity = null;
 
 			if (!Client.World.TryGetEntity(message.runtimeEntityId, out entity))
 			{
@@ -1064,6 +1070,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				}
 
 				//entity.Inventory.Boots
+			}
+
+			if (entity == null)
+			{
+				Log.Warn($"Unknown entity in MobArmorEquipment packet!");
+
+				return;
 			}
 
 
@@ -1274,6 +1287,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
         private Item ToAlexItem(MiNET.Items.Item item)
         {
+	        if (item == null)
+		        return new ItemAir();
+	        
 	        Item result = null;
 			
 	        if (item.Id < 256) //Block
@@ -1328,7 +1344,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		        return result;
 	        }
 
-	        return null;
+	        return new ItemAir()
+	        {
+		        Count = 0
+	        };
         }
         
 		public void HandleMcpeInventorySlot(McpeInventorySlot message)

@@ -92,8 +92,11 @@ namespace Alex.Net.Bedrock
                     case 7:
                         packet = new McpeResourcePackStack();
                         break;
+                    case 12:
+                        packet = new AddPlayer();
+                        break;
                     case 39:
-                        packet = new McpeSetEntityData();
+                        packet = new SetEntityData();
                         break;
                 }
 
@@ -101,9 +104,9 @@ namespace Alex.Net.Bedrock
             }
             catch (Exception ex)
             {
-                if (messageId != 39)
+                if (messageId != 49)
                 {
-                //    Log.Error(ex, $"Processing error: {ex.ToString()}");
+                      Log.Error(ex, $"Processing error: {ex.ToString()}");
                 }
             }
 

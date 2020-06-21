@@ -19,6 +19,7 @@ using Alex.Gui;
 using Alex.Gui.Elements;
 using Alex.Gui.Elements.Context3D;
 using Alex.Items;
+using Alex.Utils.Inventories;
 using Alex.Worlds.Abstraction;
 using Alex.Worlds.Singleplayer;
 using Alex.Worlds.Singleplayer.Generators;
@@ -200,6 +201,7 @@ namespace Alex.Gamestates
 			{
 				_playerView.Entity = new PlayerMob(e.Profile.Username, null, null, e.Profile.Skin.Texture,
 					e.Profile.Skin.Slim ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom" );
+				_playerView.Entity.SetInventory(new BedrockInventory(46));
 				
 				_playerView.Entity.ShowItemInHand = true;
 
@@ -231,7 +233,6 @@ namespace Alex.Gamestates
 			}
 
 			var entity = new PlayerMob("", null, null, skin.Texture);
-			entity.ShowItemInHand = true;
 
 			AddChild(_playerView =
 				new GuiEntityModelView(
@@ -355,6 +356,22 @@ namespace Alex.Gamestates
 			}
 			
 			Alex.GameStateManager.AddState("options", new OptionsState(_backgroundSkyBox));
+			
+			_playerView.Entity.SetInventory(new BedrockInventory(46));
+				
+			_playerView.Entity.ShowItemInHand = true;
+
+			if (ItemFactory.TryGetItem("minecraft:grass_block", out var grass))
+			{
+				_playerView.Entity.Inventory.MainHand = grass;
+				_playerView.Entity.Inventory[_playerView.Entity.Inventory.SelectedSlot] = grass;
+			}
+				
+			if (ItemFactory.TryGetItem("minecraft:diamond_sword", out var sword))
+			{
+				//_playerView.Entity.Inventory.MainHand = sword;
+				//_playerView.Entity.Inventory[_playerView.Entity.Inventory.SelectedSlot] = sword;
+			}
 			
 			base.OnShow();
 		}

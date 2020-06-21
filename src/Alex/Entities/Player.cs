@@ -136,7 +136,7 @@ namespace Alex.Entities
 		    }
 	    }
 
-	    public bool WaitingOnChunk { get; set; } = false;
+	    public bool WaitingOnChunk { get; set; } = true;
 	    
 	    public BlockCoordinates TargetBlock => _destroyingTarget;
 

@@ -275,7 +275,7 @@ namespace Alex.Graphics.Models.Items
                                                       Matrix.CreateTranslation(a);*/
                
                var displayTrans = new Vector3(activeDisplayItem.Translation.X / 32f,
-                   activeDisplayItem.Translation.Y / 16f,
+                   activeDisplayItem.Translation.Y / 32f,
                    activeDisplayItem.Translation.Z / 32f);
                
                world *= Matrix.CreateTranslation(-a) * Matrix.CreateScale(activeDisplayItem.Scale)
@@ -301,12 +301,12 @@ namespace Alex.Graphics.Models.Items
                 offset = new Vector3(-2f / 16f, 11.5f / 16f, -6f / 16f);
                 
                 world *= Matrix.CreateRotationX(-MathF.PI / 5f);
-                world *= Matrix.CreateRotationZ(-1f / 16f);
+               // world *= Matrix.CreateRotationZ(-1f / 16f);
                // world *= Matrix.CreateTranslation(-2f / 16f, 11.5f / 16f, -6f / 16f);
             }
             else if ((_displayPosition & ResourcePackLib.Json.Models.Items.DisplayPosition.ThirdPerson) != 0)
             {
-                offset += new Vector3(-2f / 16f, 8f / 16f, -3f / 16f);
+                offset += new Vector3(-2f / 16f, 8f/ 16f, -3f / 16f);
                 world *= Matrix.CreateRotationX(-MathF.PI / 4f);
                 //     world *= Matrix.CreateRotationX(MathF.PI / 4f);
               //  world *= Matrix.CreateTranslation(-2f / 16f, 8f / 16f, -3f / 16f);
@@ -322,8 +322,8 @@ namespace Alex.Graphics.Models.Items
                 var pivot = offset;
 
                 world *= Matrix.CreateTranslation(pivot)
-                         * Matrix.CreateRotationX(MathUtils.ToRadians(-Rotation.X))
-                         * Matrix.CreateRotationZ(MathUtils.ToRadians(-Rotation.Z))
+                         * Matrix.CreateRotationX(MathUtils.ToRadians(Rotation.X))
+                         * Matrix.CreateRotationZ(MathUtils.ToRadians(Rotation.Z))
                          * Matrix.CreateRotationY(MathUtils.ToRadians(Rotation.Y)) * Matrix.CreateTranslation(-pivot);
             }
 
