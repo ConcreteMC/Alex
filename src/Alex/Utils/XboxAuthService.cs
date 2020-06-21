@@ -383,9 +383,9 @@ namespace Alex.Utils
 			return authResponse;
 		}
 
-		private async Task<AuthResponse<DeviceDisplayClaims>> DoDeviceAuth(string token)
+		private async Task<AuthResponse<DeviceDisplayClaims>> DoDeviceAuth(string deviceId)
 		{
-			var id = Guid.NewGuid().ToString();
+			//var id = Guid.NewGuid().ToString();
 			var serial = Guid.NewGuid().ToString();
 			//UUID uuid = new UUID(Guid.NewGuid().ToByteArray());
 
@@ -399,7 +399,7 @@ namespace Alex.Utils
 					//	{"RpsTicket", token},
 					//	{"SiteName", "user.auth.xboxlive.com"},
 					{"DeviceType", "Nintendo"},
-					{"Id",id},
+					{"Id", deviceId},
 					{"SerialNumber", serial},
 					{"Version", "0.0.0.0"},
 					{"AuthMethod", "ProofOfPossession"},
@@ -586,7 +586,7 @@ namespace Alex.Utils
 			return new Response(res.StatusCode, body);
 		}
 
-		public async Task<(bool success, BedrockTokenPair token)> DoDeviceCodeLogin(string deviceCode, CancellationToken cancellationToken)
+		public async Task<(bool success, BedrockTokenPair token)> DoDeviceCodeLogin(string deviceId, string deviceCode, CancellationToken cancellationToken)
 		{
 			try
 			{
@@ -600,7 +600,7 @@ namespace Alex.Utils
 				}
 
 				var userToken = await DoUserAuth(token.AccessToken);
-				var deviceAuth = await DoDeviceAuth(userToken.Token);
+				var deviceAuth = await DoDeviceAuth(deviceId);
 				var titleAuth = await DoTitleAuth(deviceAuth, token.AccessToken);
 				
 				var xsts = await DoXsts(deviceAuth, titleAuth, userToken.Token);

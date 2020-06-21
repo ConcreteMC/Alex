@@ -10,6 +10,7 @@ using Alex.Entities;
 using Alex.Gui.Forms;
 using Alex.Net;
 using Alex.Net.Bedrock.Raknet;
+using Alex.Utils.Inventories;
 using Alex.Worlds.Abstraction;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
@@ -58,18 +59,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		private uint GetAdventureFlags()
 		{
 			uint flags = 0;
-			//if (IsWorldImmutable || player.Gamemode == Gamemode.Adventure) flags |= 0x01; // Immutable World (Remove hit markers client-side).
-			//if (IsNoPvp || player. || player.Gamemode == Gamemode.Spectator) flags |= 0x02; // No PvP (Remove hit markers client-side).
-			//if (IsNoPvm || IsSpectator || player.Gamemode == Gamemode.Spectator) flags |= 0x04; // No PvM (Remove hit markers client-side).
-			//if (IsNoMvp || IsSpectator || player.Gamemode == Gamemode.Spectator) flags |= 0x08;
-
-			//if (IsAutoJump) flags |= 0x20;
-
-			//if (AllowFly || GameMode == GameMode.Creative) flags |= 0x40;
-
-			//if (IsNoClip || IsSpectator || GameMode == GameMode.Spectator) flags |= 0x80; // No clip
-
-			//if (IsWorldBuilder) flags |= 0x100; // Worldbuilder
 
 			if (_flying) flags |= 0x200;
 
@@ -97,15 +86,14 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				{
 					_tickTime++;
 				}
-
-				var p = World.Player;
-				if (p != null && p is Player player && Client.HasSpawned)
+				
+				if (World.Player != null && Client.HasSpawned)
 				{
 				//	player.IsSpawned = Spawned;
 
-					if (player.IsFlying != _flying && _isRealTick)
+					if (World.Player.IsFlying != _flying && _isRealTick)
 					{
-						_flying = player.IsFlying;
+						_flying = World.Player.IsFlying;
 
 						McpeAdventureSettings settings = McpeAdventureSettings.CreateObject();
 						settings.flags = GetAdventureFlags(); 
@@ -113,12 +101,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						//SendPlayerAbilities(player);
 					}
 					
-					var pos = (PlayerLocation)player.KnownPosition.Clone();
+					var pos = (PlayerLocation)World.Player.KnownPosition.Clone();
 					
 					if (pos.DistanceTo(_lastSentLocation) > 0.0f) {
                         Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(pos.X,
 	                        pos.Y + Player.EyeLevel, pos.Z, pos.HeadYaw,
-	                        pos.Yaw, -pos.Pitch), player.KnownPosition.OnGround);
+	                        pos.Yaw, -pos.Pitch), World.Player.KnownPosition.OnGround);
 
                         _lastSentLocation = pos;
 					}
@@ -152,12 +140,21 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		//private ThreadSafeList<ChunkCoordinates> _loadedChunks = new ThreadSafeList<ChunkCoordinates>();
 		private void UnloadChunks(ChunkCoordinates center, double maxViewDistance)
 		{
-			//var chunkPublisher = Client.LastChunkPublish;
+			var chunkPublisher = Client.LastChunkPublish;
 			
 			//Client.ChunkRadius
 			foreach (var chunk in World.ChunkManager.GetAllChunks())
 			{
-				if (chunk.Key.DistanceTo(center) > maxViewDistance)
+				var distance = chunk.Key.DistanceTo(center);
+				
+				if (chunkPublisher != null)
+				{
+					if (chunk.Key.DistanceTo(new ChunkCoordinates(new Vector3(chunkPublisher.coordinates.X,
+						chunkPublisher.coordinates.Y, chunkPublisher.coordinates.Z))) < (chunkPublisher.radius / 16f))
+						continue;
+				}
+				
+				if (distance > maxViewDistance)
 				{
 					//_chunkCache.TryRemove(chunkColumn.Key, out var waste);
 					UnloadChunk(chunk.Key);
@@ -185,10 +182,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			_initiated = true;
 			Client.World = World;
-			//if (WorldReceiver.Player is Player player)
-			//{
-			//	WorldReceiver?.UpdatePlayerPosition();
-			//}
+			World.Player.SetInventory(new BedrockInventory(46));
 
 			CustomConnectedPong.CanPing = true;
 			_gameTickTimer = new System.Threading.Timer(GameTick, null, 50, 25);
@@ -196,119 +190,121 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		private bool VerifyConnection()
 		{
-			if (Client is BedrockClient c)
-			{
-				return c.IsConnected;
-			}
-			
-			return true;
+			return Client.IsConnected;
 		}
 
 		public override Task Load(ProgressReport progressReport)
 		{
 			Client.GameStarted = false;
 			
-			return Task.Run(() =>
-			{
-				Stopwatch timer = Stopwatch.StartNew();
-				progressReport(LoadingState.ConnectingToServer, 25);
-
-				var resetEvent = new ManualResetEventSlim(false);
-				
-				Client.Start(resetEvent);
-				progressReport(LoadingState.ConnectingToServer, 50);
-
-			//	Client.HaveServer = true;
-
-				//Client.SendOpenConnectionRequest1();
-				if (!resetEvent.Wait(TimeSpan.FromSeconds(5)))
+			return Task.Run(
+				() =>
 				{
-					Client.ShowDisconnect("Could not connect to server!");
-					return;
-				}
+					Stopwatch timer = Stopwatch.StartNew();
+					progressReport(LoadingState.ConnectingToServer, 25);
 
-				progressReport(LoadingState.ConnectingToServer, 98);
+					var resetEvent = new ManualResetEventSlim(false);
 
-				//progressReport(LoadingState.LoadingChunks, 0);
+					Client.Start(resetEvent);
+					progressReport(LoadingState.ConnectingToServer, 50);
 
-				var percentage = 0;
-				var statusChanged = false;
-				var done = false;
-				int previousPercentage = 0;
-				bool hasSpawnChunk = false;
-				
-				while (true)
-				{
-					double radiusSquared = Math.Pow(Client.ChunkRadius, 2);
-					var target = radiusSquared;
-					
-					percentage = (int)((100 / target) * World.ChunkManager.ChunkCount);
-					
-					if (Client.GameStarted && percentage != previousPercentage)
-					{
-						progressReport(LoadingState.LoadingChunks, percentage);
-						previousPercentage = percentage;
-						
-						//Log.Info($"Progress: {percentage} ({ChunksReceived} of {target})");
-					}
-					
-					if (!statusChanged)
-					{
-						if (Client.PlayerStatus == 3 || Client.PlayerStatusChanged.WaitOne(50) || Client.HasSpawned || Client.ChangeDimensionResetEvent.WaitOne(5))
-						{
-							statusChanged = true;
-							
-							//Client.SendMcpeMovePlayer();
-				
-							
-							//Client.IsEmulator = false;
-						}
-					}
-					
-					if (!hasSpawnChunk)
-					{
-						if (World.ChunkManager.TryGetChunk(new ChunkCoordinates(new PlayerLocation(Client.SpawnPoint.X, Client.SpawnPoint.Y, Client.SpawnPoint.Z)), out _))
-						{
-							hasSpawnChunk = true;
-						}
-					}
+					//	Client.HaveServer = true;
 
-					if (((percentage >= 100 || hasSpawnChunk)))
+					//Client.SendOpenConnectionRequest1();
+					if (!resetEvent.Wait(TimeSpan.FromSeconds(5)))
 					{
-						if (statusChanged)
-						{
-							break;
-						}
-					}
+						Client.ShowDisconnect("Could not connect to server!");
 
-					if (!VerifyConnection())
-					{
-						Client.ShowDisconnect("Connection lost.");
-						
-						timer.Stop();
 						return;
 					}
-				}
-				
-				if (World.Player is Player player)
-				{
+
+					progressReport(LoadingState.ConnectingToServer, 98);
+
+					//progressReport(LoadingState.LoadingChunks, 0);
+
+					var  percentage         = 0;
+					var  statusChanged      = false;
+					var  done               = false;
+					int  previousPercentage = 0;
+					bool hasSpawnChunk      = false;
+
+					while (true)
+					{
+						double radiusSquared = Math.Pow(Client.ChunkRadius, 2);
+						var    target        = radiusSquared;
+
+						percentage = (int) ((100 / target) * World.ChunkManager.ChunkCount);
+
+						if (Client.GameStarted && percentage != previousPercentage)
+						{
+							progressReport(LoadingState.LoadingChunks, percentage);
+							previousPercentage = percentage;
+
+							//Log.Info($"Progress: {percentage} ({ChunksReceived} of {target})");
+						}
+
+						if (!statusChanged)
+						{
+							if (Client.PlayerStatus == 3 || Client.PlayerStatusChanged.WaitOne(50) || Client.HasSpawned
+							    || Client.ChangeDimensionResetEvent.WaitOne(5))
+							{
+								statusChanged = true;
+
+								//Client.SendMcpeMovePlayer();
+
+
+								//Client.IsEmulator = false;
+							}
+						}
+
+						if (!hasSpawnChunk)
+						{
+							if (World.ChunkManager.TryGetChunk(
+								new ChunkCoordinates(
+									new PlayerLocation(Client.SpawnPoint.X, Client.SpawnPoint.Y, Client.SpawnPoint.Z)),
+								out _))
+							{
+								hasSpawnChunk = true;
+							}
+						}
+
+						if (((percentage >= 100 || hasSpawnChunk)))
+						{
+							if (statusChanged)
+							{
+								break;
+							}
+						}
+
+						if (!VerifyConnection())
+						{
+							Client.ShowDisconnect("Connection lost.");
+
+							timer.Stop();
+
+							return;
+						}
+					}
+
 					var packet = McpeSetLocalPlayerAsInitializedPacket.CreateObject();
 					packet.runtimeEntityId = Client.EntityId;
-					
-					Client.SendPacket(packet);
-							
-					var p = player.KnownPosition;
-					Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(p.X, p.Y, p.Z, p.HeadYaw, p.Yaw, p.Pitch), player.KnownPosition.OnGround);
-				}
 
-				//SkyLightCalculations.Calculate(WorldReceiver as World);
-				
-				//Client.IsEmulator = false;
-				progressReport(LoadingState.Spawning, 99);
-				timer.Stop();
-				
-				//TODO: Check if spawn position is safe.
-			});
+					Client.SendPacket(packet);
+
+					var p = World.Player.KnownPosition;
+
+					Client.SendMcpeMovePlayer(
+						new MiNET.Utils.PlayerLocation(p.X, p.Y, p.Z, p.HeadYaw, p.Yaw, p.Pitch),
+						World.Player.KnownPosition.OnGround);
+
+					//SkyLightCalculations.Calculate(WorldReceiver as World);
+
+					//Client.IsEmulator = false;
+					progressReport(LoadingState.Spawning, 99);
+					timer.Stop();
+
+					//TODO: Check if spawn position is safe.
+				});
 		}
 		public override void Dispose()
 		{

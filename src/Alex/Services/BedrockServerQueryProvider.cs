@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Services;
 using Alex.Worlds.Multiplayer.Bedrock;
+using MiNET.Net;
 using NLog;
 
 namespace Alex.Services
@@ -82,6 +83,25 @@ namespace Alex.Services
 					    client.Close();
 					  //  var m = new BedrockMotd(client.Connection.RemoteServerName);
 
+					  var compatability = CompatibilityResult.Unknown;
+
+					  if (motd.ProtocolVersion == McpeProtocolInfo.ProtocolVersion)
+					  {
+						  compatability = CompatibilityResult.Compatible;
+					  }
+					  /*else if (MathF.Abs(motd.ProtocolVersion - McpeProtocolInfo.ProtocolVersion) < 3) //Ehh?
+					  {
+						  compatability = CompatibilityResult.Unknown;
+					  }*/
+					  else if (motd.ProtocolVersion < McpeProtocolInfo.ProtocolVersion)
+					  {
+					//	  compatability = CompatibilityResult.OutdatedServer;
+					  }
+					  else if (motd.ProtocolVersion > McpeProtocolInfo.ProtocolVersion)
+					  {
+						//  compatability = CompatibilityResult.OutdatedClient;
+					  }
+					  
 						statusCallBack?.Invoke(new ServerQueryResponse(true, new ServerQueryStatus()
 					    {
 						    EndPoint = motd.ServerEndpoint,
@@ -91,7 +111,7 @@ namespace Alex.Services
 						    Address = connectionDetails.Hostname,
 						    Port = (ushort) connectionDetails.EndPoint.Port,
 						    WaitingOnPing = false,
-
+						    
 							Query = new ServerQuery()
 							{
 								Players = new Players()
@@ -102,6 +122,8 @@ namespace Alex.Services
 								Version = new API.Services.Version()
 								{
 									Protocol = motd.ProtocolVersion,
+									Name = motd.ClientVersion,
+									Compatibility = compatability
 								},
 								Description = new Description()
 								{

@@ -112,11 +112,21 @@ namespace Alex.API.Services
 	{
 		[J("name")] public string Name { get; set; }
 		[J("protocol")] public int Protocol { get; set; }
+
+		[JsonIgnore] public CompatibilityResult Compatibility { get; set; } = CompatibilityResult.Unknown;
 	}
 
 	public partial class ServerQuery
 	{
 		public static ServerQuery FromJson(string json) => JsonConvert.DeserializeObject<ServerQuery>(json);
+	}
+
+	public enum CompatibilityResult
+	{
+		Compatible,
+		OutdatedClient,
+		OutdatedServer,
+		Unknown
 	}
 
 

@@ -51,6 +51,7 @@ namespace Alex.API.Gui.Elements.Icons
 	    private bool _isOutdated = false;
 	    private long _ping = 0;
 	    private bool _renderLatency = false;
+	    private string _version = null;
 	    public GuiConnectionPingIcon() : base()
 	    {
 		    Background = GuiTextures.ServerPing0;
@@ -88,6 +89,11 @@ namespace Alex.API.Gui.Elements.Icons
             Background = _connectingStateTextures[0];
         }
 
+        public void SetVersion(string version)
+        {
+	        _version = version;
+        }
+        
         public void SetPing(long ms)
         {
 	        _ping = ms;
@@ -149,7 +155,7 @@ namespace Alex.API.Gui.Elements.Icons
 	            var mouseState = Mouse.GetState();
 
 	            _cursorPosition = GuiRenderer.Unproject(new Vector2(mouseState.X, mouseState.Y)).ToPoint();
-	            if (RenderBounds.Contains(_cursorPosition))
+	            if (RenderBounds.Contains(_cursorPosition) || _playerCountElement.RenderBounds.Contains(_cursorPosition))
 	            {
 		            _renderLatency = true;
 	            }
@@ -174,6 +180,11 @@ namespace Alex.API.Gui.Elements.Icons
 	            {
 		            string text = $"{_ping}ms";
 
+		            if (!string.IsNullOrWhiteSpace(_version))
+		            {
+			            text = $"Server Ping: {text}\nGame Version: {_version.Trim()}";
+		            }
+		            
 		            var size = graphics.Font.MeasureString(text);
 		            var position = _cursorPosition + new Point(5, 5);
 		            

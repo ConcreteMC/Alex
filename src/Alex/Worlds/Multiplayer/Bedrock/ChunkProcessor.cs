@@ -42,8 +42,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	    //private DedicatedThreadPool ThreadPool { get; }
 	    public bool ClientSideLighting { get; set; } = true;
 	    private API.Utils.DedicatedThreadPool ThreadPool { get; }
-        public ChunkProcessor(API.Utils.DedicatedThreadPool threadPool, bool useAlexChunks, CancellationToken cancellationToken)
+	    private BedrockClient Client { get; }
+        public ChunkProcessor(BedrockClient client, API.Utils.DedicatedThreadPool threadPool, bool useAlexChunks, CancellationToken cancellationToken)
         {
+	        Client = client;
 	        Instance = this;
 	        ThreadPool = threadPool;
 	        UseAlexChunks = useAlexChunks;
@@ -61,7 +63,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        Action<ChunkColumn> callback)
         {
 	        ThreadPool.QueueUserWorkItem(
-		        () => { HandleChunk(cacheEnabled, subChunkCount, chunkData, cx, cz, callback); });
+		        () =>
+		        {
+			        HandleChunk(cacheEnabled, subChunkCount, chunkData, cx, cz, callback);
+		        });
         }
 
         private List<string> Failed { get; set; } = new List<string>();
@@ -98,11 +103,41 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		        });
         }
 
+        private void HandleChunkCachePacket(uint subChunkCount,
+	        byte[] chunkData,
+	        int cx,
+	        int cz,
+	        Action<ChunkColumn> callback)
+        {
+	        using (MemoryStream stream = new MemoryStream(chunkData))
+	        {
+		        NbtBinaryReader defStream = new NbtBinaryReader(stream, true);
+		        var blobCount = defStream.ReadVarInt();
+
+		        ulong[] blobs = new ulong[blobCount];
+
+		        for (int i = 0; i < blobCount; i++)
+		        {
+			        blobs[i] = defStream.ReadUInt64();
+		        }
+
+		        foreach (var blob in blobs)
+		        {
+			        Client.SendPacket(new McpeClientCacheBlobStatus()
+			        {
+				        
+			        });
+		        }
+	        }
+        }
+        
         private void HandleChunk(bool cacheEnabled, uint subChunkCount, byte[] chunkData, int cx, int cz, Action<ChunkColumn> callback)
         {
 	        if (cacheEnabled)
 	        {
-		        Log.Warn($"Unsupported cache enabled!");
+		       // Log.Warn($"Unsupported cache enabled!");
+		       HandleChunkCachePacket(subChunkCount, chunkData, cx, cz, callback);
+		       return;
 	        }
 
 	        bool gotLight = false;

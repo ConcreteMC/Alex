@@ -148,10 +148,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Graphics\Models\Entity\Geometry\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <EmbeddedResource Include="Resources\Blockshader.xnb" />
   </ItemGroup>
 

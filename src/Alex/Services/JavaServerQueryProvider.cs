@@ -167,6 +167,19 @@ namespace Alex.Services
 						      //  Log.Debug($"Server json: " + jsonResponse);
 								var query = ServerQuery.FromJson(jsonResponse);
 
+								if (query.Version.Protocol == JavaProtocol.ProtocolVersion)
+								{
+									query.Version.Compatibility = CompatibilityResult.Compatible;
+								}
+								else if (query.Version.Protocol < JavaProtocol.ProtocolVersion)
+								{
+									query.Version.Compatibility = CompatibilityResult.OutdatedServer;
+								}
+								else if (query.Version.Protocol > JavaProtocol.ProtocolVersion)
+								{
+									query.Version.Compatibility = CompatibilityResult.OutdatedClient;
+								}
+								
 								var r = new ServerQueryStatus()
 						        {
 							        Delay = timeElapsed,

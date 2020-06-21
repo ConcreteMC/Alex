@@ -17,7 +17,6 @@ using Alex.Blocks;
 using Alex.Entities;
 using Alex.Gamestates;
 using Alex.Graphics.Models.Entity;
-using Alex.Graphics.Models.Entity.Geometry;
 using Alex.Items;
 using Alex.Net.Bedrock;
 using Alex.ResourcePackLib.Json.Converters;
@@ -333,6 +332,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				mob.KnownPosition = new PlayerLocation(message.x, message.y, message.z, message.headYaw, message.yaw, message.pitch);
 				mob.Velocity = new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ);
 				
+				if (message.item != null)
+				{
+					mob.Inventory.MainHand = ToAlexItem(message.item);
+				}
+
 				mob.HandleMetadata(message.metadata);
 				//mob.Height = message.metadata[(int) MiNET.Entities.Entity.MetadataFlags.CollisionBoxHeight]
 				
@@ -525,134 +529,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 								{
 									Log.Warn($"INVALID SKIN: {r.Skin.SkinResourcePatch.Geometry.Default}");
 								}
-
-								/*EntityModel geometry = null;
-								var               jObject  = JObject.Parse(r.Skin.GeometryData);
-
-								var resourcePatch = JsonConvert.DeserializeObject<SkinResourcePatch>(r.Skin.ResourcePatch, GeometrySerializationSettings);
-								if (jObject.TryGetValue(
-									resourcePatch.Geometry.Default,
-									StringComparison.InvariantCultureIgnoreCase, out JToken value))
-								{
-									geometry = value.ToObject<EntityModel>(
-										JsonSerializer.Create(
-											GeometrySerializationSettings));
-								}
-								else
-								{
-									foreach (var prop in jObject)
-									{
-										if (prop.Key.StartsWith(resourcePatch.Geometry.Default))
-										{
-											var split = prop.Key.Split(':');
-
-											EntityModel parentGeometry = null;
-
-											if (split.Length > 1)
-											{
-												if (jObject.TryGetValue(
-													split[1], StringComparison.InvariantCultureIgnoreCase,
-													out JToken parent))
-												{
-													parentGeometry = parent.ToObject<EntityModel>(
-														JsonSerializer.Create(
-															GeometrySerializationSettings));
-												}
-											}
-
-											//TODO: Support inheritance
-
-											geometry = prop.Value.ToObject<EntityModel>(
-												JsonSerializer.Create(GeometrySerializationSettings));
-
-											if (parentGeometry != null)
-											{
-												foreach (var bone in parentGeometry.Bones)
-												{
-													var childBone =
-														geometry.Bones.FirstOrDefault(x => x.Name == bone.Name);
-
-													if (childBone == null)
-													{
-														geometry.Bones.Add(bone);
-													}
-													else
-													{
-														if (childBone.NeverRender)
-															continue;
-
-													}
-												}
-											}
-
-											break;
-										}
-									}
-								}
-
-								if (geometry == null)
-								{
-									if (r.Skin.GeometryData.Contains("\"format_version\""))
-									{
-										BedrockGeometry geo = JsonConvert.DeserializeObject<BedrockGeometry>(
-											r.Skin.GeometryData, new SingleOrArrayConverter<Vector3>(),
-											new SingleOrArrayConverter<Vector2>(), new Vector3Converter(),
-											new Vector2Converter());
-
-										if (geo != null)
-										{
-											geometry = geo.MinecraftGeometry.FirstOrDefault();
-										}
-									}
-									else
-									{
-										Dictionary<string, MinecraftGeometry> geo =
-											JsonConvert.DeserializeObject<Dictionary<string, MinecraftGeometry>>(
-												r.Skin.GeometryData, new SingleOrArrayConverter<Vector3>(),
-												new SingleOrArrayConverter<Vector2>(), new Vector3Converter(),
-												new Vector2Converter());
-
-										if (geo.TryGetValue(
-											resourcePatch.Geometry.Default,
-											out MinecraftGeometry minecraftGeometry))
-										{
-											geometry = minecraftGeometry;
-										}
-									}
-								}
-
-								if (geometry != null)
-								{
-									if (geometry.Description == null)
-									{
-										geometry.Description = new SkinDescription()
-										{
-											Identifier = r.Skin.SkinResourcePatch.Geometry.Default,
-											TextureHeight = r.Skin.Height,
-											TextureWidth = r.Skin.Width
-										};
-									}
-
-									//var abc = geo.MinecraftGeometry.FirstOrDefault()
-									var modelRenderer = new EntityModelRenderer(geometry, skinTexture);
-
-									if (modelRenderer.Valid)
-									{
-										renderer = modelRenderer;
-									}
-									else
-									{
-										modelRenderer.Dispose();
-									}
-
-
-									//m.ModelRenderer =
-									//	new EntityModelRenderer(geo.MinecraftGeometry.FirstOrDefault(), skinTexture);
-								}
-								else
-								{
-									Log.Warn($"INVALID SKIN: {r.Skin.SkinResourcePatch.Geometry.Default}");
-								}*/
 							}
 							catch (Exception ex)
 							{
@@ -669,6 +545,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					PlayerMob m = new PlayerMob(r.DisplayName, Client.World as World, Client, skinTexture);
 					m.UUID = u;
 					m.EntityId = r.EntityId;
+					m.SetInventory(new BedrockInventory(46));
 					if (renderer != null)
 						m.ModelRenderer = renderer;
 					
@@ -743,6 +620,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			entity.Velocity = velocity;
 			entity.EntityId = entityId;
 			entity.UUID = new UUID(uuid.ToByteArray());
+			entity.SetInventory(new BedrockInventory(46));
 			
 			Client.World.SpawnEntity(entityId, entity);
 
@@ -786,7 +664,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		public void HandleMcpeAddItemEntity(McpeAddItemEntity message)
 		{
 			var slot = message.item;
-			if (ItemFactory.TryGetItem(slot.Id, slot.Metadata, out Item item))
+			var item = ToAlexItem(message.item);
+			//if (ItemFactory.TryGetItem(slot.Id, slot.Metadata, out Item item))
 			{
 				var itemClone = item.Clone();
 				
@@ -797,6 +676,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				itemEntity.EntityId = message.runtimeEntityId;
 				itemEntity.Velocity = new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ);
 				itemEntity.KnownPosition = new PlayerLocation(message.x, message.y, message.z);
+				itemEntity.HandleMetadata(message.metadata);
 				
 				itemEntity.SetItem(itemClone);
 
@@ -815,8 +695,37 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeTakeItemEntity(McpeTakeItemEntity message)
 		{
-			UnhandledPackage(message);
-			return;
+			if (Client.World.EntityManager.TryGet(message.target, out var targetEntity)
+			    && Client.World.EntityManager.TryGet(message.runtimeEntityId, out var runtimeEntity))
+			{
+				ItemEntity itemEntity;
+				Entity target;
+
+				if (runtimeEntity is ItemEntity rte)
+				{
+					itemEntity = rte;
+					target = targetEntity;
+				}
+				else if (targetEntity is ItemEntity rte2)
+				{
+					itemEntity = rte2;
+					target = runtimeEntity;
+				}
+				else
+				{
+					Log.Warn($"Invalid TakeItemEntity request.");
+					return;
+				}
+
+				var targetBoundingBox = target.GetBoundingBox(target.KnownPosition);
+
+				var direction = (itemEntity.KnownPosition.ToVector3() - new Microsoft.Xna.Framework.Vector3(
+					target.KnownPosition.X, targetBoundingBox.Max.Y, target.KnownPosition.Z));
+
+				//direction.Normalize();
+
+				itemEntity.Velocity = direction / 20f;
+			}
 		}
 
 		public void HandleMcpeMoveEntity(McpeMoveEntity message)
@@ -965,7 +874,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			((BedrockClient)Client).LastChunkPublish = message;
 			//UnhandledPackage(message);
-			//Log.Info($"Chunk publisher update: {message.coordinates} | {message.radius}");
+			Log.Info($"Chunk publisher update: {message.coordinates} | {message.radius}");
 		}
 
 		public void HandleMcpeBiomeDefinitionList(McpeBiomeDefinitionList message)

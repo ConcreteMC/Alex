@@ -158,7 +158,7 @@ namespace Alex.Gamestates.Login
 	        }
 
 	        //   Log.Info($"Browser opened...");
-	        AuthenticationService.DoDeviceCodeLogin(ConnectResponse.device_code, CancellationToken.Token).ContinueWith(
+	        AuthenticationService.DoDeviceCodeLogin(GetService<ResourceManager>().DeviceID, ConnectResponse.device_code, CancellationToken.Token).ContinueWith(
 		        (task) =>
 		        {
 			        try

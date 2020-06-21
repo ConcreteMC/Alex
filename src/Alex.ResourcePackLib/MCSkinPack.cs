@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO.Compression;
+using Alex.API.Utils;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Bedrock;
 using Alex.ResourcePackLib.Json.Models.Entities;
@@ -84,7 +85,7 @@ namespace Alex.ResourcePackLib
 					using (var s = textureEntry.Open())
 					{
 						//img = new Bitmap(s);
-						img = Image.Load<Rgba32>(s, PngDecoder);
+						img = Image.Load<Rgba32>(s.ReadToSpan(textureEntry.Length), PngDecoder);
 					}
 					
 					LoadedSkin loaded = new LoadedSkin(skin.LocalizationName, model, img);

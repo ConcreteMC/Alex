@@ -251,22 +251,35 @@ namespace Alex.Gamestates.Multiplayer
 				_pingStatus.SetPlayerCount(q.Players.Online, q.Players.Max);
 
 				ConnectionEndpoint = s.EndPoint;
+
+				_pingStatus.SetVersion(!string.IsNullOrWhiteSpace(q.Version.Name) ? q.Version.Name : q.Version.Protocol.ToString());
 				
 				if (!s.WaitingOnPing)
 				{
 					_pingStatus.SetPing(s.Delay);
 				}
+				
+				switch (q.Version.Compatibility)
+				{
+					case CompatibilityResult.OutdatedClient:
+						//_pingStatus.SetOutdated($"multiplayer.status.client_out_of_date", true);
+						_pingStatus.SetOutdated($"Client out of date! (#{q.Version.Protocol})");
+						break;
 
-				if (q.Version.Protocol < ServerTypeImplementation.ProtocolVersion)
-				{
-				//	if (SavedServerEntry.ServerType == ServerType.Java)
-					{
-						_pingStatus.SetOutdated(q.Version.Name);
-					}
-				}
-				else if (q.Version.Protocol > ServerTypeImplementation.ProtocolVersion)
-				{
-					_pingStatus.SetOutdated($"multiplayer.status.client_out_of_date", true);
+					case CompatibilityResult.OutdatedServer:
+						if (!string.IsNullOrWhiteSpace(q.Version.Name))
+						{
+							_pingStatus.SetOutdated(q.Version.Name);
+						}
+						else
+						{
+							_pingStatus.SetOutdated($"Server out of date! (#{q.Version.Protocol})");
+						}
+
+						break;
+
+					case CompatibilityResult.Unknown:
+						break;
 				}
 
 				if (q.Description.Extra != null)

@@ -72,79 +72,6 @@ namespace Alex
 			BedrockAssetUtil = new MCBedrockAssetUtils(Storage);
 		}
 
-		private static readonly List<char> TargetPlatformIdentifiers = new List<char>()
-		{
-			'w',
-			'x',
-			'm',
-			'i',
-			'a',
-			'd',
-			'X',
-			'W',
-			'n',
-			'M',
-			'r',
-			'P',
-			'v',
-			'O',
-			'S',
-			'G',
-			'p',
-			'g',
-			'l'
-		};
-		
-		public byte[] ReadXNBResource(string resource)
-		{
-			using (MemoryStream ms = new MemoryStream(ReadResource(resource)))
-			{
-				using (BinaryReader xnbReader = new BinaryReader(ms))
-				{
-					int  num1 = (int) xnbReader.ReadByte();
-					byte num2 = xnbReader.ReadByte();
-					byte num3 = xnbReader.ReadByte();
-					byte num4 = xnbReader.ReadByte();
-
-					if (num1 != 88 || num2 != (byte) 78
-					               || (num3 != (byte) 66 || !TargetPlatformIdentifiers.Contains((char) num4)))
-						throw new ContentLoadException(
-							"Asset does not appear to be a valid XNB file. Did you process your content for Windows?");
-
-					byte num5  = xnbReader.ReadByte();
-					int  num6  = (int) xnbReader.ReadByte();
-					bool flag1 = (uint) (num6 & 128) > 0U;
-					bool flag2 = (uint) (num6 & 64) > 0U;
-
-					if (num5 != (byte) 5 && num5 != (byte) 4)
-						throw new ContentLoadException("Invalid XNB version");
-
-					int    num7    = xnbReader.ReadInt32();
-					Stream stream1 = (Stream) null;
-
-					if (flag1 | flag2)
-					{
-						int decompressedSize = xnbReader.ReadInt32();
-
-						if (flag1)
-						{
-							int compressedSize = num7 - 14;
-							stream1 = (Stream) new LzxDecoderStream(ms, decompressedSize, compressedSize);
-						}
-						else if (flag2)
-							stream1 = (Stream) new Lz4DecoderStream(ms, long.MaxValue);
-					}
-					else
-					{
-						stream1 = ms;
-					}
-
-					//return new ContentReader(this, stream1, originalAssetName, (int) num5, recordDisposableObject);
-					return stream1.ReadAllBytes();
-				}
-			}
-		}
-		
 		private void ResourcePacksChanged(string[] oldvalue, string[] newvalue)
 		{
 			Log.Info($"Resource packs changed.");
@@ -210,16 +137,6 @@ namespace Alex
 			}
 
 			return resourcePack;
-		}
-
-		private BlockModel ModelResolver(string arg)
-		{
-			if (ResourcePack.TryGetBlockModel(arg, out var model))
-			{
-				return model;
-			}
-
-			return null;
 		}
 
 		private void LoadModels(IProgressReceiver progressReceiver, McResourcePack resourcePack, bool replaceModels,
@@ -297,11 +214,30 @@ namespace Alex
 			return true;
 		}
 
+        public string DeviceID { get; private set; } = null;
+        private void LoadHWID()
+        {
+	        string hwid = "";
+	        string path = "hwid.txt";
+
+	        if (Storage.TryReadString(path, out hwid))
+	        {
+		        DeviceID = hwid;
+
+		        return;
+	        }
+
+	        hwid = Guid.NewGuid().ToString();
+	        Storage.TryWriteString(path, hwid);
+        }
+        
         public DirectoryInfo SkinPackDirectory { get; private set; } = null;
         public DirectoryInfo ResourcePackDirectory { get; private set; } = null;
         private  McResourcePack.McResourcePackPreloadCallback PreloadCallback { get; set; }
         public bool CheckResources(GraphicsDevice device, IProgressReceiver progressReceiver, McResourcePack.McResourcePackPreloadCallback preloadCallback)
         {
+	        LoadHWID();
+	        
 	        PreloadCallback = preloadCallback;
 			byte[] defaultResources;
 			byte[] defaultBedrock;
