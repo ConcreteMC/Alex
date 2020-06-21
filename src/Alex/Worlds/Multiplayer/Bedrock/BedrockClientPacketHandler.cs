@@ -709,92 +709,17 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 			else
 			{
+				EntityModelRenderer renderer = EntityFactory.GetEntityRenderer(
+					$"minecraft:{type.ToString().ToLower()}", null);
 
-				if (EntityFactory.ModelByType(type, out var renderer, out EntityData knownData))
+				if (renderer != null)
 				{
-					//if (Enum.TryParse(knownData.Name, out type))
-					//{
-					//	entity = type.Create(null);
-					//}
 					entity = type.Create(null);
-
-					if (entity == null)
-					{
-						entity = new Entity((int) type, null, Client);
-					}
-
-					//if (knownData.Height)
-					{
-						entity.Height = knownData.Height;
-					}
-
-					//if (knownData.Width.HasValue)
-					entity.Width = knownData.Width;
-
-					if (string.IsNullOrWhiteSpace(entity.NameTag) && !string.IsNullOrWhiteSpace(knownData.Name))
-					{
-						entity.NameTag = knownData.Name;
-					}
 				}
 
 				if (entity == null)
 				{
-					Log.Warn($"Could not create entity of type: {(int) type}:{type.ToString()}");
-
-					return false;
-				}
-
-				if (renderer == null)
-				{
-					var def = AlexInstance.Resources.BedrockResourcePack.EntityDefinitions.FirstOrDefault(
-						x => x.Value.Identifier.Replace("_", "").ToLowerInvariant().Equals($"minecraft:{type}".ToLowerInvariant()));
-
-					Dictionary<string, string> textures = new Dictionary<string, string>();
-					string geometry = string.Empty;
-
-					if (!string.IsNullOrWhiteSpace(def.Key))
-					{
-						geometry = def.Value.Geometry["default"];
-						textures = def.Value.Textures;
-					}
-					else
-					{
-						geometry = $"geometry.{type.ToString()}";
-						textures.Add("default", $"textures/entity/{type.ToString()}");
-					}
-					
-					if (!string.IsNullOrWhiteSpace(geometry))
-					{
-						EntityModel model;
-
-						if (ModelFactory.TryGetModel(geometry, out model) && model != null)
-						{
-							//var    textures = def.Value.Textures;
-							string texture;
-
-							if (!textures.TryGetValue("default", out texture))
-							{
-								texture = textures.FirstOrDefault().Value;
-							}
-
-							PooledTexture2D texture2D = null;
-							if (AlexInstance.Resources.BedrockResourcePack.Textures.TryGetValue(texture, out var bmp))
-							{
-								PooledTexture2D t = TextureUtils.BitmapToTexture2D(AlexInstance.GraphicsDevice, bmp);
-
-								texture2D = t;
-							}
-							else if (AlexInstance.Resources.ResourcePack.TryGetBitmap(texture, out var bmp2))
-							{
-								texture2D = TextureUtils.BitmapToTexture2D(AlexInstance.GraphicsDevice, bmp2);
-							}
-
-							if (texture2D != null)
-							{
-								renderer = new EntityModelRenderer(model, texture2D);
-							}
-						}
-					}
+					entity = new Entity((int) type, null, Client);
 				}
 
 				if (renderer == null)
@@ -818,7 +743,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			entity.Velocity = velocity;
 			entity.EntityId = entityId;
 			entity.UUID = new UUID(uuid.ToByteArray());
-
+			
 			Client.World.SpawnEntity(entityId, entity);
 
 			return true;

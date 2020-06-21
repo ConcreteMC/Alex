@@ -147,8 +147,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						        uint[] words = new uint[wordCount];
 						        for (int w = 0; w < wordCount; w++)
 						        {
-							        uint word = defStream.ReadUInt32();
-							        words[w] = word;
+							        words[w] = defStream.ReadUInt32();
 						        }
 
 						        int[] pallete = new int[0];

@@ -114,7 +114,6 @@ namespace Alex.Entities
 		public double Width { get; set; } = 1;
 		public double Length { get; set; } = 1;
 		public double Drag { get; set; } = 0.02f;// 8f;
-		public double Friction { get; set; } = 0.1f;
 
 		public double Gravity { get; set; } = 0.08f; //16.8f; //9.81f; //1.6f;
 		//Drag & gravity etc is Vanilla * 400
