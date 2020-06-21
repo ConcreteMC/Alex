@@ -366,6 +366,89 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        MissingMemberHandling = MissingMemberHandling.Ignore
         };
         
+        private ConcurrentDictionary<string, EntityModel> _models = new ConcurrentDictionary<string, EntityModel>();
+        private bool ProcessEntityModel(EntityModel model, bool isRetry = false)
+        {
+	        string modelName = model.Name;
+            if (model.Name.Contains(":")) //This model inherits from another model.
+            {
+                string[] split = model.Name.Split(':');
+                string parent = split[1];
+
+                EntityModel parentModel;
+                if (!ModelFactory.TryGetModel(parent, out parentModel) && !_models.TryGetValue(parent, out parentModel))
+                {
+                    if (!isRetry)
+                    {
+                       // failedToProcess.TryAdd(modelName, model);
+
+                        Log.Warn($"No parent model for {modelName}");
+                    }
+
+                    return false;
+                }
+
+                modelName = split[0];
+
+                if (model.Bones == null)
+                {
+                    model.Bones = new EntityModelBone[0];
+                }
+
+                if (parentModel == null)
+                {
+                    Log.Warn($"Pass 1 fail... {modelName}");
+                    return false;
+                }
+
+                if (parentModel.Bones == null || parentModel.Bones.Length == 0)
+                {
+                    Log.Warn($"Parent models contains no bones! {modelName}");
+                    return false;
+                }
+
+                Dictionary<string, EntityModelBone> parentBones =
+                    parentModel.Bones.Where(x => x != null && !string.IsNullOrWhiteSpace(x.Name))
+                        .ToDictionary(x => x.Name, e => e);
+
+                Dictionary<string, EntityModelBone> bones =
+                    model.Bones.Where(x => x != null && !string.IsNullOrWhiteSpace(x.Name))
+                        .ToDictionary(x => x.Name, e => e);
+
+                foreach (var bone in parentBones)
+                {
+                    var parentBone = bone.Value;
+                    if (bones.TryGetValue(bone.Key, out EntityModelBone val))
+                    {
+                        if (!val.Reset)
+                        {
+                            if (val.Cubes != null)
+                            {
+                                val.Cubes = val.Cubes.Concat(parentBone.Cubes).ToArray();
+                            }
+                            else
+                            {
+                                val.Cubes = parentBone.Cubes;
+                            }
+
+                            //val.Cubes.Concat(parentBone.Cubes);
+                        }
+
+
+                        bones[bone.Key] = val;
+                    }
+                    else
+                    {
+                        bones.Add(bone.Key, parentBone);
+                    }
+                }
+
+                model.Bones = bones.Values.ToArray();
+            }
+
+            return _models.TryAdd(modelName, model);
+        }
+        
 		public void HandleMcpePlayerList(McpePlayerList message)
 		{
 			if (message.records is PlayerAddRecords addRecords)
@@ -398,7 +481,52 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						{
 							try
 							{
-								MinecraftGeometry geometry = null;
+								EntityModel model;
+								var resourcePatch = JsonConvert.DeserializeObject<SkinResourcePatch>(r.Skin.ResourcePatch, GeometrySerializationSettings);
+
+								if (!_models.TryGetValue(resourcePatch.Geometry.Default, out model))
+								{
+									Dictionary<string, EntityModel> models = new Dictionary<string, EntityModel>();
+									EntityModel.GetEntries(r.Skin.GeometryData, models);
+
+									foreach (var mm in models.ToArray())
+									{
+										if (ProcessEntityModel(mm.Value, false))
+										{
+											models.Remove(mm.Key);
+										}
+									}
+
+									foreach (var mm in models.ToArray())
+									{
+										if (ProcessEntityModel(mm.Value, true))
+										{
+											models.Remove(mm.Key);
+										}
+									}
+
+									_models.TryGetValue(resourcePatch.Geometry.Default, out model);
+								}
+
+								if (model != null)
+								{
+									var modelRenderer = new EntityModelRenderer(model, skinTexture);
+
+									if (modelRenderer.Valid)
+									{
+										renderer = modelRenderer;
+									}
+									else
+									{
+										modelRenderer.Dispose();
+									}
+								}
+								else
+								{
+									Log.Warn($"INVALID SKIN: {r.Skin.SkinResourcePatch.Geometry.Default}");
+								}
+
+								/*EntityModel geometry = null;
 								var               jObject  = JObject.Parse(r.Skin.GeometryData);
 
 								var resourcePatch = JsonConvert.DeserializeObject<SkinResourcePatch>(r.Skin.ResourcePatch, GeometrySerializationSettings);
@@ -406,7 +534,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 									resourcePatch.Geometry.Default,
 									StringComparison.InvariantCultureIgnoreCase, out JToken value))
 								{
-									geometry = value.ToObject<MinecraftGeometry>(
+									geometry = value.ToObject<EntityModel>(
 										JsonSerializer.Create(
 											GeometrySerializationSettings));
 								}
@@ -418,7 +546,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 										{
 											var split = prop.Key.Split(':');
 
-											MinecraftGeometry parentGeometry = null;
+											EntityModel parentGeometry = null;
 
 											if (split.Length > 1)
 											{
@@ -426,7 +554,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 													split[1], StringComparison.InvariantCultureIgnoreCase,
 													out JToken parent))
 												{
-													parentGeometry = parent.ToObject<MinecraftGeometry>(
+													parentGeometry = parent.ToObject<EntityModel>(
 														JsonSerializer.Create(
 															GeometrySerializationSettings));
 												}
@@ -434,7 +562,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 											//TODO: Support inheritance
 
-											geometry = prop.Value.ToObject<MinecraftGeometry>(
+											geometry = prop.Value.ToObject<EntityModel>(
 												JsonSerializer.Create(GeometrySerializationSettings));
 
 											if (parentGeometry != null)
@@ -524,7 +652,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 								else
 								{
 									Log.Warn($"INVALID SKIN: {r.Skin.SkinResourcePatch.Geometry.Default}");
-								}
+								}*/
 							}
 							catch (Exception ex)
 							{

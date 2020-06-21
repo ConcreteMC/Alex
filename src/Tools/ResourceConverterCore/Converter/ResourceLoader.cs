@@ -313,7 +313,7 @@ namespace ResourceConverterCore.Converter
                 }
             }
         }
-        
+
         private int LoadMobs(Dictionary<string, EntityModel> entries)
         {
             int c = 0;
