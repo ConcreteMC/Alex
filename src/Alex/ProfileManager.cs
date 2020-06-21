@@ -145,11 +145,6 @@ namespace Alex
 			return Profiles.Values.Where(x => x.Type == type).Select(selector => selector.Profile).ToArray();
 		}
 
-		public PlayerProfile[] GetJavaProfiles()
-		{
-			return Profiles.Values.Where(x => x.Type == "java").Select(selector => selector.Profile).ToArray();
-		}
-
 		private class ProfilesFileFormat
 		{
 			public int Version = 1;

@@ -92,10 +92,16 @@ namespace Alex.Gamestates.Multiplayer
 		  //  var queryProvider = GetService<IServerQueryProvider>();
 		    
 		    _listProvider.Load();
-		    
+
+		    Reload();
+	    }
+
+	    private void Reload()
+	    {
 		    ClearItems();
 
 		    List<Task> tasks = new List<Task>();
+
 		    foreach (var entry in _listProvider.Data.ToArray())
 		    {
 			    if (Alex.ServerTypeManager.TryGet(entry.ServerType, out var typeImplementation))
@@ -106,7 +112,7 @@ namespace Alex.Gamestates.Multiplayer
 				    tasks.Add(element.PingAsync(false));
 			    }
 		    }
-		}
+	    }
 
 	    protected override void OnSelectedItemChanged(GuiServerListEntryElement newItem)
 	    {
@@ -189,75 +195,11 @@ namespace Alex.Gamestates.Multiplayer
 					Alex.ConnectToServer(typeImplementation, new ServerConnectionDetails(target, entry.Host), authenticationService.CurrentProfile);
 				}
 			}
-			
-			/*if (entry.ServerType == ServerType.Java)
-			{
-				if (currentProfile == null || (currentProfile.IsBedrock))
-				{
-					JavaLoginState loginState = new JavaLoginState(
-						_skyBox,
-						() =>
-						{
-							Alex.ConnectToServer(
-								target, authenticationService.CurrentProfile, false,
-								SelectedItem.SavedServerEntry.Host);
-						});
-
-
-					Alex.GameStateManager.SetActiveState(loginState, true);
-				}
-				else
-				{
-					Alex.ConnectToServer(target, currentProfile, false, SelectedItem.SavedServerEntry.Host);
-				}
-			}
-			else if (entry.ServerType == ServerType.Bedrock)
-			{
-				if (SelectedItem.ConnectionEndpoint != null)
-				{
-					target = SelectedItem.ConnectionEndpoint;
-				}
-
-				if (currentProfile == null || (!currentProfile.IsBedrock))
-				{
-					foreach (var profile in authenticationService.GetBedrockProfiles())
-					{
-						profile.IsBedrock = true;
-						Log.Debug($"BEDROCK PROFILE: {profile.Username}");
-
-						var task = await authenticationService.TryAuthenticateAsync(profile);
-
-						if (task)
-						{
-							currentProfile = profile;
-
-							break;
-						}
-						else
-						{
-							Log.Warn($"Profile auth failed.");
-						}
-					}
-				}
-
-				if ((currentProfile == null || (!currentProfile.IsBedrock)) || !currentProfile.Authenticated)
-				{
-					BEDeviceCodeLoginState loginState = new BEDeviceCodeLoginState(
-						_skyBox, (profile) => { Alex.ConnectToServer(target, profile, true); });
-
-					Alex.GameStateManager.SetActiveState(loginState, true);
-				}
-				else
-				{
-					Alex.ConnectToServer(target, currentProfile, true);
-				}
-			}*/
 		}
 
 		private void OnCancelButtonPressed()
 	    {
 			Alex.GameStateManager.Back();
-			//Alex.GameStateManager.SetActiveState("title");
 	    }
 
 	    private void OnRefreshButtonPressed()
@@ -266,17 +208,12 @@ namespace Alex.Gamestates.Multiplayer
 		    {
 			    item.PingAsync(true);
 		    }
-		   /* Task.Run(() =>
-		    {
-			    SaveAll();
-			    Load(false);
-		    });*/
-		//	PingAll(true);
 	    }
 
 	    private void SaveAll()
 	    {
-		    foreach (var entry in _listProvider.Data.ToArray())
+		    _listProvider.Save(_listProvider.Data);
+		  /*  foreach (var entry in _listProvider.Data.ToArray())
 		    {
 			    _listProvider.RemoveEntry(entry);
 		    }
@@ -284,7 +221,7 @@ namespace Alex.Gamestates.Multiplayer
 		    foreach (var item in Items)
 		    {
 			    _listProvider.AddEntry(item.SavedServerEntry);
-		    }
+		    }*/
 		    
 		    /*Alex.UIThreadQueue.Enqueue(() =>
 		    {
@@ -292,28 +229,40 @@ namespace Alex.Gamestates.Multiplayer
 		    });*/
 	    }
 
-	    private void AddEditServerCallbackAction(SavedServerEntry obj)
+	    private void AddEditServerCallbackAction(MultiplayerAddEditServerState.AddOrEditCallback obj)
 	    {
-		    //var queryProvider = GetService<IServerQueryProvider>();
-		    
 		    if (obj == null) return; //Cancelled.
 
-		    for (var index = 0; index < Items.Length; index++)
+		    if (!obj.IsNew)
 		    {
-			    var entry = Items[index];
-
-			    if (entry.InternalIdentifier.Equals(obj.IntenalIdentifier))
+			    for (var index = 0; index < Items.Length; index++)
 			    {
-					var newEntry = new GuiServerListEntryElement(entry.ServerTypeImplementation, obj);
+				    var entry = Items[index];
 
-				    Items[index] = newEntry;
+				    if (entry.SavedServerEntry.InternalIdentifier.Equals(obj.Entry.InternalIdentifier))
+				    {
+					    var newEntry = new GuiServerListEntryElement(entry.ServerTypeImplementation, obj.Entry);
 
-				    newEntry.PingAsync(false);
-				    break;
+					    Items[index] = newEntry;
+
+					    newEntry.PingAsync(false);
+
+					    _listProvider.RemoveEntry(entry.SavedServerEntry);
+					    _listProvider.AddEntry(obj.Entry);
+					    _listProvider.MoveEntry(entry.SavedServerEntry.ListIndex, obj.Entry);
+					    
+					    break;
+				    }
 			    }
 		    }
+		    else
+		    {
+			    _listProvider.AddEntry(obj.Entry);
+		    }
 
-		    //Load();
+		    SaveAll();
+
+		    Reload();
 	    }
 
 	    protected override void OnUpdate(GameTime gameTime)

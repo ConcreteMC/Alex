@@ -127,11 +127,6 @@ namespace Alex.Services
 			});
 		}
 
-		public PlayerProfile[] GetJavaProfiles()
-		{
-			return ProfileManager.GetJavaProfiles();
-		}
-
 		public PlayerProfile[] GetProfiles(string type)
 		{
 			return ProfileManager.GetProfiles(type);

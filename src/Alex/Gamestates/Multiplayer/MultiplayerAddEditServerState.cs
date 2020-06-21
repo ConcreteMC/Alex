@@ -18,7 +18,7 @@ using RocketUI;
 
 namespace Alex.Gamestates.Multiplayer
 {
-	public class MultiplayerAddEditServerState : GuiCallbackStateBase<SavedServerEntry>
+	public class MultiplayerAddEditServerState : GuiCallbackStateBase<MultiplayerAddEditServerState.AddOrEditCallback>
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(MultiplayerConnectState));
 
@@ -36,24 +36,23 @@ namespace Alex.Gamestates.Multiplayer
 		
 		#endregion
 
-		private readonly SavedServerEntry                       _entry;
-		private readonly IListStorageProvider<SavedServerEntry> _savedServersStorage;
+		private readonly SavedServerEntry                       _entry = null;
+	//	private readonly IListStorageProvider<SavedServerEntry> _savedServersStorage;
 		private readonly GuiPanoramaSkyBox                      _skyBox;
 		private readonly ServerTypeManager _serverTypeManager;
 		
-		public MultiplayerAddEditServerState(Action<SavedServerEntry> callbackAction, GuiPanoramaSkyBox skyBox) :
+		public MultiplayerAddEditServerState(Action<AddOrEditCallback> callbackAction, GuiPanoramaSkyBox skyBox) :
 			this("java", null, null, callbackAction, skyBox)
 		{
 		}
 
 		private ServerTypeImplementation _selectedImplementation = null;
 		public MultiplayerAddEditServerState(string serverType, string name, string address,
-											 Action<SavedServerEntry> callbackAction,
+											 Action<AddOrEditCallback> callbackAction,
 											 GuiPanoramaSkyBox        skyBox) :
 			base(callbackAction)
 		{
 			_serverTypeManager = GetService<ServerTypeManager>();
-			_savedServersStorage = GetService<IListStorageProvider<SavedServerEntry>>();
 			_skyBox              = skyBox;
 
 			Title = "Add Server";
@@ -141,20 +140,6 @@ namespace Alex.Gamestates.Multiplayer
 				};
 			}
 
-		/*	_serverTypeGroup.AddChild(_bedrockEditionButton = new GuiToggleButton("Bedrock")
-			{
-				Margin  = new Thickness(5),
-				Modern  = true,
-				Width   = 50,
-				Checked = serverType == ServerType.Bedrock,
-				CheckedOutlineThickness = new Thickness(1),
-				DisplayFormat = new ValueFormatter<bool>((val) => $"Bedrock {(val ? "[Active]" : "")}"),
-				TabIndex = 4
-			});*/
-
-			//	var portRow = AddGuiRow();
-			//  portRow.ChildAnchor = Alignment.MiddleCenter;
-
 			var buttonRow = AddGuiRow(_saveButton = new GuiButton(OnSaveButtonPressed)
 			{
 				AccessKey = Keys.Enter,
@@ -200,14 +185,11 @@ namespace Alex.Gamestates.Multiplayer
 			Background = new GuiTexture2D(_skyBox, TextureRepeatMode.Stretch);
 		}
 
-		public MultiplayerAddEditServerState(SavedServerEntry  entry, Action<SavedServerEntry> callbackAction,
+		public MultiplayerAddEditServerState(SavedServerEntry  entry, Action<AddOrEditCallback> callbackAction,
 											 GuiPanoramaSkyBox skyBox) : this(entry.ServerType, entry.Name, entry.Host + ":" + entry.Port,
 																			  callbackAction, skyBox)
 		{
-			if (entry != null)
-			{
-				_entry = entry;
-			}
+			_entry = entry;
 		}
 
 		private void OnSaveButtonPressed()
@@ -268,12 +250,17 @@ namespace Alex.Gamestates.Multiplayer
 
 			if (_entry != null)
 			{
+				entry.InternalIdentifier = _entry.InternalIdentifier;
+			}
+			
+		/*	if (_entry != null)
+			{
 				_savedServersStorage.RemoveEntry(_entry);
 			}
 
-			_savedServersStorage.AddEntry(entry);
+			_savedServersStorage.AddEntry(entry);*/
 
-			InvokeCallback(entry);
+			InvokeCallback(new AddOrEditCallback(entry, _entry == null));
 		}
 
 		private void SetErrorMessage(string error)
@@ -291,6 +278,18 @@ namespace Alex.Gamestates.Multiplayer
 		{
 			base.OnUpdate(gameTime);
 			_skyBox.Update(gameTime);
+		}
+
+		public class AddOrEditCallback
+		{
+			public SavedServerEntry Entry { get; }
+			public bool IsNew { get; }
+
+			public AddOrEditCallback(SavedServerEntry entry, bool isNew)
+			{
+				Entry = entry;
+				IsNew = isNew;
+			}
 		}
 	}
 }
