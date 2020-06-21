@@ -34,6 +34,7 @@ using Alex.Gui;
 using Alex.Gui.Dialogs.Containers;
 using Alex.Items;
 using Alex.Net;
+using Alex.Net.Bedrock;
 using Alex.Networking.Java.Packets;
 using Alex.Plugins;
 using Alex.ResourcePackLib.Json.Models.Entities;
@@ -474,7 +475,6 @@ namespace Alex
 			progressReceiver.UpdateProgress(0, "Initializing...");
 			API.Extensions.Init(GraphicsDevice);
 			MCPacketFactory.Load();
-
 			//ConfigureServices();
 
 			var eventDispatcher = Services.GetRequiredService<IEventDispatcher>() as EventDispatcher;

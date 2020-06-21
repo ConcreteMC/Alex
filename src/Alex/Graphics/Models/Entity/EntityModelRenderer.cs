@@ -22,8 +22,9 @@ namespace Alex.Graphics.Models.Entity
 		public PooledTexture2D Texture { get; set; }
 		private PooledVertexBuffer VertexBuffer { get; set; }
 		public bool Valid { get; private set; }
+		private bool CanRender { get; set; } = true;
 
-		public long Vertices => VertexBuffer.VertexCount;
+		public long Vertices => CanRender && VertexBuffer != null ? VertexBuffer.VertexCount : 0;
 		//public float Height { get; private set; } = 0f;
 		public EntityModelRenderer(EntityModel model, PooledTexture2D texture)
 		{
@@ -296,6 +297,14 @@ namespace Alex.Graphics.Models.Entity
 					}
 				
 			}
+			
+			if (vertices.Count == 0)
+			{
+			//	Log.Warn($"No vertices. {JsonConvert.SerializeObject(model,Formatting.Indented)}");
+				Valid = true;
+				CanRender = false;
+				return;
+			}
 
 			VertexBuffer = GpuResourceManager.GetBuffer(this, Alex.Instance.GraphicsDevice,
 				VertexPositionNormalTexture.VertexDeclaration, vertices.Count, BufferUsage.None);
@@ -336,6 +345,9 @@ namespace Alex.Graphics.Models.Entity
 		
 		public virtual void Render(IRenderArgs args, PlayerLocation position, bool mock)
 		{
+			if (!CanRender)
+				return;
+			
 			var originalRaster = args.GraphicsDevice.RasterizerState;
 			args.GraphicsDevice.RasterizerState = RasterizerState;
 			args.GraphicsDevice.SetVertexBuffer(VertexBuffer);

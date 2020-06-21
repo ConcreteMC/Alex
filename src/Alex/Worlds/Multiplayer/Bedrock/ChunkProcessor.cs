@@ -131,7 +131,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				        if (version == 1 || version == 8)
 				        {
-					        int storageSize = defStream.ReadByte();
+					        int storageSize = version == 1 ? 1 : defStream.ReadByte();
 					        
 					        if (section == null) 
 						        section = new ChunkSection(chunkColumn, s, true, 2);
@@ -155,7 +155,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 						        if (isRuntime)
 						        {
-							        int palleteSize = VarInt.ReadSInt32(stream);
+							        int palleteSize = defStream.ReadVarInt();// VarInt.ReadSInt32(stream);
 							        if (palleteSize <= 0)
 							        {
 								        Log.Warn($"Pallete size is <= 0 ({palleteSize})");
@@ -166,7 +166,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 							        for (int pi = 0; pi < pallete.Length; pi++)
 							        {
-								        var ui = VarInt.ReadSInt32(stream);
+								        var ui = defStream.ReadVarInt(); //VarInt.ReadSInt32(stream);
 								        pallete[pi] = ui;
 							        }
 						        }
@@ -195,10 +195,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 								        if (translated != null)
 								        {
-									        if (translated.Block is Water)
-									        {
-										        string a = "";
-									        }
 									        section.Set(storage, x, y, z, translated);
 								        }
 
@@ -385,7 +381,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				        return;
 			        }
 
-			        int borderBlock = VarInt.ReadSInt32(stream);
+			        int borderBlock = defStream.ReadVarInt(); //VarInt.ReadSInt32(stream);
 			        if (borderBlock > 0)
 			        {
 				        byte[] buf = new byte[borderBlock];

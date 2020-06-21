@@ -17,6 +17,7 @@ using Alex.API.Utils;
 using Alex.Entities;
 using Alex.Gamestates;
 using Alex.Net;
+using Alex.Net.Bedrock;
 using Alex.Net.Bedrock.Raknet;
 using Alex.Utils;
 using Alex.Utils.Inventories;
@@ -43,7 +44,6 @@ using ConnectionInfo = Alex.API.Network.ConnectionInfo;
 using DedicatedThreadPool = MiNET.Utils.DedicatedThreadPool;
 using Item = Alex.Items.Item;
 using LevelInfo = MiNET.Worlds.LevelInfo;
-using NewtonsoftMapper = MiNET.NewtonsoftMapper;
 using Player = Alex.Entities.Player;
 
 namespace Alex.Worlds.Multiplayer.Bedrock
@@ -130,6 +130,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         private ChunkProcessor ChunkProcessor { get; }
 		public BedrockClient(Alex alex, IEventDispatcher eventDispatcher, IPEndPoint endpoint, PlayerProfile playerProfile, DedicatedThreadPool threadPool, BedrockWorldProvider wp)
 		{
+			PacketFactory.CustomPacketFactory = new AlexPacketFactory();
+			
 			PlayerProfile = playerProfile;
 			CancellationTokenSource = new CancellationTokenSource();
 			
@@ -480,7 +482,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        }
 
 	        LoginSent = true;
-            JWT.JsonMapper = new NewtonsoftMapper();
+            JWT.JsonMapper = new JWTMapper();
 
             var clientKey = XboxAuthService.MinecraftKeyPair;// CryptoUtils.GenerateClientKey();
 

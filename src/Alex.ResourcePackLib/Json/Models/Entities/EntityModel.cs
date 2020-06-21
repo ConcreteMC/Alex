@@ -89,7 +89,13 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 
                     //if (e.Key == "minecraft:client_entity") continue;
                     //if (e.Key.Contains("zombie")) Console.WriteLine(e.Key);
-                    entries.TryAdd(e.Key, e.Value.ToObject<EntityModel>(serializer));
+                    var newModel = e.Value.ToObject<EntityModel>(serializer);
+
+                    if (newModel != null)
+                    {
+	                    newModel.Name = e.Key;
+	                    entries.TryAdd(e.Key, newModel);
+                    }
                 }
             }
         }
