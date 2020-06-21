@@ -937,6 +937,7 @@ namespace Alex.Entities
 			ScaleChanged();
 			
 			ModelRenderer.GetBone("body", out _body);
+
 			ModelRenderer.GetBone("leftArm", out _rightArmModel);
 			ModelRenderer.GetBone("rightArm", out _leftArmModel);
 
@@ -950,17 +951,22 @@ namespace Alex.Entities
 			ModelRenderer.GetBone("leftPants", out _rightPantsModel);
 
 			ModelRenderer.GetBone("jacket", out _jacketModel);
-			ModelRenderer.GetBone("head", out _head);
 
-			if (ModelRenderer.GetBone("hat", out EntityModelRenderer.ModelBone hat))
+			if (ModelRenderer.GetBone("head", out _head))
 			{
-				foreach (var c in hat.Parts)
+				_head.ApplyPitch = true;
+				_head.ApplyHeadYaw = true;
+			}
+
+			/*if (ModelRenderer.GetBone("hat", out EntityModelRenderer.ModelBone hat))
+			{
+				foreach (var c in hat.Cubes)
 				{
 					c.ApplyHeadYaw = true;
 					c.ApplyYaw = false;
 					c.ApplyPitch = true;
 				}
-			}
+			}*/
 		}
 		
 		public BoundingBox BoundingBox => GetBoundingBox();

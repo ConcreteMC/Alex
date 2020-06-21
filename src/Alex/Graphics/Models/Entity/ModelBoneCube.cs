@@ -49,10 +49,7 @@ namespace Alex.Graphics.Models.Entity
 
 				IsDirty = false;
 			}
-
-			public bool ApplyPitch { get; set; } = true;
-			public bool ApplyYaw { get; set; } = true;
-			public bool ApplyHeadYaw { get; set; } = false;
+			
 			public bool Mirror { get; set; } = false;
 			public void Dispose()
 			{
