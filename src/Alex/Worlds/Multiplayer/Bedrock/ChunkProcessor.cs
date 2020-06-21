@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using Alex.Blocks;
 using Alex.Blocks.Minecraft;
@@ -518,6 +519,21 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        return $"minecraft:{result}";
         }
 
+        private string BlockStateToString(BlockStateContainer record)
+        {
+	        StringBuilder sb = new StringBuilder();
+	        sb.Append($"{record.Name}[");
+
+	        foreach (var state in record.States)
+	        {
+		        sb.Append($"{state.Name}={state.Value()},");
+	        }
+
+	        sb.Append("]");
+	        
+	        return sb.ToString();
+        }
+        
         public bool TryConvertBlockState(BlockStateContainer record, out BlockState result)
         {
 	        if (_convertedStates.TryGetValue((uint) record.RuntimeId, out var alreadyConverted))
@@ -525,6 +541,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		        result = alreadyConverted;
 		        return true;
 	        }
+
+	        var originalRecord = BlockStateToString(record);
 	        
 	        result = null;
 
@@ -636,22 +654,29 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				        break;
 			        case "color":
+				        var val = state.Value();
+
+				        if (val == "silver")
+				        {
+					        val = "light_gray";
+				        }
+				        
 				        switch (record.Name)
 				        {
 					        case "minecraft:carpet":
-						        searchName = $"minecraft:{state.Value()}_carpet";
+						        searchName = $"minecraft:{val}_carpet";
 						        break;
 					        case "minecraft:wool":
-						        searchName = $"minecraft:{state.Value()}_wool";
+						        searchName = $"minecraft:{val}_wool";
 						        break;
 					        case "minecraft:stained_glass":
-						        searchName = $"minecraft:{state.Value()}_stained_glass";
+						        searchName = $"minecraft:{val}_stained_glass";
 						        break;
 					        case "minecraft:concrete":
-						        searchName = $"minecraft:{state.Value()}_concrete";
+						        searchName = $"minecraft:{val}_concrete";
 						        break;
 					        case "minecraft:stained_glass_pane":
-						        searchName = $"minecraft:{state.Value()}_stained_glass_pane";
+						        searchName = $"minecraft:{val}_stained_glass_pane";
 						        break;
 				        }
 
@@ -707,7 +732,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 	        if (r == null || r.Name == "Unknown")
 	        {
-		        Log.Warn($"Could not translate block: {record.Name}");
+		        Log.Warn($"Could not translate block: {originalRecord} (Search: {prefix + searchName})");
 		        return false;
 	        }
 

@@ -10,6 +10,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
 using NLog;
+using MathF = System.MathF;
 
 namespace Alex.Graphics.Models.Entity
 {
@@ -278,9 +279,10 @@ namespace Alex.Graphics.Models.Entity
 
 					var size     = cube.Size;
 					var origin   = cube.Origin;
-					var pivot    = cube.Pivot;// new Vector3(-cube.Pivot.X, cube.Pivot.Y, cube.Pivot.Z);
+					var pivot    = cube.Pivot;
 					var rotation = cube.Rotation;
-
+					//rotation = new Vector3(rotation.X, 180f - rotation.Y, rotation.Z);
+					
 					//VertexPositionNormalTexture[] vertices;
 					Cube built = new Cube(size * (float)cube.Inflate, textureSize);
 					built.Mirrored = bone.Mirror;
@@ -374,7 +376,7 @@ namespace Alex.Graphics.Models.Entity
 			if (Bones == null) return;
 
 			CharacterMatrix = Matrix.CreateScale(Scale / 16f) *
-			                         Matrix.CreateRotationY(MathUtils.ToRadians((180f - position.Yaw))) *
+			                         Matrix.CreateRotationY(MathUtils.ToRadians(180f - (position.Yaw))) *
 			                         Matrix.CreateTranslation(position);
 
 			foreach (var bone in Bones)

@@ -356,6 +356,8 @@ namespace Alex.Blocks
 			    () => new Carpet().WithLocation("minecraft:brown_carpet"),
 			    () => new Carpet().WithLocation("minecraft:red_carpet"),
 			    () => new Carpet().WithLocation("minecraft:black_carpet"));
+		    
+		    this.Register("minecraft:light_block", new LightBlock());
 	    }
     }
 }

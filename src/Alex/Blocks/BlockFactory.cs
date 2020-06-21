@@ -80,7 +80,31 @@ namespace Alex.Blocks
 				return;
 
 			_builtin = true;
-			
+
+			var lightBlockVariantMapper = new BlockStateVariantMapper();
+
+			for (byte i = 0; i < 15; i++)
+			{
+				BlockState bs = new BlockState()
+				{
+					Default = i == 0,
+					Name = "minecraft:light_block",
+					VariantMapper = lightBlockVariantMapper,
+					Values = new Dictionary<string, string>() {{"block_light_level", i.ToString()}}
+				};
+				
+				var block = new LightBlock()
+				{
+					LightValue = i
+				};
+				
+				bs.Block = block;
+				block.BlockState = bs;
+				
+				lightBlockVariantMapper.TryAdd(bs);
+			}
+
+			BlockStateByName.TryAdd("minecraft:light_block", lightBlockVariantMapper);
 			//RegisteredBlockStates.Add(Block.GetBlockStateID(), StationairyWaterModel);
 		}
 
