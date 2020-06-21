@@ -8,6 +8,7 @@ using Alex.API.Input.Listeners;
 using Alex.API.Utils;
 using Alex.Entities;
 using Alex.Gui.Elements;
+using Alex.Gui.Elements.Hud;
 using Alex.Gui.Elements.Inventory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;

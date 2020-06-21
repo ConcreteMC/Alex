@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using Alex.API.Data;
@@ -113,15 +114,12 @@ namespace Alex.Networking.Java.Util
 				Read(dat, 0, length);
 				return dat;
 			}
-			//byte[] d = new byte[length];
-			//Read(d, 0, d.Length);
-			//return d;
-
-			SpinWait s = new SpinWait();
+			
+			//SpinWait s = new SpinWait();
 			int read = 0;
 
 			var buffer = new byte[length];
-			while (read < buffer.Length && !CancelationToken.IsCancellationRequested && s.Count < 25) //Give the network some time to catch up on sending data, but really 25 cycles should be enough.
+			while (read < buffer.Length && !CancelationToken.IsCancellationRequested)
 			{
 				int oldRead = read;
 
@@ -133,11 +131,8 @@ namespace Alex.Networking.Java.Util
 
 				read += r;
 
-				if (read == oldRead)
-				{
-					s.SpinOnce();
-				}
-				if (CancelationToken.IsCancellationRequested) throw new ObjectDisposedException("");
+				if (CancelationToken.IsCancellationRequested) 
+					throw new ObjectDisposedException("");
 			}
 
 			return buffer;

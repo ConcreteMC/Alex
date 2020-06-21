@@ -1,9 +1,8 @@
 ﻿using System;
 using Alex.API.Input;
 using Alex.Items;
-using Alex.Utils.Inventories;
 
-namespace Alex.Utils
+namespace Alex.Utils.Inventories
 {
     public class Inventory : InventoryBase
     {

@@ -1,14 +1,11 @@
-﻿namespace Alex
-{
-    using System;
-    using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Globalization;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
-    using System.Globalization;
-    using Newtonsoft.Json;
-    using Newtonsoft.Json.Converters;
+namespace Alex.Utils
+{
     using J = Newtonsoft.Json.JsonPropertyAttribute;
-    using R = Newtonsoft.Json.Required;
-    using N = Newtonsoft.Json.NullValueHandling;
 
     public partial class AssetIndex
     {

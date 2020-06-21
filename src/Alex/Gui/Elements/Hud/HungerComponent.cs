@@ -7,7 +7,7 @@ using Alex.Entities;
 using Microsoft.Xna.Framework;
 using RocketUI;
 
-namespace Alex.Gui.Elements
+namespace Alex.Gui.Elements.Hud
 {
     public class HungerComponent : GuiStackContainer
     {

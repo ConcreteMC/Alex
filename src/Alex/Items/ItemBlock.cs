@@ -1,5 +1,4 @@
-﻿using Alex.API.Blocks.State;
-using Alex.API.World;
+﻿using Alex.API.World;
 using Alex.Blocks.State;
 
 namespace Alex.Items

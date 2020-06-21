@@ -4,7 +4,7 @@ namespace Alex.API.Utils
 {
 	public struct ChunkCoordinates : IEquatable<ChunkCoordinates>
 	{
-		public int X, Z;
+		public readonly int X, Z;
 
 		public ChunkCoordinates(int value)
 		{
@@ -212,6 +212,7 @@ namespace Alex.API.Utils
 		public override bool Equals(object obj)
 		{
 			if (ReferenceEquals(null, obj)) return false;
+			
 			return obj is ChunkCoordinates && Equals((ChunkCoordinates)obj);
 		}
 

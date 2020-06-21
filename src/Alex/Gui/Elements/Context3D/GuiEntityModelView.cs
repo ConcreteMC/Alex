@@ -4,7 +4,7 @@ using Alex.API.Utils;
 using Alex.Entities;
 using Microsoft.Xna.Framework;
 
-namespace Alex.Gui.Elements
+namespace Alex.Gui.Elements.Context3D
 {
     public class GuiEntityModelView : GuiContext3DElement
     {

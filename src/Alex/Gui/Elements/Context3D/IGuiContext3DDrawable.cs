@@ -1,7 +1,7 @@
 ﻿using Alex.API.Graphics;
 using Alex.API.Gui.Graphics;
 
-namespace Alex.Gui.Elements
+namespace Alex.Gui.Elements.Context3D
 {
     public interface IGuiContext3DDrawable
     {

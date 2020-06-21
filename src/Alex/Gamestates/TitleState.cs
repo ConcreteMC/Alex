@@ -17,6 +17,7 @@ using Alex.Gamestates.Multiplayer;
 using Alex.Graphics.Models.Entity;
 using Alex.Gui;
 using Alex.Gui.Elements;
+using Alex.Gui.Elements.Context3D;
 using Alex.Items;
 using Alex.Worlds.Abstraction;
 using Alex.Worlds.Singleplayer;

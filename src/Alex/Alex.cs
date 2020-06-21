@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading;
 using Alex.API;
 using Alex.API.Data.Servers;
@@ -42,6 +43,7 @@ using Alex.Utils;
 using Alex.Utils.Inventories;
 using Alex.Worlds;
 using Alex.Worlds.Abstraction;
+using Alex.Worlds.Multiplayer.Bedrock;
 using Alex.Worlds.Multiplayer.Java;
 using Alex.Worlds.Singleplayer;
 using Microsoft.Extensions.DependencyInjection;
@@ -66,7 +68,7 @@ using ThreadType = Alex.API.Utils.ThreadType;
 
 namespace Alex
 {
-	public partial class Alex : Microsoft.Xna.Framework.Game
+	public class Alex : Microsoft.Xna.Framework.Game
 	{
 		public static bool InGame { get; set; } = false;
 
@@ -108,8 +110,7 @@ namespace Alex
         public new IServiceProvider Services { get; set; }
         
         public DedicatedThreadPool ThreadPool { get; private set; }
-        private DedicatedThreadPool NetworkThreadPool { get; set; } = null;
-        
+
         public StorageSystem Storage { get; private set; }
         public ServerTypeManager ServerTypeManager { get; private set; }
         
@@ -173,12 +174,14 @@ namespace Alex
 			};
 			
 			ServerTypeManager = new ServerTypeManager();
-			ServerTypeManager.TryRegister("java", new JavaServerType(this));
-			
+
 			IServiceCollection serviceCollection = new ServiceCollection();
 			ConfigureServices(serviceCollection);
 
 			Services = serviceCollection.BuildServiceProvider();
+
+			ServerTypeManager.TryRegister("java", new JavaServerType(this));
+			ServerTypeManager.TryRegister("bedrock", new BedrockServerType(this, Services.GetService<XboxAuthService>()));
 			
 			UIThreadQueue = new ConcurrentQueue<Action>();
 
@@ -221,16 +224,20 @@ namespace Alex
 
 			// InitCamera();
 			this.Window.TextInput += Window_TextInput;
-			
-			var currentAdapter = GraphicsAdapter.Adapters.FirstOrDefault(x => x == GraphicsDevice.Adapter);
-			if (currentAdapter != null)
+
+			if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
 			{
-				if (currentAdapter.IsProfileSupported(GraphicsProfile.HiDef))
+				var currentAdapter = GraphicsAdapter.Adapters.FirstOrDefault(x => x == GraphicsDevice.Adapter);
+
+				if (currentAdapter != null)
 				{
-					DeviceManager.GraphicsProfile = GraphicsProfile.HiDef;
+					if (currentAdapter.IsProfileSupported(GraphicsProfile.HiDef))
+					{
+						DeviceManager.GraphicsProfile = GraphicsProfile.HiDef;
+					}
 				}
 			}
-			
+
 			GraphicsDevice.PresentationParameters.MultiSampleCount = 8;
 			
 			DeviceManager.ApplyChanges();
@@ -399,9 +406,7 @@ namespace Alex
 			services.AddSingleton<ProfileManager>();
 
 			services.AddSingleton<IListStorageProvider<SavedServerEntry>, SavedServerDataProvider>();
-			
-			//services.AddSingleton<XBLMSAService>();
-			
+
 			services.AddSingleton<IServerQueryProvider>(new JavaServerQueryProvider(this));
 			services.AddSingleton<IPlayerProfileService, PlayerProfileService>();
 
@@ -412,6 +417,7 @@ namespace Alex
             services.AddSingleton<ResourceManager>();
             services.AddSingleton<GuiManager>((o) => this.GuiManager);
             services.AddSingleton<ServerTypeManager>(ServerTypeManager);
+            services.AddSingleton<XboxAuthService>();
 ;            //Storage = storage;
 		}
 
@@ -437,7 +443,7 @@ namespace Alex
 			GameStateManager.Update(gameTime);
 			GuiDebugHelper.Update(gameTime);
 			
-			RichPresenceProvider.Update();
+			//RichPresenceProvider.Update();
 
 			if (!UIThreadQueue.IsEmpty && UIThreadQueue.TryDequeue(out Action a))
 			{
@@ -503,9 +509,6 @@ namespace Alex
                 PluginManager.DiscoverPlugins(directory);
             }
 
-
-            var profileManager = Services.GetService<ProfileManager>();
-
             //	Log.Info($"Loading resources...");
 			if (!Resources.CheckResources(GraphicsDevice, progressReceiver,
 				OnResourcePackPreLoadCompleted))
@@ -516,6 +519,7 @@ namespace Alex
 				return;
 			}
 			
+			var profileManager = Services.GetService<ProfileManager>();
 			profileManager.LoadProfiles(progressReceiver);
 			
 			//GuiRenderer.LoadResourcePack(Resources.ResourcePack, null);
@@ -543,24 +547,6 @@ namespace Alex
 			else
 			{
 				GameStateManager.SetActiveState<TitleState>("title");
-
-				var inventory = new BedrockInventory(46);
-				Random rnd = new Random();
-				for (int i = 0; i < inventory.SlotCount; i++)
-				{
-					var state = BlockFactory.AllBlockstates.ElementAt(rnd.Next() % BlockFactory.AllBlockstates.Count);
-
-					if (ItemFactory.TryGetItem(state.Value.Name, out var item))
-					{
-						inventory[i] = item;
-						inventory[i].Count = rnd.Next(1, 64);
-					}
-
-					//{
-					//	Count = rnd.Next(1, 64)
-					//};
-				}
-				//GuiManager.ShowDialog(new GuiPlayerCreativeInventoryDialog(ItemFactory.AllItems));
 			}
 
 			GameStateManager.RemoveState("splash");
@@ -571,7 +557,6 @@ namespace Alex
 		{
 			UIThreadQueue.Enqueue(() =>
 			{
-				var scalar = fontBitmap.Width / 128;
 				Font = new BitmapFont(GraphicsDevice, fontBitmap, 16, bitmapCharacters);
 
 				GuiManager.ApplyFont(Font);
@@ -580,11 +565,11 @@ namespace Alex
 
 		public void ConnectToServer(ServerTypeImplementation serverType, ServerConnectionDetails connectionDetails, PlayerProfile profile)
 		{
-			var oldNetworkPool = NetworkThreadPool;
+	//		var oldNetworkPool = NetworkThreadPool;
 			
 			var optionsProvider =  Services.GetService<IOptionsProvider>();
 			
-			NetworkThreadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(optionsProvider.AlexOptions.NetworkOptions.NetworkThreads.Value, ThreadType.Background, "Network ThreadPool"));
+		//	NetworkThreadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(optionsProvider.AlexOptions.NetworkOptions.NetworkThreads.Value, ThreadType.Background, "Network ThreadPool"));
 
 			try
 			{
@@ -605,7 +590,7 @@ namespace Alex
 				Log.Error(ex, $"FCL: {ex.ToString()}");
 			}
 			
-			oldNetworkPool?.Dispose();
+		//	oldNetworkPool?.Dispose();
 		}
 
 		public void LoadWorld(WorldProvider worldProvider, NetworkProvider networkProvider)

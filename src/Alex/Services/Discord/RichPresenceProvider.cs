@@ -71,7 +71,7 @@ namespace Alex.Services.Discord
         /// NOTE: PLEASE DON'T CALL THIS METHOD AS A PLUGIN. YOU'RE NOT SUPPOSED TO!
         /// THIS METHOD IS ONLY MEANT TO BE CALLED BY THE CORE, NOT BY PLUGINS!
         /// </summary>
-        public static void Update()
+        internal static void Update()
         {
             client.Invoke();
         }

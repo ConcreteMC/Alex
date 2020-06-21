@@ -16,6 +16,7 @@ using Alex.Graphics.Models.Items;
 using Alex.Net;
 using Alex.ResourcePackLib.Json.Models.Items;
 using Alex.Utils;
+using Alex.Utils.Inventories;
 using Alex.Worlds;
 using Alex.Worlds.Multiplayer.Java;
 using Microsoft.Xna.Framework;

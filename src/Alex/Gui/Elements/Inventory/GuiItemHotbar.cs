@@ -6,6 +6,7 @@ using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Alex.Items;
 using Alex.Utils;
+using Alex.Utils.Inventories;
 using Microsoft.Xna.Framework;
 using NLog;
 using RocketUI;
@@ -41,12 +42,12 @@ namespace Alex.Gui.Elements.Inventory
             }
         }
 
-		public Utils.Inventory Inventory { get; set; }
+		public Utils.Inventories.Inventory Inventory { get; set; }
 
 		private GuiContainer _hotbar;
 	    private GuiFadingTextElement _itemNameTextElement;
 	    private GuiInventoryItem[] _hotbarItems;
-        public GuiItemHotbar(Utils.Inventory inventory)
+        public GuiItemHotbar(Utils.Inventories.Inventory inventory)
         {
 	        Inventory = inventory;
 			Inventory.SlotChanged += SlotChanged;

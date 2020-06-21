@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Elements.Layout;
@@ -8,7 +7,7 @@ using Alex.Entities;
 using Microsoft.Xna.Framework;
 using RocketUI;
 
-namespace Alex.Gui.Elements
+namespace Alex.Gui.Elements.Hud
 {
     public enum HeartValue
     {

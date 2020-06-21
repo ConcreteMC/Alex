@@ -1,6 +1,6 @@
 using Alex.Items;
 
-namespace Alex.Utils
+namespace Alex.Utils.Inventories
 {
 	public class BedrockInventory : Inventory
 	{

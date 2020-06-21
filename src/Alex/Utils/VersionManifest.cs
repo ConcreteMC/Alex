@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using J = Newtonsoft.Json.JsonPropertyAttribute;
 
-namespace Alex
+namespace Alex.Utils
 {
 	public partial class VersionManifest
 	{

@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using NLog;
+using log4net;
 using log4net.Appender;
 using log4net.Config;
 using log4net.Core;
+using NLog;
+using LogManager = log4net.LogManager;
 
-namespace log4net
+namespace Alex.Utils
 {
 	public class NLogAppender : AppenderSkeleton
 	{

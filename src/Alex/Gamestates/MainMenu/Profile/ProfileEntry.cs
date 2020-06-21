@@ -7,6 +7,7 @@ using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.Entities;
 using Alex.Gui.Elements;
+using Alex.Gui.Elements.Context3D;
 using Microsoft.Xna.Framework;
 using RocketUI;
 using Color = Microsoft.Xna.Framework.Color;

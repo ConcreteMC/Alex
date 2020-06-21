@@ -6,6 +6,14 @@ namespace Alex.API.Utils
 {
     public static class StreamExtensions
     {
+        public static Memory<byte> ReadToMemory(this Stream stream, long length)
+        {
+            Memory<byte> buffer = new Memory<byte>(new byte[length]);
+            stream.Read(buffer.Span);
+
+            return buffer;
+        }
+        
         public static ReadOnlySpan<byte> ReadToSpan(this Stream stream, long length)
         {
             Span<byte> buffer = new Span<byte>(new byte[length]);

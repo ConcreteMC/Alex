@@ -3,6 +3,7 @@ using Alex.API.Graphics;
 using Alex.API.Gui.Graphics;
 using Alex.API.Utils;
 using Alex.Graphics.Models.Items;
+using Alex.Gui.Elements.Context3D;
 using Alex.Items;
 using Alex.ResourcePackLib.Json.Models.Items;
 using Alex.Utils;

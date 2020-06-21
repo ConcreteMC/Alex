@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using Alex.API.Blocks.Properties;
-using Alex.API.Graphics;
-using Alex.API.World;
 using Alex.Blocks.Minecraft;
 using Alex.Graphics.Models.Blocks;
 
-namespace Alex.API.Blocks.State
+namespace Alex.Blocks.State
 {
 	public interface IBlockState : IEquatable<IBlockState>
 	{

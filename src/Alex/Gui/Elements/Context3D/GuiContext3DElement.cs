@@ -6,7 +6,7 @@ using Alex.Graphics.Camera;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Alex.Gui.Elements
+namespace Alex.Gui.Elements.Context3D
 {
     public abstract class GuiContext3DElement : GuiElement
     {

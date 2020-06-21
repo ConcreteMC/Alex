@@ -150,8 +150,6 @@
 
   <ItemGroup>
     <Folder Include="Graphics\Models\Entity\Geometry\" />
-    <Folder Include="Worlds\Multiplayer" />
-    <Folder Include="Worlds\Multiplayer\Bedrock" />
   </ItemGroup>
 
   <ItemGroup>

@@ -8,7 +8,7 @@ using Alex.API.Gui.Graphics;
 using Microsoft.Xna.Framework;
 using RocketUI;
 
-namespace Alex.Gui.Elements
+namespace Alex.Gui.Elements.Hud
 {
     public class TipPopupComponent : GuiContainer
     {

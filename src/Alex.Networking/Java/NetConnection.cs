@@ -71,7 +71,7 @@ namespace Alex.Networking.Java
 		public void Initialize()
         {
 	        Socket.Blocking = true;
-
+	        
 		   	NetworkProcessing = new Thread(ProcessNetwork)
             {
 				IsBackground = true
@@ -142,110 +142,27 @@ namespace Alex.Networking.Java
 		    {
 			    using (NetworkStream ns = new NetworkStream(Socket))
 			    {
-				    using (MinecraftStream ms = new MinecraftStream(ns))
+				    using (MinecraftStream mc = new MinecraftStream(ns))
 				    {
-					    _readerStream = ms;
-
+					   // SpinWait sw = new SpinWait();
+					    _readerStream = mc;
 					    while (!CancellationToken.IsCancellationRequested)
 					    {
-						    Packets.Packet packet = null;
-						    int packetId;
-						    byte[] packetData;
+						    SpinWait.SpinUntil(() => ns.DataAvailable || CancellationToken.IsCancellationRequested);
 
-						    if (!CompressionEnabled)
-						    {
-							    int length = ms.ReadVarInt();
-
-							    int packetIdLength;
-							    packetId = ms.ReadVarInt(out packetIdLength);
-							    lastPacketId = packetId;
-							    if (length - packetIdLength > 0)
-							    {
-								    packetData = ms.Read(length - packetIdLength);
-							    }
-							    else
-							    {
-								    packetData = new byte[0];
-							    }
-						    }
-						    else
-						    {
-							    int packetLength = ms.ReadVarInt();
-
-							    int br;
-							    int dataLength = ms.ReadVarInt(out br);
-
-							    int readMore;
-							    if (dataLength == 0)
-							    {
-								    packetId = ms.ReadVarInt(out readMore);
-								    lastPacketId = packetId;
-								    packetData = ms.Read(packetLength - (br + readMore));
-							    }
-							    else
-							    {
-								    byte[] data = ms.Read(packetLength - br);
-								    using (MinecraftStream a = new MinecraftStream())
-								    {
-									    using (ZlibStream outZStream = new ZlibStream(a,
-										    CompressionMode.Decompress, CompressionLevel.Default, true))
-									    {
-										    outZStream.Write(data, 0, data.Length);
-									    }
-
-									    a.Seek(0, SeekOrigin.Begin);
-
-									    int l;
-									    packetId = a.ReadVarInt(out l);
-									    lastPacketId = packetId;
-									    packetData = a.Read(dataLength - l);
-								    }
-							    }
-						    }
-
-						    packet = MCPacketFactory.GetPacket(Direction, ConnectionState, packetId);
-						    if (packet == null)
-						    {
-							    if (UnhandledPacketsFilter[ConnectionState]
-								    .TryAdd(packetId, 1))
-							    {
-								    Log.Debug(
-									    $"Unhandled packet in {ConnectionState}! 0x{packetId.ToString("x2")} = {(ConnectionState == ConnectionState.Play ? MCPacketFactory.GetPlayPacketName(packetId) : "Unknown")}");
-							    }
-							    else
-							    {
-								    UnhandledPacketsFilter[ConnectionState][packetId] =
-									    UnhandledPacketsFilter[ConnectionState][packetId] + 1;
-							    }
-
-							    continue;
-						    }
-
-						    if (ConnectionState == ConnectionState.Play)
-						    {
-							    if (ShouldAddToProcessing(packet))
-							    {
-								    Interlocked.Increment(ref _queued);
-								    ThreadPool.QueueUserWorkItem(() =>
-								    {
-									    ProcessPacket(packet, packetData);
-									    Interlocked.Decrement(ref _queued);
-								    });
-							    }
-						    }
-						    else
-						    {
-							    ProcessPacket(packet, packetData);
-						    }
+						    if (CancellationToken.IsCancellationRequested)
+							    break;
+						    
+						    TryReadPacket(mc, out lastPacketId);
 					    }
 				    }
 			    }
 		    }
 		    catch (Exception ex)
 		    {
-			    if (ex is OperationCanceledException) return;
-			    if (ex is EndOfStreamException) return;
-			    if (ex is IOException) return;
+			  //  if (ex is OperationCanceledException) return;
+			 //   if (ex is EndOfStreamException) return;
+			 //   if (ex is IOException) return;
 
 			    if (LogExceptions)
 				    Log.Warn(
@@ -256,6 +173,111 @@ namespace Alex.Networking.Java
 		    {
 			    Disconnected(false);
 		    }
+	    }
+
+	    private bool TryReadPacket(MinecraftStream stream, out int lastPacketId)
+	    {
+		    Packets.Packet packet = null;
+		    int            packetId;
+		    byte[] packetData;
+
+		    if (!CompressionEnabled)
+		    {
+			    int length = stream.ReadVarInt();
+
+			    int packetIdLength;
+			    packetId = stream.ReadVarInt(out packetIdLength);
+			    lastPacketId = packetId;
+
+			    if (length - packetIdLength > 0)
+			    {
+				    packetData = stream.Read(length - packetIdLength);
+			    }
+			    else
+			    {
+				    packetData = new byte[0];
+			    }
+		    }
+		    else
+		    {
+			    int packetLength = stream.ReadVarInt();
+
+			    int br;
+			    int dataLength = stream.ReadVarInt(out br);
+
+			    int readMore;
+
+			    if (dataLength == 0)
+			    {
+				    packetId = stream.ReadVarInt(out readMore);
+				    lastPacketId = packetId;
+				    packetData = stream.Read(packetLength - (br + readMore));
+			    }
+			    else
+			    {
+				    var data = stream.ReadToSpan(packetLength - br);
+
+				    using (MinecraftStream a = new MinecraftStream())
+				    {
+					    using (ZlibStream outZStream = new ZlibStream(
+						    a, CompressionMode.Decompress, CompressionLevel.Default, true))
+					    {
+						    outZStream.Write(data);
+						  //  outZStream.Write(data, 0, data.Length);
+					    }
+
+					    a.Seek(0, SeekOrigin.Begin);
+
+					    int l;
+					    packetId = a.ReadVarInt(out l);
+					    lastPacketId = packetId;
+					    packetData = a.Read(dataLength - l);
+				    }
+			    }
+		    }
+
+		    packet = MCPacketFactory.GetPacket(Direction, ConnectionState, packetId);
+
+		    if (packet == null)
+		    {
+			    if (UnhandledPacketsFilter[ConnectionState].TryAdd(packetId, 1))
+			    {
+				    Log.Debug(
+					    $"Unhandled packet in {ConnectionState}! 0x{packetId.ToString("x2")} = {(ConnectionState == ConnectionState.Play ? MCPacketFactory.GetPlayPacketName(packetId) : "Unknown")}");
+			    }
+			    else
+			    {
+				    UnhandledPacketsFilter[ConnectionState][packetId] =
+					    UnhandledPacketsFilter[ConnectionState][packetId] + 1;
+			    }
+
+			    return false;
+		    }
+
+		    if (ConnectionState == ConnectionState.Play)
+		    {
+			    if (ShouldAddToProcessing(packet))
+			    {
+				    Interlocked.Increment(ref _queued);
+
+				    ThreadPool.QueueUserWorkItem(
+					    () =>
+					    {
+						    ProcessPacket(packet, packetData);
+						    Interlocked.Decrement(ref _queued);
+					    });
+
+				    return true;
+			    }
+		    }
+		    else
+		    {
+			    ProcessPacket(packet, packetData);
+
+			    return true;
+		    }
+
+		    return false;
 	    }
 
 	    protected virtual bool ShouldAddToProcessing(Packet packet)
@@ -270,7 +292,7 @@ namespace Alex.Networking.Java
 			//	if (packet.Log)
 				packet.Stopwatch.Start();
 			
-			using (var memoryStream = new MemoryStream(data))
+			using (var memoryStream = new MemoryStream(data.ToArray()))
 			{
 				using (MinecraftStream minecraftStream = new MinecraftStream(memoryStream))
 				{
@@ -304,55 +326,14 @@ namespace Alex.Networking.Java
 		    OnPacketReceived?.Invoke(this, args);
 	    }
 
-        private void PacketReceivedCallback(IAsyncResult ar)
-        {
-            OnPacketReceived.EndInvoke(ar);
-            PacketReceivedEventArgs args = (PacketReceivedEventArgs)ar.AsyncState;
-            if (args.IsInvalid)
-            {
-                Log.Warn("Packet reported as invalid!");
-            }
-        }
-
-        private void SendDataInternal(byte[] buffer)
-        {
-	        if (CancellationToken.IsCancellationRequested) return;
-            SendData sendData = new SendData(buffer);
-            Socket.BeginSend(buffer, 0, buffer.Length, SocketFlags.None, SendCallback, sendData);
-        }
-
-        private void SendCallback(IAsyncResult ar)
-        {
-	        try
-	        {
-		        SocketError result;
-		        int sent = Socket.EndSend(ar, out result);
-
-		        SendData data = (SendData) ar.AsyncState;
-
-		        if (result == SocketError.Success)
-		        {
-			        if (sent != data.Buffer.Length)
-			        {
-				        Log.Warn("Sent {0} out of {1} bytes!", sent, data.Buffer.Length);
-			        }
-		        }
-		        else
-		        {
-			        Log.Warn("Failed to send data! (Reason: {0})", result);
-		        }
-			}
-			catch { }
-        }
-
-	    public void SendPacket(Packet packet)
+		public void SendPacket(Packet packet)
 	    {
 			if (packet.PacketId == -1) throw new Exception();
 
 			//if (packet.Log)
 			//	Log.Info($"Sending packet ({CompressionEnabled}:{EncryptionInitiated}): {packet} 0x{packet.PacketId:X2}");
 //if (packet.PacketId == 14) Log.Debug($"PACKET = {packet.ToString()}");
-			PacketWriteQueue.Add(new EnqueuedPacket(packet, EncryptionInitiated, CompressionEnabled));
+			PacketWriteQueue.Add(new EnqueuedPacket(packet, CompressionEnabled));
 	    }
 
 	    private MinecraftStream _sendStream;
@@ -492,27 +473,14 @@ namespace Alex.Networking.Java
 	    private struct EnqueuedPacket
 	    {
 		    public Packet Packet;
-		    public bool Encryption;
 		    public bool CompressionEnabled;
 
-		    public EnqueuedPacket(Packet packet, bool encryption, bool compression)
+		    public EnqueuedPacket(Packet packet, bool compression)
 		    {
 			    Packet = packet;
-			    Encryption = encryption;
+			   // Encryption = encryption;
 			    CompressionEnabled = compression;
 		    }
 	    }
-    }
-
-    internal struct SendData
-    {
-        public byte[] Buffer;
-        public DateTime Time;
-
-        public SendData(byte[] buffer)
-        {
-            Buffer = buffer;
-            Time = DateTime.UtcNow;
-        }
     }
 }

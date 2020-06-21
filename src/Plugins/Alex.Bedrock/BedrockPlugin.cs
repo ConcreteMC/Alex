@@ -1,12 +1,11 @@
 ﻿using System;
-using Alex.Bedrock.Net;
 using Alex.Plugins;
 using MiNET.Net;
 using NLog;
 
 namespace Alex.Bedrock
 {
-	[PluginInfo]
+	/*[PluginInfo]
 	public class BedrockPlugin : Plugin
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BedrockPlugin));
@@ -38,5 +37,5 @@ namespace Alex.Bedrock
 		{
 			
 		}
-	}
+	}*/
 }
