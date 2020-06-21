@@ -1115,7 +1115,8 @@ namespace Alex.Entities
 			int yOffset = 0;
 			foreach (var str in clean.Split('\n'))
 			{
-				var stringCenter = Alex.Font.MeasureString(str, scale);
+				var line = str.Trim();
+				var stringCenter = Alex.Font.MeasureString(line, scale);
 				var c            = new Point((int) stringCenter.X, (int) stringCenter.Y);
 
 				renderPosition.X = (int) (textPosition.X - (c.X / 2d));
@@ -1125,7 +1126,7 @@ namespace Alex.Entities
 					new Rectangle(renderPosition.ToPoint(), c), new Color(Color.Black, 128), screenSpace.Z);
 
 				Alex.Font.DrawString(
-					renderArgs.SpriteBatch, str, renderPosition, TextColor.White, FontStyle.None, scale,
+					renderArgs.SpriteBatch, line, renderPosition, TextColor.White, FontStyle.None, scale,
 					layerDepth: screenSpace.Z);
 
 				yOffset += c.Y;
