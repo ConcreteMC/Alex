@@ -4,7 +4,9 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using Alex.API.Gui.Elements.Controls;
+using Alex.API.Gui.Graphics;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 using NLog;
 using RocketUI;
 
@@ -110,6 +112,23 @@ namespace Alex.API.Gui.Elements.Layout
 			VerticalScrollBar.MaxScrollOffset   = Math.Max(0, sizeDiff.Height);
 			HorizontalScrollBar.MaxScrollOffset = Math.Max(0, sizeDiff.Width);
 
+			var ms = Mouse.GetState();
+			_scrollWheelValue = ms.ScrollWheelValue;
+			_horizontalScrollWheelValue = ms.HorizontalScrollWheelValue;
+		}
+
+		private bool _mouseInBounds = false;
+		private MouseState _mouseState;
+		/// <inheritdoc />
+		protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
+		{
+			base.OnDraw(graphics, gameTime);
+
+			if (HorizontalScrollBar.IsVisible || VerticalScrollBar.IsVisible)
+			{
+				_mouseState = Mouse.GetState();
+				_mouseInBounds = RenderBounds.Contains(graphics.Unproject(_mouseState.Position.ToVector2()));
+			}
 		}
 
 		protected override void OnUpdate(GameTime gameTime)
@@ -130,6 +149,8 @@ namespace Alex.API.Gui.Elements.Layout
 			base.OnUpdate(gameTime);
 		}
 
+		private int _scrollWheelValue = 0;
+		private int _horizontalScrollWheelValue = 0;
 		protected virtual void UpdateScroll()
 		{
 			if (VerticalScrollMode == ScrollMode.Auto)
@@ -159,8 +180,39 @@ namespace Alex.API.Gui.Elements.Layout
 			{
 				_hasHorizontalScroll = true;
 			}
-
+			
 			HorizontalScrollBar.IsVisible = _hasHorizontalScroll;
+			
+			if (_mouseInBounds)
+			{
+				if (_hasVerticalScroll && _mouseState.ScrollWheelValue != _scrollWheelValue)
+				{
+					if (_mouseState.ScrollWheelValue > _scrollWheelValue)
+					{
+						VerticalScrollBar.ScrollOffsetValue -= Math.Abs((_mouseState.ScrollWheelValue - _scrollWheelValue) / 5);
+					}
+					else if (_mouseState.ScrollWheelValue < _scrollWheelValue)
+					{
+						VerticalScrollBar.ScrollOffsetValue += Math.Abs((_mouseState.ScrollWheelValue - _scrollWheelValue) / 5);
+					}
+
+					_scrollWheelValue = _mouseState.ScrollWheelValue;
+				}
+
+				if (_hasHorizontalScroll && _mouseState.HorizontalScrollWheelValue != _horizontalScrollWheelValue)
+				{
+					if (_mouseState.HorizontalScrollWheelValue > _horizontalScrollWheelValue)
+					{
+						HorizontalScrollBar.ScrollOffsetValue -= Math.Abs((_mouseState.HorizontalScrollWheelValue - _horizontalScrollWheelValue) / 5);
+					}
+					else if (_mouseState.HorizontalScrollWheelValue < _horizontalScrollWheelValue)
+					{
+						HorizontalScrollBar.ScrollOffsetValue += Math.Abs((_mouseState.HorizontalScrollWheelValue - _horizontalScrollWheelValue) / 5);
+					}
+
+					_horizontalScrollWheelValue = _mouseState.HorizontalScrollWheelValue;
+				}
+			}
 
 			ScrollOffset = new Vector2(HorizontalScrollBar.ScrollOffsetValue, VerticalScrollBar.ScrollOffsetValue);
 		}
