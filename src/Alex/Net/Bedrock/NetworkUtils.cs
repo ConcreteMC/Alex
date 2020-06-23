@@ -128,6 +128,7 @@ namespace Alex.Net.Bedrock
 			}
 			catch (Exception ex)
 			{
+				Log.Warn(ex, $"Incomplete metadata: {ex.ToString()}");
 				return metadata;
 			}
 		}

@@ -88,7 +88,8 @@ namespace Alex.Plugins
                 }
                 else
                 {
-                    Log.Warn($"Failed to resolve assembly: {name}");
+                    if (!name.Name.EndsWith(".resources"))
+                        Log.Warn($"Failed to resolve assembly: {name}");
                 }
 
                 return result;

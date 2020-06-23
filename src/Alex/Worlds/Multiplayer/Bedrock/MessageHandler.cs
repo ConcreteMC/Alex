@@ -45,8 +45,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
             }
             catch (Exception ex)
             {
-                if (message.Id == 39)
-                    return;
+               // if (message.Id == 39)
+               //     return;
                 Log.Warn(ex, $"Packet handling error: {message} - {ex.ToString()}");
             }
             finally
