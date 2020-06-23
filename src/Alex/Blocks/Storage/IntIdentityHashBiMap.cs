@@ -4,35 +4,36 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Alex.API.Utils;
+using Alex.Blocks.State;
 using Alex.Utils;
 
 namespace Alex.Blocks.Storage
 {
-	public class IntIdentityHashBiMap<TK> : IEnumerable<TK>, IPallete<TK> where TK : class
+	public class IntIdentityHashBiMap : IEnumerable<BlockState>, IPallete
 	{
-		private static TK _empty = default(TK);
-		private TK[] _values;
+		private static BlockState _empty = null;
+		private BlockState[] _values;
 		private uint[] _keys;
-		private TK[] _byId;
+		private BlockState[] _byId;
 		private uint _nextFreeIndex;
 		private int _mapSize;
 
 		public IntIdentityHashBiMap(int initialCapacity)
 		{
-			_values = new TK[initialCapacity];
+			_values = new BlockState[initialCapacity];
 			_keys = new uint[initialCapacity];
-			_byId = new TK[initialCapacity];
+			_byId = new BlockState[initialCapacity];
 		}
 
-		public uint GetId(TK value)
+		public uint GetId(BlockState value)
 		{
 			if (value == null) return uint.MaxValue;
 			return GetValue(GetIndex(value, HashObject(value)));
 		}
 
-		public TK Get(uint idIn)
+		public BlockState Get(uint idIn)
 		{
-			return idIn >= 0 && idIn < _byId.Length ? _byId[idIn] : default(TK);
+			return idIn >= 0 && idIn < _byId.Length ? _byId[idIn] : null;
 		}
 
 		private uint GetValue(uint index)
@@ -40,7 +41,7 @@ namespace Alex.Blocks.Storage
 			return index == uint.MaxValue ? uint.MaxValue : _keys[index];
 		}
 
-		public uint Add(TK objectIn)
+		public uint Add(BlockState objectIn)
 		{
 			uint i = NextId();
 			Put(objectIn, i);
@@ -62,11 +63,11 @@ namespace Alex.Blocks.Storage
 	     */
 		private void Grow(int capacity)
 		{
-			TK[] ak = _values;
+			BlockState[] ak = _values;
 			uint[] aint = _keys;
-			_values = new TK[capacity];
+			_values = new BlockState[capacity];
 			_keys = new uint[capacity];
-			_byId = new TK[capacity];
+			_byId = new BlockState[capacity];
 			_nextFreeIndex = 0;
 			_mapSize = 0;
 
@@ -79,7 +80,7 @@ namespace Alex.Blocks.Storage
 			}
 		}
 		
-		public void Put(TK objectIn, uint intKey)
+		public void Put(BlockState objectIn, uint intKey)
 		{
 			uint i = (uint)Math.Max(intKey, _mapSize + 1);
 
@@ -106,14 +107,14 @@ namespace Alex.Blocks.Storage
 			}
 		}
 
-		private uint HashObject(TK obectIn)
+		private uint HashObject(BlockState obectIn)
 		{
-			return (uint)(MathUtils.Hash((uint)(RuntimeHelpers.GetHashCode(obectIn) & uint.MaxValue)) % _values.Length);
+			return (uint)((uint)(RuntimeHelpers.GetHashCode(obectIn) & uint.MaxValue) % _values.Length);
 		}
 
-		private uint GetIndex(TK objectIn, uint index)
+		private uint GetIndex(BlockState objectIn, uint index)
 		{
-			for (uint i = index; i < _values.Length; ++i)
+			for (uint i = index; i < _values.Length; i++)
 			{
 				if (_values[i] == objectIn)
 				{
@@ -126,7 +127,7 @@ namespace Alex.Blocks.Storage
 				}
 			}
 
-			for (uint j = 0; j < index; ++j)
+			for (uint j = 0; j < index; j++)
 			{
 				if (_values[j] == objectIn)
 				{
@@ -165,8 +166,8 @@ namespace Alex.Blocks.Storage
 
 		public void Clear()
 		{
-			Array.Fill(_values, default(TK));
-			Array.Fill(_byId, default(TK));
+			Array.Fill(_values, null);
+			Array.Fill(_byId, null);
 
 			_nextFreeIndex = 0;
 			_mapSize = 0;
@@ -177,9 +178,9 @@ namespace Alex.Blocks.Storage
 			return _mapSize;
 		}
 
-		public IEnumerator<TK> GetEnumerator()
+		public IEnumerator<BlockState> GetEnumerator()
 		{
-			foreach (var i in _byId.Where(x => !x.Equals(default(TK))))
+			foreach (var i in _byId.Where(x => !x.Equals(null)))
 			{
 				yield return i;
 			}

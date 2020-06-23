@@ -2,7 +2,7 @@ using Alex.Blocks.State;
 
 namespace Alex.Blocks.Storage
 {
-    public class DirectPallete : IPallete<BlockState>
+    public class DirectPallete : IPallete
     {
         public uint GetId(BlockState state)
         {

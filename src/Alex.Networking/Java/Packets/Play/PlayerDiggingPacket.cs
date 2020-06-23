@@ -13,7 +13,7 @@ namespace Alex.Networking.Java.Packets.Play
 
 	    public PlayerDiggingPacket()
 	    {
-		    PacketId = 0x1A;
+		    PacketId = 0x1B;
 	    }
 
 	    public override void Decode(MinecraftStream stream)

@@ -25,8 +25,11 @@ namespace Alex.Worlds.Multiplayer.Java
                     {
                         var idx = GetCoordinateIndex(x, y, z);
 
-                        var block = this.Get(x, y, z, 0).Block;
+                        var blockstate = this.Get(x, y, z, 0);//.Block;
+                        if (blockstate == null)
+                            continue;
 
+                        var block = blockstate.Block;
                         TransparentBlocks.Set(idx, block.Transparent);
                         SolidBlocks.Set(idx, block.Solid);
 

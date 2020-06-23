@@ -928,7 +928,7 @@ namespace Alex.Worlds.Multiplayer.Java
 		{
 
 			Respawning = true;
-			_dimension = packet.Dimension;
+			_dimension = 0;//packet.Dimension;
 			World.Player.UpdateGamemode(packet.Gamemode);
 			World.ChunkManager.ClearChunks();
 			SendPlayerPostionAndLook(World.Player.KnownPosition);
@@ -1538,7 +1538,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void HandleJoinGamePacket(JoinGamePacket packet)
 		{
-			_dimension = packet.Dimension;
+			//_dimension = packet.Dimension;
 
 			ClientSettingsPacket settings = new ClientSettingsPacket();
 			settings.ChatColors = true;

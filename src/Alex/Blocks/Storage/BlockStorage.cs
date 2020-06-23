@@ -11,7 +11,7 @@ namespace Alex.Blocks.Storage
         private IStorage Storage { get; set; }
 
         private int _bits;
-        private IPallete<BlockState> Pallette { get; set; }
+        private IPallete Pallette { get; set; }
 
         private static BlockState Air = BlockFactory.GetBlockState("minecraft:air");
         public BlockStorage()
@@ -19,7 +19,7 @@ namespace Alex.Blocks.Storage
             _bits = 8;
             
             Storage = new FlexibleStorage(_bits, 4096);
-            Pallette = new IntIdentityHashBiMap<BlockState>((1 << _bits));
+            Pallette = new IntIdentityHashBiMap((1 << _bits));
 
             Pallette.Add(Air);
         }
@@ -45,9 +45,9 @@ namespace Alex.Blocks.Storage
             {
                 i = Pallette.Add(state);
 
-                if (i >= (1 << this._bits))
+                if (i > ((1 << this._bits) - 1))
                 {
-                    return Resize(_bits + 1, state);
+                    return Resize(_bits++, state);
                 }
             }
 
@@ -58,20 +58,36 @@ namespace Alex.Blocks.Storage
         {
             var oldStorage = Storage;
             
-            var oldPallete = Pallette; 
+            var oldPallete = Pallette;
+
+            if (bits <= 4)
+                bits = 4;
+
+            Storage = new FlexibleStorage(bits, 4096);
+            
+            if (bits <= 8)
+            {
+                Pallette = new IntIdentityHashBiMap(1 << bits);
+            }
+            else
+            {
+                bits = (int) Math.Ceiling(Math.Log2(BlockFactory.AllBlockstates.Count));
+                Pallette = new DirectPallete();
+            }
             
             _bits = bits;
-
-            Pallette = new IntIdentityHashBiMap<BlockState>(1 << bits);
-            Storage = new FlexibleStorage(bits, 4096);
-            IdFor(Air);
-
-            for (int i = 0; i < oldStorage.Length; i++)
+            
+            //IdFor(Air);
+            //Pallette.Add(Air);
+            Storage[0] = Pallette.Add(Air);
+            
+            for (int i = 0; i < 4096; i++)
             {
                 var oldEntry = oldPallete.Get(oldStorage[i]);
                 if (oldEntry != null)
                 {
-                    Set(i, oldEntry);
+                    Storage[i] = Pallette.Add(oldEntry);
+                    //   Set(i, oldEntry);
                 }
             }
 
@@ -115,7 +131,7 @@ namespace Alex.Blocks.Storage
                 
                 palleteLength = ms.ReadVarInt();
                 
-                Pallette = new IntIdentityHashBiMap<BlockState>(palleteLength);
+                Pallette = new IntIdentityHashBiMap(palleteLength);
                 Pallette.Add(Air);
                 
                 //else

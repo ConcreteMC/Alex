@@ -1,13 +1,15 @@
+using Alex.Blocks.State;
+
 namespace Alex.Blocks.Storage
 {
-    public interface IPallete<Tk>
+    public interface IPallete
     {
-        uint GetId(Tk state);
+        uint GetId(BlockState state);
 
-        uint Add(Tk state);
+        uint Add(BlockState state);
 
-        Tk Get(uint id);
+        BlockState Get(uint id);
 
-        void Put(Tk objectIn, uint intKey);
+        void Put(BlockState objectIn, uint intKey);
     }
 }

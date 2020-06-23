@@ -1,4 +1,5 @@
 ﻿using Alex.Networking.Java.Util;
+using fNbt;
 
 namespace Alex.Networking.Java.Packets.Play
 {
@@ -10,37 +11,58 @@ namespace Alex.Networking.Java.Packets.Play
 		}
 
 		public int EntityId;
-		public byte Gamemode;
-		public int Dimension;
+		public byte Gamemode, PreviousGamemode;
+		public string Dimension;
 		//public byte Difficulty;
 		//public byte MaxPlayers;
-		public string LevelType;
 		public bool ReducedDebugInfo;
 		public long HashedSeed;
 		public bool EnableRespawnScreen;
+
+		public string[] WorldNames;
+		public NbtCompound DimensionCodec;
+		public string WorldName;
+
+		public int ViewDistance;
+
+		public bool IsDebug, IsFlat;
 		
 		public override void Decode(MinecraftStream stream)
 		{
 			EntityId = stream.ReadInt();
 			Gamemode = (byte) stream.ReadByte();
-			Dimension = stream.ReadInt();
+			PreviousGamemode = (byte) stream.ReadByte();
+
+			int worldCount = stream.ReadVarInt();
+			WorldNames = new string[worldCount];
+			for (int i = 0; i < worldCount; i++)
+			{
+				WorldNames[i] = stream.ReadString();
+			}
+
+			DimensionCodec = stream.ReadNbtCompound();
+			
+			Dimension = stream.ReadString();
+			WorldName = stream.ReadString();
+			
 			HashedSeed = stream.ReadLong();
 			//Difficulty = (byte) stream.ReadByte();
 			stream.ReadByte();
-			LevelType = stream.ReadString();
+			ViewDistance = stream.ReadVarInt();
 			ReducedDebugInfo = stream.ReadBool();
 			EnableRespawnScreen = stream.ReadBool();
+			IsDebug = stream.ReadBool();
+			IsFlat = stream.ReadBool();
 		}
 
 		public override void Encode(MinecraftStream stream)
 		{
 			stream.WriteInt(EntityId);
 			stream.WriteByte(Gamemode);
-			stream.WriteInt(Dimension);
+			stream.WriteString(Dimension);
 			stream.WriteLong(HashedSeed);
 		//	stream.WriteByte(Difficulty);
 			stream.WriteByte(255);
-			stream.WriteString(LevelType);
 			stream.WriteBool(ReducedDebugInfo);
 			stream.WriteBool(EnableRespawnScreen);
 		}

@@ -12,6 +12,8 @@ namespace Alex.Networking.Java.Packets.Play
 		    EmptySkyLightMask,
 		    EmptyBlockLightMask;
 
+	    public bool TrustEdges;
+
 	    public byte[][] SkyLightArrays;
 	    public byte[][] BlockLightArrays;
 
@@ -24,6 +26,7 @@ namespace Alex.Networking.Java.Packets.Play
 	    {
 		    ChunkX = stream.ReadVarInt();
 		    ChunkZ = stream.ReadVarInt();
+		    TrustEdges = stream.ReadBool();
 		    SkyLightMask = stream.ReadVarInt();
 		    BlockLightMask = stream.ReadVarInt();
 		    EmptySkyLightMask = stream.ReadVarInt();

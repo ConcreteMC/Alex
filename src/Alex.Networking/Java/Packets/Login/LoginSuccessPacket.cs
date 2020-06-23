@@ -1,4 +1,5 @@
-﻿using Alex.Networking.Java.Util;
+﻿using System;
+using Alex.Networking.Java.Util;
 
 namespace Alex.Networking.Java.Packets.Login
 {
@@ -9,18 +10,18 @@ namespace Alex.Networking.Java.Packets.Login
 			PacketId = 0x03;
 		}
 
-		public string UUID;
+		public Guid UUID;
 		public string Username;
 
 		public override void Decode(MinecraftStream stream)
 		{
-			UUID = stream.ReadString();
+			UUID = stream.ReadUuid();
 			Username = stream.ReadString();
 		}
 
 		public override void Encode(MinecraftStream stream)
 		{
-			stream.WriteString(UUID);
+			stream.WriteUuid(UUID);
 			stream.WriteString(Username);
 		}
 	}

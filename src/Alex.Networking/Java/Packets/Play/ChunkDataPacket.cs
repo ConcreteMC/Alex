@@ -14,6 +14,7 @@ namespace Alex.Networking.Java.Packets.Play
 		public List<NbtCompound> TileEntities;
 		public NbtCompound HeightMaps;
 		public bool GroundUp;
+		public bool IgnoreOldData;
 
 		public ChunkDataPacket()
 		{
@@ -29,6 +30,7 @@ namespace Alex.Networking.Java.Packets.Play
 			ChunkX = stream.ReadInt();
 			ChunkZ = stream.ReadInt();
 			GroundUp = stream.ReadBool();
+			IgnoreOldData = stream.ReadBool();
 			PrimaryBitmask = stream.ReadVarInt();
 
 			HeightMaps = stream.ReadNbtCompound();
@@ -58,6 +60,7 @@ namespace Alex.Networking.Java.Packets.Play
 			stream.WriteInt(ChunkX);
 			stream.WriteInt(ChunkZ);
 			stream.WriteBool(GroundUp);
+			stream.WriteBool(IgnoreOldData);
 			stream.WriteVarInt(PrimaryBitmask);
 			stream.WriteVarInt(Buffer.Length);
 			stream.Write(Buffer, 0, Buffer.Length);

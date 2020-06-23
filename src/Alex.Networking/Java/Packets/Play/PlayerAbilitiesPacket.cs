@@ -6,7 +6,7 @@ namespace Alex.Networking.Java.Packets.Play
     {
 	    public PlayerAbilitiesPacket()
 	    {
-		    PacketId = 0x19;
+		    PacketId = 0x1A;
 	    }
 
 	    public byte Flags;
@@ -28,8 +28,8 @@ namespace Alex.Networking.Java.Packets.Play
 		    if (ServerBound)
 		    {
 			    stream.WriteByte(Flags);
-				stream.WriteFloat(FlyingSpeed);
-				stream.WriteFloat(WalkingSpeed);
+				//stream.WriteFloat(FlyingSpeed);
+			//	stream.WriteFloat(WalkingSpeed);
 		    }
 	    }
     }

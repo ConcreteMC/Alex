@@ -15,7 +15,7 @@ namespace Alex.Networking.Java.Packets.Play
         public bool InsideBlock;
         public PlayerBlockPlacementPacket()
         {
-            PacketId = 0x2C;
+            PacketId = 0x2D;
         }
 
         public override void Decode(MinecraftStream stream)

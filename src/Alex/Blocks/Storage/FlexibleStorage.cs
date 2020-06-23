@@ -8,7 +8,7 @@ namespace Alex.Blocks.Storage
 		public long[] _data;
 		private int _bitsPerEntry;
 		private int _size;
-		private long _maxEntryValue;
+		private uint _valueMask;
 
 		public FlexibleStorage(int bitsPerEntry, int size) : this(
 			bitsPerEntry, new long[RoundUp(size * bitsPerEntry, 64) / 64])
@@ -27,14 +27,14 @@ namespace Alex.Blocks.Storage
 			this._data = data;
 
 			this._size = this._data.Length * 64 / this._bitsPerEntry;
-			this._maxEntryValue = (1L << this._bitsPerEntry) - 1;
+			this._valueMask = (uint)((1L << this._bitsPerEntry) - 1);
 		}
 		
 		public uint this[int index]
 		{
 			get
 			{
-				if (index < 0 || index > this._size - 1)
+				if (index < 0 || index >= this._size)
 				{
 					throw new IndexOutOfRangeException();
 				}
@@ -51,25 +51,25 @@ namespace Alex.Blocks.Storage
 					value |= _data[++startIndex] << 64 - i1;
 				}
 
-				return (uint) (value & _maxEntryValue);
+				return (uint) (value & _valueMask);
 			}
 			set
 			{
-				if (index < 0 || index > this._size - 1)
+				if (index < 0 || index >= this._size)
 				{
-					throw new IndexOutOfRangeException($"{index} falls outside of our current range (0 - {this._size - 1})");
+					throw new IndexOutOfRangeException($"{index} falls outside of our current range (0 - {this._size - 1}) (BPE: {_bitsPerEntry} | Size: {_data.Length})");
 				}
 
-				if (value > this._maxEntryValue)
+				if (value > this._valueMask)
 				{
-					throw new Exception($"Value cannot be outside of accepted range: Value: {value} RangeLimit: {this._maxEntryValue}");
+					throw new Exception($"Value cannot be outside of accepted range: Value: {value} RangeLimit: {this._valueMask}  (BPE: {_bitsPerEntry} | Size: {_data.Length})");
 				}
 
 				int bitIndex = index * this._bitsPerEntry;
 				int i0 = bitIndex >> 6;
 				int i1 = bitIndex & 0x3f;
 
-				_data[i0] = this._data[i0] & ~(this._maxEntryValue << i1) | (value & _maxEntryValue) << i1;
+				_data[i0] = this._data[i0] & ~(this._valueMask << i1) | (value & _valueMask) << i1;
 				int i2 = i1 + _bitsPerEntry;
 				// The value is divided over two long values
 				if (i2 > 64) {

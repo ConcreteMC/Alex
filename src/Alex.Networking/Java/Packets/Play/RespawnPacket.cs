@@ -6,17 +6,23 @@ namespace Alex.Networking.Java.Packets.Play
 {
 	public class RespawnPacket : Packet<RespawnPacket>
 	{
-		public int Dimension;
+		public string Dimension;
 		public byte Difficulty;
-		public Gamemode Gamemode;
-		public string LevelType;
-
+		public Gamemode Gamemode, PreviousGamemode;
+		public string WorldName;
+		public long HashedSeed;
+		public bool IsDebug, IsFlat, CopyMetadata;
+		
 		public override void Decode(MinecraftStream stream)
 		{
-			Dimension = stream.ReadInt();
-			Difficulty = (byte) stream.ReadByte();
+			Dimension = stream.ReadString();
+			WorldName = stream.ReadString();
+			HashedSeed = stream.ReadLong();
 			Gamemode = (Gamemode) stream.ReadByte();
-			LevelType = stream.ReadString();
+			PreviousGamemode = (Gamemode) stream.ReadByte();
+			IsDebug = stream.ReadBool();
+			IsFlat = stream.ReadBool();
+			CopyMetadata = stream.ReadBool();
 		}
 
 		public override void Encode(MinecraftStream stream)

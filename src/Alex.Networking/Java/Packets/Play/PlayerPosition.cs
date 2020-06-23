@@ -11,7 +11,7 @@ namespace Alex.Networking.Java.Packets.Play
 
 		public PlayerPosition()
 		{
-			PacketId = 0x11;
+			PacketId = 0x12;
 		}
 
 		public override void Decode(MinecraftStream stream)

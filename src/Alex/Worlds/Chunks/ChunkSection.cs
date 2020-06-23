@@ -311,7 +311,10 @@ namespace Alex.Worlds.Chunks
 	            }
             }
 
-            _blockStorages[storage].Set(x, y, z, state);
+            if (state != null)
+            {
+	            _blockStorages[storage].Set(x, y, z, state);
+            }
 
             //ScheduledUpdates.Set(coordsIndex, true);
             SetScheduled(x,y,z, true);

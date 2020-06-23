@@ -6,7 +6,7 @@ namespace Alex.Networking.Java.Packets.Play
 	{
 		public KeepAlivePacket()
 		{
-			PacketId = 0x0F; //Clientbound
+			PacketId = 0x10; //Clientbound
 		}
 
 		public long KeepAliveid;
