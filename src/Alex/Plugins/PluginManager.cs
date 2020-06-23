@@ -162,12 +162,13 @@ namespace Alex.Plugins
 			        if (CreateInstance(constructor, out Plugin instance, assemblies))
 			        {
 				        PluginContainer.RegisterSingleton(instance.GetType(), instance);
+				        
 				        IServiceHolder serviceHolder = instance as IServiceHolder;
 				        serviceHolder?.ConfigureServices(serviceCollection);
 				       // pluginInstances++;
 				        
 				        assemblyInstances.Add(instance);
-				        serviceCollection.AddSingleton(constructor.Type, instance);
+				        //serviceCollection.AddSingleton(constructor.Type, instance);
 			        }
 
 			        PluginConstructors.Remove(constructor);

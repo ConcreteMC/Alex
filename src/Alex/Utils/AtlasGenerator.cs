@@ -474,6 +474,11 @@ namespace Alex.Utils
 			    file = "water_flow";
 
 		    atlasSize = AtlasSize;
+
+		    if (!file.Contains(":"))
+		    {
+			    file = $"minecraft:{file}";
+		    }
 		    
 		    if (dictionary.ContainsKey(file))
 		    {

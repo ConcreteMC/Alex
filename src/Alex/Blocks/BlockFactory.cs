@@ -342,7 +342,7 @@ namespace Alex.Blocks
 			}
 
 			BlockStateResource blockStateResource;
-
+			
 			if (resourcePack.BlockStates.TryGetValue(name, out blockStateResource))
 			{
 				if (blockStateResource != null && blockStateResource.Parts != null &&
@@ -361,7 +361,9 @@ namespace Alex.Blocks
 
 				if (blockStateResource?.Variants == null ||
 				    blockStateResource.Variants.Count == 0)
+				{
 					return null;
+				}
 
 				if (blockStateResource.Variants.Count == 1)
 				{
@@ -434,6 +436,7 @@ namespace Alex.Blocks
 
 				if (asArray.Length == 0 || asArray.Any(x => x.Model?.Elements == null || x.Model.Elements.Length == 0))
 				{
+					Log.Info($"No elements");
 					return null;
 				}
 				

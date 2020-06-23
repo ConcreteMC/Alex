@@ -250,8 +250,9 @@ namespace Alex.ResourcePackLib
 		
 		private void LoadTexture(ZipArchiveEntry entry, Match match)
 		{
-			var textureName = match.Groups["filename"].Value;
-			if (!TryGetBitmap(textureName, out var bmp))
+			var nameSpace = match.Groups["namespace"].Value;
+			var textureName = match.Groups["filename"].Value.Replace("\\", "/");
+			if (!TryGetBitmap($"{nameSpace}:{textureName}", out var bmp))
 			{
 				try
 				{
@@ -332,7 +333,7 @@ namespace Alex.ResourcePackLib
 		
 		private void LoadColormap()
 		{
-			if (TryGetBitmap("colormap/foliage", out Image<Rgba32> foliage))
+			if (TryGetBitmap($"{DefaultNamespace}:colormap/foliage", out Image<Rgba32> foliage))
 			{
 				FoliageColors = GetColorArray(foliage);
 
@@ -340,7 +341,7 @@ namespace Alex.ResourcePackLib
 				_foliageWidth  = foliage.Width;
 			}
 
-			if (TryGetBitmap("colormap/grass", out Image<Rgba32> grass))
+			if (TryGetBitmap($"{DefaultNamespace}:colormap/grass", out Image<Rgba32> grass))
 			{
 				GrassColors = GetColorArray(grass);
 
@@ -374,6 +375,10 @@ namespace Alex.ResourcePackLib
 
 		private Image<Rgba32> LoadBitmap(ZipArchiveEntry entry, Match match)
 		{
+			var nameSpace = match.Groups["namespace"].Value;
+			var textureName = match.Groups["filename"].Value.Replace("\\", "/");
+			string entryName = $"{nameSpace}:{textureName}";
+			
 			Image<Rgba32> img;
 			using (var s = entry.Open())
 			{
@@ -382,12 +387,15 @@ namespace Alex.ResourcePackLib
 				img = Image.Load<Rgba32>(data, PngDecoder);
 			}
 
-			_bitmapCache[match.Groups["filename"].Value.Replace("\\", "/")] = img;
+			_bitmapCache[entryName] = img;
 			return img;
 		}
 
 		public bool TryGetBitmap(string textureName, out Image<Rgba32> bitmap)
 		{
+			if (!textureName.Contains(":"))
+				textureName = $"{DefaultNamespace}:{textureName}";
+			
 			if (_bitmapCache.TryGetValue(textureName, out bitmap))
 				return true;
 			
@@ -600,7 +608,11 @@ namespace Alex.ResourcePackLib
 			string key = $"{model.Namespace}:{model.Name}";
 			if (!string.IsNullOrWhiteSpace(model.ParentName) && !model.ParentName.Equals(model.Name, StringComparison.InvariantCultureIgnoreCase))
 			{
-				string parentKey = $"{model.Namespace}:{model.ParentName}";
+				string parentKey = model.ParentName;
+				if (!parentKey.Contains(":"))
+				{
+					parentKey = $"{model.Namespace}:{model.ParentName}";
+				}
 
 				ResourcePackModelBase parent;
 				if (!_models.TryGetValue(parentKey, out parent))

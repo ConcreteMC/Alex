@@ -39,14 +39,8 @@ namespace Alex.Worlds
     {
 	    private readonly static RenderStage[] RenderStages = ((RenderStage[]) Enum.GetValues(typeof(RenderStage)));
 
-	    private readonly static RenderStage[] DepthRenderStages = new[]
-	    {
-		    RenderStage.OpaqueFullCube,
-		    RenderStage.Opaque
-	    };
-	    
 
-		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ChunkManager));
+	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ChunkManager));
 
 		private GraphicsDevice Graphics { get; }
 		private ResourceManager Resources { get; }
@@ -72,13 +66,12 @@ namespace Alex.Worlds
         private RenderTarget2D _depthMap;
         public RenderTarget2D DepthMap => _depthMap;
         private DedicatedThreadPool _threadPool;
-       // private PrioritizedActionQueue ActionQueue { get; set; }
-       private Utils.Queue.ConcurrentPriorityQueue<ChunkCoordinates, double> PriorityQueue { get; } =
+        
+        private Utils.Queue.ConcurrentPriorityQueue<ChunkCoordinates, double> PriorityQueue { get; } =
 	       new Utils.Queue.ConcurrentPriorityQueue<ChunkCoordinates, double>();
        
 		private BlockLightCalculations BlockLightCalculations { get; }
-		private long _highPriorityUpdates = 0;
-        public ChunkManager(IServiceProvider serviceProvider, GraphicsDevice graphics, World world)
+		public ChunkManager(IServiceProvider serviceProvider, GraphicsDevice graphics, World world)
         {
 	        _depthMap = new RenderTarget2D(graphics, 512, 512, false, SurfaceFormat.Color, DepthFormat.None);
 	        
