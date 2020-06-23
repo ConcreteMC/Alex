@@ -9,14 +9,14 @@ namespace Alex.Plugins
     {
         //	public PluginHost PluginHost { get; }
         public Assembly Assembly { get; }
-        public List<Plugin> PluginInstances { get; }
+        public List<Type> PluginTypes { get; }
         public List<Assembly> AssemblyReferences { get; }
         public string Path { get; }
-        public LoadedAssembly(/*PluginHost host,*/ Assembly assembly, IEnumerable<Plugin> pluginInstances, IEnumerable<Assembly> referencedAssemblies, string path)
+        public LoadedAssembly(/*PluginHost host,*/ Assembly assembly, IEnumerable<Type> pluginInstances, IEnumerable<Assembly> referencedAssemblies, string path)
         {
             //	PluginHost = host;
             Assembly = assembly;
-            PluginInstances = new List<Plugin>(pluginInstances);
+            PluginTypes = new List<Type>(pluginInstances);
             AssemblyReferences = new List<Assembly>(referencedAssemblies);
             Path = path;
         }

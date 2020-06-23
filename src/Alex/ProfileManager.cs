@@ -12,19 +12,12 @@ namespace Alex
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ProfileManager));
 		private Dictionary<string, SavedProfile> Profiles { get; }
-		//public SavedProfile ActiveProfile { get; private set; } = null;
 		public SavedProfile LastUsedProfile { get; private set; } = null;
-		//private Alex Alex { get; }
-		//private IStorageSystem Storage { get; }
-		//private IPlayerProfileService ProfileService { get; }
 		private IServiceProvider ServiceProvider { get; }
-		public ProfileManager(IServiceProvider serviceProvider/*Alex alex, IStorageSystem storage, IPlayerProfileService playerProfileService*/)
+		public ProfileManager(IServiceProvider serviceProvider)
 		{
-			//Alex = alex;
-			//Storage = storage;
 			Profiles = new Dictionary<string, SavedProfile>();
 			ServiceProvider = serviceProvider;
-			//ProfileService = playerProfileService;
 		}
 
 		private const string StatusMessage = "Loading profiles...";

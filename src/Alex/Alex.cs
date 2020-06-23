@@ -48,6 +48,7 @@ using Alex.Worlds.Multiplayer.Bedrock;
 using Alex.Worlds.Multiplayer.Java;
 using Alex.Worlds.Singleplayer;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -62,6 +63,7 @@ using DedicatedThreadPool = Alex.API.Utils.DedicatedThreadPool;
 using DedicatedThreadPoolSettings = Alex.API.Utils.DedicatedThreadPoolSettings;
 using GuiDebugHelper = Alex.Gui.GuiDebugHelper;
 using Image = SixLabors.ImageSharp.Image;
+using Plugin = MiNET.Plugins.Plugin;
 using Point = Microsoft.Xna.Framework.Point;
 using Skin = Alex.API.Utils.Skin;
 using TextInputEventArgs = Microsoft.Xna.Framework.TextInputEventArgs;
@@ -114,6 +116,7 @@ namespace Alex
 
         public StorageSystem Storage { get; private set; }
         public ServerTypeManager ServerTypeManager { get; private set; }
+        public OptionsProvider Options { get; private set; }
         
         public Alex(LaunchSettings launchSettings)
 		{
@@ -175,18 +178,32 @@ namespace Alex
 			};
 			
 			ServerTypeManager = new ServerTypeManager();
-
+			PluginManager = new PluginManager();
+			
+			Storage = new StorageSystem(LaunchSettings.WorkDir);
+			Options = new OptionsProvider(Storage);
+			
 			IServiceCollection serviceCollection = new ServiceCollection();
+			serviceCollection.AddSingleton<Alex>(this);
+			serviceCollection.AddSingleton<ContentManager>(Content);
+			serviceCollection.AddSingleton<IStorageSystem>(Storage);
+			serviceCollection.AddSingleton<IOptionsProvider>(Options);
+			
+			InitiatePluginSystem(serviceCollection);
+			
 			ConfigureServices(serviceCollection);
-
+			
 			Services = serviceCollection.BuildServiceProvider();
+			
+			PluginManager.Setup(Services);
+			
+			PluginManager.LoadPlugins();
 
 			ServerTypeManager.TryRegister("java", new JavaServerType(this));
 			ServerTypeManager.TryRegister("bedrock", new BedrockServerType(this, Services.GetService<XboxAuthService>()));
 			
 			UIThreadQueue = new ConcurrentQueue<Action>();
-
-            PluginManager = new PluginManager(Services);
+			
             FpsMonitor = new FpsMonitor();
 
             Resources = Services.GetRequiredService<ResourceManager>();
@@ -342,6 +359,40 @@ namespace Alex
 			});
 		}
 
+		private void InitiatePluginSystem(IServiceCollection serviceCollection)
+		{
+			string pluginDirectoryPaths = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+
+			var pluginDir = Options.AlexOptions.ResourceOptions.PluginDirectory;
+			if (!string.IsNullOrWhiteSpace(pluginDir))
+			{
+				pluginDirectoryPaths = pluginDir;
+			}
+			else
+			{
+				if (!string.IsNullOrWhiteSpace(LaunchSettings.WorkDir) && Directory.Exists(LaunchSettings.WorkDir))
+				{
+					pluginDirectoryPaths = LaunchSettings.WorkDir;
+				}
+			}
+
+			List<string> paths = new List<string>();
+			foreach (string dirPath in pluginDirectoryPaths.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
+			{
+				string directory = dirPath;
+				if (!Path.IsPathRooted(directory))
+				{
+					directory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), dirPath);
+				}
+
+				paths.Add(directory);
+				//PluginManager.DiscoverPlugins(directory);
+			}
+			
+			PluginManager.DiscoverPlugins(paths.ToArray());
+			PluginManager.ConfigureServices(serviceCollection);
+		}
+
 		private void SetAntiAliasing(bool enabled, int count)
 		{
 			UIThreadQueue.Enqueue(() =>
@@ -398,27 +449,21 @@ namespace Alex
 		
 		private void ConfigureServices(IServiceCollection services)
 		{
-			Storage = new StorageSystem(LaunchSettings.WorkDir);
+			services.TryAddSingleton<ProfileManager>();
 
-			services.AddSingleton<Alex>(this);
-			services.AddSingleton<ContentManager>(Content);
-			services.AddSingleton<IStorageSystem>(Storage);
-			services.AddSingleton<IOptionsProvider, OptionsProvider>();
-			services.AddSingleton<ProfileManager>();
+			services.TryAddSingleton<IListStorageProvider<SavedServerEntry>, SavedServerDataProvider>();
 
-			services.AddSingleton<IListStorageProvider<SavedServerEntry>, SavedServerDataProvider>();
+			services.TryAddSingleton<IServerQueryProvider>(new JavaServerQueryProvider(this));
+			services.TryAddSingleton<IPlayerProfileService, PlayerProfileService>();
 
-			services.AddSingleton<IServerQueryProvider>(new JavaServerQueryProvider(this));
-			services.AddSingleton<IPlayerProfileService, PlayerProfileService>();
+			services.TryAddSingleton<IRegistryManager, RegistryManager>();
+            services.TryAddSingleton<AlexIpcService>();
 
-			services.AddSingleton<IRegistryManager, RegistryManager>();
-            services.AddSingleton<AlexIpcService>();
-
-            services.AddSingleton<IEventDispatcher, EventDispatcher>();
-            services.AddSingleton<ResourceManager>();
-            services.AddSingleton<GuiManager>((o) => this.GuiManager);
-            services.AddSingleton<ServerTypeManager>(ServerTypeManager);
-            services.AddSingleton<XboxAuthService>();
+            services.TryAddSingleton<IEventDispatcher, EventDispatcher>();
+            services.TryAddSingleton<ResourceManager>();
+            services.TryAddSingleton<GuiManager>((o) => this.GuiManager);
+            services.TryAddSingleton<ServerTypeManager>(ServerTypeManager);
+            services.TryAddSingleton<XboxAuthService>();
 ;            //Storage = storage;
 		}
 
@@ -481,35 +526,9 @@ namespace Alex
 			foreach(var assembly in AppDomain.CurrentDomain.GetAssemblies())
 				eventDispatcher.LoadFrom(assembly);
 			
-			var options = Services.GetService<IOptionsProvider>();
+			//var options = Services.GetService<IOptionsProvider>();
 
-			string pluginDirectoryPaths = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
-
-            var pluginDir = options.AlexOptions.ResourceOptions.PluginDirectory;
-            if (!string.IsNullOrWhiteSpace(pluginDir))
-            {
-                pluginDirectoryPaths = pluginDir;
-            }
-            else
-            {
-	            if (!string.IsNullOrWhiteSpace(LaunchSettings.WorkDir) && Directory.Exists(LaunchSettings.WorkDir))
-	            {
-		            pluginDirectoryPaths = LaunchSettings.WorkDir;
-	            }
-            }
-
-            foreach (string dirPath in pluginDirectoryPaths.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
-            {
-                string directory = dirPath;
-                if (!Path.IsPathRooted(directory))
-                {
-                    directory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), dirPath);
-                }
-
-                PluginManager.DiscoverPlugins(directory);
-            }
-
-            //	Log.Info($"Loading resources...");
+			//	Log.Info($"Loading resources...");
 			if (!Resources.CheckResources(GraphicsDevice, progressReceiver,
 				OnResourcePackPreLoadCompleted))
 			{
