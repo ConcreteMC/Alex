@@ -385,7 +385,7 @@ namespace Alex.Utils
 
 		private async Task<AuthResponse<DeviceDisplayClaims>> DoDeviceAuth(string deviceId)
 		{
-			//var id = Guid.NewGuid().ToString();
+			var id = Guid.NewGuid().ToString();
 			var serial = Guid.NewGuid().ToString();
 			//UUID uuid = new UUID(Guid.NewGuid().ToByteArray());
 
@@ -399,7 +399,7 @@ namespace Alex.Utils
 					//	{"RpsTicket", token},
 					//	{"SiteName", "user.auth.xboxlive.com"},
 					{"DeviceType", "Nintendo"},
-					{"Id", deviceId},
+					{"Id", id},
 					{"SerialNumber", serial},
 					{"Version", "0.0.0.0"},
 					{"AuthMethod", "ProofOfPossession"},

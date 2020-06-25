@@ -1140,10 +1140,24 @@ namespace Alex.Entities
 
 		public virtual void CollidedWithWorld(Vector3 direction, Vector3 position)
 		{
+			if (this is Player p)
+			{
+				 // Vector3.Distance(KnownPosition, position);
+			//	Log.Info($"Collided with world! CollisionPoint: {position} Distance: {distanceToCollision} Direction: {direction} Velocity: {Velocity}");
+			}
+
 			if (direction == Vector3.Down)
 			{
 				//Velocity = new Vector3(Velocity.X, 0f, Velocity.Z);
 				KnownPosition.OnGround = true;
+			}
+			else if (direction == Vector3.Left || direction == Vector3.Right)
+			{
+			//	Velocity = new Vector3(0, Velocity.Y, Velocity.Z);
+			}
+			else if (direction == Vector3.Forward || direction == Vector3.Backward)
+			{
+			//	Velocity = new Vector3(Velocity.X, Velocity.Y, 0);
 			}
 		}
 
