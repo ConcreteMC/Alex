@@ -27,7 +27,7 @@ namespace Alex.Blocks.Storage
 
 		public uint GetId(BlockState value)
 		{
-			if (value == null) return uint.MaxValue;
+			if (value == null) throw new Exception("NULL");
 			return GetValue(GetIndex(value, HashObject(value)));
 		}
 

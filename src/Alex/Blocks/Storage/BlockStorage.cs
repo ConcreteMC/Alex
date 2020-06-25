@@ -45,53 +45,40 @@ namespace Alex.Blocks.Storage
             {
                 i = Pallette.Add(state);
 
-                if (i > ((1 << this._bits) - 1))
+                if (i >= (1 << this._bits))
                 {
-                    return Resize(_bits++, state);
+                    var newBits = _bits + 1;
+                    if (newBits < 8)
+                    {
+                        var old = Storage;
+                        Storage = new FlexibleStorage(newBits, 4096);
+                        for (int s = 0; s < 4096; s++)
+                        {
+                            Storage[s] = old[s];
+                        }
+                    }
+                    else
+                    {
+                        var bits = (int) Math.Ceiling(Math.Log2(BlockFactory.AllBlockstates.Count));
+                        var oldPalette = Pallette;
+                        var oldStorage = Storage;
+                        Pallette = new DirectPallete();
+                        Storage = new FlexibleStorage(bits, 4096);
+                        for (int s = 0; s < 4096; s++)
+                        {
+                            var oldValue = oldStorage[s];
+                            var newValue = oldPalette.GetId(oldPalette.Get(oldValue));
+                            Storage[s] = newValue;
+                            //data.set(i, newValue);
+                        }
+
+                        return Pallette.GetId(state);
+                    }
+                    //return Resize(_bits + 1, state);
                 }
             }
 
             return i;
-        }
-
-        private uint Resize(int bits, BlockState state)
-        {
-            var oldStorage = Storage;
-            
-            var oldPallete = Pallette;
-
-            if (bits <= 4)
-                bits = 4;
-
-            Storage = new FlexibleStorage(bits, 4096);
-            
-            if (bits <= 8)
-            {
-                Pallette = new IntIdentityHashBiMap(1 << bits);
-            }
-            else
-            {
-                bits = (int) Math.Ceiling(Math.Log2(BlockFactory.AllBlockstates.Count));
-                Pallette = new DirectPallete();
-            }
-            
-            _bits = bits;
-            
-            //IdFor(Air);
-            //Pallette.Add(Air);
-            Storage[0] = Pallette.Add(Air);
-            
-            for (int i = 0; i < 4096; i++)
-            {
-                var oldEntry = oldPallete.Get(oldStorage[i]);
-                if (oldEntry != null)
-                {
-                    Storage[i] = Pallette.Add(oldEntry);
-                    //   Set(i, oldEntry);
-                }
-            }
-
-            return IdFor(state);
         }
 
         public BlockState Get(int x, int y, int z)
@@ -133,17 +120,12 @@ namespace Alex.Blocks.Storage
                 
                 Pallette = new IntIdentityHashBiMap(palleteLength);
                 Pallette.Add(Air);
-                
-                //else
-                //     palleteLength = 
 
                 for (int id = 0; id < palleteLength; id++)
                 {
                     uint stateId = (uint) ms.ReadVarInt();
                     BlockState state = BlockFactory.GetBlockState(stateId);
                     Pallette.Put(state, (uint) id);
-                    // idToState.Set(id, state);
-                    // stateToId.Set(state, id);
                 }
             }
             else
@@ -159,8 +141,17 @@ namespace Alex.Blocks.Storage
                 dataArray[i] = ms.ReadLong();
             }
 
-            Storage = new FlexibleStorage(_bits, dataArray);
-            //Storage._data = dataArray;
+            Storage = new FlexibleStorage(_bits, 4096);
+            var valueMask = (uint) ((1L << _bits) - 1);
+            for(int index = 0; index < 4096; index++)
+            {
+                var state = index / (64 / _bits);
+                var data = dataArray[state];
+
+                var shiftedData = data >> (index % (64 / _bits) * _bits);
+
+                Storage[index] = (uint) (shiftedData & valueMask);
+            }
         }
 
         public void Dispose()

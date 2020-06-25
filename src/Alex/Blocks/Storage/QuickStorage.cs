@@ -7,8 +7,10 @@ namespace Alex.Blocks.Storage
         //private static ArrayPool<uint> _arrayPool = ArrayPool<uint>.Shared;
         
         private uint[] Data { get; }
+        private int MaxSize { get; }
         public QuickStorage(int bits, int size)
         {
+            MaxSize = size;
             Data = new uint[size]; //_arrayPool.Rent(size);// new uint[size];
         }
         
