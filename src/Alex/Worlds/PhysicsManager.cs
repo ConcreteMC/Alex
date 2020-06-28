@@ -141,6 +141,12 @@ namespace Alex.Worlds
 					
 					var blockcoords = e.KnownPosition.GetCoordinates3D();//.BlockDown();
 
+					if (Math.Round(e.KnownPosition.Y, 2) % 1 == 0)
+					{
+						blockcoords = blockcoords.BlockDown();
+						//offset = 1f;
+					}
+					
 					var block = World.GetBlock(blockcoords.X, blockcoords.Y, blockcoords.Z);
 					float drag = (float) (1f - e.Drag);
 					
