@@ -65,6 +65,9 @@
 		NavigateUp,
 		NavigateDown,
 		NavigateLeft,
-		NavigateRight
+		NavigateRight,
+		
+		Navigate,
+		NavigateBack
     }
 }

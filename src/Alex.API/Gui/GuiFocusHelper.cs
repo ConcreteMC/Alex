@@ -65,11 +65,23 @@ namespace Alex.API.Gui
             }
         }
 
+        private GamePadInputListener _gamePadInputListener;
         public GuiFocusHelper(GuiManager guiManager, InputManager inputManager, GraphicsDevice graphicsDevice)
         {
             GuiManager = guiManager;
             InputManager = inputManager;
             GraphicsDevice = graphicsDevice;
+            
+            var ip = InputManager.GetOrAddPlayerManager(PlayerIndex.One);
+
+            if (ip.TryGetListener<GamePadInputListener>(out var gamePadInputListener))
+            {
+                _gamePadInputListener = gamePadInputListener;
+            }
+            else
+            {
+                _gamePadInputListener = new GamePadInputListener(PlayerIndex.One);
+            }
         }
         
 
@@ -118,8 +130,25 @@ namespace Alex.API.Gui
 	        }
         }
 
+        private Vector2 _previousGamepadPosition = Vector2.Zero;
         private void UpdateHighlightedElement()
         {
+            if (_gamePadInputListener != null)
+            {
+                var gamepadPosition = _gamePadInputListener.GetVirtualCursorPosition();
+
+                if (gamepadPosition != _previousGamepadPosition)
+                {
+                    var gp = gamepadPosition.ToPoint();
+                    Mouse.SetPosition(gp.X, gp.Y);
+                    
+                    UpdateCursor(gamepadPosition);
+                    
+                    _previousGamepadPosition = gamepadPosition;
+                    return;
+                }
+            }
+            
             var rawCursorPosition = CursorInputListener.GetCursorPosition();
 
             var cursorPosition = GuiManager.GuiRenderer.Unproject(rawCursorPosition);
@@ -128,20 +157,25 @@ namespace Alex.API.Gui
             {
                 _previousCursorPosition = CursorPosition;
                 CursorPosition = cursorPosition;
+                
+                UpdateCursor(CursorPosition);
             }
+        }
 
+        private void UpdateCursor(Vector2 cursorPosition)
+        {
             IGuiControl newHighlightedElement = null;
 
-            if (TryGetElementAt(CursorPosition, e => e is IGuiControl c && c.IsVisible && c.Enabled && c.CanHighlight, out var controlMatchingPosition))
+            if (TryGetElementAt(cursorPosition, e => e is IGuiControl c && c.IsVisible && c.Enabled && c.CanHighlight, out var controlMatchingPosition))
             {
                 newHighlightedElement = controlMatchingPosition as IGuiControl;
             }
 
             if (newHighlightedElement != HighlightedElement)
             {
-                HighlightedElement?.InvokeCursorLeave(CursorPosition);
+                HighlightedElement?.InvokeCursorLeave(cursorPosition);
                 HighlightedElement = newHighlightedElement;
-                HighlightedElement?.InvokeCursorEnter(CursorPosition);
+                HighlightedElement?.InvokeCursorEnter(cursorPosition);
             }
         }
 
@@ -180,12 +214,12 @@ namespace Alex.API.Gui
 
             if (HighlightedElement == null) return;
 
-            if (CursorInputListener.IsBeginPress(InputCommand.LeftClick) && HighlightedElement.CanFocus)
+            if ((CursorInputListener.IsBeginPress(InputCommand.LeftClick) || _gamePadInputListener.IsBeginPress(InputCommand.Navigate)) && HighlightedElement.CanFocus)
             {
                 FocusedElement = HighlightedElement;
             }
 
-            var isDown = CursorInputListener.IsDown(InputCommand.LeftClick);
+            var isDown = CursorInputListener.IsDown(InputCommand.LeftClick) || _gamePadInputListener.IsDown(InputCommand.Navigate);
 
             if (CursorPosition != _previousCursorPosition)
             {
@@ -197,7 +231,7 @@ namespace Alex.API.Gui
                 FocusedElement?.InvokeCursorDown(CursorPosition);
             }
 
-            if (HighlightedElement == FocusedElement && CursorInputListener.IsPressed(InputCommand.LeftClick))
+            if (HighlightedElement == FocusedElement && (CursorInputListener.IsPressed(InputCommand.LeftClick) || _gamePadInputListener.IsPressed(InputCommand.Navigate)))
             {
                 FocusedElement?.InvokeCursorPressed(CursorPosition, MouseButton.Left);
             }

@@ -49,6 +49,9 @@ namespace Alex.API.Input.Listeners
             RegisterMap(InputCommand.NavigateDown, Buttons.DPadDown);
             RegisterMap(InputCommand.NavigateLeft, Buttons.DPadLeft);
             RegisterMap(InputCommand.NavigateRight, Buttons.DPadRight);
+            
+            RegisterMap(InputCommand.Navigate, Buttons.A);
+            RegisterMap(InputCommand.NavigateBack, Buttons.B);
         }
 
         protected override GamePadState GetCurrentState()
@@ -68,9 +71,19 @@ namespace Alex.API.Input.Listeners
 
         protected override void OnUpdate(GameTime gameTime)
         {
+            var dt = gameTime.ElapsedGameTime.TotalSeconds;
             _gamePadCapabilities = GamePad.GetCapabilities(PlayerIndex);
+            var leftStick = CurrentState.ThumbSticks.Left;
+            
+            _cursorPosition = new Vector2((float) (_cursorPosition.X + (leftStick.X * 200 * dt)), (float) (_cursorPosition.Y + (-leftStick.Y * 200 * dt)));
         }
 
+        private Vector2 _cursorPosition = Vector2.Zero;
+        public Vector2 GetVirtualCursorPosition()
+        {
+            return _cursorPosition;
+        }
+        
         /// <inheritdoc />
         public Vector2 GetCursorPositionDelta()
         {
