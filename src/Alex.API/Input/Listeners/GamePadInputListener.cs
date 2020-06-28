@@ -44,6 +44,11 @@ namespace Alex.API.Input.Listeners
             
             RegisterMap(InputCommand.MoveUp, Buttons.DPadUp);
             RegisterMap(InputCommand.MoveDown, Buttons.DPadDown);
+            
+            RegisterMap(InputCommand.NavigateUp, Buttons.DPadUp);
+            RegisterMap(InputCommand.NavigateDown, Buttons.DPadDown);
+            RegisterMap(InputCommand.NavigateLeft, Buttons.DPadLeft);
+            RegisterMap(InputCommand.NavigateRight, Buttons.DPadRight);
         }
 
         protected override GamePadState GetCurrentState()

@@ -382,7 +382,7 @@ namespace Alex.Entities
 
 				if (checkMouseInput)
 				{
-					var e = this.GlobalInputManager.CursorInputListener.GetCursorPosition();
+					var e = MouseInputListener.GetCursorPosition();
 
 					var centerX = Graphics.Viewport.Width / 2;
 					var centerY = Graphics.Viewport.Height / 2;

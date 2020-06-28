@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using Alex.API.Gui.Elements;
 using Alex.API.Input;
 using Alex.API.Input.Listeners;
@@ -145,8 +146,38 @@ namespace Alex.API.Gui
         }
 
         private bool _cursorDown = false;
+
         private void UpdateInput()
         {
+            if (InputManager.Any(x => x.IsPressed(InputCommand.NavigateUp)))
+            {
+                if (TryFindNextControl(InputCommand.NavigateUp, out IGuiControl control))
+                {
+                    FocusedElement = control;
+                }
+            }
+            else if (InputManager.Any(x => x.IsPressed(InputCommand.NavigateDown)))
+            {
+                if (TryFindNextControl(InputCommand.NavigateDown, out IGuiControl control))
+                {
+                    FocusedElement = control;
+                }
+            }
+            else if (InputManager.Any(x => x.IsPressed(InputCommand.NavigateLeft)))
+            {
+                if (TryFindNextControl(InputCommand.NavigateLeft, out IGuiControl control))
+                {
+                    FocusedElement = control;
+                }
+            }
+            else if (InputManager.Any(x => x.IsPressed(InputCommand.NavigateRight)))
+            {
+                if (TryFindNextControl(InputCommand.NavigateRight, out IGuiControl control))
+                {
+                    FocusedElement = control;
+                }
+            }
+
             if (HighlightedElement == null) return;
 
             if (CursorInputListener.IsBeginPress(InputCommand.LeftClick) && HighlightedElement.CanFocus)
@@ -155,6 +186,7 @@ namespace Alex.API.Gui
             }
 
             var isDown = CursorInputListener.IsDown(InputCommand.LeftClick);
+
             if (CursorPosition != _previousCursorPosition)
             {
                 FocusedElement?.InvokeCursorMove(CursorPosition, _previousCursorPosition, isDown);
@@ -174,20 +206,82 @@ namespace Alex.API.Gui
             {
                 FocusedElement?.InvokeCursorPressed(CursorPosition, MouseButton.Right);
             }
-            
+
             if (HighlightedElement == FocusedElement && CursorInputListener.IsPressed(InputCommand.MiddleClick))
             {
                 FocusedElement?.InvokeCursorPressed(CursorPosition, MouseButton.Middle);
             }
-            
+
             if (!isDown && _cursorDown)
             {
                 FocusedElement?.InvokeCursorUp(CursorPosition);
             }
-            
+
             _cursorDown = isDown;
         }
 
+        private bool TryFindNextControl(InputCommand command, out IGuiControl control)
+        {
+            var focused = FocusedElement;
+            if (focused == null)
+            {
+                if (TryGetElement(x => x is IGuiControl, out var element))
+                {
+                    control = (IGuiControl) element;
+                    return true;
+                }
+
+                control = null;
+                return false;
+            }
+
+            if (TryGetElement(
+                x =>
+                {
+                    if (x is IGuiControl c)
+                    {
+                        switch (command)
+                        {
+                            case InputCommand.NavigateUp:
+                                if (c.Position.Y > focused.Position.Y)
+                                {
+                                    return true;
+                                }
+                                break;
+                            case InputCommand.NavigateDown:
+                                if (c.Position.Y < focused.Position.Y)
+                                {
+                                    return true;
+                                }
+                                break;
+                            case InputCommand.NavigateLeft:
+                                if (c.Position.X < focused.Position.X)
+                                {
+                                    return true;
+                                }
+                                break;
+                            case InputCommand.NavigateRight:
+                                if (c.Position.X > focused.Position.X)
+                                {
+                                    return true;
+                                }
+                                break;
+                            default:
+                                return false;
+                        }
+                    }
+
+                    return false;
+                }, out IGuiElement el))
+            {
+                control = (IGuiControl) el;
+                return true;
+            }
+
+            control = null;
+            return false;
+        }
+        
         private bool TryFindNextControl(Vector2 scanVector, out IGuiElement nextControl)
         {
             Vector2 scan = CursorPosition + scanVector;

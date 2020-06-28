@@ -60,6 +60,11 @@
 		LookRight,
 		
 		Jump,
-		Sneak
+		Sneak,
+		
+		NavigateUp,
+		NavigateDown,
+		NavigateLeft,
+		NavigateRight
     }
 }
