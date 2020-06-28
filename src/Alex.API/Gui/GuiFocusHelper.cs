@@ -5,11 +5,14 @@ using Alex.API.Input.Listeners;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using NLog;
 
 namespace Alex.API.Gui
 {
     public class GuiFocusHelper
     {
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(GuiFocusHelper));
+        
         private GuiManager GuiManager { get; }
         private GraphicsDevice GraphicsDevice { get; }
         private InputManager InputManager { get; }
@@ -78,13 +81,15 @@ namespace Alex.API.Gui
         public void OnTextInput(object sender, TextInputEventArgs args)
         {
             //if (args.Key == Keys.None) return;
-
             if (args.Key != Keys.None && TryGetElement(e => e is IGuiControl c && c.AccessKey == args.Key, out var controlByAccessKey))
             {
-                FocusedElement = controlByAccessKey as IGuiControl;
-                return;
+                if (FocusedElement != controlByAccessKey)
+                {
+                    FocusedElement = controlByAccessKey as IGuiControl;
+                    return;
+                }
             }
-
+            
 	        if (FocusedElement == null || !FocusedElement.InvokeKeyInput(args.Character, args.Key))
 	        {
 		        if (args.Key == Keys.Tab)

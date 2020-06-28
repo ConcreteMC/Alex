@@ -4,14 +4,17 @@ using Alex.API.Gui.Graphics;
 using Alex.API.Input;
 using Alex.API.Utils;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
+using NLog;
 using RocketUI;
 
 namespace Alex.API.Gui.Elements.Controls
 {
     public class GuiButton : GuiControl, IGuiButton
 	{
-
-        public string Text
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(GuiButton));
+		
+		public string Text
         {
             get => TextElement.Text;
 	        set => TextElement.Text = value;
@@ -168,5 +171,16 @@ namespace Alex.API.Gui.Elements.Controls
 			    }
 		    }
 	    }
-    }
+
+		protected override bool OnKeyInput(char character, Keys key)
+		{
+			if (key == Keys.Enter)
+			{
+				Action?.Invoke();
+				return true;
+			}
+			
+			return base.OnKeyInput(character, key);
+		}
+	}
 }
