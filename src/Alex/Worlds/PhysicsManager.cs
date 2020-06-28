@@ -72,30 +72,47 @@ namespace Alex.Worlds
 					if (entity is Entity e)
 					{
 						if (e.NoAi) continue;
+
 						
 						UpdateEntity(e, dt);
 						
 						TruncateVelocity(e, dt);
 
-						var boundingBox = e.GetBoundingBox(e.KnownPosition);
+						var entityBoundingBox = e.GetBoundingBox(new Vector3(e.KnownPosition.X, MathF.Round(e.KnownPosition.Y, 2, MidpointRounding.ToZero), e.KnownPosition.Z));
 
 						bool anySolid = false;
-						var yPos = boundingBox.Min.Y;
-						foreach (var corner in boundingBox.GetCorners().Where(x => x.Y == boundingBox.Min.Y))
+						var yPos = e.KnownPosition.Y;
+						
+						var offset = 0f;
+
+						if (Math.Round(yPos, 2) % 1 == 0)
+						{
+							offset = 1f;
+						}
+						
+						foreach (var corner in entityBoundingBox.GetCorners().Where(x => Math.Abs(x.Y - entityBoundingBox.Min.Y) < 0.001f))
 						{
 							var blockcoords = new BlockCoordinates(
 								new PlayerLocation(
-									corner.X, Math.Floor(corner.Y - 0.01f), corner.Z));
+									corner.X, Math.Floor(corner.Y - offset), corner.Z));
 
 							var block            = World.GetBlock(blockcoords.X, blockcoords.Y, blockcoords.Z);
 							var blockBoundingBox = block.GetBoundingBox(blockcoords);
 							
 							//..onGround = onGround || block.Solid;
 
-							if (block.Solid &&  MathF.Abs(boundingBox.Min.Y - blockBoundingBox.Max.Y) <= 0.01f)
+							if (block.Solid && blockBoundingBox.Contains(corner) != ContainmentType.Disjoint)
 							{
-								anySolid = true;
-								break;
+								var partBoundingBox = block.GetPartBoundingBox(blockcoords, entityBoundingBox);
+								if (partBoundingBox.HasValue)
+								{
+									var yDifference = MathF.Abs(entityBoundingBox.Min.Y - partBoundingBox.Value.Max.Y);// <= 0.01f
+									if (yDifference <= 0.01f)
+									{
+										anySolid = true;
+										break;
+									}
+								}
 							}
 						}
 
@@ -122,7 +139,7 @@ namespace Alex.Worlds
 					if (e.NoAi)
 						continue;
 					
-					var blockcoords = e.KnownPosition.GetCoordinates3D().BlockDown();
+					var blockcoords = e.KnownPosition.GetCoordinates3D();//.BlockDown();
 
 					var block = World.GetBlock(blockcoords.X, blockcoords.Y, blockcoords.Z);
 					float drag = (float) (1f - e.Drag);
@@ -174,7 +191,7 @@ namespace Alex.Worlds
 			
 			Bound bound = new Bound(World, boundingBox, preview);
 
-			if (bound.GetIntersecting(boundingBox, out var blocks))
+			if (bound.GetIntersecting(boundingBox, false, out var blocks))
 			{
 				var solidBlocks = blocks.Where(x => x.block.Solid).ToArray();
 
@@ -279,7 +296,7 @@ namespace Alex.Worlds
 					entity.GetBoundingBox(pos);
 				
 				Bound bound = new Bound(World, newEntityBoundingBox, pos);
-				if (bound.GetIntersecting(newEntityBoundingBox, out var collisionBlocks))
+				if (bound.GetIntersecting(newEntityBoundingBox, false, out var collisionBlocks))
 				{
 					var solidBlocks = collisionBlocks.Where(x => x.block.Solid).ToArray();
 					if (solidBlocks.Any(x => x.box.Min.Y > pos.Y && x.box.Min.Y < newEntityBoundingBox.Max.Y))
@@ -579,7 +596,7 @@ namespace Alex.Worlds
 			    }
 		    }
 
-		    public bool GetIntersecting(BoundingBox box, out (BlockCoordinates coordinates, Block block, BoundingBox box, bool isBlockPart)[] blocks)
+		    public bool GetIntersecting(BoundingBox box, bool includeFullBlocks, out (BlockCoordinates coordinates, Block block, BoundingBox box, bool isBlockPart)[] blocks)
 		    {
 			    List<(BlockCoordinates coordinates,Block block, BoundingBox box, bool isBlockPart)> b = new List<(BlockCoordinates coordinates,Block block, BoundingBox box, bool isBlockPart)>();
 			    foreach (var block in Blocks)
@@ -602,7 +619,7 @@ namespace Alex.Worlds
 						    b.Add((block.Key, block.Value.block, bb.Value, true));
 					    }
 
-					    if (!added)
+					    if (!added && includeFullBlocks)
 					    {
 						    /*var containmentType = block.Value.box.Contains(box);
 						    if (containmentType == ContainmentType.Contains || containmentType == ContainmentType.Intersects)
@@ -611,7 +628,7 @@ namespace Alex.Worlds
 						    }
 						    //   b.Add((block.Key, block.Value.block, block.Value.box));*/
 						    
-						  //  b.Add((block.Key, block.Value.block, block.Value.box, false));
+							 b.Add((block.Key, block.Value.block, block.Value.box, false));
 					    }
 				    }
 			    }
