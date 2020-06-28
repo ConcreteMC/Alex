@@ -45,41 +45,50 @@ namespace Alex.Utils
                     if (!Storage.Exists(assetsZipSavePath))
                         currentVersion = null;
                 }
-                
-                var preRedirectHeaders = await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, DownloadURL), HttpCompletionOption.ResponseHeadersRead);
-                if (preRedirectHeaders.StatusCode == HttpStatusCode.MovedPermanently)
+
+                try
                 {
-                    var zipDownloadHeaders =
-                        await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get,
-                            preRedirectHeaders.Headers.Location), HttpCompletionOption.ResponseHeadersRead);
-                    
-                    var fileName = zipDownloadHeaders.Content?.Headers?.ContentDisposition?.FileName ??
-                                   zipDownloadHeaders.RequestMessage?.RequestUri?.LocalPath;
-                    var versionMatch = ExtractVersionFromFilename.Match(fileName);
-                    if (versionMatch.Success)
+                    var preRedirectHeaders = await httpClient.SendAsync(
+                        new HttpRequestMessage(HttpMethod.Get, DownloadURL), HttpCompletionOption.ResponseHeadersRead);
+                    if (preRedirectHeaders.StatusCode == HttpStatusCode.MovedPermanently)
                     {
-                        var latestVersion = versionMatch.Groups["version"].Value;
+                        var zipDownloadHeaders =
+                            await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get,
+                                preRedirectHeaders.Headers.Location), HttpCompletionOption.ResponseHeadersRead);
 
-                        if (latestVersion != currentVersion ||
-                            (!string.IsNullOrWhiteSpace(assetsZipSavePath) && !Storage.Exists(assetsZipSavePath)))
+                        var fileName = zipDownloadHeaders.Content?.Headers?.ContentDisposition?.FileName ??
+                                       zipDownloadHeaders.RequestMessage?.RequestUri?.LocalPath;
+                        var versionMatch = ExtractVersionFromFilename.Match(fileName);
+                        if (versionMatch.Success)
                         {
-                            zipDownloadHeaders = await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get,
-                                preRedirectHeaders.Headers.Location), HttpCompletionOption.ResponseContentRead);
-                            var content = await zipDownloadHeaders.Content.ReadAsByteArrayAsync();
+                            var latestVersion = versionMatch.Groups["version"].Value;
 
-                            assetsZipSavePath = Path.Combine("assets", $"bedrock-{latestVersion}.zip");
-                            
-                            // save locally
-                            Storage.TryWriteString(CurrentBedrockVersionStorageKey, latestVersion);
+                            if (latestVersion != currentVersion ||
+                                (!string.IsNullOrWhiteSpace(assetsZipSavePath) && !Storage.Exists(assetsZipSavePath)))
+                            {
+                                zipDownloadHeaders = await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get,
+                                    preRedirectHeaders.Headers.Location), HttpCompletionOption.ResponseContentRead);
+                                var content = await zipDownloadHeaders.Content.ReadAsByteArrayAsync();
 
-                            Storage.TryWriteBytes(assetsZipSavePath, content);
+                                assetsZipSavePath = Path.Combine("assets", $"bedrock-{latestVersion}.zip");
+
+                                // save locally
+                                Storage.TryWriteString(CurrentBedrockVersionStorageKey, latestVersion);
+
+                                Storage.TryWriteBytes(assetsZipSavePath, content);
+
+                            }
 
                         }
-
                     }
-                }
 
-                return assetsZipSavePath;
+                    return assetsZipSavePath;
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Failed to download required bedrock assets...");
+                    return assetsZipSavePath;
+                }
             }
             catch(Exception ex)
             {

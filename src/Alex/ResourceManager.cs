@@ -197,9 +197,10 @@ namespace Alex
 				}
 
 				string bedrockPath = BedrockAssetUtil.CheckAndDownloadResources(progressReceiver).Result;
-				if (!Storage.TryReadBytes(bedrockPath, out bedrockResources))
+				if (string.IsNullOrWhiteSpace(bedrockPath) || !Storage.TryReadBytes(bedrockPath, out bedrockResources))
 				{
 					Log.Error("Could not load any of the required Bedrock assets! Are you connected to the internet?");
+					Log.Info($"A manual fix is available, see: https://github.com/kennyvv/Alex/wiki/Bedrock-Assets");
 					return false;
 				}
 			}
