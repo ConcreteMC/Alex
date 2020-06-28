@@ -8,7 +8,7 @@
         MoveRight,
         MoveUp,
         MoveDown,
-        
+
         MoveSpeedIncrease,
         MoveSpeedDecrease,
         MoveSpeedReset,
@@ -52,6 +52,11 @@
 		Left,
 		Right,
 		Up,
-		Down
+		Down,
+		
+		LookUp,
+		LookDown,
+		LookLeft,
+		LookRight,
     }
 }

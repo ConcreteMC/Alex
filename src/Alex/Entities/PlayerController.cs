@@ -29,6 +29,7 @@ namespace Alex.Entities
 
         private Player Player { get; }
 		private InputManager GlobalInputManager { get; }
+		private GamePadInputListener GamePadInputListener { get; }
 
 		public PlayerController(GraphicsDevice graphics, World world, InputManager inputManager, Player player, PlayerIndex playerIndex)
 		{
@@ -43,6 +44,15 @@ namespace Alex.Entities
 			InputManager = inputManager.GetOrAddPlayerManager(playerIndex);
 			InputManager.AddListener(MouseInputListener = new MouseInputListener(playerIndex));
 
+			if (InputManager.TryGetListener<GamePadInputListener>(out var gamePadInputListener))
+			{
+				GamePadInputListener = gamePadInputListener;
+			}
+			else
+			{
+				GamePadInputListener = null;
+			}
+			
 			var optionsProvider = Alex.Instance.Services.GetService<IOptionsProvider>();
 			CursorSensitivity = optionsProvider.AlexOptions.MouseSensitivity.Value;
 
@@ -50,6 +60,13 @@ namespace Alex.Entities
 				(value, newValue) =>
 				{
 					CursorSensitivity = newValue;
+				});
+
+			GamepadSensitivity = optionsProvider.AlexOptions.ControllerOptions.RightJoystickSensitivity.Value;
+			optionsProvider.AlexOptions.ControllerOptions.RightJoystickSensitivity.Bind(
+				(value, newValue) =>
+				{
+					GamepadSensitivity = newValue;
 				});
 		}
 
@@ -161,7 +178,8 @@ namespace Alex.Entities
 	    public float LastSpeedFactor = 0f;
 	    private Vector3 LastVelocity { get; set; } = Vector3.Zero;
 	    private bool WasInWater { get; set; } = false;
-	    private double CursorSensitivity { get; set; } = 30;
+	    private double CursorSensitivity { get; set; } = 30d;
+	    private double GamepadSensitivity { get; set; } = 200d;
 	    private void UpdateMovementInput(GameTime gt)
 	    {
 		    if (!_allowMovementInput) return;
@@ -332,34 +350,62 @@ namespace Alex.Entities
 			}
 			else
 			{
-				var e = this.GlobalInputManager.CursorInputListener.GetCursorPosition();
-
-				var centerX = Graphics.Viewport.Width / 2;
-				var centerY = Graphics.Viewport.Height / 2;
-
-				if (e.X < 10 || e.X > Graphics.Viewport.Width - 10 ||
-					e.Y < 10 || e.Y > Graphics.Viewport.Height - 10)
+				var checkMouseInput = true;
+				if (GamePadInputListener != null && GamePadInputListener.IsConnected)
 				{
-					_previousMousePosition = new Vector2(centerX, centerY);
-					Mouse.SetPosition(centerX, centerY);
-					IgnoreNextUpdate = true;
+					var inputValue = GamePadInputListener.GetCursorPosition();
+
+					if (inputValue != Vector2.Zero)
+					{
+						checkMouseInput = false;
+						
+						var look = new Vector2((inputValue.X), (inputValue.Y))
+						           * (float) (gt.ElapsedGameTime.TotalSeconds * GamepadSensitivity);
+
+						look = -look;
+
+						Player.KnownPosition.HeadYaw -= look.X;
+						Player.KnownPosition.Pitch -= look.Y;
+						Player.KnownPosition.HeadYaw = MathUtils.NormDeg(Player.KnownPosition.HeadYaw);
+						Player.KnownPosition.Pitch = MathHelper.Clamp(Player.KnownPosition.Pitch, -89.9f, 89.9f);
+					}
 				}
-				else
+
+				if (checkMouseInput)
 				{
-					var mouseDelta = _previousMousePosition - e; //this.GlobalInputManager.CursorInputListener.GetCursorPositionDelta();
-					var look = new Vector2((-mouseDelta.X), (mouseDelta.Y))
-							   * (float)(gt.ElapsedGameTime.TotalSeconds * CursorSensitivity);
-					look = -look;
+					var e = this.GlobalInputManager.CursorInputListener.GetCursorPosition();
 
-					Player.KnownPosition.HeadYaw -= look.X;
-					Player.KnownPosition.Pitch -= look.Y;
-					Player.KnownPosition.HeadYaw = MathUtils.NormDeg(Player.KnownPosition.HeadYaw);
-					Player.KnownPosition.Pitch = MathHelper.Clamp(Player.KnownPosition.Pitch, -89.9f, 89.9f);
+					var centerX = Graphics.Viewport.Width / 2;
+					var centerY = Graphics.Viewport.Height / 2;
 
-					//Player.KnownPosition.Pitch = MathHelper.Clamp(Player.KnownPosition.Pitch + look.Y, -89.9f, 89.9f);
-					// Player.KnownPosition.Yaw = (Player.KnownPosition.Yaw + look.X) % 360f;
-					// Player.KnownPosition.Yaw %= 360f;
-					_previousMousePosition = e;
+					if (e.X < 10 || e.X > Graphics.Viewport.Width - 10 || e.Y < 10
+					    || e.Y > Graphics.Viewport.Height - 10)
+					{
+						_previousMousePosition = new Vector2(centerX, centerY);
+						Mouse.SetPosition(centerX, centerY);
+						IgnoreNextUpdate = true;
+					}
+					else
+					{
+						var mouseDelta =
+							_previousMousePosition
+							- e; //this.GlobalInputManager.CursorInputListener.GetCursorPositionDelta();
+
+						var look = new Vector2((-mouseDelta.X), (mouseDelta.Y))
+						           * (float) (gt.ElapsedGameTime.TotalSeconds * CursorSensitivity);
+
+						look = -look;
+
+						Player.KnownPosition.HeadYaw -= look.X;
+						Player.KnownPosition.Pitch -= look.Y;
+						Player.KnownPosition.HeadYaw = MathUtils.NormDeg(Player.KnownPosition.HeadYaw);
+						Player.KnownPosition.Pitch = MathHelper.Clamp(Player.KnownPosition.Pitch, -89.9f, 89.9f);
+
+						//Player.KnownPosition.Pitch = MathHelper.Clamp(Player.KnownPosition.Pitch + look.Y, -89.9f, 89.9f);
+						// Player.KnownPosition.Yaw = (Player.KnownPosition.Yaw + look.X) % 360f;
+						// Player.KnownPosition.Yaw %= 360f;
+						_previousMousePosition = e;
+					}
 				}
 			}
 

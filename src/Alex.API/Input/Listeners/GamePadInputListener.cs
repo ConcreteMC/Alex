@@ -3,10 +3,12 @@ using Microsoft.Xna.Framework.Input;
 
 namespace Alex.API.Input.Listeners
 {
-    public class GamePadInputListener : InputListenerBase<GamePadState, Buttons>
+    public class GamePadInputListener : InputListenerBase<GamePadState, Buttons>, ICursorInputListener
     {
         private GamePadCapabilities _gamePadCapabilities;
 
+        public bool IsConnected => CurrentState.IsConnected;
+        
         public GamePadInputListener(PlayerIndex playerIndex) : base(playerIndex)
         {
             RegisterMap(InputCommand.MoveForwards, Buttons.LeftThumbstickUp);
@@ -28,6 +30,11 @@ namespace Alex.API.Input.Listeners
 
             RegisterMap(InputCommand.HotBarSelectPrevious, Buttons.LeftShoulder);
             RegisterMap(InputCommand.HotBarSelectNext, Buttons.RightShoulder);
+            
+            RegisterMap(InputCommand.LookUp, Buttons.RightThumbstickUp);
+            RegisterMap(InputCommand.LookDown, Buttons.RightThumbstickDown);
+            RegisterMap(InputCommand.LookLeft, Buttons.RightThumbstickLeft);
+            RegisterMap(InputCommand.LookRight, Buttons.RightThumbstickRight);
         }
 
         protected override GamePadState GetCurrentState()
@@ -48,6 +55,18 @@ namespace Alex.API.Input.Listeners
         protected override void OnUpdate(GameTime gameTime)
         {
             _gamePadCapabilities = GamePad.GetCapabilities(PlayerIndex);
+        }
+
+        /// <inheritdoc />
+        public Vector2 GetCursorPositionDelta()
+        {
+            return CurrentState.ThumbSticks.Right - PreviousState.ThumbSticks.Right;
+        }
+
+        /// <inheritdoc />
+        public Vector2 GetCursorPosition()
+        {
+            return CurrentState.ThumbSticks.Right;
         }
     }
 }
