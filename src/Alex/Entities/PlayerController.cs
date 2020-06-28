@@ -112,7 +112,7 @@ namespace Alex.Entities
 		   // if (World.FormManager.IsShowingForm)
 			//    return;
 		    
-		    if (MouseInputListener.IsButtonDown(MouseButton.ScrollUp))
+			/*if (MouseInputListener.IsButtonDown(MouseButton.ScrollUp))
 		    {
 			    Player.Inventory.SelectedSlot--;
 		    }
@@ -120,8 +120,17 @@ namespace Alex.Entities
 		    if (MouseInputListener.IsButtonDown(MouseButton.ScrollDown))
 		    {
 			    Player.Inventory.SelectedSlot++;
-		    }
-		    
+		    }*/
+
+			if (InputManager.IsPressed(InputCommand.HotBarSelectPrevious) || MouseInputListener.IsButtonDown(MouseButton.ScrollUp))
+			{
+				Player.Inventory.SelectedSlot--;
+			}
+			else if (InputManager.IsPressed(InputCommand.HotBarSelectNext) || MouseInputListener.IsButtonDown(MouseButton.ScrollDown))
+			{
+				Player.Inventory.SelectedSlot++;
+			}
+			
 		    if (InputManager.IsPressed(InputCommand.HotBarSelect1)) Player.Inventory.SelectedSlot = 0;
 		    if (InputManager.IsPressed(InputCommand.HotBarSelect2)) Player.Inventory.SelectedSlot = 1;
 		    if (InputManager.IsPressed(InputCommand.HotBarSelect3)) Player.Inventory.SelectedSlot = 2;
@@ -193,9 +202,9 @@ namespace Alex.Entities
 			    {
 				    Player.IsFlying = !Player.IsFlying;
 			    }
-			    else if (InputManager.IsDown(InputCommand.MoveUp))
+			    else if (InputManager.IsDown(InputCommand.MoveUp) || InputManager.IsDown(InputCommand.Jump))
 			    {
-				    if (InputManager.IsBeginPress(InputCommand.MoveUp) &&
+				    if ((InputManager.IsBeginPress(InputCommand.MoveUp) || InputManager.IsBeginPress(InputCommand.Jump)) &&
 				        now.Subtract(_lastUp).TotalMilliseconds <= 125)
 				    {
 					    Player.IsFlying = !Player.IsFlying;
@@ -279,7 +288,7 @@ namespace Alex.Entities
 				{
 					Player.Velocity = new Vector3(Player.Velocity.X, 1f * speedFactor, Player.Velocity.Z);
 				}
-				else if (!Player.IsInWater && Player.KnownPosition.OnGround && InputManager.IsDown(InputCommand.MoveUp))
+				else if (!Player.IsInWater && Player.KnownPosition.OnGround && (InputManager.IsDown(InputCommand.Jump) || InputManager.IsDown(InputCommand.MoveUp)))
 				{
 					if (Player.Velocity.Y <= 0.00001f && Player.Velocity.Y >= -0.00001f
 					    && Math.Abs(LastVelocity.Y - Player.Velocity.Y) < 0.0001f)
@@ -292,7 +301,7 @@ namespace Alex.Entities
 
 				if (!Player.IsInWater) //Sneaking in water is not a thing.
 				{
-					if (InputManager.IsDown(InputCommand.MoveDown))
+					if (InputManager.IsDown(InputCommand.MoveDown) || InputManager.IsDown(InputCommand.Sneak))
 					{
 						Player.IsSneaking = true;
 					}

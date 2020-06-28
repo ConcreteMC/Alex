@@ -10,8 +10,8 @@ namespace Alex.API.Input.Listeners
             RegisterMap(InputCommand.LeftClick, MouseButton.Left);
             RegisterMap(InputCommand.RightClick, MouseButton.Right);
             RegisterMap(InputCommand.MiddleClick, MouseButton.Middle);
-            RegisterMap(InputCommand.HotBarSelectPrevious, MouseButton.ScrollDown);
-            RegisterMap(InputCommand.HotBarSelectNext, MouseButton.ScrollUp);
+            //RegisterMap(InputCommand.HotBarSelectPrevious, MouseButton.ScrollDown);
+           // RegisterMap(InputCommand.HotBarSelectNext, MouseButton.ScrollUp);
         }
         
         private int _lastScroll;

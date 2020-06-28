@@ -58,5 +58,8 @@
 		LookDown,
 		LookLeft,
 		LookRight,
+		
+		Jump,
+		Sneak
     }
 }
