@@ -259,6 +259,7 @@ namespace Alex.Blocks
 		    this.Register("minecraft:lava", () => new Lava());
 		    this.Register("minecraft:kelp", () => new Kelp());
 		    this.Register("minecraft:seagrass", () => new SeaGrass());
+		    this.Register("minecraft:tall_seagrass", () => new SeaGrass());
 		    
 		    //Ores
 		    this.Register("minecraft:redstone_ore", () => new RedstoneOre());

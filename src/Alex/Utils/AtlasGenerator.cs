@@ -85,6 +85,8 @@ namespace Alex.Utils
 		    Image<Rgba32>[] fireFrames2 = new Image<Rgba32>[0];
 		    Image<Rgba32>[] portalFrames = new Image<Rgba32>[0];
 	        Image<Rgba32>[] seagrassFrames = new Image<Rgba32>[0];
+	        Image<Rgba32>[] seagrassTopFrames = new Image<Rgba32>[0];
+	        Image<Rgba32>[] seagrassBottomFrames = new Image<Rgba32>[0];
 	        
 		    foreach (var other in others.ToArray())
 		    {
@@ -128,6 +130,16 @@ namespace Alex.Utils
 				    seagrassFrames = GetFrames(other.Value);
 				    others.Remove(other);
 			    }
+			    else if (other.Key.Contains("tall_seagrass_top"))
+			    {
+				    seagrassTopFrames = GetFrames(other.Value);
+				    others.Remove(other);
+			    }
+			    else if (other.Key.Contains("tall_seagrass_bottom"))
+			    {
+				    seagrassBottomFrames = GetFrames(other.Value);
+				    others.Remove(other);
+			    }
 			    //seagrass
 		    }
 		    
@@ -144,31 +156,37 @@ namespace Alex.Utils
 		    Dictionary<string, Image<Rgba32>> animated = new Dictionary<string, Image<Rgba32>>();
 		    
 		    if (waterFrames.Length > 0)
-			    animated.Add("block/water_still", waterFrames[0]);
+			    animated.Add("minecraft:block/water_still", waterFrames[0]);
 	        
 
 	        if (waterFlowFrames.Length > 0)
-		        animated.Add("block/water_flow", waterFlowFrames[0]);
+		        animated.Add("minecraft:block/water_flow", waterFlowFrames[0]);
 	        
 	        
 	        if (lavaFrames.Length > 0)
-		        animated.Add("block/lava_still", lavaFrames[0]);
+		        animated.Add("minecraft:block/lava_still", lavaFrames[0]);
 	        
 	        
 	        if (lavaFlowFrames.Length > 0)
-		        animated.Add("block/lava_flow", lavaFlowFrames[0]);
+		        animated.Add("minecraft:block/lava_flow", lavaFlowFrames[0]);
 
 	        if (fireFrames.Length > 0)
-		        animated.Add("block/fire_0", fireFrames[0]);
+		        animated.Add("minecraft:block/fire_0", fireFrames[0]);
 
 	        if (fireFrames2.Length > 0)
-		        animated.Add("block/fire_1", fireFrames2[0]);
+		        animated.Add("minecraft:block/fire_1", fireFrames2[0]);
 
 	        if (portalFrames.Length > 0)
-		        animated.Add("block/nether_portal", portalFrames[0]);
+		        animated.Add("minecraft:block/nether_portal", portalFrames[0]);
 	        
 	        if (seagrassFrames.Length > 0)
-		        animated.Add("block/seagrass", seagrassFrames[0]);
+		        animated.Add("minecraft:block/seagrass", seagrassFrames[0]);
+	        
+	        if (seagrassTopFrames.Length > 0)
+		        animated.Add("minecraft:block/tall_seagrass_top", seagrassTopFrames[0]);
+	        
+	        if (seagrassBottomFrames.Length > 0)
+		        animated.Add("minecraft:block/tall_seagrass_bottom", seagrassBottomFrames[0]);
 	        
 	        var animatedFrameInfo = new Dictionary<string, TextureInfo>();
 	        GenerateAtlasInternal(animated.ToArray(), new KeyValuePair<string, Image<Rgba32>>[0], progressReceiver,
@@ -176,17 +194,18 @@ namespace Alex.Utils
 
 	        AnimatedAtlasSize = new Vector2(animatedFrame.Width, animatedFrame.Height);
 	        
-	        TextureInfo waterLocation, waterFlowLocation, lavaLocation, lavaFlowLocation, fireLocation, fireLocation2, portalLocation, seagrassLocation;
+	        TextureInfo waterLocation, waterFlowLocation, lavaLocation, lavaFlowLocation, fireLocation, fireLocation2, portalLocation, seagrassLocation, tallSeagrassTopLocation, tallSeagrassBottomLocation;
 
-	        animatedFrameInfo.TryGetValue("block/water_still", out waterLocation);
-	        animatedFrameInfo.TryGetValue("block/water_flow", out waterFlowLocation);
-	        animatedFrameInfo.TryGetValue("block/lava_still", out lavaLocation);
-	        animatedFrameInfo.TryGetValue("block/lava_flow", out lavaFlowLocation);
-	        animatedFrameInfo.TryGetValue("block/fire_0", out fireLocation);
-	        animatedFrameInfo.TryGetValue("block/fire_1", out fireLocation2);
-	        animatedFrameInfo.TryGetValue("block/nether_portal", out portalLocation);
-	        animatedFrameInfo.TryGetValue("block/seagrass", out seagrassLocation);
-	        
+	        animatedFrameInfo.TryGetValue("minecraft:block/water_still", out waterLocation);
+	        animatedFrameInfo.TryGetValue("minecraft:block/water_flow", out waterFlowLocation);
+	        animatedFrameInfo.TryGetValue("minecraft:block/lava_still", out lavaLocation);
+	        animatedFrameInfo.TryGetValue("minecraft:block/lava_flow", out lavaFlowLocation);
+	        animatedFrameInfo.TryGetValue("minecraft:block/fire_0", out fireLocation);
+	        animatedFrameInfo.TryGetValue("minecraft:block/fire_1", out fireLocation2);
+	        animatedFrameInfo.TryGetValue("minecraft:block/nether_portal", out portalLocation);
+	        animatedFrameInfo.TryGetValue("minecraft:block/seagrass", out seagrassLocation);
+	        animatedFrameInfo.TryGetValue("minecraft:block/tall_seagrass_top", out tallSeagrassTopLocation);
+	        animatedFrameInfo.TryGetValue("minecraft:block/tall_seagrass_bottom", out tallSeagrassBottomLocation);
 	        //var waterLocation = new Vector3();
 		    
 		   // var baseBitmap = new Bitmap(stillAtlas.Width, stillAtlas.Height);
@@ -212,7 +231,7 @@ namespace Alex.Utils
 			    System.Drawing.Rectangle destination;
 			    if (waterLocation != null)
 			    {
-				    progressReceiver.UpdateProgress((int)percentage, null, "block/water_still");
+				    progressReceiver.UpdateProgress((int)percentage, null, "minecraft:block/water_still");
 				    
 				    destination = new System.Drawing.Rectangle((int) waterLocation.Position.X,
 					    (int) waterLocation.Position.Y, TextureWidth, TextureHeight);
@@ -225,7 +244,7 @@ namespace Alex.Utils
 
 			    if (waterFlowLocation != null)
 			    {
-				    progressReceiver.UpdateProgress((int)percentage, null, "block/water_flow");
+				    progressReceiver.UpdateProgress((int)percentage, null, "minecraft:block/water_flow");
 				    
 				    destination = new System.Drawing.Rectangle((int) waterFlowLocation.Position.X,
 					    (int) waterFlowLocation.Position.Y, TextureWidth, TextureHeight);
@@ -236,7 +255,7 @@ namespace Alex.Utils
 
 			    if (lavaLocation != null)
 			    {
-				    progressReceiver.UpdateProgress((int)percentage, null, "block/lava_still");
+				    progressReceiver.UpdateProgress((int)percentage, null, "minecraft:block/lava_still");
 				    
 				    destination = new System.Drawing.Rectangle((int) lavaLocation.Position.X,
 					    (int) lavaLocation.Position.Y, TextureWidth, TextureHeight);
@@ -246,7 +265,7 @@ namespace Alex.Utils
 
 			    if (lavaFlowLocation != null)
 			    {
-				    progressReceiver.UpdateProgress((int)percentage, null, "block/lava_flow");
+				    progressReceiver.UpdateProgress((int)percentage, null, "minecraft:block/lava_flow");
 				    
 				    destination = new System.Drawing.Rectangle((int) lavaFlowLocation.Position.X,
 					    (int) lavaFlowLocation.Position.Y, TextureWidth, TextureHeight);
@@ -257,7 +276,7 @@ namespace Alex.Utils
 
 			    if (fireLocation != null)
 			    {
-				    progressReceiver.UpdateProgress((int)percentage, null, "block/fire_0");
+				    progressReceiver.UpdateProgress((int)percentage, null, "minecraft:block/fire_0");
 				    
 				    destination = new System.Drawing.Rectangle((int) fireLocation.Position.X,
 					    (int) fireLocation.Position.Y, TextureWidth, TextureHeight);
@@ -267,7 +286,7 @@ namespace Alex.Utils
 
 			    if (fireLocation2 != null)
 			    {
-				    progressReceiver.UpdateProgress((int)percentage, null, "block/fire_1");
+				    progressReceiver.UpdateProgress((int)percentage, null, "minecraft:block/fire_1");
 				    
 				    destination = new System.Drawing.Rectangle((int) fireLocation2.Position.X,
 					    (int) fireLocation2.Position.Y, TextureWidth, TextureHeight);
@@ -278,7 +297,7 @@ namespace Alex.Utils
 
 			    if (portalLocation != null)
 			    {
-				    progressReceiver.UpdateProgress((int)percentage, null, "block/nether_portal");
+				    progressReceiver.UpdateProgress((int)percentage, null, "minecraft:block/nether_portal");
 				    
 				    destination = new System.Drawing.Rectangle((int) portalLocation.Position.X,
 					    (int) portalLocation.Position.Y, TextureWidth, TextureHeight);
@@ -289,12 +308,34 @@ namespace Alex.Utils
 
 			    if (seagrassLocation != null)
 			    {
-				    progressReceiver.UpdateProgress((int)percentage, null, "block/seagrass");
+				    progressReceiver.UpdateProgress((int)percentage, null, "minecraft:block/seagrass");
 				    
 				    destination = new System.Drawing.Rectangle((int) seagrassLocation.Position.X,
 					    (int) seagrassLocation.Position.Y, TextureWidth, TextureHeight);
 				    if (seagrassFrames.Length > 0)
 					    TextureUtils.CopyRegionIntoImage(seagrassFrames[i % seagrassFrames.Length], r, ref target,
+						    destination);
+			    }
+			    
+			    if (tallSeagrassTopLocation != null)
+			    {
+				    progressReceiver.UpdateProgress((int)percentage, null, "minecraft:block/tall_seagrass_top");
+				    
+				    destination = new System.Drawing.Rectangle((int) tallSeagrassTopLocation.Position.X,
+					    (int) tallSeagrassTopLocation.Position.Y, TextureWidth, TextureHeight);
+				    if (seagrassTopFrames.Length > 0)
+					    TextureUtils.CopyRegionIntoImage(seagrassTopFrames[i % seagrassTopFrames.Length], r, ref target,
+						    destination);
+			    }
+			    
+			    if (tallSeagrassBottomLocation != null)
+			    {
+				    progressReceiver.UpdateProgress((int)percentage, null, "minecraft:block/tall_seagrass_bottom");
+				    
+				    destination = new System.Drawing.Rectangle((int) tallSeagrassBottomLocation.Position.X,
+					    (int) tallSeagrassBottomLocation.Position.Y, TextureWidth, TextureHeight);
+				    if (seagrassBottomFrames.Length > 0)
+					    TextureUtils.CopyRegionIntoImage(seagrassBottomFrames[i % seagrassBottomFrames.Length], r, ref target,
 						    destination);
 			    }
 
