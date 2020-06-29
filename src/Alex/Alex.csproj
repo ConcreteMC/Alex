@@ -1,8 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <DefineConstants>TRACE;DEBUG;WINDOWS;MONOGAME;NETCOREAPP2_0;DESKTOPGL;WINDOWS;LINUX</DefineConstants>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <ApplicationIcon>Resources\Icon.ico</ApplicationIcon>
     <StartupObject>Alex.Program</StartupObject>
@@ -22,18 +20,12 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <ServerGarbageCollection>true</ServerGarbageCollection>
-    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <LangVersion>8</LangVersion>
-	  <MonoGamePlatform>DesktopGL</MonoGamePlatform>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DefineConstants>TRACE;WINDOWS;MONOGAME2_0;DESKTOPGL;WINDOWS;LINUX;CHECK_EOF</DefineConstants>
+    <DefineConstants>DESKTOPGL</DefineConstants>
     <OutputPath>../../Output/x64/Debug/</OutputPath>
     <!--<OutputPath>bin\Debug\</OutputPath>-->
   </PropertyGroup>

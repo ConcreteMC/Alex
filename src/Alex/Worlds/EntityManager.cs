@@ -53,12 +53,10 @@ namespace Alex.Worlds
 		    var entities = Entities.Values.ToArray();
 		    foreach (var entity in entities)
 		    {
-			    if (entity is Entity e)
-			    {
-				    if (e.ModelRenderer != null)
-						e.ModelRenderer.DiffuseColor = Color.White.ToVector3() * World.BrightnessModifier;
-			    }
-				entity.Update(args);
+			    if (entity.ModelRenderer != null)
+				    entity.ModelRenderer.DiffuseColor = Color.White.ToVector3() * World.BrightnessModifier;
+			    
+			    entity.Update(args);
 		    }
 	    }
 

@@ -38,6 +38,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BeToJE", "Tools\BeToJE\BeTo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MCJavaTest", "Testing\MCJavaTest\MCJavaTest.csproj", "{68EAA4D3-4546-494B-803B-9308FE898A50}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Other", "Other", "{5339DA92-BA8E-441B-AF71-27B75FEEC760}"
+ProjectSection(SolutionItems) = preProject
+	..\Directory.Build.props = ..\Directory.Build.props
+EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Appveyor|Any CPU = Appveyor|Any CPU

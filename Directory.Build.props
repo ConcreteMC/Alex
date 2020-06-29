@@ -2,4 +2,39 @@
 	<PropertyGroup>
 		<RuntimeIdentifiers>win-x64;linux-x64;osx-x64</RuntimeIdentifiers>
 	</PropertyGroup>
+
+	<Choose>
+		<When Condition="$(DefineConstants.Contains(ANDROID))">
+			<PropertyGroup>
+				<TargetFramework>MonoAndroid9.0</TargetFramework>
+			</PropertyGroup>
+			<ItemGroup>
+				<PackageReference Include="MonoGame.Framework.Android" Version="3.8.0.1375-develop" />
+			</ItemGroup>
+		</When>
+		<When Condition="$(DefineConstants.Contains(IOS))">
+			<PropertyGroup>
+				<TargetFramework>Xamarin.iOS10</TargetFramework>
+			</PropertyGroup>
+			<ItemGroup>
+				<PackageReference Include="MonoGame.Framework.iOS" Version="3.8.0.1375-develop" />
+			</ItemGroup>
+		</When>
+		<When Condition="$(DefineContstants.Contains(DIRECTX))">
+			<PropertyGroup>
+				<TargetFramework>netcoreapp3.1</TargetFramework>
+			</PropertyGroup>
+			<ItemGroup>
+				<PackageReference Include="MonoGame.Framework.WindowsDX" Version="3.8.0.1375-develop" />
+			</ItemGroup>
+		</When>
+		<Otherwise>
+			<PropertyGroup>
+				<TargetFramework>netcoreapp3.1</TargetFramework>
+			</PropertyGroup>
+			<ItemGroup>
+				<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.0.1375-develop" />
+			</ItemGroup>
+		</Otherwise>
+	</Choose>
 </Project>

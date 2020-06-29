@@ -1,18 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
     <Platforms>AnyCPU;x64</Platforms>
     <Configurations>Debug;Release;Appveyor</Configurations>
   </PropertyGroup>
 
   <PropertyGroup>
     <LangVersion>8</LangVersion>
-    <MonoGamePlatform>DesktopGL</MonoGamePlatform>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.0.1375-develop" />
-  </ItemGroup>
-
 </Project>

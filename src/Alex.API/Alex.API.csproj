@@ -1,10 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <FileUpgradeFlags>
-    </FileUpgradeFlags>
-    <UpgradeBackupLocation>
-    </UpgradeBackupLocation>
     <OldToolsVersion>2.0</OldToolsVersion>
     <LangVersion>7.3</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -16,7 +11,6 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.4" />
     <PackageReference Include="MiNET" Version="1.0.2100" />
     <PackageReference Include="MiNET.fnbt" Version="1.0.22" />
-    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.0.1375-develop" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="NLog" Version="4.7.2" />
     <PackageReference Include="Portable.BouncyCastle" Version="1.8.5" />
@@ -24,6 +18,7 @@
     <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta0009" />
     <PackageReference Include="Tmds.DBus" Version="0.8.0" />
   </ItemGroup>
+  
   <ItemGroup>
     <Folder Include="Gui\Events\" />
     <Folder Include="Gui\Abstractions\" />
