@@ -15,6 +15,7 @@ using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks;
 using Alex.Entities;
+using Alex.Entities.Projectiles;
 using Alex.Gamestates;
 using Alex.Graphics.Models.Entity;
 using Alex.Items;

@@ -1,4 +1,5 @@
 using Alex.Net;
+using Alex.Networking.Java.Packets.Play;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 
@@ -11,6 +12,37 @@ namespace Alex.Entities
 			(int) EntityType.ArmorStand, level, network)
 		{
 			
+		}
+
+		/// <inheritdoc />
+		protected override void HandleJavaMeta(MetaDataEntry entry)
+		{
+			base.HandleJavaMeta(entry);
+			
+			if (entry.Index >= 15 && entry.Index <= 20 && entry is MetadataRotation rotation)
+			{
+				switch (entry.Index)
+				{
+					case 15: //Head
+						SetHeadRotation(rotation.Rotation);
+						break;
+					case 16: //Body
+						SetBodyRotation(rotation.Rotation);
+						break;
+					case 17: //Left Arm
+						SetArmRotation(rotation.Rotation, true);
+						break;
+					case 18: //Right Arm
+						SetArmRotation(rotation.Rotation, false);
+						break;
+					case 19: //Left Leg
+						SetLegRotation(rotation.Rotation, true);
+						break;
+					case 20: //Right Leg
+						SetLegRotation(rotation.Rotation, false);
+						break;
+				}
+			}
 		}
 
 		public void SetHeadRotation(Vector3 rotation)

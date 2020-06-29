@@ -78,7 +78,7 @@ namespace Alex.Networking.Java.Packets.Play
 						    meta = new MetadataRotation(index, new Vector3(stream.ReadFloat(),stream.ReadFloat(), stream.ReadFloat()));
 						    break;
 					    case MetadataType.Position:
-						    stream.ReadPosition();
+						    meta = new MetadataPosition(index, stream.ReadPosition());
 						    break;
 					    case MetadataType.OptPosition:
 						    if (stream.ReadBool())
@@ -202,6 +202,17 @@ namespace Alex.Networking.Java.Packets.Play
 	    }
     }
 
+    public class MetadataPosition : MetaDataEntry
+    {
+	    public Vector3 Position { get; set; }
+	    
+	    /// <inheritdoc />
+	    public MetadataPosition(byte index, Vector3 position) : base(index, MetadataType.Position)
+	    {
+		    Position = position;
+	    }
+    }
+    
     public class MetadataRotation : MetaDataEntry
     {
 	    public Vector3 Rotation { get; }

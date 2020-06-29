@@ -48,9 +48,6 @@ namespace Alex.Entities
         public bool HasAdjacentRaytrace = false;
         public bool HasRaytraceResult = false;
 
-        public bool IsFirstPersonMode { get; set; } = false;
-        public bool IsLeftyHandy { get; set; } = false;
-        
         public bool IsWorldImmutable { get; set; } = false;
         public bool IsNoPvP { get; set; } = true;
         public bool IsNoPvM { get; set; } = true;

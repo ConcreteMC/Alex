@@ -72,7 +72,6 @@ namespace Alex.Worlds
 					if (entity is Entity e)
 					{
 						if (e.NoAi) continue;
-
 						
 						UpdateEntity(e, dt);
 						
@@ -203,33 +202,6 @@ namespace Alex.Worlds
 
 				if (solidBlocks.Length > 0)
 				{
-					/*if (!e.IsFlying && velocity.Y >= 0f)
-					{
-						var matchingBlocks = solidBlocks
-						   .Where(x => x.block.Solid && x.box.Max.Y > preview.Y && x.block.CanCollide()).ToArray();
-
-						if (matchingBlocks.Length > 0)
-						{
-							var grouped = matchingBlocks.GroupBy(x => x.coordinates);//.Max(x => x.Key.Y).Min(x => x..box.Max.Y);
-
-							float closest = 10000f;
-							foreach (var group in grouped)
-							{
-								var heighest = group.MinBy(x => x.box.Max.Y);
-								if (heighest.box.Max.Y < closest && MathF.Abs(preview.Y - heighest.box.Max.Y) <= 0.6D)
-								{
-									closest = heighest.box.Max.Y;
-								}
-							}
-							
-							if (MathF.Abs(preview.Y - closest) <= 0.55D)
-							{
-								//TODO: Can we fit?
-								e.KnownPosition.Y = closest;// + 0.005f;
-								position.Y = closest;// + 0.005f;
-							}
-						}
-					}*/
 					if (AdjustForY(e,
 						originalEntityBoundingBox, e.GetBoundingBox(new Vector3(position.X, preview.Y, position.Z)),
 						blocks, ref velocity, out var yCollisionPoint, ref position))
@@ -249,15 +221,6 @@ namespace Alex.Worlds
 						blocks, ref velocity, out var zCollisionPoint, ref position))
 					{
 						e.CollidedWithWorld(before.Z < 0 ? Vector3.Backward : Vector3.Forward, zCollisionPoint);
-					}
-
-					if (velocity.Y >= 0f && position.Y > originalPosition.Y)
-					{
-						//preview.Y = position.Y;
-					}
-					else
-					{
-						
 					}
 
 					Hit.AddRange(solidBlocks.Select(x => x.box));
@@ -641,26 +604,6 @@ namespace Alex.Worlds
 			    
 			    blocks = b.ToArray();
 			    return (b.Count > 0);
-		    }
-		    
-		    public bool Intersects(BoundingBox box, out Vector3 collisionPoint, out (Block block, BoundingBox box) block)
-		    {
-			    foreach (var point in GetPoints())
-			    {
-				    foreach (var corner in box.GetCorners())
-				    {
-					    if (point.box.Contains(corner) == ContainmentType.Contains)
-					    {
-						    collisionPoint = corner;
-						    block = point;
-						    return true;
-					    }
-				    }
-			    }
-			    
-			    collisionPoint = default;
-			    block = default;
-			    return false;
 		    }
 	    }
     }

@@ -20,6 +20,7 @@ using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks;
 using Alex.Entities;
+using Alex.Entities.Projectiles;
 using Alex.Gamestates;
 using Alex.Graphics.Models.Entity;
 using Alex.Gui.Dialogs.Containers;
@@ -985,7 +986,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			}).Start();*/
 		}
 
-		private Item GetItemFromSlotData(SlotData data)
+		public static Item GetItemFromSlotData(SlotData data)
 		{
 			if (data == null)
 				return new ItemAir();
@@ -1054,64 +1055,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				packet.FinishReading();
 				foreach (var entry in packet.Entries)
 				{
-					if (entry.Index == 0 && entry is MetadataByte flags)
-					{
-						entity.IsOnFire = flags.Value.IsBitSet(0x01);
-						entity.IsSneaking = flags.Value.IsBitSet(0x02);
-						entity.IsSprinting = flags.Value.IsBitSet(0x08);
-						entity.IsInvisible = flags.Value.IsBitSet(0x20);
-					}
-					else if (entry.Index == 2 && entry is MetadataOptChat customName)
-					{
-						if (customName.HasValue)
-						{
-							entity.NameTag = customName.Value.RawMessage;
-						}
-					}
-					else if (entry.Index == 3 && entry is MetadataBool showNametag)
-					{
-						if (!(entity is PlayerMob))
-						{
-							entity.HideNameTag = !showNametag.Value;
-						}
-					}
-					else if (entry.Index == 5 && entry is MetadataBool noGravity)
-					{
-						entity.IsAffectedByGravity = !noGravity.Value;
-					}
-					else if (entry.Index == 7 && entity is ItemEntity itemEntity && entry is MetadataSlot slot)
-					{
-						var item = GetItemFromSlotData(slot.Value);
-						if (item != null)
-						{
-							itemEntity.SetItem(item);
-						}
-					}
-					else if (entry.Index >= 15 && entry.Index <= 20 && entry is MetadataRotation rotation
-					         && entity is EntityArmorStand armorStand)
-					{
-						switch (entry.Index)
-						{
-							case 15: //Head
-								armorStand.SetHeadRotation(rotation.Rotation);
-								break;
-							case 16: //Body
-								armorStand.SetBodyRotation(rotation.Rotation);
-								break;
-							case 17: //Left Arm
-								armorStand.SetArmRotation(rotation.Rotation, true);
-								break;
-							case 18: //Right Arm
-								armorStand.SetArmRotation(rotation.Rotation, false);
-								break;
-							case 19: //Left Leg
-								armorStand.SetLegRotation(rotation.Rotation, true);
-								break;
-							case 20: //Right Leg
-								armorStand.SetLegRotation(rotation.Rotation, false);
-								break;
-						}
-					}
+					entity.HandleJavaMetadata(entry);
 				}
 
 				//entity.IsSneaking = ((packet. & 0x200) == 0x200);

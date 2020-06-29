@@ -4,6 +4,7 @@ using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.Graphics.Models.Entity;
 using Alex.Net;
+using Alex.Networking.Java.Packets.Play;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
 using Alex.Worlds;
@@ -23,6 +24,10 @@ namespace Alex.Entities
 
 		public string Name { get; }
 		public string GeometryName { get; set; }
+		
+		public bool IsFirstPersonMode { get; set; } = false;
+		public bool IsLeftyHandy      { get; set; } = false;
+		
 		public PlayerMob(string name, World level, NetworkProvider network, PooledTexture2D skinTexture, string geometry = "geometry.humanoid.customSlim") : base(63, level, network)
 		{
 			//DoRotationCalculations = false;
@@ -68,6 +73,17 @@ namespace Alex.Entities
 			} 
 		}
 
+		/// <inheritdoc />
+		protected override void HandleJavaMeta(MetaDataEntry entry)
+		{
+			base.HandleJavaMeta(entry);
+
+			if (entry.Index == 17 && entry is MetadataByte metaByte)
+			{
+				IsLeftyHandy = metaByte.Value == 0;
+			}
+		}
+
 		public void UpdateGamemode(Gamemode gamemode)
 		{
 			Gamemode = gamemode;
@@ -110,10 +126,11 @@ namespace Alex.Entities
 			}*/
 		}
 
-		public override string ToString()
+		/*public override string ToString()
 		{
 			return
 				$"Valid: {ModelRenderer.Valid} | {ModelRenderer.Texture.Height} x {ModelRenderer.Texture.Width} | Height: {Height} | Model: {GeometryName} -- {ValidModel}";
 		}
+	*/
 	}
 }

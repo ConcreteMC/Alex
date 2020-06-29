@@ -1,16 +1,15 @@
-using System;
 using Alex.API.Graphics;
-using Alex.API.Network;
 using Alex.Graphics.Models.Items;
 using Alex.Items;
 using Alex.Net;
+using Alex.Networking.Java.Packets.Play;
 using Alex.ResourcePackLib.Json.Models.Items;
-using Alex.Utils;
 using Alex.Worlds;
+using Alex.Worlds.Multiplayer.Java;
 using Microsoft.Xna.Framework;
 using NLog;
 
-namespace Alex.Entities
+namespace Alex.Entities.Projectiles
 {
     public class ItemEntity : Entity
     {
@@ -21,8 +20,26 @@ namespace Alex.Entities
             Width = 0.25;
             Height = 0.25;
             Length = 0.25;
+            
+            Gravity = 0.04;
+            Drag = 0.02;
         }
-        
+
+        /// <inheritdoc />
+        protected override void HandleJavaMeta(MetaDataEntry entry)
+        {
+            base.HandleJavaMeta(entry);
+            
+            if (entry.Index == 7 && entry is MetadataSlot slot)
+            {
+                var item = JavaWorldProvider.GetItemFromSlotData(slot.Value);
+                if (item != null)
+                {
+                    SetItem(item);
+                }
+            }
+        }
+
         protected new IItemRenderer ItemRenderer { get; set; } = null;
         private bool CanRender { get; set; } = false;
         public virtual void SetItem(Item item)

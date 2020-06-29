@@ -14,6 +14,7 @@ using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Entity.Animations;
 using Alex.Graphics.Models.Items;
 using Alex.Net;
+using Alex.Networking.Java.Packets.Play;
 using Alex.ResourcePackLib.Json.Models.Items;
 using Alex.Utils;
 using Alex.Utils.Inventories;
@@ -25,6 +26,9 @@ using NLog;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
 using MathF = System.MathF;
+using MetadataByte = Alex.Networking.Java.Packets.Play.MetadataByte;
+using MetadataFloat = MiNET.Utils.MetadataFloat;
+using MetadataString = MiNET.Utils.MetadataString;
 using PlayerLocation = Alex.API.Utils.PlayerLocation;
 using UUID = Alex.API.Utils.UUID;
 
@@ -242,7 +246,7 @@ namespace Alex.Entities
 
 		            ItemRenderer = renderer;
 					
-		            if (this is Player p)
+		            if (this is PlayerMob p)
 		            {
 			            var pos = renderer.DisplayPosition;
 			            //if (pos.HasFlag(DisplayPosition.FirstPerson) || pos.HasFlag(DisplayPosition.ThirdPerson))
@@ -353,6 +357,41 @@ namespace Alex.Entities
 		public bool RenderEntity { get; set; } = true;
 		public bool ShowItemInHand { get; set; } = false;
 
+		public void HandleJavaMetadata(MetaDataEntry entry)
+		{
+			if (entry.Index == 0 && entry is MetadataByte flags)
+			{
+				IsOnFire = (flags.Value & 0x01) != 0;
+				IsSneaking = (flags.Value & 0x02) != 0;
+				IsSprinting = (flags.Value & 0x08) != 0;
+				IsInvisible = (flags.Value & 0x20) != 0;
+			}
+			else if (entry.Index == 2 && entry is MetadataOptChat customName)
+			{
+				if (customName.HasValue)
+				{
+					NameTag = customName.Value.RawMessage;
+				}
+			}
+			else if (entry.Index == 3 && entry is MetadataBool showNametag)
+			{
+				HideNameTag = !showNametag.Value;
+			}
+			else if (entry.Index == 5 && entry is MetadataBool noGravity)
+			{
+				IsAffectedByGravity = !noGravity.Value;
+			}
+			else
+			{
+				HandleJavaMeta(entry);
+			}
+		}
+
+		protected virtual void HandleJavaMeta(MetaDataEntry entry)
+		{
+			
+		}
+		
 		public void HandleMetadata(MetadataDictionary metadata)
 		{
 			foreach (var meta in metadata._entries)
