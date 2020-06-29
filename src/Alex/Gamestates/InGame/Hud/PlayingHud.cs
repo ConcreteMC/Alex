@@ -29,6 +29,7 @@ namespace Alex.Gamestates.InGame.Hud
         
 	    public readonly ChatComponent Chat;
 	    public readonly TitleComponent Title;
+	    public readonly ScoreboardView Scoreboard;
         private PlayerInputManager InputManager => _playerController.InputManager;
 
 		private Alex Alex { get; }
@@ -82,6 +83,9 @@ namespace Alex.Gamestates.InGame.Hud
 	        _tipPopupComponent = new TipPopupComponent();
 	        _tipPopupComponent.Anchor = Alignment.BottomCenter;
 	        _tipPopupComponent.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+	        
+	        Scoreboard = new ScoreboardView();
+	        Scoreboard.Anchor = Alignment.MiddleRight;
         }
 
         protected override void OnInit(IGuiRenderer renderer)

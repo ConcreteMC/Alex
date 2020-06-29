@@ -242,8 +242,8 @@ namespace Alex.Networking.Java.Packets
 			Register<ChatMessagePacket>(Direction.ServerBound, ConnectionState.Play, 0x01);
 
 		//	Register(Direction.ClientBound, ConnectionState.Play, 0x03, () => new SpawnMob());
-		//Register(Direction.ClientBound,ConnectionState.Play, 0x00, () => new SpawnEntity());
-		Register(Direction.ClientBound, ConnectionState.Play, 0x02, () => new SpawnLivingEntity());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x00, () => new SpawnEntity());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x02, () => new SpawnLivingEntity());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x04, () => new SpawnPlayerPacket());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x05, () => new EntityAnimationPacket());
 			
@@ -289,12 +289,18 @@ namespace Alex.Networking.Java.Packets
 
 			Register(Direction.ClientBound, ConnectionState.Play, 0x3F, () => new HeldItemChangePacket());
 			
-			//Register(Direction.ClientBound, ConnectionState.Play, 0x44, () => new EntityMetadataPacket());
-			//Register(Direction.ClientBound, ConnectionState.Play, 0x46, () => new EntityVelocity());
-			
+			Register(Direction.ClientBound, ConnectionState.Play, 0x40, () => new UpdateViewPositionPacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x41, () => new UpdateViewDistancePacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x42, () => new SpawnPositionPacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x43, () => new DisplayScoreboardPacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x44, () => new EntityMetadataPacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x46, () => new EntityVelocity());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x47, () => new EntityEquipmentPacket());
-			//Register(Direction.ClientBound, ConnectionState.Play, 0x49, () => new UpdateHealthPacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x48, () => new SetExperiencePacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x49, () => new UpdateHealthPacket());
 			
+			Register(Direction.ClientBound, ConnectionState.Play, 0x4A, () => new ScoreboardObjectivePacket());
+			Register(Direction.ClientBound, ConnectionState.Play, 0x4c, () => new TeamsPacket());
 			Register(Direction.ClientBound, ConnectionState.Play, 0x4E, () => new TimeUpdatePacket());
 			
 			Register(Direction.ClientBound, ConnectionState.Play, 0x4F, () => new TitlePacket());

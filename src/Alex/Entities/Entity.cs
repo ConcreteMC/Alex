@@ -456,9 +456,9 @@ namespace Alex.Entities
 
 			long rendered = 0;
 
-			if (RenderEntity || ShowItemInHand)
+			if ((RenderEntity && !IsInvisible) || ShowItemInHand)
 			{
-				ModelRenderer.Render(renderArgs, KnownPosition, !RenderEntity);
+				ModelRenderer.Render(renderArgs, KnownPosition, !RenderEntity || IsInvisible);
 
 				if (ModelRenderer.Valid)
 				{
@@ -479,7 +479,7 @@ namespace Alex.Entities
 		{
 			var now = DateTime.UtcNow;
 
-            if (RenderEntity || ShowItemInHand)
+            if ((RenderEntity && !IsInvisible) || ShowItemInHand)
             {
                 ModelRenderer.Update(args, KnownPosition);
 
@@ -487,39 +487,15 @@ namespace Alex.Entities
                 
                 if (ShowItemInHand)
                 {
-                    //CheckHeldItem();
+	                ItemRenderer?.Update(Matrix.Identity *
+	                                     Matrix.CreateScale(Scale) *
+	                                     Matrix.CreateRotationY(MathHelper.ToRadians(180f - KnownPosition.HeadYaw)) *
+	                                     Matrix.CreateTranslation(KnownPosition.X, KnownPosition.Y, KnownPosition.Z), new PlayerLocation(KnownPosition.X, KnownPosition.Y, KnownPosition.Z, 180f - KnownPosition.HeadYaw, 180f - KnownPosition.Yaw, KnownPosition.Pitch));
 
-                    //Matrix.CreateRotationY(MathUtils.ToRadians((-KnownPosition.HeadYaw)))
-                    //			ItemRenderer?.Update(Matrix.CreateRotationY(MathUtils.ToRadians(180f - KnownPosition.HeadYaw)) * Matrix.CreateTranslation(KnownPosition));
-                 //   ItemRenderer?.Update(null, new PlayerLocation(KnownPosition.X, KnownPosition.Y, KnownPosition.Z, 180f - KnownPosition.HeadYaw, 180f - KnownPosition.Yaw, KnownPosition.Pitch));
-
-                 if (_rightArmModel != null && ItemRenderer != null)
-                 {
-	                 //ItemRenderer.Rotation = _rightArmModel.Rotation;
-                 }
-
-                 ItemRenderer?.Update(Matrix.Identity *
-                                      Matrix.CreateScale(Scale) *
-                                      Matrix.CreateRotationY(MathHelper.ToRadians(180f - KnownPosition.HeadYaw)) *
-                                      Matrix.CreateTranslation(KnownPosition.X, KnownPosition.Y, KnownPosition.Z), new PlayerLocation(KnownPosition.X, KnownPosition.Y, KnownPosition.Z, 180f - KnownPosition.HeadYaw, 180f - KnownPosition.Yaw, KnownPosition.Pitch));
-                    //ItemRenderer?.World = 
                     ItemRenderer?.Update(args.GraphicsDevice, args.Camera);
                 }
             }
-
-      /*      if (now.Subtract(LastUpdatedTime).TotalMilliseconds >= 50)
-            {
-                LastUpdatedTime = now;
-                try
-                {
-                    OnTick();
-                }
-                catch (Exception e)
-                {
-                    Log.Warn(e, $"Exception while trying to tick entity!");
-                }
-            }*/
-        }
+		}
 
         public void UpdateHeadYaw(float rotation)
         {

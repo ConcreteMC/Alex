@@ -405,7 +405,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		public Entity SpawnMob(int entityId, Guid uuid, EntityType type, PlayerLocation position, Vector3 velocity)
 		{
-			if ((int) type == 35) //Item
+			if ((int) type == 37) //Item
 			{
 				ItemEntity itemEntity = new ItemEntity(null, NetworkProvider);
 				itemEntity.EntityId = entityId;
@@ -429,13 +429,19 @@ namespace Alex.Worlds.Multiplayer.Java
 			Entity entity = null;
 			if (EntityFactory.ModelByNetworkId((long) type, out var renderer, out EntityData knownData))
 			{
-				if (Enum.TryParse(knownData.Name, out type))
+				if (Enum.TryParse<EntityType>(knownData.Name, true, out var realType))
 				{
-					entity = type.Create(null);
+					type = realType;
+					entity = realType.Create(null);
+				}
+				else
+				{
+					Log.Warn($"Entity not registered: {knownData.Name}");
 				}
 
 				if (entity == null)
 				{
+					Log.Warn($"Could not map entity: {knownData.Name}");
 					entity = new Entity((int) type, null, NetworkProvider);
 				}
 
@@ -452,6 +458,12 @@ namespace Alex.Worlds.Multiplayer.Java
 					entity.NameTag = knownData.Name;
 				}
             }
+			else
+			{
+				Log.Warn($"Could not create entity of type: {(int) type}:{(knownData != null ? knownData.Name : type.ToString())} (Missing entityfactory mapping...)");
+
+				return null;
+			}
 
 			if (entity == null)
 			{
@@ -698,6 +710,10 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 				HandleWindowConfirmationPacket(confirmationPacket);
 			}
+			else if (packet is SpawnPositionPacket spawnPositionPacket)
+			{
+				HandleSpawnPositionPacket(spawnPositionPacket);
+			}
 			else
 			{
 				if (UnhandledPackets.TryAdd(packet.PacketId, packet.GetType()))
@@ -705,6 +721,11 @@ namespace Alex.Worlds.Multiplayer.Java
 					Log.Warn($"Unhandled packet: 0x{packet.PacketId:x2} - {packet.ToString()}");
 				}
 			}
+		}
+
+		private void HandleSpawnPositionPacket(SpawnPositionPacket packet)
+		{
+			_spawn = packet.SpawnPosition;
 		}
 		
 		private void InventoryOnCursorChanged(object sender, CursorChangedEventArgs e)
@@ -1035,7 +1056,9 @@ namespace Alex.Worlds.Multiplayer.Java
 				{
 					if (entry.Index == 0 && entry is MetadataByte flags)
 					{
+						entity.IsOnFire = flags.Value.IsBitSet(0x01);
 						entity.IsSneaking = flags.Value.IsBitSet(0x02);
+						entity.IsSprinting = flags.Value.IsBitSet(0x08);
 						entity.IsInvisible = flags.Value.IsBitSet(0x20);
 					}
 					else if (entry.Index == 2 && entry is MetadataOptChat customName)
@@ -1062,6 +1085,31 @@ namespace Alex.Worlds.Multiplayer.Java
 						if (item != null)
 						{
 							itemEntity.SetItem(item);
+						}
+					}
+					else if (entry.Index >= 15 && entry.Index <= 20 && entry is MetadataRotation rotation
+					         && entity is EntityArmorStand armorStand)
+					{
+						switch (entry.Index)
+						{
+							case 15: //Head
+								armorStand.SetHeadRotation(rotation.Rotation);
+								break;
+							case 16: //Body
+								armorStand.SetBodyRotation(rotation.Rotation);
+								break;
+							case 17: //Left Arm
+								armorStand.SetArmRotation(rotation.Rotation, true);
+								break;
+							case 18: //Right Arm
+								armorStand.SetArmRotation(rotation.Rotation, false);
+								break;
+							case 19: //Left Leg
+								armorStand.SetLegRotation(rotation.Rotation, true);
+								break;
+							case 20: //Right Leg
+								armorStand.SetLegRotation(rotation.Rotation, false);
+								break;
 						}
 					}
 				}
@@ -1239,7 +1287,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			if (_players.TryGetValue(new UUID(packet.Uuid.ToByteArray()), out PlayerMob mob))
 			{
 				float yaw = MathUtils.AngleToNotchianDegree(packet.Yaw);
-				mob.KnownPosition = new PlayerLocation(packet.X, packet.Y, packet.Z, yaw, yaw, MathUtils.AngleToNotchianDegree(packet.Pitch));
+				mob.KnownPosition = new PlayerLocation(packet.X, packet.Y, packet.Z, yaw, yaw, -MathUtils.AngleToNotchianDegree(packet.Pitch));
 				mob.EntityId = packet.EntityId;
 				mob.IsSpawned = true;
 
@@ -1371,7 +1419,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				MathUtils.FromFixedPoint(packet.DeltaZ),
 				yaw, 
 				yaw,
-				MathUtils.AngleToNotchianDegree(packet.Pitch))
+				-MathUtils.AngleToNotchianDegree(packet.Pitch))
 			{
 				OnGround = packet.OnGround
 			}, true, true, true);
@@ -1405,7 +1453,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			if (packet.EntityId == World.Player.EntityId)
 				return;
 			
-			World.UpdateEntityLook(packet.EntityId, MathUtils.AngleToNotchianDegree(packet.Yaw), MathUtils.AngleToNotchianDegree(packet.Pitch), packet.OnGround);
+			World.UpdateEntityLook(packet.EntityId, MathUtils.AngleToNotchianDegree(packet.Yaw), -MathUtils.AngleToNotchianDegree(packet.Pitch), packet.OnGround);
 		}
 
 		private void HandleEntityTeleport(EntityTeleport packet)
@@ -1414,7 +1462,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				return;
 			
 			float yaw = MathUtils.AngleToNotchianDegree(packet.Yaw);
-			World.UpdateEntityPosition(packet.EntityID, new PlayerLocation(packet.X, packet.Y, packet.Z, yaw, yaw, MathUtils.AngleToNotchianDegree(packet.Pitch))
+			World.UpdateEntityPosition(packet.EntityID, new PlayerLocation(packet.X, packet.Y, packet.Z, yaw, yaw, -MathUtils.AngleToNotchianDegree(packet.Pitch))
 			{
 				OnGround = packet.OnGround
 			}, updateLook: true, updatePitch:true);

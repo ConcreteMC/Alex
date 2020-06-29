@@ -1,4 +1,6 @@
-﻿namespace Alex.Entities
+﻿using Newtonsoft.Json;
+
+namespace Alex.Entities
 {
 	using J = Newtonsoft.Json.JsonPropertyAttribute;
 
@@ -12,5 +14,8 @@
 	    [J("height")] public long Height { get; set; }
 	    [J("type")] public string Type { get; set; }
 	    [J("category")] public string Category { get; set; }
+	    
+	    [JsonIgnore]
+	    public string OriginalName { get; set; }
     }
 }

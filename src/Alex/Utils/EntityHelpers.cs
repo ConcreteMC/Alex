@@ -1,6 +1,7 @@
 ﻿using Alex.Entities;
 using Alex.Entities.Hostile;
 using Alex.Entities.Passive;
+using Alex.Entities.Throwable;
 using Alex.Worlds;
 
 namespace Alex.Utils
@@ -140,6 +141,18 @@ namespace Alex.Utils
 					break;
 				case EntityType.FallingBlock:
 					entity = new EntityFallingBlock(world, null);
+					break;
+				case EntityType.ArmorStand:
+					entity = new EntityArmorStand(world, null);
+					break;
+				case EntityType.Arrow:
+					entity = new ArrowEntity(world, null);
+					break;
+				case EntityType.Item:
+					entity = new ItemEntity(world, null);
+					break;
+				case EntityType.Mooshroom:
+					entity = new Mooshroom(world);
 					break;
 				//case EntityType.Human:
 					//entity = new PlayerMob("test", world, );

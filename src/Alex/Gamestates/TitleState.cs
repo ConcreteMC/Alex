@@ -176,6 +176,14 @@ namespace Alex.Gamestates
 
 			_playerProfileService = Alex.Services.GetService<IPlayerProfileService>();
 			_playerProfileService.ProfileChanged += PlayerProfileServiceOnProfileChanged;
+			
+			/*ScoreboardView scoreboardView;
+			AddChild(scoreboardView = new ScoreboardView());
+			scoreboardView.Anchor = Alignment.MiddleRight;
+			
+			scoreboardView.AddString("Title");
+			scoreboardView.AddRow("Key", "200");
+			scoreboardView.AddRow("Key 2", "200");*/
 		}
 
 		private void MultiplayerButtonPressed(object sender, MenuItemClickedEventArgs e)

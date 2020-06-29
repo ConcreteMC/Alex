@@ -41,10 +41,13 @@ namespace Alex.Entities
             for (int i = 0; i < entityObjects.Length; i++)
 			{
                 EntityData p = entityObjects[i];
-
+                var originalName = p.Name;
+                p.OriginalName = originalName;
+                p.Name = p.Name.Replace("_", "");
+                
                 long id = 0;
 				progressReceiver?.UpdateProgress(100 * (i / entityObjects.Length), "Loading entity data...", p.Name);
-				if (resourceManager.Registries.Entities.Entries.TryGetValue($"minecraft:{p.Name}",
+				if (resourceManager.Registries.Entities.Entries.TryGetValue($"minecraft:{originalName}",
 					out var registryEntry))
                 {
                     id = registryEntry.ProtocolId;
@@ -57,7 +60,7 @@ namespace Alex.Entities
                     id = unknownId++;
                 }
 
-                if (EntityType.TryParse(p.Name.Replace("_", ""), true, out EntityType entType))
+                if (EntityType.TryParse(p.Name, true, out EntityType entType))
                 {
                     typeToId.TryAdd(entType, id);
                 }
@@ -133,7 +136,7 @@ namespace Alex.Entities
                 }
 				else
 				{
-					//Log.Warn($"No renderer found for {data.Name}");
+					Log.Warn($"No renderer found for {data.Name}");
 				}
 			}
 
@@ -155,13 +158,13 @@ namespace Alex.Entities
 
 		private static EntityModelRenderer TryGetRendererer(EntityData data, PooledTexture2D texture)
 		{
-			if (_registeredRenderers.TryGetValue(data.Name, out var func))
+			if (_registeredRenderers.TryGetValue(data.OriginalName, out var func))
 			{
 				return func(texture);
 			}
 			else
 			{
-				var f = _registeredRenderers.FirstOrDefault(x => x.Key.ToLowerInvariant().Contains(data.Name.ToLowerInvariant())).Value;
+				var f = _registeredRenderers.FirstOrDefault(x => x.Key.ToLowerInvariant().Contains(data.OriginalName.ToLowerInvariant())).Value;
 
 				if (f != null)
 				{

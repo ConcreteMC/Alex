@@ -4,6 +4,7 @@ using System.IO;
 using Alex.API.Data;
 using Alex.API.Utils;
 using Alex.Networking.Java.Util;
+using Microsoft.Xna.Framework;
 
 namespace Alex.Networking.Java.Packets.Play
 {
@@ -74,9 +75,7 @@ namespace Alex.Networking.Java.Packets.Play
 						    meta =new MetadataBool(index, stream.ReadBool());
 						    break;
 					    case MetadataType.Rotation:
-						    stream.ReadFloat();
-						    stream.ReadFloat();
-						    stream.ReadFloat();
+						    meta = new MetadataRotation(index, new Vector3(stream.ReadFloat(),stream.ReadFloat(), stream.ReadFloat()));
 						    break;
 					    case MetadataType.Position:
 						    stream.ReadPosition();
@@ -200,6 +199,17 @@ namespace Alex.Networking.Java.Packets.Play
 	    public MetadataString(byte index, string value) : base(index, MetadataType.String)
 	    {
 		    Value = value;
+	    }
+    }
+
+    public class MetadataRotation : MetaDataEntry
+    {
+	    public Vector3 Rotation { get; }
+	    
+	    /// <inheritdoc />
+	    public MetadataRotation(byte index, Vector3 rotation) : base(index, MetadataType.Rotation)
+	    {
+		    Rotation = rotation;
 	    }
     }
     
