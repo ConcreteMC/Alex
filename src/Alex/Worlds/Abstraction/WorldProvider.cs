@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Alex.API.Entities;
 using Alex.API.Gui.Elements;
 using Alex.API.World;
+using Alex.Gui.Elements;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Worlds.Abstraction
@@ -13,6 +14,7 @@ namespace Alex.Worlds.Abstraction
 
 		protected World  World  { get; set; }
 		public    ITitleComponent TitleComponent { get; set; }
+		public ScoreboardView ScoreboardView { get; set; }
 		protected WorldProvider()
 		{
 			

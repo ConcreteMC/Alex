@@ -1777,12 +1777,43 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeSetDisplayObjective(McpeSetDisplayObjective message)
 		{
-			UnhandledPackage(message);
+			var scoreboard = WorldProvider?.ScoreboardView;
+			if (scoreboard == null)
+				return;
+			
+			switch (message.displaySlot)
+			{
+				case "sidebar":
+					scoreboard.Clear();
+					scoreboard.AddString(message.displayName);
+					break;
+			}
 		}
 
 		public void HandleMcpeSetScore(McpeSetScore message)
 		{
-			UnhandledPackage(message);
+			var scoreboard = WorldProvider?.ScoreboardView;
+			if (scoreboard == null)
+				return;
+			
+			foreach (var entry in message.entries)
+			{
+				if (entry is ScoreEntryChangeFakePlayer fakePlayer)
+				{
+					scoreboard.AddRow($"{fakePlayer.ObjectiveName}:{fakePlayer.Id}", fakePlayer.CustomName, entry.Score);
+				}
+				else if (entry is ScoreEntryChangePlayer player)
+				{
+					if (Client.World.EntityManager.TryGet(player.EntityId, out var playerEntity))
+					{
+						scoreboard.AddRow($"{player.ObjectiveName}:{player.Id}", playerEntity.NameTag, player.Score);
+					}
+				}
+				else if (entry is ScoreEntryRemove remove)
+				{
+					scoreboard.Remove($"{remove.ObjectiveName}:{remove.Id}");
+				}
+			}
 		}
 
 		public void HandleMcpeLabTable(McpeLabTable message)

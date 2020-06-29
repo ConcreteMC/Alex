@@ -1831,7 +1831,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			}
 
 			var cryptoProvider = AsnKeyBuilder.DecodePublicKey(packet.PublicKey);
-			Log.Info($"Crypto: {cryptoProvider == null} Pub: {packet.PublicKey} Shared: {SharedSecret}");
+			//Log.Info($"Crypto: {cryptoProvider == null} Pub: {packet.PublicKey} Shared: {SharedSecret}");
 			var encrypted = cryptoProvider.Encrypt(SharedSecret, RSAEncryptionPadding.Pkcs1);
 
 			EncryptionResponsePacket response = new EncryptionResponsePacket();

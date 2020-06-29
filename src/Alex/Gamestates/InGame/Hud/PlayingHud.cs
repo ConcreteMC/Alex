@@ -119,6 +119,8 @@ namespace Alex.Gamestates.InGame.Hud
 	        //AddChild(_hotbar);
 	        AddChild(new GuiCrosshair());
 	        AddChild(Title);
+	        
+	        AddChild(Scoreboard);
         }
 
         public bool CheckInput { get; set; } = true;

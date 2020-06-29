@@ -67,6 +67,8 @@ namespace Alex.Gamestates.InGame
 			WorldProvider.TitleComponent = title;
 
 			_playingHud = new PlayingHud(Alex, World.Player, title);
+			WorldProvider.ScoreboardView = _playingHud.Scoreboard;
+			
 			_debugInfo = new GuiDebugInfo();
             InitDebugInfo();
             
