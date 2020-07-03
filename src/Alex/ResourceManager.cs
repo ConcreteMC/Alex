@@ -179,23 +179,12 @@ namespace Alex
             }
         }
 
-        private bool CheckRequiredPaths(IProgressReceiver progressReceiver, out byte[] javaResources, out byte[] bedrockResources)
+        private bool CheckBedrockAssets(IProgressReceiver progressReceiver, out byte[] bedrockResources)
         {
 	        bedrockResources = null;
 	        
 			try
 			{
-				Log.Info($"Verifiying assets...");
-				string path = AssetsUtil.EnsureTargetReleaseAsync(JavaProtocol.VersionId, progressReceiver).Result;
-				if (!Storage.TryReadBytes(path, out javaResources))
-				{
-					Log.Error($"Could not load any assets! Are you connected to the internet?");
-
-					javaResources = null;
-					//bedrockResources = null;
-					return false;
-				}
-
 				string bedrockPath = BedrockAssetUtil.CheckAndDownloadResources(progressReceiver).Result;
 				if (string.IsNullOrWhiteSpace(bedrockPath) || !Storage.TryReadBytes(bedrockPath, out bedrockResources))
 				{
@@ -207,13 +196,38 @@ namespace Alex
 			catch (Exception ex)
 			{
 				Log.Error(ex, $"Could not check for latests assets! Are you connected to the internet?");
-				javaResources = null;
-				//bedrockResources = null;
 				return false;
 			}
 
 			return true;
 		}
+
+        private bool CheckJavaAssets(IProgressReceiver progressReceiver, out byte[] javaResources)
+        {
+	        try
+	        {
+		        string path = AssetsUtil.EnsureTargetReleaseAsync(JavaProtocol.VersionId, progressReceiver).Result;
+
+		        if (!Storage.TryReadBytes(path, out javaResources))
+		        {
+			        Log.Error($"Could not load any assets! Are you connected to the internet?");
+
+			        javaResources = null;
+
+			        //bedrockResources = null;
+			        return false;
+		        }
+	        }
+	        catch (Exception ex)
+	        {
+		        Log.Error(ex, $"Could not check for latests assets! Are you connected to the internet?");
+		        javaResources = null;
+		        //bedrockResources = null;
+		        return false;
+	        }
+
+	        return true;
+        }
 
         public string DeviceID { get; private set; } = null;
         private void LoadHWID()
@@ -240,26 +254,32 @@ namespace Alex
 	        LoadHWID();
 	        
 	        PreloadCallback = preloadCallback;
+	        
+	        Log.Info($"Loading registries...");
+	        progressReceiver?.UpdateProgress(0, "Loading registries...");
+	        Registries = JsonConvert.DeserializeObject<Registries>(ReadStringResource("Alex.Resources.registries.json"));
+	        progressReceiver?.UpdateProgress(100, "Loading registries...");
+	        
 			byte[] defaultResources;
 			byte[] defaultBedrock;
 
-			if (!CheckRequiredPaths(progressReceiver, out defaultResources, out defaultBedrock))
+			if (!CheckJavaAssets(progressReceiver, out defaultResources))
 			{
 				return false;
 			}
-
-			Log.Info($"Loading registries...");
-			progressReceiver?.UpdateProgress(0, "Loading registries...");
-			Registries = JsonConvert.DeserializeObject<Registries>(ReadStringResource("Alex.Resources.registries.json"));
-			progressReceiver?.UpdateProgress(100, "Loading registries...");
-
-            Log.Info($"Loading vanilla resources...");
+			
+			Log.Info($"Loading vanilla resources...");
 			using (MemoryStream stream = new MemoryStream(defaultResources))
 			{
 				var vanilla = LoadResourcePack(progressReceiver, stream, false, preloadCallback);
 				vanilla.Manifest.Name = "Vanilla";
 				
 				ActiveResourcePacks.AddFirst(vanilla);
+			}
+
+			if (!CheckBedrockAssets(progressReceiver, out defaultBedrock))
+			{
+				return false;
 			}
 
 			var bedrockPath = Path.Combine("assets", "bedrock");

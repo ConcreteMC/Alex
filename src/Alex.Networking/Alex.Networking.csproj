@@ -4,6 +4,13 @@
     <Configurations>Release;Debug;Appveyor</Configurations>
     <Platforms>x64;AnyCPU</Platforms>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Description>Provides the MC:Java networking implementation in Alex</Description>
+    <Copyright>Kenny van Vulpen - 2020</Copyright>
+    <PackageProjectUrl>https://github.com/kennyvv/Alex</PackageProjectUrl>
+    <PackageLicenseUrl>https://github.com/kennyvv/Alex/blob/master/LICENSE</PackageLicenseUrl>
+    <RepositoryUrl>https://github.com/kennyvv/Alex</RepositoryUrl>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />

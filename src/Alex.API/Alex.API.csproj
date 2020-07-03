@@ -9,7 +9,7 @@
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="2020.1.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.4" />
-    <PackageReference Include="MiNET" Version="1.0.2100" />
+    <PackageReference Include="MiNET" Version="1.0.2106" />
     <PackageReference Include="MiNET.fnbt" Version="1.0.22" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="NLog" Version="4.7.2" />

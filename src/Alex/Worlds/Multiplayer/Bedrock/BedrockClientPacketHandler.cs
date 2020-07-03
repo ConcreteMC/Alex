@@ -872,7 +872,19 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			UnhandledPackage(message);
 		}
 
-		public void HandleMcpeNetworkSettingsPacket(McpeNetworkSettingsPacket message)
+		public void HandleMcpeNetworkSettings(McpeNetworkSettings message)
+		{
+			UnhandledPackage(message);
+		}
+
+		/// <inheritdoc />
+		public void HandleMcpeCreativeContent(McpeCreativeContent message)
+		{
+			UnhandledPackage(message);
+		}
+
+		/// <inheritdoc />
+		public void HandleMcpeItemStackResponse(McpeItemStackResponse message)
 		{
 			UnhandledPackage(message);
 		}
@@ -1826,22 +1838,22 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			UnhandledPackage(message);
 		}
 
-        public void HandleMcpeSetScoreboardIdentityPacket(McpeSetScoreboardIdentityPacket message)
+        public void HandleMcpeSetScoreboardIdentity(McpeSetScoreboardIdentity message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public void HandleMcpeUpdateSoftEnumPacket(McpeUpdateSoftEnumPacket message)
+		public void HandleMcpeUpdateSoftEnum(McpeUpdateSoftEnum message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public void HandleMcpeNetworkStackLatencyPacket(McpeNetworkStackLatencyPacket message)
+		public void HandleMcpeNetworkStackLatency(McpeNetworkStackLatency message)
 		{
 			UnhandledPackage(message);
 		}
 
-		public void HandleMcpeScriptCustomEventPacket(McpeScriptCustomEventPacket message)
+		public void HandleMcpeScriptCustomEvent(McpeScriptCustomEvent message)
 		{
 			UnhandledPackage(message);
 		}

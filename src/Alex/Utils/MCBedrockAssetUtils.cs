@@ -66,6 +66,8 @@ namespace Alex.Utils
                             if (latestVersion != currentVersion ||
                                 (!string.IsNullOrWhiteSpace(assetsZipSavePath) && !Storage.Exists(assetsZipSavePath)))
                             {
+                                progressReceiver?.UpdateProgress(0, "Downloading latest bedrock assets...", "This could take a while...");
+                                
                                 zipDownloadHeaders = await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get,
                                     preRedirectHeaders.Headers.Location), HttpCompletionOption.ResponseContentRead);
                                 var content = await zipDownloadHeaders.Content.ReadAsByteArrayAsync();

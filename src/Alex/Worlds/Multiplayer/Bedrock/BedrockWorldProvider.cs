@@ -286,7 +286,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						}
 					}
 
-					var packet = McpeSetLocalPlayerAsInitializedPacket.CreateObject();
+					var packet = McpeSetLocalPlayerAsInitialized.CreateObject();
 					packet.runtimeEntityId = Client.EntityId;
 
 					Client.SendPacket(packet);
