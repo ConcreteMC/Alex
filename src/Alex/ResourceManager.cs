@@ -157,19 +157,13 @@ namespace Alex
             if (!isFirst)
             {
 	            Atlas.LoadResourcePackOnTop(device,
-		            ActiveResourcePacks.First().TexturesAsBitmaps.Where(x => x.Key.Contains(":block/")).ToArray(),
-		            resourcePack.TexturesAsBitmaps.Where(x => x.Key.Contains(":block/")).ToArray(),
-		            resourcePack.TextureMetas,
+		            ActiveResourcePacks.First(),
+		            resourcePack,
 		            progressReceiver);
             }
             else
             {
-                Atlas.GenerateAtlas(device, resourcePack.TexturesAsBitmaps.Where(x => x.Key.Contains(":block/")).ToArray(),
-	                resourcePack.TextureMetas,
-                    progressReceiver);
-
-
-                //Atlas.Atlas.Save("atlas.png", ImageFormat.Png);
+                Atlas.LoadResourcePack(device, resourcePack, progressReceiver);
             }
 
           //  if (!isFirst)
@@ -436,15 +430,6 @@ namespace Alex
 	        }
 	        
 	        bool isFirst = true;
-	        foreach (var resourcePack in ActiveResourcePacks)
-	        {
-		        Alex.GuiRenderer.LoadLanguages(resourcePack, progress);
-		        
-		        LoadTextures(device, progress, resourcePack, isFirst);
-
-		        if (isFirst)
-			        isFirst = false;
-	        }
 
 	        isFirst = true;
 	        foreach (var resourcePack in ActiveResourcePacks)
@@ -455,6 +440,17 @@ namespace Alex
 			        isFirst = false;
 			        break;
 		        }
+	        }
+
+	        isFirst = true;
+	        foreach (var resourcePack in ActiveResourcePacks)
+	        {
+		        Alex.GuiRenderer.LoadLanguages(resourcePack, progress);
+		        
+		        LoadTextures(device, progress, resourcePack, isFirst);
+
+		        if (isFirst)
+			        isFirst = false;
 	        }
 	        
 	        Alex.GuiRenderer.SetLanguage(Options.AlexOptions.MiscelaneousOptions.Language.Value);

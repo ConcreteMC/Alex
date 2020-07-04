@@ -3,7 +3,6 @@ using JetBrains.Annotations;
 
 namespace Alex.API.Events
 {
-	[MeansImplicitUse]
 	[AttributeUsage(AttributeTargets.Method)]
 	public class EventHandlerAttribute : Attribute
 	{

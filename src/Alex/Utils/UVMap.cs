@@ -22,8 +22,10 @@ namespace Alex.Utils
         public Vector2 BottomLeft;
         public Vector2 BottomRight;
 
+        public bool IsAnimated;
+        
         public UVMap(Vector2 topLeft, Vector2 topRight, Vector2 bottomLeft, Vector2 bottomRight, Color colorSide,
-            Color colorTop, Color colorBottom)
+            Color colorTop, Color colorBottom, bool isAnimated = false)
         {
             TopLeft = topLeft;
             TopRight = topRight;
@@ -38,6 +40,8 @@ namespace Alex.Utils
 
 	        ColorTop = colorTop;
 	        ColorBottom = colorBottom;
+
+            IsAnimated = isAnimated;
         }
 
         public void Rotate(int rot)

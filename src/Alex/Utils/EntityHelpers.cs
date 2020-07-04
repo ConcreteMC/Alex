@@ -160,6 +160,9 @@ namespace Alex.Utils
 				case EntityType.ThrownEgg:
 					entity = new EggEntity(world, null);
 					break;
+				case EntityType.Salmon:
+					entity = new Salmon(world);
+					break;
 				//case EntityType.Human:
 					//entity = new PlayerMob("test", world, );
 				//	break;

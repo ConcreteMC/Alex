@@ -8,12 +8,14 @@ namespace Alex.Utils
 		public int Height { get; } = 16;
 
 		public Vector2 Position { get; } = Vector2.Zero;
+		public bool Animated { get; }
 
-		public TextureInfo(Vector2 position, int width, int height)
+		public TextureInfo(Vector2 position, int width, int height, bool animated)
 		{
 			Position = position;
 			Width = width;
 			Height = height;
+			Animated = animated;
 		}
 	}
 }

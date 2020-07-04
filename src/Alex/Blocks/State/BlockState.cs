@@ -184,7 +184,7 @@ namespace Alex.Blocks.State
 			return state;
 		}
 
-		private static Dictionary<string, string> ParseData(string variant)
+		public static Dictionary<string, string> ParseData(string variant)
 		{
 			Dictionary<string, string> values = new Dictionary<string, string>();
 

@@ -76,7 +76,7 @@ namespace Alex.Worlds.Chunks
 				if (section == null)
 					continue;
 				
-				foreach (var ls in section.LightSources)
+				foreach (var ls in section.LightSources.ToArray())
 				{
 					yield return new BlockCoordinates(ls.X, (i * 16) + ls.Y, ls.Z);
 				}

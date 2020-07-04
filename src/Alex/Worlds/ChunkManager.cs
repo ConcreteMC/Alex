@@ -1229,8 +1229,8 @@ namespace Alex.Worlds
 							    //    bool isLightSource = section.GetBlocklight(x,y,z) > 0;
 							        var data = model.GetVertices(world, blockPosition, blockState.Block);
 
-							        if (!(data.vertices == null || data.indexes == null || data.vertices.Length == 0
-							              || data.indexes.Length == 0))
+							        if (!(data.Vertices == null || data.Indexes == null || data.Vertices.Length == 0
+							              || data.Indexes.Length == 0))
 							        {
 								        RenderStage targetState = RenderStage.OpaqueFullCube;
 
@@ -1265,27 +1265,39 @@ namespace Alex.Worlds
 									        targetState = RenderStage.Opaque;
 								        }
 
-								        if (data.vertices.Length > 0 && data.indexes.Length > 0)
+								        if (data.Vertices.Length > 0 && data.Indexes.Length > 0)
 								        {
 									        // if (currentBlockState.storage == 0)
 									        // 	section.SetRendered(x, y, z, true);
 
 									        int startVerticeIndex = vertices.Count;
 
-									        foreach (var vert in data.vertices)
+									        foreach (var vert in data.Vertices)
 									        {
 										        vertices.Add(vert);
 									        }
 
 									        // int startIndex = stages[targetState].Count;
 
-									        for (int i = 0; i < data.indexes.Length; i++)
+									        for (int i = 0; i < data.Indexes.Length; i++)
 									        {
-										        var originalIndex = data.indexes[i];
+										        var originalIndex = data.Indexes[i];
 
 										        var verticeIndex = startVerticeIndex + originalIndex;
 
 										        stages[targetState].Add(verticeIndex);
+									        }
+
+									        if (data.AnimatedIndexes != null)
+									        {
+										        for (int i = 0; i < data.AnimatedIndexes.Length; i++)
+										        {
+											        var originalIndex = data.AnimatedIndexes[i];
+
+											        var verticeIndex = startVerticeIndex + originalIndex;
+
+											        stages[RenderStage.Animated].Add(verticeIndex);
+										        }
 									        }
 
 									        if (state.Storage == 0)

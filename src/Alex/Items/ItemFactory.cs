@@ -92,7 +92,7 @@ namespace Alex.Items
             for(int i = 0; i < blocks.Count; i++)
 		    {
 			    var entry = blocks.ElementAt(i);
-                progressReceiver?.UpdateProgress(i * (100 / blocks.Count), $"Processing block items...", entry.Key);
+                progressReceiver?.UpdateProgress((int) (100D * ((double)i / (double)blocks.Count)), $"Processing block items...", entry.Key);
                 
 			    Item item;
 			    /*if (blockRegistry.TryGet(entry.Key, out var blockState))

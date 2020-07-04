@@ -104,7 +104,7 @@ namespace Alex.Graphics.Models.Blocks
 			return false;
 		}
 
-		public override (BlockShaderVertex[] vertices, int[] indexes) GetVertices(IBlockAccess world, Vector3 vectorPos, Block baseBlock)
+		public override VerticesResult GetVertices(IBlockAccess world, Vector3 vectorPos, Block baseBlock)
 		{
 			//Level = GetLevel(baseBlock.BlockState);
 			
@@ -131,7 +131,7 @@ namespace Alex.Graphics.Models.Blocks
 			}
 			
 			if (renderedFaces.Count == 0)
-				return (new BlockShaderVertex[0], new int[0]);
+				return new VerticesResult(new BlockShaderVertex[0], new int[0]);
 			
 			int tl , tr, bl, br;
 
@@ -266,7 +266,7 @@ namespace Alex.Graphics.Models.Blocks
 			}
 
 			//float frameX 
-			UVMap map = GetTextureUVMap(Alex.Instance.Resources, texture, 0, 16, 0, 16, 0, Color.White);
+			UVMap map = GetTextureUVMap(baseBlock, Alex.Instance.Resources, texture, 0, 16, 0, 16, 0, Color.White);
 
 			var originalMap = new UVMap(map.TopLeft, map.TopRight, map.BottomLeft, map.BottomRight, map.ColorLeft, map.ColorTop, map.ColorBottom);
 			//originalMap.Rotate(180);
@@ -348,7 +348,7 @@ namespace Alex.Graphics.Models.Blocks
 				}
 			}
 
-			return (result.ToArray(), indexResult.ToArray());
+			return new VerticesResult(result.ToArray(), indexResult.ToArray());
 		}
 
 		protected int GetAverageLiquidLevels(IBlockAccess world, BlockCoordinates position, out BlockCoordinates lowest, out int lowestLevel)

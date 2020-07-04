@@ -7,7 +7,6 @@
     <Platforms>x64;AnyCPU</Platforms>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="JetBrains.Annotations" Version="2020.1.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.4" />
     <PackageReference Include="MiNET" Version="1.0.2106" />
     <PackageReference Include="MiNET.fnbt" Version="1.0.22" />

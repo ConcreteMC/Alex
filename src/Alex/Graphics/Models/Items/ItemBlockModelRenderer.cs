@@ -31,8 +31,8 @@ namespace Alex.Graphics.Models.Items
                 return;
             
             var data = _block.Model.GetVertices(new ItemRenderingWorld(_block.Block), Vector3.Zero, _block.Block);
-            Vertices = data.vertices;
-            Indexes = data.indexes.Select(x => (short) x).ToArray();
+            Vertices = data.Vertices;
+            Indexes = data.Indexes.Select(x => (short) x).ToArray();
         }
 
         protected override void InitEffect(BasicEffect effect)

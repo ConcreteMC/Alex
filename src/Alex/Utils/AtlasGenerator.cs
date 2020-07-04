@@ -3,8 +3,14 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using Alex.API.Resources;
 using Alex.API.Utils;
+using Alex.Blocks;
+using Alex.Blocks.Minecraft;
+using Alex.Blocks.State;
 using Alex.Gamestates.InGame;
+using Alex.Graphics.Models.Blocks;
+using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json.Textures;
 using Alex.Worlds;
 using Alex.Worlds.Singleplayer;
@@ -20,8 +26,8 @@ namespace Alex.Utils
     {
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(SPWorldProvider));
 
-	    private Dictionary<string, TextureInfo> _atlasLocations = new Dictionary<string, TextureInfo>();
-	    private Dictionary<string, TextureInfo> _animatedAtlasLocations = new Dictionary<string, TextureInfo>();
+	    private Dictionary<ResourceLocation, TextureInfo> _atlasLocations = new Dictionary<ResourceLocation, TextureInfo>();
+	    private Dictionary<ResourceLocation, TextureInfo> _animatedAtlasLocations = new Dictionary<ResourceLocation, TextureInfo>();
 	    
 	    private Texture2D[] _frames;
 	    private Texture2D _stillFrame;
@@ -35,19 +41,169 @@ namespace Alex.Utils
 
 	    public void Reset()
 	    {
-		    _atlasLocations = new Dictionary<string, TextureInfo>();
-		    _animatedAtlasLocations = new Dictionary<string, TextureInfo>();
+		    _atlasLocations = new Dictionary<ResourceLocation, TextureInfo>();
+		    _animatedAtlasLocations = new Dictionary<ResourceLocation, TextureInfo>();
 
 		    AtlasSize = default;
 		    _frames = default;
 		    _stillFrame = default;
 	    }
 
-	    public void GenerateAtlas(GraphicsDevice device, KeyValuePair<string, Image<Rgba32>>[] bitmaps, IReadOnlyDictionary<string, TextureMeta> meta, IProgressReceiver progressReceiver)
+	    private Vector2 GetTextureDimensions(McResourcePack resourcePack, ResourceLocation location)
+	    {
+		    Vector2 size = new Vector2(TextureWidth, TextureHeight);
+
+		    return size;
+		    foreach (var state in resourcePack.BlockModels)
+		    {
+			    foreach (var element in state.Value.Elements)
+			    foreach (var face in element.Faces)
+			    {
+				    var val = face.Value;
+				    if (ResourcePackBlockModel.ResolveTexture(state.Value, val.Texture) == location)
+				    {
+					    var width = val.UV.X2 - val.UV.X1;
+					    var height = val.UV.Y2 - val.UV.Y1;
+
+					    if (width > size.X)
+					    {
+						    size.X = width;
+					    }
+
+					    if (height > size.Y)
+					    {
+						    size.Y = height;
+					    }
+				    }
+			    }
+		    }
+
+		    return size;
+	    }
+	    
+	    private void GetTextures(McResourcePack resourcePack,
+		    Dictionary<ResourceLocation, Image<Rgba32>[]> seperateFrames,
+		    Dictionary<ResourceLocation, Image<Rgba32>> regularTextures, IProgressReceiver progressReceiver)
+	    {
+		    progressReceiver.UpdateProgress(0, "Processing blockstate textures...");
+			int blockstatesProcessed = 0;
+			int totalStates = resourcePack.BlockStates.Count;
+			foreach (var state in resourcePack.BlockStates)
+		    {
+			    progressReceiver.UpdateProgress((int) (100D * ((double)blockstatesProcessed / (double)totalStates)), null, state.Key);
+			    
+			    var blockState = BlockFactory.GetBlockState(state.Key);
+
+			    if (blockState.Name == "Unknown")
+			    {
+				    Log.Warn($"Missing blockstate: {state.Key}");
+				    blockstatesProcessed++;
+				    continue;
+			    }
+
+			    foreach (var variant in state.Value.Variants)
+			    {
+				    foreach (var entry in BlockState.ParseData(variant.Key))
+				    {
+					    blockState = blockState.WithProperty(entry.Key, entry.Value);
+				    }
+				    
+				    foreach (var va in variant.Value)
+				    {
+					    var model = va.Model;
+					    
+					    foreach (var texture in model.Textures)
+					    //foreach(var element in model.Elements)
+					    //foreach(var face in element.Faces)
+					    {
+						  //  var text = face.Value.Texture; //ResourcePackBlockModel.ResolveTexture(model, texture.Value);
+						  var text = texture.Value;
+						    if (text[0] == '#')
+						    {
+							    var substr = text.Substring(1);
+
+							    if (model.Textures.TryGetValue(substr, out var p))
+							    {
+								    text = p;
+							    }
+							    else
+							    {
+								    var parent = model.Parent;
+
+								    while (parent != null)
+								    {
+									    if (parent == null) break;
+
+									    if (parent.Textures.TryGetValue(substr, out string parentName))
+									    {
+										    text = parentName;
+
+										    break;
+									    }
+
+									    parent = parent.Parent;
+								    }
+							    }
+						    }
+						    
+						    if (resourcePack.TryGetBitmap(text, out var bmp))
+						    {
+							    if (blockState.Block.Animated && !seperateFrames.ContainsKey(text))
+							    {
+								    var frameSize = GetTextureDimensions(resourcePack, text);
+								    seperateFrames.Add(text, GetFrames(bmp, (int) frameSize.X, (int) frameSize.Y));
+							    }
+							    else if (!blockState.Block.Animated
+							             && regularTextures.All(x => x.Key != text))
+							    {
+								    regularTextures.Add(text, bmp);
+							    }
+						    }
+						    else
+						    {
+							   /// if (!texture.Value)
+								//	Log.Warn($"Could not get bitmap {texture.Value} or {text} (Key: {texture.Key} Model: {model.Name})");
+						    }
+					    }
+				    }
+			    }
+
+			    blockstatesProcessed++;
+			    // state.
+		    }
+
+			if (resourcePack.TryGetBitmap("block/water_flow", out var flow))
+			{
+				var frameSize = GetTextureDimensions(resourcePack, "block/water_flow");
+				seperateFrames.TryAdd("block/water_flow", GetFrames(flow, (int) frameSize.X, (int) frameSize.Y));
+			}
+			
+			if (resourcePack.TryGetBitmap("block/water_still", out var still))
+			{
+				var frameSize = GetTextureDimensions(resourcePack, "block/water_still");
+				seperateFrames.TryAdd("block/water_still", GetFrames(still, (int) frameSize.X, (int) frameSize.Y));
+			}
+	    }
+
+	    public void LoadResourcePack(GraphicsDevice graphicsDevice,
+		    McResourcePack resourcePack,
+		    IProgressReceiver progressReceiver)
+	    {
+		    Dictionary<ResourceLocation, Image<Rgba32>[]> frames  = new Dictionary<ResourceLocation, Image<Rgba32>[]>();
+		    Dictionary<ResourceLocation, Image<Rgba32>>   textures = new Dictionary<ResourceLocation, Image<Rgba32>>();
+
+		    GetTextures(resourcePack, frames, textures, progressReceiver);
+
+		    GenerateAtlas(graphicsDevice, frames, textures, progressReceiver);
+
+		    string a = "b";
+	    }
+	    
+	    private void GenerateAtlas(GraphicsDevice device, IDictionary<ResourceLocation, Image<Rgba32>[]> blockFrames, IDictionary<ResourceLocation, Image<Rgba32>> blockTextures, IProgressReceiver progressReceiver)
 	    {
 		    Stopwatch sw = Stopwatch.StartNew();
-		    
-		    Log.Info($"Generating texture atlas out of {bitmaps.Length} bitmaps...");
+
+		    Log.Info($"Generating texture atlas out of {(blockFrames.Count + blockTextures.Count)} bitmaps...");
 		    
 		    long totalSize = 0;
 		    
@@ -56,163 +212,42 @@ namespace Alex.Utils
 		    {
 			    no = Image.Load<Rgba32>(ms);
 		    }
-
-		  //  Dictionary<string, Bitmap[]> animatedFrames = new Dictionary<string, Bitmap[]>();
-		    foreach (var bmp in bitmaps)
-		    {
-			    if (meta.TryGetValue(bmp.Key, out var textureMeta))
-			    {
-				    if (textureMeta.Animation == null || textureMeta.Animation == default)
-					    continue;
-
-				   // Bitmap[] bmpFrames = GetFrames(bmp.Value);
-				 //   animatedFrames.Add(bmp.Key, bmpFrames);
-			    }
-		    }
 		    
-		    var regular = new[]
+		    var regularTextures = new[]
 		    {
-			    new KeyValuePair<string, Image<Rgba32>>("no_texture", no),
-		    }.Concat(bitmaps.Where(x => x.Value.Height == TextureHeight && x.Value.Width == TextureWidth)).ToArray();
+			    new KeyValuePair<ResourceLocation, Image<Rgba32>>("no_texture", no),
+		    }.Concat(blockTextures.Where(x => x.Value.Height == TextureHeight && x.Value.Width == TextureWidth)).ToArray();
 		       
-		    var others = bitmaps.Where(x => x.Value.Height != TextureHeight || x.Value.Width != TextureWidth).ToList();
-		    
-		    Image<Rgba32>[] waterFrames = new Image<Rgba32>[0];
-		    Image<Rgba32>[] lavaFrames = new Image<Rgba32>[0];
-		    Image<Rgba32>[] waterFlowFrames = new Image<Rgba32>[0];
-		    Image<Rgba32>[] lavaFlowFrames = new Image<Rgba32>[0];
-		    Image<Rgba32>[] fireFrames = new Image<Rgba32>[0];
-		    Image<Rgba32>[] fireFrames2 = new Image<Rgba32>[0];
-		    Image<Rgba32>[] portalFrames = new Image<Rgba32>[0];
-	        Image<Rgba32>[] seagrassFrames = new Image<Rgba32>[0];
-	        Image<Rgba32>[] seagrassTopFrames = new Image<Rgba32>[0];
-	        Image<Rgba32>[] seagrassBottomFrames = new Image<Rgba32>[0];
-	        
-		    foreach (var other in others.ToArray())
+		    var oddSizedTextures = blockTextures.Where(x => x.Value.Height != TextureHeight || x.Value.Width != TextureWidth).ToArray();
+
+		    for (var index = 0; index < oddSizedTextures.Length; index++)
 		    {
-			    if (other.Key.Contains("water") && other.Key.Contains("still"))
+			    var other = oddSizedTextures[index];
+
+			    if (blockFrames.TryGetValue(other.Key, out var values))
 			    {
-				    waterFrames = GetFrames(other.Value);
-				    others.Remove(other);
+				    oddSizedTextures[index] = new KeyValuePair<ResourceLocation, Image<Rgba32>>(other.Key, values[0]);
 			    }
-			    else if (other.Key.Contains("water") && other.Key.Contains("flow"))
-			    {
-				    waterFlowFrames = GetFrames(other.Value);
-				    others.Remove(other);
-			    }
-			    else if (other.Key.Contains("lava") && other.Key.Contains("still"))
-			    {
-				    lavaFrames = GetFrames(other.Value);
-				    others.Remove(other);
-			    }
-			    else if (other.Key.Contains("lava") && other.Key.Contains("flow"))
-			    {
-				    lavaFlowFrames = GetFrames(other.Value);
-				    others.Remove(other);
-			    }
-			    else if (other.Key.Contains("fire_0"))
-			    {
-				    fireFrames = GetFrames(other.Value);
-				    others.Remove(other);
-			    }
-			    else if (other.Key.Contains("fire_1"))
-			    {
-				    fireFrames2 = GetFrames(other.Value);
-				    others.Remove(other);
-			    }
-			    else if (other.Key.Contains("nether_portal"))
-			    {
-				    portalFrames = GetFrames(other.Value);
-				    others.Remove(other);
-			    }
-			    else if (other.Key.Contains("seagrass"))
-			    {
-				    seagrassFrames = GetFrames(other.Value);
-				    others.Remove(other);
-			    }
-			    else if (other.Key.Contains("tall_seagrass_top"))
-			    {
-				    seagrassTopFrames = GetFrames(other.Value);
-				    others.Remove(other);
-			    }
-			    else if (other.Key.Contains("tall_seagrass_bottom"))
-			    {
-				    seagrassBottomFrames = GetFrames(other.Value);
-				    others.Remove(other);
-			    }
-			    //seagrass
 		    }
-		    
-		    Dictionary<string, TextureInfo> stillFrameInfo = new Dictionary<string, TextureInfo>();
-		    GenerateAtlasInternal(regular, others.ToArray(), progressReceiver, stillFrameInfo, out var stillAtlas);
+
+		    Dictionary<ResourceLocation, TextureInfo> stillFrameInfo = new Dictionary<ResourceLocation, TextureInfo>();
+		    GenerateAtlasInternal(regularTextures, oddSizedTextures, progressReceiver, stillFrameInfo, false, out var stillAtlas);
 		    _stillFrame = TextureUtils.BitmapToTexture2D(device, stillAtlas, out var size);
-		    
-		    //stillAtlas.Save(Path.Combine(DebugPath, "atlas.png"));
+		    AtlasSize = new Vector2(stillAtlas.Width, stillAtlas.Height);
 		    
 		    totalSize += size;
 		    
 		    _atlasLocations = stillFrameInfo;
-		    
-		    Dictionary<string, Image<Rgba32>> animated = new Dictionary<string, Image<Rgba32>>();
-		    
-		    if (waterFrames.Length > 0)
-			    animated.Add("minecraft:block/water_still", waterFrames[0]);
-	        
 
-	        if (waterFlowFrames.Length > 0)
-		        animated.Add("minecraft:block/water_flow", waterFlowFrames[0]);
-	        
-	        
-	        if (lavaFrames.Length > 0)
-		        animated.Add("minecraft:block/lava_still", lavaFrames[0]);
-	        
-	        
-	        if (lavaFlowFrames.Length > 0)
-		        animated.Add("minecraft:block/lava_flow", lavaFlowFrames[0]);
-
-	        if (fireFrames.Length > 0)
-		        animated.Add("minecraft:block/fire_0", fireFrames[0]);
-
-	        if (fireFrames2.Length > 0)
-		        animated.Add("minecraft:block/fire_1", fireFrames2[0]);
-
-	        if (portalFrames.Length > 0)
-		        animated.Add("minecraft:block/nether_portal", portalFrames[0]);
-	        
-	        if (seagrassFrames.Length > 0)
-		        animated.Add("minecraft:block/seagrass", seagrassFrames[0]);
-	        
-	        if (seagrassTopFrames.Length > 0)
-		        animated.Add("minecraft:block/tall_seagrass_top", seagrassTopFrames[0]);
-	        
-	        if (seagrassBottomFrames.Length > 0)
-		        animated.Add("minecraft:block/tall_seagrass_bottom", seagrassBottomFrames[0]);
-	        
-	        var animatedFrameInfo = new Dictionary<string, TextureInfo>();
-	        GenerateAtlasInternal(animated.ToArray(), new KeyValuePair<string, Image<Rgba32>>[0], progressReceiver,
-		        animatedFrameInfo, out Image<Rgba32> animatedFrame);
+		    var animatedFrameInfo = new Dictionary<ResourceLocation, TextureInfo>();
+	        GenerateAtlasInternal(blockFrames.Select(x => new KeyValuePair<ResourceLocation,Image<Rgba32>>(x.Key, x.Value[0])).ToArray(), new KeyValuePair<ResourceLocation, Image<Rgba32>>[0], progressReceiver,
+		        animatedFrameInfo, true, out Image<Rgba32> animatedFrame);
 
 	        AnimatedAtlasSize = new Vector2(animatedFrame.Width, animatedFrame.Height);
+	        _animatedAtlasLocations = animatedFrameInfo;
 	        
-	        TextureInfo waterLocation, waterFlowLocation, lavaLocation, lavaFlowLocation, fireLocation, fireLocation2, portalLocation, seagrassLocation, tallSeagrassTopLocation, tallSeagrassBottomLocation;
-
-	        animatedFrameInfo.TryGetValue("minecraft:block/water_still", out waterLocation);
-	        animatedFrameInfo.TryGetValue("minecraft:block/water_flow", out waterFlowLocation);
-	        animatedFrameInfo.TryGetValue("minecraft:block/lava_still", out lavaLocation);
-	        animatedFrameInfo.TryGetValue("minecraft:block/lava_flow", out lavaFlowLocation);
-	        animatedFrameInfo.TryGetValue("minecraft:block/fire_0", out fireLocation);
-	        animatedFrameInfo.TryGetValue("minecraft:block/fire_1", out fireLocation2);
-	        animatedFrameInfo.TryGetValue("minecraft:block/nether_portal", out portalLocation);
-	        animatedFrameInfo.TryGetValue("minecraft:block/seagrass", out seagrassLocation);
-	        animatedFrameInfo.TryGetValue("minecraft:block/tall_seagrass_top", out tallSeagrassTopLocation);
-	        animatedFrameInfo.TryGetValue("minecraft:block/tall_seagrass_bottom", out tallSeagrassBottomLocation);
-	        //var waterLocation = new Vector3();
-		    
-		   // var baseBitmap = new Bitmap(stillAtlas.Width, stillAtlas.Height);
-		   var frameCount = Math.Max(Math.Max(Math.Max(waterFrames.Length,
-			   Math.Max(waterFlowFrames.Length,
-				   Math.Max(lavaFrames.Length, Math.Max(lavaFlowFrames.Length, fireFrames.Length)))), portalFrames.Length), seagrassFrames.Length);
-
+	        
+	        var frameCount = blockFrames.Max(x => x.Value.Length);
 		   while (frameCount % 2 != 0)
 		   {
 			   frameCount++;
@@ -223,131 +258,33 @@ namespace Alex.Utils
 		    for (int i = 0; i < frames.Length; i++)
 		    {
 			    double percentage = 100D * ((double)i / (double)frames.Length);
-			    progressReceiver.UpdateProgress((int)percentage, "Animating blocks...");
+			    progressReceiver.UpdateProgress((int)percentage, $"Animating frame {i}...");
 			    
 			    var target = animatedFrame.CloneAs<Rgba32>(); //new Bitmap(animatedFrame);
-			    var r = new System.Drawing.Rectangle(0, 0, TextureWidth, TextureHeight);
 
-			    System.Drawing.Rectangle destination;
-			    if (waterLocation != null)
+			    // System.Drawing.Rectangle destination;
+
+			    foreach (var animated in blockFrames)
 			    {
-				    progressReceiver.UpdateProgress((int)percentage, null, "minecraft:block/water_still");
-				    
-				    destination = new System.Drawing.Rectangle((int) waterLocation.Position.X,
-					    (int) waterLocation.Position.Y, TextureWidth, TextureHeight);
+				    progressReceiver.UpdateProgress((int)percentage, null, animated.Key.ToString());
 
-				    if (waterFrames.Length > 0)
+				    if (animatedFrameInfo.TryGetValue(animated.Key, out var textureInfo))
+				    {
+					    //((i % 3 == 0 ? i - 1 : i) / 6)
+					    
+					    var destination = new System.Drawing.Rectangle(
+						    (int) textureInfo.Position.X, (int) textureInfo.Position.Y, textureInfo.Width, textureInfo.Height);
+
 					    TextureUtils.CopyRegionIntoImage(
-						    waterFrames[((i % 3 == 0 ? i - 1 : i) / 6) % waterFrames.Length], r, ref target,
+						    animated.Value[i % animated.Value.Length], new System.Drawing.Rectangle(0, 0, textureInfo.Width, textureInfo.Height), ref target,
 						    destination);
+				    }
 			    }
-
-			    if (waterFlowLocation != null)
-			    {
-				    progressReceiver.UpdateProgress((int)percentage, null, "minecraft:block/water_flow");
-				    
-				    destination = new System.Drawing.Rectangle((int) waterFlowLocation.Position.X,
-					    (int) waterFlowLocation.Position.Y, TextureWidth, TextureHeight);
-				    if (waterFlowFrames.Length > 0)
-					    TextureUtils.CopyRegionIntoImage(waterFlowFrames[i % waterFlowFrames.Length], r, ref target,
-						    destination);
-			    }
-
-			    if (lavaLocation != null)
-			    {
-				    progressReceiver.UpdateProgress((int)percentage, null, "minecraft:block/lava_still");
-				    
-				    destination = new System.Drawing.Rectangle((int) lavaLocation.Position.X,
-					    (int) lavaLocation.Position.Y, TextureWidth, TextureHeight);
-				    if (lavaFrames.Length > 0)
-					    TextureUtils.CopyRegionIntoImage(lavaFrames[i % lavaFrames.Length], r, ref target, destination);
-			    }
-
-			    if (lavaFlowLocation != null)
-			    {
-				    progressReceiver.UpdateProgress((int)percentage, null, "minecraft:block/lava_flow");
-				    
-				    destination = new System.Drawing.Rectangle((int) lavaFlowLocation.Position.X,
-					    (int) lavaFlowLocation.Position.Y, TextureWidth, TextureHeight);
-				    if (lavaFlowFrames.Length > 0)
-					    TextureUtils.CopyRegionIntoImage(lavaFlowFrames[i % lavaFlowFrames.Length], r, ref target,
-						    destination);
-			    }
-
-			    if (fireLocation != null)
-			    {
-				    progressReceiver.UpdateProgress((int)percentage, null, "minecraft:block/fire_0");
-				    
-				    destination = new System.Drawing.Rectangle((int) fireLocation.Position.X,
-					    (int) fireLocation.Position.Y, TextureWidth, TextureHeight);
-				    if (fireFrames.Length > 0)
-					    TextureUtils.CopyRegionIntoImage(fireFrames[i % fireFrames.Length], r, ref target, destination);
-			    }
-
-			    if (fireLocation2 != null)
-			    {
-				    progressReceiver.UpdateProgress((int)percentage, null, "minecraft:block/fire_1");
-				    
-				    destination = new System.Drawing.Rectangle((int) fireLocation2.Position.X,
-					    (int) fireLocation2.Position.Y, TextureWidth, TextureHeight);
-				    if (fireFrames2.Length > 0)
-					    TextureUtils.CopyRegionIntoImage(fireFrames2[i % fireFrames2.Length], r, ref target,
-						    destination);
-			    }
-
-			    if (portalLocation != null)
-			    {
-				    progressReceiver.UpdateProgress((int)percentage, null, "minecraft:block/nether_portal");
-				    
-				    destination = new System.Drawing.Rectangle((int) portalLocation.Position.X,
-					    (int) portalLocation.Position.Y, TextureWidth, TextureHeight);
-				    if (portalFrames.Length > 0)
-					    TextureUtils.CopyRegionIntoImage(portalFrames[i % portalFrames.Length], r, ref target,
-						    destination);
-			    }
-
-			    if (seagrassLocation != null)
-			    {
-				    progressReceiver.UpdateProgress((int)percentage, null, "minecraft:block/seagrass");
-				    
-				    destination = new System.Drawing.Rectangle((int) seagrassLocation.Position.X,
-					    (int) seagrassLocation.Position.Y, TextureWidth, TextureHeight);
-				    if (seagrassFrames.Length > 0)
-					    TextureUtils.CopyRegionIntoImage(seagrassFrames[i % seagrassFrames.Length], r, ref target,
-						    destination);
-			    }
-			    
-			    if (tallSeagrassTopLocation != null)
-			    {
-				    progressReceiver.UpdateProgress((int)percentage, null, "minecraft:block/tall_seagrass_top");
-				    
-				    destination = new System.Drawing.Rectangle((int) tallSeagrassTopLocation.Position.X,
-					    (int) tallSeagrassTopLocation.Position.Y, TextureWidth, TextureHeight);
-				    if (seagrassTopFrames.Length > 0)
-					    TextureUtils.CopyRegionIntoImage(seagrassTopFrames[i % seagrassTopFrames.Length], r, ref target,
-						    destination);
-			    }
-			    
-			    if (tallSeagrassBottomLocation != null)
-			    {
-				    progressReceiver.UpdateProgress((int)percentage, null, "minecraft:block/tall_seagrass_bottom");
-				    
-				    destination = new System.Drawing.Rectangle((int) tallSeagrassBottomLocation.Position.X,
-					    (int) tallSeagrassBottomLocation.Position.Y, TextureWidth, TextureHeight);
-				    if (seagrassBottomFrames.Length > 0)
-					    TextureUtils.CopyRegionIntoImage(seagrassBottomFrames[i % seagrassBottomFrames.Length], r, ref target,
-						    destination);
-			    }
-
+			   
 			    frames[i] = TextureUtils.BitmapToTexture2D(device, target, out var s);
 			    totalSize += s;
-			    
-			 //   target.Save(Path.Combine(DebugFramePath, $"frame{i}.png"));
 		    }
-
-		    _animatedAtlasLocations = animatedFrameInfo;
 		    
-		    AtlasSize = new Vector2(stillAtlas.Width, stillAtlas.Height);
 		    _frames = frames;
 		    
 		    sw.Stop();
@@ -355,7 +292,7 @@ namespace Alex.Utils
 		    Log.Info($"TextureAtlas generated in {sw.ElapsedMilliseconds}ms! ({PlayingState.GetBytesReadable(totalSize, 2)})");
 	    }
 	    
-	    private void GenerateAtlasInternal(KeyValuePair<string, Image<Rgba32>>[] regular, KeyValuePair<string, Image<Rgba32>>[] others, IProgressReceiver progressReceiver, Dictionary<string, TextureInfo> atlasLocations, out Image<Rgba32> result)
+	    private void GenerateAtlasInternal(KeyValuePair<ResourceLocation, Image<Rgba32>>[] regular, KeyValuePair<ResourceLocation, Image<Rgba32>>[] others, IProgressReceiver progressReceiver, Dictionary<ResourceLocation, TextureInfo> atlasLocations, bool animated, out Image<Rgba32> result)
         {
 	        int total = regular.Length + others.Length;
 	        var a = (int)Math.Ceiling(regular.Length / 32D);
@@ -369,35 +306,35 @@ namespace Alex.Utils
 	        var bitmap = new Image<Rgba32>(Math.Min(32, total) * TextureWidth, height);
 
 	        int xi = 0, yi = 0, offsetX = 0, yRemaining = 0;
-	        int processedFiles = Process(ref bitmap, regular, ref xi, ref yi, ref offsetX, ref yRemaining, total, 0, atlasLocations, progressReceiver);
+	        int processedFiles = Process(ref bitmap, regular, ref xi, ref yi, ref offsetX, ref yRemaining, total, 0, atlasLocations, progressReceiver, animated);
 	        yi += TextureHeight;
 	        xi = 0;
-			Process(ref bitmap, others.ToArray(), ref xi, ref yi, ref offsetX, ref yRemaining, total, processedFiles, atlasLocations, progressReceiver);
+			Process(ref bitmap, others.ToArray(), ref xi, ref yi, ref offsetX, ref yRemaining, total, processedFiles, atlasLocations, progressReceiver, animated);
 
 			result = bitmap;
         }
 
-	    private int Process(ref Image<Rgba32> bmp, KeyValuePair<string, Image<Rgba32>>[] data, ref int xi, ref int yi, ref int xOffset, ref int yRemaining, int total, int processed, IDictionary<string, TextureInfo> locations, IProgressReceiver progressReceiver)
+	    private int Process(ref Image<Rgba32> target, KeyValuePair<ResourceLocation, Image<Rgba32>>[] data, ref int xi, ref int yi, ref int xOffset, ref int yRemaining, int total, int processed, IDictionary<ResourceLocation, TextureInfo> locations, IProgressReceiver progressReceiver, bool animated)
 	    {
 		    int done = processed;
 			var count = 0;
 
 		    foreach (var bm in data.OrderByDescending(x => x.Value.Height))
 		    {
-			    string key = bm.Key;
+			    var key = bm.Key;
 			    count++;
 
 			    double percentage = 100D * ((double)processed / (double)total);
-			    progressReceiver.UpdateProgress((int)percentage, null, key);
+			    progressReceiver.UpdateProgress((int)percentage, null, key.ToString());
 
                 var sourceRegion = new System.Drawing.Rectangle(0, 0, bm.Value.Width, bm.Value.Height);
 			    var targetRegion = new System.Drawing.Rectangle(xi, yi, bm.Value.Width, bm.Value.Height);
 
-			    TextureUtils.CopyRegionIntoImage(bm.Value, sourceRegion, ref bmp, targetRegion);
+			    TextureUtils.CopyRegionIntoImage(bm.Value, sourceRegion, ref target, targetRegion);
 
 			    if (!locations.ContainsKey(key))
 			    {
-				    locations.Add(key, new TextureInfo(new Vector2(xi, yi), bm.Value.Width, bm.Value.Height));
+				    locations.Add(key, new TextureInfo(new Vector2(xi, yi), bm.Value.Width, bm.Value.Height, animated));
 			    }
 
 			    if (bm.Value.Height > TextureHeight)
@@ -407,7 +344,7 @@ namespace Alex.Utils
 			    }
 			    xi += bm.Value.Width;
 
-			    if (count == bmp.Width / TextureWidth)
+			    if (count == target.Width / TextureWidth)
 			    {
 				    yi += TextureHeight;
 				    xi = 0;
@@ -424,69 +361,85 @@ namespace Alex.Utils
 		    return done;
 	    }
 
-	    private Image<Rgba32>[] GetFrames(Image<Rgba32> source)
+	    private Image<Rgba32>[] GetFrames(Image<Rgba32> source, int frameWidth, int frameHeight)
 	    {
-		    int ix = source.Width / TextureWidth;
-		    int iy = source.Height / TextureHeight;
+		    int framesInWidth = source.Width / frameWidth;
+		    int framesInHeight = source.Height / frameHeight;
 
-		    List<Image<Rgba32>> result = new List<Image<Rgba32>>();
-		    
-		    for (int x = 0; x < ix; x++)
-		    for(int y = 0; y < iy; y++)
+		    //List<Image<Rgba32>> result = new List<Image<Rgba32>>();
+		    Image<Rgba32>[] result = new Image<Rgba32>[framesInHeight * framesInWidth];
+		    int counter = 0;
+		    for (int x = 0; x < framesInWidth; x++)
+		    for (int y = 0; y < framesInHeight; y++)
 		    {
-			    var newBitmap = new Image<Rgba32>(TextureWidth, TextureHeight);
-			    TextureUtils.CopyRegionIntoImage(source, new System.Drawing.Rectangle(x * TextureWidth,y * TextureHeight, TextureWidth, TextureHeight), ref newBitmap, new System.Drawing.Rectangle(0, 0, TextureWidth, TextureHeight));
-			    
-			    result.Add(newBitmap);
+			    var newBitmap = new Image<Rgba32>(frameWidth, frameHeight);
+
+			    TextureUtils.CopyRegionIntoImage(
+				    source,
+				    new System.Drawing.Rectangle(x * frameWidth, y * frameHeight, frameWidth, frameHeight),
+				    ref newBitmap, new System.Drawing.Rectangle(0, 0, frameWidth, frameHeight));
+
+			    result[counter++] = newBitmap;
+			    //result.Add(newBitmap);
 		    }
 
 		    return result.ToArray();
 	    }
 
-	    private int AtlasWidth = 512;
-	    private int AtlasHeight = 512;
-
 	    public int TextureWidth { get; private set; } = 16;
 	    public int TextureHeight { get; private set; }= 16;
 
-        public void LoadResourcePackOnTop(GraphicsDevice device, KeyValuePair<string, Image<Rgba32>>[] vanilla, KeyValuePair<string, Image<Rgba32>>[] bitmapsRaw, IReadOnlyDictionary<string, TextureMeta> meta, IProgressReceiver progressReceiver)
+        public void LoadResourcePackOnTop(GraphicsDevice device, McResourcePack vanilla, McResourcePack resourcePack, IProgressReceiver progressReceiver)
 		{
 
             int textureWidth = 16, textureHeight = 16;
-			Dictionary<string, Image<Rgba32>> bitmaps = new Dictionary<string, Image<Rgba32>>();
-            foreach (var bmp in vanilla)
-            {
-                string name = bmp.Key;
-                if (!bitmaps.ContainsKey(name))
-                {
-                    var bitmap = bitmapsRaw.FirstOrDefault(x =>
-                        x.Key.Equals(bmp.Key, StringComparison.InvariantCultureIgnoreCase));
-                    if (bitmap.Value == null) bitmap = bmp;
 
-                    var texture = bitmap.Value;
-                    if (texture.Width > textureWidth && texture.Width % 16 == 0 && texture.Height > textureHeight &&
-                        texture.Height % 16 == 0)
-                    {
-                        if (texture.Width == texture.Height)
-                        {
-                            textureWidth = texture.Width;
-                            textureHeight = texture.Height;
-                        }
-                    }
+			Dictionary<ResourceLocation, Image<Rgba32>[]> vanillaFrames  = new Dictionary<ResourceLocation, Image<Rgba32>[]>();
+			Dictionary<ResourceLocation, Image<Rgba32>>   vanillaTextures = new Dictionary<ResourceLocation, Image<Rgba32>>();
 
-                    bitmaps.Add(name, texture);
-                }
-            }
+			GetTextures(vanilla, vanillaFrames, vanillaTextures, progressReceiver);
+			
+			Dictionary<ResourceLocation, Image<Rgba32>[]> frames   = new Dictionary<ResourceLocation, Image<Rgba32>[]>();
+			Dictionary<ResourceLocation, Image<Rgba32>>   textures = new Dictionary<ResourceLocation, Image<Rgba32>>();
 
-            AtlasWidth = 32 * textureWidth;
-            AtlasHeight = 32 * textureHeight;
+			GetTextures(resourcePack, frames, textures, progressReceiver);
 
-            AtlasSize = new Vector2(AtlasWidth, AtlasHeight);
+			foreach (var image in vanillaFrames.ToArray())
+			{
+				if (!frames.ContainsKey(image.Key))
+				{
+					frames.Add(image.Key, image.Value);
+				}
+			}
+
+			foreach (var image in vanillaTextures.ToArray())
+			{
+				if (!textures.ContainsKey(image.Key))
+				{
+					textures.Add(image.Key, image.Value);
+				}
+
+				var texture = image.Value;
+				if (texture.Width > textureWidth && texture.Width % 16 == 0 && texture.Height > textureHeight &&
+				    texture.Height % 16 == 0)
+				{
+					if (texture.Width == texture.Height)
+					{
+						textureWidth = texture.Width;
+						textureHeight = texture.Height;
+					}
+				}
+			}
+			
+			var a     = (int)Math.Ceiling(textures.Count / 32D);
+			int height = a * TextureHeight;
+			
+			AtlasSize = new Vector2(Math.Min(32, textures.Count), height);
             TextureHeight = textureHeight;
             TextureWidth = textureWidth;
 
-            GenerateAtlas(device, bitmaps.ToArray(), meta, progressReceiver);
-        }
+            GenerateAtlas(device, frames, textures, progressReceiver);
+		}
 
 
 		public int GetFrameCount()
@@ -504,37 +457,39 @@ namespace Alex.Utils
 			return _frames[frame % _frames.Length];
         }
 
-		public TextureInfo GetAtlasLocation(string file, out Vector2 atlasSize, IDictionary<string, TextureInfo> dictionary = null)
-        {
-            if (dictionary == null)
-                dictionary = _atlasLocations;
+		public TextureInfo GetAtlasLocation(Block block,
+			ResourceLocation file,
+			out Vector2 atlasSize,
+			IDictionary<ResourceLocation, TextureInfo> dictionary = null)
+		{
+		/*	if (dictionary == null)
+			{
+				atlasSize = block.Animated ? AnimatedAtlasSize : AtlasSize;
+				dictionary = block.Animated ? _animatedAtlasLocations : _atlasLocations;
+			}
+			else
+			{
+				atlasSize = AtlasSize;
+			}
 
-		    if (dictionary.Count == 0) throw new Exception();
+			if (dictionary.Count == 0) throw new Exception();*/
 
-		    if (file == "water_still" && !dictionary.ContainsKey(file))
-			    file = "water_flow";
+			if (_animatedAtlasLocations.TryGetValue(file, out var textureInfo))
+			{
+				atlasSize = AnimatedAtlasSize;
 
-		    atlasSize = AtlasSize;
+				return textureInfo;
+			}
 
-		    if (!file.Contains(":"))
-		    {
-			    file = $"minecraft:{file}";
-		    }
-		    
-		    if (dictionary.ContainsKey(file))
-		    {
-			    return dictionary[file];
-		    }
-		    else
-		    {
-			    if (_animatedAtlasLocations.TryGetValue(file, out var textureInfo))
-			    {
-				    atlasSize = AnimatedAtlasSize;
-				    return textureInfo;
-			    }
-			    
-			    return new TextureInfo(Vector2.Zero, TextureWidth, TextureHeight);
-		    }
-	    }
-	}
+			if (_atlasLocations.TryGetValue(file, out var atlasInfo))
+			{
+				atlasSize = AtlasSize;
+
+				return atlasInfo;
+			}
+
+			atlasSize = AtlasSize;
+			return new TextureInfo(Vector2.Zero, TextureWidth, TextureHeight, false);
+		}
+    }
 }

@@ -7,10 +7,24 @@ using Alex.ResourcePackLib.Json;
 using Alex.Utils;
 using Alex.Worlds;
 using Alex.Worlds.Abstraction;
+using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Graphics.Models.Blocks
 {
+	public class VerticesResult
+	{
+		public BlockShaderVertex[] Vertices { get; }
+		public int[] Indexes { get; }
+		[CanBeNull] public int[] AnimatedIndexes { get; }
+		public VerticesResult(BlockShaderVertex[] vertices, int[] indexes, [CanBeNull] int[] animatedIndexes = null)
+		{
+			Vertices = vertices;
+			Indexes = indexes;
+			AnimatedIndexes = animatedIndexes;
+		}
+	}
+
 	public class BlockModel : Model
 	{
         public BlockModel()
@@ -22,9 +36,9 @@ namespace Alex.Graphics.Models.Blocks
         
 		public float Scale { get; set; } = 1f;
 
-		public virtual (BlockShaderVertex[] vertices, int[] indexes) GetVertices(IBlockAccess world, Vector3 position, Block baseBlock)
+		public virtual VerticesResult GetVertices(IBlockAccess world, Vector3 position, Block baseBlock)
         {
-            return (new BlockShaderVertex[0], new int[0]);
+            return new VerticesResult(new BlockShaderVertex[0], new int[0], null);
         }
 
 	    public virtual BoundingBox GetBoundingBox(Vector3 position, Block requestingBlock)
@@ -257,7 +271,7 @@ namespace Alex.Graphics.Models.Blocks
 		    //(byte)Math.Min(Math.Max(0, blockLight + skyLight), 15);
 	    }
 
-		protected UVMap GetTextureUVMap(ResourceManager resources,
+		protected UVMap GetTextureUVMap(Block block, ResourceManager resources,
 			string texture,
 			float x1,
 			float x2,
@@ -279,7 +293,7 @@ namespace Alex.Graphics.Models.Blocks
 					color, color);
 			}
 
-			var textureInfo     = resources.Atlas.GetAtlasLocation(texture, out var uvSize);
+			var textureInfo     = resources.Atlas.GetAtlasLocation(block, texture, out var uvSize);
 			var textureLocation = textureInfo.Position;
 
 			var xw = (textureInfo.Width / 16f) / uvSize.X;
@@ -296,7 +310,7 @@ namespace Alex.Graphics.Models.Blocks
 			var map = new UVMap(
 				new Microsoft.Xna.Framework.Vector2(x1, y1), new Microsoft.Xna.Framework.Vector2(x2, y1),
 				new Microsoft.Xna.Framework.Vector2(x1, y2), new Microsoft.Xna.Framework.Vector2(x2, y2), color, color,
-				color);
+				color, textureInfo.Animated);
 
 			 if (rot > 0)
 				 map.Rotate(rot);

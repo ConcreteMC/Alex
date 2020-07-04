@@ -165,7 +165,7 @@ namespace Alex.Graphics.Models.Blocks
 			return new BoundingBox(position + (min), position + ((max)));
 		}
 
-		private string ResolveTexture(ResourcePackLib.Json.Models.Blocks.BlockModel var, string texture)
+		public static string ResolveTexture(ResourcePackLib.Json.Models.Blocks.BlockModel var, string texture)
 		{
 			if (texture[0] != '#')
 				return texture;
@@ -497,6 +497,7 @@ namespace Alex.Graphics.Models.Blocks
 			BlockStateModel bsModel,
 			IList<BlockShaderVertex> verts,
 			List<int> indexResult,
+			List<int> animatedIndexResult,
 			int biomeId,
 			Biome biome)
 		{
@@ -620,10 +621,13 @@ namespace Alex.Graphics.Models.Blocks
 					var skyLight = (byte) 15;
 					//GetLight(
 					//	world, facePosition, out blockLight, out skyLight, baseBlock.Transparent || !baseBlock.Solid);
+
+					var uvMap = GetTextureUVMap(
+						baseBlock, Resources, texture, x1, x2, y1, y2, textureRotation,
+						AdjustColor(faceColor, facing, element.Shade));
 					
 					var vertices = GetFaceVertices(face.Key, element.From, element.To,
-						GetTextureUVMap(Resources, texture, x1, x2, y1, y2, textureRotation, AdjustColor(
-							faceColor, facing, element.Shade)),
+						uvMap,
 						out int[] indexes);
 
 					float minX = float.MaxValue, minY = float.MaxValue, minZ = float.MaxValue;
@@ -709,19 +713,28 @@ namespace Alex.Graphics.Models.Blocks
 					for (var idx = 0; idx < indexes.Length; idx++)
 					{
 						var idxx = indexes[idx];
-						indexResult.Add(initialIndex + idxx);
+
+						if (uvMap.IsAnimated)
+						{
+							animatedIndexResult.Add(initialIndex + idxx);
+						}
+						else
+						{
+							indexResult.Add(initialIndex + idxx);
+						}
 					}
 				}
 			}
 		}
 
-		protected (BlockShaderVertex[] vertices, int[] indexes) GetVertices(IBlockAccess world,
+		protected VerticesResult GetVertices(IBlockAccess world,
 			Vector3 position, Block baseBlock,
 			BlockStateModel[] models)
 		{
 			var verts = new List<BlockShaderVertex>();
 			{
 				var indexResult = new List<int>(24 * models.Length);
+				var animatedIndexResult = new List<int>();
 
 				int biomeId = 0;//world == null ? 0 : world.GetBiome((int) position.X, 0, (int) position.Z);
 				var biome   = BiomeUtils.GetBiomeById(biomeId);
@@ -730,7 +743,7 @@ namespace Alex.Graphics.Models.Blocks
 				{
 					//var rndIndex = FastRandom.Next() % Models.Length;
 					CalculateModel(
-						world, position, baseBlock, models[0], verts, indexResult, biomeId, biome);
+						world, position, baseBlock, models[0], verts, indexResult, animatedIndexResult, biomeId, biome);
 				}
 				else
 				{
@@ -741,16 +754,16 @@ namespace Alex.Graphics.Models.Blocks
 						if (bsModel.Model == null) continue;
 
 						CalculateModel(
-							world, position, baseBlock, bsModel, verts, indexResult, biomeId,
+							world, position, baseBlock, bsModel, verts, indexResult, animatedIndexResult, biomeId,
 							biome);
 					}
 				}
 
-				return (verts.ToArray(), indexResult.ToArray());
+				return new VerticesResult(verts.ToArray(), indexResult.ToArray(), animatedIndexResult.Count > 0 ? animatedIndexResult.ToArray() : null);
 			}
 		}
 		
-		public override (BlockShaderVertex[] vertices, int[] indexes) GetVertices(IBlockAccess blockAccess, Vector3 position, Block baseBlock)
+		public override VerticesResult GetVertices(IBlockAccess blockAccess, Vector3 position, Block baseBlock)
 		{
 			return GetVertices(blockAccess, position, baseBlock, Models);
 		}
