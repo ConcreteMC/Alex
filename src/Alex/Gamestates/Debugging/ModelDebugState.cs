@@ -6,6 +6,7 @@ using System.Threading;
 using Alex.API.Graphics;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Gui.Elements.Layout;
+using Alex.API.Resources;
 using Alex.API.Utils;
 using Alex.Blocks;
 using Alex.Blocks.State;
@@ -292,7 +293,7 @@ namespace Alex.Gamestates.Debugging
 
 	public class EntityModelExplorer : ModelExplorer
 	{
-		private KeyValuePair<string, EntityDescription>[] _entityDefinitions;
+		private KeyValuePair<ResourceLocation, EntityDescription>[] _entityDefinitions;
 		private int                                                          _index = 0;
 
 		private GraphicsDevice GraphicsDevice { get; }

@@ -127,7 +127,7 @@ namespace Alex.Graphics.Models.Entity
 				{
 					var cube = Cubes[index];
 
-					AlphaTestEffect effect = cube.Effect;
+					var effect = cube.Effect;
 					if (effect == null) continue;
 
 					Matrix cubeRotationMatrix = Matrix.CreateTranslation(-cube.Pivot)
@@ -158,7 +158,7 @@ namespace Alex.Graphics.Models.Entity
 					effect.View = args.Camera.ViewMatrix;
 					effect.Projection = args.Camera.ProjectionMatrix;
 
-					if (!mock)
+					if (!mock && !cube.IsInvisible)
 					{
 						foreach (var pass in effect.CurrentTechnique.Passes)
 						{

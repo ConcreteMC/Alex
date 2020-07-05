@@ -317,11 +317,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			Client.World.Player.IsNoPvM = (message.flags & 0x04) == 0x04;
 		}
 
-		private ConcurrentDictionary<MiNET.Utils.UUID, PlayerMob> _players = new ConcurrentDictionary<MiNET.Utils.UUID, PlayerMob>();
+		private ConcurrentDictionary<MiNET.Utils.UUID, RemotePlayer> _players = new ConcurrentDictionary<MiNET.Utils.UUID, RemotePlayer>();
         public void HandleMcpeAddPlayer(McpeAddPlayer message)
 		{
 		//	UUID u = new UUID(message.uuid.GetBytes());
-			if (_players.TryGetValue(message.uuid, out PlayerMob mob))
+			if (_players.TryGetValue(message.uuid, out RemotePlayer mob))
 			{
 				//MiNET.Player
 				mob.EntityId = message.runtimeEntityId;
@@ -548,7 +548,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						}
 					}
 
-					PlayerMob m = new PlayerMob(r.DisplayName, Client.World as World, Client, skinTexture);
+					RemotePlayer m = new RemotePlayer(r.DisplayName, Client.World as World, Client, skinTexture);
 					m.UUID = u;
 					m.EntityId = r.EntityId;
 					m.SetInventory(new BedrockInventory(46));

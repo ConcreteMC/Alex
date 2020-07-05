@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Text;
+using Alex.API.Resources;
 using Alex.API.Utils;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Bedrock.Entity;
@@ -23,7 +24,7 @@ namespace Alex.ResourcePackLib
 
 		private ConcurrentDictionary<string, Image<Rgba32>> _bitmaps = new ConcurrentDictionary<string, Image<Rgba32>>();
         public IReadOnlyDictionary<string, Image<Rgba32>> Textures => _bitmaps;
-		public IReadOnlyDictionary<string, EntityDescription> EntityDefinitions { get; private set; } = new ConcurrentDictionary<string, EntityDescription>();
+		public IReadOnlyDictionary<ResourceLocation, EntityDescription> EntityDefinitions { get; private set; } = new ConcurrentDictionary<ResourceLocation, EntityDescription>();
 
 		private readonly DirectoryInfo _workingDir;
 
@@ -91,7 +92,7 @@ namespace Alex.ResourcePackLib
                 return;
             }
 
-            Dictionary<string, EntityDescription> entityDefinitions = new Dictionary<string, EntityDescription>();
+            Dictionary<ResourceLocation, EntityDescription> entityDefinitions = new Dictionary<ResourceLocation, EntityDescription>();
             foreach (var def in entityDefinitionsDir.EnumerateFiles())
             {
                 LoadEntityDefinition(def, entityDefinitions);
@@ -101,7 +102,7 @@ namespace Alex.ResourcePackLib
             Log.Info($"Processed {EntityDefinitions.Count} entity definitions");
         }
 
-		private void LoadEntityDefinition(FileInfo entry, Dictionary<string, EntityDescription> entityDefinitions)
+		private void LoadEntityDefinition(FileInfo entry, Dictionary<ResourceLocation, EntityDescription> entityDefinitions)
 		{
 			using (var stream = entry.Open(FileMode.Open))
 			{
@@ -109,7 +110,7 @@ namespace Alex.ResourcePackLib
 
 				string fileName = Path.GetFileNameWithoutExtension(entry.Name);
 
-				Dictionary<string, EntityDescription> definitions = new Dictionary<string, EntityDescription>();
+				Dictionary<ResourceLocation, EntityDescription> definitions = new Dictionary<ResourceLocation, EntityDescription>();
 				
 				JObject obj  = JObject.Parse(json, new JsonLoadSettings());
 				foreach (var e in obj)

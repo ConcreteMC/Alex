@@ -185,16 +185,27 @@ namespace Alex.Graphics.Models.Entity
 				return;
 			
 			var originalRaster = args.GraphicsDevice.RasterizerState;
-			args.GraphicsDevice.RasterizerState = RasterizerState;
-			args.GraphicsDevice.SetVertexBuffer(VertexBuffer);
+			var blendState = args.GraphicsDevice.BlendState;
 
-			if (Bones == null) return;
-			foreach (var bone in Bones)
+			try
 			{
-				bone.Value.Render(args, position, CharacterMatrix, mock);
-			}
+				args.GraphicsDevice.BlendState = BlendState.AlphaBlend;
+				args.GraphicsDevice.RasterizerState = RasterizerState;
+				
+				args.GraphicsDevice.SetVertexBuffer(VertexBuffer);
 
-			args.GraphicsDevice.RasterizerState = originalRaster;
+				if (Bones == null) return;
+
+				foreach (var bone in Bones)
+				{
+					bone.Value.Render(args, position, CharacterMatrix, mock);
+				}
+			}
+			finally
+			{
+				args.GraphicsDevice.RasterizerState = originalRaster;
+				args.GraphicsDevice.BlendState = blendState;
+			}
 		}
 
 		public Vector3 EntityColor { get; set; } = Color.White.ToVector3();

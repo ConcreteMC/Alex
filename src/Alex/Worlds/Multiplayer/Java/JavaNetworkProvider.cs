@@ -34,7 +34,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			packet.EntityId = entityId;
 			packet.Action = action;
 			packet.JumpBoost = 0;
-			//Client.SendPacket(packet);
+			Client.SendPacket(packet);
 		}
 
 		/// <inheritdoc />
@@ -130,6 +130,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		public override void UseItem(Item item, int hand, ItemUseAction action)
 		{
+			//if (!(action == ))
 			Client.SendPacket(new UseItemPacket()
 			{
 				Hand = hand

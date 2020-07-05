@@ -8,6 +8,7 @@ using Alex.API.Entities;
 using Alex.API.Graphics;
 using Alex.API.Graphics.Typography;
 using Alex.API.Network;
+using Alex.API.Resources;
 using Alex.API.Utils;
 using Alex.Blocks.Minecraft;
 using Alex.Entities.Properties;
@@ -57,7 +58,7 @@ namespace Alex.Entities
 		public World Level { get; set; }
 
 		public int JavaEntityId { get; protected set; }
-		public int EntityTypeId { get; private set; }
+		public int EntityTypeId { get; protected set; }
 		public long EntityId { get; set; }
 		public bool IsSpawned { get; set; }
 
@@ -117,7 +118,7 @@ namespace Alex.Entities
 		}
 		public double Height { get; set; } = 1;
 		public double Width { get; set; } = 1;
-		public double Length { get; set; } = 1;
+		public double Length => Width;
 		public double Drag { get; set; } = 0.02f;// 8f;
 
 		public double Gravity { get; set; } = 0.08f; //16.8f; //9.81f; //1.6f;
@@ -308,12 +309,12 @@ namespace Alex.Entities
 
 		            ItemRenderer = renderer;
 					
-		            if (this is PlayerMob p)
+		            if (this is RemotePlayer p)
 		            {
 			            var pos = renderer.DisplayPosition;
 			            //if (pos.HasFlag(DisplayPosition.FirstPerson) || pos.HasFlag(DisplayPosition.ThirdPerson))
 			            {
-				            if (p.IsLeftyHandy)
+				            if (p.IsLeftHanded)
 				            {
 					            if (!pos.HasFlag(DisplayPosition.LeftHand))
 					            {
@@ -388,7 +389,7 @@ namespace Alex.Entities
 		public bool IsInvisible { get; set; }
 		public bool IsTempted { get; set; }
 		public bool IsInLove { get; set; }
-		public bool IsSaddled { get; set; }
+		
 		public bool IsPowered { get; set; }
 		public bool IsIgnited { get; set; }
 		public bool IsBaby { get; set; }
@@ -398,12 +399,12 @@ namespace Alex.Entities
 		public bool IsAlwaysShowName { get; set; }
 		public bool IsNoAi => NoAi;
 		public bool IsSilent { get; set; }
-		public bool IsWallClimbing { get; set; }
+		public virtual bool IsWallClimbing { get; set; }
 		public bool IsResting { get; set; }
 		public bool IsSitting { get; set; }
 		public bool IsAngry { get; set; }
 		public bool IsInterested { get; set; }
-		public bool IsCharged { get; set; }
+
 		public bool IsTamed { get; set; }
 		public bool IsLeashed { get; set; }
 		public bool IsSheared { get; set; }
@@ -411,7 +412,7 @@ namespace Alex.Entities
 		public bool IsElder { get; set; }
 		public bool IsMoving { get; set; }
 		public bool IsBreathing => !IsInWater;
-		public bool IsChested { get; set; }
+		public virtual bool IsChested { get; set; }
 		public bool IsStackable { get; set; }
 		public bool HasCollision { get; set; } = true;
 		public bool IsAffectedByGravity { get; set; } = true;
@@ -472,7 +473,7 @@ namespace Alex.Entities
 						if (meta.Value is MetadataFloat fltw)
 						{
 							Width = fltw.Value;
-							Length = fltw.Value;
+						//	Length = fltw.Value;
 						}
 					} break;
 					case MiNET.Entities.Entity.MetadataFlags.Scale:
@@ -1019,17 +1020,17 @@ namespace Alex.Entities
 			
 			ModelRenderer.GetBone("body", out _body);
 
-			ModelRenderer.GetBone("leftArm", out _rightArmModel);
-			ModelRenderer.GetBone("rightArm", out _leftArmModel);
+			ModelRenderer.GetBone("leftArm", out _leftArmModel);
+			ModelRenderer.GetBone("rightArm", out _rightArmModel);
 
-			ModelRenderer.GetBone("rightLeg", out _leftLegModel);
-			ModelRenderer.GetBone("leftLeg", out _rightLegModel);
+			ModelRenderer.GetBone("rightLeg", out _rightLegModel);
+			ModelRenderer.GetBone("leftLeg", out _leftLegModel);
 
-			ModelRenderer.GetBone("rightSleeve", out _leftSleeveModel);
-			ModelRenderer.GetBone("leftSleeve", out _rightSleeveModel);
+			ModelRenderer.GetBone("rightSleeve", out _rightSleeveModel);
+			ModelRenderer.GetBone("leftSleeve", out _leftSleeveModel);
 
-			ModelRenderer.GetBone("rightPants", out _leftPantsModel);
-			ModelRenderer.GetBone("leftPants", out _rightPantsModel);
+			ModelRenderer.GetBone("rightPants", out _rightPantsModel);
+			ModelRenderer.GetBone("leftPants", out _leftPantsModel);
 
 			ModelRenderer.GetBone("jacket", out _jacketModel);
 
@@ -1238,6 +1239,74 @@ namespace Alex.Entities
 			}
 		}
 
+		protected bool TryUpdateGeometry(ResourceLocation location, string geometry, string texture = "default")
+		{
+			if (Alex.Instance.Resources.BedrockResourcePack.EntityDefinitions.TryGetValue(
+				location, out var entityDescription))
+			{
+				if (entityDescription.Textures.TryGetValue(texture, out texture) && entityDescription.Geometry.TryGetValue(geometry, out var geometryName))
+				{
+					if (ModelFactory.TryGetModel(geometryName, out var newModel))
+					{
+						Alex.Instance.UIThreadQueue.Enqueue(
+							() =>
+							{
+								if (Alex.Instance.Resources.BedrockResourcePack.TryGetTexture(
+									texture, out var newTexture))
+								{
+									ModelRenderer = new EntityModelRenderer(newModel, TextureUtils.BitmapToTexture2D(
+										Alex.Instance.GraphicsDevice, newTexture));
+									//ModelRenderer?.Texture = TextureUtils.BitmapToTexture2D(
+									//	Alex.Instance.GraphicsDevice, newTexture);
+								}
+							});
+
+						return true;
+					}
+				}
+			}
+
+			return false;
+		}
+		
+		protected bool TryUpdateTexture(ResourceLocation location, string texture)
+		{
+			if (Alex.Instance.Resources.BedrockResourcePack.EntityDefinitions.TryGetValue(
+				location, out var entityDescription))
+			{
+				if (entityDescription.Textures.TryGetValue(texture, out texture) && entityDescription.Geometry.TryGetValue("default", out var geometryName))
+				{
+					if (ModelFactory.TryGetModel(geometryName, out var newModel))
+					{
+						Alex.Instance.UIThreadQueue.Enqueue(
+							() =>
+							{
+								if (Alex.Instance.Resources.BedrockResourcePack.TryGetTexture(
+									texture, out var newTexture))
+								{
+									ModelRenderer = new EntityModelRenderer(newModel, TextureUtils.BitmapToTexture2D(
+										Alex.Instance.GraphicsDevice, newTexture));
+									//ModelRenderer?.Texture = TextureUtils.BitmapToTexture2D(
+									//	Alex.Instance.GraphicsDevice, newTexture);
+								}
+							});
+
+						return true;
+					}
+				}
+			}
+
+			return false;
+		}
+		
+		protected void ToggleCubes(EntityModelRenderer.ModelBone bone, bool isInvisible)
+		{
+			foreach (var cube in bone.Cubes)
+			{
+				cube.IsInvisible = isInvisible;
+			}
+		}
+		
 		public static float NametagScale { get; set; } = 2f;
 		public void Dispose()
 		{

@@ -7,8 +7,8 @@ namespace Alex.Entities.Passive
 		public Parrot(World level) : base((EntityType)0, level)
 		{
 			JavaEntityId = 105;
-			Height = 0;
-			Width = 0;
+			Height = 0.9;
+			Width = 0.5;
 		}
 	}
 }

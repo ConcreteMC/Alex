@@ -73,6 +73,9 @@ namespace Alex.Utils
 				case EntityType.Slime:
 					entity = new Slime(world);
 					break;
+				case EntityType.Endermite:
+					entity = new Endermite(world);
+					break;
 				case EntityType.Enderman:
 					entity = new Enderman(world);
 					break;
@@ -114,6 +117,9 @@ namespace Alex.Utils
 					break;
 				case EntityType.Horse:
 					entity = new Horse(world);
+					break;
+				case EntityType.ZombieHorse:
+					entity = new ZombieHorse(world);
 					break;
 				case EntityType.PolarBear:
 					entity = new PolarBear(world);
@@ -162,6 +168,30 @@ namespace Alex.Utils
 					break;
 				case EntityType.Salmon:
 					entity = new Salmon(world);
+					break;
+				case EntityType.Donkey:
+					entity = new Donkey(world);
+					break;
+				case EntityType.Llama:
+					entity = new Llama(world);
+					break;
+				case EntityType.Mule:
+					entity = new Mule(world);
+					break;
+				case EntityType.Fox:
+					entity = new Fox(world);
+					break;
+				case EntityType.Parrot:
+					entity = new Parrot(world);
+					break;
+				case EntityType.Phantom:
+					entity = new Phantom(world);
+					break;
+				case EntityType.Bee:
+					entity = new Bee(world);
+					break;
+				case EntityType.LlamaSpit:
+					entity = new LlamaSpit(world);
 					break;
 				//case EntityType.Human:
 					//entity = new PlayerMob("test", world, );

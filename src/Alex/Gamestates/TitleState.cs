@@ -207,7 +207,7 @@ namespace Alex.Gamestates
 		{
 			if (e.Profile?.Skin?.Texture != null)
 			{
-				_playerView.Entity = new PlayerMob(e.Profile.Username, null, null, e.Profile.Skin.Texture,
+				_playerView.Entity = new RemotePlayer(e.Profile.Username, null, null, e.Profile.Skin.Texture,
 					e.Profile.Skin.Slim ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom" );
 				_playerView.Entity.SetInventory(new BedrockInventory(46));
 				
@@ -240,7 +240,7 @@ namespace Alex.Gamestates
 				};
 			}
 
-			var entity = new PlayerMob("", null, null, skin.Texture);
+			var entity = new RemotePlayer("", null, null, skin.Texture);
 
 			AddChild(_playerView =
 				new GuiEntityModelView(

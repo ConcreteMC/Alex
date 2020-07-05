@@ -2,7 +2,7 @@ using Alex.Worlds;
 
 namespace Alex.Entities.Passive
 {
-	public class Donkey : PassiveMob
+	public class Donkey : ChestedHorse
 	{
 		public Donkey(World level) : base((EntityType)24, level)
 		{

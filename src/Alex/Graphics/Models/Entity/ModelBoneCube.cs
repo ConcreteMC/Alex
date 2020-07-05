@@ -51,6 +51,8 @@ namespace Alex.Graphics.Models.Entity
 			}
 			
 			public bool Mirror { get; set; } = false;
+			public bool IsInvisible { get; set; } = false;
+
 			public void Dispose()
 			{
 				IsDirty = false;

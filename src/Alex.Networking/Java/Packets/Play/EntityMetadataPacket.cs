@@ -4,6 +4,8 @@ using System.IO;
 using Alex.API.Data;
 using Alex.API.Utils;
 using Alex.Networking.Java.Util;
+using fNbt;
+using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Networking.Java.Packets.Play
@@ -80,22 +82,33 @@ namespace Alex.Networking.Java.Packets.Play
 					    case MetadataType.Position:
 						    meta = new MetadataPosition(index, stream.ReadPosition());
 						    break;
+
 					    case MetadataType.OptPosition:
-						    if (stream.ReadBool())
-							    stream.ReadPosition();
+					    {
+						    bool hasPosition = stream.ReadBool();
+
+						    meta = new MetadataOptPosition(
+							    index, hasPosition, hasPosition ? stream.ReadPosition() : (Vector3?) null);
+					    }
+
 						    break;
+
 					    case MetadataType.Direction:
 						    stream.ReadVarInt();
 						    break;
+
 					    case MetadataType.OptUUID:
-						    if (stream.ReadBool())
-							    stream.ReadUuid();
+					    {
+						    var hasUUID = stream.ReadBool();
+						    meta = new MetadataOptUUID(index, hasUUID, hasUUID ? new UUID(stream.ReadUuid().ToByteArray()) : null);// stream.ReadUuid();
+					    }
 						    break;
+
 					    case MetadataType.OptBlockID:
 						    stream.ReadVarInt();
 						    break;
 					    case MetadataType.NBT:
-						    stream.ReadNbtCompound();
+						    meta = new MetadataNbt(index, stream.ReadNbtCompound());
 						    break;
 					    case MetadataType.Particle:
 						    break;
@@ -213,6 +226,21 @@ namespace Alex.Networking.Java.Packets.Play
 	    }
     }
     
+    
+    public class MetadataOptPosition : MetaDataEntry
+    {
+	    public bool HasValue { get; set; }
+	    public Vector3? Position { get; set; }
+	    
+	    /// <inheritdoc />
+	    public MetadataOptPosition(byte index, bool hasPosition, Vector3? position) : base(index, MetadataType.OptPosition)
+	    {
+		    HasValue = hasPosition;
+		    Position = position;
+	    }
+    }
+
+    
     public class MetadataRotation : MetaDataEntry
     {
 	    public Vector3 Rotation { get; }
@@ -261,6 +289,29 @@ namespace Alex.Networking.Java.Packets.Play
 	    public MetadataChat(byte index, ChatObject value) : base(index, MetadataType.OptChat)
 	    {
 		    Value = value;
+	    }
+    }
+
+    public class MetadataOptUUID : MetaDataEntry
+    {
+	    public bool HasValue { get; set; }
+	    public UUID Value { get; set; }
+	    
+	    /// <inheritdoc />
+	    public MetadataOptUUID(byte index, bool hasValue, UUID uuid) : base(index, MetadataType.OptUUID)
+	    {
+		    HasValue = hasValue;
+		    Value = uuid;
+	    }
+    }
+
+    public class MetadataNbt : MetaDataEntry
+    {
+	    public NbtCompound Compound { get; set; }
+	    /// <inheritdoc />
+	    public MetadataNbt(byte index, NbtCompound compound) : base(index, MetadataType.NBT)
+	    {
+		    Compound = compound;
 	    }
     }
 }

@@ -513,7 +513,7 @@ namespace Alex.Gamestates.InGame
 
 						if (World?.Player?.ItemRenderer != null)
 						{
-							World.Player.ItemRenderer.DisplayPosition = World.Player.IsLeftyHandy ?
+							World.Player.ItemRenderer.DisplayPosition = World.Player.IsLeftHanded ?
 								DisplayPosition.ThirdPersonLeftHand : DisplayPosition.ThirdPersonRightHand;
 						}
 
@@ -537,7 +537,7 @@ namespace Alex.Gamestates.InGame
 
 							if (World.Player.ItemRenderer != null)
 							{
-								World.Player.ItemRenderer.DisplayPosition = World.Player.IsLeftyHandy ?
+								World.Player.ItemRenderer.DisplayPosition = World.Player.IsLeftHanded ?
 									DisplayPosition.FirstPersonLeftHand : DisplayPosition.FirstPersonRightHand;
 							}
 						}

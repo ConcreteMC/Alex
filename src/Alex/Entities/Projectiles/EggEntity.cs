@@ -9,7 +9,7 @@ namespace Alex.Entities.Projectiles
 		public EggEntity(World level, NetworkProvider network) : base((int) EntityType.ThrownEgg, level, network)
 		{
 			Width = 0.25;
-			Length = 0.25;
+			//Length = 0.25;
 			Height = 0.25;
 
 			Gravity = 0.03;

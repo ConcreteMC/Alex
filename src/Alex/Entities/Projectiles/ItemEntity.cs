@@ -19,7 +19,7 @@ namespace Alex.Entities.Projectiles
         {
             Width = 0.25;
             Height = 0.25;
-            Length = 0.25;
+          //  Length = 0.25;
             
             Gravity = 0.04;
             Drag = 0.02;

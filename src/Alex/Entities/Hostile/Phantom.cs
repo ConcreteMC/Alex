@@ -3,10 +3,10 @@ using Alex.Worlds;
 
 namespace Alex.Entities.Hostile
 {
-	public class Slime : HostileMob
+	public class Phantom : Flying
 	{
-		private const double BoundingWidth  = 0.51000005;
-		private const double BoundingHeight = 0.51000005;
+		private const double BoundingWidth = 0.9;
+		private const double BoundingHeight = 0.5;
 		
 		private int _size;
 
@@ -19,21 +19,21 @@ namespace Alex.Entities.Hostile
 			set
 			{
 				_size = value;
-				
+				//Scale = value;
+
 				Width = BoundingWidth + 0.2 * value;
 				Height = BoundingHeight + 0.1 * value;
 
 				Scale = (float) (Width / BoundingWidth);
 			}
 		}
-
-		public Slime(World level) : base((EntityType)37, level)
+		
+		/// <inheritdoc />
+		public Phantom(World level) : base(EntityType.Phantom, level)
 		{
-			JavaEntityId = 55;
-			Height = 0.51000005;
-			Width = 0.51000005;
+			
 		}
-
+		
 		/// <inheritdoc />
 		protected override void HandleJavaMeta(MetaDataEntry entry)
 		{

@@ -2,7 +2,7 @@ using Alex.Worlds;
 
 namespace Alex.Entities.Hostile
 {
-	public class Ghast : HostileMob
+	public class Ghast : Flying
 	{
 		public Ghast(World level) : base((EntityType)41, level)
 		{

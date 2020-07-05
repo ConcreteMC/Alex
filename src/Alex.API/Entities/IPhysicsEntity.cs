@@ -6,7 +6,7 @@ namespace Alex.API.Entities
     {
 	    double Height { get; set; }
 	    double Width { get; set; }
-	    double Length { get; set; }
+	    double Length { get; }
 	    double Drag { get; set; }
 	    double Gravity { get; set; }
 		float TerminalVelocity { get; set; }

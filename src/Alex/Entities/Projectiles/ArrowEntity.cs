@@ -10,7 +10,7 @@ namespace Alex.Entities.Projectiles
 		public ArrowEntity(World level, NetworkProvider network) : base((int) EntityType.Arrow, level, network)
 		{
 			Width = 0.15;
-			Length = 0.15;
+			//Length = 0.15;
 			Height = 0.15;
 
 			Gravity = 0.05;

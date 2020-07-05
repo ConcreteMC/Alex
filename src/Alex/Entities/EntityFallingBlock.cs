@@ -15,7 +15,7 @@ namespace Alex.Entities
 		/// <inheritdoc />
 		public EntityFallingBlock(World level, NetworkProvider network) : base(level, network)
 		{
-			Height = Width = Length = 0.98;
+			Height = Width = 0.98;
 			
 			DoRotation = false;
 			

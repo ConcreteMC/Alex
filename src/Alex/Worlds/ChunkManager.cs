@@ -116,8 +116,8 @@ namespace Alex.Worlds
 	       // ActionQueue = new PrioritizedActionQueue(_threadPool, Options.VideoOptions.ChunkThreads);
 
 	       Options.VideoOptions.ClientSideLighting.Bind(ClientSideLightingChanged);
-	       
-	     
+	       RenderDistance = Options.VideoOptions.RenderDistance;
+
 	       //_blockAccessPool = new ObjectPool<ChunkBuilderBlockAccess>(36, () => new ChunkBuilderBlockAccess(World));
         }
 
@@ -593,6 +593,8 @@ namespace Alex.Worlds
 
 	    #region Chunk Updates
 
+	    public int RenderDistance { get; set; } = 0;
+	    public ChunkCoordinates? ViewPosition { get; set; } = null;
 	    private bool NeedPrioritization { get; set; } = false;
 	    private void ChunkUpdateThread()
 		{
@@ -609,7 +611,7 @@ namespace Alex.Worlds
                 //SpinWait.SpinUntil(() => Interlocked.Read(ref _threadsRunning) < maxThreads);
 
                 foreach (var data in _chunkData.ToArray().Where(x =>
-	                QuickMath.Abs(cameraChunkPos.DistanceTo(x.Key)) > Options.VideoOptions.RenderDistance))
+	                QuickMath.Abs(cameraChunkPos.DistanceTo(x.Key)) > RenderDistance))
                 {
 	                data.Value?.Dispose();
 	                _chunkData.TryRemove(data.Key, out _);
@@ -618,7 +620,7 @@ namespace Alex.Worlds
                 var renderedChunks = Chunks.ToArray().Select(x => (KeyValuePair: x, distance: Math.Abs(x.Key.DistanceTo(cameraChunkPos)))).Where(x =>
                 {
 
-	                if (x.distance > Options.VideoOptions.RenderDistance)
+	                if (x.distance > RenderDistance)
 		                return false;
 			    
 	                var chunkPos = new Vector3(x.KeyValuePair.Key.X * ChunkColumn.ChunkWidth, 0, x.KeyValuePair.Key.Z * ChunkColumn.ChunkDepth);
@@ -772,10 +774,11 @@ namespace Alex.Worlds
 
 			    });
 	    }
-
+	    
 	    private double GetUpdatePriority(ChunkColumn column, ScheduleType type)
 	    {
-		    var cameraChunk = new ChunkCoordinates(_cameraPosition);
+		    var cameraChunk = ViewPosition.HasValue ? ViewPosition.Value : new ChunkCoordinates(_cameraPosition);
+		    
 		    var cc = new ChunkCoordinates(column.X, column.Z);
 		    bool isInView = IsWithinView(cc, _cameraBoundingFrustum);
 		    
@@ -856,6 +859,7 @@ namespace Alex.Worlds
 	    public void FlagPrioritization()
 	    {
 		    NeedPrioritization = true;
+		    //ViewPosition = viewPosition;
 	    }
 	    
 	    public TimeSpan MaxUpdateTime { get; set; } = TimeSpan.Zero;

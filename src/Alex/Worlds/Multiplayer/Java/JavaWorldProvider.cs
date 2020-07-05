@@ -107,7 +107,12 @@ namespace Alex.Worlds.Multiplayer.Java
 			
 			EventDispatcher.RegisterEvents(this);
 
-			ViewDistance = OptionsProvider.AlexOptions.VideoOptions.RenderDistance.Value;
+			Options.VideoOptions.RenderDistance.Bind(RenderDistanceSettingChanged);
+		}
+
+		private void RenderDistanceSettingChanged(int oldvalue, int newvalue)
+		{
+			SendSettings();
 		}
 
 		private bool _disconnected = false;
@@ -171,6 +176,19 @@ namespace Alex.Worlds.Multiplayer.Java
 		private int _tickSinceLastPositionUpdate = 0;
 		private bool _flying = false;
 
+		public void SendSettings()
+		{
+			ClientSettingsPacket settings = new ClientSettingsPacket();
+			settings.ChatColors = true;
+			settings.ChatMode = 0;
+			settings.ViewDistance = (byte) World.ChunkManager.RenderDistance;
+			settings.SkinParts = 255;
+			settings.MainHand = 1;
+			settings.Locale = Options.MiscelaneousOptions.Language.Value;
+			
+			SendPacket(settings);
+		}
+		
 		private void SendPlayerAbilities(Player player)
 		{
 			int flags = 0;
@@ -325,7 +343,6 @@ namespace Alex.Worlds.Multiplayer.Java
 		private bool _initiated = false;
 		private BlockingCollection<ChunkColumn> _generatingHelper = new BlockingCollection<ChunkColumn>();
 		private int _chunksReceived = 0;
-		private int ViewDistance { get; set; } = 6;
 		public override Task Load(ProgressReport progressReport)
 		{
 			return Task.Run(() =>
@@ -345,7 +362,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 				progressReport(LoadingState.LoadingChunks, 0);
 
-				int t = ViewDistance;
+				int t = World.ChunkManager.RenderDistance;
 				//double radiusSquared = Math.Pow(t, 2);
 
 				double radiusSquared = Math.Pow(t, 2);
@@ -356,11 +373,17 @@ namespace Alex.Worlds.Multiplayer.Java
 				SpinWait.SpinUntil(() =>
 				{
 					var playerChunkCoords = new ChunkCoordinates(World.Player.KnownPosition);
+
+					if (_chunksReceived >= target && !_generatingHelper.IsAddingCompleted)
+					{
+						_generatingHelper.CompleteAdding();
+					}
+
 					if (_chunksReceived < target)
 					{
 						progressReport(LoadingState.LoadingChunks, (int)Math.Floor((100 / target) * _chunksReceived));
                     }
-					else if (loaded < target || !allowSpawn)
+					else if (loaded < target || !allowSpawn || _generatingHelper.Count > 0)
 					{
 						if (_generatingHelper.TryTake(out ChunkColumn chunkColumn, 50))
 						{
@@ -477,7 +500,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				var def = Alex.Resources.BedrockResourcePack.EntityDefinitions.FirstOrDefault(
 					x => x.Value.Identifier.Replace("_", "").ToLowerInvariant().Equals($"minecraft:{type}".ToLowerInvariant()));
 
-				if (!string.IsNullOrWhiteSpace(def.Key))
+				if (def.Key != null)
 				{
 					EntityModel model;
 
@@ -486,7 +509,7 @@ namespace Alex.Worlds.Multiplayer.Java
 						var    textures = def.Value.Textures;
 						string texture;
 
-						if (!textures.TryGetValue("default", out texture))
+						if (!(textures.TryGetValue("default", out texture) || textures.TryGetValue(def.Key.Path, out texture)))
 						{
 							texture = textures.FirstOrDefault().Value;
 						}
@@ -715,6 +738,14 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 				HandleSpawnPositionPacket(spawnPositionPacket);
 			}
+			else if (packet is UpdateViewPositionPacket updateViewPositionPacket)
+			{
+				HandleUpdateViewPositionPacket(updateViewPositionPacket);
+			}
+			else if (packet is UpdateViewDistancePacket viewDistancePacket)
+			{
+				HandleUpdateViewDistancePacket(viewDistancePacket);
+			}
 			else
 			{
 				if (UnhandledPackets.TryAdd(packet.PacketId, packet.GetType()))
@@ -722,6 +753,16 @@ namespace Alex.Worlds.Multiplayer.Java
 					Log.Warn($"Unhandled packet: 0x{packet.PacketId:x2} - {packet.ToString()}");
 				}
 			}
+		}
+
+		private void HandleUpdateViewDistancePacket(UpdateViewDistancePacket packet)
+		{
+			World.ChunkManager.RenderDistance = packet.ViewDistance;
+		}
+
+		private void HandleUpdateViewPositionPacket(UpdateViewPositionPacket packet)
+		{
+			World.ChunkManager.ViewPosition = new ChunkCoordinates(packet.ChunkX, packet.ChunkZ);
 		}
 
 		private void HandleSpawnPositionPacket(SpawnPositionPacket packet)
@@ -1228,7 +1269,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void HandleSpawnPlayerPacket(SpawnPlayerPacket packet)
 		{
-			if (_players.TryGetValue(new UUID(packet.Uuid.ToByteArray()), out PlayerMob mob))
+			if (_players.TryGetValue(new UUID(packet.Uuid.ToByteArray()), out RemotePlayer mob))
 			{
 				float yaw = MathUtils.AngleToNotchianDegree(packet.Yaw);
 				mob.KnownPosition = new PlayerLocation(packet.X, packet.Y, packet.Z, yaw, yaw, -MathUtils.AngleToNotchianDegree(packet.Pitch));
@@ -1239,7 +1280,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			}
 		}
 
-		private ConcurrentDictionary<UUID, PlayerMob> _players = new ConcurrentDictionary<UUID, PlayerMob>();
+		private ConcurrentDictionary<UUID, RemotePlayer> _players = new ConcurrentDictionary<UUID, RemotePlayer>();
 		private void HandlePlayerListItemPacket(PlayerListItemPacket packet)
 		{
 			Alex.Resources.ResourcePack.TryGetBitmap("entity/alex", out var rawTexture);
@@ -1262,7 +1303,7 @@ namespace Alex.Worlds.Multiplayer.Java
 							}
 						}
 
-						PlayerMob entity = new PlayerMob(entry.Name, (World) World, NetworkProvider, t, skinSlim ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom");
+						RemotePlayer entity = new RemotePlayer(entry.Name, (World) World, NetworkProvider, t, skinSlim ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom");
 						entity.UpdateGamemode((Gamemode) entry.Gamemode);
 						entity.UUID = new UUID(entry.UUID.ToByteArray());
 
@@ -1313,7 +1354,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 				foreach (var entry in packet.UpdateDisplayNameEntries)
 				{
-					if (_players.TryGetValue(new UUID(entry.UUID.ToByteArray()), out PlayerMob entity))
+					if (_players.TryGetValue(new UUID(entry.UUID.ToByteArray()), out RemotePlayer entity))
 					{
 						if (entry.HasDisplayName)
 						{
@@ -1542,14 +1583,7 @@ namespace Alex.Worlds.Multiplayer.Java
 		{
 			//_dimension = packet.Dimension;
 
-			ClientSettingsPacket settings = new ClientSettingsPacket();
-			settings.ChatColors = true;
-			settings.ChatMode = 0;
-			settings.ViewDistance = (byte) ViewDistance;
-			settings.SkinParts = 255;
-			settings.MainHand = 1;
-			settings.Locale = "en_US";
-			SendPacket(settings);
+			SendSettings();
 
 			World.Player.EntityId = packet.EntityId;
 			World.Player.UpdateGamemode((Gamemode) packet.Gamemode);
@@ -1557,6 +1591,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void HandleUpdateLightPacket(UpdateLightPacket packet)
 		{
+			return;
 			if (World.GetChunkColumn(packet.ChunkX, packet.ChunkZ) is ChunkColumn c)
 			{
 				for (int i = 0; i < packet.SkyLightArrays.Length; i++)
@@ -1619,7 +1654,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				result.SkyLightDirty = true;
 				result.BlockLightDirty = true;
 
-				if (!hasDoneInitialChunks)
+				if (!_generatingHelper.IsAddingCompleted)
 				{
 					_generatingHelper.Add(result);
 					_chunksReceived++;
@@ -1964,6 +1999,8 @@ namespace Alex.Worlds.Multiplayer.Java
 			TcpClient.Dispose();
 
 			Client.Dispose();
+			
+			//Options.VideoOptions.RenderDistance.
 		}
 	}
 }

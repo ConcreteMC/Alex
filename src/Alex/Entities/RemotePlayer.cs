@@ -16,7 +16,7 @@ using MathF = Alex.API.Utils.MathF;
 
 namespace Alex.Entities
 {
-	public class PlayerMob : Mob
+	public class RemotePlayer : LivingEntity
 	{
 		public UUID Uuid { get; private set; }
 
@@ -28,16 +28,15 @@ namespace Alex.Entities
 		public string GeometryName { get; set; }
 		
 		public bool IsFirstPersonMode { get; set; } = false;
-		public bool IsLeftyHandy      { get; set; } = false;
-		
-		public PlayerMob(string name, World level, NetworkProvider network, PooledTexture2D skinTexture, string geometry = "geometry.humanoid.customSlim") : base(63, level, network)
+
+		public RemotePlayer(string name, World level, NetworkProvider network, PooledTexture2D skinTexture, string geometry = "geometry.humanoid.customSlim") : base(63, level, network)
 		{
 			//DoRotationCalculations = false;
 			Name = name;
 			Uuid = new UUID(Guid.NewGuid().ToByteArray());
 
 			Width = 0.6;
-			Length = 0.6;
+			//Length = 0.6;
 			Height = 1.80;
 
 			IsSpawned = false;
@@ -84,7 +83,7 @@ namespace Alex.Entities
 
 			if (entry.Index == 17 && entry is MetadataByte metaByte)
 			{
-				IsLeftyHandy = metaByte.Value == 0;
+				IsLeftHanded = metaByte.Value == 0;
 			}
 		}
 

@@ -44,7 +44,7 @@ namespace Alex.Gamestates.MainMenu.Profile
             // AutoSizeMode = AutoSizeMode.GrowAndShrink;
             // BackgroundOverlay = new GuiTexture2D(GuiTextures.OptionsBackground);
 
-            var mob = new PlayerMob(skin.Name, null, null, texture2D);
+            var mob = new RemotePlayer(skin.Name, null, null, texture2D);
             mob.ModelRenderer = new EntityModelRenderer(skin.Model, texture2D);
             
             ModelView = new GuiEntityModelView(mob) /*"geometry.humanoid.customSlim"*/

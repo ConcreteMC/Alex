@@ -4,11 +4,11 @@ using Alex.Worlds;
 
 namespace Alex.Entities
 {
-	public class Mob : LivingEntity
+	public class Mob : Insentient
 	{
 		public Mob(int entityTypeId, World level, NetworkProvider network) : base(entityTypeId, level, network)
 		{
-			Width = Length = 0.6;
+			Width = 0.6;
 			Height = 1.80;
 		}
 

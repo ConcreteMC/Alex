@@ -31,7 +31,7 @@ using Skin = Alex.API.Utils.Skin;
 
 namespace Alex.Entities
 {
-    public class Player : PlayerMob
+    public class Player : RemotePlayer
     {
 	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Player));
 
@@ -359,7 +359,7 @@ namespace Alex.Entities
 		    
 		    bool canAttack = true;
 
-		    if (entity is PlayerMob)
+		    if (entity is RemotePlayer)
 		    {
 			    canAttack = !IsNoPvP && Level.Pvp;
 		    }
