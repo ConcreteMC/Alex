@@ -36,6 +36,7 @@ using Alex.Items;
 using Alex.Net;
 using Alex.Net.Bedrock;
 using Alex.Networking.Java.Packets;
+using Alex.Networking.Java.Packets.Play;
 using Alex.Plugins;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Services;
@@ -119,7 +120,9 @@ namespace Alex
         public OptionsProvider Options { get; private set; }
         
         public Alex(LaunchSettings launchSettings)
-		{
+        {
+	        EntityProperty.Factory = new AlexPropertyFactory();
+	        
 			Instance = this;
 			LaunchSettings = launchSettings;
 			OperatingSystem = $"{System.Runtime.InteropServices.RuntimeInformation.OSDescription} ({System.Runtime.InteropServices.RuntimeInformation.OSArchitecture})";

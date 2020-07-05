@@ -189,8 +189,8 @@ namespace Alex.Worlds.Multiplayer.Java
 			abilitiesPacket.ServerBound = true;
 
 			abilitiesPacket.Flags = (byte) flags;
-			abilitiesPacket.FlyingSpeed = (float) player.FlyingSpeed;
-			abilitiesPacket.WalkingSpeed = (float)player.MovementSpeed;
+			//abilitiesPacket.FlyingSpeed = (float) player.FlyingSpeed;
+			//abilitiesPacket.WalkingSpeed = (float)player.MovementSpeed;
 
 			SendPacket(abilitiesPacket);
 		}
@@ -1438,6 +1438,7 @@ namespace Alex.Worlds.Multiplayer.Java
 		private void HandleEntityPropertiesPacket(EntityPropertiesPacket packet)
 		{
 			Entity target;
+
 			if (packet.EntityId == World.Player.EntityId)
 			{
 				target = World.Player;
@@ -1449,20 +1450,26 @@ namespace Alex.Worlds.Multiplayer.Java
 
 			foreach (var prop in packet.Properties.Values)
 			{
-				switch (prop.Key)
+				/*switch (prop.Key)
 				{
-					case "generic.movementSpeed":
+					case "generic.movement_speed":
 						target.MovementSpeed = (float) prop.Value;
+
 						break;
-					case "generic.flyingSpeed":
+
+					case "generic.flying_speed":
 						target.FlyingSpeed = (float) prop.Value;
+
 						break;
-					case "generic.maxHealth":
+
+					case "generic.max_health":
 						target.HealthManager.MaxHealth = (float) prop.Value;
+
 						break;
 				}
 
-				//TODO: Modifier data
+				//TODO: Modifier data*/
+				target.AddOrUpdateProperty(prop);
 			}
 		}
 
@@ -1471,14 +1478,17 @@ namespace Alex.Worlds.Multiplayer.Java
 			var flags = packet.Flags;
 			var player = World.Player;
 			
-			player.FlyingSpeed = packet.FlyingSpeed;
+			player.FlyingSpeed = packet.FlyingSpeed * 10f;
+
+				//player.FlyingSpeed = packet.FlyingSpeed * 10f;
 			player.FOVModifier = packet.FiedOfViewModifier;
+			
 			//player.MovementSpeed = packet.WalkingSpeed;
 
-			player.CanFly = flags.IsBitSet(0x03);
-			player.Invulnerable = flags.IsBitSet(0x00);
+			player.CanFly = (flags & 0x04) != 0; //CanFly
+			player.Invulnerable = (flags & 0x01) != 0; //InVulnerable
 
-			if (flags.IsBitSet(0x01))
+			if ((flags & 0x02) != 0) //Flying
 			{
 				player.IsFlying = true;
 				_flying = true;

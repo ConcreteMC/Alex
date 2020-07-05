@@ -2,6 +2,7 @@
 using Alex.API.Graphics;
 using Alex.API.Network;
 using Alex.API.Utils;
+using Alex.Entities.Properties;
 using Alex.Graphics.Models.Entity;
 using Alex.Net;
 using Alex.Networking.Java.Packets.Play;
@@ -10,6 +11,7 @@ using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MiNET;
 using MathF = Alex.API.Utils.MathF;
 
 namespace Alex.Entities
@@ -57,8 +59,10 @@ namespace Alex.Entities
 
 			GeometryName = geometry;
 			UpdateSkin(skinTexture);
-			
 			//Inventory = new Inventory(46);
+			
+			MovementSpeed = 0.1f;
+			FlyingSpeed = 0.4f;
 		}
 
 		/// <inheritdoc />

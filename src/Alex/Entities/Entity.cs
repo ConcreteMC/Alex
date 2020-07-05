@@ -10,6 +10,7 @@ using Alex.API.Graphics.Typography;
 using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.Blocks.Minecraft;
+using Alex.Entities.Properties;
 using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Entity.Animations;
 using Alex.Graphics.Models.Items;
@@ -124,9 +125,9 @@ namespace Alex.Entities
 		
 		public float TerminalVelocity { get; set; } = 78.4f;
 		
-		public double BaseMovementSpeed { get; set; } = 0.43f;//3;
-		public double MovementSpeed { get; set; } = 0.1F;
-		public double FlyingSpeed { get; set; } = 0.4F;
+	//	public double BaseMovementSpeed { get; set; } = 0.43f;//3;
+	//	public double MovementSpeed { get; set; } = 0.1F;
+	//	public double FlyingSpeed { get; set; } = 0.4F;
 		
 		public int Data { get; set; }
 		public UUID UUID { get; set; } = new UUID(Guid.Empty.ToByteArray());
@@ -157,6 +158,18 @@ namespace Alex.Entities
 		private EntityModelRenderer.ModelBone _head;
 		
 		public HealthManager HealthManager { get; }
+		private Dictionary<string, EntityProperty> _entityProperties = new Dictionary<string, EntityProperty>()
+		{
+			
+		};
+
+		public IReadOnlyDictionary<string, EntityProperty> EntityProperties
+		{
+			get => _entityProperties;
+			//set => _entityProperties = value;
+		}
+
+		public double BaseMovementSpeed { get; set; }
 		public Entity(int entityTypeId, World level, NetworkProvider network)
 		{
 			Network = network;
@@ -177,6 +190,55 @@ namespace Alex.Entities
 			
 			HealthManager = new HealthManager(this);
 			UUID = new UUID(Guid.NewGuid().ToByteArray());
+			
+			BaseMovementSpeed = 4.317D;
+			
+			AddOrUpdateProperty(new FlyingSpeedProperty(this));
+			AddOrUpdateProperty(new MovementSpeedProperty(this));
+		}
+
+		public double FlyingSpeed
+		{
+			get
+			{
+				return _entityProperties[Networking.Java.Packets.Play.EntityProperties.FlyingSpeed].Value;
+			}
+			set
+			{
+				_entityProperties[Networking.Java.Packets.Play.EntityProperties.FlyingSpeed].Value = value;
+			}
+		}
+		
+		public double MovementSpeed
+		{
+			get
+			{
+				return _entityProperties[Networking.Java.Packets.Play.EntityProperties.MovementSpeed].Value;
+			}
+			set
+			{
+				_entityProperties[Networking.Java.Packets.Play.EntityProperties.MovementSpeed].Value = value;
+			}
+		}
+
+		public void AddOrUpdateProperty(EntityProperty property)
+		{
+			if (!_entityProperties.TryAdd(property.Key, property))
+			{
+				_entityProperties[property.Key] = property;
+			}
+		}
+
+		public double CalculateMovementSpeed()
+		{
+			var baseMovementSpeed = BaseMovementSpeed / 2D;
+
+			var modifier =
+				(_entityProperties[
+					IsFlying ? Networking.Java.Packets.Play.EntityProperties.FlyingSpeed :
+						Networking.Java.Packets.Play.EntityProperties.MovementSpeed]).Calculate();
+
+			return baseMovementSpeed * modifier;
 		}
 
 		private void ScaleChanged()
@@ -661,7 +723,7 @@ namespace Alex.Entities
 				}
 			}
 
-			var moveSpeed = MovementSpeed * 20f;
+			var moveSpeed = CalculateMovementSpeed() * 20f;
 			var tcos0     = (float) (Math.Cos(distance * (38.17 * 20f)) * moveSpeed) * (57.3f * 20f);
 			var tcos1     = -tcos0;
 

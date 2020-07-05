@@ -214,26 +214,9 @@ namespace Alex.Entities
 			    }
 		    }
 
-		    float modifier = (Player.IsFlying ? (float)Player.FlyingSpeed : (float) Player.MovementSpeed) * 10f;
+		    float speedFactor = (float)Player.CalculateMovementSpeed();
 
-			if (Player.IsInWater || (WasInWater && Player.AboveWater))
-			{
-				modifier = 0.3f;
-			}
-			else if (Player.IsSprinting && !Player.IsSneaking)
-			{	
-				modifier = 1.29997683577f;
-			    //speedFactor *= 0.2806f; 
-		    }
-		    else if (Player.IsSneaking && !Player.IsSprinting)
-		    {
-			    modifier = 0.29997683576f;
-		    }
-
-		//	float speedFactor = (((float) Player.MovementSpeed) * modifier);
-		    float speedFactor = (float) (Player.BaseMovementSpeed * modifier);
-
-			if (InputManager.IsDown(InputCommand.MoveForwards))
+		    if (InputManager.IsDown(InputCommand.MoveForwards))
 			{
 				moveVector.Z += 1;
 				if (!Player.IsSprinting && Player.CanSprint)
