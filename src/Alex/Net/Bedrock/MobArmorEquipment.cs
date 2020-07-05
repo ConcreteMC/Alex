@@ -9,10 +9,10 @@ namespace Alex.Net.Bedrock
         {
             this.Id = ReadByte();
             this.runtimeEntityId = this.ReadUnsignedVarLong();
-            this.helmet = this.AlternativeReadItem();
-            this.chestplate = this.AlternativeReadItem();
-            this.leggings = this.AlternativeReadItem();
-            this.boots = this.AlternativeReadItem();
+            this.helmet = this.AlternativeReadItem(false);
+            this.chestplate = this.AlternativeReadItem(false);
+            this.leggings = this.AlternativeReadItem(false);
+            this.boots = this.AlternativeReadItem(false);
         }
     }
 }

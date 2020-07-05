@@ -1268,13 +1268,19 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
         public void HandleMcpeInventoryContent(McpeInventoryContent message)
 		{
+			if (message.input == null)
+			{
+				Log.Warn($"Invalid inventory content! Input was null.");
+				return;
+			}
+			
 			InventoryBase inventory = null;
 			if (message.inventoryId == 0x00)
 			{
 				inventory = Client.World.Player.Inventory;
 			}
 
-			if (inventory == null || message.input == null)
+			if (inventory == null)
 			{
 				Log.Warn($"Unknown inventory ID: {message.inventoryId}");
 				return;
@@ -1350,6 +1356,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 	        if (result != null)
 	        {
+		        result.StackID = item.UniqueId;
 		        result.Meta = item.Metadata;
 		        result.Count = item.Count;
 		        result.Nbt = item.ExtraData;
@@ -1365,6 +1372,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         
 		public void HandleMcpeInventorySlot(McpeInventorySlot message)
 		{
+			if (message.item == null)
+			{
+				Log.Warn($"Invalid inventory slot packet! Item was null.");
+				return;
+			}
+			
 			InventoryBase inventory = null;
 
 			if (message.inventoryId == 0x00)
@@ -1372,7 +1385,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				inventory = Client.World.Player.Inventory;
 			}
 
-			if (inventory == null || message.item == null)
+			if (inventory == null)
 			{
 				Log.Warn($"Unknown inventory ID: {message.inventoryId}");
 				return;

@@ -23,6 +23,8 @@ namespace Alex.Items
 		public NbtCompound Nbt { get; set; }
 		public IItemRenderer Renderer { get; set; }
 
+		public int StackID { get; set; } = -1;
+		
 		public virtual Item Clone()
 		{
 			return new Item()

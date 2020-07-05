@@ -938,7 +938,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		    }
 
 		    minetItem.ExtraData = item.Nbt;
-
+		    minetItem.UniqueId = item.StackID;
+		    
 		    return minetItem;
 	    }
 
@@ -976,7 +977,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		    }
 	    }
 
-		    public override void EntityInteraction(Entity player, Entity target,
+		public override void EntityInteraction(Entity player, Entity target,
 		    ItemUseOnEntityAction action)
 	    {
 		    if (player is Player p)
@@ -985,10 +986,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			    // WorldProvider?.GetChatReceiver?.Receive(new ChatObject($"(CLIENT) Hit entity: {target.EntityId} | Action: {action.ToString()} | Item: {itemInHand.Id}:{itemInHand.Meta} ({itemInHand.Name})"));
 
-			    var item = MiNET.Items.ItemFactory.GetItem(itemInHand.Id, itemInHand.Meta, itemInHand.Count);
-			    item.Metadata = itemInHand.Meta;
-			    item.ExtraData = itemInHand.Nbt;
-			    item.Count = (byte) itemInHand.Count;
+			    var item = GetMiNETItem(itemInHand); //MiNET.Items.ItemFactory.GetItem(itemInHand.Id, itemInHand.Meta, itemInHand.Count);
+			  //  item.Metadata = itemInHand.Meta;
+			  //  item.ExtraData = itemInHand.Nbt;
+			   // item.Count = (byte) itemInHand.Count;
 			    
 			    var packet = McpeInventoryTransaction.CreateObject();
 			    packet.transaction = new ItemUseOnEntityTransaction()
@@ -1075,7 +1076,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			var minetItem = GetMiNETItem(item);
 			
-			McpeMobEquipment packet = McpeMobEquipment.CreateObject();
+			McpeMobEquipment packet = new MobEquipment();
 			packet.selectedSlot = (byte) slot;
 			packet.slot = (byte) slot;
 			packet.item = minetItem;

@@ -11,10 +11,21 @@ namespace Alex.Net.Bedrock
         {
             this.Id = ReadByte();
             runtimeEntityId = ReadUnsignedVarLong();
-            item = this.AlternativeReadItem();
+            item = this.AlternativeReadItem(false);
             slot = ReadByte();
             selectedSlot = ReadByte();
             windowsId = ReadByte();
+        }
+
+        /// <inheritdoc />
+        protected override void EncodePacket()
+        {
+            WriteVarInt(this.Id);
+            this.WriteUnsignedVarLong(this.runtimeEntityId);
+            this.AlternativeWriteItem(this.item);
+            this.Write(this.slot);
+            this.Write(this.selectedSlot);
+            this.Write(this.windowsId);
         }
     }
 }

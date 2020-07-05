@@ -30,7 +30,7 @@ namespace Alex.Net.Bedrock
 			
 			try
 			{
-				this.item = this.AlternativeReadItem();
+				this.item = this.AlternativeReadItem(false);
 				this.metadata = this.ReadMetadataDictionaryAlternate();
 				this.flags = this.ReadUnsignedVarInt();
 			}

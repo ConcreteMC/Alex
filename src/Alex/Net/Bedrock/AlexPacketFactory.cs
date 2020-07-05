@@ -66,37 +66,37 @@ namespace Alex.Net.Bedrock
             {
                 switch (messageId)
                 {
-                    case 111: //Fixes entity delta
-                        packet = new EntityDelta();
+                    case 0x07:
+                        packet = new McpeResourcePackStack();
+                        break;
+                    case 0x0c:
+                        packet = new AddPlayer();
                         break;
 
                     //The following are only here so we can join.
-                    case 49:
-                        packet = new InventoryContent();
-                        break;
-                    case 31:
+                    case 0x1F:
                         packet = new MobEquipment();
                         break;
-                    case 122:
-                        packet = new BiomeDefinitionList();
-                        break;
-                    case 119:
-                        packet = new AvailableEntityIdentifiers();
-                        break;
-                    case 32:
+                    case 0x20:
                         packet = new MobArmorEquipment();
                         break;
-                    case 50:
+                    case 0x27:
+                        packet = new SetEntityData();
+                        break;
+                    case 0x31:
+                        packet = new InventoryContent();
+                        break;
+                    case 0x32:
                         packet = new InventorySlot();
                         break;
-                    case 7:
-                        packet = new McpeResourcePackStack();
+                    case 0x6f: //Fixes entity delta
+                        packet = new EntityDelta();
                         break;
-                    case 12:
-                        packet = new AddPlayer();
+                    case 0x77:
+                        packet = new AvailableEntityIdentifiers();
                         break;
-                    case 39:
-                        packet = new SetEntityData();
+                    case 0x7a:
+                        packet = new BiomeDefinitionList();
                         break;
                 }
 
@@ -104,7 +104,7 @@ namespace Alex.Net.Bedrock
             }
             catch (Exception ex)
             {
-                if (messageId != 49)
+              //  if (messageId != 0x31)
                 {
                       Log.Error(ex, $"Processing error: {ex.ToString()}");
                 }

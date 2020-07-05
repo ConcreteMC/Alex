@@ -9,7 +9,7 @@ namespace Alex.Net.Bedrock
         {
             this.Id = ReadByte();
             this.inventoryId = this.ReadUnsignedVarInt();
-            this.input = this.ReadItemStacksAlternate();
+            this.input = this.ReadItemStacksAlternate(true);
         }
     }
 }

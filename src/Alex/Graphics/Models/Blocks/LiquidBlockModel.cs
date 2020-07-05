@@ -166,29 +166,10 @@ namespace Alex.Graphics.Models.Blocks
 				if (isFlowing)
 				{
 					calculateDirection = true;
-					
-					tl = GetAverageLiquidLevels(world, position, out lowestBlock, out lowestFound);
-
-					tr = GetAverageLiquidLevels(world, position + BlockCoordinates.Right, out var trl, out var trv);
-					if (trv > lowestFound)
-					{
-						lowestBlock = trl;
-						lowestFound = trv;
-					}
-
-					bl = GetAverageLiquidLevels(world, position + BlockCoordinates.Forwards, out var bll, out var blv);
-					if (blv > lowestFound)
-					{
-						lowestBlock = bll;
-						lowestFound = blv;
-					}
-
-					br = GetAverageLiquidLevels(world, position + new BlockCoordinates(1, 0, 1), out var brl,
-						out var brv);
 				}
 				else
 				{
-					if (blocksUp.Any(x => x.State.Block.Solid && x.State.Block.Renderable))
+					/*if (blocksUp.Any(x => x.State.Block.Solid && x.State.Block.Renderable))
 					{
 						tl = 8;
 						tr = 8;
@@ -201,8 +182,27 @@ namespace Alex.Graphics.Models.Blocks
 						tr = 7;
 						bl = 7;
 						br = 7;
-					}
+					}*/
 				}
+				
+				tl = GetAverageLiquidLevels(world, position, out lowestBlock, out lowestFound);
+
+				tr = GetAverageLiquidLevels(world, position + BlockCoordinates.Right, out var trl, out var trv);
+				if (trv > lowestFound)
+				{
+					lowestBlock = trl;
+					lowestFound = trv;
+				}
+
+				bl = GetAverageLiquidLevels(world, position + BlockCoordinates.Forwards, out var bll, out var blv);
+				if (blv > lowestFound)
+				{
+					lowestBlock = bll;
+					lowestFound = blv;
+				}
+
+				br = GetAverageLiquidLevels(world, position + new BlockCoordinates(1, 0, 1), out var brl,
+					out var brv);
 
 				//if (brv < lowestFound)
 				//	lowestBlock = brl;

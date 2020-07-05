@@ -1,8 +1,10 @@
 using System;
 using System.IO;
+using System.IO.Compression;
 using System.Text;
 using Alex.API.Utils;
 using fNbt;
+using fNbt.Tags;
 using MiNET.Items;
 using MiNET.Net;
 using MiNET.Utils;
@@ -43,6 +45,106 @@ namespace Alex.Net.Bedrock
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(NetworkUtils));
 
+		internal static bool ReadTag(this NbtTag tag, NbtBinaryReader readStream)
+		{
+			while (true)
+			{
+				NbtTag nbtTag;
+				do
+				{
+					NbtTagType nbtTagType = readStream.ReadTagType();
+					switch (nbtTagType)
+					{
+						case NbtTagType.End:
+							return true;
+						case NbtTagType.Byte:
+							nbtTag = (NbtTag) new NbtByte();
+							break;
+						case NbtTagType.Short:
+							nbtTag = (NbtTag) new NbtShort();
+							break;
+						case NbtTagType.Int:
+							nbtTag = (NbtTag) new NbtInt();
+							break;
+						case NbtTagType.Long:
+							nbtTag = (NbtTag) new NbtLong();
+							break;
+						case NbtTagType.Float:
+							nbtTag = (NbtTag) new NbtFloat();
+							break;
+						case NbtTagType.Double:
+							nbtTag = (NbtTag) new NbtDouble();
+							break;
+						case NbtTagType.ByteArray:
+							nbtTag = (NbtTag) new NbtByteArray();
+							break;
+						case NbtTagType.String:
+							nbtTag = (NbtTag) new NbtString();
+							break;
+						case NbtTagType.List:
+							nbtTag = (NbtTag) new NbtList();
+							break;
+						case NbtTagType.Compound:
+							nbtTag = (NbtTag) new NbtCompound();
+							break;
+						case NbtTagType.IntArray:
+							nbtTag = (NbtTag) new NbtIntArray();
+							break;
+						case NbtTagType.LongArray:
+							nbtTag = (NbtTag) new NbtLongArray();
+							break;
+						case NbtTagType.Unknown:
+							return true;
+							break;
+						default:
+							throw new FormatException("Unsupported tag type found in NBT_Compound: " + (object) nbtTagType);
+					}
+					//nbtTag.Parent = (NbtTag) this;
+					nbtTag.Name = readStream.ReadString();
+				}
+				while (!nbtTag.ReadTag(readStream));
+
+				switch (tag.TagType)
+				{
+					case NbtTagType.Compound:
+						NbtCompound compound = (NbtCompound) tag;
+						compound.Add(nbtTag);
+						break;
+					case NbtTagType.List:
+						NbtList list = (NbtList) tag;
+						list.Add(nbtTag);
+						break;
+				}
+			}
+		}
+		
+		internal static NbtTag ReadUnknownTag(NbtBinaryReader readStream)
+		{
+			NbtTagType nbtTagType = (NbtTagType) readStream.ReadByte(); //readStream.ReadTagType();
+			if (nbtTagType == NbtTagType.Unknown)
+				return new NbtCompound("");
+			
+			NbtTag     nbtTag;
+			switch (nbtTagType)
+			{
+				case NbtTagType.End:
+					throw new EndOfStreamException();
+				case NbtTagType.List:
+					nbtTag = (NbtTag) new NbtList();
+					
+					break;
+				case NbtTagType.Compound:
+					nbtTag = (NbtTag) new NbtCompound();
+					break;
+				default:
+					throw new Exception("Unsupported tag type found in NBT_Tag: " + (object) nbtTagType);
+			}
+			nbtTag.Name = readStream.ReadString();
+			if (nbtTag.ReadTag(readStream))
+				return nbtTag;
+			throw new Exception("Given NBT stream does not start with a proper TAG");
+		}
+		
 		public static Nbt ReadNbt(Stream stream, bool useVarInt = false)
 		{
 			Nbt     nbt     = new Nbt();
@@ -51,6 +153,14 @@ namespace Alex.Net.Bedrock
 			nbtFile.UseVarInt = useVarInt;
 			nbt.NbtFile = nbtFile;
 			nbtFile.LoadFromStream(stream, NbtCompression.None);
+			/*
+			var reader = new NbtBinaryReader(stream, false) {
+				Selector = null,
+				UseVarInt = useVarInt
+			};
+
+			nbtFile.RootTag = ReadUnknownTag(reader);*/
+
 			return nbt;
 		}
 
@@ -133,17 +243,24 @@ namespace Alex.Net.Bedrock
 			}
 		}
 		
-		public static ItemStacks ReadItemStacksAlternate(this Packet packet)
+		public static ItemStacks ReadItemStacksAlternate(this Packet packet, bool networkIds)
 		{
 			ItemStacks itemStacks = new ItemStacks();
 			uint       num        = packet.ReadUnsignedVarInt();
 			for (int index = 0; (long) index < (long) num; ++index)
-				itemStacks.Add(packet.AlternativeReadItem());
+				itemStacks.Add(packet.AlternativeReadItem(networkIds));
 			return itemStacks;
 		}
 
-		public static Item AlternativeReadItem(this Packet packet)
+		public static Item AlternativeReadItem(this Packet packet, bool readNetworkId)
 		{
+			int networkId = -1;
+			if (readNetworkId)
+			{
+				networkId = packet.ReadSignedVarInt();
+				
+			}
+
 			int id = packet.ReadSignedVarInt();
 
 			if (id == 0)
@@ -159,22 +276,29 @@ namespace Alex.Net.Bedrock
 
 			byte count = (byte) (tmp & 0xff);
 			Item stack = ItemFactory.GetItem((short) id, metadata, count);
+			stack.UniqueId = networkId;
+			
+			ushort dataMarker = packet.ReadUshort(); // NbtLen
 
-			ushort nbtLen = packet.ReadUshort(); // NbtLen
-
-			if (nbtLen == 0xffff)
+			if (dataMarker == 0xffff)
 			{
-				if (packet.ReadByte() != 1)
+				var version = packet.ReadByte();
+
+				switch (version)
 				{
-					Log.Warn($"Invalid NBT while reading item data...");
+					case 1:
+						stack.ExtraData = (NbtCompound) packet.ReadNbt().NbtFile.RootTag;
+						break;
 				}
-				
-				stack.ExtraData = (NbtCompound) packet.ReadNbt().NbtFile.RootTag;
 			}
-			else if (nbtLen != 0)
+			else if (dataMarker != 0)
 			{
-				var stream = (Stream)ReflectionHelper.GetPrivateFieldValue<MemoryStreamReader>(typeof(Packet), packet, "_reader");
-				stack.ExtraData = (NbtCompound) ReadNbt(stream).NbtFile.RootTag;
+				var nbtData = packet.ReadBytes(dataMarker);
+			//	var stream = (Stream)ReflectionHelper.GetPrivateFieldValue<MemoryStreamReader>(typeof(Packet), packet, "_reader");
+				using (MemoryStream ms = new MemoryStream(nbtData))
+				{
+					stack.ExtraData = (NbtCompound) ReadNbt(ms).NbtFile.RootTag;
+				}
 			}
 
 			for (int i = 0, canPlace = packet.ReadVarInt(); i < canPlace; ++i)
@@ -193,6 +317,16 @@ namespace Alex.Net.Bedrock
 			}
 
 			return stack;
+		}
+
+		public static void AlternativeWriteItem(this Packet packet, Item item)
+		{
+			if (item.UniqueId != -1)
+			{
+				packet.WriteSignedVarInt(item.UniqueId);
+			}
+			
+			packet.Write(item);
 		}
 	}
 }
