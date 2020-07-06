@@ -919,19 +919,34 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				return;
 			}
 
-			bone.ClearAnimations();
+			if (message.keys.Length == 0)
+			{
+				Log.Warn($"Invalid animation: 0 keys.");
 
-			bone.Animations.Enqueue(
-				new ServerAnimation(
-					bone,
-					new ModelParameters(
-						new Microsoft.Xna.Framework.Vector3(
-							message.startRotation.X, message.startRotation.Y, message.startRotation.Z),
-						Microsoft.Xna.Framework.Vector3.Zero),
-					new ModelParameters(
-						new Microsoft.Xna.Framework.Vector3(
-							message.endRotation.X, message.endRotation.Y, message.endRotation.Z),
-						Microsoft.Xna.Framework.Vector3.Zero), TimeSpan.FromMilliseconds(message.duration)));
+				return;
+			}
+
+			if (message.keys.First().ExecuteImmediate)
+			{
+				bone.ClearAnimations();
+			}
+
+			foreach (var key in message.keys)
+			{
+				bone.Animations.Enqueue(
+					new ServerAnimation(
+						bone,
+						new ModelParameters(
+							new Microsoft.Xna.Framework.Vector3(
+								key.StartRotation.X, key.StartRotation.Y, key.StartRotation.Z),
+							Microsoft.Xna.Framework.Vector3.Zero),
+						new ModelParameters(
+							new Microsoft.Xna.Framework.Vector3(
+								key.EndRotation.X, key.EndRotation.Y, key.EndRotation.Z),
+							Microsoft.Xna.Framework.Vector3.Zero), TimeSpan.FromMilliseconds(key.Duration), key.ResetAfter));
+			}
+
+			bone.Animations.Enqueue(new ResetAnimation(bone));
 		}
 
 		public void HandleMcpeNetworkChunkPublisherUpdate(McpeNetworkChunkPublisherUpdate message)

@@ -42,7 +42,7 @@ namespace Alex.Graphics.Models.Entity
 			public Queue<ModelBoneAnimation> Animations { get; }
 			private ModelBoneAnimation CurrentAnim { get; set; } = null;
 			public bool IsAnimating => CurrentAnim != null;
-			private	EntityModelBone EntityModelBone { get; }
+			internal EntityModelBone EntityModelBone { get; }
 			public ModelBone(ModelBoneCube[] cubes, string parent, EntityModelBone bone)
 			{
 				EntityModelBone = bone;

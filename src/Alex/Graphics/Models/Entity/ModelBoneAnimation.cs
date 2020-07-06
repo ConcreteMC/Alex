@@ -22,8 +22,15 @@ namespace Alex.Graphics.Models.Entity
 			_isSetup = true;
 			
 			Initial = new ModelParameters(Bone.Rotation, Bone.Position);
+			
+			SetupAnimation();
 		}
 
+		protected virtual void SetupAnimation()
+		{
+			
+		}
+		
 		public void Update(GameTime gameTime)
 		{
 			if (!_isSetup)
@@ -42,7 +49,7 @@ namespace Alex.Graphics.Models.Entity
 			return true;
 		}
 
-		public void Reset()
+		public virtual void Reset()
 		{
 			Initial.Apply(Bone);
 		}

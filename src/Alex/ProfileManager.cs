@@ -112,6 +112,7 @@ namespace Alex
 			SavedProfile savedProfile;
 			if (Profiles.TryGetValue(profile.Uuid, out savedProfile))
 			{
+				savedProfile.Type = type;
 				savedProfile.Profile = profile;
 				Profiles[profile.Uuid] = savedProfile;
 			}
