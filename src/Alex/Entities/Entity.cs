@@ -673,25 +673,29 @@ namespace Alex.Entities
 				//_head.Position = new Vector3(_body.Position.X, 0.25f, 0f);
 				if (_rightArmModel != null && _leftArmModel != null)
 				{
-					_leftArmModel.Rotation = new Vector3(-20f, 0f, 0f);
-					_leftArmModel.Position = posOffset;
-
+					if (!_leftArmModel.IsAnimating)
+					{
+						_leftArmModel.Rotation = new Vector3(-20f, 0f, 0f);
+						
+						_leftArmModel.Position = posOffset;
+					}
 
 					if (!_rightArmModel.IsAnimating)
 					{
 						_rightArmModel.Rotation = new Vector3(-20f, 0f, 0f);
+						_rightArmModel.Position = posOffset;
 					}
 
-					_rightArmModel.Position = posOffset;
-					
-					if (_rightSleeveModel != null && _leftSleeveModel != null)
+					//if (!_leftArmModel.IsAnimating)
+
+					/*if (_rightSleeveModel != null && _leftSleeveModel != null)
 					{
 						_rightSleeveModel.Rotation = _rightArmModel.Rotation;
 						_rightSleeveModel.Position = posOffset;
 						
 						_leftSleeveModel.Rotation = _leftArmModel.Rotation;
 						_leftSleeveModel.Position = posOffset;
-					}
+					}*/
 				}
 
 				if (_head != null)
@@ -708,14 +712,14 @@ namespace Alex.Entities
 				{
 					_rightArmModel.Position = _leftArmModel.Position = Vector3.Zero;
 					
-					if (_rightSleeveModel != null && _leftSleeveModel != null)
+					/*if (_rightSleeveModel != null && _leftSleeveModel != null)
 					{
 						_rightSleeveModel.Rotation = _rightArmModel.Rotation;
 						_rightSleeveModel.Position = Vector3.Zero;
 						
 						_leftSleeveModel.Rotation = _leftArmModel.Rotation;
 						_leftSleeveModel.Position = Vector3.Zero;
-					}
+					}*/
 				}
 
 				if (_head != null)
@@ -760,7 +764,10 @@ namespace Alex.Entities
 				}
 
 
-				_leftArmModel.Rotation = rArmRot;
+				if (!_leftArmModel.IsAnimating)
+				{
+					_leftArmModel.Rotation = rArmRot;
+				}
 
 				if (!_rightArmModel.IsAnimating)
 				{
@@ -769,8 +776,8 @@ namespace Alex.Entities
 
 				if (_rightSleeveModel != null && _leftSleeveModel != null)
 				{
-					_rightSleeveModel.Rotation = -rArmRot;
-					_leftSleeveModel.Rotation = rArmRot;
+					//_rightSleeveModel.Rotation = -rArmRot;
+					//_leftSleeveModel.Rotation = rArmRot;
 				}
 			}
 
@@ -795,13 +802,16 @@ namespace Alex.Entities
 					_legRotation = 0f;
 				}
 
-				_leftLegModel.Rotation = lLegRot;
-				_rightLegModel.Rotation = rLegRot;
+				if (!_leftLegModel.IsAnimating)
+					_leftLegModel.Rotation = lLegRot;
+				
+				if (!_rightLegModel.IsAnimating)
+					_rightLegModel.Rotation = rLegRot;
 
 				if (_leftPantsModel != null && _rightPantsModel != null)
 				{
-					_leftPantsModel.Rotation = lLegRot;
-					_rightPantsModel.Rotation = rLegRot;
+					//_leftPantsModel.Rotation = lLegRot;
+					//_rightPantsModel.Rotation = rLegRot;
 				}
 			}
 
