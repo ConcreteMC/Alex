@@ -667,8 +667,12 @@ namespace Alex.Entities
 			if (IsSneaking && _body != null)
 			{
 				var posOffset = new Vector3(0f, -1.5f, -4.5f);
-				_body.Rotation = new Vector3(-25f, _body.Rotation.Y, _body.Rotation.Z);
-				_body.Position = posOffset;
+
+				if (!_body.IsAnimating)
+				{
+					_body.Rotation = new Vector3(-25f, _body.Rotation.Y, _body.Rotation.Z);
+					_body.Position = posOffset;
+				}
 
 				//_head.Position = new Vector3(_body.Position.X, 0.25f, 0f);
 				if (_rightArmModel != null && _leftArmModel != null)
@@ -698,17 +702,20 @@ namespace Alex.Entities
 					}*/
 				}
 
-				if (_head != null)
+				if (_head != null && !_head.IsAnimating)
 				{
 					_head.Position = posOffset;
 				}
 			}
 			else if (_body != null && !IsSneaking)
 			{
-				_body.Position = Vector3.Zero;
-				_body.Rotation = new Vector3(0f);
+				if (!_body.IsAnimating)
+				{
+					_body.Position = Vector3.Zero;
+					_body.Rotation = new Vector3(0f);
+				}
 
-				if (_rightArmModel != null && _leftArmModel != null)
+				if (_rightArmModel != null && _leftArmModel != null && !_rightArmModel.IsAnimating && !_leftArmModel.IsAnimating)
 				{
 					_rightArmModel.Position = _leftArmModel.Position = Vector3.Zero;
 					
@@ -722,7 +729,7 @@ namespace Alex.Entities
 					}*/
 				}
 
-				if (_head != null)
+				if (_head != null && !_head.IsAnimating)
 				{
 					_head.Position = Vector3.Zero;
 				}

@@ -12,12 +12,14 @@ namespace Alex.Graphics.Models.Entity.Animations
 		private bool ResetAfter { get; }
 		
 		/// <inheritdoc />
-		public ServerAnimation(EntityModelRenderer.ModelBone bone, ModelParameters initial, ModelParameters target, TimeSpan duration, bool resetAfter = true) : base(bone)
+		public ServerAnimation(EntityModelRenderer.ModelBone bone, ModelParameters initial, ModelParameters target, TimeSpan duration, bool resetAfter) : base(bone)
 		{
 			Start = initial;
 			Duration = duration.TotalSeconds;
 			Target = target;
 			ResetAfter = resetAfter;
+
+			_finished = false;
 		}
 
 		/// <inheritdoc />
@@ -32,15 +34,22 @@ namespace Alex.Graphics.Models.Entity.Animations
 		private float _elapsed = 0f;
 		protected override void OnTick(GameTime gameTime, float delta)
 		{
+			//if (_finished)
+			//	return;
+			
 			_elapsed += delta;
+			
 			var progress = (1f / Duration) * _elapsed;
+			
+			if (progress >= 1f)
+			{
+				_finished = true;
+				return;
+			}
 
 			Bone.Rotation = new Vector3(EasingFunction.Linear(Start.Rotation.X, Target.Rotation.X, (float)progress)
 				, EasingFunction.Linear(Start.Rotation.Y, Target.Rotation.Y, (float)progress)
 				, EasingFunction.Linear(Start.Rotation.Z, Target.Rotation.Z, (float)progress));
-			
-			if (progress >= 1f)
-				_finished = true;
 		}
 
 		/// <inheritdoc />

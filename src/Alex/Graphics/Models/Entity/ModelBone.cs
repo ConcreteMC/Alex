@@ -41,7 +41,7 @@ namespace Alex.Graphics.Models.Entity
 			
 			public Queue<ModelBoneAnimation> Animations { get; }
 			private ModelBoneAnimation CurrentAnim { get; set; } = null;
-			public bool IsAnimating => CurrentAnim != null;
+			public bool IsAnimating => CurrentAnim != null || Animations.Count > 0;
 			internal EntityModelBone EntityModelBone { get; }
 			public ModelBone(ModelBoneCube[] cubes, string parent, EntityModelBone bone)
 			{
@@ -144,6 +144,8 @@ namespace Alex.Graphics.Models.Entity
 						Matrix.CreateFromYawPitchRoll(headYaw, pitch, 0f) *
 					                 Matrix.CreateTranslation(EntityModelBone.Pivot);
 
+					//var p = EntityModelBone.Pivot + EntityModelBone.
+					
 					var rotMatrix3 = Matrix.CreateTranslation(-EntityModelBone.Pivot)
 					                 * Matrix.CreateRotationX(MathUtils.ToRadians(-Rotation.X))
 					                 * Matrix.CreateRotationY(MathUtils.ToRadians(-Rotation.Y))
