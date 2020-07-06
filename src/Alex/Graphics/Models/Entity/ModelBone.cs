@@ -178,6 +178,17 @@ namespace Alex.Graphics.Models.Entity
 				}
 			}
 
+			public void ClearAnimations()
+			{
+				var anim = CurrentAnim;
+
+				if (anim != null)
+				{
+					anim.Reset();
+					CurrentAnim = null;
+				}
+			}
+
 			public void Update(IUpdateArgs args, Matrix characterMatrix, Vector3 diffuseColor)
 			{
 				if (CurrentAnim == null && Animations.TryDequeue(out var animation))

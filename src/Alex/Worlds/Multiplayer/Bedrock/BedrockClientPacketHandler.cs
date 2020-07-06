@@ -18,6 +18,7 @@ using Alex.Entities;
 using Alex.Entities.Projectiles;
 using Alex.Gamestates;
 using Alex.Graphics.Models.Entity;
+using Alex.Graphics.Models.Entity.Animations;
 using Alex.Items;
 using Alex.Net.Bedrock;
 using Alex.ResourcePackLib.Json.Converters;
@@ -884,9 +885,53 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		}
 
 		/// <inheritdoc />
+		public void HandleMcpePlayerEnchantOptions(McpePlayerEnchantOptions message)
+		{
+			UnhandledPackage(message);
+		}
+
+		/// <inheritdoc />
 		public void HandleMcpeItemStackResponse(McpeItemStackResponse message)
 		{
 			UnhandledPackage(message);
+		}
+
+		/// <inheritdoc />
+		public void HandleMcpeAlexEntityAnimation(McpeAlexEntityAnimation message)
+		{
+			Entity entity;
+			if (!Client.World.EntityManager.TryGet(message.runtimeEntityId, out entity))
+			{
+				if (message.runtimeEntityId != Client.World.Player.EntityId)
+				{
+					Log.Warn($"Got animation request for unknown entity: {entity}");
+
+					return;
+				}
+				
+				entity = Client.World.Player;
+			}
+
+			if (!entity.ModelRenderer.GetBone(message.boneId, out var bone))
+			{
+				Log.Warn($"Animation issue: Could not find bone with name {message.boneId}");
+
+				return;
+			}
+
+			bone.ClearAnimations();
+
+			bone.Animations.Enqueue(
+				new ServerAnimation(
+					bone,
+					new ModelParameters(
+						new Microsoft.Xna.Framework.Vector3(
+							message.startRotation.X, message.startRotation.Y, message.startRotation.Z),
+						Microsoft.Xna.Framework.Vector3.Zero),
+					new ModelParameters(
+						new Microsoft.Xna.Framework.Vector3(
+							message.endRotation.X, message.endRotation.Y, message.endRotation.Z),
+						Microsoft.Xna.Framework.Vector3.Zero), TimeSpan.FromMilliseconds(message.duration)));
 		}
 
 		public void HandleMcpeNetworkChunkPublisherUpdate(McpeNetworkChunkPublisherUpdate message)
