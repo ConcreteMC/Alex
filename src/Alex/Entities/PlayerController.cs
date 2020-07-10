@@ -351,8 +351,8 @@ namespace Alex.Entities
 					{
 						checkMouseInput = false;
 						
-						var look = new Vector2((inputValue.X), (inputValue.Y))
-						           * (float) (gt.ElapsedGameTime.TotalSeconds * GamepadSensitivity);
+						var look = (new Vector2((inputValue.X), (inputValue.Y)) * (float) GamepadSensitivity)
+						                                                       * (float) (gt.ElapsedGameTime.TotalSeconds);
 
 						look = -look;
 
@@ -383,8 +383,7 @@ namespace Alex.Entities
 							_previousMousePosition
 							- e; //this.GlobalInputManager.CursorInputListener.GetCursorPositionDelta();
 
-						var look = new Vector2((-mouseDelta.X), (mouseDelta.Y))
-						           * (float) (gt.ElapsedGameTime.TotalSeconds * CursorSensitivity);
+						var look = (new Vector2((-mouseDelta.X), (mouseDelta.Y)) * (float) CursorSensitivity) * (float) (gt.ElapsedGameTime.TotalSeconds);
 
 						look = -look;
 
