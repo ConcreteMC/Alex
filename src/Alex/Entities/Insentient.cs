@@ -18,7 +18,7 @@ namespace Alex.Entities
 
 			if (entry.Index == 14 && entry is MetadataByte bitMask)
 			{
-				NoAi = ((bitMask.Value & 0x01) != 0);
+				//NoAi = ((bitMask.Value & 0x01) != 0);
 
 				if ((bitMask.Value & 0x02) != 0) //Left Handed
 				{

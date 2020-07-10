@@ -18,12 +18,13 @@ namespace Alex.API.Utils
 		Hoe = 1 << 5,
 		Shears = 1 << 6,
 		Hand = 1 << 7,
-
+		Shield = 1 << 8,
+		
 		//Armor
-		Helmet = 1 << 8,
-		Chestplate = 1 << 9,
-		Leggings = 1 << 10,
-		Boots = 1 << 11
+		Helmet = 1 << 9,
+		Chestplate = 1 << 10,
+		Leggings = 1 << 11,
+		Boots = 1 << 12
 	}
 	
 	[Flags]

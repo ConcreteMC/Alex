@@ -1,3 +1,4 @@
+using Alex.Networking.Java.Packets.Play;
 using Alex.Worlds;
 
 namespace Alex.Entities.Passive
@@ -9,6 +10,14 @@ namespace Alex.Entities.Passive
 			JavaEntityId = 98;
 			Height = 0.7;
 			Width = 0.6;
+		}
+
+		/// <inheritdoc />
+		protected override void HandleJavaMeta(MetaDataEntry entry)
+		{
+			base.HandleJavaMeta(entry);
+			
+			
 		}
 	}
 }

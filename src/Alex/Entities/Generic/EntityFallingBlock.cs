@@ -1,19 +1,16 @@
-using Alex.API.Network;
 using Alex.Entities.Projectiles;
 using Alex.Items;
-using Alex.Net;
 using Alex.Networking.Java.Packets.Play;
 using Alex.ResourcePackLib.Json.Models.Items;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
-using MiNET.Utils;
 
-namespace Alex.Entities
+namespace Alex.Entities.Generic
 {
 	public class EntityFallingBlock : ItemEntity
 	{
 		/// <inheritdoc />
-		public EntityFallingBlock(World level, NetworkProvider network) : base(level, network)
+		public EntityFallingBlock(World level) : base(level)
 		{
 			Height = Width = 0.98;
 			

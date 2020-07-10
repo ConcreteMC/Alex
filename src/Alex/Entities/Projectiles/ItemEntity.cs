@@ -11,11 +11,11 @@ using NLog;
 
 namespace Alex.Entities.Projectiles
 {
-    public class ItemEntity : Entity
+    public class ItemEntity : ItemBaseEntity
     {
         private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
         
-        public ItemEntity(World level, NetworkProvider network) : base((int) EntityType.Item, level, network)
+        public ItemEntity(World level) : base(EntityType.Item, level)
         {
             Width = 0.25;
             Height = 0.25;
@@ -23,37 +23,6 @@ namespace Alex.Entities.Projectiles
             
             Gravity = 0.04;
             Drag = 0.02;
-        }
-
-        /// <inheritdoc />
-        protected override void HandleJavaMeta(MetaDataEntry entry)
-        {
-            base.HandleJavaMeta(entry);
-            
-            if (entry.Index == 7 && entry is MetadataSlot slot)
-            {
-                var item = JavaWorldProvider.GetItemFromSlotData(slot.Value);
-                if (item != null)
-                {
-                    SetItem(item);
-                }
-            }
-        }
-
-        protected new IItemRenderer ItemRenderer { get; set; } = null;
-        private bool CanRender { get; set; } = false;
-        public virtual void SetItem(Item item)
-        {
-            if (item.Renderer != null)
-            {
-                CanRender = true;
-                ItemRenderer = item.Renderer.Clone();
-                ItemRenderer.DisplayPosition = DisplayPosition.Ground;
-            }
-            else
-            {
-                CanRender = false;
-            }
         }
 
         private float _rotation = 0;

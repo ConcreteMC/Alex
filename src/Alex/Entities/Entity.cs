@@ -52,6 +52,7 @@ namespace Alex.Entities
 			{
 				_modelRenderer = value;
 				UpdateModelParts();
+				OnModelUpdated();
 			}
 		}
 
@@ -126,17 +127,33 @@ namespace Alex.Entities
 		
 		public float TerminalVelocity { get; set; } = 78.4f;
 		
-	//	public double BaseMovementSpeed { get; set; } = 0.43f;//3;
-	//	public double MovementSpeed { get; set; } = 0.1F;
-	//	public double FlyingSpeed { get; set; } = 0.4F;
-		
-		public int Data { get; set; }
 		public UUID UUID { get; set; } = new UUID(Guid.Empty.ToByteArray());
 
 		public bool CanFly { get; set; } = false;
 		public bool IsFlying { get; set; } = false;
 
 		public bool IsCollidingWithWorld { get; set; } = false;
+		public bool AlwaysTick { get; set; } = false;
+
+		private bool _isRendered = false;
+
+		public bool IsRendered
+		{
+			get
+			{
+				return _isRendered;
+			}
+			internal set
+			{
+				var oldValue = _isRendered;
+				_isRendered = value;
+
+				if (value && !oldValue && !AlwaysTick)
+				{
+					Velocity = Vector3.Zero;
+				}
+			}
+		}
 
 		public NetworkProvider Network { get; set; }
 		public Inventory Inventory { get; protected set; }
@@ -420,6 +437,9 @@ namespace Alex.Entities
 		public bool RenderEntity { get; set; } = true;
 		public bool ShowItemInHand { get; set; } = false;
 
+		internal bool RequiresRealTimeTick { get; set; } = true;
+		internal DateTime LastTickTime { get; set; } = DateTime.UtcNow;
+		
 		public void HandleJavaMetadata(MetaDataEntry entry)
 		{
 			if (entry.Index == 0 && entry is MetadataByte flags)
@@ -1067,6 +1087,11 @@ namespace Alex.Entities
 				}
 			}*/
 		}
+
+		protected virtual void OnModelUpdated()
+		{
+			
+		}
 		
 		public BoundingBox BoundingBox => GetBoundingBox();
 		public virtual BoundingBox GetBoundingBox()
@@ -1291,21 +1316,20 @@ namespace Alex.Entities
 			if (Alex.Instance.Resources.BedrockResourcePack.EntityDefinitions.TryGetValue(
 				location, out var entityDescription))
 			{
-				if (entityDescription.Textures.TryGetValue(texture, out texture) && entityDescription.Geometry.TryGetValue("default", out var geometryName))
+				if (entityDescription.Textures.TryGetValue(texture, out texture))
 				{
-					if (ModelFactory.TryGetModel(geometryName, out var newModel))
+					if (Alex.Instance.Resources.BedrockResourcePack.TryGetTexture(texture, out var newTexture))
 					{
 						Alex.Instance.UIThreadQueue.Enqueue(
 							() =>
 							{
-								if (Alex.Instance.Resources.BedrockResourcePack.TryGetTexture(
-									texture, out var newTexture))
-								{
-									ModelRenderer = new EntityModelRenderer(newModel, TextureUtils.BitmapToTexture2D(
-										Alex.Instance.GraphicsDevice, newTexture));
-									//ModelRenderer?.Texture = TextureUtils.BitmapToTexture2D(
-									//	Alex.Instance.GraphicsDevice, newTexture);
-								}
+								//var texture = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, newTexture);
+								ModelRenderer.Texture = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, newTexture);
+								/*ModelRenderer = new EntityModelRenderer(
+									newModel,);*/
+
+								//ModelRenderer?.Texture = TextureUtils.BitmapToTexture2D(
+								//	Alex.Instance.GraphicsDevice, newTexture);
 							});
 
 						return true;

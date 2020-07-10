@@ -90,7 +90,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			});
 		}
 
-		public override void EntityInteraction(Entity player, Entity target, ItemUseOnEntityAction action)
+		public override void EntityInteraction(Entity player, Entity target, ItemUseOnEntityAction action, int hand)
 		{
 			
 			switch (action)
@@ -100,7 +100,7 @@ namespace Alex.Worlds.Multiplayer.Java
 					var packet = new InteractEntityPacket();
 					packet.EntityId = (int) target.EntityId;
 					packet.Type = 0;
-					packet.Hand = 0;
+					packet.Hand = hand;
 					
 					Client.SendPacket(packet);
 				}
@@ -110,6 +110,7 @@ namespace Alex.Worlds.Multiplayer.Java
 					var packet = new InteractEntityPacket();
 					packet.EntityId = (int) target.EntityId;
 					packet.Type = 1;
+					packet.Hand = hand;
 
 					Client.SendPacket(packet);
 				}

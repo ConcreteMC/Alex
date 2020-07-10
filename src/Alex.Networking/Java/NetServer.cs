@@ -92,7 +92,7 @@ namespace Alex.Networking.Java
 
             if (socket == null) return;
 			
-			NetConnection conn = NetConnectionFactory.CreateConnection(Direction.ServerBound, socket, ConfirmdAction);
+			NetConnection conn = NetConnectionFactory.CreateConnection(PacketDirection.ServerBound, socket, ConfirmdAction);
 
 			if (Connections.TryAdd(socket.RemoteEndPoint, conn))
 			{

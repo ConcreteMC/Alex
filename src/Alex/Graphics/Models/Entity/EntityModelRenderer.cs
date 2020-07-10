@@ -19,7 +19,31 @@ namespace Alex.Graphics.Models.Entity
 
 		//private EntityModel Model { get; }
 		private IReadOnlyDictionary<string, ModelBone> Bones { get; }
-		public PooledTexture2D Texture { get; set; }
+		
+		private PooledTexture2D _texture;
+
+		public PooledTexture2D Texture
+		{
+			get
+			{
+				return _texture;
+			}
+			set
+			{
+				_texture = value;
+				var bones = Bones;
+
+				if (bones != null && bones.Count > 0)
+				{
+					foreach (var kv in bones)
+					{
+						var bone = kv.Value;
+						bone.SetTexture(_texture);
+					}
+				}
+			}
+		}
+
 		private PooledVertexBuffer VertexBuffer { get; set; }
 		public bool Valid { get; private set; }
 		private bool CanRender { get; set; } = true;
@@ -217,7 +241,8 @@ namespace Alex.Graphics.Models.Entity
 		{
 			if (Bones == null) return;
 
-			CharacterMatrix = Matrix.CreateScale(Scale / 16f) *
+			CharacterMatrix = 
+				Matrix.CreateScale(Scale / 16f) *
 			                         Matrix.CreateRotationY(MathUtils.ToRadians(180f - (position.Yaw))) *
 			                         Matrix.CreateTranslation(position);
 
@@ -247,6 +272,14 @@ namespace Alex.Graphics.Models.Entity
 			}
 
 			return Bones.TryGetValue(name, out bone);
+		}
+		
+		public void SetVisibility(string bone, bool visible)
+		{
+			if (GetBone(bone, out var boneValue))
+			{
+				boneValue.Rendered = visible;
+			}
 		}
 
 		public void Dispose()

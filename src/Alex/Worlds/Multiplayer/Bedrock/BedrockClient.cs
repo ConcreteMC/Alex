@@ -979,7 +979,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	    }
 
 		public override void EntityInteraction(Entity player, Entity target,
-		    ItemUseOnEntityAction action)
+		    ItemUseOnEntityAction action, int hand)
 	    {
 		    if (player is Player p)
 		    {

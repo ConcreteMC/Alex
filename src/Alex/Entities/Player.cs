@@ -78,6 +78,8 @@ namespace Alex.Entities
 			ShowItemInHand = true;
 
 			ServerEntity = false;
+			RequiresRealTimeTick = true;
+			AlwaysTick = true;
         }
 
         /// <inheritdoc />
@@ -160,8 +162,8 @@ namespace Alex.Entities
         private DateTime _destroyingTick = DateTime.MaxValue;
 	    private double _destroyTimeNeeded = 0;
 	    private API.Blocks.BlockFace _destroyingFace;
-	    
-	    private int PreviousSlot { get; set; } = 9;
+
+	    private int PreviousSlot { get; set; } = -1;
 	    private DateTime _lastTimeWithoutInput = DateTime.MinValue;
 	    private bool _prevCheckedInput = false;
 	    private DateTime _lastAnimate = DateTime.MinValue;
@@ -249,14 +251,14 @@ namespace Alex.Entities
 					if (_destroyingBlock)
 						StopBreakingBlock(forceCanceled:true);
 					
-					InteractWithEntity(hitEntity, true);
+					InteractWithEntity(hitEntity, true, 0);
 				}
 				else if (hitEntity != null && Controller.InputManager.IsPressed(InputCommand.RightClick) && hitEntity is LivingEntity)
 				{
 					if (_destroyingBlock)
 						StopBreakingBlock(forceCanceled:true);
 					
-					InteractWithEntity(hitEntity, false);
+					InteractWithEntity(hitEntity, false, 0);
 				}
 				else if (hitEntity == null && !_destroyingBlock
 				                           && Controller.InputManager.IsPressed(InputCommand.LeftClick)
@@ -353,7 +355,7 @@ namespace Alex.Entities
 		    Network?.EntityAction((int) EntityId, EntityAction.Jump);
 	    }
 
-	    private void InteractWithEntity(Entity entity, bool attack)
+	    private void InteractWithEntity(Entity entity, bool attack, int hand)
 	    {
 		    SwingArm(true);
 		    
@@ -373,11 +375,11 @@ namespace Alex.Entities
 		    if (attack)
 		    {
 			   // entity.EntityHurt();
-			    Network?.EntityInteraction(this, entity, ItemUseOnEntityAction.Attack);
+			    Network?.EntityInteraction(this, entity, ItemUseOnEntityAction.Attack, hand);
 		    }
 		    else
 		    {
-			    Network?.EntityInteraction(this, entity, ItemUseOnEntityAction.Interact);
+			    Network?.EntityInteraction(this, entity, ItemUseOnEntityAction.Interact, hand);
 		    }
 	    }
 

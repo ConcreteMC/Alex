@@ -1,4 +1,5 @@
 ﻿using Alex.Entities;
+using Alex.Entities.Generic;
 using Alex.Entities.Hostile;
 using Alex.Entities.Passive;
 using Alex.Entities.Projectiles;
@@ -146,7 +147,7 @@ namespace Alex.Utils
 					entity = new Vex(world);
 					break;
 				case EntityType.FallingBlock:
-					entity = new EntityFallingBlock(world, null);
+					entity = new EntityFallingBlock(world);
 					break;
 				case EntityType.ArmorStand:
 					entity = new EntityArmorStand(world, null);
@@ -155,7 +156,7 @@ namespace Alex.Utils
 					entity = new ArrowEntity(world, null);
 					break;
 				case EntityType.Item:
-					entity = new ItemEntity(world, null);
+					entity = new ItemEntity(world);
 					break;
 				case EntityType.Mooshroom:
 					entity = new Mooshroom(world);
@@ -192,6 +193,15 @@ namespace Alex.Utils
 					break;
 				case EntityType.LlamaSpit:
 					entity = new LlamaSpit(world);
+					break;
+				case EntityType.Cat:
+					entity = new Cat(world);
+					break;
+				case EntityType.SmallFireball:
+					entity = new SmallFireball(world);
+					break;
+				case EntityType.Fireball:
+					entity = new Fireball(world);
 					break;
 				//case EntityType.Human:
 					//entity = new PlayerMob("test", world, );

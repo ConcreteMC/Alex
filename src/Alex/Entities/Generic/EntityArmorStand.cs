@@ -1,5 +1,6 @@
 using Alex.Net;
 using Alex.Networking.Java.Packets.Play;
+using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 
@@ -11,15 +12,30 @@ namespace Alex.Entities
 		public EntityArmorStand(World level, NetworkProvider network) : base(
 			(int) EntityType.ArmorStand, level, network)
 		{
-			
+			//HealthManager.Invulnerable = true;
 		}
 
 		/// <inheritdoc />
 		protected override void HandleJavaMeta(MetaDataEntry entry)
 		{
 			base.HandleJavaMeta(entry);
-			
-			if (entry.Index >= 15 && entry.Index <= 20 && entry is MetadataRotation rotation)
+
+			if (entry.Index == 14 && entry is MetadataByte data)
+			{
+				var isSmall = (data.Value & 0x01) != 0;
+				var hasArms = (data.Value & 0x04) != 0;
+				var noBasePlate = (data.Value & 0x08) != 0;
+				var setMarker = (data.Value & 0x10) != 0;
+
+				var renderer = ModelRenderer;
+				if (renderer != null)
+				{
+					renderer.SetVisibility("leftarm", hasArms);
+					renderer.SetVisibility("rightarm", hasArms);
+					renderer.SetVisibility("baseplate", !noBasePlate);
+				}
+			}
+			else if (entry.Index >= 15 && entry.Index <= 20 && entry is MetadataRotation rotation)
 			{
 				switch (entry.Index)
 				{

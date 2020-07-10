@@ -432,7 +432,7 @@ namespace Alex.Worlds.Multiplayer.Java
 		{
 			if ((int) type == 37) //Item
 			{
-				ItemEntity itemEntity = new ItemEntity(null, NetworkProvider);
+				ItemEntity itemEntity = new ItemEntity(null);
 				itemEntity.EntityId = entityId;
 				itemEntity.Velocity = velocity;
 				itemEntity.KnownPosition = position;
@@ -496,7 +496,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				return null;
 			}
 
-			if (renderer == null)
+			if (renderer == null || renderer.Texture == null)
 			{
 				var def = Alex.Resources.BedrockResourcePack.EntityDefinitions.FirstOrDefault(
 					x => x.Value.Identifier.Replace("_", "").ToLowerInvariant().Equals($"minecraft:{type}".ToLowerInvariant()));
@@ -1453,7 +1453,12 @@ namespace Alex.Worlds.Multiplayer.Java
 				OnGround = packet.OnGround
 			}, updateLook: true, updatePitch:true);
 		}
-
+		
+		private Vector3 ModifyVelocity(Vector3 velocity)
+		{
+			return velocity / 8000f;
+		}
+		
 		private void HandleEntityVelocity(EntityVelocity packet)
 		{
 			Entity entity;
@@ -1467,8 +1472,8 @@ namespace Alex.Worlds.Multiplayer.Java
 
 			if (entity != null)
 			{
-				var velocity = new Vector3(
-					packet.VelocityX / 8000f, packet.VelocityY / 8000f, packet.VelocityZ / 8000f);
+				var velocity = ModifyVelocity(new Vector3(
+					packet.VelocityX, packet.VelocityY, packet.VelocityZ));
 
 				var old = entity.Velocity;
 
@@ -1492,25 +1497,6 @@ namespace Alex.Worlds.Multiplayer.Java
 
 			foreach (var prop in packet.Properties.Values)
 			{
-				/*switch (prop.Key)
-				{
-					case "generic.movement_speed":
-						target.MovementSpeed = (float) prop.Value;
-
-						break;
-
-					case "generic.flying_speed":
-						target.FlyingSpeed = (float) prop.Value;
-
-						break;
-
-					case "generic.max_health":
-						target.HealthManager.MaxHealth = (float) prop.Value;
-
-						break;
-				}
-
-				//TODO: Modifier data*/
 				target.AddOrUpdateProperty(prop);
 			}
 		}
@@ -1763,8 +1749,8 @@ namespace Alex.Worlds.Multiplayer.Java
 			SpawnMob(packet.EntityId, packet.Uuid, (EntityType)packet.Type, new PlayerLocation(packet.X, packet.Y, packet.Z, packet.Yaw, packet.Yaw, packet.Pitch)
 			{
 				//	OnGround = packet.SpawnMob
-			}, new Vector3(
-				packet.VelocityX / 8000f, packet.VelocityY / 8000f, packet.VelocityZ / 8000f));
+			}, ModifyVelocity(new Vector3(
+				packet.VelocityX, packet.VelocityY, packet.VelocityZ)));
 			
 			
 		}
@@ -1774,8 +1760,8 @@ namespace Alex.Worlds.Multiplayer.Java
 			SpawnMob(packet.EntityId, packet.Uuid, (EntityType)packet.Type, new PlayerLocation(packet.X, packet.Y, packet.Z, packet.Yaw, packet.Yaw, packet.Pitch)
 			{
 			//	OnGround = packet.SpawnMob
-			}, new Vector3(
-				packet.VelocityX / 8000f, packet.VelocityY / 8000f, packet.VelocityZ / 8000f));
+			}, ModifyVelocity(new Vector3(
+				packet.VelocityX, packet.VelocityY, packet.VelocityZ)));
 		}
 
 		private void HandleDisconnectPacket(DisconnectPacket packet)

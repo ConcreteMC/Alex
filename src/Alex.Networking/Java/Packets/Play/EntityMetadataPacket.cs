@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using Alex.API.Blocks;
 using Alex.API.Data;
 using Alex.API.Utils;
 using Alex.Networking.Java.Util;
 using fNbt;
 using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
+using MiNET.Entities;
 
 namespace Alex.Networking.Java.Packets.Play
 {
@@ -94,7 +96,7 @@ namespace Alex.Networking.Java.Packets.Play
 						    break;
 
 					    case MetadataType.Direction:
-						    stream.ReadVarInt();
+						    meta = new MetadataDirection(index, (API.Utils.Direction) stream.ReadVarInt());// stream.ReadVarInt();
 						    break;
 
 					    case MetadataType.OptUUID:
@@ -113,9 +115,8 @@ namespace Alex.Networking.Java.Packets.Play
 					    case MetadataType.Particle:
 						    break;
 					    case MetadataType.VillagerData:
-						    stream.ReadVarInt();
-						    stream.ReadVarInt();
-						    stream.ReadVarInt();
+						    meta = new MetadataVillagerData(
+							    index, (MetadataVillagerData.VillagerTypes) stream.ReadVarInt(), (MetadataVillagerData.VillagerProfession) stream.ReadVarInt(), (MetadataVillagerData.VillagerLevel) stream.ReadVarInt());
 						    break;
 					    case MetadataType.OptVarInt:
 						    stream.ReadVarInt();
@@ -312,6 +313,71 @@ namespace Alex.Networking.Java.Packets.Play
 	    public MetadataNbt(byte index, NbtCompound compound) : base(index, MetadataType.NBT)
 	    {
 		    Compound = compound;
+	    }
+    }
+
+    public class MetadataDirection : MetaDataEntry
+    {
+	    public Alex.API.Utils.Direction Direction { get; set; }
+	    /// <inheritdoc />
+	    public MetadataDirection(byte index, Alex.API.Utils.Direction direction) : base(index, MetadataType.Direction)
+	    {
+		    Direction = direction;
+	    }
+    }
+
+    public class MetadataVillagerData : MetaDataEntry
+    {
+	    public VillagerTypes VillagerType { get; set; }
+	    public VillagerProfession Profession { get; set; }
+	    public VillagerLevel Level { get; set; }
+	    
+	    /// <inheritdoc />
+	    public MetadataVillagerData(byte index, VillagerTypes type, VillagerProfession profession, VillagerLevel level) : base(
+		    index, MetadataType.VillagerData)
+	    {
+		    VillagerType = type;
+		    Profession = profession;
+		    Level = level;
+	    }
+
+	    public enum VillagerTypes
+	    {
+		    Desert = 0,
+		    Jungle,
+		    Plains,
+		    Savanna,
+		    Snow,
+		    Swamp,
+		    Taiga
+	    }
+
+	    public enum VillagerProfession
+	    {
+		    None = 0,
+		    Armorer = 1,
+		    Butcher = 2,
+		    Cartographer = 3,
+		    Cleric = 4,
+		    Farmer = 5,
+		    Fisherman = 6,
+		    Fletcher = 7,
+		    LeatherWorker = 8,
+		    Librarian = 9,
+		    Mason = 10,
+		    Nitwit = 11,
+		    Shepherd = 12,
+		    Toolsmith  =13,
+		    WeaponSmith = 14,
+	    }
+
+	    public enum VillagerLevel
+	    {
+		    Stone = 0,
+		    Iron = 1,
+		    Gold = 2,
+		    Emerald = 3,
+		    Diamond = 4
 	    }
     }
 }

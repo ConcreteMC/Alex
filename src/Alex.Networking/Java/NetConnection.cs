@@ -27,14 +27,14 @@ namespace Alex.Networking.Java
         
         private CancellationTokenSource CancellationToken { get; }
         protected ConnectionConfirmed ConnectionConfirmed { get; }
-        private Direction Direction { get; }
+        private PacketDirection PacketDirection { get; }
         private Socket Socket { get; }
 
 		private DedicatedThreadPool ThreadPool { get; }
 
-		public NetConnection(Direction direction, Socket socket, ConnectionConfirmed confirmdAction = null, DedicatedThreadPool threadPool = null)
+		public NetConnection(PacketDirection packetDirection, Socket socket, ConnectionConfirmed confirmdAction = null, DedicatedThreadPool threadPool = null)
         {
-            Direction = direction;
+            PacketDirection = packetDirection;
             Socket = socket;
             RemoteEndPoint = Socket.RemoteEndPoint;
 	        ThreadPool = threadPool;
@@ -236,7 +236,7 @@ namespace Alex.Networking.Java
 			    }
 		    }
 
-		    packet = MCPacketFactory.GetPacket(Direction, ConnectionState, packetId);
+		    packet = MCPacketFactory.GetPacket(PacketDirection, ConnectionState, packetId);
 
 		    if (packet == null)
 		    {

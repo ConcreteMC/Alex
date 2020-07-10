@@ -92,7 +92,7 @@ namespace Alex.Services
 			        {
 				        //conn = new NetConnection(Direction.ClientBound, client.Client);
 				        //conn.LogExceptions = false;
-				        using (var conn = new NetConnection(Direction.ClientBound, client.Client)
+				        using (var conn = new NetConnection(PacketDirection.ClientBound, client.Client)
 				        {
 					        LogExceptions = true
 				        })

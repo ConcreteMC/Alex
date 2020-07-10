@@ -53,7 +53,7 @@ namespace Alex.Worlds.Singleplayer
 			
 		}
 
-		public override void EntityInteraction(Entity player, Entity target, ItemUseOnEntityAction action)
+		public override void EntityInteraction(Entity player, Entity target, ItemUseOnEntityAction action, int hand)
 		{
 			
 		}

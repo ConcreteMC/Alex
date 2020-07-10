@@ -12,9 +12,9 @@ namespace Alex.Networking.Java
 	{
 		public EventHandler<NetConnectionCreatedEventArgs> OnConnectionCreated;
 
-		internal NetConnection CreateConnection(Direction direction, Socket socket, ConnectionConfirmed confirmedAction = null)
+		internal NetConnection CreateConnection(PacketDirection packetDirection, Socket socket, ConnectionConfirmed confirmedAction = null)
 		{
-			NetConnection connection = Create(direction, socket, confirmedAction);
+			NetConnection connection = Create(packetDirection, socket, confirmedAction);
 
 			if (connection == null) return null;
 
@@ -22,9 +22,9 @@ namespace Alex.Networking.Java
 			return connection;
 		}
 
-		protected virtual NetConnection Create(Direction direction, Socket socket, ConnectionConfirmed confirmedAction = null)
+		protected virtual NetConnection Create(PacketDirection packetDirection, Socket socket, ConnectionConfirmed confirmedAction = null)
 		{
-			NetConnection conn = new NetConnection(direction, socket, confirmedAction);
+			NetConnection conn = new NetConnection(packetDirection, socket, confirmedAction);
 			return conn;
 		}
 	}

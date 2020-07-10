@@ -72,12 +72,18 @@ namespace Alex.Worlds
 			    var entityBox = entity.GetBoundingBox();
 
 				if (args.Camera.BoundingFrustum.Contains(new Microsoft.Xna.Framework.BoundingBox(entityBox.Min, entityBox.Max)) != ContainmentType.Disjoint)
-			    {
+				{
+					entity.IsRendered = true;
+					
 				    entity.Render(args);
 				    vertexCount += entity.RenderedVertices;
 				    rendered.Add(entity);
 				    renderCount++;
 			    }
+				else
+				{
+					entity.IsRendered = false;
+				}
 		    }
 
 		    _rendered = rendered.ToArray();

@@ -15,6 +15,7 @@ using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks;
 using Alex.Entities;
+using Alex.Entities.Generic;
 using Alex.Entities.Projectiles;
 using Alex.Gamestates;
 using Alex.Graphics.Models.Entity;
@@ -590,7 +591,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			if (type == EntityType.FallingBlock)
 			{
-				entity = new EntityFallingBlock(null, null);
+				entity = new EntityFallingBlock(null);
 			}
 			else
 			{
@@ -680,7 +681,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				itemClone.Count = slot.Count;
 				itemClone.Nbt = slot.ExtraData;
 
-				ItemEntity itemEntity = new ItemEntity(null, Client);
+				ItemEntity itemEntity = new ItemEntity(null);
 				itemEntity.EntityId = message.runtimeEntityId;
 				itemEntity.Velocity = new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ);
 				itemEntity.KnownPosition = new PlayerLocation(message.x, message.y, message.z);

@@ -19,6 +19,8 @@ namespace Alex.API.Resources
             Path = path;
         }
 
+        public int Length => Namespace.Length + Path.Length;
+        
         public static implicit operator ResourceLocation(string input)
         {
             return new ResourceLocation(input);

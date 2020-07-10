@@ -5,8 +5,26 @@ namespace Alex.Entities.Passive
 {
 	public class Bat : PassiveMob
 	{
-		public bool IsHanging { get; set; } = false;
-		public Bat(World level) : base((EntityType)19, level)
+		private bool _isHanging = false;
+
+		public bool IsHanging
+		{
+			get
+			{
+				return _isHanging;
+			}
+			set
+			{
+				_isHanging = value;
+
+				if (ModelRenderer != null)
+				{
+					
+					//ModelRenderer
+				}
+			}
+		}
+		public Bat(World level) : base(EntityType.Bat, level)
 		{
 			JavaEntityId = 65;
 			Height = 0.9;

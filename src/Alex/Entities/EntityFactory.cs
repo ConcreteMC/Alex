@@ -166,13 +166,16 @@ namespace Alex.Entities
 			}
 			else
 			{
-				var f = _registeredRenderers.FirstOrDefault(x => x.Key.ToString().ToLowerInvariant().Contains(data.OriginalName.ToLowerInvariant())).Value;
+				var f = _registeredRenderers.Where(x => x.Key.Path.Length >= data.OriginalName.Length)
+				   .OrderBy(x => (x.Key.Path.Length - data.OriginalName.Length)).FirstOrDefault(
+						x => x.Key.ToString().ToLowerInvariant().Contains(data.OriginalName.ToLowerInvariant())).Value;
 
 				if (f != null)
 				{
 					return f(texture);
 				}
 			}
+
 			return null;
 		}
 

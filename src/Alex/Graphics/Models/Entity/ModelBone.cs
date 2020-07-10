@@ -33,6 +33,8 @@ namespace Alex.Graphics.Models.Entity
 				get { return _position; }
 				set { _position = value; }
 			}
+
+			public bool Rendered { get; set; } = true;
 			
 			private List<IAttachable> Attachables { get; } = new List<IAttachable>();
 
@@ -160,7 +162,7 @@ namespace Alex.Graphics.Models.Entity
 					effect.View = args.Camera.ViewMatrix;
 					effect.Projection = args.Camera.ProjectionMatrix;
 
-					if (!mock && !cube.IsInvisible)
+					if (!mock && !cube.IsInvisible && Rendered)
 					{
 						foreach (var pass in effect.CurrentTechnique.Passes)
 						{
@@ -252,6 +254,17 @@ namespace Alex.Graphics.Models.Entity
 					Buffer = buffer;
 					
 					currentBuffer?.MarkForDisposal();
+				}
+			}
+
+			internal void SetTexture(PooledTexture2D texture)
+			{
+				foreach (var cube in Cubes)
+				{
+					if (cube.Effect != null)
+					{
+						cube.Effect.Texture = texture;
+					}
 				}
 			}
 

@@ -14,7 +14,7 @@ namespace Alex.Graphics.Models.Entity
 			public short[] Indexes { get; private set; }
 			
 			public bool IsDirty { get; private set; }
-			public Texture2D Texture { get; private set; }
+			private Texture2D Texture { get; set; }
 
 			public Vector3 Rotation { get; set; } = Vector3.Zero;
 			public Vector3 Pivot { get; private set; } = Vector3.Zero;
@@ -45,6 +45,7 @@ namespace Alex.Graphics.Models.Entity
 				{
 					Effect = new AlphaTestEffect(device);
 					Effect.Texture = Texture;
+					Texture = null;
 				}
 
 				IsDirty = false;

@@ -28,7 +28,7 @@ namespace Alex.Net
 		public abstract void PlayerDigging(DiggingStatus status, BlockCoordinates position, API.Blocks.BlockFace face, Vector3 cursorPosition);
 
 		public abstract void EntityInteraction(Entity player, Entity target,
-			ItemUseOnEntityAction action);
+			ItemUseOnEntityAction action, int hand);
 
 		public abstract void WorldInteraction(BlockCoordinates position, API.Blocks.BlockFace face, int hand, Vector3 cursorPosition);
 		public abstract void UseItem(Item item, int hand, ItemUseAction action);

@@ -71,7 +71,9 @@ namespace Alex.Worlds
 				{
 					if (entity is Entity e)
 					{
-						if (e.NoAi) continue;
+						if (e.NoAi || !e.RequiresRealTimeTick) continue;
+						
+						if (!e.AlwaysTick && !e.IsRendered) continue;
 						
 						UpdateEntity(e, dt);
 						
@@ -171,6 +173,12 @@ namespace Alex.Worlds
 
 					entity.Velocity *= new Vector3(drag, 0.98f, drag);
 
+					if (!e.RequiresRealTimeTick)
+					{
+						UpdateEntity(e, (float) ((DateTime.UtcNow - e.LastTickTime).TotalMilliseconds / 50f));
+						e.LastTickTime = DateTime.UtcNow;
+					}
+					
 					UpdateOnGround(e);
 					//TruncateVelocity(e, 0f);
 
@@ -184,8 +192,10 @@ namespace Alex.Worlds
 		private void UpdateEntity(Entity e, float deltaTime)
 		{
 			var originalPosition = e.KnownPosition;
+			var isPlayer = e is Player;
 			
-			Hit.Clear();
+			if (isPlayer)
+				Hit.Clear();
 			
 			var position = e.KnownPosition;
 			//var originalPosition = position;
@@ -194,57 +204,67 @@ namespace Alex.Worlds
 			
 			var before = e.Velocity;
 			var velocity = e.Velocity;
-			var preview = position.PreviewMove(velocity * deltaTime);
-			var boundingBox = e.GetBoundingBox(preview);
-			
-			var bounding = new BoundingBox(
-				new Vector3(
-					MathF.Min(originalEntityBoundingBox.Min.X, boundingBox.Min.X),
-					MathF.Min(originalEntityBoundingBox.Min.Y, boundingBox.Min.Y),
-					MathF.Min(originalEntityBoundingBox.Min.Z, boundingBox.Min.Z)),
-				new Vector3(
-					MathF.Max(originalEntityBoundingBox.Max.X, boundingBox.Max.X),
-					MathF.Max(originalEntityBoundingBox.Max.Y, boundingBox.Max.Y),
-					MathF.Max(originalEntityBoundingBox.Max.Z, boundingBox.Max.Z)));
-			
-			var modifiedPreview = preview;
-			
-			Bound bound = new Bound(World, bounding, preview);
 
-			if (bound.GetIntersecting(bounding, false, out var blocks))
+			if (e.HasCollision)
 			{
-				var solidBlocks = blocks.Where(x => x.block.Solid).ToArray();
+				var preview     = position.PreviewMove(velocity * deltaTime);
+				var boundingBox = e.GetBoundingBox(preview);
 
-				if (solidBlocks.Length > 0)
+				var bounding = new BoundingBox(
+					new Vector3(
+						MathF.Min(originalEntityBoundingBox.Min.X, boundingBox.Min.X),
+						MathF.Min(originalEntityBoundingBox.Min.Y, boundingBox.Min.Y),
+						MathF.Min(originalEntityBoundingBox.Min.Z, boundingBox.Min.Z)),
+					new Vector3(
+						MathF.Max(originalEntityBoundingBox.Max.X, boundingBox.Max.X),
+						MathF.Max(originalEntityBoundingBox.Max.Y, boundingBox.Max.Y),
+						MathF.Max(originalEntityBoundingBox.Max.Z, boundingBox.Max.Z)));
+
+				var modifiedPreview = preview;
+
+				Bound bound = new Bound(World, bounding, preview);
+
+				if (bound.GetIntersecting(bounding, false, out var blocks))
 				{
-					if (AdjustForY(e,
-						originalEntityBoundingBox, e.GetBoundingBox(new Vector3(position.X, preview.Y, position.Z)),
-						solidBlocks, ref velocity, out var yCollisionPoint, ref position))
-					{
-						e.CollidedWithWorld(before.Y < 0 ? Vector3.Down : Vector3.Up, yCollisionPoint);
-					}
-					
-					if (AdjustForX(e,
-						originalEntityBoundingBox, e.GetBoundingBox(new Vector3(preview.X, position.Y, position.Z)),
-						solidBlocks, ref velocity, out var xCollisionPoint, ref position))
-					{
-						e.CollidedWithWorld(before.X < 0 ? Vector3.Left : Vector3.Right, xCollisionPoint);
-					}
+					var solidBlocks = blocks.Where(x => x.block.Solid).ToArray();
 
-					if (AdjustForZ(e,
-						originalEntityBoundingBox, e.GetBoundingBox(new Vector3(position.X, position.Y, preview.Z)),
-						solidBlocks, ref velocity, out var zCollisionPoint, ref position))
+					if (solidBlocks.Length > 0)
 					{
-						e.CollidedWithWorld(before.Z < 0 ? Vector3.Backward : Vector3.Forward, zCollisionPoint);
-					}
+						if (AdjustForY(
+							e, originalEntityBoundingBox,
+							e.GetBoundingBox(new Vector3(position.X, preview.Y, position.Z)), solidBlocks, ref velocity,
+							out var yCollisionPoint, ref position))
+						{
+							e.CollidedWithWorld(before.Y < 0 ? Vector3.Down : Vector3.Up, yCollisionPoint);
+						}
 
-					Hit.AddRange(solidBlocks.Select(x => x.box));
+						if (AdjustForX(
+							e, originalEntityBoundingBox,
+							e.GetBoundingBox(new Vector3(preview.X, position.Y, position.Z)), solidBlocks, ref velocity,
+							out var xCollisionPoint, ref position))
+						{
+							e.CollidedWithWorld(before.X < 0 ? Vector3.Left : Vector3.Right, xCollisionPoint);
+						}
+
+						if (AdjustForZ(
+							e, originalEntityBoundingBox,
+							e.GetBoundingBox(new Vector3(position.X, position.Y, preview.Z)), solidBlocks, ref velocity,
+							out var zCollisionPoint, ref position))
+						{
+							e.CollidedWithWorld(before.Z < 0 ? Vector3.Backward : Vector3.Forward, zCollisionPoint);
+						}
+
+						if (isPlayer)
+						{
+							Hit.AddRange(solidBlocks.Select(x => x.box));
+						}
+					}
 				}
-			}
 
-			if (Hit.Count > 0)
-			{
-				LastKnownHit = Hit.ToArray();
+				if (isPlayer && Hit.Count > 0)
+				{
+					LastKnownHit = Hit.ToArray();
+				}
 			}
 
 			if (before.Y >= 0f && position.Y > originalPosition.Y)
@@ -493,7 +513,7 @@ namespace Alex.Worlds
 
 			if (direction == Vector3.Up)
 			{
-				//offset = new Vector3(offset.X, (float) entity.Height * entity.Scale, offset.Z);
+				offset = new Vector3(offset.X, (float) entity.Height * entity.Scale, offset.Z);
 			}
 
 			if (negative)
