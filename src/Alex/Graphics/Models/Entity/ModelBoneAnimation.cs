@@ -1,3 +1,5 @@
+using System;
+using System.Diagnostics;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Graphics.Models.Entity
@@ -30,6 +32,15 @@ namespace Alex.Graphics.Models.Entity
 		{
 			
 		}
+
+		private Stopwatch RuntimeStopwatch { get; } = new Stopwatch();
+		protected TimeSpan ElapsedTime => RuntimeStopwatch.Elapsed;
+		public void Start()
+		{
+			RuntimeStopwatch.Restart();
+		}
+		
+		protected virtual void OnStart(){}
 		
 		public void Update(GameTime gameTime)
 		{
@@ -42,6 +53,11 @@ namespace Alex.Graphics.Models.Entity
 		protected virtual void OnTick(GameTime gameTime, float delta)
 		{
 			
+		}
+
+		public virtual bool CanStart()
+		{
+			return true;
 		}
 
 		public virtual bool IsFinished()

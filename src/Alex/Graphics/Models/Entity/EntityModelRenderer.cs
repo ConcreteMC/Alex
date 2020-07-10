@@ -213,7 +213,7 @@ namespace Alex.Graphics.Models.Entity
 
 			try
 			{
-				args.GraphicsDevice.BlendState = BlendState.AlphaBlend;
+				args.GraphicsDevice.BlendState = BlendState.Opaque;
 				args.GraphicsDevice.RasterizerState = RasterizerState;
 				
 				args.GraphicsDevice.SetVertexBuffer(VertexBuffer);

@@ -45,6 +45,9 @@ namespace Alex.Graphics.Models.Entity
 				{
 					Effect = new AlphaTestEffect(device);
 					Effect.Texture = Texture;
+					
+					//Effect.VertexColorEnabled = true;
+					
 					Texture = null;
 				}
 

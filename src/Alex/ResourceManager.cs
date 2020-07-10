@@ -55,6 +55,7 @@ namespace Alex
 
 		private ContentManager ContentManager { get; }
 		
+		public static Effect EntityEffect { get; set; }
 		public static Effect BlockEffect { get; set; }
 		public static Effect LightingEffect { get; set; }
 		

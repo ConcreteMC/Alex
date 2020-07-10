@@ -684,6 +684,13 @@ namespace Alex.Entities
 				_mvSpeed = (float) (distanceMoved * (TimeSpan.FromSeconds(1) / args.GameTime.ElapsedGameTime));
 			}
 
+			Animate(distSQ, dt);
+			
+			_prevUpdatePosition = pos;
+		}
+
+		protected virtual void Animate(float distSQ, float dt)
+		{
 			if (IsSneaking && _body != null)
 			{
 				var posOffset = new Vector3(0f, -1.5f, -4.5f);
@@ -709,17 +716,6 @@ namespace Alex.Entities
 						_rightArmModel.Rotation = new Vector3(-20f, 0f, 0f);
 						_rightArmModel.Position = posOffset;
 					}
-
-					//if (!_leftArmModel.IsAnimating)
-
-					/*if (_rightSleeveModel != null && _leftSleeveModel != null)
-					{
-						_rightSleeveModel.Rotation = _rightArmModel.Rotation;
-						_rightSleeveModel.Position = posOffset;
-						
-						_leftSleeveModel.Rotation = _leftArmModel.Rotation;
-						_leftSleeveModel.Position = posOffset;
-					}*/
 				}
 
 				if (_head != null && !_head.IsAnimating)
@@ -738,15 +734,6 @@ namespace Alex.Entities
 				if (_rightArmModel != null && _leftArmModel != null && !_rightArmModel.IsAnimating && !_leftArmModel.IsAnimating)
 				{
 					_rightArmModel.Position = _leftArmModel.Position = Vector3.Zero;
-					
-					/*if (_rightSleeveModel != null && _leftSleeveModel != null)
-					{
-						_rightSleeveModel.Rotation = _rightArmModel.Rotation;
-						_rightSleeveModel.Position = Vector3.Zero;
-						
-						_leftSleeveModel.Rotation = _leftArmModel.Rotation;
-						_leftSleeveModel.Position = Vector3.Zero;
-					}*/
 				}
 
 				if (_head != null && !_head.IsAnimating)
@@ -754,20 +741,11 @@ namespace Alex.Entities
 					_head.Position = Vector3.Zero;
 				}
 			}
-
-			var moveSpeed = CalculateMovementSpeed() * 20f;
-			var tcos0     = (float) (Math.Cos(distance * (38.17 * 20f)) * moveSpeed) * (57.3f * 20f);
-			var tcos1     = -tcos0;
-
-			//_armRotation = _armRotation;
-
+			
 			// Test arm rotations
 			if (!IsSneaking && _leftArmModel != null && _rightArmModel != null)
 			{
-				//var lArmRot = new Vector3((0.5f + MathF.Sin(_armRotation)) * 7.5f, 0f,
-				//	0.1f + (MathF.Cos(_armRotation) * 1.5f));
 				Vector3 rArmRot = Vector3.Zero;
-				var     lArmRot = new Vector3(tcos0, 0, 0);
 
 				if (distSQ > 0f)
 				{
@@ -800,12 +778,6 @@ namespace Alex.Entities
 				{
 					_rightArmModel.Rotation = -rArmRot;
 				}
-
-				if (_rightSleeveModel != null && _leftSleeveModel != null)
-				{
-					//_rightSleeveModel.Rotation = -rArmRot;
-					//_leftSleeveModel.Rotation = rArmRot;
-				}
 			}
 
 
@@ -817,12 +789,9 @@ namespace Alex.Entities
 				if (distSQ > 0f)
 				{
 					_legRotation += (float) (_mvSpeed) * dt;
-					;
-
+					
 					lLegRot = new Vector3(MathF.Sin(_legRotation) * 34.5f, 0f, 0f);
 					rLegRot = new Vector3(-MathF.Sin(_legRotation) * 34.5f, 0f, 0f);
-					//lLegRot = new Vector3(tcos0, 0f, 0f);
-					//rLegRot = new Vector3(tcos1, 0f, 0f);
 				}
 				else
 				{
@@ -834,23 +803,7 @@ namespace Alex.Entities
 				
 				if (!_rightLegModel.IsAnimating)
 					_rightLegModel.Rotation = rLegRot;
-
-				if (_leftPantsModel != null && _rightPantsModel != null)
-				{
-					//_leftPantsModel.Rotation = lLegRot;
-					//_rightPantsModel.Rotation = rLegRot;
-				}
 			}
-
-
-			var itemRender = ItemRenderer;
-			var rightArm = _rightArmModel;
-			if (itemRender != null && rightArm != null)
-			{
-				
-			}
-			
-			_prevUpdatePosition = pos;
 		}
 
 		private DateTime NextUpdate     = DateTime.MinValue;
@@ -1048,7 +1001,7 @@ namespace Alex.Entities
 			}
 		}
 
-		protected void UpdateModelParts()
+		protected virtual void UpdateModelParts()
 		{
 			if (ModelRenderer == null)
 				return;

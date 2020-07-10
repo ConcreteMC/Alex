@@ -91,6 +91,8 @@
     <None Remove="Resources\Blockshader.xnb" />
     <None Remove="Resources\Lightmap.xnb" />
     <EmbeddedResource Include="Resources\Lightmap.xnb" />
+    <None Remove="Resources\Entityshader.xnb" />
+    <EmbeddedResource Include="Resources\Entityshader.xnb" />
   </ItemGroup>
 
   <ItemGroup>

@@ -20,6 +20,12 @@
 /processorParam:Defines=
 /build:Blockshader.fx
 
+#begin Entityshader.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Entityshader.fx
+
 #begin Lightmap.fx
 /importer:EffectImporter
 /processor:EffectProcessor

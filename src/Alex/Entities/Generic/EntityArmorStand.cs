@@ -27,6 +27,14 @@ namespace Alex.Entities
 				var noBasePlate = (data.Value & 0x08) != 0;
 				var setMarker = (data.Value & 0x10) != 0;
 
+				if (setMarker)
+				{
+					Width = 0f;
+					Height = 0f;
+					NoAi = true;
+				}
+				//IsInvisible = setMarker;
+
 				var renderer = ModelRenderer;
 				if (renderer != null)
 				{

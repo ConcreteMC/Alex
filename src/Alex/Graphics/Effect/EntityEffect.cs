@@ -1,26 +1,9 @@
-using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.Graphics.Effect
 {
-    [Flags]
-    internal enum EffectDirtyFlags
-    {
-        WorldViewProj = 1,
-        World         = 2,
-        EyePosition   = 4,
-        MaterialColor = 8,
-        Fog           = 16, // 0x00000010
-        FogEnable     = 32, // 0x00000020
-        AlphaTest     = 64, // 0x00000040
-        ShaderIndex   = 128, // 0x00000080
-        LightOffset   = 256,
-        LightSource1  = 512,
-        All           = -1, // 0xFFFFFFFF
-    }
-
-    public class BlockEffect : Microsoft.Xna.Framework.Graphics.Effect, IEffectMatrices, IEffectFog
+	public class EntityEffect : Microsoft.Xna.Framework.Graphics.Effect, IEffectMatrices, IEffectFog
     {
         #region Effect Parameters
 
@@ -40,20 +23,12 @@ namespace Alex.Graphics.Effect
 
         private EffectParameter _viewParam;
 
-        private EffectParameter _lightOffsetParam;
-
-        private EffectParameter _lightSource1StrengthParam;
-
-        private EffectParameter _lightSource1Param;
          //EffectParameter worldViewProjParam;
 
         #endregion
 
         #region Fields
 
-        private Vector3 _lightSource1;
-        private float _lightSource1Strength;
-        
         bool _fogEnabled;
         bool _vertexColorEnabled;
 
@@ -79,30 +54,7 @@ namespace Alex.Graphics.Effect
         #endregion
 
         #region Public Properties
-
-        public float LightSource1Strength
-        {
-            get => _lightSource1Strength;
-            set
-            {
-                _lightSource1Strength = value;
-                _dirtyFlags |= EffectDirtyFlags.LightSource1;
-            }
-        }
-
-        public Vector3 LightSource1
-        {
-            get
-            {
-                return _lightSource1;
-            }
-            set
-            {
-                _lightSource1 = value;
-                _dirtyFlags |= EffectDirtyFlags.LightSource1;
-            }
-        }
-
+        
         /// <summary>
         /// Gets or sets the world matrix.
         /// </summary>
@@ -317,12 +269,12 @@ namespace Alex.Graphics.Effect
         /// <summary>
         /// Creates a new AlphaTestEffect with default parameter settings.
         /// </summary>
-        public BlockEffect(GraphicsDevice device, byte[] byteCode) : base(device, byteCode)
+        public EntityEffect(GraphicsDevice device, byte[] byteCode) : base(device, byteCode)
         {
             CacheEffectParameters();
         }
         
-        public BlockEffect() : base(ResourceManager.BlockEffect)
+        public EntityEffect() : base(ResourceManager.EntityEffect)
         {
             CacheEffectParameters();
         }
@@ -330,7 +282,7 @@ namespace Alex.Graphics.Effect
         /// <summary>
         /// Creates a new AlphaTestEffect by cloning parameter settings from an existing instance.
         /// </summary>
-        public BlockEffect(BlockEffect cloneSource) : base(cloneSource)
+        public EntityEffect(EntityEffect cloneSource) : base(cloneSource)
         {
             CacheEffectParameters();
 
@@ -350,9 +302,6 @@ namespace Alex.Graphics.Effect
 
             _alphaFunction = cloneSource._alphaFunction;
             _referenceAlpha = cloneSource._referenceAlpha;
-
-            _lightSource1 = cloneSource._lightSource1;
-            _lightSource1Strength = cloneSource._lightSource1Strength;
         }
 
         /// <summary>
@@ -360,7 +309,7 @@ namespace Alex.Graphics.Effect
         /// </summary>
         public override Microsoft.Xna.Framework.Graphics.Effect Clone()
         {
-            return new BlockEffect(this);
+            return new EntityEffect(this);
         }
 
         /// <summary>
@@ -382,11 +331,6 @@ namespace Alex.Graphics.Effect
             _projParam = Parameters["Projection"];
 
             _viewParam = Parameters["View"];
-
-            _lightOffsetParam = Parameters["LightOffset"];
-
-            _lightSource1Param = Parameters["LightSource1"];
-            _lightSource1StrengthParam = Parameters["LightSource1Strength"];
             //  worldViewProjParam = Parameters["WorldViewProj"];
         }
         
@@ -473,20 +417,6 @@ namespace Alex.Graphics.Effect
                 _dirtyFlags, ref _world, ref _view, ref _projection, ref _worldView, _fogEnabled, _fogStart, _fogEnd,
                 _worldParam, _viewParam, _projParam, _fogStartParam, _fogEndParam, _fogEnabledParam, _fogColorParam, FogColor);
 
-            if ((_dirtyFlags & EffectDirtyFlags.LightSource1) != 0)
-            {
-                //lightSource1Param.SetValue(lightSource1);
-              //  lightSource1StrengthParam.SetValue(lightSource1Strength);
-                
-                _dirtyFlags &= ~EffectDirtyFlags.LightSource1;
-            }
-            
-            if ((_dirtyFlags & EffectDirtyFlags.LightOffset) != 0)
-            {
-                _lightOffsetParam.SetValue((float)_lightOffset);
-                _dirtyFlags &= ~EffectDirtyFlags.LightOffset;
-            }
-            
             // Recompute the diffuse/alpha material color parameter?
             if ((_dirtyFlags & EffectDirtyFlags.MaterialColor) != 0)
             {

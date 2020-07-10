@@ -198,6 +198,8 @@ namespace Alex.Graphics.Models.Entity
 				if (CurrentAnim == null && Animations.TryDequeue(out var animation))
 				{
 					animation.Setup();
+					animation.Start();
+					
 					CurrentAnim = animation;
 				}
 
