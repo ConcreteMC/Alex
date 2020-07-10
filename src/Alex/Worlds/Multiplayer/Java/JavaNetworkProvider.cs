@@ -30,6 +30,9 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		public override void EntityAction(int entityId, EntityAction action)
 		{
+			if (action == API.Utils.EntityAction.Jump)
+				return;
+			
 			EntityActionPacket packet = new EntityActionPacket();
 			packet.EntityId = entityId;
 			packet.Action = action;

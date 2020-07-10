@@ -217,12 +217,13 @@ namespace Alex.Worlds.Multiplayer.Java
 		private bool _isSneaking = false;
 		private bool _isSprinting = false;
 		private bool _isRealTick = false;
+		private bool _onGround = false;
 		private void GameTick(object state)
 		{
 			if (World == null) return;
 
-			var isTick = _isRealTick;
-			_isRealTick = !isTick;
+		//	var isTick = _isRealTick;
+			//_isRealTick = !isTick;
 			
 			if (_initiated)
 			{
@@ -231,7 +232,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				{
 					player.IsSpawned = Spawned;
 
-					if (isTick)
+					//if (isTick)
 					{
 						if (player.IsFlying != _flying)
 						{

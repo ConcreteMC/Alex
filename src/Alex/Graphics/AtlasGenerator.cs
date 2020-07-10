@@ -11,8 +11,7 @@ using Alex.Blocks.State;
 using Alex.Gamestates.InGame;
 using Alex.Graphics.Models.Blocks;
 using Alex.ResourcePackLib;
-using Alex.ResourcePackLib.Json.Textures;
-using Alex.Worlds;
+using Alex.Utils;
 using Alex.Worlds.Singleplayer;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -20,7 +19,7 @@ using NLog;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
-namespace Alex.Utils
+namespace Alex.Graphics
 {
     public class AtlasGenerator
     {
@@ -182,6 +181,18 @@ namespace Alex.Utils
 			{
 				var frameSize = GetTextureDimensions(resourcePack, "block/water_still");
 				seperateFrames.TryAdd("block/water_still", GetFrames(still, (int) frameSize.X, (int) frameSize.Y));
+			}
+			
+			if (resourcePack.TryGetBitmap("block/lava_flow", out var lavaFlow))
+			{
+				var frameSize = GetTextureDimensions(resourcePack, "block/lava_flow");
+				seperateFrames.TryAdd("block/lava_flow", GetFrames(lavaFlow, (int) frameSize.X, (int) frameSize.Y));
+			}
+			
+			if (resourcePack.TryGetBitmap("block/lava_still", out var lavastill))
+			{
+				var frameSize = GetTextureDimensions(resourcePack, "block/lava_still");
+				seperateFrames.TryAdd("block/lava_still", GetFrames(lavastill, (int) frameSize.X, (int) frameSize.Y));
 			}
 	    }
 

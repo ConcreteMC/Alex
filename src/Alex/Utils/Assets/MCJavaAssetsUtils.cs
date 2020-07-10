@@ -3,13 +3,12 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Alex.API.Services;
 using NLog;
 
-namespace Alex.Utils
+namespace Alex.Utils.Assets
 {
     public class MCJavaAssetsUtil
     {

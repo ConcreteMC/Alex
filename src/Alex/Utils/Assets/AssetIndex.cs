@@ -3,7 +3,7 @@ using System.Globalization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
-namespace Alex.Utils
+namespace Alex.Utils.Assets
 {
     using J = Newtonsoft.Json.JsonPropertyAttribute;
 

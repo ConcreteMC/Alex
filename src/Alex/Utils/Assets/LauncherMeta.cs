@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using J = Newtonsoft.Json.JsonPropertyAttribute;
 
-namespace Alex.Utils
+namespace Alex.Utils.Assets
 {
 	public partial class LauncherMeta
 	{
