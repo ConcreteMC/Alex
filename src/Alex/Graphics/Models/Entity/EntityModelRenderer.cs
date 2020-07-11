@@ -258,7 +258,7 @@ namespace Alex.Graphics.Models.Entity
 
 				if (parent.Value != null)
 				{
-					bone.Value.RotationMatrix = parent.Value.RotationMatrix;
+					//bone.Value.RotationMatrix = parent.Value.RotationMatrix;
 				}
 			}
 		}

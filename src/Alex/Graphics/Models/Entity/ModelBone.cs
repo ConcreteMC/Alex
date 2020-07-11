@@ -5,7 +5,6 @@ using Alex.API.Entities;
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.ResourcePackLib.Json.Models.Entities;
-using Alex.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -35,8 +34,6 @@ namespace Alex.Graphics.Models.Entity
 			}
 
 			public bool Rendered { get; set; } = true;
-			
-			private List<IAttachable> Attachables { get; } = new List<IAttachable>();
 
 			private string OriginalBone { get; }
 			public string Parent => OriginalBone;
@@ -56,7 +53,7 @@ namespace Alex.Graphics.Models.Entity
 
 			private bool _isDirty = true;
 
-			public Matrix RotationMatrix = Matrix.Identity;
+			//public Matrix RotationMatrix = Matrix.Identity;
 			public bool UpdateRotationMatrix = true;
 			private Matrix CharacterMatrix { get; set; }
 
@@ -149,14 +146,14 @@ namespace Alex.Graphics.Models.Entity
 					//var p = EntityModelBone.Pivot + EntityModelBone.
 					
 					var rotMatrix3 = Matrix.CreateTranslation(-EntityModelBone.Pivot)
-					                 * Matrix.CreateRotationX(MathUtils.ToRadians(-Rotation.X))
-					                 * Matrix.CreateRotationY(MathUtils.ToRadians(-Rotation.Y))
-					                 * Matrix.CreateRotationZ(MathUtils.ToRadians(-Rotation.Z))
+					                 * Matrix.CreateRotationX(MathUtils.ToRadians(Rotation.X))
+					                 * Matrix.CreateRotationY(MathUtils.ToRadians(Rotation.Y))
+					                 * Matrix.CreateRotationZ(MathUtils.ToRadians(Rotation.Z))
 					                 * Matrix.CreateTranslation(EntityModelBone.Pivot);
 					
 					var cubeMatrix = (cubeRotationMatrix) * Matrix.CreateTranslation(cube.Origin);
 					
-					RotationMatrix = cubeMatrix * boneMatrix * characterMatrix;
+						//	RotationMatrix = cubeMatrix * boneMatrix * characterMatrix;
 
 					effect.World = cubeMatrix * rotMatrix2 * rotMatrix3 * bindPoseMatrix * boneMatrix * characterMatrix;
 					effect.View = args.Camera.ViewMatrix;
@@ -174,11 +171,6 @@ namespace Alex.Graphics.Models.Entity
 					}
 
 					idx += cube.Indexes.Length;
-				}
-
-				foreach (var attach in Attachables.ToArray())
-				{
-					attach.Render(args);
 				}
 			}
 
@@ -229,12 +221,6 @@ namespace Alex.Graphics.Models.Entity
 					part.Update(args);
 				}
 
-				foreach (var attachable in Attachables.ToArray())
-				{
-					//attachable.R
-					//attachable.Update(RotationMatrix);
-				}
-
 				if (_isDirty)
 				{
 					UpdateVertexBuffer(args.GraphicsDevice);
@@ -270,18 +256,6 @@ namespace Alex.Graphics.Models.Entity
 				}
 			}
 
-			public void Attach(IAttachable attachable)
-			{
-				if (!Attachables.Contains(attachable))
-					Attachables.Add(attachable);
-			}
-
-			public void Detach(IAttachable attachable)
-			{
-				if (Attachables.Contains(attachable))
-					Attachables.Remove(attachable);
-			}
-			
 			public void Dispose()
 			{
 				Buffer?.MarkForDisposal();

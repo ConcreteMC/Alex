@@ -278,7 +278,7 @@ namespace Alex.Graphics.Models.Items
                    activeDisplayItem.Translation.Y / 32f,
                    activeDisplayItem.Translation.Z / 32f);
                
-               world *= Matrix.CreateTranslation(-a) * Matrix.CreateScale(activeDisplayItem.Scale)
+               world *= Matrix.CreateTranslation(-a) * Matrix.CreateScale(activeDisplayItem.Scale * scale)
                                                      * Matrix.CreateTranslation(displayTrans.X, displayTrans.Y, displayTrans.Z)
                                                      * Matrix.CreateFromAxisAngle(Vector3.Right, MathUtils.ToRadians(activeDisplayItem.Rotation.X))
                                                      * Matrix.CreateFromAxisAngle(Vector3.Backward, MathUtils.ToRadians(activeDisplayItem.Rotation.Z))

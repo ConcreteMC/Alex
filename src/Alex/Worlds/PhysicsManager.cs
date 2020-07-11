@@ -191,6 +191,7 @@ namespace Alex.Worlds
 
 		private void UpdateEntity(Entity e, float deltaTime)
 		{
+			var original = e.KnownPosition.ToVector3();
 			var originalPosition = e.KnownPosition;
 			var isPlayer = e is Player;
 			
@@ -277,7 +278,7 @@ namespace Alex.Worlds
 			e.KnownPosition.Move(e.Velocity * deltaTime);
 			//e.KnownPosition.OnGround = onGround;
 
-			e.DistanceMoved += MathF.Abs(Vector3.Distance(originalPosition, e.KnownPosition.ToVector3()));
+			e.DistanceMoved += MathF.Abs(Vector3.Distance(original, e.KnownPosition.ToVector3()));
 		}
 
 		private bool CanClimb(Entity entity, BoundingBox entityBox,

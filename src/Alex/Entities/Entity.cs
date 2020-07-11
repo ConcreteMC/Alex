@@ -15,6 +15,7 @@ using Alex.Entities.Properties;
 using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Entity.Animations;
 using Alex.Graphics.Models.Items;
+using Alex.Items;
 using Alex.Net;
 using Alex.Networking.Java.Packets.Play;
 using Alex.ResourcePackLib.Json.Models.Items;
@@ -322,6 +323,11 @@ namespace Alex.Entities
 			            renderer.DisplayPosition = oldRenderer.DisplayPosition;
 		            }
 
+		            if (inHand is ItemBlock)
+		            {
+			            renderer.Scale = new Vector3(0.5f);
+		            }
+		            
 		           // renderer.Scale = new Vector3(_scale);
 
 		            ItemRenderer = renderer;
