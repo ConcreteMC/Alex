@@ -1,8 +1,8 @@
 using Alex.Worlds;
 
-namespace Alex.Entities.Hostile
+namespace Alex.Entities.Passive
 {
-	public class Salmon : HostileMob
+	public class Salmon : AbstractFish
 	{
 		/// <inheritdoc />
 		public Salmon(World level) : base(EntityType.Salmon, level)

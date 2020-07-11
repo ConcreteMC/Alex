@@ -36,6 +36,7 @@ namespace Alex.Graphics.Models.Items
         public override void Cache(McResourcePack pack)
         {
             string t = string.Empty;
+            
             if (!Model.Textures.TryGetValue("layer0", out t))
             {
                 t = Model.Textures.FirstOrDefault(x => x.Value != null).Value;

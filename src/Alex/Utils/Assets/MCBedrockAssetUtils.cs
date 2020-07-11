@@ -1,10 +1,12 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Alex.API.Services;
+using Alex.Gamestates.InGame;
 using NLog;
 
 namespace Alex.Utils.Assets
@@ -30,7 +32,7 @@ namespace Alex.Utils.Assets
             
             using var httpClient = new HttpClient(new HttpClientHandler
             {
-                AllowAutoRedirect = false,
+                AllowAutoRedirect = true,
             });
 
             try
@@ -47,13 +49,13 @@ namespace Alex.Utils.Assets
 
                 try
                 {
-                    var preRedirectHeaders = await httpClient.SendAsync(
-                        new HttpRequestMessage(HttpMethod.Get, DownloadURL), HttpCompletionOption.ResponseHeadersRead);
-                    if (preRedirectHeaders.StatusCode == HttpStatusCode.MovedPermanently)
-                    {
+                 //   var preRedirectHeaders = await httpClient.SendAsync(
+                  //      new HttpRequestMessage(HttpMethod.Get, DownloadURL), HttpCompletionOption.ResponseHeadersRead);
+                 //   if (preRedirectHeaders.StatusCode == HttpStatusCode.MovedPermanently)
+                  //  {
                         var zipDownloadHeaders =
                             await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get,
-                                preRedirectHeaders.Headers.Location), HttpCompletionOption.ResponseHeadersRead);
+                                DownloadURL), HttpCompletionOption.ResponseHeadersRead);
 
                         var fileName = zipDownloadHeaders.Content?.Headers?.ContentDisposition?.FileName ??
                                        zipDownloadHeaders.RequestMessage?.RequestUri?.LocalPath;
@@ -62,32 +64,54 @@ namespace Alex.Utils.Assets
                         {
                             var latestVersion = versionMatch.Groups["version"].Value;
 
-                            if (latestVersion != currentVersion ||
-                                (!string.IsNullOrWhiteSpace(assetsZipSavePath) && !Storage.Exists(assetsZipSavePath)))
+                            if (latestVersion != currentVersion
+                                || (!string.IsNullOrWhiteSpace(assetsZipSavePath)
+                                    && !Storage.Exists(assetsZipSavePath)))
                             {
-                                progressReceiver?.UpdateProgress(0, "Downloading latest bedrock assets...", "This could take a while...");
-                                
-                                zipDownloadHeaders = await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get,
-                                    preRedirectHeaders.Headers.Location), HttpCompletionOption.ResponseContentRead);
-                                var content = await zipDownloadHeaders.Content.ReadAsByteArrayAsync();
+                                progressReceiver?.UpdateProgress(
+                                    0, "Downloading latest bedrock assets...", "This could take a while...");
+
+                                /* zipDownloadHeaders = await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get,
+                                     zipDownloadHeaders.Headers.Location), HttpCompletionOption.ResponseContentRead);
+                                 var content = await zipDownloadHeaders.Content.ReadAsByteArrayAsync();*/
+
+                                Stopwatch sw = Stopwatch.StartNew();
+                                WebClient wc = new WebClient();
+
+                                wc.DownloadProgressChanged += (sender, args) =>
+                                {
+                                    var downloadSpeed =
+                                        $"Download speed: {PlayingState.GetBytesReadable((long) (Convert.ToDouble(args.BytesReceived) / sw.Elapsed.TotalSeconds), 2)}/s";
+
+                                    progressReceiver?.UpdateProgress(
+                                        args.ProgressPercentage,
+                                        $"Downloading latest bedrock assets...",
+                                        downloadSpeed);
+                                };
+
+
+                                var content = await wc.DownloadDataTaskAsync(zipDownloadHeaders.RequestMessage.RequestUri);
 
                                 assetsZipSavePath = Path.Combine("assets", $"bedrock-{latestVersion}.zip");
-
+                                
                                 // save locally
                                 Storage.TryWriteString(CurrentBedrockVersionStorageKey, latestVersion);
 
                                 Storage.TryWriteBytes(assetsZipSavePath, content);
 
+                                var existingPath = Path.Combine("assets", "bedrock");
+
+                                Storage.TryDeleteDirectory(existingPath);
                             }
 
                         }
-                    }
+                   // }
 
                     return assetsZipSavePath;
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "Failed to download required bedrock assets...");
+                    Log.Error(ex, "Failed to download bedrock assets...");
                     return assetsZipSavePath;
                 }
             }

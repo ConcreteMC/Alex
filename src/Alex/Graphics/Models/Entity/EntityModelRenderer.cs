@@ -90,7 +90,7 @@ namespace Alex.Graphics.Models.Entity
 				//if (bone.NeverRender) continue;
 				if (modelBones.ContainsKey(bone.Name)) continue;
 				
-				ProcessBone(bone, vertices, uvScale, textureSize, modelBones);
+				ProcessBone(model, bone, vertices, uvScale, textureSize, modelBones);
 			}
 			
 			foreach (var bone in model.Bones.Where(x => !string.IsNullOrWhiteSpace(x.Parent)))
@@ -98,15 +98,7 @@ namespace Alex.Graphics.Models.Entity
 				//if (bone.NeverRender) continue;
 				if (modelBones.ContainsKey(bone.Name)) continue;
 
-				var newBone = ProcessBone(bone, vertices, uvScale, textureSize, modelBones);
-
-				if (modelBones.TryGetValue(bone.Parent, out ModelBone parentBone))
-				{
-					parentBone.Children = parentBone.Children.Concat(new[] {newBone}).ToArray();
-					newBone.Parent = parentBone;
-					
-					modelBones[bone.Parent] = parentBone;
-				}
+				ProcessBone(model, bone, vertices, uvScale, textureSize, modelBones);
 			}
 			
 			if (vertices.Count == 0)
@@ -124,7 +116,7 @@ namespace Alex.Graphics.Models.Entity
 			Valid = true;
 		}
 
-		private ModelBone ProcessBone(EntityModelBone bone, List<VertexPositionNormalTexture> vertices, Vector2 uvScale, Vector2 textureSize, Dictionary<string, ModelBone> modelBones)
+		private ModelBone ProcessBone(EntityModel source, EntityModelBone bone, List<VertexPositionNormalTexture> vertices, Vector2 uvScale, Vector2 textureSize, Dictionary<string, ModelBone> modelBones)
 		{
 			ModelBone           modelBone;
 				
@@ -173,6 +165,30 @@ namespace Alex.Graphics.Models.Entity
 			                                 * Matrix.CreateTranslation(bone.Pivot);
 
 			modelBone = new ModelBone(Texture, indices.ToArray(), bone.Parent, bone, bindPoseMatrix * boneMatrix);
+/*
+			if (!string.IsNullOrWhiteSpace(bone.Parent))
+			{
+				ModelBone parentBone = null;
+				if (!modelBones.TryGetValue(bone.Parent, out parentBone))
+				{
+					var result = source.Bones.FirstOrDefault(
+						x => x.Name.Equals(bone.Parent, StringComparison.InvariantCultureIgnoreCase));
+
+					if (result != null)
+					{
+						parentBone = ProcessBone(source, result, vertices, uvScale, textureSize, modelBones);
+					}
+				}
+
+				if (parentBone != null)
+				{
+					modelBone.Parent = parentBone;
+				}
+				else
+				{
+					Log.Warn($"Could not find parent-bone \"{bone.Parent}\" for bonw {bone.Name} on type: {source.Name}");
+				}
+			}*/
 			
 			//modelBone.UpdateRotationMatrix = !bone.NeverRender;
 			if (!modelBones.TryAdd(bone.Name, modelBone))

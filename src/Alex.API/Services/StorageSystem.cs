@@ -105,6 +105,14 @@ namespace Alex.API.Services
             }
         }
 
+        /// <inheritdoc />
+        public FileStream OpenFileStream(string key, FileMode access)
+        {
+            var fileName = Path.Combine(DataDirectory, key);
+
+            return new FileStream(fileName, access);
+        }
+
         public bool TryWriteString(string key, string value)
         {
             var fileName = Path.Combine(DataDirectory, key);
@@ -186,6 +194,21 @@ namespace Alex.API.Services
             return false;
         }
 
+        /// <inheritdoc />
+        public bool TryDeleteDirectory(string key)
+        {
+            var path = Path.Combine(DataDirectory, key);
+
+            if (Directory.Exists(path))
+            {
+                Directory.Delete(path);
+
+                return true;
+            }
+
+            return false;
+        }
+        
         private string GetFileName(string key)
         {
             return Path.Combine(DataDirectory, FileKeySanitizeRegex.Replace(key.ToLowerInvariant(), ""));

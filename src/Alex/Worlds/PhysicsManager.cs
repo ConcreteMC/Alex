@@ -212,12 +212,14 @@ namespace Alex.Worlds
 
 		internal Vector3 UpdateEntity(Entity e, Vector3 velocity, out float playerY)
 		{
+			List<BoundingBox> hit = new List<BoundingBox>();
+		
 			var original = e.KnownPosition.ToVector3();
 			var originalPosition = e.KnownPosition;
 			var isPlayer = e is Player;
 			
 			if (isPlayer)
-				Hit.Clear();
+				hit.Clear();
 			
 			var position = e.KnownPosition;
 			//var originalPosition = position;
@@ -278,14 +280,9 @@ namespace Alex.Worlds
 
 						if (isPlayer)
 						{
-							Hit.AddRange(solidBlocks.Select(x => x.box));
+							hit.AddRange(solidBlocks.Select(x => x.box));
 						}
 					}
-				}
-
-				if (isPlayer && Hit.Count > 0)
-				{
-					LastKnownHit = Hit.ToArray();
 				}
 			}
 			
@@ -305,6 +302,11 @@ namespace Alex.Worlds
 
 			//e.DistanceMoved += MathF.Abs(Vector3.Distance(original, e.KnownPosition.ToVector3()));
 
+			if (isPlayer && hit.Count > 0)
+			{
+				LastKnownHit = hit.ToArray();
+			}
+			
 			return velocity;
 		}
 
@@ -550,7 +552,6 @@ namespace Alex.Worlds
 				return (pointOfCollision - (entityPosition + offset)) * direction;
 		}
 		
-		public List<BoundingBox> Hit { get; set; } = new List<BoundingBox>();
 		public BoundingBox[] LastKnownHit { get; set; } = null;
 		public void Stop()
 	    {

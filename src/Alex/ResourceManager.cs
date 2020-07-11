@@ -185,8 +185,8 @@ namespace Alex
 				string bedrockPath = BedrockAssetUtil.CheckAndDownloadResources(progressReceiver).Result;
 				if (string.IsNullOrWhiteSpace(bedrockPath) || !Storage.TryReadBytes(bedrockPath, out bedrockResources))
 				{
-					Log.Error("Could not load any of the required Bedrock assets! Are you connected to the internet?");
-					Log.Info($"A manual fix is available, see: https://github.com/kennyvv/Alex/wiki/Bedrock-Assets");
+					Log.Warn("Could not load any of the required Bedrock assets! Are you connected to the internet?");
+					Log.Warn($"A manual fix is available, see: https://github.com/kennyvv/Alex/wiki/Bedrock-Assets");
 					return false;
 				}
 			}
@@ -282,7 +282,7 @@ namespace Alex
 			var bedrockPath = Path.Combine("assets", "bedrock");
 
             DirectoryInfo directory;
-            if (!Storage.TryGetDirectory(bedrockPath, out directory))
+            if (!Storage.TryGetDirectory(bedrockPath, out directory) && !Storage.TryCreateDirectory(bedrockPath))
             {
 	            Log.Warn($"The bedrock resources required to play this game are not set-up correctly!");
 	            Console.ReadLine();

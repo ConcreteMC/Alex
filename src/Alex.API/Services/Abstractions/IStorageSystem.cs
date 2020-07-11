@@ -18,6 +18,8 @@ namespace Alex.API.Services
         
         #endregion
 
+        FileStream OpenFileStream(string key, FileMode access);
+
         #region String
         
         bool TryWriteString(string key, string value);
@@ -29,6 +31,7 @@ namespace Alex.API.Services
 
         bool TryGetDirectory(string key, out DirectoryInfo info);
         bool TryCreateDirectory(string key);
+        bool TryDeleteDirectory(string key);
         
         #endregion
 

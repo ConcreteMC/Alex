@@ -2,9 +2,9 @@ using Alex.Worlds;
 
 namespace Alex.Entities.Passive
 {
-	public class Squid : PassiveMob
+	public class Squid : WaterMob
 	{
-		public Squid(World level) : base((EntityType)17, level)
+		public Squid(World level) : base(EntityType.Squid, level)
 		{
 			JavaEntityId = 94;
 			Height = 0.8;

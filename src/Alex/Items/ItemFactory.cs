@@ -210,53 +210,57 @@ namespace Alex.Items
 				    item.DisplayName = data.displayName;
 			    }
 
-			    
-			    foreach (var it in ResourcePack.ItemModels)
+
+			    var searchString = entry.Key.Replace("minecraft:", "minecraft:item/");
+
+			    ItemModelRenderer renderer;
+			    if (ItemRenderers.TryGetValue(searchString, out renderer))
 			    {
-				    if (it.Key.Contains(entry.Key.Replace("minecraft:", ""),
-					    StringComparison.InvariantCultureIgnoreCase))
+				    item.Renderer = renderer;
+			    }
+			    else
+			    {
+				    foreach (var it in ResourcePack.ItemModels.Where(x => x.Key.Length >= searchString.Length)
+					   .OrderBy(x => searchString.Length - x.Key.Length))
 				    {
-					    //Log.Info($"Model found: {entry.Key} = {it.Key}");
-					    ItemModelRenderer renderer;
-					    if (ItemRenderers.TryGetValue(it.Key, out renderer))
+					    if (it.Key.Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
 					    {
+						//    Log.Info($"Model found: {searchString} = {it.Key}");
 
-					    }
-					    else if (ItemRenderers.TryGetValue(entry.Key, out renderer))
+						    if (ItemRenderers.TryGetValue(it.Key, out renderer)) { }
+						    else if (ItemRenderers.TryGetValue(entry.Key, out renderer)) { }
 
-					    {
+						    if (renderer != null)
+						    {
+							    //Log.Debug($"Found renderer for {entry.Key}, textures: {it.Value.Textures.Count}");
+							    item.Renderer = renderer;
 
-					    }
-
-					    if (renderer != null)
-					    {
-						    //Log.Debug($"Found renderer for {entry.Key}, textures: {it.Value.Textures.Count}");
-						    item.Renderer = renderer;
-						    break;
+							    break;
+						    }
 					    }
 				    }
 			    }
 
-			   /* if (ResourcePack.ItemModels.TryGetValue(entry.Key.Replace("minecraft:", "minecraft:item/"), out ResourcePackItem iii))
-			    {
-				    ItemModelRenderer renderer;
-				    if (ItemRenderers.TryGetValue(entry.Key, out renderer))
-				    {
-
-				    }
-				    else if (ItemRenderers.TryGetValue(entry.Key, out renderer))
-
-				    {
-
-				    }
-
-				    if (renderer != null)
-				    {
-					    Log.Info($"Found renderer for {entry.Key}, textures: {iii.Textures.Count}");
-				    }
-
-				    item.Renderer = renderer;
-			    }*/
+			    /* if (ResourcePack.ItemModels.TryGetValue(entry.Key.Replace("minecraft:", "minecraft:item/"), out ResourcePackItem iii))
+			     {
+				     ItemModelRenderer renderer;
+				     if (ItemRenderers.TryGetValue(entry.Key, out renderer))
+				     {
+ 
+				     }
+				     else if (ItemRenderers.TryGetValue(entry.Key, out renderer))
+ 
+				     {
+ 
+				     }
+ 
+				     if (renderer != null)
+				     {
+					     Log.Info($"Found renderer for {entry.Key}, textures: {iii.Textures.Count}");
+				     }
+ 
+				     item.Renderer = renderer;
+			     }*/
 
 			 //   Log.Info($"Loaded item: {entry.Key} (Renderer: {item.Renderer != null})");
 			    items.TryAdd(entry.Key, () => { return item.Clone(); });

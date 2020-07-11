@@ -166,9 +166,7 @@ namespace Alex.Utils
 					break;
 				case EntityType.ThrownEgg:
 					entity = new EggEntity(world, null);
-					break;
-				case EntityType.Salmon:
-					entity = new Salmon(world);
+
 					break;
 				case EntityType.Donkey:
 					entity = new Donkey(world);
@@ -203,6 +201,22 @@ namespace Alex.Utils
 				case EntityType.Fireball:
 					entity = new Fireball(world);
 					break;
+				case EntityType.Dolphin:
+					entity = new Dolphin(world);
+					break;
+				case EntityType.Cod:
+					entity = new Cod(world);
+					break;
+				case EntityType.PufferFish:
+					entity = new PufferFish(world);
+					break;
+				case EntityType.Salmon:
+					entity = new Salmon(world);
+					break;
+				case EntityType.TropicalFish:
+					entity = new TropicalFish(world);
+					break;
+				
 				//case EntityType.Human:
 					//entity = new PlayerMob("test", world, );
 				//	break;
