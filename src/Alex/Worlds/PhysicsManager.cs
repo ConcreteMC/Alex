@@ -71,13 +71,28 @@ namespace Alex.Worlds
 				{
 					if (entity is Entity e)
 					{
-						if (e.NoAi || !e.RequiresRealTimeTick) continue;
+						if (e.NoAi) continue;
 						
-						if (!e.AlwaysTick && !e.IsRendered) continue;
+						//if (!e.AlwaysTick && !e.IsRendered) continue;
+
+						var original = e.KnownPosition.ToVector3();
 						
-						UpdateEntity(e, dt);
+						var velocity = e.Velocity;
+						velocity = UpdateEntity(e, velocity, out var playerY);
 						
-						TruncateVelocity(e, dt);
+						e.KnownPosition.Move(velocity * dt);
+
+						if (playerY > e.KnownPosition.Y)
+						{
+							e.KnownPosition.Y = playerY;
+						}
+
+						UpdateOnGround(e);
+						//e.KnownPosition.OnGround = onGround;
+
+						e.DistanceMoved += MathF.Abs(Vector3.Distance(original, e.KnownPosition.ToVector3()));
+						
+						//TruncateVelocity(e, dt);
 					}
 				}
 				catch (Exception ex)
@@ -153,33 +168,39 @@ namespace Alex.Worlds
 					
 					var block = World.GetBlock(blockcoords.X, blockcoords.Y, blockcoords.Z);
 					float drag = (float) (1f - e.Drag);
-					
+
+					var velocity = e.Velocity;
 					if (e.KnownPosition.OnGround)
 					{
 						var slipperiness = (float)block.BlockMaterial.Slipperiness;
 						slipperiness *= 0.91f;
 						var multiplier = (float)(0.1 * (0.1627714 / (slipperiness * slipperiness * slipperiness)));
 						
-						entity.Velocity *= new Vector3(slipperiness, 1f, slipperiness);
+						velocity *= new Vector3(slipperiness, 1f, slipperiness);
 					}
 					else if (!e.IsFlying && !e.KnownPosition.OnGround && e.IsAffectedByGravity)
 					{
 						drag = 0.91f;
-						entity.Velocity -= new Vector3(0f, (float) (e.Gravity), 0f);
+						velocity -= new Vector3(0f, (float) (e.Gravity), 0f);
 
 						//var modifier = new Vector3(1f, (float) (1f - (e.Gravity * dt)), 1f);
 						//velocity *= modifier;
 					}
 
-					entity.Velocity *= new Vector3(drag, 0.98f, drag);
+					velocity *= new Vector3(drag, 0.98f, drag);
 
-					if (!e.RequiresRealTimeTick)
+				//	if (!e.RequiresRealTimeTick)
 					{
-						UpdateEntity(e, (float) ((DateTime.UtcNow - e.LastTickTime).TotalMilliseconds / 50f));
+						//var dt = (float) ((DateTime.UtcNow - e.LastTickTime).TotalMilliseconds / 50f);
+						
+						velocity = UpdateEntity(e, velocity, out _);
+						
 						e.LastTickTime = DateTime.UtcNow;
 					}
+
+					e.Velocity = velocity;
 					
-					UpdateOnGround(e);
+					//UpdateOnGround(e);
 					//TruncateVelocity(e, 0f);
 
 					//CheckCollision(e);
@@ -189,7 +210,7 @@ namespace Alex.Worlds
 			_timeSinceTick.Restart();
 		}
 
-		private void UpdateEntity(Entity e, float deltaTime)
+		internal Vector3 UpdateEntity(Entity e, Vector3 velocity, out float playerY)
 		{
 			var original = e.KnownPosition.ToVector3();
 			var originalPosition = e.KnownPosition;
@@ -203,12 +224,12 @@ namespace Alex.Worlds
 			
 			var originalEntityBoundingBox = e.GetBoundingBox(position);
 			
-			var before = e.Velocity;
-			var velocity = e.Velocity;
+			var before = velocity;
+		//	var velocity = e.Velocity;
 
 			if (e.HasCollision)
 			{
-				var preview     = position.PreviewMove(velocity * deltaTime);
+				var preview     = position.PreviewMove(velocity);
 				var boundingBox = e.GetBoundingBox(preview);
 
 				var bounding = new BoundingBox(
@@ -267,18 +288,24 @@ namespace Alex.Worlds
 					LastKnownHit = Hit.ToArray();
 				}
 			}
-
+			
 			if (before.Y >= 0f && position.Y > originalPosition.Y)
 			{
-				e.KnownPosition.Y = position.Y;
+				playerY = position.Y;
 			}
+			else
+			{
+				playerY = before.Y;	
+			}
+
+			//e.Velocity = velocity;
 			
-			e.Velocity = velocity;
-			
-			e.KnownPosition.Move(e.Velocity * deltaTime);
+			//e.KnownPosition.Move(e.Velocity * deltaTime);
 			//e.KnownPosition.OnGround = onGround;
 
-			e.DistanceMoved += MathF.Abs(Vector3.Distance(original, e.KnownPosition.ToVector3()));
+			//e.DistanceMoved += MathF.Abs(Vector3.Distance(original, e.KnownPosition.ToVector3()));
+
+			return velocity;
 		}
 
 		private bool CanClimb(Entity entity, BoundingBox entityBox,

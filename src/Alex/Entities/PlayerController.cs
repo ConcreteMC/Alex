@@ -303,6 +303,8 @@ namespace Alex.Entities
 				velocity = Vector3.Transform(velocity,
 					Matrix.CreateRotationY(-MathHelper.ToRadians(Player.KnownPosition.HeadYaw)));
 
+				velocity = Player.Level.PhysicsEngine.UpdateEntity(Player, velocity, out _);
+				
 				if (Player.IsFlying)
 				{
 					if ((Player.Velocity * new Vector3(1, 1, 1)).Length() < velocity.Length())
