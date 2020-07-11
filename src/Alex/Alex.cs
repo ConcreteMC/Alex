@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using Alex.API;
 using Alex.API.Data.Servers;
@@ -552,17 +553,64 @@ namespace Alex
 
 			var storage = Services.GetRequiredService<IStorageSystem>();
 
-			if (storage.TryReadJson("skin.json", out EntityModel model))
-			{
-				PlayerModel = model;
-			}
-
 			if (storage.TryReadBytes("skin.png", out byte[] skinBytes))
 			{
 				var skinImage = Image.Load<Rgba32>(skinBytes);
 				PlayerTexture = skinImage;
 			}
+			else
+			{
+				if (Resources.ResourcePack.TryGetBitmap("entity/alex", out var img))
+				{
+					PlayerTexture = img;
+				}
+			}
+
+			if (PlayerTexture != null)
+			{
+				Log.Info($"Player skin loaded...");
+			}
 			
+			if (storage.TryReadString("skin.json", Encoding.UTF8, out var str))
+			{
+				var entries = new Dictionary<string, EntityModel>();
+				EntityModel.GetEntries(str, entries);
+
+				if (entries.TryGetValue("geometry.humanoid.customSlim", out var slim))
+				{
+					if (PlayerTexture != null)
+					{
+						slim.Textureheight = PlayerTexture.Height;
+						slim.Texturewidth = PlayerTexture.Width;
+					}
+
+					PlayerModel = slim;
+				}
+				else if (entries.TryGetValue("geometry.humanoid.custom", out var noslim))
+				{
+					if (PlayerTexture != null)
+					{
+						slim.Textureheight = PlayerTexture.Height;
+						slim.Texturewidth = PlayerTexture.Width;
+					}
+					
+					PlayerModel = noslim;
+				}
+			}
+			else
+			{
+				if (ModelFactory.TryGetModel("geometry.humanoid.customSlim", out var model))
+				{
+					model.Name = "geometry.humanoid.customSlim";
+					PlayerModel = model;
+				}
+			}
+
+			if (PlayerModel != null)
+			{
+				Log.Info($"Player model loaded...");
+			}
+
 			if (LaunchSettings.ModelDebugging)
 			{
 				GameStateManager.SetActiveState<ModelDebugState>();

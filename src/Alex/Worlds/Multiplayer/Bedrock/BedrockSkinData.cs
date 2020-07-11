@@ -99,5 +99,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
             PersonaSkin = skin.IsPersonaSkin;
             CapeOnClassicSkin = skin.Cape.OnClassicSkin;
         }
+
+        public BedrockSkinData()
+        {
+            
+        }
     }
 }

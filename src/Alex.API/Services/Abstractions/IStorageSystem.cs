@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Text;
 
 namespace Alex.API.Services
 {
@@ -24,6 +25,8 @@ namespace Alex.API.Services
         
         bool TryWriteString(string key, string value);
         bool TryReadString(string key, out string value);
+
+        bool TryReadString(string key, Encoding encoding, out string value);
         
         #endregion
 

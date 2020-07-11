@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Dynamic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -43,10 +44,12 @@ using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.Formats.Png;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using ConnectionInfo = Alex.API.Network.ConnectionInfo;
 using DedicatedThreadPool = MiNET.Utils.DedicatedThreadPool;
+using Description = MiNET.Utils.Skins.Description;
 using Item = Alex.Items.Item;
 using LevelInfo = MiNET.Worlds.LevelInfo;
 using Player = Alex.Entities.Player;
@@ -689,6 +692,16 @@ namespace Alex.Worlds.Multiplayer.Bedrock
           return Encoding.UTF8.GetBytes(val);
         }
 
+        private BoneName ParseBoneName(string name)
+        {
+	        if (Enum.TryParse(name, true, out BoneName boneName))
+	        {
+		        return boneName;
+	        }
+
+	        return BoneName.Unknown;
+        }
+
         private byte[] EncodeSkinJwt(AsymmetricCipherKeyPair newKey, ECDsa signKey, string username, string x5u)
         {
 	        #region Skin Json
@@ -697,50 +710,64 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        
 	        #endregion
 	        
-	        Skin skin;
+	        Skin skin = null;
 
-	     /*   if (Alex.PlayerModel != null && Alex.PlayerTexture != null)
+	        if (Alex.PlayerModel != null && Alex.PlayerTexture != null)
 	        {
 		        var model = Alex.PlayerModel;
 
 		        byte[] skinData;
 		        using (MemoryStream ms = new MemoryStream())
 		        {
-			        Alex.PlayerTexture.SaveAsPng(ms, new PngEncoder());
+			        if (Alex.PlayerTexture.TryGetSinglePixelSpan(out var span))
+			        {
+				        foreach (var value in span)
+				        {
+					        ms.WriteByte(value.R);
+					        ms.WriteByte(value.G);
+					        ms.WriteByte(value.B);
+					        ms.WriteByte(value.A);
+				        }
+			        }
 			        skinData = ms.ToArray();
 		        }
+
+		        dynamic abc = new ExpandoObject();
+		        abc.geometry = new Dictionary<string, string>()
+		        {
+			        {"default", model.Name}
+		        };
+		        //abc.geometry["default"] = model.Name;
 		        
 		        skin = new Skin()
 		        {
 			        Cape = new Cape()
 			        {
-				       Data = new byte[0]
+				       Data = new byte[0],
+				       Id = "",
+				       ImageHeight = 0,
+				       ImageWidth = 0,
+				       OnClassicSkin = false
 			        },
 			        SkinId = model.Name,
 			        ResourcePatch =
 				        Convert.ToBase64String(
-					        Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new SkinResourcePatch()
-						        {
-							        Geometry = new GeometryIdentifier()
-							        {
-								        Default = model.Name
-							        }
-						        }
-					        ))),
-			        Width = (int) model.Texturewidth,
-			        Height = (int) model.Textureheight,
+					        Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(abc))),
+			        Width = (int) Alex.PlayerTexture.Width,
+			        Height = (int) Alex.PlayerTexture.Height,
 			        Data = skinData,
 			        GeometryName = model.Name,
 			        GeometryData =
 				        Convert.ToBase64String(
 					        Encoding.UTF8.GetBytes(MCJsonConvert.SerializeObject(model))),
-			        //AnimationData = ,
+			        AnimationData = "",
 			        IsPremiumSkin = false,
 			        IsPersonaSkin = false,
+			        Slim = true
 		        };
 	        }
 	        else
-	       {*/
+	       {
 		       dynamic payload = JObject.Parse(skinText);
 		       
 		        skin = new Skin()
@@ -767,7 +794,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			        IsPremiumSkin = payload.IsPremiumSkin,
 			        IsPersonaSkin = payload.IsPersonaSkin,
 		        };
-	    //    }
+	        }
 
 	        string val = JWT.Encode(JsonConvert.SerializeObject(new BedrockSkinData(skin)
             {

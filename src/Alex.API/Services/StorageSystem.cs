@@ -128,6 +128,28 @@ namespace Alex.API.Services
                 return false;
             }
         }
+        
+        public bool TryReadString(string key, Encoding encoding, out string value)
+        {
+            var fileName = Path.Combine(DataDirectory, key);
+
+            if (!File.Exists(fileName))
+            {
+                value = null;
+                return false;
+            }
+
+            try
+            {
+                value = File.ReadAllText(fileName,encoding);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                value = null;
+                return false;
+            }
+        }
 
         public bool TryReadString(string key, out string value)
         {
