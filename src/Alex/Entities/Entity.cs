@@ -1301,10 +1301,7 @@ namespace Alex.Entities
 		
 		protected void ToggleCubes(EntityModelRenderer.ModelBone bone, bool isInvisible)
 		{
-			foreach (var cube in bone.Cubes)
-			{
-				cube.IsInvisible = isInvisible;
-			}
+			bone.Rendered = !isInvisible;
 		}
 		
 		public static float NametagScale { get; set; } = 2f;

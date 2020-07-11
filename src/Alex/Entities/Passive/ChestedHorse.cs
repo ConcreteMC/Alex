@@ -1,4 +1,3 @@
-using Alex.Graphics.Models.Entity;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Worlds;
 
@@ -23,12 +22,12 @@ namespace Alex.Entities.Passive
 				{
 					if (modelRenderer.GetBone("Bag1", out var bag1))
 					{
-						ToggleCubes(bag1, !IsChested);
+						bag1.Rendered = value;
 					}
 					
 					if (modelRenderer.GetBone("Bag2", out var bag2))
 					{
-						ToggleCubes(bag2, !IsChested);
+						bag1.Rendered = value;
 					}
 				}
 			}

@@ -14,7 +14,7 @@ namespace Alex.Entities.Passive
 			"SaddleMouthR",
 			"SaddleMouthLine",
 			"SaddleMouthLineR",
-			
+			"HeadSaddle"
 		};
 		public UUID Owner { get; set; }
 		

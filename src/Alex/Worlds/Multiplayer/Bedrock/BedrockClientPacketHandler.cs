@@ -457,6 +457,21 @@ namespace Alex.Worlds.Multiplayer.Bedrock
                 model.Bones = bones.Values.ToArray();
             }
 
+            if (model != null)
+            {
+	            foreach (var bone in model.Bones)
+	            {
+		            if (bone != null && bone.Cubes != null)
+		            {
+			            foreach (var cube in bone.Cubes)
+			            {
+				            cube.Origin = new Microsoft.Xna.Framework.Vector3(
+					            -(cube.Origin.X + cube.Size.X), cube.Origin.Y, cube.Origin.Z);
+			            }
+		            }
+	            }
+            }
+
             return _models.TryAdd(modelName, model);
         }
         

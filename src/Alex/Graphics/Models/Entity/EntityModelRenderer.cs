@@ -103,6 +103,9 @@ namespace Alex.Graphics.Models.Entity
 				if (modelBones.TryGetValue(bone.Parent, out ModelBone parentBone))
 				{
 					parentBone.Children = parentBone.Children.Concat(new[] {newBone}).ToArray();
+					newBone.Parent = parentBone;
+					
+					modelBones[bone.Parent] = parentBone;
 				}
 			}
 			
@@ -123,9 +126,10 @@ namespace Alex.Graphics.Models.Entity
 
 		private ModelBone ProcessBone(EntityModelBone bone, List<VertexPositionNormalTexture> vertices, Vector2 uvScale, Vector2 textureSize, Dictionary<string, ModelBone> modelBones)
 		{
-			List<ModelBoneCube> cubes = new List<ModelBoneCube>();
 			ModelBone           modelBone;
 				
+			List<short> indices = new List<short>();
+			
 			if (bone.Cubes != null)
 			{
 				foreach (var cube in bone.Cubes)
@@ -136,40 +140,41 @@ namespace Alex.Graphics.Models.Entity
 						continue;
 					}
 
-					var size     = cube.Size;
-					var origin   = cube.Origin;
-					var pivot    = cube.Pivot;
-					var rotation = cube.Rotation;
-
-					origin = new Vector3(-(origin.X + size.X), origin.Y, origin.Z);
-					
-					//VertexPositionNormalTexture[] vertices;
-					Cube built = new Cube(size * (float)cube.Inflate, textureSize);
+					Cube built = new Cube(cube.Size * (float)cube.Inflate, textureSize);
 					built.Mirrored = bone.Mirror;
 					built.BuildCube(cube.Uv * uvScale);
-					vertices = ModifyCubeIndexes(vertices, ref built.Front);
-					vertices = ModifyCubeIndexes(vertices, ref built.Back);
-					vertices = ModifyCubeIndexes(vertices, ref built.Top);
-					vertices = ModifyCubeIndexes(vertices, ref built.Bottom);
-					vertices = ModifyCubeIndexes(vertices, ref built.Left);
-					vertices = ModifyCubeIndexes(vertices, ref built.Right);
+					
+					vertices = ModifyCubeIndexes(vertices, cube, ref built.Front);
+					vertices = ModifyCubeIndexes(vertices, cube, ref built.Back);
+					vertices = ModifyCubeIndexes(vertices, cube, ref built.Top);
+					vertices = ModifyCubeIndexes(vertices, cube, ref built.Bottom);
+					vertices = ModifyCubeIndexes(vertices, cube, ref built.Left);
+					vertices = ModifyCubeIndexes(vertices, cube, ref built.Right);
 
-					var part = new ModelBoneCube(built.Front.indexes
-					   .Concat(built.Back.indexes)
-					   .Concat(built.Top.indexes)
-					   .Concat(built.Bottom.indexes)
-					   .Concat(built.Left.indexes)
-					   .Concat(built.Right.indexes)
-					   .ToArray(), Texture, rotation, pivot, origin);
-
-					part.Mirror = bone.Mirror;
-					cubes.Add(part);
+					indices.AddRange(built.Front.indexes.Concat(built.Back.indexes).Concat(built.Top.indexes)
+					   .Concat(built.Bottom.indexes).Concat(built.Left.indexes).Concat(built.Right.indexes)
+					   .ToArray());
 				}
 			}
+			
+			var bindPoseMatrix = Matrix.CreateTranslation(-bone.Pivot)
+			                     * Matrix.CreateRotationX(MathUtils.ToRadians(-bone.BindPoseRotation.X))
+			                     * Matrix.CreateRotationY(MathUtils.ToRadians(-bone.BindPoseRotation.Y))
+			                     * Matrix.CreateRotationZ(MathUtils.ToRadians(-bone.BindPoseRotation.Z))
+			                     * Matrix.CreateTranslation(bone.Pivot);
 
-			modelBone = new ModelBone(cubes.ToArray(), bone.Parent, bone);
+			var boneMatrix = Matrix.Identity * Matrix.CreateTranslation(-bone.Pivot)
+			                                 * Matrix.CreateFromAxisAngle(
+				                                 Vector3.Right, MathUtils.ToRadians(bone.Rotation.X))
+			                                 * Matrix.CreateFromAxisAngle(
+				                                 Vector3.Backward, MathUtils.ToRadians(bone.Rotation.Z))
+			                                 * Matrix.CreateFromAxisAngle(
+				                                 Vector3.Up, MathUtils.ToRadians(bone.Rotation.Y))
+			                                 * Matrix.CreateTranslation(bone.Pivot);
 
-			modelBone.UpdateRotationMatrix = !bone.NeverRender;
+			modelBone = new ModelBone(Texture, indices.ToArray(), bone.Parent, bone, bindPoseMatrix * boneMatrix);
+			
+			//modelBone.UpdateRotationMatrix = !bone.NeverRender;
 			if (!modelBones.TryAdd(bone.Name, modelBone))
 			{
 				Log.Debug($"Failed to add bone! {bone.Name}");
@@ -178,13 +183,26 @@ namespace Alex.Graphics.Models.Entity
 			return modelBone;
 		}
 
-		private List<VertexPositionNormalTexture> ModifyCubeIndexes(List<VertexPositionNormalTexture> vertices,
+		private List<VertexPositionNormalTexture> ModifyCubeIndexes(List<VertexPositionNormalTexture> vertices, EntityModelCube cube,
 			ref (VertexPositionNormalTexture[] vertices, short[] indexes) data)
 		{
+			//var origin = new Vector3(-(cube.Origin.X + cube.Size.X), cube.Origin.Y, cube.Origin.Z);
+			//var pivot = new Vector3(-(cube.Pivot.X), cube.Pivot.Y, cube.Pivot.Z);
+			var origin = cube.Origin;
+			var pivot = cube.Pivot;
+			
+			Matrix cubeRotationMatrix = Matrix.CreateTranslation(-pivot)
+			                            * Matrix.CreateRotationX(MathUtils.ToRadians(cube.Rotation.X))
+			                            * Matrix.CreateRotationY(MathUtils.ToRadians(cube.Rotation.Y))
+			                            * Matrix.CreateRotationZ(MathUtils.ToRadians(cube.Rotation.Z))
+			                            * Matrix.CreateTranslation(pivot)
+				* Matrix.CreateTranslation(origin);
+			
 			var startIndex = (short)vertices.Count;
 			foreach (var vertice in data.vertices)
 			{
 				var vertex = vertice;
+				vertex.Position = Vector3.Transform(vertex.Position, cubeRotationMatrix);
 				vertices.Add(vertex);
 			}
 
@@ -222,7 +240,7 @@ namespace Alex.Graphics.Models.Entity
 
 				foreach (var bone in Bones)
 				{
-					bone.Value.Render(args, position, CharacterMatrix, mock);
+					bone.Value.Render(args, mock);
 				}
 			}
 			finally
@@ -246,12 +264,12 @@ namespace Alex.Graphics.Models.Entity
 			                         Matrix.CreateRotationY(MathUtils.ToRadians(180f - (position.Yaw))) *
 			                         Matrix.CreateTranslation(position);
 
-			foreach (var bone in Bones)
+			foreach (var bone in Bones.Where(x => x.Value.Parent == null))
 			{
-				bone.Value.Update(args, CharacterMatrix, EntityColor * DiffuseColor);
+				bone.Value.Update(args, CharacterMatrix, EntityColor * DiffuseColor, position);
 			}
 
-			foreach (var bone in Bones.Where(x => !string.IsNullOrWhiteSpace(x.Value.Parent)))
+			/*foreach (var bone in Bones.Where(x => !string.IsNullOrWhiteSpace(x.Value.Parent)))
 			{
 				var parent = Bones.FirstOrDefault(x =>
 					x.Key.Equals(bone.Value.Parent, StringComparison.InvariantCultureIgnoreCase));
@@ -260,7 +278,7 @@ namespace Alex.Graphics.Models.Entity
 				{
 					//bone.Value.RotationMatrix = parent.Value.RotationMatrix;
 				}
-			}
+			}*/
 		}
 
 		public bool GetBone(string name, out ModelBone bone)
