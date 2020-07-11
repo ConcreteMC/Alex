@@ -17,6 +17,7 @@ namespace Alex.Entities.Projectiles
 			Drag = 0.01;
 
 			StopOnImpact = true;
+			DespawnOnImpact = false;
 		}
 	}
 }

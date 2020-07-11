@@ -14,6 +14,8 @@ namespace Alex.Entities.Projectiles
 
 			Gravity = 0.03;
 			Drag = 0.01;
+
+			DespawnOnImpact = true;
 		}
 	}
 }

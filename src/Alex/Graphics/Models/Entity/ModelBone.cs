@@ -102,17 +102,18 @@ namespace Alex.Graphics.Models.Entity
 
 			public void Render(IRenderArgs args, bool mock)
 			{
-				if (Buffer == null || Effect == null)
+				if (Buffer == null || Effect == null || Effect.Texture == null)
 					return;
 
+				var effect = Effect;
 				args.GraphicsDevice.Indices = Buffer;
 
-				Effect.View = args.Camera.ViewMatrix;
-				Effect.Projection = args.Camera.ProjectionMatrix;
+				effect.View = args.Camera.ViewMatrix;
+				effect.Projection = args.Camera.ProjectionMatrix;
 				
-				if (!mock && Rendered)
+				if (!mock && Rendered && !EntityModelBone.NeverRender)
 				{
-					foreach (var pass in Effect.CurrentTechnique.Passes)
+					foreach (var pass in effect.CurrentTechnique.Passes)
 					{
 						pass.Apply();
 					}
