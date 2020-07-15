@@ -80,7 +80,7 @@ namespace Alex.Utils
 			return Task.FromResult(false);
 		}
 
-		public virtual Task Authenticate(GuiPanoramaSkyBox skyBox, Action<bool> callBack)
+		public virtual Task Authenticate(GuiPanoramaSkyBox skyBox, PlayerProfile profile, Action<bool> callBack)
 		{
 			return Task.CompletedTask;
 		}

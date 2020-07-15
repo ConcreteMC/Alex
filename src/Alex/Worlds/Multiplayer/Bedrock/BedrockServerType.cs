@@ -144,7 +144,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		}
 
 		/// <inheritdoc />
-		public override async Task Authenticate(GuiPanoramaSkyBox skyBox, Action<bool> callBack)
+		public override async Task Authenticate(GuiPanoramaSkyBox skyBox, PlayerProfile existingProfile, Action<bool> callBack)
 		{
 			BedrockLoginState loginState = new BedrockLoginState(
 				skyBox, (profile) =>
