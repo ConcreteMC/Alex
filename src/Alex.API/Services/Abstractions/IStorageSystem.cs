@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Text;
 
 namespace Alex.API.Services
 {
@@ -8,6 +9,8 @@ namespace Alex.API.Services
         
         bool TryWriteJson<T>(string key, T value);
         bool TryReadJson<T>(string key, out T value);
+
+        bool TryReadJson<T>(string key, out T value, Encoding encoding);
 
         #endregion
 
@@ -22,6 +25,7 @@ namespace Alex.API.Services
         
         bool TryWriteString(string key, string value);
         bool TryReadString(string key, out string value);
+        bool TryReadString(string key, out string value, Encoding encoding);
         
         #endregion
 

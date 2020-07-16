@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Blocks;
 using Alex.API.Graphics;
+using Alex.API.Resources;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks.Minecraft;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.BlockStates;
+using Alex.ResourcePackLib.Json.Models;
 using Alex.ResourcePackLib.Json.Models.Blocks;
 using Alex.Utils;
 using Alex.Worlds;
@@ -56,13 +58,13 @@ namespace Alex.Graphics.Models.Blocks
 					X = x.X,
 					Y = x.Y,
 					ModelName = x.ModelName,
-					Model = new ResourcePackLib.Json.Models.Blocks.BlockModel()
+					Model = new ResourcePackLib.Json.Models.ResourcePackModelBase()
 					{
 						AmbientOcclusion = x.Model.AmbientOcclusion,
 						Display = null,
 						Elements = x.Model.Elements.Select(el =>
 						{
-							return new BlockModelElement()
+							return new ModelElement()
 							{
 								From = el.From,
 								To = el.To,
@@ -70,7 +72,7 @@ namespace Alex.Graphics.Models.Blocks
 								Shade = el.Shade,
 								Faces = el.Faces.Select(face =>
 								{
-									return new KeyValuePair<BlockFace, BlockModelElementFace>(face.Key, new BlockModelElementFace()
+									return new KeyValuePair<BlockFace, ModelElementFace>(face.Key, new ModelElementFace()
 									{
 										Rotation = face.Value.Rotation,
 										Texture = ResolveTexture(x.Model, face.Value.Texture),
@@ -165,11 +167,11 @@ namespace Alex.Graphics.Models.Blocks
 			return new BoundingBox(position + (min), position + ((max)));
 		}
 
-		public static string ResolveTexture(ResourcePackLib.Json.Models.Blocks.BlockModel var, string texture)
+		public static string ResolveTexture(ResourcePackLib.Json.Models.ResourcePackModelBase var, string texture)
 		{
 			if (texture[0] != '#')
 				return texture;
-
+			
 			var modified = texture.Substring(1);
 			if (var.Textures.TryGetValue(modified, out texture))
 			{
@@ -243,7 +245,7 @@ namespace Alex.Graphics.Models.Blocks
 			}
 		}
 
-		private void FixElementScale(BlockModelElement element,
+		private void FixElementScale(ModelElement element,
 			BlockShaderVertex[] verts,
 			float minX, float maxX, float minY, float maxY, float minZ, float maxZ,
 			ref float facesMinX,
@@ -299,7 +301,7 @@ namespace Alex.Graphics.Models.Blocks
 			}
 		}
 
-		private void ProcessModel(BlockStateModel stateModel, ResourcePackLib.Json.Models.Blocks.BlockModel model, out Vector3 min, out Vector3 max)
+		private void ProcessModel(BlockStateModel stateModel, ResourcePackLib.Json.Models.ResourcePackModelBase model, out Vector3 min, out Vector3 max)
 		{
 			float facesMinX = float.MaxValue, facesMinY = float.MaxValue, facesMinZ = float.MaxValue;
 			float facesMaxX = float.MinValue, facesMaxY = float.MinValue, facesMaxZ = float.MinValue;
@@ -402,7 +404,7 @@ namespace Alex.Graphics.Models.Blocks
 			Boxes = Boxes.Concat(boxes.ToArray()).ToArray();
 		}
 
-		private Vector3 FixRotation(Vector3 v, BlockModelElement element, int xRot, int yRot)
+		private Vector3 FixRotation(Vector3 v, ModelElement element, int xRot, int yRot)
 		{
 			if (element.Rotation.Axis != Axis.Undefined)
 			{
@@ -623,7 +625,7 @@ namespace Alex.Graphics.Models.Blocks
 					//	world, facePosition, out blockLight, out skyLight, baseBlock.Transparent || !baseBlock.Solid);
 
 					var uvMap = GetTextureUVMap(
-						baseBlock, Resources, texture, x1, x2, y1, y2, textureRotation,
+						Resources, texture, x1, x2, y1, y2, textureRotation,
 						AdjustColor(faceColor, facing, element.Shade));
 					
 					var vertices = GetFaceVertices(face.Key, element.From, element.To,

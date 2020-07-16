@@ -106,12 +106,7 @@ namespace Alex.Worlds
         {
             throw new System.NotImplementedException();
         }
-
-        public IEnumerable<(BlockState state, int storage)> GetBlockStates(int x, int y, int z)
-        {
-            yield return (Air, 0);
-        }
-
+        
         public BlockState GetBlockState(int x, int y, int z)
         {
             return Air;
@@ -122,7 +117,7 @@ namespace Alex.Worlds
             return Air;
         }
 
-        public IEnumerable<ChunkSection.BlockEntry> GetBlockStates(int positionX, in int positionY, int positionZ)
+        public IEnumerable<ChunkSection.BlockEntry> GetBlockStates(int positionX, int positionY, int positionZ)
         {
             return new[]
             {

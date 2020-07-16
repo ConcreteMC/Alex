@@ -45,6 +45,11 @@ namespace Alex.API.Services
 
         public bool TryReadJson<T>(string key, out T value)
         {
+            return TryReadJson<T>(key, out value, Encoding.Unicode);
+        }
+        
+        public bool TryReadJson<T>(string key, out T value, Encoding encoding)
+        {
             var fileName = GetFileName(key) + ".json";
 
             if (!File.Exists(fileName))
@@ -55,7 +60,7 @@ namespace Alex.API.Services
 
             try
             {
-                var json = File.ReadAllText(fileName, Encoding.Unicode);
+                var json = File.ReadAllText(fileName, encoding);
 
                 value = JsonConvert.DeserializeObject<T>(json);
                 return true;
@@ -123,6 +128,11 @@ namespace Alex.API.Services
 
         public bool TryReadString(string key, out string value)
         {
+            return TryReadString(key, out value, Encoding.Unicode);
+        }
+
+        public bool TryReadString(string key, out string value, Encoding encoding)
+        {
             var fileName = Path.Combine(DataDirectory, key);
 
             if (!File.Exists(fileName))
@@ -133,7 +143,7 @@ namespace Alex.API.Services
 
             try
             {
-                value = File.ReadAllText(fileName, Encoding.Unicode);
+                value = File.ReadAllText(fileName, encoding);
                 return true;
             }
             catch (Exception ex)

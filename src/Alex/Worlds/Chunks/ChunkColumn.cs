@@ -95,7 +95,7 @@ namespace Alex.Worlds.Chunks
 
 			var section = Sections[y >> 4];
 			if (section == null) return;
-			section.SetScheduled(x, y - ((y >> 4) << 4), z, true);
+			section.SetScheduled(x, y - 16 * (y >> 4), z, true);
 			// _scheduledUpdates[y << 8 | z << 4 | x] = true;
 			//_scheduledUpdates.Add(y << 8 | z << 4 | x);
 		}
@@ -110,7 +110,7 @@ namespace Alex.Worlds.Chunks
 			var section = Sections[y >> 4];
 			if (section == null)
 			{
-				var storage = CreateSection(y, true, 2);
+				var storage = CreateSection(y >> 4, true, 2);
 				Sections[y >> 4] = storage;
 				return storage;
 			}
@@ -133,7 +133,7 @@ namespace Alex.Worlds.Chunks
 			if ((x < 0 || x > ChunkWidth) || (y < 0 || y > ChunkHeight) || (z < 0 || z > ChunkDepth))
 				return;
 
-			GetSection(y).Set(storage, x, y - ((y >> 4) << 4), z, state);
+			GetSection(y).Set(storage, x, y - 16 * (y >> 4), z, state);
 			SetDirty();
 
 			//RecalculateHeight(x, z);
@@ -218,9 +218,9 @@ namespace Alex.Worlds.Chunks
 				yield break;
 			}
 
-			by = by - ((@by >> 4) << 4);
+		//	by = by - ((@by >> 4) << 4);
 
-			foreach (var bs in chunk.GetAll(bx, by, bz))
+			foreach (var bs in chunk.GetAll(bx, by - 16 * (by >> 4), bz))
 			{
 				yield return bs;
 			}
@@ -239,9 +239,7 @@ namespace Alex.Worlds.Chunks
 			var chunk = Sections[by >> 4];
 			if (chunk == null) return Air;
 
-			by = by - ((@by >> 4) << 4);
-
-			return chunk.Get(bx, by, bz, storage);
+			return chunk.Get(bx, by - 16 * (by >> 4), bz, storage);
 		}
 
 		public void SetHeight(int bx, int bz, short h)
@@ -286,7 +284,7 @@ namespace Alex.Worlds.Chunks
 			var section = Sections[by >> 4];
 			if (section == null) return 0;
 
-			return (byte) section.GetBlocklight(bx, by - ((@by >> 4) << 4), bz);
+			return (byte) section.GetBlocklight(bx, by - 16 * (by >> 4), bz);
 		}
 
 		public void SetBlocklight(int bx, int by, int bz, byte data)
@@ -296,7 +294,7 @@ namespace Alex.Worlds.Chunks
 
 			var yMod = ((@by >> 4) << 4);
 
-			GetSection(by).SetBlocklight(bx, by - yMod, bz, data);
+			GetSection(by).SetBlocklight(bx, by - 16 * (by >> 4), bz, data);
 
 			BlockLightDirty = true;
 

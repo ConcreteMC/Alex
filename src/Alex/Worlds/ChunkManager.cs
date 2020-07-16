@@ -1234,7 +1234,7 @@ namespace Alex.Worlds
 							        var data = model.GetVertices(world, blockPosition, blockState.Block);
 
 							        if (!(data.Vertices == null || data.Indexes == null || data.Vertices.Length == 0
-							              || data.Indexes.Length == 0))
+							              || (data.Indexes.Length == 0 && (data.AnimatedIndexes == null || data.AnimatedIndexes.Length == 0))))
 							        {
 								        RenderStage targetState = RenderStage.OpaqueFullCube;
 
@@ -1242,7 +1242,7 @@ namespace Alex.Worlds
 								        {
 									        targetState = RenderStage.Liquid;
 								        }
-								        else if (blockState.Block.Animated)
+								       /* else if (blockState.Block.Animated)
 								        {
 									        if (blockState.Block.BlockMaterial.IsOpaque())
 									        {
@@ -1252,7 +1252,7 @@ namespace Alex.Worlds
 									        {
 										        targetState = RenderStage.AnimatedTranslucent;
 									        }
-								        }
+								        }*/
 								        else if (blockState.Block.Transparent)
 								        {
 									        if (blockState.Block.BlockMaterial.IsOpaque())
@@ -1269,7 +1269,7 @@ namespace Alex.Worlds
 									        targetState = RenderStage.Opaque;
 								        }
 
-								        if (data.Vertices.Length > 0 && data.Indexes.Length > 0)
+								        if (data.Vertices.Length > 0 && (data.Indexes.Length > 0 || (data.AnimatedIndexes != null && data.AnimatedIndexes.Length > 0)))
 								        {
 									        // if (currentBlockState.storage == 0)
 									        // 	section.SetRendered(x, y, z, true);

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using Alex.API.Graphics;
 using Alex.API.Resources;
 using Alex.API.Utils;
 using Alex.Blocks;
@@ -11,13 +12,17 @@ using Alex.Blocks.State;
 using Alex.Gamestates.InGame;
 using Alex.Graphics.Models.Blocks;
 using Alex.ResourcePackLib;
+using Alex.ResourcePackLib.Json.BlockStates;
+using Alex.ResourcePackLib.Json.Textures;
 using Alex.Utils;
 using Alex.Worlds.Singleplayer;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using NLog;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 
 namespace Alex.Graphics
 {
@@ -28,7 +33,7 @@ namespace Alex.Graphics
 	    private Dictionary<ResourceLocation, TextureInfo> _atlasLocations = new Dictionary<ResourceLocation, TextureInfo>();
 	    private Dictionary<ResourceLocation, TextureInfo> _animatedAtlasLocations = new Dictionary<ResourceLocation, TextureInfo>();
 	    
-	    private Texture2D[] _frames;
+	    private PooledTexture2D[] _frames;
 	    private Texture2D _stillFrame;
         public Vector2 AtlasSize { get; private set; }
         public Vector2 AnimatedAtlasSize { get; private set; }
@@ -48,281 +53,327 @@ namespace Alex.Graphics
 		    _stillFrame = default;
 	    }
 
-	    private Vector2 GetTextureDimensions(McResourcePack resourcePack, ResourceLocation location)
-	    {
-		    Vector2 size = new Vector2(TextureWidth, TextureHeight);
-
-		    return size;
-		    foreach (var state in resourcePack.BlockModels)
-		    {
-			    foreach (var element in state.Value.Elements)
-			    foreach (var face in element.Faces)
-			    {
-				    var val = face.Value;
-				    if (ResourcePackBlockModel.ResolveTexture(state.Value, val.Texture) == location)
-				    {
-					    var width = val.UV.X2 - val.UV.X1;
-					    var height = val.UV.Y2 - val.UV.Y1;
-
-					    if (width > size.X)
-					    {
-						    size.X = width;
-					    }
-
-					    if (height > size.Y)
-					    {
-						    size.Y = height;
-					    }
-				    }
-			    }
-		    }
-
-		    return size;
-	    }
-	    
 	    private void GetTextures(McResourcePack resourcePack,
-		    Dictionary<ResourceLocation, Image<Rgba32>[]> seperateFrames,
-		    Dictionary<ResourceLocation, Image<Rgba32>> regularTextures, IProgressReceiver progressReceiver)
+		    Dictionary<ResourceLocation, ImageEntry> textures,
+		    IProgressReceiver progressReceiver)
 	    {
 		    progressReceiver.UpdateProgress(0, "Processing blockstate textures...");
-			int blockstatesProcessed = 0;
-			int totalStates = resourcePack.BlockStates.Count;
-			foreach (var state in resourcePack.BlockStates)
+		    int blockstatesProcessed = 0;
+		    int totalStates          = resourcePack.BlockStates.Count;
+
+		    foreach (var kv in resourcePack.BlockStates)
 		    {
-			    progressReceiver.UpdateProgress((int) (100D * ((double)blockstatesProcessed / (double)totalStates)), null, state.Key);
+			    progressReceiver.UpdateProgress(
+				    (int) (100D * ((double) blockstatesProcessed / (double) totalStates)), null, kv.Key);
+
+			    var state = kv.Value;
 			    
-			    var blockState = BlockFactory.GetBlockState(state.Key);
-
-			    if (blockState.Name == "Unknown")
+			    foreach (var variant in state.Variants)
 			    {
-				    Log.Warn($"Missing blockstate: {state.Key}");
-				    blockstatesProcessed++;
-				    continue;
-			    }
-
-			    foreach (var variant in state.Value.Variants)
-			    {
-				    foreach (var entry in BlockState.ParseData(variant.Key))
-				    {
-					    blockState = blockState.WithProperty(entry.Key, entry.Value);
-				    }
-				    
 				    foreach (var va in variant.Value)
 				    {
-					    var model = va.Model;
-					    
-					    foreach (var texture in model.Textures)
-					    //foreach(var element in model.Elements)
-					    //foreach(var face in element.Faces)
-					    {
-						  //  var text = face.Value.Texture; //ResourcePackBlockModel.ResolveTexture(model, texture.Value);
-						  var text = texture.Value;
-						    if (text[0] == '#')
-						    {
-							    var substr = text.Substring(1);
+					    ProcessBlockStateModel(resourcePack, textures, va);
+				    }
+			    }
 
-							    if (model.Textures.TryGetValue(substr, out var p))
-							    {
-								    text = p;
-							    }
-							    else
-							    {
-								    var parent = model.Parent;
 
-								    while (parent != null)
-								    {
-									    if (parent == null) break;
+			    foreach (var part in state.Parts)
+			    {
+				    if (part.Apply == null)
+					    continue;
 
-									    if (parent.Textures.TryGetValue(substr, out string parentName))
-									    {
-										    text = parentName;
-
-										    break;
-									    }
-
-									    parent = parent.Parent;
-								    }
-							    }
-						    }
-						    
-						    if (resourcePack.TryGetBitmap(text, out var bmp))
-						    {
-							    if (blockState.Block.Animated && !seperateFrames.ContainsKey(text))
-							    {
-								    var frameSize = GetTextureDimensions(resourcePack, text);
-								    seperateFrames.Add(text, GetFrames(bmp, (int) frameSize.X, (int) frameSize.Y));
-							    }
-							    else if (!blockState.Block.Animated
-							             && regularTextures.All(x => x.Key != text))
-							    {
-								    regularTextures.Add(text, bmp);
-							    }
-						    }
-						    else
-						    {
-							   /// if (!texture.Value)
-								//	Log.Warn($"Could not get bitmap {texture.Value} or {text} (Key: {texture.Key} Model: {model.Name})");
-						    }
-					    }
+				    foreach (var applied in part.Apply)
+				    {
+					    ProcessBlockStateModel(resourcePack, textures, applied);
 				    }
 			    }
 
 			    blockstatesProcessed++;
 			    // state.
 		    }
+	    }
 
-			if (resourcePack.TryGetBitmap("block/water_flow", out var flow))
-			{
-				var frameSize = GetTextureDimensions(resourcePack, "block/water_flow");
-				seperateFrames.TryAdd("block/water_flow", GetFrames(flow, (int) frameSize.X, (int) frameSize.Y));
-			}
-			
-			if (resourcePack.TryGetBitmap("block/water_still", out var still))
-			{
-				var frameSize = GetTextureDimensions(resourcePack, "block/water_still");
-				seperateFrames.TryAdd("block/water_still", GetFrames(still, (int) frameSize.X, (int) frameSize.Y));
-			}
-			
-			if (resourcePack.TryGetBitmap("block/lava_flow", out var lavaFlow))
-			{
-				var frameSize = GetTextureDimensions(resourcePack, "block/lava_flow");
-				seperateFrames.TryAdd("block/lava_flow", GetFrames(lavaFlow, (int) frameSize.X, (int) frameSize.Y));
-			}
-			
-			if (resourcePack.TryGetBitmap("block/lava_still", out var lavastill))
-			{
-				var frameSize = GetTextureDimensions(resourcePack, "block/lava_still");
-				seperateFrames.TryAdd("block/lava_still", GetFrames(lavastill, (int) frameSize.X, (int) frameSize.Y));
-			}
+	    private void ProcessBlockStateModel(McResourcePack resourcePack, Dictionary<ResourceLocation, ImageEntry> textures, BlockStateModel bsModel)
+	    {
+		    var model = bsModel.Model;
+
+		    foreach (var texture in model.Textures)
+		    {
+			    var text = texture.Value;
+
+			    if (text[0] == '#')
+			    {
+				    var substr = text.Substring(1);
+
+				    if (model.Textures.TryGetValue(substr, out var p))
+				    {
+					    text = p;
+				    }
+				    else
+				    {
+					    var parent = model.Parent;
+
+					    while (parent != null)
+					    {
+						    if (parent.Textures.TryGetValue(substr, out string parentName))
+						    {
+							    text = parentName;
+
+							    break;
+						    }
+
+						    parent = parent.Parent;
+					    }
+				    }
+			    }
+
+			    var key = new ResourceLocation(text);
+
+			    var alreadyLoaded = textures.ContainsKey(key);
+			    if (!alreadyLoaded && resourcePack.TryGetBitmap(key, out var bmp))
+			    {
+				    TextureMeta meta = null;
+				    resourcePack.TryGetTextureMeta(key, out meta);
+				    
+				    textures.TryAdd(key, new ImageEntry(bmp, meta));
+			    }
+			    else if (!alreadyLoaded)
+			    {
+				    if (texture.Value[0] != '#' || text[0] != '#')
+					    Log.Warn(
+						    $"Could not get bitmap {texture.Value} or {text} (Key: {texture.Key} Model: {bsModel.ModelName})");
+			    }
+		    }
 	    }
 
 	    public void LoadResourcePack(GraphicsDevice graphicsDevice,
 		    McResourcePack resourcePack,
 		    IProgressReceiver progressReceiver)
 	    {
-		    Dictionary<ResourceLocation, Image<Rgba32>[]> frames  = new Dictionary<ResourceLocation, Image<Rgba32>[]>();
-		    Dictionary<ResourceLocation, Image<Rgba32>>   textures = new Dictionary<ResourceLocation, Image<Rgba32>>();
+		    Dictionary<ResourceLocation, ImageEntry>   textures = new Dictionary<ResourceLocation, ImageEntry>();
 
-		    GetTextures(resourcePack, frames, textures, progressReceiver);
+		    GetTextures(resourcePack, textures, progressReceiver);
 
-		    GenerateAtlas(graphicsDevice, frames, textures, progressReceiver);
+		    GenerateAtlas(graphicsDevice, textures, progressReceiver);
+	    }
 
-		    string a = "b";
+	    private class ImageEntry
+	    {
+		    public Image<Rgba32> Image { get; }
+		    public TextureMeta Meta { get; }
+
+		    public ImageEntry(Image<Rgba32> image, TextureMeta meta)
+		    {
+			    Image = image;
+			    Meta = meta;
+		    }
 	    }
 	    
-	    private void GenerateAtlas(GraphicsDevice device, IDictionary<ResourceLocation, Image<Rgba32>[]> blockFrames, IDictionary<ResourceLocation, Image<Rgba32>> blockTextures, IProgressReceiver progressReceiver)
+	    private void GenerateAtlas(GraphicsDevice device,
+		    IDictionary<ResourceLocation, ImageEntry> blockTextures,
+		    IProgressReceiver progressReceiver)
 	    {
 		    Stopwatch sw = Stopwatch.StartNew();
 
-		    Log.Info($"Generating texture atlas out of {(blockFrames.Count + blockTextures.Count)} bitmaps...");
-		    
+		    Log.Info($"Generating texture atlas out of {(blockTextures.Count)} bitmaps...");
+
 		    long totalSize = 0;
-		    
+
 		    Image<Rgba32> no;
+
 		    using (MemoryStream ms = new MemoryStream(ResourceManager.ReadResource("Alex.Resources.no.png")))
 		    {
 			    no = Image.Load<Rgba32>(ms);
 		    }
+
+		    Dictionary<ResourceLocation, TextureInfo> stillFrameInfo = new Dictionary<ResourceLocation, TextureInfo>();
+
+		    GenerateAtlasInternal(
+			    new[] {new KeyValuePair<ResourceLocation, Image<Rgba32>>("no_texture", no),}.Concat(
+				    blockTextures
+					   .Where(x => x.Value.Image.Height == TextureHeight && x.Value.Image.Width == TextureWidth).Select(
+						    x => new KeyValuePair<ResourceLocation, Image<Rgba32>>(x.Key, x.Value.Image))).ToArray(),
+			    progressReceiver, stillFrameInfo, false, out var stillAtlas);
+
+		    AtlasSize = new Vector2(stillAtlas.Width, stillAtlas.Height);
+
+		    //  totalSize += size;
+
+		    _atlasLocations = stillFrameInfo;
+
 		    
-		    var regularTextures = new[]
+		    Dictionary<ResourceLocation, Image<Rgba32>[]> blockFrames =
+			    new Dictionary<ResourceLocation, Image<Rgba32>[]>();
+		    
+		    foreach (var other in blockTextures.Where(
+			    x => x.Value.Image.Height != x.Value.Image.Width))
 		    {
-			    new KeyValuePair<ResourceLocation, Image<Rgba32>>("no_texture", no),
-		    }.Concat(blockTextures.Where(x => x.Value.Height == TextureHeight && x.Value.Width == TextureWidth)).ToArray();
-		       
-		    var oddSizedTextures = blockTextures.Where(x => x.Value.Height != TextureHeight || x.Value.Width != TextureWidth).ToArray();
-
-		    for (var index = 0; index < oddSizedTextures.Length; index++)
-		    {
-			    var other = oddSizedTextures[index];
-
-			    if (blockFrames.TryGetValue(other.Key, out var values))
+			    if (!blockFrames.TryGetValue(other.Key, out _))
 			    {
-				    oddSizedTextures[index] = new KeyValuePair<ResourceLocation, Image<Rgba32>>(other.Key, values[0]);
+				    blockFrames.Add(other.Key, GetFrames(other.Value.Image, TextureWidth, TextureHeight));
 			    }
 		    }
 
-		    Dictionary<ResourceLocation, TextureInfo> stillFrameInfo = new Dictionary<ResourceLocation, TextureInfo>();
-		    GenerateAtlasInternal(regularTextures, oddSizedTextures, progressReceiver, stillFrameInfo, false, out var stillAtlas);
-		    _stillFrame = TextureUtils.BitmapToTexture2D(device, stillAtlas, out var size);
-		    AtlasSize = new Vector2(stillAtlas.Width, stillAtlas.Height);
-		    
-		    totalSize += size;
-		    
-		    _atlasLocations = stillFrameInfo;
-
 		    var animatedFrameInfo = new Dictionary<ResourceLocation, TextureInfo>();
-	        GenerateAtlasInternal(blockFrames.Select(x => new KeyValuePair<ResourceLocation,Image<Rgba32>>(x.Key, x.Value[0])).ToArray(), new KeyValuePair<ResourceLocation, Image<Rgba32>>[0], progressReceiver,
-		        animatedFrameInfo, true, out Image<Rgba32> animatedFrame);
+		    
+		    GenerateAtlasInternal(
+			    blockFrames.Select(x => new KeyValuePair<ResourceLocation, Image<Rgba32>>(x.Key, x.Value[0])).ToArray(),
+			    progressReceiver, animatedFrameInfo, true, out Image<Rgba32> animatedFrame);
 
-	        AnimatedAtlasSize = new Vector2(animatedFrame.Width, animatedFrame.Height);
-	        _animatedAtlasLocations = animatedFrameInfo;
-	        
-	        
-	        var frameCount = blockFrames.Max(x => x.Value.Length);
-		   while (frameCount % 2 != 0)
-		   {
-			   frameCount++;
-		   }
-		   
-		   var frames = new Texture2D[frameCount];
-		   
-		    for (int i = 0; i < frames.Length; i++)
+		    AnimatedAtlasSize = new Vector2(animatedFrame.Width, animatedFrame.Height);
+		    _animatedAtlasLocations = animatedFrameInfo;
+
+
+		    var frameCount = blockFrames.Max(x => x.Value.Length);
+
+		    while (frameCount % 2 != 0)
 		    {
-			    double percentage = 100D * ((double)i / (double)frames.Length);
-			    progressReceiver.UpdateProgress((int)percentage, $"Animating frame {i}...");
-			    
-			    var target = animatedFrame.CloneAs<Rgba32>(); //new Bitmap(animatedFrame);
+			    frameCount++;
+		    }
+
+		    var frames = new Image<Rgba32>[frameCount];
+		    frames[0] = animatedFrame;
+
+		    for (int i = 1; i < frames.Length; i++)
+		    {
+			    double percentage = 100D * ((double) i / (double) frames.Length);
+			    progressReceiver.UpdateProgress((int) percentage, $"Animating frame {i + 1} / {frames.Length}...");
+
+			    var target = (i > 0 ? frames[i - 1] : animatedFrame).CloneAs<Rgba32>(); //new Bitmap(animatedFrame);
 
 			    // System.Drawing.Rectangle destination;
 
 			    foreach (var animated in blockFrames)
 			    {
-				    progressReceiver.UpdateProgress((int)percentage, null, animated.Key.ToString());
+				    progressReceiver.UpdateProgress((int) percentage, null, animated.Key.ToString());
 
 				    if (animatedFrameInfo.TryGetValue(animated.Key, out var textureInfo))
 				    {
 					    //((i % 3 == 0 ? i - 1 : i) / 6)
-					    
-					    var destination = new System.Drawing.Rectangle(
-						    (int) textureInfo.Position.X, (int) textureInfo.Position.Y, textureInfo.Width, textureInfo.Height);
 
-					    TextureUtils.CopyRegionIntoImage(
-						    animated.Value[i % animated.Value.Length], new System.Drawing.Rectangle(0, 0, textureInfo.Width, textureInfo.Height), ref target,
-						    destination);
+					    var destination = new System.Drawing.Rectangle(
+						    (int) textureInfo.Position.X, (int) textureInfo.Position.Y, textureInfo.Width,
+						    textureInfo.Height);
+
+					    var sourceRegion = new System.Drawing.Rectangle(0, 0, textureInfo.Width, textureInfo.Height);
+
+					    var index = i % animated.Value.Length;
+					    
+					    var indexOffset = 0;
+					    bool shouldInterpolate = false;
+					    float interpolationValue = 0.5f;
+					    if (blockTextures.TryGetValue(animated.Key, out var imageEntry) && imageEntry.Meta != null)
+					    {
+						    var meta = imageEntry.Meta;
+
+						    if (meta.Animation != null)
+						    {
+							    if (meta.Animation.Interpolate)
+							    { 
+								    int extraFrames = (frames.Length - animated.Value.Length);
+								    
+								    var interpolationFrames = (int)Math.Floor(((double)extraFrames / (double)animated.Value.Length));
+								    
+								    var remainder = i % interpolationFrames;
+
+								    if (remainder != 0)
+								    {
+									    shouldInterpolate = true;
+									    interpolationValue = (1f / interpolationFrames) * remainder;
+
+									    indexOffset = -remainder;
+									    //   index -= remainder;
+								    }
+							    }
+
+							    if (meta.Animation.Frames != null)
+							    {
+								    var entry = meta.Animation.Frames[(i + indexOffset) % meta.Animation.Frames.Length];
+
+								    if (entry.Integer.HasValue)
+								    {
+									    index = (int) entry.Integer.Value;
+								    }
+								    else if (entry.FrameClass != null)
+								    {
+									    index = (int) entry.FrameClass.Index;
+								    }
+							    }
+							    else
+							    {
+								    index = (i + indexOffset) % animated.Value.Length;
+							    }
+						    }
+					    }
+
+					    //TextureUtils.ClearRegion(ref target, destination);
+					    
+					    if (shouldInterpolate)
+					    {
+						    TextureUtils.CopyRegionIntoImage(
+							    ((i + indexOffset >= 0) ? frames[(i + indexOffset) % frames.Length] : animatedFrame), destination, ref target,
+							    destination, clear: true);
+					    }
+
+					    var texture = animated.Value[index];
+					    
+					    TextureUtils.CopyRegionIntoImage(texture,
+						    sourceRegion, ref target,
+						    destination, shouldInterpolate, interpolationValue, clear: !shouldInterpolate);
 				    }
 			    }
-			   
-			    frames[i] = TextureUtils.BitmapToTexture2D(device, target, out var s);
-			    totalSize += s;
+
+			    frames[i] = target;
 		    }
-		    
-		    _frames = frames;
+
+		    _frames = frames.Select(
+			    x =>
+			    {
+				    var a = TextureUtils.BitmapToTexture2D(device, x, out var s);
+				    totalSize += s;
+
+				    return a;
+			    }).ToArray();
+
+		    _stillFrame = TextureUtils.BitmapToTexture2D(device, stillAtlas, out var size);
+		    totalSize += size;
 		    
 		    sw.Stop();
 		    
-		    Log.Info($"TextureAtlas generated in {sw.ElapsedMilliseconds}ms! ({PlayingState.GetBytesReadable(totalSize, 2)})");
+		    Log.Info(
+			    $"TextureAtlas's generated in {sw.ElapsedMilliseconds}ms! ({PlayingState.GetBytesReadable(totalSize, 2)})");
+		  
+		    /*
+		    PngEncoder encoder = new PngEncoder();
+		    
+		    stillAtlas.Save("atlas.png", encoder);
+		    
+		    if (!Directory.Exists("frames"))
+			    Directory.CreateDirectory("frames");
+
+		    for (var index = 0; index < frames.Length; index++)
+		    {
+			    var frame = frames[index];
+			    
+			    frame.Save(Path.Combine("frames", $"frame-{index}.png"), encoder);
+		    }*/
+		    
+		    
 	    }
-	    
-	    private void GenerateAtlasInternal(KeyValuePair<ResourceLocation, Image<Rgba32>>[] regular, KeyValuePair<ResourceLocation, Image<Rgba32>>[] others, IProgressReceiver progressReceiver, Dictionary<ResourceLocation, TextureInfo> atlasLocations, bool animated, out Image<Rgba32> result)
+
+	    private void GenerateAtlasInternal(KeyValuePair<ResourceLocation, Image<Rgba32>>[] regular, IProgressReceiver progressReceiver, Dictionary<ResourceLocation, TextureInfo> atlasLocations, bool animated, out Image<Rgba32> result)
         {
-	        int total = regular.Length + others.Length;
+	        int total = regular.Length;
 	        var a = (int)Math.Ceiling(regular.Length / 32D);
 
 	        int height = a * TextureHeight;
-	        if (others.Length != 0)
-	        {
-		        height += others.Max(x => x.Value.Height);
-	        }
-	        
+
 	        var bitmap = new Image<Rgba32>(Math.Min(32, total) * TextureWidth, height);
 
 	        int xi = 0, yi = 0, offsetX = 0, yRemaining = 0;
-	        int processedFiles = Process(ref bitmap, regular, ref xi, ref yi, ref offsetX, ref yRemaining, total, 0, atlasLocations, progressReceiver, animated);
-	        yi += TextureHeight;
-	        xi = 0;
-			Process(ref bitmap, others.ToArray(), ref xi, ref yi, ref offsetX, ref yRemaining, total, processedFiles, atlasLocations, progressReceiver, animated);
+	        Process(ref bitmap, regular, ref xi, ref yi, ref offsetX, ref yRemaining, total, 0, atlasLocations, progressReceiver, animated);
 
-			result = bitmap;
+	        result = bitmap;
         }
 
 	    private int Process(ref Image<Rgba32> target, KeyValuePair<ResourceLocation, Image<Rgba32>>[] data, ref int xi, ref int yi, ref int xOffset, ref int yRemaining, int total, int processed, IDictionary<ResourceLocation, TextureInfo> locations, IProgressReceiver progressReceiver, bool animated)
@@ -343,9 +394,9 @@ namespace Alex.Graphics
 
 			    TextureUtils.CopyRegionIntoImage(bm.Value, sourceRegion, ref target, targetRegion);
 
-			    if (!locations.ContainsKey(key))
+			    if (!locations.ContainsKey(key)) 
 			    {
-				    locations.Add(key, new TextureInfo(new Vector2(xi, yi), bm.Value.Width, bm.Value.Height, animated));
+				    locations.Add(key, new TextureInfo(new Vector2(xi, yi), bm.Value.Width, bm.Value.Height, animated, true));
 			    }
 
 			    if (bm.Value.Height > TextureHeight)
@@ -404,24 +455,14 @@ namespace Alex.Graphics
 		{
 
             int textureWidth = 16, textureHeight = 16;
-
-			Dictionary<ResourceLocation, Image<Rgba32>[]> vanillaFrames  = new Dictionary<ResourceLocation, Image<Rgba32>[]>();
+            
 			Dictionary<ResourceLocation, Image<Rgba32>>   vanillaTextures = new Dictionary<ResourceLocation, Image<Rgba32>>();
 
-			GetTextures(vanilla, vanillaFrames, vanillaTextures, progressReceiver);
+			//GetTextures(vanilla, vanillaTextures, progressReceiver);
 			
-			Dictionary<ResourceLocation, Image<Rgba32>[]> frames   = new Dictionary<ResourceLocation, Image<Rgba32>[]>();
 			Dictionary<ResourceLocation, Image<Rgba32>>   textures = new Dictionary<ResourceLocation, Image<Rgba32>>();
 
-			GetTextures(resourcePack, frames, textures, progressReceiver);
-
-			foreach (var image in vanillaFrames.ToArray())
-			{
-				if (!frames.ContainsKey(image.Key))
-				{
-					frames.Add(image.Key, image.Value);
-				}
-			}
+			//GetTextures(resourcePack, textures, progressReceiver);
 
 			foreach (var image in vanillaTextures.ToArray())
 			{
@@ -449,7 +490,7 @@ namespace Alex.Graphics
             TextureHeight = textureHeight;
             TextureWidth = textureWidth;
 
-            GenerateAtlas(device, frames, textures, progressReceiver);
+          //  GenerateAtlas(device, textures, progressReceiver);
 		}
 
 
@@ -468,10 +509,9 @@ namespace Alex.Graphics
 			return _frames[frame % _frames.Length];
         }
 
-		public TextureInfo GetAtlasLocation(Block block,
+		public TextureInfo GetAtlasLocation(
 			ResourceLocation file,
-			out Vector2 atlasSize,
-			IDictionary<ResourceLocation, TextureInfo> dictionary = null)
+			out Vector2 atlasSize)
 		{
 		/*	if (dictionary == null)
 			{
@@ -499,8 +539,13 @@ namespace Alex.Graphics
 				return atlasInfo;
 			}
 
+			if (file.Path.Contains("fire_"))
+			{
+				string a = "b";
+			}
+			
 			atlasSize = AtlasSize;
-			return new TextureInfo(Vector2.Zero, TextureWidth, TextureHeight, false);
+			return new TextureInfo(Vector2.Zero, TextureWidth, TextureHeight, false, false);
 		}
     }
 }

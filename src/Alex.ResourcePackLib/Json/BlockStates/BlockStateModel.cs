@@ -1,4 +1,5 @@
-﻿using Alex.ResourcePackLib.Json.Models.Blocks;
+﻿using Alex.ResourcePackLib.Json.Models;
+using Alex.ResourcePackLib.Json.Models.Blocks;
 using Newtonsoft.Json;
 
 namespace Alex.ResourcePackLib.Json.BlockStates
@@ -13,7 +14,7 @@ namespace Alex.ResourcePackLib.Json.BlockStates
 		public string ModelName { get; set; }
 
 		[JsonIgnore]
-		public BlockModel Model { get; set; }
+		public ResourcePackModelBase Model { get; set; }
 
 		/// <summary>
 		/// Rotation of the model on the x-axis in increments of 90 degrees.

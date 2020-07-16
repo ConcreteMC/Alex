@@ -25,7 +25,7 @@ namespace Alex.Blocks
 		private static readonly Dictionary<string, BlockStateVariantMapper> BlockStateByName = new Dictionary<string, BlockStateVariantMapper>();
 		private static readonly Dictionary<uint, BlockModel> ModelCache = new Dictionary<uint, BlockModel>();
 		private static readonly Dictionary<long, string> ProtocolIdToBlockName = new Dictionary<long, string>();
-		private static ResourcePackLib.Json.Models.Blocks.BlockModel CubeModel { get; set; }
+		private static ResourcePackLib.Json.Models.ResourcePackModelBase CubeModel { get; set; }
 		public static readonly LiquidBlockModel StationairyWaterModel = new LiquidBlockModel()
 		{
 			//IsFlowing = false,
@@ -132,7 +132,7 @@ namespace Alex.Blocks
 
 			progressReceiver?.UpdateProgress(0, "Loading block models...");
 
-			if (resourcePack.TryGetBlockModel("cube_all", out ResourcePackLib.Json.Models.Blocks.BlockModel cube))
+			if (resourcePack.TryGetBlockModel("cube_all", out ResourcePackLib.Json.Models.ResourcePackModelBase cube))
 			{
 				cube.Textures["all"] = "no_texture";
 				CubeModel = cube;

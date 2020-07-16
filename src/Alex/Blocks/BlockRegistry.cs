@@ -339,6 +339,13 @@ namespace Alex.Blocks
 		    this.Register("minecraft:grindstone", () => new Grindstone());
 		    this.Register("minecraft:bell", () => new Bell());
 
+		    this.Register("minecraft:campfire", () => new CampFire());
+		    this.Register("minecraft:stonecutter", () => new StoneCutter());
+		    this.Register("minecraft:crimson_stem", () => new CrimsonStem());
+		    this.Register("minecraft:crimson_hyphae", () => new CrimsonHyphae());
+		    this.Register("minecraft:soul_fire", () => new SoulFire());
+		    this.Register("minecraft:soul_campfire", () => new SoulCampfire());
+		    
 		    //Carpet
 		    this.RegisterRange(
 			    () => new Carpet().WithLocation("minecraft:white_carpet"),

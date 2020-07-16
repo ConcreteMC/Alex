@@ -575,17 +575,6 @@ namespace Alex.Worlds
 			return GetBlockState(x, y, z, 0);
 		}
 
-		public IEnumerable<ChunkSection.BlockEntry> GetBlockStates(int positionX, in int positionY, int positionZ)
-		{
-			ChunkColumn chunk;
-			if (ChunkManager.TryGetChunk(new ChunkCoordinates(positionX >> 4, positionZ >> 4), out chunk))
-			{
-				return chunk.GetBlockStates(positionX  & 0xf, positionY & 0xff, positionZ  & 0xf);
-			}
-
-			return new ChunkSection.BlockEntry[0];
-		}
-
 		public BlockState GetBlockState(BlockCoordinates coords)
 		{
 			return GetBlockState(coords.X, coords.Y, coords.Z);

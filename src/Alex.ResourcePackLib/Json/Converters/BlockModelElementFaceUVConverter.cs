@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using Alex.ResourcePackLib.Json.Models;
 using Alex.ResourcePackLib.Json.Models.Blocks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -10,7 +11,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 	{
 		public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
 		{
-			var uv = value as BlockModelElementFaceUV;
+			var uv = value as ModelUV;
 
 			serializer.Serialize(writer, new int[]
 			{
@@ -30,7 +31,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 				var arr = (JArray)obj;
 				if (arr.Count == 4 && arr.All(token => token.Type == JTokenType.Integer))
 				{
-					return new BlockModelElementFaceUV()
+					return new ModelUV()
 					{
 						X1 = arr[0].Value<int>(),
 						Y1 = arr[1].Value<int>(),
@@ -45,7 +46,7 @@ namespace Alex.ResourcePackLib.Json.Converters
 
 		public override bool CanConvert(Type objectType)
 		{
-			return typeof(BlockModelElementFaceUV).IsAssignableFrom(objectType);
+			return typeof(ModelUV).IsAssignableFrom(objectType);
 		}
 	}
 }
