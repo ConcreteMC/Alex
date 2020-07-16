@@ -260,12 +260,12 @@ namespace Alex.Networking.Java
 			    {
 				    Interlocked.Increment(ref _queued);
 
-				    ThreadPool.QueueUserWorkItem(
-					    () =>
-					    {
+				   // ThreadPool.QueueUserWorkItem(
+				//	    () =>
+				//	    {
 						    ProcessPacket(packet, packetData);
-						    Interlocked.Decrement(ref _queued);
-					    });
+						 //   Interlocked.Decrement(ref _queued);
+				//	    });
 
 				    return true;
 			    }

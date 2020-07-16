@@ -194,6 +194,8 @@ namespace Alex.Graphics.Models.Items
 
         protected Vector3 Offset { get; set; } = Vector3.Zero;
         
+        public Color DiffuseColor { get; set; } = Color.White;
+        
         public ItemModelRenderer(ResourcePackModelBase model, McResourcePack resourcePack, VertexDeclaration declaration)
         {
             Model = model;
@@ -344,7 +346,8 @@ namespace Alex.Graphics.Models.Items
             }
             
             Effect.World = world * ParentMatrix;
-
+            Effect.DiffuseColor = DiffuseColor.ToVector3();
+            
             if (Buffer == null && Vertices != null && Indexes != null && _canInit)
             {
                 var vertices = Vertices;

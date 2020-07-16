@@ -315,6 +315,17 @@ namespace Alex.Items
 			    return true;
 		    }
 
+		    var a = Items.Where(x => x.Key.Path.Length >= name.Path.Length)
+			   .OrderBy(x => name.ToString().Length - x.Key.ToString().Length).FirstOrDefault(
+				    x => x.Key.Path.EndsWith(name.Path, StringComparison.InvariantCultureIgnoreCase));
+
+		    if (a.Value != null)
+		    {
+			    item = a.Value();
+
+			    return true;
+		    }
+
 		    item = default;
 		    return false;
 	    }

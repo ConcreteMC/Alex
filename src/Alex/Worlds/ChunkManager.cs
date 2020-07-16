@@ -264,27 +264,28 @@ namespace Alex.Worlds
 
 	    #region  Drawing
 
-	    public void Draw(IRenderArgs args, bool depthMapOnly)
+	    public void Draw(IRenderArgs args, bool depthMapOnly, params RenderStage[] stages)
 	    {
-		    var view = args.Camera.ViewMatrix;
+		    var view       = args.Camera.ViewMatrix;
 		    var projection = args.Camera.ProjectionMatrix;
 
 		    DefaultShaders.UpdateMatrix(view, projection);
-		//	LightShaders.UpdateMatrix(view, projection);
-		    
+		    //	LightShaders.UpdateMatrix(view, projection);
+
 		    DepthEffect.View = view;
 		    DepthEffect.Projection = projection;
-		    
+
 		    var device = args.GraphicsDevice;
 
 		    var originalSamplerState = device.SamplerStates[0];
 
 		    device.SamplerStates[0] = RenderSampler;
-		    
+
 		    RasterizerState originalState = device.RasterizerState;
 		    args.GraphicsDevice.RasterizerState = RasterizerState;
 
 		    bool usingWireFrames = UseWireFrames;
+
 		    if (usingWireFrames)
 		    {
 			    originalState = device.RasterizerState;
@@ -299,7 +300,7 @@ namespace Alex.Worlds
 		    {
 			    args.GraphicsDevice.SetRenderTarget(_depthMap);
 			    device.BlendState = LightMapBS;
-			    
+
 			    args.GraphicsDevice.Clear(Color.Black);
 			    DrawStaged(args, out _, out _, DefaultShaders.LightingEffect, RenderStages);
 
@@ -307,10 +308,12 @@ namespace Alex.Worlds
 		    }
 		    else
 		    {
-			   // device.DepthStencilState = DepthStencilState.DepthRead;
+			    // device.DepthStencilState = DepthStencilState.DepthRead;
 			    device.BlendState = BlendState.AlphaBlend;
-			    
-			    DrawStaged(args, out int chunksRendered, out int verticesRendered, null, RenderStages);
+
+			    DrawStaged(
+				    args, out int chunksRendered, out int verticesRendered, null,
+				    stages.Length > 0 ? stages : RenderStages);
 
 			    Vertices = verticesRendered;
 			    RenderedChunks = chunksRendered;
@@ -318,8 +321,8 @@ namespace Alex.Worlds
 		    }
 
 		    //if (usingWireFrames)
-			    device.RasterizerState = originalState;
-		    
+		    device.RasterizerState = originalState;
+
 		    device.SamplerStates[0] = originalSamplerState;
 	    }
 
@@ -368,6 +371,7 @@ namespace Alex.Worlds
 					    case RenderStage.Liquid:
 					    case RenderStage.AnimatedTranslucent:
 						    effect = shaders.AnimatedEffect;
+						    
 						    break;
 					    default:
 						    throw new ArgumentOutOfRangeException();
@@ -1236,41 +1240,30 @@ namespace Alex.Worlds
 							        if (!(data.Vertices == null || data.Indexes == null || data.Vertices.Length == 0
 							              || (data.Indexes.Length == 0 && (data.AnimatedIndexes == null || data.AnimatedIndexes.Length == 0))))
 							        {
-								        RenderStage targetState = RenderStage.OpaqueFullCube;
+								     //   if (data.Vertices.Length > 0 && (data.Indexes.Length > 0 || (data.AnimatedIndexes != null && data.AnimatedIndexes.Length > 0)))
+								     //   {
+									        RenderStage targetState = RenderStage.OpaqueFullCube;
 
-								        if (blockState.Block.BlockMaterial.IsLiquid())
-								        {
-									        targetState = RenderStage.Liquid;
-								        }
-								       /* else if (blockState.Block.Animated)
-								        {
-									        if (blockState.Block.BlockMaterial.IsOpaque())
+									        if (blockState.Block.BlockMaterial.IsLiquid())
 									        {
-										        targetState = RenderStage.Animated;
+										        targetState = RenderStage.Liquid;
 									        }
-									        else
+									        else if (blockState.Block.Transparent)
 									        {
-										        targetState = RenderStage.AnimatedTranslucent;
+										        if (blockState.Block.BlockMaterial.IsOpaque())
+										        {
+											        targetState = RenderStage.Transparent;
+										        }
+										        else
+										        {
+											        targetState = RenderStage.Translucent;
+										        }
 									        }
-								        }*/
-								        else if (blockState.Block.Transparent)
-								        {
-									        if (blockState.Block.BlockMaterial.IsOpaque())
+									        else if (!blockState.Block.IsFullCube)
 									        {
-										        targetState = RenderStage.Transparent;
+										        targetState = RenderStage.Opaque;
 									        }
-									        else
-									        {
-										        targetState = RenderStage.Translucent;
-									        }
-								        }
-								        else if (!blockState.Block.IsFullCube)
-								        {
-									        targetState = RenderStage.Opaque;
-								        }
-
-								        if (data.Vertices.Length > 0 && (data.Indexes.Length > 0 || (data.AnimatedIndexes != null && data.AnimatedIndexes.Length > 0)))
-								        {
+									        
 									        // if (currentBlockState.storage == 0)
 									        // 	section.SetRendered(x, y, z, true);
 
@@ -1306,7 +1299,7 @@ namespace Alex.Worlds
 
 									        if (state.Storage == 0)
 										        section.SetRendered(x, y, z, true);
-								        }
+								       // }
 							        }
 							        else if (state.Storage == 0)
 							        {

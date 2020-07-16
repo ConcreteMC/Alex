@@ -305,7 +305,7 @@ namespace Alex.Entities
 		            
 		            ItemRenderer = new ItemModelRenderer(itemModel.Value, Alex.Instance.Resources.ResourcePack);*/
 
-		            var renderer = inHand.Renderer.Clone();
+		            var renderer = inHand?.Renderer;
 		            if (renderer == null)
 		            {
 			            Log.Warn($"No renderer for item: {inHand.Name}");
@@ -315,6 +315,8 @@ namespace Alex.Entities
 		            if (renderer == ItemRenderer)
 			            return;
 
+		            renderer = renderer.Clone();
+		            
 		            var itemModel = renderer.Model;
 
 		            var oldRenderer = ItemRenderer;
@@ -586,7 +588,7 @@ namespace Alex.Entities
 
 			if ((RenderEntity && !IsInvisible) || ShowItemInHand)
 			{
-				ModelRenderer.Render(renderArgs, KnownPosition, !RenderEntity || IsInvisible);
+				ModelRenderer.Render(renderArgs, KnownPosition, IsInvisible || !RenderEntity);
 
 				if (ModelRenderer.Valid)
 				{
@@ -814,7 +816,8 @@ namespace Alex.Entities
 
 		private DateTime NextUpdate     = DateTime.MinValue;
 		private DateTime PreviousUpdate = DateTime.MinValue;
-		public virtual void OnTick()
+		public int SurroundingLightValue { get; private set; } = 15;
+		public virtual void OnTick() 
 		{
 			SeenEntities.Clear();
 			UnseenEntities.Clear();
@@ -851,7 +854,21 @@ namespace Alex.Entities
 				PreviousUpdate = DateTime.UtcNow;
 				NextUpdate = DateTime.UtcNow + TimeSpan.FromMilliseconds(500);
 			}
-			
+
+			if (IsRendered || !ServerEntity)
+			{
+				SurroundingLightValue = Math.Min(
+					Level.GetSkyLight(KnownPosition) + Level.GetBlockLight(KnownPosition), 15);
+
+				var heldItemRenderer = ItemRenderer;
+
+				if (heldItemRenderer != null)
+				{
+					heldItemRenderer.DiffuseColor =  (new Color(245, 245, 225) *  ((1f / 16f) * SurroundingLightValue))
+					                                * Level.BrightnessModifier;
+				}
+			}
+
 			if (IsNoAi) return;
 		//	IsMoving = Velocity.LengthSquared() > 0f;
 
