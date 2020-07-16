@@ -9,6 +9,8 @@ namespace Alex.Blocks.Minecraft
 			IsReplacible = false;
 			
 			Hardness = 0.3f;
+			
+			BlockMaterial = Material.RedstoneLight;
 		}
 
 		public override byte LightValue

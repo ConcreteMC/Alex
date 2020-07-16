@@ -40,7 +40,7 @@ namespace Alex.ResourcePackLib.Json.Models
             }
         }
 
-        [JsonIgnore] internal ModelType Type { get; set; } = ModelType.Unknown;
+        [JsonIgnore] public ModelType Type { get; internal set; } = ModelType.Unknown;
         
         private void UpdateValuesFromParent(ResourcePackModelBase parent)
         {

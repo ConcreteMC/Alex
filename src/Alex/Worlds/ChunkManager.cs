@@ -935,7 +935,7 @@ namespace Alex.Worlds
 						    var oldMesh = section.MeshCache;
 
 						    var sectionMesh = GenerateSectionMesh(
-							    blockAccess, new Vector3(chunk.X << 4, 0, chunk.Z << 4), ref section, i);
+							    blockAccess, new Vector3(chunk.X * 16, 0, chunk.Z * 16), ref section, i);
 
 						    meshes.Add(sectionMesh);
 
@@ -1244,13 +1244,13 @@ namespace Alex.Worlds
 								     //   {
 									        RenderStage targetState = RenderStage.OpaqueFullCube;
 
-									        if (blockState.Block.BlockMaterial.IsLiquid())
+									        if (blockState.Block.BlockMaterial.IsLiquid)
 									        {
 										        targetState = RenderStage.Liquid;
 									        }
 									        else if (blockState.Block.Transparent)
 									        {
-										        if (blockState.Block.BlockMaterial.IsOpaque())
+										        if (blockState.Block.BlockMaterial.IsOpaque)
 										        {
 											        targetState = RenderStage.Transparent;
 										        }

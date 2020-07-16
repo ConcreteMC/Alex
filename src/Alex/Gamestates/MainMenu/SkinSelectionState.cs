@@ -125,7 +125,7 @@ namespace Alex.Gamestates.MainMenu
                 Storage.TryWriteBytes("skin.png", ms.ToArray());
             }
 
-            Alex.PlayerModel = profile.Skin.Model;
+            //Alex.PlayerModel = profile.Skin.Model;
             Alex.PlayerTexture = profile.Skin.Texture;
 
             OnCancelButtonPressed();

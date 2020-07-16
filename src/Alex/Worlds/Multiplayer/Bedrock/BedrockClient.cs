@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Dynamic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -135,7 +136,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         private ChunkProcessor ChunkProcessor { get; }
 		public BedrockClient(Alex alex, IEventDispatcher eventDispatcher, IPEndPoint endpoint, PlayerProfile playerProfile, DedicatedThreadPool threadPool, BedrockWorldProvider wp)
 		{
-			PacketFactory.CustomPacketFactory = new AlexPacketFactory();
+		//	PacketFactory.CustomPacketFactory = new AlexPacketFactory();
 			
 			PlayerProfile = playerProfile;
 			CancellationTokenSource = new CancellationTokenSource();
@@ -700,17 +701,74 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        
 	        Skin skin;
 
-	     /*   if (Alex.PlayerModel != null && Alex.PlayerTexture != null)
+	        if (Alex.PlayerModel != null && Alex.PlayerTexture != null)
 	        {
 		        var model = Alex.PlayerModel;
+		        var texture = Alex.PlayerTexture;
 
 		        byte[] skinData;
 		        using (MemoryStream ms = new MemoryStream())
 		        {
-			        Alex.PlayerTexture.SaveAsPng(ms, new PngEncoder());
+			       // Alex.PlayerTexture.SaveAsPng(ms, new PngEncoder());
+			       for (int x = 0; x < texture.Width; x++)
+			       {
+				       for (int y = 0; y < texture.Height; y++)
+				       {
+					       var value = texture[x, y];
+					       ms.WriteByte(value.R);
+					       ms.WriteByte(value.G);
+					       ms.WriteByte(value.B);
+					       ms.WriteByte(value.A);
+				       }
+			       }
 			        skinData = ms.ToArray();
 		        }
 		        
+		      /*  dynamic wrapper = new
+		        {
+			        format_version = "1.8.0",
+			        "" = ""
+		        };
+		        wrapper.format_version = "1.8.0";
+		        wrapper[model.Name] = model;
+		        */
+		       // var resourcePatch = model.
+		       var first = model.Geometry.FirstOrDefault();
+		        skin = new Skin
+		        {
+			        SkinId = first.Description.Identifier,
+			        SkinResourcePatch = new SkinResourcePatch(){
+			        Geometry = new GeometryIdentifier()
+			        {
+				        Default = first.Description.Identifier
+			        }
+			        },
+			        Slim = true,
+			        Height = texture.Height,
+			        Width = texture.Width,
+			        Data = skinData,
+			        GeometryData = Convert.ToBase64String(Encoding.UTF8.GetBytes(MCJsonConvert.SerializeObject(model))),
+			        GeometryName = first.Name,
+			        IsPersonaSkin = false,
+			        IsPremiumSkin = false,
+			        Cape = new Cape()
+			        {
+				        Data = new byte[0],
+				        ImageHeight = 0,
+				        ImageWidth = 0,
+				        Id = "",
+				        OnClassicSkin = false
+			        },
+			        Animations = new List<Animation>(),
+			        AnimationData = "",
+			        SkinColor = "",
+			        
+		        };
+
+		      //  string resourcePatchData = Convert.ToBase64String(Encoding.Default.GetBytes(Skin.ToJson(resourcePatch)));
+		     //   string skin64 = Convert.ToBase64String(skin.Data);
+		        
+		        /*
 		        skin = new Skin()
 		        {
 			        Cape = new Cape()
@@ -738,10 +796,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			        //AnimationData = ,
 			        IsPremiumSkin = false,
 			        IsPersonaSkin = false,
-		        };
+		        };*/
 	        }
 	        else
-	       {*/
+	       {
 		       dynamic payload = JObject.Parse(skinText);
 		       
 		        skin = new Skin()
@@ -768,7 +826,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			        IsPremiumSkin = payload.IsPremiumSkin,
 			        IsPersonaSkin = payload.IsPersonaSkin,
 		        };
-	    //    }
+	        }
 
 	        string val = JWT.Encode(JsonConvert.SerializeObject(new BedrockSkinData(skin)
             {

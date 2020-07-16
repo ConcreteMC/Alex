@@ -19,20 +19,5 @@ namespace Alex.Blocks.Minecraft
 		    Transparent = true;
 		    IsFullCube = false;
 	    }
-
-	    public override bool IsSolid(BlockFace face)
-	    {
-		    switch (face)
-		    {
-			    case BlockFace.North:
-			    case BlockFace.East:
-			    case BlockFace.South:
-			    case BlockFace.West:
-				    return false;
-				    break;
-			    default:
-				    return true;
-		    }
-	    }
     }
 }

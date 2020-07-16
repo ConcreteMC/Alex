@@ -9,7 +9,7 @@ namespace Alex.Blocks.Minecraft
             IsFullBlock = false;
             IsFullCube = false;
             
-            BlockMaterial = Material.Stone;
+            BlockMaterial = Material.Anvil;
         }
     }
 }

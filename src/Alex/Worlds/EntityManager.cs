@@ -80,28 +80,33 @@ namespace Alex.Worlds
 
 	    public void Render(IRenderArgs args)
 	    {
-		    var blendState = args.GraphicsDevice.BlendState;
-		    
-		    args.GraphicsDevice.BlendState = BlendState.AlphaBlend;
-		    
-		    long vertexCount = 0;
-		    int renderCount = 0;
-		    var entities = _rendered.ToArray();
-
-		    foreach (var entity in entities)
+		    if (_rendered != null)
 		    {
-			   // entity.IsRendered = true;
+			    var blendState = args.GraphicsDevice.BlendState;
 
-			    entity.Render(args);
-			    vertexCount += entity.RenderedVertices;
+			    args.GraphicsDevice.BlendState = BlendState.AlphaBlend;
 
-			    renderCount++;
+			    long vertexCount = 0;
+			    int renderCount = 0;
+
+
+			    var entities = _rendered.ToArray();
+
+			    foreach (var entity in entities)
+			    {
+				    // entity.IsRendered = true;
+
+				    entity.Render(args);
+				    vertexCount += entity.RenderedVertices;
+
+				    renderCount++;
+			    }
+
+			    EntitiesRendered = renderCount;
+			    VertexCount = vertexCount;
+
+			    args.GraphicsDevice.BlendState = blendState;
 		    }
-		    
-		    EntitiesRendered = renderCount;
-		    VertexCount = vertexCount;
-
-		    args.GraphicsDevice.BlendState = blendState;
 	    }
 
 	    private static RasterizerState RasterizerState = new RasterizerState()
@@ -115,19 +120,23 @@ namespace Alex.Worlds
 	    
 	    public void Render2D(IRenderArgs args)
 	    {
-		    args.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointWrap, DepthStencilState.DepthRead, RasterizerState);
-		    try
+		    if (_rendered != null)
 		    {
-			    var entities = _rendered;
-			    foreach (var entity in entities)
+			    args.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointWrap,
+				    DepthStencilState.DepthRead, RasterizerState);
+			    try
 			    {
-				    if (!entity.HideNameTag)
-						entity.RenderNametag(args);
+				    var entities = _rendered;
+				    foreach (var entity in entities)
+				    {
+					    if (!entity.HideNameTag)
+						    entity.RenderNametag(args);
+				    }
 			    }
-		    }
-		    finally
-		    {
-			    args.SpriteBatch.End();
+			    finally
+			    {
+				    args.SpriteBatch.End();
+			    }
 		    }
 	    }
 

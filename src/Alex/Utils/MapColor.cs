@@ -1,5 +1,6 @@
 ﻿using System;
 using Alex.API.Blocks;
+using Microsoft.Xna.Framework;
 
 namespace Alex.Utils
 {
@@ -59,15 +60,18 @@ namespace Alex.Utils
 		public static MapColor GREEN_STAINED_HARDENED_CLAY = new MapColor(49, 5001770);
 		public static MapColor RED_STAINED_HARDENED_CLAY = new MapColor(50, 9321518);
 		public static MapColor BLACK_STAINED_HARDENED_CLAY = new MapColor(51, 2430480);
-		public int colorValue;
-		public int colorIndex;
+		
+		private uint ColorValue { get; }
+		public Color Color { get; }
+		public int Index { get; }
 
-		private MapColor(int index, int color)
+		private MapColor(int index, uint color)
 		{
 			if (index >= 0 && index <= 63)
 			{
-				this.colorIndex = index;
-				this.colorValue = color;
+				this.Index = index;
+				ColorValue = color;
+				this.Color = new Color(color);
 				COLORS[index] = this;
 			}
 			else
@@ -100,10 +104,10 @@ namespace Alex.Utils
 				i = 180;
 			}
 
-			int j = (this.colorValue >> 16 & 255) * i / 255;
-			int k = (this.colorValue >> 8 & 255) * i / 255;
-			int l = (this.colorValue & 255) * i / 255;
-			return -16777216 | j << 16 | k << 8 | l;
+			var r = (this.ColorValue >> 16 & 255) * i / 255;
+			var g = (this.ColorValue >> 8 & 255) * i / 255;
+			var b = (this.ColorValue & 255) * i / 255;
+			return (int) (-16777216 | r << 16 | g << 8 | b);
 		}
 	}
 }

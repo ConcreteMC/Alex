@@ -607,7 +607,7 @@ namespace Alex.Entities
 
 	    private bool CanPlaceBlock(BlockCoordinates coordinates, Block block)
 	    {
-		    var bb = block.GetBoundingBox(coordinates);
+		    var bb = block.BlockState.Model.GetBoundingBox(coordinates);
 		    var playerBb = GetBoundingBox(KnownPosition);
 
 		    if (playerBb.Intersects(bb))

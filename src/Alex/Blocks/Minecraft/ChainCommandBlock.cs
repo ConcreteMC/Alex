@@ -1,15 +1,14 @@
 namespace Alex.Blocks.Minecraft
 {
-	public class ChainCommandBlock : Block
+	public class ChainCommandBlock : CommandBlock
 	{
-		public ChainCommandBlock() : base(8092)
+		public ChainCommandBlock() : base()
 		{
 			Solid = true;
 			Transparent = false;
 			IsReplacible = false;
 			IsFullBlock = true;
 			IsFullCube = true;
-			
 		}
 	}
 }

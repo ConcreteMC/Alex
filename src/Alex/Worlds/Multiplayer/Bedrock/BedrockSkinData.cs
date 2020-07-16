@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using MiNET.Net;
 using MiNET.Utils.Skins;
 using Newtonsoft.Json;
@@ -78,7 +79,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
         public BedrockSkinData(Skin skin)
         {
-            SkinResourcePatch = skin.ResourcePatch;
+            SkinResourcePatch = Convert.ToBase64String(Encoding.Default.GetBytes(Skin.ToJson(skin.SkinResourcePatch)));
             
             SkinId = skin.SkinId;
             SkinData = Convert.ToBase64String(skin.Data);

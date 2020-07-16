@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using Alex.API;
 using Alex.API.Data.Servers;
@@ -38,6 +39,7 @@ using Alex.Net.Bedrock;
 using Alex.Networking.Java.Packets;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Plugins;
+using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Services;
 using Alex.Services.Discord;
@@ -56,6 +58,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MiNET.Net;
 using MiNET.Utils;
+using MiNET.Utils.Skins;
 using Newtonsoft.Json;
 using NLog;
 using SixLabors.ImageSharp;
@@ -76,7 +79,7 @@ namespace Alex
 	{
 		public static bool InGame { get; set; } = false;
 
-		public static EntityModel PlayerModel { get; set; }
+		public static GeometryModel PlayerModel { get; set; }
 		public static Image<Rgba32> PlayerTexture { get; set; }
 		
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Alex));
@@ -552,15 +555,33 @@ namespace Alex
 
 			var storage = Services.GetRequiredService<IStorageSystem>();
 
-			if (storage.TryReadJson("skin.json", out EntityModel model))
+			/*if (storage.TryReadJson("skin", out NewEntityModel model, Encoding.UTF8))
 			{
+				Log.Info(MCJsonConvert.SerializeObject(model, true));
 				PlayerModel = model;
+				Log.Info($"Skin loaded...");
+			}*/
+
+			if (Storage.TryReadString("skin.json", out var skinValue, Encoding.UTF8))
+			{
+				//var entries = new Dictionary<string, EntityModel>();
+				//EntityModel.GetEntries(skinValue, entries);
+				GeometryModel model = Worlds.Multiplayer.Bedrock.Skin.Parse(skinValue);
+				/*if (entries.Count > 0)
+				{
+				
+					PlayerModel = entries.OrderByDescending(x => x.Value.Bones.Length).FirstOrDefault().Value;*/
+				PlayerModel = model;
+					Log.Info($"Skin loaded...: {MCJsonConvert.SerializeObject(PlayerModel, true)}");
+			//	}
 			}
 
 			if (storage.TryReadBytes("skin.png", out byte[] skinBytes))
 			{
 				var skinImage = Image.Load<Rgba32>(skinBytes);
 				PlayerTexture = skinImage;
+				
+				Log.Info($"Skin texture loaded...");
 			}
 			
 			if (LaunchSettings.ModelDebugging)

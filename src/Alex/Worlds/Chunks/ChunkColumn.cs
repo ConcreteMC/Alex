@@ -154,7 +154,7 @@ namespace Alex.Worlds.Chunks
 					var section = GetSection(y);
 					var block = section.Get(x, y - ((@y >> 4) << 4), z).Block;
 
-					if (!block.Renderable || (!block.BlockMaterial.BlocksLight()))
+					if (!block.Renderable || (!block.BlockMaterial.BlocksLight))
 					{
 						SetSkyLight(x, y, z, 15);
 					}
@@ -191,7 +191,7 @@ namespace Alex.Worlds.Chunks
 
 					var block = GetBlockState(x, y, z).Block;
 
-					if (!block.Renderable || (block.Transparent && !block.BlockMaterial.BlocksLight()))
+					if (!block.Renderable || (block.Transparent && !block.BlockMaterial.BlocksLight))
 						continue;
 
 					return y + 1;

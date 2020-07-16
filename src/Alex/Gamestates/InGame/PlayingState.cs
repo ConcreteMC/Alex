@@ -361,15 +361,15 @@ namespace Alex.Gamestates.InGame
 		    for (float x = 0.5f; x < 8f; x += 0.1f)
 		    {
 		        Vector3 targetPoint = camPos + (lookVector * x);
-		        var block = world.GetBlock(targetPoint) as Block;
+		        var block = world.GetBlockState(targetPoint);
 
-		        if (block != null && block.HasHitbox)
+		        if (block != null && block.Block.HasHitbox)
 		        {
-		            var bbox = block.GetBoundingBox(Vector3.Floor(targetPoint));
+		            var bbox = block.Model.GetBoundingBox(Vector3.Floor(targetPoint));
 		            if (bbox.Contains(targetPoint) == ContainmentType.Contains)
 		            {
 		                _raytracedBlock = Vector3.Floor(targetPoint);
-                        SelBlock = block;
+                        SelBlock = block.Block;
 		                RayTraceBoundingBox = bbox;
 
 			            world.Player.Raytraced = targetPoint;

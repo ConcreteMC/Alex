@@ -11,7 +11,9 @@
 		    Solid = false;
 		    IsReplacible = true;
 
-		    BlockMaterial = Material.Coral;
+		    Animated = true;
+		    
+		    BlockMaterial = Material.WaterPlant;
 		    //  BlockMaterial = Material.Water;
 	    }
     }

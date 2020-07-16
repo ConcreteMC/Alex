@@ -17,7 +17,7 @@ namespace Alex.Blocks.Minecraft
             Animated = true;
             IsFullCube = false;
 
-            BlockMaterial = Material.Coral;
+            BlockMaterial = Material.ReplaceableWaterPlant;
         }
     }
 }

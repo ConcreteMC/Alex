@@ -4,6 +4,7 @@ using System.Linq;
 using Alex.API.Blocks;
 using Alex.API.Utils;
 using Alex.API.World;
+using Alex.Blocks;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
 using Alex.ResourcePackLib.Json.BlockStates;
@@ -53,7 +54,15 @@ namespace Alex.Graphics.Models.Blocks
 		public static BlockState GetBlockState(IBlockAccess world, Vector3 position, BlockState blockState,
 			BlockStateResource blockStateModel)
 		{
-			var blockStateCopy = blockState;
+			/*var clone = blockState.Clone();
+			var models = GetBlockStateModels(world, position, blockState, blockStateModel, out Dictionary<string, string> properties);
+			clone.AppliedModels = models.Select(x => x.ModelName).ToArray();
+			clone.Model = new ResourcePackBlockModel(resourceManager, models);
+			clone.Block.BlockState = clone;
+			clone.Values = properties;
+			//clone.WithPropertyNoResolve()
+			return clone;*/
+			var blockStateCopy = blockState.VariantMapper.GetDefaultState().CloneSilent();
 			foreach (var s in blockStateModel.Parts)
 			{
 				if (s.When == null)
@@ -84,14 +93,16 @@ namespace Alex.Graphics.Models.Blocks
 					}
 				}
 			}
-
+			
 			return blockStateCopy;
 		}
 		
-		public static BlockStateModel[] GetBlockStateModels(World world, Vector3 position, BlockState blockState, BlockStateResource blockStateModel)
+		public static BlockStateModel[] GetBlockStateModels(IBlockAccess world, Vector3 position, BlockState blockState, BlockStateResource blockStateModel, out Dictionary<string, string> properties)
 		{
+			properties = new Dictionary<string, string>();
 			List<BlockStateModel> resultingModels = new List<BlockStateModel>(blockStateModel.Parts.Length);
-
+				//		List<MultiPartRule> passedRules = new List<MultiPartRule>();
+			
 			foreach (var s in blockStateModel.Parts)
 			{
 				if (s.When == null)
@@ -100,19 +111,31 @@ namespace Alex.Graphics.Models.Blocks
 				}
 				else if (s.When.Length > 0)
 				{
+					List<MultiPartRule> pass = new List<MultiPartRule>();
+					
 					bool passes = true;
 					foreach (var rule in s.When)
 					{
-						if (!PassesMultiPartRule(world, position, rule, blockState, out _))
+						if (!PassesMultiPartRule(world, position, rule, blockState, out var rulePassed))
 						{
 							passes = false;
 							break;
 						}
+						
+						pass.Add(rulePassed);
 					}
 
 					if (passes)
 					{
 						resultingModels.AddRange(s.Apply);
+
+						foreach (var r in pass)
+						{
+							foreach (var kv in r.KeyValues)
+							{
+								properties[kv.Key] = kv.Value;
+							}
+						}
 					}
 				}
 			}
@@ -137,8 +160,13 @@ namespace Alex.Graphics.Models.Blocks
 
 		private static bool CheckRequirements(BlockState baseblockState, string rule, string value)
 		{
+			if (baseblockState.Block is IMultipartCheck multipartChecker)
+			{
+				return multipartChecker.Passes(rule, value);
+			}
+			
 			if (string.IsNullOrWhiteSpace(value)) return true;
-
+			
 			if (baseblockState.TryGetValue(rule, out string stateValue))
 			{
 				if (stateValue.Equals(value, StringComparison.InvariantCultureIgnoreCase))
@@ -216,34 +244,20 @@ namespace Alex.Graphics.Models.Blocks
 		private static bool Passes(IBlockAccess world, Vector3 position, BlockState baseblockState, string rule,
 			string value)
 		{
-			if (string.IsNullOrWhiteSpace(value)) return true;
-
-			bool isDirection = true;
-			BlockFace face = BlockFace.None;
-			switch (rule)
+			if (baseblockState.Block is IMultipartCheck multipartChecker)
 			{
-				case "north":
-					face = BlockFace.South;
-					break;
-				case "east":
-					face = BlockFace.East;
-					break;
-				case "south":
-					face = BlockFace.North;
-					break;
-				case "west":
-					face = BlockFace.West;
-					break;
-				case "up":
-					face = BlockFace.Up;
-					break;
-				case "down":
-					face = BlockFace.Down;
-					break;
-				default:
-					isDirection = false;
+				return multipartChecker.Passes(world, position, rule, value);
+			}
+			
+			if (string.IsNullOrWhiteSpace(value)) return true;
+			
+			bool isDirection = true;
+			
+			BlockFace face = BlockFace.None;
 
-					break;
+			if (!TryGetBlockface(rule, out face))
+			{
+				isDirection = false;
 			}
 
 			var direction = face.GetVector3();
@@ -283,6 +297,37 @@ namespace Alex.Graphics.Models.Blocks
 				return val.Equals(value, StringComparison.InvariantCultureIgnoreCase);
 			}
 
+			return false;
+		}
+
+		public static bool TryGetBlockface(string value, out BlockFace face)
+		{
+			switch (value)
+			{
+				case "north":
+					face = BlockFace.South;
+					return true;
+				case "east":
+					face = BlockFace.East;
+					return true;
+				case "south":
+					face = BlockFace.North;
+					return true;
+				case "west":
+					face = BlockFace.West;
+					return true;
+				case "up":
+					face = BlockFace.Up;
+					return true;
+				case "down":
+					face = BlockFace.Down;
+					return true;
+				case "none":
+					face = BlockFace.None;
+					return true;
+			}
+
+			face = BlockFace.None;
 			return false;
 		}
 	}
