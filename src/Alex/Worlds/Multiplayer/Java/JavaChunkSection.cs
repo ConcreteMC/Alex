@@ -1,5 +1,7 @@
 using Alex.API.Utils;
+using Alex.Blocks;
 using Alex.Blocks.Minecraft;
+using Alex.Blocks.State;
 using Alex.Networking.Java.Util;
 using Alex.Worlds.Chunks;
 
@@ -41,6 +43,11 @@ namespace Alex.Worlds.Multiplayer.Java
                             {
                                 ++this._tickRefCount;
                             }
+
+                            if (block.BlockMaterial.IsWatterLoggable)
+                            {
+                                Set(1, x, y, z, BlockFactory.GetBlockState("minecraft:water"));
+                            }
                         }
 
                         if (block.LightValue > 0)
@@ -63,7 +70,25 @@ namespace Alex.Worlds.Multiplayer.Java
                 }
             }
         }
-        
+
+        /// <inheritdoc />
+        protected override void OnBlockSet(int x, int y, int z, BlockState newState, BlockState oldState)
+        {
+            if (newState == null || oldState == null)
+                return;
+
+            if (oldState.Block.BlockMaterial.IsWatterLoggable && !newState.Block.BlockMaterial.IsWatterLoggable)
+            {
+                Set(1, x, y, z, BlockFactory.GetBlockState("minecraft:air"));
+            }
+            else if (!oldState.Block.BlockMaterial.IsWatterLoggable && newState.Block.BlockMaterial.IsWatterLoggable)
+            {
+                Set(1, x, y, z, BlockFactory.GetBlockState("minecraft:water"));
+            }
+
+            // base.OnBlockSet(x, y, z, newState, oldState);
+        }
+
         public void Read(MinecraftStream ms)
         {
             _blockStorages[0].Read(ms);

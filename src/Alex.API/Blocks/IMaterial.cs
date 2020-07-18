@@ -31,6 +31,10 @@ namespace Alex.API.Blocks
 		bool IsToolRequired { get; }
 		IMaterial SetReplaceable();
 
+		bool IsWatterLoggable { get; }
+
+		IMaterial SetWaterLoggable();
+
 		bool CanUseTool(ItemType type, ItemMaterial material);
 		IMaterial SetRequiredTool(ItemType type, ItemMaterial material);
 		

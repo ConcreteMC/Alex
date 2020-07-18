@@ -292,6 +292,8 @@ namespace Alex.Worlds.Chunks
 						SolidBlocks.Set(coordsIndex, false);
 					}
 				}
+
+				OnBlockSet(x, y, z, state, iblockstate);
 			}
 
 			Block block1 = state.Block;
@@ -322,6 +324,11 @@ namespace Alex.Worlds.Chunks
             IsDirty = true;
 		}
 
+		protected virtual void OnBlockSet(int x, int y, int z, BlockState newState, BlockState oldState)
+		{
+			
+		}
+		
 		public bool IsTransparent(int x, int y, int z)
 		{
 			return TransparentBlocks.Get(GetCoordinateIndex(x, y, z));

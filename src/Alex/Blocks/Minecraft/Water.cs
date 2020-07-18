@@ -43,6 +43,9 @@ namespace Alex.Blocks.Minecraft
 
 			if (neighbor.Solid && (!neighbor.Transparent || neighbor.BlockMaterial.IsOpaque))
 				return false;
+
+			if (neighbor.Solid && neighbor.Transparent && !neighbor.IsFullCube)
+				return true;
 			
 			//else if (neighbor.Transparent)
 			return base.ShouldRenderFace(face, neighbor);

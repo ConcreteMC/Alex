@@ -62,7 +62,7 @@ namespace Alex.ResourcePackLib
 		
 		public IReadOnlyDictionary<ResourceLocation, ResourcePackModelBase>   ItemModels        => _models;
 		public IReadOnlyDictionary<ResourceLocation, TextureMeta> TextureMetas => _textureMetaCache;
-		//public IReadOnlyDictionary<string, Texture2D>          Textures          => _textureCache;
+		public IReadOnlyDictionary<ResourceLocation, Image<Rgba32>>          Textures          => _bitmapCache;
 		public IReadOnlyDictionary<string, LanguageResource>   Languages		 => _languageCache;
 		
 		public ResourcePackInfo Info { get; private set; }

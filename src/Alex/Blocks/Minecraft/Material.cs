@@ -57,8 +57,8 @@ namespace Alex.Blocks.Minecraft
 
 		public static readonly IMaterial Slime = new Material(MapColor.GREEN).SetTranslucent().SetSlipperines(0.8d);
 		//https://minecraft.gamepedia.com/Materials
-		public static readonly IMaterial WaterPlant = new Material(MapColor.WATER);
-		public static readonly IMaterial ReplaceableWaterPlant = new Material(MapColor.WATER).SetReplaceable();
+		public static readonly IMaterial WaterPlant = new Material(MapColor.WATER).SetWaterLoggable();
+		public static readonly IMaterial ReplaceableWaterPlant = new Material(MapColor.WATER).SetReplaceable().SetWaterLoggable();
 		private bool _canBurn;
 		private bool _replaceable;
 		private bool _isTranslucent;
@@ -138,6 +138,14 @@ namespace Alex.Blocks.Minecraft
 			return this;
 		}
 
+		public virtual bool IsWatterLoggable { get; private set; } = false;
+
+		public IMaterial SetWaterLoggable()
+		{
+			IsWatterLoggable = true;
+			return this;
+		}
+		
 		public virtual bool IsReplaceable => this._replaceable;
 
 		public virtual bool IsOpaque => !this._isTranslucent;

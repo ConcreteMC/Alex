@@ -57,6 +57,18 @@ namespace Alex.Graphics
 		    Dictionary<ResourceLocation, ImageEntry> textures,
 		    IProgressReceiver progressReceiver)
 	    {
+		    foreach (var texture in resourcePack.Textures.Where(x => x.Key.Path.StartsWith("block/", StringComparison.InvariantCultureIgnoreCase)))
+		    {
+			    if (textures.ContainsKey(texture.Key))
+			    {
+				    continue;
+			    }
+			    
+			    TextureMeta meta = null;
+			    resourcePack.TryGetTextureMeta(texture.Key, out meta);
+			    textures.Add(texture.Key, new ImageEntry(texture.Value, meta));
+		    }
+		    /*
 		    progressReceiver.UpdateProgress(0, "Processing blockstate textures...");
 		    int blockstatesProcessed = 0;
 		    int totalStates          = resourcePack.BlockStates.Count;
@@ -90,7 +102,7 @@ namespace Alex.Graphics
 
 			    blockstatesProcessed++;
 			    // state.
-		    }
+		    }*/
 	    }
 
 	    private void ProcessBlockStateModel(McResourcePack resourcePack, Dictionary<ResourceLocation, ImageEntry> textures, BlockStateModel bsModel)
@@ -428,6 +440,11 @@ namespace Alex.Graphics
 		    int framesInWidth = source.Width / frameWidth;
 		    int framesInHeight = source.Height / frameHeight;
 
+		    if (framesInWidth * framesInHeight == 0)
+		    {
+			//    string a = "b";
+		    }
+		    
 		    //List<Image<Rgba32>> result = new List<Image<Rgba32>>();
 		    Image<Rgba32>[] result = new Image<Rgba32>[framesInHeight * framesInWidth];
 		    int counter = 0;
