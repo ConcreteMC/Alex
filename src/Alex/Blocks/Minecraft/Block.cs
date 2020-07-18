@@ -49,8 +49,7 @@ namespace Alex.Blocks.Minecraft
 		
 	    public virtual byte LightValue { get; set; } = 0;
 	    public int LightOpacity { get; set; } = 1;
-
-		//public BlockModel BlockModel { get; set; }
+	    
 		public BlockState BlockState { get; set; }
 		public bool IsWater { get; set; } = false;
 		public bool IsSourceBlock { get; set; } = false;
@@ -72,96 +71,57 @@ namespace Alex.Blocks.Minecraft
 			}
 		}
 
-        private IMaterial _material;
+        private IMaterial _material = new Material(MapColor.STONE);
 
-		public IMaterial BlockMaterial
+		public virtual IMaterial BlockMaterial
 		{
 			get { return _material; }
 			set
 			{
 				IMaterial newValue = value;
-			//	Solid = newValue.IsSolid();
-			//	IsReplacible = newValue.IsReplaceable();
 
 				_material = newValue;
 			}
 		}
 
 		public BlockCoordinates Coordinates { get; set; }
-		protected Block(int blockId, byte metadata) : this(BlockFactory.GetBlockStateID(blockId, metadata))
+		protected Block(int blockId, byte metadata)
 	    {
-		   // LightOpacity = 2;
+		    Solid = true;
+		    Transparent = false;
+		    Renderable = true;
+		    HasHitbox = true;
 	    }
 
 	    public Block(uint blockStateId)
 	    {
-		   //BlockStateID = blockStateId;
-			BlockMaterial = new Material(MapColor.STONE);
-
-			Solid = true;
+		    Solid = true;
 		    Transparent = false;
 		    Renderable = true;
 		    HasHitbox = true;
-		    
-		   // LightOpacity = 2;
-		}
+	    }
 
 		protected Block(string blockName)
 		{
-		//	BlockStateID = blockStateId;
-			BlockMaterial = new Material(MapColor.STONE);
-
 			Solid = true;
 			Transparent = false;
 			Renderable = true;
 			HasHitbox = true;
-			
-		//	LightOpacity = 2;
 		}
 
 		protected Block()
 		{
-			BlockMaterial = new Material(MapColor.STONE);
-
 			Solid = true;
 			Transparent = false;
 			Renderable = true;
 			HasHitbox = true;
-
-		//	LightOpacity = 1;
 		}
 
-		public virtual double GetHeight(Vector3 relative)
-		{
-			return BlockState.Model.BoundingBox.Max.Y;
-		}
-
-		public virtual bool IsSolid(BlockFace face)
-		{
-			return true;
-		}
-		
 		public virtual bool CanClimb(BlockFace face)
 		{
 			return false;
 		}
-		
-		public virtual Microsoft.Xna.Framework.BoundingBox GetBoundingBox(Vector3 blockPosition)
-	    {
-			if (BlockState == null)
-				return new Microsoft.Xna.Framework.BoundingBox(blockPosition, blockPosition + Vector3.One);
 
-		    return BlockState.Model.GetBoundingBox(blockPosition, this);
-		}
-
-		public virtual BoundingBox? GetPartBoundingBox(Vector3 blockPosition, BoundingBox entityBox)
-		{
-			if (BlockState == null)
-				return new Microsoft.Xna.Framework.BoundingBox(blockPosition, blockPosition + Vector3.One);
-
-			return BlockState.Model.GetPartBoundingBox(blockPosition, entityBox);
-		}
-		
 		public virtual BlockState BlockPlaced(IBlockAccess world, BlockState state, BlockCoordinates position)
 		{
 			return state;
@@ -193,7 +153,7 @@ namespace Alex.Blocks.Minecraft
 
 		public virtual Item[] GetDrops(Item tool)
 		{
-			if (BlockMaterial.IsToolRequired() && !BlockMaterial.CanUseTool(tool.ItemType, tool.Material))
+			if (BlockMaterial.IsToolRequired && !BlockMaterial.CanUseTool(tool.ItemType, tool.Material))
 			{
 				return new Item[0];
 			}
@@ -206,7 +166,7 @@ namespace Alex.Blocks.Minecraft
 			double secondsForBreak = Hardness;
 			bool isHarvestable = GetDrops(miningTool)?.Length > 0;
 			
-			if (BlockMaterial.IsToolRequired())
+			if (BlockMaterial.IsToolRequired)
 			{
 				isHarvestable = BlockMaterial.CanUseTool(miningTool.ItemType, miningTool.Material);
 			}
@@ -293,7 +253,7 @@ namespace Alex.Blocks.Minecraft
 			        if (neighbor.Solid && (neighbor.Transparent || !neighbor.IsFullCube))
 			        {
 				        //var block = world.GetBlock(pos.X, pos.Y, pos.Z);
-				        if (!BlockMaterial.IsOpaque() && !neighbor.BlockMaterial.IsOpaque())
+				        if (!BlockMaterial.IsOpaque && !neighbor.BlockMaterial.IsOpaque)
 					        return false;
 
 				        if (!IsFullBlock || !neighbor.IsFullBlock) return true;

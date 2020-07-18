@@ -31,8 +31,6 @@ namespace Alex.Graphics.Models.Blocks
         {
 
         }
-
-        public virtual BoundingBox BoundingBox { get; } = new BoundingBox(Vector3.Zero, Vector3.One);
         
 		public float Scale { get; set; } = 1f;
 
@@ -41,7 +39,7 @@ namespace Alex.Graphics.Models.Blocks
             return new VerticesResult(new BlockShaderVertex[0], new int[0], null);
         }
 
-	    public virtual BoundingBox GetBoundingBox(Vector3 position, Block requestingBlock)
+	    public virtual BoundingBox GetBoundingBox(Vector3 position)
 	    {
 			return new BoundingBox(position, position + Vector3.One);
 	    }
@@ -50,12 +48,7 @@ namespace Alex.Graphics.Models.Blocks
 	    {
 		    return new BoundingBox(position, position + Vector3.One);
 	    }
-
-	    public virtual BoundingBox[] GetIntersecting(Vector3 position, BoundingBox box)
-	    {
-		    return new BoundingBox[0];
-	    }
-
+	    
 	    protected BlockShaderVertex[] GetFaceVertices(BlockFace blockFace, Vector3 startPosition, Vector3 endPosition, UVMap uvmap, out int[] indexes)
 		{
 			Color faceColor = Color.White;

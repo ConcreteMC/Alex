@@ -58,58 +58,6 @@ namespace Alex.Blocks.Minecraft
             return base.ShouldRenderFace(face, neighbor);
         }
 
-        public override double GetHeight(Vector3 relative)
-        {
-            var half = GetHalf(BlockState);
-
-            if (half == "top")
-                return 1d;
-
-            //var shape = GetShape(BlockState);
-            var facing = GetFacing(BlockState);
-           // var a = facing.GetVector3() / 2f;
-
-           // relative += new Vector3(0.5f, 0.5f, 0.5f);
-
-           switch (facing)
-            {
-                case BlockFace.Down:
-                    break;
-                case BlockFace.Up:
-                    break;
-                case BlockFace.East:
-                    if (relative.X >= 0.5f)
-                        return 1f;
-                    return 0.5f;
-                    break;
-                case BlockFace.West:
-                    if (relative.X <= 0.5f)
-                        return 1f;
-                    return 0.5f;
-                    break;
-                case BlockFace.North:
-
-                    if (relative.Z <= 0.5f)
-                        return 1f;
-                    
-                    return 0.5f;
-                    break;
-                case BlockFace.South:
-                    if (relative.Z >= 0.5f)
-                        return 1f;
-                    return 0.5f;
-                    break;
-                case BlockFace.None:
-                    break;
-            }
-            //Vector3.Round(relative);
-           // if (MathF.Round(relative.X) )
-            
-            //if (relative.X > a.X)
-            
-            return base.GetHeight(relative);
-        }
-
         protected static BlockFace GetFacing(BlockState state)
         {
             if (state.TryGetValue("facing", out string facingValue) &&

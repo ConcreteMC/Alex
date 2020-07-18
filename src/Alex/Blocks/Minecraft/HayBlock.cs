@@ -9,6 +9,9 @@ namespace Alex.Blocks.Minecraft
 			IsReplacible = false;
 			
 			Hardness = 0.5f;
+			
+			BlockMaterial = Material.Grass;
+			
 		}
 	}
 }

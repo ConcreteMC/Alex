@@ -124,14 +124,14 @@ namespace Alex.Worlds
 					new PlayerLocation(
 						corner.X, Math.Floor(corner.Y - offset), corner.Z));
 
-				var block            = World.GetBlock(blockcoords.X, blockcoords.Y, blockcoords.Z);
-				var blockBoundingBox = block.GetBoundingBox(blockcoords);
+				var block            = World.GetBlockState(blockcoords.X, blockcoords.Y, blockcoords.Z);
+				var blockBoundingBox = block.Model.GetBoundingBox(blockcoords);
 							
 				//..onGround = onGround || block.Solid;
 
-				if (block.Solid && blockBoundingBox.Contains(corner) != ContainmentType.Disjoint)
+				if (block.Block.Solid && blockBoundingBox.Contains(corner) != ContainmentType.Disjoint)
 				{
-					var partBoundingBox = block.GetPartBoundingBox(blockcoords, entityBoundingBox);
+					var partBoundingBox = block.Model.GetPartBoundingBox(blockcoords, entityBoundingBox);
 					if (partBoundingBox.HasValue)
 					{
 						var yDifference = MathF.Abs(entityBoundingBox.Min.Y - partBoundingBox.Value.Max.Y);// <= 0.01f
@@ -250,7 +250,7 @@ namespace Alex.Worlds
 
 				if (bound.GetIntersecting(bounding, false, out var blocks))
 				{
-					var solidBlocks = blocks.Where(x => x.block.Solid).ToArray();
+					var solidBlocks = blocks.Where(x => x.block.Block.Solid).ToArray();
 
 					if (solidBlocks.Length > 0)
 					{
@@ -311,7 +311,7 @@ namespace Alex.Worlds
 		}
 
 		private bool CanClimb(Entity entity, BoundingBox entityBox,
-			(BlockCoordinates coordinates, Block block, BoundingBox box, bool isBlockPart) collisionBlock, out float newYPosition)
+			(BlockCoordinates coordinates, BlockState block, BoundingBox box, bool isBlockPart) collisionBlock, out float newYPosition)
 		{
 			newYPosition = entityBox.Min.Y;
 			if (entity.Velocity.Y < 0f)
@@ -332,7 +332,7 @@ namespace Alex.Worlds
 				Bound bound = new Bound(World, newEntityBoundingBox, pos);
 				if (bound.GetIntersecting(newEntityBoundingBox, false, out var collisionBlocks))
 				{
-					var solidBlocks = collisionBlocks.Where(x => x.block.Solid).ToArray();
+					var solidBlocks = collisionBlocks.Where(x => x.block.Block.Solid).ToArray();
 					if (solidBlocks.Any(x => x.box.Min.Y > pos.Y && x.box.Min.Y < newEntityBoundingBox.Max.Y))
 					{
 						return false;
@@ -347,7 +347,7 @@ namespace Alex.Worlds
 		}
 
 		private bool AdjustForZ(Entity entity, BoundingBox originalEntityBoundingBox, BoundingBox box,
-			(BlockCoordinates coordinates, Block block, BoundingBox box, bool isBlockPart)[] blocks,
+			(BlockCoordinates coordinates, BlockState block, BoundingBox box, bool isBlockPart)[] blocks,
 			ref Vector3 velocity, out Vector3 collisionPoint, ref PlayerLocation position)
 		{
 			collisionPoint = Vector3.Zero;
@@ -361,7 +361,7 @@ namespace Alex.Worlds
 				var block = blocks[index];
 				var blockBox = block.box;
 
-				bool pass = block.block.Solid && blockBox.Contains(box) != ContainmentType.Disjoint;
+				bool pass = block.block.Block.Solid && blockBox.Contains(box) != ContainmentType.Disjoint;
 
 				if (pass)
 				{
@@ -411,7 +411,7 @@ namespace Alex.Worlds
 		}
 
 		private bool AdjustForX(Entity entity, BoundingBox originalEntityBoundingBox, BoundingBox box,
-			(BlockCoordinates coordinates, Block block, BoundingBox box, bool isBlockPart)[] blocks,
+			(BlockCoordinates coordinates, BlockState block, BoundingBox box, bool isBlockPart)[] blocks,
 			ref Vector3 velocity, out Vector3 collisionPoint, ref PlayerLocation position)
 		{
 			collisionPoint = Vector3.Zero;
@@ -425,7 +425,7 @@ namespace Alex.Worlds
 				var block = blocks[index];
 				var blockBox = block.box;
 
-				bool pass = block.block.Solid && blockBox.Contains(box) != ContainmentType.Disjoint;
+				bool pass = block.block.Block.Solid && blockBox.Contains(box) != ContainmentType.Disjoint;
 
 				if (pass)
 				{
@@ -474,7 +474,7 @@ namespace Alex.Worlds
 		}
 
 		private bool AdjustForY(Entity entity, BoundingBox originalEntityBoundingBox, BoundingBox box,
-			(BlockCoordinates coordinates, Block block, BoundingBox box, bool isBlockPart)[] blocks,
+			(BlockCoordinates coordinates, BlockState block, BoundingBox box, bool isBlockPart)[] blocks,
 			ref Vector3 velocity, out Vector3 collisionPoint, ref PlayerLocation position)
 		{
 			collisionPoint = Vector3.Zero;
@@ -487,7 +487,7 @@ namespace Alex.Worlds
 				var block = blocks[index];
 				var blockBox = block.box;
 
-				bool pass = block.block.Solid && blockBox.Contains(box) != ContainmentType.Disjoint;
+				bool pass = block.block.Block.Solid && blockBox.Contains(box) != ContainmentType.Disjoint;
 
 				if (pass)
 				{
@@ -575,7 +575,7 @@ namespace Alex.Worlds
 
 	    private class Bound
 	    {
-		    private Dictionary<BlockCoordinates, (Block block, BoundingBox box)> Blocks = new Dictionary<BlockCoordinates, (Block block, BoundingBox box)>();
+		    private Dictionary<BlockCoordinates, (BlockState block, BoundingBox box)> Blocks = new Dictionary<BlockCoordinates, (BlockState block, BoundingBox box)>();
 		    
 		    public Bound(World world, BoundingBox box, Vector3 entityPos)
 		    {
@@ -608,21 +608,21 @@ namespace Alex.Worlds
 			    }
 		    }
 
-		    private (Block block, BoundingBox box) GetBlock(World world, BlockCoordinates coordinates, Vector3 entityPos)
+		    private (BlockState block, BoundingBox box) GetBlock(World world, BlockCoordinates coordinates, Vector3 entityPos)
 		    {
-			    var block = world.GetBlock(coordinates) as Block;
-			    if (block == null) return default;
+			    var block = world.GetBlockState(coordinates);
+			    if (block?.Model == null) return default;
 			    
 			    //var entityBlockPos = new BlockCoordinates(entityPos);
 
-			    var box = block.GetBoundingBox(coordinates);
+			    var box = block.Model.GetBoundingBox(coordinates);
 
 			    //var height = (float)block.GetHeight(entityPos - box.Min);
 			    //box.Max = new Vector3(box.Max.X, box.Min.Y + height, box.Max.Z);
 			    return (block, box);
 		    }
 
-		    public IEnumerable<(Block block, BoundingBox box)> GetPoints()
+		    public IEnumerable<(BlockState block, BoundingBox box)> GetPoints()
 		    {
 			    foreach (var b in Blocks)
 			    {
@@ -630,9 +630,9 @@ namespace Alex.Worlds
 			    }
 		    }
 
-		    public bool GetIntersecting(BoundingBox box, bool includeFullBlocks, out (BlockCoordinates coordinates, Block block, BoundingBox box, bool isBlockPart)[] blocks)
+		    public bool GetIntersecting(BoundingBox box, bool includeFullBlocks, out (BlockCoordinates coordinates, BlockState block, BoundingBox box, bool isBlockPart)[] blocks)
 		    {
-			    List<(BlockCoordinates coordinates,Block block, BoundingBox box, bool isBlockPart)> b = new List<(BlockCoordinates coordinates,Block block, BoundingBox box, bool isBlockPart)>();
+			    List<(BlockCoordinates coordinates,BlockState block, BoundingBox box, bool isBlockPart)> b = new List<(BlockCoordinates coordinates,BlockState block, BoundingBox box, bool isBlockPart)>();
 			    foreach (var block in Blocks)
 			    {
 				    var vecPos = new Vector3(block.Key.X, block.Key.Y, block.Key.Z);
@@ -646,7 +646,7 @@ namespace Alex.Worlds
 					    }*/
 
 					    bool added = false;
-					    var bb = block.Value.block.GetPartBoundingBox(block.Key, box);
+					    var bb = block.Value.block.Model.GetPartBoundingBox(block.Key, box);
 					    if (bb.HasValue)
 					    {
 						    added = true;

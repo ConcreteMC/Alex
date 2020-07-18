@@ -15,4 +15,12 @@ namespace Alex.Blocks.Minecraft
 			BlockMaterial = Material.Glass;
 		}
 	}
+
+	public class StainedGlass : Glass
+	{
+		public StainedGlass()
+		{
+			
+		}
+	}
 }

@@ -177,7 +177,7 @@ namespace Alex.Blocks
 		    this.Register("minecraft:iron_door", () => new IronDoor());
 		    
 		    //Trapdoors
-		    this.Register("minecraft:iron_trapdoor", () => new Trapdoor());
+		    this.Register("minecraft:iron_trapdoor", () => new IronTrapdoor());
 		    this.Register("minecraft:spruce_trapdoor", () => new Trapdoor());
 		    this.Register("minecraft:oak_trapdoor", () => new Trapdoor());
 		    
@@ -300,22 +300,22 @@ namespace Alex.Blocks
 		    this.Register("minecraft:barrier", () => new InvisibleBedrock(false));
 
 		    //Stained glass
-		    this.Register("minecraft:white_stained_glass", () => new Glass());
-		    this.Register("minecraft:orange_stained_glass", () => new Glass());
-		    this.Register("minecraft:magenta_stained_glass", () => new Glass());
-		    this.Register("minecraft:light_blue_stained_glass", () => new Glass());
-		    this.Register("minecraft:yellow_stained_glass", () => new Glass());
-		    this.Register("minecraft:lime_stained_glass", () => new Glass());
-		    this.Register("minecraft:pink_stained_glass", () => new Glass());
-		    this.Register("minecraft:gray_stained_glass", () => new Glass());
-		    this.Register("minecraft:light_gray_stained_glass", () => new Glass());
-		    this.Register("minecraft:purple_stained_glass", () => new Glass());
-		    this.Register("minecraft:blue_stained_glass", () => new Glass());
-		    this.Register("minecraft:brown_stained_glass", () => new Glass());
-		    this.Register("minecraft:green_stained_glass", () => new Glass());
-		    this.Register("minecraft:red_stained_glass", () => new Glass());
-		    this.Register("minecraft:black_stained_glass", () => new Glass());
-		    this.Register("minecraft:cyan_stained_glass", () => new Glass());
+		    this.Register("minecraft:white_stained_glass", () => new StainedGlass());
+		    this.Register("minecraft:orange_stained_glass", () => new StainedGlass());
+		    this.Register("minecraft:magenta_stained_glass", () => new StainedGlass());
+		    this.Register("minecraft:light_blue_stained_glass", () => new StainedGlass());
+		    this.Register("minecraft:yellow_stained_glass", () => new StainedGlass());
+		    this.Register("minecraft:lime_stained_glass", () => new StainedGlass());
+		    this.Register("minecraft:pink_stained_glass", () => new StainedGlass());
+		    this.Register("minecraft:gray_stained_glass", () => new StainedGlass());
+		    this.Register("minecraft:light_gray_stained_glass", () => new StainedGlass());
+		    this.Register("minecraft:purple_stained_glass", () => new StainedGlass());
+		    this.Register("minecraft:blue_stained_glass", () => new StainedGlass());
+		    this.Register("minecraft:brown_stained_glass", () => new StainedGlass());
+		    this.Register("minecraft:green_stained_glass", () => new StainedGlass());
+		    this.Register("minecraft:red_stained_glass", () => new StainedGlass());
+		    this.Register("minecraft:black_stained_glass", () => new StainedGlass());
+		    this.Register("minecraft:cyan_stained_glass", () => new StainedGlass());
 		    this.Register("minecraft:glass_pane", () => new GlassPane());
 		    
 		    //Stained glass panes
@@ -366,6 +366,8 @@ namespace Alex.Blocks
 			    () => new Carpet().WithLocation("minecraft:black_carpet"));
 		    
 		    this.Register("minecraft:light_block", new LightBlock());
+		    
+		    this.Register("minecraft:soul_lantern", new SoulLantern());
 	    }
     }
 }

@@ -7,6 +7,8 @@ namespace Alex.Blocks.Minecraft
 			Animated = true;
 			
 			LightValue = 10;
+			
+			BlockMaterial = Material.Fire;
 		}
 	}
 }

@@ -1,3 +1,5 @@
+using Alex.API.Blocks;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class Grass : Block
@@ -9,7 +11,7 @@ namespace Alex.Blocks.Minecraft
 			IsReplacible = false;
 			
 			IsFullBlock = false;
-			
+
 			BlockMaterial = Material.Plants;
 			LightOpacity = 1;
 		}

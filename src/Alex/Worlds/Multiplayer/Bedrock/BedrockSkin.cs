@@ -120,7 +120,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			var settings = new JsonSerializerSettings();
 			settings.NullValueHandling = NullValueHandling.Ignore;
 			settings.DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate;
-			settings.MissingMemberHandling = MissingMemberHandling.Error;
+			settings.MissingMemberHandling = MissingMemberHandling.Ignore;
 			settings.Formatting = Formatting.Indented;
 			settings.ContractResolver = new CamelCasePropertyNamesContractResolver();
 
@@ -132,7 +132,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			var settings = new JsonSerializerSettings();
 			settings.NullValueHandling = NullValueHandling.Ignore;
 			settings.DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate;
-			settings.MissingMemberHandling = MissingMemberHandling.Error;
+			settings.MissingMemberHandling = MissingMemberHandling.Ignore;
 			//settings.Formatting = Formatting.Indented;
 			settings.ContractResolver = new CamelCasePropertyNamesContractResolver();
 			settings.Converters.Add(new StringEnumConverter {NamingStrategy = new CamelCaseNamingStrategy()});

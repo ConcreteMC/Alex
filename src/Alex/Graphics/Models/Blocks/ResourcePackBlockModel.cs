@@ -36,14 +36,6 @@ namespace Alex.Graphics.Models.Blocks
 		protected Vector3 Min = new Vector3(float.MaxValue);
 		protected Vector3 Max = new Vector3(float.MinValue);
 
-		public override BoundingBox BoundingBox
-		{
-			get
-			{
-				return new BoundingBox(Min, Max);
-			}
-		}
-
 		public BoundingBox[] Boxes { get; set; } = new BoundingBox[0];
 		private bool UseRandomizer { get; set; }
 		public ResourcePackBlockModel(ResourceManager resources, BlockStateModel[] models, bool useRandomizer = false)
@@ -92,21 +84,7 @@ namespace Alex.Graphics.Models.Blocks
 			
 			CalculateBoundingBoxes(Models);
 		}
-
-		public override BoundingBox[] GetIntersecting(Vector3 position, BoundingBox box)
-		{
-			List<BoundingBox> intersecting = new List<BoundingBox>();
-			foreach (var b in Boxes.OrderByDescending(x => x.Max.Y))
-			{
-				if (new BoundingBox(position + b.Min, position + b.Max).Contains(box) == ContainmentType.Intersects)
-				{
-					intersecting.Add(b);
-				}
-			}
-
-			return intersecting.ToArray();
-		}
-
+		
 		private BoundingBox[] GetBoxes(Vector3 position)
 		{
 			return Boxes.Select(x => new BoundingBox(position + x.Min, position + x.Max)).ToArray();
@@ -140,7 +118,7 @@ namespace Alex.Graphics.Models.Blocks
 			return null;
 		}
 
-		public override BoundingBox GetBoundingBox(Vector3 position, Block requestingBlock)
+		public override BoundingBox GetBoundingBox(Vector3 position)
 		{
 			const float minThickness = 0.1f;
 			Vector3 min = Min;
@@ -504,9 +482,9 @@ namespace Alex.Graphics.Models.Blocks
 			Biome biome)
 		{
 			var model = bsModel.Model;
-			var baseColor = Color.White;
+			var baseColor = baseBlock.BlockMaterial.TintColor;
 
-			if (biomeId != -1)
+			/*if (biomeId != -1)
 			{
 				var mapColor = baseBlock.BlockMaterial.GetMaterialMapColor();
 				if (mapColor == MapColor.GRASS)
@@ -519,7 +497,7 @@ namespace Alex.Graphics.Models.Blocks
 					baseColor = Resources.ResourcePack.GetFoliageColor(
 						biome.Temperature, biome.Downfall, (int) position.Y);
 				}
-			}
+			}*/
 			
 			for (var index = 0; index < model.Elements.Length; index++)
 			{
@@ -616,13 +594,32 @@ namespace Alex.Graphics.Models.Blocks
 						y2 = uv.Y2;
 					}
 
-					var faceColor = face.Value.TintIndex.HasValue ? baseColor : Color.White;
-					var facePosition = position + cullFace.Value.GetVector3();
+					var faceColor = baseColor;
 
-					var blockLight = (byte) 0;
-					var skyLight = (byte) 15;
-					//GetLight(
-					//	world, facePosition, out blockLight, out skyLight, baseBlock.Transparent || !baseBlock.Solid);
+					if (face.Value.TintIndex.HasValue && face.Value.TintIndex == 0)
+					{
+						switch (baseBlock.BlockMaterial.TintType)
+						{
+							case TintType.Default:
+								faceColor = Color.White;
+								break;
+							case TintType.Color:
+								faceColor = baseBlock.BlockMaterial.TintColor;
+								break;
+							case TintType.Grass:
+								faceColor = Resources.ResourcePack.GetGrassColor(
+									biome.Temperature, biome.Downfall, (int) position.Y);
+								break;
+							case TintType.Foliage:
+								faceColor = Resources.ResourcePack.GetFoliageColor(
+									biome.Temperature, biome.Downfall, (int) position.Y);
+								break;
+							default:
+								throw new ArgumentOutOfRangeException();
+						}
+					}
+
+					var facePosition = position + cullFace.Value.GetVector3();
 
 					var uvMap = GetTextureUVMap(
 						Resources, texture, x1, x2, y1, y2, textureRotation,
@@ -695,9 +692,7 @@ namespace Alex.Graphics.Models.Blocks
 					{
 						var vertex = vertices[idx];
 						vertex.Position = position + vertex.Position;
-						
-						//var vertexSkyLight = world.GetSkyLight(blockPos);
-						//var vertexBlockLight = world.GetBlockLight(blockPos);
+
 						if (SmoothLighting)
 						{
 							GetLight(world, vertex.Position + lightOffset, out vertexBlockLight, out vertexSkyLight, true);

@@ -19,6 +19,7 @@ using Alex.Gui;
 using Alex.Gui.Elements;
 using Alex.Gui.Elements.Context3D;
 using Alex.Items;
+using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils.Inventories;
 using Alex.Worlds.Abstraction;
 using Alex.Worlds.Singleplayer;
@@ -350,12 +351,12 @@ namespace Alex.Gamestates
 		{
 			if (Alex.PlayerModel != null && Alex.PlayerTexture != null)
 			{
-				Alex.UIThreadQueue.Enqueue(
+				/*Alex.UIThreadQueue.Enqueue(
 					() =>
 					{
 						var texture = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, Alex.PlayerTexture);
-						_playerView.Entity.ModelRenderer = new EntityModelRenderer(Alex.PlayerModel, texture);
-					});
+						_playerView.Entity.ModelRenderer = new EntityModelRenderer(NewEntityModel, texture);
+					});*/
 			}
 			
 			if (Alex.GameStateManager.TryGetState<OptionsState>("options", out _))

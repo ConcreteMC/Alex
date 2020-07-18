@@ -4,7 +4,7 @@ namespace Alex.Blocks.Minecraft
 	{
 		public SoulLantern()
 		{
-			
+			BlockMaterial = Material.Iron;
 		}
 	}
 }

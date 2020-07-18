@@ -1,3 +1,5 @@
+using Alex.API.Blocks;
+
 namespace Alex.Blocks.Minecraft
 {
 	public class GrassBlock : Block

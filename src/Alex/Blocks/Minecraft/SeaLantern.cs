@@ -10,6 +10,8 @@ namespace Alex.Blocks.Minecraft
 			LightValue = 15;
 			
 			Hardness = 0.3f;
+
+			BlockMaterial = Material.Glass;
 		}
 	}
 }

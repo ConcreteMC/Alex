@@ -11,6 +11,8 @@ namespace Alex.Blocks.Minecraft
 			IsReplacible = false;
 			
 			Hardness = 5;
+			
+			BlockMaterial  = Material.Iron;
 		}
 	}
 }
