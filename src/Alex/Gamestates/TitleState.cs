@@ -214,16 +214,10 @@ namespace Alex.Gamestates
 				
 				_playerView.Entity.ShowItemInHand = true;
 
-				if (ItemFactory.TryGetItem("minecraft:grass_block", out var grass))
-				{
-					_playerView.Entity.Inventory.MainHand = grass;
-					_playerView.Entity.Inventory[_playerView.Entity.Inventory.SelectedSlot] = grass;
-				}
-				
 				if (ItemFactory.TryGetItem("minecraft:diamond_sword", out var sword))
 				{
-					//_playerView.Entity.Inventory.MainHand = sword;
-					//_playerView.Entity.Inventory[_playerView.Entity.Inventory.SelectedSlot] = sword;
+					_playerView.Entity.Inventory.MainHand = sword;
+					_playerView.Entity.Inventory[_playerView.Entity.Inventory.SelectedSlot] = sword;
 				}
 			}
 		}
@@ -369,17 +363,11 @@ namespace Alex.Gamestates
 			_playerView.Entity.SetInventory(new BedrockInventory(46));
 				
 			_playerView.Entity.ShowItemInHand = true;
-
-			if (ItemFactory.TryGetItem("minecraft:grass_block", out var grass))
-			{
-				_playerView.Entity.Inventory.MainHand = grass;
-				_playerView.Entity.Inventory[_playerView.Entity.Inventory.SelectedSlot] = grass;
-			}
-				
+			
 			if (ItemFactory.TryGetItem("minecraft:diamond_sword", out var sword))
 			{
-				//_playerView.Entity.Inventory.MainHand = sword;
-				//_playerView.Entity.Inventory[_playerView.Entity.Inventory.SelectedSlot] = sword;
+				_playerView.Entity.Inventory.MainHand = sword;
+				_playerView.Entity.Inventory[_playerView.Entity.Inventory.SelectedSlot] = sword;
 			}
 			
 			base.OnShow();
