@@ -151,21 +151,27 @@ namespace Alex.Graphics.Models.Entity
 			
 			var bindPoseMatrix = Matrix.CreateTranslation(-bone.Pivot)
 			                     * Matrix.CreateRotationX(MathUtils.ToRadians(-bone.BindPoseRotation.X))
-			                     * Matrix.CreateRotationY(MathUtils.ToRadians(-bone.BindPoseRotation.Y))
-			                     * Matrix.CreateRotationZ(MathUtils.ToRadians(-bone.BindPoseRotation.Z))
+			                     * Matrix.CreateRotationY(MathUtils.ToRadians(bone.BindPoseRotation.Y))
+			                     * Matrix.CreateRotationZ(MathUtils.ToRadians(bone.BindPoseRotation.Z))
 			                     * Matrix.CreateTranslation(bone.Pivot);
 
-			var boneMatrix = Matrix.Identity * Matrix.CreateTranslation(-bone.Pivot)
+			/*var boneMatrix = Matrix.Identity * Matrix.CreateTranslation(-bone.Pivot)
 			                                 * Matrix.CreateFromAxisAngle(
 				                                 Vector3.Right, MathUtils.ToRadians(bone.Rotation.X))
 			                                 * Matrix.CreateFromAxisAngle(
 				                                 Vector3.Backward, MathUtils.ToRadians(bone.Rotation.Z))
 			                                 * Matrix.CreateFromAxisAngle(
 				                                 Vector3.Up, MathUtils.ToRadians(bone.Rotation.Y))
-			                                 * Matrix.CreateTranslation(bone.Pivot);
+			                                 * Matrix.CreateTranslation(bone.Pivot);*/
+			var boneMatrix =
+			                  Matrix.CreateTranslation(-bone.Pivot)
+			                 * Matrix.CreateRotationX(MathUtils.ToRadians(-bone.Rotation.X))
+			                 * Matrix.CreateRotationY(MathUtils.ToRadians(bone.Rotation.Y))
+			                 * Matrix.CreateRotationZ(MathUtils.ToRadians(bone.Rotation.Z))
+			                 * Matrix.CreateTranslation(bone.Pivot);
 
 			modelBone = new ModelBone(Texture, indices.ToArray(), bone.Parent, bone, bindPoseMatrix * boneMatrix);
-/*
+
 			if (!string.IsNullOrWhiteSpace(bone.Parent))
 			{
 				ModelBone parentBone = null;
@@ -183,12 +189,13 @@ namespace Alex.Graphics.Models.Entity
 				if (parentBone != null)
 				{
 					modelBone.Parent = parentBone;
+					parentBone.AddChild(modelBone);
 				}
 				else
 				{
 					Log.Warn($"Could not find parent-bone \"{bone.Parent}\" for bonw {bone.Name} on type: {source.Name}");
 				}
-			}*/
+			}
 			
 			//modelBone.UpdateRotationMatrix = !bone.NeverRender;
 			if (!modelBones.TryAdd(bone.Name, modelBone))
@@ -202,13 +209,11 @@ namespace Alex.Graphics.Models.Entity
 		private List<VertexPositionNormalTexture> ModifyCubeIndexes(List<VertexPositionNormalTexture> vertices, EntityModelCube cube,
 			ref (VertexPositionNormalTexture[] vertices, short[] indexes) data)
 		{
-			//var origin = new Vector3(-(cube.Origin.X + cube.Size.X), cube.Origin.Y, cube.Origin.Z);
-			//var pivot = new Vector3(-(cube.Pivot.X), cube.Pivot.Y, cube.Pivot.Z);
 			var origin = cube.Origin;
 			var pivot = cube.Pivot;
 			
 			Matrix cubeRotationMatrix = Matrix.CreateTranslation(-pivot)
-			                            * Matrix.CreateRotationX(MathUtils.ToRadians(cube.Rotation.X))
+			                            * Matrix.CreateRotationX(MathUtils.ToRadians(-cube.Rotation.X))
 			                            * Matrix.CreateRotationY(MathUtils.ToRadians(cube.Rotation.Y))
 			                            * Matrix.CreateRotationZ(MathUtils.ToRadians(cube.Rotation.Z))
 			                            * Matrix.CreateTranslation(pivot)
@@ -254,9 +259,10 @@ namespace Alex.Graphics.Models.Entity
 
 				if (Bones == null) return;
 
-				foreach (var bone in Bones)
+				foreach (var bone in Bones.Where(x => x.Value.Parent == null))
 				{
-					bone.Value.Render(args, mock);
+				//	if (bone.Value.Parent != null)
+						bone.Value.Render(args, mock);
 				}
 			}
 			finally

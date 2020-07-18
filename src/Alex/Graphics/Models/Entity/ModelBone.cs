@@ -16,7 +16,7 @@ namespace Alex.Graphics.Models.Entity
 		{
 			private Texture2D Texture { get; set; }
 			private PooledIndexBuffer Buffer { get; set; }
-			public ModelBone[] Children { get; internal set; } = new ModelBone[0];
+			private List<ModelBone> Children { get; set; } = new List<ModelBone>();
 			
 			private Vector3 _rotation = Vector3.Zero;
 
@@ -127,7 +127,7 @@ namespace Alex.Graphics.Models.Entity
 					}
 				}
 
-				var children = Children;
+				var children = Children.ToArray();
 
 				if (children.Length > 0)
 				{
@@ -211,7 +211,7 @@ namespace Alex.Graphics.Models.Entity
 						               * Matrix.CreateTranslation(_position) * characterMatrix;
 
 						Effect.DiffuseColor = diffuseColor;
-						var children = Children;
+						var children = Children.ToArray();
 
 						if (children.Length > 0)
 						{
@@ -260,6 +260,12 @@ namespace Alex.Graphics.Models.Entity
 			{
 				Effect?.Dispose();
 				Buffer?.MarkForDisposal();
+			}
+
+			public void AddChild(ModelBone modelBone)
+			{
+				if (!Children.Contains(modelBone))
+					Children.Add(modelBone);
 			}
 		}
 	}
