@@ -23,7 +23,7 @@ namespace Alex.API.Graphics
         public float BlockLight;
 
         public float SkyLight;
-        
+
         /// <summary>
         ///     Creates a new VertexPositionNormalTextureColor
         /// </summary>

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks;
@@ -14,49 +16,68 @@ namespace Alex.Worlds.Singleplayer.Generators
 {
     public class DebugWorldGenerator : IWorldGenerator
     {
-	    private static List<BlockState> ALL_VALID_STATES = new List<BlockState>();
-	    private static BlockState AIR = BlockFactory.GetBlockState("minecraft:air");
+	    private List<BlockState> ALL_VALID_STATES = new List<BlockState>();
+	   // private BlockState AIR = BlockFactory.GetBlockState("minecraft:air");
 
-		private static int GRID_WIDTH;
-	    private static int GRID_HEIGHT;
+		private readonly int GRID_WIDTH;
+	    private readonly int GRID_HEIGHT;
 
-		public ChunkColumn GenerateChunkColumn(ChunkCoordinates chunkCoordinates)
+	    public DebugWorldGenerator()
 	    {
-		    int cc = 0;
-
-			ChunkColumn chunk = new ChunkColumn();
-		    chunk.X = chunkCoordinates.X;
-		    chunk.Z = chunkCoordinates.Z;
-
-			for (int x = 0; x < 16; ++x)
+		    foreach (var state in BlockFactory.AllBlockstatesByName.OrderByDescending(
+			    x => x.Value.GetVariants().Any(xx => xx.Block.Animated)))
 		    {
-			    for (int z = 0; z < 16; ++z)
+			    foreach (var variant in state.Value.GetVariants())
 			    {
-				    int rx = chunkCoordinates.X * 16 + x;
-				    int rz = chunkCoordinates.Z * 16 + z;
+				    ALL_VALID_STATES.Add(variant);
+			    }
+		    }
 
-				    BlockState iblockstate = GetBlockStateFor(rx, rz);
+		    GRID_WIDTH = (int)MathF.Ceiling(MathF.Sqrt(ALL_VALID_STATES.Count));
+		    GRID_HEIGHT = (int)MathF.Ceiling((float)ALL_VALID_STATES.Count / GRID_WIDTH);
+	    }
+	    
+	    private ConcurrentDictionary<ChunkCoordinates, ChunkColumn> _cache = new ConcurrentDictionary<ChunkCoordinates, ChunkColumn>();
+	    
+		public ChunkColumn GenerateChunkColumn(ChunkCoordinates chunkCoordinates)
+		{
+			return _cache.GetOrAdd(
+				chunkCoordinates, (cc) =>
+				{
+					ChunkColumn chunk = new ChunkColumn()
+					{
+						X = chunkCoordinates.X,
+						Z = chunkCoordinates.Z
+					};
 
-				    if (iblockstate != null)
-				    {
-					    chunk.SetBlockState(x, 70, z, iblockstate);
-					    chunk.Height[((z << 4) + (x))] = 70;
-				    }
+					for (int x = 0; x < 16; x++)
+					{
+						for (int z = 0; z < 16; z++)
+						{
+							int rx = (chunkCoordinates.X * 16) + x;
+							int rz = (chunkCoordinates.Z * 16) + z;
 
-				    chunk.SetSkyLight(x, 70, z, 15);
-				    chunk.SetSkyLight(x, 71, z, 15);
-				    chunk.SetSkyLight(x, 69, z, 15);
-				}
-			}
+							BlockState iblockstate = GetBlockStateFor(rx, rz);
 
-			chunk.CalculateHeight();
-		    return chunk;
+							if (iblockstate != null)
+							{
+								chunk.SetBlockState(x, 1, z, iblockstate);
+								//chunk.Height[((z << 4) + (x))] = 70;
+							}
+
+							// chunk.SetSkyLight(x, 70, z, 15);
+							//  chunk.SetSkyLight(x, 71, z, 15);
+							//  chunk.SetSkyLight(x, 69, z, 15);
+						}
+					}
+					
+					//chunk.CalculateHeight();
+					return chunk;
+				});
 		}
 
-	    public static BlockState GetBlockStateFor(int x, int z)
+	    private BlockState GetBlockStateFor(int x, int z)
 	    {
-		    BlockState iblockstate = AIR;
-
 		    if (x > 0 && z > 0 && x % 2 != 0 && z % 2 != 0)
 		    {
 			    x = x / 2;
@@ -68,38 +89,22 @@ namespace Alex.Worlds.Singleplayer.Generators
 
 				    if (i < ALL_VALID_STATES.Count)
 				    {
-					    iblockstate = ALL_VALID_STATES[i];
+					    return ALL_VALID_STATES[i];
 				    }
 			    }
 		    }
 
-		    return iblockstate;
+		    return null;
 	    }
 
 		public Vector3 GetSpawnPoint()
 	    {
-		    return new Vector3(0, 60 ,0);
+		    return new Vector3(0, 1 ,0);
 	    }
 
 	    public void Initialize()
 	    {
 		    
 	    }
-
-	    static DebugWorldGenerator()
-	    {
-		    foreach (var state in BlockFactory.AllBlockstatesByName/*.OrderBy(x => x.Key)*/)
-		    {
-			    foreach (var variant in state.Value.GetVariants())
-			    {
-					if (variant == state.Value.GetDefaultState()) continue;
-					ALL_VALID_STATES.Add(variant);
-			    }
-			    ALL_VALID_STATES.Add(state.Value.GetDefaultState());
-			}
-
-		    GRID_WIDTH = (int)MathF.Ceiling(MathF.Sqrt(ALL_VALID_STATES.Count));
-		    GRID_HEIGHT = (int)MathF.Ceiling((float)ALL_VALID_STATES.Count / GRID_WIDTH);
-		}
     }
 }

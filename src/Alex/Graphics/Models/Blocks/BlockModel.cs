@@ -271,7 +271,7 @@ namespace Alex.Graphics.Models.Blocks
 		    //(byte)Math.Min(Math.Max(0, blockLight + skyLight), 15);
 	    }
 
-		protected UVMap GetTextureUVMap(Block block, ResourceManager resources,
+		protected UVMap GetTextureUVMap(ResourceManager resources,
 			string texture,
 			float x1,
 			float x2,
@@ -293,7 +293,7 @@ namespace Alex.Graphics.Models.Blocks
 					color, color);
 			}
 
-			var textureInfo     = resources.Atlas.GetAtlasLocation(block, texture, out var uvSize);
+			var textureInfo     = resources.Atlas.GetAtlasLocation(texture, out var uvSize);
 			var textureLocation = textureInfo.Position;
 
 			var xw = (textureInfo.Width / 16f) / uvSize.X;
@@ -311,7 +311,7 @@ namespace Alex.Graphics.Models.Blocks
 				new Microsoft.Xna.Framework.Vector2(x1, y1), new Microsoft.Xna.Framework.Vector2(x2, y1),
 				new Microsoft.Xna.Framework.Vector2(x1, y2), new Microsoft.Xna.Framework.Vector2(x2, y2), color, color,
 				color, textureInfo.Animated);
-
+			
 			 if (rot > 0)
 				 map.Rotate(rot);
 

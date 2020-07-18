@@ -17,6 +17,7 @@ namespace Alex.Graphics.Models.Items
         Vector3 Scale { get; set; }
         DisplayPosition DisplayPosition { get; set; }
         DisplayElement ActiveDisplayItem { get; }
+        Color DiffuseColor { get; set; }
 
         void Update(GraphicsDevice device, ICamera camera);
 

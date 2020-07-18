@@ -40,21 +40,39 @@ namespace Alex.Worlds
 
 		public void Tick()
 		{
+			List<Entity> rendered = new List<Entity>();
+			
 			var entities = Entities.Values.ToArray();
 
 			foreach (var entity in entities)
 			{
 				entity.OnTick();
+
+				var entityBox = entity.GetBoundingBox();
+				if (World.Camera.BoundingFrustum.Contains(new Microsoft.Xna.Framework.BoundingBox(entityBox.Min, entityBox.Max)) != ContainmentType.Disjoint)
+				{
+					rendered.Add(entity);
+					entity.IsRendered = true;
+				}
+				else
+				{
+					entity.IsRendered = false;
+				}
 			}
+
+			_rendered = rendered.ToArray();
 		}
 		
 	    public void Update(IUpdateArgs args, SkyBox skyRenderer)
 	    {
+		    var lightColor = new Color(245, 245, 225).ToVector3();
+		    
 		    var entities = Entities.Values.ToArray();
 		    foreach (var entity in entities)
 		    {
 			    if (entity.ModelRenderer != null)
-				    entity.ModelRenderer.DiffuseColor = Color.White.ToVector3() * World.BrightnessModifier;
+				    entity.ModelRenderer.DiffuseColor = ( new Color(245, 245, 225).ToVector3() * ((1f / 16f) * entity.SurroundingLightValue))
+				                                        * World.BrightnessModifier;
 			    
 			    entity.Update(args);
 		    }
@@ -62,34 +80,28 @@ namespace Alex.Worlds
 
 	    public void Render(IRenderArgs args)
 	    {
+		    var blendState = args.GraphicsDevice.BlendState;
+		    
+		    args.GraphicsDevice.BlendState = BlendState.AlphaBlend;
+		    
 		    long vertexCount = 0;
 		    int renderCount = 0;
-		    var entities = Entities.Values.ToArray();
-		    
-		    List<Entity> rendered = new List<Entity>();
+		    var entities = _rendered.ToArray();
+
 		    foreach (var entity in entities)
 		    {
-			    var entityBox = entity.GetBoundingBox();
+			   // entity.IsRendered = true;
 
-				if (args.Camera.BoundingFrustum.Contains(new Microsoft.Xna.Framework.BoundingBox(entityBox.Min, entityBox.Max)) != ContainmentType.Disjoint)
-				{
-					entity.IsRendered = true;
-					
-				    entity.Render(args);
-				    vertexCount += entity.RenderedVertices;
-				    rendered.Add(entity);
-				    renderCount++;
-			    }
-				else
-				{
-					entity.IsRendered = false;
-				}
+			    entity.Render(args);
+			    vertexCount += entity.RenderedVertices;
+
+			    renderCount++;
 		    }
-
-		    _rendered = rendered.ToArray();
-
+		    
 		    EntitiesRendered = renderCount;
 		    VertexCount = vertexCount;
+
+		    args.GraphicsDevice.BlendState = blendState;
 	    }
 
 	    private static RasterizerState RasterizerState = new RasterizerState()
@@ -127,7 +139,7 @@ namespace Alex.Worlds
 
 			foreach (var entity in entities)
 		    {
-				entity.Deconstruct(out long _, out Entity _);
+				entity.Deconstruct(out _, out _);
 		    }
 	    }
 

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Threading;
+using Alex.API;
 using Alex.API.Data.Options;
 using Alex.API.Data.Servers;
 using Alex.API.Entities;
@@ -224,6 +225,14 @@ namespace Alex.Worlds
         {
 	        ChunkManager.UseWireFrames = !ChunkManager.UseWireFrames;
         }
+
+        private static readonly RenderStage[] RenderStages = new RenderStage[]
+        {
+	        RenderStage.OpaqueFullCube,
+	        RenderStage.Opaque,
+	        
+	        //RenderStage.Liquid
+        };
         
         public void Render(IRenderArgs args)
         {
@@ -236,9 +245,20 @@ namespace Alex.Worlds
             }
 
             SkyRenderer.Draw(args);
-            ChunkManager.Draw(args, false);
             
-			EntityManager.Render(args);
+            ChunkManager.Draw(args, 
+	            false,
+	            RenderStage.OpaqueFullCube,
+	            RenderStage.Opaque);
+            
+            EntityManager.Render(args);
+            
+            ChunkManager.Draw(args, false, 
+	            RenderStage.Transparent,
+	            RenderStage.Translucent,
+	            RenderStage.Animated,
+	            RenderStage.AnimatedTranslucent,
+	            RenderStage.Liquid);
 
 			//TestItemRender.Render(args.GraphicsDevice, (Camera.Position + (Camera.Direction * 2.5f)));
 			
@@ -573,17 +593,6 @@ namespace Alex.Worlds
 		public BlockState GetBlockState(int x, int y, int z)
 		{
 			return GetBlockState(x, y, z, 0);
-		}
-
-		public IEnumerable<ChunkSection.BlockEntry> GetBlockStates(int positionX, in int positionY, int positionZ)
-		{
-			ChunkColumn chunk;
-			if (ChunkManager.TryGetChunk(new ChunkCoordinates(positionX >> 4, positionZ >> 4), out chunk))
-			{
-				return chunk.GetBlockStates(positionX  & 0xf, positionY & 0xff, positionZ  & 0xf);
-			}
-
-			return new ChunkSection.BlockEntry[0];
 		}
 
 		public BlockState GetBlockState(BlockCoordinates coords)
@@ -940,12 +949,16 @@ namespace Alex.Worlds
 
 		public void UpdatePlayerPosition(PlayerLocation location)
 		{
+			var oldPosition = Player.KnownPosition;
+			
 			if (!ChunkManager.TryGetChunk(new ChunkCoordinates(location), out _))
 			{
 				Player.WaitingOnChunk = true;
 			}
 
 			Player.KnownPosition = location;
+			
+			Player.DistanceMoved += MathF.Abs(Vector3.Distance(oldPosition, location));
 		}
 
 		public void UpdateEntityPosition(long entityId, PlayerLocation position, bool relative = false, bool updateLook = false, bool updatePitch = false)

@@ -159,10 +159,10 @@ namespace Alex
 	        
             if (!isFirst)
             {
-	            Atlas.LoadResourcePackOnTop(device,
-		            ActiveResourcePacks.First(),
-		            resourcePack,
-		            progressReceiver);
+	    //        Atlas.LoadResourcePackOnTop(device,
+		//            ActiveResourcePacks.First(),
+		//            resourcePack,
+		 //           progressReceiver);
             }
             else
             {

@@ -6,14 +6,15 @@ using Newtonsoft.Json.Converters;
 
 namespace Alex.ResourcePackLib.Json.Models
 {
+    public enum ModelType
+    {
+        Item,
+        Block,
+        Unknown
+    }
+    
     public class ResourcePackModelBase
     {
-        [JsonIgnore]
-        public string Name { get; set; }
-
-        [JsonIgnore]
-        public string Namespace { get; set; }
-        
         /// <summary>
         /// Loads a different model from the given path, starting in assets/minecraft/models. If both "parent" and "elements" are set, the "elements" tag overrides the "elements" tag from the previous model.
         /// 
@@ -35,45 +36,41 @@ namespace Alex.ResourcePackLib.Json.Models
             set
             {
                 _parent = value;
-                UpdateValuesFromParent();
+                UpdateValuesFromParent(value);
             }
         }
 
-        private void UpdateValuesFromParent()
+        [JsonIgnore] internal ModelType Type { get; set; } = ModelType.Unknown;
+        
+        private void UpdateValuesFromParent(ResourcePackModelBase parent)
         {
-            if (_parent == null) return;
+            if (parent == null) return;
 		    
-            if (!GuiLight.HasValue && Parent.GuiLight.HasValue)
+            if (!GuiLight.HasValue && parent.GuiLight.HasValue)
             {
-                GuiLight = Parent.GuiLight;
+                GuiLight = parent.GuiLight;
             }
 
-            if (Elements.Length == 0 && _parent.Elements.Length > 0)
+            if (Elements.Length == 0 && parent.Elements.Length > 0)
             {
-                Elements = (BlockModelElement[]) _parent.Elements.Clone();
+                Elements = (ModelElement[]) parent.Elements.Clone();
             }
 
-            foreach (var kvp in _parent.Textures)
+            foreach (var kvp in parent.Textures)
             {
-                if (!Textures.ContainsKey(kvp.Key))
-                {
-                    Textures.Add(kvp.Key, kvp.Value);
-                }
+                Textures.TryAdd(kvp.Key, kvp.Value);
             }
 
-            foreach (var kvp in _parent.Display)
+            foreach (var kvp in parent.Display)
             {
-                if (!Display.ContainsKey(kvp.Key))
-                {
-                    Display.Add(kvp.Key, kvp.Value);
-                }
+                Display.TryAdd(kvp.Key, kvp.Value);
             }
         }
         
         /// <summary>
         /// Contains all the elements of the model. they can only have cubic forms. If both "parent" and "elements" are set, the "elements" tag overrides the "elements" tag from the previous model.
         /// </summary>
-        public BlockModelElement[] Elements { get; set; } = new BlockModelElement[0];
+        public ModelElement[] Elements { get; set; } = new ModelElement[0];
         
         /// <summary>
         /// Holds the textures of the model. Each texture starts in assets/minecraft/textures or can be another texture variable.
@@ -81,5 +78,10 @@ namespace Alex.ResourcePackLib.Json.Models
         public Dictionary<string, string> Textures { get; set; } = new Dictionary<string, string>();
         
         public Dictionary<string, DisplayElement> Display { get; set; } = new Dictionary<string, DisplayElement>();
+        
+        /// <summary>
+        /// Whether to use ambient occlusion (true - default), or not (false).
+        /// </summary>
+        public bool AmbientOcclusion { get; set; } = true;
     }
 }

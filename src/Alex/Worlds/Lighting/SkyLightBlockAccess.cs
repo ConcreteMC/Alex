@@ -94,7 +94,7 @@ namespace Alex.Worlds.Lighting
 		{
 		}
 
-		public IEnumerable<ChunkSection.BlockEntry> GetBlockStates(int positionX, in int positionY, int positionZ)
+		public IEnumerable<ChunkSection.BlockEntry> GetBlockStates(int positionX, int positionY, int positionZ)
 		{
 			throw new NotImplementedException();
 		}

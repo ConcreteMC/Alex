@@ -42,14 +42,14 @@ namespace Alex.Worlds.Multiplayer.Java
 		}
 
 		/// <inheritdoc />
-		public override Task Authenticate(GuiPanoramaSkyBox skyBox, Action<bool> callBack)
+		public override Task Authenticate(GuiPanoramaSkyBox skyBox, PlayerProfile activeProfile, Action<bool> callBack)
 		{
 			JavaLoginState loginState = new JavaLoginState(
 				skyBox,
 				() =>
 				{
 					callBack(true);
-				});
+				}, activeProfile);
 
 
 			Alex.GameStateManager.SetActiveState(loginState, true);

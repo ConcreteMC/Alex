@@ -2,9 +2,9 @@
 using Alex.API.Blocks;
 using Microsoft.Xna.Framework;
 
-namespace Alex.ResourcePackLib.Json.Models.Blocks
+namespace Alex.ResourcePackLib.Json.Models
 {
-	public class BlockModelElement
+	public class ModelElement
 	{
 		/// <summary>
 		/// Start point of a cube according to the scheme [x, y, z]. Values must be between -16 and 32.
@@ -19,7 +19,7 @@ namespace Alex.ResourcePackLib.Json.Models.Blocks
 		/// <summary>
 		/// Defines the rotation of an element.
 		/// </summary>
-		public BlockModelElementRotation Rotation { get; set; } = new BlockModelElementRotation();
+		public ModelElementRotation Rotation { get; set; } = new ModelElementRotation();
 
 		/// <summary>
 		/// Defines if shadows are rendered (true - default), not (false).
@@ -29,6 +29,6 @@ namespace Alex.ResourcePackLib.Json.Models.Blocks
 		/// <summary>
 		/// Holds all the faces of the cube. If a face is left out, it will not be rendered.
 		/// </summary>
-		public IReadOnlyDictionary<BlockFace, BlockModelElementFace> Faces { get; set; }// = new Dictionary<BlockFace, BlockModelElementFace>();
+		public IReadOnlyDictionary<BlockFace, ModelElementFace> Faces { get; set; }// = new Dictionary<BlockFace, BlockModelElementFace>();
 	}
 }

@@ -10,6 +10,9 @@
 		    Transparent = true;
 		    Solid = false;
 		    IsReplacible = true;
+
+		    BlockMaterial = Material.Coral;
+		    //  BlockMaterial = Material.Water;
 	    }
     }
 }

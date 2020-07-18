@@ -9,13 +9,15 @@ namespace Alex.Utils
 
 		public Vector2 Position { get; } = Vector2.Zero;
 		public bool Animated { get; }
-
-		public TextureInfo(Vector2 position, int width, int height, bool animated)
+		public bool ResolvedSuccessFully { get; }
+		
+		public TextureInfo(Vector2 position, int width, int height, bool animated, bool success)
 		{
 			Position = position;
 			Width = width;
 			Height = height;
 			Animated = animated;
+			ResolvedSuccessFully = success;
 		}
 	}
 }

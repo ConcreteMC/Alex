@@ -124,18 +124,13 @@ namespace Alex.Worlds.Singleplayer
 				ChunkCoordinates currentCoordinates =
 					new ChunkCoordinates(World.Player.KnownPosition);
 
-				if (PreviousChunkCoordinates.DistanceTo(currentCoordinates) >= 1)
+				if (PreviousChunkCoordinates != currentCoordinates)
 				{
 					PreviousChunkCoordinates = currentCoordinates;
 
-					foreach(var chunk in GenerateChunks(currentCoordinates, OptionsProvider.AlexOptions.VideoOptions.RenderDistance))
-					{
-						var c = (ChunkColumn) chunk;
-		
-						base.World.ChunkManager.AddChunk(c, currentCoordinates, false);
-						//EventDispatcher.DispatchEvent(new ChunkReceivedEvent(currentCoordinates, c));
-						LoadEntities(c);
-					}
+					GenerateChunks(currentCoordinates, OptionsProvider.AlexOptions.VideoOptions.RenderDistance);
+
+					World.ChunkManager.FlagPrioritization();
 				}
 
 				//sw.SpinOnce();
@@ -146,29 +141,33 @@ namespace Alex.Worlds.Singleplayer
 		private IEnumerable<ChunkColumn> GenerateChunks(ChunkCoordinates center, int renderDistance)
 		{
 			var oldChunks = _loadedChunks.ToArray();
-
-			double radiusSquared = Math.Pow(renderDistance, 2);
-
-			List<ChunkCoordinates> newChunkCoordinates = new List<ChunkCoordinates>();
 			
-			List<ChunkCoordinates> results = new List<ChunkCoordinates>();
+			List<ChunkCoordinates> newChunkCoordinates = new List<ChunkCoordinates>();
 
-			for (int y = center.Z -renderDistance; y <= center.Z + renderDistance; y++)
-			for (int x = center.X -renderDistance; x <= center.X + renderDistance; x++)
+			int minZ = Math.Min(center.Z - renderDistance, center.Z + renderDistance);
+			int maxZ = Math.Max(center.Z - renderDistance, center.Z + renderDistance);
+			
+			int minX = Math.Min(center.X - renderDistance, center.X + renderDistance);
+			int maxX = Math.Max(center.X - renderDistance, center.X + renderDistance);
+			
+			for (int x = minX; x <= maxX; x++)
+			for (int z = minZ; z <= maxZ; z++)
 			{
-				var cc = new ChunkCoordinates(x, y);
-				
+				var cc = new ChunkCoordinates(x, z);
 				newChunkCoordinates.Add(cc);
 
 				if (!_loadedChunks.Contains(cc))
 				{
+					_loadedChunks.Add(cc);
+					
 					ChunkColumn chunk =
 						_generator.GenerateChunkColumn(cc);
 
 					if (chunk == null) continue;
 
-					_loadedChunks.Add(cc);
-
+					base.World.ChunkManager.AddChunk(chunk, cc, false);
+					LoadEntities(chunk);
+					
 					yield return chunk;
 				}
 			}
@@ -177,12 +176,9 @@ namespace Alex.Worlds.Singleplayer
 			{
 				if (!newChunkCoordinates.Contains(chunk) && chunk != center)
 				{
-					//UnloadChunk(chunk.X, chunk.Z);
-					ChunkUnloadEvent unloadEvent = new ChunkUnloadEvent(chunk);
-					EventDispatcher.DispatchEvent(unloadEvent);
-					
-					if (!unloadEvent.IsCancelled)
-						_loadedChunks.Remove(chunk);
+					//World.UnloadChunk(chunk);
+					World.ChunkManager.RemoveChunk(chunk, false);
+					_loadedChunks.Remove(chunk);
 				}
 			}
 		}
@@ -205,7 +201,6 @@ namespace Alex.Worlds.Singleplayer
 		}
 
 		private Thread UpdateThread { get; set; }
-		private World World { get; set; }
 		protected override void Initiate()
 		{
 			/*lock (genLock)
@@ -222,23 +217,11 @@ namespace Alex.Worlds.Singleplayer
 				_preGeneratedChunks = null;
 			}*/
 
-			UpdateThread = new Thread(RunThread)
-			{
-				IsBackground = true
-			};
-
-			UpdateThread.Start();
-
-			if (base.World is World world)
-			{
-				World = world;
-				
-				world.Player.CanFly = true;
-				world.Player.IsFlying = true;
+			World.Player.CanFly = true;
+			World.Player.IsFlying = true;
 				//world.Player.Controller.IsFreeCam = true;
-			} 
 
-			base.World?.UpdatePlayerPosition(new PlayerLocation(GetSpawnPoint()));
+			World.UpdatePlayerPosition(new PlayerLocation(GetSpawnPoint()));
 		}
 
 		public override Vector3 GetSpawnPoint()
@@ -246,86 +229,46 @@ namespace Alex.Worlds.Singleplayer
 			return _generator.GetSpawnPoint();
 		}
 		
-		private Queue<ChunkColumn> _preGeneratedChunks = new Queue<ChunkColumn>();
-		private readonly object genLock = new object();
 		public override Task Load(ProgressReport progressReport)
 		{
 			ChunkManager.DoMultiPartCalculations = false;
 			
 			return Task.Run(() =>
 			{
-				//Dictionary<ChunkCoordinates, IChunkColumn> newChunks = new Dictionary<ChunkCoordinates, IChunkColumn>();
-				//using (CachedWorld cached = new CachedWorld(Alex))
-				//{
-					int t = Options.VideoOptions.RenderDistance;
+				int t = Options.VideoOptions.RenderDistance;
 					double radiusSquared = Math.Pow(t, 2);
 
 					var target = radiusSquared * 3;
 					int count = 0;
 
 					var pp = GetSpawnPoint();
-					//Log.Info($"Spawnpoint: {pp}");
+					var center = new ChunkCoordinates(new PlayerLocation(pp.X, 0, pp.Z));
 
 					Stopwatch sw = Stopwatch.StartNew();
-					//List<ChunkColumn> generatedChunks = new List<ChunkColumn>();
-					List<ChunkColumn> chunks = new List<ChunkColumn>();
-					foreach (var chunk in GenerateChunks(new ChunkCoordinates(new PlayerLocation(pp.X, pp.Y, pp.Z)), t))
+					foreach (var chunk in GenerateChunks(center, t))
 					{
-						var c = (ChunkColumn) chunk;
 						count++;
 						
-						chunks.Add(c);
-                    //generatedChunks.Add(c);
-                    
-						//cached.ChunkManager.AddChunk(chunk, new ChunkCoordinates(c.X, c.Z), false);
+						//base.World.ChunkManager.AddChunk(chunk, new ChunkCoordinates(chunk.X, chunk.Z), false);
 
 						progressReport(LoadingState.LoadingChunks, (int)Math.Floor((count / target) * 100));
-					}
-
-					count = 0;
-					
-					foreach (var chunk in chunks)
-					{
-						//EventDispatcher.DispatchEvent(new ChunkReceivedEvent(new ChunkCoordinates(chunk.X, chunk.Z), chunk)
-						//{
-						//	DoUpdates = false
-						//});
-						base.World.ChunkManager.AddChunk(chunk, new ChunkCoordinates(chunk.X, chunk.Z), false);
-						progressReport(LoadingState.GeneratingVertices, (int)Math.Floor((count / target) * 100));
 					}
 					
 					var loaded = sw.Elapsed;
 
-					count = 0;
-
-				
-					/*Parallel.ForEach(generatedChunks, (c) =>
-					{
-						cached.ChunkManager.UpdateChunk(c);
-
-						lock (genLock)
-						{
-							base.LoadChunk(c, c.X, c.Z, false);
-							LoadEntities(c);
-						//	_preGeneratedChunks.Enqueue(c);
-						}
-
-						cached.ChunkManager.RemoveChunk(new ChunkCoordinates(c.X, c.Z), false);
-
-						//		newChunks.TryAdd(new ChunkCoordinates(c.X, c.Z), c);
-
-						progressReport(LoadingState.GeneratingVertices, (int)Math.Floor((count / target) * 100));
-
-						count++;
-					});
-					*/
 					sw.Stop();
-					Log.Info($"Chunk pre-loading took {sw.Elapsed.TotalMilliseconds}ms (Loading: {loaded.TotalMilliseconds}ms Initializing: {(sw.Elapsed - loaded).TotalMilliseconds}ms)");
+					Log.Info($"Chunk pre-loading took {sw.Elapsed.TotalMilliseconds}ms (Loading: {loaded}ms Initializing: {(sw.Elapsed - loaded).TotalMilliseconds}ms)");
 				
 					PreviousChunkCoordinates = new ChunkCoordinates(new PlayerLocation(pp.X, pp.Y, pp.Z));
-				//}
 
-				//return newChunks.ToArray();
+					World.Player.IsSpawned = true;
+					
+					UpdateThread = new Thread(RunThread)
+					{
+						IsBackground = true
+					};
+
+					UpdateThread.Start();
 			});
 		}
 

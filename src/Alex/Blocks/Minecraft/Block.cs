@@ -12,6 +12,7 @@ using Alex.ResourcePackLib.Json;
 using Alex.Utils;
 using Alex.Worlds;
 using Alex.Worlds.Abstraction;
+using Alex.Worlds.Chunks;
 using Microsoft.Xna.Framework;
 using MiNET.Blocks;
 using NLog;

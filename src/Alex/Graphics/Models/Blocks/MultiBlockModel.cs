@@ -38,7 +38,7 @@ namespace Alex.Graphics.Models.Blocks
 				{
 					for (int i = 0; i < verts.AnimatedIndexes.Length; i++)
 					{
-						indexes.Add(vertices.Count + verts.AnimatedIndexes[i]);
+						animatedIndexes.Add(vertices.Count + verts.AnimatedIndexes[i]);
 					}
 				}
 

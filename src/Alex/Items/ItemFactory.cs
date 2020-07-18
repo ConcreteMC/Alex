@@ -9,6 +9,7 @@ using Alex.Blocks;
 using Alex.Blocks.Minecraft;
 using Alex.Graphics.Models.Items;
 using Alex.ResourcePackLib;
+using Alex.ResourcePackLib.Json.Models;
 using Newtonsoft.Json;
 using NLog;
 using ItemMaterial = MiNET.Items.ItemMaterial;
@@ -21,11 +22,11 @@ namespace Alex.Items
 
 		private static ResourceManager ResourceManager { get; set; }
 		private static McResourcePack ResourcePack { get; set; }
-		private static IReadOnlyDictionary<string, Func<Item>> Items { get; set; }
+		private static IReadOnlyDictionary<ResourceLocation, Func<Item>> Items { get; set; }
 		private static SecondItemEntry[] SecItemEntries { get; set; }
 		private static ItemEntry[] ItemEntries { get; set; }
 		
-		private static ConcurrentDictionary<string, ItemModelRenderer> ItemRenderers { get; } = new ConcurrentDictionary<string, ItemModelRenderer>();
+		private static ConcurrentDictionary<ResourceLocation, ItemModelRenderer> ItemRenderers { get; } = new ConcurrentDictionary<ResourceLocation, ItemModelRenderer>();
 
 		public static Item[] AllItems
 		{
@@ -87,7 +88,7 @@ namespace Alex.Items
 		    
 		    LoadModels();
 		    
-            Dictionary<string, Func<Item>> items = new Dictionary<string, Func<Item>>();
+            Dictionary<ResourceLocation, Func<Item>> items = new Dictionary<ResourceLocation, Func<Item>>();
             
             for(int i = 0; i < blocks.Count; i++)
 		    {
@@ -136,27 +137,38 @@ namespace Alex.Items
 				    item.DisplayName = data.displayName;
 			    }
 
-
-			    var rpItem = ResourcePack.ItemModels.FirstOrDefault(x =>
-				    x.Key.Equals(entry.Key.Replace("minecraft:", "minecraft:item/"), StringComparison.InvariantCultureIgnoreCase)).Value;
-
-			    if (rpItem == null)
+			    string ns = ResourceLocation.DefaultNamespace;
+			    string path = entry.Key;
+			    if (entry.Key.Contains(':'))
+			    {
+				    var index = entry.Key.IndexOf(':');
+				    ns = entry.Key.Substring(0, index);
+				    path = entry.Key.Substring(index + 1);
+			    }
+			    
+			    var key = new ResourceLocation(ns, $"block/{path}");
+			    
+			    ResourcePackModelBase model;
+			    if (!(ResourcePack.ItemModels.TryGetValue(key, out model)))
 			    {
 				    foreach (var it in ResourcePack.ItemModels)
 				    {
-					    if (it.Key.Contains(entry.Key.Replace("minecraft:", "minecraft:item/"),
-						    StringComparison.InvariantCultureIgnoreCase))
+					    if (it.Key.Path.Equals(key.Path, StringComparison.InvariantCultureIgnoreCase))
 					    {
-						    rpItem = it.Value;
+						    model = it.Value;
 						    break;
 					    }
 				    }
 			    }
 
-			    if (rpItem != null)
+			    if (model != null)
 			    {
-				    item.Renderer = new ItemBlockModelRenderer(bs, rpItem, resourcePack, resources);
+				    item.Renderer = new ItemBlockModelRenderer(bs, model, resourcePack, resources);
 				    item.Renderer.Cache(resourcePack);
+			    }
+			    else
+			    {
+				    Log.Warn($"Could not find block model renderer for: {key.ToString()}");
 			    }
 			    
 			    items.TryAdd(entry.Key, () =>
@@ -209,64 +221,52 @@ namespace Alex.Items
 				    item.MaxStackSize = data.stackSize;
 				    item.DisplayName = data.displayName;
 			    }
-
-
-			    var searchString = entry.Key.Replace("minecraft:", "minecraft:item/");
-
-			    ItemModelRenderer renderer;
-			    if (ItemRenderers.TryGetValue(searchString, out renderer))
+			    
+			    string ns   = ResourceLocation.DefaultNamespace;
+			    string path = entry.Key;
+			    if (entry.Key.Contains(':'))
 			    {
-				    item.Renderer = renderer;
+				    var index = entry.Key.IndexOf(':');
+				    ns = entry.Key.Substring(0, index);
+				    path = entry.Key.Substring(index + 1);
 			    }
-			    else
+			    
+			    var key = new ResourceLocation(ns, $"item/{path}");
+
+			    foreach (var it in ResourcePack.ItemModels)
 			    {
-				    foreach (var it in ResourcePack.ItemModels.Where(x => x.Key.Length >= searchString.Length)
-					   .OrderBy(x => searchString.Length - x.Key.Length))
+				    if (it.Key.Path.Equals(key.Path, StringComparison.InvariantCultureIgnoreCase))
 				    {
-					    if (it.Key.Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
+					    //Log.Info($"Model found: {entry.Key} = {it.Key}");
+					    ItemModelRenderer renderer;
+					    if (ItemRenderers.TryGetValue(it.Key, out renderer))
 					    {
-						//    Log.Info($"Model found: {searchString} = {it.Key}");
 
-						    if (ItemRenderers.TryGetValue(it.Key, out renderer)) { }
-						    else if (ItemRenderers.TryGetValue(entry.Key, out renderer)) { }
+					    }
+					    else if (ItemRenderers.TryGetValue(key, out renderer))
 
-						    if (renderer != null)
-						    {
-							    //Log.Debug($"Found renderer for {entry.Key}, textures: {it.Value.Textures.Count}");
-							    item.Renderer = renderer;
+					    {
 
-							    break;
-						    }
+					    }
+
+					    if (renderer != null)
+					    {
+						    //Log.Debug($"Found renderer for {entry.Key}, textures: {it.Value.Textures.Count}");
+						    item.Renderer = renderer;
+						    break;
 					    }
 				    }
 			    }
 
-			    /* if (ResourcePack.ItemModels.TryGetValue(entry.Key.Replace("minecraft:", "minecraft:item/"), out ResourcePackItem iii))
-			     {
-				     ItemModelRenderer renderer;
-				     if (ItemRenderers.TryGetValue(entry.Key, out renderer))
-				     {
- 
-				     }
-				     else if (ItemRenderers.TryGetValue(entry.Key, out renderer))
- 
-				     {
- 
-				     }
- 
-				     if (renderer != null)
-				     {
-					     Log.Info($"Found renderer for {entry.Key}, textures: {iii.Textures.Count}");
-				     }
- 
-				     item.Renderer = renderer;
-			     }*/
-
-			 //   Log.Info($"Loaded item: {entry.Key} (Renderer: {item.Renderer != null})");
-			    items.TryAdd(entry.Key, () => { return item.Clone(); });
+			    if (item.Renderer == null)
+			    {
+				    Log.Warn($"Could not find item model renderer for: {key.ToString()}");
+			    }
+			    
+			    items.TryAdd(key, () => { return item.Clone(); });
 		    }
 
-			Items = new ReadOnlyDictionary<string, Func<Item>>(items);
+			Items = new ReadOnlyDictionary<ResourceLocation, Func<Item>>(items);
 	    }
 
 	    private static void LoadModels()
@@ -276,7 +276,7 @@ namespace Alex.Items
 			    if (model.Value == null || model.Value.Textures == null || model.Value.Textures.Count == 0)
 				    continue;
 			    
-			    var renderer = ItemRenderers.AddOrUpdate(model.Key,
+				ItemRenderers.AddOrUpdate(model.Key,
 				    (a) =>
 				    {
 					    var render = new ItemModelRenderer(model.Value, ResourcePack);
@@ -307,11 +307,22 @@ namespace Alex.Items
 		    return false;
 	    }
 
-	    public static bool TryGetItem(string name, out Item item)
+	    public static bool TryGetItem(ResourceLocation name, out Item item)
 	    {
 		    if (Items.TryGetValue(name, out var gen))
 		    {
 			    item = gen();
+			    return true;
+		    }
+
+		    var a = Items.Where(x => x.Key.Path.Length >= name.Path.Length)
+			   .OrderBy(x => name.ToString().Length - x.Key.ToString().Length).FirstOrDefault(
+				    x => x.Key.Path.EndsWith(name.Path, StringComparison.InvariantCultureIgnoreCase));
+
+		    if (a.Value != null)
+		    {
+			    item = a.Value();
+
 			    return true;
 		    }
 

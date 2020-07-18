@@ -9,6 +9,7 @@ namespace Alex.Blocks.Minecraft
 			Solid = true;
 			Transparent = false;
 			IsReplacible = false;
+			Animated = true;
 			
 			Hardness = 3.5f;
 		}

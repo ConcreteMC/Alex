@@ -12,9 +12,11 @@ namespace Alex.Gamestates.Login
 		private ProfileManager _profileManager;
 		
 		private Action _loginSuccesAction;
-		public JavaLoginState(GuiPanoramaSkyBox skyBox, Action loginSuccesAction) : base("Minecraft Login", skyBox)
+		private PlayerProfile _activeProfile;
+		public JavaLoginState(GuiPanoramaSkyBox skyBox, Action loginSuccesAction, PlayerProfile activeProfile = null) : base("Minecraft Login", skyBox)
 		{
 			_loginSuccesAction = loginSuccesAction;
+			_activeProfile = activeProfile;
 		}
 
 		protected override void Initialized()
@@ -23,12 +25,20 @@ namespace Alex.Gamestates.Login
 			_playerProfileService.Authenticate += PlayerProfileServiceOnAuthenticate;
 
 			_profileManager = GetService<ProfileManager>();
-			
-			var activeProfile = _profileManager.LastUsedProfile;
-			if (activeProfile != null && activeProfile.Type == "java")
+
+			if (_activeProfile != null && _activeProfile.Type == "java")
 			{
-				Requester.ClientToken = activeProfile.Profile.ClientToken;
-				NameInput.Value = activeProfile.Profile.Username;
+				NameInput.Value = _activeProfile.Username;
+			}
+			else
+			{
+				var activeProfile = _profileManager.LastUsedProfile;
+
+				if (activeProfile != null && activeProfile.Type == "java")
+				{
+					Requester.ClientToken = activeProfile.Profile.ClientToken;
+					NameInput.Value = activeProfile.Profile.Username;
+				}
 			}
 		}
 

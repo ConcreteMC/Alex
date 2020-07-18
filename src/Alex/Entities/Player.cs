@@ -153,7 +153,29 @@ namespace Alex.Entities
 		    }
 	    }
 
-	    public bool WaitingOnChunk { get; set; } = true;
+	    private bool _waitingOnChunk = true;
+
+	    public bool WaitingOnChunk
+	    {
+		    get
+		    {
+			    return _waitingOnChunk;
+		    }
+		    set
+		    {
+			    _waitingOnChunk = value;
+
+			    if (value)
+			    {
+				    NoAi = true;
+			    }
+			    else
+			    {
+				    Velocity = Vector3.Zero;
+				    NoAi = false;
+			    }
+		    }
+	    }
 	    
 	    public BlockCoordinates TargetBlock => _destroyingTarget;
 
@@ -178,9 +200,7 @@ namespace Alex.Entities
 				
 				if (Level.GetChunk(KnownPosition.GetCoordinates3D(), true) != null)
 				{
-					Velocity = Vector3.Zero;
 					WaitingOnChunk = false;
-					NoAi = false;
 				}
 			}
 

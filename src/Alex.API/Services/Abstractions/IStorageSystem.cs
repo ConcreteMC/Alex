@@ -10,6 +10,8 @@ namespace Alex.API.Services
         bool TryWriteJson<T>(string key, T value);
         bool TryReadJson<T>(string key, out T value);
 
+        bool TryReadJson<T>(string key, out T value, Encoding encoding);
+
         #endregion
 
         #region Bytes
@@ -19,14 +21,11 @@ namespace Alex.API.Services
         
         #endregion
 
-        FileStream OpenFileStream(string key, FileMode access);
-
         #region String
         
         bool TryWriteString(string key, string value);
         bool TryReadString(string key, out string value);
-
-        bool TryReadString(string key, Encoding encoding, out string value);
+        bool TryReadString(string key, out string value, Encoding encoding);
         
         #endregion
 

@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.IO;
 using System.Net;
+using System.Threading;
 using Alex.API.Graphics;
 using Alex.Blocks.Minecraft;
 using Microsoft.Xna.Framework.Graphics;
@@ -55,6 +56,24 @@ namespace Alex.Utils
 		
 		public static bool TryGetSkin(Uri skinUri, GraphicsDevice graphics, out PooledTexture2D texture)
 		{
+			if (!Program.IsRunningOnStartupThread())
+			{
+				AutoResetEvent resetEvent = new AutoResetEvent(false);
+				bool result = false;
+				PooledTexture2D rTexture = null;
+				Alex.Instance.UIThreadQueue.Enqueue(
+					() =>
+					{
+						result = TryGetSkin(skinUri, graphics, out rTexture);
+						resetEvent.Set();
+					});
+
+				resetEvent.WaitOne();
+
+				texture = rTexture;
+				return result;
+			}
+			
 			try
 			{
 				byte[] data;
@@ -77,6 +96,7 @@ namespace Alex.Utils
 
 			texture = null;
 			return false;
+			
 		}
 
 		public static bool TryGetBitmap(this Skin skin, out Image<Rgba32> result)

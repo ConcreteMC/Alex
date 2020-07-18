@@ -6,19 +6,13 @@ namespace Alex.API
     public enum RenderStage
     {
         OpaqueFullCube = 1,
-     //   LitOpaqueFullCube = 2,
         Opaque = 4,
-     //   LitOpaque = 8,
-        Liquid = 16,
-     //   LitLiquid = 32,
+       // LiquidOld = 16,
         Transparent = 64,
-      //  LitTransparent = 128,
         Translucent = 256,
-      //  LitTranslucent = 512,
         Animated = 1024,
-   //     LitAnimated = 2048,
         AnimatedTranslucent = 4096,
-      //  LitAnimatedTranslucent = 8192
+        Liquid = 8192
     }
 
    /* public static class RenderStageExtensions

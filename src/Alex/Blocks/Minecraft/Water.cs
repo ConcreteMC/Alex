@@ -38,6 +38,9 @@ namespace Alex.Blocks.Minecraft
 				return false;
 			}
 
+			if (neighbor.IsWater)
+				return false;
+
 			if (neighbor.Solid && (!neighbor.Transparent || neighbor.BlockMaterial.IsOpaque()))
 				return false;
 			

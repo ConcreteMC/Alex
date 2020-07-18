@@ -11,6 +11,7 @@ using Alex.API.Utils;
 using Alex.Gamestates.Common;
 using Alex.Gamestates.Login;
 using Alex.Gui;
+using Alex.Gui.Elements;
 using Microsoft.Xna.Framework;
 using NLog;
 using RocketUI;
@@ -169,31 +170,55 @@ namespace Alex.Gamestates.Multiplayer
 
 		private async void OnJoinServerButtonPressed()
 		{
-			var       entry = SelectedItem.SavedServerEntry;
-			var       ips   = Dns.GetHostAddresses(entry.Host).ToArray();
-			IPAddress ip    = ips[Rnd.Next(0, ips.Length - 1)];
+			var overlay = new LoadingOverlay();
+			Alex.GuiManager.AddScreen(overlay);
 
-			if (ip == null) return;
-
-			IPEndPoint target = new IPEndPoint(ip, entry.Port);
-
-			var authenticationService = GetService<IPlayerProfileService>();
-			var currentProfile        = authenticationService.CurrentProfile;
-
-			if (Alex.ServerTypeManager.TryGet(entry.ServerType, out var typeImplementation))
+			try
 			{
-				if (!await typeImplementation.VerifyAuthentication(currentProfile))
+				var       entry = SelectedItem.SavedServerEntry;
+				var       ips   = Dns.GetHostAddresses(entry.Host).ToArray();
+				IPAddress ip    = ips[Rnd.Next(0, ips.Length - 1)];
+
+				if (ip == null) return;
+
+				IPEndPoint target = new IPEndPoint(ip, entry.Port);
+
+				var authenticationService = GetService<IPlayerProfileService>();
+				var currentProfile        = authenticationService.CurrentProfile;
+
+				if (Alex.ServerTypeManager.TryGet(entry.ServerType, out var typeImplementation))
 				{
-					await typeImplementation.Authenticate(_skyBox, result =>
+					void Connect()
 					{
-						if (result)
-							Alex.ConnectToServer(typeImplementation, new ServerConnectionDetails(target, entry.Host), authenticationService.CurrentProfile);
-					});
+						Alex.ConnectToServer(
+							typeImplementation, new ServerConnectionDetails(target, entry.Host),
+							authenticationService.CurrentProfile);
+					
+						Alex.GuiManager.RemoveScreen(overlay);
+						overlay = null;
+					}
+					
+					if (!await typeImplementation.VerifyAuthentication(currentProfile))
+					{
+						await typeImplementation.Authenticate(
+							_skyBox, currentProfile, result =>
+							{
+								if (result)
+								{
+									Connect();
+								}
+							});
+					}
+					else
+					{
+						Connect();
+					}
 				}
-				else
-				{
-					Alex.ConnectToServer(typeImplementation, new ServerConnectionDetails(target, entry.Host), authenticationService.CurrentProfile);
-				}
+			}
+			finally
+			{
+				if (overlay != null)
+					Alex.GuiManager.RemoveScreen(overlay);
 			}
 		}
 

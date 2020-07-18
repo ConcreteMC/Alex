@@ -16,7 +16,7 @@ namespace Alex.Graphics.Models.Entity
 		{
 			private Texture2D Texture { get; set; }
 			private PooledIndexBuffer Buffer { get; set; }
-			public List<ModelBone> Children { get; internal set; } = new List<ModelBone>();
+			public ModelBone[] Children { get; internal set; } = new ModelBone[0];
 			
 			private Vector3 _rotation = Vector3.Zero;
 
@@ -98,35 +98,40 @@ namespace Alex.Graphics.Models.Entity
 				}
 			}
 			
-			public AlphaTestEffect Effect { get; private set; }
-
+			private AlphaTestEffect Effect { get; set; }
 			public void Render(IRenderArgs args, bool mock)
 			{
-				if (Buffer == null || Effect == null || Effect.Texture == null)
+				var buffer = Buffer;
+				var effect = Effect;
+
+				if (buffer == null || effect == null || effect.Texture == null || effect.IsDisposed
+				    || buffer.MarkedForDisposal)
 					return;
 
-				var effect = Effect;
-				args.GraphicsDevice.Indices = Buffer;
+				args.GraphicsDevice.Indices = buffer;
 
 				effect.View = args.Camera.ViewMatrix;
 				effect.Projection = args.Camera.ProjectionMatrix;
-				
-				if (!mock && Rendered && !EntityModelBone.NeverRender)
-				{
-					foreach (var pass in effect.CurrentTechnique.Passes)
-					{
-						pass.Apply();
-					}
 
-					args.GraphicsDevice.DrawIndexedPrimitives(
-						PrimitiveType.TriangleList, 0, 0, Indices.Length / 3);
+				if (!mock && Rendered && !EntityModelBone.NeverRender && buffer.IndexCount > 0)
+				{
+					if (effect.CurrentTechnique != null)
+					{
+						foreach (var pass in effect.CurrentTechnique.Passes)
+						{
+							pass?.Apply();
+
+							args.GraphicsDevice.DrawIndexedPrimitives(
+								PrimitiveType.TriangleList, 0, 0, buffer.IndexCount / 3);
+						}
+					}
 				}
-									
+
 				var children = Children;
 
-				if (children.Count > 0)
+				if (children.Length > 0)
 				{
-					foreach (var child in children.ToArray())
+					foreach (var child in children)
 					{
 						child.Render(args, mock);
 					}
@@ -153,74 +158,74 @@ namespace Alex.Graphics.Models.Entity
 			{
 				var device = args.GraphicsDevice;
 
-				if (Effect == null)
-				{
-					Effect = new AlphaTestEffect(device);
-					Effect.Texture = Texture;
-				}
-				else
-				{
-
-					if (CurrentAnim == null && Animations.TryDequeue(out var animation))
+					if (Effect == null)
 					{
-						animation.Setup();
-						animation.Start();
-
-						CurrentAnim = animation;
+						Effect = new AlphaTestEffect(device);
+						Effect.Texture = Texture;
 					}
-
-					if (CurrentAnim != null)
+					else
 					{
-						CurrentAnim.Update(args.GameTime);
 
-						if (CurrentAnim.IsFinished())
+						if (CurrentAnim == null && Animations.TryDequeue(out var animation))
 						{
-							CurrentAnim.Reset();
-							CurrentAnim = null;
+							animation.Setup();
+							animation.Start();
+
+							CurrentAnim = animation;
+						}
+
+						if (CurrentAnim != null)
+						{
+							CurrentAnim.Update(args.GameTime);
+
+							if (CurrentAnim.IsFinished())
+							{
+								CurrentAnim.Reset();
+								CurrentAnim = null;
+							}
+						}
+
+
+
+						Matrix yawPitchMatrix = Matrix.Identity;
+
+						if (ApplyHeadYaw || ApplyPitch)
+						{
+							var headYaw = ApplyHeadYaw ?
+								MathUtils.ToRadians(-(modelLocation.HeadYaw - modelLocation.Yaw)) : 0f;
+
+							var pitch = ApplyPitch ? MathUtils.ToRadians(modelLocation.Pitch) : 0f;
+
+							yawPitchMatrix = Matrix.CreateTranslation(-EntityModelBone.Pivot)
+							                 * Matrix.CreateFromYawPitchRoll(headYaw, pitch, 0f)
+							                 * Matrix.CreateTranslation(EntityModelBone.Pivot);
+						}
+
+						var userRotationMatrix = Matrix.CreateTranslation(-EntityModelBone.Pivot)
+						                         * Matrix.CreateRotationX(MathUtils.ToRadians(Rotation.X))
+						                         * Matrix.CreateRotationY(MathUtils.ToRadians(Rotation.Y))
+						                         * Matrix.CreateRotationZ(MathUtils.ToRadians(Rotation.Z))
+						                         * Matrix.CreateTranslation(EntityModelBone.Pivot);
+
+						Effect.World = yawPitchMatrix * userRotationMatrix * DefaultMatrix
+						               * Matrix.CreateTranslation(_position) * characterMatrix;
+
+						Effect.DiffuseColor = diffuseColor;
+						var children = Children;
+
+						if (children.Length > 0)
+						{
+							foreach (var child in children)
+							{
+								child.Update(args, userRotationMatrix * characterMatrix, diffuseColor, modelLocation);
+							}
+						}
+
+						if (_isDirty)
+						{
+							UpdateVertexBuffer(args.GraphicsDevice);
 						}
 					}
-
-
-
-					Matrix yawPitchMatrix = Matrix.Identity;
-
-					if (ApplyHeadYaw || ApplyPitch)
-					{
-						var headYaw = ApplyHeadYaw ? MathUtils.ToRadians(-(modelLocation.HeadYaw - modelLocation.Yaw)) :
-							0f;
-
-						var pitch = ApplyPitch ? MathUtils.ToRadians(modelLocation.Pitch) : 0f;
-
-						yawPitchMatrix = Matrix.CreateTranslation(-EntityModelBone.Pivot)
-						                 * Matrix.CreateFromYawPitchRoll(headYaw, pitch, 0f)
-						                 * Matrix.CreateTranslation(EntityModelBone.Pivot);
-					}
-
-					var userRotationMatrix = Matrix.CreateTranslation(-EntityModelBone.Pivot)
-					                         * Matrix.CreateRotationX(MathUtils.ToRadians(Rotation.X))
-					                         * Matrix.CreateRotationY(MathUtils.ToRadians(Rotation.Y))
-					                         * Matrix.CreateRotationZ(MathUtils.ToRadians(Rotation.Z))
-					                         * Matrix.CreateTranslation(EntityModelBone.Pivot);
-
-					Effect.World = yawPitchMatrix * userRotationMatrix * DefaultMatrix
-					               * Matrix.CreateTranslation(_position) * characterMatrix;
-
-					Effect.DiffuseColor = diffuseColor;
-					var children = Children;
-
-					if (children.Count > 0)
-					{
-						foreach (var child in children.ToArray())
-						{
-							child.Update(args, userRotationMatrix * characterMatrix, diffuseColor, modelLocation);
-						}
-					}
-
-					if (_isDirty)
-					{
-						UpdateVertexBuffer(args.GraphicsDevice);
-					}
-				}
 			}
 
 			private void UpdateVertexBuffer(GraphicsDevice device)

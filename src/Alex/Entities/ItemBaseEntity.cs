@@ -69,5 +69,20 @@ namespace Alex.Entities
             
 			ItemRenderer?.Render(renderArgs);
 		}
+
+		/// <inheritdoc />
+		public override void OnTick()
+		{
+			base.OnTick();
+
+			var itemRenderer = ItemRenderer;
+
+			if (itemRenderer != null)
+			{
+				itemRenderer.DiffuseColor =
+					(new Color(245, 245, 225) *  ((1f / 16f) * SurroundingLightValue))
+					* Level.BrightnessModifier;
+			}
+		}
 	}
 }

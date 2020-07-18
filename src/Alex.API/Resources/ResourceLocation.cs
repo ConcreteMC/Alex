@@ -4,11 +4,12 @@ namespace Alex.API.Resources
 {
     public class ResourceLocation : IEquatable<ResourceLocation>
     {
+        public const string DefaultNamespace = "minecraft";
         public string Namespace { get; private set; }
         public string Path { get; private set; }
 
-        public ResourceLocation(string key) : this(key.Contains(':') ? key.Substring(0, key.IndexOf(':')) : "minecraft",
-            key.Contains(':') ? key.Substring(key.IndexOf(':')) : key)
+        public ResourceLocation(string key) : this(key.Contains(':') ? key.Substring(0, key.IndexOf(':')) : DefaultNamespace,
+            key.Contains(':') ? key.Substring(key.IndexOf(':') + 1) : key)
         {
 
         }
