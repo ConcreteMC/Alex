@@ -571,7 +571,7 @@ namespace Alex
 				Log.Info($"Player skin loaded...");
 			}
 			
-			if (storage.TryReadString("skin.json", Encoding.UTF8, out var str))
+			if (storage.TryReadString("skin.json", out var str, Encoding.UTF8))
 			{
 				var entries = new Dictionary<string, EntityModel>();
 				EntityModel.GetEntries(str, entries);
