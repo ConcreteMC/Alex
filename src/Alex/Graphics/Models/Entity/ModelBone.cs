@@ -35,31 +35,25 @@ namespace Alex.Graphics.Models.Entity
 
 			public bool Rendered { get; set; } = true;
 
-			private string OriginalBone { get; }
-			public string ParentName => OriginalBone;
-
 			public ModelBone Parent { get; set; } = null;
 			
 			public Queue<ModelBoneAnimation> Animations { get; }
 			private ModelBoneAnimation CurrentAnim { get; set; } = null;
 			public bool IsAnimating => CurrentAnim != null || Animations.Count > 0;
-			internal EntityModelBone EntityModelBone { get; }
+			internal EntityModelBone Definition { get; }
 			
 			private short[] Indices { get; }
-			public ModelBone(Texture2D texture, short[] indices, string parent, EntityModelBone bone, Matrix defaultMatrix)
+			public ModelBone(Texture2D texture, short[] indices, EntityModelBone bone, Matrix defaultMatrix)
 			{
 				Texture = texture;
-				EntityModelBone = bone;
+				Definition = bone;
 				Indices = indices;
-				OriginalBone = parent;
-
 				Animations = new Queue<ModelBoneAnimation>();
 
 				DefaultMatrix = defaultMatrix;
 			}
 
-			private bool _isDirty = true;
-			private Matrix CharacterMatrix { get; set; }
+			//private bool _isDirty = true;
 
 			private bool _applyHeadYaw = false;
 			private bool _applyPitch = false;
@@ -99,31 +93,51 @@ namespace Alex.Graphics.Models.Entity
 			}
 			
 			private AlphaTestEffect Effect { get; set; }
-			public void Render(IRenderArgs args, bool mock)
+			public void Render(IRenderArgs args, bool mock, out int vertices)
 			{
+				vertices = 0;
 				var buffer = Buffer;
 				var effect = Effect;
 
-				if (buffer == null || effect == null || effect.Texture == null || effect.IsDisposed
-				    || buffer.MarkedForDisposal)
-					return;
-
-				args.GraphicsDevice.Indices = buffer;
-
-				effect.View = args.Camera.ViewMatrix;
-				effect.Projection = args.Camera.ProjectionMatrix;
-
-				if (!mock && Rendered && !EntityModelBone.NeverRender && buffer.IndexCount > 0)
+				if (!(buffer == null || effect == null || effect.Texture == null || effect.IsDisposed
+				      || buffer.MarkedForDisposal))
 				{
-					if (effect.CurrentTechnique != null)
+					if (buffer.IndexCount == 0)
 					{
-						foreach (var pass in effect.CurrentTechnique.Passes)
-						{
-							pass?.Apply();
+						Log.Warn($"Bone indexcount = 0 || {Definition.Name}");
+					}
 
-							args.GraphicsDevice.DrawIndexedPrimitives(
-								PrimitiveType.TriangleList, 0, 0, buffer.IndexCount / 3);
+					args.GraphicsDevice.Indices = buffer;
+
+					effect.View = args.Camera.ViewMatrix;
+					effect.Projection = args.Camera.ProjectionMatrix;
+
+					if (!mock && buffer.IndexCount > 0)
+					{
+						if (effect.CurrentTechnique != null && !Definition.NeverRender)
+						{
+						//	foreach (var technique in effect.Techniques)
+							{
+								foreach (var pass in effect.CurrentTechnique.Passes)
+								{
+									pass?.Apply();
+
+									args.GraphicsDevice.DrawIndexedPrimitives(
+										PrimitiveType.TriangleList, 0, 0, buffer.IndexCount / 3);
+								}
+							}
 						}
+
+						//else
+						{
+							//	Log.Warn($"Current");
+						}
+
+						vertices += buffer.IndexCount / 3;
+					}
+					else if (!mock && buffer.IndexCount == 0)
+					{
+						Log.Warn($"Index count = 0");
 					}
 				}
 
@@ -133,7 +147,8 @@ namespace Alex.Graphics.Models.Entity
 				{
 					foreach (var child in children)
 					{
-						child.Render(args, mock);
+						child.Render(args, mock, out int childVertices);
+						vertices += childVertices;
 					}
 				}
 			}
@@ -196,19 +211,18 @@ namespace Alex.Graphics.Models.Entity
 
 							var pitch = ApplyPitch ? MathUtils.ToRadians(modelLocation.Pitch) : 0f;
 
-							yawPitchMatrix = Matrix.CreateTranslation(-EntityModelBone.Pivot)
+							yawPitchMatrix = Matrix.CreateTranslation(-Definition.Pivot)
 							                 * Matrix.CreateFromYawPitchRoll(headYaw, pitch, 0f)
-							                 * Matrix.CreateTranslation(EntityModelBone.Pivot);
+							                 * Matrix.CreateTranslation(Definition.Pivot);
 						}
 
-						var userRotationMatrix = Matrix.CreateTranslation(-EntityModelBone.Pivot)
-						                         * Matrix.CreateRotationX(MathUtils.ToRadians(Rotation.X))
+						var userRotationMatrix = Matrix.CreateTranslation(-Definition.Pivot)
 						                         * Matrix.CreateRotationY(MathUtils.ToRadians(Rotation.Y))
+						                         * Matrix.CreateRotationX(MathUtils.ToRadians(Rotation.X))
 						                         * Matrix.CreateRotationZ(MathUtils.ToRadians(Rotation.Z))
-						                         * Matrix.CreateTranslation(EntityModelBone.Pivot);
+						                         * Matrix.CreateTranslation(Definition.Pivot);
 
-						Effect.World = yawPitchMatrix * userRotationMatrix * DefaultMatrix
-						               * Matrix.CreateTranslation(_position) * characterMatrix;
+						Effect.World = yawPitchMatrix * userRotationMatrix * DefaultMatrix * characterMatrix;
 
 						Effect.DiffuseColor = diffuseColor;
 						var children = Children.ToArray();
@@ -221,9 +235,10 @@ namespace Alex.Graphics.Models.Entity
 							}
 						}
 
-						if (_isDirty)
+						//if (_isDirty || Indices.Length > Buffer.IndexCount)
 						{
 							UpdateVertexBuffer(args.GraphicsDevice);
+						//	_isDirty = false;
 						}
 					}
 			}
@@ -266,6 +281,10 @@ namespace Alex.Graphics.Models.Entity
 			{
 				if (!Children.Contains(modelBone))
 					Children.Add(modelBone);
+				else
+				{
+					Log.Warn($"Could not add {modelBone.Definition.Name} as child of {Definition.Name}");
+				}
 			}
 		}
 	}

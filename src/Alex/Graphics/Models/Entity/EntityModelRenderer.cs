@@ -52,10 +52,7 @@ namespace Alex.Graphics.Models.Entity
 		//public float Height { get; private set; } = 0f;
 		public EntityModelRenderer(EntityModel model, PooledTexture2D texture)
 		{
-			
-		//	Model = model;
-			Texture = texture;
-
+			//	Model = model;
 			if (texture == null)
 			{
 				Log.Warn($"No texture set for rendererer for {model.Name}!");
@@ -64,46 +61,47 @@ namespace Alex.Graphics.Models.Entity
 
 			if (model != null)
 			{
-				var cubes = new Dictionary<string, ModelBone>();
-				Cache(model, cubes);
+				var bones = new Dictionary<string, ModelBone>();
+				Cache(texture, model, bones);
 
-				Bones = cubes;
+				Bones = bones;
 
-				Valid = true;
+				Valid = bones.Count > 0;
 			}
 		}
 
-		private void Cache(EntityModel model, Dictionary<string, ModelBone> modelBones)
+		private void Cache(PooledTexture2D texture, EntityModel model, Dictionary<string, ModelBone> modelBones)
 		{
 			List<VertexPositionNormalTexture> vertices = new List<VertexPositionNormalTexture>();
 
-			var textureSize = new Vector2(model.Texturewidth, model.Textureheight);
-			var newSize = new Vector2(Texture.Width, Texture.Height);
-
-			if (textureSize.X == 0 && textureSize.Y == 0)
-				textureSize = newSize;
+			var modelTextureSize = model.Description != null ?
+				new Vector2(model.Description.TextureWidth, model.Description.TextureHeight) :
+				new Vector2(model.Texturewidth, model.Textureheight);
 			
-			var uvScale = newSize / textureSize;
+			var actualTextureSize = new Vector2(texture.Width, texture.Height);
+				
+			if (modelTextureSize.X == 0 && modelTextureSize.Y == 0)
+				modelTextureSize = actualTextureSize;
+			
+			var uvScale = actualTextureSize / modelTextureSize;
 			
 			foreach (var bone in model.Bones.Where(x => string.IsNullOrWhiteSpace(x.Parent)))
 			{
 				//if (bone.NeverRender) continue;
 				if (modelBones.ContainsKey(bone.Name)) continue;
 				
-				ProcessBone(model, bone, vertices, uvScale, textureSize, modelBones);
+				var processed = ProcessBone(texture, model, bone, vertices, uvScale, modelTextureSize, modelBones);
+				
+				if (!modelBones.TryAdd(bone.Name, processed))
+				{
+					Log.Warn($"Failed to add bone! {bone.Name}");
+				}
 			}
-			
-			foreach (var bone in model.Bones.Where(x => !string.IsNullOrWhiteSpace(x.Parent)))
-			{
-				//if (bone.NeverRender) continue;
-				if (modelBones.ContainsKey(bone.Name)) continue;
 
-				ProcessBone(model, bone, vertices, uvScale, textureSize, modelBones);
-			}
-			
 			if (vertices.Count == 0)
 			{
-			//	Log.Warn($"No vertices. {JsonConvert.SerializeObject(model,Formatting.Indented)}");
+				Log.Warn($"No vertices. {JsonConvert.SerializeObject(model,Formatting.Indented)}");
+				
 				Valid = true;
 				CanRender = false;
 				return;
@@ -114,9 +112,10 @@ namespace Alex.Graphics.Models.Entity
 			VertexBuffer.SetData(vertices.ToArray());
 			
 			Valid = true;
+			_texture = texture;
 		}
 
-		private ModelBone ProcessBone(EntityModel source, EntityModelBone bone, List<VertexPositionNormalTexture> vertices, Vector2 uvScale, Vector2 textureSize, Dictionary<string, ModelBone> modelBones)
+		private ModelBone ProcessBone(PooledTexture2D texture, EntityModel source, EntityModelBone bone, List<VertexPositionNormalTexture> vertices, Vector2 uvScale, Vector2 textureSize, Dictionary<string, ModelBone> modelBones)
 		{
 			ModelBone           modelBone;
 				
@@ -132,9 +131,10 @@ namespace Alex.Graphics.Models.Entity
 						continue;
 					}
 
-					Cube built = new Cube(cube.Size * (float)cube.Inflate, textureSize);
-					built.Mirrored = bone.Mirror;
-					built.BuildCube(cube.Uv * uvScale);
+					var size = cube.Size;
+					Cube built = new Cube(size, textureSize, cube.Uv, uvScale, cube.Inflate, bone.Mirror);
+					//built.Mirrored = bone.Mirror;
+					//built.BuildCube(cube.Uv, uvScale);
 					
 					vertices = ModifyCubeIndexes(vertices, cube, ref built.Front);
 					vertices = ModifyCubeIndexes(vertices, cube, ref built.Back);
@@ -150,8 +150,8 @@ namespace Alex.Graphics.Models.Entity
 			}
 			
 			var bindPoseMatrix = Matrix.CreateTranslation(-bone.Pivot)
-			                     * Matrix.CreateRotationX(MathUtils.ToRadians(-bone.BindPoseRotation.X))
 			                     * Matrix.CreateRotationY(MathUtils.ToRadians(bone.BindPoseRotation.Y))
+			                     * Matrix.CreateRotationX(MathUtils.ToRadians(-bone.BindPoseRotation.X))
 			                     * Matrix.CreateRotationZ(MathUtils.ToRadians(bone.BindPoseRotation.Z))
 			                     * Matrix.CreateTranslation(bone.Pivot);
 
@@ -165,42 +165,25 @@ namespace Alex.Graphics.Models.Entity
 			                                 * Matrix.CreateTranslation(bone.Pivot);*/
 			var boneMatrix =
 			                  Matrix.CreateTranslation(-bone.Pivot)
+			                  * Matrix.CreateRotationY(MathUtils.ToRadians(bone.Rotation.Y))
 			                 * Matrix.CreateRotationX(MathUtils.ToRadians(-bone.Rotation.X))
-			                 * Matrix.CreateRotationY(MathUtils.ToRadians(bone.Rotation.Y))
-			                 * Matrix.CreateRotationZ(MathUtils.ToRadians(bone.Rotation.Z))
+			                  * Matrix.CreateRotationZ(MathUtils.ToRadians(bone.Rotation.Z))
 			                 * Matrix.CreateTranslation(bone.Pivot);
 
-			modelBone = new ModelBone(Texture, indices.ToArray(), bone.Parent, bone, bindPoseMatrix * boneMatrix);
+			modelBone = new ModelBone(texture, indices.ToArray(), bone, bindPoseMatrix * boneMatrix);
 
-			if (!string.IsNullOrWhiteSpace(bone.Parent))
+			foreach (var childBone in source.Bones.Where(
+				x => string.Equals(x.Parent, bone.Name, StringComparison.InvariantCultureIgnoreCase)))
 			{
-				ModelBone parentBone = null;
-				if (!modelBones.TryGetValue(bone.Parent, out parentBone))
+				var child = ProcessBone(texture, source, childBone, vertices, uvScale, textureSize, modelBones);
+				child.Parent = modelBone;
+				
+				modelBone.AddChild(child);
+				
+				if (!modelBones.TryAdd(childBone.Name, child))
 				{
-					var result = source.Bones.FirstOrDefault(
-						x => x.Name.Equals(bone.Parent, StringComparison.InvariantCultureIgnoreCase));
-
-					if (result != null)
-					{
-						parentBone = ProcessBone(source, result, vertices, uvScale, textureSize, modelBones);
-					}
+					Log.Warn($"Failed to add bone! {childBone.Name}");
 				}
-
-				if (parentBone != null)
-				{
-					modelBone.Parent = parentBone;
-					parentBone.AddChild(modelBone);
-				}
-				else
-				{
-					Log.Warn($"Could not find parent-bone \"{bone.Parent}\" for bonw {bone.Name} on type: {source.Name}");
-				}
-			}
-			
-			//modelBone.UpdateRotationMatrix = !bone.NeverRender;
-			if (!modelBones.TryAdd(bone.Name, modelBone))
-			{
-				Log.Debug($"Failed to add bone! {bone.Name}");
 			}
 
 			return modelBone;
@@ -211,19 +194,25 @@ namespace Alex.Graphics.Models.Entity
 		{
 			var origin = cube.Origin;
 			var pivot = cube.Pivot;
+			var rotation = cube.Rotation;
 			
-			Matrix cubeRotationMatrix = Matrix.CreateTranslation(-pivot)
-			                            * Matrix.CreateRotationX(MathUtils.ToRadians(-cube.Rotation.X))
-			                            * Matrix.CreateRotationY(MathUtils.ToRadians(cube.Rotation.Y))
-			                            * Matrix.CreateRotationZ(MathUtils.ToRadians(cube.Rotation.Z))
-			                            * Matrix.CreateTranslation(pivot)
-				* Matrix.CreateTranslation(origin);
+			Matrix cubeRotationMatrix = Matrix.CreateTranslation(origin);
+
+			if (rotation != Vector3.Zero)
+			{
+				cubeRotationMatrix *= Matrix.CreateTranslation(-pivot)
+				                      * Matrix.CreateRotationY(MathUtils.ToRadians(rotation.Y))
+				                      * Matrix.CreateRotationX(MathUtils.ToRadians(-rotation.X))
+				                      * Matrix.CreateRotationZ(MathUtils.ToRadians(rotation.Z))
+				                      * Matrix.CreateTranslation(pivot);
+			}
 			
 			var startIndex = (short)vertices.Count;
 			foreach (var vertice in data.vertices)
 			{
 				var vertex = vertice;
 				vertex.Position = Vector3.Transform(vertex.Position, cubeRotationMatrix);
+				//vertex.Position = Vector3.Transform(vertex.Position, Matrix.CreateTranslation(origin));
 				vertices.Add(vertex);
 			}
 
@@ -237,16 +226,19 @@ namespace Alex.Graphics.Models.Entity
 
 		private static RasterizerState RasterizerState = new RasterizerState()
 		{
-			DepthBias = 0.0001f,
+			DepthBias = 0f,
 			CullMode = CullMode.CullClockwiseFace,
 			FillMode = FillMode.Solid
 		};
 		
-		public virtual void Render(IRenderArgs args, PlayerLocation position, bool mock)
+		public virtual void Render(IRenderArgs args, bool mock)
 		{
 			if (!CanRender)
+			{
+				Log.Warn($"Cannot render model...");
 				return;
-			
+			}
+
 			var originalRaster = args.GraphicsDevice.RasterizerState;
 			var blendState = args.GraphicsDevice.BlendState;
 
@@ -257,12 +249,24 @@ namespace Alex.Graphics.Models.Entity
 				
 				args.GraphicsDevice.SetVertexBuffer(VertexBuffer);
 
-				if (Bones == null) return;
+				if (Bones == null)
+				{
+					Log.Warn($"No bones found for model...");
+					return;
+				}
 
+				int rendered = 0;
 				foreach (var bone in Bones.Where(x => x.Value.Parent == null))
 				{
 				//	if (bone.Value.Parent != null)
-						bone.Value.Render(args, mock);
+						bone.Value.Render(args, mock, out rendered);
+
+						//rendered++;
+				}
+
+				if (!mock)
+				{
+				//	Log.Info($"Rendered {rendered} vertices");
 				}
 			}
 			finally
@@ -274,33 +278,18 @@ namespace Alex.Graphics.Models.Entity
 
 		public Vector3 EntityColor { get; set; } = Color.White.ToVector3();
 		public Vector3 DiffuseColor { get; set; } = Color.White.ToVector3();
-		private Matrix CharacterMatrix { get; set; } = Matrix.Identity;
+
 		public float Scale { get; set; } = 1f;
 
 		public virtual void Update(IUpdateArgs args, PlayerLocation position)
 		{
 			if (Bones == null) return;
-
-			CharacterMatrix = 
-				Matrix.CreateScale(Scale / 16f) *
-			                         Matrix.CreateRotationY(MathUtils.ToRadians(180f - (position.Yaw))) *
-			                         Matrix.CreateTranslation(position);
-
 			foreach (var bone in Bones.Where(x => x.Value.Parent == null))
 			{
-				bone.Value.Update(args, CharacterMatrix, EntityColor * DiffuseColor, position);
+				bone.Value.Update(args, Matrix.CreateScale(Scale / 16f) *
+				                        Matrix.CreateRotationY(MathUtils.ToRadians(180f - (position.Yaw))) *
+				                        Matrix.CreateTranslation(position), EntityColor * DiffuseColor, position);
 			}
-
-			/*foreach (var bone in Bones.Where(x => !string.IsNullOrWhiteSpace(x.Value.Parent)))
-			{
-				var parent = Bones.FirstOrDefault(x =>
-					x.Key.Equals(bone.Value.Parent, StringComparison.InvariantCultureIgnoreCase));
-
-				if (parent.Value != null)
-				{
-					//bone.Value.RotationMatrix = parent.Value.RotationMatrix;
-				}
-			}*/
 		}
 
 		public bool GetBone(string name, out ModelBone bone)

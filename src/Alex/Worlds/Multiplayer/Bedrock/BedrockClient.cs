@@ -733,12 +733,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			        skinData = ms.ToArray();
 		        }
 
-		        dynamic abc = new ExpandoObject();
-		        abc.geometry = new Dictionary<string, string>()
-		        {
-			        {"default", model.Name}
-		        };
+		       var modelName = model.Name ?? model.Description.Identifier;
 		        //abc.geometry["default"] = model.Name;
+		        
+		        GeometryModel mm = new GeometryModel();
+		        mm.Geometry.Add(model);
 		        
 		        skin = new Skin()
 		        {
@@ -750,17 +749,23 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				       ImageWidth = 0,
 				       OnClassicSkin = false
 			        },
-			        SkinId = model.Name,
+			        SkinId = modelName,
 			        ResourcePatch =
 				        Convert.ToBase64String(
-					        Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(abc))),
+					        Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new SkinResourcePatch()
+					        {
+						        Geometry = 	new GeometryIdentifier()
+						        {
+							         Default = modelName
+						        }
+					        }))),
 			        Width = (int) Alex.PlayerTexture.Width,
 			        Height = (int) Alex.PlayerTexture.Height,
 			        Data = skinData,
-			        GeometryName = model.Name,
+			        GeometryName = modelName,
 			        GeometryData =
 				        Convert.ToBase64String(
-					        Encoding.UTF8.GetBytes(MCJsonConvert.SerializeObject(model))),
+					        Encoding.UTF8.GetBytes(MCJsonConvert.SerializeObject(mm))),
 			        AnimationData = "",
 			        IsPremiumSkin = false,
 			        IsPersonaSkin = false,
@@ -797,21 +802,26 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		        };
 	        }
 
-	        string val = JWT.Encode(JsonConvert.SerializeObject(new BedrockSkinData(skin)
-            {
-	            ClientRandomId = new Random().Next(),
-	            LanguageCode = Alex.Services.GetService<IOptionsProvider>().AlexOptions.MiscelaneousOptions.Language.Value,
-	            ServerAddress = $"{ServerEndpoint.Address.ToString()}:{ServerEndpoint.Port.ToString()}",
-	             ThirdPartyName = username,
-	             DeviceId = Alex.Resources.DeviceID
-            }, new JsonSerializerSettings()
-	        {
-		        ContractResolver = new DefaultContractResolver
+	        var serialized = JsonConvert.SerializeObject(
+		        new BedrockSkinData(skin)
 		        {
-			        NamingStrategy = new DefaultNamingStrategy(){}
+			        ClientRandomId = new Random().Next(),
+			        LanguageCode =
+				        Alex.Services.GetService<IOptionsProvider>().AlexOptions.MiscelaneousOptions.Language.Value,
+			        ServerAddress = $"{ServerEndpoint.Address.ToString()}:{ServerEndpoint.Port.ToString()}",
+			        ThirdPartyName = username,
+			        DeviceId = Alex.Resources.DeviceID
 		        },
-		        DefaultValueHandling = DefaultValueHandling.Include
-	        }), signKey, JwsAlgorithm.ES384, new Dictionary<string, object> { { "x5u", x5u } }, new JwtSettings()
+		        new JsonSerializerSettings()
+		        {
+			        ContractResolver =
+				        new DefaultContractResolver {NamingStrategy = new DefaultNamingStrategy() { }},
+			        DefaultValueHandling = DefaultValueHandling.Include
+		        });
+	        
+	        Log.Info(serialized);
+
+	        string val = JWT.Encode(serialized, signKey, JwsAlgorithm.ES384, new Dictionary<string, object> { { "x5u", x5u } }, new JwtSettings()
             {
                 JsonMapper = new JWTMapper()
             });

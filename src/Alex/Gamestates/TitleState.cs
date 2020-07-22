@@ -204,6 +204,19 @@ namespace Alex.Gamestates
 
 		#endregion
 
+		private void ApplyModel(Entity entity)
+		{
+			if (Alex.PlayerModel != null && Alex.PlayerTexture != null)
+			{
+				Alex.UIThreadQueue.Enqueue(
+					() =>
+					{
+						var texture = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, Alex.PlayerTexture);
+						entity.ModelRenderer = new EntityModelRenderer(Alex.PlayerModel, texture);
+					});
+			}
+		}
+
 		private void PlayerProfileServiceOnProfileChanged(object sender, PlayerProfileChangedEventArgs e)
 		{
 			if (e.Profile?.Skin?.Texture != null)
@@ -219,6 +232,8 @@ namespace Alex.Gamestates
 					_playerView.Entity.Inventory.MainHand = sword;
 					_playerView.Entity.Inventory[_playerView.Entity.Inventory.SelectedSlot] = sword;
 				}
+
+				ApplyModel(_playerView.Entity);
 			}
 		}
 
@@ -283,6 +298,8 @@ namespace Alex.Gamestates
 
 			Alex.GameStateManager.AddState("serverlist", new MultiplayerServerSelectionState(_backgroundSkyBox));
 			//Alex.GameStateManager.AddState("profileSelection", new ProfileSelectionState(_backgroundSkyBox));
+			
+			ApplyModel(_playerView.Entity);
 		}
 
 		private void ChangeSKinBtnPressed()
@@ -343,16 +360,6 @@ namespace Alex.Gamestates
 
 		protected override void OnShow()
 		{
-			if (Alex.PlayerModel != null && Alex.PlayerTexture != null)
-			{
-				/*Alex.UIThreadQueue.Enqueue(
-					() =>
-					{
-						var texture = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, Alex.PlayerTexture);
-						_playerView.Entity.ModelRenderer = new EntityModelRenderer(NewEntityModel, texture);
-					});*/
-			}
-			
 			if (Alex.GameStateManager.TryGetState<OptionsState>("options", out _))
 			{
 				Alex.GameStateManager.RemoveState("options");
@@ -369,6 +376,9 @@ namespace Alex.Gamestates
 				_playerView.Entity.Inventory.MainHand = sword;
 				_playerView.Entity.Inventory[_playerView.Entity.Inventory.SelectedSlot] = sword;
 			}
+			
+			
+			ApplyModel(_playerView.Entity);
 			
 			base.OnShow();
 		}

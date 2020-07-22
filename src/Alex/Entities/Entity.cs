@@ -265,6 +265,11 @@ namespace Alex.Entities
 			if (ModelRenderer != null)
 			{
 				ModelRenderer.Scale = _scale;
+
+				if (_scale <= 0.1f)
+				{
+					Log.Warn($"Scale set to tiny value: {_scale}");
+				}
 			}
 
 			//if (ItemRenderer != null)
@@ -588,7 +593,7 @@ namespace Alex.Entities
 
 			if ((RenderEntity && !IsInvisible) || ShowItemInHand)
 			{
-				ModelRenderer.Render(renderArgs, KnownPosition, IsInvisible || !RenderEntity);
+				ModelRenderer.Render(renderArgs, IsInvisible || !RenderEntity);
 
 				if (ModelRenderer.Valid)
 				{
@@ -857,7 +862,7 @@ namespace Alex.Entities
 
 			if (IsRendered || !ServerEntity)
 			{
-				SurroundingLightValue = Math.Min(
+				SurroundingLightValue = 15; /*Math.Min(
 					Level.GetSkyLight(KnownPosition) + Level.GetBlockLight(KnownPosition), 15);
 
 				var heldItemRenderer = ItemRenderer;
@@ -866,7 +871,7 @@ namespace Alex.Entities
 				{
 					heldItemRenderer.DiffuseColor =  (new Color(245, 245, 225) *  ((1f / 16f) * SurroundingLightValue))
 					                                * Level.BrightnessModifier;
-				}
+				}*/
 			}
 
 			if (IsNoAi) return;
@@ -1325,6 +1330,12 @@ namespace Alex.Entities
 		public void Dispose()
 		{
 			ModelRenderer?.Dispose();
+		}
+
+		/// <inheritdoc />
+		public override string ToString()
+		{
+			return base.ToString() + $"(Invisible: {IsInvisible} Model Valid: {_modelRenderer != null && _modelRenderer.Valid}";
 		}
 	}
 }

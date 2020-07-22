@@ -79,7 +79,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
         public BedrockSkinData(Skin skin)
         {
-            SkinResourcePatch = Convert.ToBase64String(Encoding.Default.GetBytes(Skin.ToJson(skin.SkinResourcePatch)));
+            SkinResourcePatch = skin.ResourcePatch ?? Convert.ToBase64String(Encoding.Default.GetBytes(Skin.ToJson(skin.SkinResourcePatch)));
             
             SkinId = skin.SkinId;
             SkinData = Convert.ToBase64String(skin.Data);

@@ -34,7 +34,8 @@ namespace Alex.Entities.Models
 						{
 							Origin = new Vector3(-3f,16f,-12f),
 							Size = new Vector3(6f, 6f, 6f),
-							Uv = new Vector2(0f, 32f)
+							Uv = new Vector2(0f, 32f),
+							Inflate = 0.6
 						},
 						new EntityModelCube()
 						{
@@ -58,7 +59,8 @@ namespace Alex.Entities.Models
 						{
 							Origin = new Vector3(-4f,13f,-5f),
 							Size = new Vector3(8f, 16f, 6f),
-							Uv = new Vector2(28f, 40f)
+							Uv = new Vector2(28f, 40f),
+							Inflate = 1.75
 						},
 						new EntityModelCube()
 						{
@@ -82,7 +84,8 @@ namespace Alex.Entities.Models
 						{
 							Origin = new Vector3(-5f,6f,5f),
 							Size = new Vector3(4f, 6f, 4f),
-							Uv = new Vector2(0f, 48f)
+							Uv = new Vector2(0f, 48f),
+							Inflate = 0.5
 						},
 						new EntityModelCube()
 						{
@@ -106,7 +109,8 @@ namespace Alex.Entities.Models
 						{
 							Origin = new Vector3(1f,6f,5f),
 							Size = new Vector3(4f, 6f, 4f),
-							Uv = new Vector2(0f, 48f)
+							Uv = new Vector2(0f, 48f),
+							Inflate = 0.5
 						},
 						new EntityModelCube()
 						{
@@ -130,7 +134,8 @@ namespace Alex.Entities.Models
 						{
 							Origin = new Vector3(-5f,6f,-7f),
 							Size = new Vector3(4f, 6f, 4f),
-							Uv = new Vector2(0f, 48f)
+							Uv = new Vector2(0f, 48f),
+							Inflate = 0.5
 						},
 						new EntityModelCube()
 						{
@@ -154,7 +159,8 @@ namespace Alex.Entities.Models
 						{
 							Origin = new Vector3(1f,6f,-7f),
 							Size = new Vector3(4f, 6f, 4f),
-							Uv = new Vector2(0f, 48f)
+							Uv = new Vector2(0f, 48f),
+							Inflate = 0.5
 						},
 						new EntityModelCube()
 						{

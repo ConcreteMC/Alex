@@ -718,7 +718,8 @@ namespace Alex.Entities.Models
 						{
 							Origin = new Vector3(-2.5f,25.1f,-17f),
 							Size = new Vector3(5f, 5f, 12f),
-							Uv = new Vector2(80f, 12f)
+							Uv = new Vector2(80f, 12f),
+							Inflate = 0.05d
 						},
 					}
 				},

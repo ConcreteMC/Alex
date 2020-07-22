@@ -120,11 +120,17 @@ namespace Alex.API.Services
 
         public bool TryWriteString(string key, string value)
         {
+            return TryWriteString(key, value, Encoding.Unicode);
+        }
+
+        /// <inheritdoc />
+        public bool TryWriteString(string key, string value, Encoding encoding)
+        {
             var fileName = Path.Combine(DataDirectory, key);
 
             try
             {
-                File.WriteAllText(fileName, value, Encoding.Unicode);
+                File.WriteAllText(fileName, value, encoding);
                 return true;
             }
             catch (Exception ex)
@@ -133,7 +139,7 @@ namespace Alex.API.Services
                 return false;
             }
         }
-        
+
         public bool TryReadString(string key, Encoding encoding, out string value)
         {
             var fileName = Path.Combine(DataDirectory, key);

@@ -17,7 +17,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 		/// <inheritdoc />
 		public override void Reset()
 		{
-			Bone.Rotation = Bone.EntityModelBone.Rotation;
+			Bone.Rotation = Bone.Definition.Rotation;
 			//Bone.Position = Bone.EntityModelBone.;
 			//base.Reset();
 		}

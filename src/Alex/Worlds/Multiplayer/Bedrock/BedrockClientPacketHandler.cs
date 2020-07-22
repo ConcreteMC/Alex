@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Numerics;
 using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using Alex.API.Events;
 using Alex.API.Events.World;
@@ -22,6 +24,7 @@ using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Entity.Animations;
 using Alex.Items;
 using Alex.Net.Bedrock;
+using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Converters;
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
@@ -377,8 +380,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        MissingMemberHandling = MissingMemberHandling.Ignore
         };
         
-        private ConcurrentDictionary<string, EntityModel> _models = new ConcurrentDictionary<string, EntityModel>();
-        private bool ProcessEntityModel(EntityModel model, bool isRetry = false)
+        //private ConcurrentDictionary<string, EntityModel> _models = new ConcurrentDictionary<string, EntityModel>();
+        private bool ProcessEntityModel(IDictionary<string, EntityModel> models, EntityModel model, bool isRetry = false)
         {
 	        string modelName = model.Name;
             if (model.Name.Contains(":")) //This model inherits from another model.
@@ -387,7 +390,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
                 string parent = split[1];
 
                 EntityModel parentModel;
-                if (!ModelFactory.TryGetModel(parent, out parentModel) && !_models.TryGetValue(parent, out parentModel))
+                if (!ModelFactory.TryGetModel(parent, out parentModel) && !models.TryGetValue(parent, out parentModel))
                 {
                     if (!isRetry)
                     {
@@ -470,9 +473,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			            }
 		            }
 	            }
+	            
+	            return models.TryAdd(modelName, model);
             }
 
-            return _models.TryAdd(modelName, model);
+            return false;
         }
         
 		public void HandleMcpePlayerList(McpePlayerList message)
@@ -485,40 +490,91 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					
 					var u = new API.Utils.UUID(r.ClientUuid.GetBytes());
 					
-					bool isTransparent = false;
-					PooledTexture2D skinTexture;
-					Image<Rgba32> skinBitmap;
+					PooledTexture2D skinTexture = null;
+					Image<Rgba32> skinBitmap = null;
 					if (r.Skin.TryGetBitmap(out skinBitmap))
 					{
 						skinTexture =
 							TextureUtils.BitmapToTexture2D(AlexInstance.GraphicsDevice, skinBitmap);
+						
+						/*if (Storage.TryGetDirectory("skinDebug", out var debugDir))
+						{
+							skinBitmap.Save(Path.Combine(debugDir.FullName, r.DisplayName + ".png"));
+						}*/
 					}
 					else
 					{
-						AlexInstance.Resources.ResourcePack.TryGetBitmap("entity/alex", out var rawTexture);
-						skinTexture = TextureUtils.BitmapToTexture2D(AlexInstance.GraphicsDevice, rawTexture);
+						Log.Warn($"No custom skin data for player {r.DisplayName}");
+						
+						if (AlexInstance.Resources.ResourcePack.TryGetBitmap("entity/alex", out var rawTexture))
+						{
+							skinTexture = TextureUtils.BitmapToTexture2D(AlexInstance.GraphicsDevice, rawTexture);
+						}
 					}
 
 					Client.World?.AddPlayerListItem(new PlayerListItem(u, r.DisplayName, Gamemode.Survival, 0));
 
 					EntityModelRenderer renderer = null;
-					if (UseCustomEntityModels)
+					if (UseCustomEntityModels && !r.Skin.IsPersonaSkin)
 					{
+						if (r.Skin.GeometryData != null && Storage.TryGetDirectory("skinDebug", out var skinDebug))
+						{
+							//Storage.TryWriteString(
+						//		Path.Combine("skinDebug", "geometry." + r.DisplayName + ".json"),r.Skin.GeometryData, Encoding.UTF8);
+						}
+						
 						if (!string.IsNullOrWhiteSpace(r.Skin.GeometryData) && r.Skin.GeometryData != "null")
 						{
 							try
 							{
-								EntityModel model;
-								var resourcePatch = JsonConvert.DeserializeObject<SkinResourcePatch>(r.Skin.ResourcePatch, GeometrySerializationSettings);
-
-								if (!_models.TryGetValue(resourcePatch.Geometry.Default, out model))
+								EntityModel model = null;
+								if (string.IsNullOrWhiteSpace(r.Skin.ResourcePatch) || r.Skin.ResourcePatch == "null")
 								{
-									Dictionary<string, EntityModel> models = new Dictionary<string, EntityModel>();
-									EntityModel.GetEntries(r.Skin.GeometryData, models);
+									Log.Warn($"Resourcepatch null for player {r.DisplayName}");
+								}
+								else
+								{
+									GeometryModel geometryModel = null;
+								//	Dictionary<string, EntityModel> models = new Dictionary<string, EntityModel>();
 
-									foreach (var mm in models.ToArray())
+									try
 									{
-										if (ProcessEntityModel(mm.Value, false))
+										geometryModel =
+											MCJsonConvert.DeserializeObject<GeometryModel>(r.Skin.GeometryData);
+									}
+									catch (Exception ex)
+									{
+										Log.Warn($"Failed to parse geometry for player {r.DisplayName}: {ex.ToString()}");
+									}
+
+									if (geometryModel == null || geometryModel.Geometry.Count == 0)
+									{
+										Log.Warn($"!! Model count was 0 for player {r.DisplayName} !!");
+										//EntityModel.GetEntries(r.Skin.GeometryData, models);
+									}
+									else
+									{
+										var resourcePatch = JsonConvert.DeserializeObject<SkinResourcePatch>(
+											r.Skin.ResourcePatch, GeometrySerializationSettings);
+
+										if (resourcePatch?.Geometry != null)
+										{
+											model = geometryModel.FindGeometry(resourcePatch.Geometry.Default);
+											if (model == null)
+											{
+												Log.Warn(
+													$"Invalid geometry: {resourcePatch.Geometry.Default} for player {r.DisplayName}");
+											}
+										}
+										else
+										{
+											Log.Warn($"Resourcepatch geometry was null for player {r.DisplayName}");
+										}
+									}
+									
+									/*foreach (var mm in models.ToArray())
+									{
+										if (ProcessEntityModel(models, mm.Value, false))
 										{
 											models.Remove(mm.Key);
 										}
@@ -526,16 +582,14 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 									foreach (var mm in models.ToArray())
 									{
-										if (ProcessEntityModel(mm.Value, true))
+										if (ProcessEntityModel(models, mm.Value, true))
 										{
 											models.Remove(mm.Key);
 										}
-									}
-
-									_models.TryGetValue(resourcePatch.Geometry.Default, out model);
+									}*/
 								}
 
-								if (model != null)
+								if (model != null && ValidateModel(model, r.DisplayName))
 								{
 									var modelRenderer = new EntityModelRenderer(model, skinTexture);
 
@@ -546,11 +600,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 									else
 									{
 										modelRenderer.Dispose();
+										Log.Warn($"Invalid model: for player {r.DisplayName} (Disposing)");
 									}
 								}
 								else
 								{
-									Log.Warn($"INVALID SKIN: {r.Skin.SkinResourcePatch.Geometry.Default}");
+									Log.Warn($"Invalid model for player {r.DisplayName}");
 								}
 							}
 							catch (Exception ex)
@@ -560,19 +615,26 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 								{
 									name = r.Skin.SkinResourcePatch.Geometry.Default;
 								}*/
-								Log.Warn(ex, $"Could not create geometry ({name}): {ex.ToString()}");
+								Log.Warn(ex, $"Could not create geometry ({name}): {ex.ToString()} for player {r.DisplayName}");
 							}
+						}
+						else
+						{
+							Log.Warn($"Geometry data null for player {r.DisplayName}");
 						}
 					}
 
-					RemotePlayer m = new RemotePlayer(r.DisplayName, Client.World as World, Client, skinTexture);
+					RemotePlayer m = new RemotePlayer(r.DisplayName, Client.World as World, Client, renderer == null ? skinTexture : null);
 					m.UUID = u;
 					m.EntityId = r.EntityId;
 					m.SetInventory(new BedrockInventory(46));
-					
+
 					if (renderer != null)
+					{
 						m.ModelRenderer = renderer;
-					
+						Log.Info($"Custom model loaded for {r.DisplayName}");
+					}
+
 					if (!_players.TryAdd(r.ClientUuid, m))
 					{
 						Log.Warn($"Duplicate player record! {r.ClientUuid}");
@@ -594,6 +656,42 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		            }
 	            }
             }
+		}
+
+		private bool ValidateModel(EntityModel model, string playername)
+		{
+			bool valid = true;
+
+			if (model.Bones == null || model.Bones.Length == 0)
+			{
+				valid = false;
+				Log.Warn($"Missing bones for player model for player: {playername}");
+			}
+			else
+			{
+				foreach (var bone in model.Bones)
+				{
+					if (bone == null)
+					{
+						Log.Warn($"Found null bone in {playername}'s geometry.");
+						continue;
+					}
+
+					if (!bone.NeverRender && (bone.Cubes == null || bone.Cubes.Length == 0))
+					{
+					//	Log.Warn($"Invalid bone, missing cube definitions for player {playername} (Bone: {bone.Name})");
+					}
+
+					if (bone.Cubes != null)
+					{
+						foreach (var cube in bone.Cubes)
+						{
+						}
+					}
+				}
+			}
+
+			return valid;
 		}
 
 		public bool SpawnMob(long entityId,

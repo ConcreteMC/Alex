@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Newtonsoft.Json;
 
 namespace Alex.ResourcePackLib.Json.Models.Entities
 {
@@ -26,7 +27,7 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 	    [J("mirror", NullValueHandling = N.Ignore)]
 	    public bool? Mirror { get; set; }
 
-	    [J("inflate", NullValueHandling = N.Ignore)]
-	    public double Inflate { get; set; } = 1;
+	    [J("inflate", NullValueHandling = N.Ignore, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+	    public double Inflate { get; set; } = 0;
     }
 }

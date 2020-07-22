@@ -9,6 +9,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 {
     public class SkinResourcePatch : ICloneable
 	{
+		[JsonProperty("geometry")]
 		public GeometryIdentifier Geometry { get; set; }
 
 		public object Clone()

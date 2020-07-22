@@ -22,7 +22,7 @@ namespace Alex.Entities.Models
 			{
 				new EntityModelBone(){ 
 					Name = "body",
-					Parent = "",
+					Parent = "waist",
 					Pivot = new Vector3(0f,24f,0f),
 					Rotation = new Vector3(0f,0f,0f),
 					BindPoseRotation = new Vector3(0f,0f,0f),
@@ -51,7 +51,7 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "head",
-					Parent = "",
+					Parent = "body",
 					Pivot = new Vector3(0f,24f,0f),
 					Rotation = new Vector3(0f,0f,0f),
 					BindPoseRotation = new Vector3(0f,0f,0f),
@@ -105,7 +105,7 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "hat",
-					Parent = "",
+					Parent = "head",
 					Pivot = new Vector3(0f,0f,0f),
 					Rotation = new Vector3(0f,0f,0f),
 					BindPoseRotation = new Vector3(0f,0f,0f),
@@ -116,7 +116,7 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "leftArm",
-					Parent = "",
+					Parent = "body",
 					Pivot = new Vector3(5f,21.5f,0f),
 					Rotation = new Vector3(0f,0f,0f),
 					BindPoseRotation = new Vector3(0f,0f,0f),
@@ -134,7 +134,7 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "rightArm",
-					Parent = "",
+					Parent = "body",
 					Pivot = new Vector3(-5f,21.5f,0f),
 					Rotation = new Vector3(0f,0f,0f),
 					BindPoseRotation = new Vector3(0f,0f,0f),
@@ -163,7 +163,7 @@ namespace Alex.Entities.Models
 				},
 				new EntityModelBone(){ 
 					Name = "leftSleeve",
-					Parent = "",
+					Parent = "leftArm",
 					Pivot = new Vector3(5f,21.5f,0f),
 					Rotation = new Vector3(0f,0f,0f),
 					BindPoseRotation = new Vector3(0f,0f,0f),
@@ -175,13 +175,14 @@ namespace Alex.Entities.Models
 						{
 							Origin = new Vector3(4f,11.5f,-2f),
 							Size = new Vector3(3f, 12f, 4f),
-							Uv = new Vector2(48f, 48f)
+							Uv = new Vector2(48f, 48f),
+							Inflate = 0.25
 						},
 					}
 				},
 				new EntityModelBone(){ 
 					Name = "rightSleeve",
-					Parent = "",
+					Parent = "rightArm",
 					Pivot = new Vector3(-5f,21.5f,0f),
 					Rotation = new Vector3(0f,0f,0f),
 					BindPoseRotation = new Vector3(0f,0f,0f),
@@ -193,13 +194,14 @@ namespace Alex.Entities.Models
 						{
 							Origin = new Vector3(-7f,11.5f,-2f),
 							Size = new Vector3(3f, 12f, 4f),
-							Uv = new Vector2(40f, 32f)
+							Uv = new Vector2(40f, 32f),
+							Inflate = 0.25
 						},
 					}
 				},
 				new EntityModelBone(){ 
 					Name = "leftPants",
-					Parent = "",
+					Parent = "leftLeg",
 					Pivot = new Vector3(1.9f,12f,0f),
 					Rotation = new Vector3(0f,0f,0f),
 					BindPoseRotation = new Vector3(0f,0f,0f),
@@ -211,13 +213,14 @@ namespace Alex.Entities.Models
 						{
 							Origin = new Vector3(-0.1f,0f,-2f),
 							Size = new Vector3(4f, 12f, 4f),
-							Uv = new Vector2(0f, 48f)
+							Uv = new Vector2(0f, 48f),
+							Inflate = 0.25
 						},
 					}
 				},
 				new EntityModelBone(){ 
 					Name = "rightPants",
-					Parent = "",
+					Parent = "rightLeg",
 					Pivot = new Vector3(-1.9f,12f,0f),
 					Rotation = new Vector3(0f,0f,0f),
 					BindPoseRotation = new Vector3(0f,0f,0f),
@@ -229,13 +232,14 @@ namespace Alex.Entities.Models
 						{
 							Origin = new Vector3(-3.9f,0f,-2f),
 							Size = new Vector3(4f, 12f, 4f),
-							Uv = new Vector2(0f, 32f)
+							Uv = new Vector2(0f, 32f),
+							Inflate = 0.25
 						},
 					}
 				},
 				new EntityModelBone(){ 
 					Name = "jacket",
-					Parent = "",
+					Parent = "body",
 					Pivot = new Vector3(0f,24f,0f),
 					Rotation = new Vector3(0f,0f,0f),
 					BindPoseRotation = new Vector3(0f,0f,0f),
@@ -247,7 +251,8 @@ namespace Alex.Entities.Models
 						{
 							Origin = new Vector3(-4f,12f,-2f),
 							Size = new Vector3(8f, 12f, 4f),
-							Uv = new Vector2(16f, 32f)
+							Uv = new Vector2(16f, 32f),
+							Inflate = 0.25
 						},
 					}
 				},

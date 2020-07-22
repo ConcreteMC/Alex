@@ -166,35 +166,41 @@ namespace Alex.Graphics.Models
 		public sealed class Cube
 		{
 			public Vector3 Size;
-
+			public Vector2 UvScale;
+			
 			private readonly Vector2 _textureSize;
 
 			public bool Mirrored { get; set; } = false;
-			public Cube(Vector3 size, Vector2 textureSize)
+			public Cube(Vector3 size, Vector2 textureSize, Vector2 uv, Vector2 uvScale, double inflate, bool mirrored)
 			{
+				Mirrored = mirrored;
+				UvScale = uvScale;
 				this.Size = size;
+
+				var inflator = new Vector3((float) inflate);
+				
+				var inflated = size;
 				this._textureSize = textureSize; //new Vector2((size.X + size.Z) * 2, size.Y + size.Z);
 
 				//front verts with position and texture stuff
-				_topLeftFront = new Vector3(0.0f, 1.0f, 0.0f) * Size;
-				_topLeftBack = new Vector3(0.0f, 1.0f, 1.0f) * Size;
+				_topLeftFront = new Vector3(0.0f, 1.0f, 0.0f) * inflated;
+				_topLeftBack = new Vector3(0.0f, 1.0f, 1.0f) * inflated;
 				
-				_topRightFront = new Vector3(1.0f, 1.0f, 0.0f) * Size;
-				_topRightBack = new Vector3(1.0f, 1.0f, 1.0f) * Size;
-				
-				/*
-				 * _topLeftFront = new Vector3(0.0f, 1.0f, 0.0f) * Size;
-				_topLeftBack = new Vector3(0.0f, 1.0f, 1.0f) * Size;
-				
-				_topRightFront = new Vector3(1.0f, 1.0f, 0.0f) * Size;
-				_topRightBack = new Vector3(1.0f, 1.0f, 1.0f) * Size;
-				 */
+				_topRightFront = new Vector3(1.0f, 1.0f, 0.0f) * inflated;
+				_topRightBack = new Vector3(1.0f, 1.0f, 1.0f) * inflated;
 
 				// Calculate the position of the vertices on the bottom face.
-				_btmLeftFront = new Vector3(0.0f, 0.0f, 0.0f) * Size;
-				_btmLeftBack = new Vector3(0.0f, 0.0f, 1.0f) * Size;
-				_btmRightFront = new Vector3(1.0f, 0.0f, 0.0f) * Size;
-				_btmRightBack = new Vector3(1.0f, 0.0f, 1.0f) * Size;
+				_btmLeftFront = new Vector3(0.0f, 0.0f, 0.0f) * inflated;
+				_btmLeftBack = new Vector3(0.0f, 0.0f, 1.0f) * inflated;
+				_btmRightFront = new Vector3(1.0f, 0.0f, 0.0f) * inflated;
+				_btmRightBack = new Vector3(1.0f, 0.0f, 1.0f) * inflated;
+				
+				Front = GetFrontVertex(uv, uvScale);
+				Back = GetBackVertex(uv, uvScale);
+				Left = GetLeftVertex(uv, uvScale);
+				Right = GetRightVertex(uv, uvScale);
+				Top = GetTopVertex(uv, uvScale);
+				Bottom = GetBottomVertex(uv, uvScale);
 			}
 
 			public (VertexPositionNormalTexture[] vertices, short[] indexes) Front, Back, Left, Right, Top, Bottom;
@@ -208,27 +214,7 @@ namespace Alex.Graphics.Models
 			private readonly Vector3 _btmRightFront;
 			private readonly Vector3 _btmRightBack;
 
-			public void BuildCube(Vector2 uv)
-			{
-				Front = GetFrontVertex(uv);
-				Back = GetBackVertex(uv);
-				Left = GetLeftVertex(uv);
-				Right = GetRightVertex(uv);
-				Top = GetTopVertex(uv);
-				Bottom = GetBottomVertex(uv);
-			}
-
-			public void BuildCube(Vector2 front, Vector2 back, Vector2 left, Vector2 right, Vector2 top, Vector2 bottom)
-			{
-				Front = GetFrontVertex(front);
-				Back = GetBackVertex(back);
-				Left = GetLeftVertex(left);
-				Right = GetRightVertex(right);
-				Top = GetTopVertex(top);
-				Bottom = GetBottomVertex(bottom);
-			}
-
-			private (VertexPositionNormalTexture[] vertices, short[] indexes) GetLeftVertex(Vector2 uv)
+			private (VertexPositionNormalTexture[] vertices, short[] indexes) GetLeftVertex(Vector2 uv, Vector2 uvScale)
 			{
 				Vector3 normal = new Vector3(-1.0f, 0.0f, 0.0f) * Size;
 
@@ -252,7 +238,7 @@ namespace Alex.Graphics.Models
 				});
 			}
 
-			private (VertexPositionNormalTexture[] vertices, short[] indexes) GetRightVertex(Vector2 uv)
+			private (VertexPositionNormalTexture[] vertices, short[] indexes) GetRightVertex(Vector2 uv, Vector2 uvScale)
 			{
 				Vector3 normal = new Vector3(1.0f, 0.0f, 0.0f) * Size;
 
@@ -275,7 +261,7 @@ namespace Alex.Graphics.Models
 				});
 			}
 
-			private (VertexPositionNormalTexture[] vertices, short[] indexes) GetFrontVertex(Vector2 uv)
+			private (VertexPositionNormalTexture[] vertices, short[] indexes) GetFrontVertex(Vector2 uv, Vector2 uvScale)
 			{
 				Vector3 normal = new Vector3(0.0f, 0.0f, 1.0f) * Size;
 
@@ -297,7 +283,7 @@ namespace Alex.Graphics.Models
 					//0, 2, 1, 2, 3, 1
 				});
 			}
-			private (VertexPositionNormalTexture[] vertices, short[] indexes) GetBackVertex(Vector2 uv)
+			private (VertexPositionNormalTexture[] vertices, short[] indexes) GetBackVertex(Vector2 uv, Vector2 uvScale)
 			{
 				Vector3 normal = new Vector3(0.0f, 0.0f, -1.0f) * Size;
 
@@ -320,7 +306,7 @@ namespace Alex.Graphics.Models
 				});
 			}
 
-			private (VertexPositionNormalTexture[] vertices, short[] indexes) GetTopVertex(Vector2 uv)
+			private (VertexPositionNormalTexture[] vertices, short[] indexes) GetTopVertex(Vector2 uv, Vector2 uvScale)
 			{
 				Vector3 normal = new Vector3(0.0f, 1.0f, 0.0f) * Size;
 
@@ -342,7 +328,7 @@ namespace Alex.Graphics.Models
 				});
 			}
 
-			private (VertexPositionNormalTexture[] vertices, short[] indexes) GetBottomVertex(Vector2 uv)
+			private (VertexPositionNormalTexture[] vertices, short[] indexes) GetBottomVertex(Vector2 uv, Vector2 uvScale)
 			{
 				Vector3 normal = new Vector3(0.0f, -1.0f, 0.0f) * Size;
 

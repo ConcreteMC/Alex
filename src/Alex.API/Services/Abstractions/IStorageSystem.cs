@@ -24,6 +24,8 @@ namespace Alex.API.Services
         #region String
         
         bool TryWriteString(string key, string value);
+        bool TryWriteString(string key, string value, Encoding encoding);
+        
         bool TryReadString(string key, out string value);
         bool TryReadString(string key, out string value, Encoding encoding);
         

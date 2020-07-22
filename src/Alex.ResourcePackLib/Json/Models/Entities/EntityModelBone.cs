@@ -8,6 +8,7 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 
     public sealed class EntityModelBone
 	{
+		[J("name")]
 		public string Name { get; set; }
 		public string Material { get; set; } = string.Empty;
 
@@ -17,7 +18,8 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 		[J("locators", NullValueHandling = N.Ignore)]
         public EntityModelLocators Locators { get; set; }
 
-        public double Inflate { get; set; } = 0.0;
+        [J("inflate", NullValueHandling = N.Ignore)]
+        public double Inflate { get; set; } = 1.0;
         
         [J("rotation", NullValueHandling = N.Ignore)]
         public Vector3 Rotation { get; set; } = Vector3.Zero;
@@ -32,6 +34,7 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 		public bool Mirror { get; set; } = false;
 		public bool Reset { get; set; } = false;
 		
+		[J("cubes", NullValueHandling = N.Ignore)]
 		public EntityModelCube[] Cubes { get; set; }
     }
 

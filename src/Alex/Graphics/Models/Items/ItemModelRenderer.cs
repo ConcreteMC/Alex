@@ -27,17 +27,7 @@ namespace Alex.Graphics.Models.Items
         public ItemModelRenderer(ResourcePackModelBase model, McResourcePack resourcePack) : base(model, resourcePack,
             VertexPositionColor.VertexDeclaration)
         {
-            var m = model;
-
-            while (m.Parent != null)
-            {
-                m = m.Parent;
-            }
-            
-            if (m.ParentName != "item/handheld")
-            {
-                Offset = new Vector3(0f, -0.5f, 0f);
-            }
+           
         }
 
         public override void Cache(McResourcePack pack)
@@ -173,7 +163,7 @@ namespace Alex.Graphics.Models.Items
             }
         }
 
-        public DisplayElement ActiveDisplayItem { get; private set; }
+        public DisplayElement ActiveDisplayItem { get; private set; } = DisplayElement.Default;
 
         private void UpdateDisplay()
         {
@@ -183,7 +173,7 @@ namespace Alex.Graphics.Models.Items
             }
             else
             {
-                ActiveDisplayItem = null;
+                ActiveDisplayItem = DisplayElement.Default;
             }
         }
 
@@ -253,66 +243,28 @@ namespace Alex.Graphics.Models.Items
             var trans = Translation;
 
                   var world = Matrix.Identity;
-                
-       //     ModelTransformation transformation = new ModelTransformation();
-            
-            var a = new Vector3(0.5f, 0.5f, 0.5f);
-            
-          //  bool leftHanded = (_displayPosition & DisplayPosition.LeftHand) != 0;
-            
-         //   MatrixStacker matrixStacker = new MatrixStacker();
-          //  matrixStacker.
-            
+
+            var a = new Vector3(0.5f, 1.0f, 0.5f);
+
             if (activeDisplayItem != null)
             {
-               /* world *= Matrix.CreateTranslation(-a) * Matrix.CreateScale(activeDisplayItem.Scale)
-                                                      * Matrix.CreateTranslation(activeDisplayItem.Translation.X / 32f,
-                                                          activeDisplayItem.Translation.Y / 16f,
-                                                          activeDisplayItem.Translation.Z / 32f)
-                                                      * Matrix.CreateRotationX(
-                                                          MathUtils.ToRadians(activeDisplayItem.Rotation.X))
-                                                      * Matrix.CreateRotationZ(
-                                                          MathUtils.ToRadians(activeDisplayItem.Rotation.Z))
-                                                      * Matrix.CreateRotationY(
-                                                          MathUtils.ToRadians(activeDisplayItem.Rotation.Y)) *
-                                                      Matrix.CreateTranslation(a);*/
-
-          /*     transformation.Translate(-a);
-               
-               var hand = leftHanded ? -1f : 1f;
-
-               transformation.Translate(hand * (Translation.X + activeDisplayItem.Translation.X), Translation.Y + activeDisplayItem.Translation.Y,
-                   Translation.Z + activeDisplayItem.Translation.Z);
-
-               float rotationX = Rotation.X + activeDisplayItem.Rotation.X;
-               float rotationY = Rotation.Y + activeDisplayItem.Rotation.Y;
-               float rotationZ = Rotation.Z + activeDisplayItem.Rotation.Z;
-
-               if (leftHanded)
-               {
-                   rotationY = -rotationY;
-                   rotationZ = -rotationZ;
-               }
-               
-               transformation.Rotate(rotationX, rotationY, rotationZ);
-               transformation.Scale(Scale.X + activeDisplayItem.Scale.X, Scale.Y + activeDisplayItem.Scale.Y, Scale.Z + activeDisplayItem.Scale.Z);*/
-              // world *= Matrix.CreateScale(Scale.X + activeDisplayItem.Scale.X, Sc)
-
                 var displayTrans = new Vector3(activeDisplayItem.Translation.X / 32f,
                     activeDisplayItem.Translation.Y / 32f,
                     activeDisplayItem.Translation.Z / 32f);
                 
-                world *= Matrix.CreateTranslation(-a) * Matrix.CreateScale(activeDisplayItem.Scale * scale)
-                                                      * Matrix.CreateTranslation(displayTrans.X, displayTrans.Y, displayTrans.Z)
-                                                      * Matrix.CreateFromAxisAngle(Vector3.Right, MathUtils.ToRadians(activeDisplayItem.Rotation.X))
-                                                      * Matrix.CreateFromAxisAngle(Vector3.Backward, MathUtils.ToRadians(activeDisplayItem.Rotation.Z))
-                                                      * Matrix.CreateFromAxisAngle(Vector3.Up, MathUtils.ToRadians(activeDisplayItem.Rotation.Y))
-                                                      * Matrix.CreateTranslation(a);
+                world *= 
+                    Matrix.CreateTranslation(-a) * 
+                    Matrix.CreateScale(activeDisplayItem.Scale * scale)
+                    * Matrix.CreateTranslation(displayTrans.X, displayTrans.Y, displayTrans.Z)
+                    * Matrix.CreateFromAxisAngle(Vector3.Right, MathUtils.ToRadians(activeDisplayItem.Rotation.X))
+                    * Matrix.CreateFromAxisAngle(Vector3.Backward, MathUtils.ToRadians(activeDisplayItem.Rotation.Z))
+                    * Matrix.CreateFromAxisAngle(Vector3.Up, MathUtils.ToRadians(activeDisplayItem.Rotation.Y))
+                    * Matrix.CreateTranslation(a);
             }
             else
             {
-               // world *= Matrix.CreateScale(1f)
-               //          * Matrix.CreateFromAxisAngle(Vector3.Forward, MathHelper.TwoPi);
+                world *= Matrix.CreateScale(1f)
+                         * Matrix.CreateFromAxisAngle(Vector3.Forward, MathHelper.TwoPi);
             }
 
             var offset = Offset;
@@ -322,7 +274,7 @@ namespace Alex.Graphics.Models.Items
             }
             else if ((_displayPosition & ResourcePackLib.Json.Models.Items.DisplayPosition.FirstPerson) != 0)
             {
-                offset = new Vector3(-2f / 16f, 11.5f / 16f, -6f / 16f);
+                offset += new Vector3(-2f / 16f, 0.5f, -6f / 16f);
                 world *= Matrix.CreateRotationX(-MathF.PI / 5f);
              
                // world *= Matrix.CreateRotationZ(-1f / 16f);
@@ -330,7 +282,7 @@ namespace Alex.Graphics.Models.Items
             }
             else if ((_displayPosition & ResourcePackLib.Json.Models.Items.DisplayPosition.ThirdPerson) != 0)
             {
-                offset += new Vector3(-2f / 16f, 8f/ 16f, -3f / 16f);
+                offset += new Vector3(-2f / 16f, 0f, -3f / 16f);
                 world *= Matrix.CreateRotationX(-MathF.PI / 4f);
                 
                 //     world *= Matrix.CreateRotationX(MathF.PI / 4f);
@@ -342,7 +294,7 @@ namespace Alex.Graphics.Models.Items
                 world *= Matrix.CreateTranslation(offset);
             }
 
-            if ((_displayPosition & ResourcePackLib.Json.Models.Items.DisplayPosition.FirstPerson) == 0) //Not in first person
+      /*      if ((_displayPosition & ResourcePackLib.Json.Models.Items.DisplayPosition.FirstPerson) == 0) //Not in first person
             {
                 var pivot = offset;
 
@@ -350,7 +302,7 @@ namespace Alex.Graphics.Models.Items
                          * Matrix.CreateRotationX(MathUtils.ToRadians(Rotation.X))
                          * Matrix.CreateRotationZ(MathUtils.ToRadians(Rotation.Z))
                          * Matrix.CreateRotationY(MathUtils.ToRadians(Rotation.Y)) * Matrix.CreateTranslation(-pivot);
-            }
+            }*/
 
             //transformation.Build()
             

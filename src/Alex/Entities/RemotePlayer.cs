@@ -60,7 +60,11 @@ namespace Alex.Entities
 			PositionOffset = 1.62f;
 
 			GeometryName = geometry;
-			UpdateSkin(skinTexture);
+
+			if (skinTexture != null)
+			{
+				UpdateSkin(skinTexture);
+			}
 			//Inventory = new Inventory(46);
 			
 			MovementSpeed = 0.1f;
@@ -200,7 +204,7 @@ namespace Alex.Entities
 		{
 			if (renderer.GetBone(bone, out var boneValue))
 			{
-				boneValue.Rendered = value;
+			//	boneValue.Rendered = value;
 			}
 		}
 	}
