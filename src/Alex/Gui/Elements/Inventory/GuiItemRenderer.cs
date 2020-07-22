@@ -98,15 +98,15 @@ namespace Alex.Gui.Elements.Inventory
             
          //   Camera.MoveTo(EntityPosition, Vector3.Zero);
           //  Camera.UpdateProjectionMatrix();
-            Camera.Update(new UpdateArgs()
-            {
-                GameTime = gameTime,
-                Camera = Camera,
-                GraphicsDevice = Alex.Instance.GraphicsDevice
-            });
+          var args = new UpdateArgs()
+          {
+              GameTime = gameTime, Camera = Camera, GraphicsDevice = Alex.Instance.GraphicsDevice
+          };
+            Camera.Update(args);
             Camera.UpdateProjectionMatrix();
             
-            item.Renderer.Update(Matrix.CreateTranslation(new Vector3(0,0,0)), new PlayerLocation(new Vector3(0,0,0)));
+            item.Renderer.Update(args, Matrix.CreateTranslation(new Vector3(0,0,0)), Color.White.ToVector3(), new PlayerLocation(new Vector3(0,0,0)));
+          //  item.Renderer.Update(Matrix.CreateTranslation(new Vector3(0,0,0)), new PlayerLocation(new Vector3(0,0,0)));
             item.Renderer.Update(Alex.Instance.GraphicsDevice, Camera);
         }
 
@@ -159,7 +159,7 @@ namespace Alex.Gui.Elements.Inventory
 
                     graphics.Begin();
 
-                    Item.Renderer.Render(renderArgs);
+                    Item.Renderer.Render(renderArgs, false, out _);
                    // Entity.Render(renderArgs);
                     //  EntityModelRenderer?.Render(renderArgs, EntityPosition);
 

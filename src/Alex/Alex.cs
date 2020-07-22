@@ -569,33 +569,40 @@ namespace Alex
 			
 			if (storage.TryReadBytes("skin.png", out byte[] skinBytes))
 			{
-				var skinImage = Image.Load<Rgba32>(skinBytes);
-				
-				var modelTextureSize = PlayerModel.Description != null ?
-					new Point((int) PlayerModel.Description.TextureWidth, (int) PlayerModel.Description.TextureHeight) :
-					new Point((int) PlayerModel.Texturewidth, (int) PlayerModel.Textureheight);
-				
-				var textureSize = new Point(skinImage.Width, skinImage.Height);
+				using (var skinImage = Image.Load<Rgba32>(skinBytes))
+				{
+					var modelTextureSize = PlayerModel.Description != null ?
+						new Point((int) PlayerModel.Description.TextureWidth, (int) PlayerModel.Description.TextureHeight) :
+						new Point((int) PlayerModel.Texturewidth, (int) PlayerModel.Textureheight);
 
-				if (modelTextureSize != textureSize)
-				{
-					int newHeight = modelTextureSize.Y > textureSize.Y ? textureSize.Y : modelTextureSize.Y;
-					int newWidth = modelTextureSize.X > textureSize.X ? textureSize.X: modelTextureSize.X;
+					if (PlayerModel.Description != null)
+					{
+						modelTextureSize.X = (int) Math.Max(PlayerModel.Texturewidth, PlayerModel.Description.TextureWidth);
+						modelTextureSize.Y = (int) Math.Max(PlayerModel.Textureheight, PlayerModel.Description.TextureHeight);
+					}
+				
+					var textureSize = new Point(skinImage.Width, skinImage.Height);
+
+					if (modelTextureSize != textureSize)
+					{
+						int newHeight = modelTextureSize.Y > textureSize.Y ? textureSize.Y : modelTextureSize.Y;
+						int newWidth  = modelTextureSize.X > textureSize.X ? textureSize.X: modelTextureSize.X;
 					
-					skinImage.Mutate<Rgba32>(x => x.Resize(newWidth, newHeight));
+						//skinImage.Mutate<Rgba32>(x => x.Resize(newWidth, newHeight));
 					
-					Image<Rgba32> skinTexture = new Image<Rgba32>(modelTextureSize.X, modelTextureSize.Y);
-					skinTexture.Mutate<Rgba32>(
-						c =>
-						{
-							c.DrawImage(skinImage, new SixLabors.ImageSharp.Point(0, 0), 1f);
-						});
+						Image<Rgba32> skinTexture = new Image<Rgba32>(modelTextureSize.X, modelTextureSize.Y);
+						skinTexture.Mutate<Rgba32>(
+							c =>
+							{
+								c.DrawImage(skinImage, new SixLabors.ImageSharp.Point(0, 0), 1f);
+							});
 					
-					PlayerTexture = skinTexture;
-				}
-				else
-				{
-					PlayerTexture = skinImage;
+						PlayerTexture = skinTexture;
+					}
+					else
+					{
+						PlayerTexture = skinImage.Clone<Rgba32>();
+					}
 				}
 			}
 			else

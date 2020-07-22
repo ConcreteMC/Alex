@@ -12,6 +12,7 @@ using Alex.API.Resources;
 using Alex.API.Utils;
 using Alex.Blocks.Minecraft;
 using Alex.Entities.Properties;
+using Alex.Gamestates;
 using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Entity.Animations;
 using Alex.Graphics.Models.Items;
@@ -286,8 +287,9 @@ namespace Alex.Entities
 
             if ((inHand == null || inHand.Count == 0 || inHand.Id <= 0) && ItemRenderer != null)
             {
-              //  if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
+                if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
                 {
+	                bone.Remove(ItemRenderer);
                //     _rightArmModel?.Detach(ItemRenderer);
                 }
 
@@ -373,6 +375,11 @@ namespace Alex.Entities
 				            }
 
 				            renderer.DisplayPosition = pos;
+			            }
+
+			            if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
+			            {
+				            //bone.AddChild(renderer);
 			            }
 		            }
 		            else
@@ -594,11 +601,13 @@ namespace Alex.Entities
 					rendered += ModelRenderer.Vertices;
 				}
 			}
+			
 			if (ShowItemInHand && ItemRenderer != null)
 			{
-				ItemRenderer.Render(renderArgs);
-				
-				rendered += ItemRenderer.VertexCount;
+				ItemRenderer.Render(renderArgs, false, out int itemVertices);
+				rendered += itemVertices;
+
+				//rendered += ItemRenderer.VertexCount;
 			}
 
 			RenderedVertices = rendered;
@@ -616,11 +625,23 @@ namespace Alex.Entities
                 
                 if (ShowItemInHand)
                 {
-	                ItemRenderer?.Update(Matrix.Identity *
+	               /* ItemRenderer?.Update(Matrix.Identity *
 	                                     Matrix.CreateScale(Scale) *
 	                                     Matrix.CreateRotationY(MathHelper.ToRadians(180f - KnownPosition.HeadYaw)) *
 	                                     Matrix.CreateTranslation(KnownPosition.X, KnownPosition.Y, KnownPosition.Z), new PlayerLocation(KnownPosition.X, KnownPosition.Y, KnownPosition.Z, 180f - KnownPosition.HeadYaw, 180f - KnownPosition.Yaw, KnownPosition.Pitch));
+*/
+					//if (_rightArmModel.)
 
+					ItemRenderer?.Update(
+						args,
+						Matrix.Identity * Matrix.CreateScale(Scale)
+						                * Matrix.CreateRotationY(MathHelper.ToRadians(180f - KnownPosition.HeadYaw))
+						                * Matrix.CreateTranslation(KnownPosition.X, KnownPosition.Y, KnownPosition.Z),
+						Color.White.ToVector3(),
+						new PlayerLocation(
+							KnownPosition.X, KnownPosition.Y, KnownPosition.Z, 180f - KnownPosition.HeadYaw,
+							180f - KnownPosition.Yaw, KnownPosition.Pitch));
+					
                     ItemRenderer?.Update(args.GraphicsDevice, args.Camera);
                 }
             }

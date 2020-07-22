@@ -12,11 +12,11 @@ namespace Alex.Graphics.Models.Entity
 {
 	public partial class EntityModelRenderer
 	{
-		public class ModelBone : IDisposable
+		public class ModelBone : IDisposable, IAttachable
 		{
 			private Texture2D Texture { get; set; }
 			private PooledIndexBuffer Buffer { get; set; }
-			private List<ModelBone> Children { get; set; } = new List<ModelBone>();
+			private List<IAttachable> Children { get; set; } = new List<IAttachable>();
 			
 			private Vector3 _rotation = Vector3.Zero;
 
@@ -277,15 +277,27 @@ namespace Alex.Graphics.Models.Entity
 				Buffer?.MarkForDisposal();
 			}
 
-			public void AddChild(ModelBone modelBone)
+			public void AddChild(IAttachable modelBone)
 			{
 				if (!Children.Contains(modelBone))
+				{
 					Children.Add(modelBone);
+				}
 				else
 				{
-					Log.Warn($"Could not add {modelBone.Definition.Name} as child of {Definition.Name}");
+					Log.Warn($"Could not add {modelBone.Name} as child of {Definition.Name}");
 				}
 			}
+
+			public void Remove(IAttachable modelBone)
+			{
+				if (Children.Contains(modelBone))
+				{
+					Children.Remove(modelBone);
+				}
+			}
+
+			public string Name => Definition.Name;
 		}
 	}
 }

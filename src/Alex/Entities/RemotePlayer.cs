@@ -181,7 +181,7 @@ namespace Alex.Entities
 											int newWidth = modelTextureSize.X > textureSize.X ? textureSize.X: modelTextureSize.X;
 					
 											var bitmap = skinBitmap;
-											bitmap.Mutate<Rgba32>(xx => xx.Resize(newWidth, newHeight));
+										//	bitmap.Mutate<Rgba32>(xx => xx.Resize(newWidth, newHeight));
 					
 											Image<Rgba32> skinTexture = new Image<Rgba32>(modelTextureSize.X, modelTextureSize.Y);
 

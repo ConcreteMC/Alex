@@ -53,10 +53,14 @@ namespace Alex.Entities
 		{
 			if (CanRender)
 			{
-				ItemRenderer?.Update(
-					Matrix.Identity * Matrix.CreateScale(Scale)
-					                * Matrix.CreateRotationY(MathHelper.ToRadians(KnownPosition.Yaw))
-					                * Matrix.CreateTranslation(KnownPosition.ToVector3()), KnownPosition);
+				ItemRenderer.Update(args, Matrix.Identity * Matrix.CreateScale(Scale)
+				                                           * Matrix.CreateRotationY(MathHelper.ToRadians(KnownPosition.Yaw))
+				                                           * Matrix.CreateTranslation(KnownPosition.ToVector3()), Color.White.ToVector3(), KnownPosition);
+				
+				//ItemRenderer?.Update(
+				//	Matrix.Identity * Matrix.CreateScale(Scale)
+				//	                * Matrix.CreateRotationY(MathHelper.ToRadians(KnownPosition.Yaw))
+				//	                * Matrix.CreateTranslation(KnownPosition.ToVector3()), KnownPosition);
 
 				ItemRenderer?.Update(args.GraphicsDevice, args.Camera);
 			}
@@ -67,7 +71,7 @@ namespace Alex.Entities
 			if (!CanRender)
 				return;
             
-			ItemRenderer?.Render(renderArgs);
+			ItemRenderer?.Render(renderArgs, false, out _);
 		}
 
 		/// <inheritdoc />

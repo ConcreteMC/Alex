@@ -203,18 +203,26 @@ namespace Alex.Graphics.Models.Items
         protected Matrix ParentMatrix = Matrix.Identity;
 
         public long VertexCount => Vertices?.Length ?? 0;
-        
-        public void Update(Matrix matrix, PlayerLocation knownPosition)
+
+        /// <inheritdoc />
+        public bool ApplyHeadYaw { get; set; }
+
+        /// <inheritdoc />
+        public bool ApplyPitch { get; set; }
+
+        public void Update(IUpdateArgs args, Matrix characterMatrix, Vector3 diffuseColor, PlayerLocation modelLocation)
         {
-            ParentMatrix = matrix;
+            ParentMatrix = characterMatrix;
             
-            Translation = knownPosition.ToVector3();
+            Translation = modelLocation.ToVector3();
          //   Rotation = knownPosition.ToRotationVector3();
         }
 
-        public void Render(IRenderArgs args)
+        public void Render(IRenderArgs args, bool mock, out int vertices)
         {
             Render(args.GraphicsDevice);
+
+            vertices = 0;
         }
 
         private bool _canInit = true;
@@ -254,7 +262,7 @@ namespace Alex.Graphics.Models.Items
                 
                 world *= 
                     Matrix.CreateTranslation(-a) * 
-                    Matrix.CreateScale(activeDisplayItem.Scale * scale)
+                    Matrix.CreateScale(activeDisplayItem.Scale)
                     * Matrix.CreateTranslation(displayTrans.X, displayTrans.Y, displayTrans.Z)
                     * Matrix.CreateFromAxisAngle(Vector3.Right, MathUtils.ToRadians(activeDisplayItem.Rotation.X))
                     * Matrix.CreateFromAxisAngle(Vector3.Backward, MathUtils.ToRadians(activeDisplayItem.Rotation.Z))
@@ -370,5 +378,7 @@ namespace Alex.Graphics.Models.Items
         {
             return new ItemModelRenderer<TVertice>(Model, null, _declaration);
         }
+
+        public string Name => "Item-Renderer";
     }
 }

@@ -35,17 +35,16 @@ namespace Alex.Entities.Projectiles
 
                 if (DoRotation)
                 {
-                    ItemRenderer?.Update(
-                        Matrix.Identity * Matrix.CreateScale(Scale) * Matrix.CreateTranslation(-offset)
-                        * Matrix.CreateRotationY(MathHelper.ToRadians(_rotation)) * Matrix.CreateTranslation(offset)
-                        * Matrix.CreateTranslation((KnownPosition.ToVector3())), KnownPosition);
+                    
+                    ItemRenderer.Update(args, Matrix.Identity * Matrix.CreateScale(Scale) * Matrix.CreateTranslation(-offset)
+                                              * Matrix.CreateRotationY(MathHelper.ToRadians(_rotation)) * Matrix.CreateTranslation(offset)
+                                              * Matrix.CreateTranslation((KnownPosition.ToVector3())), Color.White.ToVector3(), KnownPosition);
                 }
                 else
                 {
-                    ItemRenderer?.Update(
-                        Matrix.Identity * Matrix.CreateScale(Scale)
-                                        * Matrix.CreateRotationY(MathHelper.ToRadians(KnownPosition.Yaw))
-                                        * Matrix.CreateTranslation(KnownPosition.ToVector3()), KnownPosition);
+                    ItemRenderer.Update(args, Matrix.Identity * Matrix.CreateScale(Scale)
+                                                              * Matrix.CreateRotationY(MathHelper.ToRadians(KnownPosition.Yaw))
+                                                              * Matrix.CreateTranslation(KnownPosition.ToVector3()), Color.White.ToVector3(), KnownPosition);
                 }
 
                 ItemRenderer?.Update(args.GraphicsDevice, args.Camera);
@@ -62,7 +61,7 @@ namespace Alex.Entities.Projectiles
             if (!CanRender)
                 return;
             
-            ItemRenderer?.Render(renderArgs);
+            ItemRenderer?.Render(renderArgs, false, out _);
         }
     }
 }

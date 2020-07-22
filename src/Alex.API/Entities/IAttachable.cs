@@ -6,9 +6,13 @@ namespace Alex.API.Entities
 {
     public interface IAttachable
     {
-        void Update(Matrix matrix, PlayerLocation knownPosition);
-        long VertexCount { get; }
+        bool ApplyHeadYaw { get; set; }
+        bool ApplyPitch { get; set; }
+
+        void Update(IUpdateArgs args, Matrix characterMatrix, Vector3 diffuseColor, PlayerLocation modelLocation);
+
+        void Render(IRenderArgs args, bool mock, out int vertices);
         
-        void Render(IRenderArgs args);
+        string Name { get; }
     }
 }

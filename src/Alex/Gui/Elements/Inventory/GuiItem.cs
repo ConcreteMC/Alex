@@ -49,15 +49,17 @@ namespace Alex.Gui.Elements.Inventory
 
             Camera.MoveTo(new Vector3(0f, 0f, 2f), new Vector3(0f, 0f, 0f));
 
-            _itemRenderer.Update(Matrix.Identity, 
-                new PlayerLocation(Vector3.Zero));
+            _itemRenderer.Update(args, Matrix.Identity, Color.White.ToVector3(), new PlayerLocation(new Vector3(0,0,0)));
+            
+                //   _itemRenderer.Update(Matrix.Identity, 
+          //      new PlayerLocation(Vector3.Zero));
             //_itemRenderer.Update(Matrix.Identity);
             _itemRenderer.Update(args.GraphicsDevice, args.Camera);
         }
 
         public void DrawContext3D(IRenderArgs args, IGuiRenderer guiRenderer)
         {
-            _itemRenderer.Render(args);
+            _itemRenderer.Render(args, false, out _);
         }
 
 
