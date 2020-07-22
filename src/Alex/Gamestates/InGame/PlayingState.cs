@@ -44,7 +44,7 @@ namespace Alex.Gamestates.InGame
 		{
 			NetworkProvider = networkProvider;
 
-			World = new World(alex.Services, graphics, Options, new FirstPersonCamera(Options.VideoOptions.RenderDistance, Vector3.Zero, Vector3.Zero), networkProvider);
+			World = new World(alex.Services, graphics, Options, networkProvider);
 			World.Player.IsFirstPersonMode = true;
 			
 			WorldProvider = worldProvider;
@@ -500,7 +500,7 @@ namespace Alex.Gamestates.InGame
 					World.ChunkManager.FogEnabled = !World.ChunkManager.FogEnabled;
 				}
 
-				if (currentKeyboardState.IsKeyDown(KeyBinds.ChangeCamera))
+				/*if (currentKeyboardState.IsKeyDown(KeyBinds.ChangeCamera))
 				{
 					if (World.Camera is FirstPersonCamera)
 					{
@@ -542,7 +542,7 @@ namespace Alex.Gamestates.InGame
 							}
 						}
 					}
-				}
+				}*/
 
 				if (currentKeyboardState.IsKeyDown(KeyBinds.ToggleWireframe))
 				{

@@ -22,15 +22,20 @@ namespace Alex.Graphics.Camera
 	    public float FarDistance { get; set; }
 
 	    public float FOV { get; set; } = 75f;
-		public Camera(int renderDistance)
+		public Camera()
+		{
+			SetRenderDistance(12);
+		}
+
+		public void SetRenderDistance(int renderDistance)
 		{
 			FarDistance = renderDistance * 16 * 16;// MathF.Pow(renderDistance, 2f);
 			
-		    ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(
-			    MathHelper.ToRadians(FOV),
-			    1.333333F,
-			    NearDistance,
-			    FarDistance);
+			ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(
+				MathHelper.ToRadians(FOV),
+				1.333333F,
+				NearDistance,
+				FarDistance);
 		}
 		
 		public Vector3 Offset { get; private set; } = Vector3.Zero;
@@ -138,16 +143,15 @@ namespace Alex.Graphics.Camera
 		    MoveTo(PreviewMove(scale), Rotation);
 	    }
 
-		public virtual void Update(IUpdateArgs args, IEntity entity)
+		public virtual void Update(IUpdateArgs args)
 		{
-			Update(args, entity.KnownPosition);
+			//Update(args, entity.KnownPosition);
 		}
 
-	    public virtual void Update(IUpdateArgs args, PlayerLocation entityLocation)
+	    /*public virtual void Update(IUpdateArgs args, PlayerLocation entityLocation)
 	    {
-			
-			MoveTo(entityLocation.ToVector3(), 
+		    MoveTo(entityLocation.ToVector3(), 
 				new Vector3(MathHelper.ToRadians(entityLocation.HeadYaw), MathHelper.ToRadians(entityLocation.HeadYaw), MathHelper.ToRadians(entityLocation.Pitch)));
-	    }
+	    }*/
 	}
 }

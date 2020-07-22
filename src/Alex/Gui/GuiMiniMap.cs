@@ -33,7 +33,7 @@ namespace Alex.Gui
             Margin = new Thickness(10, 10);
             Anchor = Alignment.TopRight;
 
-            Camera = new TopDownCamera(16);
+            Camera = new TopDownCamera();
         }
 
         protected override void OnInit(IGuiRenderer renderer)

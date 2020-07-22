@@ -19,9 +19,11 @@ namespace Alex.API.Graphics
 		void Move(Vector3 scale);
 		void MoveTo(Vector3 position, Vector3 rotation);
 		Vector3 PreviewMove(Vector3 amount);
-		void Update(IUpdateArgs args, IEntity entity);
-		void Update(IUpdateArgs args, PlayerLocation entityLocation);
+		void Update(IUpdateArgs args);
+	//	void Update(IUpdateArgs args, PlayerLocation entityLocation);
 		void UpdateAspectRatio(float aspectRatio);
 		void UpdateProjectionMatrix();
+
+		void SetRenderDistance(int renderDistance);
 	}
 }

@@ -4,7 +4,7 @@ namespace Alex.Graphics.Camera
 {
     public class TopDownCamera : Camera
     {
-        public TopDownCamera(int renderDistance) : base(renderDistance)
+        public TopDownCamera() : base()
         {
         }
 

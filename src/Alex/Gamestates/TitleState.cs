@@ -335,7 +335,7 @@ namespace Alex.Gamestates
 			var pitch = (float)mouseDelta.GetPitch();
 			var yaw = (float)headYaw;
 
-			_playerView.SetEntityRotation(-yaw, pitch, -headYaw);
+			_playerView.SetEntityRotation(-yaw, -pitch, -headYaw);
 
 			KeyboardState s = Keyboard.GetState();
 			if (_prevKeyboardState.IsKeyDown(Keys.M) && s.IsKeyUp(Keys.M))

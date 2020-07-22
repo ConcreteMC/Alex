@@ -3,6 +3,7 @@ using Alex.API.Input;
 using Alex.API.Input.Listeners;
 using Alex.API.Services;
 using Alex.API.Utils;
+using Alex.Graphics.Camera;
 using Alex.Gui.Dialogs.Containers;
 using Alex.Worlds;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,7 +31,7 @@ namespace Alex.Entities
         private Player Player { get; }
 		private InputManager GlobalInputManager { get; }
 		private GamePadInputListener GamePadInputListener { get; }
-
+		
 		public PlayerController(GraphicsDevice graphics, World world, InputManager inputManager, Player player, PlayerIndex playerIndex)
 		{
 			Player = player;
@@ -68,6 +69,13 @@ namespace Alex.Entities
 				{
 					GamepadSensitivity = newValue;
 				});
+			
+			/*Cameras = new Camera[]
+			{
+				new FirstPersonCamera(Vector3.Zero, Vector3.Zero),
+				new ThirdPersonCamera(Vector3.Zero, Vector3.Zero, ThirdPersonCamera.ThirdPersonCameraMode.Front), 
+				new ThirdPersonCamera(Vector3.Zero, Vector3.Zero, ThirdPersonCamera.ThirdPersonCameraMode.Back) 
+			};*/
 		}
 
 		private bool _inActive = true;
@@ -140,6 +148,11 @@ namespace Alex.Entities
 		    if (InputManager.IsPressed(InputCommand.HotBarSelect7)) Player.Inventory.SelectedSlot = 6;
 		    if (InputManager.IsPressed(InputCommand.HotBarSelect8)) Player.Inventory.SelectedSlot = 7;
 		    if (InputManager.IsPressed(InputCommand.HotBarSelect9)) Player.Inventory.SelectedSlot = 8;
+
+		    if (InputManager.IsPressed(InputCommand.ToggleCamera))
+		    {
+			    World.Camera.ToggleMode();
+		    }
 		    
 		    if (InputManager.IsPressed(InputCommand.Exit))
 		    {

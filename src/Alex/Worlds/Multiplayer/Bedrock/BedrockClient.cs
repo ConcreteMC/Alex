@@ -107,7 +107,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         private IOptionsProvider OptionsProvider { get; }
         private XboxAuthService XboxAuthService { get; }
         private AlexOptions Options => OptionsProvider.AlexOptions;
-        private DedicatedThreadPool _threadPool;
+        public DedicatedThreadPool WorkerThreadPool { get; }
         
         public PlayerProfile PlayerProfile { get; }
         private CancellationTokenSource CancellationTokenSource { get; }
@@ -152,7 +152,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			
 			Options.VideoOptions.RenderDistance.Bind(RenderDistanceChanged);
 			Options.VideoOptions.ClientSideLighting.Bind(ClientSideLightingChanged);
-			_threadPool = threadPool;
+			WorkerThreadPool = threadPool;
 
 			ChunkProcessor = new ChunkProcessor(this, alex.ThreadPool,
 				alex.Services.GetRequiredService<IOptionsProvider>().AlexOptions.MiscelaneousOptions.ServerSideLighting,
@@ -1180,7 +1180,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			EventDispatcher?.UnregisterEvents(this);
 			
 			Close();
-			_threadPool.Dispose();
+			WorkerThreadPool.Dispose();
 			//_threadPool.WaitForThreadsExit();
 		}
 

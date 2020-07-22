@@ -103,7 +103,7 @@ namespace Alex.Gui.Elements.Inventory
                 GameTime = gameTime,
                 Camera = Camera,
                 GraphicsDevice = Alex.Instance.GraphicsDevice
-            }, EntityPosition);
+            });
             Camera.UpdateProjectionMatrix();
             
             item.Renderer.Update(Matrix.CreateTranslation(new Vector3(0,0,0)), new PlayerLocation(new Vector3(0,0,0)));

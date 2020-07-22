@@ -24,6 +24,7 @@ using Alex.Entities;
 using Alex.Gamestates;
 using Alex.Graphics.Camera;
 using Alex.Graphics.Models;
+using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Items;
 using Alex.Net;
 using Alex.Utils;
@@ -56,7 +57,7 @@ namespace Alex.Worlds
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(World));
 
 		private GraphicsDevice Graphics { get; }
-		public Camera Camera { get; set; }
+		public EntityCamera Camera { get; }
 
 		public Player Player { get; set; }
 		private AlexOptions Options { get; }
@@ -92,11 +93,10 @@ namespace Alex.Worlds
 		public bool SendCommandfeedback { get; set; } = true;
 		public int RandomTickSpeed { get; set; } = 3;
 		
-		public World(IServiceProvider serviceProvider, GraphicsDevice graphics, AlexOptions options, Camera camera,
+		public World(IServiceProvider serviceProvider, GraphicsDevice graphics, AlexOptions options,
 			NetworkProvider networkProvider)
 		{
 			Graphics = graphics;
-			Camera = camera;
 			Options = options;
 
 			PhysicsEngine = new PhysicsManager(this);
@@ -113,14 +113,24 @@ namespace Alex.Worlds
 			EventDispatcher = serviceProvider.GetRequiredService<IEventDispatcher>();
 			
 			string username = string.Empty;
+			PooledTexture2D texture;
+			
+			if (Alex.PlayerTexture != null)
+			{
+				texture = TextureUtils.BitmapToTexture2D(graphics, Alex.PlayerTexture);
+			}
+			else
+			{
+				resources.ResourcePack.TryGetBitmap("entity/alex", out var rawTexture);
+				texture = TextureUtils.BitmapToTexture2D(graphics, rawTexture);
+			}
+			
 			Skin skin = profileService?.CurrentProfile?.Skin;
 			if (skin == null)
 			{
-				resources.ResourcePack.TryGetBitmap("entity/alex", out var rawTexture);
-				var t = TextureUtils.BitmapToTexture2D(graphics, rawTexture);
 				skin = new Skin()
 				{
-					Texture = t,
+					Texture = texture,
 					Slim = true
 				};
 			}
@@ -130,8 +140,19 @@ namespace Alex.Worlds
 				username = profileService.CurrentProfile.Username;
 			}
 
-			Player = new Player(graphics, serviceProvider.GetRequiredService<Alex>().InputManager, username, this, skin, networkProvider, PlayerIndex.One, camera);
+			Player = new Player(graphics, serviceProvider.GetRequiredService<Alex>().InputManager, username, this, skin, networkProvider, PlayerIndex.One);
+			Camera = new EntityCamera(Player);
+			
+			if (Alex.PlayerModel != null)
+			{
+				EntityModelRenderer modelRenderer = new EntityModelRenderer(Alex.PlayerModel, texture);
 
+				if (modelRenderer.Valid)
+				{
+					Player.ModelRenderer = modelRenderer;
+				}
+			}
+			
 			Player.KnownPosition = new PlayerLocation(GetSpawnPoint());
 			Camera.MoveTo(Player.KnownPosition, Vector3.Zero);
 
@@ -170,6 +191,12 @@ namespace Alex.Worlds
 			UseDepthMap = options.VideoOptions.Depthmap;
 			options.VideoOptions.Depthmap.Bind((old, newValue) => { UseDepthMap = newValue; });
 
+			options.VideoOptions.RenderDistance.Bind(
+				(old, newValue) =>
+				{
+					Camera.SetRenderDistance(newValue);
+				});
+			Camera.SetRenderDistance(options.VideoOptions.RenderDistance);
 			//ServerType = (networkProvider is BedrockClient) ? ServerType.Bedrock : ServerType.Java;
 		}
 
@@ -261,17 +288,8 @@ namespace Alex.Worlds
 	            RenderStage.Liquid);
 
 			//TestItemRender.Render(args.GraphicsDevice, (Camera.Position + (Camera.Direction * 2.5f)));
-			
-	        if (Camera is ThirdPersonCamera)
-	        {
-		        Player.RenderEntity = true;
-	        }
-	        else
-	        {
-		        Player.RenderEntity = false;
-	        }
 
-	        Player.Camera = Camera;
+			//Player.Camera = Camera;
 	        Player.Render(args);
         }
 
@@ -301,16 +319,18 @@ namespace Alex.Worlds
 		private float BrightnessMod = 0f;
 		public void Update(UpdateArgs args)
 		{
-			args.Camera = Camera;
+			var camera = Camera;
+			
+			args.Camera = camera;
 			if (Player.FOVModifier != _fovModifier)
 			{
 				_fovModifier = Player.FOVModifier;
 
-				Camera.FOV += _fovModifier;
-				Camera.UpdateProjectionMatrix();
-				Camera.FOV -= _fovModifier;
+				camera.FOV += _fovModifier;
+				camera.UpdateProjectionMatrix();
+				camera.FOV -= _fovModifier;
 			}
-			Camera.Update(args, Player);
+			camera.Update(args);
 
 			BrightnessMod = SkyRenderer.BrightnessModifier;
 			

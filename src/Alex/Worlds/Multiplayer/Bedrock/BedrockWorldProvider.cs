@@ -30,7 +30,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		public Alex Alex { get; }
 		protected BedrockClient Client { get; }
 
-		private System.Threading.Timer _gameTickTimer;
+		private HighPrecisionTimer _gameTickTimer;
 		private IEventDispatcher EventDispatcher { get; }
 		public BedrockFormManager FormManager { get; }
 		
@@ -72,49 +72,45 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         
         private long _tickTime = 0;
         private long _lastPrioritization = 0;
-        private bool _isRealTick = false;
-		private void GameTick(object state)
+        private void GameTick(object state)
 		{
-			var isRealTick = _isRealTick;
-			_isRealTick = !isRealTick;
-			
 			if (World == null) return;
 
 			if (_initiated)
 			{
-				if (_isRealTick)
-				{
-					_tickTime++;
-				}
-				
+				_tickTime++;
+
 				if (World.Player != null && Client.HasSpawned)
 				{
-				//	player.IsSpawned = Spawned;
+					//	player.IsSpawned = Spawned;
 
-					if (World.Player.IsFlying != _flying && _isRealTick)
+					if (World.Player.IsFlying != _flying)
 					{
 						_flying = World.Player.IsFlying;
 
 						McpeAdventureSettings settings = McpeAdventureSettings.CreateObject();
-						settings.flags = GetAdventureFlags(); 
+						settings.flags = GetAdventureFlags();
 						Client.SendPacket(settings);
 						//SendPlayerAbilities(player);
 					}
-					
-					var pos = (PlayerLocation)World.Player.KnownPosition.Clone();
-					
-					if (pos.DistanceTo(_lastSentLocation) > 0.0f) {
-                        Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(pos.X,
-	                        pos.Y + Player.EyeLevel, pos.Z, pos.HeadYaw,
-	                        pos.Yaw, -pos.Pitch), World.Player.KnownPosition.OnGround);
 
-                        _lastSentLocation = pos;
+					var pos = (PlayerLocation) World.Player.KnownPosition.Clone();
+
+					if (pos.DistanceTo(_lastSentLocation) > 0.0f
+					    || MathF.Abs(pos.HeadYaw - _lastSentLocation.HeadYaw) > 0.0f
+					    || MathF.Abs(pos.Pitch - _lastSentLocation.Pitch) > 0.0f)
+					{
+						SendLocation(pos);
+						_lastSentLocation = pos;
 					}
 
-					if ((pos.DistanceTo(_lastLocation) > 16f || MathF.Abs(pos.HeadYaw - _lastLocation.HeadYaw) >= 10f) && (_tickTime - _lastPrioritization >= 10 && _isRealTick))
+					if ((pos.DistanceTo(_lastLocation) > 16f || MathF.Abs(pos.HeadYaw - _lastLocation.HeadYaw) >= 5.0f)
+					    && (_tickTime - _lastPrioritization >= 10))
 					{
 						World.ChunkManager.FlagPrioritization();
-						
+
+						SendLocation(pos);
+
 						_lastLocation = pos;
 						UnloadChunks(new ChunkCoordinates(pos), Client.ChunkRadius + 3);
 
@@ -122,19 +118,22 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					}
 				}
 
-				if (_isRealTick && _tickTime % 20 == 0 && CustomConnectedPong.CanPing)
+				if (_tickTime % 20 == 0 && CustomConnectedPong.CanPing)
 				{
 					Client.SendPing();
 				}
-
-
-				if (_isRealTick)
-				{
-					World.Player.OnTick();
-					World.EntityManager.Tick();
-					World.PhysicsEngine.Tick();
-				}
+				
+				World.Player.OnTick();
+				World.EntityManager.Tick();
+				World.PhysicsEngine.Tick();
 			}
+		}
+
+		private void SendLocation(PlayerLocation location)
+		{
+			Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(location.X,
+				location.Y + Player.EyeLevel, location.Z, location.HeadYaw,
+				location.Yaw, location.Pitch), location.OnGround);
 		}
 
 		//private ThreadSafeList<ChunkCoordinates> _loadedChunks = new ThreadSafeList<ChunkCoordinates>();
@@ -185,7 +184,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			World.Player.SetInventory(new BedrockInventory(46));
 
 			CustomConnectedPong.CanPing = true;
-			_gameTickTimer = new System.Threading.Timer(GameTick, null, 50, 25);
+			_gameTickTimer = new HighPrecisionTimer(50, GameTick);// new System.Threading.Timer(GameTick, null, 50, 50);
 		}
 
 		private bool VerifyConnection()

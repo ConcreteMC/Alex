@@ -160,12 +160,14 @@ namespace Alex.Gui.Elements.Context3D
                 }
             }
 
-            public GuiContext3DCamera(Vector3 basePosition) : base(1)
+            public GuiContext3DCamera(Vector3 basePosition) : base()
             {
                 Viewport = new Viewport(256, 128, 128, 256, 0.01f, 16.0f);
                 Position = basePosition;
                 Rotation = Vector3.Zero;
                 FOV = 25.0f;
+                
+                SetRenderDistance(1);
             }
 
             protected override void UpdateViewMatrix()

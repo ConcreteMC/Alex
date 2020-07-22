@@ -31,7 +31,7 @@ namespace Alex.Graphics.Models.Entity.Animations
 			if (prog > 1f)
 				prog = 2f - prog;
 			
-			Bone.Rotation = new Vector3(EasingFunction.EaseInCubic(Initial.Rotation.X, 120f, prog), 0f, (MathF.Sin(_swingValue2) * 17.5f));
+			Bone.Rotation = new Vector3(EasingFunction.EaseInCubic(Initial.Rotation.X, 120f, prog), 0f, (MathF.Sin(_swingValue2) * 11.5f));
 
 			if (progress >= 2f)
 				_finished = true;

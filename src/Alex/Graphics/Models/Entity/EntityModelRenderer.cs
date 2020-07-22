@@ -115,11 +115,27 @@ namespace Alex.Graphics.Models.Entity
 			_texture = texture;
 		}
 
+		private static Vector3 FlipX(Vector3 origin, Vector3 size)
+		{
+			if (origin.X >= 0)
+			{
+				origin.X = -(((MathF.Abs(origin.X) / size.X) + 1) * size.X);
+			}
+			else
+			{
+				origin.X = ((MathF.Abs(origin.X) / size.X) - 1) * size.X;
+			}
+
+			return origin;
+		}
+
 		private ModelBone ProcessBone(PooledTexture2D texture, EntityModel source, EntityModelBone bone, List<VertexPositionNormalTexture> vertices, Vector2 uvScale, Vector2 textureSize, Dictionary<string, ModelBone> modelBones)
 		{
 			ModelBone           modelBone;
 				
 			List<short> indices = new List<short>();
+
+			bone.Pivot *= new Vector3(-1f, 1f, 1f);
 			
 			if (bone.Cubes != null)
 			{
@@ -131,17 +147,20 @@ namespace Alex.Graphics.Models.Entity
 						continue;
 					}
 
+					//cube.Origin = FlipX(cube.Origin, cube.Size);
+
 					var size = cube.Size;
-					Cube built = new Cube(size, textureSize, cube.Uv, uvScale, cube.Inflate, bone.Mirror);
+
+					Cube built = new Cube(cube.InflatedSize, textureSize, cube.Uv, uvScale, (float) cube.Inflate, bone.Mirror);
 					//built.Mirrored = bone.Mirror;
 					//built.BuildCube(cube.Uv, uvScale);
 					
-					vertices = ModifyCubeIndexes(vertices, cube, ref built.Front);
-					vertices = ModifyCubeIndexes(vertices, cube, ref built.Back);
-					vertices = ModifyCubeIndexes(vertices, cube, ref built.Top);
-					vertices = ModifyCubeIndexes(vertices, cube, ref built.Bottom);
-					vertices = ModifyCubeIndexes(vertices, cube, ref built.Left);
-					vertices = ModifyCubeIndexes(vertices, cube, ref built.Right);
+					vertices = ModifyCubeIndexes(vertices, cube, ref built.Front, bone.Mirror);
+					vertices = ModifyCubeIndexes(vertices, cube, ref built.Back, bone.Mirror);
+					vertices = ModifyCubeIndexes(vertices, cube, ref built.Top, bone.Mirror);
+					vertices = ModifyCubeIndexes(vertices, cube, ref built.Bottom, bone.Mirror);
+					vertices = ModifyCubeIndexes(vertices, cube, ref built.Left, bone.Mirror);
+					vertices = ModifyCubeIndexes(vertices, cube, ref built.Right, bone.Mirror);
 
 					indices.AddRange(built.Front.indexes.Concat(built.Back.indexes).Concat(built.Top.indexes)
 					   .Concat(built.Bottom.indexes).Concat(built.Left.indexes).Concat(built.Right.indexes)
@@ -165,12 +184,12 @@ namespace Alex.Graphics.Models.Entity
 			                                 * Matrix.CreateTranslation(bone.Pivot);*/
 			var boneMatrix =
 			                  Matrix.CreateTranslation(-bone.Pivot)
-			                  * Matrix.CreateRotationY(MathUtils.ToRadians(bone.Rotation.Y))
+			                  * Matrix.CreateRotationY(MathUtils.ToRadians( bone.Rotation.Y))
 			                 * Matrix.CreateRotationX(MathUtils.ToRadians(-bone.Rotation.X))
 			                  * Matrix.CreateRotationZ(MathUtils.ToRadians(bone.Rotation.Z))
 			                 * Matrix.CreateTranslation(bone.Pivot);
 
-			modelBone = new ModelBone(texture, indices.ToArray(), bone, bindPoseMatrix * boneMatrix);
+			modelBone = new ModelBone(texture, indices.ToArray(), bone,  bindPoseMatrix * boneMatrix);
 
 			foreach (var childBone in source.Bones.Where(
 				x => string.Equals(x.Parent, bone.Name, StringComparison.InvariantCultureIgnoreCase)))
@@ -190,18 +209,19 @@ namespace Alex.Graphics.Models.Entity
 		}
 
 		private List<VertexPositionNormalTexture> ModifyCubeIndexes(List<VertexPositionNormalTexture> vertices, EntityModelCube cube,
-			ref (VertexPositionNormalTexture[] vertices, short[] indexes) data)
+			ref (VertexPositionNormalTexture[] vertices, short[] indexes) data, bool mirror)
 		{
-			var origin = cube.Origin;
+			var origin = FlipX(cube.InflatedOrigin, cube.InflatedSize);
+			
 			var pivot = cube.Pivot;
 			var rotation = cube.Rotation;
-			
+
 			Matrix cubeRotationMatrix = Matrix.CreateTranslation(origin);
 
 			if (rotation != Vector3.Zero)
 			{
 				cubeRotationMatrix *= Matrix.CreateTranslation(-pivot)
-				                      * Matrix.CreateRotationY(MathUtils.ToRadians(rotation.Y))
+				                      * Matrix.CreateRotationY(MathUtils.ToRadians(-rotation.Y))
 				                      * Matrix.CreateRotationX(MathUtils.ToRadians(-rotation.X))
 				                      * Matrix.CreateRotationZ(MathUtils.ToRadians(rotation.Z))
 				                      * Matrix.CreateTranslation(pivot);
@@ -211,6 +231,12 @@ namespace Alex.Graphics.Models.Entity
 			foreach (var vertice in data.vertices)
 			{
 				var vertex = vertice;
+
+				if ((cube.Mirror.HasValue && !cube.Mirror.Value) || (!cube.Mirror.HasValue))
+				{
+					//vertex.Position = RotateAboutOrigin(vertex.Position, sizeDivide, MathUtils.ToRadians(180f));
+				}
+
 				vertex.Position = Vector3.Transform(vertex.Position, cubeRotationMatrix);
 				//vertex.Position = Vector3.Transform(vertex.Position, Matrix.CreateTranslation(origin));
 				vertices.Add(vertex);
@@ -223,6 +249,11 @@ namespace Alex.Graphics.Models.Entity
 
 			return vertices;
 		}
+		
+		public Vector3 RotateAboutOrigin(Vector3 point, Vector3 origin, float rotation)
+		{
+			return Vector3.Transform(point - origin, Matrix.CreateRotationY(rotation)) + origin;
+		} 
 
 		private static RasterizerState RasterizerState = new RasterizerState()
 		{
@@ -284,11 +315,13 @@ namespace Alex.Graphics.Models.Entity
 		public virtual void Update(IUpdateArgs args, PlayerLocation position)
 		{
 			if (Bones == null) return;
+
 			foreach (var bone in Bones.Where(x => x.Value.Parent == null))
 			{
-				bone.Value.Update(args, Matrix.CreateScale(Scale / 16f) *
-				                        Matrix.CreateRotationY(MathUtils.ToRadians(180f - (position.Yaw))) *
-				                        Matrix.CreateTranslation(position), EntityColor * DiffuseColor, position);
+				bone.Value.Update(
+					args,
+					Matrix.CreateRotationY(MathUtils.ToRadians(180f)) * Matrix.CreateScale(Scale / 16f) * Matrix.CreateRotationY(MathUtils.ToRadians(-(position.Yaw)))
+					                                * Matrix.CreateTranslation(position), EntityColor * DiffuseColor, position);
 			}
 		}
 

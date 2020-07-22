@@ -171,7 +171,7 @@ namespace Alex.Graphics.Models
 			private readonly Vector2 _textureSize;
 
 			public bool Mirrored { get; set; } = false;
-			public Cube(Vector3 size, Vector2 textureSize, Vector2 uv, Vector2 uvScale, double inflate, bool mirrored)
+			public Cube(Vector3 size, Vector2 textureSize, Vector2 uv, Vector2 uvScale, float inflate, bool mirrored)
 			{
 				Mirrored = mirrored;
 				UvScale = uvScale;
@@ -179,21 +179,21 @@ namespace Alex.Graphics.Models
 
 				var inflator = new Vector3((float) inflate);
 				
-				var inflated = size;
+				//var inflated = size + new Vector3(inflate, inflate, inflate);
 				this._textureSize = textureSize; //new Vector2((size.X + size.Z) * 2, size.Y + size.Z);
 
 				//front verts with position and texture stuff
-				_topLeftFront = new Vector3(0.0f, 1.0f, 0.0f) * inflated;
-				_topLeftBack = new Vector3(0.0f, 1.0f, 1.0f) * inflated;
+				_topLeftFront = new Vector3(0.0f, 1.0f, 0.0f) * size;
+				_topLeftBack = new Vector3(0.0f, 1.0f, 1.0f) * size;
 				
-				_topRightFront = new Vector3(1.0f, 1.0f, 0.0f) * inflated;
-				_topRightBack = new Vector3(1.0f, 1.0f, 1.0f) * inflated;
+				_topRightFront = new Vector3(1.0f, 1.0f, 0.0f) * size;
+				_topRightBack = new Vector3(1.0f, 1.0f, 1.0f) * size;
 
 				// Calculate the position of the vertices on the bottom face.
-				_btmLeftFront = new Vector3(0.0f, 0.0f, 0.0f) * inflated;
-				_btmLeftBack = new Vector3(0.0f, 0.0f, 1.0f) * inflated;
-				_btmRightFront = new Vector3(1.0f, 0.0f, 0.0f) * inflated;
-				_btmRightBack = new Vector3(1.0f, 0.0f, 1.0f) * inflated;
+				_btmLeftFront = new Vector3(0.0f, 0.0f, 0.0f) * size;
+				_btmLeftBack = new Vector3(0.0f, 0.0f, 1.0f) * size;
+				_btmRightFront = new Vector3(1.0f, 0.0f, 0.0f) * size;
+				_btmRightBack = new Vector3(1.0f, 0.0f, 1.0f) * size;
 				
 				Front = GetFrontVertex(uv, uvScale);
 				Back = GetBackVertex(uv, uvScale);
@@ -286,9 +286,8 @@ namespace Alex.Graphics.Models
 			private (VertexPositionNormalTexture[] vertices, short[] indexes) GetBackVertex(Vector2 uv, Vector2 uvScale)
 			{
 				Vector3 normal = new Vector3(0.0f, 0.0f, -1.0f) * Size;
-
+				
 				var map = GetTextureMapping(uv + new Vector2(Size.Z + Size.Z + Size.X, Size.Z), Size.X, Size.Y);
-
 				// Add the vertices for the RIGHT face. 
 				return (new VertexPositionNormalTexture[]
 				{

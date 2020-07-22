@@ -166,17 +166,11 @@ namespace Alex.Entities
 		private EntityModelRenderer.ModelBone _leftLegModel;
 		private EntityModelRenderer.ModelBone _rightLegModel;
 
-		private EntityModelRenderer.ModelBone _leftSleeveModel;
-		private EntityModelRenderer.ModelBone _rightSleeveModel;
-
-		private EntityModelRenderer.ModelBone _leftPantsModel;
-		private EntityModelRenderer.ModelBone _rightPantsModel;
-
-		private EntityModelRenderer.ModelBone _jacketModel;
 		private EntityModelRenderer.ModelBone _body;
 		private EntityModelRenderer.ModelBone _head;
 		
 		public HealthManager HealthManager { get; }
+		public bool IsFirstPersonMode { get; set; } = false;
 		private Dictionary<string, EntityProperty> _entityProperties = new Dictionary<string, EntityProperty>()
 		{
 			
@@ -665,7 +659,7 @@ namespace Alex.Entities
 		{
 			if (_rightArmModel != null)
 			{
-				_rightArmModel.Animations.Enqueue(new SwingAnimation(_rightArmModel, TimeSpan.FromMilliseconds(300)));
+				_rightArmModel.Animations.Enqueue(new SwingAnimation(_rightArmModel, TimeSpan.FromMilliseconds(200)));
 			}
 
 			if (broadcast)
@@ -1043,14 +1037,6 @@ namespace Alex.Entities
 
 			ModelRenderer.GetBone("rightLeg", out _rightLegModel);
 			ModelRenderer.GetBone("leftLeg", out _leftLegModel);
-
-			ModelRenderer.GetBone("rightSleeve", out _rightSleeveModel);
-			ModelRenderer.GetBone("leftSleeve", out _leftSleeveModel);
-
-			ModelRenderer.GetBone("rightPants", out _rightPantsModel);
-			ModelRenderer.GetBone("leftPants", out _leftPantsModel);
-
-			ModelRenderer.GetBone("jacket", out _jacketModel);
 
 			if (ModelRenderer.GetBone("head", out _head))
 			{

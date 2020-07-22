@@ -17,7 +17,7 @@ namespace Alex.Gamestates.Debugging
     public class DebugModelRenderer : GuiElement
     {
         public ModelExplorer ModelExplorer { get; set; }
-        private ICamera Camera { get; }// = new FirstPersonCamera(16, Vector3.Zero, Vector3.Zero);
+        private DebugModelRendererCamera Camera { get; }// = new FirstPersonCamera(16, Vector3.Zero, Vector3.Zero);
        // private World World { get; }
         private BlockModelExplorer BlockModelExplorer { get; }
         private EntityModelExplorer EntityModelExplorer { get; }
@@ -188,7 +188,7 @@ namespace Alex.Gamestates.Debugging
 
             public Vector3 EntityPositionOffset { get; set; } = new Vector3(0f, 1.85f, 16f);
 
-            public DebugModelRendererCamera(DebugModelRenderer guiEntityModelView) : base(1 * 16 * 16)
+            public DebugModelRendererCamera(DebugModelRenderer guiEntityModelView) : base()
             {
                 _modelView = guiEntityModelView;
                 Viewport = new Viewport(256, 128, 128, 256, 0.1f, 128.0f);
@@ -223,6 +223,14 @@ namespace Alex.Gamestates.Debugging
                                                                        Viewport.MinDepth, Viewport.MaxDepth);
             }
 
+            public void Update(IUpdateArgs args, PlayerLocation entityLocation)
+            {
+                MoveTo(entityLocation.ToVector3(), 
+                    new Vector3(MathHelper.ToRadians(entityLocation.HeadYaw), MathHelper.ToRadians(entityLocation.HeadYaw), MathHelper.ToRadians(entityLocation.Pitch)));
+                
+                base.Update(args);
+            }
+            
             //public override void UpdateProjectionMatrix()
             //{
             //    var bounds = _modelView.RenderBounds;

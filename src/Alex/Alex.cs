@@ -1,41 +1,26 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading;
-using Alex.API;
 using Alex.API.Data.Servers;
 using Alex.API.Events;
 using Alex.API.Graphics.Typography;
 using Alex.API.Gui;
 using Alex.API.Input;
 using Alex.API.Input.Listeners;
-using Alex.API.Network;
 using Alex.API.Resources;
 using Alex.API.Services;
-using Alex.API.Utils;
-using Alex.API.World;
-using Alex.Blocks;
-using Alex.Blocks.Minecraft;
-using Alex.Blocks.State;
-using Alex.Blocks.Storage;
 using Alex.Entities;
 using Alex.Gamestates;
 using Alex.Gamestates.Debugging;
 using Alex.Gamestates.InGame;
-using Alex.Graphics.Effect;
 using Alex.Graphics.Models.Blocks;
 using Alex.Gui;
-using Alex.Gui.Dialogs.Containers;
-using Alex.Items;
 using Alex.Net;
-using Alex.Net.Bedrock;
 using Alex.Networking.Java.Packets;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Plugins;
@@ -44,8 +29,6 @@ using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Services;
 using Alex.Services.Discord;
 using Alex.Utils;
-using Alex.Utils.Inventories;
-using Alex.Worlds;
 using Alex.Worlds.Abstraction;
 using Alex.Worlds.Multiplayer.Bedrock;
 using Alex.Worlds.Multiplayer.Java;
@@ -56,20 +39,17 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using MiNET.Net;
-using MiNET.Utils;
-using MiNET.Utils.Skins;
 using Newtonsoft.Json;
 using NLog;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 using DedicatedThreadPool = Alex.API.Utils.DedicatedThreadPool;
 using DedicatedThreadPoolSettings = Alex.API.Utils.DedicatedThreadPoolSettings;
+using GeometryModel = Alex.Worlds.Multiplayer.Bedrock.GeometryModel;
 using GuiDebugHelper = Alex.Gui.GuiDebugHelper;
 using Image = SixLabors.ImageSharp.Image;
-using Plugin = MiNET.Plugins.Plugin;
 using Point = Microsoft.Xna.Framework.Point;
-using Skin = Alex.API.Utils.Skin;
 using TextInputEventArgs = Microsoft.Xna.Framework.TextInputEventArgs;
 using ThreadType = Alex.API.Utils.ThreadType;
 
@@ -555,10 +535,68 @@ namespace Alex
 
 			var storage = Services.GetRequiredService<IStorageSystem>();
 
+			if (storage.TryReadString("skin.json", out var str, Encoding.UTF8))
+			{
+				//var entries = new Dictionary<string, EntityModel>();
+				//EntityModel.GetEntries(str, entries);
+				var geometryModel =
+					MCJsonConvert.DeserializeObject<GeometryModel>(str);
+
+				var model = geometryModel.FindGeometry("geometry.humanoid.custom");
+
+				if (model == null)
+					model = geometryModel.FindGeometry("geometry.humanoid.customSlim");
+
+				if (model != null)
+				{
+					PlayerModel = model;
+				}
+			}
+			
+			if (PlayerModel == null)
+			{
+				if (ModelFactory.TryGetModel("geometry.humanoid.customSlim", out var model))
+				{
+					model.Name = "geometry.humanoid.customSlim";
+					PlayerModel = model;
+				}
+			}
+
+			if (PlayerModel != null)
+			{
+				Log.Info($"Player model loaded...");
+			}
+			
 			if (storage.TryReadBytes("skin.png", out byte[] skinBytes))
 			{
 				var skinImage = Image.Load<Rgba32>(skinBytes);
-				PlayerTexture = skinImage;
+				
+				var modelTextureSize = PlayerModel.Description != null ?
+					new Point((int) PlayerModel.Description.TextureWidth, (int) PlayerModel.Description.TextureHeight) :
+					new Point((int) PlayerModel.Texturewidth, (int) PlayerModel.Textureheight);
+				
+				var textureSize = new Point(skinImage.Width, skinImage.Height);
+
+				if (modelTextureSize != textureSize)
+				{
+					int newHeight = modelTextureSize.Y > textureSize.Y ? textureSize.Y : modelTextureSize.Y;
+					int newWidth = modelTextureSize.X > textureSize.X ? textureSize.X: modelTextureSize.X;
+					
+					skinImage.Mutate<Rgba32>(x => x.Resize(newWidth, newHeight));
+					
+					Image<Rgba32> skinTexture = new Image<Rgba32>(modelTextureSize.X, modelTextureSize.Y);
+					skinTexture.Mutate<Rgba32>(
+						c =>
+						{
+							c.DrawImage(skinImage, new SixLabors.ImageSharp.Point(0, 0), 1f);
+						});
+					
+					PlayerTexture = skinTexture;
+				}
+				else
+				{
+					PlayerTexture = skinImage;
+				}
 			}
 			else
 			{
@@ -571,46 +609,6 @@ namespace Alex
 			if (PlayerTexture != null)
 			{
 				Log.Info($"Player skin loaded...");
-			}
-			
-			if (storage.TryReadString("skin.json", out var str, Encoding.UTF8))
-			{
-				var entries = new Dictionary<string, EntityModel>();
-				EntityModel.GetEntries(str, entries);
-
-				if (entries.TryGetValue("geometry.humanoid.customSlim", out var slim))
-				{
-					if (PlayerTexture != null)
-					{
-						slim.Textureheight = PlayerTexture.Height;
-						slim.Texturewidth = PlayerTexture.Width;
-					}
-
-					PlayerModel = slim;
-				}
-				else if (entries.TryGetValue("geometry.humanoid.custom", out var noslim))
-				{
-					if (PlayerTexture != null)
-					{
-						slim.Textureheight = PlayerTexture.Height;
-						slim.Texturewidth = PlayerTexture.Width;
-					}
-					
-					PlayerModel = noslim;
-				}
-			}
-			else
-			{
-				if (ModelFactory.TryGetModel("geometry.humanoid.customSlim", out var model))
-				{
-					model.Name = "geometry.humanoid.customSlim";
-					PlayerModel = model;
-				}
-			}
-
-			if (PlayerModel != null)
-			{
-				Log.Info($"Player model loaded...");
 			}
 
 			if (LaunchSettings.ModelDebugging)
