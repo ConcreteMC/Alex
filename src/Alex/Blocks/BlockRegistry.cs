@@ -366,9 +366,20 @@ namespace Alex.Blocks
 			    () => new Carpet().WithLocation("minecraft:red_carpet"),
 			    () => new Carpet().WithLocation("minecraft:black_carpet"));
 		    
-		    this.Register("minecraft:light_block", new LightBlock());
+		    this.Register("minecraft:light_block", () => new LightBlock());
 		    
-		    this.Register("minecraft:soul_lantern", new SoulLantern());
+		    this.Register("minecraft:soul_lantern", () => new SoulLantern());
+		    this.Register("minecraft:shroomlight", () => new Shroomlight());
+		    this.Register("minecraft:conduit", () => new Conduit());
+		    this.Register("minecraft:nether_sprouts", () => new NetherSprouts());
+		    this.Register("minecraft:twisting_vines", () => new TwistingVines());
+		    this.Register("minecraft:twisting_vines_plant", () => new TwistingVinesPlant());
+		    this.Register("minecraft:weeping_vines_plant", () => new WeepingVinesPlant());
+		    this.Register("minecraft:weeping_vines", () => new WeepingVines());
+		    this.Register("minecraft:crimson_roots", () => new CrimsonRoot());
+		    this.Register("minecraft:crimson_fungus", () =>new CrimsonFungus());
+		    this.Register("minecraft:warped_roots", () => new WarpedRoots());
+		    this.Register("minecraft:warped_fungus", () => new WarpedFungus());
 	    }
     }
 }
