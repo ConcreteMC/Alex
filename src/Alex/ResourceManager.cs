@@ -15,6 +15,7 @@ using Alex.Blocks;
 using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
 using Alex.Entities;
+using Alex.Entities.BlockEntities;
 using Alex.Gamestates;
 using Alex.Graphics;
 using Alex.Graphics.Effect;
@@ -341,7 +342,9 @@ namespace Alex
             LoadResourcePacks(device, progressReceiver, Options.AlexOptions.ResourceOptions.LoadedResourcesPacks.Value);
 
             ItemFactory.Init(RegistryManager, this, ResourcePack, progressReceiver);
-
+			
+	        BlockEntityFactory.LoadResources(device, ResourcePack);
+            
             if (Storage.TryGetDirectory(Path.Combine("assets", "bedrockpacks"), out DirectoryInfo info))
             {
 	            SkinPackDirectory = info;

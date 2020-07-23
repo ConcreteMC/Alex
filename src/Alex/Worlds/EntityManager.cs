@@ -8,6 +8,7 @@ using Alex.API.Network;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Entities;
+using Alex.Entities.BlockEntities;
 using Alex.Graphics.Models;
 using Alex.Net;
 using Microsoft.Xna.Framework;
@@ -20,6 +21,7 @@ namespace Alex.Worlds
 	{
 		private ConcurrentDictionary<long, Entity> Entities { get; }
 		private ConcurrentDictionary<UUID, Entity> EntityByUUID { get; }
+		private ConcurrentDictionary<BlockCoordinates, BlockEntity> BlockEntities { get; }
 		private GraphicsDevice Device { get; }
 
 	    public int EntityCount => Entities.Count;
@@ -36,6 +38,7 @@ namespace Alex.Worlds
 		    Device = device;
 			Entities = new ConcurrentDictionary<long, Entity>();
 			EntityByUUID = new ConcurrentDictionary<UUID, Entity>();
+			BlockEntities = new ConcurrentDictionary<BlockCoordinates, BlockEntity>();
 		}
 
 		public void Tick()
@@ -43,8 +46,9 @@ namespace Alex.Worlds
 			List<Entity> rendered = new List<Entity>();
 			
 			var entities = Entities.Values.ToArray();
-
-			foreach (var entity in entities)
+			var blockEntities = BlockEntities.Values.ToArray();
+			
+			foreach (var entity in entities.Concat(blockEntities))
 			{
 				entity.OnTick();
 
@@ -68,7 +72,9 @@ namespace Alex.Worlds
 		    var lightColor = new Color(245, 245, 225).ToVector3();
 		    
 		    var entities = Entities.Values.ToArray();
-		    foreach (var entity in entities)
+		    var blockEntities = BlockEntities.Values.ToArray();
+		    
+		    foreach (var entity in entities.Concat(blockEntities))
 		    {
 			    if (entity.ModelRenderer != null)
 				    entity.ModelRenderer.DiffuseColor = ( new Color(245, 245, 225).ToVector3() * ((1f / 16f) * entity.SurroundingLightValue))
@@ -194,6 +200,22 @@ namespace Alex.Worlds
 		    }
 
 		    return false;
+	    }
+
+	    public bool AddBlockEntity(BlockCoordinates coordinates, BlockEntity entity)
+	    {
+		    entity.KnownPosition = coordinates;
+		    return BlockEntities.TryAdd(coordinates, entity);
+	    }
+
+	    public bool TryGetBlockEntity(BlockCoordinates coordinates, out BlockEntity entity)
+	    {
+		    return BlockEntities.TryGetValue(coordinates, out entity);
+	    }
+	    
+	    public void RemoveBlockEntity(BlockCoordinates coordinates)
+	    {
+		    BlockEntities.TryRemove(coordinates, out _);
 	    }
 
 	    public void Remove(long id)

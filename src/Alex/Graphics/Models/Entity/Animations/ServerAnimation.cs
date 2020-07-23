@@ -40,16 +40,16 @@ namespace Alex.Graphics.Models.Entity.Animations
 			_elapsed += delta;
 			
 			var progress = (1f / Duration) * _elapsed;
+
+			Bone.Rotation = new Vector3(EasingFunction.Linear(Start.Rotation.X, Target.Rotation.X, (float)progress)
+				, EasingFunction.Linear(Start.Rotation.Y, Target.Rotation.Y, (float)progress)
+				, EasingFunction.Linear(Start.Rotation.Z, Target.Rotation.Z, (float)progress));
 			
 			if (progress >= 1f)
 			{
 				_finished = true;
 				return;
 			}
-
-			Bone.Rotation = new Vector3(EasingFunction.Linear(Start.Rotation.X, Target.Rotation.X, (float)progress)
-				, EasingFunction.Linear(Start.Rotation.Y, Target.Rotation.Y, (float)progress)
-				, EasingFunction.Linear(Start.Rotation.Z, Target.Rotation.Z, (float)progress));
 		}
 
 		/// <inheritdoc />

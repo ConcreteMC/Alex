@@ -590,7 +590,7 @@ namespace Alex
 					
 						//skinImage.Mutate<Rgba32>(x => x.Resize(newWidth, newHeight));
 					
-						Image<Rgba32> skinTexture = new Image<Rgba32>(modelTextureSize.X, modelTextureSize.Y);
+						Image<Rgba32> skinTexture = new Image<Rgba32>(Math.Max(modelTextureSize.X, skinImage.Width), Math.Max(modelTextureSize.Y, skinImage.Height));
 						skinTexture.Mutate<Rgba32>(
 							c =>
 							{

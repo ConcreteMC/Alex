@@ -9,6 +9,8 @@ namespace Alex.Blocks.Minecraft
 			IsReplacible = false;
 
 			CanInteract = true;
+			Renderable = false;
+			HasHitbox = true;
 		}
 	}
 }

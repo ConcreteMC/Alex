@@ -246,7 +246,9 @@ namespace Alex.Networking.Java.Packets
 			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x02, () => new SpawnLivingEntity());
 			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x04, () => new SpawnPlayerPacket());
 			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x05, () => new EntityAnimationPacket());
+			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x09, () => new BlockEntityDataPacket());
 			
+			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x0A, () => new BlockActionPacket());
 			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x0B, () => new BlockChangePacket());
 			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x0D, () => new ServerDifficultyPacket());
 			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x0E, () => new ChatMessagePacket()

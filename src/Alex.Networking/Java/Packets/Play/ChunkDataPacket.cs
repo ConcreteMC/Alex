@@ -15,6 +15,7 @@ namespace Alex.Networking.Java.Packets.Play
 		public NbtCompound HeightMaps;
 		public bool GroundUp;
 		public bool IgnoreOldData;
+		public int[] Biomes;
 
 		public ChunkDataPacket()
 		{
@@ -37,11 +38,14 @@ namespace Alex.Networking.Java.Packets.Play
 
 			if (GroundUp)
 			{
+				//int biomeCount = stream.ReadVarInt();
 				int[] biomeIds = new int[1024];
 				for (int idx = 0; idx < biomeIds.Length; idx++)
 				{
 					biomeIds[idx] = stream.ReadInt();
 				}
+
+				Biomes = biomeIds;
 			}
 
 			int i = stream.ReadVarInt();

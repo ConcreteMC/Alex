@@ -20,6 +20,7 @@ using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks;
 using Alex.Entities;
+using Alex.Entities.BlockEntities;
 using Alex.Entities.Projectiles;
 using Alex.Gamestates;
 using Alex.Graphics.Models.Entity;
@@ -38,6 +39,7 @@ using Alex.Utils;
 using Alex.Utils.Inventories;
 using Alex.Worlds.Abstraction;
 using Alex.Worlds.Chunks;
+using fNbt;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -779,12 +781,28 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 				HandleUpdateViewDistancePacket(viewDistancePacket);
 			}
+			else if (packet is BlockEntityDataPacket blockEntityDataPacket)
+			{
+				HandleBlockEntityData(blockEntityDataPacket);
+			}
+			else if (packet is BlockActionPacket blockActionPacket)
+			{
+				HandleBlockAction(blockActionPacket);
+			}
 			else
 			{
 				if (UnhandledPackets.TryAdd(packet.PacketId, packet.GetType()))
 				{
 					Log.Warn($"Unhandled packet: 0x{packet.PacketId:x2} - {packet.ToString()}");
 				}
+			}
+		}
+
+		private void HandleBlockAction(BlockActionPacket packet)
+		{
+			if (World.EntityManager.TryGetBlockEntity(packet.Location, out BlockEntity entity))
+			{
+				entity.HandleBlockAction(packet.ActionId, packet.Parameter);
 			}
 		}
 
@@ -1682,6 +1700,51 @@ namespace Alex.Worlds.Multiplayer.Java
 				        result.IsDirty = true;
 
 				        result.Read(stream, chunk.PrimaryBitmask, chunk.GroundUp, _dimension == 0);
+
+				        if (chunk.GroundUp)
+				        {
+					        for (int i = 0; i < chunk.Biomes.Length; i++)
+					        {
+						        //result.BiomeId[i] = chunk.Biomes[i];
+					        }
+				        }
+
+
+				        foreach (var tag in chunk.TileEntities)
+				        {
+					        try
+					        {
+						        var blockEntity = BlockEntityFactory.ReadFrom(tag, World, null);
+
+						        if (blockEntity != null)
+						        {
+							        var coordinates = new BlockCoordinates(
+								        (result.X * 16) + blockEntity.X, blockEntity.Y,
+								        (result.Z * 16) + blockEntity.Z);
+
+							        World.EntityManager.AddBlockEntity(coordinates, blockEntity);
+							        
+							        var state = result.GetBlockState(blockEntity.X, blockEntity.Y, blockEntity.Z);
+							        blockEntity.Block = state.Block;
+							        
+							       // World.GetBlock(coordinates)
+							        Log.Info($"Added block entity of type \"{blockEntity.GetType()}\" ({coordinates})");
+						        }
+						        else
+						        {
+							        Log.Warn($"Got null block entity of type {tag["id"].StringValue}");
+						        }
+
+					        }
+					        catch (Exception ex)
+					        {
+						        Log.Warn(ex, "Could not add block entity!");
+					        }
+
+					        //chunk.AddBlockEntity(tag.GetInt("x"), tag.GetInt("y"), tag.GetInt("z"), tag);
+				        }
+
+
 				        result.SkyLightDirty = true;
 				        result.BlockLightDirty = true;
 
@@ -1696,6 +1759,35 @@ namespace Alex.Worlds.Multiplayer.Java
 				        World.ChunkManager.AddChunk(result, new ChunkCoordinates(result.X, result.Z), true);
 			        } //);
 		        });
+        }
+        
+        private void HandleBlockEntityData(BlockEntityDataPacket packet)
+        {
+			Log.Warn($"Got block entity data for ({packet.Location}) Action={packet.Action}");
+
+			if (!World.EntityManager.TryGetBlockEntity(packet.Location, out var entity))
+			{
+				try
+				{
+					var block = World.GetBlock(packet.Location);
+					var blockEntity = BlockEntityFactory.ReadFrom(packet.Compound, World, block);
+
+					if (blockEntity != null)
+					{
+						World.EntityManager.AddBlockEntity(packet.Location, blockEntity);
+						Log.Info($"Added block entity of type \"{blockEntity.GetType()}\" ({packet.Location})");
+					}
+					else
+					{
+						//Log.Warn($"Got null block entity of type {packet.Compound["id"].StringValue}");
+					}
+
+				}
+				catch (Exception ex)
+				{
+					Log.Warn(ex, $"Could not add block entity: {packet.Compound.ToString()}");
+				}
+			}
         }
 
 		private void HandleKeepAlivePacket(KeepAlivePacket packet)

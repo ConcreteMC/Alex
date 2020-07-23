@@ -48,7 +48,7 @@ namespace Alex.Worlds.Multiplayer.Java
 					this.Sections[sectionY] = storage;
 				}
 
-				if (groundUp)
+				/*if (groundUp)
 				{
 					for (int x = 0; x < 16; x++)
 					{
@@ -58,7 +58,7 @@ namespace Alex.Worlds.Multiplayer.Java
 							SetBiome(x, z, biomeId);
 						}
 					}
-				}
+				}*/
 
 				for (int i = 0; i < Sections.Length; i++)
 				{
