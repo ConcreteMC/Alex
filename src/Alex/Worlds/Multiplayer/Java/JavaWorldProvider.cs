@@ -1040,11 +1040,35 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		public bool Respawning = false;
 
+		private void HandleDimension(string dim)
+		{
+			Dimension dimension = Dimension.Overworld;
+			switch (dim)
+			{
+				case "minecraft:the_nether":
+					dimension = Dimension.Nether;
+					break;
+				case "minecraft:overworld":
+					dimension = Dimension.Overworld;
+					break;
+				case "minecraft:the_end":
+					dimension = Dimension.TheEnd;
+					break;
+				default:
+					Log.Warn($"Unknown dimension: {dim}");
+					break;
+			}
+
+			World.Dimension = dimension;
+		}
+		
 		private void HandleRespawnPacket(RespawnPacket packet)
 		{
 
 			Respawning = true;
-			_dimension = 0;//packet.Dimension;
+			
+			HandleDimension(packet.Dimension);
+			
 			World.Player.UpdateGamemode(packet.Gamemode);
 			World.ChunkManager.ClearChunks();
 			World.EntityManager.ClearEntities();
@@ -1617,8 +1641,6 @@ namespace Alex.Worlds.Multiplayer.Java
 		{
 			World.UnloadChunk(new ChunkCoordinates(packet.X, packet.Z));
 		}
-		
-		private int _dimension = 0;
 
 		private void HandleJoinGamePacket(JoinGamePacket packet)
 		{
@@ -1630,6 +1652,8 @@ namespace Alex.Worlds.Multiplayer.Java
 			
 			World.Player.EntityId = packet.EntityId;
 			World.Player.UpdateGamemode((Gamemode) packet.Gamemode);
+			
+			HandleDimension(packet.Dimension);
 		}
 
 		private void HandleUpdateLightPacket(UpdateLightPacket packet)
@@ -1699,7 +1723,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				        result.Z = chunk.ChunkZ;
 				        result.IsDirty = true;
 
-				        result.Read(stream, chunk.PrimaryBitmask, chunk.GroundUp, _dimension == 0);
+				        result.Read(stream, chunk.PrimaryBitmask, chunk.GroundUp, World.Dimension == Dimension.Overworld);
 
 				        if (chunk.GroundUp)
 				        {

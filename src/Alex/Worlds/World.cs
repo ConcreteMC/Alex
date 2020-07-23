@@ -52,6 +52,13 @@ using UUID = Alex.API.Utils.UUID;
 
 namespace Alex.Worlds
 {
+	public enum Dimension
+	{
+		Overworld,
+		Nether,
+		TheEnd,
+	}
+	
 	public class World : IBlockAccess
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(World));
@@ -92,7 +99,21 @@ namespace Alex.Worlds
 		public bool TntExplodes { get; set; } = true;
 		public bool SendCommandfeedback { get; set; } = true;
 		public int RandomTickSpeed { get; set; } = 3;
-		
+
+		private Dimension _dimension = Dimension.Overworld;
+
+		public Dimension Dimension
+		{
+			get
+			{
+				return _dimension;
+			}
+			set
+			{
+				_dimension = value;
+			}
+		}
+
 		public World(IServiceProvider serviceProvider, GraphicsDevice graphics, AlexOptions options,
 			NetworkProvider networkProvider)
 		{
@@ -545,7 +566,7 @@ namespace Alex.Worlds
 		{
 			var source = new BlockCoordinates(x, y, z);
 
-			if (Options.VideoOptions.ClientSideLighting)
+			if (Options.VideoOptions.ClientSideLighting && Dimension == Dimension.Overworld)
 			{
 				new SkyLightCalculations().Calculate(this, source);
 			}

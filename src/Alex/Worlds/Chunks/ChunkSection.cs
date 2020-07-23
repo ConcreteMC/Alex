@@ -82,10 +82,10 @@ namespace Alex.Worlds.Chunks
 	        this.BlockLight = new NibbleArray(new byte[2048]);
 	        MiNET.Worlds.ChunkColumn.Fill<byte>(BlockLight.Data, 0);
 	        
-			if (storeSkylight)
+		//	if (storeSkylight)
 			{
 				this.SkyLight = new NibbleArray(new byte[2048]);	
-				MiNET.Worlds.ChunkColumn.Fill<byte>(SkyLight.Data, 0xff);
+				MiNET.Worlds.ChunkColumn.Fill<byte>(SkyLight.Data, (byte) (storeSkylight ? 0xff : 0x00));
 			}
 //System.Collections.BitArray a = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8]);
 

@@ -895,7 +895,10 @@ namespace Alex.Worlds
 			    {
 				    if (chunk.SkyLightDirty || chunk.IsNew || force)
 				    {
-					    new SkyLightCalculations().RecalcSkyLight(chunk, new SkyLightBlockAccess(this));
+					    if (World.Dimension == Dimension.Overworld)
+					    {
+						    new SkyLightCalculations().RecalcSkyLight(chunk, new SkyLightBlockAccess(this));
+					    }
 
 					    chunk.SkyLightDirty = false;
 				    }

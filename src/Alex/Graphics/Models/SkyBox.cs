@@ -236,6 +236,10 @@ namespace Alex.Graphics.Models
 	    {
 		    get
 		    {
+			    if (World.Dimension == Dimension.Nether)
+			    {
+				    return new Color(0.2f, 0.03f, 0.03f);
+			    }
 			    float f = MathF.Cos(CelestialAngle * ((float) Math.PI * 2F)) * 2.0F + 0.5F;
 			    f = MathHelper.Clamp(f, 0.0F, 1.0F);
 
@@ -255,6 +259,9 @@ namespace Alex.Graphics.Models
 		{
 			get
 			{
+				//In Water: 0.02R, 0.02G, 0.2B
+				//In Lava: 0.6 0.1 0.0
+				
 				float blendFactor = 0.29f;// 1.0f - System.MathF.Pow(1.0f - (4f - (DrawDistance)), 0.25f); //((Options.VideoOptions.RenderDistance ^2) / 100f) * 0.45f;
 				
 				var fog = WorldFogColor.ToVector3();
@@ -362,11 +369,14 @@ namespace Alex.Graphics.Models
 			
 		    renderArgs.GraphicsDevice.BlendState = CelestialBlendState;
 
-		    DrawSun(renderArgs, renderArgs.Camera.Position);
+		    if (World.Dimension == Dimension.Overworld)
+		    {
+			    DrawSun(renderArgs, renderArgs.Camera.Position);
 
-			DrawMoon(renderArgs, renderArgs.Camera.Position);
+			    DrawMoon(renderArgs, renderArgs.Camera.Position);
+		    }
 
-			renderArgs.GraphicsDevice.BlendState = backup;
+		    renderArgs.GraphicsDevice.BlendState = backup;
 
 			DrawVoid(renderArgs, renderArgs.Camera.Position);
 

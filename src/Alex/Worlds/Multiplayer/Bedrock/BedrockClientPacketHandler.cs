@@ -235,7 +235,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			Client.NetworkEntityId = message.entityIdSelf;
 			Client.SpawnPoint = new Vector3(message.spawn.X, message.spawn.Y - Player.EyeLevel, message.spawn.Z); //message.spawn;
 			//Client.CurrentLocation = new MiNET.Utils.PlayerLocation(Client.SpawnPoint, message.spawn.X, message.spawn.X, message.spawn.Y);
-
+			Client.World.Dimension = (Dimension) message.dimension;
 			Client.World?.UpdatePlayerPosition(
 				new API.Utils.PlayerLocation(
 					new Microsoft.Xna.Framework.Vector3(Client.SpawnPoint.X, Client.SpawnPoint.Y, Client.SpawnPoint.Z),
