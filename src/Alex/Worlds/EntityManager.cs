@@ -243,6 +243,11 @@ namespace Alex.Worlds
 		    {
 			    Remove(entity.Key);
 		    }
+
+		    foreach (var blockEntity in BlockEntities.ToArray())
+		    {
+			    BlockEntities.TryRemove(blockEntity.Key, out _);
+		    }
 	    }
 	}
 }

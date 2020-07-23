@@ -34,7 +34,7 @@ namespace Alex.Entities.BlockEntities
 
 				BlockEntity blockEntity = null;
 
-				switch (id)
+				switch (id.ToLower())
 				{
 					case "minecraft:chest":
 					case "chest":

@@ -186,7 +186,7 @@ namespace Alex.Worlds.Singleplayer
 		private long _spEntityIdCounter = 0;
 		private void LoadEntities(ChunkColumn chunk)
 		{
-			var column = (ChunkColumn)chunk;
+			/*var column = (ChunkColumn)chunk;
 			if (column.Entities != null)
 			{
 				foreach (var nbt in column.Entities)
@@ -197,7 +197,7 @@ namespace Alex.Worlds.Singleplayer
 						World.SpawnEntity(eId, entity);
 					}
 				}
-			}
+			}*/
 		}
 
 		private Thread UpdateThread { get; set; }

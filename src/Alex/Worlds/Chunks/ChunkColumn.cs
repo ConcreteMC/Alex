@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks;
 using Alex.Blocks.State;
+using Alex.Entities.BlockEntities;
 using Alex.Networking.Java.Util;
 using Alex.Worlds.Singleplayer;
 using fNbt;
@@ -54,7 +56,9 @@ namespace Alex.Worlds.Chunks
 		
 		public object UpdateLock { get; set; } = new object();
 		public ScheduleType Scheduled { get; set; } = ScheduleType.Unscheduled;
-
+		
+		private ConcurrentDictionary<BlockCoordinates, BlockEntity> BlockEntities { get; }
+		public BlockEntity[] GetBlockEntities => BlockEntities.Values.ToArray();
 		public ChunkColumn()
 		{
 			IsDirty = true;
@@ -66,6 +70,8 @@ namespace Alex.Worlds.Chunks
 				//var b = new ExtendedBlockStorage(i, true);
 				Sections[i] = null;
 			}
+			
+			BlockEntities = new ConcurrentDictionary<BlockCoordinates, BlockEntity>();
 		}
 
 		public IEnumerable<BlockCoordinates> GetLightSources()
@@ -331,7 +337,7 @@ namespace Alex.Worlds.Chunks
 
 		private Vector3 Position => new Vector3(X * 16, 0, Z * 16);
 
-		public NbtCompound[] Entities { get; internal set; }
+	//	public NbtCompound[] Entities { get; internal set; }
 
 		public bool HasDirtySubChunks
 		{
@@ -415,6 +421,22 @@ namespace Alex.Worlds.Chunks
 			if (section == null) return;
 
 			section.GetBlockData(bx, @by & 0xf, bz, out transparent, out solid);
+		}
+		
+		public bool AddBlockEntity(BlockCoordinates coordinates, BlockEntity entity)
+		{
+			entity.KnownPosition = coordinates;
+			return BlockEntities.TryAdd(coordinates, entity);
+		}
+
+		public bool TryGetBlockEntity(BlockCoordinates coordinates, out BlockEntity entity)
+		{
+			return BlockEntities.TryGetValue(coordinates, out entity);
+		}
+	    
+		public void RemoveBlockEntity(BlockCoordinates coordinates)
+		{
+			BlockEntities.TryRemove(coordinates, out _);
 		}
 
 		public void Dispose()

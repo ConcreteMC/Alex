@@ -5,8 +5,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using Alex.API.Utils;
 using Alex.Blocks;
 using Alex.Blocks.Minecraft;
+using Alex.Entities.BlockEntities;
 using Alex.Utils;
 using Alex.Worlds.Chunks;
 using Alex.Worlds.Singleplayer;
@@ -15,6 +17,7 @@ using MiNET;
 using MiNET.Net;
 using MiNET.Utils;
 using NLog;
+using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using BlockState = Alex.Blocks.State.BlockState;
 using NibbleArray = MiNET.Utils.NibbleArray;
 
@@ -478,6 +481,30 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 							        }
 
 							        gotLight = true;
+						        }
+						        else
+						        {
+							        try
+							        {
+								        NbtCompound compound = (NbtCompound) file.RootTag;
+								        var blockEntity = BlockEntityFactory.ReadFrom(compound, Client.World, null);
+
+								        if (blockEntity != null)
+								        {
+									        var block = chunkColumn.GetBlockState(
+										        blockEntity.X, blockEntity.Y, blockEntity.Z).Block;
+
+									        blockEntity.Block = block;
+
+									        chunkColumn.AddBlockEntity(
+										        new BlockCoordinates(blockEntity.X, blockEntity.Y, blockEntity.Z),
+										        blockEntity);
+								        }
+							        }
+							        catch (Exception ex)
+							        {
+								        Log.Warn(ex, $"Could not read block entity from extra data!");
+							        }
 						        }
 
 						        if (stream.Position < stream.Length - 1)

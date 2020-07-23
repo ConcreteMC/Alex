@@ -443,6 +443,13 @@ namespace Alex.Worlds
 		
         public void AddChunk(ChunkColumn chunk, ChunkCoordinates position, bool doUpdates = false)
         {
+	        foreach (var blockEntity in chunk.GetBlockEntities)
+	        {
+		        World.EntityManager.AddBlockEntity(
+			        new BlockCoordinates((chunk.X * 16) + blockEntity.X, blockEntity.Y, (chunk.Z * 16) + blockEntity.Z),
+			        blockEntity);
+	        }
+	        
 	        if (Options.VideoOptions.ClientSideLighting)
 	        {
 		        chunk.CalculateHeight();
@@ -493,6 +500,13 @@ namespace Alex.Worlds
 		        {
 			        chunk?.Dispose();
 		        }
+		        
+		        foreach (var blockEntity in chunk.GetBlockEntities)
+		        {
+			        World.EntityManager.RemoveBlockEntity(
+				        new BlockCoordinates((chunk.X * 16) + blockEntity.X, blockEntity.Y, (chunk.Z * 16) + blockEntity.Z));
+		        }
+		        
 	        }
 
 	        if (_chunkData.TryRemove(position, out var data))

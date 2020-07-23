@@ -1742,17 +1742,20 @@ namespace Alex.Worlds.Multiplayer.Java
 
 						        if (blockEntity != null)
 						        {
-							        var coordinates = new BlockCoordinates(
-								        (result.X * 16) + blockEntity.X, blockEntity.Y,
-								        (result.Z * 16) + blockEntity.Z);
+							       // var coordinates = new BlockCoordinates(
+								   //     (result.X * 16) + blockEntity.X, blockEntity.Y,
+								   //     (result.Z * 16) + blockEntity.Z);
 
-							        World.EntityManager.AddBlockEntity(coordinates, blockEntity);
+							      //  World.EntityManager.AddBlockEntity(coordinates, blockEntity);
 							        
 							        var state = result.GetBlockState(blockEntity.X, blockEntity.Y, blockEntity.Z);
 							        blockEntity.Block = state.Block;
-							        
-							       // World.GetBlock(coordinates)
-							        Log.Info($"Added block entity of type \"{blockEntity.GetType()}\" ({coordinates})");
+
+							        result.AddBlockEntity(
+								        new BlockCoordinates(blockEntity.X, blockEntity.Y, blockEntity.Z), blockEntity);
+
+							        // World.GetBlock(coordinates)
+							        // Log.Info($"Added block entity of type \"{blockEntity.GetType()}\" ({coordinates})");
 						        }
 						        else
 						        {
