@@ -130,6 +130,12 @@ namespace Alex.Worlds
             return Air;
         }
 
+        /// <inheritdoc />
+        public Biome GetBiome(BlockCoordinates coordinates)
+        {
+            return BiomeUtils.GetBiomeById(0);
+        }
+
         public int GetBiome(int x, int y, int z)
         {
             return 0;

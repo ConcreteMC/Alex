@@ -10,7 +10,7 @@ namespace Alex.Blocks.Minecraft
 			IsFullBlock = false;
 			IsFullCube = false;
 
-			BlockMaterial = Material.Plants;
+			BlockMaterial = Material.Plants.Clone().SetTranslucent();
 		}
 	}
 }

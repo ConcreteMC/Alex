@@ -51,7 +51,7 @@ namespace Alex.Worlds.Chunks
 		public bool BlockLightDirty { get; set; }
 
 		public ChunkSection[] Sections { get; set; } = new ChunkSection[16];
-		public int[] BiomeId = ArrayOf<int>.Create(256, 1);
+		public int[] BiomeId = ArrayOf<int>.Create(16 * 16 * 256, 1);
 		public short[] Height = new short[256];
 		
 		public object UpdateLock { get; set; } = new object();
@@ -265,21 +265,21 @@ namespace Alex.Worlds.Chunks
 			return (byte) Height[((bz << 4) + (bx))];
 		}
 
-		public void SetBiome(int bx, int bz, int biome)
+		public void SetBiome(int bx, int by, int bz, int biome)
 		{
 			if ((bx < 0 || bx > ChunkWidth) || (bz < 0 || bz > ChunkDepth))
 				return;
 
-			BiomeId[(bz << 4) + (bx)] = biome;
+			BiomeId[(by << 8 | bz << 4 | bx)] = biome;
 			SetDirty();
 		}
 
-		public int GetBiome(int bx, int bz)
+		public int GetBiome(int bx, int by, int bz)
 		{
 			if ((bx < 0 || bx > ChunkWidth) || (bz < 0 || bz > ChunkDepth))
 				return 0;
 
-			return BiomeId[(bz << 4) + (bx)];
+			return BiomeId[(by << 8 | bz << 4 | bx)];
 		}
 
 		public byte GetBlocklight(int bx, int by, int bz)

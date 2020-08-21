@@ -410,8 +410,22 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			        {
 				        biomeIds[i] = defStream.ReadByte();
 			        }
+
+			        for (int x = 0; x < 16; x++)
+			        {
+				        for (int z = 0; z < 16; z++)
+				        {
+					        var biomeId = biomeIds[(z << 4) + (x)];
+
+					        for (int y = 0; y < 255; y++)
+					        {
+						        chunkColumn.SetBiome(x, y, z, biomeId);
+					        }
+				        }
+			        }
+			        //chunkColumn.SetBiome();
 			        
-			        chunkColumn.BiomeId = biomeIds;
+			       // chunkColumn.BiomeId = biomeIds;
 
 			        if (stream.Position >= stream.Length - 1)
 			        {

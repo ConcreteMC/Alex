@@ -1727,9 +1727,19 @@ namespace Alex.Worlds.Multiplayer.Java
 
 				        if (chunk.GroundUp)
 				        {
-					        for (int i = 0; i < chunk.Biomes.Length; i++)
+					        /*for (int i = 0; i < chunk.Biomes.Length; i++)
 					        {
-						        //result.BiomeId[i] = chunk.Biomes[i];
+						        result.BiomeId[i] = chunk.Biomes[i];
+					        }*/
+					        for (int x = 0; x < 16; x++)
+					        {
+						        for (int z = 0; z < 16; z++)
+						        {
+							        for (int y = 0; y < 256; y++)
+							        {
+								        result.SetBiome(x, y, z, chunk.Biomes[((y >> 2) & 63) << 4 | ((z >> 2) & 3) << 2 | ((x >> 2) & 3)]);
+							        }
+						        }
 					        }
 				        }
 

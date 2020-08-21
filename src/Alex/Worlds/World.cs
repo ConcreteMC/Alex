@@ -696,13 +696,19 @@ namespace Alex.Worlds
 			}
 		}
 
+		/// <inheritdoc />
+		public Biome GetBiome(BlockCoordinates coordinates)
+		{
+			return BiomeUtils.GetBiomeById(GetBiome(coordinates.X, coordinates.Y, coordinates.Z));
+		}
+		
 		public int GetBiome(int x, int y, int z)
 		{
 			ChunkColumn chunk;
 			if (ChunkManager.TryGetChunk(new ChunkCoordinates(x >> 4, z >> 4), out chunk))
 			{
 				ChunkColumn realColumn = (ChunkColumn) chunk;
-				return	realColumn.GetBiome(x & 0xf, z & 0xf);
+				return	realColumn.GetBiome(x & 0xf, y & 0xff, z & 0xf);
 			}
 
 			//Log.Debug($"Failed getting biome: {x} | {y} | {z}");

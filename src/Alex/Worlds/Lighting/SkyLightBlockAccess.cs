@@ -104,5 +104,11 @@ namespace Alex.Worlds.Lighting
 			return null;
 			//return air
 		}
+
+		/// <inheritdoc />
+		public Biome GetBiome(BlockCoordinates coordinates)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }

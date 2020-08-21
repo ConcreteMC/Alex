@@ -109,7 +109,7 @@ namespace Alex.Blocks
 		    this.Register("minecraft:nether_wart_block", () => new NetherWartBlock());
 		    this.Register("minecraft:jukebox", () => new Jukebox());
 		    this.Register("minecraft:stone_bricks", () => new StoneBricks());
-		    this.Register("minecraft:lily_pad", () => new LilyPad());
+		    
 		    this.Register("minecraft:command_block", () => new CommandBlock());
 		    this.Register("minecraft:nether_quartz_ore", () => new NetherQuartzOre());
 		    this.Register("minecraft:slime_block", () => new SlimeBlock());
@@ -270,6 +270,9 @@ namespace Alex.Blocks
 		    this.Register("minecraft:kelp_plant", () => new Kelp());
 		    this.Register("minecraft:seagrass", () => new SeaGrass());
 		    this.Register("minecraft:tall_seagrass", () => new SeaGrass());
+		    this.Register("minecraft:lily_pad", () => new LilyPad());
+		    
+		    this.Register("minecraft:bamboo", () => new Bamboo());
 		    
 		    //Ores
 		    this.Register("minecraft:redstone_ore", () => new RedstoneOre());

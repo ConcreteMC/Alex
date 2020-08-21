@@ -18,5 +18,7 @@ namespace Alex.Worlds.Abstraction
        // void SetBlock(Block block, bool broadcast = true, bool applyPhysics = true, bool calculateLight = true, ChunkColumn possibleChunk = null);
         IEnumerable<ChunkSection.BlockEntry> GetBlockStates(int positionX, int positionY, int positionZ);
         BlockState GetBlockState(BlockCoordinates position);
+
+        Biome GetBiome(BlockCoordinates coordinates);
     }
 }

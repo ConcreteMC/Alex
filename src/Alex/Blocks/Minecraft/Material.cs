@@ -21,7 +21,11 @@ namespace Alex.Blocks.Minecraft
 		
 		public static readonly IMaterial Iron = (new Material(MapColor.IRON)).SetRequiresTool().SetHardness(5f);
 		public static readonly IMaterial Anvil = (new Material(MapColor.IRON)).SetRequiresTool();
-		public static readonly IMaterial Water = (new MaterialLiquid(MapColor.WATER)).SetTranslucent().SetTintType(TintType.Color, new Color(68, 175, 245));
+
+		public static readonly IMaterial Water = (new MaterialLiquid(MapColor.WATER)).SetTranslucent()
+		   .SetTintType(TintType.Water, new Color(68, 175, 245));
+		//;.SetTintType(TintType.Color, new Color(68, 175, 245));
+		
 		public static readonly IMaterial Lava = (new MaterialLiquid(MapColor.TNT));
 		public static readonly IMaterial Leaves = (new Material(MapColor.FOLIAGE)).SetTintType(TintType.Foliage).SetBurning().SetHardness(0.2f);
 		

@@ -106,11 +106,13 @@ namespace Alex.Graphics.Models.Blocks
 
 		public override VerticesResult GetVertices(IBlockAccess world, Vector3 vectorPos, Block baseBlock)
 		{
+			//var chunk = world.GetChunk(vectorPos);
 			//Level = GetLevel(baseBlock.BlockState);
 			
-			var position = new BlockCoordinates(vectorPos);
-			List< BlockShaderVertex> result = new List<BlockShaderVertex>(36);
-			var indexResult = new List<int>();
+			var                      position    = new BlockCoordinates(vectorPos);
+			var                      biome   = world.GetBiome(position);
+			List< BlockShaderVertex> result      = new List<BlockShaderVertex>(36);
+			var                      indexResult = new List<int>();
 
 			List<BlockFace> renderedFaces = new List<BlockFace>();
 			foreach (var face in Enum.GetValues(typeof(BlockFace)).Cast<BlockFace>())
@@ -328,7 +330,18 @@ namespace Alex.Graphics.Models.Blocks
 
 					if (IsWater)
 					{
-						vert.Color = new Color(68, 175, 245);
+						var bx = position.X;
+						var y  = position.Y;
+						var bz = position.Z;
+						
+						vert.Color = CombineColors(
+							GetBiomeColor(world, bx, y, bz), GetBiomeColor(world,bx - 1, y, bz - 1), GetBiomeColor(world,bx - 1, y, bz),
+							GetBiomeColor(world,bx, y, bz - 1), GetBiomeColor(world,bx + 1, y, bz + 1), GetBiomeColor(world,bx + 1, y, bz),
+							GetBiomeColor(world,bx, y, bz + 1), GetBiomeColor(world,bx - 1, y, bz + 1), GetBiomeColor(world,bx + 1, y, bz - 1));
+							/*world.GetBiome(new BlockCoordinates(vert.Position))
+							   .Water;*/ //biome.Water; //new Color(68, 175, 245);
+						//vert.Color.A = 255;
+
 					}
 					else
 					{
@@ -349,6 +362,38 @@ namespace Alex.Graphics.Models.Blocks
 			}
 
 			return new VerticesResult(result.ToArray(), indexResult.ToArray());
+		}
+		
+		private Color GetBiomeColor(IBlockAccess access, int x, int y, int z)
+		{
+			return access.GetBiome(new BlockCoordinates(x, y, z)).Water;
+		}
+		
+		private static Color Blend(Color color, Color backColor, double amount)
+		{
+			byte r = (byte) ((color.R * amount) + backColor.R * (1 - amount));
+			byte g = (byte) ((color.G * amount) + backColor.G * (1 - amount));
+			byte b = (byte) ((color.B * amount) + backColor.B * (1 - amount));
+			return new Color(r, g, b);
+		}
+
+		private Color CombineColors(params Color[] aColors)
+		{
+			int r = 0;
+			int g = 0;
+			int b = 0;
+			foreach (Color c in aColors)
+			{
+				r += c.R;
+				g += c.G;
+				b += c.B;
+			}
+
+			r /= aColors.Length;
+			g /= aColors.Length;
+			b /= aColors.Length;
+
+			return new Color(r, g, b);
 		}
 
 		protected int GetAverageLiquidLevels(IBlockAccess world, BlockCoordinates position, out BlockCoordinates lowest, out int lowestLevel)

@@ -7,7 +7,8 @@ namespace Alex.API.Blocks
         Default,
         Color,
         Grass,
-        Foliage
+        Foliage,
+        Water
     }
 
     public interface ITinted

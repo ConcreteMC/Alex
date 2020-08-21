@@ -1,32 +1,45 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
+using Microsoft.Xna.Framework;
 
 namespace Alex.Worlds
 {
 	public class Biome
 	{
-		public int Id;
-		public string Name;
-		public float Temperature;
-		public float Downfall;
-		public int Grass; // r,g,b, NOT multiplied by alpha
-		public int Foliage; // r,g,b, NOT multiplied by alpha
+		private static readonly Color  WaterColor = BiomeUtils. HexToColor("#44AFF5");
+		
+		public                  int    Id;
+		public                  string Name;
+		public                  float  Temperature;
+		public                  float  Downfall;
+		
+		public float  MinHeight = 0.1f;
+		public float  MaxHeight = 0.3f;
 
-		public float MinHeight = 0.1f;
-		public float MaxHeight = 0.3f;
-
-		public byte SurfaceBlock = 2;
-		public byte SurfaceMetadata = 0;
-
-		public byte SoilBlock = 3;
-		public byte SoilMetadata = 0;
+		public Color Water { get; set; } = WaterColor;
 		//public float HeightScale = 100;
 	}
 
 	public class BiomeUtils
 	{
+		public static Color HexToColor(string hexString)
+		{
+			//replace # occurences
+			if (hexString.IndexOf('#') != -1)
+				hexString = hexString.Replace("#", "");
+
+			int r, g, b = 0;
+
+			r = int.Parse(hexString.Substring(0, 2), NumberStyles.AllowHexSpecifier);
+			g = int.Parse(hexString.Substring(2, 2), NumberStyles.AllowHexSpecifier);
+			b = int.Parse(hexString.Substring(4, 2), NumberStyles.AllowHexSpecifier);
+
+			return new Color(r, g, b);
+		}
+		
 		public static Biome[] Biomes =
 		{
 			new Biome
@@ -37,6 +50,8 @@ namespace Alex.Worlds
 				Downfall = 0.5f,
 				MinHeight = -1f,
 				MaxHeight = 0.4f,
+				
+				Water = HexToColor("#1787D4")
 				//	SurfaceBlock = 12,
 				//	SoilBlock = 24
 			}, // default values of temp and rain
@@ -48,6 +63,7 @@ namespace Alex.Worlds
 				Downfall = 0.4f,
 				MinHeight = 0.0125f,
 				MaxHeight = 0.5f, //TODO
+				Water = HexToColor("#44AFF5")
 			},
 			new Biome
 			{
@@ -57,8 +73,7 @@ namespace Alex.Worlds
 				Downfall = 0.0f,
 				MinHeight = 0.1f,
 				MaxHeight = 0.2f,
-				SurfaceBlock = 12,
-				SoilBlock = 24
+				Water = HexToColor("#32A598")
 			},
 			new Biome
 			{
@@ -77,6 +92,7 @@ namespace Alex.Worlds
 				Downfall = 0.8f,
 				MinHeight = 0.1f, //TODO
 				MaxHeight = 0.2f,
+				Water = HexToColor("#1E97F2")
 			},
 			new Biome
 			{
@@ -85,7 +101,8 @@ namespace Alex.Worlds
 				Temperature = 0.05f,
 				Downfall = 0.8f,
 				MinHeight = 0.1f,
-				MaxHeight = 0.4f
+				MaxHeight = 0.4f,
+				Water = HexToColor("#287082")
 			},
 			new Biome
 			{
@@ -94,7 +111,8 @@ namespace Alex.Worlds
 				Temperature = 0.8f,
 				Downfall = 0.9f,
 				MinHeight = -0.2f,
-				MaxHeight = 0.1f
+				MaxHeight = 0.1f,
+				Water = HexToColor("#4c6559")
 			},
 			new Biome
 			{
@@ -103,7 +121,8 @@ namespace Alex.Worlds
 				Temperature = 0.5f,
 				Downfall = 0.5f,
 				MinHeight = -0.5f,
-				MaxHeight = 0f
+				MaxHeight = 0f,
+				Water = HexToColor("#0084FF")
 			}, // default values of temp and rain
 			new Biome
 			{
@@ -122,6 +141,7 @@ namespace Alex.Worlds
 				Downfall = 0.5f,
 				MinHeight = 0.1f,
 				MaxHeight = 0.2f, //TODO!
+				Water = HexToColor("#62529e")
 			}, // default values of temp and rain
 			new Biome
 			{
@@ -130,7 +150,8 @@ namespace Alex.Worlds
 				Temperature = 0.0f,
 				Downfall = 0.5f,
 				MinHeight = -1f,
-				MaxHeight = 0.5f
+				MaxHeight = 0.5f,
+				Water = HexToColor("#2570B5")
 			},
 			new Biome
 			{
@@ -139,7 +160,8 @@ namespace Alex.Worlds
 				Temperature = 0.0f,
 				Downfall = 0.5f,
 				MinHeight = -0.5f,
-				MaxHeight = 0f
+				MaxHeight = 0f,
+				Water = HexToColor("#185390")
 			},
 			new Biome
 			{
@@ -184,7 +206,8 @@ namespace Alex.Worlds
 				Temperature = 0.8f,
 				Downfall = 0.4f,
 				MinHeight = 0f,
-				MaxHeight = 0.1f
+				MaxHeight = 0.1f,
+				Water = HexToColor("#157cab")
 			},
 			new Biome
 			{
@@ -194,9 +217,7 @@ namespace Alex.Worlds
 				Downfall = 0.0f,
 				MinHeight = 0.2f,
 				MaxHeight = 0.7f,
-
-				SurfaceBlock = 12, //Sand
-				SoilBlock = 24 //Sandstone
+				Water = HexToColor("#1a7aa1")
 			},
 			new Biome
 			{
@@ -215,6 +236,7 @@ namespace Alex.Worlds
 				Downfall = 0.7f,
 				MinHeight = 0.2f,
 				MaxHeight = 0.7f,
+				Water = HexToColor("#236583")
 			},
 			new Biome
 			{
@@ -232,7 +254,8 @@ namespace Alex.Worlds
 				Temperature = 1.2f,
 				Downfall = 0.9f,
 				MinHeight = 0.1f,
-				MaxHeight = 0.4f
+				MaxHeight = 0.4f,
+				Water = HexToColor("#14A2C5")
 			},
 			new Biome
 			{
@@ -241,7 +264,8 @@ namespace Alex.Worlds
 				Temperature = 1.2f,
 				Downfall = 0.9f,
 				MinHeight = 0.2f,
-				MaxHeight = 1.8f
+				MaxHeight = 1.8f,
+				Water = HexToColor("#1B9ED8")
 			},
 			
 			//TODO: The rest of min/max
@@ -252,7 +276,8 @@ namespace Alex.Worlds
 				Temperature = 0.95f,
 				Downfall = 0.8f,
 				MinHeight = 0.1f,
-				MaxHeight = 0.2f
+				MaxHeight = 0.2f,
+				Water = HexToColor("#0D8AE3")
 			},
 			new Biome
 			{
@@ -261,7 +286,8 @@ namespace Alex.Worlds
 				Temperature = 0.5f,
 				Downfall = 0.5f,
 				MinHeight = -1.8F,
-				MaxHeight = 0.1f
+				MaxHeight = 0.1f,
+				Water = HexToColor("#1787D4")
 			},
 			new Biome
 			{
@@ -270,7 +296,8 @@ namespace Alex.Worlds
 				Temperature = 0.2f,
 				Downfall = 0.3f,
 				MinHeight = 0.1f,
-				MaxHeight = 0.8f
+				MaxHeight = 0.8f,
+				Water = HexToColor("#0d67bb")
 			},
 			new Biome
 			{
@@ -279,7 +306,8 @@ namespace Alex.Worlds
 				Temperature = 0.05f,
 				Downfall = 0.3f,
 				MinHeight = 0f,
-				MaxHeight = 0.025f
+				MaxHeight = 0.025f,
+				Water = HexToColor("#1463a5")
 			},
 			new Biome
 			{
@@ -288,7 +316,8 @@ namespace Alex.Worlds
 				Temperature = 0.6f,
 				Downfall = 0.6f,
 				MinHeight = 0.1f,
-				MaxHeight = 0.2f
+				MaxHeight = 0.2f,
+				Water = HexToColor("#0677ce")
 			},
 			new Biome
 			{
@@ -297,7 +326,8 @@ namespace Alex.Worlds
 				Temperature = 0.6f,
 				Downfall = 0.6f,
 				MinHeight = 0.35f,
-				MaxHeight = 0.45f
+				MaxHeight = 0.45f,
+				Water = HexToColor("#0677ce")
 			},
 			new Biome
 			{
@@ -306,7 +336,8 @@ namespace Alex.Worlds
 				Temperature = 0.7f,
 				Downfall = 0.8f,
 				MinHeight = 0.1f,
-				MaxHeight = 0.2f
+				MaxHeight = 0.2f,
+				Water = HexToColor("#3B6CD1")
 			},
 			new Biome
 			{
@@ -315,7 +346,8 @@ namespace Alex.Worlds
 				Temperature = -0.5f,
 				Downfall = 0.4f,
 				MinHeight = 0.2f,
-				MaxHeight = 0.2f
+				MaxHeight = 0.2f,
+				Water = HexToColor("#205e83")
 			},
 			new Biome
 			{
@@ -361,6 +393,7 @@ namespace Alex.Worlds
 				Downfall = 0.0f,
 				MinHeight = 0.005f,
 				MaxHeight = 0.125f,
+				Water = HexToColor("#2C8B9C")
 			},
 			new Biome
 			{
@@ -369,7 +402,8 @@ namespace Alex.Worlds
 				Temperature = 1.0f,
 				Downfall = 0.0f,
 				MinHeight = 0.025f,
-				MaxHeight = 1.5f
+				MaxHeight = 1.5f,
+				Water = HexToColor("#2590A8")
 			},
 			new Biome
 			{
@@ -379,11 +413,7 @@ namespace Alex.Worlds
 				Downfall = 0.0f,
 				MinHeight = 0.1f,
 				MaxHeight = 0.2f,
-
-				SurfaceBlock = 12, //Surface = Red Sand
-				SurfaceMetadata = 1,
-
-				SoilBlock = 179, //Soil = Red Sandstone
+				Water = HexToColor("#4E7F81")
 			},
 			new Biome
 			{
@@ -393,11 +423,7 @@ namespace Alex.Worlds
 				Downfall = 0.0f,
 				MinHeight = 1.5f,
 				MaxHeight = 0.25f,
-
-				SurfaceBlock = 12, //Surface = Red Sand
-				SurfaceMetadata = 1,
-
-				SoilBlock = 179, //Soil = Red Sandstone
+				Water = HexToColor("#55809E")
 			},
 			new Biome
 			{
@@ -407,12 +433,22 @@ namespace Alex.Worlds
 				Downfall = 0.0f,
 				MinHeight = 1.5f,
 				MaxHeight = 0.025f,
-
-				SurfaceBlock = 12, //Surface = Red Sand
-				SurfaceMetadata = 1,
-
-				SoilBlock = 179, //Soil = Red Sandstone
+				Water = HexToColor("#55809E")
 			},
+			new Biome()
+			{
+				Id = 46,
+				Name = "Cold Ocean",
+				Temperature = 0.5f,
+				Water = HexToColor("#2080C9")
+			}, 
+			new Biome()
+			{
+				Id = 49,
+				Name = "Cold Deep Ocean",
+				Temperature = 0.5f,
+				Water = HexToColor("#2080C9")
+			}, 
 			new Biome {Id = 127, Name = "The Void", Temperature = 0.8f, Downfall = 0.4f},
 			new Biome {Id = 128, Name = "Unknown Biome", Temperature = 0.8f, Downfall = 0.4f},
 			new Biome {Id = 129, Name = "Sunflower Plains", Temperature = 0.8f, Downfall = 0.4f},
@@ -421,10 +457,7 @@ namespace Alex.Worlds
 				Id = 130,
 				Name = "Desert M",
 				Temperature = 2.0f,
-				Downfall = 0.0f,
-
-				SurfaceBlock = 12,
-				SoilBlock = 24
+				Downfall = 0.0f
 			},
 			new Biome
 			{
@@ -435,7 +468,7 @@ namespace Alex.Worlds
 				MinHeight = 0.2f,
 				MaxHeight = 0.8f
 			},
-			new Biome {Id = 132, Name = "Flower Forest", Temperature = 0.7f, Downfall = 0.8f},
+			new Biome {Id = 132, Name = "Flower Forest", Temperature = 0.7f, Downfall = 0.8f, Water = HexToColor("#20A3CC")},
 			new Biome {Id = 133, Name = "Taiga M", Temperature = 0.05f, Downfall = 0.8f},
 			new Biome {Id = 134, Name = "Swampland M", Temperature = 0.8f, Downfall = 0.9f},
 			new Biome {Id = 140, Name = "Ice Plains Spikes", Temperature = 0.0f, Downfall = 0.5f},
@@ -466,8 +499,8 @@ namespace Alex.Worlds
 				MaxHeight = 0.8f
 			},
 			new Biome {Id = 162, Name = "Extreme Hills+ M", Temperature = 0.2f, Downfall = 0.3f},
-			new Biome {Id = 163, Name = "Savanna M", Temperature = 1.2f, Downfall = 0.0f},
-			new Biome {Id = 164, Name = "Savanna Plateau M", Temperature = 1.0f, Downfall = 0.0f},
+			new Biome {Id = 163, Name = "Savanna M", Temperature = 1.2f, Downfall = 0.0f, Water = HexToColor("#2C8B9C")},
+			new Biome {Id = 164, Name = "Savanna Plateau M", Temperature = 1.0f, Downfall = 0.0f, Water = HexToColor("#2590A8")},
 			new Biome {Id = 165, Name = "Mesa (Bryce)", Temperature = 2.0f, Downfall = 0.0f},
 			new Biome {Id = 166, Name = "Mesa Plateau F M", Temperature = 2.0f, Downfall = 0.0f},
 			new Biome {Id = 167, Name = "Mesa Plateau M", Temperature = 2.0f, Downfall = 0.0f},
@@ -591,8 +624,8 @@ namespace Alex.Worlds
 		{
 			for (int biome = 0; biome < Biomes.Length; biome++)
 			{
-				Biomes[biome].Grass = ComputeBiomeColor(biome, 0, true);
-				Biomes[biome].Foliage = ComputeBiomeColor(biome, 0, false);
+				//Biomes[biome].Grass = ComputeBiomeColor(biome, 0, true);
+				//Biomes[biome].Foliage = ComputeBiomeColor(biome, 0, false);
 			}
 
 			//var mesaGrass = GetBiome(37).grass;
