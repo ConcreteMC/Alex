@@ -12,7 +12,7 @@ namespace Alex.Entities.BlockEntities
 	public class BlockEntityFactory
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BlockEntityFactory));
-		private static PooledTexture2D ChestTexture { get; set; }
+		internal static PooledTexture2D ChestTexture { get; set; }
 
 		public static void LoadResources(GraphicsDevice graphicsDevice, McResourcePack resourcePack)
 		{

@@ -224,7 +224,7 @@ namespace Alex.Gamestates.InGame
 						.GetBlockStates((int) _raytracedBlock.X, (int) _raytracedBlock.Y, (int) _raytracedBlock.Z))
 					{
 						var blockstate = bs.State;
-						if (blockstate != null && blockstate.Block.Renderable)
+						if (blockstate != null && blockstate.Block.HasHitbox)
 						{
 							sb.AppendLine($"{blockstate.Name} (S: {bs.Storage})");
 							if (blockstate.IsMultiPart)

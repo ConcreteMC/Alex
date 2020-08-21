@@ -180,6 +180,12 @@ namespace Alex.Blocks
 		    this.Register("minecraft:iron_trapdoor", () => new IronTrapdoor());
 		    this.Register("minecraft:spruce_trapdoor", () => new Trapdoor());
 		    this.Register("minecraft:oak_trapdoor", () => new Trapdoor());
+		    this.Register("minecraft:warped_trapdoor", () => new Trapdoor());
+		    this.Register("minecraft:crimson_trapdoor", () => new Trapdoor());
+		    this.Register("minecraft:acacia_trapdoor", () => new Trapdoor());
+		    this.Register("minecraft:birch_trapdoor", () => new Trapdoor());
+		    this.Register("minecraft:dark_oak_trapdoor", () => new Trapdoor());
+		    this.Register("minecraft:jungle_trapdoor", () => new Trapdoor());
 		    
 		    //Slabs
 		    this.Register("minecraft:oak_slab", () => new OakSlab());
@@ -240,6 +246,7 @@ namespace Alex.Blocks
 		    
 		    //Stairs
 		    this.Register("minecraft:stone_stairs", () => new StoneStairs());
+		    this.Register("minecraft:diorite_stairs", () => new StoneStairs());
 		    this.Register("minecraft:purpur_stairs", () => new PurpurStairs());
 		    this.Register("minecraft:cobblestone_stairs", () => new CobblestoneStairs());
 		    this.Register("minecraft:quartz_stairs", () => new QuartzStairs());
@@ -248,12 +255,14 @@ namespace Alex.Blocks
 		    this.Register("minecraft:brick_stairs", () => new BrickStairs());
 		    this.Register("minecraft:stone_brick_stairs", () => new StoneBrickStairs());
 		    this.Register("minecraft:nether_brick_stairs", () => new NetherBrickStairs());
+		    this.Register("minecraft:red_nether_brick_stairs", () => new NetherBrickStairs());
 		    this.Register("minecraft:acacia_stairs", () => new AcaciaStairs());
 		    this.Register("minecraft:dark_oak_stairs", () => new DarkOakStairs());
 		    this.Register("minecraft:spruce_stairs", () => new SpruceStairs());
 		    this.Register("minecraft:birch_stairs", () => new BirchStairs());
 		    this.Register("minecraft:jungle_stairs", () => new JungleStairs());
 		    this.Register("minecraft:oak_stairs", () => new OakStairs());
+		    this.Register("minecraft:crimson_stairs", () => new CrimsonStairs());
 		    
 		    this.Register("minecraft:water", () => new Water());
 		    this.Register("minecraft:lava", () => new Lava());
@@ -380,6 +389,8 @@ namespace Alex.Blocks
 		    this.Register("minecraft:crimson_fungus", () =>new CrimsonFungus());
 		    this.Register("minecraft:warped_roots", () => new WarpedRoots());
 		    this.Register("minecraft:warped_fungus", () => new WarpedFungus());
+		    
+		    this.Register("minecraft:lantern", () => new Lantern());
 	    }
     }
 }
