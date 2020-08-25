@@ -16,6 +16,7 @@ using Alex.ResourcePackLib.Json.BlockStates;
 using Alex.ResourcePackLib.Json.Textures;
 using Alex.Utils;
 using Alex.Worlds.Singleplayer;
+using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using NLog;
@@ -23,6 +24,7 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Processing.Processors.Transforms;
 
 namespace Alex.Graphics
 {
@@ -180,6 +182,21 @@ namespace Alex.Graphics
 			    Meta = meta;
 		    }
 	    }
+
+	    private class MipMappedImage
+	    {
+		    private Image<Rgba32>[] _levels;
+		    public  int             Levels => _levels.Length;
+		    public MipMappedImage(Image<Rgba32>[] levels)
+		    {
+			    _levels = levels;
+		    }
+
+		    public Image<Rgba32> GetLevel(int level)
+		    {
+			    return _levels[level];
+		    }
+	    }
 	    
 	    private void GenerateAtlas(GraphicsDevice device,
 		    IDictionary<ResourceLocation, ImageEntry> blockTextures,
@@ -213,7 +230,24 @@ namespace Alex.Graphics
 
 		    _atlasLocations = stillFrameInfo;
 
+		    var stillFrame = GetMipMappedTexture2D(device, stillAtlas);
+		    totalSize += stillFrame.MemoryUsage;
+		    _stillFrame = stillFrame;
+			    
+		    _frames = ProcessFrames(device,
+			    progressReceiver, blockTextures);
+
+		    totalSize += _frames.Sum(x => x.MemoryUsage);
 		    
+		    sw.Stop();
+		    
+		    Log.Info(
+			    $"TextureAtlas's generated in {sw.ElapsedMilliseconds}ms! ({PlayingState.GetBytesReadable(totalSize, 2)})");
+	    }
+	    
+	    private PooledTexture2D[] ProcessFrames(GraphicsDevice device, IProgressReceiver progressReceiver,
+		    IDictionary<ResourceLocation, ImageEntry> blockTextures)
+	    {
 		    Dictionary<ResourceLocation, Image<Rgba32>[]> blockFrames =
 			    new Dictionary<ResourceLocation, Image<Rgba32>[]>();
 		    
@@ -230,7 +264,7 @@ namespace Alex.Graphics
 		    
 		    GenerateAtlasInternal(
 			    blockFrames.Select(x => new KeyValuePair<ResourceLocation, Image<Rgba32>>(x.Key, x.Value[0])).ToArray(),
-			    progressReceiver, animatedFrameInfo, true, out Image<Rgba32> animatedFrame);
+			    progressReceiver, animatedFrameInfo, true, out var animatedFrame);
 
 		    AnimatedAtlasSize = new Vector2(animatedFrame.Width, animatedFrame.Height);
 		    _animatedAtlasLocations = animatedFrameInfo;
@@ -270,10 +304,11 @@ namespace Alex.Graphics
 					    var sourceRegion = new System.Drawing.Rectangle(0, 0, textureInfo.Width, textureInfo.Height);
 
 					    var index = i % animated.Value.Length;
-					    
-					    var indexOffset = 0;
-					    bool shouldInterpolate = false;
+
+					    var   indexOffset        = 0;
+					    bool  shouldInterpolate  = false;
 					    float interpolationValue = 0.5f;
+
 					    if (blockTextures.TryGetValue(animated.Key, out var imageEntry) && imageEntry.Meta != null)
 					    {
 						    var meta = imageEntry.Meta;
@@ -281,11 +316,12 @@ namespace Alex.Graphics
 						    if (meta.Animation != null)
 						    {
 							    if (meta.Animation.Interpolate)
-							    { 
+							    {
 								    int extraFrames = (frames.Length - animated.Value.Length);
-								    
-								    var interpolationFrames = (int)Math.Floor(((double)extraFrames / (double)animated.Value.Length));
-								    
+
+								    var interpolationFrames = (int) Math.Floor(
+									    ((double) extraFrames / (double) animated.Value.Length));
+
 								    var remainder = i % interpolationFrames;
 
 								    if (remainder != 0)
@@ -319,60 +355,70 @@ namespace Alex.Graphics
 					    }
 
 					    //TextureUtils.ClearRegion(ref target, destination);
-					    
+
 					    if (shouldInterpolate)
 					    {
 						    TextureUtils.CopyRegionIntoImage(
-							    ((i + indexOffset >= 0) ? frames[(i + indexOffset) % frames.Length] : animatedFrame), destination, ref target,
-							    destination, clear: true);
+							    ((i + indexOffset >= 0) ? frames[(i + indexOffset) % frames.Length] : animatedFrame),
+							    destination, ref target, destination, clear: true);
 					    }
 
 					    var texture = animated.Value[index];
-					    
-					    TextureUtils.CopyRegionIntoImage(texture,
-						    sourceRegion, ref target,
-						    destination, shouldInterpolate, interpolationValue, clear: !shouldInterpolate);
+
+					    TextureUtils.CopyRegionIntoImage(
+						    texture, sourceRegion, ref target, destination, shouldInterpolate, interpolationValue,
+						    clear: !shouldInterpolate);
 				    }
 			    }
 
 			    frames[i] = target;
 		    }
-
-		    _frames = frames.Select(
-			    x =>
+		    
+		    return frames.Select(
+			    (x, index) =>
 			    {
-				    var a = TextureUtils.BitmapToTexture2D(device, x, out var s);
-				    totalSize += s;
+				    var a = GetMipMappedTexture2D(device, x);
+				    //totalSize += a.MemoryUsage;
 
 				    return a;
 			    }).ToArray();
-
-		    _stillFrame = TextureUtils.BitmapToTexture2D(device, stillAtlas, out var size);
-		    totalSize += size;
-		    
-		    sw.Stop();
-		    
-		    Log.Info(
-			    $"TextureAtlas's generated in {sw.ElapsedMilliseconds}ms! ({PlayingState.GetBytesReadable(totalSize, 2)})");
-		  
-		    /*
-		    PngEncoder encoder = new PngEncoder();
-		    
-		    stillAtlas.Save("atlas.png", encoder);
-		    
-		    if (!Directory.Exists("frames"))
-			    Directory.CreateDirectory("frames");
-
-		    for (var index = 0; index < frames.Length; index++)
-		    {
-			    var frame = frames[index];
-			    
-			    frame.Save(Path.Combine("frames", $"frame-{index}.png"), encoder);
-		    }*/
-		    
-		    
 	    }
 
+	    private PooledTexture2D GetMipMappedTexture2D(GraphicsDevice device, Image<Rgba32> image)
+	    {
+		    //device.VertexSamplerStates.
+		    PooledTexture2D texture = GpuResourceManager.GetTexture2D(this, device, image.Width, image.Height, true, SurfaceFormat.Color);
+
+		    // Directory.CreateDirectory(name);
+		    // var resampler = new BicubicResampler();
+		    // var encoder = new PngEncoder();
+		    for (int level = 0; level < Alex.MipMapLevel; level++)
+		    {
+			    int mipWidth  = (int) System.Math.Max(1, image.Width >> level);
+			    int mipHeight = (int) System.Math.Max(1, image.Height >> level);
+			    
+			    var bmp = image.CloneAs<Rgba32>(); //.CloneAs<Rgba32>();
+			    bmp.Mutate(x => x.Resize(mipWidth, mipHeight, KnownResamplers.NearestNeighbor, true));
+			    
+			    uint[] colorData;
+
+			    if (bmp.TryGetSinglePixelSpan(out var pixelSpan))
+			    {
+				    colorData = pixelSpan.ToArray().Select(x => x.Rgba).ToArray();
+			    }
+			    else
+			    {
+				    throw new Exception("Could not get image data!");
+			    }
+
+			    //TODO: Resample per texture instead of whole texture map.
+
+			    texture.SetData(level, null, colorData, 0, colorData.Length);
+		    }
+
+		    return texture;
+	    }
+	    
 	    private void GenerateAtlasInternal(KeyValuePair<ResourceLocation, Image<Rgba32>>[] regular, IProgressReceiver progressReceiver, Dictionary<ResourceLocation, TextureInfo> atlasLocations, bool animated, out Image<Rgba32> result)
         {
 	        int total = regular.Length;
@@ -446,8 +492,8 @@ namespace Alex.Graphics
 		    }
 		    
 		    //List<Image<Rgba32>> result = new List<Image<Rgba32>>();
-		    Image<Rgba32>[] result = new Image<Rgba32>[framesInHeight * framesInWidth];
-		    int counter = 0;
+		    Image<Rgba32>[] result  = new Image<Rgba32>[framesInHeight * framesInWidth];
+		    int             counter = 0;
 		    for (int x = 0; x < framesInWidth; x++)
 		    for (int y = 0; y < framesInHeight; y++)
 		    {

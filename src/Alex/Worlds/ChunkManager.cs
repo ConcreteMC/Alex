@@ -216,12 +216,16 @@ namespace Alex.Worlds
 	    
 	    private static readonly SamplerState RenderSampler = new SamplerState()
 	    {
-		    Filter = TextureFilter.Point,
+		    Filter = TextureFilter.PointMipLinear,
 		    AddressU = TextureAddressMode.Wrap,
 		    AddressV = TextureAddressMode.Wrap,
-		    MipMapLevelOfDetailBias = -2f,
-		    MaxMipLevel = 0,
-		    FilterMode = TextureFilterMode.Default
+		    MipMapLevelOfDetailBias = -1f,
+		    MaxMipLevel = Alex.MipMapLevel,
+		   // MaxMipLevel = 0,
+		    FilterMode = TextureFilterMode.Comparison,
+		    AddressW = TextureAddressMode.Wrap,
+		    MaxAnisotropy = 16,
+		   // ComparisonFunction = 
 	    };
 	    
 	    private static readonly BlendState LightMapBS = new BlendState()

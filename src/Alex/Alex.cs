@@ -57,6 +57,7 @@ namespace Alex
 {
 	public class Alex : Microsoft.Xna.Framework.Game
 	{
+		public const  int  MipMapLevel = 4;
 		public static bool InGame { get; set; } = false;
 
 		public static EntityModel PlayerModel { get; set; }
