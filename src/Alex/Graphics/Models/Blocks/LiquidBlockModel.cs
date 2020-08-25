@@ -18,6 +18,7 @@ namespace Alex.Graphics.Models.Blocks
 {
 	public class LiquidBlockModel : BlockModel
 	{
+		private static readonly BlockFace[] Faces = Enum.GetValues(typeof(BlockFace)).Cast<BlockFace>().ToArray();
 		private static PropertyInt LEVEL = new PropertyInt("level");
 		
 		public bool IsLava = false;
@@ -106,16 +107,25 @@ namespace Alex.Graphics.Models.Blocks
 
 		public override VerticesResult GetVertices(IBlockAccess world, Vector3 vectorPos, Block baseBlock)
 		{
+			//int myLevel = 
 			//var chunk = world.GetChunk(vectorPos);
 			//Level = GetLevel(baseBlock.BlockState);
 			
 			var                      position    = new BlockCoordinates(vectorPos);
-			var                      biome   = world.GetBiome(position);
+			//var                      biome   = world.GetBiome(position);
 			List< BlockShaderVertex> result      = new List<BlockShaderVertex>(36);
 			var                      indexResult = new List<int>();
+			
+			var blocksUp = world.GetBlockStates(position.X, position.Y + 1, position.Z).ToArray();//.GetType();
+			
+			bool aboveIsLiquid =
+				(IsWater && blocksUp.Any(
+					x => x.State.Block.Renderable && (x.State.Block.BlockMaterial == Material.Water || x.State.Block.BlockMaterial == Material.WaterPlant))) || (IsLava
+					&& blocksUp.Any(x => x.State.Block.Renderable && x.State.Block.BlockMaterial == Material.Lava));
 
 			List<BlockFace> renderedFaces = new List<BlockFace>();
-			foreach (var face in Enum.GetValues(typeof(BlockFace)).Cast<BlockFace>())
+			//List<BlockFace> liquidFaces = new List<BlockFace>();
+			foreach (var face in Faces)
 			{
 				var pos = position + face.GetBlockCoordinates();
 
@@ -125,14 +135,22 @@ namespace Alex.Graphics.Models.Blocks
 					if (blockState.Storage != 0 && (blockState.State == null || (blockState.State.Block is Air)))
 						continue;
 					
-					shouldRenderFace = baseBlock.ShouldRenderFace(face, blockState.State.Block);
+					var neighbor = blockState.State.Block;
+					
+					shouldRenderFace = baseBlock.ShouldRenderFace(face, neighbor);
+
+				//	if ((neighbor.BlockMaterial == Material.Water || neighbor.BlockMaterial == Material.WaterPlant) && IsWater)
+					//{
+				//		if (face != BlockFace.Up && face != BlockFace.Down)
+				//			liquidFaces.Add(face);
+				//	}
 				}
 				
 				if (shouldRenderFace)
 					renderedFaces.Add(face);
 			}
-			
-			if (renderedFaces.Count == 0)
+
+			if (renderedFaces.Count == 0 && !aboveIsLiquid)
 				return new VerticesResult(new BlockShaderVertex[0], new int[0]);
 			
 			int tl , tr, bl, br;
@@ -146,14 +164,9 @@ namespace Alex.Graphics.Models.Blocks
 			int rot = 0;
 			bool calculateDirection = false;
 
-			var check = position + BlockCoordinates.Up;
-			var blocksUp = world.GetBlockStates(check.X, check.Y, check.Z).ToArray();//.GetType();
-
-			if ((IsWater && blocksUp.Any(
-				    x => x.State.Block.Renderable && x.State.Block.BlockMaterial == Material.Water))
-			    || (IsLava && blocksUp.Any(
-				    x => x.State.Block.Renderable && x.State.Block.BlockMaterial == Material.Lava))
-			)
+			//var avgLiquidLevel = GetAverageLiquidLevels(world, position, out lowestBlock, out lowestFound);
+			
+			if (aboveIsLiquid)
 			{
 				tl = 8;
 				tr = 8;
@@ -169,25 +182,9 @@ namespace Alex.Graphics.Models.Blocks
 				{
 					calculateDirection = true;
 				}
-				else
-				{
-					/*if (blocksUp.Any(x => x.State.Block.Solid && x.State.Block.Renderable))
-					{
-						tl = 8;
-						tr = 8;
-						bl = 8;
-						br = 8;
-					}
-					else
-					{
-						tl = 7;
-						tr = 7;
-						bl = 7;
-						br = 7;
-					}*/
-				}
-				
-				tl = GetAverageLiquidLevels(world, position, out lowestBlock, out lowestFound);
+
+				tl = GetAverageLiquidLevels(world, position, out lowestBlock, out lowestFound);;
+				//tl = GetAverageLiquidLevels(world, position, out lowestBlock, out lowestFound);
 
 				tr = GetAverageLiquidLevels(world, position + BlockCoordinates.Right, out var trl, out var trv);
 				if (trv > lowestFound)
@@ -267,23 +264,23 @@ namespace Alex.Graphics.Models.Blocks
 				texture += "_still";
 			}
 
-			//float frameX 
 			UVMap map = GetTextureUVMap(Alex.Instance.Resources, texture, 0, 16, 0, 16, 0, Color.White);
 
 			var originalMap = new UVMap(map.TopLeft, map.TopRight, map.BottomLeft, map.BottomRight, map.ColorLeft, map.ColorTop, map.ColorBottom);
-			//originalMap.Rotate(180);
-			
 			map.Rotate(rot);
 
 			foreach (var face in renderedFaces)
 			{
+				/*if (!renderedFaces.Contains(face))
+				{
+					
+					continue;
+				}*/
+				
 				float s = 1f - Scale;
 				var start = Vector3.One * s;
 				var end = Vector3.One * Scale;
-
-
-				//if (b.BlockModel is LiquidBlockModel m && m.Level > Level && f != BlockFace.Up) continue;
-
+				
 				var faceMap = map;
 				if (face != BlockFace.Up)
 				{
@@ -333,22 +330,23 @@ namespace Alex.Graphics.Models.Blocks
 						var bx = position.X;
 						var y  = position.Y;
 						var bz = position.Z;
-						
-						vert.Color = CombineColors(
-							GetBiomeColor(world, bx, y, bz), GetBiomeColor(world,bx - 1, y, bz - 1), GetBiomeColor(world,bx - 1, y, bz),
-							GetBiomeColor(world,bx, y, bz - 1), GetBiomeColor(world,bx + 1, y, bz + 1), GetBiomeColor(world,bx + 1, y, bz),
-							GetBiomeColor(world,bx, y, bz + 1), GetBiomeColor(world,bx - 1, y, bz + 1), GetBiomeColor(world,bx + 1, y, bz - 1));
-							/*world.GetBiome(new BlockCoordinates(vert.Position))
-							   .Water;*/ //biome.Water; //new Color(68, 175, 245);
-						//vert.Color.A = 255;
 
+						if (ResourcePackBlockModel.SmoothLighting)
+						{
+							vert.Color = CombineColors(
+								GetBiomeColor(world, bx, y, bz), GetBiomeColor(world,bx - 1, y, bz - 1), GetBiomeColor(world,bx - 1, y, bz),
+								GetBiomeColor(world,bx, y, bz - 1), GetBiomeColor(world,bx + 1, y, bz + 1), GetBiomeColor(world,bx + 1, y, bz),
+								GetBiomeColor(world,bx, y, bz + 1), GetBiomeColor(world,bx - 1, y, bz + 1), GetBiomeColor(world,bx + 1, y, bz - 1));
+						}
+						else
+						{
+							vert.Color = GetBiomeColor(world, bx, y, bz);
+						}
 					}
 					else
 					{
 						vert.BlockLight = baseBlock.LightValue;
 					}
-					//vert.Color = AdjustColor(new Color(68, 175, 245), f,
-					//	GetLight(world, position + d), false);
 
 					result.Add(vert);
 				}
@@ -369,14 +367,6 @@ namespace Alex.Graphics.Models.Blocks
 			return access.GetBiome(new BlockCoordinates(x, y, z)).Water;
 		}
 		
-		private static Color Blend(Color color, Color backColor, double amount)
-		{
-			byte r = (byte) ((color.R * amount) + backColor.R * (1 - amount));
-			byte g = (byte) ((color.G * amount) + backColor.G * (1 - amount));
-			byte b = (byte) ((color.B * amount) + backColor.B * (1 - amount));
-			return new Color(r, g, b);
-		}
-
 		private Color CombineColors(params Color[] aColors)
 		{
 			int r = 0;

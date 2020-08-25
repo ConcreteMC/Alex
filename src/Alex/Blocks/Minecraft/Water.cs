@@ -13,7 +13,7 @@ namespace Alex.Blocks.Minecraft
 			Solid = false;
 			Transparent = true;
 			IsReplacible = true;
-			HasHitbox = false;
+			HasHitbox = true;
 			//BlockModel = BlockFactory.StationairyWaterModel;
 
 			IsWater = true;
@@ -26,7 +26,7 @@ namespace Alex.Blocks.Minecraft
 		
 		public override bool ShouldRenderFace(BlockFace face, Block neighbor)
 		{
-			if (neighbor.BlockMaterial == Material.Water)
+			if (neighbor.BlockMaterial == Material.Water || neighbor.BlockMaterial == Material.WaterPlant)
 			{
 				var neighborLevel = neighbor.BlockState.GetTypedValue(LEVEL);
 

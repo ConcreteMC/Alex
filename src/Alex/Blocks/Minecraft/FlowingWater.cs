@@ -8,6 +8,7 @@
 			Transparent = true;
 
 			LightOpacity = 2;
+			BlockMaterial = Material.Water;
 			//BlockModel = new LiquidBlockModel()
 			//{
 			//	IsFlowing = true,
