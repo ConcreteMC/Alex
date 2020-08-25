@@ -88,11 +88,13 @@ namespace Alex.Graphics.Models
 			CelestialPlaneEffect.TextureEnabled = true;
 
 			SkyPlaneEffect = new BasicEffect(device);
-			SkyPlaneEffect.VertexColorEnabled = false;
+			SkyPlaneEffect.VertexColorEnabled = true;
 			SkyPlaneEffect.FogEnabled = true;
 			SkyPlaneEffect.FogStart = 0;
 			SkyPlaneEffect.FogEnd = 64 * 0.8f;
-			SkyPlaneEffect.LightingEnabled = true;
+			SkyPlaneEffect.LightingEnabled = false;
+			//SkyPlaneEffect.AmbientLightColor
+			//SkyPlaneEffect.DiffuseColor = Color.White.ToVector3();
 
 			var planeDistance = 64;
 			var plane = new[]
@@ -340,10 +342,10 @@ namespace Alex.Graphics.Models
 	    private static BlendState CelestialBlendState { get; } = new BlendState()
 	    {
 		    AlphaSourceBlend = Microsoft.Xna.Framework.Graphics.Blend.SourceAlpha,
-		    AlphaDestinationBlend = Microsoft.Xna.Framework.Graphics.Blend.One,
-		    ColorDestinationBlend = Microsoft.Xna.Framework.Graphics.Blend.One,
-		    ColorSourceBlend = Microsoft.Xna.Framework.Graphics.Blend.SourceAlpha
-		    //  IndependentBlendEnable = true,
+		    AlphaDestinationBlend = Microsoft.Xna.Framework.Graphics.Blend.SourceAlpha,
+		    ColorDestinationBlend = Microsoft.Xna.Framework.Graphics.Blend.SourceAlpha,
+		    ColorSourceBlend = Microsoft.Xna.Framework.Graphics.Blend.SourceAlpha,
+		     // IndependentBlendEnable = true,
 		    //AlphaBlendFunction = BlendFunction.Add,
 		   // ColorBlendFunction = BlendFunction.Add
 	    };
@@ -365,18 +367,19 @@ namespace Alex.Graphics.Models
 			
 			DrawSky(renderArgs, renderArgs.Camera.Position);
 
-			var backup = renderArgs.GraphicsDevice.BlendState;
-			
-		    renderArgs.GraphicsDevice.BlendState = CelestialBlendState;
-
-		    if (World.Dimension == Dimension.Overworld)
+			if (World.Dimension == Dimension.Overworld)
 		    {
+			    var backup = renderArgs.GraphicsDevice.BlendState;
+			
+			    //renderArgs.GraphicsDevice.DepthStencilState = DepthStencilState;
+			    renderArgs.GraphicsDevice.BlendState = CelestialBlendState;
+			    
 			    DrawSun(renderArgs, renderArgs.Camera.Position);
 
 			    DrawMoon(renderArgs, renderArgs.Camera.Position);
+			    
+			    renderArgs.GraphicsDevice.BlendState = backup;
 		    }
-
-		    renderArgs.GraphicsDevice.BlendState = backup;
 
 			DrawVoid(renderArgs, renderArgs.Camera.Position);
 
@@ -393,7 +396,7 @@ namespace Alex.Graphics.Models
 			                       * Matrix.CreateTranslation(position);
 			                    //   * Matrix.CreateTranslation(position);
 		    
-			SkyPlaneEffect.AmbientLightColor = WorldSkyColor.ToVector3();
+			SkyPlaneEffect.DiffuseColor = SkyPlaneEffect.AmbientLightColor = WorldSkyColor.ToVector3();
 			
 			// Sky
 			renderArgs.GraphicsDevice.SetVertexBuffer(SkyPlane);
@@ -456,7 +459,7 @@ namespace Alex.Graphics.Models
 			renderArgs.GraphicsDevice.SetVertexBuffer(SkyPlane);
 
 			SkyPlaneEffect.World = Matrix.CreateTranslation(0, -16, 0) * Matrix.CreateTranslation(position);
-			SkyPlaneEffect.AmbientLightColor = VoidColor.ToVector3();
+			SkyPlaneEffect.DiffuseColor = SkyPlaneEffect.AmbientLightColor = VoidColor.ToVector3();
 
 			foreach (var pass in SkyPlaneEffect.CurrentTechnique.Passes)
 			{
