@@ -204,6 +204,7 @@ namespace Alex.Blocks
 		    this.Register("minecraft:cobblestone_slab", () => new CobblestoneSlab());
 		    this.Register("minecraft:brick_slab", () => new BrickSlab());
 		    this.Register("minecraft:stone_brick_slab", () => new StoneBrickSlab());
+		    this.Register("minecraft:mossy_stone_brick_slab", () => new StoneBrickSlab());
 		    this.Register("minecraft:nether_brick_slab", () => new NetherBrickSlab());
 		    this.Register("minecraft:quartz_slab", () => new QuartzSlab());
 		    this.Register("minecraft:red_sandstone_slab", () => new RedSandstoneSlab());
@@ -254,6 +255,7 @@ namespace Alex.Blocks
 		    this.Register("minecraft:sandstone_stairs", () => new SandstoneStairs());
 		    this.Register("minecraft:brick_stairs", () => new BrickStairs());
 		    this.Register("minecraft:stone_brick_stairs", () => new StoneBrickStairs());
+		    this.Register("minecraft:mossy_stone_brick_stairs", () => new StoneBrickStairs());
 		    this.Register("minecraft:nether_brick_stairs", () => new NetherBrickStairs());
 		    this.Register("minecraft:red_nether_brick_stairs", () => new NetherBrickStairs());
 		    this.Register("minecraft:acacia_stairs", () => new AcaciaStairs());
@@ -394,6 +396,8 @@ namespace Alex.Blocks
 		    this.Register("minecraft:warped_fungus", () => new WarpedFungus());
 		    
 		    this.Register("minecraft:lantern", () => new Lantern());
+		    
+		    this.Register("minecraft:lectern", () => new Lectern());
 	    }
     }
 }

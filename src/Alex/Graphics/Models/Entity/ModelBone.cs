@@ -96,60 +96,67 @@ namespace Alex.Graphics.Models.Entity
 			public void Render(IRenderArgs args, bool mock, out int vertices)
 			{
 				vertices = 0;
-				var buffer = Buffer;
-				var effect = Effect;
-
-				if (!(buffer == null || effect == null || effect.Texture == null || effect.IsDisposed
-				      || buffer.MarkedForDisposal))
+				try
 				{
-					if (buffer.IndexCount == 0)
+					var buffer = Buffer;
+					var effect = Effect;
+
+					if (!(buffer == null || effect == null || effect.Texture == null || effect.IsDisposed
+					      || buffer.MarkedForDisposal))
 					{
-						Log.Warn($"Bone indexcount = 0 || {Definition.Name}");
-					}
-
-					args.GraphicsDevice.Indices = buffer;
-
-					effect.View = args.Camera.ViewMatrix;
-					effect.Projection = args.Camera.ProjectionMatrix;
-
-					if (!mock && buffer.IndexCount > 0)
-					{
-						if (effect.CurrentTechnique != null && !Definition.NeverRender)
+						if (buffer.IndexCount == 0)
 						{
-						//	foreach (var technique in effect.Techniques)
-							{
-								foreach (var pass in effect.CurrentTechnique.Passes)
-								{
-									pass?.Apply();
+							Log.Warn($"Bone indexcount = 0 || {Definition.Name}");
+						}
 
-									args.GraphicsDevice.DrawIndexedPrimitives(
-										PrimitiveType.TriangleList, 0, 0, buffer.IndexCount / 3);
+						args.GraphicsDevice.Indices = buffer;
+
+						effect.View = args.Camera.ViewMatrix;
+						effect.Projection = args.Camera.ProjectionMatrix;
+
+						if (!mock && buffer.IndexCount > 0)
+						{
+							if (effect.CurrentTechnique != null && !Definition.NeverRender)
+							{
+								//	foreach (var technique in effect.Techniques)
+								{
+									foreach (var pass in effect.CurrentTechnique.Passes)
+									{
+										pass?.Apply();
+
+										args.GraphicsDevice.DrawIndexedPrimitives(
+											PrimitiveType.TriangleList, 0, 0, buffer.IndexCount / 3);
+									}
 								}
 							}
-						}
 
-						//else
+							//else
+							{
+								//	Log.Warn($"Current");
+							}
+
+							vertices += buffer.IndexCount / 3;
+						}
+						else if (!mock && buffer.IndexCount == 0)
 						{
-							//	Log.Warn($"Current");
+							Log.Warn($"Index count = 0");
 						}
-
-						vertices += buffer.IndexCount / 3;
 					}
-					else if (!mock && buffer.IndexCount == 0)
+
+					var children = Children.ToArray();
+
+					if (children.Length > 0)
 					{
-						Log.Warn($"Index count = 0");
+						foreach (var child in children)
+						{
+							child.Render(args, mock, out int childVertices);
+							vertices += childVertices;
+						}
 					}
 				}
-
-				var children = Children.ToArray();
-
-				if (children.Length > 0)
+				catch (Exception ex)
 				{
-					foreach (var child in children)
-					{
-						child.Render(args, mock, out int childVertices);
-						vertices += childVertices;
-					}
+					Log.Warn(ex, $"An error occured rendering bone {Name}");
 				}
 			}
 

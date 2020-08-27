@@ -803,10 +803,11 @@ namespace Alex.Worlds
 		    
 		    var cc = new ChunkCoordinates(column.X, column.Z);
 		    bool isInView = IsWithinView(cc, _cameraBoundingFrustum);
-		    
-		    double priorityOffset = isInView ? 1 : 256;
 
-		    if (!column.IsNew)
+		    bool   hasRenderData  = _chunkData.ContainsKey(cc);
+		    double priorityOffset = isInView ? 128 : 256;
+
+		    if (!column.IsNew && hasRenderData)
 		    {
 			    if (type == ScheduleType.Border)
 			    {
@@ -819,6 +820,13 @@ namespace Alex.Worlds
 
 			    //else if (type == ScheduleType.Border)
 				//    priorityOffset = double.MaxValue / 4d;
+		    }
+		    else
+		    {
+			    if (isInView)
+			    {
+				    priorityOffset = 0;
+			    }
 		    }
 
 		    if ((column.HighPriority && isInView) || cameraChunk == cc)
@@ -1038,7 +1046,7 @@ namespace Alex.Worlds
 
 								    PooledVertexBuffer newVertexBuffer = null;
 
-								    if (vertexArray.Length >= data.Buffer.VertexCount)
+								    if (vertexArray.Length > data.Buffer.VertexCount)
 								    {
 									    PooledVertexBuffer newBuffer = GpuResourceManager.GetBuffer(
 										    this, Graphics, BlockShaderVertex.VertexDeclaration, vertexArray.Length,
@@ -1142,7 +1150,14 @@ namespace Alex.Worlds
 						    data.Coordinates = coordinates;
 					    }
 
-					    _chunkData.AddOrUpdate(coordinates, data, (chunkCoordinates, chunkData) => data);
+					    _chunkData?.AddOrUpdate(coordinates, data, (chunkCoordinates, chunkData) =>
+					    {
+						    if (!ReferenceEquals(chunkData, data))
+						    {
+							    chunkData.Dispose();
+						    }
+						    return data;
+					    });
 				    }
 
 				    return;
@@ -1186,11 +1201,10 @@ namespace Alex.Worlds
 	        ref ChunkSection section,
 	        int yIndex)
         {
-	        using (PooledList<BlockShaderVertex> vertices =
-		        new PooledList<BlockShaderVertex>(ClearMode.Auto))
-		  //  List<BlockShaderVertex> vertices = new List<BlockShaderVertex>();
-
-		    {
+	      //  using (PooledList<BlockShaderVertex> vertices =
+		 //       new PooledList<BlockShaderVertex>(ClearMode.Auto))
+		    List<BlockShaderVertex> vertices = new List<BlockShaderVertex>();
+	        {
 			    Dictionary<RenderStage, List<int>> stages =
 				    new Dictionary<RenderStage, List<int>>(RenderStages.Length);
 		        {
@@ -1361,250 +1375,6 @@ namespace Alex.Worlds
 	        // section.MeshCache = mesh
         }
 
-        #region old
-        
-        /*private ChunkMesh GenerateSectionMesh(IWorld world, ScheduleType scheduled, Vector3 chunkPosition,
-	        ref ChunkSection section, int yIndex)
-        {
-	        var force = section.New || section.MeshCache == null || section.MeshPositions == null;
-
-	        var cached = section.MeshCache;
-	        var positionCache = section.MeshPositions;
-
-	        Dictionary<BlockCoordinates, IList<ChunkMesh.EntryPosition>> positions = new Dictionary<BlockCoordinates, IList<ChunkMesh.EntryPosition>>();
-			
-	        List<VertexPositionNormalTextureColor> solidVertices = new List<VertexPositionNormalTextureColor>();
-
-	        Dictionary<RenderStage, List<int>> stages = new Dictionary<RenderStage, List<int>>();
-			RenderStage[] stageEnumValues = (RenderStage[]) Enum.GetValues(typeof(RenderStage));
-			foreach (var stage in stageEnumValues)
-			{
-				stages.Add(stage, new List<int>());
-			}
-			
-	        Dictionary<int, int> processedIndices = new Dictionary<int, int>();
-	        for (var y = 0; y < 16; y++)
-	        for (var x = 0; x < ChunkColumn.ChunkWidth; x++)
-	        for (var z = 0; z < ChunkColumn.ChunkDepth; z++)
-	        {
-		        var blockPosition = new BlockCoordinates((int) (chunkPosition.X + x), y + (yIndex << 4),
-			        (int) (chunkPosition.Z + z));
-		        var blockCoords = new BlockCoordinates(x, y, z);
-		        
-		        bool isScheduled = section.IsScheduled(x, y, z);
-		        bool isLightScheduled = section.IsLightingScheduled(x, y, z);
-		        bool isBlockLightScheduled = section.IsBlockLightScheduled(x, y, z);
-				
-		        var neighborsScheduled = HasScheduledNeighbors(world, blockPosition);
-		        var isBorderBlock = (scheduled == ScheduleType.Border && ((x == 0 || x == 15) || (z == 0 || z == 15)));
-
-		        //var isBlockScheduled = isScheduled || isLightScheduled || isBlockLightScheduled;
-		        var isRebuild = ((force || isScheduled || neighborsScheduled || isBorderBlock || isLightScheduled || isBlockLightScheduled));
-		        // bool isLightingScheduled = section.IsLightingScheduled(x, y, z);
-
-		        bool gotCachedPositions = false;
-
-		        IList<ChunkMesh.EntryPosition> positionCached = default;
-		        if (positionCache != null)
-		        {
-			        gotCachedPositions = positionCache.TryGetValue(blockCoords, out positionCached);
-		        }
-
-		        var posCache = new List<ChunkMesh.EntryPosition>();
-
-		        int renderedBlocks = 0;
-
-		        var blockStates = section.GetAll(x, y, z);
-		        foreach (var currentBlockState in blockStates)
-		        {
-			        var blockState = currentBlockState.state;
-
-			        if (((blockState == null || !blockState.Block.Renderable) && !force && !isBorderBlock))
-			        {
-				        continue;
-			        }
-
-			        var shouldRebuildVertices = isRebuild;
-
-			        var model = blockState.Model;
-
-			        if (blockState != null && shouldRebuildVertices && blockState.Block.RequiresUpdate)
-			        {
-				        blockState = blockState.Block.BlockPlaced(world, blockState, blockPosition);
-				        section.Set(currentBlockState.storage, x, y, z, blockState);
-
-				        model = blockState.Model;
-			        }
-
-			        if (DoMultiPartCalculations && blockState is BlockState state && state.IsMultiPart &&
-			            shouldRebuildVertices && (isScheduled || neighborsScheduled))
-			        {
-				        blockState = MultiPartModels.GetBlockState(world, blockPosition, state, state.MultiPartHelper);
-				        section.Set(currentBlockState.storage, x, y, z, blockState);
-
-				        model = blockState.Model;
-				        // blockState.Block.Update(world, blockPosition);
-			        }
-
-			        ChunkMesh.EntryPosition cachedBlock = null;
-			        if (gotCachedPositions && !shouldRebuildVertices)
-			        {
-				        cachedBlock = positionCached.FirstOrDefault(ps => ps.Storage == currentBlockState.storage);
-			        }
-
-			        ChunkMesh.EntryPosition entryPosition;
-			        if (!shouldRebuildVertices && cachedBlock != null)
-			        {
-				        int[] indices = cached.Indexes[cachedBlock.Stage];
-
-				        var indiceIndex = stages[cachedBlock.Stage].Count;
-
-
-				        for (int index = cachedBlock.Index;
-					        index < cachedBlock.Index + cachedBlock.Length;
-					        index++)
-				        {
-					        var vertexIndex = indices[index];
-					        if (!processedIndices.TryGetValue(vertexIndex, out var newIndex))
-					        {
-						        var vertice = cached.Vertices[vertexIndex];
-						        solidVertices.Add(vertice);
-
-						        newIndex = solidVertices.Count - 1;
-
-						        processedIndices.Add(vertexIndex, newIndex);
-					        }
-
-					        stages[cachedBlock.Stage].Add(newIndex);
-				        }
-
-				        entryPosition = new ChunkMesh.EntryPosition(cachedBlock.Stage, indiceIndex,
-					        cachedBlock.Length, currentBlockState.storage);
-
-				        posCache.Add(entryPosition);
-
-				        renderedBlocks++;
-			        }
-			        else if (shouldRebuildVertices || cachedBlock == null)
-			        {
-				        var data = model.GetVertices(world, blockPosition, blockState.Block);
-
-				        if (!(data.vertices == null || data.indexes == null || data.vertices.Length == 0 ||
-				              data.indexes.Length == 0))
-				        {
-					        RenderStage targetState = RenderStage.OpaqueFullCube;
-					        if (blockState.Block.BlockMaterial.IsLiquid())
-					        {
-						        targetState = RenderStage.Liquid;
-					        }
-					        else if (blockState.Block.Animated)
-					        {
-						        if (blockState.Block.BlockMaterial.IsOpaque())
-						        {
-							        targetState = RenderStage.Animated;
-						        }
-						        else
-						        {
-							        targetState = RenderStage.AnimatedTranslucent;
-						        }
-					        }
-					        else if (blockState.Block.Transparent)
-					        {
-						        if (blockState.Block.BlockMaterial.IsOpaque())
-						        {
-							        targetState = RenderStage.Transparent;
-						        }
-						        else
-						        {
-							        targetState = RenderStage.Translucent;
-						        }
-					        }
-					        else if (!blockState.Block.IsFullCube)
-					        {
-						        targetState = RenderStage.Opaque;
-					        }
-
-					        if (data.vertices.Length > 0 && data.indexes.Length > 0)
-					        {
-						        // if (currentBlockState.storage == 0)
-						        // 	section.SetRendered(x, y, z, true);
-
-						        renderedBlocks++;
-
-						        int startVerticeIndex = solidVertices.Count;
-						        foreach (var vert in data.vertices)
-						        {
-							        solidVertices.Add(vert);
-						        }
-
-						        int startIndex = stages[targetState].Count;
-
-						        for (int i = 0; i < data.indexes.Length; i++)
-						        {
-							        var originalIndex = data.indexes[i];
-
-							        var verticeIndex = startVerticeIndex + originalIndex;
-
-							        stages[targetState].Add(verticeIndex);
-						        }
-
-						        entryPosition = new ChunkMesh.EntryPosition(targetState, startIndex,
-							        data.indexes.Length, currentBlockState.storage);
-
-						        posCache.Add(entryPosition);
-					        }
-				        }
-
-				        if (currentBlockState.storage == 0)
-				        {
-					        if (isScheduled)
-						        section.SetScheduled(x, y, z, false);
-
-					        if (isLightScheduled)
-						        section.SetLightingScheduled(x, y, z, false);
-
-					        if (isBlockLightScheduled)
-						        section.SetBlockLightScheduled(x, y, z, false);
-				        }
-			        }
-		        }
-
-		        if (renderedBlocks > 0)
-		        {
-			        if (!positions.TryAdd(blockCoords, posCache))
-			        {
-				        Log.Warn($"Could not to indice indexer");
-			        }
-		        }
-
-		        section.SetRendered(x, y, z, renderedBlocks > 0);
-	        }
-
-	        section.New = false;
-
-	        var oldMesh = section.MeshCache;
-
-	        var mesh = new ChunkMesh(solidVertices.ToArray());
-
-	        foreach (var stage in stages)
-	        {
-		        if (stage.Value.Count > 0)
-		        {
-			        mesh.Indexes.Add(stage.Key, stage.Value.ToArray());
-		        }
-	        }
-	        
-	        section.MeshCache = mesh;
-	        section.MeshPositions = positions;
-	        
-	        if (oldMesh != null)
-		        oldMesh.Dispose();
-	        
-	        return mesh;
-        }*/
-        
-        #endregion
-        
         #endregion
     }
 }
