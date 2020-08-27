@@ -17,6 +17,8 @@ namespace Alex.Graphics.Effect
         ShaderIndex   = 128, // 0x00000080
         LightOffset   = 256,
         LightSource1  = 512,
+        DiffuseColor  = 1024,
+        AmbientColor  = 2048,
         All           = -1, // 0xFFFFFFFF
     }
 

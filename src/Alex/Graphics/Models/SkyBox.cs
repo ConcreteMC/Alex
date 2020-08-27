@@ -6,6 +6,7 @@ using Alex.API.Data.Options;
 using Alex.API.Graphics;
 using Alex.API.Services;
 using Alex.API.Utils;
+using Alex.Graphics.Effect;
 using Alex.Utils;
 using Alex.Worlds;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,9 +23,9 @@ namespace Alex.Graphics.Models
 		private float MoonX = 1f/4f;
 		private float MoonY = 1f/2f;
 
-		private BasicEffect SkyPlaneEffect { get; set; }
-	    private BasicEffect  CelestialPlaneEffect { get; set; }
-		private BasicEffect CloudsPlaneEffect { get; set; }
+		private SkyEffect   SkyPlaneEffect       { get; set; }
+	    private BasicEffect CelestialPlaneEffect { get; set; }
+		private BasicEffect CloudsPlaneEffect    { get; set; }
 
 	    private PooledVertexBuffer CloudsPlane { get; set; }
         private PooledVertexBuffer SkyPlane { get; set; }
@@ -79,7 +80,8 @@ namespace Alex.Graphics.Models
 		    {
 			    EnableClouds = false;
 		    }
-
+		    
+		    var planeDistance = 64;
             //var d = 144;
 
 			CelestialPlaneEffect = new BasicEffect(device);
@@ -87,29 +89,29 @@ namespace Alex.Graphics.Models
 			CelestialPlaneEffect.LightingEnabled = false;
 			CelestialPlaneEffect.TextureEnabled = true;
 
-			SkyPlaneEffect = new BasicEffect(device);
-			SkyPlaneEffect.VertexColorEnabled = true;
+			SkyPlaneEffect = new SkyEffect(device);
+			//SkyPlaneEffect.
+		//	SkyPlaneEffect.VertexColorEnabled = true;
 			SkyPlaneEffect.FogEnabled = true;
 			SkyPlaneEffect.FogStart = 0;
-			SkyPlaneEffect.FogEnd = 64 * 0.8f;
-			SkyPlaneEffect.LightingEnabled = false;
+			SkyPlaneEffect.FogEnd = (planeDistance / 10f) * 8f;
+		//	SkyPlaneEffect.LightingEnabled = false;
 			//SkyPlaneEffect.AmbientLightColor
 			//SkyPlaneEffect.DiffuseColor = Color.White.ToVector3();
-
-			var planeDistance = 64;
+			
 			var plane = new[]
 			{
-				new VertexPositionColor(new Vector3(-planeDistance, 0, -planeDistance), Color.White),
-				new VertexPositionColor(new Vector3(planeDistance, 0, -planeDistance), Color.White),
-				new VertexPositionColor(new Vector3(-planeDistance, 0, planeDistance), Color.White),
+				new VertexPosition(new Vector3(-planeDistance, 0, -planeDistance)),
+				new VertexPosition(new Vector3(planeDistance, 0, -planeDistance)),
+				new VertexPosition(new Vector3(-planeDistance, 0, planeDistance)),
 
-				new VertexPositionColor(new Vector3(planeDistance, 0, -planeDistance), Color.White),
-				new VertexPositionColor(new Vector3(planeDistance, 0, planeDistance), Color.White),
-				new VertexPositionColor(new Vector3(-planeDistance, 0, planeDistance), Color.White)
+				new VertexPosition(new Vector3(planeDistance, 0, -planeDistance)),
+				new VertexPosition(new Vector3(planeDistance, 0, planeDistance)),
+				new VertexPosition(new Vector3(-planeDistance, 0, planeDistance))
 			};
-			SkyPlane = GpuResourceManager.GetBuffer(this, device, VertexPositionColor.VertexDeclaration,
+			SkyPlane = GpuResourceManager.GetBuffer(this, device, VertexPosition.VertexDeclaration,
 				plane.Length, BufferUsage.WriteOnly);
-			SkyPlane.SetData<VertexPositionColor>(plane);
+			SkyPlane.SetData<VertexPosition>(plane);
 
 			planeDistance = 60;
 			var celestialPlane = new[]
@@ -182,7 +184,11 @@ namespace Alex.Graphics.Models
 		{
 			get
 			{
-				int i = (int)(World.Time % 24000L);
+				var x = ((float)World.Time / 24000) - 0.25f;
+				if (x < 0) x+= 1;
+
+				return x + ((1f - (System.MathF.Cos(x * MathF.PI) + 1f) / 2f) - x) / 3f;
+				/*int i = (int)(World.Time % 24000L);
 				float f = ((float)i + 1f) / 24000.0F - 0.25F;
 
 				if (f < 0.0F)
@@ -197,32 +203,43 @@ namespace Alex.Graphics.Models
 
 				float f1 = 1.0F - (float)((Math.Cos((double)f * Math.PI) + 1.0D) / 2.0D);
 				f = f + (f1 - f) / 3.0F;
-				return f;
+				return f;*/
 			}
 		}
 
-		public float BrightnessModifier => MathHelper.Clamp(MathF.Cos(CelestialAngle * MathHelper.TwoPi) * 2 + 0.5f, 0.25f, 1f);
+		public float BrightnessModifier => MathHelper.Clamp(MathF.Cos(CelestialAngle * MathHelper.TwoPi) * 2 + 0.5f, 0f, 1f);
 
+		private Color BaseColor
+		{
+			get
+			{
+				// Note: temperature comes from the current biome, but we have to
+				// do biomes differently than Minecraft so we'll un-hardcode this later.
+				const float temp = 0.8f / 3;
+				return HSL2RGB(0.6222222f - temp * 0.05f, 0.5f + temp * 0.1f, BrightnessModifier);
+			}
+		}
+		
 		public Color WorldSkyColor
 	    {
 		    get
 		    {
-			    var position = World.Camera.Position;
+			    return BaseColor;
+			    var position = new BlockCoordinates( World.Camera.Position);
 
 			    //float f1 = MathF.Cos(CelestialAngle * ((float)Math.PI * 2F)) * 2.0F + 0.5F;
 			   // f1 = MathHelper.Clamp(f1, 0.0F, 1.0F);
-
-			    int x = (int)MathF.Floor(position.X);
-			    int y = (int)MathF.Floor(position.Y);
-			    int z = (int)MathF.Floor(position.Z);
-
-			    Biome biome = BiomeUtils.GetBiomeById(World.GetBiome(x, y, z));
+			   
+			    Biome biome = World.GetBiome(position);
 			    float biomeTemperature = biome.Temperature;
 
 			    biomeTemperature = biomeTemperature / 3.0F;
 			    biomeTemperature = MathHelper.Clamp(biomeTemperature, -1.0F, 1.0F);
-			    int l = MathUtils.HsvToRGB(0.62222224F - biomeTemperature * 0.05F, 0.5F + biomeTemperature * 0.1F, 1.0F);
-
+			  //  var   brightness       = cos(CelestialAngle * MathHelper.TwoPi) *2 + 0.5;
+			    
+			   // float biomeTemperature = 0f;
+			    return MathUtils.HslToRGB(0.62222224F - biomeTemperature * 0.05F, 0.5F + biomeTemperature * 0.1F, 1.0F) * BrightnessModifier;
+/*
 			    float r = (l >> 16 & 255) / 255.0F;
 			    float g = (l >> 8 & 255) / 255.0F;
 			    float b = (l & 255) / 255.0F;
@@ -230,7 +247,7 @@ namespace Alex.Graphics.Models
 			    g = g * BrightnessModifier;
 			    b = b * BrightnessModifier;
 
-				return new Color(r,g,b);
+				return new Color(r,g,b);*/
 		    }
 	    }
 
@@ -242,11 +259,10 @@ namespace Alex.Graphics.Models
 			    {
 				    return new Color(0.2f, 0.03f, 0.03f);
 			    }
-			    float f = MathF.Cos(CelestialAngle * ((float) Math.PI * 2F)) * 2.0F + 0.5F;
-			    f = MathHelper.Clamp(f, 0.0F, 1.0F);
 
-			    return new Color(0.7529412F * (f * 0.94F + 0.06F), 0.84705883F * (f * 0.94F + 0.06F),
-				    1.0F * (f * 0.91F + 0.09F));
+			    float y = BrightnessModifier;
+			    return new Color(0.7529412f * y * 0.94f + 0.06f,
+				    0.8470588f * y * 0.94f + 0.06f, 1.0f * y * 0.91f + 0.09f);
 		    }
 	    }
 
@@ -265,6 +281,8 @@ namespace Alex.Graphics.Models
 				//In Lava: 0.6 0.1 0.0
 				
 				float blendFactor = 0.29f;// 1.0f - System.MathF.Pow(1.0f - (4f - (DrawDistance)), 0.25f); //((Options.VideoOptions.RenderDistance ^2) / 100f) * 0.45f;
+				
+			//	WorldSkyColor.Deconstruct(out float skyR, out float g, out float b);
 				
 				var fog = WorldFogColor.ToVector3();
 				var sky = WorldSkyColor.ToVector3();
@@ -325,6 +343,8 @@ namespace Alex.Graphics.Models
 		    CelestialPlaneEffect.View = camera.ViewMatrix;
 		    CelestialPlaneEffect.Projection = camera.ProjectionMatrix;
 
+		  //  SkyPlaneEffect.AmbientColor = WorldSkyColor.ToVector3();
+		    
 		    var position = camera.Position;
 		    
 		    if (EnableClouds)
@@ -388,18 +408,43 @@ namespace Alex.Graphics.Models
 		    renderArgs.GraphicsDevice.BlendState = bl;
 	    }
 
-		private void DrawSky(IRenderArgs renderArgs, Vector3 position)
-		{
-			SkyPlaneEffect.FogColor = AtmosphereColor.ToVector3();
-			SkyPlaneEffect.World = Matrix.CreateRotationX(MathHelper.Pi)
-			                       * Matrix.CreateTranslation(0, 16, 0)
-			                       * Matrix.CreateTranslation(position);
-			                    //   * Matrix.CreateTranslation(position);
-		    
-			SkyPlaneEffect.DiffuseColor = SkyPlaneEffect.AmbientLightColor = WorldSkyColor.ToVector3();
+	    private void DrawSky(IRenderArgs renderArgs, Vector3 position)
+	    {
+		    SkyPlaneEffect.FogColor = AtmosphereColor.ToVector3();
+		    //SkyPlaneEffect.World = Matrix.CreateRotationX(MathHelper.Pi)
+		    //                       * Matrix.CreateTranslation(0, 16, 0)
+		    //                       * Matrix.CreateTranslation(position);
+		    //   * Matrix.CreateTranslation(position);
+
+		   // SkyPlaneEffect.World = Matrix.CreateRotationX(MathHelper.Pi) * Matrix.CreateTranslation(0, 100, 0)
+		   //                                                              * Matrix.CreateRotationX(
+			//                                                                 MathHelper.TwoPi * CelestialAngle)  * Matrix.CreateTranslation(position);;
+
+			SkyPlaneEffect.World = Matrix.CreateTranslation(0, 16, 0) * Matrix.CreateTranslation(position);
 			
-			// Sky
+		    SkyPlaneEffect.AmbientColor = WorldSkyColor.ToVector3();
+
+		    // Sky
+		    renderArgs.GraphicsDevice.SetVertexBuffer(SkyPlane);
+
+		    foreach (var pass in SkyPlaneEffect.CurrentTechnique.Passes)
+		    {
+			    pass.Apply();
+			    renderArgs.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, SkyPlane.VertexCount);
+		    }
+	    }
+
+	    private void DrawVoid(IRenderArgs renderArgs, Vector3 position)
+		{
+			// Void
 			renderArgs.GraphicsDevice.SetVertexBuffer(SkyPlane);
+
+			SkyPlaneEffect.World = Matrix.CreateTranslation(0, -16, 0)  * Matrix.CreateTranslation(position);;// * Matrix.CreateTranslation(position);
+			//SkyPlaneEffect.DiffuseColor = VoidColor.ToVector3();
+			SkyPlaneEffect.AmbientColor = WorldSkyColor.ToVector3()
+			                              * new Vector3(0.2f, 0.2f, 0.6f)
+			                              + new Vector3(0.04f, 0.04f, 0.1f); // WorldSkyColor.ToVector3();
+
 			foreach (var pass in SkyPlaneEffect.CurrentTechnique.Passes)
 			{
 				pass.Apply();
@@ -451,21 +496,6 @@ namespace Alex.Graphics.Models
 				renderArgs.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, MoonPlane.VertexCount);
 			}
 			
-		}
-
-		private void DrawVoid(IRenderArgs renderArgs, Vector3 position)
-		{
-			// Void
-			renderArgs.GraphicsDevice.SetVertexBuffer(SkyPlane);
-
-			SkyPlaneEffect.World = Matrix.CreateTranslation(0, -16, 0) * Matrix.CreateTranslation(position);
-			SkyPlaneEffect.DiffuseColor = SkyPlaneEffect.AmbientLightColor = VoidColor.ToVector3();
-
-			foreach (var pass in SkyPlaneEffect.CurrentTechnique.Passes)
-			{
-				pass.Apply();
-				renderArgs.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, SkyPlane.VertexCount);
-			}
 		}
 
 		public void Dispose()
