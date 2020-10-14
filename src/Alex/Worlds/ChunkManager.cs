@@ -809,17 +809,30 @@ namespace Alex.Worlds
 
 		    if (!column.IsNew && hasRenderData)
 		    {
-			    if (type == ScheduleType.Border)
+			    var modifier = 0;
+			    
+			    if ((type & ScheduleType.Border) != 0)
 			    {
-				    priorityOffset *= 4;
+				    modifier += 4;
+				    //priorityOffset *= 4;
 			    }
-			    if (type == ScheduleType.Lighting)
+			    
+			    if ((type & ScheduleType.Lighting) != 0)
 			    {
-				    priorityOffset *= 2;
+				    modifier += 2;
+				    //priorityOffset *= 2;
+			    }
+			    
+			    if ((type & ScheduleType.LowPriority) != 0)
+			    {
+				    modifier += 6;
+				    // priorityOffset *=
 			    }
 
+			    priorityOffset *= modifier;
+
 			    //else if (type == ScheduleType.Border)
-				//    priorityOffset = double.MaxValue / 4d;
+			    //    priorityOffset = double.MaxValue / 4d;
 		    }
 		    else
 		    {

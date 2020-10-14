@@ -6,9 +6,11 @@ namespace Alex.API.World
     public enum ScheduleType
     {
         Unscheduled = 1,
-        Full = 2,
-        Border = 4,
-        Scheduled = 8,
-        Lighting = 16
+        Border      = 4,
+        Scheduled   = 8,
+        Lighting    = 16,
+        LowPriority = 32,
+        
+        Full = Lighting | Border | Scheduled
     }
 }

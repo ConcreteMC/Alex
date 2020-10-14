@@ -8,8 +8,27 @@ namespace Alex.Gamestates
 {
     public class DisconnectedScreen : GuiMenuStateBase
     {
-	    public string Reason { get; set; } = "disconnect.lost";
-	    public GuiTextElement DisconnectedTextElement { get; private set; }
+	    private static string _reason = null;
+
+	    public static string DisconnectReason
+	    {
+		    get
+		    {
+			    return _reason;
+		    }
+		    set
+		    {
+			    _reason = value;
+				if (_activeScreen != null && !string.IsNullOrWhiteSpace(value))
+				{
+					_activeScreen.DisconnectedTextElement.Text = _reason;
+				}
+		    }
+	    }
+
+	    private static DisconnectedScreen _activeScreen = null;
+	    public         string             Reason                  { get; set; } = "disconnect.lost";
+	    public         GuiTextElement     DisconnectedTextElement { get; private set; }
 		public DisconnectedScreen()
 		{
 			TitleTranslationKey = "multiplayer.disconnect.generic";
@@ -39,8 +58,17 @@ namespace Alex.Gamestates
 	    protected override void OnShow()
 	    {
 		    Alex.IsMouseVisible = true;
-		    
+		    _activeScreen = this;
+
 		    base.OnShow();
+	    }
+
+	    /// <inheritdoc />
+	    protected override void OnHide()
+	    {
+		    _activeScreen = null;
+		    DisconnectReason = null;
+		    base.OnHide();
 	    }
     }
 }

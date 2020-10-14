@@ -103,11 +103,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        string token = message.token;
 
 	        IDictionary<string, dynamic> headers = JWT.Headers(token);
-	        string x5u = headers["x5u"];
+	        string x5u = headers["x5u"].TrimEnd('=');
+			
+	       // ECPublicKeyParameters remotePublicKey = (ECPublicKeyParameters) PublicKeyFactory.CreateKey(x5u.DecodeBase64Url());
 
-	        ECPublicKeyParameters remotePublicKey = (ECPublicKeyParameters) PublicKeyFactory.CreateKey(x5u.DecodeBase64Url());
-
-	        var signParam = new ECParameters
+	       /* var signParam = new ECParameters
 	        {
 		        Curve = ECCurve.NamedCurves.nistP384,
 		        Q =
@@ -118,13 +118,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        };
 	        signParam.Validate();
 
-	        var signKey = ECDsa.Create(signParam);
+	        var signKey = ECDsa.Create(signParam);*/
 
 	        try
 	        {
-		       // var data = JWT.Decode<HandshakeData>(token, signKey);
+		        //var data = JWT.Decode<HandshakeData>(token, signKey);
 				var data = JWT.Payload<HandshakeData>(token);
-		        Client.InitiateEncryption(Base64Url.Decode(x5u), Base64Url.Decode(data.salt));
+		        Client.InitiateEncryption(Base64Url.Decode(x5u), Base64Url.Decode(data.salt.TrimEnd('=')));
 	        }
 	        catch (Exception e)
 	        {
@@ -150,6 +150,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			
 			if (Client.PlayerStatus == 3)
 			{
+				var packet = McpeSetLocalPlayerAsInitialized.CreateObject();
+				packet.runtimeEntityId = Client.EntityId;
+
+				Client.SendPacket(packet);
+				
 				Client.HasSpawned = true;
 
 				Client.PlayerStatusChanged.Set();
@@ -161,12 +166,21 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				Client.World.Player.EntityId = Client.EntityId;
 			}
+			else if (Client.PlayerStatus == 0)
+			{
+				Log.Info($"Received Play Status packet: Login success");
+			}
+			else
+			{
+				Log.Warn($"Received unknown Play Status... {message.status}");
+				Client.ShowDisconnect($"Unrecognized play status.", false, true);
+			}
 		}
 
         public void HandleMcpeDisconnect(McpeDisconnect message)
         {
             Log.Info($"Received disconnect: {message.message}");
-            Client.ShowDisconnect(message.message, false);
+            Client.ShowDisconnect(message.message, false, true);
             
            // Client.
            // base.HandleMcpeDisconnect(message);
@@ -174,6 +188,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
         public void HandleMcpeResourcePackDataInfo(McpeResourcePackDataInfo message)
         {
+	        Log.Info($"Received McpeResourcePackDataInfo....");
+	        
+	      //  Log.Info($"Got ResourcePackDataInfo: {message}");
 	        McpeResourcePackClientResponse response = new McpeResourcePackClientResponse();
 	        response.responseStatus = 3;
 	        Client.SendPacket(response);
@@ -181,35 +198,43 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
         public void HandleMcpeResourcePackChunkData(McpeResourcePackChunkData message)
         {
-	        throw new NotImplementedException();
+			Log.Info($"Received McpeResourcePackChunkData....");
         }
         
         public void HandleMcpeResourcePacksInfo(McpeResourcePacksInfo message)
         {
-	        if (message.resourcepackinfos.Count != 0)
+	        Log.Info($"Got ResourcePackDataInfo. (ForcedToAccept={message.mustAccept} Scripting={message.hasScripts} Behavior Packs={message.behahaviorpackinfos.Count} ResourcePacks={message.resourcepackinfos.Count})");
+	        
+	        McpeResourcePackClientResponse response        = new McpeResourcePackClientResponse();
+	        ResourcePackIds                resourcePackIds = new ResourcePackIds();
+	        foreach (var packInfo in message.resourcepackinfos)
 	        {
-		        ResourcePackIds resourcePackIds = new ResourcePackIds();
+		        resourcePackIds.Add($"{packInfo.PackIdVersion.Id}_{packInfo.PackIdVersion.Version}");
+	        }
 
-		        foreach (var packInfo in message.resourcepackinfos)
-		        {
-			        resourcePackIds.Add(packInfo.PackIdVersion.Id);
-		        }
-
-		        McpeResourcePackClientResponse response = new McpeResourcePackClientResponse();
+	        foreach (var packInfo in message.behahaviorpackinfos)
+	        {
+		        resourcePackIds.Add($"{packInfo.PackIdVersion.Id}_{packInfo.PackIdVersion.Version}");
+	        }
+	        
+	        if (resourcePackIds.Count > 0)
+	        {
 		        response.responseStatus = 2;
 		        response.resourcepackids = resourcePackIds;
-		        Client.SendPacket(response);
 	        }
 	        else
 	        {
-		        McpeResourcePackClientResponse response = new McpeResourcePackClientResponse();
 		        response.responseStatus = 3;
-		        Client.SendPacket(response);
 	        }
+
+	        Client.SendPacket(response);
         }
 
         public void HandleMcpeResourcePackStack(McpeResourcePackStack message)
         {
+	        Log.Info(
+		        $"Received ResourcePackStack, sending final response. (ForcedToAccept={message.mustAccept} Experimental={message.isExperimental} Gameversion={message.gameVersion} Behaviorpacks={message.behaviorpackidversions.Count} Resourcepacks={message.resourcepackidversions.Count})");
+
 	        McpeResourcePackClientResponse response = new McpeResourcePackClientResponse();
 	        response.responseStatus = 4;
 	        Client.SendPacket(response);
@@ -765,9 +790,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			if (converted != null)
 			{
+				BlockUpdatePriority priority = (BlockUpdatePriority) message.blockPriority;
+				
 				Client.World?.SetBlockState(
 					new BlockCoordinates(message.coordinates.X, message.coordinates.Y, message.coordinates.Z), 
-					converted, (int) message.storage);
+					converted, (int) message.storage, priority | BlockUpdatePriority.Network);
 			}
 			else
 			{
@@ -1223,16 +1250,19 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeRespawn(McpeRespawn message)
 		{
-			Client.World.UpdatePlayerPosition(new PlayerLocation(message.x, message.y, message.z));
-
-			if (Client.PlayerStatus == 3)
+			//if (message.state == 1)
 			{
-				Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(message.x, message.y, message.z), false);
+				Client.World.UpdatePlayerPosition(new PlayerLocation(message.x, message.y, message.z));
+
+				if (Client.PlayerStatus == 3)
+				{
+					Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(message.x, message.y, message.z), false);
+				}
+
+				Client.RequestChunkRadius(Client.ChunkRadius);
+
+				Client.ChangeDimensionResetEvent.Set();
 			}
-
-			Client.RequestChunkRadius(Client.ChunkRadius);
-
-			Client.ChangeDimensionResetEvent.Set();
 		}
 
 		private GuiDialogBase _activeDialog;

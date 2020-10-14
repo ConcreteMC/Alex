@@ -516,12 +516,12 @@ namespace Alex.Worlds
 	        return Airstate.Block;
         }
 		
-		public void SetBlockState(int x, int y, int z, BlockState block)
+		public void SetBlockState(int x, int y, int z, BlockState block, BlockUpdatePriority priority = BlockUpdatePriority.High)
 		{
-			SetBlockState(x, y, z, block, 0);
+			SetBlockState(x, y, z, block, 0, priority);
 		}
 		
-		public void SetBlockState(int x, int y, int z, BlockState block, int storage)
+		public void SetBlockState(int x, int y, int z, BlockState block, int storage, BlockUpdatePriority priority = BlockUpdatePriority.High)
 		{
 			var chunkCoords = new ChunkCoordinates(x >> 4, z >> 4);
 
@@ -533,11 +533,21 @@ namespace Alex.Worlds
 				var cz = z & 0xf;
 
 				chunk.SetBlockState(cx, cy, cz, block, storage);
+
+				var type = ScheduleType.Full;
 				
-				UpdateNeighbors(x,y,z);
-				CheckForUpdate(chunkCoords, cx, cz);
-				
-				ChunkManager.ScheduleChunkUpdate(chunkCoords, ScheduleType.Scheduled | ScheduleType.Lighting, true);
+				if ((priority & BlockUpdatePriority.Neighbors) != 0)
+				{
+					UpdateNeighbors(x, y, z);
+					CheckForUpdate(chunkCoords, cx, cz);
+				}
+
+				if ((priority & BlockUpdatePriority.NoGraphic) != 0)
+				{
+					type |= ScheduleType.LowPriority;
+				}
+
+				ChunkManager.ScheduleChunkUpdate(chunkCoords, type, (priority & BlockUpdatePriority.Priority) != 0);
 			}
 		}
 
@@ -1083,14 +1093,14 @@ namespace Alex.Worlds
 			Raining = raining;
 		}
 
-		public void SetBlockState(BlockCoordinates coordinates, BlockState blockState)
+		public void SetBlockState(BlockCoordinates coordinates, BlockState blockState, BlockUpdatePriority priority = BlockUpdatePriority.High)
 		{
-			SetBlockState(coordinates.X, coordinates.Y, coordinates.Z, blockState);
+			SetBlockState(coordinates.X, coordinates.Y, coordinates.Z, blockState, priority);
 		}
 
-		public void SetBlockState(BlockCoordinates coordinates, BlockState blockState, int storage)
+		public void SetBlockState(BlockCoordinates coordinates, BlockState blockState, int storage, BlockUpdatePriority priority = BlockUpdatePriority.High)
 		{
-			SetBlockState(coordinates.X, coordinates.Y, coordinates.Z, blockState, storage);
+			SetBlockState(coordinates.X, coordinates.Y, coordinates.Z, blockState, storage, priority);
 		}
 
 		public void AddPlayerListItem(PlayerListItem item)
@@ -1104,5 +1114,18 @@ namespace Alex.Worlds
 		}
 
 		#endregion
+	}
+
+	[Flags]
+	public enum BlockUpdatePriority
+	{
+		Neighbors = 0x01,
+		Network = 0x02,
+		NoGraphic = 0x04,
+		Priority = 0x08,
+		
+		High = Neighbors | Priority,
+		Normal = Neighbors,
+		Low = Neighbors | NoGraphic
 	}
 }

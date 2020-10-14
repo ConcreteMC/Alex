@@ -189,7 +189,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					handler.DisconnectedAction = (reason, sendDisconnect) =>
 					{
 						Log.Warn($"Got disconnected from server: {reason}");
-						ShowDisconnect(reason);
+						ShowDisconnect(reason, false, false);
 					};
 					
 					MessageHandler = handler;
@@ -434,21 +434,21 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		}
 
 		private bool _disconnectShown = false;
-		public void ShowDisconnect(string reason, bool useTranslation = false)
+		public void ShowDisconnect(string reason, bool useTranslation = false, bool overrideActive = false)
 		{
-			if (Alex.GameStateManager.GetActiveState() is DisconnectedScreen s)
-            {
-                if (useTranslation)
-                {
-                    s.DisconnectedTextElement.TranslationKey = reason;
-                }
-                else
-                {
-                    s.DisconnectedTextElement.Text = reason;
-                }
+			if (Alex.GameStateManager.GetActiveState() is DisconnectedScreen s && overrideActive)
+			{
+				if (useTranslation)
+				{
+					s.DisconnectedTextElement.TranslationKey = reason;
+				}
+				else
+				{
+					s.DisconnectedTextElement.Text = reason;
+				}
 
-                return;
-            }
+				return;
+			}
 
 			if (_disconnectShown)
 				return;
@@ -611,7 +611,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			SendPacket(movePlayerPacket);
 		}
 
-		public new void InitiateEncryption(byte[] serverKey, byte[] randomKeyToken)
+		public void InitiateEncryption(byte[] serverKey, byte[] randomKeyToken)
 		{
 			try
 			{
@@ -625,7 +625,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				byte[] secret;
 				using (var sha = SHA256.Create())
 				{
-					secret = sha.ComputeHash(randomKeyToken.Concat(agreement.CalculateAgreement(remotePublicKey).ToByteArrayUnsigned()).ToArray());
+					secret = sha.ComputeHash(randomKeyToken.Concat(agreement.CalculateAgreement(remotePublicKey).ToByteArray()).ToArray());
 				}
 		        
 				// Create a decrytor to perform the stream transform.
@@ -645,8 +645,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				};
 
 				Thread.Sleep(1250);
-				McpeClientToServerHandshake magic = new McpeClientToServerHandshake();
+				
+				McpeClientToServerHandshake magic = McpeClientToServerHandshake.CreateObject();
 				Session.SendPacket(magic);
+				
+				Log.Info($"Encryption initiated!");
 			}
 			catch (Exception e)
 			{
@@ -734,6 +737,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		        }
 
 		       var modelName = model.Name ?? model.Description.Identifier;
+
 		        //abc.geometry["default"] = model.Name;
 		        
 		        GeometryModel mm = new GeometryModel();

@@ -485,7 +485,7 @@ namespace Alex.Graphics.Models.Blocks
 				foreach (var face in element.Faces)
 				{
 					var facing   = face.Key;
-					var cullFace = face.Value.CullFace.HasValue ? face.Value.CullFace.Value : face.Key;
+					var cullFace = face.Value.CullFace ?? face.Key;
 
 					if (bsModel.X > 0f)
 					{
@@ -501,7 +501,7 @@ namespace Alex.Graphics.Models.Blocks
 						facing = RotateDirection(facing, offset, FACE_ROTATION, INVALID_FACE_ROTATION);
 					}
 					
-					if (!ShouldRenderFace(world, cullFace, position, baseBlock))
+					if (!ShouldRenderFace(world, facing, position, baseBlock))
 						continue;
 					
 					
@@ -691,11 +691,11 @@ namespace Alex.Graphics.Models.Blocks
 					if (!SmoothLighting)
 					{
 						GetLight(
-							world, position + cullFace.GetVector3(), out vertexBlockLight, out vertexSkyLight,
+							world, position + facing.GetVector3(), out vertexBlockLight, out vertexSkyLight,
 							baseBlock.Transparent || !baseBlock.Solid);
 					}
 					
-					Vector3 lightOffset =  cullFace.GetVector3();
+					Vector3 lightOffset =  facing.GetVector3();
 					
 					for (var idx = 0; idx < vertices.Length; idx++)
 					{

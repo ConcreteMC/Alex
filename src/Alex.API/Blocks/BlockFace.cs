@@ -32,9 +32,9 @@ namespace Alex.API.Blocks
     				case BlockFace.West:
     					return Vector3.Left;
     				case BlockFace.North:
-    					return Vector3.Backward;
-    				case BlockFace.South:
     					return Vector3.Forward;
+    				case BlockFace.South:
+    					return Vector3.Backward;
     				default:
     					return Vector3.Zero;
     			}
@@ -53,9 +53,9 @@ namespace Alex.API.Blocks
     				case BlockFace.West:
     					return BlockCoordinates.Left;
     				case BlockFace.North:
-    					return BlockCoordinates.Forwards;
-    				case BlockFace.South:
     					return BlockCoordinates.Backwards;
+    				case BlockFace.South:
+    					return BlockCoordinates.Forwards;
     				default:
     					return BlockCoordinates.Zero;
     			}

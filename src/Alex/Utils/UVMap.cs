@@ -48,36 +48,51 @@ namespace Alex.Utils
 
         public void Rotate(int rot)
         {
-            var topLeft = TopLeft; //ox1
-            var topRight = TopRight; //ox2
-            var bottomLeft = BottomLeft; //oy1
-            var bottomRight = BottomRight; //oy2
-				
-            if (rot == 90)
+            if (rot > 0)
             {
-                TopLeft = topRight;
-                TopRight = bottomRight;
-                BottomLeft = topLeft;
-                BottomRight = bottomLeft;
-            }
-            else if (rot == 180)
-            {
-                TopLeft = bottomRight;
-                TopRight = bottomLeft;
-                BottomLeft = topRight;
-                BottomRight = topLeft;
-            }
-            else if (rot == 270)
-            {
-                // Y2 = X1
-                // X1 = Y1;
-               // TopLeft = new Vector2(topLeft.Y, topLeft.X);
-              //  TopRight = new Vector2(topRight.X, topRight.X);
-               // BottomLeft = new Vector2(topLeft., topRight.X);
-                //TopLeft = bottomLeft;
-               // TopRight = topLeft;
-                //BottomLeft = bottomRight;
-                //BottomRight = topRight;
+                var tw = TextureInfo.Width;
+                var th = TextureInfo.Height;
+
+                var x1 = TopLeft.X;
+                var x2 = TopRight.X;
+                var y1 = TopLeft.Y;
+                var y2 = BottomLeft.Y;
+            
+                x1 = (x1 * (tw));
+                x2 = (x2 * (tw ));
+                y1 = (y1 * (th));
+                y2 = (y2 * (th));
+                
+                var ox1 = x1;
+                var ox2 = x2;
+                var oy1 = y1;
+                var oy2 = y2;
+                switch (rot)
+                {
+                    case 270:
+                        y1 = tw * 16 - ox2;
+                        y2 = tw * 16 - ox1;
+                        x1 = oy1;
+                        x2 = oy2;
+                        break;
+                    case 180:
+                        y1 = th * 16 - oy2;
+                        y2 = th * 16 - oy1;
+                        x1 = tw * 16 - ox2;
+                        x2 = tw * 16 - ox1;
+                        break;
+                    case 90:
+                        y1 = ox1;
+                        y2 = ox2;
+                        x1 = th * 16 - oy2;
+                        x2 = th * 16 - oy1;
+                        break;
+                }
+                
+                TopLeft = new Microsoft.Xna.Framework.Vector2(x1, y1);
+                TopRight = new Microsoft.Xna.Framework.Vector2(x2, y1);
+                BottomLeft = new Microsoft.Xna.Framework.Vector2(x1, y2);
+                BottomRight = new Microsoft.Xna.Framework.Vector2(x2, y2);
             }
         }
     }

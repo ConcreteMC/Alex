@@ -347,6 +347,9 @@ namespace Alex.Graphics.Models.Blocks
 					{
 						vert.BlockLight = baseBlock.LightValue;
 					}
+					
+					vert.TexCoords += map.TextureInfo.Position;
+					vert.TexCoords *= (Vector2.One / map.TextureInfo.AtlasSize);
 
 					result.Add(vert);
 				}

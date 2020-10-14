@@ -141,9 +141,9 @@ namespace Alex.Worlds.Multiplayer.Java
 		}
 
 		private bool _disconnectShown = false;
-		public void ShowDisconnect(string reason, bool useTranslation = false)
+		public void ShowDisconnect(string reason, bool useTranslation = false, bool force = false)
 		{
-			if (Alex.GameStateManager.GetActiveState() is DisconnectedScreen s)
+			if (Alex.GameStateManager.GetActiveState() is DisconnectedScreen s && force)
 			{
 				if (useTranslation)
 				{
@@ -1966,11 +1966,11 @@ namespace Alex.Worlds.Multiplayer.Java
 		{
 			if (ChatObject.TryParse(packet.Message, out ChatObject o))
 			{
-				ShowDisconnect(o.RawMessage);
+				ShowDisconnect(o.RawMessage, force:true);
 			}
 			else
 			{
-				ShowDisconnect(packet.Message);
+				ShowDisconnect(packet.Message, false, true);
 			}
 
 			_disconnected = true;
