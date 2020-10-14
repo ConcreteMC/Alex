@@ -38,9 +38,3 @@
 /processorParam:DebugMode=Auto
 /build:ShawowMap.fx
 
-#begin SkyShader.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:SkyShader.fx
-

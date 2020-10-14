@@ -93,56 +93,58 @@ namespace Alex.API.Utils
 
 			return value;
 		}
-		
-		private static float HueToRgb(float v1, float v2, float vH)
+
+		public static int HsvToRGB(float hue, float saturation, float value)
 		{
-			vH += (vH < 0) ? 1 : 0;
-			vH -= (vH > 1) ? 1 : 0;
-			float ret = v1;
+			int i = (int)(hue * 6.0F) % 6;
+			float f = hue * 6.0F - (float)i;
+			float f1 = value * (1.0F - saturation);
+			float f2 = value * (1.0F - f * saturation);
+			float f3 = value * (1.0F - (1.0F - f) * saturation);
+			float f4;
+			float f5;
+			float f6;
 
-			if ((6 * vH) < 1)
+			switch (i)
 			{
-				ret = (v1 + (v2 - v1) * 6 * vH);
+				case 0:
+					f4 = value;
+					f5 = f3;
+					f6 = f1;
+					break;
+				case 1:
+					f4 = f2;
+					f5 = value;
+					f6 = f1;
+					break;
+				case 2:
+					f4 = f1;
+					f5 = value;
+					f6 = f3;
+					break;
+				case 3:
+					f4 = f1;
+					f5 = f2;
+					f6 = value;
+					break;
+				case 4:
+					f4 = f3;
+					f5 = f1;
+					f6 = value;
+					break;
+				case 5:
+					f4 = value;
+					f5 = f1;
+					f6 = f2;
+					break;
+				default:
+					throw new Exception("Something went wrong when converting from HSV to RGB. Input was " + hue + ", " + saturation + ", " + value);
 			}
 
-			else if ((2 * vH) < 1)
-			{
-				ret = (v2);
-			}
-
-			else if ((3 * vH) < 2)
-			{
-				ret = (v1 + (v2 - v1) * ((2f / 3f) - vH) * 6f);
-			}
-
-			return MathF.Clamp(ret, 0f, 1f);
-		}
-
-		public static Color HslToRGB(float h, float s, float l)
-		{
-			var c = new Color();
-
-			if (s == 0)
-			{
-				c.R = (byte)(l * 255f);
-				c.G = (byte)(l * 255f);
-				c.B = (byte)(l * 255f);
-			}
-			else
-			{
-				float v2 = (l + s) - (s * l);
-				if (l < 0.5f)
-				{
-					v2 = l * (1 + s);
-				}
-				float v1 = 2f * l - v2;
-
-				c.R = (byte)(255f * HueToRgb(v1, v2, h + (1f / 3f)));
-				c.G = (byte)(255f * HueToRgb(v1, v2, h));
-				c.B = (byte)(255f * HueToRgb(v1, v2, h - (1f / 3f)));
-			}
-
-			return c;
+			int j = MathHelper.Clamp((int)(f4 * 255.0F), 0, 255);
+			int k = MathHelper.Clamp((int)(f5 * 255.0F), 0, 255);
+			int l = MathHelper.Clamp((int)(f6 * 255.0F), 0, 255);
+			return j << 16 | k << 8 | l;
 		}
 
 		private static int[] MULTIPLY_DE_BRUIJN_BIT_POSITION = new int[] {0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8, 31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9};

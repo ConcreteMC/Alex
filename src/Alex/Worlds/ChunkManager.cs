@@ -617,7 +617,7 @@ namespace Alex.Worlds
 
 	    public int RenderDistance { get; set; } = 0;
 	    public ChunkCoordinates? ViewPosition { get; set; } = null;
-	    private bool NeedPrioritization { get; set; } = true;
+	    private bool NeedPrioritization { get; set; } = false;
 	    private void ChunkUpdateThread()
 		{
 			 //Environment.ProcessorCount / 2;
@@ -685,7 +685,7 @@ namespace Alex.Worlds
 
                 if (NeedPrioritization)
                 {
-	                //NeedPrioritization = false;
+	                NeedPrioritization = false;
 	                var enqueued = Enqueued.ToArray();
 
 	                //   int highPriority = 0;

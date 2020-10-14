@@ -56,10 +56,9 @@ namespace Alex
 
 		private ContentManager ContentManager { get; }
 		
-		internal static   Effect EntityEffect   { get; set; }
-		internal static Effect BlockEffect    { get; set; }
-		internal static Effect LightingEffect { get; set; }
-		internal static Effect SkyEffect      { get; set; }
+		public static Effect EntityEffect { get; set; }
+		public static Effect BlockEffect { get; set; }
+		public static Effect LightingEffect { get; set; }
 		
 		public List<MCPack> Packs { get; } = new List<MCPack>();
 		
