@@ -262,6 +262,7 @@ namespace Alex
 		//	ResourceManager.EntityEffect = Content.Load<Effect>("Alex.Resources.Entityshader.xnb").Clone();
 			ResourceManager.BlockEffect = Content.Load<Effect>("Alex.Resources.Blockshader.xnb").Clone();
 			ResourceManager.LightingEffect = Content.Load<Effect>("Alex.Resources.Lightmap.xnb").Clone();
+			ResourceManager.SkyEffect = Content.Load<Effect>("Alex.Resources.SkyShader.xnb").Clone();
 			//	ResourceManager.BlockEffect.GraphicsDevice = GraphicsDevice;
 			
 			_spriteBatch = new SpriteBatch(GraphicsDevice);

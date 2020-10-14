@@ -13,7 +13,7 @@ using Alex.Networking.Java.Events;
 using Alex.Networking.Java.Packets;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Networking.Java.Util;
-using MonoGame.Utilities.Deflate;
+using MonoGame.Framework.Utilities.Deflate;
 using NLog;
 
 #endregion

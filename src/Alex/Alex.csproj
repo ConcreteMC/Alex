@@ -93,6 +93,8 @@
     <EmbeddedResource Include="Resources\Lightmap.xnb" />
     <None Remove="Resources\Entityshader.xnb" />
     <EmbeddedResource Include="Resources\Entityshader.xnb" />
+    <None Remove="Resources\SkyShader.xnb" />
+    <EmbeddedResource Include="Resources\SkyShader.xnb" />
   </ItemGroup>
 
   <ItemGroup>
