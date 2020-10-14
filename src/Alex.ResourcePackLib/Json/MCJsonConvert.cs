@@ -22,6 +22,8 @@ namespace Alex.ResourcePackLib.Json
 			PreserveReferencesHandling = PreserveReferencesHandling.None
 		};
 
+		public static readonly JsonSerializer Serializer;
+
 		static MCJsonConvert()
 		{
 			DefaultSettings.Converters.Add(new Vector3Converter());
@@ -30,6 +32,8 @@ namespace Alex.ResourcePackLib.Json
 			DefaultSettings.Converters.Add(new BlockStateMultipartRuleConverter());
 			DefaultSettings.Converters.Add(new GuidConverter());
 			//DefaultSettings.Converters.Add(new MCElementsDictionaryConverter());
+			DefaultSettings.Converters.Add(new EntityModelConverter());
+			Serializer = JsonSerializer.Create(DefaultSettings);
 		}
 
 		public static string SerializeObject(object obj, bool prettyPrint = PrettyPrint)

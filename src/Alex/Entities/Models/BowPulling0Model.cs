@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class BowPulling0Model : EntityModel
+	public partial class BowPulling0Model : OldEntityModel
 	{
 		public BowPulling0Model()
 		{

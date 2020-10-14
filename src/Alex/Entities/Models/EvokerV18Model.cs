@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class EvokerV18Model : EntityModel
+	public partial class EvokerV18Model : OldEntityModel
 	{
 		public EvokerV18Model()
 		{

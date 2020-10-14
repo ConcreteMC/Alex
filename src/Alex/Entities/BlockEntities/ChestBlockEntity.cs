@@ -140,7 +140,7 @@ namespace Alex.Entities.BlockEntities
 			}
 		}
 
-		private class ChestModel : EntityModel
+		private class ChestModel : OldEntityModel
 		{
 			public ChestModel()
 			{

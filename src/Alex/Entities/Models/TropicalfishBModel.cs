@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class TropicalfishBModel : EntityModel
+	public partial class TropicalfishBModel : OldEntityModel
 	{
 		public TropicalfishBModel()
 		{

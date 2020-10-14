@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class VindicatorModel : EntityModel
+	public partial class VindicatorModel : OldEntityModel
 	{
 		public VindicatorModel()
 		{

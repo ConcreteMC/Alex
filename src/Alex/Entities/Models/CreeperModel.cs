@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class CreeperModel : EntityModel
+	public partial class CreeperModel : OldEntityModel
 	{
 		public CreeperModel()
 		{

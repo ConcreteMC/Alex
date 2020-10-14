@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class PufferfishLargeV18Model : EntityModel
+	public partial class PufferfishLargeV18Model : OldEntityModel
 	{
 		public PufferfishLargeV18Model()
 		{

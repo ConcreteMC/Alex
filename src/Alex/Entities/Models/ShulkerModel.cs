@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class ShulkerModel : EntityModel
+	public partial class ShulkerModel : OldEntityModel
 	{
 		public ShulkerModel()
 		{

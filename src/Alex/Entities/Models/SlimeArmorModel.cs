@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class SlimeArmorModel : EntityModel
+	public partial class SlimeArmorModel : OldEntityModel
 	{
 		public SlimeArmorModel()
 		{

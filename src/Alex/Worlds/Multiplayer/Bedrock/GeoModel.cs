@@ -22,11 +22,18 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public EntityModel FindGeometry(string geometryName, bool matchPartial = true)
 		{
-			string fullName = this.Geometry.FirstOrDefault((g => !matchPartial ? g.Description.Identifier.Equals(geometryName, StringComparison.InvariantCultureIgnoreCase) : g.Description.Identifier.StartsWith(geometryName, StringComparison.InvariantCultureIgnoreCase)))?.Description.Identifier;
+			string fullName = this.Geometry.FirstOrDefault(
+					(g => !matchPartial ?
+						g.Description.Identifier.Equals(geometryName, StringComparison.InvariantCultureIgnoreCase) :
+						g.Description.Identifier.StartsWith(geometryName, StringComparison.InvariantCultureIgnoreCase)))
+			  ?.Description.Identifier;
+
 			if (fullName == null)
 				return null;
-			var geometry = this.Geometry.First( (g => g.Description.Identifier == fullName));
-			geometry.Name = fullName;
+
+			var geometry = this.Geometry.First((g => g.Description.Identifier == fullName));
+
+			//geometry.Name = fullName;
 			return geometry;
 		}
 
@@ -45,13 +52,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				geometryModel.Geometry.Add(geometry);
 			return (object) geometryModel;
 		}
-		
-		private static JsonSerializer serializer = new JsonSerializer()
-		{
-			Converters = {new Vector3Converter(), new Vector2Converter()}
-		};
 
-		
+
 		public static bool TryParse(string json, SkinResourcePatch resourcePatch, out GeometryModel output)
 		{
 			JObject obj = JObject.Parse(json, new JsonLoadSettings());
@@ -69,18 +71,18 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					}
 					else if (e.Key == "minecraft:geometry" && e.Value.Type == JTokenType.Array)
 					{
-						var models = e.Value.ToObject<EntityModel[]>(serializer);
+						var models = e.Value.ToObject<EntityModel[]>(MCJsonConvert.Serializer);
 
 						if (models != null)
 						{
 							foreach (var model in models)
 							{
-								model.Name = model.Description.Identifier;
-								model.Textureheight = model.Description.TextureHeight;
-								model.Texturewidth = model.Description.TextureWidth;
-								model.VisibleBoundsHeight = model.Description.VisibleBoundsHeight;
-								model.VisibleBoundsWidth = model.Description.VisibleBoundsWidth;
-								model.VisibleBoundsOffset = model.Description.VisibleBoundsOffset;
+								//model.Name = model.Description.Identifier;
+								//model.Textureheight = model.Description.TextureHeight;
+								//model.Texturewidth = model.Description.TextureWidth;
+								//model.VisibleBoundsHeight = model.Description.VisibleBoundsHeight;
+								//model.VisibleBoundsWidth = model.Description.VisibleBoundsWidth;
+								//model.VisibleBoundsOffset = model.Description.VisibleBoundsOffset;
 
 								if (entries.Contains(model))
 								{
@@ -103,7 +105,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						{
 							continue;
 
-							foreach (var type in e.Value.ToObject<EntityModel[]>(serializer))
+							foreach (var type in e.Value.ToObject<OldEntityModel[]>(MCJsonConvert.Serializer))
 							{
 								//entries.TryAdd(e.Key, type);
 							}
@@ -114,20 +116,15 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 					//if (e.Key == "minecraft:client_entity") continue;
 					//if (e.Key.Contains("zombie")) Console.WriteLine(e.Key);
-					var newModel = e.Value.ToObject<EntityModel>(serializer);
+					var newModel = e.Value.ToObject<EntityModel>(MCJsonConvert.Serializer);
 
 					if (newModel != null)
 					{
-						newModel.Name = e.Key;
+						//newModel.Name = e.Key;
 
-						if (newModel.Description?.Identifier == null)
+						if (string.IsNullOrWhiteSpace(newModel.Description?.Identifier))
 						{
-							newModel.Description = new ModelDescription()
-							{
-								Identifier = e.Key,
-								TextureHeight = newModel.Textureheight,
-								TextureWidth = newModel.Texturewidth
-							};
+							newModel.Description.Identifier = e.Key;
 						}
 
 						if (!entries.Contains(newModel))

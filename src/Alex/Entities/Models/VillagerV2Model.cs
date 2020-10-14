@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class VillagerV2Model : EntityModel
+	public partial class VillagerV2Model : OldEntityModel
 	{
 		public VillagerV2Model()
 		{

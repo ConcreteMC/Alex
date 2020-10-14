@@ -60,8 +60,8 @@ namespace Alex
 		public const  int  MipMapLevel = 4;
 		public static bool InGame { get; set; } = false;
 
-		public static EntityModel PlayerModel { get; set; }
-		public static Image<Rgba32> PlayerTexture { get; set; }
+		public static EntityModel PlayerModel   { get; set; }
+		public static Image<Rgba32>  PlayerTexture { get; set; }
 		
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Alex));
 
@@ -540,48 +540,57 @@ namespace Alex
 			{
 				//var entries = new Dictionary<string, EntityModel>();
 				//EntityModel.GetEntries(str, entries);
-				var geometryModel =
-					MCJsonConvert.DeserializeObject<GeometryModel>(str);
+				//var geometryModel =
+					//MCJsonConvert.DeserializeObject<GeometryModel>(str);
 
-				var model = geometryModel.FindGeometry("geometry.humanoid.custom");
+					if (GeometryModel.TryParse(str, null, out var geometryModel))
+					{
+						var model = geometryModel.FindGeometry("geometry.humanoid.custom");
 
-				if (model == null)
-					model = geometryModel.FindGeometry("geometry.humanoid.customSlim");
+						if (model == null)
+							model = geometryModel.FindGeometry("geometry.humanoid.customSlim");
 
-				if (model != null)
-				{
-					PlayerModel = model;
-				}
+						if (model != null)
+						{
+							PlayerModel = model;
+							Log.Info($"Player model loaded...");
+						}
+					}
 			}
 			
 			if (PlayerModel == null)
 			{
 				if (ModelFactory.TryGetModel("geometry.humanoid.customSlim", out var model))
 				{
-					model.Name = "geometry.humanoid.customSlim";
+					//model.Name = "geometry.humanoid.customSlim";
 					PlayerModel = model;
 				}
 			}
 
 			if (PlayerModel != null)
 			{
-				Log.Info($"Player model loaded...");
+				//Log.Info($"Player model loaded...");
 			}
 			
 			if (storage.TryReadBytes("skin.png", out byte[] skinBytes))
 			{
 				using (var skinImage = Image.Load<Rgba32>(skinBytes))
 				{
-					var modelTextureSize = PlayerModel.Description != null ?
-						new Point((int) PlayerModel.Description.TextureWidth, (int) PlayerModel.Description.TextureHeight) :
-						new Point((int) PlayerModel.Texturewidth, (int) PlayerModel.Textureheight);
+					//var modelTextureSize = PlayerModel.Description != null ?
+					//	new Point((int) PlayerModel.Description.TextureWidth, (int) PlayerModel.Description.TextureHeight) :
+					//	new Point((int) PlayerModel.Texturewidth, (int) PlayerModel.Textureheight);
 
+					var modelTextureSize = new Point(
+						0, 0);
+					
 					if (PlayerModel.Description != null)
 					{
-						modelTextureSize.X = (int) Math.Max(PlayerModel.Texturewidth, PlayerModel.Description.TextureWidth);
-						modelTextureSize.Y = (int) Math.Max(PlayerModel.Textureheight, PlayerModel.Description.TextureHeight);
+						modelTextureSize.X = (int) PlayerModel.Description.TextureWidth;
+						modelTextureSize.Y = (int) PlayerModel.Description.TextureHeight;
 					}
 				
+					PlayerTexture = skinImage.Clone<Rgba32>();
+					/*
 					var textureSize = new Point(skinImage.Width, skinImage.Height);
 
 					if (modelTextureSize != textureSize)
@@ -603,7 +612,7 @@ namespace Alex
 					else
 					{
 						PlayerTexture = skinImage.Clone<Rgba32>();
-					}
+					}*/
 				}
 			}
 			else

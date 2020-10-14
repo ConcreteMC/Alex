@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class ParrotModel : EntityModel
+	public partial class ParrotModel : OldEntityModel
 	{
 		public ParrotModel()
 		{

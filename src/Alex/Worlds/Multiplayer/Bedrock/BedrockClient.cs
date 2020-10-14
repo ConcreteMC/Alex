@@ -23,6 +23,7 @@ using Alex.Net;
 using Alex.Net.Bedrock;
 using Alex.Net.Bedrock.Raknet;
 using Alex.ResourcePackLib.Json;
+using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
 using Alex.Utils.Inventories;
 using Jose;
@@ -625,7 +626,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				byte[] secret;
 				using (var sha = SHA256.Create())
 				{
-					secret = sha.ComputeHash(randomKeyToken.Concat(agreement.CalculateAgreement(remotePublicKey).ToByteArray()).ToArray());
+					secret = sha.ComputeHash(randomKeyToken.Concat(agreement.CalculateAgreement(remotePublicKey).ToByteArrayUnsigned()).ToArray());
 				}
 		        
 				// Create a decrytor to perform the stream transform.
@@ -736,12 +737,15 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			        skinData = ms.ToArray();
 		        }
 
-		       var modelName = model.Name ?? model.Description.Identifier;
+		       //var modelName = model.Name ?? model.Description.Identifier;
 
 		        //abc.geometry["default"] = model.Name;
-		        
-		        GeometryModel mm = new GeometryModel();
-		        mm.Geometry.Add(model);
+
+		        var           newModel = new EntityModel() {Bones = model.Bones, Description = model.Description};
+		        GeometryModel mm       = new GeometryModel();
+		        mm.Geometry.Add(newModel);
+
+		        var modelIdentifier = newModel.Description.Identifier;
 		        
 		        skin = new Skin()
 		        {
@@ -753,20 +757,20 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				       ImageWidth = 0,
 				       OnClassicSkin = false
 			        },
-			        SkinId = modelName,
+			        SkinId = modelIdentifier,
 			        ResourcePatch =
 				        Convert.ToBase64String(
-					        Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new SkinResourcePatch()
+					        Encoding.UTF8.GetBytes(MCJsonConvert.SerializeObject(new SkinResourcePatch()
 					        {
 						        Geometry = 	new GeometryIdentifier()
 						        {
-							         Default = modelName
+							         Default = modelIdentifier
 						        }
 					        }))),
 			        Width = (int) Alex.PlayerTexture.Width,
 			        Height = (int) Alex.PlayerTexture.Height,
 			        Data = skinData,
-			        GeometryName = modelName,
+			        GeometryName = modelIdentifier,
 			        GeometryData =
 				        Convert.ToBase64String(
 					        Encoding.UTF8.GetBytes(MCJsonConvert.SerializeObject(mm))),

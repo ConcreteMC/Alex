@@ -100,8 +100,8 @@ namespace Alex.ResourcePackLib
 
 	public class LoadedSkin
 	{
-		public string Name { get; }
-		public EntityModel Model { get; }
+		public string        Name    { get; }
+		public EntityModel   Model   { get; }
 		public Image<Rgba32> Texture { get; }
 
 		public LoadedSkin(string name, EntityModel model, Image<Rgba32> texture)

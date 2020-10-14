@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class EndermanModel : EntityModel
+	public partial class EndermanModel : OldEntityModel
 	{
 		public EndermanModel()
 		{

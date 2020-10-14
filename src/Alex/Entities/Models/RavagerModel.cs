@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class RavagerModel : EntityModel
+	public partial class RavagerModel : OldEntityModel
 	{
 		public RavagerModel()
 		{

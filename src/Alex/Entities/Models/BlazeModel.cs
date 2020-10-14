@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class BlazeModel : EntityModel
+	public partial class BlazeModel : OldEntityModel
 	{
 		public BlazeModel()
 		{

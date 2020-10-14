@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class PolarbearModel : EntityModel
+	public partial class PolarbearModel : OldEntityModel
 	{
 		public PolarbearModel()
 		{

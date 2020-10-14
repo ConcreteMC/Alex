@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class MobHeadModel : EntityModel
+	public partial class MobHeadModel : OldEntityModel
 	{
 		public MobHeadModel()
 		{

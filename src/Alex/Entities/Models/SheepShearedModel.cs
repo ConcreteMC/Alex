@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class SheepShearedModel : EntityModel
+	public partial class SheepShearedModel : OldEntityModel
 	{
 		public SheepShearedModel()
 		{

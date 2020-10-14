@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class VexV18Model : EntityModel
+	public partial class VexV18Model : OldEntityModel
 	{
 		public VexV18Model()
 		{

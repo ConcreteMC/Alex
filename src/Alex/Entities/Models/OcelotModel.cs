@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class OcelotModel : EntityModel
+	public partial class OcelotModel : OldEntityModel
 	{
 		public OcelotModel()
 		{

@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class ArrowModel : EntityModel
+	public partial class ArrowModel : OldEntityModel
 	{
 		public ArrowModel()
 		{

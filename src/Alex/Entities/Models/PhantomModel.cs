@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class PhantomModel : EntityModel
+	public partial class PhantomModel : OldEntityModel
 	{
 		public PhantomModel()
 		{

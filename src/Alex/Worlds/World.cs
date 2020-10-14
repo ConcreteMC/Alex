@@ -1018,40 +1018,18 @@ namespace Alex.Worlds
 			Player.DistanceMoved += MathF.Abs(Vector3.Distance(oldPosition, location));
 		}
 
-		public void UpdateEntityPosition(long entityId, PlayerLocation position, bool relative = false, bool updateLook = false, bool updatePitch = false)
+		public void UpdateEntityPosition(long entityId, PlayerLocation position, bool relative = false, bool updateLook = false, bool updatePitch = false, bool teleport = false)
 		{
 			if (EntityManager.TryGet(entityId, out Entity entity))
 			{
 				entity.KnownPosition.OnGround = position.OnGround;
 				if (!relative)
 				{
-					var oldPosition = entity.KnownPosition;
-					entity.KnownPosition = position;
-					//if (entity is PlayerMob p)
-					{
-						entity.DistanceMoved += MathF.Abs(Vector3.Distance(oldPosition, position));
-					}
+					entity.Movement.MoveTo(position);
 				}
 				else
 				{
-					var oldPosition = entity.KnownPosition;
-					float offset = 0f;
-				/*	if (this.ServerType == ServerType.Bedrock)
-					{
-						offset = (float) entity.PositionOffset;
-					}*/
-				
-				//TODO: Fix position offset
-					
-					entity.KnownPosition.X += position.X;
-					entity.KnownPosition.Y += (position.Y - offset);
-					entity.KnownPosition.Z += position.Z;	
-					
-					//if (entity is PlayerMob p)
-					{
-						entity.DistanceMoved += MathF.Abs(Vector3.Distance(oldPosition, entity.KnownPosition));
-					}
-					//entity.KnownPosition.Move(position);
+					entity.Movement.Move(new System.Numerics.Vector3(position.X, position.Y, position.Z));
 				}
 
 				if (updateLook)

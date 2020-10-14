@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class GuardianV18Model : EntityModel
+	public partial class GuardianV18Model : OldEntityModel
 	{
 		public GuardianV18Model()
 		{

@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class CapeModel : EntityModel
+	public partial class CapeModel : OldEntityModel
 	{
 		public CapeModel()
 		{

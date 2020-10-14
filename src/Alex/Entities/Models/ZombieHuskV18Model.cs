@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class ZombieHuskV18Model : EntityModel
+	public partial class ZombieHuskV18Model : OldEntityModel
 	{
 		public ZombieHuskV18Model()
 		{

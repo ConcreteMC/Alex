@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class TripodCameraModel : EntityModel
+	public partial class TripodCameraModel : OldEntityModel
 	{
 		public TripodCameraModel()
 		{

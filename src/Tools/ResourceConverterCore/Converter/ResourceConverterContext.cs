@@ -6,9 +6,9 @@ namespace ResourceConverterCore.Converter
     public static class ResourceConverterContext
     {
         
-        public static IReadOnlyDictionary<string, EntityModel> EntityModels { get; set; }
+        public static IReadOnlyDictionary<string, OldEntityModel> EntityModels { get; set; }
         public static string CurrentModelName { get; set; }
-        public static EntityModel CurrentModel { get; set; }
+        public static OldEntityModel CurrentModel { get; set; }
 
     }
 }

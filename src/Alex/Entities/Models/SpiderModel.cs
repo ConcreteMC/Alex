@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class SpiderModel : EntityModel
+	public partial class SpiderModel : OldEntityModel
 	{
 		public SpiderModel()
 		{

@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class PlayerArmor2GeometryPlayerArmorBaseModel : EntityModel
+	public partial class PlayerArmor2GeometryPlayerArmorBaseModel : OldEntityModel
 	{
 		public PlayerArmor2GeometryPlayerArmorBaseModel()
 		{

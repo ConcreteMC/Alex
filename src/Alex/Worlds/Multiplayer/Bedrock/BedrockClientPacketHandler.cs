@@ -394,7 +394,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		}
 
         //private ConcurrentDictionary<string, EntityModel> _models = new ConcurrentDictionary<string, EntityModel>();
-        private bool ProcessEntityModel(IDictionary<string, EntityModel> models, EntityModel model, bool isRetry = false)
+        /*private bool ProcessEntityModel(IDictionary<string, EntityModel> models, EntityModel model, bool isRetry = false)
         {
 	        string modelName = model.Name;
             if (model.Name.Contains(":")) //This model inherits from another model.
@@ -491,7 +491,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
             }
 
             return false;
-        }
+        }*/
         
 		public void HandleMcpePlayerList(McpePlayerList message)
 		{
@@ -706,7 +706,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			if (message.runtimeEntityId != Client.EntityId)
 			{
-				Client.World.UpdateEntityPosition(message.runtimeEntityId, location);
+				Client.World.UpdateEntityPosition(message.runtimeEntityId, location, false, true, true);
 
 				return;
 			}

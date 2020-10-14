@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class PandaModel : EntityModel
+	public partial class PandaModel : OldEntityModel
 	{
 		public PandaModel()
 		{

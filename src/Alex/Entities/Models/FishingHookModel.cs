@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class FishingHookModel : EntityModel
+	public partial class FishingHookModel : OldEntityModel
 	{
 		public FishingHookModel()
 		{

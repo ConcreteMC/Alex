@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class QuadrupedModel : EntityModel
+	public partial class QuadrupedModel : OldEntityModel
 	{
 		public QuadrupedModel()
 		{

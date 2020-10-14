@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class SnowgolemModel : EntityModel
+	public partial class SnowgolemModel : OldEntityModel
 	{
 		public SnowgolemModel()
 		{

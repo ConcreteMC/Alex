@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class TridentModel : EntityModel
+	public partial class TridentModel : OldEntityModel
 	{
 		public TridentModel()
 		{

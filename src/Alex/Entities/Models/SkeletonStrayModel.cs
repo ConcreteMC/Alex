@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class SkeletonStrayModel : EntityModel
+	public partial class SkeletonStrayModel : OldEntityModel
 	{
 		public SkeletonStrayModel()
 		{

@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class MooshroomModel : EntityModel
+	public partial class MooshroomModel : OldEntityModel
 	{
 		public MooshroomModel()
 		{

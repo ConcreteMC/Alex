@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class EvokerGeometryVillagerModel : EntityModel
+	public partial class EvokerGeometryVillagerModel : OldEntityModel
 	{
 		public EvokerGeometryVillagerModel()
 		{

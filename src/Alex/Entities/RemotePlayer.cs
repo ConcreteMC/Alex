@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Alex.API.Graphics;
 using Alex.API.Network;
@@ -135,29 +136,40 @@ namespace Alex.Entities
 								skin.ResourcePatch, GeometrySerializationSettings);
 							
 							GeometryModel geometryModel = null;
-							//	Dictionary<string, EntityModel> models = new Dictionary<string, EntityModel>();
-
 							if (!GeometryModel.TryParse(skin.GeometryData, resourcePatch, out geometryModel))
 							{
 								Log.Warn($"Failed to parse geometry for player {Name}");
 							}
 							
-							/*try
-							{
-								geometryModel = MCJsonConvert.DeserializeObject<GeometryModel>(skin.GeometryData);
-							}
-							catch (Exception ex)
-							{
-								Log.Warn($"Failed to parse geometry for player {Name}: {ex.ToString()}");
-							}*/
-
 							if (geometryModel == null || geometryModel.Geometry.Count == 0)
 							{
 								Log.Warn($"!! Model count was 0 for player {Name} !!");
-								//EntityModel.GetEntries(r.Skin.GeometryData, models);
 							}
 							else
 							{
+								/*if (!string.IsNullOrWhiteSpace(Name) && geometryModel.Geometry.Any(
+									x => x.Description.TextureHeight == 32 && x.Description.TextureWidth == 64
+									                                       && !x.Description.Identifier.Contains(
+										                                       "geometry.cape",
+										                                       StringComparison
+											                                      .InvariantCultureIgnoreCase)))
+								{
+									string geometryFileName = $"geometry.{Name}.json";
+									geometryFileName = Path.Combine("/home/kenny/skins/unique", geometryFileName);
+
+									if (!File.Exists(geometryFileName))
+										File.WriteAllText(
+											geometryFileName, MCJsonConvert.SerializeObject(geometryModel, true));
+
+									geometryFileName = $"resource.{Name}.json";
+									geometryFileName = Path.Combine("/home/kenny/skins/unique", geometryFileName);
+
+									if (!File.Exists(geometryFileName))
+										File.WriteAllText(
+											geometryFileName, MCJsonConvert.SerializeObject(resourcePatch, true));
+								}*/
+							
+
 								if (resourcePatch?.Geometry != null)
 								{
 									model = geometryModel.FindGeometry(resourcePatch.Geometry.Default);
@@ -169,10 +181,8 @@ namespace Alex.Entities
 									}
 									else
 									{
-										var modelTextureSize = model.Description != null ?
-											new Point((int) model.Description.TextureWidth, (int) model.Description.TextureHeight) :
-											new Point((int) model.Texturewidth, (int) model.Textureheight);
-				
+										var modelTextureSize = new Point((int) model.Description.TextureWidth, (int) model.Description.TextureHeight);
+										
 										var textureSize = new Point(skinBitmap.Width, skinBitmap.Height);
 
 										if (modelTextureSize != textureSize)
@@ -181,17 +191,18 @@ namespace Alex.Entities
 											int newWidth = modelTextureSize.X > textureSize.X ? textureSize.X: modelTextureSize.X;
 					
 											var bitmap = skinBitmap;
-										//	bitmap.Mutate<Rgba32>(xx => xx.Resize(newWidth, newHeight));
-					
-											Image<Rgba32> skinTexture = new Image<Rgba32>(modelTextureSize.X, modelTextureSize.Y);
+											bitmap.Mutate<Rgba32>(xx => xx.Resize(modelTextureSize.X, modelTextureSize.Y));
 
-											skinTexture.Mutate<Rgba32>(
+											skinBitmap = bitmap;
+											//Image<Rgba32> skinTexture = new Image<Rgba32>(modelTextureSize.X, modelTextureSize.Y);
+
+											/*skinTexture.Mutate<Rgba32>(
 												c =>
 												{
 													c.DrawImage(bitmap, new SixLabors.ImageSharp.Point(0, 0), 1f);
-												});
-					
-											skinBitmap = skinTexture;
+												});*/
+
+											//skinBitmap = skinTexture;
 										}
 									}
 								}
@@ -200,31 +211,11 @@ namespace Alex.Entities
 									Log.Warn($"Resourcepatch geometry was null for player {Name}");
 								}
 							}
-
-							/*foreach (var mm in models.ToArray())
-							{
-								if (ProcessEntityModel(models, mm.Value, false))
-								{
-									models.Remove(mm.Key);
-								}
-							}
-	
-							foreach (var mm in models.ToArray())
-							{
-								if (ProcessEntityModel(models, mm.Value, true))
-								{
-									models.Remove(mm.Key);
-								}
-							}*/
 						}
 					}
 					catch (Exception ex)
 					{
 						string name = "N/A";
-						/*if (r.Skin.SkinResourcePatch != null)
-						{
-							name = r.Skin.SkinResourcePatch.Geometry.Default;
-						}*/
 						Log.Warn(ex, $"Could not create geometry ({name}): {ex.ToString()} for player {Name}");
 						
 					//	File.WriteAllBytes(Path.Combine("/home/kenny/.config/Alex/skinDebug/failed", $"failed-{Environment.TickCount}.json"), Encoding.UTF8.GetBytes(skin.GeometryData));

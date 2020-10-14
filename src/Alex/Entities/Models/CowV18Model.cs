@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class CowV18Model : EntityModel
+	public partial class CowV18Model : OldEntityModel
 	{
 		public CowV18Model()
 		{

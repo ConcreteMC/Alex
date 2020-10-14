@@ -12,12 +12,22 @@ namespace Alex.Entities.Models
 	{
 		public HumanoidCustomGeometryHumanoidModel()
 		{
+			/*
 			Name = "geometry.humanoid.custom:geometry.humanoid";
 			VisibleBoundsWidth = 1;
 			VisibleBoundsHeight = 1;
 			VisibleBoundsOffset = new Vector3(0f, 0.5f, 0f);
 			Texturewidth = 0;
-			Textureheight = 0;
+			Textureheight = 0;*/
+			Description = new ModelDescription()
+			{
+				Identifier = "geometry.humanoid.custom:geometry.humanoid",
+				TextureHeight = 64,
+				TextureWidth = 64,
+				VisibleBoundsHeight = 2,
+				VisibleBoundsWidth = 1,
+				VisibleBoundsOffset = new Vector3(0, 0.5f, 0f)
+			};
 			Bones = new EntityModelBone[27]
 			{
 				new EntityModelBone(){ 

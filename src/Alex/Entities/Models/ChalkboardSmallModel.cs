@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class ChalkboardSmallModel : EntityModel
+	public partial class ChalkboardSmallModel : OldEntityModel
 	{
 		public ChalkboardSmallModel()
 		{

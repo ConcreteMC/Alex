@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class VillagerWitchV18GeometryVillagerV18Model : EntityModel
+	public partial class VillagerWitchV18GeometryVillagerV18Model : OldEntityModel
 	{
 		public VillagerWitchV18GeometryVillagerV18Model()
 		{

@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class BedModel : EntityModel
+	public partial class BedModel : OldEntityModel
 	{
 		public BedModel()
 		{

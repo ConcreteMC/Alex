@@ -30,6 +30,7 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 	    [J("inflate", NullValueHandling = N.Ignore, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
 	    public double Inflate { get; set; } = 0;
 	    
+		[JsonIgnore]
 	    public Vector3 InflatedSize 
 	    {
 		    get
@@ -50,6 +51,7 @@ namespace Alex.ResourcePackLib.Json.Models.Entities
 		    }
 	    }
 
+	    [JsonIgnore]
 	    public Vector3 InflatedOrigin
 	    {
 		    get

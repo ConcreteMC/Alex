@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class ShieldModel : EntityModel
+	public partial class ShieldModel : OldEntityModel
 	{
 		public ShieldModel()
 		{

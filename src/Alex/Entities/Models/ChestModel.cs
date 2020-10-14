@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework;
 
 namespace Alex.Entities.Models
 {
-    public class ChestModel : EntityModel
+    public class ChestModel : OldEntityModel
     {
         public ChestModel()
         {

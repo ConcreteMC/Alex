@@ -55,7 +55,7 @@ namespace Alex.Graphics.Models.Entity
 			//	Model = model;
 			if (texture == null)
 			{
-				Log.Warn($"No texture set for rendererer for {model.Name}!");
+				Log.Warn($"No texture set for rendererer for {model}!");
 				return;
 			}
 
@@ -74,23 +74,25 @@ namespace Alex.Graphics.Models.Entity
 		{
 			List<VertexPositionNormalTexture> vertices = new List<VertexPositionNormalTexture>();
 
-			var modelTextureSize = model.Description != null ?
-				new Vector2(model.Description.TextureWidth, model.Description.TextureHeight) :
-				new Vector2(model.Texturewidth, model.Textureheight);
+			//var modelTextureSize = model.Description != null ?
+			//	new Vector2(model.Description.TextureWidth, model.Description.TextureHeight) :
+			//	new Vector2(model.Texturewidth, model.Textureheight);
+			
+			var modelTextureSize = new Vector2(model.Description.TextureWidth, model.Description.TextureHeight);
 			
 			var actualTextureSize = new Vector2(texture.Width, texture.Height);
 				
 			if (modelTextureSize.X == 0 && modelTextureSize.Y == 0)
 				modelTextureSize = actualTextureSize;
 			
-			var uvScale = actualTextureSize / modelTextureSize;
+			var uvScale = actualTextureSize / modelTextureSize;// / actualTextureSize;
 			
 			foreach (var bone in model.Bones.Where(x => string.IsNullOrWhiteSpace(x.Parent)))
 			{
 				//if (bone.NeverRender) continue;
 				if (modelBones.ContainsKey(bone.Name)) continue;
 				
-				var processed = ProcessBone(texture, model, bone, vertices, uvScale, modelTextureSize, modelBones);
+				var processed = ProcessBone(texture, model, bone, vertices, uvScale, actualTextureSize , modelBones);
 				
 				if (!modelBones.TryAdd(bone.Name, processed))
 				{

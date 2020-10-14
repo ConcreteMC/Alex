@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class EndermiteModel : EntityModel
+	public partial class EndermiteModel : OldEntityModel
 	{
 		public EndermiteModel()
 		{

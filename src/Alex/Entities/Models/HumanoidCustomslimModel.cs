@@ -12,12 +12,23 @@ namespace Alex.Entities.Models
 	{
 		public HumanoidCustomslimModel()
 		{
+			Description = new ModelDescription()
+			{
+				Identifier = "geometry.humanoid.customSlim",
+				TextureHeight = 64,
+				TextureWidth = 64,
+				VisibleBoundsHeight = 2,
+				VisibleBoundsWidth = 1,
+				VisibleBoundsOffset = new Vector3(0, 1f, 0f)
+			};
+			/*
 			Name = "geometry.humanoid.customSlim";
 			VisibleBoundsWidth = 1;
 			VisibleBoundsHeight = 2;
 			VisibleBoundsOffset = new Vector3(0f, 1f, 0f);
 			Texturewidth = 0;
 			Textureheight = 0;
+			*/
 			Bones = new EntityModelBone[15]
 			{
 				new EntityModelBone(){ 

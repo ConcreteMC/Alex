@@ -115,7 +115,7 @@ namespace Alex.Gamestates.MainMenu
         {
             Focus(profile);
 
-            profile.Skin.Model.Name = "geometry.alex.custom";
+           // profile.Skin.Model.Name = "geometry.alex.custom";
             Storage.TryWriteJson("skin.json", profile.Skin.Model);
 
             using (MemoryStream ms = new MemoryStream())

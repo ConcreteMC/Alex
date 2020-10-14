@@ -57,6 +57,8 @@ namespace Alex.Entities
 				OnModelUpdated();
 			}
 		}
+		
+		public EntityMovement Movement { get; }
 
 		public World Level { get; set; }
 
@@ -209,6 +211,8 @@ namespace Alex.Entities
 			
 			AddOrUpdateProperty(new FlyingSpeedProperty(this));
 			AddOrUpdateProperty(new MovementSpeedProperty(this));
+			
+			Movement = new EntityMovement(this);
 		}
 
 		public double FlyingSpeed
@@ -521,8 +525,7 @@ namespace Alex.Entities
 					{
 						if (meta.Value is MetadataLong lng)
 						{
-							BitArray bits = new BitArray(BitConverter.GetBytes(lng.Value));
-							HandleEntityFlags(bits);
+							HandleEntityFlags(lng.Value);
 						}
 					}
 						break;
@@ -550,38 +553,60 @@ namespace Alex.Entities
 			return false;
 		}
 
-		private void HandleEntityFlags(BitArray bits)
+		private void HandleEntityFlags(long data)
 		{
 			if ((this is Player))
 				return;
 			
-			IsInvisible = bits[(int) MiNET.Entities.Entity.DataFlags.Invisible];
-			IsSneaking = bits[(int) MiNET.Entities.Entity.DataFlags.Sneaking];
-			IsOnFire = bits[(int) MiNET.Entities.Entity.DataFlags.OnFire];
-			IsSprinting = bits[(int) MiNET.Entities.Entity.DataFlags.Sprinting];
+			IsInvisible = (data & ((int) MiNET.Entities.Entity.DataFlags.Invisible)) != 0;
+			IsSneaking = (data & ((int) MiNET.Entities.Entity.DataFlags.Sneaking)) != 0;
+			IsOnFire = (data & ((int) MiNET.Entities.Entity.DataFlags.OnFire)) != 0;
+			IsSprinting = (data & ((int) MiNET.Entities.Entity.DataFlags.Sprinting)) != 0;
 			
-			NoAi = bits[(int) MiNET.Entities.Entity.DataFlags.NoAi];
-
-			IsAlwaysShowName = bits[(int) MiNET.Entities.Entity.DataFlags.AlwaysShowName];
-			IsBaby = bits[(int) MiNET.Entities.Entity.DataFlags.Baby];
-			IsUsingItem = bits[(int) MiNET.Entities.Entity.DataFlags.UsingItem];
-			//HideNameTag = !bits[(int) MiNET.Entities.Entity.DataFlags.ShowName];
-			IsAngry = bits[(int) MiNET.Entities.Entity.DataFlags.Angry];
-			IsInLove = bits[(int) MiNET.Entities.Entity.DataFlags.InLove];
-			IsRiding = bits[(int) MiNET.Entities.Entity.DataFlags.Riding];
-			IsTempted = bits[(int) MiNET.Entities.Entity.DataFlags.Tempted];
-			IsTamed = bits[(int) MiNET.Entities.Entity.DataFlags.Tamed];
-			IsLeashed = bits[(int) MiNET.Entities.Entity.DataFlags.Leashed];
-			IsSheared = bits[(int) MiNET.Entities.Entity.DataFlags.Sheared];
-			IsChested = bits[(int) MiNET.Entities.Entity.DataFlags.Chested];
-			HasCollision = bits[(int) MiNET.Entities.Entity.DataFlags.HasCollision];
-			IsAffectedByGravity = bits[(int) MiNET.Entities.Entity.DataFlags.AffectedByGravity];
-			IsFlagAllFlying = bits[(int) MiNET.Entities.Entity.DataFlags.FlagAllFlying];
-			IsSilent = bits[(int) MiNET.Entities.Entity.DataFlags.Silent];
-			IsSitting = bits[(int) MiNET.Entities.Entity.DataFlags.Sitting];
-			IsWallClimbing = bits[(int) MiNET.Entities.Entity.DataFlags.WallClimbing];
-			IsResting = bits[(int) MiNET.Entities.Entity.DataFlags.Resting];
-			//IsBreathing = bits[(int) MiNET.Entities.Entity.DataFlags.Breathing];
+			NoAi = (data & ((int) MiNET.Entities.Entity.DataFlags.NoAi)) != 0;
+			IsAffectedByGravity = (data & ((int) MiNET.Entities.Entity.DataFlags.AffectedByGravity)) != 0;
+			//HasCollision = (data & ((int) MiNET.Entities.Entity.DataFlags.HasCollision)) != 0;
+			
+			IsAlwaysShowName = (data & ((int) MiNET.Entities.Entity.DataFlags.AlwaysShowName)) != 0;
+			IsBaby = (data & ((int) MiNET.Entities.Entity.DataFlags.Baby)) != 0;
+			IsUsingItem = (data & ((int) MiNET.Entities.Entity.DataFlags.UsingItem)) != 0;
+			IsAngry = (data & ((int) MiNET.Entities.Entity.DataFlags.Angry)) != 0;
+			IsInLove = (data & ((int) MiNET.Entities.Entity.DataFlags.InLove)) != 0;
+			IsRiding = (data & ((int) MiNET.Entities.Entity.DataFlags.Riding)) != 0;
+			IsTempted = (data & ((int) MiNET.Entities.Entity.DataFlags.Tempted)) != 0;
+			IsTamed = (data & ((int) MiNET.Entities.Entity.DataFlags.Tamed)) != 0;
+			IsLeashed = (data & ((int) MiNET.Entities.Entity.DataFlags.Leashed)) != 0;
+			IsSheared = (data & ((int) MiNET.Entities.Entity.DataFlags.Sheared)) != 0;
+			IsChested = (data & ((int) MiNET.Entities.Entity.DataFlags.Chested)) != 0;
+			IsFlagAllFlying = (data & ((int) MiNET.Entities.Entity.DataFlags.FlagAllFlying)) != 0;
+			IsSilent = (data & ((int) MiNET.Entities.Entity.DataFlags.Silent)) != 0;
+			IsSitting = (data & ((int) MiNET.Entities.Entity.DataFlags.Sitting)) != 0;
+			IsWallClimbing = (data & ((int) MiNET.Entities.Entity.DataFlags.WallClimbing)) != 0;
+			IsResting = (data & ((int) MiNET.Entities.Entity.DataFlags.Resting)) != 0;
+			//IsBreathing = (data & ((int) MiNET.Entities.Entity.DataFlags.Breathing)) != 0;
+			/*
+						IsAlwaysShowName = bits[(int) MiNET.Entities.Entity.DataFlags.AlwaysShowName];
+						IsBaby = bits[(int) MiNET.Entities.Entity.DataFlags.Baby];
+						IsUsingItem = bits[(int) MiNET.Entities.Entity.DataFlags.UsingItem];
+						//HideNameTag = !bits[(int) MiNET.Entities.Entity.DataFlags.ShowName];
+						IsAngry = bits[(int) MiNET.Entities.Entity.DataFlags.Angry];
+						IsInLove = bits[(int) MiNET.Entities.Entity.DataFlags.InLove];
+						IsRiding = bits[(int) MiNET.Entities.Entity.DataFlags.Riding];
+						IsTempted = bits[(int) MiNET.Entities.Entity.DataFlags.Tempted];
+						IsTamed = bits[(int) MiNET.Entities.Entity.DataFlags.Tamed];
+						IsLeashed = bits[(int) MiNET.Entities.Entity.DataFlags.Leashed];
+						IsSheared = bits[(int) MiNET.Entities.Entity.DataFlags.Sheared];
+						IsChested = bits[(int) MiNET.Entities.Entity.DataFlags.Chested];
+						
+						HasCollision = bits[(int) MiNET.Entities.Entity.DataFlags.HasCollision];
+						IsAffectedByGravity = bits[(int) MiNET.Entities.Entity.DataFlags.AffectedByGravity];
+						
+						IsFlagAllFlying = bits[(int) MiNET.Entities.Entity.DataFlags.FlagAllFlying];
+						IsSilent = bits[(int) MiNET.Entities.Entity.DataFlags.Silent];
+						IsSitting = bits[(int) MiNET.Entities.Entity.DataFlags.Sitting];
+						IsWallClimbing = bits[(int) MiNET.Entities.Entity.DataFlags.WallClimbing];
+						IsResting = bits[(int) MiNET.Entities.Entity.DataFlags.Resting];
+						//IsBreathing = bits[(int) MiNET.Entities.Entity.DataFlags.Breathing];*/
 		}
 		
 		/// <inheritdoc />

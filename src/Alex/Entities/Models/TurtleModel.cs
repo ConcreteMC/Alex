@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 namespace Alex.Entities.Models 
 {
 
-	public partial class TurtleModel : EntityModel
+	public partial class TurtleModel : OldEntityModel
 	{
 		public TurtleModel()
 		{
