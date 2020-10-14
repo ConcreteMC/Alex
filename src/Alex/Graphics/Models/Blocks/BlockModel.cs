@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Alex.API.Blocks;
 using Alex.API.Graphics;
 using Alex.API.World;
@@ -98,21 +99,21 @@ namespace Alex.Graphics.Models.Blocks
 					faceColor = uvmap.ColorRight; //new Color(0x00, 0xFF, 0xFF);
 					break;
 				case BlockFace.South: //Positive Z
-					positionTopLeft = new Vector3(startPosition.X, endPosition.Y, startPosition.Z);
-					positionTopRight = new Vector3(endPosition.X, endPosition.Y, startPosition.Z);
-
-					positionBottomLeft = new Vector3(startPosition.X, startPosition.Y, startPosition.Z);
-					positionBottomRight = new Vector3(endPosition.X, startPosition.Y, startPosition.Z);
-
-					normal = Vector3.Backward;
-					faceColor = uvmap.ColorFront; // ew Color(0x00, 0xFF, 0x00);
-					break;
-				case BlockFace.North: //Negative Z
 					positionTopLeft = new Vector3(startPosition.X, endPosition.Y, endPosition.Z);
 					positionTopRight = new Vector3(endPosition.X, endPosition.Y, endPosition.Z);
 
 					positionBottomLeft = new Vector3(startPosition.X, startPosition.Y, endPosition.Z);
 					positionBottomRight = new Vector3(endPosition.X, startPosition.Y, endPosition.Z);
+
+					normal = Vector3.Backward;
+					faceColor = uvmap.ColorFront; // ew Color(0x00, 0xFF, 0x00);
+					break;
+				case BlockFace.North: //Negative Z
+					positionTopLeft = new Vector3(startPosition.X, endPosition.Y, startPosition.Z);
+					positionTopRight = new Vector3(endPosition.X, endPosition.Y, startPosition.Z);
+
+					positionBottomLeft = new Vector3(startPosition.X, startPosition.Y, startPosition.Z);
+					positionBottomRight = new Vector3(endPosition.X, startPosition.Y, startPosition.Z);
 
 					normal = Vector3.Forward;
 					faceColor = uvmap.ColorBack; // new Color(0xFF, 0x00, 0x00);
@@ -144,7 +145,7 @@ namespace Alex.Graphics.Models.Blocks
 						2, 3, 1
 					};
 					break;
-				case BlockFace.North:
+				case BlockFace.South:
 					indexes = new[]
 					{
 						0, 2, 1,
@@ -158,7 +159,7 @@ namespace Alex.Graphics.Models.Blocks
 						3, 2, 1
 					};
 					break;
-				case BlockFace.South:
+				case BlockFace.North:
 					indexes = new[]
 					{
 						2, 0, 1,
@@ -280,33 +281,69 @@ namespace Alex.Graphics.Models.Blocks
 				y1 = 0;
 				y2 = 1 / 32f;
 
-				return new UVMap(
+				return new UVMap(new TextureInfo(new Vector2(), Vector2.Zero, 16, 16, false, true), 
 					new Microsoft.Xna.Framework.Vector2(x1, y1), new Microsoft.Xna.Framework.Vector2(x2, y1),
 					new Microsoft.Xna.Framework.Vector2(x1, y2), new Microsoft.Xna.Framework.Vector2(x2, y2), color,
 					color, color);
 			}
 
-			var textureInfo     = resources.Atlas.GetAtlasLocation(texture, out var uvSize);
-			var textureLocation = textureInfo.Position;
+			var textureInfo = resources.Atlas.GetAtlasLocation(texture);
 
-			var xw = (textureInfo.Width / 16f) / uvSize.X;
-			var yh = (textureInfo.Height / 16f) / uvSize.Y;
+			var tw = textureInfo.Width;// (textureInfo.Width / 16f) / uvSize.X;
+			var th = textureInfo.Height;// (textureInfo.Height / 16f) / uvSize.Y;
 
-			textureLocation.X /= uvSize.X;
-			textureLocation.Y /= uvSize.Y;
+			x1 = (x1 * (tw));
+			x2 = (x2 * (tw ));
+			y1 = (y1 * (th));
+			y2 = (y2 * (th));
+			
+			//textureLocation.X /= uvSize.X;
+			//textureLocation.Y /= uvSize.Y;
 
-			x1 = textureLocation.X + (x1 * xw);
-			x2 = textureLocation.X + (x2 * xw);
-			y1 = textureLocation.Y + (y1 * yh);
-			y2 = textureLocation.Y + (y2 * yh);
+			if (rot > 0)
+			{
+				var ox1 = x1;
+				var ox2 = x2;
+				var oy1 = y1;
+				var oy2 = y2;
+				switch (rot)
+				{
+					case 270:
+						y1 = tw * 16 - ox2;
+						y2 = tw * 16 - ox1;
+						x1 = oy1;
+						x2 = oy2;
+						break;
+					case 180:
+						y1 = th * 16 - oy2;
+						y2 = th * 16 - oy1;
+						x1 = tw * 16 - ox2;
+						x2 = tw * 16 - ox1;
+						break;
+					case 90:
+						y1 = ox1;
+						y2 = ox2;
+						x1 = th * 16 - oy2;
+						x2 = th * 16 - oy1;
+						break;
+				}
+			}
 
-			var map = new UVMap(
+			/*x1 += textureLocation.X;// / uvSize.X;
+			x2 += textureLocation.X;// / uvSize.X;
+			y1 += textureLocation.Y;// / uvSize.Y;
+			y2 += textureLocation.Y;// / uvSize.Y;
+
+			x1 /= uvSize.X;
+			x2 /= uvSize.X;
+			y1 /= uvSize.Y;
+			y2 /= uvSize.Y;*/
+			
+			var map = new UVMap(textureInfo,
 				new Microsoft.Xna.Framework.Vector2(x1, y1), new Microsoft.Xna.Framework.Vector2(x2, y1),
 				new Microsoft.Xna.Framework.Vector2(x1, y2), new Microsoft.Xna.Framework.Vector2(x2, y2), color, color,
 				color, textureInfo.Animated);
-			
-			 if (rot > 0)
-				 map.Rotate(rot);
+			//map.Rotate(rot);
 
 			return map;
 		}
@@ -321,19 +358,28 @@ namespace Alex.Graphics.Models.Blocks
 
 	    public static BlockFace[] FACE_ROTATION =
 		{
+			BlockFace.North,
+			BlockFace.East,
+			BlockFace.South,
+			BlockFace.West
 			/*BlockFace.West,
 			BlockFace.North,
 			BlockFace.East,
 			BlockFace.South*/
 			
-			BlockFace.East,
+			/*BlockFace.East,
 			BlockFace.South,
 			BlockFace.West,
-			BlockFace.North
+			BlockFace.North*/
 		};
 
 		public static BlockFace[] FACE_ROTATION_X =
 		{
+			/*BlockFace.North,
+			BlockFace.Down,
+			BlockFace.South,
+			BlockFace.Up*/
+			
 			BlockFace.North,
 			BlockFace.Down,
 			BlockFace.South,
@@ -349,22 +395,16 @@ namespace Alex.Graphics.Models.Blocks
 
 
 		public static BlockFace RotateDirection(BlockFace val, int offset, BlockFace[] rots, BlockFace[] invalid){
-			foreach(var d in invalid) {
-				if (d == val) {
-					return val;
-				}
-			}
+			if (invalid.Any(d => d == val))
+				return val;
 
 			int pos = 0;
 			for (var index = 0; index < rots.Length; index++)
 			{
-				var rot = rots[index];
-
-				if (rot == val)
-				{
-					pos = index;
-					break;
-				}
+				if (rots[index] != val)
+					continue;
+				
+				pos = index;
 			}
 
 			return rots[(rots.Length + pos + offset) % rots.Length];

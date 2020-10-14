@@ -23,10 +23,12 @@ namespace Alex.Utils
         public Vector2 BottomRight;
 
         public bool IsAnimated;
-        
-        public UVMap(Vector2 topLeft, Vector2 topRight, Vector2 bottomLeft, Vector2 bottomRight, Color colorSide,
+
+        public TextureInfo TextureInfo;
+        public UVMap(TextureInfo textureInfo, Vector2 topLeft, Vector2 topRight, Vector2 bottomLeft, Vector2 bottomRight, Color colorSide,
             Color colorTop, Color colorBottom, bool isAnimated = false)
         {
+            TextureInfo = textureInfo;
             TopLeft = topLeft;
             TopRight = topRight;
             BottomLeft = bottomLeft;
@@ -46,10 +48,10 @@ namespace Alex.Utils
 
         public void Rotate(int rot)
         {
-            var topLeft = TopLeft;
-            var topRight = TopRight;
-            var bottomLeft = BottomLeft;
-            var bottomRight = BottomRight;
+            var topLeft = TopLeft; //ox1
+            var topRight = TopRight; //ox2
+            var bottomLeft = BottomLeft; //oy1
+            var bottomRight = BottomRight; //oy2
 				
             if (rot == 90)
             {

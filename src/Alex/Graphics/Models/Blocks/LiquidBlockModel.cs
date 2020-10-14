@@ -266,7 +266,7 @@ namespace Alex.Graphics.Models.Blocks
 
 			UVMap map = GetTextureUVMap(Alex.Instance.Resources, texture, 0, 16, 0, 16, 0, Color.White);
 
-			var originalMap = new UVMap(map.TopLeft, map.TopRight, map.BottomLeft, map.BottomRight, map.ColorLeft, map.ColorTop, map.ColorBottom);
+			var originalMap = new UVMap(map.TextureInfo, map.TopLeft, map.TopRight, map.BottomLeft, map.BottomRight, map.ColorLeft, map.ColorTop, map.ColorBottom);
 			map.Rotate(rot);
 
 			foreach (var face in renderedFaces)

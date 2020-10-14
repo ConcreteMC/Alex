@@ -70,94 +70,6 @@ namespace Alex.Graphics
 			    resourcePack.TryGetTextureMeta(texture.Key, out meta);
 			    textures.Add(texture.Key, new ImageEntry(texture.Value, meta));
 		    }
-		    /*
-		    progressReceiver.UpdateProgress(0, "Processing blockstate textures...");
-		    int blockstatesProcessed = 0;
-		    int totalStates          = resourcePack.BlockStates.Count;
-
-		    foreach (var kv in resourcePack.BlockStates)
-		    {
-			    progressReceiver.UpdateProgress(
-				    (int) (100D * ((double) blockstatesProcessed / (double) totalStates)), null, kv.Key);
-
-			    var state = kv.Value;
-			    
-			    foreach (var variant in state.Variants)
-			    {
-				    foreach (var va in variant.Value)
-				    {
-					    ProcessBlockStateModel(resourcePack, textures, va);
-				    }
-			    }
-
-
-			    foreach (var part in state.Parts)
-			    {
-				    if (part.Apply == null)
-					    continue;
-
-				    foreach (var applied in part.Apply)
-				    {
-					    ProcessBlockStateModel(resourcePack, textures, applied);
-				    }
-			    }
-
-			    blockstatesProcessed++;
-			    // state.
-		    }*/
-	    }
-
-	    private void ProcessBlockStateModel(McResourcePack resourcePack, Dictionary<ResourceLocation, ImageEntry> textures, BlockStateModel bsModel)
-	    {
-		    var model = bsModel.Model;
-
-		    foreach (var texture in model.Textures)
-		    {
-			    var text = texture.Value;
-
-			    if (text[0] == '#')
-			    {
-				    var substr = text.Substring(1);
-
-				    if (model.Textures.TryGetValue(substr, out var p))
-				    {
-					    text = p;
-				    }
-				    else
-				    {
-					    var parent = model.Parent;
-
-					    while (parent != null)
-					    {
-						    if (parent.Textures.TryGetValue(substr, out string parentName))
-						    {
-							    text = parentName;
-
-							    break;
-						    }
-
-						    parent = parent.Parent;
-					    }
-				    }
-			    }
-
-			    var key = new ResourceLocation(text);
-
-			    var alreadyLoaded = textures.ContainsKey(key);
-			    if (!alreadyLoaded && resourcePack.TryGetBitmap(key, out var bmp))
-			    {
-				    TextureMeta meta = null;
-				    resourcePack.TryGetTextureMeta(key, out meta);
-				    
-				    textures.TryAdd(key, new ImageEntry(bmp, meta));
-			    }
-			    else if (!alreadyLoaded)
-			    {
-				    if (texture.Value[0] != '#' || text[0] != '#')
-					    Log.Warn(
-						    $"Could not get bitmap {texture.Value} or {text} (Key: {texture.Key} Model: {bsModel.ModelName})");
-			    }
-		    }
 	    }
 
 	    public void LoadResourcePack(GraphicsDevice graphicsDevice,
@@ -225,7 +137,6 @@ namespace Alex.Graphics
 			    progressReceiver, stillFrameInfo, false, out var stillAtlas);
 
 		    AtlasSize = new Vector2(stillAtlas.Width, stillAtlas.Height);
-
 		    //  totalSize += size;
 
 		    _atlasLocations = stillFrameInfo;
@@ -298,10 +209,10 @@ namespace Alex.Graphics
 					    //((i % 3 == 0 ? i - 1 : i) / 6)
 
 					    var destination = new System.Drawing.Rectangle(
-						    (int) textureInfo.Position.X, (int) textureInfo.Position.Y, textureInfo.Width,
-						    textureInfo.Height);
+						    (int) textureInfo.Position.X, (int) textureInfo.Position.Y, textureInfo.Width * 16,
+						    textureInfo.Height * 16);
 
-					    var sourceRegion = new System.Drawing.Rectangle(0, 0, textureInfo.Width, textureInfo.Height);
+					    var sourceRegion = new System.Drawing.Rectangle(0, 0, textureInfo.Width * 16, textureInfo.Height * 16);
 
 					    var index = i % animated.Value.Length;
 
@@ -454,7 +365,7 @@ namespace Alex.Graphics
 
 			    if (!locations.ContainsKey(key)) 
 			    {
-				    locations.Add(key, new TextureInfo(new Vector2(xi, yi), bm.Value.Width, bm.Value.Height, animated, true));
+				    locations.Add(key, new TextureInfo(new Vector2(target.Width, target.Height),  new Vector2(xi, yi), bm.Value.Width / 16, bm.Value.Height / 16, animated, true));
 			    }
 
 			    if (bm.Value.Height > TextureHeight)
@@ -486,11 +397,6 @@ namespace Alex.Graphics
 		    int framesInWidth = source.Width / frameWidth;
 		    int framesInHeight = source.Height / frameHeight;
 
-		    if (framesInWidth * framesInHeight == 0)
-		    {
-			//    string a = "b";
-		    }
-		    
 		    //List<Image<Rgba32>> result = new List<Image<Rgba32>>();
 		    Image<Rgba32>[] result  = new Image<Rgba32>[framesInHeight * framesInWidth];
 		    int             counter = 0;
@@ -573,42 +479,19 @@ namespace Alex.Graphics
         }
 
 		public TextureInfo GetAtlasLocation(
-			ResourceLocation file,
-			out Vector2 atlasSize)
+			ResourceLocation file)
 		{
-		/*	if (dictionary == null)
-			{
-				atlasSize = block.Animated ? AnimatedAtlasSize : AtlasSize;
-				dictionary = block.Animated ? _animatedAtlasLocations : _atlasLocations;
-			}
-			else
-			{
-				atlasSize = AtlasSize;
-			}
-
-			if (dictionary.Count == 0) throw new Exception();*/
-
 			if (_animatedAtlasLocations.TryGetValue(file, out var textureInfo))
 			{
-				atlasSize = AnimatedAtlasSize;
-
 				return textureInfo;
 			}
 
 			if (_atlasLocations.TryGetValue(file, out var atlasInfo))
 			{
-				atlasSize = AtlasSize;
-
 				return atlasInfo;
 			}
-
-			if (file.Path.Contains("fire_"))
-			{
-				string a = "b";
-			}
 			
-			atlasSize = AtlasSize;
-			return new TextureInfo(Vector2.Zero, TextureWidth, TextureHeight, false, false);
+			return new TextureInfo(AtlasSize, Vector2.Zero, TextureWidth, TextureHeight, false, false);
 		}
     }
 }
