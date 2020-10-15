@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using Alex.API.Graphics;
 using Microsoft.Xna.Framework.Graphics;
 using SixLabors.ImageSharp;
@@ -21,6 +22,9 @@ namespace Alex.API.Utils
 {
 	public static class TextureUtils
 	{
+		public static Thread         RenderThread        { get; set; }
+		public static Action<Action> QueueOnRenderThread { get; set; }
+		
 		public static PooledTexture2D BitmapToTexture2D(GraphicsDevice device, Image<Rgba32> bmp)
         {
 	        return BitmapToTexture2D(device, bmp, out _);
@@ -40,11 +44,28 @@ namespace Alex.API.Utils
 	        }
 	       // var colorData = pixels.ToArray().Select(x => x.Rgba).ToArray();
 
-	        PooledTexture2D texture = GpuResourceManager.GetTexture2D("Image converter", device, image.Width, image.Height);
-	        texture.SetData(colorData);
+	       PooledTexture2D result = null;
+	       if (Thread.CurrentThread != RenderThread)
+	       {
+		       AutoResetEvent resetEvent = new AutoResetEvent(false);
+		       QueueOnRenderThread(
+			       () =>
+			       {
+				       result = GpuResourceManager.GetTexture2D("Image converter", device, image.Width, image.Height);
+				       result.SetData(colorData);
 
-	        byteSize = texture.MemoryUsage;
-	        return texture;
+				       resetEvent.Set();
+			       });
+		       resetEvent.WaitOne();
+	       }
+	       else
+	       {
+		       result = GpuResourceManager.GetTexture2D("Image converter", device, image.Width, image.Height);
+		       result.SetData(colorData);
+	       }
+
+	       byteSize = result.MemoryUsage;
+	        return result;
 	        /*for (int x = 0; x < bmp.Width; x++)
 	        {
 		        for (int y = 0; y < bmp.Height; y++)

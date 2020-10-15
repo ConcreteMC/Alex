@@ -79,6 +79,7 @@ namespace Alex.Blocks
 		    this.Register("minecraft:carrots", () => new Carrots());
 		    this.Register("minecraft:potatoes", () => new Potatoes());
 		    this.Register("minecraft:anvil", () => new Anvil());
+		    this.Register("minecraft:chipped_anvil", () => new Anvil());
 		    this.Register("minecraft:trapped_chest", () => new TrappedChest());
 		    this.Register("minecraft:quartz_block", () => new QuartzBlock());
 		    this.Register("minecraft:activator_rail", () => new ActivatorRail());
@@ -396,6 +397,7 @@ namespace Alex.Blocks
 		    this.Register("minecraft:warped_fungus", () => new WarpedFungus());
 		    
 		    this.Register("minecraft:lantern", () => new Lantern());
+		    this.Register("minecraft:jack_o_lantern", () => new JackOLantern());
 		    
 		    this.Register("minecraft:lectern", () => new Lectern());
 	    }

@@ -208,12 +208,8 @@ namespace Alex.Gamestates
 		{
 			if (Alex.PlayerModel != null && Alex.PlayerTexture != null)
 			{
-				Alex.UIThreadQueue.Enqueue(
-					() =>
-					{
-						var texture = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, Alex.PlayerTexture);
-						entity.ModelRenderer = new EntityModelRenderer(Alex.PlayerModel, texture);
-					});
+				var texture = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, Alex.PlayerTexture);
+				entity.ModelRenderer = new EntityModelRenderer(Alex.PlayerModel, texture);
 			}
 		}
 
@@ -276,22 +272,20 @@ namespace Alex.Gamestates
 				//Enabled = false
 			});
 
-			AutoResetEvent reset = new AutoResetEvent(false);
-			Alex.UIThreadQueue.Enqueue(() =>
-			{
-				using (MemoryStream ms =
-					new MemoryStream(ResourceManager.ReadResource("Alex.Resources.GradientBlur.png")))
+			Alex.UIThreadQueue.Enqueue(
+				() =>
 				{
-					BackgroundOverlay = (TextureSlice2D) GpuResourceManager.GetTexture2D(this, args.GraphicsDevice, ms);
-				}
+					using (MemoryStream ms = new MemoryStream(
+						ResourceManager.ReadResource("Alex.Resources.GradientBlur.png")))
+					{
+						BackgroundOverlay =
+							(TextureSlice2D) GpuResourceManager.GetTexture2D(this, args.GraphicsDevice, ms);
+					}
 
-				BackgroundOverlay.RepeatMode = TextureRepeatMode.Stretch;
-				reset.Set();
-			});
-			reset.WaitOne();
-			reset.Dispose();
+					BackgroundOverlay.RepeatMode = TextureRepeatMode.Stretch;
 
-			BackgroundOverlay.Mask = new Color(Color.White, 0.5f);
+					BackgroundOverlay.Mask = new Color(Color.White, 0.5f);
+				});
 
 			_splashText.Text = SplashTexts.GetSplashText();
 			Alex.IsMouseVisible = true;

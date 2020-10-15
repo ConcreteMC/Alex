@@ -479,7 +479,7 @@ namespace Alex.API.Graphics
         }
     }
 
-    public class PooledIndexBuffer : IndexBuffer, IGpuResource
+    public class PooledIndexBuffer : DynamicIndexBuffer, IGpuResource
     { 
         public GpuResourceManager Parent { get; }
         public long PoolId { get; }

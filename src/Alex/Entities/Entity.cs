@@ -1299,31 +1299,30 @@ namespace Alex.Entities
 			if (Alex.Instance.Resources.BedrockResourcePack.EntityDefinitions.TryGetValue(
 				location, out var entityDescription))
 			{
-				if (entityDescription.Textures.TryGetValue(texture, out texture) && entityDescription.Geometry.TryGetValue(geometry, out var geometryName))
+				if (entityDescription.Textures.TryGetValue(texture, out texture)
+				    && entityDescription.Geometry.TryGetValue(geometry, out var geometryName))
 				{
 					if (ModelFactory.TryGetModel(geometryName, out var newModel))
 					{
-						Alex.Instance.UIThreadQueue.Enqueue(
-							() =>
-							{
-								if (Alex.Instance.Resources.BedrockResourcePack.TryGetTexture(
-									texture, out var newTexture))
-								{
-									ModelRenderer = new EntityModelRenderer(newModel, TextureUtils.BitmapToTexture2D(
-										Alex.Instance.GraphicsDevice, newTexture));
-									//ModelRenderer?.Texture = TextureUtils.BitmapToTexture2D(
-									//	Alex.Instance.GraphicsDevice, newTexture);
-								}
-							});
 
-						return true;
+						if (Alex.Instance.Resources.BedrockResourcePack.TryGetTexture(texture, out var newTexture))
+						{
+							ModelRenderer = new EntityModelRenderer(
+								newModel, TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, newTexture));
+
+							//ModelRenderer?.Texture = TextureUtils.BitmapToTexture2D(
+							//	Alex.Instance.GraphicsDevice, newTexture);
+						}
 					}
+
+					return true;
 				}
 			}
 
+
 			return false;
 		}
-		
+
 		protected bool TryUpdateTexture(ResourceLocation location, string texture)
 		{
 			if (Alex.Instance.Resources.BedrockResourcePack.EntityDefinitions.TryGetValue(
@@ -1333,18 +1332,7 @@ namespace Alex.Entities
 				{
 					if (Alex.Instance.Resources.BedrockResourcePack.TryGetTexture(texture, out var newTexture))
 					{
-						Alex.Instance.UIThreadQueue.Enqueue(
-							() =>
-							{
-								//var texture = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, newTexture);
-								ModelRenderer.Texture = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, newTexture);
-								/*ModelRenderer = new EntityModelRenderer(
-									newModel,);*/
-
-								//ModelRenderer?.Texture = TextureUtils.BitmapToTexture2D(
-								//	Alex.Instance.GraphicsDevice, newTexture);
-							});
-
+						ModelRenderer.Texture = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, newTexture);
 						return true;
 					}
 				}

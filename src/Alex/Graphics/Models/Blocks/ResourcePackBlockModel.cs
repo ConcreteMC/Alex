@@ -299,14 +299,16 @@ namespace Alex.Graphics.Models.Blocks
 					float minX = float.MaxValue, minY = float.MaxValue, minZ = float.MaxValue;
 					float maxX = float.MinValue, maxY = float.MinValue, maxZ = float.MinValue;
 					
+					verts = ProcessVertices(verts, stateModel, element, null, face.Key, face.Value);
+					
 					for (int i = 0; i < verts.Length; i++)
 					{
 						var v = verts[i];
 						//v.Position += (v.Normal * scale);
 						
-						v.Position = FixRotation(v.Position, element);
+						//v.Position = FixRotation(v.Position, element);
 
-						v.Position /= 16f;
+						//v.Position /= 16f;
 
 						if (v.Position.X < minX)
 						{
@@ -460,6 +462,101 @@ namespace Alex.Graphics.Models.Blocks
 
 			return v;
 		}
+
+		private BlockShaderVertex[] ProcessVertices(BlockShaderVertex[] vertices, BlockStateModel bsModel, ModelElement element, UVMap? uvMap, BlockFace blockFace, ModelElementFace face)
+		{
+			for (int i = 0; i < vertices.Length; i++)
+			{
+				var v = vertices[i];
+				
+				v.Position /= 16f;
+				v.Position = FixRotation(v.Position, element);
+
+				if (bsModel.X > 0)
+				{
+					var rotX = bsModel.X * (MathHelper.Pi / 180f);
+					var c    = MathF.Cos(rotX);
+					var s    = MathF.Sin(rotX);
+					var z    = v.Position.Z - 0.5f;
+					var y    = v.Position.Y - 0.5f;
+
+					v.Position.Z = 0.5f + (z * c - y * s);
+					v.Position.Y = 0.5f + (y * c + z * s);
+				}
+
+				if (bsModel.Y > 0)
+				{
+					var rotY = bsModel.Y * (MathHelper.Pi / 180f);
+					var c    = MathF.Cos(rotY);
+					var s    = MathF.Sin(rotY);
+					var x    = v.Position.X - 0.5f;
+					var z    = v.Position.Z - 0.5f;
+
+					v.Position.X = 0.5f + (x * c - z * s);
+					v.Position.Z = 0.5f + (z * c + x * s);
+				}
+
+				if (uvMap.HasValue)
+				{
+					var tw = uvMap.Value.TextureInfo.Width;
+					var th = uvMap.Value.TextureInfo.Height;
+
+					var rot = face.Rotation;
+					
+					/*if (blockFace == BlockFace.West || blockFace == BlockFace.Up)
+								rot += 180;
+
+					rot %= 360;*/
+					
+					if (rot > 0)
+					{
+						var rotY = rot * (MathHelper.Pi / 180f);
+						var c    = MathF.Cos(rotY);
+						var s    = MathF.Sin(rotY);
+						var x    = v.TexCoords.X - 8f * tw;
+						var y    = v.TexCoords.Y - 8f * th;
+
+						v.TexCoords.X = 8f * tw + (x * c - y * s);
+						v.TexCoords.Y = 8f * th + (y * c + x * s);
+					}
+					
+					if (bsModel.Uvlock)
+					{
+						if (bsModel.Y > 0 && (blockFace == BlockFace.Up || blockFace == BlockFace.Down))
+						{
+							var rotY = bsModel.Y * (MathHelper.Pi / 180f);
+							var c    = MathF.Cos(rotY);
+							var s    = MathF.Sin(rotY);
+							var x    = v.TexCoords.X - 8f * tw;
+							var y    = v.TexCoords.Y - 8f * th;
+
+							v.TexCoords.X = 8f * tw + (x * c - y * s);
+							v.TexCoords.Y = 8f * th + (y * c + x * s);
+						}
+
+						if (bsModel.X > 0 && (blockFace != BlockFace.Up && blockFace != BlockFace.Down))
+						{
+							var rotX = bsModel.X * (MathHelper.Pi / 180f);
+							var c    = MathF.Cos(rotX);
+							var s    = MathF.Sin(rotX);
+							var x    = v.TexCoords.X - 8f * tw;
+							var y    = v.TexCoords.Y - 8f * th;
+
+							v.TexCoords.X = 8f * tw + (x * c - y * s);
+							v.TexCoords.Y = 8f * th + (y * c + x * s);
+						}
+					}
+
+
+					v.TexCoords += uvMap.Value.TextureInfo.Position;
+					v.TexCoords *= (Vector2.One / uvMap.Value.TextureInfo.AtlasSize);
+				}
+
+				vertices[i] = v;
+			}
+
+			return vertices;
+		}
 		
 		private void CalculateModel(IBlockAccess world,
 			Vector3 position,
@@ -468,7 +565,6 @@ namespace Alex.Graphics.Models.Blocks
 			IList<BlockShaderVertex> verts,
 			List<int> indexResult,
 			List<int> animatedIndexResult,
-			int biomeId,
 			Biome biome)
 		{
 			//bsModel.Y = Math.Abs(180 - bsModel.Y);
@@ -544,7 +640,8 @@ namespace Alex.Graphics.Models.Blocks
 
 					var faceColor = baseColor;
 
-					if (face.Value.TintIndex.HasValue && face.Value.TintIndex == 0)
+					bool hasTint = face.Value.TintIndex.HasValue && face.Value.TintIndex == 0;
+					if (hasTint)
 					{
 						switch (baseBlock.BlockMaterial.TintType)
 						{
@@ -555,8 +652,23 @@ namespace Alex.Graphics.Models.Blocks
 								faceColor = baseBlock.BlockMaterial.TintColor;
 								break;
 							case TintType.Grass:
-								faceColor = Resources.ResourcePack.GetGrassColor(
-									biome.Temperature, biome.Downfall, (int) position.Y);
+								if (SmoothLighting)
+								{
+									var bx = (int)position.X;
+									var y  = (int)position.Y;
+									var bz = (int)position.Z;
+									faceColor = CombineColors(
+										GetGrassBiomeColor(world, bx, y, bz), GetGrassBiomeColor(world,bx - 1, y, bz),
+										GetGrassBiomeColor(world,bx, y, bz - 1),  GetGrassBiomeColor(world,bx + 1, y, bz),
+										GetGrassBiomeColor(world,bx, y, bz + 1), GetGrassBiomeColor(world,bx + 1, y, bz - 1));
+								}
+								else
+								{
+
+									faceColor = Resources.ResourcePack.GetGrassColor(
+										biome.Temperature, biome.Downfall, (int) position.Y);
+								}
+
 								break;
 							case TintType.Foliage:
 								faceColor = Resources.ResourcePack.GetFoliageColor(
@@ -567,10 +679,10 @@ namespace Alex.Graphics.Models.Blocks
 						}
 					}
 					
-					/*switch (facing)
+					/*switch (face.Key)
 					{
 						case BlockFace.Down:
-							faceColor = Color.Black;
+							faceColor = Color.Purple;
 							break;
 
 						case BlockFace.Up:
@@ -595,7 +707,7 @@ namespace Alex.Graphics.Models.Blocks
 
 						case BlockFace.None:
 							break;
-					}}*/
+					}*/
 					faceColor = AdjustColor(faceColor, facing, element.Shade);
 
 					var uvMap = GetTextureUVMap(
@@ -606,83 +718,7 @@ namespace Alex.Graphics.Models.Blocks
 						uvMap,
 						out int[] indexes);
 
-					for (int i = 0; i < vertices.Length; i++)
-					{
-						var v = vertices[i];
-						
-						v.Position /= 16f;
-						v.Position = FixRotation(v.Position, element);
-
-						if (bsModel.X > 0)
-						{
-							var rotX = (float) (bsModel.X * (Math.PI / 180f));
-							var c    = MathF.Cos(rotX);
-							var s    = MathF.Sin(rotX);
-							var z    = v.Position.Z - 0.5f;
-							var y    = v.Position.Y - 0.5f;
-
-							v.Position.Z = 0.5f + (z * c - y * s);
-							v.Position.Y = 0.5f + (y * c + z * s);
-						}
-
-						if (bsModel.Y > 0)
-						{
-							var rotY = (float) (bsModel.Y * (Math.PI / 180f));
-							var c    = MathF.Cos(rotY);
-							var s    = MathF.Sin(rotY);
-							var x    = v.Position.X - 0.5f;
-							var z    = v.Position.Z - 0.5f;
-
-							v.Position.X = 0.5f + (x * c - z * s);
-							v.Position.Z = 0.5f + (z * c + x * s);
-						}
-						
-						var tw = uvMap.TextureInfo.Width ;
-						var th = uvMap.TextureInfo.Height;
-						if (face.Value.Rotation > 0)
-						{
-							var rotY = (float) (-face.Value.Rotation * (Math.PI / 180f));
-							var c    = MathF.Cos(rotY);
-							var s    = MathF.Sin(rotY);
-							var x    = v.TexCoords.X - 8f * tw;
-							var y    = v.TexCoords.Y - 8f * th;
-
-							v.TexCoords.X = 8f * tw + (x * c - y * s);
-							v.TexCoords.Y = 8f * th + (y * c + x * s);
-						}
-
-						if (bsModel.Uvlock)
-						{
-							if (bsModel.Y > 0 && (facing == BlockFace.Up || face.Key == BlockFace.Down))
-							{
-								var rotY = (float) (bsModel.Y * (Math.PI / 180f));
-								var c    = MathF.Cos(rotY);
-								var s    = MathF.Sin(rotY);
-								var x    = v.TexCoords.X - 8f * tw;
-								var y    = v.TexCoords.Y - 8f * th;
-
-								v.TexCoords.X = 8f * tw + (x * c - y * s);
-								v.TexCoords.Y = 8f * th + (y * c + x * s);
-							}
-							
-							if (bsModel.X > 0 && (facing != BlockFace.Up && face.Key != BlockFace.Down))
-							{
-								var rotX = (float) (bsModel.X * (Math.PI / 180f));
-								var c    = MathF.Cos(rotX);
-								var s    = MathF.Sin(rotX);
-								var x    = v.TexCoords.X - 8f * tw;
-								var y    = v.TexCoords.Y - 8f * th;
-
-								v.TexCoords.X = 8f * tw + (x * c - y * s);
-								v.TexCoords.Y = 8f * th + (y * c + x * s);
-							}
-						}
-
-						v.TexCoords += uvMap.TextureInfo.Position;
-						v.TexCoords *= (Vector2.One / uvMap.TextureInfo.AtlasSize);
-
-						vertices[i] = v;
-					}
+					vertices = ProcessVertices(vertices, bsModel, element, uvMap, facing, face.Value);
 
 					var initialIndex = verts.Count;
 
@@ -733,6 +769,13 @@ namespace Alex.Graphics.Models.Blocks
 			}
 		}
 
+		private Color GetGrassBiomeColor(IBlockAccess access, int x, int y, int z)
+		{
+			var biome = access.GetBiome(new BlockCoordinates(x, y, z));
+			return Resources.ResourcePack.GetGrassColor(
+				biome.Temperature, biome.Downfall, y);
+		}
+		
 		protected VerticesResult GetVertices(IBlockAccess world,
 			Vector3 position, Block baseBlock,
 			BlockStateModel[] models)
@@ -741,15 +784,14 @@ namespace Alex.Graphics.Models.Blocks
 			{
 				var indexResult = new List<int>(24 * models.Length);
 				var animatedIndexResult = new List<int>();
-
-				int biomeId = 0;//world == null ? 0 : world.GetBiome((int) position.X, 0, (int) position.Z);
-				var biome   = BiomeUtils.GetBiomeById(biomeId);
+				
+				var biome   = world == null ? BiomeUtils.GetBiomeById(0) : world.GetBiome(position);
 
 				if (UseRandomizer)
 				{
 					//var rndIndex = FastRandom.Next() % Models.Length;
 					CalculateModel(
-						world, position, baseBlock, models[0], verts, indexResult, animatedIndexResult, biomeId, biome);
+						world, position, baseBlock, models[0], verts, indexResult, animatedIndexResult, biome);
 				}
 				else
 				{
@@ -760,7 +802,7 @@ namespace Alex.Graphics.Models.Blocks
 						if (bsModel.Model == null) continue;
 
 						CalculateModel(
-							world, position, baseBlock, bsModel, verts, indexResult, animatedIndexResult, biomeId,
+							world, position, baseBlock, bsModel, verts, indexResult, animatedIndexResult,
 							biome);
 					}
 				}

@@ -998,11 +998,16 @@ namespace Alex.Worlds
 						    if (mesh != null && !mesh.Disposed)
 							    meshes.Add(mesh);
 					    }
-				    }
+				    }  
+				    
+				    PooledVertexBuffer oldBuffer       = data?.Buffer;
+				    PooledVertexBuffer newVertexBuffer = null;
+				    
+				    List<Action> finishingActions = new List<Action>(meshed * 3);
+				    var          newStages        = new Dictionary<RenderStage, ChunkRenderStage>();
 
 				    if (meshed > 0) //We did not re-mesh ANY chunks. Not worth re-building.
 				    {
-
 					    IDictionary<RenderStage, List<int>> newStageIndexes = new Dictionary<RenderStage, List<int>>();
 
 					    IList<BlockShaderVertex> vertices = new List<BlockShaderVertex>();
@@ -1053,24 +1058,22 @@ namespace Alex.Worlds
 									    oldStages = data.RenderStages;
 								    }
 
-								    var newStages = new Dictionary<RenderStage, ChunkRenderStage>();
-
-								    PooledVertexBuffer oldBuffer = data.Buffer;
-
-								    PooledVertexBuffer newVertexBuffer = null;
-
 								    if (vertexArray.Length > data.Buffer.VertexCount)
 								    {
-									    PooledVertexBuffer newBuffer = GpuResourceManager.GetBuffer(
-										    this, Graphics, BlockShaderVertex.VertexDeclaration, vertexArray.Length,
-										    BufferUsage.WriteOnly);
+									    finishingActions.Add(
+										    () =>
+										    {
+											    PooledVertexBuffer newBuffer = GpuResourceManager.GetBuffer(
+												    this, Graphics, BlockShaderVertex.VertexDeclaration, vertexArray.Length,
+												    BufferUsage.WriteOnly);
 
-									    newBuffer.SetData(vertexArray);
-									    newVertexBuffer = newBuffer;
+											    newBuffer.SetData(vertexArray, 0, vertexArray.Length);
+											    newVertexBuffer = newBuffer;
+										    });
 								    }
 								    else
 								    {
-									    data.Buffer.SetData(vertexArray);
+									    finishingActions.Add(() => { data.Buffer.SetData(vertexArray, 0, vertexArray.Length, SetDataOptions.Discard); });
 								    }
 
 								    foreach (var stage in newStageIndexes)
@@ -1095,22 +1098,18 @@ namespace Alex.Worlds
 										    newIndexBuffer = renderStage.IndexBuffer;
 									    }
 
-									    newIndexBuffer.SetData(stage.Value.ToArray());
+									    var nib        = newIndexBuffer;
+									    var stageValue = stage.Value;
+									    finishingActions.Add(
+										    () =>
+										    {
+											    nib.SetData(stageValue.ToArray(), 0, stageValue.Count, SetDataOptions.Discard);
+										    });
 
 									    renderStage.IndexBuffer = newIndexBuffer;
 
 									    newStages.Add(stage.Key, renderStage);
-
 								    }
-
-								    data.RenderStages = newStages;
-
-								    if (newVertexBuffer != null)
-								    {
-									    data.Buffer = newVertexBuffer;
-									    oldBuffer?.MarkForDisposal();
-								    }
-
 
 								    RenderStage[] renderStages = RenderStages;
 
@@ -1156,21 +1155,41 @@ namespace Alex.Worlds
 				    chunk.HighPriority = false;
 				    chunk.IsNew = false;
 
-				    if (meshed > 0)
+				    if (finishingActions.Count > 0 && data != null)
 				    {
-					    if (data != null)
-					    {
-						    data.Coordinates = coordinates;
-					    }
-
-					    _chunkData?.AddOrUpdate(coordinates, data, (chunkCoordinates, chunkData) =>
-					    {
-						    if (!ReferenceEquals(chunkData, data))
+					    Alex.Instance.UIThreadQueue.Enqueue(
+						    () =>
 						    {
-							    chunkData.Dispose();
-						    }
-						    return data;
-					    });
+							    foreach (var action in finishingActions)
+							    {
+								    action();
+							    }
+							    
+							    if (newVertexBuffer != null)
+							    {
+								    data.Buffer = newVertexBuffer;
+								    oldBuffer?.MarkForDisposal();
+							    }
+							    
+							    if (meshed > 0)
+							    {
+								    data.RenderStages = newStages;
+					    
+								    if (data != null)
+								    {
+									    data.Coordinates = coordinates;
+								    }
+
+								    _chunkData?.AddOrUpdate(coordinates, data, (chunkCoordinates, chunkData) =>
+								    {
+									    if (!ReferenceEquals(chunkData, data))
+									    {
+										    chunkData.Dispose();
+									    }
+									    return data;
+								    });
+							    }
+						    });
 				    }
 
 				    return;

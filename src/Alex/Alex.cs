@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using Alex.API.Data.Servers;
 using Alex.API.Events;
 using Alex.API.Graphics.Typography;
@@ -14,6 +15,7 @@ using Alex.API.Input;
 using Alex.API.Input.Listeners;
 using Alex.API.Resources;
 using Alex.API.Services;
+using Alex.API.Utils;
 using Alex.Entities;
 using Alex.Gamestates;
 using Alex.Gamestates.Debugging;
@@ -199,7 +201,10 @@ namespace Alex
 	            ThreadType.Background, "Dedicated ThreadPool"));
 
             KeyboardInputListener.InstanceCreated += KeyboardInputCreated;
-		}
+            
+            TextureUtils.RenderThread = Thread.CurrentThread;
+            TextureUtils.QueueOnRenderThread = action => UIThreadQueue.Enqueue(action);
+        }
 
         private void KeyboardInputCreated(object sender, KeyboardInputListener e)
         {

@@ -287,10 +287,27 @@ namespace Alex.Graphics.Models.Blocks
 					faceMap = originalMap;
 				}
 
-				var vertices = GetFaceVertices(face, start, end, faceMap, out int[] indexes);
+				var   vertices  = GetFaceVertices(face, start, end, faceMap, out int[] indexes);
+				Color vertColor = Color.White;
+				
+				var   bx        = position.X;
+				var   y         = position.Y;
+				var   bz        = position.Z;
 
-				float height = 0;
-				var initialIndex = result.Count;
+				if (ResourcePackBlockModel.SmoothLighting)
+				{
+					vertColor = CombineColors(
+						GetBiomeColor(world, bx, y, bz), GetBiomeColor(world,bx - 1, y, bz - 1), GetBiomeColor(world,bx - 1, y, bz),
+						GetBiomeColor(world,bx, y, bz - 1), GetBiomeColor(world,bx + 1, y, bz + 1), GetBiomeColor(world,bx + 1, y, bz),
+						GetBiomeColor(world,bx, y, bz + 1), GetBiomeColor(world,bx - 1, y, bz + 1), GetBiomeColor(world,bx + 1, y, bz - 1));
+				}
+				else
+				{
+					vertColor = GetBiomeColor(world, bx, y, bz);
+				}
+				
+				float height       = 0;
+				var   initialIndex = result.Count;
 				for (var index = 0; index < vertices.Length; index++)
 				{
 					var vert = vertices[index];
@@ -327,21 +344,7 @@ namespace Alex.Graphics.Models.Blocks
 
 					if (IsWater)
 					{
-						var bx = position.X;
-						var y  = position.Y;
-						var bz = position.Z;
-
-						if (ResourcePackBlockModel.SmoothLighting)
-						{
-							vert.Color = CombineColors(
-								GetBiomeColor(world, bx, y, bz), GetBiomeColor(world,bx - 1, y, bz - 1), GetBiomeColor(world,bx - 1, y, bz),
-								GetBiomeColor(world,bx, y, bz - 1), GetBiomeColor(world,bx + 1, y, bz + 1), GetBiomeColor(world,bx + 1, y, bz),
-								GetBiomeColor(world,bx, y, bz + 1), GetBiomeColor(world,bx - 1, y, bz + 1), GetBiomeColor(world,bx + 1, y, bz - 1));
-						}
-						else
-						{
-							vert.Color = GetBiomeColor(world, bx, y, bz);
-						}
+						vert.Color = vertColor;
 					}
 					else
 					{
@@ -368,25 +371,6 @@ namespace Alex.Graphics.Models.Blocks
 		private Color GetBiomeColor(IBlockAccess access, int x, int y, int z)
 		{
 			return access.GetBiome(new BlockCoordinates(x, y, z)).Water;
-		}
-		
-		private Color CombineColors(params Color[] aColors)
-		{
-			int r = 0;
-			int g = 0;
-			int b = 0;
-			foreach (Color c in aColors)
-			{
-				r += c.R;
-				g += c.G;
-				b += c.B;
-			}
-
-			r /= aColors.Length;
-			g /= aColors.Length;
-			b /= aColors.Length;
-
-			return new Color(r, g, b);
 		}
 
 		protected int GetAverageLiquidLevels(IBlockAccess world, BlockCoordinates position, out BlockCoordinates lowest, out int lowestLevel)

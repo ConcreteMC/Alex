@@ -297,12 +297,13 @@ namespace Alex.Graphics.Models.Blocks
 			y1 = (y1 * (th));
 			y2 = (y2 * (th));
 
-			if (rot > 0)
+			/*if (rot > 0)
 			{
 				var ox1 = x1;
 				var ox2 = x2;
 				var oy1 = y1;
 				var oy2 = y2;
+				
 				switch (rot)
 				{
 					case 270:
@@ -324,7 +325,7 @@ namespace Alex.Graphics.Models.Blocks
 						x2 = th * 16 - oy1;
 						break;
 				}
-			}
+			}*/
 
 			var map = new UVMap(textureInfo,
 				new Microsoft.Xna.Framework.Vector2(x1, y1), new Microsoft.Xna.Framework.Vector2(x2, y1),
@@ -395,6 +396,25 @@ namespace Alex.Graphics.Models.Blocks
 			}
 
 			return rots[(rots.Length + pos + offset) % rots.Length];
+		}
+		
+		public Color CombineColors(params Color[] aColors)
+		{
+			int r = 0;
+			int g = 0;
+			int b = 0;
+			foreach (Color c in aColors)
+			{
+				r += c.R;
+				g += c.G;
+				b += c.B;
+			}
+
+			r /= aColors.Length;
+			g /= aColors.Length;
+			b /= aColors.Length;
+
+			return new Color(r, g, b);
 		}
 	}
 }

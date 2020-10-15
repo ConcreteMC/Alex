@@ -1410,9 +1410,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 						if (_players.TryAdd(entity.UUID, entity) && skinJson != null)
 						{
-							Alex.UIThreadQueue.Enqueue(() =>
-							{
-								if (SkinUtils.TryGetSkin(skinJson, Alex.GraphicsDevice, out var skin, out skinSlim))
+							if (SkinUtils.TryGetSkin(skinJson, Alex.GraphicsDevice, out var skin, out skinSlim))
 								{
 								//	t = skin;
 									
@@ -1423,7 +1421,6 @@ namespace Alex.Worlds.Multiplayer.Java
 									
 								//	Log.Info($"Skin update!");
 								}
-							});
 						}
 					}
 				//});
