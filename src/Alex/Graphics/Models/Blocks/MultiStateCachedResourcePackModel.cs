@@ -262,6 +262,9 @@ namespace Alex.Graphics.Models.Blocks
 
 			var direction = face.GetVector3();
 
+			if (face == BlockFace.North || face == BlockFace.South)
+				direction = face.Opposite().GetVector3();
+			
 			if (isDirection && (value == "true" || value == "false" || value == "none"))
 			{
 				var newPos     = new BlockCoordinates(position + direction);

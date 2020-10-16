@@ -120,7 +120,7 @@ namespace Alex.API.Gui.Elements
 					OnDraw(graphics, gameTime);
 				}
 
-				ForEachChild(c => c.Draw(graphics, gameTime));
+				ForEachChild(c => c?.Draw(graphics, gameTime));
 			}
 		}
 
