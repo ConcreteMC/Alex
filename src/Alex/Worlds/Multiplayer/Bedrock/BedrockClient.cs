@@ -139,7 +139,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         private ChunkProcessor ChunkProcessor { get; }
 		public BedrockClient(Alex alex, IEventDispatcher eventDispatcher, IPEndPoint endpoint, PlayerProfile playerProfile, DedicatedThreadPool threadPool, BedrockWorldProvider wp)
 		{
-		//	PacketFactory.CustomPacketFactory = new AlexPacketFactory();
+			PacketFactory.CustomPacketFactory = new AlexPacketFactory();
 			
 			PlayerProfile = playerProfile;
 			CancellationTokenSource = new CancellationTokenSource();

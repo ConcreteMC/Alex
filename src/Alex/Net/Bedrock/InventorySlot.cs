@@ -11,7 +11,7 @@ namespace Alex.Net.Bedrock
             
             inventoryId = ReadUnsignedVarInt();
             slot = ReadUnsignedVarInt();
-            Write(item);
+            //Write(item);
             item = this.AlternativeReadItem(true);
         }
     }

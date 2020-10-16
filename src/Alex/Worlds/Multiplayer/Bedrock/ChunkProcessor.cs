@@ -165,7 +165,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			        for (int s = 0; s < subChunkCount; s++)
 			        {
 				        var section = chunkColumn.Sections[s] as ChunkSection;
-
+				        
 				        int version = defStream.ReadByte();
 
 				        if (version == 1 || version == 8)

@@ -6,6 +6,7 @@ using System.Text;
 using Alex.API.Graphics;
 using Alex.API.Network;
 using Alex.API.Utils;
+using Alex.Entities.Models;
 using Alex.Entities.Properties;
 using Alex.Graphics.Models.Entity;
 using Alex.Net;
@@ -229,7 +230,8 @@ namespace Alex.Entities
 
 			if (model == null)
 			{
-				model = skin.Slim ? (EntityModel) new Models.HumanoidCustomslimModel() : (EntityModel) new Models.HumanoidCustomGeometryHumanoidModel();
+				model = skin.Slim ? (EntityModel) new Models.HumanoidCustomslimModel() :
+					(EntityModel) new HumanoidModel();// new Models.HumanoidCustomGeometryHumanoidModel();
 			}
 
 			if (model != null && ValidateModel(model, Name))
