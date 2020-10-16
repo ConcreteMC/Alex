@@ -42,13 +42,15 @@ namespace Alex.Worlds.Lighting
 	        return false;
         }
         
-        public void Process(ChunkCoordinates coordinates)
+        public bool Process(ChunkCoordinates coordinates)
         {
+	        int count = 0;
 	        if (ChunkQueues.TryGetValue(coordinates, out var queue))
 	        {
 		        while (queue.TryDequeue(out var coords))
 		        {
 			        ProcessNode(World, coords, queue);
+			        count++;
 		        }
 
 		        if (queue.IsEmpty)
@@ -56,6 +58,8 @@ namespace Alex.Worlds.Lighting
 			        ChunkQueues.TryRemove(coordinates, out _);
 		        }
 	        }
+
+	        return count > 0;
         }
 
         public void Enqueue(BlockCoordinates coordinates)

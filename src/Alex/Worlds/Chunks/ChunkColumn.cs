@@ -300,9 +300,8 @@ namespace Alex.Worlds.Chunks
 
 			var yMod = ((@by >> 4) << 4);
 
-			GetSection(by).SetBlocklight(bx, by - 16 * (by >> 4), bz, data);
-
-			BlockLightDirty = true;
+			if (GetSection(by).SetBlocklight(bx, by - 16 * (by >> 4), bz, data))
+				BlockLightDirty = true;
 
 			//_scheduledLightingUpdates[by << 8 | bz << 4 | bx] = true;
 			var section = (ChunkSection) Sections[by >> 4];
@@ -321,13 +320,15 @@ namespace Alex.Worlds.Chunks
 			return section.GetSkylight(bx, by - 16 * (by >> 4), bz);
 		}
 
-		public void SetSkyLight(int bx, int by, int bz, byte data)
+		public bool SetSkyLight(int bx, int by, int bz, byte data)
 		{
 			if ((bx < 0 || bx > ChunkWidth) || (by < 0 || by > ChunkHeight) || (bz < 0 || bz > ChunkDepth))
-				return;
+				return false;
 
-			GetSection(by).SetSkylight(bx, by - 16 * (by >> 4), bz, data);
-			SkyLightDirty = true;
+			bool dirty = GetSection(by).SetSkylight(bx, by - 16 * (by >> 4), bz, data);
+			SkyLightDirty = SkyLightDirty || dirty;
+
+			return dirty;
 
 			//	_scheduledLightingUpdates[by << 8 | bz << 4 | bx] = true;
 			// var section = Sections[by >> 4];

@@ -722,31 +722,31 @@ namespace Alex.Graphics.Models.Blocks
 
 					var initialIndex = verts.Count;
 
-					byte vertexBlockLight = 0, vertexSkyLight = 0;
+					Vector3 lightOffset      =  facing.GetVector3();
+				//	byte    vertexBlockLight = 0, vertexSkyLight = 0xff;
 
 					if (!SmoothLighting)
 					{
-						GetLight(
-							world, position + facing.GetVector3(), out vertexBlockLight, out vertexSkyLight,
-							baseBlock.Transparent || !baseBlock.Solid);
+				//		GetLight(
+				//			world, position + lightOffset, out vertexBlockLight, out vertexSkyLight,
+				//			baseBlock.Transparent || !baseBlock.Solid);
 					}
-					
-					Vector3 lightOffset =  facing.GetVector3();
-					
+
 					for (var idx = 0; idx < vertices.Length; idx++)
 					{
 						var vertex = vertices[idx];
 						vertex.Position = position + vertex.Position;
-
+				
 						if (SmoothLighting)
 						{
-							GetLight(world, vertex.Position + lightOffset, out vertexBlockLight, out vertexSkyLight, true);
+							//GetLight(world, vertex.Position + lightOffset, out vertexBlockLight, out vertexSkyLight, true);
 						}
 
 						//if (blockLight > 0)
 						{
-							vertex.BlockLight = vertexBlockLight;
-							vertex.SkyLight = vertexSkyLight;
+							vertex.LightOffset = lightOffset;
+						//	vertex.BlockLight = vertexBlockLight;
+						//	vertex.SkyLight = vertexSkyLight;
 						}
 
 						verts.Add(vertex);

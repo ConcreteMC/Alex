@@ -10,12 +10,14 @@ namespace Alex.API.Graphics
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
-        public BlockShaderVertex[] Vertices { get; set; }
+        public BlockShaderVertex[]            Vertices { get; set; }
         public Dictionary<RenderStage, int[]> Indexes { get; set; } = new Dictionary<RenderStage, int[]>();
+        public bool                           RequiresLightingUpdate { get; set; } = false;
 		
 		public ChunkMesh(BlockShaderVertex[] entries)
 		{
 			Vertices = entries;
+			RequiresLightingUpdate = true;
 		}
 
 		public bool Disposed { get; private set; } = false;

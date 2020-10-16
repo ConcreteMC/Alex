@@ -656,12 +656,20 @@ namespace Alex.Worlds
                 {
 	                if (Options.VideoOptions.ClientSideLighting)
 	                {
-		                if (c.Value.Scheduled == ScheduleType.Unscheduled && BlockLightCalculations.HasEnqueued(c.Key)
+		                if ( (c.Value.BlockLightDirty))
+		                {
+			                if (c.Value.Scheduled == ScheduleType.Unscheduled)
+			                {
+				                ScheduleChunkUpdate(c.Key, ScheduleType.Lighting);
+			                }
+		                }
+		               // BlockLightCalculations
+		                /*if (c.Value.Scheduled == ScheduleType.Unscheduled && BlockLightCalculations.HasEnqueued(c.Key)
 		                                                                  && !Enqueued.Contains(c.Key)
 		                                                                  && !_workItems.ContainsKey(c.Key))
 		                {
-			                ScheduleChunkUpdate(c.Key, ScheduleType.Lighting);
-		                }
+			               ScheduleChunkUpdate(c.Key, ScheduleType.Lighting);
+		                }*/
 	                }
 
 	                if (_chunkData.TryGetValue(c.Key, out var data))
@@ -731,7 +739,12 @@ namespace Alex.Worlds
 		                out BlockCoordinates coordinates))
 	                {
 		                ChunkCoordinates cc = (ChunkCoordinates) coordinates;
-		                ScheduleChunkUpdate(cc, ScheduleType.Lighting);
+
+		                if (TryGetChunk(cc, out var c))
+		                {
+			                c.GetSection(coordinates.Y)?.SetBlockLightScheduled(coordinates.X & 0x0f, coordinates.Y - 16 * (coordinates.Y >> 4), coordinates.Z & 0x0f, false);
+		                }
+		               // ScheduleChunkUpdate(cc, ScheduleType.Lighting);
 	                }
                 }
 
@@ -868,7 +881,8 @@ namespace Alex.Worlds
 				    {
 					    if ((chunk.BlockLightDirty || chunk.IsNew))
 					    {
-						    ScheduleLightUpdate(position);
+						    ScheduleLightUpdate(position, !chunk.IsNew);
+						    chunk.BlockLightDirty = false;
 					    }
 				    }
 
@@ -884,18 +898,35 @@ namespace Alex.Worlds
 		    }
 	    }
 
-	    public void ScheduleLightUpdate(ChunkCoordinates coordinates)
+	    public void ScheduleLightUpdate(ChunkCoordinates coordinates, bool newOnly)
 	    {
 		    if (Chunks.TryGetValue(coordinates, out ChunkColumn chunk))
 		    {
 			    var chunkpos = new BlockCoordinates(chunk.X * 16, 0, chunk.Z * 16);
 
-			    foreach (var ls in chunk.GetLightSources())
+			    if (!newOnly)
 			    {
-				    BlockLightCalculations.Enqueue(chunkpos + ls);
+				    foreach (var ls in chunk.GetLightSources())
+				    {
+					    BlockLightCalculations.Enqueue(chunkpos + ls);
+				    }
+			    }
+			    else
+			    {
+				    foreach (var s in chunk.Sections.ToArray())
+				    {
+					    if (s != null)
+					    {
+						    foreach (var bs in s.GetPendingLightUpdates())
+						    {
+							    BlockLightCalculations.Enqueue(chunkpos + new BlockCoordinates(bs.X, bs.Y + (s.GetYLocation()), bs.Z));
+							    s.SetBlockLightScheduled(bs.X, bs.Y, bs.Z, false);
+						    }
+					    }
+				    }
 			    }
 
-			    chunk.BlockLightDirty = false;
+			    //  chunk.BlockLightDirty = false;
 		    }
 	    }
 
@@ -928,27 +959,31 @@ namespace Alex.Worlds
 			    bool      force = !_chunkData.TryGetValue(coordinates, out data);
 
 			    Stopwatch sw = Stopwatch.StartNew();
-
+			    
 			    //  if ((chunk.Scheduled & ScheduleType.Lighting) == ScheduleType.Lighting)
+			    bool lightingUpdated = false;
 			    if (Options.VideoOptions.ClientSideLighting)
 			    {
-				    if (chunk.SkyLightDirty || chunk.IsNew || force)
+				    if ((chunk.SkyLightDirty && chunk.Sections.ToArray().Any(x => x.ScheduledSkyUpdatesCount > 0)) || chunk.IsNew || force)
 				    {
 					    if (World.Dimension == Dimension.Overworld)
 					    {
-						    new SkyLightCalculations().RecalcSkyLight(chunk, new SkyLightBlockAccess(this));
+						    new SkyLightCalculations().RecalcSkyLight(chunk, World);
+						    lightingUpdated = true;
 					    }
 
 					    chunk.SkyLightDirty = false;
 				    }
-
-				    //if (chunk.BlockLightDirty || chunk.IsNew)
+				    
+				    //if (chunk.BlockLightDirty || chunk.IsNew || force)
 				    {
-					    BlockLightCalculations.Process(coordinates);
+					    lightingUpdated = lightingUpdated || BlockLightCalculations.Process(coordinates);
+					    //chunk.BlockLightDirty = false;
 				    }
 			    }
 
-			    int meshed = 0;
+			    int meshed   = 0;
+			    int remeshed = 0;
 
 			    try
 			    {
@@ -968,10 +1003,10 @@ namespace Alex.Worlds
 
 					    var i = section.GetYLocation();
 
-					    bool shouldRebuildMesh = section.ScheduledUpdatesCount > 0
-					                             || section.ScheduledSkyUpdatesCount > 0
-					                             || section.ScheduledBlockUpdatesCount > 0;
-
+					    bool shouldRebuildMesh = section.ScheduledUpdatesCount > 0;
+					                             //|| section.ScheduledSkyUpdatesCount > 0
+					                            // || section.ScheduledBlockUpdatesCount > 0;
+					                            
 					    if (force || section.MeshCache == null || shouldRebuildMesh || (scheduleType & ScheduleType.Border) == ScheduleType.Border)
 					    {
 						    var oldMesh = section.MeshCache;
@@ -979,6 +1014,7 @@ namespace Alex.Worlds
 						    var sectionMesh = GenerateSectionMesh(
 							    blockAccess, new Vector3(chunk.X * 16, 0, chunk.Z * 16), ref section, i);
 
+						    sectionMesh.RequiresLightingUpdate = true;
 						    meshes.Add(sectionMesh);
 
 						    if (Options.MiscelaneousOptions.MeshInRam)
@@ -989,14 +1025,26 @@ namespace Alex.Worlds
 						    section.IsDirty = false;
 
 						    meshed++;
+						    remeshed++;
 
 						    oldMesh?.Dispose();
 					    }
 					    else
 					    {
 						    var mesh = section.MeshCache;
+
 						    if (mesh != null && !mesh.Disposed)
+						    {
+							    mesh.RequiresLightingUpdate = lightingUpdated || (section.ScheduledBlockUpdatesCount > 0) || section.ScheduledSkyUpdatesCount > 0;
+
+							    if (mesh.RequiresLightingUpdate)
+							    {
+								    meshed++;
+								  //  section.ResetLightingScheduled();
+							    }
+							    
 							    meshes.Add(mesh);
+						    }
 					    }
 				    }  
 				    
@@ -1023,7 +1071,14 @@ namespace Alex.Worlds
 
 								    foreach (var vertice in mesh.Vertices)
 								    {
-									    vertices.Add(vertice);
+									    var vert = vertice;
+									    if (mesh.RequiresLightingUpdate && vertice.LightOffset.Y != -255)
+									    {
+										    BlockModel.GetLight(World, vertice.Position + vertice.LightOffset, out var blockLight, out var skyLight, true);
+										    vert.BlockLight = blockLight;
+										    vert.SkyLight = skyLight;
+									    }
+									    vertices.Add(vert);
 								    }
 
 								    foreach (var stage in mesh.Indexes)
@@ -1035,6 +1090,11 @@ namespace Alex.Worlds
 
 									    newStageIndexes[stage.Key]
 										   .AddRange(stage.Value.Select(a => startVerticeIndex + a));
+								    }
+								    
+								    if (mesh.RequiresLightingUpdate)
+								    {
+									    mesh.RequiresLightingUpdate = false;
 								    }
 							    }
 
@@ -1073,7 +1133,26 @@ namespace Alex.Worlds
 								    }
 								    else
 								    {
-									    finishingActions.Add(() => { data.Buffer.SetData(vertexArray, 0, vertexArray.Length, SetDataOptions.Discard); });
+									 //   if (remeshed > 0)
+									    {
+										    finishingActions.Add(
+											    () =>
+											    {
+												    data.Buffer.SetData(
+														    vertexArray, 0, vertexArray.Length);
+											    });
+									    }
+									   /* else
+									    {
+										    finishingActions.Add(
+											    () =>
+											    {
+												    //TODO: Only update the lighting values.
+												    data.Buffer.SetData(
+													   0, vertexArray, 0,
+													    vertexArray.Length, data.Buffer.VertexDeclaration.VertexStride);
+											    });
+									    }*/
 								    }
 
 								    foreach (var stage in newStageIndexes)
@@ -1103,7 +1182,7 @@ namespace Alex.Worlds
 									    finishingActions.Add(
 										    () =>
 										    {
-											    nib.SetData(stageValue.ToArray(), 0, stageValue.Count, SetDataOptions.Discard);
+											    nib.SetData(stageValue.ToArray(), 0, stageValue.Count);
 										    });
 
 									    renderStage.IndexBuffer = newIndexBuffer;
@@ -1257,8 +1336,8 @@ namespace Alex.Worlds
 						        //var blockStates = section.GetAll(x, y, z);
 
 						        bool isScheduled           = section.IsScheduled(x, y, z);
-						        bool isLightScheduled      = section.IsLightingScheduled(x, y, z);
-						        bool isBlockLightScheduled = section.IsBlockLightScheduled(x, y, z);
+						       // bool isLightScheduled      = section.IsLightingScheduled(x, y, z);
+						        //bool isBlockLightScheduled = section.IsBlockLightScheduled(x, y, z);
 
 						        foreach (var state in section.GetAll(x, y, z))
 						        {
@@ -1378,11 +1457,11 @@ namespace Alex.Worlds
 								        if (isScheduled)
 									        section.SetScheduled(x, y, z, false);
 
-								        if (isLightScheduled)
-									        section.SetLightingScheduled(x, y, z, false);
+								       // if (isLightScheduled)
+									    //    section.SetLightingScheduled(x, y, z, false);
 
-								        if (isBlockLightScheduled)
-									        section.SetBlockLightScheduled(x, y, z, false);
+								        //if (isBlockLightScheduled)
+									     //   section.SetBlockLightScheduled(x, y, z, false);
 							        }
 						        }
 					        }

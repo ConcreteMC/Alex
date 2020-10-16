@@ -45,7 +45,7 @@ namespace Alex.Worlds.Lighting
 			var chunks = level.ChunkManager.GetAllChunks().Select(x => x.Value).Cast<ChunkColumn>().OrderBy(column => column.X)
 				.ThenBy(column => column.Z);
 			
-			SkyLightBlockAccess blockAccess = new SkyLightBlockAccess(level.ChunkManager);
+			//SkyLightBlockAccess blockAccess = new SkyLightBlockAccess(level.ChunkManager);
 		//var blockAccess = level;
 		
 			_chunkCount = chunks.Count();
@@ -75,37 +75,37 @@ namespace Alex.Worlds.Lighting
 			var t0 = Task.Run(() =>
 			{
 				var pairs = chunks.OrderBy(pair => pair.X).ThenBy(pair => pair.Z).Where(chunk => chunk.X <= midX).OrderByDescending(pair => pair.X).ThenBy(pair => pair.Z).ToArray();
-				calculator.CalculateSkyLights(blockAccess, pairs);
+				calculator.CalculateSkyLights(level, pairs);
 			});
 
 			var t5 = Task.Run(() =>
 			{
 				var pairs = chunks.OrderByDescending(pair => pair.X).ThenBy(pair => pair.Z).Where(chunk => chunk.X > midX).OrderBy(pair => pair.X).ThenByDescending(pair => pair.Z).ToArray();
-				calculator.CalculateSkyLights(blockAccess, pairs);
+				calculator.CalculateSkyLights(level, pairs);
 			});
 
 			var t1 = Task.Run(() =>
 			{
 				var pairs = chunks.OrderBy(pair => pair.X).ThenBy(pair => pair.Z).ToArray();
-				calculator.CalculateSkyLights(blockAccess, pairs);
+				calculator.CalculateSkyLights(level, pairs);
 			});
 
 			var t2 = Task.Run(() =>
 			{
 				var pairs = chunks.OrderByDescending(pair => pair.X).ThenByDescending(pair => pair.Z).ToArray();
-				calculator.CalculateSkyLights(blockAccess, pairs);
+				calculator.CalculateSkyLights(level, pairs);
 			});
 
 			var t3 = Task.Run(() =>
 			{
 				var pairs = chunks.OrderByDescending(pair => pair.X).ThenBy(pair => pair.Z).ToArray();
-				calculator.CalculateSkyLights(blockAccess, pairs);
+				calculator.CalculateSkyLights(level, pairs);
 			});
 
 			var t4 = Task.Run(() =>
 			{
 				var pairs = chunks.OrderBy(pair => pair.X).ThenByDescending(pair => pair.Z).ToArray();
-				calculator.CalculateSkyLights(blockAccess, pairs);
+				calculator.CalculateSkyLights(level, pairs);
 			});
 
 			Task.WaitAll(t0, t1, t2, t3, t4, t5);
@@ -260,8 +260,8 @@ namespace Alex.Worlds.Lighting
 			Queue<BlockCoordinates> lightBfQueue = new Queue<BlockCoordinates>(sourceQueue);
 			HashSet<BlockCoordinates> lightBfSet = new HashSet<BlockCoordinates>(sourceQueue);
 
-			SkyLightBlockAccess blockAccess = new SkyLightBlockAccess(level.ChunkManager);
-			Calculate(blockAccess, lightBfQueue, lightBfSet);
+		//	SkyLightBlockAccess blockAccess = new SkyLightBlockAccess(level.ChunkManager);
+			Calculate(level, lightBfQueue, lightBfSet);
 		}
 
 		public void ResetLight(World level, Queue<BlockCoordinates> resetQueue, Queue<BlockCoordinates> sourceQueue, BlockCoordinates coordinates)
@@ -425,7 +425,7 @@ namespace Alex.Worlds.Lighting
 			{
 				if (GetSkyLight(coordinates, subChunk) != 15)
 				{
-					SetSkyLight(coordinates, 15, chunk);
+					SetSkyLight(level, coordinates, 15, chunk);
 
 					if (!lightBfSet.Contains(coordinates))
 					{
@@ -448,7 +448,7 @@ namespace Alex.Worlds.Lighting
 				{
 					if (skyLight != 15)
 					{
-						SetSkyLight(coordinates, 15, chunk);
+						SetSkyLight(level, coordinates, 15, chunk);
 					}
 
 					if (!lightBfSet.Contains(coordinates))
@@ -467,7 +467,7 @@ namespace Alex.Worlds.Lighting
 				if (skyLight + 1 + diffuseLevel <= lightLevel)
 				{
 					byte newLevel = (byte) (lightLevel - diffuseLevel);
-					SetSkyLight(coordinates, newLevel, chunk);
+					SetSkyLight(level, coordinates, newLevel, chunk);
 
 					if (!lightBfSet.Contains(coordinates))
 					{
@@ -482,9 +482,10 @@ namespace Alex.Worlds.Lighting
 			return skyLight;
 		}
 
-		public static void SetSkyLight(BlockCoordinates coordinates, byte skyLight, ChunkColumn chunk)
+		public static void SetSkyLight(IBlockAccess world, BlockCoordinates coordinates, byte skyLight, ChunkColumn chunk)
 		{
-			chunk?.SetSkyLight(coordinates.X & 0x0f, coordinates.Y & 0xff, coordinates.Z & 0x0f, skyLight);
+		//	chunk?.SetSkyLight(coordinates.X & 0x0f, coordinates.Y & 0xff, coordinates.Z & 0x0f, skyLight);
+				world.SetSkyLight(coordinates, skyLight);
 		}
 
 		public static bool IsNotBlockingSkylight(BlockCoordinates blockCoordinates, ChunkColumn chunk)

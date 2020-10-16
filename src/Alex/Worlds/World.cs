@@ -425,10 +425,21 @@ namespace Alex.Worlds
 
         public void SetSkyLight(BlockCoordinates coordinates, byte p1)
         {
+	        var         chunkCoords = new ChunkCoordinates(coordinates);
 	        ChunkColumn chunk;
-	        if (ChunkManager.TryGetChunk(new ChunkCoordinates(coordinates), out chunk))
+	        if (ChunkManager.TryGetChunk(chunkCoords, out chunk))
 	        {
-		        chunk.SetSkyLight(coordinates.X & 0xf, coordinates.Y & 0xff, coordinates.Z & 0xf, p1);
+		        if (chunk.SetSkyLight(coordinates.X & 0xf, coordinates.Y & 0xff, coordinates.Z & 0xf, p1))
+		        {
+			        if ((chunk.Scheduled & ScheduleType.Lighting) != ScheduleType.Lighting)
+			        {
+				        ChunkManager.ScheduleChunkUpdate(chunkCoords, ScheduleType.Lighting);
+			        }
+			        else
+			        {
+				        chunk.Scheduled = chunk.Scheduled | ScheduleType.Lighting;
+			        }
+		        }
 	        }
         }
         
@@ -441,17 +452,7 @@ namespace Alex.Worlds
         {
 	        return GetBlockLight(coordinates.X, coordinates.Y, coordinates.Z);
         }
-
-        public byte GetSkyLight(Vector3 position)
-        {
-            return GetSkyLight(position.X, position.Y, position.Z);
-        }
-
-        public byte GetSkyLight(float x, float y, float z)
-        {
-            return GetSkyLight((int)x, (int)y, (int)z); // Fix. xd
-        }
-
+        
         public byte GetSkyLight(int x, int y, int z)
         {
             if (y < 0 || y > ChunkColumn.ChunkHeight) return 15;

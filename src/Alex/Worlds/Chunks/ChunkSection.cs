@@ -169,6 +169,21 @@ namespace Alex.Worlds.Chunks
 			return ScheduledBlocklightUpdates.Get(GetCoordinateIndex(x, y, z));
 		}
 
+		public IEnumerable<BlockCoordinates> GetPendingLightUpdates()
+		{
+			for (int x = 0; x < 16; x++)
+			{
+				for (int y = 0; y < 16; y++)
+				{
+					for (int z = 0; z < 16; z++)
+					{
+						if (IsBlockLightScheduled(x,y,z))
+							yield return new BlockCoordinates(x,y,z);
+					}
+				}
+			}
+		}
+
 		public void SetBlockLightScheduled(int x, int y, int z, bool value)
 		{
 			var idx = GetCoordinateIndex(x, y, z);
@@ -194,6 +209,14 @@ namespace Alex.Worlds.Chunks
 		            z));
 		}
 
+		public void ResetLightingScheduled()
+		{
+		//	ScheduledSkylightUpdates.SetAll(false);
+		//	ScheduledBlocklightUpdates.SetAll(false);
+			ScheduledBlockUpdatesCount = 0;
+			ScheduledSkyUpdatesCount = 0;
+		}
+		
 		public bool SetLightingScheduled(int x, int y, int z, bool value)
 		{
 			var idx = GetCoordinateIndex(x, y, z);
@@ -369,6 +392,7 @@ namespace Alex.Worlds.Chunks
 			if (value != oldSkylight)
 			{
 				this.SkyLight[idx] = (byte) value;
+				//ScheduledSkyUpdatesCount++;
 				SetLightingScheduled(x, y, z, true);
 				//ScheduledSkylightUpdates.Set(idx, true);
 
@@ -393,10 +417,11 @@ namespace Alex.Worlds.Chunks
 			if (oldBlocklight != value)
 			{
 				this.BlockLight[idx] = value;
-				SetBlockLightScheduled(x, y, z, true);
+				//ScheduledBlockUpdatesCount++;
+				//SetBlockLightScheduled(x, y, z, true);
 				//ScheduledBlocklightUpdates.Set(idx, true);
 
-				Owner.BlockLightDirty = true;
+				//Owner.BlockLightDirty = true;
 
 				return true;
 			}

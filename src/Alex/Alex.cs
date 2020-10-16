@@ -484,7 +484,8 @@ namespace Alex
 			
 			//RichPresenceProvider.Update();
 
-			if (!UIThreadQueue.IsEmpty && UIThreadQueue.TryDequeue(out Action a))
+			if (!UIThreadQueue.IsEmpty 
+			    && UIThreadQueue.TryDequeue(out Action a))
 			{
 				try
 				{
