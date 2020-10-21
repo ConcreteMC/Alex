@@ -147,8 +147,6 @@ namespace Alex.Worlds.Lighting
 			return level.GetChunk(blockCoordinates);
 		}
 
-		public static long touches = 0;
-
 		private void Test(World level, BlockCoordinates coord, BlockCoordinates newCoord, ConcurrentQueue<BlockCoordinates> lightBfsQueue, ChunkColumn chunk, int lightLevel)
 		{
 			//Interlocked.Add(ref touches, 1);

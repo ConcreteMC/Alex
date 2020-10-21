@@ -345,12 +345,12 @@ namespace Alex.Graphics.Models.Blocks
 					if (IsWater)
 					{
 						vert.Color = vertColor;
-						vert.LightOffset = new Vector3(0, -255, 0);
+						vert.Face = BlockFace.None;
 					}
 					else
 					{
 						vert.BlockLight = baseBlock.LightValue;
-						vert.LightOffset = face.GetVector3();
+						vert.Face = face;
 					}
 					
 					vert.TexCoords += map.TextureInfo.Position;

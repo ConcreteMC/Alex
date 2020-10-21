@@ -9,9 +9,11 @@ namespace Alex.Worlds.Chunks
 {
     internal class ChunkData : IDisposable
     {
-        public PooledVertexBuffer Buffer { get; set; }
-        public ChunkCoordinates Coordinates { get; set; }
-
+        public PooledVertexBuffer                        Buffer       { get; set; }
+        public ChunkCoordinates                          Coordinates  { get; set; }
+        public object                                    WriteLock    { get; } = new object();
+        
+        public BlockShaderVertex[]                       Vertices     { get; set; }
         public Dictionary<RenderStage, ChunkRenderStage> RenderStages { get; set; }
 
         public void Dispose()

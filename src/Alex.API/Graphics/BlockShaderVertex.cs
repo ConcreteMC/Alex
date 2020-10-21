@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Alex.API.Blocks;
+using Alex.API.Utils;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.API.Graphics
@@ -24,7 +26,8 @@ namespace Alex.API.Graphics
 
         public float SkyLight;
 
-        public Vector3 LightOffset;
+        public BlockFace Face;
+        
         /// <summary>
         ///     Creates a new VertexPositionNormalTextureColor
         /// </summary>
@@ -38,8 +41,7 @@ namespace Alex.API.Graphics
             Color = Color.White;
             BlockLight = 0f;
             SkyLight = 15f;
-			LightOffset = Vector3.Zero;
-
+			Face = BlockFace.None;
         }
 
         //public Vector3 Normal;
@@ -59,7 +61,7 @@ namespace Alex.API.Graphics
             Color = color;
             BlockLight = 0f;
             SkyLight = 15f;
-            LightOffset = Vector3.Zero;
+            Face = BlockFace.None;
         }
 
         /// <summary>
@@ -75,10 +77,11 @@ namespace Alex.API.Graphics
 		        VertexElementUsage.Color, 0),
 	        new VertexElement((5 * sizeof(float)) + 4 * sizeof(byte), VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 1),
 	        new VertexElement((6 * sizeof(float)) + 4 * sizeof(byte), VertexElementFormat.Single, VertexElementUsage.TextureCoordinate, 2),
-	        new VertexElement((7 * sizeof(float)) + 4 * sizeof(byte), VertexElementFormat.Vector3, VertexElementUsage.Position,1)
+	        new VertexElement((7 * sizeof(float)) + 4 * sizeof(byte), VertexElementFormat.Single, VertexElementUsage.Position,1)
         );
 
-        public static int LightingOffset = (5 * sizeof(float)) + 4 * sizeof(byte);
+        public static int             BlockLightOffset = (5 * sizeof(float)) + 4 * sizeof(byte);
+        public static int             SkyLightOffset = (6 * sizeof(float)) + 4 * sizeof(byte);
         
         VertexDeclaration IVertexType.VertexDeclaration => VertexDeclaration;
     }

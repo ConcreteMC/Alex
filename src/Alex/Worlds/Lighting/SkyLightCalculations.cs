@@ -40,121 +40,6 @@ namespace Alex.Worlds.Lighting
 			TrackResults = trackResults;
 		}
 
-		public static void Calculate(World level)
-		{
-			var chunks = level.ChunkManager.GetAllChunks().Select(x => x.Value).Cast<ChunkColumn>().OrderBy(column => column.X)
-				.ThenBy(column => column.Z);
-			
-			//SkyLightBlockAccess blockAccess = new SkyLightBlockAccess(level.ChunkManager);
-		//var blockAccess = level;
-		
-			_chunkCount = chunks.Count();
-
-			if (_chunkCount == 0) return;
-
-			CheckIfSpawnIsMiddle(chunks, level.SpawnPoint);
-
-			Stopwatch sw = new Stopwatch();
-			sw.Start();
-
-			//Parallel.ForEach(chunks, chunk => chunk.RecalcHeight());
-
-			//Log.Debug($"Recalc height level {level.LevelName}({level.LevelId}) for {_chunkCount} chunks, {_chunkCount*16*16*256} blocks. Time {sw.ElapsedMilliseconds}ms");
-
-			SkyLightCalculations calculator = new SkyLightCalculations(Config.GetProperty("CalculateLights.MakeMovie", false));
-
-			int midX = calculator.GetMidX(chunks.ToArray());
-			//int width = calculator.GetWidth(chunks.ToArray());
-
-			sw.Restart();
-
-			HighPrecisionTimer tickerHighPrecisionTimer = null;
-
-			calculator.StartTimeInMilliseconds = Environment.TickCount;
-
-			var t0 = Task.Run(() =>
-			{
-				var pairs = chunks.OrderBy(pair => pair.X).ThenBy(pair => pair.Z).Where(chunk => chunk.X <= midX).OrderByDescending(pair => pair.X).ThenBy(pair => pair.Z).ToArray();
-				calculator.CalculateSkyLights(level, pairs);
-			});
-
-			var t5 = Task.Run(() =>
-			{
-				var pairs = chunks.OrderByDescending(pair => pair.X).ThenBy(pair => pair.Z).Where(chunk => chunk.X > midX).OrderBy(pair => pair.X).ThenByDescending(pair => pair.Z).ToArray();
-				calculator.CalculateSkyLights(level, pairs);
-			});
-
-			var t1 = Task.Run(() =>
-			{
-				var pairs = chunks.OrderBy(pair => pair.X).ThenBy(pair => pair.Z).ToArray();
-				calculator.CalculateSkyLights(level, pairs);
-			});
-
-			var t2 = Task.Run(() =>
-			{
-				var pairs = chunks.OrderByDescending(pair => pair.X).ThenByDescending(pair => pair.Z).ToArray();
-				calculator.CalculateSkyLights(level, pairs);
-			});
-
-			var t3 = Task.Run(() =>
-			{
-				var pairs = chunks.OrderByDescending(pair => pair.X).ThenBy(pair => pair.Z).ToArray();
-				calculator.CalculateSkyLights(level, pairs);
-			});
-
-			var t4 = Task.Run(() =>
-			{
-				var pairs = chunks.OrderBy(pair => pair.X).ThenByDescending(pair => pair.Z).ToArray();
-				calculator.CalculateSkyLights(level, pairs);
-			});
-
-			Task.WaitAll(t0, t1, t2, t3, t4, t5);
-
-			Log.Debug($"Recalc skylight for {_chunkCount:N0} chunks, {_chunkCount * 16 * 16 * 256:N0} blocks. Touches={calculator.visits:N0} Time {sw.ElapsedMilliseconds:N0}ms");
-
-			//foreach (var chunk in chunks)
-			//{
-			//	calculator.ShowHeights(chunk);
-			//}
-
-			//var chunkColumn = chunks.First(column => column.x == -1 && column.z == 0 );
-			//if (chunkColumn != null)
-			//{
-			//	Log.Debug($"Heights:\n{Package.HexDump(chunkColumn.height)}");
-			//	Log.Debug($"skylight.Data:\n{Package.HexDump(chunkColumn.skyLight.Data, 64)}");
-			//}
-		}
-
-		public int CalculateSkyLights(IBlockAccess level, ChunkColumn[] chunks)
-		{
-			int calcCount = 0;
-			Stopwatch calcTime = new Stopwatch();
-			int lastCount = 0;
-
-			foreach (var chunk in chunks)
-			{
-				if (!_visitedColumns.TryAdd(chunk, true)) continue;
-
-				//if (chunk.IsAllAir) continue;
-
-				calcTime.Restart();
-				if (RecalcSkyLight(chunk, level))
-				{
-					//calcCount++;
-
-					//var elapsedMilliseconds = calcTime.ElapsedMilliseconds;
-					//var c = Visits.Sum(pair => pair.Value);
-					//if (elapsedMilliseconds > 0) Log.Debug($"Recalc skylight chunk {chunk.x}, {chunk.z}, count #{calcCount} (air={chunk.isAllAir}) chunks. Time {elapsedMilliseconds}ms and {c - lastCount} visits");
-					//lastCount = c;
-					//PrintVisits();
-				}
-			}
-
-			//Log.Debug($"Recalc skylight for #{calcCount} chunk. Made {lastCount} visits.");
-
-			return calcCount;
-		}
-
 		public bool RecalcSkyLight(ChunkColumn chunk, IBlockAccess level)
 		{
 			if (chunk == null) return false;
@@ -198,12 +83,12 @@ namespace Alex.Worlds.Lighting
 			return true;
 		}
 
-		public void Calculate(World level, BlockCoordinates coordinates)
+		public void Calculate(IBlockAccess level, BlockCoordinates coordinates)
 		{
 			int currentLight = level.GetSkyLight(coordinates);
 
 			var cc = new ChunkCoordinates(coordinates);
-			ChunkColumn chunk = (ChunkColumn) level.GetChunkColumn(cc.X, cc.Z);
+			ChunkColumn chunk = (ChunkColumn) level.GetChunk(cc);
 			var height = chunk.GetRecalculatedHeight(coordinates.X & 0x0f, coordinates.Z & 0x0f);
 
 			Queue<BlockCoordinates> sourceQueue = new Queue<BlockCoordinates>();
@@ -264,7 +149,7 @@ namespace Alex.Worlds.Lighting
 			Calculate(level, lightBfQueue, lightBfSet);
 		}
 
-		public void ResetLight(World level, Queue<BlockCoordinates> resetQueue, Queue<BlockCoordinates> sourceQueue, BlockCoordinates coordinates)
+		public void ResetLight(IBlockAccess level, Queue<BlockCoordinates> resetQueue, Queue<BlockCoordinates> sourceQueue, BlockCoordinates coordinates)
 		{
 			int currentLight = level.GetSkyLight(coordinates);
 
@@ -278,7 +163,7 @@ namespace Alex.Worlds.Lighting
 			TestForSource(level, resetQueue, sourceQueue, coordinates.BlockSouth(), currentLight);
 		}
 
-		private void TestForSource(World level, Queue<BlockCoordinates> resetQueue, Queue<BlockCoordinates> sourceQueue, BlockCoordinates coordinates, int currentLight, bool down = false)
+		private void TestForSource(IBlockAccess level, Queue<BlockCoordinates> resetQueue, Queue<BlockCoordinates> sourceQueue, BlockCoordinates coordinates, int currentLight, bool down = false)
 		{
 			int light = level.GetSkyLight(coordinates);
 			if (light == 0) return;
@@ -292,7 +177,7 @@ namespace Alex.Worlds.Lighting
 			if (!resetQueue.Contains(coordinates)) resetQueue.Enqueue(coordinates);
 		}
 
-		public void Calculate(IBlockAccess level, Queue<BlockCoordinates> lightBfQueue, HashSet<BlockCoordinates> lightBfSet)
+		private void Calculate(IBlockAccess level, Queue<BlockCoordinates> lightBfQueue, HashSet<BlockCoordinates> lightBfSet)
 		{
 			try
 			{
@@ -484,8 +369,8 @@ namespace Alex.Worlds.Lighting
 
 		public static void SetSkyLight(IBlockAccess world, BlockCoordinates coordinates, byte skyLight, ChunkColumn chunk)
 		{
-		//	chunk?.SetSkyLight(coordinates.X & 0x0f, coordinates.Y & 0xff, coordinates.Z & 0x0f, skyLight);
-				world.SetSkyLight(coordinates, skyLight);
+			chunk?.SetSkyLight(coordinates.X & 0x0f, coordinates.Y & 0xff, coordinates.Z & 0x0f, skyLight);
+				//world.SetSkyLight(coordinates, skyLight);
 		}
 
 		public static bool IsNotBlockingSkylight(BlockCoordinates blockCoordinates, ChunkColumn chunk)
@@ -564,129 +449,7 @@ namespace Alex.Worlds.Lighting
 				Visits.TryAdd(coordinates, 1);
 			}
 		}
-
-		public static void CheckIfSpawnIsMiddle(IOrderedEnumerable<ChunkColumn> chunks, Vector3 spawnPoint)
-		{
-			int xMin = chunks.OrderBy(kvp => kvp.X).First().X;
-			int xMax = chunks.OrderByDescending(kvp => kvp.X).First().X;
-			int xd = Math.Abs(xMax - xMin);
-
-			int zMin = chunks.OrderBy(kvp => kvp.Z).First().Z;
-			int zMax = chunks.OrderByDescending(kvp => kvp.Z).First().Z;
-			int zd = Math.Abs(zMax - zMin);
-
-			int xm = (int) ((xd / 2f) + xMin);
-			int zm = (int) ((zd / 2f) + zMin);
-
-			if (xm != (int) spawnPoint.X >> 4) Log.Warn($"Wrong spawn X={xm}, {(int) spawnPoint.X >> 4}");
-			if (zm != (int) spawnPoint.Z >> 4) Log.Warn($"Wrong spawn Z={zm}, {(int) spawnPoint.Z >> 4}");
-
-			if (zm == (int) spawnPoint.Z >> 4 && xm == (int) spawnPoint.X >> 4) Log.Warn($"Spawn correct {xm}, {zm} and {(int) spawnPoint.X >> 4}, {(int) spawnPoint.Z >> 4}");
-		}
-
-		private object _imageSync = new object();
-		private static int _chunkCount;
-
-		private int GetMidX(ChunkColumn[] chunks)
-		{
-			if (!TrackResults) return 0;
-
-			var visits = chunks.ToArray();
-
-			int xMin = visits.OrderBy(kvp => kvp.X).First().X;
-			int xMax = visits.OrderByDescending(kvp => kvp.X).First().X;
-			int xd = Math.Abs(xMax - xMin);
-
-			return xMin + xd / 2;
-		}
-
-		private int GetWidth(ChunkColumn[] chunks)
-		{
-			if (!TrackResults) return 0;
-
-			var visits = chunks.ToArray();
-
-			int xMin = visits.OrderBy(kvp => kvp.X).First().X;
-			int xMax = visits.OrderByDescending(kvp => kvp.X).First().X;
-			int xd = Math.Abs(xMax - xMin);
-
-			return xd;
-		}
-
-		private int GetWidth()
-		{
-			if (!TrackResults) return 0;
-
-			var visits = Visits.ToArray();
-
-			int xMin = visits.OrderBy(kvp => kvp.Key.X).First().Key.X;
-			int xMax = visits.OrderByDescending(kvp => kvp.Key.X).First().Key.X;
-			int xd = Math.Abs(xMax - xMin);
-
-			return xd + 1;
-		}
-
-		private int GetHeight()
-		{
-			if (!TrackResults) return 0;
-
-			var visits = Visits.ToArray();
-
-			int zMin = visits.OrderBy(kvp => kvp.Key.Z).First().Key.Z;
-			int zMax = visits.OrderByDescending(kvp => kvp.Key.Z).First().Key.Z;
-			int zd = Math.Abs(zMax - zMin);
-
-			return zd + 1;
-		}
 		
-		public static byte[] ToByteArray(Image image, ImageFormat format)
-		{
-			using (MemoryStream ms = new MemoryStream())
-			{
-				image.Save(ms, format);
-				return ms.ToArray();
-			}
-		}
-
-		static Color CreateHeatColor(double value, double max)
-		{
-			//if (value < 0) value = 0;
-
-			//Log.Debug($"Before Value={value}, min={min}, max={max}");
-
-			double pct = value / max;
-			if (pct < 0) pct = 0;
-
-			//Log.Debug($"Value={v :F2}, max={m:F2}, pct={pct:F2}");
-
-			return Color.FromArgb(255, (byte) (255.0f * pct), (byte) (255.0f * (1 - pct)), 0);
-
-			//int A = 255;
-			//int R;
-			//int G;
-			//int B;
-			//if (pct < 0.34d)
-			//{
-			//	R = 255;
-			//	G = (byte) (255*Math.Min(3*(pct - 0.333333d), 1d));
-			//	B = 0;
-			//}
-			//else if (pct < 0.67d)
-			//{
-			//	R = (byte) (255*Math.Min(3*(1d - pct), 1d));
-			//	G = 255;
-			//	B = 0;
-			//}
-			//else
-			//{
-			//	R = (byte) (128 + (127*Math.Min(3*pct, 1d)));
-			//	G = 0;
-			//	B = 0;
-			//}
-
-			//return Color.FromArgb(A, R, G, B);
-		}
-
 		private static bool IsOnChunkBorder(int x, int z)
 		{
 			return !(x > 0 && x < 15 && z > 0 && z < 15);
@@ -711,23 +474,10 @@ namespace Alex.Worlds.Lighting
 				return h;
 			}
 
-			//if (z < 15) h = Math.Max(h, chunk.GetHeight(x, z + 1));
-			//if (z > 0) h = Math.Max(h, chunk.GetHeight(x, z - 1));
-			//if (x < 15) h = Math.Max(h, chunk.GetHeight(x + 1, z));
-			//if (x < 15 && z > 0) h = Math.Max(h, chunk.GetHeight(x + 1, z - 1));
-			//if (x < 15 && z < 15) h = Math.Max(h, chunk.GetHeight(x + 1, z + 1));
-			//if (x > 0) h = Math.Max(h, chunk.GetHeight(x - 1, z));
-			//if (x > 0 && z > 0) h = Math.Max(h, chunk.GetHeight(x - 1, z - 1));
-			//if (x > 0 && z < 15) h = Math.Max(h, chunk.GetHeight(x - 1, z + 1));
-
 			h = Math.Max(h, chunk.GetHeight(x, z + 1));
 			h = Math.Max(h, chunk.GetHeight(x, z - 1));
 			h = Math.Max(h, chunk.GetHeight(x + 1, z));
-			//h = Math.Max(h, chunk.GetHeight(x + 1, z - 1));
-			//h = Math.Max(h, chunk.GetHeight(x + 1, z + 1));
 			h = Math.Max(h, chunk.GetHeight(x - 1, z));
-			//h = Math.Max(h, chunk.GetHeight(x - 1, z - 1));
-			//h = Math.Max(h, chunk.GetHeight(x - 1, z + 1));
 
 			return h;
 		}

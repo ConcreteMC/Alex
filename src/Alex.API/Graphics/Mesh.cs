@@ -12,12 +12,12 @@ namespace Alex.API.Graphics
 
         public BlockShaderVertex[]            Vertices { get; set; }
         public Dictionary<RenderStage, int[]> Indexes { get; set; } = new Dictionary<RenderStage, int[]>();
-        public bool                           RequiresLightingUpdate { get; set; } = false;
+     //   public bool                           RequiresLightingUpdate { get; set; } = false;
 		
 		public ChunkMesh(BlockShaderVertex[] entries)
 		{
 			Vertices = entries;
-			RequiresLightingUpdate = true;
+			//RequiresLightingUpdate = true;
 		}
 
 		public bool Disposed { get; private set; } = false;

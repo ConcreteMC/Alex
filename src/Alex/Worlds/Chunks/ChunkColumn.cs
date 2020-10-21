@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Alex.API.Utils;
 using Alex.API.World;
@@ -45,11 +46,11 @@ namespace Alex.Worlds.Chunks
 		public int X { get; set; }
 		public int Z { get; set; }
 
-		public bool IsNew { get; set; } = true;
-		public bool IsDirty { get; set; }
-		public bool SkyLightDirty { get; set; }
-		public bool BlockLightDirty { get; set; }
-
+		public bool IsNew           { get; set; } = true;
+		public bool IsDirty         { get; set; }
+		public bool SkyLightDirty   =>  Sections != null && Sections.Sum(x => x.SkyLightUpdates) > 0; 
+		public bool BlockLightDirty => Sections != null && Sections.Sum(x => x.BlockLightUpdates) > 0; 
+		public readonly Stopwatch LightUpdateWatch = new Stopwatch();
 		public ChunkSection[] Sections { get; set; } = new ChunkSection[16];
 		public int[] BiomeId = ArrayOf<int>.Create(16 * 16 * 256, 1);
 		public short[] Height = new short[256];
@@ -62,8 +63,8 @@ namespace Alex.Worlds.Chunks
 		public ChunkColumn()
 		{
 			IsDirty = true;
-			SkyLightDirty = true;
-			BlockLightDirty = true;
+			//SkyLightDirty = true;
+			//BlockLightDirty = true;
 
 			for (int i = 0; i < Sections.Length; i++)
 			{
@@ -72,6 +73,7 @@ namespace Alex.Worlds.Chunks
 			}
 			
 			BlockEntities = new ConcurrentDictionary<BlockCoordinates, BlockEntity>();
+			LightUpdateWatch.Start();
 		}
 
 		public IEnumerable<BlockCoordinates> GetLightSources()
@@ -297,16 +299,8 @@ namespace Alex.Worlds.Chunks
 		{
 			if ((bx < 0 || bx > ChunkWidth) || (by < 0 || by > ChunkHeight) || (bz < 0 || bz > ChunkDepth))
 				return;
-
-			var yMod = ((@by >> 4) << 4);
-
-			if (GetSection(by).SetBlocklight(bx, by - 16 * (by >> 4), bz, data))
-				BlockLightDirty = true;
-
-			//_scheduledLightingUpdates[by << 8 | bz << 4 | bx] = true;
-			var section = (ChunkSection) Sections[by >> 4];
-			if (section == null) return;
-			//section.ScheduledSkylightUpdates[by << 8 | bz << 4 | bx] = true;
+			
+			GetSection(by).SetBlocklight(bx, by - 16 * (by >> 4), bz, data);
 		}
 
 		public byte GetSkylight(int bx, int by, int bz)
@@ -326,14 +320,25 @@ namespace Alex.Worlds.Chunks
 				return false;
 
 			bool dirty = GetSection(by).SetSkylight(bx, by - 16 * (by >> 4), bz, data);
-			SkyLightDirty = SkyLightDirty || dirty;
-
 			return dirty;
+		}
+		
+		public bool HasLightUpdateScheduled(int bx, int by, int bz)
+		{
+			if ((bx < 0 || bx > ChunkWidth) || (by < 0 || by > ChunkHeight) || (bz < 0 || bz > ChunkDepth))
+				return false;
 
-			//	_scheduledLightingUpdates[by << 8 | bz << 4 | bx] = true;
-			// var section = Sections[by >> 4];
-			//  if (section == null) return;
-			// section.ScheduledSkylightUpdates[(by - 16 * (by >> 4)) << 8 | bz << 4 | bx] = true;
+			return GetSection(by).IsSkylightUpdateScheduled(bx, by - 16 * (by >> 4), bz)
+			       || GetSection(by).IsBlockLightScheduled(bx, by - 16 * (by >> 4), bz);
+		}
+		
+		public void SetLightUpdateScheduled(int bx, int by, int bz, bool skyLight, bool blockLight)
+		{
+			if ((bx < 0 || bx > ChunkWidth) || (by < 0 || by > ChunkHeight) || (bz < 0 || bz > ChunkDepth))
+				return;
+
+			GetSection(by).SetSkyLightUpdateScheduled(bx, by - 16 * (by >> 4), bz, skyLight);
+			GetSection(by).SetBlockLightScheduled(bx, by - 16 * (by >> 4), bz, blockLight);
 		}
 
 		private Vector3 Position => new Vector3(X * 16, 0, Z * 16);

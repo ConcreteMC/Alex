@@ -721,8 +721,7 @@ namespace Alex.Graphics.Models.Blocks
 					vertices = ProcessVertices(vertices, bsModel, element, uvMap, facing, face.Value);
 
 					var initialIndex = verts.Count;
-
-					Vector3 lightOffset      =  facing.GetVector3();
+					
 				//	byte    vertexBlockLight = 0, vertexSkyLight = 0xff;
 
 					if (!SmoothLighting)
@@ -744,11 +743,11 @@ namespace Alex.Graphics.Models.Blocks
 
 						//if (blockLight > 0)
 						{
-							vertex.LightOffset = lightOffset;
+							vertex.Face = facing;
 						//	vertex.BlockLight = vertexBlockLight;
 						//	vertex.SkyLight = vertexSkyLight;
 						}
-
+						
 						verts.Add(vertex);
 					}
 

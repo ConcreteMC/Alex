@@ -543,8 +543,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			        if (gotLight)
 			        {
-				        chunkColumn.SkyLightDirty = false;
-				        chunkColumn.BlockLightDirty = false;
+				        //chunkColumn.SkyLightDirty = false;
+				       // chunkColumn.BlockLightDirty = false;
 			        }
 			        
 			        chunkColumn.CalculateHeight(!gotLight && ClientSideLighting);

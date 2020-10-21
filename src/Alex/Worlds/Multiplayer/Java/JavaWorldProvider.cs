@@ -39,6 +39,7 @@ using Alex.Utils;
 using Alex.Utils.Inventories;
 using Alex.Worlds.Abstraction;
 using Alex.Worlds.Chunks;
+using Alex.Worlds.Lighting;
 using fNbt;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
@@ -1779,8 +1780,8 @@ namespace Alex.Worlds.Multiplayer.Java
 				        }
 
 
-				        result.SkyLightDirty = true;
-				        result.BlockLightDirty = true;
+				     //   result.SkyLightDirty = true;
+				     //   result.BlockLightDirty = true;
 
 				        if (!_generatingHelper.IsAddingCompleted)
 				        {
