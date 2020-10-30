@@ -2,7 +2,7 @@
 {
     public class UnknownBlock : Block
     {
-	    internal UnknownBlock(uint id) : base(id)
+	    internal UnknownBlock(uint id) : base()
 	    {
 
 	    }

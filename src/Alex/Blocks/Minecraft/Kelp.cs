@@ -2,7 +2,7 @@
 {
 	public class Kelp : Block
     {
-	    public Kelp() : base("minecraft:kelp")
+	    public Kelp() : base()
 	    {
 		    IsSourceBlock = true;
 		    IsWater = true;

@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class EndPortalFrame : Block
 	{
-		public EndPortalFrame() : base(4540)
+		public EndPortalFrame() : base()
 		{
 			Solid = true;
 			Transparent = false;

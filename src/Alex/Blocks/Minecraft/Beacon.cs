@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Beacon : Block
 	{
-		public Beacon() : base(5046)
+		public Beacon() : base()
 		{
 			Solid = true;
 			Transparent = false;

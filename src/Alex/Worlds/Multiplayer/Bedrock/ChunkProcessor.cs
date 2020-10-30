@@ -334,10 +334,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 										        {
 											        Name = $"{id}:{meta.ToString()}",
 											        Model = BlockFactory.UnknownBlockModel,
-											        Block = new Block(0)
-											        {
-												        
-											        }
+											        Block = new UnknownBlock(0)
 										        };
 										        
 										        Log.Info($"Unknown block: {id}:{meta}");

@@ -6,7 +6,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Ladder : Block
 	{
-		public Ladder() : base(3082)
+		public Ladder() : base()
 		{
 			Solid = true;
 			Transparent = true;

@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class PurpurPillar : Block
 	{
-		public PurpurPillar() : base(7985)
+		public PurpurPillar() : base()
 		{
 			Solid = true;
 			Transparent = false;

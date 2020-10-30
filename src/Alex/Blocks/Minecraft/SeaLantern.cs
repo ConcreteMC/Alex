@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class SeaLantern : Block
 	{
-		public SeaLantern() : base(6729)
+		public SeaLantern() : base()
 		{
 			Solid = true;
 			Transparent = false;

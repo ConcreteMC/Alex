@@ -4,7 +4,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class DiamondOre : Block
 	{
-		public DiamondOre() : base(2958)
+		public DiamondOre() : base()
 		{
 			Solid = true;
 			Transparent = false;

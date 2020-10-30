@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Dispenser : Block
 	{
-		public Dispenser() : base(144)
+		public Dispenser() : base()
 		{
 			Solid = true;
 			Transparent = false;

@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class RepeatingCommandBlock : Block
 	{
-		public RepeatingCommandBlock() : base(8080)
+		public RepeatingCommandBlock() : base()
 		{
 			Solid = true;
 			Transparent = false;

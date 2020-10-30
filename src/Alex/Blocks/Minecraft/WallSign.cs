@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class WallSign : Block
 	{
-		public WallSign() : base(3180)
+		public WallSign() : base()
 		{
 			Solid = false;
 			Transparent = true;

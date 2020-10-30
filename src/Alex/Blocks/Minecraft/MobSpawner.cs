@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class MobSpawner : Block
 	{
-		public MobSpawner() : base(1557)
+		public MobSpawner() : base()
 		{
 			Solid = true;
 			Transparent = true;

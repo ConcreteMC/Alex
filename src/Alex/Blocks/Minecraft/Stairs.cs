@@ -25,7 +25,7 @@ namespace Alex.Blocks.Minecraft
     {
         private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Stairs));
         
-        public Stairs(uint baseId) : base(baseId)
+        public Stairs(uint baseId) : base()
         {
             Solid = true;
             Transparent = true;

@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Cauldron : Block
 	{
-		public Cauldron() : base(4531)
+		public Cauldron() : base()
 		{
 			Solid = true;
 			Transparent = true;

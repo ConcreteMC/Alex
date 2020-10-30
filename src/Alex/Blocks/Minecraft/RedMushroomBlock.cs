@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class RedMushroomBlock : Block
 	{
-		public RedMushroomBlock() : base(3961)
+		public RedMushroomBlock() : base()
 		{
 			Solid = true;
 			Transparent = false;

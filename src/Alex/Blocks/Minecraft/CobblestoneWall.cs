@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class CobblestoneWall : Block
 	{
-		public CobblestoneWall() : base(5110)
+		public CobblestoneWall() : base()
 		{
 			Solid = true;
 			Transparent = true;

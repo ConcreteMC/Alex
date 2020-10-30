@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class LimeGlazedTerracotta : Block
 	{
-		public LimeGlazedTerracotta() : base(8243)
+		public LimeGlazedTerracotta() : base()
 		{
 			Solid = true;
 			Transparent = false;

@@ -6,7 +6,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Stone : Block
 	{
-		public Stone() : base(1)
+		public Stone() : base()
 		{
 			Solid = true;
 			Transparent = false;

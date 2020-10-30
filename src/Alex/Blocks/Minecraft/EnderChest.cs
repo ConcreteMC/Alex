@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class EnderChest : Block
 	{
-		public EnderChest() : base(4642)
+		public EnderChest() : base()
 		{
 			Solid = true;
 			Transparent = true;

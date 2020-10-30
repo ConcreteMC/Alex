@@ -2,7 +2,7 @@
 {
     public class Button : Block
     {
-	    public Button(uint id) : base(id)
+	    public Button(uint id) : base()
 	    {
 		    Transparent = true;
 		    Solid = false;

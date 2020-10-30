@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class PumpkinStem : Block
 	{
-		public PumpkinStem() : base(4162)
+		public PumpkinStem() : base()
 		{
 			Solid = false;
 			Transparent = true;

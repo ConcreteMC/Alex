@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class QuartzBlock : Block
 	{
-		public QuartzBlock() : base(5605)
+		public QuartzBlock() : base()
 		{
 			Solid = true;
 			Transparent = false;

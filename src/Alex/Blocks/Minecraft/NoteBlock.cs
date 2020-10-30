@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class NoteBlock : Block
 	{
-		public NoteBlock() : base(159)
+		public NoteBlock() : base()
 		{
 			Solid = true;
 			Transparent = false;

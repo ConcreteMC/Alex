@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class EmeraldBlock : Block
 	{
-		public EmeraldBlock() : base(4793)
+		public EmeraldBlock() : base()
 		{
 			Solid = true;
 			Transparent = false;

@@ -2,7 +2,7 @@
 {
 	public class FlowingLava : Block
 	{
-		public FlowingLava(byte meta = 0) : base(11, meta)
+		public FlowingLava(byte meta = 0) : base()
 		{
 			Solid = false;
 			Transparent = true;

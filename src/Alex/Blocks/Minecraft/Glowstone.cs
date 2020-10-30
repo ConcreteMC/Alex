@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Glowstone : Block
 	{
-		public Glowstone() : base(3405)
+		public Glowstone() : base()
 		{
 			Solid = true;
 			Transparent = false;

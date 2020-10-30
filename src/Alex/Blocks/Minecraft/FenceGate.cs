@@ -10,7 +10,7 @@ namespace Alex.Blocks.Minecraft
 
         }
 
-        public FenceGate(uint id) : base(id)
+        public FenceGate(uint id) : base()
         {
             Solid = true;
             Transparent = true;

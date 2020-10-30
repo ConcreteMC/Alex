@@ -5,7 +5,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class GlassPane : Block
 	{
-		public GlassPane() : base(4152)
+		public GlassPane() : base()
 		{
 			Solid = true;
 			Transparent = true;

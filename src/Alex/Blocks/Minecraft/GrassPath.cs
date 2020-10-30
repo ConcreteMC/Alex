@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class GrassPath : Block
 	{
-		public GrassPath() : base(8072)
+		public GrassPath() : base()
 		{
 			Solid = true;
 			Transparent = true;

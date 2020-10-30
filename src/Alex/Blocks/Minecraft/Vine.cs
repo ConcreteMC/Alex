@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Vine : Block
 	{
-		public Vine() : base(4209)
+		public Vine() : base()
 		{
 			Solid = false;
 			Transparent = true;

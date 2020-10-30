@@ -4,7 +4,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Furnace : Block
 	{
-		public Furnace() : base(2978)
+		public Furnace() : base()
 		{
 			Solid = true;
 			Transparent = false;

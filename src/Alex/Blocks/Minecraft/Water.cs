@@ -8,7 +8,7 @@ namespace Alex.Blocks.Minecraft
 	public class Water : Block
 	{
 		public static readonly PropertyInt LEVEL = new PropertyInt("level", 0);
-		public Water() : base(34)
+		public Water() : base()
 		{
 			Solid = false;
 			Transparent = true;

@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class StonePressurePlate : Block
 	{
-		public StonePressurePlate() : base(3212)
+		public StonePressurePlate() : base()
 		{
 			Solid = false;
 			Transparent = true;

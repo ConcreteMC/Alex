@@ -23,12 +23,7 @@ namespace Alex.Blocks.Minecraft
 	//	public bool IsRightHinch => (Metadata & 0x01) == 0x01;
 	//	public bool IsPowered => (Metadata & 0x02) == 0x02;
 
-		public WoodenDoor(byte meta) : this(64, meta)
-		{
-
-		}
-
-		public WoodenDoor(int blockId, byte meta) : base(blockId, meta)
+		public WoodenDoor(byte meta) : base()
 		{
 			Transparent = true;
 		}
@@ -65,11 +60,6 @@ namespace Alex.Blocks.Minecraft
 			}*/
 		}
 
-		public override void Interact(World world, BlockCoordinates position, BlockFace face, Entity sourceEntity)
-		{
-			Toggle(world, position);
-		}
-		
 		public byte GetMetaFromState(IBlockState state)
 		{
 			byte i = 0;

@@ -13,7 +13,7 @@ namespace Alex.Blocks.Minecraft
 	
     public class Slab : Block
     {
-	    public Slab(uint blockStateId) : base(blockStateId)
+	    public Slab(uint blockStateId) : base()
 	    {
 		    Solid = true;
 		    Transparent = true;

@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class CommandBlock : Block
 	{
-		public CommandBlock() : base(5040)
+		public CommandBlock() : base()
 		{
 			Solid = true;
 			Transparent = false;

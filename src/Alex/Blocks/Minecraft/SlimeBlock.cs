@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class SlimeBlock : Block
 	{
-		public SlimeBlock() : base(6402)
+		public SlimeBlock() : base()
 		{
 			Solid = true;
 			Transparent = true;

@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Torch : Block
 	{
-		public Torch(bool wallTorch = false) : base(1040)
+		public Torch(bool wallTorch = false) : base()
 		{
 			Solid = false;
 			Transparent = true;

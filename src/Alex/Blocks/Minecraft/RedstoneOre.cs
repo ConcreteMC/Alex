@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class RedstoneOre : Block
 	{
-		public RedstoneOre() : base(3290)
+		public RedstoneOre() : base()
 		{
 			Solid = true;
 			Transparent = false;

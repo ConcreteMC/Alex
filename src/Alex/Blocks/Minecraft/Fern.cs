@@ -4,7 +4,7 @@ namespace Alex.Blocks.Minecraft
 {
     public class Fern : Block
     {
-	    public Fern() : base(952)
+	    public Fern() : base()
 	    {
 		    Solid = false;
 		    Transparent = true;

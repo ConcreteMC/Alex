@@ -2,7 +2,7 @@
 {
     public class BubbleColumn : Block
 	{
-	    public BubbleColumn() : base("minecraft:bubble_column")
+	    public BubbleColumn() : base()
 	    {
 	    }
     }

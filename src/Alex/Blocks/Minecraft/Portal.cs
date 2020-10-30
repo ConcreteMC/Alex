@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Portal : Block
 	{
-		public Portal() : base(3406)
+		public Portal() : base()
 		{
 			Solid = false;
 			Transparent = true;

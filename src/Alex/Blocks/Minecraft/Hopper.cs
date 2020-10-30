@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Hopper : Block
 	{
-		public Hopper() : base(5595)
+		public Hopper() : base()
 		{
 			Solid = true;
 			Transparent = true;

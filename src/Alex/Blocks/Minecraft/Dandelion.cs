@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Dandelion : Block
 	{
-		public Dandelion() : base(1021)
+		public Dandelion() : base()
 		{
 			Solid = false;
 			Transparent = true;

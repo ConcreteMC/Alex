@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Bedrock : Block
 	{
-		public Bedrock() : base(33)
+		public Bedrock() : base()
 		{
 			Solid = true;
 			Transparent = false;

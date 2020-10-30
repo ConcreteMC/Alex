@@ -4,7 +4,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Grass : Block
 	{
-		public Grass() : base(951)
+		public Grass() : base()
 		{
 			Solid = false;
 			Transparent = true;

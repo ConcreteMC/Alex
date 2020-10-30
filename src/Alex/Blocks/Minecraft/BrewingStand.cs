@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class BrewingStand : Block
 	{
-		public BrewingStand() : base(4530)
+		public BrewingStand() : base()
 		{
 			Solid = true;
 			Transparent = true;

@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class TrappedChest : Block
 	{
-		public TrappedChest() : base(5490)
+		public TrappedChest() : base()
 		{
 			Solid = true;
 			Transparent = true;

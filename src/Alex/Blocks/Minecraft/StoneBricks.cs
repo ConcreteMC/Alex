@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class StoneBricks : Block
 	{
-		public StoneBricks() : base(3893)
+		public StoneBricks() : base()
 		{
 			Solid = true;
 			Transparent = false;

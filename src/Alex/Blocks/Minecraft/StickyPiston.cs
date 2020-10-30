@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class StickyPiston : Block
 	{
-		public StickyPiston() : base(944)
+		public StickyPiston() : base()
 		{
 			Solid = true;
 			Transparent = false;

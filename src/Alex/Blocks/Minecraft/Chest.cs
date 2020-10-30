@@ -8,7 +8,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Chest : Block
 	{
-		public Chest() : base(1639)
+		public Chest() : base()
 		{
 			Solid = true;
 			Transparent = true;

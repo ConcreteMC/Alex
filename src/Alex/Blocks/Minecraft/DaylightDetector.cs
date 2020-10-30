@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class DaylightDetector : Block
 	{
-		public DaylightDetector() : base(5577)
+		public DaylightDetector() : base()
 		{
 			Solid = true;
 			Transparent = true;

@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Lever : Block
 	{
-		public Lever() : base(3196)
+		public Lever() : base()
 		{
 			Solid = true;
 			Transparent = true;

@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Air : Block
 	{
-		public Air() : base(0)
+		public Air() : base()
 		{
 			Solid = false;
 			Transparent = true;

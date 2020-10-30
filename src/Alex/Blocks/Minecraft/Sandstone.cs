@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Sandstone : Block
 	{
-		public Sandstone() : base(155)
+		public Sandstone() : base()
 		{
 			Solid = true;
 			Transparent = false;

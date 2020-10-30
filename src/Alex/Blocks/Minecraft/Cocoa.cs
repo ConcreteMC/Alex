@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Cocoa : Block
 	{
-		public Cocoa() : base(4548)
+		public Cocoa() : base()
 		{
 			Solid = true;
 			Transparent = true;

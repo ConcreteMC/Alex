@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class LilyPad : Block
 	{
-		public LilyPad() : base(4404)
+		public LilyPad() : base()
 		{
 			Solid = true;
 			Transparent = true;

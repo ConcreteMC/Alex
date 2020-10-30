@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class IronBlock : Block
 	{
-		public IronBlock() : base(1034)
+		public IronBlock() : base()
 		{
 			Solid = true;
 			Transparent = false;

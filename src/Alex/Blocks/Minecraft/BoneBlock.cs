@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class BoneBlock : Block
 	{
-		public BoneBlock() : base(8106)
+		public BoneBlock() : base()
 		{
 			Solid = true;
 			Transparent = false;

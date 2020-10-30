@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Prismarine : Block
 	{
-		public Prismarine() : base(6468)
+		public Prismarine() : base()
 		{
 			Solid = true;
 			Transparent = false;

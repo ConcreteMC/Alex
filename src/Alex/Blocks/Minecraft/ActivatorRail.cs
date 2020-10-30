@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class ActivatorRail : Block
 	{
-		public ActivatorRail() : base(5696)
+		public ActivatorRail() : base()
 		{
 			Solid = false;
 			Transparent = true;

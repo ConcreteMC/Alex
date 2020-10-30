@@ -5,7 +5,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Rail : Block
 	{
-		public Rail() : base(3089)
+		public Rail() : base()
 		{
 			Solid = false;
 			Transparent = true;

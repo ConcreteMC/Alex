@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Bricks : Block
 	{
-		public Bricks() : base(1035)
+		public Bricks() : base()
 		{
 			Solid = true;
 			Transparent = false;

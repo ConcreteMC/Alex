@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class LapisOre : Block
 	{
-		public LapisOre() : base(141)
+		public LapisOre() : base()
 		{
 			Solid = true;
 			Transparent = false;

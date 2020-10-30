@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Bookshelf : Block
 	{
-		public Bookshelf() : base(1037)
+		public Bookshelf() : base()
 		{
 			Solid = true;
 			Transparent = false;

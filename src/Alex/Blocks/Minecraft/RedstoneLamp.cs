@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class RedstoneLamp : Block
 	{
-		public RedstoneLamp() : base(4547)
+		public RedstoneLamp() : base()
 		{
 			Solid = true;
 			Transparent = false;

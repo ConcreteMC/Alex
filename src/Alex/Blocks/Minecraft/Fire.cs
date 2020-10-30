@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Fire : Block
 	{
-		public Fire() : base(1076)
+		public Fire() : base()
 		{
 			Solid = false;
 			Transparent = true;

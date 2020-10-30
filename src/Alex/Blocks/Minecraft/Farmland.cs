@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Farmland : Block
 	{
-		public Farmland() : base(2969)
+		public Farmland() : base()
 		{
 			Solid = true;
 			Transparent = true;

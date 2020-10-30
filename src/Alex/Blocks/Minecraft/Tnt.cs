@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Tnt : Block
 	{
-		public Tnt() : base(1036)
+		public Tnt() : base()
 		{
 			Solid = true;
 			Transparent = false;

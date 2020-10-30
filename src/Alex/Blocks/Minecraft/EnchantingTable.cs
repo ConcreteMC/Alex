@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class EnchantingTable : Block
 	{
-		public EnchantingTable() : base(4522)
+		public EnchantingTable() : base()
 		{
 			Solid = true;
 			Transparent = true;

@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class CoalBlock : Block
 	{
-		public CoalBlock() : base(6750)
+		public CoalBlock() : base()
 		{
 			Solid = true;
 			Transparent = false;

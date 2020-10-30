@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Anvil : Block
 	{
-		public Anvil() : base(5477)
+		public Anvil() : base()
 		{
 			Solid = true;
 			Transparent = true;

@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class TallGrass : Block
 	{
-		public TallGrass() : base(6761)
+		public TallGrass() : base()
 		{
 			Solid = false;
 			Transparent = true;

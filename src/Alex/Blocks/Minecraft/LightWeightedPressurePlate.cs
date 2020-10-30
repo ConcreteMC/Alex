@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class LightWeightedPressurePlate : Block
 	{
-		public LightWeightedPressurePlate() : base(5513)
+		public LightWeightedPressurePlate() : base()
 		{
 			Solid = false;
 			Transparent = true;

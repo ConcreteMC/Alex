@@ -4,7 +4,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class IronOre : Block
 	{
-		public IronOre() : base(70)
+		public IronOre() : base()
 		{
 			Solid = true;
 			Transparent = false;

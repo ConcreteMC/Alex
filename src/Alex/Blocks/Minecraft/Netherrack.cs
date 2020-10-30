@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Netherrack : Block
 	{
-		public Netherrack() : base(3403)
+		public Netherrack() : base()
 		{
 			Solid = true;
 			Transparent = false;

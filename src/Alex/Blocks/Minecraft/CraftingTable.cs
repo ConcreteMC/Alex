@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class CraftingTable : Block
 	{
-		public CraftingTable() : base(2960)
+		public CraftingTable() : base()
 		{
 			Solid = true;
 			Transparent = false;

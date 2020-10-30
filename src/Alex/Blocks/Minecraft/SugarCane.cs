@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class SugarCane : Block
 	{
-		public SugarCane() : base(3352)
+		public SugarCane() : base()
 		{
 			Solid = false;
 			Transparent = true;

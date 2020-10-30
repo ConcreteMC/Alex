@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class NetherWartBlock : Block
 	{
-		public NetherWartBlock() : base(8103)
+		public NetherWartBlock() : base()
 		{
 			Solid = true;
 			Transparent = false;

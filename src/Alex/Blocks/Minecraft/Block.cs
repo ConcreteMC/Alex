@@ -85,29 +85,6 @@ namespace Alex.Blocks.Minecraft
 		}
 
 		public BlockCoordinates Coordinates { get; set; }
-		protected Block(int blockId, byte metadata)
-	    {
-		    Solid = true;
-		    Transparent = false;
-		    Renderable = true;
-		    HasHitbox = true;
-	    }
-
-	    public Block(uint blockStateId)
-	    {
-		    Solid = true;
-		    Transparent = false;
-		    Renderable = true;
-		    HasHitbox = true;
-	    }
-
-		protected Block(string blockName)
-		{
-			Solid = true;
-			Transparent = false;
-			Renderable = true;
-			HasHitbox = true;
-		}
 
 		protected Block()
 		{
@@ -139,11 +116,6 @@ namespace Alex.Blocks.Minecraft
 					}
 				}
 			}*/
-		}
-		
-		public virtual void Interact(World world, BlockCoordinates position, BlockFace face, Entity sourceEntity)
-		{
-
 		}
 
 		public virtual void BlockUpdate(World world, BlockCoordinates position, BlockCoordinates updatedBlock)

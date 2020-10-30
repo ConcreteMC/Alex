@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Dropper : Block
 	{
-		public Dropper() : base(5703)
+		public Dropper() : base()
 		{
 			Solid = true;
 			Transparent = false;

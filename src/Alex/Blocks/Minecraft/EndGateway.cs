@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class EndGateway : Block
 	{
-		public EndGateway() : base(8073)
+		public EndGateway() : base()
 		{
 			Solid = true;
 			Transparent = false;

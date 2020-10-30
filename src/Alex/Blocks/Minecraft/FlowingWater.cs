@@ -2,7 +2,7 @@
 {
 	public class FlowingWater : Block
 	{
-		public FlowingWater(byte meta = 0) : base(9, meta)
+		public FlowingWater(byte meta = 0) : base()
 		{
 			Solid = false;
 			Transparent = true;

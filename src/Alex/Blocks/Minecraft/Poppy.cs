@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Poppy : Block
 	{
-		public Poppy() : base(1022)
+		public Poppy() : base()
 		{
 			Solid = false;
 			Transparent = true;

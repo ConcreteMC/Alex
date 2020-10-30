@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class SoulSand : Block
 	{
-		public SoulSand() : base(3404)
+		public SoulSand() : base()
 		{
 			Solid = true;
 			Transparent = false;

@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Beetroots : Block
 	{
-		public Beetroots() : base(8068)
+		public Beetroots() : base()
 		{
 			Solid = false;
 			Transparent = true;

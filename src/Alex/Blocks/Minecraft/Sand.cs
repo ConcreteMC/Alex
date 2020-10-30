@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Sand : Block
 	{
-		public Sand() : base(66)
+		public Sand() : base()
 		{
 			Solid = true;
 			Transparent = false;

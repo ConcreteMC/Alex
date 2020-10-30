@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class FlowerPot : Block
 	{
-		public FlowerPot() : base(5175)
+		public FlowerPot() : base()
 		{
 			Solid = true;
 			Transparent = true;

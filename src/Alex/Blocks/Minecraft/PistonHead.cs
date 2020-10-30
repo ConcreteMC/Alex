@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class PistonHead : Block
 	{
-		public PistonHead() : base(971)
+		public PistonHead() : base()
 		{
 			Solid = true;
 			Transparent = true;

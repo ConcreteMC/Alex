@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class PackedIce : Block
 	{
-		public PackedIce() : base(6751)
+		public PackedIce() : base()
 		{
 			Solid = true;
 			Transparent = true;

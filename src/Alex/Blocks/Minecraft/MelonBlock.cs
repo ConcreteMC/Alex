@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class MelonBlock : Block
 	{
-		public MelonBlock() : base(4153)
+		public MelonBlock() : base()
 		{
 			Solid = true;
 			Transparent = true;

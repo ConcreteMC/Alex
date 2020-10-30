@@ -34,7 +34,7 @@ namespace Alex.Blocks.Minecraft
 		public bool IsPowered => BlockState.GetTypedValue<bool>(POWERED); //(Metadata & 0x02) == 0x02;
 
 		protected bool CanOpen { get; set; } = true;
-		public Door(uint blockId) : base(blockId)
+		public Door(uint blockId) : base()
 		{
 			Transparent = true;
 			RequiresUpdate = true;

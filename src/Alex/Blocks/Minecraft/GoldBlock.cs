@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class GoldBlock : Block
 	{
-		public GoldBlock() : base(1033)
+		public GoldBlock() : base()
 		{
 			Solid = true;
 			Transparent = false;

@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Snow : Block
 	{
-		public Snow() : base(3325)
+		public Snow() : base()
 		{
 			Solid = true;
 			Transparent = true;

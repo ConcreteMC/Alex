@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class DeadBush : Block
 	{
-		public DeadBush() : base(953)
+		public DeadBush() : base()
 		{
 			Solid = false;
 			Transparent = true;

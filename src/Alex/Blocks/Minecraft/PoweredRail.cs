@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class PoweredRail : Block
 	{
-		public PoweredRail() : base(920)
+		public PoweredRail() : base()
 		{
 			Solid = false;
 			Transparent = true;

@@ -2,7 +2,7 @@
 {
     public class Leaves : Block
     {
-	    public Leaves(uint blockStateId) : base(blockStateId)
+	    public Leaves(uint blockStateId) : base()
 	    {
 		    Solid = true;
 		    Transparent = true;

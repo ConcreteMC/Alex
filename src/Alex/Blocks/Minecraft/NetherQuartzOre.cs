@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class NetherQuartzOre : Block
 	{
-		public NetherQuartzOre() : base(5594)
+		public NetherQuartzOre() : base()
 		{
 			Solid = true;
 			Transparent = false;

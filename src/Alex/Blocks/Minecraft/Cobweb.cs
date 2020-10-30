@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Cobweb : Block
 	{
-		public Cobweb() : base(950)
+		public Cobweb() : base()
 		{
 			Solid = false;
 			Transparent = true;

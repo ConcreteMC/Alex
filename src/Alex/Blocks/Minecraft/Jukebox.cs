@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Jukebox : Block
 	{
-		public Jukebox() : base(3369)
+		public Jukebox() : base()
 		{
 			Solid = true;
 			Transparent = false;

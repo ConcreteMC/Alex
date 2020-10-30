@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Observer : Block
 	{
-		public Observer() : base(8114)
+		public Observer() : base()
 		{
 			Solid = true;
 			Transparent = true;

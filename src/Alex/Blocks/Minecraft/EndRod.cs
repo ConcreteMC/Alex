@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class EndRod : Block
 	{
-		public EndRod() : base(7911)
+		public EndRod() : base()
 		{
 			Solid = true;
 			Transparent = true;

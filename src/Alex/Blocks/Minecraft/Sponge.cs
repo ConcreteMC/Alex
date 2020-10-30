@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Sponge : Block
 	{
-		public Sponge() : base(138)
+		public Sponge() : base()
 		{
 			Solid = true;
 			Transparent = false;

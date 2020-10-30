@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class EndStone : Block
 	{
-		public EndStone() : base(4544)
+		public EndStone() : base()
 		{
 			Solid = true;
 			Transparent = false;

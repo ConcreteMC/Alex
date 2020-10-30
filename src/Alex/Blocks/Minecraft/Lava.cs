@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Lava : Block
 	{
-		public Lava() : base(50)
+		public Lava() : base()
 		{
 			Solid = false;
 			Transparent = true;

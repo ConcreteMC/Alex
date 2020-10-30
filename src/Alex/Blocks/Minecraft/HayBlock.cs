@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class HayBlock : Block
 	{
-		public HayBlock() : base(6731)
+		public HayBlock() : base()
 		{
 			Solid = true;
 			Transparent = false;

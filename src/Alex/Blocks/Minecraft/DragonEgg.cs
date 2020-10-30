@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class DragonEgg : Block
 	{
-		public DragonEgg() : base(4545)
+		public DragonEgg() : base()
 		{
 			Solid = true;
 			Transparent = true;

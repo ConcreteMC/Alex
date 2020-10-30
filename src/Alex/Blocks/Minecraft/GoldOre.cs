@@ -4,7 +4,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class GoldOre : Block
 	{
-		public GoldOre() : base(69)
+		public GoldOre() : base()
 		{
 			Solid = true;
 			Transparent = false;

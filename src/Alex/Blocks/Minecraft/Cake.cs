@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Cake : Block
 	{
-		public Cake() : base(3416)
+		public Cake() : base()
 		{
 			Solid = true;
 			Transparent = true;

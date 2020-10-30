@@ -2,7 +2,7 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Clay : Block
 	{
-		public Clay() : base(3351)
+		public Clay() : base()
 		{
 			Solid = true;
 			Transparent = false;
