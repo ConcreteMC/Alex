@@ -162,7 +162,7 @@ namespace Alex.Gamestates.InGame
 				}
 
 				return
-					$"Alex {Alex.Version} ({Alex.FpsMonitor.Value:##} FPS, Chunk Updates: {World.EnqueuedChunkUpdates} queued, {World.ConcurrentChunkUpdates} active, Avg: {avg:F2}ms, Max: {World.ChunkManager.MaxUpdateTime.TotalMilliseconds:F2}ms, Min: {World.ChunkManager.MinUpdateTIme.TotalMilliseconds:F2})" /*, H: {highLight} M: {midLight} L: {lowLight} lighting updates)"*/
+					$"Alex {Alex.Version} ({Alex.FpsMonitor.Value:##} FPS, {World.Ticker.TicksPerSecond:##} TPS, Chunk Updates: {World.EnqueuedChunkUpdates} queued, {World.ConcurrentChunkUpdates} active, Avg: {avg:F2}ms, Max: {World.ChunkManager.MaxUpdateTime.TotalMilliseconds:F2}ms, Min: {World.ChunkManager.MinUpdateTIme.TotalMilliseconds:F2})" /*, H: {highLight} M: {midLight} L: {lowLight} lighting updates)"*/
 					;
 			});
 			_debugInfo.AddDebugLeft(() =>

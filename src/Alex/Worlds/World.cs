@@ -59,7 +59,7 @@ namespace Alex.Worlds
 		TheEnd,
 	}
 	
-	public class World : IBlockAccess
+	public class World : IBlockAccess, ITicked
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(World));
 
@@ -126,6 +126,10 @@ namespace Alex.Worlds
 			Ticker = new TickManager();
 			PlayerList = new PlayerList();
 
+			Ticker.RegisterTicked(this);
+			Ticker.RegisterTicked(EntityManager);
+			Ticker.RegisterTicked(PhysicsEngine);
+			
 			ChunkManager.Start();
 		//	var alex = serviceProvider.GetRequiredService<Alex>();
 			var settings = serviceProvider.GetRequiredService<IOptionsProvider>();
@@ -357,7 +361,7 @@ namespace Alex.Worlds
 			
 			SkyRenderer.Update(args);
 			ChunkManager.Update(args);
-			EntityManager.Update(args, SkyRenderer);
+			EntityManager.Update(args);
 			PhysicsEngine.Update(args.GameTime);
 
 			var diffuseColor = Color.White.ToVector3() * SkyRenderer.BrightnessModifier;
@@ -381,16 +385,18 @@ namespace Alex.Worlds
 				ChunkManager.FogColor = SkyRenderer.WorldFogColor.ToVector3();
 				ChunkManager.FogDistance = (float) Options.VideoOptions.RenderDistance * 16f * 0.8f;
 			}
+		}
+
+		public void OnTick()
+		{
+			Player?.OnTick();
 			
-			if (Ticker.Update(args))
+			if (DoDaylightcycle)
 			{
-				if (DoDaylightcycle)
-				{
-					Time++;
-				}
+				Time++;
 			}
 		}
-        
+		
         public Vector3 SpawnPoint { get; set; } = Vector3.Zero;
 
         public float BrightnessModifier
@@ -548,6 +554,8 @@ namespace Alex.Worlds
 					type |= ScheduleType.LowPriority;
 				}
 
+				//chunk.SetDirty();
+				//chunk.IsDirty = true;
 				ChunkManager.ScheduleChunkUpdate(chunkCoords, type, (priority & BlockUpdatePriority.Priority) != 0);
 			}
 		}
@@ -943,6 +951,7 @@ namespace Alex.Worlds
 
 			PhysicsEngine.Dispose();
 			Player.Dispose();
+			Ticker.Dispose();
 		}
 
 		#region IWorldReceiver (Handle WorldProvider callbacks)

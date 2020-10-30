@@ -17,7 +17,7 @@ using MathF = System.MathF;
 
 namespace Alex.Worlds
 {
-    public class PhysicsManager : IDisposable
+    public class PhysicsManager : IDisposable, ITicked
     {
 	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(PhysicsManager));
 	    private World World { get; }
@@ -149,7 +149,7 @@ namespace Alex.Worlds
 		}
 
 		private Stopwatch _timeSinceTick { get; set; } = new Stopwatch();
-		public void Tick()
+		public void OnTick()
 		{
 			foreach (var entity in PhysicsEntities.ToArray())
 			{

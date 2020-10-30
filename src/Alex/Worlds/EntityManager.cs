@@ -17,7 +17,7 @@ using ContainmentType = Microsoft.Xna.Framework.ContainmentType;
 
 namespace Alex.Worlds
 {
-    public class EntityManager : IDisposable
+    public class EntityManager : IDisposable, ITicked
 	{
 		private ConcurrentDictionary<long, Entity> Entities { get; }
 		private ConcurrentDictionary<UUID, Entity> EntityByUUID { get; }
@@ -41,7 +41,7 @@ namespace Alex.Worlds
 			BlockEntities = new ConcurrentDictionary<BlockCoordinates, BlockEntity>();
 		}
 
-		public void Tick()
+		public void OnTick()
 		{
 			List<Entity> rendered = new List<Entity>();
 			
@@ -67,10 +67,8 @@ namespace Alex.Worlds
 			_rendered = rendered.ToArray();
 		}
 		
-	    public void Update(IUpdateArgs args, SkyBox skyRenderer)
+	    public void Update(IUpdateArgs args)
 	    {
-		    var lightColor = new Color(245, 245, 225).ToVector3();
-		    
 		    var entities = Entities.Values.ToArray();
 		    var blockEntities = BlockEntities.Values.ToArray();
 		    

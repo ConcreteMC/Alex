@@ -70,7 +70,7 @@ namespace Alex.Worlds.Multiplayer.Java
 		void HandleLogin(Packet packet);
 		void HandlePlay(Packet packet);
 	}
-	public class JavaWorldProvider : WorldProvider, IJavaProvider
+	public class JavaWorldProvider : WorldProvider, IJavaProvider, ITicked
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
@@ -85,7 +85,6 @@ namespace Alex.Worlds.Multiplayer.Java
 		private ManualResetEvent _loginCompleteEvent = new ManualResetEvent(false);
 		private TcpClient TcpClient;
 
-		private System.Threading.Timer _gameTickTimer;
 		//private DedicatedThreadPool ThreadPool;
 		private IEventDispatcher EventDispatcher { get; }
 		public string Hostname { get; set; }
@@ -219,7 +218,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			SendPacket(abilitiesPacket);
 		}
 
-		private void GameTick(object state)
+		public void OnTick()
 		{
 			if (World == null) return;
 
@@ -289,9 +288,9 @@ namespace Alex.Worlds.Multiplayer.Java
 
 				//if (isTick)
 				{
-					player?.OnTick();
-					World?.EntityManager?.Tick();
-					World?.PhysicsEngine.Tick();
+					//player?.OnTick();
+					//World?.EntityManager?.Tick();
+					//World?.PhysicsEngine.Tick();
 				}
 			}
 		}
@@ -322,12 +321,11 @@ namespace Alex.Worlds.Multiplayer.Java
 		protected override void Initiate()
 		{
 			_initiated = true;
-			
-			_gameTickTimer = new System.Threading.Timer(GameTick, null, 50, 50);
 			//	World?.UpdatePlayerPosition(_lastReceivedLocation);
 
 			Alex.Resources.ResourcePack.TryGetBitmap("entity/alex", out var rawTexture);
 			_alexSkin = TextureUtils.BitmapToTexture2D(Alex.GraphicsDevice, rawTexture);
+			World.Ticker.RegisterTicked(this);
 		}
 
 		[EventHandler(EventPriority.Highest)]
@@ -2176,7 +2174,6 @@ namespace Alex.Worlds.Multiplayer.Java
 			_initiated = false;
 			
 			base.Dispose();
-			_gameTickTimer?.Dispose();
 
 			Client.Stop();
 			TcpClient.Dispose();

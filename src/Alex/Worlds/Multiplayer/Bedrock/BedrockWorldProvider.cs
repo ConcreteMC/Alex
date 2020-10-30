@@ -23,14 +23,12 @@ using PlayerLocation = Alex.API.Utils.PlayerLocation;
 
 namespace Alex.Worlds.Multiplayer.Bedrock
 {
-	public class BedrockWorldProvider : WorldProvider
+	public class BedrockWorldProvider : WorldProvider, ITicked
 	{
 		private static Logger Log = LogManager.GetCurrentClassLogger();
 		
 		public Alex Alex { get; }
 		protected BedrockClient Client { get; }
-
-		private HighPrecisionTimer _gameTickTimer;
 		private IEventDispatcher EventDispatcher { get; }
 		public BedrockFormManager FormManager { get; }
 		
@@ -72,7 +70,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         
         private long _tickTime = 0;
         private long _lastPrioritization = 0;
-        private void GameTick(object state)
+        public void OnTick()
 		{
 			if (World == null) return;
 
@@ -123,9 +121,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					Client.SendPing();
 				}
 				
-				World.Player.OnTick();
-				World.EntityManager.Tick();
-				World.PhysicsEngine.Tick();
+				//World.Player.OnTick();
+				//World.EntityManager.Tick();
+				//World.PhysicsEngine.Tick();
 			}
 		}
 
@@ -184,7 +182,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			World.Player.SetInventory(new BedrockInventory(46));
 
 			CustomConnectedPong.CanPing = true;
-			_gameTickTimer = new HighPrecisionTimer(50, GameTick);// new System.Threading.Timer(GameTick, null, 50, 50);
+			World.Ticker.RegisterTicked(this);
 		}
 
 		private bool VerifyConnection()

@@ -91,7 +91,7 @@ namespace Alex.Worlds.Chunks
 			}
 		}
 
-		private void SetDirty()
+		public void SetDirty()
 		{
 			IsDirty = true;
 		}

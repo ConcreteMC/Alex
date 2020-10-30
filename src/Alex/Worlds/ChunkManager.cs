@@ -36,7 +36,7 @@ using PlayerLocation = Alex.API.Utils.PlayerLocation;
 
 namespace Alex.Worlds
 {
-	public class ChunkManager : IDisposable
+	public class ChunkManager : IDisposable, ITicked
     {
 	    private readonly static RenderStage[] RenderStages = ((RenderStage[]) Enum.GetValues(typeof(RenderStage)));
 
@@ -431,18 +431,11 @@ namespace Alex.Worlds
 
 			    _currentFrameTexture = Resources.Atlas.GetAtlas(_currentFrame);
 			    DefaultShaders.SetAnimatedTextures(_currentFrameTexture);
-			//    LightShaders.SetAnimatedTextures(_currentFrameTexture);
-			   // AnimatedEffect.Texture = _currentFrameTexture;
-			    //AnimatedTranslucentEffect.Texture = _currentFrameTexture;
-			    // OpaqueEffect.Texture = frame;
-			    // TransparentEffect.Texture = frame;
 		    }
 		    
 			var camera = args.Camera;
 		    _cameraBoundingFrustum = camera.BoundingFrustum;
 		    _cameraPosition = camera.Position;
-
-			    //	    DefaultShaders.LightSource1Position = _cameraPosition;
 	    }
 		
 		#region Add, Remove, Get
@@ -1525,5 +1518,11 @@ namespace Alex.Worlds
         }
 
         #endregion
+
+        /// <inheritdoc />
+        public void OnTick()
+        {
+	        
+        }
     }
 }
