@@ -319,36 +319,50 @@ namespace Alex.Worlds
 			(BlockCoordinates coordinates, BlockState block, BoundingBox box, bool isBlockPart) collisionBlock, out float newYPosition)
 		{
 			newYPosition = entityBox.Min.Y;
+			var newY = newYPosition;
 			if (entity.Velocity.Y < 0f)
 				return false;
-			
-			if (collisionBlock.box.Max.Y > entity.KnownPosition.Y)
-			{
-				var difference = collisionBlock.box.Max.Y - entity.KnownPosition.Y;
-				if (difference > 0.55f)
+
+			var result = collisionBlock.block.Model.GetBoundingBoxes(collisionBlock.coordinates)
+			   .Where(x => entityBox.Intersects(x)).All(box => {
+					if (box.Max.Y > entity.KnownPosition.Y)
+						{
+							var difference = box.Max.Y - entity.KnownPosition.Y;
+
+							if (difference > 0.55f)
+								return false;
+
+							var h = entityBox.Max.Y - entityBox.Min.Y;
+
+							var pos = new Vector3(
+								(entityBox.Min.X + entityBox.Max.X) / 2f, box.Max.Y,
+								(entityBox.Min.Z + entityBox.Max.Z) / 2f);
+
+							var newEntityBoundingBox = entity.GetBoundingBox(pos);
+
+							Bound bound = new Bound(World, newEntityBoundingBox, pos);
+
+							if (bound.GetIntersecting(newEntityBoundingBox, false, out var collisionBlocks))
+							{
+								var solidBlocks = collisionBlocks.Where(x => x.block.Block.Solid).ToArray();
+
+								if (solidBlocks.Any(
+									x => x.box.Min.Y > pos.Y && x.box.Min.Y < newEntityBoundingBox.Max.Y))
+								{
+									return false;
+								}
+							}
+
+							newY = pos.Y + 0.075f;
+
+							return true;
+						}
+
 					return false;
+				});
 
-				var h = entityBox.Max.Y - entityBox.Min.Y;
-				var pos = new Vector3((entityBox.Min.X + entityBox.Max.X) / 2f, collisionBlock.box.Max.Y,
-					(entityBox.Min.Z + entityBox.Max.Z) / 2f);
-				var newEntityBoundingBox =
-					entity.GetBoundingBox(pos);
-				
-				Bound bound = new Bound(World, newEntityBoundingBox, pos);
-				if (bound.GetIntersecting(newEntityBoundingBox, false, out var collisionBlocks))
-				{
-					var solidBlocks = collisionBlocks.Where(x => x.block.Block.Solid).ToArray();
-					if (solidBlocks.Any(x => x.box.Min.Y > pos.Y && x.box.Min.Y < newEntityBoundingBox.Max.Y))
-					{
-						return false;
-					}
-				}
-
-				newYPosition = pos.Y + 0.075f;
-				return true;
-			}
-
-			return false;
+			newYPosition = newY;
+			return result;
 		}
 
 		private bool AdjustForZ(Entity entity, BoundingBox originalEntityBoundingBox, BoundingBox box,
