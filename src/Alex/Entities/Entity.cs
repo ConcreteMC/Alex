@@ -172,8 +172,26 @@ namespace Alex.Entities
 		private EntityModelRenderer.ModelBone _body;
 		private EntityModelRenderer.ModelBone _head;
 		
-		public HealthManager HealthManager { get; }
-		public bool IsFirstPersonMode { get; set; } = false;
+		public  HealthManager HealthManager { get; }
+		
+		private bool          _isFirstPersonMode = false;
+
+		public bool IsFirstPersonMode
+		{
+			get
+			{
+				return _isFirstPersonMode;
+			}
+			set
+			{
+				if (value != _isFirstPersonMode)
+				{
+					_isFirstPersonMode = value;
+					CheckHeldItem();
+				}
+			}
+		}
+
 		private Dictionary<string, EntityProperty> _entityProperties = new Dictionary<string, EntityProperty>()
 		{
 			
@@ -746,12 +764,12 @@ namespace Alex.Entities
 		{
 			if (IsSneaking && _body != null)
 			{
-				var posOffset = new Vector3(0f, -1.5f, -4.5f);
+			//	var posOffset = new Vector3(0f, -1.5f, 4.5f);
 
 				if (!_body.IsAnimating)
 				{
 					_body.Rotation = new Vector3(-25f, _body.Rotation.Y, _body.Rotation.Z);
-					_body.Position = posOffset;
+					//_body.Position = posOffset;
 				}
 
 				//_head.Position = new Vector3(_body.Position.X, 0.25f, 0f);
@@ -759,21 +777,21 @@ namespace Alex.Entities
 				{
 					if (!_leftArmModel.IsAnimating)
 					{
-						_leftArmModel.Rotation = new Vector3(-20f, 0f, 0f);
+						_leftArmModel.Rotation = new Vector3(20f, 0f, 0f);
 						
-						_leftArmModel.Position = posOffset;
+					//	_leftArmModel.Position = posOffset;
 					}
 
 					if (!_rightArmModel.IsAnimating)
 					{
-						_rightArmModel.Rotation = new Vector3(-20f, 0f, 0f);
-						_rightArmModel.Position = posOffset;
+						_rightArmModel.Rotation = new Vector3(20f, 0f, 0f);
+					//	_rightArmModel.Position = posOffset;
 					}
 				}
 
 				if (_head != null && !_head.IsAnimating)
 				{
-					_head.Position = posOffset;
+				//	_head.Position = posOffset;
 				}
 			}
 			else if (_body != null && !IsSneaking)

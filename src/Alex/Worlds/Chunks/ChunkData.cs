@@ -16,16 +16,22 @@ namespace Alex.Worlds.Chunks
         public BlockShaderVertex[]                       Vertices     { get; set; }
         public Dictionary<RenderStage, ChunkRenderStage> RenderStages { get; set; }
 
+        public bool Disposed { get; private set; } = false;
         public void Dispose()
         {
-            Buffer?.MarkForDisposal();
+            lock (WriteLock)
+            {
+                Buffer?.MarkForDisposal();
 
-           foreach (var stage in RenderStages)
-           {
-               stage.Value.Dispose();
-           }
+                foreach (var stage in RenderStages)
+                {
+                    stage.Value.Dispose();
+                }
 
-           RenderStages.Clear();
+                RenderStages.Clear();
+
+                Disposed = true;
+            }
         }
     }
 

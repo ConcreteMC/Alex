@@ -71,7 +71,8 @@ namespace Alex.Worlds
         private Utils.Queue.ConcurrentPriorityQueue<ChunkCoordinates, double> PriorityQueue { get; } =
 	       new Utils.Queue.ConcurrentPriorityQueue<ChunkCoordinates, double>();
        
-		private BlockLightCalculations BlockLightCalculations { get; }
+		private BlockLightCalculations  BlockLightCalculations { get; }
+		private ConcurrentQueue<Action> IndirectUIThreadQueue  { get; }
 		public ChunkManager(IServiceProvider serviceProvider, GraphicsDevice graphics, World world)
         {
 	        _depthMap = new RenderTarget2D(graphics, 512, 512, false, SurfaceFormat.Color, DepthFormat.None);
@@ -119,6 +120,7 @@ namespace Alex.Worlds
 	       Options.VideoOptions.ClientSideLighting.Bind(ClientSideLightingChanged);
 	       RenderDistance = Options.VideoOptions.RenderDistance;
 
+	       IndirectUIThreadQueue = new ConcurrentQueue<Action>();
 	       //_blockAccessPool = new ObjectPool<ChunkBuilderBlockAccess>(36, () => new ChunkBuilderBlockAccess(World));
         }
 
@@ -421,8 +423,14 @@ namespace Alex.Worlds
 	    #endregion
 
 	    private Texture2D _currentFrameTexture = null;
+	    private Stopwatch _frameTimer          = Stopwatch.StartNew();
+	    private Stopwatch _actionTimer         = new Stopwatch();
+	    private int       _skipFrames          = 0;
 		public void Update(IUpdateArgs args)
-	    {
+		{
+			if (_skipFrames > 0)
+				_skipFrames--;
+			
 		    _timer += (float)args.GameTime.ElapsedGameTime.TotalSeconds;
 		    if (_timer >= (1.0f / _framerate ))
 		    {
@@ -436,6 +444,29 @@ namespace Alex.Worlds
 			var camera = args.Camera;
 		    _cameraBoundingFrustum = camera.BoundingFrustum;
 		    _cameraPosition = camera.Position;
+
+		    if (_skipFrames <= 0 && _frameTimer.ElapsedMilliseconds >= (1000 / 60) && !IndirectUIThreadQueue.IsEmpty
+		                                                       && IndirectUIThreadQueue.TryDequeue(out var action)) //We try to sustain atleast a 60FPS gameloop
+		    {
+			    _actionTimer.Restart();
+			    try
+			    {
+				    action.Invoke();
+			    }
+			    catch (Exception ex)
+			    {
+				    Log.Warn($"Exception on UI Thread: {ex.ToString()}");
+			    }
+
+			    var elapsed = _actionTimer.ElapsedMilliseconds;
+
+			    if (elapsed > args.GameTime.ElapsedGameTime.TotalMilliseconds)
+			    {
+				    _skipFrames += (int)(elapsed / args.GameTime.ElapsedGameTime.TotalMilliseconds);
+			    }
+			    
+			    _frameTimer.Restart();
+		    }
 	    }
 		
 		#region Add, Remove, Get
@@ -931,68 +962,73 @@ namespace Alex.Worlds
 
 		    try
 		    {
-			    var chunkOffset = new Vector3(coordinates.X * 16, 0, coordinates.Z * 16);
-			    var buffer      = data.Buffer;
-
-			    bool updatedBlockLights = false;
-			    bool updatedSkyLights   = false;
-
-			    var vertices    = data.Vertices;
-			    var blockLights = new float[vertices.Length];
-			    var skyLights   = new float[vertices.Length];
-
-			    for (int i = 0; i < vertices.Length; i++)
+			    if (!data.Disposed)
 			    {
-				    var vertex        = vertices[i];
-				    var blockPosition = new BlockCoordinates(vertex.Position);
+				    var chunkOffset = new Vector3(coordinates.X * 16, 0, coordinates.Z * 16);
+				    var buffer      = data.Buffer;
 
-				    blockLights[i] = vertex.BlockLight;
-				    skyLights[i] = vertex.SkyLight;
+				    bool updatedBlockLights = false;
+				    bool updatedSkyLights   = false;
 
-				    if (vertex.Face != BlockFace.None /*&& chunk.HasLightUpdateScheduled(blockPosition.X & 0x0f, blockPosition.Y & 0xff, blockPosition.Z & 0xff)*/)
+				    var vertices    = data.Vertices;
+				    var blockLights = new float[vertices.Length];
+				    var skyLights   = new float[vertices.Length];
+
+				    for (int i = 0; i < vertices.Length; i++)
 				    {
-					    BlockModel.GetLight(
-						    World, vertex.Position , out var blockLight,
-						    out var skyLight, true);
+					    var vertex        = vertices[i];
+					    var blockPosition = new BlockCoordinates(vertex.Position);
 
-					    vertices[i].BlockLight = blockLight;
-					    vertices[i].SkyLight = skyLight;
+					    blockLights[i] = vertex.BlockLight;
+					    skyLights[i] = vertex.SkyLight;
 
-					    if (blockLight != vertex.BlockLight)
+					    if (
+						    vertex.Face != BlockFace
+							   .None /*&& chunk.HasLightUpdateScheduled(blockPosition.X & 0x0f, blockPosition.Y & 0xff, blockPosition.Z & 0xff)*/
+					    )
 					    {
-						    blockLights[i] = blockLight;
-						    updatedBlockLights = true;
-						    //data.Buffer.SetData();
+						    BlockModel.GetLight(World, vertex.Position, out var blockLight, out var skyLight, true);
+
+						    vertices[i].BlockLight = blockLight;
+						    vertices[i].SkyLight = skyLight;
+
+						    if (blockLight != vertex.BlockLight)
+						    {
+							    blockLights[i] = blockLight;
+							    updatedBlockLights = true;
+							    //data.Buffer.SetData();
+						    }
+
+						    if (skyLight != vertex.SkyLight)
+						    {
+							    skyLights[i] = skyLight;
+							    updatedSkyLights = true;
+						    }
+
+						    chunk.SetLightUpdateScheduled(
+							    blockPosition.X & 0x0f, blockPosition.Y & 0xff, blockPosition.Z & 0x0f, false, false);
+
+						    //vertex.BlockLight = blockLight;
+						    // vert.SkyLight = skyLight;
 					    }
+				    }
 
-					    if (skyLight != vertex.SkyLight)
-					    {
-						    skyLights[i] = skyLight;
-						    updatedSkyLights = true;
-					    }
+				    if (updatedBlockLights)
+				    {
+					    buffer.SetData(
+						    BlockShaderVertex.BlockLightOffset, blockLights, 0, blockLights.Length,
+						    BlockShaderVertex.VertexDeclaration.VertexStride);
+				    }
 
-					    chunk.SetLightUpdateScheduled(blockPosition.X & 0x0f, blockPosition.Y & 0xff, blockPosition.Z & 0x0f, false, false);
-
-					    //vertex.BlockLight = blockLight;
-					    // vert.SkyLight = skyLight;
+				    if (updatedSkyLights)
+				    {
+					    buffer.SetData(
+						    BlockShaderVertex.SkyLightOffset, skyLights, 0, skyLights.Length,
+						    BlockShaderVertex.VertexDeclaration.VertexStride);
 				    }
 			    }
 
-			    if (updatedBlockLights)
-			    {
-				    buffer.SetData(
-					    BlockShaderVertex.BlockLightOffset, blockLights, 0, blockLights.Length,
-					    BlockShaderVertex.VertexDeclaration.VertexStride);
-			    }
-
-			    if (updatedSkyLights)
-			    {
-				    buffer.SetData(
-					    BlockShaderVertex.SkyLightOffset, skyLights, 0, skyLights.Length,
-					    BlockShaderVertex.VertexDeclaration.VertexStride);
-			    }
-
-			   // _chunkData[coordinates].Buffer = buffer;
+			    // _chunkData[coordinates].Buffer = buffer;
 		    }
 		    catch (Exception ex)
 		    {
@@ -1257,7 +1293,7 @@ namespace Alex.Worlds
 
 				    if (finishingActions.Count > 0 && data != null)
 				    {
-					    Alex.Instance.UIThreadQueue.Enqueue(
+					    IndirectUIThreadQueue.Enqueue(
 						    () =>
 						    {
 							    foreach (var action in finishingActions)

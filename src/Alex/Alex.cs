@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -92,10 +93,11 @@ namespace Alex
 
 		public GraphicsDeviceManager DeviceManager { get; }
 
-		internal ConcurrentQueue<Action> UIThreadQueue { get; }
-		private LaunchSettings LaunchSettings { get; }
-		public PluginManager PluginManager { get; }
-        public FpsMonitor FpsMonitor { get; }
+		internal ConcurrentQueue<Action> UIThreadQueue  { get; }
+		
+		private  LaunchSettings          LaunchSettings { get; }
+		public   PluginManager           PluginManager  { get; }
+        public   FpsMonitor              FpsMonitor     { get; }
 
         public new IServiceProvider Services { get; set; }
         
@@ -475,17 +477,16 @@ namespace Alex
 		protected override void Update(GameTime gameTime)
 		{
 			base.Update(gameTime);
-			
+
 			InputManager.Update(gameTime);
 
 			GuiManager.Update(gameTime);
 			GameStateManager.Update(gameTime);
 			GuiDebugHelper.Update(gameTime);
-			
+
 			//RichPresenceProvider.Update();
 
-			if (!UIThreadQueue.IsEmpty 
-			    && UIThreadQueue.TryDequeue(out Action a))
+			if (!UIThreadQueue.IsEmpty && UIThreadQueue.TryDequeue(out Action a))
 			{
 				try
 				{
@@ -495,6 +496,8 @@ namespace Alex
 				{
 					Log.Warn($"Exception on UIThreadQueue: {ex.ToString()}");
 				}
+
+				//_sw.Restart();
 			}
 		}
 
