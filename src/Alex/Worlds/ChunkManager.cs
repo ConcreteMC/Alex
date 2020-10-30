@@ -63,9 +63,7 @@ namespace Alex.Worlds
 	    private int FrameCount { get; set; } = 1;
         private ConcurrentDictionary<ChunkCoordinates, ChunkData> _chunkData = new ConcurrentDictionary<ChunkCoordinates, ChunkData>();
 
-        private AlexOptions Options { get; }
-        private RenderTarget2D _depthMap;
-        public RenderTarget2D DepthMap => _depthMap;
+        private AlexOptions         Options { get; }
         private DedicatedThreadPool _threadPool;
         
         private Utils.Queue.ConcurrentPriorityQueue<ChunkCoordinates, double> PriorityQueue { get; } =
@@ -75,8 +73,6 @@ namespace Alex.Worlds
 		private ConcurrentQueue<Action> IndirectUIThreadQueue  { get; }
 		public ChunkManager(IServiceProvider serviceProvider, GraphicsDevice graphics, World world)
         {
-	        _depthMap = new RenderTarget2D(graphics, 512, 512, false, SurfaceFormat.Color, DepthFormat.None);
-	        
 	        Graphics = graphics;
 	        World = world;
 	        //Options = option;
@@ -304,29 +300,18 @@ namespace Alex.Worlds
 
 		    device.DepthStencilState = DepthStencilState;
 
-		    if (depthMapOnly)
-		    {
-			    args.GraphicsDevice.SetRenderTarget(_depthMap);
-			    device.BlendState = LightMapBS;
 
-			    args.GraphicsDevice.Clear(Color.Black);
-			    DrawStaged(args, out _, out _, DefaultShaders.LightingEffect, RenderStages);
+		    // device.DepthStencilState = DepthStencilState.DepthRead;
+		    device.BlendState = BlendState.AlphaBlend;
 
-			    args.GraphicsDevice.SetRenderTarget(null);
-		    }
-		    else
-		    {
-			    // device.DepthStencilState = DepthStencilState.DepthRead;
-			    device.BlendState = BlendState.AlphaBlend;
+		    DrawStaged(
+			    args, out int chunksRendered, out int verticesRendered, null,
+			    stages.Length > 0 ? stages : RenderStages);
 
-			    DrawStaged(
-				    args, out int chunksRendered, out int verticesRendered, null,
-				    stages.Length > 0 ? stages : RenderStages);
+		    Vertices = verticesRendered;
+		    RenderedChunks = chunksRendered;
+		    IndexBufferSize = 0;
 
-			    Vertices = verticesRendered;
-			    RenderedChunks = chunksRendered;
-			    IndexBufferSize = 0;
-		    }
 
 		    //if (usingWireFrames)
 		    device.RasterizerState = originalState;
@@ -426,6 +411,8 @@ namespace Alex.Worlds
 	    private Stopwatch _frameTimer          = Stopwatch.StartNew();
 	    private Stopwatch _actionTimer         = new Stopwatch();
 	    private int       _skipFrames          = 0;
+
+	    private const double TargetElapsedTime = (1000d / 60d);
 		public void Update(IUpdateArgs args)
 		{
 			if (_skipFrames > 0)
@@ -445,7 +432,7 @@ namespace Alex.Worlds
 		    _cameraBoundingFrustum = camera.BoundingFrustum;
 		    _cameraPosition = camera.Position;
 
-		    if (_skipFrames <= 0 && _frameTimer.ElapsedMilliseconds >= (1000 / 60) && !IndirectUIThreadQueue.IsEmpty
+		    if (_skipFrames <= 0 && _frameTimer.ElapsedMilliseconds >= TargetElapsedTime && !IndirectUIThreadQueue.IsEmpty
 		                                                       && IndirectUIThreadQueue.TryDequeue(out var action)) //We try to sustain atleast a 60FPS gameloop
 		    {
 			    _actionTimer.Restart();
@@ -462,7 +449,7 @@ namespace Alex.Worlds
 
 			    if (elapsed > args.GameTime.ElapsedGameTime.TotalMilliseconds)
 			    {
-				    _skipFrames += (int)(elapsed / args.GameTime.ElapsedGameTime.TotalMilliseconds);
+				    _skipFrames += ((int)(elapsed / args.GameTime.ElapsedGameTime.TotalMilliseconds)) * 2;
 			    }
 			    
 			    _frameTimer.Restart();

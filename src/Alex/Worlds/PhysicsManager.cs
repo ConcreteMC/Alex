@@ -17,7 +17,7 @@ using MathF = System.MathF;
 
 namespace Alex.Worlds
 {
-    public class PhysicsManager : IDisposable, ITicked
+    public class PhysicsManager : ITicked
     {
 	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(PhysicsManager));
 	    private World World { get; }
@@ -28,21 +28,6 @@ namespace Alex.Worlds
 	    }
 
 		private ThreadSafeList<IPhysicsEntity> PhysicsEntities { get; } = new ThreadSafeList<IPhysicsEntity>();
-
-		private void TruncateVelocity(IPhysicsEntity entity, float dt)
-		{
-			entity.Velocity = TruncateVelocity(entity.Velocity);
-			/*if (Math.Abs(entity.Velocity.X) < 0.005f)
-				entity.Velocity = new Vector3(0, entity.Velocity.Y, entity.Velocity.Z);
-			
-			if (Math.Abs(entity.Velocity.Y) < 0.005f)
-				entity.Velocity = new Vector3(entity.Velocity.X, 0, entity.Velocity.Z);
-			
-			if (Math.Abs(entity.Velocity.Z) < 0.005f)
-				entity.Velocity = new Vector3(entity.Velocity.X, entity.Velocity.Y, 0);
-			*/
-			//entity.Velocity.Clamp();
-		}
 		
 		private Vector3 TruncateVelocity(Vector3 velocity)
 		{
@@ -56,7 +41,6 @@ namespace Alex.Worlds
 				velocity = new Vector3(velocity.X, velocity.Y, 0);
 
 			return velocity;
-			//entity.Velocity.Clamp();
 		}
 
 		Stopwatch sw = new Stopwatch();
@@ -73,8 +57,6 @@ namespace Alex.Worlds
 					{
 						if (e.NoAi) continue;
 						
-						//if (!e.AlwaysTick && !e.IsRendered) continue;
-
 						var original = e.KnownPosition.ToVector3();
 						
 						var velocity = e.Velocity;
@@ -88,11 +70,8 @@ namespace Alex.Worlds
 						}
 
 						UpdateOnGround(e);
-						//e.KnownPosition.OnGround = onGround;
 
 						e.DistanceMoved += MathF.Abs(Vector3.Distance(original, e.KnownPosition.ToVector3()));
-						
-						//TruncateVelocity(e, dt);
 					}
 				}
 				catch (Exception ex)
@@ -129,8 +108,6 @@ namespace Alex.Worlds
 					continue;
 				
 				var blockBoundingBox = block.Model.GetBoundingBox(blockcoords);
-							
-				//..onGround = onGround || block.Solid;
 
 				if (block.Block.Solid && blockBoundingBox.Contains(corner) != ContainmentType.Disjoint)
 				{
@@ -191,22 +168,12 @@ namespace Alex.Worlds
 					}
 
 					velocity *= new Vector3(drag, 0.98f, drag);
-
-				//	if (!e.RequiresRealTimeTick)
-					{
-						//var dt = (float) ((DateTime.UtcNow - e.LastTickTime).TotalMilliseconds / 50f);
+					
+					velocity = UpdateEntity(e, velocity, out _);
 						
-						velocity = UpdateEntity(e, velocity, out _);
-						
-						e.LastTickTime = DateTime.UtcNow;
-					}
+					e.LastTickTime = DateTime.UtcNow;
 
 					e.Velocity = velocity;
-					
-					//UpdateOnGround(e);
-					//TruncateVelocity(e, 0f);
-
-					//CheckCollision(e);
 				}
 			}
 			
@@ -225,12 +192,10 @@ namespace Alex.Worlds
 				hit.Clear();
 			
 			var position = e.KnownPosition;
-			//var originalPosition = position;
-			
+
 			var originalEntityBoundingBox = e.GetBoundingBox(position);
 			
 			var before = velocity;
-		//	var velocity = e.Velocity;
 
 			if (e.HasCollision)
 			{
@@ -299,13 +264,6 @@ namespace Alex.Worlds
 			{
 				playerY = before.Y;	
 			}
-
-			//e.Velocity = velocity;
-			
-			//e.KnownPosition.Move(e.Velocity * deltaTime);
-			//e.KnownPosition.OnGround = onGround;
-
-			//e.DistanceMoved += MathF.Abs(Vector3.Distance(original, e.KnownPosition.ToVector3()));
 
 			if (isPlayer && hit.Count > 0)
 			{
@@ -422,8 +380,6 @@ namespace Alex.Worlds
 					
 					velocity = new Vector3(velocity.X, velocity.Y, vectorDistance.Z);
 				}
-
-				//velocity = new Vector3(velocity.X, velocity.Y, vectorDistance.Z);
 
 				return true;
 			}
@@ -544,7 +500,6 @@ namespace Alex.Worlds
 				if (CanClimb(entity, box, blocks[blockIndex], out float newYPosition)&& newYPosition > position.Y)
 				{
 					position.Y = newYPosition;
-					//entity.KnownPosition.Y = newYPosition;
 				}
 				else
 				{
@@ -552,11 +507,8 @@ namespace Alex.Worlds
 					vectorDistance = TruncateVelocity(vectorDistance);
 					velocity = new Vector3(velocity.X, vectorDistance.Y, velocity.Z);
 				}
-
-				//velocity = new Vector3(velocity.X, vectorDistance.Y, velocity.Z);
-
+				
 				return true;
-				//entity.CollidedWithWorld(new Vector3(0f,distance, 0f));
 			}
 
 			return false;
@@ -579,17 +531,8 @@ namespace Alex.Worlds
 		}
 		
 		public BoundingBox[] LastKnownHit { get; set; } = null;
-		public void Stop()
-	    {
-		  //  Timer.Change(Timeout.Infinite, Timeout.Infinite);
-	    }
 
-	    public void Dispose()
-	    {
-		   // Timer?.Dispose();
-	    }
-
-	    public bool AddTickable(IPhysicsEntity entity)
+		public bool AddTickable(IPhysicsEntity entity)
 	    {
 		    return PhysicsEntities.TryAdd(entity);
 	    }
@@ -638,22 +581,10 @@ namespace Alex.Worlds
 		    {
 			    var block = world.GetBlockState(coordinates);
 			    if (block?.Model == null) return default;
-			    
-			    //var entityBlockPos = new BlockCoordinates(entityPos);
 
 			    var box = block.Model.GetBoundingBox(coordinates);
-
-			    //var height = (float)block.GetHeight(entityPos - box.Min);
-			    //box.Max = new Vector3(box.Max.X, box.Min.Y + height, box.Max.Z);
+			    
 			    return (block, box);
-		    }
-
-		    public IEnumerable<(BlockState block, BoundingBox box)> GetPoints()
-		    {
-			    foreach (var b in Blocks)
-			    {
-				    yield return b.Value;
-			    }
 		    }
 
 		    public bool GetIntersecting(BoundingBox box, bool includeFullBlocks, out (BlockCoordinates coordinates, BlockState block, BoundingBox box, bool isBlockPart)[] blocks)
@@ -661,16 +592,8 @@ namespace Alex.Worlds
 			    List<(BlockCoordinates coordinates,BlockState block, BoundingBox box, bool isBlockPart)> b = new List<(BlockCoordinates coordinates,BlockState block, BoundingBox box, bool isBlockPart)>();
 			    foreach (var block in Blocks)
 			    {
-				    var vecPos = new Vector3(block.Key.X, block.Key.Y, block.Key.Z);
-
 				    if (block.Value.box.Intersects(box))
 				    {
-					    /*foreach (var intersect in block.Value.block.BlockState.Model.GetIntersecting(block.Key, box).OrderBy(x => x.Max.Y))
-					    {
-						    b.Add((block.Value.block, intersect));
-						    break;
-					    }*/
-
 					    bool added = false;
 					    var bb = block.Value.block.Model.GetPartBoundingBox(block.Key, box);
 					    if (bb.HasValue)
@@ -681,14 +604,7 @@ namespace Alex.Worlds
 
 					    if (!added && includeFullBlocks)
 					    {
-						    /*var containmentType = block.Value.box.Contains(box);
-						    if (containmentType == ContainmentType.Contains || containmentType == ContainmentType.Intersects)
-						    {
-							    //b.Add((block.Key, block.Value.block, block.Value.box, false));
-						    }
-						    //   b.Add((block.Key, block.Value.block, block.Value.box));*/
-						    
-							 b.Add((block.Key, block.Value.block, block.Value.box, false));
+						    b.Add((block.Key, block.Value.block, block.Value.box, false));
 					    }
 				    }
 			    }

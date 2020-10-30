@@ -587,7 +587,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			entity.KnownPosition = position;
 			entity.Velocity = velocity;
 			entity.EntityId = entityId;
-			entity.UUID = new UUID(uuid.ToByteArray());
+			entity.UUID = new MiNET.Utils.UUID(uuid.ToByteArray());
 
 			if (!_initiated)
 			{
@@ -1350,7 +1350,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void HandleSpawnPlayerPacket(SpawnPlayerPacket packet)
 		{
-			if (_players.TryGetValue(new UUID(packet.Uuid.ToByteArray()), out RemotePlayer mob))
+			if (_players.TryGetValue(new MiNET.Utils.UUID(packet.Uuid.ToByteArray()), out RemotePlayer mob))
 			{
 				float yaw = MathUtils.AngleToNotchianDegree(packet.Yaw);
 				mob.KnownPosition = new PlayerLocation(packet.X, packet.Y, packet.Z, yaw, yaw, -MathUtils.AngleToNotchianDegree(packet.Pitch));
@@ -1361,7 +1361,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			}
 		}
 
-		private ConcurrentDictionary<UUID, RemotePlayer> _players = new ConcurrentDictionary<UUID, RemotePlayer>();
+		private ConcurrentDictionary<MiNET.Utils.UUID, RemotePlayer> _players = new ConcurrentDictionary<MiNET.Utils.UUID, RemotePlayer>();
 		private void HandlePlayerListItemPacket(PlayerListItemPacket packet)
 		{
 			if (packet.Action == PlayerListAction.AddPlayer)
@@ -1383,9 +1383,9 @@ namespace Alex.Worlds.Multiplayer.Java
 
 						RemotePlayer entity = new RemotePlayer(entry.Name, (World) World, NetworkProvider, _alexSkin, skinSlim ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom");
 						entity.UpdateGamemode((Gamemode) entry.Gamemode);
-						entity.UUID = new UUID(entry.UUID.ToByteArray());
+						entity.UUID = new MiNET.Utils.UUID(entry.UUID.ToByteArray());
 
-						World?.AddPlayerListItem(new PlayerListItem(entity.Uuid, entry.Name,
+						World?.AddPlayerListItem(new PlayerListItem(entity.UUID, entry.Name,
 							(Gamemode) entry.Gamemode, entry.Ping));
 
 						if (entry.HasDisplayName)
@@ -1429,7 +1429,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 				foreach (var entry in packet.UpdateDisplayNameEntries)
 				{
-					if (_players.TryGetValue(new UUID(entry.UUID.ToByteArray()), out RemotePlayer entity))
+					if (_players.TryGetValue(new MiNET.Utils.UUID(entry.UUID.ToByteArray()), out RemotePlayer entity))
 					{
 						if (entry.HasDisplayName)
 						{
@@ -1454,7 +1454,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 				foreach (var remove in packet.RemovePlayerEntries)
 				{
-					var uuid = new UUID(remove.UUID.ToByteArray());
+					var uuid = new MiNET.Utils.UUID(remove.UUID.ToByteArray());
 					World?.RemovePlayerListItem(uuid);
 				//	API.Utils.UUID uuid = new UUID(remove.UUID.ToByteArray());
 				/*	if (_players.TryRemove(uuid, out PlayerMob removed))

@@ -19,10 +19,10 @@ namespace Alex.Worlds
 {
     public class EntityManager : IDisposable, ITicked
 	{
-		private ConcurrentDictionary<long, Entity> Entities { get; }
-		private ConcurrentDictionary<UUID, Entity> EntityByUUID { get; }
+		private ConcurrentDictionary<long, Entity>                  Entities      { get; }
+		private ConcurrentDictionary<MiNET.Utils.UUID, Entity>      EntityByUUID  { get; }
 		private ConcurrentDictionary<BlockCoordinates, BlockEntity> BlockEntities { get; }
-		private GraphicsDevice Device { get; }
+		private GraphicsDevice                                      Device        { get; }
 
 	    public int EntityCount => Entities.Count;
 	    public int EntitiesRendered { get; private set; } = 0;
@@ -37,7 +37,7 @@ namespace Alex.Worlds
 		    World = world;
 		    Device = device;
 			Entities = new ConcurrentDictionary<long, Entity>();
-			EntityByUUID = new ConcurrentDictionary<UUID, Entity>();
+			EntityByUUID = new ConcurrentDictionary<MiNET.Utils.UUID, Entity>();
 			BlockEntities = new ConcurrentDictionary<BlockCoordinates, BlockEntity>();
 		}
 
@@ -167,7 +167,7 @@ namespace Alex.Worlds
 		    }
 	    }
 
-	    private void Remove(UUID entity, bool removeId = true)
+	    private void Remove(MiNET.Utils.UUID entity, bool removeId = true)
 	    {
 		    if (EntityByUUID.TryRemove(entity, out Entity e))
 		    {

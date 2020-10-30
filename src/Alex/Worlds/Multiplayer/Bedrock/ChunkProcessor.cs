@@ -142,8 +142,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		       HandleChunkCachePacket(subChunkCount, chunkData, cx, cz, callback);
 		       return;
 	        }
+	        
+	        ChunkColumn chunkColumn = new ChunkColumn();
+	        chunkColumn.IsDirty = true;
+	        chunkColumn.X = cx;
+	        chunkColumn.Z = cz;
 
-	        bool gotLight = false;
+	        bool        gotLight    = false;
 	        try
 	        {
 		        using (MemoryStream stream = new MemoryStream(chunkData))
@@ -156,12 +161,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				        Log.Warn("Nothing to read");
 				        return;
 			        }
-
-			        ChunkColumn chunkColumn = new ChunkColumn();
-			        chunkColumn.IsDirty = true;
-			        chunkColumn.X = cx;
-			        chunkColumn.Z = cz;
-
+			        
 			        for (int s = 0; s < subChunkCount; s++)
 			        {
 				        var section = chunkColumn.Sections[s] as ChunkSection;
@@ -554,6 +554,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        catch (Exception ex)
 	        {
 		        Log.Error($"Exception in chunk loading: {ex.ToString()}");
+		        callback?.Invoke(chunkColumn);
 	        }
 	        finally
 	        {

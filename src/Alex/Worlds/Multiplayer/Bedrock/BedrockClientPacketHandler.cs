@@ -22,6 +22,7 @@ using Alex.Entities.Projectiles;
 using Alex.Gamestates;
 using Alex.Graphics.Models.Entity;
 using Alex.Graphics.Models.Entity.Animations;
+using Alex.Gui.Elements;
 using Alex.Items;
 using Alex.Net.Bedrock;
 using Alex.ResourcePackLib.Json;
@@ -266,9 +267,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					new Microsoft.Xna.Framework.Vector3(Client.SpawnPoint.X, Client.SpawnPoint.Y, Client.SpawnPoint.Z),
 					message.spawn.X, message.spawn.X, message.spawn.Y));
 
-			//message.BlockPalette
-			//File.WriteAllText("states.json", JsonConvert.SerializeObject(message.blockPallet));
-
 			Dictionary<uint, BlockStateContainer> ourStates = new Dictionary<uint, BlockStateContainer>();
 
 			foreach (var bs in message.blockPalette)
@@ -284,8 +282,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 						blockstate.Name = name;
 					}
-
-					//var state = BlockFactory.GetBlockState(name);
 				}
 
 				var name2 = bs.Name;
@@ -312,8 +308,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				Client.World.SetGameRule(gr);
 			}
 
-			//Client.World.Player.Inventory.IsPeInventory = true;
-
 			_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
 		}
 
@@ -329,11 +323,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			Client.World.UpdatePlayerPosition(new 
 				PlayerLocation(message.x, message.y, message.z));
 
-			// Client.SendMcpeMovePlayer();
-		//	Client.CurrentLocation = new MiNET.Utils.PlayerLocation(message.x, message.y, message.z);
 			Client.SendMcpeMovePlayer(new MiNET.Utils.PlayerLocation(message.x, message.y, message.z), false);
-			
-			//_changeDimensionResetEvent.Set();
 		}
 
 
@@ -348,21 +338,17 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		}
 
 		private ConcurrentDictionary<MiNET.Utils.UUID, RemotePlayer> _players = new ConcurrentDictionary<MiNET.Utils.UUID, RemotePlayer>();
-        public void HandleMcpeAddPlayer(McpeAddPlayer message)
+
+		public void HandleMcpeAddPlayer(McpeAddPlayer message)
 		{
-		//	UUID u = new UUID(message.uuid.GetBytes());
 			if (_players.TryGetValue(message.uuid, out RemotePlayer mob))
 			{
-				//MiNET.Player
 				mob.EntityId = message.runtimeEntityId;
-				mob.KnownPosition = new PlayerLocation(message.x, message.y, message.z, message.headYaw, message.yaw, message.pitch);
-				mob.Velocity = new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ);
 
-				if (string.IsNullOrWhiteSpace(mob.NameTag) && !string.IsNullOrWhiteSpace(message.username))
-				{
-					//mob.NameTag = message.username;
-					//mob.HideNameTag = false;
-				}
+				mob.KnownPosition = new PlayerLocation(
+					message.x, message.y, message.z, message.headYaw, message.yaw, message.pitch);
+
+				mob.Velocity = new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ);
 
 				if (message.item != null)
 				{
@@ -373,140 +359,41 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				{
 					mob.HandleMetadata(message.metadata);
 				}
-				//mob.Height = message.metadata[(int) MiNET.Entities.Entity.MetadataFlags.CollisionBoxHeight]
-				
-				//if (Client.World is World w)
-				{
-					mob.IsSpawned = true;
-					
-					_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
-					Client.World.SpawnEntity(mob.EntityId, mob);
-				}
-				//else
-				{
-				//	mob.IsSpawned = false;
-				}
+
+				mob.IsSpawned = true;
+
+				_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
+				Client.World.SpawnEntity(mob.EntityId, mob);
 			}
 			else
 			{
-				Log.Warn($"Tried spawning invalid player: {message.uuid}");
+				var identifier = "";
+
+				if (!string.IsNullOrWhiteSpace(message.username))
+				{
+					identifier = message.username.Replace("\n", "");
+				}
+
+				Log.Warn(
+					$"({message.ReliabilityHeader.ReliableMessageNumber}) Tried spawning invalid player: {identifier} (UUID: {message.uuid}))");
 			}
 		}
 
-        //private ConcurrentDictionary<string, EntityModel> _models = new ConcurrentDictionary<string, EntityModel>();
-        /*private bool ProcessEntityModel(IDictionary<string, EntityModel> models, EntityModel model, bool isRetry = false)
-        {
-	        string modelName = model.Name;
-            if (model.Name.Contains(":")) //This model inherits from another model.
-            {
-                string[] split = model.Name.Split(':');
-                string parent = split[1];
-
-                EntityModel parentModel;
-                if (!ModelFactory.TryGetModel(parent, out parentModel) && !models.TryGetValue(parent, out parentModel))
-                {
-                    if (!isRetry)
-                    {
-                       // failedToProcess.TryAdd(modelName, model);
-
-                        Log.Warn($"No parent model for {modelName}");
-                    }
-
-                    return false;
-                }
-
-                modelName = split[0];
-
-                if (model.Bones == null)
-                {
-                    model.Bones = new EntityModelBone[0];
-                }
-
-                if (parentModel == null)
-                {
-                    Log.Warn($"Pass 1 fail... {modelName}");
-                    return false;
-                }
-
-                if (parentModel.Bones == null || parentModel.Bones.Length == 0)
-                {
-                    Log.Warn($"Parent models contains no bones! {modelName}");
-                    return false;
-                }
-
-                Dictionary<string, EntityModelBone> parentBones =
-                    parentModel.Bones.Where(x => x != null && !string.IsNullOrWhiteSpace(x.Name))
-                        .ToDictionary(x => x.Name, e => e);
-
-                Dictionary<string, EntityModelBone> bones =
-                    model.Bones.Where(x => x != null && !string.IsNullOrWhiteSpace(x.Name))
-                        .ToDictionary(x => x.Name, e => e);
-
-                foreach (var bone in parentBones)
-                {
-                    var parentBone = bone.Value;
-                    if (bones.TryGetValue(bone.Key, out EntityModelBone val))
-                    {
-                        if (!val.Reset)
-                        {
-                            if (val.Cubes != null)
-                            {
-                                val.Cubes = val.Cubes.Concat(parentBone.Cubes).ToArray();
-                            }
-                            else
-                            {
-                                val.Cubes = parentBone.Cubes;
-                            }
-
-                            //val.Cubes.Concat(parentBone.Cubes);
-                        }
-
-
-                        bones[bone.Key] = val;
-                    }
-                    else
-                    {
-                        bones.Add(bone.Key, parentBone);
-                    }
-                }
-
-                model.Bones = bones.Values.ToArray();
-            }
-
-            if (model != null)
-            {
-	            foreach (var bone in model.Bones)
-	            {
-		            if (bone != null && bone.Cubes != null)
-		            {
-			            foreach (var cube in bone.Cubes)
-			            {
-				            cube.Origin = new Microsoft.Xna.Framework.Vector3(
-					            -(cube.Origin.X + cube.Size.X), cube.Origin.Y, cube.Origin.Z);
-			            }
-		            }
-	            }
-	            
-	            return models.TryAdd(modelName, model);
-            }
-
-            return false;
-        }*/
-        
 		public void HandleMcpePlayerList(McpePlayerList message)
 		{
 			if (message.records is PlayerAddRecords addRecords)
 			{
 				foreach (var r in addRecords)
 				{
-					if (_players.ContainsKey(r.ClientUuid)) continue;
-					
-					var u = new API.Utils.UUID(r.ClientUuid.GetBytes());
+					if (_players.ContainsKey(r.ClientUuid))
+					{
+						continue;
+					}
 
-					Client.World?.AddPlayerListItem(new PlayerListItem(u, r.DisplayName, Gamemode.Survival, 0));
+					Client.World?.AddPlayerListItem(new PlayerListItem(r.ClientUuid, r.DisplayName, (Gamemode)((int)r.GameMode), 0));
 
 					RemotePlayer m = new RemotePlayer(r.DisplayName, Client.World as World, Client, null);
-					m.UUID = u;
+					m.UUID = r.ClientUuid;
 					m.EntityId = r.EntityId;
 					m.SetInventory(new BedrockInventory(46));
 
@@ -514,8 +401,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					{
 						Log.Warn($"Duplicate player record! {r.ClientUuid}");
 					}
-					
-					if (UseCustomEntityModels)
+
+					if (UseCustomEntityModels && !string.IsNullOrWhiteSpace(r.Skin?.GeometryData))
 					{
 						Client.WorkerThreadPool.QueueUserWorkItem(
 							() =>
@@ -529,14 +416,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
             {
 	            foreach (var r in removeRecords)
 	            {
-		           // var u = new UUID(r.ClientUuid.GetBytes());
 		            if (_players.TryRemove(r.ClientUuid, out var player))
 		            {
 			            Client.World?.RemovePlayerListItem(player.UUID);
-			            if (Client.World is World w)
-			            {
-				            //w.DespawnEntity(player.EntityId);
-			            }
 		            }
 	            }
             }
@@ -589,7 +471,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			entity.KnownPosition = position;
 			entity.Velocity = velocity;
 			entity.EntityId = entityId;
-			entity.UUID = new UUID(uuid.ToByteArray());
+			entity.UUID = new MiNET.Utils.UUID(uuid.ToByteArray());
 			entity.SetInventory(new BedrockInventory(46));
 			
 			Client.World.SpawnEntity(entityId, entity);
@@ -611,13 +493,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 			else
             {
-	           /* if (SpawnMob(message.runtimeEntityId, Guid.NewGuid(), ,
-		            new PlayerLocation(message.x, message.y, message.z, message.headYaw, message.yaw, message.pitch),
-		            new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ) * 20f,
-		            message.attributes))
-	            {
-		            
-	            }*/
 	            Log.Warn($"Unknown mob: {type}");
             }
         }
@@ -635,31 +510,28 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			var slot = message.item;
 			var item = ToAlexItem(message.item);
-			//if (ItemFactory.TryGetItem(slot.Id, slot.Metadata, out Item item))
+
+			var itemClone = item.Clone();
+
+			itemClone.Count = slot.Count;
+			itemClone.Nbt = slot.ExtraData;
+
+			ItemEntity itemEntity = new ItemEntity(null);
+			itemEntity.EntityId = message.runtimeEntityId;
+			itemEntity.Velocity = new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ);
+			itemEntity.KnownPosition = new PlayerLocation(message.x, message.y, message.z);
+			itemEntity.HandleMetadata(message.metadata);
+
+			itemEntity.SetItem(itemClone);
+
+			if (Client.World.SpawnEntity(message.runtimeEntityId, itemEntity))
 			{
-				var itemClone = item.Clone();
-				
-				itemClone.Count = slot.Count;
-				itemClone.Nbt = slot.ExtraData;
-
-				ItemEntity itemEntity = new ItemEntity(null);
-				itemEntity.EntityId = message.runtimeEntityId;
-				itemEntity.Velocity = new Microsoft.Xna.Framework.Vector3(message.speedX, message.speedY, message.speedZ);
-				itemEntity.KnownPosition = new PlayerLocation(message.x, message.y, message.z);
-				itemEntity.HandleMetadata(message.metadata);
-				
-				itemEntity.SetItem(itemClone);
-
-				if (Client.World.SpawnEntity(message.runtimeEntityId, itemEntity))
-				{
-					_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
-				}
-				else
-				{
-					Log.Warn($"Could not spawn in item entity, an entity with this runtimeEntityId already exists! (Runtime: {message.runtimeEntityId} Self: {message.entityIdSelf})");
-				}
-
-				// Log.Info($"Set inventory slot: {usedIndex} Id: {slot.Id}:{slot.Metadata} x {slot.Count} Name: {item.DisplayName} IsPeInv: {inventory.IsPeInventory}");
+				_entityMapping.TryAdd(message.entityIdSelf, message.runtimeEntityId);
+			}
+			else
+			{
+				Log.Warn(
+					$"Could not spawn in item entity, an entity with this runtimeEntityId already exists! (Runtime: {message.runtimeEntityId} Self: {message.entityIdSelf})");
 			}
 		}
 
@@ -692,8 +564,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				var direction = (itemEntity.KnownPosition.ToVector3() - new Microsoft.Xna.Framework.Vector3(
 					target.KnownPosition.X, targetBoundingBox.Max.Y, target.KnownPosition.Z));
 
-				//direction.Normalize();
-
 				itemEntity.Velocity = direction / 20f;
 			}
 		}
@@ -716,11 +586,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeMoveEntityDelta(McpeMoveEntityDelta message)
 		{
-			//message.GetCurrentPosition(new MiNET.Utils.PlayerLocation(Vector3.Zero));
 			if (message.runtimeEntityId != Client.EntityId)
 			{
-				//TODO: Fix delta reading on packets.
-
 				bool updatePitch = (message.flags & McpeMoveEntityDelta.HasRotX) != 0;
 				bool updateYaw = (message.flags & McpeMoveEntityDelta.HasY) != 0;
 				bool updateHeadYaw = (message.flags & McpeMoveEntityDelta.HasZ) != 0;
@@ -769,8 +636,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						endPosition.HeadYaw = ed.HasHeadYaw ? endPosition.HeadYaw : known.HeadYaw;
 						endPosition.Pitch = ed.HasPitch ? -endPosition.Pitch : known.Pitch;
 
-						//	Log.Info($"Distance: {endPosition.DistanceTo(known)} | Delta: {(endPosition - known.ToVector3())} | Start: {known.ToVector3()} | End: {endPosition.ToVector3()}");
-
 						entity.KnownPosition = endPosition;
 						
 						entity.DistanceMoved += MathF.Abs(Microsoft.Xna.Framework.Vector3.Distance(before.ToVector3(), endPosition.ToVector3()));
@@ -811,11 +676,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			UnhandledPackage(message);
 		}
-
-		/*public void HandleMcpeExplode(McpeExplode message)
-		{
-			UnhandledPackage(message);
-		}*/
 
 		public void HandleMcpeLevelSoundEventOld(McpeLevelSoundEventOld message)
 		{
@@ -1835,7 +1695,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			{
 				case "sidebar":
 					scoreboard.Clear();
-					scoreboard.AddString(message.displayName);
+					scoreboard.AddObjective(new ScoreboardObjective(message.objectiveName, message.displayName, message.sortOrder, message.criteriaName));
+					Log.Info($"SCOREBOARD OBJECTIVE: {message.objectiveName} CRITERIA: {message.criteriaName}");
+					//scoreboard.AddString(message.displayName);
 					break;
 			}
 		}
@@ -1850,18 +1712,35 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			{
 				if (entry is ScoreEntryChangeFakePlayer fakePlayer)
 				{
-					scoreboard.AddRow($"{fakePlayer.ObjectiveName}:{fakePlayer.Id}", fakePlayer.CustomName, entry.Score);
+					if (scoreboard.TryGetObjective(fakePlayer.ObjectiveName, out var objective))
+					{
+						objective.AddOrUpdate(fakePlayer.Id, new ScoreboardEntry(fakePlayer.Id, fakePlayer.Score, fakePlayer.CustomName));
+					}
+					//scoreboard.AddRow($"{fakePlayer.ObjectiveName}:{fakePlayer.Id}", fakePlayer.CustomName, entry.Score);
 				}
 				else if (entry is ScoreEntryChangePlayer player)
 				{
+
 					if (Client.World.EntityManager.TryGet(player.EntityId, out var playerEntity))
 					{
-						scoreboard.AddRow($"{player.ObjectiveName}:{player.Id}", playerEntity.NameTag, player.Score);
+						if (scoreboard.TryGetObjective(player.ObjectiveName, out var objective))
+						{
+							objective.AddOrUpdate(
+								player.Id,
+								new ScoreboardEntry(player.Id, player.Score, playerEntity.NameTag));
+						}
+
+						//scoreboard.AddRow($"{player.ObjectiveName}:{player.Id}", playerEntity.NameTag, player.Score);
 					}
 				}
 				else if (entry is ScoreEntryRemove remove)
 				{
-					scoreboard.Remove($"{remove.ObjectiveName}:{remove.Id}");
+					if (scoreboard.TryGetObjective(remove.ObjectiveName, out var objective))
+					{
+						objective.Remove(remove.Id);
+					}
+
+					//	scoreboard.Remove($"{remove.ObjectiveName}:{remove.Id}");
 				}
 			}
 		}

@@ -827,7 +827,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			        DefaultValueHandling = DefaultValueHandling.Include
 		        });
 	        
-	        Log.Info(serialized);
+	   //     Log.Info(serialized);
 
 	        string val = JWT.Encode(serialized, signKey, JwsAlgorithm.ES384, new Dictionary<string, object> { { "x5u", x5u } }, new JwtSettings()
             {
@@ -1190,18 +1190,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			Close();
 			WorkerThreadPool.Dispose();
 			//_threadPool.WaitForThreadsExit();
-		}
-
-		private CommandSet _availableCommandSet;
-		public void LoadCommands(CommandSet commandSet)
-		{
-			_availableCommandSet = commandSet;
-			/*ThreadPool.QueueUserWorkItem(o =>
-			{
-				Debug.WriteLine($"Saving commands!");
-				File.WriteAllText("commands.json", JsonConvert.SerializeObject(commandSet, Formatting.Indented));
-				//Log.Info($"Commands: {JsonConvert.SerializeObject(commandSet, Formatting.Indented)}");
-			});*/
 		}
 	}
 }

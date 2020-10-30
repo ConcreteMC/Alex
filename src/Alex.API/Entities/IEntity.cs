@@ -8,7 +8,7 @@ namespace Alex.API.Entities
 {
 	public interface IEntity : IPhysicsEntity, IDisposable
 	{
-		UUID UUID { get; set; }
+		MiNET.Utils.UUID UUID { get; set; }
 		long EntityId { get; set; }
 		bool IsSpawned { get; set; }
 		PlayerLocation KnownPosition { get; set; }

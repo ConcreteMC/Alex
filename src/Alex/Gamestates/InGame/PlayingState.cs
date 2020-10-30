@@ -369,29 +369,6 @@ namespace Alex.Gamestates.InGame
 			KeyboardState currentKeyboardState = Keyboard.GetState();
 			if (currentKeyboardState != _oldKeyboardState)
 			{
-				/*if (currentKeyboardState.IsKeyUp(Keys.Add) && _oldKeyboardState.IsKeyDown(Keys.Add))
-				{
-					if (currentKeyboardState.IsKeyDown(Keys.LeftShift))
-					{
-						Entity.NametagScale += 0.1f;
-					}
-					else
-					{
-						Entity.NametagScale += 0.25f;
-					}
-				}
-				else if (currentKeyboardState.IsKeyUp(Keys.Subtract) && _oldKeyboardState.IsKeyDown(Keys.Subtract))
-				{
-					if (currentKeyboardState.IsKeyDown(Keys.LeftShift))
-					{
-						Entity.NametagScale -= 0.1f;
-					}
-					else
-					{
-						Entity.NametagScale -= 0.25f;
-					}
-				}*/
-
 				if (KeyBinds.NetworkDebugging.All(x => currentKeyboardState.IsKeyDown(x)))
 				{
 					RenderNetworking = !RenderNetworking;
@@ -438,50 +415,6 @@ namespace Alex.Gamestates.InGame
 				{
 					World.ChunkManager.FogEnabled = !World.ChunkManager.FogEnabled;
 				}
-
-				/*if (currentKeyboardState.IsKeyDown(KeyBinds.ChangeCamera))
-				{
-					if (World.Camera is FirstPersonCamera)
-					{
-						World.Camera = new ThirdPersonCamera(Options.VideoOptions.RenderDistance, World.Camera.Position, World.Camera.Rotation)
-						{
-							FOV = World.Camera.FOV
-						};
-						
-						World.Camera.UpdateAspectRatio(Graphics.Viewport.AspectRatio);
-
-						if (World?.Player?.ItemRenderer != null)
-						{
-							World.Player.ItemRenderer.DisplayPosition = World.Player.IsLeftHanded ?
-								DisplayPosition.ThirdPersonLeftHand : DisplayPosition.ThirdPersonRightHand;
-						}
-
-						if (World?.Player != null)
-						{
-							World.Player.IsFirstPersonMode = false;
-						}
-					}
-					else
-					{
-						World.Camera = new FirstPersonCamera(Options.VideoOptions.RenderDistance, World.Camera.Position, World.Camera.Rotation)
-						{
-							FOV = World.Camera.FOV
-						};
-						
-						World.Camera.UpdateAspectRatio(Graphics.Viewport.AspectRatio);
-
-						if (World?.Player != null)
-						{
-							World.Player.IsFirstPersonMode = true;
-
-							if (World.Player.ItemRenderer != null)
-							{
-								World.Player.ItemRenderer.DisplayPosition = World.Player.IsLeftHanded ?
-									DisplayPosition.FirstPersonLeftHand : DisplayPosition.FirstPersonRightHand;
-							}
-						}
-					}
-				}*/
 
 				if (currentKeyboardState.IsKeyDown(KeyBinds.ToggleWireframe))
 				{

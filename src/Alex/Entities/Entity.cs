@@ -131,7 +131,7 @@ namespace Alex.Entities
 		
 		public float TerminalVelocity { get; set; } = 78.4f;
 		
-		public UUID UUID { get; set; } = new UUID(Guid.Empty.ToByteArray());
+		public MiNET.Utils.UUID UUID { get; set; } = new MiNET.Utils.UUID(Guid.Empty.ToByteArray());
 
 		public bool CanFly { get; set; } = false;
 		public bool IsFlying { get; set; } = false;
@@ -218,12 +218,12 @@ namespace Alex.Entities
             Inventory.SlotChanged += OnInventorySlotChanged;
             Inventory.SelectedHotbarSlotChanged += InventoryOnSelectedHotbarSlotChanged;
 
-			HideNameTag = true;
+			HideNameTag = false;
 			ServerEntity = true;
 			IsAffectedByGravity = true;
 			
 			HealthManager = new HealthManager(this);
-			UUID = new UUID(Guid.NewGuid().ToByteArray());
+			UUID = new MiNET.Utils.UUID(Guid.NewGuid().ToByteArray());
 			
 			BaseMovementSpeed = 4.317D;
 			

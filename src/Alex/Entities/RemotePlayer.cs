@@ -35,11 +35,8 @@ namespace Alex.Entities
 {
 	public class RemotePlayer : LivingEntity
 	{
-		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(RemotePlayer));
-		
-		public UUID Uuid { get; private set; }
-
-		public Gamemode Gamemode { get; private set; }
+		private static readonly Logger   Log = LogManager.GetCurrentClassLogger(typeof(RemotePlayer));
+		public                  Gamemode Gamemode { get; private set; }
 
 		private EntityModel _model;
 
@@ -57,9 +54,7 @@ namespace Alex.Entities
 				Value = 0xff
 			};
 			
-			//DoRotationCalculations = false;
 			Name = name;
-			Uuid = new UUID(Guid.NewGuid().ToByteArray());
 
 			Width = 0.6;
 			//Length = 0.6;
@@ -68,9 +63,6 @@ namespace Alex.Entities
 			IsSpawned = false;
 
 			NameTag = name;
-			//Skin = new Skin { Slim = false, SkinData = Encoding.Default.GetBytes(new string('Z', 8192)) };
-
-		//	ItemInHand = new ItemAir();
 
 			HideNameTag = false;
 			IsAlwaysShowName = true;
@@ -78,15 +70,13 @@ namespace Alex.Entities
 			
 			IsInWater = false;
 			NoAi = true;
-			//HealthManager.IsOnFire = false;
+			
 			Velocity = Vector3.Zero;
 			PositionOffset = 1.62f;
 
 			GeometryName = geometry;
 			
 			UpdateSkin(skinTexture);
-			
-			//Inventory = new Inventory(46);
 			
 			MovementSpeed = 0.1f;
 			FlyingSpeed = 0.4f;
@@ -106,7 +96,6 @@ namespace Alex.Entities
 		
 		public void LoadSkin(Skin skin)
 		{
-			//PooledTexture2D skinTexture = null;
 			Image<Rgba32>   skinBitmap  = null;
 			if (!skin.TryGetBitmap(out skinBitmap))
 			{
@@ -115,7 +104,6 @@ namespace Alex.Entities
 				if (Alex.Instance.Resources.ResourcePack.TryGetBitmap("entity/alex", out var rawTexture))
 				{
 					skinBitmap = rawTexture;
-					//skinTexture = TextureUtils.BitmapToTexture2D(AlexInstance.GraphicsDevice, rawTexture);
 				}
 			}
 			
@@ -148,29 +136,6 @@ namespace Alex.Entities
 							}
 							else
 							{
-								/*if (!string.IsNullOrWhiteSpace(Name) && geometryModel.Geometry.Any(
-									x => x.Description.TextureHeight == 32 && x.Description.TextureWidth == 64
-									                                       && !x.Description.Identifier.Contains(
-										                                       "geometry.cape",
-										                                       StringComparison
-											                                      .InvariantCultureIgnoreCase)))
-								{
-									string geometryFileName = $"geometry.{Name}.json";
-									geometryFileName = Path.Combine("/home/kenny/skins/unique", geometryFileName);
-
-									if (!File.Exists(geometryFileName))
-										File.WriteAllText(
-											geometryFileName, MCJsonConvert.SerializeObject(geometryModel, true));
-
-									geometryFileName = $"resource.{Name}.json";
-									geometryFileName = Path.Combine("/home/kenny/skins/unique", geometryFileName);
-
-									if (!File.Exists(geometryFileName))
-										File.WriteAllText(
-											geometryFileName, MCJsonConvert.SerializeObject(resourcePatch, true));
-								}*/
-							
-
 								if (resourcePatch?.Geometry != null)
 								{
 									model = geometryModel.FindGeometry(resourcePatch.Geometry.Default);
@@ -195,15 +160,6 @@ namespace Alex.Entities
 											bitmap.Mutate<Rgba32>(xx => xx.Resize(modelTextureSize.X, modelTextureSize.Y));
 
 											skinBitmap = bitmap;
-											//Image<Rgba32> skinTexture = new Image<Rgba32>(modelTextureSize.X, modelTextureSize.Y);
-
-											/*skinTexture.Mutate<Rgba32>(
-												c =>
-												{
-													c.DrawImage(bitmap, new SixLabors.ImageSharp.Point(0, 0), 1f);
-												});*/
-
-											//skinBitmap = skinTexture;
 										}
 									}
 								}
@@ -218,8 +174,6 @@ namespace Alex.Entities
 					{
 						string name = "N/A";
 						Log.Warn(ex, $"Could not create geometry ({name}): {ex.ToString()} for player {Name}");
-						
-					//	File.WriteAllBytes(Path.Combine("/home/kenny/.config/Alex/skinDebug/failed", $"failed-{Environment.TickCount}.json"), Encoding.UTF8.GetBytes(skin.GeometryData));
 					}
 				}
 				else
@@ -262,29 +216,6 @@ namespace Alex.Entities
 			{
 				valid = false;
 				Log.Warn($"Missing bones for player model for player: {playername}");
-			}
-			else
-			{
-				foreach (var bone in model.Bones)
-				{
-					if (bone == null)
-					{
-						Log.Warn($"Found null bone in {playername}'s geometry.");
-						continue;
-					}
-
-					if (!bone.NeverRender && (bone.Cubes == null || bone.Cubes.Length == 0))
-					{
-						//	Log.Warn($"Invalid bone, missing cube definitions for player {playername} (Bone: {bone.Name})");
-					}
-
-					if (bone.Cubes != null)
-					{
-						foreach (var cube in bone.Cubes)
-						{
-						}
-					}
-				}
 			}
 
 			return valid;
@@ -387,45 +318,6 @@ namespace Alex.Entities
 					UpdateModelParts();
 				}
 			}*/
-		}
-
-		/*public override string ToString()
-		{
-			return
-				$"Valid: {ModelRenderer.Valid} | {ModelRenderer.Texture.Height} x {ModelRenderer.Texture.Width} | Height: {Height} | Model: {GeometryName} -- {ValidModel}";
-		}
-	*/
-	}
-
-	public class PlayerSkinFlags
-	{
-		public byte Value { get; set; } = 0;
-
-		public bool CapeEnabled => (Value & 0x01) != 0;
-		public bool JacketEnabled => (Value & 0x02) != 0;
-		public bool LeftSleeveEnabled => (Value & 0x04) != 0;
-		public bool RightSleeveEnabled => (Value & 0x08) != 0;
-		public bool LeftPantsEnabled => (Value & 0x10) != 0;
-		public bool RightPantsEnabled => (Value & 0x20) != 0;
-		public bool HatEnabled => (Value & 0x40) != 0;
-		
-		public void ApplyTo(EntityModelRenderer renderer)
-		{
-			Set(renderer, "cape", CapeEnabled);
-			Set(renderer, "jacket", JacketEnabled);
-			Set(renderer, "leftSleeve", LeftSleeveEnabled);
-			Set(renderer, "rightSleeve", RightSleeveEnabled);
-			Set(renderer, "leftPants", LeftPantsEnabled);
-			Set(renderer, "rightPants", RightPantsEnabled);
-			Set(renderer, "hat", HatEnabled);
-		}
-
-		private void Set(EntityModelRenderer renderer, string bone, bool value)
-		{
-			if (renderer.GetBone(bone, out var boneValue))
-			{
-				boneValue.Rendered = value;
-			}
 		}
 	}
 }

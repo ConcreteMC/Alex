@@ -70,62 +70,11 @@ namespace Alex.Entities
                 {
                     Log.Warn($"Could not add entity type: {p.Name}");
                 }
-
-
-                /*foreach (var dd in p)
-				{
-					EntityData data = new EntityData();
-					data.Id = dd["id"].Value<long>();
-					data.Name = dd["name"].Value<string>();
-
-					data.DisplayName = dd["display_name"]?.Value<string>();
-
-					if (dd["height"] != null) data.Height = dd["height"].Value<double>();
-					if (dd["width"] != null) data.Width = dd["width"].Value<double>();
-
-					networkIdToData.TryAdd(data.Id, data);
-				}*/
-            }
+			}
 
 			_idToData = networkIdToData;
             _typeToId = typeToId;
         }
-
-		public static bool TryLoadEntity(NbtCompound nbt, long entityId, out Entity entity)
-		{
-			var id = nbt["id"].StringValue;
-			var pos = nbt["Pos"];
-			var rot = nbt["Rotation"];
-			if (id != null && pos != null && EntityType.TryParse(id.Replace("minecraft:", ""), true, out EntityType entityType))
-			{
-				var uuidLeast = nbt["UUIDLeast"].LongValue;
-				var uuidMost = nbt["UUIDMost"].LongValue;
-
-				Guid uuid = Extensions.GuidFromBits(uuidLeast, uuidMost);
-
-				var renderer = GetEntityRenderer(id, null);
-				if (renderer != null)
-				{
-					entity = entityType.Create(null);
-					if (entity == null) return false;
-
-					entity.EntityId = entityId;
-					entity.UUID = new UUID(uuid.ToByteArray());
-
-					PlayerLocation position = new PlayerLocation(Convert.ToSingle(pos[0].DoubleValue), Convert.ToSingle(pos[1].DoubleValue),
-						Convert.ToSingle(pos[2].DoubleValue), rot[0].FloatValue, rot[0].FloatValue, rot[1].FloatValue);
-
-					entity.KnownPosition = position;
-
-					entity.ModelRenderer = renderer;
-
-					return true;
-				}
-			}
-
-			entity = null;
-			return false;
-		}
 
 		public static bool ModelByNetworkId(long networkId, out EntityModelRenderer renderer, out EntityData data)
 		{
