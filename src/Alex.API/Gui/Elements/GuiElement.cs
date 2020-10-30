@@ -70,21 +70,28 @@ namespace Alex.API.Gui.Elements
 		[DebuggerVisible(Visible = false)]
 		public IGuiElement[] ChildElements
 		{
-			get => Children.ToArray();
+			get
+			{
+				lock (_childrenLock)
+				{
+					return Children.ToArray();
+				}
+			}
 		}
 
+		private object _childrenLock = new object();
+
+		[DebuggerVisible(Visible = false)] 
+		private List<IGuiElement> Children { get; } = new List<IGuiElement>();
 
 		[DebuggerVisible(Visible = false)]
-		protected List<IGuiElement> Children { get; } = new List<IGuiElement>();
-
-		[DebuggerVisible(Visible = false)]
-		public bool HasChildren => Children.Any();
+		public bool HasChildren => Children.Count > 0;
 
 		public int ChildCount => Children.Count;
 
 		[DebuggerVisible(Visible = false)]
 		internal IReadOnlyList<IGuiElement> AllChildren =>
-			Children.OfType<GuiElement>().SelectMany(c => new[] {c}.Union(c.AllChildren)).ToList();
+			ChildElements.OfType<GuiElement>().SelectMany(c => new[] {c}.Union(c.AllChildren)).ToList();
 
 		#region Drawing
 
@@ -175,9 +182,14 @@ namespace Alex.API.Gui.Elements
 		{
 			if (element == this) return;
 			if (element.ParentElement == this) return;
-			if (Children.Contains(element)) return;
 			
-			Children.Add(element);
+			lock (_childrenLock)
+			{
+				if (Children.Contains(element)) return;
+
+				Children.Add(element);
+			}
+
 			element.ParentElement = this;
 
 			if (_initialised)
@@ -196,8 +208,11 @@ namespace Alex.API.Gui.Elements
 
 			OnChildRemoved(element);
 
-			Children.Remove(element);
-			
+			lock (_childrenLock)
+			{
+				Children.Remove(element);
+			}
+
 			if(element.ParentElement == this)
 				element.ParentElement = null;
 			
@@ -206,7 +221,7 @@ namespace Alex.API.Gui.Elements
 
 		public void ClearChildren()
 		{
-			var children = Children.ToArray();
+			var children = ChildElements;
 
 			foreach (var child in children)
 			{
@@ -223,7 +238,7 @@ namespace Alex.API.Gui.Elements
 		{
 			if (!HasChildren) return false;
 
-			var children = Children.ToArray();
+			var children = ChildElements;
 
 			// First scan the children at this level
 			foreach (var child in children)
@@ -280,7 +295,7 @@ namespace Alex.API.Gui.Elements
 			childElement = null;
 			if (!HasChildren) return false;
 
-			var children = Children.ToArray();
+			var children = ChildElements;
 
 			foreach (var child in children)
 			{
@@ -325,7 +340,7 @@ namespace Alex.API.Gui.Elements
 		{
 			if (HasChildren)
 			{
-				foreach (var child in Children.ToArray())
+				foreach (var child in ChildElements)
 				{
 					yield return valueSelector(child);
 				}
@@ -336,7 +351,7 @@ namespace Alex.API.Gui.Elements
 		{
 			if (!HasChildren) return;
 
-			foreach (var child in Children.ToArray())
+			foreach (var child in ChildElements)
 			{
 				childAction(child);
 			}

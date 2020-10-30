@@ -601,30 +601,6 @@ namespace Alex.Entities
 			IsSitting = (data & ((int) MiNET.Entities.Entity.DataFlags.Sitting)) != 0;
 			IsWallClimbing = (data & ((int) MiNET.Entities.Entity.DataFlags.WallClimbing)) != 0;
 			IsResting = (data & ((int) MiNET.Entities.Entity.DataFlags.Resting)) != 0;
-			//IsBreathing = (data & ((int) MiNET.Entities.Entity.DataFlags.Breathing)) != 0;
-			/*
-						IsAlwaysShowName = bits[(int) MiNET.Entities.Entity.DataFlags.AlwaysShowName];
-						IsBaby = bits[(int) MiNET.Entities.Entity.DataFlags.Baby];
-						IsUsingItem = bits[(int) MiNET.Entities.Entity.DataFlags.UsingItem];
-						//HideNameTag = !bits[(int) MiNET.Entities.Entity.DataFlags.ShowName];
-						IsAngry = bits[(int) MiNET.Entities.Entity.DataFlags.Angry];
-						IsInLove = bits[(int) MiNET.Entities.Entity.DataFlags.InLove];
-						IsRiding = bits[(int) MiNET.Entities.Entity.DataFlags.Riding];
-						IsTempted = bits[(int) MiNET.Entities.Entity.DataFlags.Tempted];
-						IsTamed = bits[(int) MiNET.Entities.Entity.DataFlags.Tamed];
-						IsLeashed = bits[(int) MiNET.Entities.Entity.DataFlags.Leashed];
-						IsSheared = bits[(int) MiNET.Entities.Entity.DataFlags.Sheared];
-						IsChested = bits[(int) MiNET.Entities.Entity.DataFlags.Chested];
-						
-						HasCollision = bits[(int) MiNET.Entities.Entity.DataFlags.HasCollision];
-						IsAffectedByGravity = bits[(int) MiNET.Entities.Entity.DataFlags.AffectedByGravity];
-						
-						IsFlagAllFlying = bits[(int) MiNET.Entities.Entity.DataFlags.FlagAllFlying];
-						IsSilent = bits[(int) MiNET.Entities.Entity.DataFlags.Silent];
-						IsSitting = bits[(int) MiNET.Entities.Entity.DataFlags.Sitting];
-						IsWallClimbing = bits[(int) MiNET.Entities.Entity.DataFlags.WallClimbing];
-						IsResting = bits[(int) MiNET.Entities.Entity.DataFlags.Resting];
-						//IsBreathing = bits[(int) MiNET.Entities.Entity.DataFlags.Breathing];*/
 		}
 		
 		/// <inheritdoc />
@@ -721,9 +697,22 @@ namespace Alex.Entities
 
 		public void SwingArm(bool broadcast = false)
 		{
-			if (_rightArmModel != null)
+			EntityModelRenderer.ModelBone bone = _rightArmModel;
+			if (this is LivingEntity e)
 			{
-				_rightArmModel.Animations.Enqueue(new SwingAnimation(_rightArmModel, TimeSpan.FromMilliseconds(200)));
+				if (e.IsLeftHanded)
+				{
+					bone = _leftArmModel;
+				}
+				else
+				{
+					bone = _rightArmModel;
+				}
+			}
+			
+			if (bone != null)
+			{
+				bone.Animations.Enqueue(new SwingAnimation(bone, TimeSpan.FromMilliseconds(200)));
 			}
 
 			if (broadcast)
@@ -798,18 +787,7 @@ namespace Alex.Entities
 			{
 				if (!_body.IsAnimating)
 				{
-					_body.Position = Vector3.Zero;
 					_body.Rotation = new Vector3(0f);
-				}
-
-				if (_rightArmModel != null && _leftArmModel != null && !_rightArmModel.IsAnimating && !_leftArmModel.IsAnimating)
-				{
-					_rightArmModel.Position = _leftArmModel.Position = Vector3.Zero;
-				}
-
-				if (_head != null && !_head.IsAnimating)
-				{
-					_head.Position = Vector3.Zero;
 				}
 			}
 			

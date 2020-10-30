@@ -375,7 +375,7 @@ namespace Alex.API.Gui.Elements
 
         protected Size MeasureChildren(Size availableSize)
         {
-            var children = Children.Cast<GuiElement>().ToArray();
+            var children = ChildElements.Cast<GuiElement>().ToArray();
 
             var size = MeasureChildrenCore(availableSize, children);
 
@@ -478,7 +478,7 @@ namespace Alex.API.Gui.Elements
 
         protected void ArrangeChildren(Rectangle newBounds)
         {
-            var children = new ReadOnlyCollection<GuiElement>(Children.Cast<GuiElement>().ToList());
+            var children = new ReadOnlyCollection<GuiElement>(ChildElements.Cast<GuiElement>().ToList());
 
             ArrangeChildrenCore(newBounds, children);
         }

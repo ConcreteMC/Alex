@@ -664,7 +664,7 @@ namespace Alex
 		{
 	//		var oldNetworkPool = NetworkThreadPool;
 			
-			var optionsProvider =  Services.GetService<IOptionsProvider>();
+		//	var optionsProvider =  Services.GetService<IOptionsProvider>();
 			
 		//	NetworkThreadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(optionsProvider.AlexOptions.NetworkOptions.NetworkThreads.Value, ThreadType.Background, "Network ThreadPool"));
 

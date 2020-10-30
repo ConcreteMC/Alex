@@ -110,7 +110,7 @@ namespace Alex.Gui.Elements.Inventory
 	        {
 		        _showItemCount = value;
 		        
-		        var items = Children.OfType<GuiInventoryItem>().ToArray();
+		        var items = ChildElements.OfType<GuiInventoryItem>().ToArray();
 
 		        foreach (var item in items)
 		        {

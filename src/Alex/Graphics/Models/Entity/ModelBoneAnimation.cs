@@ -23,7 +23,7 @@ namespace Alex.Graphics.Models.Entity
 
 			_isSetup = true;
 			
-			Initial = new ModelParameters(Bone.Rotation, Bone.Position);
+			Initial = new ModelParameters(Bone.Rotation);
 			
 			SetupAnimation();
 		}
@@ -74,18 +74,18 @@ namespace Alex.Graphics.Models.Entity
 	public class ModelParameters
 	{
 		public Vector3 Rotation { get; set; }
-		public Vector3 Position { get; set; }
+	//	public Vector3 Position { get; set; }
 
-		public ModelParameters(Vector3 rotation, Vector3 position)
+		public ModelParameters(Vector3 rotation)
 		{
 			Rotation = rotation;
-			Position = position;
+			//Position = position;
 		}
 
 		public void Apply(EntityModelRenderer.ModelBone bone)
 		{
 			bone.Rotation = Rotation;
-			bone.Position = Position;
+		//	bone.Position = Position;
 		}
 	}
 }

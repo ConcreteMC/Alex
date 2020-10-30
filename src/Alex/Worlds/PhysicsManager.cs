@@ -125,6 +125,9 @@ namespace Alex.Worlds
 						corner.X, Math.Floor(corner.Y - offset), corner.Z));
 
 				var block            = World.GetBlockState(blockcoords.X, blockcoords.Y, blockcoords.Z);
+				if (block?.Model == null)
+					continue;
+				
 				var blockBoundingBox = block.Model.GetBoundingBox(blockcoords);
 							
 				//..onGround = onGround || block.Solid;

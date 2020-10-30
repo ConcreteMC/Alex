@@ -26,13 +26,6 @@ namespace Alex.Graphics.Models.Entity
 				set { _rotation = value; }
 			}
 
-			private Vector3 _position = Vector3.Zero;
-			public Vector3 Position
-			{
-				get { return _position; }
-				set { _position = value; }
-			}
-
 			public bool Rendered { get; set; } = true;
 
 			public ModelBone Parent { get; set; } = null;

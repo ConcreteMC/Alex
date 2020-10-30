@@ -54,7 +54,7 @@ namespace Alex.Gui.Elements
 		public void Clear()
 		{
 			Rows.Clear();
-			foreach (var child in Children.ToArray())
+			foreach (var child in ChildElements)
 			{
 				RemoveChild(child);
 			}

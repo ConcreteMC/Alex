@@ -45,8 +45,8 @@ namespace Alex.Entities.BlockEntities
 
 					HeadBone.Animations.Enqueue(
 						new ServerAnimation(
-							HeadBone, new ModelParameters(HeadBone.Rotation, Vector3.Zero),
-							new ModelParameters(targetRotation, Vector3.Zero), TimeSpan.FromMilliseconds(250), false));
+							HeadBone, new ModelParameters(HeadBone.Rotation),
+							new ModelParameters(targetRotation), TimeSpan.FromMilliseconds(250), false));
 				}
 			}
 		}

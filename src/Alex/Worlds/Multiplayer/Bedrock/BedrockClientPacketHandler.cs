@@ -902,12 +902,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						bone,
 						new ModelParameters(
 							new Microsoft.Xna.Framework.Vector3(
-								key.StartRotation.X, key.StartRotation.Y, key.StartRotation.Z),
-							Microsoft.Xna.Framework.Vector3.Zero),
+								key.StartRotation.X, key.StartRotation.Y, key.StartRotation.Z)),
 						new ModelParameters(
 							new Microsoft.Xna.Framework.Vector3(
-								key.EndRotation.X, key.EndRotation.Y, key.EndRotation.Z),
-							Microsoft.Xna.Framework.Vector3.Zero), TimeSpan.FromMilliseconds(key.Duration), key.ResetAfter));
+								key.EndRotation.X, key.EndRotation.Y, key.EndRotation.Z)), TimeSpan.FromMilliseconds(key.Duration), key.ResetAfter));
 			}
 
 			bone.Animations.Enqueue(new ResetAnimation(bone));
