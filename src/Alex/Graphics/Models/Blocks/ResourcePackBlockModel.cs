@@ -84,7 +84,13 @@ namespace Alex.Graphics.Models.Blocks
 			
 			CalculateBoundingBoxes(Models);
 		}
-		
+
+		/// <inheritdoc />
+		public override IEnumerable<BoundingBox> GetBoundingBoxes(Vector3 blockPos)
+		{
+			return GetBoxes(blockPos);
+		}
+
 		private BoundingBox[] GetBoxes(Vector3 position)
 		{
 			return Boxes.Select(x => new BoundingBox(position + x.Min, position + x.Max)).ToArray();
@@ -223,62 +229,7 @@ namespace Alex.Graphics.Models.Blocks
 			}
 		}
 
-		private void FixElementScale(ModelElement element,
-			BlockShaderVertex[] verts,
-			float minX, float maxX, float minY, float maxY, float minZ, float maxZ,
-			ref float facesMinX,
-			ref float facesMaxX,
-			ref float facesMinY,
-			ref float facesMaxY,
-			ref float facesMinZ,
-			ref float facesMaxZ)
-		{
-			if (element.Rotation.Axis != Axis.Undefined && element.Rotation.Rescale)
-			{
-				var diffX = maxX - minX;
-				var diffY = maxY - minY;
-				var diffZ = maxZ - minZ;
-
-				for (var i = 0; i < verts.Length; i++)
-				{
-					var v = verts[i];
-
-					v.Position.X = (v.Position.X - minX) / diffX;
-					v.Position.Y = (v.Position.Y - minY) / diffY;
-					v.Position.Z = (v.Position.Z - minZ) / diffZ;
-
-					verts[i] = v;
-
-					if (v.Position.X < facesMinX)
-					{
-						facesMinX = v.Position.X;
-					}
-					else if (v.Position.X > facesMaxX)
-					{
-						facesMaxX = v.Position.X;
-					}
-
-					if (v.Position.Y < facesMinY)
-					{
-						facesMinY = v.Position.Y;
-					}
-					else if (v.Position.Y > facesMaxY)
-					{
-						facesMaxY = v.Position.Y;
-					}
-
-					if (v.Position.Z < facesMinZ)
-					{
-						facesMinZ = v.Position.Z;
-					}
-					else if (v.Position.Z > facesMaxZ)
-					{
-						facesMaxZ = v.Position.Z;
-					}
-				}
-			}
-		}
-
+		
 		private void ProcessModel(BlockStateModel stateModel, ResourcePackLib.Json.Models.ResourcePackModelBase model, out Vector3 min, out Vector3 max)
 		{
 			float facesMinX = float.MaxValue, facesMinY = float.MaxValue, facesMinZ = float.MaxValue;
@@ -287,28 +238,43 @@ namespace Alex.Graphics.Models.Blocks
 			List<BoundingBox> boxes = new List<BoundingBox>();
 			for (var index = 0; index < model.Elements.Length; index++)
 			{
+				var eMinX   = float.MaxValue;
+				var eMinY   = float.MaxValue;
+				var eMinZ   = float.MaxValue;
+				
+				var eMaxX = float.MinValue;
+				var eMaxY = float.MinValue;
+				var eMaxZ = float.MinValue;
+				
 				var element = model.Elements[index];
-				element.To *= (Scale);
-
-				element.From *= (Scale);
+				element.To *= Scale;
+				element.From *= Scale;
 
 				foreach (var face in element.Faces)
 				{
-					var verts = GetFaceVertices(face.Key, element.From, element.To, new UVMap(), out _);
+					var facing   = face.Key;
 
+					if (stateModel.X > 0f)
+					{
+						var offset = stateModel.X / 90;
+						facing = RotateDirection(facing, offset, FACE_ROTATION_X, INVALID_FACE_ROTATION_X);
+					}
+
+					if (stateModel.Y > 0f)
+					{
+						var offset = stateModel.Y / 90;
+						facing = RotateDirection(facing, offset, FACE_ROTATION, INVALID_FACE_ROTATION);
+					}
+					
+					var verts = GetFaceVertices(face.Key, element.From, element.To, new UVMap(), out _);
+					verts = ProcessVertices(verts, stateModel, element, null, facing, face.Value);
+					
 					float minX = float.MaxValue, minY = float.MaxValue, minZ = float.MaxValue;
 					float maxX = float.MinValue, maxY = float.MinValue, maxZ = float.MinValue;
-					
-					verts = ProcessVertices(verts, stateModel, element, null, face.Key, face.Value);
-					
+
 					for (int i = 0; i < verts.Length; i++)
 					{
 						var v = verts[i];
-						//v.Position += (v.Normal * scale);
-						
-						//v.Position = FixRotation(v.Position, element);
-
-						//v.Position /= 16f;
 
 						if (v.Position.X < minX)
 						{
@@ -336,13 +302,42 @@ namespace Alex.Graphics.Models.Blocks
 						{
 							maxZ = v.Position.Z;
 						}
+						
+						//
+						
+						if (v.Position.X < eMinX)
+						{
+							eMinX = v.Position.X;
+						}
+						else if (v.Position.X > eMaxX)
+						{
+							eMaxX = v.Position.X;
+						}
+
+						if (v.Position.Y < eMinY)
+						{
+							eMinY = v.Position.Y;
+						}
+						else if (v.Position.Y > eMaxY)
+						{
+							eMaxY = v.Position.Y;
+						}
+
+						if (v.Position.Z < eMinZ)
+						{
+							eMinZ = v.Position.Z;
+						}
+						else if (v.Position.Z > eMaxZ)
+						{
+							eMaxZ = v.Position.Z;
+						}
 
 						verts[i] = v;
 					}
 
-					FixElementScale(
+				/*	FixElementScale(
 						element, verts, minX, maxX, minY, maxY, minZ, maxZ, ref facesMinX, ref facesMaxX, ref facesMinY,
-						ref facesMaxY, ref facesMinZ, ref facesMaxZ);
+						ref facesMaxY, ref facesMinZ, ref facesMaxZ);*/
 
 					if (minX < facesMinX)
 					{
@@ -371,11 +366,8 @@ namespace Alex.Graphics.Models.Blocks
 						facesMaxZ = maxZ;
 					}
 				}
-
-				var from = FixRotation(element.From, element);
-				var to   = FixRotation(element.To, element);
-
-				boxes.Add(new BoundingBox(Vector3.Min(from, to) / 16f, Vector3.Max(from, to) / 16f));
+				
+				boxes.Add(new BoundingBox(new Vector3(eMinX, eMinY, eMinZ), new Vector3(eMaxX, eMaxY, eMaxZ)));
 			}
 
 			min = new Vector3(facesMinX, facesMinY, facesMinZ);
@@ -552,6 +544,7 @@ namespace Alex.Graphics.Models.Blocks
 					v.TexCoords *= (Vector2.One / uvMap.Value.TextureInfo.AtlasSize);
 				}
 
+				v.Face = blockFace;
 				vertices[i] = v;
 			}
 
@@ -721,33 +714,12 @@ namespace Alex.Graphics.Models.Blocks
 					vertices = ProcessVertices(vertices, bsModel, element, uvMap, facing, face.Value);
 
 					var initialIndex = verts.Count;
-					
-				//	byte    vertexBlockLight = 0, vertexSkyLight = 0xff;
-
-					if (!SmoothLighting)
-					{
-				//		GetLight(
-				//			world, position + lightOffset, out vertexBlockLight, out vertexSkyLight,
-				//			baseBlock.Transparent || !baseBlock.Solid);
-					}
 
 					for (var idx = 0; idx < vertices.Length; idx++)
 					{
 						var vertex = vertices[idx];
 						vertex.Position = position + vertex.Position;
-				
-						if (SmoothLighting)
-						{
-							//GetLight(world, vertex.Position + lightOffset, out vertexBlockLight, out vertexSkyLight, true);
-						}
 
-						//if (blockLight > 0)
-						{
-							vertex.Face = facing;
-						//	vertex.BlockLight = vertexBlockLight;
-						//	vertex.SkyLight = vertexSkyLight;
-						}
-						
 						verts.Add(vertex);
 					}
 

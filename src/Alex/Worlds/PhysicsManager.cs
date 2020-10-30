@@ -251,34 +251,36 @@ namespace Alex.Worlds
 
 				Bound bound = new Bound(World, bounding, preview);
 
+				var velocityBeforeAdjustment = new Vector3(velocity.X, velocity.Y, velocity.Z);
 				if (bound.GetIntersecting(bounding, false, out var blocks))
 				{
 					var solidBlocks = blocks.Where(x => x.block.Block.Solid).ToArray();
 
 					if (solidBlocks.Length > 0)
 					{
+						Block collisionBlock;
 						if (AdjustForY(
 							e, originalEntityBoundingBox,
 							e.GetBoundingBox(new Vector3(position.X, preview.Y, position.Z)), solidBlocks, ref velocity,
-							out var yCollisionPoint, ref position))
+							out var yCollisionPoint, ref position, out collisionBlock))
 						{
-							e.CollidedWithWorld(before.Y < 0 ? Vector3.Down : Vector3.Up, yCollisionPoint);
+							e.CollidedWithWorld(before.Y < 0 ? Vector3.Down : Vector3.Up, yCollisionPoint, velocityBeforeAdjustment.Y);
 						}
 
 						if (AdjustForX(
 							e, originalEntityBoundingBox,
 							e.GetBoundingBox(new Vector3(preview.X, position.Y, position.Z)), solidBlocks, ref velocity,
-							out var xCollisionPoint, ref position))
+							out var xCollisionPoint, ref position, out collisionBlock))
 						{
-							e.CollidedWithWorld(before.X < 0 ? Vector3.Left : Vector3.Right, xCollisionPoint);
+							e.CollidedWithWorld(before.X < 0 ? Vector3.Left : Vector3.Right, xCollisionPoint, velocityBeforeAdjustment.X);
 						}
 
 						if (AdjustForZ(
 							e, originalEntityBoundingBox,
 							e.GetBoundingBox(new Vector3(position.X, position.Y, preview.Z)), solidBlocks, ref velocity,
-							out var zCollisionPoint, ref position))
+							out var zCollisionPoint, ref position, out collisionBlock))
 						{
-							e.CollidedWithWorld(before.Z < 0 ? Vector3.Backward : Vector3.Forward, zCollisionPoint);
+							e.CollidedWithWorld(before.Z < 0 ? Vector3.Backward : Vector3.Forward, zCollisionPoint, velocityBeforeAdjustment.Z);
 						}
 
 						if (isPlayer)
@@ -351,8 +353,9 @@ namespace Alex.Worlds
 
 		private bool AdjustForZ(Entity entity, BoundingBox originalEntityBoundingBox, BoundingBox box,
 			(BlockCoordinates coordinates, BlockState block, BoundingBox box, bool isBlockPart)[] blocks,
-			ref Vector3 velocity, out Vector3 collisionPoint, ref PlayerLocation position)
+			ref Vector3 velocity, out Vector3 collisionPoint, ref PlayerLocation position, out Block collisionBlock)
 		{
+			collisionBlock = null;
 			collisionPoint = Vector3.Zero;
 
 			float? collision = null;
@@ -368,6 +371,7 @@ namespace Alex.Worlds
 
 				if (pass)
 				{
+					collisionBlock = block.block.Block;
 					if (negative)
 					{
 						if (collision == null || collision.Value < blockBox.Max.Z)
@@ -415,8 +419,9 @@ namespace Alex.Worlds
 
 		private bool AdjustForX(Entity entity, BoundingBox originalEntityBoundingBox, BoundingBox box,
 			(BlockCoordinates coordinates, BlockState block, BoundingBox box, bool isBlockPart)[] blocks,
-			ref Vector3 velocity, out Vector3 collisionPoint, ref PlayerLocation position)
+			ref Vector3 velocity, out Vector3 collisionPoint, ref PlayerLocation position, out Block collisionBlock)
 		{
+			collisionBlock = null;
 			collisionPoint = Vector3.Zero;
 
 			float? collision = null;
@@ -432,6 +437,7 @@ namespace Alex.Worlds
 
 				if (pass)
 				{
+					collisionBlock = block.block.Block;
 					if (negative)
 					{
 						if (collision == null || collision.Value < blockBox.Max.X)
@@ -478,8 +484,9 @@ namespace Alex.Worlds
 
 		private bool AdjustForY(Entity entity, BoundingBox originalEntityBoundingBox, BoundingBox box,
 			(BlockCoordinates coordinates, BlockState block, BoundingBox box, bool isBlockPart)[] blocks,
-			ref Vector3 velocity, out Vector3 collisionPoint, ref PlayerLocation position)
+			ref Vector3 velocity, out Vector3 collisionPoint, ref PlayerLocation position, out Block collisionBlock)
 		{
+			collisionBlock = null;
 			collisionPoint = Vector3.Zero;
 			float? pointOfCollision = null;
 			bool negative = velocity.Y < 0f;
@@ -494,6 +501,8 @@ namespace Alex.Worlds
 
 				if (pass)
 				{
+					collisionBlock = block.block.Block;
+					
 					if (negative)
 					{
 						if (pointOfCollision == null || pointOfCollision.Value < blockBox.Max.Y)

@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using Alex.API;
 using Alex.API.Data.Servers;
 using Alex.API.Events;
 using Alex.API.Graphics.Typography;
@@ -474,17 +475,14 @@ namespace Alex
             PluginManager.UnloadAll();
         }
 
-		protected override void Update(GameTime gameTime)
+		private GameTime  _updateGameTime     = new GameTime();
+		private Stopwatch _gameTimeStopwatch  = Stopwatch.StartNew();
+		private double    _previousUpdateTime = 0;
+		protected override void Update(GameTime gt)
 		{
-			base.Update(gameTime);
+			//base.Update(gt);
 
-			InputManager.Update(gameTime);
-
-			GuiManager.Update(gameTime);
-			GameStateManager.Update(gameTime);
-			GuiDebugHelper.Update(gameTime);
-
-			//RichPresenceProvider.Update();
+			//var gameTime = _updateGameTime;
 
 			if (!UIThreadQueue.IsEmpty && UIThreadQueue.TryDequeue(out Action a))
 			{
@@ -499,6 +497,26 @@ namespace Alex
 
 				//_sw.Restart();
 			}
+			
+		//	var elapsed = _gameTimeStopwatch.Elapsed;
+
+			//Fix update loop to 60fps.
+			//if (base.IsFixedTimeStep || elapsed.TotalMilliseconds >= (1000d / 60d)) 
+			{
+			//	_updateGameTime.TotalGameTime += elapsed;
+			//	_updateGameTime.ElapsedGameTime = elapsed;
+
+			//	var gameTime = _updateGameTime;
+				InputManager.Update(gt);
+
+				GuiManager.Update(gt);
+				GameStateManager.Update(gt);
+				GuiDebugHelper.Update(gt);
+
+			//	_previousUpdateTime = _gameTimeStopwatch.Elapsed.TotalMilliseconds - elapsed.TotalMilliseconds;
+				//_gameTimeStopwatch.Restart();
+				//RichPresenceProvider.Update();
+			}
 		}
 
 		protected override void Draw(GameTime gameTime)
@@ -509,7 +527,7 @@ namespace Alex
             GameStateManager.Draw(gameTime);
 			GuiManager.Draw(gameTime);
 			
-			base.Draw(gameTime);
+		//	base.Draw(gameTime);
 		}
 
 		private void InitializeGame(IProgressReceiver progressReceiver)

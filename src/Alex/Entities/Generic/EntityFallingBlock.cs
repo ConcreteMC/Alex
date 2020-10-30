@@ -45,7 +45,7 @@ namespace Alex.Entities.Generic
 		}
 
 		/// <inheritdoc />
-		public override void CollidedWithWorld(Vector3 direction, Vector3 position)
+		public override void CollidedWithWorld(Vector3 direction, Vector3 position, float impactVelocity)
 		{
 			if (direction == Vector3.Down)
 			{

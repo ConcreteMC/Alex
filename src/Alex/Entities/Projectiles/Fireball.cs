@@ -20,9 +20,9 @@ namespace Alex.Entities.Projectiles
 		}
 
 		/// <inheritdoc />
-		public override void CollidedWithWorld(Vector3 direction, Vector3 position)
+		public override void CollidedWithWorld(Vector3 direction, Vector3 position, float impactVelocity)
 		{
-			base.CollidedWithWorld(direction, position);
+			base.CollidedWithWorld(direction, position, impactVelocity);
 			
 			Velocity = Vector3.Zero;
 			NoAi = true;

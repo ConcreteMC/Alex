@@ -52,11 +52,9 @@ namespace Alex.Entities
         public bool IsNoPvP { get; set; } = true;
         public bool IsNoPvM { get; set; } = true;
         
-        private World World { get; }
         //public Camera Camera { get; internal set; }
         public Player(GraphicsDevice graphics, InputManager inputManager, string name, World world, Skin skin, NetworkProvider networkProvider, PlayerIndex playerIndex) : base(name, world, networkProvider, skin.Texture)
         {
-	        World = world;
 		//	DoRotationCalculations = false;
 			PlayerIndex = playerIndex;
 		    Controller = new PlayerController(graphics, world, inputManager, this, playerIndex);
@@ -110,8 +108,9 @@ namespace Alex.Entities
         }
 
         /// <inheritdoc />
-        public override void CollidedWithWorld(Vector3 direction, Vector3 position)
+        public override void CollidedWithWorld(Vector3 direction, Vector3 position, float impactVelocity)
         {
+	        //var dirVelocity = direction * impactVelocity;
 	        if (direction == Vector3.Down)
 	        {
 		        //Velocity = new Vector3(Velocity.X, 0f, Velocity.Z);
@@ -237,12 +236,12 @@ namespace Alex.Entities
 				if (IsSneaking)
 				{
 					Network.EntityAction((int)EntityId, EntityAction.StartSneaking);	
-					World.Camera.UpdateOffset(new Vector3(0f, -0.15f, 0.35f));
+					Level.Camera.UpdateOffset(new Vector3(0f, -0.15f, 0.35f));
 				}
 				else
 				{
 					Network.EntityAction((int)EntityId, EntityAction.StopSneaking);
-					World.Camera.UpdateOffset(Vector3.Zero);
+					Level.Camera.UpdateOffset(Vector3.Zero);
 				}
 			}
 			
@@ -257,7 +256,8 @@ namespace Alex.Entities
 				{
 					return;
 				}
-				
+
+				UpdateBlockRayTracer();
 				UpdateRayTracer();
 
 				//if (Controller.InputManager.IsDown(InputCommand.LeftClick) && DateTime.UtcNow - _lastAnimate >= TimeSpan.FromMilliseconds(500))
@@ -435,6 +435,76 @@ namespace Alex.Entities
 		    }
 
 		    HitEntity = hitEntity;
+	    }
+
+	    public Block   SelBlock              { get; private set; } = null;
+	    public Vector3 RaytracedBlock        { get; private set; }
+	    public Vector3 AdjacentRaytraceBlock { get; private set; }
+	    private void UpdateBlockRayTracer()
+	    {
+		    var camPos     = Level.Camera.Position;
+		    var lookVector = Level.Camera.Direction;
+
+		    for (float x = 0.5f; x < 8f; x += 0.1f)
+		    {
+			    Vector3 targetPoint  = camPos + (lookVector * x);
+			    
+			    var     flooredBlock = Vector3.Floor(targetPoint);
+			    var     block        = Level.GetBlockState(targetPoint);
+
+			    if (block != null && block.Block.HasHitbox)
+			    {
+				    foreach (var bbox in block.Model.GetBoundingBoxes(flooredBlock))
+				    {
+					    if (bbox.Contains(targetPoint) == ContainmentType.Contains)
+					    {
+						    RaytracedBlock = Vector3.Floor(targetPoint);
+						    SelBlock = block.Block;
+						    //  RayTraceBoundingBox = bbox;
+
+						    Raytraced = targetPoint;
+						    HasRaytraceResult = true;
+
+						    if (SetPlayerAdjacentSelectedBlock(Level, x, camPos, lookVector, out Vector3 rawAdjacent))
+						    {
+							    AdjacentRaytraceBlock = Vector3.Floor(rawAdjacent);
+
+							    AdjacentRaytrace = rawAdjacent;
+							    HasAdjacentRaytrace = true;
+						    }
+						    else
+						    {
+							    HasAdjacentRaytrace = false;
+						    }
+
+						    return;
+					    }
+				    }
+			    }
+		    }
+
+		    SelBlock = null;
+		    //_raytracedBlock.Y = 999;
+		    HasRaytraceResult = false;
+		    HasAdjacentRaytrace = false;
+	    }
+	    
+	    private bool SetPlayerAdjacentSelectedBlock(World world, float xStart, Vector3 camPos, Vector3 lookVector, out Vector3 rawAdjacent)
+	    {
+		    for (float x = xStart; x > 0.7f; x -= 0.1f)
+		    {
+			    Vector3 targetPoint = camPos + (lookVector * x);
+			    var     block       = world.GetBlock(targetPoint) as Block;
+
+			    if (block != null && (!block.Solid))
+			    {
+				    rawAdjacent = targetPoint;
+				    return true;
+			    }
+		    }
+
+		    rawAdjacent = new Vector3(0, 0, 0);
+		    return false;
 	    }
 
 	    private void BlockBreakTick()

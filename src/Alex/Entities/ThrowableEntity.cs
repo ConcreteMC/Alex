@@ -17,7 +17,7 @@ namespace Alex.Entities
 		}
 		
 		/// <inheritdoc />
-		public override void CollidedWithWorld(Vector3 direction, Vector3 position)
+		public override void CollidedWithWorld(Vector3 direction, Vector3 position, float impactVelocity)
 		{
 			if (StopOnImpact)
 			{

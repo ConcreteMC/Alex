@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Blocks;
 using Alex.API.Graphics;
@@ -415,6 +416,11 @@ namespace Alex.Graphics.Models.Blocks
 			b /= aColors.Length;
 
 			return new Color(r, g, b);
+		}
+
+		public virtual IEnumerable<BoundingBox> GetBoundingBoxes(Vector3 blockPos)
+		{
+			yield return GetBoundingBox(blockPos);
 		}
 	}
 }

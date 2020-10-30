@@ -202,26 +202,33 @@ namespace Alex.Gamestates.InGame
 				return
 					$"Threads: {(_threadsUsed):00}/{_maxThreads}";
 			});
-			_debugInfo.AddDebugRight(() => 
+			_debugInfo.AddDebugRight(() =>
 			{
-				if (_raytracedBlock.Y > 0 && _raytracedBlock.Y < 256)
+				var player = World?.Player;
+
+				if (player == null)
+					return "";
+				
+				if (player.HasRaytraceResult)
 				{
-					var adj =  Vector3.Floor(_adjacentBlock) - Vector3.Floor(_raytracedBlock);
+					var raytracedBlock = player.RaytracedBlock;
+					var adjacentBlock  = player.AdjacentRaytraceBlock;
+					var adj             =  Vector3.Floor(adjacentBlock) - Vector3.Floor(raytracedBlock);
 					adj.Normalize();
 
 					var face = adj.GetBlockFace();
 
                     StringBuilder sb = new StringBuilder();
-					sb.AppendLine($"Target: {_raytracedBlock} Face: {face}");
+					sb.AppendLine($"Target: {raytracedBlock} Face: {face}");
 					sb.AppendLine(
-						$"Skylight: {World.GetSkyLight(_raytracedBlock)} Face Skylight: {World.GetSkyLight(_adjacentBlock)}");
+						$"Skylight: {World.GetSkyLight(raytracedBlock)} Face Skylight: {World.GetSkyLight(adjacentBlock)}");
 					sb.AppendLine(
-						$"Blocklight: {World.GetBlockLight(_raytracedBlock)} Face Blocklight: {World.GetBlockLight(_adjacentBlock)}");
+						$"Blocklight: {World.GetBlockLight(raytracedBlock)} Face Blocklight: {World.GetBlockLight(adjacentBlock)}");
 
 					//sb.AppendLine($"Skylight scheduled: {World.IsScheduled((int) _raytracedBlock.X, (int) _raytracedBlock.Y, (int) _raytracedBlock.Z)}");
 					
 					foreach (var bs in World
-						.GetBlockStates((int) _raytracedBlock.X, (int) _raytracedBlock.Y, (int) _raytracedBlock.Z))
+						.GetBlockStates((int) raytracedBlock.X, (int) raytracedBlock.Y, (int) raytracedBlock.Z))
 					{
 						var blockstate = bs.State;
 						if (blockstate != null && blockstate.Block.HasHitbox)
@@ -299,7 +306,7 @@ namespace Alex.Gamestates.InGame
 					AspectRatio = newAspectRatio;
 				}
 
-				UpdateRayTracer(Alex.GraphicsDevice, World);
+				//UpdateRayTracer(Alex.GraphicsDevice, World);
 
 				if (!_playingHud.Chat.Focused)
 				{
@@ -349,76 +356,8 @@ namespace Alex.Gamestates.InGame
 			}
 			base.OnUpdate(gameTime);
 		}
-
-	    private Air _air = new Air();
-		private Vector3 _raytracedBlock;
-	    private Vector3 _adjacentBlock;
-		protected void UpdateRayTracer(GraphicsDevice graphics, World world)
-		{
-		    var camPos = world.Camera.Position;
-		    var lookVector = world.Camera.Direction;
-
-		    for (float x = 0.5f; x < 8f; x += 0.1f)
-		    {
-		        Vector3 targetPoint = camPos + (lookVector * x);
-		        var block = world.GetBlockState(targetPoint);
-
-		        if (block != null && block.Block.HasHitbox)
-		        {
-		            var bbox = block.Model.GetBoundingBox(Vector3.Floor(targetPoint));
-		            if (bbox.Contains(targetPoint) == ContainmentType.Contains)
-		            {
-		                _raytracedBlock = Vector3.Floor(targetPoint);
-                        SelBlock = block.Block;
-		                RayTraceBoundingBox = bbox;
-
-			            world.Player.Raytraced = targetPoint;
-			            world.Player.HasRaytraceResult = true;
-
-                        if (SetPlayerAdjacentSelectedBlock(world, x, camPos, lookVector, out Vector3 rawAdjacent))
-                        {
-	                        _adjacentBlock = Vector3.Floor(rawAdjacent);
-
-				            world.Player.AdjacentRaytrace = rawAdjacent;
-                            world.Player.HasAdjacentRaytrace = true;
-                        }
-			            else
-			            {
-				            world.Player.HasAdjacentRaytrace = false;
-			            }
-
-                        return;
-		            }
-		        }
-		    }
-
-		    SelBlock = _air;
-		    _raytracedBlock.Y = 999;
-		    world.Player.HasRaytraceResult = false;
-		    world.Player.HasAdjacentRaytrace = false;
-		}
-
-	    private bool SetPlayerAdjacentSelectedBlock(World world, float xStart, Vector3 camPos, Vector3 lookVector, out Vector3 rawAdjacent)
-	    {
-	        for (float x = xStart; x > 0.7f; x -= 0.1f)
-	        {
-	            Vector3 targetPoint = camPos + (lookVector * x);
-	            var block = world.GetBlock(targetPoint) as Block;
-
-	            if (block != null && (!block.Solid))
-	            {
-		            rawAdjacent = targetPoint;
-	                return true;
-	            }
-            }
-
-			rawAdjacent = new Vector3(0, 0, 0);
-	        return false;
-	    }
-
-
-	    private Block SelBlock { get; set; } = new Air();
-		private Microsoft.Xna.Framework.BoundingBox RayTraceBoundingBox { get; set; }
+		
+		//private Microsoft.Xna.Framework.BoundingBox RayTraceBoundingBox { get; set; }
 		private bool RenderNetworking { get; set; } = false;
 		private bool RenderDebug { get; set; } = false;
 		private bool RenderBoundingBoxes { get; set; } = false;
@@ -559,31 +498,42 @@ namespace Alex.Gamestates.InGame
 			{
 				args.SpriteBatch.Begin(SpriteSortMode.Deferred, samplerState: SamplerState.PointClamp, blendState:BlendState.NonPremultiplied);
 
-				if (_raytracedBlock.Y > 0 && _raytracedBlock.Y < 256)
+				if (World?.Player != null && World.Player.HasRaytraceResult)
 				{
-					if (SelBlock.CanInteract || !World.Player.IsWorldImmutable)
-					{
-						Color color = Color.LightGray;
-						if (World.Player.IsBreakingBlock)
-						{
-							var progress = World.Player.BlockBreakProgress;
-							
-							color = Color.Red * progress;
-							
-							var depth = args.GraphicsDevice.DepthStencilState;
-							args.GraphicsDevice.DepthStencilState = DepthStencilState.None;
-							
-							args.SpriteBatch.RenderBoundingBox(
-								RayTraceBoundingBox,
-								World.Camera.ViewMatrix, World.Camera.ProjectionMatrix, color, true);
+					var player   = World?.Player;
+					var block    = player.SelBlock;
+					var blockPos = player.RaytracedBlock;
 
-							args.GraphicsDevice.DepthStencilState = depth;
-						}
-						else
+					if (block != null)
+					{
+						foreach (var boundingBox in block.BlockState.Model.GetBoundingBoxes(blockPos))
 						{
-							args.SpriteBatch.RenderBoundingBox(
-								RayTraceBoundingBox,
-								World.Camera.ViewMatrix, World.Camera.ProjectionMatrix, color);
+							if (player.SelBlock.CanInteract || !World.Player.IsWorldImmutable)
+							{
+								Color color = Color.LightGray;
+
+								if (World.Player.IsBreakingBlock)
+								{
+									var progress = World.Player.BlockBreakProgress;
+
+									color = Color.Red * progress;
+
+									var depth = args.GraphicsDevice.DepthStencilState;
+									args.GraphicsDevice.DepthStencilState = DepthStencilState.None;
+
+									args.SpriteBatch.RenderBoundingBox(
+										boundingBox, World.Camera.ViewMatrix, World.Camera.ProjectionMatrix,
+										color, true);
+
+									args.GraphicsDevice.DepthStencilState = depth;
+								}
+								else
+								{
+									args.SpriteBatch.RenderBoundingBox(
+										boundingBox, World.Camera.ViewMatrix, World.Camera.ProjectionMatrix,
+										color);
+								}
+							}
 						}
 					}
 				}

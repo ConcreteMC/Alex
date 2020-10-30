@@ -29,7 +29,7 @@ namespace Alex.API.Utils
             return (T)pi.GetValue(obj, null);
         }
         
-                public static T GetPrivateStaticPropertyValue<T>(Type t, string propName)
+        public static T GetPrivateStaticPropertyValue<T>(Type t, string propName)
         {
             PropertyInfo pi = t.GetProperty(propName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
             if (pi == null) throw new ArgumentOutOfRangeException("propName", string.Format("Property {0} was not found in Type {1}", propName));
@@ -74,7 +74,23 @@ namespace Alex.API.Utils
                 throw new ArgumentOutOfRangeException("propName", string.Format("Property {0} was not found in Type {1}", propName, obj.GetType().FullName));
             t.InvokeMember(propName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.SetProperty | BindingFlags.Instance, null, obj, new object[] { val });
         }
+        
+        public static void SetPrivateStaticPropertyValue<T>(Type t, string propName, T val)
+        {
+            // Type t = obj.GetType();
+            if (t.GetProperty(propName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static) == null)
+                throw new ArgumentOutOfRangeException("propName", string.Format("Property {0} was not found in Type {1}", propName, t.FullName));
+            t.InvokeMember(propName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.SetProperty | BindingFlags.Static, null, null, new object[] { val });
+        }
 
+        public static void SetPrivateStaticFieldValue<T>(Type t, string propName, T val)
+        {
+            // Type t = obj.GetType();
+            if (t.GetField(propName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static) == null)
+                throw new ArgumentOutOfRangeException("propName", string.Format("Property {0} was not found in Type {1}", propName, t.FullName));
+            t.InvokeMember(propName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.SetField | BindingFlags.Static, null, null, new object[] { val });
+        }
+        
         /// <summary>
         /// Set a private Property Value on a given Object. Uses Reflection.
         /// </summary>
