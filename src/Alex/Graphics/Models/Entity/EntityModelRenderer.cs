@@ -102,7 +102,7 @@ namespace Alex.Graphics.Models.Entity
 
 			if (vertices.Count == 0)
 			{
-				Log.Warn($"No vertices. {JsonConvert.SerializeObject(model,Formatting.Indented)}");
+				//Log.Warn($"No vertices.");
 				
 				Valid = true;
 				CanRender = false;

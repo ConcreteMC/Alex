@@ -32,6 +32,12 @@ namespace Alex.Worlds.Singleplayer
 			return new ConnectionInfo(DateTime.UtcNow, 0,0,0,0,0,0,0,0);
 		}
 
+		/// <inheritdoc />
+		public override void EntityFell(long entityId, float distance, bool inVoid)
+		{
+			
+		}
+
 		public override void EntityAction(int entityId, EntityAction action)
 		{
 			

@@ -65,19 +65,19 @@ namespace Alex.Entities.BlockEntities
 				switch (value)
 				{
 					case BlockFace.East:
-						KnownPosition.Yaw = 90f;
+						KnownPosition.HeadYaw = KnownPosition.Yaw = 90f;
 						break;
 
 					case BlockFace.West:
-						KnownPosition.Yaw = 270f;
+						KnownPosition.HeadYaw = KnownPosition.Yaw = 270f;
 						break;
 
 					case BlockFace.North:
-						KnownPosition.Yaw = 0;
+						KnownPosition.HeadYaw = KnownPosition.Yaw = 0;
 						break;
 
 					case BlockFace.South:
-						KnownPosition.Yaw = 180f;
+						KnownPosition.HeadYaw = KnownPosition.Yaw = 180f;
 						break;
 				}
 			}
@@ -97,7 +97,7 @@ namespace Alex.Entities.BlockEntities
 		}
 
 		/// <inheritdoc />
-		public override void HandleBlockAction(byte actionId, byte parameter)
+		public override void HandleBlockAction(byte actionId, int parameter)
 		{
 			if (actionId == 1)
 			{
@@ -140,7 +140,7 @@ namespace Alex.Entities.BlockEntities
 			}
 		}
 
-		private class ChestModel : OldEntityModel
+		private class ChestModel : EntityModel
 		{
 			public ChestModel()
 			{

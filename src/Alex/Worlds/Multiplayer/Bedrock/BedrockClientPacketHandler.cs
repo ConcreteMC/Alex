@@ -17,6 +17,7 @@ using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks;
 using Alex.Entities;
+using Alex.Entities.BlockEntities;
 using Alex.Entities.Generic;
 using Alex.Entities.Projectiles;
 using Alex.Gamestates;
@@ -32,6 +33,7 @@ using Alex.Utils;
 using Alex.Utils.Inventories;
 using Alex.Worlds.Abstraction;
 using Alex.Worlds.Singleplayer;
+using fNbt;
 using Jose;
 using Microsoft.Extensions.DependencyInjection;
 using MiNET;
@@ -861,7 +863,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeBlockEvent(McpeBlockEvent message)
 		{
-			UnhandledPackage(message);
+			var worldPos = new BlockCoordinates(
+				message.coordinates.X, message.coordinates.Y, message.coordinates.Z);
+
+			if (Client.World.EntityManager.TryGetBlockEntity(worldPos, out var blockEntity))
+			{
+				blockEntity.HandleBlockAction((byte) message.case1, message.case2);	
+			}
 		}
 
 		public void HandleMcpeEntityEvent(McpeEntityEvent message)
@@ -1316,7 +1324,47 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeBlockEntityData(McpeBlockEntityData message)
 		{
-			UnhandledPackage(message);
+			if (message.namedtag.NbtFile.RootTag is NbtCompound compound)
+			{
+				var blockEntity = BlockEntityFactory.ReadFrom(compound, Client.World, null);
+
+				if (blockEntity == null)
+				{
+					//Log.Warn($"Null blockentity!");
+					return;
+				}
+				
+				//Log.Info($"Got block entity: {blockEntity.}");
+
+				var worldPos = new BlockCoordinates(
+					message.coordinates.X, message.coordinates.Y, message.coordinates.Z);
+				if (Client.World.ChunkManager.TryGetChunk(
+					new ChunkCoordinates(
+						worldPos),
+					out var cc))
+				{
+					var blockCoordinates = new BlockCoordinates(
+						message.coordinates.X & 0x0f, message.coordinates.Y & 0xff, message.coordinates.Z & 0x0f);
+
+					//var block = cc.GetBlockState(blockCoordinates.X, blockCoordinates.Y, blockCoordinates.Z);
+					//blockEntity.Block = block.Block;
+
+					if (cc.RemoveBlockEntity(blockCoordinates))
+					{
+						Client.World.EntityManager.RemoveBlockEntity(worldPos);
+					}
+
+					if (cc.AddBlockEntity(blockCoordinates, blockEntity))
+					{
+						Client.World.EntityManager.AddBlockEntity(new BlockCoordinates(message.coordinates.X, message.coordinates.Y, message.coordinates.Z),
+							blockEntity);
+					}
+				}
+			}
+			else
+			{
+				Log.Warn($"Invalid roottag for BlockEntityData. Got: {message.namedtag.NbtFile.RootTag.TagType}");
+			}
 		}
 
 		public void HandleMcpeLevelChunk(McpeLevelChunk msg)
@@ -1627,8 +1675,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpePlayerSkin(McpePlayerSkin message)
 		{
-			//TODO: Load skin
-			UnhandledPackage(message);
+			if (_players.TryGetValue(message.uuid, out var player))
+			{
+				Client.WorkerThreadPool.QueueUserWorkItem(() => { player.LoadSkin(message.skin); });
+			}
 		}
 
 		public void HandleMcpeSubClientLogin(McpeSubClientLogin message)
@@ -1682,7 +1732,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeRemoveObjective(McpeRemoveObjective message)
 		{
-			UnhandledPackage(message);
+			var scoreboard = WorldProvider?.ScoreboardView;
+			if (scoreboard == null)
+				return;
+			
+			scoreboard.RemoveObjective(message.objectiveName);
 		}
 
 		public void HandleMcpeSetDisplayObjective(McpeSetDisplayObjective message)
@@ -1767,7 +1821,14 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeNetworkStackLatency(McpeNetworkStackLatency message)
 		{
-			UnhandledPackage(message);
+			if (message.unknownFlag == 1)
+			{
+				var response = McpeNetworkStackLatency.CreateObject();
+				response.timestamp = message.timestamp;
+				response.unknownFlag = 0;
+				
+				Client.SendPacket(response);
+			}
 		}
 
 		public void HandleMcpeScriptCustomEvent(McpeScriptCustomEvent message)

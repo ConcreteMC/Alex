@@ -56,95 +56,105 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public static bool TryParse(string json, SkinResourcePatch resourcePatch, out GeometryModel output)
 		{
-			JObject obj = JObject.Parse(json, new JsonLoadSettings());
-			
-			var entries = new List<EntityModel>();
-			output = new GeometryModel();
-
-			foreach (var e in obj)
+			try
 			{
-				try
+				JObject obj = JObject.Parse(json, new JsonLoadSettings());
+
+				var entries = new List<EntityModel>();
+				output = new GeometryModel();
+
+				foreach (var e in obj)
 				{
-					if (e.Key == "format_version" && e.Value.Type == JTokenType.String)
+					try
 					{
-						output.FormatVersion = e.Value.ToObject<string>();
-					}
-					else if (e.Key == "minecraft:geometry" && e.Value.Type == JTokenType.Array)
-					{
-						var models = e.Value.ToObject<EntityModel[]>(MCJsonConvert.Serializer);
-
-						if (models != null)
+						if (e.Key == "format_version" && e.Value.Type == JTokenType.String)
 						{
-							foreach (var model in models)
-							{
-								//model.Name = model.Description.Identifier;
-								//model.Textureheight = model.Description.TextureHeight;
-								//model.Texturewidth = model.Description.TextureWidth;
-								//model.VisibleBoundsHeight = model.Description.VisibleBoundsHeight;
-								//model.VisibleBoundsWidth = model.Description.VisibleBoundsWidth;
-								//model.VisibleBoundsOffset = model.Description.VisibleBoundsOffset;
+							output.FormatVersion = e.Value.ToObject<string>();
+						}
+						else if (e.Key == "minecraft:geometry" && e.Value.Type == JTokenType.Array)
+						{
+							var models = e.Value.ToObject<EntityModel[]>(MCJsonConvert.Serializer);
 
-								if (entries.Contains(model))
+							if (models != null)
+							{
+								foreach (var model in models)
 								{
-									Log.Warn($"The name {model.Description.Identifier} was already in use!");
+									//model.Name = model.Description.Identifier;
+									//model.Textureheight = model.Description.TextureHeight;
+									//model.Texturewidth = model.Description.TextureWidth;
+									//model.VisibleBoundsHeight = model.Description.VisibleBoundsHeight;
+									//model.VisibleBoundsWidth = model.Description.VisibleBoundsWidth;
+									//model.VisibleBoundsOffset = model.Description.VisibleBoundsOffset;
+
+									if (entries.Contains(model))
+									{
+										Log.Warn($"The name {model.Description.Identifier} was already in use!");
+									}
+									else
+									{
+										entries.Add(model);
+									}
 								}
-								else
+
+								continue;
+							}
+						}
+
+						if ( /*e.Key == "format_version" || e.Value.Type == JTokenType.Array*/
+							!e.Key.StartsWith("geometry."))
+						{
+							if (e.Value.Type == JTokenType.Array)
+							{
+								continue;
+
+								foreach (var type in e.Value.ToObject<OldEntityModel[]>(MCJsonConvert.Serializer))
 								{
-									entries.Add(model);
+									//entries.TryAdd(e.Key, type);
 								}
 							}
 
 							continue;
 						}
-					}
 
-					if ( /*e.Key == "format_version" || e.Value.Type == JTokenType.Array*/
-						!e.Key.StartsWith("geometry."))
-					{
-						if (e.Value.Type == JTokenType.Array)
+						//if (e.Key == "minecraft:client_entity") continue;
+						//if (e.Key.Contains("zombie")) Console.WriteLine(e.Key);
+						var newModel = e.Value.ToObject<EntityModel>(MCJsonConvert.Serializer);
+
+						if (newModel != null)
 						{
-							continue;
+							//newModel.Name = e.Key;
 
-							foreach (var type in e.Value.ToObject<OldEntityModel[]>(MCJsonConvert.Serializer))
+							if (string.IsNullOrWhiteSpace(newModel.Description?.Identifier))
 							{
-								//entries.TryAdd(e.Key, type);
+								newModel.Description.Identifier = e.Key;
 							}
+
+							if (!entries.Contains(newModel))
+								entries.Add(newModel);
 						}
-
-						continue;
 					}
-
-					//if (e.Key == "minecraft:client_entity") continue;
-					//if (e.Key.Contains("zombie")) Console.WriteLine(e.Key);
-					var newModel = e.Value.ToObject<EntityModel>(MCJsonConvert.Serializer);
-
-					if (newModel != null)
+					catch (Exception ex)
 					{
-						//newModel.Name = e.Key;
-
-						if (string.IsNullOrWhiteSpace(newModel.Description?.Identifier))
-						{
-							newModel.Description.Identifier = e.Key;
-						}
-
-						if (!entries.Contains(newModel))
-							entries.Add(newModel);
+						Log.Warn(ex, $"Failed to decode geometry");
 					}
 				}
-				catch (Exception ex)
+
+				if (entries.Count == 0)
 				{
-					Log.Warn(ex, $"Failed to decode geometry");
+					output = null;
+
+					return false;
 				}
+
+				output.Geometry = entries;
+
+				return true;
 			}
-
-			if (entries.Count == 0)
+			catch(JsonReaderException)
 			{
 				output = null;
 				return false;
 			}
-			
-			output.Geometry = entries;
-			return true;
 		}
 	}
 }

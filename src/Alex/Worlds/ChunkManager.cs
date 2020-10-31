@@ -513,17 +513,16 @@ namespace Alex.Worlds
             ChunkColumn chunk;
 	        if (Chunks.TryRemove(position, out chunk))
 	        {
-		        if (dispose)
-		        {
-			        chunk?.Dispose();
-		        }
-		        
 		        foreach (var blockEntity in chunk.GetBlockEntities)
 		        {
 			        World.EntityManager.RemoveBlockEntity(
 				        new BlockCoordinates((chunk.X * 16) + blockEntity.X, blockEntity.Y, (chunk.Z * 16) + blockEntity.Z));
 		        }
 		        
+		        if (dispose)
+		        {
+			        chunk?.Dispose();
+		        }
 	        }
 
 	        if (_chunkData.TryRemove(position, out var data))

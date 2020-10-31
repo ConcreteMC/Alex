@@ -488,6 +488,8 @@ namespace Alex.Worlds
 
 				chunk.SetBlockState(cx, cy, cz, block, storage);
 
+				EntityManager.RemoveBlockEntity(new BlockCoordinates(x, y, z));
+				
 				var type = ScheduleType.Full;
 				
 				if ((priority & BlockUpdatePriority.Neighbors) != 0)

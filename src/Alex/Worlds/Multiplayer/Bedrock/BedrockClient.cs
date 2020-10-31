@@ -344,7 +344,17 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				conn.NumberOfAckSent, Session?.ErrorCount ?? 0,
 				Session?.ResendCount ?? 0, conn?.TotalPacketSizeInPerSecond ?? 0, conn?.TotalPacketSizeOutPerSecond ?? 0);
 		}
-		
+
+		/// <inheritdoc />
+		public override void EntityFell(long entityId, float distance, bool inVoid)
+		{
+			McpeEntityFall fall = McpeEntityFall.CreateObject();
+			fall.runtimeEntityId = entityId;
+			fall.fallDistance = distance;
+			fall.isInVoid = inVoid;
+			SendPacket(fall);
+		}
+
 		private void InventoryOnSlotChanged(object? sender, SlotChangedEventArgs e)
 		{
 			if (e.IsServerTransaction)

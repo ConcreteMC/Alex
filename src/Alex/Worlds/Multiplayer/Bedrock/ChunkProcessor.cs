@@ -502,13 +502,15 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 								        if (blockEntity != null)
 								        {
+									        //if (blockEntity.X )
 									        var block = chunkColumn.GetBlockState(
-										        blockEntity.X, blockEntity.Y, blockEntity.Z).Block;
+										        blockEntity.X & 0x0f, blockEntity.Y & 0xff, blockEntity.Z & 0x0f).Block;
 
 									        blockEntity.Block = block;
 
 									        chunkColumn.AddBlockEntity(
-										        new BlockCoordinates(blockEntity.X, blockEntity.Y, blockEntity.Z),
+										        new BlockCoordinates(
+											        blockEntity.X & 0x0f, blockEntity.Y & 0xff, blockEntity.Z & 0x0f),
 										        blockEntity);
 								        }
 							        }

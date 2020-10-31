@@ -18,6 +18,7 @@ using Alex.Utils.Inventories;
 using Alex.Worlds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MiNET.Net;
 using NLog;
 using BlockCoordinates = Alex.API.Utils.BlockCoordinates;
 using BoundingBox = Microsoft.Xna.Framework.BoundingBox;
@@ -115,6 +116,7 @@ namespace Alex.Entities
 	        {
 		        //Velocity = new Vector3(Velocity.X, 0f, Velocity.Z);
 		        KnownPosition.OnGround = true;
+		        StopFalling();
 	        }
 	        else if (direction == Vector3.Left || direction == Vector3.Right)
 	        {
@@ -699,6 +701,27 @@ namespace Alex.Entities
 					(float) (pos.X + halfWidth), (float) (pos.Y + (height * Scale)), (float) (pos.Z + halfWidth)));
 		}
 
+	    private bool  Falling      { get; set; } = false;
+	    private float FallingStart { get; set; } = 0;
+
+	    private void StopFalling()
+	    {
+		    if (!Falling)
+			    return;
+		    
+		    float fallStart = FallingStart;
+		    float y         = KnownPosition.Y;
+		    Falling = false;
+
+		    if (fallStart > y)
+			    return;
+
+		    float distance = fallStart - y;
+		    bool  inVoid   = y < 0;
+		    
+			Network?.EntityFell(EntityId, distance, inVoid);
+	    }
+	    
 		public override void OnTick()
 		{
 			if (_destroyingBlock)
@@ -706,6 +729,19 @@ namespace Alex.Entities
 				BlockBreakTick();
 			}
 
+			if (!IsFlying && !KnownPosition.OnGround)
+			{
+				if (!Falling)
+				{
+					Falling = true;
+					FallingStart = KnownPosition.Y;
+				}
+				else if (Falling && KnownPosition.Y <= -40)
+				{
+					StopFalling();
+				}
+			}
+			
 			base.OnTick();
 		}
 	}

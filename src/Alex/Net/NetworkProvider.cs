@@ -21,6 +21,9 @@ namespace Alex.Net
 	{
 		public abstract bool IsConnected { get; }
 		public abstract ConnectionInfo GetConnectionInfo();
+
+		public abstract void EntityFell(long entityId, float distance, bool inVoid);
+		
 		public abstract void EntityAction(int entityId, EntityAction action);
 
 		public abstract void PlayerAnimate(PlayerAnimations animation);

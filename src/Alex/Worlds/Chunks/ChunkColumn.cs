@@ -431,6 +431,7 @@ namespace Alex.Worlds.Chunks
 		
 		public bool AddBlockEntity(BlockCoordinates coordinates, BlockEntity entity)
 		{
+			entity.Block = GetBlockState(coordinates.X, coordinates.Y, coordinates.Z).Block;
 			entity.KnownPosition = coordinates;
 			return BlockEntities.TryAdd(coordinates, entity);
 		}
@@ -440,9 +441,9 @@ namespace Alex.Worlds.Chunks
 			return BlockEntities.TryGetValue(coordinates, out entity);
 		}
 	    
-		public void RemoveBlockEntity(BlockCoordinates coordinates)
+		public bool RemoveBlockEntity(BlockCoordinates coordinates)
 		{
-			BlockEntities.TryRemove(coordinates, out _);
+			return BlockEntities.TryRemove(coordinates, out _);
 		}
 
 		public void Dispose()
