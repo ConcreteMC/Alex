@@ -33,9 +33,9 @@ namespace Alex.Gui.Elements
 			});
         }
 
-        public void AddDebugLeft(Func<string> getDebugString)
+        public void AddDebugLeft(string text)
         {
-            _leftContainer.AddChild(new GuiAutoUpdatingTextElement(getDebugString, false)
+            _leftContainer.AddChild(new GuiTextElement(text, false)
             {
                 TextColor = TextColor.White,
                 FontStyle = FontStyle.DropShadow,
@@ -44,14 +44,38 @@ namespace Alex.Gui.Elements
             });
         }
 
-        public void AddDebugRight(Func<string> getDebugString)
+        public void AddDebugLeft(Func<string> getDebugString, TimeSpan interval = new TimeSpan())
+        {
+            _leftContainer.AddChild(new GuiAutoUpdatingTextElement(getDebugString, false)
+            {
+                TextColor = TextColor.White,
+                FontStyle = FontStyle.DropShadow,
+                Scale = 1f,
+                BackgroundOverlay = Color.Black * 0.25f,
+                Interval = interval
+            });
+        }
+
+        public void AddDebugRight(string text)
+        {
+            _rightContainer.AddChild(new GuiTextElement(text, false)
+            {
+                TextColor = TextColor.White,
+                FontStyle = FontStyle.DropShadow,
+                Scale = 1f,
+                BackgroundOverlay = Color.Black * 0.25f
+            });
+        }
+
+        public void AddDebugRight(Func<string> getDebugString, TimeSpan interval = new TimeSpan())
         {
             _rightContainer.AddChild(new GuiAutoUpdatingTextElement(getDebugString, false)
             {
                 TextColor = TextColor.White,
                 FontStyle = FontStyle.DropShadow,
                 Scale = 1f,
-                BackgroundOverlay = Color.Black * 0.25f
+                BackgroundOverlay = Color.Black * 0.25f,
+                Interval = interval
 			});
         }
 

@@ -108,8 +108,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         private IOptionsProvider OptionsProvider { get; }
         private XboxAuthService XboxAuthService { get; }
         private AlexOptions Options => OptionsProvider.AlexOptions;
-        public DedicatedThreadPool WorkerThreadPool { get; }
-        
+
         public PlayerProfile PlayerProfile { get; }
         private CancellationTokenSource CancellationTokenSource { get; }
         
@@ -153,13 +152,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			
 			Options.VideoOptions.RenderDistance.Bind(RenderDistanceChanged);
 			Options.VideoOptions.ClientSideLighting.Bind(ClientSideLightingChanged);
-			WorkerThreadPool = threadPool;
+		//WorkerThreadPool = threadPool;
 			//ReflectionHelper.SetPrivateStaticFieldValue();
 			//MiNetServer.FastThreadPool = threadPool;
 
 			ChunkProcessor = new ChunkProcessor(this, 
 				alex.Services.GetRequiredService<IOptionsProvider>().AlexOptions.MiscelaneousOptions.ServerSideLighting,
-				CancellationTokenSource.Token);
+				CancellationTokenSource.Token, Alex.Services.GetRequiredService<BlobCache>());
 
 			ChunkProcessor.ClientSideLighting = Options.VideoOptions.ClientSideLighting;
 			
@@ -278,7 +277,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 							else
 								Log.Info(str);
 								
-							_connectionInfo = new ConnectionInfo(StartTime, CustomConnectedPong.Latency, nakReceive, ackReceived, ackSent, fails, resends, packetSizeIn, packetSizeOut);
+							_connectionInfo = new ConnectionInfo(StartTime, CustomConnectedPong.Latency, nakReceive, ackReceived, ackSent, fails, resends, packetSizeIn, packetSizeOut, packetCountIn, packetCountOut);
 						}, null, 1000, 1000);
 					
 					if (Connection.TryConnect(ServerEndpoint, 1))
@@ -335,16 +334,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				this.Connection.SendData(data, new IPEndPoint(IPAddress.Broadcast, 19132));
 		}
 
-		private ConnectionInfo _connectionInfo = new ConnectionInfo(DateTime.UtcNow, 0, 0,0,0,0,0,0,0);
+		private ConnectionInfo _connectionInfo = new ConnectionInfo(DateTime.UtcNow, 0, 0,0,0,0,0,0,0, 0, 0);
 		public override ConnectionInfo GetConnectionInfo()
 		{
 			return _connectionInfo;
-			var conn = Session?.ConnectionInfo ?? Connection.ConnectionInfo;
-
-			return new ConnectionInfo(StartTime, conn.Latency,
-				conn.NumberOfNakReceive, conn.NumberOfAckReceive,
-				conn.NumberOfAckSent, Session?.ErrorCount ?? 0,
-				Session?.ResendCount ?? 0, conn?.TotalPacketSizeInPerSecond ?? 0, conn?.TotalPacketSizeOutPerSecond ?? 0);
 		}
 
 		/// <inheritdoc />
@@ -657,7 +650,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					ClientKey = handler.CryptoContext.ClientKey
 				};
 
-				Thread.Sleep(1250);
+			//	Thread.Sleep(1250);
 				
 				McpeClientToServerHandshake magic = McpeClientToServerHandshake.CreateObject();
 				Session.SendPacket(magic);
@@ -1200,7 +1193,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			EventDispatcher?.UnregisterEvents(this);
 			
 			Close();
-			WorkerThreadPool.Dispose();
+			//WorkerThreadPool.Dispose();
 			//_threadPool.WaitForThreadsExit();
 		}
 	}

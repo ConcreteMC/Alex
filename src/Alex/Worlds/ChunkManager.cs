@@ -502,6 +502,14 @@ namespace Alex.Worlds
 	            
 	            World.EntityManager.AddBlockEntity(coordinates, blockEntity);
             }
+            
+            if (Options.VideoOptions.ClientSideLighting)
+            {
+	            if (chunk.IsNew)
+	            {
+		            ScheduleLightUpdate(position);
+	            }
+            }
 
             //InitiateChunk(c, position);
         }
@@ -730,8 +738,7 @@ namespace Alex.Worlds
 	                }
                 }
 
-                CheckLightingUpdates(renderedChunks.Where(x => IsWithinView(x.Key, _cameraBoundingFrustum))
-	               .OrderBy(c => c.Key.DistanceTo(cameraChunkPos)));
+                CheckLightingUpdates(renderedChunks.OrderByDescending(x => x.Value.LightUpdateWatch.ElapsedMilliseconds));
 
                 // _highPriorityUpdates = highPriority;
                 var threadsActive = Interlocked.Read(ref _threadsRunning);
@@ -760,22 +767,18 @@ namespace Alex.Worlds
 	    {
 		    const int maxLightingThreads = 1;
 
-		    if (Interlocked.Read(ref _lightingThreadsRunning) >= maxLightingThreads)
-			    return;
-
 		    foreach (var c in renderedChunks)
 		    {
 			    if (c.Value.UpdatingLighting || c.Value.LightUpdateWatch.ElapsedMilliseconds < 50)
 				    continue;
+			    
+			    if (!c.Value.BlockLightDirty && !c.Value.SkyLightDirty && !BlockLightCalculations.HasEnqueued(c.Key))
+				    continue;
 
+			    if (Interlocked.Read(ref _lightingThreadsRunning) >= maxLightingThreads)
+				    return;
 
-			    if (BlockLightCalculations.HasEnqueued(c.Key))
-			    {
-				    BlockLightCalculations.Process(c.Key);
-			    }
-
-			    if ((c.Value.BlockLightDirty || c.Value.SkyLightDirty)
-			        && Interlocked.Read(ref _lightingThreadsRunning) < maxLightingThreads)
+			   // if (c.Value.BlockLightDirty || c.Value.SkyLightDirty)
 			    {
 				    Interlocked.Increment(ref _lightingThreadsRunning);
 				    c.Value.UpdatingLighting = true;
@@ -787,6 +790,12 @@ namespace Alex.Worlds
 					    {
 						    try
 						    {
+							    
+							    if (BlockLightCalculations.HasEnqueued(c.Key))
+							    {
+								    BlockLightCalculations.Process(c.Key);
+							    }
+							    
 							    UpdateChunkLighting(c.Key, c.Value);
 						    }
 						    finally
@@ -907,14 +916,6 @@ namespace Alex.Worlds
 			    if (!_workItems.ContainsKey(position) &&
 			        !Enqueued.Contains(position) && Enqueued.TryAdd(position))
 			    {
-				    if (Options.VideoOptions.ClientSideLighting)
-				    {
-					    if (chunk.IsNew)
-					    {
-						    ScheduleLightUpdate(position);
-					    }
-				    }
-
 				    chunk.Scheduled = type;
 
 				    chunk.HighPriority = prioritize;

@@ -95,7 +95,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        UseCustomEntityModels = options.VideoOptions.CustomSkins.Value;
         }
 
-        public bool ReportUnhandled { get; set; } = true;
+        public bool ReportUnhandled { get; set; } = false;
         private void UnhandledPackage(Packet packet)
 		{
 			if (ReportUnhandled)
@@ -154,11 +154,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			
 			if (Client.PlayerStatus == 3)
 			{
-				var packet = McpeSetLocalPlayerAsInitialized.CreateObject();
-				packet.runtimeEntityId = Client.EntityId;
-
-				Client.SendPacket(packet);
-				
 				Client.HasSpawned = true;
 
 				Client.PlayerStatusChanged.Set();
@@ -169,10 +164,19 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				//}
 
 				Client.World.Player.EntityId = Client.EntityId;
+				
+				var packet = McpeSetLocalPlayerAsInitialized.CreateObject();
+				packet.runtimeEntityId = Client.EntityId;
+
+				Client.SendPacket(packet);
 			}
 			else if (Client.PlayerStatus == 0)
 			{
 				Log.Info($"Received Play Status packet: Login success");
+				
+				McpeClientCacheStatus status = McpeClientCacheStatus.CreateObject();
+				status.enabled = false;
+				Client.SendPacket(status);
 			}
 			else
 			{
@@ -251,7 +255,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeSetTime(McpeSetTime message)
 		{
-			Client.World?.SetTime(message.time);
+			Client.World?.SetTime(message.time, message.time % 24000);
 			
 			Client.ChangeDimensionResetEvent.Set();
 		}
@@ -338,6 +342,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			Client.World.Player.IsWorldImmutable = ((message.flags & 0x01) == 0x01);
 			Client.World.Player.IsNoPvP = (message.flags & 0x02) == 0x02;
 			Client.World.Player.IsNoPvM = (message.flags & 0x04) == 0x04;
+			Client.World.Player.HasCollision = (message.flags & 0x80) != 0x80;
 		}
 
 		private ConcurrentDictionary<MiNET.Utils.UUID, RemotePlayer> _players = new ConcurrentDictionary<MiNET.Utils.UUID, RemotePlayer>();
@@ -362,6 +367,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				{
 					mob.HandleMetadata(message.metadata);
 				}
+				
+				//mob.HandleMetadata();
+					//	message.flags
 
 				mob.IsSpawned = true;
 
@@ -384,6 +392,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpePlayerList(McpePlayerList message)
 		{
+			List<Action> actions = new List<Action>();
 			if (message.records is PlayerAddRecords addRecords)
 			{
 				foreach (var r in addRecords)
@@ -404,14 +413,15 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					{
 						Log.Warn($"Duplicate player record! {r.ClientUuid}");
 					}
-
-					if (UseCustomEntityModels)
+					else
 					{
-						Client.WorkerThreadPool.QueueUserWorkItem(
-							() =>
+						if (UseCustomEntityModels)
+						{
+							actions.Add(() =>
 							{
 								m.LoadSkin(r.Skin);
 							});
+						}
 					}
 				}
 			}
@@ -425,6 +435,15 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		            }
 	            }
             }
+
+			ThreadPool.QueueUserWorkItem(
+				o =>
+				{
+					foreach (var action in actions)
+					{
+						action.Invoke();
+					}
+				});
 		}
 
 		public bool SpawnMob(long entityId,
@@ -1604,7 +1623,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeGameRulesChanged(McpeGameRulesChanged message)
 		{
-			var lvl = Client.World.Player.Level;
+			var lvl = Client.World;
 			
 			foreach (var gr in message.rules)
 			{
@@ -1728,9 +1747,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpePlayerSkin(McpePlayerSkin message)
 		{
+			UnhandledPackage(message);
+			return;
 			if (_players.TryGetValue(message.uuid, out var player))
 			{
-				Client.WorkerThreadPool.QueueUserWorkItem(() => { player.LoadSkin(message.skin); });
+				ThreadPool.QueueUserWorkItem((o) => { player.LoadSkin(message.skin); });
 			}
 		}
 

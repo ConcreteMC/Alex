@@ -491,6 +491,8 @@ namespace Alex
 			services.TryAddSingleton<GuiManager>((o) => this.GuiManager);
 			services.TryAddSingleton<ServerTypeManager>(ServerTypeManager);
 			services.TryAddSingleton<XboxAuthService>();
+			
+			services.TryAddSingleton<BlobCache>();
 			; //Storage = storage;
 		}
 
@@ -506,16 +508,8 @@ namespace Alex
 			PluginManager.UnloadAll();
 		}
 
-		private GameTime  _updateGameTime     = new GameTime();
-		private Stopwatch _gameTimeStopwatch  = Stopwatch.StartNew();
-		private double    _previousUpdateTime = 0;
-
 		protected override void Update(GameTime gt)
 		{
-			//base.Update(gt);
-
-			//var gameTime = _updateGameTime;
-
 			if (!UIThreadQueue.IsEmpty && UIThreadQueue.TryDequeue(out Action a))
 			{
 				try
@@ -526,29 +520,13 @@ namespace Alex
 				{
 					Log.Warn($"Exception on UIThreadQueue: {ex.ToString()}");
 				}
-
-				//_sw.Restart();
 			}
 
-			//	var elapsed = _gameTimeStopwatch.Elapsed;
+			InputManager.Update(gt);
 
-			//Fix update loop to 60fps.
-			//if (base.IsFixedTimeStep || elapsed.TotalMilliseconds >= (1000d / 60d)) 
-			{
-				//	_updateGameTime.TotalGameTime += elapsed;
-				//	_updateGameTime.ElapsedGameTime = elapsed;
-
-				//	var gameTime = _updateGameTime;
-				InputManager.Update(gt);
-
-				GuiManager.Update(gt);
-				GameStateManager.Update(gt);
-				GuiDebugHelper.Update(gt);
-
-				//	_previousUpdateTime = _gameTimeStopwatch.Elapsed.TotalMilliseconds - elapsed.TotalMilliseconds;
-				//_gameTimeStopwatch.Restart();
-				//RichPresenceProvider.Update();
-			}
+			GuiManager.Update(gt);
+			GameStateManager.Update(gt);
+			GuiDebugHelper.Update(gt);
 		}
 
 		protected override void Draw(GameTime gameTime)
@@ -558,8 +536,6 @@ namespace Alex
 
 			GameStateManager.Draw(gameTime);
 			GuiManager.Draw(gameTime);
-
-			//	base.Draw(gameTime);
 		}
 
 		private void InitializeGame(IProgressReceiver progressReceiver)
@@ -598,11 +574,6 @@ namespace Alex
 
 			if (storage.TryReadString("skin.json", out var str, Encoding.UTF8))
 			{
-				//var entries = new Dictionary<string, EntityModel>();
-				//EntityModel.GetEntries(str, entries);
-				//var geometryModel =
-				//MCJsonConvert.DeserializeObject<GeometryModel>(str);
-
 				if (GeometryModel.TryParse(str, null, out var geometryModel))
 				{
 					var model = geometryModel.FindGeometry("geometry.humanoid.custom");
@@ -715,12 +686,6 @@ namespace Alex
 			ServerConnectionDetails connectionDetails,
 			PlayerProfile profile)
 		{
-			//		var oldNetworkPool = NetworkThreadPool;
-
-			//	var optionsProvider =  Services.GetService<IOptionsProvider>();
-
-			//	NetworkThreadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(optionsProvider.AlexOptions.NetworkOptions.NetworkThreads.Value, ThreadType.Background, "Network ThreadPool"));
-
 			try
 			{
 				var eventDispatcher = Services.GetRequiredService<IEventDispatcher>() as EventDispatcher;
@@ -739,8 +704,6 @@ namespace Alex
 			{
 				Log.Error(ex, $"FCL: {ex.ToString()}");
 			}
-
-			//	oldNetworkPool?.Dispose();
 		}
 
 		public void LoadWorld(WorldProvider worldProvider, NetworkProvider networkProvider)

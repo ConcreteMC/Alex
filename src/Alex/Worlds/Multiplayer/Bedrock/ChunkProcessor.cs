@@ -46,7 +46,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	    public bool ClientSideLighting { get; set; } = true;
 
 	    private BedrockClient Client { get; }
-        public ChunkProcessor(BedrockClient client, bool useAlexChunks, CancellationToken cancellationToken)
+	    private BlobCache     Cache  { get; }
+        public ChunkProcessor(BedrockClient client, bool useAlexChunks, CancellationToken cancellationToken, BlobCache blobCache)
         {
 	        Client = client;
 	        Instance = this;
@@ -54,6 +55,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        UseAlexChunks = useAlexChunks;
 	        CancellationToken = cancellationToken;
 	        Queue = new ConcurrentQueue<Action>();
+	        Cache = blobCache;
         }
 
         private ConcurrentQueue<Action> Queue { get; }
@@ -123,14 +125,27 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		        {
 			        blobs[i] = defStream.ReadUInt64();
 		        }
+		        
+		        List<ulong> missing = new List<ulong>();
+		        List<ulong> available = new List<ulong>();
 
 		        foreach (var blob in blobs)
 		        {
-			        Client.SendPacket(new McpeClientCacheBlobStatus()
+			        if (Cache.Contains(blob))
 			        {
-				        
-			        });
+				        available.Add(blob);
+			        }
+			        else
+			        {
+				        missing.Add(blob);
+			        }
 		        }
+		        
+		        Client.SendPacket(new McpeClientCacheBlobStatus()
+		        {
+			        hashHits = available.ToArray(),
+			        hashMisses = missing.ToArray()
+		        });
 	        }
         }
         

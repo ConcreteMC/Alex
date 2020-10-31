@@ -18,6 +18,7 @@ using Alex.Utils;
 using Alex.Worlds;
 using Alex.Worlds.Multiplayer.Bedrock;
 using log4net;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MiNET;
@@ -117,7 +118,7 @@ namespace Alex.Entities
 					{
 						if (string.IsNullOrWhiteSpace(skin.ResourcePatch) || skin.ResourcePatch == "null")
 						{
-							Log.Warn($"Resourcepatch null for player {Name}");
+							Log.Debug($"Resourcepatch null for player {Name}");
 						}
 						else
 						{
@@ -127,12 +128,12 @@ namespace Alex.Entities
 							GeometryModel geometryModel = null;
 							if (!GeometryModel.TryParse(skin.GeometryData, resourcePatch, out geometryModel))
 							{
-								Log.Warn($"Failed to parse geometry for player {Name}");
+								Log.Debug($"Failed to parse geometry for player {Name}");
 							}
 							
 							if (geometryModel == null || geometryModel.Geometry.Count == 0)
 							{
-								Log.Warn($"!! Model count was 0 for player {Name} !!");
+								//Log.Warn($"!! Model count was 0 for player {Name} !!");
 							}
 							else
 							{
@@ -142,7 +143,7 @@ namespace Alex.Entities
 
 									if (model == null)
 									{
-										Log.Warn(
+										Log.Debug(
 											$"Invalid geometry: {resourcePatch.Geometry.Default} for player {Name}");
 									}
 									else
@@ -165,7 +166,7 @@ namespace Alex.Entities
 								}
 								else
 								{
-									Log.Warn($"Resourcepatch geometry was null for player {Name}");
+									Log.Debug($"Resourcepatch geometry was null for player {Name}");
 								}
 							}
 						}
@@ -173,12 +174,12 @@ namespace Alex.Entities
 					catch (Exception ex)
 					{
 						string name = "N/A";
-						Log.Warn(ex, $"Could not create geometry ({name}): {ex.ToString()} for player {Name}");
+						Log.Debug(ex, $"Could not create geometry ({name}): {ex.ToString()} for player {Name}");
 					}
 				}
 				else
 				{
-					Log.Warn($"Geometry data null for player {Name}");
+					Log.Debug($"Geometry data null for player {Name}");
 				}
 			}
 
@@ -199,12 +200,12 @@ namespace Alex.Entities
 				else
 				{
 					modelRenderer.Dispose();
-					Log.Warn($"Invalid model: for player {Name} (Disposing)");
+					Log.Debug($"Invalid model: for player {Name} (Disposing)");
 				}
 			}
 			else
 			{
-				Log.Warn($"Invalid model for player {Name}");
+				Log.Debug($"Invalid model for player {Name}");
 			}
 		}
 		
@@ -215,7 +216,7 @@ namespace Alex.Entities
 			if (model.Bones == null || model.Bones.Length == 0)
 			{
 				valid = false;
-				Log.Warn($"Missing bones for player model for player: {playername}");
+				Log.Debug($"Missing bones for player model for player: {playername}");
 			}
 
 			return valid;
@@ -286,24 +287,45 @@ namespace Alex.Entities
 		private bool ValidModel { get; set; }
 		internal void UpdateSkin(PooledTexture2D skinTexture)
 		{
+			if (skinTexture != null && ModelRenderer != null)
+			{
+				ModelRenderer.Texture = skinTexture;
+				return;
+			}
+			
+			string geometry = "geometry.humanoid.customSlim";
 			if (skinTexture == null)
 			{
-				skinTexture = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, Alex.PlayerTexture);
+				string skinVariant = "entity/alex";
+				var    uuid        = UUID.GetBytes();
+
+				if ((uuid[3] ^ uuid[7] ^ uuid[11] ^ uuid[15]) % 2 == 0)
+				{
+					skinVariant = "entity/steve";
+					geometry = "geometry.humanoid.custom";
+				}
+				
+				if (Alex.Instance.Resources.ResourcePack.TryGetBitmap(skinVariant, out var rawTexture))
+				{
+					skinTexture = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, rawTexture);
+					//skinBitmap = rawTexture;
+				}
+				else
+				{
+					skinTexture = TextureUtils.BitmapToTexture2D(Alex.Instance.GraphicsDevice, Alex.PlayerTexture);
+				}
 			}
 			
 			//if (skinSlim)
 			{
-				var gotModel = ModelFactory.TryGetModel(GeometryName,
-					out EntityModel m);
+				//var gotModel = ModelFactory.TryGetModel(GeometryName,
+				//	out EntityModel m);
 				
-				ValidModel = gotModel;
-				if (gotModel || ModelFactory.TryGetModel("geometry.humanoid.customSlim", out m))
+				//ValidModel = gotModel;
+				if (ModelFactory.TryGetModel(geometry, out var m))
 				{
-					if (!gotModel)
-					{
-						
-					}
 					_model = m;
+					ValidModel = true;
 					ModelRenderer = new EntityModelRenderer(_model, skinTexture);
 					//UpdateModelParts();
 				}

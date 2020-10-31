@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Alex.API.Input
 {
@@ -159,11 +160,13 @@ namespace Alex.API.Input
                 }
             })
             {
-                process.Start();
                 process.OutputDataReceived += (sender, args) => { outputBuilder.AppendLine(args.Data); };
-                process.BeginOutputReadLine();
                 process.ErrorDataReceived += (sender, args) => { errorBuilder.AppendLine(args.Data); };
+                process.Start();
+                
+                process.BeginOutputReadLine();
                 process.BeginErrorReadLine();
+                
                 if (waitForExit)
                 {
                     if (!DoubleWaitForExit(process))
@@ -202,12 +205,21 @@ Error: {errorBuilder}";
             return result;
         }
 
+        private static Regex XClipVersionRegex = new Regex("^xclip version\\s(?<version>.*)[\\n\\r]",  RegexOptions.Compiled | RegexOptions.ECMAScript);
         public static bool IsXClipAvailable()
         {
             try
             {
-                new XClipClipboard().SetText("Alex was here, sorry for replacing your keyboard contents!");
-                string content = Run("xclip -o");
+                return false;
+               // new XClipClipboard().SetText("Alex was here, sorry for replacing your keyboard contents!");
+                string content = Run("xclip -version");
+                Console.WriteLine(content);
+                
+                var    match   = XClipVersionRegex.Match(content);
+                if (match.Success)
+                {
+                    return true;
+                }
 
                 return !string.IsNullOrWhiteSpace(content) && !content.Contains("but can be installed with");
             }

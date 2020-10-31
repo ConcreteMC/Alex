@@ -74,7 +74,7 @@ namespace Alex.Worlds
 		public InventoryManager InventoryManager { get; }
 		private SkyBox SkyRenderer { get; }
 
-		public long Time { get; set; } = 0;
+		public long Time    { get; set; } = 0;
 		public bool Raining { get; set; } = false;
 		
 		public bool DrowningDamage { get; set; } = true;
@@ -385,11 +385,11 @@ namespace Alex.Worlds
 		        {
 			        if ((chunk.Scheduled & ScheduleType.Lighting) != ScheduleType.Lighting)
 			        {
-				        ChunkManager.ScheduleChunkUpdate(chunkCoords, ScheduleType.Lighting);
+				       // ChunkManager.ScheduleChunkUpdate(chunkCoords, ScheduleType.Lighting);
 			        }
 			        else
 			        {
-				        chunk.Scheduled = chunk.Scheduled | ScheduleType.Lighting;
+				       // chunk.Scheduled = chunk.Scheduled | ScheduleType.Lighting;
 			        }
 		        }
 	        }
@@ -928,9 +928,9 @@ namespace Alex.Worlds
 			return EntityManager.TryGet(entityId, out entity);
 		}
 
-		public void SetTime(long worldTime)
+		public void SetTime(long worldTime, long timeOfDay)
 		{
-			Time = worldTime;
+			Time = worldTime;//timeOfDay;
 		}
 
 		public void SetRain(bool raining)

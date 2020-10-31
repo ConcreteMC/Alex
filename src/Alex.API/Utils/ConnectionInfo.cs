@@ -15,7 +15,10 @@ namespace Alex.API.Network
         public long BytesIn { get; set; }
         public long BytesOut { get; set; }
         
-        public ConnectionInfo(DateTime connectionOpenedTime, long latency, long nack, long ack, long acksSent, long fails, long resends, long bytesIn, long bytesOut)
+        public long PacketsIn  { get; set; }
+        public long PacketsOut { get; set; }
+        
+        public ConnectionInfo(DateTime connectionOpenedTime, long latency, long nack, long ack, long acksSent, long fails, long resends, long bytesIn, long bytesOut, long packetsIn, long packetsOut)
         {
             ConnectionOpenedTime = connectionOpenedTime;
             Latency = latency;
@@ -26,6 +29,8 @@ namespace Alex.API.Network
             Resends = resends;
             BytesIn = bytesIn;
             BytesOut = bytesOut;
+            PacketsIn = packetsIn;
+            PacketsOut = packetsOut;
         }
     }
 }

@@ -42,6 +42,7 @@ namespace Alex.Gamestates.InGame.Hud
                 
                 StringBuilder sb = new StringBuilder();
                 sb.Append($"Latency: {info.Latency}ms");
+                sb.Append($" | Pkt in/out(#/s): {info.PacketsIn}/{info.PacketsOut}");
                 sb.Append($" | Ack in/out(#/s): {info.Ack}/{info.AckSent}");
                /* sb.Append($" | NACK's: {info.Nack}");
                 sb.Append($" | Resends: {info.Resends}");

@@ -1603,7 +1603,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void HandleTimeUpdatePacket(TimeUpdatePacket packet)
 		{
-			World.SetTime(packet.TimeOfDay);
+			World.SetTime(packet.WorldAge, packet.TimeOfDay);
 		}
 
 		private void HandleChatMessagePacket(ChatMessagePacket packet)

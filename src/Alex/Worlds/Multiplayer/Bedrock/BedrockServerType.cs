@@ -17,7 +17,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 {
 	public class BedrockServerType : ServerTypeImplementation
 	{
-		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BedrockServerType));
+		private const           string AccountType = "xbox";
+		
+		private static readonly Logger Log         = LogManager.GetCurrentClassLogger(typeof(BedrockServerType));
 		
 		private Alex Alex { get; }
 		private XboxAuthService XboxAuthService { get; }
@@ -59,7 +61,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 						p.Authenticated = true;
 								
-						profileManager.CreateOrUpdateProfile("xbox", p);
+						profileManager.CreateOrUpdateProfile(AccountType, p);
 
 						profileService.Force(p);// = p;
 								
@@ -81,11 +83,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 								var p = new PlayerProfile(profile.Uuid, profile.Username, profile.PlayerName,
 									profile.Skin, r.token.AccessToken,
 									JsonConvert.SerializeObject(r.token),
-									"xbox");
+									AccountType);
 
 								p.Authenticated = true;
 								
-								profileManager.CreateOrUpdateProfile("xbox", p);
+								profileManager.CreateOrUpdateProfile(AccountType, p);
 
 								profileService.Force(p);
 								
@@ -114,12 +116,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		/// <inheritdoc />
 		public override async Task<bool> VerifyAuthentication(PlayerProfile currentProfile)
 		{
-			if (currentProfile == null || (currentProfile.Type != "xbox")  || !currentProfile.Authenticated)
+			if (currentProfile == null || (currentProfile.Type != AccountType)  || !currentProfile.Authenticated)
 			{
 				var authenticationService = Alex.Services.GetService<IPlayerProfileService>();
-				foreach (var profile in authenticationService.GetProfiles("xbox"))
+				foreach (var profile in authenticationService.GetProfiles(AccountType))
 				{
-					profile.Type = "xbox";
+					profile.Type = AccountType;
 
 					var task = await ReAuthenticate(profile);
 
@@ -132,7 +134,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				}
 			}
 
-			if ((currentProfile == null || (currentProfile.Type != "xbox")) || !currentProfile.Authenticated)
+			if ((currentProfile == null || (currentProfile.Type != AccountType)) || !currentProfile.Authenticated)
 			{
 				return false;
 			}

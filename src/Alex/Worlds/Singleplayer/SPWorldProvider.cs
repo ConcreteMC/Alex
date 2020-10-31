@@ -29,7 +29,7 @@ namespace Alex.Worlds.Singleplayer
 		public override bool IsConnected { get; } = true;
 		public override ConnectionInfo GetConnectionInfo()
 		{
-			return new ConnectionInfo(DateTime.UtcNow, 0,0,0,0,0,0,0,0);
+			return new ConnectionInfo(DateTime.UtcNow, 0,0,0,0,0,0,0,0,0, 0);
 		}
 
 		/// <inheritdoc />

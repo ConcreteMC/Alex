@@ -153,58 +153,60 @@ namespace Alex.Gamestates.InGame
 		private DateTime _lastNetworkInfo = DateTime.UtcNow;
 		private void InitDebugInfo()
 		{
-			_debugInfo.AddDebugLeft(() =>
-			{
-				//FpsCounter.Update();
-				//World.ChunkManager.GetPendingLightingUpdates(out int lowLight, out int midLight, out int highLight);
-
-				double avg = 0;
-				if (World.ChunkManager.TotalChunkUpdates > 0)
+			_debugInfo.AddDebugLeft(
+				() =>
 				{
-					avg = (World.ChunkManager.ChunkUpdateTime / World.ChunkManager.TotalChunkUpdates).TotalMilliseconds;
-				}
+					double avg = 0;
 
-				return
-					$"Alex {Alex.Version} ({Alex.FpsMonitor.Value:##} FPS, {World.Ticker.TicksPerSecond:##} TPS, Chunk Updates: {World.EnqueuedChunkUpdates} queued, {World.ConcurrentChunkUpdates} active, Avg: {avg:F2}ms, Max: {World.ChunkManager.MaxUpdateTime.TotalMilliseconds:F2}ms, Min: {World.ChunkManager.MinUpdateTIme.TotalMilliseconds:F2})" /*, H: {highLight} M: {midLight} L: {lowLight} lighting updates)"*/
-					;
-			});
+					if (World.ChunkManager.TotalChunkUpdates > 0)
+					{
+						avg = (World.ChunkManager.ChunkUpdateTime / World.ChunkManager.TotalChunkUpdates)
+						   .TotalMilliseconds;
+					}
+
+					return
+						$"Alex {Alex.Version} ({Alex.FpsMonitor.Value:##} FPS, {World.Ticker.TicksPerSecond:##} TPS, Chunk Updates: {World.EnqueuedChunkUpdates} queued, {World.ConcurrentChunkUpdates} active, Avg: {avg:F2}ms, Max: {World.ChunkManager.MaxUpdateTime.TotalMilliseconds:F2}ms, Min: {World.ChunkManager.MinUpdateTIme.TotalMilliseconds:F2})";
+				}, TimeSpan.FromMilliseconds(50));
+			
 			_debugInfo.AddDebugLeft(() =>
 			{
 				var pos = World.Player.KnownPosition;
 				var blockPos = pos.GetCoordinates3D();
 				return $"RenderPosition: (X={pos.X:F2}, Y={pos.Y:F2}, Z={pos.Z:F2}) / Block: ({blockPos.X:D}, {blockPos.Y:D}, {blockPos.Z:D})";
 			});
+			
 			_debugInfo.AddDebugLeft(() =>
 			{
 				var pos = World.Player.KnownPosition;
 				return  $"Facing: {GetCardinalDirection(pos)} (HeadYaw={pos.HeadYaw:F2}, Yaw={pos.Yaw:F2}, Pitch={pos.Pitch:F2})";
 			});
+			
 			_debugInfo.AddDebugLeft(() =>
 			{
 				var pos = World.Player.Velocity;
 				return $"Velocity: (X={pos.X:F2}, Y={pos.Y:F2}, Z={pos.Z:F2}) / Target Speed: {(World.Player.Controller.LastSpeedFactor * 20f):F3} M/s";
 			});
-			_debugInfo.AddDebugLeft(() => $"Vertices: {World.Vertices:N0} ({GetBytesReadable((long)(World.Vertices * BlockShaderVertex.VertexDeclaration.VertexStride))})");
+			_debugInfo.AddDebugLeft(() => $"Vertices: {World.Vertices:N0} ({GetBytesReadable((long)(World.Vertices * BlockShaderVertex.VertexDeclaration.VertexStride))})", TimeSpan.FromMilliseconds(500));
 		//	_debugInfo.AddDebugLeft(() => $"IndexBuffer Elements: {World.IndexBufferSize:N0} ({GetBytesReadable(World.IndexBufferSize * 4)})");
-			_debugInfo.AddDebugLeft(() => $"Chunks: {World.ChunkCount}, {World.ChunkManager.RenderedChunks}");
-			_debugInfo.AddDebugLeft(() => $"Entities: {World.EntityManager.EntityCount}, {World.EntityManager.EntitiesRendered}");
+			_debugInfo.AddDebugLeft(() => $"Chunks: {World.ChunkCount}, {World.ChunkManager.RenderedChunks}", TimeSpan.FromMilliseconds(500));
+			_debugInfo.AddDebugLeft(() => $"Entities: {World.EntityManager.EntityCount}, {World.EntityManager.EntitiesRendered}", TimeSpan.FromMilliseconds(500));
 			_debugInfo.AddDebugLeft(() =>
 			{
 				return $"Biome: {_currentBiome.Name} ({_currentBiomeId})";
-			});
-			_debugInfo.AddDebugLeft(() => { return $"Do DaylightCycle: {World.DoDaylightcycle}"; });
+			}, TimeSpan.FromMilliseconds(500));
+			//_debugInfo.AddDebugLeft(() => { return $"Do DaylightCycle: {World.DoDaylightcycle}"; });
 
-			_debugInfo.AddDebugRight(() => Alex.OperatingSystem);
-			_debugInfo.AddDebugRight(() => Alex.Gpu);
-			_debugInfo.AddDebugRight(() => $"{Alex.DotnetRuntime}\n");
+			_debugInfo.AddDebugRight(Alex.OperatingSystem);
+			_debugInfo.AddDebugRight(Alex.Gpu);
+			_debugInfo.AddDebugRight($"{Alex.DotnetRuntime}\n");
 			//_debugInfo.AddDebugRight(() => MemoryUsageDisplay);
-			_debugInfo.AddDebugRight(() => $"RAM: {GetBytesReadable(_ramUsage, 2)}");
-			_debugInfo.AddDebugRight(() => $"GPU: {GetBytesReadable(GpuResourceManager.GetMemoryUsage, 2)}");
+			_debugInfo.AddDebugRight(() => $"RAM: {GetBytesReadable(_ramUsage, 2)}", TimeSpan.FromMilliseconds(1000));
+			_debugInfo.AddDebugRight(() => $"GPU: {GetBytesReadable(GpuResourceManager.GetMemoryUsage, 2)}", TimeSpan.FromMilliseconds(1000));
 			_debugInfo.AddDebugRight(() =>
 			{
 				return
 					$"Threads: {(_threadsUsed):00}/{_maxThreads}";
-			});
+			}, TimeSpan.FromMilliseconds(50));
 			_debugInfo.AddDebugRight(() =>
 			{
 				var player = World?.Player;
@@ -271,7 +273,7 @@ namespace Alex.Gamestates.InGame
 				{
 					return string.Empty;
 				}
-			});
+			}, TimeSpan.FromMilliseconds(500));
 			
 			_debugInfo.AddDebugRight(() =>
 			{
@@ -280,11 +282,10 @@ namespace Alex.Gamestates.InGame
 
 				var entity = player.HitEntity;
 				return $"Hit entity: {entity.EntityId} / {entity.ToString()}";
-			});
+			}, TimeSpan.FromMilliseconds(500));
 		}
 
 		private float AspectRatio { get; set; }
-		private string MemoryUsageDisplay { get; set; } = "";
 
 		private DateTime _previousMemUpdate = DateTime.UtcNow;
 		protected override void OnUpdate(GameTime gameTime)
@@ -326,10 +327,6 @@ namespace Alex.Gamestates.InGame
 					World.Player.Controller.CheckInput = false;
 				}
 
-				if (AlwaysDay){
-					World.SetTime(1200);
-				}
-				
 				World.Update(args);
 
 				var now = DateTime.UtcNow;
@@ -361,11 +358,34 @@ namespace Alex.Gamestates.InGame
 		}
 		
 		//private Microsoft.Xna.Framework.BoundingBox RayTraceBoundingBox { get; set; }
-		private bool RenderNetworking { get; set; } = false;
-		private bool RenderDebug { get; set; } = false;
+		private bool _renderNetworking = true;
+
+		private bool RenderNetworking
+		{
+			get
+			{
+				return _renderNetworking;
+			}
+			set
+			{
+				if (value != _renderNetworking)
+				{
+					_renderNetworking = value;
+
+					if (value)
+					{
+						Alex.GuiManager.AddScreen(_networkDebugHud);
+					}
+					else
+					{
+						Alex.GuiManager.RemoveScreen(_networkDebugHud);
+					}
+				}
+			}
+		}
+		private bool RenderDebug         { get; set; } = false;
 		private bool RenderBoundingBoxes { get; set; } = false;
-		private bool AlwaysDay { get; set; } = false;
-		
+
 		private KeyboardState _oldKeyboardState;
 		protected void CheckInput(GameTime gameTime) //TODO: Move this input out of the main update loop and use the new per-player based implementation by @TruDan
 		{
@@ -375,26 +395,10 @@ namespace Alex.Gamestates.InGame
 				if (KeyBinds.NetworkDebugging.All(x => currentKeyboardState.IsKeyDown(x)))
 				{
 					RenderNetworking = !RenderNetworking;
-					if (!RenderNetworking)
-					{
-						Alex.GuiManager.RemoveScreen(_networkDebugHud);
-					}
-					else
-					{
-						Alex.GuiManager.AddScreen(_networkDebugHud);
-					}
 				}
 				else if (KeyBinds.EntityBoundingBoxes.All(x => currentKeyboardState.IsKeyDown(x)))
 				{
 					RenderBoundingBoxes = !RenderBoundingBoxes;
-				}
-				else if (KeyBinds.AlwaysDay.All(x => currentKeyboardState.IsKeyDown(x)))
-				{
-					if (!AlwaysDay)
-					{
-						World.SetTime(1200);
-					}
-					AlwaysDay = !AlwaysDay;
 				}
 				else if (currentKeyboardState.IsKeyDown(KeyBinds.DebugInfo))
 				{

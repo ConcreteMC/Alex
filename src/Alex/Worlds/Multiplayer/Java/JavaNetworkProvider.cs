@@ -25,7 +25,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		public override ConnectionInfo GetConnectionInfo()
 		{
-			return new ConnectionInfo(DateTime.UtcNow, 0, 0, 0,0 ,0 ,0, 0, 0);
+			return new ConnectionInfo(DateTime.UtcNow, 0, 0, 0,0 ,0 ,0, 0, 0, 0, 0);
 		}
 
 		/// <inheritdoc />
