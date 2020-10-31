@@ -248,19 +248,11 @@ namespace Alex.Worlds
         {
 	        ChunkManager.UseWireFrames = !ChunkManager.UseWireFrames;
         }
-
-        private static readonly RenderStage[] RenderStages = new RenderStage[]
-        {
-	        RenderStage.OpaqueFullCube,
-	        RenderStage.Opaque,
-	        
-	        //RenderStage.Liquid
-        };
         
         public void Render(IRenderArgs args)
         {
-			Graphics.DepthStencilState = DepthStencilState.Default;
-            Graphics.SamplerStates[0] = SamplerState.PointWrap;
+	        Graphics.DepthStencilState = DepthStencilState.Default;
+	        Graphics.SamplerStates[0] = SamplerState.PointWrap;
 
             SkyRenderer.Draw(args);
             
