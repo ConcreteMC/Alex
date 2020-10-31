@@ -26,22 +26,24 @@ namespace Alex.Blocks.Minecraft
 		{
 			if (world is World w)
 			{
-				if (!w.EntityManager.TryGetBlockEntity(position, out var entity))
+				if ((w.EntityManager.TryGetBlockEntity(position, out var entity) &&!(entity is ChestBlockEntity)))
 				{
-					var ent = new ChestBlockEntity(this, w, BlockEntityFactory.ChestTexture)
-					{
-						X = position.X & 0xf, Y = position.Y & 0xff, Z = position.Z& 0xf
-					};
+					w.EntityManager.RemoveBlockEntity(position);
+				}
+				
+				var ent = new ChestBlockEntity(this, w, BlockEntityFactory.ChestTexture)
+				{
+					X = position.X & 0xf, Y = position.Y & 0xff, Z = position.Z& 0xf
+				};
 					
-					w.EntityManager.AddBlockEntity(
-						position, ent);
+				w.EntityManager.AddBlockEntity(
+					position, ent);
 
-					var chunk = world.GetChunk(position, true);
+				var chunk = world.GetChunk(position, true);
 
-					if (chunk != null)
-					{
-						chunk.AddBlockEntity(new BlockCoordinates(ent.X, ent.Y, ent.Z), ent);
-					}
+				if (chunk != null)
+				{
+					chunk.AddBlockEntity(new BlockCoordinates(ent.X, ent.Y, ent.Z), ent);
 				}
 			}
 			return base.BlockPlaced(world, state, position);

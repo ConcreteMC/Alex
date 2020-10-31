@@ -11,9 +11,10 @@ namespace Alex.Entities.BlockEntities
 {
 	public class BlockEntityFactory
 	{
-		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BlockEntityFactory));
-		internal static PooledTexture2D ChestTexture { get; set; }
-
+		private static readonly Logger          Log = LogManager.GetCurrentClassLogger(typeof(BlockEntityFactory));
+		internal static         PooledTexture2D ChestTexture { get; set; }
+		internal static         PooledTexture2D EnderChestTexture { get; set; }
+		
 		public static void LoadResources(GraphicsDevice graphicsDevice, McResourcePack resourcePack)
 		{
 			if (resourcePack.TryGetBitmap("minecraft:entity/chest/normal", out var bmp))
@@ -23,6 +24,15 @@ namespace Alex.Entities.BlockEntities
 			else
 			{
 				Log.Warn($"Could not load chest texture.");
+			}
+			
+			if (resourcePack.TryGetBitmap("minecraft:entity/chest/ender", out var enderBmp))
+			{
+				EnderChestTexture = TextureUtils.BitmapToTexture2D(graphicsDevice, enderBmp);
+			}
+			else
+			{
+				Log.Warn($"Could not load enderchest texture");
 			}
 		}
 		
@@ -40,6 +50,11 @@ namespace Alex.Entities.BlockEntities
 					case "chest":
 						blockEntity = new ChestBlockEntity(block, world, ChestTexture);
 
+						break;
+					case "minecraft:ender_chest":
+					case "ender_chest":
+					case "enderchest":
+						blockEntity = new EnderChestBlockEntity(block, world, EnderChestTexture);
 						break;
 
 					default:

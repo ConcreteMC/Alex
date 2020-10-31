@@ -11,13 +11,11 @@ using Microsoft.Xna.Framework;
 
 namespace Alex.Entities.BlockEntities
 {
-	public class ChestBlockEntity : BlockEntity
+	public class EnderChestBlockEntity : BlockEntity
 	{
 		private EntityModelRenderer.ModelBone HeadBone { get; }
-		private EntityModelRenderer.ModelBone Body     { get; }
-		
 		/// <inheritdoc />
-		public ChestBlockEntity(Block block, World level, PooledTexture2D texture) : base(level, block)
+		public EnderChestBlockEntity(Block block, World level, PooledTexture2D texture) : base(level, block)
 		{
 			Width = 16;
 			Height = 16;
@@ -27,11 +25,6 @@ namespace Alex.Entities.BlockEntities
 			if (ModelRenderer.GetBone("head", out var head))
 			{
 				HeadBone = head;
-			}
-
-			if (ModelRenderer.GetBone("body", out var body))
-			{
-				Body = body;
 			}
 		}
 
