@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Alex.API.Entities;
 using Alex.API.Graphics;
 using Alex.API.Utils;
@@ -86,9 +87,16 @@ namespace Alex.Graphics.Models.Entity
 			}
 			
 			private AlphaTestEffect Effect { get; set; }
+			
+			private object _disposeLock = new object();
 			public void Render(IRenderArgs args, bool mock, out int vertices)
 			{
 				vertices = 0;
+				
+				if (_disposed) return;
+				if (!Monitor.TryEnter(_disposeLock, 0))
+					return;
+
 				try
 				{
 					var buffer = Buffer;
@@ -151,10 +159,15 @@ namespace Alex.Graphics.Models.Entity
 				{
 					Log.Warn(ex, $"An error occured rendering bone {Name}");
 				}
+				finally
+				{
+					Monitor.Exit(_disposeLock);
+				}
 			}
 
 			public void ClearAnimations()
 			{
+				if (_disposed) return;
 				var anim = CurrentAnim;
 
 				if (anim != null)
@@ -171,80 +184,83 @@ namespace Alex.Graphics.Models.Entity
 				Vector3 diffuseColor,
 				PlayerLocation modelLocation)
 			{
-				var device = args.GraphicsDevice;
+				if (_disposed || Effect == null) return;
 
-					if (Effect == null)
+				if (!Monitor.TryEnter(_disposeLock, 0))
+					return;
+
+				try
+				{
+					//var device = args.GraphicsDevice;
+
+					if (CurrentAnim == null && Animations.TryDequeue(out var animation))
 					{
-						Effect = new AlphaTestEffect(device);
-						Effect.Texture = Texture;
+						animation.Setup();
+						animation.Start();
+
+						CurrentAnim = animation;
 					}
-					else
+
+					if (CurrentAnim != null)
 					{
+						CurrentAnim.Update(args.GameTime);
 
-						if (CurrentAnim == null && Animations.TryDequeue(out var animation))
+						if (CurrentAnim.IsFinished())
 						{
-							animation.Setup();
-							animation.Start();
-
-							CurrentAnim = animation;
+							CurrentAnim.Reset();
+							CurrentAnim = null;
 						}
+					}
+					
+					Matrix yawPitchMatrix = Matrix.Identity;
 
-						if (CurrentAnim != null)
+					if (ApplyHeadYaw || ApplyPitch)
+					{
+						var headYaw = ApplyHeadYaw ? MathUtils.ToRadians(-(modelLocation.HeadYaw - modelLocation.Yaw)) :
+							0f;
+
+						var pitch = ApplyPitch ? MathUtils.ToRadians(modelLocation.Pitch) : 0f;
+
+						yawPitchMatrix = Matrix.CreateTranslation(-Definition.Pivot)
+						                 * Matrix.CreateFromYawPitchRoll(headYaw, pitch, 0f)
+						                 * Matrix.CreateTranslation(Definition.Pivot);
+					}
+
+					var userRotationMatrix = Matrix.CreateTranslation(-Definition.Pivot)
+					                         * Matrix.CreateRotationY(MathUtils.ToRadians(Rotation.Y))
+					                         * Matrix.CreateRotationX(MathUtils.ToRadians(Rotation.X))
+					                         * Matrix.CreateRotationZ(MathUtils.ToRadians(Rotation.Z))
+					                         * Matrix.CreateTranslation(Definition.Pivot);
+
+					Effect.World = yawPitchMatrix * userRotationMatrix * DefaultMatrix * characterMatrix;
+
+					Effect.DiffuseColor = diffuseColor;
+					var children = Children.ToArray();
+
+					if (children.Length > 0)
+					{
+						foreach (var child in children)
 						{
-							CurrentAnim.Update(args.GameTime);
-
-							if (CurrentAnim.IsFinished())
-							{
-								CurrentAnim.Reset();
-								CurrentAnim = null;
-							}
+							child.Update(args, userRotationMatrix * characterMatrix, diffuseColor, modelLocation);
 						}
+					}
 
-
-
-						Matrix yawPitchMatrix = Matrix.Identity;
-
-						if (ApplyHeadYaw || ApplyPitch)
-						{
-							var headYaw = ApplyHeadYaw ?
-								MathUtils.ToRadians(-(modelLocation.HeadYaw - modelLocation.Yaw)) : 0f;
-
-							var pitch = ApplyPitch ? MathUtils.ToRadians(modelLocation.Pitch) : 0f;
-
-							yawPitchMatrix = Matrix.CreateTranslation(-Definition.Pivot)
-							                 * Matrix.CreateFromYawPitchRoll(headYaw, pitch, 0f)
-							                 * Matrix.CreateTranslation(Definition.Pivot);
-						}
-
-						var userRotationMatrix = Matrix.CreateTranslation(-Definition.Pivot)
-						                         * Matrix.CreateRotationY(MathUtils.ToRadians(Rotation.Y))
-						                         * Matrix.CreateRotationX(MathUtils.ToRadians(Rotation.X))
-						                         * Matrix.CreateRotationZ(MathUtils.ToRadians(Rotation.Z))
-						                         * Matrix.CreateTranslation(Definition.Pivot);
-
-						Effect.World = yawPitchMatrix * userRotationMatrix * DefaultMatrix * characterMatrix;
-
-						Effect.DiffuseColor = diffuseColor;
-						var children = Children.ToArray();
-
-						if (children.Length > 0)
-						{
-							foreach (var child in children)
-							{
-								child.Update(args, userRotationMatrix * characterMatrix, diffuseColor, modelLocation);
-							}
-						}
-
-						//if (_isDirty || Indices.Length > Buffer.IndexCount)
-						{
-							UpdateVertexBuffer(args.GraphicsDevice);
+					//if (_isDirty || Indices.Length > Buffer.IndexCount)
+					{
+						UpdateVertexBuffer(args.GraphicsDevice);
 						//	_isDirty = false;
-						}
 					}
+				}
+				finally
+				{
+					Monitor.Exit(_disposeLock);
+				}
 			}
 
 			private void UpdateVertexBuffer(GraphicsDevice device)
 			{
+				if (_disposed) return;
+				
 				var indices = Indices;
 
 				PooledIndexBuffer currentBuffer = Buffer;
@@ -263,6 +279,8 @@ namespace Alex.Graphics.Models.Entity
 
 			internal void SetTexture(PooledTexture2D texture)
 			{
+				if (_disposed) return;
+				
 				if (Effect != null)
 				{
 					Effect.Texture = texture;
@@ -271,10 +289,15 @@ namespace Alex.Graphics.Models.Entity
 				Texture = texture;
 			}
 
+			private bool _disposed = false;
 			public void Dispose()
 			{
-				Effect?.Dispose();
-				Buffer?.MarkForDisposal();
+				_disposed = true;
+				lock (_disposeLock)
+				{
+					Effect?.Dispose();
+					Buffer?.MarkForDisposal();
+				}
 			}
 
 			public void AddChild(IAttachable modelBone)
@@ -298,6 +321,15 @@ namespace Alex.Graphics.Models.Entity
 			}
 
 			public string Name => Definition.Name;
+
+			public void Setup(GraphicsDevice device)
+			{
+				if (Effect == null)
+				{
+					Effect = new AlphaTestEffect(device);
+					Effect.Texture = Texture;
+				}
+			}
 		}
 	}
 }

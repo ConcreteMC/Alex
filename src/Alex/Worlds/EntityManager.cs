@@ -39,18 +39,27 @@ namespace Alex.Worlds
 			Entities = new ConcurrentDictionary<long, Entity>();
 			EntityByUUID = new ConcurrentDictionary<MiNET.Utils.UUID, Entity>();
 			BlockEntities = new ConcurrentDictionary<BlockCoordinates, BlockEntity>();
+			_rendered = new Entity[0];
 		}
 
 		public void OnTick()
 		{
-			List<Entity> rendered = new List<Entity>();
+			List<Entity> rendered = new List<Entity>(_rendered.Length);
 			
 			var entities = Entities.Values.ToArray();
 			var blockEntities = BlockEntities.Values.ToArray();
-			
+
+			var cameraChunkPosition = new ChunkCoordinates(World.Camera.Position);
 			foreach (var entity in entities.Concat(blockEntities))
 			{
 				entity.OnTick();
+
+				if (Math.Abs(new ChunkCoordinates(entity.KnownPosition).DistanceTo(cameraChunkPosition))
+				    > World.ChunkManager.RenderDistance)
+				{
+					entity.IsRendered = false;
+					continue;
+				}
 
 				var entityBox = entity.GetBoundingBox();
 				if (World.Camera.BoundingFrustum.Contains(new Microsoft.Xna.Framework.BoundingBox(entityBox.Min, entityBox.Max)) != ContainmentType.Disjoint)
@@ -78,7 +87,8 @@ namespace Alex.Worlds
 				    entity.ModelRenderer.DiffuseColor = ( new Color(245, 245, 225).ToVector3() * ((1f / 16f) * entity.SurroundingLightValue))
 				                                        * World.BrightnessModifier;
 			    
-			    entity.Update(args);
+			    if (entity.IsRendered)
+					entity.Update(args);
 		    }
 	    }
 
@@ -216,12 +226,17 @@ namespace Alex.Worlds
 		    BlockEntities.TryRemove(coordinates, out _);
 	    }
 
-	    public void Remove(long id)
+	    public bool Remove(long id)
 	    {
 		    if (Entities.TryRemove(id, out Entity entity))
 		    {
 				Remove(entity.UUID, false);
+				entity.Dispose();
+
+				return true;
 		    }
+
+		    return false;
 	    }
 
 	    public bool TryGet(long id, out Entity entity)

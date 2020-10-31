@@ -18,6 +18,7 @@ using Alex.API.World;
 using Alex.Blocks;
 using Alex.Entities;
 using Alex.Entities.BlockEntities;
+using Alex.Entities.Effects;
 using Alex.Entities.Generic;
 using Alex.Entities.Projectiles;
 using Alex.Gamestates;
@@ -94,7 +95,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        UseCustomEntityModels = options.VideoOptions.CustomSkins.Value;
         }
 
-        public bool ReportUnhandled { get; set; } = false;
+        public bool ReportUnhandled { get; set; } = true;
         private void UnhandledPackage(Packet packet)
 		{
 			if (ReportUnhandled)
@@ -404,7 +405,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						Log.Warn($"Duplicate player record! {r.ClientUuid}");
 					}
 
-					if (UseCustomEntityModels && !string.IsNullOrWhiteSpace(r.Skin?.GeometryData))
+					if (UseCustomEntityModels)
 					{
 						Client.WorkerThreadPool.QueueUserWorkItem(
 							() =>
@@ -890,7 +891,55 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeMobEffect(McpeMobEffect message)
 		{
-			UnhandledPackage(message);
+			Entity entity;
+
+			if (!Client.World.EntityManager.TryGet(message.runtimeEntityId, out entity))
+			{
+				if (Client.World.Player.EntityId == message.runtimeEntityId)
+					entity = Client.World.Player;
+			}
+
+			if (entity == null)
+			{
+				Log.Warn($"Could not find entity targeted in McpeMobEffect.");
+				return;
+			}
+
+			Effect effect = null;
+
+			switch ((EffectType)message.effectId)
+			{
+				case EffectType.Speed:
+					effect = new SpeedEffect();
+					break;
+
+				case EffectType.JumpBoost:
+					effect = new JumpBoostEffect();
+					break;
+				default:
+					Log.Warn($"Missing effect implementation: {(EffectType) message.effectId}");
+					return;
+			}
+
+			switch (message.eventId)
+			{
+				case 1:
+					effect.Duration = message.duration;
+					effect.Level = message.amplifier;
+					effect.Particles = message.particles;
+					entity.AddEffect(effect);
+					break;
+				
+				case 2:
+					
+					break;
+
+				case 3:
+					entity.RemoveEffect(effect.EffectId);
+					break;
+			}
+			//UnhandledPackage(message);
+
 		}
 
 		public void HandleMcpeUpdateAttributes(McpeUpdateAttributes message)
@@ -1326,19 +1375,24 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			if (message.namedtag.NbtFile.RootTag is NbtCompound compound)
 			{
-				var blockEntity = BlockEntityFactory.ReadFrom(compound, Client.World, null);
+				var worldPos = new BlockCoordinates(
+					message.coordinates.X, message.coordinates.Y, message.coordinates.Z);
+
+				var block = Client.World.GetBlockState(worldPos).Block;
+				
+				var blockEntity = BlockEntityFactory.ReadFrom(compound, Client.World, block);
 
 				if (blockEntity == null)
 				{
 					//Log.Warn($"Null blockentity!");
 					return;
 				}
-				
-				//Log.Info($"Got block entity: {blockEntity.}");
 
-				var worldPos = new BlockCoordinates(
-					message.coordinates.X, message.coordinates.Y, message.coordinates.Z);
-				if (Client.World.ChunkManager.TryGetChunk(
+				Client.World.SetBlockEntity(
+					message.coordinates.X, message.coordinates.Y, message.coordinates.Z, blockEntity);
+
+				//Log.Info($"Got block entity: {blockEntity.}");
+				/*if (Client.World.ChunkManager.TryGetChunk(
 					new ChunkCoordinates(
 						worldPos),
 					out var cc))
@@ -1356,10 +1410,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 					if (cc.AddBlockEntity(blockCoordinates, blockEntity))
 					{
-						Client.World.EntityManager.AddBlockEntity(new BlockCoordinates(message.coordinates.X, message.coordinates.Y, message.coordinates.Z),
-							blockEntity);
+						Client.World.EntityManager.AddBlockEntity(worldPos, blockEntity);
 					}
-				}
+				}*/
 			}
 			else
 			{

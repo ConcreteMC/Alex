@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Net;
+using System.Threading;
 using Alex.API.Graphics.Textures;
 using Alex.API.Gui.Elements.Controls;
 using Alex.API.Utils;
@@ -21,7 +22,7 @@ namespace Alex.Gui.Forms
         {
             Image = url;
             
-            Alex.Instance.ThreadPool.QueueUserWorkItem(() =>
+            ThreadPool.QueueUserWorkItem((o) =>
             {
                 try
                 {

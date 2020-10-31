@@ -29,15 +29,12 @@ namespace Alex.Networking.Java
         protected ConnectionConfirmed ConnectionConfirmed { get; }
         private PacketDirection PacketDirection { get; }
         private Socket Socket { get; }
-
-		private DedicatedThreadPool ThreadPool { get; }
-
-		public NetConnection(PacketDirection packetDirection, Socket socket, ConnectionConfirmed confirmdAction = null, DedicatedThreadPool threadPool = null)
+        
+		public NetConnection(PacketDirection packetDirection, Socket socket, ConnectionConfirmed confirmdAction = null)
         {
             PacketDirection = packetDirection;
             Socket = socket;
             RemoteEndPoint = Socket.RemoteEndPoint;
-	        ThreadPool = threadPool;
 
             ConnectionConfirmed = confirmdAction;
 
@@ -66,13 +63,13 @@ namespace Alex.Networking.Java
 		private BlockingCollection<EnqueuedPacket> PacketWriteQueue { get; }
 		public bool LogExceptions { get; set; } = true;
 
-	    private Thread NetworkProcessing { get; set; }
-		private Thread NetworkWriting { get; set; }
+	  //  private Thread NetworkProcessing { get; set; }
+	//	private Thread NetworkWriting { get; set; }
 		public void Initialize()
         {
 	        Socket.Blocking = true;
 	        
-		   	NetworkProcessing = new Thread(ProcessNetwork)
+		  /* 	NetworkProcessing = new Thread(ProcessNetwork)
             {
 				IsBackground = true
             };
@@ -82,7 +79,21 @@ namespace Alex.Networking.Java
 			{
 				IsBackground = true
 			};
-			NetworkWriting.Start();
+			NetworkWriting.Start();*/
+
+		  ThreadPool.QueueUserWorkItem(
+			  o =>
+			  {
+				  Thread.CurrentThread.Name = "MC:Java - In";
+				  ProcessNetwork();
+			  });
+
+		  ThreadPool.QueueUserWorkItem(
+			  o =>
+			  {
+				  Thread.CurrentThread.Name = "MC:Java - Out";
+				  SendQueue();
+			  });
         }
 
         public void Stop()
@@ -258,7 +269,7 @@ namespace Alex.Networking.Java
 		    {
 			    if (ShouldAddToProcessing(packet))
 			    {
-				    Interlocked.Increment(ref _queued);
+				   // Interlocked.Increment(ref _queued);
 
 				   // ThreadPool.QueueUserWorkItem(
 				//	    () =>
@@ -285,7 +296,7 @@ namespace Alex.Networking.Java
 		    return true;
 	    }
 	    
-	    private long _queued = 0;
+	//    private long _queued = 0;
 
 	    private void ProcessPacket(Packet packet, byte[] data)
 		{
@@ -305,7 +316,7 @@ namespace Alex.Networking.Java
 			packet.Stopwatch.Stop();
 			if (packet.Stopwatch.ElapsedMilliseconds > 250)
 			{
-				Log.Warn($"Packet handling took too long: {packet.GetType()} | {packet.Stopwatch.ElapsedMilliseconds}ms Processed bytes: {data.Length} (Queue size: {_queued})");
+				Log.Warn($"Packet handling took too long: {packet.GetType()} | {packet.Stopwatch.ElapsedMilliseconds}ms Processed bytes: {data.Length} (Queue size: 0)");
 			}
 		}
 
@@ -431,12 +442,12 @@ namespace Alex.Networking.Java
 
 		   // NetworkProcessing?.Wait();
 			//NetworkProcessing?.Dispose();
-		    NetworkProcessing = null;
+		  //  NetworkProcessing = null;
 		    ClearOutQueue(PacketWriteQueue);
 
 			//NetworkWriting?.Wait();
 			//NetworkWriting?.Dispose();
-			NetworkWriting = null;
+		//	NetworkWriting = null;
 			//PacketWriteQueue?.Dispose();
 
 		  //  ClearOutQueue(HandlePacketQueue);

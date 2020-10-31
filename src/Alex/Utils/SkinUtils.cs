@@ -34,11 +34,24 @@ namespace Alex.Utils
 							data = wc.DownloadData(url);
 						}
 
-						using (MemoryStream ms = new MemoryStream(data))
-						{
-							texture = GpuResourceManager.GetTexture2D("SkinUtils", graphics, ms);// Texture2D.FromStream(graphics, ms);
-						}
+						ManualResetEvent resetEvent = new ManualResetEvent(false);
 
+						PooledTexture2D text = null;
+						Alex.Instance.UIThreadQueue.Enqueue(
+							() =>
+							{
+								using (MemoryStream ms = new MemoryStream(data))
+								{
+									text = GpuResourceManager.GetTexture2D(
+										"SkinUtils", graphics, ms); // Texture2D.FromStream(graphics, ms);
+								}
+
+								resetEvent.Set();
+							});
+						
+						resetEvent.WaitOne();
+
+						texture = text;
 						isSlim = (r.textures.SKIN.metadata?.model == "slim");
 
 						return true;

@@ -55,11 +55,11 @@ namespace Alex.Worlds.Chunks
 		public int[] BiomeId = ArrayOf<int>.Create(16 * 16 * 256, 1);
 		public short[] Height = new short[256];
 		
-		public object UpdateLock { get; set; } = new object();
-		public ScheduleType Scheduled { get; set; } = ScheduleType.Unscheduled;
-		
+		public  object                                              UpdateLock { get; set; } = new object();
+		public  ScheduleType                                        Scheduled { get; set; } = ScheduleType.Unscheduled;
+		public  bool UpdatingLighting { get; set; } = false;
 		private ConcurrentDictionary<BlockCoordinates, BlockEntity> BlockEntities { get; }
-		public BlockEntity[] GetBlockEntities => BlockEntities.Values.ToArray();
+		public  BlockEntity[]                                       GetBlockEntities => BlockEntities.Values.ToArray();
 		public ChunkColumn()
 		{
 			IsDirty = true;
@@ -432,7 +432,8 @@ namespace Alex.Worlds.Chunks
 		public bool AddBlockEntity(BlockCoordinates coordinates, BlockEntity entity)
 		{
 			entity.Block = GetBlockState(coordinates.X, coordinates.Y, coordinates.Z).Block;
-			entity.KnownPosition = coordinates;
+			//entity.KnownPosition = coordinates;
+			//entity.KnownPosition = new PlayerLocation(Position.X + coordinates.X, Position.Y + coordinates.Y, Position.Z + coordinates.Z);
 			return BlockEntities.TryAdd(coordinates, entity);
 		}
 

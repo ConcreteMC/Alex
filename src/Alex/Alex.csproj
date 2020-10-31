@@ -93,6 +93,12 @@
     <EmbeddedResource Include="Resources\Lightmap.xnb" />
     <None Remove="Resources\Entityshader.xnb" />
     <EmbeddedResource Include="Resources\Entityshader.xnb" />
+    <Compile Remove="Particles\Systems\FlameParticleSystem.cs" />
+    <Compile Remove="Particles\ParticleVertex.cs" />
+    <Compile Remove="Particles\ParticleSystem.cs" />
+    <Compile Remove="Particles\ParticleSettings.cs" />
+    <Compile Remove="Particles\ParticleManager.cs" />
+    <Compile Remove="Particles\ParticleEmitter.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -158,7 +164,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Gui\Elements\Web" />
     <Folder Include="Net\Bedrock\Packets" />
+    <Folder Include="Particles\Systems" />
     <Folder Include="Worlds\Chunks\Processing" />
   </ItemGroup>
 

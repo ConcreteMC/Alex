@@ -1,12 +1,13 @@
 ﻿using System;
 using Alex.API.Utils;
 using Alex.Networking.Java.Util;
+using fNbt;
 
 namespace Alex.Networking.Java.Packets.Play
 {
 	public class RespawnPacket : Packet<RespawnPacket>
 	{
-		public string Dimension;
+		public NbtCompound Dimension;
 		public byte Difficulty;
 		public Gamemode Gamemode, PreviousGamemode;
 		public string WorldName;
@@ -15,7 +16,7 @@ namespace Alex.Networking.Java.Packets.Play
 		
 		public override void Decode(MinecraftStream stream)
 		{
-			Dimension = stream.ReadString();
+			Dimension = stream.ReadNbtCompound();
 			WorldName = stream.ReadString();
 			HashedSeed = stream.ReadLong();
 			Gamemode = (Gamemode) stream.ReadByte();

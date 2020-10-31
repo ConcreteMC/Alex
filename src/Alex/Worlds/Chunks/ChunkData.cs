@@ -19,7 +19,7 @@ namespace Alex.Worlds.Chunks
         public bool Disposed { get; private set; } = false;
         public void Dispose()
         {
-            lock (WriteLock)
+           // lock (WriteLock)
             {
                 Buffer?.MarkForDisposal();
 

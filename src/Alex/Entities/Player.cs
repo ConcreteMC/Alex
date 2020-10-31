@@ -369,14 +369,6 @@ namespace Alex.Entities
 
 		}
 
-	    public void Jump()
-	    {
-		    HealthManager.Exhaust(IsSprinting ? 0.2f : 0.05f);
-		    Velocity += new Vector3(0f, 0.42f, 0f);
-		    //Velocity += new Vector3(0f, MathF.Sqrt(2f * (float) (Gravity * 20f) * 1.2f), 0f);
-		    Network?.EntityAction((int) EntityId, EntityAction.Jump);
-	    }
-
 	    private void InteractWithEntity(Entity entity, bool attack, int hand)
 	    {
 		    SwingArm(true);

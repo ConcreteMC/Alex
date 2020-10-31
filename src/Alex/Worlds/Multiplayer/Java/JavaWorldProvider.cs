@@ -90,21 +90,19 @@ namespace Alex.Worlds.Multiplayer.Java
 		public string Hostname { get; set; }
 		
 		private JavaNetworkProvider NetworkProvider { get; }
-		private DedicatedThreadPool ThreadPool { get; }
-		public JavaWorldProvider(Alex alex, IPEndPoint endPoint, PlayerProfile profile, DedicatedThreadPool networkPool, out NetworkProvider networkProvider)
+		public JavaWorldProvider(Alex alex, IPEndPoint endPoint, PlayerProfile profile, out NetworkProvider networkProvider)
 		{
 			Alex = alex;
 			Profile = profile;
 			Endpoint = endPoint;
 
-			ThreadPool = networkPool;
 			OptionsProvider = alex.Services.GetRequiredService<IOptionsProvider>();
 			EventDispatcher = alex.Services.GetRequiredService<IEventDispatcher>();
 			
 		//	ThreadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount));
 
 			TcpClient = new TcpClient();
-			Client = new JavaClient(this, TcpClient.Client, networkPool);
+			Client = new JavaClient(this, TcpClient.Client);
 			Client.OnConnectionClosed += OnConnectionClosed;
 			
 			NetworkProvider = new JavaNetworkProvider(Client);;
@@ -1039,10 +1037,10 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		public bool Respawning = false;
 
-		private void HandleDimension(string dim)
+		private void HandleDimension(NbtCompound dim)
 		{
 			Dimension dimension = Dimension.Overworld;
-			switch (dim)
+			switch (dim["effects"].StringValue)
 			{
 				case "minecraft:the_nether":
 					dimension = Dimension.Nether;
@@ -1687,7 +1685,7 @@ namespace Alex.Worlds.Multiplayer.Java
         private unsafe void HandleChunkData(ChunkDataPacket chunk)
         {
 	        ThreadPool.QueueUserWorkItem(
-		        () =>
+		        (o) =>
 		        {
 			        _loginCompleteEvent?.Set();
 
@@ -1754,11 +1752,11 @@ namespace Alex.Worlds.Multiplayer.Java
 
 							      //  World.EntityManager.AddBlockEntity(coordinates, blockEntity);
 							        
-							        var state = result.GetBlockState(blockEntity.X, blockEntity.Y, blockEntity.Z);
-							        blockEntity.Block = state.Block;
+							        //var state = result.GetBlockState(blockEntity.X, blockEntity.Y, blockEntity.Z);
+							        //blockEntity.Block = state.Block;
 
 							        result.AddBlockEntity(
-								        new BlockCoordinates(blockEntity.X, blockEntity.Y, blockEntity.Z), blockEntity);
+								        new BlockCoordinates(blockEntity.X & 0xf, blockEntity.Y & 0xff, blockEntity.Z & 0xf), blockEntity);
 
 							        // World.GetBlock(coordinates)
 							        // Log.Info($"Added block entity of type \"{blockEntity.GetType()}\" ({coordinates})");

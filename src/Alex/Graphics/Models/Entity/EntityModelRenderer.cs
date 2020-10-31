@@ -108,7 +108,7 @@ namespace Alex.Graphics.Models.Entity
 				CanRender = false;
 				return;
 			}
-
+			
 			VertexBuffer = GpuResourceManager.GetBuffer(this, Alex.Instance.GraphicsDevice,
 				VertexPositionNormalTexture.VertexDeclaration, vertices.Count, BufferUsage.None);
 			VertexBuffer.SetData(vertices.ToArray());
@@ -192,7 +192,8 @@ namespace Alex.Graphics.Models.Entity
 			                 * Matrix.CreateTranslation(bone.Pivot);
 
 			modelBone = new ModelBone(texture, indices.ToArray(), bone,  bindPoseMatrix * boneMatrix);
-
+			modelBone.Setup(Alex.Instance.GraphicsDevice);
+			
 			foreach (var childBone in source.Bones.Where(
 				x => string.Equals(x.Parent, bone.Name, StringComparison.InvariantCultureIgnoreCase)))
 			{

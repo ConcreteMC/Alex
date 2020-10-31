@@ -33,7 +33,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			out WorldProvider worldProvider,
 			out NetworkProvider networkProvider)
 		{
-			worldProvider = new JavaWorldProvider(Alex, connectionDetails.EndPoint, playerProfile, new DedicatedThreadPool(new DedicatedThreadPoolSettings(2)), out networkProvider)
+			worldProvider = new JavaWorldProvider(Alex, connectionDetails.EndPoint, playerProfile, out networkProvider)
 			{
 				Hostname = connectionDetails.Hostname
 			};

@@ -21,6 +21,7 @@ using Alex.Blocks.Minecraft;
 using Alex.Blocks.State;
 using Alex.Blocks.Storage;
 using Alex.Entities;
+using Alex.Entities.BlockEntities;
 using Alex.Gamestates;
 using Alex.Graphics.Camera;
 using Alex.Graphics.Models;
@@ -319,7 +320,13 @@ namespace Alex.Worlds
 				ChunkManager.BrightnessModifier = SkyRenderer.BrightnessModifier;
 			}
 
-			Player.ModelRenderer.DiffuseColor = diffuseColor;
+			var modelRenderer = Player?.ModelRenderer;
+
+			if (modelRenderer != null)
+			{
+				modelRenderer.DiffuseColor = diffuseColor;
+			}
+
 			Player.Update(args);
 
 			if (Player.IsInWater)
@@ -469,6 +476,29 @@ namespace Alex.Worlds
 
 	        return Airstate.Block;
         }
+
+		public void SetBlockEntity(int x, int y, int z, BlockEntity blockEntity)
+		{
+			var coords      = new BlockCoordinates(x, y, z);
+			var chunkCoords = new ChunkCoordinates(x >> 4, z >> 4);
+
+			ChunkColumn chunk;
+
+			if (ChunkManager.TryGetChunk(chunkCoords, out chunk))
+			{
+				var cx       = x & 0xf;
+				var cy       = y & 0xff;
+				var cz       = z & 0xf;
+				
+				var chunkPos = new BlockCoordinates(cx, cy, cz);
+
+				chunk.RemoveBlockEntity(chunkPos);
+				EntityManager.RemoveBlockEntity(coords);
+				
+				chunk.AddBlockEntity(chunkPos, blockEntity);
+				EntityManager.AddBlockEntity(coords, blockEntity);
+			}
+		}
 		
 		public void SetBlockState(int x, int y, int z, BlockState block, BlockUpdatePriority priority = BlockUpdatePriority.High)
 		{
@@ -842,7 +872,7 @@ namespace Alex.Worlds
 			if (EntityManager.TryGet(entityId, out Entity entity))
 			{
 				PhysicsEngine.Remove(entity);
-				entity.Dispose();
+				//entity.Dispose();
 			}
 
 			EntityManager.Remove(entityId);
@@ -928,7 +958,7 @@ namespace Alex.Worlds
 
 		public void AddPlayerListItem(PlayerListItem item)
 		{
-			PlayerList.Entries.Add(item.UUID, item);
+			PlayerList.Entries.TryAdd(item.UUID, item);
 		}
 
 		public void RemovePlayerListItem(MiNET.Utils.UUID item)

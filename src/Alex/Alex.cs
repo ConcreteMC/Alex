@@ -43,6 +43,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MiNET;
 using Newtonsoft.Json;
 using NLog;
 using SixLabors.ImageSharp;
@@ -64,13 +65,14 @@ namespace Alex
 		public const  int  MipMapLevel = 4;
 		public static bool InGame { get; set; } = false;
 
-		public static EntityModel PlayerModel   { get; set; }
-		public static Image<Rgba32>  PlayerTexture { get; set; }
-		
+		public static EntityModel   PlayerModel   { get; set; }
+		public static Image<Rgba32> PlayerTexture { get; set; }
+
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Alex));
 
-		public static string Gpu { get; private set; } = "";
+		public static string Gpu             { get; private set; } = "";
 		public static string OperatingSystem { get; private set; } = "";
+
 		public static string DotnetRuntime { get; } =
 			$"{System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription}";
 
@@ -82,40 +84,56 @@ namespace Alex
 
 		private SpriteBatch _spriteBatch;
 
-		public static Alex Instance { get; private set; }
-		public GameStateManager GameStateManager { get; private set; }
+		public static Alex             Instance         { get; private set; }
+		public        GameStateManager GameStateManager { get; private set; }
 
 		public ResourceManager Resources { get; private set; }
 
-		public InputManager InputManager { get; private set; }
-		public GuiRenderer GuiRenderer { get; private set; }
-		public GuiManager GuiManager { get; private set; }
+		public InputManager   InputManager   { get; private set; }
+		public GuiRenderer    GuiRenderer    { get; private set; }
+		public GuiManager     GuiManager     { get; private set; }
 		public GuiDebugHelper GuiDebugHelper { get; private set; }
 
 		public GraphicsDeviceManager DeviceManager { get; }
 
-		internal ConcurrentQueue<Action> UIThreadQueue  { get; }
-		
-		private  LaunchSettings          LaunchSettings { get; }
-		public   PluginManager           PluginManager  { get; }
-        public   FpsMonitor              FpsMonitor     { get; }
+		internal ConcurrentQueue<Action> UIThreadQueue { get; }
 
-        public new IServiceProvider Services { get; set; }
-        
-        public DedicatedThreadPool ThreadPool { get; private set; }
+		private LaunchSettings LaunchSettings { get; }
+		public  PluginManager  PluginManager  { get; }
+		public  FpsMonitor     FpsMonitor     { get; }
 
-        public StorageSystem Storage { get; private set; }
-        public ServerTypeManager ServerTypeManager { get; private set; }
-        public OptionsProvider Options { get; private set; }
-        
-        public Alex(LaunchSettings launchSettings)
-        {
-	        EntityProperty.Factory = new AlexPropertyFactory();
-	        
+		public new IServiceProvider Services { get; set; }
+
+		// public DedicatedThreadPool ThreadPool { get; private set; }
+
+		public StorageSystem     Storage           { get; private set; }
+		public ServerTypeManager ServerTypeManager { get; private set; }
+		public OptionsProvider   Options           { get; private set; }
+
+		public Alex(LaunchSettings launchSettings)
+		{
+			EntityProperty.Factory = new AlexPropertyFactory();
+
+			MiNET.Utils.DedicatedThreadPool fastThreadPool =
+				ReflectionHelper.GetPrivateStaticPropertyValue<MiNET.Utils.DedicatedThreadPool>(
+					typeof(MiNetServer), "FastThreadPool");
+
+			fastThreadPool?.Dispose();
+			fastThreadPool?.WaitForThreadsExit();
+			
+			ReflectionHelper.SetPrivateStaticPropertyValue<MiNET.Utils.DedicatedThreadPool>(
+				typeof(MiNetServer), "FastThreadPool",
+				new MiNET.Utils.DedicatedThreadPool(
+					new MiNET.Utils.DedicatedThreadPoolSettings(2, "MiNETServer Fast")));
+
+			ThreadPool.SetMaxThreads(Environment.ProcessorCount, Environment.ProcessorCount);
+			
 			Instance = this;
 			LaunchSettings = launchSettings;
-			OperatingSystem = $"{System.Runtime.InteropServices.RuntimeInformation.OSDescription} ({System.Runtime.InteropServices.RuntimeInformation.OSArchitecture})";
-			
+
+			OperatingSystem =
+				$"{System.Runtime.InteropServices.RuntimeInformation.OSDescription} ({System.Runtime.InteropServices.RuntimeInformation.OSArchitecture})";
+
 			DeviceManager = new GraphicsDeviceManager(this)
 			{
 				PreferMultiSampling = false,
@@ -126,26 +144,30 @@ namespace Alex
 			DeviceManager.PreparingDeviceSettings += (sender, args) =>
 			{
 				Gpu = args.GraphicsDeviceInformation.Adapter.Description;
-					args.GraphicsDeviceInformation.PresentationParameters.DepthStencilFormat = DepthFormat.Depth24Stencil8;
-					DeviceManager.PreferMultiSampling = true;
-				};
+				args.GraphicsDeviceInformation.PresentationParameters.DepthStencilFormat = DepthFormat.Depth24Stencil8;
+				DeviceManager.PreferMultiSampling = true;
+			};
 
 			Content = new StreamingContentManager(base.Services, "assets");
-		//	Content.RootDirectory = "assets";
-			
+			//	Content.RootDirectory = "assets";
+
 			IsFixedTimeStep = false;
-           // graphics.ToggleFullScreen();
-			
+			// graphics.ToggleFullScreen();
+
 			this.Window.AllowUserResizing = true;
+
 			this.Window.ClientSizeChanged += (sender, args) =>
 			{
-				if (DeviceManager.PreferredBackBufferWidth != Window.ClientBounds.Width ||
-				    DeviceManager.PreferredBackBufferHeight != Window.ClientBounds.Height)
+				if (DeviceManager.PreferredBackBufferWidth != Window.ClientBounds.Width
+				    || DeviceManager.PreferredBackBufferHeight != Window.ClientBounds.Height)
 				{
 					if (DeviceManager.IsFullScreen)
 					{
-						DeviceManager.PreferredBackBufferWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
-						DeviceManager.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
+						DeviceManager.PreferredBackBufferWidth =
+							GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
+
+						DeviceManager.PreferredBackBufferHeight =
+							GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
 					}
 					else
 					{
@@ -158,73 +180,72 @@ namespace Alex
 					//CefWindow.Size = new System.Drawing.Size(Window.ClientBounds.Width, Window.ClientBounds.Height);
 				}
 			};
-			
+
 
 			JsonConvert.DefaultSettings = () => new JsonSerializerSettings()
 			{
-				Converters = new List<JsonConverter>()
-				{
-					new Texture2DJsonConverter(GraphicsDevice)
-				},
+				Converters = new List<JsonConverter>() {new Texture2DJsonConverter(GraphicsDevice)},
 				Formatting = Formatting.Indented
 			};
-			
+
 			ServerTypeManager = new ServerTypeManager();
 			PluginManager = new PluginManager();
-			
+
 			Storage = new StorageSystem(LaunchSettings.WorkDir);
 			Options = new OptionsProvider(Storage);
-			
+
 			IServiceCollection serviceCollection = new ServiceCollection();
 			serviceCollection.AddSingleton<Alex>(this);
 			serviceCollection.AddSingleton<ContentManager>(Content);
 			serviceCollection.AddSingleton<IStorageSystem>(Storage);
 			serviceCollection.AddSingleton<IOptionsProvider>(Options);
-			
+
 			InitiatePluginSystem(serviceCollection);
-			
+
 			ConfigureServices(serviceCollection);
-			
+
 			Services = serviceCollection.BuildServiceProvider();
-			
+
 			PluginManager.Setup(Services);
-			
+
 			PluginManager.LoadPlugins();
 
 			ServerTypeManager.TryRegister("java", new JavaServerType(this));
-			ServerTypeManager.TryRegister("bedrock", new BedrockServerType(this, Services.GetService<XboxAuthService>()));
-			
+
+			ServerTypeManager.TryRegister(
+				"bedrock", new BedrockServerType(this, Services.GetService<XboxAuthService>()));
+
 			UIThreadQueue = new ConcurrentQueue<Action>();
-			
-            FpsMonitor = new FpsMonitor();
 
-            Resources = Services.GetRequiredService<ResourceManager>();
-            
-            ThreadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount,
-	            ThreadType.Background, "Dedicated ThreadPool"));
+			FpsMonitor = new FpsMonitor();
 
-            KeyboardInputListener.InstanceCreated += KeyboardInputCreated;
-            
-            TextureUtils.RenderThread = Thread.CurrentThread;
-            TextureUtils.QueueOnRenderThread = action => UIThreadQueue.Enqueue(action);
-        }
+			Resources = Services.GetRequiredService<ResourceManager>();
 
-        private void KeyboardInputCreated(object sender, KeyboardInputListener e)
-        {
-	        var bindings = KeyBinds.DefaultBindings;
+			// ThreadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(Environment.ProcessorCount,
+			//    ThreadType.Background, "Dedicated ThreadPool"));
 
-	        if (Storage.TryReadJson($"controls", out Dictionary<InputCommand, Keys> loadedBindings))
-	        {
-		        bindings = loadedBindings;
-	        }
+			KeyboardInputListener.InstanceCreated += KeyboardInputCreated;
 
-	        foreach (var binding in bindings)
-	        {
-		        e.RegisterMap(binding.Key, binding.Value);
-	        }
-        }
+			TextureUtils.RenderThread = Thread.CurrentThread;
+			TextureUtils.QueueOnRenderThread = action => UIThreadQueue.Enqueue(action);
+		}
 
-        public static EventHandler<TextInputEventArgs> OnCharacterInput;
+		private void KeyboardInputCreated(object sender, KeyboardInputListener e)
+		{
+			var bindings = KeyBinds.DefaultBindings;
+
+			if (Storage.TryReadJson($"controls", out Dictionary<InputCommand, Keys> loadedBindings))
+			{
+				bindings = loadedBindings;
+			}
+
+			foreach (var binding in bindings)
+			{
+				e.RegisterMap(binding.Key, binding.Value);
+			}
+		}
+
+		public static EventHandler<TextInputEventArgs> OnCharacterInput;
 
 		private void Window_TextInput(object sender, TextInputEventArgs e)
 		{
@@ -252,11 +273,11 @@ namespace Alex
 			}
 
 			GraphicsDevice.PresentationParameters.MultiSampleCount = 8;
-			
+
 			DeviceManager.ApplyChanges();
-			
+
 			base.Initialize();
-			
+
 			RichPresenceProvider.Initialize();
 		}
 
@@ -264,41 +285,45 @@ namespace Alex
 		{
 			var options = Services.GetService<IOptionsProvider>();
 			options.Load();
-			
-		//	DebugFont = (WrappedSpriteFont) Content.Load<SpriteFont>("Alex.Resources.DebugFont.xnb");
-		
-		//	ResourceManager.EntityEffect = Content.Load<Effect>("Alex.Resources.Entityshader.xnb").Clone();
+
+			//	DebugFont = (WrappedSpriteFont) Content.Load<SpriteFont>("Alex.Resources.DebugFont.xnb");
+
+			//	ResourceManager.EntityEffect = Content.Load<Effect>("Alex.Resources.Entityshader.xnb").Clone();
 			ResourceManager.BlockEffect = Content.Load<Effect>("Alex.Resources.Blockshader.xnb").Clone();
 			ResourceManager.LightingEffect = Content.Load<Effect>("Alex.Resources.Lightmap.xnb").Clone();
 			//	ResourceManager.BlockEffect.GraphicsDevice = GraphicsDevice;
-			
+
 			_spriteBatch = new SpriteBatch(GraphicsDevice);
 			InputManager = new InputManager(this);
 
 			GuiRenderer = new GuiRenderer();
 			//GuiRenderer.Init(GraphicsDevice);
-			
+
 			GuiManager = new GuiManager(this, Services, InputManager, GuiRenderer, options);
 			GuiManager.Init(GraphicsDevice, Services);
 
 			options.AlexOptions.VideoOptions.UseVsync.Bind((value, newValue) => { SetVSync(newValue); });
+
 			if (options.AlexOptions.VideoOptions.UseVsync.Value)
 			{
 				SetVSync(true);
 			}
-			
+
 			options.AlexOptions.VideoOptions.Fullscreen.Bind((value, newValue) => { SetFullscreen(newValue); });
+
 			if (options.AlexOptions.VideoOptions.Fullscreen.Value)
 			{
 				SetFullscreen(true);
 			}
 
-			options.AlexOptions.VideoOptions.LimitFramerate.Bind((value, newValue) =>
+			options.AlexOptions.VideoOptions.LimitFramerate.Bind(
+				(value, newValue) =>
 				{
 					SetFrameRateLimiter(newValue, options.AlexOptions.VideoOptions.MaxFramerate.Value);
 				});
 
-			options.AlexOptions.VideoOptions.MaxFramerate.Bind((value, newValue) =>
+			options.AlexOptions.VideoOptions.MaxFramerate.Bind(
+				(value, newValue) =>
 				{
 					SetFrameRateLimiter(options.AlexOptions.VideoOptions.LimitFramerate.Value, newValue);
 				});
@@ -308,27 +333,21 @@ namespace Alex
 				SetFrameRateLimiter(true, options.AlexOptions.VideoOptions.MaxFramerate.Value);
 			}
 
-			options.AlexOptions.VideoOptions.Antialiasing.Bind((value, newValue) =>
-			{
-				SetAntiAliasing(newValue > 0, newValue);
-			});
+			options.AlexOptions.VideoOptions.Antialiasing.Bind(
+				(value, newValue) => { SetAntiAliasing(newValue > 0, newValue); });
 
-			options.AlexOptions.MiscelaneousOptions.Language.Bind((value, newValue) =>
-			{
-				GuiRenderer.SetLanguage(newValue);
-			});
+			options.AlexOptions.MiscelaneousOptions.Language.Bind(
+				(value, newValue) => { GuiRenderer.SetLanguage(newValue); });
+
 			GuiRenderer.SetLanguage(options.AlexOptions.MiscelaneousOptions.Language);
 
 			options.AlexOptions.VideoOptions.SmoothLighting.Bind(
-				(value, newValue) =>
-				{
-					ResourcePackBlockModel.SmoothLighting = newValue;
-				});
+				(value, newValue) => { ResourcePackBlockModel.SmoothLighting = newValue; });
 
 			ResourcePackBlockModel.SmoothLighting = options.AlexOptions.VideoOptions.SmoothLighting.Value;
 
-			SetAntiAliasing(options.AlexOptions.VideoOptions.Antialiasing > 0,
-				options.AlexOptions.VideoOptions.Antialiasing.Value);
+			SetAntiAliasing(
+				options.AlexOptions.VideoOptions.Antialiasing > 0, options.AlexOptions.VideoOptions.Antialiasing.Value);
 
 			GuiDebugHelper = new GuiDebugHelper(GuiManager);
 
@@ -341,25 +360,29 @@ namespace Alex
 			GameStateManager.SetActiveState("splash");
 
 			WindowSize = this.Window.ClientBounds.Size;
+
 			//	Log.Info($"Initializing Alex...");
-			ThreadPool.QueueUserWorkItem(() =>
-			{
-				try
+			ThreadPool.QueueUserWorkItem(
+				(o) =>
 				{
-					InitializeGame(splash);
-				}
-				catch (Exception ex)
-				{
-					Log.Error(ex, $"Could not initialize! {ex}");
-				}
-			});
+					try
+					{
+						InitializeGame(splash);
+					}
+					catch (Exception ex)
+					{
+						Log.Error(ex, $"Could not initialize! {ex}");
+					}
+				});
 		}
 
 		private void InitiatePluginSystem(IServiceCollection serviceCollection)
 		{
-			string pluginDirectoryPaths = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
+			string pluginDirectoryPaths =
+				Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);
 
 			var pluginDir = Options.AlexOptions.ResourceOptions.PluginDirectory;
+
 			if (!string.IsNullOrWhiteSpace(pluginDir))
 			{
 				pluginDirectoryPaths = pluginDir;
@@ -373,9 +396,12 @@ namespace Alex
 			}
 
 			List<string> paths = new List<string>();
-			foreach (string dirPath in pluginDirectoryPaths.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
+
+			foreach (string dirPath in pluginDirectoryPaths.Split(
+				new char[] {';'}, StringSplitOptions.RemoveEmptyEntries))
 			{
 				string directory = dirPath;
+
 				if (!Path.IsPathRooted(directory))
 				{
 					directory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), dirPath);
@@ -384,65 +410,70 @@ namespace Alex
 				paths.Add(directory);
 				//PluginManager.DiscoverPlugins(directory);
 			}
-			
+
 			PluginManager.DiscoverPlugins(paths.ToArray());
 			PluginManager.ConfigureServices(serviceCollection);
 		}
 
 		private void SetAntiAliasing(bool enabled, int count)
 		{
-			UIThreadQueue.Enqueue(() =>
-			{
-				DeviceManager.PreferMultiSampling = enabled;
-				GraphicsDevice.PresentationParameters.MultiSampleCount = count;
-				
-				DeviceManager.ApplyChanges();
-			});
+			UIThreadQueue.Enqueue(
+				() =>
+				{
+					DeviceManager.PreferMultiSampling = enabled;
+					GraphicsDevice.PresentationParameters.MultiSampleCount = count;
+
+					DeviceManager.ApplyChanges();
+				});
 		}
 
 		private void SetFrameRateLimiter(bool enabled, int frameRateLimit)
 		{
-			UIThreadQueue.Enqueue(() =>
-			{
-				base.IsFixedTimeStep = enabled;
-				base.TargetElapsedTime = TimeSpan.FromSeconds(1d /  frameRateLimit);
-			});
+			UIThreadQueue.Enqueue(
+				() =>
+				{
+					base.IsFixedTimeStep = enabled;
+					base.TargetElapsedTime = TimeSpan.FromSeconds(1d / frameRateLimit);
+				});
 		}
-		
+
 		private void SetVSync(bool enabled)
 		{
-			UIThreadQueue.Enqueue(() =>
-			{
-				base.IsFixedTimeStep = enabled;
-				DeviceManager.SynchronizeWithVerticalRetrace = enabled;
-				DeviceManager.ApplyChanges();
-			});
+			UIThreadQueue.Enqueue(
+				() =>
+				{
+					base.IsFixedTimeStep = enabled;
+					DeviceManager.SynchronizeWithVerticalRetrace = enabled;
+					DeviceManager.ApplyChanges();
+				});
 		}
 
 		private Point WindowSize { get; set; }
+
 		private void SetFullscreen(bool enabled)
 		{
-			UIThreadQueue.Enqueue(() =>
-			{
-				if (this.DeviceManager.IsFullScreen != enabled)
+			UIThreadQueue.Enqueue(
+				() =>
 				{
-					if (enabled)
+					if (this.DeviceManager.IsFullScreen != enabled)
 					{
-						WindowSize = Window.ClientBounds.Size;
-					}
-					else
-					{
-						DeviceManager.PreferredBackBufferWidth = WindowSize.X;
-						DeviceManager.PreferredBackBufferHeight =WindowSize.Y;
+						if (enabled)
+						{
+							WindowSize = Window.ClientBounds.Size;
+						}
+						else
+						{
+							DeviceManager.PreferredBackBufferWidth = WindowSize.X;
+							DeviceManager.PreferredBackBufferHeight = WindowSize.Y;
+							this.DeviceManager.ApplyChanges();
+						}
+
+						this.DeviceManager.IsFullScreen = enabled;
 						this.DeviceManager.ApplyChanges();
 					}
-					
-					this.DeviceManager.IsFullScreen = enabled;
-					this.DeviceManager.ApplyChanges();
-				}
-			});
+				});
 		}
-		
+
 		private void ConfigureServices(IServiceCollection services)
 		{
 			services.TryAddSingleton<ProfileManager>();
@@ -453,31 +484,32 @@ namespace Alex
 			services.TryAddSingleton<IPlayerProfileService, PlayerProfileService>();
 
 			services.TryAddSingleton<IRegistryManager, RegistryManager>();
-            services.TryAddSingleton<AlexIpcService>();
+			services.TryAddSingleton<AlexIpcService>();
 
-            services.TryAddSingleton<IEventDispatcher, EventDispatcher>();
-            services.TryAddSingleton<ResourceManager>();
-            services.TryAddSingleton<GuiManager>((o) => this.GuiManager);
-            services.TryAddSingleton<ServerTypeManager>(ServerTypeManager);
-            services.TryAddSingleton<XboxAuthService>();
-;            //Storage = storage;
+			services.TryAddSingleton<IEventDispatcher, EventDispatcher>();
+			services.TryAddSingleton<ResourceManager>();
+			services.TryAddSingleton<GuiManager>((o) => this.GuiManager);
+			services.TryAddSingleton<ServerTypeManager>(ServerTypeManager);
+			services.TryAddSingleton<XboxAuthService>();
+			; //Storage = storage;
 		}
 
 		protected override void UnloadContent()
 		{
 			//ProfileManager.SaveProfiles();
-			
+
 			Services.GetService<IOptionsProvider>().Save();
 			Services.GetService<AlexIpcService>().Stop();
 
 			GuiDebugHelper.Dispose();
 
-            PluginManager.UnloadAll();
-        }
+			PluginManager.UnloadAll();
+		}
 
 		private GameTime  _updateGameTime     = new GameTime();
 		private Stopwatch _gameTimeStopwatch  = Stopwatch.StartNew();
 		private double    _previousUpdateTime = 0;
+
 		protected override void Update(GameTime gt)
 		{
 			//base.Update(gt);
@@ -497,23 +529,23 @@ namespace Alex
 
 				//_sw.Restart();
 			}
-			
-		//	var elapsed = _gameTimeStopwatch.Elapsed;
+
+			//	var elapsed = _gameTimeStopwatch.Elapsed;
 
 			//Fix update loop to 60fps.
 			//if (base.IsFixedTimeStep || elapsed.TotalMilliseconds >= (1000d / 60d)) 
 			{
-			//	_updateGameTime.TotalGameTime += elapsed;
-			//	_updateGameTime.ElapsedGameTime = elapsed;
+				//	_updateGameTime.TotalGameTime += elapsed;
+				//	_updateGameTime.ElapsedGameTime = elapsed;
 
-			//	var gameTime = _updateGameTime;
+				//	var gameTime = _updateGameTime;
 				InputManager.Update(gt);
 
 				GuiManager.Update(gt);
 				GameStateManager.Update(gt);
 				GuiDebugHelper.Update(gt);
 
-			//	_previousUpdateTime = _gameTimeStopwatch.Elapsed.TotalMilliseconds - elapsed.TotalMilliseconds;
+				//	_previousUpdateTime = _gameTimeStopwatch.Elapsed.TotalMilliseconds - elapsed.TotalMilliseconds;
 				//_gameTimeStopwatch.Restart();
 				//RichPresenceProvider.Update();
 			}
@@ -521,13 +553,13 @@ namespace Alex
 
 		protected override void Draw(GameTime gameTime)
 		{
-            FpsMonitor.Update();
-            GraphicsDevice.RasterizerState = RasterizerState.CullClockwise;
-            
-            GameStateManager.Draw(gameTime);
+			FpsMonitor.Update();
+			GraphicsDevice.RasterizerState = RasterizerState.CullClockwise;
+
+			GameStateManager.Draw(gameTime);
 			GuiManager.Draw(gameTime);
-			
-		//	base.Draw(gameTime);
+
+			//	base.Draw(gameTime);
 		}
 
 		private void InitializeGame(IProgressReceiver progressReceiver)
@@ -538,24 +570,25 @@ namespace Alex
 			//ConfigureServices();
 
 			var eventDispatcher = Services.GetRequiredService<IEventDispatcher>() as EventDispatcher;
-			foreach(var assembly in AppDomain.CurrentDomain.GetAssemblies())
+
+			foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
 				eventDispatcher.LoadFrom(assembly);
-			
+
 			//var options = Services.GetService<IOptionsProvider>();
 
 			//	Log.Info($"Loading resources...");
-			if (!Resources.CheckResources(GraphicsDevice, progressReceiver,
-				OnResourcePackPreLoadCompleted))
+			if (!Resources.CheckResources(GraphicsDevice, progressReceiver, OnResourcePackPreLoadCompleted))
 			{
-                Console.WriteLine("Press enter to exit...");
-			    Console.ReadLine();
+				Console.WriteLine("Press enter to exit...");
+				Console.ReadLine();
 				Exit();
+
 				return;
 			}
-			
+
 			var profileManager = Services.GetService<ProfileManager>();
 			profileManager.LoadProfiles(progressReceiver);
-			
+
 			//GuiRenderer.LoadResourcePack(Resources.ResourcePack, null);
 			AnvilWorldProvider.LoadBlockConverter();
 
@@ -568,23 +601,23 @@ namespace Alex
 				//var entries = new Dictionary<string, EntityModel>();
 				//EntityModel.GetEntries(str, entries);
 				//var geometryModel =
-					//MCJsonConvert.DeserializeObject<GeometryModel>(str);
+				//MCJsonConvert.DeserializeObject<GeometryModel>(str);
 
-					if (GeometryModel.TryParse(str, null, out var geometryModel))
+				if (GeometryModel.TryParse(str, null, out var geometryModel))
+				{
+					var model = geometryModel.FindGeometry("geometry.humanoid.custom");
+
+					if (model == null)
+						model = geometryModel.FindGeometry("geometry.humanoid.customSlim");
+
+					if (model != null)
 					{
-						var model = geometryModel.FindGeometry("geometry.humanoid.custom");
-
-						if (model == null)
-							model = geometryModel.FindGeometry("geometry.humanoid.customSlim");
-
-						if (model != null)
-						{
-							PlayerModel = model;
-							Log.Info($"Player model loaded...");
-						}
+						PlayerModel = model;
+						Log.Info($"Player model loaded...");
 					}
+				}
 			}
-			
+
 			if (PlayerModel == null)
 			{
 				if (ModelFactory.TryGetModel("geometry.humanoid.customSlim", out var model))
@@ -598,7 +631,7 @@ namespace Alex
 			{
 				//Log.Info($"Player model loaded...");
 			}
-			
+
 			if (storage.TryReadBytes("skin.png", out byte[] skinBytes))
 			{
 				using (var skinImage = Image.Load<Rgba32>(skinBytes))
@@ -607,15 +640,14 @@ namespace Alex
 					//	new Point((int) PlayerModel.Description.TextureWidth, (int) PlayerModel.Description.TextureHeight) :
 					//	new Point((int) PlayerModel.Texturewidth, (int) PlayerModel.Textureheight);
 
-					var modelTextureSize = new Point(
-						0, 0);
-					
+					var modelTextureSize = new Point(0, 0);
+
 					if (PlayerModel.Description != null)
 					{
 						modelTextureSize.X = (int) PlayerModel.Description.TextureWidth;
 						modelTextureSize.Y = (int) PlayerModel.Description.TextureHeight;
 					}
-				
+
 					PlayerTexture = skinImage.Clone<Rgba32>();
 					/*
 					var textureSize = new Point(skinImage.Width, skinImage.Height);
@@ -670,28 +702,31 @@ namespace Alex
 
 		private void OnResourcePackPreLoadCompleted(Image<Rgba32> fontBitmap, List<char> bitmapCharacters)
 		{
-			UIThreadQueue.Enqueue(() =>
-			{
-				Font = new BitmapFont(GraphicsDevice, fontBitmap, 16, bitmapCharacters);
+			UIThreadQueue.Enqueue(
+				() =>
+				{
+					Font = new BitmapFont(GraphicsDevice, fontBitmap, 16, bitmapCharacters);
 
-				GuiManager.ApplyFont(Font);
-			});
+					GuiManager.ApplyFont(Font);
+				});
 		}
 
-		public void ConnectToServer(ServerTypeImplementation serverType, ServerConnectionDetails connectionDetails, PlayerProfile profile)
+		public void ConnectToServer(ServerTypeImplementation serverType,
+			ServerConnectionDetails connectionDetails,
+			PlayerProfile profile)
 		{
-	//		var oldNetworkPool = NetworkThreadPool;
-			
-		//	var optionsProvider =  Services.GetService<IOptionsProvider>();
-			
-		//	NetworkThreadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(optionsProvider.AlexOptions.NetworkOptions.NetworkThreads.Value, ThreadType.Background, "Network ThreadPool"));
+			//		var oldNetworkPool = NetworkThreadPool;
+
+			//	var optionsProvider =  Services.GetService<IOptionsProvider>();
+
+			//	NetworkThreadPool = new DedicatedThreadPool(new DedicatedThreadPoolSettings(optionsProvider.AlexOptions.NetworkOptions.NetworkThreads.Value, ThreadType.Background, "Network ThreadPool"));
 
 			try
 			{
 				var eventDispatcher = Services.GetRequiredService<IEventDispatcher>() as EventDispatcher;
 				eventDispatcher?.Reset();
-				
-				WorldProvider provider;
+
+				WorldProvider   provider;
 				NetworkProvider networkProvider;
 				IsMultiplayer = true;
 
@@ -704,39 +739,40 @@ namespace Alex
 			{
 				Log.Error(ex, $"FCL: {ex.ToString()}");
 			}
-			
-		//	oldNetworkPool?.Dispose();
+
+			//	oldNetworkPool?.Dispose();
 		}
 
 		public void LoadWorld(WorldProvider worldProvider, NetworkProvider networkProvider)
 		{
 			PlayingState playState = new PlayingState(this, GraphicsDevice, worldProvider, networkProvider);
-			
+
 			LoadingWorldState loadingScreen = new LoadingWorldState();
 			GameStateManager.AddState("loading", loadingScreen);
 			GameStateManager.SetActiveState("loading");
 
-			worldProvider.Load(loadingScreen.UpdateProgress).ContinueWith(task =>
-			{
-				GameStateManager.RemoveState("play");
-				GameStateManager.AddState("play", playState);
-				
-				if (networkProvider.IsConnected)
-				{
-					GameStateManager.SetActiveState("play");
-				}
-				else
+			worldProvider.Load(loadingScreen.UpdateProgress).ContinueWith(
+				task =>
 				{
 					GameStateManager.RemoveState("play");
-					worldProvider.Dispose();
-				}
+					GameStateManager.AddState("play", playState);
 
-				GameStateManager.RemoveState("loading");
-			});
+					if (networkProvider.IsConnected)
+					{
+						GameStateManager.SetActiveState("play");
+					}
+					else
+					{
+						GameStateManager.RemoveState("play");
+						worldProvider.Dispose();
+					}
+
+					GameStateManager.RemoveState("loading");
+				});
 		}
 	}
 
-    public interface IProgressReceiver
+	public interface IProgressReceiver
 	{
 		void UpdateProgress(int percentage, string statusMessage);
 		void UpdateProgress(int percentage, string statusMessage, string sub);

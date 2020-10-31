@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Utils;
@@ -70,23 +71,39 @@ namespace Alex.Networking.Java.Packets.Play
 	{
 		public static EntityPropertyFactory Factory { get; set; } = new EntityPropertyFactory();
 
-		public string     Key { get; }
-		public double     Value { get; set; }
-		public List<Modifier> Modifiers { get; }
+		public string                  Key       { get; }
+		public double                  Value     { get; set; }
+		public ConcurrentDictionary<UUID, Modifier> Modifiers { get; }
 
 		public EntityProperty(string key, double value, Modifier[] modifiers)
 		{
 			Key = key;
 			Value = value;
-			Modifiers = new List<Modifier>();
+			Modifiers = new ConcurrentDictionary<UUID, Modifier>();
 
 			if (modifiers != null)
-				Modifiers.AddRange(modifiers);
+			{
+				foreach (var modifier in modifiers)
+				{
+					Modifiers.TryAdd(modifier.Uuid, modifier);
+				}
+			}
+				//Modifiers.AddRange(modifiers);
+		}
+
+		public void ApplyModifier(Modifier modifier)
+		{
+			Modifiers.TryAdd(modifier.Uuid, modifier);
+		}
+
+		public void RemoveModifier(UUID key)
+		{
+			Modifiers.TryRemove(key, out _);
 		}
 		
 		protected virtual IEnumerable<Modifier> GetAppliedModifiers()
 		{
-			return Modifiers;
+			return Modifiers.Values.ToArray();
 		}
 		
 		public virtual double Calculate()

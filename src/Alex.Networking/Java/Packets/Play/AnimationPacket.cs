@@ -6,7 +6,7 @@ namespace Alex.Networking.Java.Packets.Play
 	{
 		public AnimationPacket()
 		{
-			PacketId = 0x2B;
+			PacketId = 0x2C;
 		}
 		
 		public int Hand { get; set; }

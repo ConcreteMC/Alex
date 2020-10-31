@@ -44,13 +44,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	    private CancellationToken CancellationToken { get; }
 	    //private DedicatedThreadPool ThreadPool { get; }
 	    public bool ClientSideLighting { get; set; } = true;
-	    private API.Utils.DedicatedThreadPool ThreadPool { get; }
+
 	    private BedrockClient Client { get; }
-        public ChunkProcessor(BedrockClient client, API.Utils.DedicatedThreadPool threadPool, bool useAlexChunks, CancellationToken cancellationToken)
+        public ChunkProcessor(BedrockClient client, bool useAlexChunks, CancellationToken cancellationToken)
         {
 	        Client = client;
 	        Instance = this;
-	        ThreadPool = threadPool;
+	       // ThreadPool = threadPool;
 	        UseAlexChunks = useAlexChunks;
 	        CancellationToken = cancellationToken;
 	        Queue = new ConcurrentQueue<Action>();
@@ -66,7 +66,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        Action<ChunkColumn> callback)
         {
 	        ThreadPool.QueueUserWorkItem(
-		        () =>
+		        (o) =>
 		        {
 			        HandleChunk(cacheEnabled, subChunkCount, chunkData, cx, cz, callback);
 		        });

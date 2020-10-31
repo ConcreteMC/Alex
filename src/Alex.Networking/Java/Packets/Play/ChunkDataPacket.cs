@@ -31,18 +31,19 @@ namespace Alex.Networking.Java.Packets.Play
 			ChunkX = stream.ReadInt();
 			ChunkZ = stream.ReadInt();
 			GroundUp = stream.ReadBool();
-			IgnoreOldData = stream.ReadBool();
+			//IgnoreOldData = stream.ReadBool();
 			PrimaryBitmask = stream.ReadVarInt();
 
 			HeightMaps = stream.ReadNbtCompound();
 
 			if (GroundUp)
 			{
-				//int biomeCount = stream.ReadVarInt();
-				int[] biomeIds = new int[1024];
+				int biomeCount = stream.ReadVarInt();
+				
+				int[] biomeIds = new int[biomeCount];
 				for (int idx = 0; idx < biomeIds.Length; idx++)
 				{
-					biomeIds[idx] = stream.ReadInt();
+					biomeIds[idx] = stream.ReadVarInt();
 				}
 
 				Biomes = biomeIds;

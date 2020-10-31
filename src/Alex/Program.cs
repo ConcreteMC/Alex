@@ -74,6 +74,7 @@ namespace Alex
 		static void Main(string[] args)
 		{
 			_startupThread = Thread.CurrentThread;
+			_startupThread.Name = "UI Thread";
 			
 			var argsResult = Parser.Default.ParseArguments<LaunchSettings>(args)
 				.WithParsed(LaunchGame)

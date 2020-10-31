@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Alex.API;
@@ -11,6 +12,7 @@ using Alex.API.Network;
 using Alex.API.Resources;
 using Alex.API.Utils;
 using Alex.Blocks.Minecraft;
+using Alex.Entities.Effects;
 using Alex.Entities.Properties;
 using Alex.Gamestates;
 using Alex.Graphics.Models.Entity;
@@ -277,6 +279,7 @@ namespace Alex.Entities
 			return baseMovementSpeed * modifier;
 		}
 
+		private bool SkipRendering = false;
 		private void ScaleChanged()
 		{
 			if (ModelRenderer != null)
@@ -286,6 +289,12 @@ namespace Alex.Entities
 				if (_scale <= 0.1f)
 				{
 					Log.Warn($"Scale set to tiny value: {_scale}");
+					SkipRendering = true;
+					//IsInvisible = true;
+				}
+				else
+				{
+					SkipRendering = false;
 				}
 			}
 
@@ -608,20 +617,20 @@ namespace Alex.Entities
 
 		public virtual void Render(IRenderArgs renderArgs)
 		{
-
+			var  renderer = ModelRenderer;
 			long rendered = 0;
 
-			if ((RenderEntity && !IsInvisible) || ShowItemInHand)
+			if (((RenderEntity && !IsInvisible) || ShowItemInHand) && renderer != null && !SkipRendering)
 			{
-				ModelRenderer.Render(renderArgs, IsInvisible || !RenderEntity);
+				renderer.Render(renderArgs, IsInvisible || !RenderEntity);
 
-				if (ModelRenderer.Valid)
+				if (renderer.Valid)
 				{
-					rendered += ModelRenderer.Vertices;
+					rendered += renderer.Vertices;
 				}
 			}
 			
-			if (ShowItemInHand && ItemRenderer != null)
+			if (ShowItemInHand && ItemRenderer != null && !SkipRendering)
 			{
 				ItemRenderer.Render(renderArgs, false, out int itemVertices);
 				rendered += itemVertices;
@@ -634,15 +643,16 @@ namespace Alex.Entities
 
 		public virtual void Update(IUpdateArgs args)
 		{
-			var now = DateTime.UtcNow;
+			var renderer = ModelRenderer;
+			var now      = DateTime.UtcNow;
 
-            if ((RenderEntity && !IsInvisible) || ShowItemInHand)
+            if (((RenderEntity && !IsInvisible) || ShowItemInHand) && renderer != null && !SkipRendering)
             {
-                ModelRenderer.Update(args, KnownPosition);
+	            renderer.Update(args, KnownPosition);
 
                 CalculateLegMovement(args);
                 
-                if (ShowItemInHand)
+                if (ShowItemInHand && !SkipRendering)
                 {
 	               /* ItemRenderer?.Update(Matrix.Identity *
 	                                     Matrix.CreateScale(Scale) *
@@ -908,6 +918,11 @@ namespace Alex.Entities
 					heldItemRenderer.DiffuseColor =  (new Color(245, 245, 225) *  ((1f / 16f) * SurroundingLightValue))
 					                                * Level.BrightnessModifier;
 				}*/
+			}
+
+			foreach (var effect in _effects.Values.ToArray())
+			{
+				effect.OnTick(this);
 			}
 
 			if (IsNoAi) return;
@@ -1339,13 +1354,57 @@ namespace Alex.Entities
 		public static float NametagScale { get; set; } = 2f;
 		public void Dispose()
 		{
-			ModelRenderer?.Dispose();
+			var model = ModelRenderer;
+			ModelRenderer = null;
+			model?.Dispose();
 		}
 
 		/// <inheritdoc />
 		public override string ToString()
 		{
-			return base.ToString() + $"(Invisible: {IsInvisible} Model Valid: {_modelRenderer != null && _modelRenderer.Valid}";
+			return base.ToString();
+		}
+
+		private ConcurrentDictionary<EffectType, Effect> _effects = new ConcurrentDictionary<EffectType, Effect>();
+
+		public const float JumpVelocity = 0.42f;
+		public void Jump()
+		{
+			HealthManager.Exhaust(IsSprinting ? 0.2f : 0.05f);
+			var jumpVelocity = JumpVelocity;
+
+			if (_effects.TryGetValue(EffectType.JumpBoost, out var effect))
+			{
+				jumpVelocity += ((jumpVelocity * 0.5f) * effect.Level);
+			}
+
+			Velocity += new Vector3(0f, jumpVelocity, 0f);
+			//Velocity += new Vector3(0f, MathF.Sqrt(2f * (float) (Gravity * 20f) * 1.2f), 0f);
+			Network?.EntityAction((int) EntityId, EntityAction.Jump);
+		}
+		
+		public void AddEffect(Effect effect)
+		{
+			if (_effects.TryAdd(effect.EffectId, effect))
+			{
+				effect.ApplyTo(this);
+			}
+		}
+
+		public void RemoveEffect(EffectType effectType)
+		{
+			if (_effects.TryRemove(effectType, out var removed))
+			{
+				removed.TakeFrom(this);
+			}
+		}
+
+		public IEnumerable<Effect> AppliedEffects()
+		{
+			foreach (var effect in _effects.Values.ToArray())
+			{
+				yield return effect;
+			}
 		}
 	}
 }

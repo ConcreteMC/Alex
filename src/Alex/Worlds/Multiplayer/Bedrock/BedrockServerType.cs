@@ -36,7 +36,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			out NetworkProvider networkProvider)
 		{
 			worldProvider = new BedrockWorldProvider(Alex, connectionDetails.EndPoint,
-				profile, new DedicatedThreadPool(new DedicatedThreadPoolSettings(1)), out networkProvider);
+				profile, new DedicatedThreadPool(new DedicatedThreadPoolSettings(1, "Bedrock Thread")), out networkProvider);
 				
 			return true;
 		}

@@ -116,16 +116,16 @@ namespace Alex.Gamestates.MainMenu
             Focus(profile);
 
            // profile.Skin.Model.Name = "geometry.alex.custom";
-            Storage.TryWriteJson("skin.json", profile.Skin.Model);
+           // Storage.TryWriteString("skin.json", );
 
             using (MemoryStream ms = new MemoryStream())
             {
-                profile.Skin.Texture.Save(ms, new PngEncoder());
+              //  profile.Skin.Texture.Save(ms, new PngEncoder());
 
-                Storage.TryWriteBytes("skin.png", ms.ToArray());
+            //    Storage.TryWriteBytes("skin.png", ms.ToArray());
             }
 
-            //Alex.PlayerModel = profile.Skin.Model;
+            Alex.PlayerModel = profile.Skin.Model;
             Alex.PlayerTexture = profile.Skin.Texture;
 
             OnCancelButtonPressed();
@@ -133,7 +133,7 @@ namespace Alex.Gamestates.MainMenu
 
         private void OnCancelButtonPressed()
         {
-            Alex.GameStateManager.Back();
+            Alex.GameStateManager.SetActiveState<TitleState>("title");
         }
 
         protected override void OnUpdate(GameTime gameTime)

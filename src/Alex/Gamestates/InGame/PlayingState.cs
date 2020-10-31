@@ -23,7 +23,11 @@ using DiscordRPC;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MiNET;
+using MiNET.Utils;
 using RocketUI;
+using DedicatedThreadPoolSettings = MiNET.Utils.DedicatedThreadPoolSettings;
+using PlayerLocation = Alex.API.Utils.PlayerLocation;
 
 namespace Alex.Gamestates.InGame
 {
@@ -108,15 +112,14 @@ namespace Alex.Gamestates.InGame
 			
 			World.SpawnPoint = WorldProvider.GetSpawnPoint();
 			World.Camera.MoveTo(World.GetSpawnPoint(), Vector3.Zero);
-
 			/*RichPresenceProvider.SetPresence(new RichPresence()
-			{
-				State = "Multiplayer",
-				Timestamps = Timestamps.Now,
-				Details = $"Playing on a {WorldProvider} server.",
-				Assets = RichPresenceProvider.GetDefaultAssets()
-			});
-			*/
+						{
+							State = "Multiplayer",
+							Timestamps = Timestamps.Now,
+							Details = $"Playing on a {WorldProvider} server.",
+							Assets = RichPresenceProvider.GetDefaultAssets()
+						});
+						*/
 			base.OnLoad(args);
 		}
 
@@ -628,14 +631,25 @@ namespace Alex.Gamestates.InGame
 		protected override void OnUnload()
 		{
 			Alex.InGame = false;
-			
-			World.Destroy();
-			WorldProvider.Dispose();
-			NetworkProvider.Close();
 
-			_playingHud.Unload();
-			
-			RichPresenceProvider.ClearPresence();
+			ThreadPool.QueueUserWorkItem(
+				o =>
+				{
+					World.Destroy();
+					WorldProvider.Dispose();
+					NetworkProvider.Close();
+
+					_playingHud.Unload();
+
+					//var threadPool =
+					//	ReflectionHelper.GetPrivateStaticPropertyValue<MiNET.Utils.DedicatedThreadPool>(
+					//		typeof(MiNetServer), "FastThreadPool");
+					//threadPool?.Dispose();
+					//ReflectionHelper.SetPrivateStaticPropertyValue<MiNET.Utils.DedicatedThreadPool>(typeof(MiNetServer), "FastThreadPool", null);
+					
+					RichPresenceProvider.ClearPresence();
+				});
+
 			//GetService<IEventDispatcher>().UnregisterEvents(_playingHud.Chat);
 			//_playingHud.Chat = 
 		}

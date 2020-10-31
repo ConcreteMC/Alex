@@ -154,8 +154,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			Options.VideoOptions.RenderDistance.Bind(RenderDistanceChanged);
 			Options.VideoOptions.ClientSideLighting.Bind(ClientSideLightingChanged);
 			WorkerThreadPool = threadPool;
+			//ReflectionHelper.SetPrivateStaticFieldValue();
+			//MiNetServer.FastThreadPool = threadPool;
 
-			ChunkProcessor = new ChunkProcessor(this, alex.ThreadPool,
+			ChunkProcessor = new ChunkProcessor(this, 
 				alex.Services.GetRequiredService<IOptionsProvider>().AlexOptions.MiscelaneousOptions.ServerSideLighting,
 				CancellationTokenSource.Token);
 
@@ -233,7 +235,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				{
 					Connection.ConnectionInfo.ThroughPut.Change(Timeout.Infinite, Timeout.Infinite);
 
-					if (TryLocate(ServerEndpoint, out var serverInfo))
+					if (TryLocate(ServerEndpoint, out var serverInfo, 3))
 					{
 						OnMotdReceivedHandler?.Invoke(this, new BedrockMotd(serverInfo.serverName)
 						{
