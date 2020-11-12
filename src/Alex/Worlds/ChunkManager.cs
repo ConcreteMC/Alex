@@ -19,7 +19,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.Worlds
 {
-	public class ChunkManager : IChunkManager, IDisposable
+	public class ChunkManager : IChunkManager, IDisposable, ITicked
 	{
 		private readonly static RenderStage[]   RenderStages = ((RenderStage[]) Enum.GetValues(typeof(RenderStage)));
 		
@@ -155,6 +155,8 @@ namespace Alex.Worlds
 					SpinWait sw = new SpinWait();
 					while (!CancellationToken.IsCancellationRequested)
 					{
+						UpdateRenderedChunks();
+						
 						bool processedLighting = ProcessLighting();
 						bool processedQueue    = ProcessQueue();
 
@@ -163,7 +165,28 @@ namespace Alex.Worlds
 					}
 				});
 		}
+		
+		private ChunkData[] _renderedChunks = new ChunkData[0];
+		private void UpdateRenderedChunks()
+		{
+			List<ChunkData> rendered = new List<ChunkData>();
+			foreach (var chunk in Chunks)
+			{
+				if (chunk.Value.ChunkData == null)
+					continue;
+				
+				if (!chunk.Value.ChunkData.Ready)
+					continue;
+				
+				if (IsWithinView(chunk.Key, World.Camera.BoundingFrustum, World.Camera.Position.Y))
+				{
+					rendered.Add(chunk.Value.ChunkData);
+				}
+			}
 
+			_renderedChunks = rendered.ToArray();
+		}
+		
 		private bool ProcessQueue()
 		{
 			if (Interlocked.Read(ref _threadsRunning) >= Options.VideoOptions.ChunkThreads)
@@ -205,20 +228,22 @@ namespace Alex.Worlds
 										BlockLightCalculations.Process(chunkCoordinates);
 									}
 
-									bool newChunk = chunk.IsNew;
-									if (chunk.IsNew)
+									bool newChunk      = chunk.IsNew;
+									bool skyLightDirty = chunk.SkyLightDirty;
+									if (chunk.IsNew || skyLightDirty)
 									{
 										new SkyLightCalculations().RecalcSkyLight(chunk, World);
+										chunk.SkyLightDirty = false;
 									}
 									
 									chunk.UpdateBuffer(Graphics, World);
 
 									if (newChunk)
 									{
-										ScheduleChunkUpdate(new ChunkCoordinates(chunk.X + 1, chunk.Z), ScheduleType.Border);
-										ScheduleChunkUpdate(new ChunkCoordinates(chunk.X - 1, chunk.Z), ScheduleType.Border);
-										ScheduleChunkUpdate(new ChunkCoordinates(chunk.X, chunk.Z + 1), ScheduleType.Border);
-										ScheduleChunkUpdate(new ChunkCoordinates(chunk.X, chunk.Z - 1), ScheduleType.Border);
+										ScheduleChunkUpdate(new ChunkCoordinates(chunk.X + 1, chunk.Z), ScheduleType.Border | ScheduleType.Lighting);
+										ScheduleChunkUpdate(new ChunkCoordinates(chunk.X - 1, chunk.Z), ScheduleType.Border | ScheduleType.Lighting);
+										ScheduleChunkUpdate(new ChunkCoordinates(chunk.X, chunk.Z + 1), ScheduleType.Border | ScheduleType.Lighting);
+										ScheduleChunkUpdate(new ChunkCoordinates(chunk.X, chunk.Z - 1), ScheduleType.Border | ScheduleType.Lighting);
 									}
 								}
 								finally
@@ -257,9 +282,9 @@ namespace Alex.Worlds
 
 				if (TryGetChunk(cc, out var c))
 				{
-					//  c.GetSection(coordinates.Y)?.SetBlockLightScheduled(coordinates.X & 0x0f, coordinates.Y - 16 * (coordinates.Y >> 4), coordinates.Z & 0x0f, true);
+					c.GetSection(coordinates.Y)?.SetBlockLightScheduled(coordinates.X & 0x0f, coordinates.Y - 16 * (coordinates.Y >> 4), coordinates.Z & 0x0f, true);
+					//ScheduleChunkUpdate(cc, ScheduleType.Lighting);
 				}
-				// ScheduleChunkUpdate(cc, ScheduleType.Lighting);
 
 				return true;
 			}
@@ -307,7 +332,7 @@ namespace Alex.Worlds
 			foreach (var blockEntity in chunk.GetBlockEntities)
 			{
 				var coordinates = new BlockCoordinates(
-					(position.X * 16) + blockEntity.X, blockEntity.Y, (position.Z * 16) + blockEntity.Z);
+					(position.X << 4) + blockEntity.X, blockEntity.Y, (position.Z << 4) + blockEntity.Z);
 	            
 				World.EntityManager.AddBlockEntity(coordinates, blockEntity);
 			}
@@ -326,7 +351,7 @@ namespace Alex.Worlds
 				foreach (var blockEntity in column.GetBlockEntities)
 				{
 					World.EntityManager.RemoveBlockEntity(
-						new BlockCoordinates((column.X * 16) + blockEntity.X, blockEntity.Y, (column.Z * 16) + blockEntity.Z));
+						new BlockCoordinates((column.X << 4) + blockEntity.X, blockEntity.Y, (column.Z << 4) + blockEntity.Z));
 				}
 
 				UpdateQueue.Remove(position);
@@ -366,7 +391,12 @@ namespace Alex.Worlds
 			var queue = UpdateQueue;
 			if (Chunks.TryGetValue(position, out var cc))
 			{
-				if (type == ScheduleType.Border)
+				if ((type & ScheduleType.Lighting) != 0)
+				{
+					//cc.SkyLightDirty = true;
+				}
+				
+				if ((type & ScheduleType.Border) != 0)
 				{
 					queue = UpdateBorderQueue;
 				}
@@ -495,23 +525,7 @@ namespace Alex.Worlds
 			var tempVertices    = 0;
 			int tempChunks      = 0;
 
-			List<ChunkData> chunkDatas = new List<ChunkData>();
-
-			foreach (var chunk in Chunks.ToArray())
-			{
-				if (chunk.Value.ChunkData == null)
-					continue;
-				
-				if (!chunk.Value.ChunkData.Ready)
-					continue;
-				
-				if (IsWithinView(chunk.Key, args.Camera.BoundingFrustum, args.Camera.Position.Y))
-				{
-					 chunkDatas.Add(chunk.Value.ChunkData);
-				}
-			}
-			
-			ChunkData[] chunks = chunkDatas.ToArray();
+			ChunkData[] chunks = _renderedChunks;
 
 			foreach (var stage in stages)
 			{
@@ -587,6 +601,13 @@ namespace Alex.Worlds
 			//Graphics?.Dispose();
 			CancellationToken.Cancel();
 			UpdateQueue.Clear();
+
+			foreach (var chunk in Chunks)
+			{
+				chunk.Value.Dispose();
+			}
+			
+			Chunks.Clear();
 		}
 
 		int   _currentFrame = 0;
@@ -601,6 +622,16 @@ namespace Alex.Worlds
 				_currentFrame = (_currentFrame + 1) % Resources.Atlas.GetFrameCount();
 				
 				DefaultShaders.SetAnimatedTextures(Resources.Atlas.GetAtlas(_currentFrame));
+			}
+		}
+
+		/// <inheritdoc />
+		public void OnTick()
+		{
+			foreach (var chunk in Chunks)
+			{
+				if (chunk.Value.BlockLightDirty)
+					ScheduleChunkUpdate(chunk.Key, ScheduleType.Lighting);
 			}
 		}
 	}

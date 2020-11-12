@@ -11,6 +11,6 @@ namespace Alex.API.World
         Lighting    = 16,
         LowPriority = 32,
         
-        Full = Lighting | Border | Scheduled
+        Full = Lighting | Scheduled
     }
 }

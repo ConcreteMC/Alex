@@ -23,9 +23,9 @@ namespace Alex.Worlds.Singleplayer.Generators
 
 	    public ChunkColumn GenerateChunkColumn(ChunkCoordinates chunkCoordinates)
 	    {
-		    ChunkColumn column = new ChunkColumn();
-		    column.X = chunkCoordinates.X;
-		    column.Z = chunkCoordinates.Z;
+		    ChunkColumn column = new ChunkColumn(chunkCoordinates.X, chunkCoordinates.Z);
+		   // column.X = chunkCoordinates.X;
+		  //  column.Z = chunkCoordinates.Z;
 
 		    for (int x = 0; x < 16; x++)
 		    {

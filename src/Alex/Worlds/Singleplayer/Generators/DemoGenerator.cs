@@ -46,7 +46,7 @@ namespace Alex.Worlds.Singleplayer.Generators
           //  IBlockState grass = BlockFactory.GetBlockState("minecraft:grass");
             
             
-            ChunkColumn column = new ChunkColumn();
+            ChunkColumn column = new ChunkColumn(chunkCoordinates.X, chunkCoordinates.Z);
             for (int x = 0; x < 16; x++)
             {
                 var rx = (chunkCoordinates.X * 16) + x;

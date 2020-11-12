@@ -1,6 +1,6 @@
 ﻿namespace Alex.Blocks.Minecraft
 {
-    public class Lilac : Block
+    public class Lilac : FlowerBase
     {
 	    public Lilac()
 	    {

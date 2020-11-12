@@ -1,6 +1,6 @@
 ﻿namespace Alex.Blocks.Minecraft
 {
-    public class OxeyeDaisy : Block
+    public class OxeyeDaisy : FlowerBase
     {
 	    public OxeyeDaisy()
 	    {

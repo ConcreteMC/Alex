@@ -154,11 +154,7 @@ namespace Alex.Worlds.Singleplayer
 
 					NbtList sections = dataTag["Sections"] as NbtList;
 
-					ChunkColumn chunk = new ChunkColumn()
-					{
-						X = coordinates.X,
-						Z = coordinates.Z
-					};
+					ChunkColumn chunk = new ChunkColumn(coordinates.X, coordinates.Z);
 
 					bool isNewFormat = dataTag.Contains("Status");
 

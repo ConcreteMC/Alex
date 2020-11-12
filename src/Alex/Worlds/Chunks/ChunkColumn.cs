@@ -33,7 +33,7 @@ namespace Alex.Worlds.Chunks
 		public int Z { get; set; }
 
 		public          bool IsNew           { get; set; } = true;
-		public          bool SkyLightDirty   =>  Sections != null && Sections.Sum(x => x.SkyLightUpdates) > 0; 
+		public bool SkyLightDirty { get; set; } = false;
 		public          bool BlockLightDirty => Sections != null && Sections.Sum(x => x.BlockLightUpdates) > 0; 
 		public readonly Stopwatch LightUpdateWatch = new Stopwatch();
 		public          ChunkSection[] Sections { get; set; } = new ChunkSection[16];
@@ -46,8 +46,13 @@ namespace Alex.Worlds.Chunks
 		
 		internal ChunkData ChunkData { get; private set; }
 		private object _dataLock = new object();
-		public ChunkColumn()
+		
+		private ChunkOctree _octree;
+		public ChunkColumn(int x, int z)
 		{
+			X = x;
+			Z = z;
+			
 			for (int i = 0; i < Sections.Length; i++)
 			{
 				Sections[i] = null;
@@ -57,6 +62,21 @@ namespace Alex.Worlds.Chunks
 			LightUpdateWatch.Start();
 			
 			ChunkData = new ChunkData();
+			
+			var index = new Vector3(x << 4, 0, z << 4);
+			var sizeOffs = 16 * 0.5f - 0.5f;
+			Vector3 boundsMin = new Vector3(
+				index.X - sizeOffs,
+				-0.5f,
+				index.Z - sizeOffs
+			);
+			Vector3 boundsMax = new Vector3(
+				index.X + sizeOffs,
+				0.5f + 256,
+				index.Z + sizeOffs
+			);
+			var bounds = new BoundingBox( boundsMin, boundsMax );
+			_octree = new ChunkOctree( bounds );
 		}
 
 		public void ScheduleBorder()
@@ -114,7 +134,7 @@ namespace Alex.Worlds.Chunks
 									var by               = sectionY + y;
 									var blockCoordinates = new BlockCoordinates(x, by, z);
 
-									ChunkData.Remove(device, blockCoordinates);
+									ChunkData?.Remove(device, blockCoordinates);
 
 									//var position = chunkPosition + new Vector3(x, by, z);
 									
@@ -171,7 +191,7 @@ namespace Alex.Worlds.Chunks
 					}
 				}
 				
-				ChunkData.ApplyChanges(device);
+				ChunkData?.ApplyChanges(device);
 				IsNew = false;
 			}
 		}
@@ -219,7 +239,24 @@ namespace Alex.Worlds.Chunks
 			if ((x < 0 || x > ChunkWidth) || (y < 0 || y > ChunkHeight) || (z < 0 || z > ChunkDepth))
 				return;
 
-			GetSection(y).Set(storage, x, y - 16 * (y >> 4), z, state);
+
+			var section  = GetSection(y);
+			//var oldBlock = section.Get(x, y - 16 * (y >> 4), z, storage);
+
+			/*if (oldBlock.Block.Renderable)
+			{
+				foreach(var box in oldBlock.Model.GetBoundingBoxes(new Vector3((X << 4) + x, y, (Z << 4) + z)))
+				{
+					_octree.Remove(box);
+				}
+			}*/
+			
+			section.Set(storage, x, y - 16 * (y >> 4), z, state);
+			
+			/*foreach(var box in state.Model.GetBoundingBoxes(new Vector3((X << 4) + x, y, (Z << 4) + z)))
+			{
+				_octree.Add(box);
+			}*/
 
 			_heightDirty = true;
 		}
@@ -235,6 +272,14 @@ namespace Alex.Worlds.Chunks
 					var section = GetSection(y);
 					var block = section.Get(x, y - ((@y >> 4) << 4), z).Block;
 
+					/*if (block.Renderable && block.BlockState.Model != null)
+					{
+						foreach(var box in block.BlockState.Model.GetBoundingBoxes(new Vector3((X << 4) + x, y, (Z << 4) + z)))
+						{
+							_octree.Add(box);
+						}
+					}*/
+					
 					if (!block.Renderable || (!block.BlockMaterial.BlocksLight))
 					{
 						SetSkyLight(x, y, z, 15);

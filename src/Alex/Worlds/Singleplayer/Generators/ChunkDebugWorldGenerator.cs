@@ -23,11 +23,7 @@ namespace Alex.Worlds.Singleplayer.Generators
         
         public ChunkColumn GenerateChunkColumn(ChunkCoordinates chunkCoordinates)
         {
-            ChunkColumn c = new ChunkColumn()
-            {
-                X = chunkCoordinates.X,
-                Z = chunkCoordinates.Z
-            };
+            ChunkColumn c = new ChunkColumn(chunkCoordinates.X, chunkCoordinates.Z);
             
          /*   for (int x = 0; x < ChunkColumn.ChunkWidth; x++)
             {

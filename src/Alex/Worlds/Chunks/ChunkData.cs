@@ -13,21 +13,23 @@ namespace Alex.Worlds.Chunks
 {
     public class ChunkData : IDisposable
     {
-        public PooledVertexBuffer Buffer      { get; private set; }
+        private const int                DefaultSize = 64;
+        public        PooledVertexBuffer Buffer { get; private set; }
 
         public  BlockShaderVertex[]                                 Vertices         { get; private set; }
         public  ConcurrentDictionary<RenderStage, ChunkRenderStage> RenderStages     { get; set; }
         private ConcurrentDictionary<BlockCoordinates, List<int>>   BlockIndices     { get; set; }
-        private SortedSet<int>                                         AvailableIndices { get; }
+        private SortedSet<int> AvailableIndices { get; } //LinkedList<KeyValuePair<int, int>>                         AvailableIndices { get; }
 
         private static long _instances = 0;
         private static long _totalSize = 0;
-        private static long AverageSize => _instances > 0 && _totalSize > 0 ? _totalSize / _instances : 0;
+        //private static long AverageSize => _instances > 0 && _totalSize > 0 ? _totalSize / _instances : DefaultSize;
+        private static long AverageSize = DefaultSize;
         public ChunkData()
         {
             RenderStages = new ConcurrentDictionary<RenderStage, ChunkRenderStage>();
             BlockIndices = new ConcurrentDictionary<BlockCoordinates, List<int>>();
-            AvailableIndices = new SortedSet<int>();
+            AvailableIndices = new SortedSet<int>();// new LinkedList<KeyValuePair<int, int>>();
 
             Interlocked.Increment(ref _instances);
         }
@@ -56,10 +58,11 @@ namespace Alex.Worlds.Chunks
         private void Init()
         {
             Vertices = new BlockShaderVertex[AverageSize];
+          //  AvailableIndices.AddFirst(new KeyValuePair<int, int>(0, Vertices.Length));
             for(int i = 0; i < Vertices.Length; i++)
                 AvailableIndices.Add(i);
 
-            Interlocked.Add(ref _totalSize, Vertices.Length);
+            Interlocked.Add(ref _totalSize, Vertices.Length - 1);
         }
         
         private int GetIndex()
@@ -68,9 +71,26 @@ namespace Alex.Worlds.Chunks
 
             if (AvailableIndices.Count > 0)
             {
-                availableIndex = AvailableIndices.Min;
-                AvailableIndices.Remove(availableIndex);
+               /* var first = AvailableIndices.First;
                 
+                availableIndex = first.Value.Key;
+                
+                var startIndex = first.Value.Key + 1;
+                var remaining  = first.Value.Value - 1;
+
+                if (remaining <= 0)
+                {
+                    AvailableIndices.Remove(first);
+                }
+                else
+                {
+                    first.Value = new KeyValuePair<int, int>(startIndex, remaining);
+                }*/
+
+               var first = AvailableIndices.Min;
+               AvailableIndices.Remove(first);
+
+               availableIndex = first;
                 return availableIndex;
             }
 
@@ -79,20 +99,27 @@ namespace Alex.Worlds.Chunks
             int oldSize  = vertices.Length;
 
             if (oldSize == 0)
-                oldSize = 1024;
+                oldSize = DefaultSize;
             
-            Array.Resize(ref vertices, NextPowerOf2(oldSize + 1));
+            BlockShaderVertex[] newVertices = new BlockShaderVertex[oldSize * 2];
+            Array.Copy(vertices, newVertices, vertices.Length);
+            vertices = newVertices;
+            //Array.Resize(ref vertices, NextPowerOf2(oldSize + 1));
             int newSize = vertices.Length;
             
             Vertices = vertices;
             Interlocked.Add(ref _totalSize, newSize - oldSize);
-            
-            for(int i = oldSize + 1; i < newSize; i++)
+
+            for (int i = oldSize + 1; i < newSize; i++)
                 AvailableIndices.Add(i);
+               // FreeIndex(oldSize + 1, newSize - oldSize - 1);
+                //AvailableIndices.AddLast(new KeyValuePair<int, int>(oldSize + 1, newSize - oldSize));
 
             HasResized = true;
             return oldSize;
         }
+        
+        
 
         private LinkedList<int> _intermediateChanges = new LinkedList<int>();
 
@@ -112,6 +139,40 @@ namespace Alex.Worlds.Chunks
             }
             
             Buffer.SetData(changes[0] * BlockShaderVertex.VertexDeclaration.VertexStride, vertices, 0, vertices.Length, Buffer.VertexDeclaration.VertexStride);
+        }
+
+        private void FreeIndex(int index, int count = 1)
+        {
+          /*  var first = AvailableIndices.First;
+
+            bool added = false;
+            if (first != null)
+            {
+                do
+                {
+                    if (first.Value.Key - 1 == index)
+                    {
+                        first.Value = new KeyValuePair<int, int>(first.Value.Key - 1, first.Value.Value + 1);
+                        added = true;
+                        break;
+                    }
+                    else if ((first.Value.Key + first.Value.Value) + 1 == index)
+                    {
+                        first.Value = new KeyValuePair<int, int>(first.Value.Key, first.Value.Value + count);
+                        added = true;
+                        break;
+                    }
+
+                    first = first.Next;
+                } while (first?.Next != null);
+            }
+
+            if (!added)
+            {
+                AvailableIndices.AddLast(new KeyValuePair<int, int>(index, count - 1));
+            }*/
+          for(int i = 0; i < count; i++)
+            AvailableIndices.Add(index + i);
         }
         
         private void Set(int index, BlockShaderVertex vertex)
@@ -176,7 +237,8 @@ namespace Alex.Worlds.Chunks
                 {
                     //Vertices[index] = BlockShaderVertex.Default;
                     Set(index, BlockShaderVertex.Default);
-                    AvailableIndices.Add(index);
+                    FreeIndex(index);
+                    // AvailableIndices.Add(index);
                 }
 
                 ApplyIntermediate();

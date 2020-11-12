@@ -1,6 +1,6 @@
 ﻿namespace Alex.Blocks.Minecraft
 {
-    public class AzureBluet : Block
+    public class AzureBluet : FlowerBase
     {
 	    public AzureBluet()
 	    {

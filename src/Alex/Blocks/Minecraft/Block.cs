@@ -3,6 +3,7 @@ using Alex.API.Blocks;
 using Alex.API.Items;
 using Alex.API.Resources;
 using Alex.API.Utils;
+using Alex.API.Utils.Noise;
 using Alex.API.World;
 using Alex.Blocks.Properties;
 using Alex.Blocks.State;
@@ -84,14 +85,17 @@ namespace Alex.Blocks.Minecraft
 			}
 		}
 
-		public BlockCoordinates Coordinates { get; set; }
-
 		protected Block()
 		{
 			Solid = true;
 			Transparent = false;
 			Renderable = true;
 			HasHitbox = true;
+		}
+
+		public virtual Vector3 GetOffset(IModule3D noise, BlockCoordinates position)
+		{
+			return Vector3.Zero;
 		}
 
 		public virtual bool CanClimb(BlockFace face)

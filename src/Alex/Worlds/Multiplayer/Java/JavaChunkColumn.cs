@@ -72,5 +72,8 @@ namespace Alex.Worlds.Multiplayer.Java
 				Log.Warn($"Received supposedly corrupted chunk:" + e);
 			}
 		}
+
+		/// <inheritdoc />
+		public JavaChunkColumn(int x, int z) : base(x, z) { }
 	}
 }

@@ -1,6 +1,6 @@
 ﻿namespace Alex.Blocks.Minecraft
 {
-    public class CornFlower : Block
+    public class CornFlower : FlowerBase
     {
 	    public CornFlower()
 	    {

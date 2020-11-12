@@ -1,6 +1,6 @@
 namespace Alex.Blocks.Minecraft
 {
-	public class Poppy : Block
+	public class Poppy : FlowerBase
 	{
 		public Poppy() : base()
 		{

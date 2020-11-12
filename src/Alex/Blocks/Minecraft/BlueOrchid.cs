@@ -1,6 +1,6 @@
 namespace Alex.Blocks.Minecraft
 {
-	public class BlueOrchid : Block
+	public class BlueOrchid : FlowerBase
 	{
 		public BlueOrchid()
 		{

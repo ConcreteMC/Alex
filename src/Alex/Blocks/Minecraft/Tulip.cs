@@ -1,6 +1,6 @@
 namespace Alex.Blocks.Minecraft
 {
-    public class Tulip : Block
+    public class Tulip : FlowerBase
     {
         public Tulip()
         {

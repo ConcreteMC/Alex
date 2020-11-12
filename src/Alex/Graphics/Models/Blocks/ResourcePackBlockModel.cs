@@ -6,6 +6,7 @@ using Alex.API.Blocks;
 using Alex.API.Graphics;
 using Alex.API.Resources;
 using Alex.API.Utils;
+using Alex.API.Utils.Noise;
 using Alex.API.World;
 using Alex.Blocks.Minecraft;
 using Alex.ResourcePackLib.Json;
@@ -27,10 +28,11 @@ namespace Alex.Graphics.Models.Blocks
 {
 	public class ResourcePackBlockModel : BlockModel
 	{
-		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(SPWorldProvider));
-		private static FastRandom FastRandom { get; } = new FastRandom();
-
-		public static bool SmoothLighting { get; set; } = true;
+		private static readonly Logger     Log = LogManager.GetCurrentClassLogger(typeof(SPWorldProvider));
+		private static          FastRandom FastRandom     { get; } = new FastRandom(1337);
+		private static          IModule3D  NoiseGenerator { get; } = new SimplexPerlin(1337);
+		
+		public static           bool       SmoothLighting { get; set; } = true;
 		
 		private BlockStateModel[] Models { get; set; }
 		protected ResourceManager Resources { get; }
@@ -38,8 +40,9 @@ namespace Alex.Graphics.Models.Blocks
 		protected Vector3 Min = new Vector3(float.MaxValue);
 		protected Vector3 Max = new Vector3(float.MinValue);
 
-		public BoundingBox[] Boxes { get; set; } = new BoundingBox[0];
-		private bool UseRandomizer { get; set; }
+		public  BoundingBox[] Boxes         { get; set; } = new BoundingBox[0];
+		private bool          UseRandomizer { get; set; }
+		private int           WeightSum     { get; }
 		public ResourcePackBlockModel(ResourceManager resources, BlockStateModel[] models, bool useRandomizer = false)
 		{
 			Resources = resources;
@@ -83,6 +86,7 @@ namespace Alex.Graphics.Models.Blocks
 			
 			//Models = models;
 			UseRandomizer = useRandomizer;
+			WeightSum = models.Sum(x => x.Weight);
 			
 			CalculateBoundingBoxes(Models);
 		}
@@ -597,6 +601,7 @@ namespace Alex.Graphics.Models.Blocks
 					if (!ShouldRenderFace(world, facing, position, baseBlock))
 						continue;
 
+					var positionOffset = baseBlock.GetOffset(NoiseGenerator, position);
 
 					var   uv = face.Value.UV;
 					float x1 = 0, x2 = 0, y1 = 0, y2 = 0;
@@ -736,7 +741,7 @@ namespace Alex.Graphics.Models.Blocks
 						var vertex = vertices[indexes[i]];
 						vertex.Position += position;
 
-						var pos = vertex.Position + vertex.Face.GetVector3();
+						//var pos = vertex.Position + vertex.Face.GetVector3();
 
 						BlockModel.GetLight(
 							world, vertex.Position + vertex.Face.GetVector3(), 
@@ -744,6 +749,8 @@ namespace Alex.Graphics.Models.Blocks
 							out var skyLight,
 							true);
 
+						vertex.Position += positionOffset;
+						
 						vertex.BlockLight = blockLight;
 						vertex.SkyLight = skyLight;
 
@@ -833,9 +840,26 @@ namespace Alex.Graphics.Models.Blocks
 
 				if (UseRandomizer)
 				{
-					//var rndIndex = FastRandom.Next() % Models.Length;
+					BlockStateModel selectedModel = null;
+					//FastRandom.Reinitialise(position.GetHashCode());
+					var             rnd = FastRandom.Next(0, WeightSum);
+
+					for (var index = 0; index < models.Length; index++)
+					{
+						var    model  = models[index];
+						rnd -= model.Weight;
+						//double weight = (double) model.Weight / (double) WeightSum;
+
+						if (rnd < 0)
+						{
+							selectedModel = model;
+
+							break;
+						}
+					}
+
 					CalculateModel(
-						world, chunkBuilder, position, baseBlock, models[0], biome);
+						world, chunkBuilder, position, baseBlock, selectedModel, biome);
 				}
 				else
 				{

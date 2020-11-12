@@ -1,6 +1,6 @@
 namespace Alex.Blocks.Minecraft
 {
-    public class Peony : Block
+    public class Peony : FlowerBase
     {
         public Peony()
         {

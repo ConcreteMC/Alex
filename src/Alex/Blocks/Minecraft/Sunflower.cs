@@ -1,6 +1,6 @@
 namespace Alex.Blocks.Minecraft
 {
-    public class Sunflower : Block
+    public class Sunflower : FlowerBase
     {
         public Sunflower()
         {

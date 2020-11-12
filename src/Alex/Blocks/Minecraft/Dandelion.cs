@@ -1,6 +1,6 @@
 namespace Alex.Blocks.Minecraft
 {
-	public class Dandelion : Block
+	public class Dandelion : FlowerBase
 	{
 		public Dandelion() : base()
 		{

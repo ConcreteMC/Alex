@@ -1,6 +1,6 @@
 namespace Alex.Blocks.Minecraft
 {
-    public class Allium : Block
+    public class Allium : FlowerBase
     {
         public Allium()
         {

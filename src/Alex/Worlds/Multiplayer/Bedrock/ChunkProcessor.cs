@@ -158,10 +158,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		       return;
 	        }
 	        
-	        ChunkColumn chunkColumn = new ChunkColumn();
+	        ChunkColumn chunkColumn = new ChunkColumn(cx, cz);
 	      //  chunkColumn.IsDirty = true;
-	        chunkColumn.X = cx;
-	        chunkColumn.Z = cz;
+	       // chunkColumn.X = cx;
+	      //  chunkColumn.Z = cz;
 
 	        bool        gotLight    = false;
 	        try

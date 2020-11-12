@@ -167,7 +167,6 @@
     <Folder Include="Gui\Elements\Web" />
     <Folder Include="Net\Bedrock\Packets" />
     <Folder Include="Particles\Systems" />
-    <Folder Include="Worlds\Chunks\Processing" />
   </ItemGroup>
 
 	<Target Name="ChangeAliasesOfNugetRefs" BeforeTargets="FindReferenceAssembliesForReferences;ResolveReferences">

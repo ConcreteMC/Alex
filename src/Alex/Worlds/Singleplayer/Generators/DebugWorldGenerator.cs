@@ -44,12 +44,7 @@ namespace Alex.Worlds.Singleplayer.Generators
 			return _cache.GetOrAdd(
 				chunkCoordinates, (cc) =>
 				{
-					ChunkColumn chunk = new ChunkColumn()
-					{
-						X = chunkCoordinates.X,
-						Z = chunkCoordinates.Z
-					};
-
+					ChunkColumn chunk = new ChunkColumn(chunkCoordinates.X, chunkCoordinates.Z);
 					for (int x = 0; x < 16; x++)
 					{
 						for (int z = 0; z < 16; z++)

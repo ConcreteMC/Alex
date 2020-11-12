@@ -1699,7 +1699,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 				        if (chunk.GroundUp)
 				        {
-					        result = new JavaChunkColumn();
+					        result = new JavaChunkColumn(chunk.ChunkX, chunk.ChunkZ);
 				        }
 				        else
 				        {
@@ -1709,12 +1709,12 @@ namespace Alex.Worlds.Multiplayer.Java
 					        }
 					        else
 					        {
-						        result = new JavaChunkColumn();
+						        result = new JavaChunkColumn(chunk.ChunkX, chunk.ChunkZ);
 					        }
 				        }
 
-				        result.X = chunk.ChunkX;
-				        result.Z = chunk.ChunkZ;
+				       // result.X = chunk.ChunkX;
+				       // result.Z = chunk.ChunkZ;
 				   //     result.IsDirty = true;
 
 				        result.Read(stream, chunk.PrimaryBitmask, chunk.GroundUp, World.Dimension == Dimension.Overworld);
