@@ -378,11 +378,11 @@ namespace Alex.Worlds
 	        {
 		        if (chunk.SetSkyLight(coordinates.X & 0xf, coordinates.Y & 0xff, coordinates.Z & 0xf, p1))
 		        {
-			        if ((chunk.Scheduled & ScheduleType.Lighting) != ScheduleType.Lighting)
+			       // if ((chunk.Scheduled & ScheduleType.Lighting) != ScheduleType.Lighting)
 			        {
 				       // ChunkManager.ScheduleChunkUpdate(chunkCoords, ScheduleType.Lighting);
 			        }
-			        else
+			       // else
 			        {
 				       // chunk.Scheduled = chunk.Scheduled | ScheduleType.Lighting;
 			        }
@@ -492,7 +492,7 @@ namespace Alex.Worlds
 			SetBlockState(x, y, z, block, 0, priority);
 		}
 		
-		public void SetBlockState(int x, int y, int z, BlockState block, int storage, BlockUpdatePriority priority = BlockUpdatePriority.High)
+		public void SetBlockState(int x, int y, int z, BlockState block, int storage, BlockUpdatePriority priority = BlockUpdatePriority.High | BlockUpdatePriority.Neighbors)
 		{
 			var chunkCoords = new ChunkCoordinates(x >> 4, z >> 4);
 
@@ -583,6 +583,7 @@ namespace Alex.Worlds
 		
 		private void ScheduleBlockUpdate(BlockCoordinates updatedBlock, BlockCoordinates block)
 		{
+			ScheduleBlockUpdate(block);
 			Ticker.ScheduleTick(() =>
 			{
 				GetBlockState(block).Block.BlockUpdate(this, block, updatedBlock);

@@ -50,18 +50,15 @@ namespace Alex.Worlds.Chunks
 		public int X { get; set; }
 		public int Z { get; set; }
 
-		public bool IsNew           { get; set; } = true;
-		public bool IsDirty         { get; set; }
-		public bool SkyLightDirty   =>  Sections != null && Sections.Sum(x => x.SkyLightUpdates) > 0; 
-		public bool BlockLightDirty => Sections != null && Sections.Sum(x => x.BlockLightUpdates) > 0; 
+		public          bool IsNew           { get; set; } = true;
+		public          bool SkyLightDirty   =>  Sections != null && Sections.Sum(x => x.SkyLightUpdates) > 0; 
+		public          bool BlockLightDirty => Sections != null && Sections.Sum(x => x.BlockLightUpdates) > 0; 
 		public readonly Stopwatch LightUpdateWatch = new Stopwatch();
-		public ChunkSection[] Sections { get; set; } = new ChunkSection[16];
-		public int[] BiomeId = ArrayOf<int>.Create(16 * 16 * 256, 1);
-		public short[] Height = new short[256];
+		public          ChunkSection[] Sections { get; set; } = new ChunkSection[16];
+		public          int[] BiomeId = ArrayOf<int>.Create(16 * 16 * 256, 1);
+		public          short[] Height = new short[256];
 		
 		public  object                                              UpdateLock { get; set; } = new object();
-		public  ScheduleType                                        Scheduled { get; set; } = ScheduleType.Unscheduled;
-		public  bool UpdatingLighting { get; set; } = false;
 		private ConcurrentDictionary<BlockCoordinates, BlockEntity> BlockEntities { get; }
 		public  BlockEntity[]                                       GetBlockEntities => BlockEntities.Values.ToArray();
 		
@@ -69,7 +66,6 @@ namespace Alex.Worlds.Chunks
 		private object _dataLock = new object();
 		public ChunkColumn()
 		{
-			IsDirty = true;
 			//SkyLightDirty = true;
 			//BlockLightDirty = true;
 
@@ -234,11 +230,6 @@ namespace Alex.Worlds.Chunks
 			}
 		}
 
-		public void SetDirty()
-		{
-			IsDirty = true;
-		}
-
 		public void ScheduleBlockUpdate(int x, int y, int z)
 		{
 			if ((x < 0 || x > ChunkWidth) || (y < 0 || y > ChunkHeight) || (z < 0 || z > ChunkDepth))
@@ -285,8 +276,6 @@ namespace Alex.Worlds.Chunks
 				return;
 
 			GetSection(y).Set(storage, x, y - 16 * (y >> 4), z, state);
-			SetDirty();
-
 			//RecalculateHeight(x, z);
 
 			_heightDirty = true;
@@ -399,7 +388,6 @@ namespace Alex.Worlds.Chunks
 				return;
 
 			Height[((bz << 4) + (bx))] = h;
-			SetDirty();
 		}
 
 		public byte GetHeight(int bx, int bz)
@@ -416,7 +404,6 @@ namespace Alex.Worlds.Chunks
 				return;
 
 			BiomeId[(by << 8 | bz << 4 | bx)] = biome;
-			SetDirty();
 		}
 
 		public int GetBiome(int bx, int by, int bz)

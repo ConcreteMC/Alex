@@ -1715,7 +1715,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 				        result.X = chunk.ChunkX;
 				        result.Z = chunk.ChunkZ;
-				        result.IsDirty = true;
+				   //     result.IsDirty = true;
 
 				        result.Read(stream, chunk.PrimaryBitmask, chunk.GroundUp, World.Dimension == Dimension.Overworld);
 

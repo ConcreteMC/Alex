@@ -159,7 +159,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        }
 	        
 	        ChunkColumn chunkColumn = new ChunkColumn();
-	        chunkColumn.IsDirty = true;
+	      //  chunkColumn.IsDirty = true;
 	        chunkColumn.X = cx;
 	        chunkColumn.Z = cz;
 
