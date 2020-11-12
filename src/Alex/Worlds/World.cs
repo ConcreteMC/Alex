@@ -214,11 +214,6 @@ namespace Alex.Worlds
             get { return ChunkManager.Vertices + EntityManager.VertexCount; }
         }
 
-		public int IndexBufferSize
-		{
-			get { return ChunkManager.IndexBufferSize; }
-		}
-
 		public int ChunkCount
         {
             get { return ChunkManager.ChunkCount; }
@@ -241,12 +236,12 @@ namespace Alex.Worlds
 
         public void RebuildChunks()
         {
-            ChunkManager.RebuildAll();
+          //  ChunkManager.RebuildAll();
         }
 
         public void ToggleWireFrame()
         {
-	        ChunkManager.UseWireFrames = !ChunkManager.UseWireFrames;
+	       // ChunkManager.UseWireFrames = !ChunkManager.UseWireFrames;
         }
         
         public void Render(IRenderArgs args)

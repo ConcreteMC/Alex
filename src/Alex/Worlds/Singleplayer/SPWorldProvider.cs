@@ -136,7 +136,7 @@ namespace Alex.Worlds.Singleplayer
 
 					GenerateChunks(currentCoordinates, OptionsProvider.AlexOptions.VideoOptions.RenderDistance);
 
-					World.ChunkManager.FlagPrioritization();
+					//World.ChunkManager.FlagPrioritization();
 				}
 
 				//sw.SpinOnce();
@@ -237,7 +237,7 @@ namespace Alex.Worlds.Singleplayer
 		
 		public override Task Load(ProgressReport progressReport)
 		{
-			ChunkManager.DoMultiPartCalculations = false;
+		//	ChunkManager.DoMultiPartCalculations = false;
 			
 			return Task.Run(() =>
 			{
@@ -280,7 +280,7 @@ namespace Alex.Worlds.Singleplayer
 
 		public override void Dispose()
 		{
-			ChunkManager.DoMultiPartCalculations = true;
+			//ChunkManager.DoMultiPartCalculations = true;
 			
 			ThreadCancellationTokenSource?.Cancel();
 			base.Dispose();

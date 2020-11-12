@@ -92,6 +92,17 @@ namespace Alex.Worlds.Multiplayer.Java
         public void Read(MinecraftStream ms)
         {
             _blockStorages[0].Read(ms);
+
+            for (int x = 0; x < 16; x++)
+            {
+                for (int z = 0; z < 16; z++)
+                {
+                    for (int y = 0; y < 16; y++)
+                    {
+                        SetScheduled(x, y, z, true);
+                    }
+                }
+            }
         }
     }
 }

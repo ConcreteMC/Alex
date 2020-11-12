@@ -42,26 +42,6 @@ namespace Alex.Worlds.Chunks
         public List<BlockCoordinates> LightSources { get; } = new List<BlockCoordinates>();
         
 		public bool IsAllAir => _blockRefCount == 0;
-
-		private ChunkMesh _meshCache = null;
-
-		internal ChunkMesh MeshCache
-		{
-			get
-			{
-				return _meshCache;
-			}
-			set
-			{
-				var oldValue = _meshCache;
-				_meshCache = value;
-
-				if (!ReferenceEquals(oldValue, value))
-				{
-					oldValue?.Dispose();
-				}
-			}
-		}
 		//internal Dictionary<BlockCoordinates, IList<ChunkMesh.EntryPosition>> MeshPositions { get; set; } = null;
 		
 		private ChunkColumn Owner { get; }
@@ -446,10 +426,7 @@ namespace Alex.Worlds.Chunks
 		    {
 			    _blockStorages[i]?.Dispose();
 		    }
-		    
-		    MeshCache?.Dispose();
-		    
-		  //  ArrayPool<byte>.Shared.Return(BlockLight.Data);
+		    //  ArrayPool<byte>.Shared.Return(BlockLight.Data);
 		  //  ArrayPool<byte>.Shared.Return(SkyLight.Data);
 	    }
 

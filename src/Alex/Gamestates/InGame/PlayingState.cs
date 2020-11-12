@@ -158,14 +158,14 @@ namespace Alex.Gamestates.InGame
 				{
 					double avg = 0;
 
-					if (World.ChunkManager.TotalChunkUpdates > 0)
+				/*	if (World.ChunkManager.TotalChunkUpdates > 0)
 					{
 						avg = (World.ChunkManager.ChunkUpdateTime / World.ChunkManager.TotalChunkUpdates)
 						   .TotalMilliseconds;
-					}
+					}*/
 
 					return
-						$"Alex {Alex.Version} ({Alex.FpsMonitor.Value:##} FPS, {World.Ticker.TicksPerSecond:##} TPS, Chunk Updates: {World.EnqueuedChunkUpdates} queued, {World.ConcurrentChunkUpdates} active, Avg: {avg:F2}ms, Max: {World.ChunkManager.MaxUpdateTime.TotalMilliseconds:F2}ms, Min: {World.ChunkManager.MinUpdateTIme.TotalMilliseconds:F2})";
+						$"Alex {Alex.Version} ({Alex.FpsMonitor.Value:##} FPS, {World.Ticker.TicksPerSecond:##} TPS, Chunk Updates: {World.EnqueuedChunkUpdates} queued, {World.ConcurrentChunkUpdates} active)";
 				}, TimeSpan.FromMilliseconds(50));
 			
 			_debugInfo.AddDebugLeft(() =>

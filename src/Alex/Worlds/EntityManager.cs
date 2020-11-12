@@ -54,12 +54,12 @@ namespace Alex.Worlds
 			{
 				entity.OnTick();
 
-				if (Math.Abs(new ChunkCoordinates(entity.KnownPosition).DistanceTo(cameraChunkPosition))
+				/*if (Math.Abs(new ChunkCoordinates(entity.KnownPosition).DistanceTo(cameraChunkPosition))
 				    > World.ChunkManager.RenderDistance)
 				{
 					entity.IsRendered = false;
 					continue;
-				}
+				}*/
 
 				var entityBox = entity.GetBoundingBox();
 				if (World.Camera.BoundingFrustum.Contains(new Microsoft.Xna.Framework.BoundingBox(entityBox.Min, entityBox.Max)) != ContainmentType.Disjoint)

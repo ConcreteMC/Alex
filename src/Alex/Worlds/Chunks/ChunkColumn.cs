@@ -3,15 +3,19 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Alex.API;
 using Alex.API.Utils;
 using Alex.API.World;
 using Alex.Blocks;
 using Alex.Blocks.State;
 using Alex.Entities.BlockEntities;
+using Alex.Graphics.Models.Blocks;
 using Alex.Networking.Java.Util;
+using Alex.Worlds.Abstraction;
 using Alex.Worlds.Singleplayer;
 using fNbt;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using NLog;
 
 namespace Alex.Worlds.Chunks
@@ -60,6 +64,9 @@ namespace Alex.Worlds.Chunks
 		public  bool UpdatingLighting { get; set; } = false;
 		private ConcurrentDictionary<BlockCoordinates, BlockEntity> BlockEntities { get; }
 		public  BlockEntity[]                                       GetBlockEntities => BlockEntities.Values.ToArray();
+		
+		internal ChunkData ChunkData { get; private set; }
+		private object _dataLock = new object();
 		public ChunkColumn()
 		{
 			IsDirty = true;
@@ -74,8 +81,144 @@ namespace Alex.Worlds.Chunks
 			
 			BlockEntities = new ConcurrentDictionary<BlockCoordinates, BlockEntity>();
 			LightUpdateWatch.Start();
+			
+			ChunkData = new ChunkData();
 		}
 
+		public void BuildBuffer(GraphicsDevice device, IBlockAccess world)
+		{
+			lock (_dataLock)
+			{
+				var chunkPosition = Position;
+				for (int sectionIndex = 0; sectionIndex < 16; sectionIndex++)
+				{
+					var section = Sections[sectionIndex];
+
+					if (section == null)
+						continue;
+
+					for (int x = 0; x < 16; x++)
+					{
+						for (int z = 0; z < 16; z++)
+						{
+							for (int y = 0; y < 16; y++)
+							{
+								if (!IsNew && !section.IsScheduled(x, y, z))
+									continue;
+
+								try
+								{
+									var by               = (sectionIndex * 16) + y;
+									var blockCoordinates = new BlockCoordinates(x, by, z);
+
+									ChunkData.Remove(blockCoordinates);
+
+									var position = chunkPosition + new Vector3(x, by, z);
+
+									foreach (var state in section.GetAll(x, y, z))
+									{
+										var blockState = state.State;
+										if (blockState == null || blockState.Model == null || blockState.Block == null || !blockState.Block.Renderable)
+											continue;
+										
+										var model = blockState.Model;
+
+										if (blockState != null && blockState.Block.RequiresUpdate)
+										{
+											var newblockState = blockState.Block.BlockPlaced(
+												world, blockState, position);
+
+											if (newblockState != blockState)
+											{
+												blockState = newblockState;
+
+												section.Set(state.Storage, x, y, z, blockState);
+												model = blockState.Model;
+											}
+										}
+
+										if (blockState.IsMultiPart)
+										{
+											var newBlockState = MultiPartModels.GetBlockState(
+												world, position, blockState, blockState.MultiPartHelper);
+
+											if (newBlockState != blockState)
+											{
+												blockState = newBlockState;
+
+												section.Set(state.Storage, x, y, z, blockState);
+												model = blockState.Model;
+											}
+
+											// blockState.Block.Update(world, blockPosition);
+										}
+										
+										var vertices = model.GetVertices(world, position, blockState.Block);
+
+										RenderStage targetState = RenderStage.OpaqueFullCube;
+
+										if (blockState.Block.BlockMaterial.IsLiquid)
+										{
+											targetState = RenderStage.Liquid;
+										}
+										else if (blockState.Block.Transparent)
+										{
+											if (blockState.Block.BlockMaterial.IsOpaque)
+											{
+												targetState = RenderStage.Transparent;
+											}
+											else
+											{
+												targetState = RenderStage.Translucent;
+											}
+										}
+										else if (!blockState.Block.IsFullCube)
+										{
+											targetState = RenderStage.Opaque;
+										}
+
+										//foreach (var vertex in vertices.Vertices)
+										//{
+										//	ChunkData.AddVertex(blockCoordinates, vertex);
+										//}
+
+										foreach (var index in vertices.Indexes)
+										{
+											var vertex   = vertices.Vertices[index];
+											int newIndex = ChunkData.AddVertex(blockCoordinates, vertex);
+
+											ChunkData.AddIndex(blockCoordinates, targetState, newIndex);
+										}
+
+										if (vertices.AnimatedIndexes != null)
+										{
+											foreach (var index in vertices.AnimatedIndexes)
+											{
+												var vertex   = vertices.Vertices[index];
+												int newIndex = ChunkData.AddVertex(blockCoordinates, vertex);
+
+												ChunkData.AddIndex(blockCoordinates, RenderStage.Animated, newIndex);
+											}
+										}
+
+										//ChunkData.ApplyIntermediate();
+									}
+								}
+								finally
+								{
+									section.SetScheduled(x, y, z, false);
+								}
+							}
+						}
+					}
+				}
+				
+				ChunkData.ApplyChanges(device);
+			}
+
+			IsNew = false;
+		}
+		
 		public IEnumerable<BlockCoordinates> GetLightSources()
 		{
 			for (int i = 0; i < Sections.Length; i++)
@@ -463,6 +606,8 @@ namespace Alex.Worlds.Chunks
 			{
 				chunksSection?.Dispose();
 			}
+			
+			ChunkData?.Dispose();
 			
 			//	if (Mesh != null)
 			//{

@@ -7,6 +7,8 @@ namespace Alex.API.Graphics
 {
     public struct BlockShaderVertex : IVertexType
     {
+	    public static readonly BlockShaderVertex Default = new BlockShaderVertex(Vector3.Zero, Vector3.Zero, Vector2.Zero, Color.White);
+	    
         /// <summary>
         ///     Stores the position of this vertex
         /// </summary>

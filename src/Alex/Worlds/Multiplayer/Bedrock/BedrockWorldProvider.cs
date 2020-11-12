@@ -105,7 +105,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					if ((pos.DistanceTo(_lastLocation) > 16f || MathF.Abs(pos.HeadYaw - _lastLocation.HeadYaw) >= 5.0f)
 					    && (_tickTime - _lastPrioritization >= 10))
 					{
-						World.ChunkManager.FlagPrioritization();
+					//	World.ChunkManager.FlagPrioritization();
 
 						SendLocation(pos);
 

@@ -247,7 +247,7 @@ namespace Alex.Worlds.Multiplayer.Java
 					if (Math.Abs(pos.DistanceTo(_lastSentLocation)) > 0.0f)
 					{
 						SendPlayerPostionAndLook(pos);
-						World.ChunkManager.FlagPrioritization();
+						//World.ChunkManager.FlagPrioritization();
 					}
 					else if (Math.Abs(pos.Pitch - _lastSentLocation.Pitch) > 0f || Math.Abs(pos.HeadYaw - _lastSentLocation.Yaw) > 0f)
 					{
@@ -805,12 +805,12 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void HandleUpdateViewDistancePacket(UpdateViewDistancePacket packet)
 		{
-			World.ChunkManager.RenderDistance = packet.ViewDistance / 16;
+		//	World.ChunkManager.RenderDistance = packet.ViewDistance / 16;
 		}
 
 		private void HandleUpdateViewPositionPacket(UpdateViewPositionPacket packet)
 		{
-			World.ChunkManager.ViewPosition = new ChunkCoordinates(packet.ChunkX, packet.ChunkZ);
+		//	World.ChunkManager.ViewPosition = new ChunkCoordinates(packet.ChunkX, packet.ChunkZ);
 		}
 
 		private void HandleSpawnPositionPacket(SpawnPositionPacket packet)
