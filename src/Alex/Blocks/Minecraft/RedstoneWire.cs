@@ -92,7 +92,7 @@ namespace Alex.Blocks.Minecraft
 		/// <inheritdoc />
 		public bool Passes(IBlockAccess world, Vector3 position, string rule, string value)
 		{
-			if (!MultiPartModels.TryGetBlockface(rule, out BlockFace face)) 
+			if (!MultiPartModelHelper.TryGetBlockface(rule, out BlockFace face)) 
 				return false;
 			
 			Vector3 offset = face.GetVector3();

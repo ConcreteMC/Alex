@@ -251,14 +251,13 @@ namespace Alex.Worlds
 
             SkyRenderer.Draw(args);
             
-            ChunkManager.Draw(args, 
-	            false,
+            ChunkManager.Draw(args,
 	            RenderStage.OpaqueFullCube,
 	            RenderStage.Opaque);
             
             EntityManager.Render(args);
             
-            ChunkManager.Draw(args, false, 
+            ChunkManager.Draw(args, 
 	            RenderStage.Transparent,
 	            RenderStage.Translucent,
 	            RenderStage.Animated,

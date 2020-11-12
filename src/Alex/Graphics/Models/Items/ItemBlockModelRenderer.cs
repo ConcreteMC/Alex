@@ -1,9 +1,11 @@
+using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Graphics;
 using Alex.Blocks.State;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json.Models;
 using Alex.Worlds;
+using Alex.Worlds.Chunks;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -30,9 +32,23 @@ namespace Alex.Graphics.Models.Items
             if (Vertices != null)
                 return;
             
-            var data = _block.Model.GetVertices(new ItemRenderingWorld(_block.Block), Vector3.Zero, _block.Block);
-            Vertices = data.Vertices;
-            Indexes = data.Indexes.Select(x => (short) x).ToArray();
+            ChunkData chunkData = new ChunkData();
+            _block.Model.GetVertices(new ItemRenderingWorld(_block.Block), chunkData, Vector3.Zero, _block.Block);
+            Vertices = chunkData.Vertices;
+            List<short> indexes = new List<short>();
+
+            foreach (var renderStage in chunkData.RenderStages)
+            {
+                foreach (var index in renderStage.Value.GetIndexes())
+                {
+                    indexes.Add((short) index);
+                }
+            }
+
+            Indexes = indexes.ToArray();
+
+            chunkData.Dispose();
+            //Indexes = data.Indexes.Select(x => (short) x).ToArray();
         }
 
         protected override void InitEffect(BasicEffect effect)

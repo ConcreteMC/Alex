@@ -9,7 +9,7 @@ namespace Alex.Worlds.Multiplayer.Java
 {
     public class JavaChunkSection : ChunkSection
     {
-        public JavaChunkSection(ChunkColumn owner, int y, bool storeSkylight, int sections = 2) : base(owner, y, storeSkylight, sections)
+        public JavaChunkSection(ChunkColumn owner, bool storeSkylight, int sections = 2) : base(owner, storeSkylight, sections)
         {
             
         }

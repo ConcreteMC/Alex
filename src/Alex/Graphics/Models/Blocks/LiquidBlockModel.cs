@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Alex.API;
 using Alex.API.Blocks;
 using Alex.API.Graphics;
 using Alex.API.Utils;
@@ -12,6 +13,7 @@ using Alex.ResourcePackLib.Json;
 using Alex.Utils;
 using Alex.Worlds;
 using Alex.Worlds.Abstraction;
+using Alex.Worlds.Chunks;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Graphics.Models.Blocks
@@ -105,7 +107,7 @@ namespace Alex.Graphics.Models.Blocks
 			return false;
 		}
 
-		public override VerticesResult GetVertices(IBlockAccess world, Vector3 vectorPos, Block baseBlock)
+		public override void GetVertices(IBlockAccess blockAccess, ChunkData chunkBuilder, Vector3 vectorPos, Block baseBlock)
 		{
 			//int myLevel = 
 			//var chunk = world.GetChunk(vectorPos);
@@ -116,7 +118,7 @@ namespace Alex.Graphics.Models.Blocks
 			List< BlockShaderVertex> result      = new List<BlockShaderVertex>(36);
 			var                      indexResult = new List<int>();
 			
-			var blocksUp = world.GetBlockStates(position.X, position.Y + 1, position.Z).ToArray();//.GetType();
+			var blocksUp = blockAccess.GetBlockStates(position.X, position.Y + 1, position.Z).ToArray();//.GetType();
 			
 			bool aboveIsLiquid =
 				(IsWater && blocksUp.Any(
@@ -130,7 +132,7 @@ namespace Alex.Graphics.Models.Blocks
 				var pos = position + face.GetBlockCoordinates();
 
 				bool shouldRenderFace = true;
-				foreach (var blockState in world.GetBlockStates(pos.X, pos.Y, pos.Z))
+				foreach (var blockState in blockAccess.GetBlockStates(pos.X, pos.Y, pos.Z))
 				{
 					if (blockState.Storage != 0 && (blockState.State == null || (blockState.State.Block is Air)))
 						continue;
@@ -151,7 +153,7 @@ namespace Alex.Graphics.Models.Blocks
 			}
 
 			if (renderedFaces.Count == 0 && !aboveIsLiquid)
-				return new VerticesResult(new BlockShaderVertex[0], new int[0]);
+				return;// new VerticesResult(new BlockShaderVertex[0], new int[0]);
 			
 			int tl , tr, bl, br;
 
@@ -160,8 +162,8 @@ namespace Alex.Graphics.Models.Blocks
 			int lowestFound = 999;
 			BlockCoordinates lowestBlock = BlockCoordinates.Up;
 
-			bool isFlowing = CheckFlowing(world, position);;
-			int rot = 0;
+			bool isFlowing          = CheckFlowing(blockAccess, position);;
+			int  rot                = 0;
 			bool calculateDirection = false;
 
 			//var avgLiquidLevel = GetAverageLiquidLevels(world, position, out lowestBlock, out lowestFound);
@@ -183,24 +185,24 @@ namespace Alex.Graphics.Models.Blocks
 					calculateDirection = true;
 				}
 
-				tl = GetAverageLiquidLevels(world, position, out lowestBlock, out lowestFound);;
+				tl = GetAverageLiquidLevels(blockAccess, position, out lowestBlock, out lowestFound);;
 				//tl = GetAverageLiquidLevels(world, position, out lowestBlock, out lowestFound);
 
-				tr = GetAverageLiquidLevels(world, position + BlockCoordinates.Right, out var trl, out var trv);
+				tr = GetAverageLiquidLevels(blockAccess, position + BlockCoordinates.Right, out var trl, out var trv);
 				if (trv > lowestFound)
 				{
 					lowestBlock = trl;
 					lowestFound = trv;
 				}
 
-				bl = GetAverageLiquidLevels(world, position + BlockCoordinates.Forwards, out var bll, out var blv);
+				bl = GetAverageLiquidLevels(blockAccess, position + BlockCoordinates.Forwards, out var bll, out var blv);
 				if (blv > lowestFound)
 				{
 					lowestBlock = bll;
 					lowestFound = blv;
 				}
 
-				br = GetAverageLiquidLevels(world, position + new BlockCoordinates(1, 0, 1), out var brl,
+				br = GetAverageLiquidLevels(blockAccess, position + new BlockCoordinates(1, 0, 1), out var brl,
 					out var brv);
 
 				//if (brv < lowestFound)
@@ -264,9 +266,9 @@ namespace Alex.Graphics.Models.Blocks
 				texture += "_still";
 			}
 
-			UVMap map = GetTextureUVMap(Alex.Instance.Resources, texture, 0, 16, 0, 16, 0, Color.White);
+			BlockTextureData map = GetTextureUVMap(Alex.Instance.Resources, texture, 0, 16, 0, 16, 0, Color.White);
 
-			var originalMap = new UVMap(map.TextureInfo, map.TopLeft, map.TopRight, map.BottomLeft, map.BottomRight, map.ColorLeft, map.ColorTop, map.ColorBottom);
+			var originalMap = new BlockTextureData(map.TextureInfo, map.TopLeft, map.TopRight, map.BottomLeft, map.BottomRight, map.ColorLeft, map.ColorTop, map.ColorBottom);
 			map.Rotate(rot);
 
 			foreach (var face in renderedFaces)
@@ -297,17 +299,16 @@ namespace Alex.Graphics.Models.Blocks
 				if (ResourcePackBlockModel.SmoothLighting)
 				{
 					vertColor = CombineColors(
-						GetBiomeColor(world, bx, y, bz), GetBiomeColor(world,bx - 1, y, bz - 1), GetBiomeColor(world,bx - 1, y, bz),
-						GetBiomeColor(world,bx, y, bz - 1), GetBiomeColor(world,bx + 1, y, bz + 1), GetBiomeColor(world,bx + 1, y, bz),
-						GetBiomeColor(world,bx, y, bz + 1), GetBiomeColor(world,bx - 1, y, bz + 1), GetBiomeColor(world,bx + 1, y, bz - 1));
+						GetBiomeColor(blockAccess, bx, y, bz), GetBiomeColor(blockAccess,bx - 1, y, bz - 1), GetBiomeColor(blockAccess,bx - 1, y, bz),
+						GetBiomeColor(blockAccess,bx, y, bz - 1), GetBiomeColor(blockAccess,bx + 1, y, bz + 1), GetBiomeColor(blockAccess,bx + 1, y, bz),
+						GetBiomeColor(blockAccess,bx, y, bz + 1), GetBiomeColor(blockAccess,bx - 1, y, bz + 1), GetBiomeColor(blockAccess,bx + 1, y, bz - 1));
 				}
 				else
 				{
-					vertColor = GetBiomeColor(world, bx, y, bz);
+					vertColor = GetBiomeColor(blockAccess, bx, y, bz);
 				}
 				
 				float height       = 0;
-				var   initialIndex = result.Count;
 				for (var index = 0; index < vertices.Length; index++)
 				{
 					var vert = vertices[index];
@@ -358,16 +359,25 @@ namespace Alex.Graphics.Models.Blocks
 
 					result.Add(vert);
 				}
-
-				for (var index = 0; index < indexes.Length; index++)
+				
+				for (int i = 0; i < indexes.Length; i++)
 				{
-					//var vert = vertices[index];
-					//var vert = vertices[indexes[index]];
-					indexResult.Add(initialIndex + indexes[index]);
+					var vertex      = result[indexes[i]];
+					int vertexIndex = chunkBuilder.AddVertex(position, vertex);
+
+					indexes[i] = vertexIndex;
+				}
+
+				for (var idx = 0; idx < indexes.Length; idx++)
+				{
+					var idxx = indexes[idx];
+
+					chunkBuilder.AddIndex(position, RenderStage.Animated, idxx);
+					//animatedIndexResult.Add(initialIndex + idxx);
 				}
 			}
 
-			return new VerticesResult(result.ToArray(), indexResult.ToArray());
+			//return new VerticesResult(result.ToArray(), indexResult.ToArray());
 		}
 		
 		private Color GetBiomeColor(IBlockAccess access, int x, int y, int z)

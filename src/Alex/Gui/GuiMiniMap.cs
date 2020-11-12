@@ -93,7 +93,7 @@ namespace Alex.Gui
             
             device.Clear(Color.Transparent);
 
-            ChunkManager.Draw(renderArgs,false);
+            ChunkManager.Draw(renderArgs);
         }
     }
 }

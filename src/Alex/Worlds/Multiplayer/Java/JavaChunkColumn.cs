@@ -9,9 +9,9 @@ namespace Alex.Worlds.Multiplayer.Java
 	{
 		private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
 
-		protected override ChunkSection CreateSection(int y, bool storeSkylight, int sections)
+		protected override ChunkSection CreateSection(bool storeSkylight, int sections)
 		{
-			return new JavaChunkSection(this, y, storeSkylight, sections);
+			return new JavaChunkSection(this, storeSkylight, sections);
 		}
 
 		public void Read(MinecraftStream ms, int availableSections, bool groundUp, bool readSkylight)
@@ -28,7 +28,7 @@ namespace Alex.Worlds.Multiplayer.Java
 					{
 						if (storage == null)
 						{
-							storage = new JavaChunkSection(this, sectionY, readSkylight);
+							storage = new JavaChunkSection(this, readSkylight);
 						}
 
 						storage.Read(ms);

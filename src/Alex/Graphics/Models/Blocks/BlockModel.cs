@@ -1,44 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Blocks;
 using Alex.API.Graphics;
-using Alex.API.World;
 using Alex.Blocks.Minecraft;
-using Alex.ResourcePackLib.Json;
 using Alex.Utils;
-using Alex.Worlds;
 using Alex.Worlds.Abstraction;
-using JetBrains.Annotations;
+using Alex.Worlds.Chunks;
 using Microsoft.Xna.Framework;
 
 namespace Alex.Graphics.Models.Blocks
 {
-	public class VerticesResult
+	public abstract class BlockModel : Model
 	{
-		public BlockShaderVertex[] Vertices { get; }
-		public int[] Indexes { get; }
-		[CanBeNull] public int[] AnimatedIndexes { get; }
-		public VerticesResult(BlockShaderVertex[] vertices, int[] indexes, [CanBeNull] int[] animatedIndexes = null)
-		{
-			Vertices = vertices;
-			Indexes = indexes;
-			AnimatedIndexes = animatedIndexes;
-		}
-	}
-
-	public class BlockModel : Model
-	{
-        public BlockModel()
-        {
-
-        }
-        
 		public float Scale { get; set; } = 1f;
 
-		public virtual VerticesResult GetVertices(IBlockAccess world, Vector3 position, Block baseBlock)
+		public virtual void GetVertices(IBlockAccess blockAccess, ChunkData chunkBuilder, Vector3 position, Block baseBlock)
         {
-            return new VerticesResult(new BlockShaderVertex[0], new int[0], null);
+            //return new VerticesResult(new BlockShaderVertex[0], new int[0], null);
         }
 
 	    public virtual BoundingBox GetBoundingBox(Vector3 position)
@@ -51,7 +29,7 @@ namespace Alex.Graphics.Models.Blocks
 		    return new BoundingBox(position, position + Vector3.One);
 	    }
 	    
-	    protected BlockShaderVertex[] GetFaceVertices(BlockFace blockFace, Vector3 startPosition, Vector3 endPosition, UVMap uvmap, out int[] indexes)
+	    protected BlockShaderVertex[] GetFaceVertices(BlockFace blockFace, Vector3 startPosition, Vector3 endPosition, BlockTextureData uvmap, out int[] indexes)
 		{
 			Color faceColor = Color.White;
 			Vector3 normal = Vector3.Zero;
@@ -266,7 +244,7 @@ namespace Alex.Graphics.Models.Blocks
 		    //(byte)Math.Min(Math.Max(0, blockLight + skyLight), 15);
 	    }
 
-		protected UVMap GetTextureUVMap(ResourceManager resources,
+		protected BlockTextureData GetTextureUVMap(ResourceManager resources,
 			string texture,
 			float x1,
 			float x2,
@@ -282,7 +260,7 @@ namespace Alex.Graphics.Models.Blocks
 				y1 = 0;
 				y2 = 1 / 32f;
 
-				return new UVMap(new TextureInfo(new Vector2(), Vector2.Zero, 16, 16, false, true), 
+				return new BlockTextureData(new TextureInfo(new Vector2(), Vector2.Zero, 16, 16, false, true), 
 					new Microsoft.Xna.Framework.Vector2(x1, y1), new Microsoft.Xna.Framework.Vector2(x2, y1),
 					new Microsoft.Xna.Framework.Vector2(x1, y2), new Microsoft.Xna.Framework.Vector2(x2, y2), color,
 					color, color);
@@ -298,41 +276,10 @@ namespace Alex.Graphics.Models.Blocks
 			y1 = (y1 * (th));
 			y2 = (y2 * (th));
 
-			/*if (rot > 0)
-			{
-				var ox1 = x1;
-				var ox2 = x2;
-				var oy1 = y1;
-				var oy2 = y2;
-				
-				switch (rot)
-				{
-					case 270:
-						y1 = tw * 16 - ox2;
-						y2 = tw * 16 - ox1;
-						x1 = oy1;
-						x2 = oy2;
-						break;
-					case 180:
-						y1 = th * 16 - oy2;
-						y2 = th * 16 - oy1;
-						x1 = tw * 16 - ox2;
-						x2 = tw * 16 - ox1;
-						break;
-					case 90:
-						y1 = ox1;
-						y2 = ox2;
-						x1 = th * 16 - oy2;
-						x2 = th * 16 - oy1;
-						break;
-				}
-			}*/
-
-			var map = new UVMap(textureInfo,
+			var map = new BlockTextureData(textureInfo,
 				new Microsoft.Xna.Framework.Vector2(x1, y1), new Microsoft.Xna.Framework.Vector2(x2, y1),
 				new Microsoft.Xna.Framework.Vector2(x1, y2), new Microsoft.Xna.Framework.Vector2(x2, y2), color, color,
 				color, textureInfo.Animated);
-			//map.Rotate(rot);
 
 			return map;
 		}
@@ -351,24 +298,10 @@ namespace Alex.Graphics.Models.Blocks
 			BlockFace.East,
 			BlockFace.South,
 			BlockFace.West
-			/*BlockFace.West,
-			BlockFace.North,
-			BlockFace.East,
-			BlockFace.South*/
-			
-			/*BlockFace.East,
-			BlockFace.South,
-			BlockFace.West,
-			BlockFace.North*/
 		};
 
 		public static BlockFace[] FACE_ROTATION_X =
 		{
-			/*BlockFace.North,
-			BlockFace.Down,
-			BlockFace.South,
-			BlockFace.Up*/
-			
 			BlockFace.North,
 			BlockFace.Down,
 			BlockFace.South,

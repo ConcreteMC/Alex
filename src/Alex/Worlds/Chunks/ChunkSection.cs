@@ -16,7 +16,6 @@ namespace Alex.Worlds.Chunks
     {
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ChunkSection));
 
-		private int _yBase;
 		protected int _blockRefCount;
 		protected int _tickRefCount;
 
@@ -29,7 +28,6 @@ namespace Alex.Worlds.Chunks
 
         public System.Collections.BitArray TransparentBlocks;
         public System.Collections.BitArray SolidBlocks;
-        public System.Collections.BitArray RenderedBlocks;
         
         private System.Collections.BitArray ScheduledUpdates;
         private System.Collections.BitArray ScheduledSkylightUpdates;
@@ -42,16 +40,13 @@ namespace Alex.Worlds.Chunks
         public List<BlockCoordinates> LightSources { get; } = new List<BlockCoordinates>();
         
 		public bool IsAllAir => _blockRefCount == 0;
-		//internal Dictionary<BlockCoordinates, IList<ChunkMesh.EntryPosition>> MeshPositions { get; set; } = null;
-		
 		private ChunkColumn Owner { get; }
-        public ChunkSection(ChunkColumn owner, int y, bool storeSkylight, int sections = 2)
+        public ChunkSection(ChunkColumn owner, bool storeSkylight, int sections = 2)
         {
 	        Owner = owner;
 	        if (sections <= 0)
 		        sections = 1;
-	        
-	        this._yBase = y;
+
 	        //Data = new BlockStorage();
 	        _blockStorages = new BlockStorage[sections];
 	        for (int i = 0; i < sections; i++)
@@ -67,16 +62,14 @@ namespace Alex.Worlds.Chunks
 				this.SkyLight = new NibbleArray(new byte[2048]);	
 				MiNET.Worlds.ChunkColumn.Fill<byte>(SkyLight.Data, (byte) (storeSkylight ? 0xff : 0x00));
 			}
-//System.Collections.BitArray a = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8]);
 
 		    TransparentBlocks = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8 ]);
 		    SolidBlocks = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8 ]);
 		    ScheduledUpdates = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8 ]);
 		    ScheduledSkylightUpdates = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8 ]);
 		    ScheduledBlocklightUpdates = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8 ]);
-            RenderedBlocks = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8 ]);
-		
-            for (int i = 0; i < TransparentBlocks.Length; i++)
+
+		    for (int i = 0; i < TransparentBlocks.Length; i++)
 			{
 				TransparentBlocks[i] = true;
 				SolidBlocks[i] = false;
@@ -88,7 +81,7 @@ namespace Alex.Worlds.Chunks
         {
 	        get
 	        {
-		        return New || ScheduledUpdatesCount > 0 || BlockLightUpdates > 0 ||
+		        return ScheduledUpdatesCount > 0 || BlockLightUpdates > 0 ||
 		               SkyLightUpdates > 0 || _isDirty;
 	        }
 	        set
@@ -96,8 +89,6 @@ namespace Alex.Worlds.Chunks
 		        _isDirty = value;
 	        }
         }
-
-        public bool New { get; set; } = true;
 
         public void ResetSkyLight(byte initialValue = 0xff)
         {
@@ -110,16 +101,6 @@ namespace Alex.Worlds.Chunks
 		{
 			return (y << 8 | z << 4 | x);
 		}
-
-        public void SetRendered(int x, int y, int z, bool value)
-        {
-            RenderedBlocks[GetCoordinateIndex(x, y, z)] = value;
-        }
-
-        public bool IsRendered(int x, int y, int z)
-        {
-            return RenderedBlocks[GetCoordinateIndex(x, y, z)];
-        }
 
         public bool IsScheduled(int x, int y, int z)
 		{
@@ -314,19 +295,7 @@ namespace Alex.Worlds.Chunks
 			return TransparentBlocks.Get(GetCoordinateIndex(x, y, z));
 		}
 
-		public bool IsSolid(int x, int y, int z)
-		{
-		    return SolidBlocks.Get(GetCoordinateIndex(x, y, z));
-		}
-
-		public void GetBlockData(int bx, int by, int bz, out bool transparent, out bool solid)
-		{
-			var coords = GetCoordinateIndex(bx, by, bz);
-		    transparent = TransparentBlocks.Get(coords);// TransparentBlocks[coords];
-		    solid = SolidBlocks.Get(coords);// SolidBlocks[coords];
-		}
-		
-        public bool IsEmpty()
+		public bool IsEmpty()
 		{
 			return this._blockRefCount == 0;
 		}
@@ -334,11 +303,6 @@ namespace Alex.Worlds.Chunks
 		public bool NeedsRandomTick()
 		{
 			return this._tickRefCount > 0;
-		}
-
-		public int GetYLocation()
-		{
-			return this._yBase;
 		}
 
 		public bool SetSkylight(int x, int y, int z, int value)
@@ -359,7 +323,7 @@ namespace Alex.Worlds.Chunks
 
 		public byte GetSkylight(int x, int y, int z)
 		{
-			return this.SkyLight[GetCoordinateIndex(x,y,z)]; //.get(x, y, z);
+			return this.SkyLight[GetCoordinateIndex(x,y,z)];
 		}
 		
 		public bool SetBlocklight(int x, int y, int z, byte value)
@@ -396,28 +360,23 @@ namespace Alex.Worlds.Chunks
 					{
 						var idx = GetCoordinateIndex(x, y, z);
 						
-						//foreach (var state in this.GetAll(x, y, z))
+						var block = this.Get(x, y, z, 0).Block;
+
+						TransparentBlocks.Set(idx, block.Transparent);
+						SolidBlocks.Set(idx, block.Solid);
+
+						if (!(block is Air))
 						{
-							var block = this.Get(x,y,z, 0).Block;
+							++this._blockRefCount;
 
-							TransparentBlocks.Set(idx, block.Transparent);
-							SolidBlocks.Set(idx, block.Solid);
-
-							if (!(block is Air))
+							if (block.RandomTicked)
 							{
-								++this._blockRefCount;
-
-								if (block.RandomTicked)
-								{
-									++this._tickRefCount;
-								}
+								++this._tickRefCount;
 							}
 						}
 					}
 				}
 			}
-			
-			//CheckForSolidBorder();
 		}
 
 		public void Dispose()
@@ -426,8 +385,6 @@ namespace Alex.Worlds.Chunks
 		    {
 			    _blockStorages[i]?.Dispose();
 		    }
-		    //  ArrayPool<byte>.Shared.Return(BlockLight.Data);
-		  //  ArrayPool<byte>.Shared.Return(SkyLight.Data);
 	    }
 
 	    public class BlockEntry

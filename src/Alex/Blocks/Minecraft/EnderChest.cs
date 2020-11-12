@@ -21,6 +21,8 @@ namespace Alex.Blocks.Minecraft
 			Renderable = false;
 
 			HasHitbox = true;
+
+			RequiresUpdate = true;
 		}
 		
 		/// <inheritdoc />
@@ -32,13 +34,18 @@ namespace Alex.Blocks.Minecraft
 				{
 					w.EntityManager.RemoveBlockEntity(position);
 				}
+
+				if (entity is EnderChestBlockEntity)
+					return base.BlockPlaced(world, state, position);
 				
 				var ent = new EnderChestBlockEntity(this, w, BlockEntityFactory.EnderChestTexture)
 				{
 					X = position.X & 0xf, Y = position.Y & 0xff, Z = position.Z& 0xf
 				};
+				
+				w.SetBlockEntity(position.X, position.Y, position.Z, ent);
 					
-				w.EntityManager.AddBlockEntity(
+				/*w.EntityManager.AddBlockEntity(
 					position, ent);
 
 				var chunk = world.GetChunk(position, true);
@@ -46,7 +53,7 @@ namespace Alex.Blocks.Minecraft
 				if (chunk != null)
 				{
 					chunk.AddBlockEntity(new BlockCoordinates(ent.X, ent.Y, ent.Z), ent);
-				}
+				}*/
 			}
 			return base.BlockPlaced(world, state, position);
 		}

@@ -217,6 +217,9 @@ namespace Alex.Blocks.Minecraft
 
         public virtual bool ShouldRenderFace(BlockFace face, Block neighbor)
         {
+	        if (!neighbor.Renderable)
+		        return true;
+
 	        if (Transparent)
 	        {
 		        if (Solid)

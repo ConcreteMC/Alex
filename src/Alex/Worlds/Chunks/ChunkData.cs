@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Alex.API;
 using Alex.API.Blocks;
 using Alex.API.Graphics;
@@ -10,26 +11,25 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.Worlds.Chunks
 {
-    internal class ChunkData : IDisposable
+    public class ChunkData : IDisposable
     {
         public PooledVertexBuffer Buffer      { get; private set; }
-        public ChunkCoordinates   Coordinates { get; set; }
-        public object             WriteLock   { get; } = new object();
-        
-        public  BlockShaderVertex[]                               Vertices     { get; set; }
-        public  ConcurrentDictionary<RenderStage, ChunkRenderStage>         RenderStages { get; set; }
-        private ConcurrentDictionary<BlockCoordinates, List<int>> BlockIndices { get; set; }
-        private ConcurrentQueue<int> AvailableIndices { get; }
-        
+
+        public  BlockShaderVertex[]                                 Vertices         { get; private set; }
+        public  ConcurrentDictionary<RenderStage, ChunkRenderStage> RenderStages     { get; set; }
+        private ConcurrentDictionary<BlockCoordinates, List<int>>   BlockIndices     { get; set; }
+        private SortedSet<int>                                         AvailableIndices { get; }
+
+        private static long _instances = 0;
+        private static long _totalSize = 0;
+        private static long AverageSize => _instances > 0 && _totalSize > 0 ? _totalSize / _instances : 0;
         public ChunkData()
         {
             RenderStages = new ConcurrentDictionary<RenderStage, ChunkRenderStage>();
             BlockIndices = new ConcurrentDictionary<BlockCoordinates, List<int>>();
-            AvailableIndices = new ConcurrentQueue<int>();
-            
-            Vertices = new BlockShaderVertex[NextPowerOf2(4096 * 6)];
-            for(int i = 0; i < Vertices.Length; i++)
-                AvailableIndices.Enqueue(i);
+            AvailableIndices = new SortedSet<int>();
+
+            Interlocked.Increment(ref _instances);
         }
 
         public bool Ready { get; private set; } = false;
@@ -52,24 +52,43 @@ namespace Alex.Worlds.Chunks
             // return next power of 2
             return n << 1;
         }
+
+        private void Init()
+        {
+            Vertices = new BlockShaderVertex[AverageSize];
+            for(int i = 0; i < Vertices.Length; i++)
+                AvailableIndices.Add(i);
+
+            Interlocked.Add(ref _totalSize, Vertices.Length);
+        }
         
         private int GetIndex()
         {
             int availableIndex = -1;
 
-            if (AvailableIndices.TryDequeue(out availableIndex))
+            if (AvailableIndices.Count > 0)
+            {
+                availableIndex = AvailableIndices.Min;
+                AvailableIndices.Remove(availableIndex);
+                
                 return availableIndex;
+            }
 
             var vertices = Vertices;
             
             int oldSize  = vertices.Length;
+
+            if (oldSize == 0)
+                oldSize = 1024;
+            
             Array.Resize(ref vertices, NextPowerOf2(oldSize + 1));
             int newSize = vertices.Length;
             
             Vertices = vertices;
+            Interlocked.Add(ref _totalSize, newSize - oldSize);
             
             for(int i = oldSize + 1; i < newSize; i++)
-                AvailableIndices.Enqueue(i);
+                AvailableIndices.Add(i);
 
             HasResized = true;
             return oldSize;
@@ -92,13 +111,13 @@ namespace Alex.Worlds.Chunks
                 vertices[i] = Vertices[changes[i]];
             }
             
-            Buffer.SetData(vertices, changes[0], vertices.Length);
+            Buffer.SetData(changes[0] * BlockShaderVertex.VertexDeclaration.VertexStride, vertices, 0, vertices.Length, Buffer.VertexDeclaration.VertexStride);
         }
         
         private void Set(int index, BlockShaderVertex vertex)
         {
             Vertices[index] = vertex;
-            
+
             if (Buffer != null && index < Buffer.VertexCount)
             {
                 var v = _intermediateChanges.First;
@@ -121,35 +140,16 @@ namespace Alex.Worlds.Chunks
                         v = v.Next;
                     }
                 }
-                /*var lastValue = _intermediateChanges.Last();
 
-                if (index == lastValue + 1)
-                {
-                    _intermediateChanges.AddLast(index);
-                    return;
-                }
-                
-                var firstValue = _intermediateChanges.Last();
-                if (index == firstValue + 1)
-                {
-                    _intermediateChanges.AddFirst(index);
-
-                    return;
-                }
-                
-                if (index == firstValue - 1)
-                {
-                    _intermediateChanges.AddFirst(index);
-
-                    return;
-                }*/
-                
                 ApplyIntermediate();
             }
         }
         
         public int AddVertex(BlockCoordinates blockCoordinates, BlockShaderVertex vertex)
         {
+            if (Vertices == null)
+                Init();
+            
             int index = GetIndex();
             
             Set(index, vertex);
@@ -162,11 +162,13 @@ namespace Alex.Worlds.Chunks
 
         public void AddIndex(BlockCoordinates blockCoordinates, RenderStage stage, int index)
         {
-            var rStage = RenderStages.GetOrAdd(stage, renderStage => new ChunkRenderStage(this, Vertices.Length));
+            var rStage = RenderStages.GetOrAdd(stage, renderStage => new ChunkRenderStage(this, Vertices.Length / 3));
             rStage.Add(blockCoordinates, index);
+
+            HasChanges = true;
         }
 
-        public void Remove(BlockCoordinates blockCoordinates)
+        public void Remove(GraphicsDevice device, BlockCoordinates blockCoordinates)
         {
             if (BlockIndices.TryRemove(blockCoordinates, out var indices))
             {
@@ -174,12 +176,15 @@ namespace Alex.Worlds.Chunks
                 {
                     //Vertices[index] = BlockShaderVertex.Default;
                     Set(index, BlockShaderVertex.Default);
-                    AvailableIndices.Enqueue(index);
+                    AvailableIndices.Add(index);
                 }
 
+                ApplyIntermediate();
+                
                 foreach (var stage in RenderStages.Values.ToArray())
                 {
                     stage.Remove(blockCoordinates);
+                       // stage.Apply(device);
                 }
 
                 HasChanges = true;
@@ -227,7 +232,8 @@ namespace Alex.Worlds.Chunks
         public void Dispose()
         {
            // lock (WriteLock)
-            {
+           {
+               int size = Vertices != null ? Vertices.Length : 0;
                 Buffer?.MarkForDisposal();
 
                 foreach (var stage in RenderStages)
@@ -236,59 +242,96 @@ namespace Alex.Worlds.Chunks
                 }
 
                 RenderStages.Clear();
-
+                BlockIndices.Clear();
+                AvailableIndices.Clear();
+                Vertices = null;
+                
                 Disposed = true;
+                Interlocked.Decrement(ref _instances);
+                Interlocked.Add(ref _totalSize, -size);
             }
         }
     }
 
-    internal class ChunkRenderStage : IDisposable
+    public class ChunkRenderStage : IDisposable
     {
         private ChunkData Parent { get; }
         public PooledIndexBuffer IndexBuffer { get; set; }
         
-        public  int[]                                             Indices      { get; }
+        //public  int[]                                             Indices      { get; }
         private ConcurrentDictionary<BlockCoordinates, List<int>> BlockIndices { get; set; }
+        
+        private bool _requiresUpdate = false;
         public ChunkRenderStage(ChunkData parent, int size)
         {
             Parent = parent;
-            Indices = new int[size];
+           // Indices = new int[size];
             BlockIndices = new ConcurrentDictionary<BlockCoordinates, List<int>>();
         }
 
+        public IEnumerable<int> GetIndexes()
+        {
+            foreach (var block in BlockIndices)
+            {
+                foreach (var i in block.Value)
+                {
+                    yield return i;
+                }
+            }
+        }
+        
         public void Add(BlockCoordinates coordinates, int value)
         {
             BlockIndices.GetOrAdd(coordinates, blockCoordinates => new List<int>()).Add(value);
+
+            _requiresUpdate = true;
         }
 
-        public void Remove(BlockCoordinates coordinates)
+        public bool Remove(BlockCoordinates coordinates)
         {
-            BlockIndices.TryRemove(coordinates, out var _);
+            if (BlockIndices.TryRemove(coordinates, out var _))
+            {
+                _requiresUpdate = true;
+
+                return true;
+            }
+
+            return false;
         }
         
         public void Apply(GraphicsDevice device)
         {
-            PooledIndexBuffer oldBuffer  = null;
-            PooledIndexBuffer buffer     = IndexBuffer;
-            List<int>         newIndices = new List<int>();
+            if (!_requiresUpdate)
+                return;
 
-            foreach (var bl in BlockIndices)
+            PooledIndexBuffer oldBuffer = null;
+            PooledIndexBuffer buffer    = IndexBuffer;
+            try
             {
-                newIndices.AddRange(bl.Value);
+                List<int>         newIndices = new List<int>();
+
+                foreach (var bl in BlockIndices)
+                {
+                    newIndices.AddRange(bl.Value);
+                }
+
+                if (buffer == null || buffer.IndexCount < newIndices.Count)
+                {
+                    oldBuffer = buffer;
+
+                    buffer = GpuResourceManager.GetIndexBuffer(
+                        this, device, IndexElementSize.ThirtyTwoBits, newIndices.Count, BufferUsage.WriteOnly);
+                }
+
+                buffer.SetData<int>(newIndices.ToArray());
             }
-            
-            if (buffer == null || buffer.IndexCount < newIndices.Count)
+            finally
             {
-                oldBuffer = buffer;
-
-                buffer = GpuResourceManager.GetIndexBuffer(
-                    this, device, IndexElementSize.ThirtyTwoBits, newIndices.Count, BufferUsage.WriteOnly);
+                IndexBuffer = buffer;
+                oldBuffer?.MarkForDisposal();
+                
+                _requiresUpdate = false;
             }
-
-            buffer.SetData<int>(newIndices.ToArray());
-
-            IndexBuffer = buffer;
-            oldBuffer?.MarkForDisposal();
         }
         
         public virtual int Render(GraphicsDevice device, Effect effect)

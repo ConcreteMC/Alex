@@ -349,7 +349,7 @@ namespace Alex.Blocks
 				    blockStateResource.Parts.Length > 0 &&
 				    blockStateResource.Parts.All(x => x.Apply.All(b => b.Model != null)))
 				{
-					var models = MultiPartModels.GetModels(state, blockStateResource);
+					var models = MultiPartModelHelper.GetModels(state, blockStateResource);
 
 
 					state.MultiPartHelper = blockStateResource;

@@ -322,7 +322,7 @@ namespace Alex.Worlds.Singleplayer
 			byte[] blockLight = sectionTag["BlockLight"].ByteArrayValue;
 			byte[] skyLight = sectionTag["SkyLight"].ByteArrayValue;
 
-			var section = new ChunkSection(chunk, sectionIndex, ReadSkyLight);
+			var section = new ChunkSection(chunk, ReadSkyLight);
 			//section.Data.SetDataFromNbt(palette, blockStates);
 
 			if (ReadSkyLight)
@@ -363,7 +363,7 @@ namespace Alex.Worlds.Singleplayer
 			byte[] blockLight = sectionTag["BlockLight"].ByteArrayValue;
 			byte[] skyLight = sectionTag["SkyLight"].ByteArrayValue;
 
-			var section = new ChunkSection(chunk, sectionIndex, ReadSkyLight);
+			var section = new ChunkSection(chunk, ReadSkyLight);
 
 			for (int i = 0; i < 4096; i++)
 			{
