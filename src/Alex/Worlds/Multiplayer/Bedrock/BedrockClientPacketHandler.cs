@@ -1842,7 +1842,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				{
 					if (scoreboard.TryGetObjective(fakePlayer.ObjectiveName, out var objective))
 					{
-						objective.AddOrUpdate(fakePlayer.Id, new ScoreboardEntry(fakePlayer.Id, fakePlayer.Score, fakePlayer.CustomName));
+						objective.AddOrUpdate(fakePlayer.Id.ToString(), new ScoreboardEntry(fakePlayer.Id.ToString(), fakePlayer.Score, fakePlayer.CustomName));
 					}
 					//scoreboard.AddRow($"{fakePlayer.ObjectiveName}:{fakePlayer.Id}", fakePlayer.CustomName, entry.Score);
 				}
@@ -1854,8 +1854,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						if (scoreboard.TryGetObjective(player.ObjectiveName, out var objective))
 						{
 							objective.AddOrUpdate(
-								player.Id,
-								new ScoreboardEntry(player.Id, player.Score, playerEntity.NameTag));
+								player.Id.ToString(),
+								new ScoreboardEntry(player.Id.ToString(), player.Score, playerEntity.NameTag));
 						}
 
 						//scoreboard.AddRow($"{player.ObjectiveName}:{player.Id}", playerEntity.NameTag, player.Score);
@@ -1865,7 +1865,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				{
 					if (scoreboard.TryGetObjective(remove.ObjectiveName, out var objective))
 					{
-						objective.Remove(remove.Id);
+						objective.Remove(remove.Id.ToString());
 					}
 
 					//	scoreboard.Remove($"{remove.ObjectiveName}:{remove.Id}");

@@ -98,11 +98,12 @@ namespace Alex.Entities
 		public bool HideNameTag { get; set; } = false;
 		public bool Silent { get; set; }
 
-		public bool AboveWater { get; set; } = false;
-		public bool HeadInWater { get; set; } = false;
-		public bool FeetInWater { get; set; } = false;
-		public bool IsInWater { get; set; } = false;
-		public bool IsInLava { get; set; } = false;
+		public bool HeadInBlock  { get; set; } = false;
+		public bool AboveWater   { get; set; } = false;
+		public bool HeadInWater  { get; set; } = false;
+		public bool FeetInWater  { get; set; } = false;
+		public bool IsInWater    { get; set; } = false;
+		public bool IsInLava     { get; set; } = false;
 		public bool IsOutOfWater => !IsInWater;
 		public bool Invulnerable { get; set; } = false;
 
@@ -942,6 +943,14 @@ namespace Alex.Entities
 
 			if (headBlock != null)
 			{
+				if (headBlock.Solid)
+				{
+					HeadInBlock = true;
+				}
+				else
+				{
+					HeadInBlock = false;
+				}
 				if (headBlock.BlockMaterial == Material.Water || headBlock.IsWater)
 				{
 					HeadInWater = true;

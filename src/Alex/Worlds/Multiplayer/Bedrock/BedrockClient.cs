@@ -341,6 +341,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		}
 
 		/// <inheritdoc />
+		public override void PlayerOnGroundChanged(Player player, bool onGround)
+		{
+			
+		}
+
+		/// <inheritdoc />
 		public override void EntityFell(long entityId, float distance, bool inVoid)
 		{
 			McpeEntityFall fall = McpeEntityFall.CreateObject();
@@ -995,14 +1001,14 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		    return minetItem;
 	    }
 
-	    public override void BlockPlaced(BlockCoordinates position, API.Blocks.BlockFace face, int hand, Vector3 cursorPosition, Entity entity)
+	    public override void BlockPlaced(BlockCoordinates position, API.Blocks.BlockFace face, int hand, int slot, Vector3 cursorPosition, Entity entity)
 	    {
 		    if (entity is Player p)
 		    {
-			    var itemInHand = p.Inventory[hand];
+			    var itemInHand = p.Inventory[slot];
 			    var minetItem = GetMiNETItem(itemInHand);
 			    
-			    Log.Info($"Placing block, slot={hand} InHand={itemInHand.ToString()} face={face} pos={position}");
+			    Log.Info($"Placing block, slot={slot} InHand={itemInHand.ToString()} face={face} pos={position}");
 			    
 			    var packet = McpeInventoryTransaction.CreateObject();
 			    packet.transaction = new ItemUseTransaction()
@@ -1020,7 +1026,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				    },
 				    Item = minetItem,
 				    FromPosition = new System.Numerics.Vector3(p.KnownPosition.X, p.KnownPosition.Y, p.KnownPosition.Z),
-				    Slot = hand,
+				    Slot = slot,
 				    BlockRuntimeId = ChunkProcessor._blockStateMap.FirstOrDefault(x => x.Value.Id == itemInHand.Id && x.Value.Data == itemInHand.Meta).Key
 				    //BlockRuntimeId = 
 			    };
@@ -1062,7 +1068,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		    }
 	    }
 
-	    public override void WorldInteraction(BlockCoordinates position, API.Blocks.BlockFace face, int hand, Vector3 cursorPosition)
+	    public override void WorldInteraction(Entity entity, BlockCoordinates position, API.Blocks.BlockFace face, int hand, int slot, Vector3 cursorPosition)
 	    {
 		    var packet = McpeInventoryTransaction.CreateObject();
 		    packet.transaction = new ItemUseTransaction()

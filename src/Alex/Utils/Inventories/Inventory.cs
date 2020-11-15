@@ -50,7 +50,7 @@ namespace Alex.Utils.Inventories
 	        }
         }
 
-        public virtual Item OffHand { get; set; }
+	    public virtual Item OffHand { get; set; }
 
         public int HelmetSlot { get; protected set; } = 5;
         public virtual Item Helmet

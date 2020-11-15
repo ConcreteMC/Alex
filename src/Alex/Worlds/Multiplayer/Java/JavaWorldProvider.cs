@@ -25,6 +25,7 @@ using Alex.Entities.Projectiles;
 using Alex.Gamestates;
 using Alex.Graphics.Models.Entity;
 using Alex.Gui.Dialogs.Containers;
+using Alex.Gui.Elements;
 using Alex.Items;
 using Alex.Net;
 using Alex.Networking.Java;
@@ -786,12 +787,103 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 				HandleBlockAction(blockActionPacket);
 			}
+			else if (packet is AcknowledgePlayerDiggingPacket diggingPacket)
+			{
+				HandleAcknowledgePlayerDiggingPacket(diggingPacket);
+			}
+			else if (packet is DisplayScoreboardPacket displayScoreboardPacket)
+			{
+				HandleDisplayScoreboardPacket(displayScoreboardPacket);
+			}
+			else if (packet is ScoreboardObjectivePacket scoreboardObjectivePacket)
+			{
+				HandleScoreboardObjectivePacket(scoreboardObjectivePacket);
+			}
+			else if (packet is UpdateScorePacket updateScorePacket)
+			{
+				HandleUpdateScorePacket(updateScorePacket);
+			}
 			else
 			{
 				if (UnhandledPackets.TryAdd(packet.PacketId, packet.GetType()))
 				{
 					Log.Warn($"Unhandled packet: 0x{packet.PacketId:x2} - {packet.ToString()}");
 				}
+			}
+		}
+
+		private void HandleUpdateScorePacket(UpdateScorePacket packet)
+		{
+			var scoreboard = ScoreboardView;
+			if (scoreboard == null)
+				return;
+
+			if (scoreboard.TryGetObjective(packet.ObjectiveName, out var obj))
+			{
+				if (packet.Action == UpdateScorePacket.UpdateScoreAction.CreateOrUpdate)
+				{
+					string displayName = packet.EntityName;
+
+					//if (Guid.TryParse(packet.EntityName, out var guid))
+					{
+						
+					}
+					obj.AddOrUpdate(packet.EntityName, new ScoreboardEntry(packet.EntityName, (uint) packet.Value, displayName));
+				}
+				else if (packet.Action == UpdateScorePacket.UpdateScoreAction.Remove)
+				{
+					obj.Remove(packet.EntityName);
+				}
+			}
+		}
+
+		private void HandleScoreboardObjectivePacket(ScoreboardObjectivePacket packet)
+		{
+			var scoreboard = ScoreboardView;
+			if (scoreboard == null)
+				return;
+			
+			switch (packet.Mode)
+			{
+				case ScoreboardObjectivePacket.ObjectiveMode.Create:
+					scoreboard.AddObjective(new ScoreboardObjective(packet.ObjectiveName, packet.Value.RawMessage, 0, ""));
+					break;
+
+				case ScoreboardObjectivePacket.ObjectiveMode.Remove:
+					scoreboard.RemoveObjective(packet.ObjectiveName);
+					break;
+
+				case ScoreboardObjectivePacket.ObjectiveMode.UpdateText:
+					if (scoreboard.TryGetObjective(packet.ObjectiveName, out var objective))
+					{
+						objective.DisplayName = packet.Value.RawMessage;
+					}
+					break;
+			}
+			//packet.
+		}
+
+		private void HandleDisplayScoreboardPacket(DisplayScoreboardPacket packet)
+		{
+			if (packet.Position == DisplayScoreboardPacket.ScoreboardPosition.Sidebar)
+			{
+				var scoreboard = ScoreboardView;
+				if (scoreboard == null)
+					return;
+				
+				//scoreboard.TryGetObjective(packet.Name, )
+				//scoreboard.Clear();
+				//scoreboard.AddObjective(new ScoreboardObjective(packet.Name, packet.Name, 0, ""));
+			}
+		}
+
+		private void HandleAcknowledgePlayerDiggingPacket(AcknowledgePlayerDiggingPacket packet)
+		{
+			Log.Info($"Player digging acknowledgement, status={packet.Status} success={packet.Successful}");
+			
+			if (!packet.Successful)
+			{
+				World.SetBlockState(packet.Position, BlockFactory.GetBlockState((uint)packet.Block));
 			}
 		}
 
@@ -805,7 +897,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		private void HandleUpdateViewDistancePacket(UpdateViewDistancePacket packet)
 		{
-		//	World.ChunkManager.RenderDistance = packet.ViewDistance / 16;
+			World.ChunkManager.RenderDistance = packet.ViewDistance / 16;
 		}
 
 		private void HandleUpdateViewPositionPacket(UpdateViewPositionPacket packet)
@@ -2058,19 +2150,22 @@ namespace Alex.Worlds.Multiplayer.Java
 				_uuid = uuid;
 				_accesToken = accessToken;
 
-				var ar = TcpClient.BeginConnect(Endpoint.Address, Endpoint.Port, null, null);
-				using (ar.AsyncWaitHandle)
-				{
-					if (!ar.AsyncWaitHandle.WaitOne(TimeSpan.FromSeconds(5), false))
+				
+					var ar = TcpClient.BeginConnect(Endpoint.Address, Endpoint.Port, null, null);
+
+					using (ar.AsyncWaitHandle)
 					{
-						TcpClient.Close();
-						return false;
+						if (!ar.AsyncWaitHandle.WaitOne(TimeSpan.FromSeconds(5), false))
+						{
+							Log.Warn($"Connection failed.");
+							TcpClient.Close();
+							return false;
+						}
+
+						TcpClient.EndConnect(ar);
 					}
 
-					TcpClient.EndConnect(ar);
-				}
-
-			//TcpClient.Connect(Endpoint);
+					//TcpClient.Connect(Endpoint);
 				//	ServerBound.InitEncryption();
 				Client.Initialize();
 
@@ -2087,8 +2182,9 @@ namespace Alex.Worlds.Multiplayer.Java
 				loginStart.Username = _username;
 				SendPacket(loginStart);
 			}
-			catch (SocketException)
+			catch (SocketException ex)
 			{
+				Log.Warn(ex, "Error while connecting to server.");
 				return false;
 			}
 			catch (Exception ex)

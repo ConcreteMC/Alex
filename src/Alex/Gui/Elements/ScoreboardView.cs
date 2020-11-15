@@ -55,14 +55,14 @@ namespace Alex.Gui.Elements
 
 	public class ScoreboardObjective : GuiStackContainer
 	{
-		private ConcurrentDictionary<long, ScoreboardEntry> Entries      { get; }
+		private ConcurrentDictionary<string, ScoreboardEntry> Entries      { get; }
 		public  string                                      Name         { get; set; }
 		public  string                                      DisplayName  { get; set; }
 		public  int                                         SortOrder    { get; set; }
 		public  string                                      CriteriaName { get; set; }
 		public ScoreboardObjective(string name, string displayName, int sortOrder, string criteriaName)
 		{
-			Entries = new ConcurrentDictionary<long, ScoreboardEntry>();
+			Entries = new ConcurrentDictionary<string, ScoreboardEntry>();
 			Name = name;
 			DisplayName = displayName;
 			SortOrder = sortOrder;
@@ -70,7 +70,7 @@ namespace Alex.Gui.Elements
 			ChildAnchor = Alignment.Fill;
 		}
 
-		public void AddOrUpdate(long id, ScoreboardEntry entry)
+		public void AddOrUpdate(string id, ScoreboardEntry entry)
 		{
 			if (Entries.TryGetValue(id, out var value))
 			{
@@ -89,7 +89,7 @@ namespace Alex.Gui.Elements
 			Rebuild();*/
 		}
 
-		public void Remove(long id)
+		public void Remove(string id)
 		{
 			if (Entries.TryRemove(id, out var old))
 			{
@@ -129,11 +129,11 @@ namespace Alex.Gui.Elements
 
 	public class ScoreboardEntry : GuiContainer
 	{
-		private long   _entryId;
+		private string   _entryId;
 		private uint   _score;
 		private string _displayName;
 
-		public long EntryId
+		public string EntryId
 		{
 			get => _entryId;
 			set => _entryId = value;
@@ -162,7 +162,7 @@ namespace Alex.Gui.Elements
 		private GuiTextElement Left      { get; }
 		private GuiContainer   Right     { get; }
 		private GuiTextElement RightText { get; }
-		public ScoreboardEntry(long entryId, uint score, string displayName = "")
+		public ScoreboardEntry(string entryId, uint score, string displayName = "")
 		{
 			EntryId = entryId;
 

@@ -21,6 +21,7 @@ using Microsoft.Xna.Framework;
 using MiNET;
 using MiNET.Net;
 using NLog;
+using Player = Alex.Entities.Player;
 
 namespace Alex.Worlds.Singleplayer
 {
@@ -30,6 +31,12 @@ namespace Alex.Worlds.Singleplayer
 		public override ConnectionInfo GetConnectionInfo()
 		{
 			return new ConnectionInfo(DateTime.UtcNow, 0,0,0,0,0,0,0,0,0, 0);
+		}
+
+		/// <inheritdoc />
+		public override void PlayerOnGroundChanged(Player player, bool onGround)
+		{
+			
 		}
 
 		/// <inheritdoc />
@@ -49,7 +56,7 @@ namespace Alex.Worlds.Singleplayer
 			
 		}
 
-		public override void BlockPlaced(BlockCoordinates position, API.Blocks.BlockFace face, int hand, Vector3 cursorPosition, Entity p)
+		public override void BlockPlaced(BlockCoordinates position, API.Blocks.BlockFace face, int hand, int slot, Vector3 cursorPosition, Entity p)
 		{
 			
 		}
@@ -64,7 +71,7 @@ namespace Alex.Worlds.Singleplayer
 			
 		}
 
-		public override void WorldInteraction(BlockCoordinates position, API.Blocks.BlockFace face, int hand, Vector3 cursorPosition)
+		public override void WorldInteraction(Entity player, BlockCoordinates position, API.Blocks.BlockFace face, int hand, int slot, Vector3 cursorPosition)
 		{
 			
 		}

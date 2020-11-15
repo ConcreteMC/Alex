@@ -206,7 +206,7 @@ namespace Alex.Gamestates.Multiplayer
 					{
 						Alex.ConnectToServer(
 							typeImplementation, new ServerConnectionDetails(target, entry.Host),
-							authenticationService.CurrentProfile);
+							currentProfile);
 					
 						Alex.GuiManager.RemoveScreen(overlay);
 						overlay = null;

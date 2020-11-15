@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -67,7 +68,7 @@ namespace Alex.Networking.Java
 	//	private Thread NetworkWriting { get; set; }
 		public void Initialize()
         {
-	        Socket.Blocking = true;
+	       // Socket.Blocking = true;
 	        
 		  /* 	NetworkProcessing = new Thread(ProcessNetwork)
             {
@@ -148,23 +149,38 @@ namespace Alex.Networking.Java
 
 	    private void ProcessNetwork()
 	    {
-		    int lastPacketId = 0;
+		    Stopwatch time           = Stopwatch.StartNew();
+		    int       lastPacketId = 0;
 		    try
 		    {
-			    using (NetworkStream ns = new NetworkStream(Socket))
+			    NetworkStream ns = new NetworkStream(Socket);
+
+			    using (ns)
 			    {
 				    using (MinecraftStream mc = new MinecraftStream(ns))
 				    {
-					   // SpinWait sw = new SpinWait();
+					    SpinWait sw = new SpinWait();
 					    _readerStream = mc;
 					    while (!CancellationToken.IsCancellationRequested)
 					    {
-						    SpinWait.SpinUntil(() => ns.DataAvailable || CancellationToken.IsCancellationRequested);
+						    if (time.ElapsedMilliseconds > 5000)
+						    {
+							    Log.Info($"No messages received. Stopping?");
+							    time.Restart();
+						    }
+						    /*SpinWait.SpinUntil(() => ns.DataAvailable || CancellationToken.IsCancellationRequested);*/
 
 						    if (CancellationToken.IsCancellationRequested)
 							    break;
-						    
-						    TryReadPacket(mc, out lastPacketId);
+
+						    if (!ns.DataAvailable)
+						    {
+							    sw.SpinOnce();
+							    continue;
+						    }
+
+						    if (TryReadPacket(mc, out lastPacketId))
+							    time.Restart();
 					    }
 				    }
 			    }
@@ -350,27 +366,31 @@ namespace Alex.Networking.Java
 	    private MinecraftStream _sendStream;
 	    private void SendQueue()
 	    {
-		    using (NetworkStream ms = new NetworkStream(Socket))
-		    {
-			    using (MinecraftStream mc = new MinecraftStream(ms))
-			    {
-				    _sendStream = mc;
-				    while (!CancellationToken.IsCancellationRequested)
-				    {
-					    try
-					    {
-						    EnqueuedPacket packet = PacketWriteQueue.Take(CancellationToken.Token);
-						    var data = EncodePacket(packet);
+		    using NetworkStream   ms = new NetworkStream(Socket);
+		    using MinecraftStream mc = new MinecraftStream(ms);
 
-							mc.WriteVarInt(data.Length);
-							mc.Write(data);
-						}
-						catch (EndOfStreamException) { }
-					    catch (OperationCanceledException)
-					    {
-						    break;
-					    }
+		    _sendStream = mc;
+		    while (!CancellationToken.IsCancellationRequested)
+		    {
+			    try
+			    {
+				    if (PacketWriteQueue.TryTake(out var packet, 3500))
+				    {
+					    var data = EncodePacket(packet);
+
+					    mc.WriteVarInt(data.Length);
+					    mc.Write(data);
 				    }
+				    else
+				    {
+					    Log.Warn($"No data sent in the last 3.5 seconds... :/");
+				    }
+				    //  EnqueuedPacket packet = PacketWriteQueue.Take(CancellationToken.Token);
+			    }
+			    catch (EndOfStreamException) { }
+			    catch (OperationCanceledException)
+			    {
+				    break;
 			    }
 		    }
 	    }

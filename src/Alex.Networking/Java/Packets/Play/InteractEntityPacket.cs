@@ -10,10 +10,11 @@ namespace Alex.Networking.Java.Packets.Play
             PacketId = 0x0E;
         }
         
-        public int EntityId { get; set; }
-        public int Type { get; set; }
-        public Vector3 Target { get; set; }
-        public int Hand { get; set; } = 0;
+        public int     EntityId { get; set; }
+        public int     Type     { get; set; }
+        public Vector3 Target   { get; set; }
+        public int     Hand     { get; set; } = 0;
+        public bool    Sneaking { get; set; } = false;
         
         public override void Decode(MinecraftStream stream)
         {
@@ -36,6 +37,8 @@ namespace Alex.Networking.Java.Packets.Play
             {
                 stream.WriteVarInt(Hand);
             }
+            
+            stream.WriteBool(Sneaking);
         }
     }
 }

@@ -246,6 +246,7 @@ namespace Alex.Networking.Java.Packets
 			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x02, () => new SpawnLivingEntity());
 			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x04, () => new SpawnPlayerPacket());
 			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x05, () => new EntityAnimationPacket());
+			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x07, () => new AcknowledgePlayerDiggingPacket());
 			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x09, () => new BlockEntityDataPacket());
 			
 			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x0A, () => new BlockActionPacket());
@@ -304,6 +305,7 @@ namespace Alex.Networking.Java.Packets
 			
 			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x4A, () => new ScoreboardObjectivePacket());
 			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x4c, () => new TeamsPacket());
+			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x4D, () => new UpdateScorePacket());
 			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x4E, () => new TimeUpdatePacket());
 			
 			Register(PacketDirection.ClientBound, ConnectionState.Play, 0x4F, () => new TitlePacket());

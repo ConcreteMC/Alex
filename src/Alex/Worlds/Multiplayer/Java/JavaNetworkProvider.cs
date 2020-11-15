@@ -9,6 +9,7 @@ using Alex.Networking.Java.Packets.Play;
 using Microsoft.Xna.Framework;
 using MiNET;
 using MiNET.Net;
+using Player = Alex.Entities.Player;
 
 namespace Alex.Worlds.Multiplayer.Java
 {
@@ -26,6 +27,15 @@ namespace Alex.Worlds.Multiplayer.Java
 		public override ConnectionInfo GetConnectionInfo()
 		{
 			return new ConnectionInfo(DateTime.UtcNow, 0, 0, 0,0 ,0 ,0, 0, 0, 0, 0);
+		}
+
+		/// <inheritdoc />
+		public override void PlayerOnGroundChanged(Player player, bool onGround)
+		{
+			Client.SendPacket(new PlayerMovementPacket()
+			{
+				OnGround = onGround
+			});
 		}
 
 		/// <inheritdoc />
@@ -74,14 +84,15 @@ namespace Alex.Worlds.Multiplayer.Java
 			});
 		}
 
-	    public override void BlockPlaced(BlockCoordinates position, API.Blocks.BlockFace face, int hand, Vector3 cursorPosition, Entity p)
+	    public override void BlockPlaced(BlockCoordinates position, API.Blocks.BlockFace face, int hand, int slot, Vector3 cursorPosition, Entity p)
 	    {
 		    Client.SendPacket(new PlayerBlockPlacementPacket()
 	        {
                 CursorPosition = cursorPosition,
                 Location = position,
                 Face = face,
-                Hand = hand
+                Hand = hand,
+                InsideBlock = p.HeadInBlock
 	        });
 
         }
@@ -107,6 +118,7 @@ namespace Alex.Worlds.Multiplayer.Java
 					packet.EntityId = (int) target.EntityId;
 					packet.Type = 0;
 					packet.Hand = hand;
+					packet.Sneaking = player.IsSneaking;
 					
 					Client.SendPacket(packet);
 				}
@@ -117,7 +129,8 @@ namespace Alex.Worlds.Multiplayer.Java
 					packet.EntityId = (int) target.EntityId;
 					packet.Type = 1;
 					packet.Hand = hand;
-
+					packet.Sneaking = player.IsSneaking;
+					
 					Client.SendPacket(packet);
 				}
 					break;
@@ -126,7 +139,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			}
 		}
 
-		public override void WorldInteraction(BlockCoordinates position, API.Blocks.BlockFace face, int hand, Vector3 cursorPosition)
+		public override void WorldInteraction(Entity entity, BlockCoordinates position, API.Blocks.BlockFace face, int hand, int slot, Vector3 cursorPosition)
 		{
 			Client.SendPacket(new PlayerBlockPlacementPacket()
 			{
@@ -134,7 +147,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				Face = face,
 				Hand = hand,
 				CursorPosition = cursorPosition,
-				InsideBlock = false
+				InsideBlock = entity.HeadInBlock
 			});
 		}
 

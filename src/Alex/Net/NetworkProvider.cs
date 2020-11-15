@@ -6,6 +6,7 @@ using Alex.Items;
 using Microsoft.Xna.Framework;
 using MiNET;
 using MiNET.Net;
+using Player = Alex.Entities.Player;
 
 
 namespace Alex.Net
@@ -22,18 +23,31 @@ namespace Alex.Net
 		public abstract bool IsConnected { get; }
 		public abstract ConnectionInfo GetConnectionInfo();
 
+		public abstract void PlayerOnGroundChanged(Player player, bool onGround);
+		
 		public abstract void EntityFell(long entityId, float distance, bool inVoid);
 		
 		public abstract void EntityAction(int entityId, EntityAction action);
 
 		public abstract void PlayerAnimate(PlayerAnimations animation);
-		public abstract void BlockPlaced(BlockCoordinates position, API.Blocks.BlockFace face, int hand, Vector3 cursorPosition, Entity player);
+
+		public abstract void BlockPlaced(BlockCoordinates position,
+			API.Blocks.BlockFace face,
+			int hand,
+			int slot,
+			Vector3 cursorPosition,
+			Entity p);
 		public abstract void PlayerDigging(DiggingStatus status, BlockCoordinates position, API.Blocks.BlockFace face, Vector3 cursorPosition);
 
 		public abstract void EntityInteraction(Entity player, Entity target,
 			ItemUseOnEntityAction action, int hand);
 
-		public abstract void WorldInteraction(BlockCoordinates position, API.Blocks.BlockFace face, int hand, Vector3 cursorPosition);
+		public abstract void WorldInteraction(Entity entity,
+			BlockCoordinates position,
+			API.Blocks.BlockFace face,
+			int hand,
+			int slot,
+			Vector3 cursorPosition);
 		public abstract void UseItem(Item item, int hand, ItemUseAction action);
 		public abstract void HeldItemChanged(Item item, short slot);
 		public abstract void Close();
