@@ -16,8 +16,8 @@ namespace ResourceConverterCore.Converter
         private readonly DirectoryInfo _source;
 
         private DirectoryInfo _entityDirectory, _definitionDirectory, _modelEntityDirectory;
-        private Dictionary<string, OldEntityModel>          _processedModels = new Dictionary<string, OldEntityModel>();
-        public  IReadOnlyDictionary<string, OldEntityModel> EntityModels => _processedModels;
+        private Dictionary<string, EntityModel>          _processedModels = new Dictionary<string, EntityModel>();
+        public  IReadOnlyDictionary<string, EntityModel> EntityModels => _processedModels;
         private FileInfo _mobsFile;
 
         private Dictionary<string, FileInfo> _entityGeometry = new Dictionary<string, FileInfo>();
@@ -187,7 +187,7 @@ namespace ResourceConverterCore.Converter
             }
 
 
-            var res = new Dictionary<string, OldEntityModel>();
+            var res = new Dictionary<string, EntityModel>();
             GetEntries(_mobsFile, res);
 
             int missed1 = LoadMobs(res);
@@ -255,7 +255,7 @@ namespace ResourceConverterCore.Converter
             }
         }
         
-        private void GetEntries(FileInfo file, Dictionary<string, OldEntityModel> entries)
+        private void GetEntries(FileInfo file, Dictionary<string, EntityModel> entries)
         {
             var serializer = new JsonSerializer()
             {
@@ -276,13 +276,6 @@ namespace ResourceConverterCore.Converter
                         {
                             foreach (var model in models)
                             {
-                                model.Name = model.Description.Identifier;
-                                model.Textureheight = model.Description.TextureHeight;
-                                model.Texturewidth = model.Description.TextureWidth;
-                                model.VisibleBoundsHeight = model.Description.VisibleBoundsHeight;
-                                model.VisibleBoundsWidth = model.Description.VisibleBoundsWidth;
-                                model.VisibleBoundsOffset = model.Description.VisibleBoundsOffset;
-                                
                                 if (!entries.TryAdd(model.Description.Identifier, model))
                                 {
                                     Log.Warn($"The name {model.Description.Identifier} was already in use!");
@@ -314,13 +307,13 @@ namespace ResourceConverterCore.Converter
             }
         }
 
-        private int LoadMobs(Dictionary<string, OldEntityModel> entries)
+        private int LoadMobs(Dictionary<string, EntityModel> entries)
         {
             int c = 0;
 
-            List<string> laterStages = new List<string>();
-            Dictionary<string, OldEntityModel> orderedDict = new Dictionary<string, OldEntityModel>();
-            Dictionary<string, OldEntityModel> failedToProcess = new Dictionary<string, OldEntityModel>();
+            List<string>                    laterStages     = new List<string>();
+            Dictionary<string, EntityModel> orderedDict     = new Dictionary<string, EntityModel>();
+            Dictionary<string, EntityModel> failedToProcess = new Dictionary<string, EntityModel>();
 
             foreach (var (key, value) in entries)
             {
@@ -347,7 +340,7 @@ namespace ResourceConverterCore.Converter
                 string parent = split[1];
                 string kid = split[0];
 
-                if (orderedDict.TryGetValue(parent, out OldEntityModel _))
+                if (orderedDict.TryGetValue(parent, out EntityModel _))
                 {
                     if (orderedDict.TryAdd(late, entries[late]))
                     {
@@ -368,7 +361,7 @@ namespace ResourceConverterCore.Converter
 
             foreach (var (key, value) in orderedDict)
             {
-                value.Name = key;
+                value.Description.Identifier = key;
 
                 if (_processedModels.ContainsKey(key))
                     continue;
@@ -376,7 +369,7 @@ namespace ResourceConverterCore.Converter
                 ProcessEntityModel(value, entries, failedToProcess, false);
             }
 
-            var retryCopy = new Dictionary<string, OldEntityModel>(failedToProcess.ToArray());
+            var retryCopy = new Dictionary<string, EntityModel>(failedToProcess.ToArray());
 
             int fix = 0;
             foreach (var e in retryCopy)
@@ -391,13 +384,13 @@ namespace ResourceConverterCore.Converter
 
             return failedToProcess.Count - fix;
         }
-        private bool ProcessEntityModel(OldEntityModel model, Dictionary<string, OldEntityModel> models,
-            Dictionary<string, OldEntityModel> failedToProcess, bool isRetry = false)
+        private bool ProcessEntityModel(EntityModel model, Dictionary<string, EntityModel> models,
+            Dictionary<string, EntityModel> failedToProcess, bool isRetry = false)
         {
-               string modelName = model.Name;
-            if (model.Name.Contains(":")) //This model inherits from another model.
+               string modelName = model.Description.Identifier;
+            if (model.Description.Identifier.Contains(":")) //This model inherits from another model.
             {
-                string[] split = model.Name.Split(':');
+                string[] split = model.Description.Identifier.Split(':');
                 string parent = split[1];
 
                 if (!_processedModels.TryGetValue(parent, out var parentModel))

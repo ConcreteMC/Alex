@@ -79,12 +79,12 @@ using ResourceConverterCore.Converter;
             this.Write("Model()\n\t\t{\n\t\t\t");
             #line 36 "/home/kenny/Documents/Github/Alex/src/Tools/ResourceConverterCore/Templates/EntityTemplate.tt"
 
-				WriteLine($"Name = \"{CurrentModel.Name}\";");
-				WriteLine($"\t\t\tVisibleBoundsWidth = {CurrentModel.VisibleBoundsWidth};");
-				WriteLine($"\t\t\tVisibleBoundsHeight = {CurrentModel.VisibleBoundsHeight};");
-				WriteLine($"\t\t\tVisibleBoundsOffset = new Vector3({CurrentModel.VisibleBoundsOffset.X}f, {CurrentModel.VisibleBoundsOffset.Y}f, {CurrentModel.VisibleBoundsOffset.Z}f);");
-				WriteLine($"\t\t\tTexturewidth = {CurrentModel.Texturewidth};");
-				WriteLine($"\t\t\tTextureheight = {CurrentModel.Textureheight};");
+				WriteLine($"Description.Identifier = \"{CurrentModel.Description.Identifier}\";");
+				WriteLine($"\t\t\tDescription.VisibleBoundsWidth = {CurrentModel.Description.VisibleBoundsWidth};");
+				WriteLine($"\t\t\tDescription.VisibleBoundsHeight = {CurrentModel.Description.VisibleBoundsHeight};");
+				WriteLine($"\t\t\tDescription.VisibleBoundsOffset = new Vector3({CurrentModel.Description.VisibleBoundsOffset.X}f, {CurrentModel.Description.VisibleBoundsOffset.Y}f, {CurrentModel.Description.VisibleBoundsOffset.Z}f);");
+				WriteLine($"\t\t\tDescription.TextureWidth = {CurrentModel.Description.TextureWidth};");
+				WriteLine($"\t\t\tDescription.TextureHeight = {CurrentModel.Description.TextureHeight};");
 				if (CurrentModel.Bones != null)
 				{
 					WriteLine($"\t\t\tBones = new EntityModelBone[{CurrentModel.Bones.Length}]");

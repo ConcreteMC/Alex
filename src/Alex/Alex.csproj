@@ -4,9 +4,9 @@
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <ApplicationIcon>Resources\Icon.ico</ApplicationIcon>
     <StartupObject>Alex.Program</StartupObject>
-    <Platforms>x64;AnyCPU</Platforms>
+    <Platforms>x64</Platforms>
     <Configurations>Debug;Release;Appveyor</Configurations>
-    <PublishTrimmed>false</PublishTrimmed>
+    <PublishTrimmed>true</PublishTrimmed>
     <Description>A Minecraft client written in C#</Description>
     <PackageProjectUrl>https://github.com/kennyvv/Alex</PackageProjectUrl>
     <PackageLicenseUrl>https://github.com/kennyvv/Alex/blob/master/LICENSE</PackageLicenseUrl>
@@ -16,7 +16,6 @@
   <PropertyGroup>
     <Authors>kennyvv, TruDan</Authors>
     <Version>1.0-DEV</Version>
-    <RuntimeIdentifiers>win-x64;linux-x64;osx-x64</RuntimeIdentifiers>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -35,7 +34,7 @@
     <OutputPath>../../Output/AnyCPU/Debug/</OutputPath>
   </PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>../../Output/x64/Release/</OutputPath>
   </PropertyGroup>
@@ -47,8 +46,13 @@
   
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
     <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(OS)' == 'unix'">
+    <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
+  </PropertyGroup>
+  
   <ItemGroup>
     <Compile Remove="Graphics\Items\**" />
     <EmbeddedResource Remove="Graphics\Items\**" />
@@ -102,7 +106,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Collections.Pooled" Version="2.0.0-preview.27" />
     <PackageReference Include="CommandLineParser" Version="2.8.0" />
     <PackageReference Include="DiscordRichPresence" Version="1.0.150" />
     <PackageReference Include="EasyPipes" Version="1.2.0" />

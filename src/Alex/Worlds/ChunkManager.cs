@@ -487,28 +487,20 @@ namespace Alex.Worlds
 
 		private static readonly SamplerState RenderSampler = new SamplerState()
 		{
-			Filter = TextureFilter.PointMipLinear,
+			Filter = TextureFilter.PointMipLinear	,
 			AddressU = TextureAddressMode.Wrap,
 			AddressV = TextureAddressMode.Wrap,
 			MipMapLevelOfDetailBias = -1f,
 			MaxMipLevel = Alex.MipMapLevel,
+			//ComparisonFunction = 
 			// MaxMipLevel = 0,
-			FilterMode = TextureFilterMode.Comparison,
+			FilterMode = TextureFilterMode.Default,
 			AddressW = TextureAddressMode.Wrap,
 			MaxAnisotropy = 16,
+			//ComparisonFunction = CompareFunction.Greater
 			// ComparisonFunction = 
 		};
-	    
-		private static readonly BlendState LightMapBS = new BlendState()
-		{
-			ColorSourceBlend = Blend.One,
-			ColorDestinationBlend = Blend.One,
-			ColorBlendFunction = BlendFunction.Add,
-			AlphaSourceBlend = Blend.One,
-			AlphaDestinationBlend = Blend.One,
-			AlphaBlendFunction = BlendFunction.Add
-		};
-	    
+
 		private static DepthStencilState DepthStencilState { get; } = new DepthStencilState()
 		{
 			DepthBufferEnable = true,

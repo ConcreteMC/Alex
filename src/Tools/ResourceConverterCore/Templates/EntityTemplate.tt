@@ -34,12 +34,12 @@ namespace Alex.Entities.Models
 		public <#= CurrentModelName #>Model()
 		{
 			<#
-				WriteLine($"Name = \"{CurrentModel.Name}\";");
-				WriteLine($"\t\t\tVisibleBoundsWidth = {CurrentModel.VisibleBoundsWidth};");
-				WriteLine($"\t\t\tVisibleBoundsHeight = {CurrentModel.VisibleBoundsHeight};");
-				WriteLine($"\t\t\tVisibleBoundsOffset = new Vector3({CurrentModel.VisibleBoundsOffset.X}f, {CurrentModel.VisibleBoundsOffset.Y}f, {CurrentModel.VisibleBoundsOffset.Z}f);");
-				WriteLine($"\t\t\tTexturewidth = {CurrentModel.Texturewidth};");
-				WriteLine($"\t\t\tTextureheight = {CurrentModel.Textureheight};");
+				WriteLine($"Description.Name = \"{CurrentModel.Description.Name}\";");
+				WriteLine($"\t\t\tDescription.VisibleBoundsWidth = {CurrentModel.Description.VisibleBoundsWidth};");
+				WriteLine($"\t\t\tDescription.VisibleBoundsHeight = {CurrentModel.Description.VisibleBoundsHeight};");
+				WriteLine($"\t\t\tDescription.VisibleBoundsOffset = new Vector3({CurrentModel.Description.VisibleBoundsOffset.X}f, {CurrentModel.Description.VisibleBoundsOffset.Y}f, {CurrentModel.Description.VisibleBoundsOffset.Z}f);");
+				WriteLine($"\t\t\tDescription.Texturewidth = {CurrentModel.Description.Texturewidth};");
+				WriteLine($"\t\t\tDescription.Textureheight = {CurrentModel.Description.Textureheight};");
 				if (CurrentModel.Bones != null)
 				{
 					WriteLine($"\t\t\tBones = new EntityModelBone[{CurrentModel.Bones.Length}]");

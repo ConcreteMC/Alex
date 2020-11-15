@@ -90,11 +90,11 @@ namespace ResourceConverterCore.Converter
 				
 		        template.Session["CurrentModelName"] = model.Key;
 		        template.Session["CurrentModel"] = model.Value;
-		        ResourceConverterContext.CurrentModelName = CodeTypeName(model.Value.Name);
+		        ResourceConverterContext.CurrentModelName = CodeTypeName(model.Value.Description.Identifier);
 		        ResourceConverterContext.CurrentModel = model.Value;
 
 		        var output = template.TransformText();
-		        var outputPath = Path.Combine(outDir, CodeTypeName(model.Value.Name) + "Model.cs");
+		        var outputPath = Path.Combine(outDir, CodeTypeName(model.Value.Description.Identifier) + "Model.cs");
 		        if (File.Exists(outputPath))
 		        {
 			        Log.Warn($"Class already exists: {outputPath} ({count}/{totalCount}) - {pct:F1}%");

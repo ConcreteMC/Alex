@@ -484,7 +484,6 @@ namespace Alex
 			services.TryAddSingleton<IPlayerProfileService, PlayerProfileService>();
 
 			services.TryAddSingleton<IRegistryManager, RegistryManager>();
-			services.TryAddSingleton<AlexIpcService>();
 
 			services.TryAddSingleton<IEventDispatcher, EventDispatcher>();
 			services.TryAddSingleton<ResourceManager>();
@@ -501,7 +500,6 @@ namespace Alex
 			//ProfileManager.SaveProfiles();
 
 			Services.GetService<IOptionsProvider>().Save();
-			Services.GetService<AlexIpcService>().Stop();
 
 			GuiDebugHelper.Dispose();
 
