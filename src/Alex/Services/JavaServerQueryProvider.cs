@@ -61,178 +61,171 @@ namespace Alex.Services
 
         private static async Task QueryJavaServerAsync(ServerConnectionDetails connectionDetails, PingServerDelegate pingCallback, ServerStatusDelegate statusCallBack)
         {
-			IPEndPoint endPoint = null;
-	        var sw = Stopwatch.StartNew();
-	        string jsonResponse = null;
+	        CancellationTokenSource cts = new CancellationTokenSource(10000);
+	        using TcpClient client       = new TcpClient();
+	        
+			IPEndPoint      endPoint     = null;
+	        var             sw           = Stopwatch.StartNew();
+	        string          jsonResponse = null;
 			try
 			{
-				/*var result = await ResolveHostnameAsync(hostname);
-				if (!result.Success)
+				bool            waitingOnPing = true;
+				await client.ConnectAsync(connectionDetails.EndPoint.Address, connectionDetails.EndPoint.Port, cts.Token);
+				endPoint = client.Client.RemoteEndPoint as IPEndPoint;
+
+				if (client.Connected)
 				{
-					statusCallBack?.Invoke(new ServerQueryResponse(false, "multiplayer.status.cannot_resolve", new ServerQueryStatus()
+					//conn = new NetConnection(Direction.ClientBound, client.Client);
+					//conn.LogExceptions = false;
+					using (var conn = new NetConnection(PacketDirection.ClientBound, client.Client)
 					{
-						Delay = sw.ElapsedMilliseconds,
-						Success = false,
+						LogExceptions = true
+					})
+					{
+						long pingId     = Rnd.NextUInt();
+						long pingResult = 0;
 
-						EndPoint = null,
-						Address = hostname,
-						Port = port
-					}));
+						EventWaitHandle ar = new EventWaitHandle(false, EventResetMode.AutoReset);
 
-					return;
-				}*/
-
-				bool waitingOnPing = true;
-				using (TcpClient client = new TcpClient())
-		        {
-			        await client.ConnectAsync(connectionDetails.EndPoint.Address, connectionDetails.EndPoint.Port);
-			        endPoint = client.Client.RemoteEndPoint as IPEndPoint;
-
-			        if (client.Connected)
-			        {
-				        //conn = new NetConnection(Direction.ClientBound, client.Client);
-				        //conn.LogExceptions = false;
-				        using (var conn = new NetConnection(PacketDirection.ClientBound, client.Client)
-				        {
-					        LogExceptions = true
-				        })
-				        {
-					        long pingId = Rnd.NextUInt();
-					        long pingResult = 0;
-
-							EventWaitHandle ar = new EventWaitHandle(false, EventResetMode.AutoReset);
-
-					        conn.OnPacketReceived += (sender, args) =>
-					        {
-						        if (args.Packet is ResponsePacket responsePacket)
-						        {
-							        jsonResponse = responsePacket.ResponseMsg;
+						conn.OnPacketReceived += (sender, args) =>
+						{
+							if (args.Packet is ResponsePacket responsePacket)
+							{
+								jsonResponse = responsePacket.ResponseMsg;
 							        
-							        if (pingCallback != null)
-							        {
-								        conn.SendPacket(new PingPacket()
-								        {
-									        Payload = pingId,
-								        });
+								if (pingCallback != null)
+								{
+									conn.SendPacket(new PingPacket()
+									{
+										Payload = pingId,
+									});
 
-								        sw.Restart();
-							        }
+									sw.Restart();
+								}
 							        
-							        ar.Set();
-						        }
-						        else if (args.Packet is PingPacket pong)
-						        {
-							        pingResult = sw.ElapsedMilliseconds;
-							        if (pong.Payload == pingId)
-							        {
-								        waitingOnPing = false;
-                                        pingCallback?.Invoke(new ServerPingResponse(true, sw.ElapsedMilliseconds));
-							        }
-							        else
-							        {
-								        waitingOnPing = false;
-                                        pingCallback?.Invoke(new ServerPingResponse(true, sw.ElapsedMilliseconds));
-									}
-
-							        ar.Set();
-						        }
-					        };
-
-					        bool connectionClosed = false;
-					        conn.OnConnectionClosed += (sender, args) =>
-					        {
-						        connectionClosed = true;
-						        ar.Set();
-					        };
-
-					        conn.Initialize();
-
-					        conn.SendPacket(new HandshakePacket()
-					        {
-						        NextState = ConnectionState.Status,
-						        ServerAddress = connectionDetails.Hostname,
-						        ServerPort = (ushort) connectionDetails.EndPoint.Port,
-						        ProtocolVersion = JavaProtocol.ProtocolVersion
-					        });
-
-					        conn.ConnectionState = ConnectionState.Status;
-
-					        conn.SendPacket(new RequestPacket());
-
-					        if (await WaitHandleHelpers.FromWaitHandle(ar, TimeSpan.FromMilliseconds(10000)) &&
-					            !connectionClosed && jsonResponse != null)
-					        {
-
-						        long timeElapsed = sw.ElapsedMilliseconds;
-						      //  Log.Debug($"Server json: " + jsonResponse);
-								var query = ServerQuery.FromJson(jsonResponse);
-
-								if (query.Version.Protocol == JavaProtocol.ProtocolVersion)
+								ar.Set();
+							}
+							else if (args.Packet is PingPacket pong)
+							{
+								pingResult = sw.ElapsedMilliseconds;
+								if (pong.Payload == pingId)
 								{
-									query.Version.Compatibility = CompatibilityResult.Compatible;
+									waitingOnPing = false;
+									pingCallback?.Invoke(new ServerPingResponse(true, sw.ElapsedMilliseconds));
 								}
-								else if (query.Version.Protocol < JavaProtocol.ProtocolVersion)
+								else
 								{
-									query.Version.Compatibility = CompatibilityResult.OutdatedServer;
+									waitingOnPing = false;
+									pingCallback?.Invoke(new ServerPingResponse(true, sw.ElapsedMilliseconds));
 								}
-								else if (query.Version.Protocol > JavaProtocol.ProtocolVersion)
-								{
-									query.Version.Compatibility = CompatibilityResult.OutdatedClient;
-								}
+
+								ar.Set();
+							}
+						};
+
+						bool connectionClosed = false;
+						conn.OnConnectionClosed += (sender, args) =>
+						{
+							if (!cts.IsCancellationRequested)
+								cts.Cancel();
+							
+							connectionClosed = true;
+							ar.Set();
+						};
+
+						conn.Initialize();
+
+						conn.SendPacket(new HandshakePacket()
+						{
+							NextState = ConnectionState.Status,
+							ServerAddress = connectionDetails.Hostname,
+							ServerPort = (ushort) connectionDetails.EndPoint.Port,
+							ProtocolVersion = JavaProtocol.ProtocolVersion
+						});
+
+						conn.ConnectionState = ConnectionState.Status;
+
+						conn.SendPacket(new RequestPacket());
+
+						if (await WaitHandleHelpers.FromWaitHandle(ar, TimeSpan.FromMilliseconds(10000), cts.Token) &&
+						    !connectionClosed && jsonResponse != null)
+						{
+
+							long timeElapsed = sw.ElapsedMilliseconds;
+							//  Log.Debug($"Server json: " + jsonResponse);
+							var query = ServerQuery.FromJson(jsonResponse);
+
+							if (query.Version.Protocol == JavaProtocol.ProtocolVersion)
+							{
+								query.Version.Compatibility = CompatibilityResult.Compatible;
+							}
+							else if (query.Version.Protocol < JavaProtocol.ProtocolVersion)
+							{
+								query.Version.Compatibility = CompatibilityResult.OutdatedServer;
+							}
+							else if (query.Version.Protocol > JavaProtocol.ProtocolVersion)
+							{
+								query.Version.Compatibility = CompatibilityResult.OutdatedClient;
+							}
 								
-								var r = new ServerQueryStatus()
-						        {
-							        Delay = timeElapsed,
-							        Success = true,
-							        WaitingOnPing = pingCallback != null && waitingOnPing,
+							var r = new ServerQueryStatus()
+							{
+								Delay = timeElapsed,
+								Success = true,
+								WaitingOnPing = pingCallback != null && waitingOnPing,
 
-							        EndPoint = endPoint,
-							        Address = connectionDetails.Hostname,
-							        Port = (ushort) connectionDetails.EndPoint.Port,
+								EndPoint = endPoint,
+								Address = connectionDetails.Hostname,
+								Port = (ushort) connectionDetails.EndPoint.Port,
 
-									Query = query
-						        };
+								Query = query
+							};
 
-								statusCallBack?.Invoke(new ServerQueryResponse(true, r));
+							statusCallBack?.Invoke(new ServerQueryResponse(true, r));
 
-								if (waitingOnPing && pingCallback != null)
-									await WaitHandleHelpers.FromWaitHandle(ar, TimeSpan.FromSeconds(1000));
-					        }
-					        else
-					        {
-						        statusCallBack?.Invoke(new ServerQueryResponse(false, "multiplayer.status.cannot_connect",
-							        new ServerQueryStatus()
-							        {
-								        EndPoint = endPoint,
-								        Delay = sw.ElapsedMilliseconds,
-								        Success = false,
-								        /* Motd = motd.MOTD,
+							if (waitingOnPing && pingCallback != null)
+								await WaitHandleHelpers.FromWaitHandle(ar, TimeSpan.FromSeconds(1000));
+						}
+						else
+						{
+							statusCallBack?.Invoke(new ServerQueryResponse(false, "multiplayer.status.cannot_connect",
+								new ServerQueryStatus()
+								{
+									EndPoint = endPoint,
+									Delay = sw.ElapsedMilliseconds,
+									Success = false,
+									/* Motd = motd.MOTD,
 								         ProtocolVersion = motd.ProtocolVersion,
 								         MaxNumberOfPlayers = motd.MaxPlayers,
 								         Version = motd.ClientVersion,
 								         NumberOfPlayers = motd.Players,*/
 
-								        Address = connectionDetails.Hostname,
-								        Port = (ushort) connectionDetails.EndPoint.Port,
-								        WaitingOnPing = false
+									Address = connectionDetails.Hostname,
+									Port = (ushort) connectionDetails.EndPoint.Port,
+									WaitingOnPing = false
 
-							        }));
-					        }
-				        }
-			        }
-		        }
-	        }
+								}));
+						}
+					}
+				}
+			}
 	        catch (Exception ex)
 	        {
+		        cts.Cancel();
+		        
 		        if (sw.IsRunning)
 			        sw.Stop();
 
-		        Log.Error($"Could not get server query result! Exception: {ex.ToString()}");
+		       // client?.Dispose();
 
-		        string msg = ex.Message;
+		       string msg = ex.Message;
 		        if (ex is SocketException)
 		        {
 			        msg = $"multiplayer.status.cannot_connect";
+		        }
+		        else
+		        {
+			        Log.Error(ex, $"Could not get server query result!");
 		        }
 
 		        statusCallBack?.Invoke(new ServerQueryResponse(false, msg, new ServerQueryStatus()

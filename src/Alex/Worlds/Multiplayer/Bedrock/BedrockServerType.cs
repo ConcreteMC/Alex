@@ -17,14 +17,14 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 {
 	public class BedrockServerType : ServerTypeImplementation
 	{
-		private const           string AccountType = "xbox";
+		private const           string AccountType = "bedrock";
 		
 		private static readonly Logger Log         = LogManager.GetCurrentClassLogger(typeof(BedrockServerType));
 		
 		private Alex Alex { get; }
 		private XboxAuthService XboxAuthService { get; }
 		/// <inheritdoc />
-		public BedrockServerType(Alex game, XboxAuthService xboxAuthService) : base(new BedrockServerQueryProvider(game), "Bedrock")
+		public BedrockServerType(Alex game, XboxAuthService xboxAuthService) : base(new BedrockServerQueryProvider(game), "Bedrock", "bedrock")
 		{
 			DefaultPort = 19132;
 			Alex = game;
@@ -56,8 +56,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					{
 						var p = new PlayerProfile(profile.Uuid, profile.Username, profile.PlayerName,
 							profile.Skin, profile.AccessToken,
-							profile.ClientToken,
-							"xbox");
+							profile.ClientToken);
 
 						p.Authenticated = true;
 								
@@ -82,8 +81,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 							{
 								var p = new PlayerProfile(profile.Uuid, profile.Username, profile.PlayerName,
 									profile.Skin, r.token.AccessToken,
-									JsonConvert.SerializeObject(r.token),
-									AccountType);
+									JsonConvert.SerializeObject(r.token));
 
 								p.Authenticated = true;
 								
@@ -112,29 +110,27 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				return profile;
 		}
-		
+
 		/// <inheritdoc />
 		public override async Task<bool> VerifyAuthentication(PlayerProfile currentProfile)
 		{
-			if (currentProfile == null || (currentProfile.Type != AccountType)  || !currentProfile.Authenticated)
+			var authenticationService = Alex.Services.GetService<IPlayerProfileService>();
+
+			//if () //foreach (var profile in authenticationService.GetProfiles(AccountType))
+			if (!currentProfile.Authenticated)
 			{
-				var authenticationService = Alex.Services.GetService<IPlayerProfileService>();
-				foreach (var profile in authenticationService.GetProfiles(AccountType))
+				var task = await ReAuthenticate(currentProfile);
+
+				if (task.Authenticated)
 				{
-					profile.Type = AccountType;
+				//	currentProfile = profile;
 
-					var task = await ReAuthenticate(profile);
-
-					if (task.Authenticated)
-					{
-						currentProfile = profile;
-
-						return true;
-					}
+					return true;
 				}
 			}
 
-			if ((currentProfile == null || (currentProfile.Type != AccountType)) || !currentProfile.Authenticated)
+
+			if ((currentProfile == null || !currentProfile.Authenticated))
 			{
 				return false;
 			}
@@ -142,6 +138,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			{
 				return true;
 			}
+
 			//return base.VerifyAuthentication(profile);
 		}
 

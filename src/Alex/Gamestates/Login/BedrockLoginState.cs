@@ -25,14 +25,16 @@ namespace Alex.Gamestates.Login
     {
 	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BedrockLoginState));
 	    
-	    private readonly GuiPanoramaSkyBox _backgroundSkyBox;
-		private XboxAuthService AuthenticationService { get; }
-		private IPlayerProfileService _playerProfileService;
-        protected GuiButton LoginButton;
-		private Action<PlayerProfile> Ready { get; }
-		private MsaDeviceAuthConnectResponse ConnectResponse { get; }
-		private CancellationTokenSource CancellationToken { get; } = new CancellationTokenSource();
-		private bool CanUseClipboard { get; }
+	    private readonly GuiPanoramaSkyBox            _backgroundSkyBox;
+		private          XboxAuthService              AuthenticationService { get; }
+		private          IPlayerProfileService        _playerProfileService;
+        protected        GuiButton                    LoginButton;
+		private          Action<PlayerProfile>        Ready             { get; }
+		private MsaDeviceAuthConnectResponse ConnectResponse { get; set; } = null;
+		private          CancellationTokenSource      CancellationToken { get; } = new CancellationTokenSource();
+		private          bool                         CanUseClipboard   { get; }
+
+		private GuiTextElement _authCodeElement;
         public BedrockLoginState(GuiPanoramaSkyBox skyBox, Action<PlayerProfile> readyAction, XboxAuthService xboxAuthService)
         {
             Title = "Bedrock Login";
@@ -42,9 +44,24 @@ namespace Alex.Gamestates.Login
             BackgroundOverlay = Color.Transparent;
             Ready = readyAction;
 
+            _authCodeElement = new GuiTextElement()
+            {
+	            TextColor = TextColor.Cyan,
+	            Text = "Please wait...\nStarting authentication process...",
+	            FontStyle = FontStyle.Italic,
+	            Scale = 1.1f
+            };
+            
             CanUseClipboard = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
             
-            ConnectResponse = AuthenticationService.StartDeviceAuthConnect().Result;
+            AuthenticationService.StartDeviceAuthConnect().ContinueWith(
+	            async r =>
+	            {
+		            ConnectResponse = await r;
+
+		            LoginButton.Enabled = true;
+		            ShowCode();
+	            });
 			
             Initialize();
         }
@@ -84,13 +101,8 @@ namespace Alex.Gamestates.Login
             Body.BackgroundOverlay = new Color(Color.Black, 0.5f);
             Body.ChildAnchor = Alignment.MiddleCenter;
             
-			Body.AddChild(new GuiTextElement()
-			{
-				TextColor = TextColor.Cyan,
-				Text = ConnectResponse.user_code,
-				FontStyle = FontStyle.Bold,
-				Scale = 2f
-			});
+			Body.AddChild(_authCodeElement);
+			ShowCode();
 
 			if (CanUseClipboard)
 			{
@@ -107,7 +119,8 @@ namespace Alex.Gamestates.Login
 	            Text = "Sign-In with Xbox",
 	            Margin = new Thickness(5),
 	            Modern = false,
-	            Width = 100
+	            Width = 100,
+	            Enabled = ConnectResponse != null
             }, new GuiButton(OnCancelButtonPressed)
             {
 	            AccessKey = Keys.Escape,
@@ -120,20 +133,20 @@ namespace Alex.Gamestates.Login
             buttonRow.ChildAnchor = Alignment.MiddleCenter;
         }
 
+        private void ShowCode()
+        {
+	        if (ConnectResponse != null)
+	        {
+		        _authCodeElement.TextColor = TextColor.Cyan;
+		        _authCodeElement.FontStyle = FontStyle.Bold;
+		        _authCodeElement.Scale = 2f;
+		        _authCodeElement.Text = ConnectResponse.user_code ;
+	        }
+        }
+        
         private void PlayerProfileServiceOnAuthenticate(object sender, PlayerProfileAuthenticateEventArgs e)
         {
-	        if (e.IsSuccess && e.Profile.Type == "xbox")
-	        {
-		       // Alex.ProfileManager.CreateOrUpdateProfile(e.Profile.IsBedrock ? ProfileManager.ProfileType.Bedrock : ProfileManager.ProfileType.Java, e.Profile, true);
-				//Ready?.Invoke();
-	        }
-	        else
-	        {
-		       // ErrorMessage.Text = "Could not login: " + e.ErrorMessage;
-		       // ErrorMessage.TextColor = TextColor.Red;
-
-		      //  EnableInput();
-	        }
+			
         }
 
         private void OnLoginButtonPressed()
@@ -177,10 +190,9 @@ namespace Alex.Gamestates.Login
 							       Slim = true,
 							       Texture = null
 						       }, result.token.AccessToken,
-						        JsonConvert.SerializeObject(result.token),
-						        "xbox");
+						        JsonConvert.SerializeObject(result.token));
 
-					        profileManager.CreateOrUpdateProfile("xbox" ,profile, true);
+					        profileManager.CreateOrUpdateProfile("bedrock" ,profile, true);
 					        Ready?.Invoke(profile);
 
 					        //Log.Info($"Continuewith Success!");

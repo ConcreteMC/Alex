@@ -25,8 +25,13 @@ namespace Alex.Gamestates.Login
 			_playerProfileService.Authenticate += PlayerProfileServiceOnAuthenticate;
 
 			_profileManager = GetService<ProfileManager>();
+			var profiles = _profileManager.GetProfiles("java");
 
-			if (_activeProfile != null && _activeProfile.Type == "java")
+			if (profiles.Length == 1)
+				_activeProfile = profiles[0];
+			//var javaProfiles = _profileManager.GetProfiles("java");
+
+			if (_activeProfile != null)
 			{
 				NameInput.Value = _activeProfile.Username;
 			}
@@ -34,7 +39,7 @@ namespace Alex.Gamestates.Login
 			{
 				var activeProfile = _profileManager.LastUsedProfile;
 
-				if (activeProfile != null && activeProfile.Type == "java")
+				if (activeProfile != null)
 				{
 					Requester.ClientToken = activeProfile.Profile.ClientToken;
 					NameInput.Value = activeProfile.Profile.Username;

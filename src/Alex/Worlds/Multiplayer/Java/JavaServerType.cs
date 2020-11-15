@@ -19,9 +19,11 @@ namespace Alex.Worlds.Multiplayer.Java
 {
 	public class JavaServerType : ServerTypeImplementation
 	{
-		private Alex Alex { get; }
+		private const string ProfileType = "java";
+		
+		private       Alex   Alex { get; }
 		/// <inheritdoc />
-		public JavaServerType(Alex alex) : base(new JavaServerQueryProvider(alex), "Java")
+		public JavaServerType(Alex alex) : base(new JavaServerQueryProvider(alex), "Java", "java")
 		{
 			Alex = alex;
 			ProtocolVersion = JavaProtocol.ProtocolVersion;
@@ -60,12 +62,12 @@ namespace Alex.Worlds.Multiplayer.Java
 		/// <inheritdoc />
 		public override async Task<bool> VerifyAuthentication(PlayerProfile currentProfile)
 		{
-			if (currentProfile == null || (currentProfile.Type != "java")  || !currentProfile.Authenticated)
+			if (currentProfile == null  || !currentProfile.Authenticated)
 			{
 				var authenticationService = Alex.Services.GetService<IPlayerProfileService>();
-				foreach (var profile in authenticationService.GetProfiles("java"))
+				foreach (var profile in authenticationService.GetProfiles(ProfileType))
 				{
-					profile.Type = "java";
+					//profile.Type = "java";
 
 					Requester.ClientToken = profile.ClientToken;
 

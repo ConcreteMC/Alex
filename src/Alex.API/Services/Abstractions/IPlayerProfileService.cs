@@ -19,11 +19,11 @@ namespace Alex.API.Services
 
 		//[JsonIgnore]
 		//public bool IsBedrock { get; set; }
-        public string Type { get; set; }
+        //public string Type { get; set; }
 
         [JsonIgnore] public bool Authenticated { get; set; } = false;
 
-	    public PlayerProfile(string uuid, string username, string playerName, Skin skin, string accessToken, string clientToken, string type = "java")
+	    public PlayerProfile(string uuid, string username, string playerName, Skin skin, string accessToken, string clientToken)
         {
             Uuid = uuid;
             Username = username;
@@ -31,7 +31,6 @@ namespace Alex.API.Services
             Skin = skin;
             AccessToken = accessToken;
             ClientToken = clientToken;
-	        Type = type;
         }
     }
 

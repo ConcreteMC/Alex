@@ -126,7 +126,8 @@ namespace Alex
 				new MiNET.Utils.DedicatedThreadPool(
 					new MiNET.Utils.DedicatedThreadPoolSettings(2, "MiNETServer Fast")));
 
-			ThreadPool.SetMaxThreads(Environment.ProcessorCount, Environment.ProcessorCount);
+			ThreadPool.GetMaxThreads(out _, out var completionPortThreads);
+			ThreadPool.SetMaxThreads(Environment.ProcessorCount, completionPortThreads);
 			
 			Instance = this;
 			LaunchSettings = launchSettings;

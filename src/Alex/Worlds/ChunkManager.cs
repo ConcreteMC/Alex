@@ -54,6 +54,12 @@ namespace Alex.Worlds
 			DefaultShaders.SetAnimatedTextures(Resources.Atlas.GetAtlas(0));
 			
 			RenderDistance = Options.VideoOptions.RenderDistance;
+
+			Options.VideoOptions.RenderDistance.Bind(
+				(value, newValue) =>
+				{
+					RenderDistance = newValue;
+				});
 			
 			Chunks = new ConcurrentDictionary<ChunkCoordinates, ChunkColumn>();
 			CancellationToken = new CancellationTokenSource();
@@ -189,7 +195,7 @@ namespace Alex.Worlds
 				//if (!chunk.Value.ChunkData.Ready)
 				//	continue;
 				
-				if (IsWithinView(chunk.Key, World.Camera.BoundingFrustum, World.Camera.Position.Y))
+				if (IsWithinView(chunk.Key, World.Camera))
 				{
 					rendered.Add(chunk.Value.ChunkData);
 					chunks.Add(chunk.Key);
@@ -230,7 +236,7 @@ namespace Alex.Worlds
 					{
 						while (queue.TryDequeue(out var chunkCoordinates, cc =>
 						{
-							return IsWithinView(cc, World.Camera.BoundingFrustum, World.Camera.Position.Y);
+							return IsWithinView(cc, World.Camera);
 						}))
 						{
 							if (TryGetChunk(chunkCoordinates, out var chunk))
@@ -297,74 +303,29 @@ namespace Alex.Worlds
 
 			return true;
 		}
-
-		private object _lightingLock    = new object();
-		private long   _lightingThreads = 0;
+		
 		private bool ProcessLighting(ChunkCoordinates[] renderedChunks)
 		{
-			/*if (Interlocked.Read(ref _lightingThreads) == 0)
+			bool processed = false;
+
+			if (BlockLightCalculations.TryProcess(
+				blockCoordinates => { return Chunks.ContainsKey((ChunkCoordinates) blockCoordinates); },
+				out BlockCoordinates coordinates))
 			{
-				Interlocked.Increment(ref _lightingThreads);
-				
-				ThreadPool.QueueUserWorkItem(
-					o =>
-					{
-						try
-						{
-							SkyLightCalculator.TryProcess();
-						}
-						finally
-						{
-							Interlocked.Decrement(ref _lightingThreads);
-						}
-					});
-			}*/
-			//ThreadPool.QueueUserWorkItem(
-				//o =>
-				//{
+				ChunkCoordinates cc = (ChunkCoordinates) coordinates;
 
-					bool processed = false;
+				if (TryGetChunk(cc, out var c))
+				{
+					c.GetSection(coordinates.Y)?.SetBlockLightScheduled(
+						coordinates.X & 0x0f, coordinates.Y - 16 * (coordinates.Y >> 4), coordinates.Z & 0x0f, true);
 
-					if (BlockLightCalculations.TryProcess(
-						blockCoordinates => { return Chunks.ContainsKey((ChunkCoordinates) blockCoordinates); },
-						out BlockCoordinates coordinates))
-					{
-						ChunkCoordinates cc = (ChunkCoordinates) coordinates;
+					//ScheduleChunkUpdate(cc, ScheduleType.Lighting);
+				}
 
-						if (TryGetChunk(cc, out var c))
-						{
-							c.GetSection(coordinates.Y)?.SetBlockLightScheduled(
-								coordinates.X & 0x0f, coordinates.Y - 16 * (coordinates.Y >> 4), coordinates.Z & 0x0f,
-								true);
+				return true;
+			}
 
-							//ScheduleChunkUpdate(cc, ScheduleType.Lighting);
-						}
-
-						processed = true;
-					}
-					
-					var cameraChunk = new ChunkCoordinates(World.Camera.Position);
-					var firstChunk  = renderedChunks.OrderBy(x => x.DistanceTo(cameraChunk)).FirstOrDefault();
-
-					if (firstChunk != null)
-					{
-						//processed = processed || SkyLightCalculator.TryProcess(firstChunk);
-					}
-
-					/*
-					foreach (var chunk in renderedChunks.OrderBy(x => x.DistanceTo(cameraChunk)))
-					{
-						if (SkyLightCalculator.TryProcess(chunk))
-						{
-							processed = true;
-		
-							break;
-						}
-					}*/
-
-				//});
-			
-			return true;
+			return false;
 		}
 
 
@@ -571,11 +532,16 @@ namespace Alex.Worlds
 			device.SamplerStates[0] = originalSamplerState;
 		}
 		
-		private bool IsWithinView(ChunkCoordinates chunk, BoundingFrustum frustum, float y)
+		private bool IsWithinView(ChunkCoordinates chunk, ICamera camera)
 		{
+			var frustum  = camera.BoundingFrustum;
 			var chunkPos = new Vector3(chunk.X * ChunkColumn.ChunkWidth, 0, chunk.Z * ChunkColumn.ChunkDepth);
+
+			if (chunk.DistanceTo(new ChunkCoordinates(camera.Position)) > RenderDistance)
+				return false;
+			
 			return frustum.Intersects(new Microsoft.Xna.Framework.BoundingBox(chunkPos,
-				chunkPos + new Vector3(ChunkColumn.ChunkWidth, y + 10,
+				chunkPos + new Vector3(ChunkColumn.ChunkWidth, camera.Position.Y + 10,
 					ChunkColumn.ChunkDepth)));
 
 		}
@@ -649,11 +615,9 @@ namespace Alex.Worlds
 			{
 				var chunk = chunks[index];
 				if (chunk == null) continue;
-			    
-				//chunk.Draw
+				
 				if (chunk.RenderStages.TryGetValue(stage, out var renderStage))
-				{ 
-					//device.SetVertexBuffer(chunk.Buffer);
+				{
 					verticeCount += renderStage.Render(device, effect);
 				}
 			}

@@ -636,12 +636,13 @@ namespace Alex.Gamestates.InGame
 		{
 			Alex.InGame = false;
 
-			ThreadPool.QueueUserWorkItem(
+			new Thread(
 				o =>
 				{
+					NetworkProvider.Close();
+					
 					World.Destroy();
 					WorldProvider.Dispose();
-					NetworkProvider.Close();
 
 					_playingHud.Unload();
 
@@ -652,7 +653,7 @@ namespace Alex.Gamestates.InGame
 					//ReflectionHelper.SetPrivateStaticPropertyValue<MiNET.Utils.DedicatedThreadPool>(typeof(MiNetServer), "FastThreadPool", null);
 					
 					RichPresenceProvider.ClearPresence();
-				});
+				}).Start();
 
 			//GetService<IEventDispatcher>().UnregisterEvents(_playingHud.Chat);
 			//_playingHud.Chat = 

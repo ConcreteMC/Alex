@@ -571,7 +571,7 @@ namespace Alex.Utils
 		{
 			var content = new FormUrlEncodedContent(request.PostData);
 
-			HttpClient client = new HttpClient();
+			HttpClient client = GetClient();
 			client.BaseAddress = new Uri(request.Url);
 
 			if (request.Content != null)
@@ -628,7 +628,7 @@ namespace Alex.Utils
 
 		public async Task<(bool success, BedrockTokenPair token)> RefreshTokenAsync(string refreshToken)
 		{
-			var token = RefreshAccessToken(refreshToken);
+			var token = await RefreshAccessToken(refreshToken);
 			if (token?.AccessToken == null)
 			{
 				return (false, null);
@@ -642,7 +642,7 @@ namespace Alex.Utils
 			});
 		}
 		
-		public BedrockTokenPair RefreshAccessToken(string refreshToken)
+		private async Task<BedrockTokenPair> RefreshAccessToken(string refreshToken)
 		{
 			if (string.IsNullOrEmpty(refreshToken))
 			{
@@ -651,13 +651,13 @@ namespace Alex.Utils
 
 			try
 			{
-				AccessTokens tokens = GetTokensUsingGET($"{this.RefreshUri}", new Dictionary<string, string> { 
+				AccessTokens tokens = await GetTokensUsingGET($"{this.RefreshUri}", new Dictionary<string, string> { 
 					{ "client_id", _clientId  },
 					{ "grant_type", "refresh_token" },
 					{ "scope", "service::user.auth.xboxlive.com::MBI_SSL" },
 					{ "redirect_uri", RedirectUri },
 					{ "refresh_token", refreshToken }
-				});
+				}).ConfigureAwait(false);
 
 				return new BedrockTokenPair()
 				{
@@ -756,29 +756,21 @@ namespace Alex.Utils
 			return tokens;
 		}
         
-		private static AccessTokens GetTokensUsingGET(string uri, Dictionary<string, string> parameters)
+		private async Task<AccessTokens> GetTokensUsingGET(string uri, Dictionary<string, string> parameters)
 		{
 			AccessTokens tokens = null;
 
-			using (var client = GetHttpClient())
+			using (var client = GetClient())
 			{
 				var encodedContent = new FormUrlEncodedContent (parameters);
-				var response = client.PostAsync(uri, encodedContent).Result;
+				var response = await client.PostAsync(uri, encodedContent);
 
-				var res = response.Content.ReadAsStringAsync().Result;
+				var res = await response.Content.ReadAsStringAsync();
                 
 				tokens = JsonConvert.DeserializeObject<AccessTokens>(res);
 			}
 
 			return tokens;
-		}
-        
-		private static HttpClient GetHttpClient()
-		{
-			HttpClient client = new HttpClient();
-			client.DefaultRequestHeaders.Add("Cache-Control", "no-cache");
-
-			return client;
 		}
 
 		private struct Request

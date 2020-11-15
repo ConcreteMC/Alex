@@ -62,10 +62,12 @@ namespace Alex.Utils
 		public ushort DefaultPort { get; protected set; } = 25565;
 		public int ProtocolVersion { get; protected set; } = 0;
 		
-		public ServerTypeImplementation(IServerQueryProvider queryProvider, string displayName)
+		public string TypeIdentifier { get; }
+		public ServerTypeImplementation(IServerQueryProvider queryProvider, string displayName, string typeIdentifier)
 		{
 			DisplayName = displayName;
 			QueryProvider = queryProvider;
+			TypeIdentifier = typeIdentifier;
 		}
 
 		public virtual bool TryGetWorldProvider(ServerConnectionDetails connectionDetails, PlayerProfile playerProfile, out WorldProvider worldProvider, out NetworkProvider networkProvider)

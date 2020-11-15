@@ -61,7 +61,7 @@ namespace Alex.Gamestates.MainMenu.Profile
 
             AddChild(new GuiTextElement()
             {
-                Text = profile.Type,
+                Text = profile.Username, //PROFILE TYPE!!!
                 Margin = Thickness.Zero,
                 Anchor = Alignment.BottomCenter,
                 Enabled = false,

@@ -24,36 +24,20 @@ namespace Alex.Services
 		public async Task QueryServerAsync(ServerConnectionDetails connectionDetails,
 		    PingServerDelegate pingCallback, ServerStatusDelegate statusCallBack)
 		{
-			ManualResetEventSlim ar = new ManualResetEventSlim(false);
-			Stopwatch sw = new Stopwatch();
-		    long pingTime = 0;
+			ManualResetEventSlim    ar       = new ManualResetEventSlim(false);
+			Stopwatch               sw       = new Stopwatch();
+		    long                    pingTime = 0;
 
-			/*var result = await ResolveHostnameAsync(hostname);
-			if (!result.Success)
-			{
-				statusCallBack?.Invoke(new ServerQueryResponse(false, "multiplayer.status.cannot_resolve", new ServerQueryStatus()
-				{
-					Delay = sw.ElapsedMilliseconds,
-					Success = false,
-
-					EndPoint = null,
-					Address = hostname,
-					Port = port
-				}));
-
-				return;
-			}*/
-
-			using(MiNET.Utils.DedicatedThreadPool threadPool = new MiNET.Utils.DedicatedThreadPool(new MiNET.Utils.DedicatedThreadPoolSettings(1, MiNET.Utils.ThreadType.Background, "ServerPingThread")))
+		    BedrockClient client = null;
+		    using(MiNET.Utils.DedicatedThreadPool threadPool = new MiNET.Utils.DedicatedThreadPool(new MiNET.Utils.DedicatedThreadPoolSettings(1, MiNET.Utils.ThreadType.Background, "ServerPingThread")))
 		    {
-			    BedrockClient client = null;
 			    try
 			    {
 					IPEndPoint serverEndpoint = new IPEndPoint(connectionDetails.EndPoint.Address, (int) connectionDetails.EndPoint.Port);
 
 					client = new BedrockClient(Game, null, serverEndpoint,
 						new PlayerProfile(string.Empty, $"Pinger{serverEndpoint.ToString()}",
-							$"Pinger{serverEndpoint.ToString()}", null, null, null, "xbox"), threadPool, null)
+							$"Pinger{serverEndpoint.ToString()}", null, null, null), threadPool, null)
 					{
 						
 						//IgnoreUnConnectedPong = true
@@ -73,15 +57,12 @@ namespace Alex.Services
 				    };
 
 				    client.Start(ar);
-				    //client.SendUnconnectedPing();
+
 				    sw.Restart();
 
-					//ar.WaitAsync().Wait(TimeSpan.FromMilliseconds(10000));
-
-				    if (await WaitHandleHelpers.FromWaitHandle(ar.WaitHandle, TimeSpan.FromMilliseconds(10000)))
+				    if (await WaitHandleHelpers.FromWaitHandle(ar.WaitHandle, TimeSpan.FromMilliseconds(2500)))
 				    {
 					    client.Close();
-					  //  var m = new BedrockMotd(client.Connection.RemoteServerName);
 
 					  var compatability = CompatibilityResult.Unknown;
 
@@ -89,20 +70,8 @@ namespace Alex.Services
 					  {
 						  compatability = CompatibilityResult.Compatible;
 					  }
-					  /*else if (MathF.Abs(motd.ProtocolVersion - McpeProtocolInfo.ProtocolVersion) < 3) //Ehh?
-					  {
-						  compatability = CompatibilityResult.Unknown;
-					  }*/
-					  else if (motd.ProtocolVersion < McpeProtocolInfo.ProtocolVersion)
-					  {
-					//	  compatability = CompatibilityResult.OutdatedServer;
-					  }
-					  else if (motd.ProtocolVersion > McpeProtocolInfo.ProtocolVersion)
-					  {
-						//  compatability = CompatibilityResult.OutdatedClient;
-					  }
-					  
-						statusCallBack?.Invoke(new ServerQueryResponse(true, new ServerQueryStatus()
+
+					  statusCallBack?.Invoke(new ServerQueryResponse(true, new ServerQueryStatus()
 					    {
 						    EndPoint = motd.ServerEndpoint,
 						    Delay = pingTime,
@@ -160,6 +129,7 @@ namespace Alex.Services
 			    }
 			    finally
 			    {
+				    client?.Close();
 				    client?.Dispose();
 				}
 		    }

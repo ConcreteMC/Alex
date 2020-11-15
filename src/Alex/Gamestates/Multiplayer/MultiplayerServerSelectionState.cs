@@ -100,9 +100,8 @@ namespace Alex.Gamestates.Multiplayer
 	    private void Reload()
 	    {
 		    ClearItems();
-
-		    List<Task> tasks = new List<Task>();
-
+		    
+		    Task previousTask = null;
 		    foreach (var entry in _listProvider.Data.ToArray())
 		    {
 			    if (Alex.ServerTypeManager.TryGet(entry.ServerType, out var typeImplementation))
@@ -110,7 +109,14 @@ namespace Alex.Gamestates.Multiplayer
 				    var element = new GuiServerListEntryElement(typeImplementation, entry);
 				    AddItem(element);
 
-				    tasks.Add(element.PingAsync(false));
+				    if (previousTask != null)
+				    {
+					    previousTask = previousTask.ContinueWith(r => element.PingAsync(false));
+				    }
+				    else
+				    {
+					    previousTask = element.PingAsync(false);
+				    }
 			    }
 		    }
 	    }
@@ -183,11 +189,19 @@ namespace Alex.Gamestates.Multiplayer
 
 				IPEndPoint target = new IPEndPoint(ip, entry.Port);
 
-				var authenticationService = GetService<IPlayerProfileService>();
-				var currentProfile        = authenticationService.CurrentProfile;
+				var           authenticationService = GetService<IPlayerProfileService>();
+				//var currentProfile        = authenticationService.CurrentProfile;
 
 				if (Alex.ServerTypeManager.TryGet(entry.ServerType, out var typeImplementation))
 				{
+					var           profiles       = authenticationService.GetProfiles(entry.ServerType);
+					PlayerProfile currentProfile = null;
+
+					if (profiles.Length == 1)
+					{
+						currentProfile = profiles[0];
+					}
+					
 					void Connect()
 					{
 						Alex.ConnectToServer(
@@ -198,7 +212,7 @@ namespace Alex.Gamestates.Multiplayer
 						overlay = null;
 					}
 					
-					if (!await typeImplementation.VerifyAuthentication(currentProfile))
+					if (currentProfile == null || !await typeImplementation.VerifyAuthentication(currentProfile))
 					{
 						await typeImplementation.Authenticate(
 							_skyBox, currentProfile, result =>
@@ -229,9 +243,16 @@ namespace Alex.Gamestates.Multiplayer
 
 	    private void OnRefreshButtonPressed()
 	    {
+		    Task previousTask = null;
 		    foreach (var item in Items)
 		    {
-			    item.PingAsync(true);
+			    var i = item;
+			   if (previousTask == null)
+				   previousTask =  i.PingAsync(true);
+			   else
+			   {
+				   previousTask = previousTask.ContinueWith(x => i.PingAsync(true));
+			   }
 		    }
 	    }
 

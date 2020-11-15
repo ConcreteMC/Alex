@@ -1747,20 +1747,8 @@ namespace Alex.Worlds.Multiplayer.Java
 
 						        if (blockEntity != null)
 						        {
-							       // var coordinates = new BlockCoordinates(
-								   //     (result.X * 16) + blockEntity.X, blockEntity.Y,
-								   //     (result.Z * 16) + blockEntity.Z);
-
-							      //  World.EntityManager.AddBlockEntity(coordinates, blockEntity);
-							        
-							        //var state = result.GetBlockState(blockEntity.X, blockEntity.Y, blockEntity.Z);
-							        //blockEntity.Block = state.Block;
-
 							        result.AddBlockEntity(
 								        new BlockCoordinates(blockEntity.X & 0xf, blockEntity.Y & 0xff, blockEntity.Z & 0xf), blockEntity);
-
-							        // World.GetBlock(coordinates)
-							        // Log.Info($"Added block entity of type \"{blockEntity.GetType()}\" ({coordinates})");
 						        }
 						        else
 						        {
@@ -1772,13 +1760,7 @@ namespace Alex.Worlds.Multiplayer.Java
 					        {
 						        Log.Warn(ex, "Could not add block entity!");
 					        }
-
-					        //chunk.AddBlockEntity(tag.GetInt("x"), tag.GetInt("y"), tag.GetInt("z"), tag);
 				        }
-
-
-				     //   result.SkyLightDirty = true;
-				     //   result.BlockLightDirty = true;
 
 				        if (!_generatingHelper.IsAddingCompleted)
 				        {
@@ -1806,7 +1788,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 					if (blockEntity != null)
 					{
-						World.EntityManager.AddBlockEntity(packet.Location, blockEntity);
+						World.SetBlockEntity(packet.Location.X, packet.Location.Y, packet.Location.Z, blockEntity);
 						Log.Info($"Added block entity of type \"{blockEntity.GetType()}\" ({packet.Location})");
 					}
 					else

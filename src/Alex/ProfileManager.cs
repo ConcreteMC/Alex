@@ -49,7 +49,7 @@ namespace Alex
 
 						foreach (var profile in profiles)
 						{
-							profile.Profile.Type = profile.Type;// == ProfileType.Bedrock;
+							//profile.Profile.Type = profile.Type;// == ProfileType.Bedrock;
 							if (profile.Profile.Uuid.Equals(saveFile.SelectedProfile))
 							{
 								progressReceiver.UpdateProgress(90, StatusMessage);
