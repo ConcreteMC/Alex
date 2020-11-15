@@ -42,9 +42,6 @@ namespace Alex.Worlds.Multiplayer.Java
 						}
 					}
 
-					if (storage != null)
-						storage.IsDirty = true;
-
 					this.Sections[sectionY] = storage;
 				}
 

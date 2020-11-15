@@ -1,10 +1,26 @@
 ﻿using System;
+using System.Globalization;
 using Microsoft.Xna.Framework;
 
 namespace Alex.API.Utils
 {
     public static class ColorHelper
     {
+        public static Color HexToColor(string hexString)
+        {
+            //replace # occurences
+            if (hexString.IndexOf('#') != -1)
+                hexString = hexString.Replace("#", "");
+
+            int r, g, b = 0;
+
+            r = int.Parse(hexString.Substring(0, 2), NumberStyles.AllowHexSpecifier);
+            g = int.Parse(hexString.Substring(2, 2), NumberStyles.AllowHexSpecifier);
+            b = int.Parse(hexString.Substring(4, 2), NumberStyles.AllowHexSpecifier);
+
+            return new Color(r, g, b);
+        }
+        
         public static Color Darken(this Color color, float amount)
         {
             var hsl = (HslColor) color;

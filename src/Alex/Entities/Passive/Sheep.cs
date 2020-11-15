@@ -1,6 +1,7 @@
+using Alex.API.Utils;
 using Alex.Networking.Java.Packets.Play;
 using Alex.Worlds;
-using Microsoft.Xna.Framework;
+
 using NLog;
 
 namespace Alex.Entities.Passive
@@ -8,30 +9,40 @@ namespace Alex.Entities.Passive
 	public class Sheep : PassiveMob
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Sheep));
-		private static readonly Color[] SheepColors = new Color[]
+		private static readonly DyeColor[] SheepColors = new DyeColor[]
 		{
-			new Color(1908001), 
-			new Color(11546150), 
-			new Color(6192150), 
-			new Color(8606770), 
-			new Color(3949738), 
-			new Color(8991416), 
-			new Color(1481884), 
-			new Color(10329495), 
-			new Color(4673362), 
-			new Color(15961002), 
-			new Color(8439583), 
-			new Color(16701501), 
-			new Color(3847130), 
-			new Color(13061821), 
-			new Color(16351261), 
-			new Color(16383998), 
-			new Color(1908001), 
-			new Color(8606770), 
-			new Color(3949738), 
-			new Color(16383998) 
+			DyeColor.WhiteDye,
+			DyeColor.OrangeDye,
+			DyeColor.MagentaDye,
+			DyeColor.LightBlueDye,
+			DyeColor.YellowDye, 
+			DyeColor.LimeDye, 
+			DyeColor.PinkDye,
+			DyeColor.GrayDye,
+			DyeColor.LightGrayDye,
+			DyeColor.CyanDye,
+			DyeColor.PurpleDye,
+			DyeColor.BlueDye, 
+			DyeColor.BrownDye,
+			DyeColor.GreenDye, 
+			DyeColor.RedDye, 
+			DyeColor.BlackDye
 		};
-		
+
+		private DyeColor _color = DyeColor.WhiteDye;
+		public DyeColor Color
+		{
+			get
+			{
+				return _color;
+			}
+			set
+			{
+				_color = value;
+				ModelRenderer.EntityColor = value.Color.ToVector3();
+			}
+		}
+
 		public Sheep(World level) : base((EntityType)13, level)
 		{
 			JavaEntityId = 91;
@@ -58,7 +69,7 @@ namespace Alex.Entities.Passive
 				return;
 			}
 			
-			ModelRenderer.EntityColor = SheepColors[value % SheepColors.Length].ToVector3();
+			Color = SheepColors[value % SheepColors.Length];
 		}
 
 		public void SetSheared(bool value)

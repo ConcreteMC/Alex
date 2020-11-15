@@ -171,13 +171,11 @@ namespace Alex.Graphics.Models
 			private readonly Vector2 _textureSize;
 
 			public bool Mirrored { get; set; } = false;
-			public Cube(Vector3 size, Vector2 textureSize, Vector2 uv, Vector2 uvScale, float inflate, bool mirrored)
+			public Cube(Vector3 size, Vector2 textureSize, Vector2 uv, Vector2 uvScale, bool mirrored)
 			{
 				Mirrored = mirrored;
 				UvScale = uvScale;
 				this.Size = size;
-
-				var inflator = new Vector3((float) inflate);
 				
 				//var inflated = size + new Vector3(inflate, inflate, inflate);
 				this._textureSize = textureSize; //new Vector2((size.X + size.Z) * 2, size.Y + size.Z);

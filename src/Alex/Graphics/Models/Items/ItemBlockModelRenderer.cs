@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Alex.API.Graphics;
+using Alex.API.Utils;
 using Alex.Blocks.State;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json.Models;
@@ -33,7 +34,7 @@ namespace Alex.Graphics.Models.Items
                 return;
             
             ChunkData chunkData = new ChunkData();
-            _block.Model.GetVertices(new ItemRenderingWorld(_block.Block), chunkData, Vector3.Zero, _block.Block);
+            _block.Model.GetVertices(new ItemRenderingWorld(_block.Block), chunkData, BlockCoordinates.Zero, Vector3.Zero, _block.Block);
             Vertices = chunkData.Vertices;
             List<short> indexes = new List<short>();
 

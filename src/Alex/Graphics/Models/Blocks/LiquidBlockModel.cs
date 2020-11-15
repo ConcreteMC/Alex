@@ -107,7 +107,7 @@ namespace Alex.Graphics.Models.Blocks
 			return false;
 		}
 
-		public override void GetVertices(IBlockAccess blockAccess, ChunkData chunkBuilder, Vector3 vectorPos, Block baseBlock)
+		public override void GetVertices(IBlockAccess blockAccess, ChunkData chunkBuilder, BlockCoordinates blockCoordinates, Vector3 vectorPos, Block baseBlock)
 		{
 			//int myLevel = 
 			//var chunk = world.GetChunk(vectorPos);
@@ -307,8 +307,11 @@ namespace Alex.Graphics.Models.Blocks
 				{
 					vertColor = GetBiomeColor(blockAccess, bx, y, bz);
 				}
+
+				var   skyLight = blockAccess.GetSkyLight(position + face.GetBlockCoordinates());
+				var   blockLight = blockAccess.GetBlockLight(position + face.GetBlockCoordinates());
 				
-				float height       = 0;
+				float height   = 0;
 				for (var index = 0; index < vertices.Length; index++)
 				{
 					var vert = vertices[index];
@@ -343,6 +346,9 @@ namespace Alex.Graphics.Models.Blocks
 					vert.Position.X += position.X;
 					vert.Position.Z += position.Z;
 
+					vert.SkyLight = skyLight;
+					vert.BlockLight = blockLight;
+					
 					if (IsWater)
 					{
 						vert.Color = vertColor;
@@ -363,7 +369,8 @@ namespace Alex.Graphics.Models.Blocks
 				for (int i = 0; i < indexes.Length; i++)
 				{
 					var vertex      = result[indexes[i]];
-					int vertexIndex = chunkBuilder.AddVertex(position, vertex);
+
+					int vertexIndex = chunkBuilder.AddVertex(blockCoordinates, vertex);
 
 					indexes[i] = vertexIndex;
 				}
@@ -371,9 +378,7 @@ namespace Alex.Graphics.Models.Blocks
 				for (var idx = 0; idx < indexes.Length; idx++)
 				{
 					var idxx = indexes[idx];
-
-					chunkBuilder.AddIndex(position, RenderStage.Animated, idxx);
-					//animatedIndexResult.Add(initialIndex + idxx);
+					chunkBuilder.AddIndex(blockCoordinates, RenderStage.Animated, idxx);
 				}
 			}
 

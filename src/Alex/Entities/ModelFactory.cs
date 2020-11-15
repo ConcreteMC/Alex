@@ -115,12 +115,12 @@ namespace Alex.Entities
 				if (geometry.Equals("geometry.pufferfish.small.v1.8")) { model = new Models.PufferfishSmallV18Model(); return true; }
 				if (geometry.Equals("geometry.pufferfish.large.v1.8")) { model = new Models.PufferfishLargeV18Model(); return true; }
 				if (geometry.Equals("geometry.villager.witch.v1.8")) { model = new Models.VillagerWitchV18GeometryVillagerV18Model(); return true; }
-				if (geometry.Equals("geometry.sheep")) { model = new Models.SheepV18GeometrySheepShearedV18Model(); return true; }
+				if (geometry.Equals("geometry.sheep")) { model = new Models.SheepGeometrySheepShearedModel(); return true; }
 				if (geometry.Equals("geometry.player.armor1")) { model = new Models.PlayerArmor1GeometryPlayerArmorBaseModel(); return true; }
 				if (geometry.Equals("geometry.player.armor2")) { model = new Models.PlayerArmor2GeometryPlayerArmorBaseModel(); return true; }
 				if (geometry.Equals("geometry.villager.witch")) { model = new Models.VillagerWitchV18GeometryVillagerV18Model(); return true; }
 				if (geometry.Equals("geometry.evoker")) { model = new Models.EvokerV18Model(); return true; }
-				if (geometry.Equals("geometry.sheep.v1.8")) { model = new Models.SheepV18GeometrySheepShearedV18Model(); return true; }
+				if (geometry.Equals("geometry.sheep.v1.8")) { model = new Models.SheepGeometrySheepShearedModel(); return true; }
 				if (geometry.Equals("geometry.enderman")) { model = new Models.EndermanV18Model(); return true; }
 				if (geometry.Equals("geometry.arrow")) { model = new Models.ArrowModel(); return true; }
 				if (geometry.Equals("geometry.chicken")) { model = new Models.ChickenModel(); return true; }

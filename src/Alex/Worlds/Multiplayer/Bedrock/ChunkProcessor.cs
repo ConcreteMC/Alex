@@ -405,7 +405,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				        }
 
 				        section.RemoveInvalidBlocks();
-				        section.IsDirty = true;
+				       // section.IsDirty = true;
 
 				        //Make sure the section is saved.
 				        chunkColumn.Sections[s] = section;

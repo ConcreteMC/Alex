@@ -2,6 +2,7 @@
 using System.Linq;
 using Alex.API.Blocks;
 using Alex.API.Graphics;
+using Alex.API.Utils;
 using Alex.Blocks.Minecraft;
 using Alex.Utils;
 using Alex.Worlds.Abstraction;
@@ -14,7 +15,7 @@ namespace Alex.Graphics.Models.Blocks
 	{
 		public float Scale { get; set; } = 1f;
 
-		public virtual void GetVertices(IBlockAccess blockAccess, ChunkData chunkBuilder, Vector3 position, Block baseBlock)
+		public virtual void GetVertices(IBlockAccess blockAccess, ChunkData chunkBuilder, BlockCoordinates blockCoordinates, Vector3 position, Block baseBlock)
         {
             //return new VerticesResult(new BlockShaderVertex[0], new int[0], null);
         }

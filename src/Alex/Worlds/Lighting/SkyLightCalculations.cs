@@ -23,21 +23,11 @@ namespace Alex.Worlds.Lighting
 	public class SkyLightCalculations
 	{
 		private static readonly ILogger Log = LogManager.GetCurrentClassLogger(typeof(SkyLightCalculations));
-
-		// Debug tracking, don't enable unless you really need to "see it".
-
-		public bool TrackResults { get; }
-		public ConcurrentDictionary<BlockCoordinates, int> Visits { get; } = new ConcurrentDictionary<BlockCoordinates, int>();
-		public long StartTimeInMilliseconds { get; set; }
-
-		ConcurrentDictionary<ChunkColumn, bool> _visitedColumns = new ConcurrentDictionary<ChunkColumn, bool>();
-
-		public long visits = 0;
-
+		
 		public bool DoLogging { get; set; } = false;
-		public SkyLightCalculations(bool trackResults = false)
+		public SkyLightCalculations()
 		{
-			TrackResults = trackResults;
+
 		}
 
 		public bool RecalcSkyLight(ChunkColumn chunk, IBlockAccess level)
@@ -149,7 +139,7 @@ namespace Alex.Worlds.Lighting
 			Calculate(level, lightBfQueue, lightBfSet);
 		}
 
-		public void ResetLight(IBlockAccess level, Queue<BlockCoordinates> resetQueue, Queue<BlockCoordinates> sourceQueue, BlockCoordinates coordinates)
+		private void ResetLight(IBlockAccess level, Queue<BlockCoordinates> resetQueue, Queue<BlockCoordinates> sourceQueue, BlockCoordinates coordinates)
 		{
 			int currentLight = level.GetSkyLight(coordinates);
 
@@ -282,10 +272,6 @@ namespace Alex.Worlds.Lighting
 
 		private byte SetLightLevel(IBlockAccess level, ChunkColumn chunk, ChunkSection subChunk, int sectionIdx, Queue<BlockCoordinates> lightBfsQueue, HashSet<BlockCoordinates> lightBfSet, BlockCoordinates coordinates, byte lightLevel, bool down = false, bool up = false)
 		{
-			//Interlocked.Add(ref visits, 1);
-
-			if (TrackResults) MakeVisit(coordinates);
-
 			var chunkCoords = (ChunkCoordinates) coordinates;
 			
 			if (!(up || down) && (chunk.X != coordinates.X >> 4 || chunk.Z != coordinates.Z >> 4))
@@ -367,13 +353,12 @@ namespace Alex.Worlds.Lighting
 			return skyLight;
 		}
 
-		public static void SetSkyLight(IBlockAccess world, BlockCoordinates coordinates, byte skyLight, ChunkColumn chunk)
+		private static void SetSkyLight(IBlockAccess world, BlockCoordinates coordinates, byte skyLight, ChunkColumn chunk)
 		{
 			chunk?.SetSkyLight(coordinates.X & 0x0f, coordinates.Y & 0xff, coordinates.Z & 0x0f, skyLight);
-				//world.SetSkyLight(coordinates, skyLight);
 		}
 
-		public static bool IsNotBlockingSkylight(BlockCoordinates blockCoordinates, ChunkColumn chunk)
+		private static bool IsNotBlockingSkylight(BlockCoordinates blockCoordinates, ChunkColumn chunk)
 		{
 			if (chunk == null) return true;
 
@@ -383,7 +368,7 @@ namespace Alex.Worlds.Lighting
 			//	return bid == 0 || (BlockFactory.TransparentBlocks[bid] == 1 && bid != 18 && bid != 161 && bid != 30 && bid != 8 && bid != 9);
 		}
 
-		public static int GetDiffuseLevel(BlockCoordinates blockCoordinates, ChunkSection section)
+		private static int GetDiffuseLevel(BlockCoordinates blockCoordinates, ChunkSection section)
 		{
 			//TODO: Figure out if this is really correct. Perhaps should be zero.
 			if (section == null) return 15;
@@ -397,7 +382,7 @@ namespace Alex.Worlds.Lighting
 			//return bid == 8 || bid == 9 ? 3 : bid == 18 || bid == 161 || bid == 30 ? 2 : 1;
 		}
 
-		public static bool IsTransparent(BlockCoordinates blockCoordinates, ChunkSection section)
+		private static bool IsTransparent(BlockCoordinates blockCoordinates, ChunkSection section)
 		{
 			if (section == null) return true;
 
@@ -407,12 +392,10 @@ namespace Alex.Worlds.Lighting
 
 			var state = section.Get(bx, by - 16 * (by >> 4), bz);
 			return state.Block is Air || state.Block.Transparent;
-			
-			return section.IsTransparent(bx, by - 16 * (by >> 4), bz);
 		//	return bid == 0 || BlockFactory.TransparentBlocks[bid] == 1;
 		}
 
-		public static byte GetSkyLight(BlockCoordinates blockCoordinates, ChunkSection chunk)
+		private static byte GetSkyLight(BlockCoordinates blockCoordinates, ChunkSection chunk)
 		{
 			if (chunk == null) return 15;
 
@@ -423,31 +406,18 @@ namespace Alex.Worlds.Lighting
 			return chunk.GetSkylight(bx, by - 16 * (by >> 4), bz);
 		}
 
-		public static byte GetSkyLight(BlockCoordinates blockCoordinates, ChunkColumn chunk)
+		private static byte GetSkyLight(BlockCoordinates blockCoordinates, ChunkColumn chunk)
 		{
 			if (chunk == null) return 15;
 
 			return chunk.GetSkylight(blockCoordinates.X & 0x0f, blockCoordinates.Y & 0xff, blockCoordinates.Z & 0x0f);
 		}
 
-		public static int GetHeight(BlockCoordinates blockCoordinates, ChunkColumn chunk)
+		private static int GetHeight(BlockCoordinates blockCoordinates, ChunkColumn chunk)
 		{
 			if (chunk == null) return 256;
 
 			return chunk.GetHeight(blockCoordinates.X & 0x0f, blockCoordinates.Z & 0x0f);
-		}
-
-		private void MakeVisit(BlockCoordinates inc)
-		{
-			BlockCoordinates coordinates = new BlockCoordinates(inc.X, 0, inc.Z);
-			if (Visits.ContainsKey(coordinates))
-			{
-				Visits[coordinates] = Visits[coordinates] + 1;
-			}
-			else
-			{
-				Visits.TryAdd(coordinates, 1);
-			}
 		}
 		
 		private static bool IsOnChunkBorder(int x, int z)

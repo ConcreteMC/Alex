@@ -20,16 +20,12 @@ namespace Alex.Worlds.Chunks
 		protected int _tickRefCount;
 
 		public int Blocks => _blockRefCount;
-		
-		//private BlockStorage Data;
+
 		protected BlockStorage[] _blockStorages;
 		public NibbleArray BlockLight;
 		public NibbleArray SkyLight;
 
-        public System.Collections.BitArray TransparentBlocks;
-        public System.Collections.BitArray SolidBlocks;
-        
-        private System.Collections.BitArray ScheduledUpdates;
+		private System.Collections.BitArray ScheduledUpdates;
         private System.Collections.BitArray ScheduledSkylightUpdates;
         private System.Collections.BitArray ScheduledBlocklightUpdates;
 
@@ -60,42 +56,13 @@ namespace Alex.Worlds.Chunks
 		//	if (storeSkylight)
 			{
 				this.SkyLight = new NibbleArray(new byte[2048]);	
-				MiNET.Worlds.ChunkColumn.Fill<byte>(SkyLight.Data, (byte) (storeSkylight ? 0xff : 0x00));
+				MiNET.Worlds.ChunkColumn.Fill<byte>(SkyLight.Data, 0x00);
 			}
 
-		    TransparentBlocks = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8 ]);
-		    SolidBlocks = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8 ]);
 		    ScheduledUpdates = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8 ]);
 		    ScheduledSkylightUpdates = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8 ]);
 		    ScheduledBlocklightUpdates = new System.Collections.BitArray(new byte[(16 * 16 * 16) / 8 ]);
-
-		    for (int i = 0; i < TransparentBlocks.Length; i++)
-			{
-				TransparentBlocks[i] = true;
-				SolidBlocks[i] = false;
-			}
         }
-
-        private bool _isDirty = false;
-        public bool IsDirty
-        {
-	        get
-	        {
-		        return ScheduledUpdatesCount > 0 || BlockLightUpdates > 0 ||
-		               SkyLightUpdates > 0 || _isDirty;
-	        }
-	        set
-	        {
-		        _isDirty = value;
-	        }
-        }
-
-        public void ResetSkyLight(byte initialValue = 0xff)
-        {
-	        //Owner.SkyLightDirty = true;
-	        MiNET.Worlds.ChunkColumn.Fill<byte>(SkyLight.Data, initialValue);
-			//this.SkyLight = new NibbleArray(4096, initialValue);
-		}
 
         protected static int GetCoordinateIndex(int x, int y, int z)
 		{
@@ -247,10 +214,6 @@ namespace Alex.Worlds.Chunks
 						{
 							--this._tickRefCount;
 						}
-
-
-						TransparentBlocks.Set(coordsIndex, true);
-						SolidBlocks.Set(coordsIndex, false);
 					}
 				}
 
@@ -268,9 +231,6 @@ namespace Alex.Worlds.Chunks
 		            {
 			            ++this._tickRefCount;
 		            }
-
-		            TransparentBlocks.Set(coordsIndex, block1.Transparent);
-		            SolidBlocks.Set(coordsIndex, block1.Solid);
 	            }
             }
 
@@ -281,18 +241,11 @@ namespace Alex.Worlds.Chunks
 
             //ScheduledUpdates.Set(coordsIndex, true);
             SetScheduled(x,y,z, true);
-            
-            IsDirty = true;
 		}
 
 		protected virtual void OnBlockSet(int x, int y, int z, BlockState newState, BlockState oldState)
 		{
 			
-		}
-		
-		public bool IsTransparent(int x, int y, int z)
-		{
-			return TransparentBlocks.Get(GetCoordinateIndex(x, y, z));
 		}
 
 		public bool IsEmpty()
@@ -358,12 +311,7 @@ namespace Alex.Worlds.Chunks
 				{
 					for (int z = 0; z < 16; z++)
 					{
-						var idx = GetCoordinateIndex(x, y, z);
-						
 						var block = this.Get(x, y, z, 0).Block;
-
-						TransparentBlocks.Set(idx, block.Transparent);
-						SolidBlocks.Set(idx, block.Solid);
 
 						if (!(block is Air))
 						{

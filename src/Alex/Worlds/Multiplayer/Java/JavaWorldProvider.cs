@@ -1691,8 +1691,9 @@ namespace Alex.Worlds.Multiplayer.Java
 
 			        //_chunkQueue.Add(chunk);
 			        //	ThreadPool.QueueUserWorkItem(() =>
-			        using (var memoryStream = new UnmanagedMemoryStream(
-				        (byte*) chunk.Buffer.Pin().Pointer, chunk.Buffer.Length))
+			        //using (var memoryStream = new UnmanagedMemoryStream(
+				     //   (byte*) chunk.Buffer.Pin().Pointer, chunk.Buffer.Length))
+				     using(var memoryStream = new MemoryStream(chunk.Buffer.ToArray()))
 			        using (var stream = new MinecraftStream(memoryStream))
 			        {
 				        JavaChunkColumn result = null; // = new ChunkColumn();

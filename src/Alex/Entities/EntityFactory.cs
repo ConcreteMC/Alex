@@ -95,18 +95,6 @@ namespace Alex.Entities
 			return false;
 		}
 
-        public static bool ModelByType(EntityType type, out EntityModelRenderer renderer, out EntityData data)
-        {
-            if (_typeToId.TryGetValue(type, out long id))
-            {
-                return ModelByNetworkId(id, out renderer, out data);
-            }
-
-            renderer = null;
-            data = null;
-            return false;
-        }
-
 		private static EntityModelRenderer TryGetRendererer(EntityData data, PooledTexture2D texture)
 		{
 			if (_registeredRenderers.TryGetValue(data.OriginalName, out var func))
@@ -182,19 +170,7 @@ namespace Alex.Entities
 				        Add(resourceManager, graphics, def.Value, model, def.Value.Identifier);
 				        Add(resourceManager, graphics, def.Value, model, def.Key.ToString());
 				    }
-                    /*if ((resourceManager.BedrockResourcePack.EntityModels.TryGetValue(def.Value.Geometry["default"],
-						    out model)) && model != null)
-					{
-						Add(resourceManager, graphics, def.Value, model, def.Value.Filename);
-						Add(resourceManager, graphics, def.Value, model, def.Key);
-					}
-					else if ((resourceManager.BedrockResourcePack.EntityModels.TryGetValue(def.Value.Geometry["default"] + ".v1.8",
-						         out model)) && model != null)
-					{
-						Add(resourceManager, graphics, def.Value, model, def.Value.Filename);
-						Add(resourceManager, graphics, def.Value, model, def.Key);
-					}*/
-                }
+				}
 				catch (Exception ex)
 				{
 					Log.Warn(ex, $"Failed to load model {def.Key}!");

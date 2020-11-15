@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using Alex.API;
 using Alex.API.Blocks;
 using Alex.API.Utils;
@@ -33,7 +34,7 @@ namespace Alex.Worlds.Chunks
 		public int Z { get; set; }
 
 		public          bool IsNew           { get; set; } = true;
-		public bool SkyLightDirty { get; set; } = false;
+		public bool SkyLightDirty => Sections != null && Sections.Sum(x => x.SkyLightUpdates) > 0; 
 		public          bool BlockLightDirty => Sections != null && Sections.Sum(x => x.BlockLightUpdates) > 0; 
 		public readonly Stopwatch LightUpdateWatch = new Stopwatch();
 		public          ChunkSection[] Sections { get; set; } = new ChunkSection[16];
@@ -106,8 +107,16 @@ namespace Alex.Worlds.Chunks
 
 		public void UpdateBuffer(GraphicsDevice device, IBlockAccess world)
 		{
-			lock (_dataLock)
+			if (!Monitor.TryEnter(_dataLock, 0))
+				return;
+			
+			try
 			{
+				//var chunkData     = ChunkData;
+
+				if (ChunkData == null)
+					return;
+				
 				var chunkPosition = new Vector3(X << 4, 0, Z << 4);
 				for (int sectionIndex = 0; sectionIndex < 16; sectionIndex++)
 				{
@@ -116,7 +125,7 @@ namespace Alex.Worlds.Chunks
 					if (section == null)
 						continue;
 
-					var sectionY = (sectionIndex << 4);
+					//var sectionY = (sectionIndex << 4);
 					
 					for (int x = 0; x < 16; x++)
 					{
@@ -124,15 +133,18 @@ namespace Alex.Worlds.Chunks
 						{
 							for (int y = 0; y < 16; y++)
 							{
-								if (!IsNew && !section.IsScheduled(x, y, z) &&
-								    !section.IsBlockLightScheduled(x, y, z) &&
-								    !section.IsSkylightUpdateScheduled(x, y, z))
+								bool scheduled        = section.IsScheduled(x, y, z);
+								bool blockLightUpdate = section.IsBlockLightScheduled(x, y, z);
+								bool skyLightUpdate   = section.IsSkylightUpdateScheduled(x, y, z);
+								
+								if (!IsNew && !scheduled &&
+								    !blockLightUpdate &&
+								    !skyLightUpdate)
 									continue;
 
 								try
 								{
-									var by               = sectionY + y;
-									var blockCoordinates = new BlockCoordinates(x, by, z);
+									var blockCoordinates = new BlockCoordinates(x, y + (sectionIndex * 16), z);
 
 									ChunkData?.Remove(device, blockCoordinates);
 
@@ -177,14 +189,19 @@ namespace Alex.Worlds.Chunks
 											}
 										}
 										
-										model.GetVertices(world, ChunkData, blockPosition, blockState.Block);
+										model.GetVertices(world, ChunkData, blockCoordinates, blockPosition, blockState.Block);
 									}
 								}
 								finally
 								{
-									section.SetScheduled(x, y, z, false);
-									section.SetBlockLightScheduled(x, y, z, false);
-									section.SetSkyLightUpdateScheduled(x, y, z, false);
+									if (scheduled)
+										section.SetScheduled(x, y, z, false);
+									
+									if (blockLightUpdate)
+										section.SetBlockLightScheduled(x, y, z, false);
+									
+									if (skyLightUpdate)
+										section.SetSkyLightUpdateScheduled(x, y, z, false);
 								}
 							}
 						}
@@ -193,6 +210,13 @@ namespace Alex.Worlds.Chunks
 				
 				ChunkData?.ApplyChanges(device);
 				IsNew = false;
+
+				//if (ChunkData != null)
+				//	ChunkData = chunkData;
+			}
+			finally
+			{
+				Monitor.Exit(_dataLock);
 			}
 		}
 		
@@ -241,27 +265,13 @@ namespace Alex.Worlds.Chunks
 
 
 			var section  = GetSection(y);
-			//var oldBlock = section.Get(x, y - 16 * (y >> 4), z, storage);
-
-			/*if (oldBlock.Block.Renderable)
-			{
-				foreach(var box in oldBlock.Model.GetBoundingBoxes(new Vector3((X << 4) + x, y, (Z << 4) + z)))
-				{
-					_octree.Remove(box);
-				}
-			}*/
-			
 			section.Set(storage, x, y - 16 * (y >> 4), z, state);
-			
-			/*foreach(var box in state.Model.GetBoundingBoxes(new Vector3((X << 4) + x, y, (Z << 4) + z)))
-			{
-				_octree.Add(box);
-			}*/
 
-			_heightDirty = true;
+
+		//	_heightDirty = true;
 		}
 
-		public void RecalculateHeight(int x, int z, bool doLighting = true)
+		private void RecalculateHeight(int x, int z, bool doLighting = true)
 		{
 			bool inLight = doLighting;
 			
@@ -293,7 +303,7 @@ namespace Alex.Worlds.Chunks
 				}
 				else
 				{
-					SetSkyLight(x, y, z, (byte) (doLighting ? 0 : 15));
+					//SetSkyLight(x, y, z, (byte) (doLighting ? 0 : 15));
 				}
 			}
 		}
@@ -308,7 +318,6 @@ namespace Alex.Worlds.Chunks
 					var chunk = GetSection(y);
 					if (isInAir && chunk.IsAllAir)
 					{
-						if (chunk.IsDirty) Array.Fill<byte>(chunk.SkyLight.Data, 0xff);
 						y -= 15;
 						continue;
 					}
@@ -337,7 +346,7 @@ namespace Alex.Worlds.Chunks
 				}
 			}
 
-			GetHeighest();
+			//GetHeighest();
 
 			foreach (var section in Sections)
 			{
@@ -451,29 +460,7 @@ namespace Alex.Worlds.Chunks
 			if ((bx < 0 || bx > ChunkWidth) || (by < 0 || by > ChunkHeight) || (bz < 0 || bz > ChunkDepth))
 				return false;
 
-			bool dirty = GetSection(by).SetSkylight(bx, by - 16 * (by >> 4), bz, data);
-			return dirty;
-		}
-		
-	//	public NbtCompound[] Entities { get; internal set; }
-
-		public bool HasDirtySubChunks
-		{
-			get { return Sections != null && Sections.Any(s => s != null && s.IsDirty); }
-		}
-		
-		private bool _heightDirty = true;
-		private int _heighest = 256;
-
-		public int GetHeighest()
-		{
-			if (_heightDirty)
-			{
-				_heighest = Height.Max();
-				_heightDirty = false;
-			}
-
-			return _heighest;
+			return GetSection(by).SetSkylight(bx, by - 16 * (by >> 4), bz, data);
 		}
 
 		public void ScheduleBlockUpdate(int x, int y, int z)

@@ -32,8 +32,8 @@ namespace Alex.Worlds.Multiplayer.Java
                             continue;
 
                         var block = blockstate.Block;
-                        TransparentBlocks.Set(idx, block.Transparent);
-                        SolidBlocks.Set(idx, block.Solid);
+                        //TransparentBlocks.Set(idx, block.Transparent);
+                       // SolidBlocks.Set(idx, block.Solid);
 
                         if (!(block is Air))
                         {

@@ -52,7 +52,7 @@ namespace Alex.Entities.Passive
 		/// <inheritdoc />
 		protected AbstractHorse(EntityType type, World level) : base(type, level)
 		{
-			
+			IsSaddled = false;
 		}
 
 		/// <inheritdoc />

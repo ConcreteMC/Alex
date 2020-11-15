@@ -28,9 +28,14 @@ namespace Alex.Graphics.Models.Blocks
 {
 	public class ResourcePackBlockModel : BlockModel
 	{
-		private static readonly Logger     Log = LogManager.GetCurrentClassLogger(typeof(SPWorldProvider));
-		private static          FastRandom FastRandom     { get; } = new FastRandom(1337);
-		private static          IModule3D  NoiseGenerator { get; } = new SimplexPerlin(1337);
+		private static readonly Logger        Log = LogManager.GetCurrentClassLogger(typeof(SPWorldProvider));
+		private static          FastRandom    FastRandom     { get; } = new FastRandom(1337);
+		private static          SimplexPerlin NoiseGenerator { get; } = new SimplexPerlin(1337);
+
+		static ResourcePackBlockModel()
+		{
+			
+		}
 		
 		public static           bool       SmoothLighting { get; set; } = true;
 		
@@ -558,6 +563,7 @@ namespace Alex.Graphics.Models.Blocks
 		}
 
 		private void CalculateModel(IBlockAccess world,
+			BlockCoordinates blockCoordinates,
 			ChunkData chunkBuilder,
 			Vector3 position,
 			Block baseBlock,
@@ -754,7 +760,7 @@ namespace Alex.Graphics.Models.Blocks
 						vertex.BlockLight = blockLight;
 						vertex.SkyLight = skyLight;
 
-						int vertexIndex = chunkBuilder.AddVertex(position, vertex);
+						int vertexIndex = chunkBuilder.AddVertex(blockCoordinates, vertex);
 
 						indexes[i] = vertexIndex;
 					}
@@ -787,39 +793,13 @@ namespace Alex.Graphics.Models.Blocks
 
 						if (uvMap.IsAnimated)
 						{
-							chunkBuilder.AddIndex(position, RenderStage.Animated, idxx);
-							//animatedIndexResult.Add(initialIndex + idxx);
+							chunkBuilder.AddIndex(blockCoordinates, RenderStage.Animated, idxx);
 						}
 						else
 						{
-							chunkBuilder.AddIndex(position, targetState, idxx);
-							//indexResult.Add(initialIndex + idxx);
+							chunkBuilder.AddIndex(blockCoordinates, targetState, idxx);
 						}
 					}
-
-					/*var initialIndex = verts.Count;
-
-					for (var idx = 0; idx < vertices.Length; idx++)
-					{
-						var vertex = vertices[idx];
-						vertex.Position = position + vertex.Position;
-
-						verts.Add(vertex);
-					}
-
-					for (var idx = 0; idx < indexes.Length; idx++)
-					{
-						var idxx = indexes[idx];
-
-						if (uvMap.IsAnimated)
-						{
-							animatedIndexResult.Add(initialIndex + idxx);
-						}
-						else
-						{
-							indexResult.Add(initialIndex + idxx);
-						}
-					}*/
 				}
 			}
 		}
@@ -831,7 +811,7 @@ namespace Alex.Graphics.Models.Blocks
 				biome.Temperature, biome.Downfall, y);
 		}
 		
-		protected void GetVertices(IBlockAccess world, ChunkData chunkBuilder,
+		protected void GetVertices(IBlockAccess world, ChunkData chunkBuilder, BlockCoordinates blockCoordinates,
 			Vector3 position, Block baseBlock,
 			BlockStateModel[] models)
 		{
@@ -842,7 +822,7 @@ namespace Alex.Graphics.Models.Blocks
 				{
 					BlockStateModel selectedModel = null;
 					//FastRandom.Reinitialise(position.GetHashCode());
-					var             rnd = FastRandom.Next(0, WeightSum);
+					var             rnd = MathF.Abs(NoiseGenerator.GetValue(position.X * position.Y,  position.Z * position.X)) * WeightSum;
 
 					for (var index = 0; index < models.Length; index++)
 					{
@@ -859,7 +839,7 @@ namespace Alex.Graphics.Models.Blocks
 					}
 
 					CalculateModel(
-						world, chunkBuilder, position, baseBlock, selectedModel, biome);
+						world, blockCoordinates, chunkBuilder, position, baseBlock, selectedModel, biome);
 				}
 				else
 				{
@@ -870,7 +850,7 @@ namespace Alex.Graphics.Models.Blocks
 						if (bsModel.Model == null) continue;
 
 						CalculateModel(
-							world, chunkBuilder, position, baseBlock, bsModel,
+							world, blockCoordinates, chunkBuilder, position, baseBlock, bsModel,
 							biome);
 					}
 				}
@@ -879,9 +859,9 @@ namespace Alex.Graphics.Models.Blocks
 			}
 		}
 		
-		public override void GetVertices(IBlockAccess blockAccess, ChunkData chunkBuilder, Vector3 position, Block baseBlock)
+		public override void GetVertices(IBlockAccess blockAccess, ChunkData chunkBuilder, BlockCoordinates blockCoordinates, Vector3 position, Block baseBlock)
 		{
-			GetVertices(blockAccess, chunkBuilder, position, baseBlock, Models);
+			GetVertices(blockAccess, chunkBuilder, blockCoordinates, position, baseBlock, Models);
 		}
 	}
 }

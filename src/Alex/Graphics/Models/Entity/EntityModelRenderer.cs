@@ -148,15 +148,9 @@ namespace Alex.Graphics.Models.Entity
 						Log.Warn("Cube was null!");
 						continue;
 					}
-
-					//cube.Origin = FlipX(cube.Origin, cube.Size);
-
-					var size = cube.Size;
-
-					Cube built = new Cube(cube.InflatedSize, textureSize, cube.Uv, uvScale, (float) cube.Inflate, bone.Mirror);
-					//built.Mirrored = bone.Mirror;
-					//built.BuildCube(cube.Uv, uvScale);
 					
+					Cube built = new Cube(cube.InflatedSize, textureSize, cube.Uv, uvScale, bone.Mirror);
+
 					vertices = ModifyCubeIndexes(vertices, cube, ref built.Front, bone.Mirror);
 					vertices = ModifyCubeIndexes(vertices, cube, ref built.Back, bone.Mirror);
 					vertices = ModifyCubeIndexes(vertices, cube, ref built.Top, bone.Mirror);

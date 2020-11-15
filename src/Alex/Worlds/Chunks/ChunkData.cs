@@ -62,64 +62,44 @@ namespace Alex.Worlds.Chunks
             for(int i = 0; i < Vertices.Length; i++)
                 AvailableIndices.Add(i);
 
-            Interlocked.Add(ref _totalSize, Vertices.Length - 1);
+            Interlocked.Add(ref _totalSize, Vertices.Length);
         }
-        
+
         private int GetIndex()
         {
-            int availableIndex = -1;
-
-            if (AvailableIndices.Count > 0)
+            do
             {
-               /* var first = AvailableIndices.First;
-                
-                availableIndex = first.Value.Key;
-                
-                var startIndex = first.Value.Key + 1;
-                var remaining  = first.Value.Value - 1;
-
-                if (remaining <= 0)
+                if (AvailableIndices.Count > 0)
                 {
-                    AvailableIndices.Remove(first);
+                    var availableIndex = AvailableIndices.Min;
+                    AvailableIndices.Remove(availableIndex);
+
+                    return availableIndex;
                 }
-                else
-                {
-                    first.Value = new KeyValuePair<int, int>(startIndex, remaining);
-                }*/
 
-               var first = AvailableIndices.Min;
-               AvailableIndices.Remove(first);
+                var vertices = Vertices;
 
-               availableIndex = first;
-                return availableIndex;
-            }
+                int oldSize = vertices.Length;
 
-            var vertices = Vertices;
-            
-            int oldSize  = vertices.Length;
+                if (oldSize == 0)
+                    oldSize = DefaultSize;
 
-            if (oldSize == 0)
-                oldSize = DefaultSize;
-            
-            BlockShaderVertex[] newVertices = new BlockShaderVertex[oldSize * 2];
-            Array.Copy(vertices, newVertices, vertices.Length);
-            vertices = newVertices;
-            //Array.Resize(ref vertices, NextPowerOf2(oldSize + 1));
-            int newSize = vertices.Length;
-            
-            Vertices = vertices;
-            Interlocked.Add(ref _totalSize, newSize - oldSize);
+                BlockShaderVertex[] newVertices = new BlockShaderVertex[oldSize * 2];
+                Array.Copy(vertices, newVertices, vertices.Length);
+                vertices = newVertices;
+                //Array.Resize(ref vertices, oldSize * 2);
+                int newSize = vertices.Length;
 
-            for (int i = oldSize + 1; i < newSize; i++)
-                AvailableIndices.Add(i);
-               // FreeIndex(oldSize + 1, newSize - oldSize - 1);
-                //AvailableIndices.AddLast(new KeyValuePair<int, int>(oldSize + 1, newSize - oldSize));
+                Vertices = vertices;
+                Interlocked.Add(ref _totalSize, newSize - oldSize);
 
-            HasResized = true;
-            return oldSize;
+                for (int i = oldSize; i < newSize; i++)
+                    AvailableIndices.Add(i);
+
+                HasResized = true;
+                // return ;
+            } while (true);
         }
-        
-        
 
         private LinkedList<int> _intermediateChanges = new LinkedList<int>();
 
@@ -130,19 +110,24 @@ namespace Alex.Worlds.Chunks
             
             var changes = _intermediateChanges.ToArray();    
             _intermediateChanges.Clear();
-            
-            BlockShaderVertex[] vertices = new BlockShaderVertex[changes.Length];
 
-            for (int i = 0; i < vertices.Length; i++)
-            {
-                vertices[i] = Vertices[changes[i]];
-            }
+            Buffer.SetData(changes[0] * BlockShaderVertex.VertexDeclaration.VertexStride, Vertices, changes[0], changes.Length, BlockShaderVertex.VertexDeclaration.VertexStride);
             
-            Buffer.SetData(changes[0] * BlockShaderVertex.VertexDeclaration.VertexStride, vertices, 0, vertices.Length, Buffer.VertexDeclaration.VertexStride);
+            foreach (var stage in RenderStages.Values.ToArray())
+            {
+                stage.Apply();
+            }
         }
 
         private void FreeIndex(int index, int count = 1)
         {
+            Set(index, BlockShaderVertex.Default);
+            AvailableIndices.Add(index);
+
+           // foreach (var stage in RenderStages)
+              //  stage.Value.Remove(index);
+
+            return;
           /*  var first = AvailableIndices.First;
 
             bool added = false;
@@ -171,16 +156,21 @@ namespace Alex.Worlds.Chunks
             {
                 AvailableIndices.AddLast(new KeyValuePair<int, int>(index, count - 1));
             }*/
-          for(int i = 0; i < count; i++)
-            AvailableIndices.Add(index + i);
         }
-        
+
         private void Set(int index, BlockShaderVertex vertex)
         {
             Vertices[index] = vertex;
 
+            return;
             if (Buffer != null && index < Buffer.VertexCount)
             {
+                if (_intermediateChanges.Count == 0)
+                {
+                    _intermediateChanges.AddFirst(index);
+                    return;
+                }
+
                 var v = _intermediateChanges.First;
                 while (v?.Next != null)
                 {
@@ -196,13 +186,12 @@ namespace Alex.Worlds.Chunks
 
                         return;
                     }
-                    else
-                    {
-                        v = v.Next;
-                    }
+                    
+                    v = v.Next;
                 }
 
                 ApplyIntermediate();
+                _intermediateChanges.AddFirst(index);
             }
         }
         
@@ -214,8 +203,17 @@ namespace Alex.Worlds.Chunks
             int index = GetIndex();
             
             Set(index, vertex);
-            BlockIndices.GetOrAdd(blockCoordinates, coordinates => new List<int>()).Add(index);
 
+            BlockIndices.AddOrUpdate(
+                blockCoordinates, coordinates => new List<int>() {index}, (coordinates, ints) =>
+                {
+                    ints.Add(index);
+
+                    return ints;
+                });
+            //var indices = BlockIndices.GetOrAdd(blockCoordinates, coordinates => new List<int>());//.Add(index);
+            //indices.Add(index);
+            
             HasChanges = true;
 
             return index;
@@ -223,30 +221,31 @@ namespace Alex.Worlds.Chunks
 
         public void AddIndex(BlockCoordinates blockCoordinates, RenderStage stage, int index)
         {
-            var rStage = RenderStages.GetOrAdd(stage, renderStage => new ChunkRenderStage(this, Vertices.Length / 3));
+            var rStage = RenderStages.GetOrAdd(stage, CreateRenderStage);
             rStage.Add(blockCoordinates, index);
 
             HasChanges = true;
+        }
+
+        private ChunkRenderStage CreateRenderStage(RenderStage arg)
+        {
+            return new ChunkRenderStage(Vertices.Length / 3);
         }
 
         public void Remove(GraphicsDevice device, BlockCoordinates blockCoordinates)
         {
             if (BlockIndices.TryRemove(blockCoordinates, out var indices))
             {
-                foreach (var index in indices.OrderBy(x => x))
+                foreach (var index in indices)
                 {
-                    //Vertices[index] = BlockShaderVertex.Default;
-                    Set(index, BlockShaderVertex.Default);
                     FreeIndex(index);
-                    // AvailableIndices.Add(index);
                 }
 
-                ApplyIntermediate();
+               // ApplyIntermediate();
                 
                 foreach (var stage in RenderStages.Values.ToArray())
                 {
                     stage.Remove(blockCoordinates);
-                       // stage.Apply(device);
                 }
 
                 HasChanges = true;
@@ -259,22 +258,24 @@ namespace Alex.Worlds.Chunks
                 return;
 
             ApplyIntermediate();
+
+            var                vertices    = Vertices;
             
             bool               callSetData = HasResized;
             PooledVertexBuffer oldBuffer   = null;
             PooledVertexBuffer buffer      = Buffer;
-            if (buffer == null || buffer.VertexCount < Vertices.Length)
+            if (buffer == null || buffer.VertexCount < vertices.Length)
             {
                 oldBuffer = buffer;
 
                 buffer = GpuResourceManager.GetBuffer(
-                    this, device, BlockShaderVertex.VertexDeclaration, Vertices.Length, BufferUsage.WriteOnly);
+                    this, device, BlockShaderVertex.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
 
                 callSetData = true;
             }
-            
-            if (callSetData)
-                buffer.SetData(Vertices);
+
+          //  if (callSetData)
+                buffer.SetData(vertices, 0, vertices.Length);
             
             foreach (var renderstage in RenderStages)
             {
@@ -317,17 +318,15 @@ namespace Alex.Worlds.Chunks
 
     public class ChunkRenderStage : IDisposable
     {
-        private ChunkData Parent { get; }
-        public PooledIndexBuffer IndexBuffer { get; set; }
-        
-        //public  int[]                                             Indices      { get; }
+        private  PooledIndexBuffer                                 IndexBuffer  { get; set; }
         private ConcurrentDictionary<BlockCoordinates, List<int>> BlockIndices { get; set; }
-        
+
         private bool _requiresUpdate = false;
-        public ChunkRenderStage(ChunkData parent, int size)
+        private int  _elementCount   = 0;
+        
+        private object _writeLock = new object();
+        public ChunkRenderStage(int size)
         {
-            Parent = parent;
-           // Indices = new int[size];
             BlockIndices = new ConcurrentDictionary<BlockCoordinates, List<int>>();
         }
 
@@ -344,68 +343,90 @@ namespace Alex.Worlds.Chunks
         
         public void Add(BlockCoordinates coordinates, int value)
         {
-            BlockIndices.GetOrAdd(coordinates, blockCoordinates => new List<int>()).Add(value);
+            lock (_writeLock)
+            {
+                BlockIndices.AddOrUpdate(
+                    coordinates, blockCoordinates => new List<int>() {value}, (blockCoordinates, ints) =>
+                    {
+                        ints.Add(value);
 
-            _requiresUpdate = true;
+                        return ints;
+                    });
+
+                // Interlocked.Increment(ref _elementCount);
+
+                _requiresUpdate = true;
+            }
         }
 
         public bool Remove(BlockCoordinates coordinates)
         {
-            if (BlockIndices.TryRemove(coordinates, out var _))
+            lock (_writeLock)
             {
-                _requiresUpdate = true;
+                if (BlockIndices.TryRemove(coordinates, out var indexes))
+                {
+                    //   Interlocked.Add(ref _elementCount, -indexes.Count);
+                    _requiresUpdate = true;
 
-                return true;
+                    return true;
+                }
+
+                return false;
             }
-
-            return false;
         }
-        
-        public void Apply(GraphicsDevice device)
+
+        public void Apply(GraphicsDevice device = null)
         {
-            if (!_requiresUpdate)
-                return;
-
-            PooledIndexBuffer oldBuffer = null;
-            PooledIndexBuffer buffer    = IndexBuffer;
-            try
+            lock (_writeLock)
             {
-                List<int>         newIndices = new List<int>();
+                if (!_requiresUpdate)
+                    return;
 
-                foreach (var bl in BlockIndices)
+                if (device == null)
+                    device = IndexBuffer.GraphicsDevice;
+
+                PooledIndexBuffer oldBuffer = null;
+                PooledIndexBuffer buffer    = IndexBuffer;
+
+                try
                 {
-                    newIndices.AddRange(bl.Value);
-                }
+                    var newIndices = new List<int>(BlockIndices.Sum(x => x.Value.Count));
 
-                if (buffer == null || buffer.IndexCount < newIndices.Count)
+                    foreach (var bl in BlockIndices)
+                    {
+                        newIndices.AddRange(bl.Value);
+                    }
+
+                    if (buffer == null || buffer.IndexCount < newIndices.Count)
+                    {
+                        oldBuffer = buffer;
+
+                        buffer = GpuResourceManager.GetIndexBuffer(
+                            this, device, IndexElementSize.ThirtyTwoBits, newIndices.Count, BufferUsage.WriteOnly);
+                    }
+                    
+                    buffer.SetData<int>(newIndices.ToArray(), 0, newIndices.Count);
+                    _elementCount = newIndices.Count;
+                }
+                finally
                 {
-                    oldBuffer = buffer;
+                    IndexBuffer = buffer;
+                    oldBuffer?.MarkForDisposal();
 
-                    buffer = GpuResourceManager.GetIndexBuffer(
-                        this, device, IndexElementSize.ThirtyTwoBits, newIndices.Count, BufferUsage.WriteOnly);
+                    _requiresUpdate = false;
                 }
-
-                buffer.SetData<int>(newIndices.ToArray());
-            }
-            finally
-            {
-                IndexBuffer = buffer;
-                oldBuffer?.MarkForDisposal();
-                
-                _requiresUpdate = false;
             }
         }
         
         public virtual int Render(GraphicsDevice device, Effect effect)
         {
-            if (IndexBuffer == null || Parent.Buffer == null) return 0;
-            device.SetVertexBuffer(Parent.Buffer);
+            if (IndexBuffer == null || _elementCount == 0) return 0;
             device.Indices = IndexBuffer;
 
             foreach (var pass in effect.CurrentTechnique.Passes)
             {
                 pass.Apply();
-                device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, IndexBuffer.IndexCount / 3);
+                device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, _elementCount / 3);
             }
 
             return IndexBuffer.IndexCount;
@@ -414,7 +435,7 @@ namespace Alex.Worlds.Chunks
         public void Dispose()
         {
             IndexBuffer?.MarkForDisposal();
-            //Buffer?.MarkForDisposal();
+            BlockIndices.Clear();
         }
     }
 }
