@@ -242,7 +242,7 @@ namespace Alex.Worlds
 
         public void ToggleWireFrame()
         {
-	       // ChunkManager.UseWireFrames = !ChunkManager.UseWireFrames;
+	        ChunkManager.UseWireFrames = !ChunkManager.UseWireFrames;
         }
         
         public void Render(IRenderArgs args)
@@ -262,7 +262,7 @@ namespace Alex.Worlds
 	            RenderStage.Transparent,
 	            RenderStage.Translucent,
 	            RenderStage.Animated,
-	            RenderStage.AnimatedTranslucent,
+	        //    RenderStage.AnimatedTranslucent,
 	            RenderStage.Liquid);
 
 	        Player.Render(args);

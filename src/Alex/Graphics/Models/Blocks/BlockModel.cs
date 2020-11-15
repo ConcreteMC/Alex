@@ -30,7 +30,7 @@ namespace Alex.Graphics.Models.Blocks
 		    return new BoundingBox(position, position + Vector3.One);
 	    }
 	    
-	    protected BlockShaderVertex[] GetFaceVertices(BlockFace blockFace, Vector3 startPosition, Vector3 endPosition, BlockTextureData uvmap, out int[] indexes)
+	    protected BlockShaderVertex[] GetFaceVertices(BlockFace blockFace, Vector3 startPosition, Vector3 endPosition, BlockTextureData uvmap)
 		{
 			Color faceColor = Color.White;
 			Vector3 normal = Vector3.Zero;
@@ -112,58 +112,45 @@ namespace Alex.Graphics.Models.Blocks
 			switch (blockFace)
 			{
 				case BlockFace.Up:
-					indexes = new int[]
+					return new BlockShaderVertex[]
 					{
-						2, 0, 1,
-						3, 2, 1
+						bottomLeft, topLeft, topRight,
+						bottomRight, bottomLeft, topRight
 					};
-					break;
 				case BlockFace.Down:
-					indexes = new[]
+					return new BlockShaderVertex[]
 					{
-						0, 2, 1,
-						2, 3, 1
+						topLeft, bottomLeft, topRight,
+						bottomLeft, bottomRight, topRight
 					};
-					break;
 				case BlockFace.South:
-					indexes = new[]
+					return new BlockShaderVertex[]
 					{
-						0, 2, 1,
-						2, 3, 1
+						topLeft, bottomLeft, topRight,
+						bottomLeft, bottomRight, topRight
 					};
-					break;
 				case BlockFace.East:
-					indexes = new[]
+					return new BlockShaderVertex[]
 					{
-						2, 0, 1,
-						3, 2, 1
+						bottomLeft, topLeft, topRight,
+						bottomRight, bottomLeft, topRight
 					};
-					break;
 				case BlockFace.North:
-					indexes = new[]
+					return new BlockShaderVertex[]
 					{
-						2, 0, 1,
-						3, 2, 1
+						bottomLeft, topLeft, topRight,
+						bottomRight, bottomLeft, topRight
 					};
-					break;
 				case BlockFace.West:
-					indexes = new[]
+					return new BlockShaderVertex[]
 					{
-						0, 2, 1,
-						2, 3, 1
+						topLeft, bottomLeft, topRight,
+						bottomLeft, bottomRight, topRight
 					};
 					break;
 				default:
-					indexes = new int[0];
-					break;
+					return new BlockShaderVertex[0];
 			}
-			
-			return new[]
-			{
-				topLeft, topRight, bottomLeft, bottomRight
-			};
-
-			return new BlockShaderVertex[0];
 		}
 
 		public static void GetLight(IBlockAccess world, Vector3 facePosition, out byte blockLight, out byte skyLight, bool smooth = false)

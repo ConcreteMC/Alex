@@ -109,15 +109,7 @@ namespace Alex.Graphics.Models.Blocks
 
 		public override void GetVertices(IBlockAccess blockAccess, ChunkData chunkBuilder, BlockCoordinates blockCoordinates, Vector3 vectorPos, Block baseBlock)
 		{
-			//int myLevel = 
-			//var chunk = world.GetChunk(vectorPos);
-			//Level = GetLevel(baseBlock.BlockState);
-			
-			var                      position    = new BlockCoordinates(vectorPos);
-			//var                      biome   = world.GetBiome(position);
-			List< BlockShaderVertex> result      = new List<BlockShaderVertex>(36);
-			var                      indexResult = new List<int>();
-			
+			var position = new BlockCoordinates(vectorPos);
 			var blocksUp = blockAccess.GetBlockStates(position.X, position.Y + 1, position.Z).ToArray();//.GetType();
 			
 			bool aboveIsLiquid =
@@ -126,7 +118,6 @@ namespace Alex.Graphics.Models.Blocks
 					&& blocksUp.Any(x => x.State.Block.Renderable && x.State.Block.BlockMaterial == Material.Lava));
 
 			List<BlockFace> renderedFaces = new List<BlockFace>();
-			//List<BlockFace> liquidFaces = new List<BlockFace>();
 			foreach (var face in Faces)
 			{
 				var pos = position + face.GetBlockCoordinates();
@@ -289,7 +280,7 @@ namespace Alex.Graphics.Models.Blocks
 					faceMap = originalMap;
 				}
 
-				var   vertices  = GetFaceVertices(face, start, end, faceMap, out int[] indexes);
+				var   vertices  = GetFaceVertices(face, start, end, faceMap);
 				Color vertColor = Color.White;
 				
 				var   bx        = position.X;
@@ -363,22 +354,7 @@ namespace Alex.Graphics.Models.Blocks
 					vert.TexCoords += map.TextureInfo.Position;
 					vert.TexCoords *= (Vector2.One / map.TextureInfo.AtlasSize);
 
-					result.Add(vert);
-				}
-				
-				for (int i = 0; i < indexes.Length; i++)
-				{
-					var vertex      = result[indexes[i]];
-
-					int vertexIndex = chunkBuilder.AddVertex(blockCoordinates, vertex);
-
-					indexes[i] = vertexIndex;
-				}
-
-				for (var idx = 0; idx < indexes.Length; idx++)
-				{
-					var idxx = indexes[idx];
-					chunkBuilder.AddIndex(blockCoordinates, RenderStage.Animated, idxx);
+					chunkBuilder.AddVertex(blockCoordinates, vert, RenderStage.Liquid);
 				}
 			}
 

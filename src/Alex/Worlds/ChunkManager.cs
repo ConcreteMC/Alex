@@ -186,8 +186,8 @@ namespace Alex.Worlds
 				if (chunk.Value.ChunkData == null)
 					continue;
 				
-				if (!chunk.Value.ChunkData.Ready)
-					continue;
+				//if (!chunk.Value.ChunkData.Ready)
+				//	continue;
 				
 				if (IsWithinView(chunk.Key, World.Camera.BoundingFrustum, World.Camera.Position.Y))
 				{
@@ -485,6 +485,8 @@ namespace Alex.Worlds
 
 		#region  Drawing
 
+		public bool UseWireFrames { get; set; } = false;
+
 		private static readonly SamplerState RenderSampler = new SamplerState()
 		{
 			Filter = TextureFilter.PointMipLinear	,
@@ -544,7 +546,7 @@ namespace Alex.Worlds
 			RasterizerState originalState = device.RasterizerState;
 			args.GraphicsDevice.RasterizerState = RasterizerState;
 
-			/*bool usingWireFrames = UseWireFrames;
+			bool usingWireFrames = UseWireFrames;
 
 			if (usingWireFrames)
 			{
@@ -552,7 +554,7 @@ namespace Alex.Worlds
 				RasterizerState rasterizerState = originalState.Copy();
 				rasterizerState.FillMode = FillMode.WireFrame;
 				device.RasterizerState = rasterizerState;
-			}*/
+			}
 
 			device.DepthStencilState = DepthStencilState;
 			device.BlendState = BlendState.AlphaBlend;
@@ -619,7 +621,7 @@ namespace Alex.Worlds
 							effect = shaders.AnimatedEffect;
 							break;
 						case RenderStage.Liquid:
-						case RenderStage.AnimatedTranslucent:
+					//	case RenderStage.AnimatedTranslucent:
 							effect = shaders.AnimatedEffect;
 						    
 							break;
@@ -651,7 +653,7 @@ namespace Alex.Worlds
 				//chunk.Draw
 				if (chunk.RenderStages.TryGetValue(stage, out var renderStage))
 				{ 
-					device.SetVertexBuffer(chunk.Buffer);
+					//device.SetVertexBuffer(chunk.Buffer);
 					verticeCount += renderStage.Render(device, effect);
 				}
 			}

@@ -11,7 +11,7 @@ namespace Alex.API
         Transparent = 64,
         Translucent = 256,
         Animated = 1024,
-        AnimatedTranslucent = 4096,
+        //AnimatedTranslucent = 4096,
         Liquid = 8192
     }
 

@@ -38,13 +38,17 @@ namespace Alex.Graphics.Models.Items
             Vertices = chunkData.Vertices;
             List<short> indexes = new List<short>();
 
-            foreach (var renderStage in chunkData.RenderStages)
+            for (int i = 0; i < Vertices.Length; i++)
+            {
+                indexes.Add((short) i);
+            }
+           /* foreach (var renderStage in chunkData.RenderStages)
             {
                 foreach (var index in renderStage.Value.GetIndexes())
                 {
                     indexes.Add((short) index);
                 }
-            }
+            }*/
 
             Indexes = indexes.ToArray();
 

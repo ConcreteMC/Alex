@@ -28,7 +28,6 @@ namespace Alex.Graphics.Models.Blocks
 	public class ResourcePackBlockModel : BlockModel
 	{
 		private static readonly Logger        Log = LogManager.GetCurrentClassLogger(typeof(SPWorldProvider));
-		private static          FastRandom    FastRandom     { get; } = new FastRandom(1337);
 		private static          SimplexPerlin NoiseGenerator { get; } = new SimplexPerlin(1337);
 
 		static ResourcePackBlockModel()
@@ -201,9 +200,6 @@ namespace Alex.Graphics.Models.Blocks
 			if (cZ < 0 || cZ > 16)
 				return false;
 			
-			//if (!world.HasBlock(pos.X, pos.Y, pos.Z)) 
-			//	return false;
-
 			var theBlock = world.GetBlockState(pos).Block;
 
 			if (!theBlock.Renderable)
@@ -217,7 +213,7 @@ namespace Alex.Graphics.Models.Blocks
 			for (var index = 0; index < models.Length; index++)
 			{
 				var model = models[index];
-				ProcessModel(model, model.Model, out Vector3 min, out Vector3 max);
+				GenerateBoundingBoxes(model, model.Model, out Vector3 min, out Vector3 max);
 
 				if (max.X > Max.X)
 					Max.X = max.X;
@@ -240,7 +236,7 @@ namespace Alex.Graphics.Models.Blocks
 		}
 
 		
-		private void ProcessModel(BlockStateModel stateModel, ResourcePackLib.Json.Models.ResourcePackModelBase model, out Vector3 min, out Vector3 max)
+		private void GenerateBoundingBoxes(BlockStateModel stateModel, ResourcePackLib.Json.Models.ResourcePackModelBase model, out Vector3 min, out Vector3 max)
 		{
 			float facesMinX = float.MaxValue, facesMinY = float.MaxValue, facesMinZ = float.MaxValue;
 			float facesMaxX = float.MinValue, facesMaxY = float.MinValue, facesMaxZ = float.MinValue;
@@ -276,7 +272,7 @@ namespace Alex.Graphics.Models.Blocks
 						facing = RotateDirection(facing, offset, FACE_ROTATION, INVALID_FACE_ROTATION);
 					}
 					
-					var verts = GetFaceVertices(face.Key, element.From, element.To, new BlockTextureData(), out _);
+					var verts = GetFaceVertices(face.Key, element.From, element.To, new BlockTextureData());
 					verts = ProcessVertices(verts, stateModel, element, null, facing, face.Value);
 					
 					float minX = float.MaxValue, minY = float.MaxValue, minZ = float.MaxValue;
@@ -344,10 +340,6 @@ namespace Alex.Graphics.Models.Blocks
 
 						verts[i] = v;
 					}
-
-				/*	FixElementScale(
-						element, verts, minX, maxX, minY, maxY, minZ, maxZ, ref facesMinX, ref facesMaxX, ref facesMinY,
-						ref facesMaxY, ref facesMinZ, ref facesMaxZ);*/
 
 					if (minX < facesMinX)
 					{
@@ -465,7 +457,12 @@ namespace Alex.Graphics.Models.Blocks
 			return v;
 		}
 
-		private BlockShaderVertex[] ProcessVertices(BlockShaderVertex[] vertices, BlockStateModel bsModel, ModelElement element, BlockTextureData? uvMap, BlockFace blockFace, ModelElementFace face)
+		private BlockShaderVertex[] ProcessVertices(BlockShaderVertex[] vertices, 
+			BlockStateModel bsModel,
+			ModelElement element, 
+			BlockTextureData? uvMap, 
+			BlockFace blockFace, 
+			ModelElementFace face)
 		{
 			for (int i = 0; i < vertices.Length; i++)
 			{
@@ -504,12 +501,7 @@ namespace Alex.Graphics.Models.Blocks
 					var th = uvMap.Value.TextureInfo.Height;
 
 					var rot = face.Rotation;
-					
-					/*if (blockFace == BlockFace.West || blockFace == BlockFace.Up)
-								rot += 180;
 
-					rot %= 360;*/
-					
 					if (rot > 0)
 					{
 						var rotY = rot * (MathHelper.Pi / 180f);
@@ -548,8 +540,7 @@ namespace Alex.Graphics.Models.Blocks
 							v.TexCoords.Y = 8f * th + (y * c + x * s);
 						}
 					}
-
-
+					
 					v.TexCoords += uvMap.Value.TextureInfo.Position;
 					v.TexCoords *= (Vector2.One / uvMap.Value.TextureInfo.AtlasSize);
 				}
@@ -566,10 +557,7 @@ namespace Alex.Graphics.Models.Blocks
 			ChunkData chunkBuilder,
 			Vector3 position,
 			Block baseBlock,
-			BlockStateModel bsModel, /*
-			IList<BlockShaderVertex> verts,
-			List<int> indexResult,
-			List<int> animatedIndexResult,*/
+			BlockStateModel bsModel,
 			Biome biome)
 		{
 			//bsModel.Y = Math.Abs(180 - bsModel.Y);
@@ -703,72 +691,24 @@ namespace Alex.Graphics.Models.Blocks
 						}
 					}
 
-					/*switch (face.Key)
-					{
-						case BlockFace.Down:
-							faceColor = Color.Purple;
-							break;
-
-						case BlockFace.Up:
-							faceColor = Color.White;
-							break;
-
-						case BlockFace.East:
-							faceColor = Color.Orange;
-							break;
-
-						case BlockFace.West: //Correct
-							faceColor = Color.Green;
-							break;
-
-						case BlockFace.North: //Correct
-							faceColor = Color.Red;
-							break;
-
-						case BlockFace.South:
-							faceColor = Color.Yellow;
-							break;
-
-						case BlockFace.None:
-							break;
-					}*/
 					faceColor = AdjustColor(faceColor, facing, element.Shade);
 
 					var uvMap = GetTextureUVMap(
 						Resources, face.Value.Texture, x1, x2, y1, y2, face.Value.Rotation, faceColor);
-
-					var vertices = GetFaceVertices(face.Key, element.From, element.To, uvMap, out int[] indexes);
+					
+					var vertices = GetFaceVertices(face.Key, element.From, element.To, uvMap);
 
 					vertices = ProcessVertices(vertices, bsModel, element, uvMap, facing, face.Value);
-
-					for (int i = 0; i < indexes.Length; i++)
-					{
-						var vertex = vertices[indexes[i]];
-						vertex.Position += position;
-
-						//var pos = vertex.Position + vertex.Face.GetVector3();
-
-						BlockModel.GetLight(
-							world, vertex.Position + vertex.Face.GetVector3(), 
-							out var blockLight,
-							out var skyLight,
-							true);
-
-						vertex.Position += positionOffset;
-						
-						vertex.BlockLight = blockLight;
-						vertex.SkyLight = skyLight;
-
-						int vertexIndex = chunkBuilder.AddVertex(blockCoordinates, vertex);
-
-						indexes[i] = vertexIndex;
-					}
 
 					RenderStage targetState = RenderStage.OpaqueFullCube;
 
 					if (baseBlock.BlockMaterial.IsLiquid)
 					{
 						targetState = RenderStage.Liquid;
+					}
+					else if (uvMap.IsAnimated)
+					{
+						targetState = RenderStage.Animated;
 					}
 					else if (baseBlock.Transparent)
 					{
@@ -785,19 +725,24 @@ namespace Alex.Graphics.Models.Blocks
 					{
 						targetState = RenderStage.Opaque;
 					}
-
-					for (var idx = 0; idx < indexes.Length; idx++)
+					
+					for (int i = 0; i < vertices.Length; i++)
 					{
-						var idxx = indexes[idx];
+						var vertex = vertices[i];
+						vertex.Position += position;
+						
+						BlockModel.GetLight(
+							world, vertex.Position + vertex.Face.GetVector3(), 
+							out var blockLight,
+							out var skyLight,
+							true);
 
-						if (uvMap.IsAnimated)
-						{
-							chunkBuilder.AddIndex(blockCoordinates, RenderStage.Animated, idxx);
-						}
-						else
-						{
-							chunkBuilder.AddIndex(blockCoordinates, targetState, idxx);
-						}
+						vertex.Position += positionOffset;
+						
+						vertex.BlockLight = blockLight;
+						vertex.SkyLight = skyLight;
+
+						chunkBuilder.AddVertex(blockCoordinates, vertex, targetState);
 					}
 				}
 			}
@@ -820,14 +765,12 @@ namespace Alex.Graphics.Models.Blocks
 				if (UseRandomizer)
 				{
 					BlockStateModel selectedModel = null;
-					//FastRandom.Reinitialise(position.GetHashCode());
 					var             rnd = MathF.Abs(NoiseGenerator.GetValue(position.X * position.Y,  position.Z * position.X)) * WeightSum;
 
 					for (var index = 0; index < models.Length; index++)
 					{
 						var    model  = models[index];
 						rnd -= model.Weight;
-						//double weight = (double) model.Weight / (double) WeightSum;
 
 						if (rnd < 0)
 						{
@@ -853,8 +796,6 @@ namespace Alex.Graphics.Models.Blocks
 							biome);
 					}
 				}
-
-				//return new VerticesResult(verts.ToArray(), indexResult.ToArray(), animatedIndexResult.Count > 0 ? animatedIndexResult.ToArray() : null);
 			}
 		}
 		
