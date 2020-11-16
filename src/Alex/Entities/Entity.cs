@@ -409,7 +409,7 @@ namespace Alex.Entities
 				            renderer.DisplayPosition = pos;
 			            }
 
-			            if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
+			           // if (ModelRenderer.GetBone("rightItem", out EntityModelRenderer.ModelBone bone))
 			            {
 				            //bone.AddChild(renderer);
 			            }

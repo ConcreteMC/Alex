@@ -26,8 +26,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
     public class ChunkProcessor : IDisposable
     {
 	    private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(ChunkProcessor));
-		public static ChunkProcessor Instance { get; set; }
-	    //private static readonly IReadOnlyDictionary<int, int> PeToJava
 	    static ChunkProcessor()
 	    {
 		    
@@ -35,30 +33,23 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	    
 	    private bool UseAlexChunks { get; }
 
-	    public IReadOnlyDictionary<uint, BlockStateContainer> _blockStateMap { get; set; } =
+	    public IReadOnlyDictionary<uint, BlockStateContainer> BlockStateMap { get; set; } =
 		    new Dictionary<uint, BlockStateContainer>();
 	    
-	    private ConcurrentDictionary<uint, BlockState> _convertedStates = new ConcurrentDictionary<uint, BlockState>();
+	    private readonly ConcurrentDictionary<uint, BlockState> _convertedStates = new ConcurrentDictionary<uint, BlockState>();
 	    
-	    //private Thread[] Threads { get; set; }
-	    private CancellationToken CancellationToken { get; }
-	    //private DedicatedThreadPool ThreadPool { get; }
-	    public bool ClientSideLighting { get; set; } = true;
+	    private CancellationToken CancellationToken  { get; }
+	    public  bool              ClientSideLighting { get; set; } = true;
 
 	    private BedrockClient Client { get; }
 	    private BlobCache     Cache  { get; }
         public ChunkProcessor(BedrockClient client, bool useAlexChunks, CancellationToken cancellationToken, BlobCache blobCache)
         {
 	        Client = client;
-	        Instance = this;
-	       // ThreadPool = threadPool;
 	        UseAlexChunks = useAlexChunks;
 	        CancellationToken = cancellationToken;
-	        Queue = new ConcurrentQueue<Action>();
 	        Cache = blobCache;
         }
-
-        private ConcurrentQueue<Action> Queue { get; }
 
         public void HandleChunkData(bool cacheEnabled,
 	        uint subChunkCount,
@@ -67,20 +58,26 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        int cz,
 	        Action<ChunkColumn> callback)
         {
+	        if (CancellationToken.IsCancellationRequested)
+		        return;
+	        
 	        ThreadPool.QueueUserWorkItem(
 		        (o) =>
 		        {
+			        if (CancellationToken.IsCancellationRequested)
+				        return;
+			        
 			        HandleChunk(cacheEnabled, subChunkCount, chunkData, cx, cz, callback);
 		        });
         }
 
         private List<string> Failed { get; set; } = new List<string>();
-        public BlockState GetBlockState(uint palleteId)
+        public BlockState GetBlockState(uint p)
         {
-	        return _convertedStates.GetOrAdd(palleteId,
-		        u =>
+	        return _convertedStates.GetOrAdd(p,
+		        (u, palleteId) =>
 		        {
-			        if (_blockStateMap.TryGetValue(palleteId, out var bs))
+			        if (BlockStateMap.TryGetValue(palleteId, out var bs))
 			        {
 				        if (TryConvertBlockState(bs, out var convertedState))
 				        {
@@ -105,7 +102,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			        }
 
 			        return null;
-		        });
+		        }, p);
         }
 
         private void HandleChunkCachePacket(uint subChunkCount,
@@ -441,6 +438,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			        if (stream.Position >= stream.Length - 1)
 			        {
+				        chunkColumn.CalculateHeight();
 				        callback?.Invoke(chunkColumn);
 				        return;
 			        }
@@ -561,7 +559,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				       // chunkColumn.BlockLightDirty = false;
 			        }
 			        
-			        chunkColumn.CalculateHeight(!gotLight && ClientSideLighting);
+			        chunkColumn.CalculateHeight();
 			        
 			        //Done processing this chunk, send to world
 			        callback?.Invoke(chunkColumn);
@@ -624,8 +622,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        
 	        return sb.ToString();
         }
-        
-        public bool TryConvertBlockState(BlockStateContainer record, out BlockState result)
+
+        private bool TryConvertBlockState(BlockStateContainer record, out BlockState result)
         {
 	        if (_convertedStates.TryGetValue((uint) record.RuntimeId, out var alreadyConverted))
 	        {

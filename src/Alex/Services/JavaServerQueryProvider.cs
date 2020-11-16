@@ -70,7 +70,7 @@ namespace Alex.Services
 			try
 			{
 				bool            waitingOnPing = true;
-				await client.ConnectAsync(connectionDetails.EndPoint.Address, connectionDetails.EndPoint.Port, cts.Token);
+				await client.ConnectAsync(connectionDetails.EndPoint.Address, connectionDetails.EndPoint.Port);
 				endPoint = client.Client.RemoteEndPoint as IPEndPoint;
 
 				if (client.Connected)

@@ -30,9 +30,28 @@ namespace Alex.Gamestates.Login
 		private          IPlayerProfileService        _playerProfileService;
         protected        GuiButton                    LoginButton;
 		private          Action<PlayerProfile>        Ready             { get; }
-		private MsaDeviceAuthConnectResponse ConnectResponse { get; set; } = null;
-		private          CancellationTokenSource      CancellationToken { get; } = new CancellationTokenSource();
-		private          bool                         CanUseClipboard   { get; }
+
+		private MsaDeviceAuthConnectResponse _connectResponse;
+
+		private MsaDeviceAuthConnectResponse ConnectResponse
+		{
+			get
+			{
+				return _connectResponse;
+			}
+			set
+			{
+				_connectResponse = value;
+
+				if (_authCodeElement != null)
+				{
+					ShowCode();
+					InvalidateLayout();
+				}
+			}
+		}
+		private CancellationTokenSource      CancellationToken { get; }      = new CancellationTokenSource();
+		private bool                         CanUseClipboard   { get; }
 
 		private GuiTextElement _authCodeElement;
         public BedrockLoginState(GuiPanoramaSkyBox skyBox, Action<PlayerProfile> readyAction, XboxAuthService xboxAuthService)
@@ -54,15 +73,6 @@ namespace Alex.Gamestates.Login
             
             CanUseClipboard = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
             
-            AuthenticationService.StartDeviceAuthConnect().ContinueWith(
-	            async r =>
-	            {
-		            ConnectResponse = await r;
-
-		            LoginButton.Enabled = true;
-		            ShowCode();
-	            });
-			
             Initialize();
         }
 
@@ -102,7 +112,7 @@ namespace Alex.Gamestates.Login
             Body.ChildAnchor = Alignment.MiddleCenter;
             
 			Body.AddChild(_authCodeElement);
-			ShowCode();
+			//ShowCode();
 
 			if (CanUseClipboard)
 			{
@@ -133,6 +143,21 @@ namespace Alex.Gamestates.Login
             buttonRow.ChildAnchor = Alignment.MiddleCenter;
         }
 
+        /// <inheritdoc />
+        protected override void OnShow()
+        {
+	        base.OnShow();
+	        
+	        AuthenticationService.StartDeviceAuthConnect().ContinueWith(
+		        async r =>
+		        {
+			        ConnectResponse = await r;
+
+			        LoginButton.Enabled = true;
+			        ShowCode();
+		        });
+        }
+
         private void ShowCode()
         {
 	        if (ConnectResponse != null)
@@ -140,7 +165,7 @@ namespace Alex.Gamestates.Login
 		        _authCodeElement.TextColor = TextColor.Cyan;
 		        _authCodeElement.FontStyle = FontStyle.Bold;
 		        _authCodeElement.Scale = 2f;
-		        _authCodeElement.Text = ConnectResponse.user_code ;
+		        _authCodeElement.Text = ConnectResponse.user_code;
 	        }
         }
         

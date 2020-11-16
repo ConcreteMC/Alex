@@ -213,6 +213,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         
         public Packet OnSendCustomPacket(Packet message)
         {
+	     //   Log.Info($"Sent: {message}");
             return message;
         }
 
@@ -222,6 +223,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
             try
             {
+	         //   Log.Info($"Got: {message}");
                 _messageDispatcher.HandlePacket(message);
             }
             catch (Exception ex)

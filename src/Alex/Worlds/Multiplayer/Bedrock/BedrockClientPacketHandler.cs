@@ -108,26 +108,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 	        IDictionary<string, dynamic> headers = JWT.Headers(token);
 	        string x5u = headers["x5u"].TrimEnd('=');
-			
-	       // ECPublicKeyParameters remotePublicKey = (ECPublicKeyParameters) PublicKeyFactory.CreateKey(x5u.DecodeBase64Url());
-
-	       /* var signParam = new ECParameters
-	        {
-		        Curve = ECCurve.NamedCurves.nistP384,
-		        Q =
-		        {
-			        X = remotePublicKey.Q.AffineXCoord.GetEncoded(),
-			        Y = remotePublicKey.Q.AffineYCoord.GetEncoded()
-		        },
-	        };
-	        signParam.Validate();
-
-	        var signKey = ECDsa.Create(signParam);*/
 
 	        try
 	        {
-		        //var data = JWT.Decode<HandshakeData>(token, signKey);
-				var data = JWT.Payload<HandshakeData>(token);
+		        var data = JWT.Payload<HandshakeData>(token);
 		        Client.InitiateEncryption(Base64Url.Decode(x5u), Base64Url.Decode(data.salt.TrimEnd('=')));
 	        }
 	        catch (Exception e)
@@ -157,11 +141,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				Client.HasSpawned = true;
 
 				Client.PlayerStatusChanged.Set();
-
-				//if (Client is Bedrockcl miNetClient)
-				//{
-					//miNetClient.IsEmulator = false;
-				//}
 
 				Client.World.Player.EntityId = Client.EntityId;
 				
@@ -200,7 +179,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        
 	      //  Log.Info($"Got ResourcePackDataInfo: {message}");
 	        McpeResourcePackClientResponse response = new McpeResourcePackClientResponse();
-	        response.responseStatus = 3;
+	        response.responseStatus = (byte) McpeResourcePackClientResponse.ResponseStatus.SendPacks;
 	        Client.SendPacket(response);
         }
 
@@ -208,7 +187,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         {
 			Log.Info($"Received McpeResourcePackChunkData....");
         }
-        
+
+        private ResourcePackIds _resourcePackIds;
         public void HandleMcpeResourcePacksInfo(McpeResourcePacksInfo message)
         {
 	        Log.Info($"Got ResourcePackDataInfo. (ForcedToAccept={message.mustAccept} Scripting={message.hasScripts} Behavior Packs={message.behahaviorpackinfos.Count} ResourcePacks={message.resourcepackinfos.Count})");
@@ -224,15 +204,18 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        {
 		        resourcePackIds.Add($"{packInfo.PackIdVersion.Id}_{packInfo.PackIdVersion.Version}");
 	        }
+
+	        _resourcePackIds = resourcePackIds;
 	        
 	        if (resourcePackIds.Count > 0)
 	        {
-		        response.responseStatus = 2;
+		        response.responseStatus = (byte) McpeResourcePackClientResponse.ResponseStatus.SendPacks;
 		        response.resourcepackids = resourcePackIds;
 	        }
 	        else
 	        {
-		        response.responseStatus = 3;
+		        response.responseStatus = (byte) McpeResourcePackClientResponse.ResponseStatus.HaveAllPacks;
+		        response.resourcepackids = _resourcePackIds;
 	        }
 
 	        Client.SendPacket(response);
@@ -244,7 +227,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		        $"Received ResourcePackStack, sending final response. (ForcedToAccept={message.mustAccept} Experimental={message.isExperimental} Gameversion={message.gameVersion} Behaviorpacks={message.behaviorpackidversions.Count} Resourcepacks={message.resourcepackidversions.Count})");
 
 	        McpeResourcePackClientResponse response = new McpeResourcePackClientResponse();
-	        response.responseStatus = 4;
+	        response.responseStatus = (byte) McpeResourcePackClientResponse.ResponseStatus.Completed;
+	        response.resourcepackids = _resourcePackIds;
 	        Client.SendPacket(response);
         }
 
@@ -304,7 +288,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				ourStates.TryAdd((uint) bs.RuntimeId, bs);
 			}
 
-			ChunkProcessor._blockStateMap = ourStates;
+			ChunkProcessor.BlockStateMap = ourStates;
 			Client.RequestChunkRadius(Client.ChunkRadius);
 			
 			Client.World.Player.EntityId = message.runtimeEntityId;

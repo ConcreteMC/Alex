@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Dynamic;
@@ -6,6 +7,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -162,26 +164,29 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			ChunkProcessor.ClientSideLighting = Options.VideoOptions.ClientSideLighting;
 			
-			Connection = new RakConnection(new IPEndPoint(IPAddress.Any, 0), new GreyListManager(), new MotdProvider(), threadPool);
+			Connection = new RakConnection();
 			ServerEndpoint = endpoint;
-
+			Connection.ConnectionInfo.DisableAck = false;
+			Connection.ConnectionInfo.IsEmulator = false;
+			
 			Connection.CustomMessageHandlerFactory = session =>
 			{
-				Log.Info($"Requesting sessions...  {Connection.ConnectionInfo.RakSessions.Count}");
+				//Log.Info($"Requesting sessions...  {Connection.ConnectionInfo.RakSessions.Count}");
 
-				bool hasSession = Session != null;
+			//	bool hasSession = Session != null;
+
+			var handler = new MessageHandler(session, new BedrockClientPacketHandler(this, eventDispatcher, wp, playerProfile, alex, CancellationTokenSource.Token, ChunkProcessor));
 				
-				if (!hasSession)
+				if (MessageHandler != null)
+					Log.Warn($"Messagehandler was already set.");
+				
+				if (Session == null)
 				{
 					Session = session;
-				}
-
-				session.Username = playerProfile.Username;
-				session.ConnectionInfo.RakSessions.Clear();
-
-				var handler = new MessageHandler(session, new BedrockClientPacketHandler(this, eventDispatcher, wp, playerProfile, alex, CancellationTokenSource.Token, ChunkProcessor));
-				if (!hasSession)
-				{
+					
+					session.Username = playerProfile.Username;
+					session.ConnectionInfo.RakSessions.Clear();
+					
 					handler.ConnectionAction = () =>
 					{
 						ConnectionAcceptedWaitHandle?.Set();
@@ -280,15 +285,55 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 							_connectionInfo = new ConnectionInfo(StartTime, CustomConnectedPong.Latency, nakReceive, ackReceived, ackSent, fails, resends, packetSizeIn, packetSizeOut, packetCountIn, packetCountOut);
 						}, null, 1000, 1000);
 					
-					if (Connection.TryConnect(ServerEndpoint, 1))
+					Connection.Start();
+
+				/*	try
 					{
+						var ticker = ReflectionHelper.GetPrivateFieldValue<HighPrecisionTimer>(
+							typeof(RakConnection), Connection, "_tickerHighPrecisionTimer");
+
+						ticker.Dispose();
+					}catch{}
+					
+					_timer = new System.Timers.Timer(10);
+					_timer.Elapsed += (sender, args) =>
+					{
+						Session?.SendTickAsync(Connection);
+
+						var sessions =
+							ReflectionHelper.GetPrivateFieldValue<ConcurrentDictionary<IPEndPoint, RakSession>>(
+								typeof(RakConnection), Connection, "_rakSessions");// Connection._rakSessions;
 						
+						var tasks = new List<Task>();
+						foreach (KeyValuePair<IPEndPoint, RakSession> session in sessions)
+						{
+							tasks.Add(session.Value.SendTickAsync(Connection));
+						}
+
+						Task.WaitAll(tasks.ToArray());
+
+						//foreach (var session in Connection.ConnectionInfo.RakSessions)
+						//Session?.SendTickAsync(Connection).Wait();
+					};
+					_timer.Start();*/
+
+				//	var listener = ReflectionHelper.GetPrivateFieldValue<UdpClient>(typeof(RakConnection), Connection, "_listener");
+					//listener.DontFragment = true;
+					//listener.Client.ReceiveBufferSize = 131072;
+					//listener.Client.SendBufferSize = 131072;
+					//listener.ExclusiveAddressUse = true;
+					//listener.EnableBroadcast = false;
+					
+					if (Connection.TryConnect(ServerEndpoint))
+					{
+						resetEvent.Set();
 						//resetEvent.Set();
 					}
 				}
 			});
-
 		}
+
+		private System.Timers.Timer _timer;
 		
 		public bool TryLocate(
 			IPEndPoint targetEndPoint,
@@ -297,6 +342,14 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			Stopwatch sw = new Stopwatch();
 			this.Connection.Start();
+
+			var listener = ReflectionHelper.GetPrivateFieldValue<UdpClient>(typeof(RakConnection), Connection, "_listener");
+			listener.DontFragment = true;
+			//listener.Client.ReceiveBufferSize = 2000;
+			//listener.Client.SendBufferSize = 2000;
+			//listener.ExclusiveAddressUse = true;
+			listener.EnableBroadcast = false;
+			
 			bool autoConnect = this.Connection.AutoConnect;
 			this.Connection.AutoConnect = false;
 			while (!this.Connection.FoundServer)
@@ -325,7 +378,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			byte[] data = new UnconnectedPing()
 			{
 				pingId = Stopwatch.GetTimestamp(),
-				guid = this.Connection._rakOfflineHandler.ClientGuid
+				guid = this.Connection.RakOfflineHandler.ClientGuid
 			}.Encode();
 			
 			if (targetEndPoint != null)
@@ -410,6 +463,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void SendPacket(Packet packet)
 		{
+		//	Log.Info($"Sent: {packet}");
 			Session.SendPacket(packet);
 		}
 
@@ -597,7 +651,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
             MessageHandler.CryptoContext = new CryptoContext() {ClientKey = clientKey, UseEncryption = false,};
 
-            Session.SendPacket(loginPacket);
+            SendPacket(loginPacket);
             
        /*     var packet = McpeClientCacheStatus.CreateObject();
             packet.enabled = false;
@@ -1027,7 +1081,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				    Item = minetItem,
 				    FromPosition = new System.Numerics.Vector3(p.KnownPosition.X, p.KnownPosition.Y, p.KnownPosition.Z),
 				    Slot = slot,
-				    BlockRuntimeId = ChunkProcessor._blockStateMap.FirstOrDefault(x => x.Value.Id == itemInHand.Id && x.Value.Data == itemInHand.Meta).Key
+				    BlockRuntimeId = ChunkProcessor.BlockStateMap.FirstOrDefault(x => x.Value.Id == itemInHand.Id && x.Value.Data == itemInHand.Meta).Key
 				    //BlockRuntimeId = 
 			    };
 

@@ -207,8 +207,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			//Client.SendOpenConnectionRequest1();
 			if (!resetEvent.Wait(TimeSpan.FromSeconds(5)))
 			{
-				Client.ShowDisconnect("Could not connect to server!");
-
+				//Client.ShowDisconnect("Could not connect to server!");
+				Log.Warn($"Failed to connect to server, resetevent not triggered.");
+				
 				return false;
 			}
 
@@ -269,14 +270,15 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					}
 				}
 
-				if (!VerifyConnection())
+				/*if (!VerifyConnection())
 				{
-					Client.ShowDisconnect("Connection lost.");
-
+					//Client.ShowDisconnect("Connection lost.");
+					Log.Warn($"Could not verify connection...");
+					
 					timer.Stop();
 
 					return false;
-				}
+				}*/
 			}
 
 			var p = World.Player.KnownPosition;

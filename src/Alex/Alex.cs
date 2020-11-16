@@ -114,7 +114,7 @@ namespace Alex
 		{
 			EntityProperty.Factory = new AlexPropertyFactory();
 
-			MiNET.Utils.DedicatedThreadPool fastThreadPool =
+			/*MiNET.Utils.DedicatedThreadPool fastThreadPool =
 				ReflectionHelper.GetPrivateStaticPropertyValue<MiNET.Utils.DedicatedThreadPool>(
 					typeof(MiNetServer), "FastThreadPool");
 
@@ -124,10 +124,10 @@ namespace Alex
 			ReflectionHelper.SetPrivateStaticPropertyValue<MiNET.Utils.DedicatedThreadPool>(
 				typeof(MiNetServer), "FastThreadPool",
 				new MiNET.Utils.DedicatedThreadPool(
-					new MiNET.Utils.DedicatedThreadPoolSettings(2, "MiNETServer Fast")));
+					new MiNET.Utils.DedicatedThreadPoolSettings(8, "MiNETServer Fast")));*/
 
 			ThreadPool.GetMaxThreads(out _, out var completionPortThreads);
-			ThreadPool.SetMaxThreads(Environment.ProcessorCount, completionPortThreads);
+			//ThreadPool.SetMaxThreads(Environment.ProcessorCount, completionPortThreads);
 			
 			Instance = this;
 			LaunchSettings = launchSettings;

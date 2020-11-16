@@ -572,15 +572,9 @@ namespace Alex.Utils
 			var content = new FormUrlEncodedContent(request.PostData);
 
 			HttpClient client = GetClient();
-			client.BaseAddress = new Uri(request.Url);
+			//client.BaseAddress = new Uri(request.Url);
 
-			if (request.Content != null)
-			{
-				
-			}
-			
 			var res = await client.PostAsync(request.Url, content);
-
 
 			string body = await res.Content.ReadAsStringAsync();
 			return new Response(res.StatusCode, body);
@@ -760,7 +754,7 @@ namespace Alex.Utils
 		{
 			AccessTokens tokens = null;
 
-			using (var client = GetClient())
+			var client = GetClient();
 			{
 				var encodedContent = new FormUrlEncodedContent (parameters);
 				var response = await client.PostAsync(uri, encodedContent);

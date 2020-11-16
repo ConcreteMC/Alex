@@ -202,11 +202,11 @@ namespace Alex.Gamestates.Multiplayer
 						currentProfile = profiles[0];
 					}
 					
-					void Connect()
+					void Connect(PlayerProfile profile)
 					{
 						Alex.ConnectToServer(
 							typeImplementation, new ServerConnectionDetails(target, entry.Host),
-							currentProfile);
+							profile);
 					
 						Alex.GuiManager.RemoveScreen(overlay);
 						overlay = null;
@@ -219,13 +219,13 @@ namespace Alex.Gamestates.Multiplayer
 							{
 								if (result)
 								{
-									Connect();
+									Connect(authenticationService.CurrentProfile);
 								}
 							});
 					}
 					else
 					{
-						Connect();
+						Connect(currentProfile);
 					}
 				}
 			}
