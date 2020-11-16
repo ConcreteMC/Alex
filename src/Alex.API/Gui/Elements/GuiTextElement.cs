@@ -241,7 +241,7 @@ namespace Alex.API.Gui.Elements
 				//Height = (int)Math.Floor(textSize.Y);
 
 				_renderText = text;
-
+				
 				if (!HasFixedSize)
 				{
 					//InvalidateLayout();
@@ -267,6 +267,11 @@ namespace Alex.API.Gui.Elements
 						Text = match.Value
 					});
 				}
+				
+				GetPreferredSize(out var size, out var minSize, out var maxSize);
+				Width = size.Width;
+				Height = size.Height;
+				//Size = size;
 			}
 		}
 

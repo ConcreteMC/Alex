@@ -126,7 +126,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			{
 				RakOfflineHandler.SendOpenConnectionRequest1(targetEndPoint, mtuSize);
 				Task.Delay(300).Wait();
-			} while (!RakSessions.TryGetValue(targetEndPoint, out session) && numberOfAttempts-- > 0);
+			} while ((!RakSessions.TryGetValue(targetEndPoint, out session) && RakSessions.Count < 0) && numberOfAttempts-- > 0);
 
 			if (session == null) return false;
 
@@ -162,7 +162,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			try
 			{
-				Log.Info("Shutting down...");
+				//Log.Info("Shutting down...");
 
 				foreach (var rakSession in RakSessions)
 				{
