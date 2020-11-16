@@ -713,23 +713,33 @@ namespace Alex
 			GameStateManager.AddState("loading", loadingScreen);
 			GameStateManager.SetActiveState("loading");
 
-			worldProvider.Load(loadingScreen.UpdateProgress).ContinueWith(
-				task =>
+			ThreadPool.QueueUserWorkItem(
+				o =>
 				{
-					GameStateManager.RemoveState("play");
-					GameStateManager.AddState("play", playState);
-
-					if (networkProvider.IsConnected)
-					{
-						GameStateManager.SetActiveState("play");
-					}
-					else
+					try
 					{
 						GameStateManager.RemoveState("play");
+						
+						bool connected = worldProvider.Load(loadingScreen.UpdateProgress);
+
+						if (networkProvider.IsConnected && connected)
+						{
+							GameStateManager.AddState("play", playState);
+							GameStateManager.SetActiveState("play");
+
+							return;
+						}
+
+						var s = new DisconnectedScreen();
+						s.DisconnectedTextElement.TranslationKey = "multiplayer.status.cannot_connect";
+						GameStateManager.SetActiveState(s, false);
+						
 						worldProvider.Dispose();
 					}
-
-					GameStateManager.RemoveState("loading");
+					finally
+					{
+						GameStateManager.RemoveState("loading");
+					}
 				});
 		}
 	}

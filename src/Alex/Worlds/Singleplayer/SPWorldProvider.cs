@@ -241,48 +241,48 @@ namespace Alex.Worlds.Singleplayer
 		{
 			return _generator.GetSpawnPoint();
 		}
-		
-		public override Task Load(ProgressReport progressReport)
+
+		public override bool Load(ProgressReport progressReport)
 		{
-		//	ChunkManager.DoMultiPartCalculations = false;
-			
-			return Task.Run(() =>
+			//	ChunkManager.DoMultiPartCalculations = false;
+
+
+			int    t             = Options.VideoOptions.RenderDistance;
+			double radiusSquared = Math.Pow(t, 2);
+
+			var target = radiusSquared * 3;
+			int count  = 0;
+
+			var pp     = GetSpawnPoint();
+			var center = new ChunkCoordinates(new PlayerLocation(pp.X, 0, pp.Z));
+
+			Stopwatch sw = Stopwatch.StartNew();
+
+			foreach (var chunk in GenerateChunks(center, t))
 			{
-				int t = Options.VideoOptions.RenderDistance;
-					double radiusSquared = Math.Pow(t, 2);
+				count++;
 
-					var target = radiusSquared * 3;
-					int count = 0;
+				//base.World.ChunkManager.AddChunk(chunk, new ChunkCoordinates(chunk.X, chunk.Z), false);
 
-					var pp = GetSpawnPoint();
-					var center = new ChunkCoordinates(new PlayerLocation(pp.X, 0, pp.Z));
+				progressReport(LoadingState.LoadingChunks, (int) Math.Floor((count / target) * 100));
+			}
 
-					Stopwatch sw = Stopwatch.StartNew();
-					foreach (var chunk in GenerateChunks(center, t))
-					{
-						count++;
-						
-						//base.World.ChunkManager.AddChunk(chunk, new ChunkCoordinates(chunk.X, chunk.Z), false);
+			var loaded = sw.Elapsed;
 
-						progressReport(LoadingState.LoadingChunks, (int)Math.Floor((count / target) * 100));
-					}
-					
-					var loaded = sw.Elapsed;
+			sw.Stop();
 
-					sw.Stop();
-					Log.Info($"Chunk pre-loading took {sw.Elapsed.TotalMilliseconds}ms (Loading: {loaded}ms Initializing: {(sw.Elapsed - loaded).TotalMilliseconds}ms)");
-				
-					PreviousChunkCoordinates = new ChunkCoordinates(new PlayerLocation(pp.X, pp.Y, pp.Z));
+			Log.Info(
+				$"Chunk pre-loading took {sw.Elapsed.TotalMilliseconds}ms (Loading: {loaded}ms Initializing: {(sw.Elapsed - loaded).TotalMilliseconds}ms)");
 
-					World.Player.IsSpawned = true;
-					
-					UpdateThread = new Thread(RunThread)
-					{
-						IsBackground = true
-					};
+			PreviousChunkCoordinates = new ChunkCoordinates(new PlayerLocation(pp.X, pp.Y, pp.Z));
 
-					UpdateThread.Start();
-			});
+			World.Player.IsSpawned = true;
+
+			UpdateThread = new Thread(RunThread) {IsBackground = true};
+
+			UpdateThread.Start();
+
+			return true;
 		}
 
 		public override void Dispose()

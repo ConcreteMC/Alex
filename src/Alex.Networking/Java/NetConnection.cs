@@ -68,7 +68,7 @@ namespace Alex.Networking.Java
 	//	private Thread NetworkWriting { get; set; }
 		public void Initialize()
         {
-	       // Socket.Blocking = true;
+	       Socket.Blocking = true;
 	        
 		  /* 	NetworkProcessing = new Thread(ProcessNetwork)
             {
@@ -280,6 +280,8 @@ namespace Alex.Networking.Java
 
 			    return false;
 		    }
+		    
+		//    Log.Info($"Received: {packet}");
 
 		    if (ConnectionState == ConnectionState.Play)
 		    {
@@ -376,6 +378,7 @@ namespace Alex.Networking.Java
 			    {
 				    if (PacketWriteQueue.TryTake(out var packet, 3500))
 				    {
+					    //    Log.Info($"Sent: {packet.Packet}");
 					    var data = EncodePacket(packet);
 
 					    mc.WriteVarInt(data.Length);

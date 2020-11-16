@@ -31,7 +31,7 @@ namespace Alex.Worlds.Abstraction
 			Initiate();
 		}
 
-		public abstract Task Load(ProgressReport progressReport);
+		public abstract bool Load(ProgressReport progressReport);
 
 		public virtual void Dispose()
 		{

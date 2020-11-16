@@ -9,6 +9,7 @@ using Alex.Networking.Java.Packets.Play;
 using Microsoft.Xna.Framework;
 using MiNET;
 using MiNET.Net;
+using ConnectionState = Alex.Networking.Java.ConnectionState;
 using Player = Alex.Entities.Player;
 
 namespace Alex.Worlds.Multiplayer.Java
@@ -32,6 +33,9 @@ namespace Alex.Worlds.Multiplayer.Java
 		/// <inheritdoc />
 		public override void PlayerOnGroundChanged(Player player, bool onGround)
 		{
+			if (Client.ConnectionState != ConnectionState.Play)
+				return;
+			
 			Client.SendPacket(new PlayerMovementPacket()
 			{
 				OnGround = onGround

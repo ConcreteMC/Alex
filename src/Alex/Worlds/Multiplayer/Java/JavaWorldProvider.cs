@@ -351,39 +351,44 @@ namespace Alex.Worlds.Multiplayer.Java
 		private bool _initiated = false;
 		private BlockingCollection<ChunkColumn> _generatingHelper = new BlockingCollection<ChunkColumn>();
 		private int _chunksReceived = 0;
-		public override Task Load(ProgressReport progressReport)
+
+		public override bool Load(ProgressReport progressReport)
 		{
-			return Task.Run(() =>
+			progressReport(LoadingState.ConnectingToServer, 0);
+
+			if (!Login(Profile.PlayerName, Profile.Uuid, Profile.AccessToken))
 			{
-				progressReport(LoadingState.ConnectingToServer, 0);
-				if (!Login(Profile.PlayerName, Profile.Uuid, Profile.AccessToken))
+				_disconnected = true;
+
+				return false;
+			}
+
+			if (_disconnected) return false;
+
+			progressReport(LoadingState.ConnectingToServer, 99);
+
+			_loginCompleteEvent.WaitOne();
+
+			if (_disconnected) return false;
+
+			progressReport(LoadingState.LoadingChunks, 0);
+
+			//double radiusSquared = Math.Pow(t, 2);
+
+
+			bool allowSpawn = false;
+
+			World.Player.WaitingOnChunk = true;
+
+			int loaded = 0;
+
+			SpinWait.SpinUntil(
+				() =>
 				{
-					_disconnected = true;
-					ShowDisconnect("multiplayer.status.cannot_connect", true);
-				}
-				if (_disconnected) return;
-
-				progressReport(LoadingState.ConnectingToServer, 99);
-
-				_loginCompleteEvent.WaitOne();
-				if (_disconnected) return;
-
-				progressReport(LoadingState.LoadingChunks, 0);
-				
-				//double radiusSquared = Math.Pow(t, 2);
-
-				
-				bool allowSpawn = false;
-
-				World.Player.WaitingOnChunk = true;
-				
-                int loaded = 0;
-				SpinWait.SpinUntil(() =>
-				{
-					int t = World.ChunkManager.RenderDistance;
+					int    t             = World.ChunkManager.RenderDistance;
 					double radiusSquared = Math.Pow(t, 2);
 					var    target        = radiusSquared;
-					
+
 					var playerChunkCoords = new ChunkCoordinates(World.Player.KnownPosition);
 
 					if (_chunksReceived >= target && !_generatingHelper.IsAddingCompleted)
@@ -393,9 +398,9 @@ namespace Alex.Worlds.Multiplayer.Java
 
 					if (_chunksReceived < target)
 					{
-					//	Log.Info($"Chunks: {_chunksReceived} / {target}");
-						progressReport(LoadingState.LoadingChunks, (int)Math.Floor((100 / target) * _chunksReceived));
-                    }
+						//	Log.Info($"Chunks: {_chunksReceived} / {target}");
+						progressReport(LoadingState.LoadingChunks, (int) Math.Floor((100 / target) * _chunksReceived));
+					}
 					else if (loaded < target || !allowSpawn || _generatingHelper.Count > 0)
 					{
 						if (_generatingHelper.TryTake(out ChunkColumn chunkColumn, 50))
@@ -405,11 +410,12 @@ namespace Alex.Worlds.Multiplayer.Java
 							{
 								DoUpdates = true
 							})*/
-							World.ChunkManager.AddChunk(chunkColumn, new ChunkCoordinates(chunkColumn.X ,chunkColumn.Z), true);
-							
+							World.ChunkManager.AddChunk(
+								chunkColumn, new ChunkCoordinates(chunkColumn.X, chunkColumn.Z), true);
+
 							loaded++;
 						}
-						
+
 						if (!allowSpawn)
 						{
 							if (World.ChunkManager.TryGetChunk(playerChunkCoords, out _))
@@ -417,7 +423,7 @@ namespace Alex.Worlds.Multiplayer.Java
 								allowSpawn = true;
 							}
 						}
-						
+
 						if (!allowSpawn && !World.Player.WaitingOnChunk)
 						{
 							allowSpawn = true;
@@ -431,7 +437,7 @@ namespace Alex.Worlds.Multiplayer.Java
 							{
 								p += 25;
 							}
-							
+
 							progressReport(LoadingState.Spawning, p);
 						}
 						else
@@ -439,23 +445,22 @@ namespace Alex.Worlds.Multiplayer.Java
 							progressReport(LoadingState.GeneratingVertices, (int) Math.Floor((100 / target) * loaded));
 						}
 					}
-                    else
+					else
 					{
 						hasDoneInitialChunks = true;
 						progressReport(LoadingState.Spawning, 99);
-                    }
-					
-                    return (loaded >= target && allowSpawn && hasDoneInitialChunks && ReadyToSpawn) || _disconnected; // Spawned || _disconnected;
+					}
+
+					return (loaded >= target && allowSpawn && hasDoneInitialChunks && ReadyToSpawn)
+					       || _disconnected; // Spawned || _disconnected;
 				});
 
-				Spawned = true;
+			Spawned = true;
 
-				World.Player.Inventory.CursorChanged +=	InventoryOnCursorChanged;
-				World.Player.Inventory.Closed += (sender, args) =>
-				{
-					ClosedContainer(0);
-				};
-			});
+			World.Player.Inventory.CursorChanged += InventoryOnCursorChanged;
+			World.Player.Inventory.Closed += (sender, args) => { ClosedContainer(0); };
+
+			return true;
 		}
 
 		private Queue<Entity> _entitySpawnQueue = new Queue<Entity>();
@@ -2150,6 +2155,7 @@ namespace Alex.Worlds.Multiplayer.Java
 				_uuid = uuid;
 				_accesToken = accessToken;
 
+			//	TcpClient.Connect(Endpoint);
 				
 					var ar = TcpClient.BeginConnect(Endpoint.Address, Endpoint.Port, null, null);
 
