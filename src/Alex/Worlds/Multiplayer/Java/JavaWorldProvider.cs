@@ -808,6 +808,10 @@ namespace Alex.Worlds.Multiplayer.Java
 			{
 				HandleUpdateScorePacket(updateScorePacket);
 			}
+			else if (packet is TeamsPacket teamsPacket)
+			{
+				HandleTeamsPacket(teamsPacket);
+			}
 			else
 			{
 				if (UnhandledPackets.TryAdd(packet.PacketId, packet.GetType()))
@@ -817,6 +821,54 @@ namespace Alex.Worlds.Multiplayer.Java
 			}
 		}
 
+		private TeamsManager TeamsManager { get; } = new TeamsManager();
+		private void HandleTeamsPacket(TeamsPacket packet)
+		{
+			switch (packet.PacketMode)
+			{
+				case TeamsPacket.Mode.CreateTeam:
+					if (packet.Payload is TeamsPacket.CreateTeam ct)
+					{
+						TeamsManager.AddOrUpdateTeam(
+							packet.TeamName,
+							new Team(
+								packet.TeamName, ct.TeamDisplayName.RawMessage, ct.TeamColor, ct.TeamPrefix.RawMessage,
+								ct.TeamSuffix.RawMessage));
+					}
+
+					break;
+
+				case TeamsPacket.Mode.RemoveTeam:
+					TeamsManager.RemoveTeam(packet.TeamName);
+					break;
+
+				case TeamsPacket.Mode.UpdateTeam:
+					if (packet.Payload is TeamsPacket.UpdateTeam ut)
+					{
+						if (TeamsManager.TryGet(packet.TeamName, out var team))
+						{
+							team.DisplayName = ut.TeamDisplayName.RawMessage;
+							team.Color = ut.TeamColor;
+							team.TeamPrefix = ut.TeamPrefix.RawMessage;
+							team.TeamSuffix = ut.TeamSuffix.RawMessage;
+							
+							TeamsManager.AddOrUpdateTeam(packet.TeamName, team);
+						}
+					}
+
+					break;
+
+				case TeamsPacket.Mode.AddPlayer:
+					break;
+
+				case TeamsPacket.Mode.RemovePlayer:
+					break;
+
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+		}
+		
 		private void HandleUpdateScorePacket(UpdateScorePacket packet)
 		{
 			var scoreboard = ScoreboardView;
@@ -829,14 +881,32 @@ namespace Alex.Worlds.Multiplayer.Java
 				{
 					string displayName = packet.EntityName;
 
-					//if (Guid.TryParse(packet.EntityName, out var guid))
+				//	Log.Info($"Entity: {packet.EntityName} | {packet.ObjectiveName}");
+					
+					if (packet.EntityName.Length == 36 && World.EntityManager.TryGet(
+						new MiNET.Utils.UUID(packet.EntityName), out var ent))
 					{
-						
+						displayName = ent.NameTag;
 					}
-					obj.AddOrUpdate(packet.EntityName, new ScoreboardEntry(packet.EntityName, (uint) packet.Value, displayName));
+					else if (TeamsManager.TryGet(packet.EntityName, out var team))
+					{
+						displayName = team.DisplayName;
+					}
+
+					//Log.Info(packet.EntityName);
+					if (obj.TryGet(packet.EntityName, out var entry) || obj.TryGetByScore((uint) packet.Value, out entry))
+					{
+						entry.Score = (uint) packet.Value;
+						entry.DisplayName = displayName;
+					}
+					else
+					{
+						obj.AddOrUpdate(packet.EntityName, new ScoreboardEntry(packet.EntityName, (uint) packet.Value, displayName));
+					}
 				}
 				else if (packet.Action == UpdateScorePacket.UpdateScoreAction.Remove)
 				{
+				//	Log.Info($"Removed {packet.EntityName}");
 					obj.Remove(packet.EntityName);
 				}
 			}
@@ -851,6 +921,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			switch (packet.Mode)
 			{
 				case ScoreboardObjectivePacket.ObjectiveMode.Create:
+					//packet.Type
 					scoreboard.AddObjective(new ScoreboardObjective(packet.ObjectiveName, packet.Value.RawMessage, 0, ""));
 					break;
 
@@ -876,6 +947,9 @@ namespace Alex.Worlds.Multiplayer.Java
 				if (scoreboard == null)
 					return;
 				
+				Log.Info($"Name: {packet.Name} Position: {packet.Position}");
+				
+				//scoreboard.TryGetObjective(packet.Name, out var )
 				//scoreboard.TryGetObjective(packet.Name, )
 				//scoreboard.Clear();
 				//scoreboard.AddObjective(new ScoreboardObjective(packet.Name, packet.Name, 0, ""));

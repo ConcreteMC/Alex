@@ -96,6 +96,20 @@ namespace Alex.API.Gui.Elements
 		    }
 	    }
 
+		private bool _fixedSize = false;
+		[DebuggerVisible]
+		public bool HasFixedSize
+		{
+			get
+			{
+				return _fixedSize;
+			}
+			set
+			{
+				_fixedSize = value;
+			}
+		}
+		
 		private string _renderText = String.Empty;
 
 		public EventHandler<GuiTextClickedEvent> OnLinkClicked;
@@ -159,7 +173,7 @@ namespace Alex.API.Gui.Elements
 	           // graphics.FillRectangle(new Rectangle(RenderPosition.ToPoint(), Size.ToPoint()), BackgroundOverlay);
 	           if (HasBackground && BackgroundOverlay.HasValue && BackgroundOverlay.Color.HasValue)
 	           {
-		           graphics.SpriteBatch.FillRectangle(new Rectangle(RenderPosition.ToPoint(), GetSize(text, _scale).ToPoint()), BackgroundOverlay.Color.Value);
+		           graphics.SpriteBatch.FillRectangle(new Rectangle(RenderPosition.ToPoint(), Size /*GetSize(text, _scale).ToPoint()*/), BackgroundOverlay.Color.Value);
 	           }
 
 	           Font.DrawString(graphics.SpriteBatch, text, RenderPosition, TextColor, FontStyle, _scale, TextOpacity, Rotation, RotationOrigin);
@@ -208,8 +222,15 @@ namespace Alex.API.Gui.Elements
 			    _renderText = string.Empty;
 			    Width = 0;
 			    Height = 0;
-			    
-			    InvalidateLayout();
+
+			    if (!HasFixedSize)
+			    {
+				   // InvalidateLayout();
+			    }
+			    else
+			    {
+				    
+			    }
 		    }
 		    else
 			{
@@ -221,7 +242,14 @@ namespace Alex.API.Gui.Elements
 
 				_renderText = text;
 
-				InvalidateLayout();
+				if (!HasFixedSize)
+				{
+					//InvalidateLayout();
+				}
+				else
+				{
+					
+				}
 
 				foreach (Match match in LinkParser.Matches(text))
 				{

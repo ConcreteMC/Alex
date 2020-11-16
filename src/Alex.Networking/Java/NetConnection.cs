@@ -357,6 +357,12 @@ namespace Alex.Networking.Java
 
 		public void SendPacket(Packet packet)
 	    {
+		    if (PacketWriteQueue.IsAddingCompleted)
+		    {
+			   // Log.Warn($"Tried to write packet after WriteQueue has been marked as complete!");
+			    return;
+		    }
+		    
 			if (packet.PacketId == -1) throw new Exception();
 
 			//if (packet.Log)

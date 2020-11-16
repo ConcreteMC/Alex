@@ -354,6 +354,7 @@ namespace Alex.API.Gui.Graphics
 
             var dstBounds = new Rectangle((int)xOffset, (int)yOffset, (int)scaledSize.X, (int)scaledSize.Y);
             SpriteBatch.Draw(texture, dstBounds, mask);
+          // SpriteBatch.Draw(texture, new Vector2(xOffset, yOffset), mask, 0f, Vector2.Zero, new Vector2(resultRatio));
         }
 
         private void DrawTextureCenterSliced(Rectangle rectangle, ITexture2D texture, Color mask)

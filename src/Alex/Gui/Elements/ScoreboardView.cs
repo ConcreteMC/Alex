@@ -57,33 +57,65 @@ namespace Alex.Gui.Elements
 	{
 		private ConcurrentDictionary<string, ScoreboardEntry> Entries      { get; }
 		public  string                                      Name         { get; set; }
-		public  string                                      DisplayName  { get; set; }
+
+		public string DisplayName
+		{
+			get
+			{
+				return _displayNameElement.Text;
+			}
+			set
+			{
+				_displayNameElement.Text = value;
+			}
+		}
+
 		public  int                                         SortOrder    { get; set; }
 		public  string                                      CriteriaName { get; set; }
 		public ScoreboardObjective(string name, string displayName, int sortOrder, string criteriaName)
 		{
+			_displayNameElement = new GuiTextElement(displayName) {Anchor = Alignment.CenterX};
+			
 			Entries = new ConcurrentDictionary<string, ScoreboardEntry>();
 			Name = name;
 			DisplayName = displayName;
 			SortOrder = sortOrder;
 			CriteriaName = criteriaName;
 			ChildAnchor = Alignment.Fill;
+			
+			_container = new GuiContainer();
+			_container.AddChild(_displayNameElement);
+			
+			AddChild(_container);
+		}
+
+		/// <inheritdoc />
+		protected override void OnInit(IGuiRenderer renderer)
+		{
+			base.OnInit(renderer);
 		}
 
 		public void AddOrUpdate(string id, ScoreboardEntry entry)
 		{
+			bool rebuild = false;
 			if (Entries.TryGetValue(id, out var value))
 			{
-				value.Score = entry.Score;
+				if (value.Score != entry.Score)
+				{
+					value.Score = entry.Score;
+					rebuild = true;
+				}
+
 				value.DisplayName = entry.DisplayName;
 			}
-
-			if (Entries.TryAdd(id, entry))
+			else
 			{
-				
+				Entries.TryAdd(id, entry);
+				rebuild = true;
 			}
 
-			Rebuild();
+			if (rebuild)
+				Rebuild();
 			/*Entries.AddOrUpdate(id, entry, (oldId, oldValue) => entry);
 			
 			Rebuild();*/
@@ -93,11 +125,36 @@ namespace Alex.Gui.Elements
 		{
 			if (Entries.TryRemove(id, out var old))
 			{
-				Rebuild();
+				RemoveChild(old);
+				//Rebuild();
 			}
 		}
 
-		private void Rebuild()
+		public bool TryGetByScore(uint score, out ScoreboardEntry entry)
+		{
+			foreach (var e in Entries.Values.ToArray())
+			{
+				if (e.Score == score)
+				{
+					entry = e;
+
+					return true;
+				}
+			}
+
+			entry = null;
+			return false;
+		}
+		
+		public bool TryGet(string id, out ScoreboardEntry entry)
+		{
+			return Entries.TryGetValue(id, out entry);
+		}
+
+		private GuiTextElement _displayNameElement;
+		private GuiContainer   _container;
+
+		internal void Rebuild()
 		{
 			var                 entries = Entries.ToArray();
 
@@ -110,18 +167,16 @@ namespace Alex.Gui.Elements
 				entries = entries.OrderByDescending(x => x.Value.Score).ToArray();
 			}
 			
-			ClearChildren();
+			//ClearChildren();
 
-			GuiContainer container = new GuiContainer();
+			//GuiContainer container = new GuiContainer();
 			//container.BackgroundOverlay = new Color(Color.Black, );
-			container.AddChild(new GuiTextElement(DisplayName)
-			{
-				Anchor = Alignment.CenterX
-			});
-			AddChild(container);
+			//_container.AddChild(_displayNameElement);
+			//AddChild(_container);
 			
 			foreach (var entry in entries)
 			{
+				RemoveChild(entry.Value);
 				AddChild(entry.Value);
 			}
 		}
@@ -144,8 +199,14 @@ namespace Alex.Gui.Elements
 			get => _score;
 			set
 			{
+				var originalScore = _score;
 				_score = value;
 				RightText.Text = value.ToString();
+
+				if (ParentElement is ScoreboardObjective obj && _score != originalScore)
+				{
+					obj.Rebuild();
+				}
 			}
 		}
 
@@ -234,127 +295,6 @@ namespace Alex.Gui.Elements
 			{
 				RemoveChild(child);
 			}
-		}
-		
-		public void AddString(string text)
-		{
-			GuiContainer container = new GuiContainer();
-			container.AddChild(new GuiTextElement(text)
-			{
-				Anchor = Alignment.CenterX
-			});
-			AddChild(container);
-		}
-
-		public void Remove(string id)
-		{
-			/*if (Rows.TryRemove(id, out var old))
-			{
-				RemoveChild(old.Container);
-			}*/
-		}
-
-		public void AddRow(string id, string key, uint value)
-		{
-			/*if (Rows.TryRemove(id, out var old))
-			{
-				RemoveChild(old.Container);
-			}*/
-			
-			/*GuiTextElement keyElement, valueElement;
-			keyElement = new GuiTextElement()
-			{
-				 Text = key,
-				 Anchor = Alignment.TopLeft
-			};
-			
-			valueElement = new GuiTextElement()
-			{
-				 Text = value.ToString(),
-				 Anchor = Alignment.TopRight
-			};
-			
-			var container = new GuiContainer();
-			GuiMultiStackContainer stackContainer = new GuiMultiStackContainer()
-			{
-				Orientation = Orientation.Horizontal,
-				Anchor = Alignment.Fill,
-				ChildAnchor = Alignment.FillCenter
-			};
-			stackContainer.AddRow(
-				r =>
-				{
-					r.ChildAnchor = Alignment.Fill;
-					
-					var c = new GuiContainer();
-					c.AddChild(keyElement);
-					
-					r.AddChild(c);
-				});
-			stackContainer.AddRow(
-				r =>
-				{
-					r.ChildAnchor = Alignment.Fill;
-					
-					var c = new GuiContainer();
-					c.AddChild(valueElement);
-					
-					r.AddChild(c);
-				});
-			
-			container.AddChild(stackContainer);*/
-
-			/*
-			var container = new ScoreboardElement(key, value);
-
-			//AddChild(container);
-			if (Rows.TryAdd(id, new EntryData() {Container = container, Score = value}))
-			{
-				var rows = Rows.ToArray();
-				
-				foreach (var child in rows)
-				{
-					RemoveChild(child.Value.Container);
-				}
-				
-				foreach (var row in rows.OrderBy(x => x.Value.Score))
-				{
-					AddChild(row.Value.Container);
-				}
-			}*/
-			/*
-			var row = AddRow(keyElement = new GuiTextElement()
-				{
-					Text = key,
-					Anchor = Alignment.MiddleLeft
-				},
-				valueElement = new GuiTextElement()
-				{
-					Text = value,
-					Anchor = Alignment.MiddleRight
-				});
-*/
-			//	row.Anchor = Alignment.TopFill;
-			//keyElement.Anchor = Alignment.TopLeft;
-			//	valueElement.Anchor = Alignment.TopRight;
-			//	var keyElementMargin = keyElement.Margin;
-			//	keyElementMargin.Left = 0;
-
-			//	keyElement.Margin = keyElementMargin;
-
-			//	var valueElementMargin = valueElement.Margin;
-			//		valueElementMargin.Right = 0;
-
-			//		valueElement.Margin = valueElementMargin;
-			//keyElement.Anchor = Alignment.MinX;
-			//valueElement.Anchor = Alignment.MaxX;
-
-		}
-
-		private class EntryData
-		{
-			public ScoreboardElement Container { get; set; }
-			public uint Score { get; set; }
 		}
 	}
 }
