@@ -1,6 +1,6 @@
 using MiNET.Net;
 
-namespace Alex.Net.Bedrock
+namespace Alex.Net.Bedrock.Packets
 {
 	public class SetEntityData : McpeSetEntityData
 	{

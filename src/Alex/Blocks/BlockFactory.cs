@@ -223,19 +223,7 @@ namespace Alex.Blocks
 						continue;
 					}
 
-
-					var cachedBlockModel = GetOrCacheModel(resources, resourcePack, variantState, id, replace);
-					if (cachedBlockModel == null)
-					{
-						if (reportMissing)
-							Log.Warn($"Missing blockmodel for blockstate {entry.Key}[{variantState.ToString()}]");
-
-						cachedBlockModel = UnknownBlockModel;
-					}
-
-					if (variantState.IsMultiPart) multipartBased++;
-
-					string displayName = entry.Key;
+					string                displayName = entry.Key;
 					IRegistryEntry<Block> registryEntry;
 
 					if (!blockRegistry.TryGet(entry.Key, out registryEntry))
@@ -252,7 +240,18 @@ namespace Alex.Blocks
 
 					var block = registryEntry.Value;
 
-					variantState.Model = cachedBlockModel;
+					var blockModel = GetOrCacheModel(resources, resourcePack, variantState, id, replace);
+					if (blockModel == null)
+					{
+						if (reportMissing && block.Renderable)
+							Log.Warn($"Missing blockmodel for blockstate {entry.Key}[{variantState.ToString()}]");
+
+						blockModel = UnknownBlockModel;
+					}
+
+					if (variantState.IsMultiPart) multipartBased++;
+
+					variantState.Model = blockModel;
 					variantState.Default = s.Default;
 
 					if (string.IsNullOrWhiteSpace(block.DisplayName) ||
@@ -372,7 +371,7 @@ namespace Alex.Blocks
 					{
 						return null;
 					}
-
+					
 					var models = v.Value.Where(x => x.Model?.Elements != null && x.Model.Elements.Length > 0).ToArray();
 
 					if (models.Length == 0)
@@ -380,7 +379,7 @@ namespace Alex.Blocks
 						return null;
 					}
 
-					return new ResourcePackBlockModel(resources, models, v.Value.ToArray().Length > 1);
+					return new ResourcePackBlockModel(resources, models.ToArray(), v.Value.ToArray().Length > 1);
 				}
 
 				BlockStateVariant blockStateVariant = null;

@@ -123,7 +123,10 @@ namespace Alex
 
 			using (var archive = new ZipArchive(stream, ZipArchiveMode.Read, false))
 			{
-				resourcePack = new McResourcePack(archive, preloadCallback);
+				resourcePack = new McResourcePack(archive, preloadCallback, (percentage, file) =>
+				{
+					progressReceiver?.UpdateProgress(percentage, null, file);
+				});
 			}
 
 			sw.Stop();
@@ -268,6 +271,8 @@ namespace Alex
 			}
 			
 			Log.Info($"Loading vanilla resources...");
+			
+			progressReceiver?.UpdateProgress(0, "Loading vanilla resources...");
 			using (MemoryStream stream = new MemoryStream(defaultResources))
 			{
 				var vanilla = LoadResourcePack(progressReceiver, stream, false, preloadCallback);
@@ -275,7 +280,7 @@ namespace Alex
 				
 				ActiveResourcePacks.AddFirst(vanilla);
 			}
-
+			
 			if (!CheckBedrockAssets(progressReceiver, out defaultBedrock))
 			{
 				return false;
@@ -291,14 +296,6 @@ namespace Alex
 	            Environment.Exit(1);
 	            return false;
             }
-
-            /*if (!directories.Any(x => x.Name.Equals("models")))
-            {
-				Log.Warn($"Please make sure to extract the MC:Bedrock resource pack into \"{directory.FullName}\"");
-                Console.ReadLine();
-                Environment.Exit(1);
-				return false;
-            }*/
 
             if (directory.GetFileSystemInfos().Length == 0)
             {
@@ -327,7 +324,12 @@ namespace Alex
 			//report(ResourcePack.AsciiFont);
 
 			Log.Info($"Loading bedrock resources...");
-			BedrockResourcePack = new BedrockResourcePack(directory);
+			
+			progressReceiver?.UpdateProgress(0, "Loading bedrock resources...");
+			BedrockResourcePack = new BedrockResourcePack(directory, (percentage, file) =>
+			{
+				progressReceiver?.UpdateProgress(percentage, null, file);
+			});
 
 			EntityFactory.LoadModels(this, device, true, progressReceiver);
 
@@ -460,11 +462,13 @@ namespace Alex
 			        isFirst = false;
 	        }
 
+	        progress?.UpdateProgress(50, "Loading language...");
 	        if (!Alex.GuiRenderer.SetLanguage(Options.AlexOptions.MiscelaneousOptions.Language.Value))
 	        {
 		        Alex.GuiRenderer.SetLanguage(CultureInfo.InstalledUICulture.Name);
 	        }
 
+	        progress?.UpdateProgress(90, "Loading font...");
 	        var f = ActiveResourcePacks.LastOrDefault(x => x.FontBitmap != null);
 	        if (f != null)
 	        {
@@ -483,16 +487,33 @@ namespace Alex
 	        progress.UpdateProgress(50, "Loading block registry...");
 	        RegistryManager.AddRegistry(new BlockRegistry());
         }
+        
+        public static string ReadStringResource(string resource, IProgressReceiver progressReceiver = null)
+        {
+	        return Encoding.UTF8.GetString(ReadResource(resource, progressReceiver));
+        }
 
-        public static string ReadStringResource(string resource)
+		public static byte[] ReadResource(string resource, IProgressReceiver progressReceiver = null)
 		{
-			return Encoding.UTF8.GetString(ReadResource(resource));
-		}
-		
-		public static byte[] ReadResource(string resource)
-		{
-			var fontStream = Assembly.GetEntryAssembly().GetManifestResourceStream(resource);
-			return fontStream.ReadAllBytes();
+			progressReceiver?.UpdateProgress(0, null, $"Loading resource: {resource}");
+			using (MemoryStream ms = new MemoryStream())
+			{
+				byte[] buffer = new byte[128];
+				using (var reader = Assembly.GetEntryAssembly().GetManifestResourceStream(resource))
+				{
+					int count;
+
+					while ((count = reader.Read(buffer, 0, buffer.Length)) != 0)
+					{
+						ms.Write(buffer, 0, count);
+						progressReceiver?.UpdateProgress((int) ms.Length, (int) reader.Length, null, $"Loading resource: {resource}");
+					}
+				}
+
+				return ms.ToArray();
+			}
+
+			//return fontStream.ReadAllBytes();
 		}
 	}
 

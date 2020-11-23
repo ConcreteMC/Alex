@@ -1,6 +1,5 @@
 using System;
 using System.Buffers;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -9,82 +8,8 @@ using MiNET.Net;
 using MiNET.Net.RakNet;
 using NLog;
 
-namespace Alex.Worlds.Multiplayer.Bedrock
+namespace Alex.Net.Bedrock.Raknet
 {
-	public class InternalDatagramHeader : DatagramHeader
-	{
-		private static bool GetBit(byte b, int bitNumber) {
-			return ((b >> bitNumber) & 1) != 0;
-		}
-
-		public InternalDatagramHeader(byte header)
-		{
-			IsValid = GetBit(header, 7);
-			IsAck = GetBit(header, 6);
-
-			if (IsValid)
-			{
-				if (IsAck)
-				{
-					IsNak = false;
-					IsPacketPair = false;
-					HasBAndAs =GetBit(header, 5);
-				}
-				else
-				{
-					IsNak = GetBit(header, 5);
-
-					if (IsNak)
-					{
-						IsPacketPair = false;
-					}
-					else
-					{
-						IsPacketPair = GetBit(header, 4);
-						IsContinuousSend = GetBit(header, 3);
-						NeedsBAndAs = GetBit(header, 2);
-					}
-				}
-			}
-			/*	var bits = new BitArray(new[] {header});
-	
-				IsValid = bits[7];
-				IsAck = bits[6];
-				if (IsValid)
-				{
-					if (IsAck)
-					{
-						IsNak = false;
-						IsPacketPair = false;
-						HasBAndAs = bits[5];
-						if (HasBAndAs)
-						{
-							// Read AS
-						}
-					}
-					else
-					{
-						IsNak = bits[5];
-						if (IsNak)
-						{
-							// IsNack
-							IsPacketPair = false;
-						}
-						else
-						{
-							// Other
-							IsPacketPair = bits[4];
-							IsContinuousSend = bits[3];
-							NeedsBAndAs = bits[2];
-						}
-					}
-				}*/
-		}
-		public InternalDatagramHeader() : this(0)
-		{
-			
-		}
-	}
 	public class Datagram : Packet<Datagram>
 	{
 		private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
@@ -264,7 +189,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		public bool TryAddMessagePart(MessagePart messagePart, int mtuSize)
 		{
 			byte[] bytes = messagePart.Encode();
-			if (_currentSize + bytes.Length > (mtuSize - RakOfflineHandler.UdpHeaderSize)) return false;
+			if (_currentSize + bytes.Length > (mtuSize - RaknetHandler.UdpHeaderSize)) return false;
 
 			if (messagePart.ReliabilityHeader.PartCount > 0 && messagePart.ReliabilityHeader.PartIndex > 0) Header.IsContinuousSend = true;
 
@@ -280,7 +205,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public int FirstMessageId { get; set; }
 
-		public static IEnumerable<Datagram> CreateDatagrams(List<Packet> messages, int mtuSize, RakSession session)
+		public static IEnumerable<Datagram> CreateDatagrams(List<Packet> messages, int mtuSize, RaknetSession session)
 		{
 			//Log.Debug($"CreateDatagrams multiple ({messages.Count}) messages");
 			Datagram datagram = CreateObject();
@@ -310,7 +235,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			yield return datagram;
 		}
 
-		public static IEnumerable<Datagram> CreateDatagrams(Packet message, int mtuSize, RakSession session)
+		public static IEnumerable<Datagram> CreateDatagrams(Packet message, int mtuSize, RaknetSession session)
 		{
 			Log.Warn($"CreateDatagrams single message");
 			Datagram datagram = CreateObject();
@@ -337,7 +262,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			yield return datagram;
 		}
 
-		private static List<MessagePart> CreateMessageParts(Packet message, int mtuSize, RakSession session)
+		private static List<MessagePart> CreateMessageParts(Packet message, int mtuSize, RaknetSession session)
 		{
 			Memory<byte> encodedMessage = message.Encode();
 
@@ -345,10 +270,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			if (message.IsMcpe) Log.Error($"Got bedrock message in unexpected place {message.GetType().Name}");
 
-			int maxPayloadSizeNoSplit = mtuSize - RakOfflineHandler.UdpHeaderSize - 4 - GetHeaderSize(message.ReliabilityHeader, false);
+			int maxPayloadSizeNoSplit = mtuSize - RaknetHandler.UdpHeaderSize - 4 - GetHeaderSize(message.ReliabilityHeader, false);
 			bool split = encodedMessage.Length >= maxPayloadSizeNoSplit;
 
-			List<(int @from, int length)> splits = ArraySplit(encodedMessage.Length, mtuSize - RakOfflineHandler.UdpHeaderSize - 4 /*datagram header*/ - GetHeaderSize(message.ReliabilityHeader, split));
+			List<(int @from, int length)> splits = ArraySplit(encodedMessage.Length, mtuSize - RaknetHandler.UdpHeaderSize - 4 /*datagram header*/ - GetHeaderSize(message.ReliabilityHeader, split));
 			int count = splits.Count;
 			if (count == 0) Log.Warn("Got zero parts back from split");
 			if (count <= 1)

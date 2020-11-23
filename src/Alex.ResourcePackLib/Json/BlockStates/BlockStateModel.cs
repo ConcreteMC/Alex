@@ -6,6 +6,8 @@ namespace Alex.ResourcePackLib.Json.BlockStates
 {
 	public class BlockStateModel
 	{
+		internal McResourcePack ResourcePack { get; set; }
+		
 		/// <summary>
 		/// Contains the properties of a model, if more than one model is used for the same variant. 
 		/// All specified models alternate in the game.
@@ -13,8 +15,30 @@ namespace Alex.ResourcePackLib.Json.BlockStates
 		[JsonProperty("model")]
 		public string ModelName { get; set; }
 
+		private ResourcePackModelBase _model = null;
+		
 		[JsonIgnore]
-		public ResourcePackModelBase Model { get; set; }
+		public ResourcePackModelBase Model
+		{
+			get
+			{
+				if (_model != null)
+					return _model;
+
+				if (ResourcePack == null)
+					return null;
+
+				if (!ResourcePack.TryGetBlockModel(ModelName, out var model))
+					return null;
+				
+				_model = model;
+				return model;
+			}
+			set
+			{
+				_model = value;
+			}
+		}
 
 		/// <summary>
 		/// Rotation of the model on the x-axis in increments of 90 degrees.

@@ -1,8 +1,6 @@
-using fNbt;
-using MiNET.Items;
 using MiNET.Net;
 
-namespace Alex.Net.Bedrock
+namespace Alex.Net.Bedrock.Packets
 {
     public class MobEquipment : McpeMobEquipment
     {

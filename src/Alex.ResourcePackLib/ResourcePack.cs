@@ -15,10 +15,13 @@ namespace Alex.ResourcePackLib
 {
     public class ResourcePack
     {
+	    public delegate void LoadProgress(int percentage, string file);
+	    
 	    private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
 	    
-		public ResourcePackType Type { get; private set; }
-		public ResourcePackManifest Info { get; private set; }
+	    public LoadProgress         ProgressReporter { get; set; } = null;
+		public ResourcePackType     Type             { get; private set; }
+		public ResourcePackManifest Info             { get; private set; }
 		protected ResourcePack()
 	    {
 

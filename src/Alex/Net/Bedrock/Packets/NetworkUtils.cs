@@ -1,8 +1,5 @@
 using System;
 using System.IO;
-using System.IO.Compression;
-using System.Text;
-using Alex.API.Utils;
 using fNbt;
 using fNbt.Tags;
 using MiNET.Items;
@@ -10,7 +7,7 @@ using MiNET.Net;
 using MiNET.Utils;
 using NLog;
 
-namespace Alex.Net.Bedrock
+namespace Alex.Net.Bedrock.Packets
 {
 	public class MetadataNbt : MetadataEntry
 	{

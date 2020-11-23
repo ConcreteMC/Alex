@@ -23,6 +23,7 @@ using Alex.Entities;
 using Alex.Gamestates;
 using Alex.Net;
 using Alex.Net.Bedrock;
+using Alex.Net.Bedrock.Packets;
 using Alex.Net.Bedrock.Raknet;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Models.Entities;
@@ -81,9 +82,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         public AutoResetEvent PlayerStatusChanged { get; set; } = new AutoResetEvent(false);
         public AutoResetEvent ChangeDimensionResetEvent = new AutoResetEvent(false);
         private IEventDispatcher EventDispatcher { get; }
-        public RakConnection Connection { get; }
+        public RaknetConnection Connection { get; }
         private MessageHandler MessageHandler { get; set; }
-        private RakSession Session { get; set; }//=> Connection.ConnectionInfo.RakSessions.Values.FirstOrDefault();
+        private RaknetSession Session { get; set; }//=> Connection.ConnectionInfo.RakSessions.Values.FirstOrDefault();
         public override bool IsConnected => Session?.State == ConnectionState.Connected;
         
         private IPEndPoint _remoteEndpoint;
@@ -126,7 +127,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			ChunkProcessor.ClientSideLighting = Options.VideoOptions.ClientSideLighting;
 			
-			Connection = new RakConnection();
+			Connection = new RaknetConnection();
 			ServerEndpoint = endpoint;
 			Connection.ConnectionInfo.DisableAck = false;
 			Connection.ConnectionInfo.IsEmulator = false;
@@ -305,7 +306,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			Stopwatch sw = new Stopwatch();
 			this.Connection.Start();
 
-			var listener = ReflectionHelper.GetPrivateFieldValue<UdpClient>(typeof(RakConnection), Connection, "_listener");
+			var listener = ReflectionHelper.GetPrivateFieldValue<UdpClient>(typeof(RaknetConnection), Connection, "_listener");
 			listener.DontFragment = true;
 			//listener.Client.ReceiveBufferSize = 2000;
 			//listener.Client.SendBufferSize = 2000;
@@ -340,7 +341,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			byte[] data = new UnconnectedPing()
 			{
 				pingId = Stopwatch.GetTimestamp(),
-				guid = this.Connection.RakOfflineHandler.ClientGuid
+				guid = this.Connection.RaknetHandler.ClientGuid
 			}.Encode();
 			
 			if (targetEndPoint != null)
@@ -864,16 +865,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
             return Encoding.UTF8.GetBytes(val);
         }
 
-        /*public bool IgnoreUnConnectedPong = false;
-		public override void OnUnconnectedPong(UnconnectedPong packet, IPEndPoint senderEndpoint)
-		{
-			KnownMotd = new BedrockMotd(packet.serverName);
-			OnMotdReceivedHandler?.Invoke(this, KnownMotd);
-			if (IgnoreUnConnectedPong) return;
-
-			base.OnUnconnectedPong(packet, senderEndpoint);
-		}*/
-		
 		public World World { get; set; } 
 		public System.Numerics.Vector3 SpawnPoint { get; set; } = System.Numerics.Vector3.Zero;
 		public LevelInfo LevelInfo { get; } = new LevelInfo();
@@ -1072,13 +1063,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				    Item = item,
 				    EntityId = target.EntityId
 			    };
-			    /*  packet.transaction = new Transaction()
-		    {
-			    TransactionType = McpeInventoryTransaction.TransactionType.ItemUseOnEntity,
-			    ActionType = (int) action,
-			    Item = MiNET.Items.ItemFactory.GetItem(itemInHand.Id, itemInHand.Meta, itemInHand.Count),
-			    EntityId = target.EntityId
-		    };*/
 
 			    Session.SendPacket(packet);
 		    }
@@ -1097,19 +1081,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			    Position = new MiNET.Utils.BlockCoordinates(position.X, position.Y, position.Z),
 			    Face = (int)face,
 		    };
-		  /*  packet.transaction = new Transaction()
-		    {
-			    ActionType = (int)McpeInventoryTransaction.ItemUseAction.Use,
-			    ClickPosition =
-				    new System.Numerics.Vector3(cursorPosition.X, cursorPosition.Y, cursorPosition.Z),
-			    TransactionType = McpeInventoryTransaction.TransactionType.ItemUse,
-			    EntityId = NetworkEntityId,
-			    Position = new MiNET.Utils.BlockCoordinates(position.X, position.Y, position.Z),
-			    Face = (int)face,
-                
-			    //Item = MiNET.Items.ItemFactory.GetItem()
-
-		    };*/
 
 		  Session.SendPacket(packet);
 	    }
@@ -1201,12 +1172,23 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void SendPing()
 		{
-			ConnectedPing cp = ConnectedPing.CreateObject();
-			cp.sendpingtime = DateTimeOffset.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
+			if (CustomConnectedPong.CanPing)
+			{
+				ConnectedPing cp = ConnectedPing.CreateObject();
+				cp.sendpingtime = DateTimeOffset.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
 
-			CustomConnectedPong.LastSentPing = DateTimeOffset.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
-			
-			Session?.SendPacket(cp);
+				CustomConnectedPong.LastSentPing = DateTimeOffset.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
+
+				Session?.SendPacket(cp);
+			}
+			else
+			{
+				McpeNetworkStackLatency nsl = McpeNetworkStackLatency.CreateObject();
+				nsl.timestamp = (ulong) DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+				nsl.unknownFlag = 1;
+				
+				Session?.SendPacket(nsl);
+			}
 		}
 
 

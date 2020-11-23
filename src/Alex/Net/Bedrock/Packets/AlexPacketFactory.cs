@@ -5,7 +5,7 @@ using MiNET.Net;
 using MiNET.Net.RakNet;
 using NLog;
 
-namespace Alex.Net.Bedrock
+namespace Alex.Net.Bedrock.Packets
 {
     public class AlexPacketFactory : ICustomPacketFactory
     {

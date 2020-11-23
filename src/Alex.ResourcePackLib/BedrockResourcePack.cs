@@ -28,11 +28,12 @@ namespace Alex.ResourcePackLib
 
 		private readonly DirectoryInfo _workingDir;
 
-		public BedrockResourcePack(DirectoryInfo directory)
+		public BedrockResourcePack(DirectoryInfo directory, ResourcePack.LoadProgress progressReporter = null)
 		{
+			
 			_workingDir = directory;
 
-			Load();
+			Load(progressReporter);
 		}
 
 		public bool TryGetTexture(string name, out Image<Rgba32> texture)
@@ -45,7 +46,7 @@ namespace Alex.ResourcePackLib
 			return path.Replace('\\', '/').ToLowerInvariant();
 		}
 
-		private void Load()
+		private void Load(ResourcePack.LoadProgress progressReporter)
 		{
             DirectoryInfo entityDefinitionsDir = null;
 
@@ -60,8 +61,14 @@ namespace Alex.ResourcePackLib
                         {
                             entityDefinitionsDir = dir;
 
-                            foreach (var file in dir.EnumerateFiles())
+                            var files = dir.GetFiles();
+                            var total = files.Length;
+
+                            int count = 0;
+                            foreach (var file in files)
                             {
+	                            count++;
+	                            progressReporter?.Invoke((int)(((double)count / (double)total) * 100D), file.Name);
                                 if (!entityGeometry.TryAdd(file.Name, file))
                                 {
 	                                if (entityGeometry.TryGetValue(file.Name, out var current))

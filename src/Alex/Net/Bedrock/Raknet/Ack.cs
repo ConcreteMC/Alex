@@ -23,12 +23,7 @@
 
 #endregion
 
-using System;
-using System.Collections.Generic;
-using MiNET.Net;
-using MiNET.Utils;
-
-namespace Alex.Worlds.Multiplayer.Bedrock
+namespace Alex.Net.Bedrock.Raknet
 {
 	/*public class Acks : Packet<Acks>
 	{

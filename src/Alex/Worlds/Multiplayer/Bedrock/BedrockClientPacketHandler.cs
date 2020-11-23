@@ -27,6 +27,7 @@ using Alex.Graphics.Models.Entity.Animations;
 using Alex.Gui.Elements;
 using Alex.Items;
 using Alex.Net.Bedrock;
+using Alex.Net.Bedrock.Packets;
 using Alex.ResourcePackLib.Json;
 using Alex.ResourcePackLib.Json.Converters;
 using Alex.ResourcePackLib.Json.Models.Entities;
@@ -1882,6 +1883,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeNetworkStackLatency(McpeNetworkStackLatency message)
 		{
+			Log.Info($"Stack latency: {message.timestamp} | {message.unknownFlag}");
 			if (message.unknownFlag == 1)
 			{
 				var response = McpeNetworkStackLatency.CreateObject();
@@ -1889,6 +1891,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				response.unknownFlag = 0;
 				
 				Client.SendPacket(response);
+			}
+			else
+			{
+				
 			}
 		}
 

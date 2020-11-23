@@ -2,7 +2,7 @@ using System;
 using MiNET.Net;
 using NLog;
 
-namespace Alex.Net.Bedrock
+namespace Alex.Net.Bedrock.Packets
 {
 	public class AddPlayer : McpeAddPlayer
 	{

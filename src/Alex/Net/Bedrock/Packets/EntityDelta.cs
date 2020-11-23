@@ -3,7 +3,7 @@ using Alex.API.Utils;
 using MiNET.Net;
 using NLog;
 
-namespace Alex.Net.Bedrock
+namespace Alex.Net.Bedrock.Packets
 {
   public class EntityDelta : McpeMoveEntityDelta
   {

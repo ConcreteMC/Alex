@@ -24,7 +24,6 @@
 #endregion
 
 using System;
-using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -33,15 +32,17 @@ using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Alex.Net.Bedrock.Raknet;
 using MiNET;
 using MiNET.Net;
 using MiNET.Net.RakNet;
 using MiNET.Utils;
 using NLog;
+using Datagram = Alex.Net.Bedrock.Raknet.Datagram;
 
-namespace Alex.Worlds.Multiplayer.Bedrock
+namespace Alex.Net.Bedrock
 {
-	public class RakConnection
+	public class RaknetConnection
 	{
 		private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
 
@@ -50,17 +51,17 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		private Thread _receiveThread;
 		private HighPrecisionTimer _tickerHighPrecisionTimer;
-		public readonly ConcurrentDictionary<IPEndPoint, RakSession> RakSessions = new ConcurrentDictionary<IPEndPoint, RakSession>();
+		public readonly ConcurrentDictionary<IPEndPoint, RaknetSession> RakSessions = new ConcurrentDictionary<IPEndPoint, RaknetSession>();
 
-		public readonly RakOfflineHandler RakOfflineHandler;
+		public readonly RaknetHandler RaknetHandler;
 		public ConnectionInfo ConnectionInfo { get; }
 
-		public bool FoundServer => RakOfflineHandler.HaveServer;
+		public bool FoundServer => RaknetHandler.HaveServer;
 
 		public bool AutoConnect
 		{
-			get => RakOfflineHandler.AutoConnect;
-			set => RakOfflineHandler.AutoConnect = value;
+			get => RaknetHandler.AutoConnect;
+			set => RaknetHandler.AutoConnect = value;
 		}
 
 		// This is only used in client scenarios. Will contain
@@ -68,15 +69,15 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		public IPEndPoint RemoteEndpoint { get; set; }
 		public string RemoteServerName { get; set; }
 
-		public Func<RakSession, ICustomMessageHandler> CustomMessageHandlerFactory { get; set; }
+		public Func<RaknetSession, ICustomMessageHandler> CustomMessageHandlerFactory { get; set; }
 		
-		public RakConnection()
+		public RaknetConnection()
 		{
 			_endpoint = new IPEndPoint(IPAddress.Any, 0);
 
 			ConnectionInfo = new ConnectionInfo(new ConcurrentDictionary<IPEndPoint, MiNET.Net.RakNet.RakSession>());
 
-			RakOfflineHandler = new RakOfflineHandler(this, ConnectionInfo);
+			RaknetHandler = new RaknetHandler(this, ConnectionInfo);
 		}
 
 		public void Start()
@@ -121,10 +122,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			Start(); // Make sure we have started the listener
 
-			RakSession session;
+			RaknetSession session;
 			do
 			{
-				RakOfflineHandler.SendOpenConnectionRequest1(targetEndPoint, mtuSize);
+				RaknetHandler.SendOpenConnectionRequest1(targetEndPoint, mtuSize);
 				Task.Delay(300).Wait();
 			} while ((!RakSessions.TryGetValue(targetEndPoint, out session) && RakSessions.Count < 0) && numberOfAttempts-- > 0);
 
@@ -143,7 +144,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			var packet = new UnconnectedPing
 			{
 				pingId = Stopwatch.GetTimestamp() /*incoming.pingId*/,
-				guid = RakOfflineHandler.ClientGuid
+				guid = RaknetHandler.ClientGuid
 			};
 
 			var data = packet.Encode();
@@ -224,7 +225,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			return listener;
 		}
 
-		public void Close(RakSession session)
+		public void Close(RaknetSession session)
 		{
 			var ackQueue = session.WaitingForAckQueue;
 			foreach (var kvp in ackQueue)
@@ -330,7 +331,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				if (messageId <= (byte) DefaultMessageIdTypes.ID_USER_PACKET_ENUM)
 				{
-					RakOfflineHandler.HandleOfflineRakMessage(receivedBytes, clientEndpoint);
+					RaknetHandler.HandleOfflineRakMessage(receivedBytes, clientEndpoint);
 				}
 				else
 				{
@@ -340,7 +341,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				return;
 			}
 
-			if (!RakSessions.TryGetValue(clientEndpoint, out RakSession rakSession))
+			if (!RakSessions.TryGetValue(clientEndpoint, out RaknetSession rakSession))
 			{
 				return;
 			}
@@ -388,7 +389,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			datagram.PutPool();
 		}
 
-		private void HandleDatagram(RakSession session, Datagram datagram)
+		private void HandleDatagram(RaknetSession session, Datagram datagram)
 		{
 			foreach (Packet packet in datagram.Messages)
 			{
@@ -404,7 +405,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 		}
 
-		private Packet HandleSplitMessage(RakSession session, SplitPartPacket splitPart)
+		private Packet HandleSplitMessage(RaknetSession session, SplitPartPacket splitPart)
 		{
 			int spId = splitPart.ReliabilityHeader.PartId;
 			int spIdx = splitPart.ReliabilityHeader.PartIndex;
@@ -486,12 +487,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		}
 
 
-		private void EnqueueAck(RakSession session, Int24 datagramSequenceNumber)
+		private void EnqueueAck(RaknetSession session, Int24 datagramSequenceNumber)
 		{
 			session.OutgoingAckQueue.Enqueue(datagramSequenceNumber);
 		}
 
-		private void HandleAck(RakSession session, Ack ack, ConnectionInfo connectionInfo)
+		private void HandleAck(RaknetSession session, Ack ack, ConnectionInfo connectionInfo)
 		{
 			var queue = session.WaitingForAckQueue;
 
@@ -518,7 +519,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			session.WaitForAck = false;
 		}
 
-		internal void HandleNak(RakSession session, Nak nak, ConnectionInfo connectionInfo)
+		internal void HandleNak(RaknetSession session, Nak nak, ConnectionInfo connectionInfo)
 		{
 			var queue = session.WaitingForAckQueue;
 
@@ -548,7 +549,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void CalculateRto(RakSession session, Datagram datagram)
+		private void CalculateRto(RaknetSession session, Datagram datagram)
 		{
 			// RTT = RTT * 0.875 + rtt * 0.125
 			// RTTVar = RTTVar * 0.875 + abs(RTT - rtt)) * 0.125
@@ -565,14 +566,14 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		private async void SendTick(object obj)
 		{
 			var tasks = new List<Task>();
-			foreach (KeyValuePair<IPEndPoint, RakSession> session in RakSessions)
+			foreach (KeyValuePair<IPEndPoint, RaknetSession> session in RakSessions)
 			{
 				tasks.Add(session.Value.SendTickAsync(this));
 			}
 			await Task.WhenAll(tasks);
 		}
 
-		internal async Task UpdateAsync(RakSession session)
+		internal async Task UpdateAsync(RaknetSession session)
 		{
 			if (session.Evicted) return;
 
@@ -640,7 +641,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 		}
 
-		public async Task SendPacketAsync(RakSession session, Packet message)
+		public async Task SendPacketAsync(RaknetSession session, Packet message)
 		{
 			foreach (Datagram datagram in Datagram.CreateDatagrams(message, session.MtuSize, session))
 			{
@@ -650,7 +651,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			message.PutPool();
 		}
 
-		public async Task SendPacketAsync(RakSession session, List<Packet> messages)
+		public async Task SendPacketAsync(RaknetSession session, List<Packet> messages)
 		{
 			foreach (Datagram datagram in Datagram.CreateDatagrams(messages, session.MtuSize, session))
 			{
@@ -664,7 +665,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		}
 
 
-		public async Task SendDatagramAsync(RakSession session, Datagram datagram)
+		public async Task SendDatagramAsync(RaknetSession session, Datagram datagram)
 		{
 			if (datagram.MessageParts.Count == 0)
 			{

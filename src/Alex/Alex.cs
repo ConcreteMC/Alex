@@ -282,10 +282,11 @@ namespace Alex
 
 			RichPresenceProvider.Initialize();
 		}
-
+		
 		protected override void LoadContent()
 		{
-			var options = Services.GetService<IOptionsProvider>();
+			Stopwatch loadingStopwatch = Stopwatch.StartNew();
+			var       options          = Services.GetService<IOptionsProvider>();
 			options.Load();
 
 			//	DebugFont = (WrappedSpriteFont) Content.Load<SpriteFont>("Alex.Resources.DebugFont.xnb");
@@ -377,6 +378,11 @@ namespace Alex
 					catch (Exception ex)
 					{
 						Log.Error(ex, $"Could not initialize! {ex}");
+					}
+					finally
+					{
+						loadingStopwatch.Stop();
+						Log.Info($"Startup time: {loadingStopwatch.Elapsed}");
 					}
 				});
 		}
@@ -671,7 +677,7 @@ namespace Alex
 			}
 
 			GameStateManager.RemoveState("splash");
-
+			
 		}
 
 		private void OnResourcePackPreLoadCompleted(Image<Rgba32> fontBitmap, List<char> bitmapCharacters)
@@ -754,9 +760,9 @@ namespace Alex
 		void UpdateProgress(int percentage, string statusMessage, string sub);
 		
 		void UpdateProgress(int done, int total, string statusMessage) =>
-			UpdateProgress((done / total) * 100, statusMessage);
+			UpdateProgress((int)(((double)done / (double)total) * 100D), statusMessage);
 		
 		void UpdateProgress(int done, int total, string statusMessage, string sub)=>
-			UpdateProgress((done / total) * 100, statusMessage, sub);
+			UpdateProgress((int)(((double)done / (double)total) * 100D), statusMessage, sub);
     }
 }

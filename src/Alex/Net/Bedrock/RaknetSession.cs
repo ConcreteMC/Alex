@@ -30,20 +30,20 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-
 using MiNET;
 using MiNET.Net;
 using MiNET.Net.RakNet;
 using MiNET.Utils;
 using NLog;
+using Datagram = Alex.Net.Bedrock.Raknet.Datagram;
 
-namespace Alex.Worlds.Multiplayer.Bedrock
+namespace Alex.Net.Bedrock
 {
-	public class RakSession : INetworkHandler
+	public class RaknetSession : INetworkHandler
 	{
 		private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
 
-		private readonly RakConnection _packetSender;
+		private readonly RaknetConnection _packetSender;
 
 		private long _lastOrderingIndex = -1; // That's the first message with wrapper
 		private AutoResetEvent _packetQueuedWaitEvent = new AutoResetEvent(false);
@@ -110,7 +110,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		public ConcurrentDictionary<int, Datagram> WaitingForAckQueue { get; } = new ConcurrentDictionary<int, Datagram>();
 
 
-		public RakSession(ConnectionInfo connectionInfo, RakConnection packetSender, IPEndPoint endPoint, short mtuSize, ICustomMessageHandler messageHandler = null)
+		public RaknetSession(ConnectionInfo connectionInfo, RaknetConnection packetSender, IPEndPoint endPoint, short mtuSize, ICustomMessageHandler messageHandler = null)
 		{
 			Log.Debug($"Create session for {endPoint}");
 
@@ -457,7 +457,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		private int _tickCounter;
 
-		public async Task SendTickAsync(global::Alex.Worlds.Multiplayer.Bedrock.RakConnection connection)
+		public async Task SendTickAsync(global::Alex.Net.Bedrock.RaknetConnection connection)
 		{
 			try
 			{
@@ -523,7 +523,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		private async Task SendAckQueueAsync()
 		{
-			RakSession session = this;
+			RaknetSession session = this;
 			var queue = session.OutgoingAckQueue;
 			int queueCount = queue.Count;
 

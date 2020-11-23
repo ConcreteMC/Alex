@@ -16,6 +16,7 @@ using Alex.Worlds.Lighting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MathF = System.MathF;
 
 namespace Alex.Worlds
 {
@@ -541,7 +542,7 @@ namespace Alex.Worlds
 				return false;
 			
 			return frustum.Intersects(new Microsoft.Xna.Framework.BoundingBox(chunkPos,
-				chunkPos + new Vector3(ChunkColumn.ChunkWidth, camera.Position.Y + 10,
+				chunkPos + new Vector3(ChunkColumn.ChunkWidth, MathF.Max(camera.Position.Y + 10f, 256f),
 					ChunkColumn.ChunkDepth)));
 
 		}

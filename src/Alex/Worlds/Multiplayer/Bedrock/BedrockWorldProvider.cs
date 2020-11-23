@@ -78,7 +78,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			{
 				_tickTime++;
 
-				if (World.Player != null && Client.HasSpawned)
+				if (World.Player != null && Client.HasSpawned && _gameStarted)
 				{
 					//	player.IsSpawned = Spawned;
 
@@ -116,7 +116,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					}
 				}
 
-				if (_tickTime % 20 == 0 && CustomConnectedPong.CanPing)
+				if (_tickTime % 20 == 0 && Client.HasSpawned && _gameStarted)
 				{
 					Client.SendPing();
 				}
@@ -293,9 +293,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			progressReport(LoadingState.Spawning, 99);
 			timer.Stop();
 
+			_gameStarted = true;
+			
 			//TODO: Check if spawn position is safe.
 			return true;
 		}
+
+		private bool _gameStarted = false;
 
 		public override void Dispose()
 		{

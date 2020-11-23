@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using Alex.Net.Bedrock;
 using MiNET.Net;
 using MiNET.Net.RakNet;
 using MiNET.Utils;
@@ -20,11 +21,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         public                     Action               ConnectionAction   { get; set; }
         public                     Action<string, bool> DisconnectedAction { get; set; }
         
-        private protected readonly RakSession           _session;
+        private protected readonly RaknetSession           _session;
 
         public CryptoContext CryptoContext { get; set; }
         
-        public MessageHandler(RakSession session, IMcpeClientMessageHandler handler) : base()
+        public MessageHandler(RaknetSession session, IMcpeClientMessageHandler handler) : base()
         {
 	        _session = session;
             _messageDispatcher = new McpeClientMessageDispatcher(handler);
@@ -188,7 +189,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 					try
 					{
-						HandleCustomPacket(msg);
+						HandleGamePacket(msg);
 					}
 					catch (Exception e)
 					{
@@ -210,20 +211,20 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				if (Log.IsDebugEnabled) Log.Warn($"Unknown packet 0x{message.Id:X2}\n{Packet.HexDump(message.Bytes)}");
 			}
 		}
-        
-        public Packet OnSendCustomPacket(Packet message)
+
+		private Packet OnSendCustomPacket(Packet message)
         {
 	     //   Log.Info($"Sent: {message}");
             return message;
         }
 
-        public void HandleCustomPacket(Packet message)
+        private void HandleGamePacket(Packet message)
         {
             Stopwatch sw = Stopwatch.StartNew();
 
             try
             {
-	         //   Log.Info($"Got: {message}");
+	          //  Log.Info($"Got: {message}");
                 _messageDispatcher.HandlePacket(message);
             }
             catch (Exception ex)

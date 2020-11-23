@@ -1,19 +1,14 @@
 using System;
 using System.Collections.Concurrent;
 using System.Net;
-using System.Text.RegularExpressions;
-using System.Threading;
 using MiNET;
 using MiNET.Net;
 using MiNET.Net.RakNet;
-using MiNET.Utils;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using NLog;
 
-namespace Alex.Worlds.Multiplayer.Bedrock
+namespace Alex.Net.Bedrock
 {
-	public sealed class RakOfflineHandler
+	public sealed class RaknetHandler
 	{
 		private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
 
@@ -22,7 +17,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		public short MtuSize { get; set; } = 1500;
 		public short MaxMtuSize { get; } = 1500;
 		
-		private readonly RakConnection _connection;
+		private readonly RaknetConnection _connection;
 		private readonly ConnectionInfo _connectionInfo;
 
 		public long ClientGuid { get; }
@@ -33,7 +28,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		// Tell RakNet to automatically connect to any found server.
 		public bool AutoConnect { get; set; } = true;
 
-		internal RakOfflineHandler(RakConnection connection, ConnectionInfo connectionInfo)
+		internal RaknetHandler(RaknetConnection connection, ConnectionInfo connectionInfo)
 		{
 			_connection = connection;
 			_connectionInfo = connectionInfo;
@@ -200,9 +195,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		//public ConcurrentDictionary<IPEndPoint, RakSession> _sessions = new ConcurrentDictionary<IPEndPoint, RakSession>();
 		private void SendConnectionRequest(IPEndPoint targetEndPoint, short mtuSize)
 		{
-			ConcurrentDictionary<IPEndPoint, RakSession> sessions = _connection.RakSessions;
+			ConcurrentDictionary<IPEndPoint, RaknetSession> sessions = _connection.RakSessions;
 
-			RakSession session;
+			RaknetSession session;
 			lock (sessions)
 			{
 				if (sessions.ContainsKey(targetEndPoint))
@@ -211,7 +206,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					return;
 				}
 
-				session = new RakSession(_connectionInfo, _connection, targetEndPoint, mtuSize)
+				session = new RaknetSession(_connectionInfo, _connection, targetEndPoint, mtuSize)
 				{
 					State = ConnectionState.Connecting,
 					LastUpdatedTime = DateTime.UtcNow,
@@ -234,120 +229,5 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			session.SendPacket(packet);
 		}
-
-	/*	internal static void TraceReceive(ILogger log, Packet message)
-		{
-			if (!Log.IsTraceEnabled) return;
-
-			try
-			{
-				string typeName = message.GetType().Name;
-
-				string includePattern = Config.GetProperty("TracePackets.Include", ".*");
-				string excludePattern = Config.GetProperty("TracePackets.Exclude", null);
-				int verbosity = Config.GetProperty("TracePackets.Verbosity", 0);
-				verbosity = Config.GetProperty($"TracePackets.Verbosity.{typeName}", verbosity);
-
-				if (!Regex.IsMatch(typeName, includePattern))
-				{
-					return;
-				}
-
-				if (!string.IsNullOrWhiteSpace(excludePattern) && Regex.IsMatch(typeName, excludePattern))
-				{
-					return;
-				}
-
-				if (verbosity == 0)
-				{
-					log.Trace($"> Receive: {message.Id} (0x{message.Id:x2}): {message.GetType().Name}");
-				}
-				else if (verbosity == 1 || verbosity == 3)
-				{
-					var jsonSerializerSettings = new JsonSerializerSettings
-					{
-						PreserveReferencesHandling = PreserveReferencesHandling.Arrays,
-						TypeNameHandling = TypeNameHandling.Auto,
-						Formatting = Formatting.Indented,
-						ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-					};
-
-					jsonSerializerSettings.Converters.Add(new StringEnumConverter());
-					jsonSerializerSettings.Converters.Add(new NbtIntConverter());
-					jsonSerializerSettings.Converters.Add(new NbtStringConverter());
-					jsonSerializerSettings.Converters.Add(new IPAddressConverter());
-					jsonSerializerSettings.Converters.Add(new IPEndPointConverter());
-
-					string result = JsonConvert.SerializeObject(message, jsonSerializerSettings);
-					log.Trace($"> Receive: {message.Id} (0x{message.Id:x2}): {message.GetType().Name}\n{result}");
-				}
-				else if (verbosity == 2 || verbosity == 3)
-				{
-					log.Trace($"> Receive: {message.Id} (0x{message.Id:x2}): {message.GetType().Name}\n{Packet.HexDump(message.Bytes)}");
-				}
-			}
-			catch (Exception e)
-			{
-				log.Error(e, "Error when printing trace");
-			}
-		}
-
-		internal static void TraceSend(Packet message)
-		{
-			if (!Log.IsTraceEnabled) return;
-
-			try
-			{
-				string typeName = message.GetType().Name;
-
-				string includePattern = Config.GetProperty("TracePackets.Include", ".*");
-				string excludePattern = Config.GetProperty("TracePackets.Exclude", null);
-				int verbosity = Config.GetProperty("TracePackets.Verbosity", 0);
-				verbosity = Config.GetProperty($"TracePackets.Verbosity.{typeName}", verbosity);
-
-				if (!Regex.IsMatch(typeName, includePattern))
-				{
-					return;
-				}
-
-				if (!string.IsNullOrWhiteSpace(excludePattern) && Regex.IsMatch(typeName, excludePattern))
-				{
-					return;
-				}
-
-				if (verbosity == 0)
-				{
-					Log.Trace($"<    Send: {message.Id} (0x{message.Id:x2}): {message.GetType().Name}");
-				}
-				else if (verbosity == 1 || verbosity == 3)
-				{
-					var jsonSerializerSettings = new JsonSerializerSettings
-					{
-						PreserveReferencesHandling = PreserveReferencesHandling.Arrays,
-						TypeNameHandling = TypeNameHandling.Auto,
-						Formatting = Formatting.Indented,
-						DefaultValueHandling = DefaultValueHandling.Include,
-						ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-					};
-
-					jsonSerializerSettings.Converters.Add(new StringEnumConverter());
-					jsonSerializerSettings.Converters.Add(new NbtIntConverter());
-					jsonSerializerSettings.Converters.Add(new NbtStringConverter());
-					jsonSerializerSettings.Converters.Add(new IPAddressConverter());
-					jsonSerializerSettings.Converters.Add(new IPEndPointConverter());
-
-					string result = JsonConvert.SerializeObject(message, jsonSerializerSettings);
-					Log.Trace($"<    Send: {message.Id} (0x{message.Id:x2}): {message.GetType().Name}\n{result}");
-				}
-				else if (verbosity == 2 || verbosity == 3)
-				{
-					Log.Trace($"<    Send: {message.Id} (0x{message.Id:x2}): {message.GetType().Name}\n{Packet.HexDump(message.Bytes)}");
-				}
-			}
-			catch (Exception e)
-			{
-				Log.Error(e, "Error when printing trace");
-			}
-		}*/
 	}
 }
