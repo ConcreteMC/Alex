@@ -1,17 +1,17 @@
 using System;
 using System.Numerics;
 using System.Threading.Tasks;
-using log4net;
 using MiNET.Entities;
 using MiNET.Net;
 using MiNET.Plugins.Attributes;
 using MiNET.Worlds;
+using NLog;
 
 namespace MiNET.AlexDebug
 {
     public class CommandHandler
     {
-        private static readonly ILog Log = LogManager.GetLogger(typeof(CommandHandler));
+        private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
         
         private PluginCore Core { get; }
         public CommandHandler(PluginCore core)

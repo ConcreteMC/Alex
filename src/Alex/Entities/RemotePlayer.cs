@@ -17,7 +17,6 @@ using Alex.ResourcePackLib.Json.Models.Entities;
 using Alex.Utils;
 using Alex.Worlds;
 using Alex.Worlds.Multiplayer.Bedrock;
-using log4net;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

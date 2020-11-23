@@ -5,9 +5,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using log4net;
 using MiNET.Net;
 using MiNET.Net.RakNet;
+using NLog;
 
 namespace Alex.Worlds.Multiplayer.Bedrock
 {
@@ -87,7 +87,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	}
 	public class Datagram : Packet<Datagram>
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(Datagram));
+		private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
 
 		private int _currentSize = 4; // header
 		public long RetransmissionTimeOut { get; set; }

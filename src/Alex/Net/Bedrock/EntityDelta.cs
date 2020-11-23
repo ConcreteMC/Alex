@@ -1,13 +1,13 @@
 using System;
 using Alex.API.Utils;
-using log4net;
 using MiNET.Net;
+using NLog;
 
 namespace Alex.Net.Bedrock
 {
   public class EntityDelta : McpeMoveEntityDelta
   {
-    private static readonly ILog Log = LogManager.GetLogger(typeof(McpeMoveEntityDelta));
+    private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
 
     private PlayerLocation Current { get; set; } = new PlayerLocation();
     

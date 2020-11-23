@@ -30,17 +30,18 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using log4net;
+
 using MiNET;
 using MiNET.Net;
 using MiNET.Net.RakNet;
 using MiNET.Utils;
+using NLog;
 
 namespace Alex.Worlds.Multiplayer.Bedrock
 {
 	public class RakSession : INetworkHandler
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(RakSession));
+		private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
 
 		private readonly RakConnection _packetSender;
 
@@ -330,17 +331,17 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					long elapsedMilliseconds = message.Timer.ElapsedMilliseconds;
 					if (elapsedMilliseconds > 1000)
 					{
-						Log.WarnFormat("Packet (0x{1:x2}) handling too long {0}ms for {2}", elapsedMilliseconds, message.Id, Username);
+						Log.Warn("Packet (0x{1:x2}) handling too long {0}ms for {2}", elapsedMilliseconds, message.Id, Username);
 					}
 				}
 				else
 				{
-					Log.WarnFormat("Packet (0x{0:x2}) timer not started for {1}.", message.Id, Username);
+					Log.Warn("Packet (0x{0:x2}) timer not started for {1}.", message.Id, Username);
 				}
 			}
 			catch (Exception e)
 			{
-				Log.Error("Packet handling", e);
+				Log.Error(e,"Packet handling");
 				throw;
 			}
 			finally
@@ -364,7 +365,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		protected virtual void HandleConnectionRequest(ConnectionRequest message)
 		{
-			Log.DebugFormat("Connection request from: {0}", EndPoint.Address);
+			Log.Debug("Connection request from: {0}", EndPoint.Address);
 
 			var response = ConnectionRequestAccepted.CreateObject();
 			response.NoBatch = true;

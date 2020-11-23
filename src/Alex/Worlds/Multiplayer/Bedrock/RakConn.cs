@@ -33,17 +33,17 @@ using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using log4net;
 using MiNET;
 using MiNET.Net;
 using MiNET.Net.RakNet;
 using MiNET.Utils;
+using NLog;
 
 namespace Alex.Worlds.Multiplayer.Bedrock
 {
 	public class RakConnection
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(RakConnection));
+		private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
 
 		private          UdpClient  _listener;
 		private readonly IPEndPoint _endpoint;
@@ -382,7 +382,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			EnqueueAck(rakSession, datagram.Header.DatagramSequenceNumber);
 
-			if (Log.IsVerboseEnabled()) Log.Verbose($"Receive datagram #{datagram.Header.DatagramSequenceNumber} for {_endpoint}");
+			if (Log.IsTraceEnabled) Log.Trace($"Receive datagram #{datagram.Header.DatagramSequenceNumber} for {_endpoint}");
 
 			HandleDatagram(rakSession, datagram);
 			datagram.PutPool();
@@ -433,7 +433,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			if (!haveAllParts) return null;
 
-			if (Log.IsVerboseEnabled()) Log.Verbose($"Got all {spCount} split packets for split ID: {spId}");
+			if (Log.IsTraceEnabled) Log.Trace($"Got all {spCount} split packets for split ID: {spId}");
 
 			session.Splits.TryRemove(spId, out SplitPartPacket[] _);
 
@@ -471,7 +471,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					OrderingIndex = headerOrderingIndex,
 				};
 
-				if (Log.IsVerboseEnabled()) Log.Verbose($"Assembled split packet {fullMessage.ReliabilityHeader.Reliability} message #{fullMessage.ReliabilityHeader.ReliableMessageNumber}, OrdIdx: #{fullMessage.ReliabilityHeader.OrderingIndex}");
+				if (Log.IsTraceEnabled) Log.Trace($"Assembled split packet {fullMessage.ReliabilityHeader.Reliability} message #{fullMessage.ReliabilityHeader.ReliableMessageNumber}, OrdIdx: #{fullMessage.ReliabilityHeader.OrderingIndex}");
 
 				return fullMessage;
 			}
@@ -540,7 +540,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					else
 					{
 						if (Log.IsDebugEnabled)
-							Log.WarnFormat("NAK, no datagram #{0} for {1}", i, session.Username);
+							Log.Warn($"NAK, no datagram #{i} for {session.Username}");
 					}
 				}
 			}

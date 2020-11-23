@@ -8,7 +8,6 @@ using Alex.API.Input;
 using Alex.API.Services;
 using Alex.Utils;
 using CommandLine;
-using log4net;
 using Microsoft.Extensions.DependencyInjection;
 using NLog;
 using NLog.Config;

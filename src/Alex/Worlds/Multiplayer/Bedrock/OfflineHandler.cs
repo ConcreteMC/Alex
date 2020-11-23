@@ -3,19 +3,19 @@ using System.Collections.Concurrent;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
-using log4net;
 using MiNET;
 using MiNET.Net;
 using MiNET.Net.RakNet;
 using MiNET.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using NLog;
 
 namespace Alex.Worlds.Multiplayer.Bedrock
 {
 	public sealed class RakOfflineHandler
 	{
-		private static readonly ILog Log = LogManager.GetLogger(typeof(RakOfflineHandler));
+		private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
 
 		public const int UdpHeaderSize = 28;
 
@@ -235,9 +235,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			session.SendPacket(packet);
 		}
 
-		internal static void TraceReceive(ILog log, Packet message)
+		internal static void TraceReceive(ILogger log, Packet message)
 		{
-			if (!Log.IsTraceEnabled()) return;
+			if (!Log.IsTraceEnabled) return;
 
 			try
 			{
@@ -283,7 +283,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				}
 				else if (verbosity == 2 || verbosity == 3)
 				{
-					log.Verbose($"> Receive: {message.Id} (0x{message.Id:x2}): {message.GetType().Name}\n{Packet.HexDump(message.Bytes)}");
+					log.Trace($"> Receive: {message.Id} (0x{message.Id:x2}): {message.GetType().Name}\n{Packet.HexDump(message.Bytes)}");
 				}
 			}
 			catch (Exception e)
@@ -294,7 +294,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		internal static void TraceSend(Packet message)
 		{
-			if (!Log.IsTraceEnabled()) return;
+			if (!Log.IsTraceEnabled) return;
 
 			try
 			{
@@ -341,7 +341,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				}
 				else if (verbosity == 2 || verbosity == 3)
 				{
-					Log.Verbose($"<    Send: {message.Id} (0x{message.Id:x2}): {message.GetType().Name}\n{Packet.HexDump(message.Bytes)}");
+					Log.Trace($"<    Send: {message.Id} (0x{message.Id:x2}): {message.GetType().Name}\n{Packet.HexDump(message.Bytes)}");
 				}
 			}
 			catch (Exception e)

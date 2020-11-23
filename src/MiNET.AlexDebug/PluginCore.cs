@@ -1,17 +1,16 @@
 ﻿using System.Collections.Generic;
-using log4net;
 using MiNET.Blocks;
 using MiNET.Plugins;
 using MiNET.Worlds;
-using LogManager = log4net.LogManager;
+using NLog;
 
 namespace MiNET.AlexDebug
 {
     public class PluginCore : Plugin
     {
         //private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(PluginCore));
-        private static readonly ILog Log = LogManager.GetLogger(typeof(PluginCore));
-        public LevelManager LevelManager { get; private set; }
+        private static readonly ILogger      Log = LogManager.GetCurrentClassLogger();
+        public                  LevelManager LevelManager { get; private set; }
         public PluginCore()
         {
             

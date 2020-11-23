@@ -4,14 +4,14 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
-using log4net;
 using Mono.Cecil;
+using NLog;
 
 namespace Alex.Plugins
 {
     internal class AssemblyResolver
     {
-	    private static readonly ILog Log = LogManager.GetLogger(typeof(AssemblyResolver));
+	    private static readonly ILogger Log = LogManager.GetCurrentClassLogger();
 	    
 	    private AssemblyManager AssemblyManager { get; }
         public AssemblyResolver(AssemblyManager assemblyManager)
