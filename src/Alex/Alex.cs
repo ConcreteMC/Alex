@@ -748,5 +748,11 @@ namespace Alex
 	{
 		void UpdateProgress(int percentage, string statusMessage);
 		void UpdateProgress(int percentage, string statusMessage, string sub);
+		
+		void UpdateProgress(int done, int total, string statusMessage) =>
+			UpdateProgress((done / total) * 100, statusMessage);
+		
+		void UpdateProgress(int done, int total, string statusMessage, string sub)=>
+			UpdateProgress((done / total) * 100, statusMessage, sub);
     }
 }

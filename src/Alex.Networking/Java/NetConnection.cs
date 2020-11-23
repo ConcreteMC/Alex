@@ -392,7 +392,7 @@ namespace Alex.Networking.Java
 				    }
 				    else
 				    {
-					    Log.Warn($"No data sent in the last 3.5 seconds... :/");
+					 //   Log.Warn($"No data sent in the last 3.5 seconds... :/");
 				    }
 				    //  EnqueuedPacket packet = PacketWriteQueue.Take(CancellationToken.Token);
 			    }

@@ -115,8 +115,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleRakNetMessage(IPEndPoint senderEndpoint, UnconnectedPong message)
 		{
-			Log.Warn($"Found server at {senderEndpoint}");
-			Log.Warn($"MOTD: {message.serverName}");
+			//Log.Warn($"Found server at {senderEndpoint}");
+			//Log.Warn($"MOTD: {message.serverName}");
 
 			if (!HaveServer)
 			{
@@ -128,13 +128,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				if (AutoConnect)
 				{
-					Log.Warn($"Connecting to {senderEndpoint}");
+				//	Log.Warn($"Connecting to {senderEndpoint}");
 					HaveServer = true;
 					SendOpenConnectionRequest1(senderEndpoint, MtuSize);
 				}
 				else
 				{
-					Log.Warn($"Connect to server using actual endpoint={senderEndpoint}");
+				//	Log.Warn($"Connect to server using actual endpoint={senderEndpoint}");
 					_connection.RemoteEndpoint = senderEndpoint;
 					_connection.RemoteServerName = message.serverName;
 					HaveServer = true;
@@ -154,7 +154,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			TraceSend(packet);
 
-			Log.Warn($"Sending MTU size={mtuSize}, data length={data.Length}");
+		//	Log.Warn($"Sending MTU size={mtuSize}, data length={data.Length}");
 			_connection.SendData(data, targetEndPoint);
 		}
 
@@ -162,11 +162,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			if (message.mtuSize != MtuSize)
 			{
-				Log.Warn($"Error, mtu differ from what we sent. Received {message.mtuSize} bytes");
-				//return;
+			//	Log.Warn($"Error, mtu differ from what we sent. Received {message.mtuSize} bytes");
+				return;
 			}
 
-			Log.Warn($"Server with ID {message.serverGuid} security={message.serverHasSecurity}, mtu agreed on {message.mtuSize}");
+		//	Log.Warn($"Server with ID {message.serverGuid} security={message.serverHasSecurity}, mtu agreed on {message.mtuSize}");
 
 			SendOpenConnectionRequest2(senderEndpoint, message.mtuSize);
 		}
@@ -189,8 +189,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		{
 			if (HaveServer)
 				return;
-			Log.Warn("MTU Size: " + message.mtuSize);
-			Log.Warn("Client Endpoint: " + message.clientEndpoint);
+		//	Log.Warn("MTU Size: " + message.mtuSize);
+		//	Log.Warn("Client Endpoint: " + message.clientEndpoint);
 
 			HaveServer = true;
 
@@ -288,7 +288,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 			catch (Exception e)
 			{
-				log.Error("Error when printing trace", e);
+				log.Error(e, "Error when printing trace");
 			}
 		}
 
@@ -346,7 +346,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 			catch (Exception e)
 			{
-				Log.Error("Error when printing trace", e);
+				Log.Error(e, "Error when printing trace");
 			}
 		}
 	}

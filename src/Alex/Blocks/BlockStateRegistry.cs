@@ -37,8 +37,9 @@ namespace Alex.Blocks
 			uint c = 0;
 			foreach (var entry in data)
 			{
-				double percentage = 100D * ((double) done / (double) total);
-				progressReceiver.UpdateProgress((int) percentage, $"Importing block models...", entry.Key);
+				//done * (target / 100)
+				//double percentage = 100D * ((double) done / (double) total);
+				progressReceiver.UpdateProgress(done, total, $"Importing block models...", entry.Key);
 
 				var variantMap = new BlockStateVariantMapper();
 				var state = new BlockState

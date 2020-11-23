@@ -376,7 +376,7 @@ namespace Alex
 	        for (var index = 0; index < files.Length; index++)
 	        {
 		        var file = files[index];
-		        progressReceiver?.UpdateProgress(index * (files.Length / 100), "Loading bedrock .MCPack files...", file.Name);
+		        progressReceiver?.UpdateProgress(index, files.Length, "Loading bedrock .MCPack files...", file.Name);
 
 		        try
 		        {

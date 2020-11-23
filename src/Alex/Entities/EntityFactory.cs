@@ -48,7 +48,7 @@ namespace Alex.Entities
                 p.Name = p.Name.Replace("_", "");
                 
                 long id = 0;
-				progressReceiver?.UpdateProgress(100 * (i / entityObjects.Length), "Loading entity data...", p.Name);
+				progressReceiver?.UpdateProgress(i, entityObjects.Length, "Loading entity data...", p.Name);
 				if (resourceManager.Registries.Entities.Entries.TryGetValue($"minecraft:{originalName}",
 					out var registryEntry))
                 {
@@ -142,8 +142,8 @@ namespace Alex.Entities
 
 			foreach (var def in entityDefinitions)
 			{
-				double percentage = 100D * ((double)done / (double)total);
-				progressReceiver?.UpdateProgress((int)percentage, $"Importing entity definitions...", def.Key.ToString());
+			//	double percentage = 100D * ((double)done / (double)total);
+				progressReceiver?.UpdateProgress(done, total, $"Importing entity definitions...", def.Key.ToString());
 
                 try
 				{

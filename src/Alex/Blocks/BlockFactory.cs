@@ -124,7 +124,7 @@ namespace Alex.Blocks
 			{
 				var kv = blockEntries.ElementAt(i);
 
-				progressReceiver?.UpdateProgress(i * (100 / blockEntries.Count), "Loading block registry...",
+				progressReceiver?.UpdateProgress(i, blockEntries.Count, "Loading block registry...",
 					kv.Key);
 
 				ProtocolIdToBlockName.TryAdd(kv.Value.ProtocolId, kv.Key);
@@ -173,8 +173,8 @@ namespace Alex.Blocks
 			uint c = 0;
 			foreach (var entry in data)
 			{
-				double percentage = 100D * ((double) done / (double) total);
-				progressReceiver.UpdateProgress((int) percentage, $"Importing block models...", entry.Key);
+				//double percentage = 100D * ((double) done / (double) total);
+				progressReceiver.UpdateProgress(done, total, $"Importing block models...", entry.Key);
 
 				var variantMap = new BlockStateVariantMapper();
 				var defaultState = new BlockState

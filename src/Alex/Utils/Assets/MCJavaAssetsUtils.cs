@@ -162,7 +162,7 @@ namespace Alex.Utils.Assets
                         .Replace("{hash_sub2}", assetIndexObject.Value.Hash.Substring(0, 2))
                         .Replace("{hash}", assetIndexObject.Value.Hash);
 
-                    progressReceiver?.UpdateProgress(done * (target / 100), "Downloading assets...", assetIndexObject.Key);
+                    progressReceiver?.UpdateProgress(done, target, "Downloading assets...", assetIndexObject.Key);
                     
                     try
                     {

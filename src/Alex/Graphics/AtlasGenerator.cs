@@ -193,8 +193,8 @@ namespace Alex.Graphics
 
 		    for (int i = 1; i < frames.Length; i++)
 		    {
-			    double percentage = 100D * ((double) i / (double) frames.Length);
-			    progressReceiver.UpdateProgress((int) percentage, $"Animating frame {i + 1} / {frames.Length}...");
+			  //  double percentage = 100D * ((double) i / (double) frames.Length);
+			    progressReceiver.UpdateProgress(i, frames.Length, $"Animating frame {i + 1} / {frames.Length}...");
 
 			    var target = (i > 0 ? frames[i - 1] : animatedFrame).CloneAs<Rgba32>(); //new Bitmap(animatedFrame);
 
@@ -202,7 +202,7 @@ namespace Alex.Graphics
 
 			    foreach (var animated in blockFrames)
 			    {
-				    progressReceiver.UpdateProgress((int) percentage, null, animated.Key.ToString());
+				    progressReceiver.UpdateProgress(i, frames.Length, null, animated.Key.ToString());
 
 				    if (animatedFrameInfo.TryGetValue(animated.Key, out var textureInfo))
 				    {
@@ -355,8 +355,8 @@ namespace Alex.Graphics
 			    var key = bm.Key;
 			    count++;
 
-			    double percentage = 100D * ((double)processed / (double)total);
-			    progressReceiver.UpdateProgress((int)percentage, null, key.ToString());
+			   // double percentage = 100D * ((double)processed / (double)total);
+			    progressReceiver.UpdateProgress(processed, total, null, key.ToString());
 
                 var sourceRegion = new System.Drawing.Rectangle(0, 0, bm.Value.Width, bm.Value.Height);
 			    var targetRegion = new System.Drawing.Rectangle(xi, yi, bm.Value.Width, bm.Value.Height);
