@@ -316,7 +316,7 @@ namespace Alex.Entities
 				velocity = Vector3.Transform(velocity,
 					Matrix.CreateRotationY(-MathHelper.ToRadians(Player.KnownPosition.HeadYaw)));
 
-				velocity = Player.Level.PhysicsEngine.UpdateEntity(Player, velocity, out _);
+				velocity = Player.Level.PhysicsEngine.UpdateEntity(Player, velocity);
 				
 				if (Player.IsFlying)
 				{
