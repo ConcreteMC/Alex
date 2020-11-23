@@ -57,6 +57,12 @@ namespace Alex.Entities.BlockEntities
 						blockEntity = new EnderChestBlockEntity(block, world, EnderChestTexture);
 						break;
 
+					case "minecraft:sign":
+					case "sign":
+						blockEntity = new SignBlockEntity(world, block);
+
+						break;
+					
 					default:
 						Log.Warn($"Missing block entity type: {id}");
 

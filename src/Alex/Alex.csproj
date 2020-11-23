@@ -168,7 +168,6 @@
 
   <ItemGroup>
     <Folder Include="Gui\Elements\Web" />
-    <Folder Include="Net\Bedrock\Packets" />
     <Folder Include="Particles\Systems" />
   </ItemGroup>
 

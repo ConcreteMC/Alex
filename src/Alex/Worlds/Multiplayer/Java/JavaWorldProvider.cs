@@ -189,7 +189,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			settings.ViewDistance = (byte) World.ChunkManager.RenderDistance;
 			settings.SkinParts = World.Player.SkinFlags.Value;// 255;
 			settings.MainHand = World.Player.IsLeftHanded ? 0 : 1;
-			settings.Locale = Options.MiscelaneousOptions.Language.Value;
+			settings.Locale = Alex.GuiRenderer.Language.Code; //Options.MiscelaneousOptions.Language.Value;
 			
 			SendPacket(settings);
 		}
@@ -1545,7 +1545,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 					entity.UpdateGamemode((Gamemode) entry.Gamemode);
 					entity.UUID = new MiNET.Utils.UUID(entry.UUID.ToByteArray());
-
+					
 					World?.AddPlayerListItem(
 						new PlayerListItem(entity.UUID, entry.Name, (Gamemode) entry.Gamemode, entry.Ping, true));
 
@@ -1610,7 +1610,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 					if (_players.TryGetValue(uuid, out RemotePlayer entity))
 					{
-						if (entry.HasDisplayName)
+						if (entry.HasDisplayName && !string.IsNullOrWhiteSpace(entry.DisplayName))
 						{
 							if (ChatObject.TryParse(entry.DisplayName, out ChatObject chat))
 							{

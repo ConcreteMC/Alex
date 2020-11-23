@@ -56,6 +56,8 @@ namespace Alex.Entities.BlockEntities
 			Y = compound.Get<NbtInt>("y").Value;
 			Z = compound.Get<NbtInt>("z").Value;
 		}
+		
+		protected virtual void ReadFrom(NbtCompound compound){}
 
 		public virtual void HandleBlockAction(byte actionId, int parameter)
 		{

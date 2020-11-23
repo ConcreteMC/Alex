@@ -1216,7 +1216,7 @@ namespace Alex.Entities
 			return a == b || a == b - 1 || a == b + 1;
 		}
 		
-		public void RenderNametag(IRenderArgs renderArgs)
+		public virtual void RenderNametag(IRenderArgs renderArgs)
 		{
 			string clean = NameTag;
 
