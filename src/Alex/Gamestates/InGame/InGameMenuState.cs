@@ -77,13 +77,23 @@ namespace Alex.Gamestates.InGame
 
 					for (var index = 0; index < players.Length; index++)
 					{
-						var p = players[index];
+						var p           = players[index];
+						var displayName = p.Username;
+						
+						if (!p.IsJavaPlayer)
+						{
+							//if (s.World.EntityManager.TryGet(p.UUID, out var entity))
+							//{
+							//	displayName = entity.NameTag;
+							//}
+						}
 
 						_playerList.AddChild(
-							new PlayerListItemElement(p.Username)
+							new PlayerListItemElement(displayName, p.IsJavaPlayer ? p.Ping : (int?)null)
 							{
 								BackgroundOverlay = (index % 2 == 0) ? new Color(Color.Black, 0.35f) :
-									Color.Transparent
+									Color.Transparent,
+								//MaxWidth = _playerList.MaxWidth
 							});
 					}
 				}

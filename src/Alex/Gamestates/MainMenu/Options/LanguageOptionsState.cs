@@ -31,7 +31,7 @@ namespace Alex.Gamestates.MainMenu.Options
             string displayName = culture.DisplayName;
             if (string.IsNullOrWhiteSpace(displayName))
             {
-                displayName = culture.CultureInfo.Name;
+                displayName = culture.Name;
             }
 
             return active ? $"[Active] {displayName}" : displayName;
@@ -39,8 +39,11 @@ namespace Alex.Gamestates.MainMenu.Options
 
         private void SetLanguage(CultureLanguage culture)
         {
-            _activeBtn.button.Text = GetButtonText(_activeBtn.culture, false);
-            
+            if (_activeBtn.button != null && _activeBtn.culture != null)
+            {
+                _activeBtn.button.Text = GetButtonText(_activeBtn.culture, false);
+            }
+
             if (_languageButtons.TryGetValue(culture, out GuiButton btn))
             {
                 btn.Text = GetButtonText(culture, true);
@@ -50,7 +53,7 @@ namespace Alex.Gamestates.MainMenu.Options
                 _activeBtn = (btn, culture);
             }
 
-            Options.MiscelaneousOptions.Language.Value = culture.CultureInfo.Name;
+            Options.MiscelaneousOptions.Language.Value = culture.DisplayName;
             //Alex.GuiRenderer.SetLanguage(culture.CultureInfo.Name);
         }
         
@@ -59,7 +62,7 @@ namespace Alex.Gamestates.MainMenu.Options
             var activeLang = Alex.GuiRenderer.Language;
             foreach (var lng in Alex.GuiRenderer.Languages.OrderBy(x => x.Key))
             {
-                bool active = lng.Value.CultureInfo.Equals(activeLang.CultureInfo);
+                bool active = lng.Value.Code.Equals(activeLang.Code);
                 
                 GuiButton btn = new GuiButton(GetButtonText(lng.Value, active), () =>
                 {

@@ -289,7 +289,7 @@ namespace Alex.Entities
 
 				if (_scale <= 0.1f)
 				{
-					Log.Warn($"Scale set to tiny value: {_scale}");
+				//	Log.Warn($"Scale set to tiny value: {_scale}");
 					SkipRendering = true;
 					//IsInvisible = true;
 				}

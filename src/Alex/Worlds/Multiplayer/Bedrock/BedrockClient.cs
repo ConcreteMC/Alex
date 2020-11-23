@@ -59,44 +59,6 @@ using Player = Alex.Entities.Player;
 
 namespace Alex.Worlds.Multiplayer.Bedrock
 {
-	public class BedrockMotd
-	{
-		public string Edition;
-		public string MOTD;
-		public int MaxPlayers;
-		public int Players;
-		public int ProtocolVersion;
-		public string ClientVersion;
-		public IPEndPoint ServerEndpoint;
-		public long Latency;
-
-		public BedrockMotd(string raw)
-		{
-			if (string.IsNullOrWhiteSpace(raw)) return;
-
-			var split = raw.Split(';');
-			int i = 0;
-			Edition = split[i++];
-			MOTD = split[i++];
-
-			if (int.TryParse(split[i++], out int protocolVersion))
-			{
-				ProtocolVersion = protocolVersion;
-			}
-			
-			ClientVersion = split[i++];
-
-			if (int.TryParse(split[i++], out int players))
-			{
-				Players = players;
-			}
-
-			if (int.TryParse(split[i++], out int maxplayers))
-			{
-				MaxPlayers = maxplayers;
-			}
-		}
-	}
 	public class BedrockClient : NetworkProvider, IDisposable
 	{
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(BedrockClient));
@@ -258,8 +220,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 							Interlocked.Exchange(ref Connection.ConnectionInfo.NumberOfDeniedConnectionRequestsPerSecond, 0);
 							long   packetSizeOut = Interlocked.Exchange(ref Connection.ConnectionInfo.TotalPacketSizeOutPerSecond, 0L);
 							long   packetSizeIn = Interlocked.Exchange(ref Connection.ConnectionInfo.TotalPacketSizeInPerSecond, 0L);
-							double throughtPutOut = (double) (packetSizeOut * 8L) / 1000000.0;
-							double throughPutIn = (double) (packetSizeIn * 8L) / 1000000.0;
+				//			double throughtPutOut = (double) (packetSizeOut * 8L) / 1000000.0;
+						//	double throughPutIn = (double) (packetSizeIn * 8L) / 1000000.0;
 							long   packetCountOut = Interlocked.Exchange(ref Connection.ConnectionInfo.NumberOfPacketsOutPerSecond, 0L);
 							long   packetCountIn = Interlocked.Exchange(ref Connection.ConnectionInfo.NumberOfPacketsInPerSecond, 0L);
 							
@@ -269,18 +231,18 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 							long resends = Interlocked.Exchange(ref Connection.ConnectionInfo.NumberOfResends, 0L);
 							long fails = Interlocked.Exchange(ref Connection.ConnectionInfo.NumberOfFails, 0L);
 
-							string str = string.Format("Pkt in/out(#/s) {0}/{1}, ", (object) packetCountIn, (object) packetCountOut)
+							/*string str = string.Format("Pkt in/out(#/s) {0}/{1}, ", (object) packetCountIn, (object) packetCountOut)
 							             + string.Format(
 								             "ACK(in-out)/NAK/RSND/FTO(#/s) ({0}-{1})/{2}/{3}/{4}, ", (object) ackReceived,
 								             (object) ackSent, (object) nakReceive, (object) resends, (object) fails)
 							             + string.Format("THR in/out(Mbps) {0:F}/{1:F}, ", (object) throughPutIn, (object) throughtPutOut)
 							             + string.Format(
-								             "PktSz Total in/out(B/s){0}/{1}, ", (object) packetSizeIn, (object) packetSizeOut);
+								             "PktSz Total in/out(B/s){0}/{1}, ", (object) packetSizeIn, (object) packetSizeOut);*/
 
-							if (Config.GetProperty("ServerInfoInTitle", false))
-								Console.Title = str;
-							else
-								Log.Info(str);
+							//if (Config.GetProperty("ServerInfoInTitle", false))
+							//	Console.Title = str;
+							//else
+							//	Log.Info(str);
 								
 							_connectionInfo = new ConnectionInfo(StartTime, CustomConnectedPong.Latency, nakReceive, ackReceived, ackSent, fails, resends, packetSizeIn, packetSizeOut, packetCountIn, packetCountOut);
 						}, null, 1000, 1000);

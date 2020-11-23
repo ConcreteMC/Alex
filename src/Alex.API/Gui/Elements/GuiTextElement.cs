@@ -212,7 +212,7 @@ namespace Alex.API.Gui.Elements
 			size = new Size((int)Math.Ceiling(textSize.X), (int)Math.Ceiling(textSize.Y));
 		}
 
-		private static Regex LinkParser = new Regex(@"\b(?:https?://|www\.)\S+\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+		//private static Regex LinkParser = new Regex(@"\b(?:https?://|www\.)\S+\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 		protected virtual void OnTextUpdated()
 	    {
 		    string text = _text;
@@ -234,44 +234,12 @@ namespace Alex.API.Gui.Elements
 		    }
 		    else
 			{
-				var scale = new Vector2(Scale, Scale);
-
-				//PreferredSize = new Size((int)Math.Floor(textSize.X), (int)Math.Floor(textSize.Y));
-				//Width = (int)Math.Floor(textSize.X);
-				//Height = (int)Math.Floor(textSize.Y);
-
+				//var scale = new Vector2(Scale, Scale);
 				_renderText = text;
-				
-				if (!HasFixedSize)
-				{
-					//InvalidateLayout();
-				}
-				else
-				{
-					
-				}
 
-				/*foreach (Match match in LinkParser.Matches(text))
-				{
-					var l = GetSize(text.Substring(0, match.Index), scale);
-					var linkSize = GetSize(match.Value, scale);
-
-					Rectangle clickArea = new Rectangle((int)l.X, 0, (int)linkSize.X, (int)linkSize.Y);
-
-					/*ClickableElements.Add(new ClickableElement()
-					{
-						Area = clickArea,
-						//ClickAction = (s, val) => {
-							
-						//},
-						Text = match.Value
-					});
-			
-				}*/
 				GetPreferredSize(out var size, out var minSize, out var maxSize);
-				Width = size.Width;
-				Height = size.Height;
-				//Size = size;
+				Width = Math.Max(Math.Min(size.Width, maxSize.Width), minSize.Width);// size.Width;
+				Height = Math.Max(Math.Min(size.Height, maxSize.Height), minSize.Height);// size.Height;
 			}
 		}
 

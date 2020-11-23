@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -458,8 +459,11 @@ namespace Alex
 		        if (isFirst)
 			        isFirst = false;
 	        }
-	        
-	        Alex.GuiRenderer.SetLanguage(Options.AlexOptions.MiscelaneousOptions.Language.Value);
+
+	        if (!Alex.GuiRenderer.SetLanguage(Options.AlexOptions.MiscelaneousOptions.Language.Value))
+	        {
+		        Alex.GuiRenderer.SetLanguage(CultureInfo.InstalledUICulture.Name);
+	        }
 
 	        var f = ActiveResourcePacks.LastOrDefault(x => x.FontBitmap != null);
 	        if (f != null)

@@ -120,8 +120,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			EndPoint = endPoint;
 			MtuSize = mtuSize;
 
-			InactivityTimeout = Config.GetProperty("InactivityTimeout", 8500);
-			ResendThreshold = Config.GetProperty("ResendThreshold", 10);
+			InactivityTimeout = 8500;//Config.GetProperty("InactivityTimeout", 8500);
+			ResendThreshold = 10;//Config.GetProperty("ResendThreshold", 10);
 
 			_cancellationToken = new CancellationTokenSource();
 			//_tickerHighPrecisionTimer = new HighPrecisionTimer(10, SendTick, true);

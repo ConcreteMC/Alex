@@ -35,7 +35,7 @@ namespace Alex.Gui
 		public GuiScaledResolution ScaledResolution { get; set; }
 
 		public CultureLanguage Language =
-			new CultureLanguage(CultureInfo.InstalledUICulture ?? CultureInfo.GetCultureInfo("en-US"));
+			new CultureLanguage();
 
 		private GraphicsDevice  _graphicsDevice;
 		private ResourceManager _resourceManager;
@@ -146,32 +146,36 @@ namespace Alex.Gui
 			LoadResourcePackTextures(resourcePack, progressReceiver);
 		}
 
-		private CultureInfo Culture { get; set; } = CultureInfo.CreateSpecificCulture("en_us");
-		public void SetLanguage(string cultureCode)
+		//private CultureInfo Culture { get; set; }
+		public bool SetLanguage(string cultureCode)
 		{
+			cultureCode = cultureCode;
+
 			try
 			{
-				Culture = CultureInfo.GetCultureInfo(cultureCode);
+				/*Culture = CultureInfo.GetCultureInfo(cultureCode.Replace("_", "-"));
 				CultureInfo.CurrentCulture = Culture;
 				CultureInfo.CurrentUICulture = Culture;
 				CultureInfo.DefaultThreadCurrentUICulture = Culture;
 				CultureInfo.DefaultThreadCurrentUICulture = Culture;
-
-				if (_languages.TryGetValue(cultureCode, out var lng))
+*/
+				if (_languages.TryGetValue(cultureCode.Replace("-", "_").ToLower(), out var lng))
 				{
 					Language = lng;
-					return;
+
+					return true;
 				}
 
 				if (_resourceManager.ResourcePack == null)
-					return;
+					return false;
 
 				var matchingResults = _resourceManager.ResourcePack.Languages
-					.Where(x => x.Value.CultureCode == cultureCode)
-					.Select(x => x.Value).ToArray();
+				   .Where(x => x.Value.CultureCode == cultureCode).Select(x => x.Value).ToArray();
 
-				if (matchingResults.Length <= 0) return;
-				CultureLanguage newLanguage = new CultureLanguage(Culture);
+				if (matchingResults.Length <= 0) return false;
+			//	var             cultureInfo = CultureInfo.GetCultureInfo(cultureCode.Replace("_", "-"));
+				
+				CultureLanguage newLanguage = new CultureLanguage();
 
 				foreach (var lang in matchingResults)
 				{
@@ -179,7 +183,15 @@ namespace Alex.Gui
 				}
 
 				Language = newLanguage;
-			}catch(CultureNotFoundException){}
+
+				return true;
+			}
+			catch (CultureNotFoundException)
+			{
+				
+			}
+
+			return false;
 		}
 
 		private Dictionary<string, CultureLanguage> _languages = new Dictionary<string, CultureLanguage>();
@@ -190,16 +202,29 @@ namespace Alex.Gui
 			if (resourcePack.Languages == null)
 				return;
 
+			var languages = resourcePack.Languages.Count;
+			int done      = 0;
 			foreach (var lng in resourcePack.Languages)
 			{
+				var key = lng.Key.Split(':')[1].ToLower();
+				
+				progressReceiver?.UpdateProgress(done, languages, "Loading languages...", key);
 				try
 				{
-					var key = lng.Key.Split(':')[1];
-
 					CultureLanguage language;
 					if (!_languages.TryGetValue(key, out language))
 					{
-						language = new CultureLanguage(CultureInfo.GetCultureInfo(key));
+						language = new CultureLanguage()
+						{
+							Name = lng.Value.Name,
+							Code = lng.Value.CultureCode,
+							Region = lng.Value.CultureRegion
+						};
+
+						if (!string.IsNullOrWhiteSpace(lng.Value.CultureRegion))
+						{
+							language.DisplayName = $"{lng.Value.CultureName} ({lng.Value.CultureRegion})";
+						}
 					}
 
 					//if (lng.Value.CultureCode == Culture.Name)

@@ -386,7 +386,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 						continue;
 					}
 
-					Client.World?.AddPlayerListItem(new PlayerListItem(r.ClientUuid, r.DisplayName, (Gamemode)((int)r.GameMode), 0));
+					Client.World?.AddPlayerListItem(new PlayerListItem(r.ClientUuid, r.DisplayName, (Gamemode)((int)r.GameMode), 0, false));
 
 					RemotePlayer m = new RemotePlayer(r.DisplayName, Client.World as World, Client, null);
 					m.UUID = r.ClientUuid;
@@ -420,14 +420,17 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	            }
             }
 
-			ThreadPool.QueueUserWorkItem(
-				o =>
-				{
-					foreach (var action in actions)
+			if (actions.Count > 0)
+			{
+				ThreadPool.QueueUserWorkItem(
+					o =>
 					{
-						action.Invoke();
-					}
-				});
+						foreach (var action in actions)
+						{
+							action.Invoke();
+						}
+					});
+			}
 		}
 
 		public bool SpawnMob(long entityId,

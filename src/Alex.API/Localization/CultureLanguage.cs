@@ -5,8 +5,6 @@ namespace Alex.API.Localization
 {
     public class CultureLanguage
     {
-        public CultureInfo CultureInfo { get; }
-        
         public string this[string key]
         {
             get { return GetString(key); }
@@ -14,9 +12,9 @@ namespace Alex.API.Localization
 
         private readonly Dictionary<string, string> _translations = new Dictionary<string, string>();
 
-        public CultureLanguage(CultureInfo info)
+        public CultureLanguage()
         {
-            CultureInfo = info;
+            
         }
 
         public void Load(IDictionary<string, string> translations)
@@ -38,10 +36,14 @@ namespace Alex.API.Localization
             return $"[Translation={key}]";
         }
 
+        private string _displayName = null;
         public string DisplayName
         {
             get
             {
+                if (_displayName != null)
+                    return _displayName;
+                
                 string name = GetString("language.name");
                 string region = GetString("language.region");
                 if (!string.IsNullOrWhiteSpace(region))
@@ -50,6 +52,61 @@ namespace Alex.API.Localization
                 }
 
                 return name;
+            }
+            set
+            {
+                _displayName = value;
+            }
+        }
+
+        private string _name = null;
+
+        public string Name
+        {
+            get
+            {
+                if (_name == null)
+                    return GetString("language.name");
+                
+                return _name;
+            }
+            set
+            {
+                _name = value;
+            }
+        }
+        
+        private string _region = null;
+
+        public string Region
+        {
+            get
+            {
+                if (_region == null)
+                    return GetString("language.region");
+                
+                return _region;
+            }
+            set
+            {
+                _region = value;
+            }
+        }
+
+        private string _code = null;
+
+        public string Code
+        {
+            get
+            {
+                if (_code == null)
+                    return GetString("language.code");
+
+                return _code;
+            }
+            set
+            {
+                _code = value;
             }
         }
     }

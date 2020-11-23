@@ -13,7 +13,7 @@ namespace Alex.API.Localization
 
         public CultureLanguage GetOrCreateCulture(CultureInfo culture)
         {
-            return Languages.GetOrAdd(culture, info => new CultureLanguage(info));
+            return Languages.GetOrAdd(culture, info => new CultureLanguage());
         }
     }
 }

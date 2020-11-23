@@ -954,6 +954,22 @@ namespace Alex.Worlds
 			PlayerList.Entries.Remove(item);
 		}
 
+		public void UpdatePlayerListLatency(MiNET.Utils.UUID uuid, int latency)
+		{
+			if (PlayerList.Entries.TryGetValue(uuid, out var item))
+			{
+				item.Ping = latency;
+			}
+		}
+		
+		public void UpdatePlayerListDisplayName(MiNET.Utils.UUID uuid, string displayName)
+		{
+			if (PlayerList.Entries.TryGetValue(uuid, out var item))
+			{
+				item.Username = displayName;
+			}
+		}
+
 		#endregion
 	}
 

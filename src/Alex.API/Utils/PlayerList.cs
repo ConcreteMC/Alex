@@ -19,18 +19,20 @@ namespace Alex.API.Utils
 		public Gamemode         Gamemode { get; set; } = Gamemode.Survival;
 		public int              Ping     { get; set; } = 0;
 
+		public bool IsJavaPlayer { get; set; } = false;
 		public PlayerListItem()
 		{
 
 		}
 
-		public PlayerListItem(MiNET.Utils.UUID id, string username, Gamemode gamemode, int ping)
+		public PlayerListItem(MiNET.Utils.UUID id, string username, Gamemode gamemode, int ping, bool isJavaPlayer)
 		{
 			UUID = id;
 			Username = username;
 			Gamemode = gamemode;
 
 			Ping = ping;
+			IsJavaPlayer = isJavaPlayer;
 		}
 	}
 }

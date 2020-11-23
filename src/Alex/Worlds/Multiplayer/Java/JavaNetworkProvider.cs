@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using Alex.API;
 using Alex.API.Network;
 using Alex.API.Utils;
@@ -16,18 +17,34 @@ namespace Alex.Worlds.Multiplayer.Java
 {
 	public class JavaNetworkProvider : NetworkProvider
 	{
-		private JavaClient Client { get; }
+		private JavaClient Client            { get; }
+		private Timer      NetworkReportTimer { get; }
 		public JavaNetworkProvider(JavaClient client)
 		{
 			Client = client;
+			
+			NetworkReportTimer =  new Timer(
+						state =>
+						{
+							long   packetSizeOut = Interlocked.Exchange(ref Client.PacketSizeOut, 0L);
+							long   packetSizeIn = Interlocked.Exchange(ref Client.PacketSizeIn, 0L);
+
+							long   packetCountOut = Interlocked.Exchange(ref Client.PacketsOut, 0L);
+							long   packetCountIn = Interlocked.Exchange(ref Client.PacketsIn, 0L);
+
+							_connectionInfo = new ConnectionInfo(
+								Client.StartTime, Client.Latency, null, null, null, null, null,
+								packetSizeIn, packetSizeOut, packetCountIn, packetCountOut);
+						}, null, 1000L, 1000L);
 		}
 
 		/// <inheritdoc />
 		public override bool IsConnected => Client.IsConnected;
 
+		private ConnectionInfo _connectionInfo = new ConnectionInfo(DateTime.UtcNow, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 		public override ConnectionInfo GetConnectionInfo()
 		{
-			return new ConnectionInfo(DateTime.UtcNow, 0, 0, 0,0 ,0 ,0, 0, 0, 0, 0);
+			return _connectionInfo;
 		}
 
 		/// <inheritdoc />
@@ -174,7 +191,8 @@ namespace Alex.Worlds.Multiplayer.Java
 
 		public override void Close()
 		{
-			
+			NetworkReportTimer?.Change(Timeout.Infinite, Timeout.Infinite);
+			NetworkReportTimer?.Dispose();
 		}
 	}
 }

@@ -66,38 +66,31 @@ namespace Alex.Networking.Java
 
 	  //  private Thread NetworkProcessing { get; set; }
 	//	private Thread NetworkWriting { get; set; }
+	
+		public DateTime StartTime { get; private set; } = DateTime.UtcNow;
+		public long     Latency   { get; set; }         = 0;
 		public void Initialize()
-        {
-	       Socket.Blocking = true;
-	        
-		  /* 	NetworkProcessing = new Thread(ProcessNetwork)
-            {
-				IsBackground = true
-            };
-            NetworkProcessing.Start();
+		{
+			Socket.Blocking = true;
 
-			NetworkWriting = new Thread(SendQueue)
-			{
-				IsBackground = true
-			};
-			NetworkWriting.Start();*/
+			ThreadPool.QueueUserWorkItem(
+				o =>
+				{
+					Thread.CurrentThread.Name = "MC:Java - In";
+					ProcessNetwork();
+				});
 
-		  ThreadPool.QueueUserWorkItem(
-			  o =>
-			  {
-				  Thread.CurrentThread.Name = "MC:Java - In";
-				  ProcessNetwork();
-			  });
+			ThreadPool.QueueUserWorkItem(
+				o =>
+				{
+					Thread.CurrentThread.Name = "MC:Java - Out";
+					SendQueue();
+				});
 
-		  ThreadPool.QueueUserWorkItem(
-			  o =>
-			  {
-				  Thread.CurrentThread.Name = "MC:Java - Out";
-				  SendQueue();
-			  });
-        }
+			StartTime = DateTime.UtcNow;
+		}
 
-        public void Stop()
+		public void Stop()
         {
             if (CancellationToken.IsCancellationRequested) return;
             CancellationToken.Cancel();
@@ -202,6 +195,10 @@ namespace Alex.Networking.Java
 		    }
 	    }
 
+	    public long PacketsIn;
+	    public long PacketsOut;
+	    public long PacketSizeIn;
+	    public long PacketSizeOut;
 	    private bool TryReadPacket(MinecraftStream stream, out int lastPacketId)
 	    {
 		    Packets.Packet packet = null;
@@ -264,7 +261,10 @@ namespace Alex.Networking.Java
 		    }
 
 		    packet = MCPacketFactory.GetPacket(PacketDirection, ConnectionState, packetId);
-
+		    
+		    Interlocked.Increment(ref PacketsIn);
+		    Interlocked.Add(ref PacketSizeIn, packetData.Length);
+		    
 		    if (packet == null)
 		    {
 			    if (UnhandledPacketsFilter[ConnectionState].TryAdd(packetId, 1))
@@ -387,6 +387,9 @@ namespace Alex.Networking.Java
 					    //    Log.Info($"Sent: {packet.Packet}");
 					    var data = EncodePacket(packet);
 
+					    Interlocked.Increment(ref PacketsOut);
+					    Interlocked.Add(ref PacketSizeOut, data.Length);
+					    
 					    mc.WriteVarInt(data.Length);
 					    mc.Write(data);
 				    }

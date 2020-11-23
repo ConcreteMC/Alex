@@ -23,6 +23,7 @@ using Alex.Entities;
 using Alex.Entities.BlockEntities;
 using Alex.Entities.Projectiles;
 using Alex.Gamestates;
+using Alex.Gamestates.InGame;
 using Alex.Graphics.Models.Entity;
 using Alex.Gui.Dialogs.Containers;
 using Alex.Gui.Elements;
@@ -1063,7 +1064,7 @@ namespace Alex.Worlds.Multiplayer.Java
 
 			if (!packet.Accepted)
 			{
-				Log.Warn($"Inventory / window transaction has been denied! (Action: {packet.ActionNumber})");
+			//	Log.Warn($"Inventory / window transaction has been denied! (Action: {packet.ActionNumber})");
 				
 				WindowConfirmationPacket response = new WindowConfirmationPacket();
 				response.Accepted = false;
@@ -1074,7 +1075,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			}
 			else
 			{
-				Log.Info($"Transaction got accepted! (Action: {packet.ActionNumber})");
+			//	Log.Info($"Transaction got accepted! (Action: {packet.ActionNumber})");
 			}
 
 			if (inventory == null)
@@ -1533,72 +1534,81 @@ namespace Alex.Worlds.Multiplayer.Java
 		private ConcurrentDictionary<MiNET.Utils.UUID, RemotePlayer> _players = new ConcurrentDictionary<MiNET.Utils.UUID, RemotePlayer>();
 		private void HandlePlayerListItemPacket(PlayerListItemPacket packet)
 		{
+			List<Action> actions = new List<Action>();
 			if (packet.Action == PlayerListAction.AddPlayer)
 			{
-				//ThreadPool.QueueUserWorkItem(state =>
-				//{
-					foreach (var entry in packet.AddPlayerEntries)
+				foreach (var entry in packet.AddPlayerEntries)
+				{
+					RemotePlayer entity = new RemotePlayer(
+						entry.Name, (World) World, NetworkProvider, _alexSkin,
+						"geometry.humanoid.custom");
+
+					entity.UpdateGamemode((Gamemode) entry.Gamemode);
+					entity.UUID = new MiNET.Utils.UUID(entry.UUID.ToByteArray());
+
+					World?.AddPlayerListItem(
+						new PlayerListItem(entity.UUID, entry.Name, (Gamemode) entry.Gamemode, entry.Ping, true));
+
+					if (entry.HasDisplayName)
 					{
-						string skinJson = null;
-						bool skinSlim = true;
-						foreach (var property in entry.Properties)
+						if (ChatObject.TryParse(entry.DisplayName, out ChatObject chat))
 						{
-							if (property.Name == "textures")
-							{
-								skinJson = Encoding.UTF8.GetString(Convert.FromBase64String(property.Value));
-								
-							}
-						}
-
-						RemotePlayer entity = new RemotePlayer(entry.Name, (World) World, NetworkProvider, _alexSkin, skinSlim ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom");
-						entity.UpdateGamemode((Gamemode) entry.Gamemode);
-						entity.UUID = new MiNET.Utils.UUID(entry.UUID.ToByteArray());
-
-						World?.AddPlayerListItem(new PlayerListItem(entity.UUID, entry.Name,
-							(Gamemode) entry.Gamemode, entry.Ping));
-
-						if (entry.HasDisplayName)
-						{
-							if (ChatObject.TryParse(entry.DisplayName, out ChatObject chat))
-							{
-								entity.NameTag = chat.RawMessage;
-							}
-							else
-							{
-								entity.NameTag = entry.DisplayName;
-							}
+							entity.NameTag = chat.RawMessage;
 						}
 						else
 						{
-							entity.NameTag = entry.Name;
-						}
-
-						entity.HideNameTag = false;
-						entity.IsAlwaysShowName = true;
-
-						if (_players.TryAdd(entity.UUID, entity) && skinJson != null)
-						{
-							if (SkinUtils.TryGetSkin(skinJson, Alex.GraphicsDevice, out var skin, out skinSlim))
-								{
-								//	t = skin;
-									
-									entity.GeometryName =
-										skinSlim ? "geometry.humanoid.customSlim" : "geometry.humanoid.custom";
-								
-									entity.UpdateSkin(skin);
-									
-								//	Log.Info($"Skin update!");
-								}
+							entity.NameTag = entry.DisplayName;
 						}
 					}
-				//});
-			}
+					else
+					{
+						entity.NameTag = entry.Name;
+					}
 
+					entity.HideNameTag = false;
+					entity.IsAlwaysShowName = true;
+
+					string skinJson = null;
+
+					foreach (var property in entry.Properties)
+					{
+						if (property.Name == "textures")
+						{
+							skinJson = Encoding.UTF8.GetString(Convert.FromBase64String(property.Value));
+						}
+					}
+					
+					if (_players.TryAdd(entity.UUID, entity) && skinJson != null)
+					{
+						if (Alex.GameStateManager.GetActiveState() is PlayingState)
+						{
+							actions.Add(
+								() =>
+								{
+									ProcessSkin(entity, skinJson);
+								});
+						}
+						else
+						{
+							ProcessSkin(entity, skinJson);
+						}
+					}
+				}
+			}
+			else if (packet.Action == PlayerListAction.UpdateLatency)
+			{
+				foreach (var entry in packet.UpdateLatencyEntries)
+				{
+					World?.UpdatePlayerListLatency(new MiNET.Utils.UUID(entry.UUID.ToByteArray()), entry.Ping);
+				}
+			}
 			else if (packet.Action == PlayerListAction.UpdateDisplayName)
 			{
 				foreach (var entry in packet.UpdateDisplayNameEntries)
 				{
-					if (_players.TryGetValue(new MiNET.Utils.UUID(entry.UUID.ToByteArray()), out RemotePlayer entity))
+					var uuid = new MiNET.Utils.UUID(entry.UUID.ToByteArray());
+
+					if (_players.TryGetValue(uuid, out RemotePlayer entity))
 					{
 						if (entry.HasDisplayName)
 						{
@@ -1615,6 +1625,8 @@ namespace Alex.Worlds.Multiplayer.Java
 						{
 							entity.NameTag = entity.Name;
 						}
+						
+						World?.UpdatePlayerListDisplayName(uuid, entity.NameTag);
 					}
 				}
 			}
@@ -1625,15 +1637,30 @@ namespace Alex.Worlds.Multiplayer.Java
 				{
 					var uuid = new MiNET.Utils.UUID(remove.UUID.ToByteArray());
 					World?.RemovePlayerListItem(uuid);
-				//	API.Utils.UUID uuid = new UUID(remove.UUID.ToByteArray());
-				/*	if (_players.TryRemove(uuid, out PlayerMob removed))
-					{
-						if (removed.IsSpawned)
-						{
-							base.DespawnEntity(removed.EntityId);
-						}
-					}*/
 				}
+			}
+			
+			if (actions.Count > 0)
+			{
+				ThreadPool.QueueUserWorkItem(
+					o =>
+					{
+						foreach (var action in actions)
+						{
+							action.Invoke();
+						}
+					});
+			}
+		}
+
+		private void ProcessSkin(RemotePlayer entity, string skinJson)
+		{
+			if (SkinUtils.TryGetSkin(skinJson, Alex.GraphicsDevice, out var skin, out var skinSlim))
+			{
+				entity.GeometryName = skinSlim ? "geometry.humanoid.customSlim" :
+					"geometry.humanoid.custom";
+
+				entity.UpdateSkin(skin);
 			}
 		}
 

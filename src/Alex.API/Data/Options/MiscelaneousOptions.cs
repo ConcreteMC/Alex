@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Runtime.Serialization;
 
 namespace Alex.API.Data.Options
@@ -20,7 +21,7 @@ namespace Alex.API.Data.Options
         public MiscelaneousOptions()
         {
             ServerSideLighting = new OptionsProperty<bool>(false);
-            Language = new OptionsProperty<string>("en_us");
+            Language = new OptionsProperty<string>(CultureInfo.InstalledUICulture.Name);
             MeshInRam = new OptionsProperty<bool>(true);
             ObjectPools = new OptionsProperty<bool>(true);
         }

@@ -9,78 +9,94 @@ using RocketUI;
 
 namespace Alex.API.Gui.Elements.Icons
 {
-    public class GuiConnectionPingIcon : GuiElement
-    {
-        private GuiTextures _offlineState = GuiTextures.ServerPing0;
+	public class GuiConnectionPingIcon : GuiElement
+	{
+		private const GuiTextures OfflineState = GuiTextures.ServerPing0;
 
-        private long[] _qualityThresholds = new long[]
-        {
-            50,
-            150,
-            250,
-            500,
-            1000
-        };
+		private static readonly long[] QualityThresholds = new long[] {50, 150, 250, 500, 1000};
 
-        private GuiTextures[] _qualityStates = new[]
-        {
-            GuiTextures.ServerPing1,
-            GuiTextures.ServerPing2,
-            GuiTextures.ServerPing3,
-            GuiTextures.ServerPing4,
-            GuiTextures.ServerPing5,
-        };
+		private static readonly GuiTextures[] QualityStates = new[]
+		{
+			GuiTextures.ServerPing1, GuiTextures.ServerPing2, GuiTextures.ServerPing3, GuiTextures.ServerPing4,
+			GuiTextures.ServerPing5,
+		};
 
-        private GuiTextures[] _connectingStates = new[]
-        {
-            GuiTextures.ServerPingPending1,
-            GuiTextures.ServerPingPending2,
-            GuiTextures.ServerPingPending3,
-            GuiTextures.ServerPingPending4,
-            GuiTextures.ServerPingPending5,
-        };
+		private static readonly GuiTextures[] ConnectingStates = new[]
+		{
+			GuiTextures.ServerPingPending1, GuiTextures.ServerPingPending2, GuiTextures.ServerPingPending3,
+			GuiTextures.ServerPingPending4, GuiTextures.ServerPingPending5,
+		};
 
-        private TextureSlice2D _offlineTexture;
-        private TextureSlice2D[] _qualityStateTextures = new TextureSlice2D[5];
-        private TextureSlice2D[] _connectingStateTextures = new TextureSlice2D[5];
-	    private GuiTextElement _playerCountElement;
+		private TextureSlice2D   _offlineTexture;
+		private TextureSlice2D[] _qualityStateTextures    = new TextureSlice2D[5];
+		private TextureSlice2D[] _connectingStateTextures = new TextureSlice2D[5];
+		private GuiTextElement   _playerCountElement;
 
-        private bool _isPending;
-        private int _animationFrame;
-	    private bool _isPendingUpdate;
-	    private bool _isOutdated = false;
-	    private long _ping = 0;
-	    private bool _renderLatency = false;
-	    private string _version = null;
-	    public GuiConnectionPingIcon() : base()
+		private bool   _isPending;
+		private int    _animationFrame;
+		private bool   _isPendingUpdate;
+		private bool   _isOutdated    = false;
+		private long   _ping          = 0;
+		private bool   _renderLatency = false;
+		private string _version       = null;
+
+		private bool _showPlayerCountElement = true;
+
+		public bool ShowPlayerCount
+		{
+			get
+			{
+				return _showPlayerCountElement;
+			}
+			set
+			{
+				if (value && !_showPlayerCountElement)
+				{
+					AddChild(_playerCountElement);
+				}
+				else if (!value && _showPlayerCountElement)
+				{
+					RemoveChild(_playerCountElement);
+				}
+				_showPlayerCountElement = value;
+			}
+		}
+
+		public GuiConnectionPingIcon() : base()
 	    {
 		    Background = GuiTextures.ServerPing0;
             SetFixedSize(10, 8);
+            
+            _playerCountElement = new GuiTextElement(false)
+            {
+	            //Font = renderer.Font,
+	            Text = string.Empty,
+	            Anchor = Alignment.TopRight,
+	            Margin = new Thickness(5, 0, Background.Width + 15, 0),
+	            //			Enabled = false
+            };
 	    }
 
         protected override void OnInit(IGuiRenderer renderer)
         {
             base.OnInit(renderer);
 
-            _offlineTexture = renderer.GetTexture(_offlineState);
+            _offlineTexture = renderer.GetTexture(OfflineState);
 
-            for (int i = 0; i < _qualityStates.Length; i++)
+            for (int i = 0; i < QualityStates.Length; i++)
             {
-                _qualityStateTextures[i] = renderer.GetTexture(_qualityStates[i]);
+                _qualityStateTextures[i] = renderer.GetTexture(QualityStates[i]);
             }
-            for (int i = 0; i < _connectingStates.Length; i++)
+            for (int i = 0; i < ConnectingStates.Length; i++)
             {
-                _connectingStateTextures[i] = renderer.GetTexture(_connectingStates[i]);
+                _connectingStateTextures[i] = renderer.GetTexture(ConnectingStates[i]);
             }
 
-			AddChild(_playerCountElement = new GuiTextElement(false)
-			{
-				Font = renderer.Font,
-				Text = string.Empty,
-                Anchor = Alignment.TopRight,
-				Margin = new Thickness(5, 0, Background.Width + 15, 0),
-	//			Enabled = false
-			});
+            _playerCountElement.Font = renderer.Font;
+            if (_showPlayerCountElement)
+            {
+	            AddChild(_playerCountElement);
+            }
         }
 
         public void SetPending()
@@ -105,11 +121,17 @@ namespace Alex.API.Gui.Elements.Icons
 		        for (int i = _qualityStateTextures.Length - 1; i > 0; i--)
 		        {
 			        index = i;
-			        if (ms > _qualityThresholds[i]) break;
-
+			        if (ms > QualityThresholds[i]) break;
 		        }
 
-		        Background = _qualityStateTextures[_qualityStateTextures.Length - index];
+		        GuiTexture2D bg = _qualityStateTextures[_qualityStateTextures.Length - index];
+
+		        if (!bg.HasValue && GuiRenderer != null)
+		        {
+			        bg = GuiRenderer.GetTexture(QualityStates[QualityStates.Length - index]);
+		        }
+
+		        Background = bg;
 	        }
         }
 
@@ -148,7 +170,7 @@ namespace Alex.API.Gui.Elements.Icons
             {
                 var dt = gameTime.TotalGameTime.TotalSeconds;
 
-                _animationFrame = (int)((dt * 5) % _connectingStates.Length);
+                _animationFrame = (int)((dt * 5) % ConnectingStates.Length);
             }
             else
             {
@@ -175,6 +197,8 @@ namespace Alex.API.Gui.Elements.Icons
             else
             {
 	            base.OnDraw(graphics, gameTime);
+	            
+	            //graphics.FillRectangle(RenderBounds, Background,  TextureRepeatMode.NoScaleCenterSlice);
 	            
 	            if (_renderLatency)
 	            {

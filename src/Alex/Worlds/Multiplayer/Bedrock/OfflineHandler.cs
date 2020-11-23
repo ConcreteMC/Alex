@@ -19,8 +19,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public const int UdpHeaderSize = 28;
 
-		public static short MtuSize { get; set; } = 1500;
-		public static short MaxMtuSize { get; } = 1500;
+		public short MtuSize { get; set; } = 1500;
+		public short MaxMtuSize { get; } = 1500;
 		
 		private readonly RakConnection _connection;
 		private readonly ConnectionInfo _connectionInfo;
@@ -70,7 +70,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					return;
 				}
 
-				TraceReceive(Log, message);
+			//	TraceReceive(Log, message);
 
 				switch (messageType)
 				{
@@ -152,7 +152,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			byte[] data = packet.Encode();
 
-			TraceSend(packet);
+			//TraceSend(packet);
 
 		//	Log.Warn($"Sending MTU size={mtuSize}, data length={data.Length}");
 			_connection.SendData(data, targetEndPoint);
@@ -163,7 +163,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			if (message.mtuSize != MtuSize)
 			{
 			//	Log.Warn($"Error, mtu differ from what we sent. Received {message.mtuSize} bytes");
-				return;
+				//return;
 			}
 
 		//	Log.Warn($"Server with ID {message.serverGuid} security={message.serverHasSecurity}, mtu agreed on {message.mtuSize}");
@@ -180,7 +180,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 			byte[] data = packet.Encode();
 
-			TraceSend(packet);
+			//TraceSend(packet);
 
 			_connection.SendData(data, targetEndPoint);
 		}
@@ -235,7 +235,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			session.SendPacket(packet);
 		}
 
-		internal static void TraceReceive(ILogger log, Packet message)
+	/*	internal static void TraceReceive(ILogger log, Packet message)
 		{
 			if (!Log.IsTraceEnabled) return;
 
@@ -348,6 +348,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			{
 				Log.Error(e, "Error when printing trace");
 			}
-		}
+		}*/
 	}
 }

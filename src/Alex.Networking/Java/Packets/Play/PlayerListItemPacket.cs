@@ -5,10 +5,12 @@ namespace Alex.Networking.Java.Packets.Play
 {
 	public class PlayerListItemPacket : Packet<PlayerListItemPacket>
 	{
-		public PlayerListAction Action;
-		public AddPlayerEntry[] AddPlayerEntries = new AddPlayerEntry[0];
-		public RemovePlayerEntry[] RemovePlayerEntries = new RemovePlayerEntry[0];
+		public PlayerListAction         Action;
+		
+		public AddPlayerEntry[]         AddPlayerEntries         = new AddPlayerEntry[0];
+		public RemovePlayerEntry[]      RemovePlayerEntries      = new RemovePlayerEntry[0];
 		public UpdateDisplayNameEntry[] UpdateDisplayNameEntries = new UpdateDisplayNameEntry[0];
+		public UpdateLatencyEntry[]     UpdateLatencyEntries     = new UpdateLatencyEntry[0];
 
 		public PlayerListItemPacket()
 		{
@@ -22,6 +24,12 @@ namespace Alex.Networking.Java.Packets.Play
 			if (Action == PlayerListAction.AddPlayer)
 			{
 				ReadAddPlayerEntries(count, stream);
+				return;
+			}
+
+			if (Action == PlayerListAction.UpdateLatency)
+			{
+				ReadUpdateLatencyEntries(count, stream);
 				return;
 			}
 
@@ -39,6 +47,20 @@ namespace Alex.Networking.Java.Packets.Play
 			if (Action == PlayerListAction.UpdateDisplayName)
 			{
 				ReadUpdateDisplayNameEntries(count, stream);
+			}
+		}
+
+		private void ReadUpdateLatencyEntries(int count, MinecraftStream stream)
+		{
+			UpdateLatencyEntries = new UpdateLatencyEntry[count];
+
+			for (int i = 0; i < count; i++)
+			{
+				var entry = new UpdateLatencyEntry();
+				entry.UUID = stream.ReadUuid();
+				entry.Ping = stream.ReadVarInt();
+				
+				UpdateLatencyEntries[i] = entry;
 			}
 		}
 
@@ -157,16 +179,19 @@ namespace Alex.Networking.Java.Packets.Play
 			}
 		}
 
-		public class UpdateDisplayNameEntry
+		public class PlayerEntry
 		{
 			public Guid UUID;
+		}
+		
+		public class UpdateDisplayNameEntry : PlayerEntry
+		{
 			public bool HasDisplayName;
 			public string DisplayName;
 		}
 
-		public class AddPlayerEntry
+		public class AddPlayerEntry : PlayerEntry
 		{
-			public Guid UUID;
 			public string Name;
 			public PlayerListProperty[] Properties;
 			public int Gamemode;
@@ -175,9 +200,14 @@ namespace Alex.Networking.Java.Packets.Play
 			public string DisplayName;
 		}
 
-		public class RemovePlayerEntry
+		public class UpdateLatencyEntry : PlayerEntry
 		{
-			public Guid UUID;
+			public int Ping;
+		}
+
+		public class RemovePlayerEntry : PlayerEntry
+		{
+			//public Guid UUID;
 		}
 	}
 

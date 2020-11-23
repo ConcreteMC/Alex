@@ -43,10 +43,15 @@ namespace Alex.Gamestates.InGame.Hud
                 StringBuilder sb = new StringBuilder();
                 sb.Append($"Latency: {info.Latency}ms");
                 sb.Append($" | Pkt in/out(#/s): {info.PacketsIn}/{info.PacketsOut}");
-                sb.Append($" | Ack in/out(#/s): {info.Ack}/{info.AckSent}");
-               /* sb.Append($" | NACK's: {info.Nack}");
-                sb.Append($" | Resends: {info.Resends}");
-                sb.Append($" | Fails: {info.Fails}");*/
+
+                if (info.Ack.HasValue && info.AckSent.HasValue)
+                {
+                    sb.Append($" | Ack in/out(#/s): {info.Ack}/{info.AckSent}");
+                }
+
+                /* sb.Append($" | NACK's: {info.Nack}");
+                 sb.Append($" | Resends: {info.Resends}");
+                 sb.Append($" | Fails: {info.Fails}");*/
                 sb.Append($" | THR in/out(Mbps): {dataIn:F}/{dataOut:F}");
 
                 _lastString = sb.ToString();
