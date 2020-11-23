@@ -108,7 +108,7 @@ namespace Alex.Worlds
 						
 					var yDifference = MathF.Abs(entityBoundingBox.Min.Y - box.Max.Y);// <= 0.01f
 
-					if (!(yDifference <= 0.01f) || box.Contains(corner) == ContainmentType.Disjoint) 
+					if (yDifference > 0.01f || box.Contains(new Vector3(corner.X, corner.Y - 0.015f, corner.Z)) == ContainmentType.Disjoint) 
 						continue;
 					
 					anySolid = true;
@@ -264,47 +264,32 @@ namespace Alex.Worlds
 			return velocity;
 		}
 
-		private bool CanClimb(Entity entity, BoundingBox entityBox,
-			BoundingBox box, out float newYPosition)
+		private bool CanClimb(Entity entity, BoundingBox entityBox, BoundingBox blockBox)
 		{
-			newYPosition = entityBox.Min.Y;
-		//	var newY = newYPosition;
+			//newYPosition = entityBox.Min.Y;
+
 			if (entity.Velocity.Y < 0f)
 				return false;
 
-			//var result = collisionBlock.block.Model.GetBoundingBoxes(collisionBlock.coordinates)
-			//   .Where(x => entityBox.Intersects(x)).All(box => {
-			if (box.Max.Y > entity.KnownPosition.Y)
-			{
-				var difference = box.Max.Y - entity.KnownPosition.Y;
+			if (!(blockBox.Max.Y > entity.KnownPosition.Y)) 
+				return false;
 
-				if (difference > 0.55f)
-					return false;
+			if ((blockBox.Max.Y - entity.KnownPosition.Y) > 0.55f)
+				return false;
+				
+			var pos = new Vector3(
+				(entityBox.Min.X + entityBox.Max.X) / 2f, blockBox.Max.Y, (entityBox.Min.Z + entityBox.Max.Z) / 2f);
 
-				var h = entityBox.Max.Y - entityBox.Min.Y;
+			var newEntityBoundingBox = entity.GetBoundingBox(pos);
 
-				var pos = new Vector3(
-					(entityBox.Min.X + entityBox.Max.X) / 2f, box.Max.Y, (entityBox.Min.Z + entityBox.Max.Z) / 2f);
+			Bound bound = new Bound(World, newEntityBoundingBox);
 
-				var newEntityBoundingBox = entity.GetBoundingBox(pos);
+			if (bound.Boxes.Any(bb => bb.Min.Y >= newEntityBoundingBox.Min.Y && bb.Min.Y <= newEntityBoundingBox.Max.Y))
+				return false;
 
-				Bound bound = new Bound(World, newEntityBoundingBox);
+			//newYPosition = pos.Y + 0.075f;
 
-				if (bound.Boxes.Any(x => x.Min.Y > pos.Y && x.Min.Y < newEntityBoundingBox.Max.Y))
-				{
-					return false;
-				}
-
-				newYPosition = pos.Y + 0.075f;
-
-				return true;
-			}
-
-			return false;
-				//});
-
-			//newYPosition = newY;
-			//return result;
+			return true;
 		}
 
 		private bool AdjustForZ(Entity entity, BoundingBox box,
@@ -349,9 +334,10 @@ namespace Alex.Worlds
 
 			if (collision.HasValue)
 			{
-				if (CanClimb(entity, box, blocks[blockIndex], out float newYPosition) && newYPosition > position.Y)
+				var bbox = blocks[blockIndex];
+				if (bbox.Max.Y > position.Y && CanClimb(entity, box, bbox))
 				{
-					position.Y = newYPosition;
+					position.Y = bbox.Max.Y + 0.01f;
 				}
 				else
 				{
@@ -411,9 +397,10 @@ namespace Alex.Worlds
 
 			if (collision.HasValue)
 			{
-				if (CanClimb(entity, box, blocks[blockIndex], out float newYPosition)&& newYPosition > position.Y)
+				var bbox = blocks[blockIndex];
+				if (bbox.Max.Y > position.Y && CanClimb(entity, box, bbox))
 				{
-					position.Y = newYPosition;
+					position.Y = bbox.Max.Y + 0.01f;
 				}
 				else
 				{
@@ -469,9 +456,10 @@ namespace Alex.Worlds
 
 			if (pointOfCollision.HasValue)
 			{
-				if (CanClimb(entity, box, blocks[blockIndex], out float newYPosition)&& newYPosition > position.Y)
+				var bbox = blocks[blockIndex];
+				if (bbox.Max.Y > position.Y && CanClimb(entity, box, bbox))
 				{
-					position.Y = newYPosition;
+					position.Y = bbox.Max.Y + 0.01f;
 				}
 				else
 				{
