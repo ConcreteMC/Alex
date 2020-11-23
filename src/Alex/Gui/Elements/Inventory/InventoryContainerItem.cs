@@ -61,8 +61,8 @@ namespace Alex.Gui.Elements.Inventory
                Scale = 0.75f,
                Margin = new Thickness(0, 0, 1, 1),
                FontStyle = FontStyle.DropShadow,
-               CanHighlight = false,
-               CanFocus = false
+               //CanHighlight = false,
+              // CanFocus = false
            });
         }
         

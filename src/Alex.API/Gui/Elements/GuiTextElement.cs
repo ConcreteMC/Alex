@@ -18,7 +18,7 @@ namespace Alex.API.Gui.Elements
 		public Uri ClickedText;
 	}
 
-    public class GuiTextElement : GuiControl
+    public class GuiTextElement : GuiElement //GuiControl
 	{
 	    public static readonly Color DefaultTextBackgroundColor = new Color(Color.Black, 0.6f);
         
@@ -116,14 +116,14 @@ namespace Alex.API.Gui.Elements
 
 		//public void AddClickable()
 
-		public class ClickableElement
+		/*public class ClickableElement
 		{
 			public Rectangle Area { get; set; } 
 			public Action<GuiTextElement, string> ClickAction { get; set; }
 			public string Text { get; set; }
-		}
+		}*/
 
-		private List<ClickableElement> ClickableElements = new List<ClickableElement>();
+		//private List<ClickableElement> ClickableElements = new List<ClickableElement>();
 
 		public GuiTextElement(string text, bool hasBackground = false) : this(hasBackground)
 		{
@@ -251,14 +251,14 @@ namespace Alex.API.Gui.Elements
 					
 				}
 
-				foreach (Match match in LinkParser.Matches(text))
+				/*foreach (Match match in LinkParser.Matches(text))
 				{
 					var l = GetSize(text.Substring(0, match.Index), scale);
 					var linkSize = GetSize(match.Value, scale);
 
 					Rectangle clickArea = new Rectangle((int)l.X, 0, (int)linkSize.X, (int)linkSize.Y);
 
-					ClickableElements.Add(new ClickableElement()
+					/*ClickableElements.Add(new ClickableElement()
 					{
 						Area = clickArea,
 						//ClickAction = (s, val) => {
@@ -266,8 +266,8 @@ namespace Alex.API.Gui.Elements
 						//},
 						Text = match.Value
 					});
-				}
-				
+			
+				}*/
 				GetPreferredSize(out var size, out var minSize, out var maxSize);
 				Width = size.Width;
 				Height = size.Height;
@@ -275,17 +275,17 @@ namespace Alex.API.Gui.Elements
 			}
 		}
 
-		protected override void OnCursorPressed(Point cursorPosition, MouseButton button)
-		{
-			base.OnCursorPressed(cursorPosition, button);
-			foreach (var c in ClickableElements.ToArray())
+		//protected override void OnCursorPressed(Point cursorPosition, MouseButton button)
+	//	{
+		//	base.OnCursorPressed(cursorPosition, button);
+		/*	foreach (var c in ClickableElements.ToArray())
 			{
 				if (c.Area.Contains(cursorPosition))
 				{
 					OnLinkClicked?.Invoke(this, new GuiTextClickedEvent() { ClickedText = new Uri(c.Text) });
 					//c.ClickAction?.Invoke(this, c.Text);
 				}
-			}
-		}
+			}*/
+		//}
 	}
 }

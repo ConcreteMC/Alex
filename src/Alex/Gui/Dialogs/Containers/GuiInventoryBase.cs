@@ -45,7 +45,7 @@ namespace Alex.Gui.Dialogs.Containers
 				{
 					HasShadow = true,
 					Background = new Color(Color.Black, 0.35f),
-					Enabled = false,
+		//			Enabled = false,
 					FontStyle = FontStyle.DropShadow,
 					TextColor = TextColor.Yellow,
 					ClipToBounds = false,

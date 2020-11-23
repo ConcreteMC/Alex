@@ -36,7 +36,7 @@ namespace Alex.Gamestates.MainMenu.Profile
                 Text = profile.Username,
                 Margin = Thickness.Zero,
                 Anchor = Alignment.TopCenter,
-                Enabled = false
+                //Enabled = false
             });
 
             Margin = new Thickness(0, 8);
@@ -64,7 +64,7 @@ namespace Alex.Gamestates.MainMenu.Profile
                 Text = profile.Username, //PROFILE TYPE!!!
                 Margin = Thickness.Zero,
                 Anchor = Alignment.BottomCenter,
-                Enabled = false,
+                //Enabled = false,
                 BackgroundOverlay = new Color(Color.Black, 0.5f),
                 Background = null
             });

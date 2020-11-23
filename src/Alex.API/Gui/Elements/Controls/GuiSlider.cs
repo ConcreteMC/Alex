@@ -120,8 +120,8 @@ namespace Alex.API.Gui.Elements.Controls
                 Anchor      = Alignment.MiddleCenter,
                 TextColor   = _foregroundColor,
                 FontStyle   = FontStyle.DropShadow,
-                Enabled = false,
-                CanFocus = false
+                //Enabled = false,
+              //  CanFocus = false
             });
         }
 

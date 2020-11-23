@@ -36,7 +36,7 @@ namespace Alex.Gamestates.MainMenu.Profile
             AddChild(
                 new GuiTextElement()
                 {
-                    Text = skin.Name, Margin = Thickness.Zero, Anchor = Alignment.TopCenter, Enabled = false
+                    Text = skin.Name, Margin = Thickness.Zero, Anchor = Alignment.TopCenter, //Enabled = false
                 });
 
             Margin = new Thickness(0, 8);

@@ -74,7 +74,7 @@ namespace Alex.API.Gui.Elements.Controls
             {
                 Anchor = Alignment.MiddleLeft,
 				Text = TextBuilder.Text,
-				Enabled = false
+	//			Enabled = false
             });
 
 	        TextBuilder.TextChanged += (s, v) => Value = v;

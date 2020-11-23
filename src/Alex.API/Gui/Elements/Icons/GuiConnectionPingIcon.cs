@@ -79,7 +79,7 @@ namespace Alex.API.Gui.Elements.Icons
 				Text = string.Empty,
                 Anchor = Alignment.TopRight,
 				Margin = new Thickness(5, 0, Background.Width + 15, 0),
-				Enabled = false
+	//			Enabled = false
 			});
         }
 
