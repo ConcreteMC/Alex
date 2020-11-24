@@ -13,6 +13,8 @@ namespace Alex.Entities.BlockEntities
 		{
 			ModelRenderer = new EntityModelRenderer(new MobHeadModel(), texture);
 			
+			Width = 8;
+			Height = 8;
 		}
 
 		/// <inheritdoc />

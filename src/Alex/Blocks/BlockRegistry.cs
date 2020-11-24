@@ -43,6 +43,7 @@ namespace Alex.Blocks
 		    this.Register("minecraft:ladder", () => new Ladder());
 		    this.Register("minecraft:rail", () => new Rail());
 		    this.Register("minecraft:wall_sign", () => new WallSign());
+		    this.Register("minecraft:oak_wall_sign", () => new WallSign());
 		    this.Register("minecraft:snow", () => new Snow());
 		    this.Register("minecraft:ice", () => new Ice());
 		    this.Register("minecraft:blue_ice", () => new BlueIce());

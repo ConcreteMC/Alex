@@ -92,6 +92,25 @@ namespace Alex.Graphics.Models.Blocks
 			WeightSum = models.Sum(x => x.Weight);
 			
 			CalculateBoundingBoxes(Models);
+
+			for (int i = 0; i < Boxes.Length; i++)
+			{
+				var box         = Boxes[i];
+				
+				var yDifference = box.Max.Y - box.Min.Y;
+				if (yDifference < 0.1f)
+				{
+					box.Max.Y += (0.1f - yDifference);
+				}
+
+				var xDifference = box.Max.X - box.Min.X;
+				if (xDifference < 0.1f)
+				{
+					box.Max.X += (0.1f - xDifference);
+				}
+				
+				Boxes[i] = box;
+			}
 		}
 
 		/// <inheritdoc />

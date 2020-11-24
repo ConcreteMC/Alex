@@ -14,8 +14,8 @@ namespace Alex.Entities.BlockEntities
 {
 	public class ChestBlockEntity : BlockEntity
 	{
-		private EntityModelRenderer.ModelBone HeadBone { get; }
-		private EntityModelRenderer.ModelBone Body     { get; }
+		private EntityModelRenderer.ModelBone HeadBone { get; set; }
+		private EntityModelRenderer.ModelBone Body     { get; set; }
 		
 		/// <inheritdoc />
 		public ChestBlockEntity(Block block, World level, PooledTexture2D texture) : base(level, block)
@@ -24,7 +24,12 @@ namespace Alex.Entities.BlockEntities
 			Height = 16;
 			
 			ModelRenderer = new EntityModelRenderer(new ChestEntityModel(), texture);
+		}
 
+		/// <inheritdoc />
+		protected override void UpdateModelParts()
+		{
+			//base.UpdateModelParts();
 			if (ModelRenderer.GetBone("head", out var head))
 			{
 				HeadBone = head;
@@ -70,24 +75,29 @@ namespace Alex.Entities.BlockEntities
 			{
 				_rotation = value;
 
+				var bodyRotation = Body.Rotation;
+				var headRotation = HeadBone.Rotation;
 				switch (value)
 				{
 					case BlockFace.East:
-						KnownPosition.HeadYaw = KnownPosition.Yaw = 90f;
+						bodyRotation.Y = 90f;
 						break;
 
 					case BlockFace.West:
-						KnownPosition.HeadYaw = KnownPosition.Yaw = 270f;
+						bodyRotation.Y = 270f;
 						break;
 
 					case BlockFace.North:
-						KnownPosition.HeadYaw = KnownPosition.Yaw = 0;
+						bodyRotation.Y = 180f;
 						break;
 
 					case BlockFace.South:
-						KnownPosition.HeadYaw = KnownPosition.Yaw = 180f;
+						bodyRotation.Y = 0f;
 						break;
 				}
+
+				Body.Rotation = bodyRotation;
+				//HeadBone.Rotation = headRotation;
 			}
 		}
 
@@ -132,19 +142,6 @@ namespace Alex.Entities.BlockEntities
 				{
 					Rotation = (BlockFace) val;
 				}
-			}
-		}
-
-		/// <inheritdoc />
-		public override PlayerLocation KnownPosition
-		{
-			get
-			{
-				return base.KnownPosition + new Vector3(0.5f, 0, 0.5f);
-			}
-			set
-			{
-				base.KnownPosition = value;
 			}
 		}
 	}

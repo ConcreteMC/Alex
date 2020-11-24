@@ -3,6 +3,7 @@ using Alex.Blocks.Minecraft;
 using Alex.Net;
 using Alex.Worlds;
 using fNbt;
+using Microsoft.Xna.Framework;
 
 namespace Alex.Entities.BlockEntities
 {
@@ -62,6 +63,13 @@ namespace Alex.Entities.BlockEntities
 		public virtual void HandleBlockAction(byte actionId, int parameter)
 		{
 			
+		}
+		
+		/// <inheritdoc />
+		public override PlayerLocation KnownPosition
+		{
+			get => base.KnownPosition + new Vector3(0.5f, 0, 0.5f);
+			set => base.KnownPosition = value;
 		}
 	}
 }

@@ -134,22 +134,25 @@ namespace Alex.Worlds.Chunks
 
 		internal MinifiedBlockShaderVertex[] BuildVertices()
 		{
-			var realVertices = new List<MinifiedBlockShaderVertex>((int) _vertexCount);
-
-			foreach (var block in BlockIndices)
+			lock (_writeLock)
 			{
-				foreach (var vertex in block.Value)
-				{
-					realVertices.Add(new MinifiedBlockShaderVertex(
-						vertex.Position, TextureStorage[vertex.TexCoords], new Color(vertex.Color))
-					{
-						SkyLight = vertex.SkyLight,
-						BlockLight = vertex.BlockLight
-					});
-				}
-			}
+				var realVertices = new List<MinifiedBlockShaderVertex>((int) _vertexCount);
 
-			return realVertices.ToArray();
+				foreach (var block in BlockIndices)
+				{
+					foreach (var vertex in block.Value)
+					{
+						realVertices.Add(
+							new MinifiedBlockShaderVertex(
+								vertex.Position, TextureStorage[vertex.TexCoords], new Color(vertex.Color))
+							{
+								SkyLight = vertex.SkyLight, BlockLight = vertex.BlockLight
+							});
+					}
+				}
+
+				return realVertices.ToArray();
+			}
 		}
 
 		private int NextPowerOf2(int x)
@@ -172,6 +175,13 @@ namespace Alex.Worlds.Chunks
 				_previousKeepInMemory = keepInMemory;
 
 				var realVertices = BuildVertices();
+
+				if (realVertices.Length == 0)
+				{
+					_renderablePrimitiveCount = 0;
+					return;
+				}
+				
 				_renderablePrimitiveCount = realVertices.Length / 3;
 
 				bool               callSetData = HasResized;

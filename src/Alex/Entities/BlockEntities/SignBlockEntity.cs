@@ -17,6 +17,9 @@ namespace Alex.Entities.BlockEntities
 		public SignBlockEntity(World level, Block block, PooledTexture2D texture) : base(level, block)
 		{
 			ModelRenderer = new EntityModelRenderer(new StandingSignEntityModel(), texture);
+			
+			Width = 16;
+			Height = 16;
 		}
 
 		private string[] _lines = new string[4];

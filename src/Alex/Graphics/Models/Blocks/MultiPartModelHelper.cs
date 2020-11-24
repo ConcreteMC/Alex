@@ -195,8 +195,8 @@ namespace Alex.Graphics.Models.Blocks
 
 			var direction = face.GetVector3();
 
-			if (face == BlockFace.North || face == BlockFace.South)
-				direction = face.Opposite().GetVector3();
+			//if (face == BlockFace.North || face == BlockFace.South)
+			//	direction = face.Opposite().GetVector3();
 			
 			if (isDirection && (value == "true" || value == "false" || value == "none"))
 			{
@@ -239,13 +239,13 @@ namespace Alex.Graphics.Models.Blocks
 			switch (value)
 			{
 				case "north":
-					face = BlockFace.South;
+					face = BlockFace.North;
 					return true;
 				case "east":
 					face = BlockFace.East;
 					return true;
 				case "south":
-					face = BlockFace.North;
+					face = BlockFace.South;
 					return true;
 				case "west":
 					face = BlockFace.West;

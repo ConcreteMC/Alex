@@ -130,7 +130,7 @@ namespace Alex.Blocks.Minecraft
                     {
                         if (facing == BlockFace.North || facing == BlockFace.South)
                         {
-                            result = state.WithProperty("shape", "inner_right");
+                            result = state.WithProperty("shape", "outer_right");
                         }
                         else
                         {
@@ -141,7 +141,7 @@ namespace Alex.Blocks.Minecraft
 
                     if (facing == BlockFace.North || facing == BlockFace.South)
                     {
-                        result = state.WithProperty("shape", "inner_left");
+                        result = state.WithProperty("shape", "outer_left");
                     }
                     else
                     {
@@ -160,18 +160,18 @@ namespace Alex.Blocks.Minecraft
                     {
                         if (facing == BlockFace.North || facing == BlockFace.South)
                         {
-                            result = state.WithProperty("shape", "outer_right");
+                            result = state.WithProperty("shape", "inner_right");
                         }
                         else
                         {
-                            result = state.WithProperty("shape", "inner_right");
+                            result = state.WithProperty("shape", "outer_right");
                         }
                         return true;
                     }
 
                     if (facing == BlockFace.North || facing == BlockFace.South)
                     {
-                        result = state.WithProperty("shape", "outer_left");
+                        result = state.WithProperty("shape", "inner_left");
                     }
                     else
                     {
