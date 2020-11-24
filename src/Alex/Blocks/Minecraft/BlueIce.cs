@@ -5,6 +5,8 @@ namespace Alex.Blocks.Minecraft
 		public BlueIce()
 		{
 			LightValue = 4;
+
+			BlockMaterial = Material.BlueIce;
 		}
 	}
 }

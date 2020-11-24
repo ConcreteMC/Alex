@@ -44,6 +44,7 @@ namespace Alex.Blocks.Minecraft
 		public static readonly IMaterial Tnt = (new Material(MapColor.TNT)).SetBurning();
 		public static readonly IMaterial Coral = (new Material(MapColor.FOLIAGE));
 		public static readonly IMaterial Ice = (new Material(MapColor.ICE)).SetTranslucent().SetSlipperines(0.98d);
+		public static readonly IMaterial BlueIce = (new Material(MapColor.ICE)).SetTranslucent().SetSlipperines(0.989d);
 		public static readonly IMaterial PackedIce = (new Material(MapColor.ICE)).SetSlipperines(0.989d);
 		public static readonly IMaterial Snow = (new MaterialLogic(MapColor.SNOW)).SetReplaceable().SetRequiresTool();
 		public static readonly IMaterial CraftedSnow = (new Material(MapColor.SNOW)).SetRequiresTool();
