@@ -12,8 +12,10 @@ namespace Alex.Entities.BlockEntities
 	public class BlockEntityFactory
 	{
 		private static readonly Logger          Log = LogManager.GetCurrentClassLogger(typeof(BlockEntityFactory));
-		internal static         PooledTexture2D ChestTexture { get; set; }
+		internal static         PooledTexture2D ChestTexture      { get; set; }
 		internal static         PooledTexture2D EnderChestTexture { get; set; }
+		internal static         PooledTexture2D SkullTexture      { get; set; }
+		internal static         PooledTexture2D SignTexture      { get; set; }
 		
 		public static void LoadResources(GraphicsDevice graphicsDevice, McResourcePack resourcePack)
 		{
@@ -33,6 +35,25 @@ namespace Alex.Entities.BlockEntities
 			else
 			{
 				Log.Warn($"Could not load enderchest texture");
+			}
+			
+			if (resourcePack.TryGetBitmap("minecraft:entity/steve", out var steveBmp))
+			{
+				SkullTexture = TextureUtils.BitmapToTexture2D(graphicsDevice, steveBmp);
+			}
+			else
+			{
+				Log.Warn($"Could not load skull texture");
+			}
+			
+						
+			if (resourcePack.TryGetBitmap("minecraft:entity/signs/oak", out var signBmp))
+			{
+				SignTexture = TextureUtils.BitmapToTexture2D(graphicsDevice, signBmp);
+			}
+			else
+			{
+				Log.Warn($"Could not load sign texture");
 			}
 		}
 		
@@ -59,8 +80,13 @@ namespace Alex.Entities.BlockEntities
 
 					case "minecraft:sign":
 					case "sign":
-						blockEntity = new SignBlockEntity(world, block);
+						blockEntity = new SignBlockEntity(world, block, SignTexture);
 
+						break;
+					
+					case "minecraft:skull":
+					case "skull":
+						blockEntity = new SkullBlockEntity(world, block, SkullTexture);
 						break;
 					
 					default:

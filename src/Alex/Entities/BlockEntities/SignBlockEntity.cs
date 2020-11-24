@@ -3,6 +3,8 @@ using Alex.API.Graphics;
 using Alex.API.Graphics.Typography;
 using Alex.API.Utils;
 using Alex.Blocks.Minecraft;
+using Alex.Graphics.Models.Entity;
+using Alex.Graphics.Models.Entity.BlockEntities;
 using Alex.Worlds;
 using fNbt;
 using Microsoft.Xna.Framework;
@@ -12,9 +14,9 @@ namespace Alex.Entities.BlockEntities
 	public class SignBlockEntity : BlockEntity
 	{
 		/// <inheritdoc />
-		public SignBlockEntity(World level, Block block) : base(level, block)
+		public SignBlockEntity(World level, Block block, PooledTexture2D texture) : base(level, block)
 		{
-			
+			ModelRenderer = new EntityModelRenderer(new StandingSignEntityModel(), texture);
 		}
 
 		private string[] _lines = new string[4];

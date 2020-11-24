@@ -1,7 +1,7 @@
 using Alex.ResourcePackLib.Json.Models.Entities;
 using Microsoft.Xna.Framework;
 
-namespace Alex.Entities.Models
+namespace Alex.Entities.Models.BlockEntities
 {
     public class ChestModel : OldEntityModel
     {

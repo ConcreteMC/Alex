@@ -363,8 +363,7 @@ namespace Alex.Worlds
 			
 			foreach (var blockEntity in chunk.GetBlockEntities)
 			{
-				var coordinates = new BlockCoordinates(
-					(position.X << 4) + blockEntity.X, blockEntity.Y, (position.Z << 4) + blockEntity.Z);
+				var coordinates = new BlockCoordinates(blockEntity.X, blockEntity.Y, blockEntity.Z);
 	            
 				World.EntityManager.AddBlockEntity(coordinates, blockEntity);
 			}
