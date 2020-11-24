@@ -311,19 +311,8 @@ namespace Alex
 		            }
 	            }
             }
-            
-            var directories = directory.GetDirectories();
 
-          /*  if (!directories.Any(x => x.Name.Equals("definitions")))
-            {
-				Log.Warn($"The required definition files are not found. Any questions can be asked on Discord.");
-                Console.ReadLine();
-				Environment.Exit(1);
-                return false;
-            }*/
-			//report(ResourcePack.AsciiFont);
-
-			Log.Info($"Loading bedrock resources...");
+            Log.Info($"Loading bedrock resources...");
 			
 			progressReceiver?.UpdateProgress(0, "Loading bedrock resources...");
 			BedrockResourcePack = new BedrockResourcePack(directory, (percentage, file) =>
@@ -467,8 +456,7 @@ namespace Alex
 	        {
 		        Alex.GuiRenderer.SetLanguage(CultureInfo.InstalledUICulture.Name);
 	        }
-
-	        progress?.UpdateProgress(90, "Loading font...");
+	        
 	        var f = ActiveResourcePacks.LastOrDefault(x => x.FontBitmap != null);
 	        if (f != null)
 	        {

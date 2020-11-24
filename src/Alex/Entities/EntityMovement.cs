@@ -26,7 +26,7 @@ namespace Alex.Entities
 
 		public void Move(Vector3 direction)
 		{
-			var   oldPosition = Entity.KnownPosition;
+			var   oldPosition = Entity.KnownPosition.ToVector3();
 			float offset      = 0f;
 
 			//TODO: Fix position offset
@@ -36,7 +36,7 @@ namespace Alex.Entities
 			Entity.KnownPosition.Z += direction.Z;
 
 			Entity.DistanceMoved +=
-				MathF.Abs(Microsoft.Xna.Framework.Vector3.Distance(oldPosition, Entity.KnownPosition));
+				MathF.Abs(Microsoft.Xna.Framework.Vector3.Distance(oldPosition, Entity.KnownPosition.ToVector3()));
 		}
 
 		public void Teleport(PlayerLocation location)
