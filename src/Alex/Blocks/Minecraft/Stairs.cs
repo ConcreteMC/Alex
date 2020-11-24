@@ -68,44 +68,39 @@ namespace Alex.Blocks.Minecraft
             return string.Empty;
         }
 
-        private bool UpdateState(IBlockAccess world, BlockState state, BlockCoordinates position, BlockCoordinates updatedBlock, out BlockState result)
+        private bool UpdateState(IBlockAccess world,
+            BlockState state,
+            BlockCoordinates position,
+            BlockCoordinates updatedBlock,
+            out BlockState result, bool checkCorners)
         {
             result = state;
             var block = world.GetBlockState(updatedBlock).Block;
-            if (!(block is Stairs)) {return false;}
+
+            if (!(block is Stairs))
+            {
+                return false;
+            }
 
             var myHalf = GetHalf(state);
-            
+
             var blockState = block.BlockState;
+
             if (myHalf != GetHalf(blockState))
                 return false;
-            
-            var facing = GetFacing(state);
-            var neighbor = GetFacing(blockState);
 
-            var myShape = GetShape(state);
-            var neighborShape = GetShape(blockState);
+            var facing         = GetFacing(state);
+            var neighborFacing = GetFacing(blockState);
 
-           // int offset = (myHalf == "top") ? -1 : 1;
-
-         //  var innerRight = ""
-           if (myHalf == "top")
-           {
-               
-           }
-           
-            //if ()
+            if (checkCorners)
             {
-               // if (neighbor == BlockModel.RotateDirection(facing, 1, BlockModel.FACE_ROTATION,
-               //         BlockModel.INVALID_FACE_ROTATION) && neighbor != facing && GetHalf(state) == GetHalf(blockState))
-                //if (facing == BlockFace.East && updatedBlock == (position + facing.Opposite().GetBlockCoordinates()))
-
                 BlockCoordinates offset1 = facing.GetVector3();
 
-                if (neighbor != facing && neighbor != facing.Opposite() && updatedBlock == position + offset1)
+                if (neighborFacing != facing && neighborFacing != facing.Opposite()
+                                             && updatedBlock == position + offset1)
                 {
-                    if (neighbor == BlockModel.RotateDirection(facing, 1, BlockModel.FACE_ROTATION,
-                            BlockModel.INVALID_FACE_ROTATION))
+                    if (neighborFacing == BlockModel.RotateDirection(
+                        facing, 1, BlockModel.FACE_ROTATION, BlockModel.INVALID_FACE_ROTATION))
                     {
                         if (facing == BlockFace.North || facing == BlockFace.South)
                         {
@@ -115,6 +110,7 @@ namespace Alex.Blocks.Minecraft
                         {
                             result = state.WithProperty("shape", "outer_right");
                         }
+
                         return true;
                     }
 
@@ -129,13 +125,14 @@ namespace Alex.Blocks.Minecraft
 
                     return true;
                 }
-                
+
                 BlockCoordinates offset2 = facing.Opposite().GetVector3();
 
-                if (neighbor != facing && neighbor != facing.Opposite() && updatedBlock == position + offset2)
+                if (neighborFacing != facing && neighborFacing != facing.Opposite()
+                                             && updatedBlock == position + offset2)
                 {
-                    if (neighbor == BlockModel.RotateDirection(facing, 1, BlockModel.FACE_ROTATION,
-                            BlockModel.INVALID_FACE_ROTATION))
+                    if (neighborFacing == BlockModel.RotateDirection(
+                        facing, 1, BlockModel.FACE_ROTATION, BlockModel.INVALID_FACE_ROTATION))
                     {
                         if (facing == BlockFace.North || facing == BlockFace.South)
                         {
@@ -143,8 +140,9 @@ namespace Alex.Blocks.Minecraft
                         }
                         else
                         {
-                            result = state.WithProperty("shape", "outer_right");
+                            result = state.WithProperty("shape", "inner_right");
                         }
+
                         return true;
                     }
 
@@ -156,21 +154,27 @@ namespace Alex.Blocks.Minecraft
                     {
                         result = state.WithProperty("shape", "inner_left");
                     }
+
                     return true;
                 }
-
-                /* if (updatedBlock == (position + facing.Opposite().GetBlockCoordinates()))
-                {
-                    return state.WithProperty("shape", "outer_left");
-                }*/
             }
+            else
+            {
+                if (facing == neighborFacing)
+                {
+                    result = state.WithProperty("shape", "straight");
+
+                    return true;
+                }
+            }
+
 
             return false;
         }
-        
+
         public override void BlockUpdate(World world, BlockCoordinates position, BlockCoordinates updatedBlock)
         {
-            if (UpdateState(world, BlockState, position, updatedBlock, out var state))
+            if (UpdateState(world, BlockState, position, updatedBlock, out var state, true))
             {
                 world.SetBlockState(position.X, position.Y, position.Z, state);
             }
@@ -178,15 +182,15 @@ namespace Alex.Blocks.Minecraft
 
         public override BlockState BlockPlaced(IBlockAccess world, BlockState state, BlockCoordinates position)
         {
-            if (UpdateState(world, state, position, position + BlockCoordinates.Forwards, out state)
-                || UpdateState(world, state, position, position + BlockCoordinates.Backwards, out state)
-                || UpdateState(world, state, position, position + BlockCoordinates.Left, out state)
-                || UpdateState(world, state, position, position + BlockCoordinates.Right, out state))
+            if (UpdateState(world, state, position, position + BlockCoordinates.Forwards, out state, true)
+                || UpdateState(world, state, position, position + BlockCoordinates.Backwards, out state, true)
+                || UpdateState(world, state, position, position + BlockCoordinates.Left, out state, true)
+                || UpdateState(world, state, position, position + BlockCoordinates.Right, out state, true))
             {
                 return state;
             }
 
-            return state;
+            return state.WithProperty("shape", "straight");
         }
     }
 }
