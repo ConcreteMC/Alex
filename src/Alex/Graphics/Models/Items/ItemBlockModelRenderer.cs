@@ -13,7 +13,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.Graphics.Models.Items
 {
-    public class ItemBlockModelRenderer : ItemModelRenderer<BlockShaderVertex>
+    public class ItemBlockModelRenderer : ItemModelRenderer<VertexPositionColorTexture>
     {
         private BlockState _block;
         private ResourceManager _resource;
@@ -36,7 +36,11 @@ namespace Alex.Graphics.Models.Items
             
             ChunkData chunkData = new ChunkData();
             _block.Model.GetVertices(new ItemRenderingWorld(_block.Block), chunkData, BlockCoordinates.Zero, Vector3.Zero, _block.Block);
-            Vertices = chunkData.Vertices;
+            Vertices = chunkData.Vertices.Select(
+                x =>
+                {
+                    return new VertexPositionColorTexture(x.Position, x.Color, x.TexCoords);
+                }).ToArray();
             List<short> indexes = new List<short>();
 
             for (int i = 0; i < Vertices.Length; i++)
@@ -76,7 +80,7 @@ namespace Alex.Graphics.Models.Items
         {
             return new ItemBlockModelRenderer(_block, Model, null, _resource)
             {
-                Vertices = (BlockShaderVertex[]) Vertices.Clone(),
+                Vertices = (VertexPositionColorTexture[]) Vertices.Clone(),
                 Indexes = (short[]) Indexes.Clone()
             };
         }

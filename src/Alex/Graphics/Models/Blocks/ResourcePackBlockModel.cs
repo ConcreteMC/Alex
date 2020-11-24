@@ -725,24 +725,24 @@ namespace Alex.Graphics.Models.Blocks
 					{
 						targetState = RenderStage.Opaque;
 					}
-					
+
 					for (int i = 0; i < vertices.Length; i++)
 					{
 						var vertex = vertices[i];
-						vertex.Position += position;
-						
+						//vertex.Position += position;
+
 						BlockModel.GetLight(
-							world, vertex.Position + vertex.Face.GetVector3(), 
-							out var blockLight,
-							out var skyLight,
+							world, vertex.Position + position + vertex.Face.GetVector3(), out var blockLight, out var skyLight,
 							true);
 
-						vertex.Position += positionOffset;
-						
-						vertex.BlockLight = blockLight;
-						vertex.SkyLight = skyLight;
+						//vertex.Position += positionOffset;
 
-						chunkBuilder.AddVertex(blockCoordinates, vertex, targetState);
+						//vertex.BlockLight = blockLight;
+						//vertex.SkyLight = skyLight;
+
+						chunkBuilder.AddVertex(
+							blockCoordinates, vertex.Position + position + positionOffset, vertex.TexCoords, vertex.Color, blockLight, skyLight,
+							targetState);
 					}
 				}
 			}

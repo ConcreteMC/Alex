@@ -7,15 +7,16 @@ using Alex.API;
 using Alex.API.Blocks;
 using Alex.API.Graphics;
 using Alex.API.Utils;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Alex.Worlds.Chunks
 {
     public class ChunkData : IDisposable
     {
-        public        ConcurrentDictionary<RenderStage, ChunkRenderStage> RenderStages { get; set; }
+        public         ConcurrentDictionary<RenderStage, ChunkRenderStage> RenderStages   { get; set; }
 
-        private static long _instances = 0;
+        private static long                                                _instances = 0;
         public ChunkData()
         {
             RenderStages = new ConcurrentDictionary<RenderStage, ChunkRenderStage>();
@@ -23,30 +24,36 @@ namespace Alex.Worlds.Chunks
             Interlocked.Increment(ref _instances);
         }
 
-        public BlockShaderVertex[] Vertices
+        public MinifiedBlockShaderVertex[] Vertices
         {
             get
             {
-                List<BlockShaderVertex> vertices = new List<BlockShaderVertex>();
+                List<MinifiedBlockShaderVertex> vertices = new List<MinifiedBlockShaderVertex>();
 
                 foreach (var stage in RenderStages)
                 {
-                    vertices.AddRange(stage.Value.Vertices);
+                    vertices.AddRange(stage.Value.BuildVertices());
                 }
 
                 return vertices.ToArray();
             }
         }
-        
-        public void AddVertex(BlockCoordinates blockCoordinates, BlockShaderVertex vertex, RenderStage stage)
+
+        public void AddVertex(BlockCoordinates blockCoordinates,
+            Vector3 position,
+            Vector2 textureCoordinates,
+            Color color,
+            byte blockLight,
+            byte skyLight,
+            RenderStage stage)
         {
             var rStage = RenderStages.GetOrAdd(stage, CreateRenderStage);
-            rStage.AddVertex(blockCoordinates, vertex);
+            rStage.AddVertex(blockCoordinates, position, textureCoordinates, color, blockLight, skyLight);
         }
 
         private ChunkRenderStage CreateRenderStage(RenderStage arg)
         {
-            return new ChunkRenderStage();
+            return new ChunkRenderStage(this);
         }
 
         public void Remove(GraphicsDevice device, BlockCoordinates blockCoordinates)
@@ -57,10 +64,15 @@ namespace Alex.Worlds.Chunks
             }
         }
 
-        public void ApplyChanges(GraphicsDevice device)
+        public bool Contains(BlockCoordinates coordinates)
+        {
+            return RenderStages.Values.Any(x => x.Contains(coordinates));
+        }
+
+        public void ApplyChanges(GraphicsDevice device, bool keepInMemory)
         {
             foreach(var stage in RenderStages)
-                stage.Value.Apply(device);
+                stage.Value.Apply(device, keepInMemory);
         }
 
         public bool                Disposed { get; private set; } = false;

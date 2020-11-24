@@ -118,34 +118,62 @@ namespace Alex.API.Graphics
             }
         }
 
-        public PooledVertexBuffer CreateBuffer(object caller, GraphicsDevice device, VertexDeclaration vertexDeclaration,
-            int vertexCount, BufferUsage bufferUsage)
+        public static bool TryGetRecycledBuffer(object caller,
+            GraphicsDevice device,
+            VertexDeclaration vertexDeclaration,
+            int vertexCount,
+            BufferUsage bufferUsage,
+            out PooledVertexBuffer vertexBuffer)
         {
-          /*  if (Monitor.TryEnter(_disposalLock))
+            return _instance.GetRecycledBuffer(
+                caller, device, vertexDeclaration, vertexCount, bufferUsage, out vertexBuffer);
+        }
+
+        public bool GetRecycledBuffer(object caller,
+            GraphicsDevice device,
+            VertexDeclaration vertexDeclaration,
+            int vertexCount,
+            BufferUsage bufferUsage,
+            out PooledVertexBuffer vertexBuffer)
+        {
+            if (Monitor.TryEnter(_disposalLock))
             {
                 try
                 {
-                    var items = _resources.Where(x => x is PooledVertexBuffer).Cast<PooledVertexBuffer>()
-                        .Where(x => x.VertexCount >= vertexCount && x.VertexDeclaration == vertexDeclaration).ToArray();
+                    var items = _disposalQueue.Where(x => x is PooledVertexBuffer).Cast<PooledVertexBuffer>()
+                       .Where(x => x.VertexCount >= vertexCount && x.VertexDeclaration == vertexDeclaration).ToArray();
 
                     var closest = items.OrderBy(x => Math.Abs(x.VertexCount - vertexCount)).FirstOrDefault();
-                    if (closest != default)
+                    if (closest != null)
                     {
-                        if (Buffers.TryAdd(closest.PoolId, closest))
-                        {
-                            closest.UnMark();
-                            _resources.Remove(closest);
-                            
-                      //      Interlocked.Add(ref _totalMemoryUsage, closest.MemoryUsage);
-                            return closest;
-                        }
+                        // if (Buffers.TryAdd(closest.PoolId, closest))
+                        //{
+                        closest.UnMark(caller);
+                        _disposalQueue.Remove(closest);
+
+                        vertexBuffer = closest;
+                        //      Interlocked.Add(ref _totalMemoryUsage, closest.MemoryUsage);
+                        return true;
+                        // }
                     }
                 }
                 finally
                 {
                     Monitor.Exit(_disposalLock);
                 }
-            }*/
+            }
+
+            vertexBuffer = null;
+            return false;
+        }
+        
+        public PooledVertexBuffer CreateBuffer(object caller, GraphicsDevice device, VertexDeclaration vertexDeclaration,
+            int vertexCount, BufferUsage bufferUsage)
+        {
+            if (GetRecycledBuffer(caller, device, vertexDeclaration, vertexCount, bufferUsage, out var b))
+            {
+                return b;
+            }
             
             long id = Interlocked.Increment(ref _bufferId);
             PooledVertexBuffer buffer = new PooledVertexBuffer(this, id, caller, device, vertexDeclaration, vertexCount, bufferUsage);
@@ -292,6 +320,8 @@ namespace Alex.API.Graphics
             }
         }
         
+        //public static bool TryRecycle(object caller, GraphicsDevice device,)
+        
         public static PooledVertexBuffer GetBuffer(object caller, GraphicsDevice device, VertexDeclaration vertexDeclaration,
             int vertexCount, BufferUsage bufferUsage)
         {
@@ -335,10 +365,10 @@ namespace Alex.API.Graphics
     
     public class PooledVertexBuffer : DynamicVertexBuffer, IGpuResource
     {
-        public GpuResourceManager Parent { get; }
-        public long PoolId { get; }
-        public object Owner { get; }
-        public DateTime CreatedTime { get; }
+        public GpuResourceManager Parent      { get; }
+        public long               PoolId      { get; }
+        public object             Owner       { get; private set; }
+        public DateTime           CreatedTime { get; }
 
         public long MemoryUsage
         {
@@ -363,8 +393,9 @@ namespace Alex.API.Graphics
             }
         }
 
-        public void UnMark()
+        public void UnMark(object caller)
         {
+            Owner = caller;
             MarkedForDisposal = false;
         }
         
@@ -379,11 +410,11 @@ namespace Alex.API.Graphics
 
     public class PooledTexture2D : Texture2D, IGpuResource
     {
-        public GpuResourceManager Parent { get; }
-        public long PoolId { get; }
-        public object Owner { get; }
-        public DateTime CreatedTime { get; }
-        public bool IsFullyTransparent { get; set; } = false;
+        public GpuResourceManager Parent             { get; }
+        public long               PoolId             { get; }
+        public object             Owner              { get; private set; }
+        public DateTime           CreatedTime        { get; }
+        public bool               IsFullyTransparent { get; set; } = false;
         
         public long MemoryUsage
         {
@@ -467,8 +498,9 @@ namespace Alex.API.Graphics
             }
         }
 
-        public void UnMark()
+        public void UnMark(object caller)
         {
+            Owner = caller;
             MarkedForDisposal = false;
         }
         
@@ -481,10 +513,10 @@ namespace Alex.API.Graphics
 
     public class PooledIndexBuffer : DynamicIndexBuffer, IGpuResource
     { 
-        public GpuResourceManager Parent { get; }
-        public long PoolId { get; }
-        public object Owner { get; }
-        public DateTime CreatedTime { get; }
+        public GpuResourceManager Parent      { get; }
+        public long               PoolId      { get; }
+        public object             Owner       { get; private set; }
+        public DateTime           CreatedTime { get; }
         
         public long MemoryUsage
         {
@@ -509,9 +541,10 @@ namespace Alex.API.Graphics
             }
         }
         
-        public void UnMark()
+        public void UnMark(object caller)
         {
             MarkedForDisposal = false;
+            Owner = caller;
         }
         
         protected override void Dispose(bool disposing)
@@ -534,6 +567,7 @@ namespace Alex.API.Graphics
 
         bool MarkedForDisposal { get; }
         void MarkForDisposal();
-        void UnMark();
+
+        void UnMark(object caller);
     }
 }

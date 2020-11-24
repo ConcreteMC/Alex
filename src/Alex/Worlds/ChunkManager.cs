@@ -261,7 +261,7 @@ namespace Alex.Worlds
 										SkyLightCalculator.RecalcSkyLight(chunk, World);
 									}
 									
-									chunk.UpdateBuffer(Graphics, World);
+									chunk.UpdateBuffer(Graphics, World, chunkCoordinates.DistanceTo(new ChunkCoordinates(World.Camera.Position)) <= RenderDistance / 2);
 
 									if (newChunk)
 									{

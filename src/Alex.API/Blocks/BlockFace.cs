@@ -6,7 +6,7 @@ using Newtonsoft.Json.Converters;
 namespace Alex.API.Blocks
 {
 	[JsonConverter(typeof(TolerantEnumConverter))]
-	public enum BlockFace : int
+	public enum BlockFace : byte
 	{
 		Down  = 0,
 		Up    = 1,

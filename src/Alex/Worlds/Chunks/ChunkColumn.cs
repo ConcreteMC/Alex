@@ -105,7 +105,8 @@ namespace Alex.Worlds.Chunks
 			}
 		}
 
-		public void UpdateBuffer(GraphicsDevice device, IBlockAccess world)
+		private bool _previousKeepInMemory = false;
+		public void UpdateBuffer(GraphicsDevice device, IBlockAccess world, bool keepInMemory)
 		{
 			if (!Monitor.TryEnter(_dataLock, 0))
 				return;
@@ -133,19 +134,18 @@ namespace Alex.Worlds.Chunks
 						{
 							for (int y = 0; y < 16; y++)
 							{
+								var  blockCoordinates = new BlockCoordinates(x, y + (sectionIndex * 16), z);
+								
 								bool scheduled        = section.IsScheduled(x, y, z);
 								bool blockLightUpdate = section.IsBlockLightScheduled(x, y, z);
 								bool skyLightUpdate   = section.IsSkylightUpdateScheduled(x, y, z);
-								
-								if (!IsNew && !scheduled &&
-								    !blockLightUpdate &&
-								    !skyLightUpdate)
+
+							
+								if ((!IsNew && !scheduled && !blockLightUpdate && !skyLightUpdate))
 									continue;
 
 								try
 								{
-									var blockCoordinates = new BlockCoordinates(x, y + (sectionIndex * 16), z);
-
 									ChunkData?.Remove(device, blockCoordinates);
 
 									//var position = chunkPosition + new Vector3(x, by, z);
@@ -208,7 +208,7 @@ namespace Alex.Worlds.Chunks
 					}
 				}
 				
-				ChunkData?.ApplyChanges(device);
+				ChunkData?.ApplyChanges(device, true);
 				IsNew = false;
 
 				//if (ChunkData != null)
@@ -216,6 +216,7 @@ namespace Alex.Worlds.Chunks
 			}
 			finally
 			{
+				_previousKeepInMemory = keepInMemory;
 				Monitor.Exit(_dataLock);
 			}
 		}

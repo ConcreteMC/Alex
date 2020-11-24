@@ -8,8 +8,9 @@ using MathF = System.MathF;
 namespace Alex.Graphics.Camera
 {
     public class Camera : ICamera
-	{
-        public BoundingFrustum BoundingFrustum => new BoundingFrustum(ViewMatrix * ProjectionMatrix);
+    {
+	    private BoundingFrustum _frustum = new BoundingFrustum(Matrix.Identity);
+	    public  BoundingFrustum BoundingFrustum => _frustum;// new BoundingFrustum(ViewMatrix * ProjectionMatrix);
 
 	    /// <summary>
 	    /// The nearest distance the camera will use
@@ -40,14 +41,40 @@ namespace Alex.Graphics.Camera
 		
 		public Vector3 Offset { get; private set; } = Vector3.Zero;
 
+		private Matrix _projectionMatrix;
         /// <summary>
         /// 
         /// </summary>
-        public Matrix ProjectionMatrix { get; set; }
+        public Matrix ProjectionMatrix 
+        {
+	        get
+	        {
+		        return _projectionMatrix;
+	        }
+	        set
+	        {
+		        _projectionMatrix = value;
+		      //  _frustum = new BoundingFrustum(_viewMatrix * value);
+	        }
+        }
+
+        private Matrix _viewMatrix;
+
         /// <summary>
         /// 
         /// </summary>
-        public Matrix ViewMatrix { get; set; }
+        public Matrix ViewMatrix
+        {
+	        get
+	        {
+		        return _viewMatrix;
+	        }
+	        set
+	        {
+		        _viewMatrix = value;
+		       // _frustum = new BoundingFrustum(value * _projectionMatrix);
+	        }
+        }
 
 	    /// <summary>
         /// 
@@ -102,7 +129,9 @@ namespace Alex.Graphics.Camera
 	        var pos = Position + Vector3.Transform(Offset, Matrix.CreateRotationY(-Rotation.Y));
 	        
 			Target = pos + lookAtOffset;
-	        ViewMatrix = Matrix.CreateLookAt(pos, Target, Vector3.Up);
+	        _viewMatrix = Matrix.CreateLookAt(pos, Target, Vector3.Up);
+	        
+	        _frustum = new BoundingFrustum(_viewMatrix * _projectionMatrix);
 		}
 
 	    public virtual void UpdateAspectRatio(float aspectRatio)
@@ -117,11 +146,14 @@ namespace Alex.Graphics.Camera
 
 	    public virtual void UpdateProjectionMatrix()
 		{
-			ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(
+			_projectionMatrix = Matrix.CreatePerspectiveFieldOfView(
 				MathHelper.ToRadians(FOV),
 				AspectRatio,
 				NearDistance,
 				FarDistance);
+			
+			
+			_frustum = new BoundingFrustum(_viewMatrix * _projectionMatrix);
 		}
 
 	    public virtual void MoveTo(Vector3 position, Vector3 rotation)
