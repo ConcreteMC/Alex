@@ -58,17 +58,6 @@ namespace Alex.Blocks.Minecraft
             return base.ShouldRenderFace(face, neighbor);
         }
 
-        protected static BlockFace GetFacing(BlockState state)
-        {
-            if (state.TryGetValue("facing", out string facingValue) &&
-                Enum.TryParse<BlockFace>(facingValue, true, out BlockFace face))
-            {
-                return face;
-            }
-
-            return BlockFace.None;
-        }
-        
         protected static string GetHalf(BlockState state)
         {
             if (state.TryGetValue("half", out string facingValue))
@@ -79,16 +68,6 @@ namespace Alex.Blocks.Minecraft
             return string.Empty;
         }
 
-        protected static string GetShape(BlockState state)
-        {
-            if (state.TryGetValue("shape", out string facingValue))
-            {
-                return facingValue;
-            }
-
-            return string.Empty;
-        }
-        
         private bool UpdateState(IBlockAccess world, BlockState state, BlockCoordinates position, BlockCoordinates updatedBlock, out BlockState result)
         {
             result = state;

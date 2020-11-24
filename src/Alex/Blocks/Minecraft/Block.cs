@@ -272,6 +272,27 @@ namespace Alex.Blocks.Minecraft
 		        BlockState.Name, StringComparison.InvariantCultureIgnoreCase)));
         }
 
+        protected static string GetShape(BlockState state)
+        {
+	        if (state.TryGetValue("shape", out string facingValue))
+	        {
+		        return facingValue;
+	        }
+
+	        return string.Empty;
+        }
+        
+        protected static BlockFace GetFacing(BlockState state)
+        {
+	        if (state.TryGetValue("facing", out string facingValue) &&
+	            Enum.TryParse<BlockFace>(facingValue, true, out BlockFace face))
+	        {
+		        return face;
+	        }
+
+	        return BlockFace.None;
+        }
+        
         public string DisplayName { get; set; } = null;
 	    public override string ToString()
 	    {
