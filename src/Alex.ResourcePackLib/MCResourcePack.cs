@@ -459,13 +459,13 @@ namespace Alex.ResourcePackLib
 					foreach (var sVariant in part.Apply)
 					{
 						sVariant.ResourcePack = this;
-						//if (!TryGetBlockModel(sVariant.ModelName, out var model))
-						//{
-						//	Log.Debug($"Could not get multipart blockmodel! Variant: {blockStateResource} Model: {sVariant.ModelName}");
-						//	continue;
-						//}
+						if (!TryGetBlockModel(sVariant.ModelName, out var model))
+						{
+							Log.Debug($"Could not get multipart blockmodel! Variant: {blockStateResource} Model: {sVariant.ModelName}");
+							continue;
+						}
 
-						//	sVariant.Model = model;
+							sVariant.Model = model;
 					}
 				}
 			}
@@ -476,13 +476,13 @@ namespace Alex.ResourcePackLib
 					foreach (var sVariant in variant.Value)
 					{
 						sVariant.ResourcePack = this;
-						//if (!TryGetBlockModel(sVariant.ModelName, out var model))
-						//{
-						//	Log.Debug($"Could not get blockmodel for variant! Variant: {variant.Key} Model: {sVariant.ModelName}");
-						//	continue;
-						//}
+						if (!TryGetBlockModel(sVariant.ModelName, out var model))
+						{
+							Log.Debug($"Could not get blockmodel for variant! Variant: {variant.Key} Model: {sVariant.ModelName}");
+							continue;
+						}
 
-					//	sVariant.Model = model;
+						sVariant.Model = model;
 					}
 				}
 			}

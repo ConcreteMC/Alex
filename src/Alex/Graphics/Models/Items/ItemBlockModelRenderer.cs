@@ -3,6 +3,7 @@ using System.Linq;
 using Alex.API.Graphics;
 using Alex.API.Utils;
 using Alex.Blocks.State;
+using Alex.Graphics.Models.Blocks;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json.Models;
 using Alex.Worlds;

@@ -210,6 +210,8 @@ namespace Alex.Graphics.Models.Items
         /// <inheritdoc />
         public bool ApplyPitch { get; set; }
 
+        public Matrix ParentMatrix1 { get; set; } = Matrix.Identity;
+
         public void Update(IUpdateArgs args, Matrix characterMatrix, Vector3 diffuseColor, PlayerLocation modelLocation)
         {
             ParentMatrix = characterMatrix;

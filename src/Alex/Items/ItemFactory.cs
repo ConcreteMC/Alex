@@ -7,9 +7,12 @@ using Alex.API.Resources;
 using Alex.API.Utils;
 using Alex.Blocks;
 using Alex.Blocks.Minecraft;
+using Alex.Graphics.Models.Blocks;
 using Alex.Graphics.Models.Items;
 using Alex.ResourcePackLib;
 using Alex.ResourcePackLib.Json.Models;
+using Alex.ResourcePackLib.Json.Models.Items;
+using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 using NLog;
 using ItemMaterial = MiNET.Items.ItemMaterial;
@@ -67,6 +70,16 @@ namespace Alex.Items
 					break;
 			}
 		}
+		
+		private static Dictionary<string, DisplayElement> _defaultDisplayElements = new Dictionary<string, DisplayElement>()
+		{
+			{"gui", new DisplayElement(new Vector3(30, 225, 0), new Vector3(0,0,0), new Vector3(0.625f, 0.625f, 0.625f))},
+			{"ground", new DisplayElement(new Vector3(0, 0, 0), new Vector3(0,3,0), new Vector3(0.25f, 0.25f, 0.25f))},
+			{"fixed", new DisplayElement(new Vector3(0, 0, 0), new Vector3(0,0,0), new Vector3(0.5f, 0.5f, 0.5f))},
+			{"thirdperson_righthand", new DisplayElement(new Vector3(75, 45, 0), new Vector3(0,2.5f,0), new Vector3(0.375f, 0.375f, 0.375f))},
+			{"firstperson_righthand", new DisplayElement(new Vector3(0, 45, 0), new Vector3(0,0,0), new Vector3(0.4f, 0.4f, 0.4f))},
+			{"firstperson_lefthand", new DisplayElement(new Vector3(0, 225, 0), new Vector3(0,0,0), new Vector3(0.4f, 0.4f, 0.4f))}
+		};
 		
 	    public static void Init(IRegistryManager registryManager, ResourceManager resources, McResourcePack resourcePack, IProgressReceiver progressReceiver = null)
 	    {
@@ -148,30 +161,31 @@ namespace Alex.Items
 			    
 			    var key = new ResourceLocation(ns, $"block/{path}");
 			    
-			    ResourcePackModelBase model;
-			    if (!(ResourcePack.ItemModels.TryGetValue(key, out model)))
+			    ResourcePackModelBase model = null;
+
+			    if (!(ResourcePack.ItemModels.TryGetValue(key, out model)) && !(ResourcePack.BlockModels.TryGetValue(key, out model)))
 			    {
 				    foreach (var it in ResourcePack.ItemModels)
 				    {
 					    if (it.Key.Path.Equals(key.Path, StringComparison.InvariantCultureIgnoreCase))
 					    {
 						    model = it.Value;
+
 						    break;
 					    }
 				    }
 			    }
 
-			    if (model != null)
+			    if (model == null)
 			    {
-				    item.Renderer = new ItemBlockModelRenderer(bs, model, resourcePack, resources);
-				    item.Renderer.Cache(resourcePack);
+				    Log.Warn($"Missing item render definition for block {entry.Key}, using default.");
+				    model = new ResourcePackItem() {Display = _defaultDisplayElements};
 			    }
-			    else
-			    {
-				    Log.Warn($"Could not find block model renderer for: {key.ToString()}");
-			    }
-			    
-			    items.TryAdd(entry.Key, () =>
+
+			    item.Renderer = new ItemBlockModelRenderer(bs, model, resourcePack, resources);
+			    item.Renderer.Cache(resourcePack);
+
+				    items.TryAdd(entry.Key, () =>
 			    {
 				    return item.Clone();
 			    });

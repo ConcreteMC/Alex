@@ -168,7 +168,8 @@ namespace Alex.Entities
 		
 		private EntityModelRenderer.ModelBone _leftArmModel;
 		private EntityModelRenderer.ModelBone _rightArmModel;
-
+		private EntityModelRenderer.ModelBone _rightItemModel;
+		
 		private EntityModelRenderer.ModelBone _leftLegModel;
 		private EntityModelRenderer.ModelBone _rightLegModel;
 
@@ -633,6 +634,7 @@ namespace Alex.Entities
 			
 			if (ShowItemInHand && ItemRenderer != null && !SkipRendering)
 			{
+				//ItemRenderer.
 				ItemRenderer.Render(renderArgs, false, out int itemVertices);
 				rendered += itemVertices;
 
@@ -653,7 +655,7 @@ namespace Alex.Entities
 
                 CalculateLegMovement(args);
                 
-                if (ShowItemInHand && !SkipRendering)
+                if (ShowItemInHand && !SkipRendering && ItemRenderer != null)
                 {
 	               /* ItemRenderer?.Update(Matrix.Identity *
 	                                     Matrix.CreateScale(Scale) *
@@ -662,11 +664,34 @@ namespace Alex.Entities
 */
 					//if (_rightArmModel.)
 
+					var pivot = Vector3.Zero;
+
+					if (_rightItemModel != null)
+					{
+						pivot = _rightItemModel.Definition.Pivot;
+					}
+					else if (_rightArmModel != null)
+					{
+						pivot = _rightArmModel.Definition.Pivot;
+					}
+					
+					var scaleMatrix = Matrix.Identity;
+
+					if ((ItemRenderer.DisplayPosition & DisplayPosition.ThirdPerson) != 0)
+						scaleMatrix = Matrix.CreateTranslation(-pivot)
+						              * Matrix.CreateRotationY(
+							              MathUtils.ToRadians((1f / 16f) * _rightArmModel.Rotation.Y))
+						              * Matrix.CreateRotationX(
+							              MathUtils.ToRadians((1f / 16f) * _rightArmModel.Rotation.X))
+						              * Matrix.CreateRotationZ(
+							              MathUtils.ToRadians((1f / 16f) * _rightArmModel.Rotation.Z))
+						              * Matrix.CreateTranslation(pivot);
+					
 					ItemRenderer?.Update(
 						args,
-						Matrix.Identity * Matrix.CreateScale(Scale)
-						                * Matrix.CreateRotationY(MathHelper.ToRadians(180f - KnownPosition.HeadYaw))
-						                * Matrix.CreateTranslation(KnownPosition.X, KnownPosition.Y, KnownPosition.Z),
+						scaleMatrix * Matrix.CreateScale(Scale)
+						           * Matrix.CreateRotationY(MathHelper.ToRadians(180f - KnownPosition.HeadYaw))
+						           * Matrix.CreateTranslation(KnownPosition.X, KnownPosition.Y, KnownPosition.Z),
 						Color.White.ToVector3(),
 						new PlayerLocation(
 							KnownPosition.X, KnownPosition.Y, KnownPosition.Z, 180f - KnownPosition.HeadYaw,
@@ -1100,6 +1125,7 @@ namespace Alex.Entities
 
 			ModelRenderer.GetBone("leftArm", out _leftArmModel);
 			ModelRenderer.GetBone("rightArm", out _rightArmModel);
+			ModelRenderer.GetBone("rightItem", out _rightItemModel);
 
 			ModelRenderer.GetBone("rightLeg", out _rightLegModel);
 			ModelRenderer.GetBone("leftLeg", out _leftLegModel);
