@@ -8,7 +8,7 @@ namespace Alex.Blocks.Minecraft
 	{
 		protected FlowerBase()
 		{
-			
+			IsFullCube = false;
 		}
 		
 		/// <inheritdoc />

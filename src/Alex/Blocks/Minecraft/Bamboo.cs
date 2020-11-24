@@ -6,6 +6,8 @@ namespace Alex.Blocks.Minecraft
 		{
 			Solid = true;
 			Transparent = true;
+			
+			IsFullCube = false;
 		}
 	}
 }

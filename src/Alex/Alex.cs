@@ -19,6 +19,7 @@ using Alex.API.Input.Listeners;
 using Alex.API.Resources;
 using Alex.API.Services;
 using Alex.API.Utils;
+using Alex.Blocks.Minecraft;
 using Alex.Entities;
 using Alex.Gamestates;
 using Alex.Gamestates.Debugging;
@@ -305,6 +306,14 @@ namespace Alex
 			GuiManager = new GuiManager(this, Services, InputManager, GuiRenderer, options);
 			GuiManager.Init(GraphicsDevice, Services);
 
+			options.AlexOptions.VideoOptions.FancyGraphics.Bind(
+				(value, newValue) =>
+				{
+					Block.FancyGraphics = newValue;
+				});
+
+			Block.FancyGraphics = options.AlexOptions.VideoOptions.FancyGraphics.Value;
+			
 			options.AlexOptions.VideoOptions.UseVsync.Bind((value, newValue) => { SetVSync(newValue); });
 
 			if (options.AlexOptions.VideoOptions.UseVsync.Value)

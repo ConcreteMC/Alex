@@ -75,7 +75,8 @@ namespace Alex.Worlds
 				VertexColorEnabled = true,
 				//  LightingEnabled = true,
 				FogEnabled = false,
-				ReferenceAlpha = 249
+				ReferenceAlpha = 249,
+				AlphaFunction = CompareFunction.Always
 				//    AlphaFunction = CompareFunction.Greater,
 				//    ReferenceAlpha = 127
 

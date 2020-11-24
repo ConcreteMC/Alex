@@ -9,6 +9,7 @@ using Alex.API.Graphics;
 using Alex.API.Services;
 using Alex.API.Utils;
 using Alex.API.World;
+using Alex.Blocks.Minecraft;
 using Alex.Gamestates;
 using Alex.Utils.Queue;
 using Alex.Worlds.Chunks;
@@ -519,7 +520,11 @@ namespace Alex.Worlds
 			}
 
 			device.DepthStencilState = DepthStencilState;
-			device.BlendState = BlendState.AlphaBlend;
+			
+			if (Block.FancyGraphics)
+				device.BlendState = BlendState.AlphaBlend;
+			else
+				device.BlendState = BlendState.Opaque;
 
 			DrawStaged(
 				args, out int chunksRendered, out int verticesRendered, null,
@@ -558,24 +563,45 @@ namespace Alex.Worlds
 			var tempVertices    = 0;
 			int tempChunks      = 0;
 
-			ChunkData[] chunks = _renderedChunks;
+			ChunkData[]      chunks  = _renderedChunks;
+			RenderingShaders shaders = DefaultShaders;
 
+		//	Effect transparentEffect = shaders.TransparentEffect;
+
+			//if (!Block.FancyGraphics)
+			//{
+			//	transparentEffect = shaders.OpaqueEffect;
+			//}
+			
 			foreach (var stage in stages)
 			{
 				args.GraphicsDevice.BlendState = originalBlendState;
-			    
-				RenderingShaders shaders = DefaultShaders;
-			    
+				
 				Effect effect   = forceEffect;
 				if (forceEffect == null)
 				{
 					switch (stage)
 					{
 						case RenderStage.OpaqueFullCube:
-							effect = shaders.TransparentEffect;
+							if (Block.FancyGraphics)
+							{
+								effect = shaders.TransparentEffect;
+							}
+							else
+							{
+								effect = shaders.OpaqueEffect;
+							}
 							break;
 						case RenderStage.Opaque:
-							effect = shaders.TransparentEffect;
+							if (Block.FancyGraphics)
+							{
+								effect = shaders.TransparentEffect;
+							}
+							else
+							{
+								effect = shaders.OpaqueEffect;
+							}
+							//effect = shaders.TransparentEffect;
 							break;
 						case RenderStage.Transparent:
 							effect = shaders.TransparentEffect;

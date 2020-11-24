@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.Serialization;
+using Alex.API.Graphics;
 
 namespace Alex.API.Data.Options
 {
@@ -51,6 +52,9 @@ namespace Alex.API.Data.Options
         [DataMember]
         public OptionsProperty<bool> SmoothLighting { get; set; }
         
+        [DataMember]
+        public OptionsProperty<bool> FancyGraphics { get; set; }
+        
         public VideoOptions()
         {
             RenderDistance = DefineRangedProperty(6, 2, 32);
@@ -72,6 +76,7 @@ namespace Alex.API.Data.Options
             ClientSideLighting = DefineProperty(true);
 
             SmoothLighting = DefineProperty(true);
+            FancyGraphics = DefineProperty(true);
         }
     }
 }

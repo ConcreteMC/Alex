@@ -25,6 +25,8 @@ namespace Alex.Blocks.Minecraft
 {
 	public class Block : IRegistryEntry<Block>
 	{
+		public static           bool   FancyGraphics { get; set; } = true;
+		
 		private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(Block));
 
 		protected static PropertyBool Lit = new PropertyBool("lit", "true", "false");
@@ -228,6 +230,9 @@ namespace Alex.Blocks.Minecraft
 	        {
 		        if (Solid)
 		        {
+			        if (!FancyGraphics && neighbor.Solid && neighbor.IsFullBlock && neighbor.Transparent)
+				        return false;
+			        
 			        //	if (IsFullCube && Name.Equals(block.Name)) return false;
 			        if (neighbor.Solid && (neighbor.Transparent || !neighbor.IsFullCube))
 			        {

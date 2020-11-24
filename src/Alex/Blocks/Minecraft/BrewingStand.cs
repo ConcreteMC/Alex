@@ -8,7 +8,8 @@ namespace Alex.Blocks.Minecraft
 			Transparent = true;
 			IsReplacible = false;
 			LightValue = 1;
-
+			IsFullCube = false;
+			
 			Hardness = 0.5f;
 			
 			CanInteract = true;

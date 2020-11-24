@@ -53,6 +53,8 @@ namespace Alex.Blocks.Minecraft
 			Transparent = true;
 			IsReplacible = false;
 			RequiresUpdate = false;
+			
+			IsFullCube = false;
 		}
 
 		public override IMaterial BlockMaterial

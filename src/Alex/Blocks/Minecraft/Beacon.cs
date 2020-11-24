@@ -5,7 +5,7 @@ namespace Alex.Blocks.Minecraft
 		public Beacon() : base()
 		{
 			Solid = true;
-			Transparent = false;
+			Transparent = true;
 			IsReplacible = false;
 			LightValue = 15;
 

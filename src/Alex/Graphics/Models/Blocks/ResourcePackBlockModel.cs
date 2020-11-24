@@ -714,7 +714,14 @@ namespace Alex.Graphics.Models.Blocks
 					{
 						if (baseBlock.BlockMaterial.IsOpaque)
 						{
-							targetState = RenderStage.Transparent;
+							if (!Block.FancyGraphics && baseBlock.IsFullCube)
+							{
+								targetState = RenderStage.OpaqueFullCube;
+							}
+							else
+							{
+								targetState = RenderStage.Transparent;
+							}
 						}
 						else
 						{

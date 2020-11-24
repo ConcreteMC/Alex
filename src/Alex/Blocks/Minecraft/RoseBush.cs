@@ -6,7 +6,7 @@
 	    {
 		    Solid = false;
 		    Transparent = true;
-		    
+		    IsFullCube = false;
 		    BlockMaterial = Material.Plants;
 		}
     }

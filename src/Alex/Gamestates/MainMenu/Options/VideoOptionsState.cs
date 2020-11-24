@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Alex.API.Graphics;
 using Alex.API.Gui;
 using Alex.API.Gui.Elements;
 using Alex.API.Gui.Elements.Controls;
@@ -13,23 +14,24 @@ namespace Alex.Gamestates.MainMenu.Options
 {
     public class VideoOptionsState : OptionsStateBase
     {
-        private GuiSlider GuiScaleGlider { get; set; }
-        private GuiSlider FpsSlider { get; set; }
-        private GuiToggleButton FrameRateLimiter { get; set; }
-        private GuiTextElement Description { get; set; }
-        private GuiSlider RenderDistance { get; set; }
-        private GuiSlider ProcessingThreads { get; set; }
-        private GuiSlider Brightness { get; set; }
-        private GuiToggleButton VSync { get; set; }
-        private GuiToggleButton Fullscreen { get; set; }
-        private GuiToggleButton Depthmap { get; set; }
-        private GuiToggleButton Minimap { get; set; }
-        private GuiToggleButton Skybox { get; set; }
-        private GuiSlider Antialiasing { get; set; }
-        private GuiToggleButton CustomSkins { get; set; }
+        private GuiSlider       GuiScaleGlider     { get; set; }
+        private GuiSlider       FpsSlider          { get; set; }
+        private GuiToggleButton FrameRateLimiter   { get; set; }
+        private GuiTextElement  Description        { get; set; }
+        private GuiSlider       RenderDistance     { get; set; }
+        private GuiSlider       ProcessingThreads  { get; set; }
+        private GuiSlider       Brightness         { get; set; }
+        private GuiToggleButton VSync              { get; set; }
+        private GuiToggleButton Fullscreen         { get; set; }
+        private GuiToggleButton Depthmap           { get; set; }
+        private GuiToggleButton Minimap            { get; set; }
+        private GuiToggleButton Skybox             { get; set; }
+        private GuiSlider       Antialiasing       { get; set; }
+        private GuiToggleButton CustomSkins        { get; set; }
         private GuiToggleButton ClientSideLighting { get; set; }
-        private GuiToggleButton ChunkMeshInRam { get; set; }
-        private GuiToggleButton SmoothLighting { get; set; }
+        private GuiToggleButton ChunkMeshInRam     { get; set; }
+        private GuiToggleButton SmoothLighting     { get; set; }
+        private GuiToggleButton GraphicsMode       { get; set; }
         
         private Dictionary<IGuiControl, string> Descriptions { get; } = new Dictionary<IGuiControl, string>();
         public VideoOptionsState(GuiPanoramaSkyBox skyBox) : base(skyBox)
@@ -69,20 +71,19 @@ namespace Alex.Gamestates.MainMenu.Options
                     o => { return Options.VideoOptions.UseVsync; }),
                 Fullscreen = CreateToggle("Fullscreen: {0}", o => { return Options.VideoOptions.Fullscreen; }));
 
-            AddGuiRow(Depthmap = CreateToggle("Use DepthMap: {0}", options => options.VideoOptions.Depthmap),
+            AddGuiRow( GraphicsMode = CreateToggle("Fancy Graphics: {0}", options => options.VideoOptions.FancyGraphics),
                 Minimap = CreateToggle("Minimap: {0}", options => options.VideoOptions.Minimap));
 
             AddGuiRow(Skybox = CreateToggle("Render Skybox: {0}", options => options.VideoOptions.Skybox),
                 CustomSkins = CreateToggle("Custom entity models: {0}", options => options.VideoOptions.CustomSkins));
 
-            AddGuiRow(
-                ClientSideLighting = CreateToggle(
+          /*  AddGuiRow(
+                /ClientSideLighting = CreateToggle(
                     "Client Side Lighting: {0}", options => options.VideoOptions.ClientSideLighting), 
-                SmoothLighting = CreateToggle("Smooth Lighting: {0}", o => o.VideoOptions.SmoothLighting));
+                SmoothLighting = CreateToggle("Smooth Lighting: {0}", o => o.VideoOptions.SmoothLighting));*/
 
-            AddGuiRow(
-                ChunkMeshInRam = CreateToggle("Meshes in RAM: {0}", options => options.MiscelaneousOptions.MeshInRam),
-                new GuiElement());
+           /* AddGuiRow(
+                ChunkMeshInRam = CreateToggle("Meshes in RAM: {0}", options => options.MiscelaneousOptions.MeshInRam));*/
             
             Description = new GuiTextElement()
             {
@@ -100,8 +101,8 @@ namespace Alex.Gamestates.MainMenu.Options
                 $"{TextColor.Bold}Processing Threads:{TextColor.Reset}\nThe maximum amount of concurrent chunk updates to execute.\nIf you are experiencing lag spikes, try lowering this value.");
             Descriptions.Add(Minimap,
                 $"{TextColor.Bold}Minimap:{TextColor.Reset}\nIf enabled, renders a minimap in the top right corner of the screen.\nMay impact performance heavily.");
-            Descriptions.Add(Depthmap,
-                $"{TextColor.Bold}Use DepthMap:{TextColor.Reset}\n{TextColor.Bold}{TextColor.Red}EXPERIMENTAL FEATURE{TextColor.Reset}\nHeavy performance impact");
+          //  Descriptions.Add(Depthmap,
+           //     $"{TextColor.Bold}Use DepthMap:{TextColor.Reset}\n{TextColor.Bold}{TextColor.Red}EXPERIMENTAL FEATURE{TextColor.Reset}\nHeavy performance impact");
             Descriptions.Add(Skybox,
                 $"{TextColor.Bold}Render Skybox:{TextColor.Reset}\nEnabled: Renders skybox in game\nDisabled: May improve performance slightly");
 
@@ -118,12 +119,13 @@ namespace Alex.Gamestates.MainMenu.Options
             Descriptions.Add(CustomSkins, 
                 $"{TextColor.Bold}Custom entity models:{TextColor.Reset}\nEnabled: Shows custom entity models. May impact performance heavily!\nDisabled: Do not show custom models, may improve performance.");
             
-            Descriptions.Add(ClientSideLighting, $"{TextColor.Bold}Client Side Lighting:{TextColor.Reset}\nEnabled: Calculate lighting on the client.\nDisabled: May improve chunk loading performance");
+       //     Descriptions.Add(ClientSideLighting, $"{TextColor.Bold}Client Side Lighting:{TextColor.Reset}\nEnabled: Calculate lighting on the client.\nDisabled: May improve chunk loading performance");
             
-            Descriptions.Add(ChunkMeshInRam, $"{TextColor.Bold}Meshes in RAM:{TextColor.Reset}\nEnabled: May significantly improve chunk processing performance (High memory usage)\nDisabled: Do not keep chunks meshes in memory (Lower memory usage)");
+        //    Descriptions.Add(ChunkMeshInRam, $"{TextColor.Bold}Meshes in RAM:{TextColor.Reset}\nEnabled: May significantly improve chunk processing performance (High memory usage)\nDisabled: Do not keep chunks meshes in memory (Lower memory usage)");
             
-            Descriptions.Add(SmoothLighting, $"{TextColor.Bold}Smooth Lighting:{TextColor.Reset}\nEnabled: Smoother transition in lighting.\nDisabled: May improve chunk loading performance");
+          //  Descriptions.Add(SmoothLighting, $"{TextColor.Bold}Smooth Lighting:{TextColor.Reset}\nEnabled: Smoother transition in lighting.\nDisabled: May improve chunk loading performance");
             
+            Descriptions.Add(GraphicsMode, $"{TextColor.Bold}Fancy graphics:{TextColor.Reset}\nEnabled: Use alpha blending for rendering.\nDisabled: May improve performance, no alpha blending.");
             base.OnInit(renderer);
         }
 
