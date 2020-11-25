@@ -12,16 +12,16 @@ namespace Alex.Items
 {
     public class Item
     {
-	    public short Id { get; set; }
-	    public short Meta { get; set; } = 0;
-		public string Name { get; set; }
-		public string DisplayName { get; set; }
-	    public int MaxStackSize { get; set; }= 64;
-		public int Count { get; set; } = 1;
-        public ItemMaterial Material { get; set; } = ItemMaterial.None;
-		public ItemType ItemType { get; set; }
-		public NbtCompound Nbt { get; set; }
-		public IItemRenderer Renderer { get; set; }
+	    public short         Id           { get; set; }
+	    public short         Meta         { get; set; } = 0;
+		public string        Name         { get; set; }
+		public string        DisplayName  { get; set; }
+	    public int           MaxStackSize { get; set; } = 64;
+		public int           Count        { get; set; } = 1;
+        public ItemMaterial  Material     { get; set; } = ItemMaterial.None;
+        public ItemType      ItemType     { get; set; } = ItemType.Hand;
+		public NbtCompound   Nbt          { get; set; }
+		public IItemRenderer Renderer     { get; set; }
 
 		public int StackID { get; set; } = -1;
 		

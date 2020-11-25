@@ -1975,7 +1975,7 @@ namespace Alex.Worlds.Multiplayer.Java
         
         private void HandleBlockEntityData(BlockEntityDataPacket packet)
         {
-			Log.Warn($"Got block entity data for ({packet.Location}) Action={packet.Action}");
+			//Log.Warn($"Got block entity data for ({packet.Location}) Action={packet.Action}");
 
 			if (World.EntityManager.TryGetBlockEntity(packet.Location, out var entity))
 			{
@@ -1994,13 +1994,8 @@ namespace Alex.Worlds.Multiplayer.Java
 					if (blockEntity != null)
 					{
 						World.SetBlockEntity(packet.Location.X, packet.Location.Y, packet.Location.Z, blockEntity);
-						Log.Info($"Added block entity of type \"{blockEntity.GetType()}\" ({packet.Location})");
+						//Log.Info($"Added block entity of type \"{blockEntity.GetType()}\" ({packet.Location})");
 					}
-					else
-					{
-						//Log.Warn($"Got null block entity of type {packet.Compound["id"].StringValue}");
-					}
-
 				}
 				catch (Exception ex)
 				{

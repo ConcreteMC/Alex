@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Alex.API.Blocks;
 using Alex.API.Entities;
 using Alex.API.Graphics;
@@ -136,13 +137,8 @@ namespace Alex.Entities
 		    {
 			    if (!IsBreakingBlock)
 				    return 0;
-			    
-			    var end = DateTime.UtcNow;
-			    var start = _destroyingTick;
 
-			    var timeRan = (end - start).TotalMilliseconds / 50d;
-
-			    return (float) ((1f / (float) _destroyTimeNeeded) * timeRan);
+			    return (float) ((1f / (float) _destroyTimeNeeded) * _destroyingTick);
 		    }
 	    }
 
@@ -182,7 +178,7 @@ namespace Alex.Entities
 
 	    private BlockCoordinates _destroyingTarget = BlockCoordinates.Zero;
 	    private bool _destroyingBlock = false;
-        private DateTime _destroyingTick = DateTime.MaxValue;
+        private int _destroyingTick = 0;
 	    private double _destroyTimeNeeded = 0;
 	    private API.Blocks.BlockFace _destroyingFace;
 
@@ -249,12 +245,12 @@ namespace Alex.Entities
 			
 		//	DoHealthAndExhaustion();
 
-			var previousCheckedInput = _prevCheckedInput;
+			//var previousCheckedInput = _prevCheckedInput;
 			
 			if ((Controller.CheckInput && Controller.CheckMovementInput))
 			{
 				_prevCheckedInput = true;
-				if (!previousCheckedInput || Alex.Instance.GuiManager.ActiveDialog != null)
+				if (Alex.Instance.GuiManager.ActiveDialog != null)
 				{
 					return;
 				}
@@ -266,63 +262,57 @@ namespace Alex.Entities
 				//{
 				//	SwingArm(true);
 				//}
+
+				bool didLeftClick  = Controller.InputManager.IsPressed(InputCommand.LeftClick);
+				bool didRightClick = Controller.InputManager.IsPressed(InputCommand.RightClick);
+				bool leftMouseBtnDown     = Controller.InputManager.IsDown(InputCommand.LeftClick);
 				
 				var hitEntity = HitEntity;
-				if (hitEntity != null && Controller.InputManager.IsPressed(InputCommand.LeftClick) && hitEntity is LivingEntity)
+				if (hitEntity != null && didLeftClick && hitEntity is LivingEntity)
 				{
 					if (_destroyingBlock)
 						StopBreakingBlock(forceCanceled:true);
 					
-					InteractWithEntity(hitEntity, true, 0);
+					InteractWithEntity(hitEntity, true, IsLeftHanded ? 1 : 0);
 				}
-				else if (hitEntity != null && Controller.InputManager.IsPressed(InputCommand.RightClick) && hitEntity is LivingEntity)
+				else if (hitEntity != null && didRightClick && hitEntity is LivingEntity)
 				{
 					if (_destroyingBlock)
 						StopBreakingBlock(forceCanceled:true);
 					
-					InteractWithEntity(hitEntity, false, 0);
+					InteractWithEntity(hitEntity, false, IsLeftHanded ? 1 : 0);
 				}
 				else if (hitEntity == null && !_destroyingBlock
-				                           && Controller.InputManager.IsPressed(InputCommand.LeftClick)
+				                           && didLeftClick
 				                           && !HasRaytraceResult)
 				{
 					HandleLeftClick(IsLeftHanded ? Inventory.OffHand : Inventory.MainHand, IsLeftHanded ? 1 : 0);
 				}
-				else if (hitEntity == null && !_destroyingBlock && Controller.InputManager.IsDown(InputCommand.LeftClick) && !IsWorldImmutable && HasRaytraceResult) //Destroying block.
+				else if (hitEntity == null 
+				         && !_destroyingBlock 
+				         && Controller.InputManager.IsBeginPress(InputCommand.LeftClick) 
+				         && !IsWorldImmutable 
+				         && HasRaytraceResult) //Destroying block.
 				{
 					StartBreakingBlock();
 				}
-				else if (_destroyingBlock && Controller.InputManager.IsUp(InputCommand.LeftClick))
+				else if (_destroyingBlock)
 				{
-					StopBreakingBlock();
-				}
-				else if (_destroyingBlock && Controller.InputManager.IsDown(InputCommand.LeftClick))
-				{
-					if (_destroyingTarget != new BlockCoordinates(Vector3.Floor(Raytraced)))
+					if (!leftMouseBtnDown)
+					{
+						StopBreakingBlock();
+					}
+					else if (_destroyingTarget != new BlockCoordinates(Vector3.Floor(Raytraced)))
 					{
 						StopBreakingBlock(true, true);
 
 						if (Gamemode != Gamemode.Creative)
 						{
-							StartBreakingBlock();
-						}
-					}
-					else
-					{
-						if ((DateTime.UtcNow - _lastAnimate).TotalMilliseconds > 500)
-						{
-							_lastAnimate = DateTime.UtcNow;
-							SwingArm(true);
-						}
-						
-						var timeRan = (DateTime.UtcNow - _destroyingTick).TotalMilliseconds / 50d;
-						if (timeRan >= _destroyTimeNeeded)
-						{
-							StopBreakingBlock(true);
+						//	StartBreakingBlock();
 						}
 					}
 				}
-				else if (Controller.InputManager.IsPressed(InputCommand.RightClick))
+				else if (didRightClick)
 				{
 					bool handledClick = false;
 					var  item         = IsLeftHanded ? Inventory.OffHand : Inventory.MainHand;// [Inventory.SelectedSlot];
@@ -355,7 +345,7 @@ namespace Alex.Entities
 					StopBreakingBlock();
 				}
 
-				_prevCheckedInput = false;
+				//_prevCheckedInput = false;
 				_lastTimeWithoutInput = DateTime.UtcNow;
 			}
 
@@ -505,69 +495,76 @@ namespace Alex.Entities
 
 	    private void BlockBreakTick()
 	    {
-		    //_destroyingTick++;
-        }
+		    var tick =  Interlocked.Increment(ref _destroyingTick);
+		    if (tick % 10 == 0)
+		    {
+			    _lastAnimate = DateTime.UtcNow;
+			    SwingArm(true);
+		    }
+		    
+		    if (tick >= _destroyTimeNeeded)
+		    {
+			    StopBreakingBlock(true);
+		    }
+	    }
 
 	    private void StartBreakingBlock()
 	    {
 		    SwingArm(true);
 		    
-			var floored =  Vector3.Floor(Raytraced);
-
-		    var block = Level.GetBlock(floored);
+			var floored  = new BlockCoordinates(Vector3.Floor(Raytraced));
+			var adjacent = AdjacentRaytrace;
+			
+		    var block    = Level.GetBlock(floored);
 		    if (!block.HasHitbox)
 		    {
 			    return;
 		    }
 
-            _destroyingBlock = true;
+		    var face = GetTargetFace();
+
+		    _destroyingBlock = true;
 		    _destroyingTarget = floored;
-		    _destroyingFace = GetTargetFace();
-		    _destroyingTick = DateTime.UtcNow;
+		    _destroyingFace = face;
+		    
+		    Interlocked.Exchange(ref _destroyingTick, 0);
+		    
+		    _destroyTimeNeeded = block.GetBreakTime(Inventory.MainHand ?? new ItemAir());
 
-		    //if (Inventory.MainHand != null)
-		    {
-			    _destroyTimeNeeded = block.GetBreakTime(Inventory.MainHand ?? new ItemAir()) * 20f;
-		    }
+		    Log.Debug($"Start break block ({_destroyingTarget}, {_destroyTimeNeeded} ticks.)");
 
-            Log.Debug($"Start break block ({_destroyingTarget}, {_destroyTimeNeeded} ticks.)");
+            var flooredAdj = Vector3.Floor(adjacent);
+            var remainder = new Vector3(adjacent.X - flooredAdj.X, adjacent.Y - flooredAdj.Y, adjacent.Z - flooredAdj.Z);
 
-            var flooredAdj = Vector3.Floor(AdjacentRaytrace);
-            var remainder = new Vector3(AdjacentRaytrace.X - flooredAdj.X, AdjacentRaytrace.Y - flooredAdj.Y, AdjacentRaytrace.Z - flooredAdj.Z);
-
-            Network?.PlayerDigging(DiggingStatus.Started, _destroyingTarget, _destroyingFace, remainder);
+            Network?.PlayerDigging(DiggingStatus.Started, floored, face, remainder);
         }
 
 	    private void StopBreakingBlock(bool sendToServer = true, bool forceCanceled = false)
 	    {
-		    var end = DateTime.UtcNow;
 		    _destroyingBlock = false;
-           // var ticks = Interlocked.Exchange(ref _destroyingTick, 0);// = 0;
-		    var start = _destroyingTick;
-			_destroyingTick = DateTime.MaxValue;
-
-		    var timeRan = (end - start).TotalMilliseconds / 50d;
+		    
+            var ticks = Interlocked.Exchange(ref _destroyingTick, 0);// = 0;
 
             var flooredAdj = Vector3.Floor(AdjacentRaytrace);
             var remainder = new Vector3(AdjacentRaytrace.X - flooredAdj.X, AdjacentRaytrace.Y - flooredAdj.Y, AdjacentRaytrace.Z - flooredAdj.Z);
 
             if (!sendToServer)
 		    {
-			    Log.Debug($"Stopped breaking block, not notifying server. Time: {timeRan}");
+			    Log.Debug($"Stopped breaking block, not notifying server. Time: {ticks}");
                 return;
 		    }
 
-		    if ((Gamemode == Gamemode.Creative  || timeRan >= _destroyTimeNeeded) && !forceCanceled)
+		    if ((Gamemode == Gamemode.Creative  || ticks >= _destroyTimeNeeded) && !forceCanceled)
 		    {
                 Network?.PlayerDigging(DiggingStatus.Finished, _destroyingTarget, _destroyingFace, remainder);
-			    Log.Debug($"Stopped breaking block. Ticks passed: {timeRan}");
+			    Log.Debug($"Stopped breaking block. Ticks passed: {ticks}");
 
 				Level.SetBlockState(_destroyingTarget, new Air().GetDefaultState());
             }
 		    else
 		    {
 			    Network?.PlayerDigging(DiggingStatus.Cancelled, _destroyingTarget, _destroyingFace, remainder);
-			    Log.Debug($"Cancelled breaking block. Tick passed: {timeRan}");
+			    Log.Debug($"Cancelled breaking block. Tick passed: {ticks}");
             }
 	    }
 
