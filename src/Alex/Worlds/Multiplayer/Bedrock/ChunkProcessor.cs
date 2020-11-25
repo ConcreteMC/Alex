@@ -52,6 +52,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
         }
 
         public void HandleChunkData(bool cacheEnabled,
+	        ulong[] blobs,
 	        uint subChunkCount,
 	        byte[] chunkData,
 	        int cx,
@@ -67,7 +68,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			        if (CancellationToken.IsCancellationRequested)
 				        return;
 			        
-			        HandleChunk(cacheEnabled, subChunkCount, chunkData, cx, cz, callback);
+			        HandleChunk(cacheEnabled, blobs, subChunkCount, chunkData, cx, cz, callback);
 		        });
         }
 
@@ -105,24 +106,17 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		        }, p);
         }
 
-        private void HandleChunkCachePacket(uint subChunkCount,
+        private void HandleChunkCachePacket(ulong[] blobs, uint subChunkCount,
 	        byte[] chunkData,
 	        int cx,
 	        int cz,
 	        Action<ChunkColumn> callback)
         {
-	        using (MemoryStream stream = new MemoryStream(chunkData))
+	        //using (MemoryStream stream = new MemoryStream(chunkData))
 	        {
-		        NbtBinaryReader defStream = new NbtBinaryReader(stream, true);
-		        var blobCount = defStream.ReadVarInt();
+		      //  NbtBinaryReader defStream = new NbtBinaryReader(stream, true);
+		        //var blobCount = defStream.ReadVarInt();
 
-		        ulong[] blobs = new ulong[blobCount];
-
-		        for (int i = 0; i < blobCount; i++)
-		        {
-			        blobs[i] = defStream.ReadUInt64();
-		        }
-		        
 		        List<ulong> missing = new List<ulong>();
 		        List<ulong> available = new List<ulong>();
 
@@ -146,13 +140,19 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        }
         }
         
-        private void HandleChunk(bool cacheEnabled, uint subChunkCount, byte[] chunkData, int cx, int cz, Action<ChunkColumn> callback)
+        private void HandleChunk(bool cacheEnabled, ulong[] blobs, uint subChunkCount, byte[] chunkData, int cx, int cz, Action<ChunkColumn> callback)
         {
 	        if (cacheEnabled)
 	        {
-		       // Log.Warn($"Unsupported cache enabled!");
-		       HandleChunkCachePacket(subChunkCount, chunkData, cx, cz, callback);
+		        Log.Warn($"Unsupported cache enabled!");
+		       HandleChunkCachePacket(blobs, subChunkCount, chunkData, cx, cz, callback);
 		       return;
+	        }
+	        
+	        if (subChunkCount < 1)
+	        {
+		        Log.Warn("Nothing to read");
+		        return;
 	        }
 	        
 	        ChunkColumn chunkColumn = new ChunkColumn(cx, cz);
@@ -160,50 +160,65 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	       // chunkColumn.X = cx;
 	      //  chunkColumn.Z = cz;
 
-	        bool        gotLight    = false;
 	        try
 	        {
 		        using (MemoryStream stream = new MemoryStream(chunkData))
 		        {
 			        NbtBinaryReader defStream = new NbtBinaryReader(stream, true);
 
-			        //int count = defStream.ReadByte();
-			        if (subChunkCount < 1)
-			        {
-				        Log.Warn("Nothing to read");
-				        return;
-			        }
-			        
 			        for (int s = 0; s < subChunkCount; s++)
 			        {
 				        var section = chunkColumn.Sections[s] as ChunkSection;
 				        
 				        int version = defStream.ReadByte();
-
+						
 				        if (version == 1 || version == 8)
 				        {
 					        int storageSize = version == 1 ? 1 : defStream.ReadByte();
 					        
 					        if (section == null) 
-						        section = new ChunkSection(chunkColumn, true, 2);
+						        section = new ChunkSection(chunkColumn, true, storageSize);
 
 					        for (int storage = 0; storage < storageSize; storage++)
 					        {
-						        int paletteAndFlag = defStream.ReadByte();
-						        bool isRuntime = (paletteAndFlag & 1) != 0;
-						        int bitsPerBlock = paletteAndFlag >> 1;
-						        int blocksPerWord = (int) Math.Floor(32f / bitsPerBlock);
-						        int wordCount = (int) Math.Ceiling(4096.0f / blocksPerWord);
-
-						        uint[] words = new uint[wordCount];
-						        for (int w = 0; w < wordCount; w++)
+						        int  blockSize = defStream.ReadByte();
+						       // bool isRuntime      = (blockSize & 1) != 0;
+						        blockSize >>= 1;
+						        
+						       // int  bitsPerBlock   = paletteAndFlag >> 1;
+						        int blocksPerWord = 32 / blockSize;
+						        int wordCount     = 0;
+						        
+						        if (blocksPerWord == 0)
 						        {
-							        words[w] = defStream.ReadUInt32();
+							        //Log.Warn($"Invalid section, blocksPerWord={blocksPerWord}");
+							        continue;
+						        }
+						        else if (blocksPerWord > 0)
+						        {
+							        wordCount     = 4096 / blocksPerWord;
 						        }
 
-						        int[] pallete = new int[0];
+						        if (blockSize == 3 || blockSize == 5 || blockSize == 6)
+						        {
+							        wordCount++;
+						        }
+						        
+						        uint[] words = new uint[wordCount];
 
-						        if (isRuntime)
+						        Span<byte> blockData = new Span<byte>(new byte[wordCount * 4]);
+						        defStream.Read(blockData);
+
+						        for (int w = 0; w < wordCount; w++)
+						        {
+							        words[w] = ((uint) blockData[w * 4]) | ((uint) blockData[w * 4 + 1]) << 8
+							                                             | ((uint) blockData[w * 4 + 2]) << 16
+							                                             | ((uint) blockData[w * 4 + 3]) << 24;
+						        }
+
+						        int[] pallete;// = new int[0];
+
+						        //if (isRuntime)
 						        {
 							        int palleteSize = defStream.ReadVarInt();// VarInt.ReadSInt32(stream);
 							        if (palleteSize <= 0)
@@ -227,12 +242,13 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 							        uint word = words[w];
 							        for (int block = 0; block < blocksPerWord; block++)
 							        {
-								        if (position >= 4096) break; // padding bytes
+								        //if (position >= 4096) break; // padding bytes
 
 								        uint state =
-									        (uint) ((word >> ((position % blocksPerWord) * bitsPerBlock)) &
-									                ((1 << bitsPerBlock) - 1));
-								        int x = (position >> 8) & 0xF;
+									        (uint) ((word >> ((position % blocksPerWord) * blockSize)) &
+									                ((1 << blockSize) - 1));
+
+									    int x = (position >> 8) & 0xF;
 								        int y = position & 0xF;
 								        int z = (position >> 4) & 0xF;
 
@@ -251,11 +267,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 								        position++;
 							        }
 
-							        if (position >= 4096) break;
+							        //if (position >= 4096) break;
 						        }
 					        }
 				        }
-				        else
+				        else if (version == 0)
 				        {
 					        if (section == null) 
 						        section = new ChunkSection(chunkColumn, true, 1);
@@ -373,39 +389,45 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 					        #endregion
 				        }
-
-				        if (UseAlexChunks)
+				        else
 				        {
-					        //  Log.Info($"Alex chunk!");
-					        
-					        var rawSky = new API.Utils.NibbleArray(4096);
-					        defStream.Read(rawSky.Data, 0, rawSky.Data.Length);
-					        
-					        var rawBlock = new API.Utils.NibbleArray(4096);
-					        defStream.Read(rawBlock.Data, 0, rawBlock.Data.Length);
-
-					        for (int x = 0; x < 16; x++)
-					        for (int y = 0; y < 16; y++)
-					        for (int z = 0; z < 16; z++)
-					        {
-						        var peIndex = (x * 256) + (z * 16) + y;
-						        var sky = rawSky[peIndex];
-						        var block = rawBlock[peIndex];
-
-						        var idx = y << 8 | z << 4 | x;
-						        
-						        section.SkyLight[idx] = sky;
-						        section.BlockLight[idx] = block;
-					        }
-
-					        gotLight = true;
+					        Log.Info($"Unsupported storage version: {version} - section: {s}");
 				        }
 
-				        section.RemoveInvalidBlocks();
-				       // section.IsDirty = true;
+				        if (section != null)
+				        {
 
-				        //Make sure the section is saved.
-				        chunkColumn.Sections[s] = section;
+					        if (UseAlexChunks)
+					        {
+						        //  Log.Info($"Alex chunk!");
+
+						        var rawSky = new API.Utils.NibbleArray(4096);
+						        defStream.Read(rawSky.Data, 0, rawSky.Data.Length);
+
+						        var rawBlock = new API.Utils.NibbleArray(4096);
+						        defStream.Read(rawBlock.Data, 0, rawBlock.Data.Length);
+
+						        for (int x = 0; x < 16; x++)
+						        for (int y = 0; y < 16; y++)
+						        for (int z = 0; z < 16; z++)
+						        {
+							        var peIndex = (x * 256) + (z * 16) + y;
+							        var sky     = rawSky[peIndex];
+							        var block   = rawBlock[peIndex];
+
+							        var idx = y << 8 | z << 4 | x;
+
+							        section.SkyLight[idx] = sky;
+							        section.BlockLight[idx] = block;
+						        }
+					        }
+
+					        section.RemoveInvalidBlocks();
+					        // section.IsDirty = true;
+
+					        //Make sure the section is saved.
+					        chunkColumn.Sections[s] = section;
+				        }
 			        }
 
 
@@ -443,7 +465,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				        return;
 			        }
 
-			        int borderBlock = defStream.ReadVarInt(); //VarInt.ReadSInt32(stream);
+			        int borderBlock = defStream.ReadByte();// defStream.ReadVarInt(); //VarInt.ReadSInt32(stream);
 			        if (borderBlock > 0)
 			        {
 				        byte[] buf = new byte[borderBlock];
@@ -503,30 +525,36 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 								        chunkColumn.Sections[ci] = section;
 							        }
-
-							        gotLight = true;
 						        }
 						        else
 						        {
 							        try
 							        {
-								        NbtCompound compound = (NbtCompound) file.RootTag;
-								        var blockEntity = BlockEntityFactory.ReadFrom(compound, Client.World, null);
-
-								        if (blockEntity != null)
+								        if (file.RootTag.TagType != NbtTagType.Compound)
 								        {
-									        //if (blockEntity.X )
-									        var block = chunkColumn.GetBlockState(
-										        blockEntity.X & 0xf, blockEntity.Y & 0xff, blockEntity.Z & 0xf).Block;
+									        Log.Warn($"Got non-compound block entity! Got: {file.RootTag.TagType}\n{file.RootTag}");
+								        }
+								        else
+								        {
+									        NbtCompound compound = (NbtCompound) file.RootTag;
+									        var blockEntity = BlockEntityFactory.ReadFrom(compound, Client.World, null);
 
-									        if (block.BlockMaterial != Material.Air)
+									        if (blockEntity != null)
 									        {
-										        blockEntity.Block = block;
+										        //if (blockEntity.X )
+										        var block = chunkColumn.GetBlockState(
+												        blockEntity.X & 0xf, blockEntity.Y & 0xff, blockEntity.Z & 0xf)
+											       .Block;
 
-										        chunkColumn.AddBlockEntity(
-											        new BlockCoordinates(
-												        blockEntity.X & 0xf, blockEntity.Y & 0xff,
-												        blockEntity.Z & 0xf), blockEntity);
+										        if (block.BlockMaterial != Material.Air)
+										        {
+											        blockEntity.Block = block;
+
+											        chunkColumn.AddBlockEntity(
+												        new BlockCoordinates(
+													        blockEntity.X & 0xf, blockEntity.Y & 0xff,
+													        blockEntity.Z & 0xf), blockEntity);
+										        }
 									        }
 								        }
 							        }
@@ -556,12 +584,6 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					        $"Still have data to read\n{Packet.HexDump(defStream.ReadBytes((int) (stream.Length - stream.Position)))}");
 			        }
 
-			        if (gotLight)
-			        {
-				        //chunkColumn.SkyLightDirty = false;
-				       // chunkColumn.BlockLightDirty = false;
-			        }
-			        
 			        chunkColumn.CalculateHeight();
 			        
 			        //Done processing this chunk, send to world

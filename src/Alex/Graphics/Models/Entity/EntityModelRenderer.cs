@@ -263,7 +263,7 @@ namespace Alex.Graphics.Models.Entity
 		{
 			if (!CanRender)
 			{
-				Log.Warn($"Cannot render model...");
+				//Log.Warn($"Cannot render model...");
 				return;
 			}
 

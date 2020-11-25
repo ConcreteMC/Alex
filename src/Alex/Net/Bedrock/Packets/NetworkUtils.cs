@@ -46,14 +46,16 @@ namespace Alex.Net.Bedrock.Packets
 		{
 			while (true)
 			{
-				NbtTag nbtTag;
+				NbtTag     nbtTag = null;
+				NbtTagType nbtTagType;// = readStream.ReadTagType();
 				do
 				{
-					NbtTagType nbtTagType = readStream.ReadTagType();
+					nbtTagType = readStream.ReadTagType();
+					
 					switch (nbtTagType)
 					{
 						case NbtTagType.End:
-							return true;
+							break;
 						case NbtTagType.Byte:
 							nbtTag = (NbtTag) new NbtByte();
 							break;
@@ -91,15 +93,20 @@ namespace Alex.Net.Bedrock.Packets
 							nbtTag = (NbtTag) new NbtLongArray();
 							break;
 						case NbtTagType.Unknown:
-							return true;
 							break;
 						default:
 							throw new FormatException("Unsupported tag type found in NBT_Compound: " + (object) nbtTagType);
 					}
+
+					if (nbtTag != null)
+					{
+						nbtTag.Name = readStream.ReadString();
+					}
+
 					//nbtTag.Parent = (NbtTag) this;
-					nbtTag.Name = readStream.ReadString();
+					//nbtTag.Name = readStream.ReadString();
 				}
-				while (!nbtTag.ReadTag(readStream));
+				while (nbtTagType != NbtTagType.End && nbtTagType != NbtTagType.Unknown);
 
 				switch (tag.TagType)
 				{
@@ -144,20 +151,27 @@ namespace Alex.Net.Bedrock.Packets
 		
 		public static Nbt ReadNbt(Stream stream, bool useVarInt = false)
 		{
+			if (stream.ReadByte() == 255)
+				return null;
+
+			stream.Position -= 1;
+			
 			Nbt     nbt     = new Nbt();
 			NbtFile nbtFile = new NbtFile();
 			nbtFile.BigEndian = false;
 			nbtFile.UseVarInt = useVarInt;
-			nbt.NbtFile = nbtFile;
+			
 			nbtFile.LoadFromStream(stream, NbtCompression.None);
-			/*
-			var reader = new NbtBinaryReader(stream, false) {
+			
+			/*var reader = new NbtBinaryReader(stream, false) {
 				Selector = null,
 				UseVarInt = useVarInt
 			};
 
 			nbtFile.RootTag = ReadUnknownTag(reader);*/
-
+			
+			nbt.NbtFile = nbtFile;
+			
 			return nbt;
 		}
 
@@ -256,12 +270,16 @@ namespace Alex.Net.Bedrock.Packets
 			{
 				networkId = packet.ReadSignedVarInt();
 				
+				if (networkId == 0)
+				{
+					return new ItemAir();
+				}
 			}
-
+			
 			int id = packet.ReadSignedVarInt();
 
 			if (id == 0)
-			{
+			{ 
 				return new ItemAir();
 			}
 
@@ -284,26 +302,41 @@ namespace Alex.Net.Bedrock.Packets
 				switch (version)
 				{
 					case 1:
-						stack.ExtraData = (NbtCompound) packet.ReadNbt().NbtFile.RootTag;
+						var nbt = packet.ReadNbt();
+
+						if (nbt != null)
+						{
+							stack.ExtraData = (NbtCompound) nbt.NbtFile.RootTag;
+						}
+
 						break;
 				}
 			}
-			else if (dataMarker != 0)
+			else if (dataMarker > 0)
 			{
 				var nbtData = packet.ReadBytes(dataMarker);
 			//	var stream = (Stream)ReflectionHelper.GetPrivateFieldValue<MemoryStreamReader>(typeof(Packet), packet, "_reader");
 				using (MemoryStream ms = new MemoryStream(nbtData))
 				{
-					stack.ExtraData = (NbtCompound) ReadNbt(ms).NbtFile.RootTag;
+					var nbt = ReadNbt(ms);
+
+					if (nbt != null)
+					{
+						stack.ExtraData = (NbtCompound) nbt.NbtFile.RootTag;
+					}
+					
+					//stack.ExtraData = ReadNbt(ms);
 				}
 			}
 
-			for (int i = 0, canPlace = packet.ReadVarInt(); i < canPlace; ++i)
+			var canPlace = packet.ReadVarInt();
+			for (int i = 0; i < canPlace; ++i)
 			{
 				packet.ReadString();
 			}
-
-			for (int i = 0, canBreak = packet.ReadVarInt(); i < canBreak; ++i)
+			
+			var canBreak = packet.ReadVarInt();
+			for (int i = 0; i < canBreak; ++i)
 			{
 				packet.ReadString();
 			}

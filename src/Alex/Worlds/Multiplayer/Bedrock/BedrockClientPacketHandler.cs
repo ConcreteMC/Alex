@@ -181,7 +181,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        
 	      //  Log.Info($"Got ResourcePackDataInfo: {message}");
 	        McpeResourcePackClientResponse response = new McpeResourcePackClientResponse();
-	        response.responseStatus = (byte) McpeResourcePackClientResponse.ResponseStatus.SendPacks;
+	        response.responseStatus = (byte) McpeResourcePackClientResponse.ResponseStatus.Completed;
 	        Client.SendPacket(response);
         }
 
@@ -211,7 +211,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	        
 	        if (resourcePackIds.Count > 0)
 	        {
-		        response.responseStatus = (byte) McpeResourcePackClientResponse.ResponseStatus.SendPacks;
+		        response.responseStatus = (byte) McpeResourcePackClientResponse.ResponseStatus.HaveAllPacks;
 		        response.resourcepackids = resourcePackIds;
 	        }
 	        else
@@ -1433,11 +1433,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 		public void HandleMcpeLevelChunk(McpeLevelChunk msg)
 		{
-			var cacheEnabled = msg.cacheEnabled;
+			var blobs         = msg.blobHashes;
+			var cacheEnabled  = msg.cacheEnabled;
 			var subChunkCount = msg.subChunkCount;
-			var chunkData = msg.chunkData;
-			var cx = msg.chunkX;
-			var cz = msg.chunkZ;
+			var chunkData     = msg.chunkData;
+			var cx            = msg.chunkX;
+			var cz            = msg.chunkZ;
 			msg.PutPool();
 
 			//if (chunkData[0] < 1)
@@ -1447,7 +1448,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				return;
 			}
 			
-			ChunkProcessor.HandleChunkData(cacheEnabled, subChunkCount, chunkData, cx, cz,
+			ChunkProcessor.HandleChunkData(cacheEnabled, blobs, subChunkCount, chunkData, cx, cz,
 				column =>
 				{ 
 					Client.World.ChunkManager.AddChunk(column, new ChunkCoordinates(column.X, column.Z), true);

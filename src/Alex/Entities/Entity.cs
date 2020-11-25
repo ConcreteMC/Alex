@@ -1263,7 +1263,7 @@ namespace Alex.Entities
 
 			Vector3 posOffset = new Vector3(0, 0.25f, 0);
 
-			if (RenderEntity && ModelRenderer != null && ModelRenderer.Valid && !IsInvisible && !ModelRenderer.Texture.IsFullyTransparent)
+			if (RenderEntity && ModelRenderer != null && ModelRenderer.Valid && !IsInvisible)
 			{
 				posOffset.Y += (float) (Height * Scale);
 			}

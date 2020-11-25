@@ -32,9 +32,9 @@ namespace Alex.Net.Bedrock.Packets
                     break;
                 
                 //Hack to spawn on the Hive
-                case 132:
-                    PrevBuffer = buffer.ToArray();
-                    break;
+              //  case 132:
+              //      PrevBuffer = buffer.ToArray();
+               //     break;
                 case 16:
                     packet = new RequestAccepted();
                     break;
