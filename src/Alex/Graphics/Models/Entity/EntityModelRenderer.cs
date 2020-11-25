@@ -110,7 +110,7 @@ namespace Alex.Graphics.Models.Entity
 			}
 			
 			VertexBuffer = GpuResourceManager.GetBuffer(this, Alex.Instance.GraphicsDevice,
-				VertexPositionColorTexture.VertexDeclaration, vertices.Count, BufferUsage.None);
+				VertexPositionColorTexture.VertexDeclaration, vertices.Count, BufferUsage.WriteOnly);
 			VertexBuffer.SetData(vertices.ToArray());
 			
 			Valid = true;

@@ -197,10 +197,10 @@ namespace Alex.Gui.Elements.Inventory
 
 	    protected override void OnDraw(GuiSpriteBatch graphics, GameTime gameTime)
 	    {
+		    base.OnDraw(graphics, gameTime);
 		    Vector2 textSize =
 			    graphics.Font.MeasureString(_itemNameTextElement.Text, _itemNameTextElement.Scale);
-			graphics.DrawString(Bounds.TopCenter() + new Vector2(-textSize.X / 2f, -10), _itemNameTextElement.Text, _itemNameTextElement.TextColor, _itemNameTextElement.FontStyle, _itemNameTextElement.Scale, opacity: _itemNameTextElement.TextOpacity);
-		    base.OnDraw(graphics, gameTime);
+			graphics.DrawString(Bounds.TopCenter() + new Vector2(-textSize.X / 2f, -(textSize.Y)), _itemNameTextElement.Text, _itemNameTextElement.TextColor, _itemNameTextElement.FontStyle, _itemNameTextElement.Scale, opacity: _itemNameTextElement.TextOpacity);
 	    }
 
 	    protected override void OnInit(IGuiRenderer renderer)

@@ -34,6 +34,10 @@ namespace Alex.Entities.BlockEntities
 
 			if (ModelRenderer != null && ModelRenderer.GetBone("root", out var bone))
 			{
+				var rot = bone.Rotation;
+				rot.Y = _yRotation;
+				bone.Rotation = rot;
+				
 				RootBone = bone;
 			}
 		}
@@ -99,7 +103,8 @@ namespace Alex.Entities.BlockEntities
 			}
 		}
 		
-		private byte _rotation = 0;
+		private byte  _rotation  = 0;
+		private float _yRotation = 0f;
 		public byte Rotation
 		{
 			get
@@ -110,10 +115,13 @@ namespace Alex.Entities.BlockEntities
 			{
 				_rotation = Math.Clamp(value, (byte)0, (byte)15);
 				
-				var headRotation = RootBone.Rotation;
-				headRotation.Y          = _rotation * 22.5f;
-
-				RootBone.Rotation = headRotation;
+				_yRotation          = _rotation * 22.5f;
+				if (RootBone != null)
+				{
+					var headRotation = RootBone.Rotation;
+					headRotation.Y = _yRotation;
+					RootBone.Rotation = headRotation;
+				}
 				//HeadBone.Rotation = headRotation;
 			}
 		}

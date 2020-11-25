@@ -112,7 +112,7 @@ namespace Alex.Graphics.Models.Items
     {
         public ResourcePackModelBase Model { get; }
 
-        private DisplayPosition _displayPosition;
+        private DisplayPosition _displayPosition;// = DisplayPosition.Ground;
 
         public DisplayPosition DisplayPosition
         {
@@ -133,14 +133,21 @@ namespace Alex.Graphics.Models.Items
 
         private void UpdateDisplay()
         {
-            if (Model.Display.TryGetValue(DisplayPositionHelper.ToString(_displayPosition), out var display))
+            try
             {
-                ActiveDisplayItem = display;
+                if (Model.Display.TryGetValue(DisplayPositionHelper.ToString(_displayPosition), out var display))
+                {
+                    ActiveDisplayItem = display;
+
+                    return;
+                }
             }
-            else
+            catch(ArgumentOutOfRangeException)
             {
-                ActiveDisplayItem = DisplayElement.Default;
+                
             }
+            
+            ActiveDisplayItem = DisplayElement.Default;
         }
 
         protected TVertice[]  Vertices { get; set; } = null;
@@ -286,7 +293,10 @@ namespace Alex.Graphics.Models.Items
             if (Effect == null || Buffer == null || Buffer.VertexCount == 0)
                 return;
 
+            var count = Vertices.Length;
             device.SetVertexBuffer(Buffer);
+
+            count = Math.Min(count, Buffer.VertexCount);
             
             foreach (var a in Effect.CurrentTechnique.Passes)
             {
@@ -296,7 +306,7 @@ namespace Alex.Graphics.Models.Items
                 //	DrawLine(device, Vector3.Zero, Vector3.Forward, Color.Blue);
                 //	DrawLine(device, Vector3.Zero, Vector3.Right, Color.Red);
                 
-                device.DrawPrimitives(PrimitiveType.TriangleList, 0, Buffer.VertexCount / 3);
+                device.DrawPrimitives(PrimitiveType.TriangleList, 0, count / 3);
                 //device.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, Vertices, 0, Vertices.Length, Indexes, 0, Indexes.Length / 3);
             }
         }
@@ -308,10 +318,7 @@ namespace Alex.Graphics.Models.Items
 
         public virtual IItemRenderer Clone()
         {
-            return new ItemModelRenderer<TVertice>(Model, _declaration)
-            {
-                Vertices = Vertices.Clone() as TVertice[]
-            };
+            return new ItemModelRenderer<TVertice>(Model, _declaration);
         }
 
         public string Name => "Item-Renderer";

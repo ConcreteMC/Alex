@@ -38,6 +38,10 @@ namespace Alex.Entities.BlockEntities
 			if (ModelRenderer.GetBone("body", out var body))
 			{
 				Body = body;
+				
+				var bodyRotation = Body.Rotation;
+				bodyRotation.Y = _yRotation;
+				Body.Rotation = bodyRotation;
 			}
 		}
 
@@ -64,7 +68,8 @@ namespace Alex.Entities.BlockEntities
 			}
 		}
 
-		private BlockFace _rotation = BlockFace.North;
+		private BlockFace _rotation  = BlockFace.North;
+		private float     _yRotation = 0f;
 		public BlockFace Rotation
 		{
 			get
@@ -74,29 +79,34 @@ namespace Alex.Entities.BlockEntities
 			set
 			{
 				_rotation = value;
-
-				var bodyRotation = Body.Rotation;
-				var headRotation = HeadBone.Rotation;
+				
+				//var headRotation = HeadBone.Rotation;
 				switch (value)
 				{
 					case BlockFace.East:
-						bodyRotation.Y = 90f;
+						_yRotation = 90f;
 						break;
 
 					case BlockFace.West:
-						bodyRotation.Y = 270f;
+						_yRotation = 270f;
 						break;
 
 					case BlockFace.North:
-						bodyRotation.Y = 180f;
+						_yRotation = 180f;
 						break;
 
 					case BlockFace.South:
-						bodyRotation.Y = 0f;
+						_yRotation = 0f;
 						break;
 				}
 
-				Body.Rotation = bodyRotation;
+				if (Body != null)
+				{
+					var bodyRotation = Body.Rotation;
+					bodyRotation.Y = _yRotation;
+					Body.Rotation = bodyRotation;
+				}
+
 				//HeadBone.Rotation = headRotation;
 			}
 		}

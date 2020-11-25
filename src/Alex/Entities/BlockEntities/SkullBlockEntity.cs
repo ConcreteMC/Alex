@@ -36,11 +36,16 @@ namespace Alex.Entities.BlockEntities
 			//base.UpdateModelParts();
 			if (ModelRenderer.GetBone("head", out var head))
 			{
+				var rot = head.Rotation;
+				rot.Y = _yRotation;
+				head.Rotation = rot;
+				
 				HeadBone = head;
 			}
 		}
 		
-		private byte _rotation = 0;
+		private byte  _rotation  = 0;
+		private float _yRotation = 0f;
 		public byte Rotation
 		{
 			get
@@ -51,10 +56,16 @@ namespace Alex.Entities.BlockEntities
 			{
 				_rotation = Math.Clamp(value, (byte)0, (byte)15);
 				
-				var headRotation = HeadBone.Rotation;
-				headRotation.Y          = _rotation * 22.5f;
+				//var headRotation = HeadBone.Rotation;
+				_yRotation          = _rotation * 22.5f;
 
-				HeadBone.Rotation = headRotation;
+				if (HeadBone != null)
+				{
+					var headRotation = HeadBone.Rotation;
+					headRotation.Y = _yRotation;
+					HeadBone.Rotation = headRotation;
+				}
+
 				//HeadBone.Rotation = headRotation;
 			}
 		}
@@ -180,7 +191,7 @@ namespace Alex.Entities.BlockEntities
 		{
 			if (action == 4)
 			{
-				//var tag = compound.
+				ReadFrom(compound);
 			}
 		}
 
@@ -193,7 +204,13 @@ namespace Alex.Entities.BlockEntities
 		/// <inheritdoc />
 		protected override void ReadFrom(NbtCompound compound)
 		{
-			
+			if (compound == null)
+				return;
+
+			if (compound.TryGet<NbtByte>("Rot", out var rotation) || compound.TryGet<NbtByte>("rot", out rotation))
+			{
+				Rotation = rotation.Value;
+			}
 		}
 
 		private Vector3 Offset { get; set; } = Vector3.Zero;// = new Vector3(0.5f, 0, 0.5f);

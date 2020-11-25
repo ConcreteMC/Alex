@@ -1955,6 +1955,9 @@ namespace Alex.Worlds.Multiplayer.Java
 
 				        foreach (var tag in chunk.TileEntities)
 				        {
+					        if (tag == null || !(tag.Contains("id")))
+						        continue;
+					        
 					        try
 					        {
 						        var blockEntity = BlockEntityFactory.ReadFrom(tag, World, null);
@@ -1966,7 +1969,7 @@ namespace Alex.Worlds.Multiplayer.Java
 						        }
 						        else
 						        {
-							        Log.Warn($"Got null block entity of type {tag["id"].StringValue}");
+							        Log.Warn($"Got null block entity: {tag}");
 						        }
 
 					        }

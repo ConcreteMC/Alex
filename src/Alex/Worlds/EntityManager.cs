@@ -89,10 +89,10 @@ namespace Alex.Worlds
 
 			foreach (var entity in entities.Concat(blockEntities))
 			{
-				if (entity.ModelRenderer != null)
+				/*if (entity.ModelRenderer != null)
 					entity.ModelRenderer.DiffuseColor =
 						(new Color(245, 245, 225).ToVector3() * ((1f / 16f) * entity.SurroundingLightValue))
-						* World.BrightnessModifier;
+						* World.BrightnessModifier;*/
 
 				if (entity.IsRendered)
 					entity.Update(args);
