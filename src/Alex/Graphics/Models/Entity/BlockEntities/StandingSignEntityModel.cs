@@ -37,4 +37,33 @@ namespace Alex.Graphics.Models.Entity.BlockEntities
 			};
 		}
 	}
+	
+	public class WallSignEntityModel : EntityModel
+	{
+		public WallSignEntityModel()
+		{
+			Description = new ModelDescription()
+			{
+				Identifier = "geometry.alex.sign", TextureHeight = 32, TextureWidth = 64
+			};
+
+			Bones = new EntityModelBone[]
+			{
+				new EntityModelBone()
+				{
+					Name = "root",
+					Pivot = Vector3.Zero,
+					Cubes = new[]
+					{
+						new EntityModelCube()
+						{
+							Origin = new Vector3(0, 2.5f, 0),
+							Size = new Vector3(16, 11, 1),
+							Uv = new Vector2(9, 2)
+						}
+					}
+				}
+			};
+		}
+	}
 }

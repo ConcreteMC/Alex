@@ -164,7 +164,7 @@ namespace Alex.Worlds.Chunks
 		}
 
 		private bool _previousKeepInMemory     = false;
-		private int  _renderablePrimitiveCount = 0;
+		private int  _renderableVerticeCount = 0;
 		public void Apply(GraphicsDevice device = null, bool keepInMemory = true)
 		{
 			lock (_writeLock)
@@ -178,11 +178,17 @@ namespace Alex.Worlds.Chunks
 
 				if (realVertices.Length == 0)
 				{
-					_renderablePrimitiveCount = 0;
+					_renderableVerticeCount = 0;
 					return;
 				}
+
+				var verticeCount = realVertices.Length;
+				while (verticeCount % 3 != 0) //Make sure we have a valid triangle list.
+				{
+					verticeCount--;
+				}
 				
-				_renderablePrimitiveCount = realVertices.Length / 3;
+				_renderableVerticeCount = verticeCount;
 
 				bool               callSetData = HasResized;
 				PooledVertexBuffer oldBuffer   = null;
@@ -224,13 +230,14 @@ namespace Alex.Worlds.Chunks
         
 		public virtual int Render(GraphicsDevice device, Effect effect)
 		{
-			if (Buffer == null || _renderablePrimitiveCount == 0) return 0;
+			var primitives = _renderableVerticeCount;
+			if (Buffer == null || primitives == 0) return 0;
             
 			device.SetVertexBuffer(Buffer);
 			foreach (var pass in effect.CurrentTechnique.Passes)
 			{
 				pass.Apply();
-				device.DrawPrimitives(PrimitiveType.TriangleList, 0, _renderablePrimitiveCount);
+				device.DrawPrimitives(PrimitiveType.TriangleList, 0, primitives / 3);
 			}
 
 			return Buffer.VertexCount;

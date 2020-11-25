@@ -1,6 +1,6 @@
 namespace Alex.Blocks.Minecraft
 {
-	public class TrappedChest : Block
+	public class TrappedChest : Chest
 	{
 		public TrappedChest() : base()
 		{

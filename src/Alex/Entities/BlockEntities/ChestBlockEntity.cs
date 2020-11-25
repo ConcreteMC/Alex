@@ -133,12 +133,12 @@ namespace Alex.Entities.BlockEntities
 		{
 			base.BlockChanged(oldBlock, newBlock);
 
-			if (newBlock == null)
+			if (newBlock == null || !(newBlock is Chest))
 				return;
 
 			if (newBlock.BlockState.TryGetValue("facing", out string value))
 			{
-				if (Enum.TryParse(typeof(BlockFace), value, true, out var val))
+				if (Enum.TryParse<BlockFace>(value, true, out var val))
 				{
 					Rotation = (BlockFace) val;
 				}

@@ -6,7 +6,7 @@ using Alex.Worlds.Abstraction;
 
 namespace Alex.Blocks.Minecraft
 {
-	public class EnderChest : Block
+	public class EnderChest : Chest
 	{
 		public EnderChest() : base()
 		{

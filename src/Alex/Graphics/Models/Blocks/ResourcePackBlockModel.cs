@@ -98,15 +98,21 @@ namespace Alex.Graphics.Models.Blocks
 				var box         = Boxes[i];
 				
 				var yDifference = box.Max.Y - box.Min.Y;
-				if (yDifference < 0.1f)
+				if (yDifference < 0.01f)
 				{
-					box.Max.Y += (0.1f - yDifference);
+					box.Max.Y += (0.01f - yDifference);
 				}
 
 				var xDifference = box.Max.X - box.Min.X;
-				if (xDifference < 0.1f)
+				if (xDifference < 0.01f)
 				{
-					box.Max.X += (0.1f - xDifference);
+					box.Max.X += (0.01f - xDifference);
+				}
+				
+				var zDifference = box.Max.Z - box.Min.Z;
+				if (zDifference < 0.01f)
+				{
+					box.Max.Z += (0.01f - zDifference);
 				}
 				
 				Boxes[i] = box;

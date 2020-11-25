@@ -41,24 +41,16 @@ namespace Alex.Graphics.Models.Items
                 {
                     return new VertexPositionColorTexture(x.Position, x.Color, x.TexCoords);
                 }).ToArray();
+            
             List<short> indexes = new List<short>();
-
             for (int i = 0; i < Vertices.Length; i++)
             {
                 indexes.Add((short) i);
             }
-           /* foreach (var renderStage in chunkData.RenderStages)
-            {
-                foreach (var index in renderStage.Value.GetIndexes())
-                {
-                    indexes.Add((short) index);
-                }
-            }*/
 
             Indexes = indexes.ToArray();
 
             chunkData.Dispose();
-            //Indexes = data.Indexes.Select(x => (short) x).ToArray();
         }
 
         protected override void InitEffect(BasicEffect effect)

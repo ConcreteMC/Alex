@@ -222,7 +222,7 @@ namespace Alex.Worlds
 		public bool AddBlockEntity(BlockCoordinates coordinates, BlockEntity entity)
 		{
 			entity.KnownPosition = coordinates;
-
+			entity.Block = World.GetBlock(coordinates);
 			return BlockEntities.TryAdd(coordinates, entity);
 		}
 

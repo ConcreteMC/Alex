@@ -25,8 +25,9 @@ namespace Alex.Entities.BlockEntities
 			{
 				var oldValue = _block;
 				_block = value;
-				
-				BlockChanged(oldValue, value);
+
+				if (value != null)
+					BlockChanged(oldValue, value);
 			}
 		}
 		
@@ -56,6 +57,8 @@ namespace Alex.Entities.BlockEntities
 			X = compound.Get<NbtInt>("x").Value;
 			Y = compound.Get<NbtInt>("y").Value;
 			Z = compound.Get<NbtInt>("z").Value;
+			
+			ReadFrom(compound);
 		}
 		
 		protected virtual void ReadFrom(NbtCompound compound){}
@@ -70,6 +73,11 @@ namespace Alex.Entities.BlockEntities
 		{
 			get => base.KnownPosition + new Vector3(0.5f, 0, 0.5f);
 			set => base.KnownPosition = value;
+		}
+
+		public virtual void SetData(byte action, NbtCompound compound)
+		{
+			//throw new System.NotImplementedException();
 		}
 	}
 }

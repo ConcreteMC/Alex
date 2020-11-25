@@ -487,7 +487,7 @@ namespace Alex.Worlds.Chunks
 		
 		public bool AddBlockEntity(BlockCoordinates coordinates, BlockEntity entity)
 		{
-			entity.Block = GetBlockState(coordinates.X, coordinates.Y, coordinates.Z).Block;
+			//entity.Block = GetBlockState(coordinates.X & 0x0f, coordinates.Y & 0xf, coordinates.Z & 0x0f).Block;
 			return BlockEntities.TryAdd(coordinates, entity);
 		}
 

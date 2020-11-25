@@ -35,15 +35,13 @@ namespace Alex.Blocks
 		    this.Register("minecraft:obsidian", () => new Obsidian());
 		    this.Register("minecraft:fire", () => new Fire());
 		    this.Register("minecraft:mob_spawner", () => new MobSpawner());
-		    this.Register("minecraft:chest", () => new Chest());
+		    
 		    this.Register("minecraft:crafting_table", () => new CraftingTable());
 		    this.Register("minecraft:wheat", () => new Wheat());
 		    this.Register("minecraft:farmland", () => new Farmland());
 		    this.Register("minecraft:furnace", () => new Furnace());
 		    this.Register("minecraft:ladder", () => new Ladder());
 		    this.Register("minecraft:rail", () => new Rail());
-		    this.Register("minecraft:wall_sign", () => new WallSign());
-		    this.Register("minecraft:oak_wall_sign", () => new WallSign());
 		    this.Register("minecraft:snow", () => new Snow());
 		    this.Register("minecraft:ice", () => new Ice());
 		    this.Register("minecraft:blue_ice", () => new BlueIce());
@@ -71,7 +69,7 @@ namespace Alex.Blocks
 		    this.Register("minecraft:dragon_egg", () => new DragonEgg());
 		    this.Register("minecraft:redstone_lamp", () => new RedstoneLamp());
 		    this.Register("minecraft:cocoa", () => new Cocoa());
-		    this.Register("minecraft:ender_chest", () => new EnderChest());
+		    
 		    this.Register("minecraft:tripwire_hook", () => new TripwireHook());
 		    this.Register("minecraft:tripwire", () => new Tripwire());
 		    this.Register("minecraft:beacon", () => new Beacon());
@@ -81,7 +79,7 @@ namespace Alex.Blocks
 		    this.Register("minecraft:potatoes", () => new Potatoes());
 		    this.Register("minecraft:anvil", () => new Anvil());
 		    this.Register("minecraft:chipped_anvil", () => new Anvil());
-		    this.Register("minecraft:trapped_chest", () => new TrappedChest());
+		    
 		    this.Register("minecraft:quartz_block", () => new QuartzBlock());
 		    this.Register("minecraft:activator_rail", () => new ActivatorRail());
 		    this.Register("minecraft:dropper", () => new Dropper());
@@ -401,6 +399,70 @@ namespace Alex.Blocks
 		    this.Register("minecraft:jack_o_lantern", () => new JackOLantern());
 		    
 		    this.Register("minecraft:lectern", () => new Lectern());
+		    
+		    //Skulls
+		    this.Register("minecraft:skeleton_skull", () => new Skull()
+		    {
+			    SkullType = SkullType.Skeleton
+		    });
+		    this.Register("minecraft:wither_skeleton_skull", () => new Skull()
+		    {
+			    SkullType = SkullType.WitherSkeleton
+		    });
+		    this.Register("minecraft:zombie_head", () => new Skull()
+		    {
+			    SkullType = SkullType.Zombie
+		    });
+		    this.Register("minecraft:player_head", () => new Skull()
+		    {
+			    SkullType = SkullType.Player
+		    });
+		    this.Register("minecraft:creeper_head", () => new Skull()
+		    {
+			    SkullType = SkullType.Creeper
+		    });
+		    this.Register("minecraft:dragon_head", () => new Skull()
+		    {
+			    SkullType = SkullType.Dragon
+		    });
+		    
+		    //Wall skulls
+		    this.Register("minecraft:skeleton_wall_skull", () => new WallSkull()
+		    {
+			    SkullType = SkullType.Skeleton
+		    });
+		    this.Register("minecraft:wither_skeleton_wall_skull", () => new WallSkull()
+		    {
+			    SkullType = SkullType.WitherSkeleton
+		    });
+		    this.Register("minecraft:zombie_wall_head", () => new WallSkull()
+		    {
+			    SkullType = SkullType.Zombie
+		    });
+		    this.Register("minecraft:player_wall_head", () => new WallSkull()
+		    {
+			    SkullType = SkullType.Player
+		    });
+		    this.Register("minecraft:creeper_wall_head", () => new WallSkull()
+		    {
+			    SkullType = SkullType.Creeper
+		    });
+		    this.Register("minecraft:dragon_wall_head", () => new WallSkull()
+		    {
+			    SkullType = SkullType.Dragon
+		    });
+		    
+		    //Signs
+		    this.Register("minecraft:wall_sign", () => new WallSign());
+		    this.Register("minecraft:oak_wall_sign", () => new WallSign());
+		    
+		    //Standing signs
+		    this.Register("minecraft:standing_sign", () => new StandingSign());
+		    
+		    //Chests
+		    this.Register("minecraft:chest", () => new Chest());
+		    this.Register("minecraft:trapped_chest", () => new TrappedChest());
+		    this.Register("minecraft:ender_chest", () => new EnderChest());
 	    }
     }
 }

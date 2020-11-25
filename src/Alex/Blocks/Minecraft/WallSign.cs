@@ -17,4 +17,22 @@ namespace Alex.Blocks.Minecraft
 			BlockMaterial = Material.Wood;
 		}
 	}
+
+	public class StandingSign : Block
+	{
+		public StandingSign()
+		{
+			Solid = false;
+			Transparent = true;
+			IsReplacible = false;
+			Renderable = false;
+			
+			HasHitbox = true;
+
+			//RequiresUpdate = true;
+			
+			Hardness = 1;
+			BlockMaterial = Material.Wood;
+		}
+	}
 }
