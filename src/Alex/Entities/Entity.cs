@@ -566,6 +566,16 @@ namespace Alex.Entities
 						}
 					}
 						break;
+
+					case MiNET.Entities.Entity.MetadataFlags.HideNameTag:
+					{
+						if (meta.Value is MiNET.Utils.MetadataByte hideNameTag)
+						{
+							HideNameTag = hideNameTag.Value == 1;
+						}
+						break;
+					}
+					
 					default:
 						if (!HandleMetadata((MiNET.Entities.Entity.MetadataFlags) meta.Key, meta.Value))
 						{

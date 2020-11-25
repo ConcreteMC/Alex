@@ -1047,7 +1047,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	    {
 		    if (player is Player p)
 		    {
-			    var itemInHand = p.Inventory[p.Inventory.SelectedSlot];
+			    //p.Inventory[p.Inventory.SelectedSlot]
+			    var itemInHand = p.Inventory.MainHand;
 
 			    // WorldProvider?.GetChatReceiver?.Receive(new ChatObject($"(CLIENT) Hit entity: {target.EntityId} | Action: {action.ToString()} | Item: {itemInHand.Id}:{itemInHand.Meta} ({itemInHand.Name})"));
 
