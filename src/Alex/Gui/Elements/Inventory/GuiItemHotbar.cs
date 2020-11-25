@@ -42,50 +42,76 @@ namespace Alex.Gui.Elements.Inventory
             }
         }
 
-		public Utils.Inventories.Inventory Inventory { get; set; }
+        private Utils.Inventories.Inventory _inventory = null;
 
-		private GuiContainer _hotbar;
+        public Utils.Inventories.Inventory Inventory
+        {
+	        get
+	        {
+		        return _inventory;
+	        }
+	        set
+	        {
+		        var oldValue = _inventory;
+
+		        if (oldValue != null)
+		        {
+			        oldValue.SlotChanged -= SlotChanged;
+			        oldValue.SelectedHotbarSlotChanged -= SelectedHotbarSlotChanged;
+		        }
+
+		        value.SlotChanged += SlotChanged;
+		        value.SelectedHotbarSlotChanged += SelectedHotbarSlotChanged;
+		        
+		        _inventory = value;
+		        
+		        var hotbarItems = value.GetHotbar();
+		        for (int i = 0; i < 9; i++)
+		        {
+			        _hotbarItems[i].Item = hotbarItems[i];
+		        }
+	        }
+        }
+
+        private GuiContainer _hotbar;
 	    private GuiFadingTextElement _itemNameTextElement;
 	    private GuiInventoryItem[] _hotbarItems;
         public GuiItemHotbar(Utils.Inventories.Inventory inventory)
         {
+	        _hotbarItems = new GuiInventoryItem[9];
+	        _hotbar = new GuiContainer()
+	        {
+		        Anchor = Alignment.Fill,
+		        //Padding = new Thickness(4,4)
+	        };
+            
+	        AddChild(_hotbar);
+	        for (int i = 0; i < 9; i++)
+	        {
+		        _hotbar.AddChild(_hotbarItems[i] = new GuiInventoryItem()
+		        {
+			        Width = ItemWidth + 4,
+			        Height = ItemWidth + 4,
+			        //Padding = new Thickness(2, 2),
+			        Margin = new Thickness( (i * (ItemWidth + 4)), 0, 4, 0),
+			        HighlightedBackground = GuiTextures.Inventory_HotBar_SelectedItemOverlay,
+			        IsSelected = i == SelectedIndex,
+			        Anchor = Alignment.TopLeft,
+			        //  Item = hotbarItems[i],
+			        AutoSizeMode = AutoSizeMode.None
+		        });
+	        }
+	        
 	        Inventory = inventory;
-			Inventory.SlotChanged += SlotChanged;
-			Inventory.SelectedHotbarSlotChanged += SelectedHotbarSlotChanged;
+			//Inventory.SlotChanged += SlotChanged;
+			//Inventory.SelectedHotbarSlotChanged += SelectedHotbarSlotChanged;
 
             Width = (ItemWidth + 4) * ItemCount;
             Height = ItemWidth + 4;
 
             AutoSizeMode = AutoSizeMode.None;
 
-            var hotbarItems = Inventory.GetHotbar();
-			
-            _hotbar = new GuiContainer()
-            {
-	            Anchor = Alignment.Fill,
-	            //Padding = new Thickness(4,4)
-            };
-            
-            AddChild(_hotbar);
-            
-            _hotbarItems = new GuiInventoryItem[9];
-            for (int i = 0; i < 9; i++)
-	        {
-		        _hotbar.AddChild(_hotbarItems[i] = new GuiInventoryItem()
-		        {
-					Width = ItemWidth + 4,
-					Height = ItemWidth + 4,
-					//Padding = new Thickness(2, 2),
-			        Margin = new Thickness( (i * (ItemWidth + 4)), 0, 4, 0),
-					HighlightedBackground = GuiTextures.Inventory_HotBar_SelectedItemOverlay,
-			        IsSelected = i == SelectedIndex,
-			        Anchor = Alignment.TopLeft,
-			        Item = hotbarItems[i],
-			        AutoSizeMode = AutoSizeMode.None
-		        });
-	        }
-
-	       _itemNameTextElement = new GuiFadingTextElement()
+            _itemNameTextElement = new GuiFadingTextElement()
 	        {
 		        Anchor = Alignment.TopCenter,
 		        TextColor = TextColor.White,

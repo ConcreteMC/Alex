@@ -41,7 +41,7 @@ namespace Alex.Utils.Inventories
         {
 	        get
 	        {
-		        return Slots[36 + _selectedSlot];
+		        return Get(36 + _selectedSlot);
 	        }
 	        set
 	        {
@@ -50,14 +50,16 @@ namespace Alex.Utils.Inventories
 	        }
         }
 
-	    public virtual Item OffHand { get; set; }
+	    public virtual Item OffHand     { get; set; }
+	    public         int  OffHandSlot { get; set; }
 
         public int HelmetSlot { get; protected set; } = 5;
         public virtual Item Helmet
         {
 	        get
 	        {
-		        return Slots[HelmetSlot];
+		        return Get(HelmetSlot);
+		        //   return Slots[HelmetSlot];
 	        }
 	        set
 	        {
@@ -71,7 +73,7 @@ namespace Alex.Utils.Inventories
         {
 	        get
 	        {
-		        return Slots[ChestSlot];
+		        return Get(ChestSlot);
 	        }
 	        set
 	        {
@@ -84,7 +86,7 @@ namespace Alex.Utils.Inventories
         {
 	        get
 	        {
-		        return Slots[LeggingsSlot];
+		        return Get(LeggingsSlot);
 	        }
 	        set
 	        {
@@ -97,7 +99,7 @@ namespace Alex.Utils.Inventories
 	    {
 		    get
 		    {
-			    return Slots[BootsSlot];
+			    return Get(BootsSlot);
 		    }
 		    set
 		    {
@@ -118,7 +120,7 @@ namespace Alex.Utils.Inventories
 
 		    for (int i = 0; i < 9; i++)
 		    {
-			    items[i] = this[36 + i];
+			    items[i] = Get(36 + i);
 		    }
 
 		    return items;

@@ -40,7 +40,7 @@ namespace Alex.Net
 		public abstract void PlayerDigging(DiggingStatus status, BlockCoordinates position, API.Blocks.BlockFace face, Vector3 cursorPosition);
 
 		public abstract void EntityInteraction(Entity player, Entity target,
-			ItemUseOnEntityAction action, int hand);
+			ItemUseOnEntityAction action, int hand, int slot);
 
 		public abstract void WorldInteraction(Entity entity,
 			BlockCoordinates position,

@@ -43,27 +43,43 @@ namespace Alex.Utils.Inventories
 				};
 			}
 
-			var oldValue = Slots[index];
-                
-			Slots[index] = value;
+			//var oldValue = Slots[index];
+			Set(index, value, !isServerTransaction);
+			//Slots[index] = value;
 			/*if ((index == 36 + _selectedSlot && !IsPeInventory) || (index == _selectedSlot && IsPeInventory))
 			{
 			    MainHand = value;
 			}*/
-			SlotChanged?.Invoke(this, new SlotChangedEventArgs(InventoryId, index, value, oldValue, isServerTransaction));
+		}
+
+		protected void InvokeSlotChanged(SlotChangedEventArgs eventArgs)
+		{
+			SlotChanged?.Invoke(this, eventArgs);
+		}
+
+		protected virtual Item Get(int index)
+		{
+			return Slots[index];
+		}
+
+		protected virtual void Set(int index, Item value, bool isClientTransaction)
+		{
+			var oldValue = Slots[index];
+			Slots[index] = value;
+			
+			InvokeSlotChanged(new SlotChangedEventArgs(InventoryId, index, value, oldValue, !isClientTransaction));
 		}
 		
 		public Item this[int index]
 		{
 			get
 			{
-				if (index < 0 || index >= Slots.Length) throw new IndexOutOfRangeException();
-
-				return Slots[index];
+				return Get(index);
 			}
 			set
 			{
-				SetSlot(index, value, false);
+				Set(index, value, true);
+				//SetSlot(index, value, false);
 			}
 		}
 

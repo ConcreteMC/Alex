@@ -56,7 +56,7 @@ namespace Alex.Utils.Inventories
 
 			for (int i = 0; i < hotbar.Length; i++)
 			{
-				hotbar[i] = Slots[i];
+				hotbar[i] = Get(i);
 			}
 
 			return hotbar;

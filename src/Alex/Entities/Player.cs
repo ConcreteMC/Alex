@@ -381,11 +381,11 @@ namespace Alex.Entities
 		    if (attack)
 		    {
 			   // entity.EntityHurt();
-			    Network?.EntityInteraction(this, entity, ItemUseOnEntityAction.Attack, hand);
+			    Network?.EntityInteraction(this, entity, ItemUseOnEntityAction.Attack, hand, hand == 1 ? Inventory.OffHandSlot : Inventory.SelectedSlot);
 		    }
 		    else
 		    {
-			    Network?.EntityInteraction(this, entity, ItemUseOnEntityAction.Interact, hand);
+			    Network?.EntityInteraction(this, entity, ItemUseOnEntityAction.Interact, hand, hand == 1 ? Inventory.OffHandSlot : Inventory.SelectedSlot);
 		    }
 	    }
 

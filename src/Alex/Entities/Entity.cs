@@ -303,14 +303,25 @@ namespace Alex.Entities
 			//if (ItemRenderer != null)
 			//	ItemRenderer.Scale = new Vector3(_scale);
 		}
-		
+
+		public EventHandler<Inventory> OnInventoryChanged;
 		public void SetInventory(Inventory inventory)
 		{
+			var oldInventory = Inventory;
+
+			if (oldInventory != null)
+			{
+				oldInventory.SlotChanged -= OnInventorySlotChanged;
+				oldInventory.SelectedHotbarSlotChanged -= InventoryOnSelectedHotbarSlotChanged;
+			}
+
 			Inventory = inventory;
 			//	HealthManager = new HealthManager(this);
 			
 			Inventory.SlotChanged += OnInventorySlotChanged;
 			Inventory.SelectedHotbarSlotChanged += InventoryOnSelectedHotbarSlotChanged;
+
+			OnInventoryChanged?.Invoke(this, inventory);
 		}
 
         private void CheckHeldItem()
@@ -687,16 +698,19 @@ namespace Alex.Entities
 					
 					var scaleMatrix = Matrix.Identity;
 
-					if ((ItemRenderer.DisplayPosition & DisplayPosition.ThirdPerson) != 0)
-						scaleMatrix = Matrix.CreateTranslation(-pivot)
-						              * Matrix.CreateRotationY(
-							              MathUtils.ToRadians((1f / 16f) * _rightArmModel.Rotation.Y))
-						              * Matrix.CreateRotationX(
-							              MathUtils.ToRadians((1f / 16f) * _rightArmModel.Rotation.X))
-						              * Matrix.CreateRotationZ(
-							              MathUtils.ToRadians((1f / 16f) * _rightArmModel.Rotation.Z))
-						              * Matrix.CreateTranslation(pivot);
-					
+					if (ItemRenderer != null && _rightArmModel != null)
+					{
+						if ((ItemRenderer.DisplayPosition & DisplayPosition.ThirdPerson) != 0)
+							scaleMatrix = Matrix.CreateTranslation(-pivot)
+							              * Matrix.CreateRotationY(
+								              MathUtils.ToRadians((1f / 16f) * _rightArmModel.Rotation.Y))
+							              * Matrix.CreateRotationX(
+								              MathUtils.ToRadians((1f / 16f) * _rightArmModel.Rotation.X))
+							              * Matrix.CreateRotationZ(
+								              MathUtils.ToRadians((1f / 16f) * _rightArmModel.Rotation.Z))
+							              * Matrix.CreateTranslation(pivot);
+					}
+
 					ItemRenderer?.Update(
 						args,
 						scaleMatrix * Matrix.CreateScale(Scale)

@@ -1043,34 +1043,83 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 	    }
 
 		public override void EntityInteraction(Entity player, Entity target,
-		    ItemUseOnEntityAction action, int hand)
+		    ItemUseOnEntityAction action, int hand, int slot)
 	    {
 		    if (player is Player p)
 		    {
 			    //p.Inventory[p.Inventory.SelectedSlot]
-			    var itemInHand = p.Inventory.MainHand;
+			    //var itemInHand = p.Inventory.MainHand;
 
 			    // WorldProvider?.GetChatReceiver?.Receive(new ChatObject($"(CLIENT) Hit entity: {target.EntityId} | Action: {action.ToString()} | Item: {itemInHand.Id}:{itemInHand.Meta} ({itemInHand.Name})"));
 
-			    var item = GetMiNETItem(itemInHand); //MiNET.Items.ItemFactory.GetItem(itemInHand.Id, itemInHand.Meta, itemInHand.Count);
+			  //  var item = GetMiNETItem(itemInHand); //MiNET.Items.ItemFactory.GetItem(itemInHand.Id, itemInHand.Meta, itemInHand.Count);
 			  //  item.Metadata = itemInHand.Meta;
 			  //  item.ExtraData = itemInHand.Nbt;
 			   // item.Count = (byte) itemInHand.Count;
-			    
-			    var packet = McpeInventoryTransaction.CreateObject();
-			    packet.transaction = new ItemUseOnEntityTransaction()
-			    {
-				    ActionType = (McpeInventoryTransaction.ItemUseOnEntityAction) action,
-				    Item = item,
-				    EntityId = target.EntityId
-			    };
 
-			    Session.SendPacket(packet);
+			   McpeInventoryTransaction.ItemUseOnEntityAction realAction;
+
+			   switch (action)
+			   {
+				   case ItemUseOnEntityAction.Interact:
+					   realAction = McpeInventoryTransaction.ItemUseOnEntityAction.Interact;
+					   break;
+
+				   case ItemUseOnEntityAction.Attack:
+					   realAction = McpeInventoryTransaction.ItemUseOnEntityAction.Attack;
+					   break;
+
+				   default:
+					   realAction = McpeInventoryTransaction.ItemUseOnEntityAction.ItemInteract;
+					   break;
+			   }
+			   
+			   if (p.Inventory is ItemStackInventory isi)
+			   {
+				   var packet = McpeInventoryTransaction.CreateObject();
+
+				   packet.transaction = new ItemUseOnEntityTransaction()
+				   {
+					   ActionType = realAction,
+					   Item = isi.GetOriginal(slot),
+					   EntityId = target.EntityId,
+					   Slot = slot,
+					   FromPosition = new System.Numerics.Vector3(p.KnownPosition.X, p.KnownPosition.Y, p.KnownPosition.Z)
+				   };
+
+				   Session.SendPacket(packet);
+			   }
+			   else
+			   {
+				   var packet = McpeInventoryTransaction.CreateObject();
+
+				   packet.transaction = new ItemUseOnEntityTransaction()
+				   {
+					   ActionType = realAction,
+					   Item = GetMiNETItem(p.Inventory[slot]),
+					   EntityId = target.EntityId,
+					   Slot = slot,
+					   FromPosition = new System.Numerics.Vector3(p.KnownPosition.X, p.KnownPosition.Y, p.KnownPosition.Z)
+				   };
+
+				   Session.SendPacket(packet);
+			   }
 		    }
 	    }
 
 	    public override void WorldInteraction(Entity entity, BlockCoordinates position, API.Blocks.BlockFace face, int hand, int slot, Vector3 cursorPosition)
 	    {
+		    MiNET.Items.Item minetItem;// = GetMiNETItem(item);
+
+		    if (entity.Inventory is ItemStackInventory isi)
+		    {
+			    minetItem = isi.GetOriginal(slot);
+		    }
+		    else
+		    {
+			    minetItem = GetMiNETItem(entity.Inventory[slot]);
+		    }
+		    
 		    var packet = McpeInventoryTransaction.CreateObject();
 		    packet.transaction = new ItemUseTransaction()
 		    {
@@ -1081,6 +1130,9 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			   // EntityId = NetworkEntityId,
 			    Position = new MiNET.Utils.BlockCoordinates(position.X, position.Y, position.Z),
 			    Face = (int)face,
+			    Item = minetItem,
+			    Slot = slot,
+			    FromPosition = new System.Numerics.Vector3(entity.KnownPosition.X, entity.KnownPosition.Y, entity.KnownPosition.Z)
 		    };
 
 		  Session.SendPacket(packet);
@@ -1088,7 +1140,17 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 	    public override void UseItem(Item item, int hand, ItemUseAction action)
 	    {
-		    var minetItem = GetMiNETItem(item);
+		    MiNET.Items.Item minetItem;// = GetMiNETItem(item);
+
+		    if (World.Player.Inventory is ItemStackInventory isi)
+		    {
+			    minetItem = isi.GetOriginal(isi.SelectedSlot);
+		    }
+		    else
+		    {
+			    minetItem = GetMiNETItem(item);
+		    }
+		    
 		    McpeInventoryTransaction.ItemUseAction useAction = McpeInventoryTransaction.ItemUseAction.Use;
 		    switch (action)
 		    {
@@ -1110,7 +1172,8 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		    packet.transaction = new ItemUseTransaction()
 		    {
 			    ActionType = useAction,
-			    Item = minetItem
+			    Item = minetItem,
+			    Slot = World.Player.Inventory.SelectedSlot
 		    };
 
 		    Session.SendPacket(packet);
@@ -1125,11 +1188,19 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			McpeMobEquipment packet = new MobEquipment();
 			packet.selectedSlot = (byte) slot;
 			packet.slot = (byte) slot;
-			packet.item = minetItem;
-			
+
+			if (World.Player.Inventory is ItemStackInventory isi)
+			{
+				packet.item = isi.GetOriginal(slot);
+			}
+			else
+			{
+				packet.item = minetItem;
+			}
+
 			Session.SendPacket(packet);
 			
-			Log.Warn($"Held item slot changed: {slot} | Inventor: ");
+			//Log.Warn($"Held item slot changed: {slot} | Inventor: ");
 		}
 
 		public override void Close()

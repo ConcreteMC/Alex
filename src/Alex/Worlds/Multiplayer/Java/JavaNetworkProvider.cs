@@ -128,7 +128,7 @@ namespace Alex.Worlds.Multiplayer.Java
 			});
 		}
 
-		public override void EntityInteraction(Entity player, Entity target, ItemUseOnEntityAction action, int hand)
+		public override void EntityInteraction(Entity player, Entity target, ItemUseOnEntityAction action, int hand, int slot)
 		{
 			
 			switch (action)

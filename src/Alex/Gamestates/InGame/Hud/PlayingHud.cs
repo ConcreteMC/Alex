@@ -10,6 +10,7 @@ using Alex.Entities;
 using Alex.Gui.Elements;
 using Alex.Gui.Elements.Hud;
 using Alex.Gui.Elements.Inventory;
+using Alex.Utils.Inventories;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using RocketUI;
@@ -40,6 +41,8 @@ namespace Alex.Gamestates.InGame.Hud
 
             Alex = game;
 	        Player = player;
+	        
+	        Player.OnInventoryChanged += OnInventoryChanged;
 	        
 	        Anchor = Alignment.Fill;
 	        Padding = Thickness.One;
@@ -86,6 +89,11 @@ namespace Alex.Gamestates.InGame.Hud
 	        
 	        Scoreboard = new ScoreboardView();
 	        Scoreboard.Anchor = Alignment.MiddleRight;
+        }
+
+        private void OnInventoryChanged(object sender, Inventory e)
+        {
+	        _hotbar.Inventory = e;
         }
 
         protected override void OnInit(IGuiRenderer renderer)

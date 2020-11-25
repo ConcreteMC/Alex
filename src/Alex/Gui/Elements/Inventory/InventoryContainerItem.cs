@@ -18,11 +18,11 @@ namespace Alex.Gui.Elements.Inventory
         
         private static readonly Logger Log = LogManager.GetCurrentClassLogger(typeof(InventoryContainerItem));
         
-        private Item _item;
+        //private Item _item;
        // protected GuiTextureElement TextureElement { get; }
-        protected GuiItem GuiItem { get; }
-        public int InventoryIndex { get; set; } = 0;
-        public int InventoryId { get; set; } = 0;
+       private GuiItem GuiItem        { get; }
+        public int     InventoryIndex { get; set; } = 0;
+        public int     InventoryId    { get; set; } = 0;
         
         private GuiTextElement _counTextElement;
         public InventoryContainerItem()
@@ -80,23 +80,23 @@ namespace Alex.Gui.Elements.Inventory
         
         public Item Item
         {
-            get => _item;
+            get => GuiItem.Item;
             set
             {
-                _item = value.Clone();
+                GuiItem.Item = value;//.Clone();
                 
-                GuiItem.Item = _item;
+               // GuiItem.Item = _item;
                 
-                if (_item == null || _item is ItemAir || _item.Count == 0 || _item.Id <= 0)
+                if (value == null || value is ItemAir || value.Count == 0 || value.Id <= 0)
                 {
                  //   TextureElement.IsVisible = false;
                     ShowCount = false;
                     return;
                 }
 
-                if (_item != null && _item.Count > 0)
+                if (value.Count > 0)
                 {
-                    _counTextElement.Text = _item.Count.ToString();
+                    _counTextElement.Text = value.Count.ToString();
                     ShowCount = true;
                 }
                 else

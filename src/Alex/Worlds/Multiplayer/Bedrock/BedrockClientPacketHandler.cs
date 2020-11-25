@@ -260,6 +260,18 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 					new Microsoft.Xna.Framework.Vector3(Client.SpawnPoint.X, Client.SpawnPoint.Y, Client.SpawnPoint.Z),
 					message.spawn.X, message.spawn.X, message.spawn.Y));
 
+			if (message.enableNewInventorySystem)
+			{
+				Log.Info($"Using new transaction based inventory.");
+				Client.World.Player.SetInventory(new ItemStackInventory(Client));
+			}
+			else
+			{
+				Client.World.Player.SetInventory(new BedrockInventory(46));
+			}
+			
+			//message.itemstates[0].
+
 			Dictionary<uint, BlockStateContainer> ourStates = new Dictionary<uint, BlockStateContainer>();
 
 			foreach (var bs in message.blockPalette)
@@ -346,7 +358,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 
 				if (message.item != null)
 				{
-					mob.Inventory.MainHand = ToAlexItem(message.item);
+					mob.Inventory.MainHand = message.item.ToAlexItem();
 				}
 
 				if (message.metadata != null)
@@ -520,7 +532,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		public void HandleMcpeAddItemEntity(McpeAddItemEntity message)
 		{
 			var slot = message.item;
-			var item = ToAlexItem(message.item);
+			var item = message.item.ToAlexItem();
 
 			var itemClone = item.Clone();
 
@@ -728,7 +740,11 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 		/// <inheritdoc />
 		public void HandleMcpeItemStackResponse(McpeItemStackResponse message)
 		{
-			UnhandledPackage(message);
+			//UnhandledPackage(message);
+			if (Client.World.Player.Inventory is ItemStackInventory itemStackInventory)
+			{
+				itemStackInventory.HandleResponses(message.responses);
+			}
 		}
 
 		/// <inheritdoc />
@@ -1001,7 +1017,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			
 			if (Client.World.TryGetEntity(message.runtimeEntityId, out var entity))
 			{
-				var item = ToAlexItem(message.item).Clone();
+				var item = message.item.ToAlexItem().Clone();
 
 				byte slot = message.slot;
 				switch (message.windowsId)
@@ -1040,10 +1056,10 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 
 
-			entity.Inventory.Helmet = ToAlexItem(message.helmet).Clone();
-			entity.Inventory.Chestplate = ToAlexItem(message.chestplate).Clone();
-			entity.Inventory.Leggings = ToAlexItem(message.leggings).Clone();
-			entity.Inventory.Boots = ToAlexItem(message.boots).Clone();
+			entity.Inventory.Helmet = message.helmet.ToAlexItem().Clone();
+			entity.Inventory.Chestplate = message.chestplate.ToAlexItem().Clone();
+			entity.Inventory.Leggings = message.leggings.ToAlexItem().Clone();
+			entity.Inventory.Boots = message.boots.ToAlexItem().Clone();
 
 
 			//UnhandledPackage(message);
@@ -1223,6 +1239,12 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				Log.Warn($"Invalid inventory content! Input was null.");
 				return;
 			}
+
+			if (Client.World.Player.Inventory is ItemStackInventory isi)
+			{
+				isi.HandleInventoryContent(message.inventoryId, message.input);
+				return;
+			}
 			
 			InventoryBase inventory = null;
 			if (message.inventoryId == 0x00)
@@ -1242,7 +1264,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 				
 				var usedIndex = index;
 
-				var result = ToAlexItem(slot).Clone();
+				var result = slot.ToAlexItem().Clone();
 				if (result != null)
 				{
 					inventory[usedIndex] = result;
@@ -1254,77 +1276,18 @@ namespace Alex.Worlds.Multiplayer.Bedrock
             }
 		}
 
-        private Item ToAlexItem(MiNET.Items.Item item)
-        {
-	        if (item == null)
-		        return new ItemAir();
-	        
-	        Item result = null;
-			
-	        if (item.Id < 256) //Block
-	        {
-		        var id = item.Id;
-		        var meta = (byte)item.Metadata;
-		        var reverseMap = MiNET.Worlds.AnvilWorldProvider.Convert.FirstOrDefault(map =>
-			        map.Value.Item1 == id);
-
-		        if (reverseMap.Value != null)
-		        {
-			        id = (byte) reverseMap.Key;
-		        }
-									        
-		        var res = BlockFactory.GetBlockStateID(id, meta);
-
-		        if (AnvilWorldProvider.BlockStateMapper.TryGetValue(res,
-			        out var res2))
-		        {
-			        var t = BlockFactory.GetBlockState(res2);
-
-			        ItemFactory.TryGetItem(t.Name, out result);
-		        }
-		        else
-		        {
-			        var block = BlockFactory.RuntimeIdTable.FirstOrDefault(x => x.Id == item.Id);
-			        if (block != null)
-			        {
-				        ItemFactory.TryGetItem(block.Name, out result);
-			        }
-		        }
-
-		        if (result != null)
-		        {
-			        result.Id = item.Id;
-			        //result.Meta = item.Metadata;
-		        }
-	        }
-			
-	        if (result == null)
-	        {
-		        ItemFactory.TryGetItem(item.Id, item.Metadata, out result);
-		        //  Log.Info($"Set inventory slot: {message.slot} Id: {message.item.Id}:{message.item.Metadata} x {message.item.Count} Name: {item.DisplayName} IsPeInv: {inventory.IsPeInventory}");
-	        }
-
-	        if (result != null)
-	        {
-		        result.StackID = item.UniqueId;
-		        result.Meta = item.Metadata;
-		        result.Count = item.Count;
-		        result.Nbt = item.ExtraData;
-				
-		        return result;
-	        }
-
-	        return new ItemAir()
-	        {
-		        Count = 0
-	        };
-        }
-        
-		public void HandleMcpeInventorySlot(McpeInventorySlot message)
+        public void HandleMcpeInventorySlot(McpeInventorySlot message)
 		{
 			if (message.item == null)
 			{
 				Log.Warn($"Invalid inventory slot packet! Item was null.");
+				return;
+			}
+
+			if (Client.World.Player.Inventory is ItemStackInventory isi)
+			{
+				isi.HandleSetSlot(message);
+
 				return;
 			}
 			
@@ -1342,7 +1305,7 @@ namespace Alex.Worlds.Multiplayer.Bedrock
 			}
 			
 			var index = (int)message.slot;
-			var result = ToAlexItem(message.item).Clone();
+			var result = message.item.ToAlexItem().Clone();
 
 			if (result != null)
             {
