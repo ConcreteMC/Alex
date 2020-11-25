@@ -1,4 +1,5 @@
 ﻿using Alex.API.Blocks;
+using Alex.API.Utils;
 using Alex.ResourcePackLib.Json;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -125,7 +126,7 @@ namespace Alex.Graphics.Models
 			    1.0f, 0.5f // MinY / MaxY
 		    };
 
-	    protected Color AdjustColor(Color color, BlockFace face, bool shade = true)
+	    protected static Color AdjustColor(Color color, BlockFace face, bool shade = true)
 	    {
 		    float brightness = 1f;
 		    if (shade)
@@ -165,6 +166,8 @@ namespace Alex.Graphics.Models
 
 		public sealed class Cube
 		{
+			private static readonly Color _defaultColor = Color.White;
+			
 			public Vector3 Size;
 			public Vector2 UvScale;
 			
@@ -201,7 +204,7 @@ namespace Alex.Graphics.Models
 				Bottom = GetBottomVertex(uv, uvScale);
 			}
 
-			public (VertexPositionNormalTexture[] vertices, short[] indexes) Front, Back, Left, Right, Top, Bottom;
+			public (VertexPositionColorTexture[] vertices, short[] indexes) Front, Back, Left, Right, Top, Bottom;
 
 			private readonly Vector3 _topLeftFront;
 			private readonly Vector3 _topLeftBack;
@@ -212,20 +215,21 @@ namespace Alex.Graphics.Models
 			private readonly Vector3 _btmRightFront;
 			private readonly Vector3 _btmRightBack;
 
-			private (VertexPositionNormalTexture[] vertices, short[] indexes) GetLeftVertex(Vector2 uv, Vector2 uvScale)
+			private (VertexPositionColorTexture[] vertices, short[] indexes) GetLeftVertex(Vector2 uv, Vector2 uvScale)
 			{
-				Vector3 normal = new Vector3(-1.0f, 0.0f, 0.0f) * Size;
-
+				//Vector3 normal = new Vector3(-1.0f, 0.0f, 0.0f) * Size;
+				Color normal = AdjustColor(_defaultColor, BlockFace.West);
+				
 				//var map = GetTextureMapping(uv + new Vector2(Size.Z + Size.X, Size.Z), Size.Z, Size.Y);
 				var map = GetTextureMapping(uv + new Vector2(0, Size.Z), Size.Z, Size.Y);
 				
 				// Add the vertices for the RIGHT face. 
-				return (new VertexPositionNormalTexture[]
+				return (new VertexPositionColorTexture[]
 				{
-					new VertexPositionNormalTexture(_topLeftFront, normal, map.TopRight),
-					new VertexPositionNormalTexture(_btmLeftFront , normal, map.BotRight),
-					new VertexPositionNormalTexture(_btmLeftBack, normal, map.BotLeft),
-					new VertexPositionNormalTexture(_topLeftBack , normal, map.TopLeft),
+					new VertexPositionColorTexture(_topLeftFront, normal, map.TopRight),
+					new VertexPositionColorTexture(_btmLeftFront , normal, map.BotRight),
+					new VertexPositionColorTexture(_btmLeftBack, normal, map.BotLeft),
+					new VertexPositionColorTexture(_topLeftBack , normal, map.TopLeft),
 					//new VertexPositionNormalTexture(_topLeftFront , normal, map.TopLeft),
 					//new VertexPositionNormalTexture(_btmLeftBack, normal, map.BotRight),
 				}, new short[]
@@ -236,20 +240,21 @@ namespace Alex.Graphics.Models
 				});
 			}
 
-			private (VertexPositionNormalTexture[] vertices, short[] indexes) GetRightVertex(Vector2 uv, Vector2 uvScale)
+			private (VertexPositionColorTexture[] vertices, short[] indexes) GetRightVertex(Vector2 uv, Vector2 uvScale)
 			{
-				Vector3 normal = new Vector3(1.0f, 0.0f, 0.0f) * Size;
-
-				var map = GetTextureMapping(uv + new Vector2(Size.Z + Size.X, Size.Z), Size.Z, Size.Y);
+				//Vector3 normal = new Vector3(1.0f, 0.0f, 0.0f) * Size;
+				Color normal = AdjustColor(_defaultColor, BlockFace.East);
+				
+				var   map    = GetTextureMapping(uv + new Vector2(Size.Z + Size.X, Size.Z), Size.Z, Size.Y);
 				//var map = GetTextureMapping(uv + new Vector2(0, Size.Z), Size.Z, Size.Y);
 
 				// Add the vertices for the RIGHT face. 
-				return (new VertexPositionNormalTexture[]
+				return (new VertexPositionColorTexture[]
 				{
-					new VertexPositionNormalTexture(_topRightFront, normal, map.TopLeft),
-					new VertexPositionNormalTexture(_btmRightBack , normal, map.BotRight),
-					new VertexPositionNormalTexture(_btmRightFront, normal, map.BotLeft),
-					new VertexPositionNormalTexture(_topRightBack , normal, map.TopRight),
+					new VertexPositionColorTexture(_topRightFront, normal, map.TopLeft),
+					new VertexPositionColorTexture(_btmRightBack , normal, map.BotRight),
+					new VertexPositionColorTexture(_btmRightFront, normal, map.BotLeft),
+					new VertexPositionColorTexture(_topRightBack , normal, map.TopRight),
 					//new VertexPositionNormalTexture(_btmRightBack , normal, map.BotLeft),
 					//new VertexPositionNormalTexture(_topRightFront, normal, map.TopRight),
 				}, new short[]
@@ -259,21 +264,22 @@ namespace Alex.Graphics.Models
 				});
 			}
 
-			private (VertexPositionNormalTexture[] vertices, short[] indexes) GetFrontVertex(Vector2 uv, Vector2 uvScale)
+			private (VertexPositionColorTexture[] vertices, short[] indexes) GetFrontVertex(Vector2 uv, Vector2 uvScale)
 			{
-				Vector3 normal = new Vector3(0.0f, 0.0f, 1.0f) * Size;
-
-				var map = GetTextureMapping(uv + new Vector2(Size.Z, Size.Z), Size.X, Size.Y);
+				//Vector3 normal = new Vector3(0.0f, 0.0f, 1.0f) * Size;
+				Color normal = AdjustColor(_defaultColor, BlockFace.South);
+				
+				var   map    = GetTextureMapping(uv + new Vector2(Size.Z, Size.Z), Size.X, Size.Y);
 
 				// Add the vertices for the RIGHT face. 
-				return (new VertexPositionNormalTexture[]
+				return (new VertexPositionColorTexture[]
 				{
-					new VertexPositionNormalTexture(_topLeftFront , normal, map.TopLeft),
-					new VertexPositionNormalTexture(_topRightFront, normal, map.TopRight),
-					new VertexPositionNormalTexture(_btmLeftFront , normal, map.BotLeft),
+					new VertexPositionColorTexture(_topLeftFront , normal, map.TopLeft),
+					new VertexPositionColorTexture(_topRightFront, normal, map.TopRight),
+					new VertexPositionColorTexture(_btmLeftFront , normal, map.BotLeft),
 					//new VertexPositionNormalTexture(_btmLeftFront , normal, map.BotLeft),
 					//new VertexPositionNormalTexture(_topRightFront, normal, map.TopRight),
-					new VertexPositionNormalTexture(_btmRightFront, normal, map.BotRight),
+					new VertexPositionColorTexture(_btmRightFront, normal, map.BotRight),
 				}, new short[]
 				{
 					0, 1, 2, 
@@ -281,19 +287,20 @@ namespace Alex.Graphics.Models
 					//0, 2, 1, 2, 3, 1
 				});
 			}
-			private (VertexPositionNormalTexture[] vertices, short[] indexes) GetBackVertex(Vector2 uv, Vector2 uvScale)
+			private (VertexPositionColorTexture[] vertices, short[] indexes) GetBackVertex(Vector2 uv, Vector2 uvScale)
 			{
-				Vector3 normal = new Vector3(0.0f, 0.0f, -1.0f) * Size;
+				//Vector3 normal = new Vector3(0.0f, 0.0f, -1.0f) * Size;
+				Color   normal = AdjustColor(_defaultColor, BlockFace.North);
 				
-				var map = GetTextureMapping(uv + new Vector2(Size.Z + Size.Z + Size.X, Size.Z), Size.X, Size.Y);
+				var     map    = GetTextureMapping(uv + new Vector2(Size.Z + Size.Z + Size.X, Size.Z), Size.X, Size.Y);
 				// Add the vertices for the RIGHT face. 
-				return (new VertexPositionNormalTexture[]
+				return (new VertexPositionColorTexture[]
 				{
-					new VertexPositionNormalTexture(_topLeftBack , normal, map.TopRight),
-					new VertexPositionNormalTexture(_btmLeftBack , normal, map.BotRight),
-					new VertexPositionNormalTexture(_topRightBack, normal, map.TopLeft),
+					new VertexPositionColorTexture(_topLeftBack , normal, map.TopRight),
+					new VertexPositionColorTexture(_btmLeftBack , normal, map.BotRight),
+					new VertexPositionColorTexture(_topRightBack, normal, map.TopLeft),
 					//new VertexPositionNormalTexture(_btmLeftBack , normal, map.BotRight),
-					new VertexPositionNormalTexture(_btmRightBack, normal, map.BotLeft),
+					new VertexPositionColorTexture(_btmRightBack, normal, map.BotLeft),
 					//new VertexPositionNormalTexture(_topRightBack, normal, map.TopLeft),
 				}, new short[]
 				{
@@ -303,21 +310,22 @@ namespace Alex.Graphics.Models
 				});
 			}
 
-			private (VertexPositionNormalTexture[] vertices, short[] indexes) GetTopVertex(Vector2 uv, Vector2 uvScale)
+			private (VertexPositionColorTexture[] vertices, short[] indexes) GetTopVertex(Vector2 uv, Vector2 uvScale)
 			{
-				Vector3 normal = new Vector3(0.0f, 1.0f, 0.0f) * Size;
-
-				var map = GetTextureMapping(uv + new Vector2(Size.Z, 0), Size.X, Size.Z);
+			//	Vector3 normal = new Vector3(0.0f, 1.0f, 0.0f) * Size;
+			Color   normal = AdjustColor(_defaultColor, BlockFace.Up);
+			
+				var map    = GetTextureMapping(uv + new Vector2(Size.Z, 0), Size.X, Size.Z);
 
 				// Add the vertices for the RIGHT face. 
-				return (new VertexPositionNormalTexture[]
+				return (new VertexPositionColorTexture[]
 				{
-					new VertexPositionNormalTexture(_topLeftFront , normal, map.BotLeft),
-					new VertexPositionNormalTexture(_topLeftBack  , normal, map.TopLeft),
-					new VertexPositionNormalTexture(_topRightBack , normal, map.TopRight),
+					new VertexPositionColorTexture(_topLeftFront , normal, map.BotLeft),
+					new VertexPositionColorTexture(_topLeftBack  , normal, map.TopLeft),
+					new VertexPositionColorTexture(_topRightBack , normal, map.TopRight),
 					//new VertexPositionNormalTexture(_topLeftFront , normal, map.BotLeft),
 				//	new VertexPositionNormalTexture(_topRightBack , normal, map.TopRight),
-					new VertexPositionNormalTexture(_topRightFront, normal, map.BotRight),
+					new VertexPositionColorTexture(_topRightFront, normal, map.BotRight),
 				}, new short[]
 				{
 					0, 1, 2, 
@@ -325,20 +333,20 @@ namespace Alex.Graphics.Models
 				});
 			}
 
-			private (VertexPositionNormalTexture[] vertices, short[] indexes) GetBottomVertex(Vector2 uv, Vector2 uvScale)
+			private (VertexPositionColorTexture[] vertices, short[] indexes) GetBottomVertex(Vector2 uv, Vector2 uvScale)
 			{
-				Vector3 normal = new Vector3(0.0f, -1.0f, 0.0f) * Size;
-
-				var map = GetTextureMapping(uv + new Vector2(Size.Z + Size.X, 0), Size.X, Size.Z);
+			//	Vector3 normal = new Vector3(0.0f, -1.0f, 0.0f) * Size;
+			Color   normal = AdjustColor(_defaultColor, BlockFace.Down);
+				var map    = GetTextureMapping(uv + new Vector2(Size.Z + Size.X, 0), Size.X, Size.Z);
 
 				// Add the vertices for the RIGHT face. 
-				return (new VertexPositionNormalTexture[]
+				return (new VertexPositionColorTexture[]
 				{
-					new VertexPositionNormalTexture(_btmLeftFront , normal, map.TopLeft),
-					new VertexPositionNormalTexture(_btmRightBack , normal, map.BotRight),
-					new VertexPositionNormalTexture(_btmLeftBack  , normal, map.BotLeft),
+					new VertexPositionColorTexture(_btmLeftFront , normal, map.TopLeft),
+					new VertexPositionColorTexture(_btmRightBack , normal, map.BotRight),
+					new VertexPositionColorTexture(_btmLeftBack  , normal, map.BotLeft),
 					//new VertexPositionNormalTexture(_btmLeftFront , normal, map.TopLeft),
-					new VertexPositionNormalTexture(_btmRightFront, normal, map.TopRight),
+					new VertexPositionColorTexture(_btmRightFront, normal, map.TopRight),
 					//new VertexPositionNormalTexture(_btmRightBack , normal, map.BotRight),
 				}, new short[]
 				{

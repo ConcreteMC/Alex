@@ -210,6 +210,8 @@ namespace Alex.API.Gui.Elements
 			var textSize = GetSize(text, scale);
 
 			size = new Size((int)Math.Ceiling(textSize.X), (int)Math.Ceiling(textSize.Y));
+			minSize = size;
+			maxSize = size;
 		}
 
 		//private static Regex LinkParser = new Regex(@"\b(?:https?://|www\.)\S+\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);

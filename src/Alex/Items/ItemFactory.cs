@@ -182,7 +182,7 @@ namespace Alex.Items
 				    model = new ResourcePackItem() {Display = _defaultDisplayElements};
 			    }
 
-			    item.Renderer = new ItemBlockModelRenderer(bs, model, resourcePack, resources);
+			    item.Renderer = new ItemBlockModelRenderer(bs, model, resources);
 			    item.Renderer.Cache(resourcePack);
 
 				    items.TryAdd(entry.Key, () =>
@@ -293,13 +293,13 @@ namespace Alex.Items
 				ItemRenderers.AddOrUpdate(model.Key,
 				    (a) =>
 				    {
-					    var render = new ItemModelRenderer(model.Value, ResourcePack);
+					    var render = new ItemModelRenderer(model.Value);
 					    render.Cache(ResourcePack);
 					    return render;
 				    },
 				    (s, renderer) =>
 				    {
-					    var render = new ItemModelRenderer(model.Value, ResourcePack);
+					    var render = new ItemModelRenderer(model.Value);
 					    render.Cache(ResourcePack);
 					    
 					    return render;

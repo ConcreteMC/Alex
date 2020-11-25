@@ -72,7 +72,7 @@ namespace Alex.Graphics.Models.Entity
 
 		private void Cache(PooledTexture2D texture, EntityModel model, Dictionary<string, ModelBone> modelBones)
 		{
-			List<VertexPositionNormalTexture> vertices = new List<VertexPositionNormalTexture>();
+			List<VertexPositionColorTexture> vertices = new List<VertexPositionColorTexture>();
 
 			//var modelTextureSize = model.Description != null ?
 			//	new Vector2(model.Description.TextureWidth, model.Description.TextureHeight) :
@@ -110,7 +110,7 @@ namespace Alex.Graphics.Models.Entity
 			}
 			
 			VertexBuffer = GpuResourceManager.GetBuffer(this, Alex.Instance.GraphicsDevice,
-				VertexPositionNormalTexture.VertexDeclaration, vertices.Count, BufferUsage.None);
+				VertexPositionColorTexture.VertexDeclaration, vertices.Count, BufferUsage.None);
 			VertexBuffer.SetData(vertices.ToArray());
 			
 			Valid = true;
@@ -131,7 +131,7 @@ namespace Alex.Graphics.Models.Entity
 			return origin;
 		}
 
-		private ModelBone ProcessBone(PooledTexture2D texture, EntityModel source, EntityModelBone bone, List<VertexPositionNormalTexture> vertices, Vector2 uvScale, Vector2 textureSize, Dictionary<string, ModelBone> modelBones)
+		private ModelBone ProcessBone(PooledTexture2D texture, EntityModel source, EntityModelBone bone, List<VertexPositionColorTexture> vertices, Vector2 uvScale, Vector2 textureSize, Dictionary<string, ModelBone> modelBones)
 		{
 			ModelBone           modelBone;
 				
@@ -205,8 +205,8 @@ namespace Alex.Graphics.Models.Entity
 			return modelBone;
 		}
 
-		private List<VertexPositionNormalTexture> ModifyCubeIndexes(List<VertexPositionNormalTexture> vertices, EntityModelCube cube,
-			ref (VertexPositionNormalTexture[] vertices, short[] indexes) data, bool mirror)
+		private List<VertexPositionColorTexture> ModifyCubeIndexes(List<VertexPositionColorTexture> vertices, EntityModelCube cube,
+			ref (VertexPositionColorTexture[] vertices, short[] indexes) data, bool mirror)
 		{
 			var origin = FlipX(cube.InflatedOrigin, cube.InflatedSize);
 			

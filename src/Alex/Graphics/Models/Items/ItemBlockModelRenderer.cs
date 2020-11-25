@@ -15,20 +15,29 @@ namespace Alex.Graphics.Models.Items
 {
     public class ItemBlockModelRenderer : ItemModelRenderer<VertexPositionColorTexture>
     {
-        private BlockState _block;
+        private bool            _animated = false;
+        private BlockState      _block;
         private ResourceManager _resource;
 
-        public ItemBlockModelRenderer(BlockState block, ResourcePackModelBase model, McResourcePack resourcePack,
-            ResourceManager resourceManager) : base(model, resourcePack,
-            BlockShaderVertex.VertexDeclaration)
+        public ItemBlockModelRenderer(BlockState block, ResourcePackModelBase model,
+            ResourceManager resourceManager) : base(model,
+            VertexPositionColorTexture.VertexDeclaration)
         {
             _block = block;
             _resource = resourceManager;
-
+            _animated = _block.Block.Animated;
+            
             Offset = new Vector3(0f, -0.5f, 0f);
             //  Translation = -Vector3.Forward * 8f;
         }
 
+        private ItemBlockModelRenderer(bool animated, ResourcePackModelBase model, ResourceManager resourceManager) : base(model, VertexPositionColorTexture.VertexDeclaration)
+        {
+            _animated = animated;
+            _resource = resourceManager;
+            Offset = new Vector3(0f, -0.5f, 0f);
+        }
+        
         public override void Cache(McResourcePack pack)
         {
             if (Vertices != null)
@@ -36,19 +45,17 @@ namespace Alex.Graphics.Models.Items
             
             ChunkData chunkData = new ChunkData();
             _block.Model.GetVertices(new ItemRenderingWorld(_block.Block), chunkData, BlockCoordinates.Zero, Vector3.Zero, _block.Block);
-            Vertices = chunkData.Vertices.Select(
-                x =>
-                {
-                    return new VertexPositionColorTexture(x.Position, x.Color, x.TexCoords);
-                }).ToArray();
             
-            List<short> indexes = new List<short>();
-            for (int i = 0; i < Vertices.Length; i++)
-            {
-                indexes.Add((short) i);
-            }
+            var rawVertices = chunkData.Vertices;
+            int count       = rawVertices.Length;
 
-            Indexes = indexes.ToArray();
+            while (count > 0 && count % 3 != 0)
+            {
+                count--;
+            }
+            
+            Vertices = rawVertices.Take(count).Select(
+                x => new VertexPositionColorTexture(x.Position, x.Color, x.TexCoords)).ToArray();
 
             chunkData.Dispose();
         }
@@ -58,7 +65,7 @@ namespace Alex.Graphics.Models.Items
             base.InitEffect(effect);
             effect.TextureEnabled = true;
 
-            if (_block.Block.Animated)
+            if (_animated)
             {
                 effect.Texture = _resource.Atlas.GetAtlas(0);
             }
@@ -70,10 +77,9 @@ namespace Alex.Graphics.Models.Items
 
         public override IItemRenderer Clone()
         {
-            return new ItemBlockModelRenderer(_block, Model, null, _resource)
+            return new ItemBlockModelRenderer(_block, Model, _resource)
             {
-                Vertices = (VertexPositionColorTexture[]) Vertices.Clone(),
-                Indexes = (short[]) Indexes.Clone()
+                Vertices = (VertexPositionColorTexture[]) Vertices.Clone()
             };
         }
     }
